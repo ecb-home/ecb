@@ -96,16 +96,16 @@
 
 (defun tree-buffer-select(mouse-button shift-pressed control-pressed)
   "If the callback-function in `tree-buffer-is-click-valid-fn' returns nil
-then nothing is done. Otherwise:
-If the node is expandable and the node is not expanded then the
-callback-function in `tree-node-expanded-fn' is called with the node as
-argument. If the node is not expandable then the callback-function in
-`tree-node-selected-fn' is called with the node, the clicked MOUSE-BUTTON \(1
-for mouse-1, 2 for mouse-2) and SHIFT-PRESSED and CONTROL-PRESSED informations
-as arguments."
+then nothing is done. Otherwise: If the node is expandable and the node is not
+expanded then the callback-function in `tree-node-expanded-fn' is called with
+the node, the clicked MOUSE-BUTTON \(1 for mouse-1, 2 for mouse-2, 0 for no
+mouse-button but a key like RET or TAB), SHIFT-PRESSED and CONTROL-PRESSED
+informations and the name of the tree-buffer as arguments. If the node is not
+expandable then the callback-function in `tree-node-selected-fn' is called
+with the same arguments as `tree-node-expanded-fn'."
   (when (and tree-buffer-is-click-valid-fn
              (funcall tree-buffer-is-click-valid-fn mouse-button
-                      shift-pressed control-pressed))
+                      shift-pressed control-pressed (buffer-name)))
     (let ((p (point))
           (node (tree-buffer-get-node-at-point)))
       (when node
@@ -114,13 +114,14 @@ as arguments."
             (progn
               (when (and (not (tree-node-is-expanded node))
                          tree-node-expanded-fn)
-                (funcall tree-node-expanded-fn node))
+                (funcall tree-node-expanded-fn node mouse-button
+                         shift-pressed control-pressed (buffer-name)))
               (when (tree-node-is-expandable node)
                 (tree-node-toggle-expanded node))
               (tree-buffer-update))
           (when tree-node-selected-fn
             (funcall tree-node-selected-fn node mouse-button
-                     shift-pressed control-pressed)))))))
+                     shift-pressed control-pressed (buffer-name))))))))
 
 (defun tree-buffer-get-node-at-point()
   (let ((linenr (+ (count-lines 1 (point)) (if (= (current-column) 0) 0 -1))))
@@ -155,8 +156,8 @@ as arguments."
                      (tree-buffer-get-node-name-end-point node) 'face face))
 
 ;; Klaus: Now we use overlays to highlight current node in a tree-buffer. This
-;; makes it easier to do same facing with the nodes itself and above all this
-;; the facees of the node are always visible even if the node is highlighted
+;; makes it easier to do some facing with the nodes itself and above all this
+;; the faces of the node are always visible even if the node is highlighted
 ;; (useful e.g. if you show the sources in the ECB directory buffer, and if
 ;; you do some syntax highlighting in the method-buffer).
 (defun tree-buffer-remove-highlight()
@@ -225,15 +226,6 @@ inserted and the TEXT itself"
     (goto-char p)
     (set-window-start (selected-window) ws)))
 
-;; (defun tree-buffer-update()
-;;   (let ((ws (window-start))
-;;     (p (point)))
-;;     (setq tree-buffer-nodes nil)
-;;     (erase-buffer)
-;;     (dolist (node (tree-node-get-children tree-buffer-root))
-;;       (tree-buffer-add-node node 0))
-;;     (tree-buffer-highlight-node-data tree-buffer-highlighted-node-data)))
-
 (defun tree-buffer-set-root(root)
   (setq tree-buffer-root root)
   (tree-node-set-expanded tree-buffer-root t))
@@ -264,13 +256,15 @@ IS-CLICK-VALID-FN: `tree-buffer-create' rebinds down-mouse-1 and down-mouse-2
                    and also in combination with shift and control to
                    `tree-buffer-select'. IS-CLICK-VALID-FN is called first if
                    a node or an expand-symbol is clicked. This function is
-                   called with three-arguments:
+                   called with four arguments:
                    - mouse-button: The clicked mouse-button \(1 = mouse-1, 2 =
                      mouse 2)
                    - shift-pressed: non nil if the SHIFT-key was pressed
                      during mouse-click.
                    - control-pressed: non nil if the CONTROL-key was pressed
                      during mouse-click.
+                   - tree-buffer-name: The buffer-name of the tree-buffer
+                     where the node has been clicked.
                    The function must return not nil iff exactly this click is
                    accepted. If the function returns nil then really nothing is
                    done by the tree-buffer after this click!
@@ -280,11 +274,13 @@ NODE-SELECTED-FN: Function to call if a node has been selected
                   - mouse-button
                   - shift-pressed
                   - control-pressed
-                  For the last three arguments see the description above.
+                  - tree-buffer-name
+                  For the last four arguments see the description above.
 NODE-EXPANDED-FN: Function to call if a node is expandable, point stays onto
                   the expand-symbol and node is not already expanded. This
-                  function is called with the node as argument and should add
-                  all children nodes to this node \(if possible).
+                  function is called with the same arguments as
+                  NODE-SELECTED-FN and should add all children nodes to this
+                  node \(if possible).
 NODE-MOUSE-OVER-FN: Function to call when the mouse is moved over a node.
 MENUS: Nil or a list of one or two conses, each cons for a node-type \(0 or 1)
        Example: \(\(0 . menu-for-type-0) \(1 . menu-for-type-1)). The cdr of a
@@ -342,14 +338,14 @@ EXPAND-SYMBOL-BEFORE: If not nil then the expand-symbol \(is displayed before
   (define-key tree-buffer-key-map "\C-m"
     '(lambda()
        (interactive)
-       (tree-buffer-select 0)))
+       (tree-buffer-select 0 nil nil)))
   (define-key tree-buffer-key-map [tab]
     '(lambda()
        (interactive)
        (let ((node (tree-buffer-get-node-at-point)))
          (when (tree-node-is-expandable node)
            (when (not (tree-node-is-expanded node))
-             (funcall tree-node-expanded-fn node))
+             (funcall tree-node-expanded-fn node 0 nil nil (buffer-name)))
            (when (tree-node-is-expandable node)
              (tree-node-toggle-expanded node))
            (tree-buffer-update)))))

@@ -906,6 +906,7 @@ OTHER-WINDOW."
         type filename (or not-expandable (= type 1)))))))
   
 (defun ecb-update-directory-node(node)
+  "Updates the directory node NODE and add all subnodes if any."
   (let ((old-children (tree-node-get-children node))
         (path (tree-node-get-data node)))
     (tree-node-set-children node nil)
@@ -969,89 +970,127 @@ OTHER-WINDOW."
 ;; Mouse functions
 ;;====================================================
 
-(defun ecb-interpret-mouse-click (mouse-button shift-pressed control-pressed)
-  "Converts the pysical pressed MOUSE-BUTTON to ECB-mouse-buttons: either
+(defun ecb-tree-buffer-node-select-callback(node
+                                            mouse-button
+                                            shift-pressed
+                                            control-pressed
+                                            tree-buffer-name)
+  "This is the callback-function ecb.el gives to every tree-buffer to call
+when a node has been selected. This function does nothing if the click
+combination is invalid \(see `ecb-interpret-mouse-click'."
+  (let* ((ecb-button-list (ecb-interpret-mouse-click mouse-button
+                                                     shift-pressed
+                                                     control-pressed
+                                                     tree-buffer-name))
+         (ecb-button (car ecb-button-list))
+         (shift-mode (cadr ecb-button-list)))
+    ;; in the following we only operate with ecb-button and shift-mode and
+    ;; never with mouse-button, shift-pressed and control-pressed!!
+    (when ecb-button-list
+      (cond ((string= tree-buffer-name ecb-directories-buffer-name)
+             (ecb-directory-clicked node ecb-button shift-mode))
+            ((string= tree-buffer-name ecb-sources-buffer-name)
+             (ecb-source-clicked node ecb-button shift-mode))
+            ((string= tree-buffer-name ecb-history-buffer-name)
+             (ecb-source-clicked node ecb-button shift-mode))
+            ((string= tree-buffer-name ecb-methods-buffer-name)
+             (ecb-method-clicked node ecb-button shift-mode))
+            (t nil)))))
+
+(defun ecb-tree-buffer-node-expand-callback(node
+                                            mouse-button
+                                            shift-pressed
+                                            control-pressed
+                                            tree-buffer-name)
+  "This is the callback-function ecb.el gives to every tree-buffer to call
+when a node should be expanded. This function does nothing if the click
+combination is invalid \(see `ecb-interpret-mouse-click'."
+  (let* ((ecb-button-list (ecb-interpret-mouse-click mouse-button
+                                                     shift-pressed
+                                                     control-pressed
+                                                     tree-buffer-name))
+         (ecb-button (car ecb-button-list))
+         (shift-mode (cadr ecb-button-list)))
+  (when ecb-button-list
+    (cond ((string= tree-buffer-name ecb-directories-buffer-name)
+           (ecb-update-directory-node node))
+          ((string= tree-buffer-name ecb-sources-buffer-name)
+           (ecb-source-clicked node ecb-button shift-mode))
+          ((string= tree-buffer-name ecb-history-buffer-name)
+           (ecb-source-clicked node ecb-button shift-mode))
+          ((string= tree-buffer-name ecb-methods-buffer-name)
+           nil)
+          (t nil)))))
+
+(defun ecb-interpret-mouse-click (mouse-button
+                                  shift-pressed
+                                  control-pressed
+                                  tree-buffer-name)
+  "Converts the pysical pressed MOUSE-BUTTON \(1 = mouse-1, 2 = mouse-2, 0 =
+no mouse-button but a key like RET or TAB) to ECB-mouse-buttons: either
 primary or secondary mouse-button depending on the value of CONTROL-PRESSED
-and the setting in `ecb-primary-secondary-mouse-buttons'.
-Returns a list '\(ECB-button shift-mode) where ECB-button is either 1 \(=
-primary) or 2 \(= secondary) and shift-mode is non nil if SHIFT-PRESSED is non
-nil. For an invalid and not accepted click combination nil is returned."
-  (if (and (not (eq mouse-button 1)) (not (eq mouse-button 2)))
-      nil
-    (cond ((eq ecb-primary-secondary-mouse-buttons 'mouse-1--mouse-2)
-           (if control-pressed
-               nil
-             (list mouse-button shift-pressed)))
-          ((eq ecb-primary-secondary-mouse-buttons 'mouse-1--C-mouse-1)
-           (if (not (eq mouse-button 1))
-               nil
-             (list (if control-pressed 2 1) shift-pressed)))
-          ((eq ecb-primary-secondary-mouse-buttons 'mouse-2--C-mouse-2)
-           (if (not (eq mouse-button 2))
-               nil           
-             (list (if control-pressed 2 1) shift-pressed)))
-          (t nil))))
+and the setting in `ecb-primary-secondary-mouse-buttons'. Returns a list
+'\(ECB-button shift-mode) where ECB-button is either 1 \(= primary) or 2 \(=
+secondary) and shift-mode is non nil if SHIFT-PRESSED is non nil. For an
+invalid and not accepted click combination nil is returned.
 
-(defun ecb-directory-clicked(node mouse-button shift-pressed control-pressed)
-  (let* ((ecb-button-list (ecb-interpret-mouse-click mouse-button
-                                                      shift-pressed
-                                                      control-pressed))
-         (ecb-button (car ecb-button-list))
-         (shift-mode (cadr ecb-button-list)))
-    ;; in the following we only operate with ecb-button and shift-mode and
-    ;; never with mouse-button, shift-pressed and control-pressed!!
-    (when ecb-button-list
-      (ecb-update-directory-node node)
-      (if (= 0 (tree-node-get-type node))
-          (if shift-mode
-              (ecb-mouse-over-node node)
-            (progn
-              (when (= 2 ecb-button)
-                (tree-node-toggle-expanded node))
-              (ecb-set-selected-directory (tree-node-get-data node))
-              (ecb-buffer-select ecb-directories-buffer-name)
-              (tree-buffer-update)))
-        (ecb-set-selected-source (tree-node-get-data node)
-                                 (and ecb-split-edit-window (eq ecb-button 2))
-                                 shift-mode)))))
+Note: If MOUSE-BUTTON is 0 \(means no mouse-button but a key like RET or TAB
+was hitted) then only nil is accepted for SHIFT-PRESSED and CONTROL-PRESSED.
 
-(defun ecb-source-clicked(node mouse-button shift-pressed control-pressed)
-  (let* ((ecb-button-list (ecb-interpret-mouse-click mouse-button
-                                                     shift-pressed
-                                                     control-pressed))
-         (ecb-button (car ecb-button-list))
-         (shift-mode (cadr ecb-button-list)))
-    ;; in the following we only operate with ecb-button and shift-mode and
-    ;; never with mouse-button, shift-pressed and control-pressed!!
-    (when ecb-button-list
-      (if shift-mode
-          (ecb-mouse-over-node node))
-      (ecb-set-selected-source (tree-node-get-data node)
-                               (and ecb-split-edit-window (eq ecb-button 2))
-                               shift-mode))))
+Currently the fourth argument TREE-BUFFER-NAME is not used here."
+  (if (and (eq mouse-button 0) (not shift-pressed) (not control-pressed))
+      (list 1 nil)
+    (if (and (not (eq mouse-button 1)) (not (eq mouse-button 2)))
+        nil
+      (cond ((eq ecb-primary-secondary-mouse-buttons 'mouse-1--mouse-2)
+             (if control-pressed
+                 nil
+               (list mouse-button shift-pressed)))
+            ((eq ecb-primary-secondary-mouse-buttons 'mouse-1--C-mouse-1)
+             (if (not (eq mouse-button 1))
+                 nil
+               (list (if control-pressed 2 1) shift-pressed)))
+            ((eq ecb-primary-secondary-mouse-buttons 'mouse-2--C-mouse-2)
+             (if (not (eq mouse-button 2))
+                 nil           
+               (list (if control-pressed 2 1) shift-pressed)))
+            (t nil)))))
 
-(defun ecb-method-clicked(node mouse-button shift-pressed control-pressed)
-  (let* ((ecb-button-list (ecb-interpret-mouse-click mouse-button
-                                                     shift-pressed
-                                                     control-pressed))
-         (ecb-button (car ecb-button-list))
-         (shift-mode (cadr ecb-button-list)))
-    ;; in the following we only operate with ecb-button and shift-mode and
-    ;; never with mouse-button, shift-pressed and control-pressed!!
-    (when ecb-button-list
+(defun ecb-directory-clicked(node ecb-button shift-mode)
+  (ecb-update-directory-node node)
+  (if (= 0 (tree-node-get-type node))
       (if shift-mode
           (ecb-mouse-over-node node)
-        (when (= 1 (tree-node-get-type node))
-          (tree-node-toggle-expanded node)
-          (tree-buffer-update))
-        (when (tree-node-get-data node)
-          (ecb-find-file-and-display ecb-path-selected-source
-                                     (and ecb-split-edit-window (eq ecb-button
-                                     2)))
-          ;; let us set the mark so the user can easily jump back.
-          (if ecb-method-jump-sets-mark
-              (push-mark))
-          (goto-char (semantic-token-start (tree-node-get-data node))))))))
+        (progn
+          (when (= 2 ecb-button)
+            (tree-node-toggle-expanded node))
+          (ecb-set-selected-directory (tree-node-get-data node))
+          (ecb-buffer-select ecb-directories-buffer-name)
+          (tree-buffer-update)))
+    (ecb-set-selected-source (tree-node-get-data node)
+                             (and ecb-split-edit-window (eq ecb-button 2))
+                             shift-mode)))
+
+(defun ecb-source-clicked(node ecb-button shift-mode)
+  (if shift-mode
+      (ecb-mouse-over-node node))
+  (ecb-set-selected-source (tree-node-get-data node)
+                           (and ecb-split-edit-window (eq ecb-button 2))
+                           shift-mode))
+
+(defun ecb-method-clicked(node ecb-button shift-mode)
+  (if shift-mode
+      (ecb-mouse-over-node node)
+    (when (= 1 (tree-node-get-type node))
+      (tree-node-toggle-expanded node)
+      (tree-buffer-update))
+    (when (tree-node-get-data node)
+      (ecb-find-file-and-display ecb-path-selected-source
+                                 (and ecb-split-edit-window (eq ecb-button 2)))
+      ;; let us set the mark so the user can easily jump back.
+      (if ecb-method-jump-sets-mark
+          (push-mark))
+      (goto-char (semantic-token-start (tree-node-get-data node))))))
 
 (defun ecb-mouse-over-node(node)
   (cond ((eq ecb-show-node-name-in-minibuffer 'always)
@@ -1111,8 +1150,8 @@ with the actually choosen layout \(see `ecb-layout-nr')."
         (tree-buffer-create
          ecb-directories-buffer-name
          'ecb-interpret-mouse-click
-         'ecb-directory-clicked
-         'ecb-update-directory-node
+         'ecb-tree-buffer-node-select-callback
+         'ecb-tree-buffer-node-expand-callback
          'ecb-mouse-over-node
          (list (cons 0 ecb-directories-menu) (cons 1 ecb-sources-menu))
          ecb-truncate-lines
@@ -1135,8 +1174,8 @@ with the actually choosen layout \(see `ecb-layout-nr')."
         (tree-buffer-create
          ecb-sources-buffer-name
          'ecb-interpret-mouse-click
-         'ecb-source-clicked
-         'ecb-source-clicked
+         'ecb-tree-buffer-node-select-callback
+         'ecb-tree-buffer-node-expand-callback
          'ecb-mouse-over-node
          (list (cons 0 ecb-sources-menu))
          ecb-truncate-lines
@@ -1146,7 +1185,7 @@ with the actually choosen layout \(see `ecb-layout-nr')."
         (tree-buffer-create
          ecb-methods-buffer-name
          'ecb-interpret-mouse-click
-         'ecb-method-clicked
+         'ecb-tree-buffer-node-select-callback
          nil
          'ecb-mouse-over-node
          nil
@@ -1160,8 +1199,8 @@ with the actually choosen layout \(see `ecb-layout-nr')."
         (tree-buffer-create
          ecb-history-buffer-name
          'ecb-interpret-mouse-click
-         'ecb-source-clicked
-         'ecb-source-clicked
+         'ecb-tree-buffer-node-select-callback
+         'ecb-tree-buffer-node-expand-callback
          'ecb-mouse-over-node
          (list (cons 0 ecb-history-menu))
          ecb-truncate-lines
