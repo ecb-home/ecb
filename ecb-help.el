@@ -357,6 +357,7 @@ Available interactive ECB commands:
 - `ecb-toggle-enlarged-compilation-window'
 - `ecb-cycle-switch-to-compilation-buffer'
 - `ecb-cycle-through-compilation-buffers'
+- `ecb-check-and-reset-incompatible-options'
 
 Most of these functions are also available via the menu \"ECB\" and also via
 the ECB keymap with prefix \"C-c .\" \(see `ecb-minor-mode' for a complete

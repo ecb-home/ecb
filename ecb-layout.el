@@ -209,7 +209,7 @@ layout with `ecb-redraw-layout'"
   :group 'ecb-layout
   :initialize 'custom-initialize-default
   :set ecb-layout-option-set-function
-  :type 'string)
+  :type 'integer)
 
 (defvar ecb-old-compilation-window-height compilation-window-height)
 
