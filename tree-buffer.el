@@ -26,7 +26,7 @@
 ;; This file is part of the ECB package which can be found at:
 ;; http://home.swipnet.se/mayhem/ecb.html
 
-;; $Id: tree-buffer.el,v 1.89 2002/07/22 12:38:17 berndl Exp $
+;; $Id: tree-buffer.el,v 1.90 2002/09/09 12:05:20 berndl Exp $
 
 ;;; Code:
 
@@ -104,6 +104,7 @@ node name.")
 (defvar tree-node-data-equal-fn nil)
 (defvar tree-buffer-highlight-overlay nil)
 (defvar tree-buffer-general-face nil)
+(defvar tree-buffer-general-overlay nil)
 (defvar tree-buffer-incr-searchpattern nil)
 (defvar tree-buffer-last-incr-searchpattern nil)
 (defvar tree-buffer-incr-search nil)
@@ -500,9 +501,8 @@ current tree-buffer."
     (erase-buffer)
     (dolist (node (tree-node-get-children tree-buffer-root))
       (tree-buffer-add-node node 0))
-    (if tree-buffer-general-face
-        (overlay-put (make-overlay (point-min) (point-max)) 'face
-                     tree-buffer-general-face))
+    (when tree-buffer-general-face
+      (move-overlay tree-buffer-general-overlay (point-min) (point-max)))
     (tree-buffer-highlight-node-data tree-buffer-highlighted-node-data)
     (goto-char p)
     (set-window-start w ws)
@@ -975,6 +975,7 @@ AFTER-CREATE-HOOK: A function \(with no arguments) called directly after
     (make-local-variable 'tree-buffer-expand-symbol-before)
     (make-local-variable 'tree-buffer-highlight-overlay)
     (make-local-variable 'tree-buffer-general-face)
+    (make-local-variable 'tree-buffer-general-overlay)
     (make-local-variable 'tree-buffer-incr-searchpattern)
     (make-local-variable 'tree-buffer-last-incr-searchpattern)
     (make-local-variable 'tree-buffer-incr-search)
@@ -1000,7 +1001,12 @@ AFTER-CREATE-HOOK: A function \(with no arguments) called directly after
     (setq tree-buffer-expand-symbol-before expand-symbol-before)
     (setq tree-buffer-highlight-overlay (make-overlay 1 1))
     (overlay-put tree-buffer-highlight-overlay 'face highlight-node-face)
+    ;; setting general face and overlay for the tree-buffer
     (setq tree-buffer-general-face general-face)
+    (setq tree-buffer-general-overlay (make-overlay 1 1))
+    (overlay-put tree-buffer-general-overlay 'face
+                 tree-buffer-general-face)
+    ;; initializing the search-pattern
     (setq tree-buffer-incr-searchpattern "")
     (setq tree-buffer-last-incr-searchpattern "")
     (setq tree-buffer-incr-search incr-search)

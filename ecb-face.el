@@ -112,7 +112,9 @@ color etc."
   "*Basic face for the ECB directories buffer. This defines the basic
 face the whole directory buffer should displayed with. If the face
 'ecb-default-general-face' is used then the display of all ECB-tree-buffers
-can be changed by modifying only the face 'ecb-default-general-face'."
+can be changed by modifying only the face 'ecb-default-general-face'.
+
+Changes take first effect after finishing and reactivating ECB!"
   :group 'ecb-face-options
   :group 'ecb-directories
   :type '(radio (const :tag "Use ecb-default-general-face"
@@ -129,9 +131,11 @@ color etc."
 
 (defcustom ecb-sources-general-face 'ecb-default-general-face
   "*Basic face for the ECB sources buffer. This defines the basic
-face the whole directory buffer should displayed with. If the face
+face the whole sources buffer should displayed with. If the face
 'ecb-default-general-face' is used then the display of all ECB-tree-buffers
-can be changed by modifying only the face 'ecb-default-general-face'."
+can be changed by modifying only the face 'ecb-default-general-face'.
+
+Changes take first effect after finishing and reactivating ECB!"
   :group 'ecb-face-options
   :group 'ecb-sources
   :type 'face
@@ -149,9 +153,11 @@ color etc."
 
 (defcustom ecb-methods-general-face 'ecb-default-general-face
   "*Basic face for the ECB methods buffer. This defines the basic
-face the whole directory buffer should displayed with. If the face
+face the whole methods buffer should displayed with. If the face
 'ecb-default-general-face' is used then the display of all ECB-tree-buffers
-can be changed by modifying only the face 'ecb-default-general-face'."
+can be changed by modifying only the face 'ecb-default-general-face'.
+
+Changes take first effect after finishing and reactivating ECB!"
   :group 'ecb-face-options
   :group 'ecb-methods
   :type '(radio (const :tag "Use ecb-default-general-face"
@@ -168,9 +174,11 @@ color etc."
 
 (defcustom ecb-history-general-face 'ecb-default-general-face
   "*Basic face for the ECB directory buffer. This defines the basic
-face the whole directory buffer should displayed with. If the face
+face the whole history buffer should displayed with. If the face
 'ecb-default-general-face' is used then the display of all ECB-tree-buffers
-can be changed by modifying only the face 'ecb-default-general-face'."
+can be changed by modifying only the face 'ecb-default-general-face'.
+
+Changes take first effect after finishing and reactivating ECB!"
   :group 'ecb-face-options
   :group 'ecb-history
   :type '(radio (const :tag "Use ecb-default-general-face"
@@ -215,7 +223,9 @@ directories buffer."
   "*Face used for highlighting current directory in the directories
 buffer. If the face 'ecb-default-highlight-face' is used then the display of
 all ECB-tree-buffers can be changed by modifying only the face
-'ecb-default-highlight-face'."
+'ecb-default-highlight-face'.
+
+Changes take first effect after finishing and reactivating ECB!"
   :group 'ecb-face-options
   :group 'ecb-directories
   :type '(radio (const :tag "Use ecb-default-highlight-face"
@@ -236,7 +246,9 @@ sources buffer."
   "*Face used for highlighting current source in the sources buffer.
 If the face 'ecb-default-highlight-face' is used then the display of all
 ECB-tree-buffers can be changed by modifying only the face
-'ecb-default-highlight-face'."
+'ecb-default-highlight-face'.
+
+Changes take first effect after finishing and reactivating ECB!"
   :group 'ecb-face-options
   :group 'ecb-sources
   :type '(radio (const :tag "Use ecb-default-highlight-face"
@@ -257,7 +269,9 @@ in the methods buffer."
   "*Face used for highlighting current method, class or variable in the
 methods buffer. If the face 'ecb-default-highlight-face' is used then the
 display of all ECB-tree-buffers can be changed by modifying only the face
-'ecb-default-highlight-face'."
+'ecb-default-highlight-face'.
+
+Changes take first effect after finishing and reactivating ECB!"
   :group 'ecb-face-options
   :group 'ecb-methods
   :type '(radio (const :tag "Use ecb-default-highlight-face"
@@ -278,7 +292,9 @@ history buffer."
   "*Face used for highlighting current history-entry in the history
 buffer. If the face 'ecb-default-highlight-face' is used then the display of
 all ECB-tree-buffers can be changed by modifying only the face
-'ecb-default-highlight-face'."
+'ecb-default-highlight-face'.
+
+Changes take first effect after finishing and reactivating ECB!"
   :group 'ecb-face-options
   :group 'ecb-history
   :type '(radio (const :tag "Use ecb-default-highlight-face"

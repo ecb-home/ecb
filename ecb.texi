@@ -3448,52 +3448,88 @@ width is a fraction of the frame width.
 This group contains the following options:
 
 @defopt directories-general-face
-Basic face for the ECB directories buffer. It큦 recommended to define
-here the font-family, the font-size, the basic color etc.
+Basic face for the ECB directories buffer. This defines the basic face
+the whole directory buffer should displayed with. If the face
+@code{ecb-default-general-face} is used then the display of all
+ECB-tree-buffers can be changed by modifying only the face
+@code{ecb-default-general-face}.
+
+Changes take first effect after finishing and reactivating ECB!
 @end defopt
 
 @defopt directory-face
-Define face used for highlighting current directory in the directories
-buffer.
+Face used for highlighting current directory in the directories
+buffer. If the face @code{ecb-default-highlight-face} is used then the
+display of all ECB-tree-buffers can be changed by modifying only the
+face @code{ecb-default-highlight-face}.
+
+Changes take first effect after finishing and reactivating ECB!
 @end defopt
 
 @defopt history-face
-Define face used for highlighting current history-entry in the history
-buffer.
+Face used for highlighting current history-entry in the history
+buffer. If the face @code{ecb-default-highlight-face} is used then the
+display of all ECB-tree-buffers can be changed by modifying only the
+face @code{ecb-default-highlight-face}.
+
+Changes take first effect after finishing and reactivating ECB!
 @end defopt
 
 @defopt history-general-face
-Basic face for the ECB history buffer. It큦 recommended to define here
-the font-family, the font-size, the basic color etc.
+Basic face for the ECB directory buffer. This defines the basic face
+the whole history buffer should displayed with. If the face
+@code{ecb-default-general-face} is used then the display of all
+ECB-tree-buffers can be changed by modifying only the face
+@code{ecb-default-general-face}.
+
+Changes take first effect after finishing and reactivating ECB!
 @end defopt
 
 @defopt method-face
-Define face used for highlighting current method, class or variable in
-the methods buffer.
+Face used for highlighting current method, class or variable in the
+methods buffer. If the face @code{ecb-default-highlight-face} is used
+then the display of all ECB-tree-buffers can be changed by modifying
+only the face @code{ecb-default-highlight-face}.
+
+Changes take first effect after finishing and reactivating ECB!
 @end defopt
 
 @defopt methods-general-face
-Basic face for the ECB methods buffer. It큦 recommended to define here
-the font-family, the font-size, the basic color etc.
+Basic face for the ECB methods buffer. This defines the basic face the
+whole methods buffer should displayed with. If the face
+@code{ecb-default-general-face} is used then the display of all
+ECB-tree-buffers can be changed by modifying only the face
+@code{ecb-default-general-face}.
+
+Changes take first effect after finishing and reactivating ECB!
 @end defopt
 
 @defopt source-face
-Define face used for highlighting current source in the sources
-buffer.
+Face used for highlighting current source in the sources buffer. If
+the face @code{ecb-default-highlight-face} is used then the display of
+all ECB-tree-buffers can be changed by modifying only the face
+@code{ecb-default-highlight-face}.
+
+Changes take first effect after finishing and reactivating ECB!
 @end defopt
 
 @defopt source-in-directories-buffer-face
-Define a face for displaying sources in the directories buffer.
+Face for source files in the directories buffer.
 @end defopt
 
 @defopt sources-general-face
-Basic face for the ECB sources buffer. It큦 recommended to define here
-the font-family, the font-size, the basic color etc.
+Basic face for the ECB sources buffer. This defines the basic face the
+whole sources buffer should displayed with. If the face
+@code{ecb-default-general-face} is used then the display of all
+ECB-tree-buffers can be changed by modifying only the face
+@code{ecb-default-general-face}.
+
+Changes take first effect after finishing and reactivating ECB!
 @end defopt
 
 @defopt token-header-face
-Define face used for highlighting the token header after jumping to it
-by clicking onto a node in the methods buffer.
+Face used for highlighting the token header after jumping to it by
+clicking onto a node in the methods buffer.
 @end defopt
 
 
@@ -3968,6 +4004,9 @@ With these faces you can change the basic attributes easily and fast
 for ALL ECB-tree-buffers. But you are also able to display each
 ECB-tree-buffer with different faces, see the different options for
 every tree-buffer mentioned above.
+
+TODO: Describing in more details about the differences between XEmacs
+and Emacs and what can be problems!
 
 @node Small screens, Simulating speedbar, Changing faces, Tips and tricks
 @section Working with small screens
