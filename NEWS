@@ -1,30 +1,56 @@
 * Changes for ECB version 2.24
 
-** New "current-type"-filter for the Methods-buffer
-   In languages which have types like Java or C++ this filter displays only
-   the current type and all its members \(e.g. attributes and methods). The
-   current-type is either the type of the current tag in the source-buffer or
-   the type of the current node in the methods-buffer. If ECB can not identify
-   the current type in the source-buffer or in the methods-window then nothing
-   will be done.
+** Enhancements for the Methods-buffer
+   
+*** Enhancements to the icon-display in the Methods-buffer
 
-** Enhancements to the icon-display in the Methods-buffer
+**** New icon-image for enumerations and abstract/virtual tags (interfaces are
+     currently displayed with the icon for abstract classes - at least til
+     someone provides special icons ;-)
 
-*** New icon-image for enumerations
+**** Some slightly fixes in the other icons - e.g. a better display with a
+     not-white background
 
-*** Some slightly fixes in the other icons - e.g. a better display with dark
-    background
+**** Static and abstract tags are no longer underlined rsp. italic when icons are
+     displayed because this is somehow "tautological" when a special static
+     rsp. abstract icon is already displayed.
 
-*** Static tags are no longer underlined when icons are displayed because this
-    is somehow "tautological" when a special static icon is already displayed.
+*** New option for switching on/off distinction of function-prototypes from the
+    real function-definitions: `ecb-methods-separate-prototypes'. This is for
+    example useful for C++ and C because these languages distinct between a
+    method-prototype (rsp. function-prototype for C) and the method (rsp.
+    function for C) itself. If this option is not nil (default) then ECB
+    separates the prototypes from the real function/methods in the
+    Methods-buffer.
 
-*** Interfaces are displayed with the same icon as classes - at least till
-    someone provides special images for interfaces ;-)
+*** New "current-type"-filter for the Methods-buffer
+    In languages which have types (like Java or C++) this filter displays only
+    the current type and all its members \(e.g. attributes and methods). The
+    current-type is either the type of the current tag in the source-buffer or
+    the type of the current node in the methods-buffer. If ECB can not
+    identify the current type in the source-buffer or in the methods-window
+    then nothing will be done.
+    
+** Now directories are prescanned for emptyness so they are displayed as empty
+   in the directories-buffer even without user-interaction (i.e. in previous
+   ECB-versions the emptyness of a directory has been first checked when the
+   user has clicked onto a directory). ECB optimizes this check as best as
+   possible but if a directory contains a lot of subdirectories which contain
+   in turn a lot of entries, then expanding such a directory or selecting it
+   takes of course more time as without this check - at least at the first
+   time (all following selects of a directory uses the cached information if
+   its subdirectories are empty or not). Therefore this feature can be
+   switched of via the new option `ecb-prescan-directories-for-emptyness'.
 
 ** Fixed Bugs
 
 *** Fixed some newly introduced bugs which made ECB 2.23 incompatible with
     semantic 1.4.
+
+*** Fixed a bug which changed the highlighted directory even after just expanding
+    or collapsing other directories.
+
+*** Fixed two small bugs which have influenced `ecb-create-new-layout'
 
     
 

@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-create-layout.el,v 1.27 2003/12/28 15:28:57 berndl Exp $
+;; $Id: ecb-create-layout.el,v 1.28 2004/04/13 14:55:29 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -45,6 +45,7 @@
 
 (require 'ecb-mode-line)
 (require 'ecb-util)
+(require 'ecb-compilation)
 
 ;; XEmacs stuff
 (silentcomp-defvar vertical-divider-map)
@@ -249,7 +250,8 @@ layout-creation frame."
   (interactive)
   (when (ecb-create-layout-frame-ok)
     (ecb-create-layout-clear-all (interactive-p))
-    (message "ECB Layout Creation canceled - the layout is not saved!")))
+    (message "ECB Layout Creation canceled - the layout is not saved!")
+    (ecb-activate)))
 
 (defun ecb-create-layout-clear-all (&optional delete-frame)
   "Resets all stuff to state before `ecb-create-new-layout' was called. If
@@ -306,7 +308,8 @@ DELETE-FRAME is not nil then the new created frame will be deleted and the
               (ecb-create-layout-save-layout)
             ;; clean the layout creation stuff
             (ecb-create-layout-clear-all delete-frame)
-            (message "ECB Layout Creation finished.")))
+            (message "ECB Layout Creation finished.")
+            (ecb-activate)))
       (ecb-error "You must give every ECB-tree-window a type (use C-t)!"))))
 
 
@@ -445,7 +448,10 @@ DELETE-FRAME is not nil then the new created frame will be deleted and the
                                           "Insert the buffer type"))))
       ;; removing the new buffer type from the available-list
       (ecb-create-layout-remove-from-buf-type new-type)
+      ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: Fix this - it seems not
+      ;; work anymore!!!
       (ecb-mode-line-set (buffer-name (current-buffer))
+                         (selected-frame)
                          (concat "ECB " new-type) nil t)
       ;; setting the new buffer type in the buffer itself
       (ecb-create-layout-set-buffer-type new-type)
@@ -652,7 +658,10 @@ never selects the edit-window."
   (setq mode-name "ECB Create-Layout")
   (use-local-map ecb-create-layout-mode-map)
   (make-variable-buffer-local 'buffer-read-only)
-  (ecb-mode-line-set (buffer-name (current-buffer)) "" nil t)
+  ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: Scheint nicht mehr zu
+  ;; funktionieren.
+  (ecb-mode-line-set (buffer-name (current-buffer))
+                     (selected-frame) "" nil t)
   (setq buffer-read-only t))
 
 (defun ecb-create-layout-init-layout (&optional new)
@@ -679,7 +688,10 @@ never selects the edit-window."
                 ecb-create-layout-help-text-top
               ecb-create-layout-help-text-left-right)))
   (setq ecb-create-layout-edit-window (selected-window))
-  (ecb-mode-line-set (buffer-name (current-buffer)) "   ECB edit-window" nil t)
+  ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: Scheint nicht mehr zu
+  ;; funktionieren.
+  (ecb-mode-line-set (buffer-name (current-buffer))
+                     (selected-frame) "   ECB edit-window" nil t)
   ;; The edit window must not be dedicated
   (set-window-dedicated-p (selected-window) nil)
   ;; we set the buffer for the (currently unsplitted) ECB-window
@@ -735,11 +747,14 @@ never selects the edit-window."
                        (menu-bar-lines . 0))))))
          
 
-
+;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: Wir müssen ev. ECB vorher
+;; deaktivieren, da sonst ein 2. ECB-menu entsteht. Beim C-c oder C-q eben
+;; dann wieder aktivieren.
 (defun ecb-create-new-layout ()
   "Start interactively layout creating."
   (interactive)
 
+  (ecb-deactivate)
   (ecb-create-layout-initilize)
 
   ;; before- and after make frame stuff

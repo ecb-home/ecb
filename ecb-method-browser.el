@@ -24,7 +24,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-method-browser.el,v 1.38 2004/04/08 08:36:29 berndl Exp $
+;; $Id: ecb-method-browser.el,v 1.39 2004/04/13 14:55:28 berndl Exp $
 
 ;;; Commentary:
 
@@ -680,7 +680,7 @@ for <tag type> is 'function whereas the first one is responsible for the
 if the methods should be flattened and the prototypes collapsed the
 show-tags-list for C++ and C must contain two entries for <tag type>
 'function, the first one defined as 'flattened and the second one defined as
-'collapsed.
+'collapsed. See also `ecb-methods-separate-prototypes'.
 
 The tags in the methods buffer are displayed in the order as they appear in
 this list.
@@ -750,6 +750,22 @@ by semantic!"
     (or mode-show-tag-list
         (and (null mode-show-tag-list)
              default-show-tag-list))))
+
+(defcustom ecb-methods-separate-prototypes t
+  "*Separate function-prototypes from the real functions.
+This is for example useful for C++ and C because these languages distinct
+between a method-prototype \(rsp. function-prototype for C) and the method
+\(rsp. function for C) itself. If this option is not nil then ECB separates
+the prototypes from the real function/methods. Then with `ecb-show-tags' the
+user can define different display-settings for each of them. If this option is
+nil then the prototypes and the real functions are filled in the same bucket
+and displayed plain and there is no sorting between prototypes and functions
+possible. If this option is switched on then it is senseful that
+`ecb-show-tags' contains for all modes which distinct between prototypes and
+real functions/methods two entries for the tag-type 'function - see the
+documentation of this option."
+  :group 'ecb-methods
+  :type 'boolean)
 
 (defcustom ecb-methods-filter-replace-existing 'never
   "*How the methods-filter should be applied to existing filters.
@@ -1389,79 +1405,166 @@ Methods-buffer."
           (ecb-allow-tag-display tag))))))
 
 
+
 (defconst ecb-tag-image-name-alias-alist
-  '(;; struct
-    ("struct-nil-nil" . "class-unknown")
-    ("struct-unknown-nil" . "class-unknown")
-    ("struct-private-nil" . "class-private")
-    ("struct-protected-nil" . "class-protected")
-    ("struct-public-nil" . "class-public")
-    ;; currently we have no icon for for static structs and classes, but when
-    ;; then we casn remove these mappings and replace with a mapping to
-    ;; static-icons for structs and classes.
-    ("struct-nil-t" . "class-unknown")
-    ("struct-unknown-t" . "class-unknown")
-    ("struct-private-t" . "class-private")
-    ("struct-protected-t" . "class-protected")
-    ("struct-public-t" . "class-public")
-    ;; class
-    ("class-nil-nil" . "class-unknown")
-    ("class-unknown-nil" . "class-unknown")
-    ("class-private-nil" . "class-private")
-    ("class-protected-nil" . "class-protected")
-    ("class-public-nil" . "class-public")
-    ("class-nil-t" . "class-unknown")
-    ("class-unknown-t" . "class-unknown")
-    ("class-private-t" . "class-private")
-    ("class-protected-t" . "class-protected")
-    ("class-public-t" . "class-public")
-    ;; interface
-    ("interface-nil-nil" . "class-unknown")
-    ("interface-unknown-nil" . "class-unknown")
-    ("interface-private-nil" . "class-private")
-    ("interface-protected-nil" . "class-protected")
-    ("interface-public-nil" . "class-public")
-    ("interface-nil-t" . "class-unknown")
-    ("interface-unknown-t" . "class-unknown")
-    ("interface-private-t" . "class-private")
-    ("interface-protected-t" . "class-protected")
-    ("interface-public-t" . "class-public")
-    ;; enum
-    ("enum-public-nil" . "enum-public")
-    ("enum-protected-nil" . "enum-protected")
-    ("enum-private-nil" . "enum-private")
-    ("enum-unknown-nil" . "enum-unknown")
-    ;; constructor
-    ("constructor-nil-nil" . "constructor-unknown")
-    ("constructor-unknown-nil" . "constructor-unknown")
-    ("constructor-private-nil" . "constructor-private")
-    ("constructor-protected-nil" . "constructor-protected")
-    ("constructor-public-nil" . "constructor-public")
-    ;; function, method
-    ("function-nil-nil" . "function-unknown")
-    ("function-unknown-nil" . "function-unknown")
-    ("function-private-nil" . "function-private")
-    ("function-protected-nil" . "function-protected")
-    ("function-public-nil" . "function-public")
-    ("function-nil-t" . "function-unknown-static")
-    ("function-unknown-t" . "function-unknown-static")
-    ("function-private-t" . "function-private-static")
-    ("function-protected-t" . "function-protected-static")
-    ("function-public-t" . "function-public-static")
-    ;; variable, attribute
-    ("variable-nil-nil" . "variable-unknown")
-    ("variable-unknown-nil" . "variable-unknown")
-    ("variable-private-nil" . "variable-private")
-    ("variable-protected-nil" . "variable-protected")
-    ("variable-public-nil" . "variable-public")
-    ("variable-nil-t" . "variable-unknown-static")
-    ("variable-unknown-t" . "variable-unknown-static")
-    ("variable-private-t" . "variable-private-static")
-    ("variable-protected-t" . "variable-protected-static")
-    ("variable-public-t" . "variable-public-static")
-    )
-  "This alist defines the mapping from the combination tag-protection-ststic
-to an existing icon-file-name.")
+  '((abstract . ((static . ((struct . ((nil . "abstract-class-unknown")
+                                       (unknown . "abstract-class-unknown")
+                                       (private . "abstract-class-private")
+                                       (protected . "abstract-class-protected")
+                                       (public . "abstract-class-public")))
+                            (class . ((nil . "abstract-class-unknown")
+                                      (unknown . "abstract-class-unknown")
+                                      (private . "abstract-class-private")
+                                      (protected . "abstract-class-protected")
+                                      (public . "abstract-class-public")))
+                            ;; currently we have no special icon for
+                            ;; interfaces - we use the icon for abstract classes
+                            (interface . ((nil . "abstract-class-unknown")
+                                          (unknown . "abstract-class-unknown")
+                                          (private . "abstract-class-private")
+                                          (protected . "abstract-class-protected")
+                                          (public . "abstract-class-public")))
+                            ;; we have no static and no abstract enum-icon
+                            (enum . ((nil . "enum-unknown")
+                                     (unknown . "enum-unknown")
+                                     (private . "enum-private")
+                                     (protected . "enum-protected")
+                                     (public . "enum-public")))
+                            ;; we have no icon for static constructors
+                            (constructor . ((nil . "abstract-constructor-unknown")
+                                            (unknown . "abstract-constructor-unknown")
+                                            (private . "abstract-constructor-private")
+                                            (protected . "abstract-constructor-protected")
+                                            (public . "abstract-constructor-public")))
+                            (function . ((nil . "abstract-function-unknown-static")
+                                         (unknown . "abstract-function-unknown-static")
+                                         (private . "abstract-function-private-static")
+                                         (protected . "abstract-function-protected-static")
+                                         (public . "abstract-function-public-static")))
+                            (variable . ((nil . "abstract-variable-unknown-static")
+                                         (unknown . "abstract-variable-unknown-static")
+                                         (private . "abstract-variable-private-static")
+                                         (protected . "abstract-variable-protected-static")
+                                         (public . "abstract-variable-public-static")))))
+                 (not-static . ((struct . ((nil . "abstract-class-unknown")
+                                           (unknown . "abstract-class-unknown")
+                                           (private . "abstract-class-private")
+                                           (protected . "abstract-class-protected")
+                                           (public . "abstract-class-public")))
+                                (class . ((nil . "abstract-class-unknown")
+                                          (unknown . "abstract-class-unknown")
+                                          (private . "abstract-class-private")
+                                          (protected . "abstract-class-protected")
+                                          (public . "abstract-class-public")))
+                                ;; we have currently no special icon for interfaces
+                                (interface . ((nil . "abstract-class-unknown")
+                                              (unknown . "abstract-class-unknown")
+                                              (private . "abstract-class-private")
+                                              (protected . "abstract-class-protected")
+                                              (public . "abstract-class-public")))
+                                ;; we have no abstract enum-icon
+                                (enum . ((nil . "enum-unknown")
+                                         (unknown . "enum-unknown")
+                                         (private . "enum-private")
+                                         (protected . "enum-protected")
+                                         (public . "enum-public")))
+                                (constructor . ((nil . "abstract-constructor-unknown")
+                                                (unknown . "abstract-constructor-unknown")
+                                                (private . "abstract-constructor-private")
+                                                (protected . "abstract-constructor-protected")
+                                                (public . "abstract-constructor-public")))
+                                (function . ((nil . "abstract-function-unknown")
+                                             (unknown . "abstract-function-unknown")
+                                             (private . "abstract-function-private")
+                                             (protected . "abstract-function-protected")
+                                             (public . "abstract-function-public")))
+                                (variable . ((nil . "abstract-variable-unknown")
+                                             (unknown . "abstract-variable-unknown")
+                                             (private . "abstract-variable-private")
+                                             (protected . "abstract-variable-protected")
+                                             (public . "abstract-variable-public")))))))
+    (not-abstract . ((static . ((struct . ((nil . "class-unknown")
+                                           (unknown . "class-unknown")
+                                           (private . "class-private")
+                                           (protected . "class-protected")
+                                           (public . "class-public")))
+                                (class . ((nil . "class-unknown")
+                                          (unknown . "class-unknown")
+                                          (private . "class-private")
+                                          (protected . "class-protected")
+                                          (public . "class-public")))
+                                ;; we use the icon for abstract classes for interfaces
+                                (interface . ((nil . "abstract-class-unknown")
+                                              (unknown . "abstract-class-unknown")
+                                              (private . "abstract-class-private")
+                                              (protected . "abstract-class-protected")
+                                              (public . "abstract-class-public")))
+                                ;; we have no static enum-icon
+                                (enum . ((nil . "enum-unknown")
+                                         (unknown . "enum-unknown")
+                                         (private . "enum-private")
+                                         (protected . "enum-protected")
+                                         (public . "enum-public")))
+                                (constructor . ((nil . "constructor-unknown")
+                                                (unknown . "constructor-unknown")
+                                                (private . "constructor-private")
+                                                (protected . "constructor-protected")
+                                                (public . "constructor-public")))
+                                (function . ((nil . "function-unknown-static")
+                                             (unknown . "function-unknown-static")
+                                             (private . "function-private-static")
+                                             (protected . "function-protected-static")
+                                             (public . "function-public-static")))
+                                (variable . ((nil . "variable-unknown-static")
+                                             (unknown . "variable-unknown-static")
+                                             (private . "variable-private-static")
+                                             (protected . "variable-protected-static")
+                                             (public . "variable-public-static")))))
+                     (not-static . ((struct . ((nil . "class-unknown")
+                                               (unknown . "class-unknown")
+                                               (private . "class-private")
+                                               (protected . "class-protected")
+                                               (public . "class-public")))
+                                    (class . ((nil . "class-unknown")
+                                              (unknown . "class-unknown")
+                                              (private . "class-private")
+                                              (protected . "class-protected")
+                                              (public . "class-public")))
+                                    (interface . ((nil . "abstract-class-unknown")
+                                                  (unknown . "abstract-class-unknown")
+                                                  (private . "abstract-class-private")
+                                                  (protected . "abstract-class-protected")
+                                                  (public . "abstract-class-public")))
+                                    (enum . ((nil . "enum-unknown")
+                                             (unknown . "enum-unknown")
+                                             (private . "enum-private")
+                                             (protected . "enum-protected")
+                                             (public . "enum-public")))
+                                    (constructor . ((nil . "constructor-unknown")
+                                                    (unknown . "constructor-unknown")
+                                                    (private . "constructor-private")
+                                                    (protected . "constructor-protected")
+                                                    (public . "constructor-public")))
+                                    (function . ((nil . "function-unknown")
+                                                 (unknown . "function-unknown")
+                                                 (private . "function-private")
+                                                 (protected . "function-protected")
+                                                 (public . "function-public")))
+                                    (variable . ((nil . "variable-unknown")
+                                                 (unknown . "variable-unknown")
+                                                 (private . "variable-private")
+                                                 (protected . "variable-protected")
+                                                 (public . "variable-public"))))))))
+  "This alist defines the mapping from the combination
+abstract-static-tag-protection to an existing icon-file-name.")
+
+
+(defsubst ecb-get-icon-for-tag (abstract-p static-p type protection)
+  (cdr (assoc protection
+              (cdr (assoc type
+                          (cdr (assoc static-p
+                                      (cdr (assoc abstract-p
+                                                  ecb-tag-image-name-alias-alist)))))))))
 
 ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: All this tag-icon-display-stuff
 ;; should be done by semantic - but for now we let do it by ECB because so we
@@ -1475,29 +1578,32 @@ to an existing icon-file-name.")
          (plain-tag-name (ecb-get-tag-name tag parent-tag))
          (has-protection (member (ecb-first plain-tag-name)
                                  '(?- ?# ?+)))
-         (image-name-alias (format "%s-%s-%s"
-                                   (or (and (equal (ecb--semantic-tag-class tag)
-                                                   'type)
-                                            (ecb--semantic-tag-type tag))
-                                       (and (ecb--semantic-tag-function-constructor-p tag)
-                                            'constructor)
-                                       (ecb--semantic-tag-class tag))
-                                   (or (and (ecb--semantic--tag-get-property tag 'adopted)
-                                            'unknown)
-                                       (and (not (member (ecb--semantic-tag-class tag)
-                                                         '(type function variable)))
-                                            "")
-                                       (ecb--semantic-tag-protection tag parent-tag))
-                                   (ecb--semantic-tag-static-p tag parent-tag)))
-         (image-name (cdr (assoc image-name-alias
-                                 ecb-tag-image-name-alias-alist)))
+         (icon-name (ecb-get-icon-for-tag
+                     (if (ecb--semantic-tag-abstract-p tag parent-tag)
+                         'abstract
+                       'not-abstract)
+                     (if (ecb--semantic-tag-static-p tag parent-tag)
+                         'static
+                       'not-static)
+                     (or (and (equal (ecb--semantic-tag-class tag)
+                                     'type)
+                              (intern (ecb--semantic-tag-type tag)))
+                         (and (ecb--semantic-tag-function-constructor-p tag)
+                              'constructor)
+                         (ecb--semantic-tag-class tag))
+                     (or (and (ecb--semantic--tag-get-property tag 'adopted)
+                              'unknown)
+                         (and (not (member (ecb--semantic-tag-class tag)
+                                           '(type function variable)))
+                              'unknown)
+                         (ecb--semantic-tag-protection tag parent-tag))))
          (image nil)
          (tag-name nil))
     (save-excursion
       (set-buffer ecb-methods-buffer-name)
-      (setq image (and image-name
+      (setq image (and icon-name
                        (ecb-use-images-for-semantic-tags)
-                       (tree-buffer-find-image image-name)))
+                       (tree-buffer-find-image icon-name)))
       (setq tag-name
             (if image
                 (if has-protection
@@ -1594,7 +1700,8 @@ be defined outside the class-definition, e.g. C++, Eieio."
 
 (defun ecb-filter-c-prototype-tags (taglist)
   "Filter out all prototypes.
-Beginning with version 2.23 of ECB this function does nothing.
+Beginning with version 2.24 of ECB this function does nothing when
+`ecb-methods-separate' is set to not nil \(default).
 
 For example this is useful for editing C files which have the function
 prototypes defined at the top of the file and the implementations at the
@@ -1602,26 +1709,21 @@ bottom. This means that everything appears twice in the methods buffer, but
 probably nobody wants to jump to the prototypes, they are only wasting space
 in the methods buffer.
 For C-header-files prototypes are never filtered out!"
-  taglist)
-
-;; We do not longer need this filtering because now we destinct between
-;; functions and function-prototypes and the default-value of `ecb-show-tags'
-;; expands functions per default and collapses prototypes so new they do not
-;; longer waste space in the Methods-buffer - but when anyone wants to jump to
-;; them he can.
 ;;   ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: Is there a better way to
 ;;   ;; recognize a C-Header-file?
-;;   (let ((header-extensions '("\\.h\\'" "\\.H\\'" "\\.HH\\'" "\\.hxx\\'" "\\.hh\\'")))
-;;     (or (and (catch 'found
-;;                (dolist (ext header-extensions)
-;;                  (if (save-match-data
-;;                        (string-match ext (buffer-file-name (current-buffer))))
-;;                      (throw 'found t)))
-;;                nil)
-;;              taglist)
-;;         (ecb-filter taglist
-;;                     (function (lambda (x)
-;;                                 (not (ecb--semantic-tag-prototype-p x))))))))
+  (if ecb-methods-separate-prototypes
+      taglist
+    (let ((header-extensions '("\\.h\\'" "\\.H\\'" "\\.HH\\'" "\\.hxx\\'" "\\.hh\\'")))
+      (or (and (catch 'found
+                 (dolist (ext header-extensions)
+                   (if (save-match-data
+                         (string-match ext (buffer-file-name (current-buffer))))
+                       (throw 'found t)))
+                 nil)
+               taglist)
+          (ecb-filter taglist
+                      (function (lambda (x)
+                                  (not (ecb--semantic-tag-prototype-p x)))))))))
 
 ;; Filtering the Methods-buffer by the user ----------------
 
@@ -1762,8 +1864,6 @@ the returned list contains just the name of the tag of the current node."
     (nreverse type-hierarchy)))
 
 
-;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: handle correct the case when
-;; curr-tag is a faux-type-tag (check this with `ecb-faux-group-tag-p')
 (defun ecb-get-type-tag-of-tag (&optional tag table always-parent-type)
   "Returns that tag of class 'type the tag TAG belongs to. If TAG does not
 belong to a type then nil is returned. If TAG is already of class 'type then
@@ -1777,38 +1877,43 @@ TABLE is used."
   (let* ((table (or table (ecb-get-current-tag-table)))
          (curr-tag (or tag (ecb-get-real-curr-tag)))
          (function-parent (ecb--semantic-tag-function-parent curr-tag)))
-    (if (and (not always-parent-type)
-             (equal (ecb--semantic-tag-class curr-tag) 'type))
-        curr-tag
-      (if function-parent
-          ;; we have an external member and we search the type this external
-          ;; member belongs to. This can either be a type-tag in the current
-          ;; file (which is then contained in table) or a faux-tag (created by
-          ;; semantic-adopt-external-members) when the parent-type of this
-          ;; external member is defined outside the current source - but this
-          ;; faux-type is contained in table too.
-          (catch 'found
-            (dolist (tag (ecb--semantic-flatten-tags-table table))
-              (if (and (equal (ecb--semantic-tag-class tag) 'type)
-                       (string= (ecb--semantic-tag-name tag) function-parent)
-                       (delq nil (mapcar (lambda (child)
-                                           (if (ecb--semantic-equivalent-tag-p
-                                                child curr-tag)
-                                               curr-tag))
-                                         (ecb--semantic-tag-children-compatibility tag t))))
-                  (throw 'found tag)))
-            nil)
-        ;; we are already inside the parent-type - if there is any, so we
-        ;; simply search the nearest tag of class 'type in the reversed
-        ;; overlay-stack
-        (catch 'found
-          (dolist (tag (cdr (reverse
-                             (ecb--semantic-find-tag-by-overlay
-                              (ecb--semantic-tag-start curr-tag)
-                              (ecb--semantic-tag-buffer curr-tag)))))
-            (if (equal (ecb--semantic-tag-class tag) 'type)
-                (throw 'found tag)))
-          nil)))))
+    (cond ((ecb-faux-group-tag-p curr-tag)
+           (and (not always-parent-type) curr-tag))
+          ((and (not always-parent-type)
+                (equal (ecb--semantic-tag-class curr-tag) 'type))
+           curr-tag)
+          (t (if function-parent
+                 ;; we have an external member and we search the type this
+                 ;; external member belongs to. This can either be a type-tag
+                 ;; in the current file (which is then contained in table) or
+                 ;; a faux-tag (created by semantic-adopt-external-members)
+                 ;; when the parent-type of this external member is defined
+                 ;; outside the current source - but this faux-type is
+                 ;; contained in table too.
+                 (catch 'found
+                   (dolist (tag (ecb--semantic-flatten-tags-table table))
+                     (if (and (equal (ecb--semantic-tag-class tag) 'type)
+                              (string= (ecb--semantic-tag-name tag)
+                                       function-parent)
+                              (delq nil
+                                    (mapcar (lambda (child)
+                                              (if (ecb--semantic-equivalent-tag-p
+                                                   child curr-tag)
+                                                  curr-tag))
+                                            (ecb--semantic-tag-children-compatibility tag t))))
+                         (throw 'found tag)))
+                   nil)
+               ;; we are already inside the parent-type - if there is any, so
+               ;; we simply search the nearest tag of class 'type in the
+               ;; reversed overlay-stack
+               (catch 'found
+                 (dolist (tag (cdr (reverse
+                                    (ecb--semantic-find-tag-by-overlay
+                                     (ecb--semantic-tag-start curr-tag)
+                                     (ecb--semantic-tag-buffer curr-tag)))))
+                   (if (equal (ecb--semantic-tag-class tag) 'type)
+                       (throw 'found tag)))
+                 nil))))))
 
 
 (defun ecb-get-type-name-hierarchy-of-current-tag (&optional tag)
@@ -2490,16 +2595,20 @@ to be rescanned/reparsed and therefore the Method-buffer will be rebuild too."
                                                 nil
                                               (ecb--semantic-format-use-images-flag)))
            (my-format-face-alist (if (ecb-use-images-for-semantic-tags)
-                                     (ecb-remove-assoc 'static (ecb--semantic-format-face-alist))
+                                     (ecb-remove-assoc 'abstract
+                                                       (ecb-remove-assoc 'static
+                                                                         (ecb--semantic-format-face-alist)))
                                    (ecb--semantic-format-face-alist)))
            (semantic-format-face-alist my-format-face-alist)
            ;; the semantic 1.4 compatibility needs this
            (semantic-face-alist my-format-face-alist)
            (semantic-bucketize-tag-class
-            (function (lambda (tag)
-                        (if (ecb--semantic-tag-prototype-p tag)
-                            'prototype
-                          (ecb--semantic-tag-class tag)))))
+            (if ecb-methods-separate-prototypes
+                (function (lambda (tag)
+                            (if (ecb--semantic-tag-prototype-p tag)
+                                'prototype
+                              (ecb--semantic-tag-class tag))))
+              semantic-bucketize-tag-class))
            (semantic-symbol->name-assoc-list-for-type-parts
             (and (ecb--semantic-active-p)
                  (ecb--semantic-symbol->name-assoc-list-for-type-parts)
@@ -3163,6 +3272,7 @@ should be displayed. For 1 and 2 the value of EDIT-WINDOW-NR is ignored."
       (tree-node-toggle-expanded node)
       ;; Update the tree-buffer with optimized display of NODE
       (tree-buffer-update node))
+
      ;; Type 2 = a tag name for a tag not defined in current buffer; e.g.
      ;; parent or include tags can be such tags!
      ;; Try to find the tag

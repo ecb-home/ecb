@@ -26,7 +26,7 @@
 @c GNU Emacs; see the file COPYING.  If not, write to the Free Software
 @c Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-@c $Id: ecb.texi,v 1.171 2004/04/07 11:57:56 berndl Exp $
+@c $Id: ecb.texi,v 1.172 2004/04/13 14:55:17 berndl Exp $
 
 @setfilename ecb.info
 
@@ -49,7 +49,7 @@
 @c edit the Makefile to change the version number. mechanism stolen
 @c from Tramp
 @macro ecbver{}
-2.23
+2.24
 @end macro
 
 
@@ -5581,6 +5581,19 @@ Directories that should not be included in the directories list. The
 value of this variable should be a regular expression.
 @end defopt
 
+@defopt prescan-directories-for-emptyness
+ECB does this so directories are displayed as empty in the
+directories-buffer even without user-interaction (i.e. in previous
+ECB-versions the emptyness of a directory has been first checked when
+the user has clicked onto a directory). ECB optimizes this check as
+best as possible but if a directory contains a lot of subdirectories
+which contain in turn a lot of entries, then expanding such a
+directory or selecting it takes of course more time as without this
+check - at least at the first time (all following selects of a
+directory uses the cached information if its subdirectories are empty
+or not). Therefore this feature can be switched of via this option."
+@end defopt
+
 @defopt show-sources-in-directories-buffer
 Show source files in directories buffer.
 @end defopt
@@ -6025,6 +6038,21 @@ This options takes only effect for semantic-sources - means sources
 supported by semantic!
 @end defopt
 
+@defopt methods-separate-prototypes
+Separate function-prototypes from the real functions. This is for
+example useful for C++ and C because these languages distinct between
+a method-prototype (rsp. function-prototype for C) and the method
+(rsp. function for C) itself. If this option is not nil then ECB
+separates the prototypes from the real function/methods. Then with
+@code{ecb-show-tags} the user can define different display-settings
+for each of them. If this option is nil then the prototypes and the
+real functions are filled in the same bucket and displayed plain and
+there is no sorting between prototypes and functions possible. If this
+option is switched on then it is senseful that @code{ecb-show-tags}
+contains for all modes which distinct between prototypes and real
+functions/methods two entries for the tag-type 'function - see the
+documentation of this option.
+@end defopt
 
 @defopt post-process-semantic-taglist
 Define mode-dependent post-processing for the semantic-taglist. This
@@ -11222,6 +11250,14 @@ Disable the func-menu support in your XEmacs-setup. See
 Can i use desktop.el in combination with ECB?
 @tab @tab
 Yes, see @ref{Conflicts}.
+
+@item @tab @tab
+
+@item
+Opening directories takes a long time? What can i do?
+@tab @tab
+Read @ref{Large directories} and/or set the option
+@code{ecb-prescan-directories-for-emptyness} to nil.
 
 @end multitable
 

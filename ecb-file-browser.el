@@ -23,7 +23,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-file-browser.el,v 1.18 2004/04/08 14:56:40 berndl Exp $
+;; $Id: ecb-file-browser.el,v 1.19 2004/04/13 14:55:28 berndl Exp $
 
 ;;; Commentary:
 
@@ -287,6 +287,19 @@ NOT use \"~\" because ECB tries always to match full path-names!"
   :group 'ecb-directories
   :type `(repeat (regexp :tag "Directory-regexp")))
 
+(defcustom ecb-prescan-directories-for-emptyness t
+  "*Prescan directories for emptyness.
+ECB does this so directories are displayed as empty in the directories-buffer
+even without user-interaction \(i.e. in previous ECB-versions the emptyness of
+a directory has been first checked when the user has clicked onto a
+directory). ECB optimizes this check as best as possible but if a directory
+contains a lot of subdirectories which contain in turn a lot of entries, then
+expanding such a directory or selecting it takes of course more time as
+without this check - at least at the first time \(all following selects of a
+directory uses the cached information if its subdirectories are empty or not).
+Therefore this feature can be switched of via this option."
+  :group 'ecb-directories
+  :type 'boolean)
 
 (defcustom ecb-directories-buffer-name " *ECB Directories*"
   "*Name of the ECB directory buffer.
@@ -807,7 +820,7 @@ file in current directory."
               (throw 'exit elem)))
         nil))))
 
-
+                                                   
 (defun ecb-get-files-and-subdirs (dir)
   "Return a cons cell where car is a list of all files to display in DIR and
 cdr is a list of all subdirs to display in DIR. Both lists are sorted
@@ -951,7 +964,7 @@ selected before this update."
          ;; updating the buffer itself
          (tree-buffer-set-root new-tree)
          (tree-buffer-update)
-               
+
          ;; check if the sources buffer for this directory must be
          ;; cached: If yes update the cache
          (when (ecb-check-directory-for-caching
@@ -1331,13 +1344,17 @@ is not changed. For the allowed values of OTHER-EDIT-WINDOW see
                        file
                      (file-name-sans-extension file)))
            (displayed-file file-1))
+      ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: Hier wenn dann den
+      ;; empty-check einbauen wenn type = 0!
       (tree-node-add-child
        node
        (ecb-new-child
         old-children
         displayed-file
         type filename
-        (or not-expandable (= type 1))
+        (or not-expandable
+            (= type 1)
+            (ecb-check-emptyness-of-dir filename))
         (if ecb-truncate-long-names 'end))))))
 
 
@@ -1408,23 +1425,70 @@ is not changed. For the allowed values of OTHER-EDIT-WINDOW see
 		  (name (if (listp dir) (cadr dir) norm-dir)))
 	     (tree-node-add-child
 	      node
-	      (ecb-new-child old-children name 2 norm-dir nil
+              ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: Hier wenn dann den
+              ;; empty-check einbauen!
+	      (ecb-new-child old-children name 2 norm-dir
+                             (ecb-check-emptyness-of-dir norm-dir)
 			     (if ecb-truncate-long-names 'beginning)))))
-         ;; 	 (when (not paths)
-         ;; 	   (tree-node-add-child node (tree-node-new "Welcome to ECB! Please select:"
-         ;; 						    3 '(lambda()) t))
-         ;;            (tree-node-add-child node (tree-node-new "" 3 '(lambda()) t))
-         ;;            (tree-node-add-child node (tree-node-new "[F2] Customize ECB" 3
-         ;;                                                     'ecb-customize t))
-         ;;            (tree-node-add-child node (tree-node-new "[F3] ECB Help" 3
-         ;;                                                     'ecb-show-help t))
-         ;;            (tree-node-add-child
-         ;;             node (tree-node-new
-         ;;                   "[F4] Add Source Path" 3
-         ;;                   '(lambda () (call-interactively 'ecb-add-source-path)) t)))
          (tree-buffer-update))))))
 
-(defvar ecb-prescan-directories-for-emptyness nil)
+
+;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: DAS TESTEN TESTEN TESTEN
+(defvar ecb-directory-empty-cache nil
+  "Cache for every directory if it is empty or not. This is an alist where an
+element looks like:
+   \(<directory> . \(\[nil|t] . <checked-with-show-sources>")
+
+
+(defun ecb-directory-empty-cache-add (cache-elem)
+  (if (not (ecb-directory-empty-cache-get (car cache-elem)))
+      (setq ecb-directory-empty-cache
+            (cons cache-elem ecb-directory-empty-cache))))
+
+
+(defun ecb-directory-empty-cache-get (dir)
+  (cdr (assoc dir ecb-directory-empty-cache)))
+
+
+(defun ecb-directory-empty-cache-remove (dir)
+  (let ((elem (assoc dir ecb-directory-empty-cache)))
+    (if elem
+        (setq ecb-directory-empty-cache
+              (delete elem ecb-directory-empty-cache)))))
+
+
+(defun ecb-clear-directory-empty-cache ()
+  (setq ecb-directory-empty-cache nil))
+
+
+(defun ecb-check-emptyness-of-dir (dir)
+  (if (not ecb-prescan-directories-for-emptyness)
+      nil
+    (let ((cache-value (ecb-directory-empty-cache-get dir))
+          (show-sources (ecb-show-sources-in-directories-buffer-p)))
+      (if (and cache-value
+               (equal (cdr cache-value) show-sources))
+          (car cache-value)
+        (ecb-directory-empty-cache-remove dir)
+        (let ((entries (directory-files dir nil nil t))
+              (just-files-means-empty (not show-sources))
+              (full-file-name nil)
+              (empty-p nil))
+          (setq empty-p
+                (catch 'found
+                  (dolist (e entries)
+                    (when (not (member e '("." ".." "CVS")))
+                      (setq full-file-name (ecb-fix-filename dir e))
+                      (if (file-directory-p full-file-name)
+                          (throw 'found 'nil)
+                        (if (not just-files-means-empty)
+                            (throw 'found 'nil)))))
+                  t))
+          ;; now we add this value to the cache
+          (ecb-directory-empty-cache-add (cons (ecb-fix-filename dir)
+                                               (cons empty-p show-sources)))
+          empty-p)))))
+
 
 (defun ecb-new-child (old-children name type data &optional not-expandable shorten-name)
   "Return a node with type = TYPE, data = DATA and name = NAME. Tries to find
@@ -1449,13 +1513,19 @@ is created."
   ;; function if only the dir should be checked for emptyness or if a full
   ;; files- and subdirs-contents-access should be made. But i doubt if this is
   ;; possible.
-  (if (and ecb-prescan-directories-for-emptyness
-           (file-directory-p data))
-      (let ((files-and-subdirs (ecb-get-files-and-subdirs data)))
-        (if (and (= (length (cdr files-and-subdirs)) 0)
-                 (or (not (ecb-show-sources-in-directories-buffer-p))
-                     (= (length (car files-and-subdirs)) 0)))
-            (setq not-expandable t))))
+  ;; When all this performs fast enough then we make an customizable option
+  ;; for `ecb-prescan-directories-for-emptyness'
+;;   (if (and ecb-prescan-directories-for-emptyness
+;;            (file-directory-p data))
+;;       (let ((files-and-subdirs (ecb-get-files-and-subdirs data)))
+;;         (if (and (= (length (cdr files-and-subdirs)) 0)
+;;                  (or (not (ecb-show-sources-in-directories-buffer-p))
+;;                      (= (length (car files-and-subdirs)) 0)))
+;;             (setq not-expandable t))))
+;;   (if (and ecb-prescan-directories-for-emptyness
+;;            (file-directory-p data)
+;;            (ecb-check-emptyness-of-dir data))
+;;       (setq not-expandable t))
   (catch 'exit
     (dolist (child old-children)
       (when (and (equal (tree-node-get-data child) data)
@@ -1524,6 +1594,7 @@ is created."
 
 (defun ecb-remove-dir-from-caches (dir)
   (ecb-files-and-subdirs-cache-remove dir)
+  (ecb-directory-empty-cache-remove dir)
   (ecb-sources-cache-remove dir))
 
 (defun ecb-directory-update-speedbar (dir)
@@ -1558,7 +1629,7 @@ should be displayed. For 1 and 2 the value of EDIT-WINDOW-NR is ignored."
                 (tree-node-toggle-expanded node)
                 (ecb-exec-in-directories-window
                  ;; Update the tree-buffer with optimized display of NODE
-                 (tree-buffer-update node)))                
+                 (tree-buffer-update node)))
             
             ;; Removing the element from the sources-cache and the
             ;; files-and-subdirs-cache

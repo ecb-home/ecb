@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-mode-line.el,v 1.27 2004/02/20 16:38:53 berndl Exp $
+;; $Id: ecb-mode-line.el,v 1.28 2004/04/13 14:55:28 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -250,6 +250,7 @@ prepended by the window-number, see `ecb-mode-line-display-window-number'."
                                               ecb-path-selected-directory
                                               ecb-path-selected-source)))))
                (ecb-mode-line-set (buffer-name buffer)
+                                  ecb-frame
                                   prefix-str
                                   data-str))))
           (ecb-get-current-visible-ecb-buffers))))
@@ -276,14 +277,14 @@ contains a text-property 'help-echo."
           (t ;; emacs 20.X
            strcp))))
                  
-(defun ecb-mode-line-set (buffer-name prefix &optional text no-win-nr)
+(defun ecb-mode-line-set (buffer-name frame prefix &optional text no-win-nr)
   "Sets the mode line for a buffer. The mode line has the scheme:
 \"[WIN-NR ][PREFIX[: ]][TEXT]\". WIN-NR is the number of the window which
 displays BUFFER-NAME and is only displayed if the option
 `ecb-mode-line-display-window-number' is not nil and if NO-WIN-NR is nil. See
 this option for a description of the window-number. WIN-NR will be displayed
 as \"W-<number>\"."
-  (when (get-buffer-window buffer-name ecb-frame)
+  (when (get-buffer-window buffer-name frame)
     (let ((shown-prefix (if (stringp prefix)
                             (concat " " prefix (if (stringp text) ": " ""))
                           (if (stringp text) " " "")))

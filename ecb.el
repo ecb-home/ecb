@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb.el,v 1.387 2004/04/07 15:46:17 berndl Exp $
+;; $Id: ecb.el,v 1.388 2004/04/13 14:55:23 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -2411,6 +2411,7 @@ ECB has been deactivated. Do not set this variable!")
             (when ecb-clear-caches-before-activate
               (ecb-clear-tag-tree-cache)
               (ecb-clear-files-and-subdirs-cache)
+              (ecb-clear-directory-empty-cache)
               (ecb-sources-cache-clear)
               (ecb-reset-history-filter))
 
@@ -3048,6 +3049,7 @@ performance-problem!"
 ;; clearing all caches at load-time
 (ecb-clear-tag-tree-cache)
 (ecb-clear-files-and-subdirs-cache)
+(ecb-clear-directory-empty-cache)
 (ecb-sources-cache-clear)
 (ecb-reset-history-filter)
 
