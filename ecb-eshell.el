@@ -1,6 +1,6 @@
 ;;; ecb-eshell.el --- eshell integration for the ECB.
 
-;; $Id: ecb-eshell.el,v 1.31 2002/02/05 06:42:51 burtonator Exp $
+;; $Id: ecb-eshell.el,v 1.32 2002/02/05 06:45:13 burtonator Exp $
 
 ;; Copyright (C) 2000-2003 Free Software Foundation, Inc.
 ;; Copyright (C) 2000-2003 Kevin A. Burton (burton@openprivacy.org)
@@ -57,6 +57,14 @@
 
 ;;; History:
 
+;; - Mon Feb 04 2002 10:44 PM (burton@openprivacy.org): BUG: I think at certain
+;; conditions, we might be able to get the eshell window to expand after we
+;; automatically change directories.  I think this has to be:
+;;
+;; - Mon Feb 04 2002 10:43 PM (burton@openprivacy.org): BUGFIX: make sure the
+;; eshell is not buffer-read-only.  This is manifested by desktop.el for some
+;; reason.
+;;
 ;; - Tue Jan 29 2002 03:33 AM (burton@openprivacy.org): Include the ability to
 ;; startup the eshell when the ECB is started.
 ;;
@@ -100,19 +108,8 @@
 ;; - Right now ecb-eshell doesn't work with dired.  Why?  Try to setup a hook
 ;; and an ecb-eshell-dired-buffer-sync function that will take care of this.
 ;;
-;; - BUG: I think at certain conditions, we might be able to get the eshell
-;; window to expand after we automatically change directories.  I think this has
-;; to be:
-;; 
-;;   - eshell buffer selected
-;;   - ecb source buffer changes.
-;;
-;;   we could setup a variable ecb-eshell-inhibit-resize which we could set in
-;;   ecb-eshell-current-buffer-sync. ecb-eshell-enlarge would need to pay
-;;   attention to this.
-;;
-;; - BUG: when we exit the eshell, we resize the compilation buffer.... there is
-;;   no need since the buffer is about to exit.
+;; - BUG: when we exit the eshell, we enlarge the compilation buffer.... there
+;; is not needed since the buffer is about to exit.
 ;;
 ;;    - this might be fixed by using an eshell post command hook.
 ;;
@@ -123,8 +120,6 @@
 ;; - BUG: when ecb-eshell-enlarge-when-selecting is nil we need to recenter.  If
 ;; we don't we just end up with the point in the middle of the eshell.
 ;;
-;; - BUG: make sure the eshell is not buffer-read-only.  This is manifested by
-;; desktop.el for some reason.
 
 ;;; Code:
 
