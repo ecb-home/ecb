@@ -529,7 +529,7 @@ highlighting of the methods if `ecb-font-lock-methods' is not nil."
 		 (tree-node-new (ecb-highlight-text (semantic-token-name type)
                                                     ecb-classtype)
                                 0
-                                (semantic-token-start type)))))
+                                type))))
 	(unless (and flatten (= 1 (length children)))
 	    (tree-node-add-child node n))
 	(ecb-add-tokens n (semantic-token-type-parts type))))))
@@ -542,14 +542,14 @@ highlighting of the methods if `ecb-font-lock-methods' is not nil."
   (dolist (method methods)
     (tree-node-add-child node (tree-node-new
 			       (ecb-get-method-sig method) 0
-			       (semantic-token-start method) t))))
+			       method t))))
   
 (defun ecb-add-variables(node token variables)
   (when (and ecb-show-variables variables)
     (let ((var-node node))
       (when (eq ecb-show-variables 'collapsed)
 	(setq var-node (tree-node-new "[Variables]" 0
-				      (semantic-token-start (car variables))))
+				      nil))
 	(tree-node-add-child node var-node))
       (if ecb-sort-variables
 	  (setq variables (sort variables (lambda(a b)
@@ -558,7 +558,7 @@ highlighting of the methods if `ecb-font-lock-methods' is not nil."
       (dolist (var variables)
 	(tree-node-add-child var-node (tree-node-new
 				       (ecb-get-variable-text var)
-				       0 (semantic-token-start var) t))))))
+				       0 var t))))))
   
 (defun ecb-add-tokens(node token &optional flatten)
   (let ((methods (semantic-find-nonterminal-by-token 'function token))
@@ -902,14 +902,22 @@ For further explanation see `ecb-clear-history-behavior'."
                            shift-pressed))
 
 (defun ecb-method-clicked(node mouse-button shift-pressed)
-  (ecb-find-file-and-display ecb-path-selected-source
-			     (if ecb-split-edit-window
-				 mouse-button 0))
-  (goto-char (tree-node-get-data node)))
+  (when (tree-node-get-data node)
+    (ecb-find-file-and-display ecb-path-selected-source
+			       (if ecb-split-edit-window
+				   mouse-button 0))
+    (goto-char (semantic-token-start (tree-node-get-data node)))))
 
 (defun ecb-mouse-over-node(node)
   (if ecb-show-node-name-in-minibuffer
       (message (tree-node-get-name node))))
+
+(defun ecb-mouse-over-method-node(node)
+  (if ecb-show-node-name-in-minibuffer
+      (when (tree-node-get-data node)
+	(let ((doc (semantic-token-docstring (tree-node-get-data node))))
+	  (when (stringp doc)
+	    (message doc))))))
 
 ;;====================================================
 ;; Create buffers & menus

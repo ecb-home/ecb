@@ -47,7 +47,7 @@
 (defvar tree-node-mouse-over-fn nil)
 (defvar tree-buffer-highlight-overlay nil)
 
-  (defun list-append(list item)
+(defun list-append(list item)
   (if list
       (progn
 	(setcdr (last list) item)
@@ -257,7 +257,7 @@ EXPAND-SYMBOL-BEFORE: If not nil then the expand-symbol \(is displayed before
   (make-local-variable 'tree-node-selected-fn)
   (make-local-variable 'tree-node-expanded-fn)
   (make-local-variable 'tree-node-update-fn)
-  (make-local-variable 'tree-mouse-over-node-fn)
+  (make-local-variable 'tree-node-mouse-over-fn)
   (make-local-variable 'tree-buffer-highlighted-node-data)
   (make-local-variable 'tree-buffer-menus)
   (make-local-variable 'tree-buffer-type-facer)
