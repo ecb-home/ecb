@@ -108,10 +108,12 @@ it will be called autom. with `ecb-current-buffer-sync-hook'."
 
     ;; here we can be sure that the buffer with name
     ;; `ecb-examples-bufferinfo-buffer-name' is displayed in a window of
-    ;; `ecb-frame'
+    ;; `ecb-frame'.    
+    ;; The macro `ecb-do-if-buffer-visible-in-ecb-frame' binds locally the
+    ;; variables visible-buffer, visible-window and edit-window-buffer!! See
+    ;; documentation.
 
-    (let ((buffer (get-buffer ecb-examples-bufferinfo-buffer-name))
-          (filename (buffer-file-name (current-buffer))))
+    (let ((filename (buffer-file-name edit-window-buffer)))
      
       (if (and filename (file-readable-p filename))
 
@@ -124,12 +126,13 @@ it will be called autom. with `ecb-current-buffer-sync-hook'."
             ;; set new last-file-name so we can check next time if changed
             (setq ecb-examples-bufferinfo-last-file filename)
             ;; we display the file-infos for current source-file
-            (ecb-examples-print-file-attributes buffer filename))
+            (ecb-examples-print-file-attributes visible-buffer filename))
         
         ;; what should we do for non file buffers like help-buffers etc...
         (setq ecb-examples-bufferinfo-last-file nil)
-        (ecb-examples-print-non-filebuffer buffer
-                                           (buffer-name (current-buffer)))))))
+        (ecb-examples-print-non-filebuffer visible-buffer
+                                           (buffer-name edit-window-buffer))))))
+
 
 
 ;; ---------------------------------------------------------------------------

@@ -239,9 +239,11 @@ future this could break."
   ;;only operate if the current frame is the ECB frame and the
   ;;ecb-speedbar-buffer is visible!
   (ecb-do-if-buffer-visible-in-ecb-frame 'ecb-speedbar-buffer-name
+    ;; this macro binds the local variables visible-buffer, visible-window and
+    ;; edit-window-buffer!
     (let ((speedbar-default-directory
            (save-excursion
-             (set-buffer ecb-speedbar-buffer-name)
+             (set-buffer visible-buffer)
              (ecb-fix-filename default-directory)))
           (ecb-default-directory (ecb-fix-filename default-directory)))
       

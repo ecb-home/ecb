@@ -5494,19 +5494,23 @@ edit-window if that buffer has changed.
     ;; `ecb-examples-bufferinfo-buffer-name' is displayed in a window
     ;; of `ecb-frame'
 
-    (let ((buffer (get-buffer ecb-examples-bufferinfo-buffer-name))
-          (filename (buffer-file-name (current-buffer))))
+    ;; The macro `ecb-do-if-buffer-visible-in-ecb-frame' locally binds
+    ;; the variables visible-buffer, visible-window and
+    ;; edit-window-buffer!! See documentation of this macro!
+
+    (let ((filename (buffer-file-name edit-window-buffer)))
      
       (if (and filename (file-readable-p filename))
             
           ;; real filebuffers
           ;; here we could add a smarter mechanism; see ecb-examples.el
-          (ecb-examples-print-file-attributes buffer filename))
+          (ecb-examples-print-file-attributes visible-buffer filename)
         
         ;; non file buffers like help-buffers etc...
         (setq ecb-examples-bufferinfo-last-file nil)
-        (ecb-examples-print-non-filebuffer buffer
-                                           (buffer-name (current-buffer)))
+        (ecb-examples-print-non-filebuffer visible-buffer
+                                           (buffer-name
+                                             edit-window-buffer))
         ))))
 @end lisp
 
