@@ -157,6 +157,12 @@
 (eval-when-compile
   (require 'silentcomp))
 
+;; IMPORTANT: The version-number is auto-frobbed from the Makefile. Do not
+;; change it here!
+(defconst ecb-version "2.01"
+  "Current ECB version.")
+
+
 (require 'ecb-util)
 
 (silentcomp-defun widget-convert)

@@ -56,6 +56,8 @@
 
 (require 'ecb-util)
 (require 'ecb-layout)
+(require 'ecb-file-browser)
+(require 'ecb-method-browser)
 
 (defun ecb-jde-display-class-at-point ()
   "Displays in the ECB-methods-buffer contents of class under point.

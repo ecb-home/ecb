@@ -544,7 +544,6 @@ buffer-local `window-size-fixed' from the setting in `ecb-fix-window-size'."
          (ecb-set-window-size-fixed nil)
          ,@body)
      (ecb-set-window-size-fixed (ecb-get-window-fix-type ecb-layout-name))))
-  
 
 
 (defcustom ecb-other-window-jump-behavior 'all
