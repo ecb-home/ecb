@@ -54,7 +54,7 @@
 ;; The latest version of the ECB is available at
 ;; http://home.swipnet.se/mayhem/ecb.html
 
-;; $Id: ecb.el,v 1.157 2001/11/06 12:08:17 berndl Exp $
+;; $Id: ecb.el,v 1.158 2001/11/17 06:10:00 burtonator Exp $
 
 ;;; Code:
 
@@ -228,7 +228,6 @@ There are three options:
                 (const :tag "No auto. expand"
                        :value nil)))
 
-
 (defcustom ecb-sources-buffer-name " *ECB Sources*"
   "*Name of the ECB sources buffer. Because it is not a normal buffer for
 editing you should enclose the name with stars, e.g. \"*ECB Sources*\".
@@ -381,8 +380,13 @@ or call `widen' (C-x n w)."
   :type 'boolean)
 
 (defcustom ecb-token-display-function 'semantic-prototype-nonterminal
-  "*Semantic function to use for displaying tokens in the methods buffer.
-Some useful functions are found in `semantic-token->text-functions'."
+  "*Semantic function to use for displaying tokens in the methods buffer.  Some
+useful functions are found in `semantic-token->text-functions'.  This
+functionality also allows the user to display tokens as UML.  To enable this
+functionality set this value to either
+`semantic-uml-concise-prototype-nonterminal',
+`semantic-uml-prototype-nonterminal', or
+`semantic-uml-abbreviate-nonterminal'."
   :group 'ecb-methods
   :set (function (lambda (symbol value)
 		   (set symbol value)
@@ -405,7 +409,6 @@ element represents a type of tokens:
 The tokens in the methods buffer are displayed in the order as they appear in
 this list.
 
-
 Token Type
 ----------
 
@@ -414,7 +417,6 @@ the following:
 
 - t:      All token types not specified anywhere else in the list.
 - parent: The parents of a type.
-
 
 Display Type
 ------------
@@ -425,7 +427,6 @@ A symbol which describes how the tokens of this type shall be shown:
 - collapsed: The tokens are shown in a collapsed node.
 - flattened: The tokens are added to the parent node.
 - hidden:    The tokens are not shown.
-
 
 Sort Method
 -----------
@@ -650,8 +651,6 @@ ECB again to take effect"
                        :value mouse-1--C-mouse-1)
                 (const :tag "Primary: mouse-1, secondary: mouse-2"
                        :value mouse-1--mouse-2)))
-  
-  
 
 ;; Thanks to David Hay for the suggestion <David.Hay@requisite.com>
 (defcustom ecb-primary-mouse-jump-destination 'left-top
@@ -681,7 +680,6 @@ Note: A click with the secondary mouse-button \(see again
   :group 'ecb-general
   :type 'string)
 
-  
 (defcustom ecb-activate-before-layout-draw-hook nil
   "*Normal hook run at the end of activating the ecb-package by running
 `ecb-activate'. This hooks are run after all the internal setup process
@@ -707,6 +705,11 @@ run direct before the layout-drawing look at
 (defcustom ecb-deactivate-hook nil
   "*Normal hook run at the end of deactivating \(but before the ecb-layout is
 cleared!) ECB by running `ecb-deactivate'."
+  :group 'ecb-general
+  :type 'hook)
+
+(defcustom ecb-current-buffer-sync-hook nil 
+  "*Normal hook run at the end of `ecb-current-buffer-sync'."
   :group 'ecb-general
   :type 'hook)
 
@@ -981,7 +984,6 @@ semantic-reparse. This function is added to the hook
       (tree-node-set-children node nil)
       (ecb-update-token-node token node))))
 
-
 (defun ecb-expand-tree (path node)
   (catch 'exit
     (dolist (child (tree-node-get-children node))
@@ -997,7 +999,6 @@ semantic-reparse. This function is added to the hook
                    (or (when (> (length path) (length data))
                          (ecb-expand-tree path child))
                        (not was-expanded)))))))))
-
 
 (defun ecb-get-source-files (dir files)
   (let (source-files)
@@ -1254,7 +1255,6 @@ displayed with window-start and point at beginning of buffer."
 	(ecb-exec-in-methods-window
 	 (tree-buffer-scroll (point-min) (point-min)))))))
 
-
 (defvar ecb-token-tree-cache nil
   "This is the token-tree-cache for already opened file-buffers. The cache is
 a list of cons-cells where the car is the name of the source and the cdr is
@@ -1385,7 +1385,6 @@ corresponding entry in the history-buffer is removed."
                      (y-or-n-p "Remove history entry for this buffer? ")))
             (ecb-clear-history-node node))))))
 
-
 (defun ecb-clear-history (&optional clearall)
   "Clears the ECB history-buffer. If CLEARALL is nil then the behavior is
 defined in the option `ecb-clear-history-behavior' otherwise the value of
@@ -1457,7 +1456,9 @@ the ECB tree-buffers."
           ;; ecb-selected-token again.
           (setq ecb-selected-token nil)
           (ecb-update-methods-buffer--internal 'scroll-to-begin)
-          (ecb-token-sync))))))
+          (ecb-token-sync)
+
+          (run-hooks 'ecb-current-buffer-sync-hook))))))
 
 (defun ecb-window-sync-function ()
   (when (and ecb-window-sync ecb-minor-mode (equal (selected-frame) ecb-frame))
@@ -2097,7 +2098,6 @@ That is remove the unsupported :help stuff."
    )
   "Menu for ECB minor mode.")
 
-
 (defun ecb-add-to-minor-modes ()
   "Does all necessary to add ECB as a minor mode with current values of
 `ecb-mode-map' and `ecb-minor-mode-text'"
@@ -2217,7 +2217,6 @@ macro must be written explicitly, as in \"C-c SPC\".
                    ;; alists if not already contained. In this case just
                    ;; replace the values in the alists
                    (ecb-add-to-minor-modes))))
-
 
 (defun ecb-activate ()
   "Activates the ECB and creates all the buffers and draws the ECB-screen
@@ -2501,7 +2500,6 @@ if the minor mode is enabled.
   (force-mode-line-update t)
   ecb-minor-mode)
 
-
 (defvar ecb-common-directories-menu nil)
 (setq ecb-common-directories-menu
       '(("Create File" ecb-create-file)
@@ -2567,7 +2565,6 @@ buffers does not exist anymore."
 	("Remove All Entries" ecb-clear-history-all)
 	("Remove Non Existing Buffer Entries" ecb-clear-history-only-not-existing)))
 
-
 ;; ECB byte-compilation
 
 (defun ecb-compile-file-if-necessary (file &optional force)
@@ -2582,7 +2579,6 @@ FILE.el is newer than FILE.elc or if FILE.elc doesn't exist."
 	  (message (format "Byte-compiling %s..." 
 			   (file-name-nondirectory file)))
 	  (byte-compile-file file)))))
-
 
 (defun ecb-byte-compile (&optional force-all)
   "Bytecompiles the ECB package. This is done for all lisp-files of ECB if

@@ -26,7 +26,6 @@
 ;; This file is part of the ECB package which can be found at:
 ;; http://home.swipnet.se/mayhem/ecb.html
 
-
 ;; This file has been re-implemented by Klaus Berndl <klaus.berndl@sdm.de>.
 ;; What has been done:
 ;; Completely rewritten the layout mechanism for better customizing, adding
@@ -125,7 +124,7 @@
 ;;   + The edit-window must not be splitted and the point must reside in
 ;;     the not deleted edit-window.
 
-;; $Id: ecb-layout.el,v 1.78 2001/10/29 11:04:25 berndl Exp $
+;; $Id: ecb-layout.el,v 1.79 2001/11/17 06:10:00 burtonator Exp $
 
 ;;; Code:
 
@@ -145,7 +144,6 @@
   "Settings for the screenlayout of the Emacs code browser."
   :group 'ecb
   :prefix "ecb-")
-
 
 (defconst ecb-layout-option-set-function
   (function (lambda (symbol value)
@@ -244,7 +242,6 @@ this buffer-enlarge just call `ecb-redraw-layout'."
   :set ecb-layout-option-set-function
   :type 'boolean)
 
-
 (defcustom ecb-split-edit-window nil
   "*Sets how and if the edit window should be splitted.
 But be aware: This option determines only if the edit-window should be
@@ -256,7 +253,6 @@ splitted at start-time of ECB."
                        :value vertical)
                 (const :tag "Do not split"
                        :value nil)))
-
 
 (defcustom ecb-windows-width 0.33
   "*The width of the ECB windows in columns when they are placed to the left
@@ -373,7 +369,6 @@ rebind it to the original function in the `ecb-deactivate-hook'."
                      :value switch-to-buffer-other-window)
               (const :tag "other-window-for-scrolling"
                      :value other-window-for-scrolling)))
-
 
 (defvar ecb-use-dedicated-windows t
   "Use dedicated windows for the ECB buffers.
@@ -517,7 +512,6 @@ either not activated or it behaves exactly like the original version!"
                (car (window-edges next-w)))
             'vertical
           'horizontal)))))
-      
 
 (if running-xemacs
     (progn
@@ -664,7 +658,6 @@ either not activated or it behaves exactly like the original version!"
   (dolist (elem ecb-basic-adviced-functions)
     (ad-disable-advice elem 'around 'ecb)
     (ad-activate elem)))
-
 
 ;; =========== intelligent window function advices ===================
 
@@ -874,7 +867,6 @@ The behavior depends on `ecb-other-window-jump-behavior'."
               (t
                (ecb-select-edit-window)))))))
 
-
 (defadvice delete-window (around ecb)
   "The ECB-version of `delete-window'. Works exactly like the original
 function with the following ECB-ajustment:
@@ -916,7 +908,6 @@ If called in any other window of the current ECB-layout it jumps first in the
           (funcall (intern (format "ecb-delete-other-windows-in-editwindow-%d"
                                    ecb-layout-nr))
                    (ecb-edit-window-splitted))))))
-
 
 (defadvice split-window-horizontally (around ecb)
   "The ECB-version of `split-window-horizontally'. Works exactly like the
@@ -1060,7 +1051,6 @@ ECB-adviced functions."
   (ecb-with-adviced-functions
    (call-interactively 'split-window-horizontally)))
 
-
 ;; here come the internal ...delete-...functions which are called from the
 ;; adviced versions of `delete-other-windows' or `delete-window' with respect
 ;; to the current layout-index (see `ecb-layout-nr').
@@ -1186,7 +1176,6 @@ ECB-adviced functions."
 (defalias 'ecb-delete-window-in-editwindow-10
   'ecb-delete-window-in-editwindow-7)
 
-
 ;;======= Helper-functions ===========================================
 
 (defun ecb-split-hor (amount &optional dont-switch-window)
@@ -1240,7 +1229,6 @@ multiplied with the current window-width."
 ;; Klaus: Completely rewritten the layout mechanism to make it more
 ;; straightforward, more customizable by users and slightly more
 ;; convenient.
-
 
 (defun ecb-layout-get-current-tree-windows ()
   "Return a list of all tree-buffers whose windows are currently visible." 
@@ -1474,7 +1462,6 @@ this function the edit-window is selected which was current before redrawing."
                       (ecb-layout-get-current-tree-windows)))
           (ecb-current-buffer-sync t))
       (setq ecb-windows-hidden nil))))
-
 
 (defun ecb-store-window-sizes ()
   "Stores the sizes of the ECB windows for the current layout. The size of the
