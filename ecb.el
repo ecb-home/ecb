@@ -54,7 +54,7 @@
 ;; The latest version of the ECB is available at
 ;; http://home.swipnet.se/mayhem/ecb.html
 
-;; $Id: ecb.el,v 1.190 2002/02/22 08:30:43 berndl Exp $
+;; $Id: ecb.el,v 1.191 2002/02/22 17:22:36 berndl Exp $
 
 ;;; Code:
 
@@ -655,27 +655,62 @@ or call `widen' (C-x n w)."
 `semantic-token->text-functions' with name \"semantic-XYZ\" and the key is a
 symbol with name \"ecb-XYZ\".")
 
-;; (dolist (elem ecb-token->text-functions)
-;;   (fset (car elem)
-;;         `(lambda (token &optional parent-token colorize)
-;;            (if (or (semantic-token-get token 'ecb-group-token)
-;;                    (and (eq 'type (semantic-token-token token))
-;;                         (string= "class" (semantic-token-type token))))
-;;                (let ((text (concat (semantic-name-nonterminal token
-;;                                                               parent-token
-;;                                                               colorize)
-;;                                    (if (eq major-mode 'c++-mode)
-;;                                        (semantic-c-template-string token
-;;                                                                    parent-token
-;;                                                                    colorize)
-;;                                      ""))))
-;;                  (if ecb-special-type-token-face
-;;                      (put-text-property 0 (length text)
-;;                                         'face ecb-special-type-token-face text))
-;;                  text)
-;;              (funcall (quote ,(cdr elem))
-;;                       token parent-token colorize)))))
+(defconst ecb-merge-face-list
+  (cond (running-emacs-21
+         '((set-face-background   . face-background)
+           (set-face-bold-p       . face-bold-p)
+           (set-face-italic-p     . face-italic-p)
+           (set-face-font         . face-font)
+           (set-face-foreground   . face-foreground)
+           (set-face-inverse-video-p    . face-inverse-video-p)
+           (set-face-stipple      . face-stipple)
+           (set-face-underline  . face-underline)
+           (set-face-underline-p  . face-underline-p)))
+        (running-xemacs
+         '((set-face-background    . face-background)
+           (set-face-blinking-p    . face-blinking-p)
+           (set-face-dim-p         . face-dim-p)
+           (set-face-font          . face-font)
+           (set-face-foreground    . face-foreground)
+           (set-face-highlight-p   . face-highlight-p)
+           (set-face-reverse-p     . face-reverse-p)
+           (set-face-stipple       . face-stipple)
+           (set-face-strikethru-p  . face-strikethru-p)
+           (set-face-underline-p   . face-underline-p)
+           (custom-set-face-bold   . custom-face-bold)
+           (custom-set-face-italic . custom-face-italic)))
+        (t
+         '((set-face-background      . face-background)
+           (set-face-font            . face-font)
+	   (set-face-italic-p        . face-italic-p)
+	   (set-face-bold-p          . face-bold-p)
+           (set-face-foreground      . face-foreground)
+           (set-face-inverse-video-p . face-inverse-video-p)
+           (set-face-stipple         . face-stipple)
+           (set-face-underline-p     . face-underline-p)))))
 
+;; (defun ecb-merge-face-into-text (text face)
+;;   (let ((newtext (concat text)))
+;;     (alter-text-property 0 (length newtext) 'face
+;;                          (lambda (current-face)
+;;                            (let ((klaus nil)
+;;                                  (new-face
+;;                                   (copy-face current-face
+;;                                              (intern (concat "ecb-internal-face-"
+;;                                                              (face-name current-face))))))
+;;                              (mapc (function (lambda (elem)
+;;                                                (let ((new-attr-val
+;;                                                       (funcall (cdr elem) face)))
+;;                                                  (if new-attr-val
+;;                                                      (funcall (car elem)
+;;                                                               new-face
+;;                                                               new-attr-val
+;;                                                               (selected-frame))))))
+;;                                    ecb-merge-face-list)
+;;                              (setq klaus (face-attr-construct new-face))
+;;                              (list new-face)))
+;;                          newtext)
+;;     newtext))
 
 (defun ecb-merge-face-into-text (text face)
   (let ((newtext (concat text)))
@@ -697,18 +732,6 @@ symbol with name \"ecb-XYZ\".")
                          newtext)
     newtext))
 
-;; (defun ecb-merge-face-into-text (text face)
-;;   (let ((newtext (concat text)))
-;;     (alter-text-property 0 (length newtext) 'face
-;;                          (lambda (current-face)
-;;                            (let ((new-face (purecopy current-face)))
-;;                              (set-face-attribute new-face
-;;                                                  (selected-frame)
-;;                                                  (face-attr-construct face))
-;;                              (list new-face)))
-;;                          newtext)
-;;     newtext))
-
 
 (dolist (elem ecb-token->text-functions)
   (fset (car elem)
@@ -717,7 +740,8 @@ symbol with name \"ecb-XYZ\".")
                (let ((text (concat (semantic-name-nonterminal token
                                                               parent-token
                                                               colorize)
-                                   (if (eq major-mode 'c++-mode)
+                                   (if (and (eq major-mode 'c++-mode)
+                                            (fboundp 'semantic-c-template-string))
                                        (semantic-c-template-string token
                                                                    parent-token
                                                                    colorize)
