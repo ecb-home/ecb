@@ -1252,8 +1252,7 @@ visibility of the ECB windows. ECB minor mode remains active!"
                        (<= (prefix-numeric-value arg) 0))))
       (if (not new-state)
           (progn
-            (if (or (equal ecb-show-node-name-in-minibuffer 'always)
-                    (equal ecb-show-node-name-in-minibuffer 'if-too-long))
+            (if (ecb-show-any-node-info-by-mouse-moving-p)
                 (tree-buffer-activate-follow-mouse))
             (ecb-redraw-layout))
         (unless ecb-windows-hidden
