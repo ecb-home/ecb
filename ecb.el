@@ -871,7 +871,7 @@ For further explanation see `ecb-clear-history-behavior'."
 	    (tree-buffer-update))
 	(progn
 	  (erase-buffer)
-	  (insert "No source paths set.\nPress F2 to customize."))))))
+	  (insert "No source paths set.\nPress F2 to customize\nTo get help, call\necb-show-help."))))))
 
 (defun ecb-new-child(old-children name type data &optional not-expandable)
   (catch 'exit
@@ -954,6 +954,242 @@ For further explanation see `ecb-clear-history-behavior'."
 	(let ((doc (semantic-token-docstring (tree-node-get-data node))))
 	  (when (stringp doc)
 	    (message doc))))))
+
+;; ECB help stuff, solen something from recentf.el
+
+(defconst ecb-help-message
+"
+                              ===================
+                              General description
+                              ===================      
+
+ECB offers a few ECB-windows for browsing your sources comfortable. There are
+currently three different types of ECB-windows:
+
+1. ECB Directories:
+
+Select directories and, if enabled, source files, in the \"*ECB Directories*\"
+buffer by clicking the left mouse button on the directory name or by hitting
+ENTER/RETURN when the cursor is placed on the item line. Directory names with a
+\"[+]\" symbol after \(or before) them can be expanded/collapsed by
+left-clicking on the symbol, pressing the TAB key when the cursor is placed on
+the package line or clicking the middle mouse button on the item. Right
+clicking on an item will open a popup menu where different operations on the
+item under the mouse cursor can be performed.
+
+Pressing F1 in the packages buffer will update it. Pressing F2 will open the
+ECB customization group in the edit window ECB Sources:
+
+2. ECB Sources:
+
+Source files can be select by clicking the left mouse button or hitting
+ENTER/RETURN on the source row in the \"*ECB Sources*\" or \"*ECB History*\"
+windows. Clicking on the source file with the middle mouse button will open
+the class file in the other edit window. Right clicking on a source file will
+open a popup menu where different operation on the item under the mouse cursor
+can be performed.
+
+3. ECB Methods:
+
+The \"*ECB Methods*\" buffer contains the methods \(and variables, if you
+want) in the selected source file. When a method/variable is selected with the
+left mouse button or ENTER/RETURN the edit buffer will jump to the
+method/variable. Clicking on a method/variable with the middle mouse button
+will jump to the method in the other edit window.
+
+In addition to these ECB-windows you have always one or two edit-windows in
+the ECB-frame and \(if you want) at the bottom a compilation-window, where all
+the output of Emacs-compilation \(compile, grep etc.) is shown.
+
+
+                          ===========================
+                          Activation and deactivation
+                          ===========================
+
+Call M-x `ecb-activate' and M-x `ecb-deactivate' to activate or deactivate
+ECB.
+
+
+                                 ============
+                                 Usage of ECB
+                                 ============                    
+
+Using the mouse:
+----------------
+
+Normally you get best usage if you use ECB with a mouse.
+
+- Left-button: Opens the source/jumps to method/variable in the edit-window
+
+- Middle-button: Like left-button but do this in the other edit-window if the
+                 edit window is splitted, otherwise exactly like left-button.
+
+If you hold down shift-key while you click with left- or middle-button the
+item under mouse-point is displayed in the echo-area. This is useful if you
+have longer items than the window-width of an ECB-window and truncated lines
+so you can read the whole item.
+
+- Right-button: Opens a special context popup-menu for the clicked item where
+                you can choose several senseful actions.
+
+
+Redrawing the ECB-layout:
+-------------------------
+
+If you have unintenionally destroyed the ECB-layout, you can always restore
+the layout with calling `ecb-redraw-layout'.
+
+
+Working with the edit-window of ECB:
+------------------------------------
+
+ECB offers you all what you need to work with the edit-window as if the
+edit-window would be the only window of the ECB-frame.
+
+ECB offers you some \"intelligent\" window-functions as replacements for:
+- `other-window'
+- `delete-window'
+- `delete-other-windows'
+- `split-window-horizontally'
+- `split-window-vertically'
+- `find-file-other-window'
+- `switch-to-buffer-other-window'
+The new function have the name \"ecb-<originalname>\" \(e.g.
+`ecb-split-window-horizontally').
+
+The behavior of the new functions is:
+- All these function behaves exactly like their corresponding original
+  functons but they always act as if the edit-window\(s) of ECB would be the
+  only window\(s) of the ECB-frame. So the edit-window\(s) of ECB seems to be a
+  normal Emacs-frame to the user.
+- If called in a not edit-window of ECB all these function jumps first to the
+  \(first) edit-window, so you can never destroy the ECB-window layout
+  unintentionally.
+- If the new window-delete or -split functions are called with a prefix arg
+  then the function operates exactly like the corresponding original function,
+  means just the original function is called.
+
+You can \(should?!) rebind your key-shortcuts during ECB by using the ECB-hooks.
+Here is an example, what you can add to your .emacs:
+
+\(add-hook \'ecb-activate-hook
+          \(lambda \()
+            ;; set some keys to redraw-function of ECB
+            \(global-set-key [f10] 'ecb-redraw-layout)
+            ;; for convenience
+            \(global-set-key \(kbd \"C-x C-o\") 'ecb-other-window)
+            \(global-set-key \(kbd \"C-x 1\") 'ecb-delete-other-windows)
+            \(global-set-key \(kbd \"C-x 0\") 'ecb-delete-window)
+            \(global-set-key \(kbd \"C-x 2\") 'ecb-split-window-vertically)
+            \(global-set-key \(kbd \"C-x 3\") 'ecb-split-window-horizontally)
+            \(global-set-key \(kbd \"C-x 4 b\") 'ecb-switch-to-buffer-other-window)
+            \(global-set-key \(kbd \"C-x C-v\") 'ecb-find-file-other-window)))
+
+\(add-hook 'ecb-deactivate-hook
+          \(lambda \()
+            \(global-set-key \(kbd \"C-x C-o\") 'other-window)
+            \(global-set-key \(kbd \"C-x 1\") 'delete-other-windows)
+            \(global-set-key \(kbd \"C-x 0\") 'delete-window)
+            \(global-set-key \(kbd \"C-x 2\") 'split-window-vertically)
+            \(global-set-key \(kbd \"C-x 3\") 'split-window-horizontally)
+            \(global-set-key \(kbd \"C-x 4 b\") 'switch-to-buffer-other-window)
+            \(global-set-key \(kbd \"C-x C-v\") 'find-file-other-window)))
+
+With this hook-settings you have within ECB all the standard-keys bound to the
+ECB-replacement functions and after deactivation ECB again rebound to the
+standard-functions.
+
+**Attention**:
+If you want to work within the edit-window with splitting and unsplitting the
+edit-window\(s) it is highly recommended to use the replacement-functions of
+ECB instead of the original Emacs-functions \(see above). Also rebinding your
+keys to the ecb-replacement funtions is recommended! For example
+`ecb-other-window' can only work correct if you split the edit window with
+`ecb-split-window-vertically' \(or horizontally) and NOT with
+`split-window-vertically'!
+
+
+                             ====================
+                             Customization of ECB
+                             ====================
+
+All customization of ECB is divided into the following customize groups:
+- ecb-general
+- ecb-directories
+- ecb-sources
+- ecb-methods
+- ecb-history
+
+You can highly customize all the ECB behavior so just go to this groups and
+you will see all well documented ECB-options.
+
+But you must always customize the option `ecb-source-path'!
+
+Available hooks:
+- `ecb-activate-before-layout-draw-hook'
+- `ecb-activate-hook'
+- `ecb-deactivate-hook'
+Look at the documentation of these hooks to get description.")
+
+(defun ecb-help-test ()
+  (interactive)
+  (with-output-to-temp-buffer "*ECB-help"
+    (princ ecb-help-message)
+    (print-help-return-message)))
+
+
+(defun ecb-cancel-dialog (&rest ignore)
+  "Cancel the ECB dialog."
+  (interactive)
+  (kill-buffer (current-buffer))
+  (message "ECB dialog canceled."))
+
+(defvar ecb-dialog-mode-map nil
+  "`ecb-dialog-mode' keymap.")
+
+(if ecb-dialog-mode-map
+    ()
+  (setq ecb-dialog-mode-map (make-sparse-keymap))
+  (define-key ecb-dialog-mode-map "q" 'ecb-cancel-dialog)
+  (define-key ecb-dialog-mode-map [down-mouse-1] 'widget-button-click)
+  (set-keymap-parent ecb-dialog-mode-map widget-keymap))
+
+(defun ecb-dialog-mode ()
+  "Major mode used to display the ECB-help
+
+These are the special commands of `ecb-dialog-mode' mode:
+    q -- cancel this dialog."
+  (interactive)
+  (setq major-mode 'ecb-dialog-mode)
+  (setq mode-name "ecb-dialog")
+  (use-local-map ecb-dialog-mode-map))
+
+(defun ecb-show-help ()
+  "Shows the online help of ECB."
+  (interactive)
+  (if (not (ecb-point-in-edit-window))
+      (ecb-other-window))
+  (with-current-buffer (get-buffer-create "*ECB help*")
+    (switch-to-buffer (current-buffer))
+    (kill-all-local-variables)
+    (let ((inhibit-read-only t))
+      (erase-buffer))
+    (let ((all (overlay-lists)))
+      ;; Delete all the overlays.
+      (mapcar 'delete-overlay (car all))
+      (mapcar 'delete-overlay (cdr all)))
+    ;; Insert the dialog header
+    (widget-insert "Click on Cancel or type \"q\" to quit.\n")
+    (widget-insert "\n")
+    (widget-insert ecb-help-message)
+    (widget-insert "\n\n")
+    ;; Insert the Cancel button
+    (widget-create 'push-button
+                   :notify 'ecb-cancel-dialog
+                   "Cancel")
+    (ecb-dialog-mode)
+    (widget-setup)
+    (goto-char (point-min))))
 
 ;;====================================================
 ;; Create buffers & menus

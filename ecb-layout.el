@@ -81,20 +81,22 @@
 ;; - `split-window-horizontally'
 ;; - `split-window-vertically'
 ;; - `find-file-other-window'
+;; - `switch-to-buffer-other-window'
 ;; The new function have the prefix "ecb-<originalname>" (e.g.
 ;; `ecb-split-window-horizontally').
 ;; The behavior of the new functions is:
-;; - If called in the edit-window (regardless if splitted or not), then
-;;   they all work as if the edit-window(s) are the only window(s) in the
-;;   current frame. See the documentation of these functions.
-;; - If called in any other ECB-window a completely redraw with
-;;   `ecb-redraw-layout' will be done (except `ecb-other-window')
-;; - (Except of `ecb-find-file-other-window'): If called with a prefix arg
-;;   then the original-function is called regardless in which window the point
-;;   is.
+;; - All these function behaves exactly like their corresponding original
+;;   functons but they always act as if the edit-window(s) of ECB would be the
+;;   only window(s) of the ECB-frame. So the edit-window(s) of ECB seems to be
+;;   a normal Emacs-frame to the user.
+;; - If called in a not edit-window of ECB all these function jumps first to
+;;   the (first) edit-window, so you can never destroy the ECB-window layout
+;;   unintentionally.
+;; - If the new window-delete or -split functions are called with a prefix arg
+;;   then the function operates exactly like the corresponding original
+;;   function, means just the original function is called.
 ;;
-;; You can rebind your key-shortcuts during ECB with the hooks. In
-;; ecb.el you find a hook example how to this:
+;; You can (should?!) rebind your key-shortcuts during ECB with the hooks.
 ;;
 ;; Important: For each new layout with index <index> the programmer must
 ;; write two functions for this feature:
@@ -133,6 +135,18 @@ general layout. Currently there are 10 predefined layouts with index from 0 to
 only for the current session. If you are sure which layout you want you can
 save it for future sessions. To get a picture of the layout for index <index>
 call C-h f ecb-layout-function-<index>, e.g. `ecb-layout-function-9'.
+
+Currently available layouts \(see the doc-string for a picture ot the layout):
+`ecb-layout-function-0'
+`ecb-layout-function-1'
+`ecb-layout-function-2'
+`ecb-layout-function-3'
+`ecb-layout-function-4'
+`ecb-layout-function-5'
+`ecb-layout-function-6'
+`ecb-layout-function-7'
+`ecb-layout-function-8'
+`ecb-layout-function-9'
 
 Regardless of the settings you define here: If you have destroyed or
 changed the ECB-screen-layout by any action you can always go back to this
@@ -301,10 +315,24 @@ frame height."
 
 ;; =========== intelligent window functions ==========================
 
+(defun ecb-point-in-edit-window ()
+  "Return non nil iff point stays in an edit-window nil otherwise."
+  (cond ((eq (selected-window) ecb-edit-window)
+         t)
+        ((and ecb-split-edit-window
+              (eq (previous-window (selected-window) 0) ecb-edit-window))
+         t)
+        (t nil)))
+
 (defun ecb-find-file-other-window (filename &optional wildcards)
   "The ECB-version of `find-file-other-window'. Works exactly like this
-function but opens the file always in another edit-window."
+function but opens the file always in another edit-window.
+
+If called in any non edit-window of the current ECB-layout it jumps first in
+the \(first) edit-window and does then it큦 job \(see above)."
   (interactive "FFind file in other edit-window: \np")
+  (if (not (ecb-point-in-edit-window))
+      (ecb-other-window))
   (let ((ecb-other-window-jump-behavior 'only-edit))
     (if ecb-split-edit-window
         (ecb-other-window)
@@ -312,6 +340,23 @@ function but opens the file always in another edit-window."
       (ecb-other-window))
     ;; now we are always in the other window, so we can now open the file.
     (find-file filename wildcards)))
+
+(defun ecb-switch-to-buffer-other-window (buffer &optional norecord)
+  "The ECB-version of `switch-to-buffer-other-window'. Works exactly
+like this function but switch to the buffer always in another edit-window.
+
+If called in any non edit-window of the current ECB-layout it jumps first in
+the \(first) edit-window and does then it큦 job \(see above)."
+  (interactive "BSwitch to buffer in other edit-window: \np")
+  (if (not (ecb-point-in-edit-window))
+      (ecb-other-window))
+  (let ((ecb-other-window-jump-behavior 'only-edit))
+    (if ecb-split-edit-window
+        (ecb-other-window)
+      (ecb-split-window-vertically)
+      (ecb-other-window))
+    ;; now we are always in the other window, so we can switch to the buffer
+    (switch-to-buffer buffer norecord)))
 
 (defun ecb-jde-open-class-at-point-ff-function(filename &optional wildcards)
   "Special handling of the class opening at point JDE feature. This function
@@ -373,14 +418,16 @@ point fills the whole edit-window.
 
 If called in an unsplitted edit-window then nothing is done.
 
-If called in any other window of the current ECB-layout this does a layout
-redraw \(see `ecb-redraw-layout').
+If called in any other window of the current ECB-layout it jumps first in the
+\(first) edit-window and does then it큦 job \(see above).
 
 If called with a prefix arg ORIGINAL then `delete-other-windows' will be
 called, means the current window fills the whole frame."
   (interactive "P")
   (if original
       (delete-other-windows)
+    (if (not (ecb-point-in-edit-window))
+        (ecb-other-window))
     (if ecb-split-edit-window
         (if (funcall (intern (format "ecb-delete-other-windows-in-editwindow-%d"
                                      ecb-layout-nr)))
@@ -396,14 +443,16 @@ point will be destroyed and the other part fills the whole edit-window.
 
 If called in an unsplitted edit-window then nothing is done.
 
-If called in any other window of the current ECB-layout this does a layout
-redraw \(see `ecb-redraw-layout').
+If called in any other window of the current ECB-layout it jumps first in the
+\(first) edit-window and does then it큦 job \(see above).
 
 If called with a prefix ORIGINAL arg then `delete-other-windows' will be
 called, means the current window fills the whole frame."
   (interactive "P")
   (if original
       (delete-window)
+    (if (not (ecb-point-in-edit-window))
+        (ecb-other-window))
     (if ecb-split-edit-window
         (if (funcall (intern (format "ecb-delete-window-in-editwindow-%d"
                                      ecb-layout-nr)))
@@ -418,8 +467,8 @@ splitted vertically..
 
 If called in an already splitted edit-window then nothing is done.
 
-If called in any other window of the current ECB-layout then nothing is
-done because it is not senseful to split the other windows in the ECB.
+If called in any other window of the current ECB-layout it jumps first in the
+\(first) edit-window and does then it큦 job \(see above).
 
 If called with a prefix ORIGINAL arg then `split-window-horizontally' will
 be called, means current window \(regardless which one) will be splitted
@@ -427,6 +476,8 @@ horizontally."
   (interactive "P")
   (if original
       (split-window-vertically)
+    (if (not (ecb-point-in-edit-window))
+        (ecb-other-window))
     (when (and (not ecb-split-edit-window)
                (eq (selected-window) ecb-edit-window))
       (ecb-split-ver 0.5 t)
@@ -438,8 +489,8 @@ splitted horizontally.
 
 If called in an already splitted edit-window then nothing is done.
 
-If called in any other window of the current ECB-layout then nothing is
-done because it is not senseful to split the other windows in the ECB.
+If called in any other window of the current ECB-layout it jumps first in the
+\(first) edit-window and does then it큦 job \(see above).
 
 If called with a prefix ORIGINAL arg then `split-window-horizontally' will
 be called, means current window \(regardless which one) will be splitted
@@ -447,6 +498,8 @@ horizontally."
   (interactive "P")
   (if original
       (split-window-horizontally)
+    (if (not (ecb-point-in-edit-window))
+        (ecb-other-window))
     (when (and (not ecb-split-edit-window)
                (eq (selected-window) ecb-edit-window))
       (ecb-split-hor 0.5 t)
