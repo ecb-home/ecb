@@ -20,6 +20,10 @@ global minor-mode which displays a couple of windows that can be used
 to browse directories, files and methods. It supports method parsing
 for Java, C, C++, Elisp and some more.
 
+<p><strong>NOTE</strong>: Experienced ECB users find a complete alphabetical list
+of all commands and user-options in <a href="#Interactive%20ECB%20commands">Interactive ECB commands</a> and
+<a href="#Customizable%20options">Customizable options</a>.
+
 <p>The latest version of ECB can always be found at
 <a href="http://home.swipnet.se/mayhem/ecb.html">http://home.swipnet.se/mayhem/ecb.html</a>
 
@@ -149,10 +153,10 @@ into (X)Emacs!
 
 <li>Add the new ECB-directory to your <code>load-path</code> variable.
 
-<p>You MUST add the ECB-install-directory to the <code>load-path</code> either
-by changing the <code>load-path</code> variable directly in your
-<code>.emacs</code> or <code>site-lisp/site-start.el</code> or by working with
-a file <code>subdirs.el</code>.
+<p>You <strong>MUST</strong> add the ECB-install-directory to the
+<code>load-path</code> either by changing the <code>load-path</code> variable
+directly in your <code>.emacs</code> or <code>site-lisp/site-start.el</code> or by
+working with a file <code>subdirs.el</code>.
 
 <p><strong>ATTENTION</strong>:
 ECB is NOT properly installed if it's directory is not added to
@@ -230,13 +234,14 @@ Up:<a rel=up accesskey=u href="#Top">Top</a>
 <p>ECB is a global minor-mode which offers a few <dfn>ECB-windows</dfn> for
 browsing your sources comfortable with the mouse and the keyboard. 
 These "special" windows are also called <dfn>tree-buffer</dfn> in this
-manual. There are currently three different types of
-ECB-windows/tree-buffers:
+manual. Every <dfn>item</dfn> in such a tree-buffer, i.e. every line, is
+also called a <dfn>node</dfn> of this tree-buffer. There are currently
+three different types of ECB-windows/tree-buffers:
 
 <ul>
-<li><a accesskey=1 href="#ECB%20Directories">ECB Directories</a>:              Contents of the ECB Directories-buffer
-<li><a accesskey=2 href="#ECB%20Sources">ECB Sources</a>:                  Contents of the ECB Sources/history-buffer
-<li><a accesskey=3 href="#ECB%20Methods">ECB Methods</a>:                  Contents of the ECB Methods-buffer
+<li>ECB-Directories
+<li>ECB-Sources
+<li>ECB-Methods
 </ul>
 
 <p>In addition to these ECB-windows you have always one or two
@@ -244,6 +249,12 @@ ECB-windows/tree-buffers:
 ECB-frame and (if you want) at the bottom a <dfn>compilation-window</dfn>,
 where all the output of Emacs-compilation (compile, grep etc.) is
 shown (see <a href="#Temp-%20and%20compile-buffers">Temp- and compile-buffers</a>).
+
+<ul>
+<li><a accesskey=1 href="#ECB%20Directories">ECB Directories</a>:              Contents of the ECB Directories-buffer
+<li><a accesskey=2 href="#ECB%20Sources">ECB Sources</a>:                  Contents of the ECB Sources/history-buffer
+<li><a accesskey=3 href="#ECB%20Methods">ECB Methods</a>:                  Contents of the ECB Methods-buffer
+</ul>
 
 <p><hr>
 Node:<a name="ECB%20Directories">ECB Directories</a>,
@@ -716,7 +727,7 @@ Up:<a rel=up accesskey=u href="#The%20Methods%20buffer">The Methods buffer</a>
 <h4>Customizing the display of the Methods-buffer</h4>
 
 <p>The ECB-Methods buffer is probably the most important browsing window
-offeren by ECB. It displays all semantic informations of the current
+offered by ECB. It displays all semantic informations of the current
 buffer in the edit-window.
 
 <p>ECB gets all informations displayed in this Methods-buffer from the
@@ -1352,6 +1363,39 @@ the second one lists all options of ECB.
 <li><a accesskey=2 href="#Customizable%20options">Customizable options</a>:         All customizable options of ECB
 </ul>
 
+<p><strong>ATTENTION</strong>: The best way you customize all the options of ECB
+is via the customize-feature of (X)Emacs, i.e. means calling the
+commands <code>customize-option</code> or <code>customize-group</code> etc. This
+is also the strongly recommended way!
+
+<p>But of course you can also use <code>setq</code> or some elisp-code to
+change the values of many but not all of the options. The values of
+the following options <strong>MUST NOT</strong> be changed via <code>setq</code> or
+elisp-code but only with the customize-feature!
+
+<ul>
+<li><code>ecb-source-path</code>
+<li><code>ecb-tree-RET-selects-edit-window</code>
+<li><code>ecb-font-lock-tokens</code>
+<li><code>ecb-bucket-token-display</code>
+<li><code>ecb-token-display-function</code>
+<li><code>ecb-type-token-display</code>
+<li><code>ecb-show-tokens</code>
+<li><code>ecb-exclude-parents-regexp</code>
+<li><code>ecb-highlight-token-with-point-delay</code>
+<li><code>ecb-window-sync-delay</code>
+<li><code>ecb-show-node-info-in-minibuffer</code>
+<li><code>ecb-key-map</code>
+<li><code>ecb-layout-nr</code>
+<li><code>ecb-compile-window-height</code>
+<li><code>ecb-compile-window-temporally-enlarge</code>
+<li><code>ecb-windows-width</code>
+<li><code>ecb-windows-height</code>
+<li><code>ecb-advice-window-functions</code>
+<li><code>ecb-layout-window-sizes</code>
+<li><code>ecb-mode-line-prefixes</code>
+</ul>
+
 <p><hr>
 Node:<a name="Most%20important%20options">Most important options</a>,
 Next:<a rel=next accesskey=n href="#Customizable%20options">Customizable options</a>,
@@ -1771,6 +1815,24 @@ compile-window of ECB.
 <tr><td>
 String to display in the mode line when ECB minor mode is active. 
 (When the string is not empty, make sure that it has a leading space.) 
+</td></tr>
+</table>
+
+<p>
+<table width="100%">
+<tr>
+<td align="left"><b>ecb-mode-line-prefixes</b><i>
+</i></td>
+<td align="right">User Option</td>
+</tr>
+</table>
+<table width="95%" align="center">
+<tr><td>
+Prefixes shown in the modelines of the ECB buffers. The displayed
+prefix then looks like: "[ &lt;PREFIX&gt;[: ]]", means if a prefix is
+defined for an ECB buffer then a single space is prepended and if
+there is additional text to display (e.g. the current directory in the
+sources buffer) then also the string ": " is appended. 
 </td></tr>
 </table>
 
@@ -2281,7 +2343,7 @@ change in a future version.
 <table width="95%" align="center">
 <tr><td>
 Name of the ECB directory buffer. Because it is not a normal buffer
-for editing you should enclose the name with stars, e.g. "*ECB
+for editing you should enclose the name with stars, e.g. " *ECB
 Directories*".
 
 <p>If it is necessary for you you can get emacs-lisp access to the buffer-object of
@@ -2383,8 +2445,8 @@ useful combinations of an exclude and include regexp:
 
 <li>All, but no backup, object, lib or ini-files (except .emacs and .gnus). This
 means all files except those starting with ".", "#" or ending with
-"~", ".elc", ".obj", ".o", ".lib", ".dll", ".a", ".so". (but including
-.emacs and .gnus)
+"~", ".elc", ".obj", ".o", ".lib", ".dll", ".a",
+".so". (but including .emacs and .gnus)
 
 <li>Common source file types (.c, .java etc.) 
 </ul>
@@ -2585,6 +2647,37 @@ seconds.
 <p>
 <table width="100%">
 <tr>
+<td align="left"><b>ecb-token-jump-narrow</b><i>
+</i></td>
+<td align="right">User Option</td>
+</tr>
+</table>
+<table width="95%" align="center">
+<tr><td>
+When jumping to a token from the ECB methods buffer narrows the buffer
+to only show that token. To display the entire buffer again, click on
+a source file or call <code>widen</code> <kbd>C-x n w</kbd>. 
+</td></tr>
+</table>
+
+<p>
+<table width="100%">
+<tr>
+<td align="left"><b>ecb-token-jump-sets-mark</b><i>
+</i></td>
+<td align="right">User Option</td>
+</tr>
+</table>
+<table width="95%" align="center">
+<tr><td>
+Jumping to a token from the ECB-method buffer now sets the mark so the
+user can easily jump back. 
+</td></tr>
+</table>
+
+<p>
+<table width="100%">
+<tr>
 <td align="left"><b>ecb-methods-buffer-name</b><i>
 </i></td>
 <td align="right">User Option</td>
@@ -2593,7 +2686,7 @@ seconds.
 <table width="95%" align="center">
 <tr><td>
 Name of the ECB methods buffer. Because it is not a normal buffer for
-editing you should enclose the name with stars, e.g. "*ECB
+editing you should enclose the name with stars, e.g. " *ECB
 Methods*".
 
 <p>If it is necessary for you you can get emacs-lisp access to the
@@ -4361,9 +4454,11 @@ size but splits the window equally. But if you add this to your
 
 <br><pre>(add-hook 'initial-calendar-window-hook
           (function (lambda ()
-                      (when (and ecb-minor-mode (ecb-point-in-edit-window))
+                      (when (and ecb-minor-mode
+                                 (ecb-point-in-edit-window))
                         (or (= (frame-width) (window-width))
-                            (shrink-window (- (window-height) 9)))))))
+                            (shrink-window (- (window-height) 9))))
+                     )))
 </pre>
 
 <p><hr>
@@ -4389,6 +4484,8 @@ Up:<a rel=up accesskey=u href="#Top">Top</a>
 <br>
 
 <h2>Function Index</h2>
+
+<p>This index contains all user commands of ECB:
 
 <ul compact>
 <li><code>ecb-activate</code>: <a href="#Interactive%20ECB%20commands">Interactive ECB commands</a>
@@ -4425,6 +4522,8 @@ Up:<a rel=up accesskey=u href="#Top">Top</a>
 <br>
 
 <h2>Variable Index</h2>
+
+<p>This index contains all customizable options of ECB:
 
 <ul compact>
 <li><code>ecb-activate-before-layout-draw-hook</code>: <a href="#ecb-general">ecb-general</a>
@@ -4474,6 +4573,7 @@ Up:<a rel=up accesskey=u href="#Top">Top</a>
 <li><code>ecb-methods-buffer-name</code>: <a href="#ecb-methods">ecb-methods</a>
 <li><code>ecb-methods-general-face</code>: <a href="#ecb-face-options">ecb-face-options</a>
 <li><code>ecb-minor-mode-text</code>: <a href="#ecb-general">ecb-general</a>
+<li><code>ecb-mode-line-prefixes</code>: <a href="#ecb-general">ecb-general</a>
 <li><code>ecb-new-ecb-frame</code>: <a href="#ecb-layout">ecb-layout</a>
 <li><code>ecb-other-window-jump-behavior</code>: <a href="#ecb-layout">ecb-layout</a>
 <li><code>ecb-post-process-semantic-tokenlist</code>: <a href="#ecb-methods">ecb-methods</a>
