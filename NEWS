@@ -1,4 +1,4 @@
-* Changes for ECB version
+* Changes for ECB version 1.95.1
 
 ** Now the ecb-windows can be "maximized", means all other ecb-windows are
    deleted so only the edit-window(s), and this maximized ecb-window are
