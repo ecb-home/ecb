@@ -26,7 +26,7 @@
 ;; This file is part of the ECB package which can be found at:
 ;; http://home.swipnet.se/mayhem/ecb.html
 
-;; $Id: ecb-util.el,v 1.46 2003/01/21 18:05:53 berndl Exp $
+;; $Id: ecb-util.el,v 1.47 2003/01/22 10:12:51 berndl Exp $
 
 ;;; Code:
 
@@ -420,6 +420,25 @@ During the evaluation of BODY the following local variables are bound:
        ,@body)))
 
 (put 'ecb-do-if-buffer-visible-in-ecb-frame 'lisp-indent-function 1)
+
+
+(defun ecb-option-get-value (option &optional type)
+  "Return the value of a customizable ECB-option OPTION with TYPE, where TYPE
+can either be 'standard-value \(the default-value of the defcustom) or
+'saved-value \(the value stored durable by the user via customize) or
+'customized-value \(the value set but not saved in the customize buffer).
+If TYPE is nil then the most recent set value is returned, means it
+tries the customized-value, then the saved-value and then the standard-value
+in exactly this sequence."
+  (let ((val (car (if type
+                      (get option type)
+                    (or (get option 'customized-value)
+                        (get option 'saved-value)
+                        (get option 'standard-value))))))
+    (cond ((not (listp val)) val)
+          ((equal 'quote (car val)) (car (cdr val)))
+          (t (car val)))))
+
 
 (defmacro ecb-error (&rest args)
   "Signals an error but prevents it from entering the debugger. This is
