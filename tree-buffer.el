@@ -995,8 +995,10 @@ mentioned above!"
                         menu-title)
 		(let* ((menu-selection (apply 'vector
                                               (x-popup-menu event menu)))
-                       (fn (if menu-selection (lookup-key menu menu-selection))))
-                  (when fn
+                       (fn (if (and menu-selection
+                                    (> (length menu-selection) 0))
+                               (lookup-key menu menu-selection))))
+                  (when (functionp fn)
 		    (funcall fn node)))))))))))
 
 
