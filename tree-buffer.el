@@ -26,7 +26,7 @@
 ;; This file is part of the ECB package which can be found at:
 ;; http://home.swipnet.se/mayhem/ecb.html
 
-;; $Id: tree-buffer.el,v 1.30 2001/05/02 17:11:44 berndl Exp $
+;; $Id: tree-buffer.el,v 1.31 2001/05/03 16:08:46 berndl Exp $
 
 ;;; Code:
 
@@ -65,6 +65,7 @@
 (defvar tree-node-expanded-fn nil)
 (defvar tree-node-mouse-over-fn nil)
 (defvar tree-buffer-highlight-overlay nil)
+(defvar tree-buffer-incr-searchpattern nil)
 
 (defun list-append(list item)
   (if list
@@ -348,6 +349,81 @@ point will stay on POINT."
           (if fn
               (eval (list (car fn) 'node))))))))
 
+;; idea is stolen from ido.el, written by Kim F. Storm <stormware@get2net.dk>
+(defun tree-buffer-find-common-prefix (lis subs)
+  "Return common prefix beginning with SUBS in each element of LIS."
+  (let ((change-word-sub (concat "^" (regexp-quote subs)))
+        res alist)
+    (setq res (mapcar (function (lambda (word)
+                                  (let ((case-fold-search t)
+                                        (m (string-match change-word-sub word)))
+                                    (if m
+                                        (substring word m)
+                                      ;; else no match
+                                      nil))))
+                      lis))
+    (setq res (delq nil res));; remove any nil elements (shouldn't happen)
+    (setq alist (mapcar (function (lambda (r)
+                                    (cons r 1)))
+                        res));; could use an  OBARRAY
+
+    ;; try-completion returns t if there is an exact match.
+    (let ((completion-ignore-case t))
+      (try-completion subs alist))))
+
+(defconst tree-buffer-incr-searchpattern-prefix "^[ \t]*\\(\\[[+-]\\]\\)? ?")
+(defun tree-buffer-incremental-node-search ()
+  "Incremental search for a node in current tree-buffer. Each displayable
+key \(e.g. all keys normally bound to `self-insert-command') is appended to
+the current seach-pattern. The tree-buffer tries to jump to the current
+search-pattern. If no match is found then nothing is done. Some special keys:
+- backspace and delete: Delete the last character from the search-pattern.
+- home: Delete the complete search-pattern
+- end: Expand to the greates common prefix of the nodes
+The current search-pattern is shown in the echo area.
+After selecting a node with RET the search-pattern is cleared out.
+
+Do NOT call this function directly. It works only if called from the binding
+mentioned above!"
+  (interactive)
+  (cond  ((or (equal last-command-char 'delete)
+              (equal last-command-char 'backspace))
+          ;; reduce by one from the end
+          (setq tree-buffer-incr-searchpattern
+                (substring tree-buffer-incr-searchpattern
+                           0
+                           (max 0 (1- (length tree-buffer-incr-searchpattern))))))
+         ;; delete the complete search-pattern
+         ((equal last-command-char 'home)
+          (setq tree-buffer-incr-searchpattern ""))
+         ;; expand to the max. common prefix
+         ((equal last-command-char 'end)
+          (let* ((node-name-list (mapcar 'tree-node-get-name
+                                         (tree-node-get-children tree-buffer-root)))
+                 (common-prefix (tree-buffer-find-common-substring
+                                 node-name-list tree-buffer-incr-searchpattern)))
+            (if (stringp common-prefix)
+                (setq tree-buffer-incr-searchpattern common-prefix))))
+         (t
+          ;; add the last command to the end
+          (setq tree-buffer-incr-searchpattern
+                (concat tree-buffer-incr-searchpattern
+                        (char-to-string last-command-char)))))
+  (message "%s node search: [%s]%s"
+           (buffer-name (current-buffer))
+           tree-buffer-incr-searchpattern
+           (if (let ((case-fold-search t))
+                 (save-excursion
+                   (goto-char (point-min))
+                   (re-search-forward
+                    (concat tree-buffer-incr-searchpattern-prefix
+                            (regexp-quote tree-buffer-incr-searchpattern)) nil t)))
+               ;; we have found a matching ==> jump to it
+               (progn
+                 (goto-char (match-end 0))
+                 "")
+             " - no match")))
+
 (defun tree-buffer-create(name is-click-valid-fn node-selected-fn
                                node-expanded-fn node-mouse-over-fn
                                menus tr-lines read-only tree-indent
@@ -421,6 +497,7 @@ EXPAND-SYMBOL-BEFORE: If not nil then the expand-symbol \(is displayed before
     (make-local-variable 'tree-buffer-type-facer)
     (make-local-variable 'tree-buffer-expand-symbol-before)
     (make-local-variable 'tree-buffer-highlight-overlay)
+    (make-local-variable 'tree-buffer-incr-searchpattern)
   
     (setq truncate-lines tr-lines)
     (setq truncate-partial-width-windows tr-lines)
@@ -438,11 +515,31 @@ EXPAND-SYMBOL-BEFORE: If not nil then the expand-symbol \(is displayed before
     (setq tree-buffer-expand-symbol-before expand-symbol-before)
     (setq tree-buffer-highlight-overlay (make-overlay 1 1))
     (overlay-put tree-buffer-highlight-overlay 'face 'secondary-selection)
+    (setq tree-buffer-incr-searchpattern "")
 
+    ;; settings for the incremental search.
+    ;; for all keys which are bound to `self-insert-command' in `global-map'
+    ;; we change this binding to `tree-buffer-klaus'.
+    (substitute-key-definition 'self-insert-command
+                               'tree-buffer-incremental-node-search
+                               tree-buffer-key-map
+                               global-map)
+    (define-key tree-buffer-key-map [delete]
+      'tree-buffer-incremental-node-search)
+    (define-key tree-buffer-key-map [backspace]
+      'tree-buffer-incremental-node-search)
+    (define-key tree-buffer-key-map [home]
+      'tree-buffer-incremental-node-search)
+    (define-key tree-buffer-key-map [end]
+      'tree-buffer-incremental-node-search)
+    
     (define-key tree-buffer-key-map "\C-m"
       (function (lambda()
 		  (interactive)
+                  ;; reinitialize the select pattern after selecting a node
+                  (setq tree-buffer-incr-searchpattern "")
 		  (tree-buffer-select 0 nil nil))))
+    
     (define-key tree-buffer-key-map [tab]
       (function
        (lambda()
