@@ -54,7 +54,7 @@
 ;; The latest version of the ECB is available at
 ;; http://home.swipnet.se/mayhem/ecb.html
 
-;; $Id: ecb.el,v 1.198 2002/02/27 19:09:02 berndl Exp $
+;; $Id: ecb.el,v 1.199 2002/02/28 08:16:49 berndl Exp $
 
 ;;; Code:
 
@@ -168,6 +168,11 @@
   :group 'ecb
   :prefix "ecb-")
 
+(defgroup ecb-face-definition nil
+  "Definitions of all ECB-faces"
+  :group 'ecb-faces
+  :prefix "ecb-")
+
 (defmacro ecb-face-default (&optional height bold-p italic-p
                                       fg-light-col fg-dark-col
                                       bg-light-col bg-dark-col
@@ -213,7 +218,7 @@ The parameters are set for the following display-types:
   "*Basic face for the ECB directories buffer.
 It큦 recommended to define here the font-family, the font-size, the basic
 color etc."
-  :group 'faces)
+  :group 'ecb-face-definition)
 
 (defcustom ecb-directories-general-face 'ecb-directories-general-face
   "*Basic face for the ECB directories buffer. This defines the basic
@@ -227,7 +232,7 @@ face is used but always the default-face."
   "*Basic face for the ECB sources buffer.
 It큦 recommended to define here the font-family, the font-size, the basic
 color etc."
-  :group 'faces)
+  :group 'ecb-face-definition)
 
 (defcustom ecb-sources-general-face 'ecb-sources-general-face
   "*Basic face for the ECB sources buffer. This defines the basic
@@ -241,7 +246,7 @@ face is used but always the default-face."
   "*Basic face for the ECB methods buffer.
 It큦 recommended to define here the font-family, the font-size, the basic
 color etc."
-  :group 'faces)
+  :group 'ecb-face-definition)
 
 (defcustom ecb-methods-general-face 'ecb-methods-general-face
   "*Basic face for the ECB methods buffer. This defines the basic
@@ -255,7 +260,7 @@ face is used but always the default-face."
   "*Basic face for the ECB history buffer.
 It큦 recommended to define here the font-family, the font-size, the basic
 color etc."
-  :group 'faces)
+  :group 'ecb-face-definition)
 
 (defcustom ecb-history-general-face 'ecb-history-general-face
   "*Basic face for the ECB directory buffer. This defines the basic
@@ -270,7 +275,7 @@ face is used but always the default-face."
                                               nil nil t)
   "*Define face used for highlighting current directory in the
 directories buffer."
-  :group 'faces)
+  :group 'ecb-face-definition)
 
 (defcustom ecb-directory-face 'ecb-directory-face
   "*Face used for highlighting current directory in the
@@ -284,7 +289,7 @@ directories buffer."
                                            nil nil t)
   "*Define face used for highlighting current source in the
 sources buffer."
-  :group 'faces)
+  :group 'ecb-face-definition)
 
 (defcustom ecb-source-face 'ecb-source-face
   "*Face used for highlighting current source in the
@@ -293,11 +298,12 @@ sources buffer."
   :group 'ecb-sources
   :type 'face)
 
-(defface ecb-method-face (ecb-face-default nil nil nil nil nil
-                                           "SeaGreen1" "SeaGreen1" nil nil t)
+(defface ecb-method-face (ecb-face-default nil nil nil "yellow" nil
+                                           "cornflower blue" "magenta"
+                                           nil nil t)
   "*Define face used for highlighting current method, class or variable
 in the methods buffer."
-  :group 'faces)
+  :group 'ecb-face-definition)
 
 (defcustom ecb-method-face 'ecb-method-face
   "*Face used for highlighting current method, class or variable in the
@@ -311,7 +317,7 @@ methods buffer."
                                             nil nil t)
   "*Define face used for highlighting current history-entry in the
 history buffer."
-  :group 'faces)
+  :group 'ecb-face-definition)
 
 (defcustom ecb-history-face 'ecb-history-face
   "*Face used for highlighting current history-entry in the
@@ -325,7 +331,7 @@ history buffer."
                                                  nil nil t)
   "*Define face used for highlighting the token header after jumping to
   it by clicking onto a node in the methods buffer."
-  :group 'faces)
+  :group 'ecb-face-definition)
   
 (defcustom ecb-token-header-face 'ecb-token-header-face
   "*Face used for highlighting the token header after jumping to
@@ -457,7 +463,7 @@ then activating ECB again!"
                                                                  nil nil
                                                                  nil "gray")
   "*Define a face for displaying sources in the directories buffer."
-  :group 'faces)
+  :group 'ecb-face-definition)
 
 (defcustom ecb-source-in-directories-buffer-face
   'ecb-source-in-directories-buffer-face
@@ -722,19 +728,19 @@ displaying the tokens."
 
 (defface ecb-type-token-class-face (ecb-face-default nil t)
   "*Define face used with option `ecb-type-token-display'."
-  :group 'faces)
+  :group 'ecb-face-definition)
 
 (defface ecb-type-token-struct-face (ecb-face-default nil t)
   "*Define face used with option `ecb-type-token-display'."
-  :group 'faces)
+  :group 'ecb-face-definition)
 
 (defface ecb-type-token-typedef-face (ecb-face-default nil t)
   "*Define face used with option `ecb-type-token-display'."
-  :group 'faces)
+  :group 'ecb-face-definition)
 
 (defface ecb-type-token-enum-face (ecb-face-default nil t)
   "*Define face used with option `ecb-type-token-display'."
-  :group 'faces)
+  :group 'ecb-face-definition)
 
 (defface ecb-type-token-group-face (ecb-face-default nil t nil
                                                      (if running-xemacs
@@ -744,7 +750,7 @@ displaying the tokens."
                                                          "dimgray"
                                                        "dim gray"))
   "*Define face used with option `ecb-type-token-display'."
-  :group 'faces)
+  :group 'ecb-face-definition)
 
 (defcustom ecb-type-token-display nil
   "*How to display semantic type-tokens in the methods buffer.
