@@ -5,6 +5,7 @@
 EMACS=emacs
 
 RM=rm -f
+CP=cp
 MKDIR=mkdir -p
 TARC=tar -czvf
 
@@ -15,6 +16,9 @@ ecb_HTMLDOCU_DIR=./docs
 ecb_TEXI=../ecb.texi
 
 ecb_UPLOAD_ARC=ecb-website.tar.gz
+
+ecb_WEBSITE_CONTENT=*.html docs/*.html screenshots/index.html \
+                    screenshots/*.png HISTORY
 
 all: website online-docu upload-build
 
@@ -29,5 +33,7 @@ online-docu: $(ecb_TEXI)
 $(ecb_HTMLDOCU_DIR)/index.html: online-docu
 
 upload-build: $(ecb_HTMLDOCU_DIR)/index.html
-	$(RM) $(ecb_UPLOAD_ARC)
-	$(TARC) $(ecb_UPLOAD_ARC) *.html docs screenshots/index.html screenshots/*.png
+	@$(CP) ../HISTORY .
+	@$(RM) $(ecb_UPLOAD_ARC)
+	$(TARC) $(ecb_UPLOAD_ARC) $(ecb_WEBSITE_CONTENT)
+
