@@ -1,6 +1,3 @@
-- Prevent layout-engine from splitting windows when smaller than
-  window-min-height/width.
-
 - Implementing the class-browser of speedbar native with ECB in an
   additional special ecb-window - a very important todo of high
   priority!
@@ -9,6 +6,9 @@
   (semantic-tag-include-system-p TAG). Thanks to Markus grietsch.
   But probably it would be the best if semantic itself does this special
   formating! 
+
+- Prevent layout-engine from splitting windows when smaller than
+  window-min-height/width.
 
 - (BUG) if a buffer is opened from within an archive (zip or tar) then
   clicking onto a method in this buffer tries to jump somewhere in the archive

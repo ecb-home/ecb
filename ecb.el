@@ -440,6 +440,7 @@ Here the interval is defined ECB has to be idle before starting with these
 stealthy tasks. It can be a floating-point value in seconds. The value can
 also be changed during running ECB."
   :group 'ecb-general
+  :group 'ecb-most-important
   :type '(number :tag "Idle time before running stealthy tasks"
                  :value 1)
   :initialize 'custom-initialize-default
@@ -705,7 +706,7 @@ tasks are performed:
                                                (substring norm-filename 0 2)))
                                          ;; add the full directory as source-path
                                          (file-name-directory norm-filename))))
-                     (ecb-add-source-path source-path source-path
+                     (ecb-add-source-path source-path (ecb-fix-filename source-path)
                                           (not (cdr ecb-add-path-for-not-matching-files)))))
 
                ;; now we can be sure that a matching source-path exists

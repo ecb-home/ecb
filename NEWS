@@ -1,3 +1,14 @@
+* Changes for ECB version 2.31beta1
+
+** Fixed bugs
+
+*** Fixed a recently introduced bug with XEmacs and an active isearch.
+    This bug occured when a user has clicked onto a node in a tree-buffer
+    during an active isearch and it had as result completely out-of-order
+    tree-buffers. This buf is now fixed and should never occur.
+
+
+
 * Changes for ECB version 2.30.1
 
 ** Enhancement to the automatic option-upgrading mechanism
