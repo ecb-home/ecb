@@ -25,6 +25,16 @@
 ;; This file contains all options with type 'face and all face-definitions of
 ;; ECB.
 
+(eval-when-compile
+  (or load-in-progress
+      (let ((load-path
+             (if (and (boundp 'byte-compile-dest-file)
+                      (stringp byte-compile-dest-file))
+                 (cons (file-name-directory byte-compile-dest-file)
+                       load-path)
+               load-path)))
+        (load "ecb-bytecomp" nil t))))
+
 (defgroup ecb-face-options nil
   "Settings for all faces used in ECB."
   :group 'ecb
@@ -375,6 +385,8 @@ attributes set by 'ecb-default-general-face' this set of basic attributes have
 to be set in 'ecb-bucket-token-face' too!"
 :group 'ecb-faces)
 
-(provide 'ecb-face)
+(if (featurep 'ecb-bytecomp)
+    (ecb-provide 'ecb-face)
+  (provide 'ecb-face))
 
 ;;; ecb-face.el ends here

@@ -33,6 +33,16 @@
 
 ;;; Code:
 
+(eval-when-compile
+  (or load-in-progress
+      (let ((load-path
+             (if (and (boundp 'byte-compile-dest-file)
+                      (stringp byte-compile-dest-file))
+                 (cons (file-name-directory byte-compile-dest-file)
+                       load-path)
+               load-path)))
+        (load "ecb-bytecomp" nil t))))
+
 (defgroup ecb-compilation nil
   "Settings for all things displayed in the compile window of ECB."
   :group 'ecb
@@ -103,6 +113,8 @@ This function non-nil if the name of BUFFER is either contained in
               (member major-mode ecb-compilation-major-modes))
             (compilation-buffer-p buf)))))
 
-(provide 'ecb-compilation)
+(if (featurep 'ecb-bytecomp)
+    (ecb-provide 'ecb-compilation)
+  (provide 'ecb-compilation))
 
 ;;; ecb-compilation.el ends here

@@ -116,6 +116,16 @@
 
 ;;; Code:
 
+(eval-when-compile
+  (or load-in-progress
+      (let ((load-path
+             (if (and (boundp 'byte-compile-dest-file)
+                      (stringp byte-compile-dest-file))
+                 (cons (file-name-directory byte-compile-dest-file)
+                       load-path)
+               load-path)))
+        (load "ecb-bytecomp" nil t))))
+
 (require 'ecb)
 (require 'speedbar)
 
@@ -246,6 +256,8 @@ that this is a reimplemntation of this for the ECB that does no frame selection"
 ;;always stay in the current frame
 (setq speedbar-select-frame-method 0)
 
-(provide 'ecb-speedbar)
+(if (featurep 'ecb-bytecomp)
+    (ecb-provide 'ecb-speedbar)
+  (provide 'ecb-speedbar))
 
 ;;; ecb-speedbar.el ends here

@@ -90,7 +90,7 @@ ecb: $(ecb_LISP_EL)
 	      echo "(add-to-list 'load-path \"$$loadpath\")" >> ecb-compile-script; \
 	   done; \
 	fi
-	@echo "(require 'ecb-bytecomp)" >> ecb-compile-script
+#	@echo "(require 'ecb-bytecomp)" >> ecb-compile-script
 	@echo "(require 'ecb)" >> ecb-compile-script
 	@echo "(setq debug-on-error t)" >> ecb-compile-script
 	$(EMACS) -batch -no-site-file -l ecb-compile-script --eval '(ecb-byte-compile t)'

@@ -30,6 +30,16 @@
 
 ;;; Code:
 
+(eval-when-compile
+  (or load-in-progress
+      (let ((load-path
+             (if (and (boundp 'byte-compile-dest-file)
+                      (stringp byte-compile-dest-file))
+                 (cons (file-name-directory byte-compile-dest-file)
+                       load-path)
+               load-path)))
+        (load "ecb-bytecomp" nil t))))
+
 (when (featurep 'ecb-bytecomp)
   ;; JDE
   (ecb-bytecomp-defun jde-gen-class-buffer)
@@ -267,7 +277,9 @@ should stopped but no debugging is senseful."
      (error ,@args)))
 
 
-(provide 'ecb-util)
+(if (featurep 'ecb-bytecomp)
+    (ecb-provide 'ecb-util)
+  (provide 'ecb-util))
 
 ;;; ecb-util.el ends here
 
