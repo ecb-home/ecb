@@ -122,7 +122,7 @@
 ;;   + The edit-window must not be splitted and the point must reside in
 ;;     the not deleted edit-window.
 
-;; $Id: ecb-layout.el,v 1.39 2001/05/06 07:08:15 berndl Exp $
+;; $Id: ecb-layout.el,v 1.40 2001/05/06 08:34:54 berndl Exp $
 
 ;;; Code:
 
@@ -434,12 +434,14 @@ done.")
 
 ;; utilities
 (defun ecb-raise-ecb-frame-maybe ()
-  (if (not (equal (selected-frame) ecb-frame))
-      (if ecb-auto-raise-ecb-frame
-          (progn
-            (select-frame ecb-frame)
-            (raise-frame ecb-frame))
-        (error "Select the ECB frame before calling this command!"))))
+  (if (frame-live-p ecb-frame)
+      (if (not (equal (selected-frame) ecb-frame))
+          (if ecb-auto-raise-ecb-frame
+              (progn
+                (select-frame ecb-frame)
+                (raise-frame ecb-frame))
+            (error "Select the ECB frame before calling this command!")))
+    (message "The ECB-frame seems to be dead!")))
   
 (defun ecb-activate-adviced-functions (functions)
   "Acivates the ecb-advice of exactly FUNCTIONS and only of FUNCTIONS, means
@@ -548,7 +550,9 @@ this variable."
   "Added to the end of `ediff-quit-hook' during ECB is activated. It
 does all necessary after finishing ediff."
   (when ecb-activated
-    (if (y-or-n-p "Ediff finished. Do you want to delete the extra ediff-frame? ")
+    (if (and (not (equal (selected-frame) ecb-frame))
+             (y-or-n-p
+              "Ediff finished. Do you want to delete the extra ediff-frame? "))
         (delete-frame (selected-frame) t))
     (select-frame ecb-frame)
     (let ((ecb-auto-raise-ecb-frame nil))

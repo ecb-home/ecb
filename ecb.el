@@ -52,7 +52,7 @@
 ;; The latest version of the ECB is available at
 ;; http://home.swipnet.se/mayhem/ecb.html
 
-;; $Id: ecb.el,v 1.75 2001/05/06 07:08:15 berndl Exp $
+;; $Id: ecb.el,v 1.76 2001/05/06 08:34:54 berndl Exp $
 
 ;;; Code:
 
@@ -1373,9 +1373,14 @@ with the actually choosen layout \(see `ecb-layout-nr')."
     (if ecb-new-ecb-frame
         (progn
           (run-hooks 'ecb-activate-before-new-frame-created-hook)
-          (setq ecb-frame (make-frame)))
-      (setq ecb-frame (selected-frame)))
-    (select-frame ecb-frame)
+          (setq ecb-frame (make-frame))
+          (put 'ecb-frame 'ecb-new-frame-created t))
+      (setq ecb-frame (selected-frame))
+      (put 'ecb-frame 'ecb-new-frame-created nil))
+    (if running-xemacs
+        (raise-frame ecb-frame)
+      (select-frame ecb-frame))
+    
     ;; now we can activate ECB
     (let ((curr-buffer-list (mapcar (lambda (buff)
                                       (buffer-name buff))
@@ -1501,10 +1506,12 @@ with the actually choosen layout \(see `ecb-layout-nr')."
     ;; restore the old compilation-window-height
     (setq compilation-window-height ecb-old-compilation-window-height)
 
-    (if ecb-edit-window
-        (ecb-switch-to-edit-buffer))   
-    ;; first we delete all ECB-windows.
-    (delete-other-windows)
+    (when (frame-live-p ecb-frame)
+      (if ecb-edit-window
+          (ecb-switch-to-edit-buffer))   
+      ;; first we delete all ECB-windows.
+      (delete-other-windows))
+    
     ;; we can safely do the kills because killing non existing buffers
     ;; doesn´t matter.
     (kill-buffer ecb-directories-buffer-name)
@@ -1530,7 +1537,9 @@ with the actually choosen layout \(see `ecb-layout-nr')."
                                    'ecb-ediff-quit-hook-value))
       (remove-hook 'ediff-quit-hook 'ecb-ediff-quit-hook))
     (setq ecb-activated nil)
-    (ignore-errors (delete-frame ecb-frame t))
+    (if (and (frame-live-p ecb-frame)
+             (get 'ecb-frame 'ecb-new-frame-created))
+        (ignore-errors (delete-frame ecb-frame t)))
     (setq ecb-frame nil)
     ;; run any personal hooks
     (run-hooks 'ecb-deactivate-hook))
