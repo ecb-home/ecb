@@ -1,6 +1,9 @@
 Version 1.60:
 -------------
 
+- ecb-highlight-token-header-after-jump is now a boolean; which face is used
+  for highlighting is defined in ecb-token-header-face. (Klaus)
+
 - New option 'ecb-post-process-semantic-tokenlist': Special postprocessing of
   the semantic tokenlist for certain major-modes. This is usefull for
   c++-mode. Now with the default value of this option all methods in a
