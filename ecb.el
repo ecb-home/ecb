@@ -10,7 +10,7 @@
 
 ;; IMPORTANT: The version-number is auto-frobbed from the Makefile. Do not
 ;; change it here!
-(defconst ecb-version "1.90"
+(defconst ecb-version "1.91.1"
   "Current ECB version.")
 
 ;; This program is free software; you can redistribute it and/or modify it under
@@ -62,7 +62,7 @@
 ;; The latest version of the ECB is available at
 ;; http://ecb.sourceforge.net
 
-;; $Id: ecb.el,v 1.283 2003/02/07 15:54:36 berndl Exp $
+;; $Id: ecb.el,v 1.284 2003/02/10 16:52:22 berndl Exp $
 
 ;;; Code:
 
@@ -2742,6 +2742,10 @@ it is cleared."
              (equal (selected-frame) ecb-frame)
              (get-buffer-window ecb-methods-buffer-name)
              (buffer-file-name (current-buffer))
+             ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: 
+;;              (not (string= (buffer-name (current-buffer))
+;;              jde-project-file-name))
+             
              ;; The functions of the hook
              ;; `semantic-after-toplevel-cache-change-hook' are also called
              ;; after clearing the cache to set the cache to nil if a buffer
@@ -2794,6 +2798,7 @@ it is cleared."
     ;; whole tokens to storing buffer and start- and end-markers!
     
     (ecb-mode-line-format)
+
     ;; signalize that the rebuild has already be done
     (setq ecb-method-buffer-needs-rebuild nil)))
 
@@ -3051,9 +3056,15 @@ tasks are performed:
                (ecb-select-source-file filename force)
                (ecb-update-methods-buffer--internal 'scroll-to-begin)
                (setq ecb-major-mode-selected-source major-mode)
+
+               ;; Klaus Berndl <klaus.berndl@sdm.de>: is now be done at the
+               ;; end of `ecb-rebuild-methods-buffer-with-tokencache' which is
+               ;; called by `ecb-update-methods-buffer--internal'!
+
                ;; selected source has changed, therfore we must initialize
                ;; ecb-selected-token again.
-               (ecb-token-sync 'force))
+               (ecb-token-sync 'force)
+               )
               
               (;; synchronizing for dired-mode
                (eq major-mode 'dired-mode)
@@ -3093,8 +3104,8 @@ OTHER-EDIT-WINDOW."
   (select-window (ecb-get-edit-window other-edit-window))
   (ecb-nav-save-current)
   (ecb-with-original-functions
-   (find-file filename)
-   (pop-to-buffer (buffer-name)))
+   (find-file filename))
+;;    (pop-to-buffer (buffer-name)))
   (ecb-nav-add-item (ecb-nav-file-history-item-new)))
 
 (defun ecb-tree-node-add-files

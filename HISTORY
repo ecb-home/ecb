@@ -1,5 +1,9 @@
-Version
------------
+Version 1.91.1
+--------------
+
+* Fixes a bug in upgrading stored window-sizes from ECB 1.80 to ECB >= 1.90.
+  Fixes also a bug in `ecb-store-window-sizes' if default-values are used in
+  `ecb-layout-window-sizes'. (Klaus)
 
 * Fixed a bug in the downloading feature of ECB. (Klaus)
 

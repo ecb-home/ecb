@@ -19,7 +19,7 @@
 @c Free Software Foundation, Inc., 59 Temple Place - Suite 330,
 @c Boston, MA 02111-1307, USA.
 
-@c $Id: ecb.texi,v 1.69 2003/02/07 15:54:35 berndl Exp $
+@c $Id: ecb.texi,v 1.70 2003/02/10 16:52:22 berndl Exp $
 
 @setfilename ecb.info
 
@@ -42,7 +42,7 @@
 @c edit the Makefile to change the version number. mechanism stolen
 @c from Tramp
 @macro ecbver{}
-1.90
+1.91.1
 @end macro
 
 
@@ -6505,6 +6505,34 @@ senseful behavior of @code{scroll-all-mode} with ECB.
 
 This section describes all currently known bugs of ECB. The
 maintainers of ECB try to fix these bugs as soon as possible.
+
+@subsection Extra history-entries for JDEE source-buffers
+
+ECB on occasions creates an extra edit buffer for entries in the
+history window. For example, let say there are three entries in the
+history window:
+
+@example
+@group
+Test1
+Test2
+Test3
+@end group
+@end example
+
+In the edit window Test1 file is edited. When clicked on Test2 entry
+in history, on occsion instead of switching to the existing buffer for
+Test2, a new edit buffer is opened for Test2 file. At this point, there
+are four entries in the history as follows:
+
+@example
+@group
+Test2
+Test2<2>
+Test1
+Test3
+@end group
+@end example
 
 @node FAQ, Command Index, Conflicts and bugs, Top
 @chapter Frequently asked questions

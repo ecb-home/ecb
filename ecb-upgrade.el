@@ -19,7 +19,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-upgrade.el,v 1.26 2003/02/07 15:54:44 berndl Exp $
+;; $Id: ecb-upgrade.el,v 1.27 2003/02/10 16:52:24 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -161,8 +161,8 @@
     (ecb-layout-nr . (ecb-layout-name ecb-upgrade-layout-nr))
     (ecb-toggle-layout-sequence . (ecb-toggle-layout-sequence
                                    ecb-upgrade-toggle-layout-sequence))
-    (ecb-layout-window-sizes . (ecb-layout-window-sizes
-                                ecb-upgrade-layout-window-sizes))
+;;     (ecb-layout-window-sizes . (ecb-layout-window-sizes
+;;                                 ecb-upgrade-layout-window-sizes))
     (ecb-major-modes-activate . (ecb-major-modes-activate
                                  ecb-upgrade-major-modes-activate))
     (ecb-cache-directory-contents . (ecb-cache-directory-contents
@@ -220,7 +220,8 @@ The car is the old option symbol and the cdr is a 2-element-list with:
 ;; upgrading old layout-numbers (ECB <= 1.80) to new layout-names (ECB
 ;; >= 1.90)
 (defun ecb-upgrade-layout-nr2name (number)
-  (let ((number-name-alist '((0 . "left1")
+  (let ((number-name-alist '((nil . "left8")
+                             (0 . "left1")
                              (1 . "left2")
                              (2 . "left3")
                              (3 . "left4")
@@ -254,11 +255,19 @@ The car is the old option symbol and the cdr is a 2-element-list with:
                       (ecb-upgrade-layout-nr2name elem)))
           old-val))
 
+;; not used anymore beginning with ECB 1.91.1
 (defun ecb-upgrade-layout-window-sizes (old-val)
   (let ((l (copy-tree old-val)))
     (dolist (elem l)
       (setcar elem
-              (ecb-upgrade-layout-nr2name (car elem))))
+              (ecb-upgrade-layout-nr2name (car elem)))
+      (setcdr elem
+              (mapcar (function (lambda (e)
+                                  (if (consp e)
+                                      e
+                                    (cons nil nil))))
+                      (cdr elem)))
+      )
     l))
 
 (defun ecb-upgrade-major-modes-activate (old-val)
