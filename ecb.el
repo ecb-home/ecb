@@ -1584,8 +1584,6 @@ combination is invalid \(see `ecb-interpret-mouse-click'."
     (if (/= mouse-button 0)
         (setq ecb-layout-prevent-handle-ecb-window-selection t))
     ;; first we dispatch to the right action
-    ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: Enable meta-mode in
-    ;; ecb-file-browser.el too!
     (when ecb-button-list
       (cond ((ecb-string= tree-buffer-name ecb-directories-buffer-name)
 	     (ecb-directory-clicked node ecb-button nil shift-mode meta-mode))

@@ -380,6 +380,18 @@ jumping to it by clicking onto a node in the methods buffer."
   :group 'ecb-face-options
   :type 'face)
 
+(defface ecb-source-read-only-face (ecb-face-default nil nil t)
+  "*Define a face for displaying read-only sources."
+  :group 'ecb-faces)
+ 
+(defcustom ecb-source-read-only-face
+  'ecb-source-read-only-face
+  "*Face for read-only sources."
+  :group 'ecb-sources
+  :group 'ecb-directories
+  :group 'ecb-face-options
+  :type 'face)
+
 (defface ecb-type-tag-class-face (ecb-face-default nil t)
   "*Define face used with option `ecb-type-tag-display'."
   :group 'ecb-faces)
