@@ -452,7 +452,7 @@ done.")
   (setq ecb-frame nil
         ecb-edit-window nil
         ecb-last-edit-window-with-point nil
-        ecb-compile-window))
+        ecb-compile-window nil))
 
 (defadvice delete-frame (around ecb)
   "If FRAME is equal to the ECB frame then the user will be asked if he want
