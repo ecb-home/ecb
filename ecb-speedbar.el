@@ -123,6 +123,7 @@
 (require 'speedbar)
 
 (ecb-bytecomp-defvar speedbar-attached-frame)
+(ecb-bytecomp-defvar dframe-attached-frame)
 (ecb-bytecomp-defvar speedbar-select-frame-method)
 
 (defvar ecb-speedbar-buffer-name " SPEEDBAR" "Name of the ECB speedbar buffer.")
