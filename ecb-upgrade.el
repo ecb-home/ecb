@@ -256,19 +256,19 @@ The car is the old option symbol and the cdr is a 2-element-list with:
           old-val))
 
 ;; not used anymore beginning with ECB 1.91.1
-(defun ecb-upgrade-layout-window-sizes (old-val)
-  (let ((l (copy-tree old-val)))
-    (dolist (elem l)
-      (setcar elem
-              (ecb-upgrade-layout-nr2name (car elem)))
-      (setcdr elem
-              (mapcar (function (lambda (e)
-                                  (if (consp e)
-                                      e
-                                    (cons nil nil))))
-                      (cdr elem)))
-      )
-    l))
+;; (defun ecb-upgrade-layout-window-sizes (old-val)
+;;   (let ((l (copy-tree old-val)))
+;;     (dolist (elem l)
+;;       (setcar elem
+;;               (ecb-upgrade-layout-nr2name (car elem)))
+;;       (setcdr elem
+;;               (mapcar (function (lambda (e)
+;;                                   (if (consp e)
+;;                                       e
+;;                                     (cons nil nil))))
+;;                       (cdr elem)))
+;;       )
+;;     l))
 
 (defun ecb-upgrade-major-modes-activate (old-val)
   (if (not (listp old-val))

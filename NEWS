@@ -1,4 +1,4 @@
-* Changes for ECB version 1.91.2
+* Changes for ECB version 1.92
 
 ** Fixed bugs:
 
@@ -26,13 +26,13 @@
 
 *** "Create Source" in the popup-menues now work also for non-java-files.
 
-*** ecb-truncate-lines can now set different for each ECB-tree-buffer.
+*** ecb-truncate-lines can now be set different for each ECB-tree-buffer.
 
 *** Easy horizontal mouse-scrolling of the ECB tree-buffers. See new option
     `ecb-tree-easy-hor-scroll'.
 
 ** Added a command `ecb-jde-display-class-at-point' which displays the contents
-   of the java-class under point in the methods-buffer of ECB
+   of the java-class under point in the methods-buffer of ECB.
 
 ** Renamed previous HISTORY file to NEWS and reformate it for outline-mode.
 
