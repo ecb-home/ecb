@@ -21,7 +21,7 @@
 
 ;; Generates ECB HTML pages.
 
-;; $Id: ecb-html.el,v 1.15 2001/06/22 17:40:02 berndl Exp $
+;; $Id: ecb-html.el,v 1.16 2001/07/18 19:27:51 creator Exp $
 
 ;;; Code:
 
@@ -158,8 +158,13 @@
    (h-section "About"
 	      "ECB is source code browser for Emacs. It is a global minor-mode which displays a couple of windows that can be used to browse directories, files and methods. It supports method parsing for Java, C, C++, Elisp etc.")
 
+   (h-section "News"
+	      (h-sub-section "ECB 1.40 released! (2001-07-18)"
+			     "Many improvements and bug fixes, so download it now!")
+	       )
+
    (h-section "Dependencies"
-	      "ECB requires version 1.3.3 or higher of " (h-link "http://cedet.sourceforge.net/semantic.shtml" '(target . "_top") "Eric Ludlam's semantic bovinator") ". If you use ECB for Java development you also need version 2.1.9 or higher of " (h-link "http://sunsite.auc.dk/jde/" '(target . "_top") "JDE") "." h-br "If you use XEmacs you must have the fsf-compat package installed (contains overlay.el).")
+	      "ECB requires version 1.4beta8 or higher of " (h-link "http://cedet.sourceforge.net/semantic.shtml" '(target . "_top") "Eric Ludlam's semantic bovinator") ". If you use ECB for Java development you also need " (h-link "http://sunsite.auc.dk/jde/" '(target . "_top") "JDE") "." h-br "If you use XEmacs you must have the fsf-compat package installed (contains overlay.el).")
 
    (h-section "Developers"
 	      (h-bullet-link-list
@@ -321,6 +326,8 @@
     (h-bullet-link-list
      ecb-bullet
      (list 
+      (list (concat ecb-download-url "ecb-1.32.zip") "ecb-1.32.zip")
+      (list (concat ecb-download-url "ecb-1.32.tar.gz") "ecb-1.32.tar.gz")
       (list (concat ecb-download-url "ecb-1.31.zip") "ecb-1.31.zip")
       (list (concat ecb-download-url "ecb-1.31.tar.gz") "ecb-1.31.tar.gz")
       (list (concat ecb-download-url "ecb-1.30.zip") "ecb-1.30.zip")
