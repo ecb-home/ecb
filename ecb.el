@@ -68,7 +68,7 @@
 ;; The latest version of the ECB is available at
 ;; http://ecb.sourceforge.net
 
-;; $Id: ecb.el,v 1.295 2003/03/05 09:05:24 berndl Exp $
+;; $Id: ecb.el,v 1.296 2003/03/06 19:04:31 berndl Exp $
 
 ;;; Code:
 
@@ -132,6 +132,8 @@
 (silentcomp-defun semanticdb-full-filename)
 (silentcomp-defun ediff-cleanup-mess)
 (silentcomp-defvar ediff-quit-hook)
+(silentcomp-defvar tar-subfile-mode)
+(silentcomp-defvar archive-subfile-mode)
 
 ;; ecb-speedbar is first loaded if ecb-use-speedbar-for-directories is set to
 ;; true
@@ -1581,6 +1583,78 @@ switch on this option and submitting a bug-report to the ecb-mailing-list
   :group 'ecb-general
   :type 'boolean)
 
+(defcustom ecb-directories-menu-user-extension nil
+  "*User extensions for the popup-menu of the directories buffer.
+
+Value is a list of elements of the following type: Each element defines a new
+menu-entry and is a list containing two entries, whereas the first is the name
+of the menu-entry and the second the function \(a function symbol or a
+lambda-expression) being called if the menu-entry is selected.
+
+The function must follow the following guidelines:
+It takes one argument which is the tree-buffer-node of the selected node \(means
+the node for which the popup-menu has been opened). With the function
+`tree-node-get-data' the related data of this node is accessible and returns
+in case of the directories buffer the directory for which the popup-menu has
+been opened. The function can do any arbitrary things with this directory.
+
+Example for such a menu-function:
+
+\(defun ecb-my-special-dir-popup-function \(node)
+  \(let \(\(node-data=dir \(tree-node-get-data node)))
+     \(message \"Dir under node: %s\" node-data=dir)))
+
+The user menu-extensions will be added at the beginning of the menu.
+
+If you change this option you have to restart ECB to take effect."
+  :group 'ecb-directories
+  :type '(repeat (list :tag "Menu-entry"
+                       (string :tag "Entry-name")
+                       (function :tag "Function" :value ignore))))
+
+(defcustom ecb-sources-menu-user-extension nil
+  "*User extensions for the popup-menu of the sources buffer.
+
+For further explanations see `ecb-directories-menu-user-extension'.
+
+The node-argument of a menu-function contains as data the filename of the
+source for which the popup-menu has been opened.
+
+If you change this option you have to restart ECB to take effect."
+  :group 'ecb-sources
+  :type '(repeat (list :tag "Menu-entry"
+                       (string :tag "Entry-name")
+                       (function :tag "Function" :value ignore))))
+
+(defcustom ecb-methods-menu-user-extension nil
+  "*User extensions for the popup-menu of the methods buffer.
+
+For further explanations see `ecb-directories-menu-user-extension'.
+
+The node-argument of a menu-function contains as data the semantic-token of
+the method/variable/token for which the popup-menu has been opened. 
+
+If you change this option you have to restart ECB to take effect."
+  :group 'ecb-methods
+  :type '(repeat (list :tag "Menu-entry"
+                       (string :tag "Entry-name")
+                       (function :tag "Function" :value ignore))))
+
+(defcustom ecb-history-menu-user-extension nil
+  "*User extensions for the popup-menu of the history buffer.
+
+For further explanations see `ecb-directories-menu-user-extension'.
+
+The node-argument of a menu-function contains as data the filename of the
+source for which the popup-menu has been opened. 
+
+If you change this option you have to restart ECB to take effect."
+  :group 'ecb-history
+  :type '(repeat (list :tag "Menu-entry"
+                       (string :tag "Entry-name")
+                       (function :tag "Function" :value ignore))))
+
+
 (defcustom ecb-activate-before-layout-draw-hook nil
   "*Normal hook run at the end of activating the ecb-package by running
 `ecb-activate'. These hooks run after all the internal setup process but
@@ -3011,6 +3085,51 @@ by this command."
                     tok nil (equal ecb-highlight-token-with-point 'highlight))
                    )))))))))
 
+(defun ecb-current-buffer-archive-extract-p ()
+  "Return not nil if current buffer was extracted of an archive which is in
+`tar-mode' or `archive-mode'. For this the current buffer has either to be in
+minor-mode `tar-subfile-mode' or `archive-subfile-mode'."
+  (or (and (boundp 'tar-subfile-mode)
+           tar-subfile-mode)
+      (and (boundp 'archive-subfile-mode)
+           archive-subfile-mode)))
+
+;; (defun ecb-buffer-or-file-readable-p (&optional buffer-or-file)
+;;   "Checks if a buffer or file is a readable file in the sense of ECB which
+;; means either a real physical file or an auto-extracted file from an archive.
+;; See `ecb-current-buffer-archive-extract-p'. BUFFER-OR-FILE is either a buffer
+;; or a filename or nil whereas in the latter case the current-buffer is assumed."
+;;   (let* ((buffer (cond ((not buffer-or-file)
+;;                         (current-buffer))
+;;                        ((bufferp buffer-or-file)
+;;                         buffer-or-file)
+;;                        (t nil)))
+;;          (file (if buffer
+;;                    (buffer-file-name buffer)
+;;                  buffer-or-file)))
+;;     (or (and file (file-readable-p file))
+;;         (if buffer
+;;             (ecb-current-buffer-archive-extract-p)
+;;           (save-excursion
+;;             ;; buffer is nil here therefore file can not be nil!
+;;             (set-buffer (find-file-noselect file))
+;;             (ecb-current-buffer-archive-extract-p))))))
+
+(defun ecb-buffer-or-file-readable-p (&optional filename)
+  "Checks if a buffer or a file is a readable file in the sense of ECB which
+means either a real physical file or an auto-extracted file from an archive.
+See `ecb-current-buffer-archive-extract-p'. FILENAME is either a filename or
+nil whereas in the latter case the current-buffer is assumed."
+  (let* ((file (or filename (buffer-file-name (current-buffer)))))
+    (or (and file (file-readable-p file))
+        (and (not ecb-running-xemacs)
+             (if filename
+                 (save-excursion
+                   (set-buffer (find-file-noselect filename))
+                   (ecb-current-buffer-archive-extract-p))
+               (ecb-current-buffer-archive-extract-p))))))
+
+
 (defun ecb-current-buffer-sync (&optional force)
   "Synchronizes the current buffer with any other buffers.
 
@@ -3041,7 +3160,7 @@ tasks are performed:
       (let ((filename (buffer-file-name (current-buffer))))
         (cond (;; synchronizing for real filesource-buffers
                (and filename
-                    (file-readable-p filename)
+                    (ecb-buffer-or-file-readable-p)
                     (or force
                         (not (string= filename ecb-path-selected-source))))
           
@@ -3659,8 +3778,9 @@ can last a long time - depending of machine- and disk-performance."
                                                 (eq ecb-button 2))))))))
 
 (defun ecb-jump-to-token (filename token &optional window)
-  (cond ((not (file-readable-p filename))
-         (error "ECB: ecb-jump-to-token: filename not readable"))
+  (cond ((not (ecb-buffer-or-file-readable-p filename))
+         (error "ECB: ecb-jump-to-token: Can not open filename %s."
+                filename))
         (t
          (unless window
            (setq window (selected-window)))
@@ -4473,8 +4593,11 @@ always the ECB-frame if called from another frame."
            'ecb-tree-buffer-node-expand-callback
            'ecb-mouse-over-directory-node
            'equal
-           (list (cons 0 ecb-directories-menu) (cons 1 ecb-sources-menu)
-                 (cons 2 ecb-source-path-menu))
+           (list (cons 0 (append ecb-directories-menu-user-extension
+                                  ecb-directories-menu))
+                 (cons 1 ecb-sources-menu)
+                 (cons 2 (append ecb-directories-menu-user-extension
+                                 ecb-source-path-menu)))
            (nth 0 ecb-truncate-lines)
            t
            ecb-tree-indent
@@ -4506,7 +4629,8 @@ always the ECB-frame if called from another frame."
            'ecb-tree-buffer-node-expand-callback
            'ecb-mouse-over-source-node
            'equal
-           (list (cons 0 ecb-sources-menu))
+           (list (cons 0 (append ecb-sources-menu-user-extension
+                                 ecb-sources-menu)))
            (nth 1 ecb-truncate-lines)
            t
            ecb-tree-indent
@@ -4547,7 +4671,7 @@ always the ECB-frame if called from another frame."
                      (eq (semantic-token-token l) (semantic-token-token r))
                      (eq (ecb-semantic-token-start l) (ecb-semantic-token-start r))
                      (eq (ecb-semantic-token-end l) (ecb-semantic-token-end r))))))
-           nil
+           (list (cons 0 ecb-history-menu-user-extension))
            (nth 2 ecb-truncate-lines)
            t
            ecb-tree-indent
@@ -4575,7 +4699,8 @@ always the ECB-frame if called from another frame."
            'ecb-tree-buffer-node-expand-callback
            'ecb-mouse-over-history-node
            'equal
-           (list (cons 0 ecb-history-menu))
+           (list (cons 0 (append ecb-history-menu-user-extension
+                                 ecb-history-menu)))
            (nth 3 ecb-truncate-lines)
            t
            ecb-tree-indent
