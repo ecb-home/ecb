@@ -6,7 +6,7 @@
 # Or type "make all" or "make upload-build" to generate the whole website
 # and build an uploadable ecb-website.tar.gz file.
 
-# $Id: Makefile,v 1.8 2003/02/17 17:26:53 berndl Exp $
+# $Id: Makefile,v 1.9 2003/02/26 17:18:11 berndl Exp $
 
 EMACS=emacs
 
@@ -85,4 +85,9 @@ upload-update:
 clean:
 	@$(RM) -R $(ecb_HTMLDOCU_DIR)
 	@$(RM) NEWS.html *.elc $(ecb_UPLOAD_ARC) $(ecb_HTML_GEN) *.*~
+	@(cd files-for-upload/patches; \
+	   $(RM) *.*)
+	@(cd files-for-upload; \
+	   $(RM) *.*)
+
 
