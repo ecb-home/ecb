@@ -19,8 +19,8 @@ No special notes beyond the contents of README.
 Upgrading from any previous version:
 ------------------------------------
 
-The type of the option 'ecb-token-display-function' has changed, so this
-option must be customized again!
+The type of the option 'ecb-token-display-function' has changed. ECB displays
+this after first activation and resets this option to the new default value.
 
 
 Upgrading from any version < 1.60:
