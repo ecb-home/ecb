@@ -52,7 +52,7 @@
 ;; The latest version of the ECB is available at
 ;; http://home.swipnet.se/mayhem/ecb.html
 
-;; $Id: ecb.el,v 1.96 2001/05/28 15:52:54 berndl Exp $
+;; $Id: ecb.el,v 1.97 2001/05/28 15:54:59 berndl Exp $
 
 ;;; Code:
 
@@ -1579,6 +1579,8 @@ always the ECB-frame if called from another frame."
     ;; now we draw the layout choosen in `ecb-layout'. This function
     ;; acivates at its end also the adviced functions if necessary!
     (ecb-redraw-layout)
+
+    (ecb-update-directories-buffer)
 
     ;; now update all the ECB-buffer-modelines
     (ecb-mode-line-format)

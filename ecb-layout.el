@@ -122,7 +122,7 @@
 ;;   + The edit-window must not be splitted and the point must reside in
 ;;     the not deleted edit-window.
 
-;; $Id: ecb-layout.el,v 1.53 2001/05/28 15:52:54 berndl Exp $
+;; $Id: ecb-layout.el,v 1.54 2001/05/28 15:54:59 berndl Exp $
 
 ;;; Code:
 
@@ -1195,8 +1195,6 @@ this function the edit-window is selected."
       
       ;; Restore saved window sizes
       (ecb-restore-window-sizes)
-
-      (ecb-update-directories-buffer)
 
       ;; at the end of the redraw we always stay in that edit-window as before
       ;; the redraw

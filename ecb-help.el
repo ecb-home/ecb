@@ -26,7 +26,7 @@
 ;;
 ;; Contains all online-help for ECB (stolen something from recentf.el)
 
-;; $Id: ecb-help.el,v 1.23 2001/05/27 16:02:08 berndl Exp $
+;; $Id: ecb-help.el,v 1.24 2001/05/28 15:52:54 berndl Exp $
 
 ;;; Code
 
@@ -331,12 +331,13 @@ to work best with ECB in such a situation:
   2. Do not display a durable compile-window \(see `ecb-compile-window-height').
   3. Disable all adviced functions with option `ecb-advice-window-functions';
      here deselect all functions.
-  4. Save your changes.
+  4. Optional: Ajust the `ecb-windows-height'.
+  5. Save your changes.
 - Bind `ecb-redraw-layout' to a key, e.g. F10.
 - To browse and select functions:
   Call `ecb-redraw-layout' by hitting your key to make the ECB-method buffer
   visible if not already. If you want select a method/variable with the
-  keyboard instead with the mouse yopu should read the section \"Working with
+  keyboard instead with the mouse you should read the section \"Working with
   the keyboard in the ECB-buffers\" in this online help!
 - To edit your buffers:
   Call \"C-x 1\" or `delete-other-windows' from within your edit-window to
@@ -361,9 +362,9 @@ Available hooks:
 Look at the documentation of these variables and hooks to get description.
 
 
-                      ===================================
-                      Known conflicts with other packages
-                      ===================================
+                        ===================================
+                        Known conflicts with other packages
+                        ===================================
 
 Here is a list of known conflicts of ECB with other packages and helpful
 solutions/hints/workarounds:
