@@ -31,7 +31,7 @@
 ;; For the ChangeLog of this file see the CVS-repository. For a complete
 ;; history of the ECB-package see the file NEWS.
 
-;; $Id: ecb-util.el,v 1.61 2003/03/20 16:43:29 berndl Exp $
+;; $Id: ecb-util.el,v 1.62 2003/03/21 13:29:37 berndl Exp $
 
 ;;; Code:
 
@@ -713,6 +713,18 @@ Since it actually calls `start-process', not all features will work."
 	;; in that situation.
 	;; (if (not (sit-for timeout)) (read-event))
 	))))
+
+(defun ecb-file-content-as-string (file)
+  "If FILE exists and is readable returns the contents as a string otherwise
+return nil.
+Note: No major/minor-mode is activated and no local variables are evaluated
+for FILE, but proper EOL-conversion and charcater interpretation is done!"
+  (let ((exp-filename (expand-file-name file)))
+    (if (and (file-exists-p exp-filename)
+             (file-readable-p exp-filename))
+        (with-temp-buffer
+          (insert-file-contents exp-filename)
+          (buffer-string)))))
 
 
 (silentcomp-provide 'ecb-util)

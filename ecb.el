@@ -73,7 +73,7 @@
 ;; For the ChangeLog of this file see the CVS-repository. For a complete
 ;; history of the ECB-package see the file NEWS.
 
-;; $Id: ecb.el,v 1.301 2003/03/20 16:43:27 berndl Exp $
+;; $Id: ecb.el,v 1.302 2003/03/21 13:29:34 berndl Exp $
 
 ;;; Code:
 
@@ -699,6 +699,24 @@ then activating ECB again!"
   :group 'ecb-sources
   :type 'string)
 
+
+(defcustom ecb-sources-exclude-cvsignore nil
+  "*Specify if files contained in a .cvsignore should be excluded.
+
+Value is a list of regular expressions or nil. If you want to exclude files
+listed in a .cvsignore-file from being displayed in the ecb-sources-buffer
+then specify a regexp for such a directory.
+
+If you want to exclude the contents of .cvsignore-files for every directory
+then you should add one regexp \".*\" which matches every directory.
+
+If you never want to exclude the contents of .cvsignore-files then set this
+option to nil. This is the default."
+  :group 'ecb-sources
+  :group 'ecb-directories
+  :type '(repeat (regexp :tag "Directory-regexp")))
+
+
 (defcustom ecb-source-file-regexps
   '((".*" . ("\\(^\\(\\.\\|#\\)\\|\\(~$\\|\\.\\(elc\\|obj\\|o\\|class\\|lib\\|dll\\|a\\|so\\|cache\\)$\\)\\)"
              "^\\.\\(emacs\\|gnus\\)$")))
@@ -716,9 +734,15 @@ contain an always matching directory-regexp \(\".*\")!
 So the value of this option is a list of cons-cells where the car is a
 directory regexp and the cdr is a 2 element list where the first element is a
 exclude regexp and the second element is a include regexp. A file is displayed
-in the source-buffer of ECB iff: The file does not match the exclude regexp OR
-the file matches the include regexp. There are three predefined and useful
-combinations of an exclude and include regexp:
+in the sources-buffer of ECB iff: The file does not match the exclude regexp
+OR the file matches the include regexp.
+
+But regardless of the value of this option a file F is never displayed in the
+sources-buffer if the directory matches `ecb-sources-exclude-cvsignore'
+and the directory contains a file .cvsignore which contains F as an entry!
+
+There are three predefined and useful combinations of an exclude and include
+regexp:
 - All files
 - All, but no backup, object, lib or ini-files \(except .emacs and .gnus). This
   means all files except those starting with \".\", \"#\" or ending with
@@ -2604,6 +2628,30 @@ and NUMBER-OF-CONTENTS is greater then the related threshold."
               (throw 'exit (cdr elem))))
         nil))))
 
+
+(defun ecb-files-from-cvsignore (dir)
+  "Return an expanded list of filenames which are excluded by the .cvsignore
+file in current directory."
+  (let ((cvsignore-content (ecb-file-content-as-string
+                            (expand-file-name ".cvsignore" dir)))
+        (files nil))
+    (when cvsignore-content
+      (dolist (f (split-string cvsignore-content))
+        (setq files (append (directory-files dir nil (wildcard-to-regexp f))
+                            files)))
+      files)))
+
+(defun ecb-check-directory-for-cvsignore-exclude (dir)
+  "Return not nil if DIR matches a regexp in `ecb-sources-exclude-cvsignore'."
+  (catch 'exit
+    (dolist (elem ecb-sources-exclude-cvsignore)
+      (let ((case-fold-search t))
+        (save-match-data
+          (if (string-match elem dir)
+              (throw 'exit elem)))
+        nil))))
+
+
 (defun ecb-get-files-and-subdirs (dir)
   "Return a cons cell where car is a list of all files to display in DIR and
 cdr is a list of all subdirs to display in DIR. Both lists are sorted
@@ -2614,6 +2662,8 @@ according to `ecb-sources-sort-method'."
             (source-regexps (or (ecb-check-directory-for-source-regexps
                                  (ecb-fix-filename dir))
                                 '("" "")))
+            (cvsignore-files (if (ecb-check-directory-for-cvsignore-exclude dir)
+                                 (ecb-files-from-cvsignore dir)))
             sorted-files source-files subdirs cache-elem)
         ;; if necessary sort FILES
         (setq sorted-files
@@ -2635,9 +2685,11 @@ according to `ecb-sources-sort-method'."
           (if (file-directory-p (ecb-fix-filename dir file))
               (if (not (string-match ecb-excluded-directories-regexp file))
                   (setq subdirs (append subdirs (list file))))
-            (if (or (string-match (cadr source-regexps) file)
-                    (not (string-match (car source-regexps) file)))
+            (if (and (not (member file cvsignore-files))
+                     (or (string-match (cadr source-regexps) file)
+                         (not (string-match (car source-regexps) file))))
                 (setq source-files (append source-files (list file))))))
+        
         (setq cache-elem (cons dir (cons source-files subdirs)))
         ;; check if this directory must be cached
         (if (ecb-check-directory-for-caching dir (length sorted-files))

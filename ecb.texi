@@ -19,7 +19,7 @@
 @c Free Software Foundation, Inc., 59 Temple Place - Suite 330,
 @c Boston, MA 02111-1307, USA.
 
-@c $Id: ecb.texi,v 1.87 2003/03/20 14:47:01 berndl Exp $
+@c $Id: ecb.texi,v 1.88 2003/03/21 13:29:34 berndl Exp $
 
 @setfilename ecb.info
 
@@ -3782,8 +3782,15 @@ directory regexp and the cdr is a 2 element list where the first
 element is a exclude regexp and the second element is a include
 regexp. A file is displayed in the source-buffer of ECB iff: The file
 does not match the exclude regexp OR the file matches the include
-regexp. There are three predefined and useful combinations of an
-exclude and include regexp:
+regexp.
+
+But regardless of the value of this option a file F is never displayed
+in the sources-buffer if the directory matches
+@code{ecb-sources-exclude-cvsignore} and the directory contains a file
+.cvsignore which contains F as an entry!
+
+There are three predefined and useful combinations of an exclude and
+include regexp:
 
 @itemize @bullet
 @item All files
@@ -3824,6 +3831,24 @@ of @code{set-buffer}.
 Changes for this option at runtime will take affect only after
 deactivating and then activating ECB again!
 @end defopt
+
+
+@defopt sources-exclude-cvsignore
+Specify if files contained in a @file{.cvsignore} should be
+excluded.
+
+Value is a list of regular expressions or nil. If you want to exclude
+files listed in a @file{.cvsignore}-file from being displayed in the
+ecb-sources-buffer then specify a regexp for such a directory.
+
+If you want to exclude the contents of @file{.cvsignore}-files for
+every directory then you should add one regexp ``.*'' which matches
+every directory.
+
+If you never want to exclude the contents of @file{.cvsignore}-files
+then set this option to nil.
+@end defopt
+
 
 @defopt sources-menu-sorter
 Function which re-sorts the menu-entries of the directories buffer.
