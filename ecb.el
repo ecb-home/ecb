@@ -88,7 +88,7 @@
 ;; For the ChangeLog of this file see the CVS-repository. For a complete
 ;; history of the ECB-package see the file NEWS.
 
-;; $Id: ecb.el,v 1.314 2003/07/06 06:11:07 berndl Exp $
+;; $Id: ecb.el,v 1.315 2003/07/07 06:53:03 berndl Exp $
 
 ;;; Code:
 
@@ -4974,7 +4974,7 @@ always the ECB-frame if called from another frame."
   (if ecb-use-recursive-edit
       (if ecb-minor-mode
 	  (progn
-	    (message "ECB already activated.  Drawing layout.")
+	    (message "ECB already activated. Drawing layout.")
             
 	    (ecb-redraw-layout))
 	(catch 'exit
@@ -5519,8 +5519,12 @@ function which is called with current node and has to return a string.")
   (widen))
 
 
+;; Klaus Berndl <klaus.berndl@sdm.de>: This is for silencing the
+;; byte-compiler. Normally there shouls be no warning which silentcomp-defun
+;; for hs-minor-mode is used but....argghhh.
 (if (not ecb-running-xemacs)
     (require 'hideshow))
+
 (defun ecb-methods-menu-activate-hs ()
   "Activates `hs-minor-mode' in the buffer of `ecb-path-selected-source'. If
 this fails then nil is returned otherwise t."
@@ -5535,32 +5539,13 @@ this fails then nil is returned otherwise t."
           nil)
       t)))
 
-(defvar ecb-methods-hs-show-xemacs-special-modes '(emacs-lisp-mode
-                                                   lisp-mode
-                                                   scheme-mode)
-  "List of `major-modes' which contains all modes which need the following
-behavior for the XEmacs-version of `hs-show-block': To show a hidden block at
-toplevel point must stay at the first char of that block. Example: In
-`emacs-lisp-mode' point must stay onto the opening paren of a defun so the
-hidden block can be shown.")
-  
-
 (defun ecb-methods-menu-show-block (node)
   (if (not (ecb-methods-menu-activate-hs))
       (ecb-error "hs-minor-mode can not be activated!")
     (ecb-method-clicked node 1 nil)
     (save-excursion
-      ;; The XEmacs-shipped version of hide-show seems not to hide the last line
-      ;; of a block, therefore we have to go 1 line forward to be surely within
-      ;; the block. TODO: Klaus Berndl <klaus.berndl@sdm.de>: This is somehow
-      ;; clumsy and unsave....because if hideshow-implementation changes we have
-      ;; to change this code too...but currently i know no better solution.
-      (if (and ecb-running-xemacs
-               (not (boundp 'hs-isearch-open))
-               (not (boundp 'hs-hide-comments-when-hiding-all))
-               (not (fboundp 'hs-already-hidden-p)))
-          (unless (member major-mode ecb-methods-hs-show-xemacs-special-modes)
-            (forward-line 1)))
+      (or (looking-at hs-block-start-regexp)
+          (re-search-forward hs-block-start-regexp nil t))
       (hs-show-block))
     ;; Now we are at the beginning of the block or - with other word - on that
     ;; position `ecb-method-clicked' has set the point.
@@ -5571,9 +5556,7 @@ hidden block can be shown.")
       (ecb-error "hs-minor-mode can not be activated!")
     (ecb-method-clicked node 1 nil)
     (or (looking-at hs-block-start-regexp)
-        (search-forward hs-block-start-regexp nil t))
-;;     (forward-line 1)
-;;     (end-of-line)
+        (re-search-forward hs-block-start-regexp nil t))
     (hs-hide-block)
     (beginning-of-line)))
 

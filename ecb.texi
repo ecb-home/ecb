@@ -25,7 +25,7 @@
 @c Free Software Foundation, Inc., 59 Temple Place - Suite 330,
 @c Boston, MA 02111-1307, USA.
 
-@c $Id: ecb.texi,v 1.98 2003/07/06 06:11:07 berndl Exp $
+@c $Id: ecb.texi,v 1.99 2003/07/07 06:53:03 berndl Exp $
 
 @setfilename ecb.info
 
@@ -243,6 +243,7 @@ Tips and tricks
 * Working with JDEE::           Working best with ECB and JDEE
 * Compile-window on demand::    Displaying the compile-window on demand
 * Non-semantic sources::        Parsing and displaying non-semantic sources
+* Hide-show::                   Using hide-show from the methods-buffer-menu
 
 Entry points for elisp programmers
 
@@ -5993,6 +5994,7 @@ situations.
 * Working with JDEE::           Working best with ECB and JDEE
 * Compile-window on demand::    Displaying the compile-window on demand
 * Non-semantic sources::        Parsing and displaying non-semantic sources
+* Hide-show::                   Using hide-show from the methods-buffer-menu
 @end menu
 
 @node Changing faces, Small screens, Tips and tricks, Tips and tricks
@@ -6444,7 +6446,7 @@ errors) then you can throw away the compile-window just by
 @code{ecb-toggle-compile-window} - ECB will reactivate it autom.
 before next compilation!
 
-@node Non-semantic sources, , Compile-window on demand, Tips and tricks
+@node Non-semantic sources, Hide-show, Compile-window on demand, Tips and tricks
 @section Parsing and displaying non-semantic sources
 
 ECB is mostly designed to display parsing information for files
@@ -6575,6 +6577,42 @@ face used for displaying the tokens in the Method-buffer for
 non-semantic-sources.
 
 @code{ecb-non-semantic-methods-initial-expand} can be useful too.
+
+
+@node Hide-show, , Non-semantic sources, Tips and tricks
+@section Using hide-show from the methods-buffer-menu
+
+The popup-menu of the Methods-buffer offer two entries for either
+hiding or showing the block which is related to the selected token
+(that token for which the popup-menu was opened):
+
+@itemize @bullet
+@item ``Jump to token and hide block'':
+Jumps to the token and calls @code{hs-hide-block} from the
+hideshow-library which is shipped with (X)Emacs. After that the block
+is hidden, i.e. only the header-line of that token (method, variable
+etc.) is visible, the rest is hidden behind the ``...''.
+
+@item ``Jump to token and show block'':
+Jumps to the token and calls @code{hs-show-block}. This shows the related
+hidden block if the block was hidden via @code{hs-hide-block} or the
+menu-entry ``Jump to token and hide block'' (s.a.).
+@end itemize
+
+For this feature the library @file{hideshow.el} is used which should
+normally being included in the (X)Emacs-distribution. If this library
+is not loaded into Emacs, ECB does this automatically before the first
+call to one of these menu-entries.
+
+IMPORTANT: If in some @code{major-mode} hiding and showing does not
+work as you expect it to work then you must probably add an entry for
+this @code{major-mode} to the hideshow-variable
+@code{hs-special-modes-alist}. See the documentation of this variable
+for further details. One example of such a @code{major-mode} is
+@code{jde-mode} of the Java Development Environment JDEE; just add an
+entry for it like the already contained entries for @code{c++-mode} or
+@code{java-mode} and hiding and showing will work for you with JDEE
+too.
 
 @node Elisp programming, Conflicts and bugs, Tips and tricks, Top
 @chapter Entry points for elisp programmers
@@ -8019,6 +8057,18 @@ You can change it with the options @code{ecb-mode-line-prefixes} and
 How can i change the keybindings of ECB?
 @tab @tab
 You can do this with option @code{ecb-key-map} (@pxref{ecb-general}).
+
+@item @tab @tab
+
+@item
+What can i do if hiding/showing from the methods-buffer does not work?
+@tab @tab
+Either the current @code{major-modes} is not supported by hideshow or
+you have to add an entry to @code{hs-special-modes-alist}
+@ifinfo
+@*
+@end ifinfo
+(@pxref{Hide-show}).
 @end multitable
 
 
