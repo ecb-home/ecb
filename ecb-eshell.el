@@ -1,6 +1,6 @@
 ;;; ecb-eshell.el --- eshell integration for the ECB.
 
-;; $Id: ecb-eshell.el,v 1.27 2002/01/29 11:30:41 burtonator Exp $
+;; $Id: ecb-eshell.el,v 1.28 2002/01/29 23:55:12 burtonator Exp $
 
 ;; Copyright (C) 2000-2003 Free Software Foundation, Inc.
 ;; Copyright (C) 2000-2003 Kevin A. Burton (burton@openprivacy.org)
@@ -56,6 +56,13 @@
 ;; (http://www.eff.org)
 
 ;;; History:
+
+;; - Tue Jan 29 2002 03:33 AM (burton@openprivacy.org): Include the ability to
+;; startup the eshell when the ECB is started.
+;;
+;;
+;; - Tue Jan 29 2002 03:31 AM (burton@openprivacy.org): RFE: make the
+;; auto-enlargement on command execution optional, true by default.
 ;;
 ;; - Tue Jan 22 2002 11:38 PM (burton@openprivacy.org): enable customization
 ;; 
@@ -104,20 +111,17 @@
 ;;   ecb-eshell-current-buffer-sync. ecb-eshell-enlarge would need to pay
 ;;   attention to this.
 ;;
-;; - Include the ability to startup the eshell when the ECB is started.  This
-;;   may require a new hook.
-;;
 ;; - BUG: when we exit the eshell, we resize the compilation buffer.... there is
-;; no need since the buffer is about to exit.
+;;   no need since the buffer is about to exit.
 ;;
-;; - RFE: make the auto-enlargement on command execution optional, true by
-;; default.
+;;    - this might be fixed by using an eshell post command hook.
 ;;
 ;; - RFE: could we possibly find a way to avoid window enlargement if we launch
 ;; a background process like 'xterm &'.  This would require determining what the
 ;; command is and then making sure it is acceptable.
 ;;
-;; - BUG: when ecb-eshell-enlarge-when-selecting is nil we need to recenter.
+;; - BUG: when ecb-eshell-enlarge-when-selecting is nil we need to recenter.  If
+;; we don't we just end up with the point in the middle of the eshell.
 
 ;;; Code:
 
