@@ -1,6 +1,11 @@
 Version 1.90
 ------------
 
+* The option ecb-source-file-regexps now works on a directory-base, which means
+  for each directory-regexp the files to display can be specified. Default is
+  an all-matching directory-regexp. Old saved values are autom. upgraded
+  (Klaus).
+
 * Interactively creating new layouts now works also with Emacs 20.X (Klaus).
 
 * Rewritten the mechanism for storing customized window-sizes. See option

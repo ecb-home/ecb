@@ -164,7 +164,9 @@
     (ecb-major-modes-activate . (ecb-major-modes-activate
                                  ecb-upgrade-major-modes-activate))
     (ecb-cache-directory-contents . (ecb-cache-directory-contents
-                                     ecb-upgrade-cache-directory-contents)))
+                                     ecb-upgrade-cache-directory-contents))
+    (ecb-source-file-regexps .(ecb-source-file-regexps
+                               ecb-upgrade-source-file-regexps)))
   
   "Alist of all options which should be upgraded for current ECB-version.
 There are several reasons why an option should be contained in this alist:
@@ -270,6 +272,9 @@ The car is the old option symbol and the cdr is a 2-element-list with:
   (mapcar (function (lambda (elem)
                       (cons (nth 0 elem) (nth 1 elem))))
           old-val))
+
+(defun ecb-upgrade-source-file-regexps (old-val)
+  (list (cons ".*" old-val)))
 
 ;; ----------------------------------------------------------------------
 ;; internal functions. Dot change anything below this line

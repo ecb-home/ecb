@@ -62,7 +62,7 @@
 ;; The latest version of the ECB is available at
 ;; http://home.swipnet.se/mayhem/ecb.html
 
-;; $Id: ecb.el,v 1.275 2003/01/15 16:25:57 berndl Exp $
+;; $Id: ecb.el,v 1.276 2003/01/16 10:33:29 berndl Exp $
 
 ;;; Code:
 
@@ -504,13 +504,25 @@ then activating ECB again!"
   :type 'string)
 
 (defcustom ecb-source-file-regexps
-  '("\\(^\\(\\.\\|#\\)\\|\\(~$\\|\\.\\(elc\\|obj\\|o\\|class\\|lib\\|dll\\|a\\|so\\|cache\\)$\\)\\)"
-    "^\\.\\(emacs\\|gnus\\)$")
-  "*Specifies which files are shown as source files. Consists of one exclude
-regexp and one include regexp. A file is displayed in the source-buffer of ECB
-iff: The file does not match the exclude regexp OR the file matches the
-include regexp. There are three predefined and useful combinations of an
-exclude and include regexp:
+  '((".*" . ("\\(^\\(\\.\\|#\\)\\|\\(~$\\|\\.\\(elc\\|obj\\|o\\|class\\|lib\\|dll\\|a\\|so\\|cache\\)$\\)\\)"
+             "^\\.\\(emacs\\|gnus\\)$")))
+  "*Specifies which files are shown as source files.
+
+This is done on directory-base, which means for each directory-regexp the
+files to display can be specified. If more than one direcory-regexp matches
+the current selected directory then always the first one \(and its related
+file-exclude/include-regexps) is used! If no directory-regexp matches then all
+files are displayed for the currently selected directory.
+
+Important note: It is recommended that the *LAST* element of this list should
+contain an always matching directory-regexp \(\".*\")!
+
+So the value of this option is a list of cons-cells where the car is a
+directory regexp and the cdr is a 2 element list where the first element is a
+exclude regexp and the second element is a include regexp. A file is displayed
+in the source-buffer of ECB iff: The file does not match the exclude regexp OR
+the file matches the include regexp. There are three predefined and useful
+combinations of an exclude and include regexp:
 - All files
 - All, but no backup, object, lib or ini-files \(except .emacs and .gnus). This
   means all files except those starting with \".\", \"#\" or ending with
@@ -518,19 +530,26 @@ exclude and include regexp:
   (but including .emacs and .gnus)
 - Common source file types (.c, .java etc.)
 In addition to these predefined values a custom exclude and include
-combination can be defined."
+combination can be defined.
+
+Tips for the directory- and file-rexexps: \"$^\" matches no files/directories,
+\".*\" matches all files/directories."
   :group 'ecb-sources
-  :type '(radio (const :tag "All files"
-		       :value ("" ""))
-		(const :tag "All, but no backup, object, lib or ini-files \(except .emacs and .gnus)"
-		       :value ("\\(^\\(\\.\\|#\\)\\|\\(~$\\|\\.\\(elc\\|obj\\|o\\|class\\|lib\\|dll\\|a\\|so\\|cache\\)$\\)\\)" "^\\.\\(emacs\\|gnus\\)$"))
-		(const :tag "Common source file types (.c, .java etc.)"
-		       :value ("" "\\(\\(M\\|m\\)akefile\\|.*\\.\\(java\\|el\\|c\\|cc\\|h\\|hh\\|txt\\|html\\|texi\\|info\\|bnf\\)\\)$"))
-		(list :tag "Custom (tips: \"$^\" matches no files, \"\" mathes all files)"
-		      (regexp :tag "Exclude regexp"
-			      :value "")
-		      (regexp :tag "Include regexp"
-			      :value ""))))
+  :type '(repeat (cons :tag "Directory file-spec"
+                       (regexp :tag "Directory regexp")
+                       (choice :tag "Files to display"
+                               :menu-tag "Files to display"
+                               (const :tag "All files"
+                                      :value ("" ""))
+                               (const :tag "All, but no backups, objects, etc..."
+                                      :value ("\\(^\\(\\.\\|#\\)\\|\\(~$\\|\\.\\(elc\\|obj\\|o\\|class\\|lib\\|dll\\|a\\|so\\|cache\\)$\\)\\)" "^\\.\\(emacs\\|gnus\\)$"))
+                               (const :tag "Common source file types"
+                                      :value ("" "\\(\\(M\\|m\\)akefile\\|.*\\.\\(java\\|el\\|c\\|cc\\|h\\|hh\\|txt\\|html\\|texi\\|info\\|bnf\\)\\)$"))
+                               (list :tag "Custom"
+                                     (regexp :tag "Exclude regexp"
+                                             :value "")
+                                     (regexp :tag "Include regexp"
+                                             :value ""))))))
 
 (defcustom ecb-show-source-file-extension t
   "*Show the file extension of source files."
@@ -2220,6 +2239,18 @@ and NUMBER-OF-CONTENTS is greater then the related threshold."
               (throw 'exit (car elem))))
         nil))))
 
+(defun ecb-check-directory-for-source-regexps (dir)
+  "Return the related source-exclude-include-regexps of
+`ecb-source-file-regexps' if DIR matches any directory-regexp in
+`ecb-source-file-regexps'."
+  (catch 'exit
+    (dolist (elem ecb-source-file-regexps)
+      (let ((case-fold-search t))
+        (save-match-data
+          (if (string-match (car elem) dir)
+              (throw 'exit (cdr elem))))
+        nil))))
+
 (defun ecb-get-files-and-subdirs (dir)
   "Return a cons cell where car is a list of all files to display in DIR and
 cdr is a list of all subdirs to display in DIR. Both lists are sorted
@@ -2227,6 +2258,9 @@ according to `ecb-sources-sort-method'."
   (or (ecb-files-and-subdirs-cache-get dir)
       ;; dir is not cached
       (let ((files (directory-files dir nil nil t))
+            (source-regexps (or (ecb-check-directory-for-source-regexps
+                                 (ecb-fix-filename dir))
+                                '("" "")))
             sorted-files source-files subdirs cache-elem)
         ;; if necessary sort FILES
         (setq sorted-files
@@ -2248,8 +2282,8 @@ according to `ecb-sources-sort-method'."
           (if (file-directory-p (ecb-fix-filename dir file))
               (if (not (string-match ecb-excluded-directories-regexp file))
                   (setq subdirs (append subdirs (list file))))
-            (if (or (string-match (cadr ecb-source-file-regexps) file)
-                    (not (string-match (car ecb-source-file-regexps) file)))
+            (if (or (string-match (cadr source-regexps) file)
+                    (not (string-match (car source-regexps) file)))
                 (setq source-files (append source-files (list file))))))
         (setq cache-elem (cons dir (cons source-files subdirs)))
         ;; check if this directory must be cached
