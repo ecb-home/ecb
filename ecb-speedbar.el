@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-speedbar.el,v 1.53 2004/01/07 10:23:39 berndl Exp $
+;; $Id: ecb-speedbar.el,v 1.54 2004/02/25 06:51:07 berndl Exp $
 
 ;;; Commentary:
 
@@ -86,6 +86,12 @@ the cdr the advice-class \(before, around or after). If a function should be
 adviced with more than one class \(e.g. with a before and an after-advice)
 then for every class a cons must be added to this list.")
 
+(defconst ecb-speedbar-buffer-name " SPEEDBAR"
+  "Name of the ECB speedbar buffer.")
+
+(defun ecb-speedbar-buffer-selected ()
+  (equal (current-buffer) (get-buffer ecb-speedbar-buffer-name)))
+
 (defadvice speedbar-click (around ecb)
   "Makes the function compatible with ECB. If ECB is active and the window of
 `ecb-speedbar-buffer-name' is visible \(means a layouts uses the
@@ -122,7 +128,7 @@ Change window focus to or from the ECB-speedbar-window. If the selected window
 is not speedbar-window, then the speedbar-window is selected. If the
 speedbar-window is active, then select the edit-window."
   (if ecb-minor-mode
-      (if (equal (current-buffer) (get-buffer ecb-speedbar-buffer-name))
+      (if (ecb-speedbar-buffer-selected)
           (ecb-select-edit-window)
         (ecb-speedbar-select-speedbar-window))
     ad-do-it))
@@ -146,9 +152,6 @@ the point was not set by `mouse-set-point'."
     ;; We are not in XEmacs, OR we didn't click on a picture.
     (mouse-set-point e)))
   
-
-(defconst ecb-speedbar-buffer-name " SPEEDBAR"
-  "Name of the ECB speedbar buffer.")
 
 (defun ecb-speedbar-select-speedbar-window ()
   (ignore-errors

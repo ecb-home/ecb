@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-layout.el,v 1.218 2004/02/24 11:50:02 berndl Exp $
+;; $Id: ecb-layout.el,v 1.219 2004/02/25 06:51:07 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -2395,6 +2395,9 @@ can use these variables."
     ;; slow-down the performance of all Emacs-versions unless GNU Emacs 21
     ;; because they have no builtin `window-list'-function.
     (when (and (not (ecb-point-in-tree-buffer))
+               ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>:  Do we need this
+               ;; check elsewhere??
+               (not (ecb-speedbar-buffer-selected))
                (not (equal (minibuffer-window ecb-frame)
                            (selected-window)))
                (not (ecb-point-in-compile-window)))
