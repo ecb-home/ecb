@@ -30,10 +30,6 @@
 
 ;; This file contains the code for the method-browser of ECB
 
-;; XXXX (ecb-methods-get-data-store 'source-buffer)
-;; (car (tree-buffer-get-data-store))
-
-
 
 (require 'tree-buffer)
 (require 'ecb-util)
