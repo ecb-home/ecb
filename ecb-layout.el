@@ -103,7 +103,7 @@
 ;; - `ecb-with-some-adviced-functions'
 ;;
 
-;; $Id: ecb-layout.el,v 1.121 2002/10/22 14:08:43 berndl Exp $
+;; $Id: ecb-layout.el,v 1.122 2002/10/23 16:09:30 berndl Exp $
 
 ;;; Code:
 
@@ -232,22 +232,6 @@ layout with `ecb-redraw-layout'"
   :set ecb-layout-option-set-function
   :type '(radio (const :tag "No compilation window" nil)
                 (number :tag "Window height" :value 5)))
-
-;; (defcustom ecb-compile-window-temporally-enlarge t
-;;   "*Let Emacs temporally enlarge the compile-window of the ECB-layout
-;; after finishing the compilation-output. If nil then the compile-window has
-;; always exactly the height defined in `ecb-compile-window-height' otherwise ECB
-;; let temporally enlarge all compilation-buffers \(e.g. compile- and
-;; grep-buffers) to `compilation-window-height'. To restore the ECB-layout after
-;; this buffer-enlarge just call `ecb-redraw-layout' or
-;; `ecb-toggle-enlarged-compilation-window'.
-
-;; See also the function `ecb-toggle-enlarged-compilation-window' and the option
-;; `ecb-compile-window-enlarge-by-select'."
-;;   :group 'ecb-layout
-;;   :initialize 'custom-initialize-default
-;;   :set ecb-layout-option-set-function
-;;   :type 'boolean)
 
 (defcustom ecb-compile-window-temporally-enlarge 'after-compilation
   "*Let Emacs temporally enlarge the compile-window of the ECB-layout.
@@ -493,12 +477,6 @@ window."
                      :value switch-to-buffer)
               (const :tag "switch-to-buffer-other-window"
                      :value switch-to-buffer-other-window)))
-
-;; (defcustom ecb-layout-switch-to-compilation-window-auto-enlarge nil
-;;   "*When we automatically switch to a compilation buffer, automatically enlarge
-;; the buffer with `ecb-toggle-enlarged-compilation-window'."
-;;   :group 'ecb-layout
-;;   :type 'boolean)
 
 (defconst ecb-number-of-layouts 13)
 (defcustom ecb-layout-window-sizes nil

@@ -59,7 +59,7 @@
 ;; The latest version of the ECB is available at
 ;; http://home.swipnet.se/mayhem/ecb.html
 
-;; $Id: ecb.el,v 1.244 2002/10/22 14:08:44 berndl Exp $
+;; $Id: ecb.el,v 1.245 2002/10/23 16:09:30 berndl Exp $
 
 ;;; Code:
 
@@ -2336,6 +2336,14 @@ displayed with window-start and point at beginning of buffer."
       ;; `ecb-rebuild-methods-buffer-with-tokencache' is the only function
       ;; which sets `ecb-method-buffer-needs-rebuild' to nil to signalize that
       ;; a "manually" rebuild of the method buffer is not necessary.
+      ;;
+      ;; ecb-update-methods-buffer--internal is either called by
+      ;; ecb-current-buffer-sync or ecb-set-selected-source which both are
+      ;; called also for buffers which are not setup for semantic (e.g. text-,
+      ;; tex-buffers). current-tokencache is nil for such buffers so we call
+      ;; the rebuilding of the method buffer with a nil cache and therefore
+      ;; the method-buffer will be cleared out for such buffers. This is what
+      ;; we want!
       (if ecb-method-buffer-needs-rebuild
           ;; the hook was not called therefore here manually
           (ecb-rebuild-methods-buffer-with-tokencache current-tokencache t)))
@@ -2382,11 +2390,14 @@ it is cleared."
              ;; The functions of the hook
              ;; `semantic-after-toplevel-cache-change-hook' are also called
              ;; after clearing the cache to set the cache to nil if a buffer
-             ;; is parsed which has no tokens like plain text-buffers. Here we
-             ;; do not want rebuilding the method-buffer if the cache is nil
-             ;; but the current buffer is set up for semantic-parsing, because
-             ;; the real rebuild should be done after the cache is filled
-             ;; again.
+             ;; is parsed which has no tokens. Here we do not want rebuilding
+             ;; the method-buffer if the cache is nil but the current buffer
+             ;; is set up for semantic-parsing, because the real rebuild
+             ;; should be done after the cache is filled again.
+             ;; If this hook is called "manually" by
+             ;; `ecb-update-methods-buffer--internal' then we do an update
+             ;; also for a nil cache if the buffer is not setup for semantic
+             ;; (like text-buffers) so we can clear out the method-buffer!
              (or updated-cache
                  (not (semantic-active-p))
                  force-nil-cache))
@@ -4283,4 +4294,4 @@ changed there should be no performance-problem!"
 
 (provide 'ecb)
 
-;;; ecb.el ends here
+;;;ecb.el ends here

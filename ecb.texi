@@ -238,7 +238,7 @@ what are the first steps after activation of ECB.
 @enumerate
 
 @item
-Unpack the ECB archive.
+Unpack the ECB archive (probably you have already done this :-)
 
 @item
 Read the file @file{README} in the ECB-directory and install the
@@ -272,29 +272,51 @@ ECB is NOT properly installed if it's directory is not added to
 Do not do this!
 
 @item
-Add to your @file{.emacs} or @file{site-lisp/site-start.el} the line:
+Load ECB by adding code to your @file{.emacs} or
+@file{site-lisp/site-start.el}.
+
+If you want to load the complete ECB at Emacs-loadtime (Advantage: All
+ECB-options available after loading Emacs. Disadvantage: Increasing
+loadtime@footnote{Cause of full loading of ECB itself and also
+the packages semantic and eieio regardless if ECB is started.}):
 
 @example
 (require 'ecb)
+@end example
+
+If you want to load the ECB first after starting it by
+@code{ecb-activate} (Advantage: Fast loading@footnote{ECB, semantic
+and eieio are first loaded after starting ECB}. Disadvantage:
+ECB- and semantic-options first available after starting ECB):
+
+@example
+(autoload 'ecb-activate "ecb" "Activate ECB" t)
+(autoload 'ecb-byte-compile "ecb" "Byte-compile ECB" t)
+(autoload 'ecb-show-help "ecb-help" "Show the online help of ECB" t)
 @end example
 
 @item Restart Emacs.
 @end enumerate
 
 ECB is now ready for use and can be activated by calling @code{M-x
-ecb-activate}. Now you can either starting using ECB or you can do
-these optional installation steps:
+ecb-activate} or @code{ecb-minor-mode}. Now you can either starting
+using ECB or you can do these optional installation steps:
 
 @enumerate 6
 
-@item Call @code{ecb-byte-compile}
+@item Reading the online help with @code{ecb-show-help}
+
+Maybe you are interested to read the online-help of ECB before first
+start.
+
+@item Calling @code{ecb-byte-compile}
 
 This byte compiles ECB. You can safely ignore all messages.
 (You can also bytecompile ECB from the command-line either by using
 the @file{Makefile} or by using the batch-file @file{make.bat}. Just
 read the comments in that file you choose.)
 
-@item Install the supplied @file{ecb.info}
+@item Installing the supplied @file{ecb.info}
 
 The ECB distribution contains a file @file{ecb.info} which is the
 online-help of ECB in Info-format. You can install this online help so
@@ -328,7 +350,7 @@ Copy the file @file{ecb.info} into the info-directory of Emacs and
 modify the file @file{dir} manually.
 @end itemize
 
-But it doesn't matter if you do not execute this step (7.) because the
+But it doesn't matter if you do not execute this step (8.) because the
 online help of ECB is always available though, see
 @code{ecb-show-help} (@pxref{Interactive ECB commands}).
 

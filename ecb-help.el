@@ -26,7 +26,7 @@
 ;;
 ;; Contains all online-help for ECB (stolen something from recentf.el)
 
-;; $Id: ecb-help.el,v 1.82 2002/10/18 10:45:44 berndl Exp $
+;; $Id: ecb-help.el,v 1.83 2002/10/23 16:09:30 berndl Exp $
 
 ;;; Code
 
@@ -43,6 +43,7 @@ then `browse-url-browser-function' says which browser is used."
                  (const :tag "Info" :value info)
                  (const :tag "Html" :value html)))
 
+;;;###autoload
 (defun ecb-show-help (&optional format)
   "Shows the online help of ECB in Info or HTML-format depending on the value
 of the option `ecb-show-help-format'. If called with prefix argument, i.e. if

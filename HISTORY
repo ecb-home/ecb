@@ -1,6 +1,10 @@
 Version 1.90:
 -------------
 
+- Now ECB can "loaded" with autoload, i.e. ecb-activate, ecb-minor-mode,
+  ecb-byte-compile and ecb-show-help are autoload-able via '(autoload ...)'
+  (Klaus)
+
 - Now ECB offers a command `ecb-create-new-layout' for interactively creating
   new layouts "by example". Read the online-help. (Klaus)
 
