@@ -34,6 +34,6 @@ echo (add-to-list 'load-path "../eieio-0.17beta3") >> ecb-compile-script-init
 
 echo (setq debug-on-error t) >> ecb-compile-script-init
 %EMACSPROG% -batch -no-site-file -l ecb-compile-script-init -f batch-byte-compile *.el
-REM del ecb-compile-script-init
+del ecb-compile-script-init
 
 REM End of make.bat
