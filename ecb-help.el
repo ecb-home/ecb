@@ -456,6 +456,18 @@ versions of Emacs there should be no scrolling problem even with `scroll-step'
 has value 1.
 
 
+Working with very large directories:
+------------------------------------
+
+If `ecb-source-path' contains directories with many files and subdirs,
+especially if these directories are mounted net-drives \(\"many\" means here
+something > 1000, dependend on the speed of the net-connection and the
+machine), actualizing the sources- and/or directories- buffer of ECB \(if
+displayed in current layout!) can slow down dramatically. If this is a problem
+the contents of certain directories can be cached which increases the speed a
+lot. See `ecb-cache-directory-contents'.
+
+
                         ==================================
                         Entry points for elisp programmers
                         ==================================
