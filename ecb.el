@@ -463,11 +463,6 @@ activate ECB again to take effect."
   :group 'ecb-general
   :type 'boolean)
 
-;; (defcustom ecb-mode-line-show-prefix nil
-;;   "*Show the ECB buffer prefix in the mode line."
-;;   :group 'ecb-general
-;;   :type 'boolean)
-
 (defcustom ecb-primary-secondary-mouse-buttons 'mouse-2--C-mouse-2
   "*Primary- and secondary mouse button for using the ECB-buffers.
 A click with the primary button causes the main effect in each ECB-buffer:

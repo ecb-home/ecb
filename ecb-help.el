@@ -100,7 +100,8 @@ the output of Emacs-compilation \(compile, grep etc.) is shown.
 
 Call M-x `ecb-activate' and M-x `ecb-deactivate' to activate or deactivate
 ECB. If you want ECB started in a new frame see the option
-`ecb-new-ecb-frame' \(default is nil).
+`ecb-new-ecb-frame' \(default is nil). `ecb-activate' always raises and
+selects the ECB-frame even if ECB is already started.
 
 
 
