@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-layout.el,v 1.176 2003/08/25 08:24:01 berndl Exp $
+;; $Id: ecb-layout.el,v 1.177 2003/08/25 14:22:50 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -162,6 +162,12 @@
   :group 'ecb
   :prefix "ecb-")
 
+(defgroup ecb-compilation nil
+  "Settings for the compile window of ECB."
+  :group 'ecb-layout
+  :prefix "ecb-")
+
+
 (defconst ecb-layout-option-set-function
   (function (lambda (symbol value)
 	      (set symbol value)
@@ -276,7 +282,7 @@ function `ecb-toggle-enlarged-compilation-window'!
 Regardless of the settings you define here: If you have destroyed or
 changed the ECB-screen-layout by any action you can always go back to this
 layout with `ecb-redraw-layout'"
-  :group 'ecb-layout
+  :group 'ecb-compilation
   :initialize 'custom-initialize-default
   :set (function (lambda (symbol value)
                    (ecb-set-window-size-fixed nil)
@@ -313,7 +319,7 @@ The following values are possible:
 
 To restore the ECB-layout after such a buffer-enlarge just call
 `ecb-toggle-enlarged-compilation-window' or `ecb-redraw-layout'."
-  :group 'ecb-layout
+  :group 'ecb-compilation
   :initialize 'custom-initialize-default
   :set ecb-layout-option-set-function
   :type '(radio (const :tag "After finishing compilation"
@@ -342,7 +348,7 @@ The max height of the compilation window after enlarged by
 - any number: Max height in lines. If the number is less than 1.0 the height
               is a fraction of the frame height \(e.g. 0.33 results in a
               max-height of 1/3 the frame-height)."
-  :group 'ecb-layout
+  :group 'ecb-compilation
   :type '(radio (const :tag "Compute best height"
                        :value best)
                 (const :tag "1/2 the frame height)"
@@ -630,7 +636,7 @@ and then selects the `ecb-compile-window' if it is a compilation-buffer in the
 meaning of `ecb-compilation-buffer-p'!
 
 Currently this seems only making sense for `switch-to-buffer'."
-  :group 'ecb-layout
+  :group 'ecb-compilation
   :type '(set (const :tag "switch-to-buffer"
                      :value switch-to-buffer)))
 
@@ -862,7 +868,9 @@ either not activated or it behaves exactly like the original version!"
 (defadvice compilation-set-window-height (around ecb)
   "Makes the function compatible with ECB."
   (if (or (not (equal (selected-frame) ecb-frame))
-          (and ecb-compile-window-height (ecb-compile-window-live-p)))
+          (and ecb-compile-window-height
+               (ecb-compile-window-live-p)
+               (equal ecb-compile-window-width 'frame)))
       ad-do-it
     (and compilation-window-height
          (not (equal (ecb-edit-window-splitted) 'horizontal))
@@ -878,7 +886,10 @@ either not activated or it behaves exactly like the original version!"
                    (select-window (ad-get-arg 0))
                    (enlarge-window (- compilation-window-height
                                       (window-height))))
-               (select-window w)))))))
+               ;; The enlarge-window above may have deleted W, if
+               ;; compilation-window-height is large enough.
+               (when (window-live-p w)
+                 (select-window w))))))))
 
 ;; We need this advice only because the ugly implementation of Emacs:
 ;; `scroll-other-window' uses per default not the function
@@ -966,7 +977,9 @@ only enabled and disabled by `ecb-enable-count-windows-advice'!"
       (defadvice shrink-window-if-larger-than-buffer (around ecb)
         "Makes the function compatible with ECB."
         (if (or (not (equal (selected-frame) ecb-frame))
-                (and ecb-compile-window-height (ecb-compile-window-live-p)))
+                (and ecb-compile-window-height
+                     (ecb-compile-window-live-p)
+                     (equal ecb-compile-window-width 'frame)))
             ad-do-it
           (or (ad-get-arg 0) (ad-set-arg 0 (selected-window)))
           (save-excursion
@@ -1012,7 +1025,9 @@ only enabled and disabled by `ecb-enable-count-windows-advice'!"
       (defadvice show-temp-buffer-in-current-frame (around ecb)
         "Makes the function compatible with ECB."
         (if (or (not (equal (selected-frame) ecb-frame))
-                (and ecb-compile-window-height (ecb-compile-window-live-p)))
+                (and ecb-compile-window-height
+                     (ecb-compile-window-live-p)
+                     (equal ecb-compile-window-width 'frame)))
             ad-do-it
           (let ((pre-display-buffer-function nil)) ; turn it off, whatever it is
             (save-selected-window
@@ -1090,7 +1105,9 @@ only enabled and disabled by `ecb-enable-count-windows-advice'!"
   (defadvice shrink-window-if-larger-than-buffer (around ecb)
     "Makes the function compatible with ECB."
     (if (or (not (equal (selected-frame) ecb-frame))
-            (and ecb-compile-window-height (ecb-compile-window-live-p)))
+            (and ecb-compile-window-height
+                 (ecb-compile-window-live-p)
+                 (equal ecb-compile-window-width 'frame)))
         ad-do-it
       (save-selected-window
         (if (ad-get-arg 0)
@@ -1106,20 +1123,26 @@ only enabled and disabled by `ecb-enable-count-windows-advice'!"
                    (or (not mini)
                        (< (nth 3 edges) (nth 1 (ecb-window-edges mini)))
                        (> (nth 1 edges) (cdr (assq 'menu-bar-lines params)))))
-              (let ((text-height (window-buffer-height (ad-get-arg 0)))
-                    (window-height (window-height)))
-                ;; Don't try to redisplay with the cursor at the end
-               ;; on its own line--that would force a scroll and spoil things.
-                (when (and (eobp) (bolp))
-                  (forward-char -1))
-                (when (> window-height (1+ text-height))
-                  (shrink-window
-                   (- window-height (max (1+ text-height) window-min-height))))))))))
+              (if ecb-running-emacs-21
+                  (fit-window-to-buffer (ad-get-arg 0)
+                                        (window-height (ad-get-arg 0)))
+                ;; code for GNU Emacs < 21.X
+                (let ((text-height (window-buffer-height (ad-get-arg 0)))
+                      (window-height (window-height)))
+                  ;; Don't try to redisplay with the cursor at the end
+                  ;; on its own line--that would force a scroll and spoil things.
+                  (when (and (eobp) (bolp))
+                    (forward-char -1))
+                  (when (> window-height (1+ text-height))
+                    (shrink-window
+                     (- window-height (max (1+ text-height) window-min-height)))))))))))
 
   (defadvice resize-temp-buffer-window (around ecb)
     "Makes the function compatible with ECB."
     (if (or (not (equal (selected-frame) ecb-frame))
-            (and ecb-compile-window-height (ecb-compile-window-live-p)))
+            (and ecb-compile-window-height
+                 (ecb-compile-window-live-p)
+                 (equal ecb-compile-window-width 'frame)))
         ad-do-it
       (unless (or (one-window-p 'nomini)
                   (equal (ecb-edit-window-splitted) 'horizontal)
@@ -1134,7 +1157,8 @@ only enabled and disabled by `ecb-enable-count-windows-advice'!"
         ;; source-buffer of the edit-window and then we jump to the
         ;; next-window which now displays the completions. Then we can go with
         ;; resizing. 
-        (when (not (ecb-edit-window-splitted))
+        (when (and (not (ecb-edit-window-splitted))
+                   (not (ecb-compile-window-live-p)))
           (split-window-vertically)
           (switch-to-buffer ecb-last-source-buffer)
           (other-window 1))
@@ -1605,7 +1629,9 @@ original version."
       (if (not (ecb-edit-window-splitted))
           ;; we allow only an unsplitted edit-window to be splitted
           (if (not (equal window ecb-edit-window))
-              (ecb-error "Only the edit-window of ECB is split-able!")
+              (progn
+                (message "XXX: window: %s" (ad-get-arg 0))
+                (ecb-error "XXX Only the edit-window of ECB is split-able!"))
             ad-do-it)
         ;; if already splitted return the "other" edit-window
         (setq ad-return-value
@@ -1614,7 +1640,7 @@ original version."
                     ((equal window (next-window ecb-edit-window))
                      ecb-edit-window)
                     (t
-                     (ecb-error "Only the edit-window of ECB is split-able!"))))))))
+                     (ecb-error "YYY Only the edit-window of ECB is split-able!"))))))))
 
 (defadvice switch-to-buffer-other-window (around ecb)
   "The ECB-version of `switch-to-buffer-other-window'. Works exactly like the
@@ -2355,8 +2381,10 @@ and TYPE must be an element of `ecb-layout-types'."
 ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: test code for implementing
 ;; compile-window with width of edit-window and not of frame.
 (defvar ecb-compile-window-width 'frame
-  "Possible values: 'frame and 'edit-window. This should become a defcustom if
-it works reliable")
+  "Width of the compile-window. Possible values: 'frame and 'edit-window.
+Currently it's not recommended to set it to other values than 'frame because
+it works not reliable in all situations. If you do it then do it on your own
+risk - there will be no support for this variable if there are problems!")
 
 ;; Macro for easy defining new layouts
 (defmacro ecb-layout-define (name type doc &rest create-code)

@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-compilation.el,v 1.25 2003/08/06 09:15:20 berndl Exp $
+;; $Id: ecb-compilation.el,v 1.26 2003/08/25 14:22:51 berndl Exp $
 
 ;;; Commentary:
 
@@ -48,11 +48,6 @@
 
 (require 'ecb-util)
 
-(defgroup ecb-compilation-content nil
-  "Settings for all things displayed in the compile window of ECB."
-  :group 'ecb
-  :prefix "ecb-compilation-")
-
 (defcustom ecb-compilation-buffer-names `(("*Calculator*" . nil)
                                           ("*vc*" . nil)
                                           ("*vc-diff*" . nil)
@@ -71,8 +66,7 @@ Buffer names can either be defined as strings or as regexps. If the
 buffer-name of a buffer matches one of the defined string or regexp then it
 will be displayed in the compile-window of ECB even if `compilation-buffer-p'
 says nil for this buffer."
-  :group 'ecb-compilation-content
-  :group 'ecb-layout
+  :group 'ecb-compilation
   :type '(repeat (cons (string :tag "Buffer name")
                        (boolean :tag "Handled as regexp"))))
 
@@ -105,8 +99,7 @@ compile-window of ECB. This is a list combined of
   "*Additional major-mode that should be displayed in the compile-window.
 All buffers of a major-mode contained in this list are displayed in the
 compile-window even if `compilation-buffer-p' says nil for such a buffer."
-  :group 'ecb-compilation-content
-  :group 'ecb-layout
+  :group 'ecb-compilation
   :type '(repeat (symbol :tag "major-mode name")))
 
 (defvar ecb-compilation-major-modes-internal nil
@@ -135,8 +128,7 @@ compile-window.
 
 Default value is the function `comint-check-proc' which returns not nil when
 the buffer is related to a living process."
-  :group 'ecb-compilation-content
-  :group 'ecb-layout
+  :group 'ecb-compilation
   :type '(repeat (symbol :tag "Compilation predicate")))
 
 (defvar ecb-compilation-predicates-internal nil
