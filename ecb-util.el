@@ -26,7 +26,7 @@
 ;; This file is part of the ECB package which can be found at:
 ;; http://home.swipnet.se/mayhem/ecb.html
 
-;; $Id: ecb-util.el,v 1.11 2001/05/01 13:31:53 creator Exp $
+;; $Id: ecb-util.el,v 1.12 2001/05/03 19:20:02 creator Exp $
 
 ;;; Code:
 (defconst running-xemacs (string-match "XEmacs\\|Lucid" emacs-version))
@@ -75,16 +75,8 @@
     (when (get-file-buffer file)
       (kill-buffer (get-file-buffer file)))
       
-    (delete-file file)))
-;;   (save-current-buffer
-;;     (ecb-buffer-select ecb-history-buffer-name)
-;;     (tree-node-remove-child (tree-buffer-get-root)
-;;                 (tree-node-find-child-data (tree-buffer-get-root)
-;;                                file))
-;;     (ecb-buffer-select ecb-sources-buffer-name)
-;;     (tree-node-remove-child (tree-buffer-get-root)
-;;                 (tree-node-find-child-data (tree-buffer-get-root)
-;;                                file))))
+    (delete-file file)
+    (ecb-select-source-file ecb-path-selected-source)))
 
 (defun ecb-create-directory(parent-node)
   (make-directory (concat (tree-node-get-data parent-node) "/" (read-from-minibuffer "Directory name: ")))
