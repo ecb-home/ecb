@@ -1,6 +1,9 @@
 Version 1.30 (???):
 -------------------
 
+- The messages displayed after moving the mouse over a node in a tree-buffer
+  do not longer wasting the log, means they will not be logged (Klaus).
+
 - ECB now also works with semantic >= 1.4 (Klaus).
 
 - Now the ecb-compile-window-height is also preserved after displaying

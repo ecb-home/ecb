@@ -87,6 +87,28 @@
   "After this idle-time of Emacs `tree-buffer-do-mouse-tracking' is called if
 mouse-tracking is activated by `tree-buffer-activate-mouse-tracking'")
 
+(defun tree-buffer-nolog-message (&rest args)
+  "Works exactly like `message' but does not log the message"
+  (let ((msg (cond ((or (null args)
+                        (null (car args)))
+                    nil)
+                   ((null (cdr args))
+                    (car args))
+                   (t
+                    (apply 'format args)))))
+    ;; Now message is either nil or the formated string.
+    (if running-xemacs
+        ;; XEmacs way of preventing log messages.
+        (if msg
+            (display-message 'no-log msg)
+          (clear-message 'no-log))
+      ;; Emacs way of preventing log messages.
+      (let ((message-log-max nil))
+        (if msg
+            (message "%s" msg)
+          (message nil))))
+    msg))
+
 (defun tree-buffer-get-node-name-start-column (node)
   "Returns the buffer column where the name of the node starts."
   (+ (tree-buffer-get-node-indent node)
@@ -462,7 +484,7 @@ mentioned above!"
               (setq tree-buffer-incr-searchpattern
                     (concat tree-buffer-incr-searchpattern
                             (char-to-string last-comm)))))
-      (message "%s node search: [%s]%s"
+      (tree-buffer-nolog-message "%s node search: [%s]%s"
                (buffer-name (current-buffer))
                tree-buffer-incr-searchpattern
                (if (let ((case-fold-search t))

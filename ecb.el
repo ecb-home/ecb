@@ -1391,22 +1391,24 @@ node in the ECB-window WINDOW."
   (if (= (tree-node-get-type node) 1)
       (ecb-mouse-over-source-node node)
     (if (not (= (tree-node-get-type node) 3))
-	(message (when (ecb-show-minibuffer-info node window)
-		   (tree-node-get-data node))))))
+	(tree-buffer-nolog-message
+         (when (ecb-show-minibuffer-info node window)
+           (tree-node-get-data node))))))
 
 (defun ecb-mouse-over-source-node (node &optional buffer window)
   ;; For buffers that hasnt been saved yet
   (ignore-errors
-    (message (when (ecb-show-minibuffer-info node window)
-	       (if ecb-show-file-info-in-minibuffer
-		   (ecb-get-file-info-text (tree-node-get-data node))
-		 (if ecb-show-complete-file-name-in-minibuffer
-		     (tree-node-get-data node)
-		   (tree-node-get-name node)))))))
+    (tree-buffer-nolog-message
+     (when (ecb-show-minibuffer-info node window)
+       (if ecb-show-file-info-in-minibuffer
+           (ecb-get-file-info-text (tree-node-get-data node))
+         (if ecb-show-complete-file-name-in-minibuffer
+             (tree-node-get-data node)
+           (tree-node-get-name node)))))))
 
 (defun ecb-mouse-over-method-node (node &optional buffer window)
-  (message (when (ecb-show-minibuffer-info node window)
-	     (tree-node-get-name node))))
+  (tree-buffer-nolog-message (when (ecb-show-minibuffer-info node window)
+                               (tree-node-get-name node))))
 
 
 ;;====================================================
