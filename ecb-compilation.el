@@ -1,6 +1,6 @@
 ;;; ecb-compilation.el --- 
 
-;; $Id: ecb-compilation.el,v 1.21 2003/03/31 15:40:22 berndl Exp $
+;; $Id: ecb-compilation.el,v 1.22 2003/04/01 07:58:15 berndl Exp $
 
 ;; Copyright (C) 2000-2003 Free Software Foundation, Inc.
 ;; Copyright (C) 2000-2003 Kevin A. Burton (burton@openprivacy.org)
@@ -73,12 +73,13 @@ window of ECB even if `compilation-buffer-p' says nil."
 
 (defvar ecb-compilation-buffer-names-internal nil
   "This variable is for ECB internal use and can be used by ECB to add
-buffer-names to the set displayed in the compile-window. Type is the same as
-of option `ecb-compilation-buffer-names'")
+buffer-names to the set specified in `ecb-compilation-buffer-names'. Type is
+the same as of option `ecb-compilation-buffer-names'")
 
 (defun ecb-compilation-buffer-names ()
   "Return the set of buffer names which should be displayed in the
-compile-window of ECB."
+compile-window of ECB. This is a list combined of
+`ecb-compilation-buffer-names' and `ecb-compilation-buffer-names-internal'."
   (append ecb-compilation-buffer-names
           ecb-compilation-buffer-names-internal))
 
@@ -104,28 +105,31 @@ window of ECB even if `compilation-buffer-p' says nil."
 
 (defvar ecb-compilation-major-modes-internal nil
   "This variable is for ECB internal use and can be used by ECB to add
-major-mode symbols to the set displayed in the compile-window.")
+major-mode symbols to the set specified in `ecb-compilation-major-modes'.")
 
 (defun ecb-compilation-major-modes ()
   "Return all major-mode symbols which should be displayed in the
-compile-window."
+compile-window. This is a list combined of `ecb-compilation-major-modes' and
+`ecb-compilation-major-modes-internal'."
   (append ecb-compilation-major-modes
           ecb-compilation-major-modes-internal))
 
 
 (defcustom ecb-compilation-predicates '(comint-check-proc)
-  "*Predicate when a buffer should be treaten as compilation-buffer.
+  "*Predicate when a buffer should be treated as compilation-buffer -
+even if `compilation-buffer-p' says nil.
+
 Every element of this list has to be a function or lambda-expression which
 gets as argument a buffer-object and which has to return not nil when this
-buffer should be treaten as compilation-buffer and therefore displayed in the
-compile-window of ECB \(if there is any).
+buffer should be treated as compilation-buffer and therefore be displayed in
+the compile-window of ECB \(if there is any).
 
 In combination with the values of `ecb-compilation-buffer-names' and
 `ecb-compilation-major-modes' ECB decides when a buffer is displayed in the
 compile-window.
 
 Default value is the function `comint-check-proc' which returns not nil when
-the buffer-argument is related to a living process."
+the buffer is related to a living process."
   :group 'ecb-compilation-content
   :group 'ecb-layout
   :type '(repeat (symbol :tag "Compilation predicate")))
@@ -136,7 +140,8 @@ predicates to the set defined in `ecb-compilation-predicates'.")
 
 (defun ecb-compilation-predicates ()
   "Return all predicates which should be used to test if a buffer should be
-displayed in the compile-window."
+displayed in the compile-window. This is a list combined of
+`ecb-compilation-predicates' and `ecb-compilation-predicates-internal'."
   (append ecb-compilation-predicates
           ecb-compilation-predicates-internal))
 
@@ -167,19 +172,32 @@ displayed in the compile-window."
 
 
 (defun ecb-compilation-buffer-p(buffer-or-name)
-  "Test if the given buffer is a compilation buffer. Note that in this case we
-define 'compilation buffer' as a buffer that should ideally be displayed in the
-`ecb-compile-window'. This means that in some situations this might not be the
-result of a `compile-internal'. A good example would be the *Help* buffer or the
-`ecb-eshell-buffer-name'.
+  "Test if the given buffer BUFFER-OR-NAME should be treated as a compilation
+buffer. Note that in this case we define \"compilation buffer\" as a buffer
+that should ideally be displayed in the compile-window of ECB \(see
+`ecb-compile-window-height'). This means that in some situations this might
+not be the result of a real `compile-internal'. A good example would be the
+*Help* buffer or the `ecb-eshell-buffer-name'.
 
-BUFFER can be the name of a buffer or a buffer-objekt.
+BUFFER-OR-NAME can be the name of a buffer or a buffer-object.
 
-This function is non-nil if the name of BUFFER is either contained in the list
-returned by the function `ecb-compilation-buffer-names', or its `major-mode'
-is contained in the list returned by the function
-`ecb-compilation-major-modes', or if `compilation-buffer-p' returns true."
+This function returns non-nil - i.e. buffer will be treated as
+compilation-buffer - if:
 
+- The name of the buffer is contained in the list returned by the function
+  `ecb-compilation-buffer-names' or
+- the `major-mode' of the buffer is contained in the list returned by the
+  function `ecb-compilation-major-modes' or
+- if `compilation-buffer-p' returns true or
+- one of the predicates returned by `ecb-compilation-predicates' returns not
+  nil for the buffer.
+
+Summary for ECB-endusers: A buffer will be treated as compilation-buffer if
+either 
+- `compilation-buffer-p' returns not nil, i.e. if a real compilation-buffer or
+- if at least one of the options `ecb-compilation-buffer-names',
+  `ecb-compilation-major-modes' or `ecb-compilation-predicates' define the
+  buffer as compilation-buffer."
   ;;determine the best valid for the buffer.
   (let ((buffer (cond ((stringp buffer-or-name)
                        (get-buffer buffer-or-name))

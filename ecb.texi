@@ -19,7 +19,7 @@
 @c Free Software Foundation, Inc., 59 Temple Place - Suite 330,
 @c Boston, MA 02111-1307, USA.
 
-@c $Id: ecb.texi,v 1.90 2003/03/31 15:40:18 berndl Exp $
+@c $Id: ecb.texi,v 1.91 2003/04/01 07:58:14 berndl Exp $
 
 @setfilename ecb.info
 
@@ -1210,6 +1210,9 @@ adviced functions is @code{ecb-layout-always-operate-in-edit-window}!
 If you call any help in Emacs, e.g. by calling @code{describe-function}, or
 if you do a completion in the minibuffer, then Emacs displays the
 result-buffer in another window. This behavior you have also in ECB.
+
+@subsection Standard Emacs behavior
+
 If the edit-window is already splitted then the temp-buffer is
 displayed in the ``other'' edit-window otherwise the edit-window will be
 splitted first. The variables @code{temp-buffer-max-height} and
@@ -1218,38 +1221,47 @@ splitted first. The variables @code{temp-buffer-max-height} and
 Same for all compilation output-buffers (e.g. after a @code{compile} or
 @code{grep}) and the variable @code{compilation-window-height}.
 
+This is default behavior of ECB. But there is also another way to
+display such buffers: Using a durable extra window at the bottom of
+the ECB-frame:
+
+@subsection Using a durable compile window
+
+With the option @code{ecb-compile-window-height} you can define if the
+ECB layout should contain per default a compile-window at the
+bottom (just specify the number of lines which should be used for the
+compile-window at the bottom of the frame). If ``yes'' ECB displays
+all output of compilation-mode (compile, grep etc.) in this special
+window. Same for displaying help-buffers or similar stuff.
+
 In general: With the options @code{ecb-compilation-buffer-names},
 @code{ecb-compilation-major-modes} and
 @code{ecb-compilation-predicates} you can define which buffers should
 be displayed in the compile-window of ECB for example if you call
-@code{switch-to-buffer} for a buffer.
+@code{switch-to-buffer}.
 
-This is default behavior of ECB. But there is also another way to
-display such buffers:
+With the command @code{ecb-toggle-compile-window} you can toggle the
+visibility of the compile-window (@pxref{Interactive ECB commands}).
+
+There are some more useful options and commands related to the
+compile-window of ECB:
 
 @itemize @bullet
 @item
-With the option @code{ecb-compile-window-height} you can define if the
-ECB layout should contain per default a compilation-window at the
-bottom (and if yes the height of it). If yes ECB displays all output
-of compilation-mode (compile, grep etc.) in this special window. Same
-for displaying help-buffers or similar stuff. With the command
-@code{ecb-compile-window-height} you can toggle the visibility of the
-compile-window (@pxref{Interactive ECB commands}).
-
-@item
-With the option @code{ecb-compile-window-temporally-enlarge} you can allow
-Emacs to enlarge temporally the ECB-compile-window in some situations.
-Please read the comment of this option. See also the description of
-the function @code{ecb-toggle-enlarged-compilation-window}.
+With the option @code{ecb-compile-window-temporally-enlarge} you can
+allow Emacs to enlarge temporally the ECB-compile-window in some
+situations. Please read the comment of this option. See also the
+description of the function
+@code{ecb-toggle-enlarged-compilation-window}.
 
 @item
 With the option @code{ecb-layout-switch-to-compilation-window} you can
 modify the switch-to-buffer...-functions to work best if your layout
-contains a compilation-window. See the docstring of this option.
+contains a compile-window. See the docstring of this option.
 
-But because ECB works best without such a durable compilation-window
-you should read the documentation of these three options carefully!
+But because ECB works best @strong{without} such a durable
+compile-window you should read the documentation of these two options
+carefully!
 
 @item
 With the command @code{ecb-cycle-through-compilation-buffers}
@@ -2149,13 +2161,13 @@ by you wherever you want (@kbd{C-s}). The left one contains the point.
 You must give every ECB-tree-window you create a type (@kbd{C-t})
 which can be either
 
-@itemize
-@item
-One of the builtin types ``directories'', ``sources'', ``methods'' or
-``history'' or
+@itemize @bullet
+@item One of the builtin types
 
-@item
-any user-defined type:
+This can be either ``directories'', ``sources'', ``methods'' or
+``history''.
+
+@item Any user-defined type:
 
 In this case you insert ``other'' after hitting @kbd{C-t} and you will
 then be asked for the name of the user-defined type. You can insert
@@ -4908,18 +4920,19 @@ window of ECB even if @code{compilation-buffer-p} says nil.
 
 
 @defopt compilation-predicates
-Predicate when a buffer should be treaten as compilation-buffer. Every
-element of this list has to be a function or lambda-expression which
-gets as argument a buffer-object and which has to return not nil when
-this buffer should be treaten as compilation-buffer and therefore
-displayed in the compile-window of ECB (if there is any).
+Predicate when a buffer should be treated as compilation-buffer - even
+if @code{compilation-buffer-p} says nil. Every element of this list
+has to be a function or lambda-expression which gets as argument a
+buffer-object and which has to return not nil when this buffer should
+be treated as compilation-buffer and therefore displayed in the
+compile-window of ECB (if there is any).
 
 In combination with the values of @code{ecb-compilation-buffer-names}
-and @code{ecb-compilation-major-modes} ECB decides when a buffer is
-displayed in the compile-window.
+and @code{ecb-compilation-major-modes} ECB decides when a buffer has
+to be displayed in the compile-window.
 
 Default value is the function @code{comint-check-proc} which returns
-not nil when the buffer-argument is related to a living process.
+not nil if the buffer-argument is related to a living process.
 @end defopt
 
 
@@ -7410,6 +7423,13 @@ Yes, see @ref{Using the mouse}.
 Can ECB display the compile-window ``on demand''?
 @tab @tab
 Yes, see @ref{Tips and tricks}.
+
+@item @tab @tab
+
+@item
+Which buffers are treated as compilation-buffers by ECB?
+@tab @tab
+See the docstring of the function @code{ecb-compilation-buffer-p}.
 
 @end multitable
 
