@@ -949,13 +949,16 @@ displayed with window-start and point at beginning of buffer."
 function is added to the hook `semantic-after-toplevel-bovinate-hook'."
   (when (and ecb-activated
              (equal (selected-frame) ecb-frame)
-             (get-buffer-window ecb-methods-buffer-name))
-    ;; if we check also if semantic-toplevel-bovine-cache is non nil then this
-    ;; functions is not called after clearing the cache (new in semantic 1.4)
-    ;; but then also the method-buffer is not cleared if we open a source
-    ;; which has no tokens like txt-files.
-    ;; TODO: We need a smarter mechanism to combine this.
-
+             (get-buffer-window ecb-methods-buffer-name)
+             ;; In semantic 1.4 the functions of the hook
+             ;; `semantic-after-toplevel-bovinate-hook' are also called after
+             ;; clearing the cache to set the cache to nil if a buffer is
+             ;; parsed which has no tokens like plain text-buffers. Here we do
+             ;; not want rebuilding the method-buffer if the cache is nil but
+             ;; the current buffer is the same buffer which was current before
+             ;; the command which has triggered the cache clearing.
+             (or semantic-toplevel-bovine-cache
+                 (not (equal (current-buffer) ecb-last-source-buffer))))
     ;; This is a fix for semantic 1.4beta2
     ;; otherwise it parses the mini-buffer
     (unless (string-match "^ *\\*" (buffer-name))
