@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: tree-buffer.el,v 1.159 2004/12/06 17:52:53 berndl Exp $
+;; $Id: tree-buffer.el,v 1.160 2004/12/10 12:52:41 berndl Exp $
 
 ;;; Commentary:
 
@@ -208,7 +208,7 @@ Image types are symbols like `xbm' or `jpeg'."
 
 ;; timer stuff
 
-(if (not ecb-running-xemacs)
+(if (not tree-buffer-running-xemacs)
     (progn
       (defalias 'tree-buffer-run-with-idle-timer 'run-with-idle-timer)
       (defalias 'tree-buffer-cancel-timer 'cancel-timer))
@@ -569,7 +569,7 @@ The result for NODE here is 10"
 
 (defvar tree-buffer-enable-xemacs-image-bug-hack
   tree-buffer-running-xemacs
-  "If true then ECB tries to deal best with the XEmacs-bug to display
+  "If true then tree-buffer tries to deal best with the XEmacs-bug to display
 adjacent images not correctly. Set this to nil if your XEmacs-version has fixed
 this bug.")
 
@@ -707,6 +707,22 @@ TREE-IMAGE-NAME."
                (tree-buffer-image-cache-put tree-image-name
                                             image)
                image)))))
+
+;; utilities
+
+(defun tree-buffer-position (seq elem)
+  "Return the position of ELEM within SEQ counting from 0. Comparison is done
+with `equal'."
+  (if (listp seq)
+      (let ((pos (- (length seq) (length (member elem seq)))))
+        (if (= pos (length seq))
+            nil
+          pos))
+    (catch 'found
+      (dotimes (i (length seq))
+        (if (equal elem (aref seq i))
+            (throw 'found i)))
+      nil)))
 
 (defun tree-buffer-nolog-message (&rest args)
   "Works exactly like `message' but does not log the message"
@@ -899,11 +915,11 @@ the node and the cdr is the data of the node which is equal to NODE-DATA."
                        ;; tree-buffer-nodes which begins with the P-th element
                        ;; of tree-buffer-nodes (nthcdr P tree-buffer-nodes).
                        (or (ignore-errors
-                             (nthcdr (ecb-position (mapcar (lambda (n)
-                                                             (tree-node-get-name
-                                                              (cdr n)))
-                                                           tree-buffer-nodes)
-                                                   (tree-node-get-name start-node))
+                             (nthcdr (tree-buffer-position (mapcar (lambda (n)
+                                                                     (tree-node-get-name
+                                                                      (cdr n)))
+                                                                   tree-buffer-nodes)
+                                                           (tree-node-get-name start-node))
                                      tree-buffer-nodes))
                            tree-buffer-nodes)))
           (equal-fcn 'tree-buffer-node-data-equal-p))
