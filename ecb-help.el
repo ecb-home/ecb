@@ -436,7 +436,7 @@ could be interesting for support."
                                    ecb-windows-hidden
                                    ecb-toggle-layout-state
                                    ecb-current-maximized-ecb-buffer-name
-                                   ecb-tree-buffers-of-current-layout)
+                                   ecb-special-ecb-buffers-of-current-layout)
                                  (function (lambda (l r)
                                              (ecb-string< (symbol-name l)
                                                           (symbol-name r)))))))

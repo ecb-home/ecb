@@ -7,6 +7,32 @@
    old setting of this option to the new type. Thanks to Javier Oviedo
    <joviedo@telogy.com> for the suggestion.
 
+** Enhancements to the permanent compile-window
+   
+*** Enlarging the compile-window does not destroy some ecb-windows
+    With previous versions of ECB enlarging the permanent compile-window has
+    often destroyed some ecb-windows if the compile-window has occupied a
+    large portion of the frame-height (e.g. half of the frame). Beginning with
+    ECB 2.27 such a ecb-window-damage is either prevented or - if it still
+    occurs (can not be prevented in all situations) ECB now has a
+    "self-healing"-mechanism which immediatelly repairs the layout via
+    idle-checks if the current window-layout is correct for the current
+    `ecb-layout-name'. Thanks to Javier Oviedo <joviedo@telogy.com> for a
+    great problem-report!
+
+    Caution: If bytecompiled user-defined layouts are used (ie. the file,
+    which contains the user-defined layouts is byte-compiled) then you MUST
+    recompile this file with ECB 2.27 active!
+
+*** Now `ecb-store-window-sizes' and `ecb-restore-window-sizes' also work when
+    called during a permanent compile-window is visible and also when these
+    commands are called with another compile-window state than the other (e.g.
+    when the window-sizes are stored without a compile-window and restored
+    with a compile-window).
+
+*** Now ECB ensures that the permanent compile-window has always its specified
+    size when shrinked by `ecb-toggle-compile-window-height'.
+
 ** Fixed Bugs
 
 *** Added a workaround for a bug in the custom-library of GNU Emacs which causes
@@ -15,13 +41,7 @@
     this annoying bug to Christoph Ludwig
     <cludwig@cdc.informatik.tu-darmstadt.de>
 
-*** Now `ecb-store-window-sizes' and `ecb-restore-window-sizes' also work when
-    called during a permanent compile-window is visible and also when one of
-    these commands is called with another compile-window state than the other
-    (e.g. when the window-sizes are stored without a compile-window and
-    restored with a compile-window).
 
-*** Now ECB ensures that the permanent compile-window has always its specified 
 
 * Changes for ECB version 2.26
 
