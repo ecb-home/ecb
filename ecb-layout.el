@@ -767,6 +767,10 @@ ECB-adviced functions."
   'ecb-delete-other-windows-in-editwindow-0)
 (defalias 'ecb-delete-window-in-editwindow-9
   'ecb-delete-window-in-editwindow-0)
+(defalias 'ecb-delete-other-windows-in-editwindow-10
+  'ecb-delete-other-windows-in-editwindow-0)
+(defalias 'ecb-delete-window-in-editwindow-10
+  'ecb-delete-window-in-editwindow-0)
 
 (defun ecb-delete-other-windows-in-editwindow-5 ()
   (cond ((eq (previous-window (selected-window) 0)
