@@ -80,6 +80,7 @@
 
 (require 'ecb-util)
 (require 'ecb-compilation)
+(require 'ecb-common-browser)
 
 (silentcomp-defvar eshell-buffer-name)
 (silentcomp-defun eshell)

@@ -199,7 +199,7 @@ HTML-online-documentation is not included."
                                               ecb-help-info-path))
                             (concat ecb-ecb-dir ecb-help-info-path)
                           ecb-help-info-path)))
-        (html-path-abs (ecb-fix-filename
+        (html-path-abs (expand-file-name
                         (if (or (string-match "^\\." ecb-help-html-path)
                                 (string-match (concat "^"
                                                       (regexp-quote

@@ -69,6 +69,8 @@
 (require 'speedbar)
 (require 'ecb-util)
 (require 'ecb-semantic-wrapper)
+(require 'ecb-common-browser)
+
 
 ;; imenu
 (silentcomp-defvar imenu--rescan-item)

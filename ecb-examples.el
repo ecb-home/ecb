@@ -64,6 +64,7 @@
 
 (require 'ecb-util)
 (require 'ecb-layout)
+(require 'ecb-common-browser)
 
 
 ;; ---------------------------------------------------------------------------
