@@ -118,6 +118,9 @@
 (defvar ecb-activated-window-configuration nil
   "Window configuration used after the ECB is activated.")
 
+(defvar ecb-show-node-name-in-minibuffer nil
+  "FIXME: where is this?")
+
 ;;====================================================
 ;; Customization
 ;;====================================================
