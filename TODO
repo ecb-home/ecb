@@ -4,7 +4,10 @@
 *** Author: Kevin A. Burton ( burton@apache.org | burton@openprivacy.org )
 ********************************************************************************
 
+- single click on any ECB buffers should NOT do anything.  This should be moved
+  to mouse-2
 
-- (KAB) merge my modeline additions... 
+- more readme.txt, history.txt, and makefile to README, HISTORY and Makefile 
 
-- ECB Methods buffer excepts text input.   This buffer should be read-only.  
+- ECB Methods buffer accpets text input( I can type in this buffer if I wanted
+  to ).  This buffer should be read-only.  

@@ -1,6 +1,10 @@
 Version 1.20 (???):
 -------------------
 
+- Mon Apr 2 21:20:34 2001 (burton@relativity.yi.org): (KAB) merge my modeline
+  additions... this removes the redundant modeline info and shows important
+  information.  
+
 - Added new option `ecb-advice-window-functions'. Enabling the intelligent
   window functions via customize. No hook hacking necessary anymore!
   Now the intelligent window functions are implemented by advicing.
