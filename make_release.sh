@@ -6,7 +6,7 @@
 # $Id$
 
 set files="*.el HISTORY Makefile make.bat README RELEASE_NOTES"
-set version="1.30"
+set version="1.31"
 
 set name=ecb-$version
 set release_dir=releases
