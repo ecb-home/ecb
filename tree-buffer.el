@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: tree-buffer.el,v 1.135 2004/01/14 14:01:09 berndl Exp $
+;; $Id: tree-buffer.el,v 1.136 2004/01/21 17:17:45 berndl Exp $
 
 ;;; Commentary:
 
@@ -592,7 +592,7 @@ with the same arguments as `tree-node-expanded-fn'."
       nil)))
 
 (defun tree-buffer-pos-hor-visible-p (pos window)
-  "Returns non nil if POS is horizontal visible otherwise nil."
+  "Return non nil if POS is horizontal visible in WINDOW otherwise nil."
   (save-excursion
     (goto-char pos)
     (and (>= (- (current-column) (window-hscroll window)) 0)
@@ -626,19 +626,21 @@ mode-line.  This is only useful for non-XEmacs"
 	      "Click on the edge of the modeline to scroll left/right")))
     ))
 
+(defvar tree-buffer-hscroll-number 0)
+
 (defun tree-buffer-recenter (node window)
   "If NODE is not visible then first recenter the window WINDOW so NODE is
 best visible, means NODE is displayed in the middle of the window if possible.
 If NODE is expanded then recenter the WINDOW so as much as possible subnodes
 of NODE will be visible. If NODE is not expandable then WINDOW is always
 displayed without empty-lines at the end, means WINDOW is always best filled."
-  (let* ((node-point (save-excursion
-                       (goto-line (tree-buffer-find-node node))
-                       (tree-buffer-line-beginning-pos)))
+  (let* ((node-points (save-excursion
+                        (goto-line (tree-buffer-find-node node))
+                        (cons (tree-buffer-line-beginning-pos)
+                              (tree-buffer-line-end-pos))))
+         (node-point (car node-points))
          (point-lines-before (count-lines (point-min) node-point))
          (point-lines-after (1- (count-lines node-point (point-max)))))
-    (if (not tree-buffer-running-xemacs)
-        (ignore-errors (tree-buffer-hscroll -1000)))
     ;; first make point best visible, means display node in the middle of the
     ;; window if possible (if there are enough lines before/after the node).
     (when (not (pos-visible-in-window-p node-point window))
@@ -716,6 +718,12 @@ displayed without empty-lines at the end, means WINDOW is always best filled."
                                     (goto-char (window-start window))
                                     (forward-line (- full-lines-in-window w-height))
                                     (tree-buffer-line-beginning-pos)))))))
+    (if (not tree-buffer-running-xemacs)
+        (ignore-errors (tree-buffer-hscroll -1000)))
+    ;; KB: testcode
+;;     (if (and (not tree-buffer-running-xemacs)
+;;              (not (tree-buffer-pos-hor-visible-p (cdr node-points) window)))
+;;         (ignore-errors (tree-buffer-hscroll -1000)))
     ))
 
 
@@ -887,22 +895,29 @@ children of its parent-node; this means it must be displayed with an
 end-guide."
   (let* ((ww (window-width))
 	 (name (tree-node-get-name node))
-	 (width (+ (* (+ (length indent-str-first-segs)
-                         (length indent-str-last-seg))
-                      tree-buffer-indent)
+	 (width (+ (length indent-str-first-segs)
+                   (length indent-str-last-seg)
 		   (length name)
 		   (if (tree-node-is-expandable node) 4 0))))
     ;; Truncate name if necessary
-    (when (>= width ww)
+    (when (and (>= width ww)
+               (> (length name)
+                  (+ (if tree-buffer-running-xemacs 5 4) ;; for the "..." + space
+                     (- width ww)
+                     3))) ;; there should at least remain 3 visible chars of name
       (if (eq 'beginning (tree-node-get-shorten-name node))
-	  (setq name (concat "..." (substring name (+ (if tree-buffer-running-xemacs 5 4)
-                                                      (- width ww)))))
+	  (setq name
+                (concat "..."
+                        (substring name (+ (if tree-buffer-running-xemacs 5 4)
+                                           (- width ww)))))
 	(if (and (not tree-buffer-expand-symbol-before)
 		 (tree-node-is-expandable node)
 		 (eq 'end (tree-node-get-shorten-name node)))
-	    (setq name (concat (substring name 0 (- (+ (if tree-buffer-running-xemacs 5 4)
-                                                       (- width ww))))
-                               "...")))))
+	    (setq name
+                  (concat (substring name 0
+                                     (- (+ (if tree-buffer-running-xemacs 5 4)
+                                           (- width ww))))
+                          "...")))))
     ;; insert the indent-string
     (when tree-buffer-ascii-guide-face
       (put-text-property 0 (length indent-str-first-segs)
@@ -1069,6 +1084,7 @@ of CONTENT."
     ;; let´s optimize the display of the expanded node NODE and it´s children.
     (when node
       (tree-buffer-recenter node w))))
+
 
 (defun tree-buffer-scroll (point window-start)
   "Scrolls current tree-buffer. The window will start at WINDOW-START and
@@ -1813,6 +1829,7 @@ AFTER-CREATE-HOOK: A function or a list of functions \(with no arguments)
     (make-local-variable 'tree-buffer-additional-images-dir)
     (make-local-variable 'tree-buffer-style)
     (make-local-variable 'tree-buffer-ascii-guide-face)
+    (make-local-variable 'tree-buffer-hscroll-number)
     
     ;; initialize the user-data-storage for this tree-buffer.
     (set (make-local-variable 'tree-buffer-data-store) nil)
@@ -1854,6 +1871,7 @@ AFTER-CREATE-HOOK: A function or a list of functions \(with no arguments)
     (setq tree-buffer-additional-images-dir add-image-dir)
     (setq tree-buffer-style tree-style)
     (setq tree-buffer-ascii-guide-face ascii-guide-face)
+    (setq tree-buffer-hscroll-number 0)
 
     ;; special settings for tree-buffer-indent and
     ;; tree-buffer-expand-symbol-before

@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-upgrade.el,v 1.58 2004/01/20 16:46:11 berndl Exp $
+;; $Id: ecb-upgrade.el,v 1.59 2004/01/21 17:17:45 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -176,7 +176,8 @@
 
 ;; Each NEWS-string should be a one-liner shorter than 70 chars
 (defconst ecb-upgrade-news
-  '(("2.20" . ("New keybinding for the online-help: [C-c . h]"
+  '(("2.20" . ("Fixed a bug preventing tree-buffers with expand-symbol \'before\' to work"
+               "New keybinding for the online-help: [C-c . h]"
                "The edit-area can be splitted in more than 2 windows."
                "`ecb-other-window-jump-behavior' renamed in `ecb-other-window-behavior'"
                "New option `ecb-maximize-ecb-window-after-selection'"

@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb.el,v 1.365 2004/01/20 16:46:11 berndl Exp $
+;; $Id: ecb.el,v 1.366 2004/01/21 17:17:45 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -548,7 +548,7 @@ for future Emacs sessions!"
               (const :tag ,ecb-history-buffer-name
                      :value ,ecb-history-buffer-name)))
 
-(defcustom ecb-tree-indent 2
+(defcustom ecb-tree-indent 4
   "*Indent size for tree buffer.
 If you change this during ECB is activated you must deactivate and activate
 ECB again to take effect."
@@ -556,8 +556,30 @@ ECB again to take effect."
   :group 'ecb-most-important
   :type 'integer)
 
-(defcustom ecb-tree-expand-symbol-before nil
-  "*Show the expand symbol before the items in a tree."
+(defcustom ecb-tree-expand-symbol-before t
+  "*Show the expand symbol before the items in a tree.
+When the expand-symbol is located before the items then the tree looks like:
+
+\[-] ECB
+    \[+] code-save
+    \[-] ecb-images
+        \[-] directories
+
+When located after then the tree looks like:
+
+ECB \[-]
+  code-save \[+]
+  ecb-images \[-]
+    directories \[-]
+
+The after-example above use a value of 2 for `ecb-tree-indent' whereas the
+before-example uses a value of 4.
+
+It is recommended to display the expand-symbol before because otherwise it
+could be that with a deep nested item-structure with and/or with long
+item-names \(e.g. a deep directory-structure with some long
+subdirectory-names) the expand-symbol is not visible in the tree-buffer and
+the tree-buffer has to be horizontal scrolled to expand an item."
   :group 'ecb-tree-buffer
   :group 'ecb-most-important
   :type 'boolean)
@@ -2369,6 +2391,9 @@ always the ECB-frame if called from another frame."
   "Contains the last `ecb-current-window-configuration' directly before ECB
 has been deactivated. Do not set this variable!")
 
+(defvar ecb-max-specpdl-size-old nil)
+(defvar ecb-max-lisp-eval-depth-old nil)
+
 (defun ecb-activate--impl ()
   "See `ecb-activate'.  This is the implementation of ECB activation."
   (when (or (null ecb-frame) (not (frame-live-p ecb-frame)))
@@ -2385,6 +2410,14 @@ has been deactivated. Do not set this variable!")
     ;; we activate only if all before-hooks return non nil
     (when (run-hook-with-args-until-failure 'ecb-before-activate-hook)
 
+      ;; max-specpdl-size and max-lisp-eval-depth
+      (when (< max-specpdl-size 3000)
+        (setq ecb-max-specpdl-size-old max-specpdl-size)
+        (setq max-specpdl-size 3000))
+      (when (< max-lisp-eval-depth 1000)
+        (setq ecb-max-lisp-eval-depth-old max-lisp-eval-depth)
+        (setq max-lisp-eval-depth 1000))
+      
       (condition-case err-obj
           (progn
             ;; checking the requirements
@@ -3032,7 +3065,14 @@ does all necessary after finishing ediff."
 
       (setq ecb-activated-window-configuration nil)
 
-      (setq ecb-minor-mode nil)))
+      (setq ecb-minor-mode nil)
+
+      ;; max-specpdl-size and max-lisp-eval-depth
+      (when ecb-max-specpdl-size-old
+        (setq max-specpdl-size ecb-max-specpdl-size-old))
+      (when ecb-max-lisp-eval-depth-old
+        (setq max-lisp-eval-depth ecb-max-lisp-eval-depth-old))))
+  
   (if (null ecb-minor-mode)
       (message "The ECB is now deactivated."))
   ecb-minor-mode)

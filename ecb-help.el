@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-help.el,v 1.102 2004/01/19 20:03:26 berndl Exp $
+;; $Id: ecb-help.el,v 1.103 2004/01/21 17:17:46 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -277,7 +277,26 @@ a backtrace-buffer and inserts the contents of that."
           (insert "\n\n\n")
           (forward-line -2))
       (goto-char (point-max))
-      (insert "\n\n")) 
+      (insert "\n\n"))
+    ;; ecb-faces
+    (let ((ecb-face-list (delq nil (mapcar (function
+                                            (lambda (f)
+                                              (if (string-match "^ecb-"
+                                                                (symbol-name f))
+                                                  f
+                                                nil)))
+                                           (face-list)))))
+      (insert "\n\n-----------------------------------------------------\n")
+      (insert "The attributes of the ECB-faces are:\n\n")
+      (dolist (f ecb-face-list)
+        (when f
+          (insert (format "%s: %s\n"
+                          (symbol-name f)
+                          (funcall (if ecb-running-xemacs
+                                       'face-custom-attributes-get
+                                     'custom-face-attributes-get)
+                                   f ecb-frame)))))
+      (insert "\n-----------------------------------------------------\n\n"))
     (let* ((messages-buffer 
 	    (get-buffer
 	     (if ecb-running-xemacs " *Message-Log*" "*Messages*")))
@@ -335,6 +354,8 @@ could be interesting for support."
                                          'jde-mode-hook)
                                     system-type
                                     window-system
+                                    max-specpdl-size
+                                    max-lisp-eval-depth
                                     ,(if (boundp 'ediff-quit-hook)
                                          'ediff-quit-hook)))
                           (function (lambda (l r)
@@ -373,8 +394,15 @@ could be interesting for support."
                                    ecb-use-semantic-grouping
                                    ecb-idle-timer-alist
                                    ecb-post-command-hooks
+                                   ecb-max-specpdl-size-old
+                                   ecb-max-lisp-eval-depth-old
                                    ecb-minor-mode
-                                   ecb-toggle-layout-state)
+                                   ecb-last-window-config-before-deactivation
+                                   ecb-edit-area-creators
+                                   ecb-windows-hidden
+                                   ecb-toggle-layout-state
+                                   ecb-current-maximized-ecb-buffer-name
+                                   ecb-tree-buffers-of-current-layout)
                                  (function (lambda (l r)
                                              (string< (symbol-name l)
                                                       (symbol-name r)))))))

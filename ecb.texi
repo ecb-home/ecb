@@ -26,7 +26,7 @@
 @c GNU Emacs; see the file COPYING.  If not, write to the Free Software
 @c Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-@c $Id: ecb.texi,v 1.144 2004/01/20 16:46:11 berndl Exp $
+@c $Id: ecb.texi,v 1.145 2004/01/21 17:17:45 berndl Exp $
 
 @setfilename ecb.info
 
@@ -4875,7 +4875,30 @@ for horizontal scrolling are bound.
 @end defopt
 
 @defopt tree-expand-symbol-before
-Show the expand symbol before the items in a tree.
+Show the expand symbol before the items in a tree. When the
+expand-symbol is located before the items then the tree looks like:
+
+[-] ECB
+    [+] code-save
+    [-] ecb-images
+        [-] directories
+
+When located after then the tree looks like:
+
+ECB [-]
+  code-save [+]
+  ecb-images [-]
+    directories [-]
+
+The after-example above use a value of 2 for @code{ecb-tree-indent}
+whereas the before-example uses a value of 4.
+
+It is recommended to display the expand-symbol before because
+otherwise it could be that with a deep nested item-structure with
+and/or with long item-names (e.g. a deep directory-structure with some
+long subdirectory-names) the expand-symbol is not visible in the
+tree-buffer and the tree-buffer has to be horizontal scrolled to
+expand an item.
 @end defopt
 
 @defopt tree-image-icons-directories
