@@ -8,6 +8,16 @@ Version
   tokens in the method-buffer. Now the back-forward-navigation works stable.
   (Klaus)
 
+* Enhanced the downloading new packages feature of ECB: Now ECB autom. checks
+  at the download sites which versions are available. With the new option
+  `ecb-download-package-version-type' you can define which types of version
+  you allow to download (only stable, stable and betas or stable, betas and
+  alphas); see related section in the online-manual! (Klaus)
+
+* New command `ecb-download-semantic' for easy getting latest semantic
+  versions. (Klaus)
+
+
 Version 1.90
 ------------
 
