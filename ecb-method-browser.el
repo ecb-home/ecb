@@ -24,15 +24,11 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-method-browser.el,v 1.30 2004/04/01 14:08:44 berndl Exp $
+;; $Id: ecb-method-browser.el,v 1.31 2004/04/02 14:26:56 berndl Exp $
 
 ;;; Commentary:
 
 ;; This file contains the code for the method-browser of ECB
-
-;; XXXX (ecb-methods-get-data-store 'source-buffer)
-;; (car (tree-buffer-get-data-store))
-
 
 
 (require 'tree-buffer)

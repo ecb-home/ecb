@@ -23,7 +23,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-semantic-wrapper.el,v 1.9 2004/04/01 14:08:44 berndl Exp $
+;; $Id: ecb-semantic-wrapper.el,v 1.10 2004/04/02 14:26:56 berndl Exp $
 
 ;;; Commentary:
 
@@ -41,6 +41,12 @@
 (require 'semantic)
 
 (defconst ecb-semantic-2-loaded (string-match "^2" semantic-version))
+(defconst ecb-semantic-2-beta-nr (if (and ecb-semantic-2-loaded
+                                          (string-match "beta\\([1-9]\\).*"
+                                                        semantic-version))
+                                     (string-to-number
+                                      (match-string 1 semantic-version))
+                                   -1))
 
 (eval-when-compile
   (require 'silentcomp))
@@ -108,7 +114,6 @@
     (semantic-flex-start                   . semantic-lex-token-start)
     (semantic-nonterminal-children         . semantic-tag-children-compatibility)
     (semantic-nonterminal-protection       . semantic-tag-protection)
-    (semantic-nonterminal-static           . semantic-tag-static-p)
     (semantic-overlay-live-p               . semantic-overlay-live-p)
     (semantic-overlay-p                    . semantic-overlay-p)
     (semantic-token-buffer                 . semantic-tag-buffer)
@@ -188,34 +193,34 @@ unloaded buffer representation."
       (goto-char (ecb--semantic-tag-start tag))
       (ecb--semantic-current-tag-parent))))
 
-;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: This has to be changed for cedet
-;; beta2 -- 'prototype --> :prototype-flag (see Davids renaming-mail).
-;; constructor and descstructor the same.
-;; (defsubst ecb--semantic-tag-prototype-p (tag)
-;;   (ecb--semantic-tag-get-attribute tag 'prototype))
+(defsubst ecb--semantic-tag-static-p (tag &optional parent)
+  "Return non-nil if TAG is static as a child of PARENT default action."
+  (cond ((fboundp 'semantic-tag-static-p)
+         (apply 'semantic-tag-static-p (list tag parent)))
+        ((fboundp 'semantic-tag-static)
+         (apply 'semantic-tag-static (list tag parent)))
+        ((fboundp 'semantic-nonterminal-static)
+         (apply 'semantic-nonterminal-static (list tag parent)))
+        (t nil)))
 
-;; (defsubst ecb--semantic-tag-function-constructor-p (tag)
-;;   (if (fboundp 'semantic-tag-function-constructor-p)
-;;       (apply 'semantic-tag-function-constructor-p (list tag))
-;;     (ecb--semantic-tag-get-attribute tag 'constructor)))
-    
-;; (defsubst ecb--semantic-tag-function-destructor-p (tag)
-;;   (if (fboundp 'semantic-tag-function-destructor-p)
-;;       (apply 'semantic-tag-function-destructor-p (list tag))
-;;     (ecb--semantic-tag-get-attribute tag 'destructor)))
-    
 (defsubst ecb--semantic-tag-prototype-p (tag)
-  (ecb--semantic-tag-get-attribute tag :prototype-flag))
+  (ecb--semantic-tag-get-attribute tag (if (> ecb-semantic-2-beta-nr 1)
+                                           :prototype-flag
+                                         'prototype)))
 
 (defsubst ecb--semantic-tag-function-constructor-p (tag)
   (if (fboundp 'semantic-tag-function-constructor-p)
       (apply 'semantic-tag-function-constructor-p (list tag))
-    (ecb--semantic-tag-get-attribute tag :constructor-flag)))
+    (ecb--semantic-tag-get-attribute tag (if (> ecb-semantic-2-beta-nr 1)
+                                             :constructor-flag
+                                           'constructor))))
     
 (defsubst ecb--semantic-tag-function-destructor-p (tag)
   (if (fboundp 'semantic-tag-function-destructor-p)
       (apply 'semantic-tag-function-destructor-p (list tag))
-    (ecb--semantic-tag-get-attribute tag :destructor-flag)))
+    (ecb--semantic-tag-get-attribute tag (if (> ecb-semantic-2-beta-nr 1)
+                                             :destructor-flag
+                                           'destructor))))
     
 (defsubst ecb--semantic-fetch-tags (&optional check-cache)
   (if (fboundp 'semantic-fetch-tags)
@@ -228,9 +233,6 @@ unloaded buffer representation."
 ;; on the search results at a higher level
 
 
-;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: Remove this again when they are
-;; fbound in the beta2 of cedet! But for now we can use them for implementing
-;; ecb-method-browser.el better.
 (if (fboundp 'semanticdb-strip-find-results)
     (defalias 'ecb--semanticdb-strip-find-results
       'semanticdb-strip-find-results)

@@ -28,7 +28,7 @@
 ;; Do not change any html-file besides the index.html manually but do all
 ;; changes in this elisp file!
 
-;; $Id: ecb-html.el,v 1.66 2004/04/01 15:09:49 berndl Exp $
+;; $Id: ecb-html.el,v 1.67 2004/04/02 14:26:55 berndl Exp $
 
 ;;; Code:
 
@@ -77,13 +77,13 @@
   "List of latest news displayed on the main page.")
 (setq ecb-latest-news
       `(
-        ,(h-sub-section "ECB 2.22 released! (2004-03-08)"
-                        "New nifty feature for easy applying filters to the tags of the Methods-buffer. Much smarter mechanism to highlight the current tag in the methods-buffer. Some important bug fixes - some of them especially for users of native-Windows XEmacs. "
+        ,(h-sub-section "ECB 2.23 released! (2004-04-02)"
+                        "Works with the new cedet1.0beta2-release which offers much better intellisense! The look&feel of the Methods-buffer now looks much nicer because it has been polished with a lot of new icons for methods, variables, classes and private, protected and public protection, static etc. (see Screenshot Nr. 1). New feature for applying default tag-filters for certain files. Distinction between functions and function-prototypes in the Methods-buffer. Better internal self-monitoring of ECB. Some important bug fixes "
                         (h-link "docs/Install-and-first-steps.html#Install%20and%20first%20steps" "Here") " is a short installation guide. "
                         "Click " (h-link "NEWS.html" "here")
                         " for information about changes in the new version. ")
-        ,(h-sub-section "ECB 2.21 released! (2004-02-16)"
-                        "Better compatibility with other packages: Applications like Gnus, BBDB or Xrefactory run within the ECB-frame without conflicts - even when the ECB-windows are visible. The command `balance-windows' works now. Some important bug fixes. "
+        ,(h-sub-section "ECB 2.22 released! (2004-03-08)"
+                        "New nifty feature for easy applying filters to the tags of the Methods-buffer. Much smarter mechanism to highlight the current tag in the methods-buffer. Some important bug fixes - some of them especially for users of native-Windows XEmacs. "
                         (h-link "docs/Install-and-first-steps.html#Install%20and%20first%20steps" "Here") " is a short installation guide. "
                         "Click " (h-link "NEWS.html" "here")
                         " for information about changes in the new version. ")
@@ -94,6 +94,11 @@
 `ecb-html-all-news'.")
 (setq ecb-rest-news
       `(
+        ,(h-sub-section "ECB 2.21 released! (2004-02-16)"
+                        "Better compatibility with other packages: Applications like Gnus, BBDB or Xrefactory run within the ECB-frame without conflicts - even when the ECB-windows are visible. The command `balance-windows' works now. Some important bug fixes. "
+                        (h-link "docs/Install-and-first-steps.html#Install%20and%20first%20steps" "Here") " is a short installation guide. "
+                        "Click " (h-link "NEWS.html" "here")
+                        " for information about changes in the new version. ")
         ,(h-sub-section "ECB 2.11 released! (2003-11-14)"
                         "Semanticdb is used for jumping to external type-definitions. Special-display-buffers are handled correctly. Automatic upgrading has been fixed for this new version. Some bug fixes. "
                         (h-link "docs/Install-and-first-steps.html#Install%20and%20first%20steps" "Here") " is a short installation guide. "

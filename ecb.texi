@@ -26,7 +26,7 @@
 @c GNU Emacs; see the file COPYING.  If not, write to the Free Software
 @c Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-@c $Id: ecb.texi,v 1.168 2004/04/01 14:08:43 berndl Exp $
+@c $Id: ecb.texi,v 1.169 2004/04/02 14:26:55 berndl Exp $
 
 @setfilename ecb.info
 
@@ -10423,6 +10423,42 @@ first *AFTER* ECB is activated. This can be done with the hook
 @end group
 @end example
 
+@subsubsection Package desktop.el
+
+@cindex desktop
+ECB works perfectly with the desktop-saver desktop.el. But to ensure
+this the option @code{desktop-minor-mode-table} @strong{MUST} contain
+an the following entry:
+
+@example
+(ecb-minor-mode nil)
+@end example
+
+Without this entry desktop.el tries for each buffer it loads after
+Emacs-start to enable @code{ecb-minor-mode} and therefore to start
+ECB. This conflicts with ECB! Therefore you must add the entry above
+to @code{desktop-minor-mode-table}!
+
+Further it is strongly recommended to add entries for all the
+minor-mode of the semantic-package to @code{desktop-minor-mode-table},
+so for example add also:
+
+@example
+@group
+(semantic-show-unmatched-syntax-mode nil)
+(semantic-stickyfunc-mode nil)
+(senator-minor-mode nil)
+(semantic-idle-scheduler-mode nil)
+@end group
+@end example
+
+Which modes you have to add depends on which modes of semantic you
+use. But to get sure you should add all minor-modes of the
+semantic-package because these modes are normally activated by the
+related ``global'' command (e.g.
+@code{global-semantic-show-unmatched-syntax-mode}) or by adding the
+minor-mode to the related major-mode-hook.
+
 @subsubsection Package edebug (Lisp Debugger)
 
 @cindex edebug
@@ -11147,6 +11183,13 @@ widen (1)''. What can i do?
 @tab @tab
 Disable the func-menu support in your XEmacs-setup. See
 @ref{Conflicts}.
+
+@item @tab @tab
+
+@item
+Can i use desktop.el in combination with ECB?
+@tab @tab
+Yes, see @ref{Conflicts}.
 
 @end multitable
 

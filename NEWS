@@ -4,6 +4,20 @@
 
 ** Enhancements for the Methods-buffer
 
+*** The look&feel of the Methods-buffer is now much nicer because it has been
+    polished with a lot of new icons. ECB contains now a lot of new icons for
+    displaying the Method-buffer as pretty and professional as possible. The
+    new default-value of the option `ecb-tree-image-icons-directories' points
+    autom. to the new icon-images. Thanks a lot to Markus Gritsch
+    <gritsch@iue.tuwien.ac.at> for providing these new icons.
+
+    To use this you should reset the option `ecb-tree-image-icons-directories'
+    to the new default-value if you have customized this option!
+
+    You can disable this icon-display via the new option
+    `ecb-display-image-icons-for-semantic-tags' if you do not like the new
+    icons. 
+
 *** New feature for applying default tag-filters for certain files.
     The new option `ecb-default-tag-filter' allow to define default
     tag-filters for certain files which are applied automatically after
@@ -15,7 +29,7 @@
 
     Usage-example: This can be used to display for outline-mode files (e.g.
     NEWS) in the Methods-buffer only the level-1-headings by defining a
-    regexp-filter "^\* .*"
+    regexp-filter "^\* .*" (see the default-value of this new option).
 
 *** New keybindings and commands for faster applying certain tag-filters.
     Here are the new bindings:
@@ -48,13 +62,6 @@
     collapsed when opening a C- or C++-buffer. ECB autom. updates your old
     setting of this option to the new default value.
 
-*** The look&feel of the Methods-buffer has been polished a lot with new icons.
-    ECB contains now a lot of new icons for displaying the Method-buffer as
-    pretty and professional as possible. The new default-value of the option
-    `ecb-tree-image-icons-directories' points autom. to the new icon-images.
-    Thanks a lot to Markus Gritsch <gritsch@iue.tuwien.ac.at> for providing
-    these new icons.
-
 ** The command `ecb-toggle-layout' now has a prefix-argument:
    If this optional argument is not nil (e.g. if called with a prefix-arg)
    then always the last selected layout was choosen regardless of the setting
@@ -79,7 +86,12 @@
    change the expansion-mode of the integrated speedbar via
    `speedbar-change-initial-expansion-list'. Example:
    (speedbar-change-initial-expansion-list "buffers").
-   
+
+** Added a new section in the info-manual which describes how desktop.el can be
+   used best in combination with ECB. This has been done because some
+   conflicts have been reported. See the "Conflicts"-Chapter in the
+   info-manual.
+      
 ** Fixed bugs
 
 *** Double-clicking the mouse-1-button now works with integrated speedbar.
