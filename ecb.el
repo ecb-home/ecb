@@ -197,7 +197,7 @@ buffer."
   :group 'ecb-sources
   :type 'regexp)
 
-(defcustom ecb-source-file-exclude-regexp "\\(^\\..*\\|~$\\)"
+(defcustom ecb-source-file-exclude-regexp "\\(^\\.[^eg]*\\|~$\\)"
   "*Files matching this regular expression will not be shown in the source
 buffer."
   :group 'ecb-sources
@@ -628,8 +628,9 @@ highlighting of the methods if `ecb-font-lock-methods' is not nil."
   (dolist (method methods)
     (tree-node-add-child node (tree-node-new
                                (ecb-get-method-sig method) 0
-                               (semantic-token-start method) t))))
-  
+;;                                (semantic-token-start method) t))))
+                               method t))))
+
 (defun ecb-add-variables(node token variables)
   (when (and ecb-show-variables variables)
     (let ((var-node node))
@@ -644,7 +645,8 @@ highlighting of the methods if `ecb-font-lock-methods' is not nil."
       (dolist (var variables)
         (tree-node-add-child var-node (tree-node-new
                                        (ecb-get-variable-text var)
-                                       0 (semantic-token-start var) t))))))
+;;                                        0 (semantic-token-start var) t))))))
+                                       0 var t))))))
   
 (defun ecb-add-tokens(node token &optional flatten)
   (let ((methods (semantic-find-nonterminal-by-token 'function token))
@@ -776,6 +778,56 @@ current-buffer is saved."
                (window-buffer ecb-last-edit-window-with-point)))
       (ecb-update-methods-buffer--internal)))
 
+;; This variable is only set and evaluated by the functions
+;; `ecb-update-methods-buffer--internal' and
+;; `ecb-rebuild-methods-buffer-after-parsing'!
+(defvar ecb-method-buffer-needs-rebuild t)
+(defun ecb-update-methods-buffer--internal()
+  "Updates the methods buffer with the current buffer. The only thing what
+must be done is to start the toplevel parsing of semantic, because the rest is
+done by `ecb-rebuild-methods-buffer-after-parsing' because this function is in
+the `semantic-after-toplevel-bovinate-hook'."
+  ;; Set here `ecb-method-buffer-needs-rebuild' to t so we can see below if
+  ;; `ecb-rebuild-methods-buffer-after-parsing' was called auto. after
+  ;; `semantic-bovinate-toplevel'.
+  (setq ecb-method-buffer-needs-rebuild t)
+  (condition-case nil
+      ;; semantic <= 1.2.1
+      (semantic-bovinate-toplevel 0 nil t)
+    (wrong-number-of-arguments
+     ;; semantic >= 1.3.1
+     (semantic-bovinate-toplevel t)))
+  ;; Only if the `semantic-bovinate-toplevel' has done no reparsing but only
+  ;; used it´s still valid `semantic-toplevel-bovine-cache' the hooks in
+  ;; `semantic-after-toplevel-bovinate-hook' are not evaluated and therefore
+  ;; `ecb-rebuild-methods-buffer-after-parsing' was not called. Therefore we
+  ;; call it here manually. `ecb-rebuild-methods-buffer-after-parsing' is the
+  ;; only function which sets `ecb-method-buffer-needs-rebuild' to nil to
+  ;; signalize that a "manually" rebuild of the method buffer is necessary.
+  (if ecb-method-buffer-needs-rebuild
+      (ecb-rebuild-methods-buffer-after-parsing)))
+  
+
+(defun ecb-rebuild-methods-buffer-after-parsing ()
+  "Rebuilds the ECB-method buffer after toplevel-parsing by semantic. This
+function is added to the hook `semantic-after-toplevel-bovinate-hook'."
+  (tree-node-set-children ecb-methods-root-node nil)
+  (ecb-add-tokens ecb-methods-root-node
+                  ;; this works because at call-time of the hooks in
+                  ;; `semantic-after-toplevel-bovinate-hook' the cache is
+                  ;; always either still valid or rebuild.
+                  (car semantic-toplevel-bovine-cache)
+                  t)
+  (save-selected-window
+    ;; also the whole buffer informations should be preserved!
+    (save-excursion
+      (ecb-buffer-select ecb-methods-buffer-name)
+      (setq tree-buffer-indent ecb-tree-indent)
+      (tree-buffer-update)))
+  (ecb-mode-line-format)
+  ;; signalize that the rebuild has already be done
+  (setq ecb-method-buffer-needs-rebuild nil))
+
 ;; Klaus: We must devide the ecb-update-method-buffer stuff for internal use
 ;; and for interactive use (here nothing should be done if point stays not in
 ;; an edit-window).
@@ -785,29 +837,6 @@ edit-window otherwise nothing is done."
   (interactive)
   (when (ecb-point-in-edit-window)
     (ecb-update-methods-buffer--internal)))
-
-(defun ecb-update-methods-buffer--internal()
-  "Updates the methods buffer with the current buffer."
-  (tree-node-set-children ecb-methods-root-node nil)
-  ;;  (print (semantic-bovinate-toplevel t))
-  
-  (ecb-add-tokens ecb-methods-root-node
-                  (condition-case nil
-                      ;; semantic <= 1.2.1
-                      (semantic-bovinate-toplevel 0 nil t)
-                    (wrong-number-of-arguments
-                     ;; semantic >= 1.3.1
-                     (semantic-bovinate-toplevel t)))
-                  t)
-  (save-selected-window
-    ;; also the whole buffer informations should be preserved!
-    (save-excursion
-      (ecb-buffer-select ecb-methods-buffer-name)
-      (setq tree-buffer-indent ecb-tree-indent)
-      (tree-buffer-update)))
-  
-  (ecb-mode-line-format))
-  
 
 (defun ecb-set-selected-source(filename other-edit-window
                                         no-edit-buffer-selection)
@@ -1115,8 +1144,8 @@ Currently the fourth argument TREE-BUFFER-NAME is not used here."
       ;; let us set the mark so the user can easily jump back.
       (if ecb-method-jump-sets-mark
           (push-mark))
-      (goto-char (tree-node-get-data node)))))
-		 ;;(semantic-token-start (tree-node-get-data node))))))
+;;       (goto-char (tree-node-get-data node)))))
+      (goto-char (semantic-token-start (tree-node-get-data node))))))
 
 (defun ecb-get-file-info-text(file)
   (let ((attrs (file-attributes file)))
@@ -1241,6 +1270,8 @@ with the actually choosen layout \(see `ecb-layout-nr')."
          t)))
     
     ;; we need some hooks
+    (add-hook 'semantic-after-toplevel-bovinate-hook
+              'ecb-rebuild-methods-buffer-after-parsing)
     (remove-hook 'post-command-hook 'ecb-hook)
     (add-hook 'post-command-hook 'ecb-hook)
     (add-hook 'pre-command-hook 'ecb-pre-command-hook-function)
@@ -1268,7 +1299,7 @@ with the actually choosen layout \(see `ecb-layout-nr')."
     ;; acivates at its end also the adviced functions if necessary!
     (ecb-redraw-layout)
     ;; now update all the ECB-buffer-modelines
-    (ecb-update-methods-buffer--internal)
+    (ecb-mode-line-format)
     ;; at the real end we run any personal hooks
     (run-hooks 'ecb-activate-hook)
     
@@ -1295,6 +1326,8 @@ with the actually choosen layout \(see `ecb-layout-nr')."
     (kill-buffer ecb-methods-buffer-name)
     (kill-buffer ecb-history-buffer-name)
     ;; remove the hooks
+    (remove-hook 'semantic-after-toplevel-bovinate-hook
+                 'ecb-rebuild-methods-buffer-after-parsing)
     (remove-hook 'post-command-hook 'ecb-hook)
     (remove-hook 'pre-command-hook 'ecb-pre-command-hook-function)
     (remove-hook 'after-save-hook 'ecb-update-methods-after-saving)
