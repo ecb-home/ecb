@@ -2959,8 +2959,8 @@ For further explanation see `ecb-clear-history-behavior'."
 (defvar ecb-auto-expand-token-tree-old 'expand-spec)
 (defun ecb-toggle-auto-expand-token-tree (&optional arg)
   "Toggle auto expanding of the ECB-methods-buffer.
-With prefix argument ARG, make switch on if positive, otherwise switch off.
-If the effect is that auto-expanding is switched off then the current value of
+With prefix argument ARG, switch on if positive, otherwise switch off. If the
+effect is that auto-expanding is switched off then the current value of
 `ecb-auto-expand-token-tree' is saved so it can be used for the next switch on
 by this command."
   (interactive "P")
