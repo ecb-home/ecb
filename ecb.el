@@ -1125,7 +1125,7 @@ Currently the fourth argument TREE-BUFFER-NAME is not used here."
 	    (user-login-name (nth 2 attrs))
 	    (nth 3 attrs)
 	    (nth 7 attrs)
-	    (format-time-string "%y%m%d %H:%M" (nth 5 attrs))
+	    (format-time-string "%Y/%m/%d %H:%M" (nth 5 attrs))
 	    (file-name-nondirectory file)
 	    )))
 
