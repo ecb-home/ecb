@@ -28,7 +28,7 @@
 ;; Do not change any html-file besides the index.html manually but do all
 ;; changes in this elisp file!
 
-;; $Id: ecb-html.el,v 1.52 2003/07/04 16:27:15 berndl Exp $
+;; $Id: ecb-html.el,v 1.53 2003/07/07 06:52:30 berndl Exp $
 
 ;;; Code:
 
@@ -77,6 +77,11 @@
   "List of latest news displayed on the main page.")
 (setq ecb-latest-news
       `(
+        ,(h-sub-section "ECB 1.95 released! (2003-07-07)"
+                        "ECB-tree-windows now use image-icons. Hideshow was added to the popup-menu of the Methods-buffer. "
+                        (h-link "docs/Install-and-first-steps.html#Install%20and%20first%20steps" "Here") " is a short installation guide. "
+                        "Click " (h-link "NEWS.html" "here")
+                        " for information about changes in the new version. ")
         ,(h-sub-section "ECB 1.94 now available as XEmacs package 1.08! (2003-06-30)"
                         "The XEmacs-package ECB 1.08 can be installed either via "
                         (h-link "http://www.xemacs.org/Download/win32/setup.exe"
@@ -190,8 +195,8 @@
 	       ecb-bullet
 	       '(("http://cedet.sourceforge.net/semantic.shtml" "Semantic Bovinator" "Version 1.4 or higher.")
 		 ("http://cedet.sourceforge.net/eieio.shtml" "EIEIO" "Version 0.17 or higher.")
-		 ("http://cedet.sourceforge.net/speedbar.shtml" "Speedbar (opt.)" "Version 0.14beta1 or higher if you want parsing of sources not supported by Semantic Bovinator (perl, LaTeX etc...)")
-		 ("http://jdee.sunsite.dk" "JDEE (opt.)" "If you use ECB for Java development."))
+		 ("http://cedet.sourceforge.net/speedbar.shtml" "Speedbar" "Version 0.14beta1 or higher.")
+		 ("http://jdee.sunsite.dk" "JDEE (optional)" "If you use ECB for Java development."))
 		 "_top")
 	      (h-p "If you use XEmacs you must have the fsf-compat (contains overlay.el) and mail-lib packages installed."))
 
