@@ -18,6 +18,8 @@ No special notes beyond the contents of README.
 Upgrading from any previous version:
 ------------------------------------
 
++ ECB now requires eieio >= 0.16 (see also README)
+
 + The option ecb-prefix-key has been removed. Now all customization of
   keybindings is done via the new option ecb-key-map.
 

@@ -54,18 +54,28 @@
 ;; The latest version of the ECB is available at
 ;; http://home.swipnet.se/mayhem/ecb.html
 
-;; $Id: ecb.el,v 1.153 2001/10/21 11:56:37 berndl Exp $
+;; $Id: ecb.el,v 1.154 2001/10/22 12:34:56 berndl Exp $
 
 ;;; Code:
 
 ;; semantic load
 (require 'semantic)
+;; eieio load
+(require 'eieio)
 
-;; ensure that we use the right semantic-version
-;; currently we need >= 1.4beta11
-(if (not (and (boundp 'semantic-version)
-              (string-match "^1\\.4\\(beta1[1-9]\\)?$" semantic-version)))
-    (error "ECB requires a semantic-version >= 1.40beta7!"))
+;;ensure that we use the right semantic-version and right eieio-version
+(let ((version-error nil))      
+  (if (not (and (boundp 'semantic-version)
+                (string-match "^1\\.4\\(beta1[1-9]\\)?$" semantic-version)))
+      (setq version-error "Semantic >= 1.40beta11"))
+  (if (not (and (boundp 'eieio-version)
+                (string-match "^0\\.1[6-9]" eieio-version)))
+      (setq version-error
+            (concat version-error (if version-error " and ")
+                    "Eieio >= 0.16")))
+  (if version-error
+      (error "ECB requires %s!" version-error)))
+
 (message "ECB uses semantic %s and eieio %s" semantic-version eieio-version)
 (setq semantic-load-turn-everything-on nil)
 (require 'semantic-load)
