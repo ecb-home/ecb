@@ -24,17 +24,28 @@ interactively by `ecb-create-new-layout' or programmed with the macro
 must be re-byte-compiled with latest ECB version >= 1.95.1! If the use-defined
 layouts are not byte-compiled then there is nothing to do.
 
+Some default keybindings have changed; the new bindings are:
 
+  C-c . g1: `ecb-goto-window-edit1'       (was C-c . 1)
+  C-c . g2: `ecb-goto-window-edit2'       (was C-c . 2)
+  C-c . gd: `ecb-goto-window-directories' (was C-c . d)
+  C-c . gs: `ecb-goto-window-sources'     (was C-c . s)
+  C-c . gm: `ecb-goto-window-methods'     (was C-c . m)
+  C-c . gh: `ecb-goto-window-history'     (was C-c . h)
+  C-c . gb: `ecb-goto-window-speedbar'    (was C-c . bw)
+  C-c . gc: `ecb-goto-window-compilation' (was C-c . c)
+
+  
 Upgrading from version < 1.95:
 ------------------------------
 
 Some default keybindings have changed; the new bindings are:
 
-  C-c . r:  `ecb-rebuild-methods-buffer'
-  C-c . lc: `ecb-change-layout'
-  C-c . lr: `ecb-redraw-layout'
-  C-c . lt: `ecb-toggle-layout'
-  C-c . lw: `ecb-toggle-ecb-windows'
+  C-c . r:  `ecb-rebuild-methods-buffer' (was not bound before)
+  C-c . lc: `ecb-change-layout'          (was C-c . l)
+  C-c . lr: `ecb-redraw-layout'          (was C-c . r)
+  C-c . lt: `ecb-toggle-layout'          (was C-c . t)
+  C-c . lw: `ecb-toggle-ecb-windows'     (was C-c . w)
 
 ECB now requires speedbar. ECB needs a version >= 0.14beta1.
 
