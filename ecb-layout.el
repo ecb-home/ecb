@@ -298,6 +298,13 @@ frame height."
                 (const :tag "Edit + compile window" edit-and-compile)))
 
 
+(defcustom ecb-delete-other-windows-behavor 'smart
+  "*What should ECB do when deleting other windows.  This should be used in all
+advice to enable/disable smart deletion of other windows."
+  :group 'ecb-layout
+  :type '(radio (const :tag "Smart deletion of windows within ECB" smart)
+                (const :tag "Standard deletion of all windows" standard)))
+
 (defcustom ecb-advice-window-functions '(other-window
                                          delete-window
                                          delete-other-windows
@@ -572,6 +579,25 @@ edit-window.
 If called in an unsplitted edit-window then nothing is done.
 If called in any other window of the current ECB-layout it jumps first in the
 \(first) edit-window and does then it´s job \(see above)."
+<<<<<<< ecb-layout.el
+
+  ;;only do anything if we are running in smart mode.
+  (if (equal ecb-delete-other-windows-behavor
+             'smart)
+      (progn
+      
+        (if (not (ecb-point-in-edit-window))
+            (ignore-errors (select-window ecb-edit-window)))
+        (ad-with-originals 'delete-window
+          (if ecb-split-edit-window
+              (if (funcall (intern (format "ecb-delete-other-windows-in-editwindow-%d"
+                                           ecb-layout-nr)))
+                  (setq ecb-split-edit-window nil)))))
+    (message "FIXME: Deleting other windows...")
+    (ad-with-originals
+        ;;else just delete all other windows
+        (delete-other-windows))))
+=======
   (if (not (eq (selected-frame) ecb-frame))
       ad-do-it
     (if (not (ecb-point-in-edit-window))
@@ -581,6 +607,7 @@ If called in any other window of the current ECB-layout it jumps first in the
           (if (funcall (intern (format "ecb-delete-other-windows-in-editwindow-%d"
                                        ecb-layout-nr)))
               (setq ecb-split-edit-window nil))))))
+>>>>>>> 1.27
 
 (defadvice split-window-horizontally (around ecb)
   "The ECB-version of `split-window-horizontally'. Works exactly like the
