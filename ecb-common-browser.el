@@ -946,6 +946,7 @@ run starts with this interrupted function."
 
 ;; generation of nodes rsp. of attributes of nodes
 
+
 (defun ecb-generate-node-name (text-name first-chars icon-name name-of-buffer)
   "Generate a new name from TEXT-NAME by adding an appropriate image according
 to ICON-NAME to the first FIRST-CHARS of TEXT-NAME. If FIRST-CHARS is < 0 then

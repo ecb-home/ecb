@@ -1408,7 +1408,8 @@ Methods-buffer."
   (when bucket
     (let* ((name-bucket (ecb-format-bucket-name (car bucket)))
            (image-name (format "%s-bucket" (ecb--semantic-tag-class (cadr bucket))))
-           (name (ecb-generate-node-name name-bucket -1 image-name ecb-methods-buffer-name))
+           (name (ecb-generate-node-name name-bucket -1
+                                         image-name ecb-methods-buffer-name))
            ;;(type (ecb--semantic-tag-class (cadr bucket)))
            (bucket-node node))
       (unless (eq 'hidden display)
