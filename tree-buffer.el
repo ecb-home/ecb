@@ -26,7 +26,7 @@
 ;; This file is part of the ECB package which can be found at:
 ;; http://home.swipnet.se/mayhem/ecb.html
 
-;; $Id: tree-buffer.el,v 1.101 2002/12/28 19:14:15 berndl Exp $
+;; $Id: tree-buffer.el,v 1.102 2003/01/27 10:39:39 berndl Exp $
 
 ;;; Code:
 
@@ -551,6 +551,13 @@ The result for NODE here is 10"
         (setq result (+ result (tree-node-count-subnodes-to-display child)))))
     result))
 
+(defun tree-buffer-build-tree-buffer-nodes ()
+  "Rebuild the variable `tree-buffer-nodes' from the current children of
+`tree-buffer-root'."
+  (setq tree-buffer-nodes nil)
+  (dolist (node (tree-node-get-children tree-buffer-root))
+    (tree-buffer-add-node node 0)))
+
 (defun tree-buffer-update (&optional node)
   "Updates the current tree-buffer. The buffer will be completely rebuild with
 it´s current nodes. window-start and point will be preserved.
@@ -564,10 +571,8 @@ current tree-buffer."
          (p (point))
          (buffer-read-only nil)
          (next-line-add-newlines nil))
-    (setq tree-buffer-nodes nil)
     (erase-buffer)
-    (dolist (node (tree-node-get-children tree-buffer-root))
-      (tree-buffer-add-node node 0))
+    (tree-buffer-build-tree-buffer-nodes)
     (when tree-buffer-general-face
       (move-overlay tree-buffer-general-overlay (point-min) (point-max)))
     (tree-buffer-highlight-node-data tree-buffer-highlighted-node-data)
@@ -582,6 +587,70 @@ current tree-buffer."
 point will stay on POINT."
   (goto-char point)
   (set-window-start (get-buffer-window (current-buffer)) window-start))
+
+
+(defun tree-buffer-expand-nodes (level
+                                 &optional expand-pred-fn collapse-pred-fn)
+  "Set the expand level of the nodes in current tree-buffer.
+
+LEVEL specifies precisely which level of nodes should be expanded. LEVEL
+means the indentation-level of the nodes.
+
+A LEVEL value X means that all nodes with an indentation-level <= X are
+expanded and all other are collapsed. A negative LEVEL value means all visible
+nodes are collapsed.
+
+Nodes which are not indented have indentation-level 0!
+
+This function expands all nodes with level <= LEVEL, so the subnodes of these
+nodes get visible and collapses all their \(recursive) subnodes with
+indentation-level > LEVEL.
+
+If a node has to be expanded then first the `tree-node-expanded-fn' of current
+tree-buffer \(see `tree-buffer-create') is called with the argument-values
+\[node 0 nil nil \(buffer-name)\].
+
+This function gets two optional function-arguments which are called to test if
+a node should be excluded from expanding or collapsing; both functions are
+called with two arguments, where the first one is the expandable/collapsable
+node and the second one is the current level of indentation of this node:
+EXPAND-PRED-FN is called if a node has to be expanded and must return nil if
+this node should not be expanded even if its indentation level is <= LEVEL and
+COLLAPSE-PRED-FN is called analogous for a node which has to be collapsed and
+must return nil if the node should not be collapsed even if its indentation
+level is > then LEVEL.
+
+Examples:
+- LEVEL = 0 expands only nodes which have no indentation itself.
+- LEVEL = 2 expands nodess which are either not indented or indented once or
+  twice."
+  (dolist (node (tree-node-get-children tree-buffer-root))
+    (tree-buffer-expand-node node 0 level
+                             expand-pred-fn collapse-pred-fn))
+  (tree-buffer-update))
+
+(defun tree-buffer-expand-node (node current-level level
+                                     expand-pred-fn collapse-pred-fn)
+  "Expand NODE if CURRENT-LEVEL \(the indentation-level of NODE) <= LEVEL or
+collapses NODE if CURRENT-LEVEL > LEVEL. Do this recursive for subnodes of
+NODE with incremented CURRENT-LEVEL. For EXPAND-PRED-FN and COLLAPSE-PRED-FN
+see `tree-buffer-expand-nodes'."
+  (when (tree-node-is-expandable node)
+    (when (and tree-node-expanded-fn
+               (not (tree-node-is-expanded node)))
+      (funcall tree-node-expanded-fn node 0 nil nil (buffer-name)))
+    (when (or (and (not (tree-node-is-expanded node))
+                   (or (not (functionp expand-pred-fn))
+                       (funcall expand-pred-fn node current-level))
+                   (<= current-level level))
+              (and (tree-node-is-expanded node)
+                   (or (not (functionp collapse-pred-fn))
+                       (funcall collapse-pred-fn node current-level))
+                   (> current-level level)))
+      (tree-node-toggle-expanded node))
+    (dolist (child (tree-node-get-children node))
+      (tree-buffer-expand-node child (1+ current-level) level
+                               expand-pred-fn collapse-pred-fn))))
 
 (defun tree-buffer-set-root (root)
   (setq tree-buffer-root root)
