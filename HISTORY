@@ -1,6 +1,9 @@
 Version 1.61:
 -------------
 
+- New package, ecb-cycle.el.  Supports cycling through all known compilation
+  buffers. (Kevin)
+
 - Much better performance of the directory and file-browser in ECB, especially
   for directories with a lot of entries (means ~ >1000, dependend on your
   machine and the net-connection in case of network-drives). See also the new

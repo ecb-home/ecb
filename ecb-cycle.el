@@ -31,6 +31,16 @@
 ;; NOTE: If you enjoy this software, please consider a donation to the EFF
 ;; (http://www.eff.org)
 
+;;; History:
+
+;; Fri Jan 25 2002 05:07 PM (burton@openprivacy.org): init
+
+;;; TODO:
+;;
+;; Add completion support so that I can do an ecb-cycle-set-compilation-buffer
+;; which will use completion to prompt for the buffer.  This will require us to
+;; get the index and compilation buffer list interactively.
+
 ;;; Code:
 
 (defgroup ecb-cycle nil
