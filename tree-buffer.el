@@ -26,7 +26,7 @@
 ;; This file is part of the ECB package which can be found at:
 ;; http://home.swipnet.se/mayhem/ecb.html
 
-;; $Id: tree-buffer.el,v 1.42 2001/05/09 10:15:46 berndl Exp $
+;; $Id: tree-buffer.el,v 1.43 2001/05/13 07:37:43 berndl Exp $
 
 ;;; Code:
 
@@ -464,7 +464,8 @@ mentioned above!"
                                 node-expanded-fn node-mouse-over-fn
                                 menus tr-lines read-only tree-indent
                                 incr-search
-                                &optional type-facer expand-symbol-before)
+                                &optional type-facer expand-symbol-before
+                                after-create-hook)
   "Creates a new tree buffer with
 NAME: Name of the buffer
 FRAME: Frame in which the tree-buffer is displayed and valid. All keybindings
@@ -520,7 +521,11 @@ TYPE-FACER: Nil or a list of one or two conses, each cons for a node-type \(0
               does nothing then inserting the node-text, if the tree-buffer is
               updated.
 EXPAND-SYMBOL-BEFORE: If not nil then the expand-symbol \(is displayed before
-                      the node-text."
+                      the node-text.
+AFTER-CREATE-HOOK: A function \(with no arguments) called directly after
+                   creating the tree-buffer and defining it's local keymap.
+                   For example this function can add additional keybindings
+                   for this tree-buffer local keymap."
   (let ((nop (function (lambda() (interactive)))))
     (set-buffer (get-buffer-create name))
 
@@ -675,7 +680,10 @@ EXPAND-SYMBOL-BEFORE: If not nil then the expand-symbol \(is displayed before
                         (when (and tree-node-mouse-over-fn node)
                           (funcall tree-node-mouse-over-fn node))))))))
 
-    (use-local-map tree-buffer-key-map)))
+    (use-local-map tree-buffer-key-map)
+
+    (if (functionp after-create-hook)
+        (funcall after-create-hook))))
 
 ;;; Tree node
 

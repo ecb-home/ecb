@@ -52,7 +52,7 @@
 ;; The latest version of the ECB is available at
 ;; http://home.swipnet.se/mayhem/ecb.html
 
-;; $Id: ecb.el,v 1.83 2001/05/10 17:20:20 berndl Exp $
+;; $Id: ecb.el,v 1.84 2001/05/13 07:37:43 berndl Exp $
 
 ;;; Code:
 
@@ -1401,18 +1401,15 @@ always the ECB-frame if called from another frame."
          ecb-tree-indent
          ecb-tree-incremental-search
          (list (cons 1 ecb-source-in-directories-buffer-face))
-         ecb-tree-expand-symbol-before)
-        ;; if we want some keys only defined in a certain tree-buffer we
-        ;; must do this directly after calling the tree-buffer-create
-        ;; function because this function makes the tree-buffer-key-map
-        ;; variable buffer-local for its tree-buffer and creates the sparse
-        ;; keymap.
-        (define-key tree-buffer-key-map [f1] 'ecb-update-directories-buffer)
-        (define-key tree-buffer-key-map [f2]
-          (function (lambda()
-		      (interactive)
-		      (ecb-select-edit-window)
-                      (customize-group 'ecb)))))
+         ecb-tree-expand-symbol-before
+         ;; we add an after-create-hook to the tree-buffer
+         (function (lambda ()
+                     (local-set-key [f1] 'ecb-update-directories-buffer)
+                     (local-set-key [f2] (function (lambda()
+                                                     (interactive)
+                                                     (ecb-select-edit-window)
+                                                     (customize-group 'ecb))))))
+         ))
       
       (unless (member ecb-sources-buffer-name curr-buffer-list)
         (tree-buffer-create
