@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb.el,v 1.345 2003/10/02 09:17:47 berndl Exp $
+;; $Id: ecb.el,v 1.346 2003/10/02 15:00:13 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -167,7 +167,6 @@
 ;;(require 'ecb-profile)
 
 ;; various loads
-(require 'easymenu)
 (require 'assoc)
 
 (eval-when-compile
@@ -6684,20 +6683,21 @@ changed there should be no performance-problem!"
 
 (add-hook 'emacs-startup-hook 'ecb-auto-activate-hook)
 
-
 (defun ecb-run-from-menubar ()
   "Activate ECB from the Tools-menu. See `ecb-activate'."
   (interactive)
   (ecb-activate))
 
-(easy-menu-add-item nil
-                    '("tools") 
-                    (ecb-menu-item
-                     [ "Start Code Browser (ECB)"
-                       ecb-run-from-menubar
-                       :active t
-                       :help "Start the Emacs Code Browser."
-                       ]))
+(progn
+  (require 'easymenu)
+  (easy-menu-add-item nil
+                      '("tools") 
+                      (ecb-menu-item
+                       [ "Start Code Browser (ECB)"
+                         ecb-run-from-menubar
+                         :active t
+                         :help "Start the Emacs Code Browser."
+                         ])))
 
 
 ;; Klaus Berndl <klaus.berndl@sdm.de>: Cause of the magic autostart stuff of

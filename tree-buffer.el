@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: tree-buffer.el,v 1.125 2003/10/02 09:12:10 berndl Exp $
+;; $Id: tree-buffer.el,v 1.126 2003/10/02 15:00:12 berndl Exp $
 
 ;;; Commentary:
 
@@ -986,7 +986,7 @@ mentioned above!"
                                     menu-title-creator)
                                    ((functionp menu-title-creator)
                                     (funcall menu-title-creator node))
-                                   (t "ECB-tree-buffer-menu"))))
+                                   (t "Tree-buffer-menu"))))
             (when menu
 	      (if tree-buffer-running-xemacs
 		  (popup-menu (cons menu-title menu))
