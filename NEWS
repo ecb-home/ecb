@@ -6,9 +6,9 @@
    "Window-managers and ECB" in the chapter "Tips and tricks" in the
    info-manual of ECB.
    
-   Thanks to Johann Myrkraverk <myrkraverk@users.sourceforge.net> who has
-   reported some bugs related to escreen and has therefore motivated a lot to
-   add support for the well known window-managers escreen and winring.
+   Thanks to Johann "Myrkraverk" Oskarsson <myrkraverk@users.sourceforge.net>
+   who has reported some bugs related to escreen and has therefore motivated a
+   lot to add support for the well known window-managers escreen and winring.
 
 ** ECB can display the window-number in the modeline of the special windows.
    The left-top-most window in a frame has the window-number 0 and all other
@@ -21,8 +21,8 @@
    feature is only available for GNU Emacs 21.X, because neither GNU Emacs <
    21 nor XEmacs can dynamically evaluate forms in the mode-line.
 
-   Thanks to Johann Myrkraverk <myrkraverk@users.sourceforge.net> for
-   suggesting this.
+   Thanks to Johann "Myrkraverk" Oskarsson <myrkraverk@users.sourceforge.net>
+   for suggesting this.
 
    In addition the already existing options `ecb-mode-line-data' and
    `ecb-mode-line-prefixes' are now more flexible and are now able to define
@@ -120,8 +120,8 @@
     This function has been also renamed to `ecb-toggle-compile-window-height'.
 
 *** Fixed a bug in the layout-engine related to dedicated windows.
-    Thanks to Johann Myrkraverk <myrkraverk@users.sourceforge.net> who helped
-    to find this bug.
+    Thanks to Johann "Myrkraverk" Oskarsson <myrkraverk@users.sourceforge.net>
+    who helped to find this bug.
 
 *** Fixed some references in the info-manual of ECB.
 

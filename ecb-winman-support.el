@@ -92,9 +92,9 @@
 ;; More tests.
 
 
-;; Thanks to Johann Myrkraverk <myrkraverk@users.sourceforge.net> for the
-;; first trigger for this suport-library. He has suggested to integrate ECB
-;; with escreen.
+;; Thanks to Johann "Myrkraverk" Oskarsson <myrkraverk@users.sourceforge.net>
+;; for the first trigger for this suport-library. He has suggested to
+;; integrate ECB with escreen.
 
 
 ;;; Code
