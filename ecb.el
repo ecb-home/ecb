@@ -54,7 +54,7 @@
 ;; The latest version of the ECB is available at
 ;; http://home.swipnet.se/mayhem/ecb.html
 
-;; $Id: ecb.el,v 1.192 2002/02/23 11:43:42 berndl Exp $
+;; $Id: ecb.el,v 1.193 2002/02/24 18:51:43 berndl Exp $
 
 ;;; Code:
 
@@ -76,7 +76,8 @@
   (if version-error
       (error "ECB requires %s!" version-error)))
 
-(message "ECB uses semantic %s and eieio %s" semantic-version eieio-version)
+(message "ECB %s uses semantic %s and eieio %s" ecb-version
+         semantic-version eieio-version)
 (setq semantic-load-turn-everything-on nil)
 (require 'semantic-load)
 
@@ -655,109 +656,6 @@ or call `widen' (C-x n w)."
 `semantic-token->text-functions' with name \"semantic-XYZ\" and the key is a
 symbol with name \"ecb-XYZ\".")
 
-(defconst ecb-merge-face-list
-  (cond (running-emacs-21
-         '((set-face-background   . face-background)
-           (set-face-bold-p       . face-bold-p)
-           (set-face-italic-p     . face-italic-p)
-           (set-face-font         . face-font)
-           (set-face-foreground   . face-foreground)
-           (set-face-inverse-video-p    . face-inverse-video-p)
-           (set-face-stipple      . face-stipple)
-           (set-face-underline  . face-underline)
-           (set-face-underline-p  . face-underline-p)))
-        (running-xemacs
-         '((set-face-background    . face-background)
-           (set-face-blinking-p    . face-blinking-p)
-           (set-face-dim-p         . face-dim-p)
-           (set-face-font          . face-font)
-           (set-face-foreground    . face-foreground)
-           (set-face-highlight-p   . face-highlight-p)
-           (set-face-reverse-p     . face-reverse-p)
-           (set-face-stipple       . face-stipple)
-           (set-face-strikethru-p  . face-strikethru-p)
-           (set-face-underline-p   . face-underline-p)
-           (custom-set-face-bold   . custom-face-bold)
-           (custom-set-face-italic . custom-face-italic)))
-        (t
-         '((set-face-background      . face-background)
-           (set-face-font            . face-font)
-	   (set-face-italic-p        . face-italic-p)
-	   (set-face-bold-p          . face-bold-p)
-           (set-face-foreground      . face-foreground)
-           (set-face-inverse-video-p . face-inverse-video-p)
-           (set-face-stipple         . face-stipple)
-           (set-face-underline-p     . face-underline-p)))))
-
-;; (defun ecb-merge-face-into-text (text face)
-;;   (let ((newtext (concat text)))
-;;     (alter-text-property 0 (length newtext) 'face
-;;                          (lambda (current-face)
-;;                            (let ((klaus nil)
-;;                                  (new-face
-;;                                   (copy-face current-face
-;;                                              (intern (concat "ecb-internal-face-"
-;;                                                              (face-name current-face))))))
-;;                              (mapc (function (lambda (elem)
-;;                                                (let ((new-attr-val
-;;                                                       (funcall (cdr elem) face)))
-;;                                                  (if new-attr-val
-;;                                                      (funcall (car elem)
-;;                                                               new-face
-;;                                                               new-attr-val
-;;                                                               (selected-frame))))))
-;;                                    ecb-merge-face-list)
-;;                              (setq klaus (face-attr-construct new-face))
-;;                              (list new-face)))
-;;                          newtext)
-;;     newtext))
-
-(defun ecb-merge-face-into-text (text face)
-  (let ((newtext (concat text)))
-    (alter-text-property 0 (length newtext) 'face
-                         (lambda (current-face)
-                           (let ((cf
-                                  (cond ((facep current-face)
-                                         (list current-face))
-                                        ((listp current-face)
-                                         current-face)
-                                        (t nil)))
-                                 (nf
-                                  (cond ((facep face)
-                                         (list face))
-                                        ((listp face)
-                                         face)
-                                        (t nil))))
-                             ;; we must add the new-face in front of
-                             ;; current-face to get the right merge!
-                             (append nf cf)))
-                         newtext)
-    newtext))
-
-
-(dolist (elem ecb-token->text-functions)
-  (fset (car elem)
-        `(lambda (token &optional parent-token colorize)
-           (if (eq 'type (semantic-token-token token))
-               (let ((text (concat (semantic-name-nonterminal token
-                                                              parent-token
-                                                              colorize)
-                                   (if (and (eq major-mode 'c++-mode)
-                                            (fboundp 'semantic-c-template-string))
-                                       (semantic-c-template-string token
-                                                                   parent-token
-                                                                   colorize)
-                                     "")))
-                     (face (ecb-get-face-for-type-token
-                            (if (semantic-token-get token 'ecb-group-token)
-                                "group"
-                              (semantic-token-type token)))))
-                 (if face
-                     (setq text (ecb-merge-face-into-text text face)))
-                 text)
-             (funcall (quote ,(cdr elem))
-                      token parent-token colorize)))))
-
 
 (defcustom ecb-token-display-function '((default . ecb-prototype-nonterminal))
   "*Function to use for displaying tokens in the methods buffer.
@@ -834,17 +732,28 @@ displaying the tokens."
   "*Define face used with option `ecb-type-token-display'."
   :group 'faces)
 
+(defface ecb-type-token-enum-face (ecb-face-default nil t)
+  "*Define face used with option `ecb-type-token-display'."
+  :group 'faces)
+
 (defface ecb-type-token-group-face (ecb-face-default nil t nil
-                                                     "dim gray" "dim gray")
+                                                     (if running-xemacs
+                                                         "dimgray"
+                                                       "dim gray")
+                                                     (if running-xemacs
+                                                         "dimgray"
+                                                       "dim gray"))
   "*Define face used with option `ecb-type-token-display'."
   :group 'faces)
 
 (defcustom ecb-type-token-display nil
-  "*Faces for displaying semantic type-tokens in the methods buffer.
-Normally all token colorizing and facing is done by semantic according to the
-value of `semantic-face-alist'. But sometimes a finer distinction in
-displaying the different type specifiers of type-tokens can be usefull. For a
-description when this option is evaluated look at `ecb-token-display-function'!
+  "*How to display semantic type-tokens in the methods buffer.
+Normally all token displaying, colorizing and facing is done by semantic
+according to the value of `semantic-face-alist' and the semantic
+display-function \(e.g. one from `semantic-token->text-functions'). But
+sometimes a finer distinction in displaying the different type specifiers of
+type-tokens can be usefull. For a description when this option is evaluated
+look at `ecb-token-display-function'!
 
 This functionality is set on a major-mode base, i.e. for every major-mode a
 different setting can be used. The value of this option is a list of
@@ -852,40 +761,52 @@ cons-cells:
 - The car is either a major-mode symbol or the special symbol 'default which
   means if no setting for a certain major-mode is defined then the cdr of
   the 'default cons-cell is used.
-- The cdr is a list of cons-cells with:
-  + car is a semantic type specifier in string-form. Current available type
-    specifiers are for example \"class\", \"struct\", \"typedef\". In addition
-    to these ones there is also a special ECB type specifier \"group\" which
-    is related to grouping tokens \(see `ecb-post-process-semantic-tokenlist'
-    and `ecb-group-function-tokens-with-parents'). Any arbitrary specifier can
-    be set here but if it is not \"group\" or not known by semantic it will be
-    useless.
-  + cdr is the face which is used in the ECB-method window to display
-    type-tokens with this specifier. ECB has some predefined faces for this
-    \(`ecb-type-token-class-face', `ecb-type-token-struct-face',
-    `ecb-type-token-typedef-face' and `ecb-type-token-group-face') but any
-    arbitrary face can be set here.
+- The cdr is a list of 3-element-lists:
+  1. First entry is a semantic type specifier in string-form. Current
+     available type specifiers are for example \"class\", \"struct\",
+     \"typedef\" and \"enum\". In addition to these ones there is also a
+     special ECB type specifier \"group\" which is related to grouping tokens
+     \(see `ecb-post-process-semantic-tokenlist' and
+     `ecb-group-function-tokens-with-parents'). Any arbitrary specifier can be
+     set here but if it is not \"group\" or not known by semantic it will be
+     useless.
+  2. Second entry is a flag which indicates if the type-specifier string from
+     \(1.) itself should be removed \(if there is any) from the display.
+  3. Third entry is the face which is used in the ECB-method window to display
+     type-tokens with this specifier. ECB has some predefined faces for this
+     \(`ecb-type-token-class-face', `ecb-type-token-struct-face',
+     `ecb-type-token-typedef-face', `ecb-type-token-enum-face' and
+     `ecb-type-token-group-face') but any arbitrary face can be set here. This
+     face is merged with the faces semantic already uses to display a token,
+     i.e. the result is a display where all face-attributes of the ECB-face
+     take effect plus all face-attributes of the semantic-faces which are not
+     set in the ECB-face \(with XEmacs this merge doesn't work so here the
+     ECB-face replaces the semantic-faces; this may be fixed in future
+     versions).
 
-The default value is nil means there is no special ECB-colorizing of type-tokens
-in addition to the colorizing semantic does. But a value like the following
-could be a usefull setting:
-\(\(default
-   \(\"class\" . ecb-type-token-class-face)
-   \(\"group\" . ecb-type-token-group-face))
-  \(c-mode
-   \(\"struct\" . ecb-type-token-struct-face)
-   \(\"typedef\" . ecb-type-token-typedef-face)))
+The default value is nil means there is no special ECB-displaying of
+type-tokens in addition to the displaying and colorizing semantic does. But a
+value like the following could be a usefull setting:
+
+  \(\(default
+     \(\"class\" t ecb-type-token-class-face)
+     \(\"group\" nil ecb-type-token-group-face))
+    \(c-mode
+     \(\"struct\" nil ecb-type-token-struct-face)
+     \(\"typedef\" nil ecb-type-token-typedef-face)))
+
 This means that in `c-mode' only \"struct\"s and \"typedef\"s are displayed
-with special faces and in all other modes \"class\"es and grouping-tokens
-\(see `ecb-token-display-function', `ecb-group-function-tokens-with-parents')
-have special faces."
+with special faces \(the specifiers itself are not removed) and in all other
+modes \"class\"es and grouping-tokens \(see `ecb-token-display-function',
+`ecb-group-function-tokens-with-parents') have special faces and the \"class\"
+specifier-string is removed from the display."
   :group 'ecb-methods
   :set (function (lambda (symbol value)
 		   (set symbol value)
 		   (ecb-clear-token-tree-cache)))
   :type '(repeat (cons (symbol :tag "Major-mode")
-                       (repeat :tag "Type specifiers"
-                               (cons (choice :tag "Specifier list"
+                       (repeat :tag "Display of type specifiers"
+                               (list (choice :tag "Specifier list"
                                              :menu-tag "Specifier list"
                                              (const :tag "class"
                                                     :value "class")
@@ -893,9 +814,12 @@ have special faces."
                                                     :value "struct")
                                              (const :tag "typedef"
                                                     :value "typedef")
+                                             (const :tag "enum"
+                                                    :value "enum")
                                              (const :tag "group"
                                                     :value "group")
                                              (string :tag "Any specifier"))
+                                     (boolean :tag "Remove the type-specifier" t)
                                      (face :tag "Any face"
                                            :value ecb-type-token-class-face)))))
   :initialize 'custom-initialize-default)
@@ -905,8 +829,115 @@ have special faces."
 TYPE-SPECIFIER or nil."
   (let ((mode-display (cdr (assoc major-mode ecb-type-token-display)))
         (default-display (cdr (assoc 'default ecb-type-token-display))))
-    (or (cdr (assoc type-specifier mode-display))
-        (cdr (assoc type-specifier default-display)))))
+    (or (nth 2 (assoc type-specifier mode-display))
+        (nth 2 (assoc type-specifier default-display)))))
+
+(defun ecb-get-remove-specifier-flag-for-type-token (type-specifier)
+  "Return the remove-specifier-flag set in `ecb-type-token-display' for
+current major-mode and TYPE-SPECIFIER or nil."
+  (let ((mode-display (cdr (assoc major-mode ecb-type-token-display)))
+        (default-display (cdr (assoc 'default ecb-type-token-display))))
+    (or (nth 1 (assoc type-specifier mode-display))
+        (nth 1 (assoc type-specifier default-display)))))
+
+(defun ecb-merge-face-into-text (text face)
+  "Merge FACE to the already precolored TEXT so the values of all
+face-attributes of FACE take effect and but the values of all face-attributes
+of TEXT which are not set by FACE are preserved.
+For XEmacs this merge does currently not work therefore here FACE replaces all
+faces of TEXT!"
+  (let ((newtext (concat text)))
+    (if running-xemacs
+        (put-text-property 0 (length newtext) 'face face newtext)
+      (alter-text-property 0 (length newtext) 'face
+                           (lambda (current-face)
+                             (let ((cf
+                                    (cond ((facep current-face)
+                                           (list current-face))
+                                          ((listp current-face)
+                                           current-face)
+                                          (t nil)))
+                                   (nf
+                                    (cond ((facep face)
+                                           (list face))
+                                          ((listp face)
+                                           face)
+                                          (t nil))))
+                               ;; we must add the new-face in front of
+                               ;; current-face to get the right merge!
+                               (append nf cf)))
+                           newtext))
+    newtext))
+
+
+(dolist (elem ecb-token->text-functions)
+  (fset (car elem)
+        `(lambda (token &optional parent-token colorize)
+           (if (eq 'type (semantic-token-token token))
+               (let* ( ;; we must here distinguish between UML- and
+                      ;; not-UML-semantic functions because for UML we must
+                      ;; preserve some semantic facing added by semantic (e.g.
+                      ;; italic for abstract classes)!
+                      (text (funcall (if (string-match "-uml-" (symbol-name (quote ,(car elem))))
+                                         'semantic-uml-abbreviate-nonterminal
+                                       'semantic-name-nonterminal)
+                                     token parent-token colorize))
+                      (type-specifier (if (semantic-token-get token
+                                                              'ecb-group-token)
+                                          "group"
+                                        (semantic-token-type token)))
+                      (face (ecb-get-face-for-type-token type-specifier))
+                      (remove-flag (ecb-get-remove-specifier-flag-for-type-token
+                                    type-specifier)))
+                 (save-match-data
+                   ;; the following is done to replace the "struct" from
+                   ;; grouping tokens (see
+                   ;; ecb-group-function-tokens-with-parents) with "group".
+                   ;; This code can be removed (or changed) if semantic allows
+                   ;; correct protection display for function-tokens with
+                   ;; parent-token.
+                   (when (semantic-token-get token 'ecb-group-token)
+                     (if (string-match (concat "^\\(.+"
+                                               semantic-uml-colon-string
+                                               "\\)\\(struct\\)") text)
+                         (let ((type-spec-text "group"))
+                           (put-text-property 0 (length type-spec-text)
+                                              'face
+                                              (get-text-property
+                                               0 'face
+                                               (match-string 2 text))
+                                              type-spec-text)
+                           (setq text (concat (match-string 1 text)
+                                              type-spec-text)))))
+                   ;; Now we must maybe add a template-spec in c++-mode and
+                   ;; maybe remove the type-specifier string.
+                   (let (col-type-name col-type-spec template-text)
+                     (if (string-match (concat "^\\(.+\\)\\("
+                                               semantic-uml-colon-string
+                                               type-specifier "\\)")
+                                       text)
+                         (setq col-type-name (match-string 1 text)
+                               col-type-spec (if (not remove-flag)
+                                                 (match-string 2 text)))
+                       (setq col-type-name text))
+                     (when (and (equal major-mode 'c++-mode)
+                                (fboundp 'semantic-c-template-string))
+                       (setq template-text (semantic-c-template-string
+                                            token parent-token colorize))
+                       (put-text-property 0 (length template-text)
+                                          'face
+                                          (get-text-property
+                                           (1- (length col-type-name)) 'face
+                                           col-type-name)
+                                          template-text))
+                     (setq text (concat col-type-name template-text
+                                        col-type-spec))))                     
+                 ;; now we add some own colorizing if necessary
+                 (if face
+                     (setq text (ecb-merge-face-into-text text face)))
+                 text)
+             (funcall (quote ,(cdr elem)) token parent-token colorize)))))
+  
 
 (defcustom ecb-post-process-semantic-tokenlist
   '((c++-mode . ecb-group-function-tokens-with-parents)
@@ -1447,19 +1478,6 @@ cleared!) ECB by running `ecb-deactivate'."
         (funcall display-fkt token parent-token ecb-font-lock-tokens))
     (error (semantic-prototype-nonterminal token parent-token
                                            ecb-font-lock-tokens))))
-
-;; (defun ecb-get-token-name (token &optional parent-token)
-;;   "Get the name of TOKEN with the appropriate semantic-API-fcn.
-;; Here the parent-token of TOKEN is available with `semantic-token-get' and the
-;; property 'parent-token!"
-;;   ;;   (let ((parent-token (semantic-token-get token 'parent-token)))
-;;   (if (eq 'type (semantic-token-token token))
-;;       (semantic-name-nonterminal token parent-token ecb-font-lock-tokens)
-;;     (condition-case nil
-;;         (funcall ecb-token-display-function token parent-token
-;;                  ecb-font-lock-tokens)
-;;       (error (semantic-prototype-nonterminal token parent-token
-;;                                              ecb-font-lock-tokens)))))
 
 (defun ecb-find-add-token-bucket (node type display sort-method buckets
                                        &optional parent-token)

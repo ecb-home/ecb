@@ -26,7 +26,7 @@
 ;;
 ;; Contains all online-help for ECB (stolen something from recentf.el)
 
-;; $Id: ecb-help.el,v 1.56 2002/02/23 11:43:42 berndl Exp $
+;; $Id: ecb-help.el,v 1.57 2002/02/24 18:51:43 berndl Exp $
 
 ;;; Code
 
@@ -394,6 +394,8 @@ following options before working with ECB):
   displayed in the minibuffer?
 - `ecb-layout-nr': The ECB layout, means which windows you want to be
   displayed in the ECB-frame and also the location of these windows.
+- `ecb-token-display-function', `ecb-type-token-display': How to display the
+  entries in the ECB-method window.
 - All the options in the customize groups 'ecb-layout', 'ecb-methods' and
   'ecb-faces'.
 
