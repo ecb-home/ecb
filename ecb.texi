@@ -19,7 +19,7 @@
 @c Free Software Foundation, Inc., 59 Temple Place - Suite 330,
 @c Boston, MA 02111-1307, USA.
 
-@c $Id: ecb.texi,v 1.84 2003/03/14 17:33:18 berndl Exp $
+@c $Id: ecb.texi,v 1.85 2003/03/18 13:18:38 berndl Exp $
 
 @setfilename ecb.info
 
@@ -226,6 +226,7 @@ Tips and tricks
 * Using eshell::                Optimal using of eshell in ECB
 * Grepping directories::        Grepping directories with ECB
 * Working with JDEE::           Working best with ECB and JDEE
+* Compile-window on demand::    Displaying the compile-window on demand
 
 Entry points for elisp programmers
 
@@ -4594,13 +4595,14 @@ edit-window is first selected otherwise either an error is reported or
 some other special reaction; see the documentation of the adviced
 functions for this.
 
-For @code{other-window} and @code{other-window-for-scrolling} this
-makes no sense, therefore you can not enable this for both of them.
+For @code{other-window}, @code{other-window-for-scrolling} and
+@code{switch-to-buffer-other-window} this makes no sense, therefore
+you can not enable this for them.
 
 Per default this is enabled for @code{delete-window},
-@code{delete-other-windows}, @code{switch-to-buffer} and
-@code{switch-to-buffer-other-window}.
+@code{delete-other-windows}, @code{switch-to-buffer}.
 @end defopt
+
 
 @defopt layout-name
 Select a window layout of ECB. Value is any arbitary string. There are
@@ -4634,30 +4636,28 @@ changed the ECB-screen-layout by any action you can always go back to
 this layout with @code{ecb-redraw-layout}
 @end defopt
 
-
 @defopt layout-switch-to-compilation-window
-Switch-to-buffer...-functions switch to @code{ecb-compile-window}. If
-the buffer argument of @code{switch-to-buffer} or
-@code{switch-to-buffer-other-window} is an compilation buffer as
-defined with @code{ecb-compilation-buffer-p} we will select the
-@code{ecb-compile-window} first. This is useful if you always want
-your compilation buffers within the compilation window and now within
-the edit window.
+Switching buffer functions switch always in @code{ecb-compile-window}.
+
+If the buffer argument of such functions (e.g.
+@code{switch-to-buffer}) is a compilation buffer as defined with
+@code{ecb-compilation-buffer-p} we will select the
+@code{ecb-compile-window} and display there the buffer. This is useful
+if you always want your compilation buffers within the compilation
+window and not within the edit window.
 
 Note the difference between
 @code{ecb-layout-always-operate-in-edit-window} and this option: If a
-switch-to-buffer...-function is contained in the former one, then we
+buffer-switching function is contained in the former one, then we
 always jump first into the edit-window regardless of the destination
 buffer. If also contained in this option then ECB checks the
 destination buffer and then selects the @code{ecb-compile-window} if
 it is a compilation-buffer in the meaning of
 @code{ecb-compilation-buffer-p}!
 
-Per default this is only enabled for @code{switch-to-buffer}. We
-provide the option for @code{switch-to-buffer-other-window} too but
-the assumption is that when a user asks for a buffer in another window
-it should always be presented in another window.
+Currently this seemes only making sense for @code{switch-to-buffer}.
 @end defopt
+
 
 @defopt layout-window-sizes
 Specifies the sizes of the ECB windows for each layout. The easiest
@@ -5488,6 +5488,7 @@ situations.
 * Using eshell::                Optimal using of eshell in ECB
 * Grepping directories::        Grepping directories with ECB
 * Working with JDEE::           Working best with ECB and JDEE
+* Compile-window on demand::    Displaying the compile-window on demand
 @end menu
 
 @node Changing faces, Small screens, Tips and tricks, Tips and tricks
@@ -5849,7 +5850,7 @@ way to exclude things like CVS- or RCS-directories from the find-call:
 See the variable @code{igrep-find-prune-clause} of the library
 @file{igrep.el}.
 
-@node Working with JDEE, , Grepping directories, Tips and tricks
+@node Working with JDEE, Compile-window on demand, Grepping directories, Tips and tricks
 @section Working best with ECB and JDEE
 
 ECB is completely language independent, i.e. it works with any
@@ -5871,6 +5872,43 @@ The popup-menues in the directories- and the sources-buffer offer a
 command ``Create Source'' which allows easy creating new java-sources
 by calling the command @code{jde-gen-class-buffer}.
 @end itemize
+
+@node Compile-window on demand, , Working with JDEE, Tips and tricks
+@section Displaying the compile-window on demand
+
+If you like displaying all output of compile/grep/etc. in an extra
+compile-window (@pxref{Temp- and compile-buffers}) but you dislike
+wasting the space of this compile-window if you are just editing then
+you can get a compile-window ``on demand''. Just do the following:
+
+@enumerate
+@item
+Customize @code{ecb-compile-window-height} to not nil and save it for
+future sessions. This gives you an extra compile-window at the
+bottom.
+
+@item
+Add the following to your .emacs:
+
+@example
+(add-hook 'ecb-activate-hook
+          (lambda ()
+             (ecb-toggle-compile-window -1)))
+@end example
+
+This hides the extra compile-window direct after the start of ECB
+because there is no need for a compile-window at this moment.
+
+@end enumerate
+
+This is all you have to do. Now if you run @code{compile} (or
+@code{grep} or other compile-modes) then ECB autom. displays the
+compile-window at the bottom an display the compile-output there.
+
+If you have finished with using the compile-output (e.g. fixing
+errors) then you can throw away the compile-window just by
+@code{ecb-toggle-compile-window} - ECB will reactivate it autom.
+before next compilation!
 
 @node Elisp programming, Conflicts and bugs, Tips and tricks, Top
 @chapter Entry points for elisp programmers
@@ -6934,6 +6972,38 @@ JDE-dialogs will not work correct!
 This section describes all currently known bugs of ECB. The
 maintainers of ECB try to fix these bugs as soon as possible.
 
+@subsection Following the source-file link in a help-buffer
+
+This bug only occurs if a compile-window is used and visible!
+
+If you call functions like @code{describe-function} which displays a
+help-buffer in the compile-window, then you will often get an output
+like this in the compile-window:
+
+@example
+ecb-activate is an interactive compiled Lisp function in `ecb'.
+(ecb-activate)
+
+Activates the ECB...
+@end example
+
+The link to `ecb' is normally a clickable link, means if you click
+with the middle-mouse button onto it the file is opened (in our
+example @file{ecb.el} would be opened.
+
+If you click onto it when the help-buffer is already the current
+buffer (i.e. the compile-window is already selected before the click!)
+then all is working fine (i.e. the file is opened in the edit-window),
+but if you click onto the link without selecting the compile-window
+before (i.e. the edit-window is the current selected window) then the
+file is openend in the compile-window which is probably not what you
+want. Not a big problem but annoying.
+
+The only available workaround is, first selecting the compile-window
+and then clicking onto the link!
+
+Probably this bug can never be fixed.
+
 @subsection Extra history-entries for JDEE source-buffers
 
 ECB on occasions creates an extra edit buffer for entries in the
@@ -7236,6 +7306,13 @@ see @ref{Setting up Emacs}.
 Can i add my own commands to the popup-menues of tree-buffers?
 @tab @tab
 Yes, see @ref{Using the mouse}.
+
+@item @tab @tab
+
+@item
+Can ECB display the compile-window ``on demand''?
+@tab @tab
+Yes, see @ref{Tips and tricks}.
 
 @end multitable
 

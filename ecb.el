@@ -68,7 +68,7 @@
 ;; The latest version of the ECB is available at
 ;; http://ecb.sourceforge.net
 
-;; $Id: ecb.el,v 1.297 2003/03/10 09:09:46 berndl Exp $
+;; $Id: ecb.el,v 1.298 2003/03/18 13:18:38 berndl Exp $
 
 ;;; Code:
 
@@ -2928,7 +2928,8 @@ buffers \(like plain text-buffers) are used for updating the method-buffers.
 With FORCE-NIL-CACHE the method-buffer is updated with a nil cache too, i.e.
 it is cleared."
   (when (and ecb-minor-mode
-             (equal (selected-frame) ecb-frame)
+             (ecb-point-in-edit-window)
+;;              (equal (selected-frame) ecb-frame)
              (get-buffer-window ecb-methods-buffer-name)
              (buffer-file-name (current-buffer))
              ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: 
@@ -4493,6 +4494,7 @@ That is remove the unsupported :help stuff."
                (t "bc" speedbar-change-initial-expansion-list)
                (t "e" ecb-eshell-goto-eshell)
                (t "x" ecb-expand-methods-nodes)
+               (t "\\" ecb-toggle-compile-window)
                (t "/" ecb-toggle-enlarged-compilation-window)
                (t "." ecb-cycle-through-compilation-buffers)))
 

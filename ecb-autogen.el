@@ -2,7 +2,7 @@
 
 ;;; Copyright (C) 2003 Klaus Berndl
 
-;; $Id: ecb-autogen.el,v 1.4 2003/02/26 17:18:59 berndl Exp $
+;; $Id: ecb-autogen.el,v 1.5 2003/03/18 13:18:39 berndl Exp $
 
 ;; This file is not part of GNU Emacs.
 
@@ -24,8 +24,8 @@
 ;;
 ;; Automatically generate autoloads for ECB
 ;;
-;; This code is completely copied from semantic-autogen.el, the autoload
-;; generator of semantic.
+;; This code is based onto semantic-autogen.el, the autoload generator of
+;; semantic.
 ;;
 ;;; Code
 ;;
@@ -38,7 +38,7 @@
   (require 'silentcomp))
 
 ;; Emacs knows only a variable noninteractive whereas XEmacs knows both,
-;; funvtion and variable. Therefore we silence here the byte-compiler.
+;; funtion and variable. Therefore we silence here the byte-compiler.
 (silentcomp-defun noninteractive)
 
 ;;; Compatibility
@@ -121,7 +121,7 @@ does nothing."
            )
       (batch-update-autoloads))
     ;; XEmacs adds autom. the provide statement but for GNU Emacs we must do
-    ;; this.
+    ;; this:
     (when (not ecb-running-xemacs)
       (save-excursion
         (set-buffer (find-file-noselect (expand-file-name ecb-autogen-file)))

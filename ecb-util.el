@@ -26,7 +26,7 @@
 ;; This file is part of the ECB package which can be found at:
 ;; http://ecb.sourceforge.net
 
-;; $Id: ecb-util.el,v 1.58 2003/03/10 10:18:01 berndl Exp $
+;; $Id: ecb-util.el,v 1.59 2003/03/18 13:18:39 berndl Exp $
 
 ;;; Code:
 
@@ -146,6 +146,7 @@ means not to count the minibuffer even if it is active."
                                             (shrink-window-if-larger-than-buffer . around)
                                             (show-temp-buffer-in-current-frame . around)
                                             (scroll-other-window . around)
+                                            (compile-internal . before)
                                             (custom-save-all . around)
                                             (winner-mode . around)
                                             (winner-redo . around)
@@ -156,6 +157,7 @@ means not to count the minibuffer even if it is active."
                                           (resize-temp-buffer-window . around)
                                           (shrink-window-if-larger-than-buffer . around)
                                           (scroll-other-window . around)
+                                          (compile-internal . before)
                                           (custom-save-all . around)
                                           (winner-mode . around)
                                           (winner-redo . around)
