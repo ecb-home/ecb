@@ -106,6 +106,9 @@ after clicking onto a filename in the speedbar."
              (and item
                   (file-exists-p item)
                   (not (file-directory-p item))))
+        ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: I think we should be
+        ;; somehow smarter in selecting an edit-window - e.g. selecting the
+        ;; ecb-last-edit-window-with-point. 
         (ecb-select-edit-window))))
 
 

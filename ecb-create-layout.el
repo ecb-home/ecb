@@ -381,7 +381,7 @@ DELETE-FRAME is not nil then the new created frame will be deleted and the
 (defun ecb-create-layout-split-ver (&optional fraction)
   (let ((factor (or fraction
                     (/ (float (count-lines (window-start) (point)))
-                       (float (- (window-height) 2))))))
+                       (float (- (ecb-window-full-height) 2))))))
     (ecb-split-ver factor t)
     (ecb-create-layout-gen-lisp `(ecb-split-ver ,factor t))
     factor))
@@ -634,7 +634,7 @@ never selects the edit-window."
   (switch-to-buffer (generate-new-buffer ecb-create-layout-buf-prefix))
   (erase-buffer)
   (unless do-not-fill
-    (dotimes (i (window-height))
+    (dotimes (i (ecb-window-full-height))
       (insert
        (format "%s\n"
                (make-string (- (window-width)

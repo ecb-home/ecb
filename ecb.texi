@@ -6164,6 +6164,14 @@ This option takes only effect if @code{ecb-compile-window-height} is
 not nil!
 @end defopt
 
+@defopt change-layout-preserves-compwin-state
+Changing the layout preserves the state of the compile-window. This is
+for example useful if the user toggles between several layouts (see
+@code{ecb-toggle-layout}) and wants to preserve the hidden-state of
+the compile-window.
+@end defopt
+
+
 @defopt enlarged-compilation-window-max-height
 The max height of the compile-window after enlarging it. The max
 height of the compilation window after enlarged by

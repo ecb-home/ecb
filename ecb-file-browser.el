@@ -1668,7 +1668,10 @@ help-text should be printed here."
 
 
 (defun ecb-grep-directory-internal (node find)
-  (select-window (or ecb-last-edit-window-with-point ecb-edit-window))
+  (select-window (or (and ecb-last-edit-window-with-point
+                          (window-live-p ecb-last-edit-window-with-point)
+                          ecb-last-edit-window-with-point)
+                     (car (ecb-canonical-edit-windows-list))))
   (let ((default-directory (concat (ecb-fix-filename
                                     (if (file-directory-p
                                          (tree-node-get-data node))
@@ -1712,12 +1715,10 @@ help-text should be printed here."
 
 
 (defun ecb-dired-directory-internal (node &optional other)
-  (if (not (ecb-edit-window-splitted))
-      (ecb-select-edit-window)
-    (select-window (or (and ecb-last-edit-window-with-point
-                            (window-live-p ecb-last-edit-window-with-point)
-                            ecb-last-edit-window-with-point)
-                       ecb-edit-window)))
+  (select-window (or (and ecb-last-edit-window-with-point
+                          (window-live-p ecb-last-edit-window-with-point)
+                          ecb-last-edit-window-with-point)
+                     (car (ecb-canonical-edit-windows-list))))
   (let ((dir (ecb-fix-filename
               (funcall (if (file-directory-p (tree-node-get-data node))
                            'identity

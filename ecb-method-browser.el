@@ -1975,15 +1975,15 @@ is a full filename and cdr is a tag for TYPENAME. "
                                            (and (ecb-edit-window-splitted)
                                                 (eq ecb-button 2))))))
         (ecb-jump-to-tag filename tag (ecb-get-edit-window
-                                           (and (ecb-edit-window-splitted)
-                                                (eq ecb-button 2)))
-                           no-post-action
-                           (if (and shift-mode
-                                    (not (member 'ecb-tag-visit-narrow-tag
-                                                 additional-post-action-list)))
-                               (cons 'ecb-tag-visit-narrow-tag
-                                     additional-post-action-list)
-                             additional-post-action-list))))))
+                                       (and (ecb-edit-window-splitted)
+                                            (eq ecb-button 2)))
+                         no-post-action
+                         (if (and shift-mode
+                                  (not (member 'ecb-tag-visit-narrow-tag
+                                               additional-post-action-list)))
+                             (cons 'ecb-tag-visit-narrow-tag
+                                   additional-post-action-list)
+                           additional-post-action-list))))))
 
 
 (defun ecb-tag-visit-smart-tag-start (tag)
@@ -2214,7 +2214,7 @@ too!
 Returns current point."
   (set-window-start
    (selected-window)
-   (ecb-line-beginning-pos (- (/ (window-height) 2))))
+   (ecb-line-beginning-pos (- (/ (ecb-window-full-height) 2))))
   (point))
 
 

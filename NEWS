@@ -1,5 +1,13 @@
 * Changes for ECB version 2.12
 
+TODO: 10pt images hinzufÅ¸gen!!!
+
+** The restriction of only two edit-windows has been gone!
+   Beginning with this version 2.12 there are no restrictions about the
+   window-layout of the edit-area of ECB. This means you can split the
+   edit-area of ECB in as many windows as you like. Just work with the
+   edit-area of ECB as if it would be an extra frame!
+
 ** All popup-menus of the tree-buffers can be used with the tmm-library
    The already existing command `tree-buffer-show-menu-keyboard' (bound to
    [M-m] in every tree-buffer of ECB) accepts now a prefix argument. If called
@@ -20,13 +28,22 @@
    Thanks for suggestion and a first implementation to Rob Walker
    <rob.lists@tenfoot.org.uk>.
 
-** The command `ecb-toggle-compile-window' now displays a compile-window even if
-   the option `ecb-compile-window-height' is nil. This is a shortcut for
-   customizing this option via the customize-feature if you just want
-   displaying a compile-window for the current Emacs-session. In this
-   situation ECB asks for the height of the compile-window, sets this height
-   as new value of `ecb-compile-window-height' and displays the
-   compile-window.
+** Changes for the compile-window
+   
+*** The command `ecb-toggle-compile-window' now displays a compile-window even if
+    the option `ecb-compile-window-height' is nil. This is a shortcut for
+    customizing this option via the customize-feature if you just want
+    displaying a compile-window for the current Emacs-session. In this
+    situation ECB asks for the height of the compile-window, sets this height
+    as new value of `ecb-compile-window-height' and displays the
+    compile-window.
+
+*** New option `ecb-change-layout-preserves-compwin-state'.
+    Changing the layout preserves now the state of the compile-window if this
+    option is not nil. This is for example useful if the user toggles between
+    several layouts and wants to preserve the hidden-state of the
+    compile-window. Thanks to John S. Yates, Jr. <john@yates-sheets.org> for
+    suggestion.
    
 ** Fixed Bugs
 
@@ -38,6 +55,9 @@
     has not been saved for future sessions. This is fixed now.
 
 *** `ecb-cycle-through-compilation-buffers' works with hidden compile-window.
+
+*** Fixed a bug when an ECB-window was maximized and the user has stored sizes
+    for this layout.
 
 *** Fixed a bug which prevents some older version of XEmacs 21.4 working well.
     For XEmacs 21.4.6 a bug was reported which causes this XEmacs-version to
