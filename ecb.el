@@ -6,7 +6,9 @@
 ;; Maintainer: Jesper Nordenberg <mayhem@home.se>
 ;; Keywords: java, class, browser
 ;; Created: Jul 2000
-;; Version: 1.20
+
+(defvar ecb-version "1.20"
+  "Current ECB version.")
 
 ;; This program is free software; you can redistribute it and/or modify it under
 ;; the terms of the GNU General Public License as published by the Free Software
@@ -50,7 +52,7 @@
 ;; The latest version of the ECB is available at
 ;; http://home.swipnet.se/mayhem/ecb.html
 
-;; $Id: ecb.el,v 1.61 2001/04/28 15:26:40 creator Exp $
+;; $Id: ecb.el,v 1.62 2001/04/29 16:37:14 creator Exp $
 
 ;;; Code:
 
