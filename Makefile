@@ -46,7 +46,7 @@ EMACS=emacs
 # to the cedet-installation directory.
 
 CEDET=
-#CEDET=C:/Programme/emacs-21/site-lisp/multi-file-packages/cedet-1.0beta1
+#CEDET=C:/Programme/emacs-21/site-lisp/multi-file-packages/cedet-1.0beta1b
 
 # -------- Compiling ECB with the semantic < 2.0 -------------------------
 
@@ -142,7 +142,7 @@ INSTALLINFO=/usr/bin/install-info
 
 # For the ECB-maintainers: Change the version-number here and not
 # elsewhere!
-ecb_VERSION=2.01
+ecb_VERSION=2.11
 
 
 RM=rm -f

@@ -18,6 +18,8 @@ SCP=scp
 SSH=ssh -l berndl ecb.sourceforge.net
 GNUCLIENT=gnuclient
 
+CEDETLOAD=C:/Programme/emacs-21/site-lisp/multi-file-packages/cedet-1.0beta1b/common/cedet.el
+
 MAKEINFO=/usr/bin/makeinfo
 
 ecb_HTMLSOURCE=ecb-html.el
@@ -60,7 +62,7 @@ all: upload-build
 website: $(ecb_HTMLSOURCE)
 	@$(RM) $(ecb_HTML_GEN)
 	@$(RM) *.elc
-	$(EMACS) -batch -no-site-file $< -f eval-current-buffer
+	$(EMACS) -batch -no-site-file -l $(CEDETLOAD) $< -f eval-current-buffer
 
 # Generates HTML-docu from ecb.texi into ./docs/
 online-docu: $(ecb_TEXI)
