@@ -35,6 +35,8 @@
 
 @exampleindent   3
 
+@footnotestyle end
+
 @dircategory GNU Emacs Lisp
 @direntry
 * ECB: (ecb).           Emacs Code Browser
@@ -517,8 +519,8 @@ combinations of primary and secondary mouse-buttons are possible:
 
 @itemize @minus
 @item
-primary: mouse-2, secondary: C-mouse-2 (means mouse-2 while CTRL-key
-is pressed). This is the default setting.
+primary: mouse-2, secondary: C-mouse-2@footnote{means mouse-2 while CTRL-key
+is pressed.}. This is the default.
 
 @item
 primary: mouse-1, secondary: C-mouse-1
