@@ -110,7 +110,7 @@
 ;; For the ChangeLog of this file see the CVS-repository. For a complete
 ;; history of the ECB-package see the file NEWS.
 
-;; $Id: ecb-layout.el,v 1.168 2003/07/06 06:11:07 berndl Exp $
+;; $Id: ecb-layout.el,v 1.169 2003/07/14 14:48:41 berndl Exp $
 
 ;;; Code:
 
@@ -1453,16 +1453,19 @@ If called in a splitted edit-window then it works like as if the two parts of
 the splitted edit window would be the only windows in the frame. This means
 the part of the splitted edit-window which contains the point fills the whole
 edit-window.
-If called in an unsplitted edit-window then nothing is done.
-If called in any other window of the current ECB-layout there are two
-alternatives:
-- If the function is contained in `ecb-layout-always-operate-in-edit-window'
-  it jumps first in the \(first) edit-window and does then it´s job.
-- Otherwise an error is reported.
+- If called in an unsplitted edit-window then nothing is done.
+- If called in one of the ecb-windows then the current one is maximized, i.e.
+  the other ecb-windows \(not the edit-windows!) are deleted.
+- If called in the compile window there are two
+  alternatives:
+  + If the function is contained in `ecb-layout-always-operate-in-edit-window'
+    it jumps first in the \(first) edit-window and does then it´s job.
+  + Otherwise an error is reported.
 
 If optional argument WINDOW is a live window \(i.e. called from program):
 If WINDOW is an edit-window then this window is maximized \(i.e. the other
-edit-window is deleted), otherwise an error is reported."
+edit-window is deleted), if WINDOW is an ecb-window then only the other
+ecb-windows are deleted and in all other cases an error is reported."
   
   (if (not (equal (selected-frame) ecb-frame))
       ad-do-it
@@ -1473,18 +1476,27 @@ edit-window is deleted), otherwise an error is reported."
                             ecb-layout-always-operate-in-edit-window)
                     ;; this is needed because otherwise we would also select
                     ;; the 1. edit-window if point stays in the second one!
-                    (not (ecb-point-in-edit-window)))
+                    ;; if in an ecb-window then we stay there because then we
+                    ;; want to maximize the current ecb-window
+                    (ecb-point-in-compile-window))
            (ecb-select-edit-window))
        (if (window-live-p (ad-get-arg 0))
            (select-window (ad-get-arg 0))))
      
-     (if (not (ecb-point-in-edit-window))
-         (ecb-error "Only an edit-window can be maximized!"))
-     (ad-with-originals 'delete-window
-       (if (ecb-edit-window-splitted)
-           (funcall (intern (format "ecb-delete-other-windows-in-editwindow-%s"
-                                    ecb-layout-name))
-                    (ecb-edit-window-splitted)))))))
+     (cond ((ecb-point-in-compile-window)
+            (ecb-error "The compile window can not be maximized!"))
+           ((ecb-point-in-edit-window)
+            (ad-with-originals 'delete-window
+              (if (ecb-edit-window-splitted)
+                  (funcall (intern (format "ecb-delete-other-windows-in-editwindow-%s"
+                                           ecb-layout-name))
+                           (ecb-edit-window-splitted)))))
+           (t ;; must be one of the special ecb-windows
+            (let ((ecb-buffer (current-buffer)))
+              (ecb-maximize-ecb-window)
+              (ignore-errors
+                (select-window (get-buffer-window ecb-buffer)))))))))
+            
   
 (defadvice split-window-horizontally (around ecb)
   "The ECB-version of `split-window-horizontally'. Works exactly like the
@@ -1640,69 +1652,6 @@ for compilation-buffers \(if a compile-window is used, see above)."
       (switch-to-buffer (ad-get-arg 0) (ad-get-arg 1)))))
 
 
-;; (defadvice switch-to-buffer-other-window (around ecb)
-;;   "The ECB-version of `switch-to-buffer-other-window'. Works exactly like the
-;; original but switch to the buffer always in another edit-window.
-
-;; If called in any non edit-window of the current ECB-layout then there a two
-;; alternatives:
-;; - If the function is not contained in `ecb-layout-always-operate-in-edit-window'
-;;   then the first edit-window is the \"other\" window for the buffer to switch.
-;; - Otherwise it switches to the \(first) edit-window and then choose the other
-;;   window.
-
-;; If it is already within the edit-window, and we only have one edit window, we
-;; split it."
-
-;;   (if (not (equal (selected-frame) ecb-frame))
-;;       ;;if we aren't in the ECB frame, we don't need to do anything, AKA perform
-;;       ;;default behavior.
-;;       ad-do-it
-
-;;     (let ((point-in-correct-window nil)
-;;           (point-location (ecb-where-is-point)))
-;;       ;; maybe we should always operate in the edit-window
-;;       (when (and (member 'switch-to-buffer-other-window
-;;                          ecb-layout-always-operate-in-edit-window)
-;;                  (not (numberp point-location)))
-;;         (ecb-select-edit-window))
-
-;;       (if (ecb-compilation-buffer-p (ad-get-arg 0))
-;;           ;; for compilation buffers we try to display them in the
-;;           ;; compile-window if the user uses one.
-;;           (when (member 'switch-to-buffer-other-window
-;;                         ecb-layout-switch-to-compilation-window)
-;;             (if (ecb-compile-window-live-p)
-;;                 (progn
-;;                   (select-window ecb-compile-window)
-;;                   (setq point-in-correct-window t))
-;;               (when (numberp (car (get 'ecb-compile-window-height 'saved-value)))
-;;                 (ecb-toggle-compile-window 1)
-;;                 (ecb-toggle-enlarged-compilation-window 1)
-;;                 (select-window ecb-compile-window)
-;;                 (setq point-in-correct-window t))))
-;;         ;; if the original point was in the compile-window we display the
-;;         ;; destination buffer always in the edit-window.
-;;         (if (equal point-location 'compile)
-;;             (setq point-in-correct-window t)))
-
-;;       ;; if we have not selected the edit-window before and we are still not in
-;;       ;; an edit-window then we simply jump to the first edit-window. This is
-;;       ;; then the right other window for the buffer to switch.
-;;       (when (not point-in-correct-window)
-;;         (if (not (ecb-point-in-edit-window))
-;;             (ecb-select-edit-window)
-;;           (let ((ecb-other-window-jump-behavior 'only-edit))
-;;             (ecb-with-adviced-functions
-;;              (if (ecb-edit-window-splitted)
-;;                  (other-window 1)
-;;                (split-window-vertically)
-;;                (other-window 1)))))))
-  
-;;     ;; now we are always in the right window, so we can switch to the
-;;     ;; buffer
-;;     (ad-with-originals 'switch-to-buffer
-;;       (switch-to-buffer (ad-get-arg 0) (ad-get-arg 1)))))
 
 (defadvice switch-to-buffer (around ecb)
   "The ECB-version of `switch-to-buffer'. Works exactly like the original but
@@ -1847,6 +1796,27 @@ with the current window-height \(frame-height if USE-FRAME is not nil)."
 ;; straightforward, more customizable by users and slightly more
 ;; convenient.
 
+(defvar ecb-buffer-setfunction-registration nil
+  "An alist where for each `buffer-name' of a special ecb-buffer - displayed
+in a dedicated window - a function must be registered which displays that
+buffer in current window and makes this window dedicated to this buffer. So
+for every ecb-buffer a cons cell must be added to this alist where car is
+`buffer-name' and cdr is the symbol of the setting-function.
+
+The setting function of such a buffer must do:
+
+1. switch to that buffer in current window
+2. all things necessary for this buffer - e.g. making it read-only
+3. making the current window dedicated to that buffer! For this the macro
+   `ecb-with-dedicated-window' must be used!
+
+The setting function must ensure that the current window where is still
+current at the end and that the related ecb-buffer is displayed in this window
+at the end.
+
+One examples of such a setting function is `ecb-set-history-buffer' for
+the buffer with name `ecb-history-buffer-name'.")
+
 (defun ecb-get-current-visible-ecb-buffers ()
   "Return a list of all buffers displayed in a current visible dedicated
 special ecb-window."
@@ -1879,7 +1849,13 @@ visibility of the ECB windows. ECB minor mode remains active!"
             (run-hooks 'ecb-show-ecb-windows-before-hook)
             (if (ecb-show-any-node-info-by-mouse-moving-p)
                 (tree-buffer-activate-follow-mouse))
-            (ecb-redraw-layout)
+            (run-hooks 'ecb-redraw-layout-before-hook)
+            ;; if ecb-current-maximized-ecb-buffer-name is not nil then this
+            ;; means we should only restore this one maximized buffer!
+            (if ecb-current-maximized-ecb-buffer-name
+                (ecb-maximize-ecb-window ecb-current-maximized-ecb-buffer-name)
+              (ecb-redraw-layout-full))
+            (run-hooks 'ecb-redraw-layout-after-hook)
             (setq ecb-windows-hidden nil)
             (run-hooks 'ecb-show-ecb-windows-after-hook)
             (message "ECB windows are now visible."))
@@ -1937,6 +1913,28 @@ visibility of the ECB windows. ECB minor mode remains active!"
   (interactive)
   (ecb-toggle-ecb-windows 1))
 
+
+(defvar ecb-current-maximized-ecb-buffer-name nil
+  "If not nil then it contains the buffer-name of the current maximized
+ecb-buffer. If nil then this means currently there is no ecb-buffer maximized.
+
+Do not set this variable. It is only set by `ecb-redraw-layout-full' and
+`ecb-maximize-ecb-window'. It is evaluated by `ecb-toggle-ecb-windows'.")
+
+(defun ecb-maximize-ecb-window (&optional ecb-buffer-name)
+  "Maximizes an ECB-window. If ECB-BUFFER-NAME is not nil then that window is
+maximized which displays the ecb-buffer with name ECB-BUFFER-NAME, otherwise
+the window of the current ECB-buffer. After maximizing always the
+edit-window is selected."
+  (when (equal (selected-frame) ecb-frame)
+    (let ((buf-name (or ecb-buffer-name
+                        (buffer-name (current-buffer)))))
+      (ecb-redraw-layout-full
+       nil
+       (cdr (assoc buf-name
+                   ecb-buffer-setfunction-registration)))
+      (setq ecb-current-maximized-ecb-buffer-name buf-name))))
+
 ;; This function must savely work even if `ecb-edit-window' is not longer
 ;; alive, which should normally not happen!
 (defun ecb-window-configuration ()
@@ -1979,15 +1977,34 @@ following structure:
 
 ;; =================== Helper functions ==================================
 
-(defmacro ecb-with-dedicated-window (&rest body)
+(defmacro ecb-with-dedicated-window (buffer-name dedicated-setter &rest body)
   "Make current selected window not dedicated, evaluate BODY in current
 window and make this window dedicated at the end. Even if an error occurs
-during evaluating BODY the current window is always dedicated at the end!"
-  `(unwind-protect
-       (progn
-         (set-window-dedicated-p (selected-window) nil)
-         ,@body)
-     (set-window-dedicated-p (selected-window) t)))
+during evaluating BODY the current window is always dedicated at the end!
+
+BUFFER-NAME must be the buffer-name of that buffer the current window will be
+dedicated to. DEDICATED-SETTER is the function-name \(a symbol) of that
+function which calls this macro, i.e. which is the \"dedicated setter\" of
+current window to BUFFER-NAME.
+
+Example: The function `ecb-set-history-buffer' is the \"dedicated setter\" of
+the history buffer with name `ecb-history-buffer-name' and this function uses
+this macro for making the current window dedicated to the history buffer. So
+`ecb-set-history-buffer' could be programmed like:
+
+\(defun ecb-set-history-buffer
+  \(ecb-with-dedicated-window ecb-history-buffer-name 'ecb-set-history-buffer
+     \(switch-to-buffer ecb-history-buffer-name)))"
+  `(progn
+     (add-to-list 'ecb-buffer-setfunction-registration
+                  (cons ,buffer-name ,dedicated-setter))
+     (unwind-protect
+         (progn
+           (set-window-dedicated-p (selected-window) nil)
+           ,@body)
+       (set-window-dedicated-p (selected-window) t))))
+
+(put 'ecb-with-dedicated-window 'lisp-indent-function 2)
 
 (defun ecb-set-directories-buffer ()
   (let ((set-directories-buffer
@@ -2005,12 +2022,18 @@ during evaluating BODY the current window is always dedicated at the end!"
     ;; - if ecb-use-speedbar-instead-native-tree-buffer is not 'dir or
     ;; - if setting the speedbar buffer has failed.
     (when set-directories-buffer
-      (ignore-errors (ecb-speedbar-deactivate))
+      (if (null ecb-use-speedbar-instead-native-tree-buffer)
+          (ignore-errors (ecb-speedbar-deactivate)))
       (ecb-with-dedicated-window
-       (switch-to-buffer ecb-directories-buffer-name)))))
+          ecb-directories-buffer-name
+          'ecb-set-directories-buffer
+        (switch-to-buffer ecb-directories-buffer-name)))))
+
 
 (defun ecb-set-speedbar-buffer ()
-  (ecb-with-dedicated-window (ecb-speedbar-set-buffer)))
+  (ecb-with-dedicated-window ecb-speedbar-buffer-name 'ecb-set-speedbar-buffer
+    (ecb-speedbar-set-buffer)))
+
 
 (defun ecb-set-sources-buffer ()
   (let ((set-sources-buffer
@@ -2028,9 +2051,11 @@ during evaluating BODY the current window is always dedicated at the end!"
     ;; - if ecb-use-speedbar-instead-native-tree-buffer is not 'source or
     ;; - if setting the speedbar buffer has failed.
     (when set-sources-buffer
-      (ignore-errors (ecb-speedbar-deactivate))
-      (ecb-with-dedicated-window
-       (switch-to-buffer ecb-sources-buffer-name)))))
+      (if (null ecb-use-speedbar-instead-native-tree-buffer)
+          (ignore-errors (ecb-speedbar-deactivate)))
+      (ecb-with-dedicated-window ecb-sources-buffer-name 'ecb-set-sources-buffer
+        (switch-to-buffer ecb-sources-buffer-name)))))
+
 
 (defun ecb-set-methods-buffer ()
   (let ((set-methods-buffer
@@ -2048,29 +2073,32 @@ during evaluating BODY the current window is always dedicated at the end!"
     ;; - if ecb-use-speedbar-instead-native-tree-buffer is not 'method or
     ;; - if setting the speedbar buffer has failed.
     (when set-methods-buffer
-      (ignore-errors (ecb-speedbar-deactivate))
-      (ecb-with-dedicated-window
-       (switch-to-buffer ecb-methods-buffer-name)))))
+      (if (null ecb-use-speedbar-instead-native-tree-buffer)
+          (ignore-errors (ecb-speedbar-deactivate)))
+      (ecb-with-dedicated-window ecb-methods-buffer-name 'ecb-set-methods-buffer
+        (switch-to-buffer ecb-methods-buffer-name)))))
+
 
 (defun ecb-set-history-buffer ()
-  (ecb-with-dedicated-window
-   (switch-to-buffer ecb-history-buffer-name)))
+  (ecb-with-dedicated-window ecb-history-buffer-name 'ecb-set-history-buffer
+    (switch-to-buffer ecb-history-buffer-name)))
+
 
 (defun ecb-set-default-ecb-buffer ()
   "Set in the current window the default ecb-buffer which is useless but is
 used if a layout calls within its creation body a non bound
-ecb-buffer-setting- function."
-  (ecb-with-dedicated-window
-   (switch-to-buffer (get-buffer-create " *ECB-default-buffer*"))
-   (when (= (buffer-size) 0)
-     (insert " This is the default\n")
-     (insert " ecb-buffer which is\n")
-     (insert " useless. Probably this\n")
-     (insert " buffer is displayed\n")
-     (insert " because the layout uses\n")
-     (insert " an unbound buffer-set\n")
-     (insert " function!"))
-   (setq buffer-read-only t)))
+ecb-buffer-setting-function."
+  (ecb-with-dedicated-window " *ECB-default-buffer*" 'ecb-set-default-ecb-buffer
+    (switch-to-buffer (get-buffer-create " *ECB-default-buffer*"))
+    (when (= (buffer-size) 0)
+      (insert " This is the default\n")
+      (insert " ecb-buffer which is\n")
+      (insert " useless. Probably this\n")
+      (insert " buffer is displayed\n")
+      (insert " because the layout uses\n")
+      (insert " an unbound buffer-set\n")
+      (insert " function!"))
+    (setq buffer-read-only t)))
 
 
 ;; ======== Delete-window-functions for the different layout-types ==========
@@ -2291,8 +2319,13 @@ Things CREATE-CODE has to do:
    packages like JDEE to create arbitrary ECB-windows besides the standard
    tree-windows.
 
-   It's strongly recommended not to use any other function/macro to make a
-   window dedicated!
+   To make a special ECB-window a dedicated window either one of the five
+   functions above must be used or a function\(!) which calls in turn the
+   macro `ecb-with-dedicated-window'. See the documentation of this macro how
+   to use it!
+
+   Such a function is called a \"dedicated setter\" and must\(!) use
+   `ecb-with-dedicated-window' to make the window dedicated!
 
 3. Every\(!) special ECB-window must be dedicated as described in 2.
 
@@ -2319,7 +2352,7 @@ Postconditions for CREATE-CODE:
    a dedicated window \(e.g. a ECB-tree-window)."
   `(progn
      (ecb-layout-type-p (quote ,type) t)
-     (defun ,(intern (format "ecb-layout-function-%s" name)) ()
+     (defun ,(intern (format "ecb-layout-function-%s" name)) (&optional create-code-fcn)
        ,doc
        (when ecb-compile-window-height
          (ecb-split-ver (- ecb-compile-window-height) t)
@@ -2327,14 +2360,23 @@ Postconditions for CREATE-CODE:
        ,(cond ((equal type 'left)
                '(ecb-split-hor ecb-windows-width t))
               ((equal type 'right)
-               '(ecb-split-hor (- ecb-windows-width)))
+               '(ecb-split-hor (- ecb-windows-width) nil))
               ((equal type 'top)
                '(ecb-split-ver ecb-windows-height t))
               ((equal type 'left-right)
                '(progn
                   (ecb-split-hor (- ecb-windows-width) t)
                   (ecb-split-hor ecb-windows-width t t))))
-       ,@create-code
+       ;; if create-code-fcn is not nil and we have not a left-right layout
+       ;; then we call this function instead of create-code - afterwards we
+       ;; have to select the edit-window. If create-code-fcn is nil then the
+       ;; leftmost-topmost ecb-window-column/bar is selected.
+       (if (and create-code-fcn
+                (not (equal (ecb-get-layout-type ecb-layout-name) 'left-right)))
+           (progn
+             (funcall create-code-fcn)
+             (select-window (next-window)))
+         ,@create-code)
        (setq ecb-edit-window (selected-window)))
      (defalias (quote ,(intern
                         (format "ecb-delete-other-windows-in-editwindow-%s"
@@ -2451,7 +2493,7 @@ On normal machines the full drawback should be done in << 1s!"
 ;; the main layout core-function. This function is the "environment" for a
 ;; special layout function (l.b.)
 
-(defun ecb-redraw-layout-full (&optional no-buffer-sync)
+(defun ecb-redraw-layout-full (&optional no-buffer-sync ecb-windows-creator)
   "Redraw the ECB screen according to the layout set in `ecb-layout-name'. After
 this function the edit-window is selected which was current before redrawing."
   (when (and ecb-minor-mode
@@ -2504,12 +2546,21 @@ this function the edit-window is selected which was current before redrawing."
               ecb-compile-window nil)
         
         ;; Now we call the layout-function
-        (funcall (intern (format "ecb-layout-function-%s" ecb-layout-name)))
+        (funcall (intern (format "ecb-layout-function-%s" ecb-layout-name))
+                 ecb-windows-creator)
         (select-window
          (if ecb-edit-window
              ecb-edit-window
            (error "Edit-window not set in function 'ecb-layout-function-%s"
                   ecb-layout-name)))
+
+        (if (null ecb-windows-creator)
+            (setq ecb-current-maximized-ecb-buffer-name nil))
+
+        ;; now regarless of the value of ecb-windows-creator the selected
+        ;; window is the edit-window and ecb-edit-window is set to this
+        ;; window.
+        
         );; end ecb-do-with-unfixed-ecb-buffers
        
        ;; Now all the windows must be created and the editing window must not
@@ -2521,7 +2572,7 @@ this function the edit-window is selected which was current before redrawing."
        (when ecb-compile-window-height
          (select-window (if ecb-compile-window
                             ecb-compile-window
-                          (error "Compilations-window not set in the layout-function")))
+                          (error "Compilation-window not set in the layout-function")))
          
          ;; go one window back, so display-buffer always shows the buffer in
          ;; the next window, which is then savely the compile-window. For this

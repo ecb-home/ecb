@@ -1,10 +1,19 @@
 * Changes for ECB version
 
-** All popup-menues of the ECB-tree-buffers can be openend via [Meta-m]
+** Now the ecb-windows can be "maximized", means all other ecb-windows are
+   deleted so only the edit-window(s), and this maximized ecb-window are
+   visible (and maybe a compile-window if active). This can be done either via
+   the popup-menus of the ecb-windows or via calling `delete-other-windows'
+   (bound to [C-x 1]) in one of the ecb-windows.
+
+** All popup-menus of the ECB-tree-buffers can be openend via [Meta-m]
 
 ** Fixed bugs
 
-***
+*** Clicking onto the image-icons of an integrated speedbar failed for XEmacs.
+    This comes from a bug in speedbar which is now fixed locally in ECB by
+    advicing `dframe-mouse-set-point' if speedbar is integrated in the
+    ECB-frame.
 
 
 

@@ -25,7 +25,7 @@
 @c Free Software Foundation, Inc., 59 Temple Place - Suite 330,
 @c Boston, MA 02111-1307, USA.
 
-@c $Id: ecb.texi,v 1.99 2003/07/07 06:53:03 berndl Exp $
+@c $Id: ecb.texi,v 1.100 2003/07/14 14:48:41 berndl Exp $
 
 @setfilename ecb.info
 
@@ -172,6 +172,7 @@ Usage of ECB
 * The Methods buffer::          Using and customizing he Methods-buffer
 * The ECB-layout::              Changing, customizing, redrawing, creating
 * Hiding the ECB windows::      Hiding/Showing the ECB-windows
+* Maximizing the ECB windows::   Maximizing the ECB-windows
 * Back/forward navigation::     Back- and forward navigation like a browser
 * ECB-window synchronizing::    Auto./manual synchronizing the ECB-windows
 * Interactive ECB commands::    All interactive user-commands of ECB
@@ -907,6 +908,7 @@ Emacs Code Browser.
 * The Methods buffer::          Using and customizing he Methods-buffer
 * The ECB-layout::              Changing, customizing, redrawing, creating
 * Hiding the ECB windows::      Hiding/Showing the ECB-windows
+* Maximizing the ECB windows::   Maximizing the ECB-windows
 * Back/forward navigation::     Back- and forward navigation like a browser
 * ECB-window synchronizing::    Auto./manual synchronizing the ECB-windows
 * Interactive ECB commands::    All interactive user-commands of ECB
@@ -2350,8 +2352,8 @@ layout-creation.
 
 This function @code{ecb-set-X-buffer} has first to switch to the
 buffer you want to display in this window and then making this window
-dedicated. It is strongle recommended to use the macro
-@code{ecb-with-dedicated-window} in such a function!
+dedicated. You have to use the macro @code{ecb-with-dedicated-window}
+in such a function!
 
 Here is an example: Suppose you have inserted as type name ``example''
 then you have to define and load a function
@@ -2360,7 +2362,9 @@ then you have to define and load a function
 @example
 (defun ecb-set-example-buffer ()
   (ecb-with-dedicated-window
-   (switch-to-buffer (get-buffer-create " *ECB example-buffer*"))))
+    " *ECB example-buffer*"
+    'ecb-set-example-buffer
+      (switch-to-buffer (get-buffer-create " *ECB example-buffer*"))))
 @end example
 
 If you forget to define such a function for the user-defined type then
@@ -2389,7 +2393,7 @@ With the command @code{ecb-delete-new-layout} you can delete
 previously created layouts (TAB-completion is offered for all names of
 user created layouts).
 
-@node Hiding the ECB windows, Back/forward navigation, The ECB-layout, Usage of ECB
+@node Hiding the ECB windows, Maximizing the ECB windows, The ECB-layout, Usage of ECB
 @section Hiding/Showing the ECB windows
 
 @cindex Hide windows
@@ -2420,8 +2424,23 @@ ECB-windows:
 @item @code{ecb-hide-ecb-windows-after-hook}
 @end enumerate
 
+@node Maximizing the ECB windows, Back/forward navigation, Hiding the ECB windows, Usage of ECB
+@section Maximizing the ECB windows
 
-@node Back/forward navigation, ECB-window synchronizing, Hiding the ECB windows, Usage of ECB
+To get a better overlook about the contents of a certain ECB-window
+every ECB-window can be ``maximized'', means all other ECB-windows are
+deleted so only the edit-window(s) and this maximized ECB-window are
+visible (and maybe a compile-window if active). This can be done
+either via the popup-menus of the ECB-windows or via calling the
+adviced version of @code{delete-other-windows}@footnote{This command
+is adviced per default, see @ref{The edit-window}.} (bound to @kbd{C-x
+1}) in one of the ECB windows.
+
+Minimizing such a maximized ECB-window, i.e. bringing back to its
+original size, can simply be done by redrawing the layout via the
+command @code{ecb-redraw-layout} (bound to @kbd{C-c . lr}).
+
+@node Back/forward navigation, ECB-window synchronizing, Maximizing the ECB windows, Usage of ECB
 @section Back- and forward navigation like a browser
 
 With ECB you can ``browse'' in your source-files like with a
@@ -6821,8 +6840,13 @@ code in current window and makes the window autom. dedicated at the
 end. This can be used by third party packages like JDEE to create
 arbitrary ECB-windows besides the standard tree-windows.
 
-It's strongly recommended not to use any other function/macro to make
-a window dedicated!
+To make a special ECB-window a dedicated window either one of the five
+functions above must be used or a function(!) which calls in turn the
+macro @code{ecb-with-dedicated-window}. See the documentation of this
+macro how to use it!
+
+Such a function is called a ``dedicated setter'' and must(!) use
+@code{ecb-with-dedicated-window} to make the window dedicated!
 
 @item
 Every(!) special ECB-window must be dedicated as described in 2.
@@ -7088,11 +7112,27 @@ edit-window if that buffer has changed.
 @end group
 @end lisp
 
+The function which makes the bufferinfo-buffer dedicated to a window.
+
+@lisp
+@group
+(defun ecb-examples-set-bufferinfo-buffer ()
+  (ecb-with-dedicated-window
+      ecb-examples-bufferinfo-buffer-name
+      'ecb-examples-set-bufferinfo-buffer
+    (switch-to-buffer (get-buffer-create
+                       ecb-examples-bufferinfo-buffer-name))
+    (setq buffer-read-only t)))
+@end group
+@end lisp
+
+
 This is all what we need for the special bufferinfo buffer. We have
-demonstrated already two of the important functions/macros of the
-layout-engine API of ECB: @code{ecb-with-readonly-buffer} and
-@code{ecb-do-if-buffer-visible-in-ecb-frame} (@pxref{The layout-engine
-API}. Especially the latter macro is strongly recommended for
+demonstrated already three of the important functions/macros of the
+layout-engine API of ECB: @code{ecb-with-readonly-buffer},
+@code{ecb-do-if-buffer-visible-in-ecb-frame} and
+@code{ecb-with-dedicated-window} (@pxref{The layout-engine
+API}. Especially the second macro is strongly recommended for
 programming good synchronizing functions which do not waste CPU!
 
 @subsubsection The action buffer of the example
@@ -7158,6 +7198,18 @@ clicked with the middle-mouse button onto a button [next] or [prior].
 @end group
 @end lisp
 
+The function which makes the action-buffer dedicated to a window.
+
+@lisp
+@group
+(defun ecb-examples-set-action-buffer ()
+  (let ((buf-name (buffer-name (ecb-examples-action-buffer-create))))
+    (ecb-with-dedicated-window buf-name 'ecb-examples-set-action-buffer
+      (switch-to-buffer (buffer-name
+                         (ecb-examples-action-buffer-create))))))
+@end group
+@end lisp
+
 We do not need more code for the action buffer. All of the code is
 standard emacs-lisp which would also needed if used without ECB.
 
@@ -7171,29 +7223,21 @@ type top with name ``example-layout1'':
 (ecb-layout-define "example-layout1" top
   
   ;; dedicating the bufferinfo window to the bufferinfo-buffer
-  (ecb-with-dedicated-window
-   (switch-to-buffer (get-buffer-create
-                       ecb-examples-bufferinfo-buffer-name))
-   (setq buffer-read-only t))
+  (ecb-examples-set-bufferinfo-buffer)
 
   ;; creating the action-window
   (ecb-split-hor 0.75)
   
   ;; dedicate the action window to the action-buffer
-  (ecb-with-dedicated-window
-   (switch-to-buffer (buffer-name
-                       (ecb-examples-action-buffer-create))))
+  (ecb-examples-set-action-buffer)
 
   ;; select the edit-window
   (select-window (next-window)))
 @end group
 @end lisp
 
-This all what we need to define the new layout. We have demonstrated
-another important function of the layout-engine API of ECB:
-@code{ecb-with-dedicated-window} (@pxref{The layout-engine API}). See
-@ref{Programming a new layout} for more details of the pure
-layout-programming task.
+This all what we need to define the new layout. See @ref{Programming a
+new layout} for more details of the pure layout-programming task.
 
 @subsubsection Synchronizing the bufferinfo-buffer automatically
 
@@ -7353,6 +7397,29 @@ Here is the code for that top layout (all buffers are dummy-buffers):
 
 @lisp
 @group
+
+;; The "dedicated setter" functions:
+
+(defun ecb-set-usw-buffer ()
+  (ecb-with-dedicated-window
+    "Upper special window"
+    'ecb-set-usw-buffer
+      (switch-to-buffer (get-buffer-create "Upper special window"))))
+
+(defun ecb-set-msw-buffer ()
+  (ecb-with-dedicated-window
+    "Middle special window"
+    'ecb-set-msw-buffer
+      (switch-to-buffer (get-buffer-create "Middle special window"))))
+
+(defun ecb-set-lsw-buffer ()
+  (ecb-with-dedicated-window
+    "Lower special window"
+    'ecb-set-lsw-buffer
+      (switch-to-buffer (get-buffer-create "Lower special window"))))
+
+;; The layout itself:
+
 (ecb-layout-define "example-layout3" top
   nil
 
@@ -7360,15 +7427,12 @@ Here is the code for that top layout (all buffers are dummy-buffers):
   ;; now split in several other windows. Dependend on the value of
   ;; `ecb-compile-window-height' we have also a compile-window at the
   ;; bottom.
-  
-  (ecb-with-dedicated-window
-   (switch-to-buffer (get-buffer-create "Upper special window")))
+
+  (ecb-set-usw-buffer)
   (ecb-split-ver 0.33)
-  (ecb-with-dedicated-window
-   (switch-to-buffer (get-buffer-create "Middle special window")))
+  (ecb-set-msw-buffer)
   (ecb-split-ver 0.5)
-  (ecb-with-dedicated-window
-   (switch-to-buffer (get-buffer-create "Lower special window")))
+  (ecb-set-lsw-buffer)
 
   ;; select the edit-window.
   (select-window (next-window)))
@@ -7411,6 +7475,24 @@ Here is the code for that left-right layout, again with dummy-buffers
 (depending to your screen-resolution you will need a quite big value
 for @code{ecb-windows-width}, e.g. 0.4):
 
+Here is one of the ``dedicated setter'' functions@footnote{The
+``dedicated setter functions'' for all these ecb-windows/buffers are
+not explicitly described - they look all like
+@code{ecb-set-left1-buffer}
+- of course with different buffer-names!}:
+
+@lisp
+@group
+(defun ecb-set-left1-buffer ()
+  (ecb-with-dedicated-window
+    "Left1"
+    'ecb-set-left1-buffer
+      (switch-to-buffer (get-buffer-create "Left1"))))
+@end group
+@end lisp
+
+Here is the layout-definition itself:
+
 @lisp
 @group
 (ecb-layout-define "example-layout2" left-right
@@ -7420,29 +7502,22 @@ for @code{ecb-windows-width}, e.g. 0.4):
   ;; with width `ecb-windows-width'. Dependend to the value of
   ;; `ecb-compile-window-height' we have also a compile-window at the
   ;; bottom.
-  
-  (ecb-with-dedicated-window
-   (switch-to-buffer (get-buffer-create "Left1")))  
+
+  (ecb-set-left1-buffer)
   (ecb-split-hor 0.66 t)
   (ecb-split-ver 0.75)
-  (ecb-with-dedicated-window
-   (switch-to-buffer (get-buffer-create "Left4")))
+  (ecb-set-left4-buffer)
   (select-window (previous-window (selected-window) 0))
   (ecb-split-ver 0.25 nil t)
-  (ecb-with-dedicated-window
-   (switch-to-buffer (get-buffer-create "Left2")))
+  (ecb-set-left2-buffer)
   (ecb-split-hor 0.5)
-  (ecb-with-dedicated-window
-   (switch-to-buffer (get-buffer-create "Left3")))
+  (ecb-set-left3-buffer)
   (select-window (next-window (next-window)))
-  (ecb-with-dedicated-window
-   (switch-to-buffer (get-buffer-create "Left5")))
+  (ecb-set-left5-buffer)
   (ecb-split-ver 0.5)
-  (ecb-with-dedicated-window
-   (switch-to-buffer (get-buffer-create "Left6")))
+  (ecb-set-left6-buffer)
   (select-window (next-window (next-window)))
-  (ecb-with-dedicated-window
-   (switch-to-buffer (get-buffer-create "Right1")))
+  (ecb-set-right1-buffer))
 
   ;; select the edit-window
   (select-window (previous-window (selected-window) 0)))
@@ -8069,6 +8144,21 @@ you have to add an entry to @code{hs-special-modes-alist}
 @*
 @end ifinfo
 (@pxref{Hide-show}).
+
+@item @tab @tab
+
+@item
+Can i maximize one of the ECB-windows for better overlook?
+@tab @tab
+Yes, see @ref{Maximizing the ECB windows}.
+
+@item @tab @tab
+
+@item
+Can i hide the ECB-windows for getting more editing-space?
+@tab @tab
+Yes, see @ref{Hiding the ECB windows}.
+
 @end multitable
 
 

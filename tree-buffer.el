@@ -32,7 +32,7 @@
 ;; For the ChangeLog of this file see the CVS-repository. For a complete
 ;; history of the ECB-package see the file NEWS.
 
-;; $Id: tree-buffer.el,v 1.116 2003/07/11 15:53:31 berndl Exp $
+;; $Id: tree-buffer.el,v 1.117 2003/07/14 14:48:41 berndl Exp $
 
 ;;; Code:
 
@@ -98,18 +98,28 @@
       ;; stolen from dframe.el of the speedbar-library.
       (defun tree-buffer-mouse-set-point (e)
         "Set POINT based on event E. Handles clicking on images in XEmacs."
+        (mouse-set-point e)
         (if (and (fboundp 'event-over-glyph-p) (event-over-glyph-p e))
             ;; We are in XEmacs, and clicked on a picture
             (let ((ext (event-glyph-extent e)))
               ;; This position is back inside the extent where the
               ;; junk we pushed into the property list lives.
               (if (extent-end-position ext)
-                  (progn
-                    (mouse-set-point e)
-                    (goto-char (1- (extent-end-position ext))))
-                (mouse-set-point e)))
-          ;; We are not in XEmacs, OR we didn't click on a picture.
-          (mouse-set-point e)))
+                  (goto-char (1- (extent-end-position ext)))))))
+;;       (defun tree-buffer-mouse-set-point (e)
+;;         "Set POINT based on event E. Handles clicking on images in XEmacs."
+;;         (if (and (fboundp 'event-over-glyph-p) (event-over-glyph-p e))
+;;             ;; We are in XEmacs, and clicked on a picture
+;;             (let ((ext (event-glyph-extent e)))
+;;               ;; This position is back inside the extent where the
+;;               ;; junk we pushed into the property list lives.
+;;               (if (extent-end-position ext)
+;;                   (progn
+;;                     (mouse-set-point e)
+;;                     (goto-char (1- (extent-end-position ext))))
+;;                 (mouse-set-point e)))
+;;           ;; We are not in XEmacs, OR we didn't click on a picture.
+;;           (mouse-set-point e)))
       (require 'overlay)
       )
   ;; GNU Emacs
@@ -559,11 +569,11 @@ via `tree-buffer-expand-collapse-tokens'.
 Always return SYMBOL-STR."
   (if symbol-str
       (tree-buffer-add-image-icon-maybe
-       symbol-str
+       0 (length symbol-str) symbol-str
        (cdr (assoc symbol-str tree-buffer-expand-collapse-tokens)))))
       
 
-(defun tree-buffer-add-image-icon-maybe (symbol-str image-icon)
+(defun tree-buffer-add-image-icon-maybe (start len str image-icon)
   "Add IMAGE-ICON to SYMBOL-STR which is a string. If IMAGE-ICON-SYMBOL is not
 nil and has a value \(which must be an image in the sense of \(X)Emacs) then
 add this image to SYMBOL-STR otherwise do nothing. Always return SYMBOL-STR."
@@ -574,18 +584,18 @@ add this image to SYMBOL-STR otherwise do nothing. Always return SYMBOL-STR."
 	;; underlying text.  This means if we leave it tangible, then I
 	;; don't have to change said giant piles o code.
 	(if (and image-icon (symbol-value image-icon))
-	    (if (featurep 'xemacs)
-		(add-text-properties (length symbol-str) 0
+	    (if tree-buffer-running-xemacs
+		(add-text-properties (+ start len) start
 				     (list 'end-glyph (symbol-value image-icon)
 					   'rear-nonsticky (list 'display)
 					   'invisible t
 					   'detachable t)
-                                     symbol-str)
-	      (add-text-properties 0 (length symbol-str)
+                                     str)
+	      (add-text-properties start (+ start len)
 				   (list 'display (symbol-value image-icon)
 					 'rear-nonsticky (list 'display))
-                                   symbol-str))))
-  symbol-str)
+                                   str))))
+  str)
 
 (defun tree-buffer-add-node (node depth)
   (let* ((ww (window-width))

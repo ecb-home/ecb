@@ -22,7 +22,7 @@
 ;; with GNU Emacs; see the file COPYING. If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-tod.el,v 1.7 2003/03/20 16:43:30 berndl Exp $
+;; $Id: ecb-tod.el,v 1.8 2003/07/14 14:48:41 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -56,6 +56,7 @@
   '("You can expand the ECB-methods-buffer with `ecb-expand-methods-nodes' [C-c . x]."
     "You can toggle between different layouts with `ecb-toggle-layout' [C-c . t]."
     "You can toggle displaying the ECB-windows with `ecb-toggle-ecb-windows' [C-c . w]."
+    "You can maximize a certain ECB-window either via its popup-menu or with [C-x 1] in that window."
     "You can use speedbar as directory browser with option `ecb-use-speedbar-for-directories'."
     "You can speedup access for big directories with option `ecb-cache-directory-contents'."
     "You can display the online help also in HTML-format with option `ecb-show-help-format'."
@@ -107,15 +108,6 @@
     )
   "List of all available tips of the day.")
 
-
-
-;; Klaus Berndl <klaus.berndl@sdm.de>: just a first try to get current
-;; day and display simple message boxes. But maybe i will add the complete
-;; tip-of-the-day-stuff........
-;; (defun ecb-tip-of-the-day ()
-;;   (let ((current-day (nth 3 (decode-time))))
-;;     (message "Tip for the %s. of current month" current-day)
-;;     (ecb-message-box "Have you already known..." "Tip of the day" "Close")))
 
 
 

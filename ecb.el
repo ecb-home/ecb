@@ -88,7 +88,7 @@
 ;; For the ChangeLog of this file see the CVS-repository. For a complete
 ;; history of the ECB-package see the file NEWS.
 
-;; $Id: ecb.el,v 1.316 2003/07/11 15:54:50 berndl Exp $
+;; $Id: ecb.el,v 1.317 2003/07/14 14:48:41 berndl Exp $
 
 ;;; Code:
 
@@ -2455,6 +2455,28 @@ edit-window. See also the option `ecb-tree-RET-selects-edit-window'."
 
 (defun ecb-get-token-parents (token)
   (ecb-get-token-parent-names (semantic-token-type-parent token)))
+
+;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: A first try to display protection
+;; symbols with image icons...works fine..but this should really be done by
+;; semantic or should it not?!
+
+;; (defun ecb-get-token-name (token &optional
+;; parent-token)
+;;   "Get the name of TOKEN with the appropriate fcn from
+;; `ecb-token-display-function'."
+;;   (condition-case nil
+;;       (let* ((mode-display-fkt (cdr (assoc major-mode ecb-token-display-function)))
+;;              (default-fkt (cdr (assoc 'default ecb-token-display-function)))
+;;              (display-fkt (or (and (fboundp mode-display-fkt) mode-display-fkt)
+;;                               (and (fboundp default-fkt) default-fkt)
+;;                               'semantic-prototype-nonterminal))
+;;              (token-name (funcall display-fkt
+;;                                   token parent-token ecb-font-lock-tokens)))
+;;         (if (equal (semantic-nonterminal-protection token) 'private)
+;;             (tree-buffer-add-image-icon-maybe 0 1 token-name 'speedbar-read-only)
+;;           token-name))
+;;     (error (semantic-prototype-nonterminal token parent-token
+;;                                            ecb-font-lock-tokens))))
 
 (defun ecb-get-token-name (token &optional parent-token)
   "Get the name of TOKEN with the appropriate fcn from
@@ -5237,7 +5259,7 @@ always the ECB-frame if called from another frame."
                                    ecb-sources-buffer-name
                                    ecb-methods-buffer-name
                                    ecb-history-buffer-name))
-    
+
       ;; we need some hooks
       (add-hook 'semantic-after-partial-cache-change-hook
                 'ecb-update-after-partial-reparse t)
@@ -5465,6 +5487,11 @@ if the minor mode is enabled.
     (force-mode-line-update t))
   ecb-minor-mode)
 
+(defun ecb-maximize-ecb-window-menu-wrapper (node)
+  (let ((ecb-buffer (current-buffer)))
+    (ecb-maximize-ecb-window)
+    (ignore-errors (select-window (get-buffer-window ecb-buffer)))))
+
 (defvar ecb-common-directories-menu nil)
 (setq ecb-common-directories-menu
       '(("Grep Directory" ecb-grep-directory t)
@@ -5483,7 +5510,10 @@ source-path of `ecb-source-path'.")
 (setq ecb-directories-menu
       (append
        ecb-common-directories-menu
-       '(("Make This a Source Path" ecb-node-to-source-path t))))
+       '(("Make This a Source Path" ecb-node-to-source-path t)
+         ("---")
+         ("Maximize window" ecb-maximize-ecb-window-menu-wrapper))))
+
 
 (defvar ecb-directories-menu-title-creator
   (function (lambda (node)
@@ -5494,10 +5524,13 @@ function which is called with current node and has to return a string.")
 (defvar ecb-source-path-menu nil
   "Builtin menu for the directories-buffer for directories which are elements of
 `ecb-source-path'.")
-  (setq ecb-source-path-menu
+(setq ecb-source-path-menu
       (append
        ecb-common-directories-menu
-       '(("Delete Source Path" ecb-delete-source-path t))))
+       '(("Delete Source Path" ecb-delete-source-path t)
+         ("---")
+         ("Maximize window" ecb-maximize-ecb-window-menu-wrapper))))
+
 
 (defvar ecb-sources-menu nil
   "Builtin menu for the sources-buffer.")
@@ -5507,7 +5540,10 @@ function which is called with current node and has to return a string.")
         ("---")
         ("Delete File" ecb-delete-source-2 t)
 	("Create File" ecb-create-file-2 t)
-	("Create Source" ecb-create-source t)))
+	("Create Source" ecb-create-source t)
+        ("---")
+        ("Maximize window" ecb-maximize-ecb-window-menu-wrapper)))
+
 
 (defvar ecb-sources-menu-title-creator
   (function (lambda (node)
@@ -5589,7 +5625,10 @@ this fails then nil is returned otherwise t."
         ("Expand level 0" ecb-methods-menu-expand-0 t)
         ("Expand level 1" ecb-methods-menu-expand-1 t)
         ("Expand level 2" ecb-methods-menu-expand-2 t)
-        ("Expand all" ecb-methods-menu-expand-all t)))
+        ("Expand all" ecb-methods-menu-expand-all t)
+        ("---")
+        ("Maximize window" ecb-maximize-ecb-window-menu-wrapper)))
+
 
 (defvar ecb-methods-token-menu nil)
 (setq ecb-methods-token-menu
@@ -5660,7 +5699,10 @@ buffers does not exist anymore."
 	("Remove Current Entry" ecb-clear-history-node t)
 	("Remove All Entries" ecb-clear-history-all t)
 	("Remove Non Existing Buffer Entries"
-         ecb-clear-history-only-not-existing t)))
+         ecb-clear-history-only-not-existing t)
+        ("---")
+        ("Maximize window" ecb-maximize-ecb-window-menu-wrapper)))
+
 
 (defvar ecb-history-menu-title-creator
   (function (lambda (node)

@@ -50,7 +50,7 @@
 ;; history of the ECB-package see the file NEWS.
 
 
-;; $Id: ecb-examples.el,v 1.7 2003/03/20 16:43:32 berndl Exp $
+;; $Id: ecb-examples.el,v 1.8 2003/07/14 14:48:41 berndl Exp $
 
 ;;; Code
 
@@ -146,6 +146,14 @@ it will be called autom. with `ecb-current-buffer-sync-hook'."
                                            (buffer-name (current-buffer)))))))
 
 
+(defun ecb-examples-set-bufferinfo-buffer ()
+  "Set the buffer in the current window to the bufferinfo-buffer and make this
+window dedicated for this buffer."
+  (ecb-with-dedicated-window
+      ecb-examples-bufferinfo-buffer-name
+      'ecb-examples-set-bufferinfo-buffer
+    (switch-to-buffer (get-buffer-create ecb-examples-bufferinfo-buffer-name))
+    (setq buffer-read-only t)))
 
 ;; ---------------------------------------------------------------------------
 ;; --- Code for the action buffer --------------------------------------------
@@ -226,6 +234,12 @@ done."
            (call-interactively 'scroll-up))
           (t nil))))
 
+(defun ecb-examples-set-action-buffer ()
+  "Set the buffer in the current window to the action-buffer and make this
+window dedicated for this buffer."
+  (let ((buf-name (buffer-name (ecb-examples-action-buffer-create))))
+    (ecb-with-dedicated-window buf-name 'ecb-examples-set-action-buffer
+      (switch-to-buffer (buffer-name (ecb-examples-action-buffer-create))))))
 
 ;; ---------------------------------------------------------------------------
 ;; --- The layout definiton with a bufferinfo- and a action-buffer -----------
@@ -278,8 +292,7 @@ window/buffer of a layout."
   (ecb-split-hor 0.75)
   
   ;; dedicate the action window to the action-buffer
-  (ecb-with-dedicated-window
-   (switch-to-buffer (buffer-name (ecb-examples-action-buffer-create))))
+  (ecb-examples-set-action-buffer)
 
   ;; select the edit-window
   (select-window (next-window)))
