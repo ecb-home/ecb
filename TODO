@@ -1,8 +1,10 @@
 ********************************************************************************
-*** Last-Modified: $Date: 2001/05/01 13:33:21 $ 
-*** Version: $Id: TODO,v 1.10 2001/05/01 13:33:21 creator Exp $
+*** Last-Modified: $Date: 2001/05/03 19:14:32 $ 
+*** Version: $Id: TODO,v 1.11 2001/05/03 19:14:32 creator Exp $
 *** Author: Kevin A. Burton ( burton@apache.org | burton@openprivacy.org )
 ********************************************************************************
+
+- Fix pop-up menus in XEmacs. (JN)
 
 - Maybe ECB should optionally create its own frame when activated. (JN)
 
