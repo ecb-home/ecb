@@ -103,7 +103,7 @@
 ;; - `ecb-with-some-adviced-functions'
 ;;
 
-;; $Id: ecb-layout.el,v 1.136 2002/12/19 18:01:58 berndl Exp $
+;; $Id: ecb-layout.el,v 1.137 2002/12/20 14:32:37 berndl Exp $
 
 ;;; Code:
 
@@ -120,6 +120,10 @@
 ;; Emacs
 (silentcomp-defvar scroll-bar-mode)
 
+;; ecb-speedbar is only loaded if ecb-use-speedbar-for-directories is set to
+;; true
+(silentcomp-defun ecb-set-speedbar-buffer)
+(silentcomp-defun ecb-speedbar-deactivate)
 
 ;; needed for the `some'-function.
 (require 'cl)
@@ -698,17 +702,21 @@ command.")
 ;; ====== basic advices ===============================================
 
 (defconst ecb-basic-adviced-functions (if ecb-running-xemacs
-                                          '(delete-frame
-                                            compilation-set-window-height
-                                            shrink-window-if-larger-than-buffer
-                                            show-temp-buffer-in-current-frame
-                                            scroll-other-window)
-                                        '(delete-frame
-                                          compilation-set-window-height
-                                          resize-temp-buffer-window
-                                          shrink-window-if-larger-than-buffer
-                                          scroll-other-window))
-  "This functions are always adviced if ECB is active.")
+                                          '((delete-frame . around)
+                                            (compilation-set-window-height . around)
+                                            (shrink-window-if-larger-than-buffer . around)
+                                            (show-temp-buffer-in-current-frame . around)
+                                            (scroll-other-window . around))
+                                        '((delete-frame . around)
+                                          (compilation-set-window-height . around)
+                                          (resize-temp-buffer-window . around)
+                                          (shrink-window-if-larger-than-buffer . around)
+                                          (scroll-other-window . around)))
+  "This functions are always adviced if ECB is active. Each element of the
+list is a cons-cell where the car is the function-symbol and the cdr the
+advice-class \(before, around or after). If a function should be adviced with
+more than one class \(e.g. with a before and an after-advice) then for every
+class a cons must be added to this list.")
 
 (defadvice delete-frame (around ecb)
   "If FRAME is equal to the ECB frame then the user will be asked if he want
@@ -912,13 +920,13 @@ either not activated or it behaves exactly like the original version!"
 
 (defun ecb-enable-basic-advices ()
   (dolist (elem ecb-basic-adviced-functions)
-    (ad-enable-advice elem 'around 'ecb)
-    (ad-activate elem)))
+    (ad-enable-advice (car elem) (cdr elem) 'ecb)
+    (ad-activate (car elem))))
 
 (defun ecb-disable-basic-advices ()
   (dolist (elem ecb-basic-adviced-functions)
-    (ad-disable-advice elem 'around 'ecb)
-    (ad-activate elem)))
+    (ad-disable-advice (car elem) (cdr elem) 'ecb)
+    (ad-activate (car elem))))
 
 ;; =========== intelligent window function advices ===================
 
@@ -1621,10 +1629,23 @@ visibility of the ECB windows. ECB minor mode remains active!"
   (set-window-dedicated-p (selected-window) ecb-use-dedicated-windows))
 
 (defun ecb-set-directories-buffer ()
-  (if ecb-use-speedbar-for-directories
-      (ecb-set-speedbar-buffer)
-    (ecb-speedbar-deactivate)
-    (ecb-set-buffer ecb-directories-buffer-name)))
+  (let ((set-directories-buffer (not ecb-use-speedbar-for-directories)))
+    ;; first we act depending on the value of ecb-use-speedbar-for-directories
+    (when (not set-directories-buffer)
+      (require 'ecb-speedbar)
+      (condition-case error-data
+          (ecb-set-speedbar-buffer)
+        ;; setting the speedbar buffer has failed so we set
+        ;; set-directories-buffer to t ==> standard-directories-buffer is set!
+        (error (message "%s" error-data)
+               (setq set-directories-buffer t))))
+    ;; maybe we need to set the standard directories buffer:
+    ;; - if ecb-use-speedbar-for-directories is nil or
+    ;; - if setting the speedbar buffer has failed.
+    (when set-directories-buffer
+      (if (featurep 'ecb-speedbar)
+          (ignore-errors (ecb-speedbar-deactivate)))
+      (ecb-set-buffer ecb-directories-buffer-name))))
 
 (defun ecb-set-sources-buffer ()
   (ecb-set-buffer ecb-sources-buffer-name))
