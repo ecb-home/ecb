@@ -64,12 +64,14 @@
 
 ** Fixed Bugs
 
-*** When the special ECB-windows were hidden and a durable compile was set then
-    ECB shows the special ECB-windows when a temp-buffer (e.g. *Help*-buffers)
-    has been displayed. This annoying behavior is fixed.
+*** When the special ECB-windows were hidden and a durable compile-window was set
+    then ECB shows the special ECB-windows when a temp-buffer (e.g.
+    *Help*-buffers) has been displayed. This annoying behavior is fixed.
 
-*** XEmacs has not added the ECB-menu to the menubar of that buffer being current
-    while activating ECB.
+*** XEmacs has not added the ECB-menu to the menubar of that buffers which are
+    already alive while activating ECB. On the other side XEmacs has not
+    removed the ECB-menu from the menubar for all living buffers after
+    deactivating ECB. Both of these two bugs are fixed now.
 
 
 
