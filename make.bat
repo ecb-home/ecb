@@ -1,7 +1,7 @@
 @echo off
 REM This batchfile byte-compiles the ECB lisp files.
 
-REM Copyright (C) 2000 - 2003 Jesper Nordenberg,
+REM Copyright (C) 2000 - 2005 Jesper Nordenberg,
 REM                           Klaus Berndl,
 REM                           Kevin A. Burton,
 REM                           Free Software Foundation, Inc.

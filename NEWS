@@ -1,5 +1,9 @@
 * Changes for ECB version 2.32beta1
 
+** Support for (X)Emacs < 21 has been officialy removed.
+   ECB requires now (X)Emacs >= 21. ECB stops activation with an appropriate
+   error-message when (X)Emacs < 21 is detected.
+
 ** New native ECB-display interactor for the semantic-analyzer
    There is a new tree-buffer ECB-analyse which displays the tags and
    informations of the semanic-analyzer in a smooth way. There are already
@@ -8,7 +12,6 @@
    `ecb-create-new-layout' or via a elisp-rogrammed new layout).
    
    TODO: + adding new section in the texi-manual
-         + enhance ecb-create-layout.el
 	 + fixes all docstring of ecb-analyse.el
 
 ** Renamed options or options with new type
@@ -41,7 +44,7 @@
 
 ** Fixed Bugs
 
-*** Handles not anymore existing files in the stealthy tasks (TODO!!!!!)
+*** Handles not anymore existing files in the stealthy tasks
 
 *** Fixed a bug when `ecb-process-non-semantic-files' is set to nil.
     This bug only occurs with XEmacs. As a side effect of this fix now the
@@ -53,7 +56,10 @@
 
 *** Fixed a bug in displaying semantic-tags which have plain-string members
     E.g. parsing `defstruct' has failed in previous ECB-version cause of this
-    bug. 
+    bug.
+
+*** Fixed a bug when Emacs is started with -q so Emacs could not determine the
+    `custom-file'. This case is correctly handled now.
 
 
 

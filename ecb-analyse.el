@@ -1,6 +1,6 @@
 ;;; ecb-analyse.el --- ECB analysis display interactor
 
-;;; Copyright (C) 2004 Klaus Berndl,
+;;; Copyright (C) 2004 - 2005 Klaus Berndl
 
 ;; Author: Klaus Berndl <klaus.berndl@sdm.de>
 ;; Maintainer: Klaus Berndl <klaus.berndl@sdm.de>

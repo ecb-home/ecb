@@ -1,6 +1,6 @@
 ;;; ecb-common-browser.el --- common browsing stuff for  Emacs
 
-;; Copyright (C) 2000 - 2004 Jesper Nordenberg,
+;; Copyright (C) 2000 - 2005 Jesper Nordenberg,
 ;;                           Klaus Berndl,
 ;;                           Kevin A. Burton,
 ;;                           Free Software Foundation, Inc.

@@ -1,6 +1,6 @@
 ;;; ecb-compilation.el --- code for buffers displayed in compile-window
 
-;; Copyright (C) 2000 - 2003 Jesper Nordenberg,
+;; Copyright (C) 2000 - 2005 Jesper Nordenberg,
 ;;                           Klaus Berndl,
 ;;                           Kevin A. Burton,
 ;;                           Free Software Foundation, Inc.

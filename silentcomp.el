@@ -1,6 +1,6 @@
 ;;; silentcomp.el --- compile time setup for proper compilation
 
-;; Copyright (C) 2000 - 2003 Klaus Berndl,
+;; Copyright (C) 2000 - 2005 Klaus Berndl,
 ;;                           Free Software Foundation, Inc.
 
 ;; Author: Klaus Berndl <klaus.berndl@sdm.de>

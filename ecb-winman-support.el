@@ -1,6 +1,6 @@
 ;; ecb-winman-support.el - support of several window managers
 
-;; Copyright (C) 2000 - 2003 Klaus Berndl,
+;; Copyright (C) 2000 - 2005 Klaus Berndl,
 ;;                           Free Software Foundation, Inc.
 
 ;; Author: Klaus Berndl <klaus.berndl@sdm.de>

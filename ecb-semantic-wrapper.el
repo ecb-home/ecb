@@ -1,6 +1,6 @@
 ;;; ecb-semantic-wrapper.el -- define wrappers for all semantic funcs/vars
 
-;; Copyright (C) 2000 - 2003 Jesper Nordenberg,
+;; Copyright (C) 2000 - 2005 Jesper Nordenberg,
 ;;                           Klaus Berndl,
 ;;                           Free Software Foundation, Inc.
 
