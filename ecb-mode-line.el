@@ -30,6 +30,13 @@
 (eval-when-compile
   (require 'silentcomp))
 
+(require 'ecb-util)
+
+;; XEmacs
+(silentcomp-defun redraw-modeline)
+;; Emacs
+(silentcomp-defun force-mode-line-update)
+
 (defcustom ecb-mode-line-prefixes '(nil
                                     nil
                                     nil
@@ -133,7 +140,9 @@ stretch past the screen."
       (save-excursion
         (set-buffer buffer-name)
         (setq mode-line-format new-mode-line-format)
-        (force-mode-line-update))
+        (if ecb-running-xemacs
+            (redraw-modeline)
+          (force-mode-line-update)))
     (message "This buffer isn't available: %s"  buffer-name)))
 
 (silentcomp-provide 'ecb-mode-line)

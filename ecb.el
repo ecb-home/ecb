@@ -108,6 +108,11 @@
   ;; to avoid compiler grips
   (require 'cl))
 
+;; XEmacs
+(silentcomp-defun redraw-modeline)
+;; Emacs
+(silentcomp-defun force-mode-line-update)
+
 (silentcomp-defvar dired-directory)
 (silentcomp-defun jde-show-class-source)
 (silentcomp-defun add-submenu)
@@ -4397,7 +4402,9 @@ if the minor mode is enabled.
     (if new-state
         (ecb-activate-internal)
       (ecb-deactivate-internal)))
-  (force-mode-line-update t)
+  (if ecb-running-xemacs
+      (redraw-modeline t)
+    (force-mode-line-update t))
   ecb-minor-mode)
 
 (defvar ecb-common-directories-menu nil)
