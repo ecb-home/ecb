@@ -1,6 +1,8 @@
 Version 1.30 (???):
 -------------------
 
+- Popup menus should now work in XEmacs. (Jesper)
+
 - You can now specify paths with env-vars like $HOME in the option
   `ecb-source-path'. (Klaus)
 
