@@ -444,8 +444,15 @@ run direct before the layout-drawing look at
 (defun ecb-current-buffer-sync(&optional opt-buffer)
   "Synchronizes the ECB buffers with the current buffer."
   (interactive)
+  ;;(message (prin1-to-string this-command))
   (let ((filename (buffer-file-name (if opt-buffer opt-buffer (current-buffer)))))
     (when (and filename (not (string= filename ecb-path-selected-source)))
+      ;; KB: seems this little sleep is necessary because otherwise jumping to
+      ;; certain markers in new opened files (e.g. with next-error etc. )
+      ;; doesn´t work correct. Can´t debug down this mysterious thing!
+      ;; Regardless of the size of the file to load, this 0.1 fraction of a
+      ;; sec is enough!
+      (sit-for 0.1)
       (ecb-select-source-file filename)
       (ecb-update-methods-buffer))))
     ;; Doesnt work with selections
