@@ -15,8 +15,8 @@ Installing ECB first time:
 No special notes beyond the contents of README.
 
 
-Upgrading from any version:
----------------------------
+Upgrading from a version < 1.95.1:
+----------------------------------
 
 If there are byte-compiled(!) user-defined layouts - either created
 interactively by `ecb-create-new-layout' or programmed with the macro
