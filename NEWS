@@ -5,6 +5,10 @@
    is also offered by the "Preferences" submenu ob the ECB-menu. These are
    options you should at least know that they exist.
 
+** The keybinding for the online-help has changed from [C-c . o] to [C-c . h]
+   This has been done because the key [C-c . o] is needed for the new command
+   `ecb-toggle-scroll-other-window-scrolls-compile'.
+   
 ** The restriction of only two edit-windows has been gone!
 
 *** Beginning with this version 2.20 there are no restrictions about the
@@ -53,13 +57,13 @@
     new option-name.
     
 *** New option `ecb-scroll-other-window-scrolls-compile-window' and new
-    command `ecb-toggle-scroll-other-window-scrolls-compile'. If this new
-    option is nil then ECB chooses very smart and intuitive the window which
-    will be scrolled by commands like `scroll-other-window' (see documentation
-    of the the option `ecb-other-window-behavior'). But sometimes the user
-    wants to scroll the compile-window from another window. With this new
-    command the user can fest and easy toggle the behavior ECB chooses another
-    window for scrolling.
+    command `ecb-toggle-scroll-other-window-scrolls-compile' (bound to [C-c .
+    o]). If this new option is nil then ECB chooses very smart and intuitive
+    the window which will be scrolled by commands like `scroll-other-window'
+    (see documentation of the the option `ecb-other-window-behavior'). But
+    sometimes the user wants to scroll the compile-window from another window.
+    With this new command the user can fest and easy toggle the behavior ECB
+    chooses another window for scrolling.
 
 *** Higher compatibility of ECB with other packages
     Without the 2-edit-window-restriction ECB is now more compatible with
@@ -174,7 +178,11 @@
    visibility-state of the ecb-windows or the compile-window. Called without a
    prefix-arg this command now preserves the state of the ecb-windows as well
    as the state of the compile-window.
-   
+
+** New command `ecb-display-news-for-upgrade'.
+   ECB autom. displays after an upgrade a short summary of the most important
+   NEWS. With the new command you can do this also on demand.
+      
 ** Fixed Bugs
 
 *** Fixed a bug in the adviced version of `other-window'.
