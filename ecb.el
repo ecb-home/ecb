@@ -1,4 +1,4 @@
-;;; ecb.el --- a code browser for Emacs
+ ;;; ecb.el --- a code browser for Emacs
 
 ;; Copyright (C) 2000 - 2003 Jesper Nordenberg,
 ;;                           Klaus Berndl,
@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb.el,v 1.405 2004/09/09 15:46:13 berndl Exp $
+;; $Id: ecb.el,v 1.406 2004/09/15 17:05:08 berndl Exp $
 
 ;;; Commentary:
 ;;

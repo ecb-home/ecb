@@ -26,7 +26,7 @@
 @c GNU Emacs; see the file COPYING.  If not, write to the Free Software
 @c Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-@c $Id: ecb.texi,v 1.186 2004/09/07 14:49:56 berndl Exp $
+@c $Id: ecb.texi,v 1.187 2004/09/15 17:05:07 berndl Exp $
 
 @setfilename ecb.info
 
@@ -5241,16 +5241,21 @@ Do NOT set this option directly via setq but use always customize!
 @end defopt
 
 @defopt tree-RET-selects-edit-window
-In which tree-buffers RET should finally select an edit-window. If a
-name of an ECB tree-buffer is contained in this list then hitting RET
-in this tree-buffer selects as last action the right edit-window
-otherwise only the right action is performed (opening a new source,
-selecting a method etc.) but point stays in the tree-buffer.
+In which tree-buffers RET should finally select an edit-window. If one
+of the symbols @code{ecb-directories-buffer-name},
+@code{ecb-sources-buffer-name}, @code{ecb-methods-buffer-name} or
+@code{ecb-history-buffer-name} is contained in this list then hitting
+RET in the associated tree-buffer selects as last action the right
+edit-window otherwise only the right action is performed (opening a
+new source, selecting a method etc.) but point stays in the
+tree-buffer.
 
 A special remark for the @code{ecb-directories-buffer-name}: Of course
-here the edit-window is only selected if
-@code{ecb-show-sources-in-directories-buffer} is not nil (otherwise
-this would not make any sense)!
+here the edit-window is only selected if the name of the current
+layout is contained in @code{ecb-show-sources-in-directories-buffer}
+or if the value of @code{ecb-show-sources-in-directories-buffer} is
+'always and the hitted node represents a sourcefile (otherwise this
+would not make any sense)!
 
 The setting in this option is only the default for each tree-buffer.
 With @code{ecb-toggle-RET-selects-edit-window} the behavior of RET can
