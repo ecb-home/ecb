@@ -78,16 +78,20 @@ the `ecb-compile-window'. This means that in some situations this might not be
 the result of a `compile-internal'. A good example would be the *Help* buffer
 or the `ecb-eshell-buffer-name'.
 
-This function returns true if BUFFER is either contained in
+BUFFER can be the name of a buffer or a buffer-objekt.
+
+This function returns true if the name of BUFFER is either contained in
 `ecb-compilation-buffer-names' or if `compilation-buffer-p' returns true."
 
-  (when (stringp buffer)
-    (setq buffer (get-buffer buffer)))
-  
-  (let((buffer-name (buffer-name buffer)))
-
-    (or (member buffer-name ecb-compilation-buffer-names)
-        (compilation-buffer-p buffer))))
+  (let ((buf (cond ((stringp buffer)
+                    (get-buffer buffer))
+                   ((bufferp buffer)
+                    buffer)
+                   (t
+                    nil))))
+    (if buf
+        (or (member (buffer-name buf) ecb-compilation-buffer-names)
+            (compilation-buffer-p buf)))))
 
 (provide 'ecb-compilation)
 
