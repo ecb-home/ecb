@@ -755,11 +755,15 @@ tp `load-path' and restarting Emacs the new package version can be activated."
           (message "Unpacking new %s..." package)
           (setq process-result
                 (shell-command-to-string
-                 (concat "tar -C "
-                         (ecb-create-shell-argument ecb-ecb-parent-dir)
-                         " -xf "
-                         (ecb-create-shell-argument
-                          (file-name-sans-extension downloaded-filename)))))
+                 ;; if bash is used as shell-file-name then the command must
+                 ;; not contain newlines!
+                 (subst-char-in-string
+                  ?\n 32
+                  (concat "tar -C "
+                          (ecb-create-shell-argument ecb-ecb-parent-dir)
+                          " -xf "
+                          (ecb-create-shell-argument
+                           (file-name-sans-extension downloaded-filename))))))
           (when (> (length process-result) 0)
             (setq success nil)
             (with-output-to-temp-buffer "*ECB-unpacking-failure*"
