@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb.el,v 1.392 2004/05/10 11:40:29 berndl Exp $
+;; $Id: ecb.el,v 1.393 2004/06/14 11:02:13 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -1318,7 +1318,7 @@ tasks are performed:
                ;; `ecb-source-path-functions' we must at least add the new source
                ;; path temporally to our paths. But the uses has also the choice to
                ;; save it for future sessions too.
-               (if (not (ecb-path-matching-any-source-path-p filename))
+               (if (null (ecb-matching-source-paths filename))
                    (let* ((norm-filename (ecb-fix-filename filename))
                           (source-path (if (car ecb-add-path-for-not-matching-files)
                                            (if (= (aref norm-filename 0) ?/)

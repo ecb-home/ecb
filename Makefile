@@ -26,7 +26,7 @@
 # GNU Emacs; see the file COPYING.  If not, write to the Free Software
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-# $Id: Makefile,v 1.91 2004/05/10 15:46:04 berndl Exp $
+# $Id: Makefile,v 1.92 2004/06/14 11:02:20 berndl Exp $
 
 
 # ========================================================================
@@ -52,7 +52,8 @@ EMACS=emacs
 # variable to empty.
 
 #CEDET=
-CEDET=C:/Programme/emacs-21/site-lisp/multi-file-packages/cedet-1.0beta2b
+CEDET=c:/Programme/emacs-21/site-lisp/package-development/cedet
+# CEDET=c:/Programme/emacs-21/site-lisp/multi-file-packages/cedet-1.0beta2b
 
 # -------- Compiling ECB with the semantic < 2.0 -------------------------
 
@@ -143,7 +144,7 @@ INSTALLINFO=/usr/bin/install-info
 
 # Do not change anything below!
 
-# $Id: Makefile,v 1.91 2004/05/10 15:46:04 berndl Exp $
+# $Id: Makefile,v 1.92 2004/06/14 11:02:20 berndl Exp $
 
 # For the ECB-maintainers: Change the version-number here and not
 # elsewhere!

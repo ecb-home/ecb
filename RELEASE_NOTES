@@ -18,6 +18,13 @@ No special notes beyond the contents of README.
 Upgrading from any version:
 ---------------------------
 
+`ecb-sort-history-items' has been renamed to `ecb-history-sort-method'. ECB
+autom. upgrades your old setting to the new option-name and -type.!
+
+
+Upgrading from versions < 2.23:
+-------------------------------
+
 The option `ecb-show-tags' has changed its type. ECB autom. upgrades your old
 setting to the new option-type.!
 

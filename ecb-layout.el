@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-layout.el,v 1.226 2004/05/06 09:02:05 berndl Exp $
+;; $Id: ecb-layout.el,v 1.227 2004/06/14 11:02:18 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -3156,10 +3156,10 @@ compile-window then it will be hidden and otherwise the behavior depends on
                              window edit-win-list))
                   ;; If we have deleted that window which was current at call-time
                   ;; we have to ensure that point stays in the next edit-window
-                  (if (equal curr-window-before window)
-                      (let ((edit-win-list-after (ecb-canonical-edit-windows-list)))
-                        (if (not (member (selected-window) edit-win-list-after))
-                            (select-window (car edit-win-list-after)))))))))))))
+                  (when (equal curr-window-before window)
+                    (let ((edit-win-list-after (ecb-canonical-edit-windows-list)))
+                      (if (not (member (selected-window) edit-win-list-after))
+                          (select-window (car edit-win-list-after)))))))))))))
 
 (defadvice delete-other-windows (before ecb)
   "Does nothing special but only storing the fact that the other edit-windows

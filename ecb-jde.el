@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-jde.el,v 1.8 2004/02/07 11:08:45 berndl Exp $
+;; $Id: ecb-jde.el,v 1.9 2004/06/14 11:02:20 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -56,6 +56,20 @@
 (require 'ecb-layout)
 (require 'ecb-file-browser)
 (require 'ecb-method-browser)
+
+
+(defgroup ecb-jde-integration nil
+  "Settings for the JDEE-integration in the Emacs code browser."
+  :group 'ecb
+  :prefix "ecb-jde-")
+
+
+(defcustom ecb-jde-set-directories-buffer-to-jde-sourcepath nil
+  "*THIS FEATURE IS NOT YET FINISHED"
+  :group 'ecb-jde-integration
+  :type '(radio (const :tag "No" :value nil)
+                (const :tag "Add" :value add)
+                (const :tag "Replace" :value replace)))
 
 (defun ecb-jde-display-class-at-point ()
   "Displays in the ECB-methods-buffer contents of class under point.
@@ -136,6 +150,23 @@ is not available then `find-file' is called."
     (if (fboundp 'jde-gen-class-buffer)
         (jde-gen-class-buffer file)
       (find-file file))))
+
+
+(defun ecb-jde-get-source-path ()
+  (mapcar 'jde-normalize-path jde-sourcepath))
+
+(defun ecb-jde-update-ecb-source-paths ()
+  (interactive)
+  (cond ((equal ecb-jde-set-directories-buffer-to-jde-sourcepath 'add)
+         (add-hook 'ecb-source-path-functions
+                   'ecb-jde-get-source-path))
+        ((equal ecb-jde-set-directories-buffer-to-jde-sourcepath 'replace)
+         (setq ecb-source-path (ecb-jde-get-source-path)))
+        (t
+         (remove-hook 'ecb-source-path-functions
+                      'ecb-jde-get-source-path)))
+  (ecb-update-directories-buffer))
+
 
 (when (locate-library "efc")
   (require 'efc)

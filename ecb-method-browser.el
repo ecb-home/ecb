@@ -24,7 +24,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-method-browser.el,v 1.43 2004/05/10 15:46:02 berndl Exp $
+;; $Id: ecb-method-browser.el,v 1.44 2004/06/14 11:02:18 berndl Exp $
 
 ;;; Commentary:
 
@@ -3934,7 +3934,7 @@ pattern.")
                                      source-buffer
                                      (+ 2 indent))))
 
-
 (silentcomp-provide 'ecb-method-browser)
 
 ;;; ecb-method-browser.el end here
+

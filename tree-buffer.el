@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: tree-buffer.el,v 1.143 2004/05/06 09:02:00 berndl Exp $
+;; $Id: tree-buffer.el,v 1.144 2004/06/14 11:02:12 berndl Exp $
 
 ;;; Commentary:
 
@@ -620,12 +620,23 @@ the node and the cdr is the data of the node which is equal to NODE-DATA."
     (let ((node-list (if (or (not start-node)
                              (eq start-node (tree-buffer-get-root)))
                          tree-buffer-nodes
-                       ;; because tree-buffer-nodes is a list of conses with
-                       ;; car is the node-name and cdr is the node itself we
-                       ;; must first create such a cons for START-NODE!
-                       (or (member (cons (tree-node-get-name start-node)
-                                         start-node)
-                                   tree-buffer-nodes)
+                       ;; we need that sub-list of tree-buffer-nodes which has
+                       ;; the start-node as first elem. But we can not create
+                       ;; here a search-cons containing start-node and then
+                       ;; calling `member' for this search-cons and
+                       ;; tree-buffer-nodes because this can result in a
+                       ;; stack-overflow in equal for large node-lists
+                       ;; especially with complex-data (e.g. semantic tags).
+                       ;; Therefore we first get the position P of the name of
+                       ;; start-node in the list of node-names of
+                       ;; tree-buffer-nodes (list of cars of this list) and
+                       ;; then we get that sublist of tree-buffer-nodes which
+                       ;; begins with the P-th elemen of tree-buffer-nodes
+                       ;; (nthcdr P tree-buffer-nodes).
+                       (or (ignore-errors
+                             (nthcdr (ecb-position (mapcar 'car tree-buffer-nodes)
+                                                   (tree-node-get-name start-node))
+                                     tree-buffer-nodes))
                            tree-buffer-nodes)))
           (equal-fcn 'tree-buffer-node-data-equal-p))
       (dolist (node node-list)

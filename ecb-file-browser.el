@@ -23,7 +23,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-file-browser.el,v 1.21 2004/05/06 09:02:08 berndl Exp $
+;; $Id: ecb-file-browser.el,v 1.22 2004/06/14 11:02:20 berndl Exp $
 
 ;;; Commentary:
 
@@ -1126,6 +1126,36 @@ all files are displayed."
   ;; displayed in the mode-line. See `ecb-sources-filter-modeline-prefix'.
   (ecb-mode-line-format))
 
+(defun ecb-matching-source-paths (path-to-match &optional sorted)
+  "Return all source-paths of `ecb-source-path' which match PATH-TO-MATCH. If
+SORTED is not nil then the paths are sorted by descending length, means the
+longest path \(which is the best matching) is the first elem and the shortest
+path the last elem. Otherwise the matching paths are returned in that sequence
+they occur in `ecb-source-paths'."
+  (let* ((p-t-m (ecb-fix-filename path-to-match))
+         (normed-current-source-paths
+          (mapcar (function (lambda (elem)
+                              (ecb-fix-filename (if (listp elem) (car elem) elem))))
+                  (append (ecb-get-source-paths-from-functions)
+                          ecb-source-path)))
+         (matching-paths
+          (delq nil
+                (mapcar (lambda (elem)
+                          (save-match-data
+                            (if (string-match (concat "^" (regexp-quote elem))
+                                              p-t-m)
+                                elem)))
+                        normed-current-source-paths))))
+    (if (not sorted)
+        matching-paths
+      (sort matching-paths
+            (lambda (lhs rhs)
+              (> (length lhs) (length rhs)))))))
+
+(defun ecb-get-best-matching-source-path ()
+  "Return the best-matching source-path for the current selected source."
+  (car (ecb-matching-source-paths ecb-path-selected-source t)))
+
 (defun ecb-set-selected-directory (path &optional force)
   "Set the contents of the ECB-directories and -sources buffer correct for the
 value of PATH. If PATH is equal to the value of `ecb-path-selected-directory'
@@ -1147,20 +1177,14 @@ then nothing is done unless first optional argument FORCE is not nil."
                      (if (equal ecb-auto-expand-directory-tree 'best)
                          ;; If none of the source-paths in the buffer
                          ;; `ecb-directories-buffer-name' matches then nil
-                         ;; otherwise the node of the best matching source-path
-                         (cdar (sort (delete nil
-                                             (mapcar (lambda (elem)
-                                                       (let ((data (tree-node-get-data elem)))
-                                                         (save-match-data
-                                                           (if (string-match
-                                                                (concat "^"
-                                                                        (regexp-quote data))
-                                                                ecb-path-selected-directory)
-                                                               (cons data elem)
-                                                             nil))))
-                                                     (tree-node-get-children (tree-buffer-get-root))))
-                                     (lambda (lhs rhs)
-                                       (> (length (car lhs)) (length (car rhs))))))
+                         ;; otherwise the node of the best matching
+                         ;; source-path
+                         (let ((best-source-path
+                                (car (ecb-matching-source-paths
+                                      ecb-path-selected-directory t))))
+                           (if best-source-path
+                               (tree-buffer-find-node-data
+                                (ecb-fix-filename best-source-path))))
                        ;; we start at the root node
                        (tree-buffer-get-root)))
                (when (and (equal ecb-auto-expand-directory-tree 'best)
@@ -1439,19 +1463,6 @@ is not changed. For the allowed values of OTHER-EDIT-WINDOW see
       (setq rpaths (cons (ecb-fix-filename (car paths)) rpaths)
 	    paths (cdr paths)))
     rpaths))
-
-
-(defun ecb-path-matching-any-source-path-p (path)
-  (let ((source-paths (append (ecb-get-source-paths-from-functions)
-                              ecb-source-path)))
-    (catch 'exit
-      (dolist (dir source-paths)
-        (let ((norm-dir (ecb-fix-filename (if (listp dir) (car dir) dir) nil t)))
-          (save-match-data
-            (if (string-match (regexp-quote norm-dir)
-                              (ecb-fix-filename (file-name-directory path)))
-                (throw 'exit norm-dir)))
-          nil)))))
 
 
 (defun ecb-update-directories-buffer ()

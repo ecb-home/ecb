@@ -28,7 +28,7 @@
 ;; Do not change any html-file besides the index.html manually but do all
 ;; changes in this elisp file!
 
-;; $Id: ecb-html.el,v 1.68 2004/04/14 10:17:03 berndl Exp $
+;; $Id: ecb-html.el,v 1.69 2004/06/14 11:02:09 berndl Exp $
 
 ;;; Code:
 
@@ -77,6 +77,12 @@
   "List of latest news displayed on the main page.")
 (setq ecb-latest-news
       `(
+        ,(h-sub-section "ECB 2.24 now available as XEmacs package 1.18! (2004-05-19)"
+                        "The XEmacs-package ECB 1.18 can be installed either via "
+                        (h-link "http://www.xemacs.org/Download/win32/setup.exe"
+                                "XEmacs-netinstaller")
+                        " (for Windows) or from " (h-link "ftp://ftp.xemacs.org:/pub/xemacs/packages/" "ftp.xemacs.org")
+                        " or via the package-manager of XEmacs.")
         ,(h-sub-section "ECB 2.24 released! (2004-04-14)"
                         "New \"current-type\"-filter for the Methods-buffer. More and better icons for the Methods-buffer. Now directories are prescanned for emptyness so they are displayed as empty in the directories buffer. Fixed some bugs which made ECB 2.23 incompatible with semantic 1.4.X. "
                         (h-link "docs/Install-and-first-steps.html#Install%20and%20first%20steps" "Here") " is a short installation guide. "
@@ -87,11 +93,6 @@
                         (h-link "docs/Install-and-first-steps.html#Install%20and%20first%20steps" "Here") " is a short installation guide. "
                         "Click " (h-link "NEWS.html" "here")
                         " for information about changes in the new version. ")
-        ,(h-sub-section "ECB 2.22 released! (2004-03-08)"
-                        "New nifty feature for easy applying filters to the tags of the Methods-buffer. Much smarter mechanism to highlight the current tag in the methods-buffer. Some important bug fixes - some of them especially for users of native-Windows XEmacs. "
-                        (h-link "docs/Install-and-first-steps.html#Install%20and%20first%20steps" "Here") " is a short installation guide. "
-                        "Click " (h-link "NEWS.html" "here")
-                        " for information about changes in the new version. ")
         ))
 
 (defvar ecb-rest-news nil
@@ -99,6 +100,11 @@
 `ecb-html-all-news'.")
 (setq ecb-rest-news
       `(
+        ,(h-sub-section "ECB 2.22 released! (2004-03-08)"
+                        "New nifty feature for easy applying filters to the tags of the Methods-buffer. Much smarter mechanism to highlight the current tag in the methods-buffer. Some important bug fixes - some of them especially for users of native-Windows XEmacs. "
+                        (h-link "docs/Install-and-first-steps.html#Install%20and%20first%20steps" "Here") " is a short installation guide. "
+                        "Click " (h-link "NEWS.html" "here")
+                        " for information about changes in the new version. ")
         ,(h-sub-section "ECB 2.21 released! (2004-02-16)"
                         "Better compatibility with other packages: Applications like Gnus, BBDB or Xrefactory run within the ECB-frame without conflicts - even when the ECB-windows are visible. The command `balance-windows' works now. Some important bug fixes. "
                         (h-link "docs/Install-and-first-steps.html#Install%20and%20first%20steps" "Here") " is a short installation guide. "
