@@ -1,6 +1,6 @@
 ;;; ecb-eshell.el --- eshell integration for the ECB.
 
-;; $Id: ecb-eshell.el,v 1.13 2001/12/15 05:47:08 burtonator Exp $
+;; $Id: ecb-eshell.el,v 1.14 2001/12/15 10:11:35 burtonator Exp $
 
 ;; Copyright (C) 2000-2003 Free Software Foundation, Inc.
 ;; Copyright (C) 2000-2003 Kevin A. Burton (burton@openprivacy.org)
@@ -56,7 +56,10 @@
 ;; (http://www.eff.org)
 
 ;;; History:
-
+;;
+;; - Sat Dec 15 2001 01:50 AM (burton@openprivacy.org): We are not being much
+;; smarter about saving selected windows.
+;;
 ;; - Fri Dec 14 2001 05:57 PM (burton@openprivacy.org): fixed a bug which caused 
 ;;
 ;; - Fri Dec 14 2001 04:48 PM (burton@openprivacy.org): only run eshell/cd if
@@ -79,6 +82,14 @@
 ;; - Right now ecb-eshell doesn't work with dired.  Why?  Try to setup a hook
 ;; and an ecb-eshell-dired-buffer-sync function that will take care of this.
 
+;; - BUG: ecb-eshell STILL recenters itself!!!  This is BS.
+;; 
+;;   - this only manifests itself when I an runing eshell.
+;;
+;;   - the bug is in ecb-eshell-current-buffer-sync
+;;
+;;   - the problem is in (eshell-send-input)
+
 ;;; Code:
 
 (defun ecb-eshell-current-buffer-sync()
@@ -92,46 +103,38 @@
 
         (set-buffer (get-buffer-create eshell-buffer-name))
 
-        ;;at this poitn source-buffer-directory is a snapshot of the source
+        ;;at this point source-buffer-directory is a snapshot of the source
         ;;buffer window and default directory is the directory in the eshell
         ;;window
 
         (if (not (string-equal source-buffer-directory default-directory))
             (progn 
 
-              (end-of-buffer)
-              
-              ;;change the directory without showing the cd command
-              (eshell/cd source-buffer-directory)
-              
-              ;;execute the command
-              (eshell-send-input)
+              (save-excursion
+
+                (set-buffer eshell-buffer-name)
+
+                ;;change the directory without showing the cd command
+                (eshell/cd source-buffer-directory)
+
+                ;;execute the command
+                (save-selected-window
+                  (select-window (get-buffer-window eshell-buffer-name))
+                
+                  (eshell-send-input)))
               
               (ecb-eshell-recenter))))))
 
 (defun ecb-eshell-recenter()
   "Recenter the eshell window so that the prompt is at the end of the buffer."
 
-  (if (ecb-eshell-running-p)
-  
-      (let((window-start nil)
-           (eshell-window nil))
+  (when (ecb-eshell-running-p)
 
-        (setq eshell-window (get-buffer-window eshell-buffer-name))
+    (save-selected-window
+
+      (select-window (get-buffer-window eshell-buffer-name))
         
-        (save-excursion
-          
-          (set-buffer eshell-buffer-name)
-          
-          (end-of-buffer)
-          
-          (forward-line (* -1 (- (window-height eshell-window) 3)))
-          
-          (beginning-of-line)
-          
-          (setq window-start (point)))
-
-        (set-window-start eshell-window window-start))))
+      (recenter -1))))
 
 (defun ecb-eshell-running-p()
   "Return true if eshell is currently running."
@@ -164,32 +167,33 @@
   that the eshell has more screen space after we execute a command. "
   (interactive)
 
-  (if (and (ecb-eshell-running-p)
-           ecb-minor-mode)
-      (let(enlargement window)
+  (let(enlargement window)
+  
+    (setq window (get-buffer-window eshell-buffer-name))
+    
+    (when (and (ecb-eshell-running-p)
+               (window-live-p window)
+               ecb-minor-mode)
+      ;;is there a better way to do this?  It seems that there should be a way
+      ;;to have emacs split or expand a window by 50% like it is done in a lot
+      ;;of other places (display-buffer, etc)
 
-        ;;is there a better way to do this?  It seems that there should be a way
-        ;;to have emacs split or expand a window by 50% like it is done in a lot
-        ;;of other places (display-buffer, etc)
-
-        (setq window (get-buffer-window eshell-buffer-name))
-
-        (if (window-live-p window)
-            (progn 
-              (select-window window)
-
-              (setq enlargement (- (/ (frame-height) 2) (window-height)))
-              
-              (if (> enlargement 0)
-                  (enlarge-window enlargement)))))))
+      (save-selected-window
+      
+        (select-window window)
+        
+        (setq enlargement (- (/ (frame-height) 2) (window-height)))
+        
+        (if (> enlargement 0)
+            (enlarge-window enlargement))))))
 
 (add-hook 'ecb-current-buffer-sync-hook 'ecb-eshell-current-buffer-sync)
 
 ;;(add-hook 'dired-after-readin-hook 'ecb-eshell-current-buffer-sync)
 
-(add-hook 'ecb-redraw-layout-hooks 'ecb-eshell-recenter)
+(remove-hook 'ecb-redraw-layout-hooks 'ecb-eshell-recenter)
 
-(add-hook 'eshell-pre-command-hook 'ecb-eshell-resize)
+(remove-hook 'eshell-pre-command-hook 'ecb-eshell-resize)
 
 (define-key ecb-mode-map "\C-c.e" 'ecb-eshell-goto-eshell)
 
