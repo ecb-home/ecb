@@ -65,7 +65,7 @@
     "You can speedup access for big directories with option `ecb-cache-directory-contents'."
     "You can display the online help also in HTML-format with option `ecb-show-help-format'."
     "You can interactively create your own layouts with the command `ecb-create-new-layout'."
-    "You can start the eshell in the compile-window with `ecb-eshell-goto-eshell' [C-c . e]."
+    "You can start the eshell in the compile-window simply with `eshell' or [C-c . e]."
     "You can \(de)activate ECB on a major-mode basis with `ecb-major-modes-activate' and `ecb-major-modes-deactivate'."
     "Use the incremental search in the methods-buffer for fast node-selecting; see `ecb-tree-incremental-search'."
     "You can cycle through all currently opened \"compile-buffers\" with `ecb-cycle-through-compilation-buffers'."

@@ -1503,7 +1503,7 @@ AFTER-CREATE-HOOK: A function or a list of functions \(with no arguments)
   "Destroy the tree-buffer"
   (when buffer
     (setq tree-buffers (delq (get-buffer buffer) tree-buffers))
-    (kill-buffer buffer)))
+    (ignore-errors (kill-buffer buffer))))
 
 ;;; Tree node
 
