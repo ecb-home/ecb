@@ -77,7 +77,7 @@
   "List of latest news displayed on the main page.")
 (setq ecb-latest-news
       `(
-        ,(h-sub-section "ECB 2.11 released! (2003-11-04)"
+        ,(h-sub-section "ECB 2.11 released! (2003-11-14)"
                         "Semanticdb is used for jumping to external type-definitions. Special-display-buffers are handled correctly. Automatic upgrading has been fixed for this new version. Some bug fixes. "
                         (h-link "docs/Install-and-first-steps.html#Install%20and%20first%20steps" "Here") " is a short installation guide. "
                         "Click " (h-link "NEWS.html" "here")

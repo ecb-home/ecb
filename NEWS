@@ -1,3 +1,18 @@
+* Changes for ECB version 2.12
+
+** New default-value for `ecb-post-process-semantic-taglist'.
+   Now for buffers with major-mode `c-mode' all function-prototypes are
+   filtered out. For example this is useful for editing C files which have the
+   function prototypes defined at the top of the file and the implementations
+   at the bottom. This means that everything appears twice in the methods
+   buffer, but probably nobody wants to jump to the prototypes, they are
+   only wasting space in the methods buffer.
+
+   Thanks for suggestion and a first implementation to Rob Walker
+   <rob.lists@tenfoot.org.uk>.
+
+
+
 * Changes for ECB version 2.11
 
 ** Using semanticdb to jump to type-tags defined in other files.

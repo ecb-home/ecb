@@ -45,6 +45,10 @@
 (eval-when-compile
   (require 'silentcomp))
 
+;; semantic 1.X does not have this
+(silentcomp-defvar semanticdb-search-system-databases)
+
+
 ;; -- getter functions for all variables of semantic currently used by ECB ---
 
 (defsubst ecb--semantic-symbol->name-assoc-list ()
@@ -102,6 +106,7 @@
     (semantic-overlay-p              . semantic-overlay-p)
     (semantic-token-buffer           . semantic-tag-buffer)
     (semantic-token-end              . semantic-tag-end)
+    (semantic-token-extra-spec       . semantic-tag-get-attribute)
     (semantic-token-function-parent  . semantic-tag-function-parent)
     (semantic-token-get              . semantic--tag-get-property)
     (semantic-token-name             . semantic-tag-name)
