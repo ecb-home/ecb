@@ -1,6 +1,6 @@
 ;;; ecb-eshell.el --- eshell integration for the ECB.
 
-;; $Id: ecb-eshell.el,v 1.37 2002/03/19 00:44:24 burtonator Exp $
+;; $Id: ecb-eshell.el,v 1.38 2002/10/29 11:09:15 burtonator Exp $
 
 ;; Copyright (C) 2000-2003 Free Software Foundation, Inc.
 ;; Copyright (C) 2000-2003 Kevin A. Burton (burton@openprivacy.org)
@@ -149,6 +149,9 @@
   "Buffer name for the eshell.  We define it here so that we don't need to have
 the eshell loaded for ecb-eshell to function properly.")
 
+(defvar ecb-eshell-pre-command-point nil
+  "Point in the buffer we are at before we executed a command.")
+
 (defun ecb-eshell-current-buffer-sync()
   "Synchronize the eshell with the current buffer.  This is only done if the
 eshell is currently visible."
@@ -261,6 +264,11 @@ eshell is currently visible."
 that the eshell has more screen space after we execute a command. "
   (interactive)
 
+  ;;FIXME: us the eshell-pre-command-hook to see the point and then only enlarge
+  ;;if we enlarge past the maximum amount of lines we can use.
+
+  (setq ecb-eshell-pre-command-point (point))
+
   (let(window)
   
     (setq window (get-buffer-window ecb-eshell-buffer-name))
@@ -276,6 +284,18 @@ that the eshell has more screen space after we execute a command. "
 
       (ecb-enlarge-window window)))
   (ecb-eshell-recenter))
+
+(defun ecb-eshell-shrink-if-necessary()
+  ""
+
+  (when (and ecb-eshell-pre-command-point
+             (< (count-lines ecb-eshell-pre-command-point
+                             (point))
+                ecb-compile-window-height))
+    (ecb-toggle-enlarged-compilation-window -1)
+
+  ;;reset
+  (setq ecb-eshell-pre-command-point nil)))
 
 (defun ecb-eshell-cleanse()
   "If the user has entered text in the eshell, we need to clean it.  If we don't
@@ -305,6 +325,7 @@ that the eshell has more screen space after we execute a command. "
 (add-hook 'ecb-redraw-layout-hook 'ecb-eshell-recenter)
 
 (add-hook 'eshell-pre-command-hook 'ecb-eshell-enlarge)
+(add-hook 'eshell-post-command-hook 'ecb-eshell-shrink-if-necessary)
 
 (provide 'ecb-eshell)
 
