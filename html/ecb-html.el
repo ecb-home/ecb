@@ -252,11 +252,12 @@
        ecb-bullet
        '(
 	 ("main.html" "Main")
-	 ("downloads.html" "Downloads")
+         ("docs/Overview.html" "Overview")
          ("docs/Install-and-first-steps.html#Install%20and%20first%20steps" "Installation")
 	 ("docs/index.html" "Documentation")
 	 ("docs/FAQ.html#FAQ" "FAQ")
 	 ("NEWS.html" "History")
+	 ("downloads.html" "Downloads")
 	 ("http://lists.sourceforge.net/lists/listinfo/ecb-list" "Mailing List")
 	 ("http://cvs.sourceforge.net/cgi-bin/viewcvs.cgi/ecb/ecb/" "CVS")
 	 ("screenshots/index.html" "Screenshots")
