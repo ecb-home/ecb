@@ -139,7 +139,13 @@ Entry points for elisp programmers
 * List of hooks::               All available hooks
 * tree-buffer::                 Some words to the tree-buffer-library
 * Adviced functions::           How to deal with the adviced functions
-* Programming new layouts::     How to program new layouts
+* The layout-engine::           Programming new layouts and special windows
+
+How to program new layouts and new special windows
+
+* Programming a new layout::    How to program a new layout
+* Programming special windows:: Aspects of programming special windows
+* The layout-engine API::       The complete layout-engine API
 
 Known conflicts and bugs of ECB
 
@@ -1041,8 +1047,8 @@ buildin layouts(1).
 
 In addition to these predefined layouts you can either interactively create
 new layouts "by example" (*note Creating a new ECB-layout::) or program new
-layouts with the macro `ecb-layout-define' (*note Programming new layouts::).
-The former method is the recommened one!
+layouts with the macro `ecb-layout-define' (*note The layout-engine::). The
+former method is the recommened one!
 
 There are two ways to interactively change the layout:
  * Changing permanently: Customize the option `ecb-layout-name' and store it
@@ -1555,7 +1561,7 @@ Interactively creating new layouts
 *For Emacs 20.X users:*
 
 Creating new layouts is only possible (but nevertheless quite easy) by
-programming them with emacs-lisp, see *Note Programming new layouts::.
+programming them with emacs-lisp, see *Note The layout-engine::.
 
 *For Emacs 21.X and XEmacs 21.X*
 
@@ -1629,8 +1635,7 @@ into your Emacs because it's automatically loaded by ECB!
 help-screen are available. ALL other commands are temporaly disabled (even
 the mouse-commands).
 
-For programming new layouts with emacs-lisp see *Note Programming new
-layouts::.
+For programming new layouts with emacs-lisp see *Note The layout-engine::.
 
 With the command `ecb-delete-new-layout' you can delete previously created
 layouts (TAB-completion is offered for all names of user created layouts).
@@ -2258,6 +2263,12 @@ This group contains the following options:
    See documentation of `ecb-current-buffer-sync' for conditions when
    synchronization takes place and so in turn these hooks are evaluated.
 
+   Precondition for such a hook: Current buffer is the buffer of the current
+   selected edit-window.
+
+   Postcondition for such a hook: Point must stay in the same edit-window as
+   before evaluating the hook.
+
    Important note: If `ecb-window-sync' is not nil `ecb-current-buffer-sync'
    is running either every time Emacs is idle or even after every command
    (see `ecb-window-sync-delay').  So these hooks can be really called very
@@ -2265,6 +2276,11 @@ This group contains the following options:
    efficient way at beginning if its task have to be really performed and
    then do them only if really necessary! Otherwise performance of Emacs
    could slow down dramatically!
+
+   It is strongle recommended that each function added to this hook uses the
+   macro `ecb-do-if-buffer-visible-in-ecb-frame' at beginning!  See
+   `ecb-speedbar-current-buffer-sync' and `ecb-eshell-current-buffer-sync'
+   for examples how to use this macro!
 
  - User Option: deactivate-hook
    Normal hook run at the end of deactivating (but before the ecb-layout is
@@ -4226,8 +4242,8 @@ Working with big screens
 ECB offers a layout type "left-right" with special ECB-tree-windows on the
 left and right side of the edit-window. The layouts "leftright1" and
 "leftright2"are examples for this layout type.  See *Note Creating a new
-ECB-layout:: and *Note Programming new layouts:: for details about how to
-create or program more layouts of this type.
+ECB-layout:: and *Note The layout-engine:: for details about how to create or
+program more layouts of this type.
 
 Such a layout is eventually the best choice for big screens because the
 several ECB-tree-windows are bigger and can display more informations without
@@ -4428,7 +4444,7 @@ elisp-program. This contains:
 * List of hooks::               All available hooks
 * tree-buffer::                 Some words to the tree-buffer-library
 * Adviced functions::           How to deal with the adviced functions
-* Programming new layouts::     How to program new layouts
+* The layout-engine::           Programming new layouts and special windows
 
 
 File: ecb.info,  Node: List of variables,  Next: List of hooks,  Prev: Elisp programming,  Up: Elisp programming
@@ -4508,7 +4524,7 @@ An application may only use the methods tree-buffer.el provides but no
 internal variables!
 
 
-File: ecb.info,  Node: Adviced functions,  Next: Programming new layouts,  Prev: tree-buffer,  Up: Elisp programming
+File: ecb.info,  Node: Adviced functions,  Next: The layout-engine,  Prev: tree-buffer,  Up: Elisp programming
 
 How to deal with the adviced window-functions
 =============================================
@@ -4531,17 +4547,49 @@ For a detailed explanation of each macro read the documentation with
 (1) I.e. regardless of the settings in `ecb-advice-window-functions'!
 
 
-File: ecb.info,  Node: Programming new layouts,  Prev: Adviced functions,  Up: Elisp programming
+File: ecb.info,  Node: The layout-engine,  Prev: Adviced functions,  Up: Elisp programming
 
-How to program new layouts
-==========================
+How to program new layouts and new special windows
+==================================================
 
-At least for Emacs 21.X and XEmacs 21.X users it's is strongly recommended to
-define new layouts interactively with the command `ecb-create-new-layout'
-(*note Creating a new ECB-layout::). But if you want (with Emacs 20.X you
-must) to program a new layout with elisp-code use the macro
-`ecb-layout-define' (the following definiton has stripped the prefix "ecb-"
-for better indexing this manual):
+There are two aspects concerning this topic:
+
+1. Programming a new layout which contains several special ECB-windows like
+   directories, sources, methods, history or other special windows and
+   arranging them in a new outline.
+
+2. Creating complete new special windows (e.g. a local-variable window for a
+   graphical debugger like JDEbug of JDEE), adding them to a layout and
+   synchronizing them with the edit-window.
+
+The former one covers merely the layout-programming aspect which is explained
+in the first subsection of this chapter whereas the latter one covers all
+aspects of creating new special windows and what is necessary to synchronize
+it with the edit-window of ECB. This is explained in the second subsection
+which will refers to the first subsection.
+
+* Menu:
+
+* Programming a new layout::    How to program a new layout
+* Programming special windows:: Aspects of programming special windows
+* The layout-engine API::       The complete layout-engine API
+
+
+File: ecb.info,  Node: Programming a new layout,  Next: Programming special windows,  Prev: The layout-engine,  Up: The layout-engine
+
+How to program a new layout
+---------------------------
+
+If you just want creating a new layout with the standard ECB-windows like
+directories, sources, methods and history it's is strongly recommended (at
+least for Emacs 21.X and XEmacs 21.X users) to define the new layout
+interactively with the command `ecb-create-new-layout' (*note Creating a new
+ECB-layout::).
+
+But if you want (with Emacs 20.X you must) programming a new layout with
+elisp-code and if this layout should even contain other special windows than
+the standard ECB-windows use the macro `ecb-layout-define' (the following
+definiton has stripped the prefix "ecb-" for better indexing this manual):
 
  - Macro: layout-define name type &rest create-code
    Creates a new ECB-layout with name NAME. TYPE is the type of the new
@@ -4629,7 +4677,15 @@ which is loaded into your Emacs. After loading the file(s) with all the new
 layout-definitions you can use it by customizing the option `ecb-layout-name'
 to the appropriate name or with the command `ecb-change-layout'.
 
-Here is an example:
+With the function `ecb-layout-undefine' you can remove a layout from the list
+of available layouts:
+
+ - Function: layout-undefine name
+   Unbind ecb-layout-function-<NAME>, ecb-delete-window-ecb-windows-<NAME>,
+   ecb-delete-other-windows-ecb-windows-<NAME> and remove `NAME' from
+   `ecb-available-layouts'.
+
+Here is an example for a new layout programmed with `ecb-layout-define':
 
    (ecb-layout-define "my-own-layout" left nil
      ;; The frame is already splitted side-by-side and point stays in the
@@ -4670,6 +4726,324 @@ like:
    |                    Compilation                      |
    |                                                     |
    -------------------------------------------------------
+
+
+File: ecb.info,  Node: Programming special windows,  Next: The layout-engine API,  Prev: Programming a new layout,  Up: The layout-engine
+
+All aspects of programming special windows
+------------------------------------------
+
+ECB offers a flexible programmable layout-engine for other packages to
+display their own contents and informations in special ECB-windows. An
+example could be a graphical debugger which offers a special window for
+displaying local variables and another special window for messages from the
+debugger-process (like JDEbug of JDEE(1)).
+
+This section explains all aspects of programming new special windows, adding
+them to a new layout and synchronizing them with edit-window of ECB. This can
+be done best with an easy example which nevertheless covers all necessary
+aspects to be a good example and skeleton for complex tools (like a graphical
+debugger) which want to use the layout-engine of ECB do display their own
+information.
+
+Here comes the example:
+
+The outline of the example layout:
+..................................
+
+   -------------------------------------------------------
+   |Bufferinfo for <filename>:            |[prior]       |
+   |Type: file                            |[next]        |
+   |Size: 23456                           |              |
+   |Modes: rw-rw-rw-                      |              |
+   |                                      |              |
+   |-----------------------------------------------------|
+   |                                                     |
+   |                                                     |
+   |                                                     |
+   |                                                     |
+   |                 edit-window                         |
+   |                                                     |
+   |                                                     |
+   |                                                     |
+   |                                                     |
+   -------------------------------------------------------
+   |                                                     |
+   |                 compilation-window                  |
+   |                                                     |
+   -------------------------------------------------------
+
+The description of the layout-contents
+......................................
+
+The top-left window always displays informations about the current buffer in
+the selected edit-window. This window demonstrates how autom. synchronizing a
+special window/buffer of a layout with current edit-window.
+
+The top-right window contains an read-only "action-buffer" and offers two
+buttons which can be used with the middle mouse-button to scroll the
+edit-window. This is not very senseful but it demonstrates how to control the
+edit-window with actions performed in a special window/buffer of a layout.
+
+(If you have not set a compilation-window in `ecb-compile-window-height' then
+the layout contains no durable compilation window and the other windows get a
+little more place).
+
+The example code
+................
+
+Now let have us a look at the several parts of the elisp-program needed to
+program this new example layout. ECB contains a library `ecb-examples.el'
+which contains the full working code of this example. To test this example
+and to play with it you can load this library into Emacs (with `load-library'
+for example) and then calling `ecb-change-layout' (bound to `C-c . l') and
+inserting "example-layout1" as layout-name. An alternative is calling
+`ecb-examples-activate' and `ecb-examples-deactivate'. For details see file
+`ecb-examples.el'.
+
+The following steps only contain code-skeletons to demonstrate the principle.
+The full working code is available in `ecb-examples.el'.
+
+The bufferinfo buffer of the example
+....................................
+
+The name of the bufferinfo buffer:
+
+   (defconst ecb-examples-bufferinfo-buffer-name " *ECB buffer info*")
+
+Two helper functions for displaying infos in a special buffer:
+
+   (defun ecb-examples-print-file-attributes (buffer filename)
+     (ecb-with-readonly-buffer buffer
+       (erase-buffer)
+       (insert (format "Bufferinfo for %s:\n\n" filename))
+       ;; insert with the function `file-attributes' some informations
+       ;; about FILENAME.
+       ))
+   
+   (defun ecb-examples-print-non-filebuffer (buffer buffer-name)
+     (ecb-with-readonly-buffer buffer
+       (erase-buffer)
+       ;; analogous to `ecb-examples-print-file-attributes'
+       ))
+
+The main synchronizing function added to `ecb-current-buffer-sync-hook' for
+autom. evaluation by `ecb-current-buffer-sync' which runs dependend on the
+values of `ecb-window-sync' and `ecb-window-sync-delay'. This function
+synchronizes the bufferinfo buffer with the current buffer of the edit-window
+if that buffer has changed.
+
+   (defun ecb-examples-bufferinfo-sync ()
+     (ecb-do-if-buffer-visible-in-ecb-frame
+         'ecb-examples-bufferinfo-buffer-name
+   
+       ;; here we can be sure that the buffer with name
+       ;; `ecb-examples-bufferinfo-buffer-name' is displayed in a window
+       ;; of `ecb-frame'
+   
+       (let ((buffer (get-buffer ecb-examples-bufferinfo-buffer-name))
+             (filename (buffer-file-name (current-buffer))))
+   
+         (if (and filename (file-readable-p filename))
+   
+             ;; real filebuffers
+             ;; here we could add a smarter mechanism; see ecb-examples.el
+             (ecb-examples-print-file-attributes buffer filename))
+   
+           ;; non file buffers like help-buffers etc...
+           (setq ecb-examples-bufferinfo-last-file nil)
+           (ecb-examples-print-non-filebuffer buffer
+                                              (buffer-name (current-buffer)))
+           ))))
+
+This is all what we need for the special bufferinfo buffer. We have
+demonstrated already two of the important functions/macros of the
+layout-engine API of ECB: `ecb-with-readonly-buffer' and
+`ecb-do-if-buffer-visible-in-ecb-frame' (*note The layout-engine API::.
+Especially the latter macro is strongly recommended for programming good
+synchronizing functions which do not waste CPU!
+
+The action buffer of the example
+................................
+
+The name of the action-buffer:
+
+   (defconst ecb-examples-action-buffer-name " *ECB action buffer*")
+
+Two helper functions for creating a readonly action-buffer with a special
+local keymap for the middle-mouse-button and two buttons [prior] and [next]:
+
+   (defun ecb-examples-insert-text-in-action-buffer (text)
+     (let ((p (point)))
+       (insert text)
+       (put-text-property p (+ p (length text)) 'mouse-face 'highlight)))
+   
+   (defun ecb-examples-action-buffer-create ()
+     (save-excursion
+       (if (get-buffer ecb-examples-action-buffer-name)
+           (get-buffer ecb-examples-action-buffer-name)
+   
+         (set-buffer (get-buffer-create ecb-examples-action-buffer-name))
+   
+         ;; we setup a local keymap and bind middle-mouse-button
+         ;; see ecb-examples.el for the full code
+   
+         ;; insert the action buttons [prior] und [next] and make it read-only
+   
+         (ecb-with-readonly-buffer (current-buffer)
+           (erase-buffer)
+           (ecb-examples-insert-text-in-action-buffer "[prior]")
+           ;; analogous for the [next] button
+           )
+   
+         (current-buffer))))
+
+The function which performs the actions in the action-buffer if clicked with
+the middle-mouse button onto a button [next] or [prior].
+
+   (defun ecb-examples-action-buffer-clicked (e)
+     (interactive "e")
+     (mouse-set-point e)
+     (let ((line (buffer-substring (ecb-line-beginning-pos) (ecb-line-end-pos))))
+       (cond ((string-match "prior" line)
+              (ecb-select-edit-window)
+              (call-interactively 'scroll-down))
+             ((string-match "next" line)
+              ;; analogous for [next]
+              ))))
+
+We do not need more code for the action buffer. All of the code is standard
+emacs-lisp which would also needed if used without ECB.
+
+Adding the bufferinfo- and action-buffer to a new layout
+........................................................
+
+Now we add the bufferinfo- and the action-buffer to a new layout of type top
+with name "example-layout1":
+
+   (ecb-layout-define "example-layout1" top
+   
+     ;; dedicating the bufferinfo window to the bufferinfo-buffer
+     (ecb-with-dedicated-window
+      (switch-to-buffer (get-buffer-create ecb-examples-bufferinfo-buffer-name))
+      (setq buffer-read-only t))
+   
+     ;; creating the action-window
+     (ecb-split-hor 0.75)
+   
+     ;; dedicate the action window to the action-buffer
+     (ecb-with-dedicated-window
+      (switch-to-buffer (buffer-name (ecb-examples-action-buffer-create))))
+   
+     ;; select the edit-window
+     (select-window (next-window)))
+
+This all what we need to define the new layout. We have demonstrated another
+important function of the layout-engine API of ECB:
+`ecb-with-dedicated-window' (*note The layout-engine API::). See *Note
+Programming a new layout:: for more details of the pure layout-programming
+task.
+
+Synchronizing the bufferinfo-buffer automatically
+.................................................
+
+The last thing we have to do is to synchronize the bufferinfo-buffer with
+current edit-window. We do this by adding `ecb-examples-bufferinfo-sync' to
+the hook `ecb-current-buffer-sync-hook'' (The file `ecb-examples.el' shows a
+smarter mechanism for (de)activating the new layout and the synchronization
+but this works also very well).
+
+   (add-hook 'ecb-current-buffer-sync-hook 'ecb-examples-bufferinfo-sync)
+
+Now we have all code for the new layout and the new layout-buffers.  The
+example is ready for use; just load `ecb-examples.el' (s.a.).
+
+---------- Footnotes ----------
+
+(1) JDEE is available at <http://jdee.sunsite.dk/>
+
+
+File: ecb.info,  Node: The layout-engine API,  Prev: Programming special windows,  Up: The layout-engine
+
+The complete layout-engine API of ECB
+-------------------------------------
+
+This section lists all functions, macros, variables and user-options the
+layout-engine API of ECB offers foreign packages. Call `describe-function'
+resp. `describe-variable' to get a detailed description.
+
+Functions for programming layout and special windows:
+ - ecb-available-layouts-member-p
+
+ - ecb-compile-window-live-p
+
+ - ecb-do-if-buffer-visible-in-ecb-frame
+
+ - ecb-edit-window-live-p
+
+ - ecb-layout-define
+
+ - ecb-layout-switch
+
+ - ecb-layout-undefine
+
+ - ecb-point-in-compile-window
+
+ - ecb-point-in-edit-window
+
+ - ecb-select-edit-window
+
+ - ecb-with-dedicated-window
+
+Utility functions/macros:
+ - ecb-enlarge-window
+
+ - ecb-fix-filename
+
+ - ecb-split-hor
+
+ - ecb-split-ver
+
+ - ecb-window-live-p
+
+ - ecb-with-readonly-buffer
+
+Some other maybe usefull functions/macros:
+ - ecb-with-adviced-functions
+
+ - ecb-with-original-functions
+
+ - ecb-with-some-adviced-functions
+
+Some useful *READONLY* variables:
+ - ecb-compile-window
+
+ - ecb-edit-window
+
+ - ecb-last-edit-window-with-point
+
+ - ecb-last-source-buffer
+
+User-options and hooks related to the layout-engine API:
+ - ecb-current-buffer-sync-hook
+
+ - ecb-hide-ecb-windows-after-hook
+
+ - ecb-hide-ecb-windows-before-hook
+
+ - ecb-redraw-layout-after-hook
+
+ - ecb-redraw-layout-before-hook
+
+ - ecb-show-ecb-windows-after-hook
+
+ - ecb-show-ecb-windows-before-hook
+
+ - ecb-windows-height
+
+ - ecb-windows-width
+
+ - ecb-compile-window-height
 
 
 File: ecb.info,  Node: Conflicts and bugs,  Next: FAQ,  Prev: Elisp programming,  Up: Top
@@ -4921,7 +5295,8 @@ the command `ecb-activate' is listed with name "activate").
 * goto-window-history:                   Interactive ECB commands.
 * goto-window-methods:                   Interactive ECB commands.
 * goto-window-sources:                   Interactive ECB commands.
-* layout-define:                         Programming new layouts.
+* layout-define:                         Programming a new layout.
+* layout-undefine:                       Programming a new layout.
 * minor-mode:                            Interactive ECB commands.
 * nav-goto-next:                         Interactive ECB commands.
 * nav-goto-previous:                     Interactive ECB commands.
@@ -5132,107 +5507,111 @@ Concept Index
 
 Tag Table:
 Node: Top183
-Node: Install and first steps6346
-Node: Installation6845
-Ref: Installation-Footnote-110771
-Ref: Installation-Footnote-210906
-Ref: Installation-Footnote-311018
-Node: Setting up Emacs11083
-Ref: Checking your hooks13029
-Ref: Setting up Emacs-Footnote-114226
-Ref: Setting up Emacs-Footnote-214330
-Ref: Setting up Emacs-Footnote-314431
-Ref: Setting up Emacs-Footnote-414490
-Node: First steps14639
-Ref: First steps-Footnote-115787
-Node: Overview16016
-Ref: Overview-Footnote-118767
-Node: ECB Directories18860
-Node: ECB Sources19877
-Node: ECB Methods21031
-Node: Activation and Deactivation21580
-Node: Standard activation21950
-Ref: Activation hook-sequence22528
-Ref: Deactivation hook-sequence22848
-Node: Automatic activation23022
-Node: Usage of ECB24155
-Node: Using the mouse25065
-Ref: Using the mouse-Footnote-127340
-Node: Using the keyboard27386
-Ref: Using the keyboard-Footnote-128430
-Node: Navigation28481
-Node: Incremental search29821
-Node: Personal keybindings31997
-Ref: Personal keybindings-Footnote-133995
-Node: The edit-window34098
-Node: Temp- and compile-buffers35928
-Node: The Methods buffer38210
-Node: Customizing the display38651
-Node: Rebuilding the Methods40373
-Node: The ECB-layout41228
-Node: Changing the ECB-layout41875
-Ref: Changing the ECB-layout-Footnote-169597
-Node: Redrawing the ECB-layout69689
-Node: Creating a new ECB-layout70614
-Ref: Creating a new ECB-layout-Footnote-174876
-Node: Hiding the ECB windows75050
-Node: Back/forward navigation76155
-Ref: Back/forward navigation-Footnote-177256
-Node: ECB-window synchronizing77315
-Node: Interactive ECB commands79897
-Node: Customizing90130
-Node: General aspects90764
-Ref: General aspects-Footnote-193597
-Node: Most important options93729
-Node: Customizable options95524
-Node: ecb-general96954
-Node: ecb-directories117924
-Node: ecb-sources124820
-Node: ecb-methods127075
-Node: ecb-history139344
-Node: ecb-layout141405
-Node: ecb-compilation-content158401
-Node: ecb-create-layout158967
-Node: ecb-face-options159483
-Node: ecb-faces162912
-Node: ecb-download166904
-Node: ecb-help168130
-Node: ecb-eshell170114
-Node: Submitting problem report170963
-Node: Upgrading172326
-Node: Downloading new versions173089
-Ref: Download required packages174846
-Ref: Downloading new versions-Footnote-1175944
-Node: Auto. option-upgrading175993
-Node: User interface176301
-Node: Background information177187
-Node: Tips and tricks180585
-Node: Changing faces181335
-Ref: Changing faces-Footnote-1184171
-Node: Small screens184347
-Node: Big screens185741
-Node: Simulating speedbar186582
-Node: Integrating speedbar187552
-Ref: Integrating speedbar-Footnote-1189907
-Ref: Integrating speedbar-Footnote-2190083
-Node: Optimize scrolling190241
-Node: Large directories191321
-Node: Using eshell191986
-Ref: Using eshell-Footnote-1194077
-Node: Elisp programming194229
-Node: List of variables194838
-Node: List of hooks195150
-Node: tree-buffer196106
-Node: Adviced functions196912
-Ref: Adviced functions-Footnote-1197531
-Node: Programming new layouts197602
-Node: Conflicts and bugs203861
-Node: Conflicts204336
-Node: Bugs208046
-Node: FAQ208266
-Ref: FAQ-Footnote-1213435
-Node: Command Index213466
-Node: Option Index215917
-Node: Concept Index222667
+Node: Install and first steps6610
+Node: Installation7109
+Ref: Installation-Footnote-111035
+Ref: Installation-Footnote-211170
+Ref: Installation-Footnote-311282
+Node: Setting up Emacs11347
+Ref: Checking your hooks13293
+Ref: Setting up Emacs-Footnote-114490
+Ref: Setting up Emacs-Footnote-214594
+Ref: Setting up Emacs-Footnote-314695
+Ref: Setting up Emacs-Footnote-414754
+Node: First steps14903
+Ref: First steps-Footnote-116051
+Node: Overview16280
+Ref: Overview-Footnote-119031
+Node: ECB Directories19124
+Node: ECB Sources20141
+Node: ECB Methods21295
+Node: Activation and Deactivation21844
+Node: Standard activation22214
+Ref: Activation hook-sequence22792
+Ref: Deactivation hook-sequence23112
+Node: Automatic activation23286
+Node: Usage of ECB24419
+Node: Using the mouse25329
+Ref: Using the mouse-Footnote-127604
+Node: Using the keyboard27650
+Ref: Using the keyboard-Footnote-128694
+Node: Navigation28745
+Node: Incremental search30085
+Node: Personal keybindings32261
+Ref: Personal keybindings-Footnote-134259
+Node: The edit-window34362
+Node: Temp- and compile-buffers36192
+Node: The Methods buffer38474
+Node: Customizing the display38915
+Node: Rebuilding the Methods40637
+Node: The ECB-layout41492
+Node: Changing the ECB-layout42139
+Ref: Changing the ECB-layout-Footnote-169855
+Node: Redrawing the ECB-layout69947
+Node: Creating a new ECB-layout70872
+Ref: Creating a new ECB-layout-Footnote-175122
+Node: Hiding the ECB windows75296
+Node: Back/forward navigation76401
+Ref: Back/forward navigation-Footnote-177502
+Node: ECB-window synchronizing77561
+Node: Interactive ECB commands80143
+Node: Customizing90376
+Node: General aspects91010
+Ref: General aspects-Footnote-193843
+Node: Most important options93975
+Node: Customizable options95770
+Node: ecb-general97200
+Node: ecb-directories118642
+Node: ecb-sources125538
+Node: ecb-methods127793
+Node: ecb-history140062
+Node: ecb-layout142123
+Node: ecb-compilation-content159119
+Node: ecb-create-layout159685
+Node: ecb-face-options160201
+Node: ecb-faces163630
+Node: ecb-download167622
+Node: ecb-help168848
+Node: ecb-eshell170832
+Node: Submitting problem report171681
+Node: Upgrading173044
+Node: Downloading new versions173807
+Ref: Download required packages175564
+Ref: Downloading new versions-Footnote-1176662
+Node: Auto. option-upgrading176711
+Node: User interface177019
+Node: Background information177905
+Node: Tips and tricks181303
+Node: Changing faces182053
+Ref: Changing faces-Footnote-1184889
+Node: Small screens185065
+Node: Big screens186459
+Node: Simulating speedbar187294
+Node: Integrating speedbar188264
+Ref: Integrating speedbar-Footnote-1190619
+Ref: Integrating speedbar-Footnote-2190795
+Node: Optimize scrolling190953
+Node: Large directories192033
+Node: Using eshell192698
+Ref: Using eshell-Footnote-1194789
+Node: Elisp programming194941
+Node: List of variables195567
+Node: List of hooks195879
+Node: tree-buffer196835
+Node: Adviced functions197641
+Ref: Adviced functions-Footnote-1198254
+Node: The layout-engine198325
+Node: Programming a new layout199498
+Node: Programming special windows206373
+Ref: Programming special windows-Footnote-1216156
+Node: The layout-engine API216208
+Node: Conflicts and bugs217790
+Node: Conflicts218265
+Node: Bugs221975
+Node: FAQ222195
+Ref: FAQ-Footnote-1227364
+Node: Command Index227395
+Node: Option Index229914
+Node: Concept Index236664
 
 End Tag Table
