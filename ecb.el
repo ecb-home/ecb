@@ -1237,7 +1237,7 @@ TOKENLIST otherwise TOKENLIST is returned."
 
 (defun ecb-dump-toplevel ()
   (interactive)
-  (let ((tokens (ecb-klaus-test (semantic-bovinate-toplevel t))))
+  (let ((tokens (ecb-post-process-tokenlist (semantic-bovinate-toplevel t))))
     (save-current-buffer
       (set-buffer (get-buffer-create "ecb-dump"))
       (erase-buffer)
