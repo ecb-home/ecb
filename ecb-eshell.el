@@ -1,6 +1,6 @@
 ;;; ecb-eshell.el --- eshell integration for the ECB.
 
-;; $Id: ecb-eshell.el,v 1.5 2001/11/22 05:09:02 burtonator Exp $
+;; $Id: ecb-eshell.el,v 1.6 2001/11/22 21:15:11 berndl Exp $
 
 ;; Copyright (C) 2000-2003 Free Software Foundation, Inc.
 ;; Copyright (C) 2000-2003 Kevin A. Burton (burton@openprivacy.org)
@@ -77,27 +77,26 @@
 
 (defun ecb-eshell-recenter()
   "Recenter the eshell window so that the prompt is at the end of the buffer."
-
-  (if (ecb-eshell-running-p)
+  (interactive)
   
-      (let((window-start nil)
-           (eshell-window nil))
+  (let((window-start nil)
+       (eshell-window nil))
 
-        (setq eshell-window (get-buffer-window eshell-buffer-name))
-        
-        (save-excursion
-          
-          (set-buffer eshell-buffer-name)
-          
-          (end-of-buffer)
-          
-          (forward-line (* -1 (- (window-height eshell-window) 3)))
-          
-          (beginning-of-line)
-          
-          (setq window-start (point)))
-        
-        (set-window-start eshell-window window-start))))
+    (setq eshell-window (get-buffer-window eshell-buffer-name))
+    
+    (save-excursion
+      
+      (set-buffer eshell-buffer-name)
+      
+      (end-of-buffer)
+      
+      (forward-line (* -1 (- (window-height eshell-window) 3)))
+      
+      (beginning-of-line)
+      
+      (setq window-start (point)))
+    
+    (set-window-start eshell-window window-start)))
 
 (defun ecb-eshell-running-p()
   "Return true if eshell is currently running."
@@ -118,19 +117,11 @@
 
         (switch-to-buffer eshell-buffer-name))
 
-    ;;we auto start the eshell here?  I think so..
-    (select-window ecb-compile-window)
-    
-    (eshell))
-
-  (ecb-eshell-recenter))
+      ;;FIXME: should we auto start the eshell here?  I think so..
+    (error "The eshell is not running")))
 
 (add-hook 'ecb-current-buffer-sync-hook 'ecb-eshell-current-buffer-sync)
-
-(add-hook 'ecb-redraw-layout-hooks 'ecb-eshell-recenter)
-
-(define-key ecb-mode-map "\C-c.e" 'ecb-eshell-goto-eshell)
-
+          
 (provide 'ecb-eshell)
 
 ;;; ecb-eshell.el ends here
