@@ -831,6 +831,41 @@ little more place."
   (select-window (previous-window (selected-window) 0)))
 
 
+(ecb-layout-define "left-dir-plus-speedbar" left
+  "This function creates the following layout:
+
+   -------------------------------------------------------
+   |              |                                      |
+   |  Directories |                                      |
+   |              |                                      |
+   |              |                                      |
+   |              |                                      |
+   |              |                                      |
+   |              |                                      |
+   |--------------|                 Edit                 |
+   |              |                                      |
+   |              |                                      |
+   |              |                                      |
+   |  Speedbar    |                                      |
+   |              |                                      |
+   |              |                                      |
+   |              |                                      |
+   -------------------------------------------------------
+   |                                                     |
+   |                    Compilation                      |
+   |                                                     |
+   -------------------------------------------------------
+
+If you have not set a compilation-window in `ecb-compile-window-height' then
+the layout contains no durable compilation window and the other windows get a
+little more place. This layout works best if it is contained in
+`ecb-show-sources-in-directories-buffer'!"
+  (ecb-set-directories-buffer)
+  (ecb-split-ver 0.5)
+  (ecb-set-speedbar-buffer)
+  (select-window (next-window)))
+
+
 (defconst ecb-buildin-layouts (copy-list ecb-available-layouts)
   "All layouts defined until now.")
 
