@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: tree-buffer.el,v 1.164 2005/02/28 11:31:51 berndl Exp $
+;; $Id: tree-buffer.el,v 1.165 2005/03/10 16:39:24 berndl Exp $
 
 ;;; Commentary:
 
@@ -223,6 +223,92 @@ This function returns a timer object which you can use in
       "Remove TIMER from the list of active timers."
       (delete-itimer timer))))  
 
+
+;; basic utilities
+
+(defun tree-buffer-copy-list (list)
+  "Return a copy of a LIST, which may be a dotted list.
+The elements of the list are not copied, just the list structure itself."
+  (if (fboundp 'copy-sequence)
+      (copy-sequence list)
+    (if (consp list)
+        (let ((res nil))
+          (while (consp list) (push (pop list) res))
+          (prog1 (nreverse res) (setcdr res list)))
+      (car list))))
+
+(defun tree-buffer-member (item list &optional test-fcn)
+  "Find the first occurrence of ITEM in LIST.
+Return the sublist of LIST whose car is ITEM. Comparison is done with `equal'
+unless TEST-FCN is not nil: In this case TEST-FCN will be used to compare ITEM
+with the elements of LIST. If TEST-FCN is `eq' then `memq' is called for
+optimization."
+  (if test-fcn
+      (if (eq test-fcn 'eq)
+          ;; some optimization
+          (memq item list)
+        (progn
+          (while (and list (not (funcall test-fcn item (car list))))
+            (setq list (cdr list)))
+          list))
+    (member item list)))
+
+(defun tree-buffer-position (seq elem &optional test-fcn)
+  "Return the position of ELEM within SEQ counting from 0. Comparison is done
+with `equal' unless TEST-FCN is not nil: In this case TEST-FCN will be used to
+compare ITEM with the elements of SEQ."
+  (if (listp seq)
+      (let ((pos (- (length seq) (length (tree-buffer-member elem seq test-fcn)))))
+        (if (= pos (length seq))
+            nil
+          pos))
+    (catch 'found
+      (dotimes (i (length seq))
+        (if (funcall (or test-fcn 'equal) elem (aref seq i))
+            (throw 'found i)))
+      nil)))
+
+(defun tree-buffer-set-elt (seq n val)
+  "Set VAL as new N-th element of SEQ. SEQ can be any sequence. SEQ will be
+changed because this is desctructive function. SEQ is returned."
+  (if (listp seq)
+      (setcar (nthcdr n seq) val)
+    (aset seq n val))
+  seq)
+
+(defun tree-buffer-remove-elt (seq n)
+  "Remove N-th element from SEQ. SEQ can be any sequence. SEQ will be
+changed because this is desctructive function. SEQ is returned."
+  (delq 'tree-buffer-remove-marker
+        (tree-buffer-set-elt seq n 'tree-buffer-remove-marker)))
+
+(defun tree-buffer-nolog-message (&rest args)
+  "Works exactly like `message' but does not log the message"
+  (let ((msg (cond ((or (null args)
+                        (null (car args)))
+                    nil)
+                   ((null (cdr args))
+                    (car args))
+                   (t
+                    (apply 'format args)))))
+    ;; Now message is either nil or the formated string.
+    (if tree-buffer-running-xemacs
+        ;; XEmacs way of preventing log messages.
+        (if msg
+            (display-message 'no-log msg)
+          (clear-message 'no-log))
+      ;; Emacs way of preventing log messages.
+      (let ((message-log-max nil)
+            (message-truncate-lines nil))
+        (if msg
+            (message "%s" msg)
+          (message nil))))
+    msg))
+
+(defsubst tree-buffer-current-line ()
+  "Return the current line-number - the first line in a buffer has number 1."
+  (+ (count-lines 1 (point)) (if (= (current-column) 0) 1 0)))
+
 ;; debugging
 
 (defvar tree-buffer-debug-mode nil
@@ -239,13 +325,107 @@ Do nothing if `tree-buffer-debug-mode' is nil!"
                      (apply 'format args)))))
 
 ;; tree-buffer local variables
+
 (defvar tree-buffer-root nil)
 
-(defvar tree-buffer-nodes nil
-  "Contains all the visible nodes in the buffer in top-to-bottom order. Each
-item in this list is a cons pair of the displayed node name and the node. Note
-that the displayed node name can be truncated and therefore different from the
-node name.")
+(defvar tree-buffer-displayed-nodes nil
+  "Contains all the current visible nodes of current tree-buffer in
+top-to-bottom order. This variable is buffer-local in each tree-buffer!")
+
+(defsubst tree-buffer-initialize-displayed-nodes ()
+  "Initialize the `tree-buffer-displayed-nodes' with nil."
+  (setq tree-buffer-displayed-nodes nil))
+
+(defsubst tree-buffer-number-of-displayed-nodes ()
+  "Return the number of current displayed nodes."
+  (length tree-buffer-displayed-nodes))
+
+(defsubst tree-buffer-nth-displayed-node (n)
+  "Return the N-th displayed node of current tree-buffer. Counts from 0
+whereas the 0-th node is the topmost displayed node."
+  (nth n tree-buffer-displayed-nodes))
+
+(defun tree-buffer-find-displayed-node-by-data (node-data &optional start-node)
+  "Find the first displayed node in current tree-buffer which has data equal
+to NODA-DATA. When START-NODE is nil then all currently visible nodes are
+searched beginning with the first one otherwise START-NODE is the startpoint
+for the search.
+
+If the search has success then the found node is returend."
+  (catch 'exit
+    (let ((node-list (if (or (null start-node)
+                             (eq start-node (tree-buffer-get-root)))
+                         tree-buffer-displayed-nodes
+                       ;; we need that sub-list of tree-buffer-displayed-nodes
+                       ;; which has the start-node as first elem. But we can
+                       ;; not calling `member' for this search because this
+                       ;; can result in a stack-overflow in equal for large
+                       ;; node-lists especially with complex-data (e.g.
+                       ;; semantic tags). Therefore we use `memq'.
+                       (or (tree-buffer-member start-node
+                                               tree-buffer-displayed-nodes
+                                               'eq)
+                           tree-buffer-displayed-nodes))))
+      (dolist (node node-list)
+        (when (tree-buffer-node-data-equal-p (tree-node-get-data node) node-data)
+          (throw 'exit node))))))
+
+(defun tree-buffer-search-displayed-node-list (search-fcn)
+  "Call SEARCH-FCN for each current visible node in current tree-buffer and
+return the first node for which SEARCH-FCN returns not nil."
+  (catch 'exit
+    (dolist (node tree-buffer-displayed-nodes)
+      (when (funcall search-fcn node)
+        (throw 'exit node)))))
+
+(defun tree-buffer-displayed-node-nr (node)
+  "Return the number of NODE in current tree-buffer. NODE is searched via
+`eq'! Number is counted from 0 whereas the topmost displayed node ha number
+0."
+  (tree-buffer-position tree-buffer-displayed-nodes node 'eq))
+
+(defun tree-buffer-displayed-node-linenr (node)
+  "Return the line-number of NODE in current tree-buffer. NODE is searched via
+`eq'!"
+  (1+ (tree-buffer-displayed-node-nr node)))
+
+(defsubst tree-buffer-add-to-displayed-nodes (node)
+  "Add NODE at the end of the displayed-nodes-list - see
+`tree-buffer-displayed-nodes'."
+  (setq tree-buffer-displayed-nodes
+        (append tree-buffer-displayed-nodes (list node))))
+
+(defsubst tree-buffer-displayed-nodes-remove-nth (n)
+  "Remove the N-th node from the displayed node list."
+  (tree-buffer-remove-elt tree-buffer-displayed-nodes n))
+
+(defsubst tree-buffer-displayed-nodes-remove-node (node)
+  "Remove NODE from the displayed node list."
+  (setq tree-buffer-displayed-nodes
+        (delq node tree-buffer-displayed-nodes)))
+
+(defsubst tree-buffer-displayed-nodes-replace-nth (n new-node)
+  "Replace the N-th node from the displayed node list with NEW-NODE. Return
+the updated list."
+  (tree-buffer-set-elt tree-buffer-displayed-nodes n new-node))
+
+(defun tree-buffer-displayed-nodes-replace-node (node new-node)
+  "Replace NODE with NEW-NODE in the displayed node list. Return the updated
+list."
+  (let ((memq-list (tree-buffer-member node tree-buffer-displayed-nodes 'eq)))
+    (if memq-list
+        (setcar memq-list new-node)))
+  tree-buffer-displayed-nodes)
+
+(defsubst tree-buffer-set-displayed-nodes (displayed-nodes)
+  "Set the internal displayed-nodes list to DISPLAYED-NODES which has to be a
+list of node-objects. Replaces the old list of displayed-nodes."
+  (setq tree-buffer-displayed-nodes displayed-nodes))
+
+(defsubst tree-buffer-displayed-nodes-copy ()
+  "Return a copy of the displayed-nodes-list `tree-buffer-displayed-nodes'.
+Only the list-structure is copied not the elements itself."
+  (tree-buffer-copy-list tree-buffer-displayed-nodes))
 
 (defvar tree-buffer-frame nil)
 (defvar tree-buffer-key-map nil)
@@ -390,13 +570,22 @@ child."
 	  (when n
 	    (throw 'exit n)))))))
 
-(defconst tree-node-name 0)
-(defconst tree-node-type 1)
-(defconst tree-node-data 2)
-(defconst tree-node-expanded 3)
-(defconst tree-node-parent 4)
-(defconst tree-node-children 5)
-(defconst tree-node-expandable 6)
+(defconst tree-node-name 0
+  "The name of the node. Regardless how the node is displayed; see
+`tree-node-shorten-name' and `tree-node-displayed-name'.")
+(defconst tree-node-type 1
+  "The type of the node; must currently be an interger!") ;;
+(defconst tree-node-data 2
+  "The data of the node; can be arbitrary lisp-structures.")
+(defconst tree-node-expanded 3
+  "If not nil then the node is currently expanded, means its children should
+be visible.")
+(defconst tree-node-parent 4
+  "The parent node")
+(defconst tree-node-children 5
+  "List of children-nodes.")
+(defconst tree-node-expandable 6
+  "If not nil then the node is expandable means has children.")
 (defconst tree-node-shorten-name 7
   "Decides if the node name can be shortened when displayed in a narrow tree
 buffer window. The following values are valid:
@@ -404,10 +593,21 @@ buffer window. The following values are valid:
   visible.
 - end: The name is truncated at the end. If the node is expandable the name is
   truncated so that the expand symbol is visible.
-- nil: The name is never truncated." )
+- nil: The name is never truncated. In this case `tree-node-displayed-name' is
+  equal to `tree-node-name'." )
 (defconst tree-node-indentstr 8
   "Containes the full indentation-string for the node. So a single node can
 easily redrawn.")
+(defconst tree-node-displayed-name 9
+  "Contains the current displayed name of the node. The displayed name can be
+different from the `tree-node-name' according to the value of
+`tree-node-shorten-name'.")
+
+(defsubst tree-node-set-displayed-name (node displayed-name)
+  (aset node tree-node-displayed-name displayed-name))
+
+(defsubst tree-node-get-displayed-name (node)
+  (aref node tree-node-displayed-name))
 
 (defsubst tree-node-set-indentstr (node indentstr)
   (aset node tree-node-indentstr indentstr))
@@ -476,7 +676,7 @@ easily redrawn.")
   (aref node tree-node-shorten-name))
 
 (defun tree-node-new (name type data &optional not-expandable parent shorten-name)
-  (let ((a (make-vector 9 nil)))
+  (let ((a (make-vector 10 nil)))
     (tree-node-set-name a name)
     (tree-node-set-type a type)
     (tree-node-set-data a data)
@@ -486,6 +686,7 @@ easily redrawn.")
     (tree-node-set-expandable a (not not-expandable))
     (tree-node-set-shorten-name a shorten-name)
     (tree-node-set-indentstr a nil)
+    (tree-node-set-displayed-name a nil)
     (when parent
       (tree-node-add-child parent a))
     a))
@@ -693,47 +894,6 @@ TREE-IMAGE-NAME."
 
 ;; utilities
 
-(defun tree-buffer-position (seq elem)
-  "Return the position of ELEM within SEQ counting from 0. Comparison is done
-with `equal'."
-  (if (listp seq)
-      (let ((pos (- (length seq) (length (member elem seq)))))
-        (if (= pos (length seq))
-            nil
-          pos))
-    (catch 'found
-      (dotimes (i (length seq))
-        (if (equal elem (aref seq i))
-            (throw 'found i)))
-      nil)))
-
-(defun tree-buffer-nolog-message (&rest args)
-  "Works exactly like `message' but does not log the message"
-  (let ((msg (cond ((or (null args)
-                        (null (car args)))
-                    nil)
-                   ((null (cdr args))
-                    (car args))
-                   (t
-                    (apply 'format args)))))
-    ;; Now message is either nil or the formated string.
-    (if tree-buffer-running-xemacs
-        ;; XEmacs way of preventing log messages.
-        (if msg
-            (display-message 'no-log msg)
-          (clear-message 'no-log))
-      ;; Emacs way of preventing log messages.
-      (let ((message-log-max nil)
-            (message-truncate-lines nil))
-        (if msg
-            (message "%s" msg)
-          (message nil))))
-    msg))
-
-(defsubst tree-buffer-current-line ()
-  "Return the current line-number - the first line in a buffer has number 1."
-  (+ (count-lines 1 (point)) (if (= (current-column) 0) 1 0)))
-
 (defun tree-buffer-get-node-name-start-column (node)
   "Returns the buffer column where the name of the node starts."
   (+ (tree-node-get-indentlength node)
@@ -757,7 +917,7 @@ with `equal'."
 
 (defun tree-buffer-get-node-name-start-point (name node)
   "Returns the buffer point where the name of the node starts."
-  (let ((linenr (tree-buffer-find-node node)))
+  (let ((linenr (tree-buffer-displayed-node-linenr node)))
     (tree-buffer-debug-error "tree-buffer-get-node-name-start-point: Cur-buf: %s, name: %s, linenr: %d"
                              (current-buffer) name linenr)
     (when linenr
@@ -779,6 +939,8 @@ with `equal'."
       (< p (1- (tree-buffer-get-node-name-start-point name node)))
     (> p (tree-buffer-get-node-name-end-point name node))))
 
+;; Klaus Berndl <klaus.berndl@sdm.de>: YYY This function needs the
+;; *displayed* name of a node!
 (defun tree-buffer-select (mouse-button shift-pressed control-pressed meta-pressed)
   "If the callback-function in `tree-buffer-is-click-valid-fn' returns nil
 then nothing is done. Otherwise: If the node is expandable and the node is not
@@ -796,9 +958,8 @@ is called with the same arguments as `tree-node-expanded-fn'."
       (tree-buffer-debug-error "tree-buffer-select-1: Cur-buf: %s"
                                (current-buffer))
       (let* ((p (point))
-	     (name-node (tree-buffer-get-name-node-at-point))
-	     (name (car name-node))
-	     (node (cdr name-node)))
+	     (node (tree-buffer-get-node-at-point))
+	     (name (and node (tree-node-get-displayed-name node))))
         (when node
           (tree-buffer-debug-error "tree-buffer-select-2: Cur-buf: %s"
                                    (current-buffer))
@@ -847,82 +1008,19 @@ is called with the same arguments as `tree-node-expanded-fn'."
 
 
 (defun tree-buffer-get-node-at-point (&optional p)
+  "Returns the node at point P. If p is nil the current point is used."
   (save-excursion
     (if p (goto-char p))
-    (let ((linenr (+ (count-lines 1 (point)) (if (= (current-column) 0) 0 -1))))
-      (cdr (nth linenr tree-buffer-nodes)))))
-
-(defun tree-buffer-get-name-node-at-point (&optional p)
-  (save-excursion
-    (if p (goto-char p))
-    (let ((linenr (+ (count-lines 1 (point)) (if (= (current-column) 0) 0 -1))))
-      (nth linenr tree-buffer-nodes))))
+    (tree-buffer-nth-displayed-node (1- (tree-buffer-current-line)))))
 
 (defun tree-buffer-node-data-equal-p (node-data-1 node-data-2)
+  "Calls the function stored in `tree-node-data-equal-fn' to test
+NODE-DATA-1 and NODE-DATA-2 for equality."
   (and node-data-1 node-data-2
        ;; if this comparison-function runs into an error we handle this as
        ;; non-equality!
        (ignore-errors
          (funcall tree-node-data-equal-fn node-data-1 node-data-2))))
-
-(defun tree-buffer-find-node-data (node-data)
-  (catch 'exit
-    (dolist (node tree-buffer-nodes)
-      (when (tree-buffer-node-data-equal-p (tree-node-get-data (cdr node))
-                                           node-data)
-        (throw 'exit (cdr node))))))
-
-(defun tree-buffer-find-name-node-data (node-data &optional start-node)
-  "Find the first node in current tree-buffer which has data equal to
-NODA-DATA. When START-NODE is nil then all currently visible nodes are
-searched beginning with the first one otherwise START-NODE is the startpoint
-for the search.
-
-If the search has success then a cons-cell is returned with car is the name of
-the node and the cdr is the data of the node which is equal to NODE-DATA."
-  (catch 'exit
-    (let ((node-list (if (or (not start-node)
-                             (eq start-node (tree-buffer-get-root)))
-                         tree-buffer-nodes
-                       ;; we need that sub-list of tree-buffer-nodes which has
-                       ;; the start-node as first elem. But we can not create
-                       ;; here a search-cons containing start-node and then
-                       ;; calling `member' for this search-cons and
-                       ;; tree-buffer-nodes because this can result in a
-                       ;; stack-overflow in equal for large node-lists
-                       ;; especially with complex-data (e.g. semantic tags).
-                       ;; Therefore we first get the position P of the name of
-                       ;; start-node in the list of node-names of
-                       ;; tree-buffer-nodes (list of names of cdrs of this
-                       ;; list) and then we get that sublist of
-                       ;; tree-buffer-nodes which begins with the P-th element
-                       ;; of tree-buffer-nodes (nthcdr P tree-buffer-nodes).
-                       (or (ignore-errors
-                             (nthcdr (tree-buffer-position (mapcar (lambda (n)
-                                                                     (tree-node-get-name
-                                                                      (cdr n)))
-                                                                   tree-buffer-nodes)
-                                                           (tree-node-get-name start-node))
-                                     tree-buffer-nodes))
-                           tree-buffer-nodes)))
-          (equal-fcn 'tree-buffer-node-data-equal-p))
-      (dolist (name-node node-list)
-        (when (funcall equal-fcn (tree-node-get-data (cdr name-node)) node-data)
-          (throw 'exit name-node))))))
-
-(defun tree-buffer-search-node-list (find-fcn)
-  (catch 'exit
-    (dolist (node tree-buffer-nodes)
-      (when (funcall find-fcn (cdr node))
-        (throw 'exit (cdr node))))))
-
-(defun tree-buffer-find-node (node)
-  (catch 'exit
-    (let ((linenr 1))
-      (dolist (node2 tree-buffer-nodes)
-        (when (eq node (cdr node2))
-          (throw 'exit linenr))
-        (setq linenr (1+ linenr))))))
 
 (defun tree-buffer-get-node-facer (node)
   (let ((facer (cdr (assoc (tree-node-get-type node) tree-buffer-type-facer))))
@@ -974,7 +1072,7 @@ If NODE is expanded then recenter the WINDOW so as much as possible subnodes
 of NODE will be visible. If NODE is not expandable then WINDOW is always
 displayed without empty-lines at the end, means WINDOW is always best filled."
   (let* ((node-points (save-excursion
-                        (goto-line (tree-buffer-find-node node))
+                        (goto-line (tree-buffer-displayed-node-linenr node))
                         (cons (tree-buffer-line-beginning-pos)
                               (tree-buffer-line-end-pos))))
          (node-point (car node-points))
@@ -1076,13 +1174,6 @@ displayed without empty-lines at the end, means WINDOW is always best filled."
     (tree-buffer-overlay-delete tree-buffer-highlight-overlay))
   (setq tree-buffer-highlighted-node-data nil))
 
-;; (defun tree-buffer-remove-highlight ()
-;;   (when tree-buffer-highlighted-node-data
-;;     (let ((node (tree-buffer-find-node-data tree-buffer-highlighted-node-data)))
-;;       (when node
-;;         (tree-buffer-overlay-delete tree-buffer-highlight-overlay))))
-;;   (setq tree-buffer-highlighted-node-data nil))
-
 (defun tree-buffer-highlight-node-data (node-data &optional start-node
                                                   dont-make-visible)
   "Highlights in current tree-buffer the node which has as data NODE-DATA. If
@@ -1098,9 +1189,8 @@ expanded) then no highlighting takes place but the existing highlighting is
 removed and nil is returned. Otherwise the node is highlighted and not nil is
 returned."
   (if node-data
-      (let* ((name-node (tree-buffer-find-name-node-data node-data start-node))
-	     (name (car name-node))
-	     (node (cdr name-node))
+      (let* ((node (tree-buffer-find-displayed-node-by-data node-data start-node))
+	     (name (and node (tree-node-get-displayed-name node)))
 	     (w (get-buffer-window (current-buffer))))
         (if (null node)
             (progn
@@ -1206,9 +1296,8 @@ inserted and the TEXT itself"
 
 
 (defun tree-buffer-node-display-name (node)
-  "Computes that string which is used to display the name of NODE. If optional
-arg INDENT-LENGTH is a number then it must be the length of the indendation of
-NODE. If nil then the indent-length is computed for node."
+  "Computes that string which is used to display the name of NODE. The
+display-name will be set in the suitable slot of NODE and also returned."
   (let* ((ww (window-width))
 	 (display-name (tree-node-get-name node))
 	 (width (+ (tree-node-get-indentlength node)
@@ -1233,6 +1322,7 @@ NODE. If nil then the indent-length is computed for node."
                                      (- (+ (if tree-buffer-running-xemacs 5 4)
                                            (- width ww))))
                           "...")))))
+    (tree-node-set-displayed-name node display-name)
     display-name))
   
 (defun tree-buffer-insert-node-display (node &optional no-newline)
@@ -1319,7 +1409,6 @@ tree-buffer: \(guide-str-handle guide-str-no-handle guide-end-str no-guide-str)"
                                  indent-fill-up)))
       (list guide-str-handle guide-str-no-handle guide-end-str no-guide-str))))
 
-
 (defun tree-buffer-add-node (node indent-str-first-segs indent-str-last-seg
                                   &optional last-children)
   "Insert NODE in current tree-buffer at point.
@@ -1343,11 +1432,9 @@ end-guide."
   (insert (tree-node-get-indentstr node))
     
   ;; insert the node with all its symbols - either as image or ascii and add
-  ;; the node to the `tree-buffer-nodes'
-  (setq tree-buffer-nodes
-        (append tree-buffer-nodes
-                (list (cons (tree-buffer-insert-node-display node)
-                            node))))
+  ;; the node to the `tree-buffer-displayed-nodes'
+  (tree-buffer-insert-node-display node)
+  (tree-buffer-add-to-displayed-nodes node)
   ;; compute the indentation-strings for the children and run recursive for
   ;; each child
   (if (tree-node-is-expanded node)
@@ -1414,23 +1501,27 @@ DATA and EXPANDABLE. If NODE is nil then the node at current point will be
 updated. Each of the arguments NAME, SHORTEN-NAME, TYPE, DATA and EXPANDABLE
 can have the special value 'use-old-value\; this means that attribute of NODE
 will not be updated. If first optional arg REDISLAY is not nil then NODE will
-be completely redisplayed according to its new data."
+be completely redisplayed according to its new data. Nil for REDISLAY makes
+sense for example if the caller wants to update a bunch of nodes but wants to
+update the display itself first at the end of all node-updates \(for
+efficiency). In that case the caller has to ensure that `tree-buffer-update'
+is called after updating all needed nodes."
   (let* ((my-node (or node (tree-buffer-get-node-at-point)))
          (node-line (when redisplay
                       ;; Klaus Berndl <klaus.berndl@sdm.de>: We could simply
-                      ;; here call (tree-buffer-find-node my-node) but for
-                      ;; best possible performance we just use the
-                      ;; current linenumber if NODE is nil (means we stay
-                      ;; already at the right point and there is no need to
-                      ;; waste performance by searching a node we have
+                      ;; here call (tree-buffer-displayed-node-linenr
+                      ;; my-node) but for best possible performance we just
+                      ;; use the current linenumber if NODE is nil (means we
+                      ;; stay already at the right point and there is no need
+                      ;; to waste performance by searching a node we have
                       ;; already "found"...maybe paranoid ;-)
                       (if node
-                          (tree-buffer-find-node node)
+                          (tree-buffer-displayed-node-linenr node)
                         (tree-buffer-current-line))))
          (old-node-data (tree-node-get-data my-node))
          (buffer-read-only nil))
     (tree-node-update my-node name shorten-name type data expandable)
-    (when node-line
+    (when node-line ;; we want a redisplay
       (save-excursion
         (goto-line node-line)
         (beginning-of-line)
@@ -1438,6 +1529,10 @@ be completely redisplayed according to its new data."
                        (tree-buffer-line-end-pos))
         (insert (tree-node-get-indentstr my-node))
         (tree-buffer-insert-node-display my-node 'no-newline)
+        ;; There is no need to update the displayed-node list because we have
+        ;; already updated the node-object and this node-object is part of the
+        ;; displayed-node list ==> this list is automatically up-to-date now.
+        
         ;; rehighlight here the current highlighted node again - this is
         ;; necessary if we have redisplayed the currently highlighted node.
         ;; For this check we have to compare the old-node-data (before the
@@ -1448,47 +1543,56 @@ be completely redisplayed according to its new data."
         (when (tree-buffer-node-data-equal-p old-node-data
                                              (car tree-buffer-highlighted-node-data))
           (tree-buffer-highlight-node-data (tree-node-get-data my-node)
-                                           nil t))))))
+                                           nil t))))
+    ))
 
-;; Klaus Berndl <klaus.berndl@sdm.de>: Just a test-function - not used
-(defun tree-buffer-test-update-node ()
-  (tree-buffer-update-node nil
-                           'use-old-value
-                           'use-old-value
-                           'use-old-value
-                           'use-old-value
-                           nil ;; we set the node as not-expandable
-                           t))
-
-  
-(defun tree-buffer-clear ()
+(defun tree-buffer-clear-tree ()
   "Clear current tree-buffer, i.e. remove all children of the root-node"
   (dolist (child (tree-node-get-children (tree-buffer-get-root)))
     (tree-buffer-remove-node child)))
 
-(defun tree-buffer-remove-node (node &optional empty-parent-types)
-  "Remove NODE from current tree-buffer. If NODE is nil or NODE eq the node
-returned by `tree-buffer-get-root' then nothing will be done. If
-EMPTY-PARENT-TYPES is not nil and a list of node-types \(see
-`tree-buffer-create') and if the node-type of the parent of node is contained
+(defun tree-buffer-remove-node (node &optional redisplay empty-parent-types)
+  "Remove NODE from current tree-buffer. If NODE is nil then the node at
+current point will be removed. If NODE equal the node returned by
+`tree-buffer-get-root' then nothing will be done. If first optional arg
+REDISLAY is not nil then NODE will be also completely remove from the
+tree-display otherwise only from the internal tree-structure. If second
+optional arg EMPTY-PARENT-TYPES is not nil and a list of node-types \(see
+`tree-buffer-create') and if the node-type of the parent of NODE is contained
 in EMPTY-PARENT-TYPES and if NODE is the only children of its parent then its
 parent is recursively removed too."
-  (when (and node (not (eq (tree-buffer-get-root) node)))
-    (let* ((parent (tree-node-get-parent node))
-           (parent-type (tree-node-get-type parent)))
-      ;; If parent is the root-node then its type is always -1 (only the
-      ;; root-node has type -1) and therefore then the recursion stops here
-      ;; savely.
-      (if (and (member parent-type empty-parent-types)
-               (= (length (tree-node-get-children parent)) 1))
-          (tree-buffer-remove-node parent empty-parent-types)
-        (tree-node-remove-child parent node)))))
+  (let ((my-node (or node (tree-buffer-get-node-at-point))))
+    (when (and my-node (not (eq (tree-buffer-get-root) my-node)))
+      (let* ((parent (tree-node-get-parent my-node))
+             (parent-type (tree-node-get-type parent)))
+        ;; If parent is the root-node then its type is always -1 (only the
+        ;; root-node has type -1) and therefore then the recursion stops here
+        ;; savely.
+        (if (and (member parent-type empty-parent-types)
+                 (= (length (tree-node-get-children parent)) 1))
+            (tree-buffer-remove-node parent redisplay empty-parent-types)
+          (tree-node-remove-child parent my-node)
+          (when redisplay
+            (let ((buffer-read-only nil)
+                  (node-line (when redisplay
+                               (if node
+                                   (tree-buffer-displayed-node-linenr my-node)
+                                 (tree-buffer-current-line)))))
+              (when node-line
+                (save-excursion
+                  (goto-line node-line)
+                  (beginning-of-line)
+                  (delete-region (tree-buffer-line-beginning-pos)
+                                 (1+ (tree-buffer-line-end-pos))))
+                (tree-buffer-displayed-nodes-remove-node my-node)
+                ))))))))
 
-
-(defun tree-buffer-build-tree-buffer-nodes ()
-  "Rebuild the variable `tree-buffer-nodes' from the current children of
-`tree-buffer-root'."
-  (setq tree-buffer-nodes nil)
+(defun tree-buffer-build-tree-buffer-display ()
+  "Rebuild the variable `tree-buffer-displayed-nodes' from the current
+children of `tree-buffer-root'. This also builds the display of current
+tree-buffer from scratch. This functions expects the current tree-buffer to be
+empty!"
+  (tree-buffer-initialize-displayed-nodes)
   (dolist (node (tree-node-get-children tree-buffer-root))
     (tree-buffer-add-node node "" "")))
 
@@ -1516,10 +1620,10 @@ children \(and also recursive the children of a child if it's already
 expanded, see `tree-node-count-subnodes-to-display') are visible in current
 tree-buffer. If CONTENT is not nil then it must be a cons-cell where the car
 is the whole string of the tree-buffer and the cdr is the value of
-`tree-buffer-nodes'. Then the content of the tree-buffer will not be rebuild
-by reinserting all nodes from the tree-node-structure but just by inserting
-the car of CONTENT in the tree-buffer and setting `tree-buffer-nodes' to cdr
-of CONTENT."
+`tree-buffer-displayed-nodes'. Then the content of the tree-buffer will not be
+rebuild by reinserting all nodes from the tree-node-structure but just by
+inserting the car of CONTENT in the tree-buffer and setting
+`tree-buffer-displayed-nodes' to cdr of CONTENT."
   (let* ((w (get-buffer-window (current-buffer)))
          (ws (window-start w))
          (p (point))
@@ -1529,8 +1633,8 @@ of CONTENT."
     (if (consp content)
         (progn
           (insert (car content))
-          (setq tree-buffer-nodes (cdr content)))
-      (tree-buffer-build-tree-buffer-nodes))
+          (tree-buffer-set-displayed-nodes (cdr content)))
+      (tree-buffer-build-tree-buffer-display))
     (tree-buffer-display-in-general-face)
     (tree-buffer-highlight-node-data
      (or nil ;;(and node (tree-node-get-data node))
@@ -1549,7 +1653,7 @@ of CONTENT."
     (tree-buffer-run-after-update-hook)))
 
 
-(defun tree-buffer-scroll (point window-start)
+(defun tree-buffer-scroll-window (point window-start)
   "Scrolls current tree-buffer. The window will start at WINDOW-START and
 point will stay on POINT."
   (goto-char point)
@@ -2256,7 +2360,8 @@ GENERAL-FACE: General face in which the whole tree-buffer should be displayed.
 AFTER-CREATE-HOOK: A function or a list of functions \(with no arguments)
                    called directly after creating the tree-buffer and defining
                    it's local keymap. For example such a function can add
-                   additional key-bindings for this tree-buffer local keymap.
+                   additional key-bindings for this tree-buffer local keymap
+                   \(use `local-set-key' for this).
 AFTER-UPDATE-HOOK: A function or a list of functions \(with no arguments)
                    called each time after the tree-buffer has been updated via
                    `tree-buffer-update'."
@@ -2276,7 +2381,7 @@ AFTER-UPDATE-HOOK: A function or a list of functions \(with no arguments)
     (make-local-variable 'tree-buffer-key-map)
     (make-local-variable 'tree-buffer-frame)
     (make-local-variable 'tree-buffer-root)
-    (make-local-variable 'tree-buffer-nodes)
+    (make-local-variable 'tree-buffer-displayed-nodes)
     (make-local-variable 'tree-buffer-indent)
     (make-local-variable 'tree-buffer-mouse-action-trigger)
     (make-local-variable 'tree-buffer-is-click-valid-fn)
@@ -2284,7 +2389,6 @@ AFTER-UPDATE-HOOK: A function or a list of functions \(with no arguments)
     (make-local-variable 'tree-node-selected-fn)
     (make-local-variable 'tree-node-expanded-fn)
     (make-local-variable 'tree-node-collapsed-fn)
-    (make-local-variable 'tree-node-update-fn)
     (make-local-variable 'tree-node-mouse-over-fn)
     (make-local-variable 'tree-buffer-mouse-highlight-fn)
     (make-local-variable 'tree-node-data-equal-fn)
