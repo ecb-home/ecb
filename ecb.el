@@ -1090,6 +1090,9 @@ Per default ECB advices all the functions mentioned above but with the option
 `ecb-advice-window-functions' you can customizes which functions should be
 adviced by ECB.
 
+The jump-behavior of the advices `other-window' can be customized with
+`ecb-other-window-jump-behavior'!
+
 
 Working with or without a compile window:
 -----------------------------------------

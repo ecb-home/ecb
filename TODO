@@ -8,10 +8,42 @@
   have the side windows as non-important to your current editing activity but if
   you want to use ECB without the mouse then this is impossible :(
 
+   KB: In current version the advice of 'other-window' can either be
+   deactivated or - and this is the better way - you can set the
+   behavior of it via the option 'ecb-other-window-jump-behavior'!
+
 - single click on any ECB buffers should NOT do anything.  This should be moved
   to mouse-2
 
-- more readme.txt, history.txt, and makefile to README, HISTORY and Makefile 
+   KB: No, this should not be moved. The left- and the middle-mouse
+   button jumps to different edit windows amd this is a very useful behavior.
+
+- more readme.txt, history.txt, and makefile to README, HISTORY and
+  Makefile
+   
+   KB: I agree.
 
 - All of the ECB special buffer accept text input( I can type in this buffer if
   I wanted to ).  This buffer should be read-only.  
+
+   KB: I agree.
+
+- KB: Special keymap for all ECB-buffers for better keyboard-usability:
+  If the ECB-buffers are readonly (see above) then we can do the
+  following: Instead of scrolling with the mouse each inserted
+  character scrolls to the next matching tree-node. Example:
+  Inserting 'e' scrolls to the first node beginning with "e...".
+  Then inserting an 'c' scrolls to the first node beginning with
+  "ec...". Maybe we need an somehow intelligent mechanism...
+
+- KB: Easy selecting of a certain ECB-buffer with a ECB-keymap like:
+  [C-c C-e ...] as ECB-keybindings:
+   d: Directory buffer
+   s: Source-Buffer
+   m: Method-buffer
+   h: History-Buffer
+
+- KB: the utility- (also know as compile-) window stores not only the
+  last compilation-buffer but a list of recent utility-buffers
+   (compilation-, help-, etc. buffers) which can the easily cycled
+   through by a new ecb-command (maybe also bound to a [C-c C-e ...] key?
