@@ -52,7 +52,7 @@
 ;; The latest version of the ECB is available at
 ;; http://home.swipnet.se/mayhem/ecb.html
 
-;; $Id: ecb.el,v 1.82 2001/05/10 09:25:53 berndl Exp $
+;; $Id: ecb.el,v 1.83 2001/05/10 17:20:20 berndl Exp $
 
 ;;; Code:
 
@@ -1371,6 +1371,7 @@ always the ECB-frame if called from another frame."
     (ecb-initialize-layout)
 
     ;; set the ecb-frame
+    (ecb-enable-delete-frame-advice)
     (if ecb-new-ecb-frame
         (progn
           (run-hooks 'ecb-activate-before-new-frame-created-hook)
@@ -1504,6 +1505,7 @@ always the ECB-frame if called from another frame."
     
     ;; deactivating the adviced functions
     (ecb-activate-adviced-functions nil)
+    (ecb-disable-delete-frame-advice)
 
     ;; restore the old compilation-window-height
     (setq compilation-window-height ecb-old-compilation-window-height)
