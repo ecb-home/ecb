@@ -24,7 +24,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-method-browser.el,v 1.53 2004/09/07 14:49:58 berndl Exp $
+;; $Id: ecb-method-browser.el,v 1.54 2004/09/08 16:41:52 berndl Exp $
 
 ;;; Commentary:
 
@@ -38,6 +38,7 @@
 (require 'ecb-navigate)
 (require 'ecb-face)
 (require 'ecb-speedbar)
+(require 'ecb-common-browser)
 
 (require 'ecb-semantic-wrapper)
 ;; This loads the semantic-setups for the major-modes.
@@ -886,7 +887,7 @@ by semantic!"
                         :value 0.25))
   :set (function (lambda (symbol value)
                    (set symbol value)
-                   (if ecb-minor-mode
+                   (if (and (boundp 'ecb-minor-mode) ecb-minor-mode)
                        (ecb-activate-ecb-autocontrol-functions value
                                                                'ecb-tag-sync))))
   :initialize 'custom-initialize-default)

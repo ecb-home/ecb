@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-layout.el,v 1.235 2004/09/07 14:49:58 berndl Exp $
+;; $Id: ecb-layout.el,v 1.236 2004/09/08 16:41:52 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -4235,50 +4235,51 @@ Postconditions for CREATE-CODE:
 1. The edit-window must be the selected window and must not be dedicated.
 2. Every window besides the edit-window \(and the compile-window) must be
    a dedicated window \(e.g. a ECB-tree-window)."
-  `(eval-and-compile
+  `(progn
      (ecb-layout-type-p (quote ,type) t)
-     (defun ,(intern (format "ecb-layout-function-%s" name)) (&optional create-code-fcn)
-       ,doc
-       ;; Klaus Berndl <klaus.berndl@sdm.de>: creating the compile-window is
-       ;; now done in `ecb-redraw-layout-full'!
-;;        (when (and ecb-compile-window-height
-;;                   (or (equal ecb-compile-window-width 'frame)
-;;                       (equal (ecb-get-layout-type ecb-layout-name) 'top)))
-;;          (ecb-split-ver (- ecb-compile-window-height) t t)
-;;          (setq ecb-compile-window (next-window)))
-       ,(cond ((equal type 'left)
-               '(ecb-split-hor ecb-windows-width t))
-              ((equal type 'right)
-               '(ecb-split-hor (- ecb-windows-width) nil))
-              ((equal type 'top)
-               '(ecb-split-ver ecb-windows-height t))
-              ((equal type 'left-right)
-               '(progn
-                  (ecb-split-hor (- ecb-windows-width) t)
-                  (ecb-split-hor ecb-windows-width t t))))
-       ;; if create-code-fcn is not nil and we have not a left-right layout
-       ;; then we call this function instead of create-code - afterwards we
-       ;; have to select the edit-window. If create-code-fcn is nil then the
-       ;; leftmost-topmost ecb-window-column/bar is selected.
-       (if (and create-code-fcn
-                (not (equal (ecb-get-layout-type ecb-layout-name) 'left-right)))
-           (progn
-             (funcall create-code-fcn)
-             (select-window (next-window)))
-         ,@create-code)
-       ;; Klaus Berndl <klaus.berndl@sdm.de>: creating the compile-window is
-       ;; now done in `ecb-redraw-layout-full'!
-;;        (when (and ecb-compile-window-height
-;;                   (equal ecb-compile-window-width 'edit-window)
-;;                   (not (equal (ecb-get-layout-type ecb-layout-name) 'top)))
-;;          (ecb-split-ver (- ecb-compile-window-height) t t)
-;;          (setq ecb-compile-window (next-window)))
-       (setq ecb-edit-window (selected-window)))
-     (defalias (quote ,(intern
-                        (format "ecb-delete-window-in-editwindow-%s"
-                                name)))
-       (quote ,(intern
-                (format "ecb-delete-window-ecb-windows-%s" type))))
+     (eval-and-compile
+       (defun ,(intern (format "ecb-layout-function-%s" name)) (&optional create-code-fcn)
+         ,doc
+         ;; Klaus Berndl <klaus.berndl@sdm.de>: creating the compile-window is
+         ;; now done in `ecb-redraw-layout-full'!
+         ;;        (when (and ecb-compile-window-height
+         ;;                   (or (equal ecb-compile-window-width 'frame)
+         ;;                       (equal (ecb-get-layout-type ecb-layout-name) 'top)))
+         ;;          (ecb-split-ver (- ecb-compile-window-height) t t)
+         ;;          (setq ecb-compile-window (next-window)))
+         ,(cond ((equal type 'left)
+                 '(ecb-split-hor ecb-windows-width t))
+                ((equal type 'right)
+                 '(ecb-split-hor (- ecb-windows-width) nil))
+                ((equal type 'top)
+                 '(ecb-split-ver ecb-windows-height t))
+                ((equal type 'left-right)
+                 '(progn
+                    (ecb-split-hor (- ecb-windows-width) t)
+                    (ecb-split-hor ecb-windows-width t t))))
+         ;; if create-code-fcn is not nil and we have not a left-right layout
+         ;; then we call this function instead of create-code - afterwards we
+         ;; have to select the edit-window. If create-code-fcn is nil then the
+         ;; leftmost-topmost ecb-window-column/bar is selected.
+         (if (and create-code-fcn
+                  (not (equal (ecb-get-layout-type ecb-layout-name) 'left-right)))
+             (progn
+               (funcall create-code-fcn)
+               (select-window (next-window)))
+           ,@create-code)
+         ;; Klaus Berndl <klaus.berndl@sdm.de>: creating the compile-window is
+         ;; now done in `ecb-redraw-layout-full'!
+         ;;        (when (and ecb-compile-window-height
+         ;;                   (equal ecb-compile-window-width 'edit-window)
+         ;;                   (not (equal (ecb-get-layout-type ecb-layout-name) 'top)))
+         ;;          (ecb-split-ver (- ecb-compile-window-height) t t)
+         ;;          (setq ecb-compile-window (next-window)))
+         (setq ecb-edit-window (selected-window)))
+       (defalias (quote ,(intern
+                          (format "ecb-delete-window-in-editwindow-%s"
+                                  name)))
+         (quote ,(intern
+                  (format "ecb-delete-window-ecb-windows-%s" type)))))
      (ecb-available-layouts-add ,name (quote ,type))))
 
 ;; Only a test for the macro above
@@ -4615,7 +4616,7 @@ for the quick version!"
                                                                       ecb-frame))))
                                   (process-list)))))
       (let ((config-data (ecb-window-configuration-data))
-            (win-config-before (ecb-current-window-configuration))
+            ;; (win-config-before (ecb-current-window-configuration))
             (success nil))
         (ecb-layout-debug-error "ecb-repair-ecb-window-layout: We repair with data: %s"
                                 config-data)
@@ -4632,7 +4633,7 @@ for the quick version!"
         (when (not success)
           ;; Reseting to the window-config before is good when done
           ;; interactively but not with an idle-times because then this reset
-          ;; would be done until the user creates a window-config where the no
+          ;; would be done until the user creates a window-config where no
           ;; repair is necessary or at least the repair doesn't fail. So we
           ;; have to implement a smarter mechanism..............
           nil ;; (ecb-set-window-configuration win-config-before)
@@ -5261,8 +5262,7 @@ if no compile-window is visible."
                   (progn
                     (setq max-height
                           (max (min (floor (/ (1- (frame-height)) 2))
-                                    (or (if (equal (derived-mode-class major-mode)
-                                                   'compilation-mode)
+                                    (or (if (ecb-derived-mode-p 'compilation-mode)
                                             compilation-window-height
                                           (if ecb-running-xemacs
                                               (ignore-errors ; if temp-buffer-... is nil!

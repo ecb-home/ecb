@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-upgrade.el,v 1.88 2004/09/03 16:33:46 berndl Exp $
+;; $Id: ecb-upgrade.el,v 1.89 2004/09/08 16:41:52 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -168,6 +168,7 @@
 (require 'ecb-util)
 
 (silentcomp-defun widget-convert)
+(silentcomp-defun ecb-find-optionsym-for-tree-buffer-name)
 
 ;; -------------------------------------------------------------------------
 ;; define in this defconst all important NEWS which a user should know after
@@ -286,7 +287,10 @@
     (ecb-exclude-parents-regexp . (ecb-exclude-parents-regexps
                                    ecb-upgrade-exclude-parents-regexp))
     (ecb-auto-expand-tag-tree-collapse-other . (ecb-auto-expand-tag-tree-collapse-other
-                                                ecb-upgrade-auto-expand-tag-tree-collapse-other)))
+                                                ecb-upgrade-auto-expand-tag-tree-collapse-other))
+    (ecb-tree-RET-selects-edit-window . (ecb-tree-RET-selects-edit-window
+                                         ecb-upgrade-tree-RET-selects-edit-window))
+    )
   "Alist of all options which should be upgraded for current ECB-version.
 There are several reasons why an option should be contained in this alist:
 a) An old option has just be renamed in current-ECB version but has still the
@@ -573,6 +577,12 @@ The car is the old option symbol and the cdr is a 2-element-list with:
   (if old-val
       'only-if-on-tag
     nil))
+
+(defun ecb-upgrade-tree-RET-selects-edit-window (old-val)
+  (mapcar (function (lambda (e)
+                      (ecb-find-optionsym-for-tree-buffer-name e)))
+          old-val))
+  
 
 ;; ----------------------------------------------------------------------
 ;; internal functions. Dot change anything below this line

@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: tree-buffer.el,v 1.152 2004/09/07 14:49:56 berndl Exp $
+;; $Id: tree-buffer.el,v 1.153 2004/09/08 16:41:49 berndl Exp $
 
 ;;; Commentary:
 
@@ -76,6 +76,7 @@
 (silentcomp-defun image-type-available-p)
 (silentcomp-defun count-screen-lines)
 (silentcomp-defun tmm-prompt)
+(silentcomp-defun font-lock-add-keywords)
 ;; timer stuff for XEmacs
 (silentcomp-defun delete-itimer)
 (silentcomp-defun start-itimer)

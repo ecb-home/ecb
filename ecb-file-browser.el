@@ -23,7 +23,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-file-browser.el,v 1.32 2004/09/07 14:49:59 berndl Exp $
+;; $Id: ecb-file-browser.el,v 1.33 2004/09/08 16:41:54 berndl Exp $
 
 ;;; Commentary:
 
@@ -36,6 +36,7 @@
 (require 'ecb-face)
 (require 'ecb-speedbar)
 (require 'ecb-layout)
+(require 'ecb-common-browser)
 
 ;; various loads
 (require 'assoc)
@@ -96,7 +97,8 @@ is either
   :initialize 'custom-initialize-default
   :set (function (lambda (symbol value)
                    (set symbol value)
-                   (if (and ecb-minor-mode
+                   (if (and (boundp 'ecb-minor-mode)
+                            ecb-minor-mode
 			    (functionp 'ecb-update-directories-buffer))
 		       (ecb-update-directories-buffer))))
   :type '(repeat (choice :tag "Display type"
@@ -1616,99 +1618,6 @@ element looks like:
                                                (cons empty-p show-sources)))
           empty-p)))))
 
-
-;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: We must move this code either to
-;; ecb.el or - better - to a new file ecb-common-browser.el
-
-(defvar ecb-stealthy-function-list nil
-  "List of functions which ECB runs stealthy. Do not modify this variable!
-This variable is autom. set by the macro `ecb-defstealthy'!")
-
-(defvar ecb-stealthy-function-state-alist nil
-  "Alist which stores the state of each function of
-`ecb-stealthy-function-list'. Do not add new items to this variable because
-this is autom. done by the macro `ecb-defstealthy'!")
-
-(defsubst ecb-stealthy-function-state-get (fcn)
-  "Getter for `ecb-stealthy-function-state-alist'. Return state for the
-stealthy function FCN."
-  (cdr (assoc fcn ecb-stealthy-function-state-alist)))
-
-(defsubst ecb-stealthy-function-state-set (fcn state)
-  "Setter for `ecb-stealthy-function-state-alist'. Set STATE for the
-stealthy function FCN. Return STATE."
-  (setcdr (assoc fcn ecb-stealthy-function-state-alist) state))
-
-(defsubst ecb-stealthy-function-p (fcn)
-  "Return not nil if FCN is a stealthy function defined with
-`ecb-defstealthy'."
-  (member fcn ecb-stealthy-function-list))
-
-(defun ecb-stealthy-function-state-init (&optional fcn state)
-  "Reset the state of stealthy functions. If first optional arg FCN is a
-stealthy function then only the state of this function is reset - otherwise
-all stealthy functions of `ecb-stealthy-function-list' are reset. If second
-optional arg STATE is nil then the state will be reset to the special state
-'restart - otherwise to the value STATE."
-  (if (ecb-stealthy-function-p fcn)
-      (ecb-stealthy-function-state-set fcn (or state 'restart))
-    (dolist (f ecb-stealthy-function-list)
-      (ecb-stealthy-function-state-set f (or state 'restart)))))
-
-(defmacro ecb-defstealthy (name docstring &rest body)
-  "Define a so called stealthy function with NAME. This function will be
-registered by this macro in `ecb-stealthy-function-list' and
-`ecb-stealthy-function-state-alist'. During the evaluation of BODY the
-variable `state' will be bound and initialized with the stealthy state. BODY
-can use and modify `state'. After evaluating BODY `state' will be
-automatically saved so its available at the runtime of this stealthy function.
-BODY will only be evaluated if `state' is not 'done. BODY should be designed
-to be interruptable by the user \(e.g. with `input-pending-p'). If BODY
-completes then BODY has to set `state' to the special value 'done! If BODY has
-been interrupted then `state' can have an arbitrary value which will be autom.
-stored and at next runtime of the stealthy function NAME `state' will be
-initialized with this stored value. If `state' is initialized with the special
-value 'restart then this means the stealthy function should start from scratch
-because an eventually stored state is not longer valid. If the stealthy
-function sets `state' to 'done then this function will first being called
-after the state for this function has been reset to something else than 'done
-\(mostly to 'restart)\; such a reset of the state for a stealthy function can
-be done by any code and must be done via `ecb-stealthy-function-state-init'!"
-  `(eval-and-compile
-     (add-to-list 'ecb-stealthy-function-list (quote ,name))
-     (add-to-list 'ecb-stealthy-function-state-alist
-                  (cons (quote ,name) nil))
-     (unless (fboundp (quote ,name))
-       (defun ,name nil
-         ,docstring
-         (let ((state (ecb-stealthy-function-state-get (quote ,name))))
-           (unless (equal state 'done)
-             ,@body)
-           (ecb-stealthy-function-state-set (quote ,name) state))))))
-(put 'ecb-defstealthy 'lisp-indent-function 1)
-
-(defvar ecb-stealthy-update-running nil
-  "Recursion avoidance variable for stealthy performance.")
-
-(defun ecb-stealthy-updates ()
-  "Run all functions in the stealthy function list.
-Each function returns 'done if it completes successfully, or something else if
-interrupted by the user \(i.e. the function has been interrupted by the
-user). If a function is interrupted then `ecb-stealthy-function-list' is
-rotated so the interrupted function is the first element so the nect stealthy
-run starts with this interrupted function."
-  (unless ecb-stealthy-update-running
-    (let ((l ecb-stealthy-function-list)
-          (ecb-stealthy-update-running t))
-      (while (and l (equal 'done (funcall (car l))))
-        (setq l (cdr l)))
-      ;; if l is nil this means all functions have successfully completed -
-      ;; otherwise we ensure that next time we start with the interrupted
-      ;; function.
-      (when l
-        (message "TEST: ecb-stealthy-updates: %s has been interrupted" (car l))
-        (setq ecb-stealthy-function-list
-              (ecb-rotate-list ecb-stealthy-function-list (car l)))))))
 
 (ecb-defstealthy ecb-stealthy-empty-dir-check
   "Check for each current visible nodes in the directories buffer if the
