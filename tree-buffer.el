@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: tree-buffer.el,v 1.124 2003/10/02 08:35:21 berndl Exp $
+;; $Id: tree-buffer.el,v 1.125 2003/10/02 09:12:10 berndl Exp $
 
 ;;; Commentary:
 
@@ -995,8 +995,10 @@ mentioned above!"
                         menu-title)
 		(let* ((menu-selection (apply 'vector
                                               (x-popup-menu event menu)))
-                       (fn (if menu-selection (lookup-key menu menu-selection))))
-                  (when fn
+                       (fn (if (and menu-selection
+                                    (> (length menu-selection) 0))
+                               (lookup-key menu menu-selection))))
+                  (when (functionp fn)
 		    (funcall fn node)))))))))))
 
 
