@@ -136,6 +136,17 @@
   :group 'ecb
   :prefix "ecb-")
 
+
+(defconst ecb-layout-option-set-function
+  '(lambda (symbol value)
+     (set symbol value)
+     ;; we must check this because otherwise the layout would be drawn
+     ;; if we have changed the initial value regardless if ECB is
+     ;; activated or not.
+     (if (and (boundp 'ecb-activated)
+              ecb-activated)
+         (ecb-redraw-layout))))
+
 (defcustom ecb-layout-nr 9
   "*Define the window layout of ECB. A positive integer which sets the
 general layout. Currently there are 10 predefined layouts with index from 0 to
@@ -161,14 +172,7 @@ changed the ECB-screen-layout by any action you can always go back to this
 layout with `ecb-redraw-layout'"
   :group 'ecb-layout
   :initialize 'custom-initialize-default
-  :set '(lambda (symbol value)
-	  (set symbol value)
-          ;; we must check this because otherwise the layout would be drawn
-          ;; if we have changed the initial value regardless if ECB is
-          ;; activated or not.
-          (if (and (boundp 'ecb-activated)
-                   ecb-activated)
-              (ecb-redraw-layout)))
+  :set ecb-layout-option-set-function
   :type 'integer)
 
 (defconst ecb-old-compilation-window-height compilation-window-height)
@@ -194,14 +198,7 @@ changed the ECB-screen-layout by any action you can always go back to this
 layout with `ecb-redraw-layout'"
   :group 'ecb-layout
   :initialize 'custom-initialize-default
-  :set '(lambda (symbol value)
-	  (set symbol value)
-          ;; we must check this because otherwise the layout would be drawn
-          ;; if we have changed the initial value regardless if ECB is
-          ;; activated or not.
-          (if (and (boundp 'ecb-activated)
-                   ecb-activated)
-              (ecb-redraw-layout)))
+  :set ecb-layout-option-set-function
   :type '(radio (const :tag "No compilation window" nil)
                 (number :tag "Window height")))
 
@@ -213,14 +210,7 @@ is enlarged to the value of `compilation-window-height' after finishing
 compilation. To restore the ECB-layout just call `ecb-redraw-layout'."
   :group 'ecb-layout
   :initialize 'custom-initialize-default
-  :set '(lambda (symbol value)
-	  (set symbol value)
-          ;; we must check this because otherwise the layout would be drawn
-          ;; if we have changed the initial value regardless if ECB is
-          ;; activated or not.
-          (if (and (boundp 'ecb-activated)
-                   ecb-activated)
-              (ecb-redraw-layout)))
+  :set ecb-layout-option-set-function
   :type 'boolean)
 
 ;; This variable is also set by the following adviced functions:
@@ -249,11 +239,7 @@ But you can always \(un)split the edit-window by customizing this option and
 ECB uses at start-time always the value you have set for this option!"
   :group 'ecb-layout
   :initialize 'custom-initialize-default
-  :set '(lambda (symbol value)
-	  (set symbol value)
-          (if (and (boundp 'ecb-activated)
-                   ecb-activated)
-              (ecb-redraw-layout)))
+  :set ecb-layout-option-set-function
   :type '(radio (const :tag "Split horizontally"
                        :value horizontal)
 		(const :tag "Split vertically"
@@ -285,11 +271,8 @@ during compilation process."
 or right of the edit window. If the number is less than 1.0 the width is a
 fraction of the frame width."
   :group 'ecb-layout
-  :set '(lambda (symbol value)
-	  (set symbol value)
-          (if (and (boundp 'ecb-activated)
-                   ecb-activated)
-              (ecb-redraw-layout)))
+  :initialize 'custom-initialize-default
+  :set ecb-layout-option-set-function
   :type 'number)
 
 (defcustom ecb-windows-height 0.33
@@ -297,11 +280,8 @@ fraction of the frame width."
 the edit window. If the number is less than 1.0 the width is a fraction of the
 frame height."
   :group 'ecb-layout
-  :set '(lambda (symbol value)
-	  (set symbol value)
-          (if (and (boundp 'ecb-activated)
-                   ecb-activated)
-              (ecb-redraw-layout)))
+  :initialize 'custom-initialize-default
+  :set ecb-layout-option-set-function
   :type 'number)
 
 (defcustom ecb-other-window-jump-behavior 'only-edit

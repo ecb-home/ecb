@@ -249,7 +249,7 @@ and then activating ECB again!"
 
 (defcustom ecb-auto-update-methods-after-save t
   "*Automatically updating the ECB method buffer after saving
-a source-buffer."
+the current source-buffer."
   :group 'ecb-methods
   :type 'boolean)
 
@@ -686,7 +686,16 @@ given."
 	(tree-buffer-update)))))
 
 (defun ecb-update-methods-after-saving ()
-  (if ecb-auto-update-methods-after-save
+  "Updates the methods-buffer after saving if this option is turned on and if
+current-buffer is saved."
+  (if (and ecb-auto-update-methods-after-save
+           ecb-last-edit-window-with-point
+           ;; this prevents updating the method buffer after saving a not
+           ;; current buffer (e.g. with `save-some-buffers'), because this
+           ;; would result in displaying a method-buffer not belonging to the
+           ;; current source-buffer.
+           (eq (current-buffer)
+               (window-buffer ecb-last-edit-window-with-point)))
       (ecb-update-methods-buffer)))
 
 (defun ecb-update-methods-buffer()
