@@ -779,9 +779,10 @@ is called with the same arguments as `tree-node-expanded-fn'."
 	     (node (cdr name-node)))
         (when node
           ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: Is this the right place
-          ;; for this?          
-          (let ((search-nonincremental-instead nil))
-            (isearch-exit))
+          ;; for this?
+          (ignore-errors
+            (let ((search-nonincremental-instead nil))
+              (isearch-exit)))
           (if (and (tree-buffer-at-expand-symbol name node p)
                    ;; if the expand-symbol is displayed before and mouse-button
                    ;; = 0, means RET is pressed, we do not toggle-expand but work

@@ -2609,7 +2609,7 @@ above."
 (defun ecb-vc-state (file)
   "Same as `vc-state' but it clears the internal caches of the VC-package for
 FILE before calling `vc-state'. Finally calls `vc-state' and returns that value."
-  (vc-file-clearprops file)
+  (and (fboundp 'vc-file-clearprops) (vc-file-clearprops file))
   (vc-state file))
 
 (defun ecb-vc-get-state-fcn-for-dir (directory)

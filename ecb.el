@@ -2226,22 +2226,21 @@ performance-problem!"
 
 (add-hook 'emacs-startup-hook 'ecb-auto-activate-hook)
 
-;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: CVS Emacs has changed some
-;; internals of easymenu.el so the following under some environments fails -
-;; therefore we make all this error-save!
+(silentcomp-defvar menu-bar-tools-menu)
 (condition-case oops
     (progn
       (require 'easymenu)
-      (easy-menu-add-item nil
-                          '("tools") 
+      (easy-menu-add-item (if ecb-running-xemacs nil menu-bar-tools-menu)
+                          (if ecb-running-xemacs '("tools") nil)
                           (ecb-menu-item
                            [ "Start Code Browser (ECB)"
                              ecb-activate
                              :active t
                              :help "Start the Emacs Code Browser."
-                             ])))
+                             ]))
+      )
   (error
-   (ecb-warning "added menu-entry to Tools (error-type: %S, error-data: %S)"
+   (ecb-warning "Not critical error during adding menu-entry to Tools-menu (error-type: %S, error-data: %S)"
                 (car oops) (cdr oops))))
 
 
@@ -2280,7 +2279,7 @@ performance-problem!"
                                           when-ecb-running-emacs)
         )
     (error
-     (ecb-warning "support parsing the ecb-macros: (error-type: %S, error-data: %S)"
+     (ecb-warning "Not critical error during supporting parsing the ecb-macros: (error-type: %S, error-data: %S)"
                   (car oops) (cdr oops)))))
 
 ;; highlighting of some ecb-keywords
@@ -2369,7 +2368,7 @@ performance-problem!"
                                 ecb-font-lock-keywords)
         ))
   (error
-   (ecb-warning "support fontifying the ecb-macros: (error-type: %S, error-data: %S)"
+   (ecb-warning "Not critical error during supporting fontifying the ecb-macros: (error-type: %S, error-data: %S)"
                 (car oops) (cdr oops))))
   
 
