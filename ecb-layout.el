@@ -3984,9 +3984,14 @@ of not nil!"
                        (equal (window-frame new-win) ecb-frame))
                   (select-window new-win))))
         (when (ecb-compile-window-live-p)
-          (ecb-with-original-functions
-           (ecb-with-original-basic-functions
-            (delete-window ecb-compile-window))))))))
+          (let ((point-location (ecb-where-is-point)))
+            (ecb-with-original-functions
+             (ecb-with-original-basic-functions
+              (delete-window ecb-compile-window)))
+            ;; If point was in the compile-window we move it back to the first
+            ;; edit-window
+            (if (equal point-location 'compile)
+                (ecb-select-edit-window))))))))
 
 
 (silentcomp-provide 'ecb-layout)
