@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-speedbar.el,v 1.50 2003/11/04 17:39:40 berndl Exp $
+;; $Id: ecb-speedbar.el,v 1.51 2003/11/13 18:53:40 berndl Exp $
 
 ;;; Commentary:
 
@@ -302,10 +302,9 @@ Return NODE."
       (cond ((null tag) nil)            ;this would be a separator
             ((speedbar-generic-list-tag-p tag)
              ;; the semantic tag for this tag
-             (setq new-tag (list (car tag)
-                                   (intern (car tag))
-                                   nil nil nil
-                                   (make-vector 2 (cdr tag))))
+             (setq new-tag (ecb--semantic-tag (car tag)
+                                              (intern (car tag))))
+             (ecb--semantic--tag-set-overlay new-tag (make-vector 2 (cdr tag)))
              (ecb--semantic--tag-put-property new-tag 'ecb-speedbar-tag t)
              (tree-node-new (progn
                               (set-text-properties
@@ -318,10 +317,10 @@ Return NODE."
                             node))
             ((speedbar-generic-list-positioned-group-p tag)
              ;; the semantic tag for this tag
-             (setq new-tag (list (car tag)
-                                   (intern (car tag))
-                                   nil nil nil
-                                   (make-vector 2 (car (cdr tag)))))
+             (setq new-tag (ecb--semantic-tag (car tag)
+                                              (intern (car tag))))
+             (ecb--semantic--tag-set-overlay new-tag
+                                            (make-vector 2 (car (cdr tag))))
              (ecb--semantic--tag-put-property new-tag 'ecb-speedbar-tag t)
              (ecb-create-non-semantic-tree
               (setq new-node
@@ -364,7 +363,8 @@ Return NODE."
     (let* ((lst (let ((speedbar-dynamic-tags-function-list
                        (if (not (assoc major-mode
                                        ecb-non-semantic-parsing-function))
-                           speedbar-dynamic-tags-function-list
+                           (list (cons 'speedbar-fetch-dynamic-imenu 'identity)
+                                 (cons 'speedbar-fetch-dynamic-etags 'identity))
                          (list (cons (cdr (assoc major-mode
                                                  ecb-non-semantic-parsing-function))
                                      'identity)))))

@@ -6,7 +6,7 @@
 # Or type "make all" or "make upload-build" to generate the whole website
 # and build an uploadable ecb-website.tar.gz file.
 
-# $Id: Makefile,v 1.12 2003/07/11 15:55:09 berndl Exp $
+# $Id: Makefile,v 1.13 2003/11/13 18:53:40 berndl Exp $
 
 EMACS=emacs
 
@@ -17,6 +17,8 @@ TARC=tar -czvf
 SCP=scp
 SSH=ssh -l berndl ecb.sourceforge.net
 GNUCLIENT=gnuclient
+
+CEDETLOAD=C:/Programme/emacs-21/site-lisp/multi-file-packages/cedet-1.0beta1b/common/cedet.el
 
 MAKEINFO=/usr/bin/makeinfo
 
@@ -60,7 +62,7 @@ all: upload-build
 website: $(ecb_HTMLSOURCE)
 	@$(RM) $(ecb_HTML_GEN)
 	@$(RM) *.elc
-	$(EMACS) -batch -no-site-file $< -f eval-current-buffer
+	$(EMACS) -batch -no-site-file -l $(CEDETLOAD) $< -f eval-current-buffer
 
 # Generates HTML-docu from ecb.texi into ./docs/
 online-docu: $(ecb_TEXI)

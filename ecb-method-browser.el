@@ -24,7 +24,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-method-browser.el,v 1.3 2003/11/04 17:39:40 berndl Exp $
+;; $Id: ecb-method-browser.el,v 1.4 2003/11/13 18:53:41 berndl Exp $
 
 ;;; Commentary:
 
@@ -52,11 +52,6 @@
 (eval-when-compile
   (require 'silentcomp))
 
-;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: How these functions can be used
-;; in semantic 2.X
-(silentcomp-defun semanticdb-minor-mode-p)
-(silentcomp-defun semanticdb-find-nonterminal-by-name)
-(silentcomp-defun semanticdb-full-filename)
 (silentcomp-defun hs-minor-mode)
 (silentcomp-defun hs-show-block)
 (silentcomp-defun hs-hide-block)
@@ -425,10 +420,14 @@ as specified in `ecb-type-tag-expansion'"
              (or (equal default-expansion 'all-specifiers)
                  (member type-specifier default-expansion))))))
 
+(defsubst ecb-faux-group-tag-p (tag)
+  "Returns not nil if TAG is a \"virtual\" faux-group token which has no
+position but groups some external members having the same parent-tag."
+  (or (ecb--semantic--tag-get-property tag 'ecb-group-tag)
+      (ecb--semantic--tag-get-property tag 'faux)))
+
 (defun ecb-get-type-specifier (tag)
-  (if (or (ecb--semantic--tag-get-property tag 'ecb-group-tag)
-          ;; marking done by semantic itself
-          (ecb--semantic--tag-get-property tag 'faux))
+  (if (ecb-faux-group-tag-p tag)
       "group"
     (ecb--semantic-tag-type tag)))
   
@@ -456,8 +455,7 @@ as specified in `ecb-type-tag-expansion'"
                    ;; This code can be removed (or changed) if semantic allows
                    ;; correct protection display for function-tags with
                    ;; parent-tag.
-                   (when (or (ecb--semantic--tag-get-property tag 'ecb-group-tag)
-                             (ecb--semantic--tag-get-property tag 'faux))
+                   (when (ecb-faux-group-tag-p tag)
                      (if (string-match (concat "^\\(.+"
                                                (ecb--semantic-uml-colon-string)
                                                "\\)\\("
@@ -1188,7 +1186,6 @@ TAGLIST otherwise TAGLIST is returned."
         (funcall fcn taglist)
       taglist)))
 
-
 (defun ecb-group-function-tags-with-parents (taglist)
   "Return a new taglist based on TAGLIST where all function-tags in
 TAGLIST having a parent tag are grouped together under a new faux tag
@@ -1874,7 +1871,78 @@ types which are parsed by imenu or etags \(see
                                     (symbol-name elem))))))
             spec)))
 
+;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: Maybe an option for searching
+;; system dbs too?!
+(defun ecb-semanticdb-get-type-definition-list (typename &optional
+                                                         search-system-dbs)
+  "Search with semanticdb for the definition of the type with name TYPENAME.
+The value of SEARCH-SYSTEM-DBS is propagated to the semanticdb variable
+`semanticdb-search-system-databases'. Return-value is an alist where each
+element represents a found location for TYPENAME. The car of an element is the
+full filename and the cdr is the tag in this file. If no type-definition can
+be found or if the semanticdb is not active then nil is returned."
+  (when (and (featurep 'semanticdb) (ecb--semanticdb-minor-mode-p))
+    (if (not ecb-semantic-2-loaded)
+        ;; With semantic 1.X we just run a very simplified database search.
+        (let ((search-result (ecb--semanticdb-find-tags-by-name typename)))
+          (when search-result
+            (list (cons (ecb--semanticdb-full-filename (caar search-result))
+                        (cdar search-result)))))
+      ;; With semantic 2.X we do a full featured database-search.
+      (let* ((semanticdb-search-system-databases search-system-dbs)
+             (search-result (ecb--semanticdb-find-tags-by-name typename))
+             (result-tags (and search-result
+                               (ecb--semanticdb-strip-find-results search-result)))
+             (type-tag-numbers nil)
+             (filename-tag-alist nil))
+        (when (and result-tags
+                   ;; some paranoia
+                   (= (length result-tags)
+                      (ecb--semanticdb-find-result-length search-result)))
+          ;; First we check which tags in the stripped search-result
+          ;; (result-tags) are types with positions (means associated with a
+          ;; file) and collect their sequence-positions in type-tag-numbers.
+          (dotimes (i (length result-tags))
+            (if (and (equal (ecb--semantic-tag-class (nth i result-tags))
+                            'type)
+                     (ecb--semantic-tag-with-position-p (nth i result-tags)))
+                (setq type-tag-numbers
+                      (cons i type-tag-numbers))))
+          (setq type-tag-numbers (nreverse type-tag-numbers))
+          ;; Now we get for each element in type-tag-numbers the related
+          ;; filename (where the tag is defined) and collect them in an alist
+          ;; where each element is a cons-cell where car is the filename and
+          ;; cdr is the tag in this file. Especially with scoped languages
+          ;; like C++ or Java a type with the same name can be defined in more
+          ;; than one file - each of these files belonging to another
+          ;; package/library.
+          (delq nil
+                (mapcar (function (lambda (n)
+                                    (let ((r (ecb--semanticdb-find-result-nth
+                                              search-result n)))
+                                      (if (and (cdr r)
+                                               (stringp (cdr r))
+                                               (file-readable-p (cdr r)))
+                                          (cons (cdr r) (car r))))))
+                        type-tag-numbers)))))))
 
+(defun ecb-semanticdb-get-type-definition (typename &optional
+                                                    search-system-dbs)
+  "Runs `ecb-semanticdb-get-type-definition-list' for TYPENAME and
+SEARCH-SYSTEM-DBS and return exactly one type-definition cons-cell where car
+is a full filename and cdr is a tag for TYPENAME. "
+  (let ((type-definition-alist (ecb-semanticdb-get-type-definition-list
+                                typename search-system-dbs)))
+    (when type-definition-alist
+      ;; if we got more than one file for TYPENAME then the user has to
+      ;; choose one.
+      (if (> (length type-definition-alist) 1)
+          (assoc (ecb-offer-choices "Select a definition-file: "
+                                    (mapcar #'car type-definition-alist))
+                 type-definition-alist)
+        (car type-definition-alist)))))
+    
+  
 (defun ecb-method-clicked (node ecb-button shift-mode &optional no-post-action
                                 additional-post-action-list)
   (if shift-mode
@@ -1887,7 +1955,17 @@ types which are parsed by imenu or etags \(see
     (tree-buffer-highlight-node-data data)
     (cond
      ;; Type 0 = a tag
-     ((= type 0) (setq tag data))
+     ((= type 0)
+      (setq tag data)
+      ;; If we have a virtual faux-group type-tag then we try to find it via
+      ;; semanticdb
+      (when (ecb-faux-group-tag-p tag)
+        (set-buffer (get-file-buffer ecb-path-selected-source))
+        (let ((faux-group (ecb-semanticdb-get-type-definition
+                           (ecb--semantic-tag-name data))))
+          (when faux-group
+            (setq tag (cdr faux-group))
+            (setq filename (car faux-group))))))
      ;; Type 1 = a title of a group
      ;; Just expand/collapse the node
      ((= type 1)
@@ -1902,16 +1980,15 @@ types which are parsed by imenu or etags \(see
       ;; Try to find source using JDE
       (setq found (ecb-jde-show-class-source data))
       ;; Try to find source using Semantic DB
-      (when (and (not found) (featurep 'semanticdb) (semanticdb-minor-mode-p))
-        (let ((parent (semanticdb-find-nonterminal-by-name data)))
+      (when (not found)
+        (let ((parent (ecb-semanticdb-get-type-definition data)))
           (when parent
-            (setq tag (cdar parent))
-            (setq filename (semanticdb-full-filename (caar parent)))))))
+            (setq tag (cdr parent))
+            (setq filename (car parent))))))
      )
     (when (and tag (not found))
       (ecb-semantic-assert-valid-tag tag)
       (if (eq 'include (ecb--semantic-tag-class tag))
-          ;; Include tag -> try to find source
           (progn
             (set-buffer (get-file-buffer ecb-path-selected-source))
             (let ((file (ecb--semantic-dependency-tag-file tag)))
@@ -2039,6 +2116,8 @@ nil too then no post-actions are performed."
   (cond ((not (ecb-buffer-or-file-readable-p filename))
          (error "ECB: ecb-jump-to-tag: Can not open filename %s."
                 filename))
+        ((not (ecb--semantic-tag-with-position-p tag))
+         nil)
         (t
          (unless window
            (setq window (selected-window)))

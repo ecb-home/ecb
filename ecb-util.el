@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-util.el,v 1.84 2003/11/04 17:39:40 berndl Exp $
+;; $Id: ecb-util.el,v 1.85 2003/11/13 18:53:40 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -60,6 +60,7 @@
 (silentcomp-defun display-message)
 (silentcomp-defun clear-message)
 (silentcomp-defun noninteractive)
+(silentcomp-defun make-event)
 ;; Emacs
 (silentcomp-defvar message-log-max)
 (silentcomp-defvar message-truncate-lines)
@@ -436,6 +437,7 @@ height is that fraction of the frame."
     (error "Window is not alive!")))
 
 ;; stolen from query.el and slightly enhanced
+;; This for a small number of choices each of them a short string
 (defun ecb-query-string (prompt choices &optional other-prompt)
   "Prints PROMPT and returns a string which must be one of CHOICES.
 CHOICES is either a list of strings whereas the first choice is the default
@@ -459,12 +461,80 @@ the user is prompted with OTHER-PROMPT to insert any arbitrary string."
     (setq new-choices (nconc (mapcar (function (lambda (x) (list x t)))
                                      new-choices)
                              '('("" t))))
-    (setq answer (completing-read prompt new-choices nil t ""))
+    (setq answer (completing-read prompt new-choices nil t))
     (cond ((string= answer "")
            (setq answer default))
           ((string= answer "other")
            (setq answer (read-string (concat other-prompt ": ")))))
     answer))
+
+;; This is for any number of string-choices without any length restriction -
+;; see also `ecb-query-string'.
+(defun ecb-offer-choices (prompt choices)
+  "Prints PROMPT and returns a string which must be one of CHOICES.
+CHOICES is a list of strings whereas the first choice is the default. All
+choices are immediately displayed as if completion does it so a selection can
+be made either with the mouse or with the keyboard."
+  (let* ((minibuffer-setup-hook
+          (append minibuffer-setup-hook
+                  (list (lambda ()
+                          (with-output-to-temp-buffer "*Completions*"
+                            (display-completion-list (all-completions "" minibuffer-completion-table)))))))
+         (completion-list (mapcar (function (lambda (x) (list x t)))
+                                  choices))
+         (answer (completing-read prompt
+                                  completion-list
+                                  nil t
+                                  (try-completion "" completion-list))))
+    (if (string= answer "")
+        (car choices)
+      answer)))
+
+
+;; ecb-offer-choices-1 and ecb-offer-choices-2 are two other approaches for
+;; ecb-offer-choices - but IMHO not as good and clean as the current one and
+;; therefore not used in ECB
+(defun ecb-offer-choices-1 (prompt choices)
+  "Prints PROMPT and returns a string which must be one of CHOICES.
+CHOICES is a list of strings whereas the first choice is the default. All
+choices are immediately displayed as if completion does it so a selection can
+be made either with the mouse or with the keyboard."
+  (let* ((minibuffer-setup-hook
+          (append minibuffer-setup-hook
+                  '(minibuffer-complete
+                    minibuffer-complete
+                    minibuffer-complete)))
+         (answer (completing-read
+                  prompt
+                  (mapcar (function (lambda (x) (list x t)))
+                          choices)
+                  nil t)))
+    (if (string= answer "")
+        (car choices)
+      answer)))
+
+(defun ecb-offer-choices-2 (prompt choices)
+  "Prints PROMPT and returns a string which must be one of CHOICES.
+CHOICES is a list of strings whereas the first choice is the default. All
+choices are immediately displayed as if completion does it so a selection can
+be made either with the mouse or with the keyboard."
+  ;; First we create a TAB-event
+  (let ((event (if ecb-running-xemacs
+                   (make-event 'key-press '(key tab))
+                 9)))
+    ;; With these 3 TAB-events we ensure that
+    ;; 1. The longest possible common substring is display in the minibuffer
+    ;; 2. All possible completions are displayed
+    (dotimes (i 3)
+      (setq unread-command-events (cons event unread-command-events))))
+  (let ((answer (completing-read
+                 prompt
+                 (mapcar (function (lambda (x) (list x t)))
+                         choices)
+                 nil t)))
+    (if (string= answer "")
+        (car choices)
+      answer)))
 
 (defun ecb-normalize-number (value &optional ref-value)
   "Normalize VALUE in the following manner and return:

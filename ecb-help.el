@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-help.el,v 1.100 2003/11/04 17:39:40 berndl Exp $
+;; $Id: ecb-help.el,v 1.101 2003/11/13 18:53:41 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -228,40 +228,40 @@ there is any and the current message-buffer. You will be asked for a
 problem-report subject and then you must insert a description of the problem.
 Please describe the problem as detailed as possible!"
   (interactive)
-  (if (and (equal ecb-frame (selected-frame))
-           (not (ecb-point-in-edit-window)))
-      (ecb-select-edit-window))
-  (if (not (locate-library "reporter"))
-      (ecb-error "You need the reporter.el package to submit a bugreport for ECB!")
-    (require 'reporter)
-    (and 
-     (y-or-n-p "Do you want to submit a problem report on the ECB? ")
-     (progn
-       (message "Preparing problem report...")
-       ;;prepare the basic buffer
-       (reporter-submit-bug-report
-        ecb-problem-report-mail-address
-        (format "ECB: %s, semantic: %s, eieio: %s, speedbar: %s, JDEE: %s"
-                ecb-version
-                semantic-version
-                eieio-version
-                speedbar-version
-                (if (boundp 'jde-version)
-                    jde-version
-                  "No JDEE"))
-        (ecb-problem-report-list-all-variables)
-        nil
-        'ecb-problem-report-post-hook
-        ecb-problem-report-message)
-       (if (equal ecb-frame (selected-frame))
-           (ecb-redraw-layout))
-       (mail-subject)
-       (insert (read-string "Problem report subject: "
-                            (format "ECB-%s -- " ecb-version)))
-       (mail-text)
-       (search-forward ecb-problem-report-message)
-       (end-of-line)
-       (message "Preparing bug report...done")))))
+  (when (or ecb-minor-mode
+            (y-or-n-p "ECB should be active when submitting a problem-report. Force report? "))
+    (if (and (equal ecb-frame (selected-frame))
+             (not (ecb-point-in-edit-window)))
+        (ecb-select-edit-window))
+    (if (not (locate-library "reporter"))
+        (ecb-error "You need the reporter.el package to submit a bugreport for ECB!")
+      (require 'reporter)
+      (progn
+        (message "Preparing problem report...")
+        ;;prepare the basic buffer
+        (reporter-submit-bug-report
+         ecb-problem-report-mail-address
+         (format "ECB: %s, semantic: %s, eieio: %s, speedbar: %s, JDEE: %s"
+                 ecb-version
+                 semantic-version
+                 eieio-version
+                 speedbar-version
+                 (if (boundp 'jde-version)
+                     jde-version
+                   "No JDEE"))
+         (ecb-problem-report-list-all-variables)
+         nil
+         'ecb-problem-report-post-hook
+         ecb-problem-report-message)
+        (if (equal ecb-frame (selected-frame))
+            (ecb-redraw-layout))
+        (mail-subject)
+        (insert (read-string "Problem report subject: "
+                             (format "ECB-%s -- " ecb-version)))
+        (mail-text)
+        (search-forward ecb-problem-report-message)
+        (end-of-line)
+        (message "Preparing bug report...done")))))
 
 (defun ecb-problem-report-post-hook()
   "Function run the reporter package done its work. It looks for a message- and

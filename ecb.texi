@@ -26,7 +26,7 @@
 @c GNU Emacs; see the file COPYING.  If not, write to the Free Software
 @c Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-@c $Id: ecb.texi,v 1.130 2003/11/04 17:39:36 berndl Exp $
+@c $Id: ecb.texi,v 1.131 2003/11/13 18:53:40 berndl Exp $
 
 @setfilename ecb.info
 
@@ -49,7 +49,7 @@
 @c edit the Makefile to change the version number. mechanism stolen
 @c from Tramp
 @macro ecbver{}
-2.01
+2.11
 @end macro
 
 
@@ -257,6 +257,7 @@ Tips and tricks
 * Hide-show::                   Using hide-show from the methods-buffer-menu
 * Window-managers and ECB::     Support of several Emacs-window-managers
 * Tree-buffer styles::          Displaying the trees with different styles
+* Using semanticdb::            Using semanticdb for going to external nodes
 
 Displaying the trees of the ECB-windows with different styles
 
@@ -1527,10 +1528,9 @@ called in or for the ecb-frame. It displays all buffers which are
 compile-window is temporally hidden then it will be displayed first.
 
 If there is no compile-window (@code{ecb-compile-window-height} is
-nil) then it splits the edit-window if unsplitted and displays
-@var{BUFFER} in the other edit-window but only if
-@code{pop-up-windows} is not nil (otherwise the edit-window will not
-splitted).
+nil) then it splits the edit-window if unsplitted and displays BUFFER
+in the other edit-window but only if @code{pop-up-windows} is not nil
+(otherwise the edit-window will not splitted).
 
 If called from outside the edit-area for a non-``compilation-buffers''
 (s.a.) then it behaves as if called from within an edit-window if
@@ -1541,8 +1541,15 @@ not. If @code{ecb-layout-always-operate-in-edit-window} does not
 contain @code{display-buffer} then the buffer is displayed in the
 edit-window without splitting it (if unsplitted).
 
+If BUFFER is contained in @code{special-display-buffer-names} or
+matches @code{special-display-regexps} then
+@code{special-display-function} will be called (if not nil). But this
+behavior depends on the value of the option
+@code{ecb-ignore-special-display}.
+
 If called for other frames it works like the original version.
 @end deffn
+
 
 @deffn Command switch-to-buffer BUFFER &optional NORECORD
 Around-advice @code{ecb}: The ECB-version of @code{switch-to-buffer}.
@@ -1702,6 +1709,29 @@ Now send immediately a bug report with
 Set @code{ecb-layout-debug-mode} back to nil if you do not want
 further debugging output in the *Messages* buffer"
 @end enumerate
+
+@anchor{Using special-display with ECB}
+@cindex specîal-display
+@subsection Handling special-display-buffers
+
+Emacs offers three options for a special-display-handling of certain
+buffers: @code{special-display-function},
+@code{special-display-buffer-names} and
+@code{special-display-regexps} (see the Emacs manual for a description
+of these options). ECB offers an option
+@code{ecb-ignore-special-display} for specification in which
+situations ECB should take account for the values of these
+special-display-options.
+
+Default-behavior of ECB is to ignore these special-display-options
+when a durable compile-window is active (i.e.
+@code{ecb-compile-window-height} is not nil). But with
+@code{ecb-ignore-special-display} you can tell ECB, that either always
+the special-display-options should be ignored as long as ECB is active
+or that they should be never igored regardless if a durable
+compile-window is set or not. In the latter case using
+@code{display-buffer} or @code{pop-to-buffer} takes always account for
+the values of these options - like the original behavior of Emacs.
 
 @node The Methods buffer, The ECB-layout, Temp- and compile-buffers, Usage of ECB
 @section Using and customizing the ECB-Methods buffer
@@ -4336,7 +4366,9 @@ There are three different styles available:
 
 Image-style (value @code{image}): Very nice and modern - just try it.
 For this style the options @code{ecb-tree-indent} and
-@code{ecb-tree-expand-symbol-before} have no effect!
+@code{ecb-tree-expand-symbol-before} have no effect! Note: GNU Emacs
+<= 21.3.X for Windows does not support image-display so ECB uses
+always 'ascii-guides even when here 'image is set!
 
 Ascii-style with guide-lines (value @code{ascii-guides}):
 @example
@@ -5654,6 +5686,32 @@ Hooks run direct before the ECB windows will be hidden either by
 @code{ecb-toggle-ecb-windows} or @code{ecb-hide-ecb-windows}. This means that at runtime
 of this hook all the ECB-tree-windows of current layout are visible.
 @end defopt
+
+@defopt ignore-special-display
+Ignore special-display-handling. This means, that all values of
+@code{special-display-function}, @code{special-display-buffer-names}
+and @code{special-display-regexps} are ignored
+
+@itemize
+@item
+only when durable compile window is used - i.e. if
+@code{ecb-compile-window-height} is not nil - this is the default
+value.
+
+@item
+always when ECB is active - that means no special-display-handling of
+buffers when ECB is active
+
+@item
+never, i.e. special-dislay-handling depends on the values of the
+options @code{special-display-function},
+@code{special-display-buffer-names} and
+@code{special-display-regexps}.
+
+@end itemize
+
+@end defopt
+
 
 @defopt layout-always-operate-in-edit-window
 Adviced window functions work always in the edit-window. If we are in
@@ -7034,6 +7092,7 @@ situations.
 * Hide-show::                   Using hide-show from the methods-buffer-menu
 * Window-managers and ECB::     Support of several Emacs-window-managers
 * Tree-buffer styles::          Displaying the trees with different styles
+* Using semanticdb::            Using semanticdb for going to external nodes
 @end menu
 
 @node Changing faces, Small screens, Tips and tricks, Tips and tricks
@@ -7827,7 +7886,7 @@ There is normally no need to do this but nevertheless it can be done
 by @code{ecb-winman-escreen-disable-support} rsp.
 @code{ecb-winman-winring-disable-support}.
 
-@node Tree-buffer styles, , Window-managers and ECB, Tips and tricks
+@node Tree-buffer styles, Using semanticdb, Window-managers and ECB, Tips and tricks
 @section Displaying the trees of the ECB-windows with different styles
 
 ECB offers three different styles for the tree-buffers in the
@@ -8020,6 +8079,120 @@ whereever your emacs-setup is located):
 Then ECB uses images without any special work-around with XEmacs too.
 Just try it - if the tree-buffers look ugly then the XEmacs-bug is
 probably not fixed correctly.
+
+@node Using semanticdb, , Tree-buffer styles, Tips and tricks
+@section Using semanticdb to jump to type-tags defined in other files
+
+In OO-languages like CLOS, eieio and C++ there can be type-tags in the
+method-buffer which are somehow virtual because there is no definition
+in the current source-file. But such a virtual type collects all its
+outside defined members like methods in C++ which are defined in the
+@file{*.cc} file whereas the class-definition is defined in the
+associated header-file. ECB uses semanticb to open the definition-file
+of such a tag and to jump to the definition of this tag. Same for
+parent-tags in the methods-buffer. This feature can only work
+correctly if semanticdb is well configured!
+
+Here is a C++-example:
+
+This class is defined in a file @file{ParentClass.h}:
+
+@example
+@group
+class ParentClass
+@{
+protected:
+  int p;
+@};  
+@end group
+@end example
+
+This class is defined in a file @file{ClassWithExternals.h}
+
+@example
+@group
+#include "ParentClass.h"
+
+class ClassWithExternals : public ParentClass
+@{
+private:
+  int i;
+
+public:
+  ClassWithExternals();
+  ~ClassWithExternals();
+@};
+@end group
+@end example
+
+Both the constructor and the desctructor of the class
+``ClassWithExternals'' are defined in a file
+@file{ClassWithExternals.cc}:
+
+@example
+@group
+#include "test.h"
+
+ClassWithExternals::ClassWithExternals(int i,
+                                       boolean b,
+                                       char c)
+@{
+  return;
+@}
+
+void
+ClassWithExternals::~ClassWithExternals()
+@{
+  return;
+@}
+@end group
+@end example
+
+ECB displays the contents of @file{ClassWithExternals.cc} in its methods-buffer like
+follows:
+
+@example
+@group
+[-] [Includes]
+ `- test.h
+[-] ClassWithExternals
+ |  +ClassWithExternals (+i:int, +b:class boolean, +c:char):ClassWithExternals
+ `- +~ClassWithExternals ():void
+@end group
+@end example
+
+Both the constructor and the desctructor of the class
+``ClassWithExternals'' are grouped under their class-type. ECB now
+uses semanticdb to jump to the definition of class
+``ClassWithExternals'' when you click onto the type-node
+``ClassWithExternals'' in the methods-buffer.
+
+The contents of @file{ClassWithExternals.h} are displayed like
+follows:
+
+@example
+@group
+[-] [Includes]
+ `- ParentClass.h
+[-] ClassWithExternals:class
+ |  [-] [Parents]
+ |   `- ParentClass
+ |  [-] [Variables]
+ |   `- -i:int
+ |  +ClassWithExternals ():ClassWithExternals
+ |  +~ClassWithExternals ():void
+ `- [+] [Misc]
+@end group
+@end example
+
+ECB uses semanticdb to jump to the definition of the class
+``ParentClass'' when you click onto the node ``ParentClass''.
+
+To enable this feature @code{global-semanticdb-minor-mode} must be
+enabled and semanticdb must be correctly configured. This means
+mainly that the option @code{semanticdb-project-roots} must be setup
+well. See the manual of semanticdb for further informations about
+this.
 
 @node Elisp programming, Conflicts and bugs, Tips and tricks, Top
 @chapter Entry points for Elisp programmers
@@ -9697,8 +9870,28 @@ Can i remove these ``ugly'' vertical lines from a tree-buffer?
 @tab @tab
 Yes, see option @code{ecb-tree-buffer-style}.
 
-@end multitable
+@item @tab @tab
 
+@item
+ECB does not display images in the tree-buffers - what can i do?
+@tab @tab
+Customize @code{ecb-tree-buffer-style} and restart ECB. But note: GNU
+Emacs <= 21.3.X for Windows does not support image-display so ECB uses
+always ascii-guide-lines even when here the image-style is set in
+@code{ecb-tree-buffer-style}.
+
+@item @tab @tab
+
+@item
+Do @code{special-display-function} et. al. work with ECB.
+@tab @tab
+Yes, see
+@ifinfo
+@*
+@end ifinfo
+@ref{Using special-display with ECB}.
+
+@end multitable
 
 @node Command Index, Option Index, FAQ, Top
 @unnumbered Command Index

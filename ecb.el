@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb.el,v 1.351 2003/11/04 17:39:38 berndl Exp $
+;; $Id: ecb.el,v 1.352 2003/11/13 18:53:40 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -519,6 +519,8 @@ There are three different styles available:
 Image-style \(value 'image):
 Very nice and modern - just try it. For this style the options
 `ecb-tree-indent' and `ecb-tree-expand-symbol-before' have no effect!
+Note: GNU Emacs <= 21.3.X for Windows does not support image-display so ECB
+uses always 'ascii-guides even when here 'image is set!
 
 Ascii-style with guide-lines \(value 'ascii-guides):
 \[-] ECB
@@ -2208,14 +2210,14 @@ always the ECB-frame if called from another frame."
 
 (defvar ecb-upgrade-check-done nil)
 
-(defun ecb-clean-up-after-activation-failure (msg)
+(defun ecb-clean-up-after-activation-failure (msg err)
   "Complete cleanup of all ECB-setups and report an error with message MSG."
   (let ((ecb-minor-mode t))
     (ecb-deactivate-internal t)
     (if ecb-running-xemacs
         (redraw-modeline t)
       (force-mode-line-update t))
-    (error msg)))
+    (error "ECB %s: %s (%S)" ecb-version msg err)))
   
 
 (defun ecb-xemacs-add-submenu-hack ()
@@ -2243,7 +2245,7 @@ is current when ECB is activated. This hack fixes this."
     ;; we activate only if all before-hooks return non nil
     (when (run-hook-with-args-until-failure 'ecb-before-activate-hook)
 
-      (condition-case nil
+      (condition-case err-obj
           (progn
             ;; checking the requirements
             (ecb-check-requirements)
@@ -2556,14 +2558,15 @@ is current when ECB is activated. This hack fixes this."
             )
         (error
          (ecb-clean-up-after-activation-failure
-          "Errors during the basic setup of ECB.")))
+          "Errors during the basic setup of ECB." err-obj)))
 
-      (condition-case nil
+      (condition-case err-obj
           ;; run personal hooks before drawing the layout
           (run-hooks 'ecb-activate-before-layout-draw-hook)
         (error
          (ecb-clean-up-after-activation-failure
-          "Errors during the hooks of ecb-activate-before-layout-draw-hook.")))
+          "Errors during the hooks of ecb-activate-before-layout-draw-hook."
+          err-obj)))
          
       (setq ecb-minor-mode t)
 
@@ -2571,7 +2574,7 @@ is current when ECB is activated. This hack fixes this."
       ;; split-state but only if the frame is splitted in two windows. More
       ;; windows can not be preserved because ECB can only split its edit-area
       ;; in two windows.
-      (condition-case nil
+      (condition-case err-obj
           (let ((win-list (ecb-window-list ecb-frame 0 (frame-first-window ecb-frame)))
                 buf-1 buf-2 split first-win-selected)
             (if (= (length win-list) 2)
@@ -2617,9 +2620,9 @@ is current when ECB is activated. This hack fixes this."
             (ecb-mode-line-format))
         (error
          (ecb-clean-up-after-activation-failure
-          "Errors during the layout setup of ECB.")))
+          "Errors during the layout setup of ECB." err-obj)))
 
-      (condition-case nil
+      (condition-case err-obj
           (when (and ecb-display-default-dir-after-start
                      (null (buffer-file-name (window-buffer ecb-edit-window))))
             (ecb-set-selected-directory
@@ -2628,7 +2631,7 @@ is current when ECB is activated. This hack fixes this."
                                  default-directory))))
         (error
          (ecb-clean-up-after-activation-failure
-          "Errors during setting the default directory.")))
+          "Errors during setting the default directory." err-obj)))
 
       ;; We need this ugly hack for a XEmacs-mystery concerning `add-submenu';
       ;; see `ecb-xemacs-add-submenu-hack'. `ecb-xemacs-add-submenu-hack'
@@ -2636,14 +2639,14 @@ is current when ECB is activated. This hack fixes this."
       (when ecb-running-xemacs
         (add-hook 'post-command-hook 'ecb-xemacs-add-submenu-hack))
       
-      (condition-case nil
+      (condition-case err-obj
           ;; we run any personal hooks
           (run-hooks 'ecb-activate-hook)
         (error
          (ecb-clean-up-after-activation-failure
-          "Errors during the hooks of ecb-activate-hook.")))
+          "Errors during the hooks of ecb-activate-hook." err-obj)))
 
-      (condition-case nil
+      (condition-case err-obj
           ;; enable mouse-tracking for the ecb-tree-buffers; we do this after
           ;; running the personal hooks because if a user put´s activation of
           ;; follow-mouse.el (`turn-on-follow-mouse') in the
@@ -2655,19 +2658,19 @@ is current when ECB is activated. This hack fixes this."
               (tree-buffer-activate-follow-mouse))
         (error
          (ecb-clean-up-after-activation-failure
-          "Errors during the mouse-tracking activation.")))
+          "Errors during the mouse-tracking activation." err-obj)))
 
       (setq ecb-minor-mode t)
       (message "The ECB is now activated.")
 
-      (condition-case nil
+      (condition-case err-obj
           ;; now we display all `ecb-not-compatible-options' and
           ;; `ecb-renamed-options'
           (when ecb-auto-compatibility-check
             (ecb-display-upgraded-options))
         (error
          (ecb-clean-up-after-activation-failure
-          "Error during the compatibility-check of ECB.")))
+          "Error during the compatibility-check of ECB." err-obj)))
 
       ;; if we activate ECB first time then we display the node "First steps" of
       ;; the online-manual
@@ -2681,12 +2684,12 @@ is current when ECB is activated. This hack fixes this."
       (ignore-errors
         (ecb-show-tip-of-the-day))
 
-      (condition-case nil
+      (condition-case err-obj
           ;;now take a snapshot of the current window configuration
           (ecb-set-activated-window-configuration)
         (error
          (ecb-clean-up-after-activation-failure
-          "Errors during the snapshot of the windows-configuration."))))))
+          "Errors during the snapshot of the windows-configuration." err-obj))))))
 
 
 (defun ecb-set-activated-window-configuration()

@@ -1,3 +1,37 @@
+* Changes for ECB version 2.11
+
+** Using semanticdb to jump to type-tags defined in other files.
+   In OO-languages like CLOS, eieio and C++ there can be type-tags in the
+   method-buffer which are somehow virtual because there is no definition in
+   the current source-file. But such a virtual type collects all its outside
+   defined members like methods in C++ which are defined in the *.cc file
+   whereas the class-definition is defined in the associated header-file.
+   ECB uses semanticb to open the definition-file of such a tag and to jump to
+   the definition of this tag. Same for parent-tags in the methods-buffer.
+   This feature can only work correctly if semanticdb is well configured!
+
+** New option `ecb-ignore-special-display'
+   The options `special-display-buffer-names', `special-display-regexps' and
+   `special-display-function' work as expected. Per default this in only true,
+   when no durable compile-window is used (see option
+   `ecb-compile-window-height'), i.e. with a durable compile window the
+   special-display-options are ignored per default. But this behavior can be
+   changed with the new option `ecb-ignore-special-display'.
+
+   Thanks to Rob Walker <rob.lists@tenfoot.org.uk> for a first suggestion.
+
+** Better reporting if there are errors during ECB-startup
+
+** Fixed bugs
+
+*** Clicking onto nodes with positionless semantic-tags as data doesn't fail
+
+*** Non-semantic sources (e.g. Perl, TeX) work when cedet 1.0 is loaded
+
+*** Fixed the versioning of ECB so the autom. upgrade works
+
+
+
 * Changes for ECB version 2.01
 
 ** Prepared for the new semantic 2.0 beta (contained in the cedet 1 beta)

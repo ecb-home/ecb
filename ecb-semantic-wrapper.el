@@ -23,7 +23,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-semantic-wrapper.el,v 1.1 2003/11/04 17:40:22 berndl Exp $
+;; $Id: ecb-semantic-wrapper.el,v 1.2 2003/11/13 18:53:41 berndl Exp $
 
 ;;; Commentary:
 
@@ -39,6 +39,8 @@
 
 
 (require 'semantic)
+
+(defconst ecb-semantic-2-loaded (string-match "^2" semantic-version))
 
 (eval-when-compile
   (require 'silentcomp))
@@ -104,6 +106,7 @@
     (semantic-token-get              . semantic--tag-get-property)
     (semantic-token-name             . semantic-tag-name)
     (semantic-token-overlay          . semantic-tag-overlay)
+    (semantic-token-overlay-cdr      . semantic--tag-overlay-cdr)
     (semantic-token-p                . semantic-tag-p)
     (semantic-token-put              . semantic--tag-put-property)
     (semantic-token-start            . semantic-tag-start)
@@ -131,17 +134,96 @@ equivalent new function of semantic 2.X. This alist should contain every
 function of `semantic-token->text-functions' (rsp. for semantic 2.X
 `semantic-format-tag-functions'.")
 
-;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: What about the
-;; semanticdb-functions ECB uses currently?
+(defconst ecb--semanticdb-function-alist
+  '((semanticdb-minor-mode-p             . semanticdb-minor-mode-p)
+    ;; This is not a full compatible alias. Only the first two parameters can
+    ;; be used with this alias!
+    (semanticdb-find-nonterminal-by-name . semanticdb-find-tags-by-name)
+    (semanticdb-full-filename            . semanticdb-full-filename))
+  "Alist where the car is a function of semanticdb 1.X and the cdr is the
+equivalent new function of semanticdb 2.X. This alist should contain every
+function ECB uses from the semanticdb library.")
+  
 
 ;; new let us create the aliase. Each alias has the name "ecb--"<function of
 ;; semantic 2.0>.
 (dolist (f-elem (append ecb--semantic-function-alist
-                        ecb--semantic-format-function-alist))
+                        ecb--semantic-format-function-alist
+                        ecb--semanticdb-function-alist))
   (defalias (intern (concat "ecb--" (symbol-name (cdr f-elem))))
     (if (fboundp (cdr f-elem))
         (cdr f-elem)
       (car f-elem))))
+
+(defsubst ecb--semantic-tag (name class &rest ignore)
+  "Create a new semantic tag with name NAME and tag-class CLASS."
+  (if (fboundp 'semantic-tag)
+      (apply 'semantic-tag name class ignore)
+    (list name class nil nil nil nil)))
+
+(defsubst ecb--semantic--tag-set-overlay (tag overlay)
+  "Set the overlay part of TAG with OVERLAY. OVERLAY can be an overlay or an
+unloaded buffer representation."
+  (let ((o-cdr (ecb--semantic--tag-overlay-cdr tag)))
+    (setcar o-cdr overlay)))
+
+
+;;; API Functions
+;;
+;; Once you have a search result, use these routines to operate
+;; on the search results at a higher level
+
+
+;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: Remove this again when they are
+;; fbound in the beta2 of cedet! But for now we can use them for implementing
+;; ecb-method-browser.el better.
+(if (fboundp 'semanticdb-strip-find-results)
+    (defalias 'ecb--semanticdb-strip-find-results
+      'semanticdb-strip-find-results)
+  (defun ecb--semanticdb-strip-find-results (results)
+    "Strip a semanticdb search RESULTS to exclude objects.
+This makes it appear more like the results of a `semantic-find-' call."
+    (apply #'append (mapcar #'cdr results))))
+
+(if (fboundp 'semanticdb-find-result-length)
+    (defalias 'ecb--semanticdb-find-result-length
+      'semanticdb-find-result-length)
+  (defun ecb--semanticdb-find-result-length (result)
+    "Number of tags found in RESULT."
+    (let ((count 0))
+      (mapc (lambda (onetable)
+              (setq count (+ count (1- (length onetable)))))
+            result)
+      count)))
+
+(defun ecb--semanticdb-find-result-nth (result n)
+  "In RESULT, return the Nth search result.
+This is a 0 based search result, with the first match being element 0. Returns
+a cons cell with car is the searched and found tag and the cdr is the
+associated full filename of this tag. If the search result is not associated
+with a file, then the cdar of the result-cons is nil."
+  (let ((ans nil)
+        (ans-file nil))
+    ;; Loop over each single table hit.
+    (while (and (not ans) result)
+      ;; For each table result, get local length, and modify
+      ;; N to be that much less.
+      (let ((ll (length (cdr (car result))))) ;; local length
+        (if (> ll n)
+            ;; We have a local match.
+            (setq ans (nth n (cdr (car result))))
+          ;; More to go.  Decrement N.
+          (setq n (- n ll))))
+      ;; If we have a hit, double-check the find-file
+      ;; entry.  If the file must be loaded, then gat that table's
+      ;; source file into a buffer.
+      ;; Klaus Berndl <klaus.berndl@sdm.de>: Modified to return the
+      ;; full-filename too.
+      (when (and ans (ecb--semantic-tag-with-position-p ans))
+        (setq ans-file (ecb--semanticdb-full-filename (car (car result)))))
+      ;; Keep moving.
+      (setq result (cdr result)))
+    (cons ans ans-file)))
 
 (silentcomp-provide 'ecb-semantic-wrapper)
 
