@@ -54,7 +54,7 @@
 ;; The latest version of the ECB is available at
 ;; http://home.swipnet.se/mayhem/ecb.html
 
-;; $Id: ecb.el,v 1.203 2002/03/01 09:57:03 berndl Exp $
+;; $Id: ecb.el,v 1.204 2002/03/01 14:52:43 berndl Exp $
 
 ;;; Code:
 
@@ -105,6 +105,9 @@
 ;;====================================================
 ;; Variables
 ;;====================================================
+(defvar ecb-tree-buffers nil
+  "The names of the tree-buffers of ECB.")
+
 (defvar ecb-selected-method-start 0
   "The currently selected method.")
 (defvar ecb-path-selected-directory nil
@@ -118,7 +121,8 @@
   "Path to currently selected source.")
 
 (defun ecb-initialize-internal-vars ()
-  (setq ecb-selected-method-start 0
+  (setq ecb-tree-buffers nil
+        ecb-selected-method-start 0
         ecb-path-selected-directory nil
         ecb-path-selected-source nil
         ecb-selected-token nil
@@ -1674,7 +1678,7 @@ according to `ecb-sources-sort-method'."
   ;; is this necessary if neither dir.- nor sources-buffer-contents have been
   ;; changed? I think not but anyway, doesn't matter, costs are very low.
   (save-excursion
-    (dolist (buf tree-buffers)
+    (dolist (buf ecb-tree-buffers)
       (set-buffer buf)
       (setq default-directory
             (concat ecb-path-selected-directory
@@ -3107,30 +3111,30 @@ always the ECB-frame if called from another frame."
 				    (buffer-list))))
       ;; create all the ECB-buffers if they don´t already exist
       (unless (member ecb-directories-buffer-name curr-buffer-list)
-	(tree-buffer-create
-	 ecb-directories-buffer-name
-	 ecb-frame
-	 'ecb-interpret-mouse-click
-	 'ecb-tree-buffer-node-select-callback
-	 'ecb-tree-buffer-node-expand-callback
+        (tree-buffer-create
+         ecb-directories-buffer-name
+         ecb-frame
+         'ecb-interpret-mouse-click
+         'ecb-tree-buffer-node-select-callback
+         'ecb-tree-buffer-node-expand-callback
          'ecb-mouse-over-directory-node
-	 (list (cons 0 ecb-directories-menu) (cons 1 ecb-sources-menu)
-	       (cons 2 ecb-source-path-menu))
-	 ecb-truncate-lines
-	 t
-	 ecb-tree-indent
-	 ecb-tree-incremental-search
+         (list (cons 0 ecb-directories-menu) (cons 1 ecb-sources-menu)
+               (cons 2 ecb-source-path-menu))
+         ecb-truncate-lines
+         t
+         ecb-tree-indent
+         ecb-tree-incremental-search
          ecb-tree-navigation-by-arrow
-	 (list (cons 1 ecb-source-in-directories-buffer-face))
-	 ecb-tree-expand-symbol-before
+         (list (cons 1 ecb-source-in-directories-buffer-face))
+         ecb-tree-expand-symbol-before
          ecb-directory-face
          ecb-directories-general-face
-	 ;; we add an after-create-hook to the tree-buffer
-	 (function (lambda ()
-		     (local-set-key [f1] 'ecb-add-source-path)
-		     (local-set-key [f2] 'ecb-customize)
-		     (local-set-key [f3] 'ecb-show-help)))
-	 ))
+         ;; we add an after-create-hook to the tree-buffer
+         (function (lambda ()
+                     (local-set-key [f1] 'ecb-add-source-path)
+                     (local-set-key [f2] 'ecb-customize)
+                     (local-set-key [f3] 'ecb-show-help)))
+         ))
       
       (unless (member ecb-sources-buffer-name curr-buffer-list)
 	(tree-buffer-create
@@ -3189,6 +3193,14 @@ always the ECB-frame if called from another frame."
          nil
          ecb-history-face
          ecb-history-general-face)))
+
+    ;; Now store all tree-buffer-names used by ECB
+    ;; ECB must not use the variable `tree-buffers' but must always refer to
+    ;; `ecb-tree-buffers'!!
+    (setq ecb-tree-buffers (list ecb-directories-buffer-name
+                                 ecb-sources-buffer-name
+                                 ecb-methods-buffer-name
+                                 ecb-history-buffer-name))
     
     ;; we need some hooks
     (add-hook 'semantic-after-partial-cache-change-hook
@@ -3243,7 +3255,7 @@ always the ECB-frame if called from another frame."
     ;; we run any personal hooks
     (run-hooks 'ecb-activate-hook)
 
-    ;; enable mouse-tracking for the tree-buffers; we do this after running
+    ;; enable mouse-tracking for the ecb-tree-buffers; we do this after running
     ;; the personal hooks because if a user put´s activation of
     ;; follow-mouse.el (`turn-on-follow-mouse') in the `ecb-activate-hook'
     ;; then our own ECb mouse-tracking must be activated later.

@@ -26,7 +26,7 @@
 ;;
 ;; Contains all online-help for ECB (stolen something from recentf.el)
 
-;; $Id: ecb-help.el,v 1.61 2002/02/28 16:11:04 berndl Exp $
+;; $Id: ecb-help.el,v 1.62 2002/03/01 14:52:43 berndl Exp $
 
 ;;; Code
 
@@ -526,6 +526,18 @@ Available hooks:
 - `ecb-current-buffer-sync-hook'
 
 Look at the documentation of these variables and hooks to get description.
+
+Remark to the library tree-buffer: This library is ECB independent and can be
+used for other applications too. But such an application is not allowed to use
+any of the variables of tree-buffer.el especially not the following:
+
+- `tree-buffers': Only for internal use. It contains all tree-buffers of
+  current Emacs-Instance, means all tree-buffers of all applications which
+  uses currently tree-buffers. Every application must store its own
+  tree-buffers in an own variable!
+  For example: ECB stores its tree-buffers in `ecb-tree-buffers'!
+
+An application can only use the methods tree-buffer.el provides!
 
 
                         ===================================

@@ -26,7 +26,7 @@
 ;; This file is part of the ECB package which can be found at:
 ;; http://home.swipnet.se/mayhem/ecb.html
 
-;; $Id: tree-buffer.el,v 1.78 2002/02/27 19:09:02 berndl Exp $
+;; $Id: tree-buffer.el,v 1.79 2002/03/01 14:52:43 berndl Exp $
 
 ;;; Code:
 
@@ -824,7 +824,7 @@ functionality is done with the `help-echo'-property and the function
                                 &optional type-facer expand-symbol-before
                                 highlight-node-face general-face
                                 after-create-hook)
-  "Creates a new tree buffer with
+  "Creates a new tree buffer and returns the newly created buffer.
 NAME: Name of the buffer
 FRAME: Frame in which the tree-buffer is displayed and valid. All keybindings
        and interactive functions of the tree-buffer work only if called in
@@ -881,8 +881,7 @@ TREE-INDENT: spaces subnodes should be indented.
 INCR-SEARCH: Should the incremental search be anabled in the tree-buffer.
              Three choices: 'prefix, 'substring, nil. See
              `tree-buffer-incremental-node-search'.
-ARROW-NAVIGATION: Smart navigation  with horizontal arrow keys. See
-                  `ecb-tree-navigation-by-arrow'.
+ARROW-NAVIGATION: If not nil then smart navigation with horizontal arrow keys.
 TYPE-FACER: Nil or a list of one or two conses, each cons for a node-type \(0
             or 1). The cdr of a cons can be:
             - a symbol of a face
@@ -1050,9 +1049,11 @@ AFTER-CREATE-HOOK: A function \(with no arguments) called directly after
     (use-local-map tree-buffer-key-map)
 
     (setq tree-buffers (cons (current-buffer) tree-buffers))
-    
-    (if (functionp after-create-hook)
-        (funcall after-create-hook))))
+
+    (prog1
+        (current-buffer)
+      (if (functionp after-create-hook)
+          (funcall after-create-hook)))))
 
 (defun tree-buffer-destroy (buffer)
   "Destroy the tree-buffer"
