@@ -26,7 +26,7 @@
 @c GNU Emacs; see the file COPYING.  If not, write to the Free Software
 @c Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-@c $Id: ecb.texi,v 1.184 2004/08/25 15:09:05 berndl Exp $
+@c $Id: ecb.texi,v 1.185 2004/09/03 16:33:44 berndl Exp $
 
 @setfilename ecb.info
 
@@ -49,7 +49,7 @@
 @c edit the Makefile to change the version number. mechanism stolen
 @c from Tramp
 @macro ecbver{}
-2.27
+2.28
 @end macro
 
 
@@ -5747,6 +5747,28 @@ Paths where to find code sources. Each path can have an optional alias
 that is used as it's display name. If no alias is set, the path is
 used as display name.
 @end defopt
+
+@defopt source-path
+Paths where to find code sources. Each path can have an optional alias
+that is used as it's display name. If no alias is set, the path is
+used as display name.
+
+Lisp-type of tis option: The value must be a list L whereas each
+element of L is either
+@itemize @minus
+@item
+a simple string which has to be the full path of a directory (this
+string is displayed in the directory-browser of ECB) or
+
+@item
+a 2-element list whereas the first element is the full path of a
+directory (string) and the second element is an arbitrary alias
+(string) for this directory which is then displayed instead of the
+underlying directory.
+@end itemize
+@end defopt
+
+
 
 @defopt use-speedbar-instead-native-tree-buffer
 If true then uses speedbar for directories, sources or methods. This

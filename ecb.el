@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb.el,v 1.400 2004/08/27 15:42:14 berndl Exp $
+;; $Id: ecb.el,v 1.401 2004/09/03 16:33:45 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -1708,7 +1708,7 @@ mouse-moving."
         (and (eq when-elem 'if-too-long)
              window
              (>= (+ (length (tree-node-get-name node))
-                    (tree-buffer-get-node-indent node))
+                    (tree-node-get-indentlength node))
                  (window-width window))))))
 
 (defvar ecb-idle-timer-alist nil)
