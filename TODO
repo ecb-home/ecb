@@ -1,6 +1,6 @@
 ********************************************************************************
-*** Last-Modified: $Date: 2001/05/05 05:51:39 $ 
-*** Version: $Id: TODO,v 1.13 2001/05/05 05:51:39 berndl Exp $
+*** Last-Modified: $Date: 2001/05/06 07:08:15 $ 
+*** Version: $Id: TODO,v 1.14 2001/05/06 07:08:15 berndl Exp $
 *** Author: Kevin A. Burton ( burton@apache.org | burton@openprivacy.org )
 ********************************************************************************
 
@@ -8,8 +8,6 @@
    intelligent tree-buffer recentering.
 
 - Fix pop-up menus in XEmacs. (JN)
-
-- Maybe ECB should optionally create its own frame when activated. (JN)
 
 - Ignore source files specified in .cvsignore files. (JN)
 

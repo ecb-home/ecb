@@ -52,7 +52,7 @@
 ;; The latest version of the ECB is available at
 ;; http://home.swipnet.se/mayhem/ecb.html
 
-;; $Id: ecb.el,v 1.74 2001/05/04 13:21:24 berndl Exp $
+;; $Id: ecb.el,v 1.75 2001/05/06 07:08:15 berndl Exp $
 
 ;;; Code:
 
@@ -125,8 +125,8 @@
   :prefix "ecb-")
 
 (defcustom ecb-use-recursive-edit nil
-  "*Tell ECB to use a recursive edit so that it can easily be deactivated by
-\(keyboard-escape-quit)."
+  "*Tell ECB to use a recursive edit so that it can easily be deactivated
+by \(keyboard-escape-quit)."
   :group 'ecb-general
   :type 'boolean)
 
@@ -435,13 +435,18 @@ you must deactivate and activate ECB again to take effect."
   :group 'ecb-general
   :type 'boolean)
 
-(defcustom ecb-tree-incremental-search t
+(defcustom ecb-tree-incremental-search 'prefix
   "*Enable incremental search in the ECB-tree-buffers. For a detailed
 explanation see the online help section \"Working with the keyboard in the ECB
 buffers\". If you change this during ECB is activated you must deactivate and
 activate ECB again to take effect."
   :group 'ecb-general
-  :type 'boolean)  
+  :type '(radio (const :tag "Match only prefix"
+                       :value prefix)
+                (const :tag "Match every substring"
+                       :value substring)
+                (const :tag "No incremental search"
+                       :value nil)))
 
 (defcustom ecb-show-node-name-in-minibuffer 'always
   "*Show the name of the item under mouse in minibuffer."
@@ -520,7 +525,6 @@ Note: A click with the secondary mouse-button \(see again
                 (const :tag "Last edit-window with point"
                        :value last-point)))
   
-
 (defcustom ecb-activate-before-layout-draw-hook nil
   "*Normal hook run at the end of activating the ecb-package by running
 `ecb-activate'. This hooks are run after all the internal setup process
@@ -868,14 +872,15 @@ given."
 (defun ecb-update-methods-after-saving ()
   "Updates the methods-buffer after saving if this option is turned on and if
 current-buffer is saved."
-  (when (and ecb-auto-update-methods-after-save
-           ecb-last-edit-window-with-point
-           ;; this prevents updating the method buffer after saving a not
-           ;; current buffer (e.g. with `save-some-buffers'), because this
-           ;; would result in displaying a method-buffer not belonging to the
-           ;; current source-buffer.
-           (eq (current-buffer)
-               (window-buffer ecb-last-edit-window-with-point)))
+  (when (and (equal (selected-frame) ecb-frame)
+             ecb-auto-update-methods-after-save
+             ecb-last-edit-window-with-point
+             ;; this prevents updating the method buffer after saving a not
+             ;; current buffer (e.g. with `save-some-buffers'), because this
+             ;; would result in displaying a method-buffer not belonging to the
+             ;; current source-buffer.
+             (equal (current-buffer)
+                    (window-buffer ecb-last-edit-window-with-point)))
     (ecb-select-source-file ecb-path-selected-source)
     (ecb-update-methods-buffer--internal)))
 
@@ -890,11 +895,11 @@ done by `ecb-rebuild-methods-buffer-after-parsing' because this function is in
 the `semantic-after-toplevel-bovinate-hook'.
 If optional argument SCROLL-TO-TOP is non nil then the method-buffer is
 displayed with window-start and point at beginning of buffer."
-  ;; Set here `ecb-method-buffer-needs-rebuild' to t so we can see below if
-  ;; `ecb-rebuild-methods-buffer-after-parsing' was called auto. after
-  ;; `semantic-bovinate-toplevel'.
-
-  (when (get-buffer-window ecb-methods-buffer-name)
+  (when (and (equal (selected-frame) ecb-frame)
+             (get-buffer-window ecb-methods-buffer-name))
+    ;; Set here `ecb-method-buffer-needs-rebuild' to t so we can see below if
+    ;; `ecb-rebuild-methods-buffer-after-parsing' was called auto. after
+    ;; `semantic-bovinate-toplevel'.
     (setq ecb-method-buffer-needs-rebuild t)
     (semantic-bovinate-toplevel t)
 
@@ -917,7 +922,9 @@ displayed with window-start and point at beginning of buffer."
   function is added to the hook `semantic-after-toplevel-bovinate-hook'."
   ;; This is a fix for semantic 1.4beta2
   ;; otherwise it parses the mini-buffer
-  (when (get-buffer-window ecb-methods-buffer-name)
+  (when (and ecb-activated
+             (equal (selected-frame) ecb-frame)
+             (get-buffer-window ecb-methods-buffer-name))
     (unless (string-match "^ *\\*" (buffer-name))
       (tree-node-set-children ecb-methods-root-node nil)
       (ecb-add-tokens ecb-methods-root-node
@@ -955,7 +962,9 @@ Examples when a call to this function is necessary:
   name be shown immediately in the ECB-method buffer then you must call this
   function."
   (interactive)
-  (when (ecb-point-in-edit-window)
+  (when (and ecb-activated
+             (equal (selected-frame) ecb-frame)
+             (ecb-point-in-edit-window))
     ;; to force a really complete rebuild we must completely clear the
     ;; semantic cache
     (semantic-clear-toplevel-cache)
@@ -997,57 +1006,62 @@ CLEARALL overrides the value of this option:
 = 0: Means all
 For further explanation see `ecb-clear-history-behavior'."
   (interactive "P")
-  (save-selected-window
-    (ecb-exec-in-history-window
-     (let ((buffer-file-name-list (mapcar (lambda (buff)
-					    (buffer-file-name buff))
-					  (buffer-list)))
-	   (tree-childs (tree-node-get-children (tree-buffer-get-root)))
-	   (clear-behavior (or (if (and clearall (integerp clearall))
-				   (cond ((= clearall 0) 'all)
-					 ((< clearall 0) 'not-existing-buffers)
-					 (t 'existing-buffers)))
-			       ecb-clear-history-behavior))
-	   child-data)
-       (while tree-childs
-	 (setq child-data (tree-node-get-data (car tree-childs)))
-	 (if (or (eq clear-behavior 'all)
-		 (and (eq clear-behavior 'not-existing-buffers)
-		      (not (member child-data buffer-file-name-list)))
-		 (and (eq clear-behavior 'existing-buffers)
-		      (member child-data buffer-file-name-list)))
-	     (ecb-remove-from-current-tree-buffer (car tree-childs)))
-	 (setq tree-childs (cdr tree-childs))))
-     (tree-buffer-update)
-     (tree-buffer-highlight-node-data ecb-path-selected-source))))
+  (unless (not ecb-activated)
+    (ecb-raise-ecb-frame-maybe)
+    (save-selected-window
+      (ecb-exec-in-history-window
+       (let ((buffer-file-name-list (mapcar (lambda (buff)
+                                              (buffer-file-name buff))
+                                            (buffer-list)))
+             (tree-childs (tree-node-get-children (tree-buffer-get-root)))
+             (clear-behavior (or (if (and clearall (integerp clearall))
+                                     (cond ((= clearall 0) 'all)
+                                           ((< clearall 0) 'not-existing-buffers)
+                                           (t 'existing-buffers)))
+                                 ecb-clear-history-behavior))
+             child-data)
+         (while tree-childs
+           (setq child-data (tree-node-get-data (car tree-childs)))
+           (if (or (eq clear-behavior 'all)
+                   (and (eq clear-behavior 'not-existing-buffers)
+                        (not (member child-data buffer-file-name-list)))
+                   (and (eq clear-behavior 'existing-buffers)
+                        (member child-data buffer-file-name-list)))
+               (ecb-remove-from-current-tree-buffer (car tree-childs)))
+           (setq tree-childs (cdr tree-childs))))
+       (tree-buffer-update)
+       (tree-buffer-highlight-node-data ecb-path-selected-source)))))
 
 (defun ecb-token-sync()
-  (when ecb-highlight-token-with-point
-    (let* ((tok (semantic-current-nonterminal)))
-      (when (not (eq ecb-selected-token tok))
-	(setq ecb-selected-token tok)
-	(save-selected-window
-	  (ecb-exec-in-methods-window
-	   (tree-buffer-highlight-node-data
-	    tok (equal ecb-highlight-token-with-point 'highlight))))))))
+  (when (and ecb-activated
+             (equal (selected-frame) ecb-frame))
+    (when ecb-highlight-token-with-point
+      (let* ((tok (semantic-current-nonterminal)))
+        (when (not (eq ecb-selected-token tok))
+          (setq ecb-selected-token tok)
+          (save-selected-window
+            (ecb-exec-in-methods-window
+             (tree-buffer-highlight-node-data
+              tok (equal ecb-highlight-token-with-point 'highlight)))))))))
 
 (defun ecb-current-buffer-sync(&optional opt-buffer)
   "Synchronizes the ECB buffers with the current buffer."
   (interactive)
-  ;;(message (prin1-to-string this-command))
-  (let ((filename (buffer-file-name (if opt-buffer opt-buffer (current-buffer)))))
-    (when (and filename (not (string= filename ecb-path-selected-source)))
-      ;; KB: seems this little sleep is necessary because otherwise jumping to
-      ;; certain markers in new opened files (e.g. with next-error etc. )
-      ;; doesn´t work correct. Can´t debug down this mysterious thing!
-      ;; Regardless of the size of the file to load, this 0.1 fraction of a
-      ;; sec is enough!
-      (sit-for 0.1)
-      (ecb-select-source-file filename)
-      ;; selected source has changed, therfore we must initialize
-      ;; ecb-selected-token again.
-      (setq ecb-selected-token nil)
-      (ecb-update-methods-buffer--internal 'scroll-to-begin))))
+  (when (and ecb-activated
+             (equal (selected-frame) ecb-frame))
+    (let ((filename (buffer-file-name (if opt-buffer opt-buffer (current-buffer)))))
+      (when (and filename (not (string= filename ecb-path-selected-source)))
+        ;; KB: seems this little sleep is necessary because otherwise jumping to
+        ;; certain markers in new opened files (e.g. with next-error etc. )
+        ;; doesn´t work correct. Can´t debug down this mysterious thing!
+        ;; Regardless of the size of the file to load, this 0.1 fraction of a
+        ;; sec is enough!
+        (sit-for 0.1)
+        (ecb-select-source-file filename)
+        ;; selected source has changed, therfore we must initialize
+        ;; ecb-selected-token again.
+        (setq ecb-selected-token nil)
+        (ecb-update-methods-buffer--internal 'scroll-to-begin)))))
 
 (defun ecb-find-file-and-display(filename other-edit-window)
   "Finds the file in the correct window. What the correct window is depends on
@@ -1127,6 +1141,7 @@ OTHER-WINDOW."
 (defun ecb-update-directories-buffer()
   "Updates the ECB directories buffer."
   (interactive)
+  (ecb-raise-ecb-frame-maybe)
   (save-selected-window
     (ecb-exec-in-directories-window
      ;;     (setq tree-buffer-type-faces
@@ -1354,7 +1369,14 @@ with the actually choosen layout \(see `ecb-layout-nr')."
   
   (if ecb-activated
       (ecb-redraw-layout)
-
+    ;; first set the ecb-frame
+    (if ecb-new-ecb-frame
+        (progn
+          (run-hooks 'ecb-activate-before-new-frame-created-hook)
+          (setq ecb-frame (make-frame)))
+      (setq ecb-frame (selected-frame)))
+    (select-frame ecb-frame)
+    ;; now we can activate ECB
     (let ((curr-buffer-list (mapcar (lambda (buff)
                                       (buffer-name buff))
                                     (buffer-list))))
@@ -1444,8 +1466,6 @@ with the actually choosen layout \(see `ecb-layout-nr')."
 
     ;; ediff-stuff; we operate here only with symbols to avoid bytecompiler
     ;; warnings
-    (add-hook 'ediff-before-setup-windows-hook
-              'ecb-ediff-before-setup-hook)
     (if (boundp 'ediff-quit-hook)
         (put 'ediff-quit-hook 'ecb-ediff-quit-hook-value
              (symbol-value 'ediff-quit-hook)))
@@ -1472,6 +1492,9 @@ with the actually choosen layout \(see `ecb-layout-nr')."
   "Deactivates the ECB and kills all ECB buffers and windows."
   (interactive)
   (unless (not ecb-activated)
+
+    (ecb-raise-ecb-frame-maybe)
+
     ;; deactivating the adviced functions
     (ecb-activate-adviced-functions nil)
 
@@ -1500,8 +1523,6 @@ with the actually choosen layout \(see `ecb-layout-nr')."
                  'ecb-set-edit-window-split-hook-function)
     (remove-hook 'help-mode-hook
                  'ecb-set-edit-window-split-hook-function)
-    (remove-hook 'ediff-before-setup-windows-hook
-                 'ecb-ediff-before-setup-hook)
     ;; ediff-stuff; we operate here only with symbols to avoid bytecompiler
     ;; warnings
     (if (get 'ediff-quit-hook 'ecb-ediff-quit-hook-value)
@@ -1509,6 +1530,7 @@ with the actually choosen layout \(see `ecb-layout-nr')."
                                    'ecb-ediff-quit-hook-value))
       (remove-hook 'ediff-quit-hook 'ecb-ediff-quit-hook))
     (setq ecb-activated nil)
+    (ignore-errors (delete-frame ecb-frame t))
     (setq ecb-frame nil)
     ;; run any personal hooks
     (run-hooks 'ecb-deactivate-hook))
@@ -1566,7 +1588,7 @@ buffers does not exist anymore."
   '("Remove not existing buffer-entries" . t))
 
 (defun ecb-post-command-hook()
-  (when (and ecb-window-sync (eq (selected-frame) ecb-frame))
+  (when (and ecb-window-sync ecb-activated (equal (selected-frame) ecb-frame))
     (ignore-errors (ecb-current-buffer-sync))
     (ecb-token-sync)))
 

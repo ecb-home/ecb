@@ -26,7 +26,7 @@
 ;;
 ;; Contains all online-help for ECB (stolen something from recentf.el)
 
-;; $Id: ecb-help.el,v 1.14 2001/05/03 19:58:08 berndl Exp $
+;; $Id: ecb-help.el,v 1.15 2001/05/06 07:08:15 berndl Exp $
 
 ;;; Code
 
@@ -99,7 +99,9 @@ the output of Emacs-compilation \(compile, grep etc.) is shown.
                           ===========================
 
 Call M-x `ecb-activate' and M-x `ecb-deactivate' to activate or deactivate
-ECB.
+ECB. If you want ECB started in a new frame see the option
+`ecb-new-ecb-frame' \(default is nil).
+
 
 
                                  ============
@@ -155,15 +157,19 @@ expanding/collapsing of an expandable node.
 Incremental search for a node in current tree-buffer. Each displayable key
 \(e.g. all keys normally bound to `self-insert-command') is appended to the
 current seach-pattern. The tree-buffer tries to jump to the first node which
-beginns with the current search-pattern. If no match is found then nothing is
-done. There are some special keys:
+matching the current search-pattern either as substring or as prefix \(see
+below). If no match is found then nothing is done. There are some special
+keys:
 - \[backspace] and \[delete]: Delete the last character from the search-pattern.
 - \[home]: Delete the complete search-pattern
 - \[end]: Expand either to a complete node if current search-pattern is
-         already unique or expands to the greates common prefix of the nodes.
+         already unique or expands to the greates common substring or prefix
+         of the nodes.
 For better overlooking the current search-pattern is shown in the echo area.
 After selecting a node with RET the search-pattern is cleared out.
-For this feature see also `ecb-tree-incremental-search'.
+With `ecb-tree-incremental-search' you can specify if the current
+search-pattern must be a real prefix of the node \(default) or if any
+substring is matched.
 
 For easy jumping to a certain ECB-buffer with the keyboard you should ensure
 that `ecb-other-window-jump-behavior' is set to 'all.
@@ -269,7 +275,7 @@ Available interactive ECB commands:
 
 - `ecb-activate'
 - `ecb-deactivate'
-- `ecb-update-directories-buffer' \(normally not needed)
+- `ecb-update-directories-buffer'
 - `ecb-current-buffer-sync' \(normally not needed)
 - `ecb-rebuild-methods-buffer' \(see \"Rebuilding the ECB-method buffer\")
 - `ecb-redraw-layout'
@@ -295,6 +301,7 @@ and you will see all well documented ECB-options.
 Here are the most important options \(it is recommended to check the
 following options before working with ECB):
 - `ecb-source-path': You must set this option!
+- `ecb-new-ecb-frame', `ecb-auto-raise-ecb-frame': Frame-handling of ECB.
 - `ecb-primary-secondary-mouse-buttons', `ecb-primary-mouse-jump-destination':
   Define how to use the mouse.
 - `ecb-tree-expand-symbol-before' and `ecb-tree-indent' \(maybe you like a
@@ -311,6 +318,7 @@ Variables an elisp-program can use:
 - `ecb-source-path-functions'
 
 Available hooks:
+- `ecb-activate-before-new-frame-created-hook'
 - `ecb-activate-before-layout-draw-hook'
 - `ecb-activate-hook'
 - `ecb-deactivate-hook'
@@ -366,6 +374,7 @@ These are the special commands of `ecb-dialog-mode' mode:
 (defun ecb-show-help ()
   "Shows the online help of ECB."
   (interactive)
+
   (if (not (ecb-point-in-edit-window))
       (ecb-other-window))
   (if (get-buffer ecb-help-buffer-name)
