@@ -124,7 +124,7 @@
 ;;   + The edit-window must not be splitted and the point must reside in
 ;;     the not deleted edit-window.
 
-;; $Id: ecb-layout.el,v 1.99 2002/01/25 16:21:41 berndl Exp $
+;; $Id: ecb-layout.el,v 1.100 2002/02/01 09:35:24 burtonator Exp $
 
 ;;; Code:
 
@@ -162,6 +162,11 @@ Attention: You should never change this!")
                   (select-frame ecb-frame)
 		  (ecb-redraw-layout)
                   (select-frame curr-frame))))))
+
+(defcustom ecb-select-edit-window-on-redraw nil
+  "*Select the first edit window on `ecb-redraw-layout'."
+  :group 'ecb-layout
+  :type 'boolean)
 
 (defcustom ecb-new-ecb-frame nil
   "*Create a new frame at activation time of ECB."
@@ -1468,6 +1473,10 @@ On normal machines the full drawback should be done in << 1s!"
             (ecb-redraw-layout-full)))
       (ecb-redraw-layout-full)))
 
+  ;;make sure we are in the edit window if necessary.
+  (when ecb-select-edit-window-on-redraw
+    (ecb-goto-window-edit1))
+  
   (message "ECB redrawing layout...done"))
 
 ;; the main layout core-function. This function is the "environment" for a

@@ -1,6 +1,10 @@
 Version 1.61:
 -------------
 
+- New feature, ecb-select-edit-window-on-redraw.  Mostly used if you are running
+  with ecb-redraw-layout-quickly and want to make sure you are always in the
+  edit window. (Kevin)
+
 - New feature, ecb-auto-activate.  If non-nil we can start the ECB after Emacs
   is started.  See `ecb-auto-activate' for more information.  (Kevin)
 

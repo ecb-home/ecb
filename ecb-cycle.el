@@ -1,6 +1,6 @@
 ;;; ecb-cycle.el --- cycle buffers through ecb windows.
 
-;; $Id: ecb-cycle.el,v 1.9 2002/01/26 10:38:20 burtonator Exp $
+;; $Id: ecb-cycle.el,v 1.10 2002/02/01 09:35:23 burtonator Exp $
 
 ;; Copyright (C) 2000-2003 Free Software Foundation, Inc.
 ;; Copyright (C) 2000-2003 Kevin A. Burton (burton@openprivacy.org)
@@ -69,17 +69,6 @@
   :group 'ecb-cycle
   :type 'boolean)
 
-(defcustom ecb-cycle-compilation-buffer-names (list ecb-eshell-buffer-name
-                                                    "*Apropos*"
-                                                    "*Help*"
-                                                    "*Backtrace*"
-                                                    "*shell*"
-                                                    "*bsh*")
-  "List of additional buffer names that should be displayed in compilation
-window."
-  :group 'ecb-cycle
-  :type '(repeat (file :tag "Buffer name")))
-
 (defun ecb-cycle-through-compilation-buffers()
   "Cycle through all compilation buffers currently open and display them within
 the compilation window `ecb-compile-window'.  If the currently opened buffer
@@ -88,7 +77,7 @@ compilation buffer.  If not we try to loop through all compilation buffers.  If
 we hit the end we go back to the beginning.  See `ecb-compilation-buffer-p'."
   (interactive)
 
-  (let*((compilation-buffers (ecb-get-compilation-buffers))
+  (let*((compilation-buffers (ecb-compilation-get-buffers))
         (current-buffer (window-buffer ecb-compile-window))
         (current-buffer-name (buffer-name current-buffer)))
 
@@ -140,39 +129,6 @@ we hit the end we go back to the beginning.  See `ecb-compilation-buffer-p'."
   (set-window-buffer ecb-compile-window buffer)
 
   (select-window ecb-compile-window))
-
-(defun ecb-get-compilation-buffers()
-  "Get all known compilation buffer names.  See `ecb-compilation-buffer-p'."
-
-  (let((buffer-names '())
-       (buffer-list (buffer-list))
-       (index 0))
-
-    (setq buffer-list (sort buffer-list (lambda(first second)
-                                          (string-lessp (buffer-name first)
-                                                        (buffer-name second)))))
-
-    (dolist(buffer buffer-list)
-
-      (when (ecb-compilation-buffer-p buffer)
-
-        (add-to-list 'buffer-names (cons (buffer-name buffer) index) t)
-        
-        (setq index (1+ index))))
-
-    buffer-names))
-  
-(defun ecb-compilation-buffer-p(buffer)
-  "Test if the given buffer is a compilation buffer.  Note that in this case we
-define 'compilation buffer' as a buffer that should ideally be displayed in the
-`ecb-compile-window'.  This means that in some situations this might not be the
-result of a `compile-internal'.  A good example would be the *Help* buffer or
-the `ecb-eshell-buffer-name'.  See `compilation-buffer-p'."
-  
-  (let((buffer-name (buffer-name buffer)))
-
-    (or (member buffer-name ecb-cycle-compilation-buffer-names)
-        (compilation-buffer-p buffer))))
 
 (provide 'ecb-cycle)
 

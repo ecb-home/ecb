@@ -1,6 +1,6 @@
 ;;; ecb-eshell.el --- eshell integration for the ECB.
 
-;; $Id: ecb-eshell.el,v 1.28 2002/01/29 23:55:12 burtonator Exp $
+;; $Id: ecb-eshell.el,v 1.29 2002/02/01 09:35:23 burtonator Exp $
 
 ;; Copyright (C) 2000-2003 Free Software Foundation, Inc.
 ;; Copyright (C) 2000-2003 Kevin A. Burton (burton@openprivacy.org)
@@ -122,6 +122,9 @@
 ;;
 ;; - BUG: when ecb-eshell-enlarge-when-selecting is nil we need to recenter.  If
 ;; we don't we just end up with the point in the middle of the eshell.
+;;
+;; - BUG: make sure the eshell is not buffer-read-only.  This is manifested by
+;; desktop.el for some reason.
 
 ;;; Code:
 
@@ -171,6 +174,8 @@ eshell is currently visible."
         (save-excursion
           (set-buffer (get-buffer-create ecb-eshell-buffer-name))
 
+          (setq buffer-read-only nil)
+          
           (setq ecb-buffer-directory default-directory))
 
         ;;at this point source-buffer-directory is a snapshot of the source
