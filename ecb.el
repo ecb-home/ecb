@@ -2709,7 +2709,6 @@ has been deactivated. Do not set this variable!")
             (if use-last-win-conf                     
                 (setq ecb-edit-area-creators
                       (nth 4 ecb-last-window-config-before-deactivation)))
-            (run-hooks 'ecb-redraw-layout-before-hook)
             (ecb-redraw-layout-full 'no-buffer-sync
                                     nil
                                     (if use-last-win-conf
@@ -2722,7 +2721,6 @@ has been deactivated. Do not set this variable!")
             (if (and use-last-win-conf
                      (null (nth 2 ecb-last-window-config-before-deactivation)))
                 (ecb-toggle-compile-window -1))
-            (run-hooks 'ecb-redraw-layout-after-hook)
 
             (when (member ecb-split-edit-window-after-start
                           '(vertical horizontal nil))
