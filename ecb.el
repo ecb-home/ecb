@@ -44,7 +44,9 @@
 ;; 
 ;; ECB is activated by calling:
 ;;
-;; (ecb-activate)
+;; M-x ecb-activate
+;;
+;; ECB can also be (de)activated/toggled by M-x ecb-minor-mode.
 ;;
 ;; After activating ECB you should call `ecb-show-help' to get a detailed
 ;; description of what ECB offers to you and how to use ECB.
@@ -52,7 +54,7 @@
 ;; The latest version of the ECB is available at
 ;; http://home.swipnet.se/mayhem/ecb.html
 
-;; $Id: ecb.el,v 1.112 2001/06/08 19:38:54 berndl Exp $
+;; $Id: ecb.el,v 1.113 2001/06/12 08:38:20 berndl Exp $
 
 ;;; Code:
 
@@ -88,6 +90,7 @@
 (require 'ecb-util)
 (require 'ecb-help)
 
+(require 'easymenu)
 (require 'assoc);; Semantic fix
 
 (eval-when-compile
@@ -109,7 +112,7 @@
 (defvar ecb-methods-root-node nil
   "Path to currently selected source.")
 
-(defvar ecb-activated nil
+(defvar ecb-minor-mode nil
   "Do not set this variable directly. Use `ecb-activate' and
 `ecb-deactivate'!")
 
@@ -158,7 +161,7 @@ by \(keyboard-escape-quit)."
   :group 'ecb-directories
   :set (function (lambda(symbol value)
 		   (set symbol value)
-		   (if (and ecb-activated
+		   (if (and ecb-minor-mode
 			    (functionp 'ecb-update-directories-buffer))
 		       (ecb-update-directories-buffer))))
   :type '(repeat (directory :tag "Path")))
@@ -463,8 +466,11 @@ See also `ecb-highlight-token-with-point-delay'."
 (defcustom ecb-highlight-token-with-point-delay 0.25
   "*Time Emacs must be idle before current token is highlighted.
 If nil then there is no delay, means current token is highlighted immediately.
-If your computer is slow then it could be reasonable to set a value of about
-0.25 for example."
+A small value of about 0.25 seconds saves CPU resources and you get even
+though almost the same effect as if you set no delay. But such a delay
+prevents also \"jumping backward/forward\" during scrolling within
+java-classes if point goes out of method-definition into class-definition.
+Therefore the default value is a delay of 0.25 seconds."
   :group 'ecb-methods
   :type '(radio (const :tag "No highlighting delay"
                        :value nil)
@@ -472,7 +478,7 @@ If your computer is slow then it could be reasonable to set a value of about
                         :value 0.25))
   :set (function (lambda (symbol value)
                    (set symbol value)
-                   (if ecb-activated
+                   (if ecb-minor-mode
                        (ecb-activate-ecb-sync-functions value 'ecb-token-sync))))
   :initialize 'custom-initialize-default)
 
@@ -517,8 +523,9 @@ you must deactivate and activate ECB again to take effect."
 (defcustom ecb-window-sync-delay 0.25
   "*Time Emacs must be idle before the ECB-windows are synchronized with
 current edit window. If nil then there is no delay, means synchronization
-takes place immediately. If your computer is slow then it could be reasonable
-to set a value of about 0.25 for example."
+takes place immediately. A small value of about 0.25 seconds saves CPU
+resources and you get even though almost the same effect as if you set no
+delay."
   :group 'ecb-general
   :type '(radio (const :tag "No synchronizing delay"
                        :value nil)
@@ -526,7 +533,7 @@ to set a value of about 0.25 for example."
                         :value 0.25))
   :set (function (lambda (symbol value)
                    (set symbol value)
-                   (if ecb-activated
+                   (if ecb-minor-mode
                        (ecb-activate-ecb-sync-functions value
                                                         'ecb-window-sync-function))))
   :initialize 'custom-initialize-default)
@@ -551,8 +558,8 @@ mouse over a node regardless if the ECB-window is the active window or not."
   :group 'ecb-general
   :set (function (lambda (symbol value)
                    (set symbol value)
-                   (if (and (boundp 'ecb-activated)
-                            ecb-activated)
+                   (if (and (boundp 'ecb-minor-mode)
+                            ecb-minor-mode)
                        (if (or (equal value 'always)
                                (equal value 'if-too-long))
                            (tree-buffer-activate-follow-mouse)
@@ -634,6 +641,13 @@ Note: A click with the secondary mouse-button \(see again
                        :value left-top)
                 (const :tag "Last edit-window with point"
                        :value last-point)))
+
+(defcustom ecb-minor-mode-text " ECB"
+  "*String to display in the mode line when ECB minor mode is active.
+\(When the string is not empty, make sure that it has a leading space.)"
+  :group 'ecb-general
+  :type 'string)
+
   
 (defcustom ecb-activate-before-layout-draw-hook nil
   "*Normal hook run at the end of activating the ecb-package by running
@@ -708,16 +722,60 @@ cleared!) ECB by running `ecb-deactivate'."
 	(select-window window)
       nil)))
 
+(defun ecb-goto-window (name)
+  (when ecb-minor-mode
+    (raise-frame ecb-frame)
+    (select-frame ecb-frame)    
+    (ecb-window-select name)))
+
+(defun ecb-goto-window-directories ()
+  (interactive)
+  (ecb-goto-window ecb-directories-buffer-name))
+
+(defun ecb-goto-window-sources ()
+  (interactive)
+  (ecb-goto-window ecb-sources-buffer-name))
+
+(defun ecb-goto-window-methods ()
+  (interactive)
+  (ecb-goto-window ecb-methods-buffer-name))
+
+(defun ecb-goto-window-history ()
+  (interactive)
+  (ecb-goto-window ecb-history-buffer-name))
+
+(defun ecb-goto-window-edit1 ()
+  (interactive)
+  (when ecb-minor-mode
+    (raise-frame ecb-frame)
+    (select-frame ecb-frame)    
+    (ecb-select-edit-window nil)))
+
+(defun ecb-goto-window-edit2 ()
+  (interactive)
+  (when ecb-minor-mode
+    (raise-frame ecb-frame)
+    (select-frame ecb-frame)    
+    (ecb-select-edit-window t)))
+
+(defun ecb-goto-window-compilation ()
+  (interactive)
+  (when (and ecb-minor-mode ecb-compile-window-height)
+    (raise-frame ecb-frame)
+    (select-frame ecb-frame)        
+    (ignore-errors (select-window ecb-compile-window))))
+
 (defun ecb-buffer-select (name)
   (set-buffer (get-buffer name)))
 
 (defun ecb-highlight-text (orig-text type)
   "If `ecb-font-lock-methods' is not nil then dependend to TYPE the face
-specified in `ecb-font-lock-method-faces' is added to TEXT, otherwise TEXT
-will get the face 'default. Returns TEXT."
+specified in `ecb-font-lock-method-faces' is added to TEXT. If either
+`font-lock-mode' in the source-buffer is nil or the face is not defined then
+nothing is done. Returns TEXT."
   (let ((text (copy-sequence orig-text)))
     (if (stringp text)
-        (if ecb-font-lock-methods
+        (if (and ecb-font-lock-methods font-lock-mode)
             (let* ((face-option-val (nth type ecb-font-lock-method-faces))
                    (face (or (and face-option-val
 				  (if running-xemacs
@@ -743,8 +801,7 @@ will get the face 'default. Returns TEXT."
                              (string-match "^\\(:[^: \t]+\\)" text)))
                 (put-text-property (match-beginning 1) (match-end 1)
                                    'face (if (boundp 'font-lock-type-face)
-                                             'font-lock-type-face 'default) text)))
-          (put-text-property 0 (length text) 'face 'default text)))
+                                             'font-lock-type-face 'default) text)))))
     text))
 
 (defun ecb-get-method-sig (method-token)
@@ -1057,7 +1114,7 @@ displayed with window-start and point at beginning of buffer."
 (defun ecb-rebuild-methods-buffer-after-parsing ()
   "Rebuilds the ECB-method buffer after toplevel-parsing by semantic. This
 function is added to the hook `semantic-after-toplevel-bovinate-hook'."
-  (when (and ecb-activated
+  (when (and ecb-minor-mode
              (equal (selected-frame) ecb-frame)
              (get-buffer-window ecb-methods-buffer-name)
              ;; In semantic 1.4 the functions of the hook
@@ -1103,9 +1160,10 @@ Examples when a call to this function is necessary:
   name be shown immediately in the ECB-method buffer then you must call this
   function."
   (interactive)
-  (when (and ecb-activated
+  (when (and ecb-minor-mode
              (equal (selected-frame) ecb-frame)
-             (ecb-point-in-edit-window))
+             (ecb-point-in-edit-window)
+             (y-or-n-p "Do you want completely rebuilding the method buffer? "))
     ;; to force a really complete rebuild we must completely clear the
     ;; semantic cache
     (semantic-clear-toplevel-cache)
@@ -1147,7 +1205,7 @@ CLEARALL overrides the value of this option:
 = 0: Means all
 For further explanation see `ecb-clear-history-behavior'."
   (interactive "P")
-  (unless (or (not ecb-activated)
+  (unless (or (not ecb-minor-mode)
               (not (equal (selected-frame) ecb-frame)))
     (save-selected-window
       (ecb-exec-in-history-window
@@ -1174,7 +1232,7 @@ For further explanation see `ecb-clear-history-behavior'."
        (tree-buffer-highlight-node-data ecb-path-selected-source)))))
 
 (defun ecb-token-sync ()
-  (when (and ecb-activated
+  (when (and ecb-minor-mode
              (equal (selected-frame) ecb-frame))
     (when ecb-highlight-token-with-point
       (let* ((tok (semantic-current-nonterminal)))
@@ -1190,7 +1248,7 @@ For further explanation see `ecb-clear-history-behavior'."
 nil then do this only if current-buffer differs from the source displayed in
 the ECB tree-buffers."
   (interactive "P")
-  (when (and ecb-activated
+  (when (and ecb-minor-mode
              (equal (selected-frame) ecb-frame))
     (ignore-errors
       (let ((filename (buffer-file-name (if opt-buffer opt-buffer (current-buffer)))))
@@ -1212,7 +1270,7 @@ the ECB tree-buffers."
           (ecb-token-sync))))))
 
 (defun ecb-window-sync-function ()
-  (when (and ecb-window-sync ecb-activated (equal (selected-frame) ecb-frame))
+  (when (and ecb-window-sync ecb-minor-mode (equal (selected-frame) ecb-frame))
     (ecb-current-buffer-sync)))
 
 (defun ecb-find-file-and-display (filename other-edit-window)
@@ -1290,7 +1348,7 @@ OTHER-WINDOW."
 (defun ecb-update-directories-buffer ()
   "Updates the ECB directories buffer."
   (interactive)
-  (unless (or (not ecb-activated)
+  (unless (or (not ecb-minor-mode)
               (not (equal (selected-frame) ecb-frame)))
     (save-selected-window
       (ecb-exec-in-directories-window
@@ -1563,30 +1621,6 @@ node in the ECB-window WINDOW."
                                (tree-node-get-name node))))
 
 
-;;====================================================
-;; Create buffers & menus
-;;====================================================
-
-(defun ecb-activate ()
-  "Activates the ECB and creates all the buffers and draws the ECB-screen
-with the actually choosen layout \(see `ecb-layout-nr'). This function raises
-always the ECB-frame if called from another frame."
-  (interactive)
-
-  (if ecb-use-recursive-edit
-      (if ecb-activated
-	  (progn
-	    (message "ECB already activated.  Drawing layout.")
-            
-	    (ecb-redraw-layout))
-	(catch 'exit
-	  (progn
-	    (ecb-activate--impl)
-	    (recursive-edit))
-	  (ecb-deactivate)))
-    
-    (ecb-activate--impl)))
-
 (defvar ecb-idle-timer-alist nil)
 (defvar ecb-post-command-hooks nil)
 (defun ecb-activate-ecb-sync-functions (idle-value func)
@@ -1606,10 +1640,221 @@ with idle-time IDLE-VALUE if IDLE-VALUE not nil. If nil the FUNC is added to
       (add-hook 'post-command-hook func)
       (add-to-list 'ecb-post-command-hooks func))))
 
+;;====================================================
+;; ECB minor mode: Create buffers & menus & maps
+;;====================================================
+
+(defvar ecb-prefix-key [(control ?c) ?.]
+  "The common prefix key in ECB minor mode.")
+
+(defvar ecb-prefix-map
+  (let ((km (make-sparse-keymap)))
+    (define-key km "f" 'ecb-activate)
+    (define-key km "l" 'ecb-redraw-layout)
+    (define-key km "t" 'ecb-toggle-ecb-windows)
+    (define-key km "r" 'ecb-rebuild-methods-buffer)
+    (define-key km "o" 'ecb-show-help)
+    (define-key km "1" 'ecb-goto-window-edit1)
+    (define-key km "2" 'ecb-goto-window-edit2)
+    (define-key km "d" 'ecb-goto-window-directories)
+    (define-key km "s" 'ecb-goto-window-sources)
+    (define-key km "m" 'ecb-goto-window-methods)
+    (define-key km "h" 'ecb-goto-window-history)
+    (define-key km "c" 'ecb-goto-window-compilation)
+    km)
+  "Default key bindings in ECB minor mode.")
+
+(defun ecb-menu-item (item)
+  "Build an XEmacs compatible menu item from vector ITEM.
+That is remove the unsupported :help stuff."
+  (if running-xemacs
+      (let ((n (length item))
+            (i 0)
+            slot l)
+        (while (< i n)
+          (setq slot (aref item i))
+          (if (and (keywordp slot)
+                   (eq slot :help))
+              (setq i (1+ i))
+            (setq l (cons slot l)))
+          (setq i (1+ i)))
+        (apply #'vector (nreverse l)))
+    item))
+
+(defvar ecb-menu-name "ECB")
+(defvar ecb-menu-bar
+  (list
+   ecb-menu-name
+   (ecb-menu-item
+    [ "Deactivate ECB"
+      ecb-deactivate
+      :active t
+      :help "Deactivate ECB."
+      ])
+   "-"
+   (ecb-menu-item
+    [ "Select ECB frame"
+      ecb-activate
+      :active (not (equal (selected-frame) ecb-frame))
+      :help "Select the ECB-frame."
+      ])
+   (ecb-menu-item
+    [ "Redraw layout"
+      ecb-redraw-layout
+      :active (equal (selected-frame) ecb-frame)
+      :help "Redraw the layout."
+      ])
+   (ecb-menu-item
+    [ "Toggle visibility of ECB windows"
+      ecb-toggle-ecb-windows
+      :active (equal (selected-frame) ecb-frame)
+      :help "Toggle the visibility of all ECB windows."
+      ])
+   (ecb-menu-item
+    [ "Rebuild method buffer"
+      ecb-rebuild-methods-buffer
+      :active (equal (selected-frame) ecb-frame)
+      :help "Rebuild the method buffer completely"
+      ])
+   "-"
+   (list
+    "Goto window"
+    (ecb-menu-item
+     ["Edit-window 1"
+      ecb-goto-window-edit1
+      :active t
+      :help "Go to the first edit-window"
+      ])
+    (ecb-menu-item
+     ["Edit-window 2 \(if splitted\)"
+      ecb-goto-window-edit2
+      :active t
+      :help "Go to the second edit-window \(if splitted\)"
+      ])
+    (ecb-menu-item
+     ["Directories"
+      ecb-goto-window-directories
+      :active t
+      :help "Go to the directories window"
+      ])
+    (ecb-menu-item
+     ["Sources"
+      ecb-goto-window-sources
+      :active t
+      :help "Go to the sources window"
+      ])
+    (ecb-menu-item
+     ["Methods and Variables"
+      ecb-goto-window-methods
+      :active t
+      :help "Go to the methods/variables window"
+      ])
+    (ecb-menu-item
+     ["History"
+      ecb-goto-window-history
+      :active t
+      :help "Go to the history window"
+      ])
+    (ecb-menu-item
+     ["Compilation"
+      ecb-goto-window-compilation
+      :active t
+      :help "Go to the compilation-output window"
+      ])
+    )
+   "-"
+   (list
+    "Preferences"
+    (ecb-menu-item
+     ["General..."
+      (customize-group "ecb-general")
+      :active t
+      :help "Customize general ECB options"
+      ])
+    (ecb-menu-item
+     ["Directories..."
+      (customize-group "ecb-directories")
+      :active t
+      :help "Customize ECB directories"
+      ])
+    (ecb-menu-item
+     ["Sources..."
+      (customize-group "ecb-sources")
+      :active t
+      :help "Customize ECB sources"
+      ])
+    (ecb-menu-item
+     ["Methods..."
+      (customize-group "ecb-methods")
+      :active t
+      :help "Customize ECB method display"
+      ])
+    (ecb-menu-item
+     ["History..."
+      (customize-group "ecb-history")
+      :active t
+      :help "Customize ECB history"
+      ])
+    (ecb-menu-item
+     ["Layout..."
+      (customize-group "ecb-layout")
+      :active t
+      :help "Customize ECB layout"
+      ])
+    )
+   "-"
+   (ecb-menu-item
+    [ "Show Online Help"
+      ecb-show-help
+      :active (equal (selected-frame) ecb-frame)
+      :help "Show the online help of ECB."
+      ])
+   (ecb-menu-item
+    [ "Submit problem report"
+      ecb-submit-problem-report
+      :active (equal (selected-frame) ecb-frame)
+      :help "Submit a problem report to the ECB mailing list."
+      ])
+   )
+  "Menu for ECB minor mode.")
+
+(defvar ecb-mode-map
+  (let ((km (make-sparse-keymap)))
+    (define-key km ecb-prefix-key ecb-prefix-map)
+    (easy-menu-define ecb-minor-menu km "ECB Minor Mode Menu" ecb-menu-bar)
+    km)
+  "Keymap for ECB minor mode.")
+
+(defun ecb-activate ()
+  "Activates the ECB and creates all the buffers and draws the ECB-screen
+with the actually choosen layout \(see `ecb-layout-nr'). This function raises
+always the ECB-frame if called from another frame."
+  (interactive)
+  (ecb-minor-mode 1))
+
+(defun ecb-activate-internal ()
+  "Activates the ECB and creates all the buffers and draws the ECB-screen
+with the actually choosen layout \(see `ecb-layout-nr'). This function raises
+always the ECB-frame if called from another frame."
+  (if ecb-use-recursive-edit
+      (if ecb-minor-mode
+	  (progn
+	    (message "ECB already activated.  Drawing layout.")
+            
+	    (ecb-redraw-layout))
+	(catch 'exit
+	  (progn
+	    (ecb-activate--impl)
+	    (recursive-edit))
+	  (ecb-deactivate-internal)))
+    
+    (ecb-activate--impl))
+  ecb-minor-mode)
+
 (defun ecb-activate--impl ()
   "See `ecb-activate'.  This is the implementation of ECB activation."
   
-  (if ecb-activated
+  (if ecb-minor-mode
       (progn
 	(raise-frame ecb-frame)
 	(select-frame ecb-frame)
@@ -1727,8 +1972,13 @@ with idle-time IDLE-VALUE if IDLE-VALUE not nil. If nil the FUNC is added to
 	     (symbol-value 'ediff-quit-hook)))
     (add-hook 'ediff-quit-hook 'ediff-cleanup-mess)
     (add-hook 'ediff-quit-hook 'ecb-ediff-quit-hook t)
-    
-    (setq ecb-activated t)
+
+    ;; menus
+    (if running-xemacs
+        (add-submenu nil ecb-minor-menu)
+      (easy-menu-add ecb-minor-menu))
+
+    (setq ecb-minor-mode t)
 
     ;; we must update the directories buffer first time
     (ecb-update-directories-buffer)
@@ -1767,7 +2017,11 @@ with idle-time IDLE-VALUE if IDLE-VALUE not nil. If nil the FUNC is added to
 (defun ecb-deactivate ()
   "Deactivates the ECB and kills all ECB buffers and windows."
   (interactive)
-  (unless (not ecb-activated)
+  (ecb-minor-mode 0))
+
+(defun ecb-deactivate-internal ()
+  "Deactivates the ECB and kills all ECB buffers and windows."
+  (unless (not ecb-minor-mode)
     
     ;; deactivating the adviced functions
     (ecb-activate-adviced-functions nil)
@@ -1810,6 +2064,9 @@ with idle-time IDLE-VALUE if IDLE-VALUE not nil. If nil the FUNC is added to
 				   'ecb-ediff-quit-hook-value))
       (remove-hook 'ediff-quit-hook 'ecb-ediff-quit-hook))
 
+    ;; menus
+    (easy-menu-remove ecb-minor-menu)
+
     ;; run any personal hooks
     (run-hooks 'ecb-deactivate-hook)
     
@@ -1825,8 +2082,42 @@ with idle-time IDLE-VALUE if IDLE-VALUE not nil. If nil the FUNC is added to
     
     (ecb-initialize-layout)
 
-    (setq ecb-activated nil))
-  (message "The ECB is now deactivated."))
+    (setq ecb-minor-mode nil))
+  (message "The ECB is now deactivated.")
+  ecb-minor-mode)
+
+(defun ecb-minor-mode (&optional arg)
+  "Toggle ECB minor mode.
+With prefix argument ARG, turn on if positive, otherwise off. Return non-nil
+if the minor mode is enabled.
+
+\\{ecb-mode-map}"
+  (interactive "P")
+  (let ((new-state (if (null arg)
+                       (not ecb-minor-mode)
+                     (> (prefix-numeric-value arg) 0))))
+    (if new-state
+        (ecb-activate-internal)
+      (ecb-deactivate-internal)))
+  (force-mode-line-update t)
+  ecb-minor-mode)
+
+;; Adding ECB to the minor modes
+(if (fboundp 'add-minor-mode)
+    ;; Emacs 21 & XEmacs
+    (add-minor-mode 'ecb-minor-mode
+                    'ecb-minor-mode-text ecb-mode-map)
+  ;; Emacs 20.X
+  (or (assq 'ecb-minor-mode minor-mode-alist)
+      (setq minor-mode-alist
+            (cons (list 'ecb-minor-mode 'ecb-minor-mode-text)
+                  minor-mode-alist)))
+    
+  (or (assq 'ecb-minor-mode minor-mode-map-alist)
+      (setq minor-mode-map-alist
+            (cons (cons 'ecb-minor-mode ecb-mode-map)
+                  minor-mode-map-alist))))
+
 
 (defvar ecb-common-directories-menu nil)
 (setq ecb-common-directories-menu
@@ -1919,7 +2210,7 @@ FILE.elc or if FILE.elc doesn't exist."
       (dolist (file files)
 	(if (string-match "\\(tree-buffer\\|ecb.*\\)\\.el$" file)
 	    (ecb-compile-file-if-necessary file force-all))))))
-    
+
 (provide 'ecb)
 
 ;;; ecb.el ends here

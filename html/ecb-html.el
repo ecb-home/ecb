@@ -21,7 +21,7 @@
 
 ;; Generates ECB HTML pages.
 
-;; $Id: ecb-html.el,v 1.13 2001/06/06 23:02:34 creator Exp $
+;; $Id: ecb-html.el,v 1.14 2001/06/12 08:38:21 berndl Exp $
 
 ;;; Code:
 
@@ -156,7 +156,7 @@
    "ECB - Emacs Code Browser"
 
    (h-section "About"
-	      "ECB is source code browser for Emacs. It displays a couple of windows that can be used to browse directories, files and methods. It supports method parsing for Java, C, C++, Elisp etc.")
+	      "ECB is source code browser for Emacs. It is a global minor-mode which displays a couple of windows that can be used to browse directories, files and methods. It supports method parsing for Java, C, C++, Elisp etc.")
 
    (h-section "Dependencies"
 	      "ECB requires version 1.3.3 or higher of " (h-link "http://cedet.sourceforge.net/semantic.shtml" '(target . "_top") "Eric Ludlam's semantic bovinator") ". If you use ECB for Java development you also need version 2.1.9 or higher of " (h-link "http://sunsite.auc.dk/jde/" '(target . "_top") "JDE") "." h-br "If you use XEmacs you must have the fsf-compat package installed (contains overlay.el).")

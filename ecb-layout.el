@@ -122,7 +122,7 @@
 ;;   + The edit-window must not be splitted and the point must reside in
 ;;     the not deleted edit-window.
 
-;; $Id: ecb-layout.el,v 1.59 2001/06/07 19:36:24 berndl Exp $
+;; $Id: ecb-layout.el,v 1.60 2001/06/12 08:38:20 berndl Exp $
 
 ;;; Code:
 
@@ -143,8 +143,8 @@
 	      ;; we must check this because otherwise the layout would be drawn
 	      ;; if we have changed the initial value regardless if ECB is
 	      ;; activated or not.
-	      (when (and (boundp 'ecb-activated)
-                         ecb-activated
+	      (when (and (boundp 'ecb-minor-mode)
+                         ecb-minor-mode
                          (frame-live-p ecb-frame))
                 (let ((curr-frame (selected-frame)))
                   (select-frame ecb-frame)
@@ -381,8 +381,8 @@ rebind it to the original function in the `ecb-deactivate-hook'."
   :initialize 'custom-initialize-default
   :set (function (lambda (symbol value)
 		   (set symbol value)
-		   (if (and (boundp 'ecb-activated)
-			    ecb-activated)            
+		   (if (and (boundp 'ecb-minor-mode)
+			    ecb-minor-mode)            
 		       (ecb-activate-adviced-functions value))))
   :type '(set (const :tag "other-window"
                      :value other-window)
@@ -411,7 +411,13 @@ rebind it to the original function in the `ecb-deactivate-hook'."
   "*Specifies the sizes of the ECB windows for each layout. The easiest way to
 change this variable is to change the window sizes by dragging the window
 borders using the mouse and then store the window sizes by calling the
-`ecb-store-window-sizes' function."
+`ecb-store-window-sizes' function. Next time the leyout is redrawn the values
+stored in this option will be used.
+
+But be aware: These values are only suitable for the frame-size the ecb-frame
+had at the time you store the values by calling `ecb-store-window-sizes'.
+Therefore ensure always before calling `ecb-store-window-sizes' that the
+ecb-frame has the size it has normally during your work with ECB!."
   :group 'ecb-layout
   :initialize 'custom-initialize-default
   :set ecb-layout-option-set-function
@@ -470,10 +476,10 @@ to proceed. If yes then ECB will be deactivated before deleting FRAME. If ECB
 is not activated or FRAME is not equal the ECB-frame then this advice is
 either not activated or it behaves exactly like the original version!"
   (let ((frame (or (ad-get-arg 0) (selected-frame))))
-    (if (and ecb-activated
+    (if (and ecb-minor-mode
              (equal frame ecb-frame))
         (if (yes-or-no-p "Attempt to delete the ECB-frame. ECB will be dactivated! Proceed? ")
-            (ecb-deactivate)) ;; deletes also the ecb-frame if not the only frame
+            (ecb-deactivate-internal)) ;; deletes also the ecb-frame if not the only frame
       ad-do-it)))
 
 (defun ecb-enable-delete-frame-advice ()
@@ -601,7 +607,7 @@ If point already stays in the right edit-window nothing is done."
   "During activated ECB this function is added to `pre-command-hook' to set
 always `ecb-last-edit-window-with-point' and `ecb-last-source-buffer' correct
 so other functions can use this variable."
-  (when (and ecb-activated
+  (when (and ecb-minor-mode
              (equal (selected-frame) ecb-frame)
              (ecb-point-in-edit-window))
     (setq ecb-last-edit-window-with-point (selected-window))
@@ -610,7 +616,7 @@ so other functions can use this variable."
 (defun ecb-ediff-quit-hook ()
   "Added to the end of `ediff-quit-hook' during ECB is activated. It
 does all necessary after finishing ediff."
-  (when ecb-activated
+  (when ecb-minor-mode
     (if (and (not (equal (selected-frame) ecb-frame))
              (y-or-n-p
               "Ediff finished. Do you want to delete the extra ediff-frame? "))
@@ -1033,7 +1039,7 @@ to `compilation-mode-hook' if ECB was activated."
   ;; always save a previous function for calling later (see
   ;; `ecb-layout-return-from-compilation') and then set our own finishing
   ;; function.
-  (when (and ecb-activated
+  (when (and ecb-minor-mode
              (equal (selected-frame) ecb-frame))
     (setq ecb-old-compilation-finish-function
           (if (not (equal compilation-finish-function
@@ -1056,7 +1062,7 @@ to `compilation-mode-hook' if ECB was activated."
   "First it calls the function stored in `ecb-old-compilation-finish-function'
 and then it does all necessary ECB-stuff. This is motivated cause of the lack
 of `compilation-finish-functions' in XEmacs."
-  (when (and ecb-activated
+  (when (and ecb-minor-mode
              (equal (selected-frame) ecb-frame))
     (unwind-protect
         (when (and (functionp ecb-old-compilation-finish-function)
@@ -1076,7 +1082,7 @@ of `compilation-finish-functions' in XEmacs."
 (defun ecb-set-edit-window-split-hook-function ()
   "This function is added to `compilation-mode-hook' and `help-mode-hook' to
 handle splitting the edit-window correctly."
-  (if (and ecb-activated
+  (if (and ecb-minor-mode
            (equal (selected-frame) ecb-frame)
            (not ecb-compile-window-height)
            (not ecb-split-edit-window))
@@ -1090,14 +1096,49 @@ handle splitting the edit-window correctly."
                         nil)))
           tree-buffers))
 
+(defvar ecb-windows-hidden t)
+(defun ecb-toggle-ecb-windows (&optional arg)
+  "Toggle visibilty of the ECB-windows.
+With prefix argument ARG, make visible if positive, otherwise invisible.
+This has nothing to do with \(de)activating ECB but only affects the
+visibility of the ECB windows. ECB minor mode remains active!"
+  (interactive "P")
+  (unless (or (not ecb-minor-mode)
+              (not (equal (selected-frame) ecb-frame)))
+    (let ((new-state (if (null arg)
+                         (not ecb-windows-hidden)
+                       (<= (prefix-numeric-value arg) 0))))
+      (if (not new-state)
+          (ecb-redraw-layout)
+        (unless ecb-windows-hidden
+          (if (not (ecb-point-in-edit-window))
+              (ecb-select-edit-window))
+          (ecb-with-original-functions
+           (delete-other-windows)
+           (cond ((equal ecb-split-edit-window 'vertical)
+                  (split-window-vertically))
+                 ((equal ecb-split-edit-window 'horizontal)
+                  (split-window-horizontally))))
+          (setq ecb-windows-hidden t))))))
+
+(defun ecb-hide-ecb-windows ()
+  "Hide the ECB windows if not already hidden."
+  (interactive)
+  (ecb-toggle-ecb-windows 0))
+
+(defun ecb-show-ecb-windows ()
+  "Make the ECB windows visible."
+  (interactive)
+  (ecb-toggle-ecb-windows 1))
+      
 ;; the main layout core-function. This function is the "environment" for a
 ;; special layout function (l.b.)
 
 (defun ecb-redraw-layout ()
   "Redraw the ECB screen according to the layout set in `ecb-layout-nr'. After
-this function the edit-window is selected."
+this function the edit-window is selected which was current before redrawing."
   (interactive)
-  (unless (or (not ecb-activated)
+  (unless (or (not ecb-minor-mode)
               (not (equal (selected-frame) ecb-frame)))
     (let* ((saved-edit-buffer-1 (ignore-errors (window-buffer ecb-edit-window)))
            (saved-edit-buffer-2 (ignore-errors
@@ -1220,14 +1261,16 @@ this function the edit-window is selected."
       ;; tree-windows of current layout were visible before redraw).
       (if (not (equal tree-windows-before-redraw
                       (ecb-layout-get-current-tree-windows)))
-          (ecb-current-buffer-sync t)))))
+          (ecb-current-buffer-sync t))
+      (setq ecb-windows-hidden nil))))
 
 
 (defun ecb-store-window-sizes ()
   "Stores the sizes of the ECB windows for the current layout. The size of the
 ECB windows will be set to their stored values when `ecb-redraw-layout' or
-`ecb-restore-window-sizes' is called. To reset the window sizes to their default
-values call `ecb-restore-default-window-sizes'."
+`ecb-restore-window-sizes' is called. To reset the window sizes to their
+default values call `ecb-restore-default-window-sizes'. Please read also the
+documentation of `ecb-layout-window-sizes'!"
   (interactive)
   (when (equal (selected-frame) ecb-frame)
     (aset ecb-layout-window-sizes ecb-layout-nr (ecb-get-window-sizes))

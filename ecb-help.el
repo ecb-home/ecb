@@ -26,7 +26,7 @@
 ;;
 ;; Contains all online-help for ECB (stolen something from recentf.el)
 
-;; $Id: ecb-help.el,v 1.27 2001/06/08 11:52:43 berndl Exp $
+;; $Id: ecb-help.el,v 1.28 2001/06/12 08:38:20 berndl Exp $
 
 ;;; Code
 
@@ -38,8 +38,9 @@
                               General description
                               ===================      
 
-ECB offers a few ECB-windows for browsing your sources comfortable with the
-mouse. There are currently three different types of ECB-windows:
+ECB is a global minor-mode which offers a few ECB-windows for browsing your
+sources comfortable with the mouse and the keyboard. There are currently three
+different types of ECB-windows:
 
 1. ECB Directories:
 
@@ -102,6 +103,10 @@ Call M-x `ecb-activate' and M-x `ecb-deactivate' to activate or deactivate
 ECB. If you want ECB started in a new frame see the option
 `ecb-new-ecb-frame' \(default is nil). `ecb-activate' always raises and
 selects the ECB-frame even if ECB is already started.
+
+Because ECB is a global minor-mode it can also be (de)activated/toggled by
+M-x `ecb-minor-mode'.
+
 
 
 
@@ -270,6 +275,17 @@ If you have unintenionally destroyed the ECB-layout, you can always restore the
 layout with calling `ecb-redraw-layout'.
 
 
+Hiding/Showing the ECB windows:
+-------------------------------
+
+With `ecb-toggle-ecb-windows' you can hide/show all the ECB windows without
+changing the activation state of ECB and also without deactivating the advices
+for `delete-other-windows' and/or `delete-window'. This is most useful if you
+use layout nr.10 \(see \"Tips and tricks\" below) or if you want to have
+maximum space for editing and you don´t need the browsing windows all the
+time.
+
+
 Available interactive ECB commands:
 -----------------------------------
 
@@ -281,6 +297,14 @@ Available interactive ECB commands:
 - `ecb-redraw-layout'
 - `ecb-clear-history'
 - `ecb-show-help'
+- `ecb-submit-problem-report'.
+- `ecb-goto-window-directories' \(and much more `ecb-goto-window...'
+  functions)
+- `ecb-toggle-ecb-windows'
+
+Most of these functions are also available via the menu \"ECB\" and also via
+the ECB keymap with prefix \"C-c .\" \(see `ecb-minor-mode' for a complete
+list of the keybindings).
 
 
                              ====================
@@ -296,7 +320,8 @@ All customization of ECB is divided into the following customize groups:
 - ecb-layout: Customization of the layout of ECB.
 
 You can highly customize all the ECB behavior/layout so just go to this groups
-and you will see all well documented ECB-options.
+and you will see all well documented ECB-options. The easiest access for this
+customize groups is via the menu \"ECB\".
 
 Here are the most important options \(it is recommended to check the
 following options before working with ECB):
@@ -347,21 +372,21 @@ to work best with ECB in such a situation:
 - First customize your ECB:
   1. Customize `ecb-layout-nr' to layout nr. 10.
   2. Do not display a durable compile-window \(see `ecb-compile-window-height').
-  3. Disable all adviced functions with option `ecb-advice-window-functions';
-     here deselect all functions.
-  4. Optional: Ajust the `ecb-windows-height'.
-  5. Save your changes.
-- Bind `ecb-redraw-layout' to a key, e.g. F10.
-- To browse and select functions:
-  Call `ecb-redraw-layout' by hitting your key to make the ECB-method buffer
-  visible if not already. If you want select a method/variable with the
-  keyboard instead with the mouse you should read the section \"Working with
-  the keyboard in the ECB-buffers\" in this online help!
+  3. Optional: Ajust the `ecb-windows-height'.
+  4. Save your changes.
 - To edit your buffers:
-  Call \"C-x 1\" or `delete-other-windows' from within your edit-window to
-  throw away the ECB-method buffer so you get all the place of your screen for
-  editing \(Note: This works only if you have at least disabled the advice for
-  `delete-other-windows', see above).
+  Call `ecb-toggle-ecb-windows' \(also available via the menu \"ECB\" and by
+  \"C-c . t\") or `ecb-hide-ecb-windows' to hide the ECB-method buffer so you
+  get all the place of your screen for editing.
+- To browse and select functions:
+  Call `ecb-toggle-ecb-windows' or `ecb-show-ecb-windows' to make the
+  ECB-method buffer visible if not already. If you want select a
+  method/variable with the keyboard instead with the mouse you should read the
+  section \"Working with the keyboard in the ECB-buffers\" in this online
+  help!
+
+The possibility of hiding temporally the ECB windows like described above is
+also useful for all the other layouts.
 
 
                         ==================================

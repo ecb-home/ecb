@@ -25,7 +25,7 @@
 ;;
 ;; Contains all mode-line enhancements for ECB.
 
-;; $Id: ecb-mode-line.el,v 1.9 2001/05/06 18:01:40 creator Exp $
+;; $Id: ecb-mode-line.el,v 1.10 2001/06/12 08:38:20 berndl Exp $
 
 (defcustom ecb-mode-line-prefixes '(nil
                                     nil
@@ -39,8 +39,8 @@ then also the string \": \" is appended."
   :group 'ecb-general
   :set (function (lambda (symbol value)
                    (set symbol value)
-                   (if (and (boundp 'ecb-activated)
-                            ecb-activated)
+                   (if (and (boundp 'ecb-minor-mode)
+                            ecb-minor-mode)
                        (ecb-mode-line-format))))
   :initialize 'custom-initialize-default
   :type '(list (radio :tag "Directory-buffer"

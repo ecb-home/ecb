@@ -1,6 +1,17 @@
 Version ???:
 ------------
 
+- New function to toggle visibility of the ECB windows. Now it´s possible to
+  hide all ECB windows without deactivating ECB (see 'ecb-toggle-ecb-windows')
+  (Klaus).
+
+- ECB is now a global minor mode with it´s own menu "ECB" and it´s own keymap
+  with prefix "C-c .". New function to (de)activate/toggle ECB with
+  'ecb-minor-mode'.
+
+- Fixed a bug in highlighting current token in the method-buffer when
+  font-lock-mode is nil for the source-buffer. (Klaus)
+
 - New option for highlighting the method-header in the edit-window after
   clicking onto the method in the method-window (like Speedbar does). (Klaus)
 
@@ -15,8 +26,8 @@ Version ???:
 - Smarter highlighting of current method (Klaus).
 
 - All tree-buffers now have as default-directory the current selected
-  directory in the directory buffer. So you also open files with find-file
-  etc. (Klaus).
+  directory in the directory buffer. So you can also open files with find-file
+  etc. from within the tree-buffers. (Klaus).
 
 
 Version 1.32:
