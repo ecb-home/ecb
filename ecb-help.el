@@ -1,6 +1,6 @@
 ;;; ecb-help.el --- online help for ECB and bug reporting
 
-;; Copyright (C) 2000 - 2003 Jesper Nordenberg,
+;; Copyright (C) 2000 - 2005 Jesper Nordenberg,
 ;;                           Klaus Berndl,
 ;;                           Kevin A. Burton,
 ;;                           Free Software Foundation, Inc.
@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-help.el,v 1.109 2004/11/17 17:28:38 berndl Exp $
+;; $Id: ecb-help.el,v 1.110 2005/02/28 11:31:57 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -277,7 +277,7 @@ this."
   "Function run the reporter package done its work. It looks for a message- and
 a backtrace-buffer and inserts the contents of that."
   (save-excursion
-    (beginning-of-buffer)
+    (goto-char (point-min))
     ;; if the mail-packages has already inserted a signature we must not go to
     ;; the buffer-end but just before the signature
     (if (re-search-forward "^--[ \t]*$" nil t)

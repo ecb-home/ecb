@@ -1,6 +1,6 @@
 \input texinfo   @c -*-texinfo-*-
 
-@c Copyright (C) 2000 - 2003 Jesper Nordenberg,
+@c Copyright (C) 2000 - 2005 Jesper Nordenberg,
 @c                           Klaus Berndl,
 @c                           Kevin A. Burton,
 @c                           Free Software Foundation, Inc.
@@ -26,7 +26,7 @@
 @c GNU Emacs; see the file COPYING.  If not, write to the Free Software
 @c Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-@c $Id: ecb.texi,v 1.201 2005/01/12 10:27:09 berndl Exp $
+@c $Id: ecb.texi,v 1.202 2005/02/28 11:31:51 berndl Exp $
 
 @setfilename ecb.info
 
@@ -302,7 +302,6 @@ Tips and tricks
 * Big screens::                 Working with big screens
 * Simulating speedbar::         Simulating speedbar without an extra frame
 * Integrating speedbar::        Integrating speedbar in the ECB-frame
-* Optimize scrolling::          Optimize scrolling in the edit-window
 * Large directories::           Working with large directories
 * Remote directories::          Working with remote directories
 * Version-control support::     Supporting Version control systems
@@ -380,6 +379,8 @@ This section describes how to install ECB.
 @node XEmacs Installation, GNU Emacs Installation, Installation, Installation
 @subsection Installation of ECB for XEmacs users
 
+Basic requirement: ECB requires a XEmacs-version >= 21!
+
 For XEmacs-users it is strongly recommended to use the
 package-management-system of XEmacs for first-time
 downloading/installing ECB or for upgrading to a newer version of ECB.
@@ -439,6 +440,8 @@ to follow the instructions for GNU Emacs, see @ref{GNU Emacs Installation}.
 
 @node GNU Emacs Installation, , XEmacs Installation, Installation
 @subsection Installation of ECB for GNU Emacs users
+
+Basic requirement: ECB requires an Emacs-version >= 21!
 
 @strong{IMPORTANT}: If you are a XEmacs-user please read @ref{XEmacs
 Installation} before proceeding with the following instructions!
@@ -508,8 +511,8 @@ You @strong{MUST} add the ECB-install-directory to the
 @code{load-path} either by changing the @code{load-path} variable
 directly in your @file{.emacs} or @file{site-lisp/site-start.el} or by
 working with a file @file{subdirs.el}@footnote{This works at least for
-Emacs 20.X and Emacs 21.X but XEmacs may have slightly different
-mechanisms; see the XEmacs documentation}.
+Emacs but XEmacs may have slightly different mechanisms; see the
+XEmacs documentation}.
 
 So for example the needed entry for your @file{.emacs}-file could be:
 
@@ -5886,6 +5889,10 @@ A function which has to return a list in the same format like the
 option @code{ecb-directories-menu-user-extension}. This function is
 called when the user opens the popup-menu for the directories buffer.
 
+If no dynamically evaluated menu-extensions should be added to the
+directories-buffer the function has to return nil. Therefore the
+default-value of this option is @code{ignore}.
+
 Per default the dynamic user-extensions are added in front of the
 static extensions of @code{ecb-directories-menu-user-extension} but
 the whole menu can be re-arranged with
@@ -6228,6 +6235,10 @@ function which has to return a list in the same format like the option
 @code{ecb-sources-menu-user-extension}. This function is called when
 the user opens the popup-menu for the sources buffer.
 
+If no dynamically evaluated menu-extensions should be added to the
+sources-buffer the function has to return nil. Therefore the
+default-value of this option is @code{ignore}.
+
 Per default the dynamic user-extensions are added in front of the
 static extensions of @code{ecb-sources-menu-user-extension} but the
 whole menu can be re-arranged with @code{ecb-sources-menu-sorter}.
@@ -6523,6 +6534,10 @@ function which has to return a list in the same format like the option
 the user opens the popup-menu for the methods buffer. For an example
 how such a function can be programmed see
 @code{ecb-methods-menu-editwin-entries}.
+
+If no dynamically evaluated menu-extensions should be added to the
+methods-buffer the function has to return nil. Therefore the
+default-value of this option is @code{ignore}.
 
 Per default the dynamic user-extensions are added in front of the
 static extensions of @code{ecb-methods-menu-user-extension} but the
@@ -7018,6 +7033,10 @@ Dynamic user extensions for the popup-menu of the history buffer. A
 function which has to return a list in the same format like the option
 @code{ecb-history-menu-user-extension}. This function is called when
 the user opens the popup-menu for the history buffer.
+
+If no dynamically evaluated menu-extensions should be added to the
+history-buffer the function has to return nil. Therefore the
+default-value of this option is @code{ignore}.
 
 Per default the dynamic user-extensions are added in front of the
 static extensions of @code{ecb-history-menu-user-extension} but the
@@ -8052,13 +8071,12 @@ from this face. Therefore the default attributes like font etc. of a
 face used in a tree-buffer can be very easily changed with face
 @code{ecb-default-general-face}.
 
-With XEmacs and GNU Emacs 20.X there is no inheritance-feature but the
-options @code{ecb-directories-general-face},
-@code{ecb-sources-general-face}, @code{ecb-methods-general-face} and
-@code{ecb-history-general-face} offer the choice to use the face
-@code{ecb-default-general-face} so also with XEmacs and GNU Emacs 20.X
-the basic face-settings can be easily changed just by customizing the
-face @code{ecb-default-general-face}!
+With XEmacs there is no inheritance-feature but the options
+@code{ecb-directories-general-face}, @code{ecb-sources-general-face},
+@code{ecb-methods-general-face} and @code{ecb-history-general-face}
+offer the choice to use the face @code{ecb-default-general-face} so
+also with XEmacs the basic face-settings can be easily changed just by
+customizing the face @code{ecb-default-general-face}!
 
 @item ecb-default-highlight-face:
 Define basic face for highlighting the selected node in an ECB
@@ -8070,12 +8088,12 @@ etc. of a face used in a tree-buffer for highlighting the current
 tag can be very easily changed with face
 @code{ecb-default-highlight-face}.
 
-With XEmacs and GNU Emacs 20.X there is no inheritance-feature but the
-options @code{ecb-directory-face}, @code{ecb-source-face},
+With XEmacs there is no inheritance-feature but the options
+@code{ecb-directory-face}, @code{ecb-source-face},
 @code{ecb-method-face} and @code{ecb-history-face} offer the choice to
-use the face @code{ecb-default-highlight-face} so also with XEmacs and
-GNU Emacs 20.X the basic face-settings can be easily changed just by
-customizing the face @code{ecb-default-highlight-face}!
+use the face @code{ecb-default-highlight-face} so also with XEmacs the
+basic face-settings can be easily changed just by customizing the face
+@code{ecb-default-highlight-face}!
 
 @item ecb-directories-general-face:
 Basic face for the ECB directories buffer. It´s recommended to define
@@ -9064,7 +9082,6 @@ situations.
 * Big screens::                 Working with big screens
 * Simulating speedbar::         Simulating speedbar without an extra frame
 * Integrating speedbar::        Integrating speedbar in the ECB-frame
-* Optimize scrolling::          Optimize scrolling in the edit-window
 * Large directories::           Working with large directories
 * Remote directories::          Working with remote directories
 * Version-control support::     Supporting Version control systems
@@ -9098,13 +9115,12 @@ inherit from this face. Therefore the default attributes like font
 etc. of a face used in a tree-buffer can be very easily changed with
 face @code{ecb-default-general-face}.
 
-With XEmacs and GNU Emacs 20.X there is no inheritance-feature but the
-options @code{ecb-directories-general-face},
-@code{ecb-sources-general-face}, @code{ecb-methods-general-face} and
-@code{ecb-history-general-face} offer the choice to use the face
-@code{ecb-default-general-face} so also with XEmacs and GNU Emacs 20.X
-the basic face-settings can be easily changed just by customizing the
-face @code{ecb-default-general-face}.
+With XEmacs there is no inheritance-feature but the options
+@code{ecb-directories-general-face}, @code{ecb-sources-general-face},
+@code{ecb-methods-general-face} and @code{ecb-history-general-face}
+offer the choice to use the face @code{ecb-default-general-face} so
+also with XEmacs the basic face-settings can be easily changed just by
+customizing the face @code{ecb-default-general-face}.
 
 @item @code{ecb-default-highlight-face}:
 Basic face for highlighting the current node in an ECB-tree-buffer.
@@ -9114,12 +9130,12 @@ inherit from this face. Therefore the default attributes like font
 etc. of a highlighting face used in a tree-buffer can be very easily
 changed with face @code{ecb-default-highlight-face}.
 
-With XEmacs and GNU Emacs 20.X there is no inheritance-feature but the
-options @code{ecb-directory-face}, @code{ecb-source-face},
+With XEmacs there is no inheritance-feature but the options
+@code{ecb-directory-face}, @code{ecb-source-face},
 @code{ecb-method-face} and @code{ecb-history-face} offer the choice to
-use the face @code{ecb-default-highlight-face} so also with XEmacs and
-GNU Emacs 20.X the basic face-settings can be easily changed just by
-customizing the face @code{ecb-default-highlight-face}.
+use the face @code{ecb-default-highlight-face} so also with XEmacs the
+basic face-settings can be easily changed just by customizing the face
+@code{ecb-default-highlight-face}.
 
 @end itemize
 
@@ -9245,7 +9261,7 @@ Save your changes.
 But not only simulating speedbar is possible but also full integrating
 it into the ECB and the ECB-frame, @xref{Integrating speedbar}.
 
-@node Integrating speedbar, Optimize scrolling, Simulating speedbar, Tips and tricks
+@node Integrating speedbar, Large directories, Simulating speedbar, Tips and tricks
 @section Integrating speedbar in the ECB-frame
 
 It is very easy to integrate speedbar into ECB. There are two
@@ -9334,30 +9350,7 @@ sense during running speedbar with ECB.}.
 0.14beta1! If you use lower versions of speedbar
 @code{ecb-use-speedbar-instead-native-tree-buffer} has no effect.
 
-@node Optimize scrolling, Large directories, Integrating speedbar, Tips and tricks
-@section Optimize scrolling in the edit-window
-
-@cindex Scrolling
-Emacs 20.X seems to slow down scrolling if there is a horizontal split
-in the frame and/or a lot of overlays in the buffer which is scrolled.
-This is independent of ECB! But because almost all layouts of ECB uses
-horizontal splits of the frame and because ECB is based on semantic
-which uses overlays intensively there can be poor scrolling
-performance in large buffers, especially with java-buffers in
-@code{jde-mode}.
-
-This scrolling performance can be increased a lot if the options
-@code{scroll-conservatively} and @code{scroll-step} are set
-appropriately: The former one should have a value of 0 during ECB is
-active and the latter one a value of either 0 or > 1 (the exact value
-depends on the power of your machine).
-
-As far as we know this is not a problem of Emacs 21.X or XEmacs. With
-these versions of Emacs there should be no scrolling problem even with
-@code{scroll-step} has value 1.
-
-
-@node Large directories, Remote directories, Optimize scrolling, Tips and tricks
+@node Large directories, Remote directories, Integrating speedbar, Tips and tricks
 @section Working with large directories
 
 If @code{ecb-source-path} contains directories with many files and
@@ -11727,14 +11720,6 @@ Here is a list of packages which are proved to work properly with ECB
 and if not (i.e. there are conflicts) then helpful
 solutions/hints/workarounds are offered:
 
-@subsubsection Package avoid.el
-
-@cindex avoid package
-With GNU Emacs 20.X ECB must deactivate @code{mouse-avoidance-mode} if the
-option @code{ecb-show-node-info-in-minibuffer} activates for at least one
-ECB tree-buffer 'if-too-long or 'always. This is done automatically
-but only as long ECB is activated.
-
 @subsubsection Package bs.el
 
 @cindex bs package
@@ -11873,21 +11858,6 @@ command @code{eregistry}) does confuse the window-management of ECB.
 If you often use ediff in a scenario where you suspend ediff and
 reactivate it later then it is recommended to exit ECB first
 (@code{ecb-deactivate} or @code{ecb-minor-mode})!
-
-@subsubsection Package follow-mouse.el
-
-@noindent
-The following is only relevant for Emacs 20.X!
-
-@cindex follow-mouse package
-ECB works very well with follow-mouse if follow-mouse is turned on
-@strong{BEFORE} ECB is activated (e.g. within the
-@code{ecb-activate-hook}). But if you activate follow-mouse first
-after ECB is already activated, then the follow-mouse stuff prevents
-the complete node-name to be displayed in the echo-area if mouse moves
-over it. Because ECB has a much more intelligent mouse tracking
-mechanism than follow-mouse the follow-mouse stuff profit from ECB and
-works even better and saver as without activated ECB!
 
 @subsubsection Package func-menu.el
 
@@ -12274,19 +12244,6 @@ follow-mouse AFTER activating ECB; follow-mouse must be turned on
 BEFORE ECB is activated, e.g. in the @code{ecb-activate-hook}! But with
 Emacs 21.X and XEmacs there are no problems with this feature, just
 activate it.
-
-@item @tab @tab
-
-@item
-What is the reason for poor scrolling performance with GNU Emacs 20.X
-in the edit-windows and what can i do?
-@tab @tab
-Set @code{scroll-conservatively} to 0 and @code{scroll-step} to a
-value > 1. For the exact reason look at
-@ifinfo
-@*
-@end ifinfo
-@ref{Optimize scrolling}.
 
 @item @tab @tab
 

@@ -1,6 +1,6 @@
 ;;; ecb-layout.el --- layout for ECB
 
-;; Copyright (C) 2000 - 2003 Jesper Nordenberg,
+;; Copyright (C) 2000 - 2005 Jesper Nordenberg,
 ;;                           Klaus Berndl,
 ;;                           Kevin A. Burton,
 ;;                           Free Software Foundation, Inc.
@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-layout.el,v 1.247 2005/01/12 10:25:32 berndl Exp $
+;; $Id: ecb-layout.el,v 1.248 2005/02/28 11:31:56 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -717,7 +717,7 @@ of layout LAYOUT-NAME."
   "Set the buffer-local value of `window-size-fixed' in each visible
 ecb-window to FIX. If `ecb-compile-window-height' is not nil then set always
 nil!"
-  (when ecb-running-emacs-21
+  (unless ecb-running-xemacs
     (let ((l (ecb-canonical-ecb-windows-list)))
       (dolist (w l)
         (save-excursion
@@ -1815,19 +1815,8 @@ for current layout."
                   (or (not mini)
                       (< (nth 3 edges) (nth 1 (ecb-window-edges mini)))
                       (> (nth 1 edges) (cdr (assq 'menu-bar-lines params)))))
-             (if ecb-running-emacs-21
-                 (fit-window-to-buffer (ad-get-arg 0)
-                                       (ecb-window-full-height (ad-get-arg 0)))
-               ;; code for GNU Emacs < 21.X
-               (let ((text-height (window-buffer-height (ad-get-arg 0)))
-                     (window-height (ecb-window-full-height)))
-                 ;; Don't try to redisplay with the cursor at the end
-                 ;; on its own line--that would force a scroll and spoil things.
-                 (when (and (eobp) (bolp))
-                   (forward-char -1))
-                 (when (> window-height (1+ text-height))
-                   (shrink-window
-                    (- window-height (max (1+ text-height) window-min-height)))))))))))
+             (fit-window-to-buffer (ad-get-arg 0)
+                                   (ecb-window-full-height (ad-get-arg 0))))))))
 
  (defadvice resize-temp-buffer-window (around ecb)
    "Makes the function compatible with ECB."
@@ -1865,20 +1854,11 @@ for current layout."
                      (not (pos-visible-in-window-p (point-min))))
            (ecb-layout-debug-error "resize-temp-buffer-window: resize buffer: %s"
                                    (current-buffer))
-           (if ecb-running-emacs-21
-               (fit-window-to-buffer
-                (selected-window)
-                (if (functionp temp-buffer-max-height)
-                    (funcall temp-buffer-max-height (current-buffer))
-                  temp-buffer-max-height))
-             (let* ((max-height (if (functionp temp-buffer-max-height)
-                                    (funcall temp-buffer-max-height (current-buffer))
-                                  temp-buffer-max-height))
-                    (win-height (1- (ecb-window-full-height)))
-                    (min-height (1- window-min-height))
-                    (text-height (window-buffer-height (selected-window)))
-                    (new-height (max (min text-height max-height) min-height)))
-               (enlarge-window (- new-height win-height)))))))))
+           (fit-window-to-buffer
+            (selected-window)
+            (if (functionp temp-buffer-max-height)
+                (funcall temp-buffer-max-height (current-buffer))
+              temp-buffer-max-height)))))))
 
  (defadvice pop-to-buffer (around ecb)
    "Chooses the window with the ECB-adviced version of `display-buffer'."
@@ -3873,7 +3853,6 @@ visibility of the ECB windows. ECB minor mode remains active!"
             (message "ECB windows are now visible."))
         (unless ecb-windows-hidden
           (run-hooks 'ecb-hide-ecb-windows-before-hook)
-          (tree-buffer-deactivate-mouse-tracking)
           (tree-buffer-deactivate-follow-mouse)
             (let ((compwin-hidden (equal 'hidden
                                          (ecb-compile-window-state))))

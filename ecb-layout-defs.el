@@ -1,6 +1,6 @@
 ;;; ecb-layout-defs.el --- layout definitions for ECB
 
-;; Copyright (C) 2000 - 2003 Jesper Nordenberg,
+;; Copyright (C) 2000 - 2005 Jesper Nordenberg,
 ;;                           Klaus Berndl,
 ;;                           Kevin A. Burton,
 ;;                           Free Software Foundation, Inc.
@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-layout-defs.el,v 1.17 2004/12/20 17:02:44 berndl Exp $
+;; $Id: ecb-layout-defs.el,v 1.18 2005/02/28 11:31:57 berndl Exp $
 
 ;;; Commentary:
 ;;

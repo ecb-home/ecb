@@ -1,6 +1,6 @@
 ;;; ecb-face.el --- all face-options of ECB
 
-;; Copyright (C) 2000 - 2003 Jesper Nordenberg,
+;; Copyright (C) 2000 - 2005 Jesper Nordenberg,
 ;;                           Klaus Berndl,
 ;;                           Kevin A. Burton,
 ;;                           Free Software Foundation, Inc.
@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-face.el,v 1.22 2004/12/20 17:11:00 berndl Exp $
+;; $Id: ecb-face.el,v 1.23 2005/02/28 11:31:58 berndl Exp $
 
 ;;; Commentary:
 
@@ -73,35 +73,35 @@ The parameters are set for the following display-types:
                                      FG-DARK-COL, BG-DARK-COL
 - t: HEIGHT, BOLD-P, ITALIC-P, INHERIT, FG-REST, BG-REST, REVERSE-VIDEO."
   `(list (list '((class color) (background light))
-               (append (if (and ,height ecb-running-emacs-21) (list :height ,height))
-                       (if ,bold-p (if ecb-running-emacs-21
+               (append (if (and ,height (not ecb-running-xemacs)) (list :height ,height))
+                       (if ,bold-p (if (not ecb-running-xemacs)
                                        (list :weight 'bold)
                                      (list :bold t)))
-                       (if ,italic-p (if ecb-running-emacs-21
+                       (if ,italic-p (if (not ecb-running-xemacs)
                                          (list :slant 'italic)
                                        (list :italic t)))
-                       (if (and ,inherit ecb-running-emacs-21) (list :inherit ,inherit))
+                       (if (and ,inherit (not ecb-running-xemacs)) (list :inherit ,inherit))
                        (if ,fg-light-col (list :foreground ,fg-light-col))
                        (if ,bg-light-col (list :background ,bg-light-col))))
          (list '((class color) (background dark))
-               (append (if (and ,height ecb-running-emacs-21) (list :height ,height))
-                       (if ,bold-p (if ecb-running-emacs-21
+               (append (if (and ,height (not ecb-running-xemacs)) (list :height ,height))
+                       (if ,bold-p (if (not ecb-running-xemacs)
                                        (list :weight 'bold)
                                      (list :bold t)))
-                       (if ,italic-p (if ecb-running-emacs-21
+                       (if ,italic-p (if (not ecb-running-xemacs)
                                          (list :slant 'italic)
                                        (list :italic t)))
-                       (if (and ,inherit ecb-running-emacs-21) (list :inherit ,inherit))
+                       (if (and ,inherit (not ecb-running-xemacs)) (list :inherit ,inherit))
                        (if ,fg-dark-col (list :foreground ,fg-dark-col))
                        (if ,bg-dark-col (list :background ,bg-dark-col))))
-         (list 't (append (if (and ,height ecb-running-emacs-21) (list :height ,height))
-                          (if ,bold-p (if ecb-running-emacs-21
+         (list 't (append (if (and ,height (not ecb-running-xemacs)) (list :height ,height))
+                          (if ,bold-p (if (not ecb-running-xemacs)
                                           (list :weight 'bold)
                                         (list :bold t)))
-                          (if ,italic-p (if ecb-running-emacs-21
+                          (if ,italic-p (if (not ecb-running-xemacs)
                                             (list :slant 'italic)
                                           (list :italic t)))
-                          (if (and ,inherit ecb-running-emacs-21) (list :inherit ,inherit))
+                          (if (and ,inherit (not ecb-running-xemacs)) (list :inherit ,inherit))
                           (if ,fg-rest (list :foreground ,fg-rest))
                           (if ,bg-rest (list :foreground ,bg-rest))
                           (if ,reverse-video-p (list :reverse-video t))))))

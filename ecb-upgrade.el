@@ -1,6 +1,6 @@
 ;;; ecb-upgrade.el --- Upgrade an old ecb-version to the latest one
 
-;; Copyright (C) 2000 - 2003 Jesper Nordenberg,
+;; Copyright (C) 2000 - 2005 Jesper Nordenberg,
 ;;                           Klaus Berndl,
 ;;                           Kevin A. Burton,
 ;;                           Free Software Foundation, Inc.
@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-upgrade.el,v 1.100 2005/01/12 10:27:10 berndl Exp $
+;; $Id: ecb-upgrade.el,v 1.101 2005/02/28 11:31:54 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -649,8 +649,9 @@ The car is the old option symbol and the cdr is a 2-element-list with:
   "Returns not nil if and only if the custom-file is writable for ECB, which
 means it is neither a bytecompiled-file nor a read-only-file."
   (let ((file (ecb-custom-file)))
-    (and (not (equal (file-name-extension file) "elc"))
-         (ignore-errors (file-writable-p (ecb-custom-file))))))
+    (and file
+         (not (equal (file-name-extension file) "elc"))
+         (file-writable-p file))))
 
 (defun ecb-customize-save-variable (option value)
   ;; because the adviced version of `custom-save-all' do only all the special
@@ -859,14 +860,15 @@ Note: This function upgrades only the renamed but not the incompatible options
 
 (defun ecb-upgrade-make-copy-of-custom-file ()
   "Make a backup of the file returned by `ecb-custom-file' in the same directory."
-  (let* ((file (ecb-custom-file))
-         (backup-file-base (format "%s.before_ecb_%s" file ecb-version))
-         (backup-file backup-file-base)
-         (i 0))
-    (while (file-exists-p backup-file)
-      (setq i (1+ i))
-      (setq backup-file (format "%s__%d" backup-file-base i)))
-    (copy-file file backup-file)))
+  (when (ecb-custom-file-writeable-p)
+    (let* ((file (ecb-custom-file))
+           (backup-file-base (format "%s.before_ecb_%s" file ecb-version))
+           (backup-file backup-file-base)
+           (i 0))
+      (while (file-exists-p backup-file)
+        (setq i (1+ i))
+        (setq backup-file (format "%s__%d" backup-file-base i)))
+      (copy-file file backup-file))))
       
 
 (defun ecb-display-upgraded-options ()
@@ -1024,19 +1026,26 @@ your customization-file!"
         (widget-insert "There are no incompatible or renamed options. Your settings are correct.\n")
         (widget-insert (format "But ECB must store that the ecb-settings are uptodate with %s.\n\n"
                                ecb-version))
+        (message "Klausi-1")
         (if (not (ecb-custom-file-writeable-p))
             (progn
+              (message "Klausi-2")
               (widget-insert "Emacs can not save the `ecb-options-version' because the needed file\n")
+              (message "Klausi-3")
               (widget-insert (if (ecb-custom-file)
                                  (concat (ecb-custom-file) " is not writeable by Emacs!")
                                "does not exist!"))
+              (message "Klausi-4")
               (widget-insert "\nPlease ensure that `ecb-options-version' will be saved!\n\n"))
           (widget-insert (format "Click on [Save] to save `ecb-options-version' into %s.\n"
-                                     (ecb-custom-file)))
+                                 (ecb-custom-file)))
           (widget-insert (format "This makes a backup of this file unique named with a suffix .before_ecb_%s.\n\n"
                                  ecb-version)))
+        (message "Klausi-5")
         (widget-insert "Click on [Cancel] to kill this buffer.\n\n")
+        (message "Klausi-6")
         (widget-insert "For a list of the most important NEWS call `ecb-display-news-for-upgrade'!\n\n")
+        (message "Klausi-7")
         (widget-insert "\n")
         (when (ecb-custom-file-writeable-p)
           ;; Insert the Save button
@@ -1050,13 +1059,16 @@ your customization-file!"
                          "Save")
           (widget-insert " "))
         ;; Insert the Cancel button
+        (message "Klausi-8")
         (widget-create 'push-button
                        :button-keymap ecb-upgrade-button-keymap ; XEmacs
                        :keymap ecb-upgrade-button-keymap ; Emacs
                        :notify (lambda (&rest ignore)
                                  (kill-buffer (current-buffer)))
                        "Cancel")
+        (message "Klausi-9")
         (widget-setup)
+        (message "Klausi-10")
         (goto-char (point-min))))
     nil))
 
@@ -1132,6 +1144,10 @@ If JUST-CHECK is not nil then
 
 If called in non-interactive mode \(e.g. in batch-mode) then JUST-CHECK is
 always true."
+  ;; we do not support Emacs 18, 19 or 20!
+  (when ecb-running-unsupported-emacs
+    (ecb-error "Sorry, but ECB requires an (X)Emacs-version >= 21!"))
+
   (when (and (or (not (boundp 'ecb-version-check)) ecb-version-check)
              (not ecb-all-requirements-available)
              ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: This allows ECB to

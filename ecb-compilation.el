@@ -1,6 +1,6 @@
 ;;; ecb-compilation.el --- code for buffers displayed in compile-window
 
-;; Copyright (C) 2000 - 2003 Jesper Nordenberg,
+;; Copyright (C) 2000 - 2005 Jesper Nordenberg,
 ;;                           Klaus Berndl,
 ;;                           Kevin A. Burton,
 ;;                           Free Software Foundation, Inc.
@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-compilation.el,v 1.34 2004/05/06 09:02:08 berndl Exp $
+;; $Id: ecb-compilation.el,v 1.35 2005/02/28 11:31:58 berndl Exp $
 
 ;;; Commentary:
 

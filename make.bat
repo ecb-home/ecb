@@ -1,7 +1,7 @@
 @echo off
 REM This batchfile byte-compiles the ECB lisp files.
 
-REM Copyright (C) 2000 - 2003 Jesper Nordenberg,
+REM Copyright (C) 2000 - 2005 Jesper Nordenberg,
 REM                           Klaus Berndl,
 REM                           Kevin A. Burton,
 REM                           Free Software Foundation, Inc.
@@ -27,7 +27,7 @@ REM You should have received a copy of the GNU General Public License along with
 REM GNU Emacs; see the file COPYING.  If not, write to the Free Software
 REM Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-REM $Id: make.bat,v 1.27 2003/11/04 17:39:36 berndl Exp $
+REM $Id: make.bat,v 1.28 2005/02/28 11:31:51 berndl Exp $
 
 
 REM Make sure you byte-compile ECB with the semantic, eieio and

@@ -1,6 +1,6 @@
 ;;; ecb-create-layout.el --- creating new layouts
 
-;; Copyright (C) 2000 - 2003 Jesper Nordenberg,
+;; Copyright (C) 2000 - 2005 Jesper Nordenberg,
 ;;                           Klaus Berndl,
 ;;                           Kevin A. Burton,
 ;;                           Free Software Foundation, Inc.
@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-create-layout.el,v 1.29 2004/05/06 09:02:08 berndl Exp $
+;; $Id: ecb-create-layout.el,v 1.30 2005/02/28 11:31:58 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -84,7 +84,7 @@
 (defconst ecb-create-layout-buf-prefix " *ECB-LC-")
 (defconst ecb-create-layout-frame-name "Creation of a new ECB-layout")
 (defconst ecb-create-layout-all-buf-types
-  '("directories" "history" "methods" "sources" "speedbar"))
+  '("directories" "history" "methods" "sources" "speedbar" "analyse"))
 
 (defconst ecb-create-layout-help-text-left-right
   "
@@ -105,14 +105,13 @@
       - How to split: \"at-point\", \"half\" or
         \"other\" (i.e. you can specify any fraction
         between 0.1 and 0.9)
-      - Which type (\"directories\", \"sources\",
-        \"methods\", \"history\", \"speedbar\") the
-        current window should be.
+      - Which type the current window should be
+        \(see description of C-t below).
  C-u: Unsplit, ie. delete current window
  C-t: Give the current window a built-in type
       (\"directories\", \"sources\", \"methods\",
-      \"history\", \"speedbar\") or any arbitrary user-
-      defined type (\"other\"). See the Online-manual!
+      \"history\" etc.) or any arbitrary user-defined
+      type (\"other\"). See the Online-manual!
 
  C-c: Cancel layout creation. This does not save the
       layout. Deletes this frame.
@@ -140,11 +139,10 @@
       - If \"vertical\" or \"horizontal\" split
       - How to split: \"at-point\", \"half\" or \"other\" (i.e. you can specify any
         fraction between 0.1 and 0.9)
-      - Which type (\"directories\", \"sources\", \"methods\", \"history\", \"speedbar\")
-        the current window should be.
+      - Which type the current window should be \(see description of C-t below).
  C-u: Unsplit, ie. delete current window
  C-t: Give the current window a built-in type (\"directories\", \"sources\", \"methods\",
-      \"history\", \"speedbar\") or any arbitrary user-defined type (\"other\").
+      \"history\" etc.) or any arbitrary user-defined type (\"other\").
 
  C-c: Cancel layout creation. This does not save the layout. Deletes this frame.
  C-q: Save current defined layout and quit the layout creation. You will be asked for a
@@ -157,9 +155,9 @@
 (defconst ecb-create-layout-file-header
      "
 
-;; Copyright (C) 2001 Jesper Nordenberg
-;; Copyright (C) 2001 Free Software Foundation, Inc.
-;; Copyright (C) 2001 Klaus Berndl <klaus.berndl@sdm.de>
+;; Copyright (C) 2001 - 2005 Jesper Nordenberg
+;; Copyright (C) 2001 - 2005 Free Software Foundation, Inc.
+;; Copyright (C) 2001 - 2005 Klaus Berndl <klaus.berndl@sdm.de>
 
 ;; Author: Klaus Berndl <klaus.berndl@sdm.de>
 ;; Maintainer: Klaus Berndl <klaus.berndl@sdm.de>
@@ -272,8 +270,8 @@ DELETE-FRAME is not nil then the new created frame will be deleted and the
       (setq minor-mode-map-alist
             ecb-create-layout-old-minor-mode-map-alist))
   ;; restore horiz. scrolling
-  (if ecb-running-emacs-21
-      (setq automatic-hscrolling ecb-create-layout-old-hscroll))
+  (unless ecb-running-xemacs
+    (setq automatic-hscrolling ecb-create-layout-old-hscroll))
   ;; for XEmacs restore these maps
   (if ecb-running-xemacs
       (progn
@@ -705,47 +703,37 @@ never selects the edit-window."
 
 (defun ecb-create-layout-make-frame ()
   "Create a new frame for the layout creation process and return it."
-  (cond (ecb-running-xemacs
-         (make-frame `((name . ,ecb-create-layout-frame-name)
-                       (minibuffer . t)
-                       (user-position . t)
-                       (width . ,ecb-create-layout-frame-width)
-                       (height . ,ecb-create-layout-frame-height)
-                       (default-toolbar-visible-p . nil)
-                       (left-toolbar-visible-p . nil)
-                       (right-toolbar-visible-p . nil)
-                       (top-toolbar-visible-p . nil)
-                       (bottom-toolbar-visible-p . nil)
-                       (default-gutter-visible-p . nil)
-                       (left-gutter-visible-p . nil)
-                       (right-gutter-visible-p . nil)
-                       (top-gutter-visible-p . nil)
-                       (bottom-gutter-visible-p . nil)
-                       (has-modeline-p . t)
-                       (use-left-overflow . nil)
-                       (vertical-scrollbar-visible-p . nil)
-                       (horizontal-scrollbar-visible-p . nil)
-                       (use-right-overflow . nil)
-                       (menubar-visible-p . nil))))
-        (ecb-running-emacs-21
-         (make-frame `((name . ,ecb-create-layout-frame-name)
-                       (minibuffer . t)
-                       (user-position . t)
-                       (width . ,ecb-create-layout-frame-width)
-                       (height . ,ecb-create-layout-frame-height)
-                       (vertical-scroll-bars . nil)
-                       (horizontal-scroll-bars . nil)
-                       (tool-bar-lines . 0)
-                       (menu-bar-lines . 0))))
-        (t ;; Emacs 20
-         (make-frame `((name . ,ecb-create-layout-frame-name)
-                       (minibuffer . t)
-                       (user-position . t)
-                       (width . ,ecb-create-layout-frame-width)
-                       (height . ,ecb-create-layout-frame-height)
-                       (vertical-scroll-bars . nil)
-                       (menu-bar-lines . 0))))))
-         
+  (if ecb-running-xemacs
+      (make-frame `((name . ,ecb-create-layout-frame-name)
+                    (minibuffer . t)
+                    (user-position . t)
+                    (width . ,ecb-create-layout-frame-width)
+                    (height . ,ecb-create-layout-frame-height)
+                    (default-toolbar-visible-p . nil)
+                    (left-toolbar-visible-p . nil)
+                    (right-toolbar-visible-p . nil)
+                    (top-toolbar-visible-p . nil)
+                    (bottom-toolbar-visible-p . nil)
+                    (default-gutter-visible-p . nil)
+                    (left-gutter-visible-p . nil)
+                    (right-gutter-visible-p . nil)
+                    (top-gutter-visible-p . nil)
+                    (bottom-gutter-visible-p . nil)
+                    (has-modeline-p . t)
+                    (use-left-overflow . nil)
+                    (vertical-scrollbar-visible-p . nil)
+                    (horizontal-scrollbar-visible-p . nil)
+                    (use-right-overflow . nil)
+                    (menubar-visible-p . nil)))
+    (make-frame `((name . ,ecb-create-layout-frame-name)
+                  (minibuffer . t)
+                  (user-position . t)
+                  (width . ,ecb-create-layout-frame-width)
+                  (height . ,ecb-create-layout-frame-height)
+                  (vertical-scroll-bars . nil)
+                  (horizontal-scroll-bars . nil)
+                  (tool-bar-lines . 0)
+                  (menu-bar-lines . 0)))))
 
 ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: Wir müssen ev. ECB vorher
 ;; deaktivieren, da sonst ein 2. ECB-menu entsteht. Beim C-c oder C-q eben
@@ -783,7 +771,7 @@ never selects the edit-window."
   (setq minor-mode-map-alist nil)
 
   ;; horiz. scrolling
-  (when ecb-running-emacs-21
+  (unless ecb-running-xemacs
     (setq ecb-create-layout-old-hscroll automatic-hscrolling)
     (setq automatic-hscrolling nil))
 

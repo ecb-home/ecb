@@ -1,6 +1,6 @@
 ;;; ecb-method-browser.el --- the method-browser of Emacs
 
-;; Copyright (C) 2000 - 2003 Jesper Nordenberg,
+;; Copyright (C) 2000 - 2005 Jesper Nordenberg,
 ;;                           Klaus Berndl,
 ;;                           Free Software Foundation, Inc.
 
@@ -24,7 +24,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-method-browser.el,v 1.68 2005/01/13 12:11:59 berndl Exp $
+;; $Id: ecb-method-browser.el,v 1.69 2005/02/28 11:31:55 berndl Exp $
 
 ;;; Commentary:
 
@@ -1010,12 +1010,16 @@ re-arranged with `ecb-methods-menu-sorter'."
   :type (ecb-create-menu-user-ext-type 1 ecb-max-submenu-depth))
 
 
-(defcustom ecb-methods-menu-user-extension-function nil
+(defcustom ecb-methods-menu-user-extension-function 'ignore
   "*Dynamic user extensions for the popup-menu of the methods buffer.
 A function which has to return a list in the same format like the option
 `ecb-methods-menu-user-extension'. This function is called when the user opens
 the popup-menu for the methods buffer. For an example how such a function can
 be programmed see `ecb-methods-menu-editwin-entries'.
+
+If no dynamically evaluated menu-extensions should be added to the
+methods-buffer the function has to return nil. Therefore the default-value
+of this option is `ignore'.
 
 Per default the dynamic user-extensions are added in front of the static
 extensions of `ecb-methods-menu-user-extension' but the whole menu can be
@@ -3353,6 +3357,23 @@ types which are parsed by imenu or etags \(see
                                     (symbol-name elem))))))
             spec)))
 
+;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: check if this can be used instead
+;; the mechanism in `ecb-semanticdb-get-type-definition-list'
+(defun ecb-semantic-tag-external-class-default (tag)
+  "Return a list of real tags that faux TAG might represent.
+See `semantic-tag-external-class' for details."
+  (if (and (fboundp 'semanticdb-minor-mode-p)
+	   (semanticdb-minor-mode-p))
+      (let* ((semanticdb-search-system-databases nil)
+	     (m (semanticdb-find-tags-by-class 
+		 (semantic-tag-class tag)
+		 (semanticdb-find-tags-by-name (semantic-tag-name tag)))))
+	(semanticdb-strip-find-results m))
+    ;; Presumably, if the tag is faux, it is not local.
+    nil
+    ))
+
+
 ;; semantic 1.X does not have this
 (silentcomp-defvar semanticdb-search-system-databases)
 
@@ -3425,7 +3446,26 @@ is a full filename and cdr is a tag for TYPENAME. "
                                     (mapcar #'car type-definition-alist))
                  type-definition-alist)
         (car type-definition-alist)))))
-    
+
+;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: When cedet-1.0 is stable and
+;; released (and also included as default XEmacs-package) we should use here
+;; the function `semantic-go-to-tag' because a) it has already buildin most of
+;; tghe intelligency we need here and b) it is overloadable! The we can
+;; probably write `ecb-method-clicked' and `ecb-jump-to-tag' much more
+;; simpler!
+
+;; With the new implementation of semantic-go-to-tag we can for example write
+;; a function:
+
+;; (defun ecb-tag-location (tag)
+;;   "Return a cons-cell with the buffer and the pos of TAG"
+;;   (let ((buf nil)
+;;         (pos nil))
+;;     (save-excursion
+;;       (setq pos (semantic-go-to-tag tag))
+;;       (setq buf (current-buffer)))
+;;     (cons buf pos)))
+
 (defun ecb-method-clicked (node ecb-button edit-window-nr shift-mode meta-mode
                                 &optional no-post-action
                                 additional-post-action-list)

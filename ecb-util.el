@@ -1,6 +1,6 @@
 ;;; ecb-util.el --- utility functions for ECB
 
-;; Copyright (C) 2000 - 2003 Jesper Nordenberg,
+;; Copyright (C) 2000 - 2005 Jesper Nordenberg,
 ;;                           Klaus Berndl,
 ;;                           Kevin A. Burton,
 ;;                           Free Software Foundation, Inc.
@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-util.el,v 1.129 2005/01/13 15:42:07 berndl Exp $
+;; $Id: ecb-util.el,v 1.130 2005/02/28 11:31:54 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -91,9 +91,11 @@
 
 ;;;###autoload
 (defconst ecb-running-xemacs (string-match "XEmacs\\|Lucid" emacs-version))
-;;;###autoload
-(defconst ecb-running-emacs-21 (and (not ecb-running-xemacs)
-                                    (> emacs-major-version 20)))
+
+(defconst ecb-running-unsupported-emacs (condition-case nil
+                                            (<= emacs-major-version 20)
+                                          (error t))
+  "True if running XEmacs or Emacs < 21.")
 
 (defconst ecb-temp-dir
   (file-name-as-directory
@@ -176,25 +178,11 @@ want the BODY being parsed by semantic!. If not use the variable
   `(when ecb-running-xemacs
      ,@body))
 
-(defmacro when-ecb-running-emacs-21 (&rest body)
-  "Evaluates BODY when `ecb-running-emacs-21' is true. Use this macro when you
-want the BODY being parsed by semantic!. If not use the variable
-`ecb-running-emacs-21'."
-  `(when ecb-running-emacs-21
-     ,@body))
-
-(defmacro when-ecb-running-emacs-20 (&rest body)
-  "Evaluates BODY when ECB runs Emacs 20. Use this macro when you want the
-BODY being parsed by semantic!. If not use the form
-\(and \(not ecb-running-emacs-21) \(not ecb-running-xemacs))."
-  `(when (and (not ecb-running-emacs-21) (not ecb-running-xemacs))
-     ,@body))
-
 (defmacro when-ecb-running-emacs (&rest body)
   "Evaluates BODY when `ecb-running-xemacs' is false. Use this macro when you
-want the BODY being parsed by semantic!. If not use the variable
-`ecb-running-xemacs'."
-  `(when (not ecb-running-xemacs)
+want the BODY being parsed by semantic!. If not use the form
+\(unless ecb-running-xemacs)."
+  `(unless ecb-running-xemacs
      ,@body))
 
 ;; I do not want all this compatibitly stuff being parsed by semantic,
@@ -243,7 +231,7 @@ Uses the `derived-mode-parent' property of the symbol to trace backwards."
             (/ (nth 2 pix-edges) (ecb-frame-char-width))
             (/ (nth 3 pix-edges) (ecb-frame-char-height))))))
 
-(when (not ecb-running-xemacs)
+(unless ecb-running-xemacs
   (defalias 'ecb-facep 'facep)
   (defun ecb-noninteractive ()
     "Return non-nil if running non-interactively, i.e. in batch mode."
@@ -262,12 +250,7 @@ Uses the `derived-mode-parent' property of the symbol to trace backwards."
   (defun ecb-window-full-width (&optional window)
     (let ((edges (window-edges window)))
       (- (nth 2 edges) (nth 0 edges))))
-  (defun ecb-window-display-height (&optional window)
-    (setq window (or window (selected-window)))
-    (save-selected-window
-      (select-window window)
-      (count-screen-lines (window-start)
-                          (- (window-end window t) 1))))
+  (defalias 'ecb-window-display-height 'window-text-height)
   (defalias 'ecb-window-full-height 'window-height)
   (defalias 'ecb-frame-char-width 'frame-char-width)
   (defalias 'ecb-frame-char-height 'frame-char-height)
@@ -431,14 +414,13 @@ another frame than the `ecb-frame'."
 
 (defun ecb-custom-file ()
   "Filename of that file which is used by \(X)Emacs to store the
-customize-options."
-  (cond (ecb-running-xemacs
-         custom-file)
-        (ecb-running-emacs-21
-         (custom-file))
-        (t
-         (or custom-file
-             user-init-file))))
+customize-options. If no custom-file can be computed or if Emacs reports an
+error \(e.g. GNU Emacs complains when calling `custom-file' and Emacs has been
+started with -q) nil is returned."
+  (if ecb-running-xemacs
+      custom-file
+    (require 'cus-edit)
+    (ignore-errors (custom-file))))
 
 (defadvice custom-save-all (around ecb)
   "Save the customized options completely in the background, i.e. the
@@ -1452,10 +1434,11 @@ If string STR1 is greater, the value is a positive number N;
   "Return a string where all double-and-more whitespaces in STR are replaced
 with a single space-character."
   (let ((s str))
-    (while (string-match "[ \t][ \t]+" s)
-      (setq s (concat (substring s 0 (match-beginning 0))
-                      " "
-                      (substring s (match-end 0)))))
+    (save-match-data
+      (while (string-match "[ \t][ \t]+" s)
+        (setq s (concat (substring s 0 (match-beginning 0))
+                        " "
+                        (substring s (match-end 0))))))
     s))
 
 ;; Klaus Berndl <klaus.berndl@sdm.de>: we have to take account that GNU Emacs
@@ -1767,7 +1750,7 @@ of `next-window'. If omitted, WINDOW defaults to the selected window. FRAME and
 WINDOW default to the selected ones. Optional second arg MINIBUF t means count
 the minibuffer window even if not active. If MINIBUF is neither t nor nil it
 means not to count the minibuffer even if it is active."
-  (if ecb-running-emacs-21
+  (if (not ecb-running-xemacs)
       ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: There seems to be
       ;; mysterious behavior when running our own window-list version with
       ;; GNU Emacs >= 21.3 - especially when running an igrep when the
@@ -1868,7 +1851,7 @@ visible in the `ecb-frame'."
 The left-top-most window of the ecb-frame has number 0. The other windows have
 the same ordering as `other-window' would walk through the frame."
   (1- (length (memq (or window (selected-window))
-                    (nreverse (if (not ecb-running-emacs-21)
+                    (nreverse (if ecb-running-xemacs
                                   ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>:
                                   ;; There seems to be a mysterious behavior of
                                   ;; `ecb-window-list' when changing one buffer,

@@ -1,6 +1,6 @@
 ;;; ecb-file-browser.el --- the file-browser of Emacs
 
-;; Copyright (C) 2000 - 2003 Jesper Nordenberg,
+;; Copyright (C) 2000 - 2005 Jesper Nordenberg,
 ;;                           Klaus Berndl,
 ;;                           Free Software Foundation, Inc.
 
@@ -23,7 +23,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-file-browser.el,v 1.52 2005/01/03 14:26:17 berndl Exp $
+;; $Id: ecb-file-browser.el,v 1.53 2005/02/28 11:31:57 berndl Exp $
 
 ;;; Commentary:
 
@@ -798,11 +798,15 @@ These menu-extensions are static. A dynamic menu-extension can be achieved via
   :group 'ecb-directories
   :type (ecb-create-menu-user-ext-type 1 ecb-max-submenu-depth))
 
-(defcustom ecb-directories-menu-user-extension-function nil
+(defcustom ecb-directories-menu-user-extension-function 'ignore
   "*Dynamic user extensions for the popup-menu of the directories buffer.
 A function which has to return a list in the same format like the option
 `ecb-directories-menu-user-extension'. This function is called when the user
 opens the popup-menu for the directories buffer.
+
+If no dynamically evaluated menu-extensions should be added to the
+directories-buffer the function has to return nil. Therefore the default-value
+of this option is `ignore'.
 
 Per default the dynamic user-extensions are added in front of the static
 extensions of `ecb-directories-menu-user-extension' but the whole menu can be
@@ -833,11 +837,15 @@ re-arranged with `ecb-sources-menu-sorter'."
   :group 'ecb-sources
   :type (ecb-create-menu-user-ext-type 1 ecb-max-submenu-depth))
 
-(defcustom ecb-sources-menu-user-extension-function nil
+(defcustom ecb-sources-menu-user-extension-function 'ignore
   "*Dynamic user extensions for the popup-menu of the sources buffer.
 A function which has to return a list in the same format like the option
 `ecb-sources-menu-user-extension'. This function is called when the user
 opens the popup-menu for the sources buffer.
+
+If no dynamically evaluated menu-extensions should be added to the
+sources-buffer the function has to return nil. Therefore the default-value
+of this option is `ignore'.
 
 Per default the dynamic user-extensions are added in front of the static
 extensions of `ecb-sources-menu-user-extension' but the whole menu can be
@@ -868,11 +876,15 @@ re-arranged with `ecb-history-menu-sorter'."
   :group 'ecb-history
   :type (ecb-create-menu-user-ext-type 1 ecb-max-submenu-depth))
 
-(defcustom ecb-history-menu-user-extension-function nil
+(defcustom ecb-history-menu-user-extension-function 'ignore
   "*Dynamic user extensions for the popup-menu of the history buffer.
 A function which has to return a list in the same format like the option
 `ecb-history-menu-user-extension'. This function is called when the user
 opens the popup-menu for the history buffer.
+
+If no dynamically evaluated menu-extensions should be added to the
+history-buffer the function has to return nil. Therefore the default-value
+of this option is `ignore'.
 
 Per default the dynamic user-extensions are added in front of the static
 extensions of `ecb-history-menu-user-extension' but the whole menu can be
@@ -2381,8 +2393,10 @@ directory. This function is only for use by `ecb-stealthy-updates'!"
                                  (<= state lines-of-buffer))
                        (goto-line state)
                        (setq curr-node (tree-buffer-get-node-at-point))
-                       (when (ecb-directory-should-prescanned-p
-                              (tree-node-get-data curr-node))
+                       (when (and (ecb-directory-should-prescanned-p
+                                   (tree-node-get-data curr-node))
+                                  (ecb-file-exists-p
+                                   (tree-node-get-data curr-node)))
                          (setq dir-empty-p
                                (ecb-check-emptyness-of-dir (tree-node-get-data curr-node)))
                          ;; we update the node only if we have an empty dir and the node is
@@ -2824,7 +2838,7 @@ used otherwise an ascii-icon."
 
 ;; (insert (ecb-vc-generate-node-name "test-name" 'needs-merge))
 
- (defun ecb-stealthy-vc-check--dir/history (state)
+(defun ecb-stealthy-vc-check--dir/history (state)
   "Check for all sourcefile-nodes either in the directories- or the
 history-buffer the VC-state. This function does the real job and is is only
 for use by a stealthy function defined with `defecb-stealthy'! STATE is the
@@ -2861,7 +2875,8 @@ state-value."
             (setq curr-node (tree-buffer-get-node-at-point))
             (setq curr-dir (ecb-file-name-directory (tree-node-get-data curr-node)))
             (when (and (= (tree-node-get-type curr-node) node-type-to-check)
-                       (ecb-vc-directory-should-be-checked-p curr-dir))
+                       (ecb-vc-directory-should-be-checked-p curr-dir)
+                       (ecb-file-exists-p (tree-node-get-data curr-node)))
               (setq vc-state-fcn (ecb-vc-get-state-fcn-for-dir curr-dir))
               (when vc-state-fcn ;; file is under VC-control
                 (setq new-name (tree-node-get-name curr-node))
@@ -2908,21 +2923,22 @@ stealthy-function has when called. Return the new state-value."
                         (<= state lines-of-buffer))
               (goto-line state)
               (setq curr-node (tree-buffer-get-node-at-point))
-              (setq new-name (tree-node-get-name curr-node))
-              (setq new-state
-                    (ecb-vc-check-state (tree-node-get-data curr-node)
-                                        (buffer-name (current-buffer))
-                                        vc-state-fcn))
-              ;; we update the node only if the state has changed 
-              (when (not (equal 'unchanged new-state))
-                (setq new-name (ecb-vc-generate-node-name new-name new-state))
-                (or update-performed-for-dir
-                    (setq update-performed-for-dir
-                          (ecb-fix-filename
-                           (ecb-file-name-directory (tree-node-get-data curr-node)))))
-                (tree-buffer-update-node
-                 nil new-name
-                 'use-old-value 'use-old-value 'use-old-value 'use-old-value t))
+              (when (ecb-file-exists-p (tree-node-get-data curr-node))
+                (setq new-name (tree-node-get-name curr-node))
+                (setq new-state
+                      (ecb-vc-check-state (tree-node-get-data curr-node)
+                                          (buffer-name (current-buffer))
+                                          vc-state-fcn))
+                ;; we update the node only if the state has changed 
+                (when (not (equal 'unchanged new-state))
+                  (setq new-name (ecb-vc-generate-node-name new-name new-state))
+                  (or update-performed-for-dir
+                      (setq update-performed-for-dir
+                            (ecb-fix-filename
+                             (ecb-file-name-directory (tree-node-get-data curr-node)))))
+                  (tree-buffer-update-node
+                   nil new-name
+                   'use-old-value 'use-old-value 'use-old-value 'use-old-value t)))
               (setq state (1+ state))))
           ;; if we have performed at least one update then we must update the
           ;; SOURCES-cache.

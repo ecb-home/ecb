@@ -1,6 +1,6 @@
 ;;; ecb.el --- a code browser for Emacs
 
-;; Copyright (C) 2000 - 2003 Jesper Nordenberg,
+;; Copyright (C) 2000 - 2005 Jesper Nordenberg,
 ;;                           Klaus Berndl,
 ;;                           Kevin A. Burton,
 ;;                           Free Software Foundation, Inc.
@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb.el,v 1.421 2004/12/29 08:36:09 berndl Exp $
+;; $Id: ecb.el,v 1.422 2005/02/28 11:31:52 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -142,7 +142,6 @@
 ;; want to offer the user to download them.
 (require 'ecb-upgrade)
 (require 'ecb-util)
-
 
 ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: When the cedet 2.X library is
 ;; stable then we should handle here cedet instead of these three single
@@ -1994,8 +1993,7 @@ does all necessary after finishing ediff."
       ;; eshell-advices! 
       (ecb-eshell-deactivate-integration)
 
-      (tree-buffer-activate-mouse-tracking)
-      (tree-buffer-deactivate-mouse-tracking)
+      ;; For XEmacs
       (tree-buffer-activate-follow-mouse)
       (tree-buffer-deactivate-follow-mouse)
 
@@ -2327,8 +2325,6 @@ performance-problem!"
         ;; when-ecb-running-... macros
         (semantic-elisp-reuse-form-parser eval-and-compile
                                           when-ecb-running-xemacs
-                                          when-ecb-running-emacs-21
-                                          when-ecb-running-emacs-20
                                           when-ecb-running-emacs)
         )
     (error
@@ -2364,8 +2360,6 @@ performance-problem!"
                                    "ecb-do-if-buffer-visible-in-ecb-frame"
                                    "ecb-layout-define"
                                    "when-ecb-running-xemacs"
-                                   "when-ecb-running-emacs-21"
-                                   "when-ecb-running-emacs-20"
                                    "when-ecb-running-emacs"
                                    ))
                  (v-regexp (regexp-opt variable-defs t))

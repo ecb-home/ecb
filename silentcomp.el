@@ -1,6 +1,6 @@
 ;;; silentcomp.el --- compile time setup for proper compilation
 
-;; Copyright (C) 2000 - 2003 Klaus Berndl,
+;; Copyright (C) 2000 - 2005 Klaus Berndl,
 ;;                           Free Software Foundation, Inc.
 
 ;; Author: Klaus Berndl <klaus.berndl@sdm.de>
@@ -21,7 +21,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: silentcomp.el,v 1.4 2003/07/31 16:02:07 berndl Exp $
+;; $Id: silentcomp.el,v 1.5 2005/02/28 11:31:51 berndl Exp $
 
 ;;; Location
 

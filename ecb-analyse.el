@@ -1,6 +1,6 @@
 ;;; ecb-analyse.el --- ECB analysis display interactor
 
-;;; Copyright (C) 2004 Klaus Berndl,
+;;; Copyright (C) 2004 - 2005 Klaus Berndl
 
 ;; Author: Klaus Berndl <klaus.berndl@sdm.de>
 ;; Maintainer: Klaus Berndl <klaus.berndl@sdm.de>
@@ -20,7 +20,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-analyse.el,v 1.6 2005/01/13 15:42:28 berndl Exp $
+;; $Id: ecb-analyse.el,v 1.7 2005/02/28 11:31:59 berndl Exp $
 
 
 ;;; Commentary:

@@ -1,6 +1,6 @@
 ;;; ecb-speedbar.el --- Integration of speedbar into ECB
 
-;; Copyright (C) 2000 - 2003 Jesper Nordenberg,
+;; Copyright (C) 2000 - 2005 Jesper Nordenberg,
 ;;                           Klaus Berndl,
 ;;                           Kevin A. Burton,
 ;;                           Free Software Foundation, Inc.
@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-speedbar.el,v 1.63 2004/12/20 17:00:25 berndl Exp $
+;; $Id: ecb-speedbar.el,v 1.64 2005/02/28 11:31:54 berndl Exp $
 
 ;;; Commentary:
 
@@ -137,7 +137,8 @@ after clicking onto a filename in the speedbar."
 (defadvice speedbar-frame-mode (around ecb)
   "During running speedbar within ECB this command is disabled!"
   (if ecb-minor-mode
-      (message "Takes no effect during running speedbar within ECB!")
+      (when (interactive-p)
+        (ecb-info-message "speedbar-frame-mode takes no effect when running within ECB!"))
     ad-do-it))
 
 
@@ -177,12 +178,18 @@ the point was not set by `mouse-set-point'."
 ;; take effect. But dframe-select-attached-frame is a defun so we can advice
 ;; it!
 (defadvice dframe-select-attached-frame (after ecb)
-  (when (and ad-return-value ecb-last-edit-window-with-point
+  "Run `ecb-speedbar-dframe-select-attached-window' but only if
+`dframe-after-select-attached-frame-hook' is not available."
+  (unless (boundp 'dframe-after-select-attached-frame-hook)
+    (ecb-speedbar-dframe-select-attached-window)))
+
+(defun ecb-speedbar-dframe-select-attached-window ()
+  (when (and ecb-last-edit-window-with-point
              ecb-last-source-buffer
              (window-live-p ecb-last-edit-window-with-point)
              (equal (window-buffer ecb-last-edit-window-with-point)
                     ecb-last-source-buffer))
-    ;; (select-window ecb-last-edit-window-with-point)
+    (select-window ecb-last-edit-window-with-point)
     (set-buffer ecb-last-source-buffer)))
 
 (defun ecb-speedbar-select-speedbar-window ()
@@ -190,14 +197,13 @@ the point was not set by `mouse-set-point'."
     (and (window-live-p (get-buffer-window ecb-speedbar-buffer-name))
          (select-window (get-buffer-window ecb-speedbar-buffer-name)))))
 
-
 (defun ecb-speedbar-set-buffer()
   "Set the speedbar buffer within ECB."
   (ecb-speedbar-activate)
   (set-window-buffer (selected-window)
                      (get-buffer-create ecb-speedbar-buffer-name))
-  (if ecb-running-emacs-21
-      (set (make-local-variable 'automatic-hscrolling) nil)))
+  (unless ecb-running-xemacs
+    (set (make-local-variable 'automatic-hscrolling) nil)))
 
 
 (defvar ecb-speedbar-verbosity-level-old nil)
@@ -213,6 +219,9 @@ future this could break."
   (ecb-enable-advices ecb-speedbar-adviced-functions)
   
   (run-hooks 'ecb-speedbar-before-activate-hook)
+
+  (add-hook 'dframe-after-select-attached-frame-hook
+            'ecb-speedbar-dframe-select-attached-window)
 
   ;;disable automatic speedbar updates... let the ECB handle this with
   ;;ecb-current-buffer-sync
@@ -284,6 +293,9 @@ future this could break."
   "Reset things as before activating speedbar by ECB"
   (ecb-disable-advices ecb-speedbar-adviced-functions)
   
+  (remove-hook 'dframe-after-select-attached-frame-hook
+               'ecb-speedbar-dframe-select-attached-window)
+
   (setq speedbar-frame nil)
   (setq dframe-attached-frame nil)
 

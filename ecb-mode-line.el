@@ -1,6 +1,6 @@
 ;;; ecb-mode-line.el --- mode-line for ECB
 
-;; Copyright (C) 2000 - 2003 Jesper Nordenberg,
+;; Copyright (C) 2000 - 2005 Jesper Nordenberg,
 ;;                           Klaus Berndl,
 ;;                           Kevin A. Burton,
 ;;                           Free Software Foundation, Inc.
@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-mode-line.el,v 1.30 2004/12/20 17:14:46 berndl Exp $
+;; $Id: ecb-mode-line.el,v 1.31 2005/02/28 11:31:55 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -261,22 +261,19 @@ prepended by the window-number, see `ecb-mode-line-display-window-number'."
   "Applies FACE to the STR. In additon it applies a help-echo to STR if STR
 contains a text-property 'help-echo."
   (let ((strcp (copy-sequence str)))
-    (cond (ecb-running-xemacs
-           (let ((ext (make-extent nil nil))
-                 (help-echo-str
-                  (catch 'found
-                    (dotimes (i (length strcp))
-                      (if (get-text-property i 'help-echo strcp)
-                          (throw 'found
-                                 (get-text-property i 'help-echo strcp))))
-                    nil)))
-             (set-extent-face ext face)
-             (set-extent-property ext 'help-echo help-echo-str)
-             (list (cons ext strcp))))
-          (ecb-running-emacs-21
-           (list (propertize strcp 'face face)))
-          (t ;; emacs 20.X
-           strcp))))
+    (if ecb-running-xemacs
+        (let ((ext (make-extent nil nil))
+              (help-echo-str
+               (catch 'found
+                 (dotimes (i (length strcp))
+                   (if (get-text-property i 'help-echo strcp)
+                       (throw 'found
+                              (get-text-property i 'help-echo strcp))))
+                 nil)))
+          (set-extent-face ext face)
+          (set-extent-property ext 'help-echo help-echo-str)
+          (list (cons ext strcp)))
+      (list (propertize strcp 'face face)))))
                  
 (defun ecb-mode-line-set (buffer-name frame prefix &optional text no-win-nr)
   "Sets the mode line for a buffer. The mode line has the scheme:
@@ -294,13 +291,13 @@ as \"W-<number>\"."
       (setq shown-prefix (ecb-fit-str-to-width shown-prefix (1- win-width) 'right))
       (setq avaiable-text-width (- win-width
                                    (+ (length shown-prefix)
-                                      (if (and ecb-running-emacs-21
+                                      (if (and (not ecb-running-xemacs)
                                                ecb-mode-line-display-window-number
                                                (not no-win-nr))
                                           4 0))))
       (ecb-mode-line-update-buffer
        buffer-name
-       (list (if (and ecb-running-emacs-21
+       (list (if (and (not ecb-running-xemacs)
                       ecb-mode-line-display-window-number
                       (not no-win-nr))
                  ;; With :eval we must not use a list

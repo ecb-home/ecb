@@ -1,6 +1,6 @@
 ;;; tree-buffer.el --- functions for tree buffers
 
-;; Copyright (C) 2000 - 2003 Jesper Nordenberg,
+;; Copyright (C) 2000 - 2005 Jesper Nordenberg,
 ;;                           Klaus Berndl,
 ;;                           Kevin A. Burton,
 ;;                           Free Software Foundation, Inc.
@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: tree-buffer.el,v 1.163 2005/01/03 14:28:05 berndl Exp $
+;; $Id: tree-buffer.el,v 1.164 2005/02/28 11:31:51 berndl Exp $
 
 ;;; Commentary:
 
@@ -66,8 +66,6 @@
 ;; Emacs
 (silentcomp-defvar message-log-max)
 (silentcomp-defvar message-truncate-lines)
-(silentcomp-defvar track-mouse)
-(silentcomp-defvar special-event-map)
 (silentcomp-defun posn-window)
 (silentcomp-defun event-start)
 (silentcomp-defun posn-point)
@@ -83,9 +81,6 @@
 
 (defconst tree-buffer-running-xemacs
   (string-match "XEmacs\\|Lucid" emacs-version))
-(defconst tree-buffer-running-emacs-21
-  (and (not tree-buffer-running-xemacs)
-       (> emacs-major-version 20)))
 
 (defconst tree-buffer-images-can-be-used
   (and (or (fboundp 'defimage)
@@ -165,12 +160,7 @@ Image types are symbols like `xbm' or `jpeg'."
   ;; char of the buffer) then these empty-lines are not counted. But in the
   ;; situations this function is used (only in tree-buffer-recenter) this
   ;; doesn't matter.
-  (defun tree-buffer-window-display-height (&optional window)
-    (setq window (or window (selected-window)))
-    (save-selected-window
-      (select-window window)
-      (count-screen-lines (window-start)
-                          (- (window-end window t) 1))))
+  (defalias 'tree-buffer-window-display-height 'window-text-height)
   (defun tree-buffer-event-window (event)
     (posn-window (event-start event)))
   (defun tree-buffer-event-point (event)
@@ -323,14 +313,6 @@ cdr is the full path where the image-file for this image-name resides.")
 
 ;; tree-buffer global variables
 (defvar tree-buffers nil)
-(defvar tree-buffer-saved-mouse-movement-fn nil)
-(defvar tree-buffer-saved-track-mouse nil)
-(defvar tree-buffer-track-mouse-timer nil)
-(defvar tree-buffer-track-mouse-idle-delay 0.2
-  "After this idle-time of Emacs `tree-buffer-do-mouse-tracking' is called if
-mouse-tracking is activated by `tree-buffer-activate-mouse-tracking'")
-(defvar tree-buffer-old-mouse-avoidance-mode
-  (if (null mouse-avoidance-mode) 'none mouse-avoidance-mode))
 
 (defvar tree-buffer-syntax-table nil
   "Syntax-table used in a tree-buffer.")
@@ -1953,123 +1935,47 @@ Example for the usage of this macro:
 (put 'tree-buffer-defpopup-command 'lisp-indent-function 1)
 
 
-;; mouse tracking stuff
+;; mouse tracking stuff for XEmacs - GNU Emacs uses help-echo!
 
 (defun tree-buffer-follow-mouse (event)
   (interactive "e")
-  (let ((window (tree-buffer-event-window event))
-	(current-window (get-buffer-window (current-buffer))))
-    (if (and (or (not (window-minibuffer-p current-window))
-		 (not (minibuffer-window-active-p current-window)))
-	     (windowp window)
-	     (member (window-buffer window) tree-buffers))
-	(tree-buffer-mouse-movement event)))
-  (if (not tree-buffer-running-xemacs)
-      (if tree-buffer-saved-mouse-movement-fn
-	  (funcall tree-buffer-saved-mouse-movement-fn event)
-	;; Enable dragging
-	(setq unread-command-events
-	      (nconc unread-command-events (list event))))))
-
-(defun tree-buffer-mouse-movement (event)
-  (interactive "e")
-  (set-buffer (window-buffer (tree-buffer-event-window event)))
-  (let ((p (tree-buffer-event-point event)))
-    (when (integer-or-marker-p p)
-      ;;      (unless (not (equal (selected-frame) tree-buffer-frame))
-      (let ((node (tree-buffer-get-node-at-point p)))
-	(when (and tree-node-mouse-over-fn node)
-	  (funcall tree-node-mouse-over-fn node
-                   (get-buffer-window (current-buffer))))))))
-
-(defvar tree-buffer-uncompleted-keyseq nil
-  "Not nil only if there is at evaluation-time of this variable an uncompleted
-key sequence, e.g. the \"C-h\" of the key sequence \"C-h v\".")
-
-(defun tree-buffer-do-mouse-tracking ()
-  "This function is called every time Emacs is idle for seconds defined in
-`tree-buffer-track-mouse-idle-delay'. It enables mouse-tracking but only if
-isearch is not active and if no uncompleted key sequence is open, means if this
-function is called by the idle timer during a key sequence is inserted by the
-user \(e.g. between the \"C-h\" and the \"v\" of the key sequence \"C-h v\"),
-then mouse-tracking is always not enabled, because otherwise all very slightly
-\(invisible) and unintended mouse-movements \(can occur for example only by
-the convulsion cause of hitting keys onto the keyboard!) would break the
-key sequence!"
-  (setq track-mouse nil)
-  (if (not (equal (tree-buffer-event-to-key last-input-event)
-                  'mouse-movement))
-      (setq tree-buffer-uncompleted-keyseq
-            (not (equal last-input-event last-command-event))))
-  (unless (or tree-buffer-uncompleted-keyseq
-              ;; maybe there are even more similar modes where we should not
-              ;; activate mouse-tracking?!
-              isearch-mode)
-    (setq track-mouse t))
-  (add-hook 'post-command-hook 'tree-buffer-stop-mouse-tracking))
-
-(defun tree-buffer-stop-mouse-tracking ()
-  (remove-hook 'post-command-hook 'tree-buffer-stop-mouse-tracking)
-  (setq track-mouse nil))
-
-(defun tree-buffer-activate-mouse-tracking ()
-  "Activates GNU Emacs < version 21 mouse tracking for all tree-buffers.
-With GNU Emacs 21 this functionality is done with the `help-echo'-property and
-the function `tree-buffer-help-echo-fn'!"
-  (unless (or tree-buffer-running-xemacs tree-buffer-running-emacs-21)
-    (unless tree-buffer-track-mouse-timer
-      ;; disable mouse avoidance because this can be very annoying with
-      ;; key-sequences: If a key is pressed during mouse is over point then
-      ;; the mouse goes away and therefore the key-sequence is broken because
-      ;; the mouse move generates a mouse-movement event.
-      (setq tree-buffer-old-mouse-avoidance-mode
-            (if (null mouse-avoidance-mode) 'none mouse-avoidance-mode))
-      (mouse-avoidance-mode 'none)
-      (setq tree-buffer-saved-track-mouse track-mouse)
-      (setq tree-buffer-track-mouse-timer
-            (tree-buffer-run-with-idle-timer tree-buffer-track-mouse-idle-delay
-                                             t 'tree-buffer-do-mouse-tracking)))))
-
-(defun tree-buffer-deactivate-mouse-tracking ()
-  "Deactivates GNU Emacs < version 21 mouse tracking for all tree-buffers.
-With GNU Emacs 21 this functionality is done with the `help-echo'-property and
-the function `tree-buffer-help-echo-fn'!"
-  (unless (or tree-buffer-running-xemacs tree-buffer-running-emacs-21)
-    (unless (not tree-buffer-track-mouse-timer)
-      ;; restore the old value
-      (mouse-avoidance-mode tree-buffer-old-mouse-avoidance-mode)
-      (setq track-mouse tree-buffer-saved-track-mouse)
-      (tree-buffer-cancel-timer tree-buffer-track-mouse-timer)
-      (setq tree-buffer-track-mouse-timer nil))))
+  (when tree-buffer-running-xemacs
+    (let ((window (tree-buffer-event-window event))
+          (current-window (get-buffer-window (current-buffer))))
+      (when (and (or (not (window-minibuffer-p current-window))
+                     (not (minibuffer-window-active-p current-window)))
+                 (windowp window)
+                 (member (window-buffer window) tree-buffers))
+        (set-buffer (window-buffer window))
+        (let ((p (tree-buffer-event-point event)))
+          (when (integer-or-marker-p p)
+            ;; (unless (not (equal (selected-frame) tree-buffer-frame))
+            (let ((node (tree-buffer-get-node-at-point p)))
+              (when (and tree-node-mouse-over-fn node)
+                (funcall tree-node-mouse-over-fn node
+                         (get-buffer-window (current-buffer)))))))))))
 
 (defun tree-buffer-activate-follow-mouse ()
   "Activates that in all tree-buffer-windows - regardless if the active window
 or not - a mouse-over-node-function is called if mouse moves over a node. See
 also the NODE-MOUSE-OVER-FN argument of `tree-buffer-create'.
 
-This function does nothing for GNU Emacs 21; with this version this
+This function does nothing for GNU Emacs; with this version this
 functionality is done with the `help-echo'-property and the function
 `tree-buffer-help-echo-fn'!"
-  (tree-buffer-activate-mouse-tracking)
-  (if tree-buffer-running-xemacs
-      (dolist (buf tree-buffers)
-        (save-excursion
-          (set-buffer buf)
-          (add-hook 'mode-motion-hook 'tree-buffer-follow-mouse)))
-    (unless tree-buffer-running-emacs-21
-      (let ((saved-fn (lookup-key special-event-map [mouse-movement])))
-        (unless (equal saved-fn 'tree-buffer-follow-mouse)
-          (setq tree-buffer-saved-mouse-movement-fn saved-fn)
-          (define-key special-event-map [mouse-movement] 'tree-buffer-follow-mouse))))))
+  (when tree-buffer-running-xemacs
+    (dolist (buf tree-buffers)
+      (save-excursion
+        (set-buffer buf)
+        (add-hook 'mode-motion-hook 'tree-buffer-follow-mouse)))))
 
 (defun tree-buffer-deactivate-follow-mouse ()
-  (if tree-buffer-running-xemacs
-      (dolist (buf tree-buffers)
-        (save-excursion
-          (set-buffer buf)
-          (remove-hook 'mode-motion-hook 'tree-buffer-follow-mouse)))
-    (unless tree-buffer-running-emacs-21
-      (define-key special-event-map [mouse-movement] tree-buffer-saved-mouse-movement-fn))))
+  "Complementary function to `tree-buffer-activate-follow-mouse'."
+  (when tree-buffer-running-xemacs
+    (dolist (buf tree-buffers)
+      (save-excursion
+        (set-buffer buf)
+        (remove-hook 'mode-motion-hook 'tree-buffer-follow-mouse)))))
 
 ;; pressed keys
 
@@ -2252,16 +2158,15 @@ NODE-MOUSE-OVER-FN: Function to call when the mouse is moved over a node. This
                     function is called with three arguments: NODE, WINDOW,
                     NO-PRINT, each of them related to the current tree-buffer.
                     If NO-PRINT is nil then the function must print the text
-                    itself in any manner.
-                    This function must always return the text which either is
-                    printed by the function itself or by the caller \(if
-                    NO-PRINT is not nil).
-                    The current buffer for this function is the tree-buffer.
-                    With XEmacs and GNU Emacs 20.X this function is only
-                    called if the tree-buffer track-mouse mechanism is
-                    activated \(see `tree-buffer-activate-mouse-tracking').
-                    With GNU Emacs 21 this function is called by the
-                    `help-echo' property added to each node.
+                    itself in any manner. This function must always return the
+                    text which either is printed by the function itself or by
+                    the caller \(if NO-PRINT is not nil). The current buffer
+                    for this function is the tree-buffer. With XEmacs this
+                    function is only called if the tree-buffer track-mouse
+                    mechanism is activated \(see the function
+                    `tree-buffer-activate-follow-mouse'). With GNU Emacs 21
+                    this function is called by the `help-echo' property added
+                    to each node.
 MOUSE-HIGHLIGHT-FN: If nil then in this tree-buffer no node is highlighted
                     when the mouse moves over it. If t then each node is
                     highlighted when the mouse moves over it. If a function

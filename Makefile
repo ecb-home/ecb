@@ -1,6 +1,6 @@
 # This Makefile byte-compiles the ECB lisp files and generates online-help.
 
-# Copyright (C) 2000 - 2003 Jesper Nordenberg,
+# Copyright (C) 2000 - 2005 Jesper Nordenberg,
 #                           Klaus Berndl,
 #                           Kevin A. Burton,
 #                           Free Software Foundation, Inc.
@@ -26,7 +26,7 @@
 # GNU Emacs; see the file COPYING.  If not, write to the Free Software
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-# $Id: Makefile,v 1.103 2005/01/12 10:27:11 berndl Exp $
+# $Id: Makefile,v 1.104 2005/02/28 11:31:59 berndl Exp $
 
 
 # ========================================================================
@@ -144,7 +144,7 @@ INSTALLINFO=/usr/bin/install-info
 
 # Do not change anything below!
 
-# $Id: Makefile,v 1.103 2005/01/12 10:27:11 berndl Exp $
+# $Id: Makefile,v 1.104 2005/02/28 11:31:59 berndl Exp $
 
 # For the ECB-maintainers: Change the version-number here and not
 # elsewhere!
