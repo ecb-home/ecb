@@ -21,7 +21,7 @@
 
 ;; Generates ECB HTML pages.
 
-;; $Id: ecb-html.el,v 1.22 2001/11/06 12:08:18 berndl Exp $
+;; $Id: ecb-html.el,v 1.23 2002/01/20 15:12:55 berndl Exp $
 
 ;;; Code:
 
@@ -117,7 +117,7 @@
   (h-doc
    "screenshots.html"
    "ECB Screenshots"
-   (h-section "ECB 1.20 showing fields and inner classes in a Java source file"
+   (h-section "ECB 1.60 running in Emacs 21 showing fields and inner classes in a Java source file"
 	      (h-img "ecb-java.png"))
    (h-section "ECB running in XEmacs under Windows 98"
 	      (h-img "ecb-xemacs.png"))
@@ -232,13 +232,13 @@
     "Why doesn't ECB work correct with VC?"
     "The variable `vc-delete-logbuf-window' must be set to nil during active ECB. This can be done with the hooks of ECB.")
    (ecb-faq-q-and-a
-    "Why doesn't ECB parse my C++ files correctly?"
-    "This is a problem in Semantic, which is used by ECB for parsing source files. At the moment it doesn't handle C++ source files very well.")
+    "Does ECB support C++ as well as Java?"
+    "This depends strongly on Semantic, but all semantic-versions >= semantic-1.4beta13 should support C++ really well.")
    (ecb-faq-q-and-a
     "Why doesn't ECB display the node name in the echo area if mouse moves over it?"
-    "There can be several reasons: First the value of the option 'ecb-show-node-name-in-minibuffer' must be either 'always or 'if-too-long. If this is ok, then maybe you have turned on follow-mouse AFTER activating ECB; follow-mouse must be turned on BEFORE ECB is acivated, e.g. in the 'ecb-activate-hook'!")
+    "There can be several reasons: First the value of the option 'ecb-show-node-name-in-minibuffer' must be either 'always or 'if-too-long. If this is ok, then maybe you have turned on follow-mouse AFTER activating ECB; follow-mouse must be turned on BEFORE ECB is acivated, e.g. in the 'ecb-activate-hook'! But with Emacs 21.X and XEmacs there are no problems with this feature, just activate it.")
    (ecb-faq-q-and-a
-    "What is the reason for poor scrolling performance in the edit-windows and what can i do?"
+    "What is the reason for poor scrolling performance with GNU Emacs 20.X in the edit-windows and what can i do?"
     "Set 'scroll-conservatively' to 0 and 'scroll-step' to a value > 1. For the exact reason see the online-help of ECB, section \"Tips and Tricks\".")
    )
    ))
