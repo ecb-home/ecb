@@ -52,7 +52,7 @@
 ;; The latest version of the ECB is available at
 ;; http://home.swipnet.se/mayhem/ecb.html
 
-;; $Id: ecb.el,v 1.77 2001/05/06 18:01:40 creator Exp $
+;; $Id: ecb.el,v 1.78 2001/05/07 07:09:01 berndl Exp $
 
 ;;; Code:
 
@@ -792,7 +792,7 @@ highlighting of the methods if `ecb-font-lock-methods' is not nil."
 	(if (and (not (file-directory-p long-file-name))
 		 (or (string-match (cadr ecb-source-file-regexps) file)
 		     (not (string-match (car ecb-source-file-regexps) file))))
-	    (setq source-files (list-append source-files (list file))))))
+	    (setq source-files (append source-files (list file))))))
     source-files))
 
 (defun ecb-set-selected-directory (path)
@@ -1117,7 +1117,7 @@ OTHER-WINDOW."
             (let ((filename (concat path ecb-directory-sep-string file)))
               (if (file-accessible-directory-p filename)
                   (if (not (string-match ecb-excluded-directories-regexp file))
-                      (setq dirs (list-append dirs (list file)))))))
+                      (setq dirs (append dirs (list file)))))))
           (ecb-tree-node-add-files node path dirs 0 t old-children 'name)
           (if ecb-show-sources-in-directories-buffer
               (ecb-tree-node-add-files node path normal-files 1

@@ -122,7 +122,7 @@
 ;;   + The edit-window must not be splitted and the point must reside in
 ;;     the not deleted edit-window.
 
-;; $Id: ecb-layout.el,v 1.43 2001/05/06 18:01:40 creator Exp $
+;; $Id: ecb-layout.el,v 1.44 2001/05/07 07:09:01 berndl Exp $
 
 ;;; Code:
 
@@ -416,10 +416,10 @@ borders using the mouse and then store the window sizes by calling the
 	 'vector
 	 (let ((i 0) l)
 	   (while (< i 10)
-	     (setq l (list-append
+	     (setq l (append
 		      l
 		      (list
-		       (list-append
+		       (append
 			(list
 			 'list
 			 ':tag (concat "Layout " (int-to-string i)))
