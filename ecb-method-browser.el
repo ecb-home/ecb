@@ -24,7 +24,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-method-browser.el,v 1.36 2004/04/07 15:46:33 berndl Exp $
+;; $Id: ecb-method-browser.el,v 1.37 2004/04/08 08:00:39 berndl Exp $
 
 ;;; Commentary:
 
@@ -1514,6 +1514,7 @@ TAGLIST otherwise TAGLIST is returned."
     (dolist (fcn fcn-list)
       (if (fboundp fcn)
           (setq taglist (funcall fcn taglist)))))
+  (ecb-set-current-tag-table taglist)
   ;; now we apply that tag-filters which must operate onto the whole
   ;; tag-table of
   (ecb-apply-tag-table-filters taglist))
@@ -1528,18 +1529,6 @@ TAGLIST otherwise TAGLIST is returned."
           (setq taglist (funcall (cdr filter) (car filter) taglist)))))
   taglist)
 
-(defun ecb-klausi-test ()
-  (let* ((by-name-result-1 (ecb--semantic-find-tags-by-name "XXX"
-                                                            (ecb-get-current-tag-table)))
-         (by-type-result-1 (ecb--semantic-find-tags-by-class 'type
-                                                             by-name-result-1))
-         (by-name-result-2 (ecb--semantic-find-tags-by-name
-                            "list_of_facts"
-                            (ecb--semantic-tag-children-compatibility (car by-type-result-1))))
-         (by-type-result-2 (ecb--semantic-find-tags-by-class 'type
-                                                             by-name-result-2)))
-    (if by-type-result-2
-        (ecb--semantic-tag-name (car by-type-result-2)))))
 
 (defun ecb-methods-filter-perform-current-type (filter taglist)
   "Perform a current-type filter on TAGLIST. FILTER is a type-name-hierarchy
@@ -1756,6 +1745,9 @@ the returned list contains just the name of the tag of the current node."
                (setq curr-node (ecb-get-type-node-of-node curr-node)))))
     (nreverse type-hierarchy)))
 
+
+;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: handle correct the case when
+;; curr-tag is a faux-type-tag (check this with `ecb-faux-group-tag-p')
 (defun ecb-get-type-tag-of-tag (&optional tag table always-parent-type)
   "Returns that tag of class 'type the tag TAG belongs to. If TAG does not
 belong to a type then nil is returned. If TAG is already of class 'type then
@@ -2481,6 +2473,12 @@ to be rescanned/reparsed and therefore the Method-buffer will be rebuild too."
            (semantic-format-use-images-flag (if (ecb-use-images-for-semantic-tags)
                                                 nil
                                               (ecb--semantic-format-use-images-flag)))
+           (my-format-face-alist (if (ecb-use-images-for-semantic-tags)
+                                     (ecb-remove-assoc 'static (ecb--semantic-format-face-alist))
+                                   (ecb--semantic-format-face-alist)))
+           (semantic-format-face-alist my-format-face-alist)
+           ;; the semantic 1.4 compatibility needs this
+           (semantic-face-alist my-format-face-alist)
            (semantic-bucketize-tag-class
             (function (lambda (tag)
                         (if (ecb--semantic-tag-prototype-p tag)
@@ -2554,8 +2552,7 @@ to be rescanned/reparsed and therefore the Method-buffer will be rebuild too."
             (if (equal non-semantic-handling 'parsed)
                 (ecb-create-non-semantic-tree new-tree updated-cache))
           (ecb-add-tags new-tree
-                        (ecb-set-current-tag-table
-                         (ecb-post-process-taglist updated-cache))))
+                         (ecb-post-process-taglist updated-cache)))
         (if cache
             (setcdr cache new-tree)
           (setq cache (cons norm-buffer-file-name new-tree))

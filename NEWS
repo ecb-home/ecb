@@ -8,7 +8,22 @@
    the current type in the source-buffer or in the methods-window then nothing
    will be done.
 
+** Enhancements to the icon-display in the Methods-buffer
 
+*** New icon-image for enumerations
+
+*** Some slightly fixes in the other icons - e.g. a better display with dark
+    background
+
+*** Static tags are no longer underlined when icons are displayed because this
+    is somehow "tautological" when a special static icon is already displayed.
+
+** Fixed Bugs
+
+*** Fixed some newly introduced bugs which made ECB 2.23 incompatible with
+    semantic 1.4.
+
+    
 
 * Changes for ECB version 2.23
 
