@@ -101,28 +101,28 @@ optional installation steps:
 
 8. Installing the supplied `ecb.info'
 
-   The ECB distribution contains a file `ecb.info' which is the online-help of
-   ECB in Info-format. You can install this online help so it's available in
-   the Top-directory of Info. There are two ways to do this:
+   The ECB distribution contains a subdirectory "info-help" which contains the
+   online-help of ECB in Info-format. You can install this online help so it's
+   available in the Top-directory of Info. There are two ways to do this:
 
-    - Use "install-info" (recommended):
+   - Use "install-info" (recommended):
 
-      1. Copy the file `ecb.info' into the info-directory of Emacs
+     1. Copy the the files of the subdirectory "info-help" into the
+        info-directory of Emacs
 
-      2. Install it with the command "install-info" (if available on your
-         system) in the `dir'-file.
+     2. Install the file "info-help/ecb.info" with the command "install-info"
+        (if available on your system) in the `dir'-file.
 
-      The supplied `Makefile' offers a target `install-help' which does both
-      of these steps. You have just to call `make install-help' with the
-      correct EMACSINFOPATH set (see the comment in `Makefile'). Here is an
-      example:
+     The supplied `Makefile' offers a target `install-help' which does both of
+     these steps. You have just to call `make install-help' with the correct
+     EMACSINFOPATH set (see the comment in `Makefile'). Here is an example:
 
          make EMACSINFOPATH=/path/to/emacs/info install-help
 
-    - Manual Installation:
+   - Manual Installation:
 
-      Copy the file `ecb.info' into the info-directory of Emacs and modify
-      the file `dir' manually.
+     Copy the files of the subdirectory "info-help" into the info-directory of
+     Emacs and modify the file `dir' manually.
 
    But it doesn't matter if you do not execute this step (8.) because the
    online help of ECB is always available though, see `ecb-show-help'.
