@@ -624,10 +624,10 @@ Currently there are three subcaches managed within this cache:
      key:   <directory>
      value: \(<full-content> . <filtered-content>)
   whereas <full-content> is a 3-elem list \(tree-buffer-root <copy of
-  tree-buffer-nodes> buffer-string) for a full \(i.e. all files) cache and
-  <filtered-content> is a 4-elem list \(tree-buffer-root <copy of
-  tree-buffer-nodes> sources-buffer-string <filter>) for a filtered cache
-  where <filter> is a cons-cell \(<filter-regexp> . <filter-display>).
+  tree-buffer-displayed-nodes> buffer-string) for a full \(i.e. all files)
+  cache and <filtered-content> is a 4-elem list \(tree-buffer-root <copy of
+  tree-buffer-displayed-nodes> sources-buffer-string <filter>) for a filtered
+  cache where <filter> is a cons-cell \(<filter-regexp> . <filter-display>).
 
   VC:
 

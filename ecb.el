@@ -611,7 +611,7 @@ examples how to use this macro!"
     (when ecb-kill-buffer-clears-history
       (let ((node (if buffer-file
                       (ecb-exec-in-window ecb-history-buffer-name
-                        (tree-buffer-find-node-data buffer-file)))))
+                        (tree-buffer-find-displayed-node-by-data buffer-file)))))
         (when (and node
                    (or (equal ecb-kill-buffer-clears-history 'auto)
                        (and (equal ecb-kill-buffer-clears-history 'ask)
