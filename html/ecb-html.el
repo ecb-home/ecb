@@ -21,6 +21,8 @@
 
 ;; Generates ECB HTML pages.
 
+;; $Id$
+
 ;;; Code:
 (require 'html-helper)
 (require 'ecb)

@@ -21,6 +21,8 @@
 
 ;; Functions for generating HTML pages.
 
+;; $Id$
+
 ;;; Code:
 (defconst h-br "<br>\n")
 
