@@ -122,7 +122,7 @@
 ;;   + The edit-window must not be splitted and the point must reside in
 ;;     the not deleted edit-window.
 
-;; $Id: ecb-layout.el,v 1.54 2001/05/28 15:54:59 berndl Exp $
+;; $Id: ecb-layout.el,v 1.55 2001/05/28 22:00:11 berndl Exp $
 
 ;;; Code:
 
@@ -452,6 +452,8 @@ edit-windows! ")
 (defvar ecb-last-edit-window-with-point nil
   "The edit-window of ECB which had the point before an emacs-command is
 done.")
+(defvar ecb-last-source-buffer nil
+  "The source-buffer of `ecb-last-edit-window-with-point'.")
 (defvar ecb-compile-window nil
   "Window to display compile-output in.")
 
@@ -459,6 +461,7 @@ done.")
   (setq ecb-frame nil
         ecb-edit-window nil
         ecb-last-edit-window-with-point nil
+        ecb-last-source-buffer nil
         ecb-compile-window nil))
 
 (defadvice delete-frame (around ecb)
@@ -596,12 +599,13 @@ If point already stays in the right edit-window nothing is done."
 
 (defun ecb-pre-command-hook-function ()
   "During activated ECB this function is added to `pre-command-hook' to set
-always `ecb-last-edit-window-with-point' correct so other functions can use
-this variable."
-  (if (and ecb-activated
-           (equal (selected-frame) ecb-frame)
-           (ecb-point-in-edit-window))
-      (setq ecb-last-edit-window-with-point (selected-window))))
+always `ecb-last-edit-window-with-point' and `ecb-last-source-buffer' correct
+so other functions can use this variable."
+  (when (and ecb-activated
+             (equal (selected-frame) ecb-frame)
+             (ecb-point-in-edit-window))
+    (setq ecb-last-edit-window-with-point (selected-window))
+    (setq ecb-last-source-buffer (current-buffer))))
 
 (defun ecb-ediff-quit-hook ()
   "Added to the end of `ediff-quit-hook' during ECB is activated. It
@@ -1213,6 +1217,7 @@ this function the edit-window is selected."
       ;; tree-windows of current layout were visible before redraw).
       (when pos-before-redraw
         (goto-char pos-before-redraw)
+        (setq ecb-last-source-buffer (current-buffer))
         (if (not (equal tree-windows-before-redraw
                         (ecb-layout-get-current-tree-windows)))
             (ecb-current-buffer-sync t))))))
