@@ -26,7 +26,7 @@
 @c GNU Emacs; see the file COPYING.  If not, write to the Free Software
 @c Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-@c $Id: ecb.texi,v 1.194 2004/11/25 18:07:49 berndl Exp $
+@c $Id: ecb.texi,v 1.195 2004/11/26 16:19:09 berndl Exp $
 
 @setfilename ecb.info
 
@@ -49,7 +49,7 @@
 @c edit the Makefile to change the version number. mechanism stolen
 @c from Tramp
 @macro ecbver{}
-2.28
+2.30
 @end macro
 
 
@@ -321,6 +321,8 @@ Supporting Version control systems
 * Identifying backends::        How ECB identifies the VC-backend of a dir
 * Checking the state::          How ECB checks the VC-state of a file
 * Remote repositories::         What you should now about this
+* Refreshing the VC-state::     How to refresh when state changed outside
+* Adding new backends::         Necessary steps for adding new backends
 
 Displaying the trees of the ECB-windows with different styles
 
@@ -9400,6 +9402,8 @@ remote repositories.
 * Identifying backends::        How ECB identifies the VC-backend of a dir
 * Checking the state::          How ECB checks the VC-state of a file
 * Remote repositories::         What you should now about this
+* Refreshing the VC-state::     How to refresh when state changed outside
+* Adding new backends::         Necessary steps for adding new backends
 @end menu
 
 @node Identifying backends, Checking the state, Version-control support, Version-control support
@@ -9546,7 +9550,7 @@ get fresh and real state-values, but then (a) you must make sure to
 set @code{vc-cvs-stay-local} to nil, and (b) fetching the state over
 the network under all conditions was deemed unacceptably slow in VC.
 
-@node Remote repositories, , Checking the state, Version-control support
+@node Remote repositories, Refreshing the VC-state, Checking the state, Version-control support
 @subsection Important informations about remote repositories
 
 At least CVS can be used in a mode called ``Client/Server'' which
@@ -9584,6 +9588,124 @@ default to the value @code{unless-remote} which means remote paths
 will not be processed but it can be set to @code{t} which means
 process all directories regardless if remote or not. It's strongly
 recommended to use @code{unless-remote}!
+
+@node Refreshing the VC-state, Adding new backends, Remote repositories, Version-control support
+@subsection How to refresh ECB-state-display when changed outside
+
+If all actions concerning version controlling of a file are performed
+within Emacs with commands offeres by VC then the displayed state for
+such a file in the tree-buffers of ECB will be always correct - in
+that sense that ECB will always display that state which the
+check-state-function for the file will return. At least with GNU Emacs
+for the backends CVS, RCS and SCCS will be true. With XEmacs only for
+CVS. For other backends see @ref{Adding new backends}.
+
+But if the VC-state of a file will be changed outside of Emacs
+(unfortunately PCL-CVS must be called ``outside'' too because PCL-CVS
+doesn't use the functions of the VC-package of Emacs for checking-in
+or -out) then ECB can not automatically recognize this and therefore
+it can not aurtomatically update the displayed state-image-icon. You
+have to tell ECB for which files in the tree-buffers the VC-state
+should be recomputed. This can be done via the popup-menus of the
+ECB-tree-buffers - The following popup-commands are offered in the
+submenu ``Version Control'':
+
+@table @asis
+@item ECB-directories-buffer (if sources are displayed within):
+``Recompute state for file'' and ``Recompute state for dir'' whereas
+the latter one recomputes the VC-state for all files of that directory
+the file belongs.
+@item ECB-sources-buffer
+``Recompute state for file'' and ``Recompute state for dir'' whereas
+the latter one recomputes the VC-state for all files currently
+displayed in the sources-buffer.
+@item ECB-history-buffer
+``Recompute state for file'' and ``Recompute state for whole history''
+whereas the latter one recomputes the VC-state for all file-entries currently
+displayed in the history-buffer.
+@end table
+
+Of course all these commands update the VC-state in all visible
+tree-buffers the file is currently displayed (e.g. often a file is
+displayed in the sources- and the history-buffer)!
+
+For general informations about the usage of popup-menus in ECB see
+@ref{Using the mouse} (subsection ``The right mouse button'').
+
+In addition to these popup-commands using the POWER- rsp. Shift-click
+(@pxref{Using the mouse}) onto a directory in the directory-window of
+ECB refreshes the VC-state-values of all files contained in this
+directory too.
+
+@node Adding new backends, ,Refreshing the VC-state, Version-control support
+@subsection Necessary steps and informations for adding new backends
+
+There are mainly three necessary steps for adding a new@footnote{i.e.
+not already supported by the VC-package because all these backends are
+automatically supported by ECB too!} backend BE which should be
+supported by ECB:
+
+@enumerate
+@item Adding an identify-backend-function to @code{ecb-vc-supported-backends}
+ECB needs a function how to identify the new backend BE for a certain
+directory. If there exists already a library (other then VC)
+supporting this backend then this library propably contains already
+such a function which can be used or can be used at least with a small
+elisp-wrapper. If no elisp-library for backend BE exists then you have
+probably write the full identify-backend-function for your self. This
+function has to be added to @code{ecb-vc-supported-backends}.
+
+@item Adding an check-state-function to @code{ecb-vc-supported-backends}
+Associated to the new identify-backend-function mentioned in step 1 a
+new check-state-function is needed which can be used by ECB to get the
+VC-state for a file. See @ref{Checking the state} for a description
+about the needed interface of such a function. In combinatio with the
+identify-backend-function from step 1 this function has to be added to
+@code{ecb-vc-supported-backends}.
+
+@item Enabling automatic state-update after checkin/out
+
+This step is not essential if you do not need the displayed VC-state
+automatically updated after a checkin/out of a file via the commands
+available for backend BE (e.g. clearcase.el offers for the backend
+Clearcase elisp-commands to checkin and checkout a file which then
+should also update the displayed state in the ECB-tree-buffers. All
+you need is a way to tell these commands that they should clear the
+ECB-VC-cache for the file and then restart the ECB-VC-check-mechanism.
+This should be done after these commands have finished their original
+job.
+
+ECB enables this per default for all backends supported by the
+VC-package with the following code. Maybe this is a good starting
+point.
+
+@example
+@group
+(defvar ecb-checkedin-file nil
+  "Stored the filename of the most recent checked-in file. Is only set by the
+after-advice of `vc-checkin' and `ecb-vc-checkin-hook' \(resets it to nil).
+Evaluated only by `ecb-vc-checkin-hook'.
+
+This is the communication-channel between `vc-checkin' and
+`ecb-vc-checkin-hook' so this hook-function gets the filename of the
+checked-in file.")
+
+(defadvice vc-checkin (after ecb)
+  "Simply stores the filename of the checked-in file in `ecb-checkedin-file'
+so it is available in the `vc-checkin-hook'."
+  (setq ecb-checkedin-file (ecb-fix-filename (ad-get-arg 0))))
+
+(defun ecb-vc-checkin-hook ()
+  "Ensures that the ECB-cache is reset and the entry for the most recent
+checkedin file is cleared. Uses `ecb-checkedin-file' as last checked-in file."
+  (when ecb-checkedin-file
+    (ecb-vc-cache-remove ecb-checkedin-file)
+    (ecb-vc-reset-vc-stealthy-checks)
+    (setq ecb-checkedin-file nil)))
+@end group
+@end example
+
+@end enumerate
 
 @node Using eshell, Grepping directories, Version-control support, Tips and tricks
 @section Optimal using of eshell in ECB
@@ -12334,8 +12456,15 @@ file.
 @end ifinfo
 See also @ref{Version-control support} for hints what you can do.
 
-@end multitable
+@item @tab @tab
 
+@item
+I have encountered some problems with the display of the VC-state in
+the tree-buffers.
+@tab @tab
+See also @ref{Version-control support} for hints what you can do.
+
+@end multitable
 
 @node Command Index, Option Index, FAQ, Top
 @unnumbered Command Index
