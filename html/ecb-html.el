@@ -21,7 +21,7 @@
 
 ;; Generates ECB HTML pages.
 
-;; $Id: ecb-html.el,v 1.28 2002/03/01 20:44:35 creator Exp $
+;; $Id: ecb-html.el,v 1.29 2002/03/10 10:38:11 creator Exp $
 
 ;;; Code:
 
@@ -72,7 +72,13 @@
 	       )
 
    (h-section "Dependencies"
-	      "ECB requires version 1.4beta11 or higher of " (h-link "http://cedet.sourceforge.net/semantic.shtml" '(target . "_top") "Eric Ludlam's semantic bovinator") ". It also requires version 0.16 or higher of " (h-link "http://cedet.sourceforge.net/eieio.shtml" '(target . "_top") "Eric Ludlam's CLOS implementation eieio for Emacs") ". If you use ECB for Java development you also need " (h-link "http://sunsite.auc.dk/jde/" '(target . "_top") "JDE") "." h-br "If you use XEmacs you must have the fsf-compat package installed (contains overlay.el).")
+	      (h-bullet-link-list
+	       ecb-bullet
+	       '(("http://cedet.sourceforge.net/semantic.shtml" "Semantic Bovinator" "Version 1.4beta11 or higher.")
+		 ("http://cedet.sourceforge.net/eieio.shtml" "EIEIO" "Version 0.16 or higher.")
+		 ("http://jdee.sunsite.dk" "JDEE" "If you use ECB for Java development."))
+		 "_top")
+	      (h-p "If you use XEmacs you must have the fsf-compat package installed (contains overlay.el)."))
 
    (h-section "Developers"
 	      (h-bullet-link-list
@@ -137,7 +143,7 @@
      (list
       (list "http://www.gnu.org/software/emacs/emacs.html" "GNU Emacs" (concat "No comment " (h-img "smiley.gif")))
        '("http://www.xemacs.org" "XEmacs" "")
-       '("http://jde.sunsite.dk" "JDE" "Recommended Java development environment for Emacs.")
+       '("http://jdee.sunsite.dk" "JDEE" "Recommended Java development environment for Emacs.")
        '("http://cedet.sourceforge.net" "CEDET" "A collection of Emacs development tools created by Eric M. Ludlam.")
 	'("http://www.anc.ed.ac.uk/~stephen/emacs/ell.html" "Emacs Lisp List" "A good collection of Emacs lisp packages.")
 	)
