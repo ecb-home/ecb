@@ -58,10 +58,8 @@
 ;; - We need an easier way to setup completion and a better way to get the
 ;;   index.
 ;;
-;; - if possible, try to put fit the buffer so that the end of buffer is at the
-;;   end of the window... if necessary.
-;;
-;; - Maybe this should be ecb-cycle-switch-to-compilation-buffer.
+;; - If possible, try to put fit the buffer so that the end of buffer is at the
+;; end of the window... if necessary.
 
 ;;; Code:
 
@@ -75,7 +73,7 @@
   :group 'ecb-cycle
   :type 'boolean)
 
-(defun ecb-cycle-compilation-buffers()
+(defun ecb-cycle-through-compilation-buffers()
   "Cycle through all compilation buffers currently open and display them within
 the compilation window `ecb-compile-window'.  If the currently opened buffer
 within the compilation window is not a compilation buffer, we jump to the first
