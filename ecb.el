@@ -131,7 +131,7 @@
   :group 'ecb-directories
   :set '(lambda(symbol value)
           (set symbol (mapcar (lambda (path)
-                                (ecb-strip-slash path))
+                                (ecb-fix-filename path))
                               value))
           (if (and ecb-activated
                    (functionp 'ecb-update-directories-buffer))
@@ -724,7 +724,7 @@ highlighting of the methods if `ecb-font-lock-methods' is not nil."
         (when (and (>= (length path) (length name))
                    (string= (substring path 0 (length name)) name)
                    (or (= (length path) (length name))
-                       (eq (elt path (length name)) ?/)))
+                       (eq (elt path (length name)) ecb-directory-sep-char)))
           (let ((was-expanded (tree-node-is-expanded child)))
             (tree-node-set-expanded child t)
             (ecb-update-directory-node child)
@@ -737,7 +737,7 @@ highlighting of the methods if `ecb-font-lock-methods' is not nil."
 (defun ecb-get-source-files(dir files)
   (let (source-files)
     (dolist (file files)
-      (let ((long-file-name (concat dir "/" file)))
+      (let ((long-file-name (concat dir ecb-directory-sep-string file)))
 	(if (and (not (file-directory-p long-file-name))
 		 (or (string-match (cadr ecb-source-file-regexps) file)
 		     (not (string-match (car ecb-source-file-regexps) file))))
@@ -745,33 +745,35 @@ highlighting of the methods if `ecb-font-lock-methods' is not nil."
     source-files))
 
 (defun ecb-set-selected-directory(path)
-  (save-selected-window
-    (setq ecb-path-selected-directory (ecb-strip-slash path))
+  (let ((last-dir ecb-path-selected-directory))
+    (save-selected-window
+      (setq ecb-path-selected-directory (ecb-fix-filename path))
   
-    (when (or (not ecb-show-sources-in-directories-buffer)
-	      ecb-auto-expand-directory-tree)
-      (ecb-exec-in-directories-window
-       (when ecb-auto-expand-directory-tree
-	 ;; Expand tree to show selected directory
-	 (if (ecb-expand-tree ecb-path-selected-directory (tree-buffer-get-root))
-	     (tree-buffer-update)))
-       (when (not ecb-show-sources-in-directories-buffer)
-	 (tree-buffer-highlight-node-data ecb-path-selected-directory))))
+      (when (or (not ecb-show-sources-in-directories-buffer)
+		ecb-auto-expand-directory-tree)
+	(ecb-exec-in-directories-window
+	 (when ecb-auto-expand-directory-tree
+	   ;; Expand tree to show selected directory
+	   (if (ecb-expand-tree ecb-path-selected-directory (tree-buffer-get-root))
+	       (tree-buffer-update)))
+	 (when (not ecb-show-sources-in-directories-buffer)
+	   (tree-buffer-highlight-node-data ecb-path-selected-directory))))
 
-    (ecb-exec-in-sources-window
-     (let ((old-children (tree-node-get-children (tree-buffer-get-root))))
-       (tree-node-set-children (tree-buffer-get-root) nil)
-       (ecb-tree-node-add-files
-	(tree-buffer-get-root)
-	ecb-path-selected-directory
-	(ecb-get-source-files
-	 ecb-path-selected-directory
-	 (directory-files ecb-path-selected-directory nil nil t))
-	0
-	ecb-show-source-file-extension
-	old-children t))
-     (tree-buffer-update)
-     (tree-buffer-scroll (point-min) (point-min)))))
+      (ecb-exec-in-sources-window
+       (let ((old-children (tree-node-get-children (tree-buffer-get-root))))
+	 (tree-node-set-children (tree-buffer-get-root) nil)
+	 (ecb-tree-node-add-files
+	  (tree-buffer-get-root)
+	  ecb-path-selected-directory
+	  (ecb-get-source-files
+	   ecb-path-selected-directory
+	   (directory-files ecb-path-selected-directory nil nil t))
+	  0
+	  ecb-show-source-file-extension
+	  old-children t))
+       (tree-buffer-update)
+       (when (not (string= last-dir ecb-path-selected-directory))
+	 (tree-buffer-scroll (point-min) (point-min)))))))
                    
 (defun ecb-get-source-name(filename)
   "Returns the source name of a file."
@@ -1013,7 +1015,7 @@ OTHER-WINDOW."
 				'(lambda(a b) (string< (file-name-extension a t)
 						       (file-name-extension b t))))
 			sorted-files))))
-    (let ((filename (concat path "/" file))
+    (let ((filename (concat path ecb-directory-sep-string file))
           child)
       (tree-node-add-child
        node
@@ -1034,7 +1036,7 @@ OTHER-WINDOW."
 	       dirs
 	       (normal-files (ecb-get-source-files path files)))
           (dolist (file files)
-            (let ((filename (concat path "/" file)))
+            (let ((filename (concat path ecb-directory-sep-string file)))
               (if (file-accessible-directory-p filename)
                   (if (not (string-match ecb-excluded-directories-regexp file))
                       (setq dirs (list-append dirs (list file)))))))
@@ -1228,10 +1230,12 @@ Currently the fourth argument TREE-BUFFER-NAME is not used here."
 	       (window-width)))))
 
 (defun ecb-mouse-over-node(node)
-  (message (when (ecb-show-minibuffer-info node)
-	     (if ecb-show-file-info-in-minibuffer
-		 (ecb-get-file-info-text (tree-node-get-data node))
-	       (tree-node-get-name node)))))
+  ;; For buffers that hasnt been saved yet
+  (ignore-errors
+    (message (when (ecb-show-minibuffer-info node)
+	       (if ecb-show-file-info-in-minibuffer
+		   (ecb-get-file-info-text (tree-node-get-data node))
+		 (tree-node-get-name node))))))
 
 (defun ecb-mouse-over-method-node(node)
   (message (when (ecb-show-minibuffer-info node)
