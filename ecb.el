@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb.el,v 1.339 2003/09/15 08:31:05 berndl Exp $
+;; $Id: ecb.el,v 1.340 2003/09/22 10:29:15 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -1980,6 +1980,16 @@ For the guidelines for such a sorter-function see
                  (const :tag "No special sorting" :value nil)
                  (function :tag "Sort-function" :value identity)))
 
+(defcustom ecb-run-ediff-in-ecb-frame t
+  "*Run ediff-sessions in the same frame as ECB is running.
+If not nil then ECB ensures that ediff runs in the same frame as ECB. If nil
+then ediff decides in which frame it will run - depending on the current
+window-layout \(e.g. if the ecb-windows are currently hidden) this can be the
+ecb-frame but this can also be a newly created frame or any other frame."
+  :group 'ecb-general
+  :type 'boolean)
+
+
 (defcustom ecb-activate-before-layout-draw-hook nil
   "*Hook run at the end of activating ECB by `ecb-activate'.
 These hooks run after all the internal setup process but directly before\(!)
@@ -3645,9 +3655,6 @@ nil whereas in the latter case the current-buffer is assumed."
                    (ecb-current-buffer-archive-extract-p))
                (ecb-current-buffer-archive-extract-p))))))
 
-;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: In all sources and the texi-file
-;; replacing of interactive using of ecb-current-buffer-sync with
-;; ecb-window-sync! 
 (defun ecb-current-buffer-sync (&optional force)
   "Synchronizes all special ECB-buffers with current buffer.
 
@@ -3672,6 +3679,7 @@ tasks are performed:
   (when (and ecb-minor-mode
              (not ecb-windows-hidden)
              (ecb-point-in-edit-window))
+;;     (message "Klausi: %s, %s" (current-buffer) force)
     (ignore-errors
       (let ((filename (buffer-file-name (current-buffer))))
         (cond (;; synchronizing for real filesource-buffers
@@ -3769,7 +3777,6 @@ In addition to this the hooks in `ecb-current-buffer-sync-hook' run."
   (interactive)
   (ecb-current-buffer-sync t))
 
-;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: test!!
 (defvar ecb-window-sync-old '(Info-mode dired-mode))
 (defun ecb-toggle-window-sync (&optional arg)
   "Toggle auto synchronizing of the ECB-windows.
@@ -5660,8 +5667,8 @@ always the ECB-frame if called from another frame."
                      ediff-quit-hook))
             (add-hook 'ediff-quit-hook 'ediff-cleanup-mess)
             (add-hook 'ediff-quit-hook 'ecb-ediff-quit-hook t)
-            (add-hook 'ediff-before-setup-windows-hook
-                      'ecb-ediff-before-setup-windows-hook)
+            (add-hook 'ediff-before-setup-hook
+                      'ecb-ediff-before-setup-hook)
             
             ;; menus
             (if ecb-running-xemacs
@@ -5703,8 +5710,10 @@ always the ECB-frame if called from another frame."
             ;; activates at its end also the adviced functions if necessary!
             ;; Here are the directories- and history-buffer updated.
             (let ((ecb-redraw-layout-quickly nil))
-              (ecb-redraw-layout-full 'no-buffer-sync))
-
+              (run-hooks 'ecb-redraw-layout-before-hook)
+              (ecb-redraw-layout-full 'no-buffer-sync)
+              (run-hooks 'ecb-redraw-layout-after-hook))
+            
             (ecb-with-adviced-functions
              ;; activate the correct edit-window split
              (cond ((equal ecb-split-edit-window 'vertical)
@@ -5726,7 +5735,7 @@ always the ECB-frame if called from another frame."
                       ))))
 
             ;; now we synchronize all ECB-windows
-            (ecb-current-buffer-sync 'force)
+            (ecb-window-sync)
     
             ;; now update all the ECB-buffer-modelines
             (ecb-mode-line-format))
@@ -5810,6 +5819,8 @@ always the ECB-frame if called from another frame."
     
     (setq ecb-activated-window-configuration (current-window-configuration))))
 
+;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: Should we add this function to
+;; `ediff-suspend-hook' too?!
 (defun ecb-ediff-quit-hook ()
   "Added to the end of `ediff-quit-hook' during ECB is activated. It
 does all necessary after finishing ediff."
@@ -5819,13 +5830,37 @@ does all necessary after finishing ediff."
               "Ediff finished. Do you want to delete the extra ediff-frame? "))
         (delete-frame (selected-frame) t))
     (select-frame ecb-frame)
-    (ecb-redraw-layout)))
+    (if ecb-hidden-window-config
+        (progn
+          (set-window-configuration ecb-hidden-window-config)
+          (setq ecb-hidden-window-config nil))
+      (ecb-redraw-layout))))
 
-(defun ecb-ediff-before-setup-windows-hook ()
-  (if (ecb-edit-window-splitted)
-      (save-selected-window
-        (select-window ecb-edit-window)
-        (delete-window))))
+(defvar ecb-hidden-window-config nil
+  "Used by `ecb-ediff-before-setup-hook' and `ecb-ediff-quit-hook'.")
+
+;; We must not add this function to `ediff-before-setup-windows-hook' because
+;; this hook is called very often - see docu. The hook
+;; `ediff-before-setup-hook' is called only once - so it can be used to store
+;; window-configs!
+(defun ecb-ediff-before-setup-hook ()
+  (if (and ecb-minor-mode
+           (equal (selected-frame) ecb-frame))
+      (progn
+        (if ecb-windows-hidden
+            (setq ecb-hidden-window-config
+                  (current-window-configuration))
+          (setq ecb-hidden-window-config nil))
+        (if ecb-run-ediff-in-ecb-frame
+            (ecb-toggle-ecb-windows -1)
+          (if (and (not ecb-windows-hidden)
+                   (ecb-edit-window-splitted))
+              (save-selected-window
+                (select-window ecb-edit-window)
+                (ecb-with-adviced-functions
+                 (delete-window))))))
+    (setq ecb-hidden-window-config nil)))
+
 
 
 (defun ecb-deactivate ()
@@ -5879,8 +5914,8 @@ does all necessary after finishing ediff."
           (setq ediff-quit-hook (get 'ediff-quit-hook
                                      'ecb-ediff-quit-hook-value))
         (remove-hook 'ediff-quit-hook 'ecb-ediff-quit-hook))
-      (remove-hook 'ediff-before-setup-windows-hook
-                   'ecb-ediff-before-setup-windows-hook)
+      (remove-hook 'ediff-before-setup-hook
+                   'ecb-ediff-before-setup-hook)
 
       ;; menus
       (ignore-errors

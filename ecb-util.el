@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-util.el,v 1.78 2003/09/15 08:31:05 berndl Exp $
+;; $Id: ecb-util.el,v 1.79 2003/09/22 10:29:16 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -742,7 +742,6 @@ for FILE, but proper EOL-conversion and character interpretation is done!"
   (mapc (function (lambda (w)
                     (set-window-dedicated-p w nil)))
         (ecb-window-list (or frame (selected-frame)))))
-  
 
 (defun ecb-window-number (&optional window)
   "Return the number of WINDOW or - if nil - of the current selected window.

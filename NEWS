@@ -1,3 +1,41 @@
+* Changes for ECB version 1.96.1
+
+** No window-restrictions if the ECB-windows are hidden
+   If the special ECB-windows are hidden (e.g. by `ecb-toggle-ecb-windows')
+   then there are no restrictions about the window-layout of the ecb-frame:
+   The frame can be splitted in any arbitrary windows. All adviced functions
+   behave as their originals. So the frame can be used as if ECB would not be
+   active but ECB IS still active in the "background" and all ECB-commands and
+   all ECB-keybindings can be used. Of course some of them doesn't make much
+   sense but nevertheless they can be called.
+
+   Therefore it should be enough to hide the ECB-windows to run other
+   Emacs-applications which have their own window-layout-managing. There
+   should be no conflicts. But nevertheless the most recommended method for
+   running ECB and other applications (e.g. xrefactory, Gnus etc.) in the sane
+   frame is to use a window-manager like winring.el or escreen.el!
+
+** Ediff runs per default in the ECB-frame.
+   Now ediff can run per default in the ECB-frame because ECB ensures that
+   all special ECB-windows are hidden before ediff sets up its own
+   window-layout. ECB also tries to restore the previous window-layout of the
+   ecb-frame as best as possible. See new option `ecb-run-ediff-in-ecb-frame'.
+
+** New option `ecb-advice-window-functions-signal-error'
+   Now the adviced window functions of `ecb-advice-window-functions' do not
+   signal an error per default if called in situations which are not allowed -
+   they simple do nothing. An example is calling `delete-window' in a special
+   ecb-window or in the compile-window; if this new option is nil then nothing
+   is done otherwise an error is signaled. If you want the old behavior of
+   signaling an error just set this new option to not nil.
+
+** JDEE-dialogs now work correctly.
+   JDEE offers sometimes "dialogs" where the user can choose among several
+   options. These "dialogs" now work correctly regardless if a durable
+   compile-window is used or not.
+
+
+
 * Changes for ECB version 1.96
 
 ** ECB can work together with the window-managers escreen and winring
