@@ -14,7 +14,7 @@ Version 1.90
 
 * Introduced a POWER-click (was SHIFT-click before) in the ECB-tree-windows -
   see documentation of ecb-primary-secondary-mouse-buttons and see also the
-  online-help section "Usage of ECB --> Using the moose" (Klaus).
+  online-help section "Usage of ECB --> Using the mouse" (Klaus).
 
 * Added new command 'ecb-toggle-compile-window': Toggle the visibility of the
   compile-window of ECB (Klaus).
