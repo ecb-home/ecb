@@ -124,7 +124,7 @@
 ;;   + The edit-window must not be splitted and the point must reside in
 ;;     the not deleted edit-window.
 
-;; $Id: ecb-layout.el,v 1.92 2001/12/17 12:56:28 berndl Exp $
+;; $Id: ecb-layout.el,v 1.93 2002/01/22 01:19:20 burtonator Exp $
 
 ;;; Code:
 
@@ -2149,6 +2149,25 @@ more place."
   (ecb-set-history-buffer)
   (select-window (next-window))
   (setq ecb-edit-window (selected-window)))
+
+(defun ecb-toggle-enlarged-compilation-window()
+  "Toggle whether the `ecb-compile-window' is enlarged or not."
+  (interactive)  
+  
+  (save-selected-window
+    (let(split-height)
+
+      (setq split-height (/ (frame-height) 2))
+
+      (select-window ecb-compile-window)
+      
+      (if (> (window-height ecb-compile-window) ecb-compile-window-height)
+          
+          ;;restore the window configuration to ecb-compile-window-height
+          
+          (shrink-window (- split-height ecb-compile-window-height))
+        
+        (enlarge-window (- split-height ecb-compile-window-height))))))
 
 (provide 'ecb-layout)
 

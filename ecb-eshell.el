@@ -1,6 +1,6 @@
 ;;; ecb-eshell.el --- eshell integration for the ECB.
 
-;; $Id: ecb-eshell.el,v 1.20 2001/12/26 04:03:29 burtonator Exp $
+;; $Id: ecb-eshell.el,v 1.21 2002/01/22 01:19:20 burtonator Exp $
 
 ;; Copyright (C) 2000-2003 Free Software Foundation, Inc.
 ;; Copyright (C) 2000-2003 Kevin A. Burton (burton@openprivacy.org)
@@ -101,6 +101,11 @@
 ;;   we could setup a variable ecb-eshell-inhibit-resize which we could set in
 ;;   ecb-eshell-current-buffer-sync. ecb-eshell-resize would need to pay
 ;;   attention to this.
+;;
+;;
+;; - Include the ability to startup the eshell when the ECB is started.  This
+;; may require a new hook.
+
 
 ;;; Code:
 

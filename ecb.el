@@ -54,7 +54,7 @@
 ;; The latest version of the ECB is available at
 ;; http://home.swipnet.se/mayhem/ecb.html
 
-;; $Id: ecb.el,v 1.177 2002/01/21 17:08:08 berndl Exp $
+;; $Id: ecb.el,v 1.178 2002/01/22 01:19:20 burtonator Exp $
 
 ;;; Code:
 
@@ -179,7 +179,6 @@ The parameters are set for the following display-types:
                           (if ,fg-rest (list :foreground ,fg-rest))
                           (if ,bg-rest (list :foreground ,bg-rest))
                           (if ,reverse-video (list :reverse-video t))))))
-
 
 (defface ecb-directories-general-face (ecb-face-default 0.9)
   "Basic face for the ECB directories buffer.
@@ -1869,7 +1868,6 @@ OTHER-EDIT-WINDOW."
                               (ecb-fix-filename (file-name-directory path)))
                 (throw 'exit norm-dir)))
           nil)))))
-        
 
 (defun ecb-update-directories-buffer ()
   "Updates the ECB directories buffer."
@@ -2391,6 +2389,12 @@ That is remove the unsupported :help stuff."
       :help "Toggle the visibility of all ECB windows."
       ])
    (ecb-menu-item
+    [ "Toggle enlarged compilation window"
+      ecb-toggle-enlarged-compilation-window
+      :active (equal (selected-frame) ecb-frame)
+      :help "Toggle enlarged compilation window."
+      ])
+   (ecb-menu-item
     [ "Synchronize ECB windows"
       (ecb-current-buffer-sync t)
       :active (and (equal (selected-frame) ecb-frame)
@@ -2581,7 +2585,8 @@ That is remove the unsupported :help stuff."
                (t "d" ecb-goto-window-directories)
                (t "s" ecb-goto-window-sources)
                (t "m" ecb-goto-window-methods)
-               (t "h" ecb-goto-window-history)))
+               (t "h" ecb-goto-window-history)
+               (t "/" ecb-toggle-enlarged-compilation-window)))
   "*Specifies all keybindings for the ECB minor-mode keymap.
 The value is a cons-cell where the car is a common-prefix key for all the
 keybindings. The cdr is a list of keybindings each of them a list again. A
