@@ -1499,11 +1499,16 @@ ecb-windows after displaying the file in an edit-window."
 	   (let* ((path (if (listp dir) (car dir) dir))
 		  (norm-dir (ecb-fix-filename path nil t))
 		  (name (if (listp dir) (cadr dir) norm-dir)))
-	     (tree-node-add-child
-	      node
-	      (ecb-new-child old-children name 2 norm-dir
-                             (ecb-check-emptyness-of-dir norm-dir)
-			     (if ecb-truncate-long-names 'beginning)))))
+             (if (file-exists-p norm-dir)
+                 (tree-node-add-child
+                  node
+                  (ecb-new-child old-children name 2 norm-dir
+                                 (ecb-check-emptyness-of-dir norm-dir)
+                                 (if ecb-truncate-long-names 'beginning)))
+               (if (listp dir)
+                   (ecb-warning "Source-path %s with alias %s does not exist - ignored!"
+                                norm-dir (cadr dir))
+                 (ecb-warning "Source-path %s does not exist - ignored!" norm-dir)))))
          (tree-buffer-update))))))
 
 
