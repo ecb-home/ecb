@@ -12,11 +12,28 @@
 
 *** Removed the annoying message "Partial reparsing..."
 
+** Enhancements to the layout:
+
+*** Slightly better redrawing current layout especially if the layout contains
+    a compile-window.
+
+*** ECB autom. displays hidden compile-window before starting a compilation.
+    This is done if `ecb-compile-window-height' is not nil but the
+    compile-window is currently hidden by `ecb-toggle-compile-window'. Of
+    course this works also for grep and other compile-modes. Same for
+    `switch-to-buffer' and `switch-to-buffer-other-window' if called for a
+    compilation-buffer in the sense of `ecb-compilation-buffer-p'.
+
+*** `switch-to-buffer-other-window' now works more naturally within the
+    ECB-frame, especially if a compile-window is used.
+
+*** `ecb-toggle-compile-window' now has a key-binding: [C-c . \]
+
 ** ECB now also works with buffers "online" extracted from archives.
    Buffers extracted from an archive in `tar-mode' or `archive-mode' are now
    correct handled as if they were normal file-buffers. This feature doesn't
    work with XEmacs cause of its tar-mode and arc-mode implementation which
-   does/can not handle extracted files as normal files.
+   does not handle extracted files as normal files.
 
 ** Now user-extensions can be added to the popup-menues of the tree-buffers.
    See new options `ecb-directories-menu-user-extension',
