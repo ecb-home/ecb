@@ -215,7 +215,7 @@
               "addition it offers (optional) a durable \"compile-window\" at "
               "the bottom of the frame which is used to display all help-, "
               "grep-, compile- and etc.-output. The rest of the frame is called "
-              "the \"edit-area\" which can be devided in several (no limit) "
+              "the \"edit-area\" which can be divided in several (no limit) "
               "edit-windows which are used for editing of sources. Deleting "
               "some of the edit-windows does neither destroy the compile-window "
               "nor the browsing-windows.")
