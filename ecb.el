@@ -2161,6 +2161,7 @@ That is remove the unsupported :help stuff."
 (defcustom ecb-key-map
   '("C-c ." . ((t "fh" ecb-history-filter)
                (t "fs" ecb-sources-filter)
+               (t "fm" ecb-methods-filter)
                (t "p" ecb-nav-goto-previous)
                (t "n" ecb-nav-goto-next)
                (t "lc" ecb-change-layout)
