@@ -19,7 +19,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-upgrade.el,v 1.23 2003/01/29 14:36:40 berndl Exp $
+;; $Id: ecb-upgrade.el,v 1.24 2003/02/04 11:11:03 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -755,11 +755,15 @@ tp `load-path' and restarting Emacs the new package version can be activated."
           (message "Unpacking new %s..." package)
           (setq process-result
                 (shell-command-to-string
-                 (concat "tar -C "
-                         (ecb-create-shell-argument ecb-ecb-parent-dir)
-                         " -xf "
-                         (ecb-create-shell-argument
-                          (file-name-sans-extension downloaded-filename)))))
+                 ;; if bash is used as shell-file-name then the command must
+                 ;; not contain newlines!
+                 (subst-char-in-string
+                  ?\n 32
+                  (concat "tar -C "
+                          (ecb-create-shell-argument ecb-ecb-parent-dir)
+                          " -xf "
+                          (ecb-create-shell-argument
+                           (file-name-sans-extension downloaded-filename))))))
           (when (> (length process-result) 0)
             (setq success nil)
             (with-output-to-temp-buffer "*ECB-unpacking-failure*"
