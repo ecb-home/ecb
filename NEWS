@@ -1,4 +1,4 @@
-* Changes for ECB version 1.93.1
+* Changes for ECB version
 
 ** Fixed bugs:
 
@@ -9,6 +9,20 @@
     directory-buffer then you got always an empty directory-buffer even after
     switching to a layout with a directory-buffer. This is fixed now.
 
+** Better speedbar integration into the ECB-frame
+
+*** Now speedbar can be integrated into an arbitrary layout in the same way as
+    the other four special buffers (directories, sources, methods and
+    history). See new example layout with name "left-dir-plus-speedbar".
+
+*** New option `ecb-directories-update-speedbar' which helps you
+    to update a speedbar-window to the current selected directory of the
+    ECB-directories-window.
+
+** Handling of non-semantic-files. Now the contents of files which can not be
+   parsed by semantic but by imenu or etags can be displayed in the
+   ECB-methods-window. See new option `ecb-process-non-semantic-files'.
+    
 ** New option `ecb-compilation-predicates' for better specifying which buffers
    should be treated as compilation-buffers and therefore be displayed in the
    compile-window of ECB - if there is any.
