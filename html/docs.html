@@ -1112,6 +1112,12 @@ Up:<a rel=up accesskey=u href="#The%20ECB-layout">The ECB-layout</a>
 different locations of ECB-windows. See below the "ascii-screenshot"
 of all currently available layouts.
 
+<p>In addition to these predefined layouts you can either interactively
+create new layouts "by example" (see <a href="#Creating%20a%20new%20ECB-layout">Creating a new ECB-layout</a>)
+or program new layouts with the macro <code>ecb-layout-define</code>
+(see <a href="#Programming%20new%20layouts">Programming new layouts</a>). The former method is the recommened
+one!
+
 <p>If you want to switch fast between some layouts see the option
 <code>ecb-toggle-layout-sequence</code> and the command
 <code>ecb-toggle-layout</code> (see <a href="#Simulating%20speedbar">Simulating speedbar</a>)
@@ -1671,6 +1677,10 @@ be asked for a new layout-number and after inserting this number the
 new layout is saved in the file defined by the option
 <code>ecb-create-layout-file</code>. The new layout is now available via the
 option <code>ecb-layout-nr</code>.
+
+<p>There is no need for you to load the file
+<code>ecb-create-layout-file</code> manually into your Emacs because it's
+automatically loaded by ECB!
 
 <p><strong>NOTE</strong>: During the layout-creation process only the commands
 displayed in the help-screen are available. ALL other commands are
@@ -4816,8 +4826,8 @@ start-time of ECB.
 <table width="95%" align="center">
 <tr><td>
 Toggle sequence for layout toggling with <code>ecb-toggle-layout</code>. 
-Every element of this list has to be a valid layout-number (see option
-<code>ecb-layout-nr</code>).
+Every element of this list has to be a valid layout-number i.e. either
+one of the predefined layouts or one of the user-defined layouts.
 
 <p>You can add here as many layouts as you want but to use this option
 most effective you should not add more than 2 or 3 layouts so every

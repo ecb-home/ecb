@@ -26,7 +26,7 @@
 ;; This file is part of the ECB package which can be found at:
 ;; http://home.swipnet.se/mayhem/ecb.html
 
-;; $Id: ecb-util.el,v 1.28 2002/10/18 10:45:44 berndl Exp $
+;; $Id: ecb-util.el,v 1.29 2002/10/24 16:05:53 berndl Exp $
 
 ;;; Code:
 
@@ -198,19 +198,23 @@ not nil then in both PATH and FILENAME env-var substitution is done. If the
 ;; stolen from query.el and slightly enhanced
 (defun ecb-query-string (prompt choices &optional other-prompt)
   "Prints PROMPT and returns a string which must be one of CHOICES.
-CHOICES is a list of strings. The first choice is the default,
-which is returned if the user simply types RET.
-If OTHER-PROMPT is not nil and a string then the choice \"other\" is added to
-CHOICES and after selecting this choice the user is prompted with OTHER-PROMPT
-to insert any arbitrary string."
+CHOICES is either a list of strings whereas the first choice is the default
+\(which is returned if the user simply types RET) or nil \(then only a simple
+RET quits the query and returns nil). If OTHER-PROMPT is not nil and a string
+then the choice \"other\" is added to CHOICES and after selecting this choice
+the user is prompted with OTHER-PROMPT to insert any arbitrary string."
   (let* ((new-choices (if other-prompt
                           (add-to-list 'choices "other" t)
                         choices))
          (default (car new-choices))
          answer)
-    (setq prompt (concat prompt " ["
-                         (mapconcat (function (lambda (x) x))
-                                    new-choices ", ") "] "))
+    (setq prompt (concat prompt
+                         " ["
+                         (if new-choices
+                             (mapconcat (function (lambda (x) x))
+                                        new-choices ", ")
+                           "RET")
+                         "] "))
     (setq new-choices (nconc (mapcar (function (lambda (x) (list x t)))
                                      new-choices)
                              '('("" t))))

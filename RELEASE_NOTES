@@ -1,4 +1,4 @@
-This file contains some important release-notes for ECB 1.80
+This file contains some important release-notes for ECB 1.90
 
 General:
 --------
@@ -15,7 +15,13 @@ Installing ECB first time:
 No special notes beyond the contents of README.
 
 
-Upgrading from any previous version:
+Upgrading from version 1.80:
+----------------------------
+
+No special notes beyond the contents of README.
+
+
+Upgrading from version < 1.80:
 ------------------------------------
 
 The type of the following options has changed:

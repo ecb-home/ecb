@@ -103,7 +103,7 @@
 ;; - `ecb-with-some-adviced-functions'
 ;;
 
-;; $Id: ecb-layout.el,v 1.122 2002/10/23 16:09:30 berndl Exp $
+;; $Id: ecb-layout.el,v 1.123 2002/10/24 16:05:52 berndl Exp $
 
 ;;; Code:
 
@@ -119,6 +119,12 @@
 
 ;; needed for the `some'-function.
 (require 'cl)
+
+(defun ecb-load-layouts ()
+  "Load all defined layouts"
+  (require 'ecb-layout-defs)
+  (if (file-readable-p ecb-create-layout-file)
+      (load-file ecb-create-layout-file)))
 
 (defvar ecb-use-dedicated-windows t
   "Use dedicated windows for the ECB buffers.
@@ -193,6 +199,7 @@ layout with `ecb-redraw-layout'"
   :group 'ecb-layout
   :initialize 'custom-initialize-default
   :set (function (lambda (symbol value)
+                   (ecb-load-layouts)
                    (if (fboundp (intern (format "ecb-layout-function-%d"
                                                 value)))
                        (funcall ecb-layout-option-set-function
@@ -518,8 +525,8 @@ Please read also carefully the documentation of `ecb-redraw-layout'."
 
 (defcustom ecb-toggle-layout-sequence '(11 16)
   "*Toggle sequence for layout toggling with `ecb-toggle-layout'.
-Every element of this list has to be a valid layout-number \(see option
-`ecb-layout-nr).
+Every element of this list has to be a valid layout-number i.e. either one of
+the predefined layouts or one of the user-defined layouts.
 
 You can add here as many layouts as you want but to use this option most
 effective you should not add more than 2 or 3 layouts so every layout can be
@@ -536,7 +543,17 @@ Recommended values are for example:
 
 This option makes only sense if the value is a list with more than 1 element!"
   :group 'ecb-layout
-  :type '(repeat (integer :tag "Layout-Nr.")))
+  :type '(repeat (integer :tag "Layout-Nr."))
+  :initialize 'custom-initialize-default
+  :set (function (lambda (symbol value)
+                   (ecb-load-layouts)
+                   (dolist (nr value)
+                     (if (not (fboundp (intern
+                                        (format "ecb-layout-function-%d"
+                                                nr))))
+                         (error "There is no layout with number %d available!"
+                                nr)))
+                   (set symbol value))))
 
 (defcustom ecb-hide-ecb-windows-hook nil
   "*Hooks run after the ECB windows have been hidden
@@ -1782,7 +1799,7 @@ this function the edit-window is selected which was current before redrawing."
   (when (and ecb-minor-mode
              (equal (selected-frame) ecb-frame))
     ;; this functions are only needed at runtime!
-    (require 'ecb-layout-defs)
+    (ecb-load-layouts)
     (let* ((config (ecb-edit-window-configuration))
            (split-before-redraw (car (nth 0 config)))
            (split-amount-before-redraw (cdr (nth 0 config)))

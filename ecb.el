@@ -59,7 +59,7 @@
 ;; The latest version of the ECB is available at
 ;; http://home.swipnet.se/mayhem/ecb.html
 
-;; $Id: ecb.el,v 1.245 2002/10/23 16:09:30 berndl Exp $
+;; $Id: ecb.el,v 1.246 2002/10/24 16:05:53 berndl Exp $
 
 ;;; Code:
 
@@ -2326,7 +2326,8 @@ displayed with window-start and point at beginning of buffer."
     ;; `semantic-bovinate-toplevel'.
     (setq ecb-method-buffer-needs-rebuild t)
 
-    (let ((current-tokencache (semantic-bovinate-toplevel t)))
+    (let ((current-tokencache (and (semantic-active-p)
+                                   (semantic-bovinate-toplevel t))))
       ;; If the `semantic-bovinate-toplevel' has done no reparsing but only
       ;; used it´s still valid `semantic-toplevel-bovine-cache' then neither
       ;; the hooks of `semantic-after-toplevel-cache-change-hook' nor the
@@ -2337,13 +2338,15 @@ displayed with window-start and point at beginning of buffer."
       ;; which sets `ecb-method-buffer-needs-rebuild' to nil to signalize that
       ;; a "manually" rebuild of the method buffer is not necessary.
       ;;
-      ;; ecb-update-methods-buffer--internal is either called by
-      ;; ecb-current-buffer-sync or ecb-set-selected-source which both are
-      ;; called also for buffers which are not setup for semantic (e.g. text-,
+      ;; `ecb-update-methods-buffer--internal' is called by
+      ;; `ecb-current-buffer-sync' and `ecb-set-selected-source' (depending on
+      ;; the method switching to current buffer) which both are called also
+      ;; for buffers which are not setup for semantic (e.g. text-,
       ;; tex-buffers). current-tokencache is nil for such buffers so we call
       ;; the rebuilding of the method buffer with a nil cache and therefore
       ;; the method-buffer will be cleared out for such buffers. This is what
-      ;; we want!
+      ;; we want! For further explanation see
+      ;; `ecb-rebuild-methods-buffer-with-tokencache'...
       (if ecb-method-buffer-needs-rebuild
           ;; the hook was not called therefore here manually
           (ecb-rebuild-methods-buffer-with-tokencache current-tokencache t)))
@@ -3923,10 +3926,6 @@ always the ECB-frame if called from another frame."
       ;; now update all the ECB-buffer-modelines
       (ecb-mode-line-format)
 
-      ;; load user-defined layouts
-      (if (file-readable-p (expand-file-name ecb-create-layout-file))
-          (load-file (expand-file-name ecb-create-layout-file)))
-      
       ;; we run any personal hooks
       (run-hooks 'ecb-activate-hook)
 
@@ -3970,7 +3969,6 @@ always the ECB-frame if called from another frame."
     
     (setq ecb-activated-window-configuration (current-window-configuration))))
 
-;;;###autoload
 (defun ecb-deactivate ()
   "Deactivates the ECB and kills all ECB buffers and windows."
   (interactive)
@@ -4155,11 +4153,10 @@ buffers does not exist anymore."
 (defun ecb-compile-file-if-necessary (file &optional force)
   "Compile the ECB-file FILE if necessary. This is done if FORCE is not nil or
 FILE.el is newer than FILE.elc or if FILE.elc doesn't exist."
-  (let* ((root (file-name-sans-extension file))
-	 (elc-file (concat root ".elc")))
+  (let ((elc-file (concat (file-name-sans-extension file) ".elc")))
     (if (or force
 	    (not (file-exists-p elc-file))
-	    (file-newer-than-file-p file  elc-file))
+	    (file-newer-than-file-p file elc-file))
 	(progn
 	  (message (format "Byte-compiling %s..." 
 			   (file-name-nondirectory file)))
