@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: tree-buffer.el,v 1.123 2003/10/01 17:44:45 berndl Exp $
+;; $Id: tree-buffer.el,v 1.124 2003/10/02 08:35:21 berndl Exp $
 
 ;;; Commentary:
 
@@ -900,24 +900,6 @@ mentioned above!"
       ;; lets save the search-pattern so we can compare it with the next one.
       (setq tree-buffer-last-incr-searchpattern tree-buffer-incr-searchpattern))))
 
-;; (defun tree-buffer-create-menu (menu-items)
-;;   "Creates a popup menu from a list with menu items."
-;;   (when menu-items
-;;     (let ((item (cons
-;;                  (if tree-buffer-running-xemacs
-;;                      (if (null (cdar menu-items))
-;;                          (caar menu-items)
-;;                        (let ((v (make-vector 3 t)))
-;;                          (aset v 0 (caar menu-items))
-;;                          (aset v 1 (list (cadar menu-items)
-;;                                          '(tree-buffer-get-node-at-point)))
-;;                          (aset v 2 t)
-;;                          v))
-;;                    (cons (cadar menu-items)
-;;                          (cons (caar menu-items) t)))
-;;                 (tree-buffer-create-menu (cdr menu-items)))))
-;;       item)))
-
 (defun tree-buffer-create-menu-emacs (menu-def menu-name)
   (let ((map (make-sparse-keymap menu-name))
         (counter 0)
@@ -1017,26 +999,6 @@ mentioned above!"
                   (when fn
 		    (funcall fn node)))))))))))
 
-;; (defun tree-buffer-show-menu (&optional event)
-;;   (unless (not (equal (selected-frame) tree-buffer-frame))
-;;     (when tree-buffer-menus
-;;       (let ((node (tree-buffer-get-node-at-point)))
-;; 	(when node
-;; 	  (let* ((menu (cdr (assoc (tree-node-get-type node) tree-buffer-menus)))
-;;                  (menu-title-creator
-;;                   (cdr (assoc (tree-node-get-type node) tree-buffer-menu-titles)))
-;;                  (menu-title (cond ((stringp menu-title-creator)
-;;                                     menu-title-creator)
-;;                                    ((functionp menu-title-creator)
-;;                                     (funcall menu-title-creator node))
-;;                                    (t "ECB-tree-buffer-menu"))))
-;;             (when menu
-;; 	      (if tree-buffer-running-xemacs
-;; 		  (popup-menu (cons menu-title menu))
-;; 		(let ((fn (x-popup-menu
-;; 			   event (cons 'keymap (cons menu-title menu)))))
-;;                   (when fn
-;; 		    (funcall (car fn) node)))))))))))
 
 ;; mouse tracking stuff
 
@@ -1709,152 +1671,3 @@ child."
 (silentcomp-provide 'tree-buffer)
 
 ;;; tree-buffer.el ends here
-
-;; ---------- test stuff for defining, creating, displaying and handling ------
-;; ---------- popup-menus with submenus (at least one level of submenus) ------
-
-
-;; ;; defining popup-menus with submenus.
-;; (defun emacs-menu-test-function ()
-;;   nil)
-
-;; (defalias 'emacs-menu-test-function-1 'emacs-menu-test-function)
-;; (defalias 'emacs-menu-test-function-2 'emacs-menu-test-function)
-;; (defalias 'emacs-menu-test-function-3 'emacs-menu-test-function)
-;; (defalias 'emacs-menu-test-function-4 'emacs-menu-test-function)
-;; (defalias 'emacs-menu-test-function-5 'emacs-menu-test-function)
-;; (defalias 'emacs-menu-test-function-6 'emacs-menu-test-function)
-;; (defalias 'emacs-menu-test-function-7 'emacs-menu-test-function)
-;; (defalias 'emacs-menu-test-function-8 'emacs-menu-test-function)
-;; (defalias 'emacs-menu-test-function-9 'emacs-menu-test-function)
-;; (defalias 'emacs-menu-test-function-10 'emacs-menu-test-function)
-;; (defalias 'emacs-menu-test-function-11 'emacs-menu-test-function)
-;; (defalias 'emacs-menu-test-function-12 'emacs-menu-test-function)
-;; (defalias 'emacs-menu-test-function-13 'emacs-menu-test-function)
-;; (defalias 'emacs-menu-test-function-14 'emacs-menu-test-function)
-;; (defalias 'emacs-menu-test-function-15 'emacs-menu-test-function)
-;; (defalias 'emacs-menu-test-function-16 'emacs-menu-test-function)
-;; (defalias 'emacs-menu-test-function-17 'emacs-menu-test-function)
-;; (defalias 'emacs-menu-test-function-18 'emacs-menu-test-function)
-
-;; (defcustom my-ecb-history-menu-user-extension
-;;   '((emacs-menu-test-function-1 "menu-1")
-;;     ("---")
-;;     (emacs-menu-test-function-2 "menu-2")
-;;     (emacs-menu-test-function-3 "menu-3")
-;;     ("test-submenu"
-;;      (emacs-menu-test-function-4 "menu-4")
-;;      (emacs-menu-test-function-5 "menu-5")
-;;      ("---")
-;;      (emacs-menu-test-function-6 "menu-6"))
-;;     (emacs-menu-test-function-7 "menu-7")
-;;     (emacs-menu-test-function-8 "menu-8")
-;;     (emacs-menu-test-function-9 "menu-9")
-;;     ("---")
-;;     (emacs-menu-test-function-10 "menu-10")
-;;     (emacs-menu-test-function-11 "menu-11"))
-;;   "*User extensions for the popup-menu of the history buffer.
-;; For further explanations see `ecb-directories-menu-user-extension'.
-
-;; The node-argument of a menu-function contains as data the filename of the
-;; source for which the popup-menu has been opened.
-
-;; Per default the user-extensions are added at the beginning of the built-in
-;; menu-entries of `ecb-history-menu' but the whole menu can be re-arranged
-;; with `ecb-history-menu-sorter'.
-
-;; If you change this option you have to restart ECB to take effect."
-;;   :group 'ecb-history
-;;   :type '(repeat (choice :tag "Menu-entry" :menu-tag "Menu-entry"
-;;                          :value (ignore "")
-;;                          (const :tag "Separator" :value ("---"))
-;;                          (list :tag "Menu-entry"
-;;                                (function :tag "Function" :value ignore)
-;;                                (string :tag "Entry-name"))
-;;                          (cons :tag "Submenu"
-;;                                (string :tag "Submenu-title")
-;;                                (repeat (choice :tag "submenu-entry" :menu-tag "submenu-entry"
-;;                                                :value (ignore "")
-;;                                                (const :tag "Separator" :value ("---"))
-;;                                                (list :tag "submenu-entry"
-;;                                                      (function :tag "Function"
-;;                                                                :value ignore)
-;;                                                      (string :tag "Entry-name"))))))))
-                                                     
-
-;; ;; Handling and defining popup-menus with submenus for GNU Emacs
-;; (defvar emacs-menu-keymap nil)
-
-;; (defun emacs-menu-test ()
-;;   (interactive)
-;;   (setq emacs-menu-keymap (emacs-create-menu my-ecb-history-menu-user-extension "dummy-name"))
-;;   (let ((curr-frame-ypos (* (/ (frame-pixel-height) (frame-height))
-;;                             (count-lines (window-start) (point))))
-;;         (curr-frame-xpos (* (/ (frame-pixel-width) (frame-width))
-;;                             (current-column)))
-;;         (result nil)
-;;         (result-1 nil))
-;;     (setq emacs-menu-keymap (emacs-set-menu-name emacs-menu-keymap "Klausis-mausis menu"))
-;;     (setq result
-;;           (apply 'vector
-;;                  (x-popup-menu (list (list curr-frame-xpos curr-frame-ypos)
-;;                                      (selected-window))
-;;                                emacs-menu-keymap)))
-;;     (setq result-1 (lookup-key emacs-menu-keymap result))
-;;     (message "Function to call: %s" result-1)
-;;     (when (functionp result-1)
-;;       (funcall result-1 (tree-buffer-get-node-at-point)))))
-             
-
-;; ;; setting the menu-name dynamically
-;; (defun emacs-set-menu-name (menu-map name)
-;;   (setcar (member (nth (1- (length menu-map)) menu-map) menu-map) name)
-;;   menu-map)
-
-;; (defun emacs-create-menu (menu-def menu-name)
-;;   (let ((map (make-sparse-keymap menu-name))
-;;         (counter 0)
-;;         (menu-items (reverse menu-def)))
-;;     (dolist (item menu-items)
-;;       (cond ((string-equal (car item) "---")
-;;              (define-key map
-;;                (make-vector 1
-;;                             (setq counter (1+ counter)))
-;;                (list "---")))
-;;             ((stringp (cadr item)) ;; menu-entry
-;;              (define-key map
-;;                (make-vector 1
-;;                             (setq counter (1+ counter)))
-;;                (cons (cadr item) (car item))))
-;;             (t ;; submenu
-;;              (define-key map
-;;                (make-vector 1
-;;                             (setq counter (1+ counter)))
-;;                (cons (car item)
-;;                      (emacs-create-menu (cdr item) (car item)))))))
-;;     map))
-
-
-;; ;; handling and defining popup-menus with submenus for XEmacs
-;; (defun xemacs-create-menu (menu-def)
-;;   (when menu-def
-;;     (let ((item (car menu-def)))
-;;       (cons (cond ((string-equal (car item) "---")
-;; 		   (car item))
-;; 		  ((stringp (cadr item)) ;; menu-entry
-;;                    (let ((v (make-vector 3 t)))
-;; 		      (aset v 0 (cadr item))
-;; 		      (aset v 1 (list (car item)
-;; 				      '(tree-buffer-get-node-at-point)))
-;; 		      (aset v 2 t)
-;; 		      v))
-;; 		  (t ;; submenu
-;; 		    `(,(car item)
-;; 		      ,@(xemacs-create-menu (cdr item)))))
-;; 	    (xemacs-create-menu (cdr menu-def))))))
-
-;; (defun xemacs-menu-test ()
-;;   (interactive)
-;;   (let ((menu (xemacs-create-menu my-ecb-history-menu-user-extension)))
-;;     (message "menu: %s" (pp-to-string menu))
-;;     (popup-menu (cons "klausi-test-menu" menu))))

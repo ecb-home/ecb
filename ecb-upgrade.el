@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-upgrade.el,v 1.45 2003/09/10 16:01:42 berndl Exp $
+;; $Id: ecb-upgrade.el,v 1.46 2003/10/02 08:35:22 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -189,7 +189,16 @@
     (ecb-mode-line-data . (ecb-mode-line-data
                                ecb-upgrade-mode-line-data))
     (ecb-use-speedbar-for-directories . (ecb-use-speedbar-instead-native-tree-buffer
-                                         ecb-upgrade-use-speedbar-for-directories)))
+                                         ecb-upgrade-use-speedbar-for-directories))
+
+    (ecb-directories-menu-user-extension . (ecb-directories-menu-user-extension
+                                            ecb-upgrade-directories-menu-ext))
+    (ecb-sources-menu-user-extension . (ecb-sources-menu-user-extension
+                                        ecb-upgrade-sources-menu-ext))
+    (ecb-methods-menu-user-extension . (ecb-methods-menu-user-extension
+                                        ecb-upgrade-methods-menu-ext))
+    (ecb-history-menu-user-extension . (ecb-history-menu-user-extension
+                                        ecb-upgrade-history-menu-ext)))
   "Alist of all options which should be upgraded for current ECB-version.
 There are several reasons why an option should be contained in this alist:
 a) An old option has just be renamed in current-ECB version but has still the
@@ -349,6 +358,32 @@ The car is the old option symbol and the cdr is a 2-element-list with:
                 (nth 2 old-val)))
         (cons 'ecb-history-buffer-name
               (nth 3 old-val))))
+
+(defun ecb-upgrade-menu-extension (old-list)
+  (mapcar (function (lambda (i)
+                      (reverse i)))
+          old-list))
+
+(defun ecb-upgrade-directories-menu-ext (old-val)
+  (append (ecb-upgrade-menu-extension old-val)
+          (ecb-option-get-value 'ecb-directories-menu-user-extension
+                                'standard-value)))
+
+(defun ecb-upgrade-sources-menu-ext (old-val)
+  (append (ecb-upgrade-menu-extension old-val)
+          (ecb-option-get-value 'ecb-sources-menu-user-extension
+                                'standard-value)))
+
+(defun ecb-upgrade-methods-menu-ext (old-val)
+  (append (ecb-upgrade-menu-extension old-val)
+          (ecb-option-get-value 'ecb-methods-menu-user-extension
+                                'standard-value)))
+
+(defun ecb-upgrade-history-menu-ext (old-val)
+  (append (ecb-upgrade-menu-extension old-val)
+          (ecb-option-get-value 'ecb-history-menu-user-extension
+                                'standard-value)))
+
 
 ;; ----------------------------------------------------------------------
 ;; internal functions. Dot change anything below this line
