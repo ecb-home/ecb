@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-upgrade.el,v 1.91 2004/10/04 15:53:06 berndl Exp $
+;; $Id: ecb-upgrade.el,v 1.92 2004/11/17 17:31:01 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -291,6 +291,12 @@
                                                 ecb-upgrade-auto-expand-tag-tree-collapse-other))
     (ecb-tree-RET-selects-edit-window . (ecb-tree-RET-selects-edit-window
                                          ecb-upgrade-tree-RET-selects-edit-window))
+    (ecb-prescan-directories-for-emptyness . (ecb-prescan-directories-for-emptyness
+                                              ecb-upgrade-prescan-directories-for-emptyness))
+    (ecb-sources-perform-read-only-check . (ecb-sources-perform-read-only-check
+                                            ecb-upgrade-sources-perform-read-only-check))
+    (ecb-vc-enable-support . (ecb-vc-enable-support
+                              ecb-upgrade-vc-enable-support))
     )
   "Alist of all options which should be upgraded for current ECB-version.
 There are several reasons why an option should be contained in this alist:
@@ -584,7 +590,15 @@ The car is the old option symbol and the cdr is a 2-element-list with:
                       (ecb-find-optionsym-for-tree-buffer-name e)))
           old-val))
   
+(defun ecb-upgrade-prescan-directories-for-emptyness (old-val)
+  (if old-val 'unless-remote nil))
 
+(defun ecb-upgrade-sources-perform-read-only-check (old-val)
+  (if old-val 'unless-remote nil))
+  
+(defun ecb-upgrade-vc-enable-support (old-val)
+  (if old-val 'unless-remote nil))
+  
 ;; ----------------------------------------------------------------------
 ;; internal functions. Dot change anything below this line
 ;; ----------------------------------------------------------------------
@@ -1281,7 +1295,7 @@ Note: Normally this URL should never change but who knows..."
 ;; Klaus: Arrghhhhhhhhhhhhhhh... the cygwin version of tar does not accept
 ;; args in windows-style file-format :-( Therefore we convert it with cygpath.
 ;; Cause of the need of wget we can assume the the user has cygwin installed!
-(defmacro ecb-create-shell-argument (arg)
+(defmacro ecb-create-shell-file-argument (arg)
   `(if (eq system-type 'windows-nt)
        (progn
          (require 'executable)
@@ -1665,9 +1679,9 @@ activated."
           (setq process-result
                 (shell-command-to-string
                  (concat "tar -C "
-                         (ecb-create-shell-argument download-install-dir)
+                         (ecb-create-shell-file-argument download-install-dir)
                          " -xf "
-                         (ecb-create-shell-argument
+                         (ecb-create-shell-file-argument
                           (file-name-sans-extension downloaded-filename)))))
           (when (> (length process-result) 0)
             (setq success nil)

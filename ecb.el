@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb.el,v 1.411 2004/10/04 15:53:04 berndl Exp $
+;; $Id: ecb.el,v 1.412 2004/11/17 17:30:56 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -672,27 +672,37 @@ tasks are performed:
                ;; * KB: With current ECB implementation this sit-for seems not
                ;;   longer necessary, it works with every Emacs version correct.
                ;;   Therefore i comment out the sit-for until this error occurs
-               ;;   again.
+               ;;   again.               
                ;;           (sit-for 0.1)
                
                ;; if the file is not located in any of the paths in
                ;; `ecb-source-path' or in the paths returned from
-               ;; `ecb-source-path-functions' we must at least add the new source
-               ;; path temporally to our paths. But the uses has also the choice to
-               ;; save it for future sessions too.
+               ;; `ecb-source-path-functions' we must at least add the new
+               ;; source path temporally to our paths. But the user has also
+               ;; the choice to save it for future sessions too.
                (if (null (ecb-matching-source-paths filename))
                    (let* ((norm-filename (ecb-fix-filename filename))
+                          (remote-path (ecb-remote-path norm-filename))
                           (source-path (if (car ecb-add-path-for-not-matching-files)
-                                           (if (= (aref norm-filename 0) ?/)
-                                               ;; for Unix-style-path we add the
-                                               ;; root-dir
-                                               (substring norm-filename 0 1)
-                                             ;; for win32-style-path we add the
-                                             ;; drive; because `ecb-fix-filename'
-                                             ;; also converts cygwin-path-style to
-                                             ;; win32-path-style here also the
-                                             ;; drive is added.
-                                             (substring norm-filename 0 2))
+                                           ;; we always add the only the root
+                                           ;; as source-path
+                                           (if remote-path
+                                               ;; for a remote-path we add the
+                                               ;; host+ the root of the host
+                                               (concat (car remote-path) "/")
+                                             ;; filename is a local-path
+                                             (if (= (aref norm-filename 0) ?/)
+                                                 ;; for Unix-style-path we add the
+                                                 ;; root-dir
+                                                 (substring norm-filename 0 1)
+                                               ;; for win32-style-path we add
+                                               ;; the drive; because
+                                               ;; `ecb-fix-filename' also
+                                               ;; converts cygwin-path-style
+                                               ;; to win32-path-style here
+                                               ;; also the drive is added.
+                                               (substring norm-filename 0 2)))
+                                         ;; add the full directory as source-path
                                          (file-name-directory norm-filename))))
                      (ecb-add-source-path source-path source-path
                                           (not (cdr ecb-add-path-for-not-matching-files)))))
@@ -2197,7 +2207,7 @@ performance-problem!"
 (progn
   (require 'easymenu)
   (easy-menu-add-item nil
-                      '("tools") 
+                      '("Tools") 
                       (ecb-menu-item
                        [ "Start Code Browser (ECB)"
                          ecb-run-from-menubar
@@ -2334,6 +2344,7 @@ performance-problem!"
 (ecb-disable-advices ecb-speedbar-adviced-functions)
 (ecb-disable-advices ecb-eshell-adviced-functions)
 (ecb-disable-advices ecb-permanent-adviced-functions)
+(ecb-disable-advices ecb-vc-advices)
 (ecb-activate-adviced-functions nil)
 (ecb-enable-ecb-advice 'walk-windows 'around -1)
 (ecb-enable-ecb-advice 'one-window-p 'around -1)

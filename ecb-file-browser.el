@@ -23,7 +23,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-file-browser.el,v 1.40 2004/10/06 15:46:25 berndl Exp $
+;; $Id: ecb-file-browser.el,v 1.41 2004/11/17 17:31:01 berndl Exp $
 
 ;;; Commentary:
 
@@ -103,7 +103,6 @@ is either
 			       (directory :tag "Path")
 			       (string :tag "Alias")))))
 
-
 (defcustom ecb-add-path-for-not-matching-files '(t . nil)
   "*Add path of a file to `ecb-source-path' if not already contained.
 This is done during the auto. windows synchronization which happens if a file
@@ -112,7 +111,11 @@ adds the path of the new file auto. to `ecb-source-path' at least temporally
 for the current Emacs session. This option defines two things:
 1. Should only the root-part \(which means for Unix-like systems always '/'
    and for windows-like systems the drive) of the new file be added as
-   source-path to `ecb-source-path' or the whole directory-part?
+   source-path to `ecb-source-path' or the whole directory-part? For
+   remote-files \(e.g. tramp, ange-ftp- or efs-files) the root-part is the
+   complete host-part + the root-dir at that host \(example:
+   /berndl@ecb.sourceforge.net:/ would be the root-part of
+   /berndl@ecb.sourceforge.net:/tmp/test.txt).
 2. Should this path be added for future sessions too?
 
 The value of this option is a cons-cell where the car is a boolean for 1. and
@@ -227,15 +230,19 @@ directories-buffer."
               (member ecb-layout-name
                       ecb-show-sources-in-directories-buffer)))))
 
-(defcustom ecb-cache-directory-contents '((".*" . 50))
+;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: Add also an entry to the FAQ and
+;; also a section "Remote directories" to the chapter "Tips and tricks"!!
+(defcustom ecb-cache-directory-contents '(("^/\\([^:/]*@\\)?\\([^@:/]*\\):.*" . 0)
+                                          (".*" . 50))
   "*Cache contents of certain directories.
 This can be useful if `ecb-source-path' contains directories with many files
 and subdirs, especially if these directories are mounted net-drives \(\"many\"
 means here something > 1000, dependent of the speed of the net-connection and
-the machine). For these directories actualizing the sources- and/or directories-
-buffer of ECB \(if displayed in current layout!) can slow down dramatically so
-a caching increases speed a lot.
- 
+the machine). Or if it contains remote-source-paths which means paths in the
+sense of tramp, ange-ftp or efs. For these directories actualizing the
+sources- and/or directories- buffer of ECB \(if displayed in current layout!)
+can slow down dramatically so a caching increases speed a lot.
+
 The value of this option is a list where the each element is a cons-cell and
 looks like:
   \(<dir-regexp> . <filenumber threshold>)
@@ -251,17 +258,21 @@ The cache entry for a certain directory will be refreshed and actualized only
 by using the POWER-click \(see `ecb-primary-secondary-mouse-buttons') in the
 directories-buffer of ECB.
 
+Default-value: ECB caches the contents of all remote directories regardless of
+the size and all other directories if more than 50 entries are contained.
+
 Examples:
 
-A value of \(\(\"/usr/home/john_smith/bigdir*\" . 1000)) means the contents of
+An entry \(\"/usr/home/john_smith/bigdir*\" . 1000) means the contents of
 every subdirectory of the home-directory of John Smith will be cached if the
 directory contains more than 1000 entries and its name begins with \"bigdir\".
 
-A value of \(\(\".*\" . 1000)) caches every directory which has more than 1000
+An entry \(\".*\" . 1000) caches every directory which has more than 1000
 entries.
 
-A value of \(\(\".*\" . 0)) caches every directory regardless of the number of
-entries.
+An entry \(\"^/\\\\\(\[^:/]*@\\\\)?\\\\\(\[^@:/]*\\\\):.*\" . 0) caches every
+remote \(in the sense of tramp, ange-ftp or efs) directory regardless of the
+number of entries.
 
 Please note: If you want your home-dir being cached then you MUST NOT use
 \"~\" because ECB tries always to match full path-names!"
@@ -294,8 +305,7 @@ NOT use \"~\" because ECB tries always to match full path-names!"
   :group 'ecb-directories
   :type `(repeat (regexp :tag "Directory-regexp")))
 
-;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: update texi
-(defcustom ecb-prescan-directories-for-emptyness t
+(defcustom ecb-prescan-directories-for-emptyness 'unless-remote
   "*Prescan directories for emptyness.
 ECB does this so directories are displayed as empty in the directories-buffer
 even without user-interaction \(i.e. in previous ECB-versions the emptyness of
@@ -307,10 +317,46 @@ without this check - at least at the first time \(all following selects of a
 directory uses the cached information if its subdirectories are empty or not).
 Therefore ECB performs this check stealthy \(see `ecb-stealthy-tasks-delay')
 so normally there should no performance-decrease or additional waiting-time
-for the user. But to get sure this feature can be switched off completely via
-this option."
+for the user. There is one exception: For remote directories \(in the sense of
+tramp, ange-ftp, or efs) this check can descrease performance even if
+performed stealthy and interruptable. Therefore this option offers three
+possible settings:
+
+  t: Switch on this feature
+
+  'unless-remote: Switch on this feature but not for remote directories. The
+  term \"remote\" means here directories which are used via tramp, ange-ftp or
+  efs. So mounted directories are counted not as remote directories here even
+  if such a directory is maybe hosted on a remote machine. But normally only
+  directories in a LAN are mounted so there should be no performance-problems
+  with such mounted directories.
+
+  nil: Switch off this feature completely.
+
+The option `ecb-prescan-directories-exclude-regexps' offers are more fine
+granularity to exclude certain directories from this prescan."
   :group 'ecb-directories
-  :type 'boolean)
+  :type '(radio (const :tag "Switch on" :value t)
+                (const :tag "Switch off for remote directories" :value unless-remote)
+                (const :tag "Switch off completely" :value nil)))
+
+(defcustom ecb-prescan-directories-exclude-regexps nil
+  "*Which directories should be excluded from the empty-prescan.
+If a directory matches any of the regexps of this option it will not be
+prescanned for emptyness - This option takes only effect if
+`ecb-prescan-directories-for-emptyness' is not nil."
+  :group 'ecb-directories
+  :type '(repeat (regexp :tag "Directory-regexp")))
+
+(defsubst ecb-directory-should-prescanned-p (dir)
+  "Return not nil if DIR should be prescanned for emptyness.
+The check is performed according to the settings in the options
+`ecb-prescan-directories-for-emptyness' and
+`ecb-prescan-directories-exclude-regexps'."
+  (and (or (equal t ecb-prescan-directories-for-emptyness)
+           (and (equal 'unless-remote ecb-prescan-directories-for-emptyness)
+                (not (ecb-remote-path dir))))
+       (not (ecb-match-regexp-list dir ecb-prescan-directories-exclude-regexps))))
 
 (defcustom ecb-after-directory-change-hook nil
   "*Hook which run directly after the selected directory has changed.
@@ -333,7 +379,7 @@ two arguments \"~\" and \"/tmp\"."
   :group 'ecb-directories
   :type 'hook)
 
-(defcustom ecb-sources-perform-read-only-check t
+(defcustom ecb-sources-perform-read-only-check 'unless-remote
   "*Check if source-items in the tree-buffers are read-only.
 If a sourcefile is read-only then it will be displayed with that face set in
 the option `ecb-source-read-only-face'.
@@ -341,11 +387,37 @@ the option `ecb-source-read-only-face'.
 Because this check can be take some time if files are used via a mounted
 net-drive ECB performs this check stealthy \(see `ecb-stealthy-tasks-delay')
 so normally there should no performance-decrease or additional waiting-time
-for the user. But to get sure this feature can be switched off completely via
-this option."
+for the user. But to get sure this option offers three choices: t,
+'unless-remote and nil. See `ecb-prescan-directories-for-emptyness' for an
+explanation for these three choices.
+
+The option `ecb-read-only-check-exclude-regexps' offers are more fine
+granularity to exclude the sources of certain directories from the read-only
+state-check."
   :group 'ecb-sources
   :group 'ecb-directories
-  :type 'boolean)
+  :type '(radio (const :tag "Switch on" :value t)
+                (const :tag "Switch off for remote directories" :value unless-remote)
+                (const :tag "Switch off completely" :value nil)))
+
+(defcustom ecb-read-only-check-exclude-regexps nil
+  "*Which directories should be excluded from the sources-read-only-check.
+If a directory matches any of the regexps of this option their sources will
+not be checked if they are writable - This option takes only effect if
+`ecb-sources-perform-read-only-check' is not nil."
+  :group 'ecb-sources
+  :group 'ecb-directories
+  :type '(repeat (regexp :tag "Directory-regexp")))
+
+(defsubst ecb-sources-read-only-check-p (dir)
+  "Return not nil if the sources of DIR should be checked for read-only-state.
+The check is performed according to the settings in the options
+`ecb-sources-perform-read-only-check' and
+`ecb-read-only-check-exclude-regexps'."
+  (and (or (equal t ecb-sources-perform-read-only-check)
+           (and (equal 'unless-remote ecb-sources-perform-read-only-check)
+                (not (ecb-remote-path dir))))
+       (not (ecb-match-regexp-list dir ecb-read-only-check-exclude-regexps))))
 
 (defcustom ecb-directories-buffer-name " *ECB Directories*"
   "*Name of the ECB directory buffer.
@@ -771,8 +843,7 @@ key-bindings only for the history-buffer of ECB."
 ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: add a section where all necessary
 ;; informations are described - e.g. the potential drawback when using a
 ;; function as vc-cvs-state and not to stay local!
-;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: update texi
-(defcustom ecb-vc-enable-support t
+(defcustom ecb-vc-enable-support 'unless-remote
   "*Enable support for version-control \(VC) systems.
 If on then in the directories-buffer \(if the value of the option
 `ecb-show-sources-in-directories-buffer' is on for current layout), the
@@ -783,13 +854,39 @@ item. If off then no version-control-state checking is done.
 Because this check can be take some time if files are managed by a not local
 Version-control-server ECB performs this check stealthy \(see
 `ecb-stealthy-tasks-delay') so normally there should no performance-decrease
-or additional waiting-time for the user. But to get sure this feature can be
-switched off completely via this option.
+or additional waiting-time for the user. But to get sure this option offers
+three choices: t, 'unless-remote and nil. See the option
+`ecb-prescan-directories-for-emptyness' for an explanation for these three
+choices.
+
+The option `ecb-vc-directory-exclude-regexps' offers are more fine granularity
+to exclude the sources of certain directories from the VC-state-check.
 
 See `ecb-vc-supported-backends' how to customize the VC-support itself."
   :group 'ecb-version-control
   :group 'ecb-sources
-  :type 'boolean)
+  :type '(radio (const :tag "Switch on" :value t)
+                (const :tag "Switch off for remote directories" :value unless-remote)
+                (const :tag "Switch off completely" :value nil)))
+
+(defcustom ecb-vc-directory-exclude-regexps nil
+  "*Which directories should be excluded from VC-state-check.
+If a directory matches any of the regexps of this option the VC-state of its
+sources will not be checked - This option takes only effect if
+`ecb-vc-enable-support' is not nil."
+  :group 'ecb-version-control
+  :group 'ecb-sources
+  :type '(repeat (regexp :tag "Directory-regexp")))
+
+(defsubst ecb-vc-directory-should-be-checked-p (dir)
+  "Return not nil if the sources of DIR should be checked for VC-state.
+The check is performed according to the settings in the options
+`ecb-vc-enable-support' and `ecb-vc-directory-should-be-checked-p'."
+  (and (or (equal t ecb-vc-enable-support)
+           (and (equal 'unless-remote ecb-vc-enable-support)
+                (not (ecb-remote-path dir))))
+       (not (ecb-match-regexp-list dir ecb-vc-directory-exclude-regexps))))
+
 
 (defcustom ecb-vc-supported-backends
   '((ecb-vc-managed-by-CVS-RCS-SCCS . vc-state))
@@ -889,56 +986,6 @@ beginning of this option."
 (defvar ecb-path-selected-source nil
   "Path to currently selected source.")
 
-(defecb-multicache ecb-filename-cache '(FILES-AND-SUBDIRS EMPTY-DIR-P SOURCES VC)
-  "Cache used for the filebrowser to cache all necessary informations
-associated to file- or directory-names.
-
-Currently there are three subcaches managed within this cache:
-
-  FILES-AND-SUBDIRS:
-  
-  Cache for every directory all subdirs and files. This is a cache with
-     key:   <directory>
-     value: \(<file-list> . <subdirs-list>)
-  
-  EMPTY-DIR-P:
-  
-  Cache for every directory if it is empty or not. This is a cache with
-     key:   <directory>
-     value: \(\[nil|t] . <checked-with-show-sources>)
-  
-  SOURCES:
-  
-  Cache for the contents of the buffer `ecb-sources-buffer-name'. This is a
-  cache with
-     key:   <directory>
-     value: \(<full-content> . <filtered-content>)
-  whereas <full-content> is a 3-elem list \(tree-buffer-root <copy of
-  tree-buffer-nodes> buffer-string) for a full \(i.e. all files) cache and
-  <filtered-content> is a 4-elem list \(tree-buffer-root <copy of
-  tree-buffer-nodes> sources-buffer-string <filter>) for a filtered cache
-  where <filter> is a cons-cell \(<filter-regexp> . <filter-display>).
-
-  VC:
-
-  Cache necessary informations for the version-control-support. This is a
-  cache for filenames and directories. In case of a file with
-     key: <filename> of a sourcefile
-     value: \(<state> <check-timestamp> <checked-buffers>)
-  whereas <state> is the that VC-state the file had at time <check-timestamp>.
-  <checked-buffers> is a list of tree-buffer-names for which <state> was
-  checked.
-  In case of a directory with
-     key: <dirname> of a directory
-     value: <vc-state-fcn> or 'NO-VC
-  <vc-state-fcn> is the function used to get the VC-state if <check-timestamp>
-  is older than the most recent modification-timestamp of <filename>.")
-
-(defun ecb-filename-cache-init ()
-  "Initialize the whole cache for file- and directory-names"
-  (if (ecb-multicache-p 'ecb-filename-cache)
-      (ecb-multicache-clear 'ecb-filename-cache)))
-
 ;; accessors for the FILES-AND-SUBDIRS-cache
 
 (defun ecb-files-and-subdirs-cache-add (dir cached-value)
@@ -960,7 +1007,8 @@ Currently there are three subcaches managed within this cache:
 
 (defun ecb-files-and-subdirs-cache-dump (&optional no-nil-value)
   "Dump the whole FILES-AND-SUBDIRS-cache in another window. If NO-NIL-VALUE
-is not nil then these cache-entries are not dumped."
+is not nil then these cache-entries are not dumped. This command is not
+intended for end-users of ECB."
   (interactive "P")
   (ecb-multicache-print-subcache 'ecb-filename-cache
                                  'FILES-AND-SUBDIRS
@@ -1007,7 +1055,8 @@ is not nil then these cache-entries are not dumped."
 
 (defun ecb-directory-empty-cache-dump (&optional no-nil-value)
   "Dump the whole EMPTY-DIR-P-cache. If NO-NIL-VALUE is not nil then these
-cache-entries are not dumped."
+cache-entries are not dumped. This command is not intended for end-users of
+ECB."
   (interactive "P")
   (ecb-multicache-print-subcache 'ecb-filename-cache
                                  'EMPTY-DIR-P no-nil-value))
@@ -1063,7 +1112,8 @@ filter-regexp). If no cache-entry for DIR is available then nil is returned."
 
 (defun ecb-sources-cache-dump (&optional no-nil-value)
   "Dump the whole SOURCES-cache. If NO-NIL-VALUE is not nil then these
-cache-entries are not dumped."
+cache-entries are not dumped. This command is not intended for end-users of
+ECB."
   (interactive "P")
   (ecb-multicache-print-subcache 'ecb-filename-cache 'SOURCES no-nil-value))
 
@@ -1089,11 +1139,13 @@ cache-entries are not dumped."
 
 (defun ecb-vc-cache-remove-files-of-dir (dir)
   "Remove all files contained in DIR from the VC-cache."
-  (let ((regexp (concat "^"
-                        (regexp-quote dir)
-                        ;; TODO: native Windows XEmacs uses \ as
-                        ;; directory separator!!!
-                        "/[^/]+$")))
+  (let* ((dir-sep-string (ecb-directory-sep-string dir))
+         (regexp (concat "^"
+                         (regexp-quote dir)
+                         (regexp-quote dir-sep-string)
+                         "[^"
+                         dir-sep-string
+                         "]+$")))
     (save-match-data
       (ecb-multicache-mapsubcache
        'ecb-filename-cache 'VC
@@ -1109,13 +1161,15 @@ cache-entries are not dumped."
                      ;; nothing changes
                      old-value)))))))
 
+
 (defun ecb-vc-cache-clear ()
   "Clear the whole VC-cache."
   (ecb-multicache-clear-subcache 'ecb-filename-cache 'VC))
 
 (defun ecb-vc-cache-dump (&optional no-nil-value)
   "Dump the whole VC-cache. If NO-NIL-VALUE is not nil then these
-cache-entries are not dumped."
+cache-entries are not dumped. This command is not intended for end-users of
+ECB."
   (interactive "P")
   (ecb-multicache-print-subcache 'ecb-filename-cache 'VC no-nil-value))
 
@@ -1231,7 +1285,8 @@ representing PATH."
         (when (and (>= (length path) (length data))
                    (ecb-string= (substring path 0 (length data)) data)
                    (or (= (length path) (length data))
-                       (eq (elt path (length data)) ecb-directory-sep-char)))
+                       (eq (elt path (length data))
+                           (ecb-directory-sep-char path))))
           (let ((was-expanded (or (not (tree-node-is-expandable child))
                                   (tree-node-is-expanded child))))
             (tree-node-set-expanded child t)
@@ -1340,8 +1395,6 @@ according to `ecb-sources-sort-method'."
             (when (and (not (member file cvsignore-files))
                        (or (ecb-match-regexp-list file (cadr source-regexps))
                            (not (ecb-match-regexp-list file (car source-regexps)))))
-;;               (when (not (file-writable-p file))
-;;                 (ecb-merge-face-into-text file ecb-source-read-only-face))
               (setq source-files (append source-files (list file))))))
         
         (setq cached-value (cons source-files subdirs))
@@ -1551,9 +1604,9 @@ they occur in `ecb-source-paths'."
             (lambda (lhs rhs)
               (> (length lhs) (length rhs)))))))
 
-(defun ecb-get-best-matching-source-path ()
-  "Return the best-matching source-path for the current selected source."
-  (car (ecb-matching-source-paths ecb-path-selected-source t)))
+(defun ecb-get-best-matching-source-path (path)
+  "Return the best-matching source-path for PATH."
+  (car (ecb-matching-source-paths path t)))
 
 (defun ecb-set-selected-directory (path &optional force)
   "Set the contents of the ECB-directories and -sources buffer correct for the
@@ -1579,8 +1632,8 @@ then nothing is done unless first optional argument FORCE is not nil."
                          ;; otherwise the node of the best matching
                          ;; source-path
                          (let ((best-source-path
-                                (car (ecb-matching-source-paths
-                                      ecb-path-selected-directory t))))
+                                (ecb-get-best-matching-source-path
+                                 ecb-path-selected-directory)))
                            (if best-source-path
                                (tree-buffer-find-node-data
                                 (ecb-fix-filename best-source-path))))
@@ -1632,8 +1685,8 @@ then nothing is done unless first optional argument FORCE is not nil."
             (concat ecb-path-selected-directory
                     (and (not (= (aref ecb-path-selected-directory
                                        (1- (length ecb-path-selected-directory)))
-                                 ecb-directory-sep-char))
-                         ecb-directory-sep-string)))))
+                                 (ecb-directory-sep-char ecb-path-selected-directory)))
+                         (ecb-directory-sep-string ecb-path-selected-directory))))))
   ;; set the modelines of all visible tree-buffers new
   (ecb-mode-line-format))
 
@@ -1744,10 +1797,11 @@ by the option `ecb-mode-line-prefixes'."
                             (if b
                                 (buffer-name b)
                               (ecb-get-source-name filename)))
-                        (ecb-get-source-name filename))))
-          (if (not ecb-vc-enable-support)
+                        (ecb-get-source-name filename)))
+              (dir (file-name-directory filename)))
+          (if (not (ecb-vc-directory-should-be-checked-p dir))
               file-1
-            (if (ecb-vc-managed-dir-p (file-name-directory filename))
+            (if (ecb-vc-managed-dir-p dir)
                 (ecb-vc-generate-node-name file-1
                                            (nth 0 (ecb-vc-cache-get filename)))
               (ecb-generate-node-name file-1 -1 "leaf"
@@ -1918,37 +1972,35 @@ ecb-windows after displaying the file in an edit-window."
          (tree-buffer-update))))
     ))
 
-;; empty dirs?
+;; empty dirs
 
 (defun ecb-check-emptyness-of-dir (dir)
   "Checks if DIR is an empty directory. If empty return not nil otherwise nil."
-  (if (not ecb-prescan-directories-for-emptyness)
-      nil
-    (let ((cache-value (ecb-directory-empty-cache-get dir))
-          (show-sources (ecb-show-sources-in-directories-buffer-p)))
-      (if (and cache-value
-               (equal (cdr cache-value) show-sources))
-          (car cache-value)
-        (ecb-directory-empty-cache-remove dir)
-        (let ((entries (and (file-accessible-directory-p dir)
-                            (directory-files dir nil nil t)))
-              (just-files-means-empty (not show-sources))
-              (full-file-name nil)
-              (empty-p nil))
-          (setq empty-p
-                (catch 'found
-                  (dolist (e entries)
-                    (when (not (member e '("." ".." "CVS")))
-                      (setq full-file-name (ecb-fix-filename dir e))
-                      (if (file-directory-p full-file-name)
-                          (throw 'found 'nil)
-                        (if (not just-files-means-empty)
-                            (throw 'found 'nil)))))
-                  t))
-          ;; now we add this value to the cache
-          (ecb-directory-empty-cache-add (ecb-fix-filename dir)
-                                         (cons empty-p show-sources))
-          empty-p)))))
+  (let ((cache-value (ecb-directory-empty-cache-get dir))
+        (show-sources (ecb-show-sources-in-directories-buffer-p)))
+    (if (and cache-value
+             (equal (cdr cache-value) show-sources))
+        (car cache-value)
+      (ecb-directory-empty-cache-remove dir)
+      (let ((entries (and (file-accessible-directory-p dir)
+                          (directory-files dir nil nil t)))
+            (just-files-means-empty (not show-sources))
+            (full-file-name nil)
+            (empty-p nil))
+        (setq empty-p
+              (catch 'found
+                (dolist (e entries)
+                  (when (not (member e '("." ".." "CVS")))
+                    (setq full-file-name (ecb-fix-filename dir e))
+                    (if (file-directory-p full-file-name)
+                        (throw 'found 'nil)
+                      (if (not just-files-means-empty)
+                          (throw 'found 'nil)))))
+                t))
+        ;; now we add this value to the cache
+        (ecb-directory-empty-cache-add (ecb-fix-filename dir)
+                                       (cons empty-p show-sources))
+        empty-p))))
 
 
 (defecb-stealthy ecb-stealthy-empty-dir-check
@@ -1971,22 +2023,24 @@ directory. This function is only for use by `ecb-stealthy-updates'!"
                                   (<= state lines-of-buffer))
                         (goto-line state)
                         (setq curr-node (tree-buffer-get-node-at-point))
-                        (setq dir-empty-p
-                              (ecb-check-emptyness-of-dir (tree-node-get-data curr-node)))
-                        ;; we update the node only if we have an empty dir and the node is
-                        ;; still expandable
-                        (when (or (and dir-empty-p
-                                       (tree-node-is-expandable curr-node))
-                                  (and (not dir-empty-p)
-                                       (not (tree-node-is-expandable curr-node))))
-                          (tree-buffer-update-node nil
-                                                   'use-old-value
-                                                   'use-old-value
-                                                   'use-old-value
-                                                   'use-old-value
-                                                   (not dir-empty-p)
-                                                   t))
-                        (setq state (1+ state))))
+                        (when (ecb-directory-should-prescanned-p
+                               (tree-node-get-data curr-node))
+                          (setq dir-empty-p
+                                (ecb-check-emptyness-of-dir (tree-node-get-data curr-node)))
+                          ;; we update the node only if we have an empty dir and the node is
+                          ;; still expandable
+                          (when (or (and dir-empty-p
+                                         (tree-node-is-expandable curr-node))
+                                    (and (not dir-empty-p)
+                                         (not (tree-node-is-expandable curr-node))))
+                            (tree-buffer-update-node nil
+                                                     'use-old-value
+                                                     'use-old-value
+                                                     'use-old-value
+                                                     'use-old-value
+                                                     (not dir-empty-p)
+                                                     t)))
+                          (setq state (1+ state))))
                     (if (> state lines-of-buffer)
                         (setq state 'done)))))
       (setq state 'done))))
@@ -2025,7 +2079,9 @@ when called. Return the new state-value."
                     (<= state lines-of-buffer))
           (goto-line state)
           (setq curr-node (tree-buffer-get-node-at-point))
-          (when (= (tree-node-get-type curr-node) node-type-to-check)
+          (when (and (= (tree-node-get-type curr-node) node-type-to-check)
+                     (ecb-sources-read-only-check-p
+                      (file-name-directory (tree-node-get-data curr-node))))
             (setq new-name (tree-node-get-name curr-node))
             (setq read-only-p
                   (not (file-writable-p (tree-node-get-data curr-node))))
@@ -2224,22 +2280,37 @@ not managed by one of these backends."
          (and (file-exists-p (concat proj-dir "/SCCS")) 'SCCS)
        nil))))
 
-(silentcomp-defvar ange-ftp-directory-format)
-(silentcomp-defvar efs-directory-regexp)
-(silentcomp-defvar ange-ftp-name-format)
-(defun ecb-remote-dir-p (directory)
-  "Return not nil if DIRECTORY is an ange-ftp- or efs-directory."
-  (or (and (featurep 'ange-ftp)
-           (string-match (car (if ecb-running-xemacs
-                                  ange-ftp-directory-format
-                                ange-ftp-name-format))
-                         directory))
-      ;; efs support
-      (and (featurep 'efs)
-           (string-match (if (stringp efs-directory-regexp)
-                             efs-directory-regexp
-                           (car efs-directory-regexp))
-                         directory))))
+(silentcomp-defun ange-ftp-ftp-name)
+(silentcomp-defun efs-ftp-path)
+(silentcomp-defun tramp-tramp-file-p)
+(silentcomp-defun tramp-file-name-path)
+(silentcomp-defun tramp-dissect-file-name)
+;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: Maybe we should add here caching
+;; too? Probably not necessary because it is currently only used with by
+;; - ecb-current-buffer-sync: not critical
+;; - ecb-fix-filename: not critical because already cached
+;; - ecb-directory-sep-*: Hmm, maybe caching would be good...
+;; - ecb-check-emptyness-of-dir: runs stealthy for each dir ==> not critical
+;; - ecb-vc-get-state-fcn-for-dir: runs stealthy for each dir == not critical
+(defun ecb-remote-path (path)
+  "Test if PATH is a remote path and dissect it into components if yes.
+Returns a list (HOST-PART REAL-PATH), or nil if PATH is not a remote path.
+HOST-PART is that component from beginning of PATH to the :-separator which
+separates user- and host-parts from the real path, i.e. it always ends with a
+colon! REAL-PATH is that component after that :-separator. Supports tramp,
+ange-ftp and efs."
+  (let* ((real-path (or (and (featurep 'tramp) ;; tramp-support
+                             (tramp-tramp-file-p path)
+                             (tramp-file-name-path (tramp-dissect-file-name path)))
+                        (and (featurep 'ange-ftp) ;; ange-ftp-support
+                             (nth 2 (ange-ftp-ftp-name path)))
+                        (and (featurep 'efs) ;; efs support
+                             (nth 2 (efs-ftp-path path)))
+                        ;; not a (supported) remote path
+                        path))
+         (host-part (substring path 0 (- (length path) (length real-path)))))
+    (and (not (string= host-part ""))
+         (list host-part real-path))))
 
 (defun ecb-vc-get-state-fcn-for-dir (directory)
   "Get that function which should be used for checking the VC-state for files
@@ -2256,7 +2327,7 @@ checked for VC-states!"
           (cache-val cache-val)
           (t
            (let ((vc-backend-fcn
-                  (and (not (ecb-remote-dir-p norm-dir))
+                  (and (not (ecb-remote-path norm-dir))
                       ;; we never check VC-states in "remote" paths!
                        (catch 'found
                          (dolist (elem ecb-vc-supported-backends)
@@ -2312,6 +2383,7 @@ state-value."
       ;; when state != 'done
       (let ((lines-of-buffer (count-lines (point-min) (point-max)))
             (curr-node nil)
+            (curr-dir nil)
             (new-name nil)
             (vc-state-fcn nil)
             (new-state nil)
@@ -2324,10 +2396,10 @@ state-value."
                       (<= state lines-of-buffer))
             (goto-line state)
             (setq curr-node (tree-buffer-get-node-at-point))
-            (when (= (tree-node-get-type curr-node) node-type-to-check)
-              (setq vc-state-fcn
-                    (ecb-vc-get-state-fcn-for-dir
-                     (file-name-directory (tree-node-get-data curr-node))))
+            (setq curr-dir (file-name-directory (tree-node-get-data curr-node)))
+            (when (and (= (tree-node-get-type curr-node) node-type-to-check)
+                       (ecb-vc-directory-should-be-checked-p curr-dir))
+              (setq vc-state-fcn (ecb-vc-get-state-fcn-for-dir curr-dir))
               (when vc-state-fcn ;; file is under VC-control
                 (setq new-name (tree-node-get-name curr-node))
                 (setq new-state
@@ -2350,7 +2422,7 @@ state-value."
 function does the real job and is is only for use by a stealthy function
 defined with `defecb-stealthy'! STATE is the initial state-value the
 stealthy-function has when called. Return the new state-value."
-  (if (not ecb-vc-enable-support)
+  (if (not (ecb-vc-directory-should-be-checked-p ecb-path-selected-directory))
       'done
     (let ((vc-state-fcn (ecb-vc-get-state-fcn-for-dir ecb-path-selected-directory)))
       (if (null vc-state-fcn)
@@ -2440,39 +2512,70 @@ display an appropriate icon in front of the file."
   ;; `write-file-hooks'!
   nil)
   
-;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: we have to add a smart piece of
-;; code to `vc-checkin-hook' which is able to clear the cache entry for
-;; exactly that file checked-in with vc-checkin! Problems to solve:
+;; we have to add a smart piece of code to `vc-checkin-hook' which is able to
+;; clear the cache entry for exactly that file checked-in with vc-checkin!
+;; Problems to solve:
 ;; - unfortunatelly this hook is not called with the checked-in filename as
-;;   argument but it is a normal hook runned with `run-hooks' :-( So probably
-;;   we can not use this hook but we would need an after advice for
-;;   `vc-checkin' which clears the ECB-vc-cache entry for that filename and
-;;   then restarts state-checking by ECB.
-;; - If a user uses PCL-CVS for CVS-operations this advice of vc-checkin would
-;;   probably not run because i assume that pcl-cvs does neither call
-;;   vc-checkin nor calls the hook `vc-checkin-hook' but we have to verify
-;;   this. It at least the hook would be runned by PCL-CVS i can imagine a
-;;   solution.
-;; - Of course we could simply add a ecb-vc-cache-clear to the hook
-;;   `vc-checkin-hook' then we would not need the filename but this would
-;;   remove all still valid vc-states of ALL files which is surely not what we
-;;   want because this would result in a recheck of the vc-state of ALL files
-;;   only because ONE file has been checked in... Not really smart....
+;;   argument but it is a normal hook runned with `run-hooks' :-( But we can
+;;   not reset the stuff in the advice itself because this doesn't ensure that
+;;   the after-advice-stuff is called *after* the checkin - seems that the
+;;   after-advice runs already during the user inserts/edits the
+;;   checkin-comment. But the vc-checkin-hook is really called after the
+;;   checkin! ==> We use a combination of an after-advice and vc-checkin-hook!
+;; - If a user uses PCL-CVS for CVS-operations this advice of vc-checkin will
+;;   not run because pcl-cvs doesn't delegate the checkin-task to
+;;   `vc-checkin'. Therefore also the `vc-checkin-hook' is not runned via
+;;   pcl-cvs.
 ;; - What about other backends not supported by VC, e.g. clearcase.el? Well,
 ;;   with a good documentation what a user has to do.... ;-)
 
-;; (defadvice vc-checkin (after ecb activate)
-;;   (ecb-vc-cache-remove (ecb-fix-filename (ad-get-arg 0)))
-;;   (ecb-vc-reset-vc-stealthy-checks))
+
+(defconst ecb-vc-advices '((vc-checkin . after))
+  "All advices needed for the builtin VC-support of ECB. Same format as
+`ecb-basic-adviced-functions'.")
+
+(defvar ecb-checkedin-file nil
+  "Stored the filename of the most recent checked-in file. Is only set by the
+after-advice of `vc-checkin' and `ecb-vc-checkin-hook' \(resets it to nil).
+Evaluated only by `ecb-vc-checkin-hook'.
+
+This is the communication-channel between `vc-checkin' and
+`ecb-vc-checkin-hook' so this hook-function gets the filename of the
+checked-in file.")
+
+(defadvice vc-checkin (after ecb)
+  "Simply stores the filename of the checked-in file in `ecb-checkedin-file'
+so it is available in the `vc-checkin-hook'."
+  (setq ecb-checkedin-file (ecb-fix-filename (ad-get-arg 0))))
+
+(defun ecb-vc-checkin-hook ()
+  "Ensures that the ECB-cache is reset and the entry for the most recent
+checkedin file is cleared. Uses `ecb-checkedin-file' as last checked-in file."
+  (when ecb-checkedin-file
+    (ecb-vc-cache-remove ecb-checkedin-file)
+    (ecb-vc-reset-vc-stealthy-checks)
+    (setq ecb-checkedin-file nil)))
+
+(defun ecb-vc-after-revert-hook ()
+  "Ensures that the ECB-cache is reset and the entry for the currently
+reverted file-buffer is cleared."
+  (let ((file (ignore-errors (ecb-fix-filename buffer-file-name))))
+    (when (and file (file-exists-p file))
+      (ecb-vc-reset-vc-stealthy-checks)
+      (ecb-vc-cache-remove file))))
 
 (defun ecb-vc-enable-internals (arg)
   "Enable or disable \(if ARG < 0) all settings needed by the VC-support."
   (if (< arg 0)
       (progn
-        (remove-hook 'after-revert-hook 'ecb-vc-reset-vc-stealthy-checks)
-        (remove-hook 'write-file-hooks 'ecb-vc-reset-vc-stealthy-checks))
-    (add-hook 'after-revert-hook 'ecb-vc-reset-vc-stealthy-checks)
-    (add-hook 'write-file-hooks 'ecb-vc-reset-vc-stealthy-checks)))
+        (remove-hook 'after-revert-hook 'ecb-vc-after-revert-hook)
+        (remove-hook 'write-file-hooks 'ecb-vc-reset-vc-stealthy-checks)
+        (remove-hook 'vc-checkin-hook 'ecb-vc-checkin-hook)
+        (ecb-disable-advices ecb-vc-advices))
+    (add-hook 'after-revert-hook 'ecb-vc-after-revert-hook)
+    (add-hook 'write-file-hooks 'ecb-vc-reset-vc-stealthy-checks)
+    (add-hook 'vc-checkin-hook 'ecb-vc-checkin-hook)
+    (ecb-enable-advices ecb-vc-advices)))
 
 ;; -- end of vc-support ---------------
 
@@ -2500,15 +2603,20 @@ performing a `tree-buffer-update' for this buffer."
   (ecb-stealthy-function-state-init 'ecb-stealthy-vc-check-in-history-buf)
   )
 
+;; -- adding files ---------------------
+
 (defun ecb-tree-node-add-files
   (node path files type include-extension old-children &optional not-expandable)
   "For every file in FILES add a child-node to NODE."
   (let* ((no-vc-state-display
-          (or (not ecb-vc-enable-support)
+          (or 
               ;; no vc-state-display when the node is a subdir in the
               ;; directories-buffer
               (and (equal (buffer-name) ecb-directories-buffer-name)
-                   (= type ecb-directories-nodetype-directory))))
+                   (= type ecb-directories-nodetype-directory))
+              ;; or if vc-support is either disabled at all or the directory
+              ;; PATH should be excluded from VC-check
+              (not (ecb-vc-directory-should-be-checked-p path))))
          (dir-managed-by-vc (if no-vc-state-display
                                 nil
                               (ecb-vc-managed-dir-p path))))
@@ -2565,7 +2673,7 @@ is created."
          (my-dir (ecb-fix-filename
                   (or dir
                       (file-name-directory (read-file-name "Add source path: ")))
-                  t))
+                  nil t))
          (my-alias (or alias
                        (read-string (format "Alias for \"%s\" (empty = no alias): "
                                             my-dir)))))
@@ -2609,6 +2717,7 @@ is created."
 
 
 (defun ecb-remove-dir-from-caches (dir)
+  "Remove DIR from the caches SUBDIR, EMPTY-DIR and SOURCES."
   (ecb-files-and-subdirs-cache-remove dir)
   (ecb-directory-empty-cache-remove dir)
   (ecb-sources-cache-remove dir))
@@ -2818,13 +2927,12 @@ help-text should be printed here."
 
 (defun ecb-grep-directory-internal (node find)
   (ecb-select-edit-window)
-  (let ((default-directory (concat (ecb-fix-filename
-                                    (if (file-directory-p
-                                         (tree-node-get-data node))
-                                        (tree-node-get-data node)
-                                      (file-name-directory
-                                       (tree-node-get-data node))))
-                                   ecb-directory-sep-string)))
+  (let* ((node-data (tree-node-get-data node))
+         (default-directory (concat (ecb-fix-filename
+                                     (if (file-directory-p node-data)
+                                         node-data
+                                       (file-name-directory node-data)))
+                                    (ecb-directory-sep-string node-data))))
     (call-interactively (if find
                             (or (and (fboundp ecb-grep-find-function)
                                      ecb-grep-find-function)
