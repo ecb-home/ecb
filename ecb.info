@@ -46,14 +46,19 @@ Installation
   2. Read the file `README' in the ECB-directory and install the
      required semantic- and eieio-version.
 
+     *Note*: ECB maybe requires a newer version of these libraries than
+     shipped with Emacs or XEmacs. You have to install exactly a version
+     ECB requires and also to make sure that the correct version is
+     loaded into (X)Emacs!
+
   3. Add the new ECB-directory to your `load-path' variable.
 
      You MUST add the ECB-install-directory to the `load-path' either
      by changing the `load-path' variable directly in your `.emacs' or
      `site-lisp/site-start.el' or by working with a file `subdirs.el'.
 
-     ATTENTION: ECB is NOT properly installed if it's directory is not
-     added to `load-path' and for example just loaded by
+     *ATTENTION*: ECB is NOT properly installed if it's directory is
+     not added to `load-path' and for example just loaded by
 
           (load-file "/path/to/ecb/ecb.el")
 
@@ -63,7 +68,7 @@ Installation
 
           (require 'ecb)
 
-Optional steps:
+Now ECB is ready for use but you can do these optional steps:
 
   5. Restart Emacs.
 
@@ -435,6 +440,9 @@ above but with the option `ecb-advice-window-functions' you can
 customizes which functions should be adviced by ECB. Please read
 carefully the documentation of this option!
 
+   Another interesting option in the context of the edit-window and
+these adviced functions is `ecb-layout-always-operate-in-edit-window'!
+
 
 File: ecb.info,  Node: Temp- and compilation-buffers,  Next: Rebuilding the Methods buffer,  Prev: Working with the edit-window,  Up: Usage of ECB
 
@@ -466,6 +474,11 @@ display such buffers:
      situations.  Please read the comment of this option. See also the
      description of the function
      `ecb-toggle-enlarged-compilation-window'.
+
+   * With the option `ecb-layout-switch-to-compilation-window' you can
+     modify the switch-to-buffer...-functions to work best if your
+     layout contains a compilation-window. See the docstring of this
+     option.
 
    But because ECB works best without such a durable compilation-window
 you should read the documentation of these two options carefully!
@@ -1207,41 +1220,41 @@ Concept Index
 Tag Table:
 Node: Top151
 Node: Install1530
-Node: Overview3307
-Node: ECB Directories4065
-Node: ECB Sources5073
-Node: ECB Methods6308
-Node: Activation and Deactivation6843
-Node: Usage of ECB7554
-Node: Working with the mouse8068
-Node: Working with the keyboard10418
-Node: Navigation11151
-Node: Incremental search12553
-Node: Working with the edit-window14759
-Node: Temp- and compilation-buffers16503
-Node: Rebuilding the Methods buffer18193
-Node: Changing the ECB-layout19101
-Node: Redrawing the ECB-layout20168
-Node: Hiding/Showing the ECB windows21014
-Node: Interactive ECB commands21609
-Node: Customizing29727
-Node: Submitting problem report32265
-Node: Upgrading33431
-Node: Tips and tricks33905
-Node: Changing faces34381
-Node: Small screens35200
-Node: Simulating speedbar36660
-Node: Optimze scrolling37497
-Node: Large directories38582
-Node: Elisp programming39229
-Node: Conflicts40367
-Node: VC40713
-Node: follow-mouse40986
-Node: avoid41617
-Node: calendar41984
-Node: calculator42572
-Node: Function Index43077
-Node: Variable Index44753
-Node: Concept Index45818
+Node: Overview3596
+Node: ECB Directories4354
+Node: ECB Sources5362
+Node: ECB Methods6597
+Node: Activation and Deactivation7132
+Node: Usage of ECB7843
+Node: Working with the mouse8357
+Node: Working with the keyboard10707
+Node: Navigation11440
+Node: Incremental search12842
+Node: Working with the edit-window15048
+Node: Temp- and compilation-buffers16932
+Node: Rebuilding the Methods buffer18843
+Node: Changing the ECB-layout19751
+Node: Redrawing the ECB-layout20818
+Node: Hiding/Showing the ECB windows21664
+Node: Interactive ECB commands22259
+Node: Customizing30377
+Node: Submitting problem report32915
+Node: Upgrading34081
+Node: Tips and tricks34555
+Node: Changing faces35031
+Node: Small screens35850
+Node: Simulating speedbar37310
+Node: Optimze scrolling38147
+Node: Large directories39232
+Node: Elisp programming39879
+Node: Conflicts41017
+Node: VC41363
+Node: follow-mouse41636
+Node: avoid42267
+Node: calendar42634
+Node: calculator43222
+Node: Function Index43727
+Node: Variable Index45403
+Node: Concept Index46468
 
 End Tag Table

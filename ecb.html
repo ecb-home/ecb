@@ -59,6 +59,11 @@ Up:<a rel=up accesskey=u href="#Top">Top</a>
 <li>Read the file <code>README</code> in the ECB-directory and install the
 required semantic- and eieio-version.
 
+<p><strong>Note</strong>: ECB maybe requires a newer version of these libraries than
+shipped with Emacs or XEmacs. You have to install exactly a version
+ECB requires and also to make sure that the correct version is loaded
+into (X)Emacs!
+
 <li>Add the new ECB-directory to your <code>load-path</code> variable.
 
 <p>You MUST add the ECB-install-directory to the <code>load-path</code> either
@@ -66,7 +71,7 @@ by changing the <code>load-path</code> variable directly in your
 <code>.emacs</code> or <code>site-lisp/site-start.el</code> or by working with
 a file <code>subdirs.el</code>.
 
-<p>ATTENTION:
+<p><strong>ATTENTION</strong>:
 ECB is NOT properly installed if it's directory is not added to
 <code>load-path</code> and for example just loaded by
 
@@ -81,7 +86,7 @@ ECB is NOT properly installed if it's directory is not added to
 </pre>
 </ol>
 
-<p>Optional steps:
+<p>Now ECB is ready for use but you can do these optional steps:
 
 <ol type=1 start=5>
 </p><li>Restart Emacs. 
@@ -490,6 +495,9 @@ above but with the option <code>ecb-advice-window-functions</code> you can
 customizes which functions should be adviced by ECB. Please read
 carefully the documentation of this option!
 
+<p>Another interesting option in the context of the edit-window and these
+adviced functions is <code>ecb-layout-always-operate-in-edit-window</code>!
+
 <p><hr>
 Node:<a name="Temp-%20and%20compilation-buffers">Temp- and compilation-buffers</a>,
 Next:<a rel=next accesskey=n href="#Rebuilding%20the%20Methods%20buffer">Rebuilding the Methods buffer</a>,
@@ -523,7 +531,11 @@ displaying help-buffers or similar stuff.
 <li>With the option <code>ecb-compile-window-temporally-enlarge</code> you can allow
 Emacs to enlarge temporally the ECB-compile-window in some situations. 
 Please read the comment of this option. See also the description of
-the function <code>ecb-toggle-enlarged-compilation-window</code>. 
+the function <code>ecb-toggle-enlarged-compilation-window</code>.
+
+<li>With the option <code>ecb-layout-switch-to-compilation-window</code> you can
+modify the switch-to-buffer...-functions to work best if your layout
+contains a compilation-window. See the docstring of this option. 
 </ul>
 
 <p>But because ECB works best without such a durable compilation-window

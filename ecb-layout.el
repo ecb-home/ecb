@@ -124,7 +124,7 @@
 ;;   + The edit-window must not be splitted and the point must reside in
 ;;     the not deleted edit-window.
 
-;; $Id: ecb-layout.el,v 1.112 2002/07/15 08:33:42 berndl Exp $
+;; $Id: ecb-layout.el,v 1.113 2002/07/15 12:32:53 berndl Exp $
 
 ;;; Code:
 
@@ -443,20 +443,20 @@ rebind it to the original function in the `ecb-deactivate-hook'."
     delete-other-windows
     switch-to-buffer
     switch-to-buffer-other-window)
-  "*Advised window functions work always in the edit-window.
+  "*Adviced window functions work always in the edit-window.
 If we are in an ECB special buffer (methods, directories, etc), and any of the
-advised windowing functions is called \(see `ecb-advice-window-functions'), we
+adviced windowing functions is called \(see `ecb-advice-window-functions'), we
 will select the `ecb-edit-window' first. This is useful if you have any
 functions that use such functions and you don't want them to just error with a
 method complaining that the current buffer can not be split, or something
 similar.
 
-Because this may not be desirable in all situations and all advised functions
+Because this may not be desirable in all situations and all adviced functions
 this can be enabled separately for every advisable function \(see also
-`ecb-advice-window-functions'). If the symbol of an advised function is
+`ecb-advice-window-functions'). If the symbol of an adviced function is
 contained in the value of this option, then the edit-window is first selected
 otherwise either an error is reported or some other special reaction; see the
-documentation of the advised functions for this.
+documentation of the adviced functions for this.
 
 For `other-window' and `other-window-for-scrolling' this makes no sense,
 therefore you can not enable this for both of them.
@@ -861,7 +861,7 @@ either not activated or it behaves exactly like the original version!"
     switch-to-buffer-other-window
     other-window-for-scrolling
     )
-  "A list of functions which can be advised by the ECB package.")
+  "A list of functions which can be adviced by the ECB package.")
 
 ;; utilities
 
