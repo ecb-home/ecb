@@ -2610,7 +2610,7 @@ has been deactivated. Do not set this variable!")
                                              'ecb-window-sync-function)
             (ecb-activate-ecb-sync-functions ecb-compilation-update-idle-time
                                              'ecb-compilation-buffer-list-changed-p)
-            (ecb-activate-ecb-sync-functions nil 'ecb-layout-handle-compile-window-selection)
+            (ecb-activate-ecb-sync-functions nil 'ecb-layout-post-command-hook)
             (add-hook 'pre-command-hook 'ecb-layout-pre-command-hook)
             (add-hook 'after-save-hook 'ecb-update-methods-after-saving)
             (add-hook 'kill-buffer-hook 'ecb-kill-buffer-hook)
