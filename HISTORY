@@ -1,6 +1,11 @@
 Version 1.70:
 -------------
 
+- New feature ecb-tree-navigation-by-arrow: Smarter navigation in the
+  tree-windows with left- and right-arrow key (Klaus).
+  Thanks for the suggestion and a first implementation to Geert Ribbers
+  <geert.ribbers@realworld.nl>!
+
 - New feature 'ecb-type-token-display'. See the doc-string of this new option
   for a description. (Klaus)
 
