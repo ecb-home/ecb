@@ -34,8 +34,9 @@
 ;; 2. Call `ecb-show-layout-help' and insert "example-layout1" as layout name
 ;;    to see the outline of the test layout and get information about the
 ;;    special windows of this layout.
-;; 3. Call `ecb-change-layout' [C-c . l] and insert "example-layout1" as
-;;    layout name.
+;; 3. Call `ecb-examples-activate'.
+;; 4. Play around with the new layout and test it.
+;; 5. Call `ecb-examples-deactivate'.
 ;;
 ;; The intention of this example is to be a skeleton and pattern for other
 ;; packages which want to use the layout-engine of ECB do display their own
@@ -228,7 +229,6 @@ done."
    |Type: file                            |[next]        |
    |Size: 23456                           |              |
    |Modes: rw-rw-rw-                      |              |
-   |                                      |              |
    |-----------------------------------------------------|
    |                                                     |
    |                                                     |
@@ -269,7 +269,7 @@ window/buffer of a layout."
   ;; dedicate the action window to the action-buffer
   (ecb-with-dedicated-window
    (switch-to-buffer (buffer-name (ecb-examples-action-buffer-create))))
-  
+
   ;; select the edit-window
   (select-window (next-window)))
 
@@ -278,34 +278,97 @@ window/buffer of a layout."
 ;; --- (De)activating the new layout and the synchronization -----------------
 ;; ---------------------------------------------------------------------------
 
-(defvar ecb-examples-last-layout nil)
 
+
+;; Code for saving and restoring the state before activation
+
+(defvar ecb-examples-preact-layout nil)
+(defvar ecb-examples-preact-windows-height nil)
+(defvar ecb-examples-preact-compile-window-height nil)
+(defun ecb-examples-preactivation-state(action)
+  (cond ((equal action 'save)
+         (setq ecb-examples-preact-layout
+               ecb-layout-name
+               ecb-examples-preact-windows-height
+               ecb-windows-height
+               ecb-examples-preact-compile-window-height
+               ecb-compile-window-height))
+        ((equal action 'restore)
+         (setq ecb-layout-name
+               ecb-examples-preact-layout
+               ecb-windows-height
+               ecb-examples-preact-windows-height
+               ecb-compile-window-height
+               ecb-examples-preact-compile-window-height))))
+
+
+
+;; Activation of the example. Because a set of new special windows integrated
+;; in a new layout is often just the GUI of a complete tool (like a graphical
+;; debugger) we demonstrate here the complete activation and deactivation of
+;; such a tool or at least of the tool-GUI. We decide that the GUI of our
+;; example tool needs a compile-window with height 5 lines and the height of
+;; the special windows "row" on top should be exactly 6 lines (normally width
+;; and height of the special windows should be a fraction of the frame, but
+;; here we use 6 lines; You can change the code below to use a frame-fraction
+;; of 0.2 instead of 6 hard lines, just try it!
 
 (defun ecb-examples-activate ()
   "Activate the new layout \"example-layout1\". Add
-`ecb-examples-bufferinfo-sync' to `ecb-current-buffer-sync-hook' and save the
-current layout in `ecb-examples-last-layout'."
+`ecb-examples-bufferinfo-sync' to `ecb-current-buffer-sync-hook', set
+`ecb-compile-window-height' to 5 and `ecb-windows-height' to 6. The
+preactivation-state is saved and will be restored by `ecb-examples-deactivate'."
   (interactive)
+
+  (assert (featurep 'ecb) nil
+          "ECB must be loaded!")
+  (assert ecb-minor-mode nil
+          "ECB must be activated!")
+  (assert (equal (selected-frame) ecb-frame) nil
+          "The ECB-frame must be selected!")
+  (assert (not (string= ecb-layout-name "example-layout1")) nil
+          "The examples-layout1 is already active!")
+  
+  ;; activating the synchronization of the bufferinfo-window
   (add-hook 'ecb-current-buffer-sync-hook
             'ecb-examples-bufferinfo-sync)
-  (setq ecb-examples-last-layout ecb-layout-name)
+  
+  ;; saving the state
+  (ecb-examples-preactivation-state 'save)
+
+  ;; switch to our prefered layout
+  (setq ecb-windows-height 6)
+  (setq ecb-compile-window-height 5)
   (ecb-layout-switch "example-layout1"))
 
 
+
+;; Deactivation of the example
+
 (defun ecb-examples-deactivate ()
   "Deactivate the new layout \"example-layout1\". Remove
-`ecb-examples-bufferinfo-sync' from `ecb-current-buffer-sync-hook' and switch
-to the last layout saved in `ecb-examples-last-layout'."
+`ecb-examples-bufferinfo-sync' from `ecb-current-buffer-sync-hook' and restore
+the state as before activation."
   (interactive)
+
+  (assert (featurep 'ecb) nil
+          "ECB must be loaded!")
+  (assert ecb-minor-mode nil
+          "ECB must be activated!")
+  (assert (equal (selected-frame) ecb-frame) nil
+          "The ECB-frame must be selected!")
+  (assert (string= ecb-layout-name "example-layout1") nil
+          "The example-layout1 is not active!")
+  
   (remove-hook 'ecb-current-buffer-sync-hook
                'ecb-examples-bufferinfo-sync)
-  (if (ecb-available-layouts-member-p ecb-examples-last-layout)
-      (ecb-layout-switch ecb-examples-last-layout)))
+  (ecb-examples-preactivation-state 'restore)
+  (ecb-layout-switch ecb-layout-name))
   
+
 ;; ---------------------------------------------------------------------------
 ;; --- Providing the examples ------------------------------------------------
 ;; ---------------------------------------------------------------------------
-
 
 (provide 'ecb-examples)
 

@@ -145,6 +145,7 @@ How to program new layouts and new special windows
 
 * Programming a new layout::    How to program a new layout
 * Programming special windows:: Aspects of programming special windows
+* Possible layout-outlines::    The wide range of possible layouts
 * The layout-engine API::       The complete layout-engine API
 
 Known conflicts and bugs of ECB
@@ -4457,7 +4458,8 @@ File: ecb.info,  Node: List of variables,  Next: List of hooks,  Prev: Elisp pro
 Variables for elisp-programs
 ============================
 
-Variables an elisp-program can use:
+Variables an elisp-program can use beyond those ones mentioned in *Note The
+layout-engine:::
 
  * `ecb-source-path-functions'
 
@@ -4577,6 +4579,7 @@ which will refers to the first subsection.
 
 * Programming a new layout::    How to program a new layout
 * Programming special windows:: Aspects of programming special windows
+* Possible layout-outlines::    The wide range of possible layouts
 * The layout-engine API::       The complete layout-engine API
 
 
@@ -4605,11 +4608,14 @@ definiton has stripped the prefix "ecb-" for better indexing this manual):
    with NAME and TYPEto the internal variable `ecb-available-layouts'.
 
    Preconditions for CREATE-CODE:
-   1. Current frame is splitted at least in one edit-window and the column
-      (for layout types left, right and left-right) resp. row (for a top
-      layout) for the special ECB-windows/buffers. Depending on the value of
-      the option `ecb-compile-window-height' there is also a compile window
-      at the bottom of the frame which is stored in `ecb-compile-window'.
+   1. Current frame is splitted at least in one edit-window and the "column"
+      (for layout types left, right and left-right) resp. "row" (for a top
+      layout) for the special ECB-windows/buffers. The width of the "column"
+      resp. the height of the "row" is always defined with the option
+      `ecb-windows-width' resp. `ecb-windows-height'.  Depending on the value
+      of the option `ecb-compile-window-height' there is also a compile
+      window at the bottom of the frame which is stored in
+      `ecb-compile-window'.
 
    2. All windows are not dedicated.
 
@@ -4733,7 +4739,7 @@ like:
    -------------------------------------------------------
 
 
-File: ecb.info,  Node: Programming special windows,  Next: The layout-engine API,  Prev: Programming a new layout,  Up: The layout-engine
+File: ecb.info,  Node: Programming special windows,  Next: Possible layout-outlines,  Prev: Programming a new layout,  Up: The layout-engine
 
 All aspects of programming special windows
 ------------------------------------------
@@ -4761,7 +4767,6 @@ The outline of the example layout:
    |Type: file                            |[next]        |
    |Size: 23456                           |              |
    |Modes: rw-rw-rw-                      |              |
-   |                                      |              |
    |-----------------------------------------------------|
    |                                                     |
    |                                                     |
@@ -4964,6 +4969,58 @@ but this works also very well).
 
    (add-hook 'ecb-current-buffer-sync-hook 'ecb-examples-bufferinfo-sync)
 
+Activating and deactivating new layouts
+.......................................
+
+Because a set of new special windows integrated in a new layout is often just
+the GUI of a complete tool (like a graphical debugger) we demonstrate here
+the complete activation and deactivation of such a tool or at least of the
+tool-GUI. We decide that the GUI of our example "tool" needs a compile-window
+with height 5 lines and the height of the special windows "row" on top should
+be exactly 6 lines (normally width and height of the special windows should
+be a fraction of the frame, but here we use 6 lines(2)
+
+Here comes the (de)activation code.
+
+The code for saving and restoring the state before activation (the full code
+is available in `ecb-examples.el':
+
+   (defun ecb-examples-preactivation-state(action)
+     (cond ((equal action 'save)
+            ;; code for saving the state
+            )
+           ((equal action 'restore)
+           ;; code for restoring the state
+           )))
+
+The following function activates the GUI of our example tool:
+
+   (defun ecb-examples-activate ()
+     (interactive)
+   
+     ;; activating the synchronization of the bufferinfo-window
+     (add-hook 'ecb-current-buffer-sync-hook
+               'ecb-examples-bufferinfo-sync)
+   
+     ;; saving the state
+     (ecb-examples-preactivation-state 'save)
+   
+     ;; switch to our prefered layout
+     (setq ecb-windows-height 6)
+     (setq ecb-compile-window-height 5)
+     (ecb-layout-switch "example-layout1"))
+
+This function deactivates the GUI of our example-tool and restores the state
+as before activation:
+
+   (defun ecb-examples-deactivate ()
+     (interactive)
+   
+     (remove-hook 'ecb-current-buffer-sync-hook
+                  'ecb-examples-bufferinfo-sync)
+     (ecb-examples-preactivation-state 'restore)
+     (ecb-layout-switch ecb-layout-name))
+
 Now we have all code for the new layout and the new layout-buffers.  The
 example is ready for use; just load `ecb-examples.el' (s.a.).
 
@@ -4971,8 +5028,159 @@ example is ready for use; just load `ecb-examples.el' (s.a.).
 
 (1) JDEE is available at <http://jdee.sunsite.dk/>
 
+(2) You can change the code in the file `ecb-examples.el' to use a
+frame-fraction of 0.2 instead of 6 hard lines, just try it!
+
 
-File: ecb.info,  Node: The layout-engine API,  Prev: Programming special windows,  Up: The layout-engine
+File: ecb.info,  Node: Possible layout-outlines,  Next: The layout-engine API,  Prev: Programming special windows,  Up: The layout-engine
+
+The wide range of possible layout-outlines
+------------------------------------------
+
+In the two previous sections *Note Programming a new layout:: and *Note
+Programming special windows:: we have explained in detail how to program new
+layouts and how to program new special windows/buffers and adding them to a
+new layout.
+
+The intention of this section is to be a summary what are the real
+restrictions for a new layout-outline programmed with `ecb-layout-define'.
+This is necessary because until now we just programmed "obvious" layouts,
+means layout which are in principle very similar to the standard ones which
+means one big edit-window and some special windows "around" this edit-window.
+This section will show you that a layout can have also very different
+outlines.
+
+Ok, here are the real restrictions and conditions for a layout programmed
+with `ecb-layout-define':
+1. It must have exactly one edit-window regardless of its size.
+
+2. All other windows created within the CREATE-CODE body of
+   `ecb-layout-define' (*note Programming a new layout::) must be dedicated
+   to their buffers.
+
+3. All the dedicated windows must (exclusive!) either reside on the left,
+   right, top or left-and-right side of the edit-window. This will be defined
+   with the TYPE-argument of `ecb-layout-define' (*note Programming a new
+   layout::).
+
+You see, there are only three restrictions/conditions. These and only these
+must be fullfilled at layout-programming.
+
+Demonstrating what this really means and how flexible the layout-engine of
+ECB really is can be done best with some "pathological" layout-outlines. All
+the following are correct layouts (working code is added below each layout):
+
+The following is a top layout with three vertical layered special windows.
+
+   ------------------------------------------------------------------
+   |                                                                |
+   |                 Upper special window                           |
+   |                                                                |
+   |----------------------------------------------------------------|
+   |                                                                |
+   |                 Middle special window                          |
+   |                                                                |
+   |----------------------------------------------------------------|
+   |                                                                |
+   |                 Lower special window                           |
+   |                                                                |
+   |================================================================|
+   |                                                                |
+   |                         Edit-window(s)                         |
+   |                 (can be splitted in two windows)               |
+   ------------------------------------------------------------------
+   |                                                                |
+   |                 Compilation-window (optional)                  |
+   |                                                                |
+   ------------------------------------------------------------------
+
+Here is the code for that top layout (all buffers are dummy-buffers):
+
+   (ecb-layout-define "example-layout3" top
+     nil
+   
+     ;; here we have an edit-window and above one top window which we can
+     ;; now split in several other windows. Dependend on the value of
+     ;; `ecb-compile-window-height' we have also a compile-window at the
+     ;; bottom.
+   
+     (ecb-with-dedicated-window
+      (switch-to-buffer (get-buffer-create "Upper special window")))
+     (ecb-split-ver 0.33)
+     (ecb-with-dedicated-window
+      (switch-to-buffer (get-buffer-create "Middle special window")))
+     (ecb-split-ver 0.5)
+     (ecb-with-dedicated-window
+      (switch-to-buffer (get-buffer-create "Lower special window")))
+   
+     ;; select the edit-window.
+     (select-window (next-window)))
+
+The following is a left-right layout which has six special windows in the
+left-"column" and one big special window in the right-"column". For
+left-right layouts the left-"column" and the right-"column" have always the
+same width.
+
+   ------------------------------------------------------------------
+   |             |       |                   |                      |
+   | Left1       | Left5 |                   |                      |
+   |             |       |                   |                      |
+   |-------------|       |                   |                      |
+   |      |      |       |                   |                      |
+   |      |      |       |                   |                      |
+   |      |      |       |                   |                      |
+   | Left2| Left3|-------|  Edit-window(s)   |   Right1             |
+   |      |      |       | (can be splitted  |                      |
+   |      |      |       |  in two windows)  |                      |
+   |      |      |       |                   |                      |
+   |-------------|       |                   |                      |
+   |             |       |                   |                      |
+   | Left4       | Left6 |                   |                      |
+   |             |       |                   |                      |
+   ------------------------------------------------------------------
+   |                                                                |
+   |                 Compilation-window (optional)                  |
+   |                                                                |
+   ------------------------------------------------------------------
+
+Here is the code for that left-right layout, again with dummy-buffers:
+
+   (ecb-layout-define "example-layout2" left-right
+     nil
+   
+     ;; here we have an edit-window and left and right two windows each
+     ;; with width `ecb-windows-width'. Dependend to the value of
+     ;; `ecb-compile-window-height' we have also a compile-window at the
+     ;; bottom.
+   
+     (ecb-with-dedicated-window
+      (switch-to-buffer (get-buffer-create "Left1")))
+     (ecb-split-hor 0.66 t)
+     (ecb-split-ver 0.75)
+     (ecb-with-dedicated-window
+      (switch-to-buffer (get-buffer-create "Left4")))
+     (select-window (previous-window (selected-window) 0))
+     (ecb-split-ver 0.25 nil t)
+     (ecb-with-dedicated-window
+      (switch-to-buffer (get-buffer-create "Left2")))
+     (ecb-split-hor 0.5)
+     (ecb-with-dedicated-window
+      (switch-to-buffer (get-buffer-create "Left3")))
+     (select-window (next-window (next-window)))
+     (ecb-with-dedicated-window
+      (switch-to-buffer (get-buffer-create "Left5")))
+     (ecb-split-ver 0.5)
+     (ecb-with-dedicated-window
+      (switch-to-buffer (get-buffer-create "Left6")))
+     (select-window (next-window (next-window)))
+     (ecb-with-dedicated-window
+      (switch-to-buffer (get-buffer-create "Right1")))
+   
+     ;; select the edit-window
+     (select-window (previous-window (selected-window) 0)))
+
+
+File: ecb.info,  Node: The layout-engine API,  Prev: Possible layout-outlines,  Up: The layout-engine
 
 The complete layout-engine API of ECB
 -------------------------------------
@@ -5002,16 +5210,16 @@ Functions for programming layout and special windows:
 
  - ecb-select-edit-window
 
+ - ecb-split-hor
+
+ - ecb-split-ver
+
  - ecb-with-dedicated-window
 
 Utility functions/macros:
  - ecb-enlarge-window
 
  - ecb-fix-filename
-
- - ecb-split-hor
-
- - ecb-split-ver
 
  - ecb-window-live-p
 
@@ -5516,111 +5724,113 @@ Concept Index
 
 Tag Table:
 Node: Top183
-Node: Install and first steps6610
-Node: Installation7109
-Ref: Installation-Footnote-111035
-Ref: Installation-Footnote-211170
-Ref: Installation-Footnote-311282
-Node: Setting up Emacs11347
-Ref: Checking your hooks13293
-Ref: Setting up Emacs-Footnote-114490
-Ref: Setting up Emacs-Footnote-214594
-Ref: Setting up Emacs-Footnote-314695
-Ref: Setting up Emacs-Footnote-414754
-Node: First steps14903
-Ref: First steps-Footnote-116051
-Node: Overview16280
-Ref: Overview-Footnote-119031
-Node: ECB Directories19124
-Node: ECB Sources20141
-Node: ECB Methods21295
-Node: Activation and Deactivation21844
-Node: Standard activation22214
-Ref: Activation hook-sequence22792
-Ref: Deactivation hook-sequence23112
-Node: Automatic activation23286
-Node: Usage of ECB24419
-Node: Using the mouse25329
-Ref: Using the mouse-Footnote-127604
-Node: Using the keyboard27650
-Ref: Using the keyboard-Footnote-128694
-Node: Navigation28745
-Node: Incremental search30085
-Node: Personal keybindings32261
-Ref: Personal keybindings-Footnote-134259
-Node: The edit-window34362
-Node: Temp- and compile-buffers36192
-Node: The Methods buffer38474
-Node: Customizing the display38915
-Node: Rebuilding the Methods40637
-Node: The ECB-layout41492
-Node: Changing the ECB-layout42139
-Ref: Changing the ECB-layout-Footnote-169855
-Node: Redrawing the ECB-layout69947
-Node: Creating a new ECB-layout70872
-Ref: Creating a new ECB-layout-Footnote-175122
-Node: Hiding the ECB windows75296
-Node: Back/forward navigation76401
-Ref: Back/forward navigation-Footnote-177502
-Node: ECB-window synchronizing77561
-Node: Interactive ECB commands80143
-Node: Customizing90376
-Node: General aspects91010
-Ref: General aspects-Footnote-193843
-Node: Most important options93975
-Node: Customizable options95770
-Node: ecb-general97200
-Node: ecb-directories118886
-Node: ecb-sources125782
-Node: ecb-methods128037
-Node: ecb-history140306
-Node: ecb-layout142367
-Node: ecb-compilation-content159363
-Node: ecb-create-layout159929
-Node: ecb-face-options160445
-Node: ecb-faces163874
-Node: ecb-download167866
-Node: ecb-help169092
-Node: ecb-eshell171076
-Node: Submitting problem report171925
-Node: Upgrading173288
-Node: Downloading new versions174051
-Ref: Download required packages175808
-Ref: Downloading new versions-Footnote-1176906
-Node: Auto. option-upgrading176955
-Node: User interface177263
-Node: Background information178149
-Node: Tips and tricks181547
-Node: Changing faces182297
-Ref: Changing faces-Footnote-1185133
-Node: Small screens185309
-Node: Big screens186703
-Node: Simulating speedbar187538
-Node: Integrating speedbar188508
-Ref: Integrating speedbar-Footnote-1190863
-Ref: Integrating speedbar-Footnote-2191039
-Node: Optimize scrolling191197
-Node: Large directories192277
-Node: Using eshell192942
-Ref: Using eshell-Footnote-1195033
-Node: Elisp programming195185
-Node: List of variables195811
-Node: List of hooks196123
-Node: tree-buffer197079
-Node: Adviced functions197885
-Ref: Adviced functions-Footnote-1198498
-Node: The layout-engine198569
-Node: Programming a new layout199742
-Node: Programming special windows206617
-Ref: Programming special windows-Footnote-1216597
-Node: The layout-engine API216649
-Node: Conflicts and bugs218231
-Node: Conflicts218706
-Node: Bugs222416
-Node: FAQ222636
-Ref: FAQ-Footnote-1227805
-Node: Command Index227836
-Node: Option Index230355
-Node: Concept Index237105
+Node: Install and first steps6677
+Node: Installation7176
+Ref: Installation-Footnote-111102
+Ref: Installation-Footnote-211237
+Ref: Installation-Footnote-311349
+Node: Setting up Emacs11414
+Ref: Checking your hooks13360
+Ref: Setting up Emacs-Footnote-114557
+Ref: Setting up Emacs-Footnote-214661
+Ref: Setting up Emacs-Footnote-314762
+Ref: Setting up Emacs-Footnote-414821
+Node: First steps14970
+Ref: First steps-Footnote-116118
+Node: Overview16347
+Ref: Overview-Footnote-119098
+Node: ECB Directories19191
+Node: ECB Sources20208
+Node: ECB Methods21362
+Node: Activation and Deactivation21911
+Node: Standard activation22281
+Ref: Activation hook-sequence22859
+Ref: Deactivation hook-sequence23179
+Node: Automatic activation23353
+Node: Usage of ECB24486
+Node: Using the mouse25396
+Ref: Using the mouse-Footnote-127671
+Node: Using the keyboard27717
+Ref: Using the keyboard-Footnote-128761
+Node: Navigation28812
+Node: Incremental search30152
+Node: Personal keybindings32328
+Ref: Personal keybindings-Footnote-134326
+Node: The edit-window34429
+Node: Temp- and compile-buffers36259
+Node: The Methods buffer38541
+Node: Customizing the display38982
+Node: Rebuilding the Methods40704
+Node: The ECB-layout41559
+Node: Changing the ECB-layout42206
+Ref: Changing the ECB-layout-Footnote-169922
+Node: Redrawing the ECB-layout70014
+Node: Creating a new ECB-layout70939
+Ref: Creating a new ECB-layout-Footnote-175189
+Node: Hiding the ECB windows75363
+Node: Back/forward navigation76468
+Ref: Back/forward navigation-Footnote-177569
+Node: ECB-window synchronizing77628
+Node: Interactive ECB commands80210
+Node: Customizing90443
+Node: General aspects91077
+Ref: General aspects-Footnote-193910
+Node: Most important options94042
+Node: Customizable options95837
+Node: ecb-general97267
+Node: ecb-directories118953
+Node: ecb-sources125849
+Node: ecb-methods128104
+Node: ecb-history140373
+Node: ecb-layout142434
+Node: ecb-compilation-content159430
+Node: ecb-create-layout159996
+Node: ecb-face-options160512
+Node: ecb-faces163941
+Node: ecb-download167933
+Node: ecb-help169159
+Node: ecb-eshell171143
+Node: Submitting problem report171992
+Node: Upgrading173355
+Node: Downloading new versions174118
+Ref: Download required packages175875
+Ref: Downloading new versions-Footnote-1176973
+Node: Auto. option-upgrading177022
+Node: User interface177330
+Node: Background information178216
+Node: Tips and tricks181614
+Node: Changing faces182364
+Ref: Changing faces-Footnote-1185200
+Node: Small screens185376
+Node: Big screens186770
+Node: Simulating speedbar187605
+Node: Integrating speedbar188575
+Ref: Integrating speedbar-Footnote-1190930
+Ref: Integrating speedbar-Footnote-2191106
+Node: Optimize scrolling191264
+Node: Large directories192344
+Node: Using eshell193009
+Ref: Using eshell-Footnote-1195100
+Node: Elisp programming195252
+Node: List of variables195878
+Node: List of hooks196247
+Node: tree-buffer197203
+Node: Adviced functions198009
+Ref: Adviced functions-Footnote-1198622
+Node: The layout-engine198693
+Node: Programming a new layout199933
+Node: Programming special windows206969
+Ref: Programming special windows-Footnote-1218734
+Ref: Programming special windows-Footnote-2218786
+Node: Possible layout-outlines218914
+Node: The layout-engine API226145
+Node: Conflicts and bugs227724
+Node: Conflicts228199
+Node: Bugs231909
+Node: FAQ232129
+Ref: FAQ-Footnote-1237298
+Node: Command Index237329
+Node: Option Index239848
+Node: Concept Index246598
 
 End Tag Table
