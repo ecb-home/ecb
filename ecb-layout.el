@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-layout.el,v 1.203 2004/01/13 15:44:59 berndl Exp $
+;; $Id: ecb-layout.el,v 1.204 2004/01/14 14:01:10 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -1035,7 +1035,7 @@ command.")
 (defvar ecb-windows-hidden nil
   "Used with `ecb-toggle-ecb-windows'. If true the ECB windows are hidden. Do
 not change this variable!")
-
+(defvar ecb-tree-buffers-of-current-layout nil)
 
 (defun ecb-initialize-layout ()
   ;; We do not initialize the `ecb-frame'!
@@ -1045,8 +1045,12 @@ not change this variable!")
         ecb-last-compile-buffer-in-compile-window nil
         ecb-current-maximized-ecb-buffer-name nil
         ecb-cycle-ecb-buffer-state nil
+        ecb-tree-buffers-of-current-layout nil
         ecb-windows-hidden nil
         ecb-compile-window nil
+        ecb-layout-prevent-handle-compile-window-selection nil
+        ecb-layout-prevent-handle-ecb-window-selection nil
+        ecb-ecb-window-was-selected-before-command nil
         ecb-compile-window-was-selected-before-command nil))
 
 (defun ecb-layout-debug-error (&rest args)
@@ -2151,6 +2155,19 @@ nothing is done."
                          (car edit-win-list))))
       (select-window edit-win))))
 
+;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: A first try:
+(defvar ecb-ecb-window-was-selected-before-command nil)
+(defvar ecb-layout-prevent-handle-ecb-window-selection nil)
+
+(defcustom ecb-maximize-ecb-window-after-selection nil
+  "*If not nil maximize current tree-window after selection.
+When selecting another not-tree-window after such an automatic maximizing all
+tree-windows of current layout are displayed again. But a tree-window is not
+maximized if either a node has been selected via primary- oder secondarc
+mouse-button or the popup-menu of that tree-buffer has been opened."
+  :group 'ecb-layout
+  :type 'boolean)
+
 ;; VERY IMPORTANT: pre-command- and the post-command-hook must NOT use any
 ;; function which calls `ecb-window-list' because this would slow-down the
 ;; performance of all Emacs-versions unless GNU Emacs 21 because they have no
@@ -2178,7 +2195,11 @@ can use these variables."
           (setq ecb-last-compile-buffer-in-compile-window
                 (current-buffer)))
       (setq ecb-compile-window-was-selected-before-command nil)
-      (setq ecb-last-compile-buffer-in-compile-window nil))))
+      (setq ecb-last-compile-buffer-in-compile-window nil))
+    (if (member (buffer-name) ecb-tree-buffers)
+        (setq ecb-ecb-window-was-selected-before-command (buffer-name))
+      (setq ecb-ecb-window-was-selected-before-command nil))))
+      
 
 ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: Not yet perfect - need some more
 ;; tests. Currently not used.
@@ -2202,7 +2223,8 @@ some special tasks:
                (equal (selected-frame) ecb-frame)
                (member ecb-compile-window-temporally-enlarge
                        '(after-selection both))
-               (ecb-compile-window-live-p))
+               (ecb-compile-window-live-p)
+               (= (minibuffer-depth) 0))
       (cond ((and (ecb-point-in-compile-window)
                   (not ecb-compile-window-was-selected-before-command))
              (ecb-layout-debug-error "ecb-layout-post-command-hook: enlarge")
@@ -2210,7 +2232,21 @@ some special tasks:
             ((and ecb-compile-window-was-selected-before-command
                   (not (ecb-point-in-compile-window)))
              (ecb-layout-debug-error "ecb-layout-post-command-hook: shrink")
-             (ecb-toggle-compile-window-height -1))))))
+             (ecb-toggle-compile-window-height -1)))))
+  (if ecb-layout-prevent-handle-ecb-window-selection
+      (setq ecb-layout-prevent-handle-ecb-window-selection nil)
+    (when (and ecb-minor-mode
+             (equal (selected-frame) ecb-frame)
+             ecb-maximize-ecb-window-after-selection
+             (= (minibuffer-depth) 0))
+    (cond ((and (not ecb-ecb-window-was-selected-before-command)
+                (member (buffer-name) ecb-tree-buffers))
+           (ecb-display-one-ecb-buffer (buffer-name)))
+          ((and ecb-ecb-window-was-selected-before-command
+                (not (member (buffer-name) ecb-tree-buffers)))
+           (ecb-redraw-layout-full nil nil nil nil))))))
+;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: need some more tests - see above
+;; `ecb-minibuffer-exit-hook'
 ;;              (if (equal (selected-window) (minibuffer-window ecb-frame))
 ;;                  (add-hook 'minibuffer-exit-hook 'ecb-minibuffer-exit-hook)
 ;;                (ecb-layout-debug-error "ecb-layout-post-command-hook: shrink")
@@ -3245,12 +3281,13 @@ edit-window is selected."
     (let ((buf-name (or ecb-buffer-name
                         (buffer-name (current-buffer))))
           (compwin-hidden (equal 'hidden (ecb-compile-window-state))))
-      (ecb-redraw-layout-full
-       nil
-       (cdr (assoc buf-name
-                   ecb-buffer-setfunction-registration)))
-      (if compwin-hidden (ecb-toggle-compile-window -1))
-      (setq ecb-current-maximized-ecb-buffer-name buf-name))))
+      (when (member buf-name ecb-tree-buffers-of-current-layout)
+        (ecb-redraw-layout-full
+         nil
+         (cdr (assoc buf-name
+                     ecb-buffer-setfunction-registration)))
+        (if compwin-hidden (ecb-toggle-compile-window -1))
+        (setq ecb-current-maximized-ecb-buffer-name buf-name)))))
 
 (defun ecb-display-one-ecb-buffer (ecb-buffer-name)
   (let ((curr-point (ecb-where-is-point)))
@@ -4032,14 +4069,17 @@ this function the edit-window is selected which was current before redrawing."
       ;; updating and synchronizing of the ecb-windows but only when we have a
       ;; full redraw incl. the ecb-windows.
       (when (not no-ecb-windows)
-        (let ((current-ecb-windows (ecb-get-current-visible-ecb-buffers)))
+        (let ((current-ecb-buffers (ecb-get-current-visible-ecb-buffers)))
           ;; fill-up the history new with all buffers if the history buffer was
           ;; not shown before the redisplay but now (means if the layout has
           ;; changed)
+          (when (null ecb-windows-creator)
+            (setq ecb-tree-buffers-of-current-layout
+                  (mapcar 'buffer-name current-ecb-buffers)))
           (when (and (not (member (get-buffer ecb-history-buffer-name)
                                   ecb-windows-before-redraw))
                      (member (get-buffer ecb-history-buffer-name)
-                             current-ecb-windows))
+                             current-ecb-buffers))
             (ecb-add-buffers-to-history))
           ;; update the directories buffer if the directories buffer was not
           ;; shown before the redisplay but now (means if the layout has
@@ -4047,18 +4087,18 @@ this function the edit-window is selected which was current before redrawing."
           (when (and (not (member (get-buffer ecb-directories-buffer-name)
                                   ecb-windows-before-redraw))
                      (member (get-buffer ecb-directories-buffer-name)
-                             current-ecb-windows))
+                             current-ecb-buffers))
             (ecb-update-directories-buffer))
           ;; deactivate the speedbar stuff if the speedbar-integration-buffer
           ;; was shown before but not now
           (when (and (member (get-buffer ecb-speedbar-buffer-name)
                              ecb-windows-before-redraw)
                      (not (member (get-buffer ecb-speedbar-buffer-name)
-                                  current-ecb-windows)))
+                                  current-ecb-buffers)))
             (ignore-errors (ecb-speedbar-deactivate)))
           ;; synchronize the special ecb-buffers if necessary (means if not all
           ;; ecb-windows of current layout were visible before redraw) and
-          (when (and (not (equal ecb-windows-before-redraw current-ecb-windows))
+          (when (and (not (equal ecb-windows-before-redraw current-ecb-buffers))
                      (not no-buffer-sync))
             (ecb-current-buffer-sync t))))
 

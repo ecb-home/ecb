@@ -24,7 +24,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-method-browser.el,v 1.10 2004/01/12 16:42:37 berndl Exp $
+;; $Id: ecb-method-browser.el,v 1.11 2004/01/14 14:01:10 berndl Exp $
 
 ;;; Commentary:
 
@@ -2410,6 +2410,7 @@ edit-windows. Otherwise return nil."
 
 (defun ecb-methods-menu-creator (tree-buffer-name)
   "Creates the popup-menus for the methods-buffer."
+  (setq ecb-layout-prevent-handle-ecb-window-selection t)
   (let ((dyn-user-extension
          (and (functionp ecb-methods-menu-user-extension-function)
               (funcall ecb-methods-menu-user-extension-function)))

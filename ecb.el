@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb.el,v 1.360 2004/01/13 15:44:59 berndl Exp $
+;; $Id: ecb.el,v 1.361 2004/01/14 14:01:09 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -1105,23 +1105,32 @@ The following keys must not be rebind in all tree-buffers:
 
 
 (defun ecb-window-select (name)
-  (let ((window (get-buffer-window name)))
+  (let ((window (get-buffer-window name ecb-frame)))
     (if window
 	(select-window window)
       nil)))
 
-(defun ecb-goto-window (name)
-  (when ecb-minor-mode
+(defun ecb-goto-ecb-window (name)
+  (when (and ecb-minor-mode
+             (not ecb-windows-hidden)
+             (or (equal name ecb-speedbar-buffer-name)
+                 (member name ecb-tree-buffers-of-current-layout)))
     (raise-frame ecb-frame)
     (select-frame ecb-frame)
-    (ecb-window-select name)))
+    (or (ecb-window-select name)
+        ;; the window is not visible because another one is maximized;
+        ;; therefore we first redraw the layout
+        (progn
+          (ecb-redraw-layout-full nil nil nil nil)
+          ;; now we can go to the window
+          (ecb-window-select name)))))
 
 (defun ecb-goto-window-directories ()
   "Make the ECB-directories window the current window.
 If `ecb-use-speedbar-instead-native-tree-buffer' is 'dir then goto to the
 speedbar-window."
   (interactive)
-  (or (ecb-goto-window ecb-directories-buffer-name)
+  (or (ecb-goto-ecb-window ecb-directories-buffer-name)
       (and (equal ecb-use-speedbar-instead-native-tree-buffer 'dir)
            (ecb-goto-window-speedbar))))
 
@@ -1130,7 +1139,7 @@ speedbar-window."
 If `ecb-use-speedbar-instead-native-tree-buffer' is 'source then goto to the
 speedbar-window."
   (interactive)
-  (or (ecb-goto-window ecb-sources-buffer-name)
+  (or (ecb-goto-ecb-window ecb-sources-buffer-name)
       (and (equal ecb-use-speedbar-instead-native-tree-buffer 'source)
            (ecb-goto-window-speedbar))))
 
@@ -1139,22 +1148,21 @@ speedbar-window."
 If `ecb-use-speedbar-instead-native-tree-buffer' is 'method then goto to the
 speedbar-window."
   (interactive)
-  (or (ecb-goto-window ecb-methods-buffer-name)
+  (or (ecb-goto-ecb-window ecb-methods-buffer-name)
       (and (equal ecb-use-speedbar-instead-native-tree-buffer 'method)
            (ecb-goto-window-speedbar))))
 
 (defun ecb-goto-window-history ()
   "Make the ECB-history window the current window."
   (interactive)
-  (ecb-goto-window ecb-history-buffer-name))
+  (ecb-goto-ecb-window ecb-history-buffer-name))
 
 (defun ecb-goto-window-speedbar ()
   "Make the ECB-speedbar window the current window.
 This command does nothing if no integrated speedbar is visible in the
 ECB-frame."
   (interactive)
-  (and (ecb-speedbar-active-p)
-       (ecb-goto-window ecb-speedbar-buffer-name)))
+  (ecb-goto-ecb-window ecb-speedbar-buffer-name))
 
 (defun ecb-goto-window-edit-last ()
   "Make the last selected edit-window window the current window. This is the
@@ -1238,8 +1246,7 @@ I.e. delete all other ECB-windows, so only one ECB-window and the
 edit-window\(s) are visible \(and maybe a compile-window). Does nothing if the
 speedbar-window is not visible within the ECB-frame."
   (interactive)
-  (if (ecb-speedbar-active-p)
-      (ecb-display-one-ecb-buffer ecb-speedbar-buffer-name)))
+  (ecb-display-one-ecb-buffer ecb-speedbar-buffer-name))
 
 (defun ecb-toggle-RET-selects-edit-window ()
   "Toggles if RET in a tree-buffer should finally select the edit-window.
@@ -1507,6 +1514,8 @@ combination is invalid \(see `ecb-interpret-mouse-click'."
     ;; we need maybe later that something has clicked in a tree-buffer, e.g.
     ;; in `ecb-handle-major-mode-activation'.
     (setq ecb-item-in-tree-buffer-selected t)
+    (if (/= mouse-button 0)
+        (setq ecb-layout-prevent-handle-ecb-window-selection t))
     ;; first we dispatch to the right action
     (when ecb-button-list
       (cond ((string= tree-buffer-name ecb-directories-buffer-name)
@@ -1538,9 +1547,19 @@ combination is invalid \(see `ecb-interpret-mouse-click'."
                             ecb-tree-RET-selects-edit-window--internal))
                (or (not (string= tree-buffer-name ecb-directories-buffer-name))
                    (ecb-show-sources-in-directories-buffer-p)))
-      (ecb-goto-window tree-buffer-name)
+      (ecb-goto-ecb-window tree-buffer-name)
       (tree-buffer-remove-highlight))))
 
+
+(defun ecb-tree-buffer-node-collapsed-callback (node
+                                                mouse-button
+                                                shift-pressed
+                                                control-pressed
+                                                tree-buffer-name)
+  "This is the callback-function ecb.el gives to every tree-buffer to call
+when a node has been collapsed."
+  (if (/= mouse-button 0)
+      (setq ecb-layout-prevent-handle-ecb-window-selection t)))
 
 (defun ecb-tree-buffer-node-expand-callback (node
 					     mouse-button
@@ -1556,6 +1575,8 @@ combination is invalid \(see `ecb-interpret-mouse-click')."
 						     tree-buffer-name))
 	 (ecb-button (car ecb-button-list))
 	 (shift-mode (cadr ecb-button-list)))
+    (if (/= mouse-button 0)
+        (setq ecb-layout-prevent-handle-ecb-window-selection t))
     (when ecb-button-list
       (cond ((string= tree-buffer-name ecb-directories-buffer-name)
 	     (ecb-update-directory-node node))
@@ -1856,37 +1877,37 @@ That is remove the unsupported :help stuff."
     (ecb-menu-item
      ["Directories"
       ecb-goto-window-directories
-      :active (or (ecb-window-live-p ecb-directories-buffer-name)
-                  (and (equal ecb-use-speedbar-instead-native-tree-buffer 'dir)
-                       (ignore-errors (ecb-speedbar-active-p))))
+      :active (member ecb-directories-buffer-name
+                      ecb-tree-buffers-of-current-layout)
       :help "Go to the directories window"
       ])
     (ecb-menu-item
      ["Sources"
       ecb-goto-window-sources
-      :active (or (ecb-window-live-p ecb-sources-buffer-name)
-                  (and (equal ecb-use-speedbar-instead-native-tree-buffer 'source)
-                       (ignore-errors (ecb-speedbar-active-p))))
+      :active (member ecb-sources-buffer-name
+                      ecb-tree-buffers-of-current-layout)
       :help "Go to the sources window"
       ])
     (ecb-menu-item
      ["Methods and Variables"
       ecb-goto-window-methods
-      :active (or (ecb-window-live-p ecb-methods-buffer-name)
-                  (and (equal ecb-use-speedbar-instead-native-tree-buffer 'method)
-                       (ignore-errors (ecb-speedbar-active-p))))
+      :active (member ecb-methods-buffer-name
+                      ecb-tree-buffers-of-current-layout)
       :help "Go to the methods/variables window"
       ])
     (ecb-menu-item
      ["History"
       ecb-goto-window-history
-      :active (ecb-window-live-p ecb-history-buffer-name)
+      :active (member ecb-history-buffer-name
+                      ecb-tree-buffers-of-current-layout)
       :help "Go to the history window"
       ])
     (ecb-menu-item
      ["Speedbar"
       ecb-goto-window-speedbar
-      :active (ignore-errors (ecb-speedbar-active-p))
+      :active (and ecb-use-speedbar-instead-native-tree-buffer
+                   (member ecb-speedbar-buffer-name
+                           ecb-tree-buffers-of-current-layout))
       :help "Go to the integrated speedbar window"
       ])
     (ecb-menu-item
@@ -1901,32 +1922,38 @@ That is remove the unsupported :help stuff."
     (ecb-menu-item
      ["Directories"
       ecb-maximize-window-directories
-      :active (ecb-window-live-p ecb-directories-buffer-name)
+      :active (member ecb-directories-buffer-name
+                      ecb-tree-buffers-of-current-layout)
       :help "Maximize the directories window - even if currently not visible"
       ])
     (ecb-menu-item
      ["Sources"
       ecb-maximize-window-sources
-      :active (ecb-window-live-p ecb-sources-buffer-name)
+      :active (member ecb-sources-buffer-name
+                      ecb-tree-buffers-of-current-layout)
       :help "Maximize the sources window - even if currently not visible"
       ])
     (ecb-menu-item
      ["Methods and Variables"
       ecb-maximize-window-methods
-      :active (ecb-window-live-p ecb-methods-buffer-name)
+      :active (member ecb-methods-buffer-name
+                      ecb-tree-buffers-of-current-layout)
       :help "Maximize the methods/variables window - even if currently not visible"
       ])
     (ecb-menu-item
      ["History"
       ecb-maximize-window-history
-      :active (ecb-window-live-p ecb-history-buffer-name)
+      :active (member ecb-history-buffer-name
+                      ecb-tree-buffers-of-current-layout)
       :help "Maximize the history window - even if currently not visible"
       ])
     (ecb-menu-item
      ["Speedbar"
       ecb-maximize-window-speedbar
-      :active (ignore-errors (ecb-speedbar-active-p))
-      :help "Maximize the integrated speedbar window if visible"
+      :active (and ecb-use-speedbar-instead-native-tree-buffer
+                   (member ecb-speedbar-buffer-name
+                           ecb-tree-buffers-of-current-layout))
+      :help "Maximize the integrated speedbar window - even if not visible"
       ])
     )
    "-"
@@ -2412,6 +2439,7 @@ has been deactivated. Do not set this variable!")
                  'ecb-interpret-mouse-click
                  'ecb-tree-buffer-node-select-callback
                  'ecb-tree-buffer-node-expand-callback
+                 'ecb-tree-buffer-node-collapsed-callback
                  'ecb-mouse-over-directory-node
                  'equal
                  (list 0)
@@ -2459,6 +2487,7 @@ has been deactivated. Do not set this variable!")
                  'ecb-interpret-mouse-click
                  'ecb-tree-buffer-node-select-callback
                  'ecb-tree-buffer-node-expand-callback
+                 'ecb-tree-buffer-node-collapsed-callback
                  'ecb-mouse-over-source-node
                  'equal
                  nil
@@ -2497,7 +2526,8 @@ has been deactivated. Do not set this variable!")
                  ecb-frame
                  'ecb-interpret-mouse-click
                  'ecb-tree-buffer-node-select-callback
-                 nil
+                 'ecb-tree-buffer-node-expand-callback
+                 'ecb-tree-buffer-node-collapsed-callback
                  'ecb-mouse-over-method-node
                  ;; Function which compares the node-data of a
                  ;; tree-buffer-node in the method-buffer for equality. We
@@ -2555,6 +2585,7 @@ has been deactivated. Do not set this variable!")
                  'ecb-interpret-mouse-click
                  'ecb-tree-buffer-node-select-callback
                  'ecb-tree-buffer-node-expand-callback
+                 'ecb-tree-buffer-node-collapsed-callback
                  'ecb-mouse-over-history-node
                  'equal
                  nil

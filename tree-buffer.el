@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: tree-buffer.el,v 1.134 2004/01/12 16:42:36 berndl Exp $
+;; $Id: tree-buffer.el,v 1.135 2004/01/14 14:01:09 berndl Exp $
 
 ;;; Commentary:
 
@@ -201,6 +201,7 @@ node name.")
 (defvar tree-buffer-is-click-valid-fn nil)
 (defvar tree-node-selected-fn nil)
 (defvar tree-node-expanded-fn nil)
+(defvar tree-node-collapsed-fn nil)
 (defvar tree-node-mouse-over-fn nil)
 (defvar tree-node-data-equal-fn nil)
 (defvar tree-buffer-maybe-empty-node-types nil)
@@ -514,6 +515,10 @@ with the same arguments as `tree-node-expanded-fn'."
                   (funcall tree-node-expanded-fn node mouse-button
                            shift-pressed control-pressed (buffer-name)))
                 (when (tree-node-is-expandable node)
+                  (when (and (tree-node-is-expanded node)
+                             tree-node-collapsed-fn)
+                    (funcall tree-node-collapsed-fn node mouse-button
+                             shift-pressed control-pressed (buffer-name)))
                   (tree-node-toggle-expanded node))
                 ;; Update the tree-buffer with optimized display of NODE
                 (tree-buffer-update node)
@@ -1556,6 +1561,9 @@ functionality is done with the `help-echo'-property and the function
 		   (not (tree-node-is-expanded node)))
 	  (funcall tree-node-expanded-fn node 0 nil nil (buffer-name)))
         (when (tree-node-is-expandable node)
+          (when (and (tree-node-is-expanded node)
+                     tree-node-collapsed-fn)
+            (funcall tree-node-collapsed-fn node 0 nil nil (buffer-name)))
           (tree-node-toggle-expanded node))
 	;; Update the tree-buffer with optimized display of NODE           
 	(tree-buffer-update node)))))
@@ -1598,7 +1606,7 @@ functionality is done with the `help-echo'-property and the function
 ;; tree-buffer creation
 
 (defun tree-buffer-create (name frame is-click-valid-fn node-selected-fn
-                                node-expanded-fn node-mouse-over-fn
+                                node-expanded-fn node-collapsed-fn node-mouse-over-fn
                                 node-data-equal-fn maybe-empty-node-types leaf-node-types
                                 menu-creator menu-titles tr-lines read-only tree-indent
                                 incr-search incr-search-add-pattern arrow-navigation hor-scroll
@@ -1656,6 +1664,18 @@ NODE-EXPANDED-FN: Function to call if a node is expandable, point stays onto
                   \(if possible). This function has to ensure that the
                   expandable- and expanded state of the selected node is
                   correct after returning!
+NODE-COLLAPSED-FN: Function to call if a node is expandable, point stays
+                   onto the expand-symbol and node is already expanded.
+                   This function is called with the following parameters:
+                   - node: The selected node
+                   - mouse-button \(0 = TAB, 1 = mouse-1, 2 = mouse 2)
+                   - shift-pressed
+                   - control-pressed
+                   - tree-buffer-name
+                   This function is only a callback to inform the user of
+                   this tree-buffer that this node has been collapsed. This
+                   function must not modify the expandable- or expanded
+                   state of the selected node!
 NODE-MOUSE-OVER-FN: Function to call when the mouse is moved over a node. This
                     function is called with three arguments: NODE, WINDOW,
                     NO-PRINT, each of them related to the current tree-buffer.
@@ -1769,6 +1789,7 @@ AFTER-CREATE-HOOK: A function or a list of functions \(with no arguments)
     (make-local-variable 'tree-buffer-is-click-valid-fn)
     (make-local-variable 'tree-node-selected-fn)
     (make-local-variable 'tree-node-expanded-fn)
+    (make-local-variable 'tree-node-collapsed-fn)
     (make-local-variable 'tree-node-update-fn)
     (make-local-variable 'tree-node-mouse-over-fn)
     (make-local-variable 'tree-node-data-equal-fn)
@@ -1806,6 +1827,7 @@ AFTER-CREATE-HOOK: A function or a list of functions \(with no arguments)
     (setq tree-buffer-is-click-valid-fn is-click-valid-fn)
     (setq tree-node-selected-fn node-selected-fn)
     (setq tree-node-expanded-fn node-expanded-fn)
+    (setq tree-node-collapsed-fn node-collapsed-fn)
     (setq tree-node-mouse-over-fn node-mouse-over-fn)
     (setq tree-node-data-equal-fn node-data-equal-fn)
     (setq tree-buffer-maybe-empty-node-types maybe-empty-node-types)

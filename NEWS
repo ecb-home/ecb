@@ -85,6 +85,16 @@
     with some window commands to [button-3] in its modeline. ECB supports this
     mechanism by replacing this menu by a menu which offers exactly 2
     commands: Maximizing current tree-window and displaying all ECB-windows.
+
+*** Now all commands for selecting a tree-buffer work even when this buffer is
+    not visible because another tree-buffer is maximized. If the tree-buffer
+    is contained in the layout then the layout is redrawn with all its
+    tree-buffers visible so that tree-buffer can be selected. Same for
+    maximizing. An example for such a command is `ecb-goto-window-methods'.
+
+*** New option `ecb-maximize-ecb-window-after-selection'.
+    Automatic maximizing of a tree-window after selecting it. Thanks for
+    suggestion to John S. Yates, Jr. <john@yates-sheets.org>.
        
 *** Changes to the image-icons of the tree-buffers
 
