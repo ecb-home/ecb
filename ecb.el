@@ -1782,6 +1782,7 @@ OTHER-EDIT-WINDOW."
       node)))
 
 (defun ecb-add-source-path (&optional dir alias)
+  "Add a directory to the `ecb-source-path'."
   (interactive)
   ;; we must manually cut a filename because we must not add filenames to
   ;; `ecb-source-path'!
