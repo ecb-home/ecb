@@ -26,7 +26,7 @@
 ;; This file is part of the ECB package which can be found at:
 ;; http://home.swipnet.se/mayhem/ecb.html
 
-;; $Id: tree-buffer.el,v 1.63 2001/07/17 20:43:41 creator Exp $
+;; $Id: tree-buffer.el,v 1.64 2001/07/18 19:07:12 creator Exp $
 
 ;;; Code:
 
@@ -363,21 +363,6 @@ inserted and the TEXT itself"
 	    (funcall facer p text)
 	  (put-text-property p (+ p (length text)) 'face facer)))))
 
-(defun tree-node-short-name (node depth)
-  (let* ((ww (window-width))
-         (name (tree-node-get-name node))
-         (width (+ (* depth tree-buffer-indent)
-		   (length name)
-		   (if (tree-node-is-expandable node) 4 0))))
-    ;; Truncate name if necessary
-    (when (>= width ww)
-      (if (eq 'beginning (tree-node-get-shorten-name node))
-	  (concat "$" (substring name (+ 2 (- width ww))))
-        (if (and (not tree-buffer-expand-symbol-before)
-                 (tree-node-is-expandable node)
-		 (eq 'end (tree-node-get-shorten-name node)))
-	    (concat (substring name 0 (- (+ 2 (- width ww)))) "$"))))))
-
 (defun tree-buffer-add-node (node depth)
   (let* ((ww (window-width))
 	 (name (tree-node-get-name node))
@@ -387,11 +372,11 @@ inserted and the TEXT itself"
     ;; Truncate name if necessary
     (when (>= width ww)
       (if (eq 'beginning (tree-node-get-shorten-name node))
-	  (setq name (concat "$" (substring name (+ 2 (- width ww)))))
+	  (setq name (concat "..." (substring name (+ 4 (- width ww)))))
 	(if (and (not tree-buffer-expand-symbol-before)
 		 (tree-node-is-expandable node)
 		 (eq 'end (tree-node-get-shorten-name node)))
-	    (setq name (concat (substring name 0 (- (+ 2 (- width ww)))) "$")))))
+	    (setq name (concat (substring name 0 (- (+ 4 (- width ww)))) "...")))))
     (insert (make-string (* depth tree-buffer-indent) ? ))
     (when (and tree-buffer-expand-symbol-before
 	       (tree-node-is-expandable node))
