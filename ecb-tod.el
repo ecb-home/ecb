@@ -81,7 +81,7 @@
     "Grep a directory \(recursive) by using the popup-menu \(the right mouse-button) in the directories buffer."
     "Customize the sorting of the sources with the option `ecb-sources-sort-method'."
     "Narrow the source-buffer to the selected token in the methods-buffer with `ecb-token-visit-post-actions'."
-    "Enable autom. enlarging of the compile-window by select with the option `ecb-compile-window-enlarge-by-select'."
+    "Enable autom. enlarging of the compile-window by select with the option `ecb-compile-window-temporally-enlarge'."
     "Customize with `ecb-compile-window-temporally-enlarge' the situations the compile-window is allowed to enlarge."
     "Customize the jump-behavior of `other-window' [C-x o] with the option `ecb-other-window-jump-behavior'."
     "Customize height and width of the ECB-windows with `ecb-windows-height' and `ecb-windows-width'."

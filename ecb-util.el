@@ -191,6 +191,7 @@ means not to count the minibuffer even if it is active."
                                           (mouse-drag-mode-line . around)
                                           (enlarge-window . around)
                                           (shrink-window . around)
+                                          (tmm-menubar . around)
                                           (scroll-other-window . around)
                                           (compile-internal . before)
                                           (custom-save-all . around)
