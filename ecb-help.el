@@ -26,7 +26,7 @@
 ;;
 ;; Contains all online-help for ECB (stolen something from recentf.el)
 
-;; $Id: ecb-help.el,v 1.9 2001/04/30 05:22:43 berndl Exp $
+;; $Id: ecb-help.el,v 1.10 2001/05/01 13:33:12 creator Exp $
 
 ;;; Code
 
@@ -189,7 +189,7 @@ The behavior of the adviced functions is:
 If you want to work within the edit-window with splitting and unsplitting the
 edit-window\(s) it is highly recommended to use the adviced-functions of ECB
 instead of the original Emacs-functions \(see above). For example the adviced
-`other-window' can only work correct if you split the edit window with the
+`other-window' can only work correctly if you split the edit window with the
 adviced `split-window-vertically' \(or horizontally) and NOT with the original
 `split-window-vertically'!
 
@@ -216,12 +216,12 @@ Same for displaying help-buffers or similar stuff.
 With the option `ecb-compile-window-temporally-enlarge' you can allow Emacs to
 enlarge temporally the ECB-compile-window after finishing compilation-output.
 
-Know Bug: The setting in `ecb-compile-window-height' works correct for all
-compilation-output of Emacs (compile, grep etc.) but for some other output
-like help-buffers etc. Emacs enlarges the height of the compile-window for
-it´s output. Currently ECB can´t restore auto. the height of the
-compile-window for such outputs. But you can always restore the correct layout
-by calling `ecb-redraw-layout'!.
+Known Bug: The setting in `ecb-compile-window-height' works correctly for all
+compilation-output of Emacs (compile, grep etc.) but for some other output like
+help-buffers etc. Emacs enlarges the height of the compile-window for its
+output. Currently ECB can´t restore the height of the compile-window for such
+outputs automatically. But you can always restore the correct layout by calling
+`ecb-redraw-layout'!.
 
 
 Rebuilding the ECB-method buffer:
@@ -229,11 +229,11 @@ Rebuilding the ECB-method buffer:
 
 In almost all cases there is NO need to manually rebuild the method-buffer,
 because it is always done automatically if necessary. But nevertheless there
-exist a few seldom scenarios where a complete manually rebuild is necessary.
-Here are some of them:
+exist a few rare scenarios where a complete manual rebuild is necessary.  Here
+are some of them:
 
-+ If an elisp-file is parsed which contains in the middle a defun X where the
-  closing ) is missing then semantic parses only until this defun X is reached
++ If an elisp-file is parsed which contains a defun X in the middle where the
+  closing ) is missing, then semantic parses only until this defun X is reached
   and you will get an incomplete ECB-method buffer. In such a case you must
   complete the defun X and then completely reparse the elisp-file and rebuild
   the ECB method buffer!
