@@ -24,7 +24,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-method-browser.el,v 1.58 2004/09/24 12:21:16 berndl Exp $
+;; $Id: ecb-method-browser.el,v 1.59 2004/09/29 16:32:48 berndl Exp $
 
 ;;; Commentary:
 
@@ -1408,7 +1408,8 @@ Methods-buffer."
   (when bucket
     (let* ((name-bucket (ecb-format-bucket-name (car bucket)))
            (image-name (format "%s-bucket" (ecb--semantic-tag-class (cadr bucket))))
-           (name (ecb-generate-node-name name-bucket -1 image-name ecb-methods-buffer-name))
+           (name (ecb-generate-node-name name-bucket -1
+                                         image-name ecb-methods-buffer-name))
            ;;(type (ecb--semantic-tag-class (cadr bucket)))
            (bucket-node node))
       (unless (eq 'hidden display)

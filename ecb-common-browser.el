@@ -25,7 +25,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-common-browser.el,v 1.6 2004/09/24 12:21:17 berndl Exp $
+;; $Id: ecb-common-browser.el,v 1.7 2004/09/29 16:32:54 berndl Exp $
 
 
 ;;; History
@@ -945,6 +945,7 @@ run starts with this interrupted function."
 
 
 ;; generation of nodes rsp. of attributes of nodes
+
 
 (defun ecb-generate-node-name (text-name first-chars icon-name name-of-buffer)
   "Generate a new name from TEXT-NAME by adding an appropriate image according
