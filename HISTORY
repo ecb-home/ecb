@@ -1,17 +1,20 @@
 Version 1.20 (???):
 -------------------
 
+- Now the ECB-buffers are intelligent in displaying nodes (Klaus):
+  + Expandable nodes: (e.g. a directory with it큦 subdirectories). An
+    ECB-tree-window now tries always to make visisble as much as possible of
+    the subnodes of a node if a node is expanded (e.g. by clicking onto it큦
+    expand-symbol).
+  + Other nodes: A ECB-tree-window is always best filled, means no empty lines
+    if there are enough lines to fill the whole window.
+
 - The source file is only parsed if the ECB methods window is visible
   (Jesper).
 
 - The methods buffer now show fields of EIEIO classes. Only works with
   semantic 1.4. Thanks to Eric M. Ludlam <eric@siege-engine.com> for
   this patch.
-
-- Now the ECB-buffers are somehow intelligent in displaying expanded nodes
-  (e.g. a directory with it큦 subdirectories). An ECB-buffer now tries always
-  to make visisble as much as possible of the subnodes of a node if a node
-  has been expanded (e.g. by clicking onto it큦 expand-symbol). (Klaus)
 
 - Now all adviced functions behave only special in the ECB-frame. In each other
   frame they behave exactly like the not adviced functions. (Klaus)

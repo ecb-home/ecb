@@ -884,6 +884,7 @@ displayed with window-start and point at beginning of buffer."
       ;; also the whole buffer informations should be preserved!
       (save-excursion
 	(ecb-buffer-select ecb-methods-buffer-name)
+        (setq tree-buffer-indent ecb-tree-indent)
 	(tree-buffer-update))
       (ecb-mode-line-format)
       ;; signalize that the rebuild has already be done
@@ -968,7 +969,8 @@ For further explanation see `ecb-clear-history-behavior'."
 		      (member child-data buffer-file-name-list)))
 	     (ecb-remove-from-current-tree-buffer (car tree-childs)))
 	 (setq tree-childs (cdr tree-childs))))
-     (tree-buffer-update))))
+     (tree-buffer-update)
+     (tree-buffer-highlight-node-data ecb-path-selected-source))))
 
 (defun ecb-current-buffer-sync(&optional opt-buffer)
   "Synchronizes the ECB buffers with the current buffer."
@@ -1054,6 +1056,7 @@ OTHER-WINDOW."
     (ecb-exec-in-directories-window
      ;;     (setq tree-buffer-type-faces
      ;;       (list (cons 1 ecb-source-in-directories-buffer-face)))
+     (setq tree-buffer-indent ecb-tree-indent)
      (let* ((node (tree-buffer-get-root))
 	    (old-children (tree-node-get-children node)))
        (tree-node-set-children node nil)
@@ -1285,6 +1288,7 @@ with the actually choosen layout \(see `ecb-layout-nr')."
          (list (cons 0 ecb-directories-menu) (cons 1 ecb-sources-menu))
          ecb-truncate-lines
          t
+         ecb-tree-indent
          (list (cons 1 ecb-source-in-directories-buffer-face))
          ecb-tree-expand-symbol-before)
         ;; if we want some keys only defined in a certain tree-buffer we
@@ -1308,7 +1312,8 @@ with the actually choosen layout \(see `ecb-layout-nr')."
          'ecb-mouse-over-node
          (list (cons 0 ecb-sources-menu))
          ecb-truncate-lines
-         t))
+         t
+         ecb-tree-indent))
       
       (unless (member ecb-methods-buffer-name curr-buffer-list)
         (tree-buffer-create
@@ -1320,6 +1325,7 @@ with the actually choosen layout \(see `ecb-layout-nr')."
          nil
          ecb-truncate-lines
          t
+         ecb-tree-indent
 	 nil
 ;;         (list (cons 0 t))
          ecb-tree-expand-symbol-before)
@@ -1334,7 +1340,8 @@ with the actually choosen layout \(see `ecb-layout-nr')."
          'ecb-mouse-over-node
          (list (cons 0 ecb-history-menu))
          ecb-truncate-lines
-         t)))
+         t
+         ecb-tree-indent)))
     
     ;; we need some hooks
     (add-hook 'semantic-after-toplevel-bovinate-hook
@@ -1455,11 +1462,19 @@ buffers does not exist anymore."
   "Removes all history entries from the ECB history buffer."
   (ecb-clear-history 0))
 
+
 (defun ecb-clear-history-node (node)
   "Removes current entry from the ECB history buffer."
-  (ecb-buffer-select ecb-history-buffer-name)
-  (ecb-remove-from-current-tree-buffer node)
-  (tree-buffer-update))
+  (save-selected-window
+    (ecb-exec-in-history-window
+     (let ((buffer-file-name-list (mapcar (lambda (buff)
+                                            (buffer-file-name buff))
+                                          (buffer-list))))
+       (when (or (not (member (tree-node-get-data node) buffer-file-name-list))
+                 (not (equal ecb-clear-history-behavior 'not-existing-buffers)))
+         (ecb-remove-from-current-tree-buffer node)
+         (tree-buffer-update)
+         (tree-buffer-highlight-node-data ecb-path-selected-source))))))
 
 (defvar ecb-history-menu nil)
 (setq ecb-history-menu (make-sparse-keymap "History Menu"))
@@ -1473,9 +1488,7 @@ buffers does not exist anymore."
 
 (defun ecb-hook()
   (if (and ecb-window-sync (eq (selected-frame) ecb-frame))
-      (condition-case nil
-          (ecb-current-buffer-sync)
-        (error nil))))
+      (ignore-errors (ecb-current-buffer-sync))))
 
 
 ;; ECB byte-compilation
@@ -1507,9 +1520,10 @@ FILE.elc or if FILE.elc doesn't exist."
                  load-path))
         (files (directory-files (file-name-directory (locate-library "ecb"))
                                 t)))
-    (dolist (file files)
-      (if (string-match "\\(tree-buffer\\|ecb.*\\)\\.el$" file)
-          (ecb-compile-file-if-necessary file force-all)))))
+    (save-excursion
+      (dolist (file files)
+        (if (string-match "\\(tree-buffer\\|ecb.*\\)\\.el$" file)
+            (ecb-compile-file-if-necessary file force-all))))))
     
 (provide 'ecb)
 
