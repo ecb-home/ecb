@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-util.el,v 1.64 2003/07/31 16:02:08 berndl Exp $
+;; $Id: ecb-util.el,v 1.65 2003/08/01 15:22:23 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -79,7 +79,7 @@
    (or (getenv "TMPDIR") (getenv "TMP") (getenv "TEMP")
        (cond ((eq system-type 'windows-nt) "c:/temp/")
              (t "/tmp/"))))
-  "a directory where ECB can store temporary files.")
+  "A directory where ECB can store temporary files.")
 
 (defconst ecb-ecb-dir
   (expand-file-name (file-name-directory (locate-library "ecb"))))
@@ -308,96 +308,13 @@ not nil then in both PATH and FILENAME env-var substitution is done. If the
           (message nil))))
     msg))
 
-
-
 (defun ecb-confirm (text)
   (yes-or-no-p text))
 
-
-(defun ecb-create-source-internal (dir)
-  (let* ((use-dialog-box nil)
-         (filename (file-name-nondirectory (read-file-name "Source name: "
-                                                           (concat dir "/")))))
-    (ecb-select-edit-window)
-    (if (string-match "\\.java$" filename)
-        (ecb-jde-gen-class-buffer dir filename)
-      (find-file (concat dir "/" filename)))))
-
-
-(defun ecb-create-directory-source (node)
-  (ecb-create-source-internal (tree-node-get-data node)))
-
-
-(defun ecb-create-source (node)
-  (ecb-create-source-internal (ecb-fix-filename (file-name-directory
-                                                 (tree-node-get-data node)))))
-;; ecb.el 4005
-(defun ecb-create-file (node)
-  (ecb-create-file-3 (tree-node-get-data node)))
-
-;; Only intern
-(defun ecb-create-file-3 (dir)
-  (ecb-select-edit-window)
-  (find-file (concat dir "/" (read-from-minibuffer "File name: "))))
-
-;; ecb.el 4030
-(defun ecb-create-file-2 (node)
-  (ecb-create-file-3 (ecb-fix-filename (file-name-directory
-					(tree-node-get-data node)))))
-;; ecb.el 4029, 4077
-(defun ecb-delete-source-2 (node)
-  (ecb-delete-source (tree-node-get-data node)))
-
-;; ecb-upgrade.el: 701
 (defun ecb-delete-file (file)
   (let ((exp-file (expand-file-name file)))
     (if (file-exists-p exp-file)
         (delete-file exp-file))))
-
-;; Only intern
-(defun ecb-delete-source (file)
-  (when (ecb-confirm (concat "Delete " file "?"))
-    (when (get-file-buffer file)
-      (kill-buffer (get-file-buffer file)))
-      
-    (ecb-delete-file file)
-    (ecb-clear-history -1)))
-
-;; ecb.el 4007
-(defun ecb-create-directory (parent-node)
-  (make-directory (concat (tree-node-get-data parent-node) "/"
-                          (read-from-minibuffer "Directory name: ")))
-  (ecb-update-directory-node parent-node)
-  (tree-buffer-update))
-
-;; ecb.el 4008
-(defun ecb-delete-directory (node)
-  (delete-directory (tree-node-get-data node))
-  (ecb-update-directory-node (tree-node-get-parent node))
-  (tree-buffer-update))
-
-(defun ecb-grep-directory-internal (node find)
-  (select-window (or ecb-last-edit-window-with-point ecb-edit-window))
-  (let ((default-directory (concat (ecb-fix-filename
-                                    (if (file-directory-p
-                                         (tree-node-get-data node))
-                                        (tree-node-get-data node)
-                                      (file-name-directory
-                                       (tree-node-get-data node))))
-                                   ecb-directory-sep-string)))
-    (call-interactively (if find
-                            (or (and (fboundp ecb-grep-find-function)
-                                     ecb-grep-find-function)
-                                'grep-find)
-                          (or (and (fboundp ecb-grep-function)
-                                   ecb-grep-function)
-                              'grep)))))
-
-(defun ecb-grep-find-directory (node)
-  (ecb-grep-directory-internal node t))
-
-(defun ecb-grep-directory (node)
-  (ecb-grep-directory-internal node nil))
 
 (defun ecb-enlarge-window(window &optional val)
   "Enlarge the given window
