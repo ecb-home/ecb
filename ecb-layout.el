@@ -578,9 +578,11 @@ This option makes only sense if the value is a list with more than 1 element!"
   :set (function (lambda (symbol value)
                    (ecb-load-layouts)
                    (dolist (name value)
-                     (if (not (fboundp (intern
-                                        (format "ecb-layout-function-%s"
-                                                name))))
+                     (if (and (boundp 'ecb-minor-mode)
+                              ecb-minor-mode
+                              (not (fboundp (intern
+                                             (format "ecb-layout-function-%s"
+                                                     name)))))
                          (ecb-error "There is no layout available with name %s!"
                                     name)))
                    (set symbol value))))
