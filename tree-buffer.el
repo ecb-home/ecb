@@ -26,7 +26,7 @@
 ;; This file is part of the ECB package which can be found at:
 ;; http://home.swipnet.se/mayhem/ecb.html
 
-;; $Id: tree-buffer.el,v 1.34 2001/05/03 20:07:16 creator Exp $
+;; $Id: tree-buffer.el,v 1.35 2001/05/03 20:17:41 creator Exp $
 
 ;;; Code:
 
@@ -245,7 +245,9 @@ NODE must be valid and already be visible in WINDOW!"
 	  (if (not (pos-visible-in-window-p
 		    (tree-buffer-get-node-name-start-point node) w))
 	      ;; make node visible
-	      (recenter w))
+	      (save-selected-window
+		(select-window w)
+		(recenter)))
 	  ;; maybe we must optimize the recentering
 	  (tree-buffer-recenter node w))))
     (tree-buffer-remove-highlight)))
