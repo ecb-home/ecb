@@ -28,7 +28,7 @@
 ;; Do not change any html-file besides the index.html manually but do all
 ;; changes in this elisp file!
 
-;; $Id: ecb-html.el,v 1.69 2004/06/14 11:02:09 berndl Exp $
+;; $Id: ecb-html.el,v 1.70 2004/08/12 15:11:17 berndl Exp $
 
 ;;; Code:
 
@@ -77,12 +77,29 @@
   "List of latest news displayed on the main page.")
 (setq ecb-latest-news
       `(
+        ,(h-sub-section "ECB 2.26 released! (2004-08-11)"
+                        "Improved erformance of the directories-buffer-display. Some new minor-features. Fixed an important bug with XEmacs concerning merging faces. Some minor fixes. "
+                        (h-link "docs/Install-and-first-steps.html#Install%20and%20first%20steps" "Here") " is a short installation guide. "
+                        "Click " (h-link "NEWS.html" "here")
+                        " for information about changes in the new version. ")
+        ,(h-sub-section "ECB 2.25 released! (2004-06-14)"
+                        "Fixed one annoying bug which often resulted in an error \"stack-overflow error in equal\" when using hippie-expand (or maybe also in other situations). The history-buffer can now be sorted by extension too. Some more small fixes. "
+                        (h-link "docs/Install-and-first-steps.html#Install%20and%20first%20steps" "Here") " is a short installation guide. "
+                        "Click " (h-link "NEWS.html" "here")
+                        " for information about changes in the new version. ")
         ,(h-sub-section "ECB 2.24 now available as XEmacs package 1.18! (2004-05-19)"
                         "The XEmacs-package ECB 1.18 can be installed either via "
                         (h-link "http://www.xemacs.org/Download/win32/setup.exe"
                                 "XEmacs-netinstaller")
                         " (for Windows) or from " (h-link "ftp://ftp.xemacs.org:/pub/xemacs/packages/" "ftp.xemacs.org")
                         " or via the package-manager of XEmacs.")
+        ))
+
+(defvar ecb-rest-news nil
+  "List of older news - these news are displayed in all-news.html ; see
+`ecb-html-all-news'.")
+(setq ecb-rest-news
+      `(
         ,(h-sub-section "ECB 2.24 released! (2004-04-14)"
                         "New \"current-type\"-filter for the Methods-buffer. More and better icons for the Methods-buffer. Now directories are prescanned for emptyness so they are displayed as empty in the directories buffer. Fixed some bugs which made ECB 2.23 incompatible with semantic 1.4.X. "
                         (h-link "docs/Install-and-first-steps.html#Install%20and%20first%20steps" "Here") " is a short installation guide. "
@@ -93,13 +110,6 @@
                         (h-link "docs/Install-and-first-steps.html#Install%20and%20first%20steps" "Here") " is a short installation guide. "
                         "Click " (h-link "NEWS.html" "here")
                         " for information about changes in the new version. ")
-        ))
-
-(defvar ecb-rest-news nil
-  "List of older news - these news are displayed in all-news.html ; see
-`ecb-html-all-news'.")
-(setq ecb-rest-news
-      `(
         ,(h-sub-section "ECB 2.22 released! (2004-03-08)"
                         "New nifty feature for easy applying filters to the tags of the Methods-buffer. Much smarter mechanism to highlight the current tag in the methods-buffer. Some important bug fixes - some of them especially for users of native-Windows XEmacs. "
                         (h-link "docs/Install-and-first-steps.html#Install%20and%20first%20steps" "Here") " is a short installation guide. "

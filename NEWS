@@ -67,6 +67,8 @@
 *** Fixed a bug concerning `ecb-auto-expand-tag-tree-collapse-other'.
     Thanks to Javier Oviedo <joviedo@telogy.com> for pointing to the problem.
 
+*** Handles not existing source-paths in `ecb-source-path' correct.
+
     
 
 * Changes for ECB version 2.25

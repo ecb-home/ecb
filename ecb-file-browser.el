@@ -23,7 +23,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-file-browser.el,v 1.26 2004/08/12 14:05:10 berndl Exp $
+;; $Id: ecb-file-browser.el,v 1.27 2004/08/12 15:11:19 berndl Exp $
 
 ;;; Commentary:
 
@@ -1499,11 +1499,16 @@ ecb-windows after displaying the file in an edit-window."
 	   (let* ((path (if (listp dir) (car dir) dir))
 		  (norm-dir (ecb-fix-filename path nil t))
 		  (name (if (listp dir) (cadr dir) norm-dir)))
-	     (tree-node-add-child
-	      node
-	      (ecb-new-child old-children name 2 norm-dir
-                             (ecb-check-emptyness-of-dir norm-dir)
-			     (if ecb-truncate-long-names 'beginning)))))
+             (if (file-exists-p norm-dir)
+                 (tree-node-add-child
+                  node
+                  (ecb-new-child old-children name 2 norm-dir
+                                 (ecb-check-emptyness-of-dir norm-dir)
+                                 (if ecb-truncate-long-names 'beginning)))
+               (if (listp dir)
+                   (ecb-warning "Source-path %s with alias %s does not exist - ignored!"
+                                norm-dir (cadr dir))
+                 (ecb-warning "Source-path %s does not exist - ignored!" norm-dir)))))
          (tree-buffer-update))))))
 
 
