@@ -1222,7 +1222,14 @@ TOKENLIST otherwise TOKENLIST is returned."
       (dolist (alist-elem parent-alist)
         (setq parents (cons (list (car alist-elem)
                                   'type
-                                  "class"
+                                  ;; if we set "struct" the protection will be
+                                  ;; public, with "class" it will be private.
+                                  ;; Unfortunatelly there is no way to display
+                                  ;; the right protection, but i think public
+                                  ;; is better then private. The best would be
+                                  ;; a blank protection symbol but this will
+                                  ;; be first available with semantic-1.4beta13.
+                                  "struct"
                                   ;; the PART-LIST, means all the methods of
                                   ;; this class. But first we must nreverse
                                   ;; the list because we have build the list
