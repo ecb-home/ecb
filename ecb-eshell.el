@@ -1,6 +1,6 @@
 ;;; ecb-eshell.el --- eshell integration for the ECB.
 
-;; $Id: ecb-eshell.el,v 1.62 2003/01/08 10:28:05 berndl Exp $
+;; $Id: ecb-eshell.el,v 1.63 2003/01/14 01:34:57 burtonator Exp $
 
 ;; Copyright (C) 2000-2003 Free Software Foundation, Inc.
 ;; Copyright (C) 2000-2003 Kevin A. Burton (burton@openprivacy.org)
@@ -57,7 +57,12 @@
 
 ;;; History:
 
-;; Sun Jan 05 2003 04:05 PM (burton@universe): Fixed a but with the way we
+;; Mon Jan 13 2003 09:33 AM (burton@peace): Fixed a bug with
+;; ecb-eshell-shrink-if-necessary if it wasn't being run from within the correct
+;; buffer.  Reworked some code to restore the old behavior prior to
+;; visible-window being used as a side effect from within a macro.
+
+;; Sun Jan 05 2003 04:05 PM (burton@universe): Fixed a bug with the way we
 ;; handle the switch-to-buffer after a eshell sync.
 ;;
 ;;     we need to make sure that that the eshell buffer isn't at the top of the
@@ -156,7 +161,6 @@
 (silentcomp-defun eshell-send-input)
 (silentcomp-defun eshell-bol)
 
-
 (defgroup ecb-eshell nil
   "Settings for eshell integration within the ECB."
   :group 'ecb
@@ -227,7 +231,7 @@ interactively or `ecb-eshell-synchronize' is not nil."
         ;; compile-window otherwise the following ecb-eshell-cleanse would
         ;; prevent from inserting any command if the eshell is displayed in
         ;; the edit-window (e.g. by calling `eshell' in the edit-window)
-        (when (equal visible-window ecb-compile-window)
+        (when (equal (selected-window) ecb-compile-window)
           (ecb-eshell-save-buffer-history
            ;;make sure we are clean.
            (ecb-eshell-cleanse)
@@ -254,7 +258,7 @@ interactively or `ecb-eshell-synchronize' is not nil."
                
                ;;execute the command
                (save-selected-window
-                 (select-window visible-window)
+                 (select-window (get-buffer-window ecb-eshell-buffer-name))
                  (eshell-send-input)))
              
              (ecb-eshell-recenter)
@@ -265,8 +269,6 @@ interactively or `ecb-eshell-synchronize' is not nil."
              ;; good idea in the long term to put it all the way at the end of
              ;; the history list but it is better than leaving it at the top.
              (bury-buffer eshell-buffer-name))))))))
-
-
 
 (defmacro ecb-eshell-save-buffer-history (&rest body)
   "Protect the buffer-list so that the eshell buffer name is not placed early
@@ -391,25 +393,30 @@ that the eshell has more screen space after we execute a command. "
 
 (defun ecb-eshell-shrink-if-necessary()
   "If we have expanded the compile buffer after a command, but there was no need
-to because the command didn't output much text, go ahead and shrink it again."
+to because the command didn't output much text, go ahead and shrink it again.
+Note that this function needs to be standalone as a hook so we have to make sure
+we execute it with the eshell buffer."
 
   (when (and (ecb-eshell-running-p)
              ecb-minor-mode
              (equal (selected-window) ecb-compile-window)
              (equal ecb-compile-window (get-buffer-window eshell-buffer-name)))
-        
-    ;; only shrink up if we expanded... we don't want to shrink if we just
-    ;; happend to be runnning in large mode
-    (when (and ecb-eshell-pre-command-point ecb-eshell-pre-window-enlarged
-               (< (count-lines ecb-eshell-pre-command-point
-                               (point))
-                  ecb-compile-window-height))
-      (ecb-toggle-enlarged-compilation-window -1)
-      (ecb-eshell-recenter))
-        
-    ;;reset
-    (setq ecb-eshell-pre-command-point nil)
-    (setq ecb-eshell-pre-window-enlarged nil)))
+
+    (ecb-do-if-buffer-visible-in-ecb-frame 'eshell-buffer-name
+      (select-window (get-buffer-window eshell-buffer-name))
+      
+      ;; only shrink up if we expanded... we don't want to shrink if we just
+      ;; happend to be runnning in large mode
+      (when (and ecb-eshell-pre-command-point ecb-eshell-pre-window-enlarged
+                 (< (count-lines ecb-eshell-pre-command-point
+                                 (point))
+                    ecb-compile-window-height))
+        (ecb-toggle-enlarged-compilation-window -1)
+        (ecb-eshell-recenter))
+      
+      ;;reset
+      (setq ecb-eshell-pre-command-point nil)
+      (setq ecb-eshell-pre-window-enlarged nil))))
 
 (defun ecb-eshell-cleanse()
   "If the user has entered text in the eshell, we need to clean it. If we
