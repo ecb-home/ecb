@@ -26,7 +26,7 @@
 ;;
 ;; Contains all online-help for ECB (stolen something from recentf.el)
 
-;; $Id: ecb-help.el,v 1.66 2002/04/03 15:18:17 berndl Exp $
+;; $Id: ecb-help.el,v 1.67 2002/04/19 13:15:28 berndl Exp $
 
 ;;; Code
 
@@ -291,8 +291,9 @@ grep etc.) in this special window. Same for displaying help-buffers or similar
 stuff.
 
 With the option `ecb-compile-window-temporally-enlarge' you can allow Emacs to
-enlarge temporally the ECB-compile-window after finishing compilation-output.
-Please read the comment of this option.
+enlarge temporally the ECB-compile-window in some situations. Please read the
+comment of this option. See also the description of the function
+`ecb-toggle-enlarged-compilation-window'.
 
 But because ECB works best without such a durable compilation-window you
 should read the comments of these two option carefully!
@@ -778,3 +779,4 @@ could be interesting for support."
 (provide 'ecb-help)
 
 ;; ecb-help.el ends here
+

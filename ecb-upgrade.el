@@ -136,7 +136,15 @@
 
 ;;; Code
 
-(defconst ecb-upgradable-option-alist nil
+;; ----------------------------------------------------------------------
+;; define in this defconst all options which should be upgraded
+;; ----------------------------------------------------------------------
+
+(defconst ecb-upgradable-option-alist
+  '((ecb-compile-window-temporally-enlarge .
+     (ecb-compile-window-temporally-enlarge
+      ecb-upgrade-compile-window-temporally-enlarge)))
+  
   "Alist of all options which should be upgraded for current ECB-version.
 There are several reasons why an option should be contained in this alist:
 a) An old option has just be renamed in current-ECB version but has still the
@@ -165,6 +173,20 @@ The car is the old option symbol and the cdr is a 2-element-list with:
    conversion can be performed! Maybe the function `ecb-option-get-value' can
    be helpful within such a transforming-function.")
 
+;; ----------------------------------------------------------------------
+;; define here all necessary upgrade functions
+;; ----------------------------------------------------------------------
+ 
+(defun ecb-upgrade-compile-window-temporally-enlarge (old-val)
+  (cond ((equal old-val t)
+         'after-compilation)
+        ((null old-val)
+         nil)
+        (t 'ecb-no-upgrade-conversion)))
+
+;; ----------------------------------------------------------------------
+;; internal functions. Dot change anything below this line
+;; ----------------------------------------------------------------------
 
 (defun ecb-option-get-value (option type)
   "Return the value of a customizable ECB-option OPTION with TYPE, where TYPE
@@ -394,3 +416,4 @@ new values."
 (provide 'ecb-upgrade)
 
 ;;; ecb-upgrade.el ends here
+

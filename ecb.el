@@ -7,7 +7,7 @@
 ;; Keywords: java, class, browser
 ;; Created: Jul 2000
 
-(defvar ecb-version "1.70"
+(defvar ecb-version "1.80"
   "Current ECB version.")
 
 ;; This program is free software; you can redistribute it and/or modify it under
@@ -54,7 +54,7 @@
 ;; The latest version of the ECB is available at
 ;; http://home.swipnet.se/mayhem/ecb.html
 
-;; $Id: ecb.el,v 1.210 2002/04/03 15:18:17 berndl Exp $
+;; $Id: ecb.el,v 1.211 2002/04/19 13:15:29 berndl Exp $
 
 ;;; Code:
 
@@ -739,7 +739,7 @@ faces of TEXT!"
   (fset (car elem)
         `(lambda (token &optional parent-token colorize)
            (if (eq 'type (semantic-token-token token))
-               (let* (;; we must here distinguish between UML- and
+               (let* ( ;; we must here distinguish between UML- and
                       ;; not-UML-semantic functions because for UML we must
                       ;; preserve some semantic facing added by semantic (e.g.
                       ;; italic for abstract classes)!
@@ -749,9 +749,9 @@ faces of TEXT!"
                                      token parent-token colorize))
                       (type-specifier (if (or (semantic-token-get token
                                                                   'ecb-group-token)
-                                              ;; marking done my semantic itself
+                                            ;; marking done my semantic itself
                                               (semantic-token-get token 'faux))
-                                              "group"
+                                          "group"
                                         (semantic-token-type token)))
                       (face (ecb-get-face-for-type-token type-specifier))
                       (remove-flag (ecb-get-remove-specifier-flag-for-type-token
@@ -2372,7 +2372,7 @@ combination is invalid \(see `ecb-interpret-mouse-click'."
     ;;    at least ecb-show-sources-in-directories-buffer is true.
     (when (and (equal 0 mouse-button)
                (not (member tree-buffer-name
-                                ecb-tree-RET-selects-edit-window--internal))
+                            ecb-tree-RET-selects-edit-window--internal))
                (or (not (string= tree-buffer-name ecb-directories-buffer-name))
                    ecb-show-sources-in-directories-buffer))
       (ecb-goto-window tree-buffer-name)
@@ -3256,7 +3256,7 @@ always the ECB-frame if called from another frame."
          (function (lambda ()
                      (local-set-key (kbd "C-t")
                                     'ecb-toggle-RET-selects-edit-window))))
-         (setq ecb-methods-root-node (tree-buffer-get-root)))
+        (setq ecb-methods-root-node (tree-buffer-get-root)))
       
       (unless (member ecb-history-buffer-name curr-buffer-list)
 	(tree-buffer-create
@@ -3298,7 +3298,8 @@ always the ECB-frame if called from another frame."
                                      'ecb-token-sync)
     (ecb-activate-ecb-sync-functions ecb-window-sync-delay
                                      'ecb-window-sync-function)
-    (add-hook 'pre-command-hook 'ecb-pre-command-hook-function)
+    (ecb-activate-ecb-sync-functions nil 'ecb-layout-post-command-hook)
+    (add-hook 'pre-command-hook 'ecb-layout-pre-command-hook)
     (add-hook 'after-save-hook 'ecb-update-methods-after-saving)
     (add-hook 'kill-buffer-hook 'ecb-kill-buffer-hook)
 
@@ -3342,7 +3343,7 @@ always the ECB-frame if called from another frame."
     ;; we run any personal hooks
     (run-hooks 'ecb-activate-hook)
 
-    ;; enable mouse-tracking for the ecb-tree-buffers; we do this after running
+   ;; enable mouse-tracking for the ecb-tree-buffers; we do this after running
     ;; the personal hooks because if a user put´s activation of
     ;; follow-mouse.el (`turn-on-follow-mouse') in the `ecb-activate-hook'
     ;; then our own ECb mouse-tracking must be activated later.
@@ -3403,7 +3404,7 @@ always the ECB-frame if called from another frame."
     (dolist (hook ecb-post-command-hooks)
       (remove-hook 'post-command-hook hook))
     (setq ecb-post-command-hooks nil)
-    (remove-hook 'pre-command-hook 'ecb-pre-command-hook-function)
+    (remove-hook 'pre-command-hook 'ecb-layout-pre-command-hook)
     (remove-hook 'after-save-hook 'ecb-update-methods-after-saving)
     (remove-hook 'kill-buffer-hook 'ecb-kill-buffer-hook)
     ;; ediff-stuff; we operate here only with symbols to avoid bytecompiler
@@ -3569,29 +3570,6 @@ FILE.elc or if FILE.elc doesn't exist."
     (ecb-activate)))
 
 (add-hook 'emacs-startup-hook 'ecb-auto-activate-hook)
-
-(defun ecb-klaus ()
-  (interactive)
-  (let ((tok (semantic-current-nonterminal)))
-    (backtrace)
-    (save-excursion
-      (set-buffer ecb-methods-buffer-name)
-      (let* ((name-node (catch 'exit
-                          (dolist (node tree-buffer-nodes)
-                            (let ((l (tree-node-get-data (cdr node)))
-                                  (r tok)) 
-                              (when (and (equal (semantic-token-buffer l)
-                                                (semantic-token-buffer r))
-                                         (equal (semantic-token-start l)
-                                                (semantic-token-start r))
-                                         (equal (semantic-token-end l)
-                                                (semantic-token-end r)))
-                                (throw 'exit node))))))
-             (name (car name-node))
-             (node (cdr name-node)))
-        (if node
-            (message "Klausi: %s" name)
-          (message "Klausi: No node found"))))))
 
 (provide 'ecb)
 

@@ -124,7 +124,7 @@
 ;;   + The edit-window must not be splitted and the point must reside in
 ;;     the not deleted edit-window.
 
-;; $Id: ecb-layout.el,v 1.105 2002/03/01 14:52:43 berndl Exp $
+;; $Id: ecb-layout.el,v 1.106 2002/04/19 13:15:29 berndl Exp $
 
 ;;; Code:
 
@@ -231,6 +231,9 @@ always behaving like a standard Emacs concerning displaying temp-buffers and
 compilation-buffers. It should work in most cases but maybe not in all. Just
 try it out.
 
+See also the option `ecb-compile-window-temporally-enlarge' and also the
+function `ecb-toggle-enlarged-compilation-window'!
+
 Regardless of the settings you define here: If you have destroyed or
 changed the ECB-screen-layout by any action you can always go back to this
 layout with `ecb-redraw-layout'"
@@ -240,16 +243,68 @@ layout with `ecb-redraw-layout'"
   :type '(radio (const :tag "No compilation window" nil)
                 (number :tag "Window height" :value 5)))
 
-(defcustom ecb-compile-window-temporally-enlarge t
-  "*Let Emacs temporally enlarge the compile-window of the ECB-layout
-after finishing the compilation-output. If nil then the compile-window has
-always exactly the height defined in `ecb-compile-window-height' otherwise ECB
-let temporally enlarge all compilation-buffers \(e.g. compile- and
-grep-buffers) to `compilation-window-height'. To restore the ECB-layout after
-this buffer-enlarge just call `ecb-redraw-layout'."
+;; (defcustom ecb-compile-window-temporally-enlarge t
+;;   "*Let Emacs temporally enlarge the compile-window of the ECB-layout
+;; after finishing the compilation-output. If nil then the compile-window has
+;; always exactly the height defined in `ecb-compile-window-height' otherwise ECB
+;; let temporally enlarge all compilation-buffers \(e.g. compile- and
+;; grep-buffers) to `compilation-window-height'. To restore the ECB-layout after
+;; this buffer-enlarge just call `ecb-redraw-layout' or
+;; `ecb-toggle-enlarged-compilation-window'.
+
+;; See also the function `ecb-toggle-enlarged-compilation-window' and the option
+;; `ecb-compile-window-enlarge-by-select'."
+;;   :group 'ecb-layout
+;;   :initialize 'custom-initialize-default
+;;   :set ecb-layout-option-set-function
+;;   :type 'boolean)
+
+(defcustom ecb-compile-window-temporally-enlarge 'after-compilation
+  "*Let Emacs temporally enlarge the compile-window of the ECB-layout.
+
+This option has only an effect if `ecb-compile-window-height' is not nil!
+
+The following values are possible:
+- 'after-compilation: After finishing the compilation-output and during
+  jumping to the errors ECB let temporally enlarge all compilation-buffers in
+  `ecb-compile-window' \(e.g. compile- and grep-buffers) to
+  `compilation-window-height'. But be aware this setting is currently not
+  meaningful for temporary buffers like help-buffers because these buffers
+  currently enlarge always to `temp-buffer-max-height'.
+
+- 'after-selection: selecting the `ecb-compile-window' auto. enlarges it and
+  deselecting \(means leaving `ecb-compile-window') auto. shrinks it.
+  Enlarging and shrinking the `ecb-compile-window' is done with
+  `ecb-toggle-enlarged-compilation-window'. See also the documentation of this
+  function! This is possible for all buffers in `ecb-compile-window' not only
+  for compilation-buffers!
+
+- 'both: The combination of 'after-compilation and 'after-selection.
+
+- nil: ECB tries to fix always the height of the `ecb-compile-window' at the
+  value of `ecb-compile-window-height'. But for all temporary buffers \(e.g.
+  help-buffers) this is currently not possible.
+
+To restore the ECB-layout after such a buffer-enlarge just call
+`ecb-toggle-enlarged-compilation-window' or `ecb-redraw-layout'."
   :group 'ecb-layout
   :initialize 'custom-initialize-default
   :set ecb-layout-option-set-function
+  :type '(radio (const :tag "After finishing compilation"
+                       :value after-compilation)
+                (const :tag "After selecting the compile window"
+                       :value after-selection)
+                (const :tag "Both of them" :value both)
+                (const :tag "Never" :value nil)))
+
+(defcustom ecb-compile-window-enlarge-by-select nil
+  "*The compile-window is auto. enlarged after selecting it.
+If not nil then selecting the `ecb-compile-window' auto. enlarges it and
+deselecting \(means selecting another window after point was in
+`ecb-compile-window') auto. shrinks it. Enlarging and shrinking the
+`ecb-compile-window' is done with `ecb-toggle-enlarged-compilation-window'.
+See also the documentation of this function!"
+  :group 'ecb-layout
   :type 'boolean)
 
 (defcustom ecb-split-edit-window nil
@@ -476,6 +531,9 @@ done.")
   "Window to display compile-output in.")
 (defvar ecb-redraw-layout-hook nil
   "Hooks to run after the layout is redrawn.")
+(defvar ecb-compile-window-was-selected-before-command nil
+  "Not nil only if the `ecb-compile-window' was selected before most recent
+command.")
 
 (defun ecb-initialize-layout ()
   (setq ecb-frame nil
@@ -490,6 +548,7 @@ done.")
     (if display-msg
         (message "No compile-window visible in current ECB-layout!"))
     nil))
+
 (defun ecb-edit-window-live-p ()
   (and ecb-edit-window (window-live-p ecb-edit-window)))
 
@@ -792,7 +851,8 @@ is in the left/topmost edit-window or 2 if in the other edit-window."
 
 (defun ecb-point-in-compile-window ()
   "Return non nil iff point is in the compile-window of ECB"
-  (and (equal (selected-frame) ecb-frame)
+  (and ecb-compile-window
+       (equal (selected-frame) ecb-frame)
        (equal (selected-window) ecb-compile-window)))
 
 (defun ecb-point-in-tree-buffer ()
@@ -831,15 +891,33 @@ If point already stays in the right edit-window nothing is done."
           (t
            (error "Internal layout error; redraw the whole layout!")))))
 
-(defun ecb-pre-command-hook-function ()
+(defun ecb-layout-pre-command-hook ()
   "During activated ECB this function is added to `pre-command-hook' to set
-always `ecb-last-edit-window-with-point' and `ecb-last-source-buffer' correct
-so other functions can use this variable."
+always `ecb-last-edit-window-with-point', `ecb-last-source-buffer' and
+`ecb-compile-window-was-selected-before-command' correct so other functions
+can use these variables."
+  (when (and ecb-minor-mode
+             (equal (selected-frame) ecb-frame))
+    (when (ecb-point-in-edit-window)
+      (setq ecb-last-edit-window-with-point (selected-window))
+      (setq ecb-last-source-buffer (current-buffer)))
+    (setq ecb-compile-window-was-selected-before-command
+          (ecb-point-in-compile-window))))
+
+(defun ecb-layout-post-command-hook ()
+  "During activated ECB this function is added to `post-command-hook' to
+handle `ecb-compile-window-temporally-enlarge'."
   (when (and ecb-minor-mode
              (equal (selected-frame) ecb-frame)
-             (ecb-point-in-edit-window))
-    (setq ecb-last-edit-window-with-point (selected-window))
-    (setq ecb-last-source-buffer (current-buffer))))
+             (member ecb-compile-window-temporally-enlarge
+                     '(after-selection both))
+             (ecb-compile-window-live-p))
+    (cond ((and (ecb-point-in-compile-window)
+                (not ecb-compile-window-was-selected-before-command))
+           (ecb-toggle-enlarged-compilation-window 1))
+          ((and ecb-compile-window-was-selected-before-command
+                (not (ecb-point-in-compile-window)))
+           (ecb-toggle-enlarged-compilation-window -1)))))
 
 (defun ecb-ediff-quit-hook ()
   "Added to the end of `ediff-quit-hook' during ECB is activated. It
@@ -1574,7 +1652,8 @@ this function the edit-window is selected which was current before redrawing."
       (if (not ecb-compile-window-height)
           (setq compilation-window-height ecb-old-compilation-window-height)
         (setq compilation-window-height compile-window-height-lines)
-        (if ecb-compile-window-temporally-enlarge
+        (if (or (equal ecb-compile-window-temporally-enlarge 'after-compilation)
+                (equal ecb-compile-window-temporally-enlarge 'both))
             (setq compilation-window-height ecb-old-compilation-window-height)))
 
       (select-window (if ecb-edit-window
@@ -1764,25 +1843,47 @@ documentation of `ecb-layout-window-sizes'!"
 	(ecb-set-window-size (get-buffer-window (car buffers)) size)
 	(setq buffers (cdr buffers))))))
 
-(defun ecb-toggle-enlarged-compilation-window()
-  "Toggle whether the `ecb-compile-window' is enlarged or not."
-  (interactive)  
+(defun ecb-toggle-enlarged-compilation-window (&optional arg)
+  "Toggle whether the `ecb-compile-window' is enlarged or not. If ARG > 0
+then enlarge to a sensefull value \(see below), if ARG <= 0 then shrink
+`ecb-compile-window' to `ecb-compile-window-height' and if ARG is nil then
+toggle the enlarge-state.
 
-  (if ecb-compile-window
-      (save-selected-window
-        (let(split-height)
-          
-          (setq split-height (/ (frame-height) 2))
-          
+The `ecb-compile-window' is enlarged to the following value: At least to the
+value of `ecb-compile-window-height' and max. to half of the frame-height of
+the ECB-frame, best depending on the values of `compilation-window-height'
+\(before ECB was started!) and the number of lines of current buffer in
+`ecb-compile-window'. If `compilation-window-height' is set before ECB was
+started then ECB never enlarges the `ecb-compile-window' over the value of
+`compilation-window-height'! Changing this option during activated ECB takes
+first effect after restarting ECB!"
+  (interactive "P")
+  (if (and ecb-minor-mode
+           (equal (selected-frame) ecb-frame)
+           ecb-compile-window-height
+           (ecb-compile-window-live-p))
+      (let ((should-shrink (if (null arg)
+                             (> (window-height ecb-compile-window)
+                                ecb-compile-window-height)
+                           (<= (prefix-numeric-value arg) 0)))
+            (compile-window-height-lines (if ecb-compile-window-height
+                                             (floor
+                                              (if (< ecb-compile-window-height 1.0)
+                                                  (* (1- (frame-height))
+                                                     ecb-compile-window-height)
+                                                ecb-compile-window-height))))
+            max-height)
+        (save-selected-window
           (select-window ecb-compile-window)
-          
-          (if (> (window-height ecb-compile-window) ecb-compile-window-height)
-              
+          (setq max-height
+                (min (or ecb-old-compilation-window-height (/ (frame-height) 2))
+                     (max compile-window-height-lines
+                          (count-lines (point-min) (point-max)))))
+          (if should-shrink
               ;;restore the window configuration to ecb-compile-window-height
-              
-              (shrink-window (- split-height ecb-compile-window-height))
-            
-            (enlarge-window (- split-height ecb-compile-window-height)))))
+              (shrink-window (max 0 (- (window-height)
+                                       compile-window-height-lines)))
+            (enlarge-window (max 0 (- max-height (window-height)))))))
     (message "No ecb-compile-window in current ECB-layout!")))
 
 ;; ========= Current available layouts ===============================
