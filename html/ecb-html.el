@@ -74,7 +74,8 @@
   (h-doc
    "screenshots.html"
    "ECB Screenshots"
-   (h-img "ecb.png")))
+   (h-img "ecb.png")
+   (h-img "ecb-java.png")))
   
 (defun ecb-html-links()
   (h-doc
