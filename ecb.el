@@ -5652,6 +5652,8 @@ always the ECB-frame if called from another frame."
                      ediff-quit-hook))
             (add-hook 'ediff-quit-hook 'ediff-cleanup-mess)
             (add-hook 'ediff-quit-hook 'ecb-ediff-quit-hook t)
+            (add-hook 'ediff-before-setup-windows-hook
+                      'ecb-ediff-before-setup-windows-hook)
             
             ;; menus
             (if ecb-running-xemacs
@@ -5787,6 +5789,13 @@ does all necessary after finishing ediff."
     (select-frame ecb-frame)
     (ecb-redraw-layout)))
 
+(defun ecb-ediff-before-setup-windows-hook ()
+  (if (ecb-edit-window-splitted)
+      (save-selected-window
+        (select-window ecb-edit-window)
+        (delete-window))))
+
+
 (defun ecb-deactivate ()
   "Deactivates the ECB and kills all ECB buffers and windows."
   (interactive)
@@ -5837,6 +5846,8 @@ does all necessary after finishing ediff."
           (setq ediff-quit-hook (get 'ediff-quit-hook
                                      'ecb-ediff-quit-hook-value))
         (remove-hook 'ediff-quit-hook 'ecb-ediff-quit-hook))
+      (remove-hook 'ediff-before-setup-windows-hook
+                   'ecb-ediff-before-setup-windows-hook)
 
       ;; menus
       (ignore-errors
