@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb.el,v 1.390 2004/05/06 09:02:01 berndl Exp $
+;; $Id: ecb.el,v 1.391 2004/05/10 10:59:37 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -583,7 +583,7 @@ With both ascii-styles the tree-layout can be affected with the options
                         '("default/height-17"
                           "directories/height-17"
                           nil
-                          "methods/height-15_to_21"
+                          "methods/height-14_to_21"
                           nil))))
   "*Directories where the images for the tree-buffer can be found.
 This is a five-element list where:
