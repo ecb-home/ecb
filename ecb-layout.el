@@ -104,7 +104,7 @@
 ;; - `ecb-with-some-adviced-functions'
 ;;
 
-;; $Id: ecb-layout.el,v 1.153 2003/02/19 13:57:35 berndl Exp $
+;; $Id: ecb-layout.el,v 1.154 2003/02/20 08:43:59 berndl Exp $
 
 ;;; Code:
 
@@ -541,9 +541,11 @@ the mouse and then store the window sizes by calling the command
 `ecb-store-window-sizes'. Next time the layout is redrawn the values stored in
 this option will be used.
 
-If `ecb-store-window-sizes' is used then the windows sizes are stored as
-fractions of current frame-width and -height of the ecb-frame, so the stored
-values will \"work\" for other frame sizes too.
+If `ecb-store-window-sizes' is used then the windows sizes are stored per
+default as fractions of current frame-width and -height of the ecb-frame, so
+the stored values will \"work\" for other frame sizes too. But if you call
+`ecb-store-window-sizes' with a prefix-argument then the fixed values of
+current width and height are stored!
 
 If this option is set \"by hand\" \(i.e. not by `ecb-store-window-sizes') then
 the following is important:
@@ -2303,19 +2305,24 @@ this function the edit-window is selected which was current before redrawing."
       (setq ecb-toggle-layout-state next-index)
       (ecb-layout-switch layout-name))))
 
-(defun ecb-store-window-sizes ()
+(defun ecb-store-window-sizes (&optional fix)
   "Stores the sizes of the ECB windows for the current layout. The size of the
 ECB windows will be set to their stored values when `ecb-redraw-layout' or
 `ecb-restore-window-sizes' is called. To reset the window sizes to their
 default values call `ecb-restore-default-window-sizes'. Please read also the
-documentation of `ecb-layout-window-sizes'!"
-  (interactive)
+documentation of `ecb-layout-window-sizes'!
+
+The windows sizes are stored per default as fractions of current frame-width
+and -height of the ecb-frame, so the stored values will \"work\" for other
+frame sizes too. But if FIX is not nil \(means called with a prefix argument)
+then the fixed values of current width and height are stored!"
+  (interactive "P")
   (when (equal (selected-frame) ecb-frame)
     (let ((a (ecb-find-assoc ecb-layout-window-sizes ecb-layout-name)))
       (unless a
 	(setq a (cons ecb-layout-name nil))
 	(setq ecb-layout-window-sizes (ecb-add-assoc ecb-layout-window-sizes a)))
-      (setcdr a (ecb-get-window-sizes))
+      (setcdr a (ecb-get-window-sizes fix))
       (customize-save-variable 'ecb-layout-window-sizes ecb-layout-window-sizes))))
 
 
@@ -2334,20 +2341,28 @@ documentation of `ecb-layout-window-sizes'!"
 	  (ecb-remove-assoc ecb-layout-window-sizes ecb-layout-name))
     (customize-save-variable 'ecb-layout-window-sizes ecb-layout-window-sizes)))
 
-;; Now always returns fractions of the ecb-frame; thanks to Geert Ribbers
+;; Now per default returns fractions of the ecb-frame; thanks to Geert Ribbers
 ;; [geert.ribbers@realworld.nl] for a first implementation.
-(defun ecb-get-window-size (window)
+(defun ecb-get-window-size (window &optional fix)
   "Return the sizes of WINDOW as a cons where the car is the width and the cdr
-is the height. Both values are fractions of the frame-width (resp. height) of
-the `ecb-frame'."
+is the height. Per default both values are fractions of the frame-width (resp. height) of
+the `ecb-frame' unless FIX is not nil."
   (when window
-    (cons (/ (window-width window) (* 1.0 (frame-width ecb-frame)))
-          (/ (window-height window) (* 1.0 (frame-height ecb-frame))))))
+    (cons (/ (window-width window)
+             (if fix
+                 1
+               (* 1.0 (frame-width ecb-frame))))
+          (/ (window-height window)
+             (if fix
+                 1
+               (* 1.0 (frame-height ecb-frame)))))))
 
 
-(defun ecb-get-window-sizes ()
+(defun ecb-get-window-sizes (&optional fix)
+  "Get all window-sizes of current visible ecb-windows. If FIX is not nil then
+fixed sizes are used otherwise fractions of current frame-width resp. -height."
   (mapcar (function (lambda (window)
-                      (ecb-get-window-size window)))
+                      (ecb-get-window-size window fix)))
           (ecb-canonical-ecb-windows-list)))
 
 

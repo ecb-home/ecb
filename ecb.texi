@@ -19,7 +19,7 @@
 @c Free Software Foundation, Inc., 59 Temple Place - Suite 330,
 @c Boston, MA 02111-1307, USA.
 
-@c $Id: ecb.texi,v 1.77 2003/02/19 16:54:30 berndl Exp $
+@c $Id: ecb.texi,v 1.78 2003/02/20 08:43:58 berndl Exp $
 
 @setfilename ecb.info
 
@@ -2005,10 +2005,11 @@ After this layout ``left1'' will be always drawn with the new sizes
 until you call @code{ecb-restore-default-window-sizes} during layout
 ``left1'' is active.
 
-@strong{NOTE}: @code{ecb-store-window-sizes} always stores the width
-and height of the windows as fractions of the width (resp. height) of
-the ECB-frame, so the stored sizes are always correct regardless of
-the current frame-size!
+@strong{NOTE}: @code{ecb-store-window-sizes} stores the width and
+height of the windows per default as fractions of the width (resp.
+height) of the ECB-frame, so the stored sizes are always correct
+regardless of the current frame-size! But if called with a prefix
+argument then fixed sizes are stored.
 
 @node Creating a new ECB-layout, , Changing window sizes, The ECB-layout
 @subsection Interactively creating new layouts
@@ -2537,6 +2538,16 @@ redraw is not really safe and may have some drawbacks! On normal
 machines the full drawback should be done in << 1s!
 @end deffn
 
+@deffn Command restore-default-window-sizes
+Resets the sizes of the ECB windows to their default values.
+@end deffn
+
+@deffn Command restore-window-sizes
+Sets the sizes of the ECB windows to their stored values. See option
+@code{ecb-layout-window-sizes} and command
+@code{ecb-store-window-sizes}.
+@end deffn
+
 @deffn Command show-help &optional format
 Shows the online help of ECB either in Info or in HTML format
 depending of the value of @code{ecb-show-help-format}. If called with
@@ -2559,6 +2570,21 @@ documentation contains a picture of the outline of the choosen layout.
 @deffn Command show-tip-of-the-day
 Show tip of the day if @code{ecb-tip-of-the-day} is not nil or if
 called interactively.
+@end deffn
+
+@deffn Command store-window-sizes &optional fix
+Stores the sizes of the ECB windows for the current layout. The size
+of the ECB windows will be set to their stored values when
+@code{ecb-redraw-layout} or @code{ecb-restore-window-sizes} is called.
+To reset the window sizes to their default values call
+@code{ecb-restore-default-window-sizes}. Please read also the
+documentation of @code{ecb-layout-window-sizes}!
+
+The windows sizes are stored per default as fractions of current
+frame-width and -height of the ecb-frame, so the stored values will
+``work'' for other frame sizes too. But if @var{FIX} is not nil (means
+called with a prefix argument) then the fixed values of current width
+and height are stored!
 @end deffn
 
 @deffn Command submit-problem-report
@@ -4415,9 +4441,11 @@ mouse and then store the window sizes by calling the command
 values stored in this option will be used.
 
 If @code{ecb-store-window-sizes} is used then the windows sizes are
-stored as fractions of current frame-width and -height of the
-ecb-frame, so the stored values will ``work'' for other frame sizes
-too.
+stored per default as fractions of current frame-width and -height of
+the ecb-frame, so the stored values will ``work'' for other frame
+sizes too. But if you call @code{ecb-store-window-sizes} with a
+prefix-argument then the fixed values of current width and height are
+stored!
 
 If this option is set ``by hand'' (i.e. not by
 @code{ecb-store-window-sizes}) then the following is important:
