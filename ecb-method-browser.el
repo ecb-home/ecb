@@ -24,7 +24,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-method-browser.el,v 1.25 2004/03/25 18:14:07 berndl Exp $
+;; $Id: ecb-method-browser.el,v 1.26 2004/03/26 09:35:57 berndl Exp $
 
 ;;; Commentary:
 
@@ -1432,6 +1432,11 @@ Methods-buffer."
     ("class-private-t" . "class-private")
     ("class-protected-t" . "class-protected")
     ("class-public-t" . "class-public")
+    ("constructor-nil-nil" . "constructor-public")
+    ("constructor-unknown-nil" . "constructor-public")
+    ("constructor-private-nil" . "constructor-private")
+    ("constructor-protected-nil" . "constructor-protected")
+    ("constructor-public-nil" . "constructor-public")
     ("function-nil-nil" . "function-public")
     ("function-unknown-nil" . "function-public")
     ("function-private-nil" . "function-private")
@@ -1461,8 +1466,6 @@ to an existing icon-file-name.")
 ;; can test the whole stuff. If Eric has added such icon-display to semantic
 ;; then we can throw away all this stuff and just using plain-tag-name as
 ;; node-name without any modification.
-;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: Inserting the constructor-logic -
-;; use ecb--semantic-tag-function-constructor-p!
 (defun ecb-update-tag-node (tag node &optional parent-tag no-bucketize)
   "Updates a node containing a tag."
   (let* ((children (ecb--semantic-tag-children-compatibility
@@ -1474,6 +1477,8 @@ to an existing icon-file-name.")
                                    (or (and (equal (ecb--semantic-tag-class tag)
                                                    'type)
                                             (ecb--semantic-tag-type tag))
+                                       (and (ecb--semantic-tag-function-constructor-p tag)
+                                            'constructor)
                                        (ecb--semantic-tag-class tag))
                                    (ecb--semantic-tag-protection tag parent-tag)
                                    (ecb--semantic-tag-static tag parent-tag)))
