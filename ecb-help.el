@@ -26,9 +26,19 @@
 ;;
 ;; Contains all online-help for ECB (stolen something from recentf.el)
 
-;; $Id: ecb-help.el,v 1.84 2002/11/05 13:47:40 berndl Exp $
+;; $Id: ecb-help.el,v 1.85 2002/11/05 15:14:07 berndl Exp $
 
 ;;; Code
+
+(eval-when-compile
+  (or load-in-progress
+      (let ((load-path
+             (if (and (boundp 'byte-compile-dest-file)
+                      (stringp byte-compile-dest-file))
+                 (cons (file-name-directory byte-compile-dest-file)
+                       load-path)
+               load-path)))
+        (load "ecb-bytecomp" nil t))))
 
 (require 'ecb-layout)
 (require 'ecb-util)
@@ -221,6 +231,8 @@ could be interesting for support."
     (append emacs-vars semantic-vars ecb-internal-vars ecb-options)))
 
 
-(provide 'ecb-help)
+(if (featurep 'ecb-bytecomp)
+    (ecb-provide 'ecb-help)
+  (provide 'ecb-help))
 
 ;; ecb-help.el ends here

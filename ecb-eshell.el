@@ -1,6 +1,6 @@
 ;;; ecb-eshell.el --- eshell integration for the ECB.
 
-;; $Id: ecb-eshell.el,v 1.45 2002/11/05 13:47:40 berndl Exp $
+;; $Id: ecb-eshell.el,v 1.46 2002/11/05 15:14:07 berndl Exp $
 
 ;; Copyright (C) 2000-2003 Free Software Foundation, Inc.
 ;; Copyright (C) 2000-2003 Kevin A. Burton (burton@openprivacy.org)
@@ -112,6 +112,16 @@
 ;; buffer's directlry is not equal to the ecb directory.
 
 ;;; Code:
+
+(eval-when-compile
+  (or load-in-progress
+      (let ((load-path
+             (if (and (boundp 'byte-compile-dest-file)
+                      (stringp byte-compile-dest-file))
+                 (cons (file-name-directory byte-compile-dest-file)
+                       load-path)
+               load-path)))
+        (load "ecb-bytecomp" nil t))))
 
 (require 'ecb-util)
 
@@ -373,6 +383,8 @@ to because the command didn't output much text, go ahead and shrink it again."
 
 (add-hook 'window-size-change-functions 'ecb-eshell-window-size-change)
 
-(provide 'ecb-eshell)
+(if (featurep 'ecb-bytecomp)
+    (ecb-provide 'ecb-eshell)
+  (provide 'ecb-eshell))
 
 ;;; ecb-eshell.el ends here

@@ -64,7 +64,7 @@ INSTALLINFO=/usr/bin/install-info
 
 # Do not change anything below!
 
-# $Id: Makefile,v 1.41 2002/11/05 13:47:40 berndl Exp $
+# $Id: Makefile,v 1.42 2002/11/05 15:14:07 berndl Exp $
 
 RM=rm -f
 CP=cp
@@ -90,7 +90,7 @@ ecb: $(ecb_LISP_EL)
 	      echo "(add-to-list 'load-path \"$$loadpath\")" >> ecb-compile-script; \
 	   done; \
 	fi
-	@echo "(require 'ecb-bytecomp)" >> ecb-compile-script
+#	@echo "(require 'ecb-bytecomp)" >> ecb-compile-script
 	@echo "(require 'ecb)" >> ecb-compile-script
 	@echo "(setq debug-on-error t)" >> ecb-compile-script
 	$(EMACS) -batch -no-site-file -l ecb-compile-script --eval '(ecb-byte-compile t)'

@@ -139,6 +139,16 @@
 
 ;;; Code
 
+(eval-when-compile
+  (or load-in-progress
+      (let ((load-path
+             (if (and (boundp 'byte-compile-dest-file)
+                      (stringp byte-compile-dest-file))
+                 (cons (file-name-directory byte-compile-dest-file)
+                       load-path)
+               load-path)))
+        (load "ecb-bytecomp" nil t))))
+
 (require 'ecb-util)
 
 (when (featurep 'ecb-bytecomp)
@@ -699,6 +709,8 @@ tp `load-path' and restarting Emacs the new package version can be activated."
         (concat ecb-ecb-parent-dir install-dir)
       (ecb-error "Downloading or installing failure for %s %s" package version))))
 
-(provide 'ecb-upgrade)
+(if (featurep 'ecb-bytecomp)
+    (ecb-provide 'ecb-upgrade)
+  (provide 'ecb-upgrade))
 
 ;;; ecb-upgrade.el ends here

@@ -26,9 +26,19 @@
 ;; This file is part of the ECB package which can be found at:
 ;; http://home.swipnet.se/mayhem/ecb.html
 
-;; $Id: tree-buffer.el,v 1.94 2002/11/05 13:47:41 berndl Exp $
+;; $Id: tree-buffer.el,v 1.95 2002/11/05 15:14:10 berndl Exp $
 
 ;;; Code:
+
+(eval-when-compile
+  (or load-in-progress
+      (let ((load-path
+             (if (and (boundp 'byte-compile-dest-file)
+                      (stringp byte-compile-dest-file))
+                 (cons (file-name-directory byte-compile-dest-file)
+                       load-path)
+               load-path)))
+        (load "ecb-bytecomp" nil t))))
 
 (eval-when-compile
   ;; to avoid compiler grips
@@ -1302,6 +1312,8 @@ child."
 (defun tree-node-get-shorten-name (node)
   (aref node tree-node-shorten-name))
 
-(provide 'tree-buffer)
+(if (featurep 'ecb-bytecomp)
+    (ecb-provide 'tree-buffer)
+  (provide 'tree-buffer))
 
 ;;; tree-buffer.el ends here

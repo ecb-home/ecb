@@ -28,6 +28,17 @@
 
 ;;; Code
 
+(eval-when-compile
+  (or load-in-progress
+      (let ((load-path
+             (if (and (boundp 'byte-compile-dest-file)
+                      (stringp byte-compile-dest-file))
+                 (cons (file-name-directory byte-compile-dest-file)
+                       load-path)
+               load-path)))
+        (load "ecb-bytecomp" nil t))))
+
+
 (require 'ecb-mode-line)
 (require 'ecb-util)
 
@@ -751,6 +762,8 @@ DELETE-FRAME is not nil then the new created frame will be deleted and the
            (ecb-create-layout-buffer-type)
            (ecb-create-layout-buffer-factor)))
 
-(provide 'ecb-create-layout)
+(if (featurep 'ecb-bytecomp)
+    (ecb-provide 'ecb-create-layout)
+  (provide 'ecb-create-layout))
 
 ;; ecb-help.el ends here

@@ -59,9 +59,19 @@
 ;; The latest version of the ECB is available at
 ;; http://home.swipnet.se/mayhem/ecb.html
 
-;; $Id: ecb.el,v 1.247 2002/11/05 13:47:41 berndl Exp $
+;; $Id: ecb.el,v 1.248 2002/11/05 15:14:09 berndl Exp $
 
 ;;; Code:
+
+(eval-when-compile
+  (or load-in-progress
+      (let ((load-path
+             (if (and (boundp 'byte-compile-dest-file)
+                      (stringp byte-compile-dest-file))
+                 (cons (file-name-directory byte-compile-dest-file)
+                       load-path)
+               load-path)))
+        (load "ecb-bytecomp" nil t))))
 
 ;; semantic load
 (require 'semantic)
@@ -4177,7 +4187,7 @@ FILE.elc or if FILE.elc doesn't exist."
       (if (ecb-check-requirements t)
           (ecb-error "Incorrect requirements; check the versions of semantic and eieio!"))
     (ecb-check-requirements))
-  (load-file "ecb-bytecomp.el")
+;;  (load-file "ecb-bytecomp.el")
   (let ((load-path
 	 (append (list (file-name-directory
 			(or (locate-library "semantic")
@@ -4295,6 +4305,8 @@ changed there should be no performance-problem!"
 
 (add-hook 'emacs-startup-hook 'ecb-auto-activate-hook)
 
-(provide 'ecb)
+(if (featurep 'ecb-bytecomp)
+    (ecb-provide 'ecb)
+  (provide 'ecb))
 
 ;;;ecb.el ends here

@@ -103,9 +103,19 @@
 ;; - `ecb-with-some-adviced-functions'
 ;;
 
-;; $Id: ecb-layout.el,v 1.126 2002/11/05 13:47:40 berndl Exp $
+;; $Id: ecb-layout.el,v 1.127 2002/11/05 15:14:08 berndl Exp $
 
 ;;; Code:
+
+(eval-when-compile
+  (or load-in-progress
+      (let ((load-path
+             (if (and (boundp 'byte-compile-dest-file)
+                      (stringp byte-compile-dest-file))
+                 (cons (file-name-directory byte-compile-dest-file)
+                       load-path)
+               load-path)))
+        (load "ecb-bytecomp" nil t))))
 
 (require 'ecb-util)
 (require 'ecb-create-layout)
@@ -2166,6 +2176,8 @@ The `ecb-compile-window' is enlarged depending on the value of
             (enlarge-window (max 0 (- max-height (window-height)))))))
     (message "No ecb-compile-window in current ECB-layout!")))
 
-(provide 'ecb-layout)
+(if (featurep 'ecb-bytecomp)
+    (ecb-provide 'ecb-layout)
+  (provide 'ecb-layout))
 
 ;;; ecb-layout.el ends here
