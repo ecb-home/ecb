@@ -26,7 +26,7 @@
 @c GNU Emacs; see the file COPYING.  If not, write to the Free Software
 @c Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-@c $Id: ecb.texi,v 1.189 2004/10/04 15:53:03 berndl Exp $
+@c $Id: ecb.texi,v 1.190 2004/10/06 15:46:24 berndl Exp $
 
 @setfilename ecb.info
 
@@ -5552,6 +5552,29 @@ There are three options:
 @end itemize
 @end defopt
 
+@defopt after-directory-change-hook
+Hook which run directly after the selected directory has changed. This
+means not onyl after a click onto a directory in the directory-window
+of ECB but it means this hook runs always when the current directory
+changes regardless of the trigger of this change. So for example it
+runs also when you just switches from one buffer to another via
+@code{switch-to-buffer} or @code{switch-to-buffer-other-window} and
+the directory of these filebuffers is different but only when
+auto-synchronizing of the ECB-windows is on (see
+@code{ecb-window-sync}). It runs not when switching between buffers
+and the associated files reside in the same directory.
+
+Each function added to this hook will be called with two arguments:
+The directory which was current _before_ the directory-change-trigger
+and the directory which was now the current (i.e. after the trigger).
+
+Example: If you switch from a filebuffer ``~/.emacs'' to a filebuffer
+``/tmp/test.txt'' then the functions of this hook will be called with
+the two arguments ``~'' and ``/tmp''.
+@end defopt
+
+
+
 @defopt cache-directory-contents
 Cache contents of directories.
 
@@ -9847,6 +9870,7 @@ The following hooks are available:
 @item @code{ecb-activate-before-new-frame-created-hook}
 @item @code{ecb-activate-before-layout-draw-hook}
 @item @code{ecb-activate-hook}
+@item @code{ecb-after-directory-change-hook}
 @item @code{ecb-before-activate-hook}
 @item @code{ecb-before-deactivate-hook}
 @item @code{ecb-common-tree-buffer-after-create-hook}

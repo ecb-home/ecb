@@ -23,7 +23,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-file-browser.el,v 1.39 2004/10/04 15:53:06 berndl Exp $
+;; $Id: ecb-file-browser.el,v 1.40 2004/10/06 15:46:25 berndl Exp $
 
 ;;; Commentary:
 
@@ -312,7 +312,27 @@ this option."
   :group 'ecb-directories
   :type 'boolean)
 
-;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: add entry in texi
+(defcustom ecb-after-directory-change-hook nil
+  "*Hook which run directly after the selected directory has changed.
+This means not onyl after a click onto a directory in the directory-window of
+ECB but it means this hook runs always when the current directory changes
+regardless of the trigger of this change. So for example it runs also when you
+just switches from one buffer to another via `switch-to-buffer' or
+`switch-to-buffer-other-window' and the directory of these filebuffers is
+different but only when auto-synchronizing of the ECB-windows is on (see
+`ecb-window-sync'). It runs not when switching between buffers and the
+associated files reside in the same directory.
+
+Each function added to this hook will be called with two arguments: The
+directory which was current _before_ the directory-change-trigger and the
+directory which was now the current \(i.e. after the trigger).
+
+Example: If you switch from a filebuffer \"~/.emacs\" to a filebuffer
+\"/tmp/test.txt\" then the functions of this hook will be called with the
+two arguments \"~\" and \"/tmp\"."
+  :group 'ecb-directories
+  :type 'hook)
+
 (defcustom ecb-sources-perform-read-only-check t
   "*Check if source-items in the tree-buffers are read-only.
 If a sourcefile is read-only then it will be displayed with that face set in
@@ -1595,7 +1615,11 @@ then nothing is done unless first optional argument FORCE is not nil."
                (tree-buffer-highlight-node-data ecb-path-selected-directory
                                                 start)))))
         ;; now we update the sources buffer for `ecb-path-selected-directory'
-        (ecb-update-sources-buffer last-dir))))
+        (ecb-update-sources-buffer last-dir)
+        ;; now we run the hooks
+        (run-hook-with-args 'ecb-after-directory-change-hook
+                            last-dir ecb-path-selected-directory)
+        )))
   
   ;; set the default-directory of each tree-buffer to current selected
   ;; directory so we can open files via find-file from each tree-buffer.
@@ -2217,7 +2241,7 @@ not managed by one of these backends."
                            (car efs-directory-regexp))
                          directory))))
 
-  (defun ecb-vc-get-state-fcn-for-dir (directory)
+(defun ecb-vc-get-state-fcn-for-dir (directory)
   "Get that function which should be used for checking the VC-state for files
 contained in DIRECTORY. Get it either from the VC-cache or call the car of
 each element of `ecb-vc-supported-backends' and return the cdr of the first
@@ -2264,8 +2288,9 @@ used otherwise an ascii-icon."
                             ;; they are the same!
                             ecb-sources-buffer-name)))
 
+;; (insert (ecb-vc-generate-node-name "test-name" 'needs-merge))
 
-(defun ecb-stealthy-vc-check--dir/history (state)
+ (defun ecb-stealthy-vc-check--dir/history (state)
   "Check for all sourcefile-nodes either in the directories- or the
 history-buffer the VC-state. This function does the real job and is is only
 for use by a stealthy function defined with `defecb-stealthy'! STATE is the
@@ -2409,14 +2434,45 @@ display an appropriate icon in front of the file."
   "Resets all stealthy VC-checks."
   (ecb-stealthy-function-state-init 'ecb-stealthy-vc-check-in-sources-buf)
   (ecb-stealthy-function-state-init 'ecb-stealthy-vc-check-in-directories-buf)
-  (ecb-stealthy-function-state-init 'ecb-stealthy-vc-check-in-history-buf))
+  (ecb-stealthy-function-state-init 'ecb-stealthy-vc-check-in-history-buf)
+  ;; This function is also used in write-file-hooks so we have to return nil
+  ;; because otherwise a file will never be written - see documentation of
+  ;; `write-file-hooks'!
+  nil)
   
+;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: we have to add a smart piece of
+;; code to `vc-checkin-hook' which is able to clear the cache entry for
+;; exactly that file checked-in with vc-checkin! Problems to solve:
+;; - unfortunatelly this hook is not called with the checked-in filename as
+;;   argument but it is a normal hook runned with `run-hooks' :-( So probably
+;;   we can not use this hook but we would need an after advice for
+;;   `vc-checkin' which clears the ECB-vc-cache entry for that filename and
+;;   then restarts state-checking by ECB.
+;; - If a user uses PCL-CVS for CVS-operations this advice of vc-checkin would
+;;   probably not run because i assume that pcl-cvs does neither call
+;;   vc-checkin nor calls the hook `vc-checkin-hook' but we have to verify
+;;   this. It at least the hook would be runned by PCL-CVS i can imagine a
+;;   solution.
+;; - Of course we could simply add a ecb-vc-cache-clear to the hook
+;;   `vc-checkin-hook' then we would not need the filename but this would
+;;   remove all still valid vc-states of ALL files which is surely not what we
+;;   want because this would result in a recheck of the vc-state of ALL files
+;;   only because ONE file has been checked in... Not really smart....
+;; - What about other backends not supported by VC, e.g. clearcase.el? Well,
+;;   with a good documentation what a user has to do.... ;-)
+
+;; (defadvice vc-checkin (after ecb activate)
+;;   (ecb-vc-cache-remove (ecb-fix-filename (ad-get-arg 0)))
+;;   (ecb-vc-reset-vc-stealthy-checks))
 
 (defun ecb-vc-enable-internals (arg)
   "Enable or disable \(if ARG < 0) all settings needed by the VC-support."
   (if (< arg 0)
-      (remove-hook 'after-revert-hook 'ecb-vc-reset-vc-stealthy-checks)
-    (add-hook 'after-revert-hook 'ecb-vc-reset-vc-stealthy-checks)))
+      (progn
+        (remove-hook 'after-revert-hook 'ecb-vc-reset-vc-stealthy-checks)
+        (remove-hook 'write-file-hooks 'ecb-vc-reset-vc-stealthy-checks))
+    (add-hook 'after-revert-hook 'ecb-vc-reset-vc-stealthy-checks)
+    (add-hook 'write-file-hooks 'ecb-vc-reset-vc-stealthy-checks)))
 
 ;; -- end of vc-support ---------------
 
@@ -2445,8 +2501,7 @@ performing a `tree-buffer-update' for this buffer."
   )
 
 (defun ecb-tree-node-add-files
-  (node path files type include-extension old-children
-        &optional not-expandable)
+  (node path files type include-extension old-children &optional not-expandable)
   "For every file in FILES add a child-node to NODE."
   (let* ((no-vc-state-display
           (or (not ecb-vc-enable-support)
