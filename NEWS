@@ -1,3 +1,20 @@
+* Changes for ECB version
+
+** Fixed bugs:
+
+** ECB now also works with buffers "online" extracted from archives.
+   Buffers extracted from an archive in `tar-mode' or `archive-mode' are now
+   correct handled as if they were normal file-buffers. This feature doesn't
+   work with XEmacs cause of its tar-mode and arc-mode implementation which
+   does/can not handle extracted files as normal files.
+
+** Now user-extensions can be added to the popup-menues of the tree-buffers.
+   See new options `ecb-directories-menu-user-extension',
+   `ecb-sources-menu-user-extension', `ecb-methods-menu-user-extension',
+   `ecb-history-menu-user-extension'.
+
+
+   
 * Changes for ECB version 1.92.1
 
 ** Fixed bugs:
