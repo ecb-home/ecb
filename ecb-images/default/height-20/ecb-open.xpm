@@ -16,7 +16,7 @@ static char * ecbopen_xpm[] = {
 "-	c #E5E1DA",
 ".	c #A5A5C6",
 "0	c #F5F5F1",
-"1	c #060606",
+"1	c #040404",
 "2	c #DFDBD2",
 "3	c #F2F2EE",
 "4	c #F0F0EC",
