@@ -6,7 +6,7 @@
 # Or type "make all" or "make upload-build" to generate the whole website
 # and build an uploadable ecb-website.tar.gz file.
 
-# $Id: Makefile,v 1.11 2003/07/04 16:27:15 berndl Exp $
+# $Id: Makefile,v 1.12 2003/07/11 15:55:09 berndl Exp $
 
 EMACS=emacs
 
@@ -16,6 +16,7 @@ MKDIR=mkdir -p
 TARC=tar -czvf
 SCP=scp
 SSH=ssh -l berndl ecb.sourceforge.net
+GNUCLIENT=gnuclient
 
 MAKEINFO=/usr/bin/makeinfo
 
@@ -38,6 +39,21 @@ ecb_WEBSITE_CONTENT=index.html $(ecb_HTML_GEN) $(ecb_HTMLDOCU_DIR)/*.html \
 ecb_WEBSITE_LOC=/home/groups/e/ec/ecb/htdocs
 ecb_SF_login=berndl@ecb.sourceforge.net
 
+help:
+	@echo "The following external targets are available:"
+	@echo "- website: Builds all html-files for the ECB-homepage."
+	@echo "- clean: Deletes all generated files."
+	@echo "- upload-build: Generate a zipped tar-archive for a complete"
+	@echo "                update of the ECB-homepage. Calls all necessary"
+	@echo "                targets."
+	@echo "- upload: Uploads a complete new built ECB-homepage. Calls "
+	@echo "          upload-build."
+	@echo "- upload-update: Uploads all files which reside in the subdir"
+	@echo "                 'files-for-upload' (incl. the patches in the"
+	@echo "                 subdir files-for-upload/patches'."
+	@echo "All 'upload*'-targets needs a running Emacs-instance connectable"
+	@echo "by gnuclient."
+
 all: upload-build
 
 # Creates the html-files from ecb-html.el
@@ -57,7 +73,7 @@ $(ecb_HTMLDOCU_DIR)/index.html: online-docu
 NEWS.html:
 	@$(CP) ../NEWS .
 	@$(RM) NEWS.html
-	@gnuclientw.exe -e '(progn (find-file "NEWS") (save-excursion (end-of-buffer) (previous-line 6) (delete-region (point) (point-max))) (load-library "htmlfontify") (htmlfontify-buffer) (write-file "NEWS.html") (kill-buffer "NEWS.html") (switch-to-buffer "NEWS") (set-buffer-modified-p nil) (kill-buffer "NEWS"))'
+	@$(GNUCLIENT) -e '(progn (find-file "NEWS") (save-excursion (end-of-buffer) (previous-line 6) (delete-region (point) (point-max))) (load-library "htmlfontify") (htmlfontify-buffer) (write-file "NEWS.html") (kill-buffer "NEWS.html") (switch-to-buffer "NEWS") (set-buffer-modified-p nil) (kill-buffer "NEWS"))'
 	@$(RM) NEWS
 
 
