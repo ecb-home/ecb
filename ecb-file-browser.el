@@ -23,7 +23,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-file-browser.el,v 1.41 2004/11/17 17:31:01 berndl Exp $
+;; $Id: ecb-file-browser.el,v 1.42 2004/11/22 17:04:00 berndl Exp $
 
 ;;; Commentary:
 
@@ -80,7 +80,7 @@
 Each path can have an optional alias that is used as it's display name. If no
 alias is set, the path is used as display name.
 
-Lisp-type of tis option: The value must be a list L whereas each element of L
+Lisp-type of this option: The value must be a list L whereas each element of L
 is either
 - a simple string which has to be the full path of a directory \(this string
   is displayed in the directory-browser of ECB) or
@@ -230,8 +230,6 @@ directories-buffer."
               (member ecb-layout-name
                       ecb-show-sources-in-directories-buffer)))))
 
-;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: Add also an entry to the FAQ and
-;; also a section "Remote directories" to the chapter "Tips and tricks"!!
 (defcustom ecb-cache-directory-contents '(("^/\\([^:/]*@\\)?\\([^@:/]*\\):.*" . 0)
                                           (".*" . 50))
   "*Cache contents of certain directories.
@@ -304,6 +302,44 @@ Please note: If you want your home-dir exclude from being cached then you MUST
 NOT use \"~\" because ECB tries always to match full path-names!"
   :group 'ecb-directories
   :type `(repeat (regexp :tag "Directory-regexp")))
+
+(defcustom ecb-ping-program "ping"
+  "Program to send network test packets to a host.
+See also `ecb-ping-options'."
+  :group 'ecb-directories
+  :type  'string)
+
+(defcustom ecb-ping-options
+  (if (eq system-type 'windows-nt)
+      (list "-n" "1")
+    (list "-c" "1"))
+  "List of options for the ping program.
+These options can be used to limit how many ICMP packets are emitted. Ping is
+used to test if a remote host of a remote path \(e.g. a tramp-, ange-ftp- or
+efs-path) is accessible. See also `ecb-ping-program'."
+  :group 'ecb-directories
+  :type  '(repeat string))
+
+(defcustom ecb-host-accessible-check-valid-time nil
+  "Time in seconds a cached accessible-state of a remote host is valid.
+This option is a list where each element specifies how long for a certain
+remote host the cached ping-state \(i.e. if the host is accessible or not)
+should be valid. During this time-intervall ECB pings such a remote host only
+once, all other checks use the cached value of that real check. But it the
+cached value is older than the value of this option ECB will ping again.
+
+Per default ECB discards after 1 minute the cached ping-state of each remote
+host. But if you are sure that a certain remote host is always accessible
+\(i.e. means in consequence that you are always online when working with ECB
+and remote-paths) then add an entry to this option with a high valid-interval.
+
+Examples: An entry \(\".*sourceforge.*\" . 3600) ensures that all remote hosts
+machting the string \"sourceforge\" will only once pinged during one hour. Or
+\(\".*\" . 300) would ensure that every remote host would be pinged only once
+during 5 minutes."
+  :group 'ecb-directories
+  :type '(repeat (cons (regexp :tag "Remote host regexp")
+                       (integer :tag "Valid interval"))))
 
 (defcustom ecb-prescan-directories-for-emptyness 'unless-remote
   "*Prescan directories for emptyness.
@@ -887,28 +923,24 @@ The check is performed according to the settings in the options
                 (not (ecb-remote-path dir))))
        (not (ecb-match-regexp-list dir ecb-vc-directory-exclude-regexps))))
 
-
-(defcustom ecb-vc-supported-backends
-  '((ecb-vc-managed-by-CVS-RCS-SCCS . vc-state))
-  "*Define how to to identify the VC-backend and how to check the state.
-The value of this option is a list containing cons-cells where the car is a
-function which is called to identify the VC-backend for a DIRECTORY and the
-cdr is a function which is called to check the VC-state of the FILEs contained
-in DIRECTORY.
-
-Identify-backend-function: It gets a full directory-name as argument - always
-without ending slash \(rsp. backslash for native Windows-XEmacs) - and has to
-return a unique symbol for the VC-backend which manages that directory \(e.g.
-'CVS for the CVS-system or 'RCS for the RCS-system) or nil if the file is not
-managed by a version-control-system.
-
-Check-vc-state-function: It gets a full filename \(ie. incl. the complete
-directory-part) and has to return one of the following values:
+(defcustom ecb-vc-state-mapping '((up-to-date       . up-to-date)
+                                  (edited           . edited)
+                                  (locally-modified . edited)
+                                  (needs-patch      . needs-patch)
+                                  (needs-checkout   . needs-patch)
+                                  (needs-merge      . needs-merge)
+                                  (unlocked-changes . unlocked-changes)
+                                  (added            . added)
+                                  (locally-added    . added)
+                                  (ignored          . ignored)
+                                  (unknown          . unknown))
+  "*Mapping from VC-state-values of the backends to VC-state-values of ECB.
+ECB understands the following state-values:
 
   'up-to-date        The working file is unmodified with respect to the
                      latest version on the current branch, and not locked.
 
-  'edited            The working file has been edited by the user. If
+  'edited            The working file has been locally edited by the user. If
                      locking is used for the file, this state means that
                      the current version is locked by the calling user.
 
@@ -927,11 +959,72 @@ directory-part) and has to return one of the following values:
                      with locking\; it represents an erroneous condition that
                      should be resolved by the user.
 
+  'added             The working file has already been added/registered to the
+                     VC-system but not yet commited.
+
   'ignored           The version-control-system ignores this file \(e.g.
                      because included in a .cvsignore-file in case of CVS).
 
-  nil                The state of the file can not be retrieved\; probably the
+  'unknown           The state of the file can not be retrieved\; probably the
                      file is not under a version-control-system.
+
+All state-values a check-vc-state-function of `ecb-vc-supported-backends' can
+return must have a mapping to one of the ECB-state-values listed above. If for
+a certain backend-VC-state no mapping can be found then per default 'edited is
+assumed!
+
+The default value of this option maps already the possible returned
+state-values of `vc-state' and `vc-cvs-state' \(both GNU Emacs) and
+`vc-cvs-status' \(Xemacs) to the ECB-VC-state-values."
+  :group 'ecb-version-control
+  :group 'ecb-sources
+  :type '(repeat (cons (choice :tag "Backend VC-state"
+                               :menu-tag "Backend VC-state"
+                               (const :tag "up-to-date" :value up-to-date)
+                               (const :tag "edited" :value edited)
+                               (const :tag "locally-modified" :value locally-modified)
+                               (const :tag "needs-patch" :value needs-patch)
+                               (const :tag "needs-checkout" :value needs-checkout)
+                               (const :tag "needs-merge" :value needs-merge)
+                               (const :tag "unlocked-changes" :value unlocked-changes)
+                               (const :tag "added" :value added)
+                               (const :tag "locally-added" :value locally-added)
+                               (const :tag "ignored" :value ignored)
+                               (const :tag "unknown" :value unknown)
+                               (symbol :tag "Other..."))
+                       (choice :tag "ECB VC-state"
+                               :menu-tag "ECB VC-state"
+                               (const :tag "up-to-date" :value up-to-date)
+                               (const :tag "edited" :value edited)
+                               (const :tag "needs-patch" :value needs-patch)
+                               (const :tag "needs-merge" :value needs-merge)
+                               (const :tag "unlocked-changes" :value unlocked-changes)
+                               (const :tag "added" :value added)
+                               (const :tag "ignored" :value ignored)
+                               (const :tag "unknown" :value unknown)))))
+
+(defcustom ecb-vc-supported-backends
+  (if ecb-running-xemacs
+      '((ecb-vc-dir-managed-by-CVS . vc-cvs-status))
+    '((ecb-vc-dir-managed-by-CVS . vc-state)
+      (ecb-vc-dir-managed-by-RCS . vc-state)
+      (ecb-vc-dir-managed-by-SCCS . vc-state)))
+  "*Define how to to identify the VC-backend and how to check the state.
+The value of this option is a list containing cons-cells where the car is a
+function which is called to identify the VC-backend for a DIRECTORY and the
+cdr is a function which is called to check the VC-state of the FILEs contained
+in DIRECTORY.
+
+Identify-backend-function: It gets a full directory-name as argument - always
+without ending slash \(rsp. backslash for native Windows-XEmacs) - and has to
+return a unique symbol for the VC-backend which manages that directory \(e.g.
+'CVS for the CVS-system or 'RCS for the RCS-system) or nil if the file is not
+managed by a version-control-system.
+
+Check-vc-state-function: It gets a full filename \(ie. incl. the complete
+directory-part) and has to return a symbol which indicates the VC-state of
+that file. The possible returned values of such a check-vc-state-function have
+to be mapped with `ecb-vc-state-mapping' to the allowed ECB-VC-state values.
 
 ECB runs for a certain DIRECTORY all identify-backend-functions in that order
 they are listed in this option. For the first which returns a value unequal
@@ -946,18 +1039,21 @@ possible performance.
 To prepend ECB from checking the VC-state for any file set
 `ecb-vc-enable-support' to nil.
 
-Per default ECB uses `ecb-vc-managed-by-CVS-RCS-SCCS' to identify the
-VC-backend of a file \(supports the backends RCS, CVS and SCCS) and `vc-state'
-to check the state of a file. If other check-vc-state-functions should be used
-for one of the backends RCS, CVS or SCCS they should be added to this option
-*before* this default because otherwise these other function would never be
-called because `ecb-vc-managed-by-CVS-RCS-SCCS' returns not nil for these
-three backends!
+Default value for GNU Emacs: Support for CVS, RCS and SCCS is added per
+default. To identify the VC-backend the functions `ecb-vc-managed-by-CVS',
+`ecb-vc-managed-by-SCCS' rsp. `ecb-vc-managed-by-RCS' are used. For all three
+backends the function `vc-state' of the VC-package is used.
 
-Example: If `vc-cvs-state' should be used to check the state for CVS-managed
-files and `vc-state' for all other backends then an element
-\(ecb-vc-managed-by-CVS-RCS-SCCS . vc-cvs-state) sould be added at the
-beginning of this option."
+Default value for XEmacs: XEmacs contains only a quite outdated VC-package,
+especially there is no backend-independent check-vc-state-function available
+\(like `vc-state' for GNU Emacs). Only for CVS a check-vc-state-function is
+available: `vc-cvs-status'. Therefore ECB adds per default only support for
+CVS and uses `ecb-vc-managed-by-CVS' rsp. `vc-cvs-status'.
+
+Example for GNU Emacs: If `vc-cvs-state' \(to get real state-values not only
+heuristic ones) should be used to check the state for CVS-managed files and
+`vc-state' for all other backends then an element \(ecb-vc-managed-by-CVS .
+vc-cvs-state) sould be added at the beginning of this option."
   :group 'ecb-version-control
   :group 'ecb-sources
   :initialize 'custom-initialize-default  
@@ -966,6 +1062,30 @@ beginning of this option."
                    (ecb-vc-cache-clear)))
   :type '(repeat (cons (function :tag "Identify-backend-function")
                        (function :tag "Check-state-function"))))
+
+;; Klaus Berndl <klaus.berndl@sdm.de>: IMO we do not need such an option
+;; because with `ecb-vc-directory-exclude-regexps' all these directories can
+;; be excluded.
+
+;; (defcustom ecb-vc-check-remote-repository (if ecb-running-xemacs nil t)
+;;   "*If on then ECB will also check the VC-state for remote repositories.
+;; Checking the VC-state of files with a remote repository \(means the file
+;; CVS/Root contains a repository entry with method :ext:) can take long time
+;; depending on \(a.o.) the speed of the internet-connection. GNU Emacs'
+;; VC-package offers for CVS an option `vc-cvs-stay-local' which allows to choose
+;; between heuristic approaches performed local and real state-checks performed
+;; remote. The VC-package of XEmacs doesn't have such a feature, here the check
+;; always is done via real cvs-commands over the net.
+
+;; To avoid long lasting state-checks for remote-directories ECB offers an own
+;; option to specify if remote repositories should be checked or not. Cause of
+;; the existence of `vc-cvs-stay-local' the defautl value for GNU Emacs is true
+;; and cause of the lack of such an option the default value for XEmacs is false.
+;; "
+;;   :group 'ecb-version-control
+;;   :group 'ecb-sources
+;;   :type 'boolean)
+  
 
 
 ;;====================================================
@@ -1172,6 +1292,51 @@ cache-entries are not dumped. This command is not intended for end-users of
 ECB."
   (interactive "P")
   (ecb-multicache-print-subcache 'ecb-filename-cache 'VC no-nil-value))
+
+;; accessors for the REMOTE-PATH cache
+
+(defun ecb-remote-path-cache-add (path remote-path)
+  "Add the value of REMOTE-PATH for PATH to the REMOTE-PATH-cache."
+  (ecb-multicache-put-value 'ecb-filename-cache path 'REMOTE-PATH
+                            remote-path))
+
+(defun ecb-remote-path-cache-get (path)
+  "Return the cached value for PATH from the REMOTE-PATH-cache."
+  (ecb-multicache-get-value 'ecb-filename-cache path 'REMOTE-PATH))
+
+(defun ecb-remote-path-cache-dump (&optional no-nil-value)
+  "Dump the whole REMOTE-PATH-cache. If NO-NIL-VALUE is not nil then these
+cache-entries are not dumped. This command is not intended for end-users of
+ECB."
+  (interactive "P")
+  (ecb-multicache-print-subcache 'ecb-filename-cache 'REMOTE-PATH no-nil-value))
+
+;; accessors for the HOST-ACCESSIBLE cache
+
+(defun ecb-host-accessible-cache-add (host accessible-p)
+  "Add the value of ACCESSIBLE-P to the HOST-ACCESSIBLE-cache with key HOST."
+  (ecb-multicache-put-value 'ecb-filename-cache host 'HOST-ACCESSIBLE
+                            (cons (current-time) accessible-p)))
+
+(defun ecb-host-accessible-cache-get (host valid-time)
+  "Get the accessible-p value from the HOST-ACCESSIBLE-cache. If the cache
+entry is older then VALID-TIME \(in seconds) then it is discarded."
+  (let ((value (ecb-multicache-get-value 'ecb-filename-cache host
+                                         'HOST-ACCESSIBLE)))
+    (if (or (null value)
+            (> (ecb-time-diff (current-time) (car value) t) valid-time))
+        ;; either not yet cached or outdated
+        nil
+      ;; return the valid cache-value
+      (cdr value))))
+
+(defun ecb-host-accessible-cache-dump (&optional no-nil-value)
+  "Dump the whole HOST-ACCESSIBLE-cache. If NO-NIL-VALUE is not nil then these
+cache-entries are not dumped. This command is not intended for end-users of
+ECB."
+  (interactive "P")
+  (ecb-multicache-print-subcache 'ecb-filename-cache 'HOST-ACCESSIBLE no-nil-value))
+
 
 ;; ---- end of filename-cache implementation -----------------------
 
@@ -1799,13 +1964,12 @@ by the option `ecb-mode-line-prefixes'."
                               (ecb-get-source-name filename)))
                         (ecb-get-source-name filename)))
               (dir (file-name-directory filename)))
-          (if (not (ecb-vc-directory-should-be-checked-p dir))
-              file-1
-            (if (ecb-vc-managed-dir-p dir)
-                (ecb-vc-generate-node-name file-1
-                                           (nth 0 (ecb-vc-cache-get filename)))
-              (ecb-generate-node-name file-1 -1 "leaf"
-                                      ecb-sources-buffer-name))))
+          (if (and (ecb-vc-directory-should-be-checked-p dir)
+                   (ecb-vc-managed-dir-p dir))
+              (ecb-vc-generate-node-name file-1
+                                         (nth 0 (ecb-vc-cache-get filename)))
+            (ecb-generate-node-name file-1 -1 "leaf"
+                                    ecb-sources-buffer-name)))
         ecb-history-nodetype-sourcefile
         filename t)))))
 
@@ -1945,8 +2109,6 @@ ecb-windows after displaying the file in an edit-window."
               (not (equal (selected-frame) ecb-frame)))
     (save-selected-window
       (ecb-exec-in-directories-window
-       ;;     (setq tree-buffer-type-faces
-       ;;       (list (cons 1 ecb-source-in-directories-buffer-face)))
        (let* ((node (tree-buffer-get-root))
               (old-children (tree-node-get-children node))
               (paths (append (ecb-get-source-paths-from-functions)
@@ -1954,23 +2116,118 @@ ecb-windows after displaying the file in an edit-window."
          (tree-node-set-children node nil)
 	 (dolist (dir paths)
 	   (let* ((path (if (listp dir) (car dir) dir))
-		  (norm-dir (ecb-fix-filename path nil t))
-		  (name (if (listp dir) (cadr dir) norm-dir)))
-             (if (file-accessible-directory-p norm-dir)
-                 (tree-node-add-child
-                  node
-                  (ecb-new-child old-children name
-                                 ecb-directories-nodetype-sourcepath
-                                 norm-dir
-                                 ;; The empty-dir-check is performed stealthy
-                                 nil ;;(ecb-check-emptyness-of-dir norm-dir)
-                                 (if ecb-truncate-long-names 'beginning)))
+                  (remote-path (ecb-remote-path path))
+                  (norm-dir nil)
+                  (name nil)
+                  (not-accessible nil))
+             (if (or (not remote-path)
+                     (ecb-host-accessible-p (nth 1 remote-path)))
+                 (progn
+                   (setq norm-dir (ecb-fix-filename path nil t))
+                   (setq name (if (listp dir) (cadr dir) norm-dir))
+                   (if (file-accessible-directory-p norm-dir)
+                       (tree-node-add-child
+                        node
+                        (ecb-new-child old-children name
+                                       ecb-directories-nodetype-sourcepath
+                                       norm-dir
+                                       nil
+                                       (if ecb-truncate-long-names
+                                       'beginning)))
+                     (setq not-accessible t)))
+               (setq not-accessible t))
+             (when not-accessible
                (if (listp dir)
                    (ecb-warning "Source-path %s with alias %s is not accessible - ignored!"
-                                norm-dir (cadr dir))
-                 (ecb-warning "Source-path %s is not accessible - ignored!" norm-dir)))))
+                                (car dir) (cadr dir))
+                 (ecb-warning "Source-path %s is not accessible - ignored!" dir)))))
          (tree-buffer-update))))
     ))
+
+;; remote-path stuff 
+
+(defsubst ecb-host-accessible-valid-time (host)
+  "Get the valid-cache-time of a remote HOST concering its ping-state. If host
+doesn't match any regexp of `ecb-host-accessible-check-valid-time' then return
+60 seconds."
+  (or (ecb-match-regexp-list host ecb-host-accessible-check-valid-time
+                             'car 'cdr)
+      60))
+
+;; (ecb-host-accessible-valid-time "ecb.sourceforge.net")
+
+(defun ecb-host-accessible-p (host)
+  "Return not nil if HOST is accessible."
+  (let ((value (ecb-host-accessible-cache-get
+                host (ecb-host-accessible-valid-time host))))
+    (cond ((equal value 'NOT-ACCESSIBLE)
+           nil)
+          (value value)
+          (t (let* ((options (append ecb-ping-options (list host)))
+                    (result (equal 0 (apply 'call-process
+                                            ecb-ping-program
+                                            nil nil nil
+                                            options))))
+               (ecb-host-accessible-cache-add host (or result 'NOT-ACCESSIBLE))
+               result)))))
+
+;; (ecb-host-accessible-p "ecb.sourceforge.net")
+
+(silentcomp-defun ange-ftp-ftp-name)
+(silentcomp-defun efs-ftp-path)
+(silentcomp-defun tramp-tramp-file-p)
+(silentcomp-defun tramp-file-name-path)
+(silentcomp-defun tramp-file-name-localname)
+(silentcomp-defun tramp-file-name-host)
+(silentcomp-defun tramp-dissect-file-name)
+(defun ecb-remote-path (path)
+  "Test if PATH is a remote path and dissect it into components if yes.
+Returns a list (FULL-HOST-USER-PART HOST REAL-PATH), or nil if PATH is not a
+remote path. FULL-HOST-USER-PART is that component from beginning of PATH to
+the :-separator which separates user- and host-parts from the real path, i.e.
+it always ends with a colon! HOST is the remote HOST and REAL-PATH is that
+component after that :-separator. Supports tramp, ange-ftp and efs."
+  (let ((value (ecb-remote-path-cache-get path)))
+    (cond ((equal value 'NOT-REMOTE)
+           nil)
+          (value value)
+          (t
+           (let* ((dissection (or (and (featurep 'tramp) ;; tramp-support
+                                       (tramp-tramp-file-p path)
+                                       (tramp-dissect-file-name path))
+                                  (and (featurep 'ange-ftp) ;; ange-ftp-support
+                                       (ange-ftp-ftp-name path))
+                                  (and (featurep 'efs) ;; efs support
+                                       (efs-ftp-path path))))
+                  (host/real-path
+                   (if dissection
+                       (or (and (featurep 'tramp) ;; tramp-support
+                                (cons (tramp-file-name-host dissection)
+                                      (if (fboundp 'tramp-file-name-localname)
+                                          (tramp-file-name-localname dissection)
+                                        (tramp-file-name-path dissection))))
+                           (and (featurep 'ange-ftp) ;; ange-ftp-support
+                                (cons (nth 0 dissection)
+                                      (nth 2 dissection)))
+                           (and (featurep 'efs) ;; efs support
+                                (cons (nth 0 dissection)
+                                      (nth 2 dissection))))
+                     (cons nil path)))
+                  (full-host-user-part
+                   (substring path 0 (- (length path)
+                                        (length (cdr host/real-path)))))
+                  (result nil))
+             (setq result
+                   (and dissection
+                        (list full-host-user-part
+                              (car host/real-path)
+                              (cdr host/real-path))))
+             (ecb-remote-path-cache-add path (or result 'NOT-REMOTE))
+             result)))))
+
+;; (ecb-remote-path "/berndl@ecb.sourceforge.net:~")
+;; (ecb-remote-path "~")
+
 
 ;; empty dirs
 
@@ -2145,9 +2402,11 @@ is writable or not."
 
 (defconst ecb-vc-state-icon-alist '((up-to-date . ("vc-up-to-date" "(u)"))
                                     (edited . ("vc-edited" "(e)"))
+                                    (added . ("vc-added" "(a)"))
                                     (needs-patch . ("vc-needs-patch" "(p)"))
                                     (needs-merge . ("vc-needs-merge" "(m)"))
                                     (ignored . ("vc-ignored" "(x)"))
+                                    (unknown . ("vc-unknown" "(?)"))
                                     (nil . ("vc-unknown" "(?)")))
   "Associate an image-name and a textual icon to the allowed VC-states - see
 `ecb-vc-supported-backends'. Each element is a cons-cell where the car is the
@@ -2225,7 +2484,9 @@ new state."
                         ;; (opens a new small window) if it fails...so maybe
                         ;; we have to save the window-config before this call
                         ;; and restore it when the call fails - later... ;-)
-                        (ignore-errors (funcall vc-state-fcn file)))))
+                        (ignore-errors (funcall vc-state-fcn file))))
+      ;; now we map the backend-state to one of the ECB-VC-state-values
+      (setq result (or (cdr (assoc result ecb-vc-state-mapping)) 'unknown)))
     (if (not (equal result 'unchanged))
         ;; add the new state to the cache because either the list of checked
         ;; buffers and/or the state has been modified.
@@ -2262,56 +2523,50 @@ the SOURCES-cache."
                                             (buffer-substring (point-min)
                                                               (point-max))))))))
 
-(defun ecb-vc-managed-by-CVS-RCS-SCCS (directory)
-  "Return the VC-backend if DIRECTORY is managed by CVS, RCS or SCCS or nil if
-not managed by one of these backends."
-  (or
-   ;; Local CVS available in Emacs 21
-   (and (fboundp 'vc-state)
-        (file-exists-p (concat directory "/CVS/"))
-        'CVS)
-   ;; Local RCS
-   (and (file-exists-p (concat directory "/RCS/")) 'RCS)
-   ;; Local SCCS
-   (and (file-exists-p (concat directory "/SCCS/")) 'SCCS)
-   ;; Remote SCCS project
-   (let ((proj-dir (getenv "PROJECTDIR")))
-     (if proj-dir
-         (and (file-exists-p (concat proj-dir "/SCCS")) 'SCCS)
-       nil))))
+(defun ecb-vc-dir-managed-by-CVS (directory)
+  "Return 'CVS if DIRECTORY is managed by CVS. nil if not.
 
-(silentcomp-defun ange-ftp-ftp-name)
-(silentcomp-defun efs-ftp-path)
-(silentcomp-defun tramp-tramp-file-p)
-(silentcomp-defun tramp-file-name-path)
-(silentcomp-defun tramp-dissect-file-name)
-;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: Maybe we should add here caching
-;; too? Probably not necessary because it is currently only used with by
-;; - ecb-current-buffer-sync: not critical
-;; - ecb-fix-filename: not critical because already cached
-;; - ecb-directory-sep-*: Hmm, maybe caching would be good...
-;; - ecb-check-emptyness-of-dir: runs stealthy for each dir ==> not critical
-;; - ecb-vc-get-state-fcn-for-dir: runs stealthy for each dir == not critical
-(defun ecb-remote-path (path)
-  "Test if PATH is a remote path and dissect it into components if yes.
-Returns a list (HOST-PART REAL-PATH), or nil if PATH is not a remote path.
-HOST-PART is that component from beginning of PATH to the :-separator which
-separates user- and host-parts from the real path, i.e. it always ends with a
-colon! REAL-PATH is that component after that :-separator. Supports tramp,
-ange-ftp and efs."
-  (let* ((real-path (or (and (featurep 'tramp) ;; tramp-support
-                             (tramp-tramp-file-p path)
-                             (tramp-file-name-path (tramp-dissect-file-name path)))
-                        (and (featurep 'ange-ftp) ;; ange-ftp-support
-                             (nth 2 (ange-ftp-ftp-name path)))
-                        (and (featurep 'efs) ;; efs support
-                             (nth 2 (efs-ftp-path path)))
-                        ;; not a (supported) remote path
-                        path))
-         (host-part (substring path 0 (- (length path) (length real-path)))))
-    (and (not (string= host-part ""))
-         (list host-part real-path))))
+Special remark for XEmacs: XEmacs has a quite outdated VC-package which has no
+option `vc-cvs-stay-local' so the user can not work with remote
+CVS-repositories if working offline for example. So ECB uses a workaround by
+checking the root of the CVS-repsoitory \(get it from the file /CVS/Root) if
+it is a remote root and if yes it pings the host of that root-repository. If
+accessible then it returns 'CVS otherwise nil."
+  (and (file-exists-p (concat directory "/CVS/"))
+       (if (not ecb-running-xemacs)
+           ;; GNU Emacs has a quite smart VC-package, so we can just use it...
+           'CVS
+	 ;; XEmacs has a quite outdated VC-package which has no option
+	 ;; `vc-cvs-stay-local' so the user can not work with remote directories
+	 ;; if working offline for example. so we add a kludgy workaround by
+	 ;; checking the root of the CVS-repsoitory (we can get it from the file
+	 ;; /CVS/Root) if it is a remote root and if yes we ping the host of
+	 ;; that root. If accessible ...
+	 (let* ((Root-content (ecb-file-content-as-string (concat directory
+                                                                  "/CVS/Root")))
+		(host (and Root-content
+			   (string-match "@\\(.+\\):" Root-content)
+			   (match-string 1 Root-content))))
+	   (if host
+               (and (ecb-host-accessible-p host) 'CVS)
+             ;; a local repository
+             'CVS)))))
 
+(defun ecb-vc-dir-managed-by-RCS (directory)
+  "Return 'RCS if DIRECTORY is managed by RCS. nil if not."
+  (and (file-exists-p (concat directory "/RCS/"))
+       'RCS))
+
+(defun ecb-vc-dir-managed-by-SCCS (directory)
+  "Return 'SCCS if DIRECTORY is managed by SCCS. nil if not."
+  (or (and (file-exists-p (concat directory "/SCCS/")) 'SCCS)
+      ;; Remote SCCS project
+      (let ((proj-dir (getenv "PROJECTDIR")))
+        (if proj-dir
+            (and (file-exists-p (concat proj-dir "/SCCS")) 'SCCS)
+          nil))))
+
+  
 (defun ecb-vc-get-state-fcn-for-dir (directory)
   "Get that function which should be used for checking the VC-state for files
 contained in DIRECTORY. Get it either from the VC-cache or call the car of
@@ -2609,15 +2864,12 @@ performing a `tree-buffer-update' for this buffer."
   (node path files type include-extension old-children &optional not-expandable)
   "For every file in FILES add a child-node to NODE."
   (let* ((no-vc-state-display
-          (or 
-              ;; no vc-state-display when the node is a subdir in the
-              ;; directories-buffer
-              (and (equal (buffer-name) ecb-directories-buffer-name)
-                   (= type ecb-directories-nodetype-directory))
-              ;; or if vc-support is either disabled at all or the directory
-              ;; PATH should be excluded from VC-check
-              (not (ecb-vc-directory-should-be-checked-p path))))
-         (dir-managed-by-vc (if no-vc-state-display
+          ;; no vc-state-display when the type of FILES means subdirs in
+          ;; the directories-buffer
+          (and (equal (buffer-name) ecb-directories-buffer-name)
+               (= type ecb-directories-nodetype-directory)))
+         (dir-managed-by-vc (if (or no-vc-state-display
+                                    (not (ecb-vc-directory-should-be-checked-p path)))
                                 nil
                               (ecb-vc-managed-dir-p path))))
     (dolist (file files)
@@ -3496,3 +3748,4 @@ So you get a better overlooking. There are three choices:
 (silentcomp-provide 'ecb-file-browser)
 
 ;;; ecb-file-browser.el ends here
+

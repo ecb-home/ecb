@@ -26,7 +26,7 @@
 @c GNU Emacs; see the file COPYING.  If not, write to the Free Software
 @c Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-@c $Id: ecb.texi,v 1.191 2004/11/17 17:32:50 berndl Exp $
+@c $Id: ecb.texi,v 1.192 2004/11/22 17:03:42 berndl Exp $
 
 @setfilename ecb.info
 
@@ -3726,10 +3726,10 @@ directories}.!
 
 ECB offers for all stealthy tasks three steps of activation:
 @itemize @bullet
-@item @code{t}
+@item @code{t}:
 Switch on this feature.
 
-@item @code{unless-remote}
+@item @code{unless-remote}:
 Switch on this feature but not for remote directories. The term
 ``remote'' means here directories which are used via tramp, ange-ftp
 or efs. So mounted directories are counted not as remote directories
@@ -3737,7 +3737,7 @@ here even if such a directory is maybe hosted on a remote machine. But
 normally only directories in a LAN are mounted so there should be no
 performance-problems with such mounted directories.
 
-@item @code{nil}
+@item @code{nil}:
 Switch off this feature completely.
 @end itemize
 
@@ -3749,13 +3749,13 @@ every stealthy task an additional option which allows a finer
 adjustment:
 
 @itemize @bullet
-@item Prescanning directories for emptyness
+@item Prescanning directories for emptyness:
 @code{ecb-prescan-directories-exclude-regexps}.
 
-@item Checking the read-only-state of a sourcefile
+@item Checking the read-only-state of a sourcefile:
 @code{ecb-read-only-check-exclude-regexps}
 
-@item Checking the VC-state of sourcefiles
+@item Checking the VC-state of sourcefiles:
 @code{ecb-vc-directory-exclude-regexps}
 @end itemize
 
@@ -5962,6 +5962,39 @@ Switch off this feature completely.
 The option @code{ecb-prescan-directories-exclude-regexps} offers are
 more fine granularity to exclude certain directories from this
 prescan.
+@end defopt
+
+@defopt host-accessible-check-valid-time
+Time in seconds a cached accessible-state of a remote host is valid.
+This option is a list where each element specifies how long for a
+certain remote host the cached ping-state (i.e. if the host is
+accessible or not) should be valid. During this time-intervall ECB
+pings such a remote host only once, all other checks use the cached
+value of that real check. But it the cached value is older than the
+value of this option ECB will ping again.
+
+Per default ECB discards after 1 minute the cached ping-state of each
+remote host. But if you are sure that a certain remote host is always
+accessible (i.e. means in consequence that you are always online when
+working with ECB and remote-paths) then add an entry to this option
+with a high valid-interval.
+
+Examples: An entry (``.*sourceforge.*'' . 3600) ensures that all
+remote hosts machting the string ``sourceforge'' will only once pinged
+during one hour. Or (``.*'' . 300) would ensure that every remote host
+would be pinged only once during 5 minutes.
+@end defopt
+
+@defopt ping-options
+List of options for the ping program. These options can be used to
+limit how many ICMP packets are emitted. Ping is used to test if a
+remote host of a remote path (e.g. a tramp-, ange-ftp- or efs-path) is
+accessible See also @code{ecb-ping-program}.
+@end defopt
+
+@defopt ping-program
+Program to send network test packets to a host. See also
+@code{ecb-ping-options}.
 @end defopt
 
 @defopt prescan-directories-exclude-regexps
@@ -8474,27 +8507,13 @@ The option @code{ecb-vc-directory-exclude-regexps} offers are more
 fine granularity to exclude the sources of certain directories from
 the VC-state-check.
 
-See @code{ecb-vc-supported-backends} how to customize the VC-support
-itself.
+See @code{ecb-vc-supported-backends} and @code{ecb-vc-state-mapping}
+how to customize the VC-support itself.
 @end defopt
 
-@defopt vc-supported-backends
-Define how to to identify the VC-backend and how to check the state.
-The value of this option is a list containing cons-cells where the car
-is a function which is called to identify the VC-backend for a
-DIRECTORY and the cdr is a function which is called to check the
-VC-state of the FILEs contained in DIRECTORY.
-
-Identify-backend-function: It gets a full directory-name as argument -
-always without ending slash (rsp. backslash for native Windows-XEmacs)
-- and has to return a unique symbol for the VC-backend which manages
-that directory (e.g. 'CVS for the CVS-system or 'RCS for the
-RCS-system) or nil if the file is not managed by a
-version-control-system.
-
-Check-vc-state-function: It gets a full filename (ie. incl. the
-complete directory-part) and has to return one of the following
-values:
+@defopt vc-state-mapping
+Mapping between VC-states from the backends and ECB-known VC-states.
+ECB understands the following state-values:
 
 @table @code
 @item up-to-date
@@ -8515,6 +8534,10 @@ The file has been edited by the user, and there is also a more recent
 version on the current branch stored in the master file. This state
 can only occur if locking is not used for the file.
 
+@item added
+The working file has already been added/registered to the VC-system
+but not yet commited.
+
 @item unlocked-changes
 The current version of the working file is not locked, but the working
 file has been changed with respect to that version. This state can
@@ -8525,11 +8548,42 @@ condition that should be resolved by the user.
 The version-control-system ignores this file (e.g. because included in
 a .cvsignore-file in case of CVS).
 
-@item nil
+@item unknown
 The state of the file can not be retrieved; probably the file is not
 under a version-control-system.
 
 @end table
+
+All state-values a check-vc-state-function of
+@code{ecb-vc-supported-backends} can return must have a mapping to one
+of the ECB-state-values listed above. If for a certain
+backend-VC-state no mapping can be found then per default 'edited is
+assumed!
+
+The default value of this option maps already the possible returned
+state-values of @code{vc-state} and @code{vc-cvs-state} (both GNU
+Emacs) and @code{vc-cvs-status} (Xemacs) to the ECB-VC-state-values.
+@end defopt
+
+@defopt vc-supported-backends
+Define how to to identify the VC-backend and how to check the state.
+The value of this option is a list containing cons-cells where the car
+is a function which is called to identify the VC-backend for a
+DIRECTORY and the cdr is a function which is called to check the
+VC-state of the FILEs contained in DIRECTORY.
+
+Identify-backend-function: It gets a full directory-name as argument -
+always without ending slash (rsp. backslash for native Windows-XEmacs)
+- and has to return a unique symbol for the VC-backend which manages
+that directory (e.g. @code{CVS} for the CVS-system or @code{RCS} for
+the RCS-system) or nil if the file is not managed by a
+version-control-system.
+
+Check-vc-state-function: It gets a full filename (ie. incl. the
+complete directory-part) and has to return a symbol which indicates
+the VC-state of that file. The possible returned values of such a
+check-vc-state-function have to be mapped with
+@code{ecb-vc-state-mapping} to the allowed ECB-VC-state values.
 
 ECB runs for a certain DIRECTORY all identify-backend-functions in
 that order they are listed in this option. For the first which returns
@@ -8544,21 +8598,26 @@ for best possible performance.
 To prepend ECB from checking the VC-state for any file set
 @code{ecb-vc-enable-support} to nil.
 
-Per default ECB uses @code{ecb-vc-managed-by-CVS-RCS-SCCS} to identify
-the VC-backend of a file (supports the backends RCS, CVS and SCCS) and
-@code{vc-state} to check the state of a file. If other
-check-vc-state-functions should be used for one of the backends RCS,
-CVS or SCCS they should be added to this option
-*before* this default because otherwise these other function would never be
-called because @code{ecb-vc-managed-by-CVS-RCS-SCCS} returns not nil for these
-three backends!
+Default value for GNU Emacs: Support for CVS, RCS and SCCS is added
+per default. To identify the VC-backend the functions
+@code{ecb-vc-managed-by-CVS}, @code{ecb-vc-managed-by-SCCS} rsp.
+@code{ecb-vc-managed-by-RCS} are used. For all three backends the
+function @code{vc-state} of the VC-package is used.
 
-Example: If @code{vc-cvs-state} should be used to check the state for
-CVS-managed files and @code{vc-state} for all other backends then an
-element (ecb-vc-managed-by-CVS-RCS-SCCS . vc-cvs-state) sould be added
+Default value for XEmacs: XEmacs contains only a quite outdated
+VC-package, especially there is no backend-independent
+check-vc-state-function available (like @code{vc-state} for GNU
+Emacs). Only for CVS a check-vc-state-function is available:
+@code{vc-cvs-status}. Therefore ECB adds only support for CVS per
+default and uses @code{ecb-vc-managed-by-CVS} rsp.
+@code{vc-cvs-status}.
+
+Example for GNU Emacs: If @code{vc-cvs-state} (to get real
+state-values not only heuristic ones) should be used to check the
+state for CVS-managed files and @code{vc-state} for all other backends
+then an element (ecb-vc-managed-by-CVS . vc-cvs-state) sould be added
 at the beginning of this option.
 @end defopt
-
 
 @node Submitting problem report, Upgrading, Customizing, Top
 @chapter Submitting a problem report
@@ -9244,15 +9303,26 @@ least as long you are ``connected''!
 @strong{Caution}: Suppose you have added a remote dir (e.g.
 ``user@@host.at.a.server:/dir/'') to @code{ecb-source-path} and you
 start ECB when you are offline, means there can be no connection
-established to the remote computer (e.g. ``host.at.a.server''). Then
-ECB tries to open this directory through the appropriate library (e.g.
-TRAMP) and it depends on the timeout-mechanism of this library (e.g.
-TRAMP has 60 seconds) how long ECB is blocked. First after this
-timeout ECB can start working! Currently there is no fast way, to find
-out, if a remote directory can be accessed without simply trying it
-out! A possible workaround could be: Use a different Emacs/ECB setup
-concering @code{ecb-source-path} for online and offline situations -
-use the hooks ECB offers (e.g. @code{ecb-before-activate-hook}!
+established to the remote computer (e.g. ``host.at.a.server''). Each
+time ECB has to process a remote path ECB pings via the ping-program
+the remote host (in the example above it would ping the host
+``host.at.a.server'') to test if it is accessible. If not then this
+path will be ignored by ECB@footnote{This avoids long lasting and
+annoying blocking of ECB when a remote-path is not accessible: Without
+a ping ECB would always try to open this directory through the
+appropriate library (e.g. TRAMP) and it would depend on the
+timeout-mechanism of this library (e.g. TRAMP has 60 seconds) how long
+ECB would be blocked. First after this timeout ECB could start
+working! A fast ``pre''-ping avoids this problem!}. Ensure that ECB
+calls your ping-program (see @code{ecb-ping-program}) with the right
+options (see @code{ecb-ping-options}). To avoid to many pings to the
+same host ECB caches the ping result so there should be no performance
+decrease. But to ensure still correct accessible-results and to avoid
+using outdated cache-results ECB discards the cached value of the
+accessible-state of a certain host after a customizable time-interval
+(please read the documentation of
+@code{ecb-host-accessible-check-valid-time}!).
+
 
 @subsection Excluding remote directories from time-consuming tasks
 
@@ -9269,6 +9339,15 @@ tasks with the @code{unless-remote} which is the default activation
 be swtiched on for all local directories (and also for all mounted
 drives in the LAN) but not for real remote directories used via TRAMP,
 ANGE-FTP or EFS.
+
+@subsection Caching the contents of remote directories
+
+ECB caches per default the contents of remote directories to avoid
+annoying delays. The cache is done via the option
+@code{ecb-cache-directory-contents} which contains an entry which
+covers the syntax of remote directories. If you do not want this
+caching (which is strongly recommened) you have to remove this entry
+from this option.
 
 @node Version-control support, Using eshell, Remote directories, Tips and tricks
 @section Supporting Version control systems
@@ -11998,6 +12077,32 @@ the contained sources?
 @tab @tab
 Yes, see option @code{ecb-read-only-check-exclude-regexps}.
 
+@item @tab @tab
+
+@item
+ECB ignores the remote-paths i have added to @code{ecb-source-path}.
+@tab @tab
+Maybe you have to check the option @code{ecb-ping-options}. Ensure
+that this option contains a value suitable for your ping-program (see
+@code{ecb-ping-program}).
+@ifinfo
+@*
+@end ifinfo
+See also @ref{Remote directories}.
+
+@item @tab @tab
+
+@item
+ECB seems to be blocked during the VC-state update in the
+tree-windows.
+@tab @tab
+Maybe the root repository for the current directory is a
+remote-repository. This can result in a long lasting check-time per
+file. 
+@ifinfo
+@*
+@end ifinfo
+See also @ref{Version-control support} for hints what you can do.
 
 @end multitable
 

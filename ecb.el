@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb.el,v 1.412 2004/11/17 17:30:56 berndl Exp $
+;; $Id: ecb.el,v 1.413 2004/11/22 17:03:55 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -1763,11 +1763,11 @@ ECB has been deactivated. Do not set this variable!")
             (when (member ecb-split-edit-window-after-start
                           '(vertical horizontal nil))
               (ecb-with-adviced-functions
-                (delete-other-windows)
-                (cond ((equal ecb-split-edit-window-after-start 'horizontal)
-                       (split-window-horizontally))
-                      ((equal ecb-split-edit-window-after-start 'vertical)
-                       (split-window-vertically)))))
+               (delete-other-windows)
+               (cond ((equal ecb-split-edit-window-after-start 'horizontal)
+                      (split-window-horizontally))
+                     ((equal ecb-split-edit-window-after-start 'vertical)
+                      (split-window-vertically)))))
             
             ;; now we synchronize all ECB-windows
             (ecb-window-sync)
@@ -2199,18 +2199,13 @@ performance-problem!"
 
 (add-hook 'emacs-startup-hook 'ecb-auto-activate-hook)
 
-(defun ecb-run-from-menubar ()
-  "Activate ECB from the Tools-menu. See `ecb-activate'."
-  (interactive)
-  (ecb-activate))
-
 (progn
   (require 'easymenu)
   (easy-menu-add-item nil
                       '("Tools") 
                       (ecb-menu-item
                        [ "Start Code Browser (ECB)"
-                         ecb-run-from-menubar
+                         ecb-activate
                          :active t
                          :help "Start the Emacs Code Browser."
                          ])))

@@ -1,6 +1,6 @@
 * Changes for ECB version 2.28
 
-TODO: Change version to 2.30!!!!
+TODO: Change version to 2.30 before releasing!!!! Add news to ecb-upgrade!
 
 ** Enhancements to the file-browser
 
@@ -44,18 +44,19 @@ TODO: Change version to 2.30!!!!
     `ecb-sources-perform-read-only-check' and `ecb-vc-enable-support' (new).
     This new support is tested with the combinations GNU Emacs+TRAMP and
     XEmacs+EFS but it should (hopefully) also work with all other
-    combinations.
+    combinations. Thanks a lot to Tomas Orti for beta-testing!
 
 *** ECB displays the Version-control-state of a file in the tree-buffers.
-    There are two new options `ecb-vc-enable-support' and
-    `ecb-vc-supported-backends' which define if and how ECB should check the
-    state of a sourcefile in a directory managed by a version-control system.
-    By default ECB supports the same VC-backends as the builtin VC-support of
+    There are four new options `ecb-vc-enable-support',
+    `ecb-vc-supported-backends', `ecb-vc-directory-exclude-regexps' and
+    `ecb-vc-state-mapping' which define if and how ECB should check the state
+    of a sourcefile in a directory managed by a version-control system. By
+    default ECB supports the same VC-backends as the builtin VC-support of
     Emacs: CVS, RCS and SCCS. But the option `ecb-vc-supported-backends'
     allows to add support for arbitrary VC-backends (e.g. Clearcase). New
     image-icons are also included for a cute display of the VC-state in the
-    directories, sources and history-buffer. Thanks to Thanks to Markus
-    Gritsch <gritsch@iue.tuwien.ac.at> for contributing the icons.
+    directories, sources and history-buffer. Thanks to Markus Gritsch
+    <gritsch@iue.tuwien.ac.at> for contributing the icons.
 
 *** New hook which runs directly after the selected directory has changed.
     See documentation of `ecb-after-directory-change-hook'.
@@ -83,6 +84,14 @@ TODO: Change version to 2.30!!!!
    changed and upgraded values will be lost after quiting Emacs.
 
 ** Fixed bugs
+
+*** Fixed resizing of the ecb-windows after opening a file
+    Sometimes (X)Emacs (the behavior has only been reported for XEmacs)
+    resizes the ecb-windows after opening a file by clicking onto a sourcefile
+    or calling `find-file' (or similar functions). This is not a bug of ECB
+    but nevertheless it is annoying for the ECB-users. Therefore ECB has now a
+    workaround which prevents the ecb-windows from resizing. The work around
+    is done via two simple advices of `find-file' and `find-file-other-window'.
 
 *** Fixed a bug in the upgrading feature (command `ecb-download-ecb') which has
     occured when the user has set a different LOKALE (e.g. "de_DE@euro").
