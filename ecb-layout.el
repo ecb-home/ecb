@@ -122,7 +122,7 @@
 ;;   + The edit-window must not be splitted and the point must reside in
 ;;     the not deleted edit-window.
 
-;; $Id: ecb-layout.el,v 1.50 2001/05/22 12:48:33 berndl Exp $
+;; $Id: ecb-layout.el,v 1.51 2001/05/22 13:55:16 berndl Exp $
 
 ;;; Code:
 
@@ -190,8 +190,8 @@ layout with `ecb-redraw-layout'"
   :set ecb-layout-option-set-function
   :type 'integer)
 
-(defconst ecb-old-compilation-window-height compilation-window-height)
-(defconst ecb-old-temp-buffer-max-height temp-buffer-max-height)
+(defvar ecb-old-compilation-window-height compilation-window-height)
+(defvar ecb-old-temp-buffer-max-height temp-buffer-max-height)
 
 (defcustom ecb-compile-window-height 5.0
   "*If you want a compilation window shown at the bottom
