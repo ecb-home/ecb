@@ -26,7 +26,7 @@
 ;;
 ;; Contains all online-help for ECB (stolen something from recentf.el)
 
-;; $Id: ecb-help.el,v 1.39 2001/07/08 14:24:47 berndl Exp $
+;; $Id: ecb-help.el,v 1.40 2001/07/13 10:21:56 berndl Exp $
 
 ;;; Code
 
@@ -181,8 +181,9 @@ With `ecb-tree-incremental-search' you can specify if the current
 search-pattern must be a real prefix of the node \(default) or if any
 substring is matched.
 
-Tip: You can install the package windmove.el for selection of windows in a
-frame geometrically. This makes window-selection a child´s play.
+Tip: The `ecb-minor-mode' offers you in the `ecb-mode-map' some keys for
+selecting every window of the ecb-frame. This makes window-selection a child´s
+play. For example you can jump into the method-window by hitting \"C-c . m\".
 
 
 Working with the edit-window of ECB:
@@ -376,13 +377,13 @@ Working with small screens:
 ---------------------------
 
 If your screen is very small so you need every sqare-centimeter for displaying
-the buffer which you want to edit, ECB offers you a special layout, where only
-the ECB-methods buffer is displayed on top. Here comes what you should/can do
-to work best with ECB in such a situation:
+the buffer which you want to edit, ECB offers you a special layouts, where
+only the ECB-methods buffer is displayed on top or on left-side. Here comes
+what you should/can do to work best with ECB in such a situation:
 - First customize your ECB:
-  1. Customize `ecb-layout-nr' to layout nr. 10.
+  1. Customize `ecb-layout-nr' to layout nr. 10 \(on top) or nr. 11 \(on left-side)
   2. Ensure that `ecb-compile-window-height' is nil.
-  3. Optional: Ajust the `ecb-windows-height'.
+  3. Optional: Ajust the `ecb-windows-height' resp. `ecb-windows-width'.
   4. Save your changes.
 - To edit your buffers:
   Call `ecb-toggle-ecb-windows' \(also available via the menu \"ECB\" and by
@@ -397,6 +398,16 @@ to work best with ECB in such a situation:
 
 The possibility of hiding temporally the ECB windows like described above is
 also useful for all the other layouts.
+
+
+Simulating speedbar without an extra frame:
+-------------------------------------------
+
+You can simuate a speedbar-like layout within ONE frame by doing the following:
+1. Customize `ecb-layout-nr' to layout nr. 11
+2. Optional: Ensure that `ecb-compile-window-height' is nil.
+3. Optional: Ajust the `ecb-windows-width'.
+4. Save your changes.
 
 
                         ==================================
