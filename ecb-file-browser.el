@@ -23,7 +23,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-file-browser.el,v 1.51 2004/12/29 08:36:04 berndl Exp $
+;; $Id: ecb-file-browser.el,v 1.52 2005/01/03 14:26:17 berndl Exp $
 
 ;;; Commentary:
 
@@ -2055,7 +2055,7 @@ by the option `ecb-mode-line-prefixes'."
   "Add a new item for FILENAME to the history buffer if the current filter of
 `ecb-history-filter' does not filter out this file."
   (save-excursion
-    (ecb-buffer-select ecb-history-buffer-name)
+    (set-buffer ecb-history-buffer-name)
     (tree-node-remove-child-data (tree-buffer-get-root) filename)
     (when (and (not (ecb-check-filename-for-history-exclude filename))
                (funcall (car ecb-history-filter) filename))
@@ -2083,7 +2083,7 @@ by the option `ecb-mode-line-prefixes'."
   "Sort the history buffer according to `ecb-history-sort-method'."
   (when ecb-history-sort-method
     (save-excursion
-      (ecb-buffer-select ecb-history-buffer-name)
+      (set-buffer ecb-history-buffer-name)
       (tree-node-sort-children
        (tree-buffer-get-root)
        (cond ((equal ecb-history-sort-method 'name)
