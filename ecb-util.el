@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-util.el,v 1.102 2004/03/05 16:46:32 berndl Exp $
+;; $Id: ecb-util.el,v 1.103 2004/03/07 10:25:22 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -540,9 +540,18 @@ not nil then in both PATH and FILENAME env-var substitution is done. If the
                                  (ecb-fix-path path))
                                 (t path))
                         path))
+      ;; For windows systems we normalize drive-letters to downcase
+      (setq norm-path (if (and (member system-type '(windows-nt cygwin32))
+                               (> (length norm-path) 1)
+                               (equal (aref norm-path 1) ?:))
+                          (concat (downcase (substring norm-path 0 2))
+                                  (substring norm-path 2))
+                        norm-path))
+      ;; substitute environment-variables
       (setq norm-path (expand-file-name (if substitute-env-vars
                                             (substitute-in-file-name norm-path)
                                           norm-path)))
+      ;; delete a trailing directory-separator if there is any
       (setq norm-path (if (and (> (length norm-path) 1)
                                (= (aref norm-path
                                         (1- (length norm-path))) ecb-directory-sep-char))
