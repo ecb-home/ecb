@@ -120,15 +120,14 @@
 
 (defun ecb-set-speedbar-buffer()
   "Set the speedbar buffer within ECB."
-  
+
+  (set-window-buffer (selected-window) (get-buffer-create ecb-speedbar-buffer-name))
+
   (ecb-speedbar-activate)
   
   (set-window-dedicated-p (selected-window) nil)
-  
-  (set-window-buffer (selected-window) (get-buffer ecb-speedbar-buffer-name))
 
   (set-window-dedicated-p (selected-window) t))
-
 
 (defun ecb-speedbar-activate()
   "Make sure the speedbar is running.  WARNING: This is very dependend on the
@@ -191,7 +190,6 @@ will/could break."
 
             (speedbar-update-contents))))))
 
-
 (defun ecb-layout-function-20()
 
   (when ecb-compile-window-height
@@ -209,12 +207,10 @@ will/could break."
   (ecb-split-ver 0.5)
   (ecb-set-methods-buffer))
 
-
 (defalias 'ecb-delete-other-windows-in-editwindow-20
   'ecb-delete-other-windows-ecb-windows-right)
 (defalias 'ecb-delete-window-in-editwindow-20
   'ecb-delete-window-ecb-windows-right)
-
 
 (defun ecb-speedbar-goto-speedbar()
   "Goto the speedbar window."

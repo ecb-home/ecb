@@ -152,6 +152,14 @@
   (message "The ECB is now deactivated.")
   ecb-minor-mode)
 
+(defun ecb-multiframe-activate-hook()
+  "Hook to run to initialize multiframe support"
+
+  ;;disable ECB frame management for this frame
+  (ad-deactivate 'delete-frame))
+
+(add-hook 'ecb-activate-hook 'ecb-multiframe-activate-hook)
+
 ;;we need to modify frame parameters for new frames
 (add-hook 'after-make-frame-functions 'ecb-multiframe-make-frame-hook)
 

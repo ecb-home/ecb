@@ -123,6 +123,10 @@
 ;; - BUG: enable just-in-time current-buffer-sync... only execute if the current
 ;; buffer's directlry is not equal to the ecb directory.
 
+;;; - FIXME: is there a way to hook into when a window is resized so that we can
+;;; recenter when this happens in the ecb-compile-window
+;;; ... yes... window-size-change-functions
+
 ;;; Code:
 
 (defgroup ecb-eshell nil
@@ -339,14 +343,26 @@ to because the command didn't output much text, go ahead and shrink it again."
   (when ecb-eshell-auto-activate
     (ecb-eshell-activate)))
 
+(defun ecb-eshell-window-size-change(frame)
+  "Called when we change window sizes so that the eshell can resize."
+
+  (when (equal frame ecb-frame)
+    (ecb-eshell-recenter)))
+
 (add-hook 'ecb-activate-hook 'ecb-eshell-auto-activate-hook)
   
 (add-hook 'ecb-current-buffer-sync-hook 'ecb-eshell-current-buffer-sync)
 
+;;always recenter after the ECB redraws
 (add-hook 'ecb-redraw-layout-hook 'ecb-eshell-recenter)
+
+;;always recenter after a command has been executed
+(add-hook 'eshell-post-command-hook 'ecb-eshell-recenter)
 
 (add-hook 'eshell-pre-command-hook 'ecb-eshell-enlarge)
 (add-hook 'eshell-post-command-hook 'ecb-eshell-shrink-if-necessary)
+
+(add-hook 'window-size-change-functions 'ecb-eshell-window-size-change)
 
 (provide 'ecb-eshell)
 
