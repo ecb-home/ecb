@@ -122,3 +122,14 @@ the buffers that are available for selection and then choose one.
 
 - need the ability to support a profile stack so that you can pop out of a
   current profile and restore the last one.
+
+- when we restore the default window configuration, we should pop out of any
+  profiles.
+
+- ability to *suggest* how a profile should be handled on redraw.
+
+    - always-destroy
+    - never-destroy
+    - yield-to-setting
+
+- All external profiles (gnus, calc, etc) should be stored in ecb-cycle-ext.el
