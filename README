@@ -31,10 +31,10 @@ ECB requires the following packages:
 - Optional: If Java code is edited the ECB works best when the JDE package
   (http://sunsite.auc.dk/jde) is installed.
 
-If you use XEmacs you must have the fsf-compat package installed (contains
-overlay.el). If you want to read the online-help of ECB in HTML-format you
-must have the library browse-url (part of the mail-lib XEmacs package)
-installed!
+If you use XEmacs you must have the packages fsf-compat (contains overlay.el)
+and c-support (contains hideshow.el) installed. If you want to read the
+online-help of ECB in HTML-format you must have the library browse-url (part
+of the mail-lib XEmacs package) installed!
 
 
 Installation

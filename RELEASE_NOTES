@@ -28,6 +28,8 @@ Some default keybindings have changed; the new bindings are:
 
 ECB now requires speedbar. ECB needs a version >= 0.14beta1.
 
+For XEmacs now the package c-support (contains hideshow.el) has to be
+installed.
 
 Upgrading from versions >= 1.90:
 --------------------------------

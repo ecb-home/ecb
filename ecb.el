@@ -88,7 +88,7 @@
 ;; For the ChangeLog of this file see the CVS-repository. For a complete
 ;; history of the ECB-package see the file NEWS.
 
-;; $Id: ecb.el,v 1.315 2003/07/07 06:53:03 berndl Exp $
+;; $Id: ecb.el,v 1.316 2003/07/11 15:54:50 berndl Exp $
 
 ;;; Code:
 
@@ -5083,8 +5083,10 @@ always the ECB-frame if called from another frame."
            ecb-tree-navigation-by-arrow
            ecb-tree-easy-hor-scroll
            (list (cons "[+]" (and ecb-tree-use-image-icons
+                                  (ignore-errors (require 'sb-image))
                                   'speedbar-directory-plus))
                  (cons "[-]" (and ecb-tree-use-image-icons
+                                  (ignore-errors (require 'sb-image))
                                   'speedbar-directory-minus)))
            (list (cons 1 ecb-source-in-directories-buffer-face))
            ecb-tree-expand-symbol-before
@@ -5179,8 +5181,10 @@ always the ECB-frame if called from another frame."
            ecb-tree-navigation-by-arrow
            ecb-tree-easy-hor-scroll
            (list (cons "[+]" (and ecb-tree-use-image-icons
+                                  (ignore-errors (require 'sb-image))
                                   'speedbar-box-plus))
                  (cons "[-]" (and ecb-tree-use-image-icons
+                                  (ignore-errors (require 'sb-image))
                                   'speedbar-box-minus)))
            nil
            ecb-tree-expand-symbol-before
@@ -5555,10 +5559,11 @@ this fails then nil is returned otherwise t."
   (if (not (ecb-methods-menu-activate-hs))
       (ecb-error "hs-minor-mode can not be activated!")
     (ecb-method-clicked node 1 nil)
-    (or (looking-at hs-block-start-regexp)
+    (save-excursion
+      (or (looking-at hs-block-start-regexp)
         (re-search-forward hs-block-start-regexp nil t))
-    (hs-hide-block)
-    (beginning-of-line)))
+      (hs-hide-block))))
+;;     (beginning-of-line)))
 
 (defun ecb-methods-menu-collapse-all (node)
   (ecb-expand-methods-nodes-internal -1 nil t))
