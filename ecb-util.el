@@ -742,7 +742,6 @@ for FILE, but proper EOL-conversion and character interpretation is done!"
   (mapc (function (lambda (w)
                     (set-window-dedicated-p w nil)))
         (ecb-window-list (or frame (selected-frame)))))
-  
 
 (defun ecb-window-number (&optional window)
   "Return the number of WINDOW or - if nil - of the current selected window.
