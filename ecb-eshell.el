@@ -1,6 +1,6 @@
 ;;; ecb-eshell.el --- eshell integration for the ECB.
 
-;; $Id: ecb-eshell.el,v 1.25 2002/01/26 01:04:53 burtonator Exp $
+;; $Id: ecb-eshell.el,v 1.26 2002/01/26 09:37:07 burtonator Exp $
 
 ;; Copyright (C) 2000-2003 Free Software Foundation, Inc.
 ;; Copyright (C) 2000-2003 Kevin A. Burton (burton@openprivacy.org)
@@ -216,9 +216,10 @@ eshell is currently visible."
 
   (if (ecb-eshell-running-p)
       (progn 
-        (select-window ecb-compile-window)
 
-        (switch-to-buffer ecb-eshell-buffer-name)
+        (set-window-buffer ecb-compile-window ecb-eshell-buffer-name)
+
+        (select-window ecb-compile-window)
         
         (when ecb-eshell-enlarge-when-selecting
           (ecb-eshell-enlarge)))
