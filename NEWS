@@ -1,5 +1,15 @@
 * Changes for ECB version 1.96
 
+** ECB can work together with the window-managers escreen and winring
+   This allows to run applications like Gnus, VM or BBDB in the same frame as
+   ECB! See the new lib ecb-winman-support.el and read the section
+   "Window-managers and ECB" in the chapter "Tips and tricks" in the
+   info-manual of ECB.
+   
+   Thanks to Johann ??? <myrkraverk@users.sourceforge.net> who has reported
+   some bugs related to escreen and has therefore motivated a lot to add
+   support for the well known window-managers escreen and winring.
+            
 ** Much better support of the ECB-compile-window
 
 *** General overhaul for displaying buffers in the ECB-compile-window.
@@ -68,11 +78,6 @@
    `ecb-fix-window-size' is not nil for current layout. Thanks for suggestion
    Massimiliano Mirra <mmirra@libero.it>. Only relevant for GNU Emacs 21.X.
 
-** ECB can work together with the window-managers escreen and winring
-   Thanks to Johann ??? <myrkraverk@users.sourceforge.net> who has reported
-   some bugs related to escreen and has therefore motivated a lot to add
-   support for the well known window-managers escreen and winring.
-            
 ** Fixed Bugs
 
 *** Fixed all the file- and directory-commands in the popup-menus.

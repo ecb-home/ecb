@@ -21,7 +21,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-winman-support.el,v 1.1 2003/09/09 15:37:00 berndl Exp $
+;; $Id: ecb-winman-support.el,v 1.2 2003/09/09 16:29:50 berndl Exp $
 
 ;;; Commentary
 ;;
@@ -31,6 +31,13 @@
 ;;   http://www.python.org/emacs/
 ;; - escreen.el: Written by Noah Friedman <friedman@splode.com>, get it from
 ;;   http://www.splode.com/~friedman/software/emacs-lisp/
+;;
+;; Note: With one of these window-managers installed and active you can run
+;; applications like Gnus, VM or BBDB in the same frame as ECB! Just use
+;; different window-configurations (winring.el) or escreens (escreen.el) for
+;; ECB and the other applications. Especially with winring.el you can give
+;; every configuration a descriptive name like "ECB" or "Gnus" ; afterwards
+;; you can jump to a window-configuration by name!
 
 
 ;;; Installation and enabling

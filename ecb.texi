@@ -26,7 +26,7 @@
 @c GNU Emacs; see the file COPYING.  If not, write to the Free Software
 @c Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-@c $Id: ecb.texi,v 1.117 2003/09/09 15:37:00 berndl Exp $
+@c $Id: ecb.texi,v 1.118 2003/09/09 16:29:50 berndl Exp $
 
 @setfilename ecb.info
 
@@ -6781,10 +6781,11 @@ by calling the command @code{jde-gen-class-buffer}.
 @node Compile-window on demand, Non-semantic sources, Working with JDEE, Tips and tricks
 @section Displaying the compile-window on demand
 
-If you like displaying all output of compile/grep/etc. in an extra
-compile-window (@pxref{Temp- and compile-buffers}) but you dislike
-wasting the space of this compile-window if you are just editing then
-you can get a compile-window ``on demand''. Just do the following:
+If you like displaying all output of compile/grep/etc. an all
+temp-buffers like *Help*-buffers in an extra compile-window
+(@pxref{Temp- and compile-buffers}) but you dislike wasting the space
+of this compile-window if you are just editing then you can get a
+compile-window ``on demand''. Just do the following:
 
 @enumerate
 @item
@@ -6807,13 +6808,14 @@ because there is no need for a compile-window at this moment.
 @end enumerate
 
 This is all you have to do. Now if you run @code{compile} (or
-@code{grep} or other compile-modes) then ECB autom. displays the
-compile-window at the bottom an display the compile-output there.
+@code{grep} or other compile-modes) or display temp-buffers like
+*Help*-buffers then ECB autom. displays the compile-window at the
+bottom and display the output there.
 
-If you have finished with using the compile-output (e.g. fixing
-errors) then you can throw away the compile-window just by
+If you have finished with using the compile- or temp-output (e.g.
+fixing errors) then you can throw away the compile-window just by
 @code{ecb-toggle-compile-window} - ECB will reactivate it autom.
-before next compilation!
+before next compilation or help-buffer-display.!
 
 @node Non-semantic sources, Hide-show, Compile-window on demand, Tips and tricks
 @section Parsing and displaying non-semantic sources
@@ -7022,6 +7024,14 @@ Written by Noah Friedman @email{friedman@@splode.com}, available at
 @url{http://www.splode.com/~friedman/software/emacs-lisp/}
 @end ifnothtml
 @end itemize
+
+@strong{Note}: With one of these window-managers installed and active
+you can run applications like Gnus, VM or BBDB in the same frame as
+ECB! Just use different window-configurations (winring.el) or escreens
+(escreen.el) for ECB and the other applications. Especially with
+winring.el you can give every configuration a descriptive name like
+``ECB'' or ``Gnus''; afterwards you can jump to a window-configuration
+by name!
 
 The rest of this section describes how to enable the special
 ECB-support for these window-managers and how to use them.
@@ -8090,9 +8100,15 @@ but only as long ECB is activated.
 @subsection Package BBDB
 
 @cindex BBDB
-It is recommended not to use BBDB and ECB simultaneously in one frame
-because each of them has its own window-management and probably there
-will be conflicts. Use different frames for ECB and BBDB!
+With ECB-version < 1.96 it is not recommended to use BBDB and ECB
+simultaneously in one frame because each of them has its own
+window-management and probably there will be conflicts. Use different
+frames for ECB and BBDB!
+
+But beginning with ECB 1.96 you can use one of the window-managers
+escreen.el or winring.el (@pxref{Window-managers and ECB}). With such
+a window-manager ECB and BBDB should work very well together - even in
+the same frame!
 
 @subsection Package calculator.el
 
@@ -8182,9 +8198,15 @@ works even better and saver as without activated ECB!
 @subsection Package Gnus (Newsreader)
 
 @cindex Gnus
-It is recommended not to use Gnus and ECB simultaneously in one frame
-because each of them has its own window-management and probably there
-will be conflicts. Use different frames for ECB and Gnus!
+With ECB-version < 1.96 it is not recommended to use Gnus and ECB
+simultaneously in one frame because each of them has its own
+window-management and probably there will be conflicts. Use different
+frames for ECB and Gnus!
+
+But beginning with ECB 1.96 you can use one of the window-managers
+escreen.el or winring.el (@pxref{Window-managers and ECB}). With such
+a window-manager ECB and Gnus should work very well together - even in
+the same frame!
 
 @subsection Package JDEE (Java Development Environment)
 
@@ -8672,9 +8694,9 @@ See @ref{Problems with the compile window}.
 @item @tab @tab
 
 @item
-Can ECB work together with escreen.el?
+Can ECB work together with window-managers like escreen.el?
 @tab @tab
-Yes, see @ref{Conflicts and bugs}.
+Yes, see @ref{Window-managers and ECB}.
 
 @end multitable
 
