@@ -23,7 +23,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-file-browser.el,v 1.43 2004/11/24 16:23:15 berndl Exp $
+;; $Id: ecb-file-browser.el,v 1.44 2004/11/25 18:10:14 berndl Exp $
 
 ;;; Commentary:
 
@@ -877,9 +877,6 @@ key-bindings only for the history-buffer of ECB."
   :group 'ecb-history
   :type 'hook)
 
-;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: add a section where all necessary
-;; informations are described - e.g. the potential drawback when using a
-;; function as vc-cvs-state and not to stay local!
 (defcustom ecb-vc-enable-support 'unless-remote
   "*Enable support for version-control \(VC) systems.
 If on then in the directories-buffer \(if the value of the option
@@ -1004,7 +1001,6 @@ state-values of `vc-state' and `vc-cvs-state' \(both GNU Emacs) and
                                (const :tag "ignored" :value ignored)
                                (const :tag "unknown" :value unknown)))))
 
-;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: mention vc-recompute-state!!
 (defcustom ecb-vc-supported-backends
   (if ecb-running-xemacs
       '((ecb-vc-dir-managed-by-CVS . vc-cvs-status))
@@ -2428,12 +2424,13 @@ ascii-string which should be dislayed if Emacs doesn't support image-display.")
 
 
 (defconst ecb-vc-incr-searchpattern-node-prefix
-  '("\\(([uempx?])\\)?" . 1)
+  '("\\(\\(([uempx?])\\)? \\)?" . 2)
   "Prefix-pattern which ignores all not interesting vc-icon-stuff of a
 node-name at incr. search. This ignores the \"(<vc-state-char>)\" whereas
 <vc-state-char> is one of u, e, m, p or ?.
 Format: cons with car is the pattern and cdr is the number of subexpr in this
 pattern.")
+
 
 (defun ecb-vc-check-state (file tree-buffer-name vc-state-fcn)
   "Check if the VC-state for FILE must be rechecked, i.e. if it is out of
@@ -2547,7 +2544,11 @@ CVS-repositories if working offline for example. So if there is no option
 `vc-cvs-stay-local' then ECB performs always the repository check mentioned
 above."
   (and (file-exists-p (concat directory "/CVS/"))
-       (if (or (not (boundp 'vc-cvs-stay-local))
+       (or (ignore-errors (progn
+                            (require 'vc)
+                            (require 'vc-cvs)))
+           t)
+       (if (or (not (boundp 'vc-cvs-stay-local)) ;; XEmacs doesn't have this
                (not (eq vc-cvs-stay-local t)))
            ;; XEmacs has a quite outdated VC-package which has no option
            ;; `vc-cvs-stay-local' so the user can not work with remote
@@ -2608,14 +2609,12 @@ checked for VC-states!"
           (cache-val cache-val)
           (t
            (let ((vc-backend-fcn
-                  (and (not (ecb-remote-path norm-dir))
-                      ;; we never check VC-states in "remote" paths!
-                       (catch 'found
-                         (dolist (elem ecb-vc-supported-backends)
-                           (when (and (fboundp (car elem))
-                                      (funcall (car elem) norm-dir))
-                             (throw 'found (cdr elem))))
-                         nil))))
+                  (catch 'found
+                    (dolist (elem ecb-vc-supported-backends)
+                      (when (and (fboundp (car elem))
+                                 (funcall (car elem) norm-dir))
+                        (throw 'found (cdr elem))))
+                    nil)))
              ;; Add it to the vc-cache: Either NO-VC if nil otherwise the
              ;; check-state-function
              (ecb-vc-cache-add-dir norm-dir (or vc-backend-fcn 'NO-VC))

@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-layout.el,v 1.240 2004/11/24 16:22:18 berndl Exp $
+;; $Id: ecb-layout.el,v 1.241 2004/11/25 18:10:12 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -1273,7 +1273,8 @@ not change this variable!")
 (defun ecb-layout-debug-error (&rest args)
   "Run ARGS through `format' and write it to the *Messages*-buffer."
   (when ecb-layout-debug-mode
-    (message (concat (format "ECB %s layout debug: " ecb-version)
+    (message (concat (format "ECB %s layout debug [%s] " ecb-version
+                             (format-time-string "%H:%M:%S"))
                      (apply 'format args)))))
 
 
@@ -3584,6 +3585,7 @@ an error is reported."
       (ecb-with-original-basic-functions
        (ecb-with-original-functions
         ad-do-it))
+    (ecb-layout-debug-error "switch-to-buffer buffer: %s" (ad-get-arg 0))
     (cond ((ecb-compilation-buffer-p (ad-get-arg 0))
            (when (equal 'hidden (ecb-compile-window-state))
              (ecb-toggle-compile-window 1))
@@ -3610,7 +3612,10 @@ an error is reported."
     (ecb-with-original-basic-functions
      (ecb-with-original-functions
       ad-do-it))
+    (ecb-layout-debug-error "switch-to-buffer curr-buffer: %s" (current-buffer))
     (when (ecb-point-in-compile-window)
+      (ecb-layout-debug-error "switch-to-buffer curr-buffer: %s, curr window %s"
+                              (current-buffer) (selected-window))
       ;; we set the height of the compile-window according to
       ;; `ecb-enlarged-compilation-window-max-height'
       (ecb-set-compile-window-height))))
@@ -5224,8 +5229,9 @@ floating-point-numbers. Default referencial width rsp. height are
              (dolist (size sizes)
                (ecb-set-window-size (car windows) size (cons ref-width ref-height))
                (setq windows (cdr windows)))
-           (ecb-error "Stored sizes of layout %s not applicable for current window layout!"
-                      ecb-layout-name)))))))
+           (when (interactive-p)
+             (ecb-error "Stored sizes of layout %s not applicable for current window layout!"
+                        ecb-layout-name))))))))
 
 ;; Klaus Berndl <klaus.berndl@sdm.de>: frame-width is smaller than
 ;; ecb-window-full-width for only one window in the frame. But for now this
@@ -5370,8 +5376,15 @@ if no compile-window is visible."
                     (shrink-window (max 0 (- (ecb-window-full-height)
                                              ecb-compile-window-height-lines)))
                     ;; we restore the window-sizes (either the default or the
-                    ;; stored sizes
-                    (ecb-restore-window-sizes)
+                    ;; stored sizes. because this function is often called
+                    ;; during display-buffer (e.g. when completions, help-buffers,
+                    ;; choosing a completion are performed) and XEmacs often
+                    ;; destroyes the window-layout (e.g. the topmost
+                    ;; ecb-window disappears, when doing completion etc..) we
+                    ;; hav to ignore errors here.... it's not easy to find out
+                    ;; what is precisely happening here but with this error
+                    ;; ignoring all seems to work...
+                    (ignore-errors (ecb-restore-window-sizes))
                     ))
               (if (equal ecb-enlarged-compilation-window-max-height 'best)
                   ;; With GNU Emacs we could use `fit-window-to-buffer' but

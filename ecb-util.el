@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-util.el,v 1.123 2004/11/24 16:24:08 berndl Exp $
+;; $Id: ecb-util.el,v 1.124 2004/11/25 18:10:12 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -1740,7 +1740,7 @@ the same ordering as `other-window' would walk through the frame."
                                   (ecb-canonical-windows-list)
                                 (window-list)))))))
 
-;;; Time  stuff
+;;; ----- Time  stuff -----------------------------------------
 
 ;; next three functions stolen from gnus
 (defun ecb-time-to-seconds (time)
