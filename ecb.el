@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb.el,v 1.376 2004/02/24 12:51:02 berndl Exp $
+;; $Id: ecb.el,v 1.377 2004/02/28 16:14:45 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -1225,7 +1225,7 @@ speedbar-window is not visible within the ECB-frame."
   "Toggles if RET in a tree-buffer should finally select the edit-window.
 See also the option `ecb-tree-RET-selects-edit-window'."
   (interactive)
-  (let ((tree-buffer (ecb-point-in-tree-buffer)))
+  (let ((tree-buffer (ecb-point-in-ecb-tree-buffer)))
     (if tree-buffer
         (if (member (buffer-name tree-buffer)
                     ecb-tree-RET-selects-edit-window--internal)
@@ -2537,14 +2537,12 @@ ECB has been deactivated. Do not set this variable!")
                  ;; function is a save "equal"-condition for ECB because
                  ;; currently the method buffer always displays only tags
                  ;; from exactly the buffer of the current edit-window.
-                 (if (fboundp 'ecb--semantic-equivalent-tag-p)
-                     'ecb--semantic-equivalent-tag-p
-                   (function
-                    (lambda (l r)
-                      (and (string= (ecb--semantic-tag-name l) (ecb--semantic-tag-name r))
-                           (eq (ecb--semantic-tag-class l) (ecb--semantic-tag-class r))
-                           (eq (ecb-semantic-tag-start l) (ecb-semantic-tag-start r))
-                           (eq (ecb-semantic-tag-end l) (ecb-semantic-tag-end r))))))
+                 ;; If `ecb--semantic-equivalent-tag-p' fails we return the
+                 ;; result of an eq-comparison.
+                 (function (lambda (l r)
+                             (condition-case nil
+                                 (ecb--semantic-equivalent-tag-p l r)
+                               (error (eq l r)))))
                  (list 1)
                  nil
                  'ecb-methods-menu-creator

@@ -24,7 +24,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-method-browser.el,v 1.17 2004/02/24 11:50:01 berndl Exp $
+;; $Id: ecb-method-browser.el,v 1.18 2004/02/28 16:14:46 berndl Exp $
 
 ;;; Commentary:
 
@@ -72,7 +72,8 @@
 (defun ecb-method-browser-initialize ()
   (setq ecb-selected-tag nil)
   (setq ecb-methods-root-node nil)
-  (setq ecb-methods-user-filter-alist nil))
+  (setq ecb-methods-user-filter-alist nil)
+  (setq ecb-current-post-processed-tag-table nil))
 
 ;;====================================================
 ;; Customization
@@ -1528,34 +1529,66 @@ filter belongs and the value is the applied filter to that buffer.")
   (ecb-methods-filter-apply nil nil nil "" (car (tree-buffer-get-data-store)) t))
 
 
-;; TODO: Klaus Berndl <klaus.berndl@sdm.de>:
-;; How to include this in the current filter-mechanism??
+(defun ecb-get-type-tag-of-current-node (curr-node)
+  "Returns that tag of class 'type the tag of the node CURR-NODE of the
+Methods-buffer belongs to. If the tag of CURR-NODE do not belong to a type
+then nil is returned."
+  (let ((parent (tree-node-get-parent curr-node)))
+    (catch 'found
+      (while (not (eq (tree-buffer-get-root) parent))
+        (if (equal (ecb--semantic-tag-class (tree-node-get-data parent))
+                   'type)
+            (throw 'found (tree-node-get-data parent))
+          (setq parent (tree-node-get-parent parent))))
+      nil)))
 
-;; (let* ((tagstack (reverse (ecb--semantic-find-tag-by-overlay)))
-;;        (curr-tag (car tagstack))
-;;        (next-tag (car (cdr tagstack)))
-;;        )
-;;   (if (and (equal (ecb--semantic-tag-class curr-tag) 'variable)
-;;            (equal (ecb--semantic-tag-class next-tag) 'function)
-;;            (member curr-tag (ecb--semantic-tag-function-arguments next-tag)))
-;;       (setq curr-tag next-tag)))
+(defun ecb-get-type-tag-of-tag (&optional tag table always-parent-type)
+  "Returns that tag of class 'type the tag TAG belongs to. If TAG does not
+belong to a type then nil is returned. If TAG is already of class 'type then
+the behavior depends on the optional argument ALWAYS-PARENT-TYPE: If nil then
+the current tag is returned otherwise the next parent-tag of class 'type is
+returned.
 
-(defun ecb-methods-filter-current-parent-type (curr-node)
-  (let* ((parent (tree-node-get-parent curr-node))
-         (result nil))
-    (setq result
+If TAG is nil the tag returned by `ecb-get-real-curr-tag' is used. If TABLE is
+nil then the tag-table of the current buffer is used; otherwise the tag-table
+TABLE is used."
+  (let* ((table (or table (ecb-get-current-tag-table)))
+         (curr-tag (or tag (ecb-get-real-curr-tag)))
+         (function-parent (ecb--semantic-tag-function-parent curr-tag)))
+    (if (and (not always-parent-type)
+             (equal (ecb--semantic-tag-class curr-tag) 'type))
+        curr-tag
+      (if function-parent
+          ;; we have an external member and we search the type this external
+          ;; member belongs to. This can either be a type-tag in the current
+          ;; file (which is then contained in table) or a faux-tag (created by
+          ;; semantic-adopt-external-members) when the parent-type of this
+          ;; external member is defined outside the current source - but this
+          ;; faux-type is contained in table too.
           (catch 'found
-            (while (not (eq (tree-buffer-get-root) parent))
-              (if (equal (ecb--semantic-tag-class (tree-node-get-data parent))
-                         'type)
-                  (throw 'found parent)
-                (setq parent (tree-node-get-parent parent))))))
-    (if result
-        (save-excursion
-          (set-buffer (car (tree-buffer-get-data-store)))
-          (ecb-rebuild-methods-buffer-with-tagcache
-           (list (tree-node-get-data result))))
-      (message "No type-parent available."))))
+            (dolist (tag (semantic-flatten-tags-table table))
+              (if (and (equal (ecb--semantic-tag-class tag) 'type)
+                       (string= (ecb--semantic-tag-name tag) function-parent)
+                       (delq nil (mapcar (lambda (child)
+                                           (if (ecb--semantic-equivalent-tag-p
+                                                child curr-tag)
+                                               curr-tag))
+                                         (ecb--semantic-tag-children-compatibility tag t))))
+                  (throw 'found tag)))
+            nil)
+        ;; we are already inside the parent-type - if there is any, so we
+        ;; simply search the nearest tag of class 'type in the reversed
+        ;; overlay-stack
+        (catch 'found
+          (dolist (tag (cdr (reverse
+                             (ecb--semantic-find-tag-by-overlay
+                              (ecb--semantic-tag-start curr-tag)
+                              (ecb--semantic-tag-buffer curr-tag)))))
+            (if (equal (ecb--semantic-tag-class tag) 'type)
+                (throw 'found tag)))
+          nil)))))
+
+
 
 (defun ecb-methods-filter-inverse ()
   "Apply an inverse filter to the Methods-buffer. This is the same as calling
@@ -1640,6 +1673,12 @@ help-echo."
 
 (defun ecb-methods-filter-apply (filtertype filter inverse filter-display
                                             source-buffer &optional remove-last)
+  (save-excursion
+    (set-buffer source-buffer)
+    (if (and (member filtertype '(protection tag-class))
+             (not (ecb--semantic-active-p)))
+        (ecb-error "A %s-filter '%s' can only applied to semantic-supported sources!"
+                   filtertype filter)))
   (let* ((filter-elem (assoc source-buffer ecb-methods-user-filter-alist))
          (new-filter-spec (and filtertype
                                (list filtertype filter (if inverse 'not 'identity)
@@ -1661,7 +1700,16 @@ help-echo."
   (when (buffer-live-p source-buffer)
     (save-excursion
       (set-buffer source-buffer)
-      (ecb-rebuild-methods-buffer))))
+      (if (ecb--semantic-active-p)
+          ;; For semantic-sources we do not use `ecb-rebuild-methods-buffer)'
+          ;; because this would always reparse the source-buffer even if not
+          ;; necessary.
+          (save-restriction
+            (ecb-with-original-basic-functions
+             (widen))
+            (ecb-rebuild-methods-buffer-with-tagcache
+             (ecb--semantic-bovinate-toplevel t)))
+        (ecb-rebuild-methods-buffer)))))
   
 (defun ecb-methods-filter-modeline-prefix (buffer-name sel-dir sel-source)
   "Compute a mode-line prefix for the Methods-buffer so the current filter
@@ -1874,7 +1922,6 @@ the current tag-tree for this source. The cache contains exactly one element
 for a certain source.")
 (setq ecb-tag-tree-cache nil)
 
-
 (defun ecb-clear-tag-tree-cache (&optional source-file-name)
   "Clears wither the whole tag-tree-cache \(SOURCE-FILE-NAME is nil) or
 removes only the tag-tree for SOURCE-FILE-NAME from the cache."
@@ -1883,6 +1930,23 @@ removes only the tag-tree for SOURCE-FILE-NAME from the cache."
     (setq ecb-tag-tree-cache
           (adelete 'ecb-tag-tree-cache source-file-name))))
 
+(defvar ecb-current-post-processed-tag-table nil
+  "This is the current tag-table of the current source-buffer returned by
+`ecb-post-process-taglist'. Do not set this variable, only the function
+`ecb-rebuild-methods-buffer-with-tagcache' is allowed to do this.")
+(make-variable-buffer-local 'ecb-current-post-processed-tag-table)
+
+(defun ecb-get-current-tag-table ()
+  "Return the current tag-table of the current source-buffer returned by
+`ecb-post-process-taglist'. Use always this function if you just need the
+current post-processed tag-table of the current buffer and you do not need or
+want rebuilding the Methods-buffer."
+  ecb-current-post-processed-tag-table)
+
+(defun ecb-set-current-tag-table (table)
+  "Set the current tag-table of the current source-buffer to TABLE. Return
+TABLE."
+  (setq ecb-current-post-processed-tag-table table))
 
 
 (defun ecb-rebuild-methods-buffer-with-tagcache (updated-cache
@@ -1991,7 +2055,9 @@ to be rescanned/reparsed and therefore the Method-buffer will be rebuild too."
         (if non-semantic-handling
             (if (equal non-semantic-handling 'parsed)
                 (ecb-create-non-semantic-tree new-tree updated-cache))
-          (ecb-add-tags new-tree (ecb-post-process-taglist updated-cache)))
+          (ecb-add-tags new-tree
+                        (ecb-set-current-tag-table
+                         (ecb-post-process-taglist updated-cache))))
         (if cache
             (setcdr cache new-tree)
           (setq cache (cons norm-buffer-file-name new-tree))
@@ -2148,85 +2214,115 @@ by this command."
              (if new-value "on" "off")
              new-value)))
 
-;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: Hier auch was möglich mit
-;;  (ecb-exec-in-methods-window
-;;    (tree-buffer-find-node-data curr-tag))
 
-(defun ecb-tag-sync-test (&optional force)
-  (when (and ecb-minor-mode
-             ;; we do not use here `ecb-point-in-ecb-window' because this
-             ;; would slow down Emacs dramatically when tag-synchronization is
-             ;; done via post-command-hook and not via an idle-timer.
-             (not (ecb-point-in-tree-buffer))
-             (not (ecb-point-in-compile-window)))
-    (when ecb-highlight-tag-with-point
-      (let* ((tagstack (reverse (ecb--semantic-find-tag-by-overlay)))
-             (curr-tag (car tagstack))
-             (next-tag (car (cdr tagstack)))
-             )
-        (if (and (equal (ecb--semantic-tag-class curr-tag) 'variable)
+(defun ecb-get-real-curr-tag ()
+  "Get the \"real\" current tag. This will be in most cases the tag returned
+by `ecb--semantic-current-tag' but there are exceptions:
+
+- If the current-tag is an argument-tag of a function-tag then we are not
+  interested in this argument-tag but in its parent-tag which is the
+  function-tag the argument belongs.
+- If the current-tag is a label-tag then we are interested in the type-tag
+  which contains this label \(e.g. usefull in c++ and the labels public,
+  protected and private)."
+  (let* ((tagstack (reverse (ecb--semantic-find-tag-by-overlay)))
+         (curr-tag (car tagstack))
+         (next-tag (car (cdr tagstack)))
+         )
+    (if (or (and (equal (ecb--semantic-tag-class curr-tag) 'variable)
                  (equal (ecb--semantic-tag-class next-tag) 'function)
-                 (member curr-tag (ecb--semantic-tag-function-arguments next-tag)))
-            (setq curr-tag next-tag))
-        (when (or force (not (equal ecb-selected-tag curr-tag)))
-          (setq ecb-selected-tag curr-tag)
-          (save-selected-window
-            (ecb-exec-in-methods-window
-             (or (tree-buffer-highlight-node-data
-                  curr-tag nil (equal ecb-highlight-tag-with-point 'highlight))
-                 ;; The node representing CURR-TAG could not be highlighted be
-                 ;; `tree-buffer-highlight-node-data' - probably it is
-                 ;; invisible. Let's try to make visible and then highlighting
-                 ;; again.
-                 (when (and curr-tag ecb-auto-expand-tag-tree
-                            (or (equal ecb-auto-expand-tag-tree 'all)
-                                (member (ecb--semantic-tag-class curr-tag)
-                                        (ecb-normalize-expand-spec
-                                         ecb-methods-nodes-expand-spec))))
-                   (ecb-expand-methods-nodes-internal
-                    100
-                    (equal ecb-auto-expand-tag-tree 'all))
-                   (tree-buffer-highlight-node-data
-                    curr-tag nil (equal ecb-highlight-tag-with-point 'highlight))
-                   )))))))))
+                 (member curr-tag
+                         (ecb--semantic-tag-function-arguments next-tag)))
+            (equal (ecb--semantic-tag-class curr-tag) 'label))
+        (setq curr-tag next-tag))
+    curr-tag))
 
+(defun ecb-try-highlight-tag (highlight-tag curr-tag table)
+  "First we try to expand only the absolute needed parts of the tree-buffer to
+highlight the tag HIGHLIGHT-TAG - this means we recursively go upstairs the
+ladder of types the current tag belongs to. If this has still no success then
+we return nil otherwise true \(the HIGHLIGHT-TAG is highlighted).
+
+If called from program: HIGHLIGHT-TAG is the tag to highlight, CURR-TAG has to
+be equal to HIGHLIGHT-TAG and TABLE must be the current tag-table of the
+current buffer."
+  (let ((type-tag (and curr-tag
+                       (ecb-get-type-tag-of-tag curr-tag table t)))
+        (type-node nil))
+    (or (and curr-tag
+             (save-selected-window
+               (ecb-exec-in-methods-window
+                (or (tree-buffer-highlight-node-data
+                     highlight-tag nil
+                     (equal ecb-highlight-tag-with-point 'highlight))
+                    ;; The node representing HIGHLIGHT-TAG could not be
+                    ;; highlighted by `tree-buffer-highlight-node-data' -
+                    ;; probably it is invisible. Let's try to make expand its
+                    ;; containing type and then highlighting again.
+                    (when (and highlight-tag
+                               (or (equal ecb-auto-expand-tag-tree 'all)
+                                   (member (ecb--semantic-tag-class highlight-tag)
+                                           (ecb-normalize-expand-spec
+                                            ecb-methods-nodes-expand-spec))))
+                      (setq type-node
+                            (cdr (and type-tag
+                                      (tree-buffer-find-name-node-data type-tag))))
+                      (when type-node
+                        (ecb-expand-methods-node-internal
+                         type-node
+                         100
+                         (equal ecb-auto-expand-tag-tree 'all)
+                         nil t)
+                        (tree-buffer-highlight-node-data
+                         highlight-tag nil
+                         (equal ecb-highlight-tag-with-point 'highlight))))))))
+        (if curr-tag
+            (ecb-try-highlight-tag highlight-tag type-tag table)))))
+
+;; This approach only expands the needed parts of the tree-buffer when
+;; the current-tag is not visible as node and not the whole tree-buffer.
 (defun ecb-tag-sync (&optional force)
   (when (and ecb-minor-mode
              ;; we do not use here `ecb-point-in-ecb-window' because this
              ;; would slow down Emacs dramatically when tag-synchronization is
              ;; done via post-command-hook and not via an idle-timer.
-             (not (ecb-point-in-tree-buffer))
+             (not (ecb-point-in-dedicated-special-buffer))
              (not (ecb-point-in-compile-window)))
     (when ecb-highlight-tag-with-point
-      (let* ((tagstack (reverse (ecb--semantic-find-tag-by-overlay)))
-             (curr-tag (car tagstack))
-             (next-tag (car (cdr tagstack)))
-             )
-        (if (and (equal (ecb--semantic-tag-class curr-tag) 'variable)
-                 (equal (ecb--semantic-tag-class next-tag) 'function)
-                 (member curr-tag (ecb--semantic-tag-function-arguments next-tag)))
-            (setq curr-tag next-tag))
+      (let ((curr-tag (ecb-get-real-curr-tag)))
         (when (or force (not (equal ecb-selected-tag curr-tag)))
           (setq ecb-selected-tag curr-tag)
-          (save-selected-window
-            (ecb-exec-in-methods-window
-             (or (tree-buffer-highlight-node-data
-                  curr-tag nil (equal ecb-highlight-tag-with-point 'highlight))
-                 ;; The node representing CURR-TAG could not be highlighted be
-                 ;; `tree-buffer-highlight-node-data' - probably it is
-                 ;; invisible. Let's try to make visible and then highlighting
-                 ;; again.
-                 (when (and curr-tag ecb-auto-expand-tag-tree
-                            (or (equal ecb-auto-expand-tag-tree 'all)
-                                (member (ecb--semantic-tag-class curr-tag)
-                                        (ecb-normalize-expand-spec
-                                         ecb-methods-nodes-expand-spec))))
-                   (ecb-expand-methods-nodes-internal
-                    100
-                    (equal ecb-auto-expand-tag-tree 'all))
-                   (tree-buffer-highlight-node-data
-                    curr-tag nil (equal ecb-highlight-tag-with-point 'highlight))
+          ;; If there is no tag to highlight then we remove the highlighting
+          (if (null curr-tag)
+              (save-selected-window
+                (ecb-exec-in-methods-window
+                 (tree-buffer-highlight-node-data nil)))
+            ;; First we try to expand only the absolute needed parts - this
+            ;; means we go upstairs the ladder of types the current tag
+            ;; belongs to. If this has no success then we expand the full
+            ;; tree-buffer and try it again.
+            (if (not (ecb-try-highlight-tag curr-tag curr-tag
+                                            (ecb-get-current-tag-table)))
+                ;; The node representing CURR-TAG could not be highlighted by
+                ;; `tree-buffer-highlight-node-data' - probably it is still
+                ;; invisible. Let's try to make visible all nodes and then
+                ;; highlighting again.
+                (save-selected-window
+                  (ecb-exec-in-methods-window
+                   (when (and curr-tag
+                              (or (equal ecb-auto-expand-tag-tree 'all)
+                                  (member (ecb--semantic-tag-class curr-tag)
+                                          (ecb-normalize-expand-spec
+                                           ecb-methods-nodes-expand-spec))))
+                     (ecb-expand-methods-node-internal
+                      (tree-buffer-get-root)
+                      100 ;; this should be enough levels ;-)
+                      (equal ecb-auto-expand-tag-tree 'all)
+                      nil t)
+                     (tree-buffer-highlight-node-data
+                      curr-tag nil (equal ecb-highlight-tag-with-point 'highlight)))
                    )))))))))
+
 
 (defun ecb-find-file-and-display (filename other-edit-window)
   "Finds the file in the correct window. What the correct window is depends on
@@ -2321,16 +2417,27 @@ file types which are parsed by imenu or etags \(see
     ;; expanded to max level...
     (when ecb-expand-methods-switch-off-auto-expand
       (ecb-toggle-auto-expand-tag-tree -1))
-    (ecb-expand-methods-nodes-internal level force-all t)))
+    (ecb-expand-methods-node-internal (save-excursion
+                                         (set-buffer ecb-methods-buffer-name)
+                                         (tree-buffer-get-root))
+                                       level force-all t t)))
 
+(defun ecb-expand-methods-node-internal (node level
+                                               &optional force-all
+                                               resync-tag update-tree-buffer)
+  "Set the expand level of NODE and its subnodes in the ECB-methods-buffer.
 
-(defun ecb-expand-methods-nodes-internal (level &optional force-all resync-tag)
-  "Set the expand level of the nodes in the ECB-methods-buffer.
+If NODE is equal to the root-node of the methods-tree-buffer then this
+function will be called for each of the root-children. Otherwise it will only
+expand/collaps NODE.
 
 For description of LEVEL and FORCE-ALL see `ecb-expand-methods-nodes'.
 
 If RESYNC-TAG is not nil then after expanding/collapsing the methods-buffer
 is resynced to the current tag of the edit-window.
+
+If UPDATE-TREE-BUFFER is not nil then the methods-tree-buffer will be updated
+after the expansion.
 
 Note: All this is only valid for file-types parsed by semantic. For other file
 types which are parsed by imenu or etags \(see
@@ -2342,32 +2449,40 @@ types which are parsed by imenu or etags \(see
                (ignore-errors
                  (set-buffer (get-file-buffer ecb-path-selected-source))
                  ;; for non-semantic buffers we set force-all always to t
-                 (setq force-all (not (ecb--semantic-active-p)))
+                 (setq force-all (or force-all
+                                     (not (ecb--semantic-active-p))))
                  (ecb--semantic-symbol->name-assoc-list)))
              (ecb--semantic-symbol->name-assoc-list))))
     (save-selected-window
       (ecb-exec-in-methods-window
-       (let ( ;; normalizing the elements of `ecb-methods-nodes-expand-spec'
+       (let (;; normalizing the elements of `ecb-methods-nodes-expand-spec'
              ;; and `ecb-methods-nodes-collapse-spec'.
              (norm-expand-types (ecb-normalize-expand-spec
                                  ecb-methods-nodes-expand-spec))
              (norm-collapse-types (ecb-normalize-expand-spec
-                                   ecb-methods-nodes-collapse-spec)))
-         (tree-buffer-expand-nodes
-          level
-          (and (not force-all)
-               (function (lambda (node current-level)
-                           (or (equal norm-expand-types 'all)
-                               (member (ecb-methods-node-get-semantic-type
-                                        node symbol->name-assoc-list)
-                                       norm-expand-types)))))
-          (and (not force-all)
-               (function (lambda (node current-level)
-                           (or (equal norm-collapse-types 'all)
-                               (member (ecb-methods-node-get-semantic-type
-                                        node symbol->name-assoc-list)
-                                       norm-collapse-types))))))
-         (tree-buffer-scroll (point-min) (point-min)))))
+                                   ecb-methods-nodes-collapse-spec))
+             (node-list (if (equal node (tree-buffer-get-root))
+                            (tree-node-get-children (tree-buffer-get-root))
+                          (list node))))
+         (dolist (node node-list)
+           (tree-buffer-expand-node
+            node
+            level
+            (and (not force-all)
+                 (function (lambda (node current-level)
+                             (or (equal norm-expand-types 'all)
+                                 (member (ecb-methods-node-get-semantic-type
+                                          node symbol->name-assoc-list)
+                                         norm-expand-types)))))
+            (and (not force-all)
+                 (function (lambda (node current-level)
+                             (or (equal norm-collapse-types 'all)
+                                 (member (ecb-methods-node-get-semantic-type
+                                          node symbol->name-assoc-list)
+                                         norm-collapse-types)))))))
+         (if update-tree-buffer
+             (tree-buffer-update)
+           (tree-buffer-scroll (point-min) (point-min))))))
 
     ;; we want resync the new method-buffer to the current tag in the
     ;; edit-window.
@@ -2832,27 +2947,27 @@ this fails then nil is returned otherwise t."
 
 (tree-buffer-defpopup-command ecb-methods-menu-collapse-all
   "Collapse all expandable and expanded nodes"
-  (ecb-expand-methods-nodes-internal -1 nil t))
+  (ecb-expand-methods-node-internal (tree-buffer-get-root) -1 nil t t))
 
 
 (tree-buffer-defpopup-command ecb-methods-menu-expand-0
   "Expand all nodes with level 0."
-  (ecb-expand-methods-nodes-internal 0 nil t))
+  (ecb-expand-methods-node-internal (tree-buffer-get-root) 0 nil t t))
 
 
 (tree-buffer-defpopup-command ecb-methods-menu-expand-1
   "Expand all nodes with level 1."
-  (ecb-expand-methods-nodes-internal 1 nil t))
+  (ecb-expand-methods-node-internal (tree-buffer-get-root) 1 nil t t))
 
 
 (tree-buffer-defpopup-command ecb-methods-menu-expand-2
   "Expand all nodes with level 2."
-  (ecb-expand-methods-nodes-internal 2 nil t))
+  (ecb-expand-methods-node-internal (tree-buffer-get-root) 2 nil t t))
 
 
 (tree-buffer-defpopup-command ecb-methods-menu-expand-all
   "Expand all expandable nodes recursively."
-  (ecb-expand-methods-nodes-internal 100 nil t))
+  (ecb-expand-methods-node-internal (tree-buffer-get-root) 100 nil t t))
 
 
 (defvar ecb-common-methods-menu nil
@@ -2895,29 +3010,29 @@ this fails then nil is returned otherwise t."
   "The menu-title for the methods menu. See
 `ecb-directories-menu-title-creator'.")
 
-(tree-buffer-defpopup-command ecb-jump-to-token-in-editwin1
-  "Jump to current token in the 1. edit-window."
+(tree-buffer-defpopup-command ecb-jump-to-tag-in-editwin1
+  "Jump to current tag in the 1. edit-window."
   (ecb-method-clicked node 3 1 nil))
-(tree-buffer-defpopup-command ecb-jump-to-token-in-editwin2
-  "Jump to current token in the 2. edit-window."
+(tree-buffer-defpopup-command ecb-jump-to-tag-in-editwin2
+  "Jump to current tag in the 2. edit-window."
   (ecb-method-clicked node 3 2 nil))
-(tree-buffer-defpopup-command ecb-jump-to-token-in-editwin3
-  "Jump to current token in the 3. edit-window."
+(tree-buffer-defpopup-command ecb-jump-to-tag-in-editwin3
+  "Jump to current tag in the 3. edit-window."
   (ecb-method-clicked node 3 3 nil))
-(tree-buffer-defpopup-command ecb-jump-to-token-in-editwin4
-  "Jump to current token in the 4. edit-window."
+(tree-buffer-defpopup-command ecb-jump-to-tag-in-editwin4
+  "Jump to current tag in the 4. edit-window."
   (ecb-method-clicked node 3 4 nil))
-(tree-buffer-defpopup-command ecb-jump-to-token-in-editwin5
-  "Jump to current token in the 5. edit-window."
+(tree-buffer-defpopup-command ecb-jump-to-tag-in-editwin5
+  "Jump to current tag in the 5. edit-window."
   (ecb-method-clicked node 3 5 nil))
-(tree-buffer-defpopup-command ecb-jump-to-token-in-editwin6
-  "Jump to current token in the 6. edit-window."
+(tree-buffer-defpopup-command ecb-jump-to-tag-in-editwin6
+  "Jump to current tag in the 6. edit-window."
   (ecb-method-clicked node 3 6 nil))
-(tree-buffer-defpopup-command ecb-jump-to-token-in-editwin7
-  "Jump to current token in the 7. edit-window."
+(tree-buffer-defpopup-command ecb-jump-to-tag-in-editwin7
+  "Jump to current tag in the 7. edit-window."
   (ecb-method-clicked node 3 7 nil))
-(tree-buffer-defpopup-command ecb-jump-to-token-in-editwin8
-  "Jump to current token in the 8. edit-window."
+(tree-buffer-defpopup-command ecb-jump-to-tag-in-editwin8
+  "Jump to current tag in the 8. edit-window."
   (ecb-method-clicked node 3 8 nil))
 
 (defun ecb-methods-menu-editwin-entries ()
@@ -2929,12 +3044,16 @@ edit-windows. Otherwise return nil."
       (dotimes (i (min 8 (length edit-win-list)))
         (setq result
               (append result
-                      (list (list (intern (format "ecb-jump-to-token-in-editwin%d" (1+ i)))
+                      (list (list (intern (format "ecb-jump-to-tag-in-editwin%d" (1+ i)))
                                   (format "edit-window %d" (1+ i)))))))
       (append (list (list "---")) ;; we want a separator
-              (list (append (list "Jump to token in ...")
+              (list (append (list "Jump to tag in ...")
                             result))))))
 
+;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: Here we should create all
+;; tag-filter popup-menu entries; then we can do this dynamically according to
+;; the current major-mode (normally each major-mode has its own tag-class
+;; namings)
 (defun ecb-methods-menu-creator (tree-buffer-name)
   "Creates the popup-menus for the methods-buffer."
   (setq ecb-layout-prevent-handle-ecb-window-selection t)

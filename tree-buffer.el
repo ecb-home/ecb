@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: tree-buffer.el,v 1.137 2004/02/07 11:08:43 berndl Exp $
+;; $Id: tree-buffer.el,v 1.138 2004/02/28 16:14:45 berndl Exp $
 
 ;;; Commentary:
 
@@ -1141,23 +1141,21 @@ point will stay on POINT."
   (goto-char point)
   (set-window-start (get-buffer-window (current-buffer)) window-start))
 
+(defun tree-buffer-expand-node (node level
+                                     &optional expand-pred-fn collapse-pred-fn)
+  "Expand the NODE up to an expand-level of LEVEL.
 
-(defun tree-buffer-expand-nodes (level
-                                 &optional expand-pred-fn collapse-pred-fn)
-  "Set the expand level of the nodes in current tree-buffer.
+LEVEL specifies precisely which level of nodes should be expanded. LEVEL means
+the indentation-level of the NODE itself and its \(recursive) subnodes
+relative to the NODE itself.
 
-LEVEL specifies precisely which level of nodes should be expanded. LEVEL
-means the indentation-level of the nodes.
+A LEVEL value X means that all \(sub)nodes with an indentation-level <= X
+relative to NODE are expanded and all other are collapsed. A negative LEVEL
+value means that NODE is collapsed.
 
-A LEVEL value X means that all nodes with an indentation-level <= X are
-expanded and all other are collapsed. A negative LEVEL value means all visible
-nodes are collapsed.
-
-Nodes which are not indented have indentation-level 0!
-
-This function expands all nodes with level <= LEVEL, so the subnodes of these
-nodes get visible and collapses all their \(recursive) subnodes with
-indentation-level > LEVEL.
+This function expands beginning from NODE the NODE itself and all subnodes of
+NODE with level <= LEVEL, so the subnodes of these nodes get visible and
+collapses all their \(recursive) subnodes with indentation-level > LEVEL.
 
 If a node has to be expanded then first the `tree-node-expanded-fn' of current
 tree-buffer \(see `tree-buffer-create') is called with the argument-values
@@ -1166,28 +1164,31 @@ tree-buffer \(see `tree-buffer-create') is called with the argument-values
 This function gets two optional function-arguments which are called to test if
 a node should be excluded from expanding or collapsing; both functions are
 called with two arguments, where the first one is the expandable/collapsable
-node and the second one is the current level of indentation of this node:
-EXPAND-PRED-FN is called if a node has to be expanded and must return nil if
-this node should not be expanded even if its indentation level is <= LEVEL and
-COLLAPSE-PRED-FN is called analogous for a node which has to be collapsed and
-must return nil if the node should not be collapsed even if its indentation
-level is > then LEVEL.
+node and the second one is the current level of indentation of this node
+relativ to the startnode NODE: EXPAND-PRED-FN is called if a node has to be
+expanded and must return nil if this node should not be expanded even if its
+indentation level is <= LEVEL and COLLAPSE-PRED-FN is called analogous for a
+node which has to be collapsed and must return nil if the node should not be
+collapsed even if its indentation level is > then LEVEL.
 
 Examples:
-- LEVEL = 0 expands only nodes which have no indentation itself.
-- LEVEL = 2 expands nodes which are either not indented or indented once or
-  twice."
-  (dolist (node (tree-node-get-children tree-buffer-root))
-    (tree-buffer-expand-node node 0 level
-                             expand-pred-fn collapse-pred-fn))
-  (tree-buffer-update))
+- LEVEL = -1 collapses the NODE.
+- LEVEL = 0 expands only the NODE itself because it is the only node which can
+  have no indentation relativ to itself.
+- LEVEL = 2 expands the NODE itself, its children and its grandchildren -
+  these are the nodes which are either not indented \(the NODE itself) or
+  indented once \(the children) or twice \(the grandchildren)."
+  (if (not (equal (tree-buffer-get-root) node))
+      (tree-buffer-expand-node-internal node 0 level
+                                        expand-pred-fn collapse-pred-fn)))
 
-(defun tree-buffer-expand-node (node current-level level
-                                     expand-pred-fn collapse-pred-fn)
+(defun tree-buffer-expand-node-internal (node current-level level
+                                              expand-pred-fn collapse-pred-fn)
   "Expand NODE if CURRENT-LEVEL \(the indentation-level of NODE) <= LEVEL or
 collapses NODE if CURRENT-LEVEL > LEVEL. Do this recursive for subnodes of
 NODE with incremented CURRENT-LEVEL. For EXPAND-PRED-FN and COLLAPSE-PRED-FN
-see `tree-buffer-expand-nodes'."
+see `tree-buffer-expand-node'. This function is not for external usage; use
+`tree-buffer-expand-node' instead."
   (when (tree-node-is-expandable node)
     (when (and tree-node-expanded-fn
                (not (tree-node-is-expanded node)))
@@ -1202,8 +1203,8 @@ see `tree-buffer-expand-nodes'."
                    (> current-level level)))
       (tree-node-toggle-expanded node))
     (dolist (child (tree-node-get-children node))
-      (tree-buffer-expand-node child (1+ current-level) level
-                               expand-pred-fn collapse-pred-fn))))
+      (tree-buffer-expand-node-internal child (1+ current-level) level
+                                        expand-pred-fn collapse-pred-fn))))
 
 (defun tree-buffer-set-root (root)
   (setq tree-buffer-root root)

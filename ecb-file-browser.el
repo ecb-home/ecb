@@ -23,7 +23,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-file-browser.el,v 1.11 2004/02/24 11:50:02 berndl Exp $
+;; $Id: ecb-file-browser.el,v 1.12 2004/02/28 16:14:46 berndl Exp $
 
 ;;; Commentary:
 
@@ -1567,7 +1567,9 @@ can last a long time - depending of machine- and disk-performance."
   (interactive "nLevel: ")
   (save-selected-window
     (ecb-exec-in-directories-window
-     (tree-buffer-expand-nodes level)))
+     (dolist (node (tree-node-get-children (tree-buffer-get-root)))
+       (tree-buffer-expand-node node level))
+     (tree-buffer-update)))
   (ecb-current-buffer-sync 'force))
 
 

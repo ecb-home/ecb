@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-layout.el,v 1.219 2004/02/25 06:51:07 berndl Exp $
+;; $Id: ecb-layout.el,v 1.220 2004/02/28 16:14:46 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -2317,12 +2317,33 @@ EDIT-WIN-NR must be an integer between 1 and length of EDIT-WIN-LIST \(rsp.
        (equal (selected-window) ecb-compile-window)))
 
 
-(defun ecb-point-in-tree-buffer ()
-  "Return nil if point is not in any tree-buffer of ECB otherwise return the
-buffer-object."
+(defun ecb-point-in-ecb-tree-buffer ()
+  "Return nil if point is not in any of the standard tree-buffers \(currently
+these are the buffers with name `ecb-directories-buffer-name',
+`ecb-sources-buffer-name', `ecb-methods-buffer-name' and
+`ecb-history-buffer-name') of ECB otherwise return the buffer-object."
   (when (and (equal (selected-frame) ecb-frame)
              (member (buffer-name (current-buffer)) ecb-tree-buffers))
     (current-buffer)))
+
+(defun ecb-dedicated-special-buffers ()
+  "Return a list of these special dedicated buffers which are registrated via
+the macro `ecb-with-dedicated-window' \(these are normally only the standard
+tree-buffers of ECB plus the integrated speedbar-buffer, but in general it can
+be more if there are additional buffers registrated, e.g. by other
+applications)."
+  (delq nil (mapcar (function (lambda (e)
+                                (get-buffer (car e))))
+                    ecb-buffer-setfunction-registration)))
+
+(defun ecb-point-in-dedicated-special-buffer ()
+  "Return nil if point is not in any of these special dedicated buffers which
+are registrated via the macro `ecb-with-dedicated-window' \(see
+`ecb-dedicated-special-buffers'). Otherwise return the buffer-object."
+  (when (equal (selected-frame) ecb-frame)
+    (if (member (current-buffer) (ecb-dedicated-special-buffers))
+        (current-buffer))))
+          
 
 (defun ecb-point-in-ecb-window ()
   "Return nil if point is not in any of the special dedicated ECB-windows
@@ -2394,10 +2415,7 @@ can use these variables."
     ;; We MUST not use here `ecb-point-in-edit-window' because this would
     ;; slow-down the performance of all Emacs-versions unless GNU Emacs 21
     ;; because they have no builtin `window-list'-function.
-    (when (and (not (ecb-point-in-tree-buffer))
-               ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>:  Do we need this
-               ;; check elsewhere??
-               (not (ecb-speedbar-buffer-selected))
+    (when (and (not (ecb-point-in-dedicated-special-buffer))
                (not (equal (minibuffer-window ecb-frame)
                            (selected-window)))
                (not (ecb-point-in-compile-window)))
@@ -2410,7 +2428,7 @@ can use these variables."
                 (current-buffer)))
       (setq ecb-compile-window-was-selected-before-command nil)
       (setq ecb-last-compile-buffer-in-compile-window nil))
-    (if (member (buffer-name) ecb-tree-buffers)
+    (if (ecb-point-in-dedicated-special-buffer)
         (setq ecb-ecb-window-was-selected-before-command (buffer-name))
       (setq ecb-ecb-window-was-selected-before-command nil))))
       
@@ -2457,10 +2475,10 @@ some special tasks:
                (equal (selected-frame) ecb-frame)
                (= (minibuffer-depth) 0))
       (cond ((and (not ecb-ecb-window-was-selected-before-command)
-                  (ecb-point-in-tree-buffer))
+                  (ecb-point-in-dedicated-special-buffer))
              (ecb-display-one-ecb-buffer (buffer-name)))
             ((and ecb-ecb-window-was-selected-before-command
-                  (not (ecb-point-in-tree-buffer)))
+                  (not (ecb-point-in-dedicated-special-buffer)))
              (ecb-redraw-layout-full nil nil nil nil))))))
 ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: need some more tests - see above
 ;; `ecb-minibuffer-exit-hook'

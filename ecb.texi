@@ -26,7 +26,7 @@
 @c GNU Emacs; see the file COPYING.  If not, write to the Free Software
 @c Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-@c $Id: ecb.texi,v 1.158 2004/02/24 12:51:02 berndl Exp $
+@c $Id: ecb.texi,v 1.159 2004/02/28 16:14:45 berndl Exp $
 
 @setfilename ecb.info
 
@@ -2294,10 +2294,10 @@ already applied filter.
 @node Filtering Methods, , Filtering Sources, Filtering the tree-buffers
 @subsection Applying filters to the Methods-buffer
 
-The command @code{ecb-methods-filter} allows to filter the
-semantic-tags in Methods-buffer by several criterias. As for the
-Sources- and the History-buffer the same functionality is also
-available via the popup-menu of the Methods-buffer.
+The command @code{ecb-methods-filter} allows to filter the tags/nodes
+of the Methods-buffer by several criterias. As for the Sources- and
+the History-buffer the same functionality is also available via the
+popup-menu of the Methods-buffer.
 
 @subsubsection Possible filter-criterias
 
@@ -2338,6 +2338,14 @@ type here!
 All tags which match the applied filter(s) will be displayed in the
 Methods-buffer. Such a filter is only applied to the current
 source-buffer, i.e. each source-buffer can have its own tag-filters.
+
+These tag-filters can also applied to sources which are not supported
+by the semantic-parser but ``only'' by imenu or etags. But because for
+these sources not all information are avaiable the protection- and
+tag-class filter can not used with such ``non-semantic''-sources. See
+@ref{Non-semantic sources} for further details about working with
+source-files not supported by the semantic-parser.
+
 
 @subsubsection Inverse Filters
 
