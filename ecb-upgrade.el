@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-upgrade.el,v 1.78 2004/05/06 09:02:04 berndl Exp $
+;; $Id: ecb-upgrade.el,v 1.79 2004/05/10 11:01:09 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -560,9 +560,15 @@ The car is the old option symbol and the cdr is a 2-element-list with:
   (ignore-errors (file-writable-p (ecb-custom-file))))
 
 (defun ecb-customize-save-variable (option value)
-  (if (ecb-custom-file-writeable-p)
-      (customize-save-variable option value)
-    (customize-set-variable option value)))
+  ;; because the adviced version of `custom-save-all' do only all the special
+  ;; needed things if `ecb-minor-mode' is on we must temporally set here this
+  ;; variable to not nil because the that time this function is called this
+  ;; variable is still nil (will be first set to t if the ecb-activation can
+  ;; not fail).
+  (let ((ecb-minor-mode t))
+    (if (ecb-custom-file-writeable-p)
+        (customize-save-variable option value)
+      (customize-set-variable option value))))
 
 (defun ecb-option-set-default (option)
   "Save the ECB-option OPTION with current default value."
