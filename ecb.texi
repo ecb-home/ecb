@@ -1,6 +1,12 @@
 \input texinfo   @c -*-texinfo-*-
 @c
 
+@c Copyright (C) 2002 Klaus Berndl
+
+@c Author: Klaus Berndl <klaus.berndl@sdm.de>
+@c Keywords: java, class, browser
+@c Created: Mar 2001
+
 @c This manual covers the tool "ECB", and is a part of it's
 @c distribution.
 
@@ -19,7 +25,7 @@
 @c Free Software Foundation, Inc., 59 Temple Place - Suite 330,
 @c Boston, MA 02111-1307, USA.
 
-@c $Id: ecb.texi,v 1.97 2003/07/04 16:25:45 berndl Exp $
+@c $Id: ecb.texi,v 1.98 2003/07/06 06:11:07 berndl Exp $
 
 @setfilename ecb.info
 
@@ -42,7 +48,7 @@
 @c edit the Makefile to change the version number. mechanism stolen
 @c from Tramp
 @macro ecbver{}
-1.94
+1.95
 @end macro
 
 
@@ -1022,16 +1028,28 @@ it is quite impossible to scroll smoothly right and left. The
 functions @code{scroll-left} and @code{scroll-right} can be annoying
 and are also not bound to mouse-buttons.
 
-So if @code{ecb-tree-easy-hor-scroll} is a positive integer-value S
-then in all ECB-tree-buffers the keys @kbd{M-mouse-1} and
-@kbd{M-mouse-3} are bound to scrolling left resp. right with
-scroll-step S. Additionally @kbd{C-M-mouse-1} and @code{C-M-mouse-3}
-are bound to scrolling left resp. right with scroll-step
-@code{window-width} - 2.
+ECB offers three ways for smoothly hor. scrolling with GNU Emacs if
+@code{ecb-tree-easy-hor-scroll} is a positive integer-value S:
+
+@itemize @bullet
+@item
+In all ECB-tree-buffers the keys @kbd{M-mouse-1} and @kbd{M-mouse-3}
+are bound to scrolling left resp. right with scroll-step S.
+
+@item
+Clicking with mouse-1 or mouse-2 onto the edge of the modeline has the
+same effect, i.e. if you click with mouse-1 onto the left \(resp
+right) egde of the modeline you will scroll left \(resp. right) with
+scroll-step S.
+
+@item
+Additionally @kbd{C-M-mouse-1} and @code{C-M-mouse-3} are bound to
+scrolling left resp. right with scroll-step @code{window-width} - 2.
+@end itemize
 
 This is NOT done for XEmacs cause of its horizontal scrollbars. If you
-want scroll left and right with the mouse in XEmacs then activate the
-horizontal scrollbars.
+want scrolling left and right with the mouse in XEmacs then activate
+the horizontal scrollbars.
 
 
 @node Using the keyboard, The edit-window, Using the mouse, Usage of ECB
@@ -3638,11 +3656,16 @@ and are also not bound to mouse-buttons.
 
 If this option is a positive integer S then in all ECB-tree-buffers
 the keys @kbd{M-mouse-1} and @code{M-mouse-3} are bound to scrolling
-left resp. right with scroll-step S. Additionally @code{C-M-mouse-1}
-and @code{C-M-mouse-3} are bound to scrolling left resp. right with
-scroll-step @code{window-width} - 2. Default is a scroll-step of 5. If
-the value is @code{nil} then no keys for horizontal scrolling are
-bound.
+left resp. right with scroll-step S - clicking with @kbd{mouse-1} or
+@kbd{mouse-2} onto the edge of the modeline has the same effect, i.e.
+if you click with mouse-1 onto the left (resp right) egde of the
+modeline you will scroll left (resp. right).
+
+Additionally @code{C-M-mouse-1} and @code{C-M-mouse-3} are bound to
+scrolling left resp. right with scroll-step @code{window-width} - 2.
+
+Default is a scroll-step of 5. If the value is @code{nil} then no keys
+for horizontal scrolling are bound.
 @end defopt
 
 
@@ -3683,6 +3706,14 @@ senseful correct direction.
 If this option is changed the new value takes first effect after deactivating
 ECB and then activating it again!
 @end defopt
+
+@defopt tree-use-image-icons
+Use icons for expand/collapse tokens instead of the ascii-strings. If
+true the ECB displays in its tree-buffers the expand- and collapse
+symbols with appropriate icons - the icons are the same as used by
+speedbar.
+@end defopt
+
 
 @defopt truncate-lines
 Truncate lines in ECB buffers. If you change this during ECB is

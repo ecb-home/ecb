@@ -1,6 +1,6 @@
 ;;; ecb-layout.el --- layout for ECB
 
-;; Copyright (C) 2000, 2001 Jesper Nordenberg
+;; Copyright (C) 2000, 2001 Jesper Nordenberg, Klaus Berndl
 
 ;; Author: Jesper Nordenberg <mayhem@home.se>
 ;;         Klaus Berndl <klaus.berndl@sdm.de>
@@ -110,7 +110,7 @@
 ;; For the ChangeLog of this file see the CVS-repository. For a complete
 ;; history of the ECB-package see the file NEWS.
 
-;; $Id: ecb-layout.el,v 1.167 2003/07/04 16:25:45 berndl Exp $
+;; $Id: ecb-layout.el,v 1.168 2003/07/06 06:11:07 berndl Exp $
 
 ;;; Code:
 

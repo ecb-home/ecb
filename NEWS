@@ -1,13 +1,20 @@
-* Changes for ECB version
+* Changes for ECB version 1.95
 
-** ECB now requires speedbar version 0.14beta1 or higher. An automatic
-   requirements-check is done by ECB.
+** ECB now displays the expand- and collapse symbols in the tree-buffers with
+   icons - the same icons as speedbar uses. See the new option
+   `ecb-tree-use-image-icons'.
 
 ** Adding hideshow to the popup-menu of the Methods-buffer.
    This popup-menu now offers two entries for hiding resp. showing the block
    of that token in the Methods-buffer for which the popup-menu was openend.
    This is done with the hideshow.el library.
 
+** Horizontal scrolling of the tree-buffers by clicking the edges of the
+   modeline with mouse-1 or mouse-2. I.e. if you click with mouse-1 onto the
+   left (resp right) egde of the modeline you will scroll left (resp. right)
+   with the scroll-step defined in `ecb-tree-easy-hor-scroll'. This is only
+   for GNU Emacs because XEmacs has hor. scrollbars.
+   
 ** Changed default keybindings:
    - C-c . r:  `ecb-rebuild-methods-buffer'
    - C-c . lc: `ecb-change-layout'
@@ -16,6 +23,12 @@
    - C-c . lw: `ecb-toggle-ecb-windows'
 
 ** Starting ECB is now possible via the "Tools"-menu
+
+** ECB now requires speedbar version 0.14beta1 or higher. An automatic
+   requirements-check is done by ECB. This is because now ECB has three
+   dependencies to speedbar-code: Integrating whole speedbar in the ECB-frame,
+   using speedbar-logic to parse files with imenu or etags and using the icons
+   of speedbar for the ECB-tree-buffers.
 
 ** Fixed bugs
 

@@ -10,7 +10,7 @@
 
 ;; IMPORTANT: The version-number is auto-frobbed from the Makefile. Do not
 ;; change it here!
-(defconst ecb-version "1.94"
+(defconst ecb-version "1.95"
   "Current ECB version.")
 
 ;; This program is free software; you can redistribute it and/or modify it under
@@ -88,7 +88,7 @@
 ;; For the ChangeLog of this file see the CVS-repository. For a complete
 ;; history of the ECB-package see the file NEWS.
 
-;; $Id: ecb.el,v 1.313 2003/07/04 16:25:45 berndl Exp $
+;; $Id: ecb.el,v 1.314 2003/07/06 06:11:07 berndl Exp $
 
 ;;; Code:
 
@@ -1461,6 +1461,13 @@ you must deactivate and activate ECB again to take effect."
   :group 'ecb-general
   :type 'boolean)
 
+(defcustom ecb-tree-use-image-icons t
+  "*Use icons for expand/collapse tokens instead of the ascii-strings.
+If true the ECB displays in its tree-buffers the expand- and collapse symbols
+with appropriate icons - the icons are the same as used by speedbar."
+  :group 'ecb-general
+  :type 'boolean)
+
 (defcustom ecb-truncate-lines '(t t t t)
   "*Truncate lines in ECB buffers. If you change this during ECB is activated
 you must deactivate and activate ECB again to take effect."
@@ -1482,10 +1489,12 @@ mouse-buttons.
 
 If this option is a positive integer S then in all ECB-tree-buffers the keys
 \[M-mouse-1] and \[M-mouse-3] are bound to scrolling left resp. right with
-scroll-step S. Additionally \[C-M-mouse-1] and \[C-M-mouse-3] are bound to
-scrolling left resp. right with scroll-step `window-width' - 2. Default is a
-scroll-step of 5. If the value is nil then no keys for horizontal scrolling
-are bound."
+scroll-step S - clicking with mouse-1 or mouse-2 onto the edge of the modeline
+has the same effect, i.e. if you click with mouse-1 onto the left \(resp
+right) egde of the modeline you will scroll left \(resp. right). Additionally
+\[C-M-mouse-1] and \[C-M-mouse-3] are bound to scrolling left resp. right with
+scroll-step `window-width' - 2. Default is a scroll-step of 5. If the value is
+nil then no keys for horizontal scrolling are bound."
   :group 'ecb-general
   :type '(radio :value 5
                 (const :tag "No hor. mouse scrolling" :value nil)
@@ -5073,6 +5082,10 @@ always the ECB-frame if called from another frame."
            ecb-tree-incremental-search
            ecb-tree-navigation-by-arrow
            ecb-tree-easy-hor-scroll
+           (list (cons "[+]" (and ecb-tree-use-image-icons
+                                  'speedbar-directory-plus))
+                 (cons "[-]" (and ecb-tree-use-image-icons
+                                  'speedbar-directory-minus)))
            (list (cons 1 ecb-source-in-directories-buffer-face))
            ecb-tree-expand-symbol-before
            ecb-directory-face
@@ -5109,6 +5122,7 @@ always the ECB-frame if called from another frame."
            ecb-tree-incremental-search
            ecb-tree-navigation-by-arrow
            ecb-tree-easy-hor-scroll
+           (list nil nil)
            nil
            nil
            ecb-source-face
@@ -5164,6 +5178,10 @@ always the ECB-frame if called from another frame."
            ecb-tree-incremental-search
            ecb-tree-navigation-by-arrow
            ecb-tree-easy-hor-scroll
+           (list (cons "[+]" (and ecb-tree-use-image-icons
+                                  'speedbar-box-plus))
+                 (cons "[-]" (and ecb-tree-use-image-icons
+                                  'speedbar-box-minus)))
            nil
            ecb-tree-expand-symbol-before
            ecb-method-face
@@ -5196,6 +5214,7 @@ always the ECB-frame if called from another frame."
            ecb-tree-incremental-search
            ecb-tree-navigation-by-arrow
            ecb-tree-easy-hor-scroll
+           (list nil nil)
            nil
            nil
            ecb-history-face

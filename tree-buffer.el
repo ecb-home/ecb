@@ -3,6 +3,7 @@
 ;; Copyright (C) 2000, 2001 Jesper Nordenberg
 
 ;; Author: Jesper Nordenberg <mayhem@home.se>
+;;         Klaus Berndl <klaus.berndl@sdm.de>
 ;; Maintainer: Klaus Berndl <klaus.berndl@sdm.de>
 ;; Keywords: java, class, browser
 
@@ -31,7 +32,7 @@
 ;; For the ChangeLog of this file see the CVS-repository. For a complete
 ;; history of the ECB-package see the file NEWS.
 
-;; $Id: tree-buffer.el,v 1.113 2003/07/04 16:27:01 berndl Exp $
+;; $Id: tree-buffer.el,v 1.114 2003/07/06 06:11:07 berndl Exp $
 
 ;;; Code:
 
@@ -52,6 +53,9 @@
 (silentcomp-defun button-release-event-p)
 (silentcomp-defun button-press-event-p)
 (silentcomp-defun event-key)
+(silentcomp-defun extent-end-position)
+(silentcomp-defun event-glyph-extent)
+(silentcomp-defun event-over-glyph-p)
 (silentcomp-defun display-message)
 (silentcomp-defun clear-message)
 ;; Emacs
@@ -83,6 +87,21 @@
                (ignore-errors (event-key event)))))
       (defalias 'tree-buffer-event-window 'event-window)
       (defalias 'tree-buffer-event-point 'event-point)
+      ;; stolen from dframe.el of the speedbar-library.
+      (defun tree-buffer-mouse-set-point (e)
+        "Set POINT based on event E. Handles clicking on images in XEmacs."
+        (if (and (fboundp 'event-over-glyph-p) (event-over-glyph-p e))
+            ;; We are in XEmacs, and clicked on a picture
+            (let ((ext (event-glyph-extent e)))
+              ;; This position is back inside the extent where the
+              ;; junk we pushed into the property list lives.
+              (if (extent-end-position ext)
+                  (progn
+                    (mouse-set-point e)
+                    (goto-char (1- (extent-end-position ext))))
+                (mouse-set-point e)))
+          ;; We are not in XEmacs, OR we didn't click on a picture.
+          (mouse-set-point e)))
       (require 'overlay)
       )
   ;; GNU Emacs
@@ -96,6 +115,7 @@
     (posn-window (event-start event)))
   (defun tree-buffer-event-point (event)
     (posn-point (event-start event)))
+  (defalias 'tree-buffer-mouse-set-point 'mouse-set-point)
   (defun tree-buffer-event-to-key (event)
     (let ((type (event-basic-type event)))
       (cond ((or (equal type 'mouse-1)
@@ -138,6 +158,7 @@ node name.")
 (defvar tree-buffer-last-incr-searchpattern nil)
 (defvar tree-buffer-incr-search nil)
 (defvar tree-buffer-hor-scroll-step nil)
+(defvar tree-buffer-expand-collapse-tokens nil)
 
 ;; tree-buffer-local data-storage with get- and set-function
 (defvar tree-buffer-data-store nil)
@@ -331,11 +352,32 @@ with the same arguments as `tree-node-expanded-fn'."
          (< (- (current-column) (window-hscroll window))
             (window-width window)))))
 
-(defun tree-buffer-scroll-hor (amount)
+(defun tree-buffer-hscroll (amount)
   (ignore-errors
     (let ((current-prefix-arg amount))
       (call-interactively 'scroll-left))))
 
+;; Stolen from dframe.el from the speedbar-library
+;; XEmacs: this can be implemented using modeline keymaps, but there
+;; is no use, as we have horizontal scrollbar (as the docstring
+;; hints.)
+(defun tree-buffer-mouse-hscroll (e)
+  "Read a mouse event E from the mode line, and horizontally scroll.
+If the mouse is being clicked on the far left, or far right of the
+mode-line.  This is only useful for non-XEmacs"
+  (interactive "e")
+  (let* ((x-point (car (nth 2 (car (cdr e)))))
+	 (pixels-per-10-col (/ (* 10 (frame-pixel-width))
+			       (frame-width)))
+	 (click-col (1+ (/ (* 10 x-point) pixels-per-10-col)))
+	 )
+    (cond ((< click-col 3)
+	   (tree-buffer-hscroll (- tree-buffer-hor-scroll-step)))
+	  ((> click-col (- (window-width) 4))
+	   (tree-buffer-hscroll tree-buffer-hor-scroll-step))
+          (t (tree-buffer-nolog-message
+	      "Click on the edge of the modeline to scroll left/right")))
+    ))
 
 (defun tree-buffer-recenter (node window)
   "If NODE is not visible then first recenter the window WINDOW so NODE is
@@ -349,7 +391,7 @@ displayed without empty-lines at the end, means WINDOW is always best filled."
          (point-lines-before (count-lines (point-min) node-point))
          (point-lines-after (1- (count-lines node-point (point-max)))))
     (if (not tree-buffer-running-xemacs)
-        (ignore-errors (tree-buffer-scroll-hor -1000)))
+        (ignore-errors (tree-buffer-hscroll -1000)))
     ;; first make point best visible, means display node in the middle of the
     ;; window if possible (if there are enough lines before/after the node).
     (when (not (pos-visible-in-window-p node-point window))
@@ -487,23 +529,37 @@ tree-node. This is only used with GNU Emacs 21!"
 text gets this face or it can be a function-symbol which is called to face the
 inserted TEXT. Such a function gets two arguments: Point where TEXT has been
 inserted and the TEXT itself"
-  (let ((p (point)))
-    (insert text)
-    (put-text-property p (+ p (length text)) 'mouse-face 'highlight)
-    (if (and help-echo (not tree-buffer-running-xemacs))
-        (put-text-property p (+ p (length text)) 'help-echo
-                           'tree-buffer-help-echo-fn))
-    (if facer
-	(if (functionp facer)
-	    (funcall facer p text)
-	  (put-text-property p (+ p (length text)) 'face facer)))))
+  (when (stringp text)
+    (let ((p (point)))
+      (insert text)
+      (put-text-property p (+ p (length text)) 'mouse-face 'highlight)
+      (if (and help-echo (not tree-buffer-running-xemacs))
+          (put-text-property p (+ p (length text)) 'help-echo
+                             'tree-buffer-help-echo-fn))
+      (if facer
+          (if (functionp facer)
+              (funcall facer p text)
+            (put-text-property p (+ p (length text)) 'face facer))))))
+
+
+(defun tree-buffer-make-image-icon-maybe (start length symbol-string)
+  (when (and (ignore-errors (require 'sb-image))
+             symbol-string)
+    (let ((speedbar-expand-image-button-alist
+           (list (assoc symbol-string tree-buffer-expand-collapse-tokens))))
+      (speedbar-insert-image-button-maybe start length))))
+      
 
 (defun tree-buffer-add-node (node depth)
   (let* ((ww (window-width))
 	 (name (tree-node-get-name node))
 	 (width (+ (* depth tree-buffer-indent)
 		   (length name)
-		   (if (tree-node-is-expandable node) 4 0))))
+		   (if (tree-node-is-expandable node) 4 0)))
+         (expand-collapse-token
+          (if (tree-node-is-expanded node)
+              (car (nth 1 tree-buffer-expand-collapse-tokens))
+            (car (nth 0 tree-buffer-expand-collapse-tokens)))))
     ;; Truncate name if necessary
     (when (>= width ww)
       (if (eq 'beginning (tree-node-get-shorten-name node))
@@ -518,18 +574,21 @@ inserted and the TEXT itself"
     (insert (make-string (* depth tree-buffer-indent) ? ))
     (when (and tree-buffer-expand-symbol-before
 	       (tree-node-is-expandable node))
-      (tree-buffer-insert-text (if (tree-node-is-expanded node) "[-]" "[+]"))
-      ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: Only this is necessary to
-      ;; prepare ECB for displaying images!!
-;;       (require 'speedbar)
-;;       (require 'sb-image)
-;;       (speedbar-insert-image-button-maybe (- (point) 3) 3)
+      (tree-buffer-insert-text expand-collapse-token)
+      (tree-buffer-make-image-icon-maybe (- (point)
+                                            (length expand-collapse-token))
+                                         (length expand-collapse-token)
+                                         expand-collapse-token)
       (insert " "))
     (tree-buffer-insert-text name (tree-buffer-get-node-facer node) t)
     (when (and (not tree-buffer-expand-symbol-before)
 	       (tree-node-is-expandable node))
       (insert " ")
-      (tree-buffer-insert-text (if (tree-node-is-expanded node) "[-]" "[+]")))
+      (tree-buffer-insert-text expand-collapse-token)
+      (tree-buffer-make-image-icon-maybe (- (point)
+                                            (length expand-collapse-token))
+                                         (length expand-collapse-token)
+                                         expand-collapse-token))
     (insert "\n")
     (setq tree-buffer-nodes (append tree-buffer-nodes (list (cons name node))))
     (if (tree-node-is-expanded node)
@@ -671,7 +730,7 @@ see `tree-buffer-expand-nodes'."
 
 (defun tree-buffer-show-menu (event)
   (interactive "e")
-  (mouse-set-point event)
+  (tree-buffer-mouse-set-point event)
   (unless (not (equal (selected-frame) tree-buffer-frame))
     (when tree-buffer-menus
       (let ((node (tree-buffer-get-node-at-point)))
@@ -693,12 +752,12 @@ see `tree-buffer-expand-nodes'."
 		    (funcall (car fn) node)))))))))))
 
 (defconst tree-buffer-incr-searchpattern-basic-prefix
-  "^[ \t]*\\(\\[[+-]\\] \\)?"
+  "^[ \t]*\\([[<][+-][]>] \\)?"
   "Prefix-pattern which ignores all not interesting basic stuff of a displayed
 token at incr. search. The following contents of a displayed token are ignored
 by this pattern:
 - beginning spaces
-- The expand/collapse-button: \[+] resp. \[-]")
+- The expand/collapse-buttons: \[+], <+> resp. \[-], <->")
 
 (defconst tree-buffer-incr-searchpattern-node-prefix "\\([^ ]+ \\|[-+#]\\)?"
   "Prefix-pattern which ignores all not interesting stuff of a node-name at
@@ -1012,6 +1071,7 @@ functionality is done with the `help-echo'-property and the function
                                 node-data-equal-fn
                                 menus menu-titles tr-lines read-only tree-indent
                                 incr-search arrow-navigation hor-scroll
+                                expand-collapse
                                 &optional type-facer expand-symbol-before
                                 highlight-node-face general-face
                                 after-create-hook)
@@ -1095,6 +1155,11 @@ ARROW-NAVIGATION: If not nil then smart navigation with horizontal arrow keys.
 HOR-SCROLL: Number of columns a hor. scroll in the tree-buffer should scroll.
             If not nil then M-mouse-1 and M-mouse-2 scroll left and right and
             also M-<left-arrow> and M-<right-arrow>.
+EXPAND-COLLAPSE: A 2-elem list where the first elem is a cons cell where the
+                 car is the token-string for the expand-symbol \(e.g.
+                 \"\[+]\") and the cdr is a speedbar-image-icon. The second
+                 elem is the same for the collapse symbol. Both elems can be
+                 nil; then no expand- or collapse-symbol is drawn.
 TYPE-FACER: Nil or a list of one or two conses, each cons for a node-type \(0
             or 1). The cdr of a cons can be:
             - a symbol of a face
@@ -1145,7 +1210,8 @@ AFTER-CREATE-HOOK: A function or a list of functions \(with no arguments)
     (make-local-variable 'tree-buffer-last-incr-searchpattern)
     (make-local-variable 'tree-buffer-incr-search)
     (make-local-variable 'tree-buffer-hor-scroll-step)
-
+    (make-local-variable 'tree-buffer-expand-collapse-tokens)
+    
     ;; initialize the user-data-storage for this tree-buffer.
     (set (make-local-variable 'tree-buffer-data-store) nil)
 
@@ -1178,6 +1244,7 @@ AFTER-CREATE-HOOK: A function or a list of functions \(with no arguments)
     (setq tree-buffer-last-incr-searchpattern "")
     (setq tree-buffer-incr-search incr-search)
     (setq tree-buffer-hor-scroll-step hor-scroll)
+    (setq tree-buffer-expand-collapse-tokens expand-collapse)
 
     ;; set a special syntax table for tree-buffers
     (set-syntax-table tree-buffer-syntax-table)
@@ -1228,24 +1295,23 @@ AFTER-CREATE-HOOK: A function or a list of functions \(with no arguments)
       (if tree-buffer-running-xemacs '(button1) [down-mouse-1])
       (function (lambda(e)
 		  (interactive "e")
-                  (mouse-set-point e)
+                  (tree-buffer-mouse-set-point e)
                   (tree-buffer-select 1 nil nil))))
   
     (define-key tree-buffer-key-map
       (if tree-buffer-running-xemacs '(shift button1) [S-down-mouse-1])
       (function (lambda(e)
 		  (interactive "e")
-                  (mouse-set-point e)
+                  (tree-buffer-mouse-set-point e)
                   (tree-buffer-select 1 t nil))))
 
     (define-key tree-buffer-key-map
       (if tree-buffer-running-xemacs '(control button1) [C-down-mouse-1])
       (function (lambda(e)
 		  (interactive "e")
-                  (mouse-set-point e)
+                  (tree-buffer-mouse-set-point e)
                   (tree-buffer-select 1 nil t))))
 
-    
     (define-key tree-buffer-key-map [drag-mouse-1] nop)
     (define-key tree-buffer-key-map [mouse-1] nop)
     (define-key tree-buffer-key-map [double-mouse-1] nop)
@@ -1256,21 +1322,21 @@ AFTER-CREATE-HOOK: A function or a list of functions \(with no arguments)
       (if tree-buffer-running-xemacs '(button2) [down-mouse-2])
       (function (lambda(e)
 		  (interactive "e")
-                  (mouse-set-point e)
+                  (tree-buffer-mouse-set-point e)
                   (tree-buffer-select 2 nil nil))))
 
     (define-key tree-buffer-key-map
       (if tree-buffer-running-xemacs '(shift button2) [S-down-mouse-2])
       (function (lambda(e)
 		  (interactive "e")
-                  (mouse-set-point e)
+                  (tree-buffer-mouse-set-point e)
                   (tree-buffer-select 2 t nil))))
 
     (define-key tree-buffer-key-map
       (if tree-buffer-running-xemacs '(control button2) [C-down-mouse-2])
       (function (lambda(e)
 		  (interactive "e")
-                  (mouse-set-point e)
+                  (tree-buffer-mouse-set-point e)
                   (tree-buffer-select 2 nil t))))
 
     (define-key tree-buffer-key-map [mouse-2] nop)
@@ -1292,29 +1358,35 @@ AFTER-CREATE-HOOK: A function or a list of functions \(with no arguments)
         [M-down-mouse-1]
         (function (lambda(e)
                     (interactive "e")
-                    (mouse-set-point e)
-                    (tree-buffer-scroll-hor (- tree-buffer-hor-scroll-step)))))
+                    (tree-buffer-mouse-set-point e)
+                    (tree-buffer-hscroll (- tree-buffer-hor-scroll-step)))))
 
       (define-key tree-buffer-key-map
         [M-down-mouse-3]
         (function (lambda(e)
                     (interactive "e")
-                    (mouse-set-point e)
-                    (tree-buffer-scroll-hor tree-buffer-hor-scroll-step))))
+                    (tree-buffer-mouse-set-point e)
+                    (tree-buffer-hscroll tree-buffer-hor-scroll-step))))
       
       (define-key tree-buffer-key-map
         [C-M-down-mouse-1]
         (function (lambda(e)
                     (interactive "e")
-                    (mouse-set-point e)
-                    (tree-buffer-scroll-hor (- (- (window-width) 2))))))
+                    (tree-buffer-mouse-set-point e)
+                    (tree-buffer-hscroll (- (- (window-width) 2))))))
       
       (define-key tree-buffer-key-map
         [C-M-down-mouse-3]
         (function (lambda(e)
                     (interactive "e")
-                    (mouse-set-point e)
-                    (tree-buffer-scroll-hor (- (window-width) 2)))))
+                    (tree-buffer-mouse-set-point e)
+                    (tree-buffer-hscroll (- (window-width) 2)))))
+      
+      ;; This lets the user scroll as if we had a scrollbar...
+      (define-key tree-buffer-key-map
+        [mode-line mouse-1] 'tree-buffer-mouse-hscroll)
+      (define-key tree-buffer-key-map
+        [mode-line mouse-2] 'tree-buffer-mouse-hscroll)
       
       (define-key tree-buffer-key-map [M-mouse-1] nop)
       (define-key tree-buffer-key-map [M-mouse-3] nop)

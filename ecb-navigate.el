@@ -2,7 +2,7 @@
 
 ;; Copyright (C) 2001 by Free Software Foundation, Inc.
 
-;; Author:  <Sune Mangs@MAYHEM>
+;; Author: Jesper Nordenberg <mayhem@home.se>
 ;; Keywords: 
 
 ;; This file is part of GNU Emacs.
@@ -22,7 +22,7 @@
 ;; the Free Software Foundation, Inc., 59 Temple Place - Suite 330,
 ;; Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-navigate.el,v 1.14 2003/03/20 16:43:30 berndl Exp $
+;; $Id: ecb-navigate.el,v 1.15 2003/07/06 06:11:07 berndl Exp $
 
 ;;; Commentary:
 

@@ -1,8 +1,12 @@
 ;;; ecb-autogen.el --- Auto load statement generator
 
-;;; Copyright (C) 2003 Klaus Berndl
+;; Copyright (C) 2002 Klaus Berndl
 
-;; $Id: ecb-autogen.el,v 1.7 2003/03/20 16:43:33 berndl Exp $
+;; Author: Klaus Berndl <klaus.berndl@sdm.de>
+;; Maintainer: Klaus Berndl <klaus.berndl@sdm.de>
+;; Keywords: browser, code, programming, tools
+
+;; $Id: ecb-autogen.el,v 1.8 2003/07/06 06:11:07 berndl Exp $
 
 ;; This file is not part of GNU Emacs.
 
