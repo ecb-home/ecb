@@ -174,13 +174,15 @@ with the same arguments as `tree-node-expanded-fn'."
   (tree-buffer-remove-highlight)
   (setq tree-buffer-highlighted-node-data node-data)
   (when tree-buffer-highlighted-node-data
-    (let ((node (tree-buffer-find-node-data tree-buffer-highlighted-node-data)))
+    (let ((node (tree-buffer-find-node-data
+                 tree-buffer-highlighted-node-data))
+          (w (get-buffer-window (current-buffer))))
       (when node
         (move-overlay tree-buffer-highlight-overlay
                       (tree-buffer-get-node-name-start-point node)
                       (tree-buffer-get-node-name-end-point node))
         (if (not (pos-visible-in-window-p
-                  (tree-buffer-get-node-name-start-point node)))
+                  (tree-buffer-get-node-name-start-point node) w))
             (recenter))))))
   
 (defun tree-buffer-insert-text(text &optional facer)
@@ -273,10 +275,10 @@ current tree-buffer."
       ;; window (= condition 1) and if not all of it´s children are visible in
       ;; the window then we can do some optimization.
       (when (and (save-excursion
-                   (previous-line 1)
+                   (forward-line -1)
                    (pos-visible-in-window-p (point) w))
                  (not (save-excursion
-                        (next-line exp-node-children-count)
+                        (forward-line exp-node-children-count)
                         (pos-visible-in-window-p (point) w))))
         ;; optimize the display of NODE and it´s children so as much as
         ;; possible are visible.
