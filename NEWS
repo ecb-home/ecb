@@ -11,11 +11,19 @@
     Sources- and/or the History-buffer. Thanks for suggestion to Markus
     Gritsch <gritsch@iue.tuwien.ac.at>. Per default case is now ignored.
 
+** New icons for parent-display in the Methods-buffer.
+   Thanks to Markus Gritsch <gritsch@iue.tuwien.ac.at> for contributing the
+   icon-images.
+    
 ** Fixed Bugs
 
 *** Fixed a bug in the mechanism which prescanes directories for emptyness.
     Now a directory is checked if it is accessible before it is prescanned -
     otherwise the prescan could fail with an error.
+
+*** Fixed a bug in the autom. option-upgrading-mechanism.
+    Thanks to Javier Oviedo <joviedo@telogy.com> for pointing to the
+    underlying problem.
 
 
 

@@ -285,6 +285,7 @@ distrib: $(ecb_INFO_DIR)/$(ecb_INFO) prepversion autoloads ecb
 	@$(CP) -r $(ecb_IMAGE_DIR) ecb-$(ecb_VERSION)
 	@find ecb-$(ecb_VERSION)/$(ecb_IMAGE_DIR) -name CVS -print | xargs rm -Rf
 	@find ecb-$(ecb_VERSION)/$(ecb_IMAGE_DIR) -name *~ -print | xargs $(RM)
+	@find ecb-$(ecb_VERSION)/$(ecb_IMAGE_DIR) -name *.png -print | xargs $(RM)
 	@tar -cvzf ecb-$(ecb_VERSION).tar.gz ecb-$(ecb_VERSION)
 	@$(RM) -R ecb-$(ecb_VERSION)
 
