@@ -90,6 +90,7 @@ Changing, customizing and redrawing the ECB-layout
 
 Customizing ECB
 
+* General aspects::             General aspects for customizing ECB
 * Most important options::      Which option you must know
 * Customizable options::        All customizable options of ECB
 
@@ -332,11 +333,12 @@ File: ecb.info,  Node: Overview,  Next: Activation and Deactivation,  Prev: Inst
 Overview
 ********
 
-ECB is a global minor-mode which offers a few "ECB-windows" for browsing your
-sources comfortable with the mouse and the keyboard.  These "special" windows
-are also called "tree-buffer" in this manual. Every "item" in such a
-tree-buffer, i.e. every line, is also called a "node" of this tree-buffer.
-There are currently three different types of ECB-windows/tree-buffers:
+ECB is a global minor-mode which offers a couple of "ECB-windows" for
+browsing your sources comfortable with the mouse and the keyboard.  These
+"special" windows are also called "tree-buffer" in this manual. Every "item"
+in such a tree-buffer, i.e. every line, is also called a "node" of this
+tree-buffer. There are currently three different types of
+ECB-windows/tree-buffers:
 
  - ECB-Directories
 
@@ -385,8 +387,8 @@ detail.
 
 ---------- Footnotes ----------
 
-(1) This is only one example of the layouts ECB offers, *Note Changing the
-ECB-layout::
+(1) This is only one example of the layouts ECB offers, see *Note Changing
+the ECB-layout::
 
 
 File: ecb.info,  Node: ECB Directories,  Next: ECB Sources,  Prev: Overview,  Up: Overview
@@ -396,13 +398,13 @@ ECB Directories
 
  * Select directories (and - if enabled - source files) in the
    "ECB-Directories" buffer by clicking a mouse button on the directory name
-   or by hitting RETURN when the cursor is placed on the item line, *Note
+   or by hitting RETURN when the cursor is placed on the item line, see *Note
    Usage of ECB::.
 
  * Directory names with a "[+]" symbol after (or before) them can be
-   expanded/collapsed by clicking on the symbol, pressing the TAB key when
-   the cursor is placed on the package line or clicking a mouse button on the
-   item, *Note Usage of ECB::.
+   expanded/collapsed by clicking on the symbol, pressing the TAB key (*note
+   Using the keyboard::) when the cursor is placed on the package line or
+   clicking a mouse button on the item, see *Note Using the mouse::.
 
  * Right clicking on an item will open a popup menu where different
    operations on the item under the mouse cursor can be performed.
@@ -443,8 +445,8 @@ ECB Methods
 
  * The "ECB-Methods" buffer contains the methods (and variables, if you want)
    in the selected source file. When a method/variable is selected with the
-   primary mouse button  or RETURN (*note Usage of ECB::) the edit buffer
-   will jump to the method/variable.
+   primary mouse button (*note Using the mouse::) or RETURN (*note Using the
+   keyboard::) the edit buffer will jump to the method/variable.
 
  * Clicking on a method/variable with the secondary mouse button or C-RETURN
    (*note Usage of ECB::) will jump to the method in the other edit window.
@@ -1020,8 +1022,8 @@ File: ecb.info,  Node: Interactive ECB commands,  Prev: ECB-window synchronizing
 Interactive ECB commands
 ========================
 
-ECB offers the a lot of interactive commands. Some of these commands prompt
-the user in the minibuffer if called with a prefix argument.
+ECB offers a lot of interactive commands. Some of these commands prompt the
+user in the minibuffer if called with a prefix argument.
 
 Example: If `ecb-clear-history' is called with a prefix argument then you
 will be prompted in the minibuffer with:
@@ -1115,10 +1117,12 @@ These are the interactive commands of ECB (listed in alphabetical order):
    otherwise off. Return non-`nil' if the minor mode is enabled.
 
  - Command: ecb-nav-goto-previous
-   Go backward in the navigation historylist, *Note Back/forward navigation::.
+   Go backward in the navigation historylist, see *Note Back/forward
+   navigation::.
 
  - Command: ecb-nav-goto-next
-   Go forward in the navigation historylist, *Note Back/forward navigation::.
+   Go forward in the navigation historylist, see *Note Back/forward
+   navigation::.
 
  - Command: ecb-rebuild-methods-buffer
    Updates the methods buffer with the current buffer after deleting the
@@ -1210,65 +1214,74 @@ Customizing ECB
 ***************
 
 This chapter describes how to customize ECB for your personal taste.  The
-first chapter gives an overview of the most important options and the second
-one lists all options of ECB.
+first section introduces some general aspects (which you should really
+know!), the second one gives an overview of the most important options and
+the third one lists all options of ECB (divided into the customize groups).
 
 * Menu:
 
+* General aspects::             General aspects for customizing ECB
 * Most important options::      Which option you must know
 * Customizable options::        All customizable options of ECB
 
-*ATTENTION*: The best way you customize all the options of ECB is via the
-customize-feature of (X)Emacs, i.e. means calling the commands
-`customize-option' or `customize-group' etc. This is also the strongly
-recommended way!
+
+File: ecb.info,  Node: General aspects,  Next: Most important options,  Prev: Customizing,  Up: Customizing
+
+General aspects for customizing ECB
+===================================
+
+The best way to customize all the options of ECB is via the customize-feature
+of (X)Emacs, i.e. means calling the commands `customize-option' or
+`customize-group' etc. This is also the strongly recommended way!
 
 But of course you can also use `setq' or some elisp-code to change the values
 of many but not all of the options. The values of the following options *MUST
 NOT* be changed via `setq' or elisp-code but only with the customize-feature!
 
- - `ecb-source-path'
+`ecb-advice-window-functions'           `ecb-bucket-token-display'
+`ecb-compile-window-height'             `ecb-compile-window-temporally-enlarge'
+`ecb-exclude-parents-regexp'            `ecb-font-lock-tokens'
+`ecb-highlight-token-with-point-delay'  `ecb-key-map'
+`ecb-layout-nr'                         `ecb-layout-window-sizes'
+`ecb-mode-line-prefixes'                `ecb-show-node-info-in-minibuffer'
+`ecb-show-tokens'                       `ecb-source-path'
+`ecb-token-display-function'            `ecb-tree-RET-selects-edit-window'
+`ecb-type-token-display'                `ecb-windows-height'
+`ecb-window-sync-delay'                 `ecb-windows-width'
 
- - `ecb-tree-RET-selects-edit-window'
+*NOTE*: If you are the administrator for an Emacs-site, means you are
+responsible for the basic customization of a lot of Emacs users, then you
+maybe need a way to customize Emacs and ECB without changing everyones
+`.emacs'-file and normally you will do this with the file `site-start.el'.
+You can customize all options of ECB in a central `site-start.el' (even the
+options mentioned above!) but you *MUST NOT* do this via `setq' but you have
+to use `custom-set-variables'(1)! Here is a short example how this can be
+done:
 
- - `ecb-font-lock-tokens'
+   (custom-set-variables '(ecb-show-tokens ((include collapsed nil)
+                                            (parent collapsed nil)
+                                            (type flattened nil)
+                                            (variable collapsed name)
+                                            (function flattened name)
+                                            (rule flattened name)
+                                            (section flattened nil)
+                                            (def collapsed name)
+                                            (t collapsed name)))
+                         '(ecb-font-lock-tokens t)
+                         ;; add here more options of ECB it you want
+                         )
 
- - `ecb-bucket-token-display'
+But ensure that you customize the options with the correct lisp format. Read
+carefully the docstrings of the options you want to customize from within
+elisp-code!
 
- - `ecb-token-display-function'
+---------- Footnotes ----------
 
- - `ecb-type-token-display'
-
- - `ecb-show-tokens'
-
- - `ecb-exclude-parents-regexp'
-
- - `ecb-highlight-token-with-point-delay'
-
- - `ecb-window-sync-delay'
-
- - `ecb-show-node-info-in-minibuffer'
-
- - `ecb-key-map'
-
- - `ecb-layout-nr'
-
- - `ecb-compile-window-height'
-
- - `ecb-compile-window-temporally-enlarge'
-
- - `ecb-windows-width'
-
- - `ecb-windows-height'
-
- - `ecb-advice-window-functions'
-
- - `ecb-layout-window-sizes'
-
- - `ecb-mode-line-prefixes'
+(1) At least for the options for which `setq' is explicitly forbidden, but it
+is recommended to use always `custom-set-variables'!
 
 
-File: ecb.info,  Node: Most important options,  Next: Customizable options,  Prev: Customizing,  Up: Customizing
+File: ecb.info,  Node: Most important options,  Next: Customizable options,  Prev: General aspects,  Up: Customizing
 
 The most important options of ECB
 =================================
@@ -2714,11 +2727,21 @@ File: ecb.info,  Node: Submitting problem report,  Next: Upgrading,  Prev: Custo
 Submitting a problem report
 ***************************
 
-If you run into problems with ECB you can/should send a problem report to the
+If you run into problems with ECB you should first take a look into
+
+ - *Note FAQ:: or
+
+ - *Note Conflicts and bugs:: or
+
+ - *Note Tips and tricks:: or
+
+ - the appropriate section of this online-manual.
+
+If your problem(s) still remain you can/should send a problem report to the
 ECB mailing list <ecb-list@lists.sourceforge.net>. ECB offers you a command
 which does all necessary for you to send a problem report. Just call
 `ecb-submit-problem-report'! Please read the documentation of this command,
-*Note Interactive ECB commands::.
+see *Note Interactive ECB commands::.
 
 This command creates a problem-report buffer for you. After that you get a
 menu "Mail" (dependend on the mail-package used, the menu can have a
@@ -3315,7 +3338,7 @@ with ECB?
 
 What should i do, if a have a     Send a problem-report to the ECB-mailing-list
 problem which can not be          with the command `ecb-submit-problem-report',
-solved even after reading the     *Note Submitting problem report::.
+solved even after reading the     see *Note Submitting problem report::.
 online-help?                      
 
 What should i do, if another      Take a look into *Note Conflicts::. If your
@@ -3336,7 +3359,8 @@ as Java?                          semantic-versions >= semantic-1.4beta13
 
 Why does ECB not recognize my     Your C++-files have probably an extension
 source-files for C++?             which is not mapped to c++-mode in
-                                  `auto-mode-alist', *Note Setting up Emacs::.
+                                  `auto-mode-alist', see *Note Setting up
+                                  Emacs::.
 
 Why doesn't ECB display the       There can be several reasons: First the value
 node name in the echo area if     of the option
@@ -3553,86 +3577,88 @@ Concept Index
 
 Tag Table:
 Node: Top183
-Node: Install and first steps6133
-Node: Installation6629
-Node: Setting up Emacs9434
-Ref: Setting up Emacs-Footnote-111250
-Ref: Setting up Emacs-Footnote-211354
-Node: First steps11455
-Ref: First steps-Footnote-112603
-Node: Overview12832
-Ref: Overview-Footnote-115577
-Node: ECB Directories15666
-Node: ECB Sources16643
-Node: ECB Methods17797
-Node: Activation and Deactivation18315
-Node: Standard activation18685
-Node: Automatic activation19263
-Node: Usage of ECB20313
-Node: Using the mouse21224
-Ref: Using the mouse-Footnote-123499
-Node: Using the keyboard23545
-Node: Navigation24362
-Node: Incremental search25702
-Node: The edit-window27849
-Node: Temp- and compile-buffers29655
-Node: The Methods buffer31699
-Node: Customizing the display32140
-Node: Rebuilding the Methods33862
-Node: The ECB-layout34717
-Node: Changing the ECB-layout35267
-Node: Redrawing the ECB-layout36369
-Node: Hiding the ECB windows37172
-Node: Back/forward navigation37745
-Ref: Back/forward navigation-Footnote-138846
-Node: ECB-window synchronizing38905
-Node: Interactive ECB commands41487
-Node: Customizing50274
-Node: Most important options51788
-Node: Customizable options53577
-Node: ecb-general54493
-Node: ecb-directories72788
-Node: ecb-sources77732
-Node: ecb-methods79602
-Node: ecb-history91542
-Node: ecb-layout93222
-Node: ecb-face-options107081
-Node: ecb-faces108738
-Node: ecb-download112730
-Node: Submitting problem report113951
-Node: Upgrading115108
-Node: Downloading new versions115871
-Ref: Download required packages117628
-Ref: Downloading new versions-Footnote-1118726
-Node: Auto. option-upgrading118775
-Node: User interface119083
-Node: Background information119969
-Node: Tips and tricks123367
-Node: Changing faces124060
-Node: Small screens124866
-Node: Simulating speedbar126260
-Node: Integrating speedbar127069
-Node: Optimize scrolling127335
-Node: Large directories128415
-Node: Using eshell129081
-Node: Elisp programming129271
-Node: List of variables129880
-Node: List of hooks130192
-Node: tree-buffer130690
-Node: Adviced functions131496
-Ref: Adviced functions-Footnote-1132103
-Node: New layouts132174
-Node: Conflicts and bugs132357
-Node: Conflicts132832
-Node: VC133421
-Node: follow-mouse133714
-Node: avoid134392
-Node: calendar134756
-Node: calculator135502
-Node: Bugs136004
-Node: FAQ136224
-Node: Command Index138900
-Node: Option Index140879
-Node: Concept Index146104
+Node: Install and first steps6201
+Node: Installation6697
+Node: Setting up Emacs9502
+Ref: Setting up Emacs-Footnote-111318
+Ref: Setting up Emacs-Footnote-211422
+Node: First steps11523
+Ref: First steps-Footnote-112671
+Node: Overview12900
+Ref: Overview-Footnote-115651
+Node: ECB Directories15744
+Node: ECB Sources16761
+Node: ECB Methods17915
+Node: Activation and Deactivation18464
+Node: Standard activation18834
+Node: Automatic activation19412
+Node: Usage of ECB20462
+Node: Using the mouse21373
+Ref: Using the mouse-Footnote-123648
+Node: Using the keyboard23694
+Node: Navigation24511
+Node: Incremental search25851
+Node: The edit-window27998
+Node: Temp- and compile-buffers29804
+Node: The Methods buffer31848
+Node: Customizing the display32289
+Node: Rebuilding the Methods34011
+Node: The ECB-layout34866
+Node: Changing the ECB-layout35416
+Node: Redrawing the ECB-layout36518
+Node: Hiding the ECB windows37321
+Node: Back/forward navigation37894
+Ref: Back/forward navigation-Footnote-138995
+Node: ECB-window synchronizing39054
+Node: Interactive ECB commands41636
+Node: Customizing50433
+Node: General aspects51067
+Ref: General aspects-Footnote-153831
+Node: Most important options53963
+Node: Customizable options55756
+Node: ecb-general56672
+Node: ecb-directories74967
+Node: ecb-sources79911
+Node: ecb-methods81781
+Node: ecb-history93721
+Node: ecb-layout95401
+Node: ecb-face-options109260
+Node: ecb-faces110917
+Node: ecb-download114909
+Node: Submitting problem report116130
+Node: Upgrading117493
+Node: Downloading new versions118256
+Ref: Download required packages120013
+Ref: Downloading new versions-Footnote-1121111
+Node: Auto. option-upgrading121160
+Node: User interface121468
+Node: Background information122354
+Node: Tips and tricks125752
+Node: Changing faces126445
+Node: Small screens127251
+Node: Simulating speedbar128645
+Node: Integrating speedbar129454
+Node: Optimize scrolling129720
+Node: Large directories130800
+Node: Using eshell131466
+Node: Elisp programming131656
+Node: List of variables132265
+Node: List of hooks132577
+Node: tree-buffer133075
+Node: Adviced functions133881
+Ref: Adviced functions-Footnote-1134488
+Node: New layouts134559
+Node: Conflicts and bugs134742
+Node: Conflicts135217
+Node: VC135806
+Node: follow-mouse136099
+Node: avoid136777
+Node: calendar137141
+Node: calculator137887
+Node: Bugs138389
+Node: FAQ138609
+Node: Command Index141327
+Node: Option Index143306
+Node: Concept Index148531
 
 End Tag Table

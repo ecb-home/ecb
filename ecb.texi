@@ -165,6 +165,7 @@ Changing, customizing and redrawing the ECB-layout
 
 Customizing ECB
 
+* General aspects::             General aspects for customizing ECB
 * Most important options::      Which option you must know
 * Customizable options::        All customizable options of ECB
 
@@ -351,11 +352,12 @@ appropriate way)!
 to setup your Emacs-configuration properly so semantic can be
 activated automatically for parsing your Emacs-Lisp, C, C++ or Java
 buffers@footnote{semantic supports some more ``languages'' like
-Makefiles etc. but these are the most important ones.}. For this Emacs must activate the correct @code{major-mode}
-for the source-files and Emacs can only do this if the option
-@code{auto-mode-alist} is setup correctly. The correct major-modes and
-possible file-extensions@footnote{Especially for C++ and C you can
-use any extension you want but these are the most common ones!} are:
+Makefiles etc. but these are the most important ones.}. For this Emacs
+must activate the correct @code{major-mode} for the source-files and
+Emacs can only do this if the option @code{auto-mode-alist} is setup
+correctly. The correct major-modes and possible
+file-extensions@footnote{Especially for C++ and C you can use any
+extension you want but these are the most common ones!} are:
 
 @multitable @columnfractions 0.20 0.50 0.30
 
@@ -452,8 +454,8 @@ ECB)
 
 @cindex tree-buffer
 @cindex ECB-windows
-ECB is a global minor-mode which offers a few @dfn{ECB-windows} for
-browsing your sources comfortable with the mouse and the keyboard.
+ECB is a global minor-mode which offers a couple of @dfn{ECB-windows}
+for browsing your sources comfortable with the mouse and the keyboard.
 These ``special'' windows are also called @dfn{tree-buffer} in this
 manual. Every @dfn{item} in such a tree-buffer, i.e. every line, is
 also called a @dfn{node} of this tree-buffer. There are currently
@@ -473,9 +475,10 @@ output of Emacs-compilation (compile, grep etc.) is shown
 
 The following ``ascii-screenshot'' illustrates the typical layout of
 the ECB-frame@footnote{This is only one example of the layouts ECB
-offers, @xref{Changing the ECB-layout}}:
+offers, see @ref{Changing the ECB-layout}}:
 
 @example
+@group
 ------------------------------------------------------------------
 |              |                                                 |
 |  Directories |                                                 |
@@ -497,6 +500,7 @@ offers, @xref{Changing the ECB-layout}}:
 |                 Compilation-window (optional)                  |
 |                                                                |
 ------------------------------------------------------------------
+@end group
 @end example
 
 In the following subsections the ``special'' ECB-windows will be
@@ -517,13 +521,13 @@ explained in detail.
 Select directories (and - if enabled - source files) in the
 @dfn{ECB-Directories} buffer by clicking a mouse button on the directory
 name or by hitting RETURN when the cursor is placed on the item line,
-@xref{Usage of ECB}.
+see @ref{Usage of ECB}.
 
 @item
 Directory names with a ``[+]'' symbol after (or before) them can be
 expanded/collapsed by clicking on the symbol, pressing the TAB key
-when the cursor is placed on the package line or clicking a mouse
-button on the item, @xref{Usage of ECB}.
+(@pxref{Using the keyboard}) when the cursor is placed on the package
+line or clicking a mouse button on the item, see @ref{Using the mouse}.
 
 @item
 Right clicking on an item will open a popup menu where different
@@ -573,10 +577,11 @@ operation on the item under the mouse cursor can be performed.
 @cindex Methods
 @itemize @bullet
 @item
-The @dfn{ECB-Methods} buffer contains the methods (and variables, if you
-want) in the selected source file. When a method/variable is selected
-with the primary mouse button  or RETURN (@pxref{Usage of ECB}) the
-edit buffer will jump to the method/variable.
+The @dfn{ECB-Methods} buffer contains the methods (and variables, if
+you want) in the selected source file. When a method/variable is
+selected with the primary mouse button (@pxref{Using the mouse}) or
+RETURN (@pxref{Using the keyboard}) the edit buffer will jump to the
+method/variable.
 
 @item
 Clicking on a method/variable with the secondary mouse button or C-RETURN
@@ -1166,7 +1171,7 @@ if you just want to do this!
 @section Interactive ECB commands
 
 @noindent
-ECB offers the a lot of interactive commands. Some of these commands
+ECB offers a lot of interactive commands. Some of these commands
 prompt the user in the minibuffer if called with a prefix argument.
 
 Example: If @code{ecb-clear-history} is called with a prefix argument
@@ -1285,12 +1290,12 @@ enabled.
 @end deffn
 
 @deffn Command ecb-nav-goto-previous
-Go backward in the navigation historylist, @xref{Back/forward
+Go backward in the navigation historylist, see @ref{Back/forward
 navigation}.
 @end deffn
 
 @deffn Command ecb-nav-goto-next
-Go forward in the navigation historylist, @xref{Back/forward
+Go forward in the navigation historylist, see @ref{Back/forward
 navigation}.
 @end deffn
 
@@ -1394,49 +1399,88 @@ also via the ECB keymap with prefix @kbd{C-c .} (see
 @chapter Customizing ECB
 
 This chapter describes how to customize ECB for your personal taste.
-The first chapter gives an overview of the most important options and
-the second one lists all options of ECB.
+The first section introduces some general aspects (which you should
+really know!), the second one gives an overview of the most important
+options and the third one lists all options of ECB (divided into the
+customize groups).
 
 @menu
+* General aspects::             General aspects for customizing ECB
 * Most important options::      Which option you must know
 * Customizable options::        All customizable options of ECB
 @end menu
 
-@strong{ATTENTION}: The best way you customize all the options of ECB
-is via the customize-feature of (X)Emacs, i.e. means calling the
-commands @code{customize-option} or @code{customize-group} etc. This
-is also the strongly recommended way!
+@node General aspects, Most important options, Customizing, Customizing
+@section General aspects for customizing ECB
+
+The best way to customize all the options of ECB is via the
+customize-feature of (X)Emacs, i.e. means calling the commands
+@code{customize-option} or @code{customize-group} etc. This is also
+the strongly recommended way!
 
 But of course you can also use @code{setq} or some elisp-code to
 change the values of many but not all of the options. The values of
 the following options @strong{MUST NOT} be changed via @code{setq} or
 elisp-code but only with the customize-feature!
 
-@itemize @minus
-@item @code{ecb-source-path}
-@item @code{ecb-tree-RET-selects-edit-window}
-@item @code{ecb-font-lock-tokens}
-@item @code{ecb-bucket-token-display}
-@item @code{ecb-token-display-function}
-@item @code{ecb-type-token-display}
-@item @code{ecb-show-tokens}
-@item @code{ecb-exclude-parents-regexp}
-@item @code{ecb-highlight-token-with-point-delay}
-@item @code{ecb-window-sync-delay}
-@item @code{ecb-show-node-info-in-minibuffer}
-@item @code{ecb-key-map}
-@item @code{ecb-layout-nr}
-@item @code{ecb-compile-window-height}
-@item @code{ecb-compile-window-temporally-enlarge}
-@item @code{ecb-windows-width}
-@item @code{ecb-windows-height}
+@multitable @columnfractions 0.5 0.5
+
 @item @code{ecb-advice-window-functions}
-@item @code{ecb-layout-window-sizes}
+@tab @code{ecb-bucket-token-display}
+@item @code{ecb-compile-window-height}
+@tab @code{ecb-compile-window-temporally-enlarge}
+@item @code{ecb-exclude-parents-regexp}
+@tab @code{ecb-font-lock-tokens}
+@item @code{ecb-highlight-token-with-point-delay}
+@tab @code{ecb-key-map}
+@item @code{ecb-layout-nr}
+@tab @code{ecb-layout-window-sizes}
 @item @code{ecb-mode-line-prefixes}
-@end itemize
+@tab @code{ecb-show-node-info-in-minibuffer}
+@item @code{ecb-show-tokens}
+@tab @code{ecb-source-path}
+@item @code{ecb-token-display-function}
+@tab @code{ecb-tree-RET-selects-edit-window}
+@item @code{ecb-type-token-display}
+@tab @code{ecb-windows-height}
+@item @code{ecb-window-sync-delay}
+@tab @code{ecb-windows-width}
+@end multitable
 
+@strong{NOTE}: If you are the administrator for an Emacs-site, means
+you are responsible for the basic customization of a lot of Emacs
+users, then you maybe need a way to customize Emacs and ECB without
+changing everyones @file{.emacs}-file and normally you will do this
+with the file @file{site-start.el}. You can customize all options of
+ECB in a central @file{site-start.el} (even the options mentioned
+above!) but you @strong{MUST NOT} do this via @code{setq} but you have
+to use @code{custom-set-variables}@footnote{At least for the options
+for which @code{setq} is explicitly forbidden, but it is recommended
+to use always @code{custom-set-variables}!}! Here is a short example
+how this can be done:
 
-@node Most important options, Customizable options, Customizing, Customizing
+@example
+@group
+(custom-set-variables '(ecb-show-tokens ((include collapsed nil)
+                                         (parent collapsed nil)
+                                         (type flattened nil)
+                                         (variable collapsed name)
+                                         (function flattened name)
+                                         (rule flattened name)
+                                         (section flattened nil)
+                                         (def collapsed name)
+                                         (t collapsed name)))
+                      '(ecb-font-lock-tokens t)
+                      ;; add here more options of ECB it you want
+                      )
+@end group
+@end example
+
+But ensure that you customize the options with the correct lisp
+format. Read carefully the docstrings of the options you want
+to customize from within elisp-code!
+
+@node Most important options, Customizable options, General aspects, Customizing
 @section The most important options of ECB
 
 Here are the most important options (it is recommended to check at
@@ -2478,12 +2522,14 @@ type-tokens in addition to the displaying and colorizing semantic
 does. But a value like the following could be a usefull setting:
 
 @example
+@group
 ((default
    ("class" t ecb-type-token-class-face)
    ("group" nil ecb-type-token-group-face))
  (c-mode
   ("struct" nil ecb-type-token-struct-face)
   ("typedef" nil ecb-type-token-typedef-face)))
+@end group
 @end example
 
 This means that in @code{c-mode} only ``struct''s and ``typedef''s are
@@ -3114,11 +3160,21 @@ Valid values are either the string ``latest'' or a version number like
 
 @cindex Bug report
 @cindex Problem report
-If you run into problems with ECB you can/should send a problem report
+If you run into problems with ECB you should first take a look into
+
+@itemize @minus
+@item @ref{FAQ} or
+@item @ref{Conflicts and bugs} or
+@item @ref{Tips and tricks} or
+@item the appropriate section of this online-manual.
+@end itemize
+
+If your problem(s) still remain you can/should send a problem report
 to the ECB mailing list @email{ecb-list@@lists.sourceforge.net}. ECB
 offers you a command which does all necessary for you to send a
-problem report. Just call @code{ecb-submit-problem-report}! Please read the
-documentation of this command, @xref{Interactive ECB commands}.
+problem report. Just call @code{ecb-submit-problem-report}! Please
+read the documentation of this command, see @ref{Interactive ECB
+commands}.
 
 This command creates a problem-report buffer for you. After that you
 get a menu ``Mail'' (dependend on the mail-package used, the menu can
@@ -3180,6 +3236,7 @@ If you are behind a firewall and you have to use a proxy you maybe
 need the following wget-configuration in your file @file{~/.wgetrc}:
 
 @example
+@group
 # Define your proxies (where 8080 and 8081 are examples
 # for the portnumbers)
 http_proxy = http://your.proxy.com:8080
@@ -3187,6 +3244,7 @@ ftp_proxy  = http://your.ftpproxy.com:8081
   
 # If you do not want to use proxy at all, set this to off.
 use_proxy = on
+@end group
 @end example
 @end enumerate
 
@@ -3227,6 +3285,7 @@ confirm this and the download and install succeeds then you will get a
 message-buffer which tells you something like:
 
 @example
+@group
 ---------------------------------------------------------------
 Current state of the required packages semantic and eieio:
 
@@ -3239,6 +3298,7 @@ Current state of the required packages semantic and eieio:
 After adding the new directory to your @code{load-path} and then
 restarting Emacs the new package(s) can be activated.
 ---------------------------------------------------------------
+@end group
 @end example
 
 @strong{Note}: By setting the option @code{ecb-version-check} to
@@ -3664,6 +3724,7 @@ size but splits the window equally. But if you add this to your
 @file{.emacs} it works:
 
 @example
+@group
 (add-hook 'initial-calendar-window-hook
           (function (lambda ()
                       (when (and ecb-minor-mode
@@ -3673,6 +3734,7 @@ size but splits the window equally. But if you add this to your
                         (or (= (frame-width) (window-width))
                             (shrink-window (- (window-height) 9))))
                      )))
+@end group
 @end example
 
 @node calculator, , calendar, Conflicts
@@ -3697,7 +3759,7 @@ maintainers of ECB try to fix these bugs as soon as possible.
 
 This is the Emacs Code Browser FAQ.
 
-@c To produce prettier output we make an empty column between the
+@c To produce prettier output we make a small empty column between the
 @c question- and the answer-column. Therefore every Q/A-item must look
 @c like:
 @c
@@ -3743,7 +3805,7 @@ What should i do, if a have a problem which can not be solved even
 after reading the online-help?
 @tab @tab
 Send a problem-report to the ECB-mailing-list with the command
-@code{ecb-submit-problem-report}, @xref{Submitting problem report}.
+@code{ecb-submit-problem-report}, see @ref{Submitting problem report}.
 
 @item @tab @tab
 
@@ -3785,7 +3847,7 @@ semantic-1.4beta13 should support C++ really well.
 Why does ECB not recognize my source-files for C++?
 @tab @tab
 Your C++-files have probably an extension which is not mapped to
-c++-mode in @code{auto-mode-alist}, @xref{Setting up Emacs}.
+c++-mode in @code{auto-mode-alist}, see @ref{Setting up Emacs}.
 
 @item @tab @tab
 

@@ -96,7 +96,8 @@ mailing list <a href="mailto:ecb-list@lists.sourceforge.net">ecb-list@lists.sour
 
 <p>Customizing ECB
 
-</p><li><a href="#Most%20important%20options">Most important options</a>:       Which option you must know
+</p><li><a href="#General%20aspects">General aspects</a>:              General aspects for customizing ECB
+<li><a href="#Most%20important%20options">Most important options</a>:       Which option you must know
 <li><a href="#Customizable%20options">Customizable options</a>:         All customizable options of ECB
 
 <p>All customizable options of ECB
@@ -289,10 +290,11 @@ appropriate way)!
 <p><strong>NOTE</strong>: ECB is for browsing source-files and therefore you have
 to setup your Emacs-configuration properly so semantic can be
 activated automatically for parsing your Emacs-Lisp, C, C++ or Java
-buffers<a rel=footnote href="#fn-1"><sup>1</sup></a>. For this Emacs must activate the correct <code>major-mode</code>
-for the source-files and Emacs can only do this if the option
-<code>auto-mode-alist</code> is setup correctly. The correct major-modes and
-possible file-extensions<a rel=footnote href="#fn-2"><sup>2</sup></a> are:
+buffers<a rel=footnote href="#fn-1"><sup>1</sup></a>. For this Emacs
+must activate the correct <code>major-mode</code> for the source-files and
+Emacs can only do this if the option <code>auto-mode-alist</code> is setup
+correctly. The correct major-modes and possible
+file-extensions<a rel=footnote href="#fn-2"><sup>2</sup></a> are:
 
 <p><table>
 <tr align="left"><td valign="top"><strong>Language</strong>
@@ -375,8 +377,8 @@ Up:<a rel=up accesskey=u href="#Top">Top</a>
 
 <h2>Overview</h2>
 
-<p>ECB is a global minor-mode which offers a few <dfn>ECB-windows</dfn> for
-browsing your sources comfortable with the mouse and the keyboard. 
+<p>ECB is a global minor-mode which offers a couple of <dfn>ECB-windows</dfn>
+for browsing your sources comfortable with the mouse and the keyboard. 
 These "special" windows are also called <dfn>tree-buffer</dfn> in this
 manual. Every <dfn>item</dfn> in such a tree-buffer, i.e. every line, is
 also called a <dfn>node</dfn> of this tree-buffer. There are currently
@@ -442,12 +444,12 @@ Up:<a rel=up accesskey=u href="#Overview">Overview</a>
 <li>Select directories (and - if enabled - source files) in the
 <dfn>ECB-Directories</dfn> buffer by clicking a mouse button on the directory
 name or by hitting RETURN when the cursor is placed on the item line,
-See <a href="#Usage%20of%20ECB">Usage of ECB</a>.
+see <a href="#Usage%20of%20ECB">Usage of ECB</a>.
 
 <li>Directory names with a "[+]" symbol after (or before) them can be
 expanded/collapsed by clicking on the symbol, pressing the TAB key
-when the cursor is placed on the package line or clicking a mouse
-button on the item, See <a href="#Usage%20of%20ECB">Usage of ECB</a>.
+(see <a href="#Using%20the%20keyboard">Using the keyboard</a>) when the cursor is placed on the package
+line or clicking a mouse button on the item, see <a href="#Using%20the%20mouse">Using the mouse</a>.
 
 <li>Right clicking on an item will open a popup menu where different
 operations on the item under the mouse cursor can be performed.
@@ -497,10 +499,11 @@ Up:<a rel=up accesskey=u href="#Overview">Overview</a>
 <h3>ECB Methods</h3>
 
 <ul>
-<li>The <dfn>ECB-Methods</dfn> buffer contains the methods (and variables, if you
-want) in the selected source file. When a method/variable is selected
-with the primary mouse button  or RETURN (see <a href="#Usage%20of%20ECB">Usage of ECB</a>) the
-edit buffer will jump to the method/variable.
+<li>The <dfn>ECB-Methods</dfn> buffer contains the methods (and variables, if
+you want) in the selected source file. When a method/variable is
+selected with the primary mouse button (see <a href="#Using%20the%20mouse">Using the mouse</a>) or
+RETURN (see <a href="#Using%20the%20keyboard">Using the keyboard</a>) the edit buffer will jump to the
+method/variable.
 
 <li>Clicking on a method/variable with the secondary mouse button or C-RETURN
 (see <a href="#Usage%20of%20ECB">Usage of ECB</a>) will jump to the method in the other edit window. 
@@ -1155,7 +1158,7 @@ Up:<a rel=up accesskey=u href="#Usage%20of%20ECB">Usage of ECB</a>
 
 <h3>Interactive ECB commands</h3>
 
-<p>ECB offers the a lot of interactive commands. Some of these commands
+<p>ECB offers a lot of interactive commands. Some of these commands
 prompt the user in the minibuffer if called with a prefix argument.
 
 <p>Example: If <code>ecb-clear-history</code> is called with a prefix argument
@@ -1442,7 +1445,7 @@ enabled.
 </table>
 <table width="95%" align="center">
 <tr><td>
-Go backward in the navigation historylist, See <a href="#Back%2fforward%20navigation">Back/forward navigation</a>. 
+Go backward in the navigation historylist, see <a href="#Back%2fforward%20navigation">Back/forward navigation</a>. 
 </td></tr>
 </table>
 
@@ -1456,7 +1459,7 @@ Go backward in the navigation historylist, See <a href="#Back%2fforward%20naviga
 </table>
 <table width="95%" align="center">
 <tr><td>
-Go forward in the navigation historylist, See <a href="#Back%2fforward%20navigation">Back/forward navigation</a>. 
+Go forward in the navigation historylist, see <a href="#Back%2fforward%20navigation">Back/forward navigation</a>. 
 </td></tr>
 </table>
 
@@ -1655,51 +1658,91 @@ Up:<a rel=up accesskey=u href="#Top">Top</a>
 <h2>Customizing ECB</h2>
 
 <p>This chapter describes how to customize ECB for your personal taste. 
-The first chapter gives an overview of the most important options and
-the second one lists all options of ECB.
+The first section introduces some general aspects (which you should
+really know!), the second one gives an overview of the most important
+options and the third one lists all options of ECB (divided into the
+customize groups).
 
 <ul>
-<li><a accesskey=1 href="#Most%20important%20options">Most important options</a>:       Which option you must know
-<li><a accesskey=2 href="#Customizable%20options">Customizable options</a>:         All customizable options of ECB
+<li><a accesskey=1 href="#General%20aspects">General aspects</a>:              General aspects for customizing ECB
+<li><a accesskey=2 href="#Most%20important%20options">Most important options</a>:       Which option you must know
+<li><a accesskey=3 href="#Customizable%20options">Customizable options</a>:         All customizable options of ECB
 </ul>
 
-<p><strong>ATTENTION</strong>: The best way you customize all the options of ECB
-is via the customize-feature of (X)Emacs, i.e. means calling the
-commands <code>customize-option</code> or <code>customize-group</code> etc. This
-is also the strongly recommended way!
+<p><hr>
+Node:<a name="General%20aspects">General aspects</a>,
+Next:<a rel=next accesskey=n href="#Most%20important%20options">Most important options</a>,
+Previous:<a rel=previous accesskey=p href="#Customizing">Customizing</a>,
+Up:<a rel=up accesskey=u href="#Customizing">Customizing</a>
+<br>
+
+<h3>General aspects for customizing ECB</h3>
+
+<p>The best way to customize all the options of ECB is via the
+customize-feature of (X)Emacs, i.e. means calling the commands
+<code>customize-option</code> or <code>customize-group</code> etc. This is also
+the strongly recommended way!
 
 <p>But of course you can also use <code>setq</code> or some elisp-code to
 change the values of many but not all of the options. The values of
 the following options <strong>MUST NOT</strong> be changed via <code>setq</code> or
 elisp-code but only with the customize-feature!
 
-<ul>
-<li><code>ecb-source-path</code>
-<li><code>ecb-tree-RET-selects-edit-window</code>
-<li><code>ecb-font-lock-tokens</code>
-<li><code>ecb-bucket-token-display</code>
-<li><code>ecb-token-display-function</code>
-<li><code>ecb-type-token-display</code>
-<li><code>ecb-show-tokens</code>
-<li><code>ecb-exclude-parents-regexp</code>
-<li><code>ecb-highlight-token-with-point-delay</code>
-<li><code>ecb-window-sync-delay</code>
-<li><code>ecb-show-node-info-in-minibuffer</code>
-<li><code>ecb-key-map</code>
-<li><code>ecb-layout-nr</code>
-<li><code>ecb-compile-window-height</code>
-<li><code>ecb-compile-window-temporally-enlarge</code>
-<li><code>ecb-windows-width</code>
-<li><code>ecb-windows-height</code>
-<li><code>ecb-advice-window-functions</code>
-<li><code>ecb-layout-window-sizes</code>
-<li><code>ecb-mode-line-prefixes</code>
-</ul>
+<p><table>
+<tr align="left"><td valign="top"><code>ecb-advice-window-functions</code>
+</td><td valign="top"><code>ecb-bucket-token-display</code>
+<br></td></tr><tr align="left"><td valign="top"><code>ecb-compile-window-height</code>
+</td><td valign="top"><code>ecb-compile-window-temporally-enlarge</code>
+<br></td></tr><tr align="left"><td valign="top"><code>ecb-exclude-parents-regexp</code>
+</td><td valign="top"><code>ecb-font-lock-tokens</code>
+<br></td></tr><tr align="left"><td valign="top"><code>ecb-highlight-token-with-point-delay</code>
+</td><td valign="top"><code>ecb-key-map</code>
+<br></td></tr><tr align="left"><td valign="top"><code>ecb-layout-nr</code>
+</td><td valign="top"><code>ecb-layout-window-sizes</code>
+<br></td></tr><tr align="left"><td valign="top"><code>ecb-mode-line-prefixes</code>
+</td><td valign="top"><code>ecb-show-node-info-in-minibuffer</code>
+<br></td></tr><tr align="left"><td valign="top"><code>ecb-show-tokens</code>
+</td><td valign="top"><code>ecb-source-path</code>
+<br></td></tr><tr align="left"><td valign="top"><code>ecb-token-display-function</code>
+</td><td valign="top"><code>ecb-tree-RET-selects-edit-window</code>
+<br></td></tr><tr align="left"><td valign="top"><code>ecb-type-token-display</code>
+</td><td valign="top"><code>ecb-windows-height</code>
+<br></td></tr><tr align="left"><td valign="top"><code>ecb-window-sync-delay</code>
+</td><td valign="top"><code>ecb-windows-width</code>
+<br></td></tr></table>
+
+<p><strong>NOTE</strong>: If you are the administrator for an Emacs-site, means
+you are responsible for the basic customization of a lot of Emacs
+users, then you maybe need a way to customize Emacs and ECB without
+changing everyones <code>.emacs</code>-file and normally you will do this
+with the file <code>site-start.el</code>. You can customize all options of
+ECB in a central <code>site-start.el</code> (even the options mentioned
+above!) but you <strong>MUST NOT</strong> do this via <code>setq</code> but you have
+to use <code>custom-set-variables</code><a rel=footnote href="#fn-7"><sup>7</sup></a>! Here is a short example
+how this can be done:
+
+<br><pre>(custom-set-variables '(ecb-show-tokens ((include collapsed nil)
+                                         (parent collapsed nil)
+                                         (type flattened nil)
+                                         (variable collapsed name)
+                                         (function flattened name)
+                                         (rule flattened name)
+                                         (section flattened nil)
+                                         (def collapsed name)
+                                         (t collapsed name)))
+                      '(ecb-font-lock-tokens t)
+                      ;; add here more options of ECB it you want
+                      )
+</pre>
+
+<p>But ensure that you customize the options with the correct lisp
+format. Read carefully the docstrings of the options you want
+to customize from within elisp-code!
 
 <p><hr>
 Node:<a name="Most%20important%20options">Most important options</a>,
 Next:<a rel=next accesskey=n href="#Customizable%20options">Customizable options</a>,
-Previous:<a rel=previous accesskey=p href="#Customizing">Customizing</a>,
+Previous:<a rel=previous accesskey=p href="#General%20aspects">General aspects</a>,
 Up:<a rel=up accesskey=u href="#Customizing">Customizing</a>
 <br>
 
@@ -4329,11 +4372,20 @@ Up:<a rel=up accesskey=u href="#Top">Top</a>
 
 <h2>Submitting a problem report</h2>
 
-<p>If you run into problems with ECB you can/should send a problem report
+<p>If you run into problems with ECB you should first take a look into
+
+<ul>
+<li><a href="#FAQ">FAQ</a> or
+<li><a href="#Conflicts%20and%20bugs">Conflicts and bugs</a> or
+<li><a href="#Tips%20and%20tricks">Tips and tricks</a> or
+<li>the appropriate section of this online-manual. 
+</ul>
+
+<p>If your problem(s) still remain you can/should send a problem report
 to the ECB mailing list <a href="mailto:ecb-list@lists.sourceforge.net">ecb-list@lists.sourceforge.net</a>. ECB
 offers you a command which does all necessary for you to send a
-problem report. Just call <code>ecb-submit-problem-report</code>! Please read the
-documentation of this command, See <a href="#Interactive%20ECB%20commands">Interactive ECB commands</a>.
+problem report. Just call <code>ecb-submit-problem-report</code>! Please
+read the documentation of this command, see <a href="#Interactive%20ECB%20commands">Interactive ECB commands</a>.
 
 <p>This command creates a problem-report buffer for you. After that you
 get a menu "Mail" (dependend on the mail-package used, the menu can
@@ -4392,7 +4444,7 @@ satisfied:
 
 <p>With unix-systems these tools are in the
 standard-distribution. If you are running any Microsoft Windows system
-then you need cygwin<a rel=footnote href="#fn-7"><sup>7</sup></a> which offers these tools too. On every
+then you need cygwin<a rel=footnote href="#fn-8"><sup>8</sup></a> which offers these tools too. On every
 system these tools must reside in the <code>PATH</code> environment-variable!
 
 <p>If you are behind a firewall and you have to use a proxy you maybe
@@ -4859,7 +4911,7 @@ Up:<a rel=up accesskey=u href="#Elisp%20programming">Elisp programming</a>
 <h3>How to deal with the adviced window-functions</h3>
 
 <p>ECB offers for packages which work during activated ECB three macros
-for easy temporally<a rel=footnote href="#fn-8"><sup>8</sup></a> using all original-functions, all
+for easy temporally<a rel=footnote href="#fn-9"><sup>9</sup></a> using all original-functions, all
 adviced functions or only some adviced functions:
 
 <ul>
@@ -5043,7 +5095,7 @@ Read carefully the complete online-help of ECB.
 after reading the online-help? 
 </td><td valign="top"></td><td valign="top">
 Send a problem-report to the ECB-mailing-list with the command
-<code>ecb-submit-problem-report</code>, See <a href="#Submitting%20problem%20report">Submitting problem report</a>.
+<code>ecb-submit-problem-report</code>, see <a href="#Submitting%20problem%20report">Submitting problem report</a>.
 
 <br></td></tr><tr align="left"><td valign="top"></td><td valign="top"></td><td valign="top">
 
@@ -5080,7 +5132,7 @@ semantic-1.4beta13 should support C++ really well.
 <br></td></tr><tr align="left"><td valign="top">Why does ECB not recognize my source-files for C++? 
 </td><td valign="top"></td><td valign="top">
 Your C++-files have probably an extension which is not mapped to
-c++-mode in <code>auto-mode-alist</code>, See <a href="#Setting%20up%20Emacs">Setting up Emacs</a>.
+c++-mode in <code>auto-mode-alist</code>, see <a href="#Setting%20up%20Emacs">Setting up Emacs</a>.
 
 <br></td></tr><tr align="left"><td valign="top"></td><td valign="top"></td><td valign="top">
 
@@ -5357,6 +5409,7 @@ Up:<a rel=up accesskey=u href="#Top">Top</a>
 <li><a name="toc_Customizing"></a>
     <a href="#Customizing">Customizing ECB</a>
 <ul>
+<li><a href="#General%20aspects">General aspects for customizing ECB</a>
 <li><a href="#Most%20important%20options">The most important options of ECB</a>
 <li><a href="#Customizable%20options">All customizable options of ECB</a>
 <ul>
@@ -5434,8 +5487,8 @@ Up:<a rel=up accesskey=u href="#Top">Top</a>
 Makefiles etc. but these are the most important ones.</p>
 
 <li><a name="fn-2"></a>
-<p>Especially for C++ and C you can
-use any extension you want but these are the most common ones!</p>
+<p>Especially for C++ and C you can use any
+extension you want but these are the most common ones!</p>
 
 <li><a name="fn-3"></a>
 <p>This
@@ -5446,7 +5499,7 @@ finally hitting RETURN again</p>
 
 <li><a name="fn-4"></a>
 <p>This is only one example of the layouts ECB
-offers, See <a href="#Changing%20the%20ECB-layout">Changing the ECB-layout</a></p>
+offers, see <a href="#Changing%20the%20ECB-layout">Changing the ECB-layout</a></p>
 
 <li><a name="fn-5"></a>
 <p>means mouse-2 while CTRL-key
@@ -5457,11 +5510,16 @@ is pressed.</p>
 a variable or any other semantic token</p>
 
 <li><a name="fn-7"></a>
+<p>At least for the options
+for which <code>setq</code> is explicitly forbidden, but it is recommended
+to use always <code>custom-set-variables</code>!</p>
+
+<li><a name="fn-8"></a>
 <p>cygwin is available at
 <a href="http://cygwin.com/">http://cygwin.com/</a>
 </p>
 
-<li><a name="fn-8"></a>
+<li><a name="fn-9"></a>
 <p>I.e. regardless of the settings in
 <code>ecb-advice-window-functions</code>!</p>
 
