@@ -473,7 +473,7 @@ temporally deactivates the advices because otherwise ediff does not work."
   (ecb-activate-adviced-functions nil))
 
 (defun ecb-ediff-quit-hook ()
-  "Added to the `ediff-quit-hook' during ECB is activated. It
+  "Added to the end of `ediff-quit-hook' during ECB is activated. It
 restores the advices after finishing ediff."
   (ecb-activate-adviced-functions ecb-advice-window-functions))
 

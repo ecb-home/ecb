@@ -1298,8 +1298,8 @@ with the actually choosen layout \(see `ecb-layout-nr')."
               'ecb-ediff-before-setup-hook)
     (if (boundp 'ediff-quit-hook)
         (put 'ediff-quit-hook 'ecb-ediff-quit-hook-value ediff-quit-hook))
-    (add-hook 'ediff-quit-hook 'ecb-ediff-quit-hook)
-    (add-hook 'ediff-quit-hook 'ediff-cleanup-mess t)
+    (add-hook 'ediff-quit-hook 'ediff-cleanup-mess)
+    (add-hook 'ediff-quit-hook 'ecb-ediff-quit-hook t)
     
     (setq ecb-activated t)
     ;; we must update the directories buffer first time
