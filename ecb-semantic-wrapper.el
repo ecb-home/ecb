@@ -23,7 +23,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-semantic-wrapper.el,v 1.10 2004/04/02 14:26:56 berndl Exp $
+;; $Id: ecb-semantic-wrapper.el,v 1.11 2004/04/02 14:56:03 berndl Exp $
 
 ;;; Commentary:
 
@@ -193,34 +193,37 @@ unloaded buffer representation."
       (goto-char (ecb--semantic-tag-start tag))
       (ecb--semantic-current-tag-parent))))
 
-(defsubst ecb--semantic-tag-static-p (tag &optional parent)
-  "Return non-nil if TAG is static as a child of PARENT default action."
-  (cond ((fboundp 'semantic-tag-static-p)
-         (apply 'semantic-tag-static-p (list tag parent)))
-        ((fboundp 'semantic-tag-static)
-         (apply 'semantic-tag-static (list tag parent)))
-        ((fboundp 'semantic-nonterminal-static)
-         (apply 'semantic-nonterminal-static (list tag parent)))
-        (t nil)))
+(cond ((fboundp 'semantic-tag-static-p)
+       (defalias 'ecb--semantic-tag-static-p 'semantic-tag-static-p))
+      ((fboundp 'semantic-tag-static)
+       (defalias 'ecb--semantic-tag-static-p 'semantic-tag-static))
+      ((fboundp 'semantic-nonterminal-static)
+       (defalias 'ecb--semantic-tag-static-p 'semantic-nonterminal-static))
+      (t
+       (defsubst ecb--semantic-tag-static-p (tag &optional parent)
+         nil)))
 
 (defsubst ecb--semantic-tag-prototype-p (tag)
   (ecb--semantic-tag-get-attribute tag (if (> ecb-semantic-2-beta-nr 1)
                                            :prototype-flag
                                          'prototype)))
 
-(defsubst ecb--semantic-tag-function-constructor-p (tag)
-  (if (fboundp 'semantic-tag-function-constructor-p)
-      (apply 'semantic-tag-function-constructor-p (list tag))
+(if (fboundp 'semantic-tag-function-constructor-p)
+    (defalias 'ecb--semantic-tag-function-constructor-p
+      'semantic-tag-function-constructor-p)
+  (defsubst ecb--semantic-tag-function-constructor-p (tag)
     (ecb--semantic-tag-get-attribute tag (if (> ecb-semantic-2-beta-nr 1)
                                              :constructor-flag
                                            'constructor))))
     
-(defsubst ecb--semantic-tag-function-destructor-p (tag)
-  (if (fboundp 'semantic-tag-function-destructor-p)
-      (apply 'semantic-tag-function-destructor-p (list tag))
+(if (fboundp 'semantic-tag-function-destructor-p)
+    (defalias 'ecb--semantic-tag-function-destructor-p
+      'semantic-tag-function-destructor-p)
+  (defsubst ecb--semantic-tag-function-destructor-p (tag)
     (ecb--semantic-tag-get-attribute tag (if (> ecb-semantic-2-beta-nr 1)
                                              :destructor-flag
                                            'destructor))))
+    
     
 (defsubst ecb--semantic-fetch-tags (&optional check-cache)
   (if (fboundp 'semantic-fetch-tags)
