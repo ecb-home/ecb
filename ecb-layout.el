@@ -1602,6 +1602,10 @@ for current layout."
         (ecb-do-with-unfixed-ecb-buffers ad-do-it)
       ad-do-it))
 
+  ;; Klaus Berndl <klaus.berndl@sdm.de>: We can not use our
+  ;; Electric-pop-up-window advice instaed of this advice because otherwise
+  ;; some commands of the popup-menus of the ecb-buffers would not work - this
+  ;; comes from the save-window-excursion in the the tmm.
   (defadvice tmm-prompt (around ecb)
     "Make it compatible with ECB."
     (if (or (not ecb-minor-mode)
@@ -1623,6 +1627,7 @@ for current layout."
             (ecb-compilation-predicates nil))
         ad-do-it)))
 
+  
   (defadvice shrink-window-if-larger-than-buffer (around ecb)
     "Makes the function compatible with ECB."
     (or (ad-get-arg 0) (ad-set-arg 0 (selected-window)))

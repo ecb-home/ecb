@@ -76,8 +76,12 @@ will be displayed in the compile-window of ECB even if `compilation-buffer-p'
 says nil for this buffer.
 
 It is not recommended to add the name of eshell-buffers to this list because
-ECB already handles the eshell-integration as best as possible."
+ECB already handles the eshell-integration as best as possible.
+
+See also the options `ecb-compilation-major-modes' and
+`ecb-compilation-predicates'."
   :group 'ecb-compilation
+  :group 'ecb-most-important
   :type '(repeat (cons (string :tag "Buffer name")
                        (boolean :tag "Handled as regexp"))))
 

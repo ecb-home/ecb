@@ -840,6 +840,10 @@ should stopped but no debugging is senseful."
   "Displays a warning."
   (message (concat "ECB " ecb-version " - Warning: " (apply 'format args))))
 
+(defun ecb-info-message (&rest args)
+  "Displays an information."
+  (message (concat "ECB " ecb-version " - Info: " (apply 'format args))))
+
 ;; trimming
 
 (defun ecb-excessive-trim (str)
