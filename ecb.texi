@@ -179,6 +179,7 @@ All customizable options of ECB
 * ecb-methods::                 Customizing the ECB-methods
 * ecb-history::                 Customizing the ECB-history
 * ecb-layout::                  Customizing the ECB-layout
+* ecb-compilation-content::     Customizing the compile-window contents
 * ecb-create-layout::           Customizing options for creating layouts
 * ecb-face-options::            Customizing options for faces
 * ecb-faces::                   Customizing the faces
@@ -1060,6 +1061,11 @@ splitted first. The variables @code{temp-buffer-max-height} and
 Same for all compilation output-buffers (e.g. after a @code{compile} or
 @code{grep}) and the variable @code{compilation-window-height}.
 
+In general: With the options @code{ecb-compilation-buffer-names} and
+@code{ecb-compilation-major-modes} you can define which buffers should
+be displayed in the compile-window of ECB for example if you call
+@code{switch-to-buffer} for a buffer.
+
 This is default behavior of ECB. But there is also another way to
 display such buffers:
 
@@ -1082,6 +1088,9 @@ With the option @code{ecb-layout-switch-to-compilation-window} you can
 modify the switch-to-buffer...-functions to work best if your layout
 contains a compilation-window. See the docstring of this option.
 
+But because ECB works best without such a durable compilation-window
+you should read the documentation of these three options carefully!
+
 @item
 With the command @code{ecb-cycle-through-compilation-buffers}
 (@pxref{Interactive ECB commands}) you can cycle through all current
@@ -1089,8 +1098,6 @@ open compilation-buffers in the sense of
 @code{ecb-compilation-buffer-p} very fast.
 @end itemize
 
-But because ECB works best without such a durable compilation-window
-you should read the documentation of these two options carefully!
 
 @node The Methods buffer, The ECB-layout, Temp- and compile-buffers, Usage of ECB
 @section Using and customizing the ECB-Methods buffer
@@ -2409,6 +2416,7 @@ readable option index. @xref{Option Index}.
 * ecb-methods::                 Customizing the ECB-methods
 * ecb-history::                 Customizing the ECB-history
 * ecb-layout::                  Customizing the ECB-layout
+* ecb-compilation-content::     Customizing the compile-window contents
 * ecb-create-layout::           Customizing options for creating layouts
 * ecb-face-options::            Customizing options for faces
 * ecb-faces::                   Customizing the faces
@@ -3578,7 +3586,7 @@ Asks, if the history-entry should be removed after the kill.
 Sorts the items in the history buffer.
 @end defopt
 
-@node ecb-layout, ecb-create-layout, ecb-history, Customizable options
+@node ecb-layout, ecb-compilation-content, ecb-history, Customizable options
 @subsection Group ecb-layout
 
 @noindent
@@ -4011,7 +4019,25 @@ left or right of the edit window. If the number is less than 1.0 the
 width is a fraction of the frame width.
 @end defopt
 
-@node ecb-create-layout, ecb-face-options, ecb-layout, Customizable options
+@node ecb-compilation-content, ecb-create-layout, ecb-layout, Customizable options
+@subsection Group ecb-compilation-content
+
+@noindent
+This group contains the following options:
+
+@defopt compilation-buffer-names
+Additional buffer names that should be displayed in the compilation
+window of ECB even if @code{compilation-buffer-p} says nil.
+@end defopt
+
+
+@defopt compilation-major-modes
+Additional major-mode that should be displayed in the compilation
+window of ECB even if @code{compilation-buffer-p} says nil.
+@end defopt
+
+
+@node ecb-create-layout, ecb-face-options, ecb-compilation-content, Customizable options
 @subsection Group ecb-create-layout
 
 @noindent

@@ -104,6 +104,7 @@ All customizable options of ECB
 * ecb-methods::                 Customizing the ECB-methods
 * ecb-history::                 Customizing the ECB-history
 * ecb-layout::                  Customizing the ECB-layout
+* ecb-compilation-content::     Customizing the compile-window contents
 * ecb-create-layout::           Customizing options for creating layouts
 * ecb-face-options::            Customizing options for faces
 * ecb-faces::                   Customizing the faces
@@ -910,6 +911,11 @@ with ECB.
 Same for all compilation output-buffers (e.g. after a `compile' or `grep')
 and the variable `compilation-window-height'.
 
+In general: With the options `ecb-compilation-buffer-names' and
+`ecb-compilation-major-modes' you can define which buffers should be
+displayed in the compile-window of ECB for example if you call
+`switch-to-buffer' for a buffer.
+
 This is default behavior of ECB. But there is also another way to display
 such buffers:
 
@@ -928,12 +934,12 @@ such buffers:
    the switch-to-buffer...-functions to work best if your layout contains a
    compilation-window. See the docstring of this option.
 
+   But because ECB works best without such a durable compilation-window you
+   should read the documentation of these three options carefully!
+
  * With the command `ecb-cycle-through-compilation-buffers' (*note
    Interactive ECB commands::) you can cycle through all current open
    compilation-buffers in the sense of `ecb-compilation-buffer-p' very fast.
-
-But because ECB works best without such a durable compilation-window you
-should read the documentation of these two options carefully!
 
 
 File: ecb.info,  Node: The Methods buffer,  Next: The ECB-layout,  Prev: Temp- and compile-buffers,  Up: Usage of ECB
@@ -2126,6 +2132,7 @@ Option Index::.
 * ecb-methods::                 Customizing the ECB-methods
 * ecb-history::                 Customizing the ECB-history
 * ecb-layout::                  Customizing the ECB-layout
+* ecb-compilation-content::     Customizing the compile-window contents
 * ecb-create-layout::           Customizing options for creating layouts
 * ecb-face-options::            Customizing options for faces
 * ecb-faces::                   Customizing the faces
@@ -3100,7 +3107,7 @@ This group contains the following options:
    Sorts the items in the history buffer.
 
 
-File: ecb.info,  Node: ecb-layout,  Next: ecb-create-layout,  Prev: ecb-history,  Up: Customizable options
+File: ecb.info,  Node: ecb-layout,  Next: ecb-compilation-content,  Prev: ecb-history,  Up: Customizable options
 
 Group ecb-layout
 ----------------
@@ -3479,7 +3486,23 @@ This group contains the following options:
    fraction of the frame width.
 
 
-File: ecb.info,  Node: ecb-create-layout,  Next: ecb-face-options,  Prev: ecb-layout,  Up: Customizable options
+File: ecb.info,  Node: ecb-compilation-content,  Next: ecb-create-layout,  Prev: ecb-layout,  Up: Customizable options
+
+Group ecb-compilation-content
+-----------------------------
+
+This group contains the following options:
+
+ - User Option: compilation-buffer-names
+   Additional buffer names that should be displayed in the compilation window
+   of ECB even if `compilation-buffer-p' says nil.
+
+ - User Option: compilation-major-modes
+   Additional major-mode that should be displayed in the compilation window
+   of ECB even if `compilation-buffer-p' says nil.
+
+
+File: ecb.info,  Node: ecb-create-layout,  Next: ecb-face-options,  Prev: ecb-compilation-content,  Up: Customizable options
 
 Group ecb-create-layout
 -----------------------
@@ -4754,6 +4777,8 @@ the option `ecb-layout-name' is listed with name "layout-name").
 * cache-directory-contents:              ecb-directories.
 * clear-history-behavior:                ecb-history.
 * common-tree-buffer-after-create-hook:  ecb-general.
+* compilation-buffer-names:              ecb-compilation-content.
+* compilation-major-modes:               ecb-compilation-content.
 * compile-window-enlarge-by-select:      ecb-layout.
 * compile-window-height:                 ecb-layout.
 * compile-window-temporally-enlarge:     ecb-layout.
@@ -4915,102 +4940,103 @@ Concept Index
 
 Tag Table:
 Node: Top183
-Node: Install and first steps6204
-Node: Installation6700
-Ref: Installation-Footnote-110624
-Ref: Installation-Footnote-210759
-Ref: Installation-Footnote-310871
-Node: Setting up Emacs10936
-Ref: Checking your hooks12882
-Ref: Setting up Emacs-Footnote-114079
-Ref: Setting up Emacs-Footnote-214183
-Ref: Setting up Emacs-Footnote-314284
-Ref: Setting up Emacs-Footnote-414343
-Node: First steps14492
-Ref: First steps-Footnote-115640
-Node: Overview15869
-Ref: Overview-Footnote-118620
-Node: ECB Directories18713
-Node: ECB Sources19730
-Node: ECB Methods20884
-Node: Activation and Deactivation21433
-Node: Standard activation21803
-Ref: Activation hook-sequence22381
-Ref: Deactivation hook-sequence22701
-Node: Automatic activation22875
-Node: Usage of ECB24008
-Node: Using the mouse24918
-Ref: Using the mouse-Footnote-127193
-Node: Using the keyboard27239
-Ref: Using the keyboard-Footnote-128283
-Node: Navigation28334
-Node: Incremental search29674
-Node: Personal keybindings31850
-Ref: Personal keybindings-Footnote-133848
-Node: The edit-window33951
-Node: Temp- and compile-buffers35781
-Node: The Methods buffer37825
-Node: Customizing the display38266
-Node: Rebuilding the Methods39988
-Node: The ECB-layout40843
-Node: Changing the ECB-layout41490
-Ref: Changing the ECB-layout-Footnote-169212
-Node: Redrawing the ECB-layout69304
-Node: Creating a new ECB-layout70229
-Ref: Creating a new ECB-layout-Footnote-174491
-Node: Hiding the ECB windows74665
-Node: Back/forward navigation75770
-Ref: Back/forward navigation-Footnote-176871
-Node: ECB-window synchronizing76930
-Node: Interactive ECB commands79512
-Node: Customizing88974
-Node: General aspects89608
-Ref: General aspects-Footnote-192372
-Node: Most important options92504
-Node: Customizable options94299
-Node: ecb-general95590
-Node: ecb-directories115540
-Node: ecb-sources121695
-Node: ecb-methods123950
-Node: ecb-history136219
-Node: ecb-layout138280
-Node: ecb-create-layout155270
-Node: ecb-face-options155773
-Node: ecb-faces159202
-Node: ecb-download163194
-Node: ecb-help164420
-Node: Submitting problem report166385
-Node: Upgrading167748
-Node: Downloading new versions168511
-Ref: Download required packages170268
-Ref: Downloading new versions-Footnote-1171366
-Node: Auto. option-upgrading171415
-Node: User interface171723
-Node: Background information172609
-Node: Tips and tricks176007
-Node: Changing faces176757
-Ref: Changing faces-Footnote-1179593
-Node: Small screens179769
-Node: Big screens181163
-Node: Simulating speedbar182004
-Node: Integrating speedbar182837
-Node: Optimize scrolling183103
-Node: Large directories184183
-Node: Using eshell184848
-Node: Elisp programming185038
-Node: List of variables185647
-Node: List of hooks185959
-Node: tree-buffer186915
-Node: Adviced functions187721
-Ref: Adviced functions-Footnote-1188340
-Node: Programming new layouts188411
-Node: Conflicts and bugs194115
-Node: Conflicts194590
-Node: Bugs198300
-Node: FAQ198520
-Ref: FAQ-Footnote-1203689
-Node: Command Index203720
-Node: Option Index206171
-Node: Concept Index212572
+Node: Install and first steps6276
+Node: Installation6772
+Ref: Installation-Footnote-110696
+Ref: Installation-Footnote-210831
+Ref: Installation-Footnote-310943
+Node: Setting up Emacs11008
+Ref: Checking your hooks12954
+Ref: Setting up Emacs-Footnote-114151
+Ref: Setting up Emacs-Footnote-214255
+Ref: Setting up Emacs-Footnote-314356
+Ref: Setting up Emacs-Footnote-414415
+Node: First steps14564
+Ref: First steps-Footnote-115712
+Node: Overview15941
+Ref: Overview-Footnote-118692
+Node: ECB Directories18785
+Node: ECB Sources19802
+Node: ECB Methods20956
+Node: Activation and Deactivation21505
+Node: Standard activation21875
+Ref: Activation hook-sequence22453
+Ref: Deactivation hook-sequence22773
+Node: Automatic activation22947
+Node: Usage of ECB24080
+Node: Using the mouse24990
+Ref: Using the mouse-Footnote-127265
+Node: Using the keyboard27311
+Ref: Using the keyboard-Footnote-128355
+Node: Navigation28406
+Node: Incremental search29746
+Node: Personal keybindings31922
+Ref: Personal keybindings-Footnote-133920
+Node: The edit-window34023
+Node: Temp- and compile-buffers35853
+Node: The Methods buffer38135
+Node: Customizing the display38576
+Node: Rebuilding the Methods40298
+Node: The ECB-layout41153
+Node: Changing the ECB-layout41800
+Ref: Changing the ECB-layout-Footnote-169522
+Node: Redrawing the ECB-layout69614
+Node: Creating a new ECB-layout70539
+Ref: Creating a new ECB-layout-Footnote-174801
+Node: Hiding the ECB windows74975
+Node: Back/forward navigation76080
+Ref: Back/forward navigation-Footnote-177181
+Node: ECB-window synchronizing77240
+Node: Interactive ECB commands79822
+Node: Customizing89284
+Node: General aspects89918
+Ref: General aspects-Footnote-192682
+Node: Most important options92814
+Node: Customizable options94609
+Node: ecb-general95972
+Node: ecb-directories115922
+Node: ecb-sources122077
+Node: ecb-methods124332
+Node: ecb-history136601
+Node: ecb-layout138662
+Node: ecb-compilation-content155658
+Node: ecb-create-layout156224
+Node: ecb-face-options156740
+Node: ecb-faces160169
+Node: ecb-download164161
+Node: ecb-help165387
+Node: Submitting problem report167352
+Node: Upgrading168715
+Node: Downloading new versions169478
+Ref: Download required packages171235
+Ref: Downloading new versions-Footnote-1172333
+Node: Auto. option-upgrading172382
+Node: User interface172690
+Node: Background information173576
+Node: Tips and tricks176974
+Node: Changing faces177724
+Ref: Changing faces-Footnote-1180560
+Node: Small screens180736
+Node: Big screens182130
+Node: Simulating speedbar182971
+Node: Integrating speedbar183804
+Node: Optimize scrolling184070
+Node: Large directories185150
+Node: Using eshell185815
+Node: Elisp programming186005
+Node: List of variables186614
+Node: List of hooks186926
+Node: tree-buffer187882
+Node: Adviced functions188688
+Ref: Adviced functions-Footnote-1189307
+Node: Programming new layouts189378
+Node: Conflicts and bugs195082
+Node: Conflicts195557
+Node: Bugs199267
+Node: FAQ199487
+Ref: FAQ-Footnote-1204656
+Node: Command Index204687
+Node: Option Index207138
+Node: Concept Index213671
 
 End Tag Table

@@ -110,6 +110,7 @@ mailing list <a href="mailto:ecb-list@lists.sourceforge.net">ecb-list@lists.sour
 <li><a href="#ecb-methods">ecb-methods</a>:                  Customizing the ECB-methods
 <li><a href="#ecb-history">ecb-history</a>:                  Customizing the ECB-history
 <li><a href="#ecb-layout">ecb-layout</a>:                   Customizing the ECB-layout
+<li><a href="#ecb-compilation-content">ecb-compilation-content</a>:      Customizing the compile-window contents
 <li><a href="#ecb-create-layout">ecb-create-layout</a>:            Customizing options for creating layouts
 <li><a href="#ecb-face-options">ecb-face-options</a>:             Customizing options for faces
 <li><a href="#ecb-faces">ecb-faces</a>:                    Customizing the faces
@@ -996,6 +997,11 @@ splitted first. The variables <code>temp-buffer-max-height</code> and
 <p>Same for all compilation output-buffers (e.g. after a <code>compile</code> or
 <code>grep</code>) and the variable <code>compilation-window-height</code>.
 
+<p>In general: With the options <code>ecb-compilation-buffer-names</code> and
+<code>ecb-compilation-major-modes</code> you can define which buffers should
+be displayed in the compile-window of ECB for example if you call
+<code>switch-to-buffer</code> for a buffer.
+
 <p>This is default behavior of ECB. But there is also another way to
 display such buffers:
 
@@ -1015,14 +1021,14 @@ the function <code>ecb-toggle-enlarged-compilation-window</code>.
 modify the switch-to-buffer...-functions to work best if your layout
 contains a compilation-window. See the docstring of this option.
 
-<li>With the command <code>ecb-cycle-through-compilation-buffers</code>
+<p>But because ECB works best without such a durable compilation-window
+you should read the documentation of these three options carefully!
+
+</p><li>With the command <code>ecb-cycle-through-compilation-buffers</code>
 (see <a href="#Interactive%20ECB%20commands">Interactive ECB commands</a>) you can cycle through all current
 open compilation-buffers in the sense of
 <code>ecb-compilation-buffer-p</code> very fast. 
 </ul>
-
-<p>But because ECB works best without such a durable compilation-window
-you should read the documentation of these two options carefully!
 
 <p><hr>
 Node:<a name="The%20Methods%20buffer">The Methods buffer</a>,
@@ -2662,9 +2668,10 @@ readable option index. See <a href="#Option%20Index">Option Index</a>.
 <li><a accesskey=4 href="#ecb-methods">ecb-methods</a>:                  Customizing the ECB-methods
 <li><a accesskey=5 href="#ecb-history">ecb-history</a>:                  Customizing the ECB-history
 <li><a accesskey=6 href="#ecb-layout">ecb-layout</a>:                   Customizing the ECB-layout
-<li><a accesskey=7 href="#ecb-create-layout">ecb-create-layout</a>:            Customizing options for creating layouts
-<li><a accesskey=8 href="#ecb-face-options">ecb-face-options</a>:             Customizing options for faces
-<li><a accesskey=9 href="#ecb-faces">ecb-faces</a>:                    Customizing the faces
+<li><a accesskey=7 href="#ecb-compilation-content">ecb-compilation-content</a>:      Customizing the compile-window contents
+<li><a accesskey=8 href="#ecb-create-layout">ecb-create-layout</a>:            Customizing options for creating layouts
+<li><a accesskey=9 href="#ecb-face-options">ecb-face-options</a>:             Customizing options for faces
+<li><a href="#ecb-faces">ecb-faces</a>:                    Customizing the faces
 <li><a href="#ecb-download">ecb-download</a>:                 Customizing how to download ECB
 <li><a href="#ecb-help">ecb-help</a>:                     Customizing the online help of ECB
 </ul>
@@ -4519,7 +4526,7 @@ Sorts the items in the history buffer.
 
 <p><hr>
 Node:<a name="ecb-layout">ecb-layout</a>,
-Next:<a rel=next accesskey=n href="#ecb-create-layout">ecb-create-layout</a>,
+Next:<a rel=next accesskey=n href="#ecb-compilation-content">ecb-compilation-content</a>,
 Previous:<a rel=previous accesskey=p href="#ecb-history">ecb-history</a>,
 Up:<a rel=up accesskey=u href="#Customizable%20options">Customizable options</a>
 <br>
@@ -5184,9 +5191,50 @@ width is a fraction of the frame width.
 </table>
 
 <p><hr>
+Node:<a name="ecb-compilation-content">ecb-compilation-content</a>,
+Next:<a rel=next accesskey=n href="#ecb-create-layout">ecb-create-layout</a>,
+Previous:<a rel=previous accesskey=p href="#ecb-layout">ecb-layout</a>,
+Up:<a rel=up accesskey=u href="#Customizable%20options">Customizable options</a>
+<br>
+
+<h4>Group ecb-compilation-content</h4>
+
+<p>This group contains the following options:
+
+<p>
+<table width="100%">
+<tr>
+<td align="left"><b>compilation-buffer-names</b><i>
+</i></td>
+<td align="right">User Option</td>
+</tr>
+</table>
+<table width="95%" align="center">
+<tr><td>
+Additional buffer names that should be displayed in the compilation
+window of ECB even if <code>compilation-buffer-p</code> says nil. 
+</td></tr>
+</table>
+
+<p>
+<table width="100%">
+<tr>
+<td align="left"><b>compilation-major-modes</b><i>
+</i></td>
+<td align="right">User Option</td>
+</tr>
+</table>
+<table width="95%" align="center">
+<tr><td>
+Additional major-mode that should be displayed in the compilation
+window of ECB even if <code>compilation-buffer-p</code> says nil. 
+</td></tr>
+</table>
+
+<p><hr>
 Node:<a name="ecb-create-layout">ecb-create-layout</a>,
 Next:<a rel=next accesskey=n href="#ecb-face-options">ecb-face-options</a>,
-Previous:<a rel=previous accesskey=p href="#ecb-layout">ecb-layout</a>,
+Previous:<a rel=previous accesskey=p href="#ecb-compilation-content">ecb-compilation-content</a>,
 Up:<a rel=up accesskey=u href="#Customizable%20options">Customizable options</a>
 <br>
 
@@ -6852,6 +6900,8 @@ Up:<a rel=up accesskey=u href="#Top">Top</a>
 <li><code>cache-directory-contents</code>: <a href="#ecb-directories">ecb-directories</a>
 <li><code>clear-history-behavior</code>: <a href="#ecb-history">ecb-history</a>
 <li><code>common-tree-buffer-after-create-hook</code>: <a href="#ecb-general">ecb-general</a>
+<li><code>compilation-buffer-names</code>: <a href="#ecb-compilation-content">ecb-compilation-content</a>
+<li><code>compilation-major-modes</code>: <a href="#ecb-compilation-content">ecb-compilation-content</a>
 <li><code>compile-window-enlarge-by-select</code>: <a href="#ecb-layout">ecb-layout</a>
 <li><code>compile-window-height</code>: <a href="#ecb-layout">ecb-layout</a>
 <li><code>compile-window-temporally-enlarge</code>: <a href="#ecb-layout">ecb-layout</a>
@@ -7074,6 +7124,7 @@ Up:<a rel=up accesskey=u href="#Top">Top</a>
 <li><a href="#ecb-methods">Group ecb-methods</a>
 <li><a href="#ecb-history">Group ecb-history</a>
 <li><a href="#ecb-layout">Group ecb-layout</a>
+<li><a href="#ecb-compilation-content">Group ecb-compilation-content</a>
 <li><a href="#ecb-create-layout">Group ecb-create-layout</a>
 <li><a href="#ecb-face-options">Group ecb-face-options</a>
 <li><a href="#ecb-faces">Group ecb-faces</a>
