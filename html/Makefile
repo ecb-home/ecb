@@ -6,7 +6,7 @@
 # Or type "make all" or "make upload-build" to generate the whole website
 # and build an uploadable ecb-website.tar.gz file.
 
-# $Id: Makefile,v 1.4 2003/01/30 16:14:43 berndl Exp $
+# $Id: Makefile,v 1.5 2003/01/31 12:29:16 berndl Exp $
 
 EMACS=emacs
 
@@ -19,7 +19,8 @@ SCP=scp
 MAKEINFO=/usr/bin/makeinfo
 
 ecb_HTMLSOURCE=ecb-html.el
-ecb_HTML_GEN=logo.html javabrowser.html main.html menu.html links.html top.html
+ecb_HTML_GEN=logo.html javabrowser.html main.html menu.html links.html \
+             top.html all-news.html
 ecb_HTMLDOCU_DIR=./docs
 ecb_TEXI=../ecb.texi
 
@@ -30,7 +31,7 @@ ecb_GIFS=bullet.gif ecb_logo.gif mail.gif smiley.gif
 ecb_UPLOAD_ARC=ecb-website.tar.gz
 
 ecb_WEBSITE_CONTENT=index.html $(ecb_HTML_GEN) $(ecb_HTMLDOCU_DIR)/*.html \
-                    $(ecb_SCREENSHOTS) HISTORY $(ecb_GIFS)
+                    $(ecb_SCREENSHOTS) history $(ecb_GIFS)
 
 ecb_WEBSITE_LOC=/home/groups/e/ec/ecb/htdocs
 ecb_SF_login=berndl@ecb.sourceforge.net
@@ -38,6 +39,8 @@ ecb_SF_login=berndl@ecb.sourceforge.net
 all: upload-build
 
 website: $(ecb_HTMLSOURCE)
+	@$(RM) $(ecb_HTML_GEN)
+	@$(RM) *.elc
 	$(EMACS) -batch -no-site-file $< -f eval-current-buffer
 
 online-docu: $(ecb_TEXI)
@@ -48,7 +51,7 @@ online-docu: $(ecb_TEXI)
 $(ecb_HTMLDOCU_DIR)/index.html: online-docu
 
 upload-build: $(ecb_HTMLDOCU_DIR)/index.html website
-	@$(CP) ../HISTORY .
+	@$(CP) ../HISTORY history
 	@$(RM) $(ecb_UPLOAD_ARC)
 	$(TARC) $(ecb_UPLOAD_ARC) $(ecb_WEBSITE_CONTENT)
 
@@ -59,5 +62,5 @@ upload: website upload-build
 
 clean:
 	@$(RM) -R $(ecb_HTMLDOCU_DIR)
-	@$(RM) HISTORY *.elc $(ecb_UPLOAD_ARC) $(ecb_HTML_GEN) *.*~
+	@$(RM) history *.elc $(ecb_UPLOAD_ARC) $(ecb_HTML_GEN) *.*~
 

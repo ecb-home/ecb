@@ -21,10 +21,11 @@
 
 ;; Functions for generating HTML pages.
 
-;; $Id: html-helper.el,v 1.4 2002/08/12 20:05:53 creator Exp $
+;; $Id: html-helper.el,v 1.5 2003/01/31 12:29:16 berndl Exp $
 
 ;;; Code:
 (defconst h-br "<br>\n")
+(defconst h-hr "<hr>")
 
 (defvar h-body-bgcolor)
 (setq h-body-bgcolor "white")
@@ -44,6 +45,20 @@
 (setq h-section-title-fgcolor "#ffffff")
 (setq h-section-text-bgcolor "#8080a0")
 (setq h-section-text-fgcolor "#000000")
+
+(defun h-line (&optional width-percent align)
+  (concat "<hr" (h-get-attrs
+                 (delete nil
+                         (list (if (numberp width-percent)
+                                   (cons 'width
+                                         (concat (number-to-string width-percent)
+                                                 "%")))
+                               (if align
+                                   (cons 'align
+                                         (if (stringp align)
+                                             align
+                                           (symbol-name align)))))))
+          ">"))
 
 (defun h-date()
   (format-time-string "%Y-%m-%d"))
