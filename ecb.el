@@ -26,11 +26,18 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
+
 ;;; Commentary:
 ;;
-;; The Emacs code browser (ECB) creates four buffers: *ECB Directories*, *ECB
-;; Sources*, *ECB Methods* and *ECB History*.  These buffers can be used to
-;; navigate through source code with the mouse (and also with keyboard).
+;; ECB stands for "Emacs Code Browser" and is a source code browser for
+;; (X)Emacs. It is a global minor-mode which displays a couple of windows that
+;; can be used to browse directories, files and file-contents like methods and
+;; variables. It supports source-code parsing for semantic-supported languages
+;; like Java, C, C++, Elisp, Scheme as well as for source-types supported
+;; "only" by imenu or etags (e.g. perl, TeX, LaTeX etc.).
+
+
+;;; Installation
 ;;
 ;; To use the Emacs code browser add the ECB files to your load path and add the
 ;; following line to your .emacs file:
@@ -45,47 +52,51 @@
 ;;
 ;; Optional: You can byte-compile ECB with `ecb-byte-compile' after the
 ;;           ECB-package is loaded
+
+
+;;; Requirements
 ;;
-;; ECB requires:
 ;; - Semantic, author-version between 1.4 and 1.4.9
 ;;   (http://cedet.sourceforge.net/semantic.shtml).
 ;; - Eieio, author-version between 0.17 and 0.17.9
 ;;   (http://cedet.sourceforge.net/eieio.shtml).
+;; - Optional: speedbar, author version 0.14beta1 or higher
+;;   (http://cedet.sourceforge.net/eieio.shtml) This is only needed if the
+;;   speedbar-integration of ECB is used or if sources should be parsed and
+;;   displayed which are not supported by semantic.
+;; - Optional: If Java code is edited the ECB works best when the JDE package
+;;   (http://sunsite.auc.dk/jde) is installed.
+
+
+;;; Activation
 ;;
-;; If Java code is edited the ECB works best when the JDE package
-;; (http://sunsite.auc.dk/jde) is installed.
-;;
-;; 
-;; ECB is activated by calling:
-;;
-;; M-x ecb-activate
+;; ECB is either activated and started by calling
+;;    M-x ecb-activate
+;; or
+;;    via the menu "Tools --> Start Code Browser (ECB)"
 ;;
 ;; ECB can also be (de)activated/toggled by M-x ecb-minor-mode.
 ;;
 ;; After activating ECB you should call `ecb-show-help' to get a detailed
 ;; description of what ECB offers to you and how to use ECB.
+
+
+;;; Availability
 ;;
-;; The latest version of the ECB is available at
-;; http://ecb.sourceforge.net
+;; The latest version of the ECB is available at http://ecb.sourceforge.net
 
 ;;; History
 ;;
 ;; For the ChangeLog of this file see the CVS-repository. For a complete
 ;; history of the ECB-package see the file NEWS.
 
-;; $Id: ecb.el,v 1.309 2003/06/23 14:13:39 berndl Exp $
+;; $Id: ecb.el,v 1.310 2003/06/24 15:51:05 berndl Exp $
 
 ;;; Code:
 
 (eval-when-compile
   (require 'silentcomp))
 
-;; (defun check-test (s-ver e-ver)
-;;   (interactive "sSemantic-version: \nsEieio-version: ")
-;;   (let ((ecb-all-requirements-available nil)
-;;         (semantic-version s-ver)
-;;         (eieio-version e-ver))
-;;     (ecb-check-requirements)))
 
 (defconst ecb-required-semantic-version-min '(1 4 2 0))
 (defconst ecb-required-semantic-version-max '(1 4 3 9))
@@ -2439,7 +2450,7 @@ speedbar-window."
   (interactive)
   (or (ecb-goto-window ecb-directories-buffer-name)
       (and (equal ecb-use-speedbar-instead-native-tree-buffer 'dir)
-           (ecb-goto-window ecb-speedbar-buffer-name))))
+           (ecb-goto-window-speedbar))))
 
 (defun ecb-goto-window-sources ()
   "Make the ECB-sources window the current window. If
@@ -2448,7 +2459,7 @@ speedbar-window."
   (interactive)
   (or (ecb-goto-window ecb-sources-buffer-name)
       (and (equal ecb-use-speedbar-instead-native-tree-buffer 'source)
-           (ecb-goto-window ecb-speedbar-buffer-name))))
+           (ecb-goto-window-speedbar))))
 
 (defun ecb-goto-window-methods ()
   "Make the ECB-methods window the current window. If
@@ -2457,12 +2468,20 @@ speedbar-window."
   (interactive)
   (or (ecb-goto-window ecb-methods-buffer-name)
       (and (equal ecb-use-speedbar-instead-native-tree-buffer 'method)
-           (ecb-goto-window ecb-speedbar-buffer-name))))
+           (ecb-goto-window-speedbar))))
 
 (defun ecb-goto-window-history ()
   "Make the ECB-history window the current window."
   (interactive)
   (ecb-goto-window ecb-history-buffer-name))
+
+(defun ecb-goto-window-speedbar ()
+  "Make the ECB-speedbar window the current window. This command does nothing
+if no integrated speedbar is visible in the ECB-frame."
+  (interactive)
+  (and (require 'ecb-speedbar)
+       (ecb-speedbar-active-p)
+       (ecb-goto-window ecb-speedbar-buffer-name)))
 
 (defun ecb-goto-window-edit1 ()
   "Make the \(first) edit-window window the current window."
@@ -4702,19 +4721,24 @@ That is remove the unsupported :help stuff."
      ["Directories"
       ecb-goto-window-directories
       :active (or (ecb-window-live-p ecb-directories-buffer-name)
-                  (ignore-errors (ecb-window-live-p ecb-speedbar-buffer-name)))
+                  (and (equal ecb-use-speedbar-instead-native-tree-buffer 'dir)
+                       (ignore-errors (ecb-speedbar-active-p))))
       :help "Go to the directories window"
       ])
     (ecb-menu-item
      ["Sources"
       ecb-goto-window-sources
-      :active (ecb-window-live-p ecb-sources-buffer-name)
+      :active (or (ecb-window-live-p ecb-sources-buffer-name)
+                  (and (equal ecb-use-speedbar-instead-native-tree-buffer 'source)
+                       (ignore-errors (ecb-speedbar-active-p))))
       :help "Go to the sources window"
       ])
     (ecb-menu-item
      ["Methods and Variables"
       ecb-goto-window-methods
-      :active (ecb-window-live-p ecb-methods-buffer-name)
+      :active (or (ecb-window-live-p ecb-methods-buffer-name)
+                  (and (equal ecb-use-speedbar-instead-native-tree-buffer 'method)
+                       (ignore-errors (ecb-speedbar-active-p))))
       :help "Go to the methods/variables window"
       ])
     (ecb-menu-item
@@ -4722,6 +4746,12 @@ That is remove the unsupported :help stuff."
       ecb-goto-window-history
       :active (ecb-window-live-p ecb-history-buffer-name)
       :help "Go to the history window"
+      ])
+    (ecb-menu-item
+     ["Speedbar"
+      ecb-goto-window-speedbar
+      :active (ignore-errors (ecb-speedbar-active-p))
+      :help "Go to the integrated speedbar window"
       ])
     (ecb-menu-item
      ["Compilation"
@@ -4924,10 +4954,11 @@ That is remove the unsupported :help stuff."
   '("C-c ." . ((t "f" ecb-activate)
                (t "p" ecb-nav-goto-previous)
                (t "n" ecb-nav-goto-next)
-               (t "l" ecb-change-layout)
-               (t "r" ecb-redraw-layout)
-               (t "w" ecb-toggle-ecb-windows)
-               (t "t" ecb-toggle-layout)
+               (t "lc" ecb-change-layout)
+               (t "lr" ecb-redraw-layout)
+               (t "lw" ecb-toggle-ecb-windows)
+               (t "lt" ecb-toggle-layout)
+               (t "r" ecb-rebuild-methods-buffer)
                (t "a" ecb-toggle-auto-expand-token-tree)
                (t "o" ecb-show-help)
                (t "1" ecb-goto-window-edit1)
@@ -4937,7 +4968,7 @@ That is remove the unsupported :help stuff."
                (t "s" ecb-goto-window-sources)
                (t "m" ecb-goto-window-methods)
                (t "h" ecb-goto-window-history)
-               (t "bg" ecb-goto-window-directories)
+               (t "bw" ecb-goto-window-speedbar)
                (t "bc" speedbar-change-initial-expansion-list)
                (t "e" ecb-eshell-goto-eshell)
                (t "x" ecb-expand-methods-nodes)
@@ -5824,6 +5855,19 @@ changed there should be no performance-problem!"
 
 (add-hook 'emacs-startup-hook 'ecb-auto-activate-hook)
 
+
+(defun ecb-run-from-menubar ()
+  (interactive)
+  (ecb-activate))
+
+(easy-menu-add-item nil
+                    '("tools") 
+                    (ecb-menu-item
+                     [ "Start Code Browser (ECB)"
+                       ecb-run-from-menubar
+                       :active t
+                       :help "Start the Emacs Code Browser."
+                       ]))
 
 
 (silentcomp-provide 'ecb)
