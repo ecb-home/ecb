@@ -19,7 +19,7 @@
 @c Free Software Foundation, Inc., 59 Temple Place - Suite 330,
 @c Boston, MA 02111-1307, USA.
 
-@c $Id: ecb.texi,v 1.71 2003/02/11 14:39:04 berndl Exp $
+@c $Id: ecb.texi,v 1.72 2003/02/12 15:13:26 berndl Exp $
 
 @setfilename ecb.info
 
@@ -6591,7 +6591,11 @@ What should i do, if a have a problem which can not be solved even
 after reading the online-help?
 @tab @tab
 Send a problem-report to the ECB-mailing-list with the command
-@code{ecb-submit-problem-report}, see @ref{Submitting problem report}.
+@code{ecb-submit-problem-report}.
+@ifinfo
+@*
+@end ifinfo
+See @ref{Submitting problem report}.
 
 @item @tab @tab
 
@@ -6662,7 +6666,11 @@ Why does ECB not recognize my source-files for C++?
 Your C++-files have probably an extension which is not mapped to
 c++-mode in @code{auto-mode-alist} and/or your own Emacs-setup has
 ``destroyed'' the correct value of the hook-variable
-@code{c++-mode-hook}, see @ref{Setting up Emacs}.
+@code{c++-mode-hook}.
+@ifinfo
+@*
+@end ifinfo
+See @ref{Setting up Emacs}.
 
 @item @tab @tab
 
@@ -6685,7 +6693,11 @@ What is the reason for poor scrolling performance with GNU Emacs 20.X
 in the edit-windows and what can i do?
 @tab @tab
 Set @code{scroll-conservatively} to 0 and @code{scroll-step} to a
-value > 1. For the exact reason look at @ref{Optimize scrolling}.
+value > 1. For the exact reason look at
+@ifinfo
+@*
+@end ifinfo
+@ref{Optimize scrolling}.
 
 @item @tab @tab
 
@@ -6733,24 +6745,32 @@ Gnus!
 @item
 Can i speed up displaying the contents of big-size directories?
 @tab @tab
-Yes. Read the section @ref{Large directories} and see the option
-@code{ecb-cache-directory-contents}.
+Yes, see the option @code{ecb-cache-directory-contents}. Read the
+section
+@ifinfo
+@*
+@end ifinfo
+@ref{Large directories}.
 
 @item @tab @tab
 
 @item
 Is it possible to create/use other layouts than the buildin ones?
 @tab @tab
-Yes, read the sections @ref{Creating a new ECB-layout} and @ref{The
-layout-engine}. The former one describes how to create interactively
-new layouts wheres the latter one is for elisp-progammers.
+Yes. @ref{Creating a new ECB-layout} and
+@ifinfo
+@*
+@end ifinfo
+@ref{The layout-engine} are the relevant sections. The former one
+describes how to create interactively new layouts wheres the latter
+one is for elisp-progammers.
 
 @item @tab @tab
 
 @item
 Can i use speedbar as directory-browser within ECB?
 @tab @tab
-Yes, read the section @ref{Integrating speedbar}.
+Yes, see @ref{Integrating speedbar}.
 
 @end multitable
 
