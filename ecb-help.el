@@ -26,7 +26,7 @@
 ;;
 ;; Contains all online-help for ECB (stolen something from recentf.el)
 
-;; $Id: ecb-help.el,v 1.73 2002/07/05 14:05:32 berndl Exp $
+;; $Id: ecb-help.el,v 1.74 2002/07/05 14:45:43 berndl Exp $
 
 ;;; Code
 
@@ -231,9 +231,10 @@ variable-, method-, directory- or filename and ECB will bring you as fast as
 possible to the node you want.
 Incremental node-search uses the value of `case-fold-search'.
 
-Tip: The `ecb-minor-mode' offers you in the `ecb-mode-map' some keys for
-selecting every window of the ecb-frame. This makes window-selection a child´s
-play. For example you can jump into the method-window by hitting \"C-c . m\".
+Tip: The `ecb-minor-mode' offers you in the `ecb-mode-map' \(customizable via
+`ecb-key-map') some keys for selecting every window of the ecb-frame. This
+makes window-selection a child´s play. For example you can jump into the
+method-window by hitting \"C-c . m\".
 
 
 Working with the edit-window of ECB:
@@ -301,7 +302,7 @@ comment of this option. See also the description of the function
 `ecb-toggle-enlarged-compilation-window'.
 
 But because ECB works best without such a durable compilation-window you
-should read the comments of these two option carefully!
+should read the comments of these two options carefully!
 
 
 Rebuilding the ECB-method buffer:
@@ -342,8 +343,8 @@ Hiding/Showing the ECB windows:
 With `ecb-toggle-ecb-windows' you can hide/show all the ECB windows without
 changing the activation state of ECB and also without deactivating the advices
 for `delete-other-windows' and/or `delete-window'. This is most useful if you
-use layout nr.10 \(see \"Tips and tricks\" below) or if you want to have
-maximum space for editing and you don´t need the browsing windows all the
+use a layout like nr.10 \(see \"Tips and tricks\" below) or if you want to
+have maximum space for editing and you don´t need the browsing windows all the
 time.
 
 
