@@ -25,7 +25,7 @@
 ;;
 ;; Contains all mode-line enhancements for ECB.
 
-;; $Id: ecb-mode-line.el,v 1.10 2001/06/12 08:38:20 berndl Exp $
+;; $Id: ecb-mode-line.el,v 1.11 2002/10/16 16:44:16 berndl Exp $
 
 (defcustom ecb-mode-line-prefixes '(nil
                                     nil
@@ -92,7 +92,7 @@ then also the string \": \" is appended."
 	     (window-width (get-buffer-window buffer-name)))))))))
 
 (defun ecb-mode-line-get-directory (prefix directory width)
-  "Given the prefix for the mode-line (' ECB Sources: '), the directory to
+  "Given the prefix for the mode-line \(' ECB Sources: '), the directory to
 display, and the width of the window,  compute what directory name to display.
 This should trim the beginning of the directory so that the mode-line does not
 stretch past the screen."

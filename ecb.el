@@ -59,7 +59,7 @@
 ;; The latest version of the ECB is available at
 ;; http://home.swipnet.se/mayhem/ecb.html
 
-;; $Id: ecb.el,v 1.241 2002/10/10 08:35:37 berndl Exp $
+;; $Id: ecb.el,v 1.242 2002/10/16 16:44:17 berndl Exp $
 
 ;;; Code:
 
@@ -3438,7 +3438,7 @@ That is remove the unsupported :help stuff."
     (ecb-menu-item
      [ "Show Online Help"
        ecb-show-help
-       :active (equal (selected-frame) ecb-frame)
+       :active t
        :help "Show the online help of ECB."
        ])
     (ecb-menu-item
@@ -3446,7 +3446,7 @@ That is remove the unsupported :help stuff."
        (let ((ecb-show-help-format 'info))
          (ecb-show-help)
          (Info-goto-node "Command Index"))
-       :active (equal (selected-frame) ecb-frame)
+       :active t
        :help "Displays an index of all commands in the online-help."
        ])
     (ecb-menu-item
@@ -3454,13 +3454,13 @@ That is remove the unsupported :help stuff."
        (let ((ecb-show-help-format 'info))
          (ecb-show-help)
          (Info-goto-node "Option Index"))
-       :active (equal (selected-frame) ecb-frame)
+       :active t
        :help "Displays an index of all user-options in the online-help."
        ])
     (ecb-menu-item
      [ "Submit problem report"
        ecb-submit-problem-report
-       :active (equal (selected-frame) ecb-frame)
+       :active t
        :help "Submit a problem report to the ECB mailing list."
        ])
     (ecb-menu-item

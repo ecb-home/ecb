@@ -26,7 +26,7 @@
 ;;
 ;; Contains all online-help for ECB (stolen something from recentf.el)
 
-;; $Id: ecb-help.el,v 1.80 2002/08/22 10:04:13 berndl Exp $
+;; $Id: ecb-help.el,v 1.81 2002/10/16 16:44:16 berndl Exp $
 
 ;;; Code
 
@@ -87,7 +87,8 @@ any and the current message-buffer. You will be asked for a problem-report
 subject and then you must insert a description of the problem. Please describe
 the problem as detailed as possible!"
   (interactive)
-  (if (not (ecb-point-in-edit-window))
+  (if (and (equal ecb-frame (selected-frame))
+           (not (ecb-point-in-edit-window)))
       (ecb-select-edit-window))
   (if (not (locate-library "reporter"))
       (ecb-error "You need the reporter.el package to submit a bugreport for ECB!")
@@ -111,7 +112,8 @@ the problem as detailed as possible!"
         nil
         'ecb-problem-report-post-hook
         ecb-problem-report-message)
-       (ecb-redraw-layout)
+       (if (equal ecb-frame (selected-frame))
+           (ecb-redraw-layout))
        (mail-subject)
        (insert (read-string "Problem report subject: "
                             (format "ECB-%s -- " ecb-version)))

@@ -1,6 +1,6 @@
 ;;; ecb-speedbar.el --- 
 
-;; $Id: ecb-speedbar.el,v 1.15 2002/03/22 02:03:29 burtonator Exp $
+;; $Id: ecb-speedbar.el,v 1.16 2002/10/16 16:44:17 berndl Exp $
 
 ;; Copyright (C) 2000-2003 Free Software Foundation, Inc.
 ;; Copyright (C) 2000-2003 Kevin A. Burton (burton@openprivacy.org)
@@ -129,43 +129,6 @@
 
   (set-window-dedicated-p (selected-window) t))
 
-(defun ecb-layout-function-20()
-
-  (when ecb-compile-window-height
-    (ecb-split-ver (* -1 ecb-compile-window-height) t)
-    (setq ecb-compile-window (next-window)))
-
-  (ecb-split-hor (- ecb-windows-width) t)
-
-  (setq ecb-edit-window (selected-window))
-
-  (select-window (next-window))
-
-  (ecb-set-speedbar-buffer)
-
-  (ecb-split-ver 0.5)
-  (ecb-set-methods-buffer))
-
-(defun ecb-delete-other-windows-in-editwindow-20 (split)
-  (cond ((equal (ecb-point-in-edit-window) 2)
-         (setq ecb-edit-window (selected-window))
-         (delete-window (previous-window))
-         t)
-        ((equal (ecb-point-in-edit-window) 1)
-         (delete-window (next-window))
-         t)
-        (t nil)))
-
-(defun ecb-delete-window-in-editwindow-20 (split)
-  (cond ((equal (ecb-point-in-edit-window) 2)
-         (delete-window)
-         (ecb-select-edit-window)
-         t)
-        ((equal (ecb-point-in-edit-window) 1)
-         (setq ecb-edit-window (next-window))
-         (delete-window)
-         t)
-        (t nil)))
 
 (defun ecb-speedbar-activate()
   "Make sure the speedbar is running.  WARNING: This is very dependend on the
@@ -227,6 +190,31 @@ will/could break."
                    (buffer-live-p speedbar-buffer))
 
             (speedbar-update-contents))))))
+
+
+(defun ecb-layout-function-20()
+
+  (when ecb-compile-window-height
+    (ecb-split-ver (* -1 ecb-compile-window-height) t)
+    (setq ecb-compile-window (next-window)))
+
+  (ecb-split-hor (- ecb-windows-width) t)
+
+  (setq ecb-edit-window (selected-window))
+
+  (select-window (next-window))
+
+  (ecb-set-speedbar-buffer)
+
+  (ecb-split-ver 0.5)
+  (ecb-set-methods-buffer))
+
+
+(defalias 'ecb-delete-other-windows-in-editwindow-20
+  'ecb-delete-other-windows-ecb-windows-right)
+(defalias 'ecb-delete-window-in-editwindow-20
+  'ecb-delete-window-ecb-windows-right)
+
 
 (defun ecb-speedbar-goto-speedbar()
   "Goto the speedbar window."
