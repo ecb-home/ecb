@@ -88,7 +88,8 @@
 ;; -- an alias for all functions of semantic currently used by ECB ---
 
 (defconst ecb--semantic-function-alist
-  '((semantic-active-p                     . semantic-active-p) 
+  '((semantic-active-p                     . semantic-active-p)
+    (semantic-current-nonterminal-parent   . semantic-current-tag-parent)
     (semantic-adopt-external-members       . semantic-adopt-external-members)
     (semantic-bovinate-toplevel            . semantic-bovinate-toplevel)
     (semantic-bucketize                    . semantic-bucketize)
@@ -171,6 +172,15 @@ function ECB uses from the semanticdb library.")
 unloaded buffer representation."
   (let ((o-cdr (ecb--semantic--tag-overlay-cdr tag)))
     (setcar o-cdr overlay)))
+
+(defsubst ecb--semantic-tag-calculate-parent (tag)
+  "Attempt to calculate the parent-tag of TAG."
+  (if (fboundp 'semantic-tag-calculate-parent)
+      (apply 'semantic-tag-calculate-parent (list tag))
+    (save-excursion
+      (set-buffer (ecb--semantic-tag-buffer tag))
+      (goto-char (ecb--semantic-tag-start tag))
+      (ecb--semantic-current-tag-parent))))
 
 
 ;;; API Functions
