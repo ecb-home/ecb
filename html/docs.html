@@ -198,7 +198,7 @@ See <a href="#Download%20required%20packages">Download required packages</a>.
 <p>You <strong>MUST</strong> add the ECB-install-directory to the
 <code>load-path</code> either by changing the <code>load-path</code> variable
 directly in your <code>.emacs</code> or <code>site-lisp/site-start.el</code> or by
-working with a file <code>subdirs.el</code>.
+working with a file <code>subdirs.el</code><a rel=footnote href="#fn-1"><sup>1</sup></a>.
 
 <p><strong>ATTENTION</strong>:
 ECB is NOT properly installed if it's directory is not added to
@@ -214,13 +214,13 @@ ECB is NOT properly installed if it's directory is not added to
 
 <p>If you want to load the complete ECB at Emacs-loadtime (Advantage: All
 ECB-options available after loading Emacs. Disadvantage: Increasing
-loadtime<a rel=footnote href="#fn-1"><sup>1</sup></a>):
+loadtime<a rel=footnote href="#fn-2"><sup>2</sup></a>):
 
 <br><pre>(require 'ecb)
 </pre>
 
 <p>If you want to load the ECB first after starting it by
-<code>ecb-activate</code> (Advantage: Fast loading<a rel=footnote href="#fn-2"><sup>2</sup></a>. Disadvantage:
+<code>ecb-activate</code> (Advantage: Fast loading<a rel=footnote href="#fn-3"><sup>3</sup></a>. Disadvantage:
 ECB- and semantic-options first available after starting ECB):
 
 <br><pre>(autoload 'ecb-activate "ecb" "Activate ECB" t)
@@ -313,11 +313,11 @@ appropriate way)!
 <p>ECB is for browsing source-files and therefore you have to setup your
 Emacs-configuration properly so semantic can be activated
 automatically for parsing your Emacs-Lisp, C, C++ or Java
-buffers<a rel=footnote href="#fn-3"><sup>3</sup></a>. For this Emacs
+buffers<a rel=footnote href="#fn-4"><sup>4</sup></a>. For this Emacs
 must activate the correct <code>major-mode</code> for the source-files and
 Emacs can only do this if the option <code>auto-mode-alist</code> is setup
 correctly. The correct major-modes and possible
-file-extensions<a rel=footnote href="#fn-4"><sup>4</sup></a> are:
+file-extensions<a rel=footnote href="#fn-5"><sup>5</sup></a> are:
 
 <p><table>
 <tr align="left"><td valign="top"><strong>Language</strong>
@@ -358,7 +358,7 @@ major-mode (see above, 2.), e.g. the hook for the major-mode
 <code>c++-mode</code> is <code>c++-mode-hook</code>.
 
 <p>Semantic adds automatically during load-time a special
-"semantic-setup" to these major-mode hooks<a rel=footnote href="#fn-5"><sup>5</sup></a> in form of a
+"semantic-setup" to these major-mode hooks<a rel=footnote href="#fn-6"><sup>6</sup></a> in form of a
 "setup-function". Example: For c and c++ modes semantic adds
 <code>semantic-default-c-setup</code> to <code>c-mode-hook</code> and
 <code>c++-mode-hook</code>.
@@ -370,7 +370,7 @@ ECB can not work properly too!
 
 <p>Check if your Emacs-setup uses somewhere <code>setq</code> for adding code
 to a major-mode-hook. <strong>IMPORTANT</strong>: Use <code>add-hook</code> instead of
-<code>setq</code><a rel=footnote href="#fn-6"><sup>6</sup></a>!
+<code>setq</code><a rel=footnote href="#fn-7"><sup>7</sup></a>!
 
 </ol>
 
@@ -394,7 +394,7 @@ steps:
 
 </p><li>Configure where ECB can find your sources:
 
-<p>Call <code>M-x customize-option RET ecb-source-path RET</code><a rel=footnote href="#fn-7"><sup>7</sup></a>. This lets you customize the option
+<p>Call <code>M-x customize-option RET ecb-source-path RET</code><a rel=footnote href="#fn-8"><sup>8</sup></a>. This lets you customize the option
 <code>ecb-source-path</code> with the customize-feature of Emacs. This opens
 a customize-buffer where you can insert all the directories where ECB
 can find your source-files. Save your changes with the button "Save
@@ -447,7 +447,7 @@ output of Emacs-compilation (compile, grep etc.) is shown
 (see <a href="#Temp-%20and%20compile-buffers">Temp- and compile-buffers</a>).
 
 <p>The following "ascii-screenshot" illustrates the typical layout of
-the ECB-frame<a rel=footnote href="#fn-8"><sup>8</sup></a>:
+the ECB-frame<a rel=footnote href="#fn-9"><sup>9</sup></a>:
 
 <br><pre>------------------------------------------------------------------
 |              |                                                 |
@@ -695,7 +695,7 @@ window (see the documentation <code>ecb-primary-mouse-jump-destination</code>).
 combinations of primary and secondary mouse-buttons are possible:
 
 <ul>
-<li>primary: mouse-2, secondary: C-mouse-2<a rel=footnote href="#fn-9"><sup>9</sup></a>. This is the default.
+<li>primary: mouse-2, secondary: C-mouse-2<a rel=footnote href="#fn-10"><sup>10</sup></a>. This is the default.
 
 <li>primary: mouse-1, secondary: C-mouse-1
 
@@ -719,7 +719,7 @@ Up:<a rel=up accesskey=u href="#Usage%20of%20ECB">Usage of ECB</a>
 
 <p>ECB offers the <code>ecb-mode-map</code> which binds the most important
 functions of ECB to keys so you can easily use ECB in every
-window<a rel=footnote href="#fn-10"><sup>10</sup></a> without
+window<a rel=footnote href="#fn-11"><sup>11</sup></a> without
 a mouse.
 
 <p>IMPORTANT: Do not modify <code>ecb-mode-map</code> directly! The option
@@ -855,7 +855,7 @@ to the ECB tree-buffers:
 </ul>
 
 <p>These hooks are called directly after tree-buffer creation so they can
-be used to add personal local keybindings<a rel=footnote href="#fn-11"><sup>11</sup></a> either to all tree-buffers
+be used to add personal local keybindings<a rel=footnote href="#fn-12"><sup>12</sup></a> either to all tree-buffers
 (<code>ecb-common-tree-buffer-after-create-hook</code>) or just to a certain
 tree-buffer. Here is a list which keys MUST NOT be rebind:
 
@@ -1619,7 +1619,7 @@ easy "by example" with the command <code>ecb-create-new-layout</code>.
 This command creates a new empty frame and offers a small set of keys
 to create the new layout by splitting windows. 
 <code>ecb-create-new-layout</code> and this couple of keys are your guide
-during the layout-creation-process<a rel=footnote href="#fn-12"><sup>12</sup></a>.
+during the layout-creation-process<a rel=footnote href="#fn-13"><sup>13</sup></a>.
 
 <p>After calling <code>ecb-create-new-layout</code> you will be asked which
 type of layout you want to create: "left", "right", "top". Here
@@ -1715,7 +1715,7 @@ Up:<a rel=up accesskey=u href="#Usage%20of%20ECB">Usage of ECB</a>
 
 <p>With ECB you can "browse" in your source-files like with a
 web-browser. This means ECB stores the current buffer- and
-window-position relative to the current token<a rel=footnote href="#fn-13"><sup>13</sup></a> in the edit-window after
+window-position relative to the current token<a rel=footnote href="#fn-14"><sup>14</sup></a> in the edit-window after
 
 <ul>
 <li>selecting a token in the ECB-methods buffer or
@@ -2393,7 +2393,7 @@ changing everyones <code>.emacs</code>-file and normally you will do this
 with the file <code>site-start.el</code>. You can customize all options of
 ECB in a central <code>site-start.el</code> (even the options mentioned
 above!) but you <strong>MUST NOT</strong> do this via <code>setq</code> but you have
-to use <code>custom-set-variables</code><a rel=footnote href="#fn-14"><sup>14</sup></a>! Here is a short example
+to use <code>custom-set-variables</code><a rel=footnote href="#fn-15"><sup>15</sup></a>! Here is a short example
 how this can be done:
 
 <br><pre>(custom-set-variables '(ecb-show-tokens ((include collapsed nil)
@@ -5400,7 +5400,7 @@ satisfied:
 
 <p>With unix-systems these tools are in the
 standard-distribution. If you are running any Microsoft Windows system
-then you need cygwin<a rel=footnote href="#fn-15"><sup>15</sup></a> which offers these tools too. On every
+then you need cygwin<a rel=footnote href="#fn-16"><sup>16</sup></a> which offers these tools too. On every
 system these tools must reside in the <code>PATH</code> environment-variable!
 
 <p>If you are behind a firewall and you have to use a proxy you maybe
@@ -5677,7 +5677,7 @@ the following example:
 </pre>
 
 <p>This code sets the new defined font <code>my-ecb-font</code> as font for
-all<a rel=footnote href="#fn-16"><sup>16</sup></a> ECB-tree-buffers (incl. the methods
+all<a rel=footnote href="#fn-17"><sup>17</sup></a> ECB-tree-buffers (incl. the methods
 buffer).
 
 <p><hr>
@@ -5919,7 +5919,7 @@ Up:<a rel=up accesskey=u href="#Elisp%20programming">Elisp programming</a>
 <h3>How to deal with the adviced window-functions</h3>
 
 <p>ECB offers for packages which work during activated ECB three macros
-for easy temporally<a rel=footnote href="#fn-17"><sup>17</sup></a> using all original-functions, all
+for easy temporally<a rel=footnote href="#fn-18"><sup>18</sup></a> using all original-functions, all
 adviced functions or only some adviced functions:
 
 <ul>
@@ -6328,7 +6328,7 @@ to the ECB-history after ECB-start.
 
 <br></td></tr><tr align="left"><td valign="top">Is there an "Intellisense"-mechanism like with other IDEs? 
 </td><td valign="top"></td><td valign="top">
-For Java the JDEE<a rel=footnote href="#fn-18"><sup>18</sup></a> has this feature and for all other languages
+For Java the JDEE<a rel=footnote href="#fn-19"><sup>19</sup></a> has this feature and for all other languages
 semantic offer something similar, see
 <a href="http://cedet.sourceforge.net/intellisense.shtml">http://cedet.sourceforge.net/intellisense.shtml</a>
 
@@ -6689,84 +6689,89 @@ Up:<a rel=up accesskey=u href="#Top">Top</a>
 <hr><h4>Footnotes</h4>
 <ol type="1">
 <li><a name="fn-1"></a>
+<p>This works at least for
+Emacs 20.X and Emacs 21.X but XEmacs may have slightly different
+mechanisms; see the XEmacs documentation</p>
+
+<li><a name="fn-2"></a>
 <p>Cause of full loading of ECB itself and also
 the packages semantic and eieio regardless if ECB is started.</p>
 
-<li><a name="fn-2"></a>
+<li><a name="fn-3"></a>
 <p>ECB, semantic
 and eieio are first loaded after starting ECB</p>
 
-<li><a name="fn-3"></a>
+<li><a name="fn-4"></a>
 <p>semantic supports some more "languages" like
 Makefiles etc. but these are the most important ones.</p>
 
-<li><a name="fn-4"></a>
+<li><a name="fn-5"></a>
 <p>Especially for C++ and C you can use any
 extension you want but these are the most common ones!</p>
 
-<li><a name="fn-5"></a>
+<li><a name="fn-6"></a>
 <p>Of course only
 for major-modes supported by semantic!</p>
 
-<li><a name="fn-6"></a>
+<li><a name="fn-7"></a>
 <p><code>setq</code> replaces/overwrites the current
 value of a hook with the new value whereas <code>add-hook</code>
 <strong>adds</strong> the new value to the old-value of the hook!</p>
 
-<li><a name="fn-7"></a>
+<li><a name="fn-8"></a>
 <p>This
 means first hitting the keys <kbd>M</kbd> (Meta- or Alt-key) and <kbd>x</kbd>
 simultaniously, inserting "customize-option" in the minibuffer,
 hitting RETURN, inserting "ecb-source-path" in the minibuffer and
 finally hitting RETURN again</p>
 
-<li><a name="fn-8"></a>
+<li><a name="fn-9"></a>
 <p>This is only one example of the layouts ECB
 offers, see <a href="#Changing%20the%20ECB-layout">Changing the ECB-layout</a></p>
 
-<li><a name="fn-9"></a>
+<li><a name="fn-10"></a>
 <p>means mouse-2 while CTRL-key
 is pressed.</p>
 
-<li><a name="fn-10"></a>
+<li><a name="fn-11"></a>
 <p>Regardless if a tree-window or an edit-window</p>
 
-<li><a name="fn-11"></a>
+<li><a name="fn-12"></a>
 <p>To be more general:
 They can be used to run any arbitrary lisp code after a tree-buffer
 creation!</p>
 
-<li><a name="fn-12"></a>
+<li><a name="fn-13"></a>
 <p>During the creation
 process you will be asked in the minibuffer for several options; here
 you can use TAB-completion and an "empty" RET chooses always the
 first option!</p>
 
-<li><a name="fn-13"></a>
+<li><a name="fn-14"></a>
 <p>e.g. a method,
 a variable or any other semantic token</p>
 
-<li><a name="fn-14"></a>
+<li><a name="fn-15"></a>
 <p>At least for the options
 for which <code>setq</code> is explicitly forbidden, but it is recommended
 to use always <code>custom-set-variables</code>!</p>
 
-<li><a name="fn-15"></a>
+<li><a name="fn-16"></a>
 <p>cygwin is available at
 <a href="http://cygwin.com/">http://cygwin.com/</a>
 </p>
 
-<li><a name="fn-16"></a>
+<li><a name="fn-17"></a>
 <p>Of course <code>ecb-directories-general-face</code>,
 <code>ecb-sources-general-face</code>, <code>ecb-methods-general-face</code> and
 <code>ecb-history-general-face</code> must be set to
 <code>ecb-default-general-face</code>!</p>
 
-<li><a name="fn-17"></a>
+<li><a name="fn-18"></a>
 <p>I.e. regardless of the settings in
 <code>ecb-advice-window-functions</code>!</p>
 
-<li><a name="fn-18"></a>
+<li><a name="fn-19"></a>
 <p>
 <a href="http://jdee.sunsite.dk/">http://jdee.sunsite.dk/</a>
 </p>

@@ -1,9 +1,11 @@
 Version 1.90:
 -------------
 
-- Now ECB can be "loaded" with autoload, i.e. ecb-activate, ecb-minor-mode,
-  ecb-byte-compile and ecb-show-help are autoload-able via '(autoload ...)'
-  (Klaus)
+- Now ECB can be "autoloaded", i.e.
+  + ecb-activate,
+  + ecb-minor-mode,
+  + ecb-byte-compile and
+  + ecb-show-help are autoload-able via '(autoload ...)' (Klaus)
 
 - Now ECB offers a command `ecb-create-new-layout' for interactively creating
   new layouts "by example". Read the online-help. (Klaus)
@@ -12,7 +14,7 @@ Version 1.90:
   `ecb-layout-define' which offers very easy programming of new layouts.
   (Klaus).
 
-- Now the ECB-tree-buffers offer in their popup-menues a "Grep" and a "Grep
+- Now the ECB-tree-buffers offer in their popup-menus a "Grep" and a "Grep
   recursive" (= grep-find) command where you can perform an easy grep in every
   directory without buffer-switching before. See also the new options
   `ecb-grep-function' and `ecb-grep-find-function'. (Klaus)
@@ -29,10 +31,13 @@ Version 1.90:
   tree-buffer. Please read the documentation. (Klaus)
 
 - Added two general hooks:
-  + ecb-before-activate-hook: Activate ECB only if all hooks return not nil
-  + ecb-before-deactivate-hook: deactivate ECB only if all hooks return not nil
+  + ecb-before-activate-hook: Activate ECB only if all added hooks return not
+    nil
+  + ecb-before-deactivate-hook: Deactivate ECB only if all added hooks return
+    not nil
   (Klaus)
-  
+
+
 Version 1.80:
 -------------
 
