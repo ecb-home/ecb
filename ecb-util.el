@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-util.el,v 1.128 2005/01/12 10:26:34 berndl Exp $
+;; $Id: ecb-util.el,v 1.129 2005/01/13 15:42:07 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -231,6 +231,7 @@ Uses the `derived-mode-parent' property of the symbol to trace backwards."
   (defalias 'ecb-event-buffer 'event-buffer)
   (defalias 'ecb-window-full-width 'window-full-width)
   (defalias 'ecb-window-full-height 'window-height)
+  (defalias 'ecb-window-display-height 'window-displayed-height)
   (defun ecb-frame-char-width (&optional frame)
     (/ (frame-pixel-width frame) (frame-width frame)))
   (defun ecb-frame-char-height (&optional frame)
@@ -261,6 +262,12 @@ Uses the `derived-mode-parent' property of the symbol to trace backwards."
   (defun ecb-window-full-width (&optional window)
     (let ((edges (window-edges window)))
       (- (nth 2 edges) (nth 0 edges))))
+  (defun ecb-window-display-height (&optional window)
+    (setq window (or window (selected-window)))
+    (save-selected-window
+      (select-window window)
+      (count-screen-lines (window-start)
+                          (- (window-end window t) 1))))
   (defalias 'ecb-window-full-height 'window-height)
   (defalias 'ecb-frame-char-width 'frame-char-width)
   (defalias 'ecb-frame-char-height 'frame-char-height)
