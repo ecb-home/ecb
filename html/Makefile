@@ -15,6 +15,7 @@ CP=cp
 MKDIR=mkdir -p
 TARC=tar -czvf
 SCP=scp
+SSH=ssh -l berndl ecb.sourceforge.net
 
 MAKEINFO=/usr/bin/makeinfo
 
@@ -28,7 +29,8 @@ ecb_SCREENSHOTS=screenshots/index.html screenshots/*.png
 
 ecb_GIFS=bullet.gif ecb_logo.gif mail.gif smiley.gif
 
-ecb_UPLOAD_ARC=ecb-website.tar.gz
+ecb_UPLOAD_ARC_UNZIPPED=ecb-website.tar
+ecb_UPLOAD_ARC=$(ecb_UPLOAD_ARC_UNZIPPED).gz
 
 ecb_WEBSITE_CONTENT=index.html $(ecb_HTML_GEN) $(ecb_HTMLDOCU_DIR)/*.html \
                     $(ecb_SCREENSHOTS) NEWS.html $(ecb_GIFS)
@@ -67,12 +69,17 @@ upload-build: $(ecb_HTMLDOCU_DIR)/index.html NEWS.html website
 # Uploads a complete new website build to ecb.sourceforge.net
 upload: website upload-build
 	$(SCP) $(ecb_UPLOAD_ARC) $(ecb_SF_login):$(ecb_WEBSITE_LOC)
+	@echo "Unpacking the new website..."
+	$(SSH) "cd $(ecb_WEBSITE_LOC); gzip -d $(ecb_UPLOAD_ARC); tar -xf $(ecb_UPLOAD_ARC_UNZIPPED); rm -f $(ecb_UPLOAD_ARC_UNZIPPED)"
 
-# Uploads all files curently in ./files-for-upload
+# Uploads all files currently in ./files-for-upload
 upload-update:
 	@(cd files-for-upload; \
 	$(TARC) update.tar.gz *; \
+	echo "Uploading the updates..."; \
 	$(SCP) update.tar.gz $(ecb_SF_login):$(ecb_WEBSITE_LOC); \
+	echo "Unpacking the updates..."; \
+	$(SSH) "cd $(ecb_WEBSITE_LOC); gzip -d update.tar.gz; tar -xf update.tar; rm -f update.tar"; \
 	$(RM) update.tar.gz)
 
 clean:
