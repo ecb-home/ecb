@@ -27,29 +27,60 @@
 
 ;; $Id$
 
+(defcustom ecb-mode-line-prefixes '(nil
+                                    nil
+                                    nil
+                                    "History")
+  "*Prefixes shown in the modelines of the ECB buffers.
+The displayed prefix then looks like: \"[ <PREFIX>[: ]]\", means if a prefix
+is defined for an ECB buffer then a single space is prepended and if there is
+additional text to display \(e.g. the current directory in the sources buffer)
+then also the string \": \" is appended."
+  :group 'ecb-general
+  :set (function (lambda (symbol value)
+                   (set symbol value)
+                   (if (and (boundp 'ecb-activated)
+                            ecb-activated)
+                       (ecb-mode-line-format))))
+  :initialize 'custom-initialize-default
+  :type '(list (radio :tag "Directory-buffer"
+                      (const :value "Directories")
+                      (const :tag "No prefix" :value nil)
+                      (string :tag "Custom prefix" :value ""))
+               (radio :tag "Sources-buffer"
+                      (const :value "Sources")
+                      (const :tag "No prefix" :value nil)
+                      (string :tag "Custom prefix" :value ""))
+               (radio :tag "Methods-buffer"
+                      (const :value "Methods")
+                      (const :tag "No prefix" :value nil)
+                      (string :tag "Custom prefix" :value ""))
+               (radio :tag "History-buffer"
+                      (const :value "History")
+                      (const :tag "No prefix" :value nil)
+                      (string :tag "Custom prefix" :value ""))))
+
 
 (defun ecb-mode-line-format()
   "Update all of the modelines of each buffer."
-
   (save-excursion
-
     ;; update the modeline for each visible(!!) ECB-buffer (some ECB-buffers
-    ;; are not visible in all layouts!)
-    
-    (ecb-mode-line-set ecb-sources-buffer-name " ECB Sources"
+    ;; are not visible in all layouts!)  
+    (ecb-mode-line-set ecb-directories-buffer-name (nth 0 ecb-mode-line-prefixes)
 		       ecb-path-selected-directory)
-    (ecb-mode-line-set ecb-methods-buffer-name " ECB Methods"
+    (ecb-mode-line-set ecb-sources-buffer-name (nth 1 ecb-mode-line-prefixes)
+		       ecb-path-selected-directory)
+    (ecb-mode-line-set ecb-methods-buffer-name (nth 2 ecb-mode-line-prefixes)
 		       (when ecb-path-selected-source
 			 (file-name-nondirectory ecb-path-selected-source)))
-    (ecb-mode-line-set ecb-directories-buffer-name " ECB Directories"
-		       ecb-path-selected-directory)
-    (ecb-mode-line-set ecb-history-buffer-name " ECB History" nil t)))
+    (ecb-mode-line-set ecb-history-buffer-name (nth 3 ecb-mode-line-prefixes))))
 
-(defun ecb-mode-line-set(buffer-name prefix &optional text always-show-prefix)
-  "Sets the mode line for a buffer."
-  (let ((shown-prefix (if (or ecb-mode-line-show-prefix
-			      always-show-prefix)
-			  (concat prefix (if text ": " "")) "")))
+(defun ecb-mode-line-set(buffer-name prefix &optional text)
+  "Sets the mode line for a buffer. The mode line has the scheme:
+\"[PREFIX[: ]][TEXT]\"."
+  (let ((shown-prefix (if (stringp prefix)
+			  (concat " " prefix (if (stringp text) ": " ""))
+                        (if (stringp text) " " ""))))
     (when (get-buffer-window buffer-name)
       (ecb-mode-line-update-buffer
        buffer-name
