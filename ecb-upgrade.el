@@ -873,9 +873,6 @@ options with their old \(before the upgrade/reset) and new values."
 ;; when cedet is stable (or a stable beta ;-) then we should add here a
 ;; cedet-required-version-min|max etc....
 
-;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: We should only support the latest
-;; cedet-beta!
-
 (defvar ecb-all-requirements-available nil)
 
 (defun ecb-check-requirements (&optional just-check)
