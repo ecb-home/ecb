@@ -82,18 +82,13 @@ The informational windows can contain:
 
 @itemize @bullet
 @item A directory tree,
-
 @item a list of source files in the current directory,
-
 @item a list of functions/classes/methods/... in the current file,
 (ECB uses the Semantic Bovinator, or Imenu, or etags, for getting this
 list so all languages supported by any of these tools are
 automatically supported by ECB too)
-
 @item a history of recently visited files, 
-
 @item the Speedbar and
-
 @item output from compilation (the "*compilation*" window) and other
 modes like help, grep etc. or whatever a user defines to be displayed
 in this window.

@@ -1115,6 +1115,9 @@ tree-buffer."
     (tree-buffer-overlay-move tree-buffer-general-overlay
                               (point-min) (point-max))))
 
+(defun tree-buffer-empty-p ()
+  (= (point-min) (point-max)))
+
 (defun tree-buffer-update (&optional node content)
   "Updates the current tree-buffer. The buffer will be completely rebuild with
 it´s current nodes. Window-start and point will be preserved. If NODE is not
