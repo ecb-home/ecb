@@ -185,6 +185,7 @@ All customizable options of ECB
 * ecb-faces::                   Customizing the faces
 * ecb-download::                Customizing how to download ECB
 * ecb-help::                    Customizing the online help of ECB
+* ecb-eshell::                  Customizing the eshell-integration
 
 Upgrading and downloading packages
 
@@ -2448,6 +2449,7 @@ readable option index. @xref{Option Index}.
 * ecb-faces::                   Customizing the faces
 * ecb-download::                Customizing how to download ECB
 * ecb-help::                    Customizing the online help of ECB
+* ecb-eshell::                  Customizing the eshell-integration
 @end menu
 
 @node ecb-general, ecb-directories, Customizable options, Customizable options
@@ -4363,7 +4365,7 @@ Valid values are either the string ``latest'' or a version number like
 @code{ecb-download-ecb} (@pxref{Interactive ECB commands}).
 @end defopt
 
-@node ecb-help, , ecb-download, Customizable options
+@node ecb-help, ecb-eshell, ecb-download, Customizable options
 @subsection Group ecb-help
 
 @noindent
@@ -4411,6 +4413,32 @@ are 'info (for the Info format) and 'html (for HTML format). If the
 value is 'html then @code{browse-url-browser-function} says which
 browser is used.
 @end defopt
+
+@node ecb-eshell, , ecb-help, Customizable options
+@subsection Group ecb-eshell
+
+@noindent
+This group contains the following options:
+
+@defopt eshell-auto-activate
+Startup the eshell when the ECB is activated and display it in the
+compile-window. If current layout does not display a compile-window (see
+@code{ecb-compile-window-height}) then nothing is done.
+@end defopt
+
+@defopt eshell-enlarge-when-selecting
+Enlarge the compile-window if it displays the eshell and
+if it is selected by @code{ecb-eshell-goto-eshell}.
+@end defopt
+
+@defopt eshell-synchronize
+Synchronize the eshell with the default-directory of current
+source-buffer. The synchronization is done by
+@code{ecb-eshell-current-buffer-sync} which can be called
+interactively but normally it is called autom. by the
+@code{ecb-current-buffer-sync-hook}.
+@end defopt
+
 
 
 @node Submitting problem report, Upgrading, Customizing, Top
@@ -4953,7 +4981,60 @@ directories can be cached which increases the speed a lot. See
 @node Using eshell, , Large directories, Tips and tricks
 @section Optimal using of eshell in ECB
 
-Documentation currently not available.
+@cindex eshell
+ECB offers a very smart integration of the ``eshell'' if you are using
+a compile window (@pxref{Temp- and compile-buffers})@footnote{Of
+course you can use eshell also if there is no compile-window. Then it
+is just displayed in the edit-window and there is no special
+integration.}
+
+Here is a short summary of provided features:
+
+@itemize @bullet
+@item
+Ability to jump to the eshell buffer within the compilation window
+@kbd{C-c . e}. If the eshell isn't running it will be started.
+
+@item
+Expands the compilation window when you run commands. So for example
+it allows you to view the eshell in minimized mode and then when you
+run ``ls'' the window automatically expands (but always depending of
+the output of the command you run).
+
+@item
+Sychronizes the current directory of the eshell with the current
+buffer in the edit-window of ECB.
+
+@item
+Provides smart window layout of the eshell buffer. This makes sure
+that the eshell is taking up the exact amount of space and that
+nothing is hidden.
+@end itemize
+
+Here comes a detailled explanation of these features and how to use it:
+
+Just call @code{ecb-eshell-goto-eshell} (bound to @kbd{C-c . e}) and
+eshell will displayed in the compile-window of ECB (if eshell is not
+already alive then it will be started automatically).
+
+ECB tries to display the contents of the eshell-buffer as best as
+possible, means ECB can autom. enlarge and shrink the compile-window
+so the contents of the eshell are fitting the window. See option
+@code{ecb-eshell-enlarge-when-selecting}. Normally this is done autom.
+but you can also do it on demand with the command
+@code{ecb-eshell-enlarge}.
+
+ECB tries also to recenter the eshell-buffer as best as possible.
+Normally this is done autom but you can do it on demand with the
+command @code{ecb-eshell-recenter}.
+
+If option @code{ecb-eshell-synchronize} is true then ECB always
+syncronizes the command prompt of eshell with the directory of current
+source-buffer of the edit-window.
+
+With the option @code{ecb-eshell-auto-activate} you can start eshell
+autom. in the compile-window when ECB is started but of course if a
+compile-window exists.
 
 @node Elisp programming, Conflicts and bugs, Tips and tricks, Top
 @chapter Entry points for elisp programmers

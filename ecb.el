@@ -3601,6 +3601,12 @@ That is remove the unsupported :help stuff."
       :active t
       :help "Customize options for the online help of ECB"
       ])
+    (ecb-menu-item
+     ["ECB/eshell options..."
+      (customize-group "ecb-eshell")
+      :active t
+      :help "Customize options for the eshell integration of ECB"
+      ])
     )
    (list
     "Upgrade and Download"
