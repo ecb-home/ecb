@@ -24,7 +24,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-method-browser.el,v 1.50 2004/08/13 13:56:21 berndl Exp $
+;; $Id: ecb-method-browser.el,v 1.51 2004/09/03 16:33:14 berndl Exp $
 
 ;;; Commentary:
 
@@ -2410,7 +2410,33 @@ semantic-reparse. This function is added to the hook
   ;; a mechanism where only the UPDATED-TAGS are used and only this ones are
   ;; updated. But for this we need also a tree-buffer-update which can update
   ;; single nodes without refreshing the whole tree-buffer like now.
-  (ecb-rebuild-methods-buffer-with-tagcache (ecb--semantic-fetch-tags t)))
+
+  ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: here we could check if
+  ;; UPDATED-TAGS contains only one tag and if this tag contains no childrens
+  ;; then we could use the new function `tree-buffer-update-node' to simply
+  ;; updating the associated node instead of a full reparse and then full
+  ;; tree-buffer-update.
+  (if (and (= 1 (length updated-tags))
+           (null (ecb--semantic-tag-children-compatibility (car updated-tags) t)))
+      ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: 
+      ;; we could update this single node if we can find this node. But this
+      ;; could be difficult (or impossible?) because here we only know the new
+      ;; semantic-tag but our nodes contain only outdated semantic-tags as
+      ;; data so how to find the associated node??!!
+      ;; Maybe we could search the node which contaisn the parent-tag of the
+      ;; updated tag and then we compute the position p of this tag in the list
+      ;; of the children of its parent-tag and then we update that node which
+      ;; comes on the same position p in the list of childrens of the
+      ;; associated parent-node - hmm, but can we be sure that the sequence of
+      ;; children-tags and children-nodes is the same?? probably not because
+      ;; the nodes are ordered alphabetically and the tags are are ordered in
+      ;; that sequence they are code in the source-buffer! Hmmm...........
+      ;; Until this question is solved we must use the full reparse/rebuild
+      ;; :-( One possible solution: tempor. ordering the
+      ;; semantic-tag-childrens by name and getting the position p of the
+      ;; updated tag in that ordered tag-sequence...
+      (ecb-rebuild-methods-buffer-with-tagcache (ecb--semantic-fetch-tags t))
+    (ecb-rebuild-methods-buffer-with-tagcache (ecb--semantic-fetch-tags t))))
 
 
 (defun ecb-semantic-active-for-file (filename)
@@ -4007,7 +4033,6 @@ pattern.")
       (ecb-dump-semantic-tags-internal tags nil source-buf 1)
       (switch-to-buffer-other-window (get-buffer-create "*ecb-tag-dump*"))
       (goto-char (point-min)))))
-  
 
 (defun ecb-dump-semantic-tags-internal (table parent source-buffer indent)
   (dolist (tag table)
