@@ -1,6 +1,6 @@
 ;;; ecb-speedbar.el --- 
 
-;; $Id: ecb-speedbar.el,v 1.4 2001/12/10 08:57:07 burtonator Exp $
+;; $Id: ecb-speedbar.el,v 1.5 2001/12/15 05:47:08 burtonator Exp $
 
 ;; Copyright (C) 2000-2003 Free Software Foundation, Inc.
 ;; Copyright (C) 2000-2003 Kevin A. Burton (burton@openprivacy.org)
@@ -29,11 +29,8 @@
 ;;; Commentary:
 
 ;; This package provide speedbar integration for the ECB.
-;;
-;; Note that if you use this package it will break the exiting ECB.  IE don't
-;; use the 'speedbar' function because you will get mixed results.
 
-;; NOTE: If you enjoy this software, please consider a donation to the EFF
+;; If you enjoy this software, please consider a donation to the EFF
 ;; (http://www.eff.org)
 
 ;;; History:
@@ -48,6 +45,11 @@
 ;;
 
 ;;; TODO:
+
+;; BREAKER BUG:
+;;
+;;   - when we hit <ENTER> on a file in the speedbar window, a new window is
+;;     created.
 
 ;; - only sync up the eshell if the current file is in a different dir than the
 ;; speedbar.  

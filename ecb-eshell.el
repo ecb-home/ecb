@@ -1,6 +1,6 @@
 ;;; ecb-eshell.el --- eshell integration for the ECB.
 
-;; $Id: ecb-eshell.el,v 1.12 2001/12/15 02:38:52 burtonator Exp $
+;; $Id: ecb-eshell.el,v 1.13 2001/12/15 05:47:08 burtonator Exp $
 
 ;; Copyright (C) 2000-2003 Free Software Foundation, Inc.
 ;; Copyright (C) 2000-2003 Kevin A. Burton (burton@openprivacy.org)
@@ -182,8 +182,6 @@
               
               (if (> enlargement 0)
                   (enlarge-window enlargement)))))))
-
-;;BUG: THIS HOOK CAUSES THE SOURCE BUFFER TO CHANGE!!!
 
 (add-hook 'ecb-current-buffer-sync-hook 'ecb-eshell-current-buffer-sync)
 

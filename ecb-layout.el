@@ -124,7 +124,7 @@
 ;;   + The edit-window must not be splitted and the point must reside in
 ;;     the not deleted edit-window.
 
-;; $Id: ecb-layout.el,v 1.89 2001/12/12 01:02:49 burtonator Exp $
+;; $Id: ecb-layout.el,v 1.90 2001/12/15 05:47:08 burtonator Exp $
 
 ;;; Code:
 
@@ -1505,6 +1505,7 @@ this function the edit-window is selected which was current before redrawing."
 `ecb-activated-window-configuration'."
   (when (and ecb-minor-mode
              (equal (selected-frame) ecb-frame))
+
     ;;save copies of:
     ;;
     ;; - the current buffer in the main window
@@ -1512,7 +1513,7 @@ this function the edit-window is selected which was current before redrawing."
 
     (let((main-window-buffer nil)
          (compilation-window-buffer nil))
-
+      
       ;; lets try to make this save.
       ;; TODO: Does not really work well....
     
@@ -1535,10 +1536,11 @@ this function the edit-window is selected which was current before redrawing."
       (if compilation-window-buffer
           (set-window-buffer ecb-compile-window compilation-window-buffer))
 
-    ;; because the current-window-configuration sets also the display-start of
-     ;; all windows and in most cases this is the top of a buffer in case of a
+      ;; because the current-window-configuration sets also the display-start of
+      ;; all windows and in most cases this is the top of a buffer in case of a
       ;; tree-buffer we must do here a manually synch
-      (ecb-current-buffer-sync))))
+
+      (run-hooks 'ecb-redraw-layout-hooks))))
 
 (defun ecb-store-window-sizes ()
   "Stores the sizes of the ECB windows for the current layout. The size of the
