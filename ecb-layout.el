@@ -25,7 +25,7 @@
 ;; Contains functions for settings the ECB layout.
 ;;
 ;; This file is part of the ECB package which can be found at:
-;; http://home.swipnet.se/mayhem/ecb.html
+;; http://ecb.sourceforge.net
 
 ;; This file has been re-implemented by Klaus Berndl <klaus.berndl@sdm.de>.
 ;; What has been done:

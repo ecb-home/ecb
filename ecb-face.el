@@ -1,9 +1,9 @@
 ;;; ecb-face.el --- all face-options of ECB
 
-;; Copyright (C) 2000, 2001 Jesper Nordenberg
+;; Copyright (C) 2000, 2001 Jesper Nordenberg, Klaus Berndl
 
 ;; Author: Klaus Berndl <klaus.berndl@sdm.de>
-;; Maintainer: Jesper Nordenberg <mayhem@home.se>
+;; Maintainer: Klaus Berndl <klaus.berndl@sdm.de>
 ;; Keywords: java, class, browser
 ;; Created: Feb 2002
 
