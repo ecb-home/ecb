@@ -5,10 +5,11 @@ About
 -----
 
 This package contains a code browser for several programming-languages for
-(X)Emacs. For instructions on how to use the browser read the online-help (see
-"Usage" below). The latest version of this package can be found at:
+(X)Emacs. For instructions on how to use the browser read the online-help
+either with the shipped info-manual (see "Usage" below) or direct from the
+ECB-Homepage at http://ecb.sourceforge.net.
 
-http://ecb.sourceforge.net
+The latest version can be found at: http://ecb.sourceforge.net
 
 
 Requirements
