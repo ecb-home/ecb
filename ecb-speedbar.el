@@ -1,6 +1,6 @@
 ;;; ecb-speedbar.el --- 
 
-;; $Id: ecb-speedbar.el,v 1.7 2001/12/15 20:18:56 burtonator Exp $
+;; $Id: ecb-speedbar.el,v 1.8 2001/12/16 09:38:48 burtonator Exp $
 
 ;; Copyright (C) 2000-2003 Free Software Foundation, Inc.
 ;; Copyright (C) 2000-2003 Kevin A. Burton (burton@openprivacy.org)
@@ -37,6 +37,11 @@
 ;; - Files opened with the speedbar are displayed in the ecb source window.
 ;;
 ;; Note that this is only known to work under Speedbar 0.14beta2
+;;
+;; WARNING: currently ecb-speedbar depends on patches to the speedbar which I
+;; sent to the author.  Without these patches ecb-speedbar will work but your
+;; source buffer may recenter itself when you change buffers.  Fully functionaly
+;; but very annoying.  Hopefully these patches will make it into a 0.14beta3.
 
 ;; If you enjoy this software, please consider a donation to the EFF
 ;; (http://www.eff.org)
@@ -71,6 +76,8 @@
 ;;
 ;; Sat Nov 10 2001 09:30 PM (burton@openprivacy.org): implementation of
 ;; ecb-delete-other-windows-in-editwindow-20
+
+
 ;;
 
 ;;; TODO:
@@ -145,11 +152,11 @@
 current speedbar implementation.  If the speedbar impl is changed this
 will/could break."
 
-  (if (not (buffer-live-p speedbar-buffer))
-      (save-excursion
-        (setq speedbar-buffer (get-buffer-create ecb-speedbar-buffer-name))
-        (set-buffer speedbar-buffer)
-        (speedbar-mode)))
+  (when (not (buffer-live-p speedbar-buffer))
+    (save-excursion
+      (setq speedbar-buffer (get-buffer-create ecb-speedbar-buffer-name))
+      (set-buffer speedbar-buffer)
+      (speedbar-mode)))
 
   ;;Start up the timer
 
@@ -188,12 +195,12 @@ will/could break."
         
         (setq speedbar-directory default-directory))
 
-      (if (and (not (string-equal speedbar-directory current-directory))
-               ecb-minor-mode
-               speedbar-buffer
-               (buffer-live-p speedbar-buffer))
-          (speedbar-update-contents)))))
-    
+      (when (and (not (string-equal speedbar-directory current-directory))
+                 ecb-minor-mode
+                 speedbar-buffer
+                 (buffer-live-p speedbar-buffer))
+        (speedbar-update-contents)))))
+
 (defun ecb-speedbar-goto-speedbar()
   (interactive)
 
