@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb.el,v 1.419 2004/12/10 12:54:38 berndl Exp $
+;; $Id: ecb.el,v 1.420 2004/12/20 16:43:51 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -151,34 +151,36 @@
 ;; if we miss some of the requirements we offer the user to download and
 ;; install them if Emacs is started interactive or - in batch mode - we
 ;; report an error.
-(let* ((semantic-load-ok (condition-case nil
-                             (require 'semantic)
-                           (error nil)))
-       (eieio-load-ok (condition-case nil
-                          (require 'eieio)
-                        (error nil)))
-       (speedbar-load-ok (condition-case nil
-                          (require 'speedbar)
-                        (error nil)))
-       (missing-msg (concat (if (not semantic-load-ok) "the package semantic")
-                            (when (not eieio-load-ok)
-                              (concat (if (not semantic-load-ok) " and the ")
+
+(defconst ecb-semantic-load-ok (ignore-errors (require 'semantic)))
+(defconst ecb-eieio-load-ok (ignore-errors (require 'eieio)))
+(defconst ecb-speedbar-load-ok (ignore-errors (require 'speedbar)))
+
+(defconst ecb-compiled-in-semantic-version
+  (eval-when-compile (ignore-errors semantic-version))
+  "Semantic-version used for byte-compiling ECB. Either nil when no semantic
+is loaded or the value of `semantic-version' at ECB-compilation time.")
+
+(let* ((missing-msg (concat (if (not ecb-semantic-load-ok) "the package semantic")
+                            (when (not ecb-eieio-load-ok)
+                              (concat (if (not ecb-semantic-load-ok) " and the ")
                                       "package eieio"))
-                            (when (not speedbar-load-ok)
-                              (concat (if (or (not semantic-load-ok)
-                                              (not eieio-load-ok)) " and the ")
+                            (when (not ecb-speedbar-load-ok)
+                              (concat (if (or (not ecb-semantic-load-ok)
+                                              (not ecb-eieio-load-ok)) " and the ")
                                       "package speedbar")))))
-  (when (not (and semantic-load-ok eieio-load-ok speedbar-load-ok))
-    (if (ecb-noninteractive)
-        (ecb-error "ECB is missing %s!" missing-msg)
-      (ecb-check-requirements))))
+   (when (not (and ecb-semantic-load-ok ecb-eieio-load-ok ecb-speedbar-load-ok))
+     (if (ecb-noninteractive)
+         (ecb-error "ECB is missing %s!" missing-msg)
+       (ecb-check-requirements))))
+
 
 ;; If we are here we can load ECB because at least we have installed and
 ;; loaded all required packages. If they have correct version will be checked
 ;; at start- or byte-compile-time
 
 
-(message "ECB %s uses semantic %s, eieio %s and speedbar %s." ecb-version
+(message "ECB %s uses loaded semantic %s, eieio %s and speedbar %s." ecb-version
          (or (and (boundp 'semantic-version)
                   semantic-version)
              "<unknown version>")
@@ -208,6 +210,7 @@
 (require 'ecb-autogen)
 (require 'ecb-winman-support)
 (require 'ecb-compatibility)
+(require 'ecb-analyse)
 
 ;; various loads
 (require 'assoc)
@@ -241,9 +244,6 @@
 ;;====================================================
 ;; Variables
 ;;====================================================
-(defvar ecb-tree-buffers nil
-  "The names of the tree-buffers of ECB.")
-
 (defvar ecb-major-mode-selected-source nil
   "Major-mode of currently selected source.")
 
@@ -252,8 +252,8 @@
 command.")
 
 (defun ecb-initialize-all-internals (&optional no-caches)
-  (setq ecb-tree-buffers nil
-        ecb-major-mode-selected-source nil
+  (ecb-tree-buffers-init)
+  (setq ecb-major-mode-selected-source nil
         ecb-item-in-tree-buffer-selected nil)
   (ecb-file-browser-initialize no-caches)
   (ecb-method-browser-initialize no-caches))
@@ -596,10 +596,12 @@ examples how to use this macro!"
 ;; Internals
 ;;====================================================
 
+(defvar ecb-current-buffer-sync-hook-internal nil
+  "Hook run at the end of `ecb-current-buffer-sync'.")
 
 (defun ecb-kill-buffer-hook ()
   "Function added to the `kill-buffer-hook' during ECB activation.
-It does several tasks:
+  It does several tasks:
 - Depending on the value in `ecb-kill-buffer-clears-history' the corresponding
   entry in the history-buffer is removed.
 - Clearing the method buffer if a file-buffer has been killed.
@@ -739,6 +741,7 @@ tasks are performed:
               (t nil))))
 
     ;; at the end we are running the hooks
+    (run-hooks 'ecb-current-buffer-sync-hook-internal)
     (run-hooks 'ecb-current-buffer-sync-hook)))
 
 
@@ -1524,7 +1527,6 @@ always the ECB-frame if called from another frame."
       (force-mode-line-update t))
     (error "ECB %s: %s (error-type: %S, error-data: %S)" ecb-version msg
            (car err) (cdr err))))
-  
 
 (defvar ecb-last-window-config-before-deactivation nil
   "Contains the last `ecb-current-window-configuration' directly before
@@ -1555,6 +1557,59 @@ value of VAR is as before storing a NEW-VALUE for variable-symbol VAR."
              (setq ecb-temporary-changed-emacs-variables-alist
                    (ecb-remove-assoc var ecb-temporary-changed-emacs-variables-alist)))))))
 
+(defun ecb-check-semantic-load ()
+  "Checks if cedet is correctly loaded if semantic 2.X is used and if the same
+semantic-version has been used for byte-compiling ECB and loading into Emacs.
+If ECB detects a problem it is reported and then an error is thrown."
+  (when (boundp 'semantic-version)
+    (let ((err-msg
+           (cond (;; cedet not properly installed but semantic 2.X is loaded
+		  ;; into emacs
+                  (and (not (featurep 'cedet))
+                       ecb-semantic-2-loaded)
+                  (concat (format "Currently semantic %s is loaded but cedet is not correctly installed.\n"
+                                  semantic-version)
+                          "Please read the INSTALL-file of the cedet-suite and install cedet as described.\n"
+                          "It is essential that the file /your/path/to/cedet/common/cedet.el is loaded!")
+                  )
+                 ;; not semantic was compiled into ECB
+                 ((null ecb-compiled-in-semantic-version)
+                  (concat (format "Currently semantic %s is loaded but ECB has been byte-compiled without\n"
+                                  semantic-version)
+                          "any semantic-library. Please either use ECB un-byte-compiled \(remove all *.elc\n"
+                          "files from the ECB-directory) or byte-compile ECB correctly with semantic!\n"
+                          "In the later case it is recommended to start ECB first-time not byte-compiled\n"
+                          "and then call the command `ecb-byte-compile'. This ensures you byte-compile ECB\n"
+                          "with the same library-versions \(semantic etc.) as you load into Emacs.\n"
+                          "If you use the Makefile check the variables CEDET, SEMANTIC, EIEIO and SPEEDBAR\n"
+                          "before compiling!"
+                          ))
+                 ;; Different semantic-version used for byte-compiling ECB and
+                 ;; loading into Emacs.
+                 ((not (string= semantic-version ecb-compiled-in-semantic-version))
+                  (concat "ECB has been byte-compiled with another semantic-version than currently\n"
+                          "loaded into Emacs:\n"
+                          (format "  + Semantic used for byte-compiling ECB: %s\n"
+                                  ecb-compiled-in-semantic-version)
+                          (format "  + Semantic currently loaded into Emacs: %s\n"
+                                  semantic-version)
+                          "Please ensure that ECB is byte-compiled with the same semantic-version as you\n"
+                          "you load into your Emacs. Check if you have byte-compiled ECB with the cedet-\n"
+                          "suite but loaded old semantic 1.X into Emacs or vice versa.\n\n"
+                          "In general it is recommended to start ECB first-time not byte-compiled\n"
+                          "and then call the command `ecb-byte-compile'. This ensures you byte-compile ECB\n"
+                          "with the same library-versions \(semantic etc.) as you load into Emacs.\n"
+                          "If you use the Makefile check the variables CEDET, SEMANTIC, EIEIO and SPEEDBAR\n"
+                          "before compiling!"))
+                 (t ""))))
+      (unless (= 0 (length err-msg)) 
+        (with-output-to-temp-buffer "*ECB semantic-load problems*"
+          (princ "Currently ECB can not be activated cause of the following reason:\n\n")
+          (princ err-msg)
+          (princ "\n\nPlease fix the reported problem and restart Emacs\n"))
+        (ecb-error "Please fix the reported problem and restart Emacs!")))))
+
+
 (defun ecb-activate--impl ()
   "See `ecb-activate'.  This is the implementation of ECB activation."
   (when (or (null ecb-frame) (not (frame-live-p ecb-frame)))
@@ -1568,7 +1623,7 @@ value of VAR is as before storing a NEW-VALUE for variable-symbol VAR."
         (ecb-select-ecb-frame)
         (ecb-update-directories-buffer))
 
-    (let ((stack-trace-on-error t))
+    (let ((stack-trace-on-error stack-trace-on-error))
       ;; we activate only if all before-hooks return non nil
       (when (run-hook-with-args-until-failure 'ecb-before-activate-hook)
 
@@ -1581,10 +1636,14 @@ value of VAR is as before storing a NEW-VALUE for variable-symbol VAR."
                    (boundp 'progress-feedback-use-echo-area))
           (ecb-modify-emacs-variable 'progress-feedback-use-echo-area 'store t))
       
+        ;; checking if there are semantic-load problems
+        (ecb-check-semantic-load)
+              
+        ;; checking the requirements
+        (ecb-check-requirements)
+
         (condition-case err-obj
             (progn
-              ;; checking the requirements
-              (ecb-check-requirements)
 
               ;; initialize the navigate-library
               (ecb-nav-initialize)
@@ -1655,16 +1714,16 @@ value of VAR is as before storing a NEW-VALUE for variable-symbol VAR."
                   (ecb-create-methods-tree-buffer))
       
                 (unless (member ecb-history-buffer-name curr-buffer-list)
-                  (ecb-create-history-tree-buffer)))
-    
-              ;; Now store all tree-buffer-names used by ECB ECB must not use
-              ;; the variable `tree-buffers' but must always refer to
-              ;; `ecb-tree-buffers'!!
-              (setq ecb-tree-buffers (list ecb-directories-buffer-name
-                                           ecb-sources-buffer-name
-                                           ecb-methods-buffer-name
-                                           ecb-history-buffer-name))
+                  (ecb-create-history-tree-buffer))
 
+                ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: I think we need
+                ;; here a smarter mechanism - we need a macro
+                ;; `ecb-create-tree-buffer' which does all necessary
+                ;; registering of a new tree-buffer (additionally it must
+                ;; register a tree-buffer for creation here!
+                (unless (member ecb-analyse-buffer-name curr-buffer-list)
+                  (ecb-create-analyse-tree-buffer)))
+    
               ;; activate the eshell-integration - does not load eshell but prepares
               ;; ECB to run eshell right - if loaded and activated
               (ecb-eshell-activate-integration)
@@ -2200,7 +2259,8 @@ performance-problem!"
     ;; active or if now one of the ecb-buffers is active
     (when (and (not (> (minibuffer-depth) 0))
                (not (equal ecb-last-major-mode major-mode))
-               (not (member (buffer-name (current-buffer)) ecb-tree-buffers)))
+               (not (member (buffer-name (current-buffer))
+                            (ecb-tree-buffers-name-list))))
       (let ((last-mode ecb-last-major-mode))
         (setq ecb-last-major-mode major-mode)
         (ignore-errors
@@ -2301,6 +2361,7 @@ performance-problem!"
                                    "ecb-exec-in-directories-window"
                                    "ecb-exec-in-sources-window"
                                    "ecb-exec-in-methods-window"
+                                   "ecb-exec-in-analyse-window"
                                    "ecb-do-with-unfixed-ecb-buffers"
                                    "ecb-with-original-functions"
                                    "ecb-with-adviced-functions"
