@@ -45,7 +45,7 @@ LOADPATH=
 # tests if the tools are available on these locations, so if a tool x is
 # not available let the related setting X empty! NOTE: For generating the
 # PDF-format you will need an installed TeX and Ghostscript!
-MAKEINFO=/usr/bin/makeinfo
+MAKEINFO=/C/Programme/texmf/miktex/bin/makeinfo
 TEXI2DVI=/C/Programme/texmf/miktex/bin/texi2dvi
 # You need either the dvipdfm-tool
 #DVIPDFM=/C/Programme/texmf/miktex/bin/dvipdfm

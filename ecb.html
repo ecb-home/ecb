@@ -114,6 +114,7 @@ mailing list <a href="mailto:ecb-list@lists.sourceforge.net">ecb-list@lists.sour
 <li><a href="#ecb-face-options">ecb-face-options</a>:             Customizing options for faces
 <li><a href="#ecb-faces">ecb-faces</a>:                    Customizing the faces
 <li><a href="#ecb-download">ecb-download</a>:                 Customizing how to download ECB
+<li><a href="#ecb-help">ecb-help</a>:                     Customizing the online help of ECB
 
 <p>Upgrading and downloading packages
 
@@ -177,6 +178,13 @@ Up:<a rel=up accesskey=u href="#Install%20and%20first%20steps">Install and first
 
 <h3>Installation of ECB</h3>
 
+<p><strong>IMPORTANT</strong>: The following steps 1., 2., 3., 7. and 8. describe
+installation tasks if you got the archive in the format available at
+the ECB website. If you use XEmacs and got ECB as regular
+XEmacs-package (e.g. downloaded and installed by the net-installer of
+XEmacs) then the steps 1., 2., 3., 7. and 8. are not necessary for
+you.
+
 <ol type=1 start=1>
 
 <li>Unpack the ECB archive (probably you have already done this :-)
@@ -209,8 +217,7 @@ ECB is NOT properly installed if it's directory is not added to
 
 <p>Do not do this!
 
-</p><li>Load ECB by adding code to your <code>.emacs</code> or
-<code>site-lisp/site-start.el</code>.
+</p><li>Load ECB by adding code to your <code>.emacs</code>:
 
 <p>If you want to load the complete ECB at Emacs-loadtime (Advantage: All
 ECB-options available after loading Emacs. Disadvantage: Increasing
@@ -2200,8 +2207,11 @@ machines the full drawback should be done in &lt;&lt; 1s!
 <tr><td>
 Shows the online help of ECB either in Info or in HTML format
 depending of the value of <code>ecb-show-help-format</code>. If called with
-prefix argument, i.e. if <var>FORMAT</var> is not nil then the user is prompted
-to choose the format of the help (Info or HTML). 
+prefix argument, i.e. if <var>FORMAT</var> is not nil then the user is
+prompted to choose the format of the help (Info or HTML). If an error
+about not finding the needed help-file occurs please take a look at
+the options <code>ecb-help-info-start-file</code> and
+<code>ecb-help-html-start-file</code>! 
 </td></tr>
 </table>
 
@@ -2486,6 +2496,7 @@ readable option index. See <a href="#Option%20Index">Option Index</a>.
 <li><a accesskey=8 href="#ecb-face-options">ecb-face-options</a>:             Customizing options for faces
 <li><a accesskey=9 href="#ecb-faces">ecb-faces</a>:                    Customizing the faces
 <li><a href="#ecb-download">ecb-download</a>:                 Customizing how to download ECB
+<li><a href="#ecb-help">ecb-help</a>:                     Customizing the online help of ECB
 </ul>
 
 <p><hr>
@@ -2999,23 +3010,6 @@ pressed). This is the default setting.
 
 <p>If you change this during ECB is activated you must deactivate and
 activate ECB again to take effect
-</td></tr>
-</table>
-
-<p>
-<table width="100%">
-<tr>
-<td align="left"><b>show-help-format</b><i>
-</i></td>
-<td align="right">User Option</td>
-</tr>
-</table>
-<table width="95%" align="center">
-<tr><td>
-The format <code>ecb-show-help</code> shows its online help. Allowed values
-are 'info (for the Info format) and 'html (for HTML format). If the
-value is 'html then <code>browse-url-browser-function</code> says which
-browser is used. 
 </td></tr>
 </table>
 
@@ -5277,6 +5271,7 @@ for your personal taste. Or customize the related option in the group
 
 <p><hr>
 Node:<a name="ecb-download">ecb-download</a>,
+Next:<a rel=next accesskey=n href="#ecb-help">ecb-help</a>,
 Previous:<a rel=previous accesskey=p href="#ecb-faces">ecb-faces</a>,
 Up:<a rel=up accesskey=u href="#Customizable%20options">Customizable options</a>
 <br>
@@ -5343,6 +5338,86 @@ Which version of ECB should be downloaded by <code>ecb-download-ecb</code>.
 Valid values are either the string "latest" or a version number like
 "1.70". ECB creates automatically the correct URL for download, see
 <code>ecb-download-ecb</code> (see <a href="#Interactive%20ECB%20commands">Interactive ECB commands</a>). 
+</td></tr>
+</table>
+
+<p><hr>
+Node:<a name="ecb-help">ecb-help</a>,
+Previous:<a rel=previous accesskey=p href="#ecb-download">ecb-download</a>,
+Up:<a rel=up accesskey=u href="#Customizable%20options">Customizable options</a>
+<br>
+
+<h4>Group ecb-help</h4>
+
+<p>This group contains the following options:
+
+<p>
+<table width="100%">
+<tr>
+<td align="left"><b>help-html-path</b><i>
+</i></td>
+<td align="right">User Option</td>
+</tr>
+</table>
+<table width="95%" align="center">
+<tr><td>
+Path where the ECB online help in HTML format resides. This must be
+the location of the <code>ecb.html</code> which comes with the ECB
+distribution. If is installed by unpacking the archive available on
+the ECB website then this is the installation directory of ECB, i.e. 
+where the elisp files of ECB reside. If it is installed as
+XEmacs-package (e.g. via the package manager of XEmacs) then this is
+probably not the directory where the elisp files of ECB reside but
+either the directory "../../html/" or "../../etc/ecb/html/" (both
+relativ to the elisp directory of ECB).
+
+<p>The path can either be an absolute path or a path relativ to the directory
+where the elisp files of ECB are.
+
+<p>Normally there should be no need to change this option! 
+</td></tr>
+</table>
+
+<p>
+<table width="100%">
+<tr>
+<td align="left"><b>help-info-path</b><i>
+</i></td>
+<td align="right">User Option</td>
+</tr>
+</table>
+<table width="95%" align="center">
+<tr><td>
+Path where the ECB online help in info format resides. This must be
+the location of the <code>ecb.info</code> which comes with the ECB
+distribution. If is installed by unpacking the archive available on
+the ECB website then this is the installation directory of ECB, i.e. 
+where the elisp files of ECB reside. If it is installed as
+XEmacs-package (e.g. via the package manager of XEmacs) then this is
+probably not the directory where the elisp files of ECB reside but the
+directory "../../info/" (relativ to the elisp directory of ECB).
+
+<p>The path can either be an absolute path or a path relativ to the directory
+where the elisp files of ECB are.
+
+<p>Normally there should be no need to change this option! 
+</td></tr>
+</table>
+
+<p>
+<table width="100%">
+<tr>
+<td align="left"><b>show-help-format</b><i>
+</i></td>
+<td align="right">User Option</td>
+</tr>
+</table>
+<table width="95%" align="center">
+<tr><td>
+The format <code>ecb-show-help</code> shows its online help. Allowed values
+are 'info (for the Info format) and 'html (for HTML format). If the
+value is 'html then <code>browse-url-browser-function</code> says which
+browser is used. 
 </td></tr>
 </table>
 
@@ -6460,6 +6535,8 @@ Up:<a rel=up accesskey=u href="#Top">Top</a>
 <li><code>font-lock-tokens</code>: <a href="#ecb-methods">ecb-methods</a>
 <li><code>grep-find-function</code>: <a href="#ecb-directories">ecb-directories</a>
 <li><code>grep-function</code>: <a href="#ecb-directories">ecb-directories</a>
+<li><code>help-html-path</code>: <a href="#ecb-help">ecb-help</a>
+<li><code>help-info-path</code>: <a href="#ecb-help">ecb-help</a>
 <li><code>hide-ecb-windows-hook</code>: <a href="#ecb-layout">ecb-layout</a>
 <li><code>highlight-token-header-after-jump</code>: <a href="#ecb-methods">ecb-methods</a>
 <li><code>highlight-token-with-point</code>: <a href="#ecb-methods">ecb-methods</a>
@@ -6492,7 +6569,7 @@ Up:<a rel=up accesskey=u href="#Top">Top</a>
 <li><code>scroll-window-after-jump</code>: <a href="#ecb-methods">ecb-methods</a>
 <li><code>select-edit-window-on-redraw</code>: <a href="#ecb-layout">ecb-layout</a>
 <li><code>show-ecb-windows-hook</code>: <a href="#ecb-layout">ecb-layout</a>
-<li><code>show-help-format</code>: <a href="#ecb-general">ecb-general</a>
+<li><code>show-help-format</code>: <a href="#ecb-help">ecb-help</a>
 <li><code>show-node-info-in-minibuffer</code>: <a href="#ecb-general">ecb-general</a>
 <li><code>show-only-positioned-tokens</code>: <a href="#ecb-methods">ecb-methods</a>
 <li><code>show-source-file-extension</code>: <a href="#ecb-sources">ecb-sources</a>
@@ -6655,6 +6732,7 @@ Up:<a rel=up accesskey=u href="#Top">Top</a>
 <li><a href="#ecb-face-options">Group ecb-face-options</a>
 <li><a href="#ecb-faces">Group ecb-faces</a>
 <li><a href="#ecb-download">Group ecb-download</a>
+<li><a href="#ecb-help">Group ecb-help</a>
 </ul>
 </ul>
 <li><a name="toc_Submitting%20problem%20report"></a>
