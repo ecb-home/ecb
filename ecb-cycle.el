@@ -1,6 +1,6 @@
 ;;; ecb-cycle.el --- cycle buffers through ecb windows.
 
-;; $Id: ecb-cycle.el,v 1.7 2002/01/26 10:07:42 burtonator Exp $
+;; $Id: ecb-cycle.el,v 1.8 2002/01/26 10:10:36 burtonator Exp $
 
 ;; Copyright (C) 2000-2003 Free Software Foundation, Inc.
 ;; Copyright (C) 2000-2003 Kevin A. Burton (burton@openprivacy.org)
@@ -119,7 +119,9 @@ we hit the end we go back to the beginning.  See `ecb-compilation-buffer-p'."
         (if (= (1+ index) (length compilation-buffers))
             ;;go back to the first buffer.
             (ecb-cycle-set-compilation-buffer 0 compilation-buffers)
-          (ecb-cycle-set-compilation-buffer (1+ index) compilation-buffers))))))
+          (ecb-cycle-set-compilation-buffer (1+ index) compilation-buffers)))))
+
+  (select-window ecb-compile-window))
 
 (defun ecb-cycle-set-compilation-buffer(index compilation-buffers)
   "Set the buffer in the compilation window."
@@ -139,7 +141,9 @@ we hit the end we go back to the beginning.  See `ecb-compilation-buffer-p'."
   (when ecb-cycle-enlarge-compile-window
     (ecb-enlarge-window ecb-compile-window))
 
-  (set-window-buffer ecb-compile-window buffer))
+  (set-window-buffer ecb-compile-window buffer)
+
+  (select-window ecb-compile-window))
 
 (defun ecb-get-compilation-buffers()
   "Get all known compilation buffer names.  See `ecb-compilation-buffer-p'."
