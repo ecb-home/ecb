@@ -62,7 +62,7 @@
 ;; The latest version of the ECB is available at
 ;; http://home.swipnet.se/mayhem/ecb.html
 
-;; $Id: ecb.el,v 1.269 2003/01/08 10:28:04 berndl Exp $
+;; $Id: ecb.el,v 1.270 2003/01/10 14:51:51 berndl Exp $
 
 ;;; Code:
 
@@ -397,48 +397,27 @@ the machine). For these directories actualizing the sources- and/or directories-
 buffer of ECB \(if displayed in current layout!) can slow down dramatically so
 a caching increases speed a lot.
  
-The value of this option is a list where each element looks like:
-  \(<dir-regexp> <filenumber threshold> <cache clearing>
+The value of this option is a list where the each element is a cons-cell and
+looks like:
+  \(<dir-regexp> . <filenumber threshold>)
 <dir-regexp>: Regular expression a directory must match to be cached.
 <filenumber threshold>: Number of directory contents must exceed this number.
-<cache clearing>: When the cache should be cleared:
-                  + 'demand: Cache will only be cleared on user demand. See
-                    `ecb-clear-directory-cache'.
-                  + 'auto: Cache will be cleared if the contents of the
-                    directory have been changed. ECB can detect this
-                    automatically. This works for Unix- but probably not for
-                    Windows-systems, because Windows offers no way to detect
-                    when the contents of a directory have been changed.
-                  + <number>: First selection of directories matching the
-                    regexp after <number> seconds after last caching time will
-                    rescan the directory.
 
 A directory will we only be cached if and only if the directory-name matches
-one rexexp of this option and it's content-number exceeds the related
+one rexexp of this option and its content-number exceeds the related
 threshold.
 
-Example:
-A value of \(\"~/bigdir*\" 1000 3600) means the contents of every subdirectory
-of the home-directory with name beginning with \"bigdir\" will be cached if
-the directory contains more than 1000 entries. One hour after the last
-caching time of such a directory the next selection \(clicking onto it in the
-directories-window, changing buffers so the directory becomes current in the
-directories-window, etc...) will rescan the directory and update the cache.
+The cache entry for a certain directory will be refreshed and actualized only
+by using the POWER-click \(see `ecb-primary-secondary-mouse-buttons') in the
+directories-buffer of ECB.
 
-Attention: Currently the <cache clearing> part is ignored. Currently the cache
-can only be cleared on demand and only the whole cache can be cleared, see
-`ecb-clear-directory-cache'. This will change in a future version."
+Example:
+A value of \(\"~/bigdir*\" . 1000) means the contents of every subdirectory
+of the home-directory with name beginning with \"bigdir\" will be cached if
+the directory contains more than 1000 entries."
   :group 'ecb-directories
-  :type `(repeat (list (regexp :tag "Directory-regexp")
-                       (integer :tag "Filenumber threshold" :value 1000)
-                       (choice :tag "Clear cache" :menu-tag "Clear cache"
-                               :value ,(if (eq system-type 'windows-nt)
-                                           'demand
-                                         'auto)
-                               (const :tag "Only on user demand" :value demand)
-                               (const :tag "Automatic" :value auto)
-                               (integer :tag "Seconds after caching time"
-                                        :value 3600)))))
+  :type `(repeat (cons (regexp :tag "Directory-regexp")
+                       (integer :tag "Filenumber threshold" :value 1000))))
 
 (defcustom ecb-directories-buffer-name " *ECB Directories*"
   "*Name of the ECB directory buffer. Because it is not a normal buffer for
@@ -696,7 +675,10 @@ so the user can easily jump back."
 (defcustom ecb-token-jump-narrow nil
   "*When jumping to a token from the ECB methods buffer narrows the buffer to
 only show that token. To display the entire buffer again, click on a source file
-or call `widen' (C-x n w)."
+or call `widen' (C-x n w).
+
+Note: The same effect can be achieved by using the POWER-click in the
+methods-buffer \(see `ecb-primary-secondary-mouse-buttons')."
   :group 'ecb-methods
   :type 'boolean)
 
@@ -1352,10 +1334,19 @@ A click with the primary button causes the main effect in each ECB-buffer:
   option `ecb-primary-mouse-jump-destination'.
 - ECB Methods: Jumping to the method in that edit-window specified by the
   option `ecb-primary-mouse-jump-destination'.
-A click with the primary mouse-button while the SHIFT-key is pressed only
-displays the complete clicked node in the minibuffer. This is useful if the
-node is longer as the window-width of the ECB-window and `ecb-truncate-lines'
-is not nil.
+
+A click with the primary mouse-button while the SHIFT-key is pressed called
+the POWER-click and does the following \(depending on the ECB-buffer where the
+POWER-click occurs):
++ Directory-buffer: Refreshing the directory-contents-cache \(see
+  `ecb-cache-directory-contents').
++ Sources- and History-buffer: Only displaying the source-contents in the
+  method-buffer but not displaying the source-file in the edit-window.
++ Methods-buffer: Narrowing to the clicked method/variable/ect... \(see
+  `ecb-token-jump-narrow').
+
+In addition always the whole node-name is displayed in the minibuffer after a
+POWER-click \(for this see also `ecb-show-node-info-in-minibuffer').
 
 The secondary mouse-button is for opening \(jumping to) the file in the other
 window \(see the documentation `ecb-primary-mouse-jump-destination').
@@ -1367,7 +1358,7 @@ The following combinations are possible:
 - primary: mouse-1, secondary: mouse-2
 
 If you change this during ECB is activated you must deactivate and activate
-ECB again to take effect"
+ECB again to take effect!"
   :group 'ecb-general
   :type '(radio (const :tag "Primary: mouse-2, secondary: Ctrl-mouse-2"
                        :value mouse-2--C-mouse-2)
@@ -2192,7 +2183,21 @@ semantic-reparse. This function is added to the hook
 (defvar ecb-files-and-subdirs-cache nil
   "Cache for every directory all subdirs and files. This is an alist where an
 element looks like:
-   \(<director> . \(\(<file-list> . <subdirs-list>) . <timestamp>)).")
+   \(<directory> . \(<file-list> . <subdirs-list>))")
+
+(defun ecb-files-and-subdirs-cache-add (cache-elem)
+  (if (not (ecb-files-and-subdirs-cache-get (car cache-elem)))
+      (setq ecb-files-and-subdirs-cache
+            (cons cache-elem ecb-files-and-subdirs-cache))))
+
+(defun ecb-files-and-subdirs-cache-get (dir)
+  (cdr (assoc dir ecb-files-and-subdirs-cache)))
+
+(defun ecb-files-and-subdirs-cache-remove (dir)
+  (let ((elem (assoc dir ecb-files-and-subdirs-cache)))
+    (if elem
+        (setq ecb-files-and-subdirs-cache
+              (delete elem ecb-files-and-subdirs-cache)))))
 
 (defun ecb-clear-files-and-subdirs-cache ()
   (setq ecb-files-and-subdirs-cache nil))
@@ -2205,24 +2210,15 @@ and NUMBER-OF-CONTENTS is greater then the related threshold."
       (let ((case-fold-search t))
         (save-match-data
           (if (and (string-match (car elem) dir)
-                   (> number-of-contents (cadr elem)))
+                   (> number-of-contents (cdr elem)))
               (throw 'exit (car elem))))
         nil))))
-
-;; TODO: This should be smarter: This function should offer via completion
-;; every directory currently cached, so the user can clear the cache for a
-;; single directory not only the whole cache (this should be done with prefix
-;; argument)
-(defun ecb-clear-directory-cache ()
-  "Clears the complete directory cache \(see `ecb-cache-directory-contents')."
-  (interactive)
-  (ecb-clear-files-and-subdirs-cache))
 
 (defun ecb-get-files-and-subdirs (dir)
   "Return a cons cell where car is a list of all files to display in DIR and
 cdr is a list of all subdirs to display in DIR. Both lists are sorted
 according to `ecb-sources-sort-method'."
-  (or (cdr (assoc dir ecb-files-and-subdirs-cache))
+  (or (ecb-files-and-subdirs-cache-get dir)
       ;; dir is not cached
       (let ((files (directory-files dir nil nil t))
             sorted-files source-files subdirs cache-elem)
@@ -2252,10 +2248,113 @@ according to `ecb-sources-sort-method'."
         (setq cache-elem (cons dir (cons source-files subdirs)))
         ;; check if this directory must be cached
         (if (ecb-check-directory-for-caching dir (length sorted-files))
-            (setq ecb-files-and-subdirs-cache
-                  (cons cache-elem ecb-files-and-subdirs-cache)))
+            (ecb-files-and-subdirs-cache-add cache-elem))
         ;; return the result
         (cdr cache-elem))))
+
+
+;; (defun ecb-set-selected-directory (path &optional force)
+;;   "Set the contents of the ECB-directories and -sources buffer correct for the
+;; value of PATH. If PATH is equal to the value of `ecb-path-selected-directory'
+;; then nothing is done unless first optional argument FORCE is not nil."
+;;   (let ((last-dir ecb-path-selected-directory))
+;;     (save-selected-window
+;;       (setq ecb-path-selected-directory (ecb-fix-filename path))
+;;       ;; if ecb-path-selected-directory has not changed then there is no need
+;;       ;; to do anything here because neither the content of directory buffer
+;;       ;; nor the content of the sources buffer can have been changed!
+;;       (when (or force (not (string= last-dir ecb-path-selected-directory)))
+;;         (when (or (not (ecb-show-sources-in-directories-buffer-p))
+;;                   ecb-auto-expand-directory-tree)
+;;           (ecb-exec-in-directories-window
+;;            (let (start)
+;;              (when ecb-auto-expand-directory-tree
+;;                ;; Expand tree to show selected directory
+;;                (setq start
+;;                      (if (equal ecb-auto-expand-directory-tree 'best)
+;;                          ;; If none of the source-paths in the buffer
+;;                          ;; `ecb-directories-buffer-name' matches then nil
+;;                          ;; otherwise the node of the best matching source-path
+;;                          (cdar (sort (delete nil
+;;                                              (mapcar (lambda (elem)
+;;                                                        (let ((data (tree-node-get-data elem)))
+;;                                                          (save-match-data
+;;                                                            (if (string-match
+;;                                                                 (concat "^"
+;;                                                                         (regexp-quote data))
+;;                                                                 ecb-path-selected-directory)
+;;                                                                (cons data elem)
+;;                                                              nil))))
+;;                                                      (tree-node-get-children (tree-buffer-get-root))))
+;;                                      (lambda (lhs rhs)
+;;                                        (> (length (car lhs)) (length (car rhs))))))
+;;                        ;; we start at the root node
+;;                        (tree-buffer-get-root)))
+;;                (when (and (equal ecb-auto-expand-directory-tree 'best)
+;;                           start)
+;;                  ;; expand the best-match node itself
+;;                  (tree-node-set-expanded start t)
+;;                  (ecb-update-directory-node start))
+;;                ;; start recursive expanding of either the best-matching node or
+;;                ;; the root-node itself.
+;;                (ecb-expand-directory-tree ecb-path-selected-directory
+;;                                           (or start
+;;                                               (tree-buffer-get-root)))
+;;                (tree-buffer-update))
+;;              (when (not (ecb-show-sources-in-directories-buffer-p))
+;;                (tree-buffer-highlight-node-data ecb-path-selected-directory
+;;                                                 start)))))
+
+;;         (ecb-exec-in-sources-window
+;;          (let ((old-children (tree-node-get-children (tree-buffer-get-root))))
+;;            (tree-node-set-children (tree-buffer-get-root) nil)
+;;            (ecb-tree-node-add-files
+;;             (tree-buffer-get-root)
+;;             ecb-path-selected-directory
+;;             (car (ecb-get-files-and-subdirs ecb-path-selected-directory))
+;;             0 ecb-show-source-file-extension old-children t))
+;;          (tree-buffer-update)
+;;          (when (not (string= last-dir ecb-path-selected-directory))
+;;            (tree-buffer-scroll (point-min) (point-min)))))))
+;;   ;; set the default-directory of each tree-buffer to current selected
+;;   ;; directory so we can open files via find-file from each tree-buffer.
+;;   ;; is this necessary if neither dir.- nor sources-buffer-contents have been
+;;   ;; changed? I think not but anyway, doesn't matter, costs are very low.
+;;   (save-excursion
+;;     (dolist (buf ecb-tree-buffers)
+;;       (set-buffer buf)
+;;       (setq default-directory
+;;             (concat ecb-path-selected-directory
+;;                     (and (not (= (aref ecb-path-selected-directory
+;;                                        (1- (length ecb-path-selected-directory)))
+;;                                  ecb-directory-sep-char))
+;;                          ecb-directory-sep-string)))))
+;;   ;; set the modelines of all visible tree-buffers new
+;;   (ecb-mode-line-format))
+
+
+(defvar ecb-sources-cache nil
+  "Cache for the contents of the buffer `ecb-sources-buffer-name'. This is an
+alist where every element is a cons cell which looks like:
+ \(directory . \(tree-buffer-root <copy of tree-buffer-nodes> buffer-string)")
+
+(defun ecb-sources-cache-remove (dir)
+  (let ((cache-elem (assoc dir ecb-sources-cache)))
+    (if cache-elem
+        (setq ecb-sources-cache (delete cache-elem ecb-sources-cache)))))
+
+(defun ecb-sources-cache-add (cache-elem)
+  (if (not (ecb-sources-cache-get (car cache-elem)))
+      (setq ecb-sources-cache (cons cache-elem ecb-sources-cache))))
+
+(defun ecb-sources-cache-get (dir)
+  "Return the value of a cached-directory DIR, means the 3-element-list. If no
+cache-entry for DIR is available then nil is returned."
+  (cdr (assoc dir ecb-sources-cache)))
+
+(defun ecb-sources-cache-clear ()
+  (setq ecb-sources-cache nil))
+
 
 (defun ecb-set-selected-directory (path &optional force)
   "Set the contents of the ECB-directories and -sources buffer correct for the
@@ -2309,17 +2408,47 @@ then nothing is done unless first optional argument FORCE is not nil."
                (tree-buffer-highlight-node-data ecb-path-selected-directory
                                                 start)))))
 
+        ;;Here we add a cache-mechanism which caches for each path the
+        ;;node-tree and the whole buffer-string of the sources-buffer. A
+        ;;cache-elem would be removed from the cache if a directory is
+        ;;POWER-clicked in the directories buffer because this is the only way
+        ;;to synchronize the sources-buffer with the disk-contents of the
+        ;;clicked directory.
         (ecb-exec-in-sources-window
-         (let ((old-children (tree-node-get-children (tree-buffer-get-root))))
-           (tree-node-set-children (tree-buffer-get-root) nil)
-           (ecb-tree-node-add-files
-            (tree-buffer-get-root)
-            ecb-path-selected-directory
-            (car (ecb-get-files-and-subdirs ecb-path-selected-directory))
-            0 ecb-show-source-file-extension old-children t))
-         (tree-buffer-update)
-         (when (not (string= last-dir ecb-path-selected-directory))
-           (tree-buffer-scroll (point-min) (point-min)))))))
+         (let ((cache-elem (ecb-sources-cache-get ecb-path-selected-directory)))
+           (if cache-elem
+               (progn
+                 (tree-buffer-set-root (nth 0 cache-elem))
+                 (setq tree-buffer-nodes (nth 1 cache-elem))
+                 (let ((buffer-read-only nil))
+                   (erase-buffer)
+                   (insert (nth 2 cache-elem))))
+             (let ((new-tree (tree-node-new "root" 0 nil))
+                   (old-children (tree-node-get-children (tree-buffer-get-root)))
+                   (new-cache-elem nil))
+               ;; building up the new files-tree
+               (ecb-tree-node-add-files
+                new-tree
+                ecb-path-selected-directory
+                (car (ecb-get-files-and-subdirs ecb-path-selected-directory))
+                0 ecb-show-source-file-extension old-children t)
+               (tree-buffer-set-root new-tree)
+               ;; updating the buffer itself
+               (tree-buffer-update)
+               ;; updating the cache
+               (setq new-cache-elem (cons ecb-path-selected-directory
+                                          (list (tree-buffer-get-root)
+                                                (copy-list tree-buffer-nodes)
+                                                (buffer-string))))
+               ;; check if the sources buffer for this directory must be
+               ;; cached
+               (if (ecb-check-directory-for-caching
+                    ecb-path-selected-directory
+                    (length tree-buffer-nodes))
+                   (ecb-sources-cache-add new-cache-elem))))
+           (when (not (string= last-dir ecb-path-selected-directory))
+             (tree-buffer-scroll (point-min) (point-min))))))))
+  
   ;; set the default-directory of each tree-buffer to current selected
   ;; directory so we can open files via find-file from each tree-buffer.
   ;; is this necessary if neither dir.- nor sources-buffer-contents have been
@@ -2335,6 +2464,7 @@ then nothing is done unless first optional argument FORCE is not nil."
                          ecb-directory-sep-string)))))
   ;; set the modelines of all visible tree-buffers new
   (ecb-mode-line-format))
+
 
 (defun ecb-get-source-name (filename)
   "Returns the source name of a file."
@@ -2553,7 +2683,7 @@ it is cleared."
         (setq ecb-methods-root-node (cdr cached-tree))
         (setq tree-buffer-indent ecb-tree-indent)
         (tree-buffer-update)))
-    (ecb-mode-line-format)
+   (ecb-mode-line-format)
     ;; signalize that the rebuild has already be done
     (setq ecb-method-buffer-needs-rebuild nil)))
 
@@ -3087,20 +3217,31 @@ Currently the fourth argument TREE-BUFFER-NAME is not used here."
 	       (list (if control-pressed 2 1) shift-pressed)))
 	    (t nil)))))
 
+(defun ecb-remove-dir-from-caches (dir)
+  (ecb-files-and-subdirs-cache-remove dir)
+  (ecb-sources-cache-remove dir))
+
 (defun ecb-directory-clicked (node ecb-button shift-mode)
   (if (= 3 (tree-node-get-type node))
       (funcall (tree-node-get-data node))
     (ecb-update-directory-node node)
+    (if shift-mode
+        (ecb-mouse-over-directory-node node nil nil 'force))
     (if (or (= 0 (tree-node-get-type node)) (= 2 (tree-node-get-type node)))
-	(if shift-mode
-	    (ecb-mouse-over-directory-node node nil nil 'force)
-	  (progn
-	    (if (= 2 ecb-button)
-		(tree-node-toggle-expanded node)
-	      (ecb-set-selected-directory (tree-node-get-data node)))
-	    (ecb-exec-in-directories-window
-	     ;; Update the tree-buffer with optimized display of NODE
-	     (tree-buffer-update node))))
+        (progn
+          (if (= 2 ecb-button)
+              (tree-node-toggle-expanded node)
+              
+            ;; Removing the element from the sources-cache and the
+            ;; files-and-subdirs-cache 
+            (if shift-mode
+                (ecb-remove-dir-from-caches (tree-node-get-data node)))
+            
+            (ecb-set-selected-directory (tree-node-get-data node)))
+            
+          (ecb-exec-in-directories-window
+           ;; Update the tree-buffer with optimized display of NODE
+           (tree-buffer-update node)))
       (ecb-set-selected-source (tree-node-get-data node)
 			       (and (ecb-edit-window-splitted) (eq ecb-button 2))
 			       shift-mode))))
@@ -3134,52 +3275,53 @@ Currently the fourth argument TREE-BUFFER-NAME is not used here."
 
 (defun ecb-method-clicked (node ecb-button shift-mode)
   (if shift-mode
-      (ecb-mouse-over-method-node node nil nil 'force)
-    (let ((data (tree-node-get-data node))
-	  (type (tree-node-get-type node))
-	  (filename ecb-path-selected-source)
-	  token found)
-      (cond
-       ;; Type 0 = a token
-       ((= type 0) (setq token data))
-       ;; Type 1 = a title of a group
-       ;; Just expand/collapse the node
-       ((= type 1)
-	(tree-node-toggle-expanded node)
-	;; Update the tree-buffer with optimized display of NODE
-	(tree-buffer-update node))
-       ;; Type 2 = a token name
-       ;; Try to find the token
-       ((= type 2)
-	(set-buffer (get-file-buffer ecb-path-selected-source))
-	;; Try to find source using JDE
-	(when (eq major-mode 'jde-mode)
-	  (condition-case nil
-	      (progn
-		(jde-show-class-source data)
-		(setq found t))
-	    (error nil)))
-	;; Try to find source using Semantic DB
-	(when (and (not found) (featurep 'semanticdb) (semanticdb-minor-mode-p))
-	  (let ((parent (semanticdb-find-nonterminal-by-name data)))
-	    (when parent
-	      (setq token (cdar parent))
-	      (setq filename (semanticdb-full-filename (caar parent)))))))
-       )
-      (when (and token (not found))
-        (ecb-semantic-assert-valid-token token)
-	(if (eq 'include (semantic-token-token token))
-	    ;; Include token -> try to find source
-	    (progn
-	      (set-buffer (get-file-buffer ecb-path-selected-source))
-	      (let ((file (semantic-find-dependency token)))
-		(when (and file (file-exists-p file))
-		  (ecb-find-file-and-display file
-					     (and (ecb-edit-window-splitted)
-						  (eq ecb-button 2))))))
-	  (ecb-jump-to-token filename token (ecb-get-edit-window
-					     (and (ecb-edit-window-splitted)
-						  (eq ecb-button 2)))))))))
+      (ecb-mouse-over-method-node node nil nil 'force))
+  (let ((data (tree-node-get-data node))
+        (type (tree-node-get-type node))
+        (filename ecb-path-selected-source)
+        (ecb-token-jump-narrow (if shift-mode t ecb-token-jump-narrow))
+        token found)
+    (cond
+     ;; Type 0 = a token
+     ((= type 0) (setq token data))
+     ;; Type 1 = a title of a group
+     ;; Just expand/collapse the node
+     ((= type 1)
+      (tree-node-toggle-expanded node)
+      ;; Update the tree-buffer with optimized display of NODE
+      (tree-buffer-update node))
+     ;; Type 2 = a token name
+     ;; Try to find the token
+     ((= type 2)
+      (set-buffer (get-file-buffer ecb-path-selected-source))
+      ;; Try to find source using JDE
+      (when (eq major-mode 'jde-mode)
+        (condition-case nil
+            (progn
+              (jde-show-class-source data)
+              (setq found t))
+          (error nil)))
+      ;; Try to find source using Semantic DB
+      (when (and (not found) (featurep 'semanticdb) (semanticdb-minor-mode-p))
+        (let ((parent (semanticdb-find-nonterminal-by-name data)))
+          (when parent
+            (setq token (cdar parent))
+            (setq filename (semanticdb-full-filename (caar parent)))))))
+     )
+    (when (and token (not found))
+      (ecb-semantic-assert-valid-token token)
+      (if (eq 'include (semantic-token-token token))
+          ;; Include token -> try to find source
+          (progn
+            (set-buffer (get-file-buffer ecb-path-selected-source))
+            (let ((file (semantic-find-dependency token)))
+              (when (and file (file-exists-p file))
+                (ecb-find-file-and-display file
+                                           (and (ecb-edit-window-splitted)
+                                                (eq ecb-button 2))))))
+        (ecb-jump-to-token filename token (ecb-get-edit-window
+                                           (and (ecb-edit-window-splitted)
+                                                (eq ecb-button 2))))))))
 
 (defun ecb-jump-to-token (filename token &optional window)
   (cond ((not (file-readable-p filename))
@@ -3435,12 +3577,6 @@ That is remove the unsupported :help stuff."
                    (ecb-window-live-p ecb-history-buffer-name))
       :help "Add all current file-buffers to history"
       ])
-   (ecb-menu-item
-    [ "Clear directory cache"
-      ecb-clear-directory-cache
-      :active ecb-files-and-subdirs-cache
-      :help "Clear the cache of certain cached directories."
-      ])   
    "-"
    (ecb-menu-item
     [ "Change layout"
@@ -3901,6 +4037,7 @@ always the ECB-frame if called from another frame."
       ;; clear the token-tree-cache and the files-subdir-cache
       (ecb-clear-token-tree-cache)
       (ecb-clear-files-and-subdirs-cache)
+      (ecb-sources-cache-clear)
 
       ;; initialize internal vars
       (ecb-initialize-internal-vars)
@@ -4264,6 +4401,7 @@ does all necessary after finishing ediff."
       ;; clear the caches
       (ecb-clear-token-tree-cache)
       (ecb-clear-files-and-subdirs-cache)
+      (ecb-sources-cache-clear)
       
       (setq ecb-minor-mode nil)))
   (if (null ecb-minor-mode)

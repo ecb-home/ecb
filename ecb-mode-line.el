@@ -25,7 +25,7 @@
 ;;
 ;; Contains all mode-line enhancements for ECB.
 
-;; $Id: ecb-mode-line.el,v 1.15 2002/12/15 19:35:57 berndl Exp $
+;; $Id: ecb-mode-line.el,v 1.16 2003/01/10 14:51:53 berndl Exp $
 
 (eval-when-compile
   (require 'silentcomp))
@@ -34,11 +34,11 @@
                                     nil
                                     nil
                                     "History")
-  "*Prefixes shown in the modelines of the ECB buffers.
+  "*Prefixes shown in the modelines of the standard ECB tree-buffers.
 The displayed prefix then looks like: \"[ <PREFIX>[: ]]\", means if a prefix
-is defined for an ECB buffer then a single space is prepended and if there is
-additional text to display \(e.g. the current directory in the sources buffer)
-then also the string \": \" is appended."
+is defined for an ECB tree-buffer then a single space is prepended and if
+there is additional text to display \(e.g. the current directory in the
+sources buffer) then also the string \": \" is appended."
   :group 'ecb-general
   :set (function (lambda (symbol value)
                    (set symbol value)
@@ -81,18 +81,18 @@ then also the string \": \" is appended."
 (defun ecb-mode-line-set (buffer-name prefix &optional text)
   "Sets the mode line for a buffer. The mode line has the scheme:
 \"[PREFIX[: ]][TEXT]\"."
-  (let ((shown-prefix (if (stringp prefix)
-			  (concat " " prefix (if (stringp text) ": " ""))
-                        (if (stringp text) " " ""))))
-    (when (get-buffer-window buffer-name)
+  (when (get-buffer-window buffer-name)
+    (let ((shown-prefix (if (stringp prefix)
+                            (concat " " prefix (if (stringp text) ": " ""))
+                          (if (stringp text) " " ""))))
       (ecb-mode-line-update-buffer
        buffer-name
        (concat shown-prefix
-	(if text
-	    (ecb-mode-line-get-directory
-	     shown-prefix
-	     text
-	     (window-width (get-buffer-window buffer-name)))))))))
+               (if text
+                   (ecb-mode-line-get-directory
+                    shown-prefix
+                    text
+                    (window-width (get-buffer-window buffer-name)))))))))
 
 (defun ecb-mode-line-get-directory (prefix directory width)
   "Given the prefix for the mode-line \(' ECB Sources: '), the directory to

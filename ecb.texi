@@ -150,7 +150,7 @@ Usage of ECB
 
 Working with the keyboard in the ECB-windows
 
-* Navigation::                  Keyboard navigation in a tree-buffer
+* Navigation/Selection::        Keyboard navigation/selection in a tree-buffer
 * Incremental search::          Find nodes as fast as possible
 * Personal keybindings::        Adding personal keybindings to a tree-buffer
 
@@ -599,6 +599,12 @@ Select directories (and - if enabled - source files) in the
 name or by hitting RETURN when the cursor is placed on the item line,
 see @ref{Usage of ECB}.
 
+IMPORTANT: If you use the POWER-click (i.e. hold down the SHIFT-key
+while clicking with the primary mouse button (@pxref{Using the mouse})
+or RETURN (@pxref{Using the keyboard})) on a directory node in the
+this buffer then the directory-contents-cache for this directory will
+be refreshed and actualized.
+
 @item
 Directory names with a ``[+]'' symbol after (or before) them can be
 expanded/collapsed by clicking on the symbol, pressing the TAB key
@@ -627,14 +633,15 @@ Source files can be selected by clicking a mouse button (@pxref{Using
 the mouse}) or hitting RETURN (@pxref{Using the keyboard}) on the
 source row in the @dfn{ECB-Sources} or @dfn{ECB- History} windows.
 
-IMPORTANT: If you hold down the SHIFT-key while clicking with the
-primary mouse button (@pxref{Using the mouse}) or RETURN
-(@pxref{Using the keyboard}) on a source row in the ECB-Sources
-or ECB-History windows then the source will not be displayed in the
-edit-window but it will be scanned in the background and all its
-contents (e.g. methods and variables) are listed in the @dfn{ECB
-Methods} window (@pxref{ECB Methods}. So you can get an overlook over
-the source without changing the buffer in the edit-window.
+IMPORTANT: If you use the POWER-click (i.e. hold down the SHIFT-key
+while clicking with the primary mouse button (@pxref{Using the mouse})
+or RETURN (@pxref{Using the keyboard})) on a source row in the
+ECB-Sources or ECB-History windows then the source will not be
+displayed in the edit-window but it will be scanned in the background
+and all its contents (e.g. methods and variables) are listed in the
+@dfn{ECB Methods} window (@pxref{ECB Methods}. So you can get an
+overlook over the source without changing the buffer in the
+edit-window.
 
 @item
 Clicking on the source file with the secondary mouse button or
@@ -658,6 +665,12 @@ you want) in the selected source file. When a method/variable is
 selected with the primary mouse button (@pxref{Using the mouse}) or
 RETURN (@pxref{Using the keyboard}) the edit buffer will jump to the
 method/variable.
+
+IMPORTANT: If you use the POWER-click (i.e. hold down the SHIFT-key
+while clicking with the primary mouse button (@pxref{Using the mouse})
+or RETURN (@pxref{Using the keyboard})) on a node in this buffer then
+the edit-buffer will be narrowed to the selected token (see also
+option @code{ecb-token-jump-narrow}).
 
 @item
 Clicking on a method/variable with the secondary mouse button or C-RETURN
@@ -784,19 +797,36 @@ Jumping to the method in that edit-window specified by the option
 @end itemize
 
 @cindex SHIFT-click
-Per default the complete node-name of an item in a tree-buffer is displayed in
-the echo-area if the mouse moves over it, regardless if the related window is
-the active one or not. You can get the same effect if you click with the
-primary mouse-button onto a node while SHIFT is held. In general: Via
-@code{ecb-show-node-info-in-minibuffer} you can specify in a detailled manner for
-every ECB tree-buffer when and which node-info should be displayed in the
-minibuffer.
+@cindex POWER-click
+A click with the primary mouse-button while the SHIFT-key is pressed
+is called the POWER-click and does the following (depending on the
+ECB-buffer where the POWER-click occurs):
 
-IMPORTANT: Doing this SHIFT-click in the ECB-Sources or ECB-History
-windows does not only show the node in the echo-area but it also opens the
-clicked source only in the background and shows all its methods/variables in
-ECB-Methods; the buffer of the edit-window is not changed! This is very
-useful to get only an overlook for a certain source.
+@itemize @minus
+@item ECB Directory:
+Refreshing the directory-contents-cache (see
+@code{ecb-cache-directory-contents}).
+
+@item ECB sources/history:
+Only displaying the source-contents in the method-buffer but not
+displaying the source-file in the edit-window. This means it opens the
+clicked source only in the background and shows all its
+methods/variables in ECB-Methods; the buffer of the edit-window is not
+changed! This is very useful to get only an overlook for a certain
+source.
+
+@item ECB Methods:
+Narrowing to the clicked method/variable/ect... (see
+@code{ecb-token-jump-narrow}).
+@end itemize
+
+Per default the complete node-name of an item in a tree-buffer is
+displayed in the echo-area if the mouse moves over it, regardless if
+the related window is the active one or not. You get the same effect
+always after a POWER-click. In general: Via
+@code{ecb-show-node-info-in-minibuffer} you can specify in a detailled
+manner for every ECB tree-buffer when and which node-info should be
+displayed in the minibuffer.
 
 The secondary mouse-button is for opening (jumping to) the file in the other
 window (see the documentation @code{ecb-primary-mouse-jump-destination}).
@@ -842,13 +872,13 @@ The following sections describe special topics about using the
 keyboard in the ECB-tree-buffers:
 
 @menu
-* Navigation::                  Keyboard navigation in a tree-buffer
+* Navigation/Selection::        Keyboard navigation/selection in a tree-buffer
 * Incremental search::          Find nodes as fast as possible
 * Personal keybindings::        Adding personal keybindings to a tree-buffer
 @end menu
 
-@node Navigation, Incremental search, Using the keyboard, Using the keyboard
-@subsection Navigation
+@node Navigation/Selection, Incremental search, Using the keyboard, Using the keyboard
+@subsection Navigation and Selection in a tree-buffer
 
 @cindex RETURN key
 @cindex TAB key
@@ -859,10 +889,10 @@ In the ECB-buffers RETURN and TAB are the most important keys:
 @itemize @bullet
 @item
 RETURN does the same as the primary button and C-RETURN does the same
-as the secondary button. The terms primary and secondary are explained
-in @ref{Using the mouse}. S-RETURN is the same as the
-SHIFT-click (@pxref{ECB Sources}). See also the option
-@code{ecb-tree-RET-selects-edit-window} and the function
+as the secondary button. S-RETURN is the same as the SHIFT-click or
+POWER-click. The terms ``primary'', ``secondary'', ``SHIFT-'' and
+``POWER-click'' are explained in @ref{Using the mouse}. See also the
+option @code{ecb-tree-RET-selects-edit-window} and the function
 @code{ecb-toggle-RET-selects-edit-window} which is bound to @kbd{C-t}
 in each tree-buffer of ECB!
 
@@ -891,7 +921,7 @@ Onto a not expandable node the horizontal arrow-keys go one character in the
 senseful correct direction.
 
 
-@node Incremental search, Personal keybindings, Navigation, Using the keyboard
+@node Incremental search, Personal keybindings, Navigation/Selection, Using the keyboard
 @subsection Incremental search for a node in current tree-buffer
 
 @cindex Incremental search
@@ -2842,10 +2872,26 @@ Jumping to the method in that edit-window specified by the option
 @code{ecb-primary-mouse-jump-destination}.
 @end itemize
 
-A click with the primary mouse-button while the SHIFT-key is pressed
-only displays the complete clicked node in the minibuffer. This is
-useful if the node is longer as the window-width of the ECB-window and
-@code{ecb-truncate-lines} is not nil.
+A click with the primary mouse-button while the SHIFT-key is pressed called
+the POWER-click and does the following (depending on the ECB-buffer where the
+POWER-click occurs):
+
+@itemize @bullet
+@item ECB Directories:
+Refreshing the directory-contents-cache (see
+@code{ecb-cache-directory-contents}).
+
+@item ECB sources/history:
+Only displaying the source-contents in the method-buffer but not
+displaying the source-file in the edit-window.
+
+@item ECB Methods:
+Narrowing to the clicked method/variable/ect... (see
+@code{ecb-token-jump-narrow}).
+@end itemize
+
+In addition always the whole node-name is displayed in the minibuffer after a
+POWER-click \(for this see also `ecb-show-node-info-in-minibuffer').
 
 The secondary mouse-button is for opening (jumping to) the file in the
 other window (see the documentation
@@ -3095,10 +3141,11 @@ actualizing the sources- and/or directories- buffer of ECB (if
 displayed in current layout!) can slow down dramatically so a caching
 increases speed a lot.
  
-The value of this option is a list where each element looks like:
+The value of this option is a list where each element is a cons-cell
+and looks like:
 
 @example
-  (<dir-regexp> <filenumber threshold> <cache clearing> with
+  (<dir-regexp> . <filenumber threshold>) with
 @end example
 
 @table @code
@@ -3106,41 +3153,22 @@ The value of this option is a list where each element looks like:
 Regular expression a directory must match to be cached.
 @item <filenumber threshold>:
 Number of directory contents must exceed this number.
-@item <cache clearing>:
-When the cache should be cleared:
-
-@itemize @minus
-@item @code{demand}:
-Cache will only be cleared on user demand. See
-@code{ecb-clear-directory-cache}.
-@item @code{auto}:
-Cache will be cleared if the contents of the directory have been
-changed. ECB can detect this automatically. This works for Unix- but
-probably not for Windows-systems, because Windows offers no way to
-detect when the contents of a directory have been changed.
-@item @code{<number>}:
-First selection of directories matching the regexp after <number>
-seconds after last caching time will rescan the directory.
-@end itemize
 @end table
 
 A directory will we only be cached if and only if the directory-name
-matches one rexexp of this option and it's content-number exceeds the
+matches one rexexp of this option and its content-number exceeds the
 related threshold.
 
-Example: A value of @code{("~/bigdir*" 1000 3600)} means the
+The cache entry for a certain directory will be refreshed and
+actualized only by using the POWER-click (see
+@code{ecb-primary-secondary-mouse-buttons}) in the directories-buffer
+of ECB (@pxref{Using the mouse}).
+
+Example: A value of @code{("~/bigdir*" 1000)} means the
 contents of every subdirectory of the home-directory with name
 beginning with ``bigdir'' will be cached if the directory contains more
-than 1000 entries. One hour after the last caching time of such a
-directory the next selection (clicking onto it in the
-directories-window, changing buffers so the directory becomes current
-in the directories-window, etc...) will rescan the directory and
-update the cache.
+than 1000 entries.
 
-@strong{Attention}: Currently the <cache clearing> part is ignored.
-Currently the cache can only be cleared on demand and only the whole
-cache can be cleared, see @code{ecb-clear-directory-cache}. This will
-change in a future version.
 @end defopt
 
 @defopt directories-buffer-after-create-hook
@@ -3358,17 +3386,6 @@ into class-definition. Therefore the default value is a delay of 0.25
 seconds.
 @end defopt
 
-@defopt token-jump-narrow
-When jumping to a token from the ECB methods buffer narrows the buffer
-to only show that token. To display the entire buffer again, click on
-a source file or call @code{widen} @kbd{C-x n w}.
-@end defopt
-
-@defopt token-jump-sets-mark
-Jumping to a token from the ECB-method buffer now sets the mark so the
-user can easily jump back.
-@end defopt
-
 @defopt methods-buffer-after-create-hook
 Local hook running after the creation of the methods-buffer. Every
 function of this hook is called once without arguments direct after
@@ -3541,6 +3558,9 @@ tokens.
 When jumping to a token from the ECB methods buffer narrows the buffer
 to only show that token. To display the entire buffer again, click on
 a source file or call @code{widen} (@kbd{C-x n w}).
+
+Note: The same effect can be achieved by using the POWER-click in the
+methods-buffer (@pxref{Using the mouse}).
 @end defopt
 
 @defopt token-jump-sets-mark
@@ -5010,8 +5030,23 @@ subdirs, especially if these directories are mounted net-drives
 net-connection and the machine), actualizing the sources- and/or
 directories- buffer of ECB (if displayed in current layout!) can slow
 down dramatically. If this is a problem the contents of certain
-directories can be cached which increases the speed a lot. See
+directories and also the contents of the sources-buffer can be cached
+which increases the speed a lot. See
 @code{ecb-cache-directory-contents}.
+
+IMPORTANT: The full speed-advantage of this cache-mechanism is only
+available if @code{ecb-show-sources-in-directories-buffer} is
+@code{nil}, i.e. sources of a directory are displayed in the
+ECB-sources-window. The reason is that only with a sources window the
+tree-buffer contents for the sources can be cached (i.e. the
+buffer-content of the ECB-sources-window) whereas with sources
+displayed in the directories buffer only the disk-contents of a
+directory are cached - which increases speed too but not so much as
+with sources displayed in the extra window ECB-sources.
+
+The cache of a directory can be only refreshed by a POWER-click (with
+mouse or keyboard) onto the related directory-node in the
+directories-buffer of ECB (@pxref{Using the mouse}).
 
 @node Using eshell, , Large directories, Tips and tricks
 @section Optimal using of eshell in ECB
