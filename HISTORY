@@ -1,6 +1,9 @@
 Version 1.60:
 -------------
 
+- New function `ecb-redraw-layout-quickly' is used to redraw the ECB layout when
+  the ECB is activated.  This gives us a significant performance increase.
+
 - New hook ecb-current-buffer-sync-hook allows developers to add code to be
   evaluated after the ECB is synchronized with the current buffer.
 
