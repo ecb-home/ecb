@@ -23,7 +23,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-file-browser.el,v 1.44 2004/11/25 18:10:14 berndl Exp $
+;; $Id: ecb-file-browser.el,v 1.45 2004/11/26 16:19:52 berndl Exp $
 
 ;;; Commentary:
 
@@ -738,7 +738,10 @@ re-arranged with `ecb-directories-menu-sorter'."
      (ecb-file-popup-vc-next-action "Check In/Out")
      (ecb-file-popup-vc-log "Revision history")
      (ecb-file-popup-vc-annotate "Annotate")
-     (ecb-file-popup-vc-diff "Diff against last version")))
+     (ecb-file-popup-vc-diff "Diff against last version")
+     ("---")
+     (ecb-file-popup-vc-refresh-file "Recompute state for file")
+     (ecb-file-popup-vc-refresh-dir "Recompute state for whole dir")))
   "*Static user extensions for the popup-menu of the sources buffer.
 For further explanations see `ecb-directories-menu-user-extension'.
 
@@ -770,8 +773,11 @@ re-arranged with `ecb-sources-menu-sorter'."
      (ecb-file-popup-vc-next-action "Check In/Out")
      (ecb-file-popup-vc-log "Revision history")
      (ecb-file-popup-vc-annotate "Annotate")
-     (ecb-file-popup-vc-diff "Diff against last version")))
-  "*Static user extensions for the popup-menu of the history buffer.
+     (ecb-file-popup-vc-diff "Diff against last version")
+     ("---")
+     (ecb-file-popup-vc-refresh-file "Recompute state for file")
+     (ecb-file-popup-vc-refresh-all-files "Recompute state for whole history")))
+      "*Static user extensions for the popup-menu of the history buffer.
 For further explanations see `ecb-directories-menu-user-extension'.
 
 The node-argument of a menu-function contains as data the filename of the
@@ -1058,8 +1064,17 @@ and `vc-state' for all other backends then an element \(ecb-vc-managed-by-CVS
   :set (function (lambda (sym val)
                    (set sym val)
                    (ecb-vc-cache-clear)))
-  :type '(repeat (cons (function :tag "Identify-backend-function")
-                       (function :tag "Check-state-function"))))
+  :type '(repeat (cons (symbol :tag "Identify-backend-function")
+                       (symbol :tag "Check-state-function"))))
+
+;; Klaus Berndl <klaus.berndl@sdm.de>: For XEmacs a function like the
+;; following could be used to get always fresh state-values:
+
+;; (defun ecb-vc-recompute-state (file)
+;;   ;; Return the cvs status of FILE
+;;   ;; (Status field in output of "cvs status")
+;;   (vc-fetch-master-properties file)
+;;   (vc-file-getprop file 'vc-cvs-status))
 
 ;; Klaus Berndl <klaus.berndl@sdm.de>: IMO we do not need such an option
 ;; because with `ecb-vc-directory-exclude-regexps' all these directories can
@@ -2784,6 +2799,20 @@ display an appropriate icon in front of the file."
 
 (defun ecb-vc-reset-vc-stealthy-checks ()
   "Resets all stealthy VC-checks."
+  ;; we can call savely all these initialization because if one of the
+  ;; following tree-windows is not visible nothing will be done (and the
+  ;; directories-check will only run when sources are displayed in the
+  ;; directories buffer!). If visible the vc-check will be performed for all
+  ;; current visible file-nodes again in all visible tree-buffers of the
+  ;; file-browser but because we have only removed the cache-entry for
+  ;; exactly one file, the check will be very fast for all file-nodes
+  ;; besides this file!
+
+  ;; I think the read-only check must be performed too - because for
+  ;; backends like Clearcase a changed VC-state can also result in a changed
+  ;; read-only-state!
+  (ecb-stealthy-function-state-init 'ecb-stealthy-ro-check-in-directories-buf)
+  (ecb-stealthy-function-state-init 'ecb-stealthy-ro-check-in-sources-buf)
   (ecb-stealthy-function-state-init 'ecb-stealthy-vc-check-in-sources-buf)
   (ecb-stealthy-function-state-init 'ecb-stealthy-vc-check-in-directories-buf)
   (ecb-stealthy-function-state-init 'ecb-stealthy-vc-check-in-history-buf)
@@ -3461,6 +3490,17 @@ edit-windows. Otherwise return nil."
     (find-file file)
     (vc-diff nil)))
 
+(tree-buffer-defpopup-command ecb-file-popup-vc-refresh-file
+  "Recompute the VC-state for this file."
+  (let ((file (tree-node-get-data node)))
+    (ecb-vc-cache-remove file)
+    (ecb-vc-reset-vc-stealthy-checks)))
+
+(tree-buffer-defpopup-command ecb-file-popup-vc-refresh-dir
+  "Recompute the VC-state-values for the whole directory."
+  (let ((dir (ecb-fix-filename (file-name-directory (tree-node-get-data node)))))
+    (ecb-vc-cache-remove-files-of-dir dir)
+    (ecb-vc-reset-vc-stealthy-checks)))
 
 (defvar ecb-sources-menu nil
   "Built-in menu for the sources-buffer.")
@@ -3555,6 +3595,15 @@ edit-windows. Otherwise return nil."
   "No history filter, i.e. add all existing file-buffers to the history."
   (ecb-add-all-buffers-to-history))
   
+(tree-buffer-defpopup-command ecb-file-popup-vc-refresh-all-files
+  "Recompute the VC-state for the whole history."
+  (when (equal (buffer-name) ecb-history-buffer-name)
+    (let ((files (mapcar (function (lambda (node)
+                                     (tree-node-get-data node)))
+                         (tree-node-get-children (tree-buffer-get-root)))))
+      (dolist (file files)
+        (ecb-vc-cache-remove file))
+      (ecb-vc-reset-vc-stealthy-checks))))
 
 (defun ecb-history-filter ()
   "Apply a filter to the history-buffer to reduce the number of entries.
