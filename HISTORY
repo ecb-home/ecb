@@ -1,6 +1,9 @@
 Version 1.61:
 -------------
 
+- Fixed a bug with mouse-avoidance-mode (only relevant for GNU Emacs 20.X)
+  Klaus. 
+
 - New feature, ecb-select-edit-window-on-redraw.  Mostly used if you are running
   with ecb-redraw-layout-quickly and want to make sure you are always in the
   edit window. (Kevin)

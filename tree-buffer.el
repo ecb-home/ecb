@@ -26,7 +26,7 @@
 ;; This file is part of the ECB package which can be found at:
 ;; http://home.swipnet.se/mayhem/ecb.html
 
-;; $Id: tree-buffer.el,v 1.73 2002/01/25 16:21:41 berndl Exp $
+;; $Id: tree-buffer.el,v 1.74 2002/02/08 16:32:57 berndl Exp $
 
 ;;; Code:
 
@@ -114,7 +114,8 @@ node name.")
 (defvar tree-buffer-track-mouse-idle-delay 0.2
   "After this idle-time of Emacs `tree-buffer-do-mouse-tracking' is called if
 mouse-tracking is activated by `tree-buffer-activate-mouse-tracking'")
-(defvar tree-buffer-old-mouse-avoidance-mode mouse-avoidance-mode)
+(defvar tree-buffer-old-mouse-avoidance-mode
+  (if (null mouse-avoidance-mode) 'none mouse-avoidance-mode))
 
 (defun tree-buffer-nolog-message (&rest args)
   "Works exactly like `message' but does not log the message"
@@ -707,7 +708,8 @@ the function `tree-buffer-help-echo-fn'!"
       ;; key-sequences: If a key is pressed during mouse is over point then
       ;; the mouse goes away and therefore the key-sequence is broken because
       ;; the mouse move generates a mouse-movement event.
-      (setq tree-buffer-old-mouse-avoidance-mode mouse-avoidance-mode)
+      (setq tree-buffer-old-mouse-avoidance-mode
+            (if (null mouse-avoidance-mode) 'none mouse-avoidance-mode))
       (mouse-avoidance-mode 'none)
       (setq tree-buffer-saved-track-mouse track-mouse)
       (setq tree-buffer-track-mouse-timer

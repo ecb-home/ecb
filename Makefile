@@ -12,7 +12,7 @@ EMACS=emacs -no-site-file
 # directory of JDE. (use always forward-slashes as directory-separator even
 # with MS Windows systems). Make sure you compile ECB with the semantic
 # version you load into Emacs!
-LOADPATH=../semantic-1.4beta13 ../eieio-0.17beta3 ../jde-2.2.9beta7/lisp
+LOADPATH=../semantic ../eieio ../jde/lisp
 
 # Two ways to build ECB:
 # - Call "make" to byte-compile the ECB. You can savely ignore the messages.
@@ -23,7 +23,7 @@ LOADPATH=../semantic-1.4beta13 ../eieio-0.17beta3 ../jde-2.2.9beta7/lisp
 
 # Do not change anything below!
 
-# $Id: Makefile,v 1.21 2002/01/21 17:08:08 berndl Exp $
+# $Id: Makefile,v 1.22 2002/02/08 16:32:56 berndl Exp $
 
 ecb_LISP_EL=tree-buffer.el ecb-util.el ecb-mode-line.el ecb-help.el ecb-layout.el ecb-navigate.el ecb.el ecb-eshell.el
 ecb_LISP_ELC=$(ecb_LISP_EL:.el=.elc)
