@@ -163,6 +163,12 @@
 			      items)
 			    "<li>" "\n") t))
 
+(defun h-bullet-list(&rest items)
+  (h-element "ul" (h-filter (if (listp (car items))
+				(car items)
+			      items)
+			    "<li>" "\n") t))
+
 (defun h-email(email &rest items)
   (concat
    "<a href='mailto:" email "'>"
@@ -232,5 +238,7 @@
 			  (cons 'target target)))
 	    (h-td (if (and (cdr item) (cddr item)) (caddr item) ""))))
     items "")))
+
+
 
 (provide 'html-helper)
