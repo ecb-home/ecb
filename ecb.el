@@ -54,7 +54,7 @@
 ;; The latest version of the ECB is available at
 ;; http://home.swipnet.se/mayhem/ecb.html
 
-;; $Id: ecb.el,v 1.197 2002/02/27 17:15:48 creator Exp $
+;; $Id: ecb.el,v 1.198 2002/02/27 19:09:02 berndl Exp $
 
 ;;; Code:
 
@@ -1309,7 +1309,7 @@ Note: A click with the secondary mouse-button \(see again
 
 (defcustom ecb-auto-compatibility-check t
   "*Check at ECB-startup if all ECB-options have correct values.
-If not nil then all ECB-options are checked if their current value has the
+If not nil then all ECB-options are checked if their current value have the
 correct type. It the type is incorrect the option is reset to the
 default-value of current ECB. After startup all reset options are displayed
 with their old \(before reset) and new values.

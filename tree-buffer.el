@@ -26,7 +26,7 @@
 ;; This file is part of the ECB package which can be found at:
 ;; http://home.swipnet.se/mayhem/ecb.html
 
-;; $Id: tree-buffer.el,v 1.77 2002/02/27 17:15:48 creator Exp $
+;; $Id: tree-buffer.el,v 1.78 2002/02/27 19:09:02 berndl Exp $
 
 ;;; Code:
 
@@ -104,6 +104,7 @@ node name.")
 (defvar tree-buffer-highlight-overlay nil)
 (defvar tree-buffer-general-face nil)
 (defvar tree-buffer-incr-searchpattern nil)
+(defvar tree-buffer-last-incr-searchpattern nil)
 (defvar tree-buffer-incr-search nil)
 
 ;; tree-buffer global variables
@@ -507,7 +508,7 @@ point will stay on POINT."
 		    (funcall (car fn) node)))))))))))
 
 (defconst tree-buffer-incr-searchpattern-basic-prefix
-  "^[ \t]*\\(\\[[+-]\\]\\)?"
+  "^[ \t]*\\(\\[[+-]\\] \\)?"
   "Prefix-pattern which ignores all not interesting basic stuff of a displayed
 token at incr. search. The following contents of a displayed token are ignored
 by this pattern:
@@ -564,7 +565,11 @@ search-pattern. If no match is found then nothing is done. Some special keys:
 - \[backspace] and \[delete]: Delete the last character from the search-pattern.
 - \[home]: Delete the complete search-pattern
 - \[end]: Expand either to a complete node if current search-pattern is
-         already unique or expands to the greates common prefix of the nodes
+         already unique or expands to the greates common prefix of the nodes.
+         If there are at least two nodes with the same greatest common-prefix
+         than every hit of \[end] jumps to the next node with this common
+         prefix.
+
 The current search-pattern is shown in the echo area.
 After selecting a node with RET the search-pattern is cleared out.
 
@@ -604,7 +609,10 @@ mentioned above!"
        (buffer-name (current-buffer))
        tree-buffer-incr-searchpattern
        (if (save-excursion
-             (goto-char (point-min))
+             (if (or (not (equal last-comm 'end))
+                     (not (string= tree-buffer-incr-searchpattern
+                                   tree-buffer-last-incr-searchpattern)))
+                 (goto-char (point-min)))
              (re-search-forward
               (concat tree-buffer-incr-searchpattern-basic-prefix
                       tree-buffer-incr-searchpattern-node-prefix
@@ -616,7 +624,9 @@ mentioned above!"
            (progn
              (goto-char (match-end 0))
              "")
-         " - no match")))))
+         " - no match"))
+      ;; lets save the search-pattern so we can compare it with the next one.
+      (setq tree-buffer-last-incr-searchpattern tree-buffer-incr-searchpattern))))
 
 (defun tree-buffer-create-menu (menu-items)
   "Creates a popup menu from a list with menu items."
@@ -914,6 +924,7 @@ AFTER-CREATE-HOOK: A function \(with no arguments) called directly after
     (make-local-variable 'tree-buffer-highlight-overlay)
     (make-local-variable 'tree-buffer-general-face)
     (make-local-variable 'tree-buffer-incr-searchpattern)
+    (make-local-variable 'tree-buffer-last-incr-searchpattern)
     (make-local-variable 'tree-buffer-incr-search)
   
     (setq truncate-lines tr-lines)
@@ -935,13 +946,14 @@ AFTER-CREATE-HOOK: A function \(with no arguments) called directly after
     (overlay-put tree-buffer-highlight-overlay 'face highlight-node-face)
     (setq tree-buffer-general-face general-face)
     (setq tree-buffer-incr-searchpattern "")
+    (setq tree-buffer-last-incr-searchpattern "")
     (setq tree-buffer-incr-search incr-search)
 
     ;; keyboard setting
     (when incr-search
       ;; settings for the incremental search.
       ;; for all keys which are bound to `self-insert-command' in `global-map'
-      ;; we change this binding to `tree-buffer-klaus'.
+      ;; we change this binding to `tree-buffer-incremental-node-search'.
       (substitute-key-definition 'self-insert-command
                                  'tree-buffer-incremental-node-search
                                  tree-buffer-key-map

@@ -26,7 +26,7 @@
 ;;
 ;; Contains all online-help for ECB (stolen something from recentf.el)
 
-;; $Id: ecb-help.el,v 1.59 2002/02/27 17:15:47 creator Exp $
+;; $Id: ecb-help.el,v 1.60 2002/02/27 19:09:02 berndl Exp $
 
 ;;; Code
 
@@ -201,7 +201,10 @@ keys:
 - \[home]: Delete the complete search-pattern
 - \[end]: Expand either to a complete node if current search-pattern is
          already unique or expands to the greates common substring or prefix
-         of the nodes.
+         of the nodes. If there are at least two nodes with the same greatest
+         common-prefix than every hit of \[end] jumps to the next node with
+         this common prefix.
+
 For better overlooking the current search-pattern is shown in the echo area.
 After selecting a node with RET the search-pattern is cleared out.
 With `ecb-tree-incremental-search' you can specify if the current

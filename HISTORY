@@ -1,6 +1,10 @@
 Version 1.70:
 -------------
 
+- Smarter incr. search in a tree-buffer with the [end]-key: If there are at
+  least two nodes with the same greatest common-prefix than every hit of
+  [end] jumps to the next node with this common prefix. (Klaus)
+
 - New feature ecb-auto-compatibility-check: ECB checks on startup if the
   current value of an ECB-option OPT is not compatible with the type of OPT in
   current ECB-release. This is done during activation. If there are
