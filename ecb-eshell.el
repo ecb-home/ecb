@@ -87,6 +87,17 @@
 ;;
 ;; - Right now ecb-eshell doesn't work with dired.  Why?  Try to setup a hook
 ;; and an ecb-eshell-dired-buffer-sync function that will take care of this.
+;;
+;; - BUG: I think at certain conditions, we might be able to get the eshell
+;; window to expand after we automatically change directories.  I think this has
+;; to be:
+;; 
+;;   - eshell buffer selected
+;;   - ecb source buffer changes.
+;;
+;;   we could setup a variable ecb-eshell-inhibit-resize which we could set in
+;;   ecb-eshell-current-buffer-sync. ecb-eshell-resize would need to pay
+;;   attention to this.
 
 ;;; Code:
 

@@ -1354,6 +1354,8 @@ On normal machines the full drawback should be done in < 1s!"
 (defun ecb-redraw-layout-full ()
   "Redraw the ECB screen according to the layout set in `ecb-layout-nr'. After
 this function the edit-window is selected which was current before redrawing."
+  (interactive)
+  
   (when (and ecb-minor-mode
              (equal (selected-frame) ecb-frame))
     (let* ((config (ecb-edit-window-configuration))
@@ -1503,6 +1505,8 @@ this function the edit-window is selected which was current before redrawing."
 (defun ecb-redraw-layout-quickly()
   "Redraw the layout quickly using the cached window configuration
 `ecb-activated-window-configuration'."
+  (interactive)
+
   (when (and ecb-minor-mode
              (equal (selected-frame) ecb-frame))
 
