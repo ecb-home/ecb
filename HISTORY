@@ -1,9 +1,16 @@
 Version 1.91.1
 --------------
 
+* Fixes a bug in the speedbar integration which prevented clicking onto a
+  directory in the speedbar: Always after clicking onto a directory speedbar
+  has re-synced itself to the directory of the current source-buffer in the
+  edit-window. This bug is fixed, now directory navigation in the speedbar
+  works. (Klaus)
+
 * Fixes a bug in upgrading stored window-sizes from ECB 1.80 to ECB >= 1.90.
-  Fixes also a bug in `ecb-store-window-sizes' if default-values are used in
-  `ecb-layout-window-sizes'. (Klaus)
+  Fixes also two bugs in `ecb-store-window-sizes' if default-values are used in
+  `ecb-layout-window-sizes' or if ecb-windows have frame-height as height
+  (resp. frame-width as width) . (Klaus)
 
 * Fixed a bug in the downloading feature of ECB. (Klaus)
 
@@ -12,7 +19,7 @@ Version 1.91.1
   tokens in the method-buffer. Now the back-forward-navigation works stable.
   (Klaus)
 
-* Enhanced the downloading new packages feature of ECB: Now ECB autom. checks
+* Enhanced the "downloading new packages" feature of ECB: Now ECB autom. checks
   at the download sites which versions are available. With the new option
   `ecb-download-package-version-type' you can define which types of version
   you allow to download (only stable, stable and betas or stable, betas and
