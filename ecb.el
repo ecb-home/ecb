@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb.el,v 1.325 2003/08/06 09:15:16 berndl Exp $
+;; $Id: ecb.el,v 1.326 2003/08/13 18:06:20 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -927,19 +927,6 @@ If set the user can easily jump back."
   :group 'ecb-methods
   :type 'boolean)
 
-(defcustom ecb-token-jump-narrow nil
-  "*Narrow the buffer to the token jumped to from the Methods-buffer.
-To display the entire buffer again, click on a source file or call `widen'
-(C-x n w).
-
-Note: The same effect can be achieved by using the POWER-click in the
-methods-buffer \(see `ecb-primary-secondary-mouse-buttons').
-
-This options takes only effect for semantic-sources - means sources supported
-by semantic!"
-  :group 'ecb-methods
-  :type 'boolean)
-
 (defconst ecb-token->text-functions
   (mapcar (lambda (fkt)
             (cons (intern
@@ -1453,20 +1440,58 @@ by semantic!"
   "Internal overlay used for the first line of a method.")
 (overlay-put ecb-method-overlay 'face ecb-token-header-face)
 
-(defcustom ecb-highlight-token-header-after-jump t
-  "*Highlight the token line in the source-buffer after jumping to it.
-The first line of the token in the source-buffer is highlighted after jumping
-to this method by clicking in the ECB-method-buffer onto this method. For
-highlighting `ecb-token-header-face' is used."
-  :group 'ecb-methods
-  :type 'boolean)
 
-(defcustom ecb-scroll-window-after-jump nil
-  "*How to scroll the window when jumping to a token."
+(defcustom ecb-token-visit-post-actions '((default . (ecb-token-visit-smart-token-start
+                                                      ecb-token-visit-highlight-token-header))
+                                          (java-mode . (ecb-token-visit-goto-doc-start))
+                                          (jde-mode . (ecb-token-visit-goto-doc-start)))
+  "*Actions to perform after visiting a token from the Method-buffer.
+With this option actions can be added which will be performed after visiting
+the start of the token in the source-buffer.
+
+This functionality is set on a `major-mode' base, i.e. for every `major-mode' a
+different setting can be used. The value of this option is a list of
+cons-cells:
+- The car is either a `major-mode' symbol or the special symbol 'default.
+- The cdr is a list of action-functions or nil.
+
+ECB first performs all actions defined for the special symbol 'default \(if
+any) and then all actions defined for current `major-mode' \(if any).
+
+ECB offers some predefined senseful action-functions. Currently there are:
+- `ecb-token-visit-highlight-token-header'
+- `ecb-token-visit-smart-token-start'
+- `ecb-token-visit-recenter'
+- `ecb-token-visit-recenter-top'
+- `ecb-token-visit-goto-doc-start'
+- `ecb-token-visit-narrow-token'
+See the documentation of these function for details what they do.
+
+But you can add any arbitrary function if the following conditions are
+fulfilled:
+- The function gets the semantic token as argument and
+- the function returns the \(new) point after finishing its job."
   :group 'ecb-methods
-  :type '(radio (const :tag "Scroll so that the token is at the top of the window" :value top)
-		(const :tag "Scroll so that the token is at the center of the window" :value center)
-		(const :tag "Normal scrolling" :value nil)))
+  :type '(repeat (cons :value (nil . (ecb-token-visit-recenter))
+                       (symbol :tag "Major-mode or default")
+                       (repeat (choice :tag "Post action" :menu-tag "Post action"
+                                       (const :tag "ecb-token-visit-smart-token-start"
+                                              :value ecb-token-visit-smart-token-start)
+                                       (const :tag "ecb-token-visit-highlight-token-header"
+                                              :value ecb-token-visit-highlight-token-header)
+                                       (const :tag "ecb-token-visit-goto-doc-start"
+                                              :value ecb-token-visit-goto-doc-start)
+                                       (const :tag "ecb-token-visit-narrow-token"
+                                              :value ecb-token-visit-narrow-token)
+                                       (const :tag "ecb-token-visit-recenter-top"
+                                              :value ecb-token-visit-recenter-top)
+                                       (const :tag "ecb-token-visit-recenter"
+                                              :value ecb-token-visit-recenter)
+                                       (function :tag "Function"))))))
+
+(defun ecb-token-visit-function-member-p (fnc)
+  (or (member fnc (cdr (assoc 'default ecb-token-visit-post-actions)))
+      (member fnc (cdr (assoc major-mode ecb-token-visit-post-actions)))))
 
 (defcustom ecb-tree-indent 2
   "*Indent size for tree buffer.
@@ -1707,7 +1732,8 @@ POWER-click occurs):
 + Sources- and History-buffer: Only displaying the source-contents in the
   method-buffer but not displaying the source-file in the edit-window.
 + Methods-buffer: Narrowing to the clicked method/variable/ect... \(see
-  `ecb-token-jump-narrow'). This works only for sources supported by semantic!
+  `ecb-token-visit-post-actions'). This works only for sources supported by
+  semantic!
 
 In addition always the whole node-name is displayed in the minibuffer after a
 POWER-click \(for this see also `ecb-show-node-info-in-minibuffer').
@@ -3174,7 +3200,15 @@ argument to not nil!"
     (setq ecb-method-buffer-needs-rebuild t)
 
     (let ((current-tokencache (and (semantic-active-p)
-                                   (semantic-bovinate-toplevel t))))
+                                   ;; if we manually bovinate the buffer we
+                                   ;; must widen the source to get all tokens.
+                                   ;; But here we must not use the adviced
+                                   ;; version of widen!
+                                   (save-excursion
+                                     (save-restriction
+                                       (ecb-with-original-basic-functions
+                                        (widen))
+                                       (semantic-bovinate-toplevel t))))))
       ;; If the `semantic-bovinate-toplevel' has done no reparsing but only
       ;; used it´s still valid `semantic-toplevel-bovine-cache' then neither
       ;; the hooks of `semantic-after-toplevel-cache-change-hook' nor the
@@ -3455,8 +3489,6 @@ is not changed."
     ;; parsing stuff with this buffer
     (ecb-find-file-and-display ecb-path-selected-source
 			       other-edit-window)
-    (when ecb-token-jump-narrow
-      (widen))
     (ecb-update-methods-buffer--internal 'scroll-to-begin)
     (setq ecb-major-mode-selected-source major-mode)
     (ecb-token-sync 'force)))
@@ -3735,6 +3767,36 @@ edit-window.
 In addition to this the hooks in `ecb-current-buffer-sync-hook' run."
   (interactive)
   (ecb-current-buffer-sync t))
+
+;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: test!!
+(defvar ecb-window-sync-old '(Info-mode dired-mode))
+(defun ecb-toggle-window-sync (&optional arg)
+  "Toggle auto synchronizing of the ECB-windows.
+With prefix argument ARG, switch on if positive, otherwise switch off. If the
+effect is that auto-synchronizing is switched off then the current value of
+the option `ecb-window-sync' is saved so it can be used for the next switch on
+by this command. See also the option `ecb-window-sync'."
+  (interactive "P")
+  (let* ((new-value (if (null arg)
+                        (if ecb-window-sync
+                            (progn
+                              (setq ecb-window-sync-old
+                                    ecb-window-sync)
+                              nil)
+                          ecb-window-sync-old)
+                      (if (<= (prefix-numeric-value arg) 0)
+                          (progn
+                            (if ecb-window-sync
+                                (setq ecb-window-sync-old
+                                      ecb-window-sync))
+                            nil)
+                        (or ecb-window-sync
+                            ecb-window-sync-old)))))
+    (setq ecb-window-sync new-value)
+    (message "Automatic synchronizing the ECB-windows is %s \(Value: %s\)."
+               (if new-value "on" "off")
+               new-value)))
+
 
 
 (defun ecb-get-edit-window (other-edit-window)
@@ -4252,26 +4314,13 @@ can last a long time - depending of machine- and disk-performance."
      (tree-buffer-expand-nodes level)))
   (ecb-current-buffer-sync 'force))
 
-;; this mechanism is necessary because tree-buffer creates for mouse releasing
-;; a new nop-command (otherwise the cursor jumps back to the tree-buffer).
-(defvar ecb-unhighlight-hook-called nil)
-(defun ecb-unhighlight-token-header ()
-  (let ((key (tree-buffer-event-to-key last-input-event)))
-    (when (not (or (and (equal key 'mouse-release)
-                        (not ecb-unhighlight-hook-called))
-                   (equal key 'mouse-movement)))
-      (if ecb-highlight-token-header-after-jump
-          (delete-overlay ecb-method-overlay))
-      (remove-hook 'pre-command-hook 'ecb-unhighlight-token-header)))
-  (setq ecb-unhighlight-hook-called t))
-
-(defun ecb-method-clicked (node ecb-button shift-mode &optional second-try)
+(defun ecb-method-clicked (node ecb-button shift-mode &optional no-post-action
+                                additional-post-action-list)
   (if shift-mode
       (ecb-mouse-over-method-node node nil nil 'force))
   (let ((data (tree-node-get-data node))
         (type (tree-node-get-type node))
         (filename ecb-path-selected-source)
-        (ecb-token-jump-narrow (if shift-mode t ecb-token-jump-narrow))
         token found)
     ;; Klaus Berndl <klaus.berndl@sdm.de>: We must highlight the token
     (tree-buffer-highlight-node-data data)
@@ -4311,9 +4360,183 @@ can last a long time - depending of machine- and disk-performance."
                                                 (eq ecb-button 2))))))
         (ecb-jump-to-token filename token (ecb-get-edit-window
                                            (and (ecb-edit-window-splitted)
-                                                (eq ecb-button 2))))))))
+                                                (eq ecb-button 2)))
+                           no-post-action
+                           (if (and shift-mode
+                                    (not (member 'ecb-token-visit-narrow-token
+                                                 additional-post-action-list)))
+                               (cons 'ecb-token-visit-narrow-token
+                                     additional-post-action-list)
+                             additional-post-action-list))))))
 
-(defun ecb-jump-to-token (filename token &optional window)
+
+(defun ecb-token-visit-smart-token-start (token)
+  "Go to the real token-name of TOKEN in a somehow smart way.
+This is especially needed for languages like c++ where a often used style is
+like:
+    void
+    ClassX::methodM\(arg1...)
+    \{
+      ...
+    \}
+Here we want to jump to the line \"ClassX::...\" and not to line \"void\".
+
+Returns point."
+  (goto-char (ecb-semantic-token-start token))
+  (beginning-of-line)
+  ;; We must bind the search to the max. of either the end-of-line-pos or the
+  ;; token-end, because in some languages the token-name displayed in the
+  ;; Methods-buffer and returned by the parsing engine can not be found in the
+  ;; source-buffer. Perl is an example, because here imenu returns token-names
+  ;; like <package>::<function> (e.g. bigfloat::norm) but in the source buffer
+  ;; only "sub <function>" (e.g. "sub norm...") can be found. So to avoid
+  ;; finding a wrong position in the source-buffer (e.g. if the token-name
+  ;; returned by imenu is mentioned in a comment somewhere) we bind the
+  ;; search.
+  (search-forward (semantic-token-name token)
+                  (max (ecb-line-end-pos)
+                       (semantic-token-end token))
+                  t)
+  (beginning-of-line-text)
+  (point))
+
+
+(defun ecb-start-of-token-doc (token)
+  "If TOKEN has an outside documentation located direct before TOKEN then
+return the start of the documentation. Otherwise return nil"
+  ;; there can be an error if token has no documentation - e.g.
+  ;; in elisp
+  (let ((comment (ignore-errors (semantic-find-documentation token 'flex))))
+    (if (and comment
+             (not (stringp comment)))
+        ;; probably we have a semantic flex-object
+        (semantic-flex-start comment))))
+
+
+(defun ecb-token-visit-goto-doc-start (token)
+  "Go to the beginning of the documentation of TOKEN if defined outside.
+This is useful especially for languages like Java where the documentation
+resides direct before the TOKEN in Javadoc format.
+If the documentation is located within TOKEN then nothing is done.
+
+If this function is set in `ecb-token-visit-post-actions' then it's strongly
+recommended to add `ecb-token-visit-recenter' or
+`ecb-token-visit-recenter-top' at the end too!
+
+This action is not recommended for sources of type TeX, texinfo etc. So you
+should not add this action to the 'default element of
+`ecb-token-visit-post-actions'!
+
+Returns current point."
+  (let ((token-doc-start  (ecb-start-of-token-doc token)))
+    (when token-doc-start
+      (goto-char token-doc-start))
+    (point)))
+
+
+(defvar ecb-buffer-narrowed-by-ecb nil
+  "If not nil then current buffer is narrowed to a token by ECB. Otherwise
+the buffer is not narrowed or it is narrowed by ECB but one of the
+interactive commands `narrow-to-*' or function/commands which use in turn one
+of these `narrow-to-*'-functions.")
+(make-variable-buffer-local 'ecb-buffer-narrowed-by-ecb)
+
+(defadvice narrow-to-region (before ecb)
+  "Set an internal ECB-state. This does not influence the behavior."
+  (setq ecb-buffer-narrowed-by-ecb nil))
+
+(defadvice narrow-to-defun (before ecb)
+  "Set an internal ECB-state. This does not influence the behavior."
+  (setq ecb-buffer-narrowed-by-ecb nil))
+
+(defadvice narrow-to-page (before ecb)
+  "Set an internal ECB-state. This does not influence the behavior."
+  (setq ecb-buffer-narrowed-by-ecb nil))
+
+(defadvice widen (before ecb)
+  "Set an internal ECB-state. This does not influence the behavior."
+  (setq ecb-buffer-narrowed-by-ecb nil))
+
+(defun ecb-token-visit-narrow-token (token)
+  "Narrow the source buffer to TOKEN.
+If an outside located documentation belongs to TOKEN and if this documentation
+is located direct before TOKEN \(e.g. Javadoc in Java) then this documentation
+is included in the narrow.
+
+Returns current point."
+  (when (not (ecb-speedbar-sb-token-p token))
+    (narrow-to-region (or (ecb-start-of-token-doc token)
+                          (ecb-semantic-token-start token))
+                      (ecb-semantic-token-end token))
+    ;; This is the only location where this variable is set to not nil!
+    ;; before every call to `narrow-to-*' or `widen' this variable is reset to
+    ;; nil! 
+    (setq ecb-buffer-narrowed-by-ecb t))
+  (point))
+
+
+(defun ecb-token-visit-recenter (token)
+  "Recenter the source-buffer, so current line is in the middle of the window.
+If this function is added to `ecb-token-visit-post-actions' then it's
+recommended to add this function add the end of the action list for 'default
+or a `major-mode' and not to add the function `ecb-token-visit-recenter-top'
+too!
+
+Returns current point."
+  (set-window-start
+   (selected-window)
+   (ecb-line-beginning-pos (- (/ (window-height) 2))))
+  (point))
+
+
+(defun ecb-token-visit-recenter-top (token)
+  "Recenter the source-buffer, so current line is in the middle of the window.
+If this function is added to `ecb-token-visit-post-actions' then it's
+recommended to add this function add the end of the action list for 'default
+or a `major-mode' and not to add the function `ecb-token-visit-recenter' too!
+
+Returns current point."
+  (set-window-start (selected-window)
+                    (ecb-line-beginning-pos)))
+
+
+;; this mechanism is necessary because tree-buffer creates for mouse releasing
+;; a new nop-command (otherwise the cursor jumps back to the tree-buffer).
+(defvar ecb-unhighlight-hook-called nil)
+(defun ecb-unhighlight-token-header ()
+  (let ((key (tree-buffer-event-to-key last-input-event)))
+    (when (not (or (and (equal key 'mouse-release)
+                        (not ecb-unhighlight-hook-called))
+                   (equal key 'mouse-movement)))
+      (delete-overlay ecb-method-overlay)
+      (remove-hook 'pre-command-hook 'ecb-unhighlight-token-header)))
+  (setq ecb-unhighlight-hook-called t))
+
+(defun ecb-token-visit-highlight-token-header (token)
+  "Highlights line where `ecb-token-visit-smart-token-start' puts point for TOKEN.
+
+Returns current point"
+  (save-excursion
+    (ecb-token-visit-smart-token-start token)
+    (move-overlay ecb-method-overlay
+                  (ecb-line-beginning-pos)
+                  (ecb-line-end-pos)
+                  (current-buffer)))
+  (setq ecb-unhighlight-hook-called nil)
+  (add-hook 'pre-command-hook 'ecb-unhighlight-token-header)
+  (point))
+  
+(defun ecb-jump-to-token (filename token &optional window
+                                   no-token-visit-post-actions
+                                   additional-post-action-list)
+  "Jump to token TOKEN in buffer FILENAME.
+If NO-TOKEN-VISIT-POST-ACTIONS is not nil then the functions of
+`ecb-token-visit-post-actions' are not performed. If
+ADDITIONAL-POST-ACTION-LIST is a list of function-symbols then these functions
+are performed after these ones of `ecb-token-visit-post-actions'. So if
+NO-TOKEN-VISIT-POST-ACTIONS is not nil then only the functions of
+ADDITIONAL-POST-ACTION-LIST are performed. If ADDITIONAL-POST-ACTION-LIST is
+nil too then no post-actions are performed."
   (cond ((not (ecb-buffer-or-file-readable-p filename))
          (error "ECB: ecb-jump-to-token: Can not open filename %s."
                 filename))
@@ -4329,42 +4552,17 @@ can last a long time - depending of machine- and disk-performance."
              (push-mark nil t))
          (widen)
          (goto-char (ecb-semantic-token-start token))
-         (beginning-of-line)
-         ;; goto the token name; this is especially needed for languages
-         ;; like c++ where a often used style is like:
-         ;;     void
-         ;;     ClassX::methodM(arg1...)
-         ;;     {
-         ;;       ...
-         ;;     }
-         ;; here we want to jump to the line "ClassX::..." and not to line
-         ;; "void".
-         ;; But we must bind the search to the max. of either the
-         ;; end-of-line-pos or the token-end, because in some languages the
-         ;; token-name displayed in the Methods-buffer and returned by the
-         ;; parsing engine can not be found in the source-buffer. Perl is an
-         ;; example, because here imenu returns token-names like
-         ;; <package>::<function> (e.g. bigfloat::norm) but in the source
-         ;; buffer only "sub <function>" (e.g. "sub norm...") can be found.
-         ;; So to avoid finding a wrong position in the source-buffer (e.g. if
-         ;; the token-name returned by imenu is mentioned in a comment
-         ;; somewhere) we bind the search.
-         (search-forward (semantic-token-name token)
-                         (max (ecb-line-end-pos)
-                              (semantic-token-end token))
-                         t)
-         (beginning-of-line-text)
-         (if (and ecb-token-jump-narrow (semantic-active-p))
-             (narrow-to-region (ecb-semantic-token-start token)
-                               (ecb-semantic-token-end token))
-           (cond
-            ((eq 'top ecb-scroll-window-after-jump)
-             (set-window-start (selected-window)
-                               (ecb-line-beginning-pos)))
-            ((eq 'center ecb-scroll-window-after-jump)
-             (set-window-start
-              (selected-window)
-              (ecb-line-beginning-pos (- (/ (window-height) 2)))))))
+         ;; process post action
+         (unless no-token-visit-post-actions
+           ;; first the default post actions
+           (dolist (f (cdr (assoc 'default ecb-token-visit-post-actions)))
+             (funcall f token))
+           ;; now the mode specific actions
+           (dolist (f (cdr (assoc major-mode ecb-token-visit-post-actions)))
+             (funcall f token)))
+         ;; now we perform the additional-post-action-list
+         (dolist (f additional-post-action-list)
+           (funcall f token))
          ;; Klaus Berndl <klaus.berndl@sdm.de>: Now we use a different
          ;; implementation of ecb-nav-token-history-item. Not longer storing
          ;; the whole token but the token-buffer and markers of token-start
@@ -4382,21 +4580,8 @@ can last a long time - depending of machine- and disk-performance."
                               tok-buf
                               tok-start
                               tok-end
-                              ecb-token-jump-narrow)))
-         (ecb-highlight-token-header-after-jump))))
+                              ecb-buffer-narrowed-by-ecb))))))
 
-(defun ecb-highlight-token-header-after-jump ()
-  (when ecb-highlight-token-header-after-jump
-    (require 'hideshow)
-    (save-excursion
-      (move-overlay ecb-method-overlay
-                    ;;(ecb-line-beginning-pos)
-                    (point)
-                    (ecb-line-end-pos)
-                    (current-buffer)))
-    (setq ecb-unhighlight-hook-called nil)
-    (add-hook 'pre-command-hook 'ecb-unhighlight-token-header)))
-  
 
 (defun ecb-show-any-node-info-by-mouse-moving-p ()
   "Return not nil if for at least one tree-buffer showing node info only by
@@ -5820,16 +6005,18 @@ function which is called with current node and has to return a string.")
 `ecb-directories-menu-title-creator'.")
 
 (defun ecb-methods-menu-jump-and-narrow (node)
-  (ecb-method-clicked node 1 t))
+  (ecb-method-clicked node 1 nil t '(ecb-token-visit-narrow-token
+                                     ecb-token-visit-highlight-token-header)))
 
 (defun ecb-methods-menu-widen (node)
   (ecb-select-edit-window)
-  (widen))
+  (widen)
+  (setq ecb-buffer-narrowed-by-ecb nil))
 
 
 ;; Klaus Berndl <klaus.berndl@sdm.de>: This is for silencing the
-;; byte-compiler. Normally there should be no warning which silentcomp-defun
-;; for hs-minor-mode is used but....argghhh.
+;; byte-compiler. Normally there should be no warning when silentcomp-defun
+;; is used for hs-minor-mode but....argghhh.
 (if (not ecb-running-xemacs)
     (require 'hideshow))
 
@@ -5850,24 +6037,26 @@ this fails then nil is returned otherwise t."
 (defun ecb-methods-menu-show-block (node)
   (if (not (ecb-methods-menu-activate-hs))
       (ecb-error "hs-minor-mode can not be activated!")
-    (ecb-method-clicked node 1 nil)
+    ;; point must be at beginning of token-name
+    (ecb-method-clicked node 1 nil t '(ecb-token-visit-smart-token-start))
     (save-excursion
       (or (looking-at hs-block-start-regexp)
           (re-search-forward hs-block-start-regexp nil t))
       (hs-show-block))
     ;; Now we are at the beginning of the block or - with other word - on that
     ;; position `ecb-method-clicked' has set the point.
-    (ecb-highlight-token-header-after-jump)))
+    (ecb-token-visit-highlight-token-header (tree-node-get-data node))))
 
 (defun ecb-methods-menu-hide-block (node)
   (if (not (ecb-methods-menu-activate-hs))
       (ecb-error "hs-minor-mode can not be activated!")
-    (ecb-method-clicked node 1 nil)
+    ;; point must be at beginning of token-name
+    (ecb-method-clicked node 1 nil t '(ecb-token-visit-smart-token-start))
     (save-excursion
       (or (looking-at hs-block-start-regexp)
         (re-search-forward hs-block-start-regexp nil t))
-      (hs-hide-block))))
-;;     (beginning-of-line)))
+      (hs-hide-block))
+    (ecb-token-visit-highlight-token-header (tree-node-get-data node))))
 
 (defun ecb-methods-menu-collapse-all (node)
   (ecb-expand-methods-nodes-internal -1 nil t))

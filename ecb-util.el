@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-util.el,v 1.66 2003/08/05 07:58:11 berndl Exp $
+;; $Id: ecb-util.el,v 1.67 2003/08/13 18:06:20 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -178,6 +178,10 @@ means not to count the minibuffer even if it is active."
                                             (winner-mode . around)
                                             (winner-redo . around)
                                             (winner-undo . around)
+                                            (narrow-to-region . before)
+                                            (narrow-to-defun . before)
+                                            (narrow-to-page . before)
+                                            (widen . before)
                                             (scroll-all-mode . after))
                                         '((delete-frame . around)
                                           (compilation-set-window-height . around)
@@ -193,6 +197,10 @@ means not to count the minibuffer even if it is active."
                                           (winner-mode . around)
                                           (winner-redo . around)
                                           (winner-undo . around)
+                                          (narrow-to-region . before)
+                                          (narrow-to-defun . before)
+                                          (narrow-to-page . before)
+                                          (widen . before)
                                           (scroll-all-mode . after)))
   "These functions are always adviced if ECB is active. Each element of the
 list is a cons-cell where the car is the function-symbol and the cdr the
@@ -213,6 +221,16 @@ implemented in another file!")
     (ad-disable-advice (car elem) (cdr elem) 'ecb)
     (ad-activate (car elem))))
 
+(defmacro ecb-with-original-basic-functions (&rest body)
+  "Evaluates BODY with all adviced basic-functions of ECB deactivated \(means
+with their original definition). Restores always the previous state of the ECB
+adviced basic-functions, means after evaluating BODY it activates the advices
+of exactly the functions in `ecb-basic-adviced-functions'!"
+  `(unwind-protect
+       (progn
+         (ecb-disable-basic-advices)
+         ,@body)
+     (ecb-enable-basic-advices)))
 
 ;; some basic advices
 

@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-navigate.el,v 1.17 2003/07/31 16:02:08 berndl Exp $
+;; $Id: ecb-navigate.el,v 1.18 2003/08/13 18:06:20 berndl Exp $
 
 ;;; Commentary:
 
@@ -173,10 +173,12 @@
         (tok-start (ecb-nav-get-token-start item))
         (tok-end (ecb-nav-get-token-end item)))
     (set-window-buffer (selected-window) tok-buffer)
-    (widen)
+    (ecb-with-original-basic-functions
+     (widen))
     (goto-char tok-start)
     (when (ecb-nav-get-narrow item)
-      (narrow-to-region (ecb-line-beginning-pos) tok-end))
+      (narrow-to-region (ecb-line-beginning-pos) tok-end)
+      (setq ecb-buffer-narrowed-by-ecb t))
     (goto-char (+ tok-start (ecb-nav-get-pos item)))
     (set-window-start (selected-window)
                       (+ tok-start (ecb-nav-get-window-start item)))))

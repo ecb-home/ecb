@@ -1,5 +1,15 @@
 * Changes for ECB version
 
+** ECB can visit tokens in a smarter way
+
+*** Narrowing via popup-menu of the Methods-buffer includes now the documentation
+    of the token if located outside of the token (e.g. Javadoc for Java).
+
+*** More flexible definition what to do after visiting a token via the
+    Methods-buffer. See the new option `ecb-token-visit-post-actions' which now
+    replaces the options ecb-highlight-token-header-after-jump',
+    `ecb-scroll-window-after-jump' and `ecb-token-jump-narrow'.
+
 ** ECB selects autom. the current default-directory after activation even if
    no file-buffer is displayed in the edit-window. This is useful if ECB is
    autom. activated after startup of Emacs and Emacs is started without a
@@ -7,6 +17,9 @@
    auto. selected in the ECB-directories buffer and the ECB-sources buffer
    displays the contents of this directory. See new option
    `ecb-display-default-dir-after-start'. 
+   
+** New command `ecb-toggle-window-sync' for fast toggling between autom.
+   synchronization of the ECB-buffers is switched on and off.
 
 ** The popup-menu of the Directories-buffer allows opening a dir with Dired.
    The Sources-Buffer offers the same for the current selected directory. In

@@ -26,7 +26,7 @@
 @c GNU Emacs; see the file COPYING.  If not, write to the Free Software
 @c Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-@c $Id: ecb.texi,v 1.108 2003/08/06 09:15:15 berndl Exp $
+@c $Id: ecb.texi,v 1.109 2003/08/13 18:06:20 berndl Exp $
 
 @setfilename ecb.info
 
@@ -191,6 +191,7 @@ Working with the keyboard in the ECB-windows
 
 Using and customizing the ECB-Methods buffer
 
+* Visiting tokens::             Possible actions after visiting a token
 * Expanding::                   Explicit and automatic expanding
 * Customizing the display::     How to customize the Methods-buffer display
 * Rebuilding the Methods::      When to rebuild the Methods-buffer      
@@ -872,8 +873,8 @@ IMPORTANT: If you use the POWER-click (i.e. hold down the SHIFT-key
 while clicking with the primary mouse button (@pxref{Using the mouse})
 or RETURN (@pxref{Using the keyboard})) on a node in this buffer then
 the edit-buffer will be narrowed to the selected token (see also
-option @code{ecb-token-jump-narrow}). But this works only for sources
-parsed by semantic, not by imenu or etags!
+option @code{ecb-token-visit-post-actions}). But this works only for
+sources parsed by semantic, not by imenu or etags!
 
 @item
 Clicking on a method/variable with the secondary mouse button or C-RETURN
@@ -1053,8 +1054,8 @@ source.
 
 @item ECB Methods:
 Narrowing to the clicked method/variable/ect... (see
-@code{ecb-token-jump-narrow}). But this works only for sources parsed
-by semantic, not by imenu or etags!
+@code{ecb-token-visit-post-actions}). But this works only for sources
+parsed by semantic, not by imenu or etags!
 @end itemize
 
 Per default the complete node-name of an item in a tree-buffer is
@@ -1459,12 +1460,47 @@ This chapter describes how to use and customize the Methods-buffer of
 ECB.
 
 @menu
+* Visiting tokens::             Possible actions after visiting a token
 * Expanding::                   Explicit and automatic expanding
 * Customizing the display::     How to customize the Methods-buffer display
 * Rebuilding the Methods::      When to rebuild the Methods-buffer      
 @end menu
 
-@node Expanding, Customizing the display, The Methods buffer, The Methods buffer
+@node Visiting tokens, Expanding, The Methods buffer, The Methods buffer
+@subsection Possible actions after visiting a token
+
+You visit a token by clicking with either the primary oder secondary
+mouse-button (or by hitting RET if using the keyboard) onto a node in
+the Methods-tree-buffer of ECB. This simply selects the ``right''
+edit-window (depends if clicked with the primary or secondary button
+and if the edit-window is splitted) and puts the point onto the first
+line of the clicked token.
+
+But you can define if after this ``basic'' token-visit-action more
+additional actions should be performed by ECB. You can either use some
+of the predefined actions (e.g. highlighting the header-line of the
+token) or define own actions. You can set different actions for
+different major-modes. All this is done via the option
+@code{ecb-token-visit-post-actions}.
+
+The following actions are currently predefined:
+@itemize @minus
+@item @code{ecb-token-visit-highlight-token-header}
+@item @code{ecb-token-visit-smart-token-start}
+@item @code{ecb-token-visit-recenter}
+@item @code{ecb-token-visit-recenter-top}
+@item @code{ecb-token-visit-goto-doc-start}
+@item @code{ecb-token-visit-narrow-token}
+@end itemize
+
+See the documentation of these function for details what they do.
+
+Per default ECB performs the actions
+@code{ecb-token-visit-smart-token-start} and
+@code{ecb-token-visit-highlight-token-header} for all major-modes.
+
+
+@node Expanding, Customizing the display, Visiting tokens, The Methods buffer
 @subsection Explicit and automatic expanding of the ECB-methods-buffer
 
 @subsubsection Explicit expanding to a certain expanding level
@@ -2552,7 +2588,8 @@ backward within this navigation history-list. These commands are also
 available via the menu ``ECB --> Navigate''.
 
 Aside normal ``location-browsing'' this is useful for example in a
-scenario where @code{ecb-token-jump-narrow} is activated:
+scenario where the buffer is narrowed to a token (see
+@code{ecb-token-visit-post-actions}):
 
 @enumerate
 @item You edit a function
@@ -2621,6 +2658,10 @@ no sense to synchronize the ECB-windows after calling the Info help.
 Per default also @code{dired-mode} is excluded but it can also making
 sense to synchronize the ECB-directories/sources windows with the
 current directory of the dired-buffer in the edit-window.
+
+If you often need to toggle between autom. synchronization on and off
+then customizing the option @code{ecb-window-sync} is inefficient and
+therefore ECB offers the command @code{ecb-toggle-window-sync}.
 
 @strong{NOTE}: With the command @code{ecb-window-sync} you can do a
 manually synchronization if the automatic one is switched off or if
@@ -3065,6 +3106,15 @@ Toggles between the layouts defined in
 @code{ecb-show-sources-in-directories-buffer}). Note: This function
 works by changing the options @code{ecb-layout-name} but only for
 current Emacs-session.
+@end deffn
+
+@deffn Command toggle-window-sync &optional arg
+Toggle auto synchronizing of the ECB-windows. With prefix argument
+@var{ARG}, switch on if positive, otherwise switch off. If the effect
+is that auto-synchronizing is switched off then the current value of
+the option @code{ecb-window-sync} is saved so it can be used for the
+next switch on by this command. See also the option
+@code{ecb-window-sync}.
 @end deffn
 
 @deffn Command update-directories-buffer
@@ -3686,8 +3736,8 @@ displaying the source-file in the edit-window.
 
 @item ECB Methods:
 Narrowing to the clicked method/variable/ect... (see
-@code{ecb-token-jump-narrow}). This works only for semantic supported
-sources but not for imenu- or etags-supported ones!
+@code{ecb-token-visit-post-actions}). This works only for semantic
+supported sources but not for imenu- or etags-supported ones!
 @end itemize
 
 In addition always the whole node-name is displayed in the minibuffer after a
@@ -4402,13 +4452,6 @@ This options takes only effect for semantic-sources - means sources
 supported by semantic!
 @end defopt
 
-@defopt highlight-token-header-after-jump
-Highlight the token line in the source-buffer after jumping to it.
-The first line of the token in the source-buffer is highlighted after jumping
-to this method by clicking in the ECB-method-buffer onto this method. For
-highlighting @code{ecb-token-header-face} is used.
-@end defopt
-
 @defopt highlight-token-with-point
 How to highlight the method or variable under the cursor.
 
@@ -4553,10 +4596,6 @@ This options takes only effect for semantic-sources - means sources
 supported by semantic!
 @end defopt
 
-@defopt scroll-window-after-jump
-How to scroll the window when jumping to a token.
-@end defopt
-
 @defopt show-only-positioned-tokens
 Show only nodes in the method-buffer which are ``jump-able''. If not nil
 then ECB displays in the method-buffer only nodes which are
@@ -4692,22 +4731,46 @@ This options takes only effect for semantic-sources - means sources
 supported by semantic!
 @end defopt
 
-@defopt token-jump-narrow
-Narrow the buffer to the token jumped to from the Methods-buffer. To
-display the entire buffer again, click on a source file or call
-@code{widen} (@kbd{C-x n w}).
-
-Note: The same effect can be achieved by using the POWER-click in the
-methods-buffer (@pxref{Using the mouse}).
-
-This options takes only effect for semantic-sources - means sources
-supported by semantic!
-@end defopt
-
 @defopt token-jump-sets-mark
 Set the mark after jumping to a token from the ECB-method buffer. If
 set the user can easily jump back.
 @end defopt
+
+@defopt token-visit-post-actions
+Actions to perform after visiting a token from the Method-buffer. With
+this option actions can be added which will be performed after
+visiting the start of the token in the source-buffer.
+
+This functionality is set on a @code{major-mode} base, i.e. for every
+@code{major-mode} a different setting can be used. The value of this
+option is a list of cons-cells:
+@itemize @minus
+@item
+The car is either a @code{major-mode} symbol or the special symbol
+'default.
+
+@item
+The cdr is a list of action-functions or nil.
+@end itemize
+
+ECB first performs all actions defined for the special symbol 'default
+(if any) and then all actions defined for current @code{major-mode}
+(if any).
+
+ECB offers some predefined senseful action-functions. Currently there
+are: @code{ecb-token-visit-highlight-token-header}
+@code{ecb-token-visit-smart-token-start}
+@code{ecb-token-visit-recenter} @code{ecb-token-visit-recenter-top}
+@code{ecb-token-visit-goto-doc-start}
+@code{ecb-token-visit-narrow-token} See the documentation of these
+function for details what they do.
+
+But you can add any arbitrary function if the following conditions are
+fulfilled: The function gets the semantic token as argument returns
+the (new) point after finishing its job.
+@end defopt
+
+
 
 @defopt type-token-display
 How to display semantic type-tokens in the methods buffer. Normally
@@ -8312,6 +8375,13 @@ Yes, see @ref{Maximizing the ECB windows}.
 Can i hide the ECB-windows for getting more editing-space?
 @tab @tab
 Yes, see @ref{Hiding the ECB windows}.
+
+@item @tab @tab
+
+@item
+Can i define the actions ECB performs after visiting a token?
+@tab @tab
+Yes, see @ref{Visiting tokens}.
 
 @end multitable
 
