@@ -43,22 +43,9 @@
 ;;
 ;; (ecb-activate)
 ;;
-;; To use the ECB you must add source paths in the customizations.
-;; Customization is accessed by pressing F2 in the directories buffer or
-;; with "M-x customize-group ecb".
+;; After activating ECB you should call `ecb-show-help' to get a detailed
+;; description of what ECB offers to you and how to use ECB.
 ;;
-;; Clicking on a source or method using mouse button 2 causes the file to
-;; be loaded in another window.
-;;
-;; Clicking on a source or directory using mouse button 3 activates a pop-up
-;; menu where sources and directories can be created and deleted. Note that
-;; it's the item that is clicked, not highlighted, that is the target for
-;; the selected operation.
-;;
-;; All files you have ever opened can be shown in the ECB history buffer. This
-;; buffer can also be cleared in several ways by `ecb-clear-history'.
-;;
-;; Execute `ecb-show-help' for more information.
 ;;
 ;; TODO:
 ;; - Fix XEmacs incompatibilities (I need help on this one!)
@@ -78,7 +65,7 @@
 (require 'tree-buffer)
 (require 'ecb-layout)
 (require 'ecb-util)
-(require 'wid-browse)
+;; (require 'wid-browse)
 
 (require 'assoc) ;; Semantic fix
 
@@ -641,7 +628,8 @@ highlighting of the methods if `ecb-font-lock-methods' is not nil."
       (file-name-sans-extension f))))
   
 (defun ecb-select-source-file(filename)
-  "Updates the directories, sources and history buffers to match the filename given."
+  "Updates the directories, sources and history buffers to match the filename
+given."
   (save-current-buffer
     (ecb-set-selected-directory (file-name-directory filename))
     (setq ecb-path-selected-source filename)
@@ -805,10 +793,12 @@ For further explanation see `ecb-clear-history-behavior'."
 (defun ecb-find-file-and-display(filename &optional window-skips)
   "Finds the file in the correct window."
   (select-window ecb-edit-window)
-  (if window-skips
-      (other-window window-skips))
-  (find-file ecb-path-selected-source)
-  (pop-to-buffer (buffer-name)))
+  ;; do the following with not ecb-adviced window-functions.
+  (ecb-with-original-functions
+   (if window-skips
+       (other-window window-skips))
+   (find-file ecb-path-selected-source)
+   (pop-to-buffer (buffer-name))))
 
 (defun ecb-switch-to-edit-buffer()
   (select-window ecb-edit-window))
@@ -894,19 +884,9 @@ For further explanation see `ecb-clear-history-behavior'."
 ;; Mouse functions
 ;;====================================================
 
-;; Klaus
-;; not used furthermore
-;; (defun ecb-show-long-tree-element (node)
-;;   (when node
-;;     ;; display a message with the node name if a node is longer than the
-;;     ;; window-width.
-;;     (if (>= (length (tree-node-get-name node)) (window-width))
-;;         (message (format "%s" (tree-node-get-name node))))))
-
 (defun ecb-directory-clicked(node mouse-button shift-pressed)
   (ecb-update-directory-node node)
   (if (= 0 (tree-node-get-type node))
-      ;; Klaus
       (if shift-pressed
           (ecb-mouse-over-node node)
         (progn
@@ -921,7 +901,6 @@ For further explanation see `ecb-clear-history-behavior'."
                              shift-pressed)))
 
 (defun ecb-source-clicked(node mouse-button shift-pressed)
-  ;; Klaus
   (if shift-pressed
       (ecb-mouse-over-node node))
   (ecb-set-selected-source (tree-node-get-data node)
@@ -930,7 +909,6 @@ For further explanation see `ecb-clear-history-behavior'."
                            shift-pressed))
 
 (defun ecb-method-clicked(node mouse-button shift-pressed)
-  ;; Klaus
   (if shift-pressed
       (ecb-mouse-over-node node)
     (when (= 1 (tree-node-get-type node))
@@ -984,7 +962,7 @@ clicking on an item will open a popup menu where different operations on the
 item under the mouse cursor can be performed.
 
 Pressing F1 in the packages buffer will update it. Pressing F2 will open the
-ECB customization group in the edit window.
+ECB customization group in the edit window ECB Sources:
 
 2. ECB Sources:
 
@@ -1020,8 +998,8 @@ ECB.
                                  Usage of ECB
                                  ============                    
 
-Using the mouse:
-----------------
+Working with the mouse in the ECB-buffers:
+------------------------------------------
 
 Normally you get best usage if you use ECB with a mouse.
 
@@ -1039,20 +1017,13 @@ so you can read the whole item.
                 you can choose several senseful actions.
 
 
-Redrawing the ECB-layout:
--------------------------
-
-If you have unintenionally destroyed the ECB-layout, you can always restore the
-layout with calling `ecb-redraw-layout'.
-
-
 Working with the edit-window of ECB:
 ------------------------------------
 
 ECB offers you all what you need to work with the edit-window as if the
 edit-window would be the only window of the ECB-frame.
 
-ECB offers you some \"intelligent\" window-functions as replacements for:
+ECB offers you to advice the following functions so they work best with ECB
 - `other-window'
 - `delete-window'
 - `delete-other-windows'
@@ -1060,59 +1031,58 @@ ECB offers you some \"intelligent\" window-functions as replacements for:
 - `split-window-vertically'
 - `find-file-other-window'
 - `switch-to-buffer-other-window'
-The new function have the name \"ecb-<originalname>\" \(e.g.
-`ecb-split-window-horizontally').
 
-The behavior of the new functions is:
-- All these function behaves exactly like their corresponding original
-  functons but they always act as if the edit-window\(s) of ECB would be the
-  only window\(s) of the ECB-frame. So the edit-window\(s) of ECB seems to be a
-  normal Emacs-frame to the user.
+The behavior of the adviced functions is:
+- All these adviced functions behaves exactly like their corresponding
+  original functons but they always act as if the edit-window\(s) of ECB would
+  be the only window\(s) of the ECB-frame. So the edit-window\(s) of ECB seems
+  to be a normal Emacs-frame to the user.
 - If called in a not edit-window of ECB all these function jumps first to the
   \(first) edit-window, so you can never destroy the ECB-window layout
   unintentionally.
-- If the new window-delete or -split functions are called with a prefix arg
-  then the function operates exactly like the corresponding original function,
-  means just the original function is called.
-
-You can \(should?!) rebind your key-shortcuts during ECB by using the ECB-hooks.
-Here is an example, what you can add to your .emacs:
-
-\(add-hook \'ecb-activate-hook
-          \(lambda \()
-            ;; set some keys to redraw-function of ECB
-            \(global-set-key [f10] 'ecb-redraw-layout)
-            ;; for convenience
-            \(global-set-key \(kbd \"C-x C-o\") 'ecb-other-window)
-            \(global-set-key \(kbd \"C-x 1\") 'ecb-delete-other-windows)
-            \(global-set-key \(kbd \"C-x 0\") 'ecb-delete-window)
-            \(global-set-key \(kbd \"C-x 2\") 'ecb-split-window-vertically)
-            \(global-set-key \(kbd \"C-x 3\") 'ecb-split-window-horizontally)
-            \(global-set-key \(kbd \"C-x 4 b\") 'ecb-switch-to-buffer-other-window)
-            \(global-set-key \(kbd \"C-x C-v\") 'ecb-find-file-other-window)))
-
-\(add-hook 'ecb-deactivate-hook
-          \(lambda \()
-            \(global-set-key \(kbd \"C-x C-o\") 'other-window)
-            \(global-set-key \(kbd \"C-x 1\") 'delete-other-windows)
-            \(global-set-key \(kbd \"C-x 0\") 'delete-window)
-            \(global-set-key \(kbd \"C-x 2\") 'split-window-vertically)
-            \(global-set-key \(kbd \"C-x 3\") 'split-window-horizontally)
-            \(global-set-key \(kbd \"C-x 4 b\") 'switch-to-buffer-other-window)
-            \(global-set-key \(kbd \"C-x C-v\") 'find-file-other-window)))
-
-With this hook-settings you have within ECB all the standard-keys bound to the
-ECB-replacement functions and after deactivation ECB again rebound to the
-standard-functions.
 
 **Attention**:
 If you want to work within the edit-window with splitting and unsplitting the
-edit-window\(s) it is highly recommended to use the replacement-functions of
-ECB instead of the original Emacs-functions \(see above). Also rebinding your
-keys to the ecb-replacement funtions is recommended! For example
-`ecb-other-window' can only work correct if you split the edit window with
-`ecb-split-window-vertically' \(or horizontally) and NOT with
+edit-window\(s) it is highly recommended to use the adviced-functions of ECB
+instead of the original Emacs-functions \(see above). For example the adviced
+`other-window' can only work correct if you split the edit window with the
+adviced `split-window-vertically' \(or horizontally) and NOT with the original
 `split-window-vertically'!
+
+Per default ECB advices all the functions mentioned above but with the option
+`ecb-advice-window-functions' you can customizes which functions should be
+adviced by ECB.
+
+
+Working with or without a compile window:
+-----------------------------------------
+
+With the option `ecb-compile-window-height' you can define if the ECB layout
+should contain per default a compilation-window at the bottom \(and if yes the
+height of it). If yes ECB displays all output of compilation-mode \(compile,
+grep etc.) in this special window. If not ECB splits the edit-window \(or uses
+the \"other\" edit-window if already splitted) vertically and displays the
+compilation-output there.
+Same for displaying help-buffers or similar stuff.
+
+
+Redrawing the ECB-layout:
+-------------------------
+
+If you have unintenionally destroyed the ECB-layout, you can always restore the
+layout with calling `ecb-redraw-layout'.
+
+
+Available interactive ECB commands:
+-----------------------------------
+
+- `ecb-activate'
+- `ecb-deactivate'
+- `ecb-update-directories-buffer' (normally not needed)
+- `ecb-current-buffer-sync' (normally not needed)
+- `ecb-redraw-layout'
+- `ecb-clear-history'
+- `ecb-show-help'
 
 
                              ====================
@@ -1120,16 +1090,19 @@ keys to the ecb-replacement funtions is recommended! For example
                              ====================
 
 All customization of ECB is divided into the following customize groups:
-- ecb-general
-- ecb-directories
-- ecb-sources
-- ecb-methods
-- ecb-history
+- ecb-general: General customization of ECB
+- ecb-directories: Customization of the ECB-directories buffer.
+- ecb-sources: Customization of the ECB-sources buffer.
+- ecb-methods: Customization of the ECB-methods buffer.
+- ecb-history: Customization of the ECB-history buffer.
+- ecb-layout: Customization of the layout of ECB.
 
-You can highly customize all the ECB behavior so just go to this groups and
-you will see all well documented ECB-options.
+You can highly customize all the ECB behavior/layout so just go to this groups
+and you will see all well documented ECB-options.
 
 But you must always customize the option `ecb-source-path'!
+Maybe you should also check all the options in the customize group
+'ecb-layout' before you begin to work with ECB.
 
 Available hooks:
 - `ecb-activate-before-layout-draw-hook'
@@ -1137,11 +1110,17 @@ Available hooks:
 - `ecb-deactivate-hook'
 Look at the documentation of these hooks to get description.")
 
+(defconst ecb-help-buffer-name "*ECB help*")
+
+(defvar ecb-buffer-before-help nil)
 
 (defun ecb-cancel-dialog (&rest ignore)
   "Cancel the ECB dialog."
   (interactive)
   (kill-buffer (current-buffer))
+  (if ecb-buffer-before-help
+      (switch-to-buffer ecb-buffer-before-help t))
+  (setq ecb-buffer-before-help nil)
   (message "ECB dialog canceled."))
 
 (defvar ecb-dialog-mode-map nil
@@ -1151,8 +1130,9 @@ Look at the documentation of these hooks to get description.")
     ()
   (setq ecb-dialog-mode-map (make-sparse-keymap))
   (define-key ecb-dialog-mode-map "q" 'ecb-cancel-dialog)
-  (define-key ecb-dialog-mode-map [down-mouse-1] 'widget-button-click)
-  (set-keymap-parent ecb-dialog-mode-map widget-keymap))
+  (define-key ecb-dialog-mode-map (kbd "C-x k") 'ecb-cancel-dialog)
+;;   (define-key ecb-dialog-mode-map [down-mouse-1] 'widget-button-click)
+  (set-keymap-parent ecb-dialog-mode-map help-mode-map))
 
 (defun ecb-dialog-mode ()
   "Major mode used to display the ECB-help
@@ -1164,41 +1144,43 @@ These are the special commands of `ecb-dialog-mode' mode:
   (setq mode-name "ecb-dialog")
   (use-local-map ecb-dialog-mode-map))
 
-;; The following version shows the help-message in the utility window with
-;; clickable links but not with a cancel button.
 (defun ecb-show-help ()
-  (interactive)
-  (with-output-to-temp-buffer "*ECB-help"
-    (princ ecb-help-message)))
-
-;; This version shows the help-message in the edit-window with not-clickable
-;; links but with a cancel button.
-(defun ecb-show-help-1 ()
   "Shows the online help of ECB."
   (interactive)
   (if (not (ecb-point-in-edit-window))
       (ecb-other-window))
-  (with-current-buffer (get-buffer-create "*ECB help*")
-    (switch-to-buffer (current-buffer))
-    (kill-all-local-variables)
-    (let ((inhibit-read-only t))
-      (erase-buffer))
-    (let ((all (overlay-lists)))
-      ;; Delete all the overlays.
-      (mapcar 'delete-overlay (car all))
-      (mapcar 'delete-overlay (cdr all)))
-    ;; Insert the dialog header
-    (widget-insert "Click on Cancel or type \"q\" to quit.\n")
-    (widget-insert "\n")
-    (widget-insert ecb-help-message)
-    (widget-insert "\n\n")
-    ;; Insert the Cancel button
-    (widget-create 'push-button
-                   :notify 'ecb-cancel-dialog
-                   "Cancel")
-    (ecb-dialog-mode)
-    (widget-setup)
-    (goto-char (point-min))))
+  (if (get-buffer ecb-help-buffer-name)
+      (switch-to-buffer ecb-help-buffer-name t)
+    (if (not ecb-buffer-before-help)
+        (setq ecb-buffer-before-help (current-buffer)))
+    (with-current-buffer (get-buffer-create ecb-help-buffer-name)
+      (switch-to-buffer (current-buffer) t)
+      (kill-all-local-variables)
+      (let ((inhibit-read-only t))
+        (erase-buffer))
+      (let ((all (overlay-lists)))
+        ;; Delete all the overlays.
+        (mapcar 'delete-overlay (car all))
+        (mapcar 'delete-overlay (cdr all)))
+      ;; Insert the dialog header
+      (insert "Type \"q\" to quit.\n")
+      (insert ecb-help-message)
+      (insert "\n\n")
+      (make-variable-buffer-local 'buffer-read-only)
+      (setq buffer-read-only t)
+;;     (widget-insert "Click on Cancel or type \"q\" to quit.\n")
+;;     (widget-insert "\n")
+;;     (widget-insert ecb-help-message)
+;;     (widget-insert "\n\n")
+;;     ;; Insert the Cancel button
+;;       (widget-create 'push-button
+;;                      :notify 'ecb-cancel-dialog
+;;                      "Cancel")
+      (ecb-dialog-mode)
+      (goto-char (point-min))
+      (help-make-xrefs)
+;;       (widget-setup)
+      (goto-char (point-min)))))
 
 ;;====================================================
 ;; Create buffers & menus
@@ -1206,95 +1188,103 @@ These are the special commands of `ecb-dialog-mode' mode:
 
 (defun ecb-activate ()
   "Activates the ECB and creates all the buffers and draws the ECB-screen
-with the actually choosen layout \(see `ecb-layout')."
+with the actually choosen layout \(see `ecb-layout-nr')."
   (interactive)
   (if ecb-activated
       (ecb-redraw-layout)
-      (let ((curr-buffer-list (mapcar (lambda (buff)
-					(buffer-name buff))
-				      (buffer-list))))
-	;; create all the ECB-buffers if they don´t already exist
-	(unless (member ecb-directories-buffer-name curr-buffer-list)
-	  (tree-buffer-create
-	   ecb-directories-buffer-name
-	   'ecb-directory-clicked
-	   'ecb-update-directory-node
-	   'ecb-mouse-over-node
-	   (list (cons 0 ecb-directories-menu) (cons 1 ecb-sources-menu))
-	   ecb-truncate-lines
-	   (list (cons 1 ecb-source-in-directories-buffer-face))
-	   ecb-tree-expand-symbol-before)
-	  ;; if we want some keys only defined in a certain tree-buffer we
-	  ;; must do this directly after calling the tree-buffer-create
-	  ;; function because this function makes the tree-buffer-key-map
-	  ;; variable buffer-local for its tree-buffer and creates the sparse
-	  ;; keymap.
-	  (define-key tree-buffer-key-map [f1] 'ecb-update-directories-buffer)
-	  (define-key tree-buffer-key-map [f2]
-	    '(lambda()
-	       (interactive)
-	       (ecb-switch-to-edit-buffer)
-	       (customize-group 'ecb))))        
-
-	(unless (member ecb-sources-buffer-name curr-buffer-list)
-	  (tree-buffer-create
-	   ecb-sources-buffer-name
-	   'ecb-source-clicked
-	   'ecb-source-clicked
-	   'ecb-mouse-over-node
-	   (list (cons 0 ecb-sources-menu))
-	   ecb-truncate-lines))
-
-	(unless (member ecb-methods-buffer-name curr-buffer-list)
-	  (tree-buffer-create
-	   ecb-methods-buffer-name
-	   'ecb-method-clicked
-	   nil
-	   'ecb-mouse-over-node
-	   nil
-	   ecb-truncate-lines
-	   (list (cons 0 t))
-	   ecb-tree-expand-symbol-before)
-	  (setq ecb-methods-root-node (tree-buffer-get-root)))
+    (let ((curr-buffer-list (mapcar (lambda (buff)
+                                      (buffer-name buff))
+                                    (buffer-list))))
+      ;; create all the ECB-buffers if they don´t already exist
+      (unless (member ecb-directories-buffer-name curr-buffer-list)
+        (tree-buffer-create
+         ecb-directories-buffer-name
+         'ecb-directory-clicked
+         'ecb-update-directory-node
+         'ecb-mouse-over-node
+         (list (cons 0 ecb-directories-menu) (cons 1 ecb-sources-menu))
+         ecb-truncate-lines
+         (list (cons 1 ecb-source-in-directories-buffer-face))
+         ecb-tree-expand-symbol-before)
+        ;; if we want some keys only defined in a certain tree-buffer we
+        ;; must do this directly after calling the tree-buffer-create
+        ;; function because this function makes the tree-buffer-key-map
+        ;; variable buffer-local for its tree-buffer and creates the sparse
+        ;; keymap.
+        (define-key tree-buffer-key-map [f1] 'ecb-update-directories-buffer)
+        (define-key tree-buffer-key-map [f2]
+          '(lambda()
+             (interactive)
+             (ecb-switch-to-edit-buffer)
+             (customize-group 'ecb))))        
       
-	(unless (member ecb-history-buffer-name curr-buffer-list)
-	  (tree-buffer-create
-	   ecb-history-buffer-name
-	   'ecb-source-clicked
-	   'ecb-source-clicked
-	   'ecb-mouse-over-node
-	   (list (cons 0 ecb-history-menu))
-	   ecb-truncate-lines)))
-
-      ;; we need some hooks
-      (remove-hook 'post-command-hook 'ecb-hook)
-      (add-hook 'post-command-hook 'ecb-hook)
-      (add-hook 'after-save-hook 'ecb-update-methods-after-saving)
-      ;; we add a function to this hook at the end because this function should
-      ;; be called at the end of all hook-functions of this hook!
-      (add-hook 'compilation-finish-functions
-		'ecb-layout-return-from-compilation t)
-      (add-hook 'compilation-mode-hook
-		'ecb-layout-go-to-compile-window)
-      (setq ecb-activated t)
-      ;; we must update the directories buffer first time
-      (ecb-update-directories-buffer)
-      ;; run personal hooks before drawing the layout
-      (run-hooks 'ecb-activate-before-layout-draw-hook)
-      ;; now we draw the layout choosen in `ecb-layout'.
-      (ecb-redraw-layout)
-      ;; at the real end we run any personal hooks
-      (run-hooks 'ecb-activate-hook)
-      (message "The ECB is now activated.")))
+      (unless (member ecb-sources-buffer-name curr-buffer-list)
+        (tree-buffer-create
+         ecb-sources-buffer-name
+         'ecb-source-clicked
+         'ecb-source-clicked
+         'ecb-mouse-over-node
+         (list (cons 0 ecb-sources-menu))
+         ecb-truncate-lines))
+      
+      (unless (member ecb-methods-buffer-name curr-buffer-list)
+        (tree-buffer-create
+         ecb-methods-buffer-name
+         'ecb-method-clicked
+         nil
+         'ecb-mouse-over-node
+         nil
+         ecb-truncate-lines
+         (list (cons 0 t))
+         ecb-tree-expand-symbol-before)
+        (setq ecb-methods-root-node (tree-buffer-get-root)))
+      
+      (unless (member ecb-history-buffer-name curr-buffer-list)
+        (tree-buffer-create
+         ecb-history-buffer-name
+         'ecb-source-clicked
+         'ecb-source-clicked
+         'ecb-mouse-over-node
+         (list (cons 0 ecb-history-menu))
+         ecb-truncate-lines)))
+    
+    ;; we need some hooks
+    (remove-hook 'post-command-hook 'ecb-hook)
+    (add-hook 'post-command-hook 'ecb-hook)
+    (add-hook 'after-save-hook 'ecb-update-methods-after-saving)
+    ;; we add a function to this hook at the end because this function should
+    ;; be called at the end of all hook-functions of this hook!
+    (add-hook 'compilation-finish-functions
+              'ecb-layout-return-from-compilation t)
+    (add-hook 'compilation-mode-hook
+              'ecb-layout-go-to-compile-window)
+    (add-hook 'compilation-mode-hook
+              'ecb-set-edit-window-split-hook-function)
+    (add-hook 'help-mode-hook
+              'ecb-set-edit-window-split-hook-function)
+    (setq ecb-activated t)
+    ;; we must update the directories buffer first time
+    (ecb-update-directories-buffer)
+    
+    ;; run personal hooks before drawing the layout
+    (run-hooks 'ecb-activate-before-layout-draw-hook)
+    ;; now we draw the layout choosen in `ecb-layout'. This function
+    ;; acivates at its end also the adviced functions if necessary!
+    (ecb-redraw-layout)
+    ;; at the real end we run any personal hooks
+    (run-hooks 'ecb-activate-hook)
+    (message "The ECB is now activated.")))
 
 (defun ecb-deactivate ()
   "Deactivates the ECB and kills all ECB buffers and windows."
   (interactive)
   (unless (not ecb-activated)
-    ;; first we delete all ECB-windows.
+    ;; deactivating the adviced functions
+    (ecb-activate-adviced-functions nil)
+
     (if ecb-edit-window
-	(ecb-switch-to-edit-buffer))
-    
+	(ecb-switch-to-edit-buffer))   
+    ;; first we delete all ECB-windows.
     (delete-other-windows)
     ;; we can safely do the kills because killing non existing buffers
     ;; doesn´t matter.
@@ -1309,6 +1299,10 @@ with the actually choosen layout \(see `ecb-layout')."
                  'ecb-layout-return-from-compilation)
     (remove-hook 'compilation-mode-hook
                  'ecb-layout-go-to-compile-window)
+    (remove-hook 'compilation-mode-hook
+                 'ecb-set-edit-window-split-hook-function)
+    (remove-hook 'help-mode-hook
+                 'ecb-set-edit-window-split-hook-function)
     (setq ecb-activated nil)
     ;; run any personal hooks
     (run-hooks 'ecb-deactivate-hook))

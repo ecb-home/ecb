@@ -1,3 +1,13 @@
+Version 1.20 (???):
+-------------------
+
+- Added new option `ecb-advice-window-functions'. Enabling the intelligent
+  window functions via customize. No hook hacking necessary anymore!
+  Now the intelligent window functions are implemented by advicing.
+
+- Better online help display.
+
+
 Version 1.10 (2001-03-25):
 --------------------------
 

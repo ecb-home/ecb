@@ -74,7 +74,7 @@
 ;;    one and modify that one.
 ;;
 ;;
-;; New added intelligent window-functions as replacement for:
+;; New adviced intelligent window-functions as replacement for these originals:
 ;; - `other-window'
 ;; - `delete-window'
 ;; - `delete-other-windows'
@@ -82,9 +82,7 @@
 ;; - `split-window-vertically'
 ;; - `find-file-other-window'
 ;; - `switch-to-buffer-other-window'
-;; The new function have the prefix "ecb-<originalname>" (e.g.
-;; `ecb-split-window-horizontally').
-;; The behavior of the new functions is:
+;; The behavior of the adviced functions is:
 ;; - All these function behaves exactly like their corresponding original
 ;;   functons but they always act as if the edit-window(s) of ECB would be the
 ;;   only window(s) of the ECB-frame. So the edit-window(s) of ECB seems to be
@@ -92,11 +90,6 @@
 ;; - If called in a not edit-window of ECB all these function jumps first to
 ;;   the (first) edit-window, so you can never destroy the ECB-window layout
 ;;   unintentionally.
-;; - If the new window-delete or -split functions are called with a prefix arg
-;;   then the function operates exactly like the corresponding original
-;;   function, means just the original function is called.
-;;
-;; You can (should?!) rebind your key-shortcuts during ECB with the hooks.
 ;;
 ;; Important: For each new layout with index <index> the programmer must
 ;; write two functions for this feature:
@@ -105,6 +98,8 @@
 ;; Both of these functions must follow the following guide-lines:
 ;; - Preconditions for these functions:
 ;;   + the edit window is splitted
+;;   + These functions are always(!) with deactivated adviced `delete-window'
+;;     function.
 ;; - What must they do:
 ;;   1. Checking if the point is in one of the two parts of the splitted
 ;;      edit-window. If in another window, do nothing and return nil.
@@ -115,6 +110,9 @@
 ;;      half-part fills the whole edit-window. If the split has been undone
 ;;      then non nil must be returned! This action must be done appropriate
 ;;      for the current ECB-layout with index <index>.
+;;   4. These functions can only use `delete-window' of the set of maybe
+;;      adviced window functions, because of a bug in advice.el only one
+;;      function큦 advice can be deactivated within a advice itself!
 ;; - Postcondition of these functions:
 ;;   + The edit-window must not be splitted and the point must reside in
 ;;     the not deleted edit-window.
@@ -122,6 +120,9 @@
 ;;; Code:
 
 ;;; Options
+(eval-when-compile
+  ;; to avoid compiler grips
+  (require 'cl))
 
 (defgroup ecb-layout nil
   "Settings for the screenlayout of the Emacs code browser."
@@ -156,7 +157,7 @@ layout with `ecb-redraw-layout'"
   :set '(lambda (symbol value)
 	  (set symbol value)
           ;; we must check this because otherwise the layout would be drawn
-          ;; if we have changed the initial value regardless if ECB is 
+          ;; if we have changed the initial value regardless if ECB is
           ;; activated or not.
           (if (and (boundp 'ecb-activated)
                    ecb-activated)
@@ -174,7 +175,7 @@ height is a fraction of the frame height.
 
 If you do not set a durable compilation window then doing a compilation
 splits temporally the edit window vertically if the edit window is not
-splitted already \(see documentation of the four
+splitted already \(see documentation of the
 window-function-replacements, e.g. `ecb-delete-window') or uses the
 \"other\" edit window temporally for comilation output if the edit window
 is already splitted.
@@ -187,7 +188,7 @@ layout with `ecb-redraw-layout'"
   :set '(lambda (symbol value)
 	  (set symbol value)
           ;; we must check this because otherwise the layout would be drawn
-          ;; if we have changed the initial value regardless if ECB is 
+          ;; if we have changed the initial value regardless if ECB is
           ;; activated or not.
           (if (and (boundp 'ecb-activated)
                    ecb-activated)
@@ -195,38 +196,27 @@ layout with `ecb-redraw-layout'"
   :type '(radio (const :tag "No compilation window" nil)
                 (number :tag "Window height")))
 
-;; This variable is also set by the following functions:
-;; - `ecb-delete-other-windows'
-;; - `ecb-delete-window'
-;; - `ecb-split-window-vertically'
-;; - `ecb-split-window-horizontally'
-(defcustom ecb-split-edit-window 'nil
+;; This variable is also set by the following adviced functions:
+;; - `delete-other-windows'
+;; - `delete-window'
+;; - `split-window-vertically'
+;; - `split-window-horizontally'
+(defcustom ecb-split-edit-window nil
   "*Sets how and if the edit window should be splitted.
-But be aware: ECB offers four somehow intelligent
-\"window-\(un)splitting\"-functions:
-- `ecb-delete-other-windows'
-- `ecb-delete-window'
-- `ecb-split-window-vertically'
-- `ecb-split-window-horizontally'.
-These function are the replacements for the corresponding standard-Emacs
-functions. Just remove the prefix \"ecb-\" to get the name of the
-standard-function and to know what the function does.
-You can bind these replacement functions in the ECB-hooks like
-`ecb-activate-hook' to the standard keys you like for the standard-functions
-to get the same behavior just for the edit-window of ECB.
-An example: You can bind `ecb-delete-other-windows' to [C-x 0] in the hook.
-Then always you hit [C-x 0] in the splitted edit-window only the other half of
-the edit-window will be removed and NOT the browser windows too!
-These replacement function give you the feeling to work with the edit-window
-of ECB as if it would be just a normal Emacs-frame.
+But be aware: ECB offers four somehow intelligent \"window-\(un)splitting\"-
+functions:
+- `delete-other-windows'
+- `delete-window'
+- `split-window-vertically'
+- `split-window-horizontally'.
+If `ecb-advice-window-functions' is set properly then ECB advices these
+functions so they are more suitable for ECB.
 
-And now attention:
-These function change the value of this option too so do not wonder if you
-open a customize buffer for this option and it contains a value you have not
-set. This value has been set from one of these replacement functions! Also
+These adviced function change the value of this option too so do not wonder if
+you open a customize buffer for this option and it contains a value you have
+not set. This value has been set from one of these adviced functions! Also
 `ecb-redraw-layout' is always oriented on the CURRENT value of this option
-regardless if set by your customization or by one of these replacement
-functions!
+regardless if set by your customization or by one of these adviced functions!
 
 But you can always \(un)split the edit-window by customizing this option and
 ECB uses at start-time always the value you have set for this option!"
@@ -288,18 +278,113 @@ frame height."
   :type 'number)
 
 (defcustom ecb-other-window-jump-behavior 'only-edit
-  "*Which windows of ECB should be accessable by the function
-`ecb-other-window', an intelligent replacement for the Emacs standard function
+  "*Which windows of ECB should be accessable by the ECB-adviced function
+`other-window', an intelligent replacement for the Emacs standard version of
 `other-window'. Following settings are possible:
 - 'only-edit: ECB will only cycle throuh the edit-windows of ECB.
 - 'edit-and-compile: Like 'only-edit plus the compile window if any
-- 'all: ECB will cycle through all windows of ECB, means it behaves like
-  `other-window'."
+- 'all: ECB will cycle through all windows of ECB, means it behaves like the
+  original `other-window'."
   :group 'ecb-layout
   :type '(radio (const :tag "Only edit windows" only-edit)
                 (const :tag "Edit + compile window" edit-and-compile)
                 (const :tag "All windows" all)))
-		 
+
+
+(defcustom ecb-advice-window-functions '(other-window
+                                         delete-window
+                                         delete-other-windows
+                                         split-window-horizontally
+                                         split-window-vertically
+                                         find-file-other-window
+                                         switch-to-buffer-other-window)
+  "*Use the intelligent windows functions of ECB instead of the standard
+Emacs functions. You can choose the following functions to be adviced by ECB
+so they behave as if the edit-window\(s) of ECB would be the only windows\(s)
+of the ECB-frame:
+- `other-window'
+- `delete-window'
+- `delete-other-windows'
+- `split-window-horizontally'
+- `split-window-vertically'
+- `find-file-other-window'
+- `switch-to-buffer-other-window'
+
+For working most conveniant with ECB it is the best to advice all these
+functions, because then all the standard-shortcuts of these functions are also
+useable with ECB without doing anything else. Also other packages can interact
+best with ECB if these functions are all adviced.
+
+But please read also the following:
+
+Normally all packages should work correct with ECB and it큦 adviced functions
+but if there occur problems with a package cause of some of these adviced
+functions ECB offers the following fall-back solution:
+
+1. Deactivate in `ecb-advice-window-functions' all the adviced-functions which
+   make problems with other packages.
+2. For every of the adviceable functions <adv-func> ECB offers a interactively
+   function named \"ecb-<adv-func>\" which does exactly the same as the
+   adviced version of <adv-func>. Use \"ecb-<adv-func>\" instead the original
+   one to get the proper ECB behavior even if the function is not adviced
+   anymore.
+3. You can bind in `ecb-activate-hook' the standard-shortcut of <adv-func> to
+   \"ecb-<adv-func>\" and rebind it in `ecb-deactivate-hook' to <adv-func>.
+4. Now you have the best of both worlds: The problematic package works and you
+   have the ECB-behavior of <adv-func> as if it would be adviced.
+
+Here is an example: Suppose you must deactivating the advice for
+`find-file-other-window'. Then you deactivate this function with this option
+and you can use `ecb-find-file-other-window' instead. Bind the shortcut you
+normally use for `find-file-other-window' to `ecb-find-file-other-window'
+\(use `ecb-activate-hook' for this) and rebind it to the original function in
+the `ecb-deactivate-hook'.
+
+Not all subsets of adviced functions are possible because some adviced
+functions need some other of the adviced functions, e.g. the adviced version
+of `other-window' is needed by all other. Therefore ECB ensures itself that only
+correct subsets of adviced functions are set!"
+  :group 'ecb-layout
+  :initialize 'custom-initialize-default
+  :set '(lambda (symbol value)
+          (let ((real-value value)
+                custom-reload)
+            ;; cause of `find-file-other-window' and
+            ;; `switch-to-buffer-other-window' needs the adviced version of
+            ;; `split-window-vertically' we must add it
+            (when (and (or (memq 'find-file-other-window real-value)
+                         (memq 'switch-to-buffer-other-window real-value))
+                     (not (memq 'split-window-vertically real-value)))
+                (setq real-value (cons 'split-window-vertically real-value))
+                (setq custom-reload t))
+            ;; all other adviced functions need the adviced `other-window'
+            (when (and (> (length real-value) 0)
+                     (not (memq 'other-window real-value)))
+                (setq real-value (cons 'other-window real-value))
+                (setq custom-reload t))
+            (set symbol real-value)
+            ;; if we have pressed the [Save...]-button let큦 reload this
+            ;; cutomize-buffer for immediatelly showing our ajustment.
+            ;; Maybe this solution must be changed in the future to a better
+            ;; one, but for the moment it works.
+            (if (and custom-reload
+                     (string-match "\*Customize " (buffer-name)))
+                (customize-option symbol))
+              ))
+  :type '(set (const :tag "other-window"
+                     :value other-window)
+              (const :tag "delete-window"
+                     :value delete-window)
+              (const :tag "delete-other-windows"
+                     :value delete-other-windows)
+              (const :tag "split-window-horizontally"
+                     :value split-window-horizontally)
+              (const :tag "split-window-vertically"
+                     :value split-window-vertically)
+              (const :tag "find-file-other-window"
+                     :value find-file-other-window)
+              (const :tag "switch-to-buffer-other-window"
+                     :value switch-to-buffer-other-window)))
 
 (defcustom ecb-use-dedicated-windows t
   "*Use dedicated windows for the ECB buffers."
@@ -315,6 +400,49 @@ frame height."
 
 ;; =========== intelligent window functions ==========================
 
+(defconst ecb-adviceable-functions
+  '(other-window
+    split-window-vertically
+    split-window-horizontally
+    delete-window
+    delete-other-windows
+    find-file-other-window
+    switch-to-buffer-other-window
+    )
+  "A list of functions which can be advised by the ECB package.")
+
+;; utilities
+(defun ecb-activate-adviced-functions (functions)
+  "Acivates the ecb-advice of exactly FUNCTIONS and only of FUNCTIONS, means
+deactivates also all functions of `ecb-adviceable-functions' which are not
+element of FUNCTIONS. FUNCTIONS must be nil or a subset of
+`ecb-adviceable-functions'."
+  (dolist (elem ecb-adviceable-functions)
+    (if (memq elem functions)
+        (ad-enable-advice elem 'around 'ecb)
+      (ad-disable-advice elem 'around 'ecb))
+    (ad-activate elem)))
+
+(defmacro ecb-with-original-functions (&rest body)
+  "Evaluates BODY with all adviced functions of ECB deactivated \(means with
+their original definition). Restores always the previous state of the ECB
+adviced functions!"
+  `(unwind-protect
+       (progn
+         (ecb-activate-adviced-functions nil)
+	 ,@body)
+     (ecb-activate-adviced-functions ecb-advice-window-functions)))
+
+(defmacro ecb-with-adviced-functions (&rest body)
+  "Evaluates BODY with all adviceable functions of ECB activated \(means with
+their new ECB-ajusted definition). Restores always the previous state of the
+ECB adviced functions!"
+  `(unwind-protect
+       (progn
+         (ecb-activate-adviced-functions ecb-adviceable-functions)
+	 ,@body)
+     (ecb-activate-adviced-functions ecb-advice-window-functions)))
+
 (defun ecb-point-in-edit-window ()
   "Return non nil iff point stays in an edit-window nil otherwise."
   (cond ((eq (selected-window) ecb-edit-window)
@@ -324,65 +452,16 @@ frame height."
          t)
         (t nil)))
 
-(defun ecb-find-file-other-window (filename &optional wildcards)
-  "The ECB-version of `find-file-other-window'. Works exactly like this
-function but opens the file always in another edit-window.
+;; here come the advices
 
-If called in any non edit-window of the current ECB-layout it jumps first in
-the \(first) edit-window and does then it큦 job \(see above)."
-  (interactive "FFind file in other edit-window: \np")
-  (if (not (ecb-point-in-edit-window))
-      (ecb-other-window))
-  (let ((ecb-other-window-jump-behavior 'only-edit))
-    (if ecb-split-edit-window
-        (ecb-other-window)
-      (ecb-split-window-vertically)
-      (ecb-other-window))
-    ;; now we are always in the other window, so we can now open the file.
-    (find-file filename wildcards)))
+(defadvice other-window (around ecb)
+  "The ECB-version of `other-window'. Works exactly like the original function
+with the following ECB-ajustment:
 
-(defun ecb-switch-to-buffer-other-window (buffer &optional norecord)
-  "The ECB-version of `switch-to-buffer-other-window'. Works exactly
-like this function but switch to the buffer always in another edit-window.
-
-If called in any non edit-window of the current ECB-layout it jumps first in
-the \(first) edit-window and does then it큦 job \(see above)."
-  (interactive "BSwitch to buffer in other edit-window: \np")
-  (if (not (ecb-point-in-edit-window))
-      (ecb-other-window))
-  (let ((ecb-other-window-jump-behavior 'only-edit))
-    (if ecb-split-edit-window
-        (ecb-other-window)
-      (ecb-split-window-vertically)
-      (ecb-other-window))
-    ;; now we are always in the other window, so we can switch to the buffer
-    (switch-to-buffer buffer norecord)))
-
-(defun ecb-jde-open-class-at-point-ff-function(filename &optional wildcards)
-  "Special handling of the class opening at point JDE feature. This function
-checks if `jde-open-class-at-point-find-file-function' has a value which is a
-\"other-window/frame\"-opening function. In this case ECB큦 own
-other-window-function is called otherwise the original value.
-This function is automatically set as value for the variable
-`jde-open-cap-ff-function-temp-override'."
-  (if (boundp 'jde-open-class-at-point-find-file-function)
-      (if (string-match "other"
-                        (symbol-name jde-open-class-at-point-find-file-function))
-          (ecb-find-file-other-window filename wildcards)
-        (funcall jde-open-class-at-point-find-file-function
-                 filename wildcards))))
-                    
-
-(defun ecb-other-window (&optional arg)
-  "A more ECB suitable replacement for the standard function `other-window'.
-If called with a prefix ARG then it behaves exactly like `other-window'.
-Otherwise the behavior depends on `ecb-other-window-jump-behavior'."
-  (interactive "P")
-  (if (or arg (eq ecb-other-window-jump-behavior 'all))
+The behavior depends on `ecb-other-window-jump-behavior'."
+  (if (eq ecb-other-window-jump-behavior 'all)
       ;; here we process the 'all value of `ecb-other-window-jump-behavior'
-      (if (integerp arg)
-          (other-window arg)
-        (other-window 1))
+      ad-do-it
     ;; in the following cond-clause `ecb-other-window-jump-behavior' can only
     ;; have the values 'only-edit and 'edit-and-compile!
     (cond ((eq (selected-window) ecb-edit-window)
@@ -408,105 +487,166 @@ Otherwise the behavior depends on `ecb-other-window-jump-behavior'."
           (t
            (condition-case ()
                (select-window ecb-edit-window)
-             (error nil))))))         
+             (error nil))))))
 
-(defun ecb-delete-other-windows (&optional original)
-  "If called in a splitted edit-window then it works like as if the
-two parts of the splitted edit window would be the only windows in the
-frame. This means the part of the splitted edit-window which contains the
-point fills the whole edit-window.
+(defadvice delete-window (around ecb)
+  "The ECB-version of `delete-window'. Works exactly like the original
+function with the following ECB-ajustment:
 
+If called in a splitted edit-window then it works like as if the two parts of
+the splitted edit window would be the only windows in the frame. This means
+the part of the splitted edit-window which contains the point will be
+destroyed and the other part fills the whole edit-window.
 If called in an unsplitted edit-window then nothing is done.
-
 If called in any other window of the current ECB-layout it jumps first in the
-\(first) edit-window and does then it큦 job \(see above).
-
-If called with a prefix arg ORIGINAL then `delete-other-windows' will be
-called, means the current window fills the whole frame."
-  (interactive "P")
-  (if original
-      (delete-other-windows)
-    (if (not (ecb-point-in-edit-window))
-        (ecb-other-window))
-    (if ecb-split-edit-window
-        (if (funcall (intern (format "ecb-delete-other-windows-in-editwindow-%d"
-                                     ecb-layout-nr)))
-            (setq ecb-split-edit-window nil)
-          (ecb-redraw-layout))
-      (ecb-redraw-layout))))
-
-(defun ecb-delete-window (&optional original)
-  "If called in a splitted edit-window then it works like as if the
-two parts of the splitted edit window would be the only windows in the
-frame. This means the part of the splitted edit-window which contains the
-point will be destroyed and the other part fills the whole edit-window.
-
-If called in an unsplitted edit-window then nothing is done.
-
-If called in any other window of the current ECB-layout it jumps first in the
-\(first) edit-window and does then it큦 job \(see above).
-
-If called with a prefix ORIGINAL arg then `delete-other-windows' will be
-called, means the current window fills the whole frame."
-  (interactive "P")
-  (if original
-      (delete-window)
-    (if (not (ecb-point-in-edit-window))
-        (ecb-other-window))
+\(first) edit-window and does then it큦 job \(see above)."
+  (if (not (ecb-point-in-edit-window))
+      (other-window 1))
+  (ad-with-originals 'delete-window
     (if ecb-split-edit-window
         (if (funcall (intern (format "ecb-delete-window-in-editwindow-%d"
                                      ecb-layout-nr)))
-            (setq ecb-split-edit-window nil)
-          (ecb-redraw-layout))
-      (ecb-redraw-layout))))
+            (setq ecb-split-edit-window nil)))))
 
+(defadvice delete-other-windows (around ecb)
+  "The ECB-version of `delete-other-windows'. Works exactly like the
+original function with the following ECB-ajustment:
 
-(defun ecb-split-window-vertically (&optional original)
-  "If called in an unsplitted edit-window then the edit window will be
-splitted vertically..
-
-If called in an already splitted edit-window then nothing is done.
-
+If called in a splitted edit-window then it works like as if the two parts of
+the splitted edit window would be the only windows in the frame. This means
+the part of the splitted edit-window which contains the point fills the whole
+edit-window.
+If called in an unsplitted edit-window then nothing is done.
 If called in any other window of the current ECB-layout it jumps first in the
-\(first) edit-window and does then it큦 job \(see above).
+\(first) edit-window and does then it큦 job \(see above)."
+  (if (not (ecb-point-in-edit-window))
+      (other-window 1))
+  (ad-with-originals 'delete-window
+    (if ecb-split-edit-window
+        (if (funcall (intern (format "ecb-delete-other-windows-in-editwindow-%d"
+                                     ecb-layout-nr)))
+            (setq ecb-split-edit-window nil)))))
 
-If called with a prefix ORIGINAL arg then `split-window-horizontally' will
-be called, means current window \(regardless which one) will be splitted
-horizontally."
-  (interactive "P")
-  (if original
+(defadvice split-window-horizontally (around ecb)
+  "The ECB-version of `split-window-horizontally'. Works exactly like the
+original function with the following ECB-ajustment:
+
+If called in an unsplitted edit-window then the edit window will be splitted
+horizontally.
+If called in an already splitted edit-window then nothing is done.
+If called in any other window of the current ECB-layout it jumps first in the
+\(first) edit-window and does then it큦 job \(see above)."
+  (if (not (ecb-point-in-edit-window))
+      (other-window 1))
+  (when (and (not ecb-split-edit-window)
+             (eq (selected-window) ecb-edit-window))
+    (ad-with-originals 'split-window-horizontally
+      (ecb-split-hor 0.5 t))
+    (setq ecb-split-edit-window 'horizontal)))
+
+(defadvice split-window-vertically (around ecb)
+  "The ECB-version of `split-window-vertically'. Works exactly like the
+original function with the following ECB-ajustment:
+
+Called in an unsplitted edit-window then the edit window will be splitted
+vertically.
+If called in an already splitted edit-window then nothing is done.
+If called in any other window of the current ECB-layout it jumps first in the
+\(first) edit-window and does then it큦 job \(see above)."
+  (if (not (ecb-point-in-edit-window))
+      (other-window 1))
+  (when (and (not ecb-split-edit-window)
+             (eq (selected-window) ecb-edit-window))
+    (ad-with-originals 'split-window-vertically
+      (ecb-split-ver 0.5 t))
+    (setq ecb-split-edit-window 'vertical)))
+
+(defadvice find-file-other-window (around ecb)
+  "The ECB-version of `find-file-other-window'. Works exactly like the
+original function but opens the file always in another edit-window.
+
+If called in any non edit-window of the current ECB-layout it jumps first in
+the \(first) edit-window and does then it큦 job \(see above)."
+  (if (not (ecb-point-in-edit-window))
+      (other-window 1))
+  (let ((ecb-other-window-jump-behavior 'only-edit))
+    (if ecb-split-edit-window
+        (other-window 1)
       (split-window-vertically)
-    (if (not (ecb-point-in-edit-window))
-        (ecb-other-window))
-    (when (and (not ecb-split-edit-window)
-               (eq (selected-window) ecb-edit-window))
-      (ecb-split-ver 0.5 t)
-      (setq ecb-split-edit-window 'vertical))))
+      (other-window 1))
+    ;; now we are always in the other window, so we can now open the file.
+    (find-file (ad-get-arg 0) (ad-get-arg 1))))
 
-(defun ecb-split-window-horizontally (&optional original)
-  "If called in an unsplitted edit-window then the edit window will be
-splitted horizontally.
+(defadvice switch-to-buffer-other-window (around ecb)
+  "The ECB-version of `switch-to-buffer-other-window'. Works exactly
+like the original but switch to the buffer always in another edit-window.
 
-If called in an already splitted edit-window then nothing is done.
+If called in any non edit-window of the current ECB-layout it jumps first in
+the \(first) edit-window and does then it큦 job \(see above)."
+  (if (not (ecb-point-in-edit-window))
+      (other-window 1))
+  (let ((ecb-other-window-jump-behavior 'only-edit))
+    (if ecb-split-edit-window
+        (other-window 1)
+      (split-window-vertically)
+      (other-window 1))
+    ;; now we are always in the other window, so we can switch to the buffer
+    (switch-to-buffer (ad-get-arg 0) (ad-get-arg 1))))
 
-If called in any other window of the current ECB-layout it jumps first in the
-\(first) edit-window and does then it큦 job \(see above).
+(defun ecb-jde-open-class-at-point-ff-function(filename &optional wildcards)
+  "Special handling of the class opening at point JDE feature. This function
+calls the value of `jde-open-class-at-point-find-file-function' with activated
+ECB-adviced functions."
+  (ecb-with-adviced-functions
+   (if (and (boundp 'jde-open-class-at-point-find-file-function)
+            (fboundp jde-open-class-at-point-find-file-function))
+       (funcall jde-open-class-at-point-find-file-function
+                filename wildcards))))
 
-If called with a prefix ORIGINAL arg then `split-window-horizontally' will
-be called, means current window \(regardless which one) will be splitted
-horizontally."
-  (interactive "P")
-  (if original
-      (split-window-horizontally)
-    (if (not (ecb-point-in-edit-window))
-        (ecb-other-window))
-    (when (and (not ecb-split-edit-window)
-               (eq (selected-window) ecb-edit-window))
-      (ecb-split-hor 0.5 t)
-      (setq ecb-split-edit-window 'horizontal))))
+;; here come the prefixed equivalents to the adviced originals
+(defun ecb-find-file-other-window ()
+  "Acts like the adviced version of `find-file-other-window'."
+  (interactive)
+  (ecb-with-adviced-functions
+   (call-interactively 'find-file-other-window)))
+
+(defun ecb-switch-to-buffer-other-window ()
+  "Acts like the adviced version of `switch-to-buffer-other-window'."
+  (interactive)
+  (ecb-with-adviced-functions
+   (call-interactively 'switch-to-buffer-other-window)))
+
+(defun ecb-other-window (&optional arg)
+  "Acts like the adviced version of `other-window'."
+  (interactive)
+  (ecb-with-adviced-functions
+   (call-interactively 'other-window)))
+
+(defun ecb-delete-other-windows ()
+  "Acts like the adviced version of `delete-other-windows'."
+  (interactive)
+  (ecb-with-adviced-functions
+   (call-interactively 'delete-other-windows)))
+
+(defun ecb-delete-window ()
+  "Acts like the adviced version of `delete-window'."
+  (interactive)
+  (ecb-with-adviced-functions
+   (call-interactively 'delete-window)))
+
+(defun ecb-split-window-vertically ()
+  "Acts like the adviced version of `split-window-vertically'."
+  (interactive)
+  (ecb-with-adviced-functions
+   (call-interactively 'split-window-vertically)))
+
+(defun ecb-split-window-horizontally ()
+  "Acts like the adviced version of `split-window-horizontally'."
+  (interactive)
+  (ecb-with-adviced-functions
+   (call-interactively 'split-window-horizontally)))
 
 
-  
 ;; here come the internal ...delete-...functions which are called from
 ;; `ecb-delete-other-windows' or `ecb-delete-window' with respect
 ;; to the current layout-index (see `ecb-layout-nr').
@@ -571,7 +711,7 @@ horizontally."
   'ecb-delete-other-windows-in-editwindow-0)
 (defalias 'ecb-delete-window-in-editwindow-9
   'ecb-delete-window-in-editwindow-0)
-          
+
 (defun ecb-delete-other-windows-in-editwindow-5 ()
   (cond ((eq (previous-window (selected-window) 0)
              ecb-edit-window)
@@ -702,7 +842,7 @@ This hook will only be added to `compilation-mode-hook' if ECB was activated."
             (select-window ecb-compile-window)
             (end-of-buffer))
         (error nil))))
- 
+
 (defun ecb-layout-return-from-compilation (comp-buf process-state)
   "Jumps back to the window from which the compilation-process was started.
 This is only be done if `ecb-select-compile-window' is non nil.
@@ -715,6 +855,12 @@ will not be evaluated here."
           (select-window ecb-layout-selected-window-before-compile)
         (error nil))))
 
+(defun ecb-set-edit-window-split-hook-function ()
+  "This function is added to `compilation-mode-hook' and `help-mode-hook' to
+handle splitting the edit-window correctly."
+  (if (and (not ecb-compile-window-height)
+           (not ecb-split-edit-window))
+      (setq ecb-split-edit-window 'vertical)))
 
 ;; the main layout core-function. This function is the "environment" for a
 ;; special layout function (l.b.)
@@ -733,13 +879,17 @@ this function the edit-window is selected."
                                      (t 0)))
         (pos-before-redraw (and (> window-before-redraw 0) (point))))
 
+    ;; deactivating the adviced functions, so the layout-functions can use the
+    ;; original function-definitions.
+    (ecb-activate-adviced-functions nil)
+
     ;; first we go to the edit-window we must du this with condition-case
     ;; because maybe the edit-window was destroyed by some mistake or error
     ;; and `ecb-edit-window' was not nil.
     (condition-case ()
         (select-window ecb-edit-window)
       (error nil))
-    
+
     ;; Do some actions regardless of the choosen layout
     (delete-other-windows)
     (setq ecb-frame (selected-frame))
@@ -749,15 +899,15 @@ this function the edit-window is selected."
     ;; correctly.
     (setq ecb-edit-window nil
           ecb-compile-window nil)
-  
+
     ;; Now we call the layout-function
     (funcall (intern (format "ecb-layout-function-%d"
                              ecb-layout-nr)))
-    
+
     ;; Now all the windows must be created and the editing window must not be
     ;; splitted! In addition the variables `ecb-edit-window' and
     ;; `ecb-compile-window' must be set the correct windows.
-    
+
     ;; The following when-expression is added for better relayouting the
     ;; choosen layout if we have a compilation-window.
     (when ecb-compile-window-height
@@ -783,13 +933,13 @@ this function the edit-window is selected."
                                    (* (1- (frame-height))
                                       ecb-compile-window-height)
                                  ecb-compile-window-height)))))
-    
+
     (select-window (if ecb-edit-window
                        ecb-edit-window
                      (error "Edit-window not set in the layout-function")))
 
     ;; Maybe we must split the editing window again if it was splitted before
-    ;; the redraw  
+    ;; the redraw
     (cond ((eq ecb-split-edit-window 'horizontal)
            (ecb-split-hor 0.5 t))
           ((eq ecb-split-edit-window 'vertical)
@@ -804,10 +954,13 @@ this function the edit-window is selected."
     ;; Now let큦 update the directories buffer
     (ecb-update-directories-buffer)
 
+    ;; activating the adviced functions
+    (ecb-activate-adviced-functions ecb-advice-window-functions)
+
     ;; if we were in an edit-window before redraw let us go to the old place.
     (if pos-before-redraw
         (goto-char pos-before-redraw))))
-    
+
 
 ;; ========= Current available layouts ===============================
 
@@ -821,20 +974,20 @@ this function the edit-window is selected."
   "This function creates the following layout:
 
    -------------------------------------------------------
-   |              |                                      | 
-   |  Directories |                                      | 
-   |              |                                      | 
+   |              |                                      |
+   |  Directories |                                      |
+   |              |                                      |
    |              |                                      |
    |              |                                      |
    |--------------|                                      |
    |      |       |                                      |
    | Sour | Hist  |                 Edit                 |
    |      |       |                                      |
-   |      |       |                                      | 
+   |      |       |                                      |
    |--------------|                                      |
    |              |                                      |
    |  Methods     |                                      |
-   |              |                                      | 
+   |              |                                      |
    |              |                                      |
    -------------------------------------------------------
    |                                                     |
@@ -864,20 +1017,20 @@ place."
   "This function creates the following layout:
 
    -------------------------------------------------------
-   |              |                                      | 
-   |              |                                      | 
-   |              |                                      | 
+   |              |                                      |
+   |              |                                      |
+   |              |                                      |
    |  Directories |                                      |
    |              |                                      |
    |              |                                      |
    |              |                                      |
    |--------------|                 Edit                 |
    |              |                                      |
-   |              |                                      | 
+   |              |                                      |
    |              |                                      |
    |  Sources     |                                      |
    |              |                                      |
-   |              |                                      | 
+   |              |                                      |
    |              |                                      |
    -------------------------------------------------------
    |                                                     |
@@ -890,7 +1043,7 @@ contains no compilation window and the other windows get a little more
 place."
   (when ecb-compile-window-height
     (ecb-split-ver (* -1 ecb-compile-window-height) t)
-    (setq ecb-compile-window (next-window)))    
+    (setq ecb-compile-window (next-window)))
   (ecb-split-hor ecb-windows-width t)
   (ecb-set-directories-buffer)
   (ecb-split-ver 0.5)
@@ -902,20 +1055,20 @@ place."
   "This function creates the following layout:
 
    -------------------------------------------------------
-   |              |                                      | 
-   |  Directories |                                      | 
-   |              |                                      | 
+   |              |                                      |
+   |  Directories |                                      |
+   |              |                                      |
    |              |                                      |
    |              |                                      |
    |--------------|                                      |
    |              |                                      |
    |  Sources     |                 Edit                 |
    |              |                                      |
-   |              |                                      | 
+   |              |                                      |
    |--------------|                                      |
    |              |                                      |
    |  Methods     |                                      |
-   |              |                                      | 
+   |              |                                      |
    |              |                                      |
    -------------------------------------------------------
    |                                                     |
@@ -928,7 +1081,7 @@ contains no compilation window and the other windows get a little more
 place."
   (when ecb-compile-window-height
     (ecb-split-ver (* -1 ecb-compile-window-height) t)
-    (setq ecb-compile-window (next-window)))    
+    (setq ecb-compile-window (next-window)))
   (ecb-split-hor ecb-windows-width t)
   (ecb-set-directories-buffer)
   (ecb-split-ver 0.3)
@@ -942,20 +1095,20 @@ place."
   "This function creates the following layout:
 
    -------------------------------------------------------
-   |              |                                      | 
-   |              |                                      | 
-   |              |                                      | 
+   |              |                                      |
+   |              |                                      |
+   |              |                                      |
    |  Directories |                                      |
    |              |                                      |
    |              |                                      |
    |              |                                      |
    |--------------|                 Edit                 |
    |      |       |                                      |
-   |      |       |                                      | 
+   |      |       |                                      |
    |      |       |                                      |
    | Sour | Hist  |                                      |
    |      |       |                                      |
-   |      |       |                                      | 
+   |      |       |                                      |
    |      |       |                                      |
    -------------------------------------------------------
    |                                                     |
@@ -968,7 +1121,7 @@ contains no compilation window and the other windows get a little more
 place."
   (when ecb-compile-window-height
     (ecb-split-ver (* -1 ecb-compile-window-height) t)
-    (setq ecb-compile-window (next-window)))    
+    (setq ecb-compile-window (next-window)))
   (ecb-split-hor ecb-windows-width t)
   (ecb-set-directories-buffer)
   (ecb-split-ver 0.5)
@@ -982,20 +1135,20 @@ place."
   "This function creates the following layout:
 
    -------------------------------------------------------
-   |              |                                      | 
-   |  Directories |                                      | 
-   |              |                                      | 
+   |              |                                      |
+   |  Directories |                                      |
+   |              |                                      |
    |              |                                      |
    |              |                                      |
    |--------------|                                      |
    |              |                                      |
    |  Sources     |                 Edit                 |
    |              |                                      |
-   |              |                                      | 
+   |              |                                      |
    |--------------|                                      |
    |              |                                      |
    |  History     |                                      |
-   |              |                                      | 
+   |              |                                      |
    |              |                                      |
    -------------------------------------------------------
    |                                                     |
@@ -1008,7 +1161,7 @@ contains no compilation window and the other windows get a little more
 place."
   (when ecb-compile-window-height
     (ecb-split-ver (* -1 ecb-compile-window-height) t)
-    (setq ecb-compile-window (next-window)))    
+    (setq ecb-compile-window (next-window)))
   (ecb-split-hor ecb-windows-width t)
   (ecb-set-directories-buffer)
   (ecb-split-ver 0.3)
@@ -1022,20 +1175,20 @@ place."
   "This function creates the following layout:
 
    -------------------------------------------------------
-   |                                      |              | 
-   |                                      |  Directories | 
-   |                                      |              | 
+   |                                      |              |
+   |                                      |  Directories |
+   |                                      |              |
    |                                      |              |
    |                                      |--------------|
    |                                      |              |
    |                                      |              |
    |             Edit                     |  Sources     |
    |                                      |              |
-   |                                      |              | 
+   |                                      |              |
    |                                      |--------------|
    |                                      |              |
    |                                      |  Methods     |
-   |                                      |              | 
+   |                                      |              |
    |                                      |              |
    -------------------------------------------------------
    |                                                     |
@@ -1048,7 +1201,7 @@ contains no compilation window and the other windows get a little more
 place."
   (when ecb-compile-window-height
     (ecb-split-ver (* -1 ecb-compile-window-height) t)
-    (setq ecb-compile-window (next-window)))    
+    (setq ecb-compile-window (next-window)))
   (ecb-split-hor (- ecb-windows-width) t)
   (setq ecb-edit-window (selected-window))
   (select-window (next-window))
@@ -1062,20 +1215,20 @@ place."
   "This function creates the following layout:
 
    -------------------------------------------------------
-   |              |                                      | 
-   |  Directories |                                      | 
-   |              |                                      | 
+   |              |                                      |
+   |  Directories |                                      |
+   |              |                                      |
    |              |                                      |
    |              |                                      |
    |--------------|                                      |
    |      |       |                                      |
    | Sour | Hist  |                 Edit                 |
    |      |       |                                      |
-   |      |       |                                      | 
+   |      |       |                                      |
    |--------------|                                      |
    |              |                                      |
    |  Methods     |                                      |
-   |              |                                      | 
+   |              |                                      |
    |              |                                      |
    -------------------------------------------------------
    |                                                     |
@@ -1088,7 +1241,7 @@ contains no compilation window and the other windows get a little more
 place."
   (when ecb-compile-window-height
     (ecb-split-ver (* -1 ecb-compile-window-height) t)
-    (setq ecb-compile-window (next-window)))    
+    (setq ecb-compile-window (next-window)))
   (ecb-split-hor ecb-windows-width t)
   (ecb-set-directories-buffer)
   (ecb-split-ver 0.3)
@@ -1105,20 +1258,20 @@ place."
   "This function creates the following layout:
 
    -------------------------------------------------------
-   |                        |             |              | 
-   |                        |             |              | 
-   |      Directories       |  Sources    |  Methods     | 
+   |                        |             |              |
+   |                        |             |              |
+   |      Directories       |  Sources    |  Methods     |
    |                        |             |              |
    |                        |             |              |
    |-----------------------------------------------------|
    |                                                     |
    |                                                     |
    |                                                     |
-   |                                                     | 
+   |                                                     |
    |                    Edit                             |
    |                                                     |
    |                                                     |
-   |                                                     | 
+   |                                                     |
    |                                                     |
    -------------------------------------------------------
    |                                                     |
@@ -1139,7 +1292,7 @@ place."
       (progn
         (select-window (next-window))
         (ecb-split-ver (* -1 ecb-compile-window-height) t)
-        (setq ecb-compile-window (next-window))        
+        (setq ecb-compile-window (next-window))
         (select-window (next-window))
         (switch-to-buffer ecb-history-buffer-name)
         (select-window (previous-window)))
@@ -1150,20 +1303,20 @@ place."
   "This function creates the following layout:
 
    -------------------------------------------------------
-   |              |                                      | 
-   |  Directories |                                      | 
-   |              |                                      | 
+   |              |                                      |
+   |  Directories |                                      |
+   |              |                                      |
    |              |                                      |
    |              |                                      |
    |              |                                      |
    |              |                                      |
    |--------------|                 Edit                 |
    |              |                                      |
-   |  History     |                                      | 
+   |  History     |                                      |
    |              |                                      |
    |--------------|                                      |
    |              |                                      |
-   |  Methods     |                                      | 
+   |  Methods     |                                      |
    |              |                                      |
    -------------------------------------------------------
    |                                                     |
@@ -1193,20 +1346,20 @@ to non nil!"
   "This function creates the following layout:
 
    -------------------------------------------------------
-   |              |                                      | 
-   |  Directories |                                      | 
-   |              |                                      | 
+   |              |                                      |
+   |  Directories |                                      |
+   |              |                                      |
    |--------------|                                      |
    |              |                                      |
    |  Sources     |                                      |
    |              |                                      |
    |--------------|                 Edit                 |
    |              |                                      |
-   |  Methods     |                                      | 
+   |  Methods     |                                      |
    |              |                                      |
    |              |                                      |
    |--------------|                                      |
-   |  History     |                                      | 
+   |  History     |                                      |
    |              |                                      |
    -------------------------------------------------------
    |                                                     |
@@ -1232,5 +1385,5 @@ place."
   (setq ecb-edit-window (selected-window)))
 
 (provide 'ecb-layout)
-     
+
 ;;; ecb-layout.el ends here
