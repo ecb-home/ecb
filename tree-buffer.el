@@ -1029,7 +1029,7 @@ child."
 - nil: The name is never truncated."
   )
 
-(defun tree-node-new (name type data &optional not-expandable parent)
+(defun tree-node-new (name type data &optional not-expandable parent shorten-name)
   (let ((a (make-vector 8 nil)))
     (tree-node-set-name a name)
     (tree-node-set-type a type)
@@ -1038,7 +1038,7 @@ child."
     (tree-node-set-children a nil)
     (tree-node-set-parent a parent)
     (tree-node-set-expandable a (not not-expandable))
-    (tree-node-set-shorten-name a 'end)
+    (tree-node-set-shorten-name a shorten-name)
     (when parent
       (tree-node-add-child parent a))
     a))
