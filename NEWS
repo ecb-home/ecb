@@ -1,10 +1,14 @@
-* Changes for semantic version 1.91.2
+* Changes for ECB version 1.91.2
+
+** Fixed bugs:
+
+*** Fixes small bugs in the popup-menu of the history-buffer.
+
+*** Reformatted some entries of the FAQ because otherwise some links in the
+    info-manual are not working. (Klaus)
 
 ** Renamed previous HISTORY file to NEWS and reformate it for outline-mode.
   (Klaus)
-
-** Reformatted some entries of the FAQ because otherwise some links in the
-   info-manual are not working. (Klaus)
 
 ** ecb-truncate-lines can now set different for each ECB-tree-buffer.
    (Klaus)
@@ -12,7 +16,7 @@
 ** Easy horizontal mouse-scrolling of the ECB tree-buffers. See new option
    `ecb-tree-easy-hor-scroll'. (Klaus)
 
-* Changes for semantic version 1.91.1
+* Changes for ECB version 1.91.1
 
 ** Fixed bugs:
 
@@ -47,7 +51,7 @@
 
 
 
-* Changes for semantic version 1.90
+* Changes for ECB version 1.90
 
 ** The website of ECB has moved from http://home.swipnet.se/mayhem/ecb.html to
    http://ecb.sourceforge.net. Maintainance has switched from Jesper Nordenberg
@@ -296,7 +300,7 @@
 
 
 
-* Changes for semantic version 1.80
+* Changes for ECB version 1.80
 
 ** ECB now requires:
    + Latest stable release of semantic: Version 1.4
@@ -411,7 +415,7 @@
 
     
 
-* Changes for semantic version 1.70
+* Changes for ECB version 1.70
 
 ** New option ecb-bucket-token-display. See doc-string for details. (Klaus)
 
@@ -506,7 +510,7 @@
 
 
    
-* Changes for semantic version 1.60
+* Changes for ECB version 1.60
 
 ** ecb-highlight-token-header-after-jump is now a boolean; which face is used
    for highlighting is defined in ecb-token-header-face. (Klaus)
@@ -574,13 +578,13 @@
 
 
    
-* Changes for semantic version 1.52
+* Changes for ECB version 1.52
 
 ** Added EIEIO requirement to ECB.
 
 
 
-* Changes for semantic version 1.51
+* Changes for ECB version 1.51
 
 ** Now the names of all ECB buffers begin with a SPC per default. (Klaus)
 
@@ -613,7 +617,7 @@
 
 
       
-* Changes for semantic version 1.50
+* Changes for ECB version 1.50
 
 ** Fixed a minor bug that occured when de-activating ECB under XEmacs. (Jesper)
 
@@ -640,13 +644,13 @@
 
 
    
-* Changes for semantic version 1.41
+* Changes for ECB version 1.41
 
 ** Fixed bug when clicking on token in the methods buffer in XEmacs.
 
 
 
-* Changes for semantic version 1.40
+* Changes for ECB version 1.40
 
 ** Tree-incremental-search in the ecb-windows now ignores all non interesting
    stuff:
@@ -741,7 +745,7 @@
 
 
    
-* Changes for semantic version 1.32
+* Changes for ECB version 1.32
 
 ** Nil parent bug fixed. (Jesper)
 
@@ -754,7 +758,7 @@
 
 
    
-* Changes for semantic version 1.31
+* Changes for ECB version 1.31
 
 ** Parents (extends and implements) of the classes in the current buffer is now
    shown in the methods buffer. (Jesper). Possibility to define a regexp which
@@ -771,7 +775,7 @@
 
 
 
-* Changes for semantic version 1.30
+* Changes for ECB version 1.30
 
 ** If not all ECB-tree-windows of current layout are visible at redraw-time
    ('ecb-redraw-layout') then the redraw synchronizes the contents of the
@@ -847,7 +851,7 @@
 
 
    
-* Changes for semantic version 1.20
+* Changes for ECB version 1.20
 
 ** Now the ECB-buffers are intelligent in displaying nodes (Klaus):
    + Expandable nodes: (e.g. a directory with it´s subdirectories). An
@@ -915,7 +919,7 @@
 
 
    
-* Changes for semantic version 1.10
+* Changes for ECB version 1.10
 
 ** Automatic expansion of the directory tree.
 
@@ -944,7 +948,7 @@
 
 
    
-* Changes for semantic version 1.0
+* Changes for ECB version 1.0
 
 ** Changed name from JCB to ECB and prefix from "jde-jcb-" to "ecb-".
 
@@ -978,7 +982,7 @@
 
 
 
-* Changes for semantic version 0.04
+* Changes for ECB version 0.04
 
 ** Keyboard navigation in JCB buffers. Use Return to select and Tab to expand.
 
@@ -998,7 +1002,7 @@
 
 
    
-* Changes for semantic version 0.03
+* Changes for ECB version 0.03
 
 ** Fixed naming of variables.
 
@@ -1021,7 +1025,7 @@
 
    
    
-* Changes for semantic version 0.02
+* Changes for ECB version 0.02
 
 ** Changed prefix from "jcb-" to "jde-jcb-". This will cause JCB customization 
    variables to be saved in JDE project files.
@@ -1039,7 +1043,7 @@
 
 
    
-* Changes for semantic version 0.01
+* Changes for ECB version 0.01
 
 ** Initial version.
 

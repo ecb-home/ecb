@@ -98,6 +98,7 @@
     "Use `scroll-all-mode' to scroll both edit-windows of ECB simultaneously - and no other windows are scrolled!"
     "You can toggle having a compile window with `ecb-toggle-compile-window' if `ecb-compile-window-height' is not nil."
     "Start ECB automatically after Emacs is started. Use option `ecb-auto-activate'"
+    "Easy horizontal scrolling the tree-buffers with the mouse with [M-mouse-1] and [M-mouse-3]; see `ecb-tree-easy-hor-scroll'."
     )
   "List of all available tips of the day.")
 
