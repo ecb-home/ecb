@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-upgrade.el,v 1.86 2004/08/31 15:33:52 berndl Exp $
+;; $Id: ecb-upgrade.el,v 1.87 2004/09/01 15:03:13 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -1522,42 +1522,34 @@ activated."
         
         ;; Downloading with working-display
 
-        (ecb-working-status-call-process
-         0.1
-         (concat "Downloading new " package)
-         "done"
-         (if (eq system-type 'windows-nt)
-             "wget.exe"
-           "wget")
-         nil
-         ecb-download-buffername
-         nil
-         "-C"
-         "off"
-         "-O"
-         downloaded-filename
-         (concat url package "-" version ".tar.gz"))
+        (setq success
+              (if (= 0 (ecb-working-status-call-process
+                        0.1
+                        (concat "Downloading new " package)
+                        "done"
+                        (if (eq system-type 'windows-nt)
+                            "wget.exe"
+                          "wget")
+                        nil
+                        ecb-download-buffername
+                        nil
+                        "-C"
+                        "off"
+                        "-O"
+                        downloaded-filename
+                        (concat url package "-" version ".tar.gz")))
+                  t
+                nil))
 
-        ;; checking the download-result
-
-        (save-excursion
-          (set-buffer ecb-download-buffername)
-          (setq process-result (buffer-string))
-          (goto-char (point-min))
-          (when (not (and (save-excursion
-                            (search-forward-regexp "200" nil t))
-                          (search-forward-regexp
-                           (concat (regexp-quote downloaded-filename) ".*saved.*")
-                           nil t)
-                          (file-exists-p downloaded-filename)))
-            (setq success nil)))
-        (unless success
+        (when (or (not success) (not (file-exists-p downloaded-filename)))
           (with-output-to-temp-buffer "*ECB-download-failure*"
             (princ (format "The download of %s has failed cause of the following wget-failure:"
                            package))
             (princ "\n")
             (princ "______________________________________________________________________________\n\n")
-            (princ process-result)
+            (princ (save-excursion
+                     (set-buffer ecb-download-buffername)
+                     (buffer-string)))
             (princ "\n______________________________________________________________________________")
             (princ "\n\n")
             (princ "Please check the wget configuration in \"~/.wgetrc\" and also the values\n")
@@ -1620,8 +1612,7 @@ This is done with the utility \"wget\", so please see `ecb-package-download'
 for details about using \"wget\"."
   (let ((downloaded-filename (concat ecb-temp-dir "package-index.html"))
         (success t)
-        (version-list nil)
-        process-result)
+        (version-list nil))
 
     (require 'executable)
     (if (not (executable-find
@@ -1645,40 +1636,32 @@ for details about using \"wget\"."
         
       ;; Downloading with working-display
 
-      (ecb-working-status-call-process
-       0.1
-       (concat "Getting list of available versions of package " package)
-       "done"
-       (if (eq system-type 'windows-nt)
-           "wget.exe"
-         "wget")
-       nil
-       ecb-download-buffername
-       nil
-       "-O"
-       downloaded-filename
-       package-url)
+      (setq success
+            (if (= 0 (ecb-working-status-call-process
+                      0.1
+                      (concat "Getting list of available versions of package " package)
+                      "done"
+                      (if (eq system-type 'windows-nt)
+                          "wget.exe"
+                        "wget")
+                      nil
+                      ecb-download-buffername
+                      nil
+                      "-O"
+                      downloaded-filename
+                      package-url))
+                t
+              nil))
 
-      ;; checking the download-result
-
-      (save-excursion
-        (set-buffer ecb-download-buffername)
-        (setq process-result (buffer-string))
-        (goto-char (point-min))
-        (when (not (and (save-excursion
-                          (search-forward-regexp "200" nil t))
-                        (search-forward-regexp
-                         (concat (regexp-quote downloaded-filename) ".*saved.*")
-                         nil t)
-                        (file-exists-p downloaded-filename)))
-          (setq success nil)))
-      (unless success
+      (when (or (not success) (not (file-exists-p downloaded-filename)))
         (with-output-to-temp-buffer "*ECB-download-failure*"
           (princ (format "Checking available versions for %s has failed cause of the following\nwget-failure:"
                          package))
           (princ "\n")
           (princ "______________________________________________________________________________\n\n")
-          (princ process-result)
+          (princ (save-excursion
+                   (set-buffer ecb-download-buffername)
+                   (buffer-string)))
           (princ "\n______________________________________________________________________________")
           (princ "\n\n")
           (princ "Please check the wget configuration in \"~/.wgetrc\" and also the value\n")
@@ -1689,10 +1672,6 @@ for details about using \"wget\"."
           (princ (concat "   " package-url))
           (princ "\n\n")
           (princ "Maybe this URL does not exist...please check this!\n\n")))
-;;       (princ "______________________________________________________________________________\n\n")
-;;           (princ process-result)
-;;           (princ "\n______________________________________________________________________________")
-;;           (princ "\n\n")))
       (kill-buffer ecb-download-buffername)
 
       ;; getting the list from downloaded-filename.
@@ -1733,5 +1712,8 @@ for details about using \"wget\"."
 
 
 (silentcomp-provide 'ecb-upgrade)
+
+
+
 
 ;;; ecb-upgrade.el ends here

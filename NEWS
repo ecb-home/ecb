@@ -1,3 +1,12 @@
+* Changes for ECB version 2.28
+
+** Fixed bugs
+
+*** Fixed a bug in the upgrading feature (command `ecb-download-ecb') which has
+    occured when the user has set a different LOKALE (e.g. "de_DE@euro").
+
+
+
 * Changes for ECB version 2.27
 
 ** The option `ecb-auto-expand-tag-tree-collapse-other' now has three possible
