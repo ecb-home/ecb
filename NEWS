@@ -1,5 +1,14 @@
 * Changes for ECB version 2.30.1
 
+** Enhancement to the automatic option-upgrading mechanism
+   ECB now automatically makes a backup-file of that file which will be
+   modified by storing the upgraded rsp. renamed ECB-options. This backup file
+   gets a unique name by adding a suffix ".before_ecb_<version>" to the name
+   of the modified file. If such a file already exists ECB adds a unique number
+   to the end of the filename to make the filename unique.
+   This is a safety mechanism if something fails during storing the upgraded
+   options, so you never lose the contents of your customization-file!
+    
 ** Enhancement to the VC-support
 
 *** Better recomputing of the VC-state of a file when state changed outside
@@ -16,15 +25,6 @@
     `ecb-vc-supported-backends'. Thanks for first implementation to Ekkehard
     GÅˆrlach <ekkehard.goerlach@pharma.novartis.com>.
 
-** Enhancement to the automatic option-upgrading mechanism
-   ECB now automatically makes a backup-file of that file which will be
-   modified by storing the upgraded rsp. renamed ECB-options. This backup file
-   gets a unique name by adding a suffix ".before_ecb_<version>" to the name
-   of the modified file. If such a file already exists ECB adds a unique number
-   to the end of the filename to make the filename unique.
-   This is a safety mechanism if something fails during storing the upgraded
-   options, so you never lose the contents of your customization-file!
-    
 ** Fixed bugs
 
 *** Fixed errors occured at load-time of ECB 2.30

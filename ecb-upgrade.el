@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-upgrade.el,v 1.95 2004/11/30 18:41:15 berndl Exp $
+;; $Id: ecb-upgrade.el,v 1.96 2004/12/01 14:19:38 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -978,8 +978,14 @@ your customization-file!"
           (widget-setup)
           (goto-char (point-min)))
         t)
-    ;; now we display only the choice to save the ecb-options-version
-    (when (not (ecb-options-version=ecb-version-p))
+    ;; now we display only the choice to save the ecb-options-version but only
+    ;; if ecb-options-version != ecb-version and (either the command is called
+    ;; interactively or first-time called by program)
+    (when (and (or (interactive-p)
+                   (not (get 'ecb-display-upgraded-options
+                         'ecb-options-version-save-displayed)))
+               (not (ecb-options-version=ecb-version-p)))
+      (put 'ecb-display-upgraded-options 'ecb-options-version-save-displayed t)
       (with-current-buffer (get-buffer-create "*ECB upgraded options*")
         (switch-to-buffer (current-buffer))
         (kill-all-local-variables)

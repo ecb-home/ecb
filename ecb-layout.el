@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-layout.el,v 1.242 2004/11/30 18:39:15 berndl Exp $
+;; $Id: ecb-layout.el,v 1.243 2004/12/01 14:19:39 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -1454,9 +1454,10 @@ called for other frames than for the `ecb-frame' then act like the original.
 This adviced version of `walk-windows' is not for direct usage therefore it is
 always disabled; use the macro `ecb-with-ecb-advice' instead if you
 need this adviced version of `walk-windows'!"
-  (if (or (equal (ad-get-arg 2) ecb-frame)
-          (and (null (ad-get-arg 2))
-               (equal (selected-frame) ecb-frame)))
+  (if (and ecb-minor-mode
+           (or (equal (ad-get-arg 2) ecb-frame)
+               (and (null (ad-get-arg 2))
+                    (equal (selected-frame) ecb-frame))))
       (progn
         (let ((ecb-walk-windows-advice-proc (ad-get-arg 0)))
           (ad-with-originals 'walk-windows
@@ -1479,7 +1480,8 @@ minibuffer-window are considered. This adviced version of `one-window-p' is
 not for direct usage therefore it is always disabled; use the macro
 `ecb-with-ecb-advice' instead if you need this adviced version of
 `one-window-p'!"
-  (if (equal (selected-frame) ecb-frame)
+  (if (and ecb-minor-mode
+           (equal (selected-frame) ecb-frame))
       (setq ad-return-value
             (= (length (ecb-canonical-edit-windows-list)) 1))
     ad-do-it))

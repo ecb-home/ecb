@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: tree-buffer.el,v 1.157 2004/11/30 18:39:42 berndl Exp $
+;; $Id: tree-buffer.el,v 1.158 2004/12/01 14:19:37 berndl Exp $
 
 ;;; Commentary:
 
@@ -779,9 +779,10 @@ is called with the same arguments as `tree-node-expanded-fn'."
 	     (node (cdr name-node)))
         (when node
           ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: Is this the right place
-          ;; for this?          
-          (let ((search-nonincremental-instead nil))
-            (isearch-exit))
+          ;; for this?
+          (ignore-errors
+            (let ((search-nonincremental-instead nil))
+              (isearch-exit)))
           (if (and (tree-buffer-at-expand-symbol name node p)
                    ;; if the expand-symbol is displayed before and mouse-button
                    ;; = 0, means RET is pressed, we do not toggle-expand but work

@@ -23,7 +23,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-file-browser.el,v 1.46 2004/11/30 18:40:36 berndl Exp $
+;; $Id: ecb-file-browser.el,v 1.47 2004/12/01 14:19:54 berndl Exp $
 
 ;;; Commentary:
 
@@ -2609,7 +2609,7 @@ above."
 (defun ecb-vc-state (file)
   "Same as `vc-state' but it clears the internal caches of the VC-package for
 FILE before calling `vc-state'. Finally calls `vc-state' and returns that value."
-  (vc-file-clearprops file)
+  (and (fboundp 'vc-file-clearprops) (vc-file-clearprops file))
   (vc-state file))
 
 (defun ecb-vc-get-state-fcn-for-dir (directory)

@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-tod.el,v 1.18 2004/03/23 17:29:54 berndl Exp $
+;; $Id: ecb-tod.el,v 1.19 2004/12/01 14:19:39 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -114,7 +114,12 @@
     "You can toggle having a compile window with `ecb-toggle-compile-window' if `ecb-compile-window-height' is not nil."
     "Start ECB automatically after Emacs is started. Use option `ecb-auto-activate'"
     "Maximize a tree-buffer via modeline - ECB supports the standard-mechanism of (X)Emacs for deleting other windows."
-    "Easy horizontal scrolling the tree-buffers with the mouse with [M-mouse-1] and [M-mouse-3]; see `ecb-tree-easy-hor-scroll'." ;;
+    "Easy horizontal scrolling the tree-buffers with the mouse with [M-mouse-1] and [M-mouse-3]; see `ecb-tree-easy-hor-scroll'."
+    "Expand and collapse very precisely the current node in a tree-buffer with commands in the popup-menu."
+    "Let ECB display the version-control-state of your files in the tree-buffers. See `ecb-vc-enable-support'."
+    "Work with remote paths (e.g. TRAMP-, ANGE-FTP-, or EFS-paths) as with local paths in `ecb-source-path'."
+    "Exclude certain files from being displayed in the history-buffer. See `ecb-history-exclude-file-regexps'."
+    "Get the most important options of ECB at a glance by viewing the customization group \"ecb-most-important\"."
     )
   "List of all available tips of the day.")
 
