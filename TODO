@@ -1,18 +1,11 @@
 ********************************************************************************
-*** Last-Modified: $Date: 2001/04/24 20:44:09 $ 
-*** Version: $Id: TODO,v 1.7 2001/04/24 20:44:09 creator Exp $
+*** Last-Modified: $Date: 2001/04/25 06:44:09 $ 
+*** Version: $Id: TODO,v 1.8 2001/04/25 06:44:09 berndl Exp $
 *** Author: Kevin A. Burton ( burton@apache.org | burton@openprivacy.org )
 ********************************************************************************
 
 - JN: Possibility to save the current sizes of the windows. This will make it
       possible to customize the layout better.
-
-- KB: Intelligent automatic scrolling the ECB-buffers. If i expand a
-   node (e.g. in the directory buffer), the tree-buffer should auto.
-   scroll so i can see the expanded node and as much as possible of
-   it´s subnodes. It´s annoying to expand the node in the last visible
-   line of the directory-window and then i must manually scroll down
-   to see the subnodes!
 
 - KB: Special keymap for all ECB-buffers for better keyboard-usability:
   If the ECB-buffers are readonly (see above) then we can do the
