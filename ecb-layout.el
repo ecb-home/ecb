@@ -46,10 +46,10 @@
 ;;    again (see the comments in this function). See the macro
 ;;    `ecb-layout-define' and the command `ecb-create-new-layout'!
 ;;
-;; Backgroud-info: For each layout-type (ecb-windows left, right or top) there
-;; are two functions:
-;; - 'ecb-delete-other-windows-ecb-windows[left|right|top]' and
-;; - 'ecb-delete-window-ecb-windows[left|right|top]'.
+;; Backgroud-info: For each layout-type (ecb-windows left, right, top and
+;; left-right) there are two functions:
+;; - 'ecb-delete-other-windows-ecb-windows[left|right|top|left-right]' and
+;; - 'ecb-delete-window-ecb-windows[left|right|top|left-right]'.
 ;; Both of these functions follow these guide-lines:
 ;; - Preconditions for these functions:
 ;;   + the edit window is splitted
@@ -103,7 +103,7 @@
 ;; - `ecb-with-some-adviced-functions'
 ;;
 
-;; $Id: ecb-layout.el,v 1.129 2002/12/06 20:40:07 berndl Exp $
+;; $Id: ecb-layout.el,v 1.130 2002/12/09 07:36:27 berndl Exp $
 
 ;;; Code:
 
@@ -114,6 +114,11 @@
 (require 'ecb-create-layout)
 
 (silentcomp-defvar jde-open-class-at-point-find-file-function)
+;; XEmacs
+(silentcomp-defvar scrollbars-visible-p)
+;; Emacs
+(silentcomp-defvar scroll-bar-mode)
+
 
 (if ecb-running-xemacs
     ;; because we want only check if the car of this function is equal for two
@@ -172,21 +177,23 @@ Attention: You should never change this!")
 
 (defcustom ecb-layout-nr 9
   "*Define the window layout of ECB. A positive integer which sets the
-general layout. Currently there are 17 predefined layouts with index from 0 to
-16. You can savely try out any of them by changing this value and saving it
+general layout. There are four different types of layouts: left, right, top
+and left-right, which means the location of the ECB-tree-windows in the
+ECB-frame. Currently there are 20 predefined layouts with index from 0 to
+19. You can savely try out any of them by changing this value and saving it
 only for the current session. If you are sure which layout you want you can
 save it for future sessions. To get a picture of the layout for index <index>
 call C-h f ecb-layout-function-<index>, e.g. `ecb-layout-function-9'.
 
 Currently available layouts \(see the doc-string for a picture ot the layout):
+
+Left layouts:
 `ecb-layout-function-0'
 `ecb-layout-function-1'
 `ecb-layout-function-2'
 `ecb-layout-function-3'
 `ecb-layout-function-4'
-`ecb-layout-function-5'
 `ecb-layout-function-6'
-`ecb-layout-function-7'
 `ecb-layout-function-8'
 `ecb-layout-function-9'
 `ecb-layout-function-10'
@@ -197,6 +204,16 @@ Currently available layouts \(see the doc-string for a picture ot the layout):
 `ecb-layout-function-15'
 `ecb-layout-function-16'
 `ecb-layout-function-17'
+
+Right layouts:
+`ecb-layout-function-5'
+
+Top layouts:
+`ecb-layout-function-7'
+
+Left-right layouts:
+`ecb-layout-function-18'
+`ecb-layout-function-19'
 
 Regardless of the settings you define here: If you have destroyed or
 changed the ECB-screen-layout by any action you can always go back to this
@@ -1070,10 +1087,12 @@ The behavior depends on `ecb-other-window-jump-behavior'."
                (if (= direction 1)
                    (if (ecb-edit-window-splitted)
                        (select-window (next-window))
-                     (if (equal ecb-other-window-jump-behavior 'edit-and-compile)
+                     (if (and (equal ecb-other-window-jump-behavior 'edit-and-compile)
+                              ecb-compile-window)
                          (ignore-errors
                            (select-window ecb-compile-window))))
-                 (if (equal ecb-other-window-jump-behavior 'edit-and-compile)
+                 (if (and (equal ecb-other-window-jump-behavior 'edit-and-compile)
+                          ecb-compile-window)
                      (ignore-errors
                        (select-window ecb-compile-window))
                    (if (ecb-edit-window-splitted)
@@ -1140,7 +1159,7 @@ allowed to be deleted."
              ;; to get exactly the same behavior like the original version
              ;; we must check if the current-buffer in the edit-window is
              ;; the same as the buffer argument for the current call and if
-             ;; yes we must switch to the buffer returned by `other-window'.
+             ;; yes we must switch to the buffer returned by `other-buffer'.
              (if (string= buf-name
                           (buffer-name (window-buffer ecb-edit-window)))
                  (switch-to-buffer (other-buffer buf-name
@@ -1446,11 +1465,13 @@ ECB-adviced functions."
 
 ;;======= Helper-functions ===========================================
 
-(defun ecb-split-hor (amount &optional dont-switch-window)
+(defun ecb-split-hor (amount &optional dont-switch-window use-frame)
   "Splits the current-window horizontally and returns the absolute amount in
 columns. If AMOUNT is greater than -1.0 and lower than +1.0 then the value is
-multiplied with the current window-width."
-  (let ((abs-amout (ecb-normalize-number amount (window-width))))
+multiplied with the current window-width \(frame-width if USE-FRAME is not nil)."
+  (let ((abs-amout (ecb-normalize-number amount (if use-frame
+                                                    (frame-width)
+                                                  (window-width)))))
     (ecb-split-hor-abs abs-amout dont-switch-window)
     abs-amout))
 
@@ -1459,9 +1480,13 @@ multiplied with the current window-width."
   (if (not dont-switch-window)
       (select-window (next-window))))
 
-(defun ecb-split-ver (amount &optional dont-switch-window)
-  "Splits the current-window and returns the absolute amount in lines"
-  (let ((abs-amout (ecb-normalize-number amount (window-height))))
+(defun ecb-split-ver (amount &optional dont-switch-window use-frame)
+  "Splits the current-window and returns the absolute amount in lines. If
+AMOUNT is greater than -1.0 and lower than +1.0 then the value is multiplied
+with the current window-height \(frame-height if USE-FRAME is not nil)."
+  (let ((abs-amout (ecb-normalize-number amount (if use-frame
+                                                    (frame-height)
+                                                  (window-height)))))
     (ecb-split-ver-abs abs-amout dont-switch-window)
     abs-amout))
 
@@ -1599,7 +1624,8 @@ visibility of the ECB windows. ECB minor mode remains active!"
 ;; ======== Delete-window-functions for the different layout-types ==========
 
 ;; There are three different types of layouts:
-;; 1. Ecb-windows on the left side
+;; 1. Ecb-windows on the left side (include layouts with left and right side
+;;    ECB windows)
 ;; 2. Ecb-windows on the right side
 ;; 3. Ecb-windows on the top
 ;; For each type we have special replacements for `delete-window' and
@@ -1618,24 +1644,42 @@ visibility of the ECB windows. ECB minor mode remains active!"
                                           (selected-window) 0))))
            (setq ecb-edit-window (selected-window))
            (delete-window (previous-window (selected-window) 0))
-           (if (equal split 'horizontal)
-               (enlarge-window (+ 2 prev-width) t))
+           (when (equal split 'horizontal)
+             (save-selected-window
+               (select-window (previous-window (selected-window) 0))
+               (shrink-window (+ (if ecb-running-xemacs
+                                     (if scrollbars-visible-p 4 2)
+                                   (if scroll-bar-mode 4 3))
+                                 prev-width)
+                              t)))
            t))
         (t nil)))
+
+(defalias 'ecb-delete-other-windows-ecb-windows-left-right
+  'ecb-delete-other-windows-ecb-windows-left)
 
 (defun ecb-delete-window-ecb-windows-left (split)
   (cond ((equal (ecb-point-in-edit-window) 1)
          (let ((width (window-width (selected-window))))
            (setq ecb-edit-window (next-window))
            (delete-window)
-           (if (equal split 'horizontal)
-               (enlarge-window (+ 2 width) t))
+           (when (equal split 'horizontal)
+             (save-selected-window
+               (select-window (previous-window (selected-window) 0))
+               (shrink-window (+ (if ecb-running-xemacs
+                                     (if scrollbars-visible-p 4 2)
+                                   (if scroll-bar-mode 4 3))
+                                 width)
+                              t)))
            t))
         ((equal (ecb-point-in-edit-window) 2)
          (delete-window)
          (ecb-select-edit-window)
          t)
         (t nil)))
+
+(defalias 'ecb-delete-window-ecb-windows-left-right
+  'ecb-delete-window-ecb-windows-left)
 
 ;; 2. Ecb-windows on the right side
 (defun ecb-delete-other-windows-ecb-windows-right (split)
@@ -1694,27 +1738,29 @@ visibility of the ECB windows. ECB minor mode remains active!"
 
 (defmacro ecb-layout-define (number type doc &rest create-code)
   "Creates a new ECB-layout with number NUMBER. TYPE is the type of the new
-layout and is literal, i.e. not evaluated. It can be left, right or top. DOC
-is the docstring for the new layout-function \"ecb-layout-function-<number>\".
-CREATE-CODE is all the lisp code which is necessary to define the
-ECB-windows/buffers.
+layout and is literal, i.e. not evaluated. It can be left, right, top or
+left-right. DOC is the docstring for the new layout-function
+\"ecb-layout-function-<number>\". CREATE-CODE is all the lisp code which is
+necessary to define the ECB-windows/buffers.
 
 Preconditions for CREATE-CODE:
-1. Current frame is splitted at least in one edit-window and the column \(for
-   layout types 'left and 'right) resp. row \(for a 'top layout) for the
-   ECB-tree-windows/buffers. Depending on the value of the option
-   `ecb-compile-window-height' there is also a compile window at the bottom of
-   the frame which is stored in `ecb-compile-window'.
+1. Current frame is splitted at least in one edit-window and the column\(s)
+   (for layout types left, right and left-right) resp. row \(for a top
+   layout) for the ECB-tree-windows/buffers. Depending on the value of the
+   option `ecb-compile-window-height' there is also a compile window at the
+   bottom of the frame which is stored in `ecb-compile-window'.
 2. All windows are not dedicated.
 3. Neither the edit-window nor the compile-window \(if there is one) are
-   selected.
+   selected for types left, right and top. For type left-right the left
+   column-window is selected.
 
 Things CREATE-CODE has to do:
-1. Splitting the ECB-tree-windows-column/row \(s.a.) in all the ECB-windows
-   the layout should contain \(directories, sources, methods and history). The
-   split must not be done with other functions than `ecb-split-hor' and
-   `ecb-split-ver'! It is recommened not to to use a \"hard\" number of
-   split-lines or -rows but using fractions between 0.1 and 0.9!
+1. Splitting the ECB-tree-windows-column\(s)/row \(s.a.) in all the
+   ECB-windows the layout should contain \(directories, sources, methods and
+   history). The split must not be done with other functions than
+   `ecb-split-hor' and `ecb-split-ver'! It is recommened not to to use a
+   \"hard\" number of split-lines or -rows but using fractions between 0.1 and
+   0.9!
 2. Naming each ECB-tree-window with one of the following functions:
    + `ecb-set-directories-buffer'
    + `ecb-set-sources-buffer'
@@ -1737,12 +1783,14 @@ Things CREATE-CODE must NOT do:
 1. Splitting the edit-window
 2. Creating a compile-window
 3. Deleting the edit-window, the compile-window \(if there is any) or the
-   ECB-tree-windows-column/row \(see Precondition 1.)
-4. Referring to the value of `ecb-edit-window' because this is always nil
-   during CREATE-CODE.
+   ECB-tree-windows-column\(s)/row \(see Precondition 1.)
+4. Referring to the value of `ecb-edit-window' because this is always nil or
+   undefined during CREATE-CODE.
 
 Postconditions for CREATE-CODE:
-1. The edit-window must be the selected window and must not be dedicated."
+1. The edit-window must be the selected window and must not be dedicated.
+2. Every window besides the edit-window \(and the compile-window) must be
+   set as a ECB-tree-window."
   `(progn
      (defun ,(intern (format "ecb-layout-function-%d" number)) ()
        ,doc
@@ -1754,7 +1802,11 @@ Postconditions for CREATE-CODE:
               ((equal type 'right)
                '(ecb-split-hor (- ecb-windows-width)))
               ((equal type 'top)
-               '(ecb-split-ver ecb-windows-height t)))
+               '(ecb-split-ver ecb-windows-height t))
+              ((equal type 'left-right)
+               '(progn
+                  (ecb-split-hor (- ecb-windows-width) t)
+                  (ecb-split-hor ecb-windows-width t t))))
        ,@create-code
        (setq ecb-edit-window (selected-window)))
      (defalias (quote ,(intern
@@ -2089,10 +2141,7 @@ documentation of `ecb-layout-window-sizes'!"
   (mapcar
    (function (lambda (buffer)
                (ecb-get-window-size (get-buffer-window buffer))))
-   (list ecb-directories-buffer-name
-         ecb-sources-buffer-name
-         ecb-history-buffer-name
-         ecb-methods-buffer-name)))
+   ecb-tree-buffers))
 
 (defun ecb-set-window-size (window size)
   (when (and window size)
@@ -2114,10 +2163,7 @@ documentation of `ecb-layout-window-sizes'!"
 
 (defun ecb-set-window-sizes (sizes)
   (when sizes
-    (let ((buffers (list ecb-directories-buffer-name
-			 ecb-sources-buffer-name
-			 ecb-history-buffer-name
-			 ecb-methods-buffer-name)))
+    (let ((buffers ecb-tree-buffers))
       (dolist (size sizes)
 	(ecb-set-window-size (get-buffer-window (car buffers)) size)
 	(setq buffers (cdr buffers))))))

@@ -26,7 +26,7 @@
 ;; This file is part of the ECB package which can be found at:
 ;; http://home.swipnet.se/mayhem/ecb.html
 
-;; $Id: tree-buffer.el,v 1.98 2002/12/06 20:39:59 berndl Exp $
+;; $Id: tree-buffer.el,v 1.99 2002/12/09 07:36:27 berndl Exp $
 
 ;;; Code:
 
@@ -458,6 +458,7 @@ tree-node. This is only used with GNU Emacs 21!"
       (and tree-node-mouse-over-fn
            node
            (funcall tree-node-mouse-over-fn node window 'no-print)))))
+
 
 (defun tree-buffer-insert-text (text &optional facer help-echo)
   "Insert TEXT at point and faces it with FACER. FACER can be a face then the

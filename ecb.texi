@@ -1659,6 +1659,61 @@ see @ref{Creating a new ECB-layout}); just customize the option
 -------------------------------------------------------
 @end group
 @end example
+
+@item Layout Nr. 18
+@example
+@group
+-------------------------------------------------------
+|             |                         |             |
+| Directories |                         |  Methods    |
+|             |                         |             |
+|             |                         |             |
+|             |                         |             |
+|             |                         |             |
+|             |                         |             |
+|-------------|          Edit           |             |
+|             |                         |             |
+| Sources     |                         |             |
+|             |                         |             |
+|-------------|                         |             |
+|             |                         |             |
+| History     |                         |             |
+|             |                         |             |
+-------------------------------------------------------
+|                                                     |
+|                   Compilation                       |
+|                                                     |
+-------------------------------------------------------
+@end group
+@end example
+
+@item Layout Nr. 19
+@example
+@group
+-------------------------------------------------------
+|             |                         |             |
+| Directories |                         |  Methods    |
+|             |                         |             |
+|             |                         |             |
+|             |                         |             |
+|             |                         |             |
+|             |                         |             |
+|             |          Edit           |             |
+|-------------|                         |-------------|
+|             |                         |             |
+| Sources     |                         |  History    |
+|             |                         |             |
+|             |                         |             |
+|             |                         |             |
+|             |                         |             |
+-------------------------------------------------------
+|                                                     |
+|                   Compilation                       |
+|                                                     |
+-------------------------------------------------------
+@end group
+@end example
+
 @end table
 
 @node Redrawing the ECB-layout, Creating a new ECB-layout, Changing the ECB-layout, The ECB-layout
@@ -1702,42 +1757,45 @@ you can use TAB-completion and an ``empty'' RET chooses always the
 first option!}.
 
 After calling @code{ecb-create-new-layout} you will be asked which
-type of layout you want to create: ``left'', ``right'', ``top''. Here
-you specify where the ECB-tree-windows/buffers should be located in
-the ECB-frame:
+type of layout you want to create: ``left'', ``right'', ``top'' or
+``left-right''. Here you specify where the ECB-tree-windows/buffers
+should be located in the ECB-frame:
 
 @itemize @minus
 @item left: All ECB-tree-windows are located on the left side
 @item right: All ECB-tree-windows are located on the right side
 @item top: All ECB-tree-windows are located on the top side
+@item left-right: All ECB-tree-windows are located on the left and
+right side
 @end itemize
 
 Depending on the type you choose the window is splitted by the values
-of the options @code{ecb-windows-width} (types ``left'' and ``right'')
+of the options @code{ecb-windows-width} (types ``left'', ``right'' and
+``left-right'')
 or @code{ecb-windows-height} (type ``top'').
 
 Afterwards you will see a frame like follows (here the layout-type is
-``left''):
+``left-right''):
 
 @example
 @group
--------------------------------------------------------
-|<point>       |                                      |
-|              | ECB-layout creation mode             |
-|              | ========================             |
-|              |                                      |
-|              | <This is a durable help-screen>      |
-|              |                                      |
-|              |                                      |
-|              |                                      |
-|              |                                      |
-|              |                                      |
-|              |                                      |
-|              |                                      |
-|              |                                      |
-|              |                                      |
-|              |                                      |
--------------------------------------------------------
+-----------------------------------------------------------------
+|<point>       |                                   |            |
+|              | ECB-layout creation mode          |            |
+|              | ========================          |            |
+|              |                                   |            |
+|              | <This is a durable help-screen>   |            |
+|              |                                   |            |
+|              |                                   |            |
+|              |                                   |            |
+|              |                                   |            |
+|              |                                   |            |
+|              |                                   |            |
+|              |                                   |            |
+|              |                                   |            |
+|              |                                   |            |
+|              |                                   |            |
+-----------------------------------------------------------------
                |
                |   ,---
                `---| Splitted by the value of @code{ecb-windows-width}.
@@ -1745,15 +1803,16 @@ Afterwards you will see a frame like follows (here the layout-type is
 @end group
 @end example
 
-The big window (here the right window) will be the edit-window of the
+The big window (here the middle window) will be the edit-window of the
 new layout and can not be selected, deleted or splitted during the
 creation process. It displays the help-screen for the layout-creation
 mode. Here all the available commands are displayed.
 
-The small window (here the left window) contains the point and can be
-splitted by you wherever you want (@kbd{C-s}). You must give every
-ECB-tree-window you create a type (@kbd{C-t}) which can be either
-``directories'', ``sources'', ``methods'' or ``history''.
+The small window(s) (here the left and right windows) can be splitted
+by you wherever you want (@kbd{C-s}). The left one contains the point.
+You must give every ECB-tree-window you create a type (@kbd{C-t})
+which can be either ``directories'', ``sources'', ``methods'' or
+``history''.
 
 If you are satisfied with your new layout just hit @kbd{C-q}. You will
 be asked for a new layout-number and after inserting this number the
@@ -3635,24 +3694,25 @@ Per default this is enabled for @code{delete-window},
 
 @defopt layout-nr
 Define the window layout of ECB. A positive integer which sets the
-general layout. Currently there are 17 predefined layouts with index from 0 to
-16. You can savely try out any of them by changing this value and saving it
-only for the current session. If you are sure which layout you want
-you can save it for future sessions. To get a picture of the layout
-for index <index> call C-h f ecb-layout-function-<index>, e.g.
-@code{ecb-layout-function-9}.
+general layout. There are four different types of layouts: left,
+right, top and left-right, which means the location of the
+ECB-tree-windows in the ECB-frame. Currently there are 20 predefined
+layouts with index from 0 to 19. You can savely try out any of them by
+changing this value and saving it only for the current session. If you
+are sure which layout you want you can save it for future sessions. To
+get a picture of the layout for index <index> call C-h f
+ecb-layout-function-<index>, e.g. @code{ecb-layout-function-9}.
 
 Currently available layouts (see the doc-string for a picture ot the
 layout):
 
+Left layouts:
 @code{ecb-layout-function-0}
 @code{ecb-layout-function-1}
 @code{ecb-layout-function-2}
 @code{ecb-layout-function-3}
 @code{ecb-layout-function-4}
-@code{ecb-layout-function-5}
 @code{ecb-layout-function-6}
-@code{ecb-layout-function-7}
 @code{ecb-layout-function-8}
 @code{ecb-layout-function-9}
 @code{ecb-layout-function-10}
@@ -3663,6 +3723,16 @@ layout):
 @code{ecb-layout-function-15}
 @code{ecb-layout-function-16}
 @code{ecb-layout-function-17}
+
+Right layouts:
+@code{ecb-layout-function-5}
+
+Top layouts:
+@code{ecb-layout-function-7}
+
+Left-right layouts:
+@code{ecb-layout-function-18}
+@code{ecb-layout-function-19}
 
 Regardless of the settings you define here: If you have destroyed or
 changed the ECB-screen-layout by any action you can always go back to
@@ -4366,6 +4436,7 @@ situations.
 @menu
 * Changing faces::              Changing faces in the ECB tree-buffers
 * Small screens::               Working with small screens
+* Big screens::                 Working with big screens
 * Simulating speedbar::         Simulating speedbar without an extra frame
 * Integrating speedbar::        Integrating speedbar in the ECB-frame
 * Optimize scrolling::          Optimize scrolling in the edit-window
@@ -4444,7 +4515,7 @@ all@footnote{Of course @code{ecb-directories-general-face},
 @code{ecb-default-general-face}!} ECB-tree-buffers (incl. the methods
 buffer).
 
-@node Small screens, Simulating speedbar, Changing faces, Tips and tricks
+@node Small screens, Big screens, Changing faces, Tips and tricks
 @section Working with small screens
 
 @cindex Small screen
@@ -4487,7 +4558,24 @@ The possibility of hiding temporally the ECB windows like described
 above is also useful for all the other layouts.
 
 
-@node Simulating speedbar, Integrating speedbar, Small screens, Tips and tricks
+@node Big screens, Simulating speedbar, Small screens, Tips and tricks
+@section Working with big screens
+
+ECB offers a layout type ``left-right'' with special ECB-tree-windows
+on the left and right side of the edit-window. The layouts nr. 18 and
+nr. 19 are examples for this layout type. See @ref{Creating a new
+ECB-layout} and @ref{Programming new layouts} for details about how to
+create or program more layouts of this type.
+
+Such a layout is eventually the best choice for big screens because
+the several ECB-tree-windows are bigger and can display more
+informations without scrolling.
+
+With such a layout it can could be senseful to reduce the value of the
+option @code{ecb-windows-width} compared to layouts of type left or
+right. A value of max. 0.25 should be enough.
+
+@node Simulating speedbar, Integrating speedbar, Big screens, Tips and tricks
 @section Simulating speedbar without an extra frame
 
 @cindex Speedbar
@@ -4661,7 +4749,7 @@ manual):
 @defmac layout-define number type &rest create-code
 Creates a new ECB-layout with number @var{NUMBER}. @var{TYPE} is the
 type of the new layout and is literal, i.e. not evaluated. It can be
-left, right or top. @var{DOC} is the docstring for the new
+left, right, top or left-right. @var{DOC} is the docstring for the new
 layout-function ``ecb-layout-function-<number>''. @var{CREATE-CODE} is
 all the lisp code which is necessary to define the
 ECB-windows/buffers.
@@ -4670,17 +4758,19 @@ Preconditions for @var{CREATE-CODE}:
 @enumerate
 @item
 Current frame is splitted at least in one edit-window and the column
-(for layout types left and right) resp. row (for a top layout) for the
-ECB-tree-windows/buffers. Depending on the value of the option
-@code{ecb-compile-window-height} there is also a compile window at the
-bottom of the frame which is stored in @code{ecb-compile-window}.
+(for layout types left, right and left-right) resp. row (for a top
+layout) for the ECB-tree-windows/buffers. Depending on the value of
+the option @code{ecb-compile-window-height} there is also a compile
+window at the bottom of the frame which is stored in
+@code{ecb-compile-window}.
 
 @item
 All windows are not dedicated.
 
 @item
 Neither the edit-window nor the compile-window (if there is one) are
-selected.
+selected for types left, right and top. For type left-right the left
+column-window is selected
 @end enumerate
 
 Postconditions for @var{CREATE-CODE}:
@@ -4693,11 +4783,12 @@ and splitted.
 Things @var{CREATE-CODE} has to do:
 @enumerate
 @item
-Splitting the ECB-tree-windows-column/row (s.a.) in all the ECB-windows
-the layout should contain (directories, sources, methods and history). The
-split must not be done with other functions than @code{ecb-split-hor} and
-@code{ecb-split-ver}! It is recommened not to to use a ``hard'' number of
-split-lines or -rows but using fractions between 0.1 and 0.9!
+Splitting the ECB-tree-windows-column(s)/row (s.a.) in all the
+ECB-windows the layout should contain (directories, sources, methods
+and history). The split must not be done with other functions than
+@code{ecb-split-hor} and @code{ecb-split-ver}! It is recommened not to
+to use a ``hard'' number of split-lines or -rows but using fractions
+between 0.1 and 0.9!
 
 @item
 Naming each ECB-tree-window with one of the following functions:
@@ -4710,7 +4801,7 @@ Naming each ECB-tree-window with one of the following functions:
 Each layout can only contain one of each tree-buffer-type!
 
 @item
-The ECB-tree-windows-column/row must contain at least one named
+The ECB-tree-windows-column(s)/row must contain at least one named
 ECB-tree-window.
 
 @item
@@ -4736,10 +4827,20 @@ Things @var{CREATE-CODE} must NOT do:
 @item Creating a compile-window
 @item
 Deleting the edit-window, the compile-window (if there is any) or the
-ECB-tree-windows-column/row (see Precondition 1.)
+ECB-tree-windows-column(s)/row (see Precondition 1.)
 @item
 Referring to the value of @code{ecb-edit-window} because this is always nil
 during @var{CREATE-CODE}.
+@end enumerate
+
+Postconditions for @var{CREATE-CODE}:
+@enumerate
+@item
+The edit-window must be the selected window and must not be dedicated.
+
+@item
+Every window besides the edit-window \(and the compile-window) must be
+set as a ECB-tree-window."
 @end enumerate
 @end defmac
 

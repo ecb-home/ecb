@@ -59,7 +59,7 @@
 ;; The latest version of the ECB is available at
 ;; http://home.swipnet.se/mayhem/ecb.html
 
-;; $Id: ecb.el,v 1.251 2002/12/06 20:40:01 berndl Exp $
+;; $Id: ecb.el,v 1.252 2002/12/09 07:36:27 berndl Exp $
 
 ;;; Code:
 
@@ -1526,8 +1526,7 @@ If JUST-CHECK is not nil then
           (semantic-dir nil)
           (semantic-state nil)
           (eieio-dir nil)
-          (eieio-state nil)
-          (proceed-if-failed t))
+          (eieio-state nil))
       (when (not (and (fboundp 'semantic-require-version)
                       (not (semantic-require-version
                             (nth 0 ecb-required-semantic-version)
@@ -2545,7 +2544,12 @@ It does several tasks:
     ;;    after 2. because otherwise a new element in the cache would be
     ;;    created again by `ecb-rebuild-methods-buffer-with-tokencache'.
     (if buffer-file
-        (ecb-clear-token-tree-cache buffer-file))))
+        (ecb-clear-token-tree-cache buffer-file))
+
+    ;; 4. Preventing from killing the tree-buffers by accident
+    (if (member (buffer-name (current-buffer))
+                ecb-tree-buffers)
+        (error "Killing an ECB-tree-buffer is not possible!"))))
 
 (defun ecb-clear-history (&optional clearall)
   "Clears the ECB history-buffer. If CLEARALL is nil then the behavior is
