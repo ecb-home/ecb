@@ -52,7 +52,7 @@
 ;; The latest version of the ECB is available at
 ;; http://home.swipnet.se/mayhem/ecb.html
 
-;; $Id: ecb.el,v 1.66 2001/05/01 13:31:16 creator Exp $
+;; $Id: ecb.el,v 1.67 2001/05/01 14:10:22 creator Exp $
 
 ;;; Code:
 
@@ -1192,10 +1192,10 @@ Currently the fourth argument TREE-BUFFER-NAME is not used here."
       (if shift-mode
           (ecb-mouse-over-node node)
         (progn
-          (when (= 2 ecb-button)
-            (tree-node-toggle-expanded node))
-          (ecb-set-selected-directory (tree-node-get-data node))
-          (ecb-exec-in-directories-window
+          (if (= 2 ecb-button)
+	      (tree-node-toggle-expanded node)
+	    (ecb-set-selected-directory (tree-node-get-data node)))
+	  (ecb-exec-in-directories-window
 	   ;; Update the tree-buffer with optimized display of NODE
 	   (tree-buffer-update node))))
     (ecb-set-selected-source (tree-node-get-data node)
