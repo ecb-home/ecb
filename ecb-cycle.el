@@ -73,6 +73,17 @@
   :group 'ecb-cycle
   :type 'boolean)
 
+(defcustom ecb-cycle-compilation-buffer-names (list ecb-eshell-buffer-name
+                                                    "*Apropos*"
+                                                    "*Help*"
+                                                    "*Backtrace*"
+                                                    "*shell*"
+                                                    "*bsh*")
+  "List of additional buffer names that should be displayed in compilation
+window."
+  :group 'ecb-cycle
+  :type '(repeat (file :tag "Buffer name")))
+
 (defun ecb-cycle-through-compilation-buffers()
   "Cycle through all compilation buffers currently open and display them within
 the compilation window `ecb-compile-window'.  If the currently opened buffer
@@ -123,7 +134,7 @@ we hit the end we go back to the beginning.  See `ecb-compilation-buffer-p'."
   "Switch to the given compilation buffer in the compilation window."
   (interactive
    (list
-    (completing-read "Compilation buffer: " (ecb-get-compilation-buffers))))
+    (completing-read "ECB compilation buffer: " (ecb-get-compilation-buffers))))
 
   (when ecb-cycle-enlarge-compile-window
     (ecb-enlarge-window ecb-compile-window))
@@ -160,10 +171,7 @@ the `ecb-eshell-buffer-name'.  See `compilation-buffer-p'."
   
   (let((buffer-name (buffer-name buffer)))
 
-    (or (string-equal buffer-name ecb-eshell-buffer-name)
-        (string-equal buffer-name "*Apropos*")
-        (string-equal buffer-name "*Help*")
-        (string-equal buffer-name "*Backtrace*")
+    (or (member buffer-name ecb-cycle-compilation-buffer-names)
         (compilation-buffer-p buffer))))
 
 (provide 'ecb-cycle)
