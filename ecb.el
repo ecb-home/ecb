@@ -54,7 +54,7 @@
 ;; The latest version of the ECB is available at
 ;; http://home.swipnet.se/mayhem/ecb.html
 
-;; $Id: ecb.el,v 1.173 2001/12/13 18:32:55 berndl Exp $
+;; $Id: ecb.el,v 1.174 2002/01/20 13:56:27 berndl Exp $
 
 ;;; Code:
 
@@ -691,19 +691,19 @@ Therefore the default value is a delay of 0.25 seconds."
 
 (defvar ecb-method-overlay (make-overlay 1 1)
   "Internal overlay used for the first line of a method.")
+(overlay-put ecb-method-overlay 'face ecb-token-header-face)
 
-(defcustom ecb-highlight-token-header-after-jump ecb-token-header-face
+(defcustom ecb-highlight-token-header-after-jump t
   "*If not nil then highlight the token line in the source-buffer
 after jumping to this method by clicking in the ECB-method-buffer onto this
-method. If not nil then it must be a face."
+method. For highlighting `ecb-token-header-face' is used."
   :group 'ecb-methods
-  :set (function (lambda (symbol value)
-                   (set symbol value)
-                   (if (or running-xemacs (facep value))
-                       (overlay-put ecb-method-overlay 'face value))))
-  :type '(radio (const :tag "No highlighting of token header" :value nil)
-                (face :tag "Face for the highligthing"
-                      :value ecb-token-header-face)))
+;;   :set (function (lambda (symbol value)
+;;                    (set symbol value)
+;;                    (if 
+;;                        (overlay-put ecb-method-overlay 'face
+;;                                     ecb-token-header-face))))
+  :type 'boolean)
 
 (defcustom ecb-scroll-window-after-jump nil
   "*How to scroll the window when jumping to a token."
