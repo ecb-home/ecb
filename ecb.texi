@@ -19,7 +19,7 @@
 @c Free Software Foundation, Inc., 59 Temple Place - Suite 330,
 @c Boston, MA 02111-1307, USA.
 
-@c $Id: ecb.texi,v 1.73 2003/02/14 09:32:01 berndl Exp $
+@c $Id: ecb.texi,v 1.74 2003/02/14 11:46:28 berndl Exp $
 
 @setfilename ecb.info
 
@@ -894,9 +894,12 @@ it is quite impossible to scroll smoothly right and left. The
 functions @code{scroll-left} and @code{scroll-right} can be annoying
 and are also not bound to mouse-buttons.
 
-So if @code{ecb-tree-easy-hor-scroll} option is not @code{nil} then in
-all ECB-tree-buffers the keys @kbd{M-mouse-1} and @kbd{M-mouse-3} are
-bound to scrolling left resp. right.
+So if @code{ecb-tree-easy-hor-scroll} is a positive integer-value S
+then in all ECB-tree-buffers the keys @kbd{M-mouse-1} and
+@kbd{M-mouse-3} are bound to scrolling left resp. right with
+scroll-step S. Additionally @kbd{C-M-mouse-1} and @code{C-M-mouse-3}
+are bound to scrolling left resp. right with scroll-step
+@code{window-width} - 2.
 
 This is NOT done for XEmacs cause of its horizontal scrollbars. If you
 want scroll left and right with the mouse in XEmacs then activate the
@@ -3252,12 +3255,13 @@ it is quite impossible to scroll smoothly right and left. The
 functions @code{scroll-left} and @code{scroll-right} can be annoying
 and are also not bound to mouse-buttons.
 
-If this option is not @code{nil} (means either @code{t} or a positive
-integer) then in all ECB-tree-buffers the keys @kbd{M-mouse-1} and
-@kbd{M-mouse-3} are bound to scrolling left resp. right. If the value
-is @code{t} then the default scroll-step of @code{scroll-left} or
-@code{scroll-right} is used, if an integer then this number is used as
-scroll-step. Default is a scroll-step of 5.
+If this option is a positive integer S then in all ECB-tree-buffers
+the keys @kbd{M-mouse-1} and @code{M-mouse-3} are bound to scrolling
+left resp. right with scroll-step S. Additionally @code{C-M-mouse-1}
+and @code{C-M-mouse-3} are bound to scrolling left resp. right with
+scroll-step @code{window-width} - 2. Default is a scroll-step of 5. If
+the value is @code{nil} then no keys for horizontal scrolling are
+bound.
 @end defopt
 
 

@@ -26,7 +26,7 @@
 ;; This file is part of the ECB package which can be found at:
 ;; http://ecb.sourceforge.net
 
-;; $Id: tree-buffer.el,v 1.105 2003/02/14 09:32:01 berndl Exp $
+;; $Id: tree-buffer.el,v 1.106 2003/02/14 11:46:28 berndl Exp $
 
 ;;; Code:
 
@@ -326,12 +326,10 @@ with the same arguments as `tree-node-expanded-fn'."
             (window-width window)))))
 
 (defun tree-buffer-scroll-hor (amount)
-  (if (integerp amount)
-      (let ((current-prefix-arg amount))
-        (call-interactively 'scroll-left))
-    (if (equal amount 'left)
-        (call-interactively 'scroll-left)
-      (call-interactively 'scroll-right))))
+  (ignore-errors
+    (let ((current-prefix-arg amount))
+      (call-interactively 'scroll-left))))
+
 
 (defun tree-buffer-recenter (node window)
   "If NODE is not visible then first recenter the window WINDOW so NODE is
@@ -1273,25 +1271,33 @@ AFTER-CREATE-HOOK: A function or a list of functions \(with no arguments)
         (function (lambda(e)
                     (interactive "e")
                     (mouse-set-point e)
-                    (ignore-errors
-                      (tree-buffer-scroll-hor
-                       (if (integerp tree-buffer-hor-scroll-step)
-                           (- tree-buffer-hor-scroll-step)
-                         'right))))))
+                    (tree-buffer-scroll-hor (- tree-buffer-hor-scroll-step)))))
 
-    (define-key tree-buffer-key-map
-      [M-down-mouse-3]
-      (function (lambda(e)
-		  (interactive "e")
-                  (mouse-set-point e)
-                  (ignore-errors
-                    (tree-buffer-scroll-hor
-                     (if (integerp tree-buffer-hor-scroll-step)
-                         tree-buffer-hor-scroll-step
-                       'left))))))
-    
-    (define-key tree-buffer-key-map [M-mouse-1] nop)
-    (define-key tree-buffer-key-map [M-mouse-3] nop))
+      (define-key tree-buffer-key-map
+        [M-down-mouse-3]
+        (function (lambda(e)
+                    (interactive "e")
+                    (mouse-set-point e)
+                    (tree-buffer-scroll-hor tree-buffer-hor-scroll-step))))
+      
+      (define-key tree-buffer-key-map
+        [C-M-down-mouse-1]
+        (function (lambda(e)
+                    (interactive "e")
+                    (mouse-set-point e)
+                    (tree-buffer-scroll-hor (- (- (window-width) 2))))))
+      
+      (define-key tree-buffer-key-map
+        [C-M-down-mouse-3]
+        (function (lambda(e)
+                    (interactive "e")
+                    (mouse-set-point e)
+                    (tree-buffer-scroll-hor (- (window-width) 2)))))
+      
+      (define-key tree-buffer-key-map [M-mouse-1] nop)
+      (define-key tree-buffer-key-map [M-mouse-3] nop)
+      (define-key tree-buffer-key-map [C-M-mouse-1] nop)
+      (define-key tree-buffer-key-map [C-M-mouse-3] nop))
     
     (use-local-map tree-buffer-key-map)
 
