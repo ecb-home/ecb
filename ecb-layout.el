@@ -1463,7 +1463,9 @@ this function the edit-window is selected which was current before redrawing."
         (if (not (equal tree-windows-before-redraw
                         (ecb-layout-get-current-tree-windows)))
             (ecb-current-buffer-sync t))
-        (setq ecb-windows-hidden nil)))))
+        (setq ecb-windows-hidden nil)
+
+        (run-hooks 'ecb-redraw-layout-hooks)))))
 
 (defun ecb-redraw-layout-quickly()
   "Redraw the layout quickly using the cached window configuration

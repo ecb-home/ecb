@@ -118,6 +118,8 @@
 (defvar ecb-activated-window-configuration nil
   "Window configuration used after the ECB is activated.")
 
+(defvar ecb-redraw-layout-hooks nil "Hooks to run after we redraw the layout.")
+
 ;;====================================================
 ;; Customization
 ;;====================================================
