@@ -1,6 +1,10 @@
 Version 1.xx:
 -------------
 
+- Added new navigator functionality. Makes it easy to go to the back and forward
+  in navigated tokens and buffers. See ecb-nav-goto-next and 
+  ecb-nav-goto-previous. (Jesper)
+
 - Added an option to narrow the buffer to the token that is jumped to. See
   ecb-token-jump-narrow. (Jesper)
 

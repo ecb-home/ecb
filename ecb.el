@@ -54,7 +54,7 @@
 ;; The latest version of the ECB is available at
 ;; http://home.swipnet.se/mayhem/ecb.html
 
-;; $Id: ecb.el,v 1.146 2001/08/14 23:05:01 creator Exp $
+;; $Id: ecb.el,v 1.147 2001/08/19 17:04:15 creator Exp $
 
 ;;; Code:
 
@@ -73,6 +73,7 @@
 (require 'ecb-mode-line)
 (require 'ecb-util)
 (require 'ecb-help)
+(require 'ecb-navigate)
 
 ;; various loads
 (require 'easymenu)
@@ -1304,20 +1305,27 @@ the ECB tree-buffers."
   (when (and ecb-window-sync ecb-minor-mode (equal (selected-frame) ecb-frame))
     (ecb-current-buffer-sync)))
 
+(defun ecb-get-edit-window (other-edit-window)
+  (save-selected-window
+    (if (eq ecb-primary-mouse-jump-destination 'left-top)
+	(select-window ecb-edit-window)
+      (select-window ecb-last-edit-window-with-point))
+    (ecb-with-adviced-functions
+     (if other-edit-window
+	 (let ((ecb-other-window-jump-behavior 'only-edit))
+	   (other-window 1))))
+    (selected-window)))
+
 (defun ecb-find-file-and-display (filename other-edit-window)
   "Finds the file in the correct window. What the correct window is depends on
 the setting in `ecb-primary-mouse-jump-destination' and the value of
 OTHER-EDIT-WINDOW."
-  (if (eq ecb-primary-mouse-jump-destination 'left-top)
-      (select-window ecb-edit-window)
-    (select-window ecb-last-edit-window-with-point))
-  (ecb-with-adviced-functions
-   (if other-edit-window
-       (let ((ecb-other-window-jump-behavior 'only-edit))
-	 (other-window 1))))
+  (select-window (ecb-get-edit-window other-edit-window))
+  (ecb-nav-save-current)
   (ecb-with-original-functions
    (find-file filename)
-   (pop-to-buffer (buffer-name))))
+   (pop-to-buffer (buffer-name)))
+  (ecb-nav-add-item (ecb-nav-file-history-item-new)))
 
 (defun ecb-tree-node-add-files
   (node path files type include-extension old-children sort-method
@@ -1631,36 +1639,44 @@ Currently the fourth argument TREE-BUFFER-NAME is not used here."
 		  (ecb-find-file-and-display (semantic-find-dependency token)
 					     (and (ecb-edit-window-splitted)
 						  (eq ecb-button 2))))))
-	  (ecb-find-file-and-display filename
-				     (and (ecb-edit-window-splitted)
-					  (eq ecb-button 2)))
-	  ;; let us set the mark so the user can easily jump back.
-	  (if ecb-token-jump-sets-mark
-	      (push-mark))
-	  ;; Semantic 1.4beta2 fix for EIEIO class parts
-	  ;;	  (ignore-errors
-	  (when ecb-token-jump-narrow
-	    (widen))
-	  (goto-char (semantic-token-start token))
-	  (if ecb-token-jump-narrow
-	      (narrow-to-region (tree-buffer-line-beginning-pos)
-				(semantic-token-end token))
-	    (cond
-	     ((eq 'top ecb-scroll-window-after-jump)
-	      (set-window-start (selected-window)
-				(tree-buffer-line-beginning-pos)))
-	     ((eq 'center ecb-scroll-window-after-jump)
-	      (set-window-start
-	       (selected-window)
-	       (tree-buffer-line-beginning-pos (- (/ (window-height) 2)))))))
-	  (when ecb-highlight-token-header-after-jump
-	    (save-excursion
-	      (move-overlay ecb-method-overlay
-			    (tree-buffer-line-beginning-pos)
-			    (tree-buffer-line-end-pos)
-			    (current-buffer)))
-	    (setq ecb-unhighlight-hook-called nil)
-	    (add-hook 'pre-command-hook 'ecb-unhighlight-token-header)))))))
+	  (ecb-jump-to-token filename token (ecb-get-edit-window
+					     (and (ecb-edit-window-splitted)
+						  (eq ecb-button 2)))))))))
+
+(defun ecb-jump-to-token (filename token &optional window)
+  (unless window
+    (setq window (selected-window)))
+  (select-window window)
+  (ecb-nav-save-current)
+  (find-file filename)
+  ;; let us set the mark so the user can easily jump back.
+  (if ecb-token-jump-sets-mark
+      (push-mark))
+  ;; Semantic 1.4beta2 fix for EIEIO class parts
+  ;;	  (ignore-errors
+  (when ecb-token-jump-narrow
+    (widen))
+  (goto-char (semantic-token-start token))
+  (if ecb-token-jump-narrow
+      (narrow-to-region (tree-buffer-line-beginning-pos)
+			(semantic-token-end token))
+    (cond
+     ((eq 'top ecb-scroll-window-after-jump)
+      (set-window-start (selected-window)
+			(tree-buffer-line-beginning-pos)))
+     ((eq 'center ecb-scroll-window-after-jump)
+      (set-window-start
+       (selected-window)
+       (tree-buffer-line-beginning-pos (- (/ (window-height) 2)))))))
+  (ecb-nav-add-item (ecb-nav-token-history-item-new token ecb-token-jump-narrow))
+  (when ecb-highlight-token-header-after-jump
+    (save-excursion
+      (move-overlay ecb-method-overlay
+		    (tree-buffer-line-beginning-pos)
+		    (tree-buffer-line-end-pos)
+		    (current-buffer)))
+    (setq ecb-unhighlight-hook-called nil)
+    (add-hook 'pre-command-hook 'ecb-unhighlight-token-header)))
 
 (defun ecb-get-file-info-text (file)
   (let ((attrs (file-attributes file)))
