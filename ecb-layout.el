@@ -124,7 +124,7 @@
 ;;   + The edit-window must not be splitted and the point must reside in
 ;;     the not deleted edit-window.
 
-;; $Id: ecb-layout.el,v 1.91 2001/12/16 09:38:48 burtonator Exp $
+;; $Id: ecb-layout.el,v 1.92 2001/12/17 12:56:28 berndl Exp $
 
 ;;; Code:
 
@@ -407,8 +407,8 @@ ecb-frame has the size it has normally during your work with ECB!."
                         "ECB History" "ECB Methods"))))))
 
 (defcustom ecb-redraw-layout-quickly nil
-  "If non-nil, we will attempt to redraw the layout quickly.  See
-`ecb-redraw-layout'."
+  "If non-nil, we will attempt to redraw the layout quickly.
+Please read also carefully the documentation of `ecb-redraw-layout'."
   :type 'boolean
   :group 'ecb-layout)
 
@@ -1335,7 +1335,7 @@ then the redraw is done by the `ecb-redraw-layout-quickly' function, otherwise
 by `ecb-redraw-layout-full'.  But it's strongly recommended to use the quick
 redraw only if you have really slow machines where a full redraw takes several
 seconds because the quick redraw is not really safe and may have some drawbacks!
-On normal machines the full drawback should be done in < 1s!"
+On normal machines the full drawback should be done in << 1s!"
   (interactive)
   (when (and ecb-minor-mode
              (equal (selected-frame) ecb-frame))
