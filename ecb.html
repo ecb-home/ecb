@@ -73,6 +73,7 @@ mailing list <a href="mailto:ecb-list@lists.sourceforge.net">ecb-list@lists.sour
 <li><a href="#The%20Methods%20buffer">The Methods buffer</a>:           Using and customizing he Methods-buffer
 <li><a href="#The%20ECB-layout">The ECB-layout</a>:               Changing, customizing, redrawing the layout
 <li><a href="#Hiding%20the%20ECB%20windows">Hiding the ECB windows</a>:       Hiding/Showing the ECB-windows
+<li><a href="#Back%2fforward%20navigation">Back/forward navigation</a>:      Back- and forward navigation like a browser
 <li><a href="#ECB-window%20synchronizing">ECB-window synchronizing</a>:     Auto./manual synchronizing the ECB-windows
 <li><a href="#Interactive%20ECB%20commands">Interactive ECB commands</a>:     All interactive user-commands of ECB
 
@@ -123,8 +124,10 @@ mailing list <a href="mailto:ecb-list@lists.sourceforge.net">ecb-list@lists.sour
 </p><li><a href="#Changing%20faces">Changing faces</a>:               Changing faces in the ECB tree-buffers
 <li><a href="#Small%20screens">Small screens</a>:                Working with small screens
 <li><a href="#Simulating%20speedbar">Simulating speedbar</a>:          Simulating speedbar without an extra frame
-<li><a href="#Optimze%20scrolling">Optimze scrolling</a>:            Optimze scrolling in the edit-window
+<li><a href="#Integrating%20speedbar">Integrating speedbar</a>:         Integrating speedbar in the ECB-frame
+<li><a href="#Optimize%20scrolling">Optimize scrolling</a>:            Optimize scrolling in the edit-window
 <li><a href="#Large%20directories">Large directories</a>:            Working with large directories
+<li><a href="#Using%20eshell">Using eshell</a>:                 Optimal using of eshell in ECB
 
 <p>Known conflicts and bugs of ECB
 
@@ -518,8 +521,9 @@ Emacs Code Browser.
 <li><a accesskey=5 href="#The%20Methods%20buffer">The Methods buffer</a>:           Using and customizing he Methods-buffer
 <li><a accesskey=6 href="#The%20ECB-layout">The ECB-layout</a>:               Changing, customizing, redrawing the layout
 <li><a accesskey=7 href="#Hiding%20the%20ECB%20windows">Hiding the ECB windows</a>:       Hiding/Showing the ECB-windows
-<li><a accesskey=8 href="#ECB-window%20synchronizing">ECB-window synchronizing</a>:     Auto./manual synchronizing the ECB-windows
-<li><a accesskey=9 href="#Interactive%20ECB%20commands">Interactive ECB commands</a>:     All interactive user-commands of ECB
+<li><a accesskey=8 href="#Back%2fforward%20navigation">Back/forward navigation</a>:      Back- and forward navigation like a browser
+<li><a accesskey=9 href="#ECB-window%20synchronizing">ECB-window synchronizing</a>:     Auto./manual synchronizing the ECB-windows
+<li><a href="#Interactive%20ECB%20commands">Interactive ECB commands</a>:     All interactive user-commands of ECB
 </ul>
 
 <p><hr>
@@ -959,7 +963,7 @@ done in &lt;&lt; 1s!
 
 <p><hr>
 Node:<a name="Hiding%20the%20ECB%20windows">Hiding the ECB windows</a>,
-Next:<a rel=next accesskey=n href="#ECB-window%20synchronizing">ECB-window synchronizing</a>,
+Next:<a rel=next accesskey=n href="#Back%2fforward%20navigation">Back/forward navigation</a>,
 Previous:<a rel=previous accesskey=p href="#The%20ECB-layout">The ECB-layout</a>,
 Up:<a rel=up accesskey=u href="#Usage%20of%20ECB">Usage of ECB</a>
 <br>
@@ -974,9 +978,44 @@ deactivating the advices for <code>delete-other-windows</code> and/or
 editing and you don't need the browsing windows all the time.
 
 <p><hr>
+Node:<a name="Back%2fforward%20navigation">Back/forward navigation</a>,
+Next:<a rel=next accesskey=n href="#ECB-window%20synchronizing">ECB-window synchronizing</a>,
+Previous:<a rel=previous accesskey=p href="#Hiding%20the%20ECB%20windows">Hiding the ECB windows</a>,
+Up:<a rel=up accesskey=u href="#Usage%20of%20ECB">Usage of ECB</a>
+<br>
+
+<h3>Back- and forward navigation like a browser</h3>
+
+<p>With ECB you can "browse" in your source-files like with a
+web-browser. This means ECB stores the current buffer- and
+window-position relative to the current token<a rel=footnote href="#fn-4"><sup>4</sup></a> in the edit-window after
+
+<ul>
+<li>selecting a token in the ECB-methods buffer or
+<li>selecting a source-file in the ECB-sources/history-buffer. 
+</ul>
+
+<p>ECB offers two commands <code>ecb-nav-goto-next</code> (<kbd>C-c . n</kbd>) and
+<code>ecb-nav-goto-previous</code> (<kbd>C-c . p</kbd>) to go forward and
+backward within this navigation historylist. These commands are also
+available via the menu "ECB -&gt; Navigate".
+
+<p>Aside normal "location-browsing" this is usefull for example in a
+scenario where <code>ecb-token-jump-narrow</code> is activated:
+
+<ol type=1 start=1>
+</p><li>You edit a function
+<li>Goto another function above the current in the same file
+<li>Add a few lines
+<li>Call ecb-nav-goto-previous
+
+<p>Now you will edit at the same place in the function.
+</ol>
+
+<p><hr>
 Node:<a name="ECB-window%20synchronizing">ECB-window synchronizing</a>,
 Next:<a rel=next accesskey=n href="#Interactive%20ECB%20commands">Interactive ECB commands</a>,
-Previous:<a rel=previous accesskey=p href="#Hiding%20the%20ECB%20windows">Hiding the ECB windows</a>,
+Previous:<a rel=previous accesskey=p href="#Back%2fforward%20navigation">Back/forward navigation</a>,
 Up:<a rel=up accesskey=u href="#Usage%20of%20ECB">Usage of ECB</a>
 <br>
 
@@ -1324,6 +1363,34 @@ Make the ECB-sources window the current window.
 Toggle ECB minor mode. With prefix argument <var>ARG</var>, turn on if
 positive, otherwise off. Return non-<code>nil</code> if the minor mode is
 enabled. 
+</td></tr>
+</table>
+
+<p>
+<table width="100%">
+<tr>
+<td align="left"><b>ecb-nav-goto-previous</b><i>
+</i></td>
+<td align="right">Command</td>
+</tr>
+</table>
+<table width="95%" align="center">
+<tr><td>
+Go backward in the navigation historylist, See <a href="#Back%2fforward%20navigation">Back/forward navigation</a>. 
+</td></tr>
+</table>
+
+<p>
+<table width="100%">
+<tr>
+<td align="left"><b>ecb-nav-goto-next</b><i>
+</i></td>
+<td align="right">Command</td>
+</tr>
+</table>
+<table width="95%" align="center">
+<tr><td>
+Go forward in the navigation historylist, See <a href="#Back%2fforward%20navigation">Back/forward navigation</a>. 
 </td></tr>
 </table>
 
@@ -4259,7 +4326,7 @@ satisfied:
 
 <p>With unix-systems these tools are in the
 standard-distribution. If you are running any Microsoft Windows system
-then you need cygwin<a rel=footnote href="#fn-4"><sup>4</sup></a> which offers these tools too. On every
+then you need cygwin<a rel=footnote href="#fn-5"><sup>5</sup></a> which offers these tools too. On every
 system these tools must reside in the <code>PATH</code> environment-variable!
 
 <p>If you are behind a firewall and you have to use a proxy you maybe
@@ -4461,8 +4528,10 @@ situations.
 <li><a accesskey=1 href="#Changing%20faces">Changing faces</a>:               Changing faces in the ECB tree-buffers
 <li><a accesskey=2 href="#Small%20screens">Small screens</a>:                Working with small screens
 <li><a accesskey=3 href="#Simulating%20speedbar">Simulating speedbar</a>:          Simulating speedbar without an extra frame
-<li><a accesskey=4 href="#Optimze%20scrolling">Optimze scrolling</a>:            Optimze scrolling in the edit-window
-<li><a accesskey=5 href="#Large%20directories">Large directories</a>:            Working with large directories
+<li><a accesskey=4 href="#Integrating%20speedbar">Integrating speedbar</a>:         Integrating speedbar in the ECB-frame
+<li><a accesskey=5 href="#Optimize%20scrolling">Optimize scrolling</a>:           Optimize scrolling in the edit-window
+<li><a accesskey=6 href="#Large%20directories">Large directories</a>:            Working with large directories
+<li><a accesskey=7 href="#Using%20eshell">Using eshell</a>:                 Optimal using of eshell in ECB
 </ul>
 
 <p><hr>
@@ -4537,7 +4606,7 @@ above is also useful for all the other layouts.
 
 <p><hr>
 Node:<a name="Simulating%20speedbar">Simulating speedbar</a>,
-Next:<a rel=next accesskey=n href="#Optimze%20scrolling">Optimze scrolling</a>,
+Next:<a rel=next accesskey=n href="#Integrating%20speedbar">Integrating speedbar</a>,
 Previous:<a rel=previous accesskey=p href="#Small%20screens">Small screens</a>,
 Up:<a rel=up accesskey=u href="#Tips%20and%20tricks">Tips and tricks</a>
 <br>
@@ -4566,13 +4635,24 @@ directories-tree-buffer.
 </ol>
 
 <p><hr>
-Node:<a name="Optimze%20scrolling">Optimze scrolling</a>,
-Next:<a rel=next accesskey=n href="#Large%20directories">Large directories</a>,
+Node:<a name="Integrating%20speedbar">Integrating speedbar</a>,
+Next:<a rel=next accesskey=n href="#Optimize%20scrolling">Optimize scrolling</a>,
 Previous:<a rel=previous accesskey=p href="#Simulating%20speedbar">Simulating speedbar</a>,
 Up:<a rel=up accesskey=u href="#Tips%20and%20tricks">Tips and tricks</a>
 <br>
 
-<h3>Optimze scrolling in the edit-window</h3>
+<h3>Integrating speedbar in the ECB-frame</h3>
+
+<p>This feature will be first available in future versions of ECB.
+
+<p><hr>
+Node:<a name="Optimize%20scrolling">Optimize scrolling</a>,
+Next:<a rel=next accesskey=n href="#Large%20directories">Large directories</a>,
+Previous:<a rel=previous accesskey=p href="#Integrating%20speedbar">Integrating speedbar</a>,
+Up:<a rel=up accesskey=u href="#Tips%20and%20tricks">Tips and tricks</a>
+<br>
+
+<h3>Optimize scrolling in the edit-window</h3>
 
 <p>Emacs 20.X seems to slow down scrolling if there is a horizontal split
 in the frame and/or a lot of overlays in the buffer which is scrolled. 
@@ -4594,7 +4674,8 @@ these versions of Emacs there should be no scrolling problem even with
 
 <p><hr>
 Node:<a name="Large%20directories">Large directories</a>,
-Previous:<a rel=previous accesskey=p href="#Optimze%20scrolling">Optimze scrolling</a>,
+Next:<a rel=next accesskey=n href="#Using%20eshell">Using eshell</a>,
+Previous:<a rel=previous accesskey=p href="#Optimize%20scrolling">Optimize scrolling</a>,
 Up:<a rel=up accesskey=u href="#Tips%20and%20tricks">Tips and tricks</a>
 <br>
 
@@ -4607,6 +4688,16 @@ and the machine), actualizing the sources- and/or directories- buffer
 of ECB (if displayed in current layout!) can slow down dramatically. 
 If this is a problem the contents of certain directories can be cached
 which increases the speed a lot. See <code>ecb-cache-directory-contents</code>.
+
+<p><hr>
+Node:<a name="Using%20eshell">Using eshell</a>,
+Previous:<a rel=previous accesskey=p href="#Large%20directories">Large directories</a>,
+Up:<a rel=up accesskey=u href="#Tips%20and%20tricks">Tips and tricks</a>
+<br>
+
+<h3>Optimal using of eshell in ECB</h3>
+
+<p>Documentation currently not available.
 
 <p><hr>
 Node:<a name="Elisp%20programming">Elisp programming</a>,
@@ -4811,6 +4902,8 @@ Up:<a rel=up accesskey=u href="#Top">Top</a>
 <li><code>ecb-goto-window-methods</code>: <a href="#Interactive%20ECB%20commands">Interactive ECB commands</a>
 <li><code>ecb-goto-window-sources</code>: <a href="#Interactive%20ECB%20commands">Interactive ECB commands</a>
 <li><code>ecb-minor-mode</code>: <a href="#Interactive%20ECB%20commands">Interactive ECB commands</a>
+<li><code>ecb-nav-goto-next</code>: <a href="#Interactive%20ECB%20commands">Interactive ECB commands</a>
+<li><code>ecb-nav-goto-previous</code>: <a href="#Interactive%20ECB%20commands">Interactive ECB commands</a>
 <li><code>ecb-rebuild-methods-buffer</code>: <a href="#Interactive%20ECB%20commands">Interactive ECB commands</a>
 <li><code>ecb-redraw-layout</code>: <a href="#Interactive%20ECB%20commands">Interactive ECB commands</a>
 <li><code>ecb-show-help</code>: <a href="#Interactive%20ECB%20commands">Interactive ECB commands</a>
@@ -4966,7 +5059,7 @@ Up:<a rel=up accesskey=u href="#Top">Top</a>
 <li>Problem report: <a href="#Submitting%20problem%20report">Submitting problem report</a>
 <li>redraw: <a href="#Redrawing%20the%20ECB-layout">Redrawing the ECB-layout</a>
 <li>RETURN key: <a href="#Navigation">Navigation</a>
-<li>Scrolling: <a href="#Optimze%20scrolling">Optimze scrolling</a>
+<li>Scrolling: <a href="#Optimize%20scrolling">Optimize scrolling</a>
 <li>secondary button: <a href="#Using%20the%20mouse">Using the mouse</a>
 <li>semantic token: <a href="#Customizing%20the%20display">Customizing the display</a>
 <li>SHIFT-click: <a href="#Using%20the%20mouse">Using the mouse</a>
@@ -5025,6 +5118,7 @@ Up:<a rel=up accesskey=u href="#Top">Top</a>
 <li><a href="#Redrawing%20the%20ECB-layout">Redrawing the ECB-layout</a>
 </ul>
 <li><a href="#Hiding%20the%20ECB%20windows">Hiding/Showing the ECB windows</a>
+<li><a href="#Back%2fforward%20navigation">Back- and forward navigation like a browser</a>
 <li><a href="#ECB-window%20synchronizing">Synchronization of the ECB-windows</a>
 <li><a href="#Interactive%20ECB%20commands">Interactive ECB commands</a>
 </ul>
@@ -5063,8 +5157,10 @@ Up:<a rel=up accesskey=u href="#Top">Top</a>
 <li><a href="#Changing%20faces">Changing faces in the ECB tree-buffers</a>
 <li><a href="#Small%20screens">Working with small screens</a>
 <li><a href="#Simulating%20speedbar">Simulating speedbar without an extra frame</a>
-<li><a href="#Optimze%20scrolling">Optimze scrolling in the edit-window</a>
+<li><a href="#Integrating%20speedbar">Integrating speedbar in the ECB-frame</a>
+<li><a href="#Optimize%20scrolling">Optimize scrolling in the edit-window</a>
 <li><a href="#Large%20directories">Working with large directories</a>
+<li><a href="#Using%20eshell">Optimal using of eshell in ECB</a>
 </ul>
 <li><a name="toc_Elisp%20programming"></a>
     <a href="#Elisp%20programming">Entry points for elisp programmers</a>
@@ -5108,6 +5204,10 @@ offers, See <a href="#Changing%20the%20ECB-layout">Changing the ECB-layout</a></
 is pressed.</p>
 
 <li><a name="fn-4"></a>
+<p>e.g. a method,
+a variable or any other semantic token</p>
+
+<li><a name="fn-5"></a>
 <p>cygwin is available at
 <a href="http://cygwin.com/">http://cygwin.com/</a>
 </p>
