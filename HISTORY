@@ -8,6 +8,10 @@ Version 1.80:
   ECB offers you to download and install them from within Emacs. After this
   you have only to restart Emacs and you are fine. (Klaus)
 
+- Byte compiling ECB either interactive with `ecb-byte-compile' or with the
+  supplied Makefile now checks also the versions of semantic and eieio.
+  (Klaus)
+
 - ECB now displays the section "First steps" of the online-manual after
   activating first time. (Klaus)
 
