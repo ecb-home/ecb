@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb.el,v 1.420 2004/12/20 16:43:51 berndl Exp $
+;; $Id: ecb.el,v 1.421 2004/12/29 08:36:09 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -611,15 +611,14 @@ examples how to use this macro!"
     ;; 1. clearing the history if necessary
     (when ecb-kill-buffer-clears-history
       (let ((node (if buffer-file
-                      (save-selected-window
-                        (ecb-exec-in-history-window (tree-buffer-find-node-data buffer-file))))))
+                      (ecb-exec-in-window ecb-history-buffer-name
+                        (tree-buffer-find-node-data buffer-file)))))
         (when (and node
                    (or (equal ecb-kill-buffer-clears-history 'auto)
                        (and (equal ecb-kill-buffer-clears-history 'ask)
                             (y-or-n-p "Remove history entry for this buffer? "))))
-          (save-selected-window
-            (ecb-exec-in-history-window
-             (tree-buffer-remove-node node)))
+          (ecb-exec-in-window ecb-history-buffer-name
+            (tree-buffer-remove-node node))
           (ecb-update-history-window))))
 
     ;; 2. clearing the method buffer if a file-buffer is killed
@@ -1703,29 +1702,12 @@ If ECB detects a problem it is reported and then an error is thrown."
               (let ((curr-buffer-list (mapcar (lambda (buff)
                                                 (buffer-name buff))
                                               (buffer-list))))
-                ;; create all the ECB-buffers if they don´t already exist
-                (unless (member ecb-directories-buffer-name curr-buffer-list)
-                  (ecb-create-directories-tree-buffer))
-      
-                (unless (member ecb-sources-buffer-name curr-buffer-list)
-                  (ecb-create-sources-tree-buffer))
-      
-                (unless (member ecb-methods-buffer-name curr-buffer-list)
-                  (ecb-create-methods-tree-buffer))
-      
-                (unless (member ecb-history-buffer-name curr-buffer-list)
-                  (ecb-create-history-tree-buffer))
-
-                ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: I think we need
-                ;; here a smarter mechanism - we need a macro
-                ;; `ecb-create-tree-buffer' which does all necessary
-                ;; registering of a new tree-buffer (additionally it must
-                ;; register a tree-buffer for creation here!
-                (unless (member ecb-analyse-buffer-name curr-buffer-list)
-                  (ecb-create-analyse-tree-buffer)))
+                (dolist (creator-elem ecb-tree-buffer-creators)
+                  ;; create all the ECB-buffers if they don't already exist
+                  (funcall (cdr creator-elem))))
     
-              ;; activate the eshell-integration - does not load eshell but prepares
-              ;; ECB to run eshell right - if loaded and activated
+              ;; activate the eshell-integration - does not load eshell but
+              ;; prepares ECB to run eshell right - if loaded and activated
               (ecb-eshell-activate-integration)
       
               ;; we need some hooks
@@ -2147,12 +2129,13 @@ does all necessary after finishing ediff."
         (ecb-edit-area-creators-init))
 
       ;; we can safely do the kills because killing non existing buffers
-      ;; doesn´t matter.
-      (tree-buffer-destroy ecb-directories-buffer-name)
-      (tree-buffer-destroy ecb-sources-buffer-name)
-      (tree-buffer-destroy ecb-methods-buffer-name)
-      (tree-buffer-destroy ecb-history-buffer-name)
-
+      ;; doesn´t matter. We kill these buffers because some customize-options
+      ;; takes only effect when deactivating/reactivating ECB, or to be more
+      ;; precise when creating the tree-buffers again.
+      (dolist (tb-elem ecb-tree-buffers)
+        (tree-buffer-destroy (car tb-elem)))
+      (ecb-tree-buffers-init)
+      
       (setq ecb-activated-window-configuration nil)
 
       (setq ecb-minor-mode nil)
@@ -2323,6 +2306,15 @@ performance-problem!"
                :documentation (semantic-elisp-do-doc (nth 2 read-lobject))))
           defecb-stealthy
           tree-buffer-defpopup-command)
+        ;; defecb-tree-buffer-creator
+        (semantic-elisp-setup-form-parser
+            (lambda (read-lobject start end)
+              (semantic-tag-new-function
+               (symbol-name (nth 1 read-lobject)) nil nil
+               :user-visible-flag nil
+               :documentation (semantic-elisp-do-doc (nth 3 read-lobject))))
+          defecb-tree-buffer-creator
+          defecb-window-dedicator)
         ;; ecb-layout-define
         (semantic-elisp-setup-form-parser
             (lambda (read-lobject start end)
@@ -2355,13 +2347,11 @@ performance-problem!"
                                   ))
                  (function-defs '(
                                   "defecb-stealthy"
+                                  "defecb-tree-buffer-creator"
+                                  "defecb-window-dedicator"
                                   ))
                  (plain-keywords '(
-                                   "ecb-exec-in-history-window"
-                                   "ecb-exec-in-directories-window"
-                                   "ecb-exec-in-sources-window"
-                                   "ecb-exec-in-methods-window"
-                                   "ecb-exec-in-analyse-window"
+                                   "ecb-exec-in-window"
                                    "ecb-do-with-unfixed-ecb-buffers"
                                    "ecb-with-original-functions"
                                    "ecb-with-adviced-functions"

@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: tree-buffer.el,v 1.161 2004/12/20 16:57:42 berndl Exp $
+;; $Id: tree-buffer.el,v 1.162 2004/12/29 08:36:12 berndl Exp $
 
 ;;; Commentary:
 
@@ -1854,7 +1854,7 @@ mentioned above!"
               (let ((menu (cdr (assoc (tree-node-get-type node)
                                       (tree-buffer-create-menus
                                        (funcall tree-buffer-menu-creator
-                                                (buffer-name)))))))
+                                                (buffer-name) node))))))
                 (tmm-prompt menu))))))
     (if tree-buffer-running-xemacs
         (tree-buffer-show-menu (get-buffer-window (current-buffer)
@@ -1876,7 +1876,7 @@ mentioned above!"
 	  (let* ((menu (cdr (assoc (tree-node-get-type node)
                                    (tree-buffer-create-menus
                                     (funcall tree-buffer-menu-creator
-                                             (buffer-name))))))
+                                             (buffer-name) node)))))
                  (menu-title-creator
                   (cdr (assoc (tree-node-get-type node) tree-buffer-menu-titles)))
                  (menu-title (cond ((stringp menu-title-creator)
@@ -1905,23 +1905,36 @@ mentioned above!"
 (defmacro tree-buffer-defpopup-command (name docstring &rest body)
   "Define a new popup-command for a tree-buffer.
 NAME is the name of the popup-command to create. It will get one optional
-argument NODE \(s.b.). DOCSTRING is a documentation string to describe the
-function. BODY is the code evaluated when this command is called from a
-popup-menu of a tree-buffer. BODY can refer to NODE which is bound to the node
-for which this popup-command is called \(i.h. that node with the point at
-call-time of this command). With the function `tree-node-get-data' the related
-data of this NODE is accessible and returns for example in case of the
-directories buffer the directory for which the popup-menu has been opened. The
-BODY can do any arbitrary things with this node-data.
+argument NODE \(s.b.) and a list of zero or more extra arguments called
+REST-ARG-LIST, so the argument-signature of the generated command is
+\(&optional node &rest rest-arg-list). DOCSTRING is a documentation string to
+describe the function. BODY is the code evaluated when this command is called
+from a popup-menu of a tree-buffer.
+
+BODY can refer to NODE which is bound to the node for which this popup-command
+is called \(i.h. that node with the point at call-time of this command) and to
+REST-ARG-LIST which is a list of zero or more extra arguments. If the
+generated command is called by ECB via the popup-mechanism \(or the
+tmm-mechanism) then REST-ARG-LIST is always nil. This argument list is to have
+the freedom to program such a command more generally so it can not only be
+called via popup but also called from some arbitrary elisp-code which can then
+call this command with more arguments than only a NODE - if necessary.
+
+With the function `tree-node-get-data' the related data of NODE is accessible
+and returns for example in case of the directories buffer the directory for
+which the popup-menu has been opened. The BODY can do any arbitrary things
+with this node-data. In general all accessors \(tree-node-get-*) for a node
+can be used.
 
 Example for the usage of this macro:
 
 \(tree-buffer-defpopup-command ecb-my-special-dir-popup-function
    \"Prints the name of the directory of the node under point.\"
-  \(let \(\(node-data=dir \(tree-node-get-data node)))
+  \(let \(\(node-data=dir \(tree-node-get-data node))
+          \(first-arg-of-rest-args \(car rest-arg-list)))
     \(message \"Dir under node: %s\" node-data=dir)))"
   `(eval-and-compile
-     (defun ,name (&optional node)
+     (defun ,name (&optional node &rest rest-arg-list)
        ,docstring
        (interactive)
        (let ((node (if (and (interactive-p) (null node))
@@ -2270,12 +2283,12 @@ LEAF-NODE-TYPES: Nil or a list of node-types \(see above). Nodes
                     LEAF-NODE-TYPES will be displayed with the leaf-symbol.
                   * All other nodes will be displayed with no symbol just with
                     correct indentation.
-MENU-CREATOR: A function which has to return nil or a list conses, each cons
-              for a known node-type of this tree-buffer \(the node-type of a
-              node is an integer). Example: \(\(0 . menu-for-type-0) \(1 .
-              menu-for-type-1)). The cdr of a cons must be a menu. This
-              function gets one argument: The name of the tree-buffer for
-              which a popup-menu should be opened.
+MENU-CREATOR: A function which has to return nil or a list of conses, each
+              cons for a known node-type of this tree-buffer \(the node-type
+              of a node is an integer). Example: \(\(0 . menu-for-type-0) \(1
+              . menu-for-type-1)). The cdr of a cons must be a menu. This
+              function gets two argument: The name of the tree-buffer and the
+              node for which a popup-menu should be opened.
 MENU-TITLES: Nil or a list conses, each cons for a node-type. See
              MENU-CREATOR. The cdr of a cons must be either a string or a
              function which will be called with current node under point and

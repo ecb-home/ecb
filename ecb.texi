@@ -26,7 +26,7 @@
 @c GNU Emacs; see the file COPYING.  If not, write to the Free Software
 @c Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-@c $Id: ecb.texi,v 1.199 2004/12/20 16:37:00 berndl Exp $
+@c $Id: ecb.texi,v 1.200 2004/12/29 08:36:11 berndl Exp $
 
 @setfilename ecb.info
 
@@ -3446,21 +3446,18 @@ define a function with name @code{ecb-set-X-buffer} whereas X is the
 name of the user-defined type you have specified during
 layout-creation.
 
-This function @code{ecb-set-X-buffer} has first to switch to the
-buffer you want to display in this window and then making this window
-dedicated. You have to use the macro @code{ecb-with-dedicated-window}
-in such a function!
+This function @code{ecb-set-X-buffer} must be defined with the macro
+@code{defecb-window-dedicator} and has to switch to the buffer you
+want to display in this window. This macro automatically ensures that
+this window is dedicated to that buffer.
 
 Here is an example: Suppose you have inserted as type name ``example''
 then you have to define and load a function
 @code{ecb-set-example-buffer} which could be defined like follows:
 
 @example
-(defun ecb-set-example-buffer ()
-  (ecb-with-dedicated-window
-    " *ECB example-buffer*"
-    'ecb-set-example-buffer
-      (switch-to-buffer (get-buffer-create " *ECB example-buffer*"))))
+(defecb-window-dedicator ecb-set-example-buffer " *ECB example-buf*"
+  (switch-to-buffer (get-buffer-create " *ECB example-buf*")))
 @end example
 
 If you forget to define such a function for the user-defined type then
@@ -10770,6 +10767,10 @@ tree-buffer set in @code{ecb-tree-buffers}!
 An application may only use the methods tree-buffer.el provides but no
 internal variables!
 
+@subsection Programming new tree-buffers
+
+@c TODO:
+
 @node Adviced functions, The layout-engine, tree-buffer, Elisp programming
 @section How to deal with the adviced window-functions
 
@@ -10898,19 +10899,18 @@ one of the following functions:
 @end itemize
 Each layout can only contain one of each tree-buffer-type!
 
-In addition to these functions there is a general macro
-@code{ecb-with-dedicated-window}. This macro performs any arbitrary
-code in current window and makes the window autom. dedicated at the
-end. This can be used by third party packages like JDEE to create
-arbitrary ECB-windows besides the standard tree-windows.
+In addition to these functions there is a general macro:
+@code{defecb-window-dedicator}: This macro defines a so called
+``window-dedicator'' which is a function registered at ECB and called
+by ECB to perform any arbitrary code in current window and makes the
+window autom. dedicated at the end. This can be used by third party
+packages like JDEE to create arbitrary ECB-windows besides the
+standard tree-windows.
 
 To make a special ECB-window a dedicated window either one of the five
-functions above must be used or a function(!) which calls in turn the
-macro @code{ecb-with-dedicated-window}. See the documentation of this
-macro how to use it!
-
-Such a function is called a ``dedicated setter'' and must(!) use
-@code{ecb-with-dedicated-window} to make the window dedicated!
+functions above must be used or a new ``window-dedicator''-function
+has to be defined with `defecb-window-dedicator' and must be used
+within the layout-definition.
 
 @item
 Every(!) special ECB-window must be dedicated as described in 2.
@@ -10948,8 +10948,8 @@ The edit-window must be the selected window and must not be dedicated
 and not be splitted.
 
 @item
-Every window besides the edit-window \(and the compile-window) must be
-a dedicated window \(e.g. a ECB-tree-window).
+Every window besides the edit-window (and the compile-window) must be
+a dedicated window (e.g. a ECB-tree-window).
 @end enumerate
 @end defmac
 
@@ -11175,17 +11175,37 @@ edit-window if that buffer has changed.
 @end group
 @end lisp
 
-The function which makes the bufferinfo-buffer dedicated to a window.
+Two conveniance commands for the user:
 
 @lisp
 @group
-(defun ecb-examples-set-bufferinfo-buffer ()
-  (ecb-with-dedicated-window
-      ecb-examples-bufferinfo-buffer-name
-      'ecb-examples-set-bufferinfo-buffer
-    (switch-to-buffer (get-buffer-create
-                       ecb-examples-bufferinfo-buffer-name))
-    (setq buffer-read-only t)))
+(defun ecb-maximize-bufferinfo-window ()
+  "Maximize the bufferinfo-window.
+I.e. delete all other ECB-windows, so only one ECB-window and the
+edit-window\(s) are visible \(and maybe a compile-window). Works
+also if the ECB-analyse-window is not visible in current layout."
+  (interactive)
+  (ecb-display-one-ecb-buffer ecb-examples-bufferinfo-buffer-name))
+
+(defun ecb-goto-bufferinfo-window ()
+  "Make the bufferinfo-window the current window."
+  (interactive)
+  (ecb-goto-ecb-window ecb-examples-bufferinfo-buffer-name))
+@end group
+@end lisp
+
+The function which makes the bufferinfo-buffer dedicated to a window
+and registers the new special window/buffer at ECB.
+
+@lisp
+@group
+(defecb-window-dedicator ecb-examples-set-bufferinfo-buffer
+    ecb-examples-bufferinfo-buffer-name
+  "Set the buffer in the current window to the bufferinfo-buffer
+and make this window dedicated for this buffer."
+  (switch-to-buffer (get-buffer-create
+                      ecb-examples-bufferinfo-buffer-name))
+  (setq buffer-read-only t))
 @end group
 @end lisp
 
@@ -11194,9 +11214,9 @@ This is all what we need for the special bufferinfo buffer. We have
 demonstrated already three of the important functions/macros of the
 layout-engine API of ECB: @code{ecb-with-readonly-buffer},
 @code{ecb-do-if-buffer-visible-in-ecb-frame} and
-@code{ecb-with-dedicated-window} (@pxref{The layout-engine
-API}. Especially the second macro is strongly recommended for
-programming good synchronizing functions which do not waste CPU!
+@code{defecb-window-dedicator} (@pxref{The layout-engine API}.
+Especially the second macro is strongly recommended for programming
+good synchronizing functions which do not waste CPU!
 
 @subsubsection The action buffer of the example
 
@@ -11261,20 +11281,42 @@ clicked with the middle-mouse button onto a button [next] or [prior].
 @end group
 @end lisp
 
-The function which makes the action-buffer dedicated to a window.
+Two conveniance-commands for the user:
 
 @lisp
 @group
-(defun ecb-examples-set-action-buffer ()
-  (let ((buf-name (buffer-name (ecb-examples-action-buffer-create))))
-    (ecb-with-dedicated-window buf-name 'ecb-examples-set-action-buffer
-      (switch-to-buffer (buffer-name
-                         (ecb-examples-action-buffer-create))))))
+(defun ecb-maximize-action-window ()
+  "Maximize the action-window.
+I.e. delete all other ECB-windows, so only one ECB-window and the
+edit-window\(s) are visible \(and maybe a compile-window). Works
+also if the ECB-analyse-window is not visible in current layout."
+  (interactive)
+  (ecb-display-one-ecb-buffer ecb-examples-action-buffer-name))
+
+(defun ecb-goto-action-window ()
+  "Make the action-window the current window."
+  (interactive)
+  (ecb-goto-ecb-window ecb-examples-action-buffer-name))
+@end group
+@end lisp
+
+The function which makes the action-buffer dedicated to a window and
+registers it at ECB.
+
+@lisp
+@group
+(defecb-window-dedicator ecb-examples-set-action-buffer
+    (buffer-name (ecb-examples-action-buffer-create))
+  "Set the buffer in the current window to the action-buffer
+and make this window dedicated for this buffer."
+  (switch-to-buffer (buffer-name (ecb-examples-action-buffer-create))))
 @end group
 @end lisp
 
 We do not need more code for the action buffer. All of the code is
-standard emacs-lisp which would also needed if used without ECB.
+standard emacs-lisp which would also needed if used without ECB. You
+see that you can use any arbitrary code as second argument for
+@code{defecb-window-dedicator} as long it returns a buffer-name.
 
 @subsubsection Adding the bufferinfo- and action-buffer to a new layout
 
@@ -11463,25 +11505,16 @@ Here is the code for that top layout (all buffers are dummy-buffers):
 @lisp
 @group
 
-;; The "dedicated setter" functions:
+;; The "window dedicator" functions:
 
-(defun ecb-set-usw-buffer ()
-  (ecb-with-dedicated-window
-    "Upper special window"
-    'ecb-set-usw-buffer
-      (switch-to-buffer (get-buffer-create "Upper special window"))))
+(defecb-window-dedicator ecb-set-usw-buffer "Upper special window"
+  (switch-to-buffer (get-buffer-create "Upper special window")))
 
-(defun ecb-set-msw-buffer ()
-  (ecb-with-dedicated-window
-    "Middle special window"
-    'ecb-set-msw-buffer
-      (switch-to-buffer (get-buffer-create "Middle special window"))))
+(defecb-window-dedicator ecb-set-msw-buffer "Middle special window"
+  (switch-to-buffer (get-buffer-create "Middle special window")))
 
-(defun ecb-set-lsw-buffer ()
-  (ecb-with-dedicated-window
-    "Lower special window"
-    'ecb-set-lsw-buffer
-      (switch-to-buffer (get-buffer-create "Lower special window"))))
+(defecb-window-dedicator ecb-set-lsw-buffer "Lower special window"
+  (switch-to-buffer (get-buffer-create "Lower special window")))
 
 ;; The layout itself:
 
@@ -11540,19 +11573,15 @@ Here is the code for that left-right layout, again with dummy-buffers
 (depending to your screen-resolution you will need a quite big value
 for @code{ecb-windows-width}, e.g. 0.4):
 
-Here is one of the ``dedicated setter'' functions@footnote{The
-``dedicated setter functions'' for all these ecb-windows/buffers are
+Here is one of the ``window dedicator''-functions@footnote{The
+``window dedicators'' for all these ecb-windows/buffers are
 not explicitly described - they look all like
-@code{ecb-set-left1-buffer}
-- of course with different buffer-names!}:
+@code{ecb-set-left1-buffer} - of course with different buffer-names!}:
 
 @lisp
 @group
-(defun ecb-set-left1-buffer ()
-  (ecb-with-dedicated-window
-    "Left1"
-    'ecb-set-left1-buffer
-      (switch-to-buffer (get-buffer-create "Left1"))))
+(defecb-window-dedicator ecb-set-left1-buffer "Left1"
+  (switch-to-buffer (get-buffer-create "Left1")))
 @end group
 @end lisp
 
@@ -11601,48 +11630,54 @@ the layout-engine API of ECB offers foreign packages. Call
 @code{describe-function} rsp. @code{describe-variable} to get a
 detailed description.
 
-Functions for programming with layouts and special ecb-windows:
+Functions and macros for programming with layouts and special
+ecb-windows:
 @itemize @minus
-@item ecb-available-layouts-member-p
-@item ecb-canonical-ecb-windows-list
-@item ecb-canonical-edit-windows-list
-@item ecb-compile-window-live-p
-@item ecb-compile-window-state
-@item ecb-do-if-buffer-visible-in-ecb-frame
-@item ecb-get-current-visible-ecb-buffers
-@item ecb-layout-define
-@item ecb-layout-switch
-@item ecb-layout-undefine
-@item ecb-point-in-compile-window
-@item ecb-point-in-ecb-window
-@item ecb-point-in-edit-window
-@item ecb-select-edit-window
-@item ecb-split-hor
-@item ecb-split-ver
-@item ecb-where-is-point
-@item ecb-with-dedicated-window
+@item @code{defecb-window-dedicator}
+@item @code{ecb-available-layouts-member-p}
+@item @code{ecb-canonical-ecb-windows-list}
+@item @code{ecb-canonical-edit-windows-list}
+@item @code{ecb-compile-window-live-p}
+@item @code{ecb-compile-window-state}
+@item @code{ecb-do-if-buffer-visible-in-ecb-frame}
+@item @code{ecb-exec-in-window}
+@item @code{ecb-get-current-visible-ecb-buffers}
+@item @code{ecb-layout-define}
+@item @code{ecb-layout-switch}
+@item @code{ecb-layout-undefine}
+@item @code{ecb-point-in-compile-window}
+@item @code{ecb-point-in-ecb-window}
+@item @code{ecb-point-in-edit-window}
+@item @code{ecb-select-edit-window}
+@item @code{ecb-split-hor}
+@item @code{ecb-split-ver}
+@item @code{ecb-where-is-point}
+@item @code{ecb-with-dedicated-window}@footnote{Normally not needed because
+@code{defecb-window-dedicator} does all necessary.}
 @end itemize
 
 Utility functions/macros:
 @itemize @minus
-@item ecb-enlarge-window
-@item ecb-fix-filename
-@item ecb-window-live-p
-@item ecb-with-readonly-buffer
+@item @code{ecb-display-one-ecb-buffer}
+@item @code{ecb-enlarge-window}
+@item @code{ecb-fix-filename}
+@item @code{ecb-goto-ecb-window}
+@item @code{ecb-window-live-p}
+@item @code{ecb-with-readonly-buffer}
 @end itemize
 
 Some other maybe useful functions/macros:
 @itemize @minus
-@item ecb-with-adviced-functions
-@item ecb-with-original-functions
-@item ecb-with-some-adviced-functions
+@item @code{ecb-with-adviced-functions}
+@item @code{ecb-with-original-functions}
+@item @code{ecb-with-some-adviced-functions}
 @end itemize
 
 Some useful @strong{READONLY} variables:
 @itemize @minus
-@item ecb-compile-window
-@item ecb-last-edit-window-with-point
-@item ecb-last-source-buffer
+@item @code{ecb-compile-window}
+@item @code{ecb-last-edit-window-with-point}
+@item @code{ecb-last-source-buffer}
 @end itemize
 
 @strong{Caution}: DO NOT USE THE VARIABLE @code{ecb-edit-window} IN
@@ -11650,16 +11685,16 @@ YOUR PROGRAMS!
 
 User-options and hooks related to the layout-engine API:
 @itemize @minus
-@item ecb-current-buffer-sync-hook
-@item ecb-hide-ecb-windows-after-hook
-@item ecb-hide-ecb-windows-before-hook
-@item ecb-redraw-layout-after-hook
-@item ecb-redraw-layout-before-hook
-@item ecb-show-ecb-windows-after-hook
-@item ecb-show-ecb-windows-before-hook
-@item ecb-windows-height
-@item ecb-windows-width
-@item ecb-compile-window-height
+@item @code{ecb-current-buffer-sync-hook}
+@item @code{ecb-hide-ecb-windows-after-hook}
+@item @code{ecb-hide-ecb-windows-before-hook}
+@item @code{ecb-redraw-layout-after-hook}
+@item @code{ecb-redraw-layout-before-hook}
+@item @code{ecb-show-ecb-windows-after-hook}
+@item @code{ecb-show-ecb-windows-before-hook}
+@item @code{ecb-windows-height}
+@item @code{ecb-windows-width}
+@item @code{ecb-compile-window-height}
 @end itemize
 
 @node Conflicts and bugs, FAQ, Elisp programming, Top

@@ -20,7 +20,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-analyse.el,v 1.2 2004/12/22 17:21:28 berndl Exp $
+;; $Id: ecb-analyse.el,v 1.3 2004/12/29 08:36:04 berndl Exp $
 
 
 ;;; Commentary:
@@ -32,6 +32,7 @@
 ;;; Code:
 
 (require 'semantic-analyze)
+(require 'ecb-layout)
 (require 'ecb-common-browser)
 (require 'ecb-method-browser)
 
@@ -240,24 +241,23 @@ This means in fact display the current analysis for current point."
             (setq completions (ecb--semantic-analyze-possible-completions analysis))
             (setq fnargs (ecb--semantic-get-local-arguments (point)))
             )))
-      (save-selected-window
-        (ecb-exec-in-analyse-window
-         ;; we must remove the old nodes
-         (tree-buffer-set-root (tree-node-new-root))
-         (when analysis
-           ;; Now insert information about the context
-           (when cnt
-             (ecb-analyse-add-nodes "Context" "Context"
-                                    cnt ecb-analyse-nodetype-context))
-           (when fnargs
-             (ecb-analyse-add-nodes "Arguments" "Arguments" fnargs
-                                    ecb-analyse-nodetype-arguments))
-           ;; Let different classes draw more nodes.
-           (ecb-analyse-more-nodes analysis)
-           (when completions
-             (ecb-analyse-add-nodes "Completions" "Completions" completions
-                                    ecb-analyse-nodetype-completions)))
-         (tree-buffer-update))))))
+      (ecb-exec-in-window ecb-analyse-buffer-name
+        ;; we must remove the old nodes
+        (tree-buffer-set-root (tree-node-new-root))
+        (when analysis
+          ;; Now insert information about the context
+          (when cnt
+            (ecb-analyse-add-nodes "Context" "Context"
+                                   cnt ecb-analyse-nodetype-context))
+          (when fnargs
+            (ecb-analyse-add-nodes "Arguments" "Arguments" fnargs
+                                   ecb-analyse-nodetype-arguments))
+          ;; Let different classes draw more nodes.
+          (ecb-analyse-more-nodes analysis)
+          (when completions
+            (ecb-analyse-add-nodes "Completions" "Completions" completions
+                                   ecb-analyse-nodetype-completions)))
+        (tree-buffer-update)))))
 
 (defmethod ecb-analyse-more-nodes ((context semantic-analyze-context))
   "Show a set of ecb-nodes specific to CONTEXT."
@@ -290,16 +290,6 @@ This means in fact display the current analysis for current point."
                                  (format "Argument # %d" (oref context index))
                                  arg
                                  ecb-analyse-nodetype-function-arg))))))
-
-(defmacro ecb-exec-in-analyse-window (&rest body)
-  "Evaluates BODY in the analyse-window of ECB. If that window is not
-visible then return the symbol 'window-not-visible. Otherwise the return
-value of BODY is returned."
-  `(unwind-protect
-       (if (not (ecb-window-select ecb-analyse-buffer-name))
-           'window-not-visible
-	 ,@body)
-     ))
 
 ;; Each category of nodes gets its own nodetype, so we can offer different
 ;; popup-menus for different categories (e.g. completions have other senseful
@@ -357,17 +347,12 @@ LIST will be displayed as in the methods-buffer of ECB \(if
   (and (equal (nth 2 left) (nth 2 right))
        (ecb-compare-methods-buffer-node-data (car left) (car right))))
 
-;; This is also used as a popup-command. We do not use
-;; tree-buffer-defpopup-command here because we need more arguments than node.
-;; (TODO: maybe we should enhance this macro......)
-(defun ecb-analyse-jump-to-tag (&optional node window)
+(tree-buffer-defpopup-command ecb-analyse-jump-to-tag
   "Jump to the definition of current tag of the analyse-buffer.
-If WINDOW is not nil then it must be a window and then ECB jumps to that
-window. If nil `ecb-last-edit-window-with-point' is used as window."
-  (interactive)
-  (let ((node (if (and (interactive-p) (null node))
-                  (tree-buffer-get-node-at-point)
-                node)))
+If first arg of the rest-arg-list is not nil then it must be a window and then
+ECB jumps to that window. If nil then `ecb-last-edit-window-with-point' is
+used as window."
+  (let ((window (nth 0 rest-arg-list)))
     (when node
       (let* ((data (tree-node-get-data node))
              (tag (nth 0 data)))
@@ -410,7 +395,8 @@ window. If nil `ecb-last-edit-window-with-point' is used as window."
                                       shift-mode meta-mode)
   "Handle clicking onto NODE in the analyse-buffer. ECB-BUTTON can be 1, 2 or
 3. If 3 then EDIT-WINDOW-NR contains the number of the edit-window the NODE
-should be displayed. For 1 and 2 the value of EDIT-WINDOW-NR is ignored."
+should be displayed or whatever should be done with NODE. For 1 and 2 the
+value of EDIT-WINDOW-NR is ignored."
   (if shift-mode
       (ecb-mouse-over-analyse-node node nil nil 'force))
   (let* ((data (tree-node-get-data node))
@@ -424,16 +410,18 @@ should be displayed. For 1 and 2 the value of EDIT-WINDOW-NR is ignored."
       (ecb-analyse-complete node))
      (t
       (ecb-analyse-jump-to-tag node (ecb-get-edit-window
-                                     (ecb-combine-ecb-button/edit-win-nr
-                                      ecb-button edit-window-nr)))
+                                     ;; `ecb-analyse-jump-to-tag' expects all
+                                     ;; args beyond NODE as one list.
+                                     `(,(ecb-combine-ecb-button/edit-win-nr
+                                         ecb-button edit-window-nr))))
       (when (and tag (= (nth 1 data) ecb-analyse-nodedata-tag-with-pos))
         (when meta-mode
           (ecb-run-with-idle-timer 0.001 nil 'ecb-hide-ecb-windows)))))))
 
-(defun ecb-set-analyse-buffer ()
+(defecb-window-dedicator ecb-set-analyse-buffer ecb-analyse-buffer-name
+  "Displays the analyse buffer in current window an makes this window dedicated."
   (add-hook 'ecb-current-buffer-sync-hook-internal 'ecb-analyse-buffer-sync)
-  (ecb-with-dedicated-window ecb-analyse-buffer-name 'ecb-set-analyse-buffer
-    (switch-to-buffer ecb-analyse-buffer-name)))
+  (switch-to-buffer ecb-analyse-buffer-name))
 
 (defun ecb-maximize-window-analyse ()
   "Maximize the ECB-analyse-window.
@@ -520,41 +508,40 @@ should be printed here."
 
 (defun ecb-analyse-node-mouse-highlighted-p (node)
   "Return not nil when NODE has a positioned tag as data or belongs to the
-completions."
+completions. This means that this node should be highlighted when mouse is
+moved over it."
   (or (equal ecb-analyse-nodedata-tag-with-pos
              (nth 1 (tree-node-get-data node)))
       (= (tree-node-get-type node) ecb-analyse-nodetype-completions)))
 
-(defun ecb-analyse-create-menu (node &optional with-completion)
+(defun ecb-analyse-create-menu (node)
+  "Return a popup-menu suitable for NODE."
   (let* ((data (tree-node-get-data node))
-         (tag-p (not (equal (nth 0 data) ecb-analyse-nodedata-no-tag)))
-         (tag-with-pos-p (equal (nth 0 data) ecb-analyse-nodedata-tag-with-pos)))
-    (delq nil (list (if with-completion
-                        '("Complete" ecb-analyse-complete))
+         (tag-p (not (equal (nth 1 data) ecb-analyse-nodedata-no-tag)))
+         (tag-with-pos-p (equal (nth 1 data) ecb-analyse-nodedata-tag-with-pos))
+         (nodetype (nth 2 data)))
+    (delq nil (list (if (equal nodetype ecb-analyse-nodetype-completions)
+                        '(ecb-analyse-complete "Complete"))
                     (if tag-p
-                        '("Show tag info" ecb-analyse-show-tag-info))
+                        '(ecb-analyse-show-tag-info "Show tag info"))
                     (if tag-with-pos-p
-                        '("Jump to tag" ecb-analyse-jump-to-tag))))))
+                        '(ecb-analyse-jump-to-tag "Jump to tag"))))))
     
 (defun ecb-analyse-menu-creator (tree-buffer-name node)
   "Creates the popup-menus for the analyse-buffer."
   (setq ecb-layout-prevent-handle-ecb-window-selection t)
   (let ((nodetype (tree-node-get-type node)))
     (unless (equal nodetype ecb-analyse-nodetype-bucket)
-      (mapcar (function (lambda (nodetype)
-                          (cons nodetype
-                                (ecb-analyse-create-menu
-                                 node
-                                 (equal nodetype
-                                        ecb-analyse-nodetype-completions)))))
-              '(ecb-analyse-nodetype-context
-                ecb-analyse-nodetype-arguments
-                ecb-analyse-nodetype-completions
-                ecb-analyse-nodetype-localvars
-                ecb-analyse-nodetype-prefix
-                ecb-analyse-nodetype-assignee
-                ecb-analyse-nodetype-function
-                ecb-analyse-nodetype-function-arg)))))
+      (mapcar (function (lambda (type)
+                          (cons type (ecb-analyse-create-menu node))))
+              `(,ecb-analyse-nodetype-context
+                ,ecb-analyse-nodetype-arguments
+                ,ecb-analyse-nodetype-completions
+                ,ecb-analyse-nodetype-localvars
+                ,ecb-analyse-nodetype-prefix
+                ,ecb-analyse-nodetype-assignee
+                ,ecb-analyse-nodetype-function
+                ,ecb-analyse-nodetype-function-arg)))))
 
 
 (defun ecb-analyse-gen-menu-title-creator ()
@@ -573,9 +560,8 @@ analyse-buffer."
             ecb-analyse-nodetype-function
             ecb-analyse-nodetype-function-arg)))
 
-(defun ecb-create-analyse-tree-buffer ()
+(defecb-tree-buffer-creator ecb-create-analyse-tree-buffer ecb-analyse-buffer-name
   "Create the tree-buffer for analyse-display."
-  (ecb-tree-buffers-add ecb-analyse-buffer-name 'ecb-analyse-buffer-name)
   (tree-buffer-create
    ecb-analyse-buffer-name
    ecb-frame

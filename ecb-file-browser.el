@@ -23,7 +23,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-file-browser.el,v 1.50 2004/12/20 17:03:08 berndl Exp $
+;; $Id: ecb-file-browser.el,v 1.51 2004/12/29 08:36:04 berndl Exp $
 
 ;;; Commentary:
 
@@ -1448,39 +1448,6 @@ then the caches used by the file-browser will not be initialized."
   (unless no-caches
     (ecb-file-browser-initialize-caches)))
   
-(defmacro ecb-exec-in-directories-window (&rest body)
-  "Evaluates BODY in the directories-window of ECB. If that window is not
-visible then return the symbol 'window-not-visible. Otherwise the return
-value of BODY is returned."
-  `(unwind-protect
-       (if (not (ecb-window-select ecb-directories-buffer-name))
-           'window-not-visible
-	 ,@body)
-     ))
-
-
-(defmacro ecb-exec-in-sources-window (&rest body)
-  "Evaluates BODY in the sources-window of ECB. If that window is not
-visible then return the symbol 'window-not-visible. Otherwise the return
-value of BODY is returned."
-  `(unwind-protect
-       (if (not (ecb-window-select ecb-sources-buffer-name))
-           'window-not-visible
-	 ,@body)
-     ))
-
-
-(defmacro ecb-exec-in-history-window (&rest body)
-  "Evaluates BODY in the history-window of ECB. If that window is not
-visible then return the symbol 'window-not-visible. Otherwise the return
-value of BODY is returned."
-  `(unwind-protect
-       (if  (not (ecb-window-select ecb-history-buffer-name))
-           'window-not-visible
-	 ,@body)
-     ))
-
-
 (defun ecb-goto-window-directories ()
   "Make the ECB-directories window the current window.
 If `ecb-use-speedbar-instead-native-tree-buffer' is 'dir then goto to the
@@ -1532,7 +1499,8 @@ ECB-history-window is not visible in current layout."
   (interactive)
   (ecb-display-one-ecb-buffer ecb-history-buffer-name))
 
-(defun ecb-set-directories-buffer ()
+(defecb-window-dedicator ecb-set-directories-buffer ecb-directories-buffer-name
+  "Display the Directories-buffer in current window and make window dedicated."
   (let ((set-directories-buffer
          (not (equal ecb-use-speedbar-instead-native-tree-buffer 'dir))))
     ;; first we act depending on the value of
@@ -1550,12 +1518,10 @@ ECB-history-window is not visible in current layout."
     (when set-directories-buffer
       (if (null ecb-use-speedbar-instead-native-tree-buffer)
           (ignore-errors (ecb-speedbar-deactivate)))
-      (ecb-with-dedicated-window
-          ecb-directories-buffer-name
-          'ecb-set-directories-buffer
-        (switch-to-buffer ecb-directories-buffer-name)))))
+      (switch-to-buffer ecb-directories-buffer-name))))
 
-(defun ecb-set-sources-buffer ()
+(defecb-window-dedicator ecb-set-sources-buffer ecb-sources-buffer-name
+  "Display the Sources-buffer in current window and make window dedicated."
   (let ((set-sources-buffer
          (not (equal ecb-use-speedbar-instead-native-tree-buffer 'source))))
     ;; first we act depending on the value of
@@ -1573,13 +1539,12 @@ ECB-history-window is not visible in current layout."
     (when set-sources-buffer
       (if (null ecb-use-speedbar-instead-native-tree-buffer)
           (ignore-errors (ecb-speedbar-deactivate)))
-      (ecb-with-dedicated-window ecb-sources-buffer-name 'ecb-set-sources-buffer
-        (switch-to-buffer ecb-sources-buffer-name)))))
+      (switch-to-buffer ecb-sources-buffer-name))))
 
 
-(defun ecb-set-history-buffer ()
-  (ecb-with-dedicated-window ecb-history-buffer-name 'ecb-set-history-buffer
-    (switch-to-buffer ecb-history-buffer-name)))
+(defecb-window-dedicator ecb-set-history-buffer ecb-history-buffer-name
+  "Display the History-buffer in current window and make window dedicated."
+  (switch-to-buffer ecb-history-buffer-name))
 
 
 (defun ecb-expand-directory-tree (path node)
@@ -1729,45 +1694,45 @@ selected before this update."
   ;; make the nodes in the Sources-buffer "expandable" this caching would not
   ;; work!
   
-  (ecb-exec-in-sources-window
-   ;; if we have a filtered cache we must display it - otherwise we use the
-   ;; full cache if there is any
-   (let ((cache-elem (or (ecb-sources-cache-get-filtered ecb-path-selected-directory)
-                         (ecb-sources-cache-get-full ecb-path-selected-directory))))
-     (if cache-elem
-         (progn
-           (tree-buffer-set-root (nth 0 cache-elem))
-           (tree-buffer-update nil (cons (nth 2 cache-elem)
-                                         (nth 1 cache-elem))))
-       (let ((new-tree (tree-node-new-root))
-             (old-children (tree-node-get-children (tree-buffer-get-root)))
-             (new-cache-elem nil))
-         ;; building up the new files-tree
-         (ecb-tree-node-add-files
-          new-tree
-          ecb-path-selected-directory
-          (car (ecb-get-files-and-subdirs ecb-path-selected-directory))
-          ecb-sources-nodetype-sourcefile
-          ecb-show-source-file-extension old-children t)
+  (ecb-exec-in-window ecb-sources-buffer-name
+    ;; if we have a filtered cache we must display it - otherwise we use the
+    ;; full cache if there is any
+    (let ((cache-elem (or (ecb-sources-cache-get-filtered ecb-path-selected-directory)
+                          (ecb-sources-cache-get-full ecb-path-selected-directory))))
+      (if cache-elem
+          (progn
+            (tree-buffer-set-root (nth 0 cache-elem))
+            (tree-buffer-update nil (cons (nth 2 cache-elem)
+                                          (nth 1 cache-elem))))
+        (let ((new-tree (tree-node-new-root))
+              (old-children (tree-node-get-children (tree-buffer-get-root)))
+              (new-cache-elem nil))
+          ;; building up the new files-tree
+          (ecb-tree-node-add-files
+           new-tree
+           ecb-path-selected-directory
+           (car (ecb-get-files-and-subdirs ecb-path-selected-directory))
+           ecb-sources-nodetype-sourcefile
+           ecb-show-source-file-extension old-children t)
 
-         ;; updating the buffer itself
-         (tree-buffer-set-root new-tree)
-         (tree-buffer-update)
+          ;; updating the buffer itself
+          (tree-buffer-set-root new-tree)
+          (tree-buffer-update)
 
-         ;; check if the sources buffer for this directory must be
-         ;; cached: If yes update the cache
-         (when (ecb-check-directory-for-caching
-                ecb-path-selected-directory
-                (length tree-buffer-nodes))
-           (setq new-cache-elem (list (tree-buffer-get-root)
-                                      (ecb-copy-list tree-buffer-nodes)
-                                      (buffer-substring (point-min)
-                                                        (point-max))))
-           (ecb-sources-cache-add-full ecb-path-selected-directory
-                                       new-cache-elem))))
+          ;; check if the sources buffer for this directory must be
+          ;; cached: If yes update the cache
+          (when (ecb-check-directory-for-caching
+                 ecb-path-selected-directory
+                 (length tree-buffer-nodes))
+            (setq new-cache-elem (list (tree-buffer-get-root)
+                                       (ecb-copy-list tree-buffer-nodes)
+                                       (buffer-substring (point-min)
+                                                         (point-max))))
+            (ecb-sources-cache-add-full ecb-path-selected-directory
+                                        new-cache-elem))))
            
-     (when (not (ecb-string= dir-before-update ecb-path-selected-directory))
-       (tree-buffer-scroll (point-min) (point-min))))))
+      (when (not (ecb-string= dir-before-update ecb-path-selected-directory))
+        (tree-buffer-scroll (point-min) (point-min))))))
 
 (defun ecb-sources-filter-by-ext (ext-str)
   "Filter the sources by extension EXT-STR."
@@ -1836,52 +1801,51 @@ the option `ecb-mode-line-prefixes'."
 `ecb-path-selected-directory' and display only the filtered files in the
 Sources-buffer. If FILTER-REGEXP is nil then any applied filter is removed and
 all files are displayed."
-  (save-selected-window
-    (ecb-exec-in-sources-window
-     (if (null filter-regexp)
-         ;; no filtering
-         (progn
-           ;; remove the filtered cache by setting it to nil
-           (ecb-sources-cache-add-filtered ecb-path-selected-directory nil)
-           ;; update the sources buffer - because the filtered cache is nil
-           ;; the full sources are displayed.
-           (ecb-update-sources-buffer ecb-path-selected-directory)
-           (tree-buffer-highlight-node-data ecb-path-selected-source))
-       ;; apply the filter-regexp
-       (let ((new-tree (tree-node-new-root))
-             (old-children (tree-node-get-children (tree-buffer-get-root)))
-             (all-files (car (ecb-get-files-and-subdirs ecb-path-selected-directory)))
-             (filtered-files nil))
-         (dolist (file all-files)
-           (if (string-match filter-regexp file)
-               (setq filtered-files
-                     (cons file filtered-files))))
-         (if (null filtered-files)
-             (message "ECB has not applied this filter because it would filter out all files!")
-           ;; building up the new files-tree
-           (ecb-tree-node-add-files
-            new-tree
-            ecb-path-selected-directory
-            (nreverse filtered-files)
-            ecb-sources-nodetype-sourcefile
-            ecb-show-source-file-extension old-children t)
+  (ecb-exec-in-window ecb-sources-buffer-name
+    (if (null filter-regexp)
+        ;; no filtering
+        (progn
+          ;; remove the filtered cache by setting it to nil
+          (ecb-sources-cache-add-filtered ecb-path-selected-directory nil)
+          ;; update the sources buffer - because the filtered cache is nil
+          ;; the full sources are displayed.
+          (ecb-update-sources-buffer ecb-path-selected-directory)
+          (tree-buffer-highlight-node-data ecb-path-selected-source))
+      ;; apply the filter-regexp
+      (let ((new-tree (tree-node-new-root))
+            (old-children (tree-node-get-children (tree-buffer-get-root)))
+            (all-files (car (ecb-get-files-and-subdirs ecb-path-selected-directory)))
+            (filtered-files nil))
+        (dolist (file all-files)
+          (if (string-match filter-regexp file)
+              (setq filtered-files
+                    (cons file filtered-files))))
+        (if (null filtered-files)
+            (message "ECB has not applied this filter because it would filter out all files!")
+          ;; building up the new files-tree
+          (ecb-tree-node-add-files
+           new-tree
+           ecb-path-selected-directory
+           (nreverse filtered-files)
+           ecb-sources-nodetype-sourcefile
+           ecb-show-source-file-extension old-children t)
 
-           ;; updating the buffer itself
-           (tree-buffer-set-root new-tree)
-           (tree-buffer-update)
-           (tree-buffer-scroll (point-min) (point-min))
-           (tree-buffer-highlight-node-data ecb-path-selected-source)
+          ;; updating the buffer itself
+          (tree-buffer-set-root new-tree)
+          (tree-buffer-update)
+          (tree-buffer-scroll (point-min) (point-min))
+          (tree-buffer-highlight-node-data ecb-path-selected-source)
 
-           ;; add the new filter to the cache, so the next call to
-           ;; `ecb-update-sources-buffer' displays the filtered sources.
-           (ecb-sources-cache-add-filtered ecb-path-selected-directory
-                                           (list (tree-buffer-get-root)
-                                                 (ecb-copy-list tree-buffer-nodes)
-                                                 (buffer-substring (point-min)
-                                                                   (point-max))
-                                                 (cons filter-regexp
-                                                       (or filter-display
-                                                           filter-regexp)))))))))
+          ;; add the new filter to the cache, so the next call to
+          ;; `ecb-update-sources-buffer' displays the filtered sources.
+          (ecb-sources-cache-add-filtered ecb-path-selected-directory
+                                          (list (tree-buffer-get-root)
+                                                (ecb-copy-list tree-buffer-nodes)
+                                                (buffer-substring (point-min)
+                                                                  (point-max))
+                                                (cons filter-regexp
+                                                      (or filter-display
+                                                          filter-regexp))))))))
   ;; now we update the mode-lines so the current filter (can be no filter) is
   ;; displayed in the mode-line. See `ecb-sources-filter-modeline-prefix'.
   (ecb-mode-line-format))
@@ -1921,66 +1885,65 @@ they occur in `ecb-source-paths'."
 value of PATH. If PATH is equal to the value of `ecb-path-selected-directory'
 then nothing is done unless first optional argument FORCE is not nil."
   (let ((last-dir ecb-path-selected-directory))
-    (save-selected-window
-      (setq ecb-path-selected-directory (ecb-fix-filename path))
-      ;; if ecb-path-selected-directory has not changed then there is no need
-      ;; to do anything here because neither the content of directory buffer
-      ;; nor the content of the sources buffer can have been changed!
-      (when (or force (not (ecb-string= last-dir ecb-path-selected-directory)))
-        (when (or (not (ecb-show-sources-in-directories-buffer-p))
-                  ecb-auto-expand-directory-tree)
-          (ecb-exec-in-directories-window
-           (let (start was-expanded)
-             (when ecb-auto-expand-directory-tree
-               ;; Expand tree to show selected directory
-               (setq start
-                     (if (equal ecb-auto-expand-directory-tree 'best)
-                         ;; If none of the source-paths in the buffer
-                         ;; `ecb-directories-buffer-name' matches then nil
-                         ;; otherwise the node of the best matching
-                         ;; source-path
-                         (let ((best-source-path
-                                (ecb-get-best-matching-source-path
-                                 ecb-path-selected-directory)))
-                           (if best-source-path
-                               (tree-buffer-find-node-data
-                                (ecb-fix-filename best-source-path))))
-                       ;; we start at the root node
-                       (tree-buffer-get-root)))
-               (when (and (equal ecb-auto-expand-directory-tree 'best)
-                          start)
-                 (setq was-expanded (or (not (tree-node-is-expandable start))
-                                        (tree-node-is-expanded start)))
-                 ;; expand the best-match node itself
-                 (tree-node-set-expanded start t)
-                 ;; This function ensures a correct expandable-state of
-                 ;; start-node
-                 (ecb-update-directory-node start))
-               ;; start recursive expanding of either the best-matching node or
-               ;; the root-node itself.
-               (if (or (ecb-expand-directory-tree ecb-path-selected-directory
-                                                  (or start
-                                                      (tree-buffer-get-root)))
-                       (not was-expanded))
-                   (tree-buffer-update)
-                 (tree-buffer-recenter start (selected-window))
-                 ;; sometimes we do not need a full tree-buffer-update, even
-                 ;; when FORCE is not nil. But we have to restart the
-                 ;; directories-buffer stealthy-state.
-                 (and force (ecb-stealth-tasks-after-directories-update))))
-;;              (ecb-expand-directory-tree ecb-path-selected-directory
-;;                                           (or start
-;;                                               (tree-buffer-get-root)))
-;;                (tree-buffer-update))
-             (when (not (ecb-show-sources-in-directories-buffer-p))
-               (tree-buffer-highlight-node-data ecb-path-selected-directory
-                                                start)))))
-        ;; now we update the sources buffer for `ecb-path-selected-directory'
-        (ecb-update-sources-buffer last-dir)
-        ;; now we run the hooks
-        (run-hook-with-args 'ecb-after-directory-change-hook
-                            last-dir ecb-path-selected-directory)
-        )))
+    (setq ecb-path-selected-directory (ecb-fix-filename path))
+    ;; if ecb-path-selected-directory has not changed then there is no need
+    ;; to do anything here because neither the content of directory buffer
+    ;; nor the content of the sources buffer can have been changed!
+    (when (or force (not (ecb-string= last-dir ecb-path-selected-directory)))
+      (when (or (not (ecb-show-sources-in-directories-buffer-p))
+                ecb-auto-expand-directory-tree)
+        (ecb-exec-in-window ecb-directories-buffer-name
+          (let (start was-expanded)
+            (when ecb-auto-expand-directory-tree
+              ;; Expand tree to show selected directory
+              (setq start
+                    (if (equal ecb-auto-expand-directory-tree 'best)
+                        ;; If none of the source-paths in the buffer
+                        ;; `ecb-directories-buffer-name' matches then nil
+                        ;; otherwise the node of the best matching
+                        ;; source-path
+                        (let ((best-source-path
+                               (ecb-get-best-matching-source-path
+                                ecb-path-selected-directory)))
+                          (if best-source-path
+                              (tree-buffer-find-node-data
+                               (ecb-fix-filename best-source-path))))
+                      ;; we start at the root node
+                      (tree-buffer-get-root)))
+              (when (and (equal ecb-auto-expand-directory-tree 'best)
+                         start)
+                (setq was-expanded (or (not (tree-node-is-expandable start))
+                                       (tree-node-is-expanded start)))
+                ;; expand the best-match node itself
+                (tree-node-set-expanded start t)
+                ;; This function ensures a correct expandable-state of
+                ;; start-node
+                (ecb-update-directory-node start))
+              ;; start recursive expanding of either the best-matching node or
+              ;; the root-node itself.
+              (if (or (ecb-expand-directory-tree ecb-path-selected-directory
+                                                 (or start
+                                                     (tree-buffer-get-root)))
+                      (not was-expanded))
+                  (tree-buffer-update)
+                (tree-buffer-recenter start (selected-window))
+                ;; sometimes we do not need a full tree-buffer-update, even
+                ;; when FORCE is not nil. But we have to restart the
+                ;; directories-buffer stealthy-state.
+                (and force (ecb-stealth-tasks-after-directories-update))))
+            ;;              (ecb-expand-directory-tree ecb-path-selected-directory
+            ;;                                           (or start
+            ;;                                               (tree-buffer-get-root)))
+            ;;                (tree-buffer-update))
+            (when (not (ecb-show-sources-in-directories-buffer-p))
+              (tree-buffer-highlight-node-data ecb-path-selected-directory
+                                               start)))))
+      ;; now we update the sources buffer for `ecb-path-selected-directory'
+      (ecb-update-sources-buffer last-dir)
+      ;; now we run the hooks
+      (run-hook-with-args 'ecb-after-directory-change-hook
+                          last-dir ecb-path-selected-directory)
+      ))
   
   ;; set the default-directory of each tree-buffer to current selected
   ;; directory so we can open files via find-file from each tree-buffer.
@@ -2011,24 +1974,23 @@ then nothing is done unless first optional argument FORCE is not nil."
   "Updates the directories, sources and history buffers to match the filename
 given. If FORCE is not nil then the update of the directories buffer is done
 even if current directory is equal to `ecb-path-selected-directory'."
-  (save-selected-window
-    (ecb-set-selected-directory (ecb-file-name-directory filename) force)
-    (setq ecb-path-selected-source filename)
+  (ecb-set-selected-directory (ecb-file-name-directory filename) force)
+  (setq ecb-path-selected-source filename)
   
-    ;; Update directory buffer
-    (when (ecb-show-sources-in-directories-buffer-p)
-      (ecb-exec-in-directories-window
-       (tree-buffer-highlight-node-data ecb-path-selected-source)))
+  ;; Update directory buffer
+  (when (ecb-show-sources-in-directories-buffer-p)
+    (ecb-exec-in-window ecb-directories-buffer-name
+      (tree-buffer-highlight-node-data ecb-path-selected-source)))
     
-    ;; Update source buffer
-    (ecb-exec-in-sources-window
-     (tree-buffer-highlight-node-data ecb-path-selected-source))
+  ;; Update source buffer
+  (ecb-exec-in-window ecb-sources-buffer-name
+    (tree-buffer-highlight-node-data ecb-path-selected-source))
 
-    ;; Update history buffer always regardless of visibility of history window
-    (ecb-add-item-to-history-buffer ecb-path-selected-source)
-    (ecb-sort-history-buffer)
-    ;; Update the history window only if it is visible
-    (ecb-update-history-window ecb-path-selected-source)))
+  ;; Update history buffer always regardless of visibility of history window
+  (ecb-add-item-to-history-buffer ecb-path-selected-source)
+  (ecb-sort-history-buffer)
+  ;; Update the history window only if it is visible
+  (ecb-update-history-window ecb-path-selected-source))
 
 
 (defvar ecb-history-filter nil
@@ -2161,10 +2123,9 @@ by the option `ecb-mode-line-prefixes'."
 
 (defun ecb-update-history-window (&optional filename)
   "Updates the history window and highlights the item for FILENAME if given."
-  (save-selected-window
-    (ecb-exec-in-history-window
-     (tree-buffer-update)
-     (tree-buffer-highlight-node-data filename))))
+  (ecb-exec-in-window ecb-history-buffer-name
+    (tree-buffer-update)
+    (tree-buffer-highlight-node-data filename)))
 
 (defun ecb-set-selected-source (filename other-edit-window
 					 no-edit-buffer-selection hide)
@@ -2201,11 +2162,10 @@ ecb-windows after displaying the file in an edit-window."
   (interactive)
   (unless (or (not ecb-minor-mode)
               (not (equal (selected-frame) ecb-frame)))
-    (save-selected-window
-      (ecb-exec-in-history-window
-       (tree-buffer-clear)
-       (tree-buffer-update)
-       (tree-buffer-highlight-node-data ecb-path-selected-source)))))
+    (ecb-exec-in-window ecb-history-buffer-name
+      (tree-buffer-clear)
+      (tree-buffer-update)
+      (tree-buffer-highlight-node-data ecb-path-selected-source))))
 
 
 
@@ -2250,41 +2210,40 @@ ecb-windows after displaying the file in an edit-window."
   (interactive)
   (unless (or (not ecb-minor-mode)
               (not (equal (selected-frame) ecb-frame)))
-    (save-selected-window
-      (ecb-exec-in-directories-window
-       (let* ((node (tree-buffer-get-root))
-              (old-children (tree-node-get-children node))
-              (paths (append (ecb-get-source-paths-from-functions)
-			     ecb-source-path)))
-         (tree-node-set-children node nil)
-	 (dolist (dir paths)
-	   (let* ((path (if (listp dir) (car dir) dir))
-                  (remote-path (ecb-remote-path path))
-                  (norm-dir nil)
-                  (name nil)
-                  (not-accessible nil))
-             (if (or (not remote-path)
-                     (ecb-host-accessible-p (nth 1 remote-path)))
-                 (progn
-                   (setq norm-dir (ecb-fix-filename path nil t))
-                   (setq name (if (listp dir) (cadr dir) norm-dir))
-                   (if (ecb-file-accessible-directory-p norm-dir)
-                       (tree-node-add-child
-                        node
-                        (ecb-new-child old-children name
-                                       ecb-directories-nodetype-sourcepath
-                                       norm-dir
-                                       nil
-                                       (if ecb-truncate-long-names
-                                       'beginning)))
-                     (setq not-accessible t)))
-               (setq not-accessible t))
-             (when not-accessible
-               (if (listp dir)
-                   (ecb-warning "Source-path %s with alias %s is not accessible - ignored!"
-                                (car dir) (cadr dir))
-                 (ecb-warning "Source-path %s is not accessible - ignored!" dir)))))
-         (tree-buffer-update))))
+    (ecb-exec-in-window ecb-directories-buffer-name
+      (let* ((node (tree-buffer-get-root))
+             (old-children (tree-node-get-children node))
+             (paths (append (ecb-get-source-paths-from-functions)
+                            ecb-source-path)))
+        (tree-node-set-children node nil)
+        (dolist (dir paths)
+          (let* ((path (if (listp dir) (car dir) dir))
+                 (remote-path (ecb-remote-path path))
+                 (norm-dir nil)
+                 (name nil)
+                 (not-accessible nil))
+            (if (or (not remote-path)
+                    (ecb-host-accessible-p (nth 1 remote-path)))
+                (progn
+                  (setq norm-dir (ecb-fix-filename path nil t))
+                  (setq name (if (listp dir) (cadr dir) norm-dir))
+                  (if (ecb-file-accessible-directory-p norm-dir)
+                      (tree-node-add-child
+                       node
+                       (ecb-new-child old-children name
+                                      ecb-directories-nodetype-sourcepath
+                                      norm-dir
+                                      nil
+                                      (if ecb-truncate-long-names
+                                          'beginning)))
+                    (setq not-accessible t)))
+              (setq not-accessible t))
+            (when not-accessible
+              (if (listp dir)
+                  (ecb-warning "Source-path %s with alias %s is not accessible - ignored!"
+                               (car dir) (cadr dir))
+                (ecb-warning "Source-path %s is not accessible - ignored!" dir)))))
+        (tree-buffer-update)))
     ))
 
 ;; remote-path stuff 
@@ -2408,42 +2367,41 @@ component after that :-separator. Supports tramp, ange-ftp and efs."
 underlying directory is empty or not and update the node if the current node
 state and display is different from the empty-state of the associated
 directory. This function is only for use by `ecb-stealthy-updates'!"
-  (save-selected-window
-    (when (equal 'window-not-visible
-                 (ecb-exec-in-directories-window
-                  (if (equal state 'restart)
-                      (setq state 1))
-                  ;; Here the state is an integer because a stealthy functions runs only
-                  ;; when state != 'done
-                  (let ((lines-of-buffer (count-lines (point-min) (point-max)))
-                        (curr-node nil)
-                        (dir-empty-p nil))
-                    (save-excursion
-                      (while (and (not (input-pending-p))
-                                  (<= state lines-of-buffer))
-                        (goto-line state)
-                        (setq curr-node (tree-buffer-get-node-at-point))
-                        (when (ecb-directory-should-prescanned-p
-                               (tree-node-get-data curr-node))
-                          (setq dir-empty-p
-                                (ecb-check-emptyness-of-dir (tree-node-get-data curr-node)))
-                          ;; we update the node only if we have an empty dir and the node is
-                          ;; still expandable
-                          (when (or (and dir-empty-p
-                                         (tree-node-is-expandable curr-node))
-                                    (and (not dir-empty-p)
-                                         (not (tree-node-is-expandable curr-node))))
-                            (tree-buffer-update-node nil
-                                                     'use-old-value
-                                                     'use-old-value
-                                                     'use-old-value
-                                                     'use-old-value
-                                                     (not dir-empty-p)
-                                                     t)))
-                          (setq state (1+ state))))
-                    (if (> state lines-of-buffer)
-                        (setq state 'done)))))
-      (setq state 'done))))
+  (when (equal 'window-not-visible
+               (ecb-exec-in-window ecb-directories-buffer-name
+                 (if (equal state 'restart)
+                     (setq state 1))
+                 ;; Here the state is an integer because a stealthy functions runs only
+                 ;; when state != 'done
+                 (let ((lines-of-buffer (count-lines (point-min) (point-max)))
+                       (curr-node nil)
+                       (dir-empty-p nil))
+                   (save-excursion
+                     (while (and (not (input-pending-p))
+                                 (<= state lines-of-buffer))
+                       (goto-line state)
+                       (setq curr-node (tree-buffer-get-node-at-point))
+                       (when (ecb-directory-should-prescanned-p
+                              (tree-node-get-data curr-node))
+                         (setq dir-empty-p
+                               (ecb-check-emptyness-of-dir (tree-node-get-data curr-node)))
+                         ;; we update the node only if we have an empty dir and the node is
+                         ;; still expandable
+                         (when (or (and dir-empty-p
+                                        (tree-node-is-expandable curr-node))
+                                   (and (not dir-empty-p)
+                                        (not (tree-node-is-expandable curr-node))))
+                           (tree-buffer-update-node nil
+                                                    'use-old-value
+                                                    'use-old-value
+                                                    'use-old-value
+                                                    'use-old-value
+                                                    (not dir-empty-p)
+                                                    t)))
+                       (setq state (1+ state))))
+                   (if (> state lines-of-buffer)
+                       (setq state 'done)))))
+    (setq state 'done)))
 
 ;; read-only-files?
 
@@ -2509,23 +2467,21 @@ when called. Return the new state-value."
   "Check for all sourcefile-nodes in the directories-buffer if the associated
 file is writable or not."
   (if (ecb-show-sources-in-directories-buffer-p)
-      (save-selected-window
-        (when (equal 'window-not-visible
-                     (ecb-exec-in-directories-window
-                      (setq state
-                            (ecb-stealthy-read-only-check--internal state))))
-          (setq state 'done)))
+      (when (equal 'window-not-visible
+                   (ecb-exec-in-window ecb-directories-buffer-name
+                     (setq state
+                           (ecb-stealthy-read-only-check--internal state))))
+        (setq state 'done))
     (setq state 'done)))
 
 (defecb-stealthy ecb-stealthy-ro-check-in-sources-buf
   "Check for all sourcefile-nodes in the sources-buffer if the associated file
 is writable or not."
-  (save-selected-window
-    (when (equal 'window-not-visible
-                 (ecb-exec-in-sources-window
-                  (setq state
-                        (ecb-stealthy-read-only-check--internal state))))
-      (setq state 'done))))
+  (when (equal 'window-not-visible
+               (ecb-exec-in-window ecb-sources-buffer-name
+                 (setq state
+                       (ecb-stealthy-read-only-check--internal state))))
+    (setq state 'done)))
 
 ;; version control support
 
@@ -2979,34 +2935,31 @@ stealthy-function has when called. Return the new state-value."
 (defecb-stealthy ecb-stealthy-vc-check-in-history-buf
   "Check for all entries in the history-buffer their VC-state and
 display an appropriate icon in front of the item."
-  (save-selected-window
-    (when (equal 'window-not-visible
-                 (ecb-exec-in-history-window
-                  (setq state
-                        (ecb-stealthy-vc-check--dir/history state))))
-      (setq state 'done))))
+  (when (equal 'window-not-visible
+               (ecb-exec-in-window ecb-history-buffer-name
+                 (setq state
+                       (ecb-stealthy-vc-check--dir/history state))))
+    (setq state 'done)))
 
 
 (defecb-stealthy ecb-stealthy-vc-check-in-sources-buf
   "Check for all sourcefile-nodes in the sources-buffer their VC-state and
 display an appropriate icon in front of the file."
-  (save-selected-window
-    (when (equal 'window-not-visible
-                 (ecb-exec-in-sources-window
-                  (setq state
-                        (ecb-stealthy-vc-check--sources state))))
-      (setq state 'done))))
+  (when (equal 'window-not-visible
+               (ecb-exec-in-window ecb-sources-buffer-name
+                 (setq state
+                       (ecb-stealthy-vc-check--sources state))))
+    (setq state 'done)))
 
 (defecb-stealthy ecb-stealthy-vc-check-in-directories-buf
   "Check for all sourcefile-nodes in the directories-buffer their VC-state and
 display an appropriate icon in front of the file."
   (if (ecb-show-sources-in-directories-buffer-p)
-      (save-selected-window
-        (when (equal 'window-not-visible
-                     (ecb-exec-in-directories-window
-                      (setq state
-                            (ecb-stealthy-vc-check--dir/history state))))
-          (setq state 'done)))
+      (when (equal 'window-not-visible
+                   (ecb-exec-in-window ecb-directories-buffer-name
+                     (setq state
+                           (ecb-stealthy-vc-check--dir/history state))))
+        (setq state 'done))
     (setq state 'done)))
 
 (defun ecb-vc-reset-vc-stealthy-checks ()
@@ -3274,9 +3227,9 @@ should be displayed. For 1 and 2 the value of EDIT-WINDOW-NR is ignored."
           (if (= 2 ecb-button)
               (when (tree-node-is-expandable node)
                 (tree-node-toggle-expanded node)
-                (ecb-exec-in-directories-window
-                 ;; Update the tree-buffer with optimized display of NODE
-                 (tree-buffer-update node)))
+                (ecb-exec-in-window ecb-directories-buffer-name
+                  ;; Update the tree-buffer with optimized display of NODE
+                  (tree-buffer-update node)))
             
             ;; Removing the element from the sources-cache, the
             ;; files-and-subdirs-cache and the empty-dirs-cache (incl. all
@@ -3329,11 +3282,10 @@ For argument LEVEL see `ecb-expand-methods-nodes'.
 Be aware that for deep structured paths and a lot of source-paths this command
 can last a long time - depending of machine- and disk-performance."
   (interactive "nLevel: ")
-  (save-selected-window
-    (ecb-exec-in-directories-window
-     (dolist (node (tree-node-get-children (tree-buffer-get-root)))
-       (tree-buffer-expand-node node level))
-     (tree-buffer-update)))
+  (ecb-exec-in-window ecb-directories-buffer-name
+    (dolist (node (tree-node-get-children (tree-buffer-get-root)))
+      (tree-buffer-expand-node node level))
+    (tree-buffer-update))
   (ecb-current-buffer-sync 'force))
 
 
@@ -3614,7 +3566,7 @@ edit-windows. Otherwise return nil."
                             result))))))
 
 
-(defun ecb-directories-menu-creator (tree-buffer-name)
+(defun ecb-directories-menu-creator (tree-buffer-name node)
   "Creates the popup-menus for the directories-buffer."
   (setq ecb-layout-prevent-handle-ecb-window-selection t)
   (let ((dyn-user-extension
@@ -3737,7 +3689,7 @@ edit-windows. Otherwise return nil."
   "The menu-title for the sources menu. See
 `ecb-directories-menu-title-creator'.")
 
-(defun ecb-sources-menu-creator (tree-buffer-name)
+(defun ecb-sources-menu-creator (tree-buffer-name node)
   "Creates the popup-menus for the sources-buffer."
   (setq ecb-layout-prevent-handle-ecb-window-selection t)
   (let ((dyn-user-extension
@@ -3860,7 +3812,7 @@ So you get a better overlooking. There are three choices:
   "The menu-title for the history menu. See
 `ecb-directories-menu-title-creator'.")
 
-(defun ecb-history-menu-creator (tree-buffer-name)
+(defun ecb-history-menu-creator (tree-buffer-name node)
   "Creates the popup-menus for the history-buffer."
   (setq ecb-layout-prevent-handle-ecb-window-selection t)
   (let ((dyn-user-extension
@@ -3868,8 +3820,7 @@ So you get a better overlooking. There are three choices:
               (funcall ecb-history-menu-user-extension-function)))
         (dyn-builtin-extension (ecb-dir/source/hist-menu-editwin-entries)))
     (list (cons ecb-history-nodetype-sourcefile
-                (funcall (or ecb-history-menu-sorter
-                             'identity)
+                (funcall (or ecb-history-menu-sorter 'identity)
                          (append dyn-user-extension
                                  ecb-history-menu-user-extension
                                  ecb-history-menu
@@ -3877,9 +3828,9 @@ So you get a better overlooking. There are three choices:
 
 ;; create the tree-buffers
 
-(defun ecb-create-directories-tree-buffer ()
+(defecb-tree-buffer-creator ecb-create-directories-tree-buffer
+    ecb-directories-buffer-name
   "Create the tree-buffer for directories"
-  (ecb-tree-buffers-add ecb-directories-buffer-name 'ecb-directories-buffer-name)
   (tree-buffer-create
    ecb-directories-buffer-name
    ecb-frame
@@ -3939,9 +3890,8 @@ So you get a better overlooking. There are three choices:
    'ecb-stealth-tasks-after-directories-update
    ))
 
-(defun ecb-create-sources-tree-buffer ()
+(defecb-tree-buffer-creator ecb-create-sources-tree-buffer ecb-sources-buffer-name
   "Create the tree-buffer for sources"
-  (ecb-tree-buffers-add ecb-sources-buffer-name 'ecb-sources-buffer-name)
   (tree-buffer-create
    ecb-sources-buffer-name
    ecb-frame
@@ -3991,9 +3941,8 @@ So you get a better overlooking. There are three choices:
     ecb-sources-buffer-after-create-hook)
    'ecb-stealth-tasks-after-sources-update))
 
-(defun ecb-create-history-tree-buffer ()
+(defecb-tree-buffer-creator ecb-create-history-tree-buffer ecb-history-buffer-name
   "Create the tree-buffer for history"
-  (ecb-tree-buffers-add ecb-history-buffer-name 'ecb-history-buffer-name)
   (tree-buffer-create
    ecb-history-buffer-name
    ecb-frame

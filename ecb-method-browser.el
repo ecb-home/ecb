@@ -24,7 +24,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-method-browser.el,v 1.64 2004/12/20 17:00:50 berndl Exp $
+;; $Id: ecb-method-browser.el,v 1.65 2004/12/29 08:36:08 berndl Exp $
 
 ;;; Commentary:
 
@@ -1253,17 +1253,6 @@ check the result if `ecb-debug-mode' is nil in which case the function
              (ecb--semantic-current-tag)))))
 
 
-(defmacro ecb-exec-in-methods-window (&rest body)
-  "Evaluates BODY in the methods-window of ECB. If that window is not
-visible then return the symbol 'window-not-visible. Otherwise the return
-value of BODY is returned."
-  `(unwind-protect
-       (if (not (ecb-window-select ecb-methods-buffer-name))
-           'window-not-visible
-	 ,@body)
-     ))
-
-
 (defun ecb-goto-window-methods ()
   "Make the ECB-methods window the current window.
 If `ecb-use-speedbar-instead-native-tree-buffer' is 'method then goto to the
@@ -1283,7 +1272,8 @@ ECB-methods-window is not visible in current layout."
       (ecb-maximize-window-speedbar)
     (ecb-display-one-ecb-buffer ecb-methods-buffer-name)))
 
-(defun ecb-set-methods-buffer ()
+(defecb-window-dedicator ecb-set-methods-buffer ecb-methods-buffer-name
+  "Display in current window the methods-buffer and make window dedicated."
   (let ((set-methods-buffer
          (not (equal ecb-use-speedbar-instead-native-tree-buffer 'method))))
     ;; first we act depending on the value of
@@ -1301,8 +1291,7 @@ ECB-methods-window is not visible in current layout."
     (when set-methods-buffer
       (if (null ecb-use-speedbar-instead-native-tree-buffer)
           (ignore-errors (ecb-speedbar-deactivate)))
-      (ecb-with-dedicated-window ecb-methods-buffer-name 'ecb-set-methods-buffer
-        (switch-to-buffer ecb-methods-buffer-name)))))
+      (switch-to-buffer ecb-methods-buffer-name))))
 
 
 (defun ecb-create-node (parent-node display name data type)
@@ -1758,7 +1747,8 @@ is returned which contains only the leaf-type in the hierarchy."
                 ;; `ecb-replace-first-occurence' (replace the curr filter with
                 ;; nil and then do (delq nil filters)
                 (ecb-methods-filter-apply nil nil nil "" "" (current-buffer))
-                (message "ECB has removed all filters cause of changes in the type-hierarchy for the current-type!")
+                (ecb-info-message
+                 "ECB has removed all filters cause of changes in the type-hierarchy for the current-type!")
                 ;; whenever we can not found any type in our filter type-hierarchy
                 ;; then we can not apply this current-type filter so we have to
                 ;; return the original tag-list
@@ -2596,9 +2586,8 @@ argument to not nil!"
            (ecb--semantic-active-p)
            nil rebuild-non-semantic)))
     (when scroll-to-top
-      (save-selected-window
-	(ecb-exec-in-methods-window
-	 (tree-buffer-scroll (point-min) (point-min)))))))
+      (ecb-exec-in-window ecb-methods-buffer-name
+        (tree-buffer-scroll (point-min) (point-min))))))
 
 
 (defvar ecb-tag-tree-cache nil
@@ -3002,83 +2991,82 @@ current buffer."
                      (ecb--semantic-tag-class highlight-tag))))
          (type-node nil))
     (or (and curr-tag
-             (save-selected-window
-               (ecb-exec-in-methods-window
-                (or (tree-buffer-highlight-node-data
-                     highlight-tag nil
-                     (equal ecb-highlight-tag-with-point 'highlight))
-                    ;; If the tag could not be highlighted and if there is no
-                    ;; containing type for this tag then this tag is probably
-                    ;; contained in a toplevel bucket. Then we search the
-                    ;; bucket-node for the tag if this tag-class is specified
-                    ;; as expanded or collapsed (ie not flattened or hidden
-                    ;; because in these cases no bucket would exist). If we
-                    ;; find the bucket-node then we expand only this
-                    ;; bucket-node and try highlighting again.
-                    (when (and highlight-tag
-                               bucket-data ;; tag has no containing type
-;;                                (member (car (cdr (assoc (ecb--semantic-tag-class highlight-tag)
-;;                                                         (ecb-get-show-tags-list))))
-;;                                        '(expanded collapsed))
-                               (or (equal ecb-auto-expand-tag-tree 'all)
-                                   (member (ecb--semantic-tag-class highlight-tag)
-                                           (ecb-normalize-expand-spec
-                                            ecb-methods-nodes-expand-spec))))
-                      (let ((bucket-node
-                             (tree-buffer-search-node-list
-                              (function (lambda (node)
-                                          (if (and (tree-buffer-node-data-equal-p
-                                                    (tree-node-get-data node)
-                                                    bucket-data)
-                                                   (eq (tree-buffer-get-root)
-                                                       (tree-node-get-parent node)))
-                                              node))))))
-                        (when bucket-node
-                          (ecb-expand-methods-node-internal
-                           bucket-node
-                           100
-                           (equal ecb-auto-expand-tag-tree 'all)
-                           nil t)
-                          (tree-buffer-highlight-node-data
-                           highlight-tag nil
-                           (equal ecb-highlight-tag-with-point 'highlight)))))
-                    ;; The node representing HIGHLIGHT-TAG could not be
-                    ;; highlighted by `tree-buffer-highlight-node-data' -
-                    ;; probably it is invisible. Let's try to make expand its
-                    ;; containing type (if there is any) and then highlighting
-                    ;; again.
-                    (when (and highlight-tag
-                               type-tag
-                               (or (equal ecb-auto-expand-tag-tree 'all)
-                                   (member (ecb--semantic-tag-class highlight-tag)
-                                           (ecb-normalize-expand-spec
-                                            ecb-methods-nodes-expand-spec))))
-                      (setq type-node
-                            (cdr (tree-buffer-find-name-node-data type-tag)))
-                      (when type-node
-                        (ecb-expand-methods-node-internal
-                         type-node
-                         ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: Maybe we
-                         ;; should not immediately fully expand the type but
-                         ;; in two steps:
-                         ;; 1. We expand only the first level of the type and
-                         ;;    check if the tag is contained in a flattended
-                         ;;    bucket. If yes we will have success and are
-                         ;;    finished because the tag must be contained in
-                         ;;    the type-tag. If no we go to step 2.
-                         ;; 2. because the tag MUST be contained in that
-                         ;;    type-node we now know that it must be contained
-                         ;;    in a collapsed bucket-subnode of this
-                         ;;    type-node. So we have to expand this
-                         ;;    bucket-subnode (similar to the mechanism above)
-                         ;;    and then try again...
-                         100
-                         (equal ecb-auto-expand-tag-tree 'all)
-                         nil t)
-                        (tree-buffer-highlight-node-data
-                         highlight-tag nil
-                         (equal ecb-highlight-tag-with-point 'highlight))
-                        ))))))
+             (ecb-exec-in-window ecb-methods-buffer-name
+               (or (tree-buffer-highlight-node-data
+                    highlight-tag nil
+                    (equal ecb-highlight-tag-with-point 'highlight))
+                   ;; If the tag could not be highlighted and if there is no
+                   ;; containing type for this tag then this tag is probably
+                   ;; contained in a toplevel bucket. Then we search the
+                   ;; bucket-node for the tag if this tag-class is specified
+                   ;; as expanded or collapsed (ie not flattened or hidden
+                   ;; because in these cases no bucket would exist). If we
+                   ;; find the bucket-node then we expand only this
+                   ;; bucket-node and try highlighting again.
+                   (when (and highlight-tag
+                              bucket-data ;; tag has no containing type
+                              ;;                                (member (car (cdr (assoc (ecb--semantic-tag-class highlight-tag)
+                              ;;                                                         (ecb-get-show-tags-list))))
+                              ;;                                        '(expanded collapsed))
+                              (or (equal ecb-auto-expand-tag-tree 'all)
+                                  (member (ecb--semantic-tag-class highlight-tag)
+                                          (ecb-normalize-expand-spec
+                                           ecb-methods-nodes-expand-spec))))
+                     (let ((bucket-node
+                            (tree-buffer-search-node-list
+                             (function (lambda (node)
+                                         (if (and (tree-buffer-node-data-equal-p
+                                                   (tree-node-get-data node)
+                                                   bucket-data)
+                                                  (eq (tree-buffer-get-root)
+                                                      (tree-node-get-parent node)))
+                                             node))))))
+                       (when bucket-node
+                         (ecb-expand-methods-node-internal
+                          bucket-node
+                          100
+                          (equal ecb-auto-expand-tag-tree 'all)
+                          nil t)
+                         (tree-buffer-highlight-node-data
+                          highlight-tag nil
+                          (equal ecb-highlight-tag-with-point 'highlight)))))
+                   ;; The node representing HIGHLIGHT-TAG could not be
+                   ;; highlighted by `tree-buffer-highlight-node-data' -
+                   ;; probably it is invisible. Let's try to make expand its
+                   ;; containing type (if there is any) and then highlighting
+                   ;; again.
+                   (when (and highlight-tag
+                              type-tag
+                              (or (equal ecb-auto-expand-tag-tree 'all)
+                                  (member (ecb--semantic-tag-class highlight-tag)
+                                          (ecb-normalize-expand-spec
+                                           ecb-methods-nodes-expand-spec))))
+                     (setq type-node
+                           (cdr (tree-buffer-find-name-node-data type-tag)))
+                     (when type-node
+                       (ecb-expand-methods-node-internal
+                        type-node
+                        ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: Maybe we
+                        ;; should not immediately fully expand the type but
+                        ;; in two steps:
+                        ;; 1. We expand only the first level of the type and
+                        ;;    check if the tag is contained in a flattended
+                        ;;    bucket. If yes we will have success and are
+                        ;;    finished because the tag must be contained in
+                        ;;    the type-tag. If no we go to step 2.
+                        ;; 2. because the tag MUST be contained in that
+                        ;;    type-node we now know that it must be contained
+                        ;;    in a collapsed bucket-subnode of this
+                        ;;    type-node. So we have to expand this
+                        ;;    bucket-subnode (similar to the mechanism above)
+                        ;;    and then try again...
+                        100
+                        (equal ecb-auto-expand-tag-tree 'all)
+                        nil t)
+                       (tree-buffer-highlight-node-data
+                        highlight-tag nil
+                        (equal ecb-highlight-tag-with-point 'highlight))
+                       )))))
         (if curr-tag
             (ecb-try-highlight-tag highlight-tag type-tag table)))))
 
@@ -3115,19 +3103,18 @@ current buffer."
           (when (or force (not (equal ecb-selected-tag curr-tag)))
             (setq ecb-selected-tag curr-tag)
             (if (null curr-tag)
-                (save-selected-window
-                  (ecb-exec-in-methods-window
-                   ;; If there is no tag to highlight then we remove the
-                   ;; highlighting
-                   (tree-buffer-highlight-node-data nil)
-                   (if (equal ecb-auto-expand-tag-tree-collapse-other 'always)
-                       ;; If this option is t (means always) we collapse also
-                       ;; when point is not on a tag!
-                       (ecb-expand-methods-node-internal
-                        (tree-buffer-get-root)
-                        -1
-                        (equal ecb-auto-expand-tag-tree 'all)
-                        nil t))))
+                (ecb-exec-in-window ecb-methods-buffer-name
+                  ;; If there is no tag to highlight then we remove the
+                  ;; highlighting
+                  (tree-buffer-highlight-node-data nil)
+                  (if (equal ecb-auto-expand-tag-tree-collapse-other 'always)
+                      ;; If this option is t (means always) we collapse also
+                      ;; when point is not on a tag!
+                      (ecb-expand-methods-node-internal
+                       (tree-buffer-get-root)
+                       -1
+                       (equal ecb-auto-expand-tag-tree 'all)
+                       nil t)))
               ;; Maybe we must first collapse all so only the needed parts are
               ;; expanded afterwards. Klaus Berndl <klaus.berndl@sdm.de>: Is it
               ;; necessary to update the tree-buffer after collapsing? IMO yes,
@@ -3137,18 +3124,17 @@ current buffer."
               ;; then we have an inconsistent state - would be probably very
               ;; seldom but could be - so let us be somehow paranoid ;-)
               (if ecb-auto-expand-tag-tree-collapse-other
-                  (save-selected-window
-                    (ecb-exec-in-methods-window
-                     (when (and curr-tag
-                                (or (equal ecb-auto-expand-tag-tree 'all)
-                                    (member (ecb--semantic-tag-class curr-tag)
-                                            (ecb-normalize-expand-spec
-                                             ecb-methods-nodes-expand-spec))))
-                       (ecb-expand-methods-node-internal
-                        (tree-buffer-get-root)
-                        -1
-                        (equal ecb-auto-expand-tag-tree 'all)
-                        nil t)))))
+                  (ecb-exec-in-window ecb-methods-buffer-name
+                    (when (and curr-tag
+                               (or (equal ecb-auto-expand-tag-tree 'all)
+                                   (member (ecb--semantic-tag-class curr-tag)
+                                           (ecb-normalize-expand-spec
+                                            ecb-methods-nodes-expand-spec))))
+                      (ecb-expand-methods-node-internal
+                       (tree-buffer-get-root)
+                       -1
+                       (equal ecb-auto-expand-tag-tree 'all)
+                       nil t))))
               ;; First we try to expand only the absolute needed parts - this
               ;; means we go upstairs the ladder of types the current tag
               ;; belongs to. If there is no containing type then we try to
@@ -3160,21 +3146,20 @@ current buffer."
                   ;; `tree-buffer-highlight-node-data' - probably it is still
                   ;; invisible. Let's try to make visible all nodes and then
                   ;; highlighting again.
-                  (save-selected-window
-                    (ecb-exec-in-methods-window
-                     (when (and curr-tag
-                                (or (equal ecb-auto-expand-tag-tree 'all)
-                                    (member (ecb--semantic-tag-class curr-tag)
-                                            (ecb-normalize-expand-spec
-                                             ecb-methods-nodes-expand-spec))))
-                       (ecb-expand-methods-node-internal
-                        (tree-buffer-get-root)
-                        100 ;; this should be enough levels ;-)
-                        (equal ecb-auto-expand-tag-tree 'all)
-                        nil t)
-                       (tree-buffer-highlight-node-data
-                        curr-tag nil (equal ecb-highlight-tag-with-point 'highlight)))
-                     ))))))))))
+                  (ecb-exec-in-window ecb-methods-buffer-name
+                    (when (and curr-tag
+                               (or (equal ecb-auto-expand-tag-tree 'all)
+                                   (member (ecb--semantic-tag-class curr-tag)
+                                           (ecb-normalize-expand-spec
+                                            ecb-methods-nodes-expand-spec))))
+                      (ecb-expand-methods-node-internal
+                       (tree-buffer-get-root)
+                       100 ;; this should be enough levels ;-)
+                       (equal ecb-auto-expand-tag-tree 'all)
+                       nil t)
+                      (tree-buffer-highlight-node-data
+                       curr-tag nil (equal ecb-highlight-tag-with-point 'highlight)))
+                    )))))))))
 
 
 (defun ecb-find-file-and-display (filename other-edit-window)
@@ -3276,43 +3261,42 @@ after the expansion.
 Note: All this is only valid for file-types parsed by semantic. For other file
 types which are parsed by imenu or etags \(see
 `ecb-process-non-semantic-files') FORCE-ALL is always true!"
-  (save-selected-window
-    ;; for buffers which are not parsed by semantic we always set force-all to
-    ;; t! We "misuse" (ecb-methods-get-data-store
-    ;; 'semantic-symbol->name-assoc-list) to decide if a buffer is parsed by
-    ;; semantic or not because only semantic-parsed buffers can have a value
-    ;; not nil!
-    (setq force-all
-          (if (not (ecb-methods-get-data-store 'semantic-symbol->name-assoc-list))
-              t
-            force-all))
-    (ecb-exec-in-methods-window
-     (let ( ;; normalizing the elements of `ecb-methods-nodes-expand-spec'
-           ;; and `ecb-methods-nodes-collapse-spec'.
-           (norm-expand-types (ecb-normalize-expand-spec
-                               ecb-methods-nodes-expand-spec))
-           (norm-collapse-types (ecb-normalize-expand-spec
-                                 ecb-methods-nodes-collapse-spec))
-           (node-list (if (equal node (tree-buffer-get-root))
-                          (tree-node-get-children (tree-buffer-get-root))
-                        (list node))))
-       (dolist (node node-list)
-         (tree-buffer-expand-node
-          node
-          level
-          (and (not force-all)
-               (function (lambda (node current-level)
-                           (or (equal norm-expand-types 'all)
-                               (member (ecb-methods-node-get-semantic-type node)
-                                       norm-expand-types)))))
-          (and (not force-all)
-               (function (lambda (node current-level)
-                           (or (equal norm-collapse-types 'all)
-                               (member (ecb-methods-node-get-semantic-type node)
-                                       norm-collapse-types)))))))
-       (if update-tree-buffer
-           (tree-buffer-update)
-         (tree-buffer-scroll (point-min) (point-min))))))
+  ;; for buffers which are not parsed by semantic we always set force-all to
+  ;; t! We "misuse" (ecb-methods-get-data-store
+  ;; 'semantic-symbol->name-assoc-list) to decide if a buffer is parsed by
+  ;; semantic or not because only semantic-parsed buffers can have a value
+  ;; not nil!
+  (setq force-all
+        (if (not (ecb-methods-get-data-store 'semantic-symbol->name-assoc-list))
+            t
+          force-all))
+  (ecb-exec-in-window ecb-methods-buffer-name
+    (let ( ;; normalizing the elements of `ecb-methods-nodes-expand-spec'
+          ;; and `ecb-methods-nodes-collapse-spec'.
+          (norm-expand-types (ecb-normalize-expand-spec
+                              ecb-methods-nodes-expand-spec))
+          (norm-collapse-types (ecb-normalize-expand-spec
+                                ecb-methods-nodes-collapse-spec))
+          (node-list (if (equal node (tree-buffer-get-root))
+                         (tree-node-get-children (tree-buffer-get-root))
+                       (list node))))
+      (dolist (node node-list)
+        (tree-buffer-expand-node
+         node
+         level
+         (and (not force-all)
+              (function (lambda (node current-level)
+                          (or (equal norm-expand-types 'all)
+                              (member (ecb-methods-node-get-semantic-type node)
+                                      norm-expand-types)))))
+         (and (not force-all)
+              (function (lambda (node current-level)
+                          (or (equal norm-collapse-types 'all)
+                              (member (ecb-methods-node-get-semantic-type node)
+                                      norm-collapse-types)))))))
+      (if update-tree-buffer
+          (tree-buffer-update)
+        (tree-buffer-scroll (point-min) (point-min)))))
 
   ;; we want resync the new method-buffer to the current tag in the
   ;; edit-window.
@@ -4021,7 +4005,7 @@ edit-windows. Otherwise return nil."
                           (list '(ecb-methods-filter-by-function-popup-inverse
                                   "By a inverse filter-function")))))))
     
-(defun ecb-methods-menu-creator (tree-buffer-name)
+(defun ecb-methods-menu-creator (tree-buffer-name node)
   "Creates the popup-menus for the methods-buffer."
   (setq ecb-layout-prevent-handle-ecb-window-selection t)
   (let ((dyn-user-extension
@@ -4083,9 +4067,8 @@ pattern.")
              (ecb--semantic-equivalent-tag-p l r)
            (error (eq l r))))))
 
-(defun ecb-create-methods-tree-buffer ()
+(defecb-tree-buffer-creator ecb-create-methods-tree-buffer ecb-methods-buffer-name
   "Create the tree-buffer for methods."
-  (ecb-tree-buffers-add ecb-methods-buffer-name 'ecb-methods-buffer-name)
   (tree-buffer-create
    ecb-methods-buffer-name
    ecb-frame

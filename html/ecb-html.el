@@ -28,7 +28,7 @@
 ;; Do not change any html-file besides the index.html manually but do all
 ;; changes in this elisp file!
 
-;; $Id: ecb-html.el,v 1.73 2004/11/30 18:42:06 berndl Exp $
+;; $Id: ecb-html.el,v 1.74 2004/12/29 08:36:19 berndl Exp $
 
 ;;; Code:
 
@@ -77,6 +77,11 @@
   "List of latest news displayed on the main page.")
 (setq ecb-latest-news
       `(
+        ,(h-sub-section "ECB 2.31 released! (2004-12-10)"
+                        "This is mostly a bug-fix-release for native Windows-XEmacs. In addition beta-code for Clearcase-support has been added. It's strongly recommended to install this release when using native Window-XEmacs! "
+                        (h-link "docs/Install-and-first-steps.html#Install%20and%20first%20steps" "Here") " is a short installation guide. "
+                        "Click " (h-link "NEWS.html" "here")
+                        " for information about changes in the new version. ")
         ,(h-sub-section "ECB 2.30.1 released! (2004-12-01)"
                         "This is mostly a bug-fix-release which fixes the errors occured at load-time with ECB 2.30. In addition there are some enhancements to the VC-support introduced first with ECB 2.30. "
                         (h-link "docs/Install-and-first-steps.html#Install%20and%20first%20steps" "Here") " is a short installation guide. "
@@ -87,11 +92,6 @@
                         (h-link "docs/Install-and-first-steps.html#Install%20and%20first%20steps" "Here") " is a short installation guide. "
                         "Click " (h-link "NEWS.html" "here")
                         " for information about changes in the new version. ")
-        ,(h-sub-section "ECB 2.27 released! (2004-08-31)"
-                        "Much saver mechanism for resizing the permanent compile-window: Enlarging the compile-window does never destroy some ecb-windows, shrinking the compile-window shrinks always back to the correct size and all ecb-windows have their correct size after shrinking the compile-window. Some minor fixes. "
-                        (h-link "docs/Install-and-first-steps.html#Install%20and%20first%20steps" "Here") " is a short installation guide. "
-                        "Click " (h-link "NEWS.html" "here")
-                        " for information about changes in the new version. ")
         ))
 
 (defvar ecb-rest-news nil
@@ -99,6 +99,11 @@
 `ecb-html-all-news'.")
 (setq ecb-rest-news
       `(
+        ,(h-sub-section "ECB 2.27 released! (2004-08-31)"
+                        "Much saver mechanism for resizing the permanent compile-window: Enlarging the compile-window does never destroy some ecb-windows, shrinking the compile-window shrinks always back to the correct size and all ecb-windows have their correct size after shrinking the compile-window. Some minor fixes. "
+                        (h-link "docs/Install-and-first-steps.html#Install%20and%20first%20steps" "Here") " is a short installation guide. "
+                        "Click " (h-link "NEWS.html" "here")
+                        " for information about changes in the new version. ")
         ,(h-sub-section "ECB 2.26 released! (2004-08-11)"
                         "Improved erformance of the directories-buffer-display. Some new minor-features. Fixed an important bug with XEmacs concerning merging faces. Some minor fixes. "
                         (h-link "docs/Install-and-first-steps.html#Install%20and%20first%20steps" "Here") " is a short installation guide. "

@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-layout.el,v 1.244 2004/12/20 17:02:13 berndl Exp $
+;; $Id: ecb-layout.el,v 1.245 2004/12/29 08:36:06 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -2452,7 +2452,7 @@ these are the buffers with name `ecb-directories-buffer-name',
 
 (defun ecb-dedicated-special-buffers ()
   "Return a list of these special dedicated buffers which are registrated via
-the macro `ecb-with-dedicated-window' \(these are normally only the standard
+the macro `defecb-window-dedicator' \(these are normally only the standard
 tree-buffers of ECB plus the integrated speedbar-buffer, but in general it can
 be more if there are additional buffers registrated, e.g. by other
 applications)."
@@ -2462,7 +2462,7 @@ applications)."
 
 (defun ecb-point-in-dedicated-special-buffer ()
   "Return nil if point is not in any of these special dedicated buffers which
-are registrated via the macro `ecb-with-dedicated-window' \(see
+are registrated via the macro `defecb-window-dedicator' \(see
 `ecb-dedicated-special-buffers'). Otherwise return the buffer-object."
   (when (equal (selected-frame) ecb-frame)
     (if (member (current-buffer) (ecb-dedicated-special-buffers))
@@ -2506,6 +2506,18 @@ is not active. If necessary the `ecb-frame' will be first raised."
           (ecb-redraw-layout-full nil nil nil nil)
           ;; now we can go to the window
           (ecb-window-select name)))))
+
+(defmacro ecb-exec-in-window (buffer-name &rest body)
+  "Evaluates BODY in that ecb-window which displays the buffer BUFFER-NAME. If
+that window is not visible then BODY is not evaluated and the symbol
+'window-not-visible is returned. Otherwise the return value of BODY is
+returned. Runs encapsulated in `save-selected-window'."
+  `(save-selected-window
+     (if (not (ecb-window-select ,buffer-name))
+         'window-not-visible
+       ,@body)))
+
+(put 'ecb-exec-in-window 'lisp-indent-function 1)
 
 (defun ecb-goto-window-edit-last ()
   "Make the last selected edit-window window the current window. This is the
@@ -3795,19 +3807,18 @@ buffer in current window and makes this window dedicated to this buffer. So
 for every ecb-buffer a cons cell must be added to this alist where car is
 `buffer-name' and cdr is the symbol of the setting-function.
 
-The setting function of such a buffer must do:
+The setting function of such a buffer must be defined with the macro
+`defecb-window-dedicator' and do:
 
 1. switch to that buffer in current window
 2. all things necessary for this buffer - e.g. making it read-only
-3. making the current window dedicated to that buffer! For this the macro
-   `ecb-with-dedicated-window' must be used!
 
-The setting function must ensure that the current window where is still
-current at the end and that the related ecb-buffer is displayed in this window
-at the end.
+The setting function must ensure that the current window is still current at
+the end and that the related ecb-buffer is displayed in this window at the
+end.
 
-One examples of such a setting function is `ecb-set-history-buffer' for
-the buffer with name `ecb-history-buffer-name'.")
+One examples of such a setting function is `ecb-set-history-buffer' for the
+buffer with name `ecb-history-buffer-name'.")
 
 (defun ecb-get-current-visible-ecb-buffers ()
   "Return a list of all buffer-objects displayed in a current visible
@@ -3963,6 +3974,9 @@ edit-window is selected."
         (setq ecb-current-maximized-ecb-buffer-name buf-name)))))
 
 (defun ecb-display-one-ecb-buffer (ecb-buffer-name)
+  "Maximize that window which displays the special ECB-buffer with
+name ECB-BUFFER-NAME. Afterwards ECB-BUFFER-NAME is the only visible special
+ECB-buffer. The currently selected window does not change."
   (let ((curr-point (ecb-where-is-point)))
     (ecb-maximize-ecb-window ecb-buffer-name)
     ;; point is now in the edit-buffer so maybe we have to move point to the
@@ -4042,54 +4056,61 @@ following structure:
 
 ;; =================== Helper functions ==================================
 
-(defmacro ecb-with-dedicated-window (buffer-name dedicated-setter &rest body)
+(defmacro ecb-with-dedicated-window (&rest body)
   "Make current selected window not dedicated, evaluate BODY in current
 window and make this window dedicated at the end. Even if an error occurs
-during evaluating BODY the current window is always dedicated at the end!
+during evaluating BODY the current window is always dedicated at the end!"
+  `(unwind-protect
+       (progn
+         (set-window-dedicated-p (selected-window) nil)
+         ,@body)
+     (set-window-dedicated-p (selected-window) t)))
 
-BUFFER-NAME must be the buffer-name of that buffer the current window will be
-dedicated to. DEDICATED-SETTER is the function-name \(a symbol) of that
-function which calls this macro, i.e. which is the \"dedicated setter\" of
-current window to BUFFER-NAME.
+(defmacro defecb-window-dedicator (creator buffer-name docstring &rest body)
+  "Define a function CREATOR which makes the selected window dedicated to the
+BUFFER-NAME. Do not quote CREATOR. DOCSTRING is the docstring for CREATOR.
+BODY is all the program-code of CREATOR which will be run encapsulated within
+a call to `ecb-with-dedicated-window'.
 
-Example: The function `ecb-set-history-buffer' is the \"dedicated setter\" of
-the history buffer with name `ecb-history-buffer-name' and this function uses
-this macro for making the current window dedicated to the history buffer. So
-`ecb-set-history-buffer' could be programmed like:
+Example:
 
-\(defun ecb-set-history-buffer
-  \(ecb-with-dedicated-window ecb-history-buffer-name 'ecb-set-history-buffer
-     \(switch-to-buffer ecb-history-buffer-name)))"
-  `(progn
-     (add-to-list 'ecb-buffer-setfunction-registration
-                  (cons ,buffer-name ,dedicated-setter))
-     (unwind-protect
-         (progn
-           (set-window-dedicated-p (selected-window) nil)
-           ,@body)
-       (set-window-dedicated-p (selected-window) t))))
+\(defecb-window-dedicator ecb-set-history-buffer ecb-history-buffer-name
+  \"Display the History-buffer in current window and make window
+dedicated.\"
+  \(switch-to-buffer ecb-history-buffer-name))
 
-(put 'ecb-with-dedicated-window 'lisp-indent-function 2)
+This defines a function `ecb-set-history-buffer' registered as
+\"window-dedicator\" for the buffer with name `ecb-history-buffer-name'. The
+BODY \(in this example only a call to switch-to-buffer) will run within the
+macro `ecb-with-dedicated-window'!"
+  `(eval-and-compile
+     (defun ,creator ()
+       ,docstring
+       (add-to-list 'ecb-buffer-setfunction-registration
+                    (cons ,buffer-name (quote ,creator)))
+       (ecb-with-dedicated-window
+        ,@body))))
 
-(defun ecb-set-speedbar-buffer ()
-  (ecb-with-dedicated-window ecb-speedbar-buffer-name 'ecb-set-speedbar-buffer
-    (ecb-speedbar-set-buffer)))
+(put 'defecb-window-dedicator 'lisp-indent-function 2)
 
-(defun ecb-set-default-ecb-buffer ()
+(defecb-window-dedicator ecb-set-speedbar-buffer ecb-speedbar-buffer-name
+  "Display in current window the speedbar-buffer and make window dedicated."
+  (ecb-speedbar-set-buffer))
+
+(defecb-window-dedicator ecb-set-default-ecb-buffer " *ECB-default-buffer*"
   "Set in the current window the default ecb-buffer which is useless but is
 used if a layout calls within its creation body a non bound
 ecb-buffer-setting-function."
-  (ecb-with-dedicated-window " *ECB-default-buffer*" 'ecb-set-default-ecb-buffer
-    (switch-to-buffer (get-buffer-create " *ECB-default-buffer*"))
-    (when (= (buffer-size) 0)
-      (insert " This is the default\n")
-      (insert " ecb-buffer which is\n")
-      (insert " useless. Probably this\n")
-      (insert " buffer is displayed\n")
-      (insert " because the layout uses\n")
-      (insert " an unbound buffer-set\n")
-      (insert " function!"))
-    (setq buffer-read-only t)))
+  (switch-to-buffer (get-buffer-create " *ECB-default-buffer*"))
+  (when (= (buffer-size) 0)
+    (insert " This is the default\n")
+    (insert " ecb-buffer which is\n")
+    (insert " useless. Probably this\n")
+    (insert " buffer is displayed\n")
+    (insert " because the layout uses\n")
+    (insert " an unbound window-\n")
+    (insert " dedicator!"))
+  (setq buffer-read-only t))
 
 
 ;; ======== Delete-window-functions for the different layout-types ==========
@@ -4240,19 +4261,17 @@ Things CREATE-CODE has to do:
    Each layout can only contain one of each tree-buffer-type!
 
    In addition to these functions there is a general macro:
-   + `ecb-with-dedicated-window'
-   This macro performs any arbitrary code in current window and makes the
-   window autom. dedicated at the end. This can be used by third party
-   packages like JDEE to create arbitrary ECB-windows besides the standard
-   tree-windows.
+   + `defecb-window-dedicator':
+   This macro defines a so called \"window-dedicator\" which is a function
+   registered at ECB and called by ECB to perform any arbitrary code in
+   current window and makes the window autom. dedicated at the end. This can
+   be used by third party packages like JDEE to create arbitrary ECB-windows
+   besides the standard tree-windows.
 
    To make a special ECB-window a dedicated window either one of the five
-   functions above must be used or a function\(!) which calls in turn the
-   macro `ecb-with-dedicated-window'. See the documentation of this macro how
-   to use it!
-
-   Such a function is called a \"dedicated setter\" and must\(!) use
-   `ecb-with-dedicated-window' to make the window dedicated!
+   functions above must be used or a new \"window-dedicator\"-function has to
+   be defined with `defecb-window-dedicator' and must be used within the
+   layout-definition.
 
 3. Every\(!) special ECB-window must be dedicated as described in 2.
 
@@ -4284,11 +4303,11 @@ Postconditions for CREATE-CODE:
          ,doc
          ;; Klaus Berndl <klaus.berndl@sdm.de>: creating the compile-window is
          ;; now done in `ecb-redraw-layout-full'!
-         ;;        (when (and ecb-compile-window-height
-         ;;                   (or (equal ecb-compile-window-width 'frame)
-         ;;                       (equal (ecb-get-layout-type ecb-layout-name) 'top)))
-         ;;          (ecb-split-ver (- ecb-compile-window-height) t t)
-         ;;          (setq ecb-compile-window (next-window)))
+         ;; (when (and ecb-compile-window-height
+         ;;            (or (equal ecb-compile-window-width 'frame)
+         ;;                (equal (ecb-get-layout-type ecb-layout-name) 'top)))
+         ;;   (ecb-split-ver (- ecb-compile-window-height) t t)
+         ;;   (setq ecb-compile-window (next-window)))
          ,(cond ((equal type 'left)
                  '(ecb-split-hor ecb-windows-width t))
                 ((equal type 'right)
@@ -4311,11 +4330,11 @@ Postconditions for CREATE-CODE:
            ,@create-code)
          ;; Klaus Berndl <klaus.berndl@sdm.de>: creating the compile-window is
          ;; now done in `ecb-redraw-layout-full'!
-         ;;        (when (and ecb-compile-window-height
-         ;;                   (equal ecb-compile-window-width 'edit-window)
-         ;;                   (not (equal (ecb-get-layout-type ecb-layout-name) 'top)))
-         ;;          (ecb-split-ver (- ecb-compile-window-height) t t)
-         ;;          (setq ecb-compile-window (next-window)))
+         ;; (when (and ecb-compile-window-height
+         ;;            (equal ecb-compile-window-width 'edit-window)
+         ;;            (not (equal (ecb-get-layout-type ecb-layout-name) 'top)))
+         ;;   (ecb-split-ver (- ecb-compile-window-height) t t)
+         ;;   (setq ecb-compile-window (next-window)))
          (setq ecb-edit-window (selected-window)))
        (defalias (quote ,(intern
                           (format "ecb-delete-window-in-editwindow-%s"
@@ -5205,7 +5224,7 @@ floating-point-numbers. Default referencial width rsp. height are
 ;; (see `ecb-repair-only-ecb-window-layout') the following code and mechanism
 ;; is not used - but who knows, maybe we can need it later.................
 
-;; TODO: Klaus Berndl <klaus.berndl@sdm.de>:
+;; Klaus Berndl <klaus.berndl@sdm.de>:
 ;; - this var must be set with the `current-window-configuration' in
 ;;   + `ecb-restore-window-sizes' (`ecb-store-window-sizes' and
 ;;     `ecb-restore-default-window-sizes' uses the :set-function of
