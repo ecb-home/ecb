@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: tree-buffer.el,v 1.158 2004/12/01 14:19:37 berndl Exp $
+;; $Id: tree-buffer.el,v 1.159 2004/12/06 17:52:53 berndl Exp $
 
 ;;; Commentary:
 
@@ -232,6 +232,21 @@ This function returns a timer object which you can use in
     (defun tree-buffer-cancel-timer (timer)
       "Remove TIMER from the list of active timers."
       (delete-itimer timer))))  
+
+;; debugging
+
+(defvar tree-buffer-debug-mode nil
+  "If not nil then all functions of tree-buffer which are debug-able write
+debug-messages to the message-log of Emacs. Ensure that this variable is opnlx
+not nil if you want find or report an error!")
+
+(defun tree-buffer-debug-error (&rest args)
+  "Run ARGS through `format' and write it to the *Messages*-buffer.
+Do nothing if `tree-buffer-debug-mode' is nil!"
+  (when tree-buffer-debug-mode
+    (message (concat (format "Tree-buffer-debug: [%s] "
+                             (format-time-string "%H:%M:%S"))
+                     (apply 'format args)))))
 
 ;; tree-buffer local variables
 (defvar tree-buffer-root nil)
@@ -619,9 +634,9 @@ LEN are ignored!"
   (when (equal 'image (tree-buffer-style))
     ;; Regular images (created with `insert-image' are intangible
     ;; which (I suppose) make them more compatible with XEmacs 21.
-    ;; Unfortunately, there is a giant pile o code dependent on the
+    ;; Unfortunately, there is a giant pile of code dependent on the
     ;; underlying text.  This means if we leave it tangible, then I
-    ;; don't have to change said giant piles o code.
+    ;; don't have to change said giant piles of code.
     (if image-icon
         (if tree-buffer-running-xemacs
             (add-text-properties (+ start len) start
@@ -744,6 +759,8 @@ TREE-IMAGE-NAME."
 (defun tree-buffer-get-node-name-start-point (name node)
   "Returns the buffer point where the name of the node starts."
   (let ((linenr (tree-buffer-find-node node)))
+    (tree-buffer-debug-error "tree-buffer-get-node-name-start-point: Cur-buf: %s, name: %s, linenr: %d"
+                             (current-buffer) name linenr)
     (when linenr
       (goto-line linenr)
       (beginning-of-line)
@@ -751,10 +768,14 @@ TREE-IMAGE-NAME."
 
 (defun tree-buffer-get-node-name-end-point (name node)
   "Returns the buffer point where the name of the node ends."
+  (tree-buffer-debug-error "tree-buffer-get-node-name-end-point: Cur-buf: %s, name: %s"
+                           (current-buffer) name)
   (+ (tree-buffer-get-node-name-start-point name node)
      (length name)))
 
 (defun tree-buffer-at-expand-symbol (name node p)
+  (tree-buffer-debug-error "tree-buffer-at-expand-symbol: Cur-buf: %s, name: %s, p: %d, exp-sym-before: %s"
+                           (current-buffer) name p tree-buffer-expand-symbol-before)
   (if tree-buffer-expand-symbol-before
       (< p (1- (tree-buffer-get-node-name-start-point name node)))
     (> p (tree-buffer-get-node-name-end-point name node))))
@@ -773,16 +794,26 @@ is called with the same arguments as `tree-node-expanded-fn'."
                (funcall tree-buffer-is-click-valid-fn mouse-button
                         shift-pressed control-pressed meta-pressed
                         (buffer-name)))
+      (tree-buffer-debug-error "tree-buffer-select-1: Cur-buf: %s"
+                               (current-buffer))
       (let* ((p (point))
 	     (name-node (tree-buffer-get-name-node-at-point))
 	     (name (car name-node))
 	     (node (cdr name-node)))
         (when node
+          (tree-buffer-debug-error "tree-buffer-select-2: Cur-buf: %s"
+                                   (current-buffer))
           ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: Is this the right place
-          ;; for this?
-          (ignore-errors
-            (let ((search-nonincremental-instead nil))
-              (isearch-exit)))
+          ;; for this? probably it can cause some erros...... Yep - it causes
+          ;; serious XEmacs-sideeffects: clicking into tree-buffer doesn't
+          ;; work anymore when doing this during an active isearch! Seems that
+          ;; isearch-exit switches the current buffer so the buffer after the
+          ;; isearch-exit is not the same as before!! So we comment this out!!
+;;           (ignore-errors
+;;             (let ((search-nonincremental-instead nil))
+;;               (isearch-exit)))
+          (tree-buffer-debug-error "tree-buffer-select-3: Cur-buf: %s"
+                                   (current-buffer))
           (if (and (tree-buffer-at-expand-symbol name node p)
                    ;; if the expand-symbol is displayed before and mouse-button
                    ;; = 0, means RET is pressed, we do not toggle-expand but work
