@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb.el,v 1.346 2003/10/02 15:00:13 berndl Exp $
+;; $Id: ecb.el,v 1.347 2003/10/13 16:37:38 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -646,7 +646,7 @@ then activating ECB again!"
   :group 'ecb-directories
   :type 'string)
 
-(defcustom ecb-excluded-directories-regexp "^\\(CVS\\|\\..*\\)$"
+(defcustom ecb-excluded-directories-regexp "^\\(CVS\\|\\.[^xX]*\\)$"
   "*Directories that should not be included in the directories list.
 The value of this variable should be a regular expression."
   :group 'ecb-directories
@@ -773,7 +773,7 @@ Tips for the directory- and file-regexps: \"$^\" matches no files/directories,
                                (const :tag "All files"
                                       :value ("" ""))
                                (const :tag "All, but no backups, objects, etc..."
-                                      :value ("\\(^\\(\\.\\|#\\)\\|\\(~$\\|\\.\\(elc\\|obj\\|o\\|class\\|lib\\|dll\\|a\\|so\\|cache\\)$\\)\\)" "^\\.\\(emacs\\|gnus\\)$"))
+                                      :value ("\\(^\\(\\.\\|#\\)\\|\\(~$\\|\\.\\(elc\\|obj\\|o\\|class\\|lib\\|dll\\|a\\|so\\|cache\\)$\\)\\)" "^\\.\\(x?emacs\\|gnus\\)$"))
                                (const :tag "Common source file types"
                                       :value ("" "\\(\\(M\\|m\\)akefile\\|.*\\.\\(java\\|el\\|c\\|cc\\|h\\|hh\\|txt\\|html\\|texi\\|info\\|bnf\\)\\)$"))
                                (list :tag "Custom"
@@ -1545,12 +1545,31 @@ ECB again to take effect."
   :group 'ecb-general
   :type 'boolean)
 
-(defcustom ecb-tree-use-image-icons t
+;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: Das eventuell in
+;; `ecb-tree-style' umwandeln mit folgenden Optionen:
+;; - image (Klar - wäre dann bisher ecb-tree-use-image-icons = t)
+;; - ascii plus guide-lines (Klar - wäre dann bisher ecb-tree-use-image-icons = nil)
+;; - ascii ohne guide-lines (wie in ECB <= 1.96 - müsste noch implementiert werden)
+(defcustom ecb-tree-use-image-icons ecb-images-can-be-used
   "*Use icons for expand/collapse tokens instead of the ascii-strings.
 If true the ECB displays in its tree-buffers the expand- and collapse symbols
 with appropriate icons - the icons are the same as used by speedbar."
   :group 'ecb-general
   :type 'boolean)
+
+;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: Docstring schreiben und in texi
+;; mit aufnehmen
+(defcustom ecb-tree-image-icons-directories
+  (let ((base (concat ecb-ecb-dir "ecb-images/")))
+    (mapcar (function (lambda (i)
+                        (concat base i)))
+            '("directories" "sources" "methods" "history")))
+  "*"
+  :group 'ecb-general
+  :type '(list (directory :tag "Full image-path for directories")
+               (directory :tag "Full image-path for sources")
+               (directory :tag "Full image-path for methods")
+               (directory :tag "Full image-path for history")))
 
 (defcustom ecb-truncate-lines '(t t t t)
   "*Truncate lines in ECB buffers.
@@ -1650,6 +1669,18 @@ must deactivate and activate ECB again to take effect."
                        :value substring)
                 (const :tag "No incremental search"
                        :value nil)))
+
+(defconst ecb-methods-incr-searchpattern-node-prefix
+  '("\\([-+#]\\|[^-+#][^ \n]+ \\)?" . 1)
+  "Prefix-pattern which ignores all not interesting stuff of a node-name at
+incr. search. The following contents of a node-name are ignored by this
+pattern:
+- types of a variable or return-types of a method
+- const specifier of variables
+- protection sign of a variable/method: +, - or #
+
+Format: cons with car is the pattern and cdr is the number of subexpr in this
+pattern.")
 
 (defcustom ecb-tree-navigation-by-arrow t
   "*Enable smart navigation in the tree-windows by horizontal arrow-keys.
@@ -1861,7 +1892,7 @@ switch on this option and submitting a bug-report to the ecb-mailing-list
 
 (defcustom ecb-directories-menu-user-extension
   '(("Version Control"
-     (cb-dir-popup-cvs-status "CVS Status" )
+     (ecb-dir-popup-cvs-status "CVS Status" )
      (ecb-dir-popup-cvs-examine "CVS Examine")
      (ecb-dir-popup-cvs-update "CVS Update")))
   "*User extensions for the popup-menu of the directories buffer.
@@ -3139,7 +3170,8 @@ then nothing is done unless first optional argument FORCE is not nil."
                  (setq tree-buffer-nodes (nth 1 cache-elem))
                  (let ((buffer-read-only nil))
                    (erase-buffer)
-                   (insert (nth 2 cache-elem))))
+                   (insert (nth 2 cache-elem))
+                   (tree-buffer-display-in-general-face)))
              (let ((new-tree (tree-node-new "root" 0 nil))
                    (old-children (tree-node-get-children (tree-buffer-get-root)))
                    (new-cache-elem nil))
@@ -3489,7 +3521,6 @@ to be rescanned/reparsed and therefore the Method-buffer will be rebuild too."
         (ecb-buffer-select ecb-methods-buffer-name)
         (tree-buffer-set-root (cdr cached-tree))
         (setq ecb-methods-root-node (cdr cached-tree))
-        (setq tree-buffer-indent ecb-tree-indent)
         (tree-buffer-update)))
     
     ;; Klaus Berndl <klaus.berndl@sdm.de>: after a full reparse all overlays
@@ -3934,20 +3965,39 @@ OTHER-EDIT-WINDOW."
   (ecb-nav-add-item (ecb-nav-file-history-item-new)))
 
 (defun ecb-tree-node-add-files
-  (node path files type include-extension old-children &optional not-expandable)
+  (node path files type include-extension old-children
+        &optional not-expandable)
   "For every file in FILES add a child-node to NODE."
   (dolist (file files)
-    (let ((filename (ecb-fix-filename path file)))
+    (let* ((filename (ecb-fix-filename path file))
+           (file-1 (if include-extension
+                       file
+                     (file-name-sans-extension file)))
+           (displayed-file file-1))
       (tree-node-add-child
        node
        (ecb-new-child
         old-children
-        (if include-extension
-            file
-          (file-name-sans-extension file))
+        displayed-file
         type filename
         (or not-expandable (= type 1))
         (if ecb-truncate-long-names 'end))))))
+
+;; (defun ecb-tree-node-add-files
+;;   (node path files type include-extension old-children &optional not-expandable)
+;;   "For every file in FILES add a child-node to NODE."
+;;   (dolist (file files)
+;;     (let ((filename (ecb-fix-filename path file)))
+;;       (tree-node-add-child
+;;        node
+;;        (ecb-new-child
+;;         old-children
+;;         (if include-extension
+;;             file
+;;           (file-name-sans-extension file))
+;;         type filename
+;;         (or not-expandable (= type 1))
+;;         (if ecb-truncate-long-names 'end))))))
 
 (defun ecb-update-directory-node (node)
   "Updates the directory node NODE and add all subnodes if any."
@@ -3998,7 +4048,6 @@ OTHER-EDIT-WINDOW."
       (ecb-exec-in-directories-window
        ;;     (setq tree-buffer-type-faces
        ;;       (list (cons 1 ecb-source-in-directories-buffer-face)))
-       (setq tree-buffer-indent ecb-tree-indent)
        (let* ((node (tree-buffer-get-root))
               (old-children (tree-node-get-children node))
               (paths (append (ecb-get-source-paths-from-functions)
@@ -5574,6 +5623,8 @@ is current when ECB is activated. This hack fixes this."
                  'ecb-tree-buffer-node-expand-callback
                  'ecb-mouse-over-directory-node
                  'equal
+                 (list 0)
+                 (list 1)
                  (list (cons 0 (funcall (or ecb-directories-menu-sorter
                                             'identity)
                                         (append ecb-directories-menu-user-extension
@@ -5593,14 +5644,11 @@ is current when ECB is activated. This hack fixes this."
                  t
                  ecb-tree-indent
                  ecb-tree-incremental-search
+                 nil
                  ecb-tree-navigation-by-arrow
                  ecb-tree-easy-hor-scroll
-                 (list (cons "[+]" (and ecb-tree-use-image-icons
-                                        (ignore-errors (require 'sb-image))
-                                        'speedbar-directory-plus))
-                       (cons "[-]" (and ecb-tree-use-image-icons
-                                        (ignore-errors (require 'sb-image))
-                                        'speedbar-directory-minus)))
+                 (nth 0 ecb-tree-image-icons-directories)
+                 ecb-tree-use-image-icons
                  (list (cons 1 ecb-source-in-directories-buffer-face))
                  ecb-tree-expand-symbol-before
                  ecb-directory-face
@@ -5626,6 +5674,8 @@ is current when ECB is activated. This hack fixes this."
                  'ecb-tree-buffer-node-expand-callback
                  'ecb-mouse-over-source-node
                  'equal
+                 nil
+                 nil ;(list 0) ;; set this list if you want leaf-symbols
                  (list (cons 0 (funcall (or ecb-sources-menu-sorter
                                             'identity)
                                         (append ecb-sources-menu-user-extension
@@ -5635,11 +5685,13 @@ is current when ECB is activated. This hack fixes this."
                  t
                  ecb-tree-indent
                  ecb-tree-incremental-search
+                 nil
                  ecb-tree-navigation-by-arrow
                  ecb-tree-easy-hor-scroll
-                 (list nil nil)
+                 (nth 1 ecb-tree-image-icons-directories)
+                 ecb-tree-use-image-icons
                  nil
-                 nil
+                 ecb-tree-expand-symbol-before
                  ecb-source-face
                  ecb-sources-general-face
                  (append
@@ -5672,6 +5724,8 @@ is current when ECB is activated. This hack fixes this."
                            (eq (semantic-token-token l) (semantic-token-token r))
                            (eq (ecb-semantic-token-start l) (ecb-semantic-token-start r))
                            (eq (ecb-semantic-token-end l) (ecb-semantic-token-end r))))))
+                 (list 1)
+                 nil
                  (list (cons 0 (funcall (or ecb-methods-menu-sorter
                                             'identity)
                                         (append ecb-methods-menu-user-extension
@@ -5691,14 +5745,11 @@ is current when ECB is activated. This hack fixes this."
                  t
                  ecb-tree-indent
                  ecb-tree-incremental-search
+                 ecb-methods-incr-searchpattern-node-prefix
                  ecb-tree-navigation-by-arrow
                  ecb-tree-easy-hor-scroll
-                 (list (cons "[+]" (and ecb-tree-use-image-icons
-                                        (ignore-errors (require 'sb-image))
-                                        'speedbar-box-plus))
-                       (cons "[-]" (and ecb-tree-use-image-icons
-                                        (ignore-errors (require 'sb-image))
-                                        'speedbar-box-minus)))
+                 (nth 2 ecb-tree-image-icons-directories)
+                 ecb-tree-use-image-icons
                  nil
                  ecb-tree-expand-symbol-before
                  ecb-method-face
@@ -5720,6 +5771,8 @@ is current when ECB is activated. This hack fixes this."
                  'ecb-tree-buffer-node-expand-callback
                  'ecb-mouse-over-history-node
                  'equal
+                 nil
+                 nil
                  (list (cons 0 (funcall (or ecb-history-menu-sorter
                                             'identity)
                                         (append ecb-history-menu-user-extension
@@ -5729,11 +5782,13 @@ is current when ECB is activated. This hack fixes this."
                  t
                  ecb-tree-indent
                  ecb-tree-incremental-search
+                 nil
                  ecb-tree-navigation-by-arrow
                  ecb-tree-easy-hor-scroll
-                 (list nil nil)
+                 (nth 3 ecb-tree-image-icons-directories)
+                 ecb-tree-use-image-icons
                  nil
-                 nil
+                 ecb-tree-expand-symbol-before
                  ecb-history-face
                  ecb-history-general-face
                  (append
@@ -6444,10 +6499,10 @@ this fails then nil is returned otherwise t."
 
 (defvar ecb-methods-token-menu nil)
 (setq ecb-methods-token-menu
-      (append '(("Hide & Narrow"
+      (append '(("Hide/Show"
                  (ecb-methods-menu-hide-block "Jump to token and hide block")
-                 (ecb-methods-menu-show-block "Jump to token and show block")
-                 ("---")
+                 (ecb-methods-menu-show-block "Jump to token and show block"))
+                ("Narrow/Widen"
                  (ecb-methods-menu-jump-and-narrow "Jump to token and narrow")
                  (ecb-methods-menu-widen "Undo narrowing of edit-window")))
               ecb-common-methods-menu))
@@ -6708,6 +6763,43 @@ changed there should be no performance-problem!"
 (ecb-disable-advices ecb-speedbar-adviced-functions)
 (ecb-disable-advices ecb-eshell-adviced-functions)
 (ecb-activate-adviced-functions nil)
+
+(require 'sb-image)
+(defimage-speedbar ecb-open-dir
+  ((:type xpm :file "open.xpm" :ascent center))
+  "Image used for tags.")
+
+(defimage-speedbar ecb-close-dir
+  ((:type xpm :file "close.xpm" :ascent center))
+  "Image used for tags.")
+
+(defimage-speedbar ecb-empty-dir
+  ((:type xpm :file "empty.xpm" :ascent center))
+  "Image used for tags.")
+
+(defimage-speedbar ecb-document
+  ((:type xpm :file "leave.xpm" :ascent center))
+  "Image used for tags.")
+
+(defimage-speedbar ecb-guide
+  ((:type xpm :file "guide.xpm" :ascent center))
+  "Image used for tags.")
+
+(defimage-speedbar ecb-no-guide
+  ((:type xpm :file "no-guide.xpm" :ascent center))
+  "Image used for tags.")
+
+(defimage-speedbar ecb-end-guide
+  ((:type xpm :file "end-guide.xpm" :ascent center))
+  "Image used for tags.")
+
+(defimage-speedbar ecb-handle
+  ((:type xpm :file "handle.xpm" :ascent center))
+  "Image used for tags.")
+
+(defimage-speedbar ecb-no-handle
+  ((:type xpm :file "no-handle.xpm" :ascent center))
+  "Image used for tags.")
 
 (silentcomp-provide 'ecb)
 

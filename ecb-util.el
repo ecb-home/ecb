@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-util.el,v 1.80 2003/09/25 12:13:04 berndl Exp $
+;; $Id: ecb-util.el,v 1.81 2003/10/13 16:37:38 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -65,6 +65,7 @@
 (silentcomp-defvar message-truncate-lines)
 (silentcomp-defun x-popup-dialog)
 (silentcomp-defvar noninteractive)
+(silentcomp-defun display-images-p)
 
 
 ;; Some constants
@@ -101,6 +102,14 @@
        ecb-semantic-dir
        (file-exists-p (expand-file-name (concat ecb-semantic-dir "_pkg.el")))
        (file-exists-p (expand-file-name (concat ecb-semantic-dir "auto-autoloads.el")))))
+
+(defconst ecb-images-can-be-used
+  (and (or (fboundp 'defimage)
+           (fboundp 'make-image-specifier))
+       (if (fboundp 'display-images-p)
+           (display-images-p)
+         window-system)))
+
 
 (if ecb-running-xemacs
     (progn

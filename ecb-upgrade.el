@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-upgrade.el,v 1.46 2003/10/02 08:35:22 berndl Exp $
+;; $Id: ecb-upgrade.el,v 1.47 2003/10/13 16:37:38 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -389,6 +389,17 @@ The car is the old option symbol and the cdr is a 2-element-list with:
 ;; internal functions. Dot change anything below this line
 ;; ----------------------------------------------------------------------
 
+(defgroup ecb-upgrade-internal nil
+  "Only Internal setting for the ECB upgrade-mechanism - no user-options!"
+  :group 'ecb-general
+  :prefix "ecb-")
+
+(defcustom ecb-options-version ecb-version
+  "*DO NOT CUSTOMIZE THIS VALUE - IT IS ONLY FOR INTERNAL USAGE!"
+  :group 'ecb-upgrade-internal
+  :type 'string)
+
+
 (defun ecb-option-set-default (option)
   "Save the ECB-option OPTION with current default value."
   (customize-save-variable option
@@ -450,6 +461,13 @@ its current defcustom-definition."
   (widget-apply (widget-convert (get option 'custom-type))
                 :match (symbol-value option)))
 
+(defun ecb-store-current-options-version ()
+  (if (not (equal (ecb-option-get-value 'ecb-options-version
+                                        'saved-value)
+                  ecb-version))
+      (customize-save-variable 'ecb-options-version ecb-version)))
+  
+
 (defvar ecb-not-compatible-options nil
   "This variable is only set by `ecb-check-not-compatible-options'! It is an
 alist with car is the symbol of an incompatible option and the cdr is the not
@@ -486,14 +504,24 @@ If such an option is contained in `ecb-upgradable-option-alist' then try to
 perform a special upgrade with `ecb-option-upgrade'. If no special upgrade is
 done then the option is reset to the default-value of current ECB-version."
   ;; For every not compatible option perform an upgrade
-  (dolist (option ecb-not-compatible-options)
-    ;; if the incompatible option is not upgraded by `ecb-option-upgrade' then
-    ;; we reset it to the standard-value of current ECB-version.
-    (let ((upgrade-result (ecb-option-upgrade (car option))))
-      (when (or (null upgrade-result) ;; no upgrade necessary or allowed
-                ;; the upgrade has been tried but has failed.
-                (equal (car upgrade-result) 'ecb-no-upgrade-conversion))
-        (ecb-option-set-default (car option))))))
+  (message "Klausi: Upgrading all incompatible options...curr-version: %s"
+           (ecb-option-get-value 'ecb-options-version 'saved-value))
+  (let ((is-not-a-downgrade
+         (not (ecb-package-version-list<
+               (ecb-package-version-str2list ecb-version)
+               (ecb-package-version-str2list ecb-options-version)))))
+    (dolist (option ecb-not-compatible-options)
+      ;; if the incompatible option is not upgraded by `ecb-option-upgrade'
+      ;; then we reset it to the standard-value of current ECB-version. If we
+      ;; make a downgrade we always reset to the default!
+      (let ((upgrade-result
+             (if is-not-a-downgrade (ecb-option-upgrade (car option)))))
+        (when (or (null upgrade-result) ;; no upgrade necessary or allowed
+                  ;; the upgrade has been tried but has failed.
+                  (equal (car upgrade-result) 'ecb-no-upgrade-conversion))
+          (ecb-option-set-default (car option)))))
+    ;; Now we store the version of the options
+    (ecb-store-current-options-version)))
 
 (defvar ecb-renamed-options nil)
 
@@ -507,22 +535,32 @@ Note: This function upgrades only the renamed but not the incompatible options
 `ecb-upgradable-option-alist' because the latter ones will be upgraded by
 `ecb-upgrade-not-compatible-options'!"
   (setq ecb-renamed-options nil)
-  (dolist (option ecb-upgradable-option-alist)
-    ;; perform only an upgrade if the option is not contained in
-    ;; `ecb-not-compatible-options' too because then ECB has auto. recognized
-    ;; that this option is not compatible and the upgrade (or reset) is
-    ;; performed by `ecb-upgrade-not-compatible-options'!
-    (when (not (assoc (car option) ecb-not-compatible-options))
-      (let ((new-value-list (ecb-option-upgrade (car option))))
-        ;; if an upgrade was tried then store the option in
-        ;; `ecb-renamed-options'.
-        (when new-value-list
-          (setq ecb-renamed-options
-                (cons (list (car option)
-                            (ecb-option-get-value (car option) 'saved-value)
-                            (car (cdr option))
-                            (car new-value-list))
-                      ecb-renamed-options)))))))
+  (when (not (ecb-package-version-list<
+              (ecb-package-version-str2list ecb-version)
+              (ecb-package-version-str2list ecb-options-version)))
+    (message "Klausi: Upgrading all renamed options...curr-version: %s"
+             (ecb-option-get-value 'ecb-options-version 'saved-value))
+    (dolist (option ecb-upgradable-option-alist)
+      ;; perform only an upgrade if the option is not contained in
+      ;; `ecb-not-compatible-options' too because then ECB has auto.
+      ;; recognized that this option is not compatible and the upgrade (or
+      ;; reset) is performed by `ecb-upgrade-not-compatible-options'!
+      (when (not (assoc (car option) ecb-not-compatible-options))
+        (let ((new-value-list (ecb-option-upgrade (car option))))
+          ;; if an upgrade was tried then store the option in
+          ;; `ecb-renamed-options'.
+          (when (and new-value-list
+                     (not (equal (car new-value-list)
+                                 'ecb-no-upgrade-conversion)))
+            (setq ecb-renamed-options
+                  (cons (list (car option)
+                              (ecb-option-get-value (car option) 'saved-value)
+                              (car (cdr option))
+                              (car new-value-list))
+                        ecb-renamed-options))))))
+    ;; Now we store the version of the options
+    (ecb-store-current-options-version)))
+
 
 (defun ecb-display-upgraded-options ()
   "Display a message-buffer which options have been upgraded or reset."
@@ -590,7 +628,7 @@ Note: This function upgrades only the renamed but not the incompatible options
         (princ "If the new values are not what you want please re-customize!")
         (princ "\n\n")
         (print-help-return-message))
-    (message "There were no incompatible or renamed options!")))
+    (message "There are no incompatible or renamed options!")))
 
 (defun ecb-upgrade-options ()
   "Check for all ECB-options if the current value is compatible to the type.

@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-face.el,v 1.16 2003/08/06 09:15:19 berndl Exp $
+;; $Id: ecb-face.el,v 1.17 2003/10/13 16:37:38 berndl Exp $
 
 ;;; Commentary:
 
@@ -118,6 +118,16 @@ use the face 'ecb-default-general-face' so also with XEmacs and GNU Emacs 20.X
 the basic face-settings can be easily changed just by customizing the face
 'ecb-default-general-face'!"
   :group 'ecb-faces)
+
+(defface ecb-tree-guide-line-face (ecb-face-default 1.0 nil nil
+                                                    'ecb-default-general-face
+                                                    "grey" "gray")
+  "*Face for the guide-lines in the tree-buffers."
+  :group 'ecb-faces)
+
+(defcustom ecb-tree-guide-line-face 'ecb-tree-guide-line-face
+  "*Face for the guide-lines in the tree-buffers."
+  :group 'ecb-face-options)
 
 (defface ecb-directories-general-face (ecb-face-default 1.0 nil nil
                                                         'ecb-default-general-face)
