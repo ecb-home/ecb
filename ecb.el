@@ -7,7 +7,7 @@
 ;; Keywords: java, class, browser
 ;; Created: Jul 2000
 
-(defvar ecb-version "1.60"
+(defvar ecb-version "1.61"
   "Current ECB version.")
 
 ;; This program is free software; you can redistribute it and/or modify it under
