@@ -54,7 +54,7 @@
 ;; The latest version of the ECB is available at
 ;; http://home.swipnet.se/mayhem/ecb.html
 
-;; $Id: ecb.el,v 1.213 2002/04/26 16:01:22 berndl Exp $
+;; $Id: ecb.el,v 1.214 2002/04/28 19:19:45 berndl Exp $
 
 ;;; Code:
 
@@ -182,6 +182,77 @@ if you always want to run `ecb-activate'."
   :group 'ecb-general
   :type
   'boolean)
+
+(defcustom ecb-major-modes-activate 'none
+  "*List of major-modes for which ECB shoulb be activated or shown.
+Do not mistake this option with `ecb-auto-activate'. The latter one is for
+activating ECB after Emacs-startup \(even without opening a buffer) and this
+one is for defining for which major-modes ECB should be activated if the mode
+goes active!
+
+The behaviour is like follows: If a mode is contained in this option ECB
+is activated after activating this mode \(if ECB was deactivated before) or
+the ECB-windows are shown if ECB was already active but its windows were
+hidden. In every case ECB is activated with visible ECB-windows afterwards!
+
+For every major mode there can be specified an `ecb-layout-nr':
+- default: The value customized with `ecb-layout-nr' is choosen.
+- an integer: ECB is activated with this layout-nr. This changes the value of
+  `ecb-layout-nr' but only for current emacs-session!
+But the layout is only changed if ECB was activated, if just the ECB-windows
+were shown, the current layout is used!
+
+There are two additional options:
+- none: No major-modes should activate ECB automatically.
+- all-except-deactivated: All major-modes which are not listed in
+  `ecb-major-modes-deactivate'.
+
+Any auto. activation is only done if the current-frame is unsplitted to avoid
+changing unnecessarily or unintentionally the frame-layout if the user just
+jumps between different windows."
+  :group 'ecb-general
+  :type '(radio :tag "Modes for activation"
+                (const :tag "None" none)
+                (const :tag "All except deactivated" all-except-deactivated)
+                (repeat :tag "Mode list"
+                        (cons (symbol :tag "Major-mode")
+                              (choice :tag "Layout" :menu-tag "Layout"
+                                      :value default
+                                      (const :tag "Default" default)
+                                      (integer :tag "Layout-nr."))))))
+
+(defcustom ecb-major-modes-deactivate 'none
+  "*List of major-modes for which ECB should be deactivated or hidden.
+Specify if ECB should be deactivated or at least hidden if a major-mode is
+active. For each major-mode there must be added an action what should be done:
+- hide: ECB just hides all the ECB windows like with `ecb-hide-ecb-windows'.
+- deactivate: ECB is completely deactivated after activating the major-mode.
+
+There are three additional options:
+- none: No major-modes should deactivate/hide ECB automatically.
+- hide-all-except-activated: All major-modes which are not listed in
+  `ecb-major-modes-activate' hide the ECB-windows.
+- deactivate-all-except-activated: All major-modes which are not listed in
+  `ecb-major-modes-activate' deactivate ECB.
+
+If a major-mode is listed in `ecb-major-modes-activate' as well as in
+`ecb-major-modes-deactivate' then ECB is activated!
+
+Any auto. deactivation/hiding is only done if the edit-window of ECB is
+unsplitted and point is in the edit-window to avoid changing unnecessarily or
+unintentionally the frame-layout if the user just jumps between different
+edit-windows, the tree-windows and the compile-window of ECB."
+  :group 'ecb-general
+  :type '(radio :tag "Modes for deactivation"
+                (const :tag "None" none)
+                (const :tag "Hide all except act." hide-all-except-activated)
+                (const :tag "Deactivate all except act." deactivate-all-except-activated)
+                (repeat :tag "Mode list"
+                        (cons (symbol :tag "Major-mode")
+                              (choice :tag "Action" :menu-tag "Action"
+                                      :value hide
+                                      (const :tag "Just Hide" hide)
+                                      (const :tag "Deactivate" deactivate))))))
 
 (defcustom ecb-source-path nil
   "*Paths where to find code sources. Each path can have an optional alias that
@@ -3573,77 +3644,6 @@ FILE.elc or if FILE.elc doesn't exist."
     (ecb-activate)))
 
 (defvar ecb-last-major-mode nil)
-
-(defcustom ecb-major-modes-activate 'none
-  "*List of major-modes for which ECB shoulb be activated or shown.
-Do not mistake this option with `ecb-auto-activate'. The latter one is for
-activating ECB after Emacs-startup \(even without opening a buffer) and this
-one is for defining for which major-modes ECB should be activated if the mode
-goes active!
-
-The behaviour is like follows: If a mode is contained in this option ECB
-is activated after activating this mode \(if ECB was deactivated before) or
-the ECB-windows are shown if ECB was already active but its windows were
-hidden. In every case ECB is activated with visible ECB-windows afterwards!
-
-For every major mode there can be specified an `ecb-layout-nr':
-- default: The value customized with `ecb-layout-nr' is choosen.
-- an integer: ECB is activated with this layout-nr. This changes the value of
-  `ecb-layout-nr' but only for current emacs-session!
-But the layout is only changed if ECB was activated, if just the ECB-windows
-were shown, the current layout is used!
-
-There are two additional options:
-- none: No major-modes should activate ECB automatically.
-- all-except-deactivated: All major-modes which are not listed in
-  `ecb-major-modes-deactivate'.
-
-Any auto. activation is only done if the current-frame is unsplitted to avoid
-changing unnecessarily or unintentionally the frame-layout if the user just
-jumps between different windows."
-  :group 'ecb-general
-  :type '(radio :tag "Modes for activation"
-                (const :tag "None" none)
-                (const :tag "All except deactivated" all-except-deactivated)
-                (repeat :tag "Mode list"
-                        (cons (symbol :tag "Major-mode")
-                              (choice :tag "Layout" :menu-tag "Layout"
-                                      :value default
-                                      (const :tag "Default" default)
-                                      (integer :tag "Layout-nr."))))))
-
-(defcustom ecb-major-modes-deactivate 'none
-  "*List of major-modes for which ECB should be deactivated or hidden.
-Specify if ECB should be deactivated or at least hidden if a major-mode is
-active. For each major-mode there must be added an action what should be done:
-- hide: ECB just hides all the ECB windows like with `ecb-hide-ecb-windows'.
-- deactivate: ECB is completely deactivated after activating the major-mode.
-
-There are three additional options:
-- none: No major-modes should deactivate/hide ECB automatically.
-- hide-all-except-activated: All major-modes which are not listed in
-  `ecb-major-modes-activate' hide the ECB-windows.
-- deactivate-all-except-activated: All major-modes which are not listed in
-  `ecb-major-modes-activate' deactivate ECB.
-
-If a major-mode is listed in `ecb-major-modes-activate' as well as in
-`ecb-major-modes-deactivate' then ECB is activated!
-
-Any auto. deactivation/hiding is only done if the edit-window of ECB is
-unsplitted and point is in the edit-window to avoid changing unnecessarily or
-unintentionally the frame-layout if the user just jumps between different
-edit-windows, the tree-windows and the compile-window of ECB."
-  :group 'ecb-general
-  :type '(radio :tag "Modes for deactivation"
-                (const :tag "None" none)
-                (const :tag "Hide all except act." hide-all-except-activated)
-                (const :tag "Deactivate all except act." deactivate-all-except-activated)
-                (repeat :tag "Mode list"
-                        (cons (symbol :tag "Major-mode")
-                              (choice :tag "Action" :menu-tag "Action"
-                                      :value hide
-                                      (const :tag "Just Hide" hide)
-                                      (const :tag "Deactivate" deactivate))))))
 
 (defun ecb-handle-major-mode-activation ()
   "Added to `post-command-hook' after loading the ecb-library. Handles the
