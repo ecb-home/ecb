@@ -27,7 +27,7 @@ REM You should have received a copy of the GNU General Public License along with
 REM GNU Emacs; see the file COPYING.  If not, write to the Free Software
 REM Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-REM $Id: make.bat,v 1.24 2003/07/31 16:02:07 berndl Exp $
+REM $Id: make.bat,v 1.25 2003/09/01 14:48:36 berndl Exp $
 
 
 REM Make sure you byte-compile ECB with the semantic, eieio and
@@ -66,7 +66,7 @@ echo (add-to-list 'load-path "%SPEEDBAR%") >> ecb-compile-script-init
 echo (require 'ecb) >> ecb-compile-script-init
 echo (setq debug-on-error t) >> ecb-compile-script-init
 
-%EMACS% -batch -no-site-file -l ecb-compile-script-init --eval "(ecb-byte-compile t)"
+%EMACS% -batch -no-site-file -l ecb-compile-script-init --eval "(ecb-byte-compile t t)"
 
 del ecb-compile-script-init
 

@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb.el,v 1.328 2003/09/01 09:13:24 berndl Exp $
+;; $Id: ecb.el,v 1.329 2003/09/01 14:48:37 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -5160,7 +5160,15 @@ That is remove the unsupported :help stuff."
        :active t
        :style toggle
        :selected ecb-debug-mode
-       :help "Print debug-informations in the message buffer."
+       :help "Print debug-informations about parsing files in the message buffer."
+       ])
+    (ecb-menu-item
+     [ "ECB Layout Debug mode"
+       (setq ecb-layout-debug-mode (not ecb-layout-debug-mode))
+       :active t
+       :style toggle
+       :selected ecb-layout-debug-mode
+       :help "Print debug-informations about window-operations in the message buffer."
        ])
     "-"
     (ecb-menu-item
@@ -6190,7 +6198,7 @@ FILE.el is newer than FILE.elc or if FILE.elc doesn't exist."
         (byte-compile-file file))))
 
 ;;;###autoload
-(defun ecb-byte-compile (&optional force-all)
+(defun ecb-byte-compile (&optional force-all force-no-warnings)
   "Byte-compiles the ECB package.
 This is done for all lisp-files of ECB if FORCE-ALL is not nil or for each
 lisp-file FILE.el which is either newer than FILE.elc or if FILE.elc doesn't
@@ -6200,7 +6208,11 @@ exist."
       (if (ecb-check-requirements t)
           (ecb-error "Incorrect requirements; check the versions of semantic, eieio and speedbar!"))
     (ecb-check-requirements))
-  (let (;; (byte-compile-warnings nil)
+  (if (interactive-p)
+      (setq force-no-warnings t))
+  (let ((byte-compile-warnings (if force-no-warnings
+                                   nil
+                                 byte-compile-warnings))
         (load-path
 	 (append (list (file-name-directory
 			(or (locate-library "semantic")
