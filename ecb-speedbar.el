@@ -1,6 +1,6 @@
 ;;; ecb-speedbar.el --- 
 
-;; $Id: ecb-speedbar.el,v 1.38 2003/01/15 16:25:58 berndl Exp $
+;; $Id: ecb-speedbar.el,v 1.39 2003/01/16 09:21:58 berndl Exp $
 
 ;; Copyright (C) 2000-2003 Free Software Foundation, Inc.
 ;; Copyright (C) 2000-2003 Kevin A. Burton (burton@openprivacy.org)
@@ -70,8 +70,10 @@
 
 (require 'speedbar)
 
-(defconst ecb-speedbar-version-ok (string-match "^0\\.\\(1[4-9]\\|[2-9][0-9]*\\)"
-                                                speedbar-version)
+(defconst ecb-speedbar-version-ok (and (boundp 'speedbar-version)
+                                       (stringp speedbar-version)
+                                       (string-match "^0\\.\\(1[4-9]\\|[2-9][0-9]*\\)"
+                                                     speedbar-version))
   "ECB can only integrate speedbar versions >= 0.14beta1 so the value is only
 true for these versions.")
 
