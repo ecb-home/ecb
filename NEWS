@@ -10,11 +10,16 @@
 ** Renamed previous HISTORY file to NEWS and reformate it for outline-mode.
   (Klaus)
 
+** ECB now includes a file "ecb-al.el" whioch contains all available
+   autoloads of ECB. Therefore loading this file is enough. (Klaus)
+  
 ** ecb-truncate-lines can now set different for each ECB-tree-buffer.
    (Klaus)
 
 ** Easy horizontal mouse-scrolling of the ECB tree-buffers. See new option
    `ecb-tree-easy-hor-scroll'. (Klaus)
+
+
 
 * Changes for ECB version 1.91.1
 

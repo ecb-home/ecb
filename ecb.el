@@ -102,6 +102,7 @@
 (require 'ecb-face)
 (require 'ecb-upgrade)
 (require 'ecb-tod)
+(require 'ecb-autogen)
 ;;(require 'ecb-profile)
 
 ;; various loads
@@ -4952,6 +4953,7 @@ FILE.elc or if FILE.elc doesn't exist."
 
 (defvar ecb-last-major-mode nil)
 
+;;;###autoload
 (defun ecb-handle-major-mode-activation ()
   "Added to `post-command-hook' after loading the ecb-library. Handles the
 values of `ecb-major-modes-activate' and `ecb-major-modes-deactivate'.
