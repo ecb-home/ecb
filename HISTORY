@@ -6,10 +6,13 @@ Version 1.30 (???):
 
 - Added buttons to directories buffer. (Jesper)
 
-- Mouse over files, methods etc. should now work even if follow-mouse isn't
-  activated. (Jesper)
+- Mouse over files, methods etc. now work even if follow-mouse isn't
+  activated (Jesper). ECB adds a more intelligent mouse tracking mechanism, so
+  not only the mouse-over-node stuff of ECB works now very well and savely but
+  also follow-mouse itself works better and saver as without activated ECB.
+  (Klaus)
 
-- Popup menus should now work in XEmacs. (Jesper)
+- Popup menus now work in XEmacs. (Jesper)
 
 - You can now specify paths with env-vars like $HOME in the option
   `ecb-source-path'. (Klaus)
