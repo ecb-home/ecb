@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-layout.el,v 1.194 2003/10/18 18:08:19 berndl Exp $
+;; $Id: ecb-layout.el,v 1.195 2003/10/24 16:35:19 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -3655,7 +3655,7 @@ this function the edit-window is selected which was current before redrawing."
                                 ecb-windows-before-redraw))
                    (member (get-buffer ecb-history-buffer-name)
                            current-ecb-windows))
-          (ecb-add-all-buffers-to-history))
+          (ecb-add-buffers-to-history))
         ;; update the directories buffer if the directories buffer was not
         ;; shown before the redisplay but now (means if the layout has
         ;; changed)

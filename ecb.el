@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb.el,v 1.349 2003/10/21 06:36:14 berndl Exp $
+;; $Id: ecb.el,v 1.350 2003/10/24 16:35:16 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -341,6 +341,23 @@ dired then opening this file deactivates ECB \(rsp. hides the ECB-windows)."
                                       (const :tag "Just Hide" hide)
                                       (const :tag "Deactivate" deactivate))))))
 
+(defcustom ecb-clear-caches-before-activate nil
+  "*Clear all ECB internal caches before startup.
+If t then ECB clears all its internal caches before starting up. Caches are
+used for files- and subdirs \(see `ecb-cache-directory-contents' and
+`ecb-cache-directory-contents-not') for semantic-tokens and for the
+history-filter.
+
+This caches are completely clean at load-time of the ECB-library!
+
+Default is nil, because is makes sense not to clear these caches at start-time
+because ECB is often deacticated temporally \(see `ecb-major-modes-activate'
+and `ecb-major-modes-deactivate') especially in combination with
+window-managers like escreen.el. In these situations the internal state of ECB
+should be preserved for next activation."
+  :group 'ecb-general
+  :type 'boolean)
+
 (defcustom ecb-bucket-node-display '("" "" ecb-bucket-node-face)
   "*How ECB displays bucket-nodes in a ECB tree-buffer.
 Bucket-nodes have only one job: Nodes with similar properties will be dropped
@@ -361,8 +378,6 @@ face and a display like \"[+] [<bucket-name>]\"."
   :group 'ecb-general
   :set (function (lambda (symbol value)
 		   (set symbol value)
-                   ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: Hier
-                   ;; wahrscedhinlich auch einen sources-cache löschen
 		   (ecb-clear-token-tree-cache)))
   :type '(list (string :tag "Bucket-prefix" :value "[")
                (string :tag "Bucket-suffix" :value "]")
@@ -407,7 +422,6 @@ conjunction with ECB."
                    (let ((ecb-redraw-layout-quickly nil))
                      (ecb-redraw-layout-full)))))
 
-;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: in texi nach general moven
 (defcustom ecb-grep-function (if (fboundp 'igrep) 'igrep 'grep)
   "*Function used for performing a grep.
 The popup-menu of the tree-buffers \"Directories\", \"Sources\" and
@@ -433,7 +447,6 @@ some wrappers around it) should be used!"
   :group 'ecb-general
   :type 'function)
 
-;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: in texi nach general moven
 (defcustom ecb-grep-find-function (if (fboundp 'igrep-find)
                                       'igrep-find 'grep-find)
   "*Function used for performing a recursive grep.
@@ -1196,7 +1209,10 @@ It does several tasks:
           (if (or (equal ecb-kill-buffer-clears-history 'auto)
                   (and (equal ecb-kill-buffer-clears-history 'ask)
                        (y-or-n-p "Remove history entry for this buffer? ")))
-              (ecb-clear-history-node node)))))
+              (save-selected-window
+                (ecb-exec-in-history-window
+                 (tree-buffer-remove-node node)))
+              (ecb-update-history-window)))))
 
     ;; 2. clearing the method buffer if a file-buffer is killed
     (if buffer-file
@@ -1605,7 +1621,7 @@ That is remove the unsupported :help stuff."
       :help "Updates the directories buffer with current disk-state"
       ])
    (ecb-menu-item
-    [ "Add buffers to history"
+    [ "Add all buffers to history"
       ecb-add-all-buffers-to-history
       :active (and (equal (selected-frame) ecb-frame)
                    (ecb-window-live-p ecb-history-buffer-name))
@@ -2238,10 +2254,13 @@ is current when ECB is activated. This hack fixes this."
             ;; first initialize the whole layout-engine
             (ecb-initialize-layout)
 
-            ;; clear the token-tree-cache and the files-subdir-cache
-            (ecb-clear-token-tree-cache)
-            (ecb-clear-files-and-subdirs-cache)
-            (ecb-sources-cache-clear)
+            ;; clear the token-tree-cache, the files-subdir-cache, the
+            ;; sources-cache and the history-filter.
+            (when ecb-clear-caches-before-activate
+              (ecb-clear-token-tree-cache)
+              (ecb-clear-files-and-subdirs-cache)
+              (ecb-sources-cache-clear)
+              (ecb-reset-history-filter))
 
             ;; initialize internal vars
             (ecb-initialize-internal-vars)
@@ -2830,11 +2849,6 @@ does all necessary after finishing ediff."
 
       (setq ecb-activated-window-configuration nil)
 
-      ;; clear the caches
-      (ecb-clear-token-tree-cache)
-      (ecb-clear-files-and-subdirs-cache)
-      (ecb-sources-cache-clear)
-      
       (setq ecb-minor-mode nil)))
   (if (null ecb-minor-mode)
       (message "The ECB is now deactivated."))
@@ -3043,6 +3057,13 @@ changed there should be no performance-problem!"
 (ecb-disable-advices ecb-speedbar-adviced-functions)
 (ecb-disable-advices ecb-eshell-adviced-functions)
 (ecb-activate-adviced-functions nil)
+
+;; clearing all caches at load-time
+(ecb-clear-token-tree-cache)
+(ecb-clear-files-and-subdirs-cache)
+(ecb-sources-cache-clear)
+(ecb-reset-history-filter)
+
 
 (silentcomp-provide 'ecb)
 

@@ -1,4 +1,4 @@
-This file contains some important release-notes for ECB version 1.97
+This file contains some important release-notes for ECB version 2.01
 
 General:
 --------
@@ -27,6 +27,9 @@ option-type by appending the new defaults to your old values. So no old
 personal menu-entries are lost, but cuase of the new default maybe you have
 some entries twice. Feel free to delete via customize what you want from the
 new settings.
+
+The old option `ecb-tree-use-image-icons' has been replaced by
+`ecb-tree-buffer-style'
 
 
 Upgrading from versions < 1.96:

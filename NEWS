@@ -1,9 +1,24 @@
-* Changes for ECB version 1.97
+* Changes for ECB version 2.01
 
-** Rewritten tree-buffer display-layer - now there are three different styles
-   Image: Looks very nice and modern - give it a try :-)
-   Ascii with guide-lines: TODO Klaus
-   Ascii without guide-lines: This is the style of ECB <= 1.96
+** Overhaul of the display-layer and -handling of the tree-buffers
+
+*** Now there are 3 different styles available
+    * Image: Looks very nice and modern - give it a try :-)
+    * Ascii with guide-lines: Drawing the trees with ascii-symbols
+    * Ascii without guide-lines: This is the style of ECB <= 1.96
+    For details and a visualization of these different styles see the new
+    option `ecb-tree-buffer-style' (replaces the old option
+    `ecb-tree-use-image-icons').
+
+*** No-leaf-tree-nodes with currently no subnodes are displayed with [x]
+    An example are directories in the Directories tree-buffer which have
+    currently no subdirectories. Leafs like source-files or methods are of
+    course handled as leafs and not as currently empty nodes.
+
+*** Fixed some inconsistencies in expanding, collapsing and selecting nodes
+
+*** Moving all options related to the tree-buffer-style or -handling to the new
+    customize-group "ecb-tree-buffer".
 
 ** Completely rewritten popup-menu mechanism.
 
@@ -31,6 +46,12 @@
     added to the `ecb-history-menu-user-extension'. Thanks for suggestion and
     first implementation to Ole Arndt <ole@sugarshark.com>.
 
+** Adding a filter-feature to the Sources- and the History-buffer
+   Now a filter can be applied to the Sources- and/or History-buffer which
+   desides which entries are displayed in these buffers. See the new commands
+   `ecb-sources-filter' and `ecb-history-filter' and the new entries for the
+   popup-menus for these buffers.
+    
 ** No window-restrictions if the ECB-windows are hidden
    If the special ECB-windows are hidden (e.g. by `ecb-toggle-ecb-windows')
    then there are no restrictions about the window-layout of the ecb-frame:
@@ -62,11 +83,6 @@
    is done otherwise an error is signaled. If you want the old behavior of
    signaling an error just set this new option to not nil.
 
-** JDEE-dialogs now work correctly.
-   JDEE offers sometimes "dialogs" where the user can choose among several
-   options. These "dialogs" now work correctly regardless if a durable
-   compile-window is used or not.
-
 ** Fixed Bugs
 
 *** When the special ECB-windows were hidden and a durable compile-window was set
@@ -77,6 +93,11 @@
     already alive while activating ECB. On the other side XEmacs has not
     removed the ECB-menu from the menubar for all living buffers after
     deactivating ECB. Both of these two bugs are fixed now.
+
+*** JDEE-dialogs now work correctly.
+    JDEE offers sometimes "dialogs" where the user can choose among several
+    options. These "dialogs" now work correctly regardless if a durable
+    compile-window is used or not.
 
 
 

@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: tree-buffer.el,v 1.128 2003/10/18 18:08:18 berndl Exp $
+;; $Id: tree-buffer.el,v 1.129 2003/10/24 16:35:16 berndl Exp $
 
 ;;; Commentary:
 
@@ -960,10 +960,28 @@ end-guide."
                                     next-indent-str-last-seg-std)
                                   (= counter number-of-childs )))))))
 
-(defun tree-buffer-remove-node (node)
-  "Remove NODE from current tree-buffer."
-  (when node
-    (tree-node-remove-child (tree-buffer-get-root) node)))
+(defun tree-buffer-clear ()
+  "Clear current tree-buffer, i.e. remove all children of the root-node"
+  (dolist (child (tree-node-get-children (tree-buffer-get-root)))
+    (tree-buffer-remove-node child)))
+
+(defun tree-buffer-remove-node (node &optional empty-parent-types)
+  "Remove NODE from current tree-buffer. If NODE is nil or NODE eq the node
+returned by `tree-buffer-get-root' then nothing will be done. If
+EMPTY-PARENT-TYPES is not nil and a list of node-types \(see
+`tree-buffer-create') and if the node-type of the parent of node is contained
+in EMPTY-PARENT-TYPES and if NODE is the only children of its parent then its
+parent is recursively removed too."
+  (when (and node (not (eq (tree-buffer-get-root) node)))
+    (let* ((parent (tree-node-get-parent node))
+           (parent-type (tree-node-get-type parent)))
+      ;; If parent is the root-node then its type is always nil (only the
+      ;; root-node has type nil) and therefore then the recursion stops here
+      ;; savely.
+      (if (and (member parent-type empty-parent-types)
+               (= (length (tree-node-get-children parent)) 1))
+          (tree-buffer-remove-node parent empty-parent-types)
+        (tree-node-remove-child parent node)))))
 
 
 (defun tree-node-count-subnodes-to-display (node)
@@ -1004,21 +1022,30 @@ tree-buffer."
   (when tree-buffer-general-face
     (move-overlay tree-buffer-general-overlay (point-min) (point-max))))
 
-(defun tree-buffer-update (&optional node)
+(defun tree-buffer-update (&optional node content)
   "Updates the current tree-buffer. The buffer will be completely rebuild with
-it큦 current nodes. window-start and point will be preserved.
-If NODE is not nil and a valid and expanded node with at least one child then
-the display of this node is optimized so the node itself and as much as
-possible of it큦 children \(and also recursive the children of a child if it큦
-already expanded, see `tree-node-count-subnodes-to-display') are visible in
-current tree-buffer."
+it큦 current nodes. Window-start and point will be preserved. If NODE is not
+nil and a valid and expanded node with at least one child then the display of
+this node is optimized so the node itself and as much as possible of it큦
+children \(and also recursive the children of a child if it큦 already
+expanded, see `tree-node-count-subnodes-to-display') are visible in current
+tree-buffer. If CONTENT is not nil then it must be a cons-cell where the car
+is the whole string of the tree-buffer and the cdr is the value of
+`tree-buffer-nodes'. Then the content of the tree-buffer will not be rebuild
+by reinserting all nodes from the tree-node-structure but just by inserting
+the car of CONTENT in the tree-buffer and setting `tree-buffer-nodes' to cdr
+of CONTENT."
   (let* ((w (get-buffer-window (current-buffer)))
          (ws (window-start w))
          (p (point))
          (buffer-read-only nil)
          (next-line-add-newlines nil))
     (erase-buffer)
-    (tree-buffer-build-tree-buffer-nodes)
+    (if (consp content)
+        (progn
+          (insert (car content))
+          (setq tree-buffer-nodes (cdr content)))
+      (tree-buffer-build-tree-buffer-nodes))
     (tree-buffer-display-in-general-face)
     (tree-buffer-highlight-node-data tree-buffer-highlighted-node-data)
     (goto-char p)

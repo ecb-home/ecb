@@ -23,7 +23,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-file-browser.el,v 1.2 2003/10/21 06:36:14 berndl Exp $
+;; $Id: ecb-file-browser.el,v 1.3 2003/10/24 16:35:19 berndl Exp $
 
 ;;; Commentary:
 
@@ -219,9 +219,7 @@ The value 'auto \(see above) takes exactly these two scenarios into account."
               (member ecb-layout-name
                       ecb-show-sources-in-directories-buffer)))))
 
-;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: Diesen neuen Default-wert nochmal
-;; überdenken. 
-(defcustom ecb-cache-directory-contents '((".*" . 0))
+(defcustom ecb-cache-directory-contents '((".*" . 50))
   "*Cache contents of certain directories.
 This can be useful if `ecb-source-path' contains directories with many files
 and subdirs, especially if these directories are mounted net-drives \(\"many\"
@@ -447,23 +445,6 @@ then activating ECB again!"
   "*Sorts the items in the history buffer."
   :group 'ecb-history
   :type 'boolean)
-
-
-(defcustom ecb-clear-history-behavior 'not-existing-buffers
-  "*The entries of the history buffer to delete with `ecb-clear-history'.
-Three options are available:
-- not-existing-buffers: All entries which represent a buffer-name not existing
-  anymore in the bufferlist will be cleared. Probably the most senseful value.
-- existing-buffers: The opposite of 'not-existing-buffers.
-- all: The whole history will be cleared."
-  :group 'ecb-history
-  :type '(radio (const :tag "Not existing buffers"
-                       :value not-existing-buffers)
-                (const :tag "Existing buffers"
-                       :value existing-buffers)
-                (const :tag "All entries"
-                       :value all)))
-
 
 (defcustom ecb-kill-buffer-clears-history nil
   "*Define if `kill-buffer' should also clear the history.
@@ -953,11 +934,8 @@ selected before this update."
      (if cache-elem
          (progn
            (tree-buffer-set-root (nth 0 cache-elem))
-           (setq tree-buffer-nodes (nth 1 cache-elem))
-           (let ((buffer-read-only nil))
-             (erase-buffer)
-             (insert (nth 2 cache-elem))
-             (tree-buffer-display-in-general-face)))
+           (tree-buffer-update nil (cons (nth 2 cache-elem)
+                                         (nth 1 cache-elem))))
        (let ((new-tree (tree-node-new "root" 0 nil))
              (old-children (tree-node-get-children (tree-buffer-get-root)))
              (new-cache-elem nil))
@@ -1010,6 +988,8 @@ selected before this update."
   
 
 (defun ecb-sources-filter ()
+  "Apply a filter to the sources-buffer to reduce the number of entries.
+So you get a better overlooking."
   (interactive)
   (let ((choice (ecb-query-string "Filter by:"
                                   '("extension" "regexp" "nothing"))))
@@ -1028,15 +1008,11 @@ the option `ecb-mode-line-prefixes'."
         nil ;; no prefix if no filter
       (format "[Filter: %s]" (cdr (nth 3 filtered-cache-elem))))))
 
-;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: Das auch testen, wenn
-;; `ecb-cache-directory-contents' is nil oder was anderes als der aktuelle
-;; default, der ja alles cached!
 (defun ecb-apply-filter-to-sources-buffer (filter-regexp &optional filter-display)
   "Apply the regular expression FILTER-REGEXP to the files of
 `ecb-path-selected-directory' and display only the filtered files in the
 Sources-buffer. If FILTER-REGEXP is nil then any applied filter is removed and
 all files are displayed."
-  (message "Klausi: %s" filter-regexp)
   (save-selected-window
     (ecb-exec-in-sources-window
      (if (null filter-regexp)
@@ -1051,7 +1027,6 @@ all files are displayed."
        ;; apply the filter-regexp
        (let ((new-tree (tree-node-new "root" 0 nil))
              (old-children (tree-node-get-children (tree-buffer-get-root)))
-             (new-cache-elem nil)
              (all-files (car (ecb-get-files-and-subdirs ecb-path-selected-directory)))
              (filtered-files nil))
          (dolist (file all-files)
@@ -1062,7 +1037,7 @@ all files are displayed."
          (ecb-tree-node-add-files
           new-tree
           ecb-path-selected-directory
-          filtered-files
+          (nreverse filtered-files)
           0 ecb-show-source-file-extension old-children t)
 
          ;; updating the buffer itself
@@ -1190,22 +1165,74 @@ even if current directory is equal to `ecb-path-selected-directory'."
     (ecb-update-history-window ecb-path-selected-source)))
 
 
+(defvar ecb-history-filter nil
+  "A cons-cell where car is the filter-function and the cdr is a string how
+the current active filter should be displayed in the modeline of the
+History-buffer. The filter-function gets the filename of an existing
+file-buffer and has to return not nil if for this filename a history-entry
+should be added.")
+
+(defun ecb-reset-history-filter ()
+  "Reset the `ecb-history-filter' so all file-buffers are displayed."
+  (setq ecb-history-filter '(identity . nil)))
+
+(ecb-reset-history-filter)
+
+(defun ecb-add-all-buffers-to-history ()
+  "Add all current file-buffers to the history-buffer of ECB.
+If `ecb-sort-history-items' is not nil then afterwards the history is sorted
+alphabetically. Otherwise the most recently used buffers are on the top of the
+history and the seldom used buffers at the bottom."
+  (interactive)
+  (ecb-reset-history-filter)
+  (ecb-add-buffers-to-history))
+
+(defun ecb-add-buffers-to-history ()
+  "Add exactly these currently existing file-buffers to the history-buffer
+which are not filtered out by current value of `ecb-history-filter'."
+    ;; first we clear out the history buffer
+  (save-excursion
+    (set-buffer ecb-history-buffer-name)
+    (tree-buffer-clear))
+  (mapc (function (lambda (buf)
+                    (when (buffer-file-name buf)
+                      (ecb-add-item-to-history-buffer
+                       (buffer-file-name buf)))))
+        (reverse (buffer-list)))
+  (ecb-sort-history-buffer)
+  (ecb-update-history-window (buffer-file-name ecb-last-source-buffer))
+  ;; now the modeline has to display the current filter
+  (ecb-mode-line-format))
+
+  
+(defun ecb-history-filter-modeline-prefix (buffer-name sel-dir sel-source)
+  "Compute a mode-line prefix for the History-buffer so the current filter
+applied to the history-entries is displayed. This function is only for using
+by the option `ecb-mode-line-prefixes'."
+  (concat (and (cdr ecb-history-filter)
+               (format "[Filter: %s]: " (cdr ecb-history-filter)))
+          "History"))
+
+
 (defun ecb-add-item-to-history-buffer (filename)
-  "Add a new item for FILENAME to the history buffer."
+  "Add a new item for FILENAME to the history buffer if the current filter of
+`ecb-history-filter' does not filter out this file."
   (save-excursion
     (ecb-buffer-select ecb-history-buffer-name)
     (tree-node-remove-child-data (tree-buffer-get-root) filename)
-    (tree-node-add-child-first
-     (tree-buffer-get-root)
-     (tree-node-new
-      (if (eq ecb-history-item-name 'buffer-name)
-          (let ((b (get-file-buffer filename)))
-            (if b
-                (buffer-name b)
-              (ecb-get-source-name filename)))
-        (ecb-get-source-name filename))
-      0
-      filename t))))
+    (when (funcall (car ecb-history-filter)
+                   filename)
+      (tree-node-add-child-first
+       (tree-buffer-get-root)
+       (tree-node-new
+        (if (eq ecb-history-item-name 'buffer-name)
+            (let ((b (get-file-buffer filename)))
+              (if b
+                  (buffer-name b)
+                (ecb-get-source-name filename)))
+          (ecb-get-source-name filename))
+        0
+        filename t)))))
 
 
 (defun ecb-sort-history-buffer ()
@@ -1225,26 +1252,6 @@ even if current directory is equal to `ecb-path-selected-directory'."
     (ecb-exec-in-history-window
      (tree-buffer-update)
      (tree-buffer-highlight-node-data filename))))
-
-
-(defun ecb-add-all-buffers-to-history ()
-  "Add all current file-buffers to the history-buffer of ECB.
-If `ecb-sort-history-items' is not nil then afterwards the history is sorted
-alphabetically. Otherwise the most recently used buffers are on the top of the
-history and the seldom used buffers at the bottom."
-  (interactive)
-  (when (ecb-window-live-p ecb-history-buffer-name)
-    ;; first we remove all not anymore existing buffers
-    (let ((ecb-clear-history-behavior 'not-existing-buffers))
-      (ecb-clear-history))
-    ;; now we add the current existing file-buffers
-    (mapc (lambda (buffer)
-            (when (buffer-file-name buffer)
-              (ecb-add-item-to-history-buffer (buffer-file-name buffer))))
-          (reverse (buffer-list)))
-    (ecb-sort-history-buffer))
-  (ecb-update-history-window (buffer-file-name (current-buffer))))
-
 
 (defun ecb-set-selected-source (filename other-edit-window
 					 no-edit-buffer-selection)
@@ -1271,39 +1278,14 @@ is not changed."
     (setq ecb-major-mode-selected-source major-mode)
     (ecb-token-sync 'force)))
 
-
-(defun ecb-clear-history (&optional clearall)
-  "Clears the ECB history-buffer.
-If CLEARALL is nil then the behavior is defined in the option
-`ecb-clear-history-behavior' otherwise the user is prompted what buffers
-should be cleared from the history-buffer. For further explanation see
-`ecb-clear-history-behavior'."
-  (interactive "P")
+(defun ecb-clear-history ()
+  "Clears the ECB history-buffer."
+  (interactive)
   (unless (or (not ecb-minor-mode)
               (not (equal (selected-frame) ecb-frame)))
     (save-selected-window
       (ecb-exec-in-history-window
-       (let ((buffer-file-name-list (mapcar (lambda (buff)
-                                              (buffer-file-name buff))
-                                            (buffer-list)))
-             (tree-childs (tree-node-get-children (tree-buffer-get-root)))
-             (clear-behavior
-              (or (if clearall
-                      (intern (ecb-query-string "Clear from history:"
-                                                '("all"
-                                                  "not-existing-buffers"
-                                                  "existing-buffers"))))
-                  ecb-clear-history-behavior))
-             child-data)
-         (while tree-childs
-           (setq child-data (tree-node-get-data (car tree-childs)))
-           (if (or (eq clear-behavior 'all)
-                   (and (eq clear-behavior 'not-existing-buffers)
-                        (not (member child-data buffer-file-name-list)))
-                   (and (eq clear-behavior 'existing-buffers)
-                        (member child-data buffer-file-name-list)))
-               (tree-buffer-remove-node (car tree-childs)))
-           (setq tree-childs (cdr tree-childs))))
+       (tree-buffer-clear)
        (tree-buffer-update)
        (tree-buffer-highlight-node-data ecb-path-selected-source)))))
 
@@ -1865,11 +1847,9 @@ function which is called with current node and has to return a string.")
       '(("Grep"
          (ecb-grep-directory "Grep Directory")
          (ecb-grep-find-directory "Grep Directory recursive"))
-        ;;("---")
         ("Dired"
          (ecb-dired-directory "Open Dir in Dired")
          (ecb-dired-directory-other-window "Open Dir in Dired other window"))
-        ("---")
         ("Filter"
          (ecb-sources-filter-by-ext "Filter by extension")
          (ecb-sources-filter-by-regexp "Filter by a regexp")
@@ -1887,40 +1867,58 @@ function which is called with current node and has to return a string.")
   "The menu-title for the sources menu. See
 `ecb-directories-menu-title-creator'.")
 
-
-(defun ecb-add-history-buffers-popup (node)
-  (ecb-add-all-buffers-to-history))
-
-
-(defun ecb-clear-history-only-not-existing (node)
-  "Removes all history entries from the ECB history buffer where related
-buffers does not exist anymore."
-  (let ((ecb-clear-history-behavior 'not-existing-buffers))
-    (ecb-clear-history)))
-
-
-(defun ecb-clear-history-all (node)
-  "Removes all history entries from the ECB history buffer."
-  (let ((ecb-clear-history-behavior 'all))
-    (ecb-clear-history)))
-
-
-(defun ecb-clear-history-node (node)
-  "Removes current entry from the ECB history buffer."
-  (save-selected-window
-    (ecb-exec-in-history-window
-     (tree-buffer-remove-node node)
-     (tree-buffer-update)
-     (tree-buffer-highlight-node-data ecb-path-selected-source))))
-
+;; history popups
 
 (defun ecb-history-kill-buffer (node)
   "Kills the buffer for current entry."
   (let ((data (tree-node-get-data node)))
-    (ecb-clear-history-node node)
     (when (get-file-buffer data)
       (kill-buffer (get-file-buffer data)))))
 
+(defun ecb-history-filter-by-ext (node)
+  (let ((ext-str (read-string "Insert the filter-extension without leading dot: "
+                              (and node
+                                   (file-name-extension (tree-node-get-data node))))))
+    (if (= (length ext-str) 0)
+        (setq ecb-history-filter
+         (cons `(lambda (filename)
+                  (save-match-data
+                    (string-match "^[^.]+$" filename)))
+               "No ext."))
+      (setq ecb-history-filter
+            (cons `(lambda (filename)
+                     (save-match-data
+                       (string-match ,(format "\\.%s\\'" ext-str)
+                                     filename)))
+                  (format "*.%s" ext-str)))))
+  (ecb-add-buffers-to-history))
+       
+  
+(defun ecb-history-filter-by-regexp (node)
+  (let ((regexp-str (read-string "Insert the filter-regexp: ")))
+    (if (> (length regexp-str) 0)
+        (setq ecb-history-filter
+              (cons `(lambda (filename)
+                       (save-match-data
+                         (string-match ,regexp-str filename)))
+                    regexp-str))))
+  (ecb-add-buffers-to-history))
+  
+(defun ecb-history-filter-all-existing (node)
+  (ecb-add-all-buffers-to-history))
+  
+
+(defun ecb-history-filter ()
+  "Apply a filter to the history-buffer to reduce the number of entries.
+So you get a better overlooking."
+  (interactive)
+  (let ((choice (ecb-query-string "Filter by:"
+                                  '("extension" "regexp" "no filter (all file-buffers)"))))
+    (cond ((string= choice "extension")
+           (ecb-history-filter-by-ext nil))
+          ((string= choice "regexp")
+           (ecb-history-filter-by-regexp nil))
+          (t (ecb-history-filter-all-existing nil)))))
 
 (defvar ecb-history-menu nil
   "Built-in menu for the history-buffer.")
@@ -1934,16 +1932,13 @@ buffers does not exist anymore."
         ("Dired"
          (ecb-dired-directory "Open Dir in Dired")
          (ecb-dired-directory-other-window "Open Dir in Dired other window"))
+	("Filter"
+         (ecb-history-filter-by-ext "Filter by extension")
+         (ecb-history-filter-by-regexp "Filter by regexp")
+         (ecb-history-filter-all-existing "No filter (all file-buffers)"))
         ("---")
-        (ecb-delete-source "Delete Sourcefile")
         (ecb-history-kill-buffer "Kill Buffer")
-        ("---")
-        (ecb-add-history-buffers-popup "Add all filebuffer to history")
-        ;;("---")
-	("Remove Entries"
-         (ecb-clear-history-node "Remove Current Entry")
-         (ecb-clear-history-all "Remove All Entries")
-         (ecb-clear-history-only-not-existing "Remove Non Existing Buffer Entries"))
+        (ecb-delete-source "Delete Sourcefile")
         ("---")
         (ecb-maximize-ecb-window-menu-wrapper "Maximize window")))
 

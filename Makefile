@@ -26,7 +26,7 @@
 # GNU Emacs; see the file COPYING.  If not, write to the Free Software
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-# $Id: Makefile,v 1.75 2003/10/02 15:00:14 berndl Exp $
+# $Id: Makefile,v 1.76 2003/10/24 16:35:20 berndl Exp $
 
 
 # ========================================================================
@@ -120,11 +120,11 @@ INSTALLINFO=/usr/bin/install-info
 
 # Do not change anything below!
 
-# $Id: Makefile,v 1.75 2003/10/02 15:00:14 berndl Exp $
+# $Id: Makefile,v 1.76 2003/10/24 16:35:20 berndl Exp $
 
 # For the ECB-maintainers: Change the version-number here and not
 # elsewhere!
-ecb_VERSION=1.97
+ecb_VERSION=2.01
 
 
 RM=rm -f
@@ -139,7 +139,8 @@ ecb_LISP_EL=tree-buffer.el ecb-util.el ecb-mode-line.el ecb-help.el \
             ecb-eshell.el ecb-cycle.el ecb-face.el ecb-compilation.el \
             ecb-upgrade.el ecb-create-layout.el silentcomp.el \
             ecb-speedbar.el ecb-examples.el ecb-tod.el ecb-autogen.el \
-	    ecb-jde.el ecb-winman-support.el
+	    ecb-jde.el ecb-file-browser.el ecb-method-browser.el \
+	    ecb-winman-support.el
 
 ecb_LISP_ELC=$(ecb_LISP_EL:.el=.elc)
 
@@ -157,6 +158,8 @@ ecb_INFO_DIR=info-help
 ecb_DVI=$(ecb_TEXI:.texi=.dvi)
 ecb_PS=$(ecb_TEXI:.texi=.ps)
 ecb_PDF=$(ecb_TEXI:.texi=.pdf)
+
+ecb_IMAGE_DIR=ecb-images
 
 ecb_DISTRIB_FILES=$(ecb_LISP_EL) $(ecb_AUTOLOADS) $(ecb_TEXI) $(ecb_ETC)
 
@@ -261,9 +264,9 @@ prepversion:
 	@$(MV) NEWS NEWS.tmp
 	@sed "1s/version.*/version $(ecb_VERSION)/" NEWS.tmp > NEWS
 	@$(RM) NEWS.tmp
-	@$(MV) ecb.el ecb.el.tmp
-	@sed "s/^(defconst ecb-version.*/(defconst ecb-version \"$(ecb_VERSION)\"/" ecb.el.tmp > ecb.el
-	@$(RM) ecb.el.tmp
+	@$(MV) ecb-upgrade.el ecb-upgrade.el.tmp
+	@sed "s/^(defconst ecb-version.*/(defconst ecb-version \"$(ecb_VERSION)\"/" ecb-upgrade.el.tmp > ecb-upgrade.el
+	@$(RM) ecb-upgrade.el.tmp
 	@(echo "/@macro ecbver";		\
 	  echo "+";				\
 	  echo "c";				\
@@ -286,6 +289,9 @@ distrib: $(ecb_INFO_DIR)/$(ecb_INFO) prepversion autoloads ecb
 	@$(CP) $(ecb_DISTRIB_FILES) ecb-$(ecb_VERSION)
 	@$(CP) -r $(ecb_INFO_DIR) ecb-$(ecb_VERSION)
 	@$(CP) -r $(ecb_HTML_DIR) ecb-$(ecb_VERSION)
+	@$(CP) -r $(ecb_IMAGE_DIR) ecb-$(ecb_VERSION)
+	@find ecb-$(ecb_VERSION)/$(ecb_IMAGE_DIR) -name CVS -print | xargs rm -Rf
+	@find ecb-$(ecb_VERSION)/$(ecb_IMAGE_DIR) -name *~ -print | xargs $(RM)
 	@tar -cvzf ecb-$(ecb_VERSION).tar.gz ecb-$(ecb_VERSION)
 	@$(RM) -R ecb-$(ecb_VERSION)
 
