@@ -21,7 +21,7 @@
 
 ;; Generates ECB HTML pages.
 
-;; $Id: ecb-html.el,v 1.23 2002/01/20 15:12:55 berndl Exp $
+;; $Id: ecb-html.el,v 1.24 2002/01/20 23:10:26 creator Exp $
 
 ;;; Code:
 
@@ -60,16 +60,14 @@
 	      "ECB is source code browser for Emacs. It is a global minor-mode which displays a couple of windows that can be used to browse directories, files and methods. It supports method parsing for Java, C, C++, Elisp etc.")
 
    (h-section "News"
+	      (h-sub-section "ECB 1.60 released! (2002-01-20)"
+			     "Many improvements. Works fine with Emacs 21.")
 	      (h-sub-section "ECB 1.52 released! (2001-10-24)"
 			     "Fixed a small bug when loading ECB.")
 	      (h-sub-section "ECB 1.51 released! (2001-10-21)"
 			     "Some new features.")
 	      (h-sub-section "ECB 1.50 released! (2001-08-12)"
 			     "A couple of minor improvements and some bug fixes.")
-	      (h-sub-section "ECB 1.41 released! (2001-07-19)"
-			     "Fixes a bug that occured under XEmacs when clicking a method or variable in the methods buffer.")
-	      (h-sub-section "ECB 1.40 released! (2001-07-18)"
-			     "Many improvements and bug fixes, so download it now!")
 	       )
 
    (h-section "Dependencies"
@@ -117,8 +115,8 @@
   (h-doc
    "screenshots.html"
    "ECB Screenshots"
-   (h-section "ECB 1.60 running in Emacs 21 showing fields and inner classes in a Java source file"
-	      (h-img "ecb-java.png"))
+;    (h-section "ECB 1.60 running in Emacs 21 showing fields and inner classes in a Java source file"
+; 	      (h-img "ecb-java.png"))
    (h-section "ECB running in XEmacs under Windows 98"
 	      (h-img "ecb-xemacs.png"))
    (h-section "ECB 1.0 running in GNU Emacs under Windows 98"
@@ -150,14 +148,14 @@
      "ECB Menu"
      '(leftmargin . "2")
      '(marginwidth . "2")
-;     '(marginheight . "2")
+					;     '(marginheight . "2")
      (h-section
-      "Menu"
+      "Sections"
       (h-bullet-link-list
        ecb-bullet
        '(
 	 ("main.html" "Main")
-	 ("download.html" "Download")
+	 ("http://sourceforge.net/project/showfiles.php?group_id=17484" "Download")
 	 ("docs.html" "Documentation")
 	 ("faq.html" "FAQ")
 	 ("http://lists.sourceforge.net/lists/listinfo/ecb-list" "Mailing List")
@@ -166,7 +164,17 @@
 	 ("links.html" "Links")
 	 )
        "main"))
-       )
+     (h-p
+     (h-b "Latest version: ") h-br
+     (h-img ecb-bullet) " " (h-link ecb-zip-url (h-b ecb-zip-name)) h-br
+     (h-img ecb-bullet) " " (h-link ecb-gz-url (h-b ecb-gz-name)))
+     (h-p
+      (h-b "Hosted by: ") h-br
+      (h-link "http://sourceforge.net/projects/ecb" '(target . "_top") (h-img "http://sourceforge.net/sflogo.php?group_id=17484&type=1" "width='88' height='31' border='0' alt='SourceForge Logo'")))
+     (h-p
+      (h-b "Updated: ") h-br
+      (h-date))
+      )
     (setq h-section-text-bgcolor old)))
 
 (defun ecb-html-top()
@@ -182,16 +190,8 @@
    '(alink . "#00a000")
    (h-table
     (h-tr (h-td '(nowrap) '(width . "100%") (h-fsize "5" (h-b "Emacs Code Browser")))
-	  (h-td '(nowrap) (h-email "mayhem@home.se" (h-img "mail.gif" "border='0'")))
-	  (h-td '(nowrap) (h-b "Updated: ") (h-date))
-	  (h-td '(nowrap) (h-b "Latest version: "))
-	  (h-td '(nowrap)
-		(h-img ecb-bullet) " " (h-link ecb-zip-url (h-b ecb-zip-name)) h-br
-		(h-img ecb-bullet) " " (h-link ecb-gz-url (h-b ecb-gz-name)))
-	  (h-td '(nowrap) (h-b "Hosted by: "))
-	  (h-td '(nowrap) (h-link "http://sourceforge.net/projects/ecb" '(target . "_top") (h-img "http://sourceforge.net/sflogo.php?group_id=17484&type=1" "width='88' height='31' border='0' alt='SourceForge Logo'")))
-	  ))
-   ))
+	  (h-td '(nowrap) (h-email "mayhem@home.se" (h-img "mail.gif" "border='0'"))))
+    )))
 
 (defun ecb-faq-section(name &rest questions)
   (list name questions))
@@ -324,54 +324,12 @@
      "It's easier to navigate and scroll the ECB buffers if you install " (h-link "follow-mouse.el") " and activate your " (h-link "mwheel.el" "wheel mouse") " in Emacs.")
    )))
 
-(defun ecb-html-download()
-  (h-doc
-   "download.html"
-   "ECB Documentation"
-   (h-section "The Latest Version"
-	      (h-bullet-link-list
-	       ecb-bullet
-	       (list
-		(list ecb-zip-url ecb-zip-name)
-		(list ecb-gz-url ecb-gz-name))))
-
-   (h-section
-    "Older Versions"
-    (h-bullet-link-list
-     ecb-bullet
-     (list 
-      (list (concat ecb-download-url "ecb-1.51.zip") "ecb-1.51.zip")
-      (list (concat ecb-download-url "ecb-1.51.tar.gz") "ecb-1.51.tar.gz")
-      (list (concat ecb-download-url "ecb-1.50.zip") "ecb-1.50.zip")
-      (list (concat ecb-download-url "ecb-1.50.tar.gz") "ecb-1.50.tar.gz")
-      (list (concat ecb-download-url "ecb-1.41.zip") "ecb-1.41.zip")
-      (list (concat ecb-download-url "ecb-1.41.tar.gz") "ecb-1.41.tar.gz")
-      (list (concat ecb-download-url "ecb-1.40.zip") "ecb-1.40.zip")
-      (list (concat ecb-download-url "ecb-1.40.tar.gz") "ecb-1.40.tar.gz")
-      (list (concat ecb-download-url "ecb-1.32.zip") "ecb-1.32.zip")
-      (list (concat ecb-download-url "ecb-1.32.tar.gz") "ecb-1.32.tar.gz")
-      (list (concat ecb-download-url "ecb-1.31.zip") "ecb-1.31.zip")
-      (list (concat ecb-download-url "ecb-1.31.tar.gz") "ecb-1.31.tar.gz")
-      (list (concat ecb-download-url "ecb-1.30.zip") "ecb-1.30.zip")
-      (list (concat ecb-download-url "ecb-1.30.tar.gz") "ecb-1.30.tar.gz")
-      (list (concat ecb-download-url "ecb-1.20.zip") "ecb-1.20.zip")
-      (list (concat ecb-download-url "ecb-1.20.tar.gz") "ecb-1.20.tar.gz")
-      (list (concat ecb-download-url "ecb-1.10.zip") "ecb-1.10.zip")
-      (list (concat ecb-download-url "ecb-1.0.zip") "ecb-1.0.zip")
-      '("jde-jcb-0.04.zip")
-      '("jde-jcb-0.03.zip")
-      '("jde-jcb-0.02.zip")
-      '("jde-jcb-0.01.zip")
-       )))
-   ))
-
 (ecb-html-top)
 (ecb-html-menu)
 (ecb-html-main)
 (ecb-html-doc)
 (ecb-html-faq)
 (ecb-html-doc)
-(ecb-html-download)
 (ecb-html-logo)
 (ecb-html-links)
 (ecb-html-screenshots)
