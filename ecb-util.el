@@ -1820,29 +1820,6 @@ defcustom-clause and has to be <= MAX-LEVEL."
 
 ;;; net-stuff
 
-;; currently not used!
-(defun ecb-online-p ()
-  (let ((website-to-check "http://ecb.sourceforge.net"))
-      ;; Emacs 20.X does not autoload executable-find :-(
-      (require 'executable)
-      (if (not (executable-find
-                (if (eq system-type 'windows-nt) "wget.exe" "wget")))
-          (ecb-error
-           (concat "Cannot find wget. This utilities is needed "
-                   "to check if the computer in online")))
-      (= 0 (ecb-working-status-call-process
-            0.1
-            "Checking if online"
-            "done"
-            (if (eq system-type 'windows-nt)
-                "wget.exe"
-              "wget")
-            nil
-            nil
-            nil
-            "-q"
-            "--spider"
-            website-to-check))))
 
 ;;; ----- Provide ------------------------------------------
 
