@@ -39,6 +39,8 @@ REM user configurable section
 REM Define here the correct paths to your (X)Emacs-executable and the
 REM required packages (use always FORWARD SLASHES in the paths!)
 
+REM TODO: Supporting the new cedet 1.0 library (see Makefile)
+
 set EMACS=C:/Programme/emacs-21/bin/emacs.exe
 set SEMANTIC=../semantic
 set EIEIO=../eieio

@@ -1,14 +1,48 @@
 * Changes for ECB version 2.01
 
+** Prepared for the new semantic 2.0 beta (contained in the cedet 1 beta)
+
+*** New naming convention
+
+    Forthcoming semantic 2.0 (part of the new cedet-library) introduces a new
+    naming convention. Here is the relevant part of the semantic 2.0
+    NEWS-file:
+    
+    token     - Refers to a lexical analyzer production.
+    stream    - A list of tokens
+    tag       - Refers to a datastructure created by a grammar to represent
+                something in a language file
+    table     - A hierarchical list of tags.
+    tag-class - A tag may represent a function, data type, or variable.
+    parse     - Run a source file through a parser.
+    
+    Normally there is no need for ECB users to bother with all details of
+    semantic naming conventions but for the sake of consisteny between
+    semantic and ECB the ECB-package has renamed all its variables and
+    functions from "token" to "tag". Therefore also all options which contain
+    "token" in their name have been renamed by replacing "token" with "tag".
+    See RELEASE_NOTES for a list of this options.
+ 
+    ECB autom. upgrades all old-values of these options to the new options!
+    There is nothing to do for you.
+
+*** ECB works with new semantic 2.0 which is shipped within cedet 1.0
+
 ** Overhaul of the display-layer and -handling of the tree-buffers
 
 *** Now there are 3 different styles available
-    * Image: Looks very nice and modern - give it a try :-)
+    * Image: Looks very nice and modern - just give it a try or see the
+      screenshots-section at http://ecb.sourceforge.net
     * Ascii with guide-lines: Drawing the trees with ascii-symbols
     * Ascii without guide-lines: This is the style of ECB <= 1.96
+
     For details and a visualization of these different styles see the new
     option `ecb-tree-buffer-style' (replaces the old option
     `ecb-tree-use-image-icons').
+
+    Especially the new image-style was inspired by the library tree-widget.el
+    written by David Ponce <david@dponce.com>. Also some images shipped with
+    ECB are "stolen" from this library.
 
 *** No-leaf-tree-nodes with currently no subnodes are displayed with [x]
     An example are directories in the Directories tree-buffer which have
@@ -46,12 +80,34 @@
     added to the `ecb-history-menu-user-extension'. Thanks for suggestion and
     first implementation to Ole Arndt <ole@sugarshark.com>.
 
+** Possibility to define which types should be expanded at file-open-time
+   Semantic groups types into different type-specifiers. Current available
+   type-specifiers are for example "class", "interface", "struct", "typedef",
+   "union" and "enum". With the new option `ecb-type-tag-expansion' you can
+   specify on a major-mode-basis which type-specifiers should be expanded at
+   file-open-time and which not. So for example in C++ it could be senseful
+   not to expand the types with a type-specifiers "typedef", "struct" or
+   "enum" (see the default-value of this option).
+    
 ** Adding a filter-feature to the Sources- and the History-buffer
    Now a filter can be applied to the Sources- and/or History-buffer which
    desides which entries are displayed in these buffers. See the new commands
-   `ecb-sources-filter' and `ecb-history-filter' and the new entries for the
-   popup-menus for these buffers.
-    
+   `ecb-sources-filter' (bound to [C-c . fs]) and `ecb-history-filter' (bound
+   to [C-c . fh]) and the new entries for the popup-menus for these buffers.
+   In the sources-buffer each directory has its own filter. The currently
+   applied filter is displayed in the modeline of that tree-buffer with the
+   new face `ecb-mode-line-prefix-face' (s.b.)
+
+** Changes related to the modelines of the tree-buffers
+   
+*** Added faces to the mode-lines of the ECB-tree-buffers.
+    See the three new options `ecb-mode-line-win-nr-face',
+    `ecb-mode-line-prefix-face' and `ecb-mode-line-data-face' and also they
+    related (and equally named) new faces.
+
+*** Moved all options related to the modelines in the new customize-group
+    "ecb-mode-line".
+       
 ** No window-restrictions if the ECB-windows are hidden
    If the special ECB-windows are hidden (e.g. by `ecb-toggle-ecb-windows')
    then there are no restrictions about the window-layout of the ecb-frame:
@@ -98,6 +154,8 @@
     JDEE offers sometimes "dialogs" where the user can choose among several
     options. These "dialogs" now work correctly regardless if a durable
     compile-window is used or not.
+
+*** A bug in displaying the tree-buffers in a different font or font-height
 
 
 

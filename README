@@ -38,6 +38,20 @@ of the mail-lib XEmacs package) installed; this package is also needed for
 submitting problem-reports to the ECB-maintainers!
 
 
+Using the beta of cedet 1.0 (contains semantic 2.0)
+---------------------------------------------------
+
+From beginning with version 2.01 ECB supports the next generation of the
+cedet-tools. But before the cedet 1.0 suite becomes stable this means that ECB
+runs correctly with loaded cedet 1.0 but the ECB-upgrading festure does not
+support autom. upgrading to latest available cedet versions. This will be
+first available after first stable release of the new cedet-library 1.0.
+
+So, if the cedet 1.0 suite is loaded then the min- and max-version of
+semantic, eieio and speedbar (mentioned in the Requirements-section above)
+have no relevance!
+
+
 Installation
 ------------
 
@@ -52,7 +66,11 @@ with `ecb-activate' or read the online-help with `ecb-show-help'.
 
 2. Install the required semantic-, eieio- and speedbar-version.
 
-   *Note*: ECB maybe requires a newer version of these libraries than shipped
+   *Note 1*: If the new cedet 1.0 suite should be used then just install and
+   load cedet 1.0 like described in the cedet-installation-instructions and go
+   one with step 3.
+
+   *Note 2*: ECB maybe requires a newer version of these libraries than shipped
    with (X)Emacs. You have to install exactly a version ECB requires and also
    to make sure that the correct version is loaded into (X)Emacs!
 

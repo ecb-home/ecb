@@ -345,6 +345,10 @@ Return the sublist of LIST whose car is ITEM."
       (member item list)
     (memq item list)))
 
+(defun ecb-set-elt (seq n val)
+  "Set VAL as new N-th element of SEQ. SEQ can be any sequence. SEQ will be
+changed."
+  (if (listp seq) (setcar (nthcdr n seq) val) (aset seq n val)))
 
 ;;; Compatibility
 (defun ecb-noninteractive ()

@@ -339,11 +339,14 @@ could be interesting for support."
                           (function (lambda (l r)
                                       (string< (symbol-name l)
                                                (symbol-name r))))))
-        (semantic-vars (sort `(semantic-after-toplevel-cache-change-hook
-                               semantic-after-partial-cache-change-hook
-                               semantic-face-alist
-                               semantic-uml-colon-string
-                               semantic-orphaned-member-metaparent-type)
+        (semantic-vars (sort (delete nil
+                                     `(semantic-after-toplevel-cache-change-hook
+                                       semantic-after-partial-cache-change-hook
+                                       ,(if (boundp 'semantic-format-face-alist)
+                                            'semantic-format-face-alist
+                                          'semantic-face-alist)
+                                       semantic-uml-colon-string
+                                       semantic-orphaned-member-metaparent-type))
                              (function (lambda (l r)
                                          (string< (symbol-name l)
                                                   (symbol-name r))))))
