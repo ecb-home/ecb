@@ -54,7 +54,7 @@
 ;; The latest version of the ECB is available at
 ;; http://home.swipnet.se/mayhem/ecb.html
 
-;; $Id: ecb.el,v 1.207 2002/03/22 17:49:38 creator Exp $
+;; $Id: ecb.el,v 1.208 2002/03/23 15:28:24 berndl Exp $
 
 ;;; Code:
 
@@ -433,10 +433,29 @@ then activating ECB again!"
   :group 'ecb-methods
   :type 'string)
 
-(defcustom ecb-methods-select-edit-window t
-  "*Select the edit window when you select a method."
-  :group 'ecb-methods
-  :type 'boolean)
+(defcustom ecb-tree-buffer-RET-selects-edit-window
+  (list ecb-directories-buffer-name
+        ecb-sources-buffer-name
+        ecb-methods-buffer-name
+        ecb-history-buffer-name)
+  "*In which tree-buffers RET should finally select an edit-window.
+If a name of an ECB tree-buffer is contained in this list then hitting RET in
+this tree-buffer selects as last action the right edit-window otherwise only
+the right action is performed \(opening a new source, selecting a method etc.)
+but point stays in the tree-buffer.
+
+A special remark for the `ecb-directories-buffer-name': Of course here the
+edit-window is only selected if `ecb-show-sources-in-directories-buffer' is
+not nil \(otherwise this would not make any sense)!"
+  :group 'ecb-generall
+  :type `(set (const :tag ,ecb-directories-buffer-name
+                     :value ,ecb-directories-buffer-name)
+              (const :tag ,ecb-sources-buffer-name
+                     :value ,ecb-sources-buffer-name)
+              (const :tag ,ecb-methods-buffer-name
+                     :value ,ecb-methods-buffer-name)
+              (const :tag ,ecb-history-buffer-name
+                     :value ,ecb-history-buffer-name)))
 
 (defcustom ecb-auto-update-methods-after-save t
   "*Automatically updating the ECB method buffer after saving
@@ -2289,8 +2308,7 @@ combination is invalid \(see `ecb-interpret-mouse-click'."
 						     tree-buffer-name))
 	 (ecb-button (car ecb-button-list))
 	 (shift-mode (cadr ecb-button-list)))
-    ;; in the following we only operate with ecb-button and shift-mode and
-    ;; never with mouse-button, shift-pressed and control-pressed!!
+    ;; first we dispatch to the right action
     (when ecb-button-list
       (cond ((string= tree-buffer-name ecb-directories-buffer-name)
 	     (ecb-directory-clicked node ecb-button shift-mode))
@@ -2300,7 +2318,20 @@ combination is invalid \(see `ecb-interpret-mouse-click'."
 	     (ecb-history-clicked node ecb-button shift-mode))
 	    ((string= tree-buffer-name ecb-methods-buffer-name)
 	     (ecb-method-clicked node ecb-button shift-mode))
-	    (t nil)))))
+	    (t nil)))
+    ;; now we go maybe back to the tree-buffer but only
+    ;; 1. mouse-button is 0, i.e. RET is pressed in the tree-buffer and
+    ;; 2. if the tree-buffer-name is not contained in
+    ;;    ecb-tree-buffer-RET-selects-edit-window and
+    ;; 3. Either it is not the ecb-directories-buffer-name or
+    ;;    at least ecb-show-sources-in-directories-buffer is true.
+    (when (and (equal 0 mouse-button)
+               (not (member tree-buffer-name
+                            ecb-tree-buffer-RET-selects-edit-window))
+               (or (not (string= tree-buffer-name ecb-directories-buffer-name))
+                   ecb-show-sources-in-directories-buffer))
+      (ecb-goto-window tree-buffer-name)
+      (tree-buffer-remove-highlight))))
 
 (defun ecb-tree-buffer-node-expand-callback (node
 					     mouse-button

@@ -3,30 +3,27 @@ Version 1.80:
 
 - Fixed formatting of "Parent" nodes in token buffer. (Jesper)
 
-* Factored out [return] key into a new function
-  'tree-buffer-select-current-node.  This will allow us to show documentation
-  for our key binding.  We now have a new customization variable
-  'ecb-methods-select-edit-window which allows you to select the edit window
-  when you select a method (non-nil by default).  When set to nil, we can stay
-  within the methods buffer. (Kevin A. Burton)
+- New option ecb-tree-buffer-RET-selects-edit-window: Possibility not to
+  select the edit-window of hitting RET in a tree-buffer. See the doc-string.
+  (Kevin A. Burton, Klaus)
 
-* Fixed a bug in ecb-eshell.  If we are running with current buffer sync, and
+- Fixed a bug in ecb-eshell.  If we are running with current buffer sync, and
   there is garbage on the current line, when we change buffers this garbage will
   be executed which could result in a 'command not found' or even worse, a
   damaging command executed.  We now cleanse the command line prior to directory
   changed. (Kevin A. Burton) 
 
-* Fixed a bug in ecb-speedbar.  The speedbar was doing its own updating outside
+- Fixed a bug in ecb-speedbar.  The speedbar was doing its own updating outside
   of the ECB.  This means that if you were to change buffers in a frame outside
   of the ECB frame, the ECB's Speedbar would be updated to reflect a buffer not
   within the ECB.  We now disable Speedbar's automatic update and have ECB
   handle this.  (Kevin A. Burton) 
 
-+ Better grouping of external methods, i.e. methods which are implemented
+- Better grouping of external methods, i.e. methods which are implemented
   outside the class-definition, like in C++, CLOS and EIEIO. Now this is done
   completely by semantic (Klaus).
 
-+ For application programmers using the tree-buffer library:
+- For application programmers using the tree-buffer library:
   The function tree-buffer-create has a new argument NODE-DATA-EQUAL-FN. See
   the doc-string for a description (Klaus).
 

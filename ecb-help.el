@@ -26,7 +26,7 @@
 ;;
 ;; Contains all online-help for ECB (stolen something from recentf.el)
 
-;; $Id: ecb-help.el,v 1.63 2002/03/15 14:00:19 berndl Exp $
+;; $Id: ecb-help.el,v 1.64 2002/03/23 15:28:24 berndl Exp $
 
 ;;; Code
 
@@ -177,6 +177,7 @@ In the ECB-buffers RETURN and TAB are the most important keys:
   secondary button \(see the section \"Working with the mouse in the
   ECB-buffers\" for an explanation of primary and secondary!). S-RETURN is the
   same as the SHIFT-click above.
+  See also the option `ecb-tree-buffer-RET-selects-edit-window'!
 + TAB always expands or collapses expandable nodes.
 The RETURN and TAB keys can not be \(re)defined with `ecb-key-map'!
 
