@@ -52,29 +52,34 @@
 ;; The latest version of the ECB is available at
 ;; http://home.swipnet.se/mayhem/ecb.html
 
-;; $Id: ecb.el,v 1.100 2001/05/29 15:11:19 berndl Exp $
+;; $Id: ecb.el,v 1.101 2001/05/30 08:42:13 berndl Exp $
 
 ;;; Code:
 
 ;; TODO: After semantic 1.4 is stable (means no beta stadium) we throw away
 ;; the compatibility with semantic 1.3.X!
-(if (and (boundp 'semantic-version)
-         (string-match "^1\\.4" semantic-version))
-    (progn
-      (setq semantic-load-turn-everything-on nil)
-      (require 'semantic-load)
-      ;; we need all the macros of semantic-util
-      (eval-when-compile
-        (require 'semantic-util)))
-  ;; semantic 1.3.X
-  (defconst semantic-version "1.3.X")
-  (require 'semantic)
-  (require 'semantic-el)
-  (require 'semantic-c)
-  (require 'semantic-make)
-  (defun semantic-active-p ()
-    (or semantic-toplevel-bovine-table
-        semantic-toplevel-bovinate-override))
+(eval-and-compile
+  (if (locate-library "semantic-load")
+      (progn
+        (message "ECB uses semantic 1.4")
+        (require 'semantic)
+        (setq semantic-load-turn-everything-on nil)
+        (require 'semantic-load)
+        (defun semantic-toplevel-get-cache ()
+          semantic-toplevel-bovine-cache))
+    ;; semantic 1.3.X
+    (message "ECB uses semantic 1.3.X")
+    (defconst semantic-version "1.3.X")
+    (require 'semantic)
+    (require 'semantic-el)
+    (require 'semantic-c)
+    (require 'semantic-make)
+    (defun semantic-active-p ()
+      (or semantic-toplevel-bovine-table
+          semantic-toplevel-bovinate-override))
+    (defun semantic-toplevel-get-cache ()
+      (car semantic-toplevel-bovine-cache))
+    )
   )
 
 (require 'tree-buffer)
@@ -82,7 +87,6 @@
 (require 'ecb-mode-line)
 (require 'ecb-util)
 (require 'ecb-help)
-;; (require 'wid-browse)
 
 (require 'assoc);; Semantic fix
 
@@ -962,7 +966,7 @@ function is added to the hook `semantic-after-toplevel-bovinate-hook'."
              ;; parsed which has no tokens like plain text-buffers. Here we do
              ;; not want rebuilding the method-buffer if the cache is nil but
              ;; the current buffer is set up for semantic-parsing.
-             (or semantic-toplevel-bovine-cache
+             (or (semantic-toplevel-get-cache)
                  (not (semantic-active-p))))
     ;; This is a fix for semantic 1.4beta2
     ;; otherwise it parses the mini-buffer
@@ -972,7 +976,7 @@ function is added to the hook `semantic-after-toplevel-bovinate-hook'."
 		      ;; this works because at call-time of the hooks in
 		      ;; `semantic-after-toplevel-bovinate-hook' the cache is
 		      ;; always either still valid or rebuild.
-                      semantic-toplevel-bovine-cache t)
+                      (semantic-toplevel-get-cache) t)
       ;; also the whole buffer informations should be preserved!
       (save-excursion
 	(ecb-buffer-select ecb-methods-buffer-name)
