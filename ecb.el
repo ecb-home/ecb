@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb.el,v 1.378 2004/03/01 06:28:04 berndl Exp $
+;; $Id: ecb.el,v 1.379 2004/03/02 06:48:36 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -2431,196 +2431,18 @@ ECB has been deactivated. Do not set this variable!")
             (let ((curr-buffer-list (mapcar (lambda (buff)
                                               (buffer-name buff))
                                             (buffer-list))))
-              ;; create all the ECB-buffers if they donÂ´t already exist
+              ;; create all the ECB-buffers if they don´t already exist
               (unless (member ecb-directories-buffer-name curr-buffer-list)
-                (tree-buffer-create
-                 ecb-directories-buffer-name
-                 ecb-frame
-                 'ecb-interpret-mouse-click
-                 'ecb-tree-buffer-node-select-callback
-                 'ecb-tree-buffer-node-expand-callback
-                 'ecb-tree-buffer-node-collapsed-callback
-                 'ecb-mouse-over-directory-node
-                 'equal
-                 (list 0)
-                 (list 1)
-                 'ecb-directories-menu-creator
-                 (list (cons 0 ecb-directories-menu-title-creator)
-                       (cons 1 ecb-directories-menu-title-creator)
-                       (cons 2 ecb-directories-menu-title-creator))
-                 (nth 0 ecb-truncate-lines)
-                 t
-                 ecb-tree-indent
-                 ecb-tree-incremental-search
-                 nil
-                 ecb-tree-navigation-by-arrow
-                 ecb-tree-easy-hor-scroll
-                 (nth 0 ecb-tree-image-icons-directories)
-                 (nth 1 ecb-tree-image-icons-directories)
-                 ecb-tree-buffer-style
-                 ecb-tree-guide-line-face
-                 (list (cons 1 ecb-source-in-directories-buffer-face))
-                 ecb-tree-expand-symbol-before
-                 ecb-directory-face
-                 ecb-directories-general-face
-                 ;; we add an after-create-hook to the tree-buffer
-                 (append
-                  (list (function (lambda ()
-                                    (local-set-key [f2] 'ecb-customize)
-                                    (local-set-key [f3] 'ecb-show-help)
-                                    (local-set-key [f4] 'ecb-add-source-path)
-                                    (local-set-key (kbd "C-t")
-                                                   'ecb-toggle-RET-selects-edit-window)
-                                    (if ecb-running-xemacs
-                                        (define-key modeline-map 'button3 'ecb-modeline-menu)
-                                      (define-key tree-buffer-key-map
-                                        [mode-line mouse-2]
-                                        'ecb-toggle-maximize-ecb-window-with-mouse)))))
-                  ecb-common-tree-buffer-after-create-hook
-                  ecb-directories-buffer-after-create-hook)
-                 ))
+                (ecb-create-directories-tree-buffer))
       
               (unless (member ecb-sources-buffer-name curr-buffer-list)
-                (tree-buffer-create
-                 ecb-sources-buffer-name
-                 ecb-frame
-                 'ecb-interpret-mouse-click
-                 'ecb-tree-buffer-node-select-callback
-                 'ecb-tree-buffer-node-expand-callback
-                 'ecb-tree-buffer-node-collapsed-callback
-                 'ecb-mouse-over-source-node
-                 'equal
-                 nil
-                 nil ;(list 0) ;; set this list if you want leaf-symbols
-                 'ecb-sources-menu-creator
-                 (list (cons 0 ecb-sources-menu-title-creator))
-                 (nth 1 ecb-truncate-lines)
-                 t
-                 ecb-tree-indent
-                 ecb-tree-incremental-search
-                 nil
-                 ecb-tree-navigation-by-arrow
-                 ecb-tree-easy-hor-scroll
-                 (nth 0 ecb-tree-image-icons-directories)
-                 (nth 2 ecb-tree-image-icons-directories)
-                 ecb-tree-buffer-style
-                 ecb-tree-guide-line-face
-                 nil
-                 ecb-tree-expand-symbol-before
-                 ecb-source-face
-                 ecb-sources-general-face
-                 (append
-                  (list (function (lambda ()
-                                    (local-set-key (kbd "C-t")
-                                                   'ecb-toggle-RET-selects-edit-window)
-                                    (if (not ecb-running-xemacs)
-                                        (define-key tree-buffer-key-map
-                                          [mode-line mouse-2]
-                                          'ecb-toggle-maximize-ecb-window-with-mouse)))))
-                  ecb-common-tree-buffer-after-create-hook
-                  ecb-directories-buffer-after-create-hook)))
+                (ecb-create-sources-tree-buffer))
       
               (unless (member ecb-methods-buffer-name curr-buffer-list)
-                (tree-buffer-create
-                 ecb-methods-buffer-name
-                 ecb-frame
-                 'ecb-interpret-mouse-click
-                 'ecb-tree-buffer-node-select-callback
-                 'ecb-tree-buffer-node-expand-callback
-                 'ecb-tree-buffer-node-collapsed-callback
-                 'ecb-mouse-over-method-node
-                 ;; Function which compares the node-data of a
-                 ;; tree-buffer-node in the method-buffer for equality. We
-                 ;; must compare semantic-tags but we must not compare the
-                 ;; tags with eq or equal because they can be re-grouped by
-                 ;; ecb--semantic-adopt-external-members. the following
-                 ;; function is a save "equal"-condition for ECB because
-                 ;; currently the method buffer always displays only tags
-                 ;; from exactly the buffer of the current edit-window.
-                 ;; If `ecb--semantic-equivalent-tag-p' fails we return the
-                 ;; result of an eq-comparison.
-                 (function (lambda (l r)
-                             (cond ((or (stringp l) (stringp r))
-                                    (equal l r))
-                                   ((or (equal 'ecb-bucket-node (car l))
-                                        (equal 'ecb-bucket-node (car r)))
-                                    (equal l r))
-                                   (t ;; tags
-                                    (condition-case nil
-                                        (ecb--semantic-equivalent-tag-p l r)
-                                      (error (eq l r)))))))
-                 (list 1)
-                 nil
-                 'ecb-methods-menu-creator
-                 (list (cons 0 ecb-methods-menu-title-creator)
-                       (cons 1 ecb-methods-menu-title-creator)
-                       (cons 2 ecb-methods-menu-title-creator))
-                 (nth 2 ecb-truncate-lines)
-                 t
-                 ecb-tree-indent
-                 ecb-tree-incremental-search
-                 ecb-methods-incr-searchpattern-node-prefix
-                 ecb-tree-navigation-by-arrow
-                 ecb-tree-easy-hor-scroll
-                 (nth 0 ecb-tree-image-icons-directories)
-                 (nth 3 ecb-tree-image-icons-directories)
-                 ecb-tree-buffer-style
-                 ecb-tree-guide-line-face
-                 nil
-                 ecb-tree-expand-symbol-before
-                 ecb-method-face
-                 ecb-methods-general-face
-                 (append
-                  (list (function (lambda ()
-                                    (local-set-key (kbd "C-t")
-                                                   'ecb-toggle-RET-selects-edit-window)
-                                    (if (not ecb-running-xemacs)
-                                        (define-key tree-buffer-key-map
-                                          [mode-line mouse-2]
-                                          'ecb-toggle-maximize-ecb-window-with-mouse)))))
-                  ecb-common-tree-buffer-after-create-hook
-                  ecb-directories-buffer-after-create-hook))
-                (setq ecb-methods-root-node (tree-buffer-get-root)))
+                (ecb-create-methods-tree-buffer))
       
               (unless (member ecb-history-buffer-name curr-buffer-list)
-                (tree-buffer-create
-                 ecb-history-buffer-name
-                 ecb-frame
-                 'ecb-interpret-mouse-click
-                 'ecb-tree-buffer-node-select-callback
-                 'ecb-tree-buffer-node-expand-callback
-                 'ecb-tree-buffer-node-collapsed-callback
-                 'ecb-mouse-over-history-node
-                 'equal
-                 nil
-                 nil
-                 'ecb-history-menu-creator
-                 (list (cons 0 ecb-history-menu-title-creator))
-                 (nth 3 ecb-truncate-lines)
-                 t
-                 ecb-tree-indent
-                 ecb-tree-incremental-search
-                 nil
-                 ecb-tree-navigation-by-arrow
-                 ecb-tree-easy-hor-scroll
-                 (nth 0 ecb-tree-image-icons-directories)
-                 (nth 4 ecb-tree-image-icons-directories)
-                 ecb-tree-buffer-style
-                 ecb-tree-guide-line-face
-                 nil
-                 ecb-tree-expand-symbol-before
-                 ecb-history-face
-                 ecb-history-general-face
-                 (append
-                  (list (function (lambda ()
-                                    (local-set-key (kbd "C-t")
-                                                   'ecb-toggle-RET-selects-edit-window)
-                                    (if (not ecb-running-xemacs)
-                                        (define-key tree-buffer-key-map
-                                          [mode-line mouse-2]
-                                          'ecb-toggle-maximize-ecb-window-with-mouse)))))
-                  ecb-common-tree-buffer-after-create-hook
-                  ecb-directories-buffer-after-create-hook))))
+                (ecb-create-history-tree-buffer)))
     
             ;; Now store all tree-buffer-names used by ECB ECB must not use
             ;; the variable `tree-buffers' but must always refer to
@@ -2684,6 +2506,10 @@ ECB has been deactivated. Do not set this variable!")
                           'activate-menubar-hook
                         'menu-bar-update-hook)
                       'ecb-compilation-update-menu)
+
+            ;; modeline for xemacs
+            (if ecb-running-xemacs
+                (ecb-activate-xemacs-modeline-menu 1))
             )
         (error
          (ecb-clean-up-after-activation-failure
@@ -2925,6 +2751,10 @@ does all necessary after finishing ediff."
                        'activate-menubar-hook
                      'menu-bar-update-hook)
                    'ecb-compilation-update-menu)
+
+      ;; modeline for xemacs
+      (if ecb-running-xemacs
+          (ecb-activate-xemacs-modeline-menu -1))
 
       ;; run any personal hooks
       (unless run-no-hooks

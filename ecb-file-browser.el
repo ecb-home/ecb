@@ -23,7 +23,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-file-browser.el,v 1.12 2004/02/28 16:14:46 berndl Exp $
+;; $Id: ecb-file-browser.el,v 1.13 2004/03/02 06:48:37 berndl Exp $
 
 ;;; Commentary:
 
@@ -1052,28 +1052,30 @@ all files are displayed."
            (if (string-match filter-regexp file)
                (setq filtered-files
                      (cons file filtered-files))))
-         ;; building up the new files-tree
-         (ecb-tree-node-add-files
-          new-tree
-          ecb-path-selected-directory
-          (nreverse filtered-files)
-          0 ecb-show-source-file-extension old-children t)
+         (if (null filtered-files)
+             (message "ECB has not applied this filter because it would filter out all files!")
+           ;; building up the new files-tree
+           (ecb-tree-node-add-files
+            new-tree
+            ecb-path-selected-directory
+            (nreverse filtered-files)
+            0 ecb-show-source-file-extension old-children t)
 
-         ;; updating the buffer itself
-         (tree-buffer-set-root new-tree)
-         (tree-buffer-update)
-         (tree-buffer-scroll (point-min) (point-min))
-         (tree-buffer-highlight-node-data ecb-path-selected-source)
+           ;; updating the buffer itself
+           (tree-buffer-set-root new-tree)
+           (tree-buffer-update)
+           (tree-buffer-scroll (point-min) (point-min))
+           (tree-buffer-highlight-node-data ecb-path-selected-source)
 
-         ;; add the new filter to the cache, so the next call to
-         ;; `ecb-update-sources-buffer' displays the filtered sources.
-         (ecb-sources-cache-add-filtered ecb-path-selected-directory
-                                         (list (tree-buffer-get-root)
-                                               (ecb-copy-list tree-buffer-nodes)
-                                               (buffer-string)
-                                               (cons filter-regexp
-                                                     (or filter-display
-                                                         filter-regexp))))))))
+           ;; add the new filter to the cache, so the next call to
+           ;; `ecb-update-sources-buffer' displays the filtered sources.
+           (ecb-sources-cache-add-filtered ecb-path-selected-directory
+                                           (list (tree-buffer-get-root)
+                                                 (ecb-copy-list tree-buffer-nodes)
+                                                 (buffer-string)
+                                                 (cons filter-regexp
+                                                       (or filter-display
+                                                           filter-regexp)))))))))
   ;; now we update the mode-lines so the current filter (can be no filter) is
   ;; displayed in the mode-line. See `ecb-sources-filter-modeline-prefix'.
   (ecb-mode-line-format))
@@ -1195,6 +1197,9 @@ should be added.")
   "Reset the `ecb-history-filter' so all file-buffers are displayed."
   (setq ecb-history-filter '(identity . nil)))
 
+(defun ecb-history-filter-reset-p ()
+  (null (cdr ecb-history-filter)))
+
 (ecb-reset-history-filter)
 
 (defun ecb-add-all-buffers-to-history ()
@@ -1220,6 +1225,12 @@ which are not filtered out by current value of `ecb-history-filter'."
         (reverse (buffer-list)))
   (ecb-sort-history-buffer)
   (ecb-update-history-window (buffer-file-name ecb-last-source-buffer))
+  (when (and (save-excursion
+               (set-buffer ecb-history-buffer-name)
+               (tree-buffer-empty-p))
+             (not (ecb-history-filter-reset-p)))
+    (ecb-add-all-buffers-to-history)
+    (message "ECB has not applied this filter because it would filter out all entries!"))
   ;; now the modeline has to display the current filter
   (ecb-mode-line-format))
 
@@ -2090,6 +2101,136 @@ So you get a better overlooking. There are three choices:
                                    ecb-history-menu
                                    dyn-builtin-extension))))))
 
+
+(defun ecb-create-directories-tree-buffer ()
+  "Create the tree-buffer for directories"
+  (tree-buffer-create
+   ecb-directories-buffer-name
+   ecb-frame
+   'ecb-interpret-mouse-click
+   'ecb-tree-buffer-node-select-callback
+   'ecb-tree-buffer-node-expand-callback
+   'ecb-tree-buffer-node-collapsed-callback
+   'ecb-mouse-over-directory-node
+   'equal
+   (list 0)
+   (list 1)
+   'ecb-directories-menu-creator
+   (list (cons 0 ecb-directories-menu-title-creator)
+         (cons 1 ecb-directories-menu-title-creator)
+         (cons 2 ecb-directories-menu-title-creator))
+   (nth 0 ecb-truncate-lines)
+   t
+   ecb-tree-indent
+   ecb-tree-incremental-search
+   nil
+   ecb-tree-navigation-by-arrow
+   ecb-tree-easy-hor-scroll
+   (nth 0 ecb-tree-image-icons-directories)
+   (nth 1 ecb-tree-image-icons-directories)
+   ecb-tree-buffer-style
+   ecb-tree-guide-line-face
+   (list (cons 1 ecb-source-in-directories-buffer-face))
+   ecb-tree-expand-symbol-before
+   ecb-directory-face
+   ecb-directories-general-face
+   ;; we add an after-create-hook to the tree-buffer
+   (append
+    (list (function (lambda ()
+                      (local-set-key [f2] 'ecb-customize)
+                      (local-set-key [f3] 'ecb-show-help)
+                      (local-set-key [f4] 'ecb-add-source-path)
+                      (local-set-key (kbd "C-t")
+                                     'ecb-toggle-RET-selects-edit-window)
+                      (if (not ecb-running-xemacs)
+                          (define-key tree-buffer-key-map
+                            [mode-line mouse-2]
+                            'ecb-toggle-maximize-ecb-window-with-mouse)))))
+    ecb-common-tree-buffer-after-create-hook
+    ecb-directories-buffer-after-create-hook)
+   ))
+
+(defun ecb-create-sources-tree-buffer ()
+  "Create the tree-buffer for sources"
+  (tree-buffer-create
+   ecb-sources-buffer-name
+   ecb-frame
+   'ecb-interpret-mouse-click
+   'ecb-tree-buffer-node-select-callback
+   'ecb-tree-buffer-node-expand-callback
+   'ecb-tree-buffer-node-collapsed-callback
+   'ecb-mouse-over-source-node
+   'equal
+   nil
+   nil                     ;(list 0) ;; set this list if you want leaf-symbols
+   'ecb-sources-menu-creator
+   (list (cons 0 ecb-sources-menu-title-creator))
+   (nth 1 ecb-truncate-lines)
+   t
+   ecb-tree-indent
+   ecb-tree-incremental-search
+   nil
+   ecb-tree-navigation-by-arrow
+   ecb-tree-easy-hor-scroll
+   (nth 0 ecb-tree-image-icons-directories)
+   (nth 2 ecb-tree-image-icons-directories)
+   ecb-tree-buffer-style
+   ecb-tree-guide-line-face
+   nil
+   ecb-tree-expand-symbol-before
+   ecb-source-face
+   ecb-sources-general-face
+   (append
+    (list (function (lambda ()
+                      (local-set-key (kbd "C-t")
+                                     'ecb-toggle-RET-selects-edit-window)
+                      (if (not ecb-running-xemacs)
+                          (define-key tree-buffer-key-map
+                            [mode-line mouse-2]
+                            'ecb-toggle-maximize-ecb-window-with-mouse)))))
+    ecb-common-tree-buffer-after-create-hook
+    ecb-directories-buffer-after-create-hook)))
+
+(defun ecb-create-history-tree-buffer ()
+  "Create the tree-buffer for history"
+  (tree-buffer-create
+   ecb-history-buffer-name
+   ecb-frame
+   'ecb-interpret-mouse-click
+   'ecb-tree-buffer-node-select-callback
+   'ecb-tree-buffer-node-expand-callback
+   'ecb-tree-buffer-node-collapsed-callback
+   'ecb-mouse-over-history-node
+   'equal
+   nil
+   nil
+   'ecb-history-menu-creator
+   (list (cons 0 ecb-history-menu-title-creator))
+   (nth 3 ecb-truncate-lines)
+   t
+   ecb-tree-indent
+   ecb-tree-incremental-search
+   nil
+   ecb-tree-navigation-by-arrow
+   ecb-tree-easy-hor-scroll
+   (nth 0 ecb-tree-image-icons-directories)
+   (nth 4 ecb-tree-image-icons-directories)
+   ecb-tree-buffer-style
+   ecb-tree-guide-line-face
+   nil
+   ecb-tree-expand-symbol-before
+   ecb-history-face
+   ecb-history-general-face
+   (append
+    (list (function (lambda ()
+                      (local-set-key (kbd "C-t")
+                                     'ecb-toggle-RET-selects-edit-window)
+                      (if (not ecb-running-xemacs)
+                          (define-key tree-buffer-key-map
+                            [mode-line mouse-2]
+                            'ecb-toggle-maximize-ecb-window-with-mouse)))))
+    ecb-common-tree-buffer-after-create-hook
+    ecb-directories-buffer-after-create-hook)))
 
 (silentcomp-provide 'ecb-file-browser)
 

@@ -25,6 +25,12 @@
    sources not all information are avaiable the protection- and tag-class
    filter can not used with such "non-semantic"-sources.
 
+** All tree-buffer filters are now guarded against filtering out all tags.
+   Each filter which a user can apply to the sources-, methods- or
+   history-buffer is now guarded against filtering out all nodes by accident,
+   ie. if a filter would empty the whole tree-buffer then this filter will be
+   autom. unwinded.
+   
 ** Much smarter mechanism to highlight the current tag in the methods-buffer.
    Previous versions of ECB have always fully expanded the whole tree in the
    Methods-buffer if the current tag in the source-buffer was not visible in
@@ -87,6 +93,11 @@
     This bug complained "Can not switch buffer in dedicated window" when the
     intergrated speedbar-buffer was selected and the user tries to open a file
     or to jump to a tag.
+
+*** Fixed a bug for the special ECB-modeline-menu for the XEmacs-modelines.
+    Now only in the special ECB-tree-buffer a special ECB-modeline-menu is
+    bound to mouse-3, all other buffers display the standard modeline-menu of
+    XEmacs.
     
 
 

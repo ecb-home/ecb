@@ -24,7 +24,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-method-browser.el,v 1.19 2004/03/01 06:28:04 berndl Exp $
+;; $Id: ecb-method-browser.el,v 1.20 2004/03/02 06:48:36 berndl Exp $
 
 ;;; Commentary:
 
@@ -1723,7 +1723,13 @@ help-echo."
              (widen))
             (ecb-rebuild-methods-buffer-with-tagcache
              (ecb--semantic-bovinate-toplevel t)))
-        (ecb-rebuild-methods-buffer)))))
+        (ecb-rebuild-methods-buffer)))
+    (when (save-excursion
+            (set-buffer ecb-methods-buffer-name)
+            (tree-buffer-empty-p))
+      (ecb-methods-filter-apply nil nil nil "" source-buffer t)
+      (message "ECB has not applied this filter because it would filter out all nodes!"))))
+        
   
 (defun ecb-methods-filter-modeline-prefix (buffer-name sel-dir sel-source)
   "Compute a mode-line prefix for the Methods-buffer so the current filter
@@ -3130,7 +3136,69 @@ edit-windows. Otherwise return nil."
                                    ecb-methods-menu-user-extension
                                    ecb-common-methods-menu))))))
 
-
+(defun ecb-create-methods-tree-buffer ()
+  "Create the tree-buffer for methods."
+  (tree-buffer-create
+   ecb-methods-buffer-name
+   ecb-frame
+   'ecb-interpret-mouse-click
+   'ecb-tree-buffer-node-select-callback
+   'ecb-tree-buffer-node-expand-callback
+   'ecb-tree-buffer-node-collapsed-callback
+   'ecb-mouse-over-method-node
+   ;; Function which compares the node-data of a
+   ;; tree-buffer-node in the method-buffer for equality. We
+   ;; must compare semantic-tags but we must not compare the
+   ;; tags with eq or equal because they can be re-grouped by
+   ;; ecb--semantic-adopt-external-members. the following
+   ;; function is a save "equal"-condition for ECB because
+   ;; currently the method buffer always displays only tags
+   ;; from exactly the buffer of the current edit-window.
+   ;; If `ecb--semantic-equivalent-tag-p' fails we return the
+   ;; result of an eq-comparison.
+   (function (lambda (l r)
+               (cond ((or (stringp l) (stringp r))
+                      (equal l r))
+                     ((or (equal 'ecb-bucket-node (car l))
+                          (equal 'ecb-bucket-node (car r)))
+                      (equal l r))
+                     (t ;; tags
+                      (condition-case nil
+                          (ecb--semantic-equivalent-tag-p l r)
+                        (error (eq l r)))))))
+   (list 1)
+   nil
+   'ecb-methods-menu-creator
+   (list (cons 0 ecb-methods-menu-title-creator)
+         (cons 1 ecb-methods-menu-title-creator)
+         (cons 2 ecb-methods-menu-title-creator))
+   (nth 2 ecb-truncate-lines)
+   t
+   ecb-tree-indent
+   ecb-tree-incremental-search
+   ecb-methods-incr-searchpattern-node-prefix
+   ecb-tree-navigation-by-arrow
+   ecb-tree-easy-hor-scroll
+   (nth 0 ecb-tree-image-icons-directories)
+   (nth 3 ecb-tree-image-icons-directories)
+   ecb-tree-buffer-style
+   ecb-tree-guide-line-face
+   nil
+   ecb-tree-expand-symbol-before
+   ecb-method-face
+   ecb-methods-general-face
+   (append
+    (list (function (lambda ()
+                      (local-set-key (kbd "C-t")
+                                     'ecb-toggle-RET-selects-edit-window)
+                      (if (not ecb-running-xemacs)
+                          (define-key tree-buffer-key-map
+                            [mode-line mouse-2]
+                            'ecb-toggle-maximize-ecb-window-with-mouse))
+                      (setq ecb-methods-root-node (tree-buffer-get-root)))))
+    ecb-common-tree-buffer-after-create-hook
+    ecb-directories-buffer-after-create-hook)))
+  
 (defun ecb-dump-semantic-toplevel ()
   "Dump the current semantic-tags in special buffer and display them."
   (interactive)
@@ -3166,6 +3234,8 @@ edit-windows. Otherwise return nil."
       (ecb-dump-tags (ecb--semantic-tag-children-compatibility
                         a-tag ecb-show-only-positioned-tags)
                        (concat prefix "  ")))))
+
+
 
 (silentcomp-provide 'ecb-method-browser)
 

@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: tree-buffer.el,v 1.139 2004/03/01 06:28:04 berndl Exp $
+;; $Id: tree-buffer.el,v 1.140 2004/03/02 06:48:35 berndl Exp $
 
 ;;; Commentary:
 
@@ -1114,6 +1114,9 @@ tree-buffer."
   (when tree-buffer-general-face
     (tree-buffer-overlay-move tree-buffer-general-overlay
                               (point-min) (point-max))))
+
+(defun tree-buffer-empty-p ()
+  (= (point-min) (point-max)))
 
 (defun tree-buffer-update (&optional node content)
   "Updates the current tree-buffer. The buffer will be completely rebuild with

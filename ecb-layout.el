@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-layout.el,v 1.220 2004/02/28 16:14:46 berndl Exp $
+;; $Id: ecb-layout.el,v 1.221 2004/03/02 06:48:36 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -137,6 +137,8 @@
 (silentcomp-defvar split-width-threshold)
 (silentcomp-defvar split-width-threshold)
 (silentcomp-defun popup-menu-and-execute-in-window)
+(silentcomp-defvar modeline-map)
+(silentcomp-defun modeline-menu)
 ;; for the display-buffer stuff of XEmacs
 (silentcomp-defun last-nonminibuf-frame)
 (silentcomp-defun check-argument-type)
@@ -3668,7 +3670,7 @@ Do not set this variable. It is only set by `ecb-redraw-layout-full' and
 `ecb-maximize-ecb-window'. It is evaluated by `ecb-toggle-ecb-windows' and
 `ecb-store-window-sizes'.")
 
-;; stuff for the default-modeline-mechanisms of GNU Emacs and XEmacs
+;; stuff for the default-modeline-mechanisms XEmacs
 
 ;; This menu is only used with modeline of XEmacs
 (defconst ecb-modeline-menu
@@ -3679,10 +3681,18 @@ Do not set this variable. It is only set by `ecb-redraw-layout-full' and
 
 (defun ecb-modeline-menu (event)
   (interactive "e")
-  (popup-menu-and-execute-in-window
-   (cons (car ecb-modeline-menu)
-	 (cdr ecb-modeline-menu))
-   event))
+  (if (member (ecb-event-buffer event) (ecb-dedicated-special-buffers))
+      (popup-menu-and-execute-in-window
+       (cons (car ecb-modeline-menu)
+             (cdr ecb-modeline-menu))
+       event)
+    (modeline-menu event)))
+
+(defun ecb-activate-xemacs-modeline-menu (arg)
+  (if (< arg 0)
+      (define-key modeline-map 'button3 'modeline-menu)
+    (define-key modeline-map 'button3 'ecb-modeline-menu)))
+    
 
 (defun ecb-redraw-layout-preserving-compwin-state ()
   "Redraw current layout with all ECB-windows visible."
@@ -3692,7 +3702,8 @@ Do not set this variable. It is only set by `ecb-redraw-layout-full' and
     (if (equal compwin-state 'hidden)
         (ecb-toggle-compile-window -1))))
 
-;; This function is only used with modeline of GNU Emacs
+;; This function is only used with modeline of GNU Emacs and is added to the
+;; local keymap of the tree-buffers.
 (defun ecb-toggle-maximize-ecb-window-with-mouse ()
   (interactive "@")
   (if ecb-current-maximized-ecb-buffer-name

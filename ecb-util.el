@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-util.el,v 1.99 2004/02/24 11:50:01 berndl Exp $
+;; $Id: ecb-util.el,v 1.100 2004/03/02 06:48:36 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -60,6 +60,9 @@
 (silentcomp-defvar noninteractive)
 (silentcomp-defun window-edges)
 (silentcomp-defun buffer-local-value)
+(silentcomp-defun posn-point)
+(silentcomp-defun posn-window)
+(silentcomp-defun event-start)
 ;; XEmacs
 (silentcomp-defun mswindows-cygwin-to-win32-path)
 (silentcomp-defun make-dialog-box)
@@ -148,6 +151,9 @@ Unless optional argument INPLACE is non-nil, return a new string."
       (defalias 'ecb-frame-parameter 'frame-property)
       (defalias 'ecb-line-beginning-pos 'point-at-bol)
       (defalias 'ecb-line-end-pos 'point-at-eol)
+      (defalias 'ecb-event-window 'event-window)
+      (defalias 'ecb-event-point 'event-point)
+      (defalias 'ecb-event-buffer 'event-buffer)
       (defalias 'ecb-window-full-width 'window-full-width)
       (defalias 'ecb-window-full-height 'window-height)
       (defun ecb-frame-char-width (&optional frame)
@@ -169,6 +175,12 @@ Unless optional argument INPLACE is non-nil, return a new string."
   (defalias 'ecb-frame-parameter 'frame-parameter)
   (defalias 'ecb-line-beginning-pos 'line-beginning-position)
   (defalias 'ecb-line-end-pos 'line-end-position)
+  (defun ecb-event-window (event)
+    (posn-window (event-start event)))
+  (defun ecb-event-point (event)
+    (posn-point (event-start event)))
+  (defun ecb-event-buffer (event)
+    (window-buffer (ecb-event-window event)))
   (defun ecb-window-full-width (&optional window)
     (let ((edges (window-edges window)))
       (- (nth 2 edges) (nth 0 edges))))
