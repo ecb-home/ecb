@@ -125,7 +125,7 @@
 ;;   + The edit-window must not be splitted and the point must reside in
 ;;     the not deleted edit-window.
 
-;; $Id: ecb-layout.el,v 1.77 2001/10/21 11:56:37 berndl Exp $
+;; $Id: ecb-layout.el,v 1.78 2001/10/29 11:04:25 berndl Exp $
 
 ;;; Code:
 
@@ -201,7 +201,7 @@ layout with `ecb-redraw-layout'"
   :group 'ecb-layout
   :initialize 'custom-initialize-default
   :set ecb-layout-option-set-function
-  :type 'integer)
+  :type 'string)
 
 (defvar ecb-old-compilation-window-height compilation-window-height)
 
@@ -407,8 +407,9 @@ ecb-frame has the size it has normally during your work with ECB!."
 				      (integer :tag "Width")
 				      (integer :tag "Height"))
 			       '(const :tag "Default size" nil))))
-		      '("Edit Window" "ECB Directories" "ECB Sources"
-			"ECB History" "ECB Methods"))))))
+;; 		      '("ECB Editwindow" "ECB Directories" "ECB Sources"
+                      '("ECB Directories" "ECB Sources"
+                        "ECB History" "ECB Methods"))))))
 
 ;; ====== internal variables ====================================
 
@@ -1189,7 +1190,9 @@ ECB-adviced functions."
 ;;======= Helper-functions ===========================================
 
 (defun ecb-split-hor (amount &optional dont-switch-window)
-  "Splits the current-window and returns the absolute amount in columns"
+  "Splits the current-window horizontally and returns the absolute amount in
+columns. If AMOUNT is greater than -1.0 and lower than +1.0 then the value is
+multiplied with the current window-width."
   (let ((abs-amout (floor (if (and (< amount 1.0)
                                    (> amount -1.0))
                               (* (window-width) amount)
@@ -1260,8 +1263,14 @@ visibility of the ECB windows. ECB minor mode remains active!"
                          (not ecb-windows-hidden)
                        (<= (prefix-numeric-value arg) 0))))
       (if (not new-state)
-          (ecb-redraw-layout)
+          (progn
+            (if (or (equal ecb-show-node-name-in-minibuffer 'always)
+                    (equal ecb-show-node-name-in-minibuffer 'if-too-long))
+                (tree-buffer-activate-follow-mouse))
+            (ecb-redraw-layout))
         (unless ecb-windows-hidden
+          (tree-buffer-deactivate-mouse-tracking)
+          (tree-buffer-deactivate-follow-mouse)
           (if (not (ecb-point-in-edit-window))
               (ecb-select-edit-window))
           (ecb-with-original-functions
@@ -1295,7 +1304,7 @@ visibility of the ECB windows. ECB minor mode remains active!"
              (when pos-before-redraw
                (goto-char pos-before-redraw))
              (setq ecb-last-source-buffer (current-buffer))
-             (setq ecb-last-edit-window-with-point (selected-window))))             
+             (setq ecb-last-edit-window-with-point (selected-window))))
           (setq ecb-windows-hidden t))))))
 
 (defun ecb-hide-ecb-windows ()
@@ -1360,13 +1369,15 @@ this function the edit-window is selected which was current before redrawing."
       ;; first we go to the edit-window
       (if (and ecb-edit-window (window-live-p ecb-edit-window))
           (ecb-select-edit-window)
-        ;; if the edit-window is destroyed (what should never happen) we go to
-        ;; either to the last edited buffer or - if this buffer is not longer
-        ;; existing - to the scratch-buffer.
+        ;; if the edit-window is destroyed (what should never happen) we try
+        ;; to go first to the last edited buffer, second to the scratch-buffer
+        ;; or third - if both of them don't exist - we stay in the current
+        ;; buffer.
         (set-window-dedicated-p (selected-window) nil)
         (switch-to-buffer (or (and (buffer-live-p ecb-last-source-buffer)
                                    ecb-last-source-buffer)
-                              (get-buffer-create "*scratch*"))))
+                              (get-buffer "*scratch*")
+                              (current-buffer))))
       
       ;; Do some actions regardless of the choosen layout
       (delete-other-windows)
@@ -1500,16 +1511,25 @@ documentation of `ecb-layout-window-sizes'!"
   (when window
     (cons (window-width window) (window-height window))))
 
+;; (defun ecb-get-window-sizes ()
+;;   (cons
+;;     (ecb-get-window-size ecb-edit-window)
+;;    (mapcar
+;;     (function (lambda (buffer)
+;; 		(ecb-get-window-size (get-buffer-window buffer))))
+;;     (list ecb-directories-buffer-name
+;; 	  ecb-sources-buffer-name
+;; 	  ecb-history-buffer-name
+;; 	  ecb-methods-buffer-name))))
+
 (defun ecb-get-window-sizes ()
-  (cons
-   (ecb-get-window-size ecb-edit-window)
    (mapcar
     (function (lambda (buffer)
 		(ecb-get-window-size (get-buffer-window buffer))))
     (list ecb-directories-buffer-name
 	  ecb-sources-buffer-name
 	  ecb-history-buffer-name
-	  ecb-methods-buffer-name))))
+	  ecb-methods-buffer-name)))
 
 (defun ecb-set-window-size (window size)
   (when (and window size)
@@ -1518,14 +1538,24 @@ documentation of `ecb-layout-window-sizes'!"
       (enlarge-window (- (car size) (window-width window)) t)
       (enlarge-window (- (cdr size) (window-height window))))))
 
+;; (defun ecb-set-window-sizes (sizes)
+;;   (when sizes
+;;     (ecb-set-window-size ecb-edit-window (car sizes))
+;;     (let ((buffers (list ecb-directories-buffer-name
+;; 			 ecb-sources-buffer-name
+;; 			 ecb-history-buffer-name
+;; 			 ecb-methods-buffer-name)))
+;;       (dolist (size (cdr sizes))
+;; 	(ecb-set-window-size (get-buffer-window (car buffers)) size)
+;; 	(setq buffers (cdr buffers))))))
+
 (defun ecb-set-window-sizes (sizes)
   (when sizes
-    (ecb-set-window-size ecb-edit-window (car sizes))
     (let ((buffers (list ecb-directories-buffer-name
 			 ecb-sources-buffer-name
 			 ecb-history-buffer-name
 			 ecb-methods-buffer-name)))
-      (dolist (size (cdr sizes))
+      (dolist (size sizes)
 	(ecb-set-window-size (get-buffer-window (car buffers)) size)
 	(setq buffers (cdr buffers))))))
 

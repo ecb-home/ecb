@@ -21,7 +21,7 @@
 
 ;; Generates ECB HTML pages.
 
-;; $Id: ecb-html.el,v 1.20 2001/10/24 18:38:36 creator Exp $
+;; $Id: ecb-html.el,v 1.21 2001/10/29 11:04:26 berndl Exp $
 
 ;;; Code:
 
@@ -73,7 +73,7 @@
 	       )
 
    (h-section "Dependencies"
-	      "ECB requires version 1.4beta8 or higher of " (h-link "http://cedet.sourceforge.net/semantic.shtml" '(target . "_top") "Eric Ludlam's semantic bovinator") ". If you use ECB for Java development you also need " (h-link "http://sunsite.auc.dk/jde/" '(target . "_top") "JDE") "." h-br "If you use XEmacs you must have the fsf-compat package installed (contains overlay.el).")
+	      "ECB requires version 1.4beta11 or higher of " (h-link "http://cedet.sourceforge.net/semantic.shtml" '(target . "_top") "Eric Ludlam's semantic bovinator") ". It also requires version 0.16 or higher of " (h-link "http://cedet.sourceforge.net/eieio.shtml" '(target . "_top") "Eric Ludlam's CLOS implementation eieio for Emacs") ". If you use ECB for Java development you also need " (h-link "http://sunsite.auc.dk/jde/" '(target . "_top") "JDE") "." h-br "If you use XEmacs you must have the fsf-compat package installed (contains overlay.el).")
 
    (h-section "Developers"
 	      (h-bullet-link-list
@@ -311,7 +311,7 @@
  
     (h-sub-section
      "Methods Buffer"
-     "The \"*ECB Methods*\" buffer contains the methods in the selected source file. When a method is selected with the primary mouse button or ENTER/RETURN the edit buffer will jump to the method. Clicking on a method with the secondary mouse button will jump to the method in the other edit window.")
+     "The \"*ECB Methods*\" buffer contains all classes, methods and variables in the selected source file. When a class, method or variable is selected with the primary mouse button or ENTER/RETURN the edit buffer will jump to the method. Clicking on a method with the secondary mouse button will jump to the method in the other edit window.")
  
     (h-sub-section
      "Emacs Tips"

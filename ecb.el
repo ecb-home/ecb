@@ -54,7 +54,7 @@
 ;; The latest version of the ECB is available at
 ;; http://home.swipnet.se/mayhem/ecb.html
 
-;; $Id: ecb.el,v 1.155 2001/10/24 18:38:36 creator Exp $
+;; $Id: ecb.el,v 1.156 2001/10/29 11:04:25 berndl Exp $
 
 ;;; Code:
 
@@ -214,10 +214,20 @@ list. The value of this variable should be a regular expression."
   :group 'ecb-directories
   :type 'regexp)
 
-(defcustom ecb-auto-expand-directory-tree t
-  "*Automatically expand the directory tree to the current source file."
+(defcustom ecb-auto-expand-directory-tree 'best
+  "*Automatically expand the directory tree to the current source file.
+There are three options:
+- best: Expand the best-matching source-path
+- first: Expand the first matching source-path
+- nil: Do not automatically expand the directory tree."
   :group 'ecb-directories
-  :type 'boolean)
+  :type '(radio (const :tag "Best matching"
+                       :value best)
+                (const :tag "First matching"
+                       :value first)
+                (const :tag "No auto. expand"
+                       :value nil)))
+
 
 (defcustom ecb-sources-buffer-name " *ECB Sources*"
   "*Name of the ECB sources buffer. Because it is not a normal buffer for
@@ -956,22 +966,23 @@ semantic-reparse. This function is added to the hook
       (tree-node-set-children node nil)
       (ecb-update-token-node token node))))
 
+
 (defun ecb-expand-tree (path node)
   (catch 'exit
     (dolist (child (tree-node-get-children node))
-      (let ((name (tree-node-get-name child)))
-        (when (and (>= (length path) (length name))
-                   (string= (substring path 0 (length name)) name)
-                   (or (= (length path) (length name))
-                       (eq (elt path (length name)) ecb-directory-sep-char)))
+      (let ((data (tree-node-get-data child)))
+        (when (and (>= (length path) (length data))
+                   (string= (substring path 0 (length data)) data)
+                   (or (= (length path) (length data))
+                       (eq (elt path (length data)) ecb-directory-sep-char)))
           (let ((was-expanded (tree-node-is-expanded child)))
             (tree-node-set-expanded child t)
             (ecb-update-directory-node child)
             (throw 'exit
-                   (or (when (> (length path) (length name))
-                         (ecb-expand-tree (substring path (1+ (length name)))
-                                          child))
+                   (or (when (> (length path) (length data))
+                         (ecb-expand-tree path child))
                        (not was-expanded)))))))))
+
 
 (defun ecb-get-source-files (dir files)
   (let (source-files)
@@ -993,8 +1004,35 @@ semantic-reparse. This function is added to the hook
 	(ecb-exec-in-directories-window
 	 (when ecb-auto-expand-directory-tree
 	   ;; Expand tree to show selected directory
-	   (if (ecb-expand-tree ecb-path-selected-directory (tree-buffer-get-root))
-	       (tree-buffer-update)))
+           (let ((start
+                  (if (equal ecb-auto-expand-directory-tree 'best)
+                      ;; If none of the source-paths in the buffer
+                      ;; `ecb-directories-buffer-name' matches then nil
+                      ;; otherwise the node of the best matching source-path
+                      (cdar (sort (delete nil
+                                          (mapcar (lambda (elem)
+                                                    (let ((data (tree-node-get-data elem)))
+                                                      (save-match-data
+                                                        (if (string-match
+                                                             (concat "^"
+                                                                     (regexp-quote data))
+                                                             ecb-path-selected-directory)
+                                                            (cons data elem)
+                                                          nil))))
+                                                  (tree-node-get-children (tree-buffer-get-root))))
+                                  (lambda (lhs rhs)
+                                    (> (length (car lhs)) (length (car rhs))))))
+                    ;; we start at the root node
+                    (tree-buffer-get-root))))
+             (when (and (equal ecb-auto-expand-directory-tree 'best)
+                        start)
+               ;; expand the best-match node itself
+               (tree-node-set-expanded start t)
+               (ecb-update-directory-node start))
+             ;; start recursive expanding of either the best-matching node or
+             ;; the root-node itself.
+             (ecb-expand-tree ecb-path-selected-directory start)
+             (tree-buffer-update)))
 	 (when (not ecb-show-sources-in-directories-buffer)
 	   (tree-buffer-highlight-node-data ecb-path-selected-directory))))
 
@@ -1026,6 +1064,84 @@ semantic-reparse. This function is added to the hook
                          ecb-directory-sep-string)))))
   ;; set the modelines of all visible tree-buffers new
   (ecb-mode-line-format))
+
+;; (defun ecb-set-selected-directory (path)
+;;   (let ((last-dir ecb-path-selected-directory))
+;;     (save-selected-window
+;;       (setq ecb-path-selected-directory (ecb-fix-filename path))
+  
+;;       (when (or (not ecb-show-sources-in-directories-buffer)
+;; 		ecb-auto-expand-directory-tree)
+;; 	(ecb-exec-in-directories-window
+;; 	 (when ecb-auto-expand-directory-tree
+;; 	   ;; Expand tree to show selected directory
+;;            (let ((start
+;;                   (if (equal ecb-auto-expand-directory-tree 'best)
+;;                       ;; The best matching source-path for path. If none of the
+;;                       ;; source-paths in the buffer `ecb-directories-buffer-name'
+;;                       ;; matches nil otherwise the result is a cons-cell where car
+;;                       ;; is PATH without the matching part and cdr is the matching
+;;                       ;; node."
+;;                       (car (sort (delete nil
+;;                                          (mapcar (lambda (elem)
+;;                                                    (let ((data (tree-node-get-data elem)))
+;;                                                      (save-match-data
+;;                                                        (if (string-match
+;;                                                             (concat "^"
+;;                                                                     (regexp-quote data)
+;;                                                                     "/?\\(.*\\)")
+;;                                                             ecb-path-selected-directory)
+;;                                                            (cons (match-string
+;;                                                                   1
+;;                                                                   ecb-path-selected-directory)
+;;                                                                  elem)
+;;                                                          nil))))
+;;                                                  (tree-node-get-children (tree-buffer-get-root))))
+;;                                  (lambda (lhs rhs)
+;;                                    (< (length (car lhs)) (length (car
+;;                                                                   rhs))))))
+;;                     ;; we start at the root node with the full path
+;;                     (cons ecb-path-selected-directory (tree-buffer-get-root)))))
+;;              (when (and (equal ecb-auto-expand-directory-tree 'best)
+;;                         start)
+;;                ;; expand the best-match node itself
+;;                (tree-node-set-expanded (cdr start) t)
+;;                (ecb-update-directory-node (cdr start)))
+;;              ;; start recursive expanding of either the best-match
+;;              ;; or the root-node itself.
+;;              (ecb-expand-tree (car start) (cdr start))
+;;              (tree-buffer-update)))
+;; 	 (when (not ecb-show-sources-in-directories-buffer)
+;; 	   (tree-buffer-highlight-node-data ecb-path-selected-directory))))
+
+;;       (ecb-exec-in-sources-window
+;;        (let ((old-children (tree-node-get-children (tree-buffer-get-root))))
+;; 	 (tree-node-set-children (tree-buffer-get-root) nil)
+;; 	 (ecb-tree-node-add-files
+;; 	  (tree-buffer-get-root)
+;; 	  ecb-path-selected-directory
+;; 	  (ecb-get-source-files
+;; 	   ecb-path-selected-directory
+;; 	   (directory-files ecb-path-selected-directory nil nil t))
+;; 	  0
+;; 	  ecb-show-source-file-extension
+;; 	  old-children ecb-sources-sort-method t))
+;;        (tree-buffer-update)
+;;        (when (not (string= last-dir ecb-path-selected-directory))
+;; 	 (tree-buffer-scroll (point-min) (point-min))))))
+;;   ;; set the default-directory of each tree-buffer to current selected
+;;   ;; directory so we can open files via find-file from each tree-buffer.
+;;   (save-excursion
+;;     (dolist (buf tree-buffers)
+;;       (set-buffer buf)
+;;       (setq default-directory
+;;             (concat ecb-path-selected-directory
+;;                     (and (not (= (aref ecb-path-selected-directory
+;;                                        (1- (length ecb-path-selected-directory)))
+;;                                  ecb-directory-sep-char))
+;;                          ecb-directory-sep-string)))))
+;;   ;; set the modelines of all visible tree-buffers new
+;;   (ecb-mode-line-format))
 
 (defun ecb-get-source-name (filename)
   "Returns the source name of a file."
@@ -1721,7 +1837,11 @@ node in the ECB-window WINDOW."
       (ecb-mouse-over-source-node node)
     (if (not (= (tree-node-get-type node) 3))
 	(tree-buffer-nolog-message
-         (when (ecb-show-minibuffer-info node window)
+         (when (or (ecb-show-minibuffer-info node window)
+                   (and (not (string= (tree-node-get-data node)
+                                      (tree-node-get-name node)))
+                        (eq (tree-node-get-parent node)
+                            (tree-buffer-get-root))))
            (tree-node-get-data node))))))
 
 (defun ecb-mouse-over-source-node (node &optional buffer window)
