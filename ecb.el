@@ -10,7 +10,7 @@
 
 ;; IMPORTANT: The version-number is auto-frobbed from the Makefile. Do not
 ;; change it here!
-(defconst ecb-version "1.92"
+(defconst ecb-version "1.92.1"
   "Current ECB version.")
 
 ;; This program is free software; you can redistribute it and/or modify it under

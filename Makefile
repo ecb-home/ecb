@@ -95,7 +95,7 @@ INSTALLINFO=/usr/bin/install-info
 
 # For the ECB-maintainers: Change the version-number here and not
 # elsewhere!
-ecb_VERSION=1.92
+ecb_VERSION=1.92.1
 
 
 RM=rm -f
@@ -243,6 +243,7 @@ prepversion:
 
 autoloads:
 	$(EBATCH) -l ecb-autogen -f ecb-update-autoloads
+
 
 # builds the distribution file $(ecb_VERSION).tar.gz
 distrib: $(ecb_INFO_DIR)/$(ecb_INFO) prepversion autoloads ecb

@@ -85,4 +85,9 @@ upload-update:
 clean:
 	@$(RM) -R $(ecb_HTMLDOCU_DIR)
 	@$(RM) NEWS.html *.elc $(ecb_UPLOAD_ARC) $(ecb_HTML_GEN) *.*~
+	@(cd files-for-upload/patches; \
+	   $(RM) *.*)
+	@(cd files-for-upload; \
+	   $(RM) *.*)
+
 
