@@ -1,6 +1,11 @@
 Version 1.40:
 -------------
 
+- Added a speedbar-like layout nr. 11. This is very useful (like also layout
+  nr. 10) either for users with small screens or users which normally do not
+  need/want the ECB-windows but sometimes browsing/selecting
+  methods/variables. (Klaus)
+
 - Better extraction of tokens from current buffer. ECB now displays any token
   type in any order. (Jesper)
 
