@@ -31,7 +31,7 @@
 ;; For the ChangeLog of this file see the CVS-repository. For a complete
 ;; history of the ECB-package see the file NEWS.
 
-;; $Id: tree-buffer.el,v 1.110 2003/03/28 09:48:23 berndl Exp $
+;; $Id: tree-buffer.el,v 1.111 2003/04/03 16:46:40 berndl Exp $
 
 ;;; Code:
 
@@ -960,8 +960,7 @@ functionality is done with the `help-echo'-property and the function
 	(when (and tree-node-expanded-fn
 		   (not (tree-node-is-expanded node)))
 	  (funcall tree-node-expanded-fn node 0 nil nil (buffer-name)))
-	(when (tree-node-is-expandable node)
-	  (tree-node-toggle-expanded node))
+        (tree-node-toggle-expanded node)
 	;; Update the tree-buffer with optimized display of NODE           
 	(tree-buffer-update node)))))
 
