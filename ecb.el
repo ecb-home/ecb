@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb.el,v 1.321 2003/07/31 16:02:07 berndl Exp $
+;; $Id: ecb.el,v 1.322 2003/08/01 15:24:34 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -206,6 +206,7 @@
 (silentcomp-defun ecb-speedbar-update-contents)
 (silentcomp-defun ecb-get-tags-for-non-semantic-files)
 (silentcomp-defun ecb-create-non-semantic-tree)
+
 
 ;;====================================================
 ;; Variables
@@ -435,6 +436,24 @@ root-path \(unix) is added to the directory buffer of ECB."
 `ecb-update-directories-buffer' is called, the functions in this variable will
 be evaluated. Such a function must return either nil or a list of strings
 where each string is a path.")
+
+(defcustom ecb-display-default-dir-after-start t
+  "*Automatically display current default-directory after activating ECB.
+
+If a file-buffer is displayed in the edit-window then ECB synchronizes its
+tree-buffers to this file-buffer - at least if the option `ecb-window-sync' it
+not nil. So for this situation `ecb-display-default-dir-after-start' takes no
+effect but this option is for the case if no file-buffer is displayed in the
+edit-window after startup:
+
+If true then ECB selects autom. the current default-directory after activation
+even if no file-buffer is displayed in the edit-window. This is useful if ECB
+is autom. activated after startup of Emacs and Emacs is started without a
+file-argument. So the directory from which the startup has performed is auto.
+selected in the ECB-directories buffer and the ECB-sources buffer displays the
+contents of this directory."
+  :group 'ecb-directories
+  :type 'boolean)
 
 (defcustom ecb-show-sources-in-directories-buffer '("left7" "left13"
                                                     "left14" "left15")
@@ -3243,22 +3262,24 @@ to be rescanned/reparsed and therefore the Method-buffer will be rebuild too."
              ;; The functions of the hook
              ;; `semantic-after-toplevel-cache-change-hook' are also called
              ;; after clearing the cache to set the cache to nil if a buffer
-             ;; is parsed which has no tokens. Here we do not want rebuilding
-             ;; the method-buffer if the cache is nil but the current buffer
-             ;; is set up for semantic-parsing, because the real rebuild
-             ;; should be done after the cache is filled again. If this hook
-             ;; is called "manually" by `ecb-update-methods-buffer--internal'
-             ;; then we do an update also for a nil cache if the buffer is not
-             ;; setup for semantic (like text-buffers or non-semantic-sources)
-             ;; so we can either clear out the method-buffer or fill it with
-             ;; parsing information of non-semantic-sources!
+             ;; is parsed which has no tokens. But buffers with no tokens are
+             ;; really seldom so cause of better performance here we do not
+             ;; want rebuilding the method-buffer if the cache is nil but the
+             ;; current buffer is set up for semantic-parsing, because the
+             ;; real rebuild should be done after the cache is filled again.
+             ;; If this hook is called "manually" by
+             ;; `ecb-update-methods-buffer--internal' then we do an update
+             ;; also for a nil cache if the buffer is not setup for semantic
+             ;; (like text-buffers or non-semantic-sources) so we can either
+             ;; clear out the method-buffer or fill it with parsing
+             ;; information of non-semantic-sources!
              (or updated-cache
                  (not (semantic-active-p))
                  force-nil-cache))
 
     ;; no-update-semantic has to be nil for non-semantic-sources!
     (if (not (semantic-active-p)) (setq no-update-semantic nil))
-    
+
     ;; the following cache-mechanism MUST use the (buffer-file-name
     ;; (current-buffer)) instead of ecb-path-selected-source because in case
     ;; of opening a buffer not via directory-window but via the
@@ -3463,7 +3484,8 @@ It does several tasks:
   entry in the history-buffer is removed.
 - Clearing the method buffer if a file-buffer has been killed.
 - The entry of the removed file-buffer is removed from `ecb-token-tree-cache'."
-  (let ((buffer-file (ecb-fix-filename (buffer-file-name (current-buffer)))))
+  (let* ((curr-buf (current-buffer))
+         (buffer-file (ecb-fix-filename (buffer-file-name curr-buf))))
     ;; 1. clearing the history if necessary
     (when ecb-kill-buffer-clears-history
       (let ((node (if buffer-file
@@ -3486,8 +3508,8 @@ It does several tasks:
         (ecb-clear-token-tree-cache buffer-file))
 
     ;; 4. Preventing from killing the special-ecb-buffers by accident
-    (if (member (current-buffer) (ecb-get-current-visible-ecb-buffers))
-        (ecb-error "Killing an special ECB-buffer is not possible!"))))
+    (when (member curr-buf (ecb-get-current-visible-ecb-buffers))
+      (ecb-error "Killing an special ECB-buffer is not possible!"))))
 
 (defun ecb-clear-history (&optional clearall)
   "Clears the ECB history-buffer. If CLEARALL is nil then the behavior is
@@ -3876,13 +3898,15 @@ is created."
       (cons (car sources) (ecb-delete-s child (cdr children) (cdr sources))))))
 
 (defun ecb-delete-source-path (node)
-  (setq ecb-source-path (ecb-delete-s
-			 node (tree-node-get-children (tree-node-get-parent node))
-			 ecb-source-path))
-  (ecb-update-directories-buffer)
-  (if (y-or-n-p "Delete source-path also for future-sessions? ")
-      (customize-save-variable 'ecb-source-path ecb-source-path)
-    (customize-set-variable 'ecb-source-path ecb-source-path)))
+  (let ((path (tree-node-get-data node)))
+    (when (ecb-confirm (concat "Really delete source-path " path "?"))
+      (setq ecb-source-path (ecb-delete-s
+                             node (tree-node-get-children (tree-node-get-parent node))
+                             ecb-source-path))
+      (ecb-update-directories-buffer)
+      (if (y-or-n-p "Delete source-path also for future-sessions? ")
+          (customize-save-variable 'ecb-source-path ecb-source-path)
+        (customize-set-variable 'ecb-source-path ecb-source-path)))))
 
 (defun ecb-customize ()
   (interactive)
@@ -4040,7 +4064,7 @@ Currently the fourth argument TREE-BUFFER-NAME is not used here."
             (if shift-mode
                 (ecb-remove-dir-from-caches (tree-node-get-data node)))
             
-            (ecb-set-selected-directory (tree-node-get-data node))
+            (ecb-set-selected-directory (tree-node-get-data node) shift-mode)
             ;; if we have running an integrated speedbar we must update the
             ;; speedbar 
             (ecb-directory-update-speedbar (tree-node-get-data node)))
@@ -5446,6 +5470,13 @@ always the ECB-frame if called from another frame."
       ;; now update all the ECB-buffer-modelines
       (ecb-mode-line-format)
 
+      (when (and ecb-display-default-dir-after-start
+                 (null (buffer-file-name (window-buffer ecb-edit-window))))
+        (ecb-set-selected-directory
+         (ecb-fix-filename (save-excursion
+                             (set-buffer (window-buffer ecb-edit-window))
+                             default-directory))))
+      
       ;; we run any personal hooks
       (run-hooks 'ecb-activate-hook)
 
@@ -5616,13 +5647,75 @@ if the minor mode is enabled.
     (ecb-maximize-ecb-window)
     (ignore-errors (select-window (get-buffer-window ecb-buffer)))))
 
+
+;; ----------- popup-menus for the tree-buffers ----------------------
+
+(defun ecb-create-source (node)
+  "Creates a new sourcefile in current directory."
+  (let* ((use-dialog-box nil)
+         (dir (ecb-fix-filename
+               (funcall (if (file-directory-p (tree-node-get-data node))
+                            'identity
+                          'file-name-directory)
+                        (tree-node-get-data node))))
+         (filename (file-name-nondirectory
+                    (read-file-name "Source name: " (concat dir "/")))))
+    (ecb-select-edit-window)
+    (if (string-match "\\.java$" filename)
+        (ecb-jde-gen-class-buffer dir filename)
+      (find-file (concat dir "/" filename)))
+    (when (= (point-min) (point-max))
+      (set-buffer-modified-p t)
+      (save-buffer)
+      (ecb-rebuild-methods-buffer-with-tokencache nil nil t))
+    (ecb-remove-dir-from-caches dir)
+    (ecb-set-selected-directory dir t)))
+
+(defun ecb-grep-directory-internal (node find)
+  (select-window (or ecb-last-edit-window-with-point ecb-edit-window))
+  (let ((default-directory (concat (ecb-fix-filename
+                                    (if (file-directory-p
+                                         (tree-node-get-data node))
+                                        (tree-node-get-data node)
+                                      (file-name-directory
+                                       (tree-node-get-data node))))
+                                   ecb-directory-sep-string)))
+    (call-interactively (if find
+                            (or (and (fboundp ecb-grep-find-function)
+                                     ecb-grep-find-function)
+                                'grep-find)
+                          (or (and (fboundp ecb-grep-function)
+                                   ecb-grep-function)
+                              'grep)))))
+
+(defun ecb-grep-find-directory (node)
+  (ecb-grep-directory-internal node t))
+
+(defun ecb-grep-directory (node)
+  (ecb-grep-directory-internal node nil))
+
+(defun ecb-create-directory (parent-node)
+  (make-directory (concat (tree-node-get-data parent-node) "/"
+                          (read-from-minibuffer "Directory name: ")))
+  (ecb-update-directory-node parent-node)
+  (tree-buffer-update))
+
+(defun ecb-delete-directory (node)
+  "Deletes current directory."
+  (let ((dir (tree-node-get-data node)))
+    (when (ecb-confirm (concat "Really delete directory" dir "? "))
+      (delete-directory (tree-node-get-data node))
+      (ecb-update-directory-node (tree-node-get-parent node))
+      (tree-buffer-update))))
+
+
+
 (defvar ecb-common-directories-menu nil)
 (setq ecb-common-directories-menu
       '(("Grep Directory" ecb-grep-directory t)
         ("Grep Directory recursive" ecb-grep-find-directory t)
         ("---")
-        ("Create File" ecb-create-file t)
-	("Create Source" ecb-create-directory-source t)
+	("Create Sourcefile" ecb-create-source t)
 	("Create Child Directory" ecb-create-directory t)
 	("Delete Directory" ecb-delete-directory t)
         ("---")
@@ -5645,6 +5738,7 @@ source-path of `ecb-source-path'.")
   "The menu-title for the directories menu. Has to be either a string or a
 function which is called with current node and has to return a string.")
 
+
 (defvar ecb-source-path-menu nil
   "Built-in menu for the directories-buffer for directories which are elements of
 `ecb-source-path'.")
@@ -5656,15 +5750,27 @@ function which is called with current node and has to return a string.")
          ("Maximize window" ecb-maximize-ecb-window-menu-wrapper))))
 
 
+(defun ecb-delete-source (node)
+  "Deletes current sourcefile."
+  (let* ((file (tree-node-get-data node))
+         (dir (ecb-fix-filename (file-name-directory file))))
+    (message "KLausi: %s, %s" file dir)
+    (when (ecb-confirm (concat "Really delete " (file-name-nondirectory file) "? "))
+      (when (get-file-buffer file)
+        (kill-buffer (get-file-buffer file)))
+      (ecb-delete-file file)
+      (ecb-remove-dir-from-caches dir)
+      (ecb-set-selected-directory dir t))))
+
+
 (defvar ecb-sources-menu nil
   "Built-in menu for the sources-buffer.")
 (setq ecb-sources-menu
       '(("Grep Directory" ecb-grep-directory t)
         ("Grep Directory recursive" ecb-grep-find-directory t)
         ("---")
-        ("Delete File" ecb-delete-source-2 t)
-	("Create File" ecb-create-file-2 t)
-	("Create Source" ecb-create-source t)
+	("Create Sourcefile" ecb-create-source t)
+        ("Delete Sourcefile" ecb-delete-source t)
         ("---")
         ("Maximize window" ecb-maximize-ecb-window-menu-wrapper)))
 
@@ -5815,7 +5921,7 @@ buffers does not exist anymore."
       '(("Grep Directory" ecb-grep-directory t)
         ("Grep Directory recursive" ecb-grep-find-directory t)
         ("---")
-        ("Delete File" ecb-delete-source-2 t)
+        ("Delete Sourcefile" ecb-delete-source t)
         ("Kill Buffer" ecb-history-kill-buffer t)
         ("---")
         ("Add all filebuffer to history" ecb-add-history-buffers-popup t)

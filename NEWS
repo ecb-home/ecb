@@ -1,6 +1,18 @@
 * Changes for ECB version 1.95.2
 
+** ECB selects autom. the current default-directory after activation even if
+   no file-buffer is displayed in the edit-window. This is useful if ECB is
+   autom. activated after startup of Emacs and Emacs is started without a
+   file-argument. So the directory from which the startup has performed is
+   auto. selected in the ECB-directories buffer and the ECB-sources buffer
+   displays the contents of this directory. See new option
+   `ecb-display-default-dir-after-start'. 
+
 ** Fixed Bugs
+
+*** Fixed all the file- and directory-commands in the popup-menus.
+    Now the Directories- and Sources-buffers are autom. updated after creating
+    rsp. deleting sourcefiles or directories.
 
 *** Jumping to some token for Perl sources failed. This is fixed now.
 
