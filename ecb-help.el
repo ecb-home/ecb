@@ -26,7 +26,7 @@
 ;;
 ;; Contains all online-help for ECB (stolen something from recentf.el)
 
-;; $Id: ecb-help.el,v 1.29 2001/06/12 15:37:35 berndl Exp $
+;; $Id: ecb-help.el,v 1.30 2001/06/13 09:34:03 berndl Exp $
 
 ;;; Code
 
@@ -583,15 +583,32 @@ a backtrace-buffer and inserts the contents of that."
       (insert-string  "\n-----------------------------------------------------\n\n"))))
 
 (defun ecb-problem-report-list-all-variables()
-  "List all variables starting with `ecb-'."
-  (let ((vars))
+  "List all variables starting with `ecb-' and some other variables which
+could be interesting for support."
+  (let ((emacs-vars `(semantic-after-toplevel-bovinate-hook
+                     pre-command-hook
+                     post-command-hook
+                     after-save-hook
+                     compilation-mode-hook
+                     help-mode-hook
+                     ,(if (boundp 'ediff-quit-hook)
+                         'ediff-quit-hook)))
+        ecb-vars)
     (mapatoms
      (lambda (symbol)
        (when (and (string-match "ecb-" (symbol-name symbol))
                   (get symbol 'custom-type))
-	 (setq vars (cons symbol vars)))))
-    (sort vars (function (lambda (l r)
-                           (string< (symbol-name l) (symbol-name r)))))))
+	 (setq ecb-vars (cons symbol ecb-vars)))))
+    (setq ecb-vars
+          (sort ecb-vars
+                (function (lambda (l r)
+                            (string< (symbol-name l) (symbol-name r))))))
+    (setq emacs-vars
+          (sort emacs-vars
+                (function (lambda (l r)
+                            (string< (symbol-name l) (symbol-name r))))))
+    (append emacs-vars ecb-vars)))
+    
 
 
 
