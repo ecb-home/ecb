@@ -105,7 +105,7 @@
 ;; - `ecb-with-some-adviced-functions'
 ;;
 
-;; $Id: ecb-layout.el,v 1.156 2003/03/04 15:10:43 berndl Exp $
+;; $Id: ecb-layout.el,v 1.157 2003/03/10 09:09:05 berndl Exp $
 
 ;;; Code:
 
@@ -895,8 +895,15 @@ either not activated or it behaves exactly like the original version!"
 
 
 (defadvice winner-mode (around ecb)
-  "Prevents `winner-mode' from being activated during ECB is active."
-  (ecb-error "Activating winner-mode is not possible as long as ECB is active!"))
+  "Prevents `winner-mode' from being activated for the ECB-frame."
+  (if (equal (selected-frame) ecb-frame)
+      (ecb-error "Can't use winner-mode functions in the ecb-frame.")))
+
+(defadvice winner-redo (around ecb)
+  "Prevents `winner-redo' from being used within the ECB-frame."
+  (if (equal (selected-frame) ecb-frame)
+      (ecb-error "Can't use winner-mode functions in the ecb-frame.")))
+
 
 (defadvice scroll-all-mode (after ecb)
   "With active ECB `scroll-all-mode' scrolls only the two edit-windows if point
@@ -2436,8 +2443,9 @@ this function the edit-window is selected which was current before redrawing."
           (setq compilation-window-buffer (window-buffer ecb-compile-window))
         (setq compilation-window-buffer "*scratch*")
         (message "ECB quick redraw: ecb-compile-window not alive!"))
-    
-      (set-window-configuration ecb-activated-window-configuration)
+
+      (ecb-with-original-functions
+       (set-window-configuration ecb-activated-window-configuration))
 
       ;;ok... now restore the buffers in the compile and edit windows..
 

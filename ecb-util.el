@@ -26,7 +26,7 @@
 ;; This file is part of the ECB package which can be found at:
 ;; http://ecb.sourceforge.net
 
-;; $Id: ecb-util.el,v 1.56 2003/02/21 17:57:49 berndl Exp $
+;; $Id: ecb-util.el,v 1.57 2003/03/10 09:09:05 berndl Exp $
 
 ;;; Code:
 
@@ -148,6 +148,7 @@ means not to count the minibuffer even if it is active."
                                             (scroll-other-window . around)
                                             (custom-save-all . around)
                                             (winner-mode . around)
+                                            (winner-redo . around)
                                             (scroll-all-mode . after))
                                         '((delete-frame . around)
                                           (compilation-set-window-height . around)
@@ -156,6 +157,7 @@ means not to count the minibuffer even if it is active."
                                           (scroll-other-window . around)
                                           (custom-save-all . around)
                                           (winner-mode . around)
+                                          (winner-redo . around)
                                           (scroll-all-mode . after)))
   "These functions are always adviced if ECB is active. Each element of the
 list is a cons-cell where the car is the function-symbol and the cdr the
