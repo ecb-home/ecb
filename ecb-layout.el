@@ -122,7 +122,7 @@
 ;;   + The edit-window must not be splitted and the point must reside in
 ;;     the not deleted edit-window.
 
-;; $Id: ecb-layout.el,v 1.33 2001/04/26 12:59:37 berndl Exp $
+;; $Id: ecb-layout.el,v 1.34 2001/04/28 10:08:34 creator Exp $
 
 ;;; Code:
 
@@ -138,14 +138,14 @@
 
 
 (defconst ecb-layout-option-set-function
-  '(lambda (symbol value)
-     (set symbol value)
-     ;; we must check this because otherwise the layout would be drawn
-     ;; if we have changed the initial value regardless if ECB is
-     ;; activated or not.
-     (if (and (boundp 'ecb-activated)
-              ecb-activated)
-         (ecb-redraw-layout))))
+  (function (lambda (symbol value)
+	      (set symbol value)
+	      ;; we must check this because otherwise the layout would be drawn
+	      ;; if we have changed the initial value regardless if ECB is
+	      ;; activated or not.
+	      (if (and (boundp 'ecb-activated)
+		       ecb-activated)
+		  (ecb-redraw-layout)))))
 
 (defcustom ecb-layout-nr 9
   "*Define the window layout of ECB. A positive integer which sets the
@@ -359,11 +359,11 @@ normally use for `find-file-other-window' to `ecb-find-file-other-window'
 the `ecb-deactivate-hook'."
   :group 'ecb-layout
   :initialize 'custom-initialize-default
-  :set '(lambda (symbol value)
-          (set symbol value)
-          (if (and (boundp 'ecb-activated)
-                   ecb-activated)            
-              (ecb-activate-adviced-functions value)))
+  :set (function (lambda (symbol value)
+		   (set symbol value)
+		   (if (and (boundp 'ecb-activated)
+			    ecb-activated)            
+		       (ecb-activate-adviced-functions value))))
   :type '(set (const :tag "other-window"
                      :value other-window)
               (const :tag "delete-window"
@@ -812,10 +812,6 @@ ECB-adviced functions."
 (defalias 'ecb-delete-other-windows-in-editwindow-9
   'ecb-delete-other-windows-in-editwindow-0)
 (defalias 'ecb-delete-window-in-editwindow-9
-  'ecb-delete-window-in-editwindow-0)
-(defalias 'ecb-delete-other-windows-in-editwindow-10
-  'ecb-delete-other-windows-in-editwindow-0)
-(defalias 'ecb-delete-window-in-editwindow-10
   'ecb-delete-window-in-editwindow-0)
 
 (defun ecb-delete-other-windows-in-editwindow-5 ()
@@ -1329,25 +1325,21 @@ place."
   (ecb-split-ver 0.5)
   (ecb-set-methods-buffer))
 
-(defun ecb-layout-function-6 ()
+(defun ecb-layout-function-6()
   "This function creates the following layout:
 
    -------------------------------------------------------
+   |  Sources     |                                      | 
+   |--------------|                                      |
    |              |                                      |
-   |  Directories |                                      |
    |              |                                      |
+   |              |                                      |
+   |  Methods     |                 Edit                 |
+   |              |                                      | 
    |              |                                      |
    |              |                                      |
    |--------------|                                      |
-   |      |       |                                      |
-   | Sour | Hist  |                 Edit                 |
-   |      |       |                                      |
-   |      |       |                                      |
-   |--------------|                                      |
-   |              |                                      |
-   |  Methods     |                                      |
-   |              |                                      |
-   |              |                                      |
+   |  History     |                                      |
    -------------------------------------------------------
    |                                                     |
    |                    Compilation                      |
@@ -1361,15 +1353,15 @@ place."
     (ecb-split-ver (* -1 ecb-compile-window-height) t)
     (setq ecb-compile-window (next-window)))
   (ecb-split-hor ecb-windows-width t)
-  (ecb-set-directories-buffer)
-  (ecb-split-ver 0.3)
+
+  ;;(ecb-set-directories-buffer)
+  ;;(ecb-split-ver 0.3)
   (ecb-set-sources-buffer)
-  (ecb-split-ver 0.5)
+  (ecb-split-ver 0.2)
   (ecb-set-methods-buffer)
-  (select-window (previous-window))
-  (ecb-split-hor 0.5)
+  (ecb-split-ver 0.75)
   (ecb-set-history-buffer)
-  (select-window (next-window (next-window)))
+  (select-window (next-window))
   (setq ecb-edit-window (selected-window)))
 
 (defun ecb-layout-function-7 ()
@@ -1498,45 +1490,6 @@ place."
   (ecb-split-ver 0.35)
   (ecb-set-methods-buffer)
   (ecb-split-ver 0.65)
-  (ecb-set-history-buffer)
-  (select-window (next-window))
-  (setq ecb-edit-window (selected-window)))
-
-(defun ecb-layout-function-10()
-  "This function creates the following layout:
-
-   -------------------------------------------------------
-   |  Sources     |                                      | 
-   |--------------|                                      |
-   |              |                                      |
-   |              |                                      |
-   |              |                                      |
-   |  Methods     |                 Edit                 |
-   |              |                                      | 
-   |              |                                      |
-   |              |                                      |
-   |--------------|                                      |
-   |  History     |                                      |
-   -------------------------------------------------------
-   |                                                     |
-   |                    Compilation                      |
-   |                                                     |
-   -------------------------------------------------------
-
-If you have not set a compilation-window in `ecb-layout-nr' then the layout
-contains no compilation window and the other windows get a little more
-place."
-  (when ecb-compile-window-height
-    (ecb-split-ver (* -1 ecb-compile-window-height) t)
-    (setq ecb-compile-window (next-window)))
-  (ecb-split-hor ecb-windows-width t)
-
-  ;;(ecb-set-directories-buffer)
-  ;;(ecb-split-ver 0.3)
-  (ecb-set-sources-buffer)
-  (ecb-split-ver 0.2)
-  (ecb-set-methods-buffer)
-  (ecb-split-ver 0.75)
   (ecb-set-history-buffer)
   (select-window (next-window))
   (setq ecb-edit-window (selected-window)))
