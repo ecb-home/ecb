@@ -225,6 +225,16 @@ the user is prompted with OTHER-PROMPT to insert any arbitrary string."
            (setq answer (read-string (concat other-prompt ": ")))))
     answer))
 
+(defun ecb-normalize-number (value &optional ref-value)
+  "Normalize VALUE in the following manner and return:
+* VALUE > -1.0 and < +1.0 and REF-VALUE a number: `floor' of VALUE * REF-VALUE
+* all other cases: `floor' of VALUE"
+  (floor (if (and (< value 1.0)
+                  (> value -1.0)
+                  (numberp ref-value))
+             (* ref-value value)
+           value)))
+
 (defmacro ecb-error (&rest args)
   "Signals an error but prevents it from entering the debugger. This is
 usefull if an error-message should be signaled to the user and evaluating

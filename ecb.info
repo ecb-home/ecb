@@ -1810,15 +1810,8 @@ Command Index::.
    `ecb-compile-window' to `ecb-compile-window-height' and if ARG is nil then
    toggle the enlarge-state.
 
-   The `ecb-compile-window' is enlarged to the following value: At least to
-   the value of `ecb-compile-window-height' and max. to half of the
-   frame-height of the ECB-frame, best depending on the values of
-   `compilation-window-height' (before ECB was started!) and the number of
-   lines of current buffer in `ecb-compile-window'. If
-   `compilation-window-height' is set before ECB was started then ECB never
-   enlarges the `ecb-compile-window' over the value of
-   `compilation-window-height'! Changing this option during activated ECB
-   takes first effect after restarting ECB!
+   The `ecb-compile-window' is enlarged to the value of
+   `ecb-enlarged-compilation-window-max-height'.!
 
  - Command: toggle-layout
    Toggles between the layouts defined in `ecb-toggle-layout-sequence'.
@@ -3106,6 +3099,25 @@ This group contains the following options:
 
    To restore the ECB-layout after such a buffer-enlarge just call
    `ecb-toggle-enlarged-compilation-window' or `ecb-redraw-layout'.
+
+ - User Option: enlarged-compilation-window-max-height
+   The max height of the compilation window after enlarging it by
+   `ecb-toggle-enlarged-compilation-window'. The following values are allowed:
+
+    - best: Minimum is the value of `ecb-compile-window-height' and max. the
+      half of the frame-height of the ECB-frame, best depending on the values
+      of `compilation-window-height' (before ECB was started!) and the number
+      of lines of current buffer in `ecb-compile-window'. If
+      `compilation-window-height' is set before ECB was started then ECB
+      never enlarges the `ecb-compile-window' over the value of
+      `compilation-window-height'! Changing `compilation-window-height'
+      during activated ECB takes first effect after restarting ECB!
+
+    - half: 1/2 the frame-height of the ECB-frame
+
+    - any number: Max height in lines. If the number is less than 1.0 the
+      height is a fraction of the frame height (e.g. 0.33 results in a
+      max-height of 1/3 the frame-height).
 
  - User Option: hide-ecb-windows-hook
    Hooks run after the ECB windows have been hidden either by
@@ -4450,6 +4462,7 @@ the option `ecb-layout-nr' is listed with name "layout-nr").
 * download-version:                      ecb-download.
 * ecb-create-layout-frame-height:        ecb-create-layout.
 * ecb-create-layout-frame-width:         ecb-create-layout.
+* enlarged-compilation-window-max-height: ecb-layout.
 * exclude-parents-regexp:                ecb-methods.
 * excluded-directories-regexp:           ecb-directories.
 * font-lock-tokens:                      ecb-methods.
@@ -4630,52 +4643,52 @@ Node: Back/forward navigation70281
 Ref: Back/forward navigation-Footnote-171382
 Node: ECB-window synchronizing71441
 Node: Interactive ECB commands74023
-Node: Customizing83002
-Node: General aspects83636
-Ref: General aspects-Footnote-186400
-Node: Most important options86532
-Node: Customizable options88325
-Node: ecb-general89545
-Node: ecb-directories109155
-Node: ecb-sources115310
-Node: ecb-methods117565
-Node: ecb-history129834
-Node: ecb-layout131895
-Node: ecb-create-layout145752
-Node: ecb-face-options146255
-Node: ecb-faces149684
-Node: ecb-download153676
-Node: Submitting problem report154885
-Node: Upgrading156248
-Node: Downloading new versions157011
-Ref: Download required packages158768
-Ref: Downloading new versions-Footnote-1159866
-Node: Auto. option-upgrading159915
-Node: User interface160223
-Node: Background information161109
-Node: Tips and tricks164507
-Node: Changing faces165200
-Ref: Changing faces-Footnote-1168036
-Node: Small screens168212
-Node: Simulating speedbar169606
-Node: Integrating speedbar170415
-Node: Optimize scrolling170681
-Node: Large directories171761
-Node: Using eshell172427
-Node: Elisp programming172617
-Node: List of variables173226
-Node: List of hooks173538
-Node: tree-buffer174323
-Node: Adviced functions175129
-Ref: Adviced functions-Footnote-1175748
-Node: Programming new layouts175819
-Node: Conflicts and bugs181147
-Node: Conflicts181622
-Node: Bugs185080
-Node: FAQ185300
-Ref: FAQ-Footnote-1190052
-Node: Command Index190083
-Node: Option Index192333
-Node: Concept Index198365
+Node: Customizing82519
+Node: General aspects83153
+Ref: General aspects-Footnote-185917
+Node: Most important options86049
+Node: Customizable options87842
+Node: ecb-general89062
+Node: ecb-directories108672
+Node: ecb-sources114827
+Node: ecb-methods117082
+Node: ecb-history129351
+Node: ecb-layout131412
+Node: ecb-create-layout146282
+Node: ecb-face-options146785
+Node: ecb-faces150214
+Node: ecb-download154206
+Node: Submitting problem report155415
+Node: Upgrading156778
+Node: Downloading new versions157541
+Ref: Download required packages159298
+Ref: Downloading new versions-Footnote-1160396
+Node: Auto. option-upgrading160445
+Node: User interface160753
+Node: Background information161639
+Node: Tips and tricks165037
+Node: Changing faces165730
+Ref: Changing faces-Footnote-1168566
+Node: Small screens168742
+Node: Simulating speedbar170136
+Node: Integrating speedbar170945
+Node: Optimize scrolling171211
+Node: Large directories172291
+Node: Using eshell172957
+Node: Elisp programming173147
+Node: List of variables173756
+Node: List of hooks174068
+Node: tree-buffer174853
+Node: Adviced functions175659
+Ref: Adviced functions-Footnote-1176278
+Node: Programming new layouts176349
+Node: Conflicts and bugs181677
+Node: Conflicts182152
+Node: Bugs185610
+Node: FAQ185830
+Ref: FAQ-Footnote-1190582
+Node: Command Index190613
+Node: Option Index192863
+Node: Concept Index198949
 
 End Tag Table
