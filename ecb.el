@@ -59,7 +59,7 @@
 ;; The latest version of the ECB is available at
 ;; http://home.swipnet.se/mayhem/ecb.html
 
-;; $Id: ecb.el,v 1.234 2002/08/09 13:38:54 berndl Exp $
+;; $Id: ecb.el,v 1.235 2002/08/10 12:18:40 berndl Exp $
 
 ;;; Code:
 
@@ -1306,8 +1306,7 @@ Note: A click with the secondary mouse-button \(see again
    (or (getenv "TMPDIR") (getenv "TMP") (getenv "TEMP")
        (cond ((eq system-type 'windows-nt) "c:/temp")
              (t "/tmp"))))
-  "*Specify a directory where ECB can store temporary files.
-This is for example needed for upgrading ECB by `ecb-upgrade-ecb'."
+  "*Specify a directory where ECB can store temporary files."
   :type '(directory :tag "Temporary Directory")
   :group 'ecb-general)
 
@@ -2404,11 +2403,8 @@ It does several tasks:
 
 (defun ecb-clear-history (&optional clearall)
   "Clears the ECB history-buffer. If CLEARALL is nil then the behavior is
-defined in the option `ecb-clear-history-behavior' otherwise the value of
-CLEARALL overrides the value of this option:
-< 0: Means not-existing-buffers
-> 0: Means existing-buffers
-= 0: Means all
+defined in the option `ecb-clear-history-behavior' otherwise the user is
+prompted what buffers should be cleared from the history-buffer.
 For further explanation see `ecb-clear-history-behavior'."
   (interactive "P")
   (unless (or (not ecb-minor-mode)
@@ -2419,11 +2415,13 @@ For further explanation see `ecb-clear-history-behavior'."
                                               (buffer-file-name buff))
                                             (buffer-list)))
              (tree-childs (tree-node-get-children (tree-buffer-get-root)))
-             (clear-behavior (or (if (and clearall (integerp clearall))
-                                     (cond ((= clearall 0) 'all)
-                                           ((< clearall 0) 'not-existing-buffers)
-                                           (t 'existing-buffers)))
-                                 ecb-clear-history-behavior))
+             (clear-behavior
+              (or (if clearall
+                      (intern (ecb-query-string "Clear from history:"
+                                                '("all"
+                                                  "not-existing-buffers"
+                                                  "existing-buffers"))))
+                  ecb-clear-history-behavior))
              child-data)
          (while tree-childs
            (setq child-data (tree-node-get-data (car tree-childs)))
@@ -3727,7 +3725,6 @@ always the ECB-frame if called from another frame."
     ;; menus
     (if running-xemacs
         (add-submenu nil ecb-minor-menu))
-    ;;       (easy-menu-add ecb-minor-menu))
 
     (setq ecb-minor-mode t)
 
