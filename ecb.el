@@ -54,7 +54,7 @@
 ;; The latest version of the ECB is available at
 ;; http://home.swipnet.se/mayhem/ecb.html
 
-;; $Id: ecb.el,v 1.184 2002/01/26 10:38:20 burtonator Exp $
+;; $Id: ecb.el,v 1.185 2002/01/29 02:28:10 burtonator Exp $
 
 ;;; Code:
 
@@ -195,6 +195,13 @@ The parameters are set for the following display-types:
 It´s recommended to define here the font-family, the font-size, the basic
 color etc."
   :group 'faces)
+
+(defcustom ecb-auto-activate nil
+  "Automatically startup ECB when Emacs starts up.  This should only be run if
+  you always want to run `ecb-activate'."
+  :group 'ecb-general
+  :type 'boolean)
+
 
 (defcustom ecb-directories-general-face 'ecb-directories-general-face
   "Basic face for the ECB directories buffer. This defines the basic
@@ -3223,6 +3230,16 @@ FILE.elc or if FILE.elc doesn't exist."
       (dolist (file files)
 	(if (string-match "\\(tree-buffer\\|ecb.*\\)\\.el$" file)
 	    (ecb-compile-file-if-necessary file force-all))))))
+
+(defun ecb-auto-activate-hook()
+  "If necessary, run `ecb-activate' when Emacs is started."
+
+  (when ecb-auto-activate
+    (ecb-activate)))
+
+(add-hook 'emacs-startup-hook 'ecb-auto-activate-hook)
+  
+;;tell ECB to automatically startup.
 
 (provide 'ecb)
 

@@ -1,6 +1,9 @@
 Version 1.61:
 -------------
 
+- New feature, ecb-auto-activate.  If non-nil we can start the ECB after Emacs
+  is started.  See `ecb-auto-activate' for more information.  (Kevin)
+
 - New package, ecb-cycle.el.  Supports cycling through all known compilation
   buffers. (Kevin)
     + ecb-cycle-switch-to-compilation-buffer - switch to available compilation
