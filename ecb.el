@@ -1708,7 +1708,7 @@ mouse-moving."
         (and (eq when-elem 'if-too-long)
              window
              (>= (+ (length (tree-node-get-name node))
-                    (tree-buffer-get-node-indent node))
+                    (tree-node-get-indentlength node))
                  (window-width window))))))
 
 (defvar ecb-idle-timer-alist nil)
