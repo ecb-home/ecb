@@ -7,7 +7,7 @@ Version 1.70:
   it is now possible to change easily and fast the general face for ALL
   ECB-tree-buffers (same for the highlighting face). See the docstring of the
   new faces 'ecb-default-general-face' and 'ecb-default-highlight-face' for
-  further details. (KLaus).
+  further details. (Klaus).
 
 - Smarter incr. search in a tree-buffer with the [end]-key: If there are at
   least two nodes with the same greatest common-prefix than every hit of

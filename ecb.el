@@ -1302,11 +1302,13 @@ PARENT-TOKEN is only propagated to `ecb-add-token-bucket'."
                                   &optional parent-token)
   "Adds a token bucket to a node unless DISPLAY equals 'hidden."
   (when bucket
-    (let ((name (concat "[" (car bucket) "]"))
+    (let ((name (concat (car bucket)))
 	  (type (semantic-token-token (cadr bucket)))
 	  (bucket-node node))
       (unless (eq 'hidden display)
 	(unless (eq 'flattened display)
+	  (unless running-xemacs
+	    (put-text-property 0 (length name) 'face '(weight . bold) name))
 	  (setq bucket-node (tree-node-new name 1 nil nil node
 					   (if ecb-truncate-long-names 'end)))
 	  (tree-node-set-expanded bucket-node (eq 'expanded display)))
