@@ -124,7 +124,7 @@
 ;;   + The edit-window must not be splitted and the point must reside in
 ;;     the not deleted edit-window.
 
-;; $Id: ecb-layout.el,v 1.98 2002/01/23 07:17:53 burtonator Exp $
+;; $Id: ecb-layout.el,v 1.99 2002/01/25 16:21:41 berndl Exp $
 
 ;;; Code:
 
@@ -139,6 +139,10 @@
 
 ;; needed for the `some'-function.
 (require 'cl)
+
+(defvar ecb-use-dedicated-windows t
+  "Use dedicated windows for the ECB buffers.
+Attention: You should never change this!")
 
 (defgroup ecb-layout nil
   "Settings for the screenlayout of the Emacs code browser."
@@ -172,8 +176,8 @@
 
 (defcustom ecb-layout-nr 9
   "*Define the window layout of ECB. A positive integer which sets the
-general layout. Currently there are 13 predefined layouts with index from 0 to
-12. You can savely try out any of them by changing this value and saving it
+general layout. Currently there are 14 predefined layouts with index from 0 to
+13. You can savely try out any of them by changing this value and saving it
 only for the current session. If you are sure which layout you want you can
 save it for future sessions. To get a picture of the layout for index <index>
 call C-h f ecb-layout-function-<index>, e.g. `ecb-layout-function-9'.
@@ -192,6 +196,7 @@ Currently available layouts \(see the doc-string for a picture ot the layout):
 `ecb-layout-function-10'
 `ecb-layout-function-11'
 `ecb-layout-function-12'
+`ecb-layout-function-13'
 
 Regardless of the settings you define here: If you have destroyed or
 changed the ECB-screen-layout by any action you can always go back to this
@@ -370,21 +375,44 @@ rebind it to the original function in the `ecb-deactivate-hook'."
               (const :tag "other-window-for-scrolling"
                      :value other-window-for-scrolling)))
 
-(defvar ecb-use-dedicated-windows t
-  "Use dedicated windows for the ECB buffers.
-Attention: You should never change this!")
+(defcustom ecb-layout-always-operate-in-edit-window
+  '(delete-window
+    delete-other-windows
+    switch-to-buffer
+    switch-to-buffer-other-window)
+  "*Adviced window functions work always in the edit-window.
+If we are in an ECB special buffer (methods, directories, etc), and any of the
+adviced windowing functions is called \(see `ecb-advice-window-functions'), we
+will select the `ecb-edit-window' first. This is useful if you have any
+functions that use such functions and you don't want them to just error with a
+method complaining that the current buffer can not be split, or something
+similar.
 
-(defcustom ecb-layout-split-in-edit-window nil
-  "If we are in an ECB special buffer (methods, directories, etc), and
-`split-window' or friends are called, we will select the `ecb-edit-window'
-first.  This is useful if you have any functions that split windows and you
-don't want them to just error with a method complaining that the current buffer
-can not be split.
+Because this may not be desirable in all situations and all adviced functions
+this can be enabled separately for every advicable function \(see also
+`ecb-advice-window-functions'). If the symbol of an adviced function is
+contained in the value of this option, then the edit-window is first selected
+otherwise either an error is reported or some other special reaction; see the
+documentation of the adviced functions for this.
 
-Note that this may not be desirable in all situations and is disabled by
-default."
+For `other-window' and `other-window-for-scrolling' this makes no sense,
+therefore you can not enable this for both of them.
+
+Per default this is enabled for `delete-window', `delete-other-windows',
+`switch-to-buffer' and `switch-to-buffer-other-window'."
   :group 'ecb-layout
-  :type 'boolean)
+  :type '(set (const :tag "delete-window"
+                     :value delete-window)
+              (const :tag "delete-other-windows"
+                     :value delete-other-windows)
+              (const :tag "split-window-horizontally"
+                     :value split-window-horizontally)
+              (const :tag "split-window-vertically"
+                     :value split-window-vertically)
+              (const :tag "switch-to-buffer"
+                     :value switch-to-buffer)
+              (const :tag "switch-to-buffer-other-window"
+                     :value switch-to-buffer-other-window)))
 
 (defconst ecb-number-of-layouts 13)
 (defcustom ecb-layout-window-sizes nil
@@ -898,12 +926,21 @@ the splitted edit window would be the only windows in the frame. This means
 the part of the splitted edit-window which contains the point will be
 destroyed and the other part fills the whole edit-window.
 If called in an unsplitted edit-window then nothing is done.
-If called in any other window of the current ECB-layout it jumps first in the
-\(first) edit-window and does then it큦 job \(see above)."
+If called in any other window of the current ECB-layout there are two
+alternatives:
+- If the function is contained in `ecb-layout-always-operate-in-edit-window'
+  it jumps first in the \(first) edit-window and does then it큦 job.
+- Otherwise an error is reported."
   (if (not (equal (selected-frame) ecb-frame))
       ad-do-it
+    (when (and (member 'delete-window ecb-layout-always-operate-in-edit-window)
+               ;; this is needed because otherwise we would also select the 1.
+               ;; edit-window if point stays in the second one!
+               (not (ecb-point-in-edit-window)))
+      (ecb-select-edit-window))
+    
     (if (not (ecb-point-in-edit-window))
-        (ecb-select-edit-window))
+        (error "Only an edit-window can be deleted!"))
     (ad-with-originals 'delete-window
       (if (ecb-edit-window-splitted)
           (funcall (intern (format "ecb-delete-window-in-editwindow-%d"
@@ -919,12 +956,23 @@ the splitted edit window would be the only windows in the frame. This means
 the part of the splitted edit-window which contains the point fills the whole
 edit-window.
 If called in an unsplitted edit-window then nothing is done.
-If called in any other window of the current ECB-layout it jumps first in the
-\(first) edit-window and does then it큦 job \(see above)."
+If called in any other window of the current ECB-layout there are two
+alternatives:
+- If the function is contained in `ecb-layout-always-operate-in-edit-window'
+  it jumps first in the \(first) edit-window and does then it큦 job.
+- Otherwise an error is reported."
   (if (not (equal (selected-frame) ecb-frame))
       ad-do-it
+
+    (when (and (member 'delete-other-windows
+                       ecb-layout-always-operate-in-edit-window)
+               ;; this is needed because otherwise we would also select the 1.
+               ;; edit-window if point stays in the second one!
+               (not (ecb-point-in-edit-window)))
+      (ecb-select-edit-window))
+    
     (if (not (ecb-point-in-edit-window))
-        (ecb-select-edit-window))
+        (error "Only an edit-window can be deleted!"))
     (ad-with-originals 'delete-window
       (if (ecb-edit-window-splitted)
           (funcall (intern (format "ecb-delete-other-windows-in-editwindow-%d"
@@ -935,18 +983,19 @@ If called in any other window of the current ECB-layout it jumps first in the
   "The ECB-version of `split-window-horizontally'. Works exactly like the
 original function with the following ECB-ajustment:
 
-If called in an unsplitted edit-window then the edit window will be splitted
-horizontally.
-If called in an already splitted edit-window then nothing is done.
-If called in any other window of the current ECB-layout it stops with an
-error!"
-
+Called in an unsplitted edit-window then the edit window will be splitted
+horizontally. If called in an already splitted edit-window then nothing is
+done. If called in any other window of the current ECB-layout it stops with an
+error if this function is not contained in `ecb-layout-always-operate-in-edit-window'!"
   (if (not (equal (selected-frame) ecb-frame))
       ad-do-it
 
-    (when ecb-layout-split-in-edit-window
-      (set-buffer (window-buffer ecb-edit-window))
-      (select-window ecb-edit-window))
+    (when (and (member 'split-window-horizontally
+                       ecb-layout-always-operate-in-edit-window)
+               ;; this is needed because otherwise we would also select the 1.
+               ;; edit-window if point stays in the second one!
+               (not (ecb-point-in-edit-window)))
+      (ecb-select-edit-window))
     
     (let ((p (ecb-point-in-edit-window)))
       (if (not p)
@@ -963,17 +1012,16 @@ error!"
 original function with the following ECB-ajustment:
 
 Called in an unsplitted edit-window then the edit window will be splitted
-vertically.
-If called in an already splitted edit-window then nothing is done.
-If called in any other window of the current ECB-layout it stops with an
-error."
-
+vertically. If called in an already splitted edit-window then nothing is done.
+If called in any other window of the current ECB-layout it stops with an error
+if this function is not contained in `ecb-layout-always-operate-in-edit-window'."
   (if (not (equal (selected-frame) ecb-frame))
       ad-do-it
 
-    (when ecb-layout-split-in-edit-window
-      (set-buffer (window-buffer ecb-edit-window))
-      (select-window ecb-edit-window))
+    (when (and (member 'split-window-vertically
+                       ecb-layout-always-operate-in-edit-window)
+               (not (ecb-point-in-edit-window)))
+      (ecb-select-edit-window))
     
     (let ((p (ecb-point-in-edit-window)))
       (if (not p)
@@ -989,39 +1037,63 @@ error."
   "The ECB-version of `switch-to-buffer-other-window'. Works exactly like the
 original but switch to the buffer always in another edit-window.
 
-If called in any non edit-window of the current ECB-layout it switches to the
-\(first) edit-window.  If it is already within the edit-window, and we only have
-one edit window, we split it."
+If called in any non edit-window of the current ECB-layout then there a two
+alternatives:
+- If the function is not contained in `ecb-layout-always-operate-in-edit-window'
+  then the first edit-window is the \"other\" window for the buffer to switch.
+- Otherwise it switches to the \(first) edit-window and then choose the other
+  window.
+
+If it is already within the edit-window, and we only have one edit window, we
+split it."
 
   (if (not (equal (selected-frame) ecb-frame))
       ;;if we aren't in the ECB frame, we don't need to do anything, AKA perform
       ;;default behavior.
       ad-do-it
 
-    ;;we should always be in the edit window
+    ;; maybe we should always operate in the edit-window
+    (when (and (member 'switch-to-buffer-other-window
+                       ecb-layout-always-operate-in-edit-window)
+               (not (ecb-point-in-edit-window)))
+      (ecb-select-edit-window))
+    
+    ;; if we have not selected the edit-window before and we are still not in
+    ;; an edit-window then we simply jump to the first edit-window. This is
+    ;; then the right other window for the buffer to switch.
     (if (not (ecb-point-in-edit-window))
         (ecb-select-edit-window)
-      
       (let ((ecb-other-window-jump-behavior 'only-edit))
         (ecb-with-adviced-functions
          (if (ecb-edit-window-splitted)
              (other-window 1)
            (split-window-vertically)
            (other-window 1)))))
-
-    ;; now we are always in the other window, so we can switch to the buffer
+    
+    ;; now we are always in the right other window, so we can switch to the
+    ;; buffer
     (ad-with-originals 'switch-to-buffer
       (switch-to-buffer (ad-get-arg 0) (ad-get-arg 1)))))
 
 (defadvice switch-to-buffer (around ecb)
   "The ECB-version of `switch-to-buffer'. Works exactly like the original but
-if called in any non edit-window of the current ECB-layout it jumps first in
-the \(first) edit-window and does then it큦 job \(see above)."
+if called in any non edit-window of the current ECB-layout there are two
+alternatives:
+- If this function is contained in `ecb-layout-always-operate-in-edit-window'
+  then it jumps in the \(first) edit-window and does then it큦 job.
+- Otherwise an error repoprted."
   (if (not (equal (selected-frame) ecb-frame))
       ad-do-it
-    (if (and (not (ecb-point-in-edit-window))
-             (not (ecb-point-in-compile-window)))
-        (ecb-select-edit-window))
+    
+    ;; maybe we should always operate in the edit-window
+    (when (and (member 'switch-to-buffer
+                       ecb-layout-always-operate-in-edit-window)
+               (not (ecb-point-in-edit-window)))
+      (ecb-select-edit-window))
+    
+    (if (not (ecb-point-in-edit-window))
+        (error "Only in an edit-window the buffer can be switched!"))
+
     ;; now we are always in the edit window, so we can switch to the buffer
     ad-do-it))
 
@@ -1162,6 +1234,10 @@ ECB-adviced functions."
 (defalias 'ecb-delete-other-windows-in-editwindow-12
   'ecb-delete-other-windows-in-editwindow-0)
 (defalias 'ecb-delete-window-in-editwindow-12
+  'ecb-delete-window-in-editwindow-0)
+(defalias 'ecb-delete-other-windows-in-editwindow-13
+  'ecb-delete-other-windows-in-editwindow-0)
+(defalias 'ecb-delete-window-in-editwindow-13
   'ecb-delete-window-in-editwindow-0)
 
 (defun ecb-delete-other-windows-in-editwindow-5 (split)
@@ -1677,6 +1753,25 @@ documentation of `ecb-layout-window-sizes'!"
       (dolist (size sizes)
 	(ecb-set-window-size (get-buffer-window (car buffers)) size)
 	(setq buffers (cdr buffers))))))
+
+(defun ecb-toggle-enlarged-compilation-window()
+  "Toggle whether the `ecb-compile-window' is enlarged or not."
+  (interactive)  
+  
+  (save-selected-window
+    (let(split-height)
+
+      (setq split-height (/ (frame-height) 2))
+
+      (select-window ecb-compile-window)
+      
+      (if (> (window-height ecb-compile-window) ecb-compile-window-height)
+          
+          ;;restore the window configuration to ecb-compile-window-height
+          
+          (shrink-window (- split-height ecb-compile-window-height))
+        
+        (enlarge-window (- split-height ecb-compile-window-height))))))
 
 ;; ========= Current available layouts ===============================
 
@@ -2199,24 +2294,39 @@ more place."
   (select-window (next-window))
   (setq ecb-edit-window (selected-window)))
 
-(defun ecb-toggle-enlarged-compilation-window()
-  "Toggle whether the `ecb-compile-window' is enlarged or not."
-  (interactive)  
-  
-  (save-selected-window
-    (let(split-height)
+(defun ecb-layout-function-13 ()
+  "This function creates the following layout:
 
-      (setq split-height (/ (frame-height) 2))
+   -------------------------------------------------------
+   |              |                                      |
+   |              |                                      |
+   |              |                                      |
+   |  Methods     |                 Edit                 |
+   |              |                                      |
+   |              |                                      |
+   |              |                                      |
+   |              |                                      |
+   |              |                                      |
+   |--------------|                                      |
+   |    Hist      |                                      |
+   -------------------------------------------------------
+   |                                                     |
+   |                    Compilation                      |
+   |                                                     |
+   -------------------------------------------------------
 
-      (select-window ecb-compile-window)
-      
-      (if (> (window-height ecb-compile-window) ecb-compile-window-height)
-          
-          ;;restore the window configuration to ecb-compile-window-height
-          
-          (shrink-window (- split-height ecb-compile-window-height))
-        
-        (enlarge-window (- split-height ecb-compile-window-height))))))
+If you have not set a compilation-window in `ecb-compile-window-height' then the
+layout contains no durable compilation window and the other windows get a little
+more place."
+  (when ecb-compile-window-height
+    (ecb-split-ver (* -1 ecb-compile-window-height) t)
+    (setq ecb-compile-window (next-window)))
+  (ecb-split-hor ecb-windows-width t)
+  (ecb-set-methods-buffer)
+  (ecb-split-ver 0.75)
+  (ecb-set-history-buffer)
+  (select-window (next-window))
+  (setq ecb-edit-window (selected-window)))
 
 (provide 'ecb-layout)
 

@@ -1,23 +1,22 @@
 Version 1.61:
 -------------
 
+- Much better performance of the directory and file-browser in ECB, especially
+  for directories with a lot of entries (means ~ >1000, dependend on your
+  machine and the net-connection in case of network-drives). See also the new
+  feature: ecb-cache-directory-contents. (Klaus)
+
 - ecb-eshell now supports customization.  (Kevin)
 
-- New feature: If we are in an ECB special buffer (methods, directories, etc),
-and `split-window' or friends are called, we will select the `ecb-edit-window'
-first.  This is useful if you have any functions that split windows and you
-don't want them to just error with a method complaining that the current buffer
-can not be split. (Kevin)
+- New feature: ecb-layout-always-operate-in-edit-window. Look at the
+  documentation. (Kevin & Klaus)
 
 - Fixed a bug in `ecb-toggle-ecb-windows'.  For starters we weren't setting
   `ecb-window-hidden' when we redraw the layout.  This means that the ecb
-  windows could be hidden but never shown. (Kevin)
-
-    Other things:
-
-        - ecb-windows-hidden now has documentation
-
-        - we display status messages when we hide windows.
+  windows could be hidden but never shown.
+  Other things:
+  + ecb-windows-hidden now has documentation
+  + we display status messages when we hide windows. (Kevin)
 
 - Fixed bug in `ecb-redraw-layout-quickly'.  If for come reason any of the ECB
   windows are not alive, we do not return with a hard error.  Instead, we use

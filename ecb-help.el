@@ -26,7 +26,7 @@
 ;;
 ;; Contains all online-help for ECB (stolen something from recentf.el)
 
-;; $Id: ecb-help.el,v 1.52 2001/12/17 12:56:28 berndl Exp $
+;; $Id: ecb-help.el,v 1.53 2002/01/25 16:21:41 berndl Exp $
 
 ;;; Code
 
@@ -454,6 +454,18 @@ of either 0 or > 1 \(the exact value depends on the power of your machine).
 As far as we know this is not a problem of Emacs 21.X or XEmacs. With these
 versions of Emacs there should be no scrolling problem even with `scroll-step'
 has value 1.
+
+
+Working with very large directories:
+------------------------------------
+
+If `ecb-source-path' contains directories with many files and subdirs,
+especially if these directories are mounted net-drives \(\"many\" means here
+something > 1000, dependend on the speed of the net-connection and the
+machine), actualizing the sources- and/or directories- buffer of ECB \(if
+displayed in current layout!) can slow down dramatically. If this is a problem
+the contents of certain directories can be cached which increases the speed a
+lot. See `ecb-cache-directory-contents'.
 
 
                         ==================================
