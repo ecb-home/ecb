@@ -76,7 +76,9 @@
 ;; - `delete-other-windows'
 ;; - `split-window-horizontally'
 ;; - `split-window-vertically'
+;; - `find-file'
 ;; - `find-file-other-window'
+;; - `switch-to-buffer'
 ;; - `switch-to-buffer-other-window'
 ;; The behavior of the adviced functions is:
 ;; - All these function behaves exactly like their corresponding original
@@ -122,7 +124,7 @@
 ;;   + The edit-window must not be splitted and the point must reside in
 ;;     the not deleted edit-window.
 
-;; $Id: ecb-layout.el,v 1.57 2001/05/31 15:41:35 berndl Exp $
+;; $Id: ecb-layout.el,v 1.58 2001/06/06 19:28:20 berndl Exp $
 
 ;;; Code:
 
@@ -332,7 +334,9 @@ frame height."
                                          delete-other-windows
                                          split-window-horizontally
                                          split-window-vertically
+                                         find-file
                                          find-file-other-window
+                                         switch-to-buffer
                                          switch-to-buffer-other-window)
   "*Use the intelligent windows functions of ECB instead of the standard
 Emacs functions. You can choose the following functions to be adviced by ECB
@@ -343,7 +347,9 @@ of the ECB-frame:
 - `delete-other-windows'
 - `split-window-horizontally'
 - `split-window-vertically'
+- `find-file'
 - `find-file-other-window'
+- `switch-to-buffer'
 - `switch-to-buffer-other-window'
 
 For working most conveniantly with ECB it is the best to advice all these
@@ -394,8 +400,12 @@ the `ecb-deactivate-hook'."
                      :value split-window-horizontally)
               (const :tag "split-window-vertically"
                      :value split-window-vertically)
+              (const :tag "find-file"
+                     :value find-file)
               (const :tag "find-file-other-window"
                      :value find-file-other-window)
+              (const :tag "switch-to-buffer"
+                     :value switch-to-buffer)
               (const :tag "switch-to-buffer-other-window"
                      :value switch-to-buffer-other-window)))
 
@@ -493,7 +503,9 @@ either not activated or it behaves exactly like the original version!"
     split-window-horizontally
     delete-window
     delete-other-windows
+    find-file
     find-file-other-window
+    switch-to-buffer
     switch-to-buffer-other-window
     )
   "A list of functions which can be advised by the ECB package.")
@@ -771,7 +783,19 @@ the \(first) edit-window and does then it큦 job \(see above)."
          (split-window-vertically)
          (other-window 1)))
       ;; now we are always in the other window, so we can now open the file.
-      (find-file (ad-get-arg 0) (ad-get-arg 1)))))
+      (ad-with-originals 'find-file
+        (find-file (ad-get-arg 0) (ad-get-arg 1))))))
+
+(defadvice find-file (around ecb)
+  "The ECB-version of `find-file'. Works exactly like the original version but
+if called in any non edit-window of the current ECB-layout it jumps first in
+the \(first) edit-window and does then it큦 job \(see above)."
+  (if (not (equal (selected-frame) ecb-frame))
+      ad-do-it
+    (if (not (ecb-point-in-edit-window))
+        (ecb-select-edit-window))
+    ;; now we are always in the edit window, so we can now open the file.
+    ad-do-it))
 
 (defadvice switch-to-buffer-other-window (around ecb)
   "The ECB-version of `switch-to-buffer-other-window'. Works exactly
@@ -790,7 +814,19 @@ the \(first) edit-window and does then it큦 job \(see above)."
          (split-window-vertically)
          (other-window 1)))
       ;; now we are always in the other window, so we can switch to the buffer
-      (switch-to-buffer (ad-get-arg 0) (ad-get-arg 1)))))
+      (ad-with-originals 'switch-to-buffer
+        (switch-to-buffer (ad-get-arg 0) (ad-get-arg 1))))))
+
+(defadvice switch-to-buffer (around ecb)
+  "The ECB-version of `switch-to-buffer'. Works exactly like the original but
+if called in any non edit-window of the current ECB-layout it jumps first in
+the \(first) edit-window and does then it큦 job \(see above)."
+  (if (not (equal (selected-frame) ecb-frame))
+      ad-do-it
+    (if (not (ecb-point-in-edit-window))
+        (ecb-select-edit-window))
+      ;; now we are always in the edit window, so we can switch to the buffer
+    ad-do-it))
 
 (defun ecb-jde-open-class-at-point-ff-function (filename &optional wildcards)
   "Special handling of the class opening at point JDE feature. This function
@@ -803,11 +839,23 @@ ECB-adviced functions."
                 filename wildcards))))
 
 ;; here come the prefixed equivalents to the adviced originals
+(defun ecb-find-file ()
+  "Acts like the adviced version of `find-file'."
+  (interactive)
+  (ecb-with-adviced-functions
+   (call-interactively 'find-file)))
+
 (defun ecb-find-file-other-window ()
   "Acts like the adviced version of `find-file-other-window'."
   (interactive)
   (ecb-with-adviced-functions
    (call-interactively 'find-file-other-window)))
+
+(defun ecb-switch-to-buffer ()
+  "Acts like the adviced version of `switch-to-buffer'."
+  (interactive)
+  (ecb-with-adviced-functions
+   (call-interactively 'switch-to-buffer)))
 
 (defun ecb-switch-to-buffer-other-window ()
   "Acts like the adviced version of `switch-to-buffer-other-window'."
@@ -1159,7 +1207,7 @@ this function the edit-window is selected."
         ;; compile-buffer; this can be for example a *igrep*-, a
         ;; *compilation*- or any other buffer with compile-mode.
         (display-buffer (or (get-buffer ecb-last-compile-window-buffer)
-                            (get-buffer "*scratch*")))
+                            (get-buffer-create "*scratch*")))
 
         ;; Cause of display-buffer changes the height of the compile-window we
         ;; must resize it again to the correct value

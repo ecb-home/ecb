@@ -52,7 +52,7 @@
 ;; The latest version of the ECB is available at
 ;; http://home.swipnet.se/mayhem/ecb.html
 
-;; $Id: ecb.el,v 1.108 2001/06/04 11:00:59 creator Exp $
+;; $Id: ecb.el,v 1.109 2001/06/06 19:28:20 berndl Exp $
 
 ;;; Code:
 
@@ -443,8 +443,14 @@ methods buffer \(see also `ecb-exclude-parents-regexp')."
                        :value nil)
                 (regexp :tag "Parents-regexp to exclude")))
 
-(defcustom ecb-highlight-token-with-point 'highlight
-  "*How to highlight the method or variable under the cursor."
+(defcustom ecb-highlight-token-with-point 'highlight-scroll
+  "*How to highlight the method or variable under the cursor.
+- highlight-scroll: Always scroll the method buffer, so the current method of the
+  edit-window is highlighted in the method-window.
+- highlight: Only highlight the current method of the edit window in the
+  method window if the method is visible in the method-window.
+- nil: No highlighting is done.
+See also `ecb-highlight-token-with-point-delay'."
   :group 'ecb-methods
   :type '(radio (const :tag "Highlight and scroll window"
                        :value highlight-scroll)
@@ -452,6 +458,23 @@ methods buffer \(see also `ecb-exclude-parents-regexp')."
                        :value highlight)
                 (const :tag "Do not highlight"
                        :value nil)))
+
+(defcustom ecb-highlight-token-with-point-delay 0.25
+  "*Time Emacs must be idle before current token is highlighted.
+If nil then there is no delay, means current token is highlighted immediately.
+If your computer is slow then it could be reasonable to set a value of about
+0.25 for example."
+  :group 'ecb-methods
+  :type '(radio (const :tag "No highlighting delay"
+                       :value nil)
+                (number :tag "Idle time before highlighting"
+                        :value 0.25))
+  :set (function (lambda (symbol value)
+                   (set symbol value)
+                   (if ecb-activated
+                       (ecb-activate-ecb-token-sync value))))
+  :initialize 'custom-initialize-default)
+                     
 
 (defcustom ecb-tree-indent 2
   "*Indent size for tree buffer. If you change this during ECB is activated
@@ -939,6 +962,7 @@ given."
      (tree-buffer-update)
      (tree-buffer-highlight-node-data ecb-path-selected-source))))
 
+
 (defun ecb-update-methods-after-saving ()
   "Updates the methods-buffer after saving if this option is turned on and if
 current-buffer is saved."
@@ -971,7 +995,7 @@ displayed with window-start and point at beginning of buffer."
     ;; `ecb-rebuild-methods-buffer-after-parsing' was called auto. after
     ;; `semantic-bovinate-toplevel'.
     (setq ecb-method-buffer-needs-rebuild t)
-    
+
     (semantic-bovinate-toplevel t)
     
     ;; If the `semantic-bovinate-toplevel' has done no full reparsing but only
@@ -1496,6 +1520,17 @@ always the ECB-frame if called from another frame."
     
     (ecb-activate--impl)))
 
+(defvar ecb-idle-timer nil)
+(defun ecb-activate-ecb-token-sync (value)
+  (if (null value)
+      (progn
+        (if ecb-idle-timer (cancel-timer ecb-idle-timer))
+        (setq ecb-idle-timer nil)
+        (add-hook 'post-command-hook 'ecb-token-sync))
+    (remove-hook 'post-command-hook 'ecb-token-sync)
+    (if (null ecb-idle-timer)
+        (setq ecb-idle-timer (run-with-idle-timer value t 'ecb-token-sync)))))
+
 (defun ecb-activate--impl ()
   "See `ecb-activate'.  This is the implementation of ECB activation."
   
@@ -1599,6 +1634,7 @@ always the ECB-frame if called from another frame."
 	      'ecb-rebuild-methods-buffer-after-parsing)
     (remove-hook 'post-command-hook 'ecb-post-command-hook)
     (add-hook 'post-command-hook 'ecb-post-command-hook)
+    (ecb-activate-ecb-token-sync ecb-highlight-token-with-point-delay)
     (add-hook 'pre-command-hook 'ecb-pre-command-hook-function)
     (add-hook 'after-save-hook 'ecb-update-methods-after-saving)
     (add-hook 'compilation-mode-hook
@@ -1678,6 +1714,9 @@ always the ECB-frame if called from another frame."
     (remove-hook 'semantic-after-toplevel-bovinate-hook
 		 'ecb-rebuild-methods-buffer-after-parsing)
     (remove-hook 'post-command-hook 'ecb-post-command-hook)
+    (when ecb-idle-timer
+      (cancel-timer ecb-idle-timer)
+      (setq ecb-idle-timer nil))
     (remove-hook 'pre-command-hook 'ecb-pre-command-hook-function)
     (remove-hook 'after-save-hook 'ecb-update-methods-after-saving)
     (remove-hook 'compilation-mode-hook
@@ -1770,8 +1809,7 @@ buffers does not exist anymore."
 
 (defun ecb-post-command-hook ()
   (when (and ecb-window-sync ecb-activated (equal (selected-frame) ecb-frame))
-    (ignore-errors (ecb-current-buffer-sync))
-    (ecb-token-sync)))
+    (ignore-errors (ecb-current-buffer-sync))))
 
 
 ;; ECB byte-compilation

@@ -1,3 +1,14 @@
+Version ???:
+------------
+
+- New advices for find-file and switch-to-buffer (Klaus).
+
+- Now possible to set an idle delay before the current method is highlighted;
+  useful for slow machines but prevents also "jumping backward/forward" during
+  scrolling within java-classes if point goes out of method-definition into
+  class-definition. Default is an idle time of 0.25 seconds. (Klaus).
+
+
 Version 1.31:
 -------------
 
