@@ -19,7 +19,7 @@
 @c Free Software Foundation, Inc., 59 Temple Place - Suite 330,
 @c Boston, MA 02111-1307, USA.
 
-@c $Id: ecb.texi,v 1.76 2003/02/18 16:17:51 berndl Exp $
+@c $Id: ecb.texi,v 1.77 2003/02/19 16:54:30 berndl Exp $
 
 @setfilename ecb.info
 
@@ -224,6 +224,7 @@ Tips and tricks
 * Large directories::           Working with large directories
 * Using eshell::                Optimal using of eshell in ECB
 * Grepping directories::        Grepping directories with ECB
+* Working with JDEE::           Working best with ECB and JDEE
 
 Entry points for elisp programmers
 
@@ -2474,6 +2475,20 @@ Make the ECB-methods window the current window.
 
 @deffn Command goto-window-sources
 Make the ECB-sources window the current window.
+@end deffn
+
+@deffn Command jde-display-class-at-point
+Display in the ECB-methods-buffer the contents (methods, attributes
+etc...) of the class which contains the definition of the ``thing''
+under point (this can be a variablename, classname, methodname,
+attributename). This function needs the same requirements to work as
+the method-completion feature of JDEE (see
+@code{jde-complete})!. The source-file is searched first in
+@code{jde-sourcepath}, then in @code{jde-global-classpath}, then in
+@var{$CLASSPATH}, then in current-directory.
+
+Works only for classes where the source-code (i.e. the *.java-file) is
+available."
 @end deffn
 
 @deffn Command minor-mode &optional arg
@@ -5217,6 +5232,7 @@ situations.
 * Large directories::           Working with large directories
 * Using eshell::                Optimal using of eshell in ECB
 * Grepping directories::        Grepping directories with ECB
+* Working with JDEE::           Working best with ECB and JDEE
 @end menu
 
 @node Changing faces, Small screens, Tips and tricks, Tips and tricks
@@ -5554,7 +5570,7 @@ With the option @code{ecb-eshell-auto-activate} you can start eshell
 autom. in the compile-window when ECB is started but of course if a
 compile-window exists.
 
-@node Grepping directories, , Using eshell, Tips and tricks
+@node Grepping directories, Working with JDEE, Using eshell, Tips and tricks
 @section Grepping directories with ECB
 
 ECB offers in the popup-menus in the directories- and
@@ -5577,6 +5593,29 @@ is not easy but with the library @file{igrep.el} there is a conveniant
 way to exclude things like CVS- or RCS-directories from the find-call:
 See the variable @code{igrep-find-prune-clause} of the library
 @file{igrep.el}.
+
+@node Working with JDEE, , Grepping directories, Tips and tricks
+@section Working best with ECB and JDEE
+
+ECB is completely language independent, i.e. it works with any
+language supported by semantic (e.g. C, C++, Java, Elisp etc.).
+
+But there are some special integrations for the great
+Java-Development-Environment JDEE:
+
+@itemize @bullet
+@item Displaying contents of class under point
+
+With the command @code{ecb-jde-display-class-at-point} you can display
+the contents of the class which contains the definition of the
+``thing'' at point (which can be a method, variable etc.).
+
+@item Creating new source-files
+
+The popup-menues in the directories- and the sources-buffer offer a
+command ``Create Source'' which allows easy creating new java-sources
+by calling the command @code{jde-gen-class-buffer}.
+@end itemize
 
 @node Elisp programming, Conflicts and bugs, Tips and tricks, Top
 @chapter Entry points for elisp programmers
