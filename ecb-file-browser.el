@@ -23,7 +23,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-file-browser.el,v 1.47 2004/12/01 14:19:54 berndl Exp $
+;; $Id: ecb-file-browser.el,v 1.48 2004/12/06 17:53:49 berndl Exp $
 
 ;;; Commentary:
 
@@ -373,6 +373,7 @@ possible settings:
 The option `ecb-prescan-directories-exclude-regexps' offers are more fine
 granularity to exclude certain directories from this prescan."
   :group 'ecb-directories
+  :group 'ecb-most-important
   :type '(radio (const :tag "Switch on" :value t)
                 (const :tag "Switch off for remote directories" :value unless-remote)
                 (const :tag "Switch off completely" :value nil)))
@@ -433,6 +434,7 @@ granularity to exclude the sources of certain directories from the read-only
 state-check."
   :group 'ecb-sources
   :group 'ecb-directories
+  :group 'ecb-most-important
   :type '(radio (const :tag "Switch on" :value t)
                 (const :tag "Switch off for remote directories" :value unless-remote)
                 (const :tag "Switch off completely" :value nil)))
@@ -905,6 +907,7 @@ to exclude the sources of certain directories from the VC-state-check.
 See `ecb-vc-supported-backends' how to customize the VC-support itself."
   :group 'ecb-version-control
   :group 'ecb-sources
+  :group 'ecb-most-important
   :type '(radio (const :tag "Switch on" :value t)
                 (const :tag "Switch off for remote directories" :value unless-remote)
                 (const :tag "Switch off completely" :value nil)))
