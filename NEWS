@@ -10,8 +10,8 @@
     switching to a layout with a directory-buffer. This is fixed now.
 
 ** New option `ecb-compilation-predicates' for better specifying which buffers
-   should be treaten as compilation-buffers and therefore displayed in the
-   compile-window of ECB if there is any.
+   should be treated as compilation-buffers and therefore be displayed in the
+   compile-window of ECB - if there is any.
    
     
 
