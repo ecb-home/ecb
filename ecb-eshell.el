@@ -1,6 +1,6 @@
 ;;; ecb-eshell.el --- eshell integration for the ECB.
 
-;; $Id: ecb-eshell.el,v 1.11 2001/12/14 23:29:58 burtonator Exp $
+;; $Id: ecb-eshell.el,v 1.12 2001/12/15 02:38:52 burtonator Exp $
 
 ;; Copyright (C) 2000-2003 Free Software Foundation, Inc.
 ;; Copyright (C) 2000-2003 Kevin A. Burton (burton@openprivacy.org)
@@ -30,8 +30,25 @@
 
 ;; This package provides eshell integration for the ECB.  This basically allows
 ;; you to jump to the eshell in the compilation window, synch up the current
-;; eshell with the current ECB buffer, etc.
+;; eshell with the current ECB buffer and run commands without getting in the
+;; way.
 ;;
+;; It provides the following features:
+;;
+;; - ability to jump to the eshell buffer within the compilation window ( C-.e )
+;;   If the eshell isn't running it will be started
+;;
+;; - expands the compilation window when you run commands.  So for example it
+;;   allows you to view the eshell in minimized mode and then when you run 'ls'
+;;   the window automatically expands.
+;;
+;; - Sychronizes the current directory of the eshell with the current buffer
+;;   with each every ECB buffer.
+;;
+;; - Provides smart window layout of the eshell buffer.  This makes sure that
+;;   the eshell is taking up the exact amount of space and that nothing is
+;;   hidden.
+;; 
 ;; The goal is to make it easy to jump to a command prompt to run OS level
 ;; commands.  
 ;; 
@@ -40,26 +57,27 @@
 
 ;;; History:
 
-;; - Fri Dec 14 2001 03:24 PM (burton@openprivacy.org): use
-;; eshell-pre-command-hook to increase the size of the window if we are in an
-;; ECB layout (and the ecb is activated)...
-
-;; - Sun Nov 18 2001 07:20 PM (burton@openprivacy.org): putting the cursor one
-;;   line from the bottom of the window.
-
-;;; TODO:
-
-;;; RELEASE BREAKERS
-
-;; NORMAL PRIORITY
-
-;; - only run eshell/cd if the current directory is different than the
-;;   eshell/pwd (this is a performance issue and needs to be added in
-;;   ecb-eshell-current-buffer-sync
+;; - Fri Dec 14 2001 05:57 PM (burton@openprivacy.org): fixed a bug which caused 
+;;
+;; - Fri Dec 14 2001 04:48 PM (burton@openprivacy.org): only run eshell/cd if
+;; the current directory is different than the eshell/pwd (this is a performance
+;; issue and needs to be added in ecb-eshell-current-buffer-sync
 ;;
 ;;   - we can't do this.  eshell/pwd does't return a string.  Instead we should
 ;;     change to the eshell-buffer and see what the directory default-directory
 ;;     is there.
+;;
+;; - Fri Dec 14 2001 03:24 PM (burton@openprivacy.org): use
+;; eshell-pre-command-hook to increase the size of the window if we are in an
+;; ECB layout (and the ecb is activated)...
+;;
+;; - Sun Nov 18 2001 07:20 PM (burton@openprivacy.org): putting the cursor one
+;;   line from the bottom of the window.
+
+;;; TODO:
+;;
+;; - Right now ecb-eshell doesn't work with dired.  Why?  Try to setup a hook
+;; and an ecb-eshell-dired-buffer-sync function that will take care of this.
 
 ;;; Code:
 
@@ -70,21 +88,26 @@
   ;;only do this if the user is looking at the eshell buffer
 
   (if (ecb-eshell-running-p)      
-      (let((new-directory default-directory))
-    
+      (let((source-buffer-directory default-directory))
+
         (set-buffer (get-buffer-create eshell-buffer-name))
-        
-        (end-of-buffer)
-        
-        ;;change the directory without showing the cd command
-        (eshell/cd new-directory)
-        
-        ;;execute the command
-        (eshell-send-input)
 
-        (ecb-eshell-recenter)
+        ;;at this poitn source-buffer-directory is a snapshot of the source
+        ;;buffer window and default directory is the directory in the eshell
+        ;;window
 
-        (set-window-point (get-buffer-window eshell-buffer-name) (point-max)))))
+        (if (not (string-equal source-buffer-directory default-directory))
+            (progn 
+
+              (end-of-buffer)
+              
+              ;;change the directory without showing the cd command
+              (eshell/cd source-buffer-directory)
+              
+              ;;execute the command
+              (eshell-send-input)
+              
+              (ecb-eshell-recenter))))))
 
 (defun ecb-eshell-recenter()
   "Recenter the eshell window so that the prompt is at the end of the buffer."
@@ -107,7 +130,7 @@
           (beginning-of-line)
           
           (setq window-start (point)))
-        
+
         (set-window-start eshell-window window-start))))
 
 (defun ecb-eshell-running-p()
@@ -145,7 +168,9 @@
            ecb-minor-mode)
       (let(enlargement window)
 
-        ;;is there a better way to do this?
+        ;;is there a better way to do this?  It seems that there should be a way
+        ;;to have emacs split or expand a window by 50% like it is done in a lot
+        ;;of other places (display-buffer, etc)
 
         (setq window (get-buffer-window eshell-buffer-name))
 
@@ -158,7 +183,11 @@
               (if (> enlargement 0)
                   (enlarge-window enlargement)))))))
 
+;;BUG: THIS HOOK CAUSES THE SOURCE BUFFER TO CHANGE!!!
+
 (add-hook 'ecb-current-buffer-sync-hook 'ecb-eshell-current-buffer-sync)
+
+;;(add-hook 'dired-after-readin-hook 'ecb-eshell-current-buffer-sync)
 
 (add-hook 'ecb-redraw-layout-hooks 'ecb-eshell-recenter)
 
