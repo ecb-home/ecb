@@ -26,14 +26,7 @@
 ;; ECB.
 
 (eval-when-compile
-  (or load-in-progress
-      (let ((load-path
-             (if (and (boundp 'byte-compile-dest-file)
-                      (stringp byte-compile-dest-file))
-                 (cons (file-name-directory byte-compile-dest-file)
-                       load-path)
-               load-path)))
-        (load "ecb-bytecomp" nil t))))
+  (require 'ecb-bytecomp))
 
 (defgroup ecb-face-options nil
   "Settings for all faces used in ECB."
@@ -385,8 +378,6 @@ attributes set by 'ecb-default-general-face' this set of basic attributes have
 to be set in 'ecb-bucket-token-face' too!"
 :group 'ecb-faces)
 
-(if (featurep 'ecb-bytecomp)
-    (ecb-provide 'ecb-face)
-  (provide 'ecb-face))
+(ecb-provide 'ecb-face)
 
 ;;; ecb-face.el ends here

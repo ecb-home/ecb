@@ -26,32 +26,24 @@
 ;; This file is part of the ECB package which can be found at:
 ;; http://home.swipnet.se/mayhem/ecb.html
 
-;; $Id: ecb-util.el,v 1.33 2002/11/05 15:14:09 berndl Exp $
+;; $Id: ecb-util.el,v 1.34 2002/11/06 11:25:38 berndl Exp $
 
 ;;; Code:
 
 (eval-when-compile
-  (or load-in-progress
-      (let ((load-path
-             (if (and (boundp 'byte-compile-dest-file)
-                      (stringp byte-compile-dest-file))
-                 (cons (file-name-directory byte-compile-dest-file)
-                       load-path)
-               load-path)))
-        (load "ecb-bytecomp" nil t))))
+  (require 'ecb-bytecomp))
 
-(when (featurep 'ecb-bytecomp)
-  ;; JDE
-  (ecb-bytecomp-defun jde-gen-class-buffer)
-  ;; XEmacs
-  (ecb-bytecomp-defun mswindows-cygwin-to-win32-path)
-  (ecb-bytecomp-defun frame-property)
-  (ecb-bytecomp-defun point-at-bol)
-  (ecb-bytecomp-defun point-at-eol)
-  ;; Emacs
-  (ecb-bytecomp-defun frame-parameter)
-  (ecb-bytecomp-defun line-beginning-position)
-  (ecb-bytecomp-defun line-end-position))
+;; JDE
+(ecb-bytecomp-defun jde-gen-class-buffer)
+;; XEmacs
+(ecb-bytecomp-defun mswindows-cygwin-to-win32-path)
+(ecb-bytecomp-defun frame-property)
+(ecb-bytecomp-defun point-at-bol)
+(ecb-bytecomp-defun point-at-eol)
+;; Emacs
+(ecb-bytecomp-defun frame-parameter)
+(ecb-bytecomp-defun line-beginning-position)
+(ecb-bytecomp-defun line-end-position)
   
 ;; Some constants
 (defconst ecb-running-xemacs (string-match "XEmacs\\|Lucid" emacs-version))
@@ -277,9 +269,7 @@ should stopped but no debugging is senseful."
      (error ,@args)))
 
 
-(if (featurep 'ecb-bytecomp)
-    (ecb-provide 'ecb-util)
-  (provide 'ecb-util))
+(ecb-provide 'ecb-util)
 
 ;;; ecb-util.el ends here
 

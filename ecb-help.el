@@ -26,35 +26,27 @@
 ;;
 ;; Contains all online-help for ECB (stolen something from recentf.el)
 
-;; $Id: ecb-help.el,v 1.85 2002/11/05 15:14:07 berndl Exp $
+;; $Id: ecb-help.el,v 1.86 2002/11/06 11:25:38 berndl Exp $
 
 ;;; Code
 
 (eval-when-compile
-  (or load-in-progress
-      (let ((load-path
-             (if (and (boundp 'byte-compile-dest-file)
-                      (stringp byte-compile-dest-file))
-                 (cons (file-name-directory byte-compile-dest-file)
-                       load-path)
-               load-path)))
-        (load "ecb-bytecomp" nil t))))
+  (require 'ecb-bytecomp))
 
 (require 'ecb-layout)
 (require 'ecb-util)
 
-(when (featurep 'ecb-bytecomp)
-  ;; Emacs 21.X stuff
-  (ecb-bytecomp-defvar browse-url-new-window-flag)
-  ;; Xemacs and Emacs 20.X
-  (ecb-bytecomp-defvar browse-url-new-window-p)
-  (ecb-bytecomp-defun browse-url)
-  ;; JDE
-  (ecb-bytecomp-defvar jde-version)
-  ;; mail and reporter
-  (ecb-bytecomp-defun mail-subject)
-  (ecb-bytecomp-defun mail-text)
-  (ecb-bytecomp-defun reporter-submit-bug-report))
+;; Emacs 21.X stuff
+(ecb-bytecomp-defvar browse-url-new-window-flag)
+;; Xemacs and Emacs 20.X
+(ecb-bytecomp-defvar browse-url-new-window-p)
+(ecb-bytecomp-defun browse-url)
+;; JDE
+(ecb-bytecomp-defvar jde-version)
+;; mail and reporter
+(ecb-bytecomp-defun mail-subject)
+(ecb-bytecomp-defun mail-text)
+(ecb-bytecomp-defun reporter-submit-bug-report)
   
 (defcustom ecb-show-help-format 'info
   "*The format `ecb-show-help' shows its online help. Allowed values are 'info
@@ -98,7 +90,7 @@ FORMAT is not nil then the user is prompted to choose the format of the help
           (message "Opening ECB online-help in a web-browser...done"))))))
 
 ;;
-;; Problem reporting functions stolen from JDE
+;; Problem reporting functions stolen from JDEE
 ;;
 (defvar ecb-problem-report-mail-address "ecb-list@lists.sourceforge.net" )
 
@@ -126,14 +118,13 @@ the problem as detailed as possible!"
        ;;prepare the basic buffer
        (reporter-submit-bug-report
         ecb-problem-report-mail-address
-        (format "ECB: %s, Semantic: %s, JDE: %s"
+        (format "ECB: %s, semantic: %s, eieio: %s, JDEE: %s"
                 ecb-version
-                (if (boundp 'semantic-version)
-                    semantic-version
-                  "<=1.3.3")
+                semantic-version
+                eieio-version
                 (if (boundp 'jde-version)
                     jde-version
-                  "No JDE"))
+                  "No JDEE"))
         (ecb-problem-report-list-all-variables)
         nil
         'ecb-problem-report-post-hook
@@ -231,8 +222,6 @@ could be interesting for support."
     (append emacs-vars semantic-vars ecb-internal-vars ecb-options)))
 
 
-(if (featurep 'ecb-bytecomp)
-    (ecb-provide 'ecb-help)
-  (provide 'ecb-help))
+(ecb-provide 'ecb-help)
 
 ;; ecb-help.el ends here

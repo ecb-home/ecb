@@ -11,16 +11,29 @@
 EMACS=emacs
 
 # Set here the load-path of the semantic-version and eieio-version loaded
-# into your Emacs (use always forward-slashes as directory-separator even
+# into your Emacs (use always FORWARD-SLASHES as directory-separator even
 # with MS Windows systems). Make sure you compile ECB with the semantic-
 # and eieio-version you load into Emacs!
-LOADPATH=../semantic ../eieio
+SEMANTIC=../semantic
+EIEIO=../eieio
+
+# You can set here more load-paths to arbitrary packages if you want. But
+# this is really not necessary!
+LOADPATH=
 
 # Two ways to build ECB:
 # - Call "make" to byte-compile the ECB. You can savely ignore the messages.
-# - Or call "make LOADPATH=<your loadpath> EMACS=<path to emacs binary>" if
-#   you want to set a different LOADPATH and or Emacs-binary and you do not
-#   want edit the makefile.
+# - Or call
+#
+#      make SEMANTIC=="path/to/semantic" EIEIO="path/to/eieio" \
+#           EMACS="path/to/emacs"
+#
+#   if you want to set either different load-pathes or Emacs-binary and
+#   you do not want edit the Makefile. Do not forget quoting the arguments
+#   if they contain spaces!
+#
+# If there are any warning messages during byte-compilation (normally there
+# aren't any) you can savely ignore them!
 
 
 # ------------------------------------------------------------------------
@@ -42,7 +55,8 @@ DVIPDFM=
 DVIPS=/C/Programme/texmf/miktex/bin/dvips
 PS2PDF=/C/home/bin/ps2pdf
 
-# To generate the online-formats just call "make online-help"
+# To generate the online-formats just call "make online-help" for info- and
+# HTML-format and "make pdf" for PDF-format.
 
 # ------------------------------------------------------------------------
 # Installing the info online-help in the Top-directory of (X)Emacs-info
@@ -64,7 +78,7 @@ INSTALLINFO=/usr/bin/install-info
 
 # Do not change anything below!
 
-# $Id: Makefile,v 1.42 2002/11/05 15:14:07 berndl Exp $
+# $Id: Makefile,v 1.43 2002/11/06 11:25:37 berndl Exp $
 
 RM=rm -f
 CP=cp
@@ -85,12 +99,13 @@ ecb: $(ecb_LISP_EL)
 	@echo "Byte-compiling ECB with LOADPATH=${LOADPATH} ..."
 	@$(RM) $(ecb_LISP_ELC) ecb-compile-script
 	@echo "(add-to-list 'load-path nil)" > ecb-compile-script
+	@echo "(add-to-list 'load-path \"$(SEMANTIC)\")" >> ecb-compile-script
+	@echo "(add-to-list 'load-path \"$(EIEIO)\")" >> ecb-compile-script
 	@if test ! -z "${LOADPATH}" ; then\
 	   for loadpath in ${LOADPATH}; do \
 	      echo "(add-to-list 'load-path \"$$loadpath\")" >> ecb-compile-script; \
 	   done; \
 	fi
-#	@echo "(require 'ecb-bytecomp)" >> ecb-compile-script
 	@echo "(require 'ecb)" >> ecb-compile-script
 	@echo "(setq debug-on-error t)" >> ecb-compile-script
 	$(EMACS) -batch -no-site-file -l ecb-compile-script --eval '(ecb-byte-compile t)'
@@ -110,6 +125,8 @@ online-help: $(ecb_TEXI)
 	   echo - makeinfo in $(MAKEINFO); \
 	   echo is not available!; \
 	fi
+
+pdf: $(ecb_TEXI)
 	@if test -x "$(TEXI2DVI)" -a -x "$(DVIPDFM)"; then\
 	   $(RM) $(ecb_DVI) $(ecb_PDF); \
 	   echo Generating pdf-format with dvipdfm ...; \

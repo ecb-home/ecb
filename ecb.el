@@ -59,19 +59,12 @@
 ;; The latest version of the ECB is available at
 ;; http://home.swipnet.se/mayhem/ecb.html
 
-;; $Id: ecb.el,v 1.248 2002/11/05 15:14:09 berndl Exp $
+;; $Id: ecb.el,v 1.249 2002/11/06 11:25:38 berndl Exp $
 
 ;;; Code:
 
 (eval-when-compile
-  (or load-in-progress
-      (let ((load-path
-             (if (and (boundp 'byte-compile-dest-file)
-                      (stringp byte-compile-dest-file))
-                 (cons (file-name-directory byte-compile-dest-file)
-                       load-path)
-               load-path)))
-        (load "ecb-bytecomp" nil t))))
+  (require 'ecb-bytecomp))
 
 ;; semantic load
 (require 'semantic)
@@ -111,15 +104,14 @@
   ;; to avoid compiler grips
   (require 'cl))
 
-(when (featurep 'ecb-bytecomp)
-  (ecb-bytecomp-defvar dired-directory)
-  (ecb-bytecomp-defun jde-show-class-source)
-  (ecb-bytecomp-defun add-submenu)
-  (ecb-bytecomp-defun semanticdb-minor-mode-p)
-  (ecb-bytecomp-defun semanticdb-find-nonterminal-by-name)
-  (ecb-bytecomp-defun semanticdb-full-filename)
-  (ecb-bytecomp-defun ediff-cleanup-mess)
-  (ecb-bytecomp-defvar ediff-quit-hook))
+(ecb-bytecomp-defvar dired-directory)
+(ecb-bytecomp-defun jde-show-class-source)
+(ecb-bytecomp-defun add-submenu)
+(ecb-bytecomp-defun semanticdb-minor-mode-p)
+(ecb-bytecomp-defun semanticdb-find-nonterminal-by-name)
+(ecb-bytecomp-defun semanticdb-full-filename)
+(ecb-bytecomp-defun ediff-cleanup-mess)
+(ecb-bytecomp-defvar ediff-quit-hook)
 
 ;;====================================================
 ;; Variables
@@ -4172,10 +4164,7 @@ FILE.el is newer than FILE.elc or if FILE.elc doesn't exist."
     (if (or force
 	    (not (file-exists-p elc-file))
 	    (file-newer-than-file-p file elc-file))
-	(progn
-	  (message (format "Byte-compiling %s..." 
-			   (file-name-nondirectory file)))
-	  (byte-compile-file file)))))
+        (byte-compile-file file))))
 
 ;;;###autoload
 (defun ecb-byte-compile (&optional force-all)
@@ -4305,8 +4294,6 @@ changed there should be no performance-problem!"
 
 (add-hook 'emacs-startup-hook 'ecb-auto-activate-hook)
 
-(if (featurep 'ecb-bytecomp)
-    (ecb-provide 'ecb)
-  (provide 'ecb))
+(ecb-provide 'ecb)
 
 ;;;ecb.el ends here

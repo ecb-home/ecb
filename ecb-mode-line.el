@@ -25,17 +25,10 @@
 ;;
 ;; Contains all mode-line enhancements for ECB.
 
-;; $Id: ecb-mode-line.el,v 1.12 2002/11/05 15:14:09 berndl Exp $
+;; $Id: ecb-mode-line.el,v 1.13 2002/11/06 11:25:38 berndl Exp $
 
 (eval-when-compile
-  (or load-in-progress
-      (let ((load-path
-             (if (and (boundp 'byte-compile-dest-file)
-                      (stringp byte-compile-dest-file))
-                 (cons (file-name-directory byte-compile-dest-file)
-                       load-path)
-               load-path)))
-        (load "ecb-bytecomp" nil t))))
+  (require 'ecb-bytecomp))
 
 (defcustom ecb-mode-line-prefixes '(nil
                                     nil
@@ -143,8 +136,7 @@ stretch past the screen."
         (force-mode-line-update))
     (message "This buffer isn't available: %s"  buffer-name)))
 
-(if (featurep 'ecb-bytecomp)
-    (ecb-provide 'ecb-mode-line)
-  (provide 'ecb-mode-line))
+(ecb-provide 'ecb-mode-line)
 
+;;; ecb-mode-line.el end here
 

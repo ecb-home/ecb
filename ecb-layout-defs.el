@@ -27,14 +27,7 @@
 ;; http://home.swipnet.se/mayhem/ecb.html
 
 (eval-when-compile
-  (or load-in-progress
-      (let ((load-path
-             (if (and (boundp 'byte-compile-dest-file)
-                      (stringp byte-compile-dest-file))
-                 (cons (file-name-directory byte-compile-dest-file)
-                       load-path)
-               load-path)))
-        (load "ecb-bytecomp" nil t))))
+  (require 'ecb-bytecomp))
 
 (require 'ecb-util)
 (require 'ecb-layout)
@@ -679,8 +672,6 @@ to non nil!"
   (ecb-set-methods-buffer)
   (select-window (next-window)))
 
-(if (featurep 'ecb-bytecomp)
-    (ecb-provide 'ecb-layout-defs)
-  (provide 'ecb-layout-defs))
+(ecb-provide 'ecb-layout-defs)
 
 ;;; ecb-layout-defs.el ends here

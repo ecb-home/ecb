@@ -27,39 +27,25 @@
 ;; This file provides features to defeat the compiler warnings for selected
 ;; symbols.
 ;;
-;; There's really nothing ECB Mode specific here; this functionality
-;; ought to be provided by the byte compilers or some accompanying
-;; library.  To use it from some package "foo.el", begin by putting
-;; the following blurb at the top of the file:
+;; There's really nothing ECB Mode specific here; this functionality ought to
+;; be provided by the byte compilers or some accompanying library. To use it
+;; from some package "foo.el", begin by putting the following blurb at the top
+;; of the file:
 ;;
 ;;   (eval-when-compile
-;;     (or load-in-progress
-;;         (let ((load-path
-;;                (if (and (boundp 'byte-compile-dest-file)
-;;                         (stringp byte-compile-dest-file))
-;;                    (cons (file-name-directory byte-compile-dest-file)
-;;                          load-path)
-;;                  load-path)))
-;;           (load "ecb-bytecomp" nil t)))
+;;       (require 'ecb-bytecomp))
 ;;
-;; This (unfortunately rather clumsy) form will ensure that the
-;; ecb-bytecomp.el in the same directory as foo.el is loaded during
-;; byte compilation of the latter, and that ecb-bytecomp.el isn't
-;; loaded again in nested file loads (which is known to cause bugs in
-;; some versions of XEmacs).
-;;
-;; At the end of foo.el there should normally be a "(provide 'foo)".
-;; Replace it with "(ecb-provide 'foo)"; that is necessary to restore
-;; the environment after the byte compilation.  If you don't have a
-;; `provide' at the end, you have to add the following as the very
-;; last form in the file:
+;; At the end of foo.el there should normally be a "(provide 'foo)". Replace
+;; it with "(ecb-provide 'foo)"; that is necessary to restore the environment
+;; after the byte compilation. If you don't have a `provide' at the end, you
+;; have to add the following as the very last form in the file:
 ;;
 ;;   (eval-when-compile (ecb-bytecomp-restore-environment))
 ;;
 ;; Now everything is set to use the various macros in this package.
 ;;
-;; To suppress byte compiler warnings, use the macros
-;; `ecb-bytecomp-defun', `ecb-bytecomp-defvar'
+;; To suppress byte compiler warnings, use the macros `ecb-bytecomp-defun',
+;; `ecb-bytecomp-defvar'
 ;;
 
 ;;; This code is stolen from original cc-bytecomp.el from Martin Stjernholm
