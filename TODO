@@ -4,6 +4,9 @@
 *** Author: Kevin A. Burton ( burton@apache.org | burton@openprivacy.org )
 ********************************************************************************
 
+- Shorten source path names when they don't fit in the directory window. For
+  example "c:/dir1/dir2" becomes "...1/dir2". (JN)
+
 - KB: Option to auto. expand also "[+] Variables" and "[+] Classname"
    in the methods buffer if 'ecb-highlight-token-with-point' is
    'highlight-scroll. (Like the auto. expand directory feature)
