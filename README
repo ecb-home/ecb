@@ -5,8 +5,8 @@ About
 -----
 
 This package contains a code browser for several languages for Emacs. For
-instructions on how to use the browser read the online-help (see "Usage" below)
-file. The latest version of this package can be found at:
+instructions on how to use the browser read the online-help (see "Usage"
+below). The latest version of this package can be found at:
 
 http://home.swipnet.se/mayhem/ecb.html
 
@@ -62,18 +62,30 @@ Now ECB is ready for use but you can do these optional steps:
    comments in that file you choose.)
 
 7. Install the supplied ecb.info
+
    The ECB distribution contains a file ecb.info which is the online-help of
    ECB in Info-format. You can install this online help so it's available in
    the Top-directory of Info. There are two ways to do this:
-   
-   - Use the command "install-info" if available on your system (recommended).
 
-   - Copy the file ecb.info into the info-directory of Emacs and modify the
-     file dir manually.
+   * Use install-info (recommended):
+     1. Copy the file ecb.info into the info-directory of Emacs
+     2. Install it with the command install-info (if available on your system)
+        in the dir-file.
 
-   It doesn't matter if you do not execute this step because the online help
-   of ECB is always available though, see 'ecb-show-help'.
-   
+     The supplied Makefile offers a target install-help which does both of
+     these steps. You have just to call "make install-help" with the correct
+     EMACSINFOPATH set (see the comment in Makefile). Here is an
+     example:
+
+        make EMACSINFOPATH=/path/to/emacs/info install-help
+
+    * Manual Installation:
+      Copy the file ecb.info into the info-directory of Emacs and
+      modify the file dir manually.
+
+   But it doesn't matter if you do not execute this step (7.) because the
+   online help of ECB is always available though, see `ecb-show-help'!
+
 
 Usage
 -----
