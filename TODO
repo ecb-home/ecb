@@ -4,6 +4,9 @@
 *** Author: Kevin A. Burton ( burton@apache.org | burton@openprivacy.org )
 ********************************************************************************
 
+- Support horizontal scrolling (especially with XEmacs) in the
+   intelligent tree-buffer recentering.
+
 - Fix pop-up menus in XEmacs. (JN)
 
 - Maybe ECB should optionally create its own frame when activated. (JN)
