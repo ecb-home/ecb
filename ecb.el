@@ -59,7 +59,7 @@
 ;; The latest version of the ECB is available at
 ;; http://home.swipnet.se/mayhem/ecb.html
 
-;; $Id: ecb.el,v 1.255 2002/12/15 19:35:56 berndl Exp $
+;; $Id: ecb.el,v 1.256 2002/12/19 16:20:34 berndl Exp $
 
 ;;; Code:
 
@@ -95,6 +95,7 @@
 (require 'ecb-cycle)
 (require 'ecb-face)
 (require 'ecb-upgrade)
+(require 'ecb-speedbar)
 
 ;; various loads
 (require 'easymenu)
@@ -2691,6 +2692,7 @@ the ECB tree-buffers."
                (ecb-token-sync)
                (run-hooks 'ecb-current-buffer-sync-hook))
               
+              
               (;; synchronizing for dired-mode
                (eq major-mode 'dired-mode)
                (ecb-set-selected-directory
@@ -3807,7 +3809,7 @@ always the ECB-frame if called from another frame."
     
       ;; enable basic advices
       (ecb-enable-basic-advices)
-    
+
       ;; set the ecb-frame
       (if ecb-new-ecb-frame
           (progn
@@ -4086,6 +4088,9 @@ does all necessary after finishing ediff."
       (ecb-activate-adviced-functions nil)
       (ecb-disable-basic-advices)
 
+      ;; deactivate and reset the speedbar stuff
+      (ecb-speedbar-deactivate)
+      
       (tree-buffer-deactivate-mouse-tracking)
       (tree-buffer-deactivate-follow-mouse)
 
