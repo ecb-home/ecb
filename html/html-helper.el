@@ -225,8 +225,9 @@
   (h-table
    (mapconcat
     (lambda (item)
-      (h-tr (h-td '(nowrap) (h-img bullet) " "
-		  (h-link (car item)
+      (h-tr '(valign . "top")
+            (h-td '(nowrap) (h-img bullet) " "
+                  (h-link (car item)
 			  (h-b (if (cdr item) (cadr item) (car item)))
 			  (cons 'target target)))
 	    (h-td (if (and (cdr item) (cddr item)) (caddr item) ""))))
