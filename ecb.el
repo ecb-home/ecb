@@ -52,7 +52,7 @@
 ;; The latest version of the ECB is available at
 ;; http://home.swipnet.se/mayhem/ecb.html
 
-;; $Id: ecb.el,v 1.105 2001/05/31 21:16:44 creator Exp $
+;; $Id: ecb.el,v 1.106 2001/06/01 20:51:01 berndl Exp $
 
 ;;; Code:
 
@@ -424,7 +424,8 @@ so the user can easily jump back."
                        :value nil)))
 
 (defcustom ecb-show-parents 'expanded
-  "*How to show parents (extends and implements) of a class in the methods buffer."
+  "*How to show parents (extends and implements) of a class in the
+methods buffer \(see also `ecb-exclude-parents-regexp')."
   :group 'ecb-methods
   :type '(radio (const :tag "Show parents expanded"
                        :value expanded)
@@ -432,6 +433,15 @@ so the user can easily jump back."
                        :value collapsed)
                 (const :tag "Do not show parents"
                        :value nil)))
+
+(defcustom ecb-exclude-parents-regexp nil
+  "*Regexp which parent classes should not be shown in the methods buffer
+\(see also `ecb-show-parents'). If nil then all parents will be shown if
+`ecb-show-parents' is not nil."
+  :group 'ecb-methods
+  :type '(radio (const :tag "Do not exclude any parents"
+                       :value nil)
+                (regexp :tag "Parents-regexp to exclude")))
 
 (defcustom ecb-highlight-token-with-point 'highlight
   "*How to highlight the method or variable under the cursor."
@@ -763,13 +773,19 @@ highlighting of the methods if `ecb-font-lock-methods' is not nil."
                  (tree-node-new (ecb-highlight-text (semantic-token-name type)
                                                     ecb-classtype)
                                 0 type)))
-	    (parents (semantic-token-type-parent type)))
+	    (parents (delq nil
+                           (mapcar (function (lambda (p)
+                                               (if (or (not ecb-exclude-parents-regexp)
+                                                       (not (string-match
+                                                             ecb-exclude-parents-regexp p)))
+                                                   p)))
+                                   (semantic-token-type-parent type)))))
 	(when (and parents ecb-show-parents)
 	  (let ((pn (tree-node-new "[Parents]" 1 nil)))
 	    (dolist (p (if (listp parents) parents (list parents)))
-	      (tree-node-add-child
-	       pn
-	       (tree-node-new (ecb-highlight-text p ecb-classtype) 2 p t)))
+              (tree-node-add-child
+               pn
+               (tree-node-new (ecb-highlight-text p ecb-classtype) 2 p t)))
 	    (when (eq ecb-show-parents 'expanded)
 	      (tree-node-set-expanded pn t))
 	    (tree-node-add-child n pn)))
