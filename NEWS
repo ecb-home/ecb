@@ -18,11 +18,25 @@
    these hooks. The new monitoring-mechanism checks this periodically and
    re-adds the ECB-hooks if necessary.
 
+** New option group for the integrated speedbar and one new option:
+   The new hook `ecb-speedbar-before-activate-hook' runs directly before ECB
+   activates the integrated speedbar. For example this hook can be used to
+   change the expansion-mode of the integrated speedbar via
+   `speedbar-change-initial-expansion-list'. Example:
+   (speedbar-change-initial-expansion-list "buffers").
+   
 ** Fixed bugs
 
 *** Double-clicking the mouse-1-button now works with integrated speedbar.
 
+*** Fixed two small bugs in the advice of `display-buffer':
+    One bug occured when called for one of the special ECB-buffers. The other
+    bug has not preserved the current-buffer when called for a buffer in the
+    sense of `ecb-compilation-buffer-p' and a hidden compile-window is
+    shown by display-buffer to display this buffer. The latter one for example
+    has prevented the ant-server of JDEE from working properly.
 
+    
 
 * Changes for ECB version 2.22
 

@@ -1082,12 +1082,6 @@ all files are displayed."
   ;; displayed in the mode-line. See `ecb-sources-filter-modeline-prefix'.
   (ecb-mode-line-format))
 
-
-
-(defun klausi-bb-test ()
-  (interactive)
-  (ecb-set-selected-directory "c:/Programme/emacs-21/site-lisp/package-development/ecb" t))
-
 (defun ecb-set-selected-directory (path &optional force)
   "Set the contents of the ECB-directories and -sources buffer correct for the
 value of PATH. If PATH is equal to the value of `ecb-path-selected-directory'
