@@ -1,6 +1,11 @@
 Version 1.80:
 -------------
 
+- New feature: ecb-download-ecb. With this function you can download and
+  install any arbitrary ECB-version from the ECB-website from within Emacs.
+  This is especially usefull for upgrading to the latest version.
+  (Klaus)
+
 - New debug mode for ECB which prints some debug informations in the message
   buffer for certain critical operations with semantic-overlays/extends.
   New option 'ecb-debug-mode' (also available in the Help-menu of ECB).
