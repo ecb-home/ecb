@@ -124,6 +124,7 @@ Tips and tricks
 
 * Changing faces::              Changing faces in the ECB tree-buffers
 * Small screens::               Working with small screens
+* Big screens::                 Working with big screens
 * Simulating speedbar::         Simulating speedbar without an extra frame
 * Integrating speedbar::        Integrating speedbar in the ECB-frame
 * Optimize scrolling::          Optimize scrolling in the edit-window
@@ -1953,9 +1954,10 @@ Command Index::.
    `ecb-enlarged-compilation-window-max-height'.!
 
  - Command: toggle-layout
-   Toggles between the layouts defined in `ecb-toggle-layout-sequence'. Note:
-   This function works by changing the options `ecb-layout-name' but only for
-   current Emacs-session.
+   Toggles between the layouts defined in `ecb-toggle-layout-sequence' (See
+   also option `ecb-show-sources-in-directories-buffer'). Note: This function
+   works by changing the options `ecb-layout-name' but only for current
+   Emacs-session.
 
  - Command: update-directories-buffer
    Updates the ECB directories buffer.
@@ -3461,6 +3463,8 @@ This group contains the following options:
     - ("left10" "left13" "left14"), toggles between methods, history and
       directories
 
+   See also option `ecb-show-sources-in-directories-buffer'.
+
    This option makes only sense if the value is a list with more than 1
    element!
 
@@ -4555,6 +4559,13 @@ mouse moves over it. Because ECB has a much more intelligent mouse tracking
 mechanism than follow-mouse the follow-mouse stuff profit from ECB and works
 even better and saver as without activated ECB!
 
+Package Gnus (Newsreader)
+-------------------------
+
+It is recommended not to use Gnus and ECB simultaniously in one frame because
+each of them has its own window-management and probably there will be
+conflicts. Use different frames for ECB and Gnus!
+
 Package VC (Version Control)
 ----------------------------
 
@@ -4657,6 +4668,13 @@ Is there an                       For Java the JDEE(1) has this feature and for
 "Intellisense"-mechanism like     all other languages semantic offer something
 with other IDEs?                  similar, see
                                   <http://cedet.sourceforge.net/intellisense.shtml>
+
+Can i use ECB in combination      You can, but it is recommended not to use
+with Gnus within one frame?       Gnus and ECB simultaniously in one frame
+                                  because each of them has it's own
+                                  window-management and probably there will be
+                                  conflicts. Use different frames for ECB and
+                                  Gnus!
 
 ---------- Footnotes ----------
 
@@ -4862,6 +4880,7 @@ Concept Index
 * expanding:                             Navigation.
 * Faces:                                 Changing faces.
 * follow-mouse package:                  Conflicts.
+* Gnus:                                  Conflicts.
 * grep buffers:                          Temp- and compile-buffers.
 * help buffers:                          Temp- and compile-buffers.
 * Hide windows:                          Hiding the ECB windows.
@@ -4896,102 +4915,102 @@ Concept Index
 
 Tag Table:
 Node: Top183
-Node: Install and first steps6147
-Node: Installation6643
-Ref: Installation-Footnote-110567
-Ref: Installation-Footnote-210702
-Ref: Installation-Footnote-310814
-Node: Setting up Emacs10879
-Ref: Checking your hooks12825
-Ref: Setting up Emacs-Footnote-114022
-Ref: Setting up Emacs-Footnote-214126
-Ref: Setting up Emacs-Footnote-314227
-Ref: Setting up Emacs-Footnote-414286
-Node: First steps14435
-Ref: First steps-Footnote-115583
-Node: Overview15812
-Ref: Overview-Footnote-118563
-Node: ECB Directories18656
-Node: ECB Sources19673
-Node: ECB Methods20827
-Node: Activation and Deactivation21376
-Node: Standard activation21746
-Ref: Activation hook-sequence22324
-Ref: Deactivation hook-sequence22644
-Node: Automatic activation22818
-Node: Usage of ECB23951
-Node: Using the mouse24861
-Ref: Using the mouse-Footnote-127136
-Node: Using the keyboard27182
-Ref: Using the keyboard-Footnote-128226
-Node: Navigation28277
-Node: Incremental search29617
-Node: Personal keybindings31793
-Ref: Personal keybindings-Footnote-133791
-Node: The edit-window33894
-Node: Temp- and compile-buffers35724
-Node: The Methods buffer37768
-Node: Customizing the display38209
-Node: Rebuilding the Methods39931
-Node: The ECB-layout40786
-Node: Changing the ECB-layout41433
-Ref: Changing the ECB-layout-Footnote-169155
-Node: Redrawing the ECB-layout69247
-Node: Creating a new ECB-layout70172
-Ref: Creating a new ECB-layout-Footnote-174434
-Node: Hiding the ECB windows74608
-Node: Back/forward navigation75713
-Ref: Back/forward navigation-Footnote-176814
-Node: ECB-window synchronizing76873
-Node: Interactive ECB commands79455
-Node: Customizing88855
-Node: General aspects89489
-Ref: General aspects-Footnote-192253
-Node: Most important options92385
-Node: Customizable options94180
-Node: ecb-general95471
-Node: ecb-directories115421
-Node: ecb-sources121576
-Node: ecb-methods123831
-Node: ecb-history136100
-Node: ecb-layout138161
-Node: ecb-create-layout155089
-Node: ecb-face-options155592
-Node: ecb-faces159021
-Node: ecb-download163013
-Node: ecb-help164239
-Node: Submitting problem report166204
-Node: Upgrading167567
-Node: Downloading new versions168330
-Ref: Download required packages170087
-Ref: Downloading new versions-Footnote-1171185
-Node: Auto. option-upgrading171234
-Node: User interface171542
-Node: Background information172428
-Node: Tips and tricks175826
-Node: Changing faces176576
-Ref: Changing faces-Footnote-1179412
-Node: Small screens179588
-Node: Big screens180982
-Node: Simulating speedbar181823
-Node: Integrating speedbar182656
-Node: Optimize scrolling182922
-Node: Large directories184002
-Node: Using eshell184667
-Node: Elisp programming184857
-Node: List of variables185466
-Node: List of hooks185778
-Node: tree-buffer186734
-Node: Adviced functions187540
-Ref: Adviced functions-Footnote-1188159
-Node: Programming new layouts188230
-Node: Conflicts and bugs193934
-Node: Conflicts194409
-Node: Bugs197867
-Node: FAQ198087
-Ref: FAQ-Footnote-1202839
-Node: Command Index202870
-Node: Option Index205321
-Node: Concept Index211722
+Node: Install and first steps6204
+Node: Installation6700
+Ref: Installation-Footnote-110624
+Ref: Installation-Footnote-210759
+Ref: Installation-Footnote-310871
+Node: Setting up Emacs10936
+Ref: Checking your hooks12882
+Ref: Setting up Emacs-Footnote-114079
+Ref: Setting up Emacs-Footnote-214183
+Ref: Setting up Emacs-Footnote-314284
+Ref: Setting up Emacs-Footnote-414343
+Node: First steps14492
+Ref: First steps-Footnote-115640
+Node: Overview15869
+Ref: Overview-Footnote-118620
+Node: ECB Directories18713
+Node: ECB Sources19730
+Node: ECB Methods20884
+Node: Activation and Deactivation21433
+Node: Standard activation21803
+Ref: Activation hook-sequence22381
+Ref: Deactivation hook-sequence22701
+Node: Automatic activation22875
+Node: Usage of ECB24008
+Node: Using the mouse24918
+Ref: Using the mouse-Footnote-127193
+Node: Using the keyboard27239
+Ref: Using the keyboard-Footnote-128283
+Node: Navigation28334
+Node: Incremental search29674
+Node: Personal keybindings31850
+Ref: Personal keybindings-Footnote-133848
+Node: The edit-window33951
+Node: Temp- and compile-buffers35781
+Node: The Methods buffer37825
+Node: Customizing the display38266
+Node: Rebuilding the Methods39988
+Node: The ECB-layout40843
+Node: Changing the ECB-layout41490
+Ref: Changing the ECB-layout-Footnote-169212
+Node: Redrawing the ECB-layout69304
+Node: Creating a new ECB-layout70229
+Ref: Creating a new ECB-layout-Footnote-174491
+Node: Hiding the ECB windows74665
+Node: Back/forward navigation75770
+Ref: Back/forward navigation-Footnote-176871
+Node: ECB-window synchronizing76930
+Node: Interactive ECB commands79512
+Node: Customizing88974
+Node: General aspects89608
+Ref: General aspects-Footnote-192372
+Node: Most important options92504
+Node: Customizable options94299
+Node: ecb-general95590
+Node: ecb-directories115540
+Node: ecb-sources121695
+Node: ecb-methods123950
+Node: ecb-history136219
+Node: ecb-layout138280
+Node: ecb-create-layout155270
+Node: ecb-face-options155773
+Node: ecb-faces159202
+Node: ecb-download163194
+Node: ecb-help164420
+Node: Submitting problem report166385
+Node: Upgrading167748
+Node: Downloading new versions168511
+Ref: Download required packages170268
+Ref: Downloading new versions-Footnote-1171366
+Node: Auto. option-upgrading171415
+Node: User interface171723
+Node: Background information172609
+Node: Tips and tricks176007
+Node: Changing faces176757
+Ref: Changing faces-Footnote-1179593
+Node: Small screens179769
+Node: Big screens181163
+Node: Simulating speedbar182004
+Node: Integrating speedbar182837
+Node: Optimize scrolling183103
+Node: Large directories184183
+Node: Using eshell184848
+Node: Elisp programming185038
+Node: List of variables185647
+Node: List of hooks185959
+Node: tree-buffer186915
+Node: Adviced functions187721
+Ref: Adviced functions-Footnote-1188340
+Node: Programming new layouts188411
+Node: Conflicts and bugs194115
+Node: Conflicts194590
+Node: Bugs198300
+Node: FAQ198520
+Ref: FAQ-Footnote-1203689
+Node: Command Index203720
+Node: Option Index206171
+Node: Concept Index212572
 
 End Tag Table
