@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-layout.el,v 1.222 2004/03/12 16:48:19 berndl Exp $
+;; $Id: ecb-layout.el,v 1.223 2004/03/13 19:17:09 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -1786,7 +1786,9 @@ for current layout."
         (error
          (ecb-layout-debug-error "pop-to-buffer: adviced version failed for buffer: %s, %s"
                                  (ad-get-arg 0) (ad-get-arg 1))
-         ad-do-it))
+         (if (ecb-buffer-is-dedicated-special-buffer-p (ad-get-arg 0))
+             (ecb-error "Can not go to a invisible special ECB-buffer!")
+           ad-do-it)))
       (when (ecb-point-in-compile-window)
         ;; we set the height of the compile-window according to
         ;; `ecb-enlarged-compilation-window-max-height'
@@ -2352,6 +2354,17 @@ are registrated via the macro `ecb-with-dedicated-window' \(see
     (if (member (current-buffer) (ecb-dedicated-special-buffers))
         (current-buffer))))
           
+(defun ecb-buffer-is-dedicated-special-buffer-p (buffer-or-name)
+  "Return not nil if BUFFER-OR-NAME is a member of
+`ecb-dedicated-special-buffers'. BUFFER-OR-NAME ca be either a
+buffer-object or a buffer-name."
+  (let ((buffer (cond ((stringp buffer-or-name)
+                       (get-buffer buffer-or-name))
+                      ((bufferp buffer-or-name)
+                       buffer-or-name)
+                      (t
+                       nil))))
+    (member buffer (ecb-dedicated-special-buffers))))
 
 (defun ecb-point-in-ecb-window ()
   "Return nil if point is not in any of the special dedicated ECB-windows
@@ -2641,7 +2654,7 @@ If called for other frames it works like the original version."
                           ;; seems to cause problems
                           (not (equal (minibuffer-window ecb-frame) (selected-window))))
                  (ecb-layout-debug-error "display-buffer: comp-win will be toggled.")
-                 (ecb-toggle-compile-window 1))
+                 (save-excursion (ecb-toggle-compile-window 1)))
                (if (ecb-compile-window-live-p)
                    ;; now we have to make the edit-window(s) dedicated
                    (let ((edit-window-list (ecb-canonical-edit-windows-list)))
@@ -2745,7 +2758,7 @@ If called for other frames it works like the original version."
                                                       (ad-get-arg 3)))
                    ad-do-it)))
             
-              ((not (member (ad-get-arg 0) (ecb-get-current-visible-ecb-buffers)))
+              ((not (ecb-buffer-is-dedicated-special-buffer-p (ad-get-arg 0)))
                (ecb-layout-debug-error "display-buffer for normal buffer: %s"
                                        (ad-get-arg 0))
                (let ((edit-win-list (ecb-canonical-edit-windows-list)))
@@ -2797,6 +2810,7 @@ If called for other frames it works like the original version."
                    ad-do-it)))
             
               (t ;; buffer is a special ecb-buffer
+               (ecb-layout-debug-error "display-buffer for special ecb-buffer: %s" (ad-get-arg 0))
                (or (setq ad-return-value (get-buffer-window (ad-get-arg 0) ecb-frame))
                    (ecb-error "display-buffer can not display not visible ecb-buffers!")))))
 
@@ -3390,32 +3404,57 @@ an error is reported."
       (ecb-with-original-basic-functions
        (ecb-with-original-functions
         ad-do-it))
-    (if (ecb-compilation-buffer-p (ad-get-arg 0))
-        (progn
-          (when (equal 'hidden (ecb-compile-window-state))
-            (ecb-toggle-compile-window 1))
-          (if (ecb-compile-window-live-p)
-              (select-window ecb-compile-window))
-          ;; now we must handle if there is still no compile-window and
-          ;; therefore point can still stay in an ecb-window
-          (if (equal (ecb-where-is-point) 'ecb)
-              (if (member 'switch-to-buffer ecb-layout-always-operate-in-edit-window)
-                  (ecb-select-edit-window)
-                (ecb-error "switch-to-buffer: Can not switch to %s in an ecb-window!"
-                           (ad-get-arg 0)))))
-      (if (member (ecb-where-is-point) '(ecb compile))
-          (if (member 'switch-to-buffer ecb-layout-always-operate-in-edit-window)
-              (ecb-select-edit-window)
-            (ecb-error "switch-to-buffer: Can only switch to %s in an edit-window!"
-                       (ad-get-arg 0)))))
-    ;; now we stay in the correct window
-    (ecb-with-original-basic-functions
-     (ecb-with-original-functions
-      ad-do-it))
-    (when (ecb-point-in-compile-window)
-      ;; we set the height of the compile-window according to
-      ;; `ecb-enlarged-compilation-window-max-height'
-      (ecb-set-compile-window-height))))
+    (let ((pop-up-windows nil)
+          (special-display-regexps nil)
+          (special-display-buffer-names nil))
+      (pop-to-buffer (ad-get-arg 0)))))
+
+;; (defadvice switch-to-buffer (around ecb)
+;;   "The ECB-version of `switch-to-buffer'. Works exactly like the original but
+;; with the following enhancements for ECB:
+
+;; \"compilation-buffers\" in the sense of `ecb-compilation-buffer-p' will be
+;; displayed always in the compile-window of ECB \(if `ecb-compile-window-height'
+;; is not nil) - if the compile-window is temporally hidden then it will be
+;; displayed first. If you do not want this you have to modify the options
+;; `ecb-compilation-buffer-names', `ecb-compilation-major-modes' or
+;; `ecb-compilation-predicates'.
+
+;; If called for non \"compilation-buffers\" \(s.a.) from outside the edit-area
+;; of ECB it behaves as if called from an edit-window if `switch-to-buffer' is
+;; contained in the option `ecb-layout-always-operate-in-edit-window'. Otherwise
+;; an error is reported."
+;;   (if (or (not ecb-minor-mode)
+;;           (not (equal (selected-frame) ecb-frame)))
+;;       (ecb-with-original-basic-functions
+;;        (ecb-with-original-functions
+;;         ad-do-it))
+;;     (if (ecb-compilation-buffer-p (ad-get-arg 0))
+;;         (progn
+;;           (when (equal 'hidden (ecb-compile-window-state))
+;;             (ecb-toggle-compile-window 1))
+;;           (if (ecb-compile-window-live-p)
+;;               (select-window ecb-compile-window))
+;;           ;; now we must handle if there is still no compile-window and
+;;           ;; therefore point can still stay in an ecb-window
+;;           (if (equal (ecb-where-is-point) 'ecb)
+;;               (if (member 'switch-to-buffer ecb-layout-always-operate-in-edit-window)
+;;                   (ecb-select-edit-window)
+;;                 (ecb-error "switch-to-buffer: Can not switch to %s in an ecb-window!"
+;;                            (ad-get-arg 0)))))
+;;       (if (member (ecb-where-is-point) '(ecb compile))
+;;           (if (member 'switch-to-buffer ecb-layout-always-operate-in-edit-window)
+;;               (ecb-select-edit-window)
+;;             (ecb-error "switch-to-buffer: Can only switch to %s in an edit-window!"
+;;                        (ad-get-arg 0)))))
+;;     ;; now we stay in the correct window
+;;     (ecb-with-original-basic-functions
+;;      (ecb-with-original-functions
+;;       ad-do-it))
+;;     (when (ecb-point-in-compile-window)
+;;       ;; we set the height of the compile-window according to
+;;       ;; `ecb-enlarged-compilation-window-max-height'
+;;       (ecb-set-compile-window-height))))
 
 (defadvice other-window-for-scrolling (around ecb)
   "This function determines the window which is scrolled if any of the
@@ -3600,11 +3639,25 @@ One examples of such a setting function is `ecb-set-history-buffer' for
 the buffer with name `ecb-history-buffer-name'.")
 
 (defun ecb-get-current-visible-ecb-buffers ()
-  "Return a list of all buffers displayed in a current visible dedicated
-special ecb-window."
+  "Return a list of all buffer-objects displayed in a current visible
+dedicated special ecb-window."
   (mapcar (function (lambda (window)
                       (window-buffer window)))
           (ecb-canonical-ecb-windows-list)))
+
+(defun ecb-buffer-is-visible-ecb-buffer-p (buffer-or-name)
+  "Return not nil if BUFFER-OR-NAME is a member of
+`ecb-get-current-visible-ecb-buffers'. BUFFER-OR-NAME ca be either a
+buffer-object or a buffer-name."
+  (let ((buffer (cond ((stringp buffer-or-name)
+                       (get-buffer buffer-or-name))
+                      ((bufferp buffer-or-name)
+                       buffer-or-name)
+                      (t
+                       nil))))
+    (member buffer (ecb-get-current-visible-ecb-buffers))))
+
+  
 
 (defun ecb-set-minor-mode-text ()
   (setq ecb-minor-mode-text

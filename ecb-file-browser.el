@@ -23,7 +23,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-file-browser.el,v 1.15 2004/03/07 10:25:22 berndl Exp $
+;; $Id: ecb-file-browser.el,v 1.16 2004/03/13 19:17:10 berndl Exp $
 
 ;;; Commentary:
 
@@ -1081,12 +1081,6 @@ all files are displayed."
   ;; now we update the mode-lines so the current filter (can be no filter) is
   ;; displayed in the mode-line. See `ecb-sources-filter-modeline-prefix'.
   (ecb-mode-line-format))
-
-
-
-(defun klausi-bb-test ()
-  (interactive)
-  (ecb-set-selected-directory "c:/Programme/emacs-21/site-lisp/package-development/ecb" t))
 
 (defun ecb-set-selected-directory (path &optional force)
   "Set the contents of the ECB-directories and -sources buffer correct for the

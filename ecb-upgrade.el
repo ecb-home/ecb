@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-upgrade.el,v 1.68 2004/03/12 16:48:19 berndl Exp $
+;; $Id: ecb-upgrade.el,v 1.69 2004/03/13 19:17:09 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -176,7 +176,10 @@
 
 ;; Each NEWS-string should be a one-liner shorter than 70 chars
 (defconst ecb-upgrade-news
-  '(("2.22" . ("New nifty feature for filtering the tags displayed in the Methods-buffer"
+  '(("2.23" . ("The command `ecb-toggle-layout' now has a prefix-argument"
+               "Double-clicking the mouse-1-button now works with integrated speedbar"
+               "A new hook `ecb-speedbar-before-activate-hook'"))
+    ("2.22" . ("New nifty feature for filtering the tags displayed in the Methods-buffer"
                "Much smarter mechanism to highlight the current tag in the methods-buffer"
                "New option `ecb-auto-expand-tag-tree-collapse-other'."
                "Fixed a bug preventing the native Windows-port of XEmacs from working."))

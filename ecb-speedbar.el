@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-speedbar.el,v 1.56 2004/03/12 16:48:19 berndl Exp $
+;; $Id: ecb-speedbar.el,v 1.57 2004/03/13 19:17:09 berndl Exp $
 
 ;;; Commentary:
 
@@ -76,6 +76,20 @@
 ;; XEmacs
 (silentcomp-defun event-button)
 
+(defgroup ecb-speedbar nil
+  "Settings for the speedbar-integration of ECB."
+  :group 'ecb-general
+  :prefix "ecb-")
+
+(defcustom ecb-speedbar-before-activate-hook nil
+  "*Hook running directly before ECB activates the integrated speedbar.
+
+For example this hook can be used to change the expansion-mode of the
+integrated speedbar via `speedbar-change-initial-expansion-list'.
+Example: \(speedbar-change-initial-expansion-list \"buffers\")."
+  :group 'ecb-speedbar
+  :type 'hook)
+
 (defconst ecb-speedbar-adviced-functions '((speedbar-click . around)
                                            (speedbar-frame-mode . around)
                                            (speedbar-get-focus . around)
@@ -106,7 +120,6 @@ after clicking onto a filename in the speedbar."
   ;; file if a clicked directory contains any.
   (let ((item (and (fboundp 'speedbar-line-file)
                    (speedbar-line-file))))
-    (message "Klausi: %s" item)
     ad-do-it
     (if (and ecb-minor-mode
              (equal (selected-frame) ecb-frame)
@@ -182,6 +195,8 @@ future this could break."
   ;; enable the advices for speedbar
   (ecb-enable-advices ecb-speedbar-adviced-functions)
   
+  (run-hooks 'ecb-speedbar-before-activate-hook)
+
   ;;disable automatic speedbar updates... let the ECB handle this with
   ;;ecb-current-buffer-sync
   (speedbar-disable-update)
@@ -297,8 +312,9 @@ future this could break."
              (set-buffer visible-buffer)
              (ecb-fix-filename default-directory)))
           (ecb-default-directory (ecb-fix-filename default-directory)))
-      (when (and (not (string-equal speedbar-default-directory
-                                    ecb-default-directory))
+      (when (and (or (not (string-equal speedbar-default-directory
+                                        ecb-default-directory))
+                     (string= speedbar-initial-expansion-list-name "buffers"))
                  speedbar-buffer
                  (buffer-live-p speedbar-buffer))
         (ecb-speedbar-update-contents)))))
