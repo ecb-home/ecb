@@ -1,6 +1,6 @@
 ;;; ecb-eshell.el --- eshell integration for the ECB.
 
-;; $Id: ecb-eshell.el,v 1.24 2002/01/23 07:39:58 burtonator Exp $
+;; $Id: ecb-eshell.el,v 1.25 2002/01/26 01:04:53 burtonator Exp $
 
 ;; Copyright (C) 2000-2003 Free Software Foundation, Inc.
 ;; Copyright (C) 2000-2003 Kevin A. Burton (burton@openprivacy.org)
@@ -106,23 +106,38 @@
 ;;
 ;; - Include the ability to startup the eshell when the ECB is started.  This
 ;; may require a new hook.
+;;
+;; - BUG: when we exit the eshell, we resize the compilation buffer.... there is
+;; no need since the buffer is about to exit.
+;;
+;; - RFE: make the auto-enlargement on command execution optional, true by
+;; default.
+;;
+;; - RFE: could we possibly find a way to avoid window enlargement if we launch
+;; a background process like 'xterm &'.  This would require determining what the
+;; command is and then making sure it is acceptable.
 
 ;;; Code:
 
 (defgroup ecb-eshell nil
-  "General settings for the Emacs code browser."
+  "Settings for eshell integration within the ECB."
   :group 'ecb
   :prefix "ecb-eshell-")
 
 (defcustom ecb-eshell-enlarge-when-selecting t
   "When selecting the `ecb-eshell-buffer-name' buffer, enlarge the buffer if
-  non-nil."
+non-nil."
+  :group 'ecb-eshell
+  :type 'boolean)
+
+(defcustom ecb-eshell-enlarge-when-starting t
+  "When starting the eshell, enlarge the buffer if non-nil."
   :group 'ecb-eshell
   :type 'boolean)
 
 (defvar ecb-eshell-buffer-name "*eshell*"
   "Buffer name for the eshell.  We define it here so that we don't need to have
-  the eshell loaded for ecb-eshell to function properly.")
+the eshell loaded for ecb-eshell to function properly.")
 
 (defun ecb-eshell-current-buffer-sync()
   "Synchronize the eshell with the current buffer.  This is only done if the
@@ -203,21 +218,23 @@ eshell is currently visible."
       (progn 
         (select-window ecb-compile-window)
 
-        (switch-to-buffer ecb-eshell-buffer-name))
+        (switch-to-buffer ecb-eshell-buffer-name)
+        
+        (when ecb-eshell-enlarge-when-selecting
+          (ecb-eshell-enlarge)))
 
     ;;we auto start the eshell here?  I think so..
     (select-window ecb-compile-window)
-    (eshell))
-
-  (when ecb-eshell-enlarge-when-selecting
-    (ecb-eshell-enlarge)))
+    (eshell)
+    (when ecb-eshell-enlarge-when-starting
+      (ecb-eshell-enlarge))))
 
 (defun ecb-eshell-enlarge()
   "Enlarge the eshell so more information is visible.  This is usually done so
 that the eshell has more screen space after we execute a command. "
   (interactive)
 
-  (let(enlargement window)
+  (let(window)
   
     (setq window (get-buffer-window ecb-eshell-buffer-name))
     
@@ -228,19 +245,10 @@ that the eshell has more screen space after we execute a command. "
       ;;to have emacs split or expand a window by 50% like it is done in a lot
       ;;of other places (display-buffer, etc)
 
-      (save-selected-window
-      
-        (select-window window)
-        
-        (setq enlargement (- (/ (frame-height) 2) (window-height)))
-        
-        (if (> enlargement 0)
-            (enlarge-window enlargement)))))
+      (ecb-enlarge-window window)))
   (ecb-eshell-recenter))
 
 (add-hook 'ecb-current-buffer-sync-hook 'ecb-eshell-current-buffer-sync)
-
-;;(add-hook 'dired-after-readin-hook 'ecb-eshell-current-buffer-sync)
 
 (add-hook 'ecb-redraw-layout-hooks 'ecb-eshell-recenter)
 

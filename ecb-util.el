@@ -26,7 +26,7 @@
 ;; This file is part of the ECB package which can be found at:
 ;; http://home.swipnet.se/mayhem/ecb.html
 
-;; $Id: ecb-util.el,v 1.18 2001/12/03 10:12:34 berndl Exp $
+;; $Id: ecb-util.el,v 1.19 2002/01/26 01:04:53 burtonator Exp $
 
 ;;; Code:
 (defconst running-xemacs (string-match "XEmacs\\|Lucid" emacs-version))
@@ -123,6 +123,19 @@ win32-path-style!"
   (delete-directory (tree-node-get-data node))
   (ecb-update-directory-node (tree-node-get-parent node))
   (tree-buffer-update))
+
+(defun ecb-enlarge-window(window)
+  "Enlarge the given window so that it is 1/2 of the current frame."
+
+  (save-selected-window
+    (let(enlargement)
+    
+      (select-window window)
+      
+      (setq enlargement (- (/ (frame-height) 2) (window-height)))
+      
+      (if (> enlargement 0)
+          (enlarge-window enlargement)))))
 
 (provide 'ecb-util)
 

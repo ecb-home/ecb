@@ -1,0 +1,119 @@
+;;; ecb-cycle.el --- cycle buffers through ecb windows.
+
+;; $Id: ecb-cycle.el,v 1.1 2002/01/26 01:04:53 burtonator Exp $
+
+;; Copyright (C) 2000-2003 Free Software Foundation, Inc.
+;; Copyright (C) 2000-2003 Kevin A. Burton (burton@openprivacy.org)
+
+;; Author: Kevin A. Burton (burton@openprivacy.org)
+;; Maintainer: Kevin A. Burton (burton@openprivacy.org)
+;; Location: http://relativity.yi.org
+;; Keywords: 
+;; Version: 1.0.0
+
+;; This file is [not yet] part of GNU Emacs.
+
+;; This program is free software; you can redistribute it and/or modify it under
+;; the terms of the GNU General Public License as published by the Free Software
+;; Foundation; either version 2 of the License, or any later version.
+;;
+;; This program is distributed in the hope that it will be useful, but WITHOUT
+;; ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+;; FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+;; details.
+;;
+;; You should have received a copy of the GNU General Public License along with
+;; this program; if not, write to the Free Software Foundation, Inc., 59 Temple
+;; Place - Suite 330, Boston, MA 02111-1307, USA.
+
+;;; Commentary:
+
+;; NOTE: If you enjoy this software, please consider a donation to the EFF
+;; (http://www.eff.org)
+
+;;; Code:
+
+(defgroup ecb-cycle nil
+  "Setting for cycling through misc ECB buffers."
+  :group 'ecb
+  :prefix "ecb-cycle-")
+
+(defcustom ecb-cycle-enlarge-compile-window t
+  "Enlarge the compilation buffer when we switch to it."
+  :group 'ecb-cycle
+  :type 'boolean)
+
+(defun ecb-cycle-compilation-buffers()
+  "Cycle through all compilation buffers currently open and display them within
+the compilation window `ecb-compile-window'.  If the currently opened buffer
+within the compilation window is not a compilation buffer, we jump to the first
+compilation buffer.  If not we try to loop through all compilation buffers.  If
+we hit the end we go back to the beginning.  See `ecb-compilation-buffer-p'."
+  (interactive)
+
+  (when ecb-cycle-enlarge-compile-window
+    (ecb-enlarge-window ecb-compile-window))
+
+  (let*((compilation-buffers (ecb-get-compilation-buffers))
+        (current-buffer (window-buffer ecb-compile-window))
+        (current-buffer-name (buffer-name current-buffer)))
+
+    (if (not (ecb-compilation-buffer-p current-buffer))
+        ;;if the current bufffer is not a compilation buffer, goto the first
+        ;;compilation buffer.
+        
+        (ecb-cycle-set-compilation-buffer 0 compilation-buffers)
+
+      ;;else... we need to determine what buffer to display.
+
+      (let(subset index)
+
+        (setq subset (member current-buffer-name compilation-buffers))
+
+        (if (= (length subset) 1)
+            ;;go back to the first buffer.
+            (ecb-cycle-set-compilation-buffer 0 compilation-buffers)
+
+          (ecb-cycle-set-compilation-buffer (1+ (- (length compilation-buffers)
+                                                   (length subset))) compilation-buffers))))))
+
+(defun ecb-cycle-set-compilation-buffer(index compilation-buffers)
+  "Set the buffer in the compilation window."
+
+  (let((buffer-name (nth index compilation-buffers)))
+
+    (message "ECB: setting compilation buffer %d/%d - %s" (1+ index) (length compilation-buffers) buffer-name)
+
+    (set-window-buffer ecb-compile-window buffer-name)))
+
+(defun ecb-get-compilation-buffers()
+  "Get all known compilation buffer names.  See `ecb-compilation-buffer-p'."
+
+  (let((buffer-names '())
+       (buffer-list (buffer-list)))
+
+    (dolist(buffer buffer-list)
+
+      (when (ecb-compilation-buffer-p buffer)
+
+        (add-to-list 'buffer-names (buffer-name buffer))))
+
+    (sort buffer-names 'string-lessp)))
+  
+(defun ecb-compilation-buffer-p(buffer)
+  "Test if the given buffer is a compilation buffer.  Note that in this case we
+define 'compilation buffer' as a buffer that should ideally be displayed in the
+`ecb-compile-window'.  This means that in some situations this might not be the
+result of a `compile-internal'.  A good example would be the *Help* buffer or
+the `ecb-eshell-buffer-name'.  See `compilation-buffer-p'."
+  
+  (let((buffer-name (buffer-name buffer)))
+
+    (or (string-equal buffer-name ecb-eshell-buffer-name)
+        (string-equal buffer-name "*Apropos*")
+        (string-equal buffer-name "*Help*")
+        (compilation-buffer-p buffer))))
+
+(provide 'ecb-cycle)
+
+;;; ecb-cycle.el ends here
