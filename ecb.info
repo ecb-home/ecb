@@ -13,6 +13,10 @@ global minor-mode which displays a couple of windows that can be used
 to browse directories, files and methods. It supports method parsing
 for Java, C, C++, Elisp and some more.
 
+*NOTE*: Experienced ECB users find a complete alphabetical list of all
+commands and user-options in *Note Interactive ECB commands:: and *Note
+Customizable options::.
+
 The latest version of ECB can always be found at the URL
 <http://home.swipnet.se/mayhem/ecb.html>.
 
@@ -136,8 +140,8 @@ Installation
 
 3. Add the new ECB-directory to your `load-path' variable.
 
-   You MUST add the ECB-install-directory to the `load-path' either by
-   changing the `load-path' variable directly in your `.emacs' or
+   You *MUST* add the ECB-install-directory to the `load-path' either
+   by changing the `load-path' variable directly in your `.emacs' or
    `site-lisp/site-start.el' or by working with a file `subdirs.el'.
 
    *ATTENTION*: ECB is NOT properly installed if it's directory is not
@@ -202,19 +206,27 @@ Overview
 ECB is a global minor-mode which offers a few "ECB-windows" for
 browsing your sources comfortable with the mouse and the keyboard.
 These "special" windows are also called "tree-buffer" in this manual.
-There are currently three different types of ECB-windows/tree-buffers:
+Every "item" in such a tree-buffer, i.e. every line, is also called a
+"node" of this tree-buffer. There are currently three different types
+of ECB-windows/tree-buffers:
 
-* Menu:
+ - ECB-Directories
 
-* ECB Directories::             Contents of the ECB Directories-buffer
-* ECB Sources::                 Contents of the ECB Sources/history-buffer
-* ECB Methods::                 Contents of the ECB Methods-buffer
+ - ECB-Sources
+
+ - ECB-Methods
 
 In addition to these ECB-windows you have always one or two
 "edit-windows" (*note The edit-window::) in the ECB-frame and (if you
 want) at the bottom a "compilation-window", where all the output of
 Emacs-compilation (compile, grep etc.) is shown (*note Temp- and
 compile-buffers::).
+
+* Menu:
+
+* ECB Directories::             Contents of the ECB Directories-buffer
+* ECB Sources::                 Contents of the ECB Sources/history-buffer
+* ECB Methods::                 Contents of the ECB Methods-buffer
 
 
 File: ecb.info,  Node: ECB Directories,  Next: ECB Sources,  Prev: Overview,  Up: Overview
@@ -635,7 +647,7 @@ Customizing the display of the Methods-buffer
 ---------------------------------------------
 
 The ECB-Methods buffer is probably the most important browsing window
-offeren by ECB. It displays all semantic informations of the current
+offered by ECB. It displays all semantic informations of the current
 buffer in the edit-window.
 
 ECB gets all informations displayed in this Methods-buffer from the
@@ -974,6 +986,56 @@ the second one lists all options of ECB.
 * Most important options::      Which option you must know
 * Customizable options::        All customizable options of ECB
 
+*ATTENTION*: The best way you customize all the options of ECB is via
+the customize-feature of (X)Emacs, i.e. means calling the commands
+`customize-option' or `customize-group' etc. This is also the strongly
+recommended way!
+
+But of course you can also use `setq' or some elisp-code to change the
+values of many but not all of the options. The values of the following
+options *MUST NOT* be changed via `setq' or elisp-code but only with
+the customize-feature!
+
+ - `ecb-source-path'
+
+ - `ecb-tree-RET-selects-edit-window'
+
+ - `ecb-font-lock-tokens'
+
+ - `ecb-bucket-token-display'
+
+ - `ecb-token-display-function'
+
+ - `ecb-type-token-display'
+
+ - `ecb-show-tokens'
+
+ - `ecb-exclude-parents-regexp'
+
+ - `ecb-highlight-token-with-point-delay'
+
+ - `ecb-window-sync-delay'
+
+ - `ecb-show-node-info-in-minibuffer'
+
+ - `ecb-key-map'
+
+ - `ecb-layout-nr'
+
+ - `ecb-compile-window-height'
+
+ - `ecb-compile-window-temporally-enlarge'
+
+ - `ecb-windows-width'
+
+ - `ecb-windows-height'
+
+ - `ecb-advice-window-functions'
+
+ - `ecb-layout-window-sizes'
+
+ - `ecb-mode-line-prefixes'
+
 
 File: ecb.info,  Node: Most important options,  Next: Customizable options,  Prev: Customizing,  Up: Customizing
 
@@ -1263,6 +1325,13 @@ This group contains the following options:
    (When the string is not empty, make sure that it has a leading
    space.)
 
+ - User Option: ecb-mode-line-prefixes
+   Prefixes shown in the modelines of the ECB buffers. The displayed
+   prefix then looks like: "[ <PREFIX>[: ]]", means if a prefix is
+   defined for an ECB buffer then a single space is prepended and if
+   there is additional text to display (e.g. the current directory in
+   the sources buffer) then also the string ": " is appended.
+
  - User Option: ecb-primary-mouse-jump-destination
    Jump-destination of a primary mouse-button click (see
    `ecb-primary-secondary-mouse-buttons') in an ECB-window, if you
@@ -1547,7 +1616,7 @@ This group contains the following options:
 
  - User Option: ecb-directories-buffer-name
    Name of the ECB directory buffer. Because it is not a normal buffer
-   for editing you should enclose the name with stars, e.g. "*ECB
+   for editing you should enclose the name with stars, e.g. " *ECB
    Directories*".
 
    If it is necessary for you you can get emacs-lisp access to the
@@ -1681,9 +1750,19 @@ This group contains the following options:
    method-definition into class-definition. Therefore the default value
    is a delay of 0.25 seconds.
 
+ - User Option: ecb-token-jump-narrow
+   When jumping to a token from the ECB methods buffer narrows the
+   buffer to only show that token. To display the entire buffer again,
+   click on a source file or call `widen' `C-x n w'.
+
+ - User Option: ecb-token-jump-sets-mark
+   Jumping to a token from the ECB-method buffer now sets the mark so
+   the user can easily jump back.
+
  - User Option: ecb-methods-buffer-name
    Name of the ECB methods buffer. Because it is not a normal buffer for
-   editing you should enclose the name with stars, e.g. "*ECB Methods*".
+   editing you should enclose the name with stars, e.g. " *ECB
+   Methods*".
 
    If it is necessary for you you can get emacs-lisp access to the
    buffer-object of the ECB-methods-buffer by this name, e.g. by a call
@@ -2851,9 +2930,11 @@ size but splits the window equally. But if you add this to your
 
    (add-hook 'initial-calendar-window-hook
              (function (lambda ()
-                         (when (and ecb-minor-mode (ecb-point-in-edit-window))
+                         (when (and ecb-minor-mode
+                                    (ecb-point-in-edit-window))
                            (or (= (frame-width) (window-width))
-                               (shrink-window (- (window-height) 9)))))))
+                               (shrink-window (- (window-height) 9))))
+                        )))
 
 
 File: ecb.info,  Node: calculator,  Prev: calendar,  Up: Conflicts
@@ -2873,6 +2954,8 @@ File: ecb.info,  Node: Function Index,  Next: Variable Index,  Prev: Conflicts, 
 
 Function Index
 **************
+
+This index contains all user commands of ECB:
 
 * Menu:
 
@@ -2907,6 +2990,8 @@ File: ecb.info,  Node: Variable Index,  Next: Concept Index,  Prev: Function Ind
 
 Variable Index
 **************
+
+This index contains all customizable options of ECB:
 
 * Menu:
 
@@ -2957,6 +3042,7 @@ Variable Index
 * ecb-methods-buffer-name:               ecb-methods.
 * ecb-methods-general-face:              ecb-face-options.
 * ecb-minor-mode-text:                   ecb-general.
+* ecb-mode-line-prefixes:                ecb-general.
 * ecb-new-ecb-frame:                     ecb-layout.
 * ecb-other-window-jump-behavior:        ecb-layout.
 * ecb-post-process-semantic-tokenlist:   ecb-methods.
@@ -3059,62 +3145,62 @@ Concept Index
 
 Tag Table:
 Node: Top183
-Node: Install4807
-Node: Overview7270
-Node: ECB Directories8166
-Node: ECB Sources9146
-Node: ECB Methods10309
-Node: Activation and Deactivation10830
-Node: Standard activation11200
-Node: Automatic activation11778
-Node: Usage of ECB12828
-Node: Using the mouse13588
-Node: Using the keyboard15880
-Node: Navigation16674
-Node: Incremental search18017
-Node: The edit-window20168
-Node: Temp- and compile-buffers21974
-Node: The Methods buffer24021
-Node: Customizing the display24462
-Node: Rebuilding the Methods26184
-Node: The ECB-layout27038
-Node: Changing the ECB-layout27588
-Node: Redrawing the ECB-layout28626
-Node: Hiding the ECB windows29429
-Node: Interactive ECB commands30003
-Node: Customizing38745
-Node: Most important options39195
-Node: Customizable options40967
-Node: ecb-general41883
-Node: ecb-directories58959
-Node: ecb-sources63938
-Node: ecb-methods65808
-Node: ecb-history77569
-Node: ecb-layout79261
-Node: ecb-face-options93166
-Node: ecb-faces94826
-Node: ecb-download98833
-Node: Submitting problem report100020
-Node: Upgrading101177
-Node: Downloading new version101534
-Node: Auto. option-upgrading102089
-Node: User interface102396
-Node: Background information103285
-Node: Tips and tricks106683
-Node: Changing faces107242
-Node: Small screens108048
-Node: Simulating speedbar109451
-Node: Optimze scrolling110260
-Node: Large directories111335
-Node: Elisp programming111979
-Node: Conflicts113089
-Node: VC113672
-Node: follow-mouse113965
-Node: avoid114643
-Node: calendar115007
-Node: calculator115582
-Node: Function Index116084
-Node: Variable Index117893
-Node: Concept Index122963
+Node: Install4975
+Node: Overview7440
+Node: ECB Directories8486
+Node: ECB Sources9466
+Node: ECB Methods10629
+Node: Activation and Deactivation11150
+Node: Standard activation11520
+Node: Automatic activation12098
+Node: Usage of ECB13148
+Node: Using the mouse13908
+Node: Using the keyboard16200
+Node: Navigation16994
+Node: Incremental search18337
+Node: The edit-window20488
+Node: Temp- and compile-buffers22294
+Node: The Methods buffer24341
+Node: Customizing the display24782
+Node: Rebuilding the Methods26504
+Node: The ECB-layout27358
+Node: Changing the ECB-layout27908
+Node: Redrawing the ECB-layout28946
+Node: Hiding the ECB windows29749
+Node: Interactive ECB commands30323
+Node: Customizing39065
+Node: Most important options40578
+Node: Customizable options42350
+Node: ecb-general43266
+Node: ecb-directories60719
+Node: ecb-sources65699
+Node: ecb-methods67569
+Node: ecb-history79710
+Node: ecb-layout81402
+Node: ecb-face-options95307
+Node: ecb-faces96967
+Node: ecb-download100974
+Node: Submitting problem report102161
+Node: Upgrading103318
+Node: Downloading new version103675
+Node: Auto. option-upgrading104230
+Node: User interface104537
+Node: Background information105426
+Node: Tips and tricks108824
+Node: Changing faces109383
+Node: Small screens110189
+Node: Simulating speedbar111592
+Node: Optimze scrolling112401
+Node: Large directories113476
+Node: Elisp programming114120
+Node: Conflicts115230
+Node: VC115813
+Node: follow-mouse116106
+Node: avoid116784
+Node: calendar117148
+Node: calculator117784
+Node: Function Index118286
+Node: Variable Index120142
+Node: Concept Index125320
 
 End Tag Table

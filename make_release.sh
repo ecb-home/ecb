@@ -5,8 +5,8 @@
 #
 # $Id$
 
-set files="*.el HISTORY Makefile make.bat README RELEASE_NOTES"
-set version="1.70"
+set files="*.el HISTORY Makefile make.bat README RELEASE_NOTES ecb.texi ecb.html ecb.info"
+set version="1.80"
 
 set name=ecb-$version
 set release_dir=releases

@@ -29,9 +29,7 @@
 @c @syncodeindex fn cp
 
 @c in info we do not want paragraph indenting
-@ifinfo
 @paragraphindent 0
-@end ifinfo
 
 @exampleindent   3
 
@@ -54,6 +52,14 @@ ECB (Emacs Code Browser) is a source code browser for Emacs. It is a
 global minor-mode which displays a couple of windows that can be used
 to browse directories, files and methods. It supports method parsing
 for Java, C, C++, Elisp and some more.
+
+@iftex
+@sp 1
+@end iftex
+
+@strong{NOTE}: Experienced ECB users find a complete alphabetical list
+of all commands and user-options in @ref{Interactive ECB commands} and
+@ref{Customizable options}.
 
 @c In the following tow paragraphs we distinct between HTML-, info-,
 @c and tex-format concerning the display of the URLs.
@@ -210,10 +216,10 @@ into (X)Emacs!
 @item
 Add the new ECB-directory to your @code{load-path} variable.
 
-You MUST add the ECB-install-directory to the @code{load-path} either
-by changing the @code{load-path} variable directly in your
-@file{.emacs} or @file{site-lisp/site-start.el} or by working with
-a file @file{subdirs.el}.
+You @strong{MUST} add the ECB-install-directory to the
+@code{load-path} either by changing the @code{load-path} variable
+directly in your @file{.emacs} or @file{site-lisp/site-start.el} or by
+working with a file @file{subdirs.el}.
 
 @strong{ATTENTION}:
 ECB is NOT properly installed if it's directory is not added to
@@ -294,20 +300,27 @@ online help of ECB is always available though, see
 ECB is a global minor-mode which offers a few @dfn{ECB-windows} for
 browsing your sources comfortable with the mouse and the keyboard.
 These ``special'' windows are also called @dfn{tree-buffer} in this
-manual. There are currently three different types of
-ECB-windows/tree-buffers:
+manual. Every @dfn{item} in such a tree-buffer, i.e. every line, is
+also called a @dfn{node} of this tree-buffer. There are currently
+three different types of ECB-windows/tree-buffers:
 
-@menu
-* ECB Directories::             Contents of the ECB Directories-buffer
-* ECB Sources::                 Contents of the ECB Sources/history-buffer
-* ECB Methods::                 Contents of the ECB Methods-buffer
-@end menu
+@itemize @minus
+@item ECB-Directories
+@item ECB-Sources
+@item ECB-Methods
+@end itemize
 
 In addition to these ECB-windows you have always one or two
 @dfn{edit-windows} (@pxref{The edit-window}) in the
 ECB-frame and (if you want) at the bottom a @dfn{compilation-window},
 where all the output of Emacs-compilation (compile, grep etc.) is
 shown (@pxref{Temp- and compile-buffers}).
+
+@menu
+* ECB Directories::             Contents of the ECB Directories-buffer
+* ECB Sources::                 Contents of the ECB Sources/history-buffer
+* ECB Methods::                 Contents of the ECB Methods-buffer
+@end menu
 
 @node ECB Directories, ECB Sources, Overview, Overview
 @section ECB Directories
@@ -748,7 +761,7 @@ ECB.
 @cindex semantic token
 @cindex token
 The ECB-Methods buffer is probably the most important browsing window
-offeren by ECB. It displays all semantic informations of the current
+offered by ECB. It displays all semantic informations of the current
 buffer in the edit-window.
 
 ECB gets all informations displayed in this Methods-buffer from the
@@ -1104,6 +1117,40 @@ the second one lists all options of ECB.
 * Customizable options::        All customizable options of ECB
 @end menu
 
+@strong{ATTENTION}: The best way you customize all the options of ECB
+is via the customize-feature of (X)Emacs, i.e. means calling the
+commands @code{customize-option} or @code{customize-group} etc. This
+is also the strongly recommended way!
+
+But of course you can also use @code{setq} or some elisp-code to
+change the values of many but not all of the options. The values of
+the following options @strong{MUST NOT} be changed via @code{setq} or
+elisp-code but only with the customize-feature!
+
+@itemize @minus
+@item @code{ecb-source-path}
+@item @code{ecb-tree-RET-selects-edit-window}
+@item @code{ecb-font-lock-tokens}
+@item @code{ecb-bucket-token-display}
+@item @code{ecb-token-display-function}
+@item @code{ecb-type-token-display}
+@item @code{ecb-show-tokens}
+@item @code{ecb-exclude-parents-regexp}
+@item @code{ecb-highlight-token-with-point-delay}
+@item @code{ecb-window-sync-delay}
+@item @code{ecb-show-node-info-in-minibuffer}
+@item @code{ecb-key-map}
+@item @code{ecb-layout-nr}
+@item @code{ecb-compile-window-height}
+@item @code{ecb-compile-window-temporally-enlarge}
+@item @code{ecb-windows-width}
+@item @code{ecb-windows-height}
+@item @code{ecb-advice-window-functions}
+@item @code{ecb-layout-window-sizes}
+@item @code{ecb-mode-line-prefixes}
+@end itemize
+
+
 @node Most important options, Customizable options, Customizing, Customizing
 @section The most important options of ECB
 
@@ -1234,8 +1281,8 @@ is cleared!) ECB by running @code{ecb-deactivate}.
 If not nil ECB displays debug-information in the Messages-buffer. This
 is done for some critical situations concerning semantic-tokens and
 their overlays (or extends for XEmacs). Normally you should not need
-this switched on! But if you get errors like "destroyed extend" for
-XEmacs or "wrong-argument-type" concerning overlays for GNU Emacs then
+this switched on! But if you get errors like ``destroyed extend'' for
+XEmacs or ``wrong-argument-type'' concerning overlays for GNU Emacs then
 you should switch on this option and submitting a bug-report to the
 ecb-mailing-list (@code{ecb-submit-problem-report}) after getting the
 error again!
@@ -1410,18 +1457,26 @@ String to display in the mode line when ECB minor mode is active.
 (When the string is not empty, make sure that it has a leading space.)
 @end defopt
 
+@defopt ecb-mode-line-prefixes
+Prefixes shown in the modelines of the ECB buffers. The displayed
+prefix then looks like: ``[ <PREFIX>[: ]]'', means if a prefix is
+defined for an ECB buffer then a single space is prepended and if
+there is additional text to display (e.g. the current directory in the
+sources buffer) then also the string ``: `` is appended.
+@end defopt
+
 @defopt ecb-primary-mouse-jump-destination
 Jump-destination of a primary mouse-button click (see
 @code{ecb-primary-secondary-mouse-buttons}) in an ECB-window, if you
 click onto a source or method or variable. Defines in which
-edit-window (if splitted) ECB does the "right" action (opening the
+edit-window (if splitted) ECB does the ``right'' action (opening the
 source, jumping to a method/variable). There are two possible choices:
 
 @itemize @minus
 @item @code{left-top}:
-Does the "right" action always in the left/topmost edit-window.
+Does the ``right'' action always in the left/topmost edit-window.
 @item @code{last-point}:
-Does the "right" action always in that edit-window which had the point
+Does the ``right'' action always in that edit-window which had the point
 before.
 @end itemize
 
@@ -1674,7 +1729,7 @@ Cache contents of directories.
 
 This can be useful if @code{ecb-source-path} contains directories with
 many files and subdirs, especially if these directories are mounted
-net-drives ("many" means here something > 1000, dependend of the speed
+net-drives (``many'' means here something > 1000, dependend of the speed
 of the net-connection and the machine). For these directories
 actualizing the sources- and/or directories- buffer of ECB (if
 displayed in current layout!) can slow down dramatically so a caching
@@ -1715,7 +1770,7 @@ related threshold.
 
 Example: A value of @code{("~/bigdir*" 1000 3600)} means the
 contents of every subdirectory of the home-directory with name
-beginning with "bigdir" will be cached if the directory contains more
+beginning with ``bigdir'' will be cached if the directory contains more
 than 1000 entries. One hour after the last caching time of such a
 directory the next selection (clicking onto it in the
 directories-window, changing buffers so the directory becomes current
@@ -1730,8 +1785,8 @@ change in a future version.
 
 @defopt ecb-directories-buffer-name
 Name of the ECB directory buffer. Because it is not a normal buffer
-for editing you should enclose the name with stars, e.g. "*ECB
-Directories*".
+for editing you should enclose the name with stars, e.g. `` *ECB
+Directories*''.
 
 If it is necessary for you you can get emacs-lisp access to the buffer-object of
 the ECB-directory-buffer by this name, e.g. by a call of @code{set-buffer}.
@@ -1777,9 +1832,9 @@ useful combinations of an exclude and include regexp:
 @item All files
 
 @item All, but no backup, object, lib or ini-files (except .emacs and .gnus). This
-means all files except those starting with ".", "#" or ending with
-"~", ".elc", ".obj", ".o", ".lib", ".dll", ".a", ".so". (but including
-.emacs and .gnus)
+means all files except those starting with ``.'', ``#'' or ending with
+``~'', ``.elc'', ``.obj'', ``.o'', ``.lib'', ``.dll'', ``.a'',
+``.so''. (but including .emacs and .gnus)
 
 @item Common source file types (.c, .java etc.)
 @end itemize
@@ -1882,9 +1937,20 @@ into class-definition. Therefore the default value is a delay of 0.25
 seconds.
 @end defopt
 
+@defopt ecb-token-jump-narrow
+When jumping to a token from the ECB methods buffer narrows the buffer
+to only show that token. To display the entire buffer again, click on
+a source file or call @code{widen} @kbd{C-x n w}.
+@end defopt
+
+@defopt ecb-token-jump-sets-mark
+Jumping to a token from the ECB-method buffer now sets the mark so the
+user can easily jump back.
+@end defopt
+
 @defopt ecb-methods-buffer-name
 Name of the ECB methods buffer. Because it is not a normal buffer for
-editing you should enclose the name with stars, e.g. ``*ECB
+editing you should enclose the name with stars, e.g. `` *ECB
 Methods*''.
 
 If it is necessary for you you can get emacs-lisp access to the
@@ -2011,7 +2077,7 @@ All functions of @code{semantic-token->text-functions}.
 
 @item
 For every function in @code{semantic-token->text-functions} with name
-``semantic-XYZ'' a function with name "ecb-XYC" is predefined. The
+``semantic-XYZ'' a function with name ``ecb-XYC'' is predefined. The
 differences between the semantic- and the ECB-version are:
 
 @itemize @minus
@@ -2082,10 +2148,10 @@ The cdr is a list of 3-element-lists:
 First entry is a semantic type specifier in string-form. Current
 available type specifiers are for example ``class'', ``interface'',
 ``struct'', ``typedef'' and ``enum''. In addition to these ones there
-is also a special ECB type specifier "group" which is related to
+is also a special ECB type specifier ``group'' which is related to
 grouping tokens (see @code{ecb-post-process-semantic-tokenlist} and
 @code{ecb-group-function-tokens-with-parents}). Any arbitrary
-specifier can be set here but if it is not "group" or not known by
+specifier can be set here but if it is not ``group'' or not known by
 semantic it will be useless.
 @item
 Second entry is a flag which indicates if the type-specifier string
@@ -2124,7 +2190,7 @@ displayed with special faces (the specifiers itself are not removed)
 and in all other modes ``class''es and grouping-tokens (see
 @code{ecb-token-display-function},
 @code{ecb-group-function-tokens-with-parents}) have special faces and
-the "class" specifier-string is removed from the display.
+the ``class'' specifier-string is removed from the display.
 @end defopt
 
 
@@ -3139,9 +3205,11 @@ size but splits the window equally. But if you add this to your
 @example
 (add-hook 'initial-calendar-window-hook
           (function (lambda ()
-                      (when (and ecb-minor-mode (ecb-point-in-edit-window))
+                      (when (and ecb-minor-mode
+                                 (ecb-point-in-edit-window))
                         (or (= (frame-width) (window-width))
-                            (shrink-window (- (window-height) 9)))))))
+                            (shrink-window (- (window-height) 9))))
+                     )))
 @end example
 
 @node calculator, , calendar, Conflicts
@@ -3158,10 +3226,16 @@ echo-area instead of creating a new small window!
 @node Function Index, Variable Index, Conflicts, Top
 @unnumbered Function Index
 
+@noindent
+This index contains all user commands of ECB:
+
 @printindex fn
 
 @node Variable Index, Concept Index, Function Index, Top
 @unnumbered Variable Index
+
+@noindent
+This index contains all customizable options of ECB:
 
 @printindex vr
 
