@@ -26,7 +26,7 @@
 ;; This file is part of the ECB package which can be found at:
 ;; http://home.swipnet.se/mayhem/ecb.html
 
-;; $Id: ecb-util.el,v 1.44 2003/01/14 16:20:55 berndl Exp $
+;; $Id: ecb-util.el,v 1.45 2003/01/15 11:14:16 berndl Exp $
 
 ;;; Code:
 
@@ -72,7 +72,6 @@
       (defalias 'ecb-frame-parameter 'frame-property)
       (defalias 'ecb-line-beginning-pos 'point-at-bol)
       (defalias 'ecb-line-end-pos 'point-at-eol)
-      (defalias 'ecb-window-list 'window-list)
       (defun ecb-frame-char-width (&optional frame)
         (/ (frame-pixel-width frame) (frame-width frame)))
       (defun ecb-frame-char-height (&optional frame)
@@ -88,36 +87,38 @@
   (defalias 'ecb-line-end-pos 'line-end-position)
   (defalias 'ecb-frame-char-width 'frame-char-width)
   (defalias 'ecb-frame-char-height 'frame-char-height)
-  (defalias 'ecb-window-edges 'window-edges)
-  (if ecb-running-emacs-21
-      (defalias 'ecb-window-list 'window-list)
-    ;; Emacs 20 has no window-list function. The following one is stolen from
-    ;; XEmacs.
-    (defun ecb-window-list (&optional frame minibuf window)
-      "Return a list of windows on FRAME, beginning with WINDOW.
-FRAME and WINDOW default to the selected ones.
-Optional second arg MINIBUF t means count the minibuffer window
-even if not active.  If MINIBUF is neither t nor nil it means
-not to count the minibuffer even if it is active."
-      (setq window (or window (selected-window))
-            frame (or frame (selected-frame)))
-      (if (not (eq (window-frame window) frame))
-          (error "Window must be on frame."))
-      (let ((current-frame (selected-frame))
-            list)
-        (unwind-protect
-            (save-window-excursion
-              (select-frame frame)
-              (walk-windows
-               (function (lambda (cur-window)
-                           (if (not (eq window cur-window))
-                               (setq list (cons cur-window list)))))
-               minibuf
-               'selected)
-              ;; This is needed to get the right windows-order!
-              (setq list (nreverse list))
-              (setq list (cons window list)))
-          (select-frame current-frame))))))
+  (defalias 'ecb-window-edges 'window-edges))
+
+;; Emacs 20 has no window-list function and the XEmacs and Emacs 21 one has
+;; no specified ordering. The following one is stolen from XEmacs and has
+;; fixed this lack of a well defined order.
+(defun ecb-window-list (&optional frame minibuf window)
+  "Return a list of windows on FRAME, beginning with WINDOW. The
+windows-objects in the result-list are in the same canonical windows-ordering
+of `next-window'. If omitted, WINDOW defaults to the selected window. FRAME and
+WINDOW default to the selected ones. Optional second arg MINIBUF t means count
+the minibuffer window even if not active. If MINIBUF is neither t nor nil it
+means not to count the minibuffer even if it is active."
+  (setq window (or window (selected-window))
+        frame (or frame (selected-frame)))
+  (if (not (eq (window-frame window) frame))
+      (error "Window must be on frame."))
+  (let ((current-frame (selected-frame))
+        list)
+    (unwind-protect
+        (save-window-excursion
+          (select-frame frame)
+          (walk-windows
+           (function (lambda (cur-window)
+                       (if (not (eq window cur-window))
+                           (setq list (cons cur-window list)))))
+           minibuf
+           'selected)
+          ;; This is needed to get the right canonical windows-order, i.e. the
+          ;; same order of windows than `walk-windows' walks through!
+          (setq list (nreverse list))
+          (setq list (cons window list)))
+      (select-frame current-frame))))
 
 
 (defconst ecb-basic-adviced-functions (if ecb-running-xemacs
