@@ -302,6 +302,13 @@ If you have unintenionally destroyed the ECB-layout, you can always restore the
 layout with calling `ecb-redraw-layout'. This is even true, if you get
 messages like \"wrong-type-argument window-live-p #<window 222>\".
 
+If the variable `ecb-redraw-layout-quickly' is not nil then the redraw is done
+by the `ecb-redraw-layout-quickly' function, otherwise by
+`ecb-redraw-layout-full'. But it's strongly recommended to use the quick
+redraw only if you have really slow machines where a full redraw takes several
+seconds because the quick redraw is not really safe and may have some
+drawbacks! On normal machines the full drawback should be done in << 1s!
+
 
 Hiding/Showing the ECB windows:
 -------------------------------
@@ -323,7 +330,7 @@ Available interactive ECB commands:
 - `ecb-update-directories-buffer'
 - `ecb-current-buffer-sync' \(normally not needed)
 - `ecb-rebuild-methods-buffer' \(see \"Rebuilding the ECB-method buffer\")
-- `ecb-redraw-layout'
+- `ecb-redraw-layout' \(see \"Redrawing the ECB-layout\")
 - `ecb-clear-history'
 - `ecb-show-help'
 - `ecb-submit-problem-report'.
