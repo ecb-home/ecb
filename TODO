@@ -1,14 +1,18 @@
-- Distinction of include-tags by "" or <>. This can be done via
-  (semantic-tag-include-system-p TAG). Thanks to Markus grietsch.
-  But probably it would be the best if semantic itself does this special
-  formating! 
+- Maybe compile-window shrinking should be done by restoring a previously
+  saved window-config?!
+
+- Implementing the class-browser of speedbar native with ECB in an
+  additional special ecb-window - a very important todo of high
+  priority!
 
 - Displaying the version-control-state of a file concerning (for this we can
   probably steal 90% of the needed code from speedbar). Probably we should
   display this with a appropriate suffix (or a image)
 
-- Displaying the read-only-state of a file (probably by using a different
-  face)
+- Distinction of include-tags by "" or <>. This can be done via
+  (semantic-tag-include-system-p TAG). Thanks to Markus grietsch.
+  But probably it would be the best if semantic itself does this special
+  formating! 
 
 - (BUG) if a buffer is opened from within an archive (zip or tar) then
   clicking onto a method in this buffer tries to jump somewhere in the archive

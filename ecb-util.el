@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-util.el,v 1.110 2004/08/18 16:07:14 berndl Exp $
+;; $Id: ecb-util.el,v 1.111 2004/08/25 15:09:06 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -394,6 +394,12 @@ means not to count the minibuffer even if it is active."
         ;; we must reset the point of the buffer which was current at call-time
         ;; of this function
         (goto-char current-point)))))
+
+(defun ecb-canonical-windows-list ()
+  "Return a list of all current visible windows in the `ecb-frame' \(starting
+  from the left-most top-most window) in the order `other-window' would walk
+  through these windows."
+  (ecb-window-list ecb-frame 0 (frame-first-window ecb-frame)))
 
 
 ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: Attention. Current mechanism of
@@ -1376,10 +1382,9 @@ the same ordering as `other-window' would walk through the frame."
                                   ;;   modeline via (:eval...) the new buffer
                                   ;;   scrolls autom. back to beginng of
                                   ;;   buffer.
-                                  ;; With the original window-list all is ok...
-                                  (ecb-window-list
-                                   ecb-frame 0
-                                   (frame-first-window ecb-frame))
+                                  ;; With the original window-list all is
+                                  ;; ok...
+                                  (ecb-canonical-windows-list)
                                 (window-list)))))))
 
 
