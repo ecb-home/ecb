@@ -15,7 +15,13 @@
     this annoying bug to Christoph Ludwig
     <cludwig@cdc.informatik.tu-darmstadt.de>
 
+*** Now `ecb-store-window-sizes' and `ecb-restore-window-sizes' also work when
+    called during a permanent compile-window is visible and also when one of
+    these commands is called with another compile-window state than the other
+    (e.g. when the window-sizes are stored without a compile-window and
+    restored with a compile-window).
 
+*** Now ECB ensures that the permanent compile-window has always its specified 
 
 * Changes for ECB version 2.26
 

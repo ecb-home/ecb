@@ -395,6 +395,12 @@ means not to count the minibuffer even if it is active."
         ;; of this function
         (goto-char current-point)))))
 
+(defun ecb-canonical-windows-list ()
+  "Return a list of all current visible windows in the `ecb-frame' \(starting
+  from the left-most top-most window) in the order `other-window' would walk
+  through these windows."
+  (ecb-window-list ecb-frame 0 (frame-first-window ecb-frame)))
+
 
 ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: Attention. Current mechanism of
 ;; (de)activating the basic advices and the intelligent window advices of
@@ -1376,10 +1382,9 @@ the same ordering as `other-window' would walk through the frame."
                                   ;;   modeline via (:eval...) the new buffer
                                   ;;   scrolls autom. back to beginng of
                                   ;;   buffer.
-                                  ;; With the original window-list all is ok...
-                                  (ecb-window-list
-                                   ecb-frame 0
-                                   (frame-first-window ecb-frame))
+                                  ;; With the original window-list all is
+                                  ;; ok...
+                                  (ecb-canonical-windows-list)
                                 (window-list)))))))
 
 
