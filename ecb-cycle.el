@@ -37,14 +37,10 @@
 
 ;;; TODO:
 ;;
-;; - Add completion support so that I can do an ecb-cycle-set-compilation-buffer
-;; which will use completion to prompt for the buffer.  This will require us to
-;; get the index and compilation buffer list interactively.
-;;
 ;; - What is the pattern we should use for cycling through other windows?
 ;;
-;;   - ecb-cycle-X-buffers (select the next X buffer)
-;;   - ecb-cycle-set-X-buffer (set the X buffer using completion)
+;;   - ecb-cycle-through-X-buffers (select the next X buffer)
+;;   - ecb-cycle-switch-to-X-buffer (set the X buffer using completion)
 ;;
 ;; - How do we setup the menubar?
 ;;
