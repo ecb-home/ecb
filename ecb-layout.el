@@ -2244,6 +2244,7 @@ Things CREATE-CODE has to do:
    + `ecb-set-sources-buffer'
    + `ecb-set-methods-buffer'
    + `ecb-set-history-buffer'
+   + `ecb-set-speedbar-buffer'
    Each layout can only contain one of each tree-buffer-type!
 
    In addition to these functions there is a general macro:

@@ -81,7 +81,7 @@
 (defconst ecb-create-layout-buf-prefix " *ECB-LC-")
 (defconst ecb-create-layout-frame-name "Creation of a new ECB-layout")
 (defconst ecb-create-layout-all-buf-types
-  '("directories" "history" "methods" "sources"))
+  '("directories" "history" "methods" "sources" "speedbar"))
 
 (defconst ecb-create-layout-help-text-left-right
   "
@@ -103,13 +103,13 @@
         \"other\" (i.e. you can specify any fraction
         between 0.1 and 0.9)
       - Which type (\"directories\", \"sources\",
-        \"methods\" or \"history\") the current window
-        should be.
+        \"methods\", \"history\", \"speedbar\") the
+        current window should be.
  C-u: Unsplit, ie. delete current window
  C-t: Give the current window a builtin type
-      (\"directories\", \"sources\", \"methods\" or
-      \"history\") or any arbitary user-defined type
-      (\"other\"). See the Online-manual!
+      (\"directories\", \"sources\", \"methods\",
+      \"history\", \"speedbar\") or any arbitary user-
+      defined type (\"other\"). See the Online-manual!
 
  C-c: Cancel layout creation. This does not save the
       layout. Deletes this frame.
@@ -137,11 +137,11 @@
       - If \"vertical\" or \"horizontal\" split
       - How to split: \"at-point\", \"half\" or \"other\" (i.e. you can specify any
         fraction between 0.1 and 0.9)
-      - Which type (\"directories\", \"sources\", \"methods\" or \"history\") the current
-        window should be.
+      - Which type (\"directories\", \"sources\", \"methods\", \"history\", \"speedbar\")
+        the current window should be.
  C-u: Unsplit, ie. delete current window
- C-t: Give the current window a builtin type (\"directories\", \"sources\", \"methods\" or
-      \"history\") or any arbitray user-defined type (\"other\"). See the Online-manual!
+ C-t: Give the current window a builtin type (\"directories\", \"sources\", \"methods\",
+      \"history\", \"speedbar\") or any arbitray user-defined type (\"other\").
 
  C-c: Cancel layout creation. This does not save the layout. Deletes this frame.
  C-q: Save current defined layout and quit the layout creation. You will be asked for a
