@@ -54,7 +54,7 @@
 ;; The latest version of the ECB is available at
 ;; http://home.swipnet.se/mayhem/ecb.html
 
-;; $Id: ecb.el,v 1.189 2002/02/15 12:14:07 berndl Exp $
+;; $Id: ecb.el,v 1.190 2002/02/22 08:30:43 berndl Exp $
 
 ;;; Code:
 
@@ -93,7 +93,7 @@
 
 ;; various loads
 (require 'easymenu)
-(require 'assoc) ;; Semantic fix
+(require 'assoc)
 
 (eval-when-compile
   ;; to avoid compiler grips
@@ -167,11 +167,11 @@
   :group 'ecb
   :prefix "ecb-")
 
-(defmacro ecb-face-default (&optional height
+(defmacro ecb-face-default (&optional height bold-p italic-p
                                       fg-light-col fg-dark-col
                                       bg-light-col bg-dark-col
                                       fg-rest bg-rest
-                                      reverse-video)
+                                      reverse-video-p)
   "Macro for setting default values for an ECB face.
 The parameters are set for the following display-types:
 - ((class color) (background light)): HEIGHT, FG-LIGHT-COL, BG-LIGHT-COL
@@ -179,31 +179,43 @@ The parameters are set for the following display-types:
 - t: HEIGHT, FG-REST, BG-REST, REVERSE-VIDEO."
   `(list (list '((class color) (background light))
                (append (if (and ,height running-emacs-21) (list :height ,height))
+                       (if ,bold-p (if running-emacs-21
+                                       (list :weight 'bold)
+                                     (list :bold t)))
+                       (if ,italic-p (if running-emacs-21
+                                         (list :slant 'italic)
+                                       (list :italic t)))
                        (if ,fg-light-col (list :foreground ,fg-light-col))
                        (if ,bg-light-col (list :background ,bg-light-col))))
          (list '((class color) (background dark))
                (append (if (and ,height running-emacs-21) (list :height ,height))
+                       (if ,bold-p (if running-emacs-21
+                                       (list :weight 'bold)
+                                     (list :bold t)))
+                       (if ,italic-p (if running-emacs-21
+                                         (list :slant 'italic)
+                                       (list :italic t)))
                        (if ,fg-dark-col (list :foreground ,fg-dark-col))
                        (if ,bg-dark-col (list :background ,bg-dark-col))))
          (list 't (append (if (and ,height running-emacs-21) (list :height ,height))
+                          (if ,bold-p (if running-emacs-21
+                                          (list :weight 'bold)
+                                        (list :bold t)))
+                          (if ,italic-p (if running-emacs-21
+                                            (list :slant 'italic)
+                                          (list :italic t)))
                           (if ,fg-rest (list :foreground ,fg-rest))
                           (if ,bg-rest (list :foreground ,bg-rest))
-                          (if ,reverse-video (list :reverse-video t))))))
+                          (if ,reverse-video-p (list :reverse-video t))))))
 
 (defface ecb-directories-general-face (ecb-face-default 1.0)
-  "Basic face for the ECB directories buffer.
+  "*Basic face for the ECB directories buffer.
 It큦 recommended to define here the font-family, the font-size, the basic
 color etc."
   :group 'faces)
 
-(defcustom ecb-auto-activate nil
-  "Automatically startup ECB when Emacs starts up.  This should only be run if
-  you always want to run `ecb-activate'."
-  :group 'ecb-general
-  :type 'boolean)
-
 (defcustom ecb-directories-general-face 'ecb-directories-general-face
-  "Basic face for the ECB directories buffer. This defines the basic
+  "*Basic face for the ECB directories buffer. This defines the basic
 face the whole directory buffer should displayed with. If nil then no special
 face is used but always the default-face."
   :group 'ecb-faces
@@ -211,13 +223,13 @@ face is used but always the default-face."
   :type 'face)
 
 (defface ecb-sources-general-face (ecb-face-default 1.0)
-  "Basic face for the ECB sources buffer.
+  "*Basic face for the ECB sources buffer.
 It큦 recommended to define here the font-family, the font-size, the basic
 color etc."
   :group 'faces)
 
 (defcustom ecb-sources-general-face 'ecb-sources-general-face
-  "Basic face for the ECB sources buffer. This defines the basic
+  "*Basic face for the ECB sources buffer. This defines the basic
 face the whole directory buffer should displayed with. If nil then no special
 face is used but always the default-face."
   :group 'ecb-faces
@@ -225,13 +237,13 @@ face is used but always the default-face."
   :type 'face)
 
 (defface ecb-methods-general-face (ecb-face-default 1.0)
-  "Basic face for the ECB methods buffer.
+  "*Basic face for the ECB methods buffer.
 It큦 recommended to define here the font-family, the font-size, the basic
 color etc."
   :group 'faces)
 
 (defcustom ecb-methods-general-face 'ecb-methods-general-face
-  "Basic face for the ECB methods buffer. This defines the basic
+  "*Basic face for the ECB methods buffer. This defines the basic
 face the whole directory buffer should displayed with. If nil then no special
 face is used but always the default-face."
   :group 'ecb-faces
@@ -239,20 +251,20 @@ face is used but always the default-face."
   :type 'face)
 
 (defface ecb-history-general-face (ecb-face-default 1.0)
-  "Basic face for the ECB history buffer.
+  "*Basic face for the ECB history buffer.
 It큦 recommended to define here the font-family, the font-size, the basic
 color etc."
   :group 'faces)
 
 (defcustom ecb-history-general-face 'ecb-history-general-face
-  "Basic face for the ECB directory buffer. This defines the basic
+  "*Basic face for the ECB directory buffer. This defines the basic
 face the whole directory buffer should displayed with. If nil then no special
 face is used but always the default-face."
   :group 'ecb-faces
   :group 'ecb-history
   :type 'face)
 
-(defface ecb-directory-face (ecb-face-default nil "yellow" nil
+(defface ecb-directory-face (ecb-face-default nil nil nil "yellow" nil
                                               "cornflower blue" "magenta"
                                               nil nil t)
   "*Define face used for highlighting current directory in the
@@ -266,7 +278,7 @@ directories buffer."
   :group 'ecb-directories
   :type 'face)
 
-(defface ecb-source-face (ecb-face-default nil "yellow" nil
+(defface ecb-source-face (ecb-face-default nil nil nil "yellow" nil
                                            "cornflower blue" "magenta"
                                            nil nil t)
   "*Define face used for highlighting current source in the
@@ -280,7 +292,7 @@ sources buffer."
   :group 'ecb-sources
   :type 'face)
 
-(defface ecb-method-face (ecb-face-default nil nil nil
+(defface ecb-method-face (ecb-face-default nil nil nil nil nil
                                            "SeaGreen1" "SeaGreen1" nil nil t)
   "*Define face used for highlighting current method, class or variable
 in the methods buffer."
@@ -293,7 +305,7 @@ methods buffer."
   :group 'ecb-methods
   :type 'face)
 
-(defface ecb-history-face (ecb-face-default nil "yellow" nil
+(defface ecb-history-face (ecb-face-default nil nil nil "yellow" nil
                                             "cornflower blue" "magenta"
                                             nil nil t)
   "*Define face used for highlighting current history-entry in the
@@ -307,7 +319,7 @@ history buffer."
   :group 'ecb-history
   :type 'face)
 
-(defface ecb-token-header-face (ecb-face-default nil nil nil
+(defface ecb-token-header-face (ecb-face-default nil nil nil nil nil
                                                  "SeaGreen1" "SeaGreen1"
                                                  nil nil t)
   "*Define face used for highlighting the token header after jumping to
@@ -324,6 +336,12 @@ it by clicking onto a node in the methods buffer."
 (defcustom ecb-use-recursive-edit nil
   "*Tell ECB to use a recursive edit so that it can easily be deactivated
 by \(keyboard-escape-quit)."
+  :group 'ecb-general
+  :type 'boolean)
+
+(defcustom ecb-auto-activate nil
+  "*Automatically startup ECB when Emacs starts up.  This should only be run if
+  you always want to run `ecb-activate'."
   :group 'ecb-general
   :type 'boolean)
 
@@ -432,7 +450,7 @@ then activating ECB again!"
   :group 'ecb-directories
   :type 'string)
 
-(defface ecb-source-in-directories-buffer-face (ecb-face-default nil
+(defface ecb-source-in-directories-buffer-face (ecb-face-default nil nil nil
                                                                  "medium blue"
                                                                  "LightBlue1"
                                                                  nil nil
@@ -601,7 +619,7 @@ the current source-buffer."
   :type 'boolean)
 
 (defcustom ecb-font-lock-tokens t
-  "*Adds font-locking \(means highlighting) to the ECB-method buffer." 
+  "*Adds font-locking \(means highlighting) to the ECB-method buffer."
   :group 'ecb-methods
   :set (function (lambda (symbol value)
 		   (set symbol value)
@@ -635,25 +653,84 @@ or call `widen' (C-x n w)."
   "Alist containing one element for every member of
 `semantic-token->text-functions' where the value is the member of
 `semantic-token->text-functions' with name \"semantic-XYZ\" and the key is a
-symbol with name \"ecb-XYZ\".")  
+symbol with name \"ecb-XYZ\".")
 
-;; Now we define for each function "semantic-X" of
-;; semantic-token->text-functions a function with name "ecb-X" which does the
-;; same with a little difference; see
-;; `ecb-token-display-function'.
+;; (dolist (elem ecb-token->text-functions)
+;;   (fset (car elem)
+;;         `(lambda (token &optional parent-token colorize)
+;;            (if (or (semantic-token-get token 'ecb-group-token)
+;;                    (and (eq 'type (semantic-token-token token))
+;;                         (string= "class" (semantic-token-type token))))
+;;                (let ((text (concat (semantic-name-nonterminal token
+;;                                                               parent-token
+;;                                                               colorize)
+;;                                    (if (eq major-mode 'c++-mode)
+;;                                        (semantic-c-template-string token
+;;                                                                    parent-token
+;;                                                                    colorize)
+;;                                      ""))))
+;;                  (if ecb-special-type-token-face
+;;                      (put-text-property 0 (length text)
+;;                                         'face ecb-special-type-token-face text))
+;;                  text)
+;;              (funcall (quote ,(cdr elem))
+;;                       token parent-token colorize)))))
+
+
+(defun ecb-merge-face-into-text (text face)
+  (let ((newtext (concat text)))
+    (alter-text-property 0 (length newtext) 'face
+                         (lambda (current-face)
+                           (let ((cf
+                                  (cond ((facep current-face)
+                                         (list current-face))
+                                        ((listp current-face)
+                                         current-face)
+                                        (t nil)))
+                                 (nf
+                                  (cond ((facep face)
+                                         (list face))
+                                        ((listp face)
+                                         face)
+                                        (t nil))))
+                             (append cf nf)))
+                         newtext)
+    newtext))
+
+;; (defun ecb-merge-face-into-text (text face)
+;;   (let ((newtext (concat text)))
+;;     (alter-text-property 0 (length newtext) 'face
+;;                          (lambda (current-face)
+;;                            (let ((new-face (purecopy current-face)))
+;;                              (set-face-attribute new-face
+;;                                                  (selected-frame)
+;;                                                  (face-attr-construct face))
+;;                              (list new-face)))
+;;                          newtext)
+;;     newtext))
+
+
 (dolist (elem ecb-token->text-functions)
-  (fset (car elem) `(lambda (token &optional parent-token colorize)
-                      (if (eq 'type (semantic-token-token token))
-                          (concat (semantic-name-nonterminal token
-                                                             parent-token
-                                                             colorize)
-                                  (if (eq major-mode 'c++-mode)
-                                      (semantic-c-template-string token
-                                                                  parent-token
-                                                                  colorize)
-                                    ""))
-                        (funcall (quote ,(cdr elem))
-                                 token parent-token colorize)))))
+  (fset (car elem)
+        `(lambda (token &optional parent-token colorize)
+           (if (eq 'type (semantic-token-token token))
+               (let ((text (concat (semantic-name-nonterminal token
+                                                              parent-token
+                                                              colorize)
+                                   (if (eq major-mode 'c++-mode)
+                                       (semantic-c-template-string token
+                                                                   parent-token
+                                                                   colorize)
+                                     "")))
+                     (face (ecb-get-face-for-type-token
+                            (if (semantic-token-get token 'ecb-group-token)
+                                "group"
+                              (semantic-token-type token)))))
+                 (if face
+                     (setq text (ecb-merge-face-into-text text face)))
+                 text)
+             (funcall (quote ,(cdr elem))
+                      token parent-token colorize)))))
 
 
 (defcustom ecb-token-display-function '((default . ecb-prototype-nonterminal))
@@ -666,7 +743,7 @@ cons-cells:
   the 'default cons-cell is used.
 - The cdr is the function used for displaying a token in the related
   major-mode.
-Everey function is called with 3 arguments:
+Every function is called with 3 arguments:
 1. The token
 2. The parent-token of token \(can be nil)
 3. The value of `ecb-font-lock-tokens'.
@@ -677,12 +754,16 @@ The following functions are predefined:
 - All functions of `semantic-token->text-functions'.
 - For every function in `semantic-token->text-functions' with name
   \"semantic-XYZ\" a function with name \"ecb-XYC\" is predefined. The
-  difference between the semantic- and the ECB-version is that the ECB-version
-  displays for types only the type-name and nothing else \(exception: In
-  c++-mode a template specifier is appended to the type-name if a template
-  instead a normal class). For all tokens which are not types the display is
-  identical. Example: For `semantic-name-nonterminal' the pendant is
-  `ecb-name-nonterminal'.
+  differences between the semantic- and the ECB-version are:
+  + The ECB-version displays for type tokens only the type-name and nothing
+    else \(exception: In c++-mode a template specifier is appended to the
+    type-name if a template instead a normal class).
+  + The ECB-version displays type-tokens according to the setting in
+    `ecb-type-token-display'. This is useful for better recognizing
+    different classes, structs etc. in the ECB-method window.
+  For all tokens which are not types the display of the ECB-version is
+  identical to the semantic version. Example: For `semantic-name-nonterminal'
+  the pendant is `ecb-name-nonterminal'.
 
 This functionality also allows the user to display tokens as UML. To enable
 this functionality set the function for a major-mode \(e.g. `jde-mode') to
@@ -713,15 +794,108 @@ displaying the tokens."
                                     ecb-token->text-functions)
                             (list '(function :tag "Function"))))))
   :initialize 'custom-initialize-default)
-          
+
+
+(defface ecb-type-token-class-face (ecb-face-default nil t)
+  "*Define face used with option `ecb-type-token-display'."
+  :group 'faces)
+
+(defface ecb-type-token-struct-face (ecb-face-default nil t)
+  "*Define face used with option `ecb-type-token-display'."
+  :group 'faces)
+
+(defface ecb-type-token-typedef-face (ecb-face-default nil t)
+  "*Define face used with option `ecb-type-token-display'."
+  :group 'faces)
+
+(defface ecb-type-token-group-face (ecb-face-default nil t t)
+  "*Define face used with option `ecb-type-token-display'."
+  :group 'faces)
+
+(defcustom ecb-type-token-display nil
+  "*Faces for displaying semantic type-tokens in the methods buffer.
+Normally all token colorizing and facing is done by semantic according to the
+value of `semantic-face-alist'. But sometimes a finer distinction in
+displaying the different type specifiers of type-tokens can be usefull. For a
+description when this option is evaluated look at `ecb-token-display-function'!
+
+This functionality is set on a major-mode base, i.e. for every major-mode a
+different setting can be used. The value of this option is a list of
+cons-cells:
+- The car is either a major-mode symbol or the special symbol 'default which
+  means if no setting for a certain major-mode is defined then the cdr of
+  the 'default cons-cell is used.
+- The cdr is a list of cons-cells with:
+  + car is a semantic type specifier in string-form. Current available type
+    specifiers are for example \"class\", \"struct\", \"typedef\". In addition
+    to these ones there is also a special ECB type specifier \"group\" which
+    is related to grouping tokens \(see `ecb-post-process-semantic-tokenlist'
+    and `ecb-group-function-tokens-with-parents'). Any arbitrary specifier can
+    be set here but if it is not \"group\" or not known by semantic it will be
+    useless.
+  + cdr is the face which is used in the ECB-method window to display
+    type-tokens with this specifier. ECB has some predefined faces for this
+    \(`ecb-type-token-class-face', `ecb-type-token-struct-face',
+    `ecb-type-token-typedef-face' and `ecb-type-token-group-face') but any
+    arbitrary face can be set here.
+
+The default value is nil means there is no special ECB-colorizing of type-tokens
+in addition to the colorizing semantic does. But a value like the following
+could be a usefull setting:
+\(\(default
+   \(\"class\" . ecb-type-token-class-face)
+   \(\"group\" . ecb-type-token-group-face))
+  \(c-mode
+   \(\"struct\" . ecb-type-token-struct-face)
+   \(\"typedef\" . ecb-type-token-typedef-face)))
+This means that in `c-mode' only \"struct\"s and \"typedef\"s are displayed
+with special faces and in all other modes \"class\"es and grouping-tokens
+\(see `ecb-token-display-function', `ecb-group-function-tokens-with-parents')
+have special faces."
+  :group 'ecb-methods
+  :set (function (lambda (symbol value)
+		   (set symbol value)
+		   (ecb-clear-token-tree-cache)))
+  :type '(repeat (cons (symbol :tag "Major-mode")
+                       (repeat :tag "Type specifiers"
+                               (cons (choice :tag "Specifier list"
+                                             :menu-tag "Specifier list"
+                                             (const :tag "class"
+                                                    :value "class")
+                                             (const :tag "struct"
+                                                    :value "struct")
+                                             (const :tag "typedef"
+                                                    :value "typedef")
+                                             (const :tag "group"
+                                                    :value "group")
+                                             (string :tag "Any specifier"))
+                                     (face :tag "Any face"
+                                           :value ecb-type-token-class-face)))))
+  :initialize 'custom-initialize-default)
+
+(defun ecb-get-face-for-type-token (type-specifier)
+  "Return the face set in `ecb-type-token-display' for current major-mode and
+TYPE-SPECIFIER or nil."
+  (let ((mode-display (cdr (assoc major-mode ecb-type-token-display)))
+        (default-display (cdr (assoc 'default ecb-type-token-display))))
+    (or (cdr (assoc type-specifier mode-display))
+        (cdr (assoc type-specifier default-display)))))
+
 (defcustom ecb-post-process-semantic-tokenlist
-  '((c++-mode . ecb-post-process-c++))
+  '((c++-mode . ecb-group-function-tokens-with-parents)
+    (emacs-lisp-mode . ecb-group-function-tokens-with-parents))
   "*Define mode-dependend postprocessing for the semantic-tokenlist.
 This is an alist where the car is a major-mode symbol and the cdr is a
 function-symbol of a function which should be used for post-processing the
 tokenlist \(returned by `semantic-bovinate-toplevel') for a buffer in this
 major-mode. Such a function is called with current semantic tokenlist of
-current buffer and must return a valid tokenlist again."
+current buffer and must return a valid tokenlist again.
+
+For oo-programming languages where the methods of a class can be defined
+outside the class-definition \(e.g. C++, Eieio) the function
+`ecb-group-function-tokens-with-parents' can be used to get a much better
+method-display in the methods-window of ECB, because all method
+implementations of a class are grouped together."
   :group 'ecb-methods
   :type '(repeat (cons (symbol :tag "Major-mode")
                        (function :tag "Postprocess function"))))
@@ -1298,58 +1472,63 @@ TOKENLIST otherwise TOKENLIST is returned."
         (funcall fcn tokenlist)
       tokenlist)))
 
-(defun ecb-post-process-c++ (tokenlist)
-  "Return an ECB friendly display token list for C++."
-  (if (not (eq major-mode 'c++-mode))
-      tokenlist
-    ;; group tokens together based on parent
-    (let ((parent-alist nil)
-          (parents nil)
-          (parentless nil))
-      (while tokenlist
-        (cond ((and (eq (semantic-token-token (car tokenlist)) 'function)
-                    (semantic-token-function-parent (car tokenlist)))
-               ;; Find or Create a faux parent token in `parents'
-               ;; and add this token to it.
-               (let ((elem (assoc (semantic-token-function-parent (car tokenlist))
-                                  parent-alist)))
-                 (if elem
-                     (setcdr elem (cons (car tokenlist) (cdr elem)))
-                   (setq parent-alist
-                         (cons (cons (semantic-token-function-parent (car
-                                                                      tokenlist))
-                                     (list (car tokenlist)))
-                               parent-alist)))))
-              (t
-               (setq parentless (cons (car tokenlist) parentless))))
-        (setq tokenlist (cdr tokenlist)))
-      ;; now we have an alist with an element for each parent where the key is
-      ;; the class-name (string) and the value is a list of all method-tokens
-      ;; for this class.
+(defun ecb-group-function-tokens-with-parents (tokenlist)
+  "Return a new tokenlist based on TOKENLIST where all function-tokens in
+TOKENLIST having a parent token are grouped together under a new faux token
+for this parent-token. The new tokenlist contains first all parentless tokens
+and then all grouped tokens.
 
-      ;; Now we must build a new token-list
-      (dolist (alist-elem parent-alist)
-        (setq parents (cons (list (car alist-elem)
-                                  'type
-                                  ;; if we set "struct" the protection will be
-                                  ;; public, with "class" it will be private.
-                                  ;; Unfortunatelly there is no way to display
-                                  ;; the right protection, but i think public
-                                  ;; is better then private. The best would be
-                                  ;; a blank protection symbol but this will
-                                  ;; be first available with semantic-1.4beta13.
-                                  "struct"
-                                  ;; the PART-LIST, means all the methods of
-                                  ;; this class. But first we must nreverse
-                                  ;; the list because we have build the list
-                                  ;; with cons.
-                                  (nreverse (cdr alist-elem))
-                                  nil nil nil nil nil)
-                            parents)))
+This is usefull for oo-programming languages where the methods of a class can
+be defined outside the class-definition, e.g. C++, Eieio."
+  (let ((parent-alist nil)
+        (parents nil)
+        (parentless nil))
+    (while tokenlist
+      (cond ((and (eq (semantic-token-token (car tokenlist)) 'function)
+                  (semantic-token-function-parent (car tokenlist)))
+             ;; Find or Create a faux parent token in `parents'
+             ;; and add this token to it.
+             (let ((elem (assoc (semantic-token-function-parent (car tokenlist))
+                                parent-alist)))
+               (if elem
+                   (setcdr elem (cons (car tokenlist) (cdr elem)))
+                 (setq parent-alist
+                       (cons (cons (semantic-token-function-parent (car
+                                                                    tokenlist))
+                                   (list (car tokenlist)))
+                             parent-alist)))))
+            (t
+             (setq parentless (cons (car tokenlist) parentless))))
+      (setq tokenlist (cdr tokenlist)))
+    ;; now we have an alist with an element for each parent where the key is
+    ;; the class-name (string) and the value is a list of all method-tokens
+    ;; for this class.
 
-      ;; We nreverse the parentless (because build with cons) and append then
-      ;; all the parents.
-      (append (nreverse parentless) parents))))
+    ;; Now we must build a new token-list
+    (dolist (alist-elem parent-alist)
+      (let ((group-token (list (concat (car alist-elem) " (Methods)")
+                               'type
+                               ;; if we set "struct" the protection will be
+                               ;; public, with "class" it will be private.
+                               ;; Unfortunatelly there is no way to display
+                               ;; the right protection, but i think public
+                               ;; is better then private. The best would be
+                               ;; a blank protection symbol but this will
+                               ;; be first available with semantic-1.4beta13.
+                               "struct"
+                               ;; the PART-LIST, means all the methods of
+                               ;; this class. But first we must nreverse
+                               ;; the list because we have build the list
+                               ;; with cons.
+                               (nreverse (cdr alist-elem))
+                               nil nil nil nil nil)))
+        ;; now we mark our new group token
+        (semantic-token-put group-token 'ecb-group-token t)
+        (setq parents (cons group-token parents))))
+
+    ;; We nreverse the parentless (because build with cons) and append then
+    ;; all the parents.
+    (append (nreverse parentless) parents)))    
 
 (defun ecb-dump-toplevel ()
   (interactive)
@@ -1714,8 +1893,13 @@ the current token-tree for this source. The cache contains exactly one element
 for a certain source.")
 (setq ecb-token-tree-cache nil)
 
-(defun ecb-clear-token-tree-cache ()
-  (setq ecb-token-tree-cache nil))
+(defun ecb-clear-token-tree-cache (&optional source-file-name)
+  "Clears wither the whole token-tree-cache \(SOURCE-FILE-NAME is nil) or
+removes only the token-tree for SOURCE-FILE-NAME from the cache."
+  (if (not source-file-name)
+      (setq ecb-token-tree-cache nil)
+    (setq ecb-token-tree-cache
+          (adelete 'ecb-token-tree-cache source-file-name))))
 
 (defun ecb-rebuild-methods-buffer-with-tokencache (updated-cache
 						   &optional no-update)
@@ -1746,15 +1930,16 @@ function is added to the hook `semantic-after-toplevel-cache-change-hook'."
     ;; update this cache-element instead of always adding a new one to the
     ;; cache. Otherwith we would get more than one cache-element for the same
     ;; source!.
-    (let ((cached-tree (assoc (buffer-file-name (current-buffer))
-                              ecb-token-tree-cache))
-          new-tree)
+    (let* ((norm-buffer-file-name (ecb-fix-filename
+                                   (buffer-file-name (current-buffer))))
+           (cached-tree (assoc norm-buffer-file-name ecb-token-tree-cache))
+           new-tree)
       (unless (and no-update cached-tree)
 	(setq new-tree (tree-node-new "root" 0 nil))
 	(ecb-add-tokens new-tree (ecb-post-process-tokenlist updated-cache))
         (if cached-tree
             (setcdr cached-tree new-tree)
-          (setq cached-tree (cons (buffer-file-name (current-buffer)) new-tree))
+          (setq cached-tree (cons norm-buffer-file-name new-tree))
           (setq ecb-token-tree-cache (cons cached-tree ecb-token-tree-cache))))
       (save-excursion
         (ecb-buffer-select ecb-methods-buffer-name)
@@ -1824,18 +2009,25 @@ is not changed."
 
 (defun ecb-kill-buffer-hook ()
   "Function added to the `kill-buffer-hook' during ECB activation.
-Depending on the value in `ecb-kill-buffer-clears-history' the
-corresponding entry in the history-buffer is removed."
-  (when ecb-kill-buffer-clears-history
-    (let* ((buffer-file (ecb-fix-filename (buffer-file-name (current-buffer))))
-           (node (if buffer-file
-                     (save-selected-window
-                       (ecb-exec-in-history-window (tree-buffer-find-node-data buffer-file))))))
-      (when node
-        (if (or (equal ecb-kill-buffer-clears-history 'auto)
-                (and (equal ecb-kill-buffer-clears-history 'ask)
-                     (y-or-n-p "Remove history entry for this buffer? ")))
-            (ecb-clear-history-node node))))))
+It does several tasks:
+- Depending on the value in `ecb-kill-buffer-clears-history' the corresponding
+  entry in the history-buffer is removed.
+- The entry of the removed file-buffer is removed from `ecb-token-tree-cache'."
+  (let ((buffer-file (ecb-fix-filename (buffer-file-name (current-buffer)))))
+    ;; 1. clearing the history if necessary
+    (when ecb-kill-buffer-clears-history
+      (let ((node (if buffer-file
+                      (save-selected-window
+                        (ecb-exec-in-history-window (tree-buffer-find-node-data buffer-file))))))
+        (when node
+          (if (or (equal ecb-kill-buffer-clears-history 'auto)
+                  (and (equal ecb-kill-buffer-clears-history 'ask)
+                       (y-or-n-p "Remove history entry for this buffer? ")))
+              (ecb-clear-history-node node)))))
+    ;; 2. removing the file-buffer from `ecb-token-tree-cache'
+    (if buffer-file
+        (ecb-clear-token-tree-cache buffer-file))))
+    
 
 (defun ecb-clear-history (&optional clearall)
   "Clears the ECB history-buffer. If CLEARALL is nil then the behavior is
@@ -2589,7 +2781,8 @@ That is remove the unsupported :help stuff."
     [ "Toggle enlarged compilation window"
       ecb-toggle-enlarged-compilation-window
       :active (and (equal (selected-frame) ecb-frame)
-                   ecb-compile-window)
+                   ecb-compile-window
+                   (window-live-p ecb-compile-window))
       :help "Toggle enlarged compilation window."
       ])
    "-"
@@ -2648,7 +2841,8 @@ That is remove the unsupported :help stuff."
     (ecb-menu-item
      ["Compilation"
       ecb-goto-window-compilation
-      :active (and ecb-compile-window-height ecb-compile-window)
+      :active (and ecb-compile-window-height ecb-compile-window
+                   (window-live-p ecb-compile-window))
       :help "Go to the history window"
       ])
     )

@@ -1,6 +1,6 @@
 ;;; ecb-buffertab.el --- 
 
-;; $Id: ecb-buffertab.el,v 1.1 2002/01/29 23:56:55 burtonator Exp $
+;; $Id: ecb-buffertab.el,v 1.2 2002/02/22 08:30:43 berndl Exp $
 
 ;; Copyright (C) 2000-2003 Free Software Foundation, Inc.
 ;; Copyright (C) 2000-2003 Kevin A. Burton (burton@openprivacy.org)
@@ -41,6 +41,8 @@
 ;;
 ;; 
 
+(require 'ecb-compilation)
+
 (defface ecb-buffertab-face '((t (:bold t :foreground "lightyellow")))
   "Face used to highlight the annotation lines to the left of the annotate buffer.")
 
@@ -60,7 +62,7 @@
 
   (let((menu (list 'keymap name)))
 
-    (dolist(entry (ecb-get-compilation-buffers))
+    (dolist(entry (ecb-compilation-get-buffers))
 
       (add-to-list 'menu (list 'menu-item 'menu-item (car entry) (car entry)) t))
 

@@ -26,7 +26,7 @@
 ;;
 ;; Contains all online-help for ECB (stolen something from recentf.el)
 
-;; $Id: ecb-help.el,v 1.54 2002/02/15 12:14:07 berndl Exp $
+;; $Id: ecb-help.el,v 1.55 2002/02/22 08:30:43 berndl Exp $
 
 ;;; Code
 
@@ -342,6 +342,9 @@ Available interactive ECB commands:
 - `ecb-goto-window-directories' \(and much more `ecb-goto-window...'
    functions)
 - `ecb-toggle-ecb-windows'
+- `ecb-toggle-enlarged-compilation-window'
+- `ecb-cycle-switch-to-compilation-buffer'
+- `ecb-cycle-through-compilation-buffers'
 
 Most of these functions are also available via the menu \"ECB\" and also via
 the ECB keymap with prefix \"C-c .\" \(see `ecb-minor-mode' for a complete
@@ -379,7 +382,8 @@ following options before working with ECB):
   displayed in the minibuffer?
 - `ecb-layout-nr': The ECB layout, means which windows you want to be
   displayed in the ECB-frame and also the location of these windows.
-- All the options in the customize groups 'ecb-layout' and 'ecb-faces'.
+- All the options in the customize groups 'ecb-layout', 'ecb-methods' and
+  'ecb-faces'.
 
 
                          ===========================

@@ -7,8 +7,8 @@ REM root
 REM   emacs
 REM 	site-lisp
 REM 	  ecb
-REM 	  semantic-1.4beta11
-REM       eieio-0.17beta3
+REM 	  semantic
+REM       eieio
 REM 
 REM If your installation is different, edit this batchfile to reflect the
 REM actual locations of the required packages (use always forward-slashes as
@@ -20,7 +20,7 @@ REM
 REM Call "make" to byte-compile the ECB. You can savely ignore the messages.
 
 REM Define here the correct path to your Emacs or XEmacs
-set EMACSPROG=emacs
+set EMACS=emacs
 
 echo Byte-compiling ECB with make.bat...
 
@@ -29,11 +29,11 @@ if exist ecb.elc del *.elc
 echo (add-to-list 'load-path nil) > ecb-compile-script-init
 
 REM !!! Check these lines and change it if necessary (see comments above) !!!
-echo (add-to-list 'load-path "../semantic-1.4beta11") >> ecb-compile-script-init
-echo (add-to-list 'load-path "../eieio-0.17beta3") >> ecb-compile-script-init
+echo (add-to-list 'load-path "../semantic") >> ecb-compile-script-init
+echo (add-to-list 'load-path "../eieio") >> ecb-compile-script-init
 
 echo (setq debug-on-error t) >> ecb-compile-script-init
-%EMACSPROG% -batch -no-site-file -l ecb-compile-script-init -f batch-byte-compile *.el
+%EMACS% -batch -no-site-file -l ecb-compile-script-init -f batch-byte-compile *.el
 del ecb-compile-script-init
 
 REM End of make.bat

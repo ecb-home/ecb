@@ -1,9 +1,17 @@
 Version 1.70:
 -------------
 
+- New feature 'ecb-type-token-display'. See the doc-string of this new option
+  for a description. (Klaus)
+
+- Now the option 'ecb-post-process-semantic-tokenlist' has per default an
+  entry for emacs-lisp-mode, so for eieio-code the methods (defmethod) of a
+  class are grouped grouped with respect to the class they belong. The new
+  default value of this option does this for c++- and eieio-code. (Klaus)
+
 - Now in the ECB-tree-buffers RETURN works like the primary button (already in
-  previous versions) and C-RETURN works like the secondary button (new). For
-  an explanation of primary and secondary see the option
+  previous versions) and C-RETURN works like the secondary button (new in
+  version 1.70). For an explanation of primary and secondary see the option
   ecb-primary-secondary-mouse-buttons. (Klaus)
 
 - New feature: Now the token-display function can be defined separated for

@@ -124,7 +124,7 @@
 ;;   + The edit-window must not be splitted and the point must reside in
 ;;     the not deleted edit-window.
 
-;; $Id: ecb-layout.el,v 1.101 2002/02/15 12:14:07 berndl Exp $
+;; $Id: ecb-layout.el,v 1.102 2002/02/22 08:30:43 berndl Exp $
 
 ;;; Code:
 
@@ -160,7 +160,7 @@ Attention: You should never change this!")
                          (frame-live-p ecb-frame))
                 (let ((curr-frame (selected-frame)))
                   (select-frame ecb-frame)
-		  (ecb-redraw-layout)
+		  (ecb-redraw-layout-full)
                   (select-frame curr-frame))))))
 
 (defcustom ecb-select-edit-window-on-redraw nil
@@ -484,6 +484,15 @@ done.")
         ecb-last-source-buffer nil
         ecb-compile-window nil))
 
+(defun ecb-compile-window-live-p (&optional display-msg)
+  (if (and ecb-compile-window (window-live-p ecb-compile-window))
+      t
+    (if display-msg
+        (message "No compile-window visible in current ECB-layout!"))
+    nil))
+(defun ecb-edit-window-live-p ()
+  (and ecb-edit-window (window-live-p ecb-edit-window)))
+
 ;; ====== basic advices ===============================================
 
 (defconst ecb-basic-adviced-functions (if running-xemacs
@@ -521,8 +530,7 @@ either not activated or it behaves exactly like the original version!"
 (defadvice compilation-set-window-height (around ecb)
   "Makes the function compatible with ECB."
   (if (or (not (equal (selected-frame) ecb-frame))
-          (and ecb-compile-window-height
-               ecb-compile-window (window-live-p ecb-compile-window)))
+          (and ecb-compile-window-height (ecb-compile-window-live-p)))
       ad-do-it
     (and compilation-window-height
          (not (equal (ecb-edit-window-splitted) 'horizontal))
@@ -557,8 +565,7 @@ either not activated or it behaves exactly like the original version!"
 (defun ecb-edit-window-splitted ()
   "Returns either nil if the ECB edit-window is not splitted or 'vertical or
 'horizontal depending on the splitting."
-  (when (and ecb-edit-window
-             (window-live-p ecb-edit-window))
+  (when (ecb-edit-window-live-p)
     (let ((next-w (next-window ecb-edit-window 0 ecb-frame)))
       (if (or (equal next-w ecb-edit-window)
               (window-dedicated-p next-w)
@@ -575,8 +582,7 @@ either not activated or it behaves exactly like the original version!"
       (defadvice shrink-window-if-larger-than-buffer (around ecb)
         "Makes the function compatible with ECB."
         (if (or (not (equal (selected-frame) ecb-frame))
-                (and ecb-compile-window-height
-                     ecb-compile-window (window-live-p ecb-compile-window)))
+                (and ecb-compile-window-height (ecb-compile-window-live-p)))
             ad-do-it
           (or (ad-get-arg 0) (ad-set-arg 0 (selected-window)))
           (save-excursion
@@ -622,8 +628,7 @@ either not activated or it behaves exactly like the original version!"
       (defadvice show-temp-buffer-in-current-frame (around ecb)
         "Makes the function compatible with ECB."
         (if (or (not (equal (selected-frame) ecb-frame))
-                (and ecb-compile-window-height
-                     ecb-compile-window (window-live-p ecb-compile-window)))
+                (and ecb-compile-window-height (ecb-compile-window-live-p)))
             ad-do-it
           (let ((pre-display-buffer-function nil)) ; turn it off, whatever it is
             (save-selected-window
@@ -654,8 +659,7 @@ either not activated or it behaves exactly like the original version!"
   (defadvice shrink-window-if-larger-than-buffer (around ecb)
     "Makes the function compatible with ECB."
     (if (or (not (equal (selected-frame) ecb-frame))
-            (and ecb-compile-window-height
-                 ecb-compile-window (window-live-p ecb-compile-window)))
+            (and ecb-compile-window-height (ecb-compile-window-live-p)))
         ad-do-it
       (save-selected-window
         (if (ad-get-arg 0)
@@ -684,8 +688,7 @@ either not activated or it behaves exactly like the original version!"
   (defadvice resize-temp-buffer-window (around ecb)
     "Makes the function compatible with ECB."
     (if (or (not (equal (selected-frame) ecb-frame))
-            (and ecb-compile-window-height
-                 ecb-compile-window (window-live-p ecb-compile-window)))
+            (and ecb-compile-window-height (ecb-compile-window-live-p)))
         ad-do-it
       (unless (or (one-window-p 'nomini)
                   (equal (ecb-edit-window-splitted) 'horizontal)
@@ -1109,8 +1112,7 @@ alternatives:
 If edit-window is splitted, point stays in the \"other\" edit-window and there
 is no durable compilation-window then always the first edit-window is choosen."
   (if (or (not (equal (selected-frame) ecb-frame))
-          (and ecb-compile-window-height ecb-compile-window
-               (window-live-p ecb-compile-window))
+          (and ecb-compile-window-height (ecb-compile-window-live-p))
           (not (equal (ecb-point-in-edit-window) 2)))
       ad-do-it
     ;; point stays in the "other" edit-window and there is no
@@ -1504,8 +1506,7 @@ this function the edit-window is selected which was current before redrawing."
                                                     ecb-compile-window-height)
                                                ecb-compile-window-height))))
            (compile-buffer-before-redraw (if (and ecb-compile-window-height
-                                                  ecb-compile-window
-                                                  (window-live-p ecb-compile-window))
+                                                  (ecb-compile-window-live-p))
                                              (window-buffer ecb-compile-window)))
            (tree-windows-before-redraw (ecb-layout-get-current-tree-windows)))
 
@@ -1514,7 +1515,7 @@ this function the edit-window is selected which was current before redrawing."
       (ecb-activate-adviced-functions nil)
       
       ;; first we go to the edit-window
-      (if (and ecb-edit-window (window-live-p ecb-edit-window))
+      (if (ecb-edit-window-live-p)
           (ecb-select-edit-window)
         ;; if the edit-window is destroyed (what should never happen) we try
         ;; to go first to the last edited buffer, second to the scratch-buffer
@@ -1653,17 +1654,15 @@ this function the edit-window is selected which was current before redrawing."
       ;; lets try to make this save.
       ;; TODO: Does not really work well....
     
-      (if (and ecb-edit-window (window-live-p ecb-edit-window))
+      (if (ecb-edit-window-live-p)
           (setq main-window-buffer (window-buffer ecb-edit-window))
         (setq compilation-window-buffer "*scratch*")
         (message "ECB quick redraw: ecb-edit-window not alive!"))
 
-      (if ecb-compile-window
-          (if (window-live-p ecb-compile-window)
-              (setq compilation-window-buffer (window-buffer ecb-compile-window))
-
-            (setq compilation-window-buffer "*scratch*")
-            (message "ECB quick redraw: ecb-compile-window not alive!")))
+      (if (ecb-compile-window-live-p)
+          (setq compilation-window-buffer (window-buffer ecb-compile-window))
+        (setq compilation-window-buffer "*scratch*")
+        (message "ECB quick redraw: ecb-compile-window not alive!"))
     
       (set-window-configuration ecb-activated-window-configuration)
 
@@ -1672,11 +1671,12 @@ this function the edit-window is selected which was current before redrawing."
       (if main-window-buffer
           (set-window-buffer ecb-edit-window main-window-buffer))
 
-      (if compilation-window-buffer
+      (if (and compilation-window-buffer
+               (ecb-compile-window-live-p))
           (set-window-buffer ecb-compile-window compilation-window-buffer))
 
-    ;; because the current-window-configuration sets also the display-start of
-     ;; all windows and in most cases this is the top of a buffer in case of a
+      ;; because the current-window-configuration sets also the display-start of
+      ;; all windows and in most cases this is the top of a buffer in case of a
       ;; tree-buffer we must do here a manually synch
 
       (run-hooks 'ecb-redraw-layout-hook))))

@@ -1,6 +1,6 @@
 ;;; ecb-compilation.el --- 
 
-;; $Id: ecb-compilation.el,v 1.1 2002/02/01 09:35:23 burtonator Exp $
+;; $Id: ecb-compilation.el,v 1.2 2002/02/22 08:30:43 berndl Exp $
 
 ;; Copyright (C) 2000-2003 Free Software Foundation, Inc.
 ;; Copyright (C) 2000-2003 Kevin A. Burton (burton@openprivacy.org)
@@ -34,7 +34,7 @@
 ;;; Code:
 
 (defgroup ecb-compilation nil
-  "Setting for cycling through misc ECB buffers."
+  "Settings for all things displayed in the compile window of ECB."
   :group 'ecb
   :prefix "ecb-compilation-")
 
@@ -44,10 +44,10 @@
                                               "*Backtrace*"
                                               "*shell*"
                                               "*bsh*")
-  "List of additional buffer names that should be displayed in compilation
+  "*Additional buffer names that should be displayed in compilation
 window."
   :group 'ecb-compilation
-  :type '(repeat (file :tag "Buffer name")))
+  :type '(repeat (string :tag "Buffer name")))
 
 (defun ecb-compilation-get-buffers()
   "Get all known compilation buffer names.  See `ecb-compilation-buffer-p'."
@@ -71,11 +71,11 @@ window."
     buffer-names))
   
 (defun ecb-compilation-buffer-p(buffer)
-  "Test if the given buffer is a compilation buffer.  Note that in this case we
-define 'compilation buffer' as a buffer that should ideally be displayed in the
-`ecb-compile-window'.  This means that in some situations this might not be the
-result of a `compile-internal'.  A good example would be the *Help* buffer or
-the `ecb-eshell-buffer-name'.  See `compilation-buffer-p'."
+  "Test if the given buffer is a compilation buffer. Note that in this case we
+define 'compilation buffer' as a buffer that should ideally be displayed in
+the `ecb-compile-window'. This means that in some situations this might not be
+the result of a `compile-internal'. A good example would be the *Help* buffer
+or the `ecb-eshell-buffer-name'. See `compilation-buffer-p'."
   
   (let((buffer-name (buffer-name buffer)))
 
