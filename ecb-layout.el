@@ -1217,10 +1217,11 @@ this function the edit-window is selected."
       ;; tree-windows of current layout were visible before redraw).
       (when pos-before-redraw
         (goto-char pos-before-redraw)
-        (setq ecb-last-source-buffer (current-buffer))
-        (if (not (equal tree-windows-before-redraw
-                        (ecb-layout-get-current-tree-windows)))
-            (ecb-current-buffer-sync t))))))
+        (setq ecb-last-source-buffer (current-buffer)))
+      
+      (if (not (equal tree-windows-before-redraw
+                      (ecb-layout-get-current-tree-windows)))
+          (ecb-current-buffer-sync t)))))
 
 
 (defun ecb-store-window-sizes ()

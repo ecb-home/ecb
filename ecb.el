@@ -965,7 +965,8 @@ function is added to the hook `semantic-after-toplevel-bovinate-hook'."
              ;; clearing the cache to set the cache to nil if a buffer is
              ;; parsed which has no tokens like plain text-buffers. Here we do
              ;; not want rebuilding the method-buffer if the cache is nil but
-             ;; the current buffer is set up for semantic-parsing.
+             ;; the current buffer is set up for semantic-parsing, because the
+             ;; real rebuild should be done after the cache is filled again.
              (or (semantic-toplevel-get-cache)
                  (not (semantic-active-p))))
     ;; This is a fix for semantic 1.4beta2
@@ -1101,6 +1102,7 @@ the ECB tree-buffers."
         ;; Regardless of the size of the file to load, this 0.1 fraction of a
         ;; sec is enough!
         (sit-for 0.1)
+        (ecb-update-directories-buffer)
         (ecb-select-source-file filename)
         ;; selected source has changed, therfore we must initialize
         ;; ecb-selected-token again.
