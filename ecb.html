@@ -73,7 +73,7 @@ mailing list <a href="mailto:ecb-list@lists.sourceforge.net">ecb-list@lists.sour
 <li><a href="#The%20edit-window">The edit-window</a>:              How to use the edit-window(s)
 <li><a href="#Temp-%20and%20compile-buffers">Temp- and compile-buffers</a>:    Displaying temp- and compilation-buffers
 <li><a href="#The%20Methods%20buffer">The Methods buffer</a>:           Using and customizing he Methods-buffer
-<li><a href="#The%20ECB-layout">The ECB-layout</a>:               Changing, customizing, redrawing the layout
+<li><a href="#The%20ECB-layout">The ECB-layout</a>:               Changing, customizing, redrawing, creating
 <li><a href="#Hiding%20the%20ECB%20windows">Hiding the ECB windows</a>:       Hiding/Showing the ECB-windows
 <li><a href="#Back%2fforward%20navigation">Back/forward navigation</a>:      Back- and forward navigation like a browser
 <li><a href="#ECB-window%20synchronizing">ECB-window synchronizing</a>:     Auto./manual synchronizing the ECB-windows
@@ -90,7 +90,7 @@ mailing list <a href="mailto:ecb-list@lists.sourceforge.net">ecb-list@lists.sour
 </p><li><a href="#Customizing%20the%20display">Customizing the display</a>:      How to customize the Methods-buffer display
 <li><a href="#Rebuilding%20the%20Methods">Rebuilding the Methods</a>:       When to rebuild the Methods-buffer
 
-<p>Changing, customizing and redrawing the ECB-layout
+<p>Changing, customizing, redrawing and creating layouts
 
 </p><li><a href="#Changing%20the%20ECB-layout">Changing the ECB-layout</a>:      How to change and customize the layout
 <li><a href="#Redrawing%20the%20ECB-layout">Redrawing the ECB-layout</a>:     How and when redrawing the layout
@@ -619,7 +619,7 @@ Emacs Code Browser.
 <li><a accesskey=3 href="#The%20edit-window">The edit-window</a>:              How to use the edit-window(s)
 <li><a accesskey=4 href="#Temp-%20and%20compile-buffers">Temp- and compile-buffers</a>:    Displaying temp- and compilation-buffers
 <li><a accesskey=5 href="#The%20Methods%20buffer">The Methods buffer</a>:           Using and customizing he Methods-buffer
-<li><a accesskey=6 href="#The%20ECB-layout">The ECB-layout</a>:               Changing, customizing, redrawing the layout
+<li><a accesskey=6 href="#The%20ECB-layout">The ECB-layout</a>:               Changing, customizing, redrawing, creating
 <li><a accesskey=7 href="#Hiding%20the%20ECB%20windows">Hiding the ECB windows</a>:       Hiding/Showing the ECB-windows
 <li><a accesskey=8 href="#Back%2fforward%20navigation">Back/forward navigation</a>:      Back- and forward navigation like a browser
 <li><a accesskey=9 href="#ECB-window%20synchronizing">ECB-window synchronizing</a>:     Auto./manual synchronizing the ECB-windows
@@ -1067,7 +1067,7 @@ Previous:<a rel=previous accesskey=p href="#The%20Methods%20buffer">The Methods 
 Up:<a rel=up accesskey=u href="#Usage%20of%20ECB">Usage of ECB</a>
 <br>
 
-<h3>Changing, customizing and redrawing the ECB-layout</h3>
+<h3>Changing, customizing, redrawing and creating layouts</h3>
 
 <p>The term <dfn>ECB-layout</dfn> means in which windows the ECB-frame is
 divided. This chapter describes all aspects concerning this layout,
@@ -1585,12 +1585,13 @@ Up:<a rel=up accesskey=u href="#The%20ECB-layout">The ECB-layout</a>
 easy "by example" with the command <code>ecb-create-new-layout</code>. 
 This command creates a new empty frame and offers a small set of keys
 to create the new layout by splitting windows. 
-<code>ecb-create-new-layout</code> and these keys are your guide during the
-layout-creation-process.
+<code>ecb-create-new-layout</code> and this couple of keys are your guide
+during the layout-creation-process.
 
 <p>After calling <code>ecb-create-new-layout</code> you will be asked which
-type of layout you want to create: left, right, top. Here you specify
-where the ECB-tree-windows/buffers should be located in the ECB-frame:
+type of layout you want to create: "left", "right", "top". Here
+you specify where the ECB-tree-windows/buffers should be located in
+the ECB-frame:
 <ul>
 <li>left: All ECB-tree-windows are located on the left side
 <li>right: All ECB-tree-windows are located on the right side
@@ -1598,7 +1599,7 @@ where the ECB-tree-windows/buffers should be located in the ECB-frame:
 </ul>
 
 <p>Afterwards you will see a frame like follows (here the layout-type is
-left):
+"left"):
 
 <br><pre>-------------------------------------------------------
 |&lt;point&gt;       |                                      |
@@ -1629,7 +1630,7 @@ splitted by you wherever you want (<kbd>C-s</kbd>). You must give every
 ECB-tree-window you create a type (<kbd>C-t</kbd>) which can be either
 "directories", "sources", "methods" or "history".
 
-<p>If you are satisfied with your new layout just hit <kbd>C-q</kbd>. You wil
+<p>If you are satisfied with your new layout just hit <kbd>C-q</kbd>. You will
 be asked for a new layout-number and after inserting this number the
 new layout is saved in the file defined by the option
 <code>ecb-create-layout-file</code>. The new layout is now available via the
@@ -6550,7 +6551,7 @@ Up:<a rel=up accesskey=u href="#Top">Top</a>
 <li><a href="#Customizing%20the%20display">Customizing the display of the Methods-buffer</a>
 <li><a href="#Rebuilding%20the%20Methods">Rebuilding the Methods-buffer</a>
 </ul>
-<li><a href="#The%20ECB-layout">Changing, customizing and redrawing the ECB-layout</a>
+<li><a href="#The%20ECB-layout">Changing, customizing, redrawing and creating layouts</a>
 <ul>
 <li><a href="#Changing%20the%20ECB-layout">Changing and customizing the ECB-layout</a>
 <li><a href="#Redrawing%20the%20ECB-layout">Redrawing the ECB-layout</a>
