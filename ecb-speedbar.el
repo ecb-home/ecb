@@ -1,6 +1,6 @@
 ;;; ecb-speedbar.el --- 
 
-;; $Id: ecb-speedbar.el,v 1.25 2002/12/15 19:35:57 berndl Exp $
+;; $Id: ecb-speedbar.el,v 1.26 2002/12/18 14:30:21 berndl Exp $
 
 ;; Copyright (C) 2000-2003 Free Software Foundation, Inc.
 ;; Copyright (C) 2000-2003 Kevin A. Burton (burton@openprivacy.org)
@@ -130,13 +130,9 @@
 
 (defun ecb-set-speedbar-buffer()
   "Set the speedbar buffer within ECB."
-
-  (set-window-buffer (selected-window) (get-buffer-create ecb-speedbar-buffer-name))
-
   (ecb-speedbar-activate)
-  
   (set-window-dedicated-p (selected-window) nil)
-
+  (set-window-buffer (selected-window) (get-buffer-create ecb-speedbar-buffer-name))
   (set-window-dedicated-p (selected-window) t))
 
 (defun ecb-speedbar-activate()
@@ -200,18 +196,84 @@ will/could break."
 
             (speedbar-update-contents))))))
 
-(defun speedbar-find-file-in-frame(file)
-  "This will load FILE into the speedbar attached frame.  If the file is being
-displayed in a different frame already, then raise that frame instead.  Note
-that this is a reimplemntation of this for the ECB that does no frame selection"
+;;TODO: Klaus Berndl <klaus.berndl@sdm.de>: The following redefinitions have
+;;to be implemented by an advice which is active during active ECB and not
+;;active if ECB is not active! Otherwise speedbar will never work correct
+;;after deactivating ECB!
 
-  (find-file file))
+;;TODO: Klaus Berndl <klaus.berndl@sdm.de>: Damn. What is the reason that
+;;point does NOT stay in the edit-window after a click onto a filename in the
+;;speedbar-window. The file is opened in the edit-window but the window is not
+;;selected. ecb-find-file-and-display should do this. Seems that
+;;speedbar/dframe does something magic, so this can not happen...
+;; I have also tried redefining speedbar-find-file and
+;; speedbar-do-function-pointer in senseful ways but no success :-(( Maybe we
+;; have to ask Eric....
 
+;; (defun speedbar-find-file-in-frame(file)
+;;   "This will load FILE into the speedbar attached frame.  If the file is being
+;; displayed in a different frame already, then raise that frame instead.  Note
+;; that this is a reimplemntation of this for the ECB that does no frame
+;; selection"
+;;   (ecb-find-file-and-display file nil))
+
+;; (defun speedbar-find-file (text token indent)
+;;   "Speedbar click handler for filenames.
+;; TEXT, the file will be displayed in the attached frame.
+;; TOKEN is unused, but required by the click handler.  INDENT is the
+;; current indentation level."
+;;   (let ((cdd (speedbar-line-path indent)))
+;;     (message "I clicked at %s" (concat cdd text))
+;;     (ecb-find-file-and-display (concat cdd text) nil)))
+
+;; (defun speedbar-do-function-pointer ()
+;;   "Look under the cursor and examine the text properties.
+;; From this extract the file/tag name, token, indentation level and call
+;; a function if appropriate"
+;;   (let* ((speedbar-frame (speedbar-current-frame))
+;; 	 (fn (get-text-property (point) 'speedbar-function))
+;; 	 (tok (get-text-property (point) 'speedbar-token))
+;; 	 ;; The 1-,+ is safe because scaning starts AFTER the point
+;; 	 ;; specified.  This lets the search include the character the
+;; 	 ;; cursor is on.
+;; 	 (tp (previous-single-property-change
+;; 	      (1+ (point)) 'speedbar-function))
+;; 	 (np (next-single-property-change
+;; 	      (point) 'speedbar-function))
+;; 	 (txt (buffer-substring-no-properties (or tp (point-min))
+;; 					      (or np (point-max))))
+;; 	 (dent (save-excursion (beginning-of-line)
+;; 			       (string-to-number
+;; 				(if (looking-at "[0-9]+")
+;; 				    (buffer-substring-no-properties
+;;                                      (match-beginning 0) (match-end 0))
+;; 				  "0")))))
+;;     ;;(speedbar-message "%S:%S:%S:%s" fn tok txt dent)
+;;     (and fn (funcall fn txt tok dent))))
+
+
+;;TODO: Klaus Berndl <klaus.berndl@sdm.de>: It should not be easy introducing
+;;a new option ecb-use-speedbar-for-directories and evaluating it in
+;;ecb-set-directories-buffer like follows:
+;;
+;; (defun ecb-set-directories-buffer ()
+;;   (if ecb-use-speedbar-for-directories
+;;       (ecb-set-speedbar-buffer)
+;;     (ecb-set-buffer ecb-directories-buffer-name)))
+;;
+;; So we would not need extra layouts for the speedbar-integration but we could
+;; use speedbar for all layouts which have a directories-window in its layout.
+;; So the following layout-definition would be superfluous...
+
+;; the special speedbar layout.
 (ecb-layout-define "speedbar1" right
   "ECB layout with integrated speedbar."  
-  (ecb-set-speedbar-buffer)
-  (ecb-split-ver 0.5)
-  (ecb-set-methods-buffer))
+  (let ((edit-win (previous-window (selected-window) 0)))
+    (ecb-set-speedbar-buffer)
+    (ecb-split-ver 0.5)
+    (ecb-set-methods-buffer)
+    (select-window edit-win)))
+
 
 (defun ecb-speedbar-goto-speedbar()
   "Goto the speedbar window."
@@ -229,7 +291,8 @@ that this is a reimplemntation of this for the ECB that does no frame selection"
 (speedbar-disable-update)
 
 ;;always stay in the current frame
-(setq speedbar-select-frame-method 0)
+(setq speedbar-select-frame-method 'attached)
+(setq dframe-activity-change-focus-flag t)
 
 (silentcomp-provide 'ecb-speedbar)
 
