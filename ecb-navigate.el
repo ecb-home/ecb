@@ -35,9 +35,9 @@
 ;;====================================================
 
 (defclass ecb-dlist-node ()
-  ((previous :initform nil :protection :private)
-   (next :initform nil :protection :private)
-   (data :initarg :data :initform nil :protection :private)
+  ((previous :initform nil); :protection :private)
+   (next :initform nil); :protection :private)
+   (data :initarg :data :initform nil); :protection :private)
    )
   "A node in a double linked list."
   )
