@@ -52,7 +52,7 @@
 ;; The latest version of the ECB is available at
 ;; http://home.swipnet.se/mayhem/ecb.html
 
-;; $Id: ecb.el,v 1.67 2001/05/01 14:10:22 creator Exp $
+;; $Id: ecb.el,v 1.68 2001/05/02 12:46:31 berndl Exp $
 
 ;;; Code:
 
@@ -432,10 +432,10 @@ you must deactivate and activate ECB again to take effect."
   :group 'ecb-general
   :type 'boolean)
 
-(defcustom ecb-mode-line-show-prefix nil
-  "*Show the ECB buffer prefix in the mode line."
-  :group 'ecb-general
-  :type 'boolean)
+;; (defcustom ecb-mode-line-show-prefix nil
+;;   "*Show the ECB buffer prefix in the mode line."
+;;   :group 'ecb-general
+;;   :type 'boolean)
 
 (defcustom ecb-primary-secondary-mouse-buttons 'mouse-2--C-mouse-2
   "*Primary- and secondary mouse button for using the ECB-buffers.
@@ -581,7 +581,13 @@ will get the face 'default. Returns TEXT."
             (let* ((face-option-val (nth type ecb-font-lock-method-faces))
                    (face (or (and face-option-val
 				  (if running-xemacs
-				      (boundp face-option-val)
+                                      ;; facep seems not to work correct with
+                                      ;; XEmacs and boundp returns nil for
+                                      ;; faces like bold, italic, underline.
+				      (or (boundp face-option-val)
+                                          (equal face-option-val 'bold)
+                                          (equal face-option-val 'italic)
+                                          (equal face-option-val 'underline))
 				    (facep face-option-val))
                                   face-option-val)
                              'default)))

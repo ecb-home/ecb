@@ -7,8 +7,9 @@ Version 1.30 (???):
 - Spelling corrections. Thanks to Colin Marquardt
   <colin.marquardt@usa.alcatel.com> for spotting them.
 
-- Mode line prefixes can now optionally be shown. The default is to not show
-  them. (Jesper)
+- Mode line prefixes can now be set individually for each ECB-buffer. There is
+  a default-prefix for each buffer but the user can also define a custom
+  prefix or no prefix at all. (Jesper/Klaus)
 
 - Fixed small bug in directory tree that caused directories to be sorted by
   extension. (Jesper)

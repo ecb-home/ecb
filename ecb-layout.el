@@ -122,7 +122,7 @@
 ;;   + The edit-window must not be splitted and the point must reside in
 ;;     the not deleted edit-window.
 
-;; $Id: ecb-layout.el,v 1.36 2001/05/01 13:33:00 creator Exp $
+;; $Id: ecb-layout.el,v 1.37 2001/05/02 12:46:31 berndl Exp $
 
 ;;; Code:
 
@@ -970,10 +970,11 @@ handle splitting the edit-window correctly."
 this function the edit-window is selected."
   (interactive)
 
-  (let* ((saved-edit-buffer-1 (window-buffer ecb-edit-window))
-	 (saved-edit-buffer-2 (window-buffer (next-window ecb-edit-window)))
-	 (saved-edit-window-start (window-start ecb-edit-window))
-	 (window-before-redraw (cond ((eq (selected-window) ecb-edit-window)
+  (let* ((saved-edit-buffer-1 (ignore-errors (window-buffer ecb-edit-window)))
+	 (saved-edit-buffer-2 (ignore-errors
+                                (window-buffer (next-window ecb-edit-window))))
+         (saved-edit-window-start (ignore-errors (window-start ecb-edit-window)))
+         (window-before-redraw (cond ((eq (selected-window) ecb-edit-window)
                                       1)
                                      ((and ecb-split-edit-window
                                            (eq (previous-window (selected-window) 0)
@@ -1061,11 +1062,11 @@ this function the edit-window is selected."
            (ecb-split-ver 0.5 t)))
 
     ;; Restore edit window buffers
-    (set-window-buffer ecb-edit-window saved-edit-buffer-1)
-    (set-window-start ecb-edit-window saved-edit-window-start)
-
-    (when ecb-split-edit-window
-	(set-window-buffer (next-window ecb-edit-window) saved-edit-buffer-2))
+    (when (and saved-edit-window-start saved-edit-buffer-1 saved-edit-buffer-2)
+      (set-window-buffer ecb-edit-window saved-edit-buffer-1)
+      (set-window-start ecb-edit-window saved-edit-window-start)
+      (when ecb-split-edit-window
+	(set-window-buffer (next-window ecb-edit-window) saved-edit-buffer-2)))
     
     ;; at the end of the redraw we always stay in that edit-window as before
     ;; the redraw

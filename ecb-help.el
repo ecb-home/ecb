@@ -26,7 +26,7 @@
 ;;
 ;; Contains all online-help for ECB (stolen something from recentf.el)
 
-;; $Id: ecb-help.el,v 1.10 2001/05/01 13:33:12 creator Exp $
+;; $Id: ecb-help.el,v 1.11 2001/05/02 12:46:31 berndl Exp $
 
 ;;; Code
 
@@ -279,8 +279,8 @@ All customization of ECB is divided into the following customize groups:
 You can highly customize all the ECB behavior/layout so just go to this groups
 and you will see all well documented ECB-options.
 
-Here are the most important options \(it is recommended to check the following
-options before working with ECB):
+Here are the most important options \(it is recommended to check the
+following options before working with ECB):
 - `ecb-source-path': You must set this option!
 - `ecb-primary-secondary-mouse-buttons', `ecb-primary-mouse-jump-destination':
   Define how to use the mouse.
