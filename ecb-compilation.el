@@ -1,6 +1,6 @@
 ;;; ecb-compilation.el --- 
 
-;; $Id: ecb-compilation.el,v 1.9 2002/12/06 20:41:21 berndl Exp $
+;; $Id: ecb-compilation.el,v 1.10 2002/12/16 00:03:30 burtonator Exp $
 
 ;; Copyright (C) 2000-2003 Free Software Foundation, Inc.
 ;; Copyright (C) 2000-2003 Kevin A. Burton (burton@openprivacy.org)
@@ -42,6 +42,7 @@
   :prefix "ecb-compilation-")
 
 (defcustom ecb-compilation-buffer-names (list ecb-eshell-buffer-name
+                                              "*Calculator*"
                                               "*Apropos*"
                                               "*Help*"
                                               "*Backtrace*"
@@ -80,7 +81,7 @@ window even if `compilation-buffer-p' says nil."
 
     buffer-names))
   
-(defun ecb-compilation-buffer-p(buffer)
+(defun ecb-compilation-buffer-p(buffer-or-name)
   "Test if the given buffer is a compilation buffer. Note that in this case we
 define 'compilation buffer' as a buffer that should ideally be displayed in the
 `ecb-compile-window'. This means that in some situations this might not be the
@@ -93,18 +94,29 @@ This function non-nil if the name of BUFFER is either contained in
 `ecb-compilation-buffer-names', or its `major-mode' is in
 `ecb-compilation-major-modes', or if `compilation-buffer-p' returns true."
 
-  (let ((buf (cond ((stringp buffer)
-                    (get-buffer buffer))
-                   ((bufferp buffer)
-                    buffer)
-                   (t
-                    nil))))
-    (if buf
-        (or (member (buffer-name buf) ecb-compilation-buffer-names)
-            (save-excursion
+  ;;determine the best valid for the buffer.
+  (let ((buffer (cond ((stringp buffer-or-name)
+                       (get-buffer buffer-or-name))
+                      ((bufferp buffer-or-name)
+                       buffer-or-name)
+                      (t
+                       nil))))
+
+    (when buffer
+
+      ;;test if this is a valid buffer by name.
+      (if (member (buffer-name buffer) ecb-compilation-buffer-names)
+          t
+        ;;else test if this is a valid buffer by mode
+        (if (save-excursion
               (set-buffer buffer)
               (member major-mode ecb-compilation-major-modes))
-            (compilation-buffer-p buf)))))
+            t
+          ;;else test if this is a regular compilation buffer
+          (if (compilation-buffer-p buffer)
+              t
+            ;;else it isn't a complication buffer
+            nil))))))
 
 (silentcomp-provide 'ecb-compilation)
 
