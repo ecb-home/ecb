@@ -145,6 +145,20 @@ In each ECB-buffer mouse-3 \(= right button) opens a special context
 popup-menu for the clicked item where you can choose several senseful actions.
 
 
+Working with the keyboard in the ECB-buffers:
+---------------------------------------------
+
+In the ECB-buffers RET and TAB work as primary \"buttons\" \(see above), means
+RET opens a source or jumps to a method and TAB toggles expanding/collapsing
+of an expandable node.
+
+For easy jumping to a certain ECB-buffer with the keyboard you should set
+`ecb-other-window-jump-behavior' to 'all.
+
+Tip: You can install the package windmove.el for selection of windows in a
+frame geometrically. This makes window-selection a child´s play.
+
+
 Working with the edit-window of ECB:
 ------------------------------------
 
@@ -249,8 +263,20 @@ Available hooks:
 - `ecb-activate-before-layout-draw-hook'
 - `ecb-activate-hook'
 - `ecb-deactivate-hook'
-Look at the documentation of these hooks to get description.")
+Look at the documentation of these hooks to get description.
 
+
+                      ===================================
+                      Known conflicts with other packages
+                      ===================================
+
+Here is a list of known conflicts of ECB with other packages and helpful
+workarounds:
+
+1. Package VC
+   The variable `vc-delete-logbuf-window' must be set to nil during active
+   ECB. This can be done with the hooks mentioned above.
+")
 
 (defconst ecb-help-buffer-name "*ECB help*")
 
