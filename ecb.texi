@@ -432,7 +432,7 @@ the value of @code{case-fold-search}.
 Tip: The @code{ecb-minor-mode} offers you in the @code{ecb-mode-map}
 (customizable via @code{ecb-key-map}) some keys for selecting every window
 of the ecb-frame. This makes window-selection a child´s play. For
-example you can jump into the method-window by hitting "C-c . m".
+example you can jump into the method-window by hitting @kbd{C-c . m}.
 
 
 @node Working with the edit-window, Temp- and compilation-buffers, Working with the keyboard, Usage of ECB
@@ -773,7 +773,7 @@ use_proxy = on
 @end example
 
 ECB will try to download the following url:
-"<ecb-download-url>ecb-<ecb-download-version>.tar.gz". For this the
+``<ecb-download-url>ecb-<ecb-download-version>.tar.gz''. For this the
 options @code{ecb-download-url} and @code{ecb-download-version} must be set
 correct, whereas the default value of the former one should always be
 correct.
@@ -785,9 +785,9 @@ be activated by @code{ecb-activate}.
 @end defun
 
 
-Most of these functions are also available via the menu "ECB" and also
-via the ECB keymap with prefix "C-c ." (see @code{ecb-minor-mode} for a
-complete list of the keybindings).
+Most of these functions are also available via the menu ``ECB'' and
+also via the ECB keymap with prefix @kbd{C-c .} (see
+@code{ecb-minor-mode} for a complete list of the keybindings).
 
 @node Customizing, Submitting problem report, Usage of ECB, Top
 @chapter Customizing ECB
@@ -947,16 +947,15 @@ Save your changes.
 @end enumerate
 
 @item To edit your buffers:
-Call @code{ecb-toggle-ecb-windows} (also available via the menu "ECB" and
-by "C-c . t") or @code{ecb-hide-ecb-windows} to hide the ECB-method buffer
+Call @code{ecb-toggle-ecb-windows} (also available via the menu ``ECB'' and
+by @kbd{C-c . w}) or @code{ecb-hide-ecb-windows} to hide the ECB-method buffer
 so you get all the place of your screen for editing.
 
 @item To browse and select functions:
-Call @code{ecb-toggle-ecb-windows} or @code{ecb-show-ecb-windows} to make the
-ECB-method buffer visible if not already. If you want select a
-method/variable with the keyboard instead with the mouse you should
-read the section "Working with the keyboard in the ECB-buffers" in
-this online help!
+Call @code{ecb-toggle-ecb-windows} or @code{ecb-show-ecb-windows} to
+make the ECB-method buffer visible if not already. If you want select
+a method/variable with the keyboard instead with the mouse you should
+read the section @ref{Working with the keyboard} in this online help!
 @end itemize
 
 The possibility of hiding temporally the ECB windows like described
@@ -1017,7 +1016,7 @@ these versions of Emacs there should be no scrolling problem even with
 @section Working with large directories
 
 If @code{ecb-source-path} contains directories with many files and subdirs,
-especially if these directories are mounted net-drives ("many" means
+especially if these directories are mounted net-drives (``many'' means
 here something > 1000, dependend on the speed of the net-connection
 and the machine), actualizing the sources- and/or directories- buffer
 of ECB (if displayed in current layout!) can slow down dramatically.
@@ -1128,7 +1127,7 @@ size but splits the window equally. But if you add this to your
 
 @cindex calculator package
 If the edit-window is already splitted then calling @code{calculator} uses
-the whole "other" edit-window for the calculator. With an unsplitted
+the whole ``other'' edit-window for the calculator. With an unsplitted
 edit-window the calculator window has it´s normal size of about 2
 lines. Therefore it´s recommended to set @code{calculator-electric-mode}
 during ECB activation to not nil so calculator uses always the
