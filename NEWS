@@ -30,11 +30,11 @@
    - People do not install the cedet-suite as described in the INSTALL-file of
      cedet.
    - People byte-compile ECB with another semantic (also eieio and speedbar)
-     version then loaded into Emacs.
+     version than loaded into Emacs.
    All of them prevent ECB from working correctly.
 
-   Now detects the error at startup-time and assists the user in finding the
-   reason of the problem and how to fix it.
+   Now ECB detects the error at startup-time and assists the user in finding
+   the reason of the problem and how to fix it.
 
 ** More robust downloading of new ECB from within Emacs
    Now `ecb-download-ecb' should work also with native Windows-XEmacs and also
@@ -44,7 +44,9 @@
 
 ** Fixed Bugs
 
-*** Handles not anymore existing files in the stealthy tasks
+*** Handles not anymore existing files in the stealthy tasks.
+    If a stealthy task detects that a displayed file does not exist anymore it
+    removes this source-file from the tree-displays.
 
 *** Fixed a bug when `ecb-process-non-semantic-files' is set to nil.
     This bug only occurs with XEmacs. As a side effect of this fix now the
