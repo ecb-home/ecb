@@ -482,9 +482,9 @@ solutions/hints/workarounds:
    If the edit-window is already splitted then calling `calculator' uses the
    whole \"other\" edit-window for the calculator. With an unsplitted
    edit-window the calculator window has it´s normal size of about 2 lines.
-   Therefore it´s recommended to set `calculator-electric-mode' to not nil so
-   calculator uses always the echo-area instead of creating a new small
-   window!
+   Therefore it´s recommended to set `calculator-electric-mode' during ECB
+   activation to not nil so calculator uses always the echo-area instead of
+   creating a new small window!
 
 ")
 
