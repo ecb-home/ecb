@@ -2572,8 +2572,7 @@ AFTER-UPDATE-HOOK: A function or a list of functions \(with no arguments)
       `((,full
          (1 font-lock-keyword-face)
          (,(+ 1 kf-depth 1)
-          (if (match-beginning 3)
-              font-lock-function-name-face)
+          font-lock-function-name-face
           nil t)))
       ))
   "Highlighted tree-buffer keywords.")
