@@ -26,7 +26,7 @@
 ;; Functions for tree buffers.
 ;;
 ;; This file is part of the ECB package which can be found at:
-;; http://home.swipnet.se/mayhem/javabrowser.html
+;; http://home.swipnet.se/mayhem/ecb.html
 
 ;;; Code:
 

@@ -1,9 +1,13 @@
-Version 0.05 (2000-11-07):
---------------------------
+Version 1.0 (2001-03-17):
+-------------------------
+
+- Changed name from JCB to ECB and prefix from "jde-jcb-" to "ecb-".
 
 - Works with semantic 1.3.1 and higher.
 
 - Fixed a couple of bugs when creating and deleting files.
+
+- Grouped customization variables.
 
 
 Contributed by Klaus Berndl <klaus.berndl@sdm.de>:
@@ -13,6 +17,17 @@ Contributed by Klaus Berndl <klaus.berndl@sdm.de>:
 - The history buffer can optionally be sorted and also cleared.
 
 - The package expanded symbol can optionally be placed before the package name.
+
+- Syntax highlighting of the methods buffer.
+
+- Show argument names and return type in the methods buffer.
+
+- History clear function: ecb-clear-history.
+
+- Added pop-up menu to the history buffer.
+
+- Fixed edit buffer sync bug.
+
 
 
 Version 0.04 (2000-11-07):

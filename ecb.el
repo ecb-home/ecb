@@ -6,7 +6,7 @@
 ;; Maintainer: Jesper Nordenberg <mayhem@home.se>
 ;; Keywords: java, class, browser
 ;; Created: Jul 2000
-;; Version: 0.04
+;; Version: 1.0
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -27,8 +27,7 @@
 ;;
 ;; The Emacs code browser (ECB) creates four buffers: *ECB Directories*,
 ;; *ECB Sources*, *ECB Methods* and *ECB History*. These buffers can be
-;; used to navigate through source code by clicking the left mouse
-;; button.
+;; used to navigate through source code with the mouse.
 ;;
 ;; To use the Emacs code browser add the ECB files to your load path
 ;; and add the following line to your .emacs file:
@@ -37,7 +36,7 @@
 ;;
 ;; ECB requires version 1.2.1 or higher of Eric's semantic bovinator
 ;; (http://www.ultranet.com/~zappo/semantic.shtml).
-;; If you are working with Java ECB works best when the JDE package
+;; If you are working with Java, ECB works best when the JDE package
 ;; (http://sunsite.auc.dk/jde) is installed.
 ;; 
 ;; ECB is activated by calling:
@@ -63,10 +62,11 @@
 ;; - Fix XEmacs incompatibilities (I need help on this one!)
 ;; - More layouts
 ;; - More functions on the pop-up menus. Suggestions are welcome!
+;; - Convert the code to EIEIO
 ;; - Lots more...
 ;;
 ;; The latest version of the ECB is available at
-;; http://home.swipnet.se/mayhem/javabrowser.html
+;; http://home.swipnet.se/mayhem/ecb.html
 
 ;;; Code:
 
@@ -181,8 +181,8 @@ list. The value of this variable should be a regular expression."
   :group 'ecb-directories
   :type 'regexp)
 
-(defcustom ecb-source-file-regexp ".*\\.\\(java\\|el\\|c\\|cc\\|h\\|hh\\|txt\\|html\\)$"
-  "*Files matching this regular expression will be added to the source
+(defcustom ecb-source-file-regexp "\\(\\(M\\|m\\)akefile\\|.*\\.\\(java\\|el\\|c\\|cc\\|h\\|hh\\|txt\\|html\\|mk\\)\\)$"
+  "*Files matching this regular expression will be shown in the source
 buffer."
   :group 'ecb-sources
   :type 'regexp)
