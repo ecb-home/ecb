@@ -7,7 +7,7 @@
 ;; Keywords: java, class, browser
 ;; Created: Jul 2000
 
-(defvar ecb-version "1.30"
+(defvar ecb-version "1.31"
   "Current ECB version.")
 
 ;; This program is free software; you can redistribute it and/or modify it under
@@ -52,7 +52,7 @@
 ;; The latest version of the ECB is available at
 ;; http://home.swipnet.se/mayhem/ecb.html
 
-;; $Id: ecb.el,v 1.104 2001/05/31 13:00:59 berndl Exp $
+;; $Id: ecb.el,v 1.105 2001/05/31 21:16:44 creator Exp $
 
 ;;; Code:
 
@@ -423,6 +423,16 @@ so the user can easily jump back."
                 (const :tag "Do not show variables"
                        :value nil)))
 
+(defcustom ecb-show-parents 'expanded
+  "*How to show parents (extends and implements) of a class in the methods buffer."
+  :group 'ecb-methods
+  :type '(radio (const :tag "Show parents expanded"
+                       :value expanded)
+                (const :tag "Show parents collapsed"
+                       :value collapsed)
+                (const :tag "Do not show parents"
+                       :value nil)))
+
 (defcustom ecb-highlight-token-with-point 'highlight
   "*How to highlight the method or variable under the cursor."
   :group 'ecb-methods
@@ -752,8 +762,17 @@ highlighting of the methods if `ecb-font-lock-methods' is not nil."
                    node
                  (tree-node-new (ecb-highlight-text (semantic-token-name type)
                                                     ecb-classtype)
-                                0
-                                type))))
+                                0 type)))
+	    (parents (semantic-token-type-parent type)))
+	(when (and parents ecb-show-parents)
+	  (let ((pn (tree-node-new "[Parents]" 1 nil)))
+	    (dolist (p (if (listp parents) parents (list parents)))
+	      (tree-node-add-child
+	       pn
+	       (tree-node-new (ecb-highlight-text p ecb-classtype) 2 p t)))
+	    (when (eq ecb-show-parents 'expanded)
+	      (tree-node-set-expanded pn t))
+	    (tree-node-add-child n pn)))
         (unless (and flatten (= 1 (length children)))
           (tree-node-add-child node n))
         (ecb-add-tokens n (semantic-token-type-parts type))))))
@@ -772,8 +791,7 @@ highlighting of the methods if `ecb-font-lock-methods' is not nil."
   (when (and ecb-show-variables variables)
     (let ((var-node node))
       (when (eq ecb-show-variables 'collapsed)
-        (setq var-node (tree-node-new "[Variables]" 1
-                                      nil))
+        (setq var-node (tree-node-new "[Variables]" 1 nil))
         (tree-node-add-child node var-node))
       (if ecb-sort-variables
           (setq variables (sort variables (lambda(a b)
@@ -860,7 +878,7 @@ highlighting of the methods if `ecb-font-lock-methods' is not nil."
        (when (not (string= last-dir ecb-path-selected-directory))
 	 (tree-buffer-scroll (point-min) (point-min))))))
   (ecb-mode-line-format))
-                   
+
 (defun ecb-get-source-name (filename)
   "Returns the source name of a file."
   (let ((f (file-name-nondirectory filename)))
@@ -1376,15 +1394,18 @@ Currently the fourth argument TREE-BUFFER-NAME is not used here."
       (tree-node-toggle-expanded node)
       ;; Update the tree-buffer with optimized display of NODE
       (tree-buffer-update node))
-    (when (tree-node-get-data node)
-      (ecb-find-file-and-display ecb-path-selected-source
-				 (and ecb-split-edit-window (eq ecb-button 2)))
-      ;; let us set the mark so the user can easily jump back.
-      (if ecb-method-jump-sets-mark
-	  (push-mark))
-      ;; Semantic 1.4beta2 fix for EIEIO class parts
-      (ignore-errors
-	(goto-char (semantic-token-start (tree-node-get-data node)))))))
+    (if (= 2 (tree-node-get-type node))
+	(progn
+	  (jde-show-class-source (tree-node-get-data node)))
+      (when (tree-node-get-data node)
+	(ecb-find-file-and-display ecb-path-selected-source
+				   (and ecb-split-edit-window (eq ecb-button 2)))
+	;; let us set the mark so the user can easily jump back.
+	(if ecb-method-jump-sets-mark
+	    (push-mark))
+	;; Semantic 1.4beta2 fix for EIEIO class parts
+	(ignore-errors
+	  (goto-char (semantic-token-start (tree-node-get-data node))))))))
 
 (defun ecb-get-file-info-text (file)
   (let ((attrs (file-attributes file)))
