@@ -1,6 +1,6 @@
 ;;; ecb-common-browser.el --- common browsing stuff for  Emacs
 
-;; Copyright (C) 2000 - 2003 Jesper Nordenberg,
+;; Copyright (C) 2000 - 2004 Jesper Nordenberg,
 ;;                           Klaus Berndl,
 ;;                           Kevin A. Burton,
 ;;                           Free Software Foundation, Inc.
@@ -9,9 +9,8 @@
 ;;         Klaus Berndl <klaus.berndl@sdm.de>
 ;;         Kevin A. Burton <burton@openprivacy.org>
 ;; Maintainer: Klaus Berndl <klaus.berndl@sdm.de>
-;;             Kevin A. Burton <burton@openprivacy.org>
 ;; Keywords: browser, code, programming, tools
-;; Created: 2000
+;; Created: 2004
 
 ;; This program is free software; you can redistribute it and/or modify it under
 ;; the terms of the GNU General Public License as published by the Free Software
@@ -35,8 +34,6 @@
 ;; history of the ECB-package see the file NEWS.
 
 ;;; Code:
-
-;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: Add it to CVS (in XEmacs too!)
 
 (eval-when-compile
   (require 'silentcomp))

@@ -413,6 +413,18 @@ means not to count the minibuffer even if it is active."
   through these windows."
   (ecb-window-list ecb-frame 0 (frame-first-window ecb-frame)))
 
+(defun ecb-window-select (name)
+  "Select that window which displays the buffer with NAME in the `ecb-frame'
+and return the window-object. If that buffer is not displayed in the
+`ecb-frame' then nothing happens and nil is returned."
+  (let ((window (get-buffer-window name ecb-frame)))
+    (if window
+	(select-window window)
+      nil)))
+
+(defun ecb-buffer-select (name)
+  (set-buffer (get-buffer name)))
+
 
 ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: Attention. Current mechanism of
 ;; (de)activating the basic advices and the intelligent window advices of

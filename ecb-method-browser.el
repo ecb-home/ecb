@@ -1227,6 +1227,25 @@ value of BODY is returned."
      ))
 
 
+(defun ecb-goto-window-methods ()
+  "Make the ECB-methods window the current window.
+If `ecb-use-speedbar-instead-native-tree-buffer' is 'method then goto to the
+speedbar-window."
+  (interactive)
+  (or (ecb-goto-ecb-window ecb-methods-buffer-name)
+      (and (equal ecb-use-speedbar-instead-native-tree-buffer 'method)
+           (ecb-goto-window-speedbar))))
+
+(defun ecb-maximize-window-methods ()
+  "Maximize the ECB-methods-window.
+I.e. delete all other ECB-windows, so only one ECB-window and the
+edit-window\(s) are visible \(and maybe a compile-window). Works also if the
+ECB-methods-window is not visible in current layout."
+  (interactive)
+  (if (equal ecb-use-speedbar-instead-native-tree-buffer 'method)
+      (ecb-maximize-window-speedbar)
+    (ecb-display-one-ecb-buffer ecb-methods-buffer-name)))
+
 (defun ecb-create-node (parent-node display name data type)
   (if (eq 'hidden display)
       nil
