@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-util.el,v 1.81 2003/10/13 16:37:38 berndl Exp $
+;; $Id: ecb-util.el,v 1.82 2003/10/18 18:08:19 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -67,6 +67,8 @@
 (silentcomp-defvar noninteractive)
 (silentcomp-defun display-images-p)
 
+(silentcomp-defvar tar-subfile-mode)
+(silentcomp-defvar archive-subfile-mode)
 
 ;; Some constants
 (defconst ecb-running-xemacs (string-match "XEmacs\\|Lucid" emacs-version))
@@ -581,6 +583,37 @@ If `window-system' is nil then a simple message is displayed in the echo-area."
           t)
       (message (concat title " " message-str)))))
 
+(defun ecb-merge-face-into-text (text face)
+  "Merge FACE to the already precolored TEXT so the values of all
+face-attributes of FACE take effect and but the values of all face-attributes
+of TEXT which are not set by FACE are preserved.
+For XEmacs this merge does currently not work therefore here FACE replaces all
+faces of TEXT!"
+  (if (null face)
+      text
+    (let ((newtext (concat text)))
+      (if ecb-running-xemacs
+          (add-text-properties 0 (length newtext) (list 'face face) newtext)
+        (alter-text-property 0 (length newtext) 'face
+                             (lambda (current-face)
+                               (let ((cf
+                                      (cond ((facep current-face)
+                                             (list current-face))
+                                            ((listp current-face)
+                                             current-face)
+                                            (t nil)))
+                                     (nf
+                                      (cond ((facep face)
+                                             (list face))
+                                            ((listp face)
+                                             face)
+                                            (t nil))))
+                                 ;; we must add the new-face in front of
+                                 ;; current-face to get the right merge!
+                                 (append nf cf)))
+                             newtext))
+      newtext)))
+
 
 (defun ecb-error (&rest args)
   "Signals an error but prevents it from entering the debugger. This is
@@ -745,6 +778,29 @@ for FILE, but proper EOL-conversion and character interpretation is done!"
         (with-temp-buffer
           (insert-file-contents exp-filename)
           (buffer-string)))))
+
+(defun ecb-current-buffer-archive-extract-p ()
+  "Return not nil if current buffer was extracted of an archive which is in
+`tar-mode' or `archive-mode'. For this the current buffer has either to be in
+minor-mode `tar-subfile-mode' or `archive-subfile-mode'."
+  (or (and (boundp 'tar-subfile-mode)
+           tar-subfile-mode)
+      (and (boundp 'archive-subfile-mode)
+           archive-subfile-mode)))
+
+(defun ecb-buffer-or-file-readable-p (&optional filename)
+  "Checks if a buffer or a file is a readable file in the sense of ECB which
+means either a real physical file or an auto-extracted file from an archive.
+See `ecb-current-buffer-archive-extract-p'. FILENAME is either a filename or
+nil whereas in the latter case the current-buffer is assumed."
+  (let* ((file (or filename (buffer-file-name (current-buffer)))))
+    (or (and file (file-readable-p file))
+        (and (not ecb-running-xemacs)
+             (if filename
+                 (save-excursion
+                   (set-buffer (find-file-noselect filename))
+                   (ecb-current-buffer-archive-extract-p))
+               (ecb-current-buffer-archive-extract-p))))))
 
 (defun ecb-make-windows-not-dedicated (&optional frame)
   "Make all windows of FRAME not dedicated."

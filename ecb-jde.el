@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-jde.el,v 1.6 2003/08/06 09:15:19 berndl Exp $
+;; $Id: ecb-jde.el,v 1.7 2003/10/18 18:08:19 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -56,6 +56,8 @@
 
 (require 'ecb-util)
 (require 'ecb-layout)
+(require 'ecb-file-browser)
+(require 'ecb-method-browser)
 
 (defun ecb-jde-display-class-at-point ()
   "Displays in the ECB-methods-buffer contents of class under point.

@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-layout.el,v 1.193 2003/10/01 17:41:34 berndl Exp $
+;; $Id: ecb-layout.el,v 1.194 2003/10/18 18:08:19 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -544,7 +544,6 @@ buffer-local `window-size-fixed' from the setting in `ecb-fix-window-size'."
          (ecb-set-window-size-fixed nil)
          ,@body)
      (ecb-set-window-size-fixed (ecb-get-window-fix-type ecb-layout-name))))
-  
 
 
 (defcustom ecb-other-window-jump-behavior 'all
