@@ -195,9 +195,9 @@ and then activating ECB again!"
   :type 'string)
 
 (defcustom ecb-source-file-regexps
- '("\\(^\\(\\.\\|#\\)\\|\\(~$\\|\\.\\(elc\\|obj\\|o\\|class\\|lib\\|dll\\|a\\|so\\)$\\)\\)"
-   "^\\.\\(emacs\\|gnus\\)$")
- "*Specifies which files are shown as source files. Consists of one exclude
+  '("\\(^\\(\\.\\|#\\)\\|\\(~$\\|\\.\\(elc\\|obj\\|o\\|class\\|lib\\|dll\\|a\\|so\\)$\\)\\)"
+    "^\\.\\(emacs\\|gnus\\)$")
+  "*Specifies which files are shown as source files. Consists of one exclude
 regexp and one include regexp. A file is displayed in the source-buffer of ECB
 iff: The file does not match the exclude regexp OR the file matches the
 include regexp. There are three predefined and senseful combinations of an
@@ -210,18 +210,18 @@ exclude and include regexp:
 - Common source file types (.c, .java etc.)
 In addition to these predefined values a custom exclude and include
 combination can be defined."
- :group 'ecb-sources
- :type '(radio (const :tag "All files"
-		      :value ("" ""))
-	       (const :tag "All, but no backup, object, lib or ini-files \(except .emacs and .gnus)"
-		      :value ("\\(^\\(\\.\\|#\\)\\|\\(~$\\|\\.\\(elc\\|obj\\|o\\|class\\|lib\\|dll\\|a\\|so\\)$\\)\\)" "^\\.\\(emacs\\|gnus\\)$"))
-	       (const :tag "Common source file types (.c, .java etc.)"
-		      :value ("" "\\(\\(M\\|m\\)akefile\\|.*\\.\\(java\\|el\\|c\\|cc\\|h\\|hh\\|txt\\|html\\|texi\\|info\\|bnf\\)\\)$"))
-	       (list :tag "Custom (tips: \"$^\" matches no files, \"\" mathes all files)"
-		     (regexp :tag "Exclude regexp"
-			     :value "")
-		     (regexp :tag "Include regexp"
-			     :value ""))))
+  :group 'ecb-sources
+  :type '(radio (const :tag "All files"
+		       :value ("" ""))
+		(const :tag "All, but no backup, object, lib or ini-files \(except .emacs and .gnus)"
+		       :value ("\\(^\\(\\.\\|#\\)\\|\\(~$\\|\\.\\(elc\\|obj\\|o\\|class\\|lib\\|dll\\|a\\|so\\)$\\)\\)" "^\\.\\(emacs\\|gnus\\)$"))
+		(const :tag "Common source file types (.c, .java etc.)"
+		       :value ("" "\\(\\(M\\|m\\)akefile\\|.*\\.\\(java\\|el\\|c\\|cc\\|h\\|hh\\|txt\\|html\\|texi\\|info\\|bnf\\)\\)$"))
+		(list :tag "Custom (tips: \"$^\" matches no files, \"\" mathes all files)"
+		      (regexp :tag "Exclude regexp"
+			      :value "")
+		      (regexp :tag "Include regexp"
+			      :value ""))))
 
 (defcustom ecb-show-source-file-extension t
   "*Show the file extension of source files."
@@ -523,6 +523,30 @@ run direct before the layout-drawing look at
 ;; Methods
 ;;====================================================
 
+(defmacro ecb-exec-in-directories-buffer(&rest body)
+  `(unwind-protect
+       (when (ecb-buffer-select ecb-directories-buffer-name)
+	 ,@body)
+     ))
+
+(defmacro ecb-exec-in-sources-buffer(&rest body)
+  `(unwind-protect
+       (when (ecb-buffer-select ecb-sources-buffer-name)
+	 ,@body)
+     ))
+
+(defmacro ecb-exec-in-methods-buffer(&rest body)
+  `(unwind-protect
+       (when (ecb-buffer-select ecb-methods-buffer-name)
+	 ,@body)
+     ))
+
+(defmacro ecb-exec-in-history-buffer(&rest body)
+  `(unwind-protect
+       (when (ecb-buffer-select ecb-history-buffer-name)
+	 ,@body)
+     ))
+
 (defconst ecb-language-modes-args-separated-with-space
   '(emacs-lisp-mode scheme-mode lisp-mode))
 
@@ -648,7 +672,6 @@ highlighting of the methods if `ecb-font-lock-methods' is not nil."
   (dolist (method methods)
     (tree-node-add-child node (tree-node-new
                                (ecb-get-method-sig method) 0
-;;                                (semantic-token-start method) t))))
                                method t))))
 
 (defun ecb-add-variables(node token variables)
@@ -665,7 +688,6 @@ highlighting of the methods if `ecb-font-lock-methods' is not nil."
       (dolist (var variables)
         (tree-node-add-child var-node (tree-node-new
                                        (ecb-get-variable-text var)
-;;                                        0 (semantic-token-start var) t))))))
                                        0 var t))))))
   
 (defun ecb-add-tokens(node token &optional flatten)
@@ -710,35 +732,33 @@ highlighting of the methods if `ecb-font-lock-methods' is not nil."
     source-files))
 
 (defun ecb-set-selected-directory(path)
-  (setq path (ecb-strip-slash path))
-  (setq ecb-path-selected-directory path)
+  (save-selected-window
+    (setq ecb-path-selected-directory (ecb-strip-slash path))
   
-  (when (or (not ecb-show-sources-in-directories-buffer)
-            ecb-auto-expand-directory-tree)
-    (save-selected-window
-      (when (get-buffer-window ecb-directories-buffer-name)
-        (pop-to-buffer ecb-directories-buffer-name)
-        (when ecb-auto-expand-directory-tree
-          ;; Expand tree to show selected directory
-          (if (ecb-expand-tree path (tree-buffer-get-root))
-              (tree-buffer-update)))
-        (when (not ecb-show-sources-in-directories-buffer)
-          (tree-buffer-highlight-node-data ecb-path-selected-directory)))))
+    (when (or (not ecb-show-sources-in-directories-buffer)
+	      ecb-auto-expand-directory-tree)
+      (ecb-exec-in-directories-buffer
+       (when ecb-auto-expand-directory-tree
+	 ;; Expand tree to show selected directory
+	 (if (ecb-expand-tree ecb-path-selected-directory (tree-buffer-get-root))
+	     (tree-buffer-update)))
+       (when (not ecb-show-sources-in-directories-buffer)
+	 (tree-buffer-highlight-node-data ecb-path-selected-directory))))
 
-  (ecb-buffer-select ecb-sources-buffer-name)
-  (let ((old-children (tree-node-get-children (tree-buffer-get-root))))
-    (tree-node-set-children (tree-buffer-get-root) nil)
-    (ecb-tree-node-add-files
-     (tree-buffer-get-root)
-     path
-     (ecb-get-source-files
-      ecb-path-selected-directory
-      (directory-files ecb-path-selected-directory nil nil t))
-     0
-     ecb-show-source-file-extension
-     old-children t))
-  (tree-buffer-update)
-  (tree-buffer-scroll (point-min) (point-min)))
+    (ecb-exec-in-sources-buffer
+     (let ((old-children (tree-node-get-children (tree-buffer-get-root))))
+       (tree-node-set-children (tree-buffer-get-root) nil)
+       (ecb-tree-node-add-files
+	(tree-buffer-get-root)
+	ecb-path-selected-directory
+	(ecb-get-source-files
+	 ecb-path-selected-directory
+	 (directory-files ecb-path-selected-directory nil nil t))
+	0
+	ecb-show-source-file-extension
+	old-children t))
+     (tree-buffer-update)
+     (tree-buffer-scroll (point-min) (point-min)))))
                    
 (defun ecb-get-source-name(filename)
   "Returns the source name of a file."
@@ -750,41 +770,41 @@ highlighting of the methods if `ecb-font-lock-methods' is not nil."
 (defun ecb-select-source-file(filename)
   "Updates the directories, sources and history buffers to match the filename
 given."
-  (save-current-buffer
+  (save-selected-window
     (ecb-set-selected-directory (file-name-directory filename))
     (setq ecb-path-selected-source filename)
-    (let ((node (tree-node-find-child-data (tree-buffer-get-root)
-                                           ecb-path-selected-source)))
-      (save-selected-window
-        (when ecb-show-sources-in-directories-buffer
-          (if (get-buffer-window ecb-directories-buffer-name)
-              (pop-to-buffer ecb-directories-buffer-name))
-          (tree-buffer-highlight-node-data ecb-path-selected-source))
-        (if (get-buffer-window ecb-sources-buffer-name)
-            (pop-to-buffer ecb-sources-buffer-name))
-        (tree-buffer-highlight-node-data ecb-path-selected-source))
+  
+    ;; Update directory buffer
+    (when ecb-show-sources-in-directories-buffer
+      (ecb-exec-in-directories-buffer
+       (tree-buffer-highlight-node-data ecb-path-selected-source)))
+    
+    ;; Update source buffer
+    (ecb-exec-in-sources-buffer
+     (tree-buffer-highlight-node-data ecb-path-selected-source))
 
-      (ecb-buffer-select ecb-history-buffer-name)
-      (let ((child (tree-node-find-child-data
-                    (tree-buffer-get-root) ecb-path-selected-source)))
-        (when child
-          (tree-node-remove-child
-           (tree-buffer-get-root) child))
-        (tree-node-set-children
-         (tree-buffer-get-root)
-         (let ((history-items
-                (cons
-                 (tree-node-new (tree-node-get-name node) 0
-                                ecb-path-selected-source t
-                                (tree-buffer-get-root))
-                 (tree-node-get-children (tree-buffer-get-root)))))
-           (if ecb-sort-history-items
-               (sort history-items
-                     (function (lambda (l r) (string< (tree-node-get-name l)
-                                                      (tree-node-get-name r)))))
-             history-items)))
-        (setq tree-buffer-highlighted-node-data ecb-path-selected-source)
-        (tree-buffer-update)))))
+    ;; Update history buffer
+    (ecb-exec-in-history-buffer
+     (let ((child (tree-node-find-child-data
+		   (tree-buffer-get-root) ecb-path-selected-source)))
+       (when child
+	 (tree-node-remove-child
+	  (tree-buffer-get-root) child))
+       (tree-node-set-children
+	(tree-buffer-get-root)
+	(let ((history-items
+	       (cons
+		(tree-node-new (ecb-get-source-name filename) 0
+			       ecb-path-selected-source t
+			       (tree-buffer-get-root))
+		(tree-node-get-children (tree-buffer-get-root)))))
+	  (if ecb-sort-history-items
+	      (sort history-items
+		    (function (lambda (l r) (string< (tree-node-get-name l)
+						     (tree-node-get-name r)))))
+	    history-items)))
+       (tree-buffer-highlight-node-data ecb-path-selected-source)
+       (tree-buffer-update)))))
 
 (defun ecb-update-methods-after-saving ()
   "Updates the methods-buffer after saving if this option is turned on and if
@@ -826,31 +846,28 @@ displayed with window-start and point at beginning of buffer."
   (if ecb-method-buffer-needs-rebuild
       (ecb-rebuild-methods-buffer-after-parsing))
   (when scroll-to-top
-    (save-excursion
-      (ecb-buffer-select ecb-methods-buffer-name)
-      (tree-buffer-scroll (point-min) (point-min)))))
-
-
+    (save-selected-window
+      (ecb-exec-in-methods-buffer
+       (tree-buffer-scroll (point-min) (point-min))))))
+  
 (defun ecb-rebuild-methods-buffer-after-parsing ()
   "Rebuilds the ECB-method buffer after toplevel-parsing by semantic. This
-function is added to the hook `semantic-after-toplevel-bovinate-hook'."
+  function is added to the hook `semantic-after-toplevel-bovinate-hook'."
   (tree-node-set-children ecb-methods-root-node nil)
   (ecb-add-tokens ecb-methods-root-node
-                  ;; this works because at call-time of the hooks in
-                  ;; `semantic-after-toplevel-bovinate-hook' the cache is
-                  ;; always either still valid or rebuild.
+		  ;; this works because at call-time of the hooks in
+		  ;; `semantic-after-toplevel-bovinate-hook' the cache is
+		  ;; always either still valid or rebuild.
 		  ;;
 		  ;; TODO: Ugly fix to make it work with semantic 1.4
 		  (if (listp (caar semantic-toplevel-bovine-cache))
 		      (car semantic-toplevel-bovine-cache)
 		    semantic-toplevel-bovine-cache)
-                  t)
-  (save-selected-window
-    ;; also the whole buffer informations should be preserved!
-    (save-excursion
-      (ecb-buffer-select ecb-methods-buffer-name)
-      (setq tree-buffer-indent ecb-tree-indent)
-      (tree-buffer-update)))
+		  t)
+  ;; also the whole buffer informations should be preserved!
+  (save-excursion
+    (set-buffer (get-buffer ecb-methods-buffer-name))
+    (tree-buffer-update))
   (ecb-mode-line-format)
   ;; signalize that the rebuild has already be done
   (setq ecb-method-buffer-needs-rebuild nil))
@@ -891,23 +908,14 @@ is not changed."
       ;; display the methods in the METHOD-buffer. We can not go back to
       ;; the edit-window because then the METHODS buffer would be
       ;; immediately updated with the methods of the edit-window.
-      (save-selected-window
-        (save-excursion
-          (set-buffer (find-file-noselect ecb-path-selected-source))
-          (ecb-update-methods-buffer--internal 'scroll-to-begin)))
+      (save-excursion
+	(set-buffer (find-file-noselect ecb-path-selected-source))
+	(ecb-update-methods-buffer--internal 'scroll-to-begin))
     ;; open the selected source in the edit-window and do all the update and
     ;; parsing stuff with this buffer
     (ecb-find-file-and-display ecb-path-selected-source
-                               other-edit-window)
+			       other-edit-window)
     (ecb-update-methods-buffer--internal 'scroll-to-begin)))
-
-(defun ecb-select-method(method-start)
-  (setq ecb-selected-method-start method-start)
-  (when (get-buffer-window ecb-methods-buffer-name)
-    (save-excursion
-      (ecb-buffer-select ecb-methods-buffer-name)
-      (tree-buffer-highlight-node-data ecb-selected-method-start))))
-
 
 (defun ecb-remove-from-current-tree-buffer (node)
   (when node
@@ -922,27 +930,28 @@ CLEARALL overrides the value of this option:
 = 0: Means all
 For further explanation see `ecb-clear-history-behavior'."
   (interactive "P")
-  (ecb-buffer-select ecb-history-buffer-name)
-  (let ((buffer-file-name-list (mapcar (lambda (buff)
-                                         (buffer-file-name buff))
-                                       (buffer-list)))
-        (tree-childs (tree-node-get-children (tree-buffer-get-root)))
-        (clear-behavior (or (if (and clearall (integerp clearall))
-                                (cond ((= clearall 0) 'all)
-                                      ((< clearall 0) 'not-existing-buffers)
-                                      (t 'existing-buffers)))
-                            ecb-clear-history-behavior))
-        child-data child)
-    (while tree-childs
-      (setq child-data (tree-node-get-data (car tree-childs)))
-      (if (or (eq clear-behavior 'all)
-              (and (eq clear-behavior 'not-existing-buffers)
-                   (not (member child-data buffer-file-name-list)))
-              (and (eq clear-behavior 'existing-buffers)
-                   (member child-data buffer-file-name-list)))
-          (ecb-remove-from-current-tree-buffer (car tree-childs)))
-      (setq tree-childs (cdr tree-childs))))
-  (tree-buffer-update))
+  (save-selected-window
+    (ecb-exec-in-history-buffer
+     (let ((buffer-file-name-list (mapcar (lambda (buff)
+					    (buffer-file-name buff))
+					  (buffer-list)))
+	   (tree-childs (tree-node-get-children (tree-buffer-get-root)))
+	   (clear-behavior (or (if (and clearall (integerp clearall))
+				   (cond ((= clearall 0) 'all)
+					 ((< clearall 0) 'not-existing-buffers)
+					 (t 'existing-buffers)))
+			       ecb-clear-history-behavior))
+	   child-data child)
+       (while tree-childs
+	 (setq child-data (tree-node-get-data (car tree-childs)))
+	 (if (or (eq clear-behavior 'all)
+		 (and (eq clear-behavior 'not-existing-buffers)
+		      (not (member child-data buffer-file-name-list)))
+		 (and (eq clear-behavior 'existing-buffers)
+		      (member child-data buffer-file-name-list)))
+	     (ecb-remove-from-current-tree-buffer (car tree-childs)))
+	 (setq tree-childs (cdr tree-childs))))
+     (tree-buffer-update))))
 
 (defun ecb-current-buffer-sync(&optional opt-buffer)
   "Synchronizes the ECB buffers with the current buffer."
@@ -957,7 +966,6 @@ For further explanation see `ecb-clear-history-behavior'."
       ;; sec is enough!
       (sit-for 0.1)
       (ecb-select-source-file filename)
-
       (ecb-update-methods-buffer--internal 'scroll-to-begin))))
 
 (defun ecb-find-file-and-display(filename other-edit-window)
@@ -970,7 +978,7 @@ OTHER-WINDOW."
   (ecb-with-adviced-functions
    (if other-edit-window
        (let ((ecb-other-window-jump-behavior 'only-edit))
-         (other-window 1))))
+	 (other-window 1))))
   (ecb-with-original-functions
    (find-file ecb-path-selected-source)
    (pop-to-buffer (buffer-name))))
@@ -1007,7 +1015,7 @@ OTHER-WINDOW."
     (if (file-accessible-directory-p path)
         (let* ((files (directory-files path nil nil t))
 	       dirs
-	      (normal-files (ecb-get-source-files path files)))
+	       (normal-files (ecb-get-source-files path files)))
           (dolist (file files)
             (let ((filename (concat path "/" file)))
               (if (file-accessible-directory-p filename)
@@ -1020,30 +1028,28 @@ OTHER-WINDOW."
                                        old-children))
           (tree-node-set-expandable node (or (tree-node-get-children node)))))))
 
-
 (defun ecb-update-directories-buffer()
   "Updates the ECB directories buffer."
   (interactive)
-  (save-current-buffer
-    (ecb-buffer-select ecb-directories-buffer-name)
-    ;;     (setq tree-buffer-type-faces
-    ;;       (list (cons 1 ecb-source-in-directories-buffer-face)))
-    (setq tree-buffer-indent ecb-tree-indent)
-    (let* ((node (tree-buffer-get-root))
-           (old-children (tree-node-get-children node)))
-      (tree-node-set-children node nil)
-      (if ecb-source-path
-          (progn
-            (dolist (dir ecb-source-path)
-              (tree-node-add-child node (ecb-new-child old-children dir 0 dir)))
-            (tree-buffer-update))
-        (let ((buffer-read-only))
-          ;; TODO: This should not be done, because the read-only property of
-          ;; a treebuffer should only be changed by the tree-buffer routines.
-          ;; But for the moment it works. But let´s find a better solution,
-          ;; maybe only a message displaying in the echo-area??!!
-          (erase-buffer)
-          (insert "No source paths set.\nPress F2 to customize\nTo get help, call\necb-show-help."))))))
+  (save-selected-window
+    (ecb-exec-in-directories-buffer
+     ;;     (setq tree-buffer-type-faces
+     ;;       (list (cons 1 ecb-source-in-directories-buffer-face)))
+     (let* ((node (tree-buffer-get-root))
+	    (old-children (tree-node-get-children node)))
+       (tree-node-set-children node nil)
+       (if ecb-source-path
+	   (progn
+	     (dolist (dir ecb-source-path)
+	       (tree-node-add-child node (ecb-new-child old-children dir 0 dir)))
+	     (tree-buffer-update))
+	 (let ((buffer-read-only))
+	   ;; TODO: This should not be done, because the read-only property of
+	   ;; a treebuffer should only be changed by the tree-buffer routines.
+	   ;; But for the moment it works. But let´s find a better solution,
+	   ;; maybe only a message displaying in the echo-area??!!
+	   (erase-buffer)
+	   (insert "No source paths set.\nPress F2 to customize\nTo get help, call\necb-show-help.")))))))
 
 (defun ecb-new-child(old-children name type data &optional not-expandable)
   (catch 'exit
@@ -1057,7 +1063,10 @@ OTHER-WINDOW."
     (tree-node-new name type data not-expandable)))
 
 (defun ecb-buffer-select(name)
-  (set-buffer (get-buffer name)))
+  (let ((window (get-buffer-window name)))
+    (if window
+	(select-window window)
+      nil)))
 
 ;;====================================================
 ;; Mouse functions
@@ -1104,16 +1113,16 @@ combination is invalid \(see `ecb-interpret-mouse-click'."
                                                      tree-buffer-name))
          (ecb-button (car ecb-button-list))
          (shift-mode (cadr ecb-button-list)))
-  (when ecb-button-list
-    (cond ((string= tree-buffer-name ecb-directories-buffer-name)
-           (ecb-update-directory-node node))
-          ((string= tree-buffer-name ecb-sources-buffer-name)
-           (ecb-source-clicked node ecb-button shift-mode))
-          ((string= tree-buffer-name ecb-history-buffer-name)
-           (ecb-source-clicked node ecb-button shift-mode))
-          ((string= tree-buffer-name ecb-methods-buffer-name)
-           nil)
-          (t nil)))))
+    (when ecb-button-list
+      (cond ((string= tree-buffer-name ecb-directories-buffer-name)
+	     (ecb-update-directory-node node))
+	    ((string= tree-buffer-name ecb-sources-buffer-name)
+	     (ecb-source-clicked node ecb-button shift-mode))
+	    ((string= tree-buffer-name ecb-history-buffer-name)
+	     (ecb-source-clicked node ecb-button shift-mode))
+	    ((string= tree-buffer-name ecb-methods-buffer-name)
+	     nil)
+	    (t nil)))))
 
 (defun ecb-interpret-mouse-click (mouse-button
                                   shift-pressed
@@ -1158,9 +1167,9 @@ Currently the fourth argument TREE-BUFFER-NAME is not used here."
           (when (= 2 ecb-button)
             (tree-node-toggle-expanded node))
           (ecb-set-selected-directory (tree-node-get-data node))
-          (ecb-buffer-select ecb-directories-buffer-name)
-          ;; Update the tree-buffer with optimized display of NODE
-          (tree-buffer-update node)))
+          (ecb-exec-in-directories-buffer
+	   ;; Update the tree-buffer with optimized display of NODE
+	   (tree-buffer-update node))))
     (ecb-set-selected-source (tree-node-get-data node)
                              (and ecb-split-edit-window (eq ecb-button 2))
                              shift-mode)))
@@ -1185,7 +1194,7 @@ Currently the fourth argument TREE-BUFFER-NAME is not used here."
       ;; let us set the mark so the user can easily jump back.
       (if ecb-method-jump-sets-mark
           (push-mark))
-;;       (goto-char (tree-node-get-data node)))))
+      ;;       (goto-char (tree-node-get-data node)))))
       (goto-char (semantic-token-start (tree-node-get-data node))))))
 
 (defun ecb-get-file-info-text(file)
