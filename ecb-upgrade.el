@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-upgrade.el,v 1.42 2003/08/06 09:15:18 berndl Exp $
+;; $Id: ecb-upgrade.el,v 1.43 2003/09/01 09:13:24 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -222,11 +222,13 @@ The car is the old option symbol and the cdr is a 2-element-list with:
 
 ;; upgrading ecb-compile-window-temporally-enlarge
 (defun ecb-upgrade-compile-window-temporally-enlarge (old-val)
-  "save"
-  (cond ((equal old-val t)
-         'after-compilation)
+  (cond ((or (equal old-val t)
+             (equal old-val 'after-compilation))
+         'after-display)
         ((null old-val)
          nil)
+        ((member old-val '(after-selection both))
+         old-val)
         (t 'ecb-no-upgrade-conversion)))
 
 ;; upgrading ecb-window-sync

@@ -1,5 +1,24 @@
 * Changes for ECB version 1.95.2
 
+** Much better support of the compile-window
+
+*** Completely rewritten mechanism for displaying certain buffers in the compile-
+    window of ECB. Now using a compile-window is much safer and works as well
+    as without one. Now all buffers displayed with `display-buffer' are checked
+    if they are "compilation-buffers" in the sense of the function
+    `ecb-compilation-buffer-p' and then displayed in the compile-window of ECB.
+    Especially temp-buffers displayed with `with-output-to-temp-buffer' (e.g.
+    *Help*-buffers) are now much better supported.
+
+*** New layout-option `ecb-compile-window-width'.
+
+*** All options related to the ECB-compile-window have been moved to the new
+    customization-group "ecb-compilation" which is a subgroup of "ecb-layout".
+    
+** Safer handling of all adviced functions of ECB
+   All ECB-advices are now active if and only if ECB is running. Just loading
+   the ECB-library doesn't activate any ECB-advice!
+
 ** ECB can visit tokens in a smarter way
 
 *** Narrowing via popup-menu of the Methods-buffer includes now the documentation
@@ -29,7 +48,7 @@
 ** Now manually resizing of the ECB-windows is possible even if
    `ecb-fix-window-size' is not nil for current layout. Thanks for suggestion
    Massimiliano Mirra <mmirra@libero.it>. Only relevant for GNU Emacs 21.X.
-      
+         
 ** Fixed Bugs
 
 *** Fixed all the file- and directory-commands in the popup-menus.

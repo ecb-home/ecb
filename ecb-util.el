@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-util.el,v 1.68 2003/08/25 08:24:01 berndl Exp $
+;; $Id: ecb-util.el,v 1.69 2003/09/01 09:13:24 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -167,13 +167,16 @@ means not to count the minibuffer even if it is active."
       (select-frame current-frame))))
 
 
+;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: Attention. Current mechanism of
+;; (de)activating the basic advices and the intelligent window advices of
+;; `ecb-advice-window-functions' independent from each other works only if
+;; both sets of functions are disjunct (because ad-activate always activates
+;; ALL advices of a function if they are not disabled!)
 (defconst ecb-basic-adviced-functions (if ecb-running-xemacs
                                           '((delete-frame . around)
                                             (compilation-set-window-height . around)
                                             (shrink-window-if-larger-than-buffer . around)
-                                            (show-temp-buffer-in-current-frame . around)
                                             (scroll-other-window . around)
-                                            (compile-internal . before)
                                             (custom-save-all . around)
                                             (winner-mode . around)
                                             (winner-redo . around)
@@ -189,11 +192,11 @@ means not to count the minibuffer even if it is active."
                                           (shrink-window-if-larger-than-buffer . around)
                                           (mouse-drag-vertical-line . around)
                                           (mouse-drag-mode-line . around)
+                                          (pop-to-buffer . around)
                                           (enlarge-window . around)
                                           (shrink-window . around)
                                           (tmm-menubar . around)
                                           (scroll-other-window . around)
-                                          (compile-internal . before)
                                           (custom-save-all . around)
                                           (winner-mode . around)
                                           (winner-redo . around)

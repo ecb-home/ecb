@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-eshell.el,v 1.68 2003/08/06 09:15:20 berndl Exp $
+;; $Id: ecb-eshell.el,v 1.69 2003/09/01 09:13:24 berndl Exp $
 
 ;;; Commentary:
 
@@ -122,7 +122,7 @@ behavior of XEmacs which always starts eshell in the edit-window even if
 called from the compile-window. This functions ensures that eshell is started
 in that window where this function is called from!"
   (require 'eshell)
-  (ecb-with-original-functions
+  (ecb-with-adviced-functions
    (display-buffer (get-buffer-create eshell-buffer-name)))
   (eshell-mode))
 

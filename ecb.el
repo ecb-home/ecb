@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb.el,v 1.327 2003/08/25 08:24:00 berndl Exp $
+;; $Id: ecb.el,v 1.328 2003/09/01 09:13:24 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -3812,13 +3812,12 @@ by this command. See also the option `ecb-window-sync'."
 
 (defun ecb-find-file-and-display (filename other-edit-window)
   "Finds the file in the correct window. What the correct window is depends on
-  the setting in `ecb-primary-mouse-jump-destination' and the value of
+the setting in `ecb-primary-mouse-jump-destination' and the value of
 OTHER-EDIT-WINDOW."
   (select-window (ecb-get-edit-window other-edit-window))
   (ecb-nav-save-current)
   (ecb-with-original-functions
    (find-file filename))
-;;    (pop-to-buffer (buffer-name)))
   (ecb-nav-add-item (ecb-nav-file-history-item-new)))
 
 (defun ecb-tree-node-add-files
@@ -5399,6 +5398,9 @@ always the ECB-frame if called from another frame."
       ;; enable basic advices
       (ecb-enable-basic-advices)
 
+      ;; enable window-function advices
+      (ecb-activate-adviced-functions ecb-advice-window-functions)
+
       ;; set the ecb-frame
       (if ecb-new-ecb-frame
           (progn
@@ -5409,7 +5411,9 @@ always the ECB-frame if called from another frame."
         (put 'ecb-frame 'ecb-new-frame-created nil))
       (raise-frame ecb-frame)
       (select-frame ecb-frame)
-    
+
+      (ecb-enable-own-temp-buffer-show-function t)
+      
       ;; now we can activate ECB
       (let ((curr-buffer-list (mapcar (lambda (buff)
                                         (buffer-name buff))
@@ -5741,6 +5745,9 @@ does all necessary after finishing ediff."
       ;; deactivating the adviced functions
       (ecb-activate-adviced-functions nil)
       (ecb-disable-basic-advices)
+      (ecb-enable-count-windows-advice nil)
+
+      (ecb-enable-own-temp-buffer-show-function nil)      
 
       ;; deactivate and reset the speedbar stuff
       (ignore-errors (ecb-speedbar-deactivate))
@@ -6340,6 +6347,15 @@ changed there should be no performance-problem!"
                        :help "Start the Emacs Code Browser."
                        ]))
 
+
+;; Klaus Berndl <klaus.berndl@sdm.de>: Cause of the magic autostart stuff of
+;; the advice-package we must disable at load-time all these advices!!
+;; Otherwise would just loading ecb (not deactivating) activating each advice
+;; AFTER the FIRST usage of our advices!!
+(ecb-disable-basic-advices)
+(ecb-activate-adviced-functions nil)
+(ecb-enable-count-windows-advice nil)
+(ecb-speedbar-disable-advices)
 
 (silentcomp-provide 'ecb)
 
