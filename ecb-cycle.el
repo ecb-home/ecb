@@ -1,6 +1,6 @@
 ;;; ecb-cycle.el --- cycle buffers through ecb windows.
 
-;; $Id: ecb-cycle.el,v 1.1 2002/01/26 01:04:53 burtonator Exp $
+;; $Id: ecb-cycle.el,v 1.2 2002/01/26 01:12:22 burtonator Exp $
 
 ;; Copyright (C) 2000-2003 Free Software Foundation, Inc.
 ;; Copyright (C) 2000-2003 Kevin A. Burton (burton@openprivacy.org)
@@ -30,6 +30,16 @@
 
 ;; NOTE: If you enjoy this software, please consider a donation to the EFF
 ;; (http://www.eff.org)
+
+;;; History:
+
+;; Fri Jan 25 2002 05:07 PM (burton@openprivacy.org): init
+
+;;; TODO:
+;;
+;; Add completion support so that I can do an ecb-cycle-set-compilation-buffer
+;; which will use completion to prompt for the buffer.  This will require us to
+;; get the index and compilation buffer list interactively.
 
 ;;; Code:
 

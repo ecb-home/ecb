@@ -54,7 +54,7 @@
 ;; The latest version of the ECB is available at
 ;; http://home.swipnet.se/mayhem/ecb.html
 
-;; $Id: ecb.el,v 1.181 2002/01/25 16:21:41 berndl Exp $
+;; $Id: ecb.el,v 1.182 2002/01/26 01:12:22 burtonator Exp $
 
 ;;; Code:
 
@@ -88,6 +88,7 @@
 (require 'ecb-help)
 (require 'ecb-navigate)
 (require 'ecb-eshell)
+(require 'ecb-cycle)
 
 ;; various loads
 (require 'easymenu)
