@@ -25,7 +25,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-common-browser.el,v 1.4 2004/09/17 11:43:57 berndl Exp $
+;; $Id: ecb-common-browser.el,v 1.5 2004/09/20 15:13:19 berndl Exp $
 
 
 ;;; History
@@ -938,7 +938,7 @@ run starts with this interrupted function."
         ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: remove this test if it works
         (message "TEST: ecb-stealthy-updates: %s has been interrupted" (car l))
         (setq ecb-stealthy-function-list
-              (ecb-rotate-list ecb-stealthy-function-list (car l)))))))
+              (ecb-rotate ecb-stealthy-function-list (car l)))))))
 
 
 
