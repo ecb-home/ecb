@@ -116,6 +116,7 @@ update-cvs-snapshot:
 	$(CP) -r $(ecb_IMAGE_DIR) html/ecb-snap)
 	@find ecb-snap/$(ecb_IMAGE_DIR) -name CVS -print | xargs rm -Rf
 	@find ecb-snap/$(ecb_IMAGE_DIR) -name *~ -print | xargs $(RM)
+	@find ecb-snap/$(ecb_IMAGE_DIR) -name *.png -print | xargs $(RM)
 	@$(TARC) ecb.tar.gz ecb-snap
 	@$(RM) -R ecb-snap
 	$(SCP) ecb.tar.gz $(ecb_SF_login):$(ecb_WEBSITE_LOC)/cvs_snapshots
