@@ -15,6 +15,18 @@ Installing ECB first time:
 No special notes beyond the contents of README.
 
 
+Upgrading from any version:
+---------------------------
+
+Some default keybindings have changed; the new bindings are:
+
+  C-c . r:  `ecb-rebuild-methods-buffer'
+  C-c . lc: `ecb-change-layout'
+  C-c . lr: `ecb-redraw-layout'
+  C-c . lt: `ecb-toggle-layout'
+  C-c . lw: `ecb-toggle-ecb-windows'
+
+
 Upgrading from versions >= 1.90:
 --------------------------------
 
