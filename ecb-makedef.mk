@@ -12,7 +12,7 @@ ecb_LISP_EL=tree-buffer.el ecb-util.el ecb-mode-line.el ecb-help.el \
             ecb-speedbar.el ecb-examples.el ecb-tod.el ecb-autogen.el \
 	    ecb-jde.el ecb-file-browser.el ecb-method-browser.el \
 	    ecb-winman-support.el ecb-semantic-wrapper.el \
-	    ecb-compatibility.el ecb-common-browser.el
+	    ecb-compatibility.el ecb-common-browser.el ecb-analyse.el
 
 ecb_LISP_ELC=$(ecb_LISP_EL:.el=.elc)
 
