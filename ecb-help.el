@@ -394,6 +394,8 @@ following options before working with ECB):
   displayed in the minibuffer?
 - `ecb-layout-nr': The ECB layout, means which windows you want to be
   displayed in the ECB-frame and also the location of these windows.
+- `ecb-token-display-function', `ecb-type-token-display': How to display the
+  entries in the ECB-method window.
 - All the options in the customize groups 'ecb-layout', 'ecb-methods' and
   'ecb-faces'.
 
