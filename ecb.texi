@@ -19,7 +19,7 @@
 @c Free Software Foundation, Inc., 59 Temple Place - Suite 330,
 @c Boston, MA 02111-1307, USA.
 
-@c $Id: ecb.texi,v 1.78 2003/02/20 08:43:58 berndl Exp $
+@c $Id: ecb.texi,v 1.79 2003/02/21 18:00:15 berndl Exp $
 
 @setfilename ecb.info
 
@@ -179,6 +179,7 @@ Changing, customizing, redrawing and creating layouts
 * Changing the ECB-layout::     How to change and customize the layout
 * Redrawing the ECB-layout::    How and when redrawing the layout
 * Changing window sizes::       Changing sizes of the ECB-windows
+* Fixing window sizes::         Fixing sizes of the ECB-windows
 * Creating a new ECB-layout::   Interactively creating new layouts
 
 Customizing ECB
@@ -399,6 +400,10 @@ online help of ECB is always available though, see
 
 @node Setting up Emacs, First steps, Installation, Install and first steps
 @section How to set up Emacs for file parsing
+
+@strong{NOTE}: Normally it should not necessary for you to bother with
+the following stuff unless you have problems getting ECB working
+correctly for you. 
 
 To ensure ECB and semantic are working correctly for all by semantic
 supported languages you have to pay attention to the following aspects
@@ -1129,6 +1134,7 @@ ECB offers you to advice the following functions so they work best with ECB:
 @item @code{delete-windows-on}
 @item @code{split-window-horizontally}
 @item @code{split-window-vertically}
+@item @code{split-window}
 @item @code{switch-to-buffer}
 @item @code{switch-to-buffer-other-window}
 @item @code{other-window-for-scrolling}
@@ -1342,6 +1348,7 @@ layouts.
 * Changing the ECB-layout::     How to change and customize the layout
 * Redrawing the ECB-layout::    How and when redrawing the layout
 * Changing window sizes::       Changing sizes of the ECB-windows
+* Fixing window sizes::         Fixing sizes of the ECB-windows
 * Creating a new ECB-layout::   Interactively creating new layouts
 @end menu
 
@@ -1971,7 +1978,7 @@ done in << 1s!
 See also the hooks @code{ecb-redraw-layout-after-hook} and
 @code{ecb-redraw-layout-before-hook}!
 
-@node Changing window sizes, Creating a new ECB-layout, Redrawing the ECB-layout, The ECB-layout
+@node Changing window sizes, Fixing window sizes, Redrawing the ECB-layout, The ECB-layout
 @subsection Changing the sizes of the special ECB-windows
 
 The standard width and height of the special ECB-windows is defined
@@ -2011,7 +2018,35 @@ height) of the ECB-frame, so the stored sizes are always correct
 regardless of the current frame-size! But if called with a prefix
 argument then fixed sizes are stored.
 
-@node Creating a new ECB-layout, , Changing window sizes, The ECB-layout
+@node Fixing window sizes, Creating a new ECB-layout, Changing window sizes, The ECB-layout
+@subsection Fixing the sizes of the special ECB-windows
+
+GNU Emacs 21 introduced a new feature which can fix the sizes of a
+window displaying a certain buffer even after resizing the frame. This
+new feature is driven by the new buffer-local variable
+@code{window-size-fixed}.
+
+ECB offers an option @code{ecb-fix-window-size} for fixing the sizes
+of the special ECB-windows/buffers even after frame-resizing. The fix
+type (valid values are @code{nil}, @code{t}, @code{width} and
+@code{height}) can either be set on a layout-basis (means a different
+value for each layout) or one value can be set for all layouts. In the
+latter case there is an additional value @code{auto} which choose
+autom. the senseful fix-type depending on the current layout-type: For
+top-layouts the fix-type @code{height} and for all other layout-types
+the fix-type @code{width}.
+
+Probably the most senseful value is @code{auto} for all layouts
+because it makes less sense to fix the height of the ecb-windows in a
+left-, right- or leftright-layout. Same for fixing the width in a
+top-layout.
+
+Note: With current Emacs 21.2.X there seems to be no distinction
+between @code{width}, @code{height} and @code{t}. Therefore this
+option takes no effect (means all ecb-windows have always unfixed
+sizes) if @code{ecb-compile-window-height} is not @code{nil}.
+
+@node Creating a new ECB-layout, , Fixing window sizes, The ECB-layout
 @subsection Interactively creating new layouts
 
 @cindex New layouts
@@ -4176,6 +4211,9 @@ For this one see also the option @code{ecb-other-window-jump-behavior}!
 @item @code{delete-windows-on}
 @item @code{split-window-horizontally}
 @item @code{split-window-vertically}
+@item @code{split-window}
+If this advice is enabled then @code{split-window-vertically} and
+@code{split-window-horizontally} are autom. enabled too!
 @item @code{switch-to-buffer}
 @item @code{switch-to-buffer-other-window}
 @item @code{other-window-for-scrolling}
@@ -4337,6 +4375,30 @@ is a fraction of the frame height (e.g. 0.33 results in a
 max-height of 1/3 the frame-height).
 @end itemize
 @end defopt
+
+@defopt fix-window-size
+Fix size of the ECB-windows/buffers even after frame-resizing. The fix
+type (valid values are nil, t, width and height) can either be set on
+a layout-basis (means a different value for each layout) or one value
+can be set for all layouts.
+
+For a detailed description of the valid values see description of
+@code{window-size-fixed} which is newly introduced in GNU Emacs 21 and
+is only available there. Therefore this option takes only effect with
+GNU Emacs 21.
+
+Note1: The description of @code{window-size-fixed} in the
+elisp-info-manual is more detailled than the description offered by
+@kbd{C-h v}!
+
+Note2: With current Emacs 21.2.X there seems to be no distinction
+between @code{width}, @code{height} and @code{t}. Therefore this
+option takes no effect (means all ecb-windows have always unfixed
+sizes) if @code{ecb-compile-window-height} is not @code{nil}.
+
+Per default no window-size fixing has been done.
+@end defopt
+
 
 @defopt hide-ecb-windows-after-hook
 Hooks run direct after the ECB windows have been hidden
