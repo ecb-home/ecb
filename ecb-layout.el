@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-layout.el,v 1.237 2004/09/09 15:46:16 berndl Exp $
+;; $Id: ecb-layout.el,v 1.238 2004/09/20 15:09:31 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -1518,244 +1518,89 @@ edit-window-list is computed via `ecb-canonical-edit-windows-list'."
 arguments. Do never set this variable; it is only set by
 `show-temp-buffer-in-current-frame'!")
 
-(if ecb-running-xemacs
-    (progn
-      ;; We advice this function to exactly that version of XEmacs 21.4.13.
-      ;; For that XEmacs-version (and higher) this would not be necessary but
-      ;; we need this advice for versions of XEmacs which do not have the
-      ;; 4-argument-version of `display-buffer'. With this advice we give
-      ;; older XEmacsen the newest display-buffer- and
-      ;; shrink-to-fit-mechanism. How this is done is described at beginning
-      ;; of `ecb-display-buffer-xemacs'.
-      (defadvice show-temp-buffer-in-current-frame (around ecb)
-        "Makes the function compatible with ECB."
-        (let ((pre-display-buffer-function nil)) ; turn it off, whatever it is
-          ;; Here we run our display-buffer-version which in turn calls
-          ;; `ecb-display-buffer-xemacs' which contains the shrink-to-fit
-          ;; mechanism.
-          (let ((window (ecb-with-adviced-functions
-                         (condition-case oops
-                             ;; For this call `ecb-temp-buffer-shrink-to-fit'
-                             ;; is always nil
-                             (display-buffer (ad-get-arg 0) nil nil
-                                             temp-buffer-shrink-to-fit)
-                           (wrong-number-of-arguments
-                            ;; we have a XEmacs which do not support the 4.
-                            ;; arg SHRINK-TO-FIT of `display-buffer'. So we
-                            ;; call it with only three args and simulate the
-                            ;; 4. arg by setting
-                            ;; `ecb-temp-buffer-shrink-to-fit' to the value of
-                            ;; `temp-buffer-shrink-to-fit'. The adviced
-                            ;; version of `display-buffer' calls
-                            ;; `ecb-display-buffer-xemacs' for XEmacs which in
-                            ;; turn evaluates `ecb-temp-buffer-shrink-to-fit'.
-                            ;; For details see `ecb-display-buffer-xemacs'.
-                            (let ((ecb-temp-buffer-shrink-to-fit temp-buffer-shrink-to-fit))
-                              (ecb-layout-debug-error "show-temp-buffer-in-current-frame for %s: we call a 3-arg display-buffer: %s"
-                                                      (ad-get-arg 0) ecb-temp-buffer-shrink-to-fit)
-                              (display-buffer (ad-get-arg 0) nil nil)))
-                           (error (signal (car oops) (cdr oops)))
-                           (quit (signal 'quit nil))))))
-            (if (not (eq (last-nonminibuf-frame) (window-frame window)))
-                ;; only the pre-display-buffer-function should ever do this.
-                (error "display-buffer switched frames on its own!!"))
-            (setq minibuffer-scroll-window window)
-            (set-window-start window 1) ; obeys narrowing
-            (set-window-point window 1)
-            (ecb-layout-debug-error "show-temp-buffer-in-current-frame: buffer: %s, window: %s, shrink-to-fit: %s"
-                                    (ad-get-arg 0) window temp-buffer-shrink-to-fit)
-            nil)))
+(when-ecb-running-xemacs
+ ;; We advice this function to exactly that version of XEmacs 21.4.13.
+ ;; For that XEmacs-version (and higher) this would not be necessary but
+ ;; we need this advice for versions of XEmacs which do not have the
+ ;; 4-argument-version of `display-buffer'. With this advice we give
+ ;; older XEmacsen the newest display-buffer- and
+ ;; shrink-to-fit-mechanism. How this is done is described at beginning
+ ;; of `ecb-display-buffer-xemacs'.
+ (defadvice show-temp-buffer-in-current-frame (around ecb)
+   "Makes the function compatible with ECB."
+   (let ((pre-display-buffer-function nil)) ; turn it off, whatever it is
+     ;; Here we run our display-buffer-version which in turn calls
+     ;; `ecb-display-buffer-xemacs' which contains the shrink-to-fit
+     ;; mechanism.
+     (let ((window (ecb-with-adviced-functions
+                    (condition-case oops
+                        ;; For this call `ecb-temp-buffer-shrink-to-fit'
+                        ;; is always nil
+                        (display-buffer (ad-get-arg 0) nil nil
+                                        temp-buffer-shrink-to-fit)
+                      (wrong-number-of-arguments
+                       ;; we have a XEmacs which do not support the 4.
+                       ;; arg SHRINK-TO-FIT of `display-buffer'. So we
+                       ;; call it with only three args and simulate the
+                       ;; 4. arg by setting
+                       ;; `ecb-temp-buffer-shrink-to-fit' to the value of
+                       ;; `temp-buffer-shrink-to-fit'. The adviced
+                       ;; version of `display-buffer' calls
+                       ;; `ecb-display-buffer-xemacs' for XEmacs which in
+                       ;; turn evaluates `ecb-temp-buffer-shrink-to-fit'.
+                       ;; For details see `ecb-display-buffer-xemacs'.
+                       (let ((ecb-temp-buffer-shrink-to-fit temp-buffer-shrink-to-fit))
+                         (ecb-layout-debug-error "show-temp-buffer-in-current-frame for %s: we call a 3-arg display-buffer: %s"
+                                                 (ad-get-arg 0) ecb-temp-buffer-shrink-to-fit)
+                         (display-buffer (ad-get-arg 0) nil nil)))
+                      (error (signal (car oops) (cdr oops)))
+                      (quit (signal 'quit nil))))))
+       (if (not (eq (last-nonminibuf-frame) (window-frame window)))
+           ;; only the pre-display-buffer-function should ever do this.
+           (error "display-buffer switched frames on its own!!"))
+       (setq minibuffer-scroll-window window)
+       (set-window-start window 1)      ; obeys narrowing
+       (set-window-point window 1)
+       (ecb-layout-debug-error "show-temp-buffer-in-current-frame: buffer: %s, window: %s, shrink-to-fit: %s"
+                               (ad-get-arg 0) window temp-buffer-shrink-to-fit)
+       nil)))
       
-      ;; XEmacs-version
-      (defadvice shrink-window-if-larger-than-buffer (around ecb)
-        "Makes the function compatible with ECB."
-        (or (ad-get-arg 0) (ad-set-arg 0 (selected-window)))
-        (ecb-layout-debug-error "shrink-window-if-larger-than-buffer: window: %s"
-                                (ad-get-arg 0))
-        (if (or (not ecb-minor-mode)
-                (not (equal (window-frame (ad-get-arg 0)) ecb-frame))
-                (member (ad-get-arg 0) (ecb-canonical-ecb-windows-list)))
-            (ecb-with-original-basic-functions
-             (ecb-with-original-functions
-              ad-do-it))
+ ;; XEmacs-version
+ (defadvice shrink-window-if-larger-than-buffer (around ecb)
+   "Makes the function compatible with ECB."
+   (or (ad-get-arg 0) (ad-set-arg 0 (selected-window)))
+   (ecb-layout-debug-error "shrink-window-if-larger-than-buffer: window: %s"
+                           (ad-get-arg 0))
+   (if (or (not ecb-minor-mode)
+           (not (equal (window-frame (ad-get-arg 0)) ecb-frame))
+           (member (ad-get-arg 0) (ecb-canonical-ecb-windows-list)))
+       (ecb-with-original-basic-functions
+        (ecb-with-original-functions
+         ad-do-it))
 
-          ;; we handle only the edit-windows and the compile-window of the
-          ;; ecb-frame in a special manner.
+     ;; we handle only the edit-windows and the compile-window of the
+     ;; ecb-frame in a special manner.
 
-          ;; if called non-interactively (e.g. by `display-buffer's forth
-          ;; argument SHRINK-TO-FIT) and if called for the compile-window of
-          ;; ECB and if `ecb-compile-window-temporally-enlarge' is either
-          ;; after-selection or nil then we shrink to the
-          ;; ecb-compile-window-height! Otherwise we run the normal job!
-          (if (and (not (interactive-p))
-                   (equal (ad-get-arg 0) ecb-compile-window)
-                   (member ecb-compile-window-temporally-enlarge
-                           '(after-selection nil))
-                   ;; The *Completions*-buffer must always being enlarged!
-                   (not (ecb-string= (buffer-name (window-buffer (ad-get-arg 0)))
-                                     "*Completions*")))
-              (ecb-toggle-compile-window-height -1)
-            (save-excursion
-              (set-buffer (window-buffer (ad-get-arg 0)))
-              (ecb-layout-debug-error "shrink-window-if-larger-than-buffer: buffer to shrink: %s"
-                                      (current-buffer))
-              ;; we prevent to shrink the compile-window below
-              ;; `ecb-compile-window-height'
-              (let ((window-min-height (if (and (equal (ad-get-arg 0) ecb-compile-window)
-                                                (and ecb-compile-window-prevent-shrink-below-height
-                                                     (not (interactive-p)))
-                                                window-min-height
-                                                ecb-compile-window-height-lines
-                                                (< window-min-height
-                                                   ecb-compile-window-height-lines))
-                                           ecb-compile-window-height-lines
-                                         window-min-height))
-                    (n 0)
-                    (test-pos
-                     (- (point-max)
-                        ;; If buffer ends with a newline, ignore it when counting
-                        ;; height unless point is after it.
-                        (if (and (not (eobp))
-                                 (eq ?\n (char-after (1- (point-max)))))
-                            1 0)))
-                    (mini (frame-property (window-frame (ad-get-arg 0)) 'minibuffer))
-                    (edges (window-pixel-edges (selected-window))))
-                (if (and (< 1 (let ((frame (selected-frame)))
-                                (select-frame (window-frame (ad-get-arg 0)))
-                                (unwind-protect
-                                    (ecb-with-original-basic-functions
-                                     (count-windows))
-                                  (select-frame frame))))
-                         (or (equal (ad-get-arg 0) ecb-compile-window)
-                             (not (equal (ecb-edit-window-splitted) 'horizontal)))
-                         (pos-visible-in-window-p (point-min) (ad-get-arg 0))
-                         (not (eq mini 'only))
-                         (or (not mini) (eq mini t)
-                             (< (nth 3 edges)
-                                (nth 1 (window-pixel-edges mini)))
-                             (> (nth 1 edges)
-                                0)))
-                    (progn
-                      (save-window-excursion
-                        (goto-char (point-min))
-                        (while (and (window-live-p (ad-get-arg 0))
-                                    (pos-visible-in-window-p test-pos (ad-get-arg 0)))
-                          (shrink-window 1 nil (ad-get-arg 0))
-                          (setq n (1+ n))))
-                      (ecb-layout-debug-error "shrink-window-if-larger-than-buffer: n: %d" n)
-                      (if (> n 0)
-                          (shrink-window (min (1- n)
-                                              (- (ecb-window-full-height (ad-get-arg 0))
-                                                 (1+ window-min-height)))
-                                         nil
-                                         (ad-get-arg 0))))))))))
-      
-      (defadvice pop-to-buffer (around ecb)
-        "Chooses the window with the ECB-adviced version of `display-buffer'."
-        (ecb-with-adviced-functions
-         ad-do-it)
-        (when (and (equal (selected-frame) ecb-frame)
-                   (ecb-point-in-compile-window))
-          ;; we set the height of the compile-window according to
-          ;; `ecb-enlarged-compilation-window-max-height'
-          (ecb-set-compile-window-height)))
-      
-        ) ;; end of progn
-
-  ;; only GNU Emacs basic advices
-  (defadvice mouse-drag-vertical-line (around ecb)
-    "Allows manually window-resizing even if `ecb-fix-window-size' is not nil
-for current layout."
-    (if (and ecb-minor-mode
-             (equal (selected-frame) ecb-frame)
-             (not ecb-windows-hidden)
-             (ecb-get-window-fix-type ecb-layout-name))
-        (ecb-do-with-unfixed-ecb-buffers ad-do-it)
-      ad-do-it))
-
-
-  (defadvice mouse-drag-mode-line (around ecb)
-    "Allows manually window-resizing even if `ecb-fix-window-size' is not nil
-for current layout."
-    (if (and ecb-minor-mode
-             (equal (selected-frame) ecb-frame)
-             (not ecb-windows-hidden)
-             (ecb-get-window-fix-type ecb-layout-name)
-             (member (car (car (cdr (ad-get-arg 0)))) ;; the window of the event
-                     (ecb-canonical-ecb-windows-list)))
-        (ecb-do-with-unfixed-ecb-buffers ad-do-it)
-      ad-do-it))
-
-  (defadvice enlarge-window (around ecb)
-    "Allows manually window-resizing even if `ecb-fix-window-size' is not nil
-for current layout."
-    (if (and ecb-minor-mode
-             (equal (selected-frame) ecb-frame)
-             (not ecb-windows-hidden)
-             (ecb-get-window-fix-type ecb-layout-name)
-             (member (selected-window) (ecb-canonical-ecb-windows-list)))
-        (ecb-do-with-unfixed-ecb-buffers ad-do-it)
-      ad-do-it))
-
-  (defadvice shrink-window (around ecb)
-    "Allows manually window-resizing even if `ecb-fix-window-size' is not nil
-for current layout."
-    (if (and ecb-minor-mode
-             (equal (selected-frame) ecb-frame)
-             (not ecb-windows-hidden)
-             ;; See comment of defadvice for mouse-drag-mode-line
-             (ecb-get-window-fix-type ecb-layout-name)
-             (member (selected-window) (ecb-canonical-ecb-windows-list)))
-        (ecb-do-with-unfixed-ecb-buffers ad-do-it)
-      ad-do-it))
-
-  ;; Klaus Berndl <klaus.berndl@sdm.de>: We can not use our
-  ;; Electric-pop-up-window advice instaed of this advice because otherwise
-  ;; some commands of the popup-menus of the ecb-buffers would not work - this
-  ;; comes from the save-window-excursion in the the tmm.
-  (defadvice tmm-prompt (around ecb)
-    "Make it compatible with ECB."
-    (if (or (not ecb-minor-mode)
-            (not (equal (selected-frame) ecb-frame)))
-        (ecb-with-original-basic-functions
-         (ecb-with-original-functions
-          ad-do-it))
-      ;; we set temporally `ecb-other-window-behavior' to a function which
-      ;; always selects the "next" window after the
-      ;; `ecb-last-edit-window-with-point'
-      (let ((ecb-other-window-behavior
-             (lambda (win-list edit-win-list ecb-win-list comp-win
-                               mini-win point-loc nth-win)
-               (ecb-next-listelem edit-win-list
-                                  ecb-last-edit-window-with-point)))
-            ;; we must not handle the tmm-stuff as compilation-buffer
-            (ecb-compilation-buffer-names nil)
-            (ecb-compilation-major-modes nil)
-            (ecb-compilation-predicates nil))
-        ad-do-it)))
-
-  
-  (defadvice shrink-window-if-larger-than-buffer (around ecb)
-    "Makes the function compatible with ECB."
-    (or (ad-get-arg 0) (ad-set-arg 0 (selected-window)))
-    (ecb-layout-debug-error "shrink-window-if-larger-than-buffer: window: %s"
-                            (ad-get-arg 0))
-    (if (or (not ecb-minor-mode)
-            (not (equal (window-frame (ad-get-arg 0)) ecb-frame))
-            (member (ad-get-arg 0) (ecb-canonical-ecb-windows-list)))
-        (ecb-with-original-basic-functions
-         (ecb-with-original-functions
-          ad-do-it))
-      (save-selected-window
-        (select-window (ad-get-arg 0))
-        (ecb-layout-debug-error "shrink-window-if-larger-than-buffer: buffer to shrink: %s"
-                                (current-buffer))
-        (let* ((params (frame-parameters))
-               (mini (cdr (assq 'minibuffer params)))
-               (edges (ecb-window-edges))
-               ;; we prevent to shrink the compile-window below
-               ;; `ecb-compile-window-height'
-               (window-min-height (if (and (equal (ad-get-arg 0) ecb-compile-window)
+     ;; if called non-interactively (e.g. by `display-buffer's forth
+     ;; argument SHRINK-TO-FIT) and if called for the compile-window of
+     ;; ECB and if `ecb-compile-window-temporally-enlarge' is either
+     ;; after-selection or nil then we shrink to the
+     ;; ecb-compile-window-height! Otherwise we run the normal job!
+     (if (and (not (interactive-p))
+              (equal (ad-get-arg 0) ecb-compile-window)
+              (member ecb-compile-window-temporally-enlarge
+                      '(after-selection nil))
+              ;; The *Completions*-buffer must always being enlarged!
+              (not (ecb-string= (buffer-name (window-buffer (ad-get-arg 0)))
+                                "*Completions*")))
+         (ecb-toggle-compile-window-height -1)
+       (save-excursion
+         (set-buffer (window-buffer (ad-get-arg 0)))
+         (ecb-layout-debug-error "shrink-window-if-larger-than-buffer: buffer to shrink: %s"
+                                 (current-buffer))
+         ;; we prevent to shrink the compile-window below
+         ;; `ecb-compile-window-height'
+         (let ((window-min-height (if (and (equal (ad-get-arg 0) ecb-compile-window)
                                            (and ecb-compile-window-prevent-shrink-below-height
                                                 (not (interactive-p)))
                                            window-min-height
@@ -1763,113 +1608,267 @@ for current layout."
                                            (< window-min-height
                                               ecb-compile-window-height-lines))
                                       ecb-compile-window-height-lines
-                                    window-min-height)))
-          (if (and (< 1 (ecb-with-original-basic-functions
-                         (count-windows)))
-                   (or (equal (ad-get-arg 0) ecb-compile-window)
-                       (not (equal (ecb-edit-window-splitted) 'horizontal)))
-                   (pos-visible-in-window-p (point-min) (ad-get-arg 0))
-                   (not (eq mini 'only))
-                   (or (not mini)
-                       (< (nth 3 edges) (nth 1 (ecb-window-edges mini)))
-                       (> (nth 1 edges) (cdr (assq 'menu-bar-lines params)))))
-              (if ecb-running-emacs-21
-                  (fit-window-to-buffer (ad-get-arg 0)
-                                        (ecb-window-full-height (ad-get-arg 0)))
-                ;; code for GNU Emacs < 21.X
-                (let ((text-height (window-buffer-height (ad-get-arg 0)))
-                      (window-height (ecb-window-full-height)))
-                  ;; Don't try to redisplay with the cursor at the end
-                  ;; on its own line--that would force a scroll and spoil things.
-                  (when (and (eobp) (bolp))
-                    (forward-char -1))
-                  (when (> window-height (1+ text-height))
-                    (shrink-window
-                     (- window-height (max (1+ text-height) window-min-height)))))))))))
+                                    window-min-height))
+               (n 0)
+               (test-pos
+                (- (point-max)
+                   ;; If buffer ends with a newline, ignore it when counting
+                   ;; height unless point is after it.
+                   (if (and (not (eobp))
+                            (eq ?\n (char-after (1- (point-max)))))
+                       1 0)))
+               (mini (frame-property (window-frame (ad-get-arg 0)) 'minibuffer))
+               (edges (window-pixel-edges (selected-window))))
+           (if (and (< 1 (let ((frame (selected-frame)))
+                           (select-frame (window-frame (ad-get-arg 0)))
+                           (unwind-protect
+                               (ecb-with-original-basic-functions
+                                (count-windows))
+                             (select-frame frame))))
+                    (or (equal (ad-get-arg 0) ecb-compile-window)
+                        (not (equal (ecb-edit-window-splitted) 'horizontal)))
+                    (pos-visible-in-window-p (point-min) (ad-get-arg 0))
+                    (not (eq mini 'only))
+                    (or (not mini) (eq mini t)
+                        (< (nth 3 edges)
+                           (nth 1 (window-pixel-edges mini)))
+                        (> (nth 1 edges)
+                           0)))
+               (progn
+                 (save-window-excursion
+                   (goto-char (point-min))
+                   (while (and (window-live-p (ad-get-arg 0))
+                               (pos-visible-in-window-p test-pos (ad-get-arg 0)))
+                     (shrink-window 1 nil (ad-get-arg 0))
+                     (setq n (1+ n))))
+                 (ecb-layout-debug-error "shrink-window-if-larger-than-buffer: n: %d" n)
+                 (if (> n 0)
+                     (shrink-window (min (1- n)
+                                         (- (ecb-window-full-height (ad-get-arg 0))
+                                            (1+ window-min-height)))
+                                    nil
+                                    (ad-get-arg 0))))))))))
+      
+ (defadvice pop-to-buffer (around ecb)
+   "Chooses the window with the ECB-adviced version of `display-buffer'."
+   (ecb-with-adviced-functions
+    ad-do-it)
+   (when (and (equal (selected-frame) ecb-frame)
+              (ecb-point-in-compile-window))
+     ;; we set the height of the compile-window according to
+     ;; `ecb-enlarged-compilation-window-max-height'
+     (ecb-set-compile-window-height)))
+      
+ ) ;; end of if-ecb-running-xemacs
 
-  (defadvice resize-temp-buffer-window (around ecb)
-    "Makes the function compatible with ECB."
-    (ecb-layout-debug-error "resize-temp-buffer-window: buffer: %s, window: %s, frame: %s"
-                            (current-buffer) (selected-window) (selected-frame))
-    (if (or (not ecb-minor-mode)
-            (not (equal (selected-frame) ecb-frame))
-            (equal (ecb-where-is-point) 'ecb))
-        (ecb-with-original-basic-functions
-         (ecb-with-original-functions
-          ad-do-it))
-      (if (and (equal (selected-window) ecb-compile-window)
-               (member ecb-compile-window-temporally-enlarge
-                       '(after-selection nil))
-               ;; The *Completions* buffer must always being enlarged!!
-               (not (ecb-string= (buffer-name (current-buffer)) "*Completions*")))
-          (progn
-            (ecb-layout-debug-error "resize-temp-buffer-window: buffer: shrink to comp-win-height")
-            (ecb-toggle-compile-window-height -1))
-        ;; we prevent to shrink the compile-window below
-        ;; `ecb-compile-window-height'
-        (let ((window-min-height (if (and window-min-height
+(when-ecb-running-emacs
+ ;; only GNU Emacs basic advices
+ (defadvice mouse-drag-vertical-line (around ecb)
+   "Allows manually window-resizing even if `ecb-fix-window-size' is not nil
+for current layout."
+   (if (and ecb-minor-mode
+            (equal (selected-frame) ecb-frame)
+            (not ecb-windows-hidden)
+            (ecb-get-window-fix-type ecb-layout-name))
+       (ecb-do-with-unfixed-ecb-buffers ad-do-it)
+     ad-do-it))
+
+
+ (defadvice mouse-drag-mode-line (around ecb)
+   "Allows manually window-resizing even if `ecb-fix-window-size' is not nil
+for current layout."
+   (if (and ecb-minor-mode
+            (equal (selected-frame) ecb-frame)
+            (not ecb-windows-hidden)
+            (ecb-get-window-fix-type ecb-layout-name)
+            (member (car (car (cdr (ad-get-arg 0)))) ;; the window of the event
+                    (ecb-canonical-ecb-windows-list)))
+       (ecb-do-with-unfixed-ecb-buffers ad-do-it)
+     ad-do-it))
+
+ (defadvice enlarge-window (around ecb)
+   "Allows manually window-resizing even if `ecb-fix-window-size' is not nil
+for current layout."
+   (if (and ecb-minor-mode
+            (equal (selected-frame) ecb-frame)
+            (not ecb-windows-hidden)
+            (ecb-get-window-fix-type ecb-layout-name)
+            (member (selected-window) (ecb-canonical-ecb-windows-list)))
+       (ecb-do-with-unfixed-ecb-buffers ad-do-it)
+     ad-do-it))
+
+ (defadvice shrink-window (around ecb)
+   "Allows manually window-resizing even if `ecb-fix-window-size' is not nil
+for current layout."
+   (if (and ecb-minor-mode
+            (equal (selected-frame) ecb-frame)
+            (not ecb-windows-hidden)
+            ;; See comment of defadvice for mouse-drag-mode-line
+            (ecb-get-window-fix-type ecb-layout-name)
+            (member (selected-window) (ecb-canonical-ecb-windows-list)))
+       (ecb-do-with-unfixed-ecb-buffers ad-do-it)
+     ad-do-it))
+
+ ;; Klaus Berndl <klaus.berndl@sdm.de>: We can not use our
+ ;; Electric-pop-up-window advice instaed of this advice because otherwise
+ ;; some commands of the popup-menus of the ecb-buffers would not work - this
+ ;; comes from the save-window-excursion in the the tmm.
+ (defadvice tmm-prompt (around ecb)
+   "Make it compatible with ECB."
+   (if (or (not ecb-minor-mode)
+           (not (equal (selected-frame) ecb-frame)))
+       (ecb-with-original-basic-functions
+        (ecb-with-original-functions
+         ad-do-it))
+     ;; we set temporally `ecb-other-window-behavior' to a function which
+     ;; always selects the "next" window after the
+     ;; `ecb-last-edit-window-with-point'
+     (let ((ecb-other-window-behavior
+            (lambda (win-list edit-win-list ecb-win-list comp-win
+                              mini-win point-loc nth-win)
+              (ecb-next-listelem edit-win-list
+                                 ecb-last-edit-window-with-point)))
+           ;; we must not handle the tmm-stuff as compilation-buffer
+           (ecb-compilation-buffer-names nil)
+           (ecb-compilation-major-modes nil)
+           (ecb-compilation-predicates nil))
+       ad-do-it)))
+
+  
+ (defadvice shrink-window-if-larger-than-buffer (around ecb)
+   "Makes the function compatible with ECB."
+   (or (ad-get-arg 0) (ad-set-arg 0 (selected-window)))
+   (ecb-layout-debug-error "shrink-window-if-larger-than-buffer: window: %s"
+                           (ad-get-arg 0))
+   (if (or (not ecb-minor-mode)
+           (not (equal (window-frame (ad-get-arg 0)) ecb-frame))
+           (member (ad-get-arg 0) (ecb-canonical-ecb-windows-list)))
+       (ecb-with-original-basic-functions
+        (ecb-with-original-functions
+         ad-do-it))
+     (save-selected-window
+       (select-window (ad-get-arg 0))
+       (ecb-layout-debug-error "shrink-window-if-larger-than-buffer: buffer to shrink: %s"
+                               (current-buffer))
+       (let* ((params (frame-parameters))
+              (mini (cdr (assq 'minibuffer params)))
+              (edges (ecb-window-edges))
+              ;; we prevent to shrink the compile-window below
+              ;; `ecb-compile-window-height'
+              (window-min-height (if (and (equal (ad-get-arg 0) ecb-compile-window)
+                                          (and ecb-compile-window-prevent-shrink-below-height
+                                               (not (interactive-p)))
+                                          window-min-height
                                           ecb-compile-window-height-lines
-                                          ecb-compile-window-prevent-shrink-below-height
                                           (< window-min-height
                                              ecb-compile-window-height-lines))
                                      ecb-compile-window-height-lines
                                    window-min-height)))
-          (unless (or (one-window-p 'nomini)
-                      ;; Klaus Berndl <klaus.berndl@sdm.de>: we do nothing if an unsplitted
-                      ;; edit-window should be resized because this would fail (e.g. if
-                      ;; `pop-up-windows' is nil)
-                      (and (not (equal (selected-window) ecb-compile-window))
-                           (not (ecb-edit-window-splitted)))
-                      (not (pos-visible-in-window-p (point-min))))
-            (ecb-layout-debug-error "resize-temp-buffer-window: resize buffer: %s"
-                                    (current-buffer))
-            (if ecb-running-emacs-21
-                (fit-window-to-buffer
-                 (selected-window)
-                 (if (functionp temp-buffer-max-height)
-                     (funcall temp-buffer-max-height (current-buffer))
-                   temp-buffer-max-height))
-              (let* ((max-height (if (functionp temp-buffer-max-height)
-                                     (funcall temp-buffer-max-height (current-buffer))
-                                   temp-buffer-max-height))
-                     (win-height (1- (ecb-window-full-height)))
-                     (min-height (1- window-min-height))
-                     (text-height (window-buffer-height (selected-window)))
-                     (new-height (max (min text-height max-height) min-height)))
-                (enlarge-window (- new-height win-height)))))))))
+         (if (and (< 1 (ecb-with-original-basic-functions
+                        (count-windows)))
+                  (or (equal (ad-get-arg 0) ecb-compile-window)
+                      (not (equal (ecb-edit-window-splitted) 'horizontal)))
+                  (pos-visible-in-window-p (point-min) (ad-get-arg 0))
+                  (not (eq mini 'only))
+                  (or (not mini)
+                      (< (nth 3 edges) (nth 1 (ecb-window-edges mini)))
+                      (> (nth 1 edges) (cdr (assq 'menu-bar-lines params)))))
+             (if ecb-running-emacs-21
+                 (fit-window-to-buffer (ad-get-arg 0)
+                                       (ecb-window-full-height (ad-get-arg 0)))
+               ;; code for GNU Emacs < 21.X
+               (let ((text-height (window-buffer-height (ad-get-arg 0)))
+                     (window-height (ecb-window-full-height)))
+                 ;; Don't try to redisplay with the cursor at the end
+                 ;; on its own line--that would force a scroll and spoil things.
+                 (when (and (eobp) (bolp))
+                   (forward-char -1))
+                 (when (> window-height (1+ text-height))
+                   (shrink-window
+                    (- window-height (max (1+ text-height) window-min-height)))))))))))
 
-  (defadvice pop-to-buffer (around ecb)
-    "Chooses the window with the ECB-adviced version of `display-buffer'."
-    (if (or (not ecb-minor-mode)
-            (null (ad-get-arg 0)))
-        (ecb-with-original-basic-functions
-         (ecb-with-original-functions
-          ad-do-it))
-      (condition-case nil
-          (progn
-            (ecb-layout-debug-error "pop-to-buffer: buffer: %s, %s"
-                                    (ad-get-arg 0) (ad-get-arg 1))
-            (select-window (ecb-with-adviced-functions
-                            (display-buffer (ad-get-arg 0)
-                                            (ad-get-arg 1))))
-            (if (ad-get-arg 2)
-                ;; not the best solution but for now....
-                (bury-buffer (ad-get-arg 0))))
-        ;; This is if the call to the adviced `display-buffer' fails (seems
-        ;; to make problems with C-h i and the *info*-buffer). Then we run the
-        ;; orginal version.
-        (error
-         (ecb-layout-debug-error "pop-to-buffer: adviced version failed for buffer: %s, %s"
-                                 (ad-get-arg 0) (ad-get-arg 1))
-         (if (ecb-buffer-is-dedicated-special-buffer-p (ad-get-arg 0))
-             (ecb-error "Can not go to a invisible special ECB-buffer!")
-           ad-do-it)))
-      (when (ecb-point-in-compile-window)
-        ;; we set the height of the compile-window according to
-        ;; `ecb-enlarged-compilation-window-max-height'
-        (ecb-set-compile-window-height))))       
+ (defadvice resize-temp-buffer-window (around ecb)
+   "Makes the function compatible with ECB."
+   (ecb-layout-debug-error "resize-temp-buffer-window: buffer: %s, window: %s, frame: %s"
+                           (current-buffer) (selected-window) (selected-frame))
+   (if (or (not ecb-minor-mode)
+           (not (equal (selected-frame) ecb-frame))
+           (equal (ecb-where-is-point) 'ecb))
+       (ecb-with-original-basic-functions
+        (ecb-with-original-functions
+         ad-do-it))
+     (if (and (equal (selected-window) ecb-compile-window)
+              (member ecb-compile-window-temporally-enlarge
+                      '(after-selection nil))
+              ;; The *Completions* buffer must always being enlarged!!
+              (not (ecb-string= (buffer-name (current-buffer)) "*Completions*")))
+         (progn
+           (ecb-layout-debug-error "resize-temp-buffer-window: buffer: shrink to comp-win-height")
+           (ecb-toggle-compile-window-height -1))
+       ;; we prevent to shrink the compile-window below
+       ;; `ecb-compile-window-height'
+       (let ((window-min-height (if (and window-min-height
+                                         ecb-compile-window-height-lines
+                                         ecb-compile-window-prevent-shrink-below-height
+                                         (< window-min-height
+                                            ecb-compile-window-height-lines))
+                                    ecb-compile-window-height-lines
+                                  window-min-height)))
+         (unless (or (one-window-p 'nomini)
+                     ;; Klaus Berndl <klaus.berndl@sdm.de>: we do nothing if an unsplitted
+                     ;; edit-window should be resized because this would fail (e.g. if
+                     ;; `pop-up-windows' is nil)
+                     (and (not (equal (selected-window) ecb-compile-window))
+                          (not (ecb-edit-window-splitted)))
+                     (not (pos-visible-in-window-p (point-min))))
+           (ecb-layout-debug-error "resize-temp-buffer-window: resize buffer: %s"
+                                   (current-buffer))
+           (if ecb-running-emacs-21
+               (fit-window-to-buffer
+                (selected-window)
+                (if (functionp temp-buffer-max-height)
+                    (funcall temp-buffer-max-height (current-buffer))
+                  temp-buffer-max-height))
+             (let* ((max-height (if (functionp temp-buffer-max-height)
+                                    (funcall temp-buffer-max-height (current-buffer))
+                                  temp-buffer-max-height))
+                    (win-height (1- (ecb-window-full-height)))
+                    (min-height (1- window-min-height))
+                    (text-height (window-buffer-height (selected-window)))
+                    (new-height (max (min text-height max-height) min-height)))
+               (enlarge-window (- new-height win-height)))))))))
+
+ (defadvice pop-to-buffer (around ecb)
+   "Chooses the window with the ECB-adviced version of `display-buffer'."
+   (if (or (not ecb-minor-mode)
+           (null (ad-get-arg 0)))
+       (ecb-with-original-basic-functions
+        (ecb-with-original-functions
+         ad-do-it))
+     (condition-case nil
+         (progn
+           (ecb-layout-debug-error "pop-to-buffer: buffer: %s, %s"
+                                   (ad-get-arg 0) (ad-get-arg 1))
+           (select-window (ecb-with-adviced-functions
+                           (display-buffer (ad-get-arg 0)
+                                           (ad-get-arg 1))))
+           (if (ad-get-arg 2)
+               ;; not the best solution but for now....
+               (bury-buffer (ad-get-arg 0))))
+       ;; This is if the call to the adviced `display-buffer' fails (seems
+       ;; to make problems with C-h i and the *info*-buffer). Then we run the
+       ;; orginal version.
+       (error
+        (ecb-layout-debug-error "pop-to-buffer: adviced version failed for buffer: %s, %s"
+                                (ad-get-arg 0) (ad-get-arg 1))
+        (if (ecb-buffer-is-dedicated-special-buffer-p (ad-get-arg 0))
+            (ecb-error "Can not go to a invisible special ECB-buffer!")
+          ad-do-it)))
+     (when (ecb-point-in-compile-window)
+       ;; we set the height of the compile-window according to
+       ;; `ecb-enlarged-compilation-window-max-height'
+       (ecb-set-compile-window-height)))))
   
-  ) ;; end of (if ecb-running-xemacs...)
 
 ;; Klaus Berndl <klaus.berndl@sdm.de>: Fixes a bug with ths
 ;; shrink-to-fit stuff: (set-window-buffer ...) has to be called BEFORE
@@ -5148,21 +5147,22 @@ floating-point-numbers. Default referencial width rsp. height are
             (ignore-errors (enlarge-window enlarge-height)))))))
 
 (defun ecb-set-ecb-window-sizes (window-sizes)
-  (ecb-do-with-unfixed-ecb-buffers
-   (let ((sizes (or window-sizes ecb-layout-default-window-sizes))
-         (windows (ecb-canonical-ecb-windows-list))
-         (ref-width (frame-width ecb-frame))
-         (ref-height (if (ecb-compile-window-live-p)
-                         (- (frame-height ecb-frame)
-                            (ecb-window-full-height ecb-compile-window))
-                       (frame-height ecb-frame))))
-     (when sizes
-       (if (= (length windows) (length sizes))
-           (dolist (size sizes)
-             (ecb-set-window-size (car windows) size (cons ref-width ref-height))
-             (setq windows (cdr windows)))
-         (ecb-error "Stored sizes of layout %s not applicable for current window layout!"
-                    ecb-layout-name))))))
+  (unless ecb-windows-hidden
+    (ecb-do-with-unfixed-ecb-buffers
+     (let ((sizes (or window-sizes ecb-layout-default-window-sizes))
+           (windows (ecb-canonical-ecb-windows-list))
+           (ref-width (frame-width ecb-frame))
+           (ref-height (if (ecb-compile-window-live-p)
+                           (- (frame-height ecb-frame)
+                              (ecb-window-full-height ecb-compile-window))
+                         (frame-height ecb-frame))))
+       (when sizes
+         (if (= (length windows) (length sizes))
+             (dolist (size sizes)
+               (ecb-set-window-size (car windows) size (cons ref-width ref-height))
+               (setq windows (cdr windows)))
+           (ecb-error "Stored sizes of layout %s not applicable for current window layout!"
+                      ecb-layout-name)))))))
 
 ;; Klaus Berndl <klaus.berndl@sdm.de>: frame-width is smaller than
 ;; ecb-window-full-width for only one window in the frame. But for now this
