@@ -52,7 +52,7 @@
 ;; The latest version of the ECB is available at
 ;; http://home.swipnet.se/mayhem/ecb.html
 
-;; $Id: ecb.el,v 1.63 2001/04/30 11:56:03 berndl Exp $
+;; $Id: ecb.el,v 1.64 2001/04/30 12:38:31 berndl Exp $
 
 ;;; Code:
 
@@ -577,7 +577,11 @@ will get the face 'default. Returns TEXT."
   (let ((text (copy-sequence orig-text)))
     (if (stringp text)
         (if ecb-font-lock-methods
-            (let ((face (or (nth type ecb-font-lock-method-faces) 'default)))
+            (let* ((face-option-val (nth type ecb-font-lock-method-faces))
+                   (face (or (and face-option-val
+                                  (boundp face-option-val)
+                                  face-option-val)
+                             'default)))
               (put-text-property 0 (length text) 'face face text)
               ;; some special heuristic for better handling of the lisp-dialects
               (when (and (memq major-mode
@@ -589,7 +593,8 @@ will get the face 'default. Returns TEXT."
                          (or (string-match "^\\(&[^& \t]+\\)" text)
                              (string-match "^\\(:[^: \t]+\\)" text)))
                 (put-text-property (match-beginning 1) (match-end 1)
-                                   'face 'font-lock-type-face text)))
+                                   'face (if (boundp 'font-lock-type-face)
+                                             'font-lock-type-face 'default) text)))
           (put-text-property 0 (length text) 'face 'default text)))
     text))
 
@@ -1020,8 +1025,7 @@ OTHER-WINDOW."
 					    (string< (file-name-extension a t)
 						     (file-name-extension b t)))))
 			sorted-files))))
-    (let ((filename (concat path ecb-directory-sep-string file))
-          child)
+    (let ((filename (concat path ecb-directory-sep-string file)))
       (tree-node-add-child
        node
        (ecb-new-child
