@@ -163,6 +163,7 @@ Changing, customizing and redrawing the ECB-layout
 
 * Changing the ECB-layout::     How to change and customize the layout
 * Redrawing the ECB-layout::    How and when redrawing the layout
+* Creating a new ECB-layout::   Interactively creating new layouts
 
 Customizing ECB
 
@@ -178,6 +179,7 @@ All customizable options of ECB
 * ecb-methods::                 Customizing the ECB-methods
 * ecb-history::                 Customizing the ECB-history
 * ecb-layout::                  Customizing the ECB-layout
+* ecb-create-layout::           Customizing options for creating layouts
 * ecb-face-options::            Customizing options for faces
 * ecb-faces::                   Customizing the faces
 * ecb-download::                Customizing how to download ECB
@@ -208,7 +210,7 @@ Entry points for elisp programmers
 * List of hooks::               All available hooks
 * tree-buffer::                 Some words to the tree-buffer-library
 * Adviced functions::           How to deal with the adviced functions
-* New layouts::                 How to program new layouts
+* Programming new layouts::     How to program new layouts
 
 Known conflicts and bugs of ECB
 
@@ -1111,11 +1113,13 @@ A complete manually rebuild is done by @code{ecb-rebuild-methods-buffer}.
 @cindex ECB-layout
 The term @dfn{ECB-layout} means in which windows the ECB-frame is
 divided. This chapter describes all aspects concerning this layout,
-especially changing, customizing and redrawing it.
+especially changing, customizing, redrawing and also creating new
+layouts.
 
 @menu
 * Changing the ECB-layout::     How to change and customize the layout
 * Redrawing the ECB-layout::    How and when redrawing the layout
+* Creating a new ECB-layout::   Interactively creating new layouts
 @end menu
 
 @node Changing the ECB-layout, Redrawing the ECB-layout, The ECB-layout, The ECB-layout
@@ -1619,10 +1623,10 @@ Here are all currently available layouts (Just customize the option
 @end example
 @end table
 
-@node Redrawing the ECB-layout, , Changing the ECB-layout, The ECB-layout
+@node Redrawing the ECB-layout, Creating a new ECB-layout, Changing the ECB-layout, The ECB-layout
 @subsection Redrawing the ECB-layout
 
-@cindex redraw
+@cindex Redraw
 If you have unintenionally destroyed the ECB-layout, you can always
 restore the layout with calling @code{ecb-redraw-layout}. This is even
 true, if you get messages like ``wrong-type-argument window-live-p
@@ -1636,6 +1640,74 @@ takes several seconds because the quick redraw is not really safe and
 may have some drawbacks! On normal machines the full redraw should be
 done in << 1s!
 
+@node Creating a new ECB-layout, , Redrawing the ECB-layout, The ECB-layout
+@subsection Interactively creating new layouts
+
+@cindex New layouts
+@cindex Creating new layouts
+If you want to create your own ECB-layout then you can do this very
+easy ``by example'' with the command @code{ecb-create-new-layout}.
+This command creates a new empty frame and offers a small set of keys
+to create the new layout by splitting windows.
+@code{ecb-create-new-layout} and these keys are your guide during the
+layout-creation-process.
+
+After calling @code{ecb-create-new-layout} you will be asked which
+type of layout you want to create: left, right, top. Here you specify
+where the ECB-tree-windows/buffers should be located in the ECB-frame:
+@itemize @minus
+@item left: All ECB-tree-windows are located on the left side
+@item right: All ECB-tree-windows are located on the right side
+@item top: All ECB-tree-windows are located on the top side
+@end itemize
+
+Afterwards you will see a frame like follows (here the layout-type is
+left):
+
+@example
+@group
+-------------------------------------------------------
+|<point>       |                                      |
+|              | ECB-layout creation mode             |
+|              | ========================             |
+|              |                                      |
+|              | <This is a durable help-screen>      |
+|              |                                      |
+|              |                                      |
+|              |                                      |
+|              |                                      |
+|              |                                      |
+|              |                                      |
+|              |                                      |
+|              |                                      |
+|              |                                      |
+|              |                                      |
+-------------------------------------------------------
+@end group
+@end example
+
+The big window (here the right window) will be the edit-window of the
+new layout and can not be selected, deleted or splitted during the
+creation process. It displays the help-screen for the layout-creation
+mode. Here all the available commands are displayed.
+
+The small window (here the left window) contains the point and can be
+splitted by you wherever you want (@kbd{C-s}). You must give every
+ECB-tree-window you create a type (@kbd{C-t}) which can be either
+``directories'', ``sources'', ``methods'' or ``history''.
+
+If you are satisfied with your new layout just hit @kbd{C-q}. You wil
+be asked for a new layout-number and after inserting this number the
+new layout is saved in the file defined by the option
+@code{ecb-create-layout-file}. The new layout is now available via the
+option @code{ecb-layout-nr}.
+
+@strong{NOTE}: During the layout-creation process only the commands
+displayed in the help-screen are available. ALL other commands are
+temporaly disabled (even the mouse-commands).
+
+For programming new layouts with emacs-lisp see @ref{Programming new
+layouts}.
 
 @node Hiding the ECB windows, Back/forward navigation, The ECB-layout, Usage of ECB
 @section Hiding/Showing the ECB windows
@@ -1782,6 +1854,11 @@ the behavior is defined in the option
 @code{ecb-clear-history-behavior} otherwise the user is prompted what
 buffers should be cleared from the history-buffer. For further
 explanation see @code{ecb-clear-history-behavior}.
+@end deffn
+
+@deffn Command create-new-layout
+Start process for interactively creating a new ECB-layout
+(@pxref{Creating a new ECB-layout}).
 @end deffn
 
 @deffn Command current-buffer-sync &optional force
@@ -2124,6 +2201,7 @@ readable option index. @xref{Option Index}.
 * ecb-methods::                 Customizing the ECB-methods
 * ecb-history::                 Customizing the ECB-history
 * ecb-layout::                  Customizing the ECB-layout
+* ecb-create-layout::           Customizing options for creating layouts
 * ecb-face-options::            Customizing options for faces
 * ecb-faces::                   Customizing the faces
 * ecb-download::                Customizing how to download ECB
@@ -3283,7 +3361,7 @@ Asks, if the history-entry should be removed after the kill.
 Sorts the items in the history buffer.
 @end defopt
 
-@node ecb-layout, ecb-face-options, ecb-history, Customizable options
+@node ecb-layout, ecb-create-layout, ecb-history, Customizable options
 @subsection Group ecb-layout
 
 @noindent
@@ -3635,8 +3713,26 @@ left or right of the edit window. If the number is less than 1.0 the
 width is a fraction of the frame width.
 @end defopt
 
+@node ecb-create-layout, ecb-face-options, ecb-layout, Customizable options
+@subsection Group ecb-create-layout
 
-@node ecb-face-options, ecb-faces, ecb-layout, Customizable options
+@noindent
+This group contains the following options:
+
+@defopt create-layout-file
+File where all layouts created by @code{ecb-create-new-layout} are
+stored.
+@end defopt
+
+@defopt ecb-create-layout-frame-height
+Frame height of the layout creation frame.
+@end defopt
+
+@defopt ecb-create-layout-frame-width
+Frame width of the layout creation frame.
+@end defopt
+
+@node ecb-face-options, ecb-faces, ecb-create-layout, Customizable options
 @subsection Group ecb-face-options
 
 @noindent
@@ -4351,7 +4447,7 @@ elisp-program. This contains:
 * List of hooks::               All available hooks
 * tree-buffer::                 Some words to the tree-buffer-library
 * Adviced functions::           How to deal with the adviced functions
-* New layouts::                 How to program new layouts
+* Programming new layouts::     How to program new layouts
 @end menu
 
 @node List of variables, List of hooks, Elisp programming, Elisp programming
@@ -4408,7 +4504,7 @@ tree-buffer set in @code{ecb-tree-buffers}!
 An application may only use the methods tree-buffer.el provides but no
 internal variables!
 
-@node Adviced functions, New layouts, tree-buffer, Elisp programming
+@node Adviced functions, Programming new layouts, tree-buffer, Elisp programming
 @section How to deal with the adviced window-functions
 
 ECB offers for packages which work during activated ECB three macros
@@ -4425,10 +4521,153 @@ adviced functions or only some adviced functions:
 For a detailed explanation of each macro read the documentation with
 @code{describe-function}!
 
-@node New layouts, , Adviced functions, Elisp programming
+@node Programming new layouts, , Adviced functions, Elisp programming
 @section How to program new layouts
 
-Documentation will be added in future!
+It's is strongly recommended to define new layouts interactively with
+the command @code{ecb-create-new-layout} (@pxref{Creating a new
+ECB-layout}). But if you want to program a new layout with elisp-code
+use the macro @code{ecb-layout-define} (the following definiton has
+stripped the prefix ``ecb-'' for better indexing this manual):
+
+@defmac layout-define number type &rest create-code
+Creates a new ECB-layout with number @var{NUMBER}. @var{TYPE} is the
+type of the new layout and is literal, i.e. not evaluated. It can be
+left, right or top. @var{DOC} is the docstring for the new
+layout-function ``ecb-layout-function-<number>''. @var{CREATE-CODE} is
+all the lisp code which is necessary to define the
+ECB-windows/buffers.
+
+Preconditions for @var{CREATE-CODE}:
+@enumerate
+@item
+Current frame is splitted at least in one edit-window and the column
+(for layout types left and right) resp. row (for a top layout) for the
+ECB-tree-windows/buffers. Depending on the value of the option
+@code{ecb-compile-window-height} there is also a compile window at the
+bottom of the frame which is stored in @code{ecb-compile-window}.
+
+@item
+All windows are not dedicated.
+
+@item
+Neither the edit-window nor the compile-window (if there is one) are
+selected.
+@end enumerate
+
+Postconditions for @var{CREATE-CODE}:
+@enumerate
+@item
+The edit-window must be the selected window and must not be dedicated
+and splitted.
+@end enumerate
+
+Things @var{CREATE-CODE} has to do:
+@enumerate
+@item
+Splitting the ECB-tree-windows-column/row (s.a.) in all the ECB-windows
+the layout should contain (directories, sources, methods and history). The
+split must not be done with other functions than @code{ecb-split-hor} and
+@code{ecb-split-ver}! It is recommened not to to use a ``hard'' number of
+split-lines or -rows but using fractions between 0.1 and 0.9!
+
+@item
+Naming each ECB-tree-window with one of the following functions:
+@itemize @minus
+@item @code{ecb-set-directories-buffer}
+@item @code{ecb-set-sources-buffer}
+@item @code{ecb-set-methods-buffer}
+@item @code{ecb-set-history-buffer}
+@end itemize
+Each layout can only contain one of each tree-buffer-type!
+
+@item
+The ECB-tree-windows-column/row must contain at least one named
+ECB-tree-window.
+
+@item
+Every(!) ECB-tree-window must be named as described in 2.
+
+@item
+@var{CREATE-CODE} must work correctly regardless if there is already a
+compile-window (stored in @code{ecb-compile-window}) or not
+(@code{ecb-compile-window} is nil).
+@end enumerate
+
+Things @var{CREATE-CODE} can do or can use:
+@enumerate
+@item
+The value of @code{ecb-compile-window} which contains the compile-window (if
+there is one). Using the values of @code{ecb-compile-window-height},
+@code{ecb-windows-width}, @code{ecb-windows-height}.
+@end enumerate
+
+Things @var{CREATE-CODE} must NOT do:
+@enumerate
+@item Splitting the edit-window
+@item Creating a compile-window
+@item
+Deleting the edit-window, the compile-window (if there is any) or the
+ECB-tree-windows-column/row (see Precondition 1.)
+@item
+Referring to the value of @code{ecb-edit-window} because this is always nil
+during @var{CREATE-CODE}.
+@end enumerate
+@end defmac
+
+Use this macro to program new layouts within your @file{.emacs} or any
+other file which is loaded into your Emacs. After loading the file(s)
+with all the new layout-definitions you can use it by customizing the
+option @code{ecb-layout-nr} to the appropriate number.
+
+Here is an example:
+
+@example
+@group
+(ecb-layout-define 100 left nil
+  ;; The frame is already splitted side-by-side and point stays in the
+  ;; left window (= the ECB-tree-window-column)
+
+  ;; Here is the creation code for the new layout
+  
+  ;; 1. Defining the current window/buffer as ECB-methods buffer
+  (ecb-set-methods-buffer)
+  ;; 2. Splitting the ECB-tree-windows-column in two windows
+  (ecb-split-ver 0.75 t)
+  ;; 3. Go to the second window
+  (other-window 1)
+  ;; 4. Defining the current window/buffer as ECB-history buffer
+  (ecb-set-history-buffer)
+  ;; 5. Make the ECB-edit-window current (see Postcondition above)
+  (select-window (next-window)))
+@end group
+@end example
+
+This layout definition defines a layout nr. 100 which looks like:
+
+@example
+@group
+-------------------------------------------------------
+|              |                                      |
+|              |                                      |
+|              |                                      |
+|  Methods     |                                      |
+|              |                                      |
+|              |                                      |
+|              |               Edit                   |
+|              |                                      |
+|              |                                      |
+|--------------|                                      |
+|              |                                      |
+|  History     |                                      |
+|              |                                      |
+-------------------------------------------------------
+|                                                     |
+|                    Compilation                      |
+|                                                     |
+-------------------------------------------------------
+@end group
+@end example
 
 @node Conflicts and bugs, FAQ, Elisp programming, Top
 @chapter Known conflicts and bugs of ECB

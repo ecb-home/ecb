@@ -138,7 +138,7 @@ a backtrace-buffer and inserts the contents of that."
       (insert-string "\n\n")) 
     (let* ((messages-buffer 
 	    (get-buffer
-	     (if running-xemacs " *Message-Log*" "*Messages*")))
+	     (if ecb-running-xemacs " *Message-Log*" "*Messages*")))
 	   (backtrace-buffer (get-buffer "*Backtrace*")))
 
       ;;insert the contents of the backtrace buffer if it is there. 

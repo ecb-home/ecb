@@ -50,35 +50,35 @@ The parameters are set for the following display-types:
                                      FG-DARK-COL, BG-DARK-COL
 - t: HEIGHT, BOLD-P, ITALIC-P, INHERIT, FG-REST, BG-REST, REVERSE-VIDEO."
   `(list (list '((class color) (background light))
-               (append (if (and ,height running-emacs-21) (list :height ,height))
-                       (if ,bold-p (if running-emacs-21
+               (append (if (and ,height ecb-running-emacs-21) (list :height ,height))
+                       (if ,bold-p (if ecb-running-emacs-21
                                        (list :weight 'bold)
                                      (list :bold t)))
-                       (if ,italic-p (if running-emacs-21
+                       (if ,italic-p (if ecb-running-emacs-21
                                          (list :slant 'italic)
                                        (list :italic t)))
-                       (if (and ,inherit running-emacs-21) (list :inherit ,inherit))
+                       (if (and ,inherit ecb-running-emacs-21) (list :inherit ,inherit))
                        (if ,fg-light-col (list :foreground ,fg-light-col))
                        (if ,bg-light-col (list :background ,bg-light-col))))
          (list '((class color) (background dark))
-               (append (if (and ,height running-emacs-21) (list :height ,height))
-                       (if ,bold-p (if running-emacs-21
+               (append (if (and ,height ecb-running-emacs-21) (list :height ,height))
+                       (if ,bold-p (if ecb-running-emacs-21
                                        (list :weight 'bold)
                                      (list :bold t)))
-                       (if ,italic-p (if running-emacs-21
+                       (if ,italic-p (if ecb-running-emacs-21
                                          (list :slant 'italic)
                                        (list :italic t)))
-                       (if (and ,inherit running-emacs-21) (list :inherit ,inherit))
+                       (if (and ,inherit ecb-running-emacs-21) (list :inherit ,inherit))
                        (if ,fg-dark-col (list :foreground ,fg-dark-col))
                        (if ,bg-dark-col (list :background ,bg-dark-col))))
-         (list 't (append (if (and ,height running-emacs-21) (list :height ,height))
-                          (if ,bold-p (if running-emacs-21
+         (list 't (append (if (and ,height ecb-running-emacs-21) (list :height ,height))
+                          (if ,bold-p (if ecb-running-emacs-21
                                           (list :weight 'bold)
                                         (list :bold t)))
-                          (if ,italic-p (if running-emacs-21
+                          (if ,italic-p (if ecb-running-emacs-21
                                             (list :slant 'italic)
                                           (list :italic t)))
-                          (if (and ,inherit running-emacs-21) (list :inherit ,inherit))
+                          (if (and ,inherit ecb-running-emacs-21) (list :inherit ,inherit))
                           (if ,fg-rest (list :foreground ,fg-rest))
                           (if ,bg-rest (list :foreground ,bg-rest))
                           (if ,reverse-video-p (list :reverse-video t))))))
@@ -353,10 +353,10 @@ it by clicking onto a node in the methods buffer."
   :group 'ecb-faces)
 
 (defface ecb-type-token-group-face (ecb-face-default nil t nil nil
-                                                     (if running-xemacs
+                                                     (if ecb-running-xemacs
                                                          "dimgray"
                                                        "dim gray")
-                                                     (if running-xemacs
+                                                     (if ecb-running-xemacs
                                                          "dimgray"
                                                        "dim gray"))
   "*Define face used with option `ecb-type-token-display'."

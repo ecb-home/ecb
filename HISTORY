@@ -1,6 +1,13 @@
 Version 1.90:
 -------------
 
+- Now ECB offers a command `ecb-create-new-layout' for interactively creating
+  new layouts "by example". Read the online-help. (Klaus)
+
+- Completely rewritten how to program new layouts. Now there is a new macro
+  `ecb-layout-define' which offers very easy programming of new layouts.
+  (Klaus).
+
 - Now the ECB-tree-buffers offer in their popup-menues a "Grep" and a "Grep
   recursive" (= grep-find) command where you can perform an easy grep in every
   directory without buffer-switching before. See also the new options
