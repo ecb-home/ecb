@@ -104,7 +104,7 @@
 ;; - `ecb-with-some-adviced-functions'
 ;;
 
-;; $Id: ecb-layout.el,v 1.144 2003/01/14 13:46:41 berndl Exp $
+;; $Id: ecb-layout.el,v 1.145 2003/01/14 16:22:50 berndl Exp $
 
 ;;; Code:
 
@@ -524,13 +524,11 @@ window."
   "Return a list of all current visible special dedicated ECB-windows
 \(starting from the left-most top-most window) in the order `other-window'
 would walk through these windows."
-  (if (not (or ecb-running-xemacs ecb-running-emacs-21))
-      (error "Canonical window list not possible with Emacs 20.X!")
-    (delete nil (mapcar (function (lambda (elem)
-                                    (if (window-dedicated-p elem)
-                                        elem)))
-                        (window-list ecb-frame 0
-                                     (frame-first-window ecb-frame))))))
+  (delete nil (mapcar (function (lambda (elem)
+                                  (if (window-dedicated-p elem)
+                                      elem)))
+                      (ecb-window-list ecb-frame 0
+                                       (frame-first-window ecb-frame)))))
 
 (defcustom ecb-layout-window-sizes nil
   "*Specifies the sizes of the ECB windows for each layout.
