@@ -22,7 +22,7 @@
 ;; with GNU Emacs; see the file COPYING. If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-jde.el,v 1.2 2003/02/24 12:40:16 berndl Exp $
+;; $Id: ecb-jde.el,v 1.3 2003/03/04 15:10:17 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -126,7 +126,19 @@ is not available then `find-file' is called."
     (if (fboundp 'jde-gen-class-buffer)
         (jde-gen-class-buffer file)
       (find-file file))))
+
+(when (locate-library "efc")
+  (require 'efc)
+  (if (boundp 'efc-dialog-show-before-hook)
+      (add-hook 'efc-dialog-show-before-hook
+                (function (lambda ()
+                            (ecb-toggle-compile-window -1)))))
   
+  (if (boundp 'efc-dialog-close-after-hook)
+      (add-hook 'efc-dialog-close-after-hook
+                (function (lambda ()
+                            (ecb-toggle-compile-window 1))))))
+
 
 (silentcomp-provide 'ecb-jde)
 
