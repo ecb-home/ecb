@@ -69,10 +69,10 @@ edit-window. Does nothing if called in another frame as the `ecb-frame'."
     ;; now we handle if bs-show should always display in the compile-window
     (let ((my-bs-buffer (get-buffer-create "*buffer-selection*")))
       ;; ecb-compilation-buffer-p needs a living buffer!
-      (if (and (ecb-compilation-buffer-p my-bs-buffer)
-               ecb-compile-window-height)
-          (ecb-with-adviced-functions
-           (display-buffer (buffer-name my-bs-buffer)))))))
+      (when (and (ecb-compilation-buffer-p my-bs-buffer)
+                 ecb-compile-window-height)
+        (ecb-with-adviced-functions
+         (display-buffer (buffer-name my-bs-buffer)))))))
 
 (defadvice Electric-pop-up-window (around ecb)
   "Ensures that the electric-* commands \(e.g. `electric-buffer-list') work

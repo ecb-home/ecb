@@ -78,7 +78,7 @@
 (setq ecb-latest-news
       `(
         ,(h-sub-section "ECB 2.21 released! (2004-02-16)"
-                        "Better compatibility with other packages: Applications like Gnus, BBDB or Xrefactory run within the ECB-frame without conflicts - even when the ECB-windows are visible. Some important bug fixes. "
+                        "Better compatibility with other packages: Applications like Gnus, BBDB or Xrefactory run within the ECB-frame without conflicts - even when the ECB-windows are visible. The command `balance-windows' works now. Some important bug fixes. "
                         (h-link "docs/Install-and-first-steps.html#Install%20and%20first%20steps" "Here") " is a short installation guide. "
                         "Click " (h-link "NEWS.html" "here")
                         " for information about changes in the new version. ")
