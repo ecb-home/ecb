@@ -460,6 +460,17 @@ this variable."
   (if (ecb-point-in-edit-window)
       (setq ecb-last-edit-window-with-point (selected-window))))
 
+(defun ecb-ediff-before-setup-hook ()
+  "Added to the `ediff-before-setup-windows-hook' during ECB is activated. It
+temporally deactivates the advices because otherwise ediff does not work."
+  (ecb-activate-adviced-functions nil))
+
+(defun ecb-ediff-cleanup-hook ()
+  "Added to the `ediff-cleanup-hook' during ECB is activated. It
+restores the advices after finishing ediff."
+  (ecb-activate-adviced-functions ecb-advice-window-functions))
+
+
 ;; here come the advices
 
 ;; Important: `other-window', `delete-window', `delete-other-windows',

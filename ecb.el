@@ -713,7 +713,7 @@ current-buffer is saved."
 edit-window otherwise nothing is done."
   (interactive)
   (when (ecb-point-in-edit-window)
-    (ecb-update-methods-buffer-internal)))
+    (ecb-update-methods-buffer--internal)))
 
 (defun ecb-update-methods-buffer--internal()
   "Updates the methods buffer with the current buffer."
@@ -1084,6 +1084,9 @@ with the actually choosen layout \(see `ecb-layout-nr')."
               'ecb-set-edit-window-split-hook-function)
     (add-hook 'help-mode-hook
               'ecb-set-edit-window-split-hook-function)
+    (add-hook 'ediff-before-setup-windows-hook
+              'ecb-ediff-before-setup-hook)
+    (add-hook 'ediff-cleanup-hook 'ecb-ediff-cleanup-hook)
     (setq ecb-activated t)
     ;; we must update the directories buffer first time
     (ecb-update-directories-buffer)
@@ -1132,6 +1135,9 @@ with the actually choosen layout \(see `ecb-layout-nr')."
                  'ecb-set-edit-window-split-hook-function)
     (remove-hook 'help-mode-hook
                  'ecb-set-edit-window-split-hook-function)
+    (remove-hook 'ediff-before-setup-windows-hook
+              'ecb-ediff-before-setup-hook)
+    (remove-hook 'ediff-cleanup-hook 'ecb-ediff-cleanup-hook)
     (setq ecb-activated nil)
     ;; run any personal hooks
     (run-hooks 'ecb-deactivate-hook))
