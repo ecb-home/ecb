@@ -31,7 +31,7 @@
 ;; For the ChangeLog of this file see the CVS-repository. For a complete
 ;; history of the ECB-package see the file NEWS.
 
-;; $Id: tree-buffer.el,v 1.112 2003/05/06 08:26:38 berndl Exp $
+;; $Id: tree-buffer.el,v 1.113 2003/07/04 16:27:01 berndl Exp $
 
 ;;; Code:
 
@@ -519,6 +519,11 @@ inserted and the TEXT itself"
     (when (and tree-buffer-expand-symbol-before
 	       (tree-node-is-expandable node))
       (tree-buffer-insert-text (if (tree-node-is-expanded node) "[-]" "[+]"))
+      ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: Only this is necessary to
+      ;; prepare ECB for displaying images!!
+;;       (require 'speedbar)
+;;       (require 'sb-image)
+;;       (speedbar-insert-image-button-maybe (- (point) 3) 3)
       (insert " "))
     (tree-buffer-insert-text name (tree-buffer-get-node-facer node) t)
     (when (and (not tree-buffer-expand-symbol-before)
@@ -819,6 +824,7 @@ mentioned above!"
              (aset v 0 (caar menu-items))
              (aset v 1 (list (cadar menu-items)
                              '(tree-buffer-get-node-at-point)))
+             (aset v 2 t)
              v))
        (cons (cadar menu-items)
 	     (cons (caar menu-items) t)))
