@@ -122,7 +122,7 @@
 ;;   + The edit-window must not be splitted and the point must reside in
 ;;     the not deleted edit-window.
 
-;; $Id: ecb-layout.el,v 1.40 2001/05/06 08:34:54 berndl Exp $
+;; $Id: ecb-layout.el,v 1.41 2001/05/06 12:08:58 creator Exp $
 
 ;;; Code:
 
@@ -403,6 +403,39 @@ the `ecb-deactivate-hook'."
   "*Use dedicated windows for the ECB buffers."
   :group 'ecb-layout
   :type 'boolean)
+
+(defcustom ecb-layout-window-sizes (make-vector 10 (make-list 5 nil))
+  "*Specifies the sizes of the ECB windows for each layout. The easiest way to
+change this variable is to change the window sizes by dragging the window
+borders using the mouse and then store the window sizes by calling the
+`ecb-store-window-sizes' function."
+  :group 'ecb-layout
+  :initialize 'custom-initialize-default
+  :set ecb-layout-option-set-function
+  :type (cons
+	 'vector
+	 (let ((i 0) l)
+	   (while (< i 10)
+	     (setq l (list-append
+		      l
+		      (list
+		       (list-append
+			(list
+			 'list
+			 ':tag (concat "Layout " (int-to-string i)))
+			(mapcar
+			 (function
+			  (lambda (item)
+			    (list 'choice ':tag item
+				  '(cons :tag "Custom size"
+					 :value (0 . 0)
+					 (integer :tag "Width")
+					 (integer :tag "Height"))
+				  '(const :tag "Default" nil))))
+			 '("Edit Window" "ECB Directories" "ECB Sources"
+			   "ECB History" "ECB Methods"))))))
+	     (setq i (1+ i)))
+	   l)))
 
 ;; ====== internal variables ====================================
 
@@ -1125,6 +1158,9 @@ this function the edit-window is selected."
       (set-window-start ecb-edit-window saved-edit-window-start)
       (when ecb-split-edit-window
 	(set-window-buffer (next-window ecb-edit-window) saved-edit-buffer-2)))
+
+    ;; Restore saved window sizes
+    (ecb-restore-window-sizes)
     
     ;; at the end of the redraw we always stay in that edit-window as before
     ;; the redraw
@@ -1145,6 +1181,58 @@ this function the edit-window is selected."
     (if pos-before-redraw
 	(goto-char pos-before-redraw))))
 
+
+(defun ecb-store-window-sizes()
+  "Stores the sizes of the ECB windows for the current layout. The size of the
+ECB windows will be set to their stored values when `ecb-redraw-layout' or
+`ecb-restore-window-sizes' is called. To reset the window sizes to their default
+values call `ecb-restore-default-window-sizes'."
+  (interactive)
+  (aset ecb-layout-window-sizes ecb-layout-nr (ecb-get-window-sizes)))
+
+(defun ecb-restore-window-sizes()
+  "Sets the sizes of the ECB windows to their stored values."
+  (interactive)
+  (ecb-set-window-sizes (aref ecb-layout-window-sizes ecb-layout-nr)))
+
+(defun ecb-restore-default-window-sizes()
+  "Resets the sizes of the ECB windows to their default values."
+  (interactive)
+  (aset ecb-layout-window-sizes ecb-layout-nr nil)
+  (ecb-redraw-layout))
+
+(defun ecb-get-window-size(window)
+  (when window
+    (cons (window-width window) (window-height window))))
+
+(defun ecb-get-window-sizes()
+  (cons
+   (ecb-get-window-size ecb-edit-window)
+   (mapcar
+    (function (lambda (buffer)
+		(ecb-get-window-size (get-buffer-window buffer))))
+    (list ecb-directories-buffer-name
+	  ecb-sources-buffer-name
+	  ecb-history-buffer-name
+	  ecb-methods-buffer-name))))
+
+(defun ecb-set-window-size(window size)
+  (when (and window size)
+    (save-selected-window
+      (select-window window)
+      (enlarge-window (- (car size) (window-width window)) t)
+      (enlarge-window (- (cdr size) (window-height window))))))
+
+(defun ecb-set-window-sizes(sizes)
+  (when sizes
+    (ecb-set-window-size ecb-edit-window (car sizes))
+    (let ((buffers (list ecb-directories-buffer-name
+			 ecb-sources-buffer-name
+			 ecb-history-buffer-name
+			 ecb-methods-buffer-name)))
+      (dolist (size (cdr sizes))
+	(ecb-set-window-size (get-buffer-window (car buffers)) size)
+	(setq buffers (cdr buffers))))))
 
 ;; ========= Current available layouts ===============================
 
