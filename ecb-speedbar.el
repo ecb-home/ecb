@@ -70,8 +70,10 @@
 
 (require 'speedbar)
 
-(defconst ecb-speedbar-version-ok (string-match "^0\\.\\(1[4-9]\\|[2-9][0-9]*\\)"
-                                                speedbar-version)
+(defconst ecb-speedbar-version-ok (and (boundp 'speedbar-version)
+                                       (stringp speedbar-version)
+                                       (string-match "^0\\.\\(1[4-9]\\|[2-9][0-9]*\\)"
+                                                     speedbar-version))
   "ECB can only integrate speedbar versions >= 0.14beta1 so the value is only
 true for these versions.")
 
