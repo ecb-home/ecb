@@ -142,6 +142,7 @@ Usage of ECB
 * The Methods buffer::          Using and customizing he Methods-buffer
 * The ECB-layout::              Changing, customizing, redrawing the layout
 * Hiding the ECB windows::      Hiding/Showing the ECB-windows
+* Back/forward navigation::     Back- and forward navigation like a browser
 * ECB-window synchronizing::    Auto./manual synchronizing the ECB-windows
 * Interactive ECB commands::    All interactive user-commands of ECB
 
@@ -192,8 +193,10 @@ Tips and tricks
 * Changing faces::              Changing faces in the ECB tree-buffers
 * Small screens::               Working with small screens
 * Simulating speedbar::         Simulating speedbar without an extra frame
-* Optimze scrolling::           Optimze scrolling in the edit-window
+* Integrating speedbar::        Integrating speedbar in the ECB-frame
+* Optimize scrolling::           Optimize scrolling in the edit-window
 * Large directories::           Working with large directories
+* Using eshell::                Optimal using of eshell in ECB
 
 Known conflicts and bugs of ECB
 
@@ -563,6 +566,7 @@ Emacs Code Browser.
 * The Methods buffer::          Using and customizing he Methods-buffer
 * The ECB-layout::              Changing, customizing, redrawing the layout
 * Hiding the ECB windows::      Hiding/Showing the ECB-windows
+* Back/forward navigation::     Back- and forward navigation like a browser
 * ECB-window synchronizing::    Auto./manual synchronizing the ECB-windows
 * Interactive ECB commands::    All interactive user-commands of ECB
 @end menu
@@ -972,7 +976,7 @@ may have some drawbacks! On normal machines the full redraw should be
 done in << 1s!
 
 
-@node Hiding the ECB windows, ECB-window synchronizing, The ECB-layout, Usage of ECB
+@node Hiding the ECB windows, Back/forward navigation, The ECB-layout, Usage of ECB
 @section Hiding/Showing the ECB windows
 
 @cindex Hide windows
@@ -984,7 +988,37 @@ deactivating the advices for @code{delete-other-windows} and/or
 (@pxref{Tips and tricks}) or if you want to have maximum space for
 editing and you don't need the browsing windows all the time.
 
-@node ECB-window synchronizing, Interactive ECB commands, Hiding the ECB windows, Usage of ECB
+@node Back/forward navigation, ECB-window synchronizing, Hiding the ECB windows, Usage of ECB
+@section Back- and forward navigation like a browser
+
+With ECB you can ``browse'' in your source-files like with a
+web-browser. This means ECB stores the current buffer- and
+window-position relative to the current token@footnote{e.g. a method,
+a variable or any other semantic token} in the edit-window after
+
+@itemize @minus
+@item selecting a token in the ECB-methods buffer or
+@item selecting a source-file in the ECB-sources/history-buffer.
+@end itemize
+
+ECB offers two commands @code{ecb-nav-goto-next} (@kbd{C-c . n}) and
+@code{ecb-nav-goto-previous} (@kbd{C-c . p}) to go forward and
+backward within this navigation historylist. These commands are also
+available via the menu ``ECB --> Navigate''.
+
+Aside normal ``location-browsing'' this is usefull for example in a
+scenario where @code{ecb-token-jump-narrow} is activated:
+
+@enumerate
+@item You edit a function
+@item Goto another function above the current in the same file
+@item Add a few lines
+@item Call ecb-nav-goto-previous
+
+Now you will edit at the same place in the function.
+@end enumerate
+
+@node ECB-window synchronizing, Interactive ECB commands, Back/forward navigation, Usage of ECB
 @section Synchronization of the ECB-windows
 
 Per default ECB synchronizes automatically the contents of the
@@ -1167,6 +1201,16 @@ Make the ECB-sources window the current window.
 Toggle ECB minor mode. With prefix argument @var{ARG}, turn on if
 positive, otherwise off. Return non-@code{nil} if the minor mode is
 enabled.
+@end deffn
+
+@deffn Command ecb-nav-goto-previous
+Go backward in the navigation historylist, @xref{Back/forward
+navigation}.
+@end deffn
+
+@deffn Command ecb-nav-goto-next
+Go forward in the navigation historylist, @xref{Back/forward
+navigation}.
 @end deffn
 
 @deffn Command ecb-rebuild-methods-buffer
@@ -3238,8 +3282,10 @@ situations.
 * Changing faces::              Changing faces in the ECB tree-buffers
 * Small screens::               Working with small screens
 * Simulating speedbar::         Simulating speedbar without an extra frame
-* Optimze scrolling::           Optimze scrolling in the edit-window
+* Integrating speedbar::        Integrating speedbar in the ECB-frame
+* Optimize scrolling::          Optimize scrolling in the edit-window
 * Large directories::           Working with large directories
+* Using eshell::                Optimal using of eshell in ECB
 @end menu
 
 @node Changing faces, Small screens, Tips and tricks, Tips and tricks
@@ -3308,7 +3354,7 @@ The possibility of hiding temporally the ECB windows like described
 above is also useful for all the other layouts.
 
 
-@node Simulating speedbar, Optimze scrolling, Small screens, Tips and tricks
+@node Simulating speedbar, Integrating speedbar, Small screens, Tips and tricks
 @section Simulating speedbar without an extra frame
 
 @cindex Speedbar
@@ -3339,9 +3385,13 @@ directories-tree-buffer.
 Save your changes.
 @end enumerate
 
+@node Integrating speedbar, Optimize scrolling, Simulating speedbar, Tips and tricks
+@section Integrating speedbar in the ECB-frame
 
-@node Optimze scrolling, Large directories, Simulating speedbar, Tips and tricks
-@section Optimze scrolling in the edit-window
+This feature will be first available in future versions of ECB.
+
+@node Optimize scrolling, Large directories, Integrating speedbar, Tips and tricks
+@section Optimize scrolling in the edit-window
 
 @cindex Scrolling
 Emacs 20.X seems to slow down scrolling if there is a horizontal split
@@ -3363,7 +3413,7 @@ these versions of Emacs there should be no scrolling problem even with
 @code{scroll-step} has value 1.
 
 
-@node Large directories, , Optimze scrolling, Tips and tricks
+@node Large directories, Using eshell, Optimize scrolling, Tips and tricks
 @section Working with large directories
 
 If @code{ecb-source-path} contains directories with many files and subdirs,
@@ -3374,6 +3424,10 @@ of ECB (if displayed in current layout!) can slow down dramatically.
 If this is a problem the contents of certain directories can be cached
 which increases the speed a lot. See @code{ecb-cache-directory-contents}.
 
+@node Using eshell, , Large directories, Tips and tricks
+@section Optimal using of eshell in ECB
+
+Documentation currently not available.
 
 @node Elisp programming, Conflicts and bugs, Tips and tricks, Top
 @chapter Entry points for elisp programmers

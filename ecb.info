@@ -67,6 +67,7 @@ Usage of ECB
 * The Methods buffer::          Using and customizing he Methods-buffer
 * The ECB-layout::              Changing, customizing, redrawing the layout
 * Hiding the ECB windows::      Hiding/Showing the ECB-windows
+* Back/forward navigation::     Back- and forward navigation like a browser
 * ECB-window synchronizing::    Auto./manual synchronizing the ECB-windows
 * Interactive ECB commands::    All interactive user-commands of ECB
 
@@ -117,8 +118,10 @@ Tips and tricks
 * Changing faces::              Changing faces in the ECB tree-buffers
 * Small screens::               Working with small screens
 * Simulating speedbar::         Simulating speedbar without an extra frame
-* Optimze scrolling::           Optimze scrolling in the edit-window
+* Integrating speedbar::        Integrating speedbar in the ECB-frame
+* Optimize scrolling::           Optimize scrolling in the edit-window
 * Large directories::           Working with large directories
+* Using eshell::                Optimal using of eshell in ECB
 
 Known conflicts and bugs of ECB
 
@@ -470,6 +473,7 @@ Emacs Code Browser.
 * The Methods buffer::          Using and customizing he Methods-buffer
 * The ECB-layout::              Changing, customizing, redrawing the layout
 * Hiding the ECB windows::      Hiding/Showing the ECB-windows
+* Back/forward navigation::     Back- and forward navigation like a browser
 * ECB-window synchronizing::    Auto./manual synchronizing the ECB-windows
 * Interactive ECB commands::    All interactive user-commands of ECB
 
@@ -870,7 +874,7 @@ may have some drawbacks! On normal machines the full redraw should be
 done in << 1s!
 
 
-File: ecb.info,  Node: Hiding the ECB windows,  Next: ECB-window synchronizing,  Prev: The ECB-layout,  Up: Usage of ECB
+File: ecb.info,  Node: Hiding the ECB windows,  Next: Back/forward navigation,  Prev: The ECB-layout,  Up: Usage of ECB
 
 Hiding/Showing the ECB windows
 ==============================
@@ -883,7 +887,43 @@ deactivating the advices for `delete-other-windows' and/or
 editing and you don't need the browsing windows all the time.
 
 
-File: ecb.info,  Node: ECB-window synchronizing,  Next: Interactive ECB commands,  Prev: Hiding the ECB windows,  Up: Usage of ECB
+File: ecb.info,  Node: Back/forward navigation,  Next: ECB-window synchronizing,  Prev: Hiding the ECB windows,  Up: Usage of ECB
+
+Back- and forward navigation like a browser
+===========================================
+
+With ECB you can "browse" in your source-files like with a web-browser.
+This means ECB stores the current buffer- and window-position relative
+to the current token(1) in the edit-window after
+
+ - selecting a token in the ECB-methods buffer or
+
+ - selecting a source-file in the ECB-sources/history-buffer.
+
+ECB offers two commands `ecb-nav-goto-next' (`C-c . n') and
+`ecb-nav-goto-previous' (`C-c . p') to go forward and backward within
+this navigation historylist. These commands are also available via the
+menu "ECB -> Navigate".
+
+Aside normal "location-browsing" this is usefull for example in a
+scenario where `ecb-token-jump-narrow' is activated:
+
+1. You edit a function
+
+2. Goto another function above the current in the same file
+
+3. Add a few lines
+
+4. Call ecb-nav-goto-previous
+
+   Now you will edit at the same place in the function.
+
+---------- Footnotes ----------
+
+(1) e.g. a method, a variable or any other semantic token
+
+
+File: ecb.info,  Node: ECB-window synchronizing,  Next: Interactive ECB commands,  Prev: Back/forward navigation,  Up: Usage of ECB
 
 Synchronization of the ECB-windows
 ==================================
@@ -1050,6 +1090,14 @@ order):
    Toggle ECB minor mode. With prefix argument ARG, turn on if
    positive, otherwise off. Return non-`nil' if the minor mode is
    enabled.
+
+ - Command: ecb-nav-goto-previous
+   Go backward in the navigation historylist, *Note Back/forward
+   navigation::.
+
+ - Command: ecb-nav-goto-next
+   Go forward in the navigation historylist, *Note Back/forward
+   navigation::.
 
  - Command: ecb-rebuild-methods-buffer
    Updates the methods buffer with the current buffer after deleting the
@@ -2960,8 +3008,10 @@ situations.
 * Changing faces::              Changing faces in the ECB tree-buffers
 * Small screens::               Working with small screens
 * Simulating speedbar::         Simulating speedbar without an extra frame
-* Optimze scrolling::           Optimze scrolling in the edit-window
+* Integrating speedbar::        Integrating speedbar in the ECB-frame
+* Optimize scrolling::          Optimize scrolling in the edit-window
 * Large directories::           Working with large directories
+* Using eshell::                Optimal using of eshell in ECB
 
 
 File: ecb.info,  Node: Changing faces,  Next: Small screens,  Prev: Tips and tricks,  Up: Tips and tricks
@@ -3025,7 +3075,7 @@ The possibility of hiding temporally the ECB windows like described
 above is also useful for all the other layouts.
 
 
-File: ecb.info,  Node: Simulating speedbar,  Next: Optimze scrolling,  Prev: Small screens,  Up: Tips and tricks
+File: ecb.info,  Node: Simulating speedbar,  Next: Integrating speedbar,  Prev: Small screens,  Up: Tips and tricks
 
 Simulating speedbar without an extra frame
 ==========================================
@@ -3050,10 +3100,18 @@ following:
 6. Save your changes.
 
 
-File: ecb.info,  Node: Optimze scrolling,  Next: Large directories,  Prev: Simulating speedbar,  Up: Tips and tricks
+File: ecb.info,  Node: Integrating speedbar,  Next: Optimize scrolling,  Prev: Simulating speedbar,  Up: Tips and tricks
 
-Optimze scrolling in the edit-window
-====================================
+Integrating speedbar in the ECB-frame
+=====================================
+
+This feature will be first available in future versions of ECB.
+
+
+File: ecb.info,  Node: Optimize scrolling,  Next: Large directories,  Prev: Integrating speedbar,  Up: Tips and tricks
+
+Optimize scrolling in the edit-window
+=====================================
 
 Emacs 20.X seems to slow down scrolling if there is a horizontal split
 in the frame and/or a lot of overlays in the buffer which is scrolled.
@@ -3073,7 +3131,7 @@ these versions of Emacs there should be no scrolling problem even with
 `scroll-step' has value 1.
 
 
-File: ecb.info,  Node: Large directories,  Prev: Optimze scrolling,  Up: Tips and tricks
+File: ecb.info,  Node: Large directories,  Next: Using eshell,  Prev: Optimize scrolling,  Up: Tips and tricks
 
 Working with large directories
 ==============================
@@ -3085,6 +3143,14 @@ the machine), actualizing the sources- and/or directories- buffer of
 ECB (if displayed in current layout!) can slow down dramatically.  If
 this is a problem the contents of certain directories can be cached
 which increases the speed a lot. See `ecb-cache-directory-contents'.
+
+
+File: ecb.info,  Node: Using eshell,  Prev: Large directories,  Up: Tips and tricks
+
+Optimal using of eshell in ECB
+==============================
+
+Documentation currently not available.
 
 
 File: ecb.info,  Node: Elisp programming,  Next: Conflicts and bugs,  Prev: Tips and tricks,  Up: Top
@@ -3264,6 +3330,8 @@ This index contains all user commands of ECB:
 * ecb-goto-window-methods:               Interactive ECB commands.
 * ecb-goto-window-sources:               Interactive ECB commands.
 * ecb-minor-mode:                        Interactive ECB commands.
+* ecb-nav-goto-next:                     Interactive ECB commands.
+* ecb-nav-goto-previous:                 Interactive ECB commands.
 * ecb-rebuild-methods-buffer:            Interactive ECB commands.
 * ecb-redraw-layout:                     Interactive ECB commands.
 * ecb-show-help:                         Interactive ECB commands.
@@ -3416,7 +3484,7 @@ Concept Index
 * Problem report:                        Submitting problem report.
 * redraw:                                Redrawing the ECB-layout.
 * RETURN key:                            Navigation.
-* Scrolling:                             Optimze scrolling.
+* Scrolling:                             Optimize scrolling.
 * secondary button:                      Using the mouse.
 * semantic token:                        Customizing the display.
 * SHIFT-click:                           Using the mouse.
@@ -3435,72 +3503,76 @@ Concept Index
 
 Tag Table:
 Node: Top183
-Node: Install and first steps5429
-Node: Installation5825
-Node: First steps8630
-Ref: First steps-Footnote-19777
-Node: Overview10006
-Ref: Overview-Footnote-112750
-Node: ECB Directories12839
-Node: ECB Sources13819
-Node: ECB Methods14982
-Node: Activation and Deactivation15503
-Node: Standard activation15873
-Node: Automatic activation16451
-Node: Usage of ECB17501
-Node: Using the mouse18336
-Ref: Using the mouse-Footnote-120611
-Node: Using the keyboard20657
-Node: Navigation21474
-Node: Incremental search22817
-Node: The edit-window24968
-Node: Temp- and compile-buffers26774
-Node: The Methods buffer28821
-Node: Customizing the display29262
-Node: Rebuilding the Methods30984
-Node: The ECB-layout31838
-Node: Changing the ECB-layout32388
-Node: Redrawing the ECB-layout33490
-Node: Hiding the ECB windows34293
-Node: ECB-window synchronizing34867
-Node: Interactive ECB commands37448
-Node: Customizing46039
-Node: Most important options47552
-Node: Customizable options49344
-Node: ecb-general50260
-Node: ecb-directories68646
-Node: ecb-sources73626
-Node: ecb-methods75496
-Node: ecb-history87503
-Node: ecb-layout89195
-Node: ecb-face-options103127
-Node: ecb-faces104787
-Node: ecb-download108794
-Node: Submitting problem report110016
-Node: Upgrading111173
-Node: Downloading new versions111936
-Ref: Download required packages113693
-Ref: Downloading new versions-Footnote-1114791
-Node: Auto. option-upgrading114840
-Node: User interface115148
-Node: Background information116037
-Node: Tips and tricks119435
-Node: Changing faces119994
-Node: Small screens120800
-Node: Simulating speedbar122203
-Node: Optimze scrolling123012
-Node: Large directories124087
-Node: Elisp programming124731
-Node: Conflicts and bugs125914
-Node: Conflicts126400
-Node: VC126989
-Node: follow-mouse127282
-Node: avoid127960
-Node: calendar128324
-Node: calculator128960
-Node: Bugs129462
-Node: Function Index129682
-Node: Variable Index131547
-Node: Concept Index136779
+Node: Install and first steps5640
+Node: Installation6036
+Node: First steps8841
+Ref: First steps-Footnote-19988
+Node: Overview10217
+Ref: Overview-Footnote-112961
+Node: ECB Directories13050
+Node: ECB Sources14030
+Node: ECB Methods15193
+Node: Activation and Deactivation15714
+Node: Standard activation16084
+Node: Automatic activation16662
+Node: Usage of ECB17712
+Node: Using the mouse18623
+Ref: Using the mouse-Footnote-120898
+Node: Using the keyboard20944
+Node: Navigation21761
+Node: Incremental search23104
+Node: The edit-window25255
+Node: Temp- and compile-buffers27061
+Node: The Methods buffer29108
+Node: Customizing the display29549
+Node: Rebuilding the Methods31271
+Node: The ECB-layout32125
+Node: Changing the ECB-layout32675
+Node: Redrawing the ECB-layout33777
+Node: Hiding the ECB windows34580
+Node: Back/forward navigation35153
+Ref: Back/forward navigation-Footnote-136254
+Node: ECB-window synchronizing36313
+Node: Interactive ECB commands38895
+Node: Customizing47715
+Node: Most important options49228
+Node: Customizable options51020
+Node: ecb-general51936
+Node: ecb-directories70322
+Node: ecb-sources75302
+Node: ecb-methods77172
+Node: ecb-history89179
+Node: ecb-layout90871
+Node: ecb-face-options104803
+Node: ecb-faces106463
+Node: ecb-download110470
+Node: Submitting problem report111692
+Node: Upgrading112849
+Node: Downloading new versions113612
+Ref: Download required packages115369
+Ref: Downloading new versions-Footnote-1116467
+Node: Auto. option-upgrading116516
+Node: User interface116824
+Node: Background information117713
+Node: Tips and tricks121111
+Node: Changing faces121804
+Node: Small screens122610
+Node: Simulating speedbar124013
+Node: Integrating speedbar124825
+Node: Optimize scrolling125091
+Node: Large directories126170
+Node: Using eshell126836
+Node: Elisp programming127026
+Node: Conflicts and bugs128209
+Node: Conflicts128695
+Node: VC129284
+Node: follow-mouse129577
+Node: avoid130255
+Node: calendar130619
+Node: calculator131255
+Node: Bugs131757
+Node: Function Index131977
+Node: Variable Index133976
+Node: Concept Index139208
 
 End Tag Table
