@@ -1,6 +1,6 @@
 ;;; ecb-compilation.el --- 
 
-;; $Id: ecb-compilation.el,v 1.14 2002/12/23 14:47:41 berndl Exp $
+;; $Id: ecb-compilation.el,v 1.15 2002/12/27 00:25:43 burtonator Exp $
 
 ;; Copyright (C) 2000-2003 Free Software Foundation, Inc.
 ;; Copyright (C) 2000-2003 Kevin A. Burton (burton@openprivacy.org)
@@ -46,6 +46,8 @@
   :prefix "ecb-compilation-")
 
 (defcustom ecb-compilation-buffer-names `(("*Calculator*" . nil)
+                                          ("*vc*" . nil)
+                                          ("*vc-diff*" . nil)
                                           ("*Apropos*" . nil)
                                           ,(if ecb-running-xemacs
                                                '("\\*Help.*\\*" . t)
