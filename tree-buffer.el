@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: tree-buffer.el,v 1.149 2004/08/18 16:07:14 berndl Exp $
+;; $Id: tree-buffer.el,v 1.150 2004/09/03 16:31:11 berndl Exp $
 
 ;;; Commentary:
 
@@ -330,6 +330,217 @@ mouse-tracking is activated by `tree-buffer-activate-mouse-tracking'")
   (modify-syntax-entry ?\[ " " tree-buffer-syntax-table)
   (modify-syntax-entry ?\] " " tree-buffer-syntax-table))
 
+;; tree-node
+
+(defsubst tree-node-add-child (node child)
+  (tree-node-set-children node (append (tree-node-get-children node) (list child)))
+  (tree-node-set-parent child node))
+
+(defsubst tree-node-add-child-first (node child)
+  (tree-node-set-children node (cons child (tree-node-get-children node)))
+  (tree-node-set-parent child node))
+
+(defsubst tree-node-sort-children (node sortfn)
+  (tree-node-set-children node (sort (tree-node-get-children node) sortfn)))
+
+(defsubst tree-node-remove-child (node child)
+  "Removes the child from the node."
+  (tree-node-set-parent child nil)
+  (tree-node-set-children node
+                          (delq child (tree-node-get-children node))))
+
+(defun tree-node-find-child-data (node child-data)
+  "Finds the first child with the given child-data."
+  (catch 'exit
+    (dolist (child (tree-node-get-children node))
+      (when (tree-buffer-node-data-equal-p (tree-node-get-data child)
+                                           child-data)
+        (throw 'exit child)))))
+
+(defun tree-node-remove-child-data (node child-data)
+  "Removes the first child with the given child-data. Returns the removed
+child."
+  (catch 'exit
+    (let ((last-cell nil)
+	  (cell (tree-node-get-children node)))
+      (while cell
+	(when (tree-buffer-node-data-equal-p (tree-node-get-data (car cell))
+                                             child-data)
+	  (if last-cell
+	      (setcdr last-cell (cdr cell))
+	    (tree-node-set-children node (cdr cell)))
+	  (setcdr cell nil)
+	  (tree-node-set-parent (car cell) nil)
+	  (throw 'exit cell))
+	(setq last-cell cell)
+	(setq cell (cdr cell))))))
+
+(defun tree-node-find-child-name (node child-name)
+  (catch 'exit
+    (dolist (child (tree-node-get-children node))
+      (when (equal (tree-node-get-name child) child-name)
+        (throw 'exit child)))))
+
+(defun tree-node-find-data-recursively (node data)
+  (if (tree-buffer-node-data-equal-p data (tree-node-get-data node))
+      node
+    (catch 'exit
+      (dolist (child (tree-node-get-children node))
+	(let ((n (tree-node-find-data-recursively child data)))
+	  (when n
+	    (throw 'exit n)))))))
+
+(defconst tree-node-name 0)
+(defconst tree-node-type 1)
+(defconst tree-node-data 2)
+(defconst tree-node-expanded 3)
+(defconst tree-node-parent 4)
+(defconst tree-node-children 5)
+(defconst tree-node-expandable 6)
+(defconst tree-node-shorten-name 7
+  "Decides if the node name can be shortened when displayed in a narrow tree
+buffer window. The following values are valid:
+- beginning: The name is truncated at the beginning so the end is always
+  visible.
+- end: The name is truncated at the end. If the node is expandable the name is
+  truncated so that the expand symbol is visible.
+- nil: The name is never truncated." )
+(defconst tree-node-indentstr 8
+  "Containes the full indentation-string for the node. So a single node can
+easily redrawn.")
+
+(defsubst tree-node-set-indentstr (node indentstr)
+  (aset node tree-node-indentstr indentstr))
+
+(defsubst tree-node-get-indentstr (node)
+  (aref node tree-node-indentstr))
+
+(defsubst tree-node-get-indentlength (node)
+  (length (aref node tree-node-indentstr)))
+
+(defsubst tree-node-get-name (node)
+  (aref node tree-node-name))
+
+(defsubst tree-node-set-name (node name)
+  (aset node tree-node-name name))
+
+(defsubst tree-node-get-type (node)
+  (aref node tree-node-type))
+
+(defsubst tree-node-set-type (node type)
+  (aset node tree-node-type type))
+
+(defsubst tree-node-get-data (node)
+  (aref node tree-node-data))
+
+(defsubst tree-node-set-data (node data)
+  (aset node tree-node-data data))
+
+(defsubst tree-node-is-expanded (node)
+  (aref node tree-node-expanded))
+
+(defsubst tree-node-set-expanded (node expanded)
+  (aset node tree-node-expanded expanded))
+
+(defsubst tree-node-is-expandable (node)
+  (aref node tree-node-expandable))
+
+(defsubst tree-node-set-expandable (node expandable)
+  (aset node tree-node-expandable expandable))
+
+(defsubst tree-node-get-parent (node)
+  (aref node tree-node-parent))
+
+(defsubst tree-node-set-parent (node parent)
+  (aset node tree-node-parent parent))
+
+(defsubst tree-node-get-children (node)
+  (aref node tree-node-children))
+
+(defsubst tree-node-set-children (node children)
+  (aset node tree-node-children children))
+
+(defsubst tree-node-toggle-expanded (node)
+  (tree-node-set-expanded node (not (tree-node-is-expanded node))))
+
+(defun tree-node-get-depth (node)
+  (let ((parent (tree-node-get-parent node)))
+    (if parent
+        (1+ (tree-node-get-depth parent))
+      '0)))
+
+(defsubst tree-node-set-shorten-name (node shorten)
+  (aset node tree-node-shorten-name shorten))
+
+(defsubst tree-node-get-shorten-name (node)
+  (aref node tree-node-shorten-name))
+
+(defun tree-node-new (name type data &optional not-expandable parent shorten-name)
+  (let ((a (make-vector 9 nil)))
+    (tree-node-set-name a name)
+    (tree-node-set-type a type)
+    (tree-node-set-data a data)
+    (tree-node-set-expanded a nil)
+    (tree-node-set-children a nil)
+    (tree-node-set-parent a parent)
+    (tree-node-set-expandable a (not not-expandable))
+    (tree-node-set-shorten-name a shorten-name)
+    (tree-node-set-indentstr a nil)
+    (when parent
+      (tree-node-add-child parent a))
+    a))
+
+(defun tree-node-new-root ()
+  "Creates a new root node. The root node has always NAME=\"root\", TYPE=-1
+and DATA=nil."
+  (tree-node-new "root" -1 nil))
+
+(defun tree-node-update (node name shorten-name type data expandable)
+  "Update NODE with setable datas."
+  (tree-node-set-name node name)
+  (tree-node-set-shorten-name node shorten-name)
+  (tree-node-set-type node type)
+  (tree-node-set-data node data)
+  (tree-node-set-expandable node expandable))
+
+
+(defun tree-node-count-subnodes-to-display (node)
+  "Returns the number of ALL subnodes of NODE which will currently be displayed
+if NODE is expanded, means the number of all the children of NODE \(if NODE is
+expanded) plus recursive the number of the children of each expanded child.
+Example:
+\[-] NODE
+    \[+] child 1
+    \[-] child 2
+        \[+] child 2.1
+        \[-] child 2.2
+            \[+] child 2.2.1
+            \[+] child 2.2.2
+        \[+] child 2.3
+    \[-] child 3
+        \[+] child 3.1
+    \[+] child 4
+The result for NODE here is 10"
+  (let ((result 0))
+    (when (and (tree-node-is-expandable node)
+               (tree-node-is-expanded node))
+      (setq result (+ result (length (tree-node-get-children node))))
+      (dolist (child (tree-node-get-children node))
+        (setq result (+ result (tree-node-count-subnodes-to-display child)))))
+    result))
+
+(defun tree-node-get-all-visible-node-names (start-node)
+  (let ((result (if (not (equal tree-buffer-root start-node))
+                    (list (tree-node-get-name start-node)))))
+    (when (or (equal tree-buffer-root start-node)
+              (tree-node-is-expanded start-node))
+      (dolist (child (tree-node-get-children start-node))
+        (setq result (append result (tree-node-get-all-visible-node-names child)))))
+    result))
+
+
+
+
 ;; image support
 
 (defvar tree-buffer-enable-xemacs-image-bug-hack
@@ -498,7 +709,7 @@ TREE-IMAGE-NAME."
 
 (defun tree-buffer-get-node-name-start-column (node)
   "Returns the buffer column where the name of the node starts."
-  (+ (tree-buffer-get-node-indent node)
+  (+ (tree-node-get-indentlength node)
      (if (and tree-buffer-expand-symbol-before
               (or (tree-node-is-expandable node)
                   (member (tree-node-get-type node)
@@ -598,9 +809,6 @@ is called with the same arguments as `tree-node-expanded-fn'."
     (if p (goto-char p))
     (let ((linenr (+ (count-lines 1 (point)) (if (= (current-column) 0) 0 -1))))
       (nth linenr tree-buffer-nodes))))
-
-(defsubst tree-buffer-get-node-indent (node)
-  (* tree-buffer-indent (1- (tree-node-get-depth node))))
 
 (defun tree-buffer-node-data-equal-p (node-data-1 node-data-2)
   (and node-data-1 node-data-2
@@ -942,7 +1150,42 @@ inserted and the TEXT itself"
             (tree-buffer-merge-face-into-text text facer)))
       (insert text))))
 
-(defun tree-buffer-insert-node-display (node node-display-name)
+(defun tree-buffer-node-display-name (node)
+  "Computes that string which is used to display the name of NODE. If optional
+arg INDENT-LENGTH is a number then it must be the length of the indendation of
+NODE. If nil then the indent-length is computed for node."
+  (let* ((ww (window-width))
+	 (display-name (tree-node-get-name node))
+	 (width (+ (tree-node-get-indentlength node)
+		   (length display-name)
+		   (if (tree-node-is-expandable node) 4 0))))
+    ;; Truncate name if necessary
+    (when (and (>= width ww)
+               (> (length display-name)
+                  (+ (if tree-buffer-running-xemacs 5 4) ;; for the "..." + space
+                     (- width ww)
+                     3))) ;; there should at least remain 3 visible chars of name
+      (if (eq 'beginning (tree-node-get-shorten-name node))
+	  (setq display-name
+                (concat "..."
+                        (substring display-name (+ (if tree-buffer-running-xemacs 5 4)
+                                                   (- width ww)))))
+	(if (and (not tree-buffer-expand-symbol-before)
+		 (tree-node-is-expandable node)
+		 (eq 'end (tree-node-get-shorten-name node)))
+	    (setq display-name
+                  (concat (substring display-name 0
+                                     (- (+ (if tree-buffer-running-xemacs 5 4)
+                                           (- width ww))))
+                          "...")))))
+    display-name))
+  
+(defun tree-buffer-insert-node-display (node &optional no-newline)
+  "Insert NODE into the tree-buffer with all necessary buttons before or after
+the name of the NODE. This function computes also the name how the NODE has to
+be displayed and returns this name. If optional arg NO-NEWLINE is not nil then
+no final newline is displayed after inserting the node. Otherwise always a
+newline is inserted after the node."
   (let* ((node-type (tree-node-get-type node))
          (tree-image-name (if (and (tree-node-is-expanded node)
                                    (tree-node-is-expandable node))
@@ -956,7 +1199,8 @@ inserted and the TEXT itself"
                                       "leaf"
                                     nil))
                               "close")))
-         (ascii-symbol (tree-buffer-ascii-symbol-4-image-name tree-image-name)))
+         (ascii-symbol (tree-buffer-ascii-symbol-4-image-name tree-image-name))
+         (display-name (tree-buffer-node-display-name node)))
     (when (and tree-buffer-expand-symbol-before
 	       ascii-symbol tree-image-name)
       (tree-buffer-insert-text 
@@ -967,13 +1211,14 @@ inserted and the TEXT itself"
       (if (or tree-buffer-enable-xemacs-image-bug-hack
               (not (equal 'image (tree-buffer-style))))
           (insert " ")))
-    (tree-buffer-insert-text node-display-name
+    (tree-buffer-insert-text display-name
                              (tree-buffer-get-node-facer node) t t)
     (when (and (not tree-buffer-expand-symbol-before)
 	       ascii-symbol)
       (insert " ")
       (tree-buffer-insert-text ascii-symbol nil nil t))
-    (insert "\n")))
+    (unless no-newline (insert "\n"))
+    display-name))
 
 (defsubst tree-buffer-aset (array idx newelt)
   (aset array idx newelt)
@@ -1015,6 +1260,7 @@ tree-buffer: \(guide-str-handle guide-str-no-handle guide-end-str no-guide-str)"
                                  indent-fill-up)))
       (list guide-str-handle guide-str-no-handle guide-end-str no-guide-str))))
 
+
 (defun tree-buffer-add-node (node indent-str-first-segs indent-str-last-seg
                                   &optional last-children)
   "Insert NODE in current tree-buffer at point.
@@ -1022,103 +1268,109 @@ The indentation is the concatenation of INDENT-STR-FIRST-SEGS and
 INDENT-STR-LAST-SEG. If LAST-CHILDREN is not nil then NODE is the last
 children of its parent-node; this means it must be displayed with an
 end-guide."
-  (let* ((ww (window-width))
-	 (name (tree-node-get-name node))
-	 (width (+ (length indent-str-first-segs)
-                   (length indent-str-last-seg)
-		   (length name)
-		   (if (tree-node-is-expandable node) 4 0))))
-    ;; Truncate name if necessary
-    (when (and (>= width ww)
-               (> (length name)
-                  (+ (if tree-buffer-running-xemacs 5 4) ;; for the "..." + space
-                     (- width ww)
-                     3))) ;; there should at least remain 3 visible chars of name
-      (if (eq 'beginning (tree-node-get-shorten-name node))
-	  (setq name
-                (concat "..."
-                        (substring name (+ (if tree-buffer-running-xemacs 5 4)
-                                           (- width ww)))))
-	(if (and (not tree-buffer-expand-symbol-before)
-		 (tree-node-is-expandable node)
-		 (eq 'end (tree-node-get-shorten-name node)))
-	    (setq name
-                  (concat (substring name 0
-                                     (- (+ (if tree-buffer-running-xemacs 5 4)
-                                           (- width ww))))
-                          "...")))))
-    ;; insert the indent-string
-    (when tree-buffer-ascii-guide-face
-      (put-text-property 0 (length indent-str-first-segs)
-                         'face tree-buffer-ascii-guide-face
-                         indent-str-first-segs)
-      (put-text-property 0 (length indent-str-last-seg)
-                         'face tree-buffer-ascii-guide-face
-                         indent-str-last-seg))
-    (insert (concat indent-str-first-segs indent-str-last-seg))
-    ;; insert the node with all its symbols - either as image or ascii
-    (tree-buffer-insert-node-display node name)
-    ;; add the node to the `tree-buffer-nodes'
-    (setq tree-buffer-nodes
-          (append tree-buffer-nodes (list (cons name node))))
-    ;; compute the indentation-strings for the children and run recursive for
-    ;; each child
-    (if (tree-node-is-expanded node)
-        (let* ((number-of-childs (length (tree-node-get-children node)))
-               (counter 0)
-               (guide-strings (tree-buffer-gen-guide-strings))
-               (guide-str (if (and (equal 'image (tree-buffer-style))
-                                   tree-buffer-enable-xemacs-image-bug-hack)
-                              (nth 0 guide-strings)
-                            (nth 1 guide-strings)))
-               (guide-end-str (nth 2 guide-strings))
-               (no-guide-str (nth 3 guide-strings))
-               (indent-str-last-seg-copy (copy-sequence indent-str-last-seg))
-               (next-indent-str-first-segs
-                (if (= 0 (length indent-str-last-seg-copy))
-                    ""
-                  (concat indent-str-first-segs
-                          (if last-children
-                              (tree-buffer-add-image-icon-maybe
-                               2 1
-                               (tree-buffer-add-image-icon-maybe
-                                0 2 no-guide-str
-                                (tree-buffer-find-image "no-guide"))
-                               (tree-buffer-find-image "no-handle"))
+  ;; here we save the indentstr in the node itself - we do this as first step
+  ;; so all following steps can use the indentstr from the node itself
+  (when tree-buffer-ascii-guide-face
+    (put-text-property 0 (length indent-str-first-segs)
+                       'face tree-buffer-ascii-guide-face
+                       indent-str-first-segs)
+    (put-text-property 0 (length indent-str-last-seg)
+                       'face tree-buffer-ascii-guide-face
+                       indent-str-last-seg))
+  (tree-node-set-indentstr node
+                           (concat indent-str-first-segs indent-str-last-seg))
+
+  ;; insert the node indentation
+  (insert (tree-node-get-indentstr node))
+    
+  ;; insert the node with all its symbols - either as image or ascii and add
+  ;; the node to the `tree-buffer-nodes'
+  (setq tree-buffer-nodes
+        (append tree-buffer-nodes
+                (list (cons (tree-buffer-insert-node-display node)
+                            node))))
+  ;; compute the indentation-strings for the children and run recursive for
+  ;; each child
+  (if (tree-node-is-expanded node)
+      (let* ((number-of-childs (length (tree-node-get-children node)))
+             (counter 0)
+             (guide-strings (tree-buffer-gen-guide-strings))
+             (guide-str (if (and (equal 'image (tree-buffer-style))
+                                 tree-buffer-enable-xemacs-image-bug-hack)
+                            (nth 0 guide-strings)
+                          (nth 1 guide-strings)))
+             (guide-end-str (nth 2 guide-strings))
+             (no-guide-str (nth 3 guide-strings))
+             (indent-str-last-seg-copy (copy-sequence indent-str-last-seg))
+             (next-indent-str-first-segs
+              (if (= 0 (length indent-str-last-seg-copy))
+                  ""
+                (concat indent-str-first-segs
+                        (if last-children
                             (tree-buffer-add-image-icon-maybe
                              2 1
-                             (tree-buffer-aset
-                              indent-str-last-seg-copy
-                              (1- (cond ((equal 'image (tree-buffer-style))
-                                         tree-buffer-indent-with-images)
-                                        (tree-buffer-expand-symbol-before
-                                         tree-buffer-indent-w/o-images-before-min)
-                                        (t
-                                         tree-buffer-indent-w/o-images-after-min)))
-                              ? )
-                             (tree-buffer-find-image "no-handle"))))))
-               (next-indent-str-last-seg-std
-                (tree-buffer-add-image-icon-maybe
-                 2 1
-                 (tree-buffer-add-image-icon-maybe
-                  0 2 guide-str
-                  (tree-buffer-find-image "guide"))
-                 (tree-buffer-find-image "handle")))
-               (next-indent-str-last-seg-end
-                (tree-buffer-add-image-icon-maybe
-                 2 1
-                 (tree-buffer-add-image-icon-maybe
-                  0 2 guide-end-str
-                  (tree-buffer-find-image "end-guide"))
-                 (tree-buffer-find-image "handle"))))
-          (dolist (node (tree-node-get-children node))
-            (setq counter (1+ counter))
-            (tree-buffer-add-node node
-                                  next-indent-str-first-segs
-                                  (if (= counter number-of-childs )
-                                      next-indent-str-last-seg-end
-                                    next-indent-str-last-seg-std)
-                                  (= counter number-of-childs )))))))
+                             (tree-buffer-add-image-icon-maybe
+                              0 2 no-guide-str
+                              (tree-buffer-find-image "no-guide"))
+                             (tree-buffer-find-image "no-handle"))
+                          (tree-buffer-add-image-icon-maybe
+                           2 1
+                           (tree-buffer-aset
+                            indent-str-last-seg-copy
+                            (1- (cond ((equal 'image (tree-buffer-style))
+                                       tree-buffer-indent-with-images)
+                                      (tree-buffer-expand-symbol-before
+                                       tree-buffer-indent-w/o-images-before-min)
+                                      (t
+                                       tree-buffer-indent-w/o-images-after-min)))
+                            ? )
+                           (tree-buffer-find-image "no-handle"))))))
+             (next-indent-str-last-seg-std
+              (tree-buffer-add-image-icon-maybe
+               2 1
+               (tree-buffer-add-image-icon-maybe
+                0 2 guide-str
+                (tree-buffer-find-image "guide"))
+               (tree-buffer-find-image "handle")))
+             (next-indent-str-last-seg-end
+              (tree-buffer-add-image-icon-maybe
+               2 1
+               (tree-buffer-add-image-icon-maybe
+                0 2 guide-end-str
+                (tree-buffer-find-image "end-guide"))
+               (tree-buffer-find-image "handle"))))
+        (dolist (node (tree-node-get-children node))
+          (setq counter (1+ counter))
+          (tree-buffer-add-node node
+                                next-indent-str-first-segs
+                                (if (= counter number-of-childs )
+                                    next-indent-str-last-seg-end
+                                  next-indent-str-last-seg-std)
+                                (= counter number-of-childs ))))))
+
+(defun tree-buffer-update-node (node name shorten-name type data expandable
+                                     &optional redisplay)
+  "This function updates the NODE with the new datas NAME, SHORTEN-NAME, TYPE,
+DATA and EXPANDABLE. If first optional arg REDISLAY is not nil then NODE will
+be completely redisplayed according its new data."
+  (let ((node-line (if redisplay
+                       (tree-buffer-find-node node)))
+        (old-node-data (tree-node-get-data node))
+        (buffer-read-only nil))
+    (tree-node-update node name shorten-name type data expandable)
+    (when node-line
+      (save-excursion
+        (goto-line node-line)
+        (beginning-of-line)
+        (delete-region (tree-buffer-line-beginning-pos)
+                       (tree-buffer-line-end-pos))
+        (insert (tree-node-get-indentstr node))
+        (tree-buffer-insert-node-display node 'no-newline)
+        ;; rehighlight here the current highlighted node again - this is
+        ;; necessary if we have redisplayed the currently highlighted node.
+        (if (tree-buffer-node-data-equal-p old-node-data
+                                           (car tree-buffer-highlighted-node-data))
+            (tree-buffer-highlight-node-data old-node-data nil t))))))
 
 (defun tree-buffer-clear ()
   "Clear current tree-buffer, i.e. remove all children of the root-node"
@@ -1143,31 +1395,6 @@ parent is recursively removed too."
           (tree-buffer-remove-node parent empty-parent-types)
         (tree-node-remove-child parent node)))))
 
-
-(defun tree-node-count-subnodes-to-display (node)
-  "Returns the number of ALL subnodes of NODE which will currently be displayed
-if NODE is expanded, means the number of all the children of NODE \(if NODE is
-expanded) plus recursive the number of the children of each expanded child.
-Example:
-\[-] NODE
-    \[+] child 1
-    \[-] child 2
-        \[+] child 2.1
-        \[-] child 2.2
-            \[+] child 2.2.1
-            \[+] child 2.2.2
-        \[+] child 2.3
-    \[-] child 3
-        \[+] child 3.1
-    \[+] child 4
-The result for NODE here is 10"
-  (let ((result 0))
-    (when (and (tree-node-is-expandable node)
-               (tree-node-is-expanded node))
-      (setq result (+ result (length (tree-node-get-children node))))
-      (dolist (child (tree-node-get-children node))
-        (setq result (+ result (tree-node-count-subnodes-to-display child)))))
-    result))
 
 (defun tree-buffer-build-tree-buffer-nodes ()
   "Rebuild the variable `tree-buffer-nodes' from the current children of
@@ -1350,15 +1577,6 @@ ONLY-PREFIX is not nil then only common prefix is returned."
     ;; try-completion returns t if there is an exact match.
     (let ((completion-ignore-case t))
       (try-completion subs alist))))
-
-(defun tree-node-get-all-visible-node-names (start-node)
-  (let ((result (if (not (equal tree-buffer-root start-node))
-                    (list (tree-node-get-name start-node)))))
-    (when (or (equal tree-buffer-root start-node)
-              (tree-node-is-expanded start-node))
-      (dolist (child (tree-node-get-children start-node))
-        (setq result (append result (tree-node-get-all-visible-node-names child)))))
-    result))
 
 (defun tree-buffer-incremental-node-search ()
   "Incremental search for a node in current tree-buffer.
@@ -1747,7 +1965,7 @@ functionality is done with the `help-echo'-property and the function
              (if (tree-node-is-expanded node)
                  (tree-buffer-tab-pressed)
                ;; jump to next higher node
-               (let* ((new-indent-factor (/ (max 0 (- (tree-buffer-get-node-indent node)
+               (let* ((new-indent-factor (/ (max 0 (- (tree-node-get-indentlength node)
                                                       tree-buffer-indent))
                                             tree-buffer-indent))
                       (search-string
@@ -2269,160 +2487,6 @@ AFTER-CREATE-HOOK: A function or a list of functions \(with no arguments)
   (when buffer
     (setq tree-buffers (delq (get-buffer buffer) tree-buffers))
     (ignore-errors (kill-buffer buffer))))
-
-;;; Tree node
-
-(defsubst tree-node-add-child (node child)
-  (tree-node-set-children node (append (tree-node-get-children node) (list child)))
-  (tree-node-set-parent child node))
-
-(defsubst tree-node-add-child-first (node child)
-  (tree-node-set-children node (cons child (tree-node-get-children node)))
-  (tree-node-set-parent child node))
-
-(defsubst tree-node-sort-children (node sortfn)
-  (tree-node-set-children node (sort (tree-node-get-children node) sortfn)))
-
-(defsubst tree-node-remove-child (node child)
-  "Removes the child from the node."
-  (tree-node-set-parent child nil)
-  (tree-node-set-children node
-                          (delq child (tree-node-get-children node))))
-
-(defun tree-node-find-child-data (node child-data)
-  "Finds the first child with the given child-data."
-  (catch 'exit
-    (dolist (child (tree-node-get-children node))
-      (when (tree-buffer-node-data-equal-p (tree-node-get-data child)
-                                           child-data)
-        (throw 'exit child)))))
-
-(defun tree-node-remove-child-data (node child-data)
-  "Removes the first child with the given child-data. Returns the removed
-child."
-  (catch 'exit
-    (let ((last-cell nil)
-	  (cell (tree-node-get-children node)))
-      (while cell
-	(when (tree-buffer-node-data-equal-p (tree-node-get-data (car cell))
-                                             child-data)
-	  (if last-cell
-	      (setcdr last-cell (cdr cell))
-	    (tree-node-set-children node (cdr cell)))
-	  (setcdr cell nil)
-	  (tree-node-set-parent (car cell) nil)
-	  (throw 'exit cell))
-	(setq last-cell cell)
-	(setq cell (cdr cell))))))
-
-(defun tree-node-find-child-name (node child-name)
-  (catch 'exit
-    (dolist (child (tree-node-get-children node))
-      (when (equal (tree-node-get-name child) child-name)
-        (throw 'exit child)))))
-
-(defun tree-node-find-data-recursively (node data)
-  (if (tree-buffer-node-data-equal-p data (tree-node-get-data node))
-      node
-    (catch 'exit
-      (dolist (child (tree-node-get-children node))
-	(let ((n (tree-node-find-data-recursively child data)))
-	  (when n
-	    (throw 'exit n)))))))
-
-;;; Tree node
-
-(defconst tree-node-name 0)
-(defconst tree-node-type 1)
-(defconst tree-node-data 2)
-(defconst tree-node-expanded 3)
-(defconst tree-node-parent 4)
-(defconst tree-node-children 5)
-(defconst tree-node-expandable 6)
-(defconst tree-node-shorten-name 7
-  "Decides if the node name can be shortened when displayed in a narrow tree
-buffer window. The following values are valid:
-- beginning: The name is truncated at the beginning so the end is always
-  visible.
-- end: The name is truncated at the end. If the node is expandable the name is
-  truncated so that the expand symbol is visible.
-- nil: The name is never truncated." )
-
-(defun tree-node-new (name type data &optional not-expandable parent shorten-name)
-  (let ((a (make-vector 8 nil)))
-    (tree-node-set-name a name)
-    (tree-node-set-type a type)
-    (tree-node-set-data a data)
-    (tree-node-set-expanded a nil)
-    (tree-node-set-children a nil)
-    (tree-node-set-parent a parent)
-    (tree-node-set-expandable a (not not-expandable))
-    (tree-node-set-shorten-name a shorten-name)
-    (when parent
-      (tree-node-add-child parent a))
-    a))
-
-(defun tree-node-new-root ()
-  "Creates a new root node. The root node has always NAME=\"root\", TYPE=-1
-and DATA=nil."
-  (tree-node-new "root" -1 nil))
-
-(defsubst tree-node-get-name (node)
-  (aref node tree-node-name))
-
-(defsubst tree-node-set-name (node name)
-  (aset node tree-node-name name))
-
-(defsubst tree-node-get-type (node)
-  (aref node tree-node-type))
-
-(defsubst tree-node-set-type (node type)
-  (aset node tree-node-type type))
-
-(defsubst tree-node-get-data (node)
-  (aref node tree-node-data))
-
-(defsubst tree-node-set-data (node data)
-  (aset node tree-node-data data))
-
-(defsubst tree-node-is-expanded (node)
-  (aref node tree-node-expanded))
-
-(defsubst tree-node-set-expanded (node expanded)
-  (aset node tree-node-expanded expanded))
-
-(defsubst tree-node-is-expandable (node)
-  (aref node tree-node-expandable))
-
-(defsubst tree-node-set-expandable (node expandable)
-  (aset node tree-node-expandable expandable))
-
-(defsubst tree-node-get-parent (node)
-  (aref node tree-node-parent))
-
-(defsubst tree-node-set-parent (node parent)
-  (aset node tree-node-parent parent))
-
-(defsubst tree-node-get-children (node)
-  (aref node tree-node-children))
-
-(defsubst tree-node-set-children (node children)
-  (aset node tree-node-children children))
-
-(defsubst tree-node-toggle-expanded (node)
-  (tree-node-set-expanded node (not (tree-node-is-expanded node))))
-
-(defun tree-node-get-depth (node)
-  (let ((parent (tree-node-get-parent node)))
-    (if parent
-        (1+ (tree-node-get-depth parent))
-      '0)))
-
-(defsubst tree-node-set-shorten-name (node shorten)
-  (aset node tree-node-shorten-name shorten))
-
-(defsubst tree-node-get-shorten-name (node)
-  (aref node tree-node-shorten-name))
 
 (silentcomp-provide 'tree-buffer)
 
