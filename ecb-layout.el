@@ -1428,8 +1428,9 @@ this function the edit-window is selected which was current before redrawing."
                               split-amount-before-redraw) t)))
       
       ;; Restore edit window buffers
-      (set-window-buffer ecb-edit-window (car saved-edit-1))
-      (set-window-start ecb-edit-window (cdr saved-edit-1))
+      (when saved-edit-1
+        (set-window-buffer ecb-edit-window (car saved-edit-1))
+        (set-window-start ecb-edit-window (cdr saved-edit-1)))
       (when (and split-before-redraw saved-edit-2)
         (set-window-buffer (next-window ecb-edit-window) (car saved-edit-2))
         (set-window-start (next-window ecb-edit-window) (cdr saved-edit-2)))

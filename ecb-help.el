@@ -160,6 +160,14 @@ popup-menu for the clicked item where you can choose several senseful actions.
 Working with the keyboard in the ECB-buffers:
 ---------------------------------------------
 
+ECB offers you the `ecb-mode-map' which binds the most important functions of
+ECB to keys so you can easily use ECB without a mouse.
+
+IMPORTANT: The option `ecb-prefix-key' defines the prefix-keysequence for the
+ECB keymap. This is by default \"C-c .\". If there a conflicts with other
+minor-modes or packages you can define very easy another prefix. Please read
+carefully the description of `ecb-prefix-key'!
+
 In the ECB-buffers RET and TAB work as primary \"buttons\" \(see above), means
 RET selects a directory or opens a source or jumps to a method and TAB toggles
 expanding/collapsing of an expandable node.
@@ -348,6 +356,7 @@ customize groups is via the menu \"ECB\".
 Here are the most important options \(it is recommended to check the
 following options before working with ECB):
 - `ecb-source-path': You must set this option!
+- `ecb-prefix-key': The prefix-keysequence for the ECB keymap.
 - `ecb-new-ecb-frame': Should ECB create a new frame at activation time.
 - `ecb-primary-secondary-mouse-buttons', `ecb-primary-mouse-jump-destination':
   Define how to use the mouse.
@@ -462,6 +471,17 @@ solutions/hints/workarounds:
    With GNU Emacs ECB must deactivate `mouse-avoidance-mode' if the option
    `ecb-show-node-name-in-minibuffer' is set to either 'if-too-long or
    'always. This is only be done as long ECB is activated.
+
+4. Package calendar.el:
+   With activated ECB `calendar' does not shrink it´s window to the small size
+   but splits the window equally. But if you add this to your .emacs it works:
+    \(add-hook 'initial-calendar-window-hook
+              \(function \(lambda \()
+                          \(or \(one-window-p t)
+                              \(/= \(frame-width) \(window-width))
+                              \(and ecb-minor-mode \(ecb-point-in-edit-window)))
+                          \(shrink-window \(- (window-height) 9)))))
+
 ")
 
 (defconst ecb-help-buffer-name "*ECB help*")
