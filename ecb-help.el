@@ -26,7 +26,7 @@
 ;;
 ;; Contains all online-help for ECB (stolen something from recentf.el)
 
-;; $Id: ecb-help.el,v 1.5 2001/04/22 18:52:23 berndl Exp $
+;; $Id: ecb-help.el,v 1.6 2001/04/24 12:51:04 berndl Exp $
 
 ;;; Code
 
@@ -182,6 +182,8 @@ The behavior of the adviced functions is:
 - If called in a not edit-window of ECB all these function jumps first to the
   \(first) edit-window, so you can never destroy the ECB-window layout
   unintentionally.
+- If called in another frame than the ECB-frame these functions behave exactly
+  like the not adviced original versions!
 
 **Attention**:
 If you want to work within the edit-window with splitting and unsplitting the
@@ -191,12 +193,13 @@ instead of the original Emacs-functions \(see above). For example the adviced
 adviced `split-window-vertically' \(or horizontally) and NOT with the original
 `split-window-vertically'!
 
-Per default ECB advices all the functions mentioned above but with the option
-`ecb-advice-window-functions' you can customizes which functions should be
-adviced by ECB.
+Per default ECB does advice all of the functions mentioned above but with the
+option `ecb-advice-window-functions' you can customizes which functions should
+be adviced by ECB.
 
 The jump-behavior of the advices `other-window' can be customized with
-`ecb-other-window-jump-behavior'!
+`ecb-other-window-jump-behavior'! It´s default-value is 'all, means it behaves
+exactly like the not adviced orginal version.
 
 
 Working with or without a compile window:

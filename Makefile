@@ -14,12 +14,11 @@
 # Make sure you compile ECB with the semantic version you load into Emacs
 # (see below)!
 #
-# Adapted by Klaus Berndl from the makefile to compile the JDE
+# Call "make" to byte-compile the ECB. You can savely ignore the messages.
+
+# $Id: Makefile,v 1.3 2001/04/24 12:51:04 berndl Exp $
 
 # Define here the correct path to your Emacs or XEmacs
-
-# $Id: Makefile,v 1.2 2001/04/22 15:45:01 creator Exp $
-
 EMACSPROG=emacs
 
 all:

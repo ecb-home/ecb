@@ -26,7 +26,7 @@
 ;; This file is part of the ECB package which can be found at:
 ;; http://home.swipnet.se/mayhem/ecb.html
 
-;; $Id: tree-buffer.el,v 1.20 2001/04/23 14:38:19 berndl Exp $
+;; $Id: tree-buffer.el,v 1.21 2001/04/24 12:51:04 berndl Exp $
 
 ;;; Code:
 
@@ -532,4 +532,4 @@ EXPAND-SYMBOL-BEFORE: If not nil then the expand-symbol \(is displayed before
 
 (provide 'tree-buffer)
 
-;;; dirtest.el ends here
+;;; tree-buffer.el ends here

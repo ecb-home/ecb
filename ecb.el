@@ -32,7 +32,10 @@
 ;;
 ;; (require 'ecb)
 ;;
-;; ECB requires version 1.2.1 or higher of Eric's semantic bovinator
+;; Optional: You can byte-compile ECB after the ECB-package is loaded with
+;; `ecb-bytecompile-ecb'.
+;;
+;; ECB requires version 1.3.3 of Eric's semantic bovinator
 ;; (http://www.ultranet.com/~zappo/semantic.shtml).
 ;; If you are working with Java, ECB works best when the JDE package
 ;; (http://sunsite.auc.dk/jde) is installed.
@@ -47,7 +50,7 @@
 ;; The latest version of the ECB is available at
 ;; http://home.swipnet.se/mayhem/ecb.html
 
-;; $Id: ecb.el,v 1.47 2001/04/24 04:11:41 berndl Exp $
+;; $Id: ecb.el,v 1.48 2001/04/24 12:51:04 berndl Exp $
 
 ;;; Code:
 
@@ -794,12 +797,13 @@ displayed with window-start and point at beginning of buffer."
   ;; `ecb-rebuild-methods-buffer-after-parsing' was called auto. after
   ;; `semantic-bovinate-toplevel'.
   (setq ecb-method-buffer-needs-rebuild t)
-  (condition-case nil
-      ;; semantic <= 1.2.1
-      (semantic-bovinate-toplevel 0 nil t)
-    (wrong-number-of-arguments
-     ;; semantic >= 1.3.1
-     (semantic-bovinate-toplevel t)))
+;;   (condition-case nil
+;;       ;; semantic <= 1.2.1
+;;       (semantic-bovinate-toplevel 0 nil t)
+;;     (wrong-number-of-arguments
+;;      ;; semantic >= 1.3.1
+;;      (semantic-bovinate-toplevel t)))
+  (semantic-bovinate-toplevel t)
   ;; Only if the `semantic-bovinate-toplevel' has done no reparsing but only
   ;; used it´s still valid `semantic-toplevel-bovine-cache' the hooks in
   ;; `semantic-after-toplevel-bovinate-hook' are not evaluated and therefore
@@ -1293,11 +1297,14 @@ with the actually choosen layout \(see `ecb-layout-nr')."
               'ecb-set-edit-window-split-hook-function)
     (add-hook 'help-mode-hook
               'ecb-set-edit-window-split-hook-function)
-    ;; ediff-stuff
+
+    ;; ediff-stuff; we operate here only with symbols to avoid bytecompiler
+    ;; warnings
     (add-hook 'ediff-before-setup-windows-hook
               'ecb-ediff-before-setup-hook)
     (if (boundp 'ediff-quit-hook)
-        (put 'ediff-quit-hook 'ecb-ediff-quit-hook-value ediff-quit-hook))
+        (put 'ediff-quit-hook 'ecb-ediff-quit-hook-value
+             (symbol-value 'ediff-quit-hook)))
     (add-hook 'ediff-quit-hook 'ediff-cleanup-mess)
     (add-hook 'ediff-quit-hook 'ecb-ediff-quit-hook t)
     
@@ -1353,12 +1360,14 @@ with the actually choosen layout \(see `ecb-layout-nr')."
                  'ecb-set-edit-window-split-hook-function)
     (remove-hook 'ediff-before-setup-windows-hook
                  'ecb-ediff-before-setup-hook)
-    ;; ediff-stuff
+    ;; ediff-stuff; we operate here only with symbols to avoid bytecompiler
+    ;; warnings
     (if (get 'ediff-quit-hook 'ecb-ediff-quit-hook-value)
-        (setq ediff-quit-hook (get 'ediff-quit-hook
+        (set 'ediff-quit-hook (get 'ediff-quit-hook
                                    'ecb-ediff-quit-hook-value))
       (remove-hook 'ediff-quit-hook 'ecb-ediff-quit-hook))
     (setq ecb-activated nil)
+    (setq ecb-frame nil)
     ;; run any personal hooks
     (run-hooks 'ecb-deactivate-hook))
   (message "The ECB is now deactivated."))
@@ -1412,6 +1421,40 @@ buffers does not exist anymore."
           (ecb-current-buffer-sync)
         (error nil))))
 
+
+;; ECB byte-compilation
+
+(defun ecb-compile-file-if-necessary (file &optional force)
+  "Compile the ECB-file FILE if necessary. This is done if FORCE is not nil or
+FILE.el is newer than FILE.elc or if FILE.elc doesn't exist."
+  (let* ((root (file-name-sans-extension file))
+         (elc-file (concat root ".elc")))
+    (if (or force
+            (not (file-exists-p elc-file))
+            (file-newer-than-file-p file  elc-file))
+        (progn
+          (message (format "Byte-compiling %s..." 
+                           (file-name-nondirectory file)))
+          (byte-compile-file file)))))
+
+
+(defun ecb-bytecompile-ecb (&optional force-all)
+  "Bytecompiles the ECB package. This is done for all lisp-files of ECB if
+FORCE-ALL is not nil or for each lisp-file FILE.el which is either newer than
+FILE.elc or if FILE.elc doesn't exist."
+  (interactive "P")
+  (let ((load-path
+         (append (list (file-name-directory
+                        (or (locate-library "semantic")
+                            (error "Semantic is not in the load-path!")))
+                       (file-name-directory (locate-library "ecb")))
+                 load-path))
+        (files (directory-files (file-name-directory (locate-library "ecb"))
+                                t)))
+    (dolist (file files)
+      (if (string-match "\\(tree-buffer\\|ecb.*\\)\\.el$" file)
+          (ecb-compile-file-if-necessary file force-all)))))
+    
 (provide 'ecb)
 
 ;;; ecb.el ends here
