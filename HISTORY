@@ -1,6 +1,9 @@
 Version 1.20 (???):
 -------------------
 
+- The source file is only parsed if the ECB methods window is visible
+  (Jesper).
+
 - The methods buffer now show fields of EIEIO classes. Only works with
   semantic 1.4. Thanks to Eric M. Ludlam <eric@siege-engine.com> for
   this patch.
