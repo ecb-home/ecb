@@ -28,7 +28,7 @@
 ;; Do not change any html-file besides the index.html manually but do all
 ;; changes in this elisp file!
 
-;; $Id: ecb-html.el,v 1.46 2003/03/21 15:32:58 berndl Exp $
+;; $Id: ecb-html.el,v 1.47 2003/03/28 09:48:44 berndl Exp $
 
 ;;; Code:
 
@@ -76,7 +76,7 @@
 (defvar ecb-latest-news nil
   "List of latest news displayed on the main page.")
 (setq ecb-latest-news
-      `(,(h-sub-section "ECB 1.93 released! (2003-03-21)"
+      `(,(h-sub-section "ECB 1.93 released! (2003-03-27)"
                         "Fixes some bugs and enhances the layout-engine. Offers also some new features. "
                         (h-link "docs/Install-and-first-steps.html#Install%20and%20first%20steps" "Here") " is a short installation guide. "
                         "Click " (h-link "NEWS.html" "here")
