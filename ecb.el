@@ -54,7 +54,7 @@
 ;; The latest version of the ECB is available at
 ;; http://home.swipnet.se/mayhem/ecb.html
 
-;; $Id: ecb.el,v 1.221 2002/06/14 16:13:37 berndl Exp $
+;; $Id: ecb.el,v 1.222 2002/06/21 12:27:24 berndl Exp $
 
 ;;; Code:
 
@@ -1290,6 +1290,15 @@ Note: A click with the secondary mouse-button \(see again
   :group 'ecb-general
   :type 'string)
 
+(defcustom ecb-temp-dir
+  (file-name-as-directory
+   (or (getenv "TMPDIR") (getenv "TMP") (getenv "TEMP")
+       (cond ((eq system-type 'windows-nt) "c:/temp")
+             (t "/tmp"))))
+  "*Specify a directory where ECB can store temporary files.
+This is for example needed for upgrading ECB by `ecb-upgrade-ecb'."
+  :type '(directory :tag "Temporary Directory")
+  :group 'ecb-general)
 
 (defcustom ecb-auto-compatibility-check t
   "*Check at ECB-startup if all ECB-options have correct values.
@@ -3164,6 +3173,12 @@ That is remove the unsupported :help stuff."
       :active t
       :help "Customize ECB faces"
       ])
+    (ecb-menu-item
+     ["Download options..."
+      (customize-group "ecb-download")
+      :active t
+      :help "Customize options for downloading ECB"
+      ])
     )
    (list
     "Help"
@@ -3916,7 +3931,6 @@ changed there should be no performance-problem!"
                    (ecb-hide-ecb-windows)
                  (ecb-deactivate))))))))
 
-
 (add-hook 'post-command-hook 'ecb-handle-major-mode-activation)
 
 (add-hook 'emacs-startup-hook 'ecb-auto-activate-hook)
@@ -3924,5 +3938,3 @@ changed there should be no performance-problem!"
 (provide 'ecb)
 
 ;;; ecb.el ends here
-
-

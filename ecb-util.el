@@ -26,7 +26,7 @@
 ;; This file is part of the ECB package which can be found at:
 ;; http://home.swipnet.se/mayhem/ecb.html
 
-;; $Id: ecb-util.el,v 1.20 2002/02/22 08:30:43 berndl Exp $
+;; $Id: ecb-util.el,v 1.21 2002/06/21 12:27:24 berndl Exp $
 
 ;;; Code:
 (defconst running-xemacs (string-match "XEmacs\\|Lucid" emacs-version))
@@ -138,6 +138,33 @@ win32-path-style!"
           (if (> enlargement 0)
               (enlarge-window enlargement))))
     (error "Window is not alive!")))
+
+;; stolen from query.el and slightly enhanced
+(defun ecb-query-string (prompt choices &optional other-prompt)
+  "Prints PROMPT and returns a string which must be one of CHOICES.
+CHOICES is a list of strings. The first choice is the default,
+which is returned if the user simply types RET.
+If OTHER-PROMPT is not nil and a string then the choice \"Other\" is added to
+CHOICES and after selecting this choice the user is prompted with OTHER-PROMPT
+to insert any arbitrary string."
+  (let* ((new-choices (if other-prompt
+                          (add-to-list 'choices "Other" t)
+                        choices))
+         (default (car new-choices))
+         answer)
+    (setq prompt (concat prompt " ["
+                         (mapconcat (function (lambda (x) x))
+                                    new-choices ", ") "] "))
+    (setq new-choices (nconc (mapcar (function (lambda (x) (list x t)))
+                                 new-choices)
+                         '('("" t))))
+    (setq answer (completing-read prompt new-choices nil t ""))
+    (cond ((string= answer "")
+           (setq answer default))
+          ((string= answer "Other")
+           (setq answer (read-string (concat other-prompt ": ")))))
+    answer))
+
 
 (provide 'ecb-util)
 

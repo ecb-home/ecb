@@ -26,7 +26,7 @@
 ;;
 ;; Contains all online-help for ECB (stolen something from recentf.el)
 
-;; $Id: ecb-help.el,v 1.70 2002/06/09 08:40:47 berndl Exp $
+;; $Id: ecb-help.el,v 1.71 2002/06/21 12:27:24 berndl Exp $
 
 ;;; Code
 
@@ -369,6 +369,7 @@ Available interactive ECB commands:
 - `ecb-cycle-through-compilation-buffers'
 - `ecb-upgrade-options'
 - `ecb-display-upgraded-options'
+- `ecb-download-ecb'
 
 Most of these functions are also available via the menu \"ECB\" and also via
 the ECB keymap with prefix \"C-c .\" \(see `ecb-minor-mode' for a complete
@@ -387,6 +388,7 @@ All customization of ECB is divided into the following customize groups:
 - ecb-history: Customization of the ECB-history buffer.
 - ecb-layout: Customization of the layout of ECB.
 - ecb-faces: All faces used by ECB to highlight nodes and some other stuff.
+- ecb-download: Options for downloading another ECB version from within ECB.
 
 You can highly customize all the ECB behavior/layout so just go to this groups
 and you will see all well documented ECB-options. The easiest access for this
@@ -434,6 +436,17 @@ buffer after filling it out and sending it with your standard mail-client to
 Please read also the documentation of the option `ecb-debug-mode' and switch
 on the debug mode of ECB \(also available in the Help-menu of ECB!) before
 submitting a problem-report!
+
+
+                               =============
+                               Upgrading ECB
+                               =============
+
+ECB offers the possibility to upgrade to newer version direct from the
+ECB-website. This can be done with `ecb-download-ecb' if the tools wget, tar
+and gzip are installed onto the system and an connection to the web is
+available. Please read the documentation of `ecb-download-ecb' and the option
+of the customize-group 'ecb-download'!
 
 
                               ===============
