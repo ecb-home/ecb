@@ -1,0 +1,58 @@
+<html>
+<head>
+<title>ECB - Emacs Code Browser</title>
+</head>
+
+<body bgcolor='white'>
+
+<h2>ECB - Emacs Code Browser</h2>
+<p>Updated: 2001-03-17</p>
+<p><b>Download the latest version: <a href='ecb-1.0.zip'>ecb-1.0.zip</a></b></p>
+<p><b>This project is hosted by <a href='http://sourceforge.net/projects/ecb'><img src='http://sourceforge.net/sflogo.php?group_id=17484&type=1' width='88' height='31' border='0' alt='SourceForge Logo'></a></b></p>
+<p><b>The CVS tree can be accessed <a href='http://cvs.sourceforge.net/cgi-bin/cvsweb.cgi/?cvsroot=ecb'>here</a>.</b></p>
+
+<h3>About</h3>
+<p>ECB is source code browser for Emacs. It displays a few windows that can be used to browse directories, files and methods. It supports method parsing for Java, C, C++, Elisp etc. <a href='ecb.png'>Here's</a> a screenshot of the browser in action.</p>
+
+<h3>Dependencies</h3>
+<p>ECB requires version 1.2.x of <a href='http://cedet.sourceforge.net/semantic.shtml'>Eric Ludlam's semantic bovinator</a>. If you use ECB for Java development you also need version 2.1.9 or higher of <a href='http://sunsite.auc.dk/jde/'>JDE</a>.</p>
+
+<h3>Installation and Setup</h3>
+<ol><li>Download and unzip the latest version of ECB.
+<li>Put the directory 'ecb-1.0' in your Emacs load path.
+<li>Add "(require 'ecb)" to your .emacs file.
+<li>Call "ecb-activate".
+<li>Select the '*ECB Directories*' window (usually top-left) and press F2. This will open the customization buffer for ECB.
+<li>Add the paths to your source files under 'Ecb Directories' -> 'Ecb Source Path'.
+<li>Save the settings. Done!
+</ol>
+
+<h3>Usage</h3>
+
+<h4>Directories Buffer</h4>
+<p>Select directories and, if enabled, source files, in the "*ECB Directories*" buffer by clicking the left mouse button on the package name or by hitting ENTER/RETURN when the cursor is placed on the item line. Package names with a "[+]" symbol after them can be expanded/collapsed by left-clicking on the symbol, pressing the TAB key when the cursor is placed on the package line or clicking the middle mouse button on the item. Right clicking on an item will open a popup menu where different operations on the item under the mouse cursor can be performed.</p>
+<p>Pressing F1 in the packages buffer will update it. Pressing F2 will open the ECB customization group in the edit window.</p>
+
+<h4>Source and History Buffer</h4>
+<p>Source files can be select by clicking the left mouse button or hitting ENTER/RETURN on the class row in the "*ECB Sources*" or "*ECB History*" windows. Clicking on the source file with the middle mouse button will open the class file in the other edit window. Right clicking on a source file will open a popup menu where different operation on the item under the mouse cursor can be performed.</p>
+
+<h4>Methods Buffer</h4>
+<p>The "*ECB Methods*" buffer contains the methods in the selected source file. When a method is selected with the left mouse button or ENTER/RETURN the edit buffer will jump to the method. Clicking on a method with the middle mouse button will jump to the method in the other edit window.</p>
+
+<h3>Emacs Tips</h3>
+<p>It's easier to navigate and scroll the ECB buffers if you install <a href='http://www.deja.com/getdoc.xp?AN=610250245&fmt=raw'>follow-mouse.el</a> and activate your <a href='ftp://ftp.cs.indiana.edu/pub/elisp/mwheel.el'>wheel mouse</a> in Emacs.</p>
+
+<h3>Download</h3>
+<p>The latest version: <a href='ecb-1.0.zip'>ecb-1.0.zip</a></p>
+<p>Older versions:<br><a href='jde-jcb-0.04.zip'>jde-jcb-0.04.zip</a><br><a href='jde-jcb-0.03.zip'>jde-jcb-0.03.zip</a><br><a href='jde-jcb-0.02.zip'>jde-jcb-0.02.zip</a><br><a href='jde-jcb-0.01.zip'>jde-jcb-0.01.zip</a></p>
+
+<h3>Developers</h3>
+<p><a href='mailto:mayhem@home.se'>Jesper Nordenberg</a><br><a href='mailto:klaus.berndl@sdm.de'>Klaus Berndl</a></p>
+
+<h3>Comments, Suggestions etc.</h3>
+<p>Please feel free to contact me if you find the code browser useful, if you have found some bugs or if you some suggestions on how to improve it.
+<a href='mailto:mayhem@home.se'>Jesper Nordenberg</a></p>
+<p>The page's WebCounter count says that you are visitor number <img src='http://counter.digits.com/wc/-d/4/javabrowser' ALIGN=middle WIDTH=60 HEIGHT=20 BORDER=0 HSPACE=4 VSPACE=2> since 2000-07-28.</p>
+
+</body>
+</html>
