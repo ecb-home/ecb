@@ -3,6 +3,10 @@ Version
 
 * Fixed a bug in the downloading feature of ECB. (Klaus)
 
+* Fixed a bug in the navigation-history of ECB which sometimes has prevented
+  that a user can open files from the sources/history buffer or clicking onto
+  tokens in the method-buffer. Now the back-forward-navigation works stable.
+  (Klaus)
 
 Version 1.90
 ------------

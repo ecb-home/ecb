@@ -22,7 +22,7 @@
 ;; the Free Software Foundation, Inc., 59 Temple Place - Suite 330,
 ;; Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-navigate.el,v 1.12 2003/01/29 14:29:37 berndl Exp $
+;; $Id: ecb-navigate.el,v 1.13 2003/02/06 09:37:08 berndl Exp $
 
 ;;; Commentary:
 
@@ -108,8 +108,13 @@
   (concat (int-to-string (ecb-nav-get-pos item)) ":"
 	  (int-to-string (ecb-nav-get-window-start item))))
 
+;; This method must return nil if saving can not be performed and otherwise
+;; not nil!
 (defmethod ecb-nav-save ((item ecb-nav-history-item))
-  )
+  t)
+
+(defmethod ecb-nav-is-valid ((item ecb-nav-history-item))
+  t)
 
 
 ;;====================================================
@@ -169,14 +174,28 @@
                       (+ tok-start (ecb-nav-get-window-start item)))))
 
 (defmethod ecb-nav-save ((item ecb-nav-token-history-item))
+  "Return only nil if token-start of ITEM points into a dead buffer. In this
+case no position saving is done."
   (let ((tok-start (ecb-nav-get-token-start item)))
-    (when tok-start
-      (ecb-nav-set-pos item (- (point) tok-start))
-      (ecb-nav-set-window-start item (- (window-start) tok-start)))))
+    (if (and tok-start (marker-buffer tok-start))
+        (progn
+          (ecb-nav-set-pos item (- (point) tok-start))
+          (ecb-nav-set-window-start item (- (window-start) tok-start))
+          t)
+      nil)))
 
 (defmethod ecb-nav-to-string ((item ecb-nav-token-history-item))
   (concat (ecb-nav-get-token-name item) ":" (call-next-method)))
 
+(defmethod ecb-nav-is-valid ((item ecb-nav-token-history-item))
+   (let ((tok-start (ecb-nav-get-token-start item))
+         (tok-buf (ecb-nav-get-token-buffer item))
+         (tok-end (ecb-nav-get-token-end item)))
+     (if (and tok-start (marker-buffer tok-start)
+              tok-end (marker-buffer tok-end)
+              tok-buf (buffer-live-p tok-buf))
+         t)))
+ 
 
 ;;====================================================
 ;; 
@@ -204,7 +223,8 @@
 (defmethod ecb-nav-save ((item ecb-nav-file-history-item))
   (ecb-nav-set-pos item (point))
   (ecb-nav-set-window-start item (window-start))
-  (ecb-nav-set-file item (buffer-file-name)))
+  (ecb-nav-set-file item (buffer-file-name))
+  t)
 
 (defmethod ecb-nav-goto ((item ecb-nav-file-history-item))
   (find-file (ecb-nav-get-file item))
@@ -215,6 +235,8 @@
 (defmethod ecb-nav-to-string ((item ecb-nav-file-history-item))
   (concat (ecb-nav-get-file item) ":" (call-next-method)))
 
+(defmethod ecb-nav-is-valid ((item ecb-nav-file-history-item))
+  t)
 
 ;;====================================================
 ;; 
@@ -250,31 +272,52 @@
     (setq ecb-nav-current-node node)))
 
 (defun ecb-nav-remove-current-node ()
-  (if (ecb-get-previous ecb-nav-current-node)
-      (let ((prev (ecb-get-previous ecb-nav-current-node)))
-        (ecb-set-next prev (ecb-get-next ecb-nav-current-node))
-        (setq ecb-nav-current-node prev))
-    (if (ecb-get-next ecb-nav-current-node)
-        (let ((next (ecb-get-next ecb-nav-current-node)))
-          (ecb-set-previous next nil)
-          (setq ecb-nav-current-node next))
-      (ecb-nav-initialize))))
+  (ecb-nav-remove-node ecb-nav-current-node))
+
+(defun ecb-nav-remove-node (node)
+  "Remove NODE and set `ecb-nav-first-node' and `ecb-nav-current-node' if
+necessary."
+  (let ((prev (ecb-get-previous node))
+        (next (ecb-get-next node)))
+    (if prev
+        (ecb-set-next prev (ecb-get-next node)))
+    (if next
+        (ecb-set-previous next (ecb-get-previous node)))
+    (if (eq node ecb-nav-current-node)
+        (setq ecb-nav-current-node (or prev
+                                       next
+                                       ecb-nav-first-node)))
+    (if (eq node ecb-nav-first-node)
+        (if next
+            (setq ecb-nav-first-node next)
+        (ecb-nav-initialize)))))
+
+(defun ecb-nav-remove-invalid-nodes ()
+  (let ((node ecb-nav-first-node)
+        (next-node nil))
+    (while node
+      (setq next-node (ecb-get-next node))
+      (if (not (ecb-nav-is-valid (ecb-get-data node)))
+          (ecb-nav-remove-node node))
+      (setq node next-node))))
 
 (defun ecb-nav-save-current ()
-  (ecb-nav-save (ecb-get-data ecb-nav-current-node)))
+  (while (not (ecb-nav-save (ecb-get-data ecb-nav-current-node)))
+    (ecb-nav-remove-current-node)))
 
 (defun ecb-nav-goto-next ()
-  "Go forward in the navigator history list."
+  "Go forward in the navigation history list."
   (interactive)
   (ecb-nav-goto--internal (ecb-get-next ecb-nav-current-node)))
 
 (defun ecb-nav-goto-previous ()
-  "Go back in the navigator history list."
+  "Go back in the navigation history list."
   (interactive)
   (ecb-nav-goto--internal (ecb-get-previous ecb-nav-current-node)))
 
 (defun ecb-nav-dump-history ()
   (interactive)
+  (ecb-nav-remove-invalid-nodes)
   (ecb-nav-dump-history--internal ecb-nav-first-node))
 
 (defun ecb-nav-dump-history--internal (node)
@@ -284,10 +327,14 @@
 
 (defun ecb-nav-goto--internal (node)
   (if (or (not node) (eq ecb-nav-first-node node))
-      (message "No more history items!")
+      (message "No more valid history items!")
+    ;; before doing something we have to clear the history from now invalid
+    ;; nodes means removing nodes which does not point into a live buffer
+    (ecb-nav-remove-invalid-nodes)
     (ecb-nav-save-current)
     (setq ecb-nav-current-node node)
     (ecb-nav-goto (ecb-get-data node))))
+
 
 (silentcomp-provide 'ecb-navigate)
 

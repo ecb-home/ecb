@@ -19,7 +19,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-upgrade.el,v 1.24 2003/02/04 11:11:03 berndl Exp $
+;; $Id: ecb-upgrade.el,v 1.25 2003/02/06 09:37:08 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -545,7 +545,12 @@ are:
 (defmacro ecb-create-shell-argument (arg)
   `(if (eq system-type 'windows-nt)
        (if (executable-find "cygpath.exe")
-           (shell-command-to-string (concat "cygpath -u " ,arg))
+           ;; if bash is used as shell-file-name then the command must
+           ;; not contain newlines!
+           (ecb-trim
+            (subst-char-in-string ?\n 32
+                                  (shell-command-to-string
+                                   (concat "cygpath -u " ,arg))))
          (ecb-error "Cannot find the cygpath utility!"))
      ,arg))
 
@@ -755,15 +760,11 @@ tp `load-path' and restarting Emacs the new package version can be activated."
           (message "Unpacking new %s..." package)
           (setq process-result
                 (shell-command-to-string
-                 ;; if bash is used as shell-file-name then the command must
-                 ;; not contain newlines!
-                 (subst-char-in-string
-                  ?\n 32
-                  (concat "tar -C "
-                          (ecb-create-shell-argument ecb-ecb-parent-dir)
-                          " -xf "
-                          (ecb-create-shell-argument
-                           (file-name-sans-extension downloaded-filename))))))
+                 (concat "tar -C "
+                         (ecb-create-shell-argument ecb-ecb-parent-dir)
+                         " -xf "
+                         (ecb-create-shell-argument
+                          (file-name-sans-extension downloaded-filename)))))
           (when (> (length process-result) 0)
             (setq success nil)
             (with-output-to-temp-buffer "*ECB-unpacking-failure*"
