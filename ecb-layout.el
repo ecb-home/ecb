@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-layout.el,v 1.206 2004/01/19 20:03:26 berndl Exp $
+;; $Id: ecb-layout.el,v 1.207 2004/01/20 08:06:20 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -699,11 +699,12 @@ prefix-argument unequal 1.
 
 A function:
 
-This function gets six arguments:
+This function gets seven arguments:
 1. A canonical list of all currently visible windows of the `ecb-frame'
 2. A canonical list of all currently visible edit-windows
 3. A canonical list of all currently visible ecb-windows
 4. The window-object of the compile-window if there is any.
+5. The minibuffer-window of the ECB-frame if there is an active minibuffer.
 5. The result of the function `ecb-where-is-point' - see the documentation
    of this function for details.
 6. An integer which indicates how many steps away from the current selected
@@ -711,7 +712,8 @@ This function gets six arguments:
    another context then for `other-window'.
 The function has to return a window-object which is then used as \"other
 window\" for the command `other-window' or for scrolling another window
-\(e.g. with `scroll-other-window')."
+\(e.g. with `scroll-other-window'). `ecb-get-other-window-smart' is an example
+for such a function."
   :group 'ecb-layout
   :group 'ecb-most-important
   :type '(radio (const :tag "Smart" :value smart)
@@ -2586,12 +2588,83 @@ If called for other frames it works like the original version."
                                           (ad-get-arg 2)
                                           (ad-get-arg 3)))
        ad-do-it))))
+
+(defun ecb-get-other-window-minibuf-active (win-list
+                                            edit-win-list
+                                            ecb-win-list
+                                            comp-win
+                                            minibuf-win
+                                            point-loc
+                                            nth-window)
+  (let* ((nth-win (or nth-window 1))
+         (next-listelem-fcn (if (< nth-win 0)
+                                'ecb-prev-listelem
+                              'ecb-next-listelem)))
+    (if (equal point-loc 'minibuf)
+        (if (= nth-win 1)
+            (or (if (and minibuffer-scroll-window
+                         (window-live-p minibuffer-scroll-window)
+                         (equal (window-frame minibuffer-scroll-window)
+                                ecb-frame))
+                    minibuffer-scroll-window)
+                comp-win
+                ecb-last-edit-window-with-point)
+          (funcall next-listelem-fcn (append edit-win-list
+                                             (if comp-win
+                                                 (list comp-win))
+                                             (if minibuf-win
+                                                 (list minibuf-win)))
+                   (selected-window) nth-win))
+      (funcall next-listelem-fcn (append win-list (if minibuf-win
+                                                      (list minibuf-win)))
+               (selected-window) nth-win))))
   
+
+
+(defun ecb-get-other-window-smart (win-list
+                                   edit-win-list
+                                   ecb-win-list
+                                   comp-win
+                                   minibuf-win
+                                   point-loc
+                                   nth-window)
+  (if minibuf-win
+      (ecb-get-other-window-minibuf-active win-list
+                                           edit-win-list
+                                           ecb-win-list
+                                           comp-win
+                                           minibuf-win
+                                           point-loc
+                                           nth-window)
+    ;; here we have no active minibuffer!
+    (let* ((nth-win (or nth-window 1))
+           (next-listelem-fcn (if (< nth-win 0)
+                                  'ecb-prev-listelem
+                                'ecb-next-listelem)))
+      (cond ((equal point-loc 'ecb)
+             (funcall next-listelem-fcn ecb-win-list
+                      (selected-window) nth-win))
+            ((equal point-loc 'compile)
+             (if (= nth-win 1)
+                 (or (and ecb-last-edit-window-with-point
+                          (window-live-p ecb-last-edit-window-with-point)
+                          ecb-last-edit-window-with-point)
+                     (car edit-win-list))
+               (funcall next-listelem-fcn
+                        (append edit-win-list (list (selected-window)))
+                        (selected-window)
+                        nth-win)))
+            (t ;; must be an edit-window
+             (funcall next-listelem-fcn
+                      (append edit-win-list
+                              (if (and comp-win
+                                       (= (length edit-win-list) 1))
+                                  (list comp-win)))
+                      (selected-window)
+                      nth-win))))))
+
 ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: Noch das verhalten bei aktivem
 ;; Minibuffer dokumentieren!!
-;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: Irgendwie ist diese Funktion
-;; ziemlich Kraut und Rüben - besser strukturieren, neu schreiben etc... aber
-;; fürs testen reicht sie erstmal
 (defun ecb-get-other-window (nth-window)
   "Return the \"other window\" according to `ecb-other-window-behavior'.
 Returns the window NTH-WINDOW steps away from the current window. If
@@ -2607,8 +2680,7 @@ NTH-WINDOW is nil then it is treated as 1."
                           (minibuffer-window ecb-frame)))
          (next-listelem-fcn (if (< nth-win 0)
                                 'ecb-prev-listelem
-                              'ecb-next-listelem))
-         win-list)
+                              'ecb-next-listelem)))
     (if (functionp ecb-other-window-behavior)
         (let ((other-win (funcall ecb-other-window-behavior
                                   windows-list
@@ -2616,6 +2688,7 @@ NTH-WINDOW is nil then it is treated as 1."
                                   ecb-win-list
                                   (if (equal compwin-state 'visible)
                                       ecb-compile-window)
+                                  minibuf-win
                                   point-loc
                                   nth-window)))
           (if (and other-win (window-live-p other-win))
@@ -2624,27 +2697,14 @@ NTH-WINDOW is nil then it is treated as 1."
                      (append windows-list (list minibuf-win))
                      (selected-window) nth-win)))
       (if minibuf-win
-          ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: Maybe we should here
-          ;; even smarter but for now...
-          (if (equal point-loc 'minibuf)
-              (if (= nth-win 1)
-                  (or (if (and minibuffer-scroll-window
-                               (window-live-p minibuffer-scroll-window)
-                               (equal (window-frame minibuffer-scroll-window)
-                                      ecb-frame))
-                          minibuffer-scroll-window)
-                      (if (equal compwin-state 'visible)
-                          ecb-compile-window)
-                      ecb-last-edit-window-with-point)
-                (funcall next-listelem-fcn (append edit-win-list
-                                                   (if (equal compwin-state
-                                                              'visible)
-                                                       ecb-compile-window)
-                                                   (list minibuf-win))
-                         (selected-window) nth-win))
-            (funcall next-listelem-fcn (append windows-list
-                                               (list minibuf-win))
-                     (selected-window) nth-win))
+          (ecb-get-other-window-minibuf-active windows-list
+                                               edit-win-list
+                                               ecb-win-list
+                                               (if (equal compwin-state 'visible)
+                                                   ecb-compile-window)
+                                               minibuf-win
+                                               point-loc
+                                               nth-window)
         ;; in the following there is no minibuffer active...
         (cond ((equal 'all ecb-other-window-behavior)
                (funcall next-listelem-fcn windows-list
@@ -2671,28 +2731,14 @@ NTH-WINDOW is nil then it is treated as 1."
                           (selected-window)
                           nth-win)))
               (t ;; = 'smart
-               (cond ((equal point-loc 'ecb)
-                      (funcall next-listelem-fcn ecb-win-list
-                               (selected-window) nth-win))
-                     ((equal point-loc 'compile)
-                      (if (= nth-win 1)
-                          (or (and ecb-last-edit-window-with-point
-                                   (window-live-p ecb-last-edit-window-with-point)
-                                   ecb-last-edit-window-with-point)
-                              (car edit-win-list))
-                        (funcall next-listelem-fcn
-                                 (append edit-win-list (list (selected-window)))
-                                 (selected-window)
-                                 nth-win)))
-                     (t ;; must be an edit-window
-                      (funcall next-listelem-fcn
-                               (append edit-win-list
-                                       (if (and (equal 'visible
-                                                       (ecb-compile-window-state))
-                                                (= (length edit-win-list) 1))
-                                           (list ecb-compile-window)))
-                               (selected-window)
-                               nth-win)))))))))
+               (ecb-get-other-window-smart windows-list
+                                           edit-win-list
+                                           ecb-win-list
+                                           (if (equal compwin-state 'visible)
+                                               ecb-compile-window)
+                                           minibuf-win
+                                           point-loc
+                                           nth-window)))))))
 
 ;; Important: `other-window', `delete-window', `split-window' need none of the
 ;; other advices and can therefore be used savely by the other advices (means,
