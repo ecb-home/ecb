@@ -87,11 +87,6 @@
 ;; Currently not known
 
 
-;;; TODO
-;;
-;; More tests.
-
-
 ;; Thanks to Johann "Myrkraverk" Oskarsson <myrkraverk@users.sourceforge.net>
 ;; for the first trigger for this support-library. He has suggested to
 ;; integrate ECB with escreen.

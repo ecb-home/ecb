@@ -330,7 +330,6 @@ by semantic and also killed afterwards."
 
 ;; some function from cl - but we do not want to call cl-functions at runtime
 
-;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: Is this the best way to do this? 
 (defun ecb-filter (seq pred)
   "Filter out those elements of SEQUENCE for which PREDICATE returns nil."
   (let ((res))

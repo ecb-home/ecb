@@ -186,7 +186,7 @@ that should ideally be displayed in the compile-window of ECB \(see
 not be the result of a real `compile-internal'. A good example would be the
 *Help* buffer.
 
-BUFFER-OR-NAME can be the name of a buffer or a buffer-object.
+BUFFER-OR-NAME can be the name of a living\(!) buffer or a buffer-object.
 
 This function returns the buffer-object of BUFFER-OR-NAME - i.e.
 BUFFER-OR-NAME will be treated as compilation-buffer - if:
