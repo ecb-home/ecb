@@ -19,7 +19,7 @@
 @c Free Software Foundation, Inc., 59 Temple Place - Suite 330,
 @c Boston, MA 02111-1307, USA.
 
-@c $Id: ecb.texi,v 1.66 2003/01/30 16:13:18 berndl Exp $
+@c $Id: ecb.texi,v 1.67 2003/01/31 12:28:40 berndl Exp $
 
 @setfilename ecb.info
 
@@ -38,6 +38,14 @@
 
 @footnotestyle end
 
+@c The version number is auto-frobbed from the Makefile, so you should
+@c edit the Makefile to change the version number. mechanism stolen
+@c from Tramp
+@macro ecbver{}
+1.90
+@end macro
+
+
 @dircategory GNU Emacs Lisp
 @direntry
 * ECB: (ecb).           Emacs Code Browser
@@ -45,18 +53,23 @@
 
 @titlepage
 @sp 10
-@center @titlefont{ECB - the Emacs Code Browser}
+@center @titlefont{ECB version @ecbver{} - User manual}
 @vskip 0pt plus 1 fill
-Copyright @copyright{} 2000, 2001, 2002 Jesper Nordenberg
+Copyright @copyright{} 2000, 2001, 2002 Jesper Nordenberg, Klaus Berndl
 @end titlepage
 
 @node Top, Install and first steps, (dir), (dir)
 @comment  node-name,  next,  previous,  up
 
-ECB (Emacs Code Browser) is a source code browser for (X)Emacs. It is
-a global minor-mode which displays a couple of windows that can be
-used to browse directories, files and methods. It supports method
-parsing for Java, C, C++, Elisp and some more.
+@ifnottex
+This is the user manual for ECB version @ecbver{}.
+@end ifnottex
+
+ECB stands for ``Emacs Code Browser'' and is a source code browser for
+(X)Emacs. It is a global minor-mode which displays a couple of windows
+that can be used to browse directories, files and file-contents like
+methods and variables. It supports source-code parsing for Java, C,
+C++, Elisp, Scheme and some more.
 
 @iftex
 @sp 1
@@ -6499,10 +6512,8 @@ active ECB. This can be done with the hooks of ECB.
 @item
 Does ECB support C++ as well as Java?
 @tab @tab
-For older versions of ECB (< 1.80) this depends strongly on the used
-semantic-version, but all semantic-versions >= semantic-1.4beta13
-should support C++ really well. All versions of ECB >= 1.80 support
-C++ as well as Java.
+This depends strongly on the used semantic-version, but all
+semantic-versions >= semantic-1.4.3 support C++ really well.
 
 @item @tab @tab
 
