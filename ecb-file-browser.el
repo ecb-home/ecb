@@ -23,7 +23,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-file-browser.el,v 1.49 2004/12/10 12:55:48 berndl Exp $
+;; $Id: ecb-file-browser.el,v 1.50 2004/12/20 17:03:08 berndl Exp $
 
 ;;; Commentary:
 
@@ -174,6 +174,36 @@ layouts sources should be displayed in the directories window."
                 (repeat :tag "With these layouts"
                         (string :tag "Layout name"))))
 
+
+(defcustom ecb-directories-show-node-info '(if-too-long . path)
+  "*When to display which node-info in the directories-buffer.
+Define which node info should displayed after moving the mouse over a node
+\(or after a shift click onto the node) in the directories-buffer.
+
+You can define \"when\" a node-info should be displayed:
+- always: Node info is displayed by moving with the mouse over a node.
+- if-too-long: Node info is only displayed by moving with the mouse over a
+  node does not fit into the window-width of the tree-buffer window.
+  In the ECB directories buffer this means also if a node is shortend or if
+  the node has an alias \(see `ecb-source-path').
+- shift-click: Node info is only displayed after a shift click with the
+  primary mouse button onto the node.
+- never: Node info is never displayed.
+
+You can define what info should be displayed:
+- name: Only the full node-name is displayed.
+- path: The full-path of the node is displayed.
+
+Do NOT set this option directly via setq but use always customize!"
+  :group 'ecb-directories
+  :type '(cons (choice :tag "When"
+                       (const :tag "Always" :value always)
+                       (const :tag "If too long" :value if-too-long)
+                       (const :tag "After shift click" :value shift-click)
+                       (const :tag "Never" :value never))
+               (choice :tag "What"
+                       (const :tag "Node-name" :value name)
+                       (const :tag "Full path" :value path))))
 
 (defcustom ecb-directories-update-speedbar 'auto
   "*Update an integrated speedbar after selecting a directory.
@@ -509,6 +539,31 @@ then activating ECB again!"
   :group 'ecb-sources
   :type 'string)
 
+(defcustom ecb-sources-show-node-info '(if-too-long . name)
+  "*When to display which node-info in the sources-buffer.
+Define which node info should displayed after moving the mouse over a node
+\(or after a shift click onto the node) in the sources-buffer.
+
+You can define \"when\" a node-info should be displayed:
+See `ecb-directories-show-node-info' for the possible choices.
+
+You can define what info should be displayed:
+- name: Only the full node-name is displayed.
+- file-info: File infos for this file are displayed.
+- file-info-full: Fill infos incl. full path for this file are displayed.
+
+Do NOT set this option directly via setq but use always customize!"
+  :group 'ecb-sources
+  :type '(cons (choice :tag "When"
+                       (const :tag "Always" :value always)
+                       (const :tag "If too long" :value if-too-long)
+                       (const :tag "After shift click" :value shift-click)
+                       (const :tag "Never" :value never))
+               (choice :tag "What"
+                       (const :tag "Node-name" :value name)
+                       (const :tag "File info" :value file-info)
+                       (const :tag "File info \(full path)"
+                              :value file-info-full))))
 
 (defcustom ecb-sources-exclude-cvsignore nil
   "*Specify if files contained in a .cvsignore should be excluded.
@@ -630,6 +685,28 @@ these regexps! Therefore be carefore with regexps beginning with ^!"
 
 (defsubst ecb-check-filename-for-history-exclude (filename)
   (ecb-match-regexp-list filename ecb-history-exclude-file-regexps))
+
+(defcustom ecb-history-show-node-info '(always . path)
+  "*When to display which node-info in the history-buffer.
+Define which node info should displayed after moving the mouse over a node
+\(or after a shift click onto the node) in the history-buffer.
+
+You can define \"when\" a node-info should be displayed:
+See `ecb-directories-show-node-info' for the possible choices.
+
+You can define what info should be displayed:
+See `ecb-directories-show-node-info' for the possible choices.
+
+Do NOT set this option directly via setq but use always customize!"
+  :group 'ecb-history
+  :type '(cons (choice :tag "When"
+                       (const :tag "Always" :value always)
+                       (const :tag "If too long" :value if-too-long)
+                       (const :tag "After shift click" :value shift-click)
+                       (const :tag "Never" :value never))
+               (choice :tag "What"
+                       (const :tag "Node-name" :value name)
+                       (const :tag "Full path" :value path))))
 
 (defcustom ecb-history-sort-method 'name
   "*Defines how the entries in the history-buffer are sorted.
@@ -1455,6 +1532,55 @@ ECB-history-window is not visible in current layout."
   (interactive)
   (ecb-display-one-ecb-buffer ecb-history-buffer-name))
 
+(defun ecb-set-directories-buffer ()
+  (let ((set-directories-buffer
+         (not (equal ecb-use-speedbar-instead-native-tree-buffer 'dir))))
+    ;; first we act depending on the value of
+    ;; ecb-use-speedbar-instead-native-tree-buffer
+    (when (not set-directories-buffer)
+      (condition-case error-data
+          (ecb-set-speedbar-buffer)
+        ;; setting the speedbar buffer has failed so we set
+        ;; set-directories-buffer to t ==> standard-directories-buffer is set!
+        (error (message "%s" error-data)
+               (setq set-directories-buffer t))))
+    ;; maybe we need to set the standard directories buffer:
+    ;; - if ecb-use-speedbar-instead-native-tree-buffer is not 'dir or
+    ;; - if setting the speedbar buffer has failed.
+    (when set-directories-buffer
+      (if (null ecb-use-speedbar-instead-native-tree-buffer)
+          (ignore-errors (ecb-speedbar-deactivate)))
+      (ecb-with-dedicated-window
+          ecb-directories-buffer-name
+          'ecb-set-directories-buffer
+        (switch-to-buffer ecb-directories-buffer-name)))))
+
+(defun ecb-set-sources-buffer ()
+  (let ((set-sources-buffer
+         (not (equal ecb-use-speedbar-instead-native-tree-buffer 'source))))
+    ;; first we act depending on the value of
+    ;; ecb-use-speedbar-instead-native-tree-buffer
+    (when (not set-sources-buffer)
+      (condition-case error-data
+          (ecb-set-speedbar-buffer)
+        ;; setting the speedbar buffer has failed so we set
+        ;; set-sources-buffer to t ==> standard-sources-buffer is set!
+        (error (message "%s" error-data)
+               (setq set-sources-buffer t))))
+    ;; maybe we need to set the standard sources buffer:
+    ;; - if ecb-use-speedbar-instead-native-tree-buffer is not 'source or
+    ;; - if setting the speedbar buffer has failed.
+    (when set-sources-buffer
+      (if (null ecb-use-speedbar-instead-native-tree-buffer)
+          (ignore-errors (ecb-speedbar-deactivate)))
+      (ecb-with-dedicated-window ecb-sources-buffer-name 'ecb-set-sources-buffer
+        (switch-to-buffer ecb-sources-buffer-name)))))
+
+
+(defun ecb-set-history-buffer ()
+  (ecb-with-dedicated-window ecb-history-buffer-name 'ecb-set-history-buffer
+    (switch-to-buffer ecb-history-buffer-name)))
+
 
 (defun ecb-expand-directory-tree (path node)
   "Expands the directory part so the node representing PATH is visible.
@@ -1861,7 +1987,7 @@ then nothing is done unless first optional argument FORCE is not nil."
   ;; is this necessary if neither dir.- nor sources-buffer-contents have been
   ;; changed? I think not but anyway, doesn't matter, costs are very low.
   (save-excursion
-    (dolist (buf ecb-tree-buffers)
+    (dolist (buf (ecb-tree-buffers-buffer-list))
       (set-buffer buf)
       (setq default-directory
             (concat ecb-path-selected-directory
@@ -3220,8 +3346,7 @@ can last a long time - depending of machine- and disk-performance."
 	    (nth 3 attrs)
 	    (nth 7 attrs)
 	    (format-time-string "%Y/%m/%d %H:%M" (nth 5 attrs))
-            (if (equal (ecb-show-node-info-what ecb-sources-buffer-name)
-                       'file-info-full)
+            (if (equal (cdr ecb-sources-show-node-info) 'file-info-full)
                 file
               (ecb-file-name-nondirectory file)))
     ))
@@ -3230,23 +3355,22 @@ can last a long time - depending of machine- and disk-performance."
 (defun ecb-mouse-over-directory-node (node &optional window no-message click-force)
   "Displays help text if mouse moves over a node in the directory buffer or if
 CLICK-FORCE is not nil and always with regards to the settings in
-`ecb-show-node-info-in-minibuffer'. NODE is the node for which help text
-should be displayed, WINDOW is the related window, NO-MESSAGE defines if the
+`ecb-directories-show-node-info'. NODE is the node for which help text should
+be displayed, WINDOW is the related window, NO-MESSAGE defines if the
 help-text should be printed here."
   (if (= (tree-node-get-type node) ecb-directories-nodetype-sourcefile)
       (ecb-mouse-over-source-node node window no-message click-force)
     (if (not (= (tree-node-get-type node) 3))
         (let ((str (when (or click-force
                              (ecb-show-minibuffer-info node window
-                                                       ecb-directories-buffer-name)
-                             (and (not (equal (ecb-show-node-info-when ecb-directories-buffer-name)
+                                                       (car ecb-directories-show-node-info))
+                             (and (not (equal (car ecb-directories-show-node-info)
                                               'never))
                                   (not (ecb-string= (tree-node-get-data node)
                                                     (tree-node-get-name node)))
                                   (eq (tree-node-get-parent node)
                                       (tree-buffer-get-root))))
-                     (if (equal (ecb-show-node-info-what ecb-directories-buffer-name)
-                                'name)
+                     (if (equal (cdr ecb-directories-show-node-info) 'name)
                          (tree-node-get-name node)
                        (tree-node-get-data node)))))
           (prog1 str
@@ -3257,15 +3381,14 @@ help-text should be printed here."
 (defun ecb-mouse-over-source-node (node &optional window no-message click-force)
   "Displays help text if mouse moves over a node in the sources buffer or if
 CLICK-FORCE is not nil and always with regards to the settings in
-`ecb-show-node-info-in-minibuffer'. NODE is the node for which help text
-should be displayed, WINDOW is the related window, NO-MESSAGE defines if the
-help-text should be printed here."
+`ecb-sources-show-node-info'. NODE is the node for which help
+text should be displayed, WINDOW is the related window, NO-MESSAGE defines if
+the help-text should be printed here."
   (let ((str (ignore-errors ;; For buffers that hasn't been saved yet
                (when (or click-force
                          (ecb-show-minibuffer-info node window
-                                                   ecb-sources-buffer-name))
-                 (if (equal (ecb-show-node-info-what ecb-sources-buffer-name)
-                            'name)
+                                                   (car ecb-sources-show-node-info)))
+                 (if (equal (cdr ecb-sources-show-node-info) 'name)
                      (tree-node-get-name node)
                    (ecb-get-file-info-text (tree-node-get-data node)))))))
     (prog1 str
@@ -3276,15 +3399,14 @@ help-text should be printed here."
 (defun ecb-mouse-over-history-node (node &optional window no-message click-force)
   "Displays help text if mouse moves over a node in the history buffer or if
 CLICK-FORCE is not nil and always with regards to the settings in
-`ecb-show-node-info-in-minibuffer'. NODE is the node for which help text
-should be displayed, WINDOW is the related window, NO-MESSAGE defines if the
-help-text should be printed here."
+`ecb-history-show-node-info'. NODE is the node for which help
+text should be displayed, WINDOW is the related window, NO-MESSAGE defines if
+the help-text should be printed here."
   (let ((str (ignore-errors ;; For buffers that hasn't been saved yet
                (when (or click-force
                          (ecb-show-minibuffer-info node window
-                                                   ecb-history-buffer-name))
-                 (if (equal (ecb-show-node-info-what ecb-history-buffer-name)
-                            'name)
+                                                   (car ecb-history-show-node-info)))
+                 (if (equal (cdr ecb-history-show-node-info) 'name)
                      (tree-node-get-name node)
                    (tree-node-get-data node))))))
     (prog1 str
@@ -3757,6 +3879,7 @@ So you get a better overlooking. There are three choices:
 
 (defun ecb-create-directories-tree-buffer ()
   "Create the tree-buffer for directories"
+  (ecb-tree-buffers-add ecb-directories-buffer-name 'ecb-directories-buffer-name)
   (tree-buffer-create
    ecb-directories-buffer-name
    ecb-frame
@@ -3766,6 +3889,7 @@ So you get a better overlooking. There are three choices:
    'ecb-tree-buffer-node-expand-callback
    'ecb-tree-buffer-node-collapsed-callback
    'ecb-mouse-over-directory-node
+   t ;; highlight each node when moving mouse over it
    'equal
    (list ecb-directories-nodetype-directory)
    ;; Now no longer tree-buffer decides if a node is displayed as leave but
@@ -3779,15 +3903,18 @@ So you get a better overlooking. There are three choices:
                ecb-directories-menu-title-creator)
          (cons ecb-directories-nodetype-sourcepath
                ecb-directories-menu-title-creator))
-   (nth 0 ecb-truncate-lines)
+   (ecb-member-of-symbol/value-list ecb-directories-buffer-name
+                                    ecb-tree-truncate-lines)
    t
    ecb-tree-indent
    ecb-tree-incremental-search
    ecb-vc-incr-searchpattern-node-prefix
    ecb-tree-navigation-by-arrow
    ecb-tree-easy-hor-scroll
-   (nth 0 ecb-tree-image-icons-directories)
-   (nth 1 ecb-tree-image-icons-directories)
+   (car ecb-tree-image-icons-directories)
+   (ecb-member-of-symbol/value-list ecb-directories-buffer-name
+                                    (cdr ecb-tree-image-icons-directories)
+                                    'car 'cdr)
    ecb-tree-buffer-style
    ecb-tree-guide-line-face
    (list (cons ecb-directories-nodetype-sourcefile
@@ -3814,6 +3941,7 @@ So you get a better overlooking. There are three choices:
 
 (defun ecb-create-sources-tree-buffer ()
   "Create the tree-buffer for sources"
+  (ecb-tree-buffers-add ecb-sources-buffer-name 'ecb-sources-buffer-name)
   (tree-buffer-create
    ecb-sources-buffer-name
    ecb-frame
@@ -3823,6 +3951,7 @@ So you get a better overlooking. There are three choices:
    'ecb-tree-buffer-node-expand-callback
    'ecb-tree-buffer-node-collapsed-callback
    'ecb-mouse-over-source-node
+   t ;; highlight each node when moving mouse over it
    'equal
    nil
    ;; If we want to display the VC-state in the sources-icon then we should
@@ -3832,15 +3961,18 @@ So you get a better overlooking. There are three choices:
    nil ;; (list ecb-sources-nodetype-sourcefile)
    'ecb-sources-menu-creator
    (list (cons ecb-sources-nodetype-sourcefile ecb-sources-menu-title-creator))
-   (nth 1 ecb-truncate-lines)
+   (ecb-member-of-symbol/value-list ecb-sources-buffer-name
+                                    ecb-tree-truncate-lines)
    t
    ecb-tree-indent
    ecb-tree-incremental-search
    ecb-vc-incr-searchpattern-node-prefix
    ecb-tree-navigation-by-arrow
    ecb-tree-easy-hor-scroll
-   (nth 0 ecb-tree-image-icons-directories)
-   (nth 2 ecb-tree-image-icons-directories)
+   (car ecb-tree-image-icons-directories)
+   (ecb-member-of-symbol/value-list ecb-sources-buffer-name
+                                    (cdr ecb-tree-image-icons-directories)
+                                    'car 'cdr)
    ecb-tree-buffer-style
    ecb-tree-guide-line-face
    nil
@@ -3861,6 +3993,7 @@ So you get a better overlooking. There are three choices:
 
 (defun ecb-create-history-tree-buffer ()
   "Create the tree-buffer for history"
+  (ecb-tree-buffers-add ecb-history-buffer-name 'ecb-history-buffer-name)
   (tree-buffer-create
    ecb-history-buffer-name
    ecb-frame
@@ -3870,21 +4003,25 @@ So you get a better overlooking. There are three choices:
    'ecb-tree-buffer-node-expand-callback
    'ecb-tree-buffer-node-collapsed-callback
    'ecb-mouse-over-history-node
+   t ;; highlight each node when moving mouse over it
    'equal
    nil
    nil
    'ecb-history-menu-creator
    (list (cons ecb-history-nodetype-sourcefile
                ecb-history-menu-title-creator))
-   (nth 3 ecb-truncate-lines)
+   (ecb-member-of-symbol/value-list ecb-history-buffer-name
+                                    ecb-tree-truncate-lines)
    t
    ecb-tree-indent
    ecb-tree-incremental-search
    ecb-vc-incr-searchpattern-node-prefix
    ecb-tree-navigation-by-arrow
    ecb-tree-easy-hor-scroll
-   (nth 0 ecb-tree-image-icons-directories)
-   (nth 4 ecb-tree-image-icons-directories)
+   (car ecb-tree-image-icons-directories)
+   (ecb-member-of-symbol/value-list ecb-history-buffer-name
+                                    (cdr ecb-tree-image-icons-directories)
+                                    'car 'cdr)
    ecb-tree-buffer-style
    ecb-tree-guide-line-face
    nil
