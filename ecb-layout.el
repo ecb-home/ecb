@@ -343,42 +343,14 @@ Here is an example: Suppose you must deactivating the advice for
 and you can use `ecb-find-file-other-window' instead. Bind the shortcut you
 normally use for `find-file-other-window' to `ecb-find-file-other-window'
 \(use `ecb-activate-hook' for this) and rebind it to the original function in
-the `ecb-deactivate-hook'.
-
-Not all subsets of adviced functions are possible because some adviced
-functions need some other of the adviced functions, e.g. the adviced version
-of `other-window' is needed by all other. Therefore ECB ensures itself that only
-correct subsets of adviced functions are set!"
+the `ecb-deactivate-hook'."
   :group 'ecb-layout
   :initialize 'custom-initialize-default
   :set '(lambda (symbol value)
-          (let ((real-value value)
-                custom-reload)
-            ;; cause of `find-file-other-window' and
-            ;; `switch-to-buffer-other-window' needs the adviced version of
-            ;; `split-window-vertically' we must add it
-            (when (and (or (memq 'find-file-other-window real-value)
-                           (memq 'switch-to-buffer-other-window real-value))
-                       (not (memq 'split-window-vertically real-value)))
-              (setq real-value (cons 'split-window-vertically real-value))
-              (setq custom-reload t))
-            ;; all other adviced functions need the adviced `other-window'
-            (when (and (> (length real-value) 0)
-                       (not (memq 'other-window real-value)))
-              (setq real-value (cons 'other-window real-value))
-              (setq custom-reload t))
-            (set symbol real-value)
-            (if (and (boundp 'ecb-activated)
-                     ecb-activated)            
-                (ecb-activate-adviced-functions real-value))
-            ;; if we have pressed the [Save...]-button let큦 reload this
-            ;; cutomize-buffer for immediatelly showing our ajustment.
-            ;; Maybe this solution must be changed in the future to a better
-            ;; one, but for the moment it works.
-            (if (and custom-reload
-                     (string-match "\*Customize " (buffer-name)))
-                (customize-option symbol))
-            ))
+          (set symbol value)
+          (if (and (boundp 'ecb-activated)
+                   ecb-activated)            
+              (ecb-activate-adviced-functions value)))
   :type '(set (const :tag "other-window"
                      :value other-window)
               (const :tag "delete-window"
@@ -393,6 +365,7 @@ correct subsets of adviced functions are set!"
                      :value find-file-other-window)
               (const :tag "switch-to-buffer-other-window"
                      :value switch-to-buffer-other-window)))
+
 
 (defcustom ecb-use-dedicated-windows t
   "*Use dedicated windows for the ECB buffers."
@@ -488,6 +461,10 @@ this variable."
 
 ;; here come the advices
 
+;; Important: `other-window', `delete-window', `delete-other-windows',
+;; `split-window-horizontally' and `split-window-vertically' need none of the
+;; other advices and can therefore be used savely by the other advices (means,
+;; other functions or advices can savely (de)activate these "basic"-advices!
 (defadvice other-window (around ecb)
   "The ECB-version of `other-window'. Works exactly like the original function
 with the following ECB-ajustment:
@@ -555,7 +532,7 @@ If called in an unsplitted edit-window then nothing is done.
 If called in any other window of the current ECB-layout it jumps first in the
 \(first) edit-window and does then it큦 job \(see above)."
   (if (not (ecb-point-in-edit-window))
-      (other-window 1))
+      (ignore-errors (select-window ecb-edit-window)))
   (ad-with-originals 'delete-window
     (if ecb-split-edit-window
         (if (funcall (intern (format "ecb-delete-window-in-editwindow-%d"
@@ -574,7 +551,7 @@ If called in an unsplitted edit-window then nothing is done.
 If called in any other window of the current ECB-layout it jumps first in the
 \(first) edit-window and does then it큦 job \(see above)."
   (if (not (ecb-point-in-edit-window))
-      (other-window 1))
+      (ignore-errors (select-window ecb-edit-window)))
   (ad-with-originals 'delete-window
     (if ecb-split-edit-window
         (if (funcall (intern (format "ecb-delete-other-windows-in-editwindow-%d"
@@ -591,7 +568,7 @@ If called in an already splitted edit-window then nothing is done.
 If called in any other window of the current ECB-layout it jumps first in the
 \(first) edit-window and does then it큦 job \(see above)."
   (if (not (ecb-point-in-edit-window))
-      (other-window 1))
+      (ignore-errors (select-window ecb-edit-window)))
   (when (and (not ecb-split-edit-window)
              (eq (selected-window) ecb-edit-window))
     (ad-with-originals 'split-window-horizontally
@@ -608,7 +585,7 @@ If called in an already splitted edit-window then nothing is done.
 If called in any other window of the current ECB-layout it jumps first in the
 \(first) edit-window and does then it큦 job \(see above)."
   (if (not (ecb-point-in-edit-window))
-      (other-window 1))
+      (ignore-errors (select-window ecb-edit-window)))
   (when (and (not ecb-split-edit-window)
              (eq (selected-window) ecb-edit-window))
     (ad-with-originals 'split-window-vertically
@@ -622,12 +599,13 @@ original function but opens the file always in another edit-window.
 If called in any non edit-window of the current ECB-layout it jumps first in
 the \(first) edit-window and does then it큦 job \(see above)."
   (if (not (ecb-point-in-edit-window))
-      (other-window 1))
+      (ignore-errors (select-window ecb-edit-window)))
   (let ((ecb-other-window-jump-behavior 'only-edit))
-    (if ecb-split-edit-window
-        (other-window 1)
-      (split-window-vertically)
-      (other-window 1))
+    (ecb-with-adviced-functions
+     (if ecb-split-edit-window
+         (other-window 1)
+       (split-window-vertically)
+       (other-window 1)))
     ;; now we are always in the other window, so we can now open the file.
     (find-file (ad-get-arg 0) (ad-get-arg 1))))
 
@@ -638,12 +616,13 @@ like the original but switch to the buffer always in another edit-window.
 If called in any non edit-window of the current ECB-layout it jumps first in
 the \(first) edit-window and does then it큦 job \(see above)."
   (if (not (ecb-point-in-edit-window))
-      (other-window 1))
+      (ignore-errors (select-window ecb-edit-window)))
   (let ((ecb-other-window-jump-behavior 'only-edit))
-    (if ecb-split-edit-window
-        (other-window 1)
-      (split-window-vertically)
-      (other-window 1))
+    (ecb-with-adviced-functions
+     (if ecb-split-edit-window
+         (other-window 1)
+       (split-window-vertically)
+       (other-window 1)))
     ;; now we are always in the other window, so we can switch to the buffer
     (switch-to-buffer (ad-get-arg 0) (ad-get-arg 1))))
 
