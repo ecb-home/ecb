@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-speedbar.el,v 1.49 2003/09/08 12:20:17 berndl Exp $
+;; $Id: ecb-speedbar.el,v 1.50 2003/11/04 17:39:40 berndl Exp $
 
 ;;; Commentary:
 
@@ -68,6 +68,7 @@
 
 (require 'speedbar)
 (require 'ecb-util)
+(require 'ecb-semantic-wrapper)
 
 ;; imenu
 (silentcomp-defvar imenu--rescan-item)
@@ -277,9 +278,9 @@ future this could break."
 ;; semantic-grammar available) but which can be parsed by imenu and/or etags
 ;; via speedbar.
 
-(defun ecb-speedbar-sb-token-p (token)
-  "Return not nil if TOKEN is a semantic-token generated from a speedbar tag."
-  (semantic-token-get token 'ecb-speedbar-token))
+(defun ecb-speedbar-sb-tag-p (tag)
+  "Return not nil if TAG is a semantic-tag generated from a speedbar tag."
+  (ecb--semantic--tag-get-property tag 'ecb-speedbar-tag))
 
 (require 'tree-buffer)
 (require 'ecb-face)
@@ -296,32 +297,32 @@ called recursive for the elements of a group.
 
 Return NODE."
   (let ((new-node nil)
-        (new-token nil))
+        (new-tag nil))
     (dolist (tag tag-list)
       (cond ((null tag) nil)            ;this would be a separator
             ((speedbar-generic-list-tag-p tag)
-             ;; the semantic token for this tag
-             (setq new-token (list (car tag)
+             ;; the semantic tag for this tag
+             (setq new-tag (list (car tag)
                                    (intern (car tag))
                                    nil nil nil
                                    (make-vector 2 (cdr tag))))
-             (semantic-token-put new-token 'ecb-speedbar-token t)
+             (ecb--semantic--tag-put-property new-tag 'ecb-speedbar-tag t)
              (tree-node-new (progn
                               (set-text-properties
                                0 (length (car tag))
                                `(face ,ecb-method-non-semantic-face) (car tag))
                               (car tag))
                             0
-                            new-token
+                            new-tag
                             t
                             node))
             ((speedbar-generic-list-positioned-group-p tag)
-             ;; the semantic token for this tag
-             (setq new-token (list (car tag)
+             ;; the semantic tag for this tag
+             (setq new-tag (list (car tag)
                                    (intern (car tag))
                                    nil nil nil
                                    (make-vector 2 (car (cdr tag)))))
-             (semantic-token-put new-token 'ecb-speedbar-token t)
+             (ecb--semantic--tag-put-property new-tag 'ecb-speedbar-tag t)
              (ecb-create-non-semantic-tree
               (setq new-node
                     (tree-node-new (progn
@@ -330,7 +331,7 @@ Return NODE."
                                       `(face ,ecb-method-non-semantic-face) (car tag))
                                      (car tag))
                                    0
-                                   new-token
+                                   new-tag
                                    nil node))
               (cdr (cdr tag)))
              (tree-node-set-expanded new-node

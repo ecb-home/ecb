@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-navigate.el,v 1.18 2003/08/13 18:06:20 berndl Exp $
+;; $Id: ecb-navigate.el,v 1.19 2003/11/04 17:39:40 berndl Exp $
 
 ;;; Commentary:
 
@@ -130,80 +130,80 @@
 ;;====================================================
 
 ;; Klaus Berndl <klaus.berndl@sdm.de>: Changed this class from storing the
-;; whole token to storing explicitly the token-buffer, the marker of the
-;; token-start, the marker of the token-end. This prevents the stored
+;; whole tag to storing explicitly the tag-buffer, the marker of the
+;; tag-start, the marker of the tag-end. This prevents the stored
 ;; navigation-items from getting invalid and unusable after a full
 ;; semantic-reparse because such a reparse makes the overlays contained in the
-;; stored tokens invalid so we can not uses their informations.
-(defclass ecb-nav-token-history-item (ecb-nav-history-item)
-  ((token-buffer :initarg :token-buffer :initform nil); :protection :private)
-   (token-start :initarg :token-start :initform nil) ; :protection :private)
-   (token-end :initarg :token-end :initform nil) ; :protection :private)
-   (token-name :initarg :token-name :initform nil) ; :protection :private)
+;; stored tags invalid so we can not uses their informations.
+(defclass ecb-nav-tag-history-item (ecb-nav-history-item)
+  ((tag-buffer :initarg :tag-buffer :initform nil); :protection :private)
+   (tag-start :initarg :tag-start :initform nil) ; :protection :private)
+   (tag-end :initarg :tag-end :initform nil) ; :protection :private)
+   (tag-name :initarg :tag-name :initform nil) ; :protection :private)
    (narrow :initarg :narrow :initform nil); :protection :private)
    )
   )
 
-(defun ecb-nav-token-history-item-new (token-name token-buffer token-start
-                                                  token-end &optional narrow)
-  (ecb-nav-token-history-item token-name
-                              :token-buffer token-buffer
-                              :token-start token-start
-                              :token-end token-end
-                              :token-name token-name
+(defun ecb-nav-tag-history-item-new (tag-name tag-buffer tag-start
+                                                  tag-end &optional narrow)
+  (ecb-nav-tag-history-item tag-name
+                              :tag-buffer tag-buffer
+                              :tag-start tag-start
+                              :tag-end tag-end
+                              :tag-name tag-name
                               :narrow narrow))
 
-(defmethod ecb-nav-get-token-buffer ((item ecb-nav-token-history-item))
-  (oref item token-buffer))
+(defmethod ecb-nav-get-tag-buffer ((item ecb-nav-tag-history-item))
+  (oref item tag-buffer))
 
-(defmethod ecb-nav-get-token-start ((item ecb-nav-token-history-item))
-  (oref item token-start))
+(defmethod ecb-nav-get-tag-start ((item ecb-nav-tag-history-item))
+  (oref item tag-start))
 
-(defmethod ecb-nav-get-token-end ((item ecb-nav-token-history-item))
-  (oref item token-end))
+(defmethod ecb-nav-get-tag-end ((item ecb-nav-tag-history-item))
+  (oref item tag-end))
 
-(defmethod ecb-nav-get-token-name ((item ecb-nav-token-history-item))
-  (oref item token-name))
+(defmethod ecb-nav-get-tag-name ((item ecb-nav-tag-history-item))
+  (oref item tag-name))
 
-(defmethod ecb-nav-get-narrow ((item ecb-nav-token-history-item))
+(defmethod ecb-nav-get-narrow ((item ecb-nav-tag-history-item))
   (oref item narrow))
 
-(defmethod ecb-nav-goto ((item ecb-nav-token-history-item))
-  (let ((tok-buffer (ecb-nav-get-token-buffer item))
-        (tok-start (ecb-nav-get-token-start item))
-        (tok-end (ecb-nav-get-token-end item)))
-    (set-window-buffer (selected-window) tok-buffer)
+(defmethod ecb-nav-goto ((item ecb-nav-tag-history-item))
+  (let ((tag-buffer (ecb-nav-get-tag-buffer item))
+        (tag-start (ecb-nav-get-tag-start item))
+        (tag-end (ecb-nav-get-tag-end item)))
+    (set-window-buffer (selected-window) tag-buffer)
     (ecb-with-original-basic-functions
      (widen))
-    (goto-char tok-start)
+    (goto-char tag-start)
     (when (ecb-nav-get-narrow item)
-      (narrow-to-region (ecb-line-beginning-pos) tok-end)
+      (narrow-to-region (ecb-line-beginning-pos) tag-end)
       (setq ecb-buffer-narrowed-by-ecb t))
-    (goto-char (+ tok-start (ecb-nav-get-pos item)))
+    (goto-char (+ tag-start (ecb-nav-get-pos item)))
     (set-window-start (selected-window)
-                      (+ tok-start (ecb-nav-get-window-start item)))))
+                      (+ tag-start (ecb-nav-get-window-start item)))))
 
-(defmethod ecb-nav-save ((item ecb-nav-token-history-item))
-  "Return only nil if token-start of ITEM points into a dead buffer. In this
+(defmethod ecb-nav-save ((item ecb-nav-tag-history-item))
+  "Return only nil if tag-start of ITEM points into a dead buffer. In this
 case no position saving is done."
-  (let ((tok-start (ecb-nav-get-token-start item)))
-    (if (and tok-start (marker-buffer tok-start))
+  (let ((tag-start (ecb-nav-get-tag-start item)))
+    (if (and tag-start (marker-buffer tag-start))
         (progn
-          (ecb-nav-set-pos item (- (point) tok-start))
-          (ecb-nav-set-window-start item (- (window-start) tok-start))
+          (ecb-nav-set-pos item (- (point) tag-start))
+          (ecb-nav-set-window-start item (- (window-start) tag-start))
           t)
       nil)))
 
-(defmethod ecb-nav-to-string ((item ecb-nav-token-history-item))
-  (concat (ecb-nav-get-token-name item) ":" (call-next-method)))
+(defmethod ecb-nav-to-string ((item ecb-nav-tag-history-item))
+  (concat (ecb-nav-get-tag-name item) ":" (call-next-method)))
 
-(defmethod ecb-nav-is-valid ((item ecb-nav-token-history-item))
-   (let ((tok-start (ecb-nav-get-token-start item))
-         (tok-buf (ecb-nav-get-token-buffer item))
-         (tok-end (ecb-nav-get-token-end item)))
-     (if (and tok-start (marker-buffer tok-start)
-              tok-end (marker-buffer tok-end)
-              tok-buf (buffer-live-p tok-buf))
+(defmethod ecb-nav-is-valid ((item ecb-nav-tag-history-item))
+   (let ((tag-start (ecb-nav-get-tag-start item))
+         (tag-buf (ecb-nav-get-tag-buffer item))
+         (tag-end (ecb-nav-get-tag-end item)))
+     (if (and tag-start (marker-buffer tag-start)
+              tag-end (marker-buffer tag-end)
+              tag-buf (buffer-live-p tag-buf))
          t)))
  
 
@@ -265,10 +265,10 @@ case no position saving is done."
   (setq ecb-nav-current-node ecb-nav-first-node))
   
 
-(defun ecb-nav-jump-to-token (file token &optional narrow)
+(defun ecb-nav-jump-to-tag (file tag &optional narrow)
   (ecb-nav-save-current)
   (find-file file)
-  (ecb-nav-add-item (ecb-nav-token-history-item token narrow)))
+  (ecb-nav-add-item (ecb-nav-tag-history-item tag narrow)))
 
 (defun ecb-nav-jump-to-file (file)
   (ecb-nav-save-current)

@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb.el,v 1.350 2003/10/24 16:35:16 berndl Exp $
+;; $Id: ecb.el,v 1.351 2003/11/04 17:39:38 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -100,6 +100,10 @@
 (require 'ecb-util)
 
 
+;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: When the cedet 2.X library is
+;; stable then we should handle here cedet instead of these three single
+;; libraries. 
+
 ;; if we miss some of the requirements we offer the user to download and
 ;; install them if Emacs is started interactive or - in batch mode - we
 ;; report an error.
@@ -140,8 +144,6 @@
          (or (and (boundp 'speedbar-version)
                   speedbar-version)
              "<unknown version>"))
-
-(require 'semantic-load)
 
 ;; rest of ecb loads
 (require 'tree-buffer)
@@ -345,7 +347,7 @@ dired then opening this file deactivates ECB \(rsp. hides the ECB-windows)."
   "*Clear all ECB internal caches before startup.
 If t then ECB clears all its internal caches before starting up. Caches are
 used for files- and subdirs \(see `ecb-cache-directory-contents' and
-`ecb-cache-directory-contents-not') for semantic-tokens and for the
+`ecb-cache-directory-contents-not') for semantic-tags and for the
 history-filter.
 
 This caches are completely clean at load-time of the ECB-library!
@@ -378,7 +380,7 @@ face and a display like \"[+] [<bucket-name>]\"."
   :group 'ecb-general
   :set (function (lambda (symbol value)
 		   (set symbol value)
-		   (ecb-clear-token-tree-cache)))
+		   (ecb-clear-tag-tree-cache)))
   :type '(list (string :tag "Bucket-prefix" :value "[")
                (string :tag "Bucket-suffix" :value "]")
                (choice :tag "Bucket-face" :menu-tag "Bucket-face"
@@ -840,7 +842,7 @@ POWER-click occurs):
 + Sources- and History-buffer: Only displaying the source-contents in the
   method-buffer but not displaying the source-file in the edit-window.
 + Methods-buffer: Narrowing to the clicked method/variable/ect... \(see
-  `ecb-token-visit-post-actions'). This works only for sources supported by
+  `ecb-tag-visit-post-actions'). This works only for sources supported by
   semantic!
 
 In addition always the whole node-name is displayed in the minibuffer after a
@@ -918,7 +920,7 @@ It is strongly recommended to set this option to not nil!"
 
 (defcustom ecb-debug-mode nil
   "*If not nil ECB displays debug-information in the Messages-buffer.
-This is done for some critical situations concerning semantic-tokens and their
+This is done for some critical situations concerning semantic-tags and their
 overlays \(or extends for XEmacs). Normally you should not need this switched
 on! But if you get errors like \"destroyed extend\" for XEmacs or
 \"wrong-argument-type\" concerning overlays for GNU Emacs then you should
@@ -1197,7 +1199,7 @@ It does several tasks:
 - Depending on the value in `ecb-kill-buffer-clears-history' the corresponding
   entry in the history-buffer is removed.
 - Clearing the method buffer if a file-buffer has been killed.
-- The entry of the removed file-buffer is removed from `ecb-token-tree-cache'."
+- The entry of the removed file-buffer is removed from `ecb-tag-tree-cache'."
   (let* ((curr-buf (current-buffer))
          (buffer-file (ecb-fix-filename (buffer-file-name curr-buf))))
     ;; 1. clearing the history if necessary
@@ -1216,13 +1218,13 @@ It does several tasks:
 
     ;; 2. clearing the method buffer if a file-buffer is killed
     (if buffer-file
-        (ecb-rebuild-methods-buffer-with-tokencache nil nil t))
+        (ecb-rebuild-methods-buffer-with-tagcache nil nil t))
 
-    ;; 3. removing the file-buffer from `ecb-token-tree-cache'. Must be done
+    ;; 3. removing the file-buffer from `ecb-tag-tree-cache'. Must be done
     ;;    after 2. because otherwise a new element in the cache would be
-    ;;    created again by `ecb-rebuild-methods-buffer-with-tokencache'.
+    ;;    created again by `ecb-rebuild-methods-buffer-with-tagcache'.
     (if buffer-file
-        (ecb-clear-token-tree-cache buffer-file))
+        (ecb-clear-tag-tree-cache buffer-file))
 
     ;; 4. Preventing from killing the special-ecb-buffers by accident
     (when (member curr-buf (ecb-get-current-visible-ecb-buffers))
@@ -1304,12 +1306,12 @@ tasks are performed:
                (setq ecb-major-mode-selected-source major-mode)
 
                ;; Klaus Berndl <klaus.berndl@sdm.de>: is now be done at the
-               ;; end of `ecb-rebuild-methods-buffer-with-tokencache' which is
+               ;; end of `ecb-rebuild-methods-buffer-with-tagcache' which is
                ;; called by `ecb-update-methods-buffer--internal'!
 
                ;; selected source has changed, therefore we must initialize
-               ;; ecb-selected-token again.
-               (ecb-token-sync 'force)
+               ;; ecb-selected-tag again.
+               (ecb-tag-sync 'force)
                )
               
               (;; synchronizing for dired-mode
@@ -1642,7 +1644,7 @@ That is remove the unsupported :help stuff."
       ])
    (ecb-menu-item
     [ "Toggle auto. expanding of the method buffer"
-      ecb-toggle-auto-expand-token-tree
+      ecb-toggle-auto-expand-tag-tree
       :active (equal (selected-frame) ecb-frame)
       :help "Toggle auto. expanding of the method buffer"
       ])
@@ -1898,6 +1900,12 @@ That is remove the unsupported :help stuff."
       :help "Customize ECB layout"
       ])
     (ecb-menu-item
+     ["Tree-buffer style and handling..."
+      (customize-group "ecb-tree-buffer")
+      :active t
+      :help "Customize the tree-buffers of ECB"
+      ])
+    (ecb-menu-item
      ["Face options..."
       (customize-group "ecb-face-options")
       :active t
@@ -2056,7 +2064,8 @@ That is remove the unsupported :help stuff."
   "Internal key-map for ECB minor mode.")
 
 (defcustom ecb-key-map
-  '("C-c ." . ((t "f" ecb-activate)
+  '("C-c ." . ((t "fh" ecb-history-filter)
+               (t "fs" ecb-sources-filter)
                (t "p" ecb-nav-goto-previous)
                (t "n" ecb-nav-goto-next)
                (t "lc" ecb-change-layout)
@@ -2065,7 +2074,7 @@ That is remove the unsupported :help stuff."
                (t "lt" ecb-toggle-layout)
                (t "s" ecb-window-sync)
                (t "r" ecb-rebuild-methods-buffer)
-               (t "a" ecb-toggle-auto-expand-token-tree)
+               (t "a" ecb-toggle-auto-expand-tag-tree)
                (t "x" ecb-expand-methods-nodes)
                (t "o" ecb-show-help)
                (t "g1" ecb-goto-window-edit1)
@@ -2254,10 +2263,10 @@ is current when ECB is activated. This hack fixes this."
             ;; first initialize the whole layout-engine
             (ecb-initialize-layout)
 
-            ;; clear the token-tree-cache, the files-subdir-cache, the
+            ;; clear the tag-tree-cache, the files-subdir-cache, the
             ;; sources-cache and the history-filter.
             (when ecb-clear-caches-before-activate
-              (ecb-clear-token-tree-cache)
+              (ecb-clear-tag-tree-cache)
               (ecb-clear-files-and-subdirs-cache)
               (ecb-sources-cache-clear)
               (ecb-reset-history-filter))
@@ -2388,27 +2397,28 @@ is current when ECB is activated. This hack fixes this."
                  'ecb-tree-buffer-node-select-callback
                  nil
                  'ecb-mouse-over-method-node
-                 ;; Function which compares the node-data of a tree-buffer-node in the
-                 ;; method-buffer for equality. We must compare semantic-tokens but we
-                 ;; must not compare the tokens with eq or equal because they can be
-                 ;; re-grouped by semantic-adopt-external-members. the following
-                 ;; function is a save "equal"-condition for ECB because currently the
-                 ;; method buffer always displays only tokens from exactly the buffer
-                 ;; of the current edit-window.
-                 (if (fboundp 'semantic-equivalent-tokens-p)
-                     'semantic-equivalent-tokens-p
+                 ;; Function which compares the node-data of a
+                 ;; tree-buffer-node in the method-buffer for equality. We
+                 ;; must compare semantic-tags but we must not compare the
+                 ;; tags with eq or equal because they can be re-grouped by
+                 ;; ecb--semantic-adopt-external-members. the following
+                 ;; function is a save "equal"-condition for ECB because
+                 ;; currently the method buffer always displays only tags
+                 ;; from exactly the buffer of the current edit-window.
+                 (if (fboundp 'ecb--semantic-equivalent-tag-p)
+                     'ecb--semantic-equivalent-tag-p
                    (function
                     (lambda (l r)
-                      (and (string= (semantic-token-name l) (semantic-token-name r))
-                           (eq (semantic-token-token l) (semantic-token-token r))
-                           (eq (ecb-semantic-token-start l) (ecb-semantic-token-start r))
-                           (eq (ecb-semantic-token-end l) (ecb-semantic-token-end r))))))
+                      (and (string= (ecb--semantic-tag-name l) (ecb--semantic-tag-name r))
+                           (eq (ecb--semantic-tag-class l) (ecb--semantic-tag-class r))
+                           (eq (ecb-semantic-tag-start l) (ecb-semantic-tag-start r))
+                           (eq (ecb-semantic-tag-end l) (ecb-semantic-tag-end r))))))
                  (list 1)
                  nil
                  (list (cons 0 (funcall (or ecb-methods-menu-sorter
                                             'identity)
                                         (append ecb-methods-menu-user-extension
-                                                ecb-methods-token-menu)))
+                                                ecb-methods-tag-menu)))
                        (cons 1 (funcall (or ecb-methods-menu-sorter
                                             'identity)
                                         (append ecb-methods-menu-user-extension
@@ -2494,12 +2504,12 @@ is current when ECB is activated. This hack fixes this."
             (ecb-eshell-activate-integration)
       
             ;; we need some hooks
-            (add-hook 'semantic-after-partial-cache-change-hook
+            (add-hook (ecb--semantic-after-partial-cache-change-hook)
                       'ecb-update-after-partial-reparse t)
-            (add-hook 'semantic-after-toplevel-cache-change-hook
-                      'ecb-rebuild-methods-buffer-with-tokencache t)
-            (ecb-activate-ecb-sync-functions ecb-highlight-token-with-point-delay
-                                             'ecb-token-sync)
+            (add-hook (ecb--semantic-after-toplevel-cache-change-hook)
+                      'ecb-rebuild-methods-buffer-with-tagcache t)
+            (ecb-activate-ecb-sync-functions ecb-highlight-tag-with-point-delay
+                                             'ecb-tag-sync)
             (ecb-activate-ecb-sync-functions ecb-window-sync-delay
                                              'ecb-window-sync-function)
             (ecb-activate-ecb-sync-functions ecb-compilation-update-idle-time
@@ -2760,10 +2770,10 @@ does all necessary after finishing ediff."
       (tree-buffer-deactivate-follow-mouse)
 
       ;; remove the hooks
-      (remove-hook 'semantic-after-partial-cache-change-hook
+      (remove-hook (ecb--semantic-after-partial-cache-change-hook)
                    'ecb-update-after-partial-reparse)
-      (remove-hook 'semantic-after-toplevel-cache-change-hook
-                   'ecb-rebuild-methods-buffer-with-tokencache)
+      (remove-hook (ecb--semantic-after-toplevel-cache-change-hook)
+                   'ecb-rebuild-methods-buffer-with-tagcache)
       (dolist (timer-elem ecb-idle-timer-alist)
         (cancel-timer (cdr timer-elem)))
       (setq ecb-idle-timer-alist nil)
@@ -3059,7 +3069,7 @@ changed there should be no performance-problem!"
 (ecb-activate-adviced-functions nil)
 
 ;; clearing all caches at load-time
-(ecb-clear-token-tree-cache)
+(ecb-clear-tag-tree-cache)
 (ecb-clear-files-and-subdirs-cache)
 (ecb-sources-cache-clear)
 (ecb-reset-history-filter)

@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-util.el,v 1.83 2003/10/21 06:36:14 berndl Exp $
+;; $Id: ecb-util.el,v 1.84 2003/11/04 17:39:40 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -345,6 +345,10 @@ Return the sublist of LIST whose car is ITEM."
       (member item list)
     (memq item list)))
 
+(defun ecb-set-elt (seq n val)
+  "Set VAL as new N-th element of SEQ. SEQ can be any sequence. SEQ will be
+changed."
+  (if (listp seq) (setcar (nthcdr n seq) val) (aset seq n val)))
 
 ;;; Compatibility
 (defun ecb-noninteractive ()

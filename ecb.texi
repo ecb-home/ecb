@@ -26,7 +26,7 @@
 @c GNU Emacs; see the file COPYING.  If not, write to the Free Software
 @c Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-@c $Id: ecb.texi,v 1.129 2003/10/24 16:35:16 berndl Exp $
+@c $Id: ecb.texi,v 1.130 2003/11/04 17:39:36 berndl Exp $
 
 @setfilename ecb.info
 
@@ -191,7 +191,7 @@ Working with the keyboard in the ECB-windows
 
 Using and customizing the ECB-Methods buffer
 
-* Visiting tokens::             Possible actions after visiting a token
+* Visiting tags::               Possible actions after visiting a tag
 * Expanding::                   Explicit and automatic expanding
 * Customizing the display::     How to customize the Methods-buffer display
 * Rebuilding the Methods::      When to rebuild the Methods-buffer      
@@ -227,7 +227,8 @@ All customizable options of ECB
 * ecb-help::                    Customizing the online help of ECB
 * ecb-eshell::                  Customizing the eshell-integration
 * ecb-non-semantic::            Customizing parsing non-semantic sources
-* ecb-winman::                  Customizing window-manager support 
+* ecb-winman::                  Customizing window-manager support
+* ecb-mode-line::               Customizing the tree-buffer-modelines
 
 Upgrading and downloading packages
 
@@ -373,6 +374,23 @@ to follow the instructions for GNU Emacs, see @ref{GNU Emacs Installation}.
 
 @strong{IMPORTANT}: If you are a XEmacs-user please read @ref{XEmacs
 Installation} before proceeding with the following instructions!
+
+@c TODO: Klaus Berndl <klaus.berndl@sdm.de>: Remove this when we
+@c support upgrading also with cedet.
+
+@strong{Using the new cedet 1.0 suite}: From beginning with version
+2.01 ECB supports the next generation of the cedet-tools. But before
+the cedet 1.0 suite becomes stable this means that ECB runs correctly
+with loaded cedet 1.0 but the ECB-upgrading feature
+(@pxref{Downloading new versions}) does not support autom. upgrading
+to latest available cedet versions. This will be first available after
+first stable release of the new cedet-library 1.0.
+
+So, if the cedet 1.0 suite is loaded then the min- and max-version of
+semantic, eieio and speedbar (mentioned in the Requirements-section of
+the file @file{README}) have no relevance! If the new cedet 1.0 suite
+should be used then just install and load cedet 1.0 like described in
+the cedet-installation-instructions and go one with step 3.
 
 @enumerate
 
@@ -866,13 +884,13 @@ operation on the item under the mouse cursor can be performed.
 @section ECB Methods-buffer
 
 @cindex Methods
-The @dfn{ECB-Methods} buffer contains all parsed and recognized tokens
+The @dfn{ECB-Methods} buffer contains all parsed and recognized tags
 of the current source-buffer. It is called ``Method-buffer'' because
 ECB is mostly designed for browsing sourcecode files and for
-programming-languages these tokens are often methods (and variables
+programming-languages these tags are often methods (and variables
 etc.) To simplify explanations we talk in the following only about
 methods and variables - but in general the method-buffer can contain
-any kind of tokens (e.g. sections and subsections for texinfo
+any kind of tags (e.g. sections and subsections for texinfo
 buffers).
 
 @itemize @bullet
@@ -884,8 +902,8 @@ edit buffer will jump to the method/variable.
 IMPORTANT: If you use the POWER-click (i.e. hold down the SHIFT-key
 while clicking with the primary mouse button (@pxref{Using the mouse})
 or RETURN (@pxref{Using the keyboard})) on a node in this buffer then
-the edit-buffer will be narrowed to the selected token (see also
-option @code{ecb-token-visit-post-actions}). But this works only for
+the edit-buffer will be narrowed to the selected tag (see also
+option @code{ecb-tag-visit-post-actions}). But this works only for
 sources parsed by semantic, not by imenu or etags!
 
 @item
@@ -1075,7 +1093,7 @@ source.
 
 @item ECB Methods:
 Narrowing to the clicked method/variable/ect... (see
-@code{ecb-token-visit-post-actions}). But this works only for sources
+@code{ecb-tag-visit-post-actions}). But this works only for sources
 parsed by semantic, not by imenu or etags!
 @end itemize
 
@@ -1717,57 +1735,57 @@ This chapter describes how to use and customize the Methods-buffer of
 ECB.
 
 @menu
-* Visiting tokens::             Possible actions after visiting a token
+* Visiting tags::               Possible actions after visiting a tag
 * Expanding::                   Explicit and automatic expanding
 * Customizing the display::     How to customize the Methods-buffer display
 * Rebuilding the Methods::      When to rebuild the Methods-buffer      
 @end menu
 
-@node Visiting tokens, Expanding, The Methods buffer, The Methods buffer
-@subsection Possible actions after visiting a token
+@node Visiting tags, Expanding, The Methods buffer, The Methods buffer
+@subsection Possible actions after visiting a tag
 
-You visit a token by clicking with either the primary oder secondary
+You visit a tag by clicking with either the primary oder secondary
 mouse-button (or by hitting RET if using the keyboard) onto a node in
 the Methods-tree-buffer of ECB. This simply selects the ``right''
 edit-window (depends if clicked with the primary or secondary button
 and if the edit-window is splitted) and puts the point onto the first
-line of the clicked token.
+line of the clicked tag.
 
-But you can define if after this ``basic'' token-visit-action more
+But you can define if after this ``basic'' tag-visit-action more
 additional actions should be performed by ECB. You can either use some
 of the predefined actions (e.g. highlighting the header-line of the
-token) or define own actions. You can set different actions for
+tag) or define own actions. You can set different actions for
 different major-modes. All this is done via the option
-@code{ecb-token-visit-post-actions}.
+@code{ecb-tag-visit-post-actions}.
 
 The following actions are currently predefined:
 @itemize @minus
-@item @code{ecb-token-visit-highlight-token-header}
-@item @code{ecb-token-visit-smart-token-start}
-@item @code{ecb-token-visit-recenter}
-@item @code{ecb-token-visit-recenter-top}
-@item @code{ecb-token-visit-goto-doc-start}
-@item @code{ecb-token-visit-narrow-token}
+@item @code{ecb-tag-visit-highlight-tag-header}
+@item @code{ecb-tag-visit-smart-tag-start}
+@item @code{ecb-tag-visit-recenter}
+@item @code{ecb-tag-visit-recenter-top}
+@item @code{ecb-tag-visit-goto-doc-start}
+@item @code{ecb-tag-visit-narrow-tag}
 @end itemize
 
 See the documentation of these function for details what they do.
 
 Per default ECB performs the actions
-@code{ecb-token-visit-smart-token-start} and
-@code{ecb-token-visit-highlight-token-header} for all major-modes.
+@code{ecb-tag-visit-smart-tag-start} and
+@code{ecb-tag-visit-highlight-tag-header} for all major-modes.
 
 
-@node Expanding, Customizing the display, Visiting tokens, The Methods buffer
+@node Expanding, Customizing the display, Visiting tags, The Methods buffer
 @subsection Explicit and automatic expanding of the ECB-methods-buffer
 
 @subsubsection Explicit expanding to a certain expanding level
 
 With the command @code{ecb-expand-methods-nodes} (bound to @kbd{C-c .
 x}) you can get a fast overlook of the contents of the source-buffer,
-because this command allows precisely expanding tokens with a certain
-indentation-level. So you can either expand no tokens (or with other
-words collapse all tokens) or expand all tokens so see the contents of
-a buffer at one glance. Or you can expand exactly that tokens of a
+because this command allows precisely expanding tags with a certain
+indentation-level. So you can either expand no tags (or with other
+words collapse all tags) or expand all tags so see the contents of
+a buffer at one glance. Or you can expand exactly that tags of a
 certain indentation level.
 
 Which node-types are expanded (rsp. collapsed) by this command
@@ -1779,16 +1797,16 @@ takes no effect for these files.
 
 @subsubsection Automatic expanding the ECB-methods-buffer
 
-If the option @code{ecb-highlight-token-with-point} is switched on,
+If the option @code{ecb-highlight-tag-with-point} is switched on,
 then then always that node in the method-buffer is highlighted which
-belongs to the current semantic-token under point in the edit-window.
+belongs to the current semantic-tag under point in the edit-window.
 But if this node is invisible (probably because its parent node is
 collapsed) then no node is highlighted if the auto. expanding feature
 is switched off.
 
 You can either switch on this feature with the option
-@code{ecb-auto-expand-token-tree} or even easier with the command
-@code{ecb-toggle-auto-expand-token-tree}.
+@code{ecb-auto-expand-tag-tree} or even easier with the command
+@code{ecb-toggle-auto-expand-tag-tree}.
 
 There is another option
 @code{ecb-expand-methods-switch-off-auto-expand} which makes both
@@ -1800,8 +1818,8 @@ The autom. expanding feature is only available for semantic-sources!
 @node Customizing the display, Rebuilding the Methods, Expanding, The Methods buffer
 @subsection Customizing the display of the Methods-buffer
 
-@cindex semantic token
-@cindex token
+@cindex semantic tag
+@cindex tag
 The ECB-Methods buffer is probably the most important browsing window
 offered by ECB. It displays all parsing informations of the current
 source-buffer (the buffer displayed in the edit-window).
@@ -1809,27 +1827,27 @@ source-buffer (the buffer displayed in the edit-window).
 Normally ECB gets all informations displayed in this Methods-buffer
 from the semantic-library - at least for semantic-sources. This
 library parses auto. the current source-buffer in the edit-window of
-ECB and returns all information in form of @dfn{tokens} to ECB which
+ECB and returns all information in form of @dfn{tags} to ECB which
 displays them in a browse-able form in its Method-buffer. See @ref{ECB
 Methods-buffer} for information how to use the Methods-buffer.
 
-There are several options to customize which tokens ECB should display
-in general, if the tokens should be collapsed or expanded, how to
+There are several options to customize which tags ECB should display
+in general, if the tags should be collapsed or expanded, how to
 fontify them (i.e. syntax-highlighting) and something more.
 
 @table @code
-@item ecb-show-tokens
-Which semantic-tokens (e.g. types, methods, variables etc.) should be
+@item ecb-show-tags
+Which semantic-tags (e.g. types, methods, variables etc.) should be
 displayed and should they be collapsed, flattened or expanded. Sorting
 is also possible.
 
-@item ecb-font-lock-tokens
-@itemx ecb-type-token-display
-How to fontify the tokens in the Method-buffer
+@item ecb-font-lock-tags
+@itemx ecb-type-tag-display
+How to fontify the tags in the Method-buffer
 
-@item ecb-token-display-function
+@item ecb-tag-display-function
 ECB and semantic offer several predefined functions for displaying the
-tokens. Here you can customize, what informations tokens should
+tags. Here you can customize, what informations tags should
 contain (only the method-name or the whole signature or something
 else) and what notation should be used, e.g. UML or not.
 
@@ -1943,9 +1961,12 @@ contain a durable compilation-window at the bottom of the frame, see
 @code{ecb-compile-window-height} (@pxref{Temp- and compile-buffers}).
 
 Maybe you want also change the look&feel of the tree-buffers. Then you
-can change the location of the collapse- and expand-symbols and the
-indentation of sub-nodes in a tree. See @code{ecb-tree-indent} and
-@code{ecb-tree-expand-symbol-before}.
+can change the general style of the tree-buffers with the option
+@code{ecb-tree-buffer-style} and the location of the collapse- and
+expand-symbols and the indentation of sub-nodes in a tree. See
+@code{ecb-tree-indent} and @code{ecb-tree-expand-symbol-before}. More
+details about the different tree-buffer-styles are described in
+@ref{Tree-buffer styles}.
 
 Here are all currently available layouts (for creating own new layouts
 see @ref{Creating a new ECB-layout}); just customize the option
@@ -2848,11 +2869,11 @@ command @code{ecb-redraw-layout} (bound to @kbd{C-c . lr}).
 
 With ECB you can ``browse'' in your source-files like with a
 web-browser. This means ECB stores the current buffer- and
-window-position relative to the current token@footnote{e.g. a method,
-a variable or any other semantic token} in the edit-window after
+window-position relative to the current tag@footnote{e.g. a method,
+a variable or any other semantic tag} in the edit-window after
 
 @itemize @minus
-@item selecting a token in the ECB-methods buffer or
+@item selecting a tag in the ECB-methods buffer or
 @item selecting a source-file in the ECB-sources/history-buffer.
 @end itemize
 
@@ -2862,8 +2883,8 @@ backward within this navigation history-list. These commands are also
 available via the menu ``ECB --> Navigate''.
 
 Aside normal ``location-browsing'' this is useful for example in a
-scenario where the buffer is narrowed to a token (see
-@code{ecb-token-visit-post-actions}):
+scenario where the buffer is narrowed to a tag (see
+@code{ecb-tag-visit-post-actions}):
 
 @enumerate
 @item You edit a function
@@ -2900,7 +2921,7 @@ edit-window. The entry of the ``current'' source-file is highlighted.
 
 @item ECB-methods:
 
-Contains after synchronizing all the tokens of the buffer in the
+Contains after synchronizing all the tags of the buffer in the
 edit-window, i.e. all methods, variables etc... depending of the
 major-mode.
 
@@ -3098,7 +3119,7 @@ Nodes which are not indented have indentation-level 0!
 Which node-types are expanded (rsp. collapsed) by this command
 depends on the options @code{ecb-methods-nodes-expand-spec} and
 @code{ecb-methods-nodes-collapse-spec}! With optional argument
-@var{FORCE-ALL} all tokens will be expanded/collapsed regardless of
+@var{FORCE-ALL} all tags will be expanded/collapsed regardless of
 the values of these options.
 
 Examples:
@@ -3116,7 +3137,7 @@ indented deeper than 10.
 Note 1: This command switches off auto. expanding of the method-buffer
 if @code{ecb-expand-methods-switch-off-auto-expand} is not nil. But it
 can be switched on again quickly with
-@code{ecb-toggle-auto-expand-token-tree} or @kbd{[C-c . a]}.
+@code{ecb-toggle-auto-expand-tag-tree} or @kbd{[C-c . a]}.
 
 Note 2: All this is only valid for file-types parsed by semantic. For
 other file types which are parsed by imenu or etags (see
@@ -3179,8 +3200,21 @@ then goto to the speedbar-window.
 
 @deffn Command history-filter
 Apply a filter to the history-buffer to reduce the number of entries.
-So you get a better overlooking.
+So you get a better overlooking. There are three choices:
+
+@itemize @minus
+@item Filter by extension:
+Just insert the extension you want the History-buffer being filtered.
+Insert the extension without leading dot!
+
+@item Filter by regexp:
+Insert the filter as regular expression.
+
+@item No filter:
+This means to display an entry for all currently living file-buffers.
+@end itemize
 @end deffn
+
 
 
 @deffn Command jde-display-class-at-point
@@ -3324,7 +3358,25 @@ called interactively.
 
 @deffn Command sources-filter
 Apply a filter to the sources-buffer to reduce the number of entries.
-So you get a better overlooking.
+So you get a better overlooking. There are three choices:
+
+@itemize @minus
+@item Filter by extension:
+Just insert the extension you want the Sources-buffer being filtered.
+Insert the extension without leading dot!
+
+@item Filter by regexp:
+Insert the filter as regular expression.
+
+@item No filter:
+This means to display an entry for every file in the current selected
+directory (all except these filter already filtered out by
+@code{ecb-source-file-regexps} and
+@code{ecb-sources-exclude-cvsignore}).
+@end itemize
+
+Such a filter is only applied to the current selected directory, i.e. each
+directory has its own filtered sources-buffer.
 @end deffn
 
 
@@ -3353,11 +3405,11 @@ description of the problem. Please describe the problem as detailed as
 possible!
 @end deffn
 
-@deffn Command toggle-auto-expand-token-tree &optional arg
+@deffn Command toggle-auto-expand-tag-tree &optional arg
 Toggle auto expanding of the ECB-methods-buffer. With prefix argument
 @var{ARG}, make switch on if positive, otherwise switch off. If the
 effect is that auto-expanding is switched off then the current value
-of @code{ecb-auto-expand-token-tree} is saved so it can be used for
+of @code{ecb-auto-expand-tag-tree} is saved so it can be used for
 the next switch on by this command.
 @end deffn
 
@@ -3478,8 +3530,8 @@ Elisp-code but only with the customize-feature!
 @item @code{ecb-compile-window-width}
 @item @code{ecb-exclude-parents-regexp}
 @item @code{ecb-fix-window-size}
-@item @code{ecb-font-lock-tokens}
-@item @code{ecb-highlight-token-with-point-delay}
+@item @code{ecb-font-lock-tags}
+@item @code{ecb-highlight-tag-with-point-delay}
 @item @code{ecb-key-map}
 @item @code{ecb-layout-name}
 @item @code{ecb-layout-window-sizes}
@@ -3487,12 +3539,13 @@ Elisp-code but only with the customize-feature!
 @item @code{ecb-mode-line-display-window-number}
 @item @code{ecb-mode-line-prefixes}
 @item @code{ecb-show-node-info-in-minibuffer}
-@item @code{ecb-show-tokens}
+@item @code{ecb-show-tags}
 @item @code{ecb-source-path}
 @item @code{ecb-toggle-layout-sequence}
-@item @code{ecb-token-display-function}
+@item @code{ecb-tag-display-function}
 @item @code{ecb-tree-RET-selects-edit-window}
-@item @code{ecb-type-token-display}
+@item @code{ecb-type-tag-display}
+@item @code{ecb-type-tag-expansion}
 @item @code{ecb-use-speedbar-instead-native-tree-buffer}
 @item @code{ecb-window-sync-delay}
 @item @code{ecb-windows-height}
@@ -3556,7 +3609,7 @@ site-wide pre-customized like follows:
 
 @example
 @group
-(customize-save-variable-save 'ecb-show-tokens
+(customize-save-variable-save 'ecb-show-tags
                               '((include collapsed nil)
                                 (parent collapsed nil)
                                 (type flattened nil)
@@ -3566,7 +3619,7 @@ site-wide pre-customized like follows:
                                 (section flattened nil)
                                 (def collapsed name)
                                 (t collapsed name)))
-(customize-save-variable-save 'ecb-font-lock-tokens t)
+(customize-save-variable-save 'ecb-font-lock-tags t)
 ;; add here more options of ECB it you want
 @end group
 @end example
@@ -3605,11 +3658,14 @@ Should ECB create a new frame at activation time.
 @item  ecb-primary-secondary-mouse-buttons
 @itemx ecb-primary-mouse-jump-destination
 Define how to use the mouse (@pxref{Using the mouse}).
-@item  ecb-tree-expand-symbol-before
+@item ecb-tree-buffer-style
+@itemx ecb-tree-expand-symbol-before
 @itemx ecb-tree-indent
-The look&feel of the trees in the tree-buffers. Maybe you like a value
-of 4 for the latter one if you display the expand-symbol before
-(@pxref{Changing the ECB-layout}).
+The look&feel of the trees in the tree-buffers. The former option
+defines the general style of the tree-buffers and the latter ones
+allow to customize the ascii-style tree-buffers (maybe you like a
+value of 4 for the latter one if you display the expand-symbol before
+(@pxref{Tree-buffer styles}).
 @item ecb-source-file-regexps
 Which files will (not) be shown in ECB.
 @item ecb-show-node-info-in-minibuffer
@@ -3618,9 +3674,10 @@ When and which node-info should be displayed in the minibuffer?
 The ECB layout, means which windows you want to be displayed in the
 ECB-frame and also the location of these windows (@pxref{Changing the
 ECB-layout}).
-@item  ecb-token-display-function
-@itemx ecb-type-token-display
-@itemx ecb-show-tokens
+@item  ecb-tag-display-function
+@itemx ecb-type-tag-display
+@itemx ecb-type-tag-expansion
+@itemx ecb-show-tags
 How to display the entries in the ECB-method window for semantic
 supported sources (@pxref{Customizing the display}). These options
 take only effect for semantic-sources (@pxref{Definition of semantic-
@@ -3662,14 +3719,15 @@ been done for a better readable option index. @xref{Option Index}.
 * ecb-help::                    Customizing the online help of ECB
 * ecb-eshell::                  Customizing the eshell-integration
 * ecb-non-semantic::            Customizing parsing non-semantic sources
-* ecb-winman::                  Customizing window-manager support 
+* ecb-winman::                  Customizing window-manager support
+* ecb-mode-line::               Customizing the tree-buffer-modelines
 @end menu
 
 @node ecb-general, ecb-tree-buffer, Customizable options, Customizable options
 @subsection Group ecb-general
 
 @noindent
-This group contains the following options:
+This group contains general settings for the Emacs code browser:
 
 @defopt activate-before-layout-draw-hook
 Normal hook run at the end of activating the ecb-package by running
@@ -3776,7 +3834,7 @@ The default are empty prefix/suffix-strings and
 Clear all ECB internal caches before startup. If t then ECB clears all
 its internal caches before starting up. Caches are used for files- and
 subdirs (see @code{ecb-cache-directory-contents} and
-@code{ecb-cache-directory-contents-not}) for semantic-tokens and for
+@code{ecb-cache-directory-contents-not}) for semantic-tags and for
 the history-filter.
 
 This caches are completely clean at load-time of the ECB-library!
@@ -3827,7 +3885,7 @@ is cleared!) ECB by running @code{ecb-deactivate}.
 
 @defopt debug-mode
 If not nil ECB displays debug-information in the Messages-buffer. This
-is done for some critical situations concerning semantic-tokens and
+is done for some critical situations concerning semantic-tags and
 their overlays (or extends for XEmacs). Normally you should not need
 this switched on! But if you get errors like ``destroyed extend'' for
 XEmacs or ``wrong-argument-type'' concerning overlays for GNU Emacs then
@@ -4032,89 +4090,6 @@ String to display in the mode line when ECB minor mode is active.
 (When the string is not empty, make sure that it has a leading space.)
 @end defopt
 
-@defopt mode-line-data
-Data shown in the modelines of the special ECB-buffers. Everey element
-of this list is a cons-cell where the car is used to define a
-buffer-name and the cdr to define the modeline-data for that buffer.
-For details about how to defining a buffer-name see
-@code{ecb-mode-line-prefixes} - its completely the same.
-
-The cdr is the data for ths modeline and can either be the symbol
-@code{sel-dir} or @code{sel-source} whereas the former one displays
-the current selected directory as modeline-data and the latter one the
-current selected source-file (without path).
-
-In addition to these two predefined values for every special
-ECB-buffer a function can be specified which gets three args (name of
-the buffer, current selected directory and current selected
-source-file) and must return a string which will be displayed in the
-modeline (or nil if no data should be displayed).
-
-If a special ECB-buffer should not display special data in its
-modeline then this buffer-name should either not being added to this
-option or added with ``No data'' (= nil as cdr).
-
-The whole modeline of the special ECB-buffer consists of the prefix of
-@code{ecb-mode-line-prefixes} and the data of @code{ecb-mode-line-data} - eventually
-prepended by the window-number, see @code{ecb-mode-line-display-window-number}.
-@end defopt
-
-
-
-@defopt mode-line-display-window-number
-Display in the modeline of every special ECB-window the window-number.
-The left-top-most window in a frame has the window-number 0 and all
-other windows are numbered with increasing numbers in the sequence,
-functions like @code{other-window} or @code{next-window} would walk
-through the frame.
-
-This can be used to jump to windows by number with commands like:
-
-@lisp
-@group
-  (defun my-switch-to-window-number (number)
-    ``Switch to the nth window''
-    (interactive ``P'')
-    (if (integerp number)
-        (select-window (nth number (window-list)))))
-@end group
-@end lisp
-
-Currently this feature is only available for GNU Emacs 21.X, because
-neither GNU Emacs < 21 nor XEmacs can evaluate dynamically forms in
-the mode-line.
-@end defopt
-
-@defopt mode-line-prefixes
-Prefixes shown in the modelines of the special ECB-buffers. The
-displayed prefix then looks like: ``[ <PREFIX>[: ]]'', means if a
-prefix is defined for an special ECB-buffer then a single space is
-prepended and if there is additional text to display (e.g. the current
-directory in the sources buffer, see @code{ecb-mode-line-data}) then
-also the string ``: '' is appended.
-
-Everey element of this list is a cons-cell where the car is used to
-define a buffer-name and the cdr to define the modeline-prefix for
-that buffer.
-
-The buffer-name can either be defined as plain string or with a symbol
-which contains the buffer-name as value. The latter one is recommended
-to define a prefix for one of the builtin ECB-tree-buffers because
-then simply the related option-symbol can be used. To add a prefix for
-the builtin directories tree-buffer just set the symbol
-@code{ecb-directories-buffer-name} as car.
-
-The cdr is the prefix for a buffer and can either be a string which
-used as it is or a function-symbol which is called with three argument
-(the buffer-name, the current selected directory and the current
-selected source-file) and must return either nil (for no prefix) or a
-string which is then used a prefix.
-
-If a special ECB-buffer should not have a prefix in its modeline then
-this buffer-name should either not being added to this option or added
-with ``No prefix'' (= nil as cdr).
-@end defopt
-
 
 @defopt primary-mouse-jump-destination
 Jump-destination of a primary mouse-button click. Defines in which
@@ -4208,7 +4183,8 @@ effect as if you set no delay.
 @subsection Group ecb-tree-buffer
 
 @noindent
-This group contains the following options:
+This group contains general settings related to the tree-buffers of
+ECB:
 
 @defopt common-tree-buffer-after-create-hook
 Local hook running at the end of each tree-buffer creation. Every
@@ -4258,7 +4234,7 @@ displaying the source-file in the edit-window.
 
 @item ECB Methods:
 Narrowing to the clicked method/variable/ect... (see
-@code{ecb-token-visit-post-actions}). This works only for semantic
+@code{ecb-tag-visit-post-actions}). This works only for semantic
 supported sources but not for imenu- or etags-supported ones!
 @end itemize
 
@@ -4516,7 +4492,7 @@ activate ECB again to take effect.
 @subsection Group ecb-directories
 
 @noindent
-This group contains the following options:
+This group contains settings for the directories-buffer in the ECB:
 
 @defopt add-path-for-not-matching-files
 Add path of a file to @code{ecb-source-path} if not already contained.
@@ -4796,7 +4772,7 @@ and want it in conjunction with ECB.
 @subsection Group ecb-sources
 
 @noindent
-This group contains the following options:
+This group contains settings for the sources-buffer in the ECB:
 
 @defopt show-source-file-extension
 Show the file extension of source files.
@@ -4939,23 +4915,23 @@ by @code{directory-files} (called without sorting).
 @subsection Group ecb-methods
 
 @noindent
-This group contains the following options:
+This group contains settings for the methods-buffer in the ECB:
 
-@defopt auto-expand-token-tree
-Expand the methods-token-tree automatically if node invisible.
+@defopt auto-expand-tag-tree
+Expand the methods-tag-tree automatically if node invisible.
 
-This option has only an effect if option @code{ecb-highlight-token-with-point} is
+This option has only an effect if option @code{ecb-highlight-tag-with-point} is
 switched on too. There are three possible choices:
 @itemize @minus
 @item @code{nil}:
 No auto. expanding of the method buffer.
 @item @code{expand-spec}:
 Auto expand the method-buffer nodes if the node belonging to current
-token under point is invisible because its parent-node is collapsed.
-But expanding is only done if the type of the token under point in the
+tag under point is invisible because its parent-node is collapsed.
+But expanding is only done if the type of the tag under point in the
 edit-buffer is contained in @code{ecb-methods-nodes-expand-spec}.
 @item @code{all}:
-Like expand-spec but expands all tokens regardless of the setting in
+Like expand-spec but expands all tags regardless of the setting in
 @code{ecb-methods-nodes-expand-spec}.
 @end itemize
 
@@ -4982,27 +4958,27 @@ Switch off auto expanding in the ECB-method buffer. If on then auto
 expanding is switched off after explicit expanding or collapsing by
 @code{ecb-expand-methods-nodes}.
 
-This is done with @code{ecb-toggle-auto-expand-token-tree} so after
+This is done with @code{ecb-toggle-auto-expand-tag-tree} so after
 the switch off the auto expanding feature can again switched on
 quickly.
 
 But after explicitly expanding/collapsing the methods-buffer to a
 certain level the auto. expanding could undo this when the node
-belonging to current token under point in the edit-window is invisible
+belonging to current tag under point in the edit-window is invisible
 after @code{ecb-expand-methods-nodes} - then the auto. expand feature
 would make this node immediately visible and destroys the explicitly
 set expand-level.
 @end defopt
 
 
-@defopt font-lock-tokens
+@defopt font-lock-tags
 Adds font-locking (means highlighting) to the ECB-method buffer.
 
 This options takes only effect for semantic-sources - means sources
 supported by semantic!
 @end defopt
 
-@defopt highlight-token-with-point
+@defopt highlight-tag-with-point
 How to highlight the method or variable under the cursor.
 
 @itemize @minus
@@ -5016,15 +4992,15 @@ method window if the method is visible in the method-window.
 No highlighting is done.
 @end itemize
 
-See also @code{ecb-highlight-token-with-point-delay}.
+See also @code{ecb-highlight-tag-with-point-delay}.
 
 This options takes only effect for semantic-sources - means sources
 supported by semantic!
 @end defopt
 
-@defopt highlight-token-with-point-delay
-Time Emacs must be idle before current token is highlighted. If nil
-then there is no delay, means current token is highlighted
+@defopt highlight-tag-with-point-delay
+Time Emacs must be idle before current tag is highlighted. If nil
+then there is no delay, means current tag is highlighted
 immediately. A small value of about 0.25 seconds saves CPU resources
 and you get even though almost the same effect as if you set no delay.
 But such a delay prevents also ``jumping backward/forward'' during
@@ -5081,7 +5057,7 @@ For further explanations see
 @code{ecb-directories-menu-user-extension}.
 
 The node-argument of a menu-function contains as data the
-semantic-token of the method/variable/token for which the popup-menu
+semantic-tag of the method/variable/tag for which the popup-menu
 has been opened.
 
 Per default the user-extensions are added at the beginning of the
@@ -5094,7 +5070,7 @@ If you change this option you have to restart ECB to take effect.
 
 
 @defopt methods-nodes-collapse-spec
-Semantic token-types collapsed by @code{ecb-expand-methods-nodes}.
+Semantic tag-types collapsed by @code{ecb-expand-methods-nodes}.
 For valid values of this option see @code{ecb-methods-nodes-expand-spec}!
 
 This options takes only effect for semantic-sources - means sources
@@ -5103,23 +5079,25 @@ supported by semantic!
 
 
 @defopt methods-nodes-expand-spec
-Semantic token-types expanded by @code{ecb-expand-methods-nodes}.
+Semantic tag-types expanded by @code{ecb-expand-methods-nodes}.
 
-The value of this option is either the symbol @code{all} (all tokens
+The value of this option is either the symbol @code{all} (all tags
 are expanded regardless of their type) or a list of symbols where each
-symbol is a valid semantic token-type. For a description of semantic
-token types see option @code{ecb-show-tokens}.
+symbol is a valid semantic tag-type. For a description of semantic
+tag types see option @code{ecb-show-tags}.
 
-But this option also defines if bucket-nodes in the ECB-method-buffer (e.g.
-``[Variables]'') should be expanded. Therefore valid symbols for this list
-are also all cars of the variable @code{semantic-symbol->name-assoc-list}.
+But this option also defines if bucket-nodes in the ECB-method-buffer
+(e.g. ``[Variables]'') should be expanded. Therefore valid symbols for
+this list are also all cars of the variable returned by
+@code{ecb--semantic-symbol->name-assoc-list}.
 
 If there is a bucket-name (the node-name stripped of the settings in
-@code{ecb-bucket-node-display}) which is not contained as cdr in
-@code{semantic-symbol->name-assoc-list} then the symbol with this bucket-name as
-name is also a valid symbol for this list. Example: In ECB there are buckets
-``[Parents]''. The bucket-name is ``Parents'' and the valid symbol-name is
-then @code{Parents}.
+@code{ecb-bucket-node-display}) which is not contained as cdr in the
+value returned by @code{ecb--semantic-symbol->name-assoc-list} then
+the symbol with this bucket-name as name is also a valid symbol for
+this list. Example: In ECB there are buckets ``[Parents]''. The
+bucket-name is ``Parents'' and the valid symbol-name is then
+@code{Parents}.
 
 This options takes only effect for semantic-sources - means sources
 supported by semantic!
@@ -5127,18 +5105,18 @@ supported by semantic!
 
 
 
-@defopt post-process-semantic-tokenlist
-Define mode-dependent post-processing for the semantic-tokenlist. This
+@defopt post-process-semantic-taglist
+Define mode-dependent post-processing for the semantic-taglist. This
 is an alist where the car is a major-mode symbol and the cdr is a
 function-symbol of a function which should be used for post-processing
-the tokenlist (returned by @code{semantic-bovinate-toplevel}) for a
+the taglist (returned by @code{semantic-bovinate-toplevel}) for a
 buffer in this major-mode. Such a function is called with current
-semantic tokenlist of current buffer and must return a valid tokenlist
+semantic taglist of current buffer and must return a valid taglist
 again.
 
 For oo-programming languages where the methods of a class can be
 defined outside the class-definition (e.g. C++, Eieio) the function
-@code{ecb-group-function-tokens-with-parents} can be used to get a
+@code{ecb-group-function-tags-with-parents} can be used to get a
 much better method-display in the methods-window of ECB, because all
 method implementations of a class are grouped together.
 
@@ -5146,7 +5124,7 @@ This options takes only effect for semantic-sources - means sources
 supported by semantic!
 @end defopt
 
-@defopt show-only-positioned-tokens
+@defopt show-only-positioned-tags
 Show only nodes in the method-buffer which are ``jump-able''. If not nil
 then ECB displays in the method-buffer only nodes which are
 ``jump-able'', i.e. after selecting it by clicking or with RET then ECB
@@ -5160,48 +5138,48 @@ This options takes only effect for semantic-sources - means sources
 supported by semantic!
 @end defopt
 
-@defopt show-tokens
-How to show tokens in the methods buffer first time after find-file.
+@defopt show-tags
+How to show tags in the methods buffer first time after find-file.
 This variable is a list where each element represents a type of
-tokens:
+tags:
 
 @example
-(<token type> <display type> <sort method>)
+(<tag type> <display type> <sort method>)
 @end example
 
-The tokens in the methods buffer are displayed in the order as they appear in
+The tags in the methods buffer are displayed in the order as they appear in
 this list.
 
 @table @code
-@item <token type>
-A Semantic token type symbol (function, variable, rule, include etc.)
+@item <tag type>
+A Semantic tag type symbol (function, variable, rule, include etc.)
 or one of the following:
 
 @itemize @minus
-@item @code{t}: All token types not specified anywhere else in the list.
+@item @code{t}: All tag types not specified anywhere else in the list.
 @item @code{parent}: The parents of a type.
 @end itemize
 
 @item <display type>
-A symbol which describes how the tokens of this type shall be shown:
+A symbol which describes how the tags of this type shall be shown:
 
 @itemize @minus
-@item @code{expanded}: The tokens are shown in an expanded node.
-@item @code{collapsed}: The tokens are shown in a collapsed node.
-@item @code{flattened}: The tokens are added to the parent node.
-@item @code{hidden}: The tokens are not shown.
+@item @code{expanded}: The tags are shown in an expanded node.
+@item @code{collapsed}: The tags are shown in a collapsed node.
+@item @code{flattened}: The tags are added to the parent node.
+@item @code{hidden}: The tags are not shown.
 @end itemize
 
 @item <sort method>
-A symbol describing how to sort the tokens of this type:
+A symbol describing how to sort the tags of this type:
 
 @itemize @minus
 @item @code{name}:
-Sort by the token name.
+Sort by the tag name.
 @item @code{access}:
-Sort by token access (public, protected, private) and then by name.
+Sort by tag access (public, protected, private) and then by name.
 @item @code{nil}:
-Don't sort tokens. They appear in the same order as in the source
+Don't sort tags. They appear in the same order as in the source
 buffer.
 @end itemize
 @end table
@@ -5211,8 +5189,8 @@ This options takes only effect for semantic-sources - means sources
 supported by semantic!
 @end defopt
 
-@defopt token-display-function
-Function to use for displaying tokens in the methods buffer. This
+@defopt tag-display-function
+Function to use for displaying tags in the methods buffer. This
 functionality is set on major-mode base, i.e. for every major-mode a
 different function can be used. The value of this option is a list of
 cons-cells:
@@ -5223,73 +5201,82 @@ The car is either a major-mode symbol or the special symbol 'default which
 means if no function for a certain major-mode is defined then the cdr of
 the 'default cons-cell is used.
 @item
-The cdr is the function used for displaying a token in the related
+The cdr is the function used for displaying a tag in the related
 major-mode.
 @end itemize
 
 Every function is called with 3 arguments:
 
 @enumerate
-@item The token
-@item The parent-token of token (can be nil)
-@item The value of @code{ecb-font-lock-tokens}.
+@item The tag
+@item The parent-tag of tag (can be nil)
+@item The value of @code{ecb-font-lock-tags}.
 @end enumerate
 
-Every function must return the display of the token as string,
+Every function must return the display of the tag as string,
 colorized if the third argument is not nil.
 
 The following functions are predefined:
 
 @itemize @bullet
 @item
-All functions of @code{semantic-token->text-functions}.
-
+For each element E of @code{ecb--semantic-format-function-alist}
+exists a function with name ``ecb--<(cdr E)>''. These functions are
+just aliase to the builtin format-functions of semantic. See the
+docstring of these functions to see what they do. Example:
+(semantic-name-nonterminal . semantic-format-tag-name) is an element
+of @code{ecb--semantic-format-function-alist}. Therefore the
+alias-function for this element is named
+@code{ecb--semantic-format-tag-name}.
+  
 @item
-For every function in @code{semantic-token->text-functions} with name
+For every cdr in @code{ecb--semantic-format-function-alist} with name
 ``semantic-XYZ'' a function with name ``ecb-XYC'' is predefined. The
 differences between the semantic- and the ECB-version are:
 
 @itemize @minus
 @item
-The ECB-version displays for type tokens only the type-name and nothing
+The ECB-version displays for type tags only the type-name and nothing
 else (exception: In c++-mode a template specifier is appended to the
 type-name if a template instead a normal class).
 @item
-The ECB-version displays type-tokens according to the setting in
-@code{ecb-type-token-display}. This is useful for better recognizing
+The ECB-version displays type-tags according to the setting in
+@code{ecb-type-tag-display}. This is useful for better recognizing
 different classes, structs etc. in the ECB-method window.
 @end itemize
 
-For all tokens which are not types the display of the ECB-version is
-identical to the semantic version. Example: For @code{semantic-name-nonterminal}
-the pendant is @code{ecb-name-nonterminal}.
+For all tags which are not types the display of the ECB-version is
+identical to the semantic version. Example: For
+@code{ecb--semantic-format-tag-name} (one of the builtin semantic
+formatters) the pendant is @code{ecb-format-tag-name}.
 @end itemize
 
-This functionality also allows the user to display tokens as UML. To
-enable this functionality set the function for a major-mode (e.g.
-@code{jde-mode}) to @code{semantic-uml-concise-prototype-nonterminal},
-@code{semantic-uml-prototype-nonterminal}, or
-@code{semantic-uml-abbreviate-nonterminal} or the ECB-versions of
+This functionality also allows the user to display tags as UML. To
+enable this functionality set the function for a major-mode \(e.g.
+@code{jde-mode}) to
+@code{ecb--semantic-format-tag-uml-concise-prototype},
+@code{ecb--semantic-format-tag-uml-prototype}, or
+@code{ecb--semantic-format-tag-uml-abbreviate} the ECB-versions of
 these functions.
 
 If the value is @code{nil}, i.e. neither a function for a major-mode
 is defined nor the special 'default, then
-@code{semantic-prototype-nonterminal} is used for displaying the
-tokens.
+@code{ecb--semantic-format-tag-prototype} is used for displaying the
+tags.
 
 This options takes only effect for semantic-sources - means sources
 supported by semantic!
 @end defopt
 
-@defopt token-jump-sets-mark
-Set the mark after jumping to a token from the ECB-method buffer. If
+@defopt tag-jump-sets-mark
+Set the mark after jumping to a tag from the ECB-method buffer. If
 set the user can easily jump back.
 @end defopt
 
-@defopt token-visit-post-actions
-Actions to perform after visiting a token from the Method-buffer. With
+@defopt tag-visit-post-actions
+Actions to perform after visiting a tag from the Method-buffer. With
 this option actions can be added which will be performed after
-visiting the start of the token in the source-buffer.
+visiting the start of the tag in the source-buffer.
 
 This functionality is set on a @code{major-mode} base, i.e. for every
 @code{major-mode} a different setting can be used. The value of this
@@ -5308,29 +5295,30 @@ ECB first performs all actions defined for the special symbol 'default
 (if any).
 
 ECB offers some predefined senseful action-functions. Currently there
-are: @code{ecb-token-visit-highlight-token-header}
-@code{ecb-token-visit-smart-token-start}
-@code{ecb-token-visit-recenter} @code{ecb-token-visit-recenter-top}
-@code{ecb-token-visit-goto-doc-start}
-@code{ecb-token-visit-narrow-token} See the documentation of these
+are: @code{ecb-tag-visit-highlight-tag-header}
+@code{ecb-tag-visit-smart-tag-start}
+@code{ecb-tag-visit-recenter} @code{ecb-tag-visit-recenter-top}
+@code{ecb-tag-visit-goto-doc-start}
+@code{ecb-tag-visit-narrow-tag} See the documentation of these
 function for details what they do.
 
 But you can add any arbitrary function if the following conditions are
-fulfilled: The function gets the semantic token as argument returns
+fulfilled: The function gets the semantic tag as argument returns
 the (new) point after finishing its job.
 @end defopt
 
 
 
-@defopt type-token-display
-How to display semantic type-tokens in the methods buffer. Normally
-all token displaying, colorizing and facing is done by semantic
-according to the value of @code{semantic-face-alist} and the semantic
+@defopt type-tag-display
+How to display semantic type-tags in the methods buffer. Normally
+all tag displaying, colorizing and facing is done by semantic
+according to the value returned by
+@code{ecb--semantic-format-face-alist} and the semantic
 display-function (e.g. one from
-@code{semantic-token->text-functions}). But sometimes a finer
-distinction in displaying the different type specifiers of type-tokens
-can be useful. For a description when this option is evaluated look
-at @code{ecb-token-display-function}!
+@code{ecb--semantic-format-tag-functions}). But sometimes a finer
+distinction in displaying the different type specifiers of type-tags
+can be useful. For a description when this option is evaluated look at
+@code{ecb-tag-display-function}!
 
 This functionality is set on a major-mode base, i.e. for every
 major-mode a different setting can be used. The value of this option
@@ -5351,8 +5339,8 @@ First entry is a semantic type specifier in string-form. Current
 available type specifiers are for example ``class'', ``interface'',
 ``struct'', ``typedef'' and ``enum''. In addition to these ones there
 is also a special ECB type specifier ``group'' which is related to
-grouping tokens (see @code{ecb-post-process-semantic-tokenlist} and
-@code{ecb-group-function-tokens-with-parents}). Any arbitrary
+grouping tags (see @code{ecb-post-process-semantic-taglist} and
+@code{ecb-group-function-tags-with-parents}). Any arbitrary
 specifier can be set here but if it is not ``group'' or not known by
 semantic it will be useless.
 @item
@@ -5360,12 +5348,13 @@ Second entry is a flag which indicates if the type-specifier string
 from (1.) itself should be removed (if there is any) from the display.
 @item
 Third entry is the face which is used in the ECB-method window to
-display type-tokens with this specifier. ECB has some predefined faces
-for this (@code{ecb-type-token-class-face},
-@code{ecb-type-token-struct-face}, @code{ecb-type-token-typedef-face},
-@code{ecb-type-token-enum-face} and @code{ecb-type-token-group-face})
-but any arbitrary face can be set here. This face is merged with the
-faces semantic already uses to display a token,
+display type-tags with this specifier. ECB has some predefined faces
+for this (@code{ecb-type-tag-class-face},
+@code{ecb-type-tag-interface-face}, @code{ecb-type-tag-struct-face},
+@code{ecb-type-tag-typedef-face}, @code{ecb-type-tag-union-face},
+@code{ecb-type-tag-enum-face} and @code{ecb-type-tag-group-face}) but
+any arbitrary face can be set here. This face is merged with the faces
+semantic already uses to display a tag,
 i.e. the result is a display where all face-attributes of the ECB-face
 take effect plus all face-attributes of the semantic-faces which are not
 set in the ECB-face (with XEmacs this merge doesn't work so here the
@@ -5375,26 +5364,58 @@ versions).
 @end itemize
 
 The default value is nil means there is no special ECB-displaying of
-type-tokens in addition to the displaying and colorizing semantic
+type-tags in addition to the displaying and colorizing semantic
 does. But a value like the following could be a useful setting:
 
 @example
 @group
 ((default
-   ("class" t ecb-type-token-class-face)
-   ("group" nil ecb-type-token-group-face))
+   ("class" t ecb-type-tag-class-face)
+   ("group" nil ecb-type-tag-group-face))
  (c-mode
-  ("struct" nil ecb-type-token-struct-face)
-  ("typedef" nil ecb-type-token-typedef-face)))
+  ("struct" nil ecb-type-tag-struct-face)
+  ("typedef" nil ecb-type-tag-typedef-face)))
 @end group
 @end example
 
 This means that in @code{c-mode} only ``struct''s and ``typedef''s are
 displayed with special faces (the specifiers itself are not removed)
-and in all other modes ``class''s and grouping-tokens (see
-@code{ecb-token-display-function},
-@code{ecb-group-function-tokens-with-parents}) have special faces and
+and in all other modes ``class''s and grouping-tags (see
+@code{ecb-tag-display-function},
+@code{ecb-group-function-tags-with-parents}) have special faces and
 the ``class'' specifier-string is removed from the display.
+
+This options takes only effect for semantic-sources - means sources
+supported by semantic!
+@end defopt
+
+@defopt type-tag-expansion
+Default expansion of semantic type-tags. Semantic groups type-tags in
+different type-specifiers. Current available type specifiers are for
+example ``class'', ``interface'', ``struct'', ``typedef'', ``union''
+and ``enum''. In addition to these ones there is also a special ECB
+type-specifier ``group'' which is related to grouping tags (see
+@code{ecb-post-process-semantic-taglist}).
+
+This option defines which type-specifiers should be expanded at
+file-open-time. Any arbitrary specifier can be set here but if it is
+not ``group'' or not known by semantic it will be useless.
+
+This functionality is set on a major-mode base, i.e. for every
+major-mode a different setting can be used. The value of this option
+is a list of cons-cells:
+
+@itemize
+@item
+The car is either a major-mode symbol or the special symbol
+@code{default} which means if no setting for a certain major-mode is
+defined then the cdr of the @code{default} cons-cell is used.
+
+@item
+The cdr is either a list of type-specifiers which should be expanded
+at file-open-time or the symbol @code{all-specifiers} (then a type-tag
+is always expanded regardless of its type-specifier).
+@end itemize
 
 This options takes only effect for semantic-sources - means sources
 supported by semantic!
@@ -5405,7 +5426,7 @@ supported by semantic!
 @subsection Group ecb-history
 
 @noindent
-This group contains the following options:
+This group contains settings for the history-buffer in the ECB:
 
 @defopt history-buffer-after-create-hook
 Local hook running after the creation of the history-buffer. Every
@@ -5489,7 +5510,7 @@ Sorts the items in the history buffer.
 @subsection Group ecb-layout
 
 @noindent
-This group contains the following options:
+This group contains settings for the screen-layout of the ECB:
 
 @defopt activate-before-new-frame-created-hook
 Normal hook run before the new ECB-frame is created if
@@ -5883,7 +5904,7 @@ width.
 @subsection Group ecb-compilation
 
 @noindent
-This group contains the following options:
+This group contains settings for the compile window of ECB:
 
 @defopt compilation-buffer-names
 Additional buffer names that should be displayed in the
@@ -6089,7 +6110,7 @@ the frame-height).
 @subsection Group ecb-create-layout
 
 @noindent
-This group contains the following options:
+This group contains settings for creating new ECB-layouts:
 
 @defopt create-layout-file
 File where all layouts created by @code{ecb-create-new-layout} are
@@ -6108,7 +6129,7 @@ Frame width of the layout creation frame.
 @subsection Group ecb-face-options
 
 @noindent
-This group contains the following options:
+This group contains settings for all faces used in ECB:
 
 @defopt directories-general-face
 Basic face for the ECB directories buffer. This defines the basic face
@@ -6158,7 +6179,7 @@ Changes take first effect after finishing and reactivating ECB!
 @end defopt
 
 @defopt method-non-semantic-face
-Face used for for displaying tokens of sources not supported by
+Face used for for displaying tags of sources not supported by
 semantic.
 
 Changes take first effect after finishing and reactivating ECB!
@@ -6198,8 +6219,8 @@ ECB-tree-buffers can be changed by modifying only the face
 Changes take first effect after finishing and reactivating ECB!
 @end defopt
 
-@defopt token-header-face
-Face used for highlighting the token header after jumping to it by
+@defopt tag-header-face
+Face used for highlighting the tag header after jumping to it by
 clicking onto a node in the methods buffer.
 @end defopt
 
@@ -6209,11 +6230,11 @@ clicking onto a node in the methods buffer.
 @subsection Group ecb-faces
 
 @noindent
-This group contains the following faces:
+This group contains all faces used in ECB:
 
 @table @code
 @item ecb-bucket-node-face:
-Face which can be used for displaying bucket tokens in the methods
+Face which can be used for displaying bucket tags in the methods
 buffer. See also @code{ecb-bucket-node-display}.
 
 @item ecb-default-general-face:
@@ -6242,7 +6263,7 @@ tree-buffer.
 In GNU Emacs 21.X all highlighting faces in the ECB tree-buffers
 inherit from this face. Therefore the default attributes like font
 etc. of a face used in a tree-buffer for highlighting the current
-token can be very easily changed with face
+tag can be very easily changed with face
 @code{ecb-default-highlight-face}.
 
 With XEmacs and GNU Emacs 20.X there is no inheritance-feature but the
@@ -6277,7 +6298,15 @@ Basic face for the ECB methods buffer. It´s recommended to define here
 the font-family, the font-size, the basic color etc.
 
 @item ecb-method-non-semantic-face:
-Define face used for displaying tokens of sources not supported by semantic.
+Define face used for displaying tags of sources not supported by semantic.
+
+@item ecb-mode-line-data-face
+Define face for the data in the mode-line. See
+@code{ecb-mode-line-data}.
+
+@item ecb-mode-line-prefix-face
+Define face for the prefix in the mode-line. See
+@code{ecb-mode-line-prefixes}.
 
 @item ecb-source-face:
 Define face used for highlighting current source in the sources
@@ -6290,31 +6319,38 @@ Define a face for displaying sources in the directories buffer.
 Basic face for the ECB sources buffer. It´s recommended to define here
 the font-family, the font-size, the basic color etc.
 
-@item ecb-token-header-face:
-Define face used for highlighting the token header after jumping to it
+@item ecb-tag-header-face:
+Define face used for highlighting the tag header after jumping to it
 by clicking onto a node in the methods buffer.
 
 @item ecb-tree-guide-line-face:
 Define face for the guide-lines in the tree-buffers. See the option
 @code{ecb-tree-buffer-style} for a explanation of guide-lines.
 
-@item ecb-type-token-class-face:
-Define face used with option @code{ecb-type-token-display}.
+@item ecb-type-tag-class-face:
+Define face used with option @code{ecb-type-tag-display}.
 
-@item ecb-type-token-enum-face:
-Define face used with option @code{ecb-type-token-display}.
+@item ecb-type-tag-enum-face:
+Define face used with option @code{ecb-type-tag-display}.
 
-@item ecb-type-token-group-face:
-Define face used with option @code{ecb-type-token-display}.
+@item ecb-type-tag-group-face:
+Define face used with option @code{ecb-type-tag-display}.
 
-@item ecb-type-token-interface-face:
-Define face used with option @code{ecb-type-token-display}.
+@item ecb-type-tag-interface-face:
+Define face used with option @code{ecb-type-tag-display}.
 
-@item ecb-type-token-struct-face:
-Define face used with option @code{ecb-type-token-display}.
+@item ecb-type-tag-struct-face:
+Define face used with option @code{ecb-type-tag-display}.
 
-@item ecb-type-token-typedef-face:
-Define face used with option @code{ecb-type-token-display}.
+@item ecb-type-tag-typedef-face:
+Define face used with option @code{ecb-type-tag-display}.
+
+@item ecb-type-tag-union-face:
+Define face used with option @code{ecb-type-tag-display}.
+
+@item ecb-mode-line-win-nr-face
+Define face for the window-number in the mode-line. See
+@code{ecb-mode-line-display-window-number}.
 
 @end table
 
@@ -6326,7 +6362,8 @@ for your personal taste. Or customize the related option in the group
 @subsection Group ecb-download
 
 @noindent
-This group contains the following options:
+This group contains settings for downloading and installing a new ECB
+from within ECB:
 
 @defopt download-delete-archive
 Should the downloaded archive be deleted after successful
@@ -6396,7 +6433,7 @@ Note: Normally this URL should never change but who knows...
 @subsection Group ecb-help
 
 @noindent
-This group contains the following options:
+This group contains settings for the ECB online help:
 
 
 @defopt help-html-path
@@ -6447,7 +6484,7 @@ HTML-online-documentation is not included.
 @subsection Group ecb-eshell
 
 @noindent
-This group contains the following options:
+This group contains settings for eshell integration within the ECB:
 
 @defopt eshell-auto-activate
 Startup the eshell and display it in the compile-window. If current
@@ -6480,7 +6517,7 @@ interactively but normally it is called autom. by the
 @subsection Group ecb-non-semantic
 
 @noindent
-This group contains the following options:
+This group contains settings for parsing and displaying non-semantic files:
 
 @defopt auto-save-before-etags-methods-rebuild
 Automatic saving of current buffer before rebuilding its methods.
@@ -6515,9 +6552,9 @@ tried to parsed.
 @end defopt
 
 @defopt non-semantic-methods-initial-expand
-Initially expand all tokens for not by semantic supported sources.
+Initially expand all tags for not by semantic supported sources.
 This option can be customized on a major-mode basis, i.e. if a
-@code{major-mode} is contained in this option then all tokens for this
+@code{major-mode} is contained in this option then all tags for this
 modes will be initially expanded - otherwise not.
 @end defopt
 
@@ -6527,7 +6564,7 @@ is an alist where the car is a major-mode symbol and the cdr is a
 function-symbol of a function which should be used for parsing a
 non-semantic buffer, i.h. a buffer for which no semantic grammar
 exists. Such a function gets one argument - the filename of current
-buffer - and has to generate and return a token/tag list which is
+buffer - and has to generate and return a tag/tag list which is
 understandable by @code{speedbar-insert-generic-list}. speedbar has
 already included two functions @code{speedbar-fetch-dynamic-imenu} and
 @code{speedbar-fetch-dynamic-etags} which can be used for parsing
@@ -6570,11 +6607,11 @@ of this hook returns nil! See @code{run-hook-with-args-until-failure}
 for description how these function are processed.
 @end defopt
 
-@node ecb-winman, , ecb-non-semantic, Customizable options
+@node ecb-winman, ecb-mode-line, ecb-non-semantic, Customizable options
 @subsection Group ecb-winman
 
 @noindent
-This group contains the following options:
+This group contains settings for supporting several window-managers:
 
 @defopt winman-escreen-number
 Number of the escreen which is reserved for ECB. If you go to the
@@ -6587,6 +6624,115 @@ Name of the winring-window-configuration reserved for ECB. If you go
 to the window-configuration with this name you go always to the
 window-configuration with activated ECB. All other
 window-configuration are configurations with deactivated ECB!
+@end defopt
+
+@node ecb-mode-line, , ecb-winman, Customizable options
+@subsection Group ecb-mode-line
+
+@noindent
+This group contains settings for the modelines of the
+ECB-tree-buffers:
+
+@defopt mode-line-data
+Data shown in the modelines of the special ECB-buffers. Everey element
+of this list is a cons-cell where the car is used to define a
+buffer-name and the cdr to define the modeline-data for that buffer.
+For details about how to defining a buffer-name see
+@code{ecb-mode-line-prefixes} - its completely the same.
+
+The cdr is the data for ths modeline and can either be the symbol
+@code{sel-dir} or @code{sel-source} whereas the former one displays
+the current selected directory as modeline-data and the latter one the
+current selected source-file (without path).
+
+In addition to these two predefined values for every special
+ECB-buffer a plain string (which is displayed) or a function can be
+specified which gets three args (name of the buffer, current selected
+directory and current selected source-file) and must return a string
+which will be displayed in the modeline (or nil if no data should be
+displayed).
+
+If a special ECB-buffer should not display special data in its
+modeline then this buffer-name should either not being added to this
+option or added with ``No data'' (= nil as cdr).
+
+The whole modeline of the special ECB-buffer consists of the prefix of
+@code{ecb-mode-line-prefixes} and the data of
+@code{ecb-mode-line-data} - eventually prepended by the window-number,
+see @code{ecb-mode-line-display-window-number}.
+@end defopt
+
+@defopt mode-line-data-face
+Face used for the data in the mode-line. See
+@code{ecb-mode-line-data}. For XEmacs the face should inherit from the
+face @code{modeline} (see @code{set-face-parent})!
+@end defopt
+
+
+@defopt mode-line-display-window-number
+Display in the modeline of every special ECB-window the window-number.
+The left-top-most window in a frame has the window-number 0 and all
+other windows are numbered with increasing numbers in the sequence,
+functions like @code{other-window} or @code{next-window} would walk
+through the frame.
+
+This can be used to jump to windows by number with commands like:
+
+@lisp
+@group
+  (defun my-switch-to-window-number (number)
+    ``Switch to the nth window''
+    (interactive ``P'')
+    (if (integerp number)
+        (select-window (nth number (window-list)))))
+@end group
+@end lisp
+
+Currently this feature is only available for GNU Emacs 21.X, because
+neither GNU Emacs < 21 nor XEmacs can evaluate dynamically forms in
+the mode-line.
+@end defopt
+
+@defopt mode-line-prefixes
+Prefixes shown in the modelines of the special ECB-buffers. The
+displayed prefix then looks like: ``[ <PREFIX>[: ]]'', means if a
+prefix is defined for an special ECB-buffer then a single space is
+prepended and if there is additional text to display (e.g. the current
+directory in the sources buffer, see @code{ecb-mode-line-data}) then
+also the string ``: '' is appended.
+
+Everey element of this list is a cons-cell where the car is used to
+define a buffer-name and the cdr to define the modeline-prefix for
+that buffer.
+
+The buffer-name can either be defined as plain string or with a symbol
+which contains the buffer-name as value. The latter one is recommended
+to define a prefix for one of the builtin ECB-tree-buffers because
+then simply the related option-symbol can be used. To add a prefix for
+the builtin directories tree-buffer just set the symbol
+@code{ecb-directories-buffer-name} as car.
+
+The cdr is the prefix for a buffer and can either be a string which
+used as it is or a function-symbol which is called with three argument
+(the buffer-name, the current selected directory and the current
+selected source-file) and must return either nil (for no prefix) or a
+string which is then used a prefix.
+
+If a special ECB-buffer should not have a prefix in its modeline then
+this buffer-name should either not being added to this option or added
+with ``No prefix'' (= nil as cdr).
+@end defopt
+
+@defopt mode-line-prefix-face
+Face used for the prefix in the mode-line. See
+@code{ecb-mode-line-prefixes}. For XEmacs the face should inherit from
+the face @code{modeline} (see @code{set-face-parent})!
+@end defopt
+
+@defopt mode-line-win-nr-face
+Face used for the window-number in the mode-line. See
+@code{ecb-mode-line-display-window-number}. For XEmacs the face should
+inherit from the face @code{modeline} (see @code{set-face-parent})!
 @end defopt
 
 
@@ -7212,6 +7358,11 @@ Set @code{ecb-cache-directory-contents} to ((``.*'' . 500)) and set
 @code{ecb-cache-directory-contents-not} to (``^/usr/.*'').
 @end itemize
 
+Another way for getting a faster overlook for large directories with
+many source-entries is to apply an online-filter to the
+sources-buffer. This can be done via the command
+@code{ecb-sources-filter} or via the popup-menu of the sources-buffer.
+
 @node Using eshell, Grepping directories, Large directories, Tips and tricks
 @section Optimal using of eshell in ECB
 
@@ -7495,11 +7646,11 @@ function FF has to cancel its own idle-timer at the end, so the next
 idle-timer is first started again after the next change (i.e. by
 function F which is still contained in @code{after-change-functions}.
 
-@subsection Customizing the display of the tokens
+@subsection Customizing the display of the tags
 
-For non-semantic-sources ECB uses does no special organizing of tokens
-in groups and sub-tokens but it completely uses the token-hierarchy the
-imenu- and etags-parsers of speedbar return. So the displayed token
+For non-semantic-sources ECB uses does no special organizing of tags
+in groups and sub-tags but it completely uses the tag-hierarchy the
+imenu- and etags-parsers of speedbar return. So the displayed tag
 hierarchy can only be customized with some options speedbar offers for
 this:
 
@@ -7510,7 +7661,7 @@ this:
 documentation for details about these options.
 
 With the option @code{ecb-method-non-semantic-face} you can define the
-face used for displaying the tokens in the Method-buffer for
+face used for displaying the tags in the Method-buffer for
 non-semantic-sources.
 
 @code{ecb-non-semantic-methods-initial-expand} can be useful too.
@@ -7520,20 +7671,20 @@ non-semantic-sources.
 @section Using hide-show from the methods-buffer-menu
 
 The popup-menu of the Methods-buffer offer two entries for either
-hiding or showing the block which is related to the selected token
-(that token for which the popup-menu was opened):
+hiding or showing the block which is related to the selected tag
+(that tag for which the popup-menu was opened):
 
 @itemize @bullet
-@item ``Jump to token and hide block'':
-Jumps to the token and calls @code{hs-hide-block} from the
+@item ``Jump to tag and hide block'':
+Jumps to the tag and calls @code{hs-hide-block} from the
 hideshow-library which is shipped with (X)Emacs. After that the block
-is hidden, i.e. only the header-line of that token (method, variable
+is hidden, i.e. only the header-line of that tag (method, variable
 etc.) is visible, the rest is hidden behind the ``...''.
 
-@item ``Jump to token and show block'':
-Jumps to the token and calls @code{hs-show-block}. This shows the related
+@item ``Jump to tag and show block'':
+Jumps to the tag and calls @code{hs-show-block}. This shows the related
 hidden block if the block was hidden via @code{hs-hide-block} or the
-menu-entry ``Jump to token and hide block'' (s.a.).
+menu-entry ``Jump to tag and hide block'' (s.a.).
 @end itemize
 
 For this feature the library @file{hideshow.el} is used which should
@@ -9473,6 +9624,21 @@ You can change it with the options @code{ecb-mode-line-prefixes},
 @item @tab @tab
 
 @item
+Can the tree-buffers being selected faster than with the
+standard-keybindings of ECB? 
+@tab @tab
+Yes, see option @code{ecb-mode-line-display-window-number}.
+
+@item @tab @tab
+
+@item
+Can ECB display the window-number in the modeline of the special windows?
+@tab @tab
+Yes, see option @code{ecb-mode-line-display-window-number}.
+
+@item @tab @tab
+
+@item
 How can i change the keybindings of ECB?
 @tab @tab
 You can do this with option @code{ecb-key-map} (@pxref{ecb-general}).
@@ -9506,9 +9672,9 @@ Yes, see @ref{Hiding the ECB windows}.
 @item @tab @tab
 
 @item
-Can i define the actions ECB performs after visiting a token?
+Can i define the actions ECB performs after visiting a tag?
 @tab @tab
-Yes, see @ref{Visiting tokens}.
+Yes, see @ref{Visiting tags}.
 
 @item @tab @tab
 
@@ -9523,13 +9689,6 @@ See @ref{Problems with the compile window}.
 Can ECB work together with window-managers like escreen.el?
 @tab @tab
 Yes, see @ref{Window-managers and ECB}.
-
-@item @tab @tab
-
-@item
-Can ECB display the window-number in the modeline of the special windows?
-@tab @tab
-Yes, see option @code{ecb-mode-line-display-window-number}.
 
 @item @tab @tab
 
@@ -9590,7 +9749,7 @@ name ``layout-name'').
 @c  LocalWords:  deffn var CLEARALL cedet sourcepath classpath arg html regexp
 @c  LocalWords:  backtrace def incl defopt cdr keysequence SPC DEL LFD ESC NUL
 @c  LocalWords:  alt abc horiz filenumber rexexp bigdir iff cvsignore lib ini
-@c  LocalWords:  elc obj dll rexexps assoc tokenlist bovinate toplevel oo CLOS
+@c  LocalWords:  elc obj dll rexexps assoc taglist bovinate toplevel oo CLOS
 @c  LocalWords:  defclass colorized XYZ XYC structs colorizing struct enum adv
 @c  LocalWords:  func comint proc min subdir wget gzip cygwin ifnothtml env iso
 @c  LocalWords:  http defcustom upgradable defconst lw doc ls grepping tempor

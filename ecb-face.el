@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-face.el,v 1.18 2003/10/21 06:36:15 berndl Exp $
+;; $Id: ecb-face.el,v 1.19 2003/11/04 17:39:40 berndl Exp $
 
 ;;; Commentary:
 
@@ -42,6 +42,11 @@
 
 (eval-when-compile
   (require 'silentcomp))
+
+(silentcomp-defun set-face-parent)
+(silentcomp-defun make-face-bold)
+(silentcomp-defun make-face)
+(silentcomp-defun set-face-foreground)
 
 (defgroup ecb-face-options nil
   "Settings for all faces used in ECB."
@@ -218,18 +223,15 @@ Changes take first effect after finishing and reactivating ECB!"
                 (face :tag "Special face"
                       :value ecb-history-general-face)))
 
-;; this face should also inherit from 'ecb-default-general-face': Then
-;; changing the font in 'ecb-default-general-face' changes the font in all
-;; faces of the tree-buffers.
 (defface ecb-default-highlight-face (ecb-face-default nil nil nil
-                                                      'ecb-default-general-face
+                                                      nil ;'ecb-default-general-face
                                                       "yellow" nil
                                                       "cornflower blue" "magenta"
                                                       nil nil t)
   "*Define basic face for highlighting the selected node in a tree-buffer.
 In GNU Emacs 21.X all highlighting faces in the ECB tree-buffers inherit from
 this face. Therefore the default attributes like font etc. of a face used in a
-tree-buffer for highlighting the current token can be very easily changed with
+tree-buffer for highlighting the current tag can be very easily changed with
 face 'ecb-default-highlight-face'.
 
 With XEmacs and GNU Emacs 20.X there is no inheritance-feature but the options
@@ -289,11 +291,11 @@ Changes take first effect after finishing and reactivating ECB!"
                                            "yellow" nil
                                            "cornflower blue" "magenta"
                                            nil nil t)
-  "*Define face used for highlighting current token in the methods buffer."
+  "*Define face used for highlighting current tag in the methods buffer."
   :group 'ecb-faces)
 
 (defcustom ecb-method-face 'ecb-default-highlight-face
-  "*Face used for highlighting current token in the methods buffer.
+  "*Face used for highlighting current tag in the methods buffer.
 If the face 'ecb-default-highlight-face' is used then the display of all
 ECB-tree-buffers can be changed by modifying only the face
 'ecb-default-highlight-face'.
@@ -307,13 +309,13 @@ Changes take first effect after finishing and reactivating ECB!"
                       :value ecb-method-face)))
 
 (defface ecb-method-non-semantic-face (ecb-face-default nil nil nil
-                                           'ecb-methods-general-face
-                                           "brown" "brown")
-  "*Define face used for displaying tokens of non-semantic-sources."
+                                                        'ecb-methods-general-face
+                                                        "brown" "brown")
+  "*Define face used for displaying tags of non-semantic-sources."
   :group 'ecb-faces)
 
 (defcustom ecb-method-non-semantic-face 'speedbar-tag-face
-  "*Face used for for displaying tokens of non-semantic-sources.
+  "*Face used for for displaying tags of non-semantic-sources.
 Default is the face used by speedbar for tags.
 
 Changes take first effect after finishing and reactivating ECB!"
@@ -346,17 +348,17 @@ Changes take first effect after finishing and reactivating ECB!"
                 (face :tag "Special face"
                       :value ecb-history-face)))
 
-(defface ecb-token-header-face (ecb-face-default nil nil nil nil nil nil
-                                                 "SeaGreen1" "SeaGreen1"
-                                                 nil nil t)
-  "*Define face used for highlighting the token header.
-The token header is the first line of the token which is highlighted after
+(defface ecb-tag-header-face (ecb-face-default nil nil nil nil nil nil
+                                               "SeaGreen1" "SeaGreen1"
+                                               nil nil t)
+  "*Define face used for highlighting the tag header.
+The tag header is the first line of the tag which is highlighted after
 jumping to it by clicking onto a node in the methods buffer."
   :group 'ecb-faces)
   
-(defcustom ecb-token-header-face 'ecb-token-header-face
-  "*Face used for highlighting the token header.
-The token header is the first line of the token which is highlighted after
+(defcustom ecb-tag-header-face 'ecb-tag-header-face
+  "*Face used for highlighting the tag header.
+The tag header is the first line of the tag which is highlighted after
 jumping to it by clicking onto a node in the methods buffer."
   :group 'ecb-face-options
   :group 'ecb-methods
@@ -378,34 +380,38 @@ jumping to it by clicking onto a node in the methods buffer."
   :group 'ecb-face-options
   :type 'face)
 
-(defface ecb-type-token-class-face (ecb-face-default nil t)
-  "*Define face used with option `ecb-type-token-display'."
+(defface ecb-type-tag-class-face (ecb-face-default nil t)
+  "*Define face used with option `ecb-type-tag-display'."
   :group 'ecb-faces)
 
-(defface ecb-type-token-interface-face (ecb-face-default nil t)
-  "*Define face used with option `ecb-type-token-display'."
+(defface ecb-type-tag-interface-face (ecb-face-default nil t)
+  "*Define face used with option `ecb-type-tag-display'."
   :group 'ecb-faces)
 
-(defface ecb-type-token-struct-face (ecb-face-default nil t)
-  "*Define face used with option `ecb-type-token-display'."
+(defface ecb-type-tag-struct-face (ecb-face-default nil t)
+  "*Define face used with option `ecb-type-tag-display'."
   :group 'ecb-faces)
 
-(defface ecb-type-token-typedef-face (ecb-face-default nil t)
-  "*Define face used with option `ecb-type-token-display'."
+(defface ecb-type-tag-typedef-face (ecb-face-default nil t)
+  "*Define face used with option `ecb-type-tag-display'."
   :group 'ecb-faces)
 
-(defface ecb-type-token-enum-face (ecb-face-default nil t)
-  "*Define face used with option `ecb-type-token-display'."
+(defface ecb-type-tag-union-face (ecb-face-default nil t)
+  "*Define face used with option `ecb-type-tag-display'."
   :group 'ecb-faces)
 
-(defface ecb-type-token-group-face (ecb-face-default nil t nil nil
-                                                     (if ecb-running-xemacs
-                                                         "dimgray"
-                                                       "dim gray")
-                                                     (if ecb-running-xemacs
-                                                         "dimgray"
-                                                       "dim gray"))
-  "*Define face used with option `ecb-type-token-display'."
+(defface ecb-type-tag-enum-face (ecb-face-default nil t)
+  "*Define face used with option `ecb-type-tag-display'."
+  :group 'ecb-faces)
+
+(defface ecb-type-tag-group-face (ecb-face-default nil t nil nil
+                                                   (if ecb-running-xemacs
+                                                       "dimgray"
+                                                     "dim gray")
+                                                   (if ecb-running-xemacs
+                                                       "dimgray"
+                                                     "dim gray"))
+  "*Define face used with option `ecb-type-tag-display'."
   :group 'ecb-faces)
 
 (defface ecb-bucket-node-face (ecb-face-default nil t nil
@@ -420,6 +426,71 @@ buckets in the ECB-buffers should be displayed with the same basic
 attributes set by 'ecb-default-general-face' this set of basic attributes have
 to be set in 'ecb-bucket-node-face' too!"
   :group 'ecb-faces)
+
+;; - mode-line faces-------------------------------------------
+
+;; For XEmacs a face in the modeline should really inhertit from the face
+;; 'modeline!
+;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: Currently with XEmacs 21.4.X
+;; set-face-parent MUST be before defface - therefore we have to use make-face
+;; first and then adding the values to this face we would have also added
+;; by`defface. The defface is here only used to make this face customizable!
+;; Maybe later XEmacs-versions support the parent-keyword with defface then we
+;; can change back this ugly hack.
+(when ecb-running-xemacs
+  (make-face 'ecb-mode-line-win-nr-face)
+  (set-face-parent 'ecb-mode-line-win-nr-face 'modeline nil '(default))
+  (make-face-bold 'ecb-mode-line-win-nr-face))
+(defface ecb-mode-line-win-nr-face (ecb-face-default nil t)
+  "*Define face for the window-number in the mode-line.
+See `ecb-mode-line-display-window-number'."
+  :group 'ecb-faces)
+
+(defcustom ecb-mode-line-win-nr-face 'ecb-mode-line-win-nr-face
+  "*Face used for the window-number in the mode-line.
+See `ecb-mode-line-display-window-number'. For XEmacs the face should inherit
+from the face 'modeline \(see `set-face-parent')!"
+  :group 'ecb-mode-line
+  :group 'ecb-face-options
+  :type 'face)
+
+(when ecb-running-xemacs
+  (make-face 'ecb-mode-line-prefix-face)
+  (set-face-parent 'ecb-mode-line-prefix-face 'modeline nil '(default))
+  (set-face-foreground 'ecb-mode-line-prefix-face "forestgreen"))
+;;                        nil '(default color win)))
+(defface ecb-mode-line-prefix-face (ecb-face-default nil nil nil nil
+                                                     "forestgreen"
+                                                     "forestgreen")
+  "*Define face for the prefix in the mode-line.
+See `ecb-mode-line-prefixes'."
+  :group 'ecb-faces)
+
+(defcustom ecb-mode-line-prefix-face 'ecb-mode-line-prefix-face
+  "*Face used for the prefix in the mode-line.
+See `ecb-mode-line-prefixes'. For XEmacs the face should inherit from the face
+'modeline \(see `set-face-parent')!"
+  :group 'ecb-mode-line
+  :group 'ecb-face-options
+  :type 'face)
+
+(when ecb-running-xemacs
+  (make-face 'ecb-mode-line-data-face)
+  (set-face-parent 'ecb-mode-line-data-face 'modeline nil '(default)))
+(defface ecb-mode-line-data-face (ecb-face-default)
+  "*Define face for the data in the mode-line.
+See `ecb-mode-line-data'."
+  :group 'ecb-faces)
+
+(defcustom ecb-mode-line-data-face 'ecb-mode-line-data-face
+  "*Face used for the data in the mode-line.
+See `ecb-mode-line-data'. For XEmacs the face should inherit from the face
+'modeline \(see `set-face-parent')!"
+  :group 'ecb-mode-line
+  :group 'ecb-face-options
+  :type 'face)
+
+
 
 (silentcomp-provide 'ecb-face)
 

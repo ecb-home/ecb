@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-help.el,v 1.99 2003/09/12 09:19:25 berndl Exp $
+;; $Id: ecb-help.el,v 1.100 2003/11/04 17:39:40 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -339,11 +339,14 @@ could be interesting for support."
                           (function (lambda (l r)
                                       (string< (symbol-name l)
                                                (symbol-name r))))))
-        (semantic-vars (sort `(semantic-after-toplevel-cache-change-hook
-                               semantic-after-partial-cache-change-hook
-                               semantic-face-alist
-                               semantic-uml-colon-string
-                               semantic-orphaned-member-metaparent-type)
+        (semantic-vars (sort (delete nil
+                                     `(semantic-after-toplevel-cache-change-hook
+                                       semantic-after-partial-cache-change-hook
+                                       ,(if (boundp 'semantic-format-face-alist)
+                                            'semantic-format-face-alist
+                                          'semantic-face-alist)
+                                       semantic-uml-colon-string
+                                       semantic-orphaned-member-metaparent-type))
                              (function (lambda (l r)
                                          (string< (symbol-name l)
                                                   (symbol-name r))))))

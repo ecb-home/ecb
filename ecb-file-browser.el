@@ -23,7 +23,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-file-browser.el,v 1.3 2003/10/24 16:35:19 berndl Exp $
+;; $Id: ecb-file-browser.el,v 1.4 2003/11/04 17:39:40 berndl Exp $
 
 ;;; Commentary:
 
@@ -920,12 +920,17 @@ filter-regexp). If no cache-entry for DIR is available then nil is returned."
 `ecb-path-selected-directory' - the contents are either newly computed or come
 from the `ecb-sources-cache'. DIR-BEFORE-UPDATE is the directory which was
 selected before this update."
-  ;;Here we add a cache-mechanism which caches for each path the
-  ;;node-tree and the whole buffer-string of the sources-buffer. A
-  ;;cache-elem would be removed from the cache if a directory is
-  ;;POWER-clicked in the directories buffer because this is the only way
-  ;;to synchronize the sources-buffer with the disk-contents of the
-  ;;clicked directory.
+
+  ;; Here we add a cache-mechanism which caches for each path the node-tree
+  ;; and the whole buffer-string of the sources-buffer. A cache-elem would be
+  ;; removed from the cache if a directory is POWER-clicked in the directories
+  ;; buffer because this is the only way to synchronize the sources-buffer
+  ;; with the disk-contents of the clicked directory. This works because the
+  ;; tree of the sources-buffer contains only not expandable nodes (see the
+  ;; comment in `ecb-rebuild-methods-buffer-with-tagcache'). If we would
+  ;; make the nodes in the Sources-buffer "expandable" this caching would not
+  ;; work!
+  
   (ecb-exec-in-sources-window
    ;; if we have a filtered cache we must display it - otherwise we use the
    ;; full cache if there is any
@@ -936,7 +941,7 @@ selected before this update."
            (tree-buffer-set-root (nth 0 cache-elem))
            (tree-buffer-update nil (cons (nth 2 cache-elem)
                                          (nth 1 cache-elem))))
-       (let ((new-tree (tree-node-new "root" 0 nil))
+       (let ((new-tree (tree-node-new-root))
              (old-children (tree-node-get-children (tree-buffer-get-root)))
              (new-cache-elem nil))
          ;; building up the new files-tree
@@ -957,7 +962,8 @@ selected before this update."
                 (length tree-buffer-nodes))
            (setq new-cache-elem (list (tree-buffer-get-root)
                                       (ecb-copy-list tree-buffer-nodes)
-                                      (buffer-string)))
+                                      (buffer-substring (point-min)
+                                                        (point-max))))
            (ecb-sources-cache-add-full ecb-path-selected-directory
                                        new-cache-elem))))
            
@@ -989,9 +995,17 @@ selected before this update."
 
 (defun ecb-sources-filter ()
   "Apply a filter to the sources-buffer to reduce the number of entries.
-So you get a better overlooking."
+So you get a better overlooking. There are three choices:
+- Filter by extension: Just insert the extension you want the Sources-buffer
+  being filtered. Insert the extension without leading dot!
+- Filter by regexp: Insert the filter as regular expression.
+- No filter: This means to display an entry for every file in the current
+  selected directory \(all except these filter already filtered out by
+  `ecb-source-file-regexps' and `ecb-sources-exclude-cvsignore').
+Such a filter is only applied to the current selected directory, i.e. each
+directory has its own filtered sources-buffer."
   (interactive)
-  (let ((choice (ecb-query-string "Filter by:"
+  (let ((choice (ecb-query-string "Filter sources by:"
                                   '("extension" "regexp" "nothing"))))
     (cond ((string= choice "extension")
            (ecb-sources-filter-by-ext nil))
@@ -1025,7 +1039,7 @@ all files are displayed."
            (ecb-update-sources-buffer ecb-path-selected-directory)
            (tree-buffer-highlight-node-data ecb-path-selected-source))
        ;; apply the filter-regexp
-       (let ((new-tree (tree-node-new "root" 0 nil))
+       (let ((new-tree (tree-node-new-root))
              (old-children (tree-node-get-children (tree-buffer-get-root)))
              (all-files (car (ecb-get-files-and-subdirs ecb-path-selected-directory)))
              (filtered-files nil))
@@ -1209,9 +1223,8 @@ which are not filtered out by current value of `ecb-history-filter'."
   "Compute a mode-line prefix for the History-buffer so the current filter
 applied to the history-entries is displayed. This function is only for using
 by the option `ecb-mode-line-prefixes'."
-  (concat (and (cdr ecb-history-filter)
-               (format "[Filter: %s]: " (cdr ecb-history-filter)))
-          "History"))
+  (and (cdr ecb-history-filter)
+       (format "[Filter: %s]" (cdr ecb-history-filter))))
 
 
 (defun ecb-add-item-to-history-buffer (filename)
@@ -1276,7 +1289,7 @@ is not changed."
 			       other-edit-window)
     (ecb-update-methods-buffer--internal 'scroll-to-begin)
     (setq ecb-major-mode-selected-source major-mode)
-    (ecb-token-sync 'force)))
+    (ecb-tag-sync 'force)))
 
 (defun ecb-clear-history ()
   "Clears the ECB history-buffer."
@@ -1643,7 +1656,7 @@ help-text should be printed here."
       (set-buffer-modified-p t)
       (let ((ecb-auto-update-methods-after-save nil))
         (save-buffer))
-      (ecb-rebuild-methods-buffer-with-tokencache nil nil t))
+      (ecb-rebuild-methods-buffer-with-tagcache nil nil t))
     (ecb-remove-dir-from-caches dir)
     (ecb-set-selected-directory dir t)
     (ecb-current-buffer-sync)))
@@ -1910,10 +1923,15 @@ function which is called with current node and has to return a string.")
 
 (defun ecb-history-filter ()
   "Apply a filter to the history-buffer to reduce the number of entries.
-So you get a better overlooking."
+So you get a better overlooking. There are three choices:
+- Filter by extension: Just insert the extension you want the History-buffer
+  being filtered. Insert the extension without leading dot!
+- Filter by regexp: Insert the filter as regular expression.
+- No filter: This means to display an entry for all currently living
+  file-buffers."
   (interactive)
-  (let ((choice (ecb-query-string "Filter by:"
-                                  '("extension" "regexp" "no filter (all file-buffers)"))))
+  (let ((choice (ecb-query-string "Filter history by:"
+                                  '("extension" "regexp" "no filter"))))
     (cond ((string= choice "extension")
            (ecb-history-filter-by-ext nil))
           ((string= choice "regexp")

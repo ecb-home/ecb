@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-upgrade.el,v 1.49 2003/10/21 06:36:14 berndl Exp $
+;; $Id: ecb-upgrade.el,v 1.50 2003/11/04 17:39:40 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -162,6 +162,8 @@
 (defconst ecb-version "2.01"
   "Current ECB version.")
 
+(eval-when-compile
+  (require 'cl))
 
 (require 'ecb-util)
 
@@ -205,7 +207,22 @@
                                         ecb-upgrade-methods-menu-ext))
     (ecb-history-menu-user-extension . (ecb-history-menu-user-extension
                                         ecb-upgrade-history-menu-ext))
-    (ecb-bucket-token-display . (ecb-bucket-node-display identity)))
+    (ecb-bucket-token-display . (ecb-bucket-node-display identity))
+    (ecb-auto-expand-token-tree . (ecb-auto-expand-tag-tree identity))
+    (ecb-font-lock-tokens . (ecb-font-lock-tags identity))
+    (ecb-token-jump-sets-mark . (ecb-tag-jump-sets-mark identity))
+    (ecb-token-display-function . (ecb-tag-display-function ecb-upgrade-token-display-function))
+    (ecb-type-token-display . (ecb-type-tag-display ecb-upgrade-type-token-display))
+    (ecb-post-process-semantic-tokenlist . (ecb-post-process-semantic-taglist
+                                            ecb-upgrade-post-process-semantic-tokenlist))
+    (ecb-show-only-positioned-tokens . (ecb-show-only-positioned-tags identity))
+    (ecb-show-tokens . (ecb-show-tags identity))
+    (ecb-highlight-token-with-point . (ecb-highlight-tag-with-point identity))
+    (ecb-highlight-token-with-point-delay . (ecb-highlight-tag-with-point-delay identity))
+    (ecb-token-visit-post-actions . (ecb-tag-visit-post-actions
+                                     ecb-upgrade-token-visit-post-actions))
+    (ecb-token-header-face . (ecb-tag-header-face
+                              ecb-upgrade-token-header-face)))
   "Alist of all options which should be upgraded for current ECB-version.
 There are several reasons why an option should be contained in this alist:
 a) An old option has just be renamed in current-ECB version but has still the
@@ -297,21 +314,6 @@ The car is the old option symbol and the cdr is a 2-element-list with:
   (if old-val
       'dir))
 
-;; not used anymore beginning with ECB 1.91.1
-;; (defun ecb-upgrade-layout-window-sizes (old-val)
-;;   (let ((l (copy-tree old-val)))
-;;     (dolist (elem l)
-;;       (setcar elem
-;;               (ecb-upgrade-layout-nr2name (car elem)))
-;;       (setcdr elem
-;;               (mapcar (function (lambda (e)
-;;                                   (if (consp e)
-;;                                       e
-;;                                     (cons nil nil))))
-;;                       (cdr elem)))
-;;       )
-;;     l))
-
 (defun ecb-upgrade-major-modes-activate (old-val)
   (if (not (listp old-val))
       old-val
@@ -391,6 +393,83 @@ The car is the old option symbol and the cdr is a 2-element-list with:
           (ecb-option-get-value 'ecb-history-menu-user-extension
                                 'standard-value)))
 
+(defun ecb-upgrade-token-display-function (old-val)
+  (let ((l (copy-tree old-val))
+        (mapping-list
+         '((semantic-name-nonterminal                  . ecb--semantic-format-tag-name)
+           (semantic-abbreviate-nonterminal            . ecb--semantic-format-tag-abbreviate)
+           (semantic-summarize-nonterminal             . ecb--semantic-format-tag-summarize)
+           (semantic-prototype-nonterminal             . ecb--semantic-format-tag-prototype)
+           (semantic-concise-prototype-nonterminal     . ecb--semantic-format-tag-concise-prototype)
+           (semantic-uml-abbreviate-nonterminal        . ecb--semantic-format-tag-uml-abbreviate)
+           (semantic-uml-prototype-nonterminal         . ecb--semantic-format-tag-uml-prototype)
+           (semantic-uml-concise-prototype-nonterminal . ecb--semantic-format-tag-uml-concise-prototype)
+           (semantic-prin1-nonterminal                 . ecb--semantic-format-tag-prin1)
+           (ecb-name-nonterminal                  . ecb-format-tag-name)
+           (ecb-abbreviate-nonterminal            . ecb-format-tag-abbreviate)
+           (ecb-summarize-nonterminal             . ecb-format-tag-summarize)
+           (ecb-prototype-nonterminal             . ecb-format-tag-prototype)
+           (ecb-concise-prototype-nonterminal     . ecb-format-tag-concise-prototype)
+           (ecb-uml-abbreviate-nonterminal        . ecb-format-tag-uml-abbreviate)
+           (ecb-uml-prototype-nonterminal         . ecb-format-tag-uml-prototype)
+           (ecb-uml-concise-prototype-nonterminal . ecb-format-tag-uml-concise-prototype)
+           (ecb-prin1-nonterminal                 . ecb-format-tag-prin1))))
+    (mapc (function (lambda (e)
+                      (if (assoc (cdr e) mapping-list)
+                          (setcdr e (cdr (assoc (cdr e) mapping-list))))))
+          l)
+    l))
+
+
+(defun ecb-upgrade-type-token-display (old-val)
+  (let ((val-copy (copy-tree old-val))
+        (mapping-list
+         '((ecb-type-token-class-face . ecb-type-tag-class-face)
+           (ecb-type-token-interface-face . ecb-type-tag-interface-face)
+           (ecb-type-token-struct-face . ecb-type-tag-struct-face)
+           (ecb-type-token-typedef-face . ecb-type-tag-typedef-face)
+           (ecb-type-token-enum-face . ecb-type-tag-enum-face)
+           (ecb-type-token-group-face . ecb-type-tag-group-face))))
+    (mapc (function (lambda (e)
+                      (dolist (l (cdr e))
+                        (if (assoc (nth 2 l) mapping-list)
+                            (ecb-set-elt l 2
+                                         (cdr (assoc (nth 2 l) mapping-list)))))))
+          val-copy)
+    val-copy))
+
+(defun ecb-upgrade-post-process-semantic-tokenlist (old-val)
+  (let ((val-copy (copy-tree old-val))
+        (mapping-list
+         '((ecb-group-function-tokens-with-parents . ecb-group-function-tags-with-parents))))
+    (mapc (function (lambda (e)
+                      (if (assoc (cdr e) mapping-list)
+                          (setcdr e (cdr (assoc (cdr e) mapping-list))))))
+          val-copy)
+    val-copy))
+
+(defun ecb-upgrade-token-visit-post-actions (old-val)
+  (let ((val-copy (copy-tree old-val))
+        (mapping-list
+         '((ecb-token-visit-highlight-token-header . ecb-tag-visit-highlight-tag-header)
+           (ecb-token-visit-smart-token-start . ecb-tag-visit-smart-tag-start)
+           (ecb-token-visit-recenter . ecb-tag-visit-recenter)
+           (ecb-token-visit-recenter-top . ecb-tag-visit-recenter-top)
+           (ecb-token-visit-goto-doc-start . ecb-tag-visit-goto-doc-start)
+           (ecb-token-visit-narrow-token . ecb-tag-visit-narrow-tag))))
+    (mapc (function (lambda (e)
+                      (dotimes (i (length (cdr e)))
+                        (if (assoc (nth i (cdr e)) mapping-list)
+                            (ecb-set-elt (cdr e) i
+                                         (cdr (assoc (nth i (cdr e))
+                                                     mapping-list)))))))
+          val-copy)
+    val-copy))
+
+(defun ecb-upgrade-token-header-face (old-val)
+  (if (equal old-val 'ecb-token-header-face)
+      'ecb-tag-header-face
+    old-val))
 
 ;; ----------------------------------------------------------------------
 ;; internal functions. Dot change anything below this line
@@ -511,8 +590,6 @@ If such an option is contained in `ecb-upgradable-option-alist' then try to
 perform a special upgrade with `ecb-option-upgrade'. If no special upgrade is
 done then the option is reset to the default-value of current ECB-version."
   ;; For every not compatible option perform an upgrade
-  (message "Klausi: Upgrading all incompatible options...curr-version: %s"
-           (ecb-option-get-value 'ecb-options-version 'saved-value))
   (let ((is-not-a-downgrade
          (not (ecb-package-version-list<
                (ecb-package-version-str2list ecb-version)
@@ -545,8 +622,6 @@ Note: This function upgrades only the renamed but not the incompatible options
   (when (not (ecb-package-version-list<
               (ecb-package-version-str2list ecb-version)
               (ecb-package-version-str2list ecb-options-version)))
-    (message "Klausi: Upgrading all renamed options...curr-version: %s"
-             (ecb-option-get-value 'ecb-options-version 'saved-value))
     (dolist (option ecb-upgradable-option-alist)
       ;; perform only an upgrade if the option is not contained in
       ;; `ecb-not-compatible-options' too because then ECB has auto.
@@ -652,13 +727,24 @@ options with their old \(before the upgrade/reset) and new values."
 ;; all needs for the requirements check
 ;; ----------------------------------------------------------------------
 
-
 (defconst ecb-required-semantic-version-min '(1 4 2 0))
 (defconst ecb-required-semantic-version-max '(1 4 3 9))
 (defconst ecb-required-eieio-version-min '(0 17 2 0))
 (defconst ecb-required-eieio-version-max '(0 17 3 9))
 (defconst ecb-required-speedbar-version-min '(0 14 1 1))
 (defconst ecb-required-speedbar-version-max '(0 15 3 9))
+
+;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: Currently we support the
+;; cedet-library by hacking ecb-check-requirements 8see the TODO there). But
+;; when cedet is stable (or a stable beta ;-) then we should add here a
+;; cedet-required-version-min|max etc....
+
+;; (defconst ecb-required-semantic-version-min '(1 4 2 0))
+;; (defconst ecb-required-semantic-version-max '(2 0 3 9))
+;; (defconst ecb-required-eieio-version-min '(0 17 2 0))
+;; (defconst ecb-required-eieio-version-max '(0 18 3 9))
+;; (defconst ecb-required-speedbar-version-min '(0 14 1 1))
+;; (defconst ecb-required-speedbar-version-max '(0 15 3 9))
 
 (defvar ecb-all-requirements-available nil)
 
@@ -675,7 +761,11 @@ If JUST-CHECK is not nil then
 If called in non-interactive mode \(e.g. in batch-mode) then JUST-CHECK is
 always true."
   (when (and (or (not (boundp 'ecb-version-check)) ecb-version-check)
-             (not ecb-all-requirements-available))
+             (not ecb-all-requirements-available)
+             ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: This allows ECB to
+             ;; work with current cedet 1.0. Remove this hack when we fully
+             ;; support the cedet-library in upgrading.
+             (not (boundp 'cedet-version)))
     (let ((semantic-required-version-str-min (ecb-package-version-list2str
                                               ecb-required-semantic-version-min))
           (semantic-required-version-str-max (ecb-package-version-list2str
@@ -1121,11 +1211,16 @@ If current running semantic is installed as regular XEmacs-package and not
 with the archive available at the semantic website then this function asks for
 proceeding!"
   (interactive)
-  (when (or (not ecb-semantic-regular-xemacs-package-p)
-            (ecb-package-display-xemacs-package-info "semantic"))
-    (ecb-package-download-ecb/semantic "semantic"
-                                       semantic-version
-                                       ecb-cedet-url)))
+  ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: Remove this test, and offer to
+  ;; download full cedet suite instead of just semantic when cedet 1.0 is
+  ;; stable!
+  (if (boundp 'cedet-version)
+      (ecb-error "When new cedet 1.0 is loaded then no semantic upgrade possible!")
+    (when (or (not ecb-semantic-regular-xemacs-package-p)
+              (ecb-package-display-xemacs-package-info "semantic"))
+      (ecb-package-download-ecb/semantic "semantic"
+                                         semantic-version
+                                         ecb-cedet-url))))
 
 (defun ecb-package-display-xemacs-package-info (package)
   "Displays a warning if PACKAGE is a standard xemacs-package and ask if to

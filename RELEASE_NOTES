@@ -18,18 +18,36 @@ No special notes beyond the contents of README.
 Upgrading from any version:
 ---------------------------
 
+The following options have changed their name:
+
+- ecb-auto-expand-token-tree           -> ecb-auto-expand-tag-tree
+- ecb-font-lock-tokens                 -> ecb-font-lock-tags
+- ecb-token-jump-sets-mark             -> ecb-tag-jump-sets-mark
+- ecb-token-display-function           -> ecb-tag-display-function
+- ecb-type-token-display               -> ecb-type-tag-display
+- ecb-post-process-semantic-tokenlist  -> ecb-post-process-semantic-taglist
+- ecb-show-only-positioned-tokens      -> ecb-show-only-positioned-tags
+- ecb-show-tokens                      -> ecb-show-tags
+- ecb-highlight-token-with-point       -> ecb-highlight-tag-with-point
+- ecb-highlight-token-with-point-delay -> ecb-highlight-tag-with-point-delay
+- ecb-token-visit-post-actions         -> ecb-tag-visit-post-actions
+- ecb-token-header-face                -> ecb-tag-header-face
+
+ECB autom. upgrades all old-values of these options to the new options! There
+is nothing to do for you.
+
 The type of the options `ecb-directories-menu-user-extension',
 `ecb-sources-menu-user-extension', `ecb-methods-menu-user-extension' and
 `ecb-history-menu-user-extension' has been changed - now sub-menus are
 allowed. The new default values of these options contains now entries, mostly
 concerning "version control". ECB autom. upgrades the old-values to the new
 option-type by appending the new defaults to your old values. So no old
-personal menu-entries are lost, but cuase of the new default maybe you have
+personal menu-entries are lost, but cause of the new default maybe you have
 some entries twice. Feel free to delete via customize what you want from the
 new settings.
 
 The old option `ecb-tree-use-image-icons' has been replaced by
-`ecb-tree-buffer-style'
+`ecb-tree-buffer-style'.
 
 
 Upgrading from versions < 1.96:

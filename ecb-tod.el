@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-tod.el,v 1.14 2003/09/08 12:20:17 berndl Exp $
+;; $Id: ecb-tod.el,v 1.15 2003/11/04 17:39:40 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -75,12 +75,12 @@
     "Download latest ECB direct from the website with `ecb-download-ecb'."
     "Download latest semantic direct from the website with `ecb-download-semantic''."
     "Customize the look\&feel of the tree-buffers with `ecb-tree-expand-symbol-before' and `ecb-tree-indent'."
-    "Customize the contents of the methods-buffer with `ecb-token-display-function', `ecb-type-token-display', `ecb-show-tokens'."
+    "Customize the contents of the methods-buffer with `ecb-tag-display-function', `ecb-type-tag-display', `ecb-show-tags'."
     "Customize the main mouse-buttons of the tree-buffers with `ecb-primary-secondary-mouse-buttons'."
     "Customize with `ecb-tree-RET-selects-edit-window' in which tree-buffer a RETURN selects the edit-window."
     "Grep a directory \(recursive) by using the popup-menu \(the right mouse-button) in the directories buffer."
     "Customize the sorting of the sources with the option `ecb-sources-sort-method'."
-    "Narrow the source-buffer to the selected token in the methods-buffer with `ecb-token-visit-post-actions'."
+    "Narrow the source-buffer to the selected tag in the methods-buffer with `ecb-tag-visit-post-actions'."
     "Enable autom. enlarging of the compile-window by select with the option `ecb-compile-window-temporally-enlarge'."
     "Customize with `ecb-compile-window-temporally-enlarge' the situations the compile-window is allowed to enlarge."
     "Customize the jump-behavior of `other-window' [C-x o] with the option `ecb-other-window-jump-behavior'."
@@ -103,8 +103,8 @@
     "You can change the prefix [C-c .] of all ECB-key-bindings quick and easy with `ecb-key-map'."
     "Send a problem-report to the ECB-mailing-list quick and easy with `ecb-submit-problem-report'."
     "Switch on/off auto. expanding of the ECB-methods-buffer with `ecb-auto-expand-directory-tree'."
-    "You can quickly toggle auto. expanding of the ECB-methods-buffer with `ecb-toggle-auto-expand-token-tree'."
-    "Highlight current semantic-token of the edit-buffer in the ECB-methods-buffer with `ecb-highlight-token-with-point'."
+    "You can quickly toggle auto. expanding of the ECB-methods-buffer with `ecb-toggle-auto-expand-tag-tree'."
+    "Highlight current semantic-tag of the edit-buffer in the ECB-methods-buffer with `ecb-highlight-tag-with-point'."
     "Use `scroll-all-mode' to scroll both edit-windows of ECB simultaneously - and no other windows are scrolled!"
     "You can toggle having a compile window with `ecb-toggle-compile-window' if `ecb-compile-window-height' is not nil."
     "Start ECB automatically after Emacs is started. Use option `ecb-auto-activate'"

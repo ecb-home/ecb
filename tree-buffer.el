@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: tree-buffer.el,v 1.129 2003/10/24 16:35:16 berndl Exp $
+;; $Id: tree-buffer.el,v 1.130 2003/11/04 17:39:36 berndl Exp $
 
 ;;; Commentary:
 
@@ -211,7 +211,7 @@ node name.")
 (defvar tree-buffer-incr-search nil)
 (defvar tree-buffer-incr-searchpattern-indent-prefix nil
   "Prefix-pattern which ignores all not interesting basic stuff of a displayed
-token at incr. search. The following contents of a displayed token are ignored
+tag at incr. search. The following contents of a displayed tag are ignored
 by this pattern:
 - beginning spaces and guide characters \(|`-)
 This prefix is computed by `tree-buffer-gen-searchpattern-indent-prefix'!")
@@ -280,7 +280,7 @@ mouse-tracking is activated by `tree-buffer-activate-mouse-tracking'")
 (defvar tree-buffer-enable-xemacs-image-bug-hack
   tree-buffer-running-xemacs
   "If true then ECB tries to deal best with the XEmacs-bug to display
-adjacent images not orrectly. Set this to nil if your XEmacs-version has fixed
+adjacent images not correctly. Set this to nil if your XEmacs-version has fixed
 this bug.")
 
 (defconst tree-buffer-image-formats
@@ -447,12 +447,18 @@ once! Returns the image-object for TREE-IMAGE-NAME."
               (or (tree-node-is-expandable node)
                   (member (tree-node-get-type node)
                           tree-buffer-maybe-empty-node-types)))
-         (if (not (equal 'image (tree-buffer-style))) 4 3) 0)
+         (if (or tree-buffer-enable-xemacs-image-bug-hack
+                 (not (equal 'image (tree-buffer-style))))
+             4 3)
+       0)
      (if (and tree-buffer-expand-symbol-before
               (not (tree-node-is-expandable node))
               (member (tree-node-get-type node)
                       tree-buffer-leaf-node-types))
-         (if (not (equal 'image (tree-buffer-style))) 2 1) 0)))
+         (if (or tree-buffer-enable-xemacs-image-bug-hack
+                 (not (equal 'image (tree-buffer-style))))
+             2 1)
+       0)))
      
 
 (defun tree-buffer-get-node-name-start-point (name node)
@@ -793,7 +799,8 @@ inserted and the TEXT itself"
 
 (defun tree-buffer-insert-node-display (node node-display-name)
   (let* ((node-type (tree-node-get-type node))
-         (tree-image-name (if (tree-node-is-expanded node)
+         (tree-image-name (if (and (tree-node-is-expanded node)
+                                   (tree-node-is-expandable node))
                               "open"
                             (if (not (tree-node-is-expandable node))
                                 (if (member node-type
@@ -812,8 +819,9 @@ inserted and the TEXT itself"
         0 (length ascii-symbol)
         ascii-symbol (tree-buffer-find-image tree-image-name))
        nil nil t)
-      (if (not (equal 'image (tree-buffer-style))) (insert " ")))
-;;       (insert " "))
+      (if (or tree-buffer-enable-xemacs-image-bug-hack
+              (not (equal 'image (tree-buffer-style))))
+          (insert " ")))
     (tree-buffer-insert-text node-display-name
                              (tree-buffer-get-node-facer node) t t)
     (when (and (not tree-buffer-expand-symbol-before)
@@ -975,8 +983,8 @@ parent is recursively removed too."
   (when (and node (not (eq (tree-buffer-get-root) node)))
     (let* ((parent (tree-node-get-parent node))
            (parent-type (tree-node-get-type parent)))
-      ;; If parent is the root-node then its type is always nil (only the
-      ;; root-node has type nil) and therefore then the recursion stops here
+      ;; If parent is the root-node then its type is always -1 (only the
+      ;; root-node has type -1) and therefore then the recursion stops here
       ;; savely.
       (if (and (member parent-type empty-parent-types)
                (= (length (tree-node-get-children parent)) 1))
@@ -1552,8 +1560,8 @@ The user of this tree-buffer can store any arbitrary data in this storage.
 Before using the accessor-functions above the tree-buffer has to be the
 current buffer!
 
-NAME: Name of the buffer FRAME: Frame in
-which the tree-buffer is displayed and valid. All key-bindings
+NAME: Name of the buffer.
+FRAME: Frame in which the tree-buffer is displayed and valid. All key-bindings
        and interactive functions of the tree-buffer work only if called in
        FRAME otherwise nothing is done!
 IS-CLICK-VALID-FN: `tree-buffer-create' rebinds down-mouse-1, down-mouse-2,
@@ -1750,7 +1758,7 @@ AFTER-CREATE-HOOK: A function or a list of functions \(with no arguments)
     (setq tree-buffer-highlighted-node-data nil)
     (setq tree-buffer-menus (tree-buffer-create-menus menus))
     (setq tree-buffer-menu-titles menu-titles)
-    (setq tree-buffer-root (tree-node-new "root" 0 "root"))
+    (setq tree-buffer-root (tree-node-new-root))
     (setq tree-buffer-type-facer type-facer)
     (setq tree-buffer-highlight-overlay (make-overlay 1 1))
     (overlay-put tree-buffer-highlight-overlay 'face highlight-node-face)
@@ -2052,6 +2060,11 @@ buffer window. The following values are valid:
     (when parent
       (tree-node-add-child parent a))
     a))
+
+(defun tree-node-new-root ()
+  "Creates a new root node. The root node has always NAME=\"root\", TYPE=-1
+and DATA=nil."
+  (tree-node-new "root" -1 nil))
 
 (defsubst tree-node-get-name (node)
   (aref node tree-node-name))

@@ -24,7 +24,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-method-browser.el,v 1.2 2003/10/21 06:36:14 berndl Exp $
+;; $Id: ecb-method-browser.el,v 1.3 2003/11/04 17:39:40 berndl Exp $
 
 ;;; Commentary:
 
@@ -38,6 +38,8 @@
 (require 'ecb-face)
 (require 'ecb-speedbar)
 
+(require 'ecb-semantic-wrapper)
+;; This loads the semantic-setups for the major-modes.
 (require 'semantic-load)
 
 ;; various loads
@@ -50,6 +52,8 @@
 (eval-when-compile
   (require 'silentcomp))
 
+;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: How these functions can be used
+;; in semantic 2.X
 (silentcomp-defun semanticdb-minor-mode-p)
 (silentcomp-defun semanticdb-find-nonterminal-by-name)
 (silentcomp-defun semanticdb-full-filename)
@@ -63,15 +67,15 @@
 (silentcomp-defun ecb-get-tags-for-non-semantic-files)
 (silentcomp-defun ecb-create-non-semantic-tree)
 
-(defvar ecb-selected-token nil
-  "The currently selected Semantic token.")
-(make-variable-buffer-local 'ecb-selected-token)
+(defvar ecb-selected-tag nil
+  "The currently selected Semantic tag.")
+(make-variable-buffer-local 'ecb-selected-tag)
 
 (defvar ecb-methods-root-node nil
   "Path to currently selected source.")
 
 (defun ecb-method-browser-initialize ()
-  (setq ecb-selected-token nil)
+  (setq ecb-selected-tag nil)
   (setq ecb-methods-root-node nil))
 
 ;;====================================================
@@ -104,16 +108,16 @@ then activating ECB again!"
   :type 'string)
 
 
-(defcustom ecb-auto-expand-token-tree 'expand-spec
-  "*Expand the methods-token-tree automatically if node invisible.
-This option has only an effect if option `ecb-highlight-token-with-point' is
+(defcustom ecb-auto-expand-tag-tree 'expand-spec
+  "*Expand the methods-tag-tree automatically if node invisible.
+This option has only an effect if option `ecb-highlight-tag-with-point' is
 switched on too. There are three possible choices:
 - nil: No auto. expanding of the method buffer.
 - expand-spec: Auto expand the method-buffer nodes if the node belonging to
-  current token under point is invisible because its parent-node is collapsed.
-  But expanding is only done if the type of the token under point in the
+  current tag under point is invisible because its parent-node is collapsed.
+  But expanding is only done if the type of the tag under point in the
   edit-buffer is contained in `ecb-methods-nodes-expand-spec'.
-- all: Like expand-spec but expands all tokens regardless of the setting in
+- all: Like expand-spec but expands all tags regardless of the setting in
   `ecb-methods-nodes-expand-spec'.
 
 This options takes only effect for semantic-sources - means sources supported
@@ -129,12 +133,12 @@ by semantic!"
 If on then auto expanding is switched off after explicit expanding or
 collapsing by `ecb-expand-methods-nodes'.
 
-This is done with `ecb-toggle-auto-expand-token-tree' so after the switch off
+This is done with `ecb-toggle-auto-expand-tag-tree' so after the switch off
 the auto expanding feature can again switched on quickly.
 
 But after explicitly expanding/collapsing the methods-buffer to a certain
 level the auto. expanding could undo this when the node belonging to current
-token under point in the edit-window is invisible after
+tag under point in the edit-window is invisible after
 `ecb-expand-methods-nodes' - then the auto. expand feature would make this
 node immediately visible and destroys the explicitly set expand-level."
   :group 'ecb-methods
@@ -147,89 +151,95 @@ node immediately visible and destroys the explicitly set expand-level."
   :type 'boolean)
 
 
-(defcustom ecb-font-lock-tokens t
+(defcustom ecb-font-lock-tags t
   "*Adds font-locking \(means highlighting) to the ECB-method buffer.
 This options takes only effect for semantic-sources - means sources supported
 by semantic!"
   :group 'ecb-methods
   :set (function (lambda (symbol value)
 		   (set symbol value)
-		   (ecb-clear-token-tree-cache)))
+		   (ecb-clear-tag-tree-cache)))
   :type 'boolean
   :initialize 'custom-initialize-default)
 
 
-(defcustom ecb-token-jump-sets-mark t
-  "*Set the mark after jumping to a token from the ECB-method buffer.
+(defcustom ecb-tag-jump-sets-mark t
+  "*Set the mark after jumping to a tag from the ECB-method buffer.
 If set the user can easily jump back."
   :group 'ecb-methods
   :type 'boolean)
 
-
-(defconst ecb-token->text-functions
-  (mapcar (lambda (fkt)
+(defconst ecb-tag->text-functions
+  (mapcar (lambda (fkt-elem)
             (cons (intern
                    (concat "ecb-"
                            (mapconcat 'identity
-                                      (cdr (split-string (symbol-name fkt) "-"))
+                                      (cdr (split-string (symbol-name
+                                                          (cdr fkt-elem)) "-"))
                                       "-")))
-                  fkt))
-          semantic-token->text-functions)
-  "Alist containing one element for every member of
-`semantic-token->text-functions' where the value is the member of
-`semantic-token->text-functions' with name \"semantic-XYZ\" and the key is a
-symbol with name \"ecb-XYZ\".")
+                  (intern
+                   (concat "ecb--" (symbol-name (cdr fkt-elem))))))
+          ecb--semantic-format-function-alist)
+  "Alist containing one element for every member of 
+`ecb--semantic-format-function-alist'")
 
-(defcustom ecb-token-display-function '((default . ecb-prototype-nonterminal))
-  "*Function to use for displaying tokens in the methods buffer.
+(defcustom ecb-tag-display-function '((default . ecb-format-tag-uml-prototype))
+  "*Function to use for displaying tags in the methods buffer.
 This functionality is set on major-mode base, i.e. for every major-mode a
 different function can be used. The value of this option is a list of
 cons-cells:
 - The car is either a major-mode symbol or the special symbol 'default which
   means if no function for a certain major-mode is defined then the cdr of
   the 'default cons-cell is used.
-- The cdr is the function used for displaying a token in the related
+- The cdr is the function used for displaying a tag in the related
   major-mode.
 Every function is called with 3 arguments:
-1. The token
-2. The parent-token of token \(can be nil)
-3. The value of `ecb-font-lock-tokens'.
-Every function must return the display of the token as string, colorized if
+1. The tag
+2. The parent-tag of tag \(can be nil)
+3. The value of `ecb-font-lock-tags'.
+Every function must return the display of the tag as string, colorized if
 the third argument is not nil.
 
 The following functions are predefined:
-- All functions of `semantic-token->text-functions'.
-- For every function in `semantic-token->text-functions' with name
+- For each element E of `ecb--semantic-format-function-alist' exists a
+  function with name \"ecb--<\(cdr E)>\". These functions are just aliase to
+  the builtin format-functions of semantic. See the docstring of these
+  functions to see what they do.
+  Example: \(semantic-name-nonterminal . semantic-format-tag-name) is an
+  element of `ecb--semantic-format-function-alist'. Therefore the
+  alias-function for this element is named `ecb--semantic-format-tag-name'.
+- For every cdr in `ecb--semantic-format-function-alist' with name
   \"semantic-XYZ\" a function with name \"ecb-XYC\" is predefined. The
   differences between the semantic- and the ECB-version are:
-  + The ECB-version displays for type tokens only the type-name and nothing
+  + The ECB-version displays for type tags only the type-name and nothing
     else \(exception: In c++-mode a template specifier is appended to the
     type-name if a template instead a normal class).
-  + The ECB-version displays type-tokens according to the setting in
-    `ecb-type-token-display'. This is useful for better recognizing
+  + The ECB-version displays type-tags according to the setting in
+    `ecb-type-tag-display'. This is useful for better recognizing
     different classes, structs etc. in the ECB-method window.
-  For all tokens which are not types the display of the ECB-version is
-  identical to the semantic version. Example: For `semantic-name-nonterminal'
-  the pendant is `ecb-name-nonterminal'.
+  For all tags which are not types the display of the ECB-version is
+  identical to the semantic version. Example: For
+  `ecb--semantic-format-tag-name' \(the builtin semantic formatter) the
+  pendant is `ecb-format-tag-name'.
 
-This functionality also allows the user to display tokens as UML. To enable
+This functionality also allows the user to display tags as UML. To enable
 this functionality set the function for a major-mode \(e.g. `jde-mode') to
-`semantic-uml-concise-prototype-nonterminal',
-`semantic-uml-prototype-nonterminal', or
-`semantic-uml-abbreviate-nonterminal' or the ECB-versions of these functions.
+`ecb--semantic-format-tag-uml-concise-prototype',
+`ecb--semantic-format-tag-uml-prototype', or
+`ecb--semantic-format-tag-uml-abbreviate' the ECB-versions of these functions.
 
 If the value is nil, i.e. neither a function for a major-mode is defined nor
-the special 'default, then `semantic-prototype-nonterminal' is used for
-displaying the tokens.
+the special 'default, then `ecb--semantic-format-tag-prototype' is used for
+displaying the tags.
 
 This options takes only effect for semantic-sources - means sources supported
 by semantic!"
   :group 'ecb-methods
   :set (function (lambda (symbol value)
 		   (set symbol value)
-		   (ecb-clear-token-tree-cache)))
+		   (ecb-clear-tag-tree-cache)))
   :type (list 'repeat ':tag "Display functions per mode"
-              (list 'cons ':tag "Mode token display"
+              (list 'cons ':tag "Mode tag display"
                     '(symbol :tag "Major mode")
                     (nconc (list 'choice ':tag "Display function"
                                  ':menu-tag '"Display function")
@@ -237,23 +247,23 @@ by semantic!"
                             (mapcar (lambda (f)
                                       (list 'const ':tag
                                             (symbol-name (car f)) (car f)))
-                                    ecb-token->text-functions)
+                                    ecb-tag->text-functions)
                             (mapcar (lambda (f)
                                       (list 'const ':tag
                                             (symbol-name (cdr f)) (cdr f)))
-                                    ecb-token->text-functions)
+                                    ecb-tag->text-functions)
                             (list '(function :tag "Function"))))))
   :initialize 'custom-initialize-default)
 
 
-(defcustom ecb-type-token-display nil
-  "*How to display semantic type-tokens in the methods buffer.
-Normally all token displaying, colorizing and facing is done by semantic
-according to the value of `semantic-face-alist' and the semantic
-display-function \(e.g. one from `semantic-token->text-functions'). But
+(defcustom ecb-type-tag-display nil
+  "*How to display semantic type-tags in the methods buffer.
+Normally all tag displaying, colorizing and facing is done by semantic
+according to the value of `ecb--semantic-format-face-alist' and the semantic
+display-function \(e.g. one from `ecb--semantic-format-function-alist'). But
 sometimes a finer distinction in displaying the different type specifiers of
-type-tokens can be useful. For a description when this option is evaluated
-look at `ecb-token-display-function'!
+type-tags can be useful. For a description when this option is evaluated look
+at `ecb-tag-display-function'!
 
 This functionality is set on a major-mode base, i.e. for every major-mode a
 different setting can be used. The value of this option is a list of
@@ -264,20 +274,21 @@ cons-cells:
 - The cdr is a list of 3-element-lists:
   1. First entry is a semantic type specifier in string-form. Current
      available type specifiers are for example \"class\", \"interface\",
-     \"struct\", \"typedef\" and \"enum\". In addition to these ones there is
-     also a special ECB type specifier \"group\" which is related to grouping
-     tokens \(see `ecb-post-process-semantic-tokenlist' and
-     `ecb-group-function-tokens-with-parents'). Any arbitrary specifier can be
+     \"struct\", \"typedef\", \"union\" and \"enum\". In addition to these
+     ones there is also a special ECB type specifier \"group\" which is
+     related to grouping tags \(see `ecb-post-process-semantic-taglist' and
+     `ecb-group-function-tags-with-parents'). Any arbitrary specifier can be
      set here but if it is not \"group\" or not known by semantic it will be
      useless.
   2. Second entry is a flag which indicates if the type-specifier string from
      \(1.) itself should be removed \(if there is any) from the display.
   3. Third entry is the face which is used in the ECB-method window to display
-     type-tokens with this specifier. ECB has some predefined faces for this
-     \(`ecb-type-token-class-face', `ecb-type-token-struct-face',
-     `ecb-type-token-typedef-face', `ecb-type-token-enum-face' and
-     `ecb-type-token-group-face') but any arbitrary face can be set here. This
-     face is merged with the faces semantic already uses to display a token,
+     type-tags with this specifier. ECB has some predefined faces for this
+     \(`ecb-type-tag-class-face', `ecb-type-tag-interface-face',
+     `ecb-type-tag-struct-face', `ecb-type-tag-typedef-face',
+     `ecb-type-tag-union-face', `ecb-type-tag-enum-face' and
+     `ecb-type-tag-group-face') but any arbitrary face can be set here. This
+     face is merged with the faces semantic already uses to display a tag,
      i.e. the result is a display where all face-attributes of the ECB-face
      take effect plus all face-attributes of the semantic-faces which are not
      set in the ECB-face \(with XEmacs this merge doesn't work so here the
@@ -285,20 +296,20 @@ cons-cells:
      versions).
 
 The default value is nil means there is no special ECB-displaying of
-type-tokens in addition to the displaying and colorizing semantic does. But a
+type-tags in addition to the displaying and colorizing semantic does. But a
 value like the following could be a useful setting:
 
   \(\(default
-     \(\"class\" t ecb-type-token-class-face)
-     \(\"group\" nil ecb-type-token-group-face))
+     \(\"class\" t ecb-type-tag-class-face)
+     \(\"group\" nil ecb-type-tag-group-face))
     \(c-mode
-     \(\"struct\" nil ecb-type-token-struct-face)
-     \(\"typedef\" nil ecb-type-token-typedef-face)))
+     \(\"struct\" nil ecb-type-tag-struct-face)
+     \(\"typedef\" nil ecb-type-tag-typedef-face)))
 
 This means that in `c-mode' only \"struct\"s and \"typedef\"s are displayed
 with special faces \(the specifiers itself are not removed) and in all other
-modes \"class\"es and grouping-tokens \(see `ecb-token-display-function',
-`ecb-group-function-tokens-with-parents') have special faces and the \"class\"
+modes \"class\"es and grouping-tags \(see `ecb-tag-display-function',
+`ecb-group-function-tags-with-parents') have special faces and the \"class\"
 specifier-string is removed from the display.
 
 This options takes only effect for semantic-sources - means sources supported
@@ -306,7 +317,7 @@ by semantic!"
   :group 'ecb-methods
   :set (function (lambda (symbol value)
 		   (set symbol value)
-		   (ecb-clear-token-tree-cache)))
+		   (ecb-clear-tag-tree-cache)))
   :type '(repeat (cons (symbol :tag "Major-mode")
                        (repeat :tag "Display of type specifiers"
                                (list (choice :tag "Specifier list"
@@ -319,6 +330,8 @@ by semantic!"
                                                     :value "struct")
                                              (const :tag "typedef"
                                                     :value "typedef")
+                                             (const :tag "union"
+                                                    :value "union")
                                              (const :tag "enum"
                                                     :value "enum")
                                              (const :tag "group"
@@ -326,63 +339,130 @@ by semantic!"
                                              (string :tag "Any specifier"))
                                      (boolean :tag "Remove the type-specifier" t)
                                      (face :tag "Any face"
-                                           :value ecb-type-token-class-face)))))
+                                           :value ecb-type-tag-class-face)))))
   :initialize 'custom-initialize-default)
 
-
-(defun ecb-get-face-for-type-token (type-specifier)
-  "Return the face set in `ecb-type-token-display' for current major-mode and
+(defun ecb-get-face-for-type-tag (type-specifier)
+  "Return the face set in `ecb-type-tag-display' for current major-mode and
 TYPE-SPECIFIER or nil."
-  (let ((mode-display (cdr (assoc major-mode ecb-type-token-display)))
-        (default-display (cdr (assoc 'default ecb-type-token-display))))
+  (let ((mode-display (cdr (assoc major-mode ecb-type-tag-display)))
+        (default-display (cdr (assoc 'default ecb-type-tag-display))))
     (or (nth 2 (assoc type-specifier mode-display))
-        (nth 2 (assoc type-specifier default-display)))))
+        (and (null mode-display)
+             (nth 2 (assoc type-specifier default-display))))))
 
 
-(defun ecb-get-remove-specifier-flag-for-type-token (type-specifier)
-  "Return the remove-specifier-flag set in `ecb-type-token-display' for
+(defun ecb-get-remove-specifier-flag-for-type-tag (type-specifier)
+  "Return the remove-specifier-flag set in `ecb-type-tag-display' for
 current major-mode and TYPE-SPECIFIER or nil."
-  (let ((mode-display (cdr (assoc major-mode ecb-type-token-display)))
-        (default-display (cdr (assoc 'default ecb-type-token-display))))
+  (let ((mode-display (cdr (assoc major-mode ecb-type-tag-display)))
+        (default-display (cdr (assoc 'default ecb-type-tag-display))))
     (or (nth 1 (assoc type-specifier mode-display))
-        (nth 1 (assoc type-specifier default-display)))))
+        (and (null mode-display)
+             (nth 1 (assoc type-specifier default-display))))))
 
+(defcustom ecb-type-tag-expansion
+  '((default . ("class" "interface" "group"))
+    (c-mode .  ("struct")))
+  "*Default expansion of semantic type-tags.
+Semantic groups type-tags into different type-specifiers. Current available
+type specifiers are for example \"class\", \"interface\", \"struct\",
+\"typedef\", \"union\" and \"enum\". In addition to these ones there is also a
+special ECB type specifier \"group\" which is related to grouping tags \(see
+`ecb-post-process-semantic-taglist').
 
-(dolist (elem ecb-token->text-functions)
+This option defines which type-specifiers should be expanded at
+file-open-time. Any arbitrary specifier can be set here but if it is not
+\"group\" or not known by semantic it will be useless.
+
+This functionality is set on a major-mode base, i.e. for every major-mode a
+different setting can be used. The value of this option is a list of
+cons-cells:
+- The car is either a major-mode symbol or the special symbol 'default which
+  means if no setting for a certain major-mode is defined then the cdr of
+  the 'default cons-cell is used.
+- The cdr is either a list of type-specifiers which should be expanded at
+  file-open-time or the symbol 'all-specifiers \(then a type-tag is always
+  expanded regardless of its type-specifier).
+
+This options takes only effect for semantic-sources - means sources supported
+by semantic!"
+  :group 'ecb-methods
+  :type '(repeat (cons (symbol :tag "Major-mode")
+                       (radio (const :tag "Expand all type-specifiers"
+                                     :value all-specifiers)
+                              (repeat :tag "Expand type specifiers"
+                                      (choice :tag "Specifier"
+                                              :menu-tag "Specifier"
+                                              (const :tag "class"
+                                                     :value "class")
+                                              (const :tag "interface"
+                                                     :value "interface")
+                                              (const :tag "struct"
+                                                     :value "struct")
+                                              (const :tag "typedef"
+                                                     :value "typedef")
+                                              (const :tag "union"
+                                                     :value "union")
+                                              (const :tag "enum"
+                                                     :value "enum")
+                                              (const :tag "group"
+                                                     :value "group")
+                                              (string :tag "Any specifier"))))))
+  :set (function (lambda (symbol value)
+		   (set symbol value)
+		   (ecb-clear-tag-tree-cache)))
+  :initialize 'custom-initialize-default)
+  
+(defun ecb-type-tag-expansion (type-specifier)
+  "Return the default expansion-state of TYPE-SPECIFIER for current major-mode
+as specified in `ecb-type-tag-expansion'"
+  (let ((mode-expansion (cdr (assoc major-mode ecb-type-tag-expansion)))
+        (default-expansion (cdr (assoc 'default ecb-type-tag-expansion))))
+    (or (equal mode-expansion 'all-specifiers)
+        (member type-specifier mode-expansion)
+        (and (null mode-expansion)
+             (or (equal default-expansion 'all-specifiers)
+                 (member type-specifier default-expansion))))))
+
+(defun ecb-get-type-specifier (tag)
+  (if (or (ecb--semantic--tag-get-property tag 'ecb-group-tag)
+          ;; marking done by semantic itself
+          (ecb--semantic--tag-get-property tag 'faux))
+      "group"
+    (ecb--semantic-tag-type tag)))
+  
+
+(dolist (elem ecb-tag->text-functions)
   (fset (car elem)
-        `(lambda (token &optional parent-token colorize)
-           (if (eq 'type (semantic-token-token token))
-               (let* ( ;; we must here distinguish between UML- and
+        `(lambda (tag &optional parent-tag colorize)
+           (if (eq 'type (ecb--semantic-tag-class tag))
+               (let* (;; we must here distinguish between UML- and
                       ;; not-UML-semantic functions because for UML we must
                       ;; preserve some semantic facing added by semantic (e.g.
                       ;; italic for abstract classes)!
                       (text (funcall (if (string-match "-uml-" (symbol-name (quote ,(car elem))))
-                                         'semantic-uml-abbreviate-nonterminal
-                                       'semantic-name-nonterminal)
-                                     token parent-token colorize))
-                      (type-specifier (if (or (semantic-token-get token
-                                                                  'ecb-group-token)
-                                              ;; marking done my semantic itself
-                                              (semantic-token-get token 'faux))
-                                          "group"
-                                        (semantic-token-type token)))
-                      (face (ecb-get-face-for-type-token type-specifier))
-                      (remove-flag (ecb-get-remove-specifier-flag-for-type-token
+                                         'ecb--semantic-format-tag-uml-abbreviate
+                                       'ecb--semantic-format-tag-name)
+                                     tag parent-tag colorize))
+                      (type-specifier (ecb-get-type-specifier tag))
+                      (face (ecb-get-face-for-type-tag type-specifier))
+                      (remove-flag (ecb-get-remove-specifier-flag-for-type-tag
                                     type-specifier)))
                  (save-match-data
                    ;; the following is done to replace the "struct" from
-                   ;; grouping tokens (see
-                   ;; ecb-group-function-tokens-with-parents) with "group".
+                   ;; grouping tags (see
+                   ;; ecb-group-function-tags-with-parents) with "group".
                    ;; This code can be removed (or changed) if semantic allows
-                   ;; correct protection display for function-tokens with
-                   ;; parent-token.
-                   (when (or (semantic-token-get token 'ecb-group-token)
-                             (semantic-token-get token 'faux))
+                   ;; correct protection display for function-tags with
+                   ;; parent-tag.
+                   (when (or (ecb--semantic--tag-get-property tag 'ecb-group-tag)
+                             (ecb--semantic--tag-get-property tag 'faux))
                      (if (string-match (concat "^\\(.+"
-                                               semantic-uml-colon-string
+                                               (ecb--semantic-uml-colon-string)
                                                "\\)\\("
-                                               (if (semantic-token-get token 'faux)
-                                                   semantic-orphaned-member-metaparent-type
+                                               (if (ecb--semantic--tag-get-property tag 'faux)
+                                                   (ecb--semantic-orphaned-member-metaparent-type)
                                                  "struct")
                                                "\\)") text)
                          (let ((type-spec-text "group"))
@@ -398,7 +478,7 @@ current major-mode and TYPE-SPECIFIER or nil."
                    ;; maybe remove the type-specifier string.
                    (let (col-type-name col-type-spec template-text)
                      (if (string-match (concat "^\\(.+\\)\\("
-                                               semantic-uml-colon-string
+                                               (ecb--semantic-uml-colon-string)
                                                type-specifier "\\)")
                                        text)
                          (setq col-type-name (match-string 1 text)
@@ -406,9 +486,16 @@ current major-mode and TYPE-SPECIFIER or nil."
                                                  (match-string 2 text)))
                        (setq col-type-name text))
                      (when (and (equal major-mode 'c++-mode)
-                                (fboundp 'semantic-c-template-string))
-                       (setq template-text (semantic-c-template-string
-                                            token parent-token colorize))
+                                (fboundp 'ecb--semantic-c-template-string))
+                       (setq template-text (ecb--semantic-c-template-string
+                                            tag parent-tag colorize))
+                       ;; Removing {...} from within the template-text.
+                       ;; Normally the semantic-formatters should not add this
+                       ;; ugly stuff.
+                       (if (string-match "^\\(.+\\){.*}\\(.+\\)$" template-text)
+                           (setq template-text
+                                 (concat (match-string 1 template-text)
+                                         (match-string 2 template-text))))
                        (put-text-property 0 (length template-text)
                                           'face
                                           (get-text-property
@@ -421,22 +508,22 @@ current major-mode and TYPE-SPECIFIER or nil."
                  (if face
                      (setq text (ecb-merge-face-into-text text face)))
                  text)
-             (funcall (quote ,(cdr elem)) token parent-token colorize)))))
+             (funcall (quote ,(cdr elem)) tag parent-tag colorize)))))
 
 
-(defcustom ecb-post-process-semantic-tokenlist
-  '((c++-mode . ecb-group-function-tokens-with-parents)
-    (emacs-lisp-mode . ecb-group-function-tokens-with-parents))
-  "*Define mode-dependent post-processing for the semantic-tokenlist.
+(defcustom ecb-post-process-semantic-taglist
+  '((c++-mode . ecb-group-function-tags-with-parents)
+    (emacs-lisp-mode . ecb-group-function-tags-with-parents))
+  "*Define mode-dependent post-processing for the semantic-taglist.
 This is an alist where the car is a major-mode symbol and the cdr is a
 function-symbol of a function which should be used for post-processing the
-tokenlist \(returned by `semantic-bovinate-toplevel') for a buffer in this
-major-mode. Such a function is called with current semantic tokenlist of
-current buffer and must return a valid tokenlist again.
+taglist \(returned by `ecb--semantic-bovinate-toplevel') for a buffer in this
+major-mode. Such a function is called with current semantic taglist of
+current buffer and must return a valid taglist again.
 
 For oo-programming languages where the methods of a class can be defined
 outside the class-definition \(e.g. C++, Eieio) the function
-`ecb-group-function-tokens-with-parents' can be used to get a much better
+`ecb-group-function-tags-with-parents' can be used to get a much better
 method-display in the methods-window of ECB, because all method
 implementations of a class are grouped together.
 
@@ -447,7 +534,7 @@ by semantic!"
                        (function :tag "Post-process function"))))
 
 
-(defcustom ecb-show-only-positioned-tokens t
+(defcustom ecb-show-only-positioned-tags t
   "*Show only nodes in the method-buffer which are \"jump-able\".
 If not nil then ECB displays in the method-buffer only nodes which are
 \"jump-able\", i.e. after selecting it by clicking or with RET then ECB jumps
@@ -463,27 +550,27 @@ by semantic!"
   :type 'boolean)
 
 
-(defcustom ecb-show-tokens '((include collapsed nil)
-			     (parent collapsed nil)
-                             (type flattened nil)
-                             (variable collapsed access)
-                             (function flattened access)
-                             (rule flattened name)
-                             (section flattened nil)
-                             (def collapsed name)
-                             (t collapsed name))
-  "*How to show tokens in the methods buffer first time after find-file.
-This variable is a list where each element represents a type of tokens:
+(defcustom ecb-show-tags '((include collapsed nil)
+                           (parent collapsed nil)
+                           (type flattened nil)
+                           (variable collapsed access)
+                           (function flattened access)
+                           (rule flattened name)
+                           (section flattened nil)
+                           (def collapsed name)
+                           (t collapsed name))
+  "*How to show tags in the methods buffer first time after find-file.
+This variable is a list where each element represents a type of tags:
 
-\(<token type> <display type> <sort method>)
+\(<tag type> <display type> <sort method>)
 
-The tokens in the methods buffer are displayed in the order as they appear in
+The tags in the methods buffer are displayed in the order as they appear in
 this list.
 
-Token Type
+Tag Type
 ----------
 
-A Semantic token type symbol \(for all possible type symbols see documentation
+A Semantic tag type symbol \(for all possible type symbols see documentation
 of semantic):
 - include
 - type
@@ -495,27 +582,27 @@ of semantic):
 
 or one of the following:
 
-- t:      All token types not specified anywhere else in the list.
+- t:      All tag types not specified anywhere else in the list.
 - parent: The parents of a type.
 
 Display Type
 ------------
 
-A symbol which describes how the tokens of this type shall be shown:
+A symbol which describes how the tags of this type shall be shown:
 
-- expanded:  The tokens are shown in an expanded node.
-- collapsed: The tokens are shown in a collapsed node.
-- flattened: The tokens are added to the parent node.
-- hidden:    The tokens are not shown.
+- expanded:  The tags are shown in an expanded node.
+- collapsed: The tags are shown in a collapsed node.
+- flattened: The tags are added to the parent node.
+- hidden:    The tags are not shown.
 
 Sort Method
 -----------
 
-A symbol describing how to sort the tokens of this type:
+A symbol describing how to sort the tags of this type:
 
-- name:   Sort by the token name.
-- access: Sort by token access (public, protected, private) and then by name.
-- nil:    Don't sort tokens. They appear in the same order as in the source
+- name:   Sort by the tag name.
+- access: Sort by tag access (public, protected, private) and then by name.
+- nil:    Don't sort tags. They appear in the same order as in the source
           buffer.
 
 This options takes only effect for semantic-sources - means sources supported
@@ -523,8 +610,8 @@ by semantic!"
   :group 'ecb-methods
   :set (function (lambda (symbol value)
 		   (set symbol value)
-		   (ecb-clear-token-tree-cache)))
-  :type '(repeat (list (symbol :tag "Token symbol")
+		   (ecb-clear-tag-tree-cache)))
+  :type '(repeat (list (symbol :tag "Tag symbol")
 		       (choice :tag "Display type" :value collapsed
 			       (const :tag "Expanded" expanded)
 			       (const :tag "Collapsed" collapsed)
@@ -538,11 +625,11 @@ by semantic!"
 
 
 (defcustom ecb-methods-nodes-expand-spec '(type variable function section)
-  "*Semantic token-types expanded by `ecb-expand-methods-nodes'.
-The value of this option is either the symbol 'all \(all tokens are expanded
+  "*Semantic tag-types expanded by `ecb-expand-methods-nodes'.
+The value of this option is either the symbol 'all \(all tags are expanded
 regardless of their type) or a list of symbols where each symbol is a valid
-semantic token-type. For a description of semantic token types see option
-`ecb-show-tokens'.
+semantic tag-type. For a description of semantic tag types see option
+`ecb-show-tags'.
 
 But this option also defines if bucket-nodes in the ECB-method-buffer \(e.g.
 \"\[Variables\]\") should be expanded. Therefore valid symbols for this list
@@ -564,7 +651,7 @@ by semantic!"
 
 
 (defcustom ecb-methods-nodes-collapse-spec 'all
-  "*Semantic token-types collapsed by `ecb-expand-methods-nodes'.
+  "*Semantic tag-types collapsed by `ecb-expand-methods-nodes'.
 For valid values of this option see `ecb-methods-nodes-expand-spec'!
 
 This options takes only effect for semantic-sources - means sources supported
@@ -584,21 +671,21 @@ by semantic!"
   :group 'ecb-methods
   :set (function (lambda (symbol value)
 		   (set symbol value)
-		   (ecb-clear-token-tree-cache)))
+		   (ecb-clear-tag-tree-cache)))
   :type '(radio (const :tag "Do not exclude any parents"
                        :value nil)
                 (regexp :tag "Parents-regexp to exclude"))
   :initialize 'custom-initialize-default)
 
 
-(defcustom ecb-highlight-token-with-point 'highlight-scroll
+(defcustom ecb-highlight-tag-with-point 'highlight-scroll
   "*How to highlight the method or variable under the cursor.
 - highlight-scroll: Always scroll the method buffer, so the current method of the
   edit-window is highlighted in the method-window.
 - highlight: Only highlight the current method of the edit window in the
   method window if the method is visible in the method-window.
 - nil: No highlighting is done.
-See also `ecb-highlight-token-with-point-delay'.
+See also `ecb-highlight-tag-with-point-delay'.
 
 This options takes only effect for semantic-sources - means sources supported
 by semantic!"
@@ -611,9 +698,9 @@ by semantic!"
                        :value nil)))
 
 
-(defcustom ecb-highlight-token-with-point-delay 0.25
-  "*Time Emacs must be idle before current token is highlighted.
-If nil then there is no delay, means current token is highlighted immediately.
+(defcustom ecb-highlight-tag-with-point-delay 0.25
+  "*Time Emacs must be idle before current tag is highlighted.
+If nil then there is no delay, means current tag is highlighted immediately.
 A small value of about 0.25 seconds saves CPU resources and you get even
 though almost the same effect as if you set no delay. But such a delay
 prevents also \"jumping backward/forward\" during scrolling within
@@ -630,22 +717,22 @@ by semantic!"
   :set (function (lambda (symbol value)
                    (set symbol value)
                    (if ecb-minor-mode
-                       (ecb-activate-ecb-sync-functions value 'ecb-token-sync))))
+                       (ecb-activate-ecb-sync-functions value 'ecb-tag-sync))))
   :initialize 'custom-initialize-default)
 
 
 (defvar ecb-method-overlay (make-overlay 1 1)
   "Internal overlay used for the first line of a method.")
-(overlay-put ecb-method-overlay 'face ecb-token-header-face)
+(overlay-put ecb-method-overlay 'face ecb-tag-header-face)
 
 
-(defcustom ecb-token-visit-post-actions '((default . (ecb-token-visit-smart-token-start
-                                                      ecb-token-visit-highlight-token-header))
-                                          (java-mode . (ecb-token-visit-goto-doc-start))
-                                          (jde-mode . (ecb-token-visit-goto-doc-start)))
-  "*Actions to perform after visiting a token from the Method-buffer.
+(defcustom ecb-tag-visit-post-actions '((default . (ecb-tag-visit-smart-tag-start
+                                                    ecb-tag-visit-highlight-tag-header))
+                                        (java-mode . (ecb-tag-visit-goto-doc-start))
+                                        (jde-mode . (ecb-tag-visit-goto-doc-start)))
+  "*Actions to perform after visiting a tag from the Method-buffer.
 With this option actions can be added which will be performed after visiting
-the start of the token in the source-buffer.
+the start of the tag in the source-buffer.
 
 This functionality is set on a `major-mode' base, i.e. for every `major-mode' a
 different setting can be used. The value of this option is a list of
@@ -657,48 +744,48 @@ ECB first performs all actions defined for the special symbol 'default \(if
 any) and then all actions defined for current `major-mode' \(if any).
 
 ECB offers some predefined senseful action-functions. Currently there are:
-- `ecb-token-visit-highlight-token-header'
-- `ecb-token-visit-smart-token-start'
-- `ecb-token-visit-recenter'
-- `ecb-token-visit-recenter-top'
-- `ecb-token-visit-goto-doc-start'
-- `ecb-token-visit-narrow-token'
+- `ecb-tag-visit-highlight-tag-header'
+- `ecb-tag-visit-smart-tag-start'
+- `ecb-tag-visit-recenter'
+- `ecb-tag-visit-recenter-top'
+- `ecb-tag-visit-goto-doc-start'
+- `ecb-tag-visit-narrow-tag'
 See the documentation of these function for details what they do.
 
 But you can add any arbitrary function if the following conditions are
 fulfilled:
-- The function gets the semantic token as argument and
+- The function gets the semantic tag as argument and
 - the function returns the \(new) point after finishing its job."
   :group 'ecb-methods
-  :type '(repeat (cons :value (nil . (ecb-token-visit-recenter))
+  :type '(repeat (cons :value (nil . (ecb-tag-visit-recenter))
                        (symbol :tag "Major-mode or default")
                        (repeat (choice :tag "Post action" :menu-tag "Post action"
-                                       (const :tag "ecb-token-visit-smart-token-start"
-                                              :value ecb-token-visit-smart-token-start)
-                                       (const :tag "ecb-token-visit-highlight-token-header"
-                                              :value ecb-token-visit-highlight-token-header)
-                                       (const :tag "ecb-token-visit-goto-doc-start"
-                                              :value ecb-token-visit-goto-doc-start)
-                                       (const :tag "ecb-token-visit-narrow-token"
-                                              :value ecb-token-visit-narrow-token)
-                                       (const :tag "ecb-token-visit-recenter-top"
-                                              :value ecb-token-visit-recenter-top)
-                                       (const :tag "ecb-token-visit-recenter"
-                                              :value ecb-token-visit-recenter)
+                                       (const :tag "ecb-tag-visit-smart-tag-start"
+                                              :value ecb-tag-visit-smart-tag-start)
+                                       (const :tag "ecb-tag-visit-highlight-tag-header"
+                                              :value ecb-tag-visit-highlight-tag-header)
+                                       (const :tag "ecb-tag-visit-goto-doc-start"
+                                              :value ecb-tag-visit-goto-doc-start)
+                                       (const :tag "ecb-tag-visit-narrow-tag"
+                                              :value ecb-tag-visit-narrow-tag)
+                                       (const :tag "ecb-tag-visit-recenter-top"
+                                              :value ecb-tag-visit-recenter-top)
+                                       (const :tag "ecb-tag-visit-recenter"
+                                              :value ecb-tag-visit-recenter)
                                        (function :tag "Function"))))))
 
 
-(defun ecb-token-visit-function-member-p (fnc)
-  (or (member fnc (cdr (assoc 'default ecb-token-visit-post-actions)))
-      (member fnc (cdr (assoc major-mode ecb-token-visit-post-actions)))))
+(defun ecb-tag-visit-function-member-p (fnc)
+  (or (member fnc (cdr (assoc 'default ecb-tag-visit-post-actions)))
+      (member fnc (cdr (assoc major-mode ecb-tag-visit-post-actions)))))
 
 
 (defcustom ecb-methods-menu-user-extension nil
   "*User extensions for the popup-menu of the methods buffer.
 For further explanations see `ecb-directories-menu-user-extension'.
 
-The node-argument of a menu-function contains as data the semantic-token of
-the method/variable/token for which the popup-menu has been opened.
+The node-argument of a menu-function contains as data the semantic-tag of
+the method/variable/tag for which the popup-menu has been opened.
 
 Per default the user-extensions are added at the beginning of the built-in
 menu-entries of `ecb-methods-menu' but the whole menu can be re-arranged
@@ -764,7 +851,7 @@ This is an alist where the car is a major-mode symbol and the cdr is a
 function-symbol of a function which should be used for parsing a non-semantic
 buffer, i.h. a buffer for which no semantic grammar exists. Such a function
 gets one argument - the filename of current buffer - and has to generate and
-return a token/tag list which is understandable by
+return a tag/tag list which is understandable by
 `speedbar-insert-generic-list'. speedbar has already included two functions
 `speedbar-fetch-dynamic-imenu' and `speedbar-fetch-dynamic-etags' which can be
 used for parsing buffers with imenu rsp. etags.
@@ -790,9 +877,9 @@ IMPORTANT: if imenu-parsing should be used then the option
 
 
 (defcustom ecb-non-semantic-methods-initial-expand nil
-  "*Initially expand all tokens for not by semantic supported sources.
+  "*Initially expand all tags for not by semantic supported sources.
 This option can be customized on a major-mode basis, i.e. if a `major-mode' is
-contained in this option then all tokens for this modes will be initially
+contained in this option then all tags for this modes will be initially
 expanded - otherwise not."
   :group 'ecb-methods
   :group 'ecb-non-semantic
@@ -866,96 +953,96 @@ error with ERROR-ARGS."
 ;; semantic-overlays, so we can handle an error if these overlays (extends for
 ;; XEmacs) are destroyed and invalid cause of some mysterious circumstances.
 
-(defun ecb-semantic-assert-valid-token (token &optional no-reparse)
-  "Assert that TOKEN is a valid token. If not valid then `ecb-enter-debugger'
+(defun ecb-semantic-assert-valid-tag (tag &optional no-reparse)
+  "Assert that TAG is a valid tag. If not valid then `ecb-enter-debugger'
 is called. If NO-REPARSE is not nil then the buffer is not autom. reparsed. It
 returns nil if the assertion fails otherwise not nil. So the caller can even
 check the result if `ecb-debug-mode' is nil in which case the function
 `ecb-enter-debugger' is a no-op."
-  (if (semantic-token-p token)
-      (if (semantic-token-with-position-p token)
-          (let ((o  (semantic-token-overlay token)))
-            (if (and (semantic-overlay-p o)
-                     (not (semantic-overlay-live-p o)))
+  (if (ecb--semantic-tag-p tag)
+      (if (ecb--semantic-tag-with-position-p tag)
+          (let ((o  (ecb--semantic-tag-overlay tag)))
+            (if (and (ecb--semantic-overlay-p o)
+                     (not (ecb--semantic-overlay-live-p o)))
                 (progn
                   (when (not no-reparse)
                     ;; we need this because:
-                    ;; 1. After every jump to a token X via the method-buffer of
-                    ;;    ECB this token X is added to the navigation history list
-                    ;;    as new ecb-nav-token-history-item.
+                    ;; 1. After every jump to a tag X via the method-buffer of
+                    ;;    ECB this tag X is added to the navigation history list
+                    ;;    as new ecb-nav-tag-history-item.
                     ;; 2. Before every select of a source in the sources- or
                     ;;    history-buffer or of a node in the method-buffer
                     ;;    `ecb-nav-save-current' is called which operates onto
                     ;;    the last saved history-item which is often a
-                    ;;    token-history-item (see 1.): `ecb-nav-save-current'
-                    ;;    saves for token-history-items current-position and
-                    ;;    window-start relative to the token position of the
-                    ;;    last saved token-history-item which is token X from
+                    ;;    tag-history-item (see 1.): `ecb-nav-save-current'
+                    ;;    saves for tag-history-items current-position and
+                    ;;    window-start relative to the tag position of the
+                    ;;    last saved tag-history-item which is tag X from
                     ;;    1.
                     ;; Now suppose that after 1. and before 2. the overlay of
-                    ;; token X has been destroyed cause of some reason. Then
-                    ;; the token-history-item of 1. contains now a token with
+                    ;; tag X has been destroyed cause of some reason. Then
+                    ;; the tag-history-item of 1. contains now a tag with
                     ;; a destroyed overlay. Now step 2. is performed and now
                     ;; we see why from this moment every click onto a node in
                     ;; the source-, history- or method-buffer must fail:
-                    ;; During step 2. `ecb-nav-save-current' gets the token
-                    ;; from the last token-history-item and calls for this
-                    ;; token `semantic-token-start' which fails now because
-                    ;; the contained overlay of this token is destroyed in the
+                    ;; During step 2. `ecb-nav-save-current' gets the tag
+                    ;; from the last tag-history-item and calls for this
+                    ;; tag `ecb--semantic-tag-start' which fails now because
+                    ;; the contained overlay of this tag is destroyed in the
                     ;; meanwhile. Therefore we must throw away this last
-                    ;; token-history-item containing the token with the
+                    ;; tag-history-item containing the tag with the
                     ;; destroyed overlay. Then after a complete reparse of the
                     ;; source-buffer and following rebuild of the
                     ;; ECB-method-buffer ECB is in correct state again!
                     (ecb-nav-initialize)
-                    (semantic-clear-toplevel-cache)
+                    (ecb--semantic-clear-toplevel-cache)
                     (ecb-update-methods-buffer--internal))
-                  (ecb-enter-debugger "Token %S is invalid!" token)
+                  (ecb-enter-debugger "Tag %S is invalid!" tag)
                   nil)
-              ;; else, token is OK.
+              ;; else, tag is OK.
               t))
-        ;; Position-less tokens are also OK.
+        ;; Position-less tags are also OK.
         t)
-    ;; For no semantic-tokens a reparse makes no sense!
-    (ecb-enter-debugger "Not a semantic token: %S" token)
+    ;; For no semantic-tags a reparse makes no sense!
+    (ecb-enter-debugger "Not a semantic tag: %S" tag)
     nil))
 
 
-(defun ecb-semantic-token-buffer (token)
-  (ecb-semantic-assert-valid-token token)
-  ;; if ecb-debug-mode is not nil then the TOKEN is valid if we pass the
+(defun ecb-semantic-tag-buffer (tag)
+  (ecb-semantic-assert-valid-tag tag)
+  ;; if ecb-debug-mode is not nil then the TAG is valid if we pass the
   ;; assert. If ecb-debug-mode is nil then we call simply the semantic
   ;; function and see what happens.
-  (semantic-token-buffer token))
+  (ecb--semantic-tag-buffer tag))
 
 
-(defun ecb-semantic-token-start (token)
-  (ecb-semantic-assert-valid-token token)
-  ;; if ecb-debug-mode is not nil then the TOKEN is valid if we pass the
+(defun ecb-semantic-tag-start (tag)
+  (ecb-semantic-assert-valid-tag tag)
+  ;; if ecb-debug-mode is not nil then the TAG is valid if we pass the
   ;; assert. If ecb-debug-mode is nil then we call simply the semantic
   ;; function and see what happens.
-  (semantic-token-start token))
+  (ecb--semantic-tag-start tag))
 
 
-(defun ecb-semantic-token-end (token)
-  (ecb-semantic-assert-valid-token token)
-  ;; if ecb-debug-mode is not nil then the TOKEN is valid if we pass the
+(defun ecb-semantic-tag-end (tag)
+  (ecb-semantic-assert-valid-tag tag)
+  ;; if ecb-debug-mode is not nil then the TAG is valid if we pass the
   ;; assert. If ecb-debug-mode is nil then we call simply the semantic
   ;; function and see what happens.
-  (semantic-token-end token))
+  (ecb--semantic-tag-end tag))
 
-;; Klaus: We must not reparse the buffer if `semantic-current-nonterminal'
+;; Klaus: We must not reparse the buffer if `ecb--semantic-current-tag'
 ;; returns nil because here this is no error but nil is always returned for
 ;; example if point stays within a comment. Therefore here we only catch real
 ;; errors!
 (defun ecb-semantic-current-nonterminal ()
   (condition-case nil
-      (semantic-current-nonterminal)
-    (error (message "semantic-current-nonterminal has problems --> reparsed is performed!")
+      (ecb--semantic-current-tag)
+    (error (message "ecb--semantic-current-tag has problems --> reparsed is performed!")
            (when (ecb-point-in-edit-window)
-             (semantic-clear-toplevel-cache)
+             (ecb--semantic-clear-toplevel-cache)
              (ecb-update-methods-buffer--internal)
-             (semantic-current-nonterminal)))))
+             (ecb--semantic-current-tag)))))
 
 
 (defmacro ecb-exec-in-methods-window (&rest body)
@@ -977,66 +1064,71 @@ check the result if `ecb-debug-mode' is nil in which case the function
 	node))))
 
 
-(defun ecb-get-token-type-display (token-type)
-  (let ((display (ecb-find-assoc token-type ecb-show-tokens)))
+(defun ecb-get-tag-type-display (tag-type)
+  (let ((display (ecb-find-assoc tag-type ecb-show-tags)))
     (if display
 	display
-      (setq display (ecb-find-assoc t ecb-show-tokens))
+      (setq display (ecb-find-assoc t ecb-show-tags))
       (if display
 	  display
 	'(t hidden nil)))))
 
 
-(defun ecb-get-token-parent-names (parents)
+(defun ecb-get-tag-parent-names (parents)
   (when parents
     (let* ((parent (car parents))
 	   (name (cond
-		  ((semantic-token-p parent)
-		   (semantic-name-nonterminal parent nil ecb-font-lock-tokens))
+		  ((ecb--semantic-tag-p parent)
+		   (ecb--semantic-format-tag-name parent nil ecb-font-lock-tags))
 		  ((stringp parent)
-		   (semantic-colorize-text parent 'type)))))
+		   (ecb--semantic--format-colorize-text parent 'type)))))
       (if name
 	  (if (and ecb-exclude-parents-regexp
 		   (string-match ecb-exclude-parents-regexp name))
-	      (ecb-get-token-parent-names (cdr parents))
-	    (cons name (ecb-get-token-parent-names (cdr parents))))
+	      (ecb-get-tag-parent-names (cdr parents))
+	    (cons name (ecb-get-tag-parent-names (cdr parents))))
 	(if (listp parent)
-	    (append (ecb-get-token-parent-names parent)
-		    (ecb-get-token-parent-names (cdr parents))))))))
+	    (append (ecb-get-tag-parent-names parent)
+		    (ecb-get-tag-parent-names (cdr parents))))))))
+
+(defun ecb-get-tag-parents (tag)
+  "Return a list of parent-names already colorized by semantic. Currently
+there is no distinction between superclasses and interfaces."
+  (ecb-get-tag-parent-names
+   (append (ecb--semantic-tag-type-superclass tag)
+           (ecb--semantic-tag-type-interfaces tag))))
+;;    (ecb--semantic-tag-type-parent tag)))
 
 
-(defun ecb-get-token-parents (token)
-  (ecb-get-token-parent-names (semantic-token-type-parent token)))
 
-
-(defun ecb-get-token-name (token &optional parent-token)
-  "Get the name of TOKEN with the appropriate fcn from
-`ecb-token-display-function'."
+(defun ecb-get-tag-name (tag &optional parent-tag)
+  "Get the name of TAG with the appropriate fcn from
+`ecb-tag-display-function'."
   (condition-case nil
-      (let* ((mode-display-fkt (cdr (assoc major-mode ecb-token-display-function)))
-             (default-fkt (cdr (assoc 'default ecb-token-display-function)))
+      (let* ((mode-display-fkt (cdr (assoc major-mode ecb-tag-display-function)))
+             (default-fkt (cdr (assoc 'default ecb-tag-display-function)))
              (display-fkt (or (and (fboundp mode-display-fkt) mode-display-fkt)
                               (and (fboundp default-fkt) default-fkt)
-                              'semantic-prototype-nonterminal)))
-        (funcall display-fkt token parent-token ecb-font-lock-tokens))
-    (error (semantic-prototype-nonterminal token parent-token
-                                           ecb-font-lock-tokens))))
+                              'ecb--semantic-format-tag-prototype)))
+        (funcall display-fkt tag parent-tag ecb-font-lock-tags))
+    (error (ecb--semantic-format-tag-prototype tag parent-tag
+                                               ecb-font-lock-tags))))
 
 
-(defun ecb-find-add-token-bucket (node type display sort-method buckets
-                                       &optional parent-token no-bucketize)
-  "Finds a bucket containing tokens of the given type, creates nodes for them
+(defun ecb-find-add-tag-bucket (node type display sort-method buckets
+                                       &optional parent-tag no-bucketize)
+  "Finds a bucket containing tags of the given type, creates nodes for them
 and adds them to the given node. The bucket is removed from the buckets list.
-PARENT-TOKEN is only propagated to `ecb-add-token-bucket'."
+PARENT-TAG is only propagated to `ecb-add-tag-bucket'."
   (when (cdr buckets)
     (let ((bucket (cadr buckets)))
-      (if (eq type (semantic-token-token (cadr bucket)))
+      (if (eq type (ecb--semantic-tag-class (cadr bucket)))
 	  (progn
-	    (ecb-add-token-bucket node bucket display sort-method parent-token
+	    (ecb-add-tag-bucket node bucket display sort-method parent-tag
                                   no-bucketize)
 	    (setcdr buckets (cddr buckets)))
-	(ecb-find-add-token-bucket node type display sort-method
-				   (cdr buckets) parent-token no-bucketize)))))
+	(ecb-find-add-tag-bucket node type display sort-method
+				   (cdr buckets) parent-tag no-bucketize)))))
 
 
 (defun ecb-format-bucket-name (name)
@@ -1047,87 +1139,93 @@ PARENT-TOKEN is only propagated to `ecb-add-token-bucket'."
     formatted-name))
 
 
-(defun ecb-add-token-bucket (node bucket display sort-method
-                                  &optional parent-token no-bucketize)
-  "Adds a token bucket to a node unless DISPLAY equals 'hidden."
+(defun ecb-add-tag-bucket (node bucket display sort-method
+                                  &optional parent-tag no-bucketize)
+  "Adds a tag bucket to a node unless DISPLAY equals 'hidden."
   (when bucket
     (let ((name (ecb-format-bucket-name (car bucket)))
-          ;;(type (semantic-token-token (cadr bucket)))
+          ;;(type (ecb--semantic-tag-class (cadr bucket)))
 	  (bucket-node node))
       (unless (eq 'hidden display)
 	(unless (eq 'flattened display)
 	  (setq bucket-node (tree-node-new name 1 nil nil node
 					   (if ecb-truncate-long-names 'end)))
 	  (tree-node-set-expanded bucket-node (eq 'expanded display)))
-	(dolist (token (ecb-sort-tokens sort-method (cdr bucket)))
-          ;;           (semantic-token-put token 'parent-token parent-token)
-	  (ecb-update-token-node token
-                                 (tree-node-new "" 0 token t bucket-node
+	(dolist (tag (ecb-sort-tags sort-method (cdr bucket)))
+          ;;           (ecb--semantic--tag-put-property tag 'parent-tag parent-tag)
+	  (ecb-update-tag-node tag
+                                 (tree-node-new "" 0 tag t bucket-node
                                                 (if ecb-truncate-long-names 'end))
-                                 parent-token no-bucketize))))))
+                                 parent-tag no-bucketize))))))
 
 
-(defun ecb-update-token-node (token node &optional parent-token no-bucketize)
-  "Updates a node containing a token."
-  (let* ((children (semantic-nonterminal-children
-                    token ecb-show-only-positioned-tokens)))
-    (tree-node-set-name node (ecb-get-token-name token parent-token))
-    ;; Always expand types, maybe this should be customizable and more
-    ;; flexible
-    (tree-node-set-expanded node (eq 'type (semantic-token-token token)))
-    (unless (eq 'function (semantic-token-token token))
-      (ecb-add-tokens node children token no-bucketize)
+(defun ecb-update-tag-node (tag node &optional parent-tag no-bucketize)
+  "Updates a node containing a tag."
+  (let* ((children (ecb--semantic-tag-children-compatibility
+                    tag ecb-show-only-positioned-tags)))
+    (tree-node-set-name node (ecb-get-tag-name tag parent-tag))
+    (unless (eq 'function (ecb--semantic-tag-class tag))
+      (ecb-add-tags node children tag no-bucketize)
       (tree-node-set-expandable
-       node (not (eq nil (tree-node-get-children node)))))))
+       node (not (eq nil (tree-node-get-children node))))
+      ;; Always expand types, maybe this should be customizable and more
+      ;; flexible
+      (if (not (eq 'type (ecb--semantic-tag-class tag)))
+          (tree-node-set-expanded node nil)
+        (let ((type-specifier (ecb-get-type-specifier tag)))
+          (tree-node-set-expanded
+           node
+           (and (tree-node-is-expandable node)
+                (ecb-type-tag-expansion type-specifier))))))))
+    
 
-
-(defun ecb-post-process-tokenlist (tokenlist)
+(defun ecb-post-process-taglist (taglist)
   "If for current major-mode a post-process function is found in
-`ecb-post-process-semantic-tokenlist' then this function is called with
-TOKENLIST otherwise TOKENLIST is returned."
-  (let ((fcn (cdr (assoc major-mode ecb-post-process-semantic-tokenlist))))
+`ecb-post-process-semantic-taglist' then this function is called with
+TAGLIST otherwise TAGLIST is returned."
+  (let ((fcn (cdr (assoc major-mode ecb-post-process-semantic-taglist))))
     (if (fboundp fcn)
-        (funcall fcn tokenlist)
-      tokenlist)))
+        (funcall fcn taglist)
+      taglist)))
 
 
-(defun ecb-group-function-tokens-with-parents (tokenlist)
-  "Return a new tokenlist based on TOKENLIST where all function-tokens in
-TOKENLIST having a parent token are grouped together under a new faux token
-for this parent-token. The new tokenlist contains first all parent-less tokens
-and then all grouped tokens.
+(defun ecb-group-function-tags-with-parents (taglist)
+  "Return a new taglist based on TAGLIST where all function-tags in
+TAGLIST having a parent tag are grouped together under a new faux tag
+for this parent-tag. The new taglist contains first all parent-less tags
+and then all grouped tags.
 
 This is useful for oo-programming languages where the methods of a class can
 be defined outside the class-definition, e.g. C++, Eieio."
-  (if (fboundp 'semantic-adopt-external-members)
-      (semantic-adopt-external-members tokenlist)
+  (if (fboundp 'ecb--semantic-adopt-external-members)
+      (ecb--semantic-adopt-external-members taglist)
     (let ((parent-alist nil)
           (parents nil)
           (parentless nil))
-      (while tokenlist
-        (cond ((and (eq (semantic-token-token (car tokenlist)) 'function)
-                    (semantic-token-function-parent (car tokenlist)))
-               ;; Find or Create a faux parent token in `parents'
-               ;; and add this token to it.
-               (let ((elem (assoc (semantic-token-function-parent (car tokenlist))
+      (while taglist
+        (cond ((and (eq (ecb--semantic-tag-class (car taglist)) 'function)
+                    (ecb--semantic-tag-function-parent (car taglist)))
+               ;; Find or Create a faux parent tag in `parents'
+               ;; and add this tag to it.
+               (let ((elem (assoc (ecb--semantic-tag-function-parent (car taglist))
                                   parent-alist)))
                  (if elem
-                     (setcdr elem (cons (car tokenlist) (cdr elem)))
+                     (setcdr elem (cons (car taglist) (cdr elem)))
                    (setq parent-alist
-                         (cons (cons (semantic-token-function-parent (car
-                                                                      tokenlist))
-                                     (list (car tokenlist)))
+                         (cons (cons (ecb--semantic-tag-function-parent (car
+                                                                         taglist))
+                                     (list (car taglist)))
                                parent-alist)))))
               (t
-               (setq parentless (cons (car tokenlist) parentless))))
-        (setq tokenlist (cdr tokenlist)))
+               (setq parentless (cons (car taglist) parentless))))
+        (setq taglist (cdr taglist)))
       ;; now we have an alist with an element for each parent where the key is
-      ;; the class-name (string) and the value is a list of all method-tokens
+      ;; the class-name (string) and the value is a list of all method-tags
       ;; for this class.
 
-      ;; Now we must build a new token-list
+      ;; Now we must build a new tag-list
       (dolist (alist-elem parent-alist)
-        (let ((group-token (list (concat (car alist-elem) " (Methods)")
+        (let ((group-tag (list (concat (car alist-elem) " (Methods)")
                                  'type
                                  ;; if we set "struct" the protection will be
                                  ;; public, with "class" it will be private.
@@ -1143,22 +1241,22 @@ be defined outside the class-definition, e.g. C++, Eieio."
                                  ;; with cons.
                                  (nreverse (cdr alist-elem))
                                  nil nil nil nil nil)))
-          ;; now we mark our new group token
-          (semantic-token-put group-token 'ecb-group-token t)
-          (setq parents (cons group-token parents))))
+          ;; now we mark our new group tag
+          (ecb--semantic--tag-put-property group-tag 'ecb-group-tag t)
+          (setq parents (cons group-tag parents))))
 
       ;; We nreverse the parent-less (because build with cons) and append then
       ;; all the parents.
       (append (nreverse parentless) parents))))
 
 
-(defun ecb-add-tokens (node tokens &optional parent-token no-bucketize)
-  "If NO-BUCKETIZE is not nil then TOKENS will not bucketized by
-`semantic-bucketize' but must already been bucketized!"
-  (ecb-add-token-buckets node parent-token
+(defun ecb-add-tags (node tags &optional parent-tag no-bucketize)
+  "If NO-BUCKETIZE is not nil then TAGS will not bucketized by
+`ecb--semantic-bucketize' but must already been bucketized!"
+  (ecb-add-tag-buckets node parent-tag
                          (if no-bucketize
-                             tokens
-                           (semantic-bucketize tokens))
+                             tags
+                           (ecb--semantic-bucketize tags))
                          no-bucketize))
 
 
@@ -1170,65 +1268,65 @@ be defined outside the class-definition, e.g. C++, Eieio."
    (t  2)))
 
 
-(defun ecb-sort-tokens (sort-method tokens)
+(defun ecb-sort-tags (sort-method tags)
   (if sort-method
-      (let ((tokens-by-name
-	     (sort tokens (function (lambda (a b)
-				      (string< (semantic-token-name a)
-					       (semantic-token-name b)))))))
+      (let ((tags-by-name
+	     (sort tags (function (lambda (a b)
+				      (string< (ecb--semantic-tag-name a)
+					       (ecb--semantic-tag-name b)))))))
 	(if (eq 'access sort-method)
-	    (sort tokens-by-name
+	    (sort tags-by-name
 		  (function
 		   (lambda (a b)
-		     (< (ecb-access-order (semantic-nonterminal-protection a))
-			(ecb-access-order (semantic-nonterminal-protection b))))))
-	  tokens-by-name))
-    tokens))
+		     (< (ecb-access-order (ecb--semantic-tag-protection a))
+			(ecb-access-order (ecb--semantic-tag-protection b))))))
+	  tags-by-name))
+    tags))
 
 
-(defun ecb-add-token-buckets (node parent-token buckets &optional no-bucketize)
-  "Creates and adds token nodes to the given node.
-The PARENT-TOKEN is propagated to the functions `ecb-add-token-bucket' and
-`ecb-find-add-token-bucket'."
+(defun ecb-add-tag-buckets (node parent-tag buckets &optional no-bucketize)
+  "Creates and adds tag nodes to the given node.
+The PARENT-TAG is propagated to the functions `ecb-add-tag-bucket' and
+`ecb-find-add-tag-bucket'."
   (setq buckets (cons nil buckets))
-  (dolist (token-display ecb-show-tokens)
-    (let* ((type (car token-display))
-           (display (cadr token-display))
-           (sort-method (caddr token-display)))
+  (dolist (tag-display ecb-show-tags)
+    (let* ((type (car tag-display))
+           (display (cadr tag-display))
+           (sort-method (caddr tag-display)))
       (cond
        ((eq 'parent type)
- 	(when (and parent-token
- 		   (eq 'type (semantic-token-token parent-token)))
- 	  (let ((parents (ecb-get-token-parents parent-token)))
+ 	(when (and parent-tag
+ 		   (eq 'type (ecb--semantic-tag-class parent-tag)))
+ 	  (let ((parents (ecb-get-tag-parents parent-tag)))
 	    (when parents
 	      (let ((node (ecb-create-node node display (ecb-format-bucket-name "Parents") nil 1)))
 		(when node
 		  (dolist (parent (if sort-method
 				      (sort parents 'string<) parents))
-		    (tree-node-new (if ecb-font-lock-tokens
-				       (semantic-colorize-text parent 'type)
+		    (tree-node-new (if ecb-font-lock-tags
+				       (ecb--semantic--format-colorize-text parent 'type)
 				     parent)
 				   2 parent t node
 				   (if ecb-truncate-long-names 'end)))))))))
-       (t (ecb-find-add-token-bucket node type display sort-method buckets
-                                     parent-token no-bucketize)))))
-  (let ((type-display (ecb-get-token-type-display t)))
+       (t (ecb-find-add-tag-bucket node type display sort-method buckets
+                                     parent-tag no-bucketize)))))
+  (let ((type-display (ecb-get-tag-type-display t)))
     (dolist (bucket buckets)
-      (ecb-add-token-bucket node bucket (cadr type-display)
-                            (caddr type-display) parent-token no-bucketize))))
+      (ecb-add-tag-bucket node bucket (cadr type-display)
+                            (caddr type-display) parent-tag no-bucketize))))
 
 
-(defun ecb-update-after-partial-reparse (updated-tokens)
+(defun ecb-update-after-partial-reparse (updated-tags)
   "Updates the method buffer and all internal ECB-caches after a partial
 semantic-reparse. This function is added to the hook
 `semantic-after-partial-cache-change-hook'."
   ;; TODO: Currently we get simply the whole cache from semantic (already up
   ;; to date at this time!) and then we rebuild the whole tree-buffer with
   ;; this cache-contents. This is for great sources slow. We should implement
-  ;; a mechanism where only the UPDATED-TOKENS are used and only this ones are
+  ;; a mechanism where only the UPDATED-TAGS are used and only this ones are
   ;; updated. But for this we need also a tree-buffer-update which can update
   ;; single nodes without refreshing the whole tree-buffer like now.
-  (ecb-rebuild-methods-buffer-with-tokencache (semantic-bovinate-toplevel t)))
+  (ecb-rebuild-methods-buffer-with-tagcache (ecb--semantic-bovinate-toplevel t)))
 
 
 (defun ecb-semantic-active-for-file (filename)
@@ -1237,7 +1335,7 @@ is active for this buffer."
   (and (get-file-buffer filename)
        (save-excursion
          (set-buffer (get-file-buffer filename))
-         (semantic-active-p))))
+         (ecb--semantic-active-p))))
 
 
 (defun ecb-update-methods-after-saving ()
@@ -1259,47 +1357,47 @@ current-buffer is saved."
 (defvar ecb-method-buffer-needs-rebuild t
   "This variable is only set and evaluated by the functions
 `ecb-update-methods-buffer--internal' and
-`ecb-rebuild-methods-buffer-with-tokencache'!")
+`ecb-rebuild-methods-buffer-with-tagcache'!")
 
 
 (defun ecb-update-methods-buffer--internal (&optional scroll-to-top
                                                       rebuild-non-semantic)
   "Updates the methods buffer with the current buffer. The only thing what
 must be done is to start the toplevel parsing of semantic, because the rest is
-done by `ecb-rebuild-methods-buffer-with-tokencache' because this function is in
+done by `ecb-rebuild-methods-buffer-with-tagcache' because this function is in
 the `semantic-after-toplevel-cache-change-hook'.
 If optional argument SCROLL-TO-TOP is non nil then the method-buffer is
 displayed with window-start and point at beginning of buffer.
 
 If second optional argument REBUILD-NON-SEMANTIC is not nil then non-semantic
 sources are forced to be rescanned and reparsed by
-`ecb-rebuild-methods-buffer-with-tokencache'. The function
+`ecb-rebuild-methods-buffer-with-tagcache'. The function
 `ecb-rebuild-methods-buffer-for-non-semantic' is the only one settings this
 argument to not nil!"
   (when (and (equal (selected-frame) ecb-frame)
              (get-buffer-window ecb-methods-buffer-name))
     ;; Set here `ecb-method-buffer-needs-rebuild' to t so we can see below if
-    ;; `ecb-rebuild-methods-buffer-with-tokencache' was called auto. after
-    ;; `semantic-bovinate-toplevel'.
+    ;; `ecb-rebuild-methods-buffer-with-tagcache' was called auto. after
+    ;; `ecb--semantic-bovinate-toplevel'.
     (setq ecb-method-buffer-needs-rebuild t)
 
-    (let ((current-tokencache (and (semantic-active-p)
+    (let ((current-tagcache (and (ecb--semantic-active-p)
                                    ;; if we manually bovinate the buffer we
-                                   ;; must widen the source to get all tokens.
+                                   ;; must widen the source to get all tags.
                                    ;; But here we must not use the adviced
                                    ;; version of widen!
                                    (save-excursion
                                      (save-restriction
                                        (ecb-with-original-basic-functions
                                         (widen))
-                                       (semantic-bovinate-toplevel t))))))
-      ;; If the `semantic-bovinate-toplevel' has done no reparsing but only
+                                       (ecb--semantic-bovinate-toplevel t))))))
+      ;; If the `ecb--semantic-bovinate-toplevel' has done no reparsing but only
       ;; used it´s still valid `semantic-toplevel-bovine-cache' then neither
       ;; the hooks of `semantic-after-toplevel-cache-change-hook' nor the
       ;; hooks in `semantic-after-partial-cache-change-hook' are evaluated and
-      ;; therefore `ecb-rebuild-methods-buffer-with-tokencache' was not
+      ;; therefore `ecb-rebuild-methods-buffer-with-tagcache' was not
       ;; called. Therefore we call it here manually.
-      ;; `ecb-rebuild-methods-buffer-with-tokencache' is the only function
+      ;; `ecb-rebuild-methods-buffer-with-tagcache' is the only function
       ;; which sets `ecb-method-buffer-needs-rebuild' to nil to signalize that
       ;; a "manually" rebuild of the method buffer is not necessary.
       ;;
@@ -1307,16 +1405,16 @@ argument to not nil!"
       ;; `ecb-current-buffer-sync' and `ecb-set-selected-source' (depending on
       ;; the method switching to current buffer) which both are called also
       ;; for buffers which are not setup for semantic (e.g. text-,
-      ;; tex-buffers). current-tokencache is nil for such buffers so we call
+      ;; tex-buffers). current-tagcache is nil for such buffers so we call
       ;; the rebuilding of the method buffer with a nil cache and therefore
       ;; the method-buffer will be cleared out for such buffers. This is what
       ;; we want! For further explanation see
-      ;; `ecb-rebuild-methods-buffer-with-tokencache'...
+      ;; `ecb-rebuild-methods-buffer-with-tagcache'...
       (if ecb-method-buffer-needs-rebuild
           ;; the hook was not called therefore here manually
-          (ecb-rebuild-methods-buffer-with-tokencache
-           current-tokencache
-           (semantic-active-p)
+          (ecb-rebuild-methods-buffer-with-tagcache
+           current-tagcache
+           (ecb--semantic-active-p)
            nil rebuild-non-semantic)))
     (when scroll-to-top
       (save-selected-window
@@ -1324,33 +1422,34 @@ argument to not nil!"
 	 (tree-buffer-scroll (point-min) (point-min)))))))
 
 
-(defvar ecb-token-tree-cache nil
-  "This is the token-tree-cache for already opened file-buffers. The cache is
+(defvar ecb-tag-tree-cache nil
+  "This is the tag-tree-cache for already opened file-buffers. The cache is
 a list of cons-cells where the car is the name of the source and the cdr is
-the current token-tree for this source. The cache contains exactly one element
+the current tag-tree for this source. The cache contains exactly one element
 for a certain source.")
-(setq ecb-token-tree-cache nil)
+(setq ecb-tag-tree-cache nil)
 
 
-(defun ecb-clear-token-tree-cache (&optional source-file-name)
-  "Clears wither the whole token-tree-cache \(SOURCE-FILE-NAME is nil) or
-removes only the token-tree for SOURCE-FILE-NAME from the cache."
+(defun ecb-clear-tag-tree-cache (&optional source-file-name)
+  "Clears wither the whole tag-tree-cache \(SOURCE-FILE-NAME is nil) or
+removes only the tag-tree for SOURCE-FILE-NAME from the cache."
   (if (not source-file-name)
-      (setq ecb-token-tree-cache nil)
-    (setq ecb-token-tree-cache
-          (adelete 'ecb-token-tree-cache source-file-name))))
+      (setq ecb-tag-tree-cache nil)
+    (setq ecb-tag-tree-cache
+          (adelete 'ecb-tag-tree-cache source-file-name))))
 
 
-(defun ecb-rebuild-methods-buffer-with-tokencache (updated-cache
+
+(defun ecb-rebuild-methods-buffer-with-tagcache (updated-cache
 						   &optional no-update-semantic
                                                    force-nil-cache
                                                    non-semantic-rebuild)
   "Rebuilds the ECB-method buffer after toplevel-parsing by semantic. This
 function is added to the hook `semantic-after-toplevel-cache-change-hook'.
 
-If NO-UPDATE-SEMANTIC is not nil then the tokens of the ECB-methods-buffer are
+If NO-UPDATE-SEMANTIC is not nil then the tags of the ECB-methods-buffer are
 not updated with UPDATED-CACHE but the method-buffer is rebuild with these
-tokens ECB has already cached in it `ecb-token-tree-cache'. Only relevant for
+tags ECB has already cached in it `ecb-tag-tree-cache'. Only relevant for
 semantic-parsed sources!
 
 If FORCE-NIL-CACHE is not nil then the method-buffer is even rebuild if
@@ -1370,7 +1469,7 @@ to be rescanned/reparsed and therefore the Method-buffer will be rebuild too."
              ;; The functions of the hook
              ;; `semantic-after-toplevel-cache-change-hook' are also called
              ;; after clearing the cache to set the cache to nil if a buffer
-             ;; is parsed which has no tokens. But buffers with no tokens are
+             ;; is parsed which has no tags. But buffers with no tags are
              ;; really seldom so cause of better performance here we do not
              ;; want rebuilding the method-buffer if the cache is nil but the
              ;; current buffer is set up for semantic-parsing, because the
@@ -1382,11 +1481,11 @@ to be rescanned/reparsed and therefore the Method-buffer will be rebuild too."
              ;; clear out the method-buffer or fill it with parsing
              ;; information of non-semantic-sources!
              (or updated-cache
-                 (not (semantic-active-p))
+                 (not (ecb--semantic-active-p))
                  force-nil-cache))
 
     ;; no-update-semantic has to be nil for non-semantic-sources!
-    (if (not (semantic-active-p)) (setq no-update-semantic nil))
+    (if (not (ecb--semantic-active-p)) (setq no-update-semantic nil))
 
     ;; the following cache-mechanism MUST use the (buffer-file-name
     ;; (current-buffer)) instead of ecb-path-selected-source because in case
@@ -1394,7 +1493,7 @@ to be rescanned/reparsed and therefore the Method-buffer will be rebuild too."
     ;; standard-mechanism of Emacs this function is called via hook BEFORE
     ;; ecb-path-selected-source is set currently by the synchronize-mechanism
     ;; of ECB.
-    ;; Also if we create a new cache-element for the token-tree we MUST look
+    ;; Also if we create a new cache-element for the tag-tree we MUST look
     ;; if in the cache is already an element with this key and if we MUST
     ;; update this cache-element instead of always adding a new one to the
     ;; cache. Otherwise we would get more than one cache-element for the same
@@ -1402,74 +1501,79 @@ to be rescanned/reparsed and therefore the Method-buffer will be rebuild too."
     
     (let* ((norm-buffer-file-name (ecb-fix-filename
                                    (buffer-file-name (current-buffer))))
-           (cached-tree (assoc norm-buffer-file-name ecb-token-tree-cache))
+           (cache (assoc norm-buffer-file-name ecb-tag-tree-cache))
            new-tree non-semantic-handling)
       
       (if ecb-debug-mode
-          (dolist (tok updated-cache)
-            (ecb-semantic-assert-valid-token tok)))
+          (dolist (a-tag updated-cache)
+            (ecb-semantic-assert-valid-tag a-tag)))
       
       ;; here we process non-semantic buffers if the user wants this. But only
-      ;; if either non-semantic-rebuild is true or no cached-tree exists.
+      ;; if either non-semantic-rebuild is true or no cache exists.
       (when (and ecb-process-non-semantic-files
                  (null updated-cache)
-                 (not (semantic-active-p))
+                 (not (ecb--semantic-active-p))
                  (buffer-file-name (current-buffer))
-                 (or non-semantic-rebuild (null cached-tree)))
+                 (or non-semantic-rebuild (null cache)))
         (setq updated-cache (ignore-errors
                               (ecb-get-tags-for-non-semantic-files)))
         (setq non-semantic-handling
               (if updated-cache 'parsed 'parsed-failed)))
 
       ;; Now non-semantic-handling is only nil either for semantic-sources or
-      ;; for non-semantic-sources if already a cached-tree exists and
+      ;; for non-semantic-sources if already a cache exists and
       ;; non-semantic-rebuild is nil (i.e. no rescan and rebuild is
       ;; necessary). A not-nil value is only possible for non-semantic-sources
       ;; and is then either 'parsed in case the parsing was successful or
       ;; 'parsed-failed.
 
-      ;; We always make a new token-tree with updated-cache except for
+      ;; We always make a new tag-tree with updated-cache except for
       ;; - semantic-sources if no-update-semantic is true and already a
-      ;;   cached-tree exists. This means this function is NOT called by
+      ;;   cache exists. This means this function is NOT called by
       ;;   `semantic-after-toplevel-cache-change-hook'.
       ;; - non-semantic-sources if non-semantic-handling is false, because
       ;;   then no rescan has been performed and updated-cache contains
       ;;   nothing; see comment above.
-      (unless (or (and no-update-semantic cached-tree) ;; for semantic-sources
-                  (and (not (semantic-active-p)) ;; for non-semantic-sources
+      (unless (or (and no-update-semantic cache) ;; for semantic-sources
+                  (and (not (ecb--semantic-active-p)) ;; for non-semantic-sources
                        (not non-semantic-handling)
                        ;; for clearing out non-semantic-buffers too after
                        ;; killing one; see `ecb-kill-buffer-hook'.
                        (not force-nil-cache)))
-        (setq new-tree (tree-node-new "root" 0 nil))
+        (setq new-tree (tree-node-new-root))
         (if non-semantic-handling
             (if (equal non-semantic-handling 'parsed)
                 (ecb-create-non-semantic-tree new-tree updated-cache))
-          (ecb-add-tokens new-tree (ecb-post-process-tokenlist updated-cache)))
-        (if cached-tree
-            (setcdr cached-tree new-tree)
-          (setq cached-tree (cons norm-buffer-file-name new-tree))
-          (setq ecb-token-tree-cache (cons cached-tree ecb-token-tree-cache))))
+          (ecb-add-tags new-tree (ecb-post-process-taglist updated-cache)))
+        (if cache
+            (setcdr cache new-tree)
+          (setq cache (cons norm-buffer-file-name new-tree))
+          (setq ecb-tag-tree-cache (cons cache ecb-tag-tree-cache))))
 
       ;; Now we either update the method-buffer with a newly created
-      ;; token-tree or with the token-tree from the cache (with all its
-      ;; existing expansions!)
+      ;; tag-tree or with the tag-tree from the cache (with all its
+      ;; existing expansions). This work because we store in the cache not a
+      ;; copy of the tree but the tree itself, so every expansion of nodes in
+      ;; the tree (e.g. by clicking onto the expand-button) expands the nodes
+      ;; in the cache!! Cause of this storing the buffer-string too in the
+      ;; cache can not work because the buffer-string is a "copy" of the
+      ;; tree-buffer and therefore the cached buffer-string can not be updated
+      ;; automatically.
       (save-excursion
         (ecb-buffer-select ecb-methods-buffer-name)
-        (tree-buffer-set-root (cdr cached-tree))
-        (setq ecb-methods-root-node (cdr cached-tree))
+        (tree-buffer-set-root (cdr cache))
+        (setq ecb-methods-root-node (cdr cache))
         (tree-buffer-update)))
     
     ;; Klaus Berndl <klaus.berndl@sdm.de>: after a full reparse all overlays
     ;; stored in the dnodes of the navigation-list now are invalid. Therefore
     ;; we have changed the implementation of ecb-navigate.el from storing
-    ;; whole tokens to storing buffer and start- and end-markers!
+    ;; whole tags to storing buffer and start- and end-markers!
     
     (ecb-mode-line-format)
 
     ;; signalize that the rebuild has already be done
     (setq ecb-method-buffer-needs-rebuild nil)))
-
 
 (defun ecb-save-without-auto-update-methods ()
   (let ((ecb-auto-update-methods-after-save nil))
@@ -1493,7 +1597,7 @@ rescanning the source-buffer and rebuilding the methods-buffer.
 This function is called by the command `ecb-rebuild-methods-buffer'."
   (when (and ecb-minor-mode
              (equal (selected-frame) ecb-frame)
-             (not (semantic-active-p))
+             (not (ecb--semantic-active-p))
              (not (member major-mode ecb-non-semantic-exclude-modes))
              (ecb-point-in-edit-window))
     (when (run-hook-with-args-until-failure
@@ -1519,11 +1623,11 @@ This function does nothing if point stays not in an edit-window of the
 ECB-frame or if current source-file is not supported by semantic!"
   (when (and ecb-minor-mode
              (equal (selected-frame) ecb-frame)
-             (semantic-active-p)
+             (ecb--semantic-active-p)
              (ecb-point-in-edit-window))
     ;; to force a really complete rebuild we must completely clear the
     ;; semantic cache for semantic-files.
-    (semantic-clear-toplevel-cache)
+    (ecb--semantic-clear-toplevel-cache)
     (ecb-update-methods-buffer--internal)))
 
 
@@ -1552,66 +1656,66 @@ For non-semantic-sources supported by etags the option
 `ecb-auto-save-before-etags-methods-rebuild' is checked before rescanning the
 source-buffer and rebuilding the methods-buffer."
   (interactive)
-  (if (semantic-active-p)
+  (if (ecb--semantic-active-p)
       (ecb-rebuild-methods-buffer-for-semantic)
     (ecb-rebuild-methods-buffer-for-non-semantic)))
 
 
-(defvar ecb-auto-expand-token-tree-old 'expand-spec)
+(defvar ecb-auto-expand-tag-tree-old 'expand-spec)
 
-(defun ecb-toggle-auto-expand-token-tree (&optional arg)
+(defun ecb-toggle-auto-expand-tag-tree (&optional arg)
   "Toggle auto expanding of the ECB-methods-buffer.
 With prefix argument ARG, switch on if positive, otherwise switch off. If the
 effect is that auto-expanding is switched off then the current value of
-`ecb-auto-expand-token-tree' is saved so it can be used for the next switch on
+`ecb-auto-expand-tag-tree' is saved so it can be used for the next switch on
 by this command."
   (interactive "P")
   (let* ((new-value (if (null arg)
-                        (if ecb-auto-expand-token-tree
+                        (if ecb-auto-expand-tag-tree
                             (progn
-                              (setq ecb-auto-expand-token-tree-old
-                                    ecb-auto-expand-token-tree)
+                              (setq ecb-auto-expand-tag-tree-old
+                                    ecb-auto-expand-tag-tree)
                               nil)
-                          ecb-auto-expand-token-tree-old)
+                          ecb-auto-expand-tag-tree-old)
                       (if (<= (prefix-numeric-value arg) 0)
                           (progn
-                            (if ecb-auto-expand-token-tree
-                                (setq ecb-auto-expand-token-tree-old
-                                      ecb-auto-expand-token-tree))
+                            (if ecb-auto-expand-tag-tree
+                                (setq ecb-auto-expand-tag-tree-old
+                                      ecb-auto-expand-tag-tree))
                             nil)
-                        (or ecb-auto-expand-token-tree
-                            ecb-auto-expand-token-tree-old)))))
-    (setq ecb-auto-expand-token-tree new-value)
+                        (or ecb-auto-expand-tag-tree
+                            ecb-auto-expand-tag-tree-old)))))
+    (setq ecb-auto-expand-tag-tree new-value)
     (message "Auto. expanding of the methods-buffer is switched %s \(Value: %s\)."
              (if new-value "on" "off")
              new-value)))
 
 
-(defun ecb-token-sync (&optional force)
+(defun ecb-tag-sync (&optional force)
   (when (and ecb-minor-mode
              (ecb-point-in-edit-window))
-    (when ecb-highlight-token-with-point
-      (let ((tok (ecb-semantic-current-nonterminal)))
-        (when (or force (not (equal ecb-selected-token tok)))
-          (setq ecb-selected-token tok)
+    (when ecb-highlight-tag-with-point
+      (let ((a-tag (ecb-semantic-current-nonterminal)))
+        (when (or force (not (equal ecb-selected-tag a-tag)))
+          (setq ecb-selected-tag a-tag)
           (save-selected-window
             (ecb-exec-in-methods-window
              (or (tree-buffer-highlight-node-data
-                  tok nil (equal ecb-highlight-token-with-point 'highlight))
-                 ;; The node representing TOK could not be highlighted be
+                  a-tag nil (equal ecb-highlight-tag-with-point 'highlight))
+                 ;; The node representing A-TAG could not be highlighted be
                  ;; `tree-buffer-highlight-node-data' - probably it is
                  ;; invisible. Let's try to make visible and then highlighting
                  ;; again.
-                 (when (and tok ecb-auto-expand-token-tree
-                            (or (equal ecb-auto-expand-token-tree 'all)
-                                (member (semantic-token-token tok)
+                 (when (and a-tag ecb-auto-expand-tag-tree
+                            (or (equal ecb-auto-expand-tag-tree 'all)
+                                (member (ecb--semantic-tag-class a-tag)
                                         (ecb-normalize-expand-spec
                                          ecb-methods-nodes-expand-spec))))
                    (ecb-expand-methods-nodes-internal
                     100
-                    (equal ecb-auto-expand-token-tree 'all))
+                    (equal ecb-auto-expand-tag-tree 'all))
                    (tree-buffer-highlight-node-data
-                    tok nil (equal ecb-highlight-token-with-point 'highlight))
+                    a-tag nil (equal ecb-highlight-tag-with-point 'highlight))
                    )))))))))
 
 
@@ -1655,7 +1759,7 @@ OTHER-EDIT-WINDOW."
                    ;; for example for the ECB created bucket-name "Parents"!
                    (intern (downcase (ecb-string-make-singular bucket-name)))))))
         ((= 0 (tree-node-get-type node))
-         (ignore-errors (semantic-token-token (tree-node-get-data node))))
+         (ignore-errors (ecb--semantic-tag-class (tree-node-get-data node))))
         (t nil)))
 
 
@@ -1673,7 +1777,7 @@ Nodes which are not indented have indentation-level 0!
 
 Which node-types are expanded \(rsp. collapsed) by this command depends on
 the options `ecb-methods-nodes-expand-spec' and
-`ecb-methods-nodes-collapse-spec'! With optional argument FORCE-ALL all tokens
+`ecb-methods-nodes-collapse-spec'! With optional argument FORCE-ALL all tags
 will be expanded/collapsed regardless of the values of these options.
 
 Examples:
@@ -1685,7 +1789,7 @@ Examples:
 
 Note 1: This command switches off auto. expanding of the method-buffer if
 `ecb-expand-methods-switch-off-auto-expand' is not nil. But it can be switched
-on again quickly with `ecb-toggle-auto-expand-token-tree' or \[C-c . a].
+on again quickly with `ecb-toggle-auto-expand-tag-tree' or \[C-c . a].
 
 Note 2: All this is only valid for file-types parsed by semantic. For other
 file types which are parsed by imenu or etags \(see
@@ -1701,23 +1805,23 @@ file types which are parsed by imenu or etags \(see
                           (tree-node-is-expanded first-node))
                      -1
                    10))))
-    ;; here we should switch off autom. expanding token-tree because otherwise
+    ;; here we should switch off autom. expanding tag-tree because otherwise
     ;; our expanding to a certain level takes no effect because if the current
-    ;; token in the edit-buffer would be invisible afterwards (after the
-    ;; expanding/collapsing) then immediately the token would be autom.
+    ;; tag in the edit-buffer would be invisible afterwards (after the
+    ;; expanding/collapsing) then immediately the tag would be autom.
     ;; expanded to max level...
     (when ecb-expand-methods-switch-off-auto-expand
-      (ecb-toggle-auto-expand-token-tree -1))
+      (ecb-toggle-auto-expand-tag-tree -1))
     (ecb-expand-methods-nodes-internal level force-all t)))
 
 
-(defun ecb-expand-methods-nodes-internal (level &optional force-all resync-token)
+(defun ecb-expand-methods-nodes-internal (level &optional force-all resync-tag)
   "Set the expand level of the nodes in the ECB-methods-buffer.
 
 For description of LEVEL and FORCE-ALL see `ecb-expand-methods-nodes'.
 
-If RESYNC-TOKEN is not nil then after expanding/collapsing the methods-buffer
-is resynced to the current token of the edit-window.
+If RESYNC-TAG is not nil then after expanding/collapsing the methods-buffer
+is resynced to the current tag of the edit-window.
 
 Note: All this is only valid for file-types parsed by semantic. For other file
 types which are parsed by imenu or etags \(see
@@ -1729,9 +1833,9 @@ types which are parsed by imenu or etags \(see
                (ignore-errors
                  (set-buffer (get-file-buffer ecb-path-selected-source))
                  ;; for non-semantic buffers we set force-all always to t
-                 (setq force-all (not (semantic-active-p)))
-                 semantic-symbol->name-assoc-list))
-             semantic-symbol->name-assoc-list)))
+                 (setq force-all (not (ecb--semantic-active-p)))
+                 (ecb--semantic-symbol->name-assoc-list)))
+             (ecb--semantic-symbol->name-assoc-list))))
     (save-selected-window
       (ecb-exec-in-methods-window
        (let ( ;; normalizing the elements of `ecb-methods-nodes-expand-spec'
@@ -1756,9 +1860,9 @@ types which are parsed by imenu or etags \(see
                                        norm-collapse-types))))))
          (tree-buffer-scroll (point-min) (point-min)))))
 
-    ;; we want resync the new method-buffer to the current token in the
+    ;; we want resync the new method-buffer to the current tag in the
     ;; edit-window.
-    (if resync-token (ecb-token-sync 'force))))
+    (if resync-tag (ecb-tag-sync 'force))))
 
 
 (defun ecb-normalize-expand-spec (spec)
@@ -1778,21 +1882,21 @@ types which are parsed by imenu or etags \(see
   (let ((data (tree-node-get-data node))
         (type (tree-node-get-type node))
         (filename ecb-path-selected-source)
-        token found)
-    ;; Klaus Berndl <klaus.berndl@sdm.de>: We must highlight the token
+        tag found)
+    ;; Klaus Berndl <klaus.berndl@sdm.de>: We must highlight the tag
     (tree-buffer-highlight-node-data data)
     (cond
-     ;; Type 0 = a token
-     ((= type 0) (setq token data))
+     ;; Type 0 = a tag
+     ((= type 0) (setq tag data))
      ;; Type 1 = a title of a group
      ;; Just expand/collapse the node
      ((= type 1)
       (tree-node-toggle-expanded node)
       ;; Update the tree-buffer with optimized display of NODE
       (tree-buffer-update node))
-     ;; Type 2 = a token name for a token not defined in current buffer; e.g.
-     ;; parent or include tokens can be such tokens!
-     ;; Try to find the token
+     ;; Type 2 = a tag name for a tag not defined in current buffer; e.g.
+     ;; parent or include tags can be such tags!
+     ;; Try to find the tag
      ((= type 2)
       (set-buffer (get-file-buffer ecb-path-selected-source))
       ;; Try to find source using JDE
@@ -1801,34 +1905,34 @@ types which are parsed by imenu or etags \(see
       (when (and (not found) (featurep 'semanticdb) (semanticdb-minor-mode-p))
         (let ((parent (semanticdb-find-nonterminal-by-name data)))
           (when parent
-            (setq token (cdar parent))
+            (setq tag (cdar parent))
             (setq filename (semanticdb-full-filename (caar parent)))))))
      )
-    (when (and token (not found))
-      (ecb-semantic-assert-valid-token token)
-      (if (eq 'include (semantic-token-token token))
-          ;; Include token -> try to find source
+    (when (and tag (not found))
+      (ecb-semantic-assert-valid-tag tag)
+      (if (eq 'include (ecb--semantic-tag-class tag))
+          ;; Include tag -> try to find source
           (progn
             (set-buffer (get-file-buffer ecb-path-selected-source))
-            (let ((file (semantic-find-dependency token)))
+            (let ((file (ecb--semantic-dependency-tag-file tag)))
               (when (and file (file-exists-p file))
                 (ecb-find-file-and-display file
                                            (and (ecb-edit-window-splitted)
                                                 (eq ecb-button 2))))))
-        (ecb-jump-to-token filename token (ecb-get-edit-window
+        (ecb-jump-to-tag filename tag (ecb-get-edit-window
                                            (and (ecb-edit-window-splitted)
                                                 (eq ecb-button 2)))
                            no-post-action
                            (if (and shift-mode
-                                    (not (member 'ecb-token-visit-narrow-token
+                                    (not (member 'ecb-tag-visit-narrow-tag
                                                  additional-post-action-list)))
-                               (cons 'ecb-token-visit-narrow-token
+                               (cons 'ecb-tag-visit-narrow-tag
                                      additional-post-action-list)
                              additional-post-action-list))))))
 
 
-(defun ecb-token-visit-smart-token-start (token)
-  "Go to the real token-name of TOKEN in a somehow smart way.
+(defun ecb-tag-visit-smart-tag-start (tag)
+  "Go to the real tag-name of TAG in a somehow smart way.
 This is especially needed for languages like c++ where a often used style is
 like:
     void
@@ -1839,55 +1943,56 @@ like:
 Here we want to jump to the line \"ClassX::...\" and not to line \"void\".
 
 Returns point."
-  (goto-char (ecb-semantic-token-start token))
+  (goto-char (ecb-semantic-tag-start tag))
   (beginning-of-line)
   ;; We must bind the search to the max. of either the end-of-line-pos or the
-  ;; token-end, because in some languages the token-name displayed in the
+  ;; tag-end, because in some languages the tag-name displayed in the
   ;; Methods-buffer and returned by the parsing engine can not be found in the
-  ;; source-buffer. Perl is an example, because here imenu returns token-names
+  ;; source-buffer. Perl is an example, because here imenu returns tag-names
   ;; like <package>::<function> (e.g. bigfloat::norm) but in the source buffer
   ;; only "sub <function>" (e.g. "sub norm...") can be found. So to avoid
-  ;; finding a wrong position in the source-buffer (e.g. if the token-name
+  ;; finding a wrong position in the source-buffer (e.g. if the tag-name
   ;; returned by imenu is mentioned in a comment somewhere) we bind the
   ;; search.
-  (search-forward (semantic-token-name token)
+  (search-forward (ecb--semantic-tag-name tag)
                   (max (ecb-line-end-pos)
-                       (semantic-token-end token))
+                       (ecb-semantic-tag-end tag))
                   t)
   (beginning-of-line-text)
   (point))
 
 
-(defun ecb-start-of-token-doc (token)
-  "If TOKEN has an outside documentation located direct before TOKEN then
+(defun ecb-start-of-tag-doc (tag)
+  "If TAG has an outside documentation located direct before TAG then
 return the start of the documentation. Otherwise return nil"
-  ;; there can be an error if token has no documentation - e.g.
+  ;; there can be an error if tag has no documentation - e.g.
   ;; in elisp
-  (let ((comment (ignore-errors (semantic-find-documentation token 'flex))))
+  (let ((comment (ignore-errors (ecb--semantic-documentation-for-tag tag
+                                                                     'flex))))
     (if (and comment
              (not (stringp comment)))
         ;; probably we have a semantic flex-object
-        (semantic-flex-start comment))))
+        (ecb--semantic-lex-token-start comment))))
 
 
-(defun ecb-token-visit-goto-doc-start (token)
-  "Go to the beginning of the documentation of TOKEN if defined outside.
+(defun ecb-tag-visit-goto-doc-start (tag)
+  "Go to the beginning of the documentation of TAG if defined outside.
 This is useful especially for languages like Java where the documentation
-resides direct before the TOKEN in Javadoc format.
-If the documentation is located within TOKEN then nothing is done.
+resides direct before the TAG in Javadoc format.
+If the documentation is located within TAG then nothing is done.
 
-If this function is set in `ecb-token-visit-post-actions' then it's strongly
-recommended to add `ecb-token-visit-recenter' or
-`ecb-token-visit-recenter-top' at the end too!
+If this function is set in `ecb-tag-visit-post-actions' then it's strongly
+recommended to add `ecb-tag-visit-recenter' or
+`ecb-tag-visit-recenter-top' at the end too!
 
 This action is not recommended for sources of type TeX, texinfo etc. So you
 should not add this action to the 'default element of
-`ecb-token-visit-post-actions'!
+`ecb-tag-visit-post-actions'!
 
 Returns current point."
-  (let ((token-doc-start  (ecb-start-of-token-doc token)))
-    (when token-doc-start
-      (goto-char token-doc-start))
+  (let ((tag-doc-start  (ecb-start-of-tag-doc tag)))
+    (when tag-doc-start
+      (goto-char tag-doc-start))
     (point)))
 
 
@@ -1896,84 +2001,84 @@ Returns current point."
 new nop-command \(otherwise the cursor jumps back to the tree-buffer).")
 
 
-(defun ecb-unhighlight-token-header ()
+(defun ecb-unhighlight-tag-header ()
   (let ((key (tree-buffer-event-to-key last-input-event)))
     (when (not (or (and (equal key 'mouse-release)
                         (not ecb-unhighlight-hook-called))
                    (equal key 'mouse-movement)))
       (delete-overlay ecb-method-overlay)
-      (remove-hook 'pre-command-hook 'ecb-unhighlight-token-header)))
+      (remove-hook 'pre-command-hook 'ecb-unhighlight-tag-header)))
   (setq ecb-unhighlight-hook-called t))
 
 
-(defun ecb-token-visit-highlight-token-header (token)
-  "Highlights line where `ecb-token-visit-smart-token-start' puts point for
-TOKEN. Returns current point"
+(defun ecb-tag-visit-highlight-tag-header (tag)
+  "Highlights line where `ecb-tag-visit-smart-tag-start' puts point for
+TAG. Returns current point"
   (save-excursion
-    (ecb-token-visit-smart-token-start token)
+    (ecb-tag-visit-smart-tag-start tag)
     (move-overlay ecb-method-overlay
                   (ecb-line-beginning-pos)
                   (ecb-line-end-pos)
                   (current-buffer)))
   (setq ecb-unhighlight-hook-called nil)
-  (add-hook 'pre-command-hook 'ecb-unhighlight-token-header)
+  (add-hook 'pre-command-hook 'ecb-unhighlight-tag-header)
   (point))
 
 
-(defun ecb-jump-to-token (filename token &optional window
-                                   no-token-visit-post-actions
+(defun ecb-jump-to-tag (filename tag &optional window
+                                   no-tag-visit-post-actions
                                    additional-post-action-list)
-  "Jump to token TOKEN in buffer FILENAME.
-If NO-TOKEN-VISIT-POST-ACTIONS is not nil then the functions of
-`ecb-token-visit-post-actions' are not performed. If
+  "Jump to tag TAG in buffer FILENAME.
+If NO-TAG-VISIT-POST-ACTIONS is not nil then the functions of
+`ecb-tag-visit-post-actions' are not performed. If
 ADDITIONAL-POST-ACTION-LIST is a list of function-symbols then these functions
-are performed after these ones of `ecb-token-visit-post-actions'. So if
-NO-TOKEN-VISIT-POST-ACTIONS is not nil then only the functions of
+are performed after these ones of `ecb-tag-visit-post-actions'. So if
+NO-TAG-VISIT-POST-ACTIONS is not nil then only the functions of
 ADDITIONAL-POST-ACTION-LIST are performed. If ADDITIONAL-POST-ACTION-LIST is
 nil too then no post-actions are performed."
   (cond ((not (ecb-buffer-or-file-readable-p filename))
-         (error "ECB: ecb-jump-to-token: Can not open filename %s."
+         (error "ECB: ecb-jump-to-tag: Can not open filename %s."
                 filename))
         (t
          (unless window
            (setq window (selected-window)))
          (select-window window)
-         (ecb-semantic-assert-valid-token token)
+         (ecb-semantic-assert-valid-tag tag)
          (ecb-nav-save-current)
          (find-file filename)
          ;; let us set the mark so the user can easily jump back.
-         (if ecb-token-jump-sets-mark
+         (if ecb-tag-jump-sets-mark
              (push-mark nil t))
          (widen)
-         (goto-char (ecb-semantic-token-start token))
+         (goto-char (ecb-semantic-tag-start tag))
          ;; process post action
-         (unless no-token-visit-post-actions
+         (unless no-tag-visit-post-actions
            ;; first the default post actions
-           (dolist (f (cdr (assoc 'default ecb-token-visit-post-actions)))
-             (funcall f token))
+           (dolist (f (cdr (assoc 'default ecb-tag-visit-post-actions)))
+             (funcall f tag))
            ;; now the mode specific actions
-           (dolist (f (cdr (assoc major-mode ecb-token-visit-post-actions)))
-             (funcall f token)))
+           (dolist (f (cdr (assoc major-mode ecb-tag-visit-post-actions)))
+             (funcall f tag)))
          ;; now we perform the additional-post-action-list
          (dolist (f additional-post-action-list)
-           (funcall f token))
+           (funcall f tag))
          ;; Klaus Berndl <klaus.berndl@sdm.de>: Now we use a different
-         ;; implementation of ecb-nav-token-history-item. Not longer storing
-         ;; the whole token but the token-buffer and markers of token-start
-         ;; and token-end. This prevents the navigation-tree from getting
+         ;; implementation of ecb-nav-tag-history-item. Not longer storing
+         ;; the whole tag but the tag-buffer and markers of tag-start
+         ;; and tag-end. This prevents the navigation-tree from getting
          ;; unusable cause of invalid overlays after a full reparse!
-         (let* ((tok-buf (or (ecb-semantic-token-buffer token)
+         (let* ((tag-buf (or (ecb-semantic-tag-buffer tag)
                              (current-buffer)))
-                (tok-name (semantic-token-name token))
-                (tok-start (move-marker (make-marker)
-                                        (semantic-token-start token) tok-buf))
-                (tok-end (move-marker (make-marker)
-                                      (semantic-token-end token) tok-buf)))
-           (ecb-nav-add-item (ecb-nav-token-history-item-new
-                              tok-name
-                              tok-buf
-                              tok-start
-                              tok-end
+                (tag-name (ecb--semantic-tag-name tag))
+                (tag-start (move-marker (make-marker)
+                                        (ecb-semantic-tag-start tag) tag-buf))
+                (tag-end (move-marker (make-marker)
+                                      (ecb-semantic-tag-end tag) tag-buf)))
+           (ecb-nav-add-item (ecb-nav-tag-history-item-new
+                              tag-name
+                              tag-buf
+                              tag-start
+                              tag-end
                               ecb-buffer-narrowed-by-ecb))))))
 
 
@@ -1993,7 +2098,7 @@ help-text should be printed here."
                          (equal (ecb-show-node-info-what ecb-methods-buffer-name)
                                 'name+type))
                     (concat ", "
-                            (symbol-name (semantic-token-token (tree-node-get-data node))))
+                            (symbol-name (ecb--semantic-tag-class (tree-node-get-data node))))
                   "")))))
     (prog1 str
       (unless no-message
@@ -2002,7 +2107,7 @@ help-text should be printed here."
 ;;; popup-menu stuff for the methods-buffer
 
 (defvar ecb-buffer-narrowed-by-ecb nil
-  "If not nil then current buffer is narrowed to a token by ECB. Otherwise
+  "If not nil then current buffer is narrowed to a tag by ECB. Otherwise
 the buffer is not narrowed or it is narrowed by ECB but one of the
 interactive commands `narrow-to-*' or function/commands which use in turn one
 of these `narrow-to-*'-functions.")
@@ -2024,17 +2129,17 @@ of these `narrow-to-*'-functions.")
   "Set an internal ECB-state. This does not influence the behavior."
   (setq ecb-buffer-narrowed-by-ecb nil))
 
-(defun ecb-token-visit-narrow-token (token)
-  "Narrow the source buffer to TOKEN.
-If an outside located documentation belongs to TOKEN and if this documentation
-is located direct before TOKEN \(e.g. Javadoc in Java) then this documentation
+(defun ecb-tag-visit-narrow-tag (tag)
+  "Narrow the source buffer to TAG.
+If an outside located documentation belongs to TAG and if this documentation
+is located direct before TAG \(e.g. Javadoc in Java) then this documentation
 is included in the narrow.
 
 Returns current point."
-  (when (not (ecb-speedbar-sb-token-p token))
-    (narrow-to-region (or (ecb-start-of-token-doc token)
-                          (ecb-semantic-token-start token))
-                      (ecb-semantic-token-end token))
+  (when (not (ecb-speedbar-sb-tag-p tag))
+    (narrow-to-region (or (ecb-start-of-tag-doc tag)
+                          (ecb-semantic-tag-start tag))
+                      (ecb-semantic-tag-end tag))
     ;; This is the only location where this variable is set to not nil!
     ;; before every call to `narrow-to-*' or `widen' this variable is reset to
     ;; nil! 
@@ -2042,11 +2147,11 @@ Returns current point."
   (point))
 
 
-(defun ecb-token-visit-recenter (token)
+(defun ecb-tag-visit-recenter (tag)
   "Recenter the source-buffer, so current line is in the middle of the window.
-If this function is added to `ecb-token-visit-post-actions' then it's
+If this function is added to `ecb-tag-visit-post-actions' then it's
 recommended to add this function add the end of the action list for 'default
-or a `major-mode' and not to add the function `ecb-token-visit-recenter-top'
+or a `major-mode' and not to add the function `ecb-tag-visit-recenter-top'
 too!
 
 Returns current point."
@@ -2056,19 +2161,19 @@ Returns current point."
   (point))
 
 
-(defun ecb-token-visit-recenter-top (token)
+(defun ecb-tag-visit-recenter-top (tag)
   "Recenter the source-buffer, so current line is in the middle of the window.
-If this function is added to `ecb-token-visit-post-actions' then it's
+If this function is added to `ecb-tag-visit-post-actions' then it's
 recommended to add this function add the end of the action list for 'default
-or a `major-mode' and not to add the function `ecb-token-visit-recenter' too!
+or a `major-mode' and not to add the function `ecb-tag-visit-recenter' too!
 
 Returns current point."
   (set-window-start (selected-window)
                     (ecb-line-beginning-pos)))
 
 (defun ecb-methods-menu-jump-and-narrow (node)
-  (ecb-method-clicked node 1 nil t '(ecb-token-visit-narrow-token
-                                     ecb-token-visit-highlight-token-header)))
+  (ecb-method-clicked node 1 nil t '(ecb-tag-visit-narrow-tag
+                                     ecb-tag-visit-highlight-tag-header)))
 
 
 (defun ecb-methods-menu-widen (node)
@@ -2102,27 +2207,27 @@ this fails then nil is returned otherwise t."
 (defun ecb-methods-menu-show-block (node)
   (if (not (ecb-methods-menu-activate-hs))
       (ecb-error "hs-minor-mode can not be activated!")
-    ;; point must be at beginning of token-name
-    (ecb-method-clicked node 1 nil t '(ecb-token-visit-smart-token-start))
+    ;; point must be at beginning of tag-name
+    (ecb-method-clicked node 1 nil t '(ecb-tag-visit-smart-tag-start))
     (save-excursion
       (or (looking-at hs-block-start-regexp)
           (re-search-forward hs-block-start-regexp nil t))
       (hs-show-block))
     ;; Now we are at the beginning of the block or - with other word - on that
     ;; position `ecb-method-clicked' has set the point.
-    (ecb-token-visit-highlight-token-header (tree-node-get-data node))))
+    (ecb-tag-visit-highlight-tag-header (tree-node-get-data node))))
 
 
 (defun ecb-methods-menu-hide-block (node)
   (if (not (ecb-methods-menu-activate-hs))
       (ecb-error "hs-minor-mode can not be activated!")
-    ;; point must be at beginning of token-name
-    (ecb-method-clicked node 1 nil t '(ecb-token-visit-smart-token-start))
+    ;; point must be at beginning of tag-name
+    (ecb-method-clicked node 1 nil t '(ecb-tag-visit-smart-tag-start))
     (save-excursion
       (or (looking-at hs-block-start-regexp)
           (re-search-forward hs-block-start-regexp nil t))
       (hs-hide-block))
-    (ecb-token-visit-highlight-token-header (tree-node-get-data node))))
+    (ecb-tag-visit-highlight-tag-header (tree-node-get-data node))))
 
 
 (defun ecb-methods-menu-collapse-all (node)
@@ -2161,13 +2266,13 @@ this fails then nil is returned otherwise t."
         (ecb-maximize-ecb-window-menu-wrapper "Maximize window")))
 
 
-(defvar ecb-methods-token-menu nil)
-(setq ecb-methods-token-menu
+(defvar ecb-methods-tag-menu nil)
+(setq ecb-methods-tag-menu
       (append '(("Hide/Show"
-                 (ecb-methods-menu-hide-block "Jump to token and hide block")
-                 (ecb-methods-menu-show-block "Jump to token and show block"))
+                 (ecb-methods-menu-hide-block "Jump to tag and hide block")
+                 (ecb-methods-menu-show-block "Jump to tag and show block"))
                 ("Narrow/Widen"
-                 (ecb-methods-menu-jump-and-narrow "Jump to token and narrow")
+                 (ecb-methods-menu-jump-and-narrow "Jump to tag and narrow")
                  (ecb-methods-menu-widen "Undo narrowing of edit-window")))
               ecb-common-methods-menu))
 
@@ -2176,8 +2281,8 @@ this fails then nil is returned otherwise t."
   (function (lambda (node)
               (let ((data (tree-node-get-data node)))
                 (if data
-                    (cond ((semantic-token-p data)
-                           (semantic-token-name data))
+                    (cond ((ecb--semantic-tag-p data)
+                           (ecb--semantic-tag-name data))
                           ((stringp data)
                            data)
                           (t (tree-node-get-name node)))
@@ -2186,65 +2291,42 @@ this fails then nil is returned otherwise t."
 `ecb-directories-menu-title-creator'.")
 
 
-;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: A first try to display protection
-;; symbols with image icons...works fine..but this should really be done by
-;; semantic or should it not?!
-
-;; (defun ecb-get-token-name (token &optional
-;; parent-token)
-;;   "Get the name of TOKEN with the appropriate fcn from
-;; `ecb-token-display-function'."
-;;   (condition-case nil
-;;       (let* ((mode-display-fkt (cdr (assoc major-mode ecb-token-display-function)))
-;;              (default-fkt (cdr (assoc 'default ecb-token-display-function)))
-;;              (display-fkt (or (and (fboundp mode-display-fkt) mode-display-fkt)
-;;                               (and (fboundp default-fkt) default-fkt)
-;;                               'semantic-prototype-nonterminal))
-;;              (token-name (funcall display-fkt
-;;                                   token parent-token ecb-font-lock-tokens)))
-;;         (if (equal (semantic-nonterminal-protection token) 'private)
-;;             (tree-buffer-add-image-icon-maybe 0 1 token-name 'speedbar-read-only)
-;;           token-name))
-;;     (error (semantic-prototype-nonterminal token parent-token
-;;                                            ecb-font-lock-tokens))))
-
 
 (defun ecb-dump-semantic-toplevel ()
-  "Dump the current semantic-tokens in special buffer and display them."
+  "Dump the current semantic-tags in special buffer and display them."
   (interactive)
-  (let ((tokens (ecb-post-process-tokenlist (semantic-bovinate-toplevel t))))
+  (let ((tags (ecb-post-process-taglist (ecb--semantic-bovinate-toplevel t))))
     (save-selected-window
       (set-buffer (get-buffer-create "ecb-dump"))
       (erase-buffer)
-      (ecb-dump-tokens tokens "")
+      (ecb-dump-tags tags "")
       (switch-to-buffer-other-window (get-buffer-create "ecb-dump"))
       (goto-char (point-min)))))
 
 
-(defun ecb-dump-type (tok prefix)
-  (dolist (parent (ecb-get-token-parents tok))
+(defun ecb-dump-type (a-tag prefix)
+  (dolist (parent (ecb-get-tag-parents a-tag))
     (insert prefix "  " parent)))
 
 
-(defun ecb-dump-tokens (tokens prefix)
-  (dolist (tok tokens)
-    (if (stringp tok)
-	(princ (concat prefix tok))
+(defun ecb-dump-tags (tags prefix)
+  (dolist (a-tag tags)
+    (if (stringp a-tag)
+	(princ (concat prefix a-tag))
       (insert prefix
-              (semantic-name-nonterminal tok nil ecb-font-lock-tokens)
+              (ecb--semantic-format-tag-name a-tag nil ecb-font-lock-tags)
               ", "
-              (symbol-name (semantic-token-token tok))
+              (symbol-name (ecb--semantic-tag-class a-tag))
               ", "
-              (if (stringp (semantic-token-type tok))
-                  (semantic-token-type tok)
+              (if (stringp (ecb--semantic-tag-type a-tag))
+                  (ecb--semantic-tag-type a-tag)
                 "<unknown type>")
               "\n")
-      (if (eq 'type (semantic-token-token tok))
-	  (ecb-dump-type tok prefix))
-      (ecb-dump-tokens (semantic-nonterminal-children
-                        tok ecb-show-only-positioned-tokens)
+      (if (eq 'type (ecb--semantic-tag-class a-tag))
+	  (ecb-dump-type a-tag prefix))
+      (ecb-dump-tags (ecb--semantic-tag-children-compatibility
+                        a-tag ecb-show-only-positioned-tags)
                        (concat prefix "  ")))))
-
 
 (silentcomp-provide 'ecb-method-browser)
 

@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-mode-line.el,v 1.25 2003/10/24 16:35:18 berndl Exp $
+;; $Id: ecb-mode-line.el,v 1.26 2003/11/04 17:39:40 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -43,11 +43,20 @@
   (require 'silentcomp))
 
 (require 'ecb-util)
+(require 'ecb-face)
 
 ;; XEmacs
 (silentcomp-defun redraw-modeline)
+(silentcomp-defun make-extent)
+(silentcomp-defun set-extent-face)
 ;; Emacs
 (silentcomp-defun force-mode-line-update)
+(silentcomp-defun propertize)
+
+(defgroup ecb-mode-line nil
+  "Settings for the modelines of the ECB-tree-buffers."
+  :group 'ecb-general
+  :prefix "ecb-")
 
 
 (defcustom ecb-mode-line-prefixes '((ecb-directories-buffer-name . nil)
@@ -78,7 +87,7 @@ return either nil \(for no prefix) or a string which is then used a prefix.
 If a special ECB-buffer should not have a prefix in its modeline then this
 buffer-name should either not being added to this option or added with \"No
 prefix\" \(= nil as cdr)."
-  :group 'ecb-general
+  :group 'ecb-mode-line
   :set (function (lambda (symbol value)
                    (set symbol value)
                    (if (and (boundp 'ecb-minor-mode)
@@ -112,7 +121,7 @@ This can be used to jump to windows by number with commands like:
 
 Currently this feature is only available for GNU Emacs 21.X, because neither
 GNU Emacs < 21 nor XEmacs can evaluate dynamically forms in the mode-line."
-  :group 'ecb-general
+  :group 'ecb-mode-line
   :set (function (lambda (symbol value)
                    (set symbol value)
                    (if (and (boundp 'ecb-minor-mode)
@@ -123,11 +132,10 @@ GNU Emacs < 21 nor XEmacs can evaluate dynamically forms in the mode-line."
 
 
   
-
 (defcustom ecb-mode-line-data '((ecb-directories-buffer-name . sel-dir)
                                 (ecb-sources-buffer-name . sel-dir)
                                 (ecb-methods-buffer-name . sel-source)
-                                (ecb-history-buffer-name . nil))
+                                (ecb-history-buffer-name . "History"))
   "*Data shown in the modelines of the special ECB-buffers.
 Everey element of this list is a cons-cell where the car is used to define a
 buffer-name and the cdr to define the modeline-data for that buffer. For
@@ -139,11 +147,11 @@ The cdr is the data for ths modeline and can either be the symbol 'sel-dir or
 modeline-data and the latter one the current selected source-file \(without
 path).
 
-In addition to these two predefined values for every special ECB-buffer a
-function can be specified which gets three args \(name of the buffer, current
-selected directory and current selected source-file) and must return a string
-which will be displayed in the modeline \(or nil if no data should be
-displayed).
+In addition to these two predefined values for every special ECB-buffer either
+a simple string \(which will be displayed) or a function can be specified
+which gets three args \(name of the buffer, current selected directory and
+current selected source-file) and must return a string which will be displayed
+in the modeline \(or nil if no data should be displayed).
 
 If a special ECB-buffer should not display special data in its modeline then
 this buffer-name should either not being added to this option or added with
@@ -152,7 +160,7 @@ this buffer-name should either not being added to this option or added with
 The whole modeline of the special ECB-buffer consists of the prefix of
 `ecb-mode-line-prefixes' and the data of `ecb-mode-line-data' - eventually
 prepended by the window-number, see `ecb-mode-line-display-window-number'."
-  :group 'ecb-general
+  :group 'ecb-mode-line
   :set (function (lambda (symbol value)
                    (set symbol value)
                    (if (and (boundp 'ecb-minor-mode)
@@ -169,6 +177,7 @@ prepended by the window-number, see `ecb-mode-line-display-window-number'."
                                       :value sel-dir)
                                (const :tag "Current selected source"
                                       :value sel-source)
+                               (string :tag "Data-string")
                                (function :tag "Compute data with")))))
 
 
@@ -224,6 +233,8 @@ prepended by the window-number, see `ecb-mode-line-display-window-number'."
                                     ((equal data-elem 'sel-source)
                                      (and ecb-path-selected-source
                                           (file-name-nondirectory ecb-path-selected-source)))
+                                    ((stringp data-elem)
+                                     data-elem)
                                     ((null data-elem)
                                      nil)
                                     ((functionp data-elem)
@@ -235,6 +246,17 @@ prepended by the window-number, see `ecb-mode-line-display-window-number'."
                                   prefix-str
                                   data-str))))
           (ecb-get-current-visible-ecb-buffers))))
+
+
+(defun ecb-mode-line-make-modeline-str (str face)
+  (cond (ecb-running-xemacs
+         (let ((ext (make-extent nil nil)))
+           (set-extent-face ext face)
+           (list (cons ext str))))
+        (ecb-running-emacs-21
+         (list (propertize str 'face face)))
+        (t ;; emacs 20.X
+         str)))
 
 
 (defun ecb-mode-line-set (buffer-name prefix &optional text no-win-nr)
@@ -264,11 +286,20 @@ as \"W-<number>\"."
        (list (if (and ecb-running-emacs-21
                       ecb-mode-line-display-window-number
                       (not no-win-nr))
-                 '(:eval (format " W-%d" (ecb-window-number)))
+                 ;; With :eval we must not use a list
+                 '(:eval (car (ecb-mode-line-make-modeline-str
+                               (format " W-%d" (ecb-window-number))
+                               ecb-mode-line-win-nr-face)))
                "")
-             (concat shown-prefix
-                     (if (stringp text)
-                         (ecb-fit-str-to-width text avaiable-text-width))))))))
+             (ecb-mode-line-make-modeline-str shown-prefix
+                                              ecb-mode-line-prefix-face)
+             (ecb-mode-line-make-modeline-str
+              (concat (if (stringp text)
+                          (ecb-fit-str-to-width
+                           text
+                           avaiable-text-width)))
+              ecb-mode-line-data-face))))))
+
 
 
 (defun ecb-mode-line-update-buffer (buffer-name new-mode-line-format)

@@ -27,7 +27,7 @@ REM You should have received a copy of the GNU General Public License along with
 REM GNU Emacs; see the file COPYING.  If not, write to the Free Software
 REM Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-REM $Id: make.bat,v 1.26 2003/09/01 16:17:51 berndl Exp $
+REM $Id: make.bat,v 1.27 2003/11/04 17:39:36 berndl Exp $
 
 
 REM Make sure you byte-compile ECB with the semantic, eieio and
@@ -38,6 +38,8 @@ REM user configurable section
 
 REM Define here the correct paths to your (X)Emacs-executable and the
 REM required packages (use always FORWARD SLASHES in the paths!)
+
+REM TODO: Supporting the new cedet 1.0 library (see Makefile)
 
 set EMACS=C:/Programme/emacs-21/bin/emacs.exe
 set SEMANTIC=../semantic
