@@ -1,10 +1,17 @@
 ;;; ecb-util.el --- utility functions for ECB
 
-;; Copyright (C) 2000, 2001 Jesper Nordenberg
+;; Copyright (C) 2000 - 2003 Jesper Nordenberg,
+;;                           Klaus Berndl,
+;;                           Kevin A. Burton,
+;;                           Free Software Foundation, Inc.
 
 ;; Author: Jesper Nordenberg <mayhem@home.se>
+;;         Klaus Berndl <klaus.berndl@sdm.de>
+;;         Kevin A. Burton <burton@openprivacy.org>
 ;; Maintainer: Klaus Berndl <klaus.berndl@sdm.de>
-;; Keywords: java, class, browser
+;;             Kevin A. Burton <burton@openprivacy.org>
+;; Keywords: browser, code, programming, tools
+;; Created: 2000
 
 ;; This program is free software; you can redistribute it and/or modify it under
 ;; the terms of the GNU General Public License as published by the Free Software
@@ -19,6 +26,8 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
+;; $Id: ecb-util.el,v 1.64 2003/07/31 16:02:08 berndl Exp $
+
 ;;; Commentary:
 ;;
 ;; Contains misc utility functions for ECB.
@@ -30,8 +39,6 @@
 ;;
 ;; For the ChangeLog of this file see the CVS-repository. For a complete
 ;; history of the ECB-package see the file NEWS.
-
-;; $Id: ecb-util.el,v 1.63 2003/07/30 16:54:49 berndl Exp $
 
 ;;; Code:
 

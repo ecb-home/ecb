@@ -1,11 +1,17 @@
 ;;; ecb-face.el --- all face-options of ECB
 
-;; Copyright (C) 2000, 2001 Jesper Nordenberg, Klaus Berndl
+;; Copyright (C) 2000 - 2003 Jesper Nordenberg,
+;;                           Klaus Berndl,
+;;                           Kevin A. Burton,
+;;                           Free Software Foundation, Inc.
 
-;; Author: Klaus Berndl <klaus.berndl@sdm.de>
+;; Author: Jesper Nordenberg <mayhem@home.se>
+;;         Klaus Berndl <klaus.berndl@sdm.de>
+;;         Kevin A. Burton <burton@openprivacy.org>
 ;; Maintainer: Klaus Berndl <klaus.berndl@sdm.de>
-;; Keywords: java, class, browser
-;; Created: Feb 2002
+;;             Kevin A. Burton <burton@openprivacy.org>
+;; Keywords: browser, code, programming, tools
+;; Created: 2001
 
 ;; This program is free software; you can redistribute it and/or modify it under
 ;; the terms of the GNU General Public License as published by the Free Software
@@ -20,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-face.el,v 1.14 2003/06/23 14:13:40 berndl Exp $
+;; $Id: ecb-face.el,v 1.15 2003/07/31 16:02:08 berndl Exp $
 
 ;;; Commentary:
 

@@ -1,31 +1,32 @@
 \input texinfo   @c -*-texinfo-*-
-@c
 
-@c Copyright (C) 2002 Klaus Berndl
+@c Copyright (C) 2000 - 2003 Jesper Nordenberg,
+@c                           Klaus Berndl,
+@c                           Kevin A. Burton,
+@c                           Free Software Foundation, Inc.
 
-@c Author: Klaus Berndl <klaus.berndl@sdm.de>
-@c Keywords: java, class, browser
-@c Created: Mar 2001
+@c Author: Jesper Nordenberg <mayhem@home.se>
+@c         Klaus Berndl <klaus.berndl@sdm.de>
+@c         Kevin A. Burton <burton@openprivacy.org>
+@c Maintainer: Klaus Berndl <klaus.berndl@sdm.de>
+@c             Kevin A. Burton <burton@openprivacy.org>
+@c Keywords: browser, code, programming, tools
+@c Created: 2001
 
-@c This manual covers the tool "ECB", and is a part of it's
-@c distribution.
+@c This program is free software; you can redistribute it and/or modify it under
+@c the terms of the GNU General Public License as published by the Free Software
+@c Foundation; either version 2, or (at your option) any later version.
 
-@c This manual is free software; you can redistribute it and/or modify
-@c it under the terms of the GNU General Public License as published by
-@c the Free Software Foundation; either version 2, or (at your option)
-@c any later version.
+@c This program is distributed in the hope that it will be useful, but WITHOUT
+@c ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+@c FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+@c details.
 
-@c This manual is distributed in the hope that it will be useful,
-@c but WITHOUT ANY WARRANTY; without even the implied warranty of
-@c MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-@c GNU General Public License for more details.
+@c You should have received a copy of the GNU General Public License along with
+@c GNU Emacs; see the file COPYING.  If not, write to the Free Software
+@c Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-@c You should have received a copy of the GNU General Public License
-@c along with GNU Emacs; see the file COPYING.  If not, write to the
-@c Free Software Foundation, Inc., 59 Temple Place - Suite 330,
-@c Boston, MA 02111-1307, USA.
-
-@c $Id: ecb.texi,v 1.104 2003/07/30 16:54:48 berndl Exp $
+@c $Id: ecb.texi,v 1.105 2003/07/31 16:02:07 berndl Exp $
 
 @setfilename ecb.info
 

@@ -1,11 +1,17 @@
 ;;; tree-buffer.el --- functions for tree buffers
 
-;; Copyright (C) 2000, 2001 Jesper Nordenberg
+;; Copyright (C) 2000 - 2003 Jesper Nordenberg,
+;;                           Klaus Berndl,
+;;                           Kevin A. Burton,
+;;                           Free Software Foundation, Inc.
 
 ;; Author: Jesper Nordenberg <mayhem@home.se>
 ;;         Klaus Berndl <klaus.berndl@sdm.de>
+;;         Kevin A. Burton <burton@openprivacy.org>
 ;; Maintainer: Klaus Berndl <klaus.berndl@sdm.de>
-;; Keywords: java, class, browser
+;;             Kevin A. Burton <burton@openprivacy.org>
+;; Keywords: browser, code, programming, tools, tree
+;; Created: 2000
 
 ;; This program is free software; you can redistribute it and/or modify it under
 ;; the terms of the GNU General Public License as published by the Free Software
@@ -20,8 +26,10 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
+;; $Id: tree-buffer.el,v 1.119 2003/07/31 16:02:07 berndl Exp $
+
 ;;; Commentary:
-;;
+
 ;; Functions for tree buffers.
 ;;
 ;; This file is part of the ECB package which can be found at:
@@ -31,8 +39,6 @@
 ;;
 ;; For the ChangeLog of this file see the CVS-repository. For a complete
 ;; history of the ECB-package see the file NEWS.
-
-;; $Id: tree-buffer.el,v 1.118 2003/07/30 16:54:48 berndl Exp $
 
 ;;; Code:
 

@@ -1,12 +1,17 @@
 ;;; ecb-mode-line.el --- mode-line for ECB
 
-;; Copyright (C) 2001 Jesper Nordenberg
-;; Copyright (C) 2001 Free Software Foundation, Inc.
-;; Copyright (C) 2001 Kevin A. Burton ( burton@apache.org | burton@openprivacy.org )
+;; Copyright (C) 2000 - 2003 Jesper Nordenberg,
+;;                           Klaus Berndl,
+;;                           Kevin A. Burton,
+;;                           Free Software Foundation, Inc.
 
-;; Author: Kevin A. Burton <burton@openprivacy.org>
-;; Maintainer: Kevin A. Burton <burton@openprivacy.org>
-;; Keywords: java, class, browser
+;; Author: Jesper Nordenberg <mayhem@home.se>
+;;         Klaus Berndl <klaus.berndl@sdm.de>
+;;         Kevin A. Burton <burton@openprivacy.org>
+;; Maintainer: Klaus Berndl <klaus.berndl@sdm.de>
+;;             Kevin A. Burton <burton@openprivacy.org>
+;; Keywords: browser, code, programming, tools
+;; Created: 2001
 
 ;; This program is free software; you can redistribute it and/or modify it under
 ;; the terms of the GNU General Public License as published by the Free Software
@@ -21,6 +26,8 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
+;; $Id: ecb-mode-line.el,v 1.21 2003/07/31 16:02:08 berndl Exp $
+
 ;;; Commentary:
 ;;
 ;; Contains all mode-line enhancements for ECB.
@@ -29,8 +36,6 @@
 ;;
 ;; For the ChangeLog of this file see the CVS-repository. For a complete
 ;; history of the ECB-package see the file NEWS.
-
-;; $Id: ecb-mode-line.el,v 1.20 2003/07/30 16:54:49 berndl Exp $
 
 ;;; Code
 

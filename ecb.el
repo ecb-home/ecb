@@ -1,17 +1,17 @@
-;;; ecb.el --- a code browser
+;;; ecb.el --- a code browser for Emacs
 
-;; Copyright (C) 2000, 2001 Jesper Nordenberg, Klaus Berndl
+;; Copyright (C) 2000 - 2003 Jesper Nordenberg,
+;;                           Klaus Berndl,
+;;                           Kevin A. Burton,
+;;                           Free Software Foundation, Inc.
 
 ;; Author: Jesper Nordenberg <mayhem@home.se>
 ;;         Klaus Berndl <klaus.berndl@sdm.de>
+;;         Kevin A. Burton <burton@openprivacy.org>
 ;; Maintainer: Klaus Berndl <klaus.berndl@sdm.de>
+;;             Kevin A. Burton <burton@openprivacy.org>
 ;; Keywords: browser, code, programming, tools
-;; Created: Jul 2000
-
-;; IMPORTANT: The version-number is auto-frobbed from the Makefile. Do not
-;; change it here!
-(defconst ecb-version "1.95.1"
-  "Current ECB version.")
+;; Created: 2000
 
 ;; This program is free software; you can redistribute it and/or modify it under
 ;; the terms of the GNU General Public License as published by the Free Software
@@ -26,6 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
+;; $Id: ecb.el,v 1.321 2003/07/31 16:02:07 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -35,7 +36,6 @@
 ;; variables. It supports source-code parsing for semantic-supported languages
 ;; like Java, C, C++, Elisp and Scheme as well as for source-types supported
 ;; "only" by imenu or etags (e.g. perl, TeX, LaTeX etc.).
-
 
 ;;; Installation
 ;;
@@ -88,9 +88,12 @@
 ;; For the ChangeLog of this file see the CVS-repository. For a complete
 ;; history of the ECB-package see the file NEWS.
 
-;; $Id: ecb.el,v 1.320 2003/07/30 16:54:48 berndl Exp $
-
 ;;; Code:
+
+;; IMPORTANT: The version-number is auto-frobbed from the Makefile. Do not
+;; change it here!
+(defconst ecb-version "1.95.1"
+  "Current ECB version.")
 
 (eval-when-compile
   (require 'silentcomp))
@@ -367,7 +370,7 @@ unintentionally the frame-layout if the user just jumps between different
 edit-windows, the tree-windows and the compile-window of ECB.
 There is one exception from this rule: If the edit-window is splitted and one
 window contains a dired-buffer and a \"ECB-deactivating\"-file is opened via
-dired then opening this file deactivates ECB \(resp. hides the ECB-windows)."
+dired then opening this file deactivates ECB \(rsp. hides the ECB-windows)."
   :group 'ecb-general
   :type '(radio :tag "Modes for deactivation"
                 (const :tag "None" none)
@@ -1490,8 +1493,8 @@ mouse-buttons.
 If this option is a positive integer S then in all ECB-tree-buffers the keys
 \[M-mouse-1] and \[M-mouse-3] are bound to scrolling left rsp. right with
 scroll-step S - clicking with mouse-1 or mouse-2 onto the edge of the modeline
-has the same effect, i.e. if you click with mouse-1 onto the left \(resp
-right) edge of the modeline you will scroll left \(resp. right). Additionally
+has the same effect, i.e. if you click with mouse-1 onto the left \(rsp.
+right) edge of the modeline you will scroll left \(rsp. right). Additionally
 \[C-M-mouse-1] and \[C-M-mouse-3] are bound to scrolling left rsp. right with
 scroll-step `window-width' - 2. Default is a scroll-step of 5. If the value is
 nil then no keys for horizontal scrolling are bound."
@@ -4108,7 +4111,7 @@ nodes are collapsed.
 
 Nodes which are not indented have indentation-level 0!
 
-Which node-types are expanded \(resp. collapsed) by this command depends on
+Which node-types are expanded \(rsp. collapsed) by this command depends on
 the options `ecb-methods-nodes-expand-spec' and
 `ecb-methods-nodes-collapse-spec'! With optional argument FORCE-ALL all tokens
 will be expanded/collapsed regardless of the values of these options.

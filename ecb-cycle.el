@@ -1,30 +1,32 @@
 ;;; ecb-cycle.el --- cycle buffers through ecb windows.
 
-;; $Id: ecb-cycle.el,v 1.22 2003/07/30 16:54:49 berndl Exp $
+;; Copyright (C) 2000 - 2003 Jesper Nordenberg,
+;;                           Klaus Berndl,
+;;                           Kevin A. Burton,
+;;                           Free Software Foundation, Inc.
 
-;; Copyright (C) 2000-2003 Free Software Foundation, Inc.
-;; Copyright (C) 2000-2003 Kevin A. Burton (burton@openprivacy.org)
-
-;; Author: Kevin A. Burton (burton@openprivacy.org)
-;; Maintainer: Kevin A. Burton (burton@openprivacy.org)
-;; Location: http://relativity.yi.org
-;; Keywords:
-;; Version: 1.1.0
-
-;; This file is [not yet] part of GNU Emacs.
+;; Author: Jesper Nordenberg <mayhem@home.se>
+;;         Klaus Berndl <klaus.berndl@sdm.de>
+;;         Kevin A. Burton <burton@openprivacy.org>
+;; Maintainer: Klaus Berndl <klaus.berndl@sdm.de>
+;;             Kevin A. Burton <burton@openprivacy.org>
+;; Keywords: browser, code, programming, tools
+;; Created: 2002
 
 ;; This program is free software; you can redistribute it and/or modify it under
 ;; the terms of the GNU General Public License as published by the Free Software
-;; Foundation; either version 2 of the License, or any later version.
-;;
+;; Foundation; either version 2, or (at your option) any later version.
+
 ;; This program is distributed in the hope that it will be useful, but WITHOUT
 ;; ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
 ;; FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
 ;; details.
-;;
+
 ;; You should have received a copy of the GNU General Public License along with
-;; this program; if not, write to the Free Software Foundation, Inc., 59 Temple
-;; Place - Suite 330, Boston, MA 02111-1307, USA.
+;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
+;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+
+;; $Id: ecb-cycle.el,v 1.23 2003/07/31 16:02:08 berndl Exp $
 
 ;;; Commentary:
 
@@ -33,7 +35,8 @@
 
 ;;; History:
 
-;; Fri Jan 25 2002 05:07 PM (burton@openprivacy.org): init
+;; For the ChangeLog of this file see the CVS-repository. For a complete
+;; history of the ECB-package see the file NEWS.
 
 ;;; TODO:
 ;;
@@ -56,9 +59,6 @@
 ;;
 ;; - If possible, try to put fit the buffer so that the end of buffer is at the
 ;; end of the window... if necessary.
-
-;; What do we do if
-;;
 
 ;;; Code:
 

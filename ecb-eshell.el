@@ -1,30 +1,32 @@
 ;;; ecb-eshell.el --- eshell integration for the ECB.
 
-;; $Id: ecb-eshell.el,v 1.66 2003/07/30 16:54:49 berndl Exp $
+;; Copyright (C) 2000 - 2003 Jesper Nordenberg,
+;;                           Klaus Berndl,
+;;                           Kevin A. Burton,
+;;                           Free Software Foundation, Inc.
 
-;; Copyright (C) 2000-2003 Free Software Foundation, Inc.
-;; Copyright (C) 2000-2003 Kevin A. Burton (burton@openprivacy.org)
-
-;; Author: Kevin A. Burton (burton@openprivacy.org)
-;; Maintainer: Kevin A. Burton (burton@openprivacy.org)
-;; Location: http://relativity.yi.org
-;; Keywords: 
-;; Version: 1.1.0
-
-;; This file is [not yet] part of GNU Emacs.
+;; Author: Jesper Nordenberg <mayhem@home.se>
+;;         Klaus Berndl <klaus.berndl@sdm.de>
+;;         Kevin A. Burton <burton@openprivacy.org>
+;; Maintainer: Klaus Berndl <klaus.berndl@sdm.de>
+;;             Kevin A. Burton <burton@openprivacy.org>
+;; Keywords: browser, code, programming, tools
+;; Created: 2001
 
 ;; This program is free software; you can redistribute it and/or modify it under
 ;; the terms of the GNU General Public License as published by the Free Software
-;; Foundation; either version 2 of the License, or any later version.
-;;
+;; Foundation; either version 2, or (at your option) any later version.
+
 ;; This program is distributed in the hope that it will be useful, but WITHOUT
 ;; ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
 ;; FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
 ;; details.
-;;
+
 ;; You should have received a copy of the GNU General Public License along with
-;; this program; if not, write to the Free Software Foundation, Inc., 59 Temple
-;; Place - Suite 330, Boston, MA 02111-1307, USA.
+;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
+;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+
+;; $Id: ecb-eshell.el,v 1.67 2003/07/31 16:02:08 berndl Exp $
 
 ;;; Commentary:
 
@@ -57,87 +59,8 @@
 
 ;;; History:
 
-;; Tue Jan 14 2003 14:53 PM (klaus.berndl@sdm.de):
-;; Switched back to the use of visible-window during body of
-;; `ecb-do-if-buffer-visible-in-ecb-frame'.
-
-;; Mon Jan 13 2003 09:33 AM (burton@peace): Fixed a bug with
-;; ecb-eshell-shrink-if-necessary if it wasn't being run from within the
-;; correct buffer. Reworked some code to restore the old behavior prior to
-;; visible-window being used as a side effect from within a macro.
-
-;; Sun Jan 05 2003 04:05 PM (burton@universe): Fixed a bug with the way we
-;; handle the switch-to-buffer after a eshell sync.
-;;
-;;     we need to make sure that that the eshell buffer isn't at the top of the
-;;     buffer history list just because we implicitly changed its directory and
-;;     switched to it.  It might not be a good idea in the long term to put it
-;;     all the way at the end of the history list but it is better than leaving
-;;     it at the top.
-
-;; - Mon Dec 30 2002 6:57 PM (klaus.berndl@sdm.de):
-;;   Added ecb-eshell-start. See docstring.
-;; - Son Dec 29 2002 9:43 AM (klaus.berndl@sdm.de):
-;;   Fixes some bugs and cleans up the code:
-;;   + ecb-eshell-save-buffer-history: In macros with a let-clause we must
-;;     generate the local variables with make-symbol!!
-;;   + ecb-eshell-current-buffer-sync:
-;;     - Now only executed if called in ecb-compile-window; see comment in the
-;;       function itself.
-;;     - Normalizing directories before comparing it
-;;   + ecb-eshell-cleanse: removed (end-of-buffer) because this always sets
-;;     the mark. This should not be used in Elisp-programs!
-;;   + Added to all functions ecb-eshell-running-p
-;;   + Removed a lot of superfluous save-excursion, save-window-excursion
-;;     etc...
-;;   + Removed ecb-eshell-enlarge-when-starting; eshell is always implicit
-;;     started and selected by `ecb-eshell-goto-eshell' so the option
-;;     `ecb-eshell-enlarge-when-selecting' should be enough.
-;;   + Removed the ecb-eshell-buffer-name.
-;;   + Added new option ecb-eshell-synchronize
-;;   + Moved all add-hook into ecb-eshell-activate
-;;   + Added new function ecb-eshell-deactivate
-;;   + Made ecb-eshell-activate idempotent.
-;;   
-;; - Mon Feb 04 2002 10:44 PM (burton@openprivacy.org): BUG: I think at certain
-;; conditions, we might be able to get the eshell window to expand after we
-;; automatically change directories.  I think this has to be:
-;;
-;; - Mon Feb 04 2002 10:43 PM (burton@openprivacy.org): BUGFIX: make sure the
-;; eshell is not buffer-read-only.  This is manifested by desktop.el for some
-;; reason.
-;;
-;; - Tue Jan 29 2002 03:33 AM (burton@openprivacy.org): Include the ability to
-;; startup the eshell when the ECB is started.
-;;
-;;
-;; - Tue Jan 29 2002 03:31 AM (burton@openprivacy.org): RFE: make the
-;; auto-enlargement on command execution optional, true by default.
-;;
-;; - Tue Jan 22 2002 11:38 PM (burton@openprivacy.org): enable customization
-;; 
-;; - Tue Dec 25 2001 07:54 PM (burton@openprivacy.org): We now enlarge the ecb
-;;   window when you go to it.
-;;    
-;; - Sat Dec 15 2001 01:50 AM (burton@openprivacy.org): We are not being much
-;;   smarter about saving selected windows.
-;;
-;; - Fri Dec 14 2001 05:57 PM (burton@openprivacy.org): fixed a bug which caused 
-;;
-;; - Fri Dec 14 2001 04:48 PM (burton@openprivacy.org): only run eshell/cd if
-;; the current directory is different than the eshell/pwd (this is a performance
-;; issue and needs to be added in ecb-eshell-current-buffer-sync
-;;
-;;   - we can't do this.  eshell/pwd doesn't return a string.  Instead we should
-;;     change to the eshell-buffer and see what the directory default-directory
-;;     is there.
-;;
-;; - Fri Dec 14 2001 03:24 PM (burton@openprivacy.org): use
-;; eshell-pre-command-hook to increase the size of the window if we are in an
-;; ECB layout (and the ecb is activated)...
-;;
-;; - Sun Nov 18 2001 07:20 PM (burton@openprivacy.org): putting the cursor one
-;;   line from the bottom of the window.
+;; For the ChangeLog of this file see the CVS-repository. For a complete
+;; history of the ECB-package see the file NEWS.
 
 ;;; Design:
 ;;

@@ -1,31 +1,32 @@
-;;; ecb-speedbar.el --- 
+;;; ecb-speedbar.el --- Integration of speedbar into ECB
 
-;; $Id: ecb-speedbar.el,v 1.45 2003/07/30 16:54:49 berndl Exp $
+;; Copyright (C) 2000 - 2003 Jesper Nordenberg,
+;;                           Klaus Berndl,
+;;                           Kevin A. Burton,
+;;                           Free Software Foundation, Inc.
 
-;; Copyright (C) 2000-2003 Free Software Foundation, Inc.
-;; Copyright (C) 2000-2003 Kevin A. Burton (burton@openprivacy.org)
-
-;; Author: Kevin A. Burton (burton@openprivacy.org)
-;;         Klaus berndl (klaus.berndl@sdm.de)
-;; Maintainer: Kevin A. Burton (burton@openprivacy.org)
-;;             Klaus berndl (klaus.berndl@sdm.de)
-;; Location: http://relativity.yi.org
-;; Keywords: 
-
-;; This file is [not yet] part of GNU Emacs.
+;; Author: Jesper Nordenberg <mayhem@home.se>
+;;         Klaus Berndl <klaus.berndl@sdm.de>
+;;         Kevin A. Burton <burton@openprivacy.org>
+;; Maintainer: Klaus Berndl <klaus.berndl@sdm.de>
+;;             Kevin A. Burton <burton@openprivacy.org>
+;; Keywords: browser, code, programming, tools
+;; Created: 2002
 
 ;; This program is free software; you can redistribute it and/or modify it under
 ;; the terms of the GNU General Public License as published by the Free Software
-;; Foundation; either version 2 of the License, or any later version.
-;;
+;; Foundation; either version 2, or (at your option) any later version.
+
 ;; This program is distributed in the hope that it will be useful, but WITHOUT
 ;; ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
 ;; FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
 ;; details.
-;;
+
 ;; You should have received a copy of the GNU General Public License along with
-;; this program; if not, write to the Free Software Foundation, Inc., 59 Temple
-;; Place - Suite 330, Boston, MA 02111-1307, USA.
+;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
+;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+
+;; $Id: ecb-speedbar.el,v 1.46 2003/07/31 16:02:08 berndl Exp $
 
 ;;; Commentary:
 
@@ -57,30 +58,8 @@
 
 ;;; History:
 
-
-;; - Fri Jul 04 2003 5:28 PM (klaus.berndl@sdm.de): removed the
-;;   speedbar-version check because this is done now globally in ecb.el.
-;;
-;; - Mon Jun 23 2003 11:54 AM (klaus.berndl@sdm.de): Added speedbar-mechanism
-;;   for parsing files not supported by semantic but by imenu and/or etags.
-;;
-;; - Thu Dec 19 2002 6:54 PM (klaus.berndl@sdm.de): Full integrated in ECB and
-;;   fixed some bugs. Now the speedbar integration seems to work very well.
-;;
-;; - Sat Dec 15 2001 03:10 AM (burton@openprivacy.org): only sync up the eshell
-;;   if the current file is in a different dir than the speedbar.
-;;
-;; - Fri Dec 14 2001 10:11 PM (burton@openprivacy.org): when we hit <ENTER> on a
-;;   file in the speedbar window, a new window is created.
-;;
-;; - Sun Nov 18 2001 01:46 AM (burton@openprivacy.org): BUG: we need to set
-;;   dframe-activate-frame to the current frame and NOT use an invisible
-;;   frame. This is important because when I select a buffer in ECB it can't
-;;   use the invisible frame. :(
-;;
-;; - Sat Nov 10 2001 09:30 PM (burton@openprivacy.org): implementation of
-;;   ecb-delete-other-windows-in-editwindow-20
-
+;; For the ChangeLog of this file see the CVS-repository. For a complete
+;; history of the ECB-package see the file NEWS.
 
 ;;; Code:
 
