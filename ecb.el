@@ -696,8 +696,8 @@ highlighting of the methods if `ecb-font-lock-methods' is not nil."
     (save-excursion
       (ecb-buffer-select ecb-methods-buffer-name)
       (setq tree-buffer-indent ecb-tree-indent)
-      (tree-buffer-update))
-    (set-window-point (selected-window) 1)))
+      (tree-buffer-update))))
+;;     (set-window-point (selected-window) 1)))
 
 (defun ecb-set-selected-source(filename &optional window-skips
                                         no-edit-buffer-selection)
