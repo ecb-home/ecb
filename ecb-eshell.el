@@ -1,6 +1,6 @@
 ;;; ecb-eshell.el --- eshell integration for the ECB.
 
-;; $Id: ecb-eshell.el,v 1.39 2002/10/29 20:17:14 burtonator Exp $
+;; $Id: ecb-eshell.el,v 1.40 2002/10/30 01:00:25 burtonator Exp $
 
 ;; Copyright (C) 2000-2003 Free Software Foundation, Inc.
 ;; Copyright (C) 2000-2003 Kevin A. Burton (burton@openprivacy.org)
@@ -162,70 +162,78 @@ eshell is currently visible."
 
   ;;only do this if the user is looking at the eshell buffer
 
-  (if (ecb-eshell-running-p)      
-      (let((source-buffer-directory nil)
-           (ecb-buffer-directory nil)
-           (window nil))
+  (save-excursion
+    (save-window-excursion
 
-        ;;make sure we are clean.
-        (ecb-eshell-cleanse)
+      (if (ecb-eshell-running-p)
+          (let((source-buffer-directory nil)
+               (eshell-buffer-list (frame-parameter nil 'buffer-list))
+               (ecb-buffer-directory nil)
+               (window nil))
+
+            ;;make sure we are clean.
+            (ecb-eshell-cleanse)
         
-        ;;get copies of the current source directory.
+            ;;get copies of the current source directory.
         
-        (setq source-buffer-directory default-directory)
+            (setq source-buffer-directory default-directory)
 
-        (setq window (get-buffer-window ecb-eshell-buffer-name))
+            (setq window (get-buffer-window ecb-eshell-buffer-name))
 
-        (save-excursion
-          (set-buffer (get-buffer-create ecb-eshell-buffer-name))
+            (save-excursion
+              (set-buffer (get-buffer-create ecb-eshell-buffer-name))
 
-          (setq buffer-read-only nil)
+              (setq buffer-read-only nil)
           
-          (setq ecb-buffer-directory default-directory))
+              (setq ecb-buffer-directory default-directory))
 
-        ;;at this point source-buffer-directory is a snapshot of the source
-        ;;buffer window and default directory is the directory in the eshell
-        ;;window
+            ;;at this point source-buffer-directory is a snapshot of the source
+            ;;buffer window and default directory is the directory in the eshell
+            ;;window
         
-        (when (and window
-                   (window-live-p window)
-                   (not (string-equal source-buffer-directory ecb-buffer-directory)))
-          (save-excursion
+            (when (and window
+                       (window-live-p window)
+                       (not (string-equal source-buffer-directory ecb-buffer-directory)))
+              (save-excursion
 
-            (set-buffer ecb-eshell-buffer-name)
+                (set-buffer ecb-eshell-buffer-name)
             
-            ;;change the directory without showing the cd command
-            (eshell/cd source-buffer-directory)
+                ;;change the directory without showing the cd command
+                (eshell/cd source-buffer-directory)
             
-            ;;execute the command
-            (save-selected-window
-              (select-window window)
+                ;;execute the command
+                (save-selected-window
+                  (select-window window)
               
-              (eshell-send-input)))
+                  (eshell-send-input)))
           
-          (ecb-eshell-recenter)))))
+              (ecb-eshell-recenter))
+
+            ;;now update the buffer list to remove the eshell.
+            (modify-frame-parameters nil (list (cons 'buffer-list eshell-buffer-list))))))))
 
 (defun ecb-eshell-recenter()
   "Recenter the eshell window so that the prompt is at the end of the buffer."
   (interactive)
 
-  (save-selected-window
+  (save-excursion
+    (save-selected-window
   
-    (let(window)
+      (let(window)
       
-      (setq window (get-buffer-window ecb-eshell-buffer-name))
+        (setq window (get-buffer-window ecb-eshell-buffer-name))
       
-      (when (and (ecb-eshell-running-p)
-                 window
-                 (window-live-p window)
-                 (equal window ecb-compile-window))
+        (when (and (ecb-eshell-running-p)
+                   window
+                   (window-live-p window)
+                   (equal window ecb-compile-window))
         
-        (select-window window)
+          (select-window window)
 
-        ;;this needs to be present under GNU Emacs or recenter will fail.
-        (end-of-buffer) 
+          ;;this needs to be present under GNU Emacs or recenter will fail.
+          (end-of-buffer) 
         
-        (recenter -2)))))
+          (recenter -2))))))
 
 (defun ecb-eshell-running-p()
   "Return true if eshell is currently running."
