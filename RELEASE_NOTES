@@ -1,0 +1,45 @@
+This file contains some important release-notes for ECB 1.20
+
+General:
+--------
+
+Please read also the section "Known conflicts of ECB with other packages" in
+the online help ('ecb-show-help'). This section is a list of known conflicts
+and also proper and easy solutions!
+
+
+Installing ECB first time:
+--------------------------
+
+No special notes.
+
+
+Upgrading from versions < 1.20:
+-------------------------------
+
++ Now mouse-1 and mouse-2 for opening source-files and jumping to
+  methods/variables is not longer the default keybinding. Please take a look
+  at the new options 'ecb-primary-secondary-mouse-buttons' and
+  'ecb-primary-mouse-jump-destination'.
+
++ Now it is no longer necessary to bind in the ECB-hooks (ecb-activate-hook
+  and ecb-deactivate-hook) some standard-Emacs-keys for window-handling to the
+  ECB replacements for the related standard-functions to get proper
+  window-handling within the edit-window(s) of ECB.
+
+  Example: With ECB < 1.20 it was necessary to bind [C-x o] to
+  'ecb-other-window' in 'ecb-activate-hook' (and also "unbinding" it back to
+  the standard other-window in the 'ecb-deactivate-hook') to get a more
+  ECB-suitable other-window behavior. Same for other window-keys.
+
+  This way will work also in ECB 1.20 but it is NOT the recommended way
+  because the new option 'ecb-advice-window-functions' makes this much easier
+  and better. Please read the documentation of this option exactly!
+
++ Interactively calling 'ecb-update-methods-buffer' is not longer necessary as
+  work-around for the bug, that sometimes the error "Wrong type argument,
+  integer-or-marker-p nil" is displayed after clicking onto a method/variable
+  in the ECB-method-buffer. This bug is fixed!
+
++ For a complete list of changes and new features for version 1.20 see the
+  HISTORY file.
