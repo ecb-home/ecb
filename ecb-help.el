@@ -26,7 +26,7 @@
 ;;
 ;; Contains all online-help for ECB (stolen something from recentf.el)
 
-;; $Id: ecb-help.el,v 1.50 2001/11/19 12:11:54 berndl Exp $
+;; $Id: ecb-help.el,v 1.51 2001/11/21 08:16:04 berndl Exp $
 
 ;;; Code
 
@@ -488,8 +488,9 @@ solutions/hints/workarounds:
 
 3. Package avoid.el
    With GNU Emacs 20.X ECB must deactivate `mouse-avoidance-mode' if the
-   option `ecb-show-node-name-in-minibuffer' is set to either 'if-too-long or
-   'always. This is done automatically but only as long ECB is activated.
+   option `ecb-show-node-info-in-minibuffer' activates for at least one ECB
+   tree-buffer 'if-too-long or 'always. This is done automatically but only as
+   long ECB is activated.
 
 4. Package calendar.el:
    With activated ECB `calendar' does not shrink it´s window to the small size

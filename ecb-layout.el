@@ -124,7 +124,7 @@
 ;;   + The edit-window must not be splitted and the point must reside in
 ;;     the not deleted edit-window.
 
-;; $Id: ecb-layout.el,v 1.80 2001/11/18 05:34:36 burtonator Exp $
+;; $Id: ecb-layout.el,v 1.81 2001/11/21 08:16:04 berndl Exp $
 
 ;;; Code:
 
@@ -1252,8 +1252,7 @@ visibility of the ECB windows. ECB minor mode remains active!"
                        (<= (prefix-numeric-value arg) 0))))
       (if (not new-state)
           (progn
-            (if (or (equal ecb-show-node-name-in-minibuffer 'always)
-                    (equal ecb-show-node-name-in-minibuffer 'if-too-long))
+            (if (ecb-show-any-node-info-by-mouse-moving-p)
                 (tree-buffer-activate-follow-mouse))
             (ecb-redraw-layout))
         (unless ecb-windows-hidden

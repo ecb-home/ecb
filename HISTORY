@@ -27,7 +27,13 @@ Version 1.60:
   (Klaus)
 
 - If mouse is moved over an alias in the directories buffer then the real path
-  is shown in the echo-area. (Klaus)
+  is shown in the echo-area; see also 'ecb-show-node-info-in-minibuffer'
+  (Klaus).
+
+- If mouse is moved over an history-entry then the full path is shown in the
+  echo-area so you can distinct better between two entries with the same name
+  but with differnt pathes; see also 'ecb-show-node-info-in-minibuffer'
+  (Klaus).
 
 - New option for the history: ecb-kill-buffer-clears-history defines if
   `kill-buffer' should also remove the corresponding history entry. There are

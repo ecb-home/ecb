@@ -54,7 +54,7 @@
 ;; The latest version of the ECB is available at
 ;; http://home.swipnet.se/mayhem/ecb.html
 
-;; $Id: ecb.el,v 1.161 2001/11/21 02:20:50 burtonator Exp $
+;; $Id: ecb.el,v 1.162 2001/11/21 08:16:04 berndl Exp $
 
 ;;; Code:
 
@@ -117,9 +117,6 @@
 
 (defvar ecb-activated-window-configuration nil
   "Window configuration used after the ECB is activated.")
-
-(defvar ecb-show-node-name-in-minibuffer nil
-  "FIXME: where is this?")
 
 ;;====================================================
 ;; Customization
@@ -1213,84 +1210,6 @@ semantic-reparse. This function is added to the hook
   ;; set the modelines of all visible tree-buffers new
   (ecb-mode-line-format))
 
-;; (defun ecb-set-selected-directory (path)
-;;   (let ((last-dir ecb-path-selected-directory))
-;;     (save-selected-window
-;;       (setq ecb-path-selected-directory (ecb-fix-filename path))
-  
-;;       (when (or (not ecb-show-sources-in-directories-buffer)
-;; 		ecb-auto-expand-directory-tree)
-;; 	(ecb-exec-in-directories-window
-;; 	 (when ecb-auto-expand-directory-tree
-;; 	   ;; Expand tree to show selected directory
-;;            (let ((start
-;;                   (if (equal ecb-auto-expand-directory-tree 'best)
-;;                       ;; The best matching source-path for path. If none of the
-;;                       ;; source-paths in the buffer `ecb-directories-buffer-name'
-;;                       ;; matches nil otherwise the result is a cons-cell where car
-;;                       ;; is PATH without the matching part and cdr is the matching
-;;                       ;; node."
-;;                       (car (sort (delete nil
-;;                                          (mapcar (lambda (elem)
-;;                                                    (let ((data (tree-node-get-data elem)))
-;;                                                      (save-match-data
-;;                                                        (if (string-match
-;;                                                             (concat "^"
-;;                                                                     (regexp-quote data)
-;;                                                                     "/?\\(.*\\)")
-;;                                                             ecb-path-selected-directory)
-;;                                                            (cons (match-string
-;;                                                                   1
-;;                                                                   ecb-path-selected-directory)
-;;                                                                  elem)
-;;                                                          nil))))
-;;                                                  (tree-node-get-children (tree-buffer-get-root))))
-;;                                  (lambda (lhs rhs)
-;;                                    (< (length (car lhs)) (length (car
-;;                                                                   rhs))))))
-;;                     ;; we start at the root node with the full path
-;;                     (cons ecb-path-selected-directory (tree-buffer-get-root)))))
-;;              (when (and (equal ecb-auto-expand-directory-tree 'best)
-;;                         start)
-;;                ;; expand the best-match node itself
-;;                (tree-node-set-expanded (cdr start) t)
-;;                (ecb-update-directory-node (cdr start)))
-;;              ;; start recursive expanding of either the best-match
-;;              ;; or the root-node itself.
-;;              (ecb-expand-tree (car start) (cdr start))
-;;              (tree-buffer-update)))
-;; 	 (when (not ecb-show-sources-in-directories-buffer)
-;; 	   (tree-buffer-highlight-node-data ecb-path-selected-directory))))
-
-;;       (ecb-exec-in-sources-window
-;;        (let ((old-children (tree-node-get-children (tree-buffer-get-root))))
-;; 	 (tree-node-set-children (tree-buffer-get-root) nil)
-;; 	 (ecb-tree-node-add-files
-;; 	  (tree-buffer-get-root)
-;; 	  ecb-path-selected-directory
-;; 	  (ecb-get-source-files
-;; 	   ecb-path-selected-directory
-;; 	   (directory-files ecb-path-selected-directory nil nil t))
-;; 	  0
-;; 	  ecb-show-source-file-extension
-;; 	  old-children ecb-sources-sort-method t))
-;;        (tree-buffer-update)
-;;        (when (not (string= last-dir ecb-path-selected-directory))
-;; 	 (tree-buffer-scroll (point-min) (point-min))))))
-;;   ;; set the default-directory of each tree-buffer to current selected
-;;   ;; directory so we can open files via find-file from each tree-buffer.
-;;   (save-excursion
-;;     (dolist (buf tree-buffers)
-;;       (set-buffer buf)
-;;       (setq default-directory
-;;             (concat ecb-path-selected-directory
-;;                     (and (not (= (aref ecb-path-selected-directory
-;;                                        (1- (length ecb-path-selected-directory)))
-;;                                  ecb-directory-sep-char))
-;;                          ecb-directory-sep-string)))))
-;;   ;; set the modelines of all visible tree-buffers new
-;;   (ecb-mode-line-format))
-
 (defun ecb-get-source-name (filename)
   "Returns the source name of a file."
   (let ((f (file-name-nondirectory filename)))
@@ -1980,6 +1899,16 @@ Currently the fourth argument TREE-BUFFER-NAME is not used here."
     (setq ecb-unhighlight-hook-called nil)
     (add-hook 'pre-command-hook 'ecb-unhighlight-token-header)))
 
+(defun ecb-show-any-node-info-by-mouse-moving-p ()
+  "Return not nil if for at least one tree-buffer showing node info only by
+moving the mouse over a node is activated. See
+`ecb-show-node-info-in-minibuffer'."
+  (let ((when-list (mapcar (lambda (elem)
+                             (car elem))
+                           ecb-show-node-info-in-minibuffer)))
+    (or (member 'if-too-long when-list)
+        (member 'always when-list))))
+
 ;; access-functions for when and what value of
 ;; `ecb-show-node-info-in-minibuffer':
 (defun ecb-show-node-info-index (tree-buffer-name)
@@ -2637,8 +2566,7 @@ always the ECB-frame if called from another frame."
     ;; If `turn-on-follow-mouse' would be activated after our own follow-mouse
     ;; stuff, it would overwrite our mechanism and the show-node-name stuff
     ;; would not work!
-    (if (or (equal ecb-show-node-name-in-minibuffer 'always)
-            (equal ecb-show-node-name-in-minibuffer 'if-too-long))
+    (if (ecb-show-any-node-info-by-mouse-moving-p)
         (tree-buffer-activate-follow-mouse))
     
     (message "The ECB is now activated.")
