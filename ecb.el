@@ -54,7 +54,7 @@
 ;; The latest version of the ECB is available at
 ;; http://home.swipnet.se/mayhem/ecb.html
 
-;; $Id: ecb.el,v 1.126 2001/07/13 15:23:03 berndl Exp $
+;; $Id: ecb.el,v 1.127 2001/07/13 15:33:54 berndl Exp $
 
 ;;; Code:
 
@@ -949,7 +949,7 @@ current-buffer is saved."
   "Updates the methods buffer with the current buffer. The only thing what
 must be done is to start the toplevel parsing of semantic, because the rest is
 done by `ecb-rebuild-methods-buffer-with-tokencache' because this function is in
-the `semantic-after-toplevel-bovinate-hook'.
+the `semantic-after-toplevel-cache-change-hook'.
 If optional argument SCROLL-TO-TOP is non nil then the method-buffer is
 displayed with window-start and point at beginning of buffer."
   (when (and (equal (selected-frame) ecb-frame)
@@ -1839,8 +1839,6 @@ always the ECB-frame if called from another frame."
 	 ecb-tree-incremental-search)))
     
     ;; we need some hooks
-;;     (add-hook 'semantic-after-toplevel-bovinate-hook
-;; 	      'ecb-rebuild-methods-buffer-with-tokencache)
     (add-hook 'semantic-after-toplevel-cache-change-hook
 	      'ecb-rebuild-methods-buffer-with-tokencache)
     (ecb-activate-ecb-sync-functions ecb-highlight-token-with-point-delay
@@ -1928,8 +1926,6 @@ always the ECB-frame if called from another frame."
     (tree-buffer-destroy ecb-methods-buffer-name)
     (tree-buffer-destroy ecb-history-buffer-name)
     ;; remove the hooks
-;;     (remove-hook 'semantic-after-toplevel-bovinate-hook
-;; 		 'ecb-rebuild-methods-buffer-with-tokencache)
     (remove-hook 'semantic-after-toplevel-cache-change-hook
 		 'ecb-rebuild-methods-buffer-with-tokencache)
     (dolist (timer-elem ecb-idle-timer-alist)
