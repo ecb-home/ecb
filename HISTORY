@@ -2,7 +2,7 @@ Version 1.61:
 -------------
 
 - New function ecb-toggle-enlarged-compilation-window allows users to expand and
-  then contract the compilation window with a new key binding C-c . /
+  then contract the compilation window with a new key binding C-c . / (Kevin)
 
 - new option ecb-add-path-for-not-matching-files. Look at the documentation
   (Klaus).
