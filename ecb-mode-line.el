@@ -25,7 +25,7 @@
 ;;
 ;; Contains all mode-line enhancements for ECB.
 
-;; $Id: ecb-mode-line.el,v 1.6 2001/04/22 15:45:01 creator Exp $
+;; $Id: ecb-mode-line.el,v 1.7 2001/05/01 13:32:30 creator Exp $
 
 
 (defun ecb-mode-line-format()
@@ -36,31 +36,29 @@
     ;; update the modeline for each visible(!!) ECB-buffer (some ECB-buffers
     ;; are not visible in all layouts!)
     
-    ;;display the directory but trim it so the whole thing is available.
-    (if (get-buffer-window ecb-sources-buffer-name)
-        (if ecb-path-selected-source
-            (let* ((prefix " ECB Sources: ")
-                   (directory (ecb-mode-line-get-directory
-                               prefix
-                               (file-name-directory ecb-path-selected-source)
-                               (window-width (get-buffer-window
-                                              ecb-sources-buffer-name))))
-                   (line (concat prefix directory)))
-              (ecb-mode-line-update-buffer ecb-sources-buffer-name line))
-          (ecb-mode-line-update-buffer ecb-sources-buffer-name " ECB Sources")))
-    
-    (if (get-buffer-window ecb-methods-buffer-name)
-        (if ecb-path-selected-source
-            (ecb-mode-line-update-buffer
-             ecb-methods-buffer-name (concat " ECB Methods: "
-                                             (file-name-nondirectory ecb-path-selected-source)))
-          (ecb-mode-line-update-buffer ecb-methods-buffer-name " ECB Methods")))
+    (ecb-mode-line-set ecb-sources-buffer-name " ECB Sources"
+		       ecb-path-selected-directory)
+    (ecb-mode-line-set ecb-methods-buffer-name " ECB Methods"
+		       (when ecb-path-selected-source
+			 (file-name-nondirectory ecb-path-selected-source)))
+    (ecb-mode-line-set ecb-directories-buffer-name " ECB Directories"
+		       ecb-path-selected-directory)
+    (ecb-mode-line-set ecb-history-buffer-name " ECB History" nil t)))
 
-    (if (get-buffer-window ecb-directories-buffer-name)
-        (ecb-mode-line-update-buffer ecb-directories-buffer-name " ECB Directories"))
-
-    (if (get-buffer-window ecb-history-buffer-name)
-        (ecb-mode-line-update-buffer ecb-history-buffer-name " ECB History"))))
+(defun ecb-mode-line-set(buffer-name prefix &optional text always-show-prefix)
+  "Sets the mode line for a buffer."
+  (let ((shown-prefix (if (or ecb-mode-line-show-prefix
+			      always-show-prefix)
+			  (concat prefix (if text ": " "")) "")))
+    (when (get-buffer-window buffer-name)
+      (ecb-mode-line-update-buffer
+       buffer-name
+       (concat shown-prefix
+	(if text
+	    (ecb-mode-line-get-directory
+	     shown-prefix
+	     text
+	     (window-width (get-buffer-window buffer-name)))))))))
 
 (defun ecb-mode-line-get-directory(prefix directory width)
   "Given the prefix for the mode-line (' ECB Sources: '), the directory to
