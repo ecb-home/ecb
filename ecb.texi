@@ -19,7 +19,7 @@
 @c Free Software Foundation, Inc., 59 Temple Place - Suite 330,
 @c Boston, MA 02111-1307, USA.
 
-@c $Id: ecb.texi,v 1.75 2003/02/14 16:42:07 berndl Exp $
+@c $Id: ecb.texi,v 1.76 2003/02/18 16:17:51 berndl Exp $
 
 @setfilename ecb.info
 
@@ -223,6 +223,7 @@ Tips and tricks
 * Optimize scrolling::          Optimize scrolling in the edit-window
 * Large directories::           Working with large directories
 * Using eshell::                Optimal using of eshell in ECB
+* Grepping directories::        Grepping directories with ECB
 
 Entry points for elisp programmers
 
@@ -326,7 +327,7 @@ and eieio are first loaded after starting ECB}. Disadvantage:
 ECB- and semantic-options first available after starting ECB):
 
 @example
-(load-library "ecb-al")
+(require 'ecb-autoloads)
 @end example
 
 This loads all available autoloads of ECB, e.g. @code{ecb-activate},
@@ -410,6 +411,30 @@ parsing results. For all needs of ECB semantic is completely setup by
 ECB itself, i.e. ECB sets up semantic for you! You have only to add
 the installation directory of semantic to your @code{load-path} (in an
 appropriate way)!
+
+@strong{NOTE}: If you setup semantic for yourself following the
+recommendations in the installation instructions of semantic then you
+have probably added code to your startup-file like:
+
+@example
+(setq semantic-load-turn-everything-on t)
+(require 'semantic-load)
+@end example
+
+Be aware that this also enables the minor-modes
+@code{semantic-show-dirty-mode} and
+@code{semantic-show-unmatched-syntax-mode} where the former one
+highlights all code which has to be reparsed with dark background
+(which results in large portions of dark background ;-) and the latter
+one underlines all syntax which can not be parsed. Especially the
+former one can be really annoying.
+
+To switch off these modes you can add to your startup-file:
+
+@example
+(global-semantic-show-dirty-mode -1)
+(global-semantic-show-unmatched-syntax-mode -1)
+@end example
 
 @item Activating the correct major-mode
 
@@ -5191,6 +5216,7 @@ situations.
 * Optimize scrolling::          Optimize scrolling in the edit-window
 * Large directories::           Working with large directories
 * Using eshell::                Optimal using of eshell in ECB
+* Grepping directories::        Grepping directories with ECB
 @end menu
 
 @node Changing faces, Small screens, Tips and tricks, Tips and tricks
@@ -5470,7 +5496,7 @@ The cache of a directory can be only refreshed by a POWER-click (with
 mouse or keyboard) onto the related directory-node in the
 directories-buffer of ECB (@pxref{Using the mouse}).
 
-@node Using eshell, , Large directories, Tips and tricks
+@node Using eshell, Grepping directories, Large directories, Tips and tricks
 @section Optimal using of eshell in ECB
 
 @cindex eshell
@@ -5527,6 +5553,30 @@ source-buffer of the edit-window.
 With the option @code{ecb-eshell-auto-activate} you can start eshell
 autom. in the compile-window when ECB is started but of course if a
 compile-window exists.
+
+@node Grepping directories, , Using eshell, Tips and tricks
+@section Grepping directories with ECB
+
+ECB offers in the popup-menus in the directories- and
+sources-tree-buffer commands for easy (recursive) grepping the current
+directory under point (directory-buffer) resp. the current-directory
+(sources-buffer). In every case just the function of the options
+@code{ecb-grep-function} resp. @code{ecb-grep-find-function} is called
+and the @code{default-directory} is tempor. set to the choosen
+directory so the grep will performed in this directory regardless of
+the @code{default-directory} of current buffer in the edit-window.
+
+Other smart things beyond that are not done by ECB, see also
+@code{ecb-grep-function}!
+
+So, how to exclude some subdirectories or files from the grep?
+
+Basically this has to be done with the ``-prune'' option of the
+find-utility: If the standard-grep facility of Emacs is used then this
+is not easy but with the library @file{igrep.el} there is a conveniant
+way to exclude things like CVS- or RCS-directories from the find-call:
+See the variable @code{igrep-find-prune-clause} of the library
+@file{igrep.el}.
 
 @node Elisp programming, Conflicts and bugs, Tips and tricks, Top
 @chapter Entry points for elisp programmers
@@ -6829,6 +6879,42 @@ one is for elisp-progammers.
 Can i use speedbar as directory-browser within ECB?
 @tab @tab
 Yes, see @ref{Integrating speedbar}.
+
+@item @tab @tab
+
+@item
+Can i exclude subdirectories from the recursive grep in the directories buffer?
+@tab @tab
+Yes, see @ref{Grepping directories}.
+
+@item @tab @tab
+
+@item
+How can i prevent contaminating each directory with a file @file{semantic-cache}?
+@tab @tab
+Set @code{semanticdb-default-save-directory} to a directory.
+
+@item @tab @tab
+
+@item
+Why ECB displays large portions of current source-file with dark background?
+@tab @tab
+This comes from semantic;
+@ifinfo
+@*
+@end ifinfo
+see @ref{Setting up Emacs}.
+
+@item @tab @tab
+
+@item
+Why ECB underlines some parts of current source-file?
+@tab @tab
+This comes from semantic;
+@ifinfo
+@*
+@end ifinfo
+see @ref{Setting up Emacs}.
 
 @end multitable
 
