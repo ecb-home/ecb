@@ -1,4 +1,4 @@
-* Changes for semantic version 
+* Changes for semantic version 1.91.2
 
 ** Renamed previous HISTORY file to NEWS and reformate it for outline-mode.
   (Klaus)
@@ -6,7 +6,11 @@
 ** Reformatted some entries of the FAQ because otherwise some links in the
    info-manual are not working. (Klaus)
 
+** ecb-truncate-lines can now set different for each ECB-tree-buffer.
+   (Klaus)
 
+** Easy horizontal mouse-scrolling of the ECB tree-buffers. See new option
+   `ecb-tree-easy-hor-scroll'. (Klaus)
 
 * Changes for semantic version 1.91.1
 
@@ -500,6 +504,8 @@
 ** new option ecb-add-path-for-not-matching-files. Look at the documentation
    (Klaus).
 
+
+   
 * Changes for semantic version 1.60
 
 ** ecb-highlight-token-header-after-jump is now a boolean; which face is used
@@ -566,10 +572,12 @@
    `kill-buffer' should also remove the corresponding history entry. There are
    several options (Klaus).
 
+
    
 * Changes for semantic version 1.52
 
 ** Added EIEIO requirement to ECB.
+
 
 
 * Changes for semantic version 1.51
@@ -603,7 +611,8 @@
 ** Fixed a small bug that placed the window start at the beginning of the token
    instead of the beginning of the token line. (Jesper)
 
-   
+
+      
 * Changes for semantic version 1.50
 
 ** Fixed a minor bug that occured when de-activating ECB under XEmacs. (Jesper)
@@ -630,9 +639,11 @@
    prefix if there are conflicts with other minor-modes or packages (Klaus).
 
 
+   
 * Changes for semantic version 1.41
 
 ** Fixed bug when clicking on token in the methods buffer in XEmacs.
+
 
 
 * Changes for semantic version 1.40
@@ -729,6 +740,7 @@
    etc. from within the tree-buffers. (Klaus).
 
 
+   
 * Changes for semantic version 1.32
 
 ** Nil parent bug fixed. (Jesper)
@@ -741,6 +753,7 @@
    class-definition. Default is an idle time of 0.25 seconds. (Klaus).
 
 
+   
 * Changes for semantic version 1.31
 
 ** Parents (extends and implements) of the classes in the current buffer is now
@@ -755,6 +768,7 @@
 ** Fixed a bug in 'ecb-current-buffer-sync' and 'ecb-redraw-layout' (Klaus)
 
 ** Fixed a bug in loading semantic 1.3.3 or semantic 1.4 (Klaus)
+
 
 
 * Changes for semantic version 1.30
@@ -832,6 +846,7 @@
    extension. (Jesper)
 
 
+   
 * Changes for semantic version 1.20
 
 ** Now the ECB-buffers are intelligent in displaying nodes (Klaus):
@@ -899,6 +914,7 @@
    Emacs-compilation to enlarge the ECB-compile-window temporally.
 
 
+   
 * Changes for semantic version 1.10
 
 ** Automatic expansion of the directory tree.
@@ -926,6 +942,8 @@
    mini-buffer. Currently this only works when follow-mouse is
    activated.
 
+
+   
 * Changes for semantic version 1.0
 
 ** Changed name from JCB to ECB and prefix from "jde-jcb-" to "ecb-".
@@ -959,6 +977,7 @@
 *** Fixed edit buffer sync bug.
 
 
+
 * Changes for semantic version 0.04
 
 ** Keyboard navigation in JCB buffers. Use Return to select and Tab to expand.
@@ -977,6 +996,8 @@
 ** Added method sorting. Thanks to Brian Anderson <brian.anderson@luna.com> 
    for this improvement.
 
+
+   
 * Changes for semantic version 0.03
 
 ** Fixed naming of variables.
@@ -999,6 +1020,7 @@
    "jde-jcb-window-skips-from-history-buffer" customization variables.
 
    
+   
 * Changes for semantic version 0.02
 
 ** Changed prefix from "jcb-" to "jde-jcb-". This will cause JCB customization 
@@ -1015,6 +1037,8 @@
 ** Packages matching a regular expression can be excluded from the packages 
    buffer. Thanks to Mark Gibson <mark@markg.co.uk> for this feature.
 
+
+   
 * Changes for semantic version 0.01
 
 ** Initial version.

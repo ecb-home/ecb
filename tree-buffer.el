@@ -26,7 +26,7 @@
 ;; This file is part of the ECB package which can be found at:
 ;; http://ecb.sourceforge.net
 
-;; $Id: tree-buffer.el,v 1.104 2003/01/30 16:13:12 berndl Exp $
+;; $Id: tree-buffer.el,v 1.105 2003/02/14 09:32:01 berndl Exp $
 
 ;;; Code:
 
@@ -131,6 +131,7 @@ node name.")
 (defvar tree-buffer-incr-searchpattern nil)
 (defvar tree-buffer-last-incr-searchpattern nil)
 (defvar tree-buffer-incr-search nil)
+(defvar tree-buffer-hor-scroll-step nil)
 
 ;; tree-buffer-local data-storage with get- and set-function
 (defvar tree-buffer-data-store nil)
@@ -325,10 +326,13 @@ with the same arguments as `tree-node-expanded-fn'."
             (window-width window)))))
 
 (defun tree-buffer-scroll-hor (amount)
-  (let ((current-prefix-arg amount))
-    (call-interactively 'scroll-left)))
+  (if (integerp amount)
+      (let ((current-prefix-arg amount))
+        (call-interactively 'scroll-left))
+    (if (equal amount 'left)
+        (call-interactively 'scroll-left)
+      (call-interactively 'scroll-right))))
 
-(defvar tree-buffer-current-hor-scroll-amount 0)
 (defun tree-buffer-recenter (node window)
   "If NODE is not visible then first recenter the window WINDOW so NODE is
 best visible, means NODE is displayed in the middle of the window if possible.
@@ -340,6 +344,8 @@ displayed without empty-lines at the end, means WINDOW is always best filled."
                        (tree-buffer-line-beginning-pos)))
          (point-lines-before (count-lines (point-min) node-point))
          (point-lines-after (1- (count-lines node-point (point-max)))))
+    (if (not tree-buffer-running-xemacs)
+        (ignore-errors (tree-buffer-scroll-hor -1000)))
     ;; first make point best visible, means display node in the middle of the
     ;; window if possible (if there are enough lines before/after the node).
     (when (not (pos-visible-in-window-p node-point window))
@@ -403,22 +409,6 @@ displayed without empty-lines at the end, means WINDOW is always best filled."
                                     (goto-char (window-start window))
                                     (forward-line (- full-lines-in-window w-height))
                                     (tree-buffer-line-beginning-pos)))))))
-
-  ;; now we have to hor. recenter the whole window/buffer to the last computed
-  ;; value
-;;   (tree-buffer-scroll-hor tree-buffer-current-hor-scroll-amount)
-  
-;;   ;; now we optimize the horizontal display of the tree-buffer, so that at
-;;   ;; least of NODE and all its visible subnodes the expand/collapse-button
-;;   ;; is visible and as much as possible of the nodenames.
-;;   (let ((node-end-point (save-excursion
-;;                           (goto-line (tree-buffer-find-node node))
-;;                           (tree-buffer-line-end-pos))))
-;;     (when (not (tree-buffer-pos-hor-visible-p node-end-point window))
-;;       (setq tree-buffer-current-hor-scroll-amount
-;;             (+ 5 tree-buffer-current-hor-scroll-amount))
-;;       (tree-buffer-scroll-hor tree-buffer-current-hor-scroll-amount)))
-
     ))
 
 ;; Klaus: Now we use overlays to highlight current node in a tree-buffer. This
@@ -1008,7 +998,7 @@ functionality is done with the `help-echo'-property and the function
                                 node-expanded-fn node-mouse-over-fn
                                 node-data-equal-fn
                                 menus tr-lines read-only tree-indent
-                                incr-search arrow-navigation
+                                incr-search arrow-navigation hor-scroll
                                 &optional type-facer expand-symbol-before
                                 highlight-node-face general-face
                                 after-create-hook)
@@ -1084,6 +1074,9 @@ INCR-SEARCH: Should the incremental search be anabled in the tree-buffer.
              Three choices: 'prefix, 'substring, nil. See
              `tree-buffer-incremental-node-search'.
 ARROW-NAVIGATION: If not nil then smart navigation with horizontal arrow keys.
+HOR-SCROLL: Number of columns a hor. scroll in the tree-buffer should scroll.
+            If not nil then M-mouse-1 and M-mouse-2 scroll left and right and
+            also M-<left-arrow> and M-<right-arrow>.
 TYPE-FACER: Nil or a list of one or two conses, each cons for a node-type \(0
             or 1). The cdr of a cons can be:
             - a symbol of a face
@@ -1132,6 +1125,7 @@ AFTER-CREATE-HOOK: A function or a list of functions \(with no arguments)
     (make-local-variable 'tree-buffer-incr-searchpattern)
     (make-local-variable 'tree-buffer-last-incr-searchpattern)
     (make-local-variable 'tree-buffer-incr-search)
+    (make-local-variable 'tree-buffer-hor-scroll-step)
 
     ;; initialize the user-data-storage for this tree-buffer.
     (set (make-local-variable 'tree-buffer-data-store) nil)
@@ -1163,6 +1157,7 @@ AFTER-CREATE-HOOK: A function or a list of functions \(with no arguments)
     (setq tree-buffer-incr-searchpattern "")
     (setq tree-buffer-last-incr-searchpattern "")
     (setq tree-buffer-incr-search incr-search)
+    (setq tree-buffer-hor-scroll-step hor-scroll)
 
     ;; set a special syntax table for tree-buffers
     (set-syntax-table tree-buffer-syntax-table)
@@ -1230,6 +1225,7 @@ AFTER-CREATE-HOOK: A function or a list of functions \(with no arguments)
                   (mouse-set-point e)
                   (tree-buffer-select 1 nil t))))
 
+    
     (define-key tree-buffer-key-map [drag-mouse-1] nop)
     (define-key tree-buffer-key-map [mouse-1] nop)
     (define-key tree-buffer-key-map [double-mouse-1] nop)
@@ -1269,6 +1265,34 @@ AFTER-CREATE-HOOK: A function or a list of functions \(with no arguments)
     (define-key tree-buffer-key-map [double-mouse-3] nop)
     (define-key tree-buffer-key-map [triple-mouse-3] nop)
 
+    ;; scrolling horiz.
+    (when (and (not tree-buffer-running-xemacs)
+               tree-buffer-hor-scroll-step)
+      (define-key tree-buffer-key-map
+        [M-down-mouse-1]
+        (function (lambda(e)
+                    (interactive "e")
+                    (mouse-set-point e)
+                    (ignore-errors
+                      (tree-buffer-scroll-hor
+                       (if (integerp tree-buffer-hor-scroll-step)
+                           (- tree-buffer-hor-scroll-step)
+                         'right))))))
+
+    (define-key tree-buffer-key-map
+      [M-down-mouse-3]
+      (function (lambda(e)
+		  (interactive "e")
+                  (mouse-set-point e)
+                  (ignore-errors
+                    (tree-buffer-scroll-hor
+                     (if (integerp tree-buffer-hor-scroll-step)
+                         tree-buffer-hor-scroll-step
+                       'left))))))
+    
+    (define-key tree-buffer-key-map [M-mouse-1] nop)
+    (define-key tree-buffer-key-map [M-mouse-3] nop))
+    
     (use-local-map tree-buffer-key-map)
 
     (setq tree-buffers (cons (current-buffer) tree-buffers))

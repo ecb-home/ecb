@@ -10,7 +10,7 @@
 
 ;; IMPORTANT: The version-number is auto-frobbed from the Makefile. Do not
 ;; change it here!
-(defconst ecb-version "1.91.1"
+(defconst ecb-version "1.91.2"
   "Current ECB version.")
 
 ;; This program is free software; you can redistribute it and/or modify it under
@@ -62,7 +62,7 @@
 ;; The latest version of the ECB is available at
 ;; http://ecb.sourceforge.net
 
-;; $Id: ecb.el,v 1.284 2003/02/10 16:52:22 berndl Exp $
+;; $Id: ecb.el,v 1.285 2003/02/14 09:32:02 berndl Exp $
 
 ;;; Code:
 
@@ -1261,11 +1261,35 @@ you must deactivate and activate ECB again to take effect."
   :group 'ecb-general
   :type 'boolean)
 
-(defcustom ecb-truncate-lines t
+(defcustom ecb-truncate-lines '(t t t t)
   "*Truncate lines in ECB buffers. If you change this during ECB is activated
 you must deactivate and activate ECB again to take effect."
   :group 'ecb-general
-  :type 'boolean)
+  :type '(list (boolean :tag "Directories buffer")
+               (boolean :tag "Sources buffer")
+               (boolean :tag "Methods buffer")
+               (boolean :tag "History buffer")))
+
+(defcustom ecb-tree-easy-hor-scroll 5
+  "*Scroll step for easy hor. scrolling via mouse-click in tree-buffers.
+XEmacs has horizontal scroll-bars so invisible parts beyond the right
+window-border of a tree-buffer can always made visible very easy.
+
+GNU Emacs does not have hor. scroll-bars so especially with the mouse it is
+quite impossible to scroll smoothly right and left. The functions
+`scroll-left' and `scroll-right' can be annoying and are also not bound to
+mouse-buttons.
+
+If this option is not nil \(means either t or a positive integer) then in all
+ECB-tree-buffers the keys \[M-mouse-1] and [M-mouse-3] are bound to scrolling
+left resp. right. If the value is t then the default scroll-step of
+`scroll-left' or `scroll-right' is used, if an integer then this number is
+used as scroll-step. Default is a scroll-step of 5."
+  :group 'ecb-general
+  :type '(radio :value 5
+                (const :tag "No hor. mouse scrolling" :value nil)
+                (const :tag "Default step" :value t)
+                (integer :tag "Scroll step")))
 
 (defcustom ecb-truncate-long-names t
   "*Truncate long names that don't fit in the width of the ECB windows. If you
@@ -4454,6 +4478,7 @@ always the ECB-frame if called from another frame."
            ecb-tree-indent
            ecb-tree-incremental-search
            ecb-tree-navigation-by-arrow
+           ecb-tree-easy-hor-scroll
            (list (cons 1 ecb-source-in-directories-buffer-face))
            ecb-tree-expand-symbol-before
            ecb-directory-face
@@ -4485,6 +4510,7 @@ always the ECB-frame if called from another frame."
            ecb-tree-indent
            ecb-tree-incremental-search
            ecb-tree-navigation-by-arrow
+           ecb-tree-easy-hor-scroll
            nil
            nil
            ecb-source-face
@@ -4525,6 +4551,7 @@ always the ECB-frame if called from another frame."
            ecb-tree-indent
            ecb-tree-incremental-search
            ecb-tree-navigation-by-arrow
+           ecb-tree-easy-hor-scroll
            nil
            ecb-tree-expand-symbol-before
            ecb-method-face
@@ -4552,6 +4579,7 @@ always the ECB-frame if called from another frame."
            ecb-tree-indent
            ecb-tree-incremental-search
            ecb-tree-navigation-by-arrow
+           ecb-tree-easy-hor-scroll
            nil
            nil
            ecb-history-face

@@ -19,7 +19,7 @@
 @c Free Software Foundation, Inc., 59 Temple Place - Suite 330,
 @c Boston, MA 02111-1307, USA.
 
-@c $Id: ecb.texi,v 1.72 2003/02/12 15:13:26 berndl Exp $
+@c $Id: ecb.texi,v 1.73 2003/02/14 09:32:01 berndl Exp $
 
 @setfilename ecb.info
 
@@ -42,7 +42,7 @@
 @c edit the Makefile to change the version number. mechanism stolen
 @c from Tramp
 @macro ecbver{}
-1.91.1
+1.91.2
 @end macro
 
 
@@ -797,7 +797,27 @@ Emacs Code Browser.
 @cindex mouse button
 Normally you get best usage if you use ECB with a mouse. ECB
 distinguishes between a @dfn{primary} and a @dfn{secondary}
-mouse-button:
+mouse-button.
+
+With the option @code{ecb-primary-secondary-mouse-buttons} the following
+combinations of primary and secondary mouse-buttons are possible:
+
+@itemize @minus
+@item
+primary: mouse-2, secondary: C-mouse-2@footnote{means mouse-2 while CTRL-key
+is pressed.}. This is the default.
+
+@item
+primary: mouse-1, secondary: C-mouse-1
+
+@item
+primary: mouse-1, secondary: mouse-2
+@end itemize
+
+If you change this during ECB is activated you must deactivate and activate
+ECB again to take effect.
+
+@subsection The primary mouse-button
 
 A click with the primary button causes the main effect in each ECB-buffer:
 
@@ -814,6 +834,8 @@ Opening the file in that edit-window specified by the option
 Jumping to the method in that edit-window specified by the option
 @code{ecb-primary-mouse-jump-destination}.
 @end itemize
+
+@subsection The POWER- or SHIFT-click
 
 @cindex SHIFT-click
 @cindex POWER-click
@@ -847,29 +869,38 @@ always after a POWER-click. In general: Via
 manner for every ECB tree-buffer when and which node-info should be
 displayed in the minibuffer.
 
+@subsection The secondary mouse-button
+
 The secondary mouse-button is for opening (jumping to) the file in the other
 window (see the documentation @code{ecb-primary-mouse-jump-destination}).
 
-With the option @code{ecb-primary-secondary-mouse-buttons} the following
-combinations of primary and secondary mouse-buttons are possible:
-
-@itemize @minus
-@item
-primary: mouse-2, secondary: C-mouse-2@footnote{means mouse-2 while CTRL-key
-is pressed.}. This is the default.
-
-@item
-primary: mouse-1, secondary: C-mouse-1
-
-@item
-primary: mouse-1, secondary: mouse-2
-@end itemize
-
-If you change this during ECB is activated you must deactivate and activate
-ECB again to take effect
+@subsection The right mouse-button
 
 In each ECB-buffer mouse-3 (= right button) opens a special context popup-menu
 for the clicked item where you can choose several senseful actions.
+
+@subsection Horizontal scrolling with the mouse
+
+In each tree-buffer of ECB you can easily scroll left and right with
+the mouse if the option @code{ecb-tree-easy-hor-scroll} is not
+@code{nil}.
+
+The reason for this is: XEmacs has horizontal scroll-bars so invisible
+parts beyond the right window-border of a tree-buffer can always made
+visible very easy.
+
+GNU Emacs does not have hor. scroll-bars so especially with the mouse
+it is quite impossible to scroll smoothly right and left. The
+functions @code{scroll-left} and @code{scroll-right} can be annoying
+and are also not bound to mouse-buttons.
+
+So if @code{ecb-tree-easy-hor-scroll} option is not @code{nil} then in
+all ECB-tree-buffers the keys @kbd{M-mouse-1} and @kbd{M-mouse-3} are
+bound to scrolling left resp. right.
+
+This is NOT done for XEmacs cause of its horizontal scrollbars. If you
+want scroll left and right with the mouse in XEmacs then activate the
+horizontal scrollbars.
 
 
 @node Using the keyboard, The edit-window, Using the mouse, Usage of ECB
@@ -3209,6 +3240,26 @@ With @code{ecb-toggle-RET-selects-edit-window} the behavior of RET can
 be changed fast and easy in a tree-buffer without customizing this
 option, but of course not for future Emacs sessions!
 @end defopt
+
+
+@defopt tree-easy-hor-scroll
+Scroll step for easy hor. scrolling via mouse-click in tree-buffers.
+XEmacs has horizontal scroll-bars so invisible parts beyond the right
+window-border of a tree-buffer can always made visible very easy.
+
+GNU Emacs does not have hor. scroll-bars so especially with the mouse
+it is quite impossible to scroll smoothly right and left. The
+functions @code{scroll-left} and @code{scroll-right} can be annoying
+and are also not bound to mouse-buttons.
+
+If this option is not @code{nil} (means either @code{t} or a positive
+integer) then in all ECB-tree-buffers the keys @kbd{M-mouse-1} and
+@kbd{M-mouse-3} are bound to scrolling left resp. right. If the value
+is @code{t} then the default scroll-step of @code{scroll-left} or
+@code{scroll-right} is used, if an integer then this number is used as
+scroll-step. Default is a scroll-step of 5.
+@end defopt
+
 
 @defopt tree-expand-symbol-before
 Show the expand symbol before the items in a tree.

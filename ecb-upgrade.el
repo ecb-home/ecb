@@ -19,7 +19,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-upgrade.el,v 1.28 2003/02/11 14:39:04 berndl Exp $
+;; $Id: ecb-upgrade.el,v 1.29 2003/02/14 09:32:03 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -161,14 +161,14 @@
     (ecb-layout-nr . (ecb-layout-name ecb-upgrade-layout-nr))
     (ecb-toggle-layout-sequence . (ecb-toggle-layout-sequence
                                    ecb-upgrade-toggle-layout-sequence))
-;;     (ecb-layout-window-sizes . (ecb-layout-window-sizes
-;;                                 ecb-upgrade-layout-window-sizes))
     (ecb-major-modes-activate . (ecb-major-modes-activate
                                  ecb-upgrade-major-modes-activate))
     (ecb-cache-directory-contents . (ecb-cache-directory-contents
                                      ecb-upgrade-cache-directory-contents))
     (ecb-source-file-regexps . (ecb-source-file-regexps
-                                ecb-upgrade-source-file-regexps)))
+                                ecb-upgrade-source-file-regexps))
+    (ecb-truncate-lines .(ecb-truncate-lines
+                          ecb-upgrade-truncate-lines)))
   
   "Alist of all options which should be upgraded for current ECB-version.
 There are several reasons why an option should be contained in this alist:
@@ -287,6 +287,11 @@ The car is the old option symbol and the cdr is a 2-element-list with:
 
 (defun ecb-upgrade-source-file-regexps (old-val)
   (list (cons ".*" old-val)))
+
+(defun ecb-upgrade-truncate-lines (old-val)
+  (if old-val
+      '(t t t t)
+    '(nil nil nil nil)))
 
 ;; ----------------------------------------------------------------------
 ;; internal functions. Dot change anything below this line

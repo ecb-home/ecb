@@ -1,6 +1,6 @@
 # This Makefile byte-compiles the ECB lisp files and generates online-help.
 
-# $Id: Makefile,v 1.54 2003/02/11 16:22:11 berndl Exp $
+# $Id: Makefile,v 1.55 2003/02/14 09:32:03 berndl Exp $
 
 # ========================================================================
 # User configurable section
@@ -91,11 +91,11 @@ INSTALLINFO=/usr/bin/install-info
 
 # Do not change anything below!
 
-# $Id: Makefile,v 1.54 2003/02/11 16:22:11 berndl Exp $
+# $Id: Makefile,v 1.55 2003/02/14 09:32:03 berndl Exp $
 
 # For the ECB-maintainers: Change the version-number here and not
 # elsewhere!
-ecb_VERSION=1.91.1
+ecb_VERSION=1.91.2
 
 
 RM=rm -f
@@ -111,7 +111,7 @@ ecb_LISP_EL=tree-buffer.el ecb-util.el ecb-mode-line.el ecb-help.el \
 
 ecb_LISP_ELC=$(ecb_LISP_EL:.el=.elc)
 
-ecb_ETC=HISTORY README RELEASE_NOTES Makefile make.bat
+ecb_ETC=NEWS README RELEASE_NOTES Makefile make.bat
 
 ecb_TEXI=ecb.texi
 
@@ -212,7 +212,7 @@ clean:
 
 $(ecb_INFO_DIR)/$(ecb_INFO): online-help
 
-# updates RELEASE_NOTES, README, HISTORY, ecb.texi and ecb.el to the
+# updates RELEASE_NOTES, README, NEWS, ecb.texi and ecb.el to the
 # version-number of $(ecb_VERSION).
 prepversion:
 	@$(MV) RELEASE_NOTES RELEASE_NOTES.tmp
@@ -221,9 +221,9 @@ prepversion:
 	@$(MV) README README.tmp
 	@sed "1s/version.*/version $(ecb_VERSION)/" README.tmp > README
 	@$(RM) README.tmp
-	@$(MV) HISTORY HISTORY.tmp
-	@sed "1s/Version.*/Version $(ecb_VERSION)/" HISTORY.tmp > HISTORY
-	@$(RM) HISTORY.tmp
+	@$(MV) NEWS NEWS.tmp
+	@sed "1s/version.*/version $(ecb_VERSION)/" NEWS.tmp > NEWS
+	@$(RM) NEWS.tmp
 	@$(MV) ecb.el ecb.el.tmp
 	@sed "s/^(defconst ecb-version.*/(defconst ecb-version \"$(ecb_VERSION)\"/" ecb.el.tmp > ecb.el
 	@$(RM) ecb.el.tmp
