@@ -26,7 +26,7 @@
 ;; This file is part of the ECB package which can be found at:
 ;; http://ecb.sourceforge.net
 
-;; $Id: ecb-util.el,v 1.50 2003/01/30 16:13:43 berndl Exp $
+;; $Id: ecb-util.el,v 1.51 2003/02/02 07:00:59 berndl Exp $
 
 ;;; Code:
 
@@ -468,7 +468,9 @@ specifies the text of the message-box button; if nil then \"OK\" is used.
 
 Remark: BUTTON-TEXT is currently only used with XEmacs. Wie GNU Emacs the
 message itself is the button because GNU Emacs currently does not support
-dialog-boxes very well."
+dialog-boxes very well.
+
+If `window-system' is nil then a simple message is displayed in the echo-area."
   (let ((button (if (stringp button-text)
                     button-text
                   "OK"))
@@ -476,14 +478,17 @@ dialog-boxes very well."
                        (if (stringp title-text)
                            (concat " - " title-text)
                          " Message"))))
-    (if ecb-running-xemacs
-        (make-dialog-box 'question
-                         :title title
-                         :modal t
-                         :question message-str
-                         :buttons (list (vector button '(identity nil) t)))
-      (x-popup-dialog t (list title (cons message-str t))))
-    t))
+    (if window-system
+        (progn
+          (if ecb-running-xemacs
+              (make-dialog-box 'question
+                               :title title
+                               :modal t
+                               :question message-str
+                               :buttons (list (vector button '(identity nil) t)))
+            (x-popup-dialog t (list title (cons message-str t))))
+          t)
+      (message (concat title " " message-str)))))
 
 
 (defmacro ecb-error (&rest args)

@@ -26,7 +26,7 @@
 ;;
 ;; Contains all online-help for ECB (stolen something from recentf.el)
 
-;; $Id: ecb-help.el,v 1.89 2003/01/07 14:46:20 berndl Exp $
+;; $Id: ecb-help.el,v 1.90 2003/02/02 07:00:59 berndl Exp $
 
 ;;; Code
 
@@ -92,22 +92,25 @@ Normally there should be no need to change this option!"
   :group 'ecb-help
   :type 'file)
 
-(defcustom ecb-help-html-path (concat
-                               (if ecb-running-xemacs
-                                   (cond ((file-exists-p
-                                           (concat ecb-ecb-dir
-                                                   ecb-help-html-subdir
-                                                   ecb-help-html-start-file))
-                                          ecb-help-html-subdir)
-                                         ((file-exists-p
-                                           (concat ecb-ecb-dir
-                                                   "../../html/"
-                                                   ecb-help-html-start-file))
-                                          "../../html/")
-                                         (t
-                                          "../../etc/ecb/html/"))
-                                 ecb-help-html-subdir)
-                               ecb-help-html-start-file)
+(defcustom ecb-help-html-path
+  (if (not ecb-running-xemacs)
+      (concat ecb-help-html-subdir ecb-help-html-start-file)
+    (cond ((file-exists-p
+            (concat ecb-ecb-dir
+                    ecb-help-html-subdir
+                    ecb-help-html-start-file))
+           (concat ecb-help-html-subdir ecb-help-html-start-file))
+          ((file-exists-p
+            (concat ecb-ecb-dir
+                    "../../html/"
+                    ecb-help-html-start-file))
+           (concat "../../html/" ecb-help-html-start-file))
+          ((file-exists-p
+            (concat ecb-ecb-dir
+                    "../../html/ecb/index.html"))
+           "../../html/ecb/index.html")
+          (t
+           (concat "../../etc/ecb/html/" ecb-help-html-start-file))))
   "*Path where the ECB online help in HTML format resides.
 This must be the location of the file \"index.html\" which comes with the ECB
 distribution. If is installed by unpacking the archive available on the ECB
@@ -294,6 +297,10 @@ could be interesting for support."
                             after-save-hook
                             help-mode-hook
                             compilation-mode-hook
+                            truncate-partial-width-windows
+                            truncate-lines
+                            system-type
+                            window-system
                             ,(if (boundp 'ediff-quit-hook)
                                  'ediff-quit-hook))
                           (function (lambda (l r)
@@ -319,6 +326,7 @@ could be interesting for support."
                                    ecb-idle-timer-alist
                                    ecb-post-command-hooks
                                    ecb-old-compilation-window-height
+                                   ecb-minor-mode
                                    ecb-toggle-layout-state)
                                  (function (lambda (l r)
                                              (string< (symbol-name l)

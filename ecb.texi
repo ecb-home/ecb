@@ -19,7 +19,7 @@
 @c Free Software Foundation, Inc., 59 Temple Place - Suite 330,
 @c Boston, MA 02111-1307, USA.
 
-@c $Id: ecb.texi,v 1.67 2003/01/31 12:28:40 berndl Exp $
+@c $Id: ecb.texi,v 1.68 2003/02/02 07:00:59 berndl Exp $
 
 @setfilename ecb.info
 
@@ -140,9 +140,9 @@ Installation and first steps of ECB
 
 Overview
 
-* ECB Directories::             Contents of the ECB Directories-buffer
-* ECB Sources::                 Contents of the ECB Sources/history-buffer
-* ECB Methods::                 Contents of the ECB Methods-buffer
+* ECB Directories-buffer::      Contents of the ECB Directories-buffer
+* ECB Sources-buffer::          Contents of the ECB Sources/history-buffer
+* ECB Methods-buffer::          Contents of the ECB Methods-buffer
 
 Activation and Deactivation
 
@@ -599,13 +599,13 @@ In the following subsections the ``special'' ECB-windows will be
 explained in detail.
 
 @menu
-* ECB Directories::             Contents of the ECB Directories-buffer
-* ECB Sources::                 Contents of the ECB Sources/history-buffer
-* ECB Methods::                 Contents of the ECB Methods-buffer
+* ECB Directories-buffer::      Contents of the ECB Directories-buffer
+* ECB Sources-buffer::          Contents of the ECB Sources/history-buffer
+* ECB Methods-buffer::          Contents of the ECB Methods-buffer
 @end menu
 
-@node ECB Directories, ECB Sources, Overview, Overview
-@section ECB Directories
+@node ECB Directories-buffer, ECB Sources-buffer, Overview, Overview
+@section ECB Directories-buffer
 
 @cindex Directories
 @itemize @bullet
@@ -638,8 +638,8 @@ the edit-window. Pressing F4 in the ECB-directories buffer will offer
 adding a new source-path.
 @end itemize
 
-@node ECB Sources, ECB Methods, ECB Directories, Overview
-@section ECB Sources
+@node ECB Sources-buffer, ECB Methods-buffer, ECB Directories-buffer, Overview
+@section ECB Sources-buffer
 
 @cindex Sources
 @cindex History
@@ -655,7 +655,7 @@ or RETURN (@pxref{Using the keyboard})) on a source row in the
 ECB-Sources or ECB-History windows then the source will not be
 displayed in the edit-window but it will be scanned in the background
 and all its contents (e.g. methods and variables) are listed in the
-@dfn{ECB Methods} window (@pxref{ECB Methods}. So you can get an
+@dfn{ECB Methods} window (@pxref{ECB Methods-buffer}. So you can get an
 overlook over the source without changing the buffer in the
 edit-window.
 
@@ -669,8 +669,8 @@ Right clicking on a source file will open a popup menu where different
 operation on the item under the mouse cursor can be performed.
 @end itemize
 
-@node ECB Methods, , ECB Sources, Overview
-@section ECB Methods
+@node ECB Methods-buffer, , ECB Sources-buffer, Overview
+@section ECB Methods-buffer
 
 @cindex Methods
 @cindex Methods
@@ -1219,7 +1219,7 @@ ECB gets all informations displayed in this Methods-buffer from the
 semantic-library. This library parses auto. the current source-buffer
 in the edit-window of ECB and returns all information in form of
 @dfn{tokens} to ECB which displays them in a browsable form in its
-Method-buffer. See @ref{ECB Methods} for information how to use the
+Method-buffer. See @ref{ECB Methods-buffer} for information how to use the
 Methods-buffer.
 
 There are several options to customize which tokens ECB should display
@@ -1313,7 +1313,7 @@ selecting another layout during current Emacs-session use the command
 
 With the option @code{ecb-show-sources-in-directories-buffer} you can
 define if sources are displayed in the directory-window of a layout
-(@pxref{ECB Directories}).
+(@pxref{ECB Directories-buffer}).
 
 In addition to the general layout you can specify if the layout should
 contain a durable compilation-window at the bottom of the frame, see
