@@ -195,7 +195,7 @@ and then activating ECB again!"
   :type 'string)
 
 (defcustom ecb-source-file-regexps
- '("\\(^\\(\\.\\|#\\)\\|\\(~$\\|\\.\\(elc\\|obj\\|o\\|lib\\|dll\\|a\\|so\\)$\\)\\)"
+ '("\\(^\\(\\.\\|#\\)\\|\\(~$\\|\\.\\(elc\\|obj\\|o\\|class\\|lib\\|dll\\|a\\|so\\)$\\)\\)"
    "^\\.\\(emacs\\|gnus\\)$")
  "*Specifies which files are shown as source files. Consists of one exclude
 regexp and one include regexp. A file is displayed in the source-buffer of ECB
@@ -214,7 +214,7 @@ combination can be defined."
  :type '(radio (const :tag "All files"
 		      :value ("" ""))
 	       (const :tag "All, but no backup, object, lib or ini-files \(except .emacs and .gnus)"
-		      :value ("\\(^\\(\\.\\|#\\)\\|\\(~$\\|\\.\\(elc\\|obj\\|o\\|lib\\|dll\\|a\\|so\\)$\\)\\)" "^\\.\\(emacs\\|gnus\\)$"))
+		      :value ("\\(^\\(\\.\\|#\\)\\|\\(~$\\|\\.\\(elc\\|obj\\|o\\|class\\|lib\\|dll\\|a\\|so\\)$\\)\\)" "^\\.\\(emacs\\|gnus\\)$"))
 	       (const :tag "Common source file types (.c, .java etc.)"
 		      :value ("" "\\(\\(M\\|m\\)akefile\\|.*\\.\\(java\\|el\\|c\\|cc\\|h\\|hh\\|txt\\|html\\|texi\\|info\\|bnf\\)\\)$"))
 	       (list :tag "Custom (tips: \"$^\" matches no files, \"\" mathes all files)"
