@@ -105,7 +105,7 @@
 ;; - `ecb-with-some-adviced-functions'
 ;;
 
-;; $Id: ecb-layout.el,v 1.157 2003/03/10 09:09:05 berndl Exp $
+;; $Id: ecb-layout.el,v 1.158 2003/03/10 10:18:02 berndl Exp $
 
 ;;; Code:
 
@@ -714,22 +714,6 @@ This option makes only sense if the value is a list with more than 1 element!"
                                     name)))
                    (set symbol value))))
 
-;; (defcustom ecb-scroll-all-behavior '(selected edit-windows edit-windows)
-;;   "*"
-;;   :group 'ecb-layout
-;;   :type '(list (choice :tag "ECB-windows" :menu-tag "ECB-windows"
-;;                        (const :tag "Selected window" :value selected)
-;;                        (const :tag "All ECB-windows" :value ecb-windows)
-;;                        (const :tag "All windows" :value all))
-;;                (choice :tag "Edit windows" :menu-tag "Edit-windows"
-;;                        (const :tag "Selected window" :value selected)
-;;                        (const :tag "Both Edit-windows" :value edit-windows)
-;;                        (const :tag "All windows" :value all))
-;;                (choice :tag "Compile-window" :menu-tag "Compile-windows"
-;;                        (const :tag "Selected window" :value selected)
-;;                        (const :tag "Compile- and edit-windows" :value edit-windows)
-;;                        (const :tag "All windows" :value all))))
-              
 
 (defcustom ecb-hide-ecb-windows-before-hook nil
   "*Hooks run direct before the ECB windows will be hidden either by
@@ -904,6 +888,11 @@ either not activated or it behaves exactly like the original version!"
   (if (equal (selected-frame) ecb-frame)
       (ecb-error "Can't use winner-mode functions in the ecb-frame.")))
 
+(defadvice winner-undo (around ecb)
+  "Prevents `winner-undo' from being used within the ECB-frame."
+  (if (equal (selected-frame) ecb-frame)
+      (ecb-error "Can't use winner-mode functions in the ecb-frame.")))
+
 
 (defadvice scroll-all-mode (after ecb)
   "With active ECB `scroll-all-mode' scrolls only the two edit-windows if point
@@ -918,14 +907,18 @@ stays in one of them. In all other situations just the selected window is scroll
           (ecb-option-get-value 'ecb-other-window-jump-behavior))))
 
 (defadvice count-windows (around ecb)
-  "Return the current number of edit-windows if point is in an edit-window. If
-point is not in an edit-window return always 1. This advice is only enabled if
-`scroll-all-mode' is active! This advice is only enabled and disabled by
-`ecb-enable-count-windows-advice'!"
-  (setq ad-return-value (if (and (ecb-point-in-edit-window)
-                                 (ecb-edit-window-splitted))
-                            2
-                          1)))
+  "If the selected frame is the ecb-frame then return the current number of
+edit-windows if point is in an edit-window and always return 1 if point is not
+in an edit-window. In any other frame return the number of visible windows.
+
+This advice is only enabled if `scroll-all-mode' is active! This advice is
+only enabled and disabled by `ecb-enable-count-windows-advice'!"
+  (if (equal (selected-frame) ecb-frame)
+      (setq ad-return-value (if (and (ecb-point-in-edit-window)
+                                     (ecb-edit-window-splitted))
+                                2
+                              1))
+    ad-do-it))
 
 (defun ecb-enable-count-windows-advice (arg)
   "Enable the around-advice of `count-windows'."
