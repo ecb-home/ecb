@@ -36,9 +36,9 @@
 
 ;; Here come all the index layout-functions:
 
-;; Layout Nr. 0 -----------------------------------------------------
+;; Layout left1 -----------------------------------------------------
 
-(ecb-layout-define 0 left
+(ecb-layout-define "left1" left
   "This function creates the following layout:
 
    -------------------------------------------------------
@@ -76,9 +76,9 @@ little more place."
   (ecb-set-history-buffer)
   (select-window (next-window (next-window))))
 
-;; Layout Nr. 1 -----------------------------------------------------
+;; Layout left2 -----------------------------------------------------
 
-(ecb-layout-define 1 left
+(ecb-layout-define "left2" left
   "This function creates the following layout:
 
    -------------------------------------------------------
@@ -111,9 +111,9 @@ little more place."
   (ecb-set-sources-buffer)
   (select-window (next-window)))
 
-;; Layout Nr. 2 -----------------------------------------------------
+;; Layout left3 -----------------------------------------------------
 
-(ecb-layout-define 2 left
+(ecb-layout-define "left3" left
   "This function creates the following layout:
 
    -------------------------------------------------------
@@ -148,9 +148,9 @@ little more place."
   (ecb-set-methods-buffer)
   (select-window (next-window)))
 
-;; Layout Nr. 3 -----------------------------------------------------
+;; Layout left4 -----------------------------------------------------
 
-(ecb-layout-define 3 left
+(ecb-layout-define "left4" left
   "This function creates the following layout:
 
    -------------------------------------------------------
@@ -185,9 +185,9 @@ little more place."
   (ecb-set-history-buffer)
   (select-window (next-window)))
 
-;; Layout Nr. 4 -----------------------------------------------------
+;; Layout left5 -----------------------------------------------------
 
-(ecb-layout-define 4 left
+(ecb-layout-define "left5" left
   "This function creates the following layout:
 
    -------------------------------------------------------
@@ -222,9 +222,9 @@ little more place."
   (ecb-set-history-buffer)
   (select-window (next-window)))
 
-;; Layout Nr. 5 -----------------------------------------------------
+;; Layout right1 -----------------------------------------------------
 
-(ecb-layout-define 5 right
+(ecb-layout-define "right1" right
   "This function creates the following layout:
 
    -------------------------------------------------------
@@ -260,9 +260,9 @@ little more place."
     (ecb-set-methods-buffer)
     (select-window edit-win)))
 
-;; Layout Nr. 6 -----------------------------------------------------
+;; Layout left6 -----------------------------------------------------
 
-(ecb-layout-define 6 left
+(ecb-layout-define "left6" left
   "This function creates the following layout:
 
    -------------------------------------------------------
@@ -293,9 +293,9 @@ little more place."
   (ecb-set-history-buffer)
   (select-window (next-window)))
 
-;; Layout Nr. 7 -----------------------------------------------------
+;; Layout top1 -----------------------------------------------------
 
-(ecb-layout-define 7 top
+(ecb-layout-define "top1" top
   "This function creates the following layout:
 
    -------------------------------------------------------
@@ -330,9 +330,9 @@ little more place."
   (ecb-set-methods-buffer)
   (select-window (next-window)))
 
-;; Layout Nr. 8 -----------------------------------------------------
+;; Layout left7 -----------------------------------------------------
 
-(ecb-layout-define 8 left
+(ecb-layout-define "left7" left
   "This function creates the following layout:
 
    -------------------------------------------------------
@@ -359,9 +359,8 @@ little more place."
 
 If you have not set a compilation-window in `ecb-compile-window-height' then
 the layout contains no durable compilation window and the other windows get a
-little more place.
-This layout works best if you set `ecb-show-sources-in-directories-buffer'
-to non nil!"
+little more place. This layout works best if it is contained in
+`ecb-show-sources-in-directories-buffer'!"
   (ecb-set-directories-buffer)
   (ecb-split-ver 0.6)
   (ecb-set-history-buffer)
@@ -369,9 +368,9 @@ to non nil!"
   (ecb-set-methods-buffer)
   (select-window (next-window)))
 
-;; Layout Nr. 9 -----------------------------------------------------
+;; Layout left8 -----------------------------------------------------
 
-(ecb-layout-define 9 left
+(ecb-layout-define "left8" left
   "This function creates the following layout:
 
    -------------------------------------------------------
@@ -408,9 +407,9 @@ little more place."
   (ecb-set-history-buffer)
   (select-window (next-window)))
 
-;; Layout Nr. 10 -----------------------------------------------------
+;; Layout top2 -----------------------------------------------------
 
-(ecb-layout-define 10 top
+(ecb-layout-define "top2" top
   "This function creates the following layout:
 
    -------------------------------------------------------
@@ -441,9 +440,9 @@ little more place."
   (ecb-set-methods-buffer)
   (select-window (next-window)))
 
-;; Layout Nr. 11 -----------------------------------------------------
+;; Layout left9 -----------------------------------------------------
 
-(ecb-layout-define 11 left
+(ecb-layout-define "left9" left
   "This function creates the following layout:
 
    -------------------------------------------------------
@@ -474,9 +473,9 @@ little more place."
   (ecb-set-methods-buffer)
   (select-window (next-window)))
 
-;; Layout Nr. 12 -----------------------------------------------------
+;; Layout left10 -----------------------------------------------------
 
-(ecb-layout-define 12 left
+(ecb-layout-define "left10" left
   "This function creates the following layout:
 
    -------------------------------------------------------
@@ -507,9 +506,9 @@ more place."
   (ecb-set-history-buffer)
   (select-window (next-window)))
 
-;; Layout Nr. 13 -----------------------------------------------------
+;; Layout left11 -----------------------------------------------------
 
-(ecb-layout-define 13 left
+(ecb-layout-define "left11" left
   "This function creates the following layout:
 
    -------------------------------------------------------
@@ -538,9 +537,9 @@ more place."
   (ecb-set-history-buffer)
   (select-window (next-window)))
 
-;; Layout Nr. 14 -----------------------------------------------------
+;; Layout left12 -----------------------------------------------------
 
-(ecb-layout-define 14 left
+(ecb-layout-define "left12" left
   "This function creates the following layout:
 
    -------------------------------------------------------
@@ -571,9 +570,9 @@ little more place."
   (ecb-set-history-buffer)
   (select-window (next-window)))
 
-;; Layout Nr. 15 -----------------------------------------------------
+;; Layout left13 -----------------------------------------------------
 
-(ecb-layout-define 15 left
+(ecb-layout-define "left13" left
   "This function creates the following layout:
 
    -------------------------------------------------------
@@ -600,13 +599,14 @@ little more place."
 
 If you have not set a compilation-window in `ecb-compile-window-height' then
 the layout contains no durable compilation window and the other windows get a
-little more place."
+little more place. This layout works best if it is contained in
+`ecb-show-sources-in-directories-buffer'!"
   (ecb-set-directories-buffer)
   (select-window (next-window)))
 
-;; Layout Nr. 16 -----------------------------------------------------
+;; Layout left14 -----------------------------------------------------
 
-(ecb-layout-define 16 left
+(ecb-layout-define "left14" left
   "This function creates the following layout:
 
    -------------------------------------------------------
@@ -627,17 +627,18 @@ little more place."
    |                                                     |
    -------------------------------------------------------
 
-If you have not set a compilation-window in `ecb-compile-window-height' then the
-layout contains no durable compilation window and the other windows get a little
-more place."
+If you have not set a compilation-window in `ecb-compile-window-height' then
+the layout contains no durable compilation window and the other windows get a
+little more place. This layout works best if it is contained in
+`ecb-show-sources-in-directories-buffer'!"
   (ecb-set-directories-buffer)
   (ecb-split-ver 0.75)
   (ecb-set-history-buffer)
   (select-window (next-window)))
 
-;; Layout Nr. 17 -----------------------------------------------------
+;; Layout left15 -----------------------------------------------------
 
-(ecb-layout-define 17 left
+(ecb-layout-define "left15" left
   "This function creates the following layout:
 
    -------------------------------------------------------
@@ -664,17 +665,16 @@ more place."
 
 If you have not set a compilation-window in `ecb-compile-window-height' then
 the layout contains no durable compilation window and the other windows get a
-little more place.
-This layout works best if you set `ecb-show-sources-in-directories-buffer'
-to non nil!"
+little more place. This layout works best if it is contained in
+`ecb-show-sources-in-directories-buffer'!"
   (ecb-set-directories-buffer)
   (ecb-split-ver 0.5)
   (ecb-set-methods-buffer)
   (select-window (next-window)))
 
-;; Layout Nr. 18 -----------------------------------------------------
+;; Layout leftright1 -----------------------------------------------------
 
-(ecb-layout-define 18 left-right
+(ecb-layout-define "leftright1" left-right
  "This function creates the following layout:
 
    --------------------------------------------------------------
@@ -701,9 +701,7 @@ to non nil!"
 
 If you have not set a compilation-window in `ecb-compile-window-height' then
 the layout contains no durable compilation window and the other windows get a
-little more place.
-This layout works best if you set `ecb-show-sources-in-directories-buffer'
-to non nil!"
+little more place."
  (ecb-set-directories-buffer)
  (ecb-split-ver 0.4)
  (ecb-set-sources-buffer)
@@ -713,9 +711,9 @@ to non nil!"
  (ecb-set-methods-buffer)
  (select-window (previous-window (selected-window) 0)))
 
-;; Layout Nr. 19 -----------------------------------------------------
+;; Layout leftright2 -----------------------------------------------------
 
-(ecb-layout-define 19 left-right
+(ecb-layout-define "leftright2" left-right
  "This function creates the following layout:
 
    --------------------------------------------------------------
@@ -742,9 +740,7 @@ to non nil!"
 
 If you have not set a compilation-window in `ecb-compile-window-height' then
 the layout contains no durable compilation window and the other windows get a
-little more place.
-This layout works best if you set `ecb-show-sources-in-directories-buffer'
-to non nil!"
+little more place."
  (ecb-set-directories-buffer)
  (ecb-split-ver 0.66)
  (ecb-set-sources-buffer)
@@ -754,6 +750,8 @@ to non nil!"
  (ecb-set-history-buffer)
  (select-window (previous-window (previous-window (selected-window) 0) 0)))
 
+(defconst ecb-buildin-layouts (copy-list ecb-available-layouts)
+  "All layouts defined until now.")
 
 (silentcomp-provide 'ecb-layout-defs)
 

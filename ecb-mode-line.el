@@ -101,7 +101,7 @@ This should trim the beginning of the directory so that the mode-line does not
 stretch past the screen."
 
   (if (< width (length prefix))
-      (error "Given prefix '%s' is longer than modeline, increase window width" prefix))
+      (ecb-error "Given prefix '%s' is longer than modeline, increase window width" prefix))
 
   ;;make modifications to directory so that the line is the correct length
   ;;remove the first characters of directory so that we have ... at the beginning.

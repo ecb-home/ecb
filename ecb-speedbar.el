@@ -207,7 +207,7 @@ that this is a reimplemntation of this for the ECB that does no frame selection"
 
   (find-file file))
 
-(ecb-layout-define 20 right
+(ecb-layout-define "speedbar1" right
   "ECB layout with integrated speedbar."  
   (ecb-set-speedbar-buffer)
   (ecb-split-ver 0.5)

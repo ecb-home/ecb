@@ -155,7 +155,14 @@
                                               ecb-upgrade-compile-window-temporally-enlarge))
     (ecb-window-sync . (ecb-window-sync ecb-upgrade-window-sync))
     (ecb-hide-ecb-windows-hook . (ecb-hide-ecb-windows-before-hook identity))
-    (ecb-show-ecb-windows-hook . (ecb-show-ecb-windows-before-hook identity)))
+    (ecb-show-ecb-windows-hook . (ecb-show-ecb-windows-before-hook identity))
+    (ecb-layout-nr . (ecb-layout-name ecb-upgrade-layout-nr))
+    (ecb-toggle-layout-sequence . (ecb-toggle-layout-sequence
+                                   ecb-upgrade-toggle-layout-sequence))
+    (ecb-layout-window-sizes . (ecb-layout-window-sizes
+                                ecb-upgrade-layout-window-sizes))
+    (ecb-major-modes-activate . (ecb-major-modes-activate
+                                 ecb-upgrade-major-modes-activate)))
   
   "Alist of all options which should be upgraded for current ECB-version.
 There are several reasons why an option should be contained in this alist:
@@ -202,6 +209,60 @@ The car is the old option symbol and the cdr is a 2-element-list with:
   (if (equal old-val t)
       (ecb-option-get-value 'ecb-window-sync 'standard-value)
     nil))
+
+;; upgrading old layout-numbers (ECB <= 1.80) to new layout-names (ECB
+;; >= 1.90)
+(defun ecb-upgrade-layout-nr2name (number)
+  (let ((number-name-alist '((0 . "left1")
+                             (1 . "left2")
+                             (2 . "left3")
+                             (3 . "left4")
+                             (4 . "left5")
+                             (5 . "right1")
+                             (6 . "left6")
+                             (7 . "top1")
+                             (8 . "left7")
+                             (9 . "left8")
+                             (10 . "top2")
+                             (11 . "left9")
+                             (12 . "left10")
+                             (13 . "left11")
+                             (14 . "left12")
+                             (15 . "left13")
+                             (16 . "left14")
+                             (17 . "left15")
+                             (18 . "leftright1")
+                             (19 . "leftright2")
+                             (20 . "speedbar1"))))
+    (cdr (assoc number number-name-alist))))
+
+(defun ecb-upgrade-layout-nr (old-val)
+  (let ((name (ecb-upgrade-layout-nr2name old-val)))
+    (if (stringp name)
+        name
+      'ecb-no-upgrade-conversion)))
+
+(defun ecb-upgrade-toggle-layout-sequence (old-val)
+  (mapcar (function (lambda (elem)
+                      (ecb-upgrade-layout-nr2name elem)))
+          old-val))
+
+(defun ecb-upgrade-layout-window-sizes (old-val)
+  (let ((l (copy-tree old-val)))
+    (dolist (elem l)
+      (setcar elem
+              (ecb-upgrade-layout-nr2name (car elem))))
+    l))
+
+(defun ecb-upgrade-major-modes-activate (old-val)
+  (if (not (listp old-val))
+      old-val
+    (let ((l (copy-tree old-val)))
+      (dolist (elem l)
+        (if (and (consp elem)
+                 (integerp (cdr elem)))
+            (setcdr elem (ecb-upgrade-layout-nr2name (cdr elem)))))
+      l)))
 
 ;; ----------------------------------------------------------------------
 ;; internal functions. Dot change anything below this line
@@ -382,7 +443,7 @@ Note: This function upgrades only the renamed but not the incompatible options
                            (prin1-to-string new-value)))
             (princ "\n\n")))
         (when ecb-renamed-options
-          (princ "The following options are no longer valid and have now new names. ECB has\ntried to transform the old value to the new option. In cases where this\nwas not possible the current default value is active!")
+          (princ "The following options are not longer valid and have now new names. ECB has\ntried to transform the old value to the new option. In cases where this\nwas not possible the current default value is active!")
           (princ "\n\n"))
         (dolist (option ecb-renamed-options)
           (let ((old-option-name (symbol-name (nth 0 option)))

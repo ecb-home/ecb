@@ -34,6 +34,8 @@
 (require 'ecb-mode-line)
 (require 'ecb-util)
 
+(require 'cl) ;; for set-difference
+
 ;; XEmacs stuff
 (silentcomp-defvar vertical-divider-map)
 (silentcomp-defvar modeline-map)
@@ -41,7 +43,8 @@
 (silentcomp-defvar automatic-hscrolling)
 (silentcomp-defvar before-make-frame-hook)
 (silentcomp-defvar after-make-frame-functions)
-
+;; First loaded during activated ECB
+(silentcomp-defvar ecb-buildin-layouts)
 
 (defgroup ecb-create-layout nil
   "Settings for creating new ECB-layouts."
@@ -101,7 +104,9 @@
  C-c: Cancel layout creation. This does not save the
       layout. Deletes this frame.
  C-q: Save current defined layout and quit the layout
-      creation. You will be asked for a layout-number.
+      creation. You will be asked for a layout-name.
+      With TAB-completion you can get the names already
+      in use. You have to choose a new name!
       Deletes this frame.
 
  There are NO other commands or keys avaliable. ALL
@@ -129,7 +134,8 @@
 
  C-c: Cancel layout creation. This does not save the layout. Deletes this frame.
  C-q: Save current defined layout and quit the layout creation. You will be asked for a
-      layout-number. Deletes this frame.
+      layout-name. With TAB-completion you can get the names already in use.
+      You have to choose a new name! Deletes this frame.
 
  There are NO other commands or keys avaliable. ALL other keys are disabled in this mode!
 ")
@@ -185,8 +191,6 @@
 (defvar ecb-create-layout-generated-lisp nil)
 (defvar ecb-create-layout-gen-counter 0)
 
-(defvar ecb-create-layout-user-layout-max-nr 99)
-
 (defvar ecb-create-layout-buf-types nil)
 
 ;; can be 'left, 'right, 'top or 'left-right
@@ -211,6 +215,8 @@
   (setq ecb-create-layout-gen-counter 0))
 
 (defadvice delete-frame (before ecb-create-layout)
+  "Ensure calling `ecb-create-layout-cancel' during deleting the
+layout-creation frame."
   (let ((frame (or (ad-get-arg 0) (selected-frame))))
     (when (string= (ecb-frame-parameter frame 'name)
                    ecb-create-layout-frame-name)
@@ -285,7 +291,7 @@ DELETE-FRAME is not nil then the new created frame will be deleted and the
             ;; clean the layout creation stuff
             (ecb-create-layout-clear-all delete-frame)
             (message "ECB Layout Creation finished.")))
-      (error "You must give every ECB-tree-window a type (use C-t)!"))))
+      (ecb-error "You must give every ECB-tree-window a type (use C-t)!"))))
 
 
 (defun ecb-create-layout-ready-for-save-p ()
@@ -297,23 +303,6 @@ DELETE-FRAME is not nil then the new created frame will be deleted and the
           (set-buffer (window-buffer win))
           (setq save-p (ecb-create-layout-buffer-type)))))
     save-p))
-
-(defun ecb-create-layout-nr-usable-p (nr &optional commit)
-  (if (<= nr ecb-create-layout-user-layout-max-nr)
-      (progn
-        (if commit
-            (ecb-query-string
-             (format "The number must be >= %d. Please commit!"
-                     (1+ ecb-create-layout-user-layout-max-nr)) nil))
-        nil)
-    (if (fboundp (intern (format "ecb-layout-function-%d" nr)))
-        (progn
-          (if commit
-              (ecb-query-string
-               (format "Layout %d is already defined. Use another number. Please commit!"
-                       nr) nil))
-          nil)
-      t)))
 
 
 (defmacro ecb-create-layout-insert-line (line)
@@ -334,50 +323,35 @@ DELETE-FRAME is not nil then the new created frame will be deleted and the
   ;; we need the reversed sequence of the generated code
   (setq ecb-create-layout-generated-lisp
         (nreverse ecb-create-layout-generated-lisp))
+  ;; ensure we have load all layouts defined until now
+  (ecb-load-layouts)
   ;; now we have the create-code in the right sequence so we can save the new
   ;; layout in the user-layout file
-  (let ((layout-nr 0))
+  (let ((layout-name ""))
     ;; a repeat...until-loop
     (while (progn
              ;;the while body
-             (setq layout-nr
-                   (string-to-number
-                    (read-string
-                     (format "Insert layout-number (must be >= %d): "
-                             (1+ ecb-create-layout-user-layout-max-nr))
-                     (number-to-string (1+
-                     ecb-create-layout-user-layout-max-nr)))))
+             (setq layout-name
+                   (ecb-choose-layout-name ecb-available-layouts nil))
              ;; the while condition
-             (not (ecb-create-layout-nr-usable-p layout-nr t))))
-    (setq ecb-create-layout-user-layout-max-nr layout-nr)
+             (member layout-name ecb-available-layouts)))
     (with-temp-file (expand-file-name ecb-create-layout-file)
       (erase-buffer)
       (if (file-readable-p (expand-file-name ecb-create-layout-file))
           (insert-file-contents (expand-file-name ecb-create-layout-file))
         (ecb-create-layout-insert-file-header))
-      (goto-char (point-min))
-      ;; delete the old user-max-nr
-      (when (re-search-forward
-             "^(setq ecb-create-layout-user-layout-max-nr [0-9]+)$" nil t)
-        (kill-region (match-beginning 0) (match-end 0)))
       (goto-char (point-max))
-      (ecb-create-layout-insert-line "")
       ;; insert header of the layout-define macro
       (ecb-create-layout-insert-line
-       (format "(ecb-layout-define %d %s nil"
-               layout-nr
+       (format "(ecb-layout-define \"%s\" %s nil"
+               layout-name
                (symbol-name ecb-create-layout-type)))
       ;; insert all the generated layout-code of the new layout
       (dolist (line ecb-create-layout-generated-lisp)
         (ecb-create-layout-insert-line
          (format "  %s" line)))
       ;; close the new layout-function
-      (ecb-create-layout-insert-line "  )")
-      (ecb-create-layout-insert-line "")
-      ;; insert the new user-max-nr
-      (ecb-create-layout-insert-line
-       (format "(setq ecb-create-layout-user-layout-max-nr %d)" layout-nr))
-      (ecb-create-layout-insert-line ""))
+      (ecb-create-layout-insert-line "  )"))
     ;; now we load the new layout
     (load-file (expand-file-name ecb-create-layout-file))
     (message "The new layout is saved in %s, loaded and available!"
@@ -544,13 +518,13 @@ DELETE-FRAME is not nil then the new created frame will be deleted and the
       (if (and (member ecb-create-layout-type '(right left-right))
                (equal (previous-window (selected-window) 0)
                       ecb-create-layout-edit-window)
-               (> (nth 0 (window-edges (next-window))) (nth 0 (window-edges)))
-               (= (nth 3 (window-edges ecb-create-layout-edit-window))
-                  (nth 3 (window-edges))))
+               (> (nth 0 (ecb-window-edges (next-window))) (nth 0 (ecb-window-edges)))
+               (= (nth 3 (ecb-window-edges ecb-create-layout-edit-window))
+                  (nth 3 (ecb-window-edges))))
           ;; In exactly this window context we can not delete the current
           ;; window because otherwise the edit-window would enlarge and the
           ;; wrong window would be deleted!
-          (error "This window can not be deleted! Delete another one.")
+          (ecb-error "This window can not be deleted! Delete another one.")
         ;; add the buffer type of the deleted window to the available-list
         (ecb-create-layout-add-to-buf-types (ecb-create-layout-buffer-type))
         (kill-buffer (current-buffer))
@@ -723,7 +697,7 @@ DELETE-FRAME is not nil then the new created frame will be deleted and the
   "Start process for interactively creating a new ECB-layout."
   (interactive)
   (if (not (or ecb-running-emacs-21 ecb-running-xemacs))
-      (error "This command works not with Emacs 20.X; use the macro 'ecb-layout-define'!")
+      (ecb-error "This command works not with Emacs 20.X; use the macro 'ecb-layout-define'!")
     (ecb-create-layout-initilize)
 
     ;; before- and after make frame stuff
@@ -768,6 +742,45 @@ DELETE-FRAME is not nil then the new created frame will be deleted and the
     (setq debug-on-error nil)
 
     (ecb-create-layout-init-layout t)))
+
+
+(defun ecb-delete-new-layout ()
+  "Select a layout-name for a layout created by `ecb-create-new-layout' and
+delete this layout. This means the layout-definiton is removed from the file
+`ecb-create-layout-file' and the layout-function and associated aliases are
+unbound."
+  (interactive)
+  ;; ensure we have load all layouts defined until now
+  (ecb-load-layouts)
+  (let ((new-layout-list (sort (set-difference ecb-available-layouts
+                                               ecb-buildin-layouts
+                                               :test 'string=)
+                               'string<))
+        (layout-name nil))
+    (if (= (length new-layout-list) 0)
+        (ecb-error "There are no layouts to delete!")
+      (setq layout-name (ecb-choose-layout-name new-layout-list t)))
+    (with-temp-file (expand-file-name ecb-create-layout-file)
+      (erase-buffer)
+      (if (file-readable-p (expand-file-name ecb-create-layout-file))
+          (insert-file-contents (expand-file-name ecb-create-layout-file))
+        (ecb-error "This layout is not defined in %s!" ecb-create-layout-file))
+      (goto-char (point-min))
+      (if (re-search-forward (concat "^(ecb-layout-define +"
+                                     "\"" layout-name "\".+$")
+                             nil t)
+          (progn
+            ;; Deleting the layout definition in the file
+            ;; `ecb-create-layout-file'.
+            (beginning-of-line)
+            (delete-region (match-beginning 0)
+                           (progn
+                             (forward-sexp)
+                             (point)))
+            (kill-line)
+            ;; undefining the function and aliases.
+            (ecb-layout-undefine layout-name))
+        (ecb-error "This layout is not defined in %s!" ecb-create-layout-file)))))
 
 (defun ecb-create-layout-debug ()
   (interactive)
