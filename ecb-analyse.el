@@ -20,7 +20,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-analyse.el,v 1.4 2005/01/03 14:27:20 berndl Exp $
+;; $Id: ecb-analyse.el,v 1.5 2005/01/12 10:27:10 berndl Exp $
 
 
 ;;; Commentary:
@@ -195,7 +195,7 @@ See also `ecb-analyse-gen-tag-info-fn'."
                 (function :tag "Info display-function")))
 
 ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: first we start simple by creating
-;; an anaylse-tree-buffer which can be included in a layout and all should
+;; an analyse-tree-buffer which can be included in a layout and all should
 ;; work. Later we could design a basic-mechanism which:
 ;; - creates a "mode"-tree-buffer for stuff like analyse, class browser etc.
 ;; - a mechansims which copy the anaylse-tree-buffer (or in future the
@@ -417,10 +417,12 @@ value of EDIT-WINDOW-NR is ignored."
           (ecb-run-with-idle-timer 0.001 nil 'ecb-hide-ecb-windows)))))))
 
 (defecb-window-dedicator ecb-set-analyse-buffer ecb-analyse-buffer-name
-  "Displays the analyse buffer in current window an makes this window dedicated."
+  "Display the analyse buffer in current window and make window dedicated."
   (add-hook 'ecb-current-buffer-sync-hook-internal 'ecb-analyse-buffer-sync)
   (switch-to-buffer ecb-analyse-buffer-name))
 
+;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: Add these commans to the right
+;; submenu of the ECB-menu and also to the ecb-key-map!
 (defun ecb-maximize-window-analyse ()
   "Maximize the ECB-analyse-window.
 I.e. delete all other ECB-windows, so only one ECB-window and the
@@ -566,6 +568,8 @@ analyse-buffer."
    ecb-frame
    ecb-tree-mouse-action-trigger
    'ecb-interpret-mouse-click
+   ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: Maybe we should make own
+   ;; callbacks for analyse...
    'ecb-tree-buffer-node-select-callback
    'ecb-tree-buffer-node-expand-callback
    'ecb-tree-buffer-node-collapsed-callback

@@ -1,4 +1,4 @@
-* Changes for ECB version 2.32
+* Changes for ECB version 2.32beta1
 
 ** New native ECB-display interactor for the semantic-analyzer
    There is a new tree-buffer ECB-analyse which displays the tags and
@@ -43,7 +43,15 @@
 
 *** Handles not anymore existing files in the stealthy tasks (TODO!!!!!)
 
+*** Fixed a bug when `ecb-process-non-semantic-files' is set to nil.
+    This bug only occurs with XEmacs. As a side effect of this fix now the
+    methods-buffer is correctly cleared out when loading a
+    non-semantic-sourcefile (i.e. not parsable by semantic) and processing of
+    non-semantic-files is switched off (`ecb-process-non-semantic-files' is
+    set to nil) or the sourcefile is not parsable by a parser like imenu or
+    etags/ctags.
 
+    
 
 * Changes for ECB version 2.31
 
