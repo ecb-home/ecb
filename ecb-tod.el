@@ -91,6 +91,12 @@
     "Call `ecb-show-help' [C-c . o] with a prefix-argument [C-u] and choose the help-format."
     "You can change the prefix [C-c .] of all ECB-keybindings quick and easy with `ecb-key-map'."
     "Send a problem-report to the ECB-mailing-list quick and easy with `ecb-submit-problem-report'."
+    "Switch on/off auto. expanding of the ECB-methods-buffer with `ecb-auto-expand-directory-tree'."
+    "You can quickly toggle auto. expanding of the ECB-methods-buffer with `ecb-toggle-auto-expand-token-tree'."
+    "Highlight current semantic-token of the edit-buffer in the ECB-methods-buffer with `ecb-highlight-token-with-point'."
+    "Use `scroll-all-mode' to scroll both edit-windows of ECB simultaneously - and no other windows are scrolled!"
+    "You can toggle having a compile window with `ecb-toggle-compile-window' if `ecb-compile-window-height' is not nil."
+    "Start ECB automatically after Emacs is started. Use option `ecb-auto-activate'"
     )
   "List of all available tips of the day.")
 
