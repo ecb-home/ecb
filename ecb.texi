@@ -752,6 +752,9 @@ than auto. calling @code{ecb-toggle-ecb-windows} (@pxref{Interactive
 ECB commands} depending which major-mode is active.
 @end table
 
+If you activate ECB on a major-mode basis you probably want switch off
+displaying the tip of the day. You can do this with the option
+@code{ecb-tip-of-the-day}.
 
 @node Usage of ECB, Customizing, Activation and Deactivation, Top
 @chapter Usage of ECB
@@ -1157,13 +1160,13 @@ ECB.
 @node Fast overlook, Customizing the display, The Methods buffer, The Methods buffer
 @subsection Getting a fast overlook of the buffer-contents
 
-With the command @code{ecb-expand-methods-nodes} you can get a fast
-overlook of the contents of the source-buffer, because this command
-allows precisely expanding tokens with a certain indentation-level. So
-you can either expand no tokens (or with other words collapse all
-tokens) or expand all tokens so see the contents of a buffer at one
-glance. Or you can expand exactly that tokens of a certain indentation
-level.
+With the command @code{ecb-expand-methods-nodes} (bound to @kbd{C-c .
+x}) you can get a fast overlook of the contents of the source-buffer,
+because this command allows precisely expanding tokens with a certain
+indentation-level. So you can either expand no tokens (or with other
+words collapse all tokens) or expand all tokens so see the contents of
+a buffer at one glance. Or you can expand exactly that tokens of a
+certain indentation level.
 
 Which node-types are expanded (resp. collapsed) by this command
 depends on the options @code{ecb-methods-nodes-expand-spec} and
@@ -2263,39 +2266,45 @@ directory tp @code{load-path} and restarting Emacs the new ECB version can
 be activated by @code{ecb-activate}.
 @end deffn
 
-@deffn Command expand-methods-nodes &optional level
+@deffn Command expand-methods-nodes &optional force-all
 Set the expand level of the nodes in the ECB-methods-buffer.
 
-With the optional argument @var{LEVEL} (an integer or nil) you can
-precisely spezify which level of nodes should be expanded.
-@var{LEVEL} means the indentation-level of the nodes.
+This command asks in the minibuffer for an indentation level LEVEL. With this
+LEVEL you can precisely spezify which level of nodes should be expanded. LEVEL
+means the indentation-level of the nodes.
 
-A @var{LEVEL} value X means that all nodes with an indentation-level
-<= X are expanded and all other are collapsed. A negative @var{LEVEL}
-value means all visible nodes are collapsed.
+A LEVEL value X means that all nodes with an indentation-level <= X are
+expanded and all other are collapsed. A negative LEVEL value means all visible
+nodes are collapsed.
 
 Nodes which are not indented have indentation-level 0!
 
 Which node-types are expanded (resp. collapsed) by this command
 depends on the options @code{ecb-methods-nodes-expand-spec} and
-@code{ecb-methods-nodes-collapse-spec}!
-
-If @var{LEVEL} is @code{nil} then the action depends on the first
-node of current method-buffer: If it is expanded than @var{LEVEL}
-will be treated as -1 (i.e. all visible nodes will be collapsed)
-otherwise ALL nodes will be expanded regardless of their
-indentation-level.
+@code{ecb-methods-nodes-collapse-spec}! With optional argument
+@var{FORCE-ALL} all tokens will be expanded/collapsed regardless of
+the values of these options.
 
 Examples:
 @itemize @minus
-@item @var{LEVEL} = 0
+@item LEVEL = 0
 expands only nodes which have no indentation itself.
-@item @var{LEVEL} = 2
-expands nodes which are indented once or twice
-@item @var{LEVEL} ~ 100
+@item LEVEL = 2
+expands nodes which are either not indented or indented indented once
+or twice
+@item LEVEL ~ 10
 should normally expand all nodes expect there are nodes which are
-indented deeper than 100.
+indented deeper than 10.
 @end itemize
+@end deffn
+
+@deffn Command expand-directory-nodes
+Set the expand level of the nodes in the ECB-directories-buffer. For
+argument LEVEL see @code{ecb-expand-methods-nodes}.
+
+Be aware that for deep structured paths and a lot of source-paths this
+command can last a long time - depending of machine- and
+disk-performance.
 @end deffn
 
 @deffn Command goto-window-compilation
@@ -2386,6 +2395,11 @@ the options @code{ecb-help-info-start-file} and
 Select a name of a layout and shows the documentation of the
 associated layout-function. At least for the buildin layouts the
 documentation contains a picture of the outline of the choosen layout.
+@end deffn
+
+@deffn Command show-tip-of-the-day
+Show tip of the day if @code{ecb-tip-of-the-day} is not nil or if
+called interactively.
 @end deffn
 
 @deffn Command submit-problem-report
@@ -3080,6 +3094,14 @@ Do NOT set this option directly via setq but use always customize!
 Specify a directory where ECB can store temporary files.
 @end defopt
 
+@defopt tip-of-the-day
+Show tip of the day at start time of ECB.
+@end defopt
+
+@defopt tip-of-the-day-file
+File where tip-of-the-day cursor is stored.
+@end defopt
+
 @defopt tree-RET-selects-edit-window
 In which tree-buffers RET should finally select an edit-window. If a
 name of an ECB tree-buffer is contained in this list then hitting RET
@@ -3606,8 +3628,9 @@ they can not be jumped.
 @end defopt
 
 @defopt show-tokens
-How to show tokens in the methods buffer. This variable is a list
-where each element represents a type of tokens:
+How to show tokens in the methods buffer first time after find-file.
+This variable is a list where each element represents a type of
+tokens:
 
 @example
 (<token type> <display type> <sort method>)
