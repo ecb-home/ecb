@@ -26,7 +26,7 @@
 ;; This file is part of the ECB package which can be found at:
 ;; http://home.swipnet.se/mayhem/ecb.html
 
-;; $Id: ecb-util.el,v 1.43 2003/01/14 13:46:41 berndl Exp $
+;; $Id: ecb-util.el,v 1.44 2003/01/14 16:20:55 berndl Exp $
 
 ;;; Code:
 
@@ -72,6 +72,7 @@
       (defalias 'ecb-frame-parameter 'frame-property)
       (defalias 'ecb-line-beginning-pos 'point-at-bol)
       (defalias 'ecb-line-end-pos 'point-at-eol)
+      (defalias 'ecb-window-list 'window-list)
       (defun ecb-frame-char-width (&optional frame)
         (/ (frame-pixel-width frame) (frame-width frame)))
       (defun ecb-frame-char-height (&optional frame)
@@ -87,7 +88,36 @@
   (defalias 'ecb-line-end-pos 'line-end-position)
   (defalias 'ecb-frame-char-width 'frame-char-width)
   (defalias 'ecb-frame-char-height 'frame-char-height)
-  (defalias 'ecb-window-edges 'window-edges))
+  (defalias 'ecb-window-edges 'window-edges)
+  (if ecb-running-emacs-21
+      (defalias 'ecb-window-list 'window-list)
+    ;; Emacs 20 has no window-list function. The following one is stolen from
+    ;; XEmacs.
+    (defun ecb-window-list (&optional frame minibuf window)
+      "Return a list of windows on FRAME, beginning with WINDOW.
+FRAME and WINDOW default to the selected ones.
+Optional second arg MINIBUF t means count the minibuffer window
+even if not active.  If MINIBUF is neither t nor nil it means
+not to count the minibuffer even if it is active."
+      (setq window (or window (selected-window))
+            frame (or frame (selected-frame)))
+      (if (not (eq (window-frame window) frame))
+          (error "Window must be on frame."))
+      (let ((current-frame (selected-frame))
+            list)
+        (unwind-protect
+            (save-window-excursion
+              (select-frame frame)
+              (walk-windows
+               (function (lambda (cur-window)
+                           (if (not (eq window cur-window))
+                               (setq list (cons cur-window list)))))
+               minibuf
+               'selected)
+              ;; This is needed to get the right windows-order!
+              (setq list (nreverse list))
+              (setq list (cons window list)))
+          (select-frame current-frame))))))
 
 
 (defconst ecb-basic-adviced-functions (if ecb-running-xemacs
@@ -139,9 +169,13 @@ by semantic and also killed afterwards."
     ;; parse the buffer of custom-file and the method-buffer would be updated
     ;; with the contents of custom-file which is definitely not desired.
     (ignore-errors
-      (kill-buffer (find-file-noselect (if ecb-running-xemacs
-                                           custom-file
-                                         (custom-file)))))))
+      (kill-buffer (find-file-noselect (cond (ecb-running-xemacs
+                                              custom-file)
+                                             (ecb-running-emacs-21
+                                              (custom-file))
+                                             (t
+                                              (or custom-file
+                                                  user-init-file))))))))
 
 ;; assoc helpers
 
@@ -305,7 +339,8 @@ RET quits the query and returns nil). If OTHER-PROMPT is not nil and a string
 then the choice \"other\" is added to CHOICES and after selecting this choice
 the user is prompted with OTHER-PROMPT to insert any arbitrary string."
   (let* ((new-choices (if other-prompt
-                          (add-to-list 'choices "other" t)
+                          ;; Emacs 20.X add-to-list can not append at the end
+                          (append choices (list "other"))
                         choices))
          (default (car new-choices))
          answer)
