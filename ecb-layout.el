@@ -125,7 +125,7 @@
 ;;   + The edit-window must not be splitted and the point must reside in
 ;;     the not deleted edit-window.
 
-;; $Id: ecb-layout.el,v 1.67 2001/07/03 16:57:01 berndl Exp $
+;; $Id: ecb-layout.el,v 1.68 2001/07/03 19:16:27 berndl Exp $
 
 ;;; Code:
 
@@ -1320,10 +1320,10 @@ visibility of the ECB windows. ECB minor mode remains active!"
 ;; the main layout core-function. This function is the "environment" for a
 ;; special layout function (l.b.)
 
-(defun ecb-redraw-layout (&optional force)
+(defun ecb-redraw-layout ()
   "Redraw the ECB screen according to the layout set in `ecb-layout-nr'. After
 this function the edit-window is selected which was current before redrawing."
-  (interactive "P")
+  (interactive)
   (unless (or (not ecb-minor-mode)
               (not (equal (selected-frame) ecb-frame)))
     (let* ((config (ecb-edit-window-configuration))

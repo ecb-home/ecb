@@ -26,7 +26,7 @@
 ;;
 ;; Contains all online-help for ECB (stolen something from recentf.el)
 
-;; $Id: ecb-help.el,v 1.36 2001/07/03 16:57:01 berndl Exp $
+;; $Id: ecb-help.el,v 1.37 2001/07/03 19:16:27 berndl Exp $
 
 ;;; Code
 
@@ -280,7 +280,8 @@ Redrawing the ECB-layout:
 -------------------------
 
 If you have unintenionally destroyed the ECB-layout, you can always restore the
-layout with calling `ecb-redraw-layout'.
+layout with calling `ecb-redraw-layout'. This is even true, if you get
+messages like \"wrong-type-argument window-live-p #<window 222>\".
 
 
 Hiding/Showing the ECB windows:

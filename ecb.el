@@ -54,7 +54,7 @@
 ;; The latest version of the ECB is available at
 ;; http://home.swipnet.se/mayhem/ecb.html
 
-;; $Id: ecb.el,v 1.121 2001/07/03 13:47:15 berndl Exp $
+;; $Id: ecb.el,v 1.122 2001/07/03 19:16:28 berndl Exp $
 
 ;;; Code:
 
@@ -1836,8 +1836,8 @@ always the ECB-frame if called from another frame."
 
     ;; menus
     (if running-xemacs
-        (add-submenu nil ecb-minor-menu)
-      (easy-menu-add ecb-minor-menu))
+        (add-submenu nil ecb-minor-menu))
+;;       (easy-menu-add ecb-minor-menu))
 
     (setq ecb-minor-mode t)
 
@@ -1922,7 +1922,8 @@ always the ECB-frame if called from another frame."
       (remove-hook 'ediff-quit-hook 'ecb-ediff-quit-hook))
 
     ;; menus
-    (easy-menu-remove ecb-minor-menu)
+    (if running-xemacs
+        (easy-menu-remove ecb-minor-menu))
 
     ;; run any personal hooks
     (run-hooks 'ecb-deactivate-hook)
