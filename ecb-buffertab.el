@@ -1,6 +1,6 @@
 ;;; ecb-buffertab.el --- 
 
-;; $Id: ecb-buffertab.el,v 1.2 2002/02/22 08:30:43 berndl Exp $
+;; $Id: ecb-buffertab.el,v 1.3 2002/03/22 02:03:29 burtonator Exp $
 
 ;; Copyright (C) 2000-2003 Free Software Foundation, Inc.
 ;; Copyright (C) 2000-2003 Kevin A. Burton (burton@openprivacy.org)
@@ -39,7 +39,11 @@
 ;;
 ;; - write a function that generates a popup menu
 ;;
-;; 
+;; - the popup menu should allow the user to check a buffer view to set it as
+;;   the default when opening new files.
+;;
+;;   - is this possible?  I think it might but I would need to set it up
+;;   correctly.
 
 (require 'ecb-compilation)
 

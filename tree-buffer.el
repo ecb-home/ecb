@@ -26,7 +26,7 @@
 ;; This file is part of the ECB package which can be found at:
 ;; http://home.swipnet.se/mayhem/ecb.html
 
-;; $Id: tree-buffer.el,v 1.80 2002/03/15 14:00:22 berndl Exp $
+;; $Id: tree-buffer.el,v 1.81 2002/03/22 02:03:29 burtonator Exp $
 
 ;;; Code:
 
@@ -377,7 +377,6 @@ This is only used with GNU Emacs 21!"
       (or (and tree-node-mouse-over-fn
                node
                (funcall tree-node-mouse-over-fn node window 'no-print)) ""))))
-
 
 (defun tree-buffer-insert-text (text &optional facer help-echo)
   "Insert TEXT at point and faces it with FACER. FACER can be a face then the
@@ -975,10 +974,8 @@ AFTER-CREATE-HOOK: A function \(with no arguments) called directly after
       (define-key tree-buffer-key-map [end]
         'tree-buffer-incremental-node-search))
     
-    (define-key tree-buffer-key-map (kbd "<RET>")
-      (function (lambda ()
-                  (interactive)
-                  (tree-buffer-return-pressed))))
+    (define-key tree-buffer-key-map (kbd "<RET>") 'tree-buffer-select-current-node)
+
     (define-key tree-buffer-key-map (kbd "<C-return>")
       (function (lambda ()
                   (interactive)
@@ -1217,6 +1214,17 @@ child."
 
 (defun tree-node-get-shorten-name (node)
   (aref node tree-node-shorten-name))
+
+(defun tree-buffer-select-current-node()
+  "Select the current node and open it in the ECB edit window."
+  (interactive)
+
+  (if ecb-methods-select-edit-window
+     (tree-buffer-return-pressed)
+    (tree-buffer-return-pressed)
+    (recenter)
+    (ecb-goto-window-methods)
+    (tree-buffer-remove-highlight)))
 
 (provide 'tree-buffer)
 

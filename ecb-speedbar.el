@@ -1,6 +1,6 @@
 ;;; ecb-speedbar.el --- 
 
-;; $Id: ecb-speedbar.el,v 1.14 2002/03/19 00:37:25 burtonator Exp $
+;; $Id: ecb-speedbar.el,v 1.15 2002/03/22 02:03:29 burtonator Exp $
 
 ;; Copyright (C) 2000-2003 Free Software Foundation, Inc.
 ;; Copyright (C) 2000-2003 Kevin A. Burton (burton@openprivacy.org)
@@ -225,7 +225,8 @@ will/could break."
                    ecb-minor-mode
                    speedbar-buffer
                    (buffer-live-p speedbar-buffer))
-          (speedbar-update-contents))))))
+
+            (speedbar-update-contents))))))
 
 (defun ecb-speedbar-goto-speedbar()
   "Goto the speedbar window."
@@ -238,7 +239,8 @@ will/could break."
 ;;FIXME: migrate this into ecb-mode-map when speedbar is ready.
 (define-key ecb-mode-map "\C-c.b" 'ecb-speedbar-goto-speedbar)
 
-;;disable automatic speedbar updates... let the ECB handle this.
+;;disable automatic speedbar updates... let the ECB handle this with
+;;ecb-current-buffer-sync
 (speedbar-disable-update)
 
 (provide 'ecb-speedbar)
