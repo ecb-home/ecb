@@ -1,6 +1,4 @@
-* Changes for ECB version 2.28
-
-TODO: Change version to 2.30 before releasing!!!! Add news to ecb-upgrade!
+* Changes for ECB version 2.30
 
 ** Enhancements to the file-browser
 
@@ -57,6 +55,9 @@ TODO: Change version to 2.30 before releasing!!!! Add news to ecb-upgrade!
     image-icons are also included for a cute display of the VC-state in the
     directories, sources and history-buffer. Thanks to Markus Gritsch
     <gritsch@iue.tuwien.ac.at> for contributing the icons.
+
+    It's recommended to read the section "Version-control support" in the
+    chapter "Tips and Trick" of the ECB-info-manual!
 
 *** New hook which runs directly after the selected directory has changed.
     See documentation of `ecb-after-directory-change-hook'.

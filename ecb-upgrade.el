@@ -159,7 +159,7 @@
 
 ;; IMPORTANT: The version-number is auto-frobbed from the Makefile. Do not
 ;; change it here!
-(defconst ecb-version "2.28"
+(defconst ecb-version "2.30"
   "Current ECB version.")
 
 (eval-when-compile
@@ -177,7 +177,7 @@
 
 ;; Each NEWS-string should be a one-liner shorter than 70 chars
 (defconst ecb-upgrade-news
-  '(("2.28" . ("Support for displaying the VC-state in the tree-buffers; see NEWS."
+  '(("2.30" . ("Support for displaying the VC-state in the tree-buffers; see NEWS."
                "ECB is now capable of handling remote paths (e.g. TRAMP-paths)"
                "Precisely expanding of current node via popup-menu of the methods-buffer."
                "Time consuming tasks are performed stealthy; see `ecb-stealthy-tasks-delay'"))
