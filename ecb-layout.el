@@ -228,7 +228,7 @@ layout with `ecb-redraw-layout'"
   :initialize 'custom-initialize-default
   :set ecb-layout-option-set-function
   :type '(radio (const :tag "No compilation window" nil)
-                (number :tag "Window height")))
+                (number :tag "Window height" :value 5)))
 
 (defcustom ecb-compile-window-temporally-enlarge t
   "*Let Emacs temporally enlarge the compile-window of the ECB-layout
