@@ -1,6 +1,6 @@
 ;;; ecb-compilation.el --- 
 
-;; $Id: ecb-compilation.el,v 1.12 2002/12/21 03:58:28 burtonator Exp $
+;; $Id: ecb-compilation.el,v 1.13 2002/12/22 06:45:54 burtonator Exp $
 
 ;; Copyright (C) 2000-2003 Free Software Foundation, Inc.
 ;; Copyright (C) 2000-2003 Kevin A. Burton (burton@openprivacy.org)
@@ -31,10 +31,12 @@
 ;; NOTE: If you enjoy this software, please consider a donation to the EFF
 ;; (http://www.eff.org)
 
+;;; TODO: 
+
 ;;; Code:
 
 (eval-when-compile
-  (require 'silentcomp))
+ (require 'silentcomp))
 
 (defgroup ecb-compilation-content nil
   "Settings for all things displayed in the compile window of ECB."
@@ -141,6 +143,24 @@ is contained in the list returned by the function
                 t
               ;;else it isn't a complication buffer
               nil)))))))
+
+(defun ecb-compilation-update-menu()
+  "Create an install a menu that allows the user to navigate buffers that are
+valid ECB compilation buffers.  See `ecb-compilation-buffer-p' for more
+information about compilation buffers."
+  (interactive)
+
+  (let((submenu '("Compilation Buffers"))
+       (buffers (ecb-compilation-get-buffers)))
+
+    (dolist(buffer buffers)
+      (add-to-list 'submenu (vector (car buffer)
+                                    (list 'switch-to-buffer (car buffer))
+                                    :active t) t))
+
+    (easy-menu-add-item 'ecb-minor-menu nil submenu "Navigate")))
+
+(add-hook 'menu-bar-update-hook 'ecb-compilation-update-menu)
 
 (silentcomp-provide 'ecb-compilation)
 
