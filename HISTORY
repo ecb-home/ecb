@@ -21,8 +21,10 @@ Version 1.80:
   the documentation. (Klaus)
   Suggested by Daniel Hegyi <daniel_hegyi@hotmail.com>
 
-- (Hopefully) Fixed a bug which results in a "wrong-type-argument"-error (or
-  "destroyed extent"-error with XEmacs) under some circumstances. (Klaus)
+- Fixed a bug: Sometimes there occurs a a "wrong-type-argument"-error (or
+  "destroyed extent"-error with XEmacs) under some circumstances. Now ECB
+  auto- reparses the buffer and after that ECB is in correct state again.
+  (Klaus)
 
 - Two new options: ecb-major-modes-activate and ecb-major-modes-deactivate.
   Allow (de)activation of ECB on major-mode base. Instead of deactivation also
