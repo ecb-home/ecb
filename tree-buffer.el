@@ -187,8 +187,8 @@ with the same arguments as `tree-node-expanded-fn'."
         (when node
           (if (and (tree-node-is-expandable node)
                    (tree-buffer-at-expand-symbol name node p)
-                  ;; if the expand-symbol is displayed before and mouse-button
-                ;; = 0, means RET is pressed, we do not toggle-expand but work
+                   ;; if the expand-symbol is displayed before and mouse-button
+                   ;; = 0, means RET is pressed, we do not toggle-expand but work
                    ;; as if point would not be at expand-symbol. This is for
                    ;; conveniance.
                    (not (and (= mouse-button 0)
@@ -974,8 +974,10 @@ AFTER-CREATE-HOOK: A function \(with no arguments) called directly after
       (define-key tree-buffer-key-map [end]
         'tree-buffer-incremental-node-search))
     
-    (define-key tree-buffer-key-map (kbd "<RET>") 'tree-buffer-select-current-node)
-
+    (define-key tree-buffer-key-map (kbd "<RET>")
+      (function (lambda ()
+                  (interactive)
+                  (tree-buffer-return-pressed nil nil))))
     (define-key tree-buffer-key-map (kbd "<C-return>")
       (function (lambda ()
                   (interactive)
@@ -1214,17 +1216,6 @@ child."
 
 (defun tree-node-get-shorten-name (node)
   (aref node tree-node-shorten-name))
-
-(defun tree-buffer-select-current-node()
-  "Select the current node and open it in the ECB edit window."
-  (interactive)
-
-  (if ecb-methods-select-edit-window
-     (tree-buffer-return-pressed)
-    (tree-buffer-return-pressed)
-    (recenter)
-    (ecb-goto-window-methods)
-    (tree-buffer-remove-highlight)))
 
 (provide 'tree-buffer)
 
