@@ -16,9 +16,15 @@
    But it is still necessary to check if fsf-compat is required by the
    packages semantic, eieio and speedbar which in turn are required by ECB.
 
-** Xrefactory works even when all ECB-windows are visible (see Fixed Bugs).
-   !!!TODO!!! When true and well tested then remoce the restriction in the
-   texi-file. 
+** Compatibility enhancements
+
+*** Commands like bs-show of the library bs.el now work correctly with ECB
+
+*** Xrefactory works even when all ECB-windows are visible (see Fixed Bugs).
+    !!!TODO!!! When true and well tested then remoce the restriction in the
+    texi-file.
+
+*** Commands using `Electric-pop-up-window' now work correctly with ECB
 
 ** Fixed Bugs
 
