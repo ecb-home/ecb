@@ -51,7 +51,11 @@
    auto. selected in the ECB-directories buffer and the ECB-sources buffer
    displays the contents of this directory. See new option
    `ecb-display-default-dir-after-start'. 
-   
+
+** ECB preserves the split-state of the frame after activation rsp. deactivation
+   This is done if the already existing option `ecb-split-edit-window' has the
+   new value t.
+      
 ** New command `ecb-toggle-window-sync' for fast toggling between autom.
    synchronization of the ECB-buffers is switched on and off.
 

@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb.el,v 1.333 2003/09/08 13:32:10 berndl Exp $
+;; $Id: ecb.el,v 1.334 2003/09/08 17:32:28 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -5415,8 +5415,6 @@ always the ECB-frame if called from another frame."
     
             ;; enable basic advices
             (ecb-enable-advices ecb-basic-adviced-functions)
-            ;; enable window-function advices
-            (ecb-activate-adviced-functions ecb-advice-window-functions)
 
             ;; set the ecb-frame
             (if ecb-new-ecb-frame
@@ -5675,15 +5673,28 @@ always the ECB-frame if called from another frame."
           "Errors during the hooks of ecb-activate-before-layout-draw-hook.")))
          
       (setq ecb-minor-mode t)
-      
+
+      ;; now we draw the screen-layout of ECB. We try to preserve the
+      ;; split-state but only if the frame is splitted in two windows. More
+      ;; windows can not be preserved because ECB can only split its edit-area
+      ;; in two windows.
       (condition-case nil
-          (progn
+          (let ((win-list (ecb-window-list ecb-frame 0 (frame-first-window ecb-frame)))
+                buf-1 buf-2 split first-win-selected)
+            (if (= (length win-list) 2)
+                (setq buf-1 (window-buffer (nth 0 win-list))
+                      buf-2 (window-buffer (nth 1 win-list))
+                      split (if (= (car (ecb-window-edges (nth 0 win-list)))
+                                   (car (ecb-window-edges (nth 1 win-list))))
+                                'vertical
+                              'horizontal)
+                      first-win-selected (equal (selected-window) (nth 0 win-list))))
             ;; now we draw the layout chosen in `ecb-layout'. This function
             ;; activates at its end also the adviced functions if necessary!
             ;; Here are the directories- and history-buffer updated.
             (let ((ecb-redraw-layout-quickly nil))
               (ecb-redraw-layout-full 'no-buffer-sync))
-    
+
             (ecb-with-adviced-functions
              ;; activate the correct edit-window split
              (cond ((equal ecb-split-edit-window 'vertical)
@@ -5691,7 +5702,18 @@ always the ECB-frame if called from another frame."
                    ((equal ecb-split-edit-window 'horizontal)
                     (split-window-horizontally))
                    ((not ecb-split-edit-window)
-                    (delete-other-windows))))
+                    (delete-other-windows))
+                   (t
+                    (cond ((equal split 'vertical)
+                           (split-window-vertically))
+                          ((equal split 'horizontal)
+                           (split-window-horizontally)))
+                    (when split
+                      (set-window-buffer ecb-edit-window buf-1)
+                      (set-window-buffer (next-window ecb-edit-window)
+                                         buf-2)
+                      (ecb-select-edit-window (not first-win-selected))
+                      ))))
 
             ;; now we synchronize all ECB-windows
             (ecb-current-buffer-sync 'force)
@@ -5863,16 +5885,42 @@ does all necessary after finishing ediff."
       (unless run-no-hooks
         (run-hooks 'ecb-deactivate-hook))
     
-      ;; clear the ecb-frame
+      ;; clear the ecb-frame. Here we try to preserve the split-state after
+      ;; deleting the ECB-screen-layout.
       (when (frame-live-p ecb-frame)
         (raise-frame ecb-frame)
         (select-frame ecb-frame)
-        (ecb-select-edit-window)
-        ;; first we delete all ECB-windows.
-        (delete-other-windows)
-        (if (get 'ecb-frame 'ecb-new-frame-created)
-            (ignore-errors (delete-frame ecb-frame t))))
-    
+        (condition-case nil
+            (let* ((split (ecb-edit-window-splitted))
+                   (buf-1 (window-buffer ecb-edit-window))
+                   (buf-2 (if split (window-buffer (next-window ecb-edit-window))))
+                   (sel-win (ecb-point-in-edit-window)))
+              ;; first we delete all ECB-windows.
+              (ecb-select-edit-window)
+              (mapc (function (lambda (w)
+                                (set-window-dedicated-p w nil)))
+                    (ecb-window-list ecb-frame 0))
+              (delete-other-windows)
+              (set-window-dedicated-p (selected-window) nil)
+              ;; now we try to restore the split-state
+              (cond ((equal split 'vertical)
+                     (split-window-vertically))
+              ((equal split 'horizontal)
+               (split-window-horizontally)))
+              (when split
+              (set-window-buffer (selected-window) buf-1)
+              (set-window-buffer (next-window (selected-window))
+                                 buf-2)
+              (if (and sel-win
+                       (= sel-win 2))
+                  (select-window (next-window)))))
+          (error
+           ;; in case of an error we delete at least all other windows.
+           (ignore-errors (delete-other-windows))))
+        
+          (if (get 'ecb-frame 'ecb-new-frame-created)
+              (ignore-errors (delete-frame ecb-frame t))))
+        
       (ecb-initialize-layout)
 
       ;; we can safely do the kills because killing non existing buffers
