@@ -1217,11 +1217,9 @@ TIMEOUT is how fast to display the messages.
 MESSAGE is the message to show, and DONESTR is the string to add when done.
 CALLPROCESSARGS are the same style of args as passed to `call-process'.
 The are: PROGRAM, INFILE, BUFFER, DISPLAY, and ARGS.
-Since it actually calls `start-process', not all features will work."
+Since it actually calls `start-process', not all features will work.
+It returns the exit-status of the called PROGRAM."
   (ecb-working-status-timeout timeout message donestr
-    ;; we must explicitly set the LOKALE to C to avoid that a process is
-    ;; called with a different LOKALE...otherwise parsing the output of a
-    ;; process could fail!
     (let* ((process-environment (cons "LC_ALL=C" process-environment))
            (proc (apply 'start-process "ecb-working"
                         (if (listp buffer) (car buffer) buffer)
@@ -1233,7 +1231,8 @@ Since it actually calls `start-process', not all features will work."
 	;; If this is unreliable for you, use the below which will work
 	;; in that situation.
 	;; (if (not (sit-for timeout)) (read-event))
-	))))
+	)
+      (process-exit-status proc))))
 
 (defun ecb-position (seq elem)
   "Return the position of ELEM within SEQ counting from 0. Comparison is done
