@@ -10,7 +10,7 @@ Contributed by Klaus Berndl <klaus.berndl@sdm.de>:
 
 - New layout functionality.
 
-- The history buffer can optionally be sorted.
+- The history buffer can optionally be sorted and also cleared.
 
 - The package expanded symbol can optionally be placed before the package name.
 

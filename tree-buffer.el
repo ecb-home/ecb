@@ -40,12 +40,13 @@
 (defvar tree-buffer-indent nil)
 (defvar tree-buffer-highlighted-node-data nil)
 (defvar tree-buffer-menus nil)
-(defvar tree-buffer-type-faces nil)
+(defvar tree-buffer-type-facer nil)
 (defvar tree-buffer-expand-symbol-before nil)
 (defvar tree-node-selected-fn nil)
 (defvar tree-node-expanded-fn nil)
+(defvar tree-buffer-highlight-overlay nil)
 
-(defun list-append(list item)
+  (defun list-append(list item)
   (if list
       (progn
 	(setcdr (last list) item)
@@ -88,10 +89,6 @@
   (let ((p (point))
 	(node (tree-buffer-get-node-at-point)))
     (when node
-      ;; display a message with the node name if a node is longer than the
-      ;; window-width. Works currently only for the Method-Window.
-      (if (> (length (tree-node-get-name node)) (window-width))
-          (message (format "%s" (tree-node-get-name node))))
       (if (and (tree-node-is-expandable node)
 	       (tree-buffer-at-expand-symbol node (point)))
 	  (progn
@@ -123,10 +120,10 @@
 	  (throw 'exit linenr))
 	(setq linenr (1+ linenr))))))
 
-(defun tree-buffer-get-node-face(node)
-  (let ((face (cdr (assoc (tree-node-get-type node) tree-buffer-type-faces))))
-    (if face
-	face
+(defun tree-buffer-get-node-facer(node)
+  (let ((facer (cdr (assoc (tree-node-get-type node) tree-buffer-type-facer))))
+    (if facer
+	facer
       'default)))
 
 (defun tree-buffer-node-set-face(node face)
@@ -134,11 +131,31 @@
   (put-text-property (tree-buffer-get-node-name-start-point node)
 		     (tree-buffer-get-node-name-end-point node) 'face face))
 
+;; (defun tree-buffer-remove-highlight()
+;;   (when tree-buffer-highlighted-node-data
+;;     (let ((node (tree-buffer-find-node-data tree-buffer-highlighted-node-data)))
+;;       (when node
+;; 	(tree-buffer-node-set-face node (tree-buffer-get-node-face node)))))
+;;   (setq tree-buffer-highlighted-node-data nil))
+
+;; (defun tree-buffer-highlight-node-data(node-data)
+;;   (tree-buffer-remove-highlight)
+;;   (setq tree-buffer-highlighted-node-data node-data)
+;;   (when tree-buffer-highlighted-node-data
+;;     (let ((node (tree-buffer-find-node-data tree-buffer-highlighted-node-data)))
+;;       (when node
+;; 	(tree-buffer-node-set-face node 'region)))))
+
+;; Klaus: Now we use overlays to highlight current node in a tree-buffer. This
+;; makes it easier to do same facing with the nodes itself and above all this
+;; the facees of the node are always visible even if the node is highlighted
+;; (useful e.g. if you show the sources in the ECB directory buffer, and if
+;; you do some syntax highlighting in the method-buffer).
 (defun tree-buffer-remove-highlight()
   (when tree-buffer-highlighted-node-data
     (let ((node (tree-buffer-find-node-data tree-buffer-highlighted-node-data)))
       (when node
-	(tree-buffer-node-set-face node (tree-buffer-get-node-face node)))))
+        (delete-overlay tree-buffer-highlight-overlay))))
   (setq tree-buffer-highlighted-node-data nil))
 
 (defun tree-buffer-highlight-node-data(node-data)
@@ -147,14 +164,26 @@
   (when tree-buffer-highlighted-node-data
     (let ((node (tree-buffer-find-node-data tree-buffer-highlighted-node-data)))
       (when node
-	(tree-buffer-node-set-face node 'region)))))
+        (move-overlay tree-buffer-highlight-overlay
+                      (tree-buffer-get-node-name-start-point node)
+                      (tree-buffer-get-node-name-end-point node))))))
   
-(defun tree-buffer-insert-text(text &optional face)
+(defun tree-buffer-insert-text(text &optional facer)
+  "Insert TEXT at point and faces it with FACER. FACER can be a face then the
+text gets this face or it can be a function-symbol which is called to face the
+inserted TEXT. Such a function gets two arguments: Point where TEXT has been
+inserted and the TEXT itself"
   (let ((p (point)))
     (insert text)
     (put-text-property p (+ p (length text)) 'mouse-face 'highlight)
-    (if face
-	(put-text-property p (+ p (length text)) 'face face))))
+    (if facer
+        (cond ((facep facer)
+               (put-text-property p (+ p (length text)) 'face facer))
+              ((functionp facer)
+               (funcall facer p text))
+              (t ;; do nothing, maybe the inserted text is already faced
+               )))))
+               
     
 (defun tree-buffer-add-node(node depth)
   (insert (make-string (* depth tree-buffer-indent) ? ))
@@ -162,7 +191,7 @@
 	     (tree-node-is-expandable node))
     (tree-buffer-insert-text (if (tree-node-is-expanded node) "[-]" "[+]"))
     (insert " "))
-  (tree-buffer-insert-text (tree-node-get-name node) (tree-buffer-get-node-face node))
+  (tree-buffer-insert-text (tree-node-get-name node) (tree-buffer-get-node-facer node))
   (when (and (not tree-buffer-expand-symbol-before)
 	     (tree-node-is-expandable node))
     (insert " ")
@@ -205,7 +234,27 @@
 	      (eval (list (car fn) 'node))))))))
 
 (defun tree-buffer-create(name node-selected-fn node-expanded-fn menus tr-lines
-			       &optional expand-symbol-before)
+			       &optional type-facer expand-symbol-before)
+  "Creates a new tree buffer with
+NAME: Name of the buffer
+NODE-SELECTED-FN: Function to call if a node has been selected
+NODE-EXPANDED-FN: Function to call if a node has been expanded
+MENUS: Nil or a list of one or two conses, each cons for a node-type \(0 or 1)
+       Example: \(\(0 . menu-for-type-0) \(1 . menu-for-type-1)). The cdr of a
+       cons must be a menu.
+TR-LINES: Should lines in this tree buffer be truncated \(not nil)
+TYPE-FACER: Nil or a list of one or two conses, each cons for a node-type \(0
+            or 1). The cdr of a cons can be:
+            - a symbol of a face
+            - a symbol of a function which gets to arguments \(see
+              `tree-buffer-insert-text'). This function can do anything, but
+              normally it should face a tree-buffer node.
+            - the symbol t. Then the tree-buffer assumes that the node-text is
+              already faces and therefore it does not face the node, means it
+              does nothing then inserting the node-text, if the tree-buffer is
+              updated.
+EXPAND-SYMBOL-BEFORE: If not nil then the expand-symbol \(is displayed before
+                      the node-text."
   (set-buffer (get-buffer-create name))
 
   (make-local-variable 'truncate-lines)
@@ -218,8 +267,9 @@
   (make-local-variable 'tree-node-update-fn)
   (make-local-variable 'tree-buffer-highlighted-node-data)
   (make-local-variable 'tree-buffer-menus)
-  (make-local-variable 'tree-buffer-type-faces)
+  (make-local-variable 'tree-buffer-type-facer)
   (make-local-variable 'tree-buffer-expand-symbol-before)
+  (make-local-variable 'tree-buffer-highlight-overlay)
   
   (setq truncate-lines tr-lines)
   (setq tree-buffer-key-map (make-sparse-keymap))
@@ -229,8 +279,10 @@
   (setq tree-buffer-highlighted-node-data nil)
   (setq tree-buffer-menus menus)
   (setq tree-buffer-root (tree-node-new "root" 0 "root"))
-  (setq tree-buffer-type-faces nil)
+  (setq tree-buffer-type-facer type-facer)
   (setq tree-buffer-expand-symbol-before expand-symbol-before)
+  (setq tree-buffer-highlight-overlay (make-overlay 1 1))
+  (overlay-put tree-buffer-highlight-overlay 'face 'region)
 
   (define-key tree-buffer-key-map "\C-m"
     '(lambda()

@@ -56,11 +56,13 @@
 ;; it's the item that is clicked, not highlighted, that is the target for
 ;; the selected operation.
 ;;
+;; All files you have ever opened can be shown in the ECB history buffer. This
+;; buffer can also be cleared in several ways by `ecb-clear-history'.
+;;
 ;; TODO:
 ;; - Fix XEmacs incompatibilities (I need help on this one!)
 ;; - More layouts
 ;; - More functions on the pop-up menus. Suggestions are welcome!
-;; - Syntax highlighting in methods buffer
 ;; - Lots more...
 ;;
 ;; The latest version of the ECB is available at
@@ -127,8 +129,13 @@
   :group 'ecb
   :prefix "ecb-")
 
+(defgroup ecb-history nil
+  "Settings for the history buffer in the Emacs code browser."
+  :group 'ecb
+  :prefix "ecb-")
+
 (defcustom ecb-source-path nil
-  "Path where to find code sources."
+  "*Path where to find code sources."
   :group 'ecb-directories
   :set '(lambda(symbol value)
 	  (set symbol (mapcar (lambda (path)
@@ -140,7 +147,7 @@
   :type '(repeat (directory :tag "Path")))
 
 (defcustom ecb-show-sources-in-directories-buffer nil
-  "Show source files in directories buffer."
+  "*Show source files in directories buffer."
   :group 'ecb-directories
   :type 'boolean)
 
@@ -148,69 +155,133 @@
   '((((class color) (background light)) (:foreground "medium blue"))
     (((class color) (background dark))  (:foreground "LightBlue1"))
     (t (:background "gray")))
-  "Define a face for displaying sources in the directories buffer."
+  "*Define a face for displaying sources in the directories buffer."
   :group 'faces
   :group 'ecb-directories)
 
 (defcustom ecb-source-in-directories-buffer-face
   'ecb-sources-face
-  "Face for source files in the directories buffer."
+  "*Face for source files in the directories buffer."
   :group 'ecb-directories
   :type 'face)
 
 (defcustom ecb-directory-indent 2
-  "Indent size for directories."
+  "*Indent size for directories."
   :group 'ecb-directories
   :type 'integer)
 
 (defcustom ecb-directory-expand-symbol-before nil
-  "Show the directory expand symbol before the directory name."
+  "*Show the directory expand symbol before the directory name."
   :group 'ecb-directories
   :type 'boolean)
 
 (defcustom ecb-excluded-directories-regexp ".*CVS.*"
-  "Specifies directories that should not be included in the directories list.
-The value of this variable should be a regular expression."
+  "*Specifies directories that should not be included in the directories
+list. The value of this variable should be a regular expression."
   :group 'ecb-directories
   :type 'regexp)
 
 (defcustom ecb-source-file-regexp ".*\\.\\(java\\|el\\|c\\|cc\\|h\\|hh\\|txt\\|html\\)$"
-  "Files matching this regular expression will be added to the source buffer."
+  "*Files matching this regular expression will be added to the source
+buffer."
   :group 'ecb-sources
   :type 'regexp)
 
 (defcustom ecb-show-source-file-extension t
-  "Show the file extension of source files."
+  "*Show the file extension of source files."
   :group 'ecb-sources
   :type 'boolean)
 
 (defcustom ecb-sort-history-items nil
-  "Sorts the items in the history buffer."
-  :group 'ecb-sources
+  "*Sorts the items in the history buffer."
+  :group 'ecb-history
   :type 'boolean)
 
-(defcustom ecb-show-method-argument-types t
-  "Show method argument types."
+(defcustom ecb-clear-history-behavior 'not-existing-buffers
+  "*Defines which entries of the history buffer should be deleted if
+`ecb-clear-history' is called. Three options are available:
+- not-existing-buffers: All entries which represent a buffername not existing
+  anymore in the bufferlist will be cleared. Probably the most senseful value.
+- existing-buffers: The opposite of 'not-existing-buffers.
+- all: The whole history will be cleared."
+  :group 'ecb-history
+  :type '(radio (const :tag "Not existing buffers"
+                       :value not-existing-buffers)
+                (const :tag "Existing buffers"
+                       :value existing-buffers)
+                (const :tag "All entries"
+                       :value all)))
+                
+(defcustom ecb-show-method-arguments 'only-type
+  "*Show method argument types and/or names. You have the following
+choices:
+- only-type: Show only the type of the argument
+- type-and-name: Show both type and name
+- nil: Do not show arguments.
+In an untyped language like emacs-lisp show always only the argumentnames
+instead."
+  :group 'ecb-methods
+  :type '(radio (const :tag "Show only type"
+                       :value only-type)
+                (const :tag "Show type and name"
+                       :value type-and-name)
+                (const :tag "Do not show arguments"
+                       :value nil)))
+
+(defcustom ecb-show-method-return-type 'after
+  "*Show method return type. You can specify where the return type
+is displayed:
+- after: <method-name> \(<arguments>) : <return type> \(= UML notation)
+- before: <return type> <method-name> \(<arguments>)"
+  :group 'ecb-methods
+  :type '(radio (const :tag "Display after method \(UML\)"
+                       :value after)
+                (const :tag "Display before method"
+                       :value before)
+                (const :tag "Do not show return type"
+                       :value nil)))
+
+(defcustom ecb-font-lock-methods t
+  "*Adds font-locking \(means highlighting) to the ECB-method buffer." 
   :group 'ecb-methods
   :type 'boolean)
 
-(defcustom ecb-show-method-return-type nil
-  "Show method return type."
+(defcustom ecb-font-lock-method-faces '(font-lock-function-name-face
+                                        font-lock-type-face
+                                        font-lock-variable-name-face
+                                        font-lock-type-face)
+  "*Specify how to highlight the parts of a method in the method buffer.
+The value must be a list of exactly four elements each of them either nil
+\(not highlighting this part) or a face for this part. The sequence within the
+list must be \(methodename argumenttype argumentname returntype).
+
+This option takes only effect if `ecb-font-lock-methods' is on."
   :group 'ecb-methods
-  :type 'boolean)
+  :type '(list (radio :tag "Methodname"
+                      (const :tag "Do not highlight" :value nil)
+                      (face))
+               (radio :tag "Argumenttype"
+                      (const :tag "Do not highlight" :value nil)
+                      (face))
+               (radio :tag "Argumentname"
+                      (const :tag "Do not highlight" :value nil)
+                      (face))
+               (radio :tag "Returntype"
+                      (const :tag "Do not highlight" :value nil)
+                      (face))))
 
 (defcustom ecb-sort-methods t
-  "Sort the contents of the methods buffer." 
+   "*Sort the contents of the methods buffer." 
   :group 'ecb-methods
-  :type 'boolean) 
+  :type 'boolean)
 
 (defcustom ecb-truncate-lines t
-  "Truncate lines in ECB buffers."
+  "*Truncate lines in ECB buffers."
   :group 'ecb-general
   :type 'boolean)
 
 (defcustom ecb-window-sync t
-  "Synchronize ECB with edit window."
+  "*Synchronize ECB with edit window."
   :group 'ecb-general
   :type 'boolean)
 
@@ -245,27 +316,99 @@ run direct before the layout-drawing look at
 ;;====================================================
 ;; Methods
 ;;====================================================
+
+(defconst ecb-language-modes-args-separated-with-space
+  '(emacs-lisp-mode scheme-mode lisp-mode))
+
+(defconst ecb-methodname 0)
+(defconst ecb-argumenttype 1)
+(defconst ecb-argumentname 2)
+(defconst ecb-returntype 3)
+
+(defun ecb-highlight-text(text type)
+  "If `ecb-font-lock-methods' is not nil then dependend to TYPE the face
+specified in `ecb-font-lock-method-faces' is added to TEXT, otherwise TEXT
+will get the face 'default. Returns TEXT."
+  (if (stringp text)
+      (if ecb-font-lock-methods
+          (let ((face (or (nth type ecb-font-lock-method-faces) 'default)))
+            (put-text-property 0 (length text) 'face face text)
+            ;; some special heuristic for better handling of the lisp-dialects
+            (when (and (memq major-mode
+                             ecb-language-modes-args-separated-with-space)
+                       (eq type ecb-argumentname)
+                       (not (eq face 'default))
+                       ;; lets look if some special keywords like &optional or :key
+                       ;; are in the text.
+                       (or (string-match "^\\(&[^& \t]+\\)" text)
+                           (string-match "^\\(:[^: \t]+\\)" text)))
+              (put-text-property (match-beginning 1) (match-end 1)
+                                 'face 'font-lock-type-face text)))
+        (put-text-property 0 (length text) 'face 'default text)))
+  text)
+
 (defun ecb-get-method-sig(method-token)
-  (let ((method-type (semantic-token-type method-token)))
-    (concat
-     (if (and ecb-show-method-return-type
-	      (> (length method-type) 0))
-	 (concat (if (listp method-type)
-		     (car method-type) method-type) " ")
-       "")
-     (semantic-token-name method-token)
-     "("
-     (if ecb-show-method-argument-types
-	 (condition-case nil
-	     (mapconcat
-	      (lambda(method-arg-token)
-		(let ((method-arg-type (semantic-token-type method-arg-token)))
-		  (if (listp method-arg-type)
-		      (car method-arg-type)
-		    method-arg-type)))
-	      (semantic-token-function-args method-token) ",")
-	   (error nil)))
-     ")")))
+  "Returns the complete method-signature as a string and does also the
+highlighting of the methods if `ecb-font-lock-methods' is not nil."
+  ;; all strings i this method must be build with concat and not with format
+  ;; because format does not preserve text-properties!
+  (let* ((method-type (semantic-token-type method-token))
+         (return-type (ecb-highlight-text
+                       (if (and ecb-show-method-return-type
+                                (> (length method-type) 0))
+                           (if (listp method-type)
+                               (car method-type) method-type)
+                         "")
+                       ecb-returntype))
+         (method-and-args
+          (concat
+           (ecb-highlight-text (semantic-token-name method-token)
+                               ecb-methodname)
+           " ("
+           (if ecb-show-method-arguments
+               (mapconcat
+                (lambda(method-arg-token)
+                  (let ((method-arg-type
+                         (ignore-errors
+                           (semantic-token-type method-arg-token))))
+                    (if method-arg-type
+                        (concat (ecb-highlight-text (if (listp method-arg-type)
+                                                        (car method-arg-type)
+                                                      method-arg-type)
+                                                    ecb-argumenttype)
+                                (ecb-highlight-text
+                                 (if (eq ecb-show-method-arguments 'type-and-name)
+                                     (concat " "
+                                             (if (listp method-arg-token)
+                                                 (car method-arg-token)
+                                               method-arg-token)))
+                                 ecb-argumentname))
+                      ;; there is no type so we probably have an untyped language
+                      ;; like emacs-lisp etc. In such a case we display the
+                      ;; argument-name.
+                      (ecb-highlight-text (if (listp method-arg-token)
+                                              (car method-arg-token)
+                                            method-arg-token)
+                                          ecb-argumentname))))
+                (semantic-token-function-args method-token)
+                ;; dependent of the language we separate the args either with a
+                ;; space or with a comma. With this trick there is no need to
+                ;; recognice in lisp-like languages such keywords like &optional to
+                ;; set the commas correct.
+                (if (memq major-mode ecb-language-modes-args-separated-with-space)
+                    " "
+                  ",")))
+           ")")))
+    ;; now lets build the complete signature
+    (cond ((eq ecb-show-method-return-type 'before)
+           (concat return-type
+                   (if (> (length return-type) 0) " " "")
+                   method-and-args))
+          ((eq ecb-show-method-return-type 'after)
+           (concat method-and-args
+                   (if (> (length return-type) 0) " : " "")
+                   return-type))
+          (t method-and-args))))
   
 (defun ecb-default-get-methods()
 ;  (save-current-buffer
@@ -377,7 +520,7 @@ run direct before the layout-drawing look at
       (set-window-point (selected-window) 1))))
   
 (defun ecb-set-selected-source(filename &optional window-skips
-					   no-edit-buffer-selection)
+                                        no-edit-buffer-selection)
   "Updates all the ECB buffers and loads the file. The file is also
   displayed unless NO-EDIT-BUFFER-SELECTION is set to non nil. In such case
   the file is only loaded invisible in the background, all semantic-parsing
@@ -416,30 +559,46 @@ run direct before the layout-drawing look at
 	    (throw 'exit (car method)))))))
 
 
-;; Klaus: The new feature for clearing the history is not yet ready for
-;; release! Therefore the next two functions are commented out.
-
-;; (defun ecb-remove-from-history (node-data)
+;; (defun ecb-remove-from-current-tree-buffer (node-data)
 ;;   (let ((node (tree-node-find-child-data
 ;;                (tree-buffer-get-root) node-data)))
 ;;     (when node
 ;;       (tree-node-remove-child (tree-buffer-get-root) node))))
   
+(defun ecb-remove-from-current-tree-buffer (node)
+  (when node
+    (tree-node-remove-child (tree-buffer-get-root) node)))
 
-;; (defun ecb-clear-history ()
-;;   (interactive)
-;;   (ecb-buffer-select ecb-history-buffer-name)
-;;   (let ((buffer-file-name-list (mapcar (lambda (buff)
-;;                                          (buffer-file-name buff))
-;;                                        (buffer-list)))
-;;         (tree-childs (tree-node-get-children (tree-buffer-get-root)))
-;;         child-data child)
-;;     (while tree-childs
-;;       (setq child-data (tree-node-get-data (car tree-childs)))
-;;       (if (not (member child-data buffer-file-name-list))
-;;           (ecb-remove-from-history child-data))
-;;       (setq tree-childs (cdr tree-childs))))
-;;   (tree-buffer-update))
+(defun ecb-clear-history (&optional clearall)
+  "Clears the ECB history-buffer. If CLEARALL is nil then the behavior is
+defined in the option `ecb-clear-history-behavior' otherwise the value of
+CLEARALL overrides the value of this option:
+< 0: Means not-existing-buffers
+> 0: Means existing-buffers
+= 0: Means all
+For further explanation see `ecb-clear-history-behavior'."
+  (interactive "P")
+  (ecb-buffer-select ecb-history-buffer-name)
+  (let ((buffer-file-name-list (mapcar (lambda (buff)
+                                         (buffer-file-name buff))
+                                       (buffer-list)))
+        (tree-childs (tree-node-get-children (tree-buffer-get-root)))
+        (clear-behavior (or (if (and clearall (integerp clearall))
+                                (cond ((= clearall 0) 'all)
+                                      ((< clearall 0) 'not-existing-buffers)
+                                      (t 'existing-buffers)))
+                            ecb-clear-history-behavior))
+        child-data child)
+    (while tree-childs
+      (setq child-data (tree-node-get-data (car tree-childs)))
+      (if (or (eq clear-behavior 'all)
+              (and (eq clear-behavior 'not-existing-buffers)
+                   (not (member child-data buffer-file-name-list)))
+              (and (eq clear-behavior 'existing-buffers)
+                   (member child-data buffer-file-name-list)))
+          (ecb-remove-from-current-tree-buffer (car tree-childs)))
+      (setq tree-childs (cdr tree-childs))))
+  (tree-buffer-update))
 
 (defun ecb-current-buffer-sync(&optional opt-buffer)
   "Synchronizes the ECB buffers with the current buffer."
@@ -519,8 +678,8 @@ run direct before the layout-drawing look at
   (interactive)
   (save-current-buffer
     (ecb-buffer-select ecb-directories-buffer-name)
-    (setq tree-buffer-type-faces
-	  (list (cons 1 ecb-source-in-directories-buffer-face)))
+;;     (setq tree-buffer-type-faces
+;; 	  (list (cons 1 ecb-source-in-directories-buffer-face)))
     (setq tree-buffer-indent ecb-directory-indent)
     (let* ((node (tree-buffer-get-root))
 	   (old-children (tree-node-get-children node)))
@@ -551,31 +710,49 @@ run direct before the layout-drawing look at
 ;;====================================================
 ;; Mouse functions
 ;;====================================================
+
+;; Klaus
+(defun ecb-show-long-tree-element (node)
+  (when node
+    ;; display a message with the node name if a node is longer than the
+    ;; window-width.
+    (if (>= (length (tree-node-get-name node)) (window-width))
+        (message (format "%s" (tree-node-get-name node))))))
+
 (defun ecb-directory-clicked(node mouse-button shift-pressed)
   (ecb-update-directory-node node)
   (if (= 0 (tree-node-get-type node))
-      (progn
-	(when (= 1 mouse-button)
-	  (tree-node-toggle-expanded node))
-	(ecb-set-selected-directory (tree-node-get-data node))
-	(ecb-buffer-select ecb-directories-buffer-name)
-	(tree-buffer-update))
+      ;; Klaus
+      (if shift-pressed
+          (ecb-show-long-tree-element node)
+        (progn
+          (when (= 1 mouse-button)
+            (tree-node-toggle-expanded node))
+          (ecb-set-selected-directory (tree-node-get-data node))
+          (ecb-buffer-select ecb-directories-buffer-name)
+          (tree-buffer-update)))
     (ecb-set-selected-source (tree-node-get-data node)
-				(if ecb-layout-edit-window-splitted
-				    mouse-button 0)
-				shift-pressed)))
+                             (if ecb-layout-edit-window-splitted
+                                 mouse-button 0)
+                             shift-pressed)))
 
 (defun ecb-source-clicked(node mouse-button shift-pressed)
+  ;; Klaus
+  (if shift-pressed
+      (ecb-show-long-tree-element node))
   (ecb-set-selected-source (tree-node-get-data node)
-			      (if ecb-layout-edit-window-splitted
-				  mouse-button 0)
-			      shift-pressed))
+                           (if ecb-layout-edit-window-splitted
+                               mouse-button 0)
+                           shift-pressed))
 
 (defun ecb-method-clicked(node mouse-button shift-pressed)
-  (ecb-find-file-and-display ecb-path-selected-source
-		     (if ecb-layout-edit-window-splitted
-			 mouse-button 0))
-  (goto-char (tree-node-get-data node)))
+  ;; Klaus
+  (if shift-pressed
+      (ecb-show-long-tree-element node)
+    (ecb-find-file-and-display ecb-path-selected-source
+                               (if ecb-layout-edit-window-splitted
+                                   mouse-button 0))
+    (goto-char (tree-node-get-data node))))
 
 ;;====================================================
 ;; Create buffers & menus
@@ -598,6 +775,7 @@ with the actually choosen layout \(see `ecb-layout')."
          'ecb-update-directory-node
          (list (cons 0 ecb-directories-menu) (cons 1 ecb-sources-menu))
          ecb-truncate-lines
+         (list (cons 1 ecb-source-in-directories-buffer-face))
 	 ecb-directory-expand-symbol-before)
         ;; if we want some keys only defined in a certain tree-buffer we
         ;; must do this directly after calling the tree-buffer-create
@@ -625,14 +803,15 @@ with the actually choosen layout \(see `ecb-layout')."
          'ecb-method-clicked
          'ecb-method-clicked
          nil
-         ecb-truncate-lines))
+         ecb-truncate-lines
+         (list (cons 0 t))))
       
       (unless (member ecb-history-buffer-name curr-buffer-list)
         (tree-buffer-create
          ecb-history-buffer-name
          'ecb-source-clicked
          'ecb-source-clicked
-         ecb-sources-menu
+         (list (cons 0 ecb-history-menu))
          ecb-truncate-lines)))
 
     ;; we need some hooks
@@ -696,6 +875,33 @@ with the actually choosen layout \(see `ecb-layout')."
 (define-key ecb-sources-menu [ecb-delete-source-2] '("Delete Source" . t))
 (define-key ecb-sources-menu [ecb-create-file-2] '("Create File" . t))
 (define-key ecb-sources-menu [ecb-create-source-2] '("Create Source" . t))
+
+;; three easy-entry functions for the history menu for conveniance
+;; Note: The node argument in the first two functions is not used.
+(defun ecb-clear-history-only-not-existing (node)
+  "Removes all history entries from the ECB history buffer where related
+buffers does not exist anymore."
+  (ecb-clear-history -1))
+
+(defun ecb-clear-history-all (node)
+  "Removes all history entries from the ECB history buffer."
+  (ecb-clear-history 0))
+
+(defun ecb-clear-history-node (node)
+  "Removes current entry from the ECB history buffer."
+  (ecb-buffer-select ecb-history-buffer-name)
+  (ecb-remove-from-current-tree-buffer node)
+  (tree-buffer-update))
+
+(defvar ecb-history-menu nil)
+(setq ecb-history-menu (make-sparse-keymap "History Menu"))
+(define-key ecb-history-menu [ecb-delete-source-2] '("Delete Source" . t))
+(define-key ecb-history-menu [ecb-clear-history-node]
+  '("Remove current entry" . t))
+(define-key ecb-history-menu [ecb-clear-history-all]
+  '("Remove all entries" . t))
+(define-key ecb-history-menu [ecb-clear-history-only-not-existing]
+  '("Remove not existing buffer-entries" . t))
 
 (defun ecb-hook()
   (if (and ecb-window-sync (eq (selected-frame) ecb-frame))
