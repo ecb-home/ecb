@@ -24,7 +24,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-method-browser.el,v 1.66 2005/01/03 14:26:17 berndl Exp $
+;; $Id: ecb-method-browser.el,v 1.67 2005/01/12 10:20:33 berndl Exp $
 
 ;;; Commentary:
 
@@ -240,8 +240,10 @@ The following functions are predefined:
   \"semantic-XYZ\" a function with name \"ecb-XYC\" is predefined. The
   differences between the semantic- and the ECB-version are:
   + The ECB-version displays for type tags only the type-name and nothing
-    else \(exception: In c++-mode a template specifier is appended to the
-    type-name if a template instead a normal class).
+    else \(exceptions: In c++-mode a template specifier is appended to the
+    type-name if a template instead a normal class. If the tag-name of a
+    type-tag is the empty-string \(tag has no name) then always the
+    type-specifier is displayed - see `ecb-type-tag-display'.).
   + The ECB-version displays type-tags according to the setting in
     `ecb-type-tag-display'. This is useful for better recognizing
     different classes, structs etc. in the ECB-method window.
@@ -525,6 +527,10 @@ position but groups some external members having the same parent-tag."
                          (setq col-type-name (match-string 1 text)
                                col-type-spec (if (not remove-flag)
                                                  (match-string 2 text)))
+                       ;; necessary for anonymous types like unnamed enums etc...
+                       (setq col-type-spec (if (= (length text) 0)
+                                               type-specifier
+                                             nil))
                        (setq col-type-name text))
                      (when (and (equal major-mode 'c++-mode)
                                 (fboundp 'semantic-c-template-string))
@@ -1354,8 +1360,8 @@ there is no distinction between superclasses and interfaces."
 
 (defun ecb-find-add-tag-bucket (node type display sort-method buckets
                                        &optional parent-tag no-bucketize)
-  "Finds a bucket containing tags of the given type, creates nodes for them
-and adds them to the given node. The bucket is removed from the buckets list.
+  "Finds a bucket containing tags of the given TYPE, creates nodes for them
+and adds them to the given NODE. The bucket is removed from the BUCKETS list.
 PARENT-TAG is only propagated to `ecb-add-tag-bucket'."
   (when (cdr buckets)
     (let ((bucket (cadr buckets)))
@@ -1651,8 +1657,10 @@ abstract-static-tag-protection to an existing icon-file-name.")
 (defun ecb-displayed-tag-name (tag &optional parent-tag)
   "Return the tag-name of TAG as it will be displayed in the methods-buffer."
   (let* ((plain-tag-name (ecb-get-tag-name tag parent-tag))
-         (has-protection (member (ecb-first plain-tag-name)
-                                 '(?- ?# ?+)))
+         (has-protection (if (= 0 (length plain-tag-name))
+                             nil
+                           (member (ecb-first plain-tag-name)
+                                   '(?- ?# ?+))))
          (icon-name (ecb-get-icon-for-tag
                      (if (ecb--semantic-tag-abstract-p tag parent-tag)
                          'abstract
@@ -2372,8 +2380,10 @@ removes itself from the `post-command-hook'."
 ;; adding tags to the Methods-buffer 
 
 (defun ecb-add-tags (node tags &optional parent-tag no-bucketize)
-  "If NO-BUCKETIZE is not nil then TAGS will not bucketized by
-`ecb--semantic-bucketize' but must already been bucketized!"
+  "Add TAGS to the node NODE.
+If NO-BUCKETIZE is not nil then TAGS will not bucketized by
+`ecb--semantic-bucketize' but must already been bucketized! If not nil
+PARENT-TAG is the parent of TAGS."
   (ecb-add-tag-buckets
    node parent-tag
    (if no-bucketize
@@ -2387,6 +2397,11 @@ removes itself from the `post-command-hook'."
 
 
 (defun ecb-access-order (access)
+  "Map ACCESS to a integer-value.
+'public     --> 0
+'protected  --> 1
+'private    --> 3
+<all other> --> 2"
   (cond
    ((eq 'public access) 0)
    ((eq 'protected access) 1)
@@ -2749,7 +2764,7 @@ to be rescanned/reparsed and therefore the Method-buffer will be rebuild too."
       ;; here we process non-semantic buffers if the user wants this. But only
       ;; if either non-semantic-rebuild is true or no cache exists.
       (when (and ecb-process-non-semantic-files
-                 (null updated-cache)
+                 (null updated-cache)                 
                  (not (ecb--semantic-active-p))
                  (buffer-file-name (current-buffer))
                  (or non-semantic-rebuild (null cache)))
@@ -2807,9 +2822,20 @@ to be rescanned/reparsed and therefore the Method-buffer will be rebuild too."
                                           (cons 'source-major-mode curr-major-mode)
                                           (cons 'semantic-symbol->name-assoc-list
                                                 curr-semantic-symbol->name-assoc-list)))
+        ;; To ensure cleaning out the methods-display for non-semantic-sources
+        ;; when non-semantic-parsing is disabled or such a source is not
+        ;; parsable we set cache to an empty tree. As a side effect this fixes
+        ;; a bug with XEmacs which has the annoying behavior that even
+        ;; semantic-sources are processed twice here when loading such a
+        ;; source whereas the first time semantic is not active; without this
+        ;; dummy-cache we would run in setting the tree-buffer-root to nil
+        ;; which would cause a wrong-argument-type arrayp nil error!
+        (unless cache
+          (setq cache (cons norm-buffer-file-name (tree-node-new-root))))
         (tree-buffer-set-root (cdr cache))
         (setq ecb-methods-root-node (cdr cache))
-        (tree-buffer-update)))
+        (tree-buffer-update))
+      )
     
     ;; Klaus Berndl <klaus.berndl@sdm.de>: after a full reparse all overlays
     ;; stored in the dnodes of the navigation-list now are invalid. Therefore
