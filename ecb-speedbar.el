@@ -1,6 +1,6 @@
 ;;; ecb-speedbar.el --- 
 
-;; $Id: ecb-speedbar.el,v 1.27 2002/12/19 00:09:05 burtonator Exp $
+;; $Id: ecb-speedbar.el,v 1.28 2002/12/19 16:20:05 berndl Exp $
 
 ;; Copyright (C) 2000-2003 Free Software Foundation, Inc.
 ;; Copyright (C) 2000-2003 Kevin A. Burton (burton@openprivacy.org)
@@ -119,26 +119,72 @@
 (eval-when-compile
   (require 'silentcomp))
 
-(require 'ecb)
 (require 'speedbar)
 
 (silentcomp-defvar speedbar-attached-frame)
 (silentcomp-defvar dframe-attached-frame)
 (silentcomp-defvar speedbar-select-frame-method)
 
-(defvar ecb-speedbar-buffer-name " SPEEDBAR" "Name of the ECB speedbar buffer.")
+(defconst ecb-speedbar-adviced-functions '(speedbar-click)
+  "This functions of speedbar are always adviced if ECB is active.")
+
+(defadvice speedbar-click (around ecb)
+  "Makes the function compatible with ECB. If ECB is active and the window of
+`ecb-speedbar-buffer-name' is visible \(means a layouts uses the
+speedbar-integration) the advice acts like the original version but it
+performs not the final `dframe-quick-mouse' which keeps the point positioned
+in the ECB-window. So the edit-window is selected after clicking onto a
+filename in the speedbar."
+  (if (and (equal (selected-frame) ecb-frame)
+           (window-live-p (get-buffer-window ecb-speedbar-buffer-name)))
+      (let ((speedbar-power-click dframe-power-click))
+        (speedbar-do-function-pointer))      
+    ad-do-it))
+
+(defun ecb-speedbar-enable-advices ()
+  (dolist (elem ecb-speedbar-adviced-functions)
+    (ad-enable-advice elem 'around 'ecb)
+    (ad-activate elem)))
+
+(defun ecb-speedbar-disable-advices ()
+  (dolist (elem ecb-speedbar-adviced-functions)
+    (ad-disable-advice elem 'around 'ecb)
+    (ad-activate elem)))
+
+(defvar ecb-speedbar-buffer-name " SPEEDBAR"
+  "Name of the ECB speedbar buffer.")
 
 (defun ecb-set-speedbar-buffer()
   "Set the speedbar buffer within ECB."
   (ecb-speedbar-activate)
   (set-window-dedicated-p (selected-window) nil)
   (set-window-buffer (selected-window) (get-buffer-create ecb-speedbar-buffer-name))
-  (set-window-dedicated-p (selected-window) t))
+  (set-window-dedicated-p (selected-window) t)
+  (if ecb-running-emacs-21
+      (set (make-local-variable 'automatic-hscrolling) nil)))
+
+
+(defvar ecb-speedbar-verbosity-level-old nil)
+(defvar ecb-speedbar-select-frame-method-old nil)
 
 (defun ecb-speedbar-activate()
-  "Make sure the speedbar is running.  WARNING: This is very dependend on the
-current speedbar implementation.  If the speedbar impl is changed this
-will/could break."
+  "Make sure the speedbar is running. WARNING: This could be dependend on the
+current speedbar implementation but normally it sould be work with recent
+speedbar versions >= 0.14beta2. But be aware: If the speedbar impl is changed
+this could break."
+
+  ;; enable the advices for speedbar
+  (ecb-speedbar-enable-advices)
+  
+  ;;disable automatic speedbar updates... let the ECB handle this with
+  ;;ecb-current-buffer-sync
+  (speedbar-disable-update)
+
+  ;;always stay in the current frame
+  ;; save the old value but only first time!
+  (if (null ecb-speedbar-select-frame-method-old)
+      (setq ecb-speedbar-select-frame-method-old speedbar-select-frame-method))
+  (setq speedbar-select-frame-method 'attached)
 
   (when (not (buffer-live-p speedbar-buffer))
     (save-excursion
@@ -147,16 +193,12 @@ will/could break."
       (speedbar-mode)))
 
   ;;Start up the timer
-
   (speedbar-reconfigure-keymaps)
   (speedbar-update-contents)
   (speedbar-set-timer 1)
 
-  (set (make-local-variable 'automatic-hscrolling) nil) ;;Emacs 21
-
   ;;Set the frame that the speedbar should use.  This should be the selected
   ;;frame.  AKA the frame that ECB is running in.
-
   (setq speedbar-frame ecb-frame)
   (setq speedbar-attached-frame ecb-frame)
   (setq dframe-attached-frame ecb-frame)
@@ -164,18 +206,52 @@ will/could break."
   ;;this needs to be 0 because we can't have the speedbar too chatty in the
   ;;current frame because this will mean that the minibuffer will be updated too
   ;;much.
+  ;; save the old value but only first time!
+  (if (null ecb-speedbar-verbosity-level-old)
+      (setq ecb-speedbar-verbosity-level-old speedbar-verbosity-level))
   (setq speedbar-verbosity-level 0)
+
+  (add-hook 'ecb-current-buffer-sync-hook
+            'ecb-speedbar-current-buffer-sync)
   
   ;;reset the selection variable
   (setq speedbar-last-selected-file nil))
+
+(defun ecb-speedbar-deactivate ()
+  "Reset things as before activating speedbar by ECB"
+  (ecb-speedbar-disable-advices)
+  
+  (setq speedbar-frame nil)
+  (setq speedbar-attached-frame nil)
+  (setq dframe-attached-frame nil)
+
+  (speedbar-enable-update)
+  
+  (if ecb-speedbar-select-frame-method-old
+      (setq speedbar-select-frame-method ecb-speedbar-select-frame-method-old))
+  (setq ecb-speedbar-select-frame-method-old nil)
+
+  (if ecb-speedbar-verbosity-level-old
+      (setq speedbar-verbosity-level ecb-speedbar-verbosity-level-old))
+  (setq ecb-speedbar-verbosity-level-old nil)
+  
+  (remove-hook 'ecb-current-buffer-sync-hook
+               'ecb-speedbar-current-buffer-sync)
+
+  (when (and speedbar-buffer
+             (buffer-live-p speedbar-buffer))
+    (kill-buffer speedbar-buffer)
+    (setq speedbar-buffer nil)))
+
 
 (defun ecb-speedbar-current-buffer-sync()
   "Update the speedbar so that we sync up with the current file."
   (interactive)
 
-  ;;only operate if the current frame is the ECB frame.
-
-  (when (equal (window-frame (selected-window)) ecb-frame)
+  ;;only operate if the current frame is the ECB frame and the
+  ;;ecb-speedbar-buffer is visible!
+  (when (and (equal (selected-frame) ecb-frame)
+             (window-live-p (get-buffer-window ecb-speedbar-buffer-name)))
     
     (save-excursion
       (let(speedbar-default-directory ecb-default-directory)
@@ -196,70 +272,9 @@ will/could break."
 
             (speedbar-update-contents))))))
 
-;;TODO: Klaus Berndl <klaus.berndl@sdm.de>: The following redefinitions have
-;;to be implemented by an advice which is active during active ECB and not
-;;active if ECB is not active! Otherwise speedbar will never work correct
-;;after deactivating ECB!
-
-;;TODO: Klaus Berndl <klaus.berndl@sdm.de>: Damn. What is the reason that
-;;point does NOT stay in the edit-window after a click onto a filename in the
-;;speedbar-window. The file is opened in the edit-window but the window is not
-;;selected. ecb-find-file-and-display should do this. Seems that
-;;speedbar/dframe does something magic, so this can not happen...
-;; I have also tried redefining speedbar-find-file and
-;; speedbar-do-function-pointer in senseful ways but no success :-(( Maybe we
-;; have to ask Eric....
-
-;;  TODO: Kevin Burton <burton@peerfear.org> Klaus.  Your problem is due to the
-;;  speedbar bugs I was talking about.  I can give you a copy of my speedbar.  I
-;;  will try to get a decent patch setup and at least documented.  My changes
-;;  were made to 0.14b2.  I do not seem to have this problem with 0.14b4 but it
-;;  might just be my installation.
-;; 
-
-;; (defun speedbar-find-file-in-frame(file)
-;;   "This will load FILE into the speedbar attached frame.  If the file is being
-;; displayed in a different frame already, then raise that frame instead.  Note
-;; that this is a reimplemntation of this for the ECB that does no frame
-;; selection"
-;;   (ecb-find-file-and-display file nil))
-
-;; (defun speedbar-find-file (text token indent)
-;;   "Speedbar click handler for filenames.
-;; TEXT, the file will be displayed in the attached frame.
-;; TOKEN is unused, but required by the click handler.  INDENT is the
-;; current indentation level."
-;;   (let ((cdd (speedbar-line-path indent)))
-;;     (message "I clicked at %s" (concat cdd text))
-;;     (ecb-find-file-and-display (concat cdd text) nil)))
-
-;; (defun speedbar-do-function-pointer ()
-;;   "Look under the cursor and examine the text properties.
-;; From this extract the file/tag name, token, indentation level and call
-;; a function if appropriate"
-;;   (let* ((speedbar-frame (speedbar-current-frame))
-;; 	 (fn (get-text-property (point) 'speedbar-function))
-;; 	 (tok (get-text-property (point) 'speedbar-token))
-;; 	 ;; The 1-,+ is safe because scaning starts AFTER the point
-;; 	 ;; specified.  This lets the search include the character the
-;; 	 ;; cursor is on.
-;; 	 (tp (previous-single-property-change
-;; 	      (1+ (point)) 'speedbar-function))
-;; 	 (np (next-single-property-change
-;; 	      (point) 'speedbar-function))
-;; 	 (txt (buffer-substring-no-properties (or tp (point-min))
-;; 					      (or np (point-max))))
-;; 	 (dent (save-excursion (beginning-of-line)
-;; 			       (string-to-number
-;; 				(if (looking-at "[0-9]+")
-;; 				    (buffer-substring-no-properties
-;;                                      (match-beginning 0) (match-end 0))
-;; 				  "0")))))
-;;     ;;(speedbar-message "%S:%S:%S:%s" fn tok txt dent)
-;;     (and fn (funcall fn txt tok dent))))
 
 
-;;TODO: Klaus Berndl <klaus.berndl@sdm.de>: It should not be easy introducing
+;;TODO: Klaus Berndl <klaus.berndl@sdm.de>: It should not be hard introducing
 ;;a new option ecb-use-speedbar-for-directories and evaluating it in
 ;;ecb-set-directories-buffer like follows:
 ;;
@@ -272,11 +287,6 @@ will/could break."
 ;; use speedbar for all layouts which have a directories-window in its layout.
 ;; So the following layout-definition would be superfluous...
 
-;; TODO: Kevin Burton <burton@peerfear.org> +1 I am in favor of this option. I
-;; haven't looked back at setting up alternative window layouts.  Since it
-;; wasn't stable I never went back and look at providing an alternative to the
-;; directories buffer.
-
 ;; the special speedbar layout.
 (ecb-layout-define "speedbar1" right
   "ECB layout with integrated speedbar."  
@@ -285,26 +295,6 @@ will/could break."
     (ecb-split-ver 0.5)
     (ecb-set-methods-buffer)
     (select-window edit-win)))
-
-
-(defun ecb-speedbar-goto-speedbar()
-  "Goto the speedbar window."
-  (interactive)
-
-  (select-window (get-buffer-window ecb-speedbar-buffer-name)))
-
-(add-hook 'ecb-current-buffer-sync-hook 'ecb-speedbar-current-buffer-sync)
-
-;;FIXME: migrate this into ecb-mode-map when speedbar is ready.
-(define-key ecb-mode-map "\C-c.b" 'ecb-speedbar-goto-speedbar)
-
-;;disable automatic speedbar updates... let the ECB handle this with
-;;ecb-current-buffer-sync
-(speedbar-disable-update)
-
-;;always stay in the current frame
-(setq speedbar-select-frame-method 'attached)
-(setq dframe-activity-change-focus-flag t)
 
 (silentcomp-provide 'ecb-speedbar)
 
