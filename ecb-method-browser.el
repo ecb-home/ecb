@@ -24,7 +24,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-method-browser.el,v 1.42 2004/05/06 09:02:05 berndl Exp $
+;; $Id: ecb-method-browser.el,v 1.43 2004/05/10 15:46:02 berndl Exp $
 
 ;;; Commentary:
 
@@ -1356,25 +1356,38 @@ Methods-buffer."
                     (t nil)))))))))
 
 
+(defun ecb-generate-node-name (text-name first-chars icon-name)
+  "Generate a new name from TEXT-NAME by adding an appropriate image according
+to ICON-NAME to the first FIRST-CHARS of TEXT-NAME. If FIRST-CHARS is < 0 then
+a string with length abs\(FIRST-CHARS) is created, the image is applied to
+this new string and this \"image\"-string is added to the front of TEXT-NAME.
+If no image can be found for ICON-NAME then the original TEXT-NAME is
+returned."
+  (let ((image nil))
+    (save-excursion
+      (set-buffer ecb-methods-buffer-name)
+      (setq image (and icon-name
+                       (ecb-use-images-for-semantic-tags)
+                       (tree-buffer-find-image icon-name)))
+      (if image
+          (if (> first-chars 0)
+              (tree-buffer-add-image-icon-maybe
+               0 first-chars text-name image)
+            (concat (tree-buffer-add-image-icon-maybe
+                     0 1 (make-string (- first-chars) ? ) image)
+                    text-name))
+        text-name))))
+    
+  
 (defun ecb-add-tag-bucket (node bucket display sort-method
-                                  &optional parent-tag no-bucketize)
+                                &optional parent-tag no-bucketize)
   "Adds a tag bucket to a node unless DISPLAY equals 'hidden."
   (when bucket
     (let* ((name-bucket (ecb-format-bucket-name (car bucket)))
            (image-name (format "%s-bucket" (ecb--semantic-tag-class (cadr bucket))))
-           (image nil)
-           (name nil)
+           (name (ecb-generate-node-name name-bucket -1 image-name))
            ;;(type (ecb--semantic-tag-class (cadr bucket)))
            (bucket-node node))
-      (save-excursion
-        (set-buffer ecb-methods-buffer-name)
-        (setq image (and (ecb-use-images-for-semantic-tags)
-                         (tree-buffer-find-image image-name)))
-        (setq name (if image
-                       (concat (tree-buffer-add-image-icon-maybe
-                                0 1 (make-string 1 ? ) image)
-                               name-bucket)
-                     name-bucket)))
       (unless (eq 'hidden display)
         (ecb-apply-user-filter-to-tags (cdr bucket))
 	(unless (or (eq 'flattened display)
@@ -1566,6 +1579,7 @@ abstract-static-tag-protection to an existing icon-file-name.")
                                       (cdr (assq abstract-p
                                                   ecb-tag-image-name-alias-alist)))))))))
 
+
 ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: All this tag-icon-display-stuff
 ;; should be done by semantic - but for now we let do it by ECB because so we
 ;; can test the whole stuff. If Eric has added such icon-display to semantic
@@ -1597,22 +1611,9 @@ abstract-static-tag-protection to an existing icon-file-name.")
                                            '(type function variable)))
                               'unknown)
                          (ecb--semantic-tag-protection tag parent-tag))))
-         (image nil)
-         (tag-name nil))
-    (save-excursion
-      (set-buffer ecb-methods-buffer-name)
-      (setq image (and icon-name
-                       (ecb-use-images-for-semantic-tags)
-                       (tree-buffer-find-image icon-name)))
-      (setq tag-name
-            (if image
-                (if has-protection
-                    (tree-buffer-add-image-icon-maybe
-                     0 1 plain-tag-name image)
-                  (concat (tree-buffer-add-image-icon-maybe
-                           0 1 (make-string 1 ? ) image)
-                          plain-tag-name))
-              plain-tag-name)))
+         (tag-name (ecb-generate-node-name plain-tag-name
+                                           (if has-protection 1 -1)
+                                           icon-name)))
     (tree-node-set-name node tag-name)
     (unless (eq 'function (ecb--semantic-tag-class tag))
       (ecb-add-tags node children tag no-bucketize)
@@ -2338,6 +2339,7 @@ removes itself from the `post-command-hook'."
 	  tags-by-name))
     tags))
 
+
 (defun ecb-add-tag-buckets (node parent-tag buckets &optional no-bucketize)
   "Creates and adds tag nodes to the given node.
 The PARENT-TAG is propagated to the functions `ecb-add-tag-bucket' and
@@ -2353,22 +2355,35 @@ The PARENT-TAG is propagated to the functions `ecb-add-tag-bucket' and
  		   (eq 'type (ecb--semantic-tag-class parent-tag)))
  	  (let ((parents (ecb-get-tag-parents parent-tag)))
 	    (when parents
-	      (let ((node (ecb-create-node node display
-                                           (ecb-format-bucket-name "Parents")
-                                           (list 'ecb-bucket-node
-                                                 "Parents"
-                                                 'parent)
-                                           1)))
-                    (when node
+	      (let* ((name-bucket (ecb-format-bucket-name "Parents"))
+                     (name (ecb-generate-node-name name-bucket -1 "parent-bucket"))
+                     (parent-node nil))
+                (setq parent-node (ecb-create-node node display
+                                                   name
+                                                   (list 'ecb-bucket-node
+                                                         "Parents"
+                                                         'parent)
+                                                   1))
+                (when node
 		  (dolist (parent (if sort-method
 				      (sort parents 'ecb-string<) parents))
-		    (tree-node-new (if ecb-font-lock-tags
-				       (ecb--semantic--format-colorize-text parent 'type)
-				     parent)
-				   2 parent t node
-				   (if ecb-truncate-long-names 'end)))))))))
+                    (let* ((plain-parent-name
+                            (if ecb-font-lock-tags
+                                (ecb--semantic--format-colorize-text parent 'type)
+                              parent))
+                           ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: When
+                           ;; the next version of the semantic-parsers offer
+                           ;; the protection of the inheritance (like possible
+                           ;; in C++) then we have to adjust this code and
+                           ;; compute the correct icon-name.
+                           (parent-name (ecb-generate-node-name plain-parent-name
+                                                                -1
+                                                                "parent-unknown")))
+                      (tree-node-new parent-name
+                                     2 parent t parent-node
+                                     (if ecb-truncate-long-names 'end))))))))))
        (t (ecb-find-add-tag-bucket node type display sort-method buckets
-                                     parent-tag no-bucketize)))))
+                                   parent-tag no-bucketize)))))
   (let ((type-display (ecb-get-tag-type-display t)))
     (dolist (bucket buckets)
       (ecb-add-tag-bucket node bucket (cadr type-display)

@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-upgrade.el,v 1.79 2004/05/10 11:01:09 berndl Exp $
+;; $Id: ecb-upgrade.el,v 1.80 2004/05/10 15:46:02 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -159,7 +159,7 @@
 
 ;; IMPORTANT: The version-number is auto-frobbed from the Makefile. Do not
 ;; change it here!
-(defconst ecb-version "2.24"
+(defconst ecb-version "2.25"
   "Current ECB version.")
 
 (eval-when-compile
@@ -177,6 +177,9 @@
 ;; Each NEWS-string should be a one-liner shorter than 70 chars
 (defconst ecb-upgrade-news
   '(
+    ("2.25" . ("`ecb-sort-history-items' has been renamed to `ecb-history-sort-method'"
+               "New options `ecb-sources-sort-ignore-case' and `ecb-history-sort-ignore-case'"
+               "New icons for parent-display in the Methods-buffer"))
     ("2.24" . ("New \"current-type\"-filter for the Methods-buffer"
                "Now directories are prescanned for emptyness"))
     ("2.23" . ("New cedet1.0beta2 is supported."

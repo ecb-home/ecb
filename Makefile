@@ -26,7 +26,7 @@
 # GNU Emacs; see the file COPYING.  If not, write to the Free Software
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-# $Id: Makefile,v 1.90 2004/05/06 09:02:08 berndl Exp $
+# $Id: Makefile,v 1.91 2004/05/10 15:46:04 berndl Exp $
 
 
 # ========================================================================
@@ -143,7 +143,7 @@ INSTALLINFO=/usr/bin/install-info
 
 # Do not change anything below!
 
-# $Id: Makefile,v 1.90 2004/05/06 09:02:08 berndl Exp $
+# $Id: Makefile,v 1.91 2004/05/10 15:46:04 berndl Exp $
 
 # For the ECB-maintainers: Change the version-number here and not
 # elsewhere!
@@ -285,6 +285,7 @@ distrib: $(ecb_INFO_DIR)/$(ecb_INFO) prepversion autoloads ecb
 	@$(CP) -r $(ecb_IMAGE_DIR) ecb-$(ecb_VERSION)
 	@find ecb-$(ecb_VERSION)/$(ecb_IMAGE_DIR) -name CVS -print | xargs rm -Rf
 	@find ecb-$(ecb_VERSION)/$(ecb_IMAGE_DIR) -name *~ -print | xargs $(RM)
+	@find ecb-$(ecb_VERSION)/$(ecb_IMAGE_DIR) -name *.png -print | xargs $(RM)
 	@tar -cvzf ecb-$(ecb_VERSION).tar.gz ecb-$(ecb_VERSION)
 	@$(RM) -R ecb-$(ecb_VERSION)
 
