@@ -3,10 +3,10 @@
 # Script for creating ECB releases.
 # Author: Jesper Nordenberg
 #
-# $Id: make_release.sh,v 1.7 2001/08/12 12:29:24 creator Exp $
+# $Id: make_release.sh,v 1.8 2001/10/21 14:56:00 creator Exp $
 
 set files="*.el HISTORY Makefile make.bat README RELEASE_NOTES"
-set version="1.50"
+set version="1.51"
 
 set name=ecb-$version
 set release_dir=releases
