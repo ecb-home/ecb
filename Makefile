@@ -1,6 +1,6 @@
 # This Makefile byte-compiles the ECB lisp files and generates online-help.
 
-# $Id: Makefile,v 1.53 2003/02/10 16:52:25 berndl Exp $
+# $Id: Makefile,v 1.54 2003/02/11 16:22:11 berndl Exp $
 
 # ========================================================================
 # User configurable section
@@ -91,7 +91,7 @@ INSTALLINFO=/usr/bin/install-info
 
 # Do not change anything below!
 
-# $Id: Makefile,v 1.53 2003/02/10 16:52:25 berndl Exp $
+# $Id: Makefile,v 1.54 2003/02/11 16:22:11 berndl Exp $
 
 # For the ECB-maintainers: Change the version-number here and not
 # elsewhere!
@@ -131,10 +131,10 @@ ecb: $(ecb_LISP_EL)
 	@$(RM) $(ecb_LISP_ELC) ecb-compile-script
 	@echo "(add-to-list 'load-path nil)" > ecb-compile-script
 	@if test ! -z "${SEMANTIC}" ; then\
-	   @echo "(add-to-list 'load-path \"$(SEMANTIC)\")" >> ecb-compile-script; \
+	   echo "(add-to-list 'load-path \"$(SEMANTIC)\")" >> ecb-compile-script; \
 	fi
 	@if test ! -z "${EIEIO}" ; then\
-	   @echo "(add-to-list 'load-path \"$(EIEIO)\")" >> ecb-compile-script; \
+	   echo "(add-to-list 'load-path \"$(EIEIO)\")" >> ecb-compile-script; \
 	fi
 	@if test ! -z "${LOADPATH}" ; then\
 	   for loadpath in ${LOADPATH}; do \
