@@ -26,7 +26,7 @@
 @c GNU Emacs; see the file COPYING.  If not, write to the Free Software
 @c Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-@c $Id: ecb.texi,v 1.187 2004/09/15 17:05:07 berndl Exp $
+@c $Id: ecb.texi,v 1.188 2004/09/29 16:30:41 berndl Exp $
 
 @setfilename ecb.info
 
@@ -3741,7 +3741,10 @@ another window.
 @end deffn
 
 @deffn Command display-upgraded-options
-Display a message-buffer which options have been upgraded or reset.
+Displays an information-buffer which options have been upgraded or
+reset. Offers two buttons where the user can decide if the upgraded
+options should also being saved by ECB for future settings or if the
+buffer should be killed.
 @end deffn
 
 @deffn Command download-ecb
@@ -8396,8 +8399,10 @@ options, upgrading/resetting incompatible options and ending with the
 display of all upgraded or reset options.
 
 @item @code{ecb-display-upgraded-options}:
-Displays a temp. buffer with all upgraded or reseted ECB-options with
-their old and new values.
+Displays an information-buffer which options have been upgraded or
+reset. Offers two buttons where the user can decide if the upgraded
+options should also being saved by ECB for future settings or if the
+buffer should be killed.
 @end itemize
 
 If the option @code{ecb-auto-compatibility-check} has a non-nil value
@@ -8465,8 +8470,9 @@ ECB has a solution for all these problems:
 It checks all customized values of all ECB-options if they are still
 type-compatible. If not then it tries to upgrade the old-value to the
 new value-type and if this is not possible then it resets the option
-to the new default value and store it via customize in the .emacs-file
-(or in any file which is used for customized options).
+to the new default value and offers then to store it via customize in
+the .emacs-file (or in any file which is used for customized options).
+But ECB does not touch any customization-file without asking the user!
 
 @item
 It offers a special constant @code{ecb-upgradable-option-alist} which

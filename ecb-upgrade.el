@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-upgrade.el,v 1.89 2004/09/08 16:41:52 berndl Exp $
+;; $Id: ecb-upgrade.el,v 1.90 2004/09/29 16:30:48 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -599,23 +599,29 @@ The car is the old option symbol and the cdr is a 2-element-list with:
   :type 'string)
 
 (defun ecb-custom-file-writeable-p ()
-  (ignore-errors (file-writable-p (ecb-custom-file))))
+  "Returns not nil if and only if the custom-file is writable for ECB, which
+means it is neither a bytecompiled-file nor a read-only-file."
+  (let ((file (ecb-custom-file)))
+    (and (not (equal (file-name-extension file) "elc"))
+         (ignore-errors (file-writable-p (ecb-custom-file))))))
 
 (defun ecb-customize-save-variable (option value)
   ;; because the adviced version of `custom-save-all' do only all the special
   ;; needed things if `ecb-minor-mode' is on we must temporally set here this
-  ;; variable to not nil because the that time this function is called this
-  ;; variable is still nil (will be first set to t if the ecb-activation can
-  ;; not fail).
+  ;; variable to not nil because at that time this function is called this
+  ;; variable is maybe still nil.
   (let ((ecb-minor-mode t))
     (if (ecb-custom-file-writeable-p)
         (customize-save-variable option value)
       (customize-set-variable option value))))
 
+(defun ecb-customize-set-variable (option value)
+  (customize-set-variable option value))
+
 (defun ecb-option-set-default (option)
   "Save the ECB-option OPTION with current default value."
-  (ecb-customize-save-variable option
-                               (ecb-option-get-value option 'standard-value)))
+  (ecb-customize-set-variable option
+                              (ecb-option-get-value option 'standard-value)))
 
 (defun ecb-option-upgrade (old-option)
   "Upgrade the old ECB-option OLD-OPTION if the following conditions are ALL
@@ -661,7 +667,7 @@ result-list!"
       (when (not (equal new-value 'ecb-no-upgrade-conversion))
         ;; the old-value has been transformed successfully into the new type
         ;; so we can save it.
-        (ecb-customize-save-variable (nth 0 upgrade-elem) new-value))
+        (ecb-customize-set-variable (nth 0 upgrade-elem) new-value))
       ;; we return the value of the transforming-function even if it is
       ;; 'ecb-no-upgrade-conversion!
       (list new-value))))
@@ -742,9 +748,7 @@ done then the option is reset to the default-value of current ECB-version."
         (when (or (null upgrade-result) ;; no upgrade necessary or allowed
                   ;; the upgrade has been tried but has failed.
                   (equal (car upgrade-result) 'ecb-no-upgrade-conversion))
-          (ecb-option-set-default (car option)))))
-    ;; Now we store the version of the options
-    (ecb-store-current-options-version)))
+          (ecb-option-set-default (car option)))))))
     
 
 (defvar ecb-renamed-options nil)
@@ -780,91 +784,158 @@ Note: This function upgrades only the renamed but not the incompatible options
                               (ecb-option-get-value (car option) 'saved-value)
                               (car (cdr option))
                               (car new-value-list))
-                        ecb-renamed-options))))))
-    ;; Now we store the version of the options
-    (ecb-store-current-options-version)))
+                        ecb-renamed-options))))))))
 
+(require 'wid-edit)
+(silentcomp-defvar widget-button-keymap)
+(silentcomp-defvar widget-keymap)
+
+(defvar ecb-upgrade-button-keymap
+  (let (parent-keymap mouse-button1 keymap)
+    (if ecb-running-xemacs
+        (setq parent-keymap widget-button-keymap
+              mouse-button1 [button1])
+      (setq parent-keymap widget-keymap
+            mouse-button1 [down-mouse-1]))
+    (setq keymap (copy-keymap parent-keymap))
+    (define-key keymap mouse-button1 #'widget-button-click)
+    keymap)
+  "Keymap used inside buttons.")
+
+
+(defun ecb-not-compatible-or-renamed-options-detected ()
+  (or ecb-not-compatible-options ecb-renamed-options))
 
 (defun ecb-display-upgraded-options ()
-  "Display a message-buffer which options have been upgraded or reset."
+  "Display a information-buffer which options have been upgraded or reset.
+Offers two buttons where the user can decide if the upgraded options should
+also being saved by ECB for future settings or if the buffer should be
+killed.
+
+If saving is possible this command display where the options would be saved.
+It is that file Emacs uses to save customize-settings. This file is
+\"computed\" from the settings in `custom-file' and `user-init-file' \(see the
+documentation of these variables)."
   (interactive)
-  (if (or ecb-not-compatible-options ecb-renamed-options)
+  (if (ecb-not-compatible-or-renamed-options-detected)
       (progn
-        (with-output-to-temp-buffer "*ECB upgraded options*"
-          (when (and (or ecb-not-compatible-options ecb-renamed-options)
-                     (not (ecb-custom-file-writeable-p)))
-            (princ "Emacs can not save the upgraded options because the needed file\n")
-            (princ (if (ecb-custom-file)
-                       (concat (ecb-custom-file) " is not writeable!")
-                     "does not exist!"))
-            (princ "\nPlease ensure that the new values will be stored!\n\n"))
+        (with-current-buffer (get-buffer-create "*ECB upgraded options*")
+          (switch-to-buffer (current-buffer))
+          (kill-all-local-variables)
+          (let ((inhibit-read-only t))
+            (erase-buffer))
+          (if (not (ecb-custom-file-writeable-p))
+              (progn
+                (widget-insert "Emacs can not save the upgraded options because the needed file\n")
+                (widget-insert (if (ecb-custom-file)
+                                   (concat (ecb-custom-file) " is not writeable by Emacs!")
+                                 "does not exist!"))
+                (widget-insert "\nPlease ensure that the new values will be stored!\n\n"))
+            (if (not (get 'ecb-display-upgraded-options
+                          'ecb-upgrades-saved))
+                (widget-insert (format "Click on [Save] to save all changed options into %s.\n"
+                                       (ecb-custom-file)))))
+          (widget-insert "Click on [Cancel] to kill this buffer.\n\n")
           (when ecb-not-compatible-options
-            (princ "The values of the following options are incompatible with current type.\nECB has tried to transform the old-value to the new type. In cases where\nthis was not possible ECB has reset to the current default-value.")
-            (princ "\n\n"))
+            (widget-insert "The values of the following options are incompatible with current type.\nECB has tried to transform the old-value to the new type. In cases where\nthis was not possible ECB has reset to the current default-value.")
+            (widget-insert "\n\n"))
           (dolist (option ecb-not-compatible-options)
             (let ((option-name (symbol-name (car option)))
                   (old-value (cdr option))
                   (new-value (symbol-value (car option))))
-              (princ (concat "+ Option:   " option-name))
-              (princ "\n")
-              (princ (concat "  Old value: "
-                             (if (and (not (equal old-value nil))
-                                      (not (equal old-value t))
-                                      (or (symbolp old-value)
-                                          (listp old-value)))
-                                 "'")
-                             (prin1-to-string old-value)))
-              (princ "\n")
-              (princ (concat "  New value: "
-                             (if (and (not (equal new-value nil))
-                                      (not (equal new-value t))
-                                      (or (symbolp new-value)
-                                          (listp new-value)))
-                                 "'")
-                             (prin1-to-string new-value)))
-              (princ "\n\n")))
+              (widget-insert (concat "+ Option:   " option-name))
+              (widget-insert "\n")
+              (widget-insert (concat "  Old value: "
+                                     (if (and (not (equal old-value nil))
+                                              (not (equal old-value t))
+                                              (or (symbolp old-value)
+                                                  (listp old-value)))
+                                         "'")
+                                     (prin1-to-string old-value)))
+              (widget-insert "\n")
+              (widget-insert (concat "  New value: "
+                                     (if (and (not (equal new-value nil))
+                                              (not (equal new-value t))
+                                              (or (symbolp new-value)
+                                                  (listp new-value)))
+                                         "'")
+                                     (prin1-to-string new-value)))
+              (widget-insert "\n\n")))
           (when ecb-renamed-options
-            (princ "The following options are not longer valid and have now new names. ECB has\ntried to transform the old value to the new option. In cases where this\nwas not possible the current default value is active!")
-            (princ "\n\n"))
+            (widget-insert "The following options are not longer valid and have now new names. ECB has\ntried to transform the old value to the new option. In cases where this\nwas not possible the current default value is active!")
+            (widget-insert "\n\n"))
           (dolist (option ecb-renamed-options)
             (let ((old-option-name (symbol-name (nth 0 option)))
                   (old-value (nth 1 option))
                   (new-option-name (symbol-name (nth 2 option)))
                   (new-value (nth 3 option)))
-              (princ (concat "+ Old option: " old-option-name))
-              (princ "\n")
-              (princ (concat "  Old value:  "
-                             (if (and (not (equal old-value nil))
-                                      (not (equal old-value t))
-                                      (or (symbolp old-value)
-                                          (listp old-value)))
-                                 "'")
-                             (prin1-to-string old-value)))
-              (princ "\n")
-              (princ (concat "  New option: " new-option-name))
-              (princ "\n")
-              (princ (concat "  New value:  "
-                             (if (equal new-value 'ecb-no-upgrade-conversion)
-                                 ;; we print the new default value.
-                                 (prin1-to-string (symbol-value (nth 2 option)))
-                               (concat (if (and (not (equal new-value nil))
-                                                (not (equal new-value t))
-                                                (or (symbolp new-value)
-                                                    (listp new-value)))
-                                           "'")
-                                       (prin1-to-string new-value)))))
+              (widget-insert (concat "+ Old option: " old-option-name))
+              (widget-insert "\n")
+              (widget-insert (concat "  Old value:  "
+                                     (if (and (not (equal old-value nil))
+                                              (not (equal old-value t))
+                                              (or (symbolp old-value)
+                                                  (listp old-value)))
+                                         "'")
+                                     (prin1-to-string old-value)))
+              (widget-insert "\n")
+              (widget-insert (concat "  New option: " new-option-name))
+              (widget-insert "\n")
+              (widget-insert (concat "  New value:  "
+                                     (if (equal new-value 'ecb-no-upgrade-conversion)
+                                         ;; we print the new default value.
+                                         (prin1-to-string (symbol-value (nth 2 option)))
+                                       (concat (if (and (not (equal new-value nil))
+                                                        (not (equal new-value t))
+                                                        (or (symbolp new-value)
+                                                            (listp new-value)))
+                                                   "'")
+                                               (prin1-to-string new-value)))))
               (if (equal new-value 'ecb-no-upgrade-conversion)
-                  (princ "\n  (The old value couldn't be transformed - this is the current default!)"))
-              (princ "\n\n")))
-          (princ "If the new values are not what you want please re-customize!")
-          (princ "\n\n")
-          (princ "For a list of the most important NEWS call `ecb-display-news-for-upgrade'!\n\n")
-          (print-help-return-message))
+                  (widget-insert "\n  (The old value couldn't be transformed - this is the current default!)"))
+              (widget-insert "\n\n")))
+          (widget-insert "If the new values are not what you want please re-customize!")
+          (widget-insert "\n\n")
+          (when (ecb-custom-file-writeable-p)
+            (widget-insert "For a list of the most important NEWS call `ecb-display-news-for-upgrade'!\n\n")
+            (widget-insert "\n")
+            (when (not (get 'ecb-display-upgraded-options
+                            'ecb-upgrades-saved))
+              ;; Insert the Save button
+              (widget-create 'push-button
+                             :button-keymap ecb-upgrade-button-keymap ; XEmacs
+                             :keymap ecb-upgrade-button-keymap ; Emacs
+                             :notify (lambda (&rest ignore)
+                                       (if (get 'ecb-display-upgraded-options
+                                                'ecb-upgrades-saved)
+                                           (ecb-info-message "Upgraded options are already saved!")
+                                         (dolist (option ecb-not-compatible-options)
+                                           (ecb-customize-save-variable
+                                            (car option) (symbol-value (car option))))
+                                         (dolist (option ecb-renamed-options)
+                                           (ecb-customize-save-variable
+                                            (nth 2 option)
+                                            (symbol-value (nth 2 option))))
+                                         ;; store the information that the
+                                         ;; upgradings have already been saved now
+                                         (put 'ecb-display-upgraded-options
+                                              'ecb-upgrades-saved t)
+                                         (ecb-store-current-options-version)
+                                         (ecb-info-message "Upgraded options saved!")))
+                             "Save")
+              (widget-insert " "))
+            ;; Insert the Cancel button
+            (widget-create 'push-button
+                           :button-keymap ecb-upgrade-button-keymap ; XEmacs
+                           :keymap ecb-upgrade-button-keymap ; Emacs
+                           :notify (lambda (&rest ignore)
+                                     (kill-buffer (current-buffer)))
+                           "Cancel"))
+          (widget-setup)
+          (goto-char (point-min)))
         t)
     (message "There are no incompatible or renamed options!")
     nil))
-
-(defvar ecb-news-for-upgrade-displayed nil)
 
 (defun ecb-display-news-for-upgrade (&optional full-news)
   "Display the most important NEWS after an ECB-upgrade.
@@ -876,7 +947,8 @@ If FULL-NEWS is not nil then the NEWS-file is displayed in another window."
   (if full-news
       (find-file-other-window (concat ecb-ecb-dir "NEWS"))
     (if (and ecb-old-ecb-version
-             (or (not ecb-news-for-upgrade-displayed)
+             (or (not (get 'ecb-display-news-for-upgrade
+                           'ecb-news-for-upgrade-displayed))
                  (interactive-p)))
         (progn
           (with-output-to-temp-buffer "*News for the new ECB-version*"
@@ -892,7 +964,7 @@ If FULL-NEWS is not nil then the NEWS-file is displayed in another window."
                   ecb-upgrade-news)
             (princ "\nFor more details see the attached NEWS-file."))
           ;; We want this being displayed only once
-          (setq ecb-news-for-upgrade-displayed t))
+          (put 'ecb-display-news-for-upgrade 'ecb-news-for-upgrade-displayed t))
       (message "There are no NEWS to display."))))
     
   
