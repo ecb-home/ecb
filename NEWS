@@ -1,3 +1,21 @@
+* Changes for ECB version
+
+** Fixed bugs
+
+*** Now the "goto-window-..." menu-entries in the "ECB"-menu are working correct
+    if a speedbar is integrated.
+
+** Changed default keybindings:
+   - C-c . r:  `ecb-rebuild-methods-buffer'
+   - C-c . lc: `ecb-change-layout'
+   - C-c . lr: `ecb-redraw-layout'
+   - C-c . lt: `ecb-toggle-layout'
+   - C-c . lw: `ecb-toggle-ecb-windows'
+
+** Starting ECB is now possible via the "Tools"-menu
+
+
+
 * Changes for ECB version 1.94
 
 ** Supporting of non-semantic-sources.
