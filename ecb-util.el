@@ -743,6 +743,16 @@ for FILE, but proper EOL-conversion and character interpretation is done!"
                     (set-window-dedicated-p w nil)))
         (ecb-window-list (or frame (selected-frame)))))
 
+(defun ecb-set-windows-dedicated-state (buf-list state)
+  "For every buffer in BUF-LIST set its windows dedicated-state to STATE if
+visible in the `ecb-frame'."
+  (mapc (function (lambda (b)
+                    (when (get-buffer-window b ecb-frame)
+                      (set-window-dedicated-p
+                       (get-buffer-window b ecb-frame) state))))
+        buf-list))
+
+
 (defun ecb-window-number (&optional window)
   "Return the number of WINDOW or - if nil - of the current selected window.
 The left-top-most window of the ecb-frame has number 0. The other windows have

@@ -16,14 +16,14 @@
    frame is to use a window-manager like winring.el or escreen.el!
 
 ** Ediff runs per default in the ECB-frame.
-   Now ediff can run per default in the ECB-frame because ECB ensures that
-   all special ECB-windows are hidden before ediff sets up its own
-   window-layout. ECB also tries to restore the previous window-layout of the
-   ecb-frame as best as possible. See new option `ecb-run-ediff-in-ecb-frame'.
+   Now ediff can run per default in the ECB-frame because ECB ensures that all
+   special ECB-windows are hidden before ediff sets up its own window-layout.
+   ECB also restores exactly the "before-ediff" window-layout of the ecb-frame
+   See new option `ecb-run-ediff-in-ecb-frame'.
 
 ** New option `ecb-advice-window-functions-signal-error'
    Now the adviced window functions of `ecb-advice-window-functions' do not
-   signal an error per default if called in situations which are not allowed -
+   signal per default an error if called in situations which are not allowed -
    they simple do nothing. An example is calling `delete-window' in a special
    ecb-window or in the compile-window; if this new option is nil then nothing
    is done otherwise an error is signaled. If you want the old behavior of
@@ -33,6 +33,15 @@
    JDEE offers sometimes "dialogs" where the user can choose among several
    options. These "dialogs" now work correctly regardless if a durable
    compile-window is used or not.
+
+** Fixed Bugs
+
+*** When the special ECB-windows were hidden and a durable compile was set then
+    ECB shows the special ECB-windows when a temp-buffer (e.g. *Help*-buffers)
+    has been displayed. This annoying behavior is fixed.
+
+*** XEmacs has not added the ECB-menu to the menubar of that buffer being current
+    while activating ECB.
 
 
 
