@@ -1625,7 +1625,7 @@ always the ECB-frame if called from another frame."
     (tree-buffer-deactivate-mouse-tracking)
     (tree-buffer-deactivate-follow-mouse)
     
-    ;; restore the old compilation-window-height and temp-buffer-max-height
+    ;; restore the old values
     (setq compilation-window-height ecb-old-compilation-window-height
           temp-buffer-max-height ecb-old-temp-buffer-max-height)
 
