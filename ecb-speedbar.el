@@ -1,6 +1,6 @@
 ;;; ecb-speedbar.el --- 
 
-;; $Id: ecb-speedbar.el,v 1.30 2002/12/20 14:30:58 berndl Exp $
+;; $Id: ecb-speedbar.el,v 1.31 2002/12/21 14:21:55 berndl Exp $
 
 ;; Copyright (C) 2000-2003 Free Software Foundation, Inc.
 ;; Copyright (C) 2000-2003 Kevin A. Burton (burton@openprivacy.org)
@@ -136,8 +136,10 @@
   "ECB can only integrate speedbar versions >= 0.14beta1 so the value is only
 true for these versions.")
 
-(defconst ecb-speedbar-adviced-functions '((speedbar-click . after))
-  "This functions of speedbar are always adviced if ECB is active. Each
+(defconst ecb-speedbar-adviced-functions '((speedbar-click . after)
+                                           (speedbar-frame-mode . around)
+                                           (speedbar-get-focus . around))
+  "These functions of speedbar are always adviced if ECB is active. Each
 element of the list is a cons-cell where the car is the function-symbol and
 the cdr the advice-class \(before, around or after). If a function should be
 adviced with more than one class \(e.g. with a before and an after-advice)
@@ -155,6 +157,21 @@ speedbar."
       (ecb-select-edit-window)))
 
 
+(defadvice speedbar-frame-mode (around ecb)
+  "During running speedbar within ECB this command is disabled!"
+  (message "This command is disabled during running speedbar within ECB!"))
+
+
+(defadvice speedbar-get-focus (around ecb)
+  "During running speedbar within ECB this function behaves like follows:
+Change window focus to or from the ECB-speedbar-window. If the selected window
+is not speedbar-window, then the speedbar-window is selected. If the
+speedbar-window is active, then select the edit-window."
+  (if (equal (current-buffer) (get-buffer ecb-speedbar-buffer-name))
+      (ecb-select-edit-window)
+    (ecb-speedbar-select-speedbar-window)))
+  
+
 (defun ecb-speedbar-enable-advices ()
   (dolist (elem ecb-speedbar-adviced-functions)
     (ad-enable-advice (car elem) (cdr elem) 'ecb)
@@ -165,8 +182,14 @@ speedbar."
     (ad-disable-advice (car elem) (cdr elem) 'ecb)
     (ad-activate (car elem))))
 
-(defvar ecb-speedbar-buffer-name " SPEEDBAR"
+(defconst ecb-speedbar-buffer-name " SPEEDBAR"
   "Name of the ECB speedbar buffer.")
+
+(defun ecb-speedbar-select-speedbar-window ()
+  (ignore-errors
+    (and (window-live-p (get-buffer-window ecb-speedbar-buffer-name))
+         (select-window (get-buffer-window ecb-speedbar-buffer-name)))))
+
 
 (defun ecb-set-speedbar-buffer()
   "Set the speedbar buffer within ECB."
@@ -183,9 +206,9 @@ speedbar."
 
 (defun ecb-speedbar-activate()
   "Make sure the speedbar is running. WARNING: This could be dependend on the
-current speedbar implementation but normally it sould be work with recent
-speedbar versions >= 0.14beta2. But be aware: If the speedbar impl is changed
-this could break."
+current speedbar implementation but normally it should work with recent
+speedbar versions >= 0.14beta1. But be aware: If the speedbar impl changes in
+future this could break."
 
   (if (not ecb-speedbar-version-ok)
       (error "Speedbar integration needs speedbar-version >= 0.14beta1!")

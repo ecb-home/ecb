@@ -6271,6 +6271,12 @@ combination displays also directories and sources in one window.
 the choice which way of displaying and handling directories and
 source-files you want (the speedbar- or the ECB-way).
 
+<p>During speedbar is running within ECB (i.e. 
+<code>ecb-use-speedbar-for-directories</code> is not nil) the
+speedbar-command <code>speedbar</code> is disabled and the speedbar-command
+<code>speedbar-get-focus</code> switches between the speedbar-window and the
+edit-window<a rel=footnote href="#fn-20"><sup>20</sup></a>.
+
 <p>Note: ECB can only integrate speedbar-versions &gt;= 0.14beta1! If you
 use lower versions of speedbar <code>ecb-use-speedbar-for-directories</code>
 has no effect.
@@ -6435,7 +6441,7 @@ Up:<a rel=up accesskey=u href="#Elisp%20programming">Elisp programming</a>
 <h3>How to deal with the adviced window-functions</h3>
 
 <p>ECB offers for packages which work during activated ECB three macros
-for easy temporally<a rel=footnote href="#fn-20"><sup>20</sup></a> using all original-functions, all
+for easy temporally<a rel=footnote href="#fn-21"><sup>21</sup></a> using all original-functions, all
 adviced functions or only some adviced functions:
 
 <ul>
@@ -6862,7 +6868,7 @@ to the ECB-history after ECB-start.
 
 <br></td></tr><tr align="left"><td valign="top">Is there an "Intellisense"-mechanism like with other IDEs? 
 </td><td valign="top"></td><td valign="top">
-For Java the JDEE<a rel=footnote href="#fn-21"><sup>21</sup></a> has this feature and for all other languages
+For Java the JDEE<a rel=footnote href="#fn-22"><sup>22</sup></a> has this feature and for all other languages
 semantic offer something similar, see
 <a href="http://cedet.sourceforge.net/intellisense.shtml">http://cedet.sourceforge.net/intellisense.shtml</a>
 
@@ -7341,10 +7347,15 @@ because speedbar displays directories and sources in one window. But
 if you like you can also use a sources window too...</p>
 
 <li><a name="fn-20"></a>
+<p>The standard behavior is switching between the
+speedbar-frame and the attached frame, but this make obviously no
+sense during running speedbar with ECB.</p>
+
+<li><a name="fn-21"></a>
 <p>I.e. regardless of the settings in
 <code>ecb-advice-window-functions</code>!</p>
 
-<li><a name="fn-21"></a>
+<li><a name="fn-22"></a>
 <p>
 <a href="http://jdee.sunsite.dk/">http://jdee.sunsite.dk/</a>
 </p>
