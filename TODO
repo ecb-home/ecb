@@ -1,0 +1,10 @@
+********************************************************************************
+*** Last-Modified: $Date: 2001/04/03 05:25:58 $ 
+*** Version: $Id: TODO,v 1.1 2001/04/03 05:25:58 burtonator Exp $
+*** Author: Kevin A. Burton ( burton@apache.org | burton@openprivacy.org )
+********************************************************************************
+
+
+- (KAB) merge my modeline additions... 
+
+- ECB Methods buffer excepts text input.   This buffer should be read-only.  

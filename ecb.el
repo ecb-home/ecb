@@ -64,6 +64,7 @@
 (require 'semantic-c)
 (require 'tree-buffer)
 (require 'ecb-layout)
+(require 'ecb-mode-line)
 (require 'ecb-util)
 ;; (require 'wid-browse)
 
@@ -798,7 +799,10 @@ For further explanation see `ecb-clear-history-behavior'."
       ;; sec is enough!
       (sit-for 0.1)
       (ecb-select-source-file filename)
-      (ecb-update-methods-buffer))))
+
+      (ecb-update-methods-buffer)
+
+      (ecb-mode-line-format))))
 
 (defun ecb-find-file-and-display(filename &optional window-skips)
   "Finds the file in the correct window. What the correct window is depends on
