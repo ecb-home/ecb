@@ -3,9 +3,11 @@ Version 1.80:
 
 - Fixed formatting of "Parent" nodes in token buffer. (Jesper)
 
-- New option ecb-tree-buffer-RET-selects-edit-window: Possibility not to
-  select the edit-window of hitting RET in a tree-buffer. See the doc-string.
-  (Kevin A. Burton, Klaus)
+- New option ecb-tree-RET-selects-edit-window: Possibility not to select the
+  edit-window of hitting RET in a tree-buffer; see the doc-string. There is
+  also a new function ecb-toggle-RET-selects-edit-window which is bound to
+  [C-t]} in each tree-buffer. (Kevin A. Burton,
+  Klaus)
 
 - Fixed a bug in ecb-eshell.  If we are running with current buffer sync, and
   there is garbage on the current line, when we change buffers this garbage will
