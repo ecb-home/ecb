@@ -3,7 +3,8 @@
 ;; Copyright (C) 2000, 2001 Jesper Nordenberg
 
 ;; Author: Jesper Nordenberg <mayhem@home.se>
-;; Maintainer: Jesper Nordenberg <mayhem@home.se>
+;;         Klaus Berndl <klaus.berndl@sdm.de>
+;; Maintainer: Klaus Berndl <klaus.berndl@sdm.de>
 ;; Keywords: java, class, browser
 
 ;; This program is free software; you can redistribute it and/or modify it under
@@ -103,7 +104,7 @@
 ;; - `ecb-with-some-adviced-functions'
 ;;
 
-;; $Id: ecb-layout.el,v 1.141 2002/12/28 19:16:48 berndl Exp $
+;; $Id: ecb-layout.el,v 1.142 2003/01/02 14:13:09 berndl Exp $
 
 ;;; Code:
 
@@ -155,7 +156,8 @@
 	      (when (and (boundp 'ecb-minor-mode)
                          ecb-minor-mode
                          (frame-live-p ecb-frame))
-                (let ((curr-frame (selected-frame)))
+                (let ((curr-frame (selected-frame))
+                      (ecb-redraw-layout-quickly nil))
                   (select-frame ecb-frame)
 		  (ecb-redraw-layout-full)
                   (select-frame curr-frame))))))
@@ -989,6 +991,8 @@ FUNCTIONS must be nil or a subset of `ecb-adviceable-functions'!"
          (ecb-activate-adviced-functions ,functions)
          ,@body)
      (ecb-activate-adviced-functions ecb-advice-window-functions)))
+
+(put 'ecb-with-some-adviced-functions 'lisp-indent-function 1)
 
 (defun ecb-point-in-edit-window ()
   "Return nil if point stays not in an edit-window otherwise return 1 if point
@@ -1940,8 +1944,12 @@ Postconditions for CREATE-CODE:
                 (format "ecb-delete-window-ecb-windows-%s" type))))
      (ecb-available-layouts-add ,name (quote ,type))))
 
-(put 'ecb-layout-define 'lisp-indent-function 1)
-
+;; we want proper editing with ecb-layout-define like follows:
+;; (ecb-layout-define "name" left
+;;   "documentation" or nil
+;;   ;; here comes the creation code
+;;   )
+(put 'ecb-layout-define 'lisp-indent-function 2)
 
 (defun ecb-layout-undefine (name)
   "Unbind ecb-layout-function-<NAME>, ecb-delete-window-ecb-windows-<NAME>,
@@ -1967,14 +1975,20 @@ input the first element of LAYOUT-LIST is returned."
       result)))
 
 
+(defun ecb-layout-switch (name)
+  "Switch to layout with layout-name NAME."
+  (customize-set-variable 'ecb-layout-name name))
+  
+
 (defun ecb-change-layout (&optional preselect-type)
   "Select a layout-name from all current available layouts \(TAB-completion is
 offered) and change the layout to the selected layout-name. If optional
 argument PRESELECT-TYPE is not nil then you can preselect a layout-type
 \(TAB-completion is offered too) and then will be asked only for layouts of
 that preselected type.
-Note: This function works by changing the option `ecb-layout-name' but only
-for current Emacs-session."
+
+Note: Do not use this function from within elisp-programs; use
+`ecb-layout-switch'!"
   (interactive "P")
   (when (and ecb-minor-mode
              (equal (selected-frame) ecb-frame))
@@ -1984,9 +1998,8 @@ for current Emacs-session."
                              (mapcar (function (lambda (elem)
                                                  (symbol-name elem)))
                                      ecb-layout-types))))))
-      (customize-set-variable 'ecb-layout-name
-                              (ecb-choose-layout-name
-                               (ecb-available-layouts-of-type type) t)))))
+      (ecb-layout-switch (ecb-choose-layout-name
+                          (ecb-available-layouts-of-type type) t)))))
 
 (defun ecb-show-layout-help ()
   "Select a name of a layout and shows the documentation of the associated
@@ -2241,9 +2254,7 @@ this function the edit-window is selected which was current before redrawing."
   "Internal state of `ecb-toggle-layout'. Do not change it!")
 (defun ecb-toggle-layout ()
   "Toggles between the layouts defined in `ecb-toggle-layout-sequence'
-\(See also option `ecb-show-sources-in-directories-buffer').
-Note: This function works by changing the option `ecb-layout-name' but only
-for current Emacs-session."
+\(See also option `ecb-show-sources-in-directories-buffer')."
   (interactive)
   (let ((layout-name (nth ecb-toggle-layout-state ecb-toggle-layout-sequence))
         (next-index (if (< (1+ ecb-toggle-layout-state)
@@ -2252,7 +2263,7 @@ for current Emacs-session."
                       0)))
     (when (and layout-name (not (= ecb-toggle-layout-state next-index)))
       (setq ecb-toggle-layout-state next-index)
-      (customize-set-variable 'ecb-layout-name layout-name))))
+      (ecb-layout-switch layout-name))))
 
 (defun ecb-store-window-sizes ()
   "Stores the sizes of the ECB windows for the current layout. The size of the
@@ -2312,17 +2323,6 @@ documentation of `ecb-layout-window-sizes'!"
       (select-window window)
       (enlarge-window (- (car size) (window-width window)) t)
       (enlarge-window (- (cdr size) (window-height window))))))
-
-;; (defun ecb-set-window-sizes (sizes)
-;;   (when sizes
-;;     (ecb-set-window-size ecb-edit-window (car sizes))
-;;     (let ((buffers (list ecb-directories-buffer-name
-;; 			 ecb-sources-buffer-name
-;; 			 ecb-history-buffer-name
-;; 			 ecb-methods-buffer-name)))
-;;       (dolist (size (cdr sizes))
-;; 	(ecb-set-window-size (get-buffer-window (car buffers)) size)
-;; 	(setq buffers (cdr buffers))))))
 
 (defun ecb-set-window-sizes (sizes)
   (when sizes
