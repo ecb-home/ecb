@@ -26,7 +26,7 @@
 @c GNU Emacs; see the file COPYING.  If not, write to the Free Software
 @c Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-@c $Id: ecb.texi,v 1.140 2004/01/14 14:01:09 berndl Exp $
+@c $Id: ecb.texi,v 1.141 2004/01/14 17:22:22 berndl Exp $
 
 @setfilename ecb.info
 
@@ -2706,6 +2706,8 @@ takes several seconds because the quick redraw is not really safe and
 may have some drawbacks! On normal machines the full redraw should be
 done in << 1s!
 
+Please read the documentation of the command @code{ecb-redraw-layout}!
+
 See also the hooks @code{ecb-redraw-layout-after-hook} and
 @code{ecb-redraw-layout-before-hook}!
 
@@ -2934,7 +2936,9 @@ The following sequence of hooks is evaluated during hiding the
 ECB-windows:
 @enumerate
 @item @code{ecb-hide-ecb-windows-before-hook}
+@item @code{ecb-redraw-layout-before-hook}
 @item <Hiding the ECB-windows>
+@item @code{ecb-redraw-layout-after-hook}
 @item @code{ecb-hide-ecb-windows-after-hook}
 @end enumerate
 
@@ -3467,6 +3471,42 @@ buffers there is no built-in auto-rebuild mechanism. For these buffers
 this command calls @code{ecb-rebuild-methods-buffer-for-non-semantic}.
 @end itemize
 @end deffn
+
+@deffn Command redraw-layout &optional DO-NOT-PRESERVE-STATE
+Redraw the ECB screen. Without the prefix-argument
+@var{DO-NOT-PRESERVE-STATE} the state of the ECB-frame-layout will
+preserved. This means:
+
+@itemize @minus
+@item
+The state of compile-window (hidden or visible) will be preserved but
+if visible then the height will be as specified in
+@code{ecb-compile-window-height}.
+
+@item
+The state of the ECB-windows will be preserved (hidden or visible) but
+if visible then the sizes will be as specified in the layout (and with
+the options @code{ecb-windows-width} and @code{ecb-windows-height}) or
+as stored with @code{ecb-store-window-sizes}.
+@end itemize
+
+If DO-NOT-PRESERVE-STATE is not nil or if called with a
+prefix-argument then the layout will be drawn with all ECB-windows and
+also with a visible compile-window (when
+@code{ecb-compile-window-height} is not nil).
+
+If the variable @code{ecb-redraw-layout-quickly} is not nil then the
+redraw is done by the @code{ecb-redraw-layout-quickly} function,
+otherwise by @code{ecb-redraw-layout-full}.
+
+Please not: It's strongly recommended to use the quick redraw only if
+you have really slow machines where a full redraw takes several
+seconds because the quick redraw is not really safe and has some
+annoying drawbacks! On normal machines the full redraw should be done
+in << 1s so there should be no need for the quick version!
+@end deffn
+
+
 
 @deffn Command redraw-layout
 Redraw the ECB screen quickly. If the variable
@@ -5883,16 +5923,31 @@ sizes) if @code{ecb-compile-window-height} is not @code{nil}.
 Per default no window-size fixing has been done.
 @end defopt
 
-
 @defopt hide-ecb-windows-after-hook
-Hooks run direct after the ECB windows have been hidden
-either by @code{ecb-toggle-ecb-windows} or @code{ecb-hide-ecb-windows}.
+Hooks run direct after the ECB windows have been hidden. Hiding was
+done either by @code{ecb-toggle-ecb-windows} or
+@code{ecb-hide-ecb-windows}.
+
+IMPORTANT: Hiding the ECB-windows is internally done by calling
+@code{ecb-redraw-layout} and therefore also the hooks
+@code{ecb-redraw-layout-before-hook} and
+@code{ecb-redraw-layout-after-hook} are evaluated. The hook-sequence
+is analogous to that described in
+@code{ecb-show-ecb-windows-after-hook}.
 @end defopt
 
 @defopt hide-ecb-windows-before-hook
-Hooks run direct before the ECB windows will be hidden either by
-@code{ecb-toggle-ecb-windows} or @code{ecb-hide-ecb-windows}. This means that at runtime
-of this hook all the ECB-tree-windows of current layout are visible.
+Hook run direct before the ECB windows will be hidden. Hiding is done
+either by @code{ecb-toggle-ecb-windows} or
+@code{ecb-hide-ecb-windows}. This means that at runtime of this hook
+all the ECB-tree-windows of current layout are visible.
+
+IMPORTANT: Hiding the ECB-windows is internally done by calling
+@code{ecb-redraw-layout} and therefore also the hooks
+@code{ecb-redraw-layout-before-hook} and
+@code{ecb-redraw-layout-after-hook} are evaluated. The hook-sequence
+is analogous to that described in
+@code{ecb-show-ecb-windows-before-hook}.
 @end defopt
 
 @defopt ignore-special-display

@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-layout.el,v 1.204 2004/01/14 14:01:10 berndl Exp $
+;; $Id: ecb-layout.el,v 1.205 2004/01/14 17:22:22 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -42,10 +42,10 @@
 ;; 1. Now all user-layouting is done by customizing the new option
 ;;    `ecb-layout-name' or by the command `ecb-change-layout'. The function
 ;;    `ecb-redraw-layout' (formally known as 'ecb-set-layout) can still be
-;;    called interactively but without arguments because it does only a redraw
-;;    of the layout specified in `ecb-layout-name'. All changes to the layout
-;;    must be made by customizing this new option. Please read the very
-;;    detailed comment of `ecb-layout-name'!
+;;    called interactively. But it just redraws the layout specified in
+;;    `ecb-layout-name'. All changes to the layout must be made by customizing
+;;    this new option. Please read the very detailed comment of
+;;    `ecb-layout-name'!
 ;; 2. Adding new layouts is now much easier and more straightforward: We have
 ;;    now a main core-layout function (`ecb-redraw-layout-full') which is the
 ;;    "environment" for the specific "layout-functions". The core function
@@ -927,18 +927,32 @@ This option makes only sense if the value is a list with more than 1 element!"
                                     name)))
                    (set symbol value))))
 
-
+;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: Doctsring nach texi so
+;; übernehmen, für die nächsten beiden Options - hook Reihenfolge auch sonst
+;; in texi überprüfen und anpassen!
 (defcustom ecb-hide-ecb-windows-before-hook nil
   "*Hook run direct before the ECB windows will be hidden.
 Hiding is done either by `ecb-toggle-ecb-windows' or `ecb-hide-ecb-windows'.
 This means that at runtime of this hook all the ECB-tree-windows of current
-layout are visible."
+layout are visible.
+
+IMPORTANT: Showing the hidden ECB-windows is internally done by calling
+`ecb-redraw-layout' and therefore also the hooks
+`ecb-redraw-layout-before-hook' and `ecb-redraw-layout-after-hook' are
+evaluated. The hook-sequence is analogous to that described in
+`ecb-show-ecb-windows-before-hook'."
   :group 'ecb-layout
   :type 'hook)
 
 (defcustom ecb-hide-ecb-windows-after-hook nil
   "*Hooks run direct after the ECB windows have been hidden.
-Hiding was done either by `ecb-toggle-ecb-windows' or `ecb-hide-ecb-windows'."
+Hiding was done either by `ecb-toggle-ecb-windows' or `ecb-hide-ecb-windows'.
+
+IMPORTANT: Showing the hidden ECB-windows is internally done by calling
+`ecb-redraw-layout' and therefore also the hooks
+`ecb-redraw-layout-before-hook' and `ecb-redraw-layout-after-hook' are
+evaluated. The hook-sequence is analogous to that described in
+`ecb-show-ecb-windows-after-hook'."
   :group 'ecb-layout
   :type 'hook)
 
@@ -2216,7 +2230,8 @@ can use these variables."
 (defun ecb-layout-post-command-hook ()
   "During activated ECB this function is added to `post-command-hook' to do
 some special tasks:
-- handling of `ecb-compile-window-temporally-enlarge'"
+- handling of `ecb-compile-window-temporally-enlarge'
+- handling of `ecb-maximize-ecb-window-after-selection'"
   (if ecb-layout-prevent-handle-compile-window-selection
       (setq ecb-layout-prevent-handle-compile-window-selection nil)
     (when (and ecb-minor-mode
@@ -2236,15 +2251,15 @@ some special tasks:
   (if ecb-layout-prevent-handle-ecb-window-selection
       (setq ecb-layout-prevent-handle-ecb-window-selection nil)
     (when (and ecb-minor-mode
-             (equal (selected-frame) ecb-frame)
-             ecb-maximize-ecb-window-after-selection
-             (= (minibuffer-depth) 0))
-    (cond ((and (not ecb-ecb-window-was-selected-before-command)
-                (member (buffer-name) ecb-tree-buffers))
-           (ecb-display-one-ecb-buffer (buffer-name)))
-          ((and ecb-ecb-window-was-selected-before-command
-                (not (member (buffer-name) ecb-tree-buffers)))
-           (ecb-redraw-layout-full nil nil nil nil))))))
+               ecb-maximize-ecb-window-after-selection
+               (equal (selected-frame) ecb-frame)
+               (= (minibuffer-depth) 0))
+      (cond ((and (not ecb-ecb-window-was-selected-before-command)
+                  (member (buffer-name) ecb-tree-buffers))
+             (ecb-display-one-ecb-buffer (buffer-name)))
+            ((and ecb-ecb-window-was-selected-before-command
+                  (not (member (buffer-name) ecb-tree-buffers)))
+             (ecb-redraw-layout-full nil nil nil nil))))))
 ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: need some more tests - see above
 ;; `ecb-minibuffer-exit-hook'
 ;;              (if (equal (selected-window) (minibuffer-window ecb-frame))
@@ -3193,7 +3208,6 @@ visibility of the ECB windows. ECB minor mode remains active!"
             (run-hooks 'ecb-show-ecb-windows-before-hook)
             (if (ecb-show-any-node-info-by-mouse-moving-p)
                 (tree-buffer-activate-follow-mouse))
-            (run-hooks 'ecb-redraw-layout-before-hook)
             ;; if ecb-current-maximized-ecb-buffer-name is not nil then this
             ;; means we should only restore this one maximized buffer!
             (let ((compwin-hidden (equal 'hidden
@@ -3203,7 +3217,6 @@ visibility of the ECB windows. ECB minor mode remains active!"
                 (ecb-redraw-layout-full))
               (if compwin-hidden
                   (ecb-toggle-compile-window -1)))
-            (run-hooks 'ecb-redraw-layout-after-hook)
             (run-hooks 'ecb-show-ecb-windows-after-hook)
             (message "ECB windows are now visible."))
         (unless ecb-windows-hidden
@@ -3866,8 +3879,24 @@ WINDOW-CONFIG must be got from `ecb-current-window-configuration'."
   (setq ecb-edit-area-creators (nth 4 ecb-window-config))
   (setq ecb-windows-hidden (nth 5 ecb-window-config)))
 
-(defun ecb-redraw-layout()
-  "Redraw the ECB screen quickly.
+;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: Docstring wie unten nach texi
+;; übernehmen. 
+(defun ecb-redraw-layout (&optional do-not-preserve-state)
+  "Redraw the ECB screen.
+
+Without the prefix-argument DO-NOT-PRESERVE-STATE the state of the
+ECB-frame-layout will preserved. This means:
+- The state of compile-window \(hidden or visible) will be preserved but if
+  visible then the height will be as specified in `ecb-compile-window-height'.
+- The state of the ECB-windows will be preserved \(hidden or visible) but if
+  visible then the sizes will be as specified in the layout \(and with the
+  options `ecb-windows-width' and `ecb-windows-height') or as stored with
+  `ecb-store-window-sizes'.
+
+If DO-NOT-PRESERVE-STATE is not nil or called with a prefix-argument then the
+layout will bedrawn with all ECB-windows and also with a visible
+compile-window \(when `ecb-compile-window-height' is not nil).
+
 If the variable `ecb-redraw-layout-quickly' is not nil then the redraw is done
 by the `ecb-redraw-layout-quickly' function, otherwise by
 `ecb-redraw-layout-full'.
@@ -3877,28 +3906,31 @@ really slow machines where a full redraw takes several seconds because the
 quick redraw is not really safe and has some annoying drawbacks! On normal
 machines the full redraw should be done in << 1s so there should be no need
 for the quick version!"
-  (interactive)
+  (interactive "P")
 
-  (message "ECB redrawing layout...")
-    
   (when (and ecb-minor-mode
              (equal (selected-frame) ecb-frame))
-    (run-hooks 'ecb-redraw-layout-before-hook)
-    (if (and ecb-redraw-layout-quickly
-             ecb-activated-window-configuration)
-        (condition-case nil
-            (ecb-redraw-layout-quickly)
-          (error (message "ECB: Quick redraw failed...full redraw will be performed!")
-                 (ecb-redraw-layout-full)))
-      (ecb-redraw-layout-full)))
+    (let ((compwin-hidden (equal (ecb-compile-window-state) 'hidden)))
+      (message "ECB redrawing layout...")
+    
+      (if (and ecb-redraw-layout-quickly
+               ecb-activated-window-configuration)
+          (condition-case nil
+              (ecb-redraw-layout-quickly)
+            (error (message "ECB: Quick redraw failed...full redraw will be performed!")
+                   (ecb-redraw-layout-full nil nil nil (and (not do-not-preserve-state)
+                                                            ecb-windows-hidden))))
+        (ecb-redraw-layout-full nil nil nil (and (not do-not-preserve-state)
+                                                 ecb-windows-hidden)))
+      
+      (if (and (not do-not-preserve-state) compwin-hidden)
+          (ecb-toggle-compile-window -1)))
 
-  ;;make sure we are in the edit window if necessary.
-  (when ecb-select-edit-window-on-redraw
-    (ecb-select-edit-window))
-
-  (run-hooks 'ecb-redraw-layout-after-hook)
+    ;;make sure we are in the edit window if necessary.
+    (when ecb-select-edit-window-on-redraw
+      (ecb-select-edit-window))
   
-  (message "ECB redrawing layout...done"))
+    (message "ECB redrawing layout...done")))
 
 
 ;; the main layout core-function. This function is the "environment" for a
@@ -3913,6 +3945,7 @@ this function the edit-window is selected which was current before redrawing."
              (equal (selected-frame) ecb-frame))
     ;; this functions are only needed at runtime!
     (ecb-load-layouts)
+    (run-hooks 'ecb-redraw-layout-before-hook)
     (let* ((config (or window-configuration-data (ecb-window-configuration-data)))
            (window-before-redraw (nth 0 config))
            (pos-before-redraw (nth 1 config))
@@ -4113,14 +4146,18 @@ this function the edit-window is selected which was current before redrawing."
       ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: maybe we must not do this
       ;; when NO-ECB-WINDOWS is not nil?!
       (setq ecb-activated-window-configuration
-            (ecb-current-window-configuration)))))
+            (ecb-current-window-configuration)))
+    (run-hooks 'ecb-redraw-layout-after-hook)))
+    
 
 (defun ecb-redraw-layout-quickly()
   "Redraw the layout quickly using the cached window configuration
 `ecb-activated-window-configuration'."
   (when (and ecb-minor-mode
              (equal (selected-frame) ecb-frame))
-    (ecb-set-window-configuration ecb-activated-window-configuration)))
+    (run-hooks 'ecb-redraw-layout-before-hook)
+    (ecb-set-window-configuration ecb-activated-window-configuration)
+    (run-hooks 'ecb-redraw-layout-after-hook)))
 
 
 (defvar ecb-toggle-layout-state 0

@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb.el,v 1.361 2004/01/14 14:01:09 berndl Exp $
+;; $Id: ecb.el,v 1.362 2004/01/14 17:22:22 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -2709,7 +2709,6 @@ has been deactivated. Do not set this variable!")
             (if use-last-win-conf                     
                 (setq ecb-edit-area-creators
                       (nth 4 ecb-last-window-config-before-deactivation)))
-            (run-hooks 'ecb-redraw-layout-before-hook)
             (ecb-redraw-layout-full 'no-buffer-sync
                                     nil
                                     (if use-last-win-conf
@@ -2722,7 +2721,6 @@ has been deactivated. Do not set this variable!")
             (if (and use-last-win-conf
                      (null (nth 2 ecb-last-window-config-before-deactivation)))
                 (ecb-toggle-compile-window -1))
-            (run-hooks 'ecb-redraw-layout-after-hook)
 
             (when (member ecb-split-edit-window-after-start
                           '(vertical horizontal nil))

@@ -28,7 +28,7 @@
 ;; Do not change any html-file besides the index.html manually but do all
 ;; changes in this elisp file!
 
-;; $Id: ecb-html.el,v 1.57 2004/01/12 16:42:36 berndl Exp $
+;; $Id: ecb-html.el,v 1.58 2004/01/14 17:22:21 berndl Exp $
 
 ;;; Code:
 
@@ -77,6 +77,11 @@
   "List of latest news displayed on the main page.")
 (setq ecb-latest-news
       `(
+        ,(h-sub-section "ECB 2.20 released! (2004-??-??)"
+                        "The most important news at the beginning: The restriction of only two edit-windows has been gone; now you can get as many edit-windows as you need! The window-layout of the edit-area will be fully preserved between deactivation/activation and hidding/showing ecb-windows! A lot of improvements for the tree-buffers. A lot of bug fixes. "
+                        (h-link "docs/Install-and-first-steps.html#Install%20and%20first%20steps" "Here") " is a short installation guide. "
+                        "Click " (h-link "NEWS.html" "here")
+                        " for information about changes in the new version. ")
         ,(h-sub-section "ECB 2.11 released! (2003-11-14)"
                         "Semanticdb is used for jumping to external type-definitions. Special-display-buffers are handled correctly. Automatic upgrading has been fixed for this new version. Some bug fixes. "
                         (h-link "docs/Install-and-first-steps.html#Install%20and%20first%20steps" "Here") " is a short installation guide. "
@@ -87,11 +92,6 @@
                         (h-link "docs/Install-and-first-steps.html#Install%20and%20first%20steps" "Here") " is a short installation guide. "
                         "Click " (h-link "NEWS.html" "here")
                         " for information about changes in the new version. ")
-        ,(h-sub-section "ECB 1.96 released! (2003-09-15)"
-                        "Support for window-managers like winring and escreen and therefore possibilty to run apps like Gnus and ECB in one frame. Complete overhaul of the compile-window mechanism - now it is much more stable. Some other nice features and bug fixes. "
-                        (h-link "docs/Install-and-first-steps.html#Install%20and%20first%20steps" "Here") " is a short installation guide. "
-                        "Click " (h-link "NEWS.html" "here")
-                        " for information about changes in the new version. ")
         ))
 
 (defvar ecb-rest-news nil
@@ -99,6 +99,11 @@
 `ecb-html-all-news'.")
 (setq ecb-rest-news
       `(
+        ,(h-sub-section "ECB 1.96 released! (2003-09-15)"
+                        "Support for window-managers like winring and escreen and therefore possibilty to run apps like Gnus and ECB in one frame. Complete overhaul of the compile-window mechanism - now it is much more stable. Some other nice features and bug fixes. "
+                        (h-link "docs/Install-and-first-steps.html#Install%20and%20first%20steps" "Here") " is a short installation guide. "
+                        "Click " (h-link "NEWS.html" "here")
+                        " for information about changes in the new version. ")
         ,(h-sub-section "ECB 1.95.1 released! (2003-07-16)"
                         "Now every ECB-window can be maximized, so afterwards only this ecb-window and the edit-window(s) are visible. Some bug fixes. "
                         (h-link "docs/Install-and-first-steps.html#Install%20and%20first%20steps" "Here") " is a short installation guide. "

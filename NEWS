@@ -30,7 +30,7 @@
     
 *** The option `ecb-primary-mouse-jump-destination' has been renamed to
     `ecb-mouse-click-destination' and has also changed its default value to
-    'last-point.
+    'last-point. ECB autom. upgrades the old settings.
 
 *** New keybinding [C-c . g l] for selecting the last selected edit-window.
     Also available via the ECB-menu. The command is
@@ -76,7 +76,7 @@
      `ecb-mouse-click-destination' (formerly known as
      `ecb-primary-mouse-jump-destination' - see above).
 
-*** ECB supports the default modeline-mechanisms for deleting other windows
+*** ECB supports the default modeline-mechanisms for deleting other windows.
     GNU Emacs binds [mouse-2] in its modeline to `delete-other-window'. ECB
     now supports this mechanism by binding a toggle-command to [mouse-2] in
     the modeline of each tree-buffer: If all ECB-windows are visible then this
@@ -146,6 +146,13 @@
    See the docstring for more details. Thanks for suggestion to Jeff Jensen
    <jeffjensen@nospam.visi.com>
 
+** The command `ecb-redraw-layout' has now a prefix-argument.
+   Called with a prefix-argument the command behaves as with ECB-versions <
+   2.20, i.e. redrawing the full layout regardless of the current
+   visibility-state of the ecb-windows or the compile-window. Called without a
+   prefix-arg this command now preserves the state of the ecb-windows as well
+   as the state of the compile-window.
+   
 ** Fixed Bugs
 
 *** Fixed a bug in the adviced version of `other-window'.
