@@ -54,7 +54,7 @@
 ;; The latest version of the ECB is available at
 ;; http://home.swipnet.se/mayhem/ecb.html
 
-;; $Id: ecb.el,v 1.204 2002/03/01 14:52:43 berndl Exp $
+;; $Id: ecb.el,v 1.205 2002/03/15 14:00:20 berndl Exp $
 
 ;;; Code:
 
@@ -92,6 +92,7 @@
 (require 'ecb-compilation)
 (require 'ecb-cycle)
 (require 'ecb-face)
+(require 'ecb-upgrade)
 
 
 ;; various loads
@@ -686,12 +687,23 @@ faces of TEXT!"
                              newtext))
       newtext)))
 
+;; TODO: This variable is only for internal tests, so we can esy switch
+;; between the grouping methods. After semantic-adopt-external-members is
+;; working perfect then we throw away this variable! With semantic beta14 the
+;; semantic grouping works already very well, but there are still some small
+;; drawbacks. Eric has already fixed them and the fixes are in CVS!
+(defvar ecb-use-semantic-grouping t)
+(defun ecb-toggle-use-semantic-grouping ()
+  (interactive)
+  (setq ecb-use-semantic-grouping (not ecb-use-semantic-grouping))
+  (message "Semantic-grouping: %s"
+           (if ecb-use-semantic-grouping "On" "Off")))
 
 (dolist (elem ecb-token->text-functions)
   (fset (car elem)
         `(lambda (token &optional parent-token colorize)
            (if (eq 'type (semantic-token-token token))
-               (let* ( ;; we must here distinguish between UML- and
+               (let* (;; we must here distinguish between UML- and
                       ;; not-UML-semantic functions because for UML we must
                       ;; preserve some semantic facing added by semantic (e.g.
                       ;; italic for abstract classes)!
@@ -699,9 +711,11 @@ faces of TEXT!"
                                          'semantic-uml-abbreviate-nonterminal
                                        'semantic-name-nonterminal)
                                      token parent-token colorize))
-                      (type-specifier (if (semantic-token-get token
-                                                              'ecb-group-token)
-                                          "group"
+                      (type-specifier (if (or (semantic-token-get token
+                                                                  'ecb-group-token)
+                                              ;; marking done my semantic itself
+                                              (semantic-token-get token 'faux))
+                                              "group"
                                         (semantic-token-type token)))
                       (face (ecb-get-face-for-type-token type-specifier))
                       (remove-flag (ecb-get-remove-specifier-flag-for-type-token
@@ -713,10 +727,15 @@ faces of TEXT!"
                    ;; This code can be removed (or changed) if semantic allows
                    ;; correct protection display for function-tokens with
                    ;; parent-token.
-                   (when (semantic-token-get token 'ecb-group-token)
+                   (when (or (semantic-token-get token 'ecb-group-token)
+                             (semantic-token-get token 'faux))
                      (if (string-match (concat "^\\(.+"
                                                semantic-uml-colon-string
-                                               "\\)\\(struct\\)") text)
+                                               "\\)\\("
+                                               (if (semantic-token-get token 'faux)
+                                                   semantic-orphaned-member-metaparent-type
+                                                 "struct")
+                                               "\\)") text)
                          (let ((type-spec-text "group"))
                            (put-text-property 0 (length type-spec-text)
                                               'face
@@ -774,6 +793,22 @@ implementations of a class are grouped together."
   :group 'ecb-methods
   :type '(repeat (cons (symbol :tag "Major-mode")
                        (function :tag "Postprocess function"))))
+
+(defcustom ecb-show-only-positioned-tokens
+  (if (string-match "^1\\.4\\(beta1[5-9]\\)?$" semantic-version) t nil)
+  "*Show only nodes in the method-buffer which are \"jumpable\".
+If not not nil then ECB displays in the method-buffer only nodes which are
+\"jumpable\", i.e. after selecting it by clicking or with RET then ECB jumps
+to the corresponding location in the edit-window.
+Example: With CLOS or Eieio source-code there can exist some positionless
+nodes like variable-attributes in a `defclass' form which are only displayed
+if this option is nil. Displaying such nodes can be sensefull even if they can
+not be jumped.
+
+This option works only correct if a `semantic-version' > semantic-1.4beta14 is
+installed. Otherwise this option should be nil!"
+  :group 'ecb-methods
+  :type 'boolean)
 
 (defcustom ecb-show-tokens '((include collapsed nil)
 			     (parent collapsed nil)
@@ -1335,8 +1370,6 @@ PARENT-TOKEN is only propagated to `ecb-add-token-bucket'."
 	(unless (eq 'flattened display)
           (setq name
                 (ecb-merge-face-into-text name (nth 2 ecb-bucket-token-display)))
-;; 	  (unless running-xemacs
-;; 	    (put-text-property 0 (length name) 'face '(weight . bold) name))
 	  (setq bucket-node (tree-node-new name 1 nil nil node
 					   (if ecb-truncate-long-names 'end)))
 	  (tree-node-set-expanded bucket-node (eq 'expanded display)))
@@ -1349,7 +1382,8 @@ PARENT-TOKEN is only propagated to `ecb-add-token-bucket'."
 
 (defun ecb-update-token-node (token node &optional parent-token)
   "Updates a node containing a token."
-  (let* ((children (semantic-nonterminal-children token t)))
+  (let* ((children (semantic-nonterminal-children
+                    token ecb-show-only-positioned-tokens)))
     (tree-node-set-name node (ecb-get-token-name token parent-token))
     ;; Always expand types, maybe this should be customizable and more
     ;; flexible
@@ -1376,9 +1410,9 @@ and then all grouped tokens.
 
 This is usefull for oo-programming languages where the methods of a class can
 be defined outside the class-definition, e.g. C++, Eieio."
-  ;; current version of semantic-adopt-external-members has really problems!
-;;   (if (fboundp 'semantic-adopt-external-members)
-;;       (semantic-adopt-external-members tokenlist)
+  (if (and ecb-use-semantic-grouping
+           (fboundp 'semantic-adopt-external-members))
+      (semantic-adopt-external-members tokenlist)
     (let ((parent-alist nil)
           (parents nil)
           (parentless nil))
@@ -1427,7 +1461,7 @@ be defined outside the class-definition, e.g. C++, Eieio."
 
       ;; We nreverse the parentless (because build with cons) and append then
       ;; all the parents.
-      (append (nreverse parentless) parents)))
+      (append (nreverse parentless) parents))))
 
 (defun ecb-dump-toplevel ()
   (interactive)
@@ -1456,7 +1490,8 @@ be defined outside the class-definition, e.g. C++, Eieio."
 	      "\n")
       (if (eq 'type (semantic-token-token tok))
 	  (ecb-dump-type tok prefix))
-      (ecb-dump-tokens (semantic-nonterminal-children tok t)
+      (ecb-dump-tokens (semantic-nonterminal-children
+                        tok ecb-show-only-positioned-tokens)
                        (concat prefix "  ")))))
 
 (defun ecb-add-tokens (node tokens &optional parent-token)
@@ -1520,17 +1555,13 @@ The PARENT-TOKEN is propagated to the functions `ecb-add-token-bucket' and
 semantic-reparse. This function is added to the hook
 `semantic-after-partial-cache-change-hook'."
   (message "Partial reparsing...")
+  ;; TODO: Currently we get simply the whole cache from semantic (already up
+  ;; to date at this time!) and then we rebuild the whole tree-buffer with
+  ;; this cache-contents. This is for great sources slow. We should implement
+  ;; a mechanism where only the UPDATED-TOKENS are used and only this ones are
+  ;; updated. But for this we need also a tree-buffer-update which can update
+  ;; single nodes without refreshing the whole tree-buffer like now.
   (ecb-rebuild-methods-buffer-with-tokencache (semantic-bovinate-toplevel t)))
-
-;; Klaus: Currently unused because the hook `semantic-clear-toplevel-cache' is
-;; currently unused by ECB.
-(defun ecb-update-token (token)
-  "Finds a node displaying token and updates it."
-  (let ((node (tree-node-find-data-recursively ecb-methods-root-node token)))
-    (when node
-      (message (concat "Cleaning: " (tree-node-get-name node)))
-      (tree-node-set-children node nil)
-      (ecb-update-token-node token node))))
 
 (defun ecb-expand-tree (path node)
   (catch 'exit
@@ -1768,17 +1799,17 @@ displayed with window-start and point at beginning of buffer."
     (setq ecb-method-buffer-needs-rebuild t)
 
     (let ((current-tokencache (semantic-bovinate-toplevel t)))
-    ;; If the `semantic-bovinate-toplevel' has done no full reparsing but only
-    ;; used it´s still valid `semantic-toplevel-bovine-cache' or only has done
-      ;; a partial reparsing of dirty tokens the hooks in
-      ;; `semantic-after-toplevel-cache-change-hook' are not evaluated and
+      ;; If the `semantic-bovinate-toplevel' has done no reparsing but only
+      ;; used it´s still valid `semantic-toplevel-bovine-cache' then neither
+      ;; the hooks of `semantic-after-toplevel-cache-change-hook' nor the
+      ;; hooks in `semantic-after-partial-cache-change-hook' are evaluated and
       ;; therefore `ecb-rebuild-methods-buffer-with-tokencache' was not
       ;; called. Therefore we call it here manually.
-      ;; `ecb-rebuild-methods-buffer-with-tokencache' is the only
-      ;; function which sets `ecb-method-buffer-needs-rebuild' to nil to
-      ;; signalize that a "manually" rebuild of the method buffer is not
-      ;; necessary.
+      ;; `ecb-rebuild-methods-buffer-with-tokencache' is the only function
+      ;; which sets `ecb-method-buffer-needs-rebuild' to nil to signalize that
+      ;; a "manually" rebuild of the method buffer is not necessary.
       (if ecb-method-buffer-needs-rebuild
+          ;; the hook was not called therefore here manually
           (ecb-rebuild-methods-buffer-with-tokencache current-tokencache t)))
     (when scroll-to-top
       (save-selected-window
@@ -1801,9 +1832,21 @@ removes only the token-tree for SOURCE-FILE-NAME from the cache."
           (adelete 'ecb-token-tree-cache source-file-name))))
 
 (defun ecb-rebuild-methods-buffer-with-tokencache (updated-cache
-						   &optional no-update)
+						   &optional no-update
+                                                   force-nil-cache)
   "Rebuilds the ECB-method buffer after toplevel-parsing by semantic. This
-function is added to the hook `semantic-after-toplevel-cache-change-hook'."
+function is added to the hook `semantic-after-toplevel-cache-change-hook'. If
+
+If NO-UPDATE is not nil then the tokens of the ECB-methods-buffer are not
+updated with UPDATED-TOKENS but the method-buffer is rebuild with these tokens
+ECB has already cached in it `ecb-token-tree-cache'.
+
+If FORCE-NIL-CACHE is not nil then the method-buffer is even rebuild if
+UPDATED-CACHE is nil. Normally a nil cache is ignored if it belongs to a
+buffer with is setup for semantic-parsing; only nil caches for no-semantic
+buffers \(like plain text-buffers) are used for updating the method-buffers.
+With FORCE-NIL-CACHE the method-buffer is updated with a nil cache too, i.e.
+it is cleared."
   (when (and ecb-minor-mode
              (equal (selected-frame) ecb-frame)
              (get-buffer-window ecb-methods-buffer-name)
@@ -1817,7 +1860,8 @@ function is added to the hook `semantic-after-toplevel-cache-change-hook'."
              ;; the real rebuild should be done after the cache is filled
              ;; again.
              (or updated-cache
-                 (not (semantic-active-p))))
+                 (not (semantic-active-p))
+                 force-nil-cache))
     ;; the following cache-mechanism MUST use the (buffer-file-name
     ;; (current-buffer)) instead of ecb-path-selected-source because in case
     ;; of opening a buffer not via directory-window but via the
@@ -1923,9 +1967,17 @@ It does several tasks:
                   (and (equal ecb-kill-buffer-clears-history 'ask)
                        (y-or-n-p "Remove history entry for this buffer? ")))
               (ecb-clear-history-node node)))))
-    ;; 2. removing the file-buffer from `ecb-token-tree-cache'
+
+    ;; 2. clearing the method buffer if a semantic parsed buffer is killed
+    (if (and buffer-file (semantic-active-p))
+        (ecb-rebuild-methods-buffer-with-tokencache nil nil t))
+
+    ;; 3. removing the file-buffer from `ecb-token-tree-cache'. Must be done
+    ;;    after 2. because otherwise a new element in the cache would be
+    ;;    created again by `ecb-rebuild-methods-buffer-with-tokencache'.
     (if buffer-file
         (ecb-clear-token-tree-cache buffer-file))))
+
     
 
 (defun ecb-clear-history (&optional clearall)
@@ -2954,87 +3006,6 @@ macro must be written explicitly, as in \"C-c SPC\".
                    ;; replace the values in the alists
                    (ecb-add-to-minor-modes))))
 
-(defvar ecb-not-compatible-options nil)
-
-(defun ecb-check-not-compatible-options ()
-  "Check for all ECB-options if their current value is compatible to the
-defined type. If not store it in `ecb-not-compatible-options'."
-  (setq ecb-not-compatible-options nil)
-
-  ;; get all options of ECB
-  (let ((ecb-options nil))
-    (mapatoms
-     (lambda (symbol)
-       (when (and (string-match "ecb-" (symbol-name symbol))
-                  (get symbol 'custom-type))
-         (setq ecb-options (cons symbol ecb-options)))))
-
-    ;; check if all current values of ECB options match their types. Add not
-    ;; matching options to `ecb-not-compatible-options'.
-    (dolist (option ecb-options)
-      (require 'cus-edit)
-      (unless (widget-apply (widget-convert (get option 'custom-type))
-                            :match (symbol-value option))
-        (setq ecb-not-compatible-options
-              (cons (cons option
-                          (symbol-value option))
-                    ecb-not-compatible-options))))))
-
-(defun ecb-reset-not-compatible-options ()
-  "Reset all not anymore compatible options of `ecb-not-compatible-options' to
-their current default-values."
-  ;; For every not compatible option reset it to the current default-value.
-  (dolist (option ecb-not-compatible-options)
-    (let* ((default-val (car (get (car option) 'standard-value))))
-      (setq default-val (cond ((not (listp default-val)) default-val)
-                              ((equal 'quote (car default-val))
-                               (car (cdr default-val)))
-                              (t (car default-val))))
-      (customize-save-variable (car option) default-val))))
-
-
-(defun ecb-display-reset-options ()
-  "Display a message-buffer which options have been reset."
-  (interactive)
-  (if ecb-not-compatible-options
-      (with-output-to-temp-buffer "*ECB reset options*"
-        (princ (format "ECB %s has reset the following options to the new default values\nof current ECB because the old customized values are not compatible.\nPlease re-customize if the new default value is not what you need!"
-                       ecb-version))
-        (princ "\n\n")
-        (dolist (option ecb-not-compatible-options)
-          (let ((option-name (symbol-name (car option)))
-                (old-value (cdr option))
-                (new-value (symbol-value (car option))))
-            (princ (concat "+ Option :   " option-name))
-            (princ "\n")
-            (princ (concat "  Old value: "
-                           (if (and (not (equal old-value nil))
-                                    (not (equal old-value t))
-                                    (or (symbolp old-value)
-                                        (listp old-value)))
-                               "'")
-                           (prin1-to-string old-value)))
-            (princ "\n")
-            (princ (concat "  New value: "
-                           (if (and (not (equal new-value nil))
-                                    (not (equal new-value t))
-                                    (or (symbolp new-value)
-                                        (listp new-value)))
-                               "'")
-                           (prin1-to-string new-value)))
-            (princ "\n\n")))
-        (print-help-return-message))
-    (message "There were no incompatible options and therefore no resets!")))
-
-(defun ecb-check-and-reset-incompatible-options ()
-  "Check for all ECB-options if their current value is compatible to the
-defined type. If not reset it to the default-value of current ECB. Displays
-all reset options with their old \(before the reset) and new values."
-  (interactive)
-  (ecb-check-not-compatible-options)
-  (ecb-reset-not-compatible-options)
-  (ecb-display-reset-options))
-
 (defun ecb-activate ()
   "Activates the ECB and creates all the buffers and draws the ECB-screen
 with the actually choosen layout \(see `ecb-layout-nr'). This function raises
@@ -3078,7 +3049,7 @@ always the ECB-frame if called from another frame."
     (when ecb-auto-compatibility-check
       (ecb-check-not-compatible-options)
       (ecb-reset-not-compatible-options))
-    
+
     (setq ecb-old-compilation-window-height compilation-window-height)
     
     ;; first initialize the whole layout-engine
@@ -3118,6 +3089,7 @@ always the ECB-frame if called from another frame."
          'ecb-tree-buffer-node-select-callback
          'ecb-tree-buffer-node-expand-callback
          'ecb-mouse-over-directory-node
+         'equal
          (list (cons 0 ecb-directories-menu) (cons 1 ecb-sources-menu)
                (cons 2 ecb-source-path-menu))
          ecb-truncate-lines
@@ -3144,6 +3116,7 @@ always the ECB-frame if called from another frame."
 	 'ecb-tree-buffer-node-select-callback
 	 'ecb-tree-buffer-node-expand-callback
          'ecb-mouse-over-source-node
+         'equal
 	 (list (cons 0 ecb-sources-menu))
 	 ecb-truncate-lines
 	 t
@@ -3163,8 +3136,30 @@ always the ECB-frame if called from another frame."
 	 'ecb-tree-buffer-node-select-callback
 	 nil
          'ecb-mouse-over-method-node
-	 nil
-	 ecb-truncate-lines
+         ;; Function which compares the node-data of a tree-buffer-node in the
+         ;; method-buffer for equality. We must compare semantic-tokens but we
+         ;; must not compare the tokens with eq or equal because they can be
+         ;; re-grouped by semantic-adopt-external-members. the following
+         ;; function is a save "equal"-condition for ECB because currently the
+         ;; method buffer always displays only tokens from exactly the buffer
+         ;; of the current edit-window.
+         ;; TODO: There is the mysterious behavior that the overlays are lost
+         ;; in re-grouped tokens if we use semantic-adopt-external-members. I
+         ;; have already send a mail to Eric. Maybe this is a bug and after
+         ;; fixing it we can use the function semantic-equivalent-tokens-p. If
+         ;; not we use the following condition for the equal-test.
+         ;; Currently it seems to be a problem in re-overlaying tokens if they
+         ;; are read from semantic.cache.
+         (if (fboundp 'semantic-equivalent-tokens-p)
+             'semantic-equivalent-tokens-p
+           (function
+            (lambda (l r)
+              (and (string= (semantic-token-name l) (semantic-token-name r))
+                   (eq (semantic-token-token l) (semantic-token-token r))
+                   (= (semantic-token-start l) (semantic-token-start r))
+                   (= (semantic-token-end l) (semantic-token-end r))))))
+         nil
+         ecb-truncate-lines
 	 t
 	 ecb-tree-indent
 	 ecb-tree-incremental-search
@@ -3183,6 +3178,7 @@ always the ECB-frame if called from another frame."
 	 'ecb-tree-buffer-node-select-callback
 	 'ecb-tree-buffer-node-expand-callback
          'ecb-mouse-over-history-node
+         'equal
 	 (list (cons 0 ecb-history-menu))
 	 ecb-truncate-lines
 	 t
@@ -3481,6 +3477,30 @@ FILE.elc or if FILE.elc doesn't exist."
     (ecb-activate)))
 
 (add-hook 'emacs-startup-hook 'ecb-auto-activate-hook)
+
+(defun ecb-klaus ()
+  (interactive)
+  (let ((tok (semantic-current-nonterminal)))
+    (backtrace)
+    (save-excursion
+      (set-buffer ecb-methods-buffer-name)
+      (let* ((name-node (catch 'exit
+                          (dolist (node tree-buffer-nodes)
+                            (let ((l (tree-node-get-data (cdr node)))
+                                  (r tok)) 
+                              (when (and (equal (semantic-token-buffer l)
+                                                (semantic-token-buffer r))
+                                         (equal (semantic-token-start l)
+                                                (semantic-token-start r))
+                                         (equal (semantic-token-end l)
+                                                (semantic-token-end r)))
+                                (throw 'exit node))))))
+             (name (car name-node))
+             (node (cdr name-node)))
+        (if node
+            (message "Klausi: %s" name)
+          (message "Klausi: No node found"))))))
+
 
 (provide 'ecb)
 

@@ -26,7 +26,7 @@
 ;; This file is part of the ECB package which can be found at:
 ;; http://home.swipnet.se/mayhem/ecb.html
 
-;; $Id: tree-buffer.el,v 1.79 2002/03/01 14:52:43 berndl Exp $
+;; $Id: tree-buffer.el,v 1.80 2002/03/15 14:00:22 berndl Exp $
 
 ;;; Code:
 
@@ -101,6 +101,7 @@ node name.")
 (defvar tree-node-selected-fn nil)
 (defvar tree-node-expanded-fn nil)
 (defvar tree-node-mouse-over-fn nil)
+(defvar tree-node-data-equal-fn nil)
 (defvar tree-buffer-highlight-overlay nil)
 (defvar tree-buffer-general-face nil)
 (defvar tree-buffer-incr-searchpattern nil)
@@ -224,13 +225,15 @@ with the same arguments as `tree-node-expanded-fn'."
 (defun tree-buffer-find-node-data (node-data)
   (catch 'exit
     (dolist (node tree-buffer-nodes)
-      (when (equal (tree-node-get-data (cdr node)) node-data)
+      (when (funcall tree-node-data-equal-fn
+                     (tree-node-get-data (cdr node)) node-data)
         (throw 'exit (cdr node))))))
 
 (defun tree-buffer-find-name-node-data (node-data)
   (catch 'exit
     (dolist (node tree-buffer-nodes)
-      (when (equal (tree-node-get-data (cdr node)) node-data)
+      (when (funcall tree-node-data-equal-fn
+                     (tree-node-get-data (cdr node)) node-data)
         (throw 'exit node)))))
 
 (defun tree-buffer-find-node (node)
@@ -819,6 +822,7 @@ functionality is done with the `help-echo'-property and the function
 
 (defun tree-buffer-create (name frame is-click-valid-fn node-selected-fn
                                 node-expanded-fn node-mouse-over-fn
+                                node-data-equal-fn
                                 menus tr-lines read-only tree-indent
                                 incr-search arrow-navigation
                                 &optional type-facer expand-symbol-before
@@ -872,6 +876,9 @@ NODE-MOUSE-OVER-FN: Function to call when the mouse is moved over a node. This
                     activated \(see `tree-buffer-activate-mouse-tracking').
                     With GNU Emacs 21 this function is called by the
                     `help-echo' property added to each node.
+NODE-DATA-EQUAL-FN: Function used by the tree-buffer to test if the data of
+                    two tree-nodes are equal. The data of node can be set/get
+                    with `tree-node-set-data'/`tree-node-get-data'.
 MENUS: Nil or a list of one or two conses, each cons for a node-type \(0 or 1)
        Example: \(\(0 . menu-for-type-0) \(1 . menu-for-type-1)). The cdr of a
        cons must be a menu.
@@ -916,6 +923,7 @@ AFTER-CREATE-HOOK: A function \(with no arguments) called directly after
     (make-local-variable 'tree-node-expanded-fn)
     (make-local-variable 'tree-node-update-fn)
     (make-local-variable 'tree-node-mouse-over-fn)
+    (make-local-variable 'tree-node-data-equal-fn)
     (make-local-variable 'tree-buffer-highlighted-node-data)
     (make-local-variable 'tree-buffer-menus)
     (make-local-variable 'tree-buffer-type-facer)
@@ -935,6 +943,7 @@ AFTER-CREATE-HOOK: A function \(with no arguments) called directly after
     (setq tree-node-selected-fn node-selected-fn)
     (setq tree-node-expanded-fn node-expanded-fn)
     (setq tree-node-mouse-over-fn node-mouse-over-fn)
+    (setq tree-node-data-equal-fn node-data-equal-fn)
     (setq tree-buffer-indent tree-indent)
     (setq tree-buffer-highlighted-node-data nil)
     (setq tree-buffer-menus (tree-buffer-create-menus menus))
@@ -1084,7 +1093,8 @@ AFTER-CREATE-HOOK: A function \(with no arguments) called directly after
   "Finds the first child with the given child-data."
   (catch 'exit
     (dolist (child (tree-node-get-children node))
-      (when (equal (tree-node-get-data child) child-data)
+      (when (funcall tree-node-data-equal-fn
+                     (tree-node-get-data child) child-data)
         (throw 'exit child)))))
 
 (defun tree-node-remove-child-data (node child-data)
@@ -1094,7 +1104,8 @@ child."
     (let ((last-cell nil)
 	  (cell (tree-node-get-children node)))
       (while cell
-	(when (equal (tree-node-get-data (car cell)) child-data)
+	(when (funcall tree-node-data-equal-fn
+                       (tree-node-get-data (car cell)) child-data)
 	  (if last-cell
 	      (setcdr last-cell (cdr cell))
 	    (tree-node-set-children node (cdr cell)))
@@ -1111,7 +1122,8 @@ child."
         (throw 'exit child)))))
 
 (defun tree-node-find-data-recursively (node data)
-  (if (eq data (tree-node-get-data node))
+  (if (funcall tree-node-data-equal-fn
+               data (tree-node-get-data node))
       node
     (catch 'exit
       (dolist (child (tree-node-get-children node))

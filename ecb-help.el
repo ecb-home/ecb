@@ -26,7 +26,7 @@
 ;;
 ;; Contains all online-help for ECB (stolen something from recentf.el)
 
-;; $Id: ecb-help.el,v 1.62 2002/03/01 14:52:43 berndl Exp $
+;; $Id: ecb-help.el,v 1.63 2002/03/15 14:00:19 berndl Exp $
 
 ;;; Code
 
@@ -191,12 +191,12 @@ onto an expandable node:
 Onto a not expandable node the horizontal arrow-keys go one character in the
 senseful correct direction.
 
-Incremental search for a node in current tree-buffer. Each displayable key
-\(e.g. all keys normally bound to `self-insert-command') is appended to the
-current seach-pattern. The tree-buffer tries to jump to the first node which
-matching the current search-pattern either as substring or as prefix \(see
-below). If no match is found then nothing is done. There are some special
-keys:
+Incremental search for a node in current tree-buffer:
+Each displayable key \(e.g. all keys normally bound to `self-insert-command')
+is appended to the current seach-pattern. The tree-buffer tries to jump to the
+first node which matching the current search-pattern either as substring or as
+prefix \(see below). If no match is found then nothing is done. There are some
+special keys:
 - \[backspace] and \[delete]: Delete the last character from the search-pattern.
 - \[home]: Delete the complete search-pattern
 - \[end]: Expand either to a complete node if current search-pattern is
@@ -300,17 +300,14 @@ Rebuilding the ECB-method buffer:
 
 In almost all cases there is NO need to manually rebuild the method-buffer,
 because it is always done automatically if necessary. But nevertheless there
-exist a few rare scenarios where a complete manual rebuild is necessary.  Here
-are some of them:
+exist a few rare scenarios where a complete manual rebuild can be necessary.
+Here is one example:
 
-+ If an elisp-file is parsed which contains a defun X in the middle where the
-  closing ) is missing, then semantic parses only until this defun X is reached
-  and you will get an incomplete ECB-method buffer. In such a case you must
-  complete the defun X and then completely reparse the elisp-file and rebuild
-  the ECB method buffer!
-+ If you change only the name of a method or a variable and you want the new
-  name be shown immediately in the ECB-method buffer then you must call this
-  function.
++ Depending on the semantic-version: If an elisp-file is parsed which contains
+  a defun X in the middle where the closing ) is missing, then semantic parses
+  only until this defun X is reached and you will get an incomplete ECB-method
+  buffer. In such a case you must complete the defun X and then completely
+  reparse the elisp-file and rebuild the ECB method buffer!
 
 A complete manually rebuild is done by `ecb-rebuild-methods-buffer'.
 
@@ -327,7 +324,7 @@ by the `ecb-redraw-layout-quickly' function, otherwise by
 `ecb-redraw-layout-full'. But it's strongly recommended to use the quick
 redraw only if you have really slow machines where a full redraw takes several
 seconds because the quick redraw is not really safe and may have some
-drawbacks! On normal machines the full drawback should be done in << 1s!
+drawbacks! On normal machines the full redraw should be done in << 1s!
 
 
 Hiding/Showing the ECB windows:
@@ -472,7 +469,7 @@ also useful for all the other layouts.
 Simulating speedbar without an extra frame:
 -------------------------------------------
 
-You can simuate a speedbar-like layout within ONE frame by doing the following:
+You can simulate a speedbar-like layout within ONE frame by doing the following:
 1. Customize `ecb-layout-nr' to layout nr. 11
 2. Optional: Ensure that `ecb-compile-window-height' is nil.
 3. Optional: Ajust the `ecb-windows-width'.
@@ -532,7 +529,7 @@ used for other applications too. But such an application is not allowed to use
 any of the variables of tree-buffer.el especially not the following:
 
 - `tree-buffers': Only for internal use. It contains all tree-buffers of
-  current Emacs-Instance, means all tree-buffers of all applications which
+  current Emacs-instance, means all tree-buffers of all applications which
   uses currently tree-buffers. Every application must store its own
   tree-buffers in an own variable!
   For example: ECB stores its tree-buffers in `ecb-tree-buffers'!

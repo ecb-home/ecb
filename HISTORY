@@ -1,3 +1,15 @@
+Version 1.80:
+-------------
+
++ Better grouping of external methods, i.e. methods which are implemented
+  outside the class-definition, like in C++, CLOS and EIEIO. Now this is done
+  completely by semantic (Klaus).
+
++ For application programmers using the tree-buffer library:
+  The function tree-buffer-create has a new argument NODE-DATA-EQUAL-FN. See
+  the doc-string for a description (Klaus).
+
+  
 Version 1.70:
 -------------
 
