@@ -47,7 +47,7 @@
 ;; The latest version of the ECB is available at
 ;; http://home.swipnet.se/mayhem/ecb.html
 
-;; $Id: ecb.el,v 1.41 2001/04/22 16:47:46 creator Exp $
+;; $Id: ecb.el,v 1.42 2001/04/22 16:48:54 creator Exp $
 
 ;;; Code:
 
@@ -1125,7 +1125,7 @@ Currently the fourth argument TREE-BUFFER-NAME is not used here."
 	    (user-login-name (nth 2 attrs))
 	    (nth 3 attrs)
 	    (nth 7 attrs)
-	    (format-time-string "%y%m%d %H:%M" (nth 5 attrs))
+	    (format-time-string "%Y/%m/%d %H:%M" (nth 5 attrs))
 	    (file-name-nondirectory file)
 	    )))
 
