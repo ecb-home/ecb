@@ -217,6 +217,16 @@ unloaded buffer representation."
        (defsubst ecb--semantic-tag-static-p (tag &optional parent)
          nil)))
 
+(cond ((fboundp 'semantic-tag-abstract-p)
+       (defalias 'ecb--semantic-tag-abstract-p 'semantic-tag-abstract-p))
+      ((fboundp 'semantic-tag-abstract)
+       (defalias 'ecb--semantic-tag-abstract-p 'semantic-tag-abstract))
+      ((fboundp 'semantic-nonterminal-abstract)
+       (defalias 'ecb--semantic-tag-abstract-p 'semantic-nonterminal-abstract))
+      (t
+       (defsubst ecb--semantic-tag-abstract-p (tag &optional parent)
+         nil)))
+
 (defsubst ecb--semantic-tag-prototype-p (tag)
   (ecb--semantic-tag-get-attribute tag (if (> ecb-semantic-2-beta-nr 1)
                                            :prototype-flag

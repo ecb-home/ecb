@@ -2411,6 +2411,7 @@ ECB has been deactivated. Do not set this variable!")
             (when ecb-clear-caches-before-activate
               (ecb-clear-tag-tree-cache)
               (ecb-clear-files-and-subdirs-cache)
+              (ecb-clear-directory-empty-cache)
               (ecb-sources-cache-clear)
               (ecb-reset-history-filter))
 
@@ -3048,6 +3049,7 @@ performance-problem!"
 ;; clearing all caches at load-time
 (ecb-clear-tag-tree-cache)
 (ecb-clear-files-and-subdirs-cache)
+(ecb-clear-directory-empty-cache)
 (ecb-sources-cache-clear)
 (ecb-reset-history-filter)
 

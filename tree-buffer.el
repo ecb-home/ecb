@@ -795,10 +795,15 @@ displayed without empty-lines at the end, means WINDOW is always best filled."
 ;; you do some syntax highlighting in the method-buffer).
 (defun tree-buffer-remove-highlight ()
   (when tree-buffer-highlighted-node-data
-    (let ((node (tree-buffer-find-node-data tree-buffer-highlighted-node-data)))
-      (when node
-        (tree-buffer-overlay-delete tree-buffer-highlight-overlay))))
+    (tree-buffer-overlay-delete tree-buffer-highlight-overlay))
   (setq tree-buffer-highlighted-node-data nil))
+
+;; (defun tree-buffer-remove-highlight ()
+;;   (when tree-buffer-highlighted-node-data
+;;     (let ((node (tree-buffer-find-node-data tree-buffer-highlighted-node-data)))
+;;       (when node
+;;         (tree-buffer-overlay-delete tree-buffer-highlight-overlay))))
+;;   (setq tree-buffer-highlighted-node-data nil))
 
 (defun tree-buffer-highlight-node-data (node-data &optional start-node
                                                   dont-make-visible)
@@ -826,7 +831,7 @@ returned."
               ;; NODE-DATA; therefore we must remove the highlighting
               (tree-buffer-remove-highlight)
               nil)
-          (setq tree-buffer-highlighted-node-data node-data)
+          (setq tree-buffer-highlighted-node-data (cons node-data node))
           (save-excursion
             (tree-buffer-overlay-move tree-buffer-highlight-overlay
                                       (tree-buffer-get-node-name-start-point name node)
@@ -1143,10 +1148,11 @@ of CONTENT."
           (setq tree-buffer-nodes (cdr content)))
       (tree-buffer-build-tree-buffer-nodes))
     (tree-buffer-display-in-general-face)
-    (tree-buffer-highlight-node-data (or (and node
-                                              (tree-node-get-data node))
-                                         tree-buffer-highlighted-node-data)
-                                     node nil)
+    (tree-buffer-highlight-node-data
+     (or nil ;;(and node (tree-node-get-data node))
+         (car tree-buffer-highlighted-node-data))
+     (cdr tree-buffer-highlighted-node-data)
+     nil)
     (goto-char p)
     (set-window-start w ws)
     ;; let´s optimize the display of the expanded node NODE and it´s children.
