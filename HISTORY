@@ -76,6 +76,7 @@ Version 1.80:
     `tree-buffer-get-data-store'. See the docstring of `tree-buffer-create'.
     (Klaus)
 
+    
 Version 1.70:
 -------------
 

@@ -4,7 +4,7 @@
 
 ;; Author: Jesper Nordenberg <mayhem@home.se>
 ;; Maintainer: Jesper Nordenberg <mayhem@home.se>
-;; Keywords: java, class, browser
+;; Keywords: browser, code, programming, tools
 ;; Created: Jul 2000
 
 (defvar ecb-version "1.80"
@@ -27,7 +27,7 @@
 ;;
 ;; The Emacs code browser (ECB) creates four buffers: *ECB Directories*, *ECB
 ;; Sources*, *ECB Methods* and *ECB History*. These buffers can be used to
-;; navigate through source code with the mouse.
+;; navigate through source code with the mouse (and also with keyboard).
 ;;
 ;; To use the Emacs code browser add the ECB files to your load path and add the
 ;; following line to your .emacs file:
@@ -37,10 +37,14 @@
 ;; Optional: You can byte-compile ECB after the ECB-package is loaded with
 ;; `ecb-byte-compile'.
 ;;
-;; ECB requires version 1.4beta11 or higher of Eric's semantic bovinator
-;; (http://www.ultranet.com/~zappo/semantic.shtml).
-;; If you are working with Java, ECB works best when the JDE package
+;; ECB requires:
+;; - Semantic, version 1.4beta11 or higher
+;;   (http://cedet.sourceforge.net/semantic.shtml).
+;; - Eieio, version 0.16 or higher (http://cedet.sourceforge.net/eieio.shtml).
+;;
+;; If Java code is edited the ECB works best when the JDE package
 ;; (http://sunsite.auc.dk/jde) is installed.
+;;
 ;; 
 ;; ECB is activated by calling:
 ;;
@@ -54,7 +58,7 @@
 ;; The latest version of the ECB is available at
 ;; http://home.swipnet.se/mayhem/ecb.html
 
-;; $Id: ecb.el,v 1.223 2002/07/05 14:05:33 berndl Exp $
+;; $Id: ecb.el,v 1.224 2002/07/06 15:40:57 berndl Exp $
 
 ;;; Code:
 
@@ -67,7 +71,7 @@
 (let ((version-error nil))
   (if (not (and (boundp 'semantic-version)
                 (string-match "^1\\.4\\(beta1[1-9]\\)?$" semantic-version)))
-      (setq version-error "Semantic >= 1.40beta11"))
+      (setq version-error "Semantic >= 1.4beta11"))
   (if (not (and (boundp 'eieio-version)
                 (string-match "^0\\.1[6-9]" eieio-version)))
       (setq version-error
@@ -78,8 +82,8 @@
 
 (message "ECB %s uses semantic %s and eieio %s" ecb-version
          semantic-version eieio-version)
-(setq semantic-load-turn-everything-on nil)
-(require 'semantic-load)
+(let ((semantic-load-turn-everything-on nil))
+  (require 'semantic-load))
 
 ;; ecb loads
 (require 'tree-buffer)
@@ -133,7 +137,7 @@
 
 (defvar ecb-minor-mode nil
   "Do not set this variable directly. Use `ecb-activate' and
-`ecb-deactivate'!")
+`ecb-deactivate' or `ecb-minor-mode'.!")
 
 (defvar ecb-activated-window-configuration nil
   "Window configuration used after the ECB is activated.")
@@ -343,6 +347,11 @@ The value of this option is a list where each element looks like:
 <cache clearing>: When the cache should be cleared:
                   + 'demand: Cache will only be cleared on user demand. See
                     `ecb-clear-directory-cache'.
+                  + 'auto: Cache will be cleared if the contents of the
+                    directory have been changed. ECB can detect this
+                    automatically. This works for Unix- but probably not for
+                    Windows-systems, because Windows offers no way to detect
+                    when the contents of a directory have been changed.
                   + <number>: First selection of directories matching the
                     regexp after <number> seconds after last caching time will
                     rescan the directory.
@@ -363,12 +372,15 @@ Attention: Currently the <cache clearing> part is ignored. Currently the cache
 can only be cleared on demand and only the whole cache can be cleared, see
 `ecb-clear-directory-cache'. This will change in a future version."
   :group 'ecb-directories
-  :type '(repeat (list (regexp :tag "Directory-regexp")
+  :type `(repeat (list (regexp :tag "Directory-regexp")
                        (integer :tag "Filenumber threshold" :value 1000)
                        (choice :tag "Clear cache" :menu-tag "Clear cache"
-                               :value demand
-                               (const :tag "only on user demand" :value demand)
-                               (integer :tag "seconds after caching time"
+                               :value ,(if (eq system-type 'windows-nt)
+                                          'demand
+                                        'auto)
+                               (const :tag "Only on user demand" :value demand)
+                               (const :tag "Automatic" :value auto)
+                               (integer :tag "Seconds after caching time"
                                         :value 3600)))))
 
 (defcustom ecb-directories-buffer-name " *ECB Directories*"
@@ -928,7 +940,7 @@ implementations of a class are grouped together."
 (defcustom ecb-show-only-positioned-tokens
   (if (string-match "^1\\.4\\(beta1[5-9]\\)?$" semantic-version) t nil)
   "*Show only nodes in the method-buffer which are \"jumpable\".
-If not not nil then ECB displays in the method-buffer only nodes which are
+If not nil then ECB displays in the method-buffer only nodes which are
 \"jumpable\", i.e. after selecting it by clicking or with RET then ECB jumps
 to the corresponding location in the edit-window.
 Example: With CLOS or Eieio source-code there can exist some positionless
@@ -2262,6 +2274,7 @@ is not changed."
 It does several tasks:
 - Depending on the value in `ecb-kill-buffer-clears-history' the corresponding
   entry in the history-buffer is removed.
+- Clearing the method buffer if a semantic-parsed buffer has been killed.
 - The entry of the removed file-buffer is removed from `ecb-token-tree-cache'."
   (let ((buffer-file (ecb-fix-filename (buffer-file-name (current-buffer)))))
     ;; 1. clearing the history if necessary
