@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-util.el,v 1.113 2004/09/01 15:03:13 berndl Exp $
+;; $Id: ecb-util.el,v 1.114 2004/09/06 15:46:14 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -294,6 +294,10 @@ Unless optional argument INPLACE is non-nil, return a new string."
 
 ;; ---------- End of compatibility between GNU Emacs and XEmacs -------------
   
+(defsubst ecb-current-line ()
+  "Return the current line-number - the first line in a buffer has number 1."
+  (+ (count-lines 1 (point)) (if (= (current-column) 0) 1 0)))
+
 (if (fboundp 'compare-strings)
     (defalias 'ecb-compare-strings 'compare-strings)
   (defun ecb-compare-strings (str1 start1 end1 str2 start2 end2 &optional ignore-case)
@@ -1233,6 +1237,42 @@ It returns the exit-status of the called PROGRAM."
 	;; (if (not (sit-for timeout)) (read-event))
 	)
       (process-exit-status proc))))
+
+(defun ecb-subseq (seq start &optional end)
+  "Return the subsequence of SEQ from START to END.
+If END is omitted, it defaults to the length of the sequence.
+If START or END is negative, it counts from the end."
+  (if (stringp seq) (substring seq start end)
+    (let (len)
+      (and end (< end 0) (setq end (+ end (setq len (length seq)))))
+      (if (< start 0) (setq start (+ start (or len (setq len (length seq))))))
+      (cond ((listp seq)
+	     (if (> start 0) (setq seq (nthcdr start seq)))
+	     (if end
+		 (let ((res nil))
+		   (while (>= (setq end (1- end)) start)
+		     (push (pop seq) res))
+		   (nreverse res))
+	       (copy-sequence seq)))
+	    (t
+	     (or end (setq end (or len (length seq))))
+	     (let ((res (make-vector (max (- end start) 0) nil))
+		   (i 0))
+	       (while (< start end)
+		 (aset res i (aref seq start))
+		 (setq i (1+ i) start (1+ start)))
+	       res))))))
+
+;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: Generalize this for sequences
+;; (ie. arrays and strings too)
+(defun ecb-rotate-list (list start-elem)
+  "Rotate LIST so START-ELEM is the new first element of LIST. Example:
+\(ecb-rotate-list '\(a b c d e f) 'c) results in \(c d e f a b). If START-ELEM
+is not a member of LIST then nil is returned."
+  (let ((start-pos (ecb-position list start-elem)))
+    (when start-pos
+      (append (nthcdr start-pos list)
+              (ecb-subseq list 0 start-pos)))))
 
 (defun ecb-position (seq elem)
   "Return the position of ELEM within SEQ counting from 0. Comparison is done

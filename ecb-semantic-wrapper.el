@@ -23,7 +23,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-semantic-wrapper.el,v 1.15 2004/04/15 16:34:08 berndl Exp $
+;; $Id: ecb-semantic-wrapper.el,v 1.16 2004/09/06 15:46:14 berndl Exp $
 
 ;;; Commentary:
 
@@ -369,6 +369,14 @@ with a file, then the cdr of the result-cons is nil."
 ;;
 ;;    ((eq ts 'tree-buffer-defpopup-command)
 ;;     ;; tree-buffer-defpopup-command
+;;     (semantic-tag-new-function
+;;      sn nil nil
+;;      :user-visible-flag nil
+;;      :documentation (semantic-elisp-do-doc (nth 2 rt))
+;;      )
+;;     )
+;;    ((eq ts 'ecb-defstealthy)
+;;     ;; ecb-defstealthy
 ;;     (semantic-tag-new-function
 ;;      sn nil nil
 ;;      :user-visible-flag nil

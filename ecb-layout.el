@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-layout.el,v 1.233 2004/08/31 15:33:52 berndl Exp $
+;; $Id: ecb-layout.el,v 1.234 2004/09/06 15:46:14 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -4226,7 +4226,7 @@ Postconditions for CREATE-CODE:
 1. The edit-window must be the selected window and must not be dedicated.
 2. Every window besides the edit-window \(and the compile-window) must be
    a dedicated window \(e.g. a ECB-tree-window)."
-  `(progn
+  `(eval-and-compile
      (ecb-layout-type-p (quote ,type) t)
      (defun ,(intern (format "ecb-layout-function-%s" name)) (&optional create-code-fcn)
        ,doc
