@@ -189,6 +189,7 @@ with the same arguments as `tree-node-expanded-fn'."
                   (tree-node-toggle-expanded node))
                 ;; Update the tree-buffer with optimized display of NODE
                 (tree-buffer-update node))
+            (setq tree-buffer-incr-searchpattern "")
             (when tree-node-selected-fn
               (funcall tree-node-selected-fn node mouse-button
                        shift-pressed control-pressed (buffer-name)))))))))

@@ -40,7 +40,7 @@ all: $(ecb_LISP_EL)
 	@echo "(require 'ecb)" >> ecb-compile-script
 	@echo "(setq debug-on-error t)" >> ecb-compile-script
 	$(EMACS) -batch -no-site-file -l ecb-compile-script --eval '(ecb-byte-compile t)'
-#	@rm -f ecb-compile-script
+	@rm -f ecb-compile-script
 
 clean:
 	@rm -f $(ecb_LISP_ELC) ecb-compile-script
