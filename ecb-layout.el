@@ -76,8 +76,6 @@
 ;; - `delete-other-windows'
 ;; - `split-window-horizontally'
 ;; - `split-window-vertically'
-;; - `find-file'
-;; - `find-file-other-window'
 ;; - `switch-to-buffer'
 ;; - `switch-to-buffer-other-window'
 ;; The behavior of the adviced functions is:
@@ -124,7 +122,7 @@
 ;;   + The edit-window must not be splitted and the point must reside in
 ;;     the not deleted edit-window.
 
-;; $Id: ecb-layout.el,v 1.58 2001/06/06 19:28:20 berndl Exp $
+;; $Id: ecb-layout.el,v 1.59 2001/06/07 19:36:24 berndl Exp $
 
 ;;; Code:
 
@@ -334,8 +332,6 @@ frame height."
                                          delete-other-windows
                                          split-window-horizontally
                                          split-window-vertically
-                                         find-file
-                                         find-file-other-window
                                          switch-to-buffer
                                          switch-to-buffer-other-window)
   "*Use the intelligent windows functions of ECB instead of the standard
@@ -347,8 +343,6 @@ of the ECB-frame:
 - `delete-other-windows'
 - `split-window-horizontally'
 - `split-window-vertically'
-- `find-file'
-- `find-file-other-window'
 - `switch-to-buffer'
 - `switch-to-buffer-other-window'
 
@@ -378,11 +372,11 @@ functions ECB offers the following fall-back solution:
    have the ECB-behavior of <adv-func> as if it would be adviced.
 
 Here is an example: Suppose you must deactivating the advice for
-`find-file-other-window'. Then you deactivate this function with this option
-and you can use `ecb-find-file-other-window' instead. Bind the shortcut you
-normally use for `find-file-other-window' to `ecb-find-file-other-window'
-\(use `ecb-activate-hook' for this) and rebind it to the original function in
-the `ecb-deactivate-hook'."
+`switch-to-buffer-other-window'. Then you deactivate this function with this
+option and you can use `ecb-switch-to-buffer-other-window' instead. Bind the
+shortcut you normally use for `switch-to-buffer-other-window' to
+`ecb-switch-to-buffer-other-window' \(use `ecb-activate-hook' for this) and
+rebind it to the original function in the `ecb-deactivate-hook'."
   :group 'ecb-layout
   :initialize 'custom-initialize-default
   :set (function (lambda (symbol value)
@@ -400,10 +394,6 @@ the `ecb-deactivate-hook'."
                      :value split-window-horizontally)
               (const :tag "split-window-vertically"
                      :value split-window-vertically)
-              (const :tag "find-file"
-                     :value find-file)
-              (const :tag "find-file-other-window"
-                     :value find-file-other-window)
               (const :tag "switch-to-buffer"
                      :value switch-to-buffer)
               (const :tag "switch-to-buffer-other-window"
@@ -503,8 +493,6 @@ either not activated or it behaves exactly like the original version!"
     split-window-horizontally
     delete-window
     delete-other-windows
-    find-file
-    find-file-other-window
     switch-to-buffer
     switch-to-buffer-other-window
     )
@@ -766,36 +754,6 @@ If called in any other window of the current ECB-layout it jumps first in the
         (ecb-split-ver 0.5 t))
       (setq ecb-split-edit-window 'vertical))))
 
-(defadvice find-file-other-window (around ecb)
-  "The ECB-version of `find-file-other-window'. Works exactly like the
-original function but opens the file always in another edit-window.
-
-If called in any non edit-window of the current ECB-layout it jumps first in
-the \(first) edit-window and does then it큦 job \(see above)."
-  (if (not (equal (selected-frame) ecb-frame))
-      ad-do-it
-    (if (not (ecb-point-in-edit-window))
-        (ecb-select-edit-window))
-    (let ((ecb-other-window-jump-behavior 'only-edit))
-      (ecb-with-adviced-functions
-       (if ecb-split-edit-window
-           (other-window 1)
-         (split-window-vertically)
-         (other-window 1)))
-      ;; now we are always in the other window, so we can now open the file.
-      (ad-with-originals 'find-file
-        (find-file (ad-get-arg 0) (ad-get-arg 1))))))
-
-(defadvice find-file (around ecb)
-  "The ECB-version of `find-file'. Works exactly like the original version but
-if called in any non edit-window of the current ECB-layout it jumps first in
-the \(first) edit-window and does then it큦 job \(see above)."
-  (if (not (equal (selected-frame) ecb-frame))
-      ad-do-it
-    (if (not (ecb-point-in-edit-window))
-        (ecb-select-edit-window))
-    ;; now we are always in the edit window, so we can now open the file.
-    ad-do-it))
 
 (defadvice switch-to-buffer-other-window (around ecb)
   "The ECB-version of `switch-to-buffer-other-window'. Works exactly
@@ -839,18 +797,6 @@ ECB-adviced functions."
                 filename wildcards))))
 
 ;; here come the prefixed equivalents to the adviced originals
-(defun ecb-find-file ()
-  "Acts like the adviced version of `find-file'."
-  (interactive)
-  (ecb-with-adviced-functions
-   (call-interactively 'find-file)))
-
-(defun ecb-find-file-other-window ()
-  "Acts like the adviced version of `find-file-other-window'."
-  (interactive)
-  (ecb-with-adviced-functions
-   (call-interactively 'find-file-other-window)))
-
 (defun ecb-switch-to-buffer ()
   "Acts like the adviced version of `switch-to-buffer'."
   (interactive)
@@ -1089,9 +1035,12 @@ to `compilation-mode-hook' if ECB was activated."
   ;; function.
   (when (and ecb-activated
              (equal (selected-frame) ecb-frame))
-    (setq ecb-old-compilation-finish-function compilation-finish-function)
+    (setq ecb-old-compilation-finish-function
+          (if (not (equal compilation-finish-function
+                          'ecb-layout-return-from-compilation))
+              compilation-finish-function
+            nil))
     (setq compilation-finish-function 'ecb-layout-return-from-compilation)
-    
     ;; do all the jump stuff
     (setq ecb-layout-selected-window-before-compile (selected-window))
     (if ecb-select-compile-window
@@ -1110,16 +1059,18 @@ of `compilation-finish-functions' in XEmacs."
   (when (and ecb-activated
              (equal (selected-frame) ecb-frame))
     (unwind-protect
-        (when (functionp ecb-old-compilation-finish-function)
+        (when (and (functionp ecb-old-compilation-finish-function)
+                   (not (equal ecb-old-compilation-finish-function
+                               'ecb-layout-return-from-compilation)))
           (funcall ecb-old-compilation-finish-function comp-buf process-state))
-      ;; if this called function has not cleared itself from
-      ;; `compilation-finish-function' we set back it큦 value.
-      (if compilation-finish-function
-          (setq compilation-finish-function ecb-old-compilation-finish-function))
       (setq ecb-last-compile-window-buffer (buffer-name))
       (if ecb-select-compile-window
           (ignore-errors
-            (select-window ecb-layout-selected-window-before-compile))))))
+            (select-window ecb-layout-selected-window-before-compile)))
+      ;; if the old finish-function has not cleared itself from
+      ;; `compilation-finish-function' we set back it큦 value.
+      (if compilation-finish-function
+          (setq compilation-finish-function ecb-old-compilation-finish-function)))))
     
 
 (defun ecb-set-edit-window-split-hook-function ()

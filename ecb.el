@@ -52,7 +52,7 @@
 ;; The latest version of the ECB is available at
 ;; http://home.swipnet.se/mayhem/ecb.html
 
-;; $Id: ecb.el,v 1.110 2001/06/06 21:46:17 creator Exp $
+;; $Id: ecb.el,v 1.111 2001/06/07 19:36:25 berndl Exp $
 
 ;;; Code:
 
@@ -105,6 +105,7 @@
   "Path to currently selected source.")
 (defvar ecb-selected-token nil
   "The currently selected Semantic token.")
+(make-variable-buffer-local 'ecb-selected-token)
 (defvar ecb-methods-root-node nil
   "Path to currently selected source.")
 
@@ -472,7 +473,7 @@ If your computer is slow then it could be reasonable to set a value of about
   :set (function (lambda (symbol value)
                    (set symbol value)
                    (if ecb-activated
-                       (ecb-activate-ecb-token-sync value))))
+                       (ecb-activate-ecb-sync-functions value 'ecb-token-sync))))
   :initialize 'custom-initialize-default)
                      
 
@@ -494,9 +495,26 @@ you must deactivate and activate ECB again to take effect."
   :type 'boolean)
 
 (defcustom ecb-window-sync t
-  "*Synchronize ECB with edit window."
+  "*Synchronize the ECB-windows with current edit window."
   :group 'ecb-general
   :type 'boolean)
+
+(defcustom ecb-window-sync-delay 0.25
+  "*Time Emacs must be idle before the ECB-windows are synchronized with
+current edit window. If nil then there is no delay, means synchronization
+takes place immediately. If your computer is slow then it could be reasonable
+to set a value of about 0.25 for example."
+  :group 'ecb-general
+  :type '(radio (const :tag "No synchronizing delay"
+                       :value nil)
+                (number :tag "Idle time before synchronizing"
+                        :value 0.25))
+  :set (function (lambda (symbol value)
+                   (set symbol value)
+                   (if ecb-activated
+                       (ecb-activate-ecb-sync-functions value
+                                                        'ecb-window-sync-function))))
+  :initialize 'custom-initialize-default)
 
 (defcustom ecb-tree-incremental-search 'prefix
   "*Enable incremental search in the ECB-tree-buffers. For a detailed
@@ -918,6 +936,13 @@ highlighting of the methods if `ecb-font-lock-methods' is not nil."
        (tree-buffer-update)
        (when (not (string= last-dir ecb-path-selected-directory))
 	 (tree-buffer-scroll (point-min) (point-min))))))
+  ;; set the default-directory of each tree-buffer to current selected
+  ;; directory so we can open files via find-file from each tree-buffer.
+  (save-excursion
+    (dolist (buf tree-buffers)
+      (set-buffer buf)
+      (setq default-directory ecb-path-selected-directory)))
+  ;; set the modelines of all visible tree-buffers new
   (ecb-mode-line-format))
 
 (defun ecb-get-source-name (filename)
@@ -1138,7 +1163,7 @@ For further explanation see `ecb-clear-history-behavior'."
              (equal (selected-frame) ecb-frame))
     (when ecb-highlight-token-with-point
       (let* ((tok (semantic-current-nonterminal)))
-        (when (not (eq ecb-selected-token tok))
+        (when (not (equal ecb-selected-token tok))
           (setq ecb-selected-token tok)
           (save-selected-window
             (ecb-exec-in-methods-window
@@ -1152,22 +1177,28 @@ the ECB tree-buffers."
   (interactive "P")
   (when (and ecb-activated
              (equal (selected-frame) ecb-frame))
-    (let ((filename (buffer-file-name (if opt-buffer opt-buffer (current-buffer)))))
-      (when (and filename
-		 (or force
-		     (not (string= filename ecb-path-selected-source))))
-        ;; KB: seems this little sleep is necessary because otherwise jumping to
-        ;; certain markers in new opened files (e.g. with next-error etc. )
-        ;; doesn´t work correct. Can´t debug down this mysterious thing!
-        ;; Regardless of the size of the file to load, this 0.1 fraction of a
-        ;; sec is enough!
-        (sit-for 0.1)
-        (ecb-update-directories-buffer)
-        (ecb-select-source-file filename)
-        ;; selected source has changed, therfore we must initialize
-        ;; ecb-selected-token again.
-        (setq ecb-selected-token nil)
-        (ecb-update-methods-buffer--internal 'scroll-to-begin)))))
+    (ignore-errors
+      (let ((filename (buffer-file-name (if opt-buffer opt-buffer (current-buffer)))))
+        (when (and filename
+                   (or force
+                       (not (string= filename ecb-path-selected-source))))
+          ;; KB: seems this little sleep is necessary because otherwise jumping to
+          ;; certain markers in new opened files (e.g. with next-error etc. )
+          ;; doesn´t work correct. Can´t debug down this mysterious thing!
+          ;; Regardless of the size of the file to load, this 0.1 fraction of a
+          ;; sec is enough!
+          (sit-for 0.1)
+          (ecb-update-directories-buffer)
+          (ecb-select-source-file filename)
+          ;; selected source has changed, therfore we must initialize
+          ;; ecb-selected-token again.
+          (setq ecb-selected-token nil)
+          (ecb-update-methods-buffer--internal 'scroll-to-begin)
+          (ecb-token-sync))))))
+
+(defun ecb-window-sync-function ()
+  (when (and ecb-window-sync ecb-activated (equal (selected-frame) ecb-frame))
+    (ecb-current-buffer-sync)))
 
 (defun ecb-find-file-and-display (filename other-edit-window)
   "Finds the file in the correct window. What the correct window is depends on
@@ -1261,16 +1292,16 @@ OTHER-WINDOW."
 						      norm-dir 2 norm-dir))))
 	 (when (not paths)
 	   (tree-node-add-child node (tree-node-new "Welcome to ECB! Please select:"
-						    3 '(lambda()) t)))
-	 (tree-node-add-child node (tree-node-new "" 3 '(lambda()) t))
-	 (tree-node-add-child
-	  node (tree-node-new
-		"[F1] Add Source Path" 3
-		'(lambda () (call-interactively 'ecb-add-source-path)) t))
-	 (tree-node-add-child node (tree-node-new "[F2] Customize ECB" 3
-						  'ecb-customize t))
-	 (tree-node-add-child node (tree-node-new "[F3] ECB Help" 3
-						  'ecb-show-help t))
+						    3 '(lambda()) t))
+           (tree-node-add-child node (tree-node-new "" 3 '(lambda()) t))
+           (tree-node-add-child
+            node (tree-node-new
+                  "[F1] Add Source Path" 3
+                  '(lambda () (call-interactively 'ecb-add-source-path)) t))
+           (tree-node-add-child node (tree-node-new "[F2] Customize ECB" 3
+                                                    'ecb-customize t))
+           (tree-node-add-child node (tree-node-new "[F3] ECB Help" 3
+                                                    'ecb-show-help t)))
 	 (tree-buffer-update))))))
   
 (defun ecb-new-child (old-children name type data &optional not-expandable)
@@ -1520,16 +1551,24 @@ always the ECB-frame if called from another frame."
     
     (ecb-activate--impl)))
 
-(defvar ecb-idle-timer nil)
-(defun ecb-activate-ecb-token-sync (value)
-  (if (null value)
-      (progn
-        (if ecb-idle-timer (cancel-timer ecb-idle-timer))
-        (setq ecb-idle-timer nil)
-        (add-hook 'post-command-hook 'ecb-token-sync))
-    (remove-hook 'post-command-hook 'ecb-token-sync)
-    (if (null ecb-idle-timer)
-        (setq ecb-idle-timer (run-with-idle-timer value t 'ecb-token-sync)))))
+(defvar ecb-idle-timer-alist nil)
+(defvar ecb-post-command-hooks nil)
+(defun ecb-activate-ecb-sync-functions (idle-value func)
+  "Adds function FUNC to `ecb-idle-timer-alist' and activates an idle-timer
+with idle-time IDLE-VALUE if IDLE-VALUE not nil. If nil the FUNC is added to
+`post-command-hook' and `ecb-post-command-hooks' and removed from the idle-list."
+  (let* ((timer-elem (assoc func ecb-idle-timer-alist))
+         (timer (cdr timer-elem)))
+    (when timer-elem
+      (cancel-timer timer)
+      (setq ecb-idle-timer-alist (delq timer-elem ecb-idle-timer-alist)))
+    (remove-hook 'post-command-hook func)
+    (setq ecb-post-command-hooks (delq func ecb-post-command-hooks))
+    (if idle-value
+        (add-to-list 'ecb-idle-timer-alist
+                     (cons func (run-with-idle-timer idle-value t func)))
+      (add-hook 'post-command-hook func)
+      (add-to-list 'ecb-post-command-hooks func))))
 
 (defun ecb-activate--impl ()
   "See `ecb-activate'.  This is the implementation of ECB activation."
@@ -1632,9 +1671,10 @@ always the ECB-frame if called from another frame."
     ;; we need some hooks
     (add-hook 'semantic-after-toplevel-bovinate-hook
 	      'ecb-rebuild-methods-buffer-after-parsing)
-    (remove-hook 'post-command-hook 'ecb-post-command-hook)
-    (add-hook 'post-command-hook 'ecb-post-command-hook)
-    (ecb-activate-ecb-token-sync ecb-highlight-token-with-point-delay)
+    (ecb-activate-ecb-sync-functions ecb-highlight-token-with-point-delay
+                                     'ecb-token-sync)
+    (ecb-activate-ecb-sync-functions ecb-window-sync-delay
+                                     'ecb-window-sync-function)
     (add-hook 'pre-command-hook 'ecb-pre-command-hook-function)
     (add-hook 'after-save-hook 'ecb-update-methods-after-saving)
     (add-hook 'compilation-mode-hook
@@ -1713,10 +1753,12 @@ always the ECB-frame if called from another frame."
     ;; remove the hooks
     (remove-hook 'semantic-after-toplevel-bovinate-hook
 		 'ecb-rebuild-methods-buffer-after-parsing)
-    (remove-hook 'post-command-hook 'ecb-post-command-hook)
-    (when ecb-idle-timer
-      (cancel-timer ecb-idle-timer)
-      (setq ecb-idle-timer nil))
+    (dolist (timer-elem ecb-idle-timer-alist)
+      (cancel-timer (cdr timer-elem)))
+    (setq ecb-idle-timer-alist nil)
+    (dolist (hook ecb-post-command-hooks)
+      (remove-hook 'post-command-hook hook))
+    (setq ecb-post-command-hooks nil)
     (remove-hook 'pre-command-hook 'ecb-pre-command-hook-function)
     (remove-hook 'after-save-hook 'ecb-update-methods-after-saving)
     (remove-hook 'compilation-mode-hook
@@ -1806,10 +1848,6 @@ buffers does not exist anymore."
 	("Remove Current Entry" ecb-clear-history-node)
 	("Remove All Entries" ecb-clear-history-all)
 	("Remove Non Existing Buffer Entries" ecb-clear-history-only-not-existing)))
-
-(defun ecb-post-command-hook ()
-  (when (and ecb-window-sync ecb-activated (equal (selected-frame) ecb-frame))
-    (ignore-errors (ecb-current-buffer-sync))))
 
 
 ;; ECB byte-compilation

@@ -26,7 +26,7 @@
 ;;
 ;; Contains all online-help for ECB (stolen something from recentf.el)
 
-;; $Id: ecb-help.el,v 1.25 2001/06/06 19:28:20 berndl Exp $
+;; $Id: ecb-help.el,v 1.26 2001/06/07 19:36:24 berndl Exp $
 
 ;;; Code
 
@@ -195,8 +195,6 @@ ECB offers you to advice the following functions so they work best with ECB
 - `delete-other-windows'
 - `split-window-horizontally'
 - `split-window-vertically'
-- `find-file'
-- `find-file-other-window'
 - `switch-to-buffer'
 - `switch-to-buffer-other-window'
 

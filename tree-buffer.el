@@ -26,7 +26,7 @@
 ;; This file is part of the ECB package which can be found at:
 ;; http://home.swipnet.se/mayhem/ecb.html
 
-;; $Id: tree-buffer.el,v 1.52 2001/05/31 15:41:35 berndl Exp $
+;; $Id: tree-buffer.el,v 1.53 2001/06/07 19:36:25 berndl Exp $
 
 ;;; Code:
 
@@ -295,12 +295,16 @@ displayed without empty-lines at the end, means WINDOW is always best filled."
         (delete-overlay tree-buffer-highlight-overlay))))
   (setq tree-buffer-highlighted-node-data nil))
 
+(defvar ecb-klaus-test nil)
 (defun tree-buffer-highlight-node-data (node-data &optional dont-make-visible)
   (if node-data
       (let ((node (tree-buffer-find-node-data node-data))
             (w (get-buffer-window (current-buffer))))
-        (when node
-;;        (tree-buffer-remove-highlight)
+        (if (null node)
+            ;; node can not be found because maybe the node is a subnode and
+            ;; it´s parent is not expanded --> then there is no node for
+            ;; NODE-DATA; therefore we must remove the highlighting
+            (tree-buffer-remove-highlight)
           (setq tree-buffer-highlighted-node-data node-data)
           (save-excursion
             (move-overlay tree-buffer-highlight-overlay
