@@ -114,8 +114,14 @@
 ;;      `----
 
 
-;;; This package is stolen from original cc-bytecomp.el from Martin Stjernholm
-;;; who is the maintainer of cc-mode.
+;; This package is stolen from original cc-bytecomp.el from Martin Stjernholm
+;; who is the maintainer of cc-mode.
+
+;;; History
+;;
+;; For the ChangeLog of this file see the CVS-repository. For a complete
+;; history of the ECB-package see the file NEWS.
+
 
 
 ;;; Code:

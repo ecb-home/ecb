@@ -29,6 +29,11 @@
 ;; Contains code for JDEE integrations into ECB or vice versa
 ;; JDEE is available at http://jdee.sunsite.dk/
 
+;;; History
+;;
+;; For the ChangeLog of this file see the CVS-repository. For a complete
+;; history of the ECB-package see the file NEWS.
+
 ;;; Code
 
 (eval-when-compile

@@ -31,6 +31,12 @@
 ;; NOTE: If you enjoy this software, please consider a donation to the EFF
 ;; (http://www.eff.org)
 
+;;; History
+;;
+;; For the ChangeLog of this file see the CVS-repository. For a complete
+;; history of the ECB-package see the file NEWS.
+
+
 ;;; Code:
 
 (eval-when-compile

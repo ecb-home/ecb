@@ -27,6 +27,12 @@
 ;; This code is based onto semantic-autogen.el, the autoload generator of
 ;; semantic.
 ;;
+
+;;; History
+;;
+;; For the ChangeLog of this file see the CVS-repository. For a complete
+;; history of the ECB-package see the file NEWS.
+
 ;;; Code
 ;;
 

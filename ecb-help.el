@@ -26,6 +26,11 @@
 ;;
 ;; Contains all online-help for ECB (stolen something from recentf.el)
 
+;;; History
+;;
+;; For the ChangeLog of this file see the CVS-repository. For a complete
+;; history of the ECB-package see the file NEWS.
+
 ;; $Id$
 
 ;;; Code
