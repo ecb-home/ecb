@@ -90,7 +90,7 @@
 ;; For the ChangeLog of this file see the CVS-repository. For a complete
 ;; history of the ECB-package see the file NEWS.
 
-;; $Id: ecb.el,v 1.310 2003/06/24 15:51:05 berndl Exp $
+;; $Id: ecb.el,v 1.311 2003/06/27 14:28:53 berndl Exp $
 
 ;;; Code:
 
@@ -3390,6 +3390,11 @@ to be rescanned/reparsed and therefore the Method-buffer will be rebuild too."
     ;; signalize that the rebuild has already be done
     (setq ecb-method-buffer-needs-rebuild nil)))
 
+
+(defun ecb-save-without-auto-update-methods ()
+  (let ((ecb-auto-update-methods-after-save nil))
+    (save-buffer)))
+
 (defun ecb-rebuild-methods-buffer-for-non-semantic ()
   "Rebuild the ECB-method-buffer for current source-file of the edit-window.
 This function does nothing if point stays not in an edit-window of the
@@ -3408,18 +3413,22 @@ This function is called by the command `ecb-rebuild-methods-buffer'."
   (when (and ecb-minor-mode
              (equal (selected-frame) ecb-frame)
              (not (semantic-active-p))
+             (not (member major-mode ecb-non-semantic-exclude-modes))
              (ecb-point-in-edit-window))
     (when (run-hook-with-args-until-failure
            'ecb-rebuild-non-semantic-methods-before-hook
            (buffer-file-name))
       ;; For etags supported non-semantic-sources we maybe have to save the
       ;; buffer first.
-      (if (and (not (and (boundp 'imenu--index-alist)
-                         imenu--index-alist))
-               (or (equal ecb-auto-save-before-etags-methods-rebuild t)
-                   (member major-mode
-                           ecb-auto-save-before-etags-methods-rebuild)))
-          (save-buffer))
+      (when (and (buffer-modified-p)
+                 (not (and (boundp 'imenu--index-alist)
+                           imenu--index-alist))
+                 (or (equal ecb-auto-save-before-etags-methods-rebuild t)
+                     (member major-mode
+                             ecb-auto-save-before-etags-methods-rebuild)))
+        ;; to prevent files from being parsed too often we need to temp.
+        ;; switch off the auto-method-updating-after-save feature
+        (ecb-save-without-auto-update-methods))
       (ecb-update-methods-buffer--internal nil t))))
 
 (defun ecb-rebuild-methods-buffer-for-semantic ()
