@@ -581,6 +581,7 @@ a backtrace-buffer and inserts the contents of that."
           (progn
             (insert-string "The contents of the *Backtrace* buffer were\n\n")
 	    (insert-buffer backtrace-buffer)
+            ;; we must force the mark
 	    (goto-char (mark t))
             (insert-string "\nEnd Insert *Backtrace* buffer" ))
         (insert-string "There was no *Backtrace* buffer" ))
