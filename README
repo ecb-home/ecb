@@ -35,11 +35,11 @@ installed!
 Installation
 ------------
 
-*IMPORTANT*: The following steps 1., 2., 3., 7. and 8. describe installation
-tasks if you got the archive in the format available at the ECB website. If
-you use XEmacs and got ECB as regular XEmacs-package (e.g. downloaded and
-installed by the net-installer of XEmacs) then the steps 1., 2., 3., 7. and 8.
-are not necessary for you; please start reading at point 4.
+*IMPORTANT*: The following steps 1. to 8. describe installation tasks if you
+got the archive in the format available at the ECB website. If you use XEmacs
+and got ECB as regular XEmacs-package (e.g. downloaded and installed by the
+net-installer of XEmacs) then there is nothing to do for you, just start ECB
+with `ecb-activate' or read the online-help with `ecb-show-help'.
 
 
 1. Unpack the ECB archive (probably you have already done this :-)
@@ -78,9 +78,10 @@ are not necessary for you; please start reading at point 4.
    (Advantage: Fast loading. Disadvantage: ECB- and semantic-options first
    available after starting ECB):
 
-      (autoload 'ecb-activate "ecb" "Activate ECB" t)
-      (autoload 'ecb-byte-compile "ecb" "Byte-compile ECB" t)
-      (autoload 'ecb-show-help "ecb-help" "Show the online help of ECB" t)
+      (require 'ecb-autoloads)
+
+   This loads all available autoloads (e.g. `ecb-activate', `ecb-minor-mode',
+   `ecb-show-help' or `ecb-byte-compile') of current ECB.
 
 5. Restart (X)Emacs.
 
