@@ -80,6 +80,8 @@
 
 ** Fixed Bugs
 
+*** Fixed a bug preventing the native Windows-port of XEmacs from working.
+
 *** Makes the behavior of adviced `display-buffer' fully compatible to the
     original version for all buffers which are neither ecb-tree-buffer nor
     compilation-buffers in the sense of `ecb-compilation-buffer-p'. These

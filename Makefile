@@ -36,7 +36,8 @@
 # Byte-compiling ECB:
 # ------------------------------------------------------------------------
 
-# Define here the correct path to your Emacs or XEmacs binary
+# Define here the correct path to your Emacs or XEmacs binary. Ensure you
+# have set this variable to 'xemacs' if you want byte-compile with XEmacs!
 EMACS=emacs
 
 # -------- Compiling ECB with the cedet-library 1.0 ----------------------
@@ -77,7 +78,7 @@ LOADPATH=
 # - Call "make" to byte-compile the ECB. You can savely ignore the messages.
 # - Or call
 #
-#      make EMACS="path/to/emacs"
+#      make EMACS="path/to/emacs" (rsp. make EMACS="path/to/xemacs)
 #
 #      or
 #
