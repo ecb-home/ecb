@@ -115,9 +115,11 @@
   (h-doc
    "screenshots.html"
    "ECB Screenshots"
-;    (h-section "ECB 1.60 running in Emacs 21 showing fields and inner classes in a Java source file"
-; 	      (h-img "ecb-java.png"))
-   (h-section "ECB running in XEmacs under Windows 98"
+   (h-section "ECB 1.60 running in Emacs 21 showing fields and inner classes in a Java source file"
+	      (h-img "ecb-java.png"))
+   (h-section "ECB 1.60 running in Emacs 21 showing two classes in a C++ source file"
+	      (h-img "ecb-cpp.png"))
+   (h-section "ECB running in XEmacs under Windows 98 showing an emacs-lisp source file"
 	      (h-img "ecb-xemacs.png"))
    (h-section "ECB 1.0 running in GNU Emacs under Windows 98"
 	      (h-img "ecb.png"))
