@@ -3350,7 +3350,7 @@ That is remove the unsupported :help stuff."
      [ "List of all commands"
        (let ((ecb-show-help-format 'info))
          (ecb-show-help)
-         (Info-goto-node "Function Index"))
+         (Info-goto-node "Command Index"))
        :active (equal (selected-frame) ecb-frame)
        :help "Displays an index of all commands in the online-help."
        ])
@@ -3358,7 +3358,7 @@ That is remove the unsupported :help stuff."
      [ "List of all options"
        (let ((ecb-show-help-format 'info))
          (ecb-show-help)
-         (Info-goto-node "Variable Index"))
+         (Info-goto-node "Option Index"))
        :active (equal (selected-frame) ecb-frame)
        :help "Displays an index of all user-options in the online-help."
        ])
