@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb.el,v 1.354 2003/12/15 17:29:35 berndl Exp $
+;; $Id: ecb.el,v 1.355 2003/12/28 15:28:56 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -1379,10 +1379,13 @@ by this command. See also the option `ecb-window-sync'."
                (if new-value "on" "off")
                new-value)))
 
+;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: Verhalten bei
+;; ecb-last-edit-window-with-point testen. Auch wenn other-edit-window ist not
+;; nil.
 (defun ecb-get-edit-window (other-edit-window)
   (save-selected-window
     (if (eq ecb-primary-mouse-jump-destination 'left-top)
-	(select-window ecb-edit-window)
+	(select-window (car (ecb-canonical-edit-windows-list)))
       (select-window ecb-last-edit-window-with-point))
     (ecb-with-adviced-functions
      (if other-edit-window
@@ -1752,6 +1755,8 @@ That is remove the unsupported :help stuff."
       :active t
       :help "Go to the first edit-window"
       ])
+    ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: Hier eventuell noch ein menu
+    ;; für edit-window 3 hinzufügen - :active-Bedingung überprüfen und ändern!
     (ecb-menu-item
      ["Edit-window 2"
       ecb-goto-window-edit2
@@ -1812,6 +1817,8 @@ That is remove the unsupported :help stuff."
       :active (ecb-edit-window-splitted)
       :help "Maximize the first edit-window"
       ])
+    ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: Hier eventuell noch eins für
+    ;; edit-window 3 hinzufügen.
     (ecb-menu-item
      ["Edit-window 2"
       (progn
@@ -1824,19 +1831,19 @@ That is remove the unsupported :help stuff."
     (ecb-menu-item
      ["Directories"
       ecb-maximize-window-directories
-      :active t
+      :active (ecb-window-live-p ecb-directories-buffer-name)
       :help "Maximize the directories window - even if currently not visible"
       ])
     (ecb-menu-item
      ["Sources"
       ecb-maximize-window-sources
-      :active t
+      :active (ecb-window-live-p ecb-sources-buffer-name)
       :help "Maximize the sources window - even if currently not visible"
       ])
     (ecb-menu-item
      ["Methods and Variables"
       ecb-maximize-window-methods
-      :active t
+      :active (ecb-window-live-p ecb-methods-buffer-name)
       :help "Maximize the methods/variables window - even if currently not visible"
       ])
     (ecb-menu-item
@@ -2221,7 +2228,7 @@ always the ECB-frame if called from another frame."
 (defun ecb-activate--impl ()
   "See `ecb-activate'.  This is the implementation of ECB activation."
 
-  (when (null ecb-frame)
+  (when (or (null ecb-frame) (not (frame-live-p ecb-frame)))
     (setq ecb-frame (selected-frame)))
   
   (if ecb-minor-mode
@@ -2271,17 +2278,27 @@ always the ECB-frame if called from another frame."
             ;; enable basic advices
             (ecb-enable-advices ecb-basic-adviced-functions)
 
+            ;; enable permanent advices - these advices will never being
+            ;; deactivated after first activation of ECB!
+            (ecb-enable-advices ecb-permanent-adviced-functions)
+
             ;; enable advices for not supported window-managers
             (ecb-enable-advices ecb-winman-not-supported-function-advices)
             
             ;; set the ecb-frame
-            (if ecb-new-ecb-frame
-                (progn
-                  (run-hooks 'ecb-activate-before-new-frame-created-hook)
-                  (setq ecb-frame (make-frame))
-                  (put 'ecb-frame 'ecb-new-frame-created t))
-              (setq ecb-frame (selected-frame))
-              (put 'ecb-frame 'ecb-new-frame-created nil))
+            (let ((old-ecb-frame ecb-frame))
+              (if ecb-new-ecb-frame
+                  (progn
+                    (run-hooks 'ecb-activate-before-new-frame-created-hook)
+                    (setq ecb-frame (make-frame))
+                    (put 'ecb-frame 'ecb-new-frame-created t))
+                (setq ecb-frame (selected-frame))
+                (put 'ecb-frame 'ecb-new-frame-created nil))
+              ;; If ECB is acivated in a frame unequal to that frame which was
+              ;; the ecb-frame at last deactivation then we initialize the
+              ;; `ecb-edit-area-creators'.
+              (if (not (equal ecb-frame old-ecb-frame))
+                  (ecb-edit-area-creators-init)))
             (raise-frame ecb-frame)
             (select-frame ecb-frame)
 
@@ -2562,52 +2579,27 @@ always the ECB-frame if called from another frame."
          
       (setq ecb-minor-mode t)
 
-      ;; now we draw the screen-layout of ECB. We try to preserve the
-      ;; split-state but only if the frame is splitted in two windows. More
-      ;; windows can not be preserved because ECB can only split its edit-area
-      ;; in two windows.
+      ;; now we draw the screen-layout of ECB.
       (condition-case err-obj
-          (let ((win-list (ecb-window-list ecb-frame 0 (frame-first-window ecb-frame)))
-                buf-1 buf-2 split first-win-selected)
-            (if (= (length win-list) 2)
-                (setq buf-1 (window-buffer (nth 0 win-list))
-                      buf-2 (window-buffer (nth 1 win-list))
-                      split (if (= (car (ecb-window-edges (nth 0 win-list)))
-                                   (car (ecb-window-edges (nth 1 win-list))))
-                                'vertical
-                              'horizontal)
-                      first-win-selected (equal (selected-window) (nth 0 win-list))))
-            ;; now we draw the layout chosen in `ecb-layout'. This function
-            ;; activates at its end also the adviced functions if necessary!
-            ;; Here are the directories- and history-buffer updated.
-            (let ((ecb-redraw-layout-quickly nil))
-              (run-hooks 'ecb-redraw-layout-before-hook)
-              (ecb-redraw-layout-full 'no-buffer-sync)
-              (run-hooks 'ecb-redraw-layout-after-hook))
-            
-            (ecb-with-adviced-functions
-             ;; activate the correct edit-window split
-             (cond ((equal ecb-split-edit-window 'vertical)
-                    (split-window-vertically))
-                   ((equal ecb-split-edit-window 'horizontal)
-                    (split-window-horizontally))
-                   ((not ecb-split-edit-window)
-                    (delete-other-windows))
-                   (t
-                    (cond ((equal split 'vertical)
-                           (split-window-vertically))
-                          ((equal split 'horizontal)
-                           (split-window-horizontally)))
-                    (when split
-                      (set-window-buffer ecb-edit-window buf-1)
-                      (set-window-buffer (next-window ecb-edit-window)
-                                         buf-2)
-                      (ecb-select-edit-window (not first-win-selected))
-                      ))))
+          ;; now we draw the layout chosen in `ecb-layout'. This function
+          ;; activates at its end also the adviced functions if necessary!
+          ;; Here the directories- and history-buffer will be updated.
+          (let ((ecb-redraw-layout-quickly nil))
+            (run-hooks 'ecb-redraw-layout-before-hook)
+            (ecb-redraw-layout-full 'no-buffer-sync)
+            (run-hooks 'ecb-redraw-layout-after-hook)
 
+            (when (not (equal ecb-split-edit-window t))
+              (ecb-with-adviced-functions
+                (delete-other-windows)
+                (cond ((equal ecb-split-edit-window 'horizontal)
+                       (split-window-horizontally))
+                      ((equal ecb-split-edit-window 'vertical)
+                       (split-window-vertically)))))
+            
             ;; now we synchronize all ECB-windows
             (ecb-window-sync)
-    
+            
             ;; now update all the ECB-buffer-modelines
             (ecb-mode-line-format))
         (error
@@ -2615,12 +2607,14 @@ always the ECB-frame if called from another frame."
           "Errors during the layout setup of ECB." err-obj)))
 
       (condition-case err-obj
-          (when (and ecb-display-default-dir-after-start
-                     (null (buffer-file-name (window-buffer ecb-edit-window))))
-            (ecb-set-selected-directory
-             (ecb-fix-filename (save-excursion
-                                 (set-buffer (window-buffer ecb-edit-window))
-                                 default-directory))))
+          (let ((edit-window (car (ecb-canonical-edit-windows-list))))
+            (when (and ecb-display-default-dir-after-start
+                       (null (buffer-file-name
+                              (window-buffer edit-window))))
+              (ecb-set-selected-directory
+               (ecb-fix-filename (save-excursion
+                                   (set-buffer (window-buffer edit-window))
+                                   default-directory)))))
         (error
          (ecb-clean-up-after-activation-failure
           "Errors during setting the default directory." err-obj)))
@@ -2680,12 +2674,8 @@ always the ECB-frame if called from another frame."
 
 (defun ecb-set-activated-window-configuration()
   "Set the `ecb-activated-window-configuration' after the ECB is activated."
+  (setq ecb-activated-window-configuration (ecb-current-window-configuration)))
 
-  (save-window-excursion
-    ;;set the edit window buffer to *scratch* so that we are not dependent on a
-    ;;specific window being available
-    (set-window-buffer ecb-edit-window (get-buffer-create "*scratch*"))
-    (setq ecb-activated-window-configuration (current-window-configuration))))
 
 ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: Should we add this function to
 ;; `ediff-suspend-hook' too?! We should add something but this functions is
@@ -2717,12 +2707,9 @@ does all necessary after finishing ediff."
               (ecb-current-window-configuration))
         (if ecb-run-ediff-in-ecb-frame
             (ecb-toggle-ecb-windows -1)
-          (if (and (not ecb-windows-hidden)
-                   (ecb-edit-window-splitted))
-              (save-selected-window
-                (select-window ecb-edit-window)
-                (ecb-with-adviced-functions
-                 (delete-window))))))
+          (if (not ecb-windows-hidden)
+              (ecb-with-adviced-functions
+               (delete-other-windows (car (ecb-canonical-edit-windows-list)))))))
     (setq ecb-before-ediff-window-config nil)))
 
 (defun ecb-deactivate ()
@@ -2743,6 +2730,8 @@ does all necessary after finishing ediff."
       (ecb-disable-advices ecb-speedbar-adviced-functions)
       (ecb-disable-advices ecb-eshell-adviced-functions)
       (ecb-disable-advices ecb-winman-not-supported-function-advices)
+      ;; we do NOT disable the permanent-advices of
+      ;; `ecb-permanent-adviced-functions'!
 
       (ecb-enable-own-temp-buffer-show-function nil)      
 
@@ -2803,34 +2792,60 @@ does all necessary after finishing ediff."
       (when (frame-live-p ecb-frame)
         (raise-frame ecb-frame)
         (select-frame ecb-frame)
-        (condition-case nil
-            (let* ((split (ecb-edit-window-splitted))
-                   (buf-1 (window-buffer ecb-edit-window))
-                   (buf-2 (if split (window-buffer (next-window ecb-edit-window))))
-                   (sel-win (ecb-point-in-edit-window)))
+        (condition-case oops
+            (let* ((config (ecb-window-configuration-data))
+                   (window-before-redraw (nth 0 config))
+                   (pos-before-redraw (nth 1 config))
+                   (edit-win-data-before-redraw (nth 2 config))
+                   (edit-win-list-after-redraw nil))
               ;; first we make all windows of the ECB-frame not dedicated and
               ;; then we delete all ECB-windows
               (ecb-select-edit-window)
               (ecb-make-windows-not-dedicated ecb-frame)
-              (delete-other-windows)
+
+              ;; deletion of all windows.
+              ;; (All other advices are already disabled!)
+              (ecb-with-original-permanent-functions
+               (delete-other-windows))
+
               ;; some paranoia....
               (set-window-dedicated-p (selected-window) nil)
-              ;; now we try to restore the split-state
-              (cond ((equal split 'vertical)
-                     (split-window-vertically))
-                    ((equal split 'horizontal)
-                     (split-window-horizontally)))
-              (when split
-                (set-window-buffer (selected-window) buf-1)
-                (set-window-buffer (next-window (selected-window))
-                                   buf-2)
-                (if (and sel-win
-                         (= sel-win 2))
-                    (select-window (next-window)))))
+
+              ;; now we restore the edit-windows as before the deactivation
+              ;; (All other advices are already disabled!)
+              (ecb-with-original-permanent-functions
+               (ecb-restore-edit-area))
+              
+              (setq edit-win-list-after-redraw (ecb-canonical-edit-windows-list))
+
+              ;; a safety-check if we have now at least as many windows as
+              ;; edit-windows before deactivation. If yes we restore all
+              ;; window-data as before deactivation.
+              (when (= (length edit-win-list-after-redraw)
+                       (length edit-win-data-before-redraw))
+                (dotimes (i (length edit-win-data-before-redraw))
+                  (let ((win (nth i edit-win-list-after-redraw))
+                        (data (nth i edit-win-data-before-redraw)))
+                    (set-window-buffer win (nth 0 data))
+                    (set-window-start win (nth 1 data))
+                    (set-window-point win (nth 2 data))
+                    (if (> (length edit-win-list-after-redraw) 1)
+                        (ecb-set-window-size win (nth 3 data)))
+                    )))
+
+              ;; at the end always stay in that window as before the
+              ;; deactivation.
+              (when (integerp window-before-redraw)
+                (ecb-select-edit-window window-before-redraw))       
+              ;; if we were in an edit-window before deactivation let us go to
+              ;; the old place
+              (when pos-before-redraw
+                (goto-char pos-before-redraw)))
           (error
            ;; in case of an error we make all windows not dedicated and delete
            ;; at least all other windows
-           (message "ECB %s: ecb-deactivate-internal: Error during frame cleanup!")
+           (ecb-warning "ecb-deactivate-internal (error-type: %S, error-data: %S)"
+                        (car oops) (cdr oops))
            (ignore-errors (ecb-make-windows-not-dedicated ecb-frame))
            (ignore-errors (delete-other-windows))))
         
@@ -2874,9 +2889,7 @@ if the minor mode is enabled.
 
 (tree-buffer-defpopup-command ecb-maximize-ecb-window-menu-wrapper
   "Expand the current ECB-window from popup-menu."
-  (let ((ecb-buffer (current-buffer)))
-    (ecb-maximize-ecb-window)
-    (ignore-errors (select-window (get-buffer-window ecb-buffer)))))
+  (ecb-display-one-ecb-buffer (buffer-name (current-buffer))))
 
 
 ;; ECB byte-compilation
@@ -2928,7 +2941,7 @@ exist."
 
 (defvar ecb-last-major-mode nil)
 
-
+;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: testen!
 (defun ecb-handle-major-mode-activation ()
   "Added to `post-command-hook' after loading the ecb-library. Handles the
 values of `ecb-major-modes-activate' and `ecb-major-modes-deactivate'.
@@ -2963,33 +2976,40 @@ changed there should be no performance-problem!"
                       ;; ecb-major-modes-activate.
                       (not (save-match-data
                              (string-match ecb-major-modes-activate
-                                           (symbol-name major-mode))))
-                      ;; the window must not be splitted or if splitted the
-                      ;; last major-mode must be dired-mode
-                      (or (equal (selected-window) (next-window))
-                          (equal last-mode 'dired-mode)))
-                 (if ecb-minor-mode
-                     (and (ecb-point-in-edit-window) (ecb-show-ecb-windows))
-                   (ecb-activate)))
+                                           (symbol-name major-mode)))))
+                 (let ((edit-win-list (ecb-canonical-edit-windows-list)))
+                   ;; the window must not be splitted or if splitted the last
+                   ;; major-mode must be dired-mode
+                   (when (or (not (ecb-edit-window-splitted edit-win-list))
+                             (equal last-mode 'dired-mode))
+                     (if ecb-minor-mode
+                         (and (ecb-point-in-edit-window edit-win-list)
+                              (ecb-show-ecb-windows))
+                       (ecb-activate)))))
                 ;; ecb-major-modes-activate is a major-mode list:
                 ((and (listp ecb-major-modes-activate)
                       ecb-major-modes-activate
-                      (assoc major-mode ecb-major-modes-activate)
-                      (or (equal (selected-window) (next-window))
-                          (equal last-mode 'dired-mode)))
-                 (if ecb-minor-mode
-                     (and (ecb-point-in-edit-window) (ecb-show-ecb-windows))
-                   (ecb-activate)
-                   (let* ((layout (cdr (assoc major-mode
-                                              ecb-major-modes-activate)))
-                          (layout-to-set (if (equal layout 'default)
-                                             (car (or (get 'ecb-layout-name 'saved-value)
-                                                      (get 'ecb-layout-name 'standard-value)))
-                                           layout)))
-                     ;; if we must set a new layout we do this via customizing
-                     ;; ecb-layout-name for current Emacs-session!
-                     (if (not (string= layout-to-set ecb-layout-name))
-                         (customize-set-variable 'ecb-layout-name layout-to-set)))))
+                      (assoc major-mode ecb-major-modes-activate))
+                 (let ((edit-win-list (ecb-canonical-edit-windows-list)))
+                   ;; the window must not be splitted or if splitted the last
+                   ;; major-mode must be dired-mode
+                   (when (or (not (ecb-edit-window-splitted edit-win-list))
+                             (equal last-mode 'dired-mode))
+                     (if ecb-minor-mode
+                         (and (ecb-point-in-edit-window edit-win-list)
+                              (ecb-show-ecb-windows))
+                       (ecb-activate)
+                       (let* ((layout (cdr (assoc major-mode
+                                                  ecb-major-modes-activate)))
+                              (layout-to-set (if (equal layout 'default)
+                                                 (car (or (get 'ecb-layout-name 'saved-value)
+                                                          (get 'ecb-layout-name 'standard-value)))
+                                               layout)))
+                         ;; if we must set a new layout we do this via
+                         ;; customizing ecb-layout-name for current
+                         ;; Emacs-session!
+                         (if (not (string= layout-to-set ecb-layout-name))
+                             (ecb-layout-switch layout-to-set)))))))
                 ;; ecb-major-modes-deactivate is "All except activated"
                 ((and (listp ecb-major-modes-deactivate)
                       (member (car ecb-major-modes-deactivate)
@@ -3002,31 +3022,36 @@ changed there should be no performance-problem!"
                       ;; current major-mode must not be contained in
                       ;; ecb-major-modes-activate.
                       (not (assoc major-mode ecb-major-modes-activate))
-                      ecb-minor-mode
-                      ;; point must be stay in the unsplitted edit-window of ECB
-                      (ecb-point-in-edit-window)
-                      (or (not (ecb-edit-window-splitted))
-                          (equal last-mode 'dired-mode))
-                      (not (save-match-data
-                             (string-match (cdr ecb-major-modes-deactivate)
-                                           (symbol-name major-mode)))))
-                 (if (equal (car ecb-major-modes-deactivate)
-                            'deactivate-all-except-activated)
-                     (ecb-deactivate)
-                   (ecb-hide-ecb-windows)))
+                      ecb-minor-mode)
+                 (let ((edit-win-list (ecb-canonical-edit-windows-list)))
+                   (when (and
+                          ;; point must be in the unsplitted edit-area of ECB
+                          (ecb-point-in-edit-window edit-win-list)
+                          (or (not (ecb-edit-window-splitted edit-win-list))
+                              (equal last-mode 'dired-mode))
+                          (not (save-match-data
+                                 (string-match (cdr ecb-major-modes-deactivate)
+                                               (symbol-name major-mode)))))
+                     (if (equal (car ecb-major-modes-deactivate)
+                                'deactivate-all-except-activated)
+                         (ecb-deactivate)
+                       (ecb-hide-ecb-windows)))))
                 ;; ecb-major-modes-deactivate is a major-mode list
                 ((and (listp ecb-major-modes-deactivate)
                       (listp (car ecb-major-modes-deactivate))
                       ecb-major-modes-deactivate
                       (assoc major-mode ecb-major-modes-deactivate)
-                      ecb-minor-mode
-                      (ecb-point-in-edit-window)
-                      (or (not (ecb-edit-window-splitted))
-                          (equal last-mode 'dired-mode)))
-                 (if (equal (cdr (assoc major-mode ecb-major-modes-deactivate))
-                            'hide)
-                     (ecb-hide-ecb-windows)
-                   (ecb-deactivate)))))))))
+                      ecb-minor-mode)
+                 (let ((edit-win-list (ecb-canonical-edit-windows-list)))
+                   (when (and
+                          ;; point must be in the unsplitted edit-area of ECB
+                          (ecb-point-in-edit-window edit-win-list)
+                          (or (not (ecb-edit-window-splitted edit-win-list))
+                              (equal last-mode 'dired-mode)))
+                     (if (equal (cdr (assoc major-mode ecb-major-modes-deactivate))
+                                'hide)
+                         (ecb-hide-ecb-windows)
+                       (ecb-deactivate)))))))))))
   
 (add-hook 'post-command-hook 'ecb-handle-major-mode-activation)
 
@@ -3056,6 +3081,7 @@ changed there should be no performance-problem!"
 (ecb-disable-advices ecb-basic-adviced-functions)
 (ecb-disable-advices ecb-speedbar-adviced-functions)
 (ecb-disable-advices ecb-eshell-adviced-functions)
+(ecb-disable-advices ecb-permanent-adviced-functions)
 (ecb-activate-adviced-functions nil)
 
 ;; clearing all caches at load-time

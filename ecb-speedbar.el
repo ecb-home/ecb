@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-speedbar.el,v 1.51 2003/11/13 18:53:40 berndl Exp $
+;; $Id: ecb-speedbar.el,v 1.52 2003/12/28 15:28:57 berndl Exp $
 
 ;;; Commentary:
 
@@ -106,6 +106,9 @@ after clicking onto a filename in the speedbar."
              (and item
                   (file-exists-p item)
                   (not (file-directory-p item))))
+        ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: I think we should be
+        ;; somehow smarter in selecting an edit-window - e.g. selecting the
+        ;; ecb-last-edit-window-with-point. 
         (ecb-select-edit-window))))
 
 

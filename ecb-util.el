@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-util.el,v 1.88 2003/12/15 17:29:36 berndl Exp $
+;; $Id: ecb-util.el,v 1.89 2003/12/28 15:28:57 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -67,6 +67,7 @@
 (silentcomp-defun x-popup-dialog)
 (silentcomp-defvar noninteractive)
 (silentcomp-defun display-images-p)
+(silentcomp-defun window-edges)
 
 (silentcomp-defvar tar-subfile-mode)
 (silentcomp-defvar archive-subfile-mode)
@@ -129,6 +130,8 @@ Unless optional argument INPLACE is non-nil, return a new string."
       (defalias 'ecb-frame-parameter 'frame-property)
       (defalias 'ecb-line-beginning-pos 'point-at-bol)
       (defalias 'ecb-line-end-pos 'point-at-eol)
+      (defalias 'ecb-window-full-width 'window-full-width)
+      (defalias 'ecb-window-full-height 'window-height)
       (defun ecb-frame-char-width (&optional frame)
         (/ (frame-pixel-width frame) (frame-width frame)))
       (defun ecb-frame-char-height (&optional frame)
@@ -143,13 +146,20 @@ Unless optional argument INPLACE is non-nil, return a new string."
   (defalias 'ecb-frame-parameter 'frame-parameter)
   (defalias 'ecb-line-beginning-pos 'line-beginning-position)
   (defalias 'ecb-line-end-pos 'line-end-position)
+  (defun ecb-window-full-width (&optional window)
+    (let ((edges (window-edges window)))
+      (- (nth 2 edges) (nth 0 edges))))
+  (defalias 'ecb-window-full-height 'window-height)
   (defalias 'ecb-frame-char-width 'frame-char-width)
   (defalias 'ecb-frame-char-height 'frame-char-height)
   (defalias 'ecb-window-edges 'window-edges))
 
-;; Emacs 20 has no window-list function and the XEmacs and Emacs 21 one has
-;; no specified ordering. The following one is stolen from XEmacs and has
-;; fixed this lack of a well defined order.
+;; Emacs 20 has no window-list function and the XEmacs and Emacs 21 one has no
+;; specified ordering. The following one is stolen from XEmacs and has fixed
+;; this lack of a well defined order. We preserve also point of current
+;; buffer! IMPORTANT: When the window-ordering is important then currently
+;; these function should only be used with WINDOW = (frame-first-window
+;; ecb-frame)!
 (defun ecb-window-list (&optional frame minibuf window)
   "Return a list of windows on FRAME, beginning with WINDOW. The
 windows-objects in the result-list are in the same canonical windows-ordering
@@ -157,28 +167,39 @@ of `next-window'. If omitted, WINDOW defaults to the selected window. FRAME and
 WINDOW default to the selected ones. Optional second arg MINIBUF t means count
 the minibuffer window even if not active. If MINIBUF is neither t nor nil it
 means not to count the minibuffer even if it is active."
-  (setq window (or window (selected-window))
-        frame (or frame (selected-frame)))
-  (if (not (eq (window-frame window) frame))
-      (error "Window must be on frame."))
-  (let ((current-frame (selected-frame))
-        list)
-    (unwind-protect
-        (save-window-excursion
-          (select-frame frame)
-          ;; this is needed for correct start-point
-          (select-window window)
-          (walk-windows
-           (function (lambda (cur-window)
-                       (if (not (eq window cur-window))
-                           (setq list (cons cur-window list)))))
-           minibuf
-           'selected)
-          ;; This is needed to get the right canonical windows-order, i.e. the
-          ;; same order of windows than `walk-windows' walks through!
-          (setq list (nreverse list))
-          (setq list (cons window list)))
-      (select-frame current-frame))))
+  (if ecb-running-emacs-21
+      ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: There seems to be
+      ;; mysterious behavior when running our own window-list version with
+      ;; GNU Emacs >= 21.3 - especially when running an igrep when the
+      ;; igrep-buffer is already in another window. We can here savely use the
+      ;; function `window-list' because it returns an ordered list
+      (window-list frame minibuf window)
+    (setq window (or window (selected-window))
+          frame (or frame (selected-frame)))
+    (if (not (eq (window-frame window) frame))
+        (error "Window must be on frame."))
+    (let ((current-frame (selected-frame))
+          (current-point (point))
+          list)
+      (unwind-protect
+          (save-window-excursion
+            (select-frame frame)
+            ;; this is needed for correct start-point
+            (select-window window)
+            (walk-windows
+             (function (lambda (cur-window)
+                         (if (not (eq window cur-window))
+                             (setq list (cons cur-window list)))))
+             minibuf
+             'selected)
+            ;; This is needed to get the right canonical windows-order, i.e. the
+            ;; same order of windows than `walk-windows' walks through!
+            (setq list (nreverse list))
+            (setq list (cons window list)))
+        (select-frame current-frame)
+        ;; we must reset the point of the buffer which was current at call-time
+        ;; of this function
+        (goto-char current-point)))))
 
 
 ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: Attention. Current mechanism of
@@ -262,6 +283,9 @@ by semantic and also killed afterwards."
   (if ecb-minor-mode
       (let ((ecb-window-sync nil)
             (kill-buffer-hook nil)
+            ;; we prevent parsing the custom-file
+            (semantic-before-toplevel-bovination-hook (lambda ()
+                                                        nil))
             (semantic-after-toplevel-cache-change-hook nil)
             (semantic-after-partial-cache-change-hook nil))
         ;; now we do the standard task
@@ -439,7 +463,7 @@ height is that fraction of the frame."
       (let* ((norm-val (if val
                            (ecb-normalize-number val (1- (frame-height)))
                          (/ (1- (frame-height)) 2)))
-             (enlargement (- norm-val (window-height window))))
+             (enlargement (- norm-val (ecb-window-full-height window))))
         (save-selected-window
           (select-window window)          
           (if (> enlargement 0)
@@ -580,7 +604,7 @@ buffer is current which was it before calling this macro."
 - The buffer B is visible and displayed in a window of the `ecb-frame'
 - ECB is active
 - The current frame is the `ecb-frame'
-- The window of buffer B is not the `ecb-edit-window'.
+- The window of buffer B is not a window in the edit-area.
 If one of these conditions is false then nothing will be done.
 
 During the evaluation of BODY the following local variables are bound:
@@ -596,7 +620,7 @@ During the evaluation of BODY the following local variables are bound:
                 (equal (selected-frame) ecb-frame)
                 visible-window
                 (window-live-p visible-window)
-                (not (equal visible-window ecb-edit-window)))
+                (not (member visible-window (ecb-canonical-edit-windows-list))))
        ,@body)))
 
 (put 'ecb-do-if-buffer-visible-in-ecb-frame 'lisp-indent-function 1)
@@ -704,8 +728,12 @@ faces of TEXT!"
 useful if an error-message should be signaled to the user and evaluating
 should stopped but no debugging is senseful."
   (let ((debug-on-error nil))
-    (error (concat "ECB " ecb-version ": "
+    (error (concat "ECB " ecb-version " - Error: "
                    (apply 'format args)))))
+
+(defun ecb-warning (&rest args)
+  "Displays a warning."
+  (message (concat "ECB " ecb-version " - Warning: " (apply 'format args))))
 
 ;; trimming
 
@@ -857,6 +885,42 @@ Since it actually calls `start-process', not all features will work."
 	;; in that situation.
 	;; (if (not (sit-for timeout)) (read-event))
 	))))
+
+(defun ecb-position (list elem)
+  "Return the position of ELEM within LIST counting from 0. Comparison is done
+with `equal'."
+  (let ((pos (1- (length (member elem (reverse list))))))
+    (if (< pos 0)
+        nil
+      pos)))
+
+(defun ecb-next-listelem (list elem &optional nth-next)
+  "Return that element of LIST which follows directly ELEM when ELEM is an
+element of LIST. If ELEM is the last element of LIST then return the first
+element of LIST. If ELEM is not an element of LIST nil is returned. Elements
+are compared with `equal'.
+
+If NTH-NEXT is an integer then the NTH-NEXT element of LIST in the meaning
+described above is returned, i.e. the algorithm above is applied NTH-NEXT
+times. Example: Suppose LIST = '\(a b c d), ELEM is 'c and NTH-NEXT = 3 then
+'b is returned - same result for NTH-NEXT = 7, 11..."
+  (let ((elem-pos (ecb-position list elem))
+        (next (or nth-next 1)))
+    (nth (mod (+ elem-pos next)
+              (length list))
+         list)))
+
+(defun ecb-prev-listelem (list elem &optional nth-prev)
+  "Return that element of LIST which preceeds directly ELEM when ELEM is an
+element of LIST. If ELEM is the first element of LIST then return the last
+element of LIST. If ELEM is not an element of LIST nil is returned. Elements
+are compared with `equal'.
+
+If NTH-PREV is an integer then the NTH-PREV element of LIST in the meaning
+described above is returned, i.e. the algorithm above is applied NTH-PREV
+times. Example: Suppose LIST = '\(a b c d), ELEM is 'c and NTH-PREV = 3 then
+'d is returned - same result for NTH-PREV = 7, 11..."
+  (ecb-next-listelem (reverse list) elem nth-prev))
 
 (defun ecb-file-content-as-string (file)
   "If FILE exists and is readable returns the contents as a string otherwise

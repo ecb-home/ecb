@@ -26,7 +26,7 @@
 @c GNU Emacs; see the file COPYING.  If not, write to the Free Software
 @c Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-@c $Id: ecb.texi,v 1.134 2003/12/15 17:29:35 berndl Exp $
+@c $Id: ecb.texi,v 1.135 2003/12/28 15:28:56 berndl Exp $
 
 @setfilename ecb.info
 
@@ -6163,6 +6163,14 @@ With @code{edit-window} the compile-window looks like:
 This option takes only effect if @code{ecb-compile-window-height} is
 not nil!
 @end defopt
+
+@defopt change-layout-preserves-compwin-state
+Changing the layout preserves the state of the compile-window. This is
+for example useful if the user toggles between several layouts (see
+@code{ecb-toggle-layout}) and wants to preserve the hidden-state of
+the compile-window.
+@end defopt
+
 
 @defopt enlarged-compilation-window-max-height
 The max height of the compile-window after enlarging it. The max

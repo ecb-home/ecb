@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-layout.el,v 1.198 2003/12/15 17:29:36 berndl Exp $
+;; $Id: ecb-layout.el,v 1.199 2003/12/28 15:28:57 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -56,32 +56,32 @@
 ;;    command `ecb-create-new-layout'!
 ;;
 ;; Background-info: For each layout-type (ecb-windows left, right, top and
-;; left-right) there are two functions:
-;; - 'ecb-delete-other-windows-ecb-windows[left|right|top|left-right]' and
-;; - 'ecb-delete-window-ecb-windows[left|right|top|left-right]'.
+;; left-right) there is one function:
+;; 'ecb-delete-window-ecb-windows-[left|right|top|leftright]'.
 ;; These functions follow these guide-lines:
 ;; - Preconditions for these functions:
-;;   + the edit window is splitted
-;;   + The function gets one argument 'split' which can have the values
-;;     'horizontal and 'vertical.
-;;   + These functions are always(!) called with deactivated advice of
+;;   + the edit-area is splitted - at least in two edit-windows
+;;   + The function gets two arguments: The window to delete (if nil then the
+;;     current window has to be deleted) and the list of all current
+;;     edit-windows.
+;;   + These functions are always(!) called with deactivated advices of
 ;;     `delete-window' function.
-;; - What must they do:
-;;   1. Checking if the point is in one of the two parts of the splitted
-;;      edit-window. If in another window, do nothing and return nil.
-;;   2. Checking in which part of the splitted edit-window the point is.
-;;   3. Doing the appropriate action (e.g.
-;;      `ecb-delete-window-ecb-windows-left' must delete this half-part
-;;      of the splitted edit-window which contains the point, so the other
-;;      half-part fills the whole edit-window. If the split has been undone
-;;      then non nil must be returned! This action must be done appropriate
-;;      for the current ECB-layout type.
-;;   4. These functions can only use `delete-window' of the set of maybe
-;;      adviced window functions, because of a bug in advice.el only one
-;;      function´s advice can be deactivated within a advice itself!
+;;   + These functions can only use `delete-window' of the set of maybe
+;;     adviced window functions, because of a bug in advice.el only one
+;;     function´s advice can be deactivated within a advice itself!
+;; - What must they do: Doing the appropriate action (e.g.
+;;   `ecb-delete-window-ecb-windows-left' must delete the window. This action
+;;   must be done appropriate for the current ECB-layout type (see
+;;   postconditions)
 ;; - Postcondition of these functions:
-;;   + The edit-window must not be splitted and the point must reside in
-;;     the not deleted edit-window.
+;;   + The named edit-window must be deleted and all ecb-windows in the
+;;     ecb-frame must have the layout like before the delete.
+;;   + If the current window has been deleted then point must reside after
+;;     deletion in the next edit-window in a circular meaning (i.e. if the
+;;     last edit-window has been deleted, point must stay afterwards in the
+;;     first edit-window). If a window unequal the current window has been
+;;     deleted point must stay in the window before deletion at the same
+;;     place.
 ;;
 ;; New adviced intelligent window-functions as replacement for these originals:
 ;; - `other-window'
@@ -172,9 +172,6 @@
     (if (file-readable-p ecb-create-layout-file)
         (load-file ecb-create-layout-file))
     (setq ecb-layouts-reload-needed nil)))
-
-(defconst ecb-use-dedicated-windows t
-  "Use dedicated windows for the ECB buffers.")
 
 (defgroup ecb-layout nil
   "Settings for the screen-layout of the Emacs code browser."
@@ -346,6 +343,14 @@ This option takes only effect if `ecb-compile-window-height' is not nil!"
                             symbol value)))
   :type '(radio (const :tag "Width of ECB-frame" :value frame)
                 (const :tag "Width of edit-window" :value edit-window)))
+
+(defcustom ecb-change-layout-preserves-compwin-state t
+  "*Changing the layout preserves the state of the compile-window.
+This is for example useful if the user toggles between several layouts \(see
+`ecb-toggle-layout') and wants to preserve the hidden-state of the
+compile-window."
+  :group 'ecb-compilation
+  :type 'boolean)
 
 (defcustom ecb-compile-window-temporally-enlarge 'after-display
   "*Let Emacs temporally enlarge the compile-window of the ECB-layout.
@@ -555,7 +560,6 @@ nil!"
                                       nil
                                     fix)))))))
 
-
 (defmacro ecb-do-with-unfixed-ecb-buffers (&rest body)
   "Evaluate BODY with unfixed size of all current-visible ecb-buffers and
 ensure that at the end \(either after finishing of BODY or after an error
@@ -701,16 +705,18 @@ call a function in a situation which is not supported by this function."
   :group 'ecb-layout
   :type 'boolean)
 
+;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: docstring anpassen - auch in
+;; texi.
 (defcustom ecb-layout-always-operate-in-edit-window
   '(display-buffer
     switch-to-buffer)
   "*Adviced window functions work always in the edit-window.
 If we are in an ECB special buffer (methods, directories, etc), and any of the
-adviced windowing functions is called \(see `ecb-advice-window-functions'), we
-will select the `ecb-edit-window' first. This is useful if you have any
-functions that use such functions and you don't want them to just error with a
-method complaining that the current buffer can not be split, or something
-similar.
+adviced windowing functions is called interactively \(see
+`ecb-advice-window-functions'), we will select the first the first edit-window
+in the edit-area. This is useful if you have any functions that use such
+functions and you don't want them to just error with a method complaining that
+the current buffer can not be split, or something similar.
 
 Because this may not be desirable in all situations and all adviced functions
 this can be enabled separately for every advisable function \(see also
@@ -750,6 +756,20 @@ would walk through these windows."
                                       elem)))
                       (ecb-window-list ecb-frame 0
                                        (frame-first-window ecb-frame)))))
+
+(defun ecb-canonical-edit-windows-list ()
+  "Return a list of all current edit-windows \(starting from the left-most
+top-most window) in the order `other-window' would walk through these windows.
+These are all windows in the `ecb-frame' which are not identical to the
+compile-window and not identical to one of the visible ECB-windows."
+  (let ((comp-win-state (ecb-compile-window-state)))
+    (delete nil (mapcar (function (lambda (elem)
+                                    (if (and (not (window-dedicated-p elem))
+                                             (or (not (equal comp-win-state 'visible))
+                                                 (not (equal elem ecb-compile-window))))
+                                        elem)))
+                        (ecb-window-list ecb-frame 0
+                                         (frame-first-window ecb-frame))))))
 
 (defcustom ecb-layout-window-sizes nil
   "*Specifies the sizes of the ECB windows for each layout.
@@ -918,12 +938,15 @@ not do what you think it should do etc...) then please do the following steps:
 
 
 (defvar ecb-frame nil
-  "Frame where ECB runs")
+  "Frame where ECB runs. This frame is only set if this variable is nil or the
+value points to a dead frame. Deactivation and activation of ECB does not set
+this variable to nil!")
 
 (defvar ecb-edit-window nil
-  "Window to edit source in. If this window is splitted in two windows then
-`ecb-edit-window' is always the leftmost/topmost window of the two
-edit-windows! ")
+  "Only used internally by `ecb-redraw-layout-full'. Do not refer to this
+variable because the value is not predictable!")
+;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: Die folgenden beiden Variablen
+;; überprüfen, ob sie immer noch überall korrekt verwendet werden.
 (defvar ecb-last-edit-window-with-point nil
   "The edit-window of ECB which had the point before an emacs-command is
 done.")
@@ -938,8 +961,8 @@ done.")
 command.")
 
 (defun ecb-initialize-layout ()
-  (setq ecb-frame nil
-        ecb-edit-window nil
+  ;; We do not initialize the `ecb-frame'!
+  (setq ecb-edit-window nil
         ecb-last-edit-window-with-point nil
         ecb-last-source-buffer nil
         ecb-last-compile-buffer-in-compile-window nil
@@ -965,8 +988,11 @@ command.")
         (message "No compile-window visible in current ECB-layout!"))
     nil))
 
+;; Klaus Berndl <klaus.berndl@sdm.de>: This function is only there for
+;; backward compatibility and is not needed for ECB-versions > 2.11
 (defun ecb-edit-window-live-p ()
-  (and ecb-edit-window (window-live-p ecb-edit-window)))
+  "At least one edit-window is always alive."
+  t)
 
 (defun ecb-window-live-p (buffer-name)
   "Return not nil if buffer BUFFER-NAME is displayed in an active window."
@@ -1034,7 +1060,7 @@ either not activated or it behaves exactly like the original version!"
                      (progn
                        (select-window (ad-get-arg 0))
                        (enlarge-window (- compilation-window-height
-                                          (window-height))))
+                                          (ecb-window-full-height))))
                    ;; The enlarge-window above may have deleted W, if
                    ;; compilation-window-height is large enough.
                    (when (window-live-p w)
@@ -1046,10 +1072,8 @@ either not activated or it behaves exactly like the original version!"
 (defadvice scroll-other-window (around ecb)
   "The behavior depends on the advice of `other-window-for-scrolling' \(see
 `ecb-advice-window-functions')."
-  (if (not (equal (ecb-point-in-edit-window) 2))
-      ad-do-it
-    (let ((other-window-scroll-buffer (window-buffer (other-window-for-scrolling))))
-      ad-do-it)))
+  (let ((other-window-scroll-buffer (window-buffer (other-window-for-scrolling))))
+    ad-do-it))
 
 
 (defadvice scroll-all-mode (after ecb)
@@ -1073,39 +1097,34 @@ if `scroll-all-mode' is nil return the number of visible windows."
            (not ecb-windows-hidden)
            (boundp 'scroll-all-mode)
            scroll-all-mode)
-      (setq ad-return-value (if (and (ecb-point-in-edit-window)
-                                     (ecb-edit-window-splitted))
-                                2
+      (setq ad-return-value (if (ecb-point-in-edit-window)
+                                (length (ecb-canonical-edit-windows-list))
                               1))
     (ecb-with-original-basic-functions
      (ecb-with-original-functions
       ad-do-it))))
 
 
-;; This function must safely work even if `ecb-edit-window' is not longer alive,
-;; which should normally not happen! In this case nil is returned.
-
-(defun ecb-edit-window-splitted ()
+;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: Alle user dieser Funktion auf
+;; neuen zusätzlichen Wert 'splitted anpassen!
+(defun ecb-edit-window-splitted (&optional edit-windows-list)
   "Returns either nil if the ECB edit-window is not splitted or 'vertical or
-'horizontal depending on the splitting."
-  (when (ecb-edit-window-live-p)
-    (let ((next-w (next-window ecb-edit-window 0 ecb-frame)))
-      (if (or (equal next-w ecb-edit-window)
-              (window-dedicated-p next-w)
-              (equal next-w ecb-compile-window))
-          nil
-        (if (= (car (ecb-window-edges ecb-edit-window))
-               (car (ecb-window-edges next-w)))
-            'vertical
-          'horizontal)))))
-
-(defun ecb-get-other-edit-window ()
-  (let ((edit-window (ecb-point-in-edit-window)))
-    (when (and edit-window
-               (ecb-edit-window-splitted))
-      (if (= 1 edit-window)
-          (next-window ecb-edit-window)
-        ecb-edit-window))))
+'horizontal when splitted in two windows \(depending on the splitting) or
+'splitted if splitted in more than two windows. If EDIT-WINDOWS-LIST is not
+nil then it must be a current list of edit-windows \(got by
+`ecb-canonical-edit-windows-list'). If EDIT-WINDOWS-LIST is nil then a new
+edit-window-list is computed via `ecb-canonical-edit-windows-list'."
+  (let ((edit-win-list (or edit-windows-list (ecb-canonical-edit-windows-list))))
+    (cond ((null edit-win-list)
+           (ecb-error "Internal error - redraw the layout!"))
+          ((= (length edit-win-list) 1)
+           nil)
+          ((= (length edit-win-list) 2)
+           (if (= (car (ecb-window-edges (car edit-win-list)))
+                  (car (ecb-window-edges (cadr edit-win-list))))
+               'vertical
+             'horizontal))
+          (t 'splitted))))
 
 (defvar ecb-temp-buffer-shrink-to-fit nil
   "Workaround for XEmacs-version which have a `display-buffer' with only 3
@@ -1243,7 +1262,7 @@ arguments. Do never set this variable; it is only set by
                       (ecb-layout-debug-error "shrink-window-if-larger-than-buffer: n: %d" n)
                       (if (> n 0)
                           (shrink-window (min (1- n)
-                                              (- (window-height (ad-get-arg 0))
+                                              (- (ecb-window-full-height (ad-get-arg 0))
                                                  (1+ window-min-height)))
                                          nil
                                          (ad-get-arg 0))))))))))
@@ -1308,8 +1327,6 @@ for current layout."
         (ecb-do-with-unfixed-ecb-buffers ad-do-it)
       ad-do-it))
 
-  ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: Hier besser tmm-prompt advicen!
-  ;; oder - falls nötig - eben beide!
   (defadvice tmm-prompt (around ecb)
     "Make it compatible with ECB."
     (if (or (not ecb-minor-mode)
@@ -1369,10 +1386,10 @@ for current layout."
                        (> (nth 1 edges) (cdr (assq 'menu-bar-lines params)))))
               (if ecb-running-emacs-21
                   (fit-window-to-buffer (ad-get-arg 0)
-                                        (window-height (ad-get-arg 0)))
+                                        (ecb-window-full-height (ad-get-arg 0)))
                 ;; code for GNU Emacs < 21.X
                 (let ((text-height (window-buffer-height (ad-get-arg 0)))
-                      (window-height (window-height)))
+                      (window-height (ecb-window-full-height)))
                   ;; Don't try to redisplay with the cursor at the end
                   ;; on its own line--that would force a scroll and spoil things.
                   (when (and (eobp) (bolp))
@@ -1430,7 +1447,7 @@ for current layout."
               (let* ((max-height (if (functionp temp-buffer-max-height)
                                      (funcall temp-buffer-max-height (current-buffer))
                                    temp-buffer-max-height))
-                     (win-height (1- (window-height)))
+                     (win-height (1- (ecb-window-full-height)))
                      (min-height (1- window-min-height))
                      (text-height (window-buffer-height (selected-window)))
                      (new-height (max (min text-height max-height) min-height)))
@@ -1936,27 +1953,61 @@ FUNCTIONS must be nil or a subset of `ecb-adviceable-functions'!"
 
 (put 'ecb-with-some-adviced-functions 'lisp-indent-function 1)
 
+(defconst ecb-permanent-adviced-functions '((split-window . before)
+                                            (delete-window . before)))
 
-(defun ecb-where-is-point ()
-  "Return 1 if point in first edit-window, 2 if in second edit-window,
-'compile if in compile-window and 'ecb if in any special ecb-window. Return
-nil if in a window of a frame not equal the `ecb-frame'."
-  (or (ecb-point-in-edit-window)
+(defmacro ecb-with-original-permanent-functions (&rest body)
+  "Evaluates BODY with all adviced permanent-functions of ECB deactivated
+\(means with their original definition). Restores always the previous state of
+the ECB adviced permanent-functions, means after evaluating BODY it activates
+the advices of exactly the functions in `ecb-permanent-adviced-functions'!"
+  `(unwind-protect
+       (progn
+         (ecb-disable-advices ecb-permanent-adviced-functions)
+         ,@body)
+     (ecb-enable-advices ecb-permanent-adviced-functions)))
+
+
+;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: Alle user dieser Funktion
+;; anpassen, dass jetzt beliebige Werte > 1 geliefert werden können (nicht nur
+;; 1 und 2), je nachdem wie viele Edit-windows existieren!
+(defun ecb-where-is-point (&optional edit-windows-list)
+  "Return either the number of the edit-window when point is in an edit-window
+\(see `ecb-point-in-edit-window') or 'compile if in compile-window and 'ecb if
+in any special ecb-window. Return nil if in a window of a frame not equal the
+`ecb-frame'. If EDIT-WINDOWS-LIST is not nil then it must be a current list of
+edit-windows \(got by `ecb-canonical-edit-windows-list'). If EDIT-WINDOWS-LIST
+is nil then a new edit-window-list is computed via
+`ecb-canonical-edit-windows-list'."
+  (or (ecb-point-in-edit-window edit-windows-list)
       (and (ecb-point-in-compile-window)
            'compile)
       (and (equal (selected-frame) ecb-frame)
            'ecb)))
 
-(defun ecb-point-in-edit-window ()
+;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: Alle user dieser Funktion
+;; anpassen, dass jetzt beliebige Werte > 1 geliefert werden können (nicht nur
+;; 1 und 2), je nachdem wie viele Edit-windows existieren!
+(defun ecb-point-in-edit-window (&optional edit-windows-list)
   "Return nil if point stays not in an edit-window otherwise return 1 if point
-is in the left/topmost edit-window or 2 if in the other edit-window."
-  (and (equal (selected-frame) ecb-frame)
-       (cond ((equal (selected-window) ecb-edit-window)
-              1)
-             ((and (ecb-edit-window-splitted)
-                   (equal (previous-window (selected-window) 0) ecb-edit-window))
-              2)
-             (t nil))))
+is in the left/topmost edit-window or 2 if in the next edit-window and so on.
+Return the number of the edit-window \(if point is in an edit-window) in the
+order `walk-windows' would go through the edit-windows. If EDIT-WINDOWS-LIST
+is not nil then it must be a current list of edit-windows \(got by
+`ecb-canonical-edit-windows-list'). If EDIT-WINDOWS-LIST is nil then a new
+edit-window-list is computed via `ecb-canonical-edit-windows-list'."
+  (when (equal (selected-frame) ecb-frame)
+    (let* ((edit-win-list (or edit-windows-list
+                              (ecb-canonical-edit-windows-list)))
+           (edit-win-number (ecb-position edit-win-list (selected-window))))
+      (if edit-win-number (1+ edit-win-number) nil))))
+
+(defun ecb-get-edit-window-by-number (edit-win-nr &optional edit-win-list)
+  "Return that edit-window with number EDIT-WIN-NR. If EDIT-WIN-LIST is set
+then get it from that list otherwise from `ecb-canonical-edit-windows-list'.
+EDIT-WIN-NR must be an integer between 1 and length of EDIT-WIN-LIST \(rsp.
+`ecb-canonical-edit-windows-list')."
+  (nth (1- edit-win-nr) (or edit-win-list (ecb-canonical-edit-windows-list))))
 
 (defun ecb-point-in-compile-window ()
   "Return non nil iff point is in the compile-window of ECB"
@@ -1982,42 +2033,35 @@ dedicated special ECB-window not only for the built-in standard tree-buffers!"
   
 
 
-(defun ecb-select-edit-window (&optional other-edit-window)
-  "Moves point into the edit-window. If optional OTHER-EDIT-WINDOW is non nil
-then point goes in the \"other\" edit-window if the edit-window is splitted.
-Note: The \"other\" edit window means always the right/down-most edit-window!
-If point already stays in the right edit-window nothing is done."
-  (let ((point-location (ecb-point-in-edit-window)))
-    (cond ((not point-location) ;; point not in an edit-window
-           (ignore-errors (select-window ecb-edit-window))
-           (if (and other-edit-window (ecb-edit-window-splitted))
-               (select-window (next-window)))
-           )
-          ((equal point-location 1) ;; point in main edit-window
-           (if (and other-edit-window (ecb-edit-window-splitted))
-               (select-window (next-window)))
-           )
-          ((equal point-location 2) ;; point in other edit window
-           (if (not other-edit-window)
-               (select-window (previous-window (selected-window) 0)))
-           )
-          (t
-           (error "Internal layout error; redraw the whole layout!")))))
+;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: Alle user dieser Funktion prüfen
+;; und ev. anpassen!
+(defun ecb-select-edit-window (&optional edit-window-number)
+  "Moves point into the edit-window. If optional EDIT-WINDOW-NUMBER
+is an integer then move point into the EDIT-WINDOW-NUMBER-nth edit-window
+\(beginning from 1). If EDIT-WINDOW-NUMBER is not nil but not an integer or an
+integer < 0 or > number of current available edit-windows then move point to
+the second edit-window if there is more than 1. If point already stays in the
+right edit-window nothing is done."
+  (let* ((edit-win-list (ecb-canonical-edit-windows-list))
+         (edit-win (or (and (not edit-window-number)
+                            (car edit-win-list))
+                       (and (integerp edit-window-number)
+                            (> edit-window-number 0)
+                            (<= edit-window-number (length edit-win-list))
+                            (nth (1- edit-window-number) edit-win-list))
+                       (and (> (length edit-win-list) 1)
+                            (nth 1 edit-win-list))
+                       (car edit-win-list))))
+    (select-window edit-win)))
 
 (defun ecb-layout-pre-command-hook ()
   "During activated ECB this function is added to `pre-command-hook' to set
 always `ecb-last-edit-window-with-point', `ecb-last-source-buffer',
 `ecb-compile-window-was-selected-before-command' and
 `ecb-last-compile-buffer-in-compile-window' correct so other functions
-can use these variables. In addition it checks if the `ecb-edit-window' is
-still alive if the special ecb-windows are hidden \(`ecb-windows-hidden' is
-not nil) and if it is not alive then it will be set to the left- topmost
-window of the ecb-frame."
+can use these variables."
   (when (and ecb-minor-mode
              (equal (selected-frame) ecb-frame))
-    (when (and ecb-windows-hidden
-               (not (ecb-edit-window-live-p)))
-      (setq ecb-edit-window (frame-first-window ecb-frame)))
     (when (ecb-point-in-edit-window)
       (setq ecb-last-edit-window-with-point (selected-window))
       (setq ecb-last-source-buffer (current-buffer)))
@@ -2172,11 +2216,7 @@ If called for other frames it works like the original version."
                  (ecb-toggle-compile-window 1))
                (if (ecb-compile-window-live-p)
                    ;; now we have to make the edit-window(s) dedicated
-                   (let ((edit-window-list (if (ecb-edit-window-splitted)
-                                               (list ecb-edit-window
-                                                     (next-window
-                                                      ecb-edit-window))
-                                             (list ecb-edit-window))))
+                   (let ((edit-window-list (ecb-canonical-edit-windows-list)))
                      (unwind-protect
                          (progn
                            (mapc (function (lambda (w)
@@ -2258,8 +2298,8 @@ If called for other frames it works like the original version."
                             (not (ecb-edit-window-splitted)))
                    (ecb-layout-debug-error "display-buffer for comp-buffer %s - split edit-window:"
                                            (ad-get-arg 0))
-                   (ecb-with-adviced-functions (split-window
-                                                ecb-edit-window)))
+                   (ecb-with-adviced-functions
+                    (split-window (car (ecb-canonical-edit-windows-list)))))
                  ;; Here the values of temp-buffer-max-height and
                  ;; compilation-window-height take effect.
                  (if ecb-running-xemacs
@@ -2315,12 +2355,13 @@ If called for other frames it works like the original version."
                                           (ad-get-arg 3)))
        ad-do-it))))
   
-;; Important: `other-window', `delete-window', `delete-other-windows',
-;; `split-window' need none of the other advices and can therefore be used
-;; savely by the other advices (means, other functions or advices can savely
-;; (de)activate these "basic"-advices!
+;; Important: `other-window', `delete-window', `split-window' need none of the
+;; other advices and can therefore be used savely by the other advices (means,
+;; other functions or advices can savely (de)activate these "basic"-advices!
 
 
+;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: Alle user dieser Funtion prüfen
+;; und ev. anpassen.
 (defadvice other-window (around ecb)
   "The ECB-version of `other-window'. Works exactly like the original function
 with the following ECB-adjustment: The behavior depends on
@@ -2333,67 +2374,26 @@ with the following ECB-adjustment: The behavior depends on
       (ecb-with-original-basic-functions
        (ecb-with-original-functions
         ad-do-it))
-    ;; in the following cond-clause `ecb-other-window-jump-behavior' can only
-    ;; have the values 'only-edit and 'edit-and-compile! we have implemented
-    ;; the logic for the values 1 and -1 for ARG-argument of other-window.
-    ;; This algorithm is called ARG-times with the right direction if ARG != 1
-    ;; or -1.
+    ;; Now `ecb-other-window-jump-behavior' can only have the values
+    ;; 'only-edit and 'edit-and-compile!
     (let ((count (if (ad-get-arg 0)
                      (if (< (ad-get-arg 0) 0)
                          (* -1 (ad-get-arg 0))
                        (ad-get-arg 0))
                    1))
-          (direction (if (or (not (ad-get-arg 0)) (>= (ad-get-arg 0) 0)) 1 -1)))
-      (while (> count 0)
-        (setq count (1- count))
-        (cond ((equal (ecb-point-in-edit-window) 1)
-               (if (= direction 1)
-                   (if (ecb-edit-window-splitted)
-                       (select-window (next-window))
-                     (if (and (equal ecb-other-window-jump-behavior
-                                     'edit-and-compile)
-                              (ecb-compile-window-live-p))
-                         (ignore-errors
-                           (select-window ecb-compile-window))
-                       (if (> (minibuffer-depth) 0)
-                           (select-window (minibuffer-window ecb-frame)))))
-                 (if (> (minibuffer-depth) 0)
-                     (select-window (minibuffer-window ecb-frame))
-                   (if (and (equal ecb-other-window-jump-behavior
-                                   'edit-and-compile)
-                            (ecb-compile-window-live-p))
-                       (ignore-errors
-                         (select-window ecb-compile-window))
-                     (if (ecb-edit-window-splitted)
-                         (select-window (next-window)))))))
-              ((ecb-point-in-compile-window)
-               (if (and (= direction 1) (> (minibuffer-depth) 0))
-                   (select-window (minibuffer-window ecb-frame))
-                 (ecb-select-edit-window)
-                 (if (and (ecb-edit-window-splitted) (= direction -1))
-                     (select-window (next-window)))))
-              ((equal (ecb-point-in-edit-window) 2)
-               (if (= direction 1)
-                   (if (and (equal ecb-other-window-jump-behavior
-                                   'edit-and-compile)
-                            (ecb-compile-window-live-p))
-                       (ignore-errors
-                         (select-window ecb-compile-window))
-                     (if (> (minibuffer-depth) 0)
-                         (select-window (minibuffer-window ecb-frame))
-                       (ecb-select-edit-window)))
-                 (ecb-select-edit-window)))
-              ((equal (selected-window) (minibuffer-window ecb-frame))
-               (if (= direction -1)
-                   (if (and (equal ecb-other-window-jump-behavior
-                                   'edit-and-compile)
-                            (ecb-compile-window-live-p))
-                       (ignore-errors
-                         (select-window ecb-compile-window))
-                     (ecb-select-edit-window t))
-                 (ecb-select-edit-window)))
-              (t 
-               (ecb-select-edit-window)))))))
+          (other-win-fcn (if (or (not (ad-get-arg 0)) (>= (ad-get-arg 0) 0))
+                             'ecb-next-listelem
+                           'ecb-prev-listelem))
+          (win-list (append (ecb-canonical-edit-windows-list)
+                            (if (and (equal ecb-other-window-jump-behavior
+                                            'edit-and-compile)
+                                     (equal (ecb-compile-window-state)
+                                            'visible))
+                                (list ecb-compile-window))
+                            (if (> (minibuffer-depth) 0)
+                                (list (minibuffer-window ecb-frame))))))
+      (select-window (funcall other-win-fcn
+                              win-list (selected-window) count)))))
 
 (defadvice delete-windows-on (around ecb)
   "The ECB-version of `delete-windows-on'. Works exactly like the original
@@ -2444,12 +2444,52 @@ allowed to be deleted."
              ;; the same as the buffer argument for the current call and if
              ;; yes we must switch to the buffer returned by `other-buffer'.
              (if (string= buf-name
-                          (buffer-name (window-buffer ecb-edit-window)))
+                          (buffer-name (window-buffer (car (ecb-canonical-edit-windows-list)))))
                  (switch-to-buffer (other-buffer buf-name
                                                  nil ecb-frame))))
             (select-frame curr-frame)))))))
 
+(defvar ecb-edit-area-creators nil)
 
+(defsubst ecb-edit-area-creators-init ()
+  (setq ecb-edit-area-creators nil))
+
+(defsubst ecb-edit-area-creators-add (creator)
+  (setq ecb-edit-area-creators (append ecb-edit-area-creators (list creator))))
+
+(defun ecb-restore-edit-area ()
+  (dolist (elem ecb-edit-area-creators)
+    (let ((edit-win-list (ecb-canonical-edit-windows-list)))
+      (select-window (nth (car elem) edit-win-list))
+      (funcall (cdr elem)))))
+
+(defadvice delete-window (before ecb)
+  "Does nothing special but only storing the fact that the window is deleted.
+This is done even when ECB is deactivated so ECB can later restore the
+window-layout as if before activation. Normally there can not occur an error
+in this advice but nevertheless this advice is constructed error-save, i.e. if
+an error occurs during this before-advice then it will be reported but
+`delete-window' will be executed correctly."
+  (when (equal (window-frame (or (ad-get-arg 0) (selected-window)))
+               ecb-frame)
+    (condition-case oops
+        (let* ((edit-win-list (ecb-canonical-edit-windows-list))
+               (window (or (ad-get-arg 0) (selected-window)))
+               (edit-win-number (ecb-position edit-win-list window)))
+          (when (and edit-win-number
+                     (> (length edit-win-list) 1))
+            (if (= (length edit-win-list) 2)
+                ;; After the deletion of WINDOW there will be only one
+                ;; edit-window.
+                (ecb-edit-area-creators-init)
+              ;; After the deletion of WINDOW there will be still more than
+              ;; one edit-window.
+              (ecb-edit-area-creators-add (cons edit-win-number
+                                                'delete-window)))))
+      (error (ecb-warning "Before-advice delete-window (error-type: %S, error-data: %S)"
+                          (car oops) (cdr oops))))))
+
+;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: docstring anpassen
 (defadvice delete-window (around ecb)
   "The ECB-version of `delete-window'. Works exactly like the original
 function with the following ECB-adjustment:
@@ -2470,30 +2510,43 @@ If optional argument WINDOW is a live window \(i.e. called from program):
 If WINDOW is an edit-window then this window is deleted, otherwise an error is
 reported."
   (if (or (not ecb-minor-mode)
-          (not (equal (selected-frame) ecb-frame))
-          ecb-windows-hidden)
+          (not (equal (window-frame (or (ad-get-arg 0) (selected-window)))
+                      ecb-frame)))
       (ecb-with-original-basic-functions
        (ecb-with-original-functions
         ad-do-it))
     (ecb-do-with-unfixed-ecb-buffers
-     (if (null (ad-get-arg 0))
-         (when (and (member 'delete-window ecb-layout-always-operate-in-edit-window)
-                    ;; this is needed because otherwise we would also select the 1.
-                    ;; edit-window if point stays in the second one!
-                    (not (ecb-point-in-edit-window)))
-           (ecb-select-edit-window))
-       (if (window-live-p (ad-get-arg 0))
-           (select-window (ad-get-arg 0))))
+     (when (and (interactive-p)
+                (null (ad-get-arg 0))
+                (member 'delete-window ecb-layout-always-operate-in-edit-window)
+                ;; this is needed because otherwise we would also select
+                ;; the 1. edit-window if point stays in another one!
+                (not (ecb-point-in-edit-window)))
+       (ecb-select-edit-window))
      
-     (if (not (ecb-point-in-edit-window))
-         (if ecb-advice-window-functions-signal-error
-             (ecb-error "Only an edit-window can be deleted!"))
-       (ad-with-originals 'delete-window
-         (if (ecb-edit-window-splitted)
-             (funcall (intern (format "ecb-delete-window-in-editwindow-%s"
-                                      ecb-layout-name))
-                      (ecb-edit-window-splitted))))))))
+     (let* ((edit-win-list (ecb-canonical-edit-windows-list))
+            (window (or (ad-get-arg 0) (selected-window)))
+            (edit-win-number (ecb-position edit-win-list window))
+            (curr-window-before (selected-window)))
+       (if (null edit-win-number)
+           (if ecb-advice-window-functions-signal-error
+               (ecb-error "Only an edit-window can be deleted!"))
+         (ad-with-originals 'delete-window
+           (when (> (length edit-win-list) 1)
+             (if ecb-windows-hidden
+                 (delete-window)
+               (funcall (intern (format "ecb-delete-window-in-editwindow-%s"
+                                        ecb-layout-name))
+                        window edit-win-list))
+             ;; If we have deleted that window which was current at call-time
+             ;; we have to ensure that point stays in the next edit-window
+             (if (equal curr-window-before window)
+                 (let ((edit-win-list-after (ecb-canonical-edit-windows-list)))
+                   (if (not (member (selected-window) edit-win-list-after))
+                       (select-window (car edit-win-list-after))))))))))))
 
+;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: docstring anpassen - auch in
+;; texi!! 
 (defadvice delete-other-windows (around ecb)
   "The ECB-version of `delete-other-windows'. Works exactly like the
 original function with the following ECB-adjustment:
@@ -2518,40 +2571,40 @@ edit-window is deleted), if WINDOW is an ecb-window then only the other
 ecb-windows are deleted and in all other cases an error is reported."
   
   (if (or (not ecb-minor-mode)
-          (not (equal (selected-frame) ecb-frame))
-          ecb-windows-hidden)
+          (not (equal (window-frame (or (ad-get-arg 0) (selected-window)))
+                                    ecb-frame)))
       (ecb-with-original-basic-functions
        (ecb-with-original-functions
         ad-do-it))
     (ecb-do-with-unfixed-ecb-buffers
-     (if (null (ad-get-arg 0))
-         (when (and (member 'delete-other-windows
-                            ecb-layout-always-operate-in-edit-window)
-                    ;; this is needed because otherwise we would also select
-                    ;; the 1. edit-window if point stays in the second one!
-                    ;; if in an ecb-window then we stay there because then we
-                    ;; want to maximize the current ecb-window
-                    (ecb-point-in-compile-window))
-           (ecb-select-edit-window))
-       (if (window-live-p (ad-get-arg 0))
-           (select-window (ad-get-arg 0))))
+     (when (and (interactive-p)
+                (null (ad-get-arg 0))
+                (member 'delete-other-windows
+                        ecb-layout-always-operate-in-edit-window)
+                ;; this is needed because otherwise we would also select
+                ;; the 1. edit-window if point stays in another one!
+                ;; if in an ecb-window then we stay there because then we
+                ;; want to maximize the current ecb-window
+                (ecb-point-in-compile-window))
+       (ecb-select-edit-window))
      
-     (cond ((ecb-point-in-compile-window)
-            (if ecb-advice-window-functions-signal-error
-                (ecb-error "The compile window can not be maximized!")))
-           ((ecb-point-in-edit-window)
-            (ad-with-originals 'delete-window
-              (if (ecb-edit-window-splitted)
-                  (funcall (intern (format "ecb-delete-other-windows-in-editwindow-%s"
-                                           ecb-layout-name))
-                           (ecb-edit-window-splitted)))))
-           (t ;; must be one of the special ecb-windows
-            (let ((ecb-buffer (current-buffer)))
-              (ecb-maximize-ecb-window)
-              (ignore-errors
-                (select-window (get-buffer-window ecb-buffer)))))))))
+     (let ((edit-win-list (ecb-canonical-edit-windows-list))
+           (window (or (ad-get-arg 0) (selected-window))))
+       (cond ((equal window ecb-compile-window)
+              (if ecb-advice-window-functions-signal-error
+                  (ecb-error "The compile window can not be maximized!")))
+             ((integerp (ecb-position edit-win-list window))
+              ;; we run the adviced version of delete-window for each "other"
+              ;; edit-window
+              (ecb-with-adviced-functions
+               (dolist (ew (delete window edit-win-list))
+                 (delete-window ew))))
+             (t ;; must be one of the special ecb-windows
+              (ecb-display-one-ecb-buffer
+               (buffer-name (window-buffer window)))))))))
             
   
+;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: docstring anpassen
 (defadvice split-window-horizontally (around ecb)
   "The ECB-version of `split-window-horizontally'. Works exactly like the
 original function with the following ECB-adjustment:
@@ -2570,12 +2623,13 @@ error if this function is not contained in
     (when (and (member 'split-window-horizontally
                        ecb-layout-always-operate-in-edit-window)
                ;; this is needed because otherwise we would also select the 1.
-               ;; edit-window if point stays in the second one!
+               ;; edit-window if point stays in another one!
                (not (ecb-point-in-edit-window)))
       (ecb-select-edit-window))
     (ecb-with-adviced-functions
      ad-do-it)))
 
+;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: docstring anpassen
 (defadvice split-window-vertically (around ecb)
   "The ECB-version of `split-window-vertically'. Works exactly like the
 original function with the following ECB-adjustment:
@@ -2598,16 +2652,39 @@ if this function is not contained in
     (ecb-with-adviced-functions
      ad-do-it)))
 
+(defadvice split-window (before ecb)
+  "Does nothing special but only storing the fact that the window is splitted.
+This is done even when ECB is deactivated so ECB can later restore the
+window-layout as if before activation. Normally there can not occur an error
+in this advice but nevertheless this advice is constructed error-save, i.e. if
+an error occurs during this before-advice then it will be reported but
+`split-window' will be executed correctly."
+  (when (equal (window-frame (or (ad-get-arg 0) (selected-window)))
+               ecb-frame)
+    (condition-case oops
+        (let* ((edit-win-list (ecb-canonical-edit-windows-list))
+               (window (or (ad-get-arg 0) (selected-window)))
+               (edit-win-number (ecb-position edit-win-list window)))
+          (when edit-win-number
+            (ecb-edit-area-creators-add (cons edit-win-number
+                                              (if (ad-get-arg 2)
+                                                  'split-window-horizontally
+                                                'split-window-vertically)))))
+      (error (ecb-warning "Before-advice split-window (error-type: %S, error-data: %S)"
+                          (car oops) (cdr oops))))))
+      
 
+;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: Alle user der adviced version
+;; prüfen.
 (defadvice split-window (around ecb)
   "The ECB-version of `split-window'. The meaning of WINDOW must be one of the
-edit-windows of ECB otherwise an error is reported. If the edit-window is
-already splitted then nothing will be done. Besides this \(e.g. called for a
-window in another frame than the `ecb-frame') it behaves like the original
-version."
+edit-windows of ECB otherwise an error is reported. Besides this \(e.g. called
+for a window in another frame than the `ecb-frame') it behaves like the
+original version."
+  (ecb-layout-debug-error "split-window entered for window: %s" (ad-get-arg 0))
   (if (or (not ecb-minor-mode)
-          (not (equal (selected-frame) ecb-frame))
-          ecb-windows-hidden)
+          (not (equal (window-frame (or (ad-get-arg 0) (selected-window)))
+                      ecb-frame)))
       (ecb-with-original-basic-functions
        (ecb-with-original-functions
         ad-do-it))
@@ -2623,24 +2700,14 @@ version."
       (ecb-select-edit-window))
 
     ;; now perform the splitting task
-    (let ((window (or (ad-get-arg 0) (selected-window))))
-      (if (not (ecb-edit-window-splitted))
-          ;; we allow only an unsplitted edit-window to be splitted
-          (if (not (equal window ecb-edit-window))
-              (if ecb-advice-window-functions-signal-error
-                  (ecb-error "Only the edit-window of ECB is split-able!")
-                (setq ad-return-value (selected-window)))
-            ad-do-it)
-        ;; if already splitted return the "other" edit-window
-        (setq ad-return-value
-              (cond ((equal window ecb-edit-window)
-                     (next-window ecb-edit-window))
-                    ((equal window (next-window ecb-edit-window))
-                     ecb-edit-window)
-                    (t
-                     (if ecb-advice-window-functions-signal-error
-                         (ecb-error "Only the edit-window of ECB is split-able!")
-                       (selected-window)))))))))
+    (let* ((window (or (ad-get-arg 0) (selected-window)))
+           (edit-win-number (ecb-position (ecb-canonical-edit-windows-list)
+                                          window)))
+      (if edit-win-number
+          ad-do-it
+        (if ecb-advice-window-functions-signal-error
+            (ecb-error "Only the edit-windows of ECB are split-able!")
+          (setq ad-return-value (selected-window)))))))
 
 (defadvice switch-to-buffer-other-window (around ecb)
   "The ECB-version of `switch-to-buffer-other-window'. Works exactly like the
@@ -2734,15 +2801,22 @@ If edit-window is splitted, point stays in the \"other\" edit-window and there
 is no durable compilation-window then always the first edit-window is chosen."
   (if (or (not ecb-minor-mode)
           (not (equal (selected-frame) ecb-frame))
-          ecb-windows-hidden
-          (equal 'visible (ecb-compile-window-state))
-          (not (equal (ecb-point-in-edit-window) 2)))
+          ecb-windows-hidden)
       (ecb-with-original-basic-functions
        (ecb-with-original-functions
         ad-do-it))
     ;; point stays in the "other" edit-window and there is no
     ;; compilation-window
-    (let ((other-window-scroll-buffer (window-buffer ecb-edit-window)))
+    (let* ((edit-win-list (ecb-canonical-edit-windows-list))
+           (win-list (append (ecb-canonical-edit-windows-list)
+                             (if (and (equal 'visible
+                                             (ecb-compile-window-state))
+                                      (= (length edit-win-list) 1))
+                                 (list ecb-compile-window))))
+           (other-window-scroll-buffer
+            (if (member (selected-window) edit-win-list)
+                (window-buffer (ecb-next-listelem win-list (selected-window)))
+              nil)))
       ad-do-it)))
     
 ;; here come the prefixed equivalents to the adviced originals
@@ -2849,7 +2923,7 @@ AMOUNT is greater than -1.0 and lower than +1.0 then the value is multiplied
 with the current window-height \(frame-height if USE-FRAME is not nil)."
   (let ((abs-amout (ecb-normalize-number amount (if use-frame
                                                     (1- (frame-height))
-                                                  (window-height)))))
+                                                  (ecb-window-full-height)))))
     (ecb-split-ver-abs abs-amout dont-switch-window)
     abs-amout))
 
@@ -2936,46 +3010,54 @@ visibility of the ECB windows. ECB minor mode remains active!"
               (ecb-select-edit-window))
           ;; we have to unfix all our ECB windows!!
           (ecb-set-window-size-fixed nil)
-          (ecb-with-original-functions
-           (let* ((config (ecb-window-configuration-data))
-                  (split-before-redraw (car (nth 0 config)))
-                  (split-amount-before-redraw (cdr (nth 0 config)))
-                  (window-before-redraw (nth 1 config))
-                  (pos-before-redraw (nth 2 config))
-                  (saved-edit-1 (nth 3 config))
-                  (saved-edit-2 (nth 4 config)))
+          (let* ((config (ecb-window-configuration-data))
+                 (window-before-redraw (nth 0 config))
+                 (pos-before-redraw (nth 1 config))
+                 (edit-win-data-before-redraw (nth 2 config))
+                 (edit-win-list-after-redraw nil))
+            (ecb-with-original-functions
              ;; we first make all windows of our ecb-frame not dedicated and
              ;; then we delete all other windows...we restore the split- and
              ;; buffer-state later...
              (ecb-make-windows-not-dedicated ecb-frame)
              (delete-other-windows)
              ;; some paranoia...
-             (set-window-dedicated-p (selected-window) nil)
-             ;; now we restore the split-state as before the toggle.
-             (cond ((equal split-before-redraw 'horizontal)
-                    (ecb-split-hor 0.5 t))
-                   ((equal split-before-redraw 'vertical)
-                    (ecb-split-ver (if ecb-compile-window-height 0.5
-                                     split-amount-before-redraw) t)))
-             (setq ecb-edit-window (selected-window))
-             ;; Restore edit window buffers
-             (when saved-edit-1
-               (set-window-buffer ecb-edit-window (car saved-edit-1))
-               (set-window-start ecb-edit-window (cdr saved-edit-1)))
-             (when (and split-before-redraw saved-edit-2)
-               (set-window-buffer (next-window ecb-edit-window) (car saved-edit-2))
-               (set-window-start (next-window ecb-edit-window) (cdr saved-edit-2)))
-             ;; at the end of the redraw we always stay in that edit-window as
-             ;; before the redraw
-             (ecb-select-edit-window)    
-             (if (equal window-before-redraw 2)
-                 (select-window (next-window)))
-             ;; if we were in an edit-window before redraw let us go to the
-             ;; old place
-             (when pos-before-redraw
-               (goto-char pos-before-redraw))
-             (setq ecb-last-source-buffer (current-buffer))
-             (setq ecb-last-edit-window-with-point (selected-window))))
+             (set-window-dedicated-p (selected-window) nil))
+
+            ;; we restore the split-state of the edit-area
+            (ecb-with-original-functions
+             (ecb-with-original-permanent-functions
+              (ecb-restore-edit-area)))
+              
+            (setq edit-win-list-after-redraw (ecb-canonical-edit-windows-list))
+
+            ;; a safety-check if we have now after redrawing at least as many
+            ;; edit-windows as before redrawing. If yes we restore all
+            ;; window-data as before redraw.
+            (when (and (= (length edit-win-list-after-redraw)
+                          (length edit-win-data-before-redraw)))
+              (dotimes (i (length edit-win-data-before-redraw))
+                (let ((win (nth i edit-win-list-after-redraw))
+                      (data (nth i edit-win-data-before-redraw)))
+                  (set-window-buffer win (nth 0 data))
+                  (set-window-start win (nth 1 data))
+                  (set-window-point win (nth 2 data))
+                  (if (> (length edit-win-list-after-redraw) 1)
+                      (ecb-set-window-size win (nth 3 data)))
+                  )))
+
+            ;; at the end of the redraw we always stay in that edit-window as
+            ;; before the redraw
+            (when (integerp window-before-redraw)
+              (ecb-select-edit-window window-before-redraw))
+            ;; if we were in an edit-window before redraw let us go to the old
+            ;; place
+            (when pos-before-redraw
+              (goto-char pos-before-redraw))
+
+            (setq ecb-last-source-buffer (current-buffer))
+            (setq ecb-last-edit-window-with-point (selected-window)))
+          
           (setq ecb-windows-hidden t)
           (run-hooks 'ecb-hide-ecb-windows-after-hook)
           (message "ECB windows are now hidden."))))))
@@ -2997,7 +3079,8 @@ visibility of the ECB windows. ECB minor mode remains active!"
 ecb-buffer. If nil then this means currently there is no ecb-buffer maximized.
 
 Do not set this variable. It is only set by `ecb-redraw-layout-full' and
-`ecb-maximize-ecb-window'. It is evaluated by `ecb-toggle-ecb-windows'.")
+`ecb-maximize-ecb-window'. It is evaluated by `ecb-toggle-ecb-windows' and
+`ecb-store-window-sizes'.")
 
 (defun ecb-maximize-ecb-window (&optional ecb-buffer-name)
   "Maximizes an ECB-window. If ECB-BUFFER-NAME is not nil then that window is
@@ -3013,6 +3096,10 @@ edit-window is selected."
                    ecb-buffer-setfunction-registration)))
       (setq ecb-current-maximized-ecb-buffer-name buf-name))))
 
+;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: Für XEmacs das in jedem
+;; Tree-buffer als neues menu zur modeline-map hinzufügen: Menu: "maximize" und
+;; "display all ecb-windows". Für GNU Emacs: Toggle-command an mouse-2 (default
+;; bei GNU Emacs is mouse-delete-other-windows) in der Modeline binden.
 (defun ecb-display-one-ecb-buffer (ecb-buffer-name)
   (let ((curr-point (ecb-where-is-point)))
     (ecb-maximize-ecb-window ecb-buffer-name)
@@ -3028,6 +3115,11 @@ edit-window is selected."
 buffer-names of the ecb-buffers of current layout and the cdr the index which
 buffer-name is the next one in the cycle-sequence. Is only set by
 `ecb-redraw-layout-full' and `ecb-cycle-maximized-ecb-buffers'.")
+
+;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: Analog zum "expand comp-win after
+;; selection" das gleiche für die ecb-windows hinzufügen - wenn selecting ein
+;; edit-window, dann wieder alle ECB-windows anzeigen. Das ganze customizable
+;; mit einer neuen Option. John S. Yates!
 
 (defun ecb-cycle-maximized-ecb-buffers ()
   "Cycles through all ecb-buffers by maximizing one at each step."
@@ -3054,61 +3146,44 @@ buffer-name is the next one in the cycle-sequence. Is only set by
             (1+ (cdr ecb-cycle-ecb-buffer-state)))))
 
 
-;; This function must savely work even if `ecb-edit-window' is not longer
-;; alive, which should normally not happen!
 (defun ecb-window-configuration-data ()
   "Return current window configuration of the ecb-frame as a list with the
 following structure:
-0. Edit-window split data: cons with car is a boolean if the edit-window is
-   splitted and cdr is the height of the `ecb-edit-window' or nil if not
-   splitted.
-1. 1 or 2 if point is one of the edit-windows, nil otherwise
+1. The number of the edit-window if point is one of the edit-windows, nil
+   otherwise
 2. current point if one of the edit-windows is selected, nil otherwise.
-3. Data of the edit-window: cons with car is the buffer of the
-   `ecb-edit-window' and cdr is the `window-start' of this window.
-4. Data of the second edit-window: See 3. If the edit-window is not splitted
-   then nil.
-5. Data of the compile window or nil (if there is no compile-window visible):
+3. Data of all edit-windows in form of a list: Everey listelement is a list
+   again with first subelement is the buffer of an edit-window, second
+   subelement is the `window-start' of this window, third is the
+   `window-point' and fourth subelement is the result of `ecb-get-window-size'
+   for this window. This data-list has the same ordering as
+   `ecb-canonical-edit-windows-list'.
+4. Data of the compile window or nil \(if there is no compile-window visible):
    List with first elem is the buffer of the compile-window, second elem is
    current point of the compile-buffer if the compile-window is selected
    \(otherwise nil) and third elem is the current height of the
    compile-window."
-  (if (or (not ecb-windows-hidden)
-          (< (ecb-with-original-basic-functions
-              (count-windows)) 3))
-      (let ((split (ecb-edit-window-splitted))
-            (selected-window (ecb-where-is-point)))
-        (list (cons split (if (equal split 'vertical)
-                              (window-height ecb-edit-window)))
-              (if (numberp selected-window) selected-window)
-              (if (numberp selected-window) (point))
-              (ignore-errors (cons (window-buffer ecb-edit-window)
-                                   (window-start ecb-edit-window)))
-              (if split
-                  (ignore-errors (cons (window-buffer (next-window
-                                                       ecb-edit-window))
-                                       (window-start (next-window
-                                                      ecb-edit-window)))))
-              (if (equal 'visible (ecb-compile-window-state))
-                  (list (window-buffer ecb-compile-window)
-                        (if (equal selected-window 'compile) (point))
-                        (window-height ecb-compile-window)))
-              ))
-      ;; we have to return a window-config for only one window which is the
-      ;; window of the current buffer
-      (list '(nil)
-            nil
-            nil
-            (cons (current-buffer)
-                  (window-start (selected-window)))
-            nil
-            nil)))
+  (let* ((edit-win-list (ecb-canonical-edit-windows-list))
+         (point-pos (ecb-where-is-point edit-win-list))
+         (edit-area-size (ecb-get-edit-area-size)))
+    (list (if (integerp point-pos) point-pos nil)
+          (if (integerp point-pos)
+              (window-point (ecb-get-edit-window-by-number point-pos
+                                                           edit-win-list)))
+          (mapcar (function (lambda (win)
+                              (list (window-buffer win)
+                                    (window-start win)
+                                    (window-point win)
+                                    (ecb-get-window-size win nil edit-area-size))))
+                  edit-win-list)
+          (if (equal 'visible (ecb-compile-window-state))
+              (list (window-buffer ecb-compile-window)
+                    (if (equal point-pos 'compile) (point))
+                    (ecb-window-full-height ecb-compile-window)))
+          )))
 
 ;; =================== Helper functions ==================================
 
-;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: Dieses Makro zwar aus
-;; kompatibilitäts-Gründen drin lassen aber neues makro schreiben, das diese
-;; Setter komplett definiert (siehe tree-buffer-defpopup-command).
 (defmacro ecb-with-dedicated-window (buffer-name dedicated-setter &rest body)
   "Make current selected window not dedicated, evaluate BODY in current
 window and make this window dedicated at the end. Even if an error occurs
@@ -3237,115 +3312,50 @@ ecb-buffer-setting-function."
 
 ;; There are three different types of layouts:
 ;; 1. Ecb-windows on the left side (include layouts with left and right side
-;;    ECB windows)
+;;    ECB-windows)
 ;; 2. Ecb-windows on the right side
 ;; 3. Ecb-windows on the top
-;; For each type we have special replacements for `delete-window' and
-;; `delete-other-windows' which operate correctly as if the edit-window would
-;; be an extra frame. For each layout two aliases must be defined (see
-;; ecb-layout-defs.el)
+;; For each type we have a special replacement for `delete-window' which
+;; operates correctly as if all the edit-windows would be in an extra frame.
 
 ;; 1. Ecb-windows on the left side
-(defun ecb-delete-other-windows-ecb-windows-left (split)
-  (cond ((equal (ecb-point-in-edit-window) 1)
-         (delete-window (next-window))
-         (ecb-select-edit-window)
-         t)
-        ((equal (ecb-point-in-edit-window) 2)
-         (let ((prev-width (window-width (previous-window
-                                          (selected-window) 0))))
-           (setq ecb-edit-window (selected-window))
-           (delete-window (previous-window (selected-window) 0))
-           (when (equal split 'horizontal)
-             (save-selected-window
-               (select-window (previous-window (selected-window) 0))
-               (shrink-window (+ (if ecb-running-xemacs
-                                     (if scrollbars-visible-p 4 2)
-                                   (if scroll-bar-mode 4 3))
-                                 prev-width)
-                              t)))
-           t))
-        (t nil)))
 
-(defalias 'ecb-delete-other-windows-ecb-windows-left-right
-  'ecb-delete-other-windows-ecb-windows-left)
-
-(defun ecb-delete-window-ecb-windows-left (split)
-  (cond ((equal (ecb-point-in-edit-window) 1)
-         (let ((width (window-width (selected-window))))
-           (setq ecb-edit-window (next-window))
-           (delete-window)
-           (when (equal split 'horizontal)
-             (save-selected-window
-               (select-window (previous-window (selected-window) 0))
-               (shrink-window (+ (if ecb-running-xemacs
-                                     (if scrollbars-visible-p 4 2)
-                                   (if scroll-bar-mode 4 3))
-                                 width)
-                              t)))
-           t))
-        ((equal (ecb-point-in-edit-window) 2)
-         (delete-window)
-         (ecb-select-edit-window)
-         t)
-        (t nil)))
+(defun ecb-delete-window-ecb-windows-left (window edit-win-list)
+  (let ((ecb-win-width-before (window-width (frame-first-window ecb-frame)))
+        (curr-edit-win-width (ecb-window-full-width window)))
+    (delete-window window)
+    (when (/= (window-width (frame-first-window ecb-frame))
+              ecb-win-width-before)
+      ;; We have to select here the "next" edit-window explicitly because if
+      ;; WINDOW is not the selected-window `delete-window' does not select the
+      ;; next window!
+      (save-selected-window
+        (select-window (ecb-next-listelem edit-win-list window))
+        (enlarge-window (+ curr-edit-win-width
+                           (if ecb-running-xemacs
+                               (if scrollbars-visible-p 3 1)
+                             0))
+                        t)))))
 
 (defalias 'ecb-delete-window-ecb-windows-left-right
   'ecb-delete-window-ecb-windows-left)
 
 ;; 2. Ecb-windows on the right side
-(defun ecb-delete-other-windows-ecb-windows-right (split)
-  (cond ((equal (ecb-point-in-edit-window) 2)
-         (setq ecb-edit-window (selected-window))
-         (delete-window (previous-window))
-         t)
-        ((equal (ecb-point-in-edit-window) 1)
-         (delete-window (next-window))
-         t)
-        (t nil)))
 
-
-(defun ecb-delete-window-ecb-windows-right (split)
-  (cond ((equal (ecb-point-in-edit-window) 2)
-         (delete-window)
-         (ecb-select-edit-window)
-         t)
-        ((equal (ecb-point-in-edit-window) 1)
-         (setq ecb-edit-window (next-window))
-         (delete-window)
-         t)
-        (t nil)))
+(defun ecb-delete-window-ecb-windows-right (window edit-win-list)
+  (delete-window window))
 
 ;; 3. Ecb-windows on the top
-(defun ecb-delete-other-windows-ecb-windows-top (split)
-  (cond ((equal (ecb-point-in-edit-window) 1)
-         (delete-window (next-window))
-         t)
-        ((equal (ecb-point-in-edit-window) 2)
-         (let ((prev-height (+ (if ecb-running-xemacs 0 2)
-                               (window-height (previous-window
-                                               (selected-window) 0)))))
-           (setq ecb-edit-window (selected-window))
-           (delete-window (previous-window (selected-window) 0))
-           (if (equal split 'vertical)
-               (enlarge-window prev-height))
-           t))
-        (t nil)))
 
-(defun ecb-delete-window-ecb-windows-top (split)
-  (cond ((equal (ecb-point-in-edit-window) 1)
-         (let ((height (+ (if ecb-running-xemacs 0 2)
-                          (window-height (selected-window)))))
-           (setq ecb-edit-window (next-window))
-           (delete-window)
-           (if (equal split 'vertical)
-               (enlarge-window height))
-           t))
-        ((equal (ecb-point-in-edit-window) 2)
-         (delete-window)
-         (ecb-select-edit-window)
-         t)
-        (t nil)))
+(defun ecb-delete-window-ecb-windows-top (window edit-win-list)
+  (let ((ecb-win-height-before (ecb-window-full-height (frame-first-window ecb-frame)))
+        (curr-edit-win-height (ecb-window-full-height window)))
+    (delete-window window)
+    (when (/= (ecb-window-full-height (frame-first-window ecb-frame))
+              ecb-win-height-before)
+      (save-selected-window
+        (select-window (ecb-next-listelem edit-win-list window))
+        (enlarge-window curr-edit-win-height)))))
 
 
 (defconst ecb-layout-types '(left right top left-right))
@@ -3403,6 +3413,8 @@ and TYPE must be an element of `ecb-layout-types'."
   (cdr (assoc name ecb-available-layouts)))
 
 ;; Macro for easy defining new layouts
+;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: In texi im docstring
+;; ecb-edit-window-live-p eliminieren!
 (defmacro ecb-layout-define (name type doc &rest create-code)
   "Creates a new ECB-layout with name NAME which must be a string. TYPE is the
 type of the new layout and is literal, i.e. not evaluated. It can be left,
@@ -3477,7 +3489,7 @@ Things CREATE-CODE must NOT do:
    ECB-windows-column\(s)/row \(see Precondition 1.)
 4. Referring to the values of `ecb-edit-window' or `ecb-compile-window'
    because these values are always nil or undefined during CREATE-CODE.
-5. Using the functions `ecb-edit-window-live-p' or `ecb-compile-window-live-p'.
+5. Using the function `ecb-compile-window-live-p'.
 
 Postconditions for CREATE-CODE:
 1. The edit-window must be the selected window and must not be dedicated.
@@ -3519,11 +3531,6 @@ Postconditions for CREATE-CODE:
          (setq ecb-compile-window (next-window)))
        (setq ecb-edit-window (selected-window)))
      (defalias (quote ,(intern
-                        (format "ecb-delete-other-windows-in-editwindow-%s"
-                                name)))
-       (quote ,(intern
-                (format "ecb-delete-other-windows-ecb-windows-%s" type))))
-     (defalias (quote ,(intern
                         (format "ecb-delete-window-in-editwindow-%s"
                                 name)))
        (quote ,(intern
@@ -3548,8 +3555,6 @@ ecb-delete-other-windows-ecb-windows-<NAME> and remove NAME from
 `ecb-available-layouts'."
   (fmakunbound (intern (format "ecb-layout-function-%s" name)))
   (fmakunbound (intern (format "ecb-delete-window-ecb-windows-%s" name)))
-  (fmakunbound (intern (format "ecb-delete-other-windows-ecb-windows-%s"
-                               name)))
   (ecb-available-layouts-remove name))
 
 
@@ -3568,7 +3573,11 @@ first element of LAYOUT-LIST is returned."
 
 (defun ecb-layout-switch (name)
   "Switch to layout with layout-name NAME."
-  (customize-set-variable 'ecb-layout-name name))
+  (let ((comp-win-state (ecb-compile-window-state)))
+    (customize-set-variable 'ecb-layout-name name)
+    (if (and ecb-change-layout-preserves-compwin-state
+             (equal comp-win-state 'hidden))
+        (ecb-toggle-compile-window -1))))
   
 
 (defun ecb-change-layout (&optional preselect-type)
@@ -3608,9 +3617,7 @@ outline of the chosen layout."
 Result is a four-element list with:
 0. Result of `current-window-configuration'
 1. List of buffers which are currently dedicated in the ecb-frame
-2. The number of the `ecb-edit-window' in the `ecb-window-list' of the
-   `ecb-frame'
-3. The number of the `ecb-compile-window' in the `ecb-window-list' of the
+2. The number of the `ecb-compile-window' in the `ecb-window-list' of the
    `ecb-frame' \(nil if there is no compile-window alive)
 
 If the special ECB-windows are hidden at call-time then the last three
@@ -3619,10 +3626,10 @@ elements are nil!"
       (list (current-window-configuration ecb-frame) nil nil nil)
     (list (current-window-configuration ecb-frame)
           (ecb-get-current-visible-ecb-buffers)
-          (if (ecb-edit-window-live-p)
-              (ecb-window-number ecb-edit-window))
           (if (ecb-compile-window-live-p)
-              (ecb-window-number ecb-compile-window)))))
+              (ecb-position (ecb-window-list ecb-frame 0
+                                             (frame-first-window ecb-frame))
+                            ecb-compile-window)))))
 
 (defun ecb-set-window-configuration (ecb-window-config)
   "Restore a window-configuration ECB-WINDOW-CONFIG which must be returned by
@@ -3633,19 +3640,16 @@ elements are nil!"
     (set-window-configuration (nth 0 ecb-window-config))))
   ;; we have to reset the dedicated state because it is not preserved by
   ;; `current-window-configuration' and `set-window-configuration'! At least
-  ;; not with GNU Emacs 21.X, In addition we have to reset ecb-edit-window and
-  ;; ecb-compile-window and also to set ecb-windows-hidden correctly
+  ;; not with GNU Emacs 21.X, In addition we have to reset ecb-compile-window
+  ;; and also to set ecb-windows-hidden correctly
   (and (nth 1 ecb-window-config)
        (ecb-set-windows-dedicated-state (nth 1 ecb-window-config) t))
-  (when (or (nth 2 ecb-window-config)
-            (nth 3 ecb-window-config))
+  (when (nth 2 ecb-window-config)
     (let ((win-list (ecb-window-list ecb-frame 0
                                      (frame-first-window ecb-frame))))
-      (and (nth 2 ecb-window-config)
-           (setq ecb-edit-window (nth (nth 2 ecb-window-config) win-list)))
       (and ecb-compile-window-height
-           (nth 3 ecb-window-config)
-           (setq ecb-compile-window (nth (nth 3 ecb-window-config) win-list)))))
+           (nth 2 ecb-window-config)
+           (setq ecb-compile-window (nth (nth 2 ecb-window-config) win-list)))))
   (and (nth 1 ecb-window-config)
        (setq ecb-windows-hidden nil)))
 
@@ -3687,6 +3691,9 @@ for the quick version!"
 ;; the main layout core-function. This function is the "environment" for a
 ;; special layout function (l.b.)
 
+;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: Mechanismus, um das
+;; compile-window-hidding sticky zu machen, d.h. bei einem layout-wechsel
+;; (ecb-toggle-layout) etc. bleibt das compile-window hidden
 (defun ecb-redraw-layout-full (&optional no-buffer-sync ecb-windows-creator)
   "Redraw the ECB screen according to the layout set in `ecb-layout-name'. After
 this function the edit-window is selected which was current before redrawing."
@@ -3695,18 +3702,15 @@ this function the edit-window is selected which was current before redrawing."
     ;; this functions are only needed at runtime!
     (ecb-load-layouts)
     (let* ((config (ecb-window-configuration-data))
-           (split-before-redraw (car (nth 0 config)))
-           (split-amount-before-redraw (cdr (nth 0 config)))
-           (window-before-redraw (nth 1 config))
-           (pos-before-redraw (nth 2 config))
-           (saved-edit-1 (nth 3 config))
-           (saved-edit-2 (nth 4 config))
-           (compile-window-config (nth 5 config))
+           (window-before-redraw (nth 0 config))
+           (pos-before-redraw (nth 1 config))
+           (edit-win-data-before-redraw (nth 2 config))
+           (compile-window-config (nth 3 config))
            (compile-buffer-before-redraw (nth 0 compile-window-config))
            (compile-buffer-pos-before-redraw (nth 1 compile-window-config))
-           (compile-buffer-window-height-before-redraw
-            (nth 2 compile-window-config))
-           (ecb-windows-before-redraw (ecb-get-current-visible-ecb-buffers)))
+           (ecb-windows-before-redraw (ecb-get-current-visible-ecb-buffers))
+           (edit-area-size nil)
+           (edit-win-list-after-redraw nil))
 
       (ecb-layout-debug-error "ecb-redraw-layout-full: config: %s, hidden-state: %s, curr-buff: %s, last-source-buff: %s"
                               config ecb-windows-hidden (current-buffer)
@@ -3715,120 +3719,126 @@ this function the edit-window is selected which was current before redrawing."
       ;; The following code runs with deactivated adviced functions, so the
       ;; layout-functions can use the original function-definitions.
       (ecb-with-original-functions
+       (ecb-with-original-permanent-functions
+        ;; first we go to the edit-window/buffer
+        (ecb-select-edit-window)
+       
+        (ecb-do-with-unfixed-ecb-buffers
+         ;; Do some actions regardless of the chosen layout
 
-       ;; first we go to the most senseful edit-window/buffer
-       (if (and (not ecb-windows-hidden)
-                (ecb-edit-window-live-p))
-           (ecb-select-edit-window)
-         ;; if the edit-window is destroyed (what should never happen) we try
-         ;; to go first to the last edited buffer, second to the
-         ;; scratch-buffer or third - if both of them don't exist - we stay in
-         ;; the current buffer.
+         ;; first we make all windows of ecb-frame not dedicated and then we
+         ;; delete all other windows so we have a clean frame with only one
+         ;; window where we can draw our layout. We restore later the
+         ;; frame-state (splits, buffers, points etc.)
+         (ecb-make-windows-not-dedicated ecb-frame)
+         (delete-other-windows)
+         ;; some paranoia...
          (set-window-dedicated-p (selected-window) nil)
-         (if (not ecb-windows-hidden)
-             (switch-to-buffer (or (and (buffer-live-p ecb-last-source-buffer)
-                                        ecb-last-source-buffer)
-                                   (get-buffer "*scratch*")
-                                   (current-buffer)))))
-       
-       (ecb-do-with-unfixed-ecb-buffers
-        ;; Do some actions regardless of the chosen layout
-
-        ;; first we make all windows of ecb-frame not dedicated and then we
-        ;; delete all other windows so we have a clean frame with only one
-        ;; window where we can draw our layout. We restore later the
-        ;; frame-state (splits, buffers, points etc.)
-        (ecb-make-windows-not-dedicated ecb-frame)
-        (delete-other-windows)
-        ;; some paranoia...
-        (set-window-dedicated-p (selected-window) nil)
         
-        ;; we force a layout-function to set both of these windows
-        ;; correctly.
-        (setq ecb-edit-window nil
-              ecb-compile-window nil)
+         ;; we force a layout-function to set both of these windows
+         ;; correctly.
+         (setq ecb-edit-window nil
+               ecb-compile-window nil)
         
-        ;; Now we call the layout-function
-        (funcall (intern (format "ecb-layout-function-%s" ecb-layout-name))
-                 ecb-windows-creator)
-        (select-window
-         (if ecb-edit-window
-             ecb-edit-window
-           (error "Edit-window not set in function 'ecb-layout-function-%s"
-                  ecb-layout-name)))
+         ;; Now we call the layout-function
+         (funcall (intern (format "ecb-layout-function-%s" ecb-layout-name))
+                  ecb-windows-creator)
+         (select-window
+          (if ecb-edit-window
+              ecb-edit-window
+            (error "Edit-window not set in function 'ecb-layout-function-%s"
+                   ecb-layout-name)))
 
-        ;; resetting some states if we have a full layout
-        (when (null ecb-windows-creator)
-          (setq ecb-current-maximized-ecb-buffer-name nil)
-          (setq ecb-cycle-ecb-buffer-state nil))
+         ;; resetting some states if we have a full layout
+         (when (null ecb-windows-creator)
+           (setq ecb-current-maximized-ecb-buffer-name nil)
+           (setq ecb-cycle-ecb-buffer-state nil))
 
-        ;; now regardless of the value of ecb-windows-creator the selected
-        ;; window is the edit-window and ecb-edit-window is set to this
-        ;; window.
+         ;; now regardless of the value of ecb-windows-creator the selected
+         ;; window is the edit-window and ecb-edit-window is set to this
+         ;; window.
         
-        );; end ecb-do-with-unfixed-ecb-buffers
+         ) ;; end ecb-do-with-unfixed-ecb-buffers
 
-       (setq ecb-windows-hidden nil)
+        (setq ecb-windows-hidden nil)
        
-       ;; Now all the windows must be created and the editing window must not
-       ;; be splitted! In addition the variables `ecb-edit-window' and
-       ;; `ecb-compile-window' must be set to the correct windows.
+        ;; Now all the windows must be created and the editing window must not
+        ;; be splitted! In addition the variables `ecb-edit-window' and
+        ;; `ecb-compile-window' must be set to the correct windows.
        
-       ;; The following when-expression is added for better relayouting the
-       ;; chosen layout if we have a compilation-window.
-       (when ecb-compile-window-height
-         (if (not (ecb-compile-window-live-p))
-             (error "Compilation-window not set in the layout-function"))
-         (set-window-buffer
-          ecb-compile-window
-          (or (and compile-buffer-before-redraw
-                   (ecb-compilation-buffer-p compile-buffer-before-redraw))
-              (ecb-some (function (lambda (buf)
-                                    (and (not (string= "*Completions*"
-                                                       (buffer-name buf)))
-                                         (not (ecb-check-for-special-buffer buf))
-                                         (ecb-compilation-buffer-p buf))))
-                        (buffer-list ecb-frame))
-              (get-buffer-create "*scratch*"))))
+        ;; The following when-expression is added for better relayouting the
+        ;; chosen layout if we have a compilation-window.
+        (when ecb-compile-window-height
+          (if (not (ecb-compile-window-live-p))
+              (error "Compilation-window not set in the layout-function"))
+          (set-window-buffer
+           ecb-compile-window
+           (or (and compile-buffer-before-redraw
+                    (ecb-compilation-buffer-p compile-buffer-before-redraw))
+               (ecb-some (function (lambda (buf)
+                                     (and (not (string= "*Completions*"
+                                                        (buffer-name buf)))
+                                          (not (ecb-check-for-special-buffer buf))
+                                          (ecb-compilation-buffer-p buf))))
+                         (buffer-list ecb-frame))
+               (get-buffer-create "*scratch*"))))
 
-       (select-window ecb-edit-window)
-       
-       ;; Maybe we must split the editing window again if it was splitted
-       ;; before the redraw
-       (cond ((equal split-before-redraw 'horizontal)
-              (ecb-split-hor 0.5 t))
-             ((equal split-before-redraw 'vertical)
-              (ecb-split-ver (if (or (not compile-buffer-before-redraw)
-                                     (equal ecb-compile-window-height
-                                            compile-buffer-window-height-before-redraw))
-                                 split-amount-before-redraw
-                               0.5) t)))
-       
-       ;; Restore edit window buffers
-       (when saved-edit-1
-         (set-window-buffer ecb-edit-window (car saved-edit-1))
-         (set-window-start ecb-edit-window (cdr saved-edit-1)))
-       (when (and split-before-redraw saved-edit-2)
-         (set-window-buffer (next-window ecb-edit-window) (car saved-edit-2))
-         (set-window-start (next-window ecb-edit-window) (cdr saved-edit-2)))
-       
-       ;; Restore saved window sizes
-       (ecb-restore-window-sizes)
-       
-       ;; at the end of the redraw we always stay in that edit-window as before
-       ;; the redraw
-       (ecb-select-edit-window)    
-       (if (equal window-before-redraw 2)
-           (select-window (next-window)))
-       
-       ;; if we were in an edit-window before redraw let us go to the old place
-       (when pos-before-redraw
-         (goto-char pos-before-redraw))
-       
-       (setq ecb-last-source-buffer (current-buffer))
-       (setq ecb-last-edit-window-with-point (selected-window))
+        ;; Only the function `ecb-redraw-layout-full' is allowed to refer and
+        ;; set the variable `ecb-edit-window' but not after the following
+        ;; code-line. The only exception is that every layout-function must set
+        ;; `ecb-edit-window' and `ecb-compile-window' at its end (but because
+        ;; most layout-function will be generated with `ecb-layout-define' this
+        ;; is not really an exception).
+        (select-window ecb-edit-window))) ;; end of ecb-with-original-functions,
+                                          ;; ecb-with-original-permanent-functions
 
-       );; end of ecb-with-original-functions       
+       ;; now we restore the edit-windows as before the redraw
+      (ecb-with-original-functions
+       (ecb-with-original-permanent-functions
+        (ecb-restore-edit-area)))
+
+      (setq edit-win-list-after-redraw (ecb-canonical-edit-windows-list))
+      (setq edit-area-size (ecb-get-edit-area-size))
+
+      ;; a safety-check if we have now after redrawing at least as many
+      ;; edit-windows as before redrawing. If yes we restore all window-data
+      ;; as before redraw.
+      (when (= (length edit-win-list-after-redraw)
+               (length edit-win-data-before-redraw))
+        (dotimes (i (length edit-win-data-before-redraw))
+          (let ((win (nth i edit-win-list-after-redraw))
+                (data (nth i edit-win-data-before-redraw)))
+            (set-window-buffer win (nth 0 data))
+            (set-window-start win (nth 1 data))
+            (set-window-point win (nth 2 data))))
+
+        ;; Klaus Berndl <klaus.berndl@sdm.de>: It seems that resizing the
+        ;; windows is not reliable in some constellations with more than 3
+        ;; edit-windows - but with max. 3 edit-windows there are not known any
+        ;; problems - and 3 edit-windows should e sufficient for most
+        ;; situations. 
+        (when (< (length edit-win-data-before-redraw) 4)
+          (dotimes (i (length edit-win-data-before-redraw))
+            (let ((win (nth i edit-win-list-after-redraw))
+                  (data (nth i edit-win-data-before-redraw)))
+              (if (> (length edit-win-list-after-redraw) 1)
+                  (ecb-set-window-size win (nth 3 data) edit-area-size))
+              ))))
+
+      ;; at the end of the edit-area-redraw we always stay in that edit-window
+      ;; as before the redraw
+      (when (integerp window-before-redraw)
+        (ecb-select-edit-window window-before-redraw))       
+      ;; if we were in an edit-window before redraw let us go to the old place
+      (when pos-before-redraw
+        (goto-char pos-before-redraw))
+
+      ;; Restore saved window sizes
+      (when (null ecb-windows-creator)
+        (ecb-restore-window-sizes))
+       
+      (setq ecb-last-source-buffer (current-buffer))
+      (setq ecb-last-edit-window-with-point (selected-window))
       
       (let ((current-ecb-windows (ecb-get-current-visible-ecb-buffers)))
         ;; fill-up the history new with all buffers if the history buffer was
@@ -3868,47 +3878,15 @@ this function the edit-window is selected which was current before redrawing."
 
       ;; after a full redraw the stored window-configuration for a quick
       ;; redraw should be actualized
-      (setq ecb-activated-window-configuration (current-window-configuration)))))
+      (setq ecb-activated-window-configuration
+            (ecb-current-window-configuration)))))
 
-;; TODO: this function is a first try to use the built-in window-configuration
-;; stuff of Emacs for the layout-redraw. But currently this does not work
-;; really well, there is a lot of work to do (Klaus).
 (defun ecb-redraw-layout-quickly()
   "Redraw the layout quickly using the cached window configuration
 `ecb-activated-window-configuration'."
   (when (and ecb-minor-mode
              (equal (selected-frame) ecb-frame))
-
-    ;;save copies of:
-    ;;
-    ;; - the current buffer in the main window
-    ;; - the current buffer in the compilation window
-
-    (let((main-window-buffer nil)
-         (compilation-window-buffer nil))
-      
-      (if (ecb-edit-window-live-p)
-          (setq main-window-buffer (window-buffer ecb-edit-window))
-        (setq compilation-window-buffer "*scratch*")
-        (message "ECB quick redraw: ecb-edit-window not alive!"))
-
-      (if (ecb-compile-window-live-p)
-          (setq compilation-window-buffer (window-buffer ecb-compile-window))
-        (setq compilation-window-buffer "*scratch*")
-        (message "ECB quick redraw: ecb-compile-window not alive!"))
-
-      (ecb-with-original-functions
-       (set-window-configuration ecb-activated-window-configuration))
-
-      
-      ;;OK... now restore the buffers in the compile and edit windows..
-
-      (if main-window-buffer
-          (set-window-buffer ecb-edit-window main-window-buffer))
-
-      (if (and compilation-window-buffer
-               (ecb-compile-window-live-p))
-          (set-window-buffer ecb-compile-window compilation-window-buffer)))))
+    (ecb-set-window-configuration ecb-activated-window-configuration)))
 
 
 (defvar ecb-toggle-layout-state 0
@@ -3939,12 +3917,14 @@ frame sizes too. But if FIX is not nil \(means called with a prefix argument)
 then the fixed values of current width and height are stored!"
   (interactive "P")
   (when (equal (selected-frame) ecb-frame)
-    (let ((a (ecb-find-assoc ecb-layout-name ecb-layout-window-sizes)))
-      (unless a
-	(setq a (cons ecb-layout-name nil))
-	(setq ecb-layout-window-sizes (ecb-add-assoc a ecb-layout-window-sizes)))
-      (setcdr a (ecb-get-window-sizes fix))
-      (customize-save-variable 'ecb-layout-window-sizes ecb-layout-window-sizes))))
+    (if ecb-current-maximized-ecb-buffer-name
+        (ecb-error "Sizes can not be stored when an ECB-window is maximized!")
+      (let ((a (ecb-find-assoc ecb-layout-name ecb-layout-window-sizes)))
+        (unless a
+          (setq a (cons ecb-layout-name nil))
+          (setq ecb-layout-window-sizes (ecb-add-assoc a ecb-layout-window-sizes)))
+        (setcdr a (ecb-get-window-sizes fix))
+        (customize-save-variable 'ecb-layout-window-sizes ecb-layout-window-sizes)))))
 
 
 (defun ecb-restore-window-sizes ()
@@ -3964,19 +3944,25 @@ then the fixed values of current width and height are stored!"
 
 ;; Now per default returns fractions of the ecb-frame; thanks to Geert Ribbers
 ;; [geert.ribbers@realworld.nl] for a first implementation.
-(defun ecb-get-window-size (window &optional fix)
+(defun ecb-get-window-size (window &optional fix ref-size)
   "Return the sizes of WINDOW as a cons where the car is the width and the cdr
-is the height. Per default both values are fractions of the frame-width (rsp. height) of
-the `ecb-frame' unless FIX is not nil."
+is the height. Per default both values are fractions of the frame-width (rsp.
+height) of the `ecb-frame' unless FIX is not nil. Optional third argument
+REF-SIZE is a cons where car is the referencial width and the cdr is the
+referencial height when the sizes should be computed as fractionals between -1
+and +1 \(if FIX is nil). Default referencial width rsp. height are
+`frame-width' rsp. `frame-height' of the `ecb-frame'."
   (when window
-    (cons (/ (window-width window)
-             (if fix
-                 1
-               (* 1.0 (frame-width ecb-frame))))
-          (/ (window-height window)
-             (if fix
-                 1
-               (* 1.0 (frame-height ecb-frame)))))))
+    (let ((ref-width (or (car ref-size) (frame-width ecb-frame)))
+          (ref-height (or (cdr ref-size) (frame-height ecb-frame))))
+      (cons (/ (ecb-window-full-width window)
+               (if fix
+                   1
+                 (* 1.0 ref-width)))
+            (/ (ecb-window-full-height window)
+               (if fix
+                   1
+                 (* 1.0 ref-height)))))))
 
 
 (defun ecb-get-window-sizes (&optional fix)
@@ -3989,27 +3975,36 @@ fixed sizes are used otherwise fractions of current frame-width rsp. -height."
 
 ;; Now possible to set fractional sizes; thanks to Geert Ribbers
 ;; [geert.ribbers@realworld.nl] for a first implementation.
-(defun ecb-set-window-size (window size)
+(defun ecb-set-window-size (window size &optional ref-size)
   "Enlarge/shrink WINDOW to SIZE where SIZE is a cons with new width as car
 and new height as cdr. New width and height can be fractionals between -1 and
-+1."
++1. Optional third argument REF-SIZE is a cons too where car is the
+referencial width and the cdr is the referencial height when the car and cdr
+of SIZE are fractionals between -1 and +1. Default referencial width rsp.
+height are `frame-width' rsp. `frame-height' of the `ecb-frame'."
   (when (and window (consp size))
-    (let ((absolut-width (if (and (numberp (car size))
-                                  (<= (car size) 1)
-                                  (>= (car size) -1))
-                             (* (car size) (frame-width ecb-frame))
-                           (car size)))
-          (absolut-height (if (and (numberp (car size))
-                                   (<= (cdr size) 1)
-                                   (>= (cdr size) -1))
-                              (* (cdr size) (frame-height ecb-frame))
-                           (cdr size))))
+    (let* ((ref-width (or (car ref-size) (frame-width ecb-frame)))
+           (ref-height (or (cdr ref-size) (frame-height ecb-frame)))
+           (absolut-width (if (and (numberp (car size))
+                                   (<= (car size) 1)
+                                   (>= (car size) -1))
+                              (* (car size) ref-width)
+                            (car size)))
+           (absolut-height (if (and (numberp (car size))
+                                    (<= (cdr size) 1)
+                                    (>= (cdr size) -1))
+                               (* (cdr size) ref-height)
+                             (cdr size)))
+           (enlarge-width (if (numberp absolut-width)
+                              (- (round absolut-width) (ecb-window-full-width window))))
+           (enlarge-height (if (numberp absolut-height)
+                               (- (round absolut-height) (ecb-window-full-height window)))))
       (save-selected-window
         (select-window window)
-        (if (numberp absolut-width)
-            (enlarge-window (- (round absolut-width) (window-width window)) t))
-        (if (numberp absolut-height)
-            (enlarge-window (- (round absolut-height) (window-height window))))))))
+        (if (and (numberp enlarge-width) (/= enlarge-width 0))
+            (ignore-errors (enlarge-window enlarge-width t)))
+        (if (and (numberp enlarge-height) (/= enlarge-height 0))
+            (ignore-errors (enlarge-window enlarge-height)))))))
 
 (defun ecb-set-window-sizes (sizes)
   (ecb-do-with-unfixed-ecb-buffers
@@ -4021,6 +4016,40 @@ and new height as cdr. New width and height can be fractionals between -1 and
              (setq windows (cdr windows)))
          (ecb-error "Stored sizes of layout %s not applicable for current window layout!"
                     ecb-layout-name))))))
+
+;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: frame-width is smaller than
+;; ecb-window-full-width for only one window in the frame. But for now this
+;; doesn't matter because it is only important that for getting and setting
+;; the edit-windows-sizes the same reference-sizes are used.
+(defun ecb-get-edit-area-size ()
+  (let ((layout-type (ecb-get-layout-type ecb-layout-name))
+        (ecb-win-list (ecb-canonical-ecb-windows-list))
+        (comp-win-state (ecb-compile-window-state)))
+    (if (null ecb-win-list)
+        (cons (frame-width ecb-frame)
+              (frame-height ecb-frame))
+      (cond ((equal layout-type 'top)
+             (cons (frame-width ecb-frame)
+                   (- (frame-height ecb-frame)
+                      (ecb-window-full-height (car ecb-win-list))
+                      (if (equal comp-win-state 'visible)
+                          (ecb-window-full-height ecb-compile-window)
+                        0))))
+            ((equal layout-type 'left-right)
+             (cons (- (frame-width ecb-frame)
+                      (ecb-window-full-width (car ecb-win-list))
+                      (ecb-window-full-width (car (last ecb-win-list))))
+                   (- (frame-height ecb-frame)
+                      (if (equal comp-win-state 'visible)
+                          (ecb-window-full-height ecb-compile-window)
+                        0))))
+            (t
+             (cons (- (frame-width ecb-frame)
+                      (ecb-window-full-width (car ecb-win-list)))
+                   (- (frame-height ecb-frame)
+                      (if (equal comp-win-state 'visible)
+                          (ecb-window-full-height ecb-compile-window)
+                        0))))))))
 
 ;; For backward-compatibility
 (defalias 'ecb-toggle-enlarged-compilation-window
@@ -4041,7 +4070,7 @@ toggle the enlarge-state."
                                            ecb-compile-window-height
                                            (1- (frame-height))))
              (should-shrink (if (null arg)
-                                (> (window-height ecb-compile-window)
+                                (> (ecb-window-full-height ecb-compile-window)
                                    compile-window-height-lines)
                               (<= (prefix-numeric-value arg) 0)))
              (compile-window-selected-p (equal (selected-window)
@@ -4058,7 +4087,7 @@ toggle the enlarge-state."
               (progn
                 (ecb-layout-debug-error "ecb-toggle-compile-window-height: buffer: %s, lines: %d shrink down to compile-window-height"
                                         (current-buffer) number-of-lines)
-                (shrink-window (max 0 (- (window-height)
+                (shrink-window (max 0 (- (ecb-window-full-height)
                                          compile-window-height-lines))))
             (if (equal ecb-enlarged-compilation-window-max-height 'best)
                 ;; With GNU Emacs we could use `fit-window-to-buffer' but
@@ -4090,8 +4119,8 @@ toggle the enlarge-state."
                                   number-of-lines)
                              compile-window-height-lines))
                   (ecb-layout-debug-error "ecb-toggle-compile-window-height: max-height: %s, curr-win-height: %s"
-                                          max-height (window-height))
-                  (enlarge-window (- max-height (window-height))))
+                                          max-height (ecb-window-full-height))
+                  (enlarge-window (- max-height (ecb-window-full-height))))
               (setq max-height
                     (cond ((equal ecb-enlarged-compilation-window-max-height
                                   'half)
@@ -4101,7 +4130,7 @@ toggle the enlarge-state."
                             ecb-enlarged-compilation-window-max-height
                             (1- (frame-height))))))
               (enlarge-window (- (max max-height compile-window-height-lines)
-                                 (window-height))))
+                                 (ecb-window-full-height))))
             ;; now we set the window-start
             (when (and (not (equal major-mode 'compilation-mode))
                        (not compile-window-selected-p))
@@ -4191,7 +4220,8 @@ you have to quit with `C-g')."
           (let ((point-location (ecb-where-is-point)))
             (ecb-with-original-functions
              (ecb-with-original-basic-functions
-              (delete-window ecb-compile-window)))
+              (ecb-with-original-permanent-functions
+               (delete-window ecb-compile-window))))
             ;; If point was in the compile-window we move it back to the first
             ;; edit-window
             (if (equal point-location 'compile)

@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: tree-buffer.el,v 1.131 2003/12/15 17:29:35 berndl Exp $
+;; $Id: tree-buffer.el,v 1.132 2003/12/28 15:28:56 berndl Exp $
 
 ;;; Commentary:
 
@@ -61,6 +61,7 @@
 (silentcomp-defun locate-data-directory)
 (silentcomp-defun make-image-specifier)
 (silentcomp-defun make-glyph)
+(silentcomp-defun popup-menu-and-execute-in-window)
 (silentcomp-defun valid-image-instantiator-format-p)
 ;; Emacs
 (silentcomp-defvar message-log-max)
@@ -1346,7 +1347,8 @@ mentioned above!"
                                       tree-buffer-menus))))
                 (tmm-prompt menu))))))
     (if tree-buffer-running-xemacs
-        (tree-buffer-show-menu)
+        (tree-buffer-show-menu (get-buffer-window (current-buffer)
+                                                  tree-buffer-frame))
       (let ((curr-frame-ypos (* (/ (frame-pixel-height) (frame-height))
                                 (count-lines (window-start) (point))))
             (curr-frame-xpos (* (/ (frame-pixel-width) (frame-width))
@@ -1371,7 +1373,10 @@ mentioned above!"
                                    (t "Tree-buffer-menu"))))
             (when menu
 	      (if tree-buffer-running-xemacs
-		  (popup-menu (cons menu-title menu))
+                  (if (windowp event)
+                      (popup-menu-and-execute-in-window (cons menu-title menu)
+                                                        event)
+                    (popup-menu (cons menu-title menu)))
                 ;; we must set the title for the menu-keymap
                 (setcar (member (nth (1- (length menu)) menu) menu)
                         menu-title)
@@ -1989,8 +1994,8 @@ AFTER-CREATE-HOOK: A function or a list of functions \(with no arguments)
       ;; scrollbar...
       (define-key tree-buffer-key-map
         [mode-line mouse-1] 'tree-buffer-mouse-hscroll)
-      (define-key tree-buffer-key-map
-        [mode-line mouse-2] 'tree-buffer-mouse-hscroll)
+;;       (define-key tree-buffer-key-map
+;;         [mode-line mouse-2] 'tree-buffer-mouse-hscroll)
       
       (define-key tree-buffer-key-map [M-mouse-1] nop)
       (define-key tree-buffer-key-map [M-mouse-3] nop)
