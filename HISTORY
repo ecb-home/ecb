@@ -1,3 +1,18 @@
+Version ???:
+------------
+
+- Now not only for method-highlighting an idle delay can be set but also for
+  synchronizing the ECB windows with current edit window (see option
+  ecb-window-sync and ecb-window-sync-delay; default is 0.25 sec delay)
+  (Klaus).
+
+- Smarter highlighting of current method (Klaus).
+
+- All tree-buffers now have as default-directory the current selected
+  directory in the directory buffer. So you also open files with find-file
+  etc. (Klaus).
+
+
 Version 1.32:
 -------------
 
