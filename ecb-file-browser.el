@@ -23,7 +23,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-file-browser.el,v 1.45 2004/11/26 16:19:52 berndl Exp $
+;; $Id: ecb-file-browser.el,v 1.46 2004/11/30 18:40:36 berndl Exp $
 
 ;;; Commentary:
 
@@ -978,10 +978,14 @@ a certain backend-VC-state no mapping can be found then per default 'edited is
 assumed!
 
 The default value of this option maps already the possible returned
-state-values of `vc-state' and `vc-cvs-state' \(both GNU Emacs) and
-`vc-cvs-status' \(Xemacs) to the ECB-VC-state-values."
+state-values of `ecb-vc-state', `vc-state' and `vc-recompute-state' \(both GNU
+Emacs) and `vc-cvs-status' \(Xemacs) to the ECB-VC-state-values."
   :group 'ecb-version-control
   :group 'ecb-sources
+  :initialize 'custom-initialize-default  
+  :set (function (lambda (sym val)
+                   (set sym val)
+                   (ecb-vc-cache-clear)))
   :type '(repeat (cons (choice :tag "Backend VC-state"
                                :menu-tag "Backend VC-state"
                                (const :tag "up-to-date" :value up-to-date)
@@ -1010,9 +1014,10 @@ state-values of `vc-state' and `vc-cvs-state' \(both GNU Emacs) and
 (defcustom ecb-vc-supported-backends
   (if ecb-running-xemacs
       '((ecb-vc-dir-managed-by-CVS . vc-cvs-status))
-    '((ecb-vc-dir-managed-by-CVS . vc-state)
-      (ecb-vc-dir-managed-by-RCS . vc-state)
-      (ecb-vc-dir-managed-by-SCCS . vc-state)))
+    '((ecb-vc-dir-managed-by-CVS . ecb-vc-state)
+      (ecb-vc-dir-managed-by-RCS . ecb-vc-state)
+      (ecb-vc-dir-managed-by-SCCS . ecb-vc-state)
+      (ecb-vc-dir-managed-by-SVN . ecb-vc-state)))
   "*Define how to to identify the VC-backend and how to check the state.
 The value of this option is a list containing cons-cells where the car is a
 function which is called to identify the VC-backend for a DIRECTORY and the
@@ -1043,10 +1048,12 @@ possible performance.
 To prepend ECB from checking the VC-state for any file set
 `ecb-vc-enable-support' to nil.
 
-Default value for GNU Emacs: Support for CVS, RCS and SCCS is added per
-default. To identify the VC-backend the functions `ecb-vc-managed-by-CVS',
-`ecb-vc-managed-by-SCCS' rsp. `ecb-vc-managed-by-RCS' are used. For all three
-backends the function `vc-state' of the VC-package is used.
+Default value for GNU Emacs: Support for CVS, RCS, SCCS and Subversion \(for
+the later one the most recent version of the VC-package incl. the vc-svn
+library is needed) is added per default. To identify the VC-backend the
+functions `ecb-vc-managed-by-CVS', `ecb-vc-managed-by-RCS' rsp.
+`ecb-vc-managed-by-SCCS' rsp. `ecb-vc-managed-by-SVN' are used. For all three
+backends the function `ecb-vc-state' of the VC-package is used.
 
 Default value for XEmacs: XEmacs contains only a quite outdated VC-package,
 especially there is no backend-independent check-vc-state-function available
@@ -1056,8 +1063,9 @@ CVS and uses `ecb-vc-managed-by-CVS' rsp. `vc-cvs-status'.
 
 Example for GNU Emacs: If `vc-recompute-state' \(to get real state-values not
 only heuristic ones) should be used to check the state for CVS-managed files
-and `vc-state' for all other backends then an element \(ecb-vc-managed-by-CVS
-. vc-recompute-state) sould be added at the beginning of this option."
+and `vc-state' for all other backends then an element
+\(ecb-vc-dir-managed-by-CVS . vc-recompute-state) should be added at the
+beginning of this option."
   :group 'ecb-version-control
   :group 'ecb-sources
   :initialize 'custom-initialize-default  
@@ -1075,31 +1083,6 @@ and `vc-state' for all other backends then an element \(ecb-vc-managed-by-CVS
 ;;   ;; (Status field in output of "cvs status")
 ;;   (vc-fetch-master-properties file)
 ;;   (vc-file-getprop file 'vc-cvs-status))
-
-;; Klaus Berndl <klaus.berndl@sdm.de>: IMO we do not need such an option
-;; because with `ecb-vc-directory-exclude-regexps' all these directories can
-;; be excluded.
-
-;; (defcustom ecb-vc-check-remote-repository (if ecb-running-xemacs nil t)
-;;   "*If on then ECB will also check the VC-state for remote repositories.
-;; Checking the VC-state of files with a remote repository \(means the file
-;; CVS/Root contains a repository entry with method :ext:) can take long time
-;; depending on \(a.o.) the speed of the internet-connection. GNU Emacs'
-;; VC-package offers for CVS an option `vc-cvs-stay-local' which allows to choose
-;; between heuristic approaches performed local and real state-checks performed
-;; remote. The VC-package of XEmacs doesn't have such a feature, here the check
-;; always is done via real cvs-commands over the net.
-
-;; To avoid long lasting state-checks for remote-directories ECB offers an own
-;; option to specify if remote repositories should be checked or not. Cause of
-;; the existence of `vc-cvs-stay-local' the defautl value for GNU Emacs is true
-;; and cause of the lack of such an option the default value for XEmacs is false.
-;; "
-;;   :group 'ecb-version-control
-;;   :group 'ecb-sources
-;;   :type 'boolean)
-  
-
 
 ;;====================================================
 ;; Internals
@@ -2498,6 +2481,15 @@ new state."
                         ;; (opens a new small window) if it fails...so maybe
                         ;; we have to save the window-config before this call
                         ;; and restore it when the call fails - later... ;-)
+
+                        ;; we must ignore errors here because it could be that
+                        ;; a user has a certain VC-system not installed onto
+                        ;; his machine but opens directories which have a
+                        ;; CVS-subdir for example - then for such a directory
+                        ;; ECB would eventually call this backend - but this
+                        ;; would fail because the needed program is not
+                        ;; installed - so we ignore this an handle this as
+                        ;; unknown-state. 
                         (ignore-errors (funcall vc-state-fcn file))))
       ;; now we map the backend-state to one of the ECB-VC-state-values
       (setq result (or (cdr (assoc result ecb-vc-state-mapping)) 'unknown)))
@@ -2599,6 +2591,12 @@ above."
   (and (file-exists-p (concat directory "/RCS/"))
        'RCS))
 
+(defun ecb-vc-dir-managed-by-SVN (directory)
+  "Return 'SVN if DIRECTORY is managed by SVN. nil if not."
+  (and (file-exists-p (concat directory "/.svn/"))
+       (locate-library "vc-svn")
+       'SVN))
+
 (defun ecb-vc-dir-managed-by-SCCS (directory)
   "Return 'SCCS if DIRECTORY is managed by SCCS. nil if not."
   (or (and (file-exists-p (concat directory "/SCCS/")) 'SCCS)
@@ -2608,7 +2606,12 @@ above."
             (and (file-exists-p (concat proj-dir "/SCCS")) 'SCCS)
           nil))))
 
-  
+(defun ecb-vc-state (file)
+  "Same as `vc-state' but it clears the internal caches of the VC-package for
+FILE before calling `vc-state'. Finally calls `vc-state' and returns that value."
+  (vc-file-clearprops file)
+  (vc-state file))
+
 (defun ecb-vc-get-state-fcn-for-dir (directory)
   "Get that function which should be used for checking the VC-state for files
 contained in DIRECTORY. Get it either from the VC-cache or call the car of
@@ -2870,8 +2873,8 @@ checkedin file is cleared. Uses `ecb-checkedin-file' as last checked-in file."
 reverted file-buffer is cleared."
   (let ((file (ignore-errors (ecb-fix-filename buffer-file-name))))
     (when (and file (file-exists-p file))
-      (ecb-vc-reset-vc-stealthy-checks)
-      (ecb-vc-cache-remove file))))
+      (ecb-vc-cache-remove file)
+      (ecb-vc-reset-vc-stealthy-checks))))
 
 (defun ecb-vc-enable-internals (arg)
   "Enable or disable \(if ARG < 0) all settings needed by the VC-support."
@@ -3483,7 +3486,6 @@ edit-windows. Otherwise return nil."
     (find-file file)
     (vc-annotate nil)))
 
-
 (tree-buffer-defpopup-command ecb-file-popup-vc-diff
   "Diff file against last version in repository."
   (let ((file (tree-node-get-data node)))
@@ -3504,7 +3506,6 @@ edit-windows. Otherwise return nil."
 
 (defvar ecb-sources-menu nil
   "Built-in menu for the sources-buffer.")
-
 
 (setq ecb-sources-menu
       '(("Grep"
