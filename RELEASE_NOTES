@@ -7,6 +7,7 @@ Please read also the sections "Known conflicts of ECB with other packages" and
 "Tips and Tricks" in the online help ('ecb-show-help'). The former one is a
 small list of known conflicts and for each conflict a proper and easy
 solution!
+Please read also carefully the upgrade informations below!
 
 
 Installing ECB first time:
@@ -20,6 +21,7 @@ Upgrading from any previous version:
 
 The type of the option 'ecb-token-display-function' has changed, so this
 option must be customized again!
+
 
 Upgrading from any version < 1.60:
 ----------------------------------

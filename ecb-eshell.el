@@ -131,18 +131,17 @@
   :prefix "ecb-eshell-")
 
 (defcustom ecb-eshell-enlarge-when-selecting t
-  "When selecting the `ecb-eshell-buffer-name' buffer, enlarge the buffer if
-non-nil."
+  "*Enlarge the `ecb-eshell-buffer-name' buffer if it has been selected."
   :group 'ecb-eshell
   :type 'boolean)
 
 (defcustom ecb-eshell-enlarge-when-starting t
-  "When starting the eshell, enlarge the buffer if non-nil."
+  "*When starting the eshell, enlarge the buffer if non-nil."
   :group 'ecb-eshell
   :type 'boolean)
 
 (defcustom ecb-eshell-auto-activate nil
-  "Startup the eshell when the ECB is activated."
+  "*Startup the eshell when the ECB is activated."
   :group 'ecb-eshell
   :type 'boolean)
 
@@ -234,12 +233,9 @@ eshell is currently visible."
   ;;buffer.
 
   (if (ecb-eshell-running-p)
-      (progn 
-
+      (when (ecb-compile-window-live-p 'display-msg)
         (set-window-buffer ecb-compile-window ecb-eshell-buffer-name)
-
         (select-window ecb-compile-window)
-        
         (if ecb-eshell-enlarge-when-selecting
             (ecb-eshell-enlarge)
           ;;else just recenter
@@ -253,8 +249,9 @@ eshell is currently visible."
 (defun ecb-eshell-activate()
   "Startup the eshell in the compile window."
 
-  (select-window ecb-compile-window)
-  (eshell))
+  (when (ecb-compile-window-live-p 'display-msg)
+    (select-window ecb-compile-window)
+    (eshell)))
   
 (defun ecb-eshell-enlarge()
   "Enlarge the eshell so more information is visible.  This is usually done so

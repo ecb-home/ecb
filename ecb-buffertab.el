@@ -41,6 +41,8 @@
 ;;
 ;; 
 
+(require 'ecb-compilation)
+
 (defface ecb-buffertab-face '((t (:bold t :foreground "lightyellow")))
   "Face used to highlight the annotation lines to the left of the annotate buffer.")
 
@@ -60,7 +62,7 @@
 
   (let((menu (list 'keymap name)))
 
-    (dolist(entry (ecb-get-compilation-buffers))
+    (dolist(entry (ecb-compilation-get-buffers))
 
       (add-to-list 'menu (list 'menu-item 'menu-item (car entry) (car entry)) t))
 
