@@ -1,3 +1,16 @@
+* Changes for ECB version 2.26
+
+** Improved the performance of the directories-buffer-display
+   Reduced the need of completely rebuilding the whole directories-tree-buffer
+   when just switching between buffers and the related directories are already
+   expanded. This can dramatically increase the speed of the tree-buffer
+   display when displaying the sources-files in the directories-buffer (see
+   `ecb-show-sources-in-directories-buffer') Thanks to Rob Walker
+   <rob.lists@tenfoot.org.uk> for tracking down the performance bottleneck and
+   supplying a first patch.
+   
+
+
 * Changes for ECB version 2.25
 
 ** More flexible sorting of the Sources- and the History-buffer
