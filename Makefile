@@ -64,7 +64,7 @@ INSTALLINFO=/usr/bin/install-info
 
 # Do not change anything below!
 
-# $Id: Makefile,v 1.35 2002/08/09 11:33:44 berndl Exp $
+# $Id: Makefile,v 1.36 2002/08/22 10:04:13 berndl Exp $
 
 RM=rm -f
 CP=cp
@@ -99,7 +99,7 @@ online-help: $(ecb_TEXI)
 	@if test -x "$(MAKEINFO)" ; then\
 	   $(RM) $(ecb_INFO) $(ecb_HTML); \
 	   echo Generating info-format...; \
-	   $(MAKEINFO) --no-split $<; \
+	   $(MAKEINFO) --fill-column=78 --no-split $<; \
 	   echo Generating html-format...; \
 	   $(MAKEINFO) --no-split --html $<; \
 	else \

@@ -26,7 +26,7 @@
 ;;
 ;; Contains all online-help for ECB (stolen something from recentf.el)
 
-;; $Id: ecb-help.el,v 1.79 2002/08/09 11:33:44 berndl Exp $
+;; $Id: ecb-help.el,v 1.80 2002/08/22 10:04:13 berndl Exp $
 
 ;;; Code
 
@@ -166,9 +166,7 @@ a backtrace-buffer and inserts the contents of that."
 (defun ecb-problem-report-list-all-variables()
   "List all variables starting with `ecb-' and some other variables which
 could be interesting for support."
-  (let ((emacs-vars (sort `(semantic-after-toplevel-cache-change-hook
-                            semantic-after-partial-cache-change-hook
-                            pre-command-hook
+  (let ((emacs-vars (sort `(pre-command-hook
                             post-command-hook
                             after-save-hook
                             help-mode-hook
@@ -176,7 +174,16 @@ could be interesting for support."
                             ,(if (boundp 'ediff-quit-hook)
                                  'ediff-quit-hook))
                           (function (lambda (l r)
-                                      (string< (symbol-name l) (symbol-name r))))))
+                                      (string< (symbol-name l)
+                                               (symbol-name r))))))
+        (semantic-vars (sort `(semantic-after-toplevel-cache-change-hook
+                               semantic-after-partial-cache-change-hook
+                               semantic-face-alist
+                               semantic-uml-colon-string
+                               semantic-orphaned-member-metaparent-type)
+                             (function (lambda (l r)
+                                         (string< (symbol-name l)
+                                                  (symbol-name r))))))
         (ecb-options (mapcar
                       'intern
                       (sort
@@ -193,7 +200,7 @@ could be interesting for support."
                                  (function (lambda (l r)
                                              (string< (symbol-name l)
                                                       (symbol-name r)))))))
-    (append emacs-vars ecb-internal-vars ecb-options)))
+    (append emacs-vars semantic-vars ecb-internal-vars ecb-options)))
 
 
 (provide 'ecb-help)

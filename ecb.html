@@ -42,6 +42,7 @@ mailing list <a href="mailto:ecb-list@lists.sourceforge.net">ecb-list@lists.sour
 <li><a accesskey=8 href="#Tips%20and%20tricks">Tips and tricks</a>:              Useful hints and tips
 <li><a accesskey=9 href="#Elisp%20programming">Elisp programming</a>:            Entry points for elisp programmers
 <li><a href="#Conflicts%20and%20bugs">Conflicts and bugs</a>:           Known Conflicts with other packages and bugs
+<li><a href="#FAQ">FAQ</a>:                          Frequent asked questions
 <li><a href="#Command%20Index">Command Index</a>:                Index for interactive commands
 <li><a href="#Option%20Index">Option Index</a>:                 Index for user options
 <li><a href="#Concept%20Index">Concept Index</a>:                Index for concepts and terms
@@ -51,6 +52,7 @@ mailing list <a href="mailto:ecb-list@lists.sourceforge.net">ecb-list@lists.sour
 <p>Installation and first steps of ECB
 
 </p><li><a href="#Installation">Installation</a>:                 Installation of ECB
+<li><a href="#Setting%20up%20Emacs">Setting up Emacs</a>:             How to set up Emacs for semantic and ECB
 <li><a href="#First%20steps">First steps</a>:                  First steps after activating ECB first time
 
 <p>Overview
@@ -161,17 +163,18 @@ Up:<a rel=up accesskey=u href="#Top">Top</a>
 
 <h2>Installation and first steps of ECB</h2>
 
-<p>This chapter describes how to install ECB and what are the first
-steps after activation of ECB
+<p>This chapter describes how to install ECB and setup Emacs correctly and
+what are the first steps after activation of ECB.
 
 <ul>
 <li><a accesskey=1 href="#Installation">Installation</a>:                 Installation of ECB
-<li><a accesskey=2 href="#First%20steps">First steps</a>:                  First steps after activating ECB first time
+<li><a accesskey=2 href="#Setting%20up%20Emacs">Setting up Emacs</a>:             How to set up Emacs for semantic and ECB
+<li><a accesskey=3 href="#First%20steps">First steps</a>:                  First steps after activating ECB first time
 </ul>
 
 <p><hr>
 Node:<a name="Installation">Installation</a>,
-Next:<a rel=next accesskey=n href="#First%20steps">First steps</a>,
+Next:<a rel=next accesskey=n href="#Setting%20up%20Emacs">Setting up Emacs</a>,
 Previous:<a rel=previous accesskey=p href="#Install%20and%20first%20steps">Install and first steps</a>,
 Up:<a rel=up accesskey=u href="#Install%20and%20first%20steps">Install and first steps</a>
 <br>
@@ -269,8 +272,63 @@ online help of ECB is always available though, see
 </ol>
 
 <p><hr>
-Node:<a name="First%20steps">First steps</a>,
+Node:<a name="Setting%20up%20Emacs">Setting up Emacs</a>,
+Next:<a rel=next accesskey=n href="#First%20steps">First steps</a>,
 Previous:<a rel=previous accesskey=p href="#Installation">Installation</a>,
+Up:<a rel=up accesskey=u href="#Install%20and%20first%20steps">Install and first steps</a>
+<br>
+
+<h3>How to set up Emacs for file parsing</h3>
+
+<p>Parsing files is done completely by semantic. ECB just displays the
+parsing results. For all needs of ECB semantic is completely setup by
+ECB itself, i.e. ECB sets up semantic for you! You have only to add
+the installation directory of semantic to your <code>load-path</code> (in an
+appropriate way)!
+
+<p><strong>NOTE</strong>: ECB is for browsing source-files and therefore you have
+to setup your Emacs-configuration properly so semantic can be
+activated automatically for parsing your Emacs-Lisp, C, C++ or Java
+buffers<a rel=footnote href="#fn-1"><sup>1</sup></a>. For this Emacs must activate the correct <code>major-mode</code>
+for the source-files and Emacs can only do this if the option
+<code>auto-mode-alist</code> is setup correctly. The correct major-modes and
+possible file-extensions<a rel=footnote href="#fn-2"><sup>2</sup></a> are:
+
+<p><table>
+<tr align="left"><td valign="top"><strong>Language</strong>
+</td><td valign="top">
+<strong>Major-mode</strong>
+</td><td valign="top">
+<strong>Extension(s)</strong>
+
+<br></td></tr><tr align="left"><td valign="top">Emacs Lisp </td><td valign="top"><code>emacs-lisp-mode</code> </td><td valign="top">.el
+
+<br></td></tr><tr align="left"><td valign="top">C </td><td valign="top"><code>c-mode</code> </td><td valign="top">.h, .c
+
+<br></td></tr><tr align="left"><td valign="top">C++ </td><td valign="top"><code>c++-mode</code> </td><td valign="top">.h, .hxx, .hh, .HH, .cxx, .cpp,
+.cc, .CC
+
+<br></td></tr><tr align="left"><td valign="top">Java </td><td valign="top"><code>java-mode</code> or <code>jde-mode</code> (if you use JDEE)
+</td><td valign="top">.java
+<br></td></tr></table>
+
+<br><p>
+<p>If your source-files are "running" with correct <code>major-mode</code>
+ECB and semantic will do what you expect them doing!
+
+<p>Example: If you want files with extension ".cpp" being c++-parsed by
+semantic and ECB, your <code>auto-mode-alist</code> must contain an entry
+like:
+
+<br><pre>("\\.cpp\\'" . c++-mode)
+</pre>
+
+<p>After this ECB will correctly parse your ".cpp"-sources and display
+all the semantic information in the ECB-methods buffer.
+
+<p><hr>
+Node:<a name="First%20steps">First steps</a>,
+Previous:<a rel=previous accesskey=p href="#Setting%20up%20Emacs">Setting up Emacs</a>,
 Up:<a rel=up accesskey=u href="#Install%20and%20first%20steps">Install and first steps</a>
 <br>
 
@@ -284,7 +342,7 @@ steps:
 
 </p><li>Configure where ECB can find your sources:
 
-<p>Call <code>M-x customize-option RET ecb-source-path RET</code><a rel=footnote href="#fn-1"><sup>1</sup></a>. This lets you customize the option
+<p>Call <code>M-x customize-option RET ecb-source-path RET</code><a rel=footnote href="#fn-3"><sup>3</sup></a>. This lets you customize the option
 <code>ecb-source-path</code> with the customize-feature of Emacs. This opens
 a customize-buffer where you can insert all the directories where ECB
 can find your source-files. Save your changes with the button "Save
@@ -337,7 +395,7 @@ output of Emacs-compilation (compile, grep etc.) is shown
 (see <a href="#Temp-%20and%20compile-buffers">Temp- and compile-buffers</a>).
 
 <p>The following "ascii-screenshot" illustrates the typical layout of
-the ECB-frame<a rel=footnote href="#fn-2"><sup>2</sup></a>:
+the ECB-frame<a rel=footnote href="#fn-4"><sup>4</sup></a>:
 
 <br><pre>------------------------------------------------------------------
 |              |                                                 |
@@ -584,7 +642,7 @@ window (see the documentation <code>ecb-primary-mouse-jump-destination</code>).
 combinations of primary and secondary mouse-buttons are possible:
 
 <ul>
-<li>primary: mouse-2, secondary: C-mouse-2<a rel=footnote href="#fn-3"><sup>3</sup></a>. This is the default.
+<li>primary: mouse-2, secondary: C-mouse-2<a rel=footnote href="#fn-5"><sup>5</sup></a>. This is the default.
 
 <li>primary: mouse-1, secondary: C-mouse-1
 
@@ -996,7 +1054,7 @@ Up:<a rel=up accesskey=u href="#Usage%20of%20ECB">Usage of ECB</a>
 
 <p>With ECB you can "browse" in your source-files like with a
 web-browser. This means ECB stores the current buffer- and
-window-position relative to the current token<a rel=footnote href="#fn-4"><sup>4</sup></a> in the edit-window after
+window-position relative to the current token<a rel=footnote href="#fn-6"><sup>6</sup></a> in the edit-window after
 
 <ul>
 <li>selecting a token in the ECB-methods buffer or
@@ -4334,7 +4392,7 @@ satisfied:
 
 <p>With unix-systems these tools are in the
 standard-distribution. If you are running any Microsoft Windows system
-then you need cygwin<a rel=footnote href="#fn-5"><sup>5</sup></a> which offers these tools too. On every
+then you need cygwin<a rel=footnote href="#fn-7"><sup>7</sup></a> which offers these tools too. On every
 system these tools must reside in the <code>PATH</code> environment-variable!
 
 <p>If you are behind a firewall and you have to use a proxy you maybe
@@ -4801,7 +4859,7 @@ Up:<a rel=up accesskey=u href="#Elisp%20programming">Elisp programming</a>
 <h3>How to deal with the adviced window-functions</h3>
 
 <p>ECB offers for packages which work during activated ECB three macros
-for easy temporally<a rel=footnote href="#fn-6"><sup>6</sup></a> using all original-functions, all
+for easy temporally<a rel=footnote href="#fn-8"><sup>8</sup></a> using all original-functions, all
 adviced functions or only some adviced functions:
 
 <ul>
@@ -4825,7 +4883,7 @@ Up:<a rel=up accesskey=u href="#Elisp%20programming">Elisp programming</a>
 
 <p><hr>
 Node:<a name="Conflicts%20and%20bugs">Conflicts and bugs</a>,
-Next:<a rel=next accesskey=n href="#Command%20Index">Command Index</a>,
+Next:<a rel=next accesskey=n href="#FAQ">FAQ</a>,
 Previous:<a rel=previous accesskey=p href="#Elisp%20programming">Elisp programming</a>,
 Up:<a rel=up accesskey=u href="#Top">Top</a>
 <br>
@@ -4958,9 +5016,99 @@ Up:<a rel=up accesskey=u href="#Conflicts%20and%20bugs">Conflicts and bugs</a>
 maintainers of ECB try to fix these bugs as soon as possible.
 
 <p><hr>
+Node:<a name="FAQ">FAQ</a>,
+Next:<a rel=next accesskey=n href="#Command%20Index">Command Index</a>,
+Previous:<a rel=previous accesskey=p href="#Conflicts%20and%20bugs">Conflicts and bugs</a>,
+Up:<a rel=up accesskey=u href="#Top">Top</a>
+<br>
+
+<h2>Frequent asked questions</h2>
+
+<p>This is the Emacs Code Browser FAQ.
+
+<p><table>
+<tr align="left"><td valign="top"><strong>Question</strong>
+</td><td valign="top"></td><td valign="top">
+<strong>Answer</strong>
+
+<br></td></tr><tr align="left"><td valign="top"></td><td valign="top"></td><td valign="top">
+
+<br></td></tr><tr align="left"><td valign="top">What is the first step i should do if i have problems with ECB? 
+</td><td valign="top"></td><td valign="top">
+Read carefully the complete online-help of ECB.
+
+<br></td></tr><tr align="left"><td valign="top"></td><td valign="top"></td><td valign="top">
+
+<br></td></tr><tr align="left"><td valign="top">What should i do, if a have a problem which can not be solved even
+after reading the online-help? 
+</td><td valign="top"></td><td valign="top">
+Send a problem-report to the ECB-mailing-list with the command
+<code>ecb-submit-problem-report</code>, See <a href="#Submitting%20problem%20report">Submitting problem report</a>.
+
+<br></td></tr><tr align="left"><td valign="top"></td><td valign="top"></td><td valign="top">
+
+<br></td></tr><tr align="left"><td valign="top">What should i do, if another package seems not to work correct with
+ECB? 
+</td><td valign="top"></td><td valign="top">
+Take a look into <a href="#Conflicts">Conflicts</a>. If your package is not listed there
+then submit a problem-report.
+
+<br></td></tr><tr align="left"><td valign="top"></td><td valign="top"></td><td valign="top">
+
+<br></td></tr><tr align="left"><td valign="top">Why are the lines in the ECB-, temp- and compilation-buffers not
+wrapped but truncated? 
+</td><td valign="top"></td><td valign="top">
+Check the variable <code>truncate-partial-width-windows</code> and set it to
+nil.
+
+<br></td></tr><tr align="left"><td valign="top"></td><td valign="top"></td><td valign="top">
+
+<br></td></tr><tr align="left"><td valign="top">Why doesn't ECB work correct with VC? 
+</td><td valign="top"></td><td valign="top">
+The variable <code>vc-delete-logbuf-window</code> must be set to nil during
+active ECB. This can be done with the hooks of ECB.
+
+<br></td></tr><tr align="left"><td valign="top"></td><td valign="top"></td><td valign="top">
+
+<br></td></tr><tr align="left"><td valign="top">Does ECB support C++ as well as Java? 
+</td><td valign="top"></td><td valign="top">
+This depends strongly on Semantic, but all semantic-versions &gt;=
+semantic-1.4beta13 should support C++ really well.
+
+<br></td></tr><tr align="left"><td valign="top"></td><td valign="top"></td><td valign="top">
+
+<br></td></tr><tr align="left"><td valign="top">Why does ECB not recognize my source-files for C++? 
+</td><td valign="top"></td><td valign="top">
+Your C++-files have probably an extension which is not mapped to
+c++-mode in <code>auto-mode-alist</code>, See <a href="#Setting%20up%20Emacs">Setting up Emacs</a>.
+
+<br></td></tr><tr align="left"><td valign="top"></td><td valign="top"></td><td valign="top">
+
+<br></td></tr><tr align="left"><td valign="top">Why doesn't ECB display the node name in the echo area if mouse moves
+over it? 
+</td><td valign="top"></td><td valign="top">
+There can be several reasons: First the value of the option
+<code>ecb-show-node-name-in-minibuffer</code> must be either <code>always</code> or
+<code>if-too-long</code>. If this is ok, then maybe you have turned on
+follow-mouse AFTER activating ECB; follow-mouse must be turned on
+BEFORE ECB is acivated, e.g. in the <code>ecb-activate-hook</code>! But with
+Emacs 21.X and XEmacs there are no problems with this feature, just
+activate it.
+
+<br></td></tr><tr align="left"><td valign="top"></td><td valign="top"></td><td valign="top">
+
+<br></td></tr><tr align="left"><td valign="top">What is the reason for poor scrolling performance with GNU Emacs 20.X
+in the edit-windows and what can i do? 
+</td><td valign="top"></td><td valign="top">
+Set <code>scroll-conservatively</code> to 0 and <code>scroll-step</code> to a
+value &gt; 1. For the exact reason look at <a href="#Optimize%20scrolling">Optimize scrolling</a>.
+
+<br></td></tr></table>
+
+<p><hr>
 Node:<a name="Command%20Index">Command Index</a>,
 Next:<a rel=next accesskey=n href="#Option%20Index">Option Index</a>,
-Previous:<a rel=previous accesskey=p href="#Conflicts%20and%20bugs">Conflicts and bugs</a>,
+Previous:<a rel=previous accesskey=p href="#FAQ">FAQ</a>,
 Up:<a rel=up accesskey=u href="#Top">Top</a>
 <br>
 
@@ -5164,6 +5312,7 @@ Up:<a rel=up accesskey=u href="#Top">Top</a>
     <a href="#Install%20and%20first%20steps">Installation and first steps of ECB</a>
 <ul>
 <li><a href="#Installation">Installation of ECB</a>
+<li><a href="#Setting%20up%20Emacs">How to set up Emacs for file parsing</a>
 <li><a href="#First%20steps">First steps after activating ECB first time</a>
 </ul>
 <li><a name="toc_Overview"></a>
@@ -5267,6 +5416,8 @@ Up:<a rel=up accesskey=u href="#Top">Top</a>
 </ul>
 <li><a href="#Bugs">Known bugs</a>
 </ul>
+<li><a name="toc_FAQ"></a>
+    <a href="#FAQ">Frequent asked questions</a>
 <li><a name="toc_Command%20Index"></a>
     <a href="#Command%20Index">Command Index</a>
 <li><a name="toc_Option%20Index"></a>
@@ -5279,30 +5430,38 @@ Up:<a rel=up accesskey=u href="#Top">Top</a>
 <hr><h4>Footnotes</h4>
 <ol type="1">
 <li><a name="fn-1"></a>
+<p>semantic supports some more "languages" like
+Makefiles etc. but these are the most important ones.</p>
+
+<li><a name="fn-2"></a>
+<p>Especially for C++ and C you can
+use any extension you want but these are the most common ones!</p>
+
+<li><a name="fn-3"></a>
 <p>This
 means first hitting the keys <kbd>M</kbd> (Meta- or Alt-key) and <kbd>x</kbd>
 simultaniously, inserting "customize-option" in the minibuffer,
 hitting RETURN, inserting "ecb-source-path" in the minibuffer and
 finally hitting RETURN again</p>
 
-<li><a name="fn-2"></a>
+<li><a name="fn-4"></a>
 <p>This is only one example of the layouts ECB
 offers, See <a href="#Changing%20the%20ECB-layout">Changing the ECB-layout</a></p>
 
-<li><a name="fn-3"></a>
+<li><a name="fn-5"></a>
 <p>means mouse-2 while CTRL-key
 is pressed.</p>
 
-<li><a name="fn-4"></a>
+<li><a name="fn-6"></a>
 <p>e.g. a method,
 a variable or any other semantic token</p>
 
-<li><a name="fn-5"></a>
+<li><a name="fn-7"></a>
 <p>cygwin is available at
 <a href="http://cygwin.com/">http://cygwin.com/</a>
 </p>
 
-<li><a name="fn-6"></a>
+<li><a name="fn-8"></a>
 <p>I.e. regardless of the settings in
 <code>ecb-advice-window-functions</code>!</p>
 
