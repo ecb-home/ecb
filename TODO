@@ -1,6 +1,6 @@
 ********************************************************************************
-*** Last-Modified: $Date: 2001/07/14 13:14:16 $ 
-*** Version: $Id: TODO,v 1.19 2001/07/14 13:14:16 creator Exp $
+*** Last-Modified: $Date: 2001/07/15 09:48:59 $ 
+*** Version: $Id: TODO,v 1.20 2001/07/15 09:48:59 berndl Exp $
 *** Author: Kevin A. Burton ( burton@apache.org | burton@openprivacy.org )
 ********************************************************************************
 
@@ -19,22 +19,3 @@
 
 - Optionally add "(file . line-nr)" to history when clicking on methods in
   the methods buffer. (JN)
-
-- KB: use the JDE source paths if the JDE variable is available 
-   (perhaps there are other variables to use by default as well?). We
-   should add an option where this external source-paths can be defined.
-
-- KB: Easy selecting of a certain ECB-buffer with a ECB-keymap like.
-   This means we need an ECB minor mode with
-   [C-c C-e ...] as ECB-keybindings:
-   d: Directory buffer
-   s: Source-Buffer
-   m: Method-buffer
-   h: History-Buffer
-   This minor mode should be enabled in each ecb-buffer and also in
-   each buffer in general if ECB is activated.
-
-- KB: the utility- (also know as compile-) window stores not only the
-  last compilation-buffer but a list of recent utility-buffers
-   (compilation-, help-, etc. buffers) which can the easily cycled
-   through by a new ecb-command (maybe also bound to a [C-c C-e ...] key?

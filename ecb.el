@@ -54,7 +54,7 @@
 ;; The latest version of the ECB is available at
 ;; http://home.swipnet.se/mayhem/ecb.html
 
-;; $Id: ecb.el,v 1.132 2001/07/14 13:14:17 creator Exp $
+;; $Id: ecb.el,v 1.133 2001/07/15 09:48:59 berndl Exp $
 
 ;;; Code:
 
@@ -962,7 +962,7 @@ current-buffer is saved."
 ;; `ecb-update-methods-buffer--internal' and
 ;; `ecb-rebuild-methods-buffer-with-tokencache'!
 (defvar ecb-method-buffer-needs-rebuild t)
-(defun ecb-update-methods-buffer--internal ()
+(defun ecb-update-methods-buffer--internal (&optional scroll-to-top)
   "Updates the methods buffer with the current buffer. The only thing what
 must be done is to start the toplevel parsing of semantic, because the rest is
 done by `ecb-rebuild-methods-buffer-with-tokencache' because this function is in
@@ -988,12 +988,20 @@ displayed with window-start and point at beginning of buffer."
       ;; signalize that a "manually" rebuild of the method buffer is not
       ;; necessary.
       (if ecb-method-buffer-needs-rebuild
-          (ecb-rebuild-methods-buffer-with-tokencache current-tokencache t)))))
+          (ecb-rebuild-methods-buffer-with-tokencache current-tokencache t)))
+    (when scroll-to-top
+      (save-selected-window
+        (ecb-exec-in-methods-window
+         (tree-buffer-scroll (point-min) (point-min)))))))
 
-(defvar ecb-token-tree-cache nil)
+
+(defvar ecb-token-tree-cache nil
+  "This is the token-tree-cache for already opened file-buffers. The cache is
+a list of cons-cells where the car is the name of the source and the cdr is
+the current token-tree for this source. The cache contains exactly one element
+for a certain source.")
 (setq ecb-token-tree-cache nil)
-(defvar ecb-last-cached-tree nil)
-(setq ecb-last-cached-tree nil)
+
 (defun ecb-rebuild-methods-buffer-with-tokencache (updated-cache
 						   &optional no-update)
   "Rebuilds the ECB-method buffer after toplevel-parsing by semantic. This
@@ -1001,6 +1009,7 @@ function is added to the hook `semantic-after-toplevel-cache-change-hook'."
   (when (and ecb-minor-mode
              (equal (selected-frame) ecb-frame)
              (get-buffer-window ecb-methods-buffer-name)
+             (buffer-file-name (current-buffer))
              ;; The functions of the hook
              ;; `semantic-after-toplevel-cache-change-hook' are also called
              ;; after clearing the cache to set the cache to nil if a buffer
@@ -1011,24 +1020,33 @@ function is added to the hook `semantic-after-toplevel-cache-change-hook'."
              ;; again.
              (or updated-cache
                  (not (semantic-active-p))))
-    (let ((cached-tree (assoc ecb-path-selected-source ecb-token-tree-cache)))
+    ;; the following cache-mechanism MUST use the (buffer-file-name
+    ;; (current-buffer)) instead of ecb-path-selected-source because in case
+    ;; of opening a buffer not via directory-window but via the
+    ;; standard-mechanism of Emacs this function is called via hook BEFORE
+    ;; ecb-path-selected-source is set curretly by the synchronize-mechanism
+    ;; of ECB.
+    ;; Also if we create a new cache-element for the token-tree we MUST look
+    ;; if in the cache is already an element with this key and if we MUST
+    ;; update this cache-element instead of always adding a new one to the
+    ;; cache. Otherwith we would get more than one cache-element for the same
+    ;; source!.
+    (let ((cached-tree (assoc (buffer-file-name (current-buffer))
+                              ecb-token-tree-cache))
+          new-tree)
       (unless (and no-update cached-tree)
-	(setq cached-tree (list ecb-path-selected-source
-				(tree-node-new "root" 0 nil)
-				1 1))
-	(ecb-add-tokens (cadr cached-tree) updated-cache)
-	(setq ecb-token-tree-cache (cons cached-tree ecb-token-tree-cache)))
-      (save-selected-window
-	(ecb-exec-in-methods-window
-	 (when ecb-last-cached-tree
-	   (setcar (cddr ecb-last-cached-tree) (point))
-	   (setcar (cdddr ecb-last-cached-tree) (window-start)))
-	 (setq ecb-last-cached-tree cached-tree)
-	 (tree-buffer-set-root (cadr cached-tree))
-	 (setq ecb-methods-root-node (cadr cached-tree))
-	 (setq tree-buffer-indent ecb-tree-indent)
-	 (tree-buffer-update)
-	 (tree-buffer-scroll (caddr cached-tree) (cadddr cached-tree)))))
+	(setq new-tree (tree-node-new "root" 0 nil))
+	(ecb-add-tokens new-tree updated-cache)
+        (if cached-tree
+            (setcdr cached-tree new-tree)
+          (setq cached-tree (cons (buffer-file-name (current-buffer)) new-tree))
+          (setq ecb-token-tree-cache (cons cached-tree ecb-token-tree-cache))))
+      (save-excursion
+        (ecb-buffer-select ecb-methods-buffer-name)
+        (tree-buffer-set-root (cdr cached-tree))
+        (setq ecb-methods-root-node (cdr cached-tree))
+        (setq tree-buffer-indent ecb-tree-indent)
+        (tree-buffer-update)))
     (ecb-mode-line-format)
     ;; signalize that the rebuild has already be done
     (setq ecb-method-buffer-needs-rebuild nil)))
@@ -1074,12 +1092,12 @@ is not changed."
       ;; immediately updated with the methods of the edit-window.
       (save-excursion
 	(set-buffer (find-file-noselect ecb-path-selected-source))
-	(ecb-update-methods-buffer--internal))
+	(ecb-update-methods-buffer--internal 'scroll-to-begin))
     ;; open the selected source in the edit-window and do all the update and
     ;; parsing stuff with this buffer
     (ecb-find-file-and-display ecb-path-selected-source
 			       other-edit-window)
-    (ecb-update-methods-buffer--internal)))
+    (ecb-update-methods-buffer--internal 'scroll-to-begin)))
 
 (defun ecb-remove-from-current-tree-buffer (node)
   (when node
@@ -1155,7 +1173,7 @@ the ECB tree-buffers."
           ;; selected source has changed, therfore we must initialize
           ;; ecb-selected-token again.
           (setq ecb-selected-token nil)
-          (ecb-update-methods-buffer--internal)
+          (ecb-update-methods-buffer--internal 'scroll-to-begin)
           (ecb-token-sync))))))
 
 (defun ecb-window-sync-function ()
@@ -1957,6 +1975,7 @@ always the ECB-frame if called from another frame."
     ;; remove the hooks
     (remove-hook 'semantic-after-toplevel-cache-change-hook
 		 'ecb-rebuild-methods-buffer-with-tokencache)
+    (remove-hook 'semantic-clean-token-hooks 'ecb-update-token)
     (dolist (timer-elem ecb-idle-timer-alist)
       (cancel-timer (cdr timer-elem)))
     (setq ecb-idle-timer-alist nil)
