@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb.el,v 1.384 2004/04/05 09:41:45 berndl Exp $
+;; $Id: ecb.el,v 1.385 2004/04/06 15:17:29 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -2208,6 +2208,7 @@ That is remove the unsupported :help stuff."
                (t "fm" ecb-methods-filter)
                (t "fr" ecb-methods-filter-regexp)
                (t "ft" ecb-methods-filter-tagclass)
+               (t "fc" ecb-methods-filter-current-type)
                (t "fp" ecb-methods-filter-protection)
                (t "fn" ecb-methods-filter-nofilter)
                (t "fl" ecb-methods-filter-delete-last)

@@ -24,7 +24,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-method-browser.el,v 1.33 2004/04/05 09:41:45 berndl Exp $
+;; $Id: ecb-method-browser.el,v 1.34 2004/04/06 15:17:30 berndl Exp $
 
 ;;; Commentary:
 
@@ -1310,7 +1310,7 @@ Methods-buffer."
         (dolist (tag taglist)
           (dolist (filter-spec filters)
             (setq filter-type (nth 0 filter-spec))
-            (setq filter (nth 1 filter-spec))
+            (setq filter (car (nth 1 filter-spec))) ;; ignore the attached fcn
             (setq inverse (nth 2 filter-spec))
             ;; we forbid some tags to be displayed when they do not match the
             ;; filter. Currently we do not apply a filter to tags of class 'type
@@ -1504,14 +1504,61 @@ to an existing icon-file-name.")
                 (ecb-type-tag-expansion type-specifier))))))))
 
 (defun ecb-post-process-taglist (taglist)
-  "If for current major-mode a post-process function is found in
-`ecb-post-process-semantic-taglist' then this function is called with
+  "If for current major-mode post-process functions are found in
+`ecb-post-process-semantic-taglist' then these functions are called with
 TAGLIST otherwise TAGLIST is returned."
   (let ((fcn-list (cdr (assoc major-mode ecb-post-process-semantic-taglist))))
     (dolist (fcn fcn-list)
       (if (fboundp fcn)
-        (setq taglist (funcall fcn taglist))))
-    taglist))
+          (setq taglist (funcall fcn taglist)))))
+  ;; now we apply that tag-filters which must operate onto the whole
+  ;; tag-table of
+  (ecb-apply-tag-table-filters taglist))
+
+(defun ecb-apply-tag-table-filters (taglist)
+  "Perform all tag-filters which must be applied to the whole tag-table."
+  (let ((filters (cdr (assoc (current-buffer) ecb-methods-user-filter-alist)))
+        (filter nil))
+    (dolist (filter-type '(current-type))
+      (setq filter (car (cdr (assoc filter-type filters))))
+      (if filter
+          (setq taglist (funcall (cdr filter) (car filter) taglist)))))
+  taglist)
+
+
+(defun ecb-methods-filter-perform-current-type (filter taglist)
+  "Perform a current-type filter on TAGLIST. FILTER is a type-name-hierarchy
+for a certain type. If this hierarchy can be found in TAGLIST a new tag-list
+is returned which contains only the leaf-type in the hierarchy."
+  (let ((curr-type-filter (reverse filter))
+        (new-tag-list taglist)
+        (found-type-tag nil))
+    (if (null curr-type-filter)
+        taglist
+      (catch 'not-found
+        (dolist (type-name curr-type-filter)
+          (setq found-type-tag
+                (car (ecb--semantic-find-tags-by-class
+                      'type
+                      (ecb--semantic-find-tags-by-name type-name new-tag-list))))
+          (if (null found-type-tag)
+              (progn
+                ;; remove here the filters for current source because the
+                ;; current-type filter is no longer useable! TODO: Klaus
+                ;; Berndl <klaus.berndl@sdm.de>: Maybe we should be smarter
+                ;; and only remove the current-type-filter instead of all
+                ;; filters.
+                (ecb-methods-filter-apply nil nil nil "" "" (current-buffer))
+                (message "ECB has removed all filters cause of changes in the type-hierarchy for the current-type!")
+                ;; whenever we can not found any type in our filter type-hierarchy
+                ;; then we can not apply this current-type filter so we have to
+                ;; return the original tag-list
+                (throw 'not-found taglist))
+            (setq new-tag-list
+                  (ecb--semantic-tag-children-compatibility found-type-tag))))
+        ;; when we reach this point we can be sure that the whole type-hierarchy
+        ;; has been found and so we return just our current-type as new taglist.
+        (list found-type-tag)))))
 
 (defun ecb-group-function-tags-with-parents (taglist)
   "Return a new taglist based on TAGLIST where all function-tags in
@@ -1557,11 +1604,13 @@ For C-header-files prototypes are never filtered out!"
 ;; Filtering the Methods-buffer by the user ----------------
 
 (defvar ecb-methods-user-filter-alist nil
-  "The filter currently applied to the methods-buffer by the user. It can be a
-regexp-string, or one of the symbols 'private, 'protected or 'public or one of
-the tag-type-symbols mentioned in the the option `ecb-tag-display-function'.
-This cache is an alist where the key is the buffer-object of that buffer the
-filter belongs and the value is the applied filter to that buffer.")
+  "The filter currently applied to the methods-buffer by the user. This cache
+is an alist where the key is the buffer-object of that buffer the filter
+belongs and the value is the applied filter to that buffer.
+
+Filters which can work onto single tags are applied by
+`ecb-apply-user-filter-to-tags' whereas tag-filters which have to be applied
+onto the whole tag-table are performed by `ecb-apply-tag-table-filters'.")
 
 
 (defun ecb-methods-filter-by-prot (inverse source-buffer &optional prot)
@@ -1570,7 +1619,7 @@ filter belongs and the value is the applied filter to that buffer.")
                     (ecb-query-string "Protection filter:"
                                       '("private" "protected" "public")))))
     (ecb-methods-filter-apply 'protection
-                              (intern choice)
+                              (cons (intern choice) nil)
                               inverse
                               (concat (and inverse "^") "Prot")
                               choice
@@ -1594,7 +1643,7 @@ filter belongs and the value is the applied filter to that buffer.")
                                                             (car e))))
                                             curr-semantic-symbol->name-assoc-list)))))))
     (ecb-methods-filter-apply 'tag-class
-                              (intern class)
+                              (cons (intern class) nil)
                               inverse
                               (concat (and inverse "^") "Tagclass")
                               (cdr (assoc (intern class)
@@ -1609,7 +1658,9 @@ filter belongs and the value is the applied filter to that buffer.")
   "Filter the Methods-buffer by a regular expression."
   (let ((regexp-str (or regexp (read-string "Filter-regexp: "))))
     (ecb-methods-filter-apply 'regexp
-                              (if (> (length regexp-str) 0) regexp-str nil)
+                              (if (> (length regexp-str) 0)
+                                  (cons regexp-str nil)
+                                nil)
                               inverse
                               (concat (and inverse "^") "Regexp")
                               (if (> (length regexp-str) 0) regexp-str nil)
@@ -1629,7 +1680,8 @@ filter belongs and the value is the applied filter to that buffer.")
                              (completing-read "Tag-filter-function: "
                                               obarray 'fboundp t))))
     (ecb-methods-filter-apply 'function
-                              (intern filter-fcn-name)
+                              (cons (intern filter-fcn-name)
+                                    nil)
                               inverse
                               (concat (and inverse "^") "Function")
                               filter-fcn-name
@@ -1652,19 +1704,40 @@ filter belongs and the value is the applied filter to that buffer.")
   (ecb-methods-filter-apply nil nil nil "" "" (ecb-methods-get-data-store 'source-buffer) t))
 
 
-(defun ecb-get-type-tag-of-current-node (curr-node)
-  "Returns that tag of class 'type the tag of the node CURR-NODE of the
-Methods-buffer belongs to. If the tag of CURR-NODE do not belong to a type
+(defun ecb-get-type-node-of-node (node)
+  "Returns that node which data-tag is of class 'type the tag of the node NODE
+of the Methods-buffer belongs to. If the tag of NODE do not belong to a type
 then nil is returned."
-  (let ((parent (tree-node-get-parent curr-node)))
+  (let ((parent (tree-node-get-parent node)))
     (catch 'found
       (while (not (eq (tree-buffer-get-root) parent))
         (if (equal (and (= (tree-node-get-type parent) 0)
                         (ecb--semantic-tag-class (tree-node-get-data parent)))
                    'type)
-            (throw 'found (tree-node-get-data parent))
+            (throw 'found parent)
           (setq parent (tree-node-get-parent parent))))
       nil)))
+
+
+(defun ecb-get-type-name-hierarchy-of-current-node ()
+  "Return the type-name-hierarchy of current node in form of a list whereas the
+first element is the name of the tag of the current node itself, the second
+element is the name of the type the current node belongs to, the third element
+is the name of the parent-type of that type and so on. The last element in
+this list is the topmost type-parent of the tag of the current node. If the
+current node has no tag as data then nil is returned. If the tag of the
+current node does not belong to a type-tag \(e.g. a toplevel function) then
+the returned list contains just the name of the tag of the current node."
+  (let ((type-hierarchy nil)
+        (curr-node (tree-buffer-get-node-at-point)))
+    (when (and curr-node
+               (= (tree-node-get-type curr-node) 0))
+      (while (progn
+               (setq type-hierarchy (cons (ecb--semantic-tag-name
+                                           (tree-node-get-data curr-node))
+                                          type-hierarchy))
+               (setq curr-node (ecb-get-type-node-of-node curr-node)))))
+    (nreverse type-hierarchy)))
 
 (defun ecb-get-type-tag-of-tag (&optional tag table always-parent-type)
   "Returns that tag of class 'type the tag TAG belongs to. If TAG does not
@@ -1713,6 +1786,74 @@ TABLE is used."
           nil)))))
 
 
+(defun ecb-get-type-name-hierarchy-of-current-tag (&optional tag)
+  "Return the type-name-hierarchy of TAG in form of a list whereas the
+first element is the name of the TAG itself, the second element is the name of
+the type the TAG belongs to, the third element is the name of the parent-type
+of that type and so on. The last element in this list is the topmost
+type-parent of the TAG. If the TAG does not belong to a type-tag \(e.g. a
+toplevel function) then the returned list contains just the name of the
+TAG. If TAG is nil then the current tag returned by `ecb-get-real-curr-tag' is
+used; if point does not stay on a tag then nil is returned."
+  (let ((type-hierarchy nil)
+        (curr-tag (or tag (ecb-get-real-curr-tag))))
+    (when curr-tag
+      (while (progn
+               (setq type-hierarchy (cons (ecb--semantic-tag-name curr-tag)
+                                          type-hierarchy))
+               (setq curr-tag (ecb-get-type-tag-of-tag curr-tag nil t)))))
+    (nreverse type-hierarchy)))
+
+;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: Wenn wir im methods-buffer auf
+;; einem Bucket stehen, wird momentan kein type ermittelt.. Mittels
+;; ecb-get-type-name-hierarchy-of-current-node (und kleinen Änderungen) ginge
+;; das aber sehr leicht!
+
+;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: Applizieren eines
+;; current-type-filters sollte einen bestehenden current-type-filter immer
+;; autom. ersetzen
+(defun ecb-methods-filter-by-current-type (inverse source-buffer &optional
+                                                   tag)
+  "Display only the current-type and its contents in the methods-buffer. The
+argument INVERSE is ignored here."
+  (let* ((curr-tag (or tag
+                       (cond ((ecb-point-in-edit-window)
+                              (if (ecb--semantic-active-p)
+                                  (ecb-get-real-curr-tag)))
+                             ((equal (current-buffer)
+                                     (get-buffer ecb-methods-buffer-name))
+                              (let ((node (tree-buffer-get-node-at-point)))
+                                (and node
+                                     (= (tree-node-get-type node) 0)
+                                     (tree-node-get-data node))))
+                             (t (ecb-error "ECB can not identify the current-type!")))))
+         (curr-type-tag (and (ecb--semantic-tag-p curr-tag)
+                             (save-excursion
+                               (set-buffer source-buffer)
+                               (ecb-get-type-tag-of-tag curr-tag))))
+         (curr-tag-type-name-hierachy (and curr-type-tag
+                                           (save-excursion
+                                             (set-buffer source-buffer)
+                                             (ecb-get-type-name-hierarchy-of-current-tag
+                                              curr-type-tag)))))
+    (if (and curr-type-tag curr-tag-type-name-hierachy)
+        (ecb-methods-filter-apply 'current-type
+                                  (cons curr-tag-type-name-hierachy
+                                        'ecb-methods-filter-perform-current-type)
+                                  nil
+                                  "Type"
+                                  (ecb--semantic-tag-name curr-type-tag)
+                                  source-buffer)
+      (ecb-error "ECB can not identify the current-type!"))))
+                          
+(tree-buffer-defpopup-command ecb-methods-filter-by-current-type-popup
+  "Display only the current-type from popup."
+  (if (= (tree-node-get-type node) 0)
+      (ecb-methods-filter-by-current-type nil
+                                          (ecb-methods-get-data-store 'source-buffer)
+                                          (tree-node-get-data node))))
+
+
 (defun ecb-get-source-buffer-for-tag-filter ()
   "Return the source-buffer of the tag-list which should be filtered."
   (cond ((ecb-point-in-edit-window)
@@ -1744,6 +1885,12 @@ with a prefix arg) then an inverse filter is applied. For further details see
 `ecb-methods-filter'."
   (interactive "P")
   (ecb-methods-filter-internal inverse "tag-class"))
+
+(defun ecb-methods-filter-current-type ()
+  "Display in the Methods-buffer only the current type and its members. For
+further details see `ecb-methods-filter'."
+  (interactive)
+  (ecb-methods-filter-internal nil "current-type"))
 
 (defun ecb-methods-filter-regexp (&optional inverse)
   "Filter the methods-buffer by a regexp. If INVERSE is not nil \(called
@@ -1781,6 +1928,10 @@ So you get a better overlooking. There are six choices:
   major-mode. The available tag-classes come from the variable
   `semantic--symbol->name-assoc-list'. The are normally methods, variables
   etc.
+- Filter by current type: In languages which have types like Java or C++ this
+  filter displays only the current type and all its members \(e.g. attributes
+  and methods). If ECB can not identify the current type in the source-buffer
+  or in the methods-window then nothing will be done.
 - Filter by a filter-function: Such a function gets two arguments: a tag and
   the source-buffer of this tag. If the tag should be displayed \(i.e. not
   being filtered out) then the function has to return not nil otherwise nil.
@@ -1829,7 +1980,7 @@ applied default-tag-filters."
 
 (defun ecb-methods-filter-internal (inverse &optional filter-type)
   "FILTER-TYPE has to be one of the strings \"regexp\", \"protection\",
-\"tag-class\", \"function\", \"no filter\" or \"delete last\"."
+\"tag-class\", \"curr-type\", \"function\", \"no filter\" or \"delete last\"."
   (if (save-excursion
         (set-buffer ecb-methods-buffer-name)
         (tree-buffer-empty-p))
@@ -1845,6 +1996,7 @@ applied default-tag-filters."
                         (delq nil (list "regexp"
                                         (if semantic-source-p "protection")
                                         (if semantic-source-p "tag-class")
+                                        (if semantic-source-p "curr-type")
                                         "function" "no filter" "delete last"))))))
       (cond ((string= choice "protection")
              (ecb-methods-filter-by-prot inverse source-buffer))
@@ -1852,6 +2004,8 @@ applied default-tag-filters."
              (ecb-methods-filter-by-tag-class inverse source-buffer))
             ((string= choice "regexp")
              (ecb-methods-filter-by-regexp inverse source-buffer))
+            ((string= choice "curr-type")
+             (ecb-methods-filter-by-current-type inverse source-buffer))
             ((string= choice "function")
              (ecb-methods-filter-by-function inverse source-buffer))
             ((string= choice "delete last")
@@ -1873,7 +2027,7 @@ SOURCE-BUFFER arguments are ignored."
   (save-excursion
     (set-buffer source-buffer)
     (if (and (not remove-last)
-             (member filtertype '(protection tag-class))
+             (member filtertype '(protection tag-class curr-type))
              (not (ecb--semantic-active-p)))
         (ecb-error "A %s-filter '%s' can only applied to semantic-supported sources!"
                    filtertype filter)))
@@ -3469,6 +3623,9 @@ edit-windows. Otherwise return nil."
                           (when tag-menu-class-entries
                             (list (append (list "By tag-class")
                                           tag-menu-class-entries)))
+                          (when curr-semantic-symbol->name-assoc-list
+                            (list '(ecb-methods-filter-by-current-type-popup
+                                    "By current type")))
                           (list '(ecb-methods-filter-by-function-popup
                                   "By a filter-function")
                                 '("---")
@@ -3577,39 +3734,29 @@ edit-windows. Otherwise return nil."
 (defun ecb-dump-semantic-toplevel ()
   "Dump the current semantic-tags in special buffer and display them."
   (interactive)
-  (let ((tags (ecb-post-process-taglist (ecb--semantic-fetch-tags t))))
+  (let ((tags (ecb--semantic-fetch-tags))
+        (source-buf (current-buffer)))
     (save-selected-window
-      (set-buffer (get-buffer-create "ecb-dump"))
+      (set-buffer (get-buffer-create "*ecb-tag-dump*"))
       (erase-buffer)
-      (ecb-dump-tags tags "")
-      (switch-to-buffer-other-window (get-buffer-create "ecb-dump"))
+      (ecb-dump-semantic-tags-internal tags nil source-buf 1)
+      (switch-to-buffer-other-window (get-buffer-create "*ecb-tag-dump*"))
       (goto-char (point-min)))))
+  
 
-
-(defun ecb-dump-type (a-tag prefix)
-  (dolist (parent (ecb-get-tag-parents a-tag))
-    (insert prefix "  " parent)))
-
-
-(defun ecb-dump-tags (tags prefix)
-  (dolist (a-tag tags)
-    (if (stringp a-tag)
-	(princ (concat prefix a-tag))
-      (insert prefix
-              (ecb--semantic-format-tag-name a-tag nil ecb-font-lock-tags)
-              ", "
-              (symbol-name (ecb--semantic-tag-class a-tag))
-              ", "
-              (if (stringp (ecb--semantic-tag-type a-tag))
-                  (ecb--semantic-tag-type a-tag)
-                "<unknown type>")
-              "\n")
-      (if (eq 'type (ecb--semantic-tag-class a-tag))
-	  (ecb-dump-type a-tag prefix))
-      (ecb-dump-tags (ecb--semantic-tag-children-compatibility
-                        a-tag ecb-show-only-positioned-tags)
-                       (concat prefix "  ")))))
-
+(defun ecb-dump-semantic-tags-internal (table parent source-buffer indent)
+  (dolist (tag table)
+    (insert (format "%s%s, tag-class: %s\n" (make-string indent ? )
+                    (save-excursion
+                      (set-buffer source-buffer)
+                      (ecb--semantic-format-tag-uml-prototype tag parent t))
+                    (ecb--semantic-tag-class tag)))
+    (ecb-dump-semantic-tags-internal (ecb--semantic-tag-children-compatibility tag t)
+                                     (if (equal (ecb--semantic-tag-class tag)
+                                                'type)
+                                         tag)
+                                     source-buffer
+                                     (+ 2 indent))))
 
 
 (silentcomp-provide 'ecb-method-browser)

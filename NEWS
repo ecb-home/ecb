@@ -1,5 +1,17 @@
 * Changes for ECB version 2.23
 
+** New "current-type"-filter for the Methods-buffer
+   In languages which have types like Java or C++ this filter displays only
+   the current type and all its members \(e.g. attributes and methods). The
+   current-type is either the type of the current tag in the source-buffer or
+   the type of the current node in the methods-buffer. If ECB can not identify
+   the current type in the source-buffer or in the methods-window then nothing
+   will be done.
+
+
+
+* Changes for ECB version 2.23
+
 ** New cedet1.0beta2 is supported.
 
 ** Enhancements for the Methods-buffer
