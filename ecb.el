@@ -7,7 +7,7 @@
 ;; Keywords: java, class, browser
 ;; Created: Jul 2000
 
-(defvar ecb-version "1.20"
+(defvar ecb-version "1.30"
   "Current ECB version.")
 
 ;; This program is free software; you can redistribute it and/or modify it under
@@ -52,7 +52,7 @@
 ;; The latest version of the ECB is available at
 ;; http://home.swipnet.se/mayhem/ecb.html
 
-;; $Id: ecb.el,v 1.97 2001/05/28 15:54:59 berndl Exp $
+;; $Id: ecb.el,v 1.98 2001/05/28 20:36:43 creator Exp $
 
 ;;; Code:
 
@@ -1084,8 +1084,9 @@ the ECB tree-buffers."
   (when (and ecb-activated
              (equal (selected-frame) ecb-frame))
     (let ((filename (buffer-file-name (if opt-buffer opt-buffer (current-buffer)))))
-      (when (or force
-                (and filename (not (string= filename ecb-path-selected-source))))
+      (when (and filename
+		 (or force
+		     (not (string= filename ecb-path-selected-source))))
         ;; KB: seems this little sleep is necessary because otherwise jumping to
         ;; certain markers in new opened files (e.g. with next-error etc. )
         ;; doesn´t work correct. Can´t debug down this mysterious thing!
@@ -1453,7 +1454,8 @@ always the ECB-frame if called from another frame."
       (progn
 	(raise-frame ecb-frame)
 	(select-frame ecb-frame)
-	(ecb-redraw-layout))
+	(ecb-redraw-layout)
+	(ecb-update-directories-buffer))
 
     ;; first initialize the whole layout-engine
     (ecb-initialize-layout)
