@@ -725,18 +725,6 @@ must deactivate and activate ECB again to take effect."
                 (const :tag "No incremental search"
                        :value nil)))
 
-(defconst ecb-methods-incr-searchpattern-node-prefix
-  '("\\([-+#(]\\|[^-+#(][^ \n]+ \\)?" . 1)
-  "Prefix-pattern which ignores all not interesting stuff of a node-name at
-incr. search. The following contents of a node-name are ignored by this
-pattern:
-- types of a variable or return-types of a method
-- const specifier of variables
-- protection sign of a variable/method: +, - or #
-
-Format: cons with car is the pattern and cdr is the number of subexpr in this
-pattern.")
-
 (defcustom ecb-tree-navigation-by-arrow t
   "*Enable smart navigation in the tree-windows by horizontal arrow-keys.
 If not nil then the left- and right-arrow keys work in the ECB tree-window in
