@@ -124,7 +124,7 @@
 ;;   + The edit-window must not be splitted and the point must reside in
 ;;     the not deleted edit-window.
 
-;; $Id: ecb-layout.el,v 1.79 2001/11/17 06:10:00 burtonator Exp $
+;; $Id: ecb-layout.el,v 1.80 2001/11/18 05:34:36 burtonator Exp $
 
 ;;; Code:
 
@@ -1329,6 +1329,7 @@ visibility of the ECB windows. ECB minor mode remains active!"
   "Redraw the ECB screen according to the layout set in `ecb-layout-nr'. After
 this function the edit-window is selected which was current before redrawing."
   (interactive)
+
   (unless (or (not ecb-minor-mode)
               (not (equal (selected-frame) ecb-frame)))
     (let* ((config (ecb-edit-window-configuration))
@@ -1349,7 +1350,7 @@ this function the edit-window is selected which was current before redrawing."
                                                   (window-live-p ecb-compile-window))
                                              (window-buffer ecb-compile-window)))
            (tree-windows-before-redraw (ecb-layout-get-current-tree-windows)))
-      
+
       ;; deactivating the adviced functions, so the layout-functions can use the
       ;; original function-definitions.
       (ecb-activate-adviced-functions nil)
@@ -1375,14 +1376,14 @@ this function the edit-window is selected which was current before redrawing."
       ;; correctly.
       (setq ecb-edit-window nil
             ecb-compile-window nil)
-      
+
       ;; Now we call the layout-function
       (funcall (intern (format "ecb-layout-function-%d" ecb-layout-nr)))
       
       ;; Now all the windows must be created and the editing window must not
       ;; be splitted! In addition the variables `ecb-edit-window' and
       ;; `ecb-compile-window' must be set to the correct windows.
-      
+
       ;; The following when-expression is added for better relayouting the
       ;; choosen layout if we have a compilation-window.
       (when ecb-compile-window-height
