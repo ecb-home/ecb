@@ -291,6 +291,25 @@ Changes take first effect after finishing and reactivating ECB!"
                 (face :tag "Special face"
                       :value ecb-method-face)))
 
+(defface ecb-method-non-semantic-face (ecb-face-default nil nil nil
+                                           'ecb-methods-general-face
+                                           "brown" "brown")
+  "*Define face used for displaying tokens of sources not supported by
+semantic."
+  :group 'ecb-faces)
+
+(defcustom ecb-method-non-semantic-face 'speedbar-tag-face
+  "*Face used for for displaying tokens of sources not supported by
+semantic. Default is the face used by speedbar for tags.
+
+Changes take first effect after finishing and reactivating ECB!"
+  :group 'ecb-face-options
+  :group 'ecb-methods
+  :type '(radio (const :tag "Use ecb-default-highlight-face"
+                       :value ecb-default-highlight-face)
+                (face :tag "Special face"
+                      :value ecb-method-face)))
+
 (defface ecb-history-face (ecb-face-default nil nil nil
                                             'ecb-default-highlight-face
                                             "yellow" nil

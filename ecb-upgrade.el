@@ -178,8 +178,9 @@
     (ecb-layout-switch-to-compilation-window . (ecb-layout-switch-to-compilation-window
                                                  ecb-upgrade-switch-to-compilation-window))
     (ecb-truncate-lines . (ecb-truncate-lines
-                           ecb-upgrade-truncate-lines)))
-  
+                           ecb-upgrade-truncate-lines))
+    (ecb-use-speedbar-for-directories . (ecb-use-speedbar-instead-native-tree-buffer
+                                         ecb-upgrade-use-speedbar-for-directories)))
   "Alist of all options which should be upgraded for current ECB-version.
 There are several reasons why an option should be contained in this alist:
 a) An old option has just be renamed in current-ECB version but has still the
@@ -264,6 +265,10 @@ The car is the old option symbol and the cdr is a 2-element-list with:
   (mapcar (function (lambda (elem)
                       (ecb-upgrade-layout-nr2name elem)))
           old-val))
+
+(defun ecb-upgrade-use-speedbar-for-directories (old-val)
+  (if old-val
+      'dir))
 
 ;; not used anymore beginning with ECB 1.91.1
 ;; (defun ecb-upgrade-layout-window-sizes (old-val)

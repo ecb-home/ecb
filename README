@@ -1,4 +1,4 @@
-Readme for the Emacs Code Browser (ECB) version 1.93
+Readme for the Emacs Code Browser (ECB) version 1.94
 
 
 About
@@ -23,7 +23,8 @@ ECB requires the following packages:
   
 - Optional: speedbar, author version 0.14beta1 or higher
   (http://cedet.sourceforge.net/eieio.shtml)
-  This is only needed if the speedbar-integration of ECB is used
+  This is only needed if the speedbar-integration of ECB is used or if
+  non-semantic-sources should be parsed and displayed.
 - Optional: If Java code is edited the ECB works best when the JDE package
   (http://sunsite.auc.dk/jde) is installed.
 
