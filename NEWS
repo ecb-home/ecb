@@ -1,3 +1,13 @@
+* Changes for ECB version 2.25
+
+** Fixed Bugs
+
+*** Fixed a bug in the mechanism which prescanes directories for emptyness.
+    Now a directory is checked if it is accible before it is prescanned -
+    otherwise the prescan could fail with an error.
+
+
+
 * Changes for ECB version 2.24
 
 ** Enhancements for the Methods-buffer

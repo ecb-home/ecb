@@ -24,7 +24,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-method-browser.el,v 1.40 2004/04/14 09:29:38 berndl Exp $
+;; $Id: ecb-method-browser.el,v 1.41 2004/04/15 16:34:08 berndl Exp $
 
 ;;; Commentary:
 
@@ -1560,10 +1560,10 @@ abstract-static-tag-protection to an existing icon-file-name.")
 
 
 (defsubst ecb-get-icon-for-tag (abstract-p static-p type protection)
-  (cdr (assoc protection
-              (cdr (assoc type
-                          (cdr (assoc static-p
-                                      (cdr (assoc abstract-p
+  (cdr (assq protection
+              (cdr (assq type
+                          (cdr (assq static-p
+                                      (cdr (assq abstract-p
                                                   ecb-tag-image-name-alias-alist)))))))))
 
 ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: All this tag-icon-display-stuff

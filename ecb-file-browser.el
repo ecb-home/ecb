@@ -23,7 +23,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-file-browser.el,v 1.19 2004/04/13 14:55:28 berndl Exp $
+;; $Id: ecb-file-browser.el,v 1.20 2004/04/15 16:34:08 berndl Exp $
 
 ;;; Commentary:
 
@@ -1470,7 +1470,8 @@ element looks like:
                (equal (cdr cache-value) show-sources))
           (car cache-value)
         (ecb-directory-empty-cache-remove dir)
-        (let ((entries (directory-files dir nil nil t))
+        (let ((entries (and (file-accessible-directory-p dir)
+                            (directory-files dir nil nil t)))
               (just-files-means-empty (not show-sources))
               (full-file-name nil)
               (empty-p nil))

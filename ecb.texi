@@ -26,7 +26,7 @@
 @c GNU Emacs; see the file COPYING.  If not, write to the Free Software
 @c Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-@c $Id: ecb.texi,v 1.173 2004/04/14 10:17:06 berndl Exp $
+@c $Id: ecb.texi,v 1.174 2004/04/15 16:34:04 berndl Exp $
 
 @setfilename ecb.info
 
@@ -11300,7 +11300,7 @@ Yes, see @ref{Conflicts}.
 @item @tab @tab
 
 @item
-Opening directories takes a long time? What can i do?
+Opening directories takes a long time - what can i do?
 @tab @tab
 Read @ref{Large directories} and/or set the option
 @code{ecb-prescan-directories-for-emptyness} to nil.

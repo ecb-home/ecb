@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb.el,v 1.388 2004/04/13 14:55:23 berndl Exp $
+;; $Id: ecb.el,v 1.389 2004/04/15 16:34:05 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -573,7 +573,7 @@ With both ascii-styles the tree-layout can be affected with the options
 
 (defcustom ecb-tree-image-icons-directories
   (let ((base (concat (if ecb-regular-xemacs-package-p
-                          (format "%s/" (locate-data-directory "ecb"))
+                          (format "%s" (locate-data-directory "ecb"))
                         ecb-ecb-dir)
                       "ecb-images/")))
         (append (mapcar (function (lambda (i)
