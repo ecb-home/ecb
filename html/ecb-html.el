@@ -21,7 +21,7 @@
 
 ;; Generates ECB HTML pages.
 
-;; $Id: ecb-html.el,v 1.19 2001/10/21 14:56:00 creator Exp $
+;; $Id: ecb-html.el,v 1.20 2001/10/24 18:38:36 creator Exp $
 
 ;;; Code:
 
@@ -60,6 +60,8 @@
 	      "ECB is source code browser for Emacs. It is a global minor-mode which displays a couple of windows that can be used to browse directories, files and methods. It supports method parsing for Java, C, C++, Elisp etc.")
 
    (h-section "News"
+	      (h-sub-section "ECB 1.52 released! (2001-10-24)"
+			     "Fixed a small bug when loading ECB.")
 	      (h-sub-section "ECB 1.51 released! (2001-10-21)"
 			     "Some new features.")
 	      (h-sub-section "ECB 1.50 released! (2001-08-12)"
@@ -332,6 +334,8 @@
     (h-bullet-link-list
      ecb-bullet
      (list 
+      (list (concat ecb-download-url "ecb-1.51.zip") "ecb-1.51.zip")
+      (list (concat ecb-download-url "ecb-1.51.tar.gz") "ecb-1.51.tar.gz")
       (list (concat ecb-download-url "ecb-1.50.zip") "ecb-1.50.zip")
       (list (concat ecb-download-url "ecb-1.50.tar.gz") "ecb-1.50.tar.gz")
       (list (concat ecb-download-url "ecb-1.41.zip") "ecb-1.41.zip")
