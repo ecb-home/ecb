@@ -649,13 +649,14 @@ a backtrace-buffer and inserts the contents of that."
 (defun ecb-problem-report-list-all-variables()
   "List all variables starting with `ecb-' and some other variables which
 could be interesting for support."
-  (let ((emacs-vars `(semantic-after-toplevel-bovinate-hook
-                     pre-command-hook
-                     post-command-hook
-                     after-save-hook
-                     help-mode-hook
-                     ,(if (boundp 'ediff-quit-hook)
-                         'ediff-quit-hook)))
+  (let ((emacs-vars `(semantic-after-toplevel-cache-change-hook
+                      semantic-clean-token-hooks
+                      pre-command-hook
+                      post-command-hook
+                      after-save-hook
+                      help-mode-hook
+                      ,(if (boundp 'ediff-quit-hook)
+                           'ediff-quit-hook)))
         ecb-vars)
     (mapatoms
      (lambda (symbol)

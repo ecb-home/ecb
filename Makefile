@@ -6,12 +6,12 @@
 # Define here the correct path to your Emacs or XEmacs
 EMACS=emacs
 
-# Set here the load-path of the semantic-version loaded into your Emacs. If
-# you use JDE then add also the path to the lisp directory of JDE.
-# (use always forward-slashes as directory-separator even with MS Windows
-# systems). Make sure you compile ECB with the semantic version you load
-# into Emacs!
-LOADPATH=../semantic-1.4beta9 ../jde-2.2.8/lisp
+# Set here the load-path of the semantic-version and eieio-version loaded
+# into your Emacs. If you use JDE then add also the path to the lisp
+# directory of JDE. (use always forward-slashes as directory-separator even
+# with MS Windows systems). Make sure you compile ECB with the semantic
+# version you load into Emacs!
+LOADPATH=../semantic-1.4beta11 ../eieio-0.17beta3 ../jde-2.2.8/lisp
 
 # Two ways to build ECB:
 # - Call "make" to byte-compile the ECB. You can savely ignore the messages.
