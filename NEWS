@@ -8,7 +8,15 @@
 ** The keybinding for the online-help has changed from [C-c . o] to [C-c . h]
    This has been done because the key [C-c . o] is needed for the new command
    `ecb-toggle-scroll-other-window-scrolls-compile'.
-   
+
+** The options `ecb-major-modes-activate' and `ecb-majors-mode-deactivate' have
+   been replaced by one new option `ecb-major-modes-show-or-hide'. The purpose
+   of the old option is now quite out-of-date because:
+   - ECB supports window-managers like winring.el or escreen.el very well,
+   - as of version 2.20 ECB has no restrictions about the number of
+     edit-windows and
+   - the new option simplifies things a lot.
+      
 ** The restriction of only two edit-windows has been gone!
 
 *** Beginning with this version 2.20 there are no restrictions about the
@@ -184,6 +192,9 @@
    NEWS. With the new command you can do this also on demand.
       
 ** Fixed Bugs
+
+*** Adviced `display-buffer' handles `same-window-buffer-names' and
+    `same-window-regexps' correctly.
 
 *** Fixed a bug preventing tree-buffers with expand-symbol "before" to work
 
