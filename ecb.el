@@ -59,7 +59,7 @@
 ;; The latest version of the ECB is available at
 ;; http://home.swipnet.se/mayhem/ecb.html
 
-;; $Id: ecb.el,v 1.237 2002/08/11 21:31:14 berndl Exp $
+;; $Id: ecb.el,v 1.238 2002/09/16 14:32:43 berndl Exp $
 
 ;;; Code:
 
@@ -4129,4 +4129,3 @@ changed there should be no performance-problem!"
 (provide 'ecb)
 
 ;;; ecb.el ends here
-

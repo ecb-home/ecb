@@ -4005,8 +4005,27 @@ for ALL ECB-tree-buffers. But you are also able to display each
 ECB-tree-buffer with different faces, see the different options for
 every tree-buffer mentioned above.
 
-TODO: Describing in more details about the differences between XEmacs
-and Emacs and what can be problems!
+@strong{NOTE} (only for XEmacs users): Cause of the lack of the
+font-inheritance feature using ONE other font for the ECB-methods
+buffer can NOT be achieved just by setting
+@code{ecb-methods-general-face} to @code{ecb-default-general-face} and
+changing the font of this default face. In addition you have to set
+the same font also for the face @code{ecb-bucket-token-face} like in
+the following example:
+
+@example
+(defconst my-ecb-font
+          "-outline-Courier-normal-normal-13-97-96-96-c-*-iso8859-1")
+(set-face-font 'ecb-default-general-face my-ecb-font)
+(set-face-font 'ecb-bucket-token-face my-ecb-font)
+@end example
+
+This code sets the new defined font @code{my-ecb-font} as font for
+all@footnote{Of course @code{ecb-directories-general-face},
+@code{ecb-sources-general-face}, @code{ecb-methods-general-face} and
+@code{ecb-history-general-face} must be set to
+@code{ecb-default-general-face}!} ECB-tree-buffers (incl. the methods
+buffer).
 
 @node Small screens, Simulating speedbar, Changing faces, Tips and tricks
 @section Working with small screens
@@ -4453,6 +4472,28 @@ You can use the library ``desktop.el'' which works very well with ECB.
 Then all files of your recent Emacs-session will be opened
 automatically after next Emacs-start and will be added automatically
 to the ECB-history after ECB-start.
+
+@item @tab @tab
+
+@item
+Is there an ``Intellisense''-mechanism like with other IDEs?
+@tab @tab
+For Java the JDEE@footnote{
+@ifhtml
+@uref{http://jdee.sunsite.dk/}
+@end ifhtml
+@ifnothtml
+@url{http://jdee.sunsite.dk/}
+@end ifnothtml
+} has this feature and for all other languages
+semantic offer something similar, see
+@ifhtml
+@uref{http://cedet.sourceforge.net/intellisense.shtml}
+@end ifhtml
+@ifnothtml
+@url{http://cedet.sourceforge.net/intellisense.shtml}
+@end ifnothtml
+
 
 @end multitable
 
