@@ -26,7 +26,7 @@
 ;; This file is part of the ECB package which can be found at:
 ;; http://home.swipnet.se/mayhem/ecb.html
 
-;; $Id: tree-buffer.el,v 1.37 2001/05/04 19:09:43 berndl Exp $
+;; $Id: tree-buffer.el,v 1.38 2001/05/05 05:51:39 berndl Exp $
 
 ;;; Code:
 
@@ -180,25 +180,39 @@ with the same arguments as `tree-node-expanded-fn'."
 
 (defun tree-buffer-recenter (node window)
   "If NODE is not visible then first recenter the window WINDOW so NODE is
-at least visible. If NODE is expanded then recenter the WINDOW so as much as
-possible subnodes of NODE will be visible. If NODE is not expandable then
-WINDOW is always displayed without empty-lines at the end, means WINDOW is
-always best filled."
-  (let ((node-point (save-excursion
+best visible, means NODE is displayed in the middle of the window if possible.
+If NODE is expanded then recenter the WINDOW so as much as possible subnodes
+of NODE will be visible. If NODE is not expandable then WINDOW is always
+displayed without empty-lines at the end, means WINDOW is always best filled."
+  (let* ((node-point (save-excursion
                       (goto-line (tree-buffer-find-node node))
-                      (tree-buffer-line-beginning-pos))))
-    ;; first make point at least visible if not
+                      (tree-buffer-line-beginning-pos)))
+         (point-lines-before (count-lines (point-min) node-point))
+         (point-lines-after (1- (count-lines node-point (point-max)))))
+    ;; first make point best visible, means display node in the middle of the
+    ;; window if possible (if there are enough lines before/after the node).
     (if (not (pos-visible-in-window-p node-point window))
         (if (< node-point (window-start window))
-            (set-window-start window node-point)
+            (set-window-start
+             window
+             (save-excursion
+               (goto-char node-point)
+               (forward-line
+                (* -1 (min point-lines-before
+                           (/ (tree-buffer-window-display-height window) 2))))
+               (tree-buffer-line-beginning-pos)))
           (set-window-start window
                             (save-excursion
                               (goto-char (window-start window))
                               (forward-line
-                               (- (1+ (count-lines (window-start window) node-point))
+                               (- (+ 1
+                                     (count-lines (window-start window) node-point)
+                                     (min point-lines-after
+                                          (/ (tree-buffer-window-display-height window) 2)))
                                   (tree-buffer-window-display-height window)))
                               (tree-buffer-line-beginning-pos)))))
-    ;; now optimize the window display
+    ;; now optimize the window display for displaying as much possible
+    ;; subnodes of node.
     (if (tree-node-is-expanded node)
         (let ((exp-node-children-count (tree-node-count-subnodes-to-display node))
               (point-window-line (count-lines (window-start window) node-point)))

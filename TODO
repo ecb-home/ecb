@@ -1,8 +1,11 @@
 ********************************************************************************
-*** Last-Modified: $Date: 2001/05/04 13:21:44 $ 
-*** Version: $Id: TODO,v 1.12 2001/05/04 13:21:44 berndl Exp $
+*** Last-Modified: $Date: 2001/05/05 05:51:39 $ 
+*** Version: $Id: TODO,v 1.13 2001/05/05 05:51:39 berndl Exp $
 *** Author: Kevin A. Burton ( burton@apache.org | burton@openprivacy.org )
 ********************************************************************************
+
+- Support horizontal scrolling (especially with XEmacs) in the
+   intelligent tree-buffer recentering.
 
 - Fix pop-up menus in XEmacs. (JN)
 
