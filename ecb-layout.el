@@ -939,12 +939,13 @@ If called in an already splitted edit-window then nothing is done.
 If called in any other window of the current ECB-layout it stops with an
 error!"
 
-  (when ecb-layout-split-in-edit-window
-    (set-buffer (window-buffer ecb-edit-window))
-    (select-window ecb-edit-window))
-
   (if (not (equal (selected-frame) ecb-frame))
       ad-do-it
+
+    (when ecb-layout-split-in-edit-window
+      (set-buffer (window-buffer ecb-edit-window))
+      (select-window ecb-edit-window))
+    
     (let ((p (ecb-point-in-edit-window)))
       (if (not p)
           (error "Only the edit-window of ECB is splitable!")
@@ -965,12 +966,13 @@ If called in an already splitted edit-window then nothing is done.
 If called in any other window of the current ECB-layout it stops with an
 error."
 
-  (when ecb-layout-split-in-edit-window
-    (set-buffer (window-buffer ecb-edit-window))
-    (select-window ecb-edit-window))
-
   (if (not (equal (selected-frame) ecb-frame))
       ad-do-it
+
+    (when ecb-layout-split-in-edit-window
+      (set-buffer (window-buffer ecb-edit-window))
+      (select-window ecb-edit-window))
+    
     (let ((p (ecb-point-in-edit-window)))
       (if (not p)
           (error "Only the edit-window of ECB is splitable!")
