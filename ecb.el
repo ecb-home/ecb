@@ -54,7 +54,7 @@
 ;; The latest version of the ECB is available at
 ;; http://home.swipnet.se/mayhem/ecb.html
 
-;; $Id: ecb.el,v 1.170 2001/12/11 12:12:47 berndl Exp $
+;; $Id: ecb.el,v 1.171 2001/12/12 16:15:06 berndl Exp $
 
 ;;; Code:
 
@@ -568,6 +568,18 @@ functionality set this value to either
 		   (ecb-clear-token-tree-cache)))
   :type semantic-token->text-custom-list
   :initialize 'custom-initialize-default)
+
+(defcustom ecb-post-process-semantic-tokenlist
+  '((c++-mode . ecb-post-process-c++))
+  "*Define mode-dependend postprocessing for the semantic-tokenlist.
+This is an alist where the car is a major-mode symbol and the cdr is a
+function-symbol of a function which should be used for post-processing the
+tokenlist \(returned by `semantic-bovinate-toplevel') for a buffer in this
+major-mode. Such a function is called with current semantic tokenlist of
+current buffer and must return a valid tokenlist again."
+  :group 'ecb-methods
+  :type '(repeat (cons (symbol :tag "Major-mode")
+                       (function :tag "Postprocess function"))))
 
 (defcustom ecb-show-tokens '((include collapsed nil)
 			     (parent collapsed nil)
@@ -1168,22 +1180,64 @@ PARENT-TOKEN is only propagated to `ecb-add-token-bucket'."
 ;;       (tree-node-set-expandable 
 ;;        node (not (eq nil (tree-node-get-children node)))))))
 
-;; (defun ecb-klaus-test (tokenlist)
-;;   '(("klaus.hh" include nil nil nil)
-;;     ("KLAUS" parent nil
-;;      (("aPrivateMethod" function ("void") (("i" variable "int" nil ... nil nil)) ((parent . "KLAUS")) nil nil )
-;;       ("KLAUS" function ("KLAUS" type "class") nil ((parent . "KLAUS") (constructor . t)) nil nil)
-;;       ("KLAUS" function "void" nil ((parent . "KLAUS") (destructor . t)) nil nil )) nil nil)
-;;     ("BERNDL" parent nil
-;;      (("aPrivateMethod" function ("void") nil ((parent . "BERNDL")) nil nil )
-;;       ("BERNDL" function ("BERNDL" type "class") nil ((parent . "BERNDL") (constructor . t)) nil nil )
-;;       ("BERNDL" function "void" nil ((parent . "BERNDL") (destructor . t)) nil nil )) nil nil)
-;;     )
-;;   )
+(defun ecb-post-process-tokenlist (tokenlist)
+  "If for current major-mode a post-process function is found in
+`ecb-post-process-semantic-tokenlist' then this function is called with
+TOKENLIST otherwise TOKENLIST is returned."
+  (let ((fcn (cdr (assoc major-mode ecb-post-process-semantic-tokenlist))))
+    (if (fboundp fcn)
+        (funcall fcn tokenlist)
+      tokenlist)))
+
+(defun ecb-post-process-c++ (tokenlist)
+  "Return an ECB friendly display token list for C++."
+  (if (not (eq major-mode 'c++-mode))
+      tokenlist
+    ;; group tokens together based on parent
+    (let ((parent-alist nil)
+          (parents nil)
+          (parentless nil))
+      (while tokenlist
+        (cond ((and (eq (semantic-token-token (car tokenlist)) 'function)
+                    (semantic-token-function-parent (car tokenlist)))
+               ;; Find or Create a faux parent token in `parents'
+               ;; and add this token to it.
+               (let ((elem (assoc (semantic-token-function-parent (car tokenlist))
+                                  parent-alist)))
+                 (if elem
+                     (setcdr elem (cons (car tokenlist) (cdr elem)))
+                   (setq parent-alist
+                         (cons (cons (semantic-token-function-parent (car
+                                                                      tokenlist))
+                                     (list (car tokenlist)))
+                               parent-alist)))))
+              (t
+               (setq parentless (cons (car tokenlist) parentless))))
+        (setq tokenlist (cdr tokenlist)))
+      ;; now we have an alist with an element for each parent where the key is
+      ;; the class-name (string) and the value is a list of all method-tokens
+      ;; for this class.
+
+      ;; Now we must build a new token-list
+      (dolist (alist-elem parent-alist)
+        (setq parents (cons (list (car alist-elem)
+                                  'type
+                                  "class"
+                                  ;; the PART-LIST, means all the methods of
+                                  ;; this class. But first we must nreverse
+                                  ;; the list because we have build the list
+                                  ;; with cons.
+                                  (nreverse (cdr alist-elem))
+                                  nil nil nil nil nil)
+                            parents)))
+
+      ;; We nreverse the parentless (because build with cons) and append then
+      ;; all the parents.
+      (append (nreverse parentless) parents))))
 
 (defun ecb-dump-toplevel ()
   (interactive)
-  (let ((tokens (semantic-bovinate-toplevel t)))
+  (let ((tokens (ecb-klaus-test (semantic-bovinate-toplevel t))))
     (save-current-buffer
       (set-buffer (get-buffer-create "ecb-dump"))
       (erase-buffer)
@@ -1208,10 +1262,8 @@ PARENT-TOKEN is only propagated to `ecb-add-token-bucket'."
 	      "\n")
       (if (eq 'type (semantic-token-token tok))
 	  (ecb-dump-type tok prefix))
-      (if (eq 'parent (semantic-token-token tok))
-          (ecb-dump-tokens (nth 3 tok) (concat prefix "  "))
-        (ecb-dump-tokens (semantic-nonterminal-children tok t)
-                         (concat prefix "  "))))))
+      (ecb-dump-tokens (semantic-nonterminal-children tok t)
+                       (concat prefix "  ")))))
 
 (defun ecb-add-tokens (node tokens &optional parent-token)
   (ecb-add-token-buckets node parent-token (semantic-bucketize tokens)))
@@ -1523,7 +1575,8 @@ function is added to the hook `semantic-after-toplevel-cache-change-hook'."
           new-tree)
       (unless (and no-update cached-tree)
 	(setq new-tree (tree-node-new "root" 0 nil))
-	(ecb-add-tokens new-tree updated-cache)
+;; 	(ecb-add-tokens new-tree updated-cache)
+	(ecb-add-tokens new-tree (ecb-post-process-tokenlist updated-cache))
         (if cached-tree
             (setcdr cached-tree new-tree)
           (setq cached-tree (cons (buffer-file-name (current-buffer)) new-tree))
