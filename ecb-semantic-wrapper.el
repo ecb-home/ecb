@@ -55,6 +55,10 @@
   "Return the value of `semantic-symbol->name-assoc-list'."
   (symbol-value 'semantic-symbol->name-assoc-list))
 
+(defsubst ecb--semantic-symbol->name-assoc-list-for-type-parts ()
+  "Return the value of `semantic-symbol->name-assoc-list-for-type-parts'."
+  (symbol-value 'semantic-symbol->name-assoc-list-for-type-parts))
+
 (defsubst ecb--semantic-format-tag-functions ()
   "Return either the value of `semantic-format-tag-functions' or
 `semantic-token->text-functions' depending which semantic version is loaded."

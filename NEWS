@@ -1,5 +1,14 @@
 * Changes for ECB version 2.23
 
+** The popup-menu contains now mode-dependend tag-filter entries.
+   This means for sources not supported by semantic no protection- or
+   tag-class filters will be offered. And for semantic-supported sources
+   exactly these tag-classes are offered the semantic-parser for the current
+   major-mode offers. For example texi-sources can only be filtered by the
+   tag-classes "Definitions" and "Sections" and java-sources can be filtered
+   by "Methods", "Variables", "Classes" etc. In general the semantic-variable
+   `semantic-symbol->name-assoc-list' is used to get the right tag-classes.
+
 ** The command `ecb-toggle-layout' now has a prefix-argument:
    If this optional argument is not nil (e.g. if called with a prefix-arg)
    then always the last selected layout was choosen regardless of the setting

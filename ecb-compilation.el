@@ -212,12 +212,7 @@ either
   `ecb-compilation-major-modes' or `ecb-compilation-predicates' define the
   buffer as compilation-buffer."
   ;;determine the best valid for the buffer.
-  (let ((buffer (cond ((stringp buffer-or-name)
-                       (get-buffer buffer-or-name))
-                      ((bufferp buffer-or-name)
-                       buffer-or-name)
-                      (t
-                       nil)))
+  (let ((buffer (ecb-buffer-obj buffer-or-name))
         (ecb-comp-predicates (ecb-compilation-predicates)))
     (when buffer
 

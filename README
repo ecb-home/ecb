@@ -17,10 +17,10 @@ Requirements
 
 ECB requires the following packages:
 
-- Semantic, author version between 1.4 and 1.4.9
+- Semantic, author version 1.4 or higher
   (http://cedet.sourceforge.net/semantic.shtml)
   
-- Eieio, author version between 0.17 and 0.17.9
+- Eieio, author version 0.17 or higher
   (http://cedet.sourceforge.net/eieio.shtml).
   
 - speedbar, author version 0.14beta1 or higher

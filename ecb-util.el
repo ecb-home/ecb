@@ -1078,6 +1078,24 @@ returned."
                    (length list))
               list))))
 
+(defun ecb-buffer-name (buffer-or-name)
+  "Return the buffer-name of BUFFER-OR-NAME."
+  (cond ((stringp buffer-or-name)
+         buffer-or-name)
+        ((bufferp buffer-or-name)
+         (buffer-name buffer-or-name))
+        (t
+         nil)))
+
+(defun ecb-buffer-obj (buffer-or-name)
+  "Return the buffer-object of BUFFER-OR-NAME."
+  (cond ((stringp buffer-or-name)
+         (get-buffer buffer-or-name))
+        ((bufferp buffer-or-name)
+         buffer-or-name)
+        (t
+         nil)))
+
 (defun ecb-file-content-as-string (file)
   "If FILE exists and is readable returns the contents as a string otherwise
 return nil.
