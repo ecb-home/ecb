@@ -75,16 +75,8 @@
     (when (get-file-buffer file)
       (kill-buffer (get-file-buffer file)))
       
-    (delete-file file)))
-;;   (save-current-buffer
-;;     (ecb-buffer-select ecb-history-buffer-name)
-;;     (tree-node-remove-child (tree-buffer-get-root)
-;;                 (tree-node-find-child-data (tree-buffer-get-root)
-;;                                file))
-;;     (ecb-buffer-select ecb-sources-buffer-name)
-;;     (tree-node-remove-child (tree-buffer-get-root)
-;;                 (tree-node-find-child-data (tree-buffer-get-root)
-;;                                file))))
+    (delete-file file)
+    (ecb-select-source-file ecb-path-selected-source)))
 
 (defun ecb-create-directory(parent-node)
   (make-directory (concat (tree-node-get-data parent-node) "/" (read-from-minibuffer "Directory name: ")))
