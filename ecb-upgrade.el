@@ -159,7 +159,7 @@
 
 ;; IMPORTANT: The version-number is auto-frobbed from the Makefile. Do not
 ;; change it here!
-(defconst ecb-version "2.20"
+(defconst ecb-version "2.21"
   "Current ECB version.")
 
 (eval-when-compile

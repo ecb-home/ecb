@@ -2852,7 +2852,8 @@ does all necessary after finishing ediff."
       (ecb-disable-advices ecb-eshell-adviced-functions)
       (ecb-disable-advices ecb-winman-not-supported-function-advices)
       (ecb-disable-advices ecb-compatibility-advices)
-      (ecb-enable-walk-windows-advice -1)
+      (ecb-enable-ecb-advice 'walk-windows 'around -1)
+      (ecb-enable-ecb-advice 'one-window-p 'around -1)
       ;; we disable the permanent advices later
 
       (ecb-enable-own-temp-buffer-show-function nil)      
@@ -3154,7 +3155,8 @@ performance-problem!"
 (ecb-disable-advices ecb-eshell-adviced-functions)
 (ecb-disable-advices ecb-permanent-adviced-functions)
 (ecb-activate-adviced-functions nil)
-(ecb-enable-walk-windows-advice -1)
+(ecb-enable-ecb-advice 'walk-windows 'around -1)
+(ecb-enable-ecb-advice 'one-window-p 'around -1)
 
 ;; clearing all caches at load-time
 (ecb-clear-tag-tree-cache)

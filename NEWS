@@ -1,7 +1,7 @@
-* Changes for ECB version
+* Changes for ECB version 2.21
 
 ** Advice for `balance-windows' so only the edit-windows are balanced.
-   Thanks to for <> suggestion.
+   Thanks to David Ishee <782zp6a02@sneakemail.com> for suggestion.
 
 ** New option `ecb-ignore-display-buffer-function'
    Per default the adviced version of `display-buffer' ignores the value of
@@ -15,11 +15,22 @@
 ** For XEmacs the package fsf-compat is no longer required by ECB.
    But it is still necessary to check if fsf-compat is required by the
    packages semantic, eieio and speedbar which in turn are required by ECB.
-      
+
+** Xrefactory works even when all ECB-windows are visible (see Fixed Bugs).
+   !!!TODO!!! When true and well tested then remoce the restriction in the
+   texi-file. 
+
 ** Fixed Bugs
+
+*** Fixed a fatal bug which prevents `other-window' from working with
+    arguments < 0. This bug has also prevented Xrefactory from working correct
+    when ECB is active.
 
 *** If point stays in the current source-buffer on a function argument then still
     ECB highlights the function in the Methods-buffer.
+
+*** ECB now uses `compilation-window-height' also correct when set buffer-local
+    as possible with latest CVS-version of GNU Emacs.
     
 
 
