@@ -1,6 +1,9 @@
 Version 1.60:
 -------------
 
+- Now also with C++ Sources the method- and variable-protection is displayed
+  correct in the ECB-method buffer (Klaus).
+
 - Fixed a bug which prevented ECB using the root path "/" on unix-like systems
   as a source-path. (Klaus)
 

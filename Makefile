@@ -12,7 +12,7 @@ EMACS=emacs -no-site-file
 # directory of JDE. (use always forward-slashes as directory-separator even
 # with MS Windows systems). Make sure you compile ECB with the semantic
 # version you load into Emacs!
-LOADPATH=../semantic-1.4beta12 ../eieio-0.17beta3 ../jde-2.2.9beta6/lisp
+LOADPATH=../semantic-1.4beta12 ../eieio-0.17beta3 ../jde-2.2.9beta7/lisp
 
 # Two ways to build ECB:
 # - Call "make" to byte-compile the ECB. You can savely ignore the messages.

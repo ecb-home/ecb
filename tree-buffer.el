@@ -258,26 +258,26 @@ displayed without empty-lines at the end, means WINDOW is always best filled."
          (point-lines-after (1- (count-lines node-point (point-max)))))
     ;; first make point best visible, means display node in the middle of the
     ;; window if possible (if there are enough lines before/after the node).
-    (if (not (pos-visible-in-window-p node-point window))
-        (if (< node-point (window-start window))
-            (set-window-start
-             window
-             (save-excursion
-               (goto-char node-point)
-               (forward-line
-                (* -1 (min point-lines-before
-                           (/ (tree-buffer-window-display-height window) 2))))
-               (tree-buffer-line-beginning-pos)))
-          (set-window-start window
-                            (save-excursion
-                              (goto-char (window-start window))
-                              (forward-line
-                               (- (+ 1
-                                     (count-lines (window-start window) node-point)
-                                     (min point-lines-after
-                                          (/ (tree-buffer-window-display-height window) 2)))
-                                  (tree-buffer-window-display-height window)))
-                              (tree-buffer-line-beginning-pos)))))
+    (when (not (pos-visible-in-window-p node-point window))
+      (if (< node-point (window-start window))
+          (set-window-start
+           window
+           (save-excursion
+             (goto-char node-point)
+             (forward-line
+              (* -1 (min point-lines-before
+                         (/ (tree-buffer-window-display-height window) 2))))
+             (tree-buffer-line-beginning-pos)))
+        (set-window-start window
+                          (save-excursion
+                            (goto-char (window-start window))
+                            (forward-line
+                             (- (+ 1
+                                   (count-lines (window-start window) node-point)
+                                   (min point-lines-after
+                                        (/ (tree-buffer-window-display-height window) 2)))
+                                (tree-buffer-window-display-height window)))
+                            (tree-buffer-line-beginning-pos)))))
     ;; now optimize the window display for displaying as much possible
     ;; subnodes of node.
     (if (tree-node-is-expanded node)
