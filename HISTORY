@@ -1,3 +1,16 @@
+Version 1.53:
+-------------
+
+- ecb-auto-expand-directory-tree now offers to options:
+  - best: Expand always the best matching source-path for a file
+  - first: Expand always the first matching source-path for a file (Klaus)
+
+- Fixed a bug in auto. expanding directories if a source-path has an alias.
+  (Klaus)
+
+- If mouse is moved over an alias in the directories buffer then the real path
+  is shown in the echo-area. (Klaus)
+
 Version 1.52:
 -------------
 
