@@ -23,7 +23,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-semantic-wrapper.el,v 1.16 2004/09/06 15:46:14 berndl Exp $
+;; $Id: ecb-semantic-wrapper.el,v 1.17 2004/09/15 17:02:31 berndl Exp $
 
 ;;; Commentary:
 
@@ -118,7 +118,13 @@
     (semantic-current-nonterminal-parent      . semantic-current-tag-parent)
     (semantic-adopt-external-members          . semantic-adopt-external-members)
     (semantic-bucketize                       . semantic-bucketize)
-    (semantic-c-template-string               . semantic-c-template-string)
+    ;; Do not define an alias for this function because probably we define an
+    ;; alias for an undefined function because this function is only loaded
+    ;; when c or c++-file is edited! if we define an alias this could break
+    ;; XEmacs-apropos from working when a user calls apropos "string" foe
+    ;; example (IMO a bug in apropos of XEmacs but we have to avoid breaking
+    ;; some basic functionality of XEmacs/Emacs!
+;;     (semantic-c-template-string               . semantic-c-template-string)
     (semantic-clear-toplevel-cache            . semantic-clear-toplevel-cache)
     (semantic-colorize-text                   . semantic--format-colorize-text)
     (semantic-current-nonterminal             . semantic-current-tag)
