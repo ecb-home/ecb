@@ -54,7 +54,7 @@
 ;; The latest version of the ECB is available at
 ;; http://home.swipnet.se/mayhem/ecb.html
 
-;; $Id: ecb.el,v 1.130 2001/07/13 22:19:46 creator Exp $
+;; $Id: ecb.el,v 1.131 2001/07/14 12:05:42 creator Exp $
 
 ;;; Code:
 
@@ -324,11 +324,11 @@ Some useful functions are found in `semantic-token->text-functions'."
 
 (defcustom ecb-show-tokens '((include collapsed nil)
 			     (parent collapsed nil)
-                             (type expanded nil)
-                             (variable collapsed t)
-                             (function flattened t)
-                             (rule flattened t)
-                             (t collapsed t))
+                             (type flattened nil)
+                             (variable collapsed access)
+                             (function flattened access)
+                             (rule flattened name)
+                             (t collapsed name))
   "*How to show tokens in the methods buffer. This variable is a list
 where each item is a list of a Semantic token type symbol and a symbol which
 describes how the token type shall be shown:
@@ -348,7 +348,10 @@ The tokens in the methods buffer are displayed in the order as they appear in th
 			       (const :tag "Collapsed" collapsed)
 			       (const :tag "Flattened" flattened)
 			       (const :tag "Hidden" hidden))
-		       (boolean :tag "Sorted" :value nil))))
+		       (choice :tag "Sort by" :value nil
+			       (const :tag "Name" name)
+			       (const :tag "Access then name" access)
+			       (const :tag "No sort" nil)))))
 
 (defcustom ecb-exclude-parents-regexp nil
   "*Regexp which parent classes should not be shown in the methods buffer
@@ -724,17 +727,18 @@ cleared!) ECB by running `ecb-deactivate'."
 	(funcall ecb-token-display-function token nil ecb-font-lock-tokens)
       (error (semantic-prototype-nonterminal token nil ecb-font-lock-tokens)))))
 
-(defun ecb-find-add-token-bucket (node type display sorted buckets)
+(defun ecb-find-add-token-bucket (node type display sort-method buckets)
   "Finds a bucket containing tokens of the given type, creates nodes for them and adds them to the given node. The bucket is removed from the buckets list."
   (when (cdr buckets)
     (let ((bucket (cadr buckets)))
       (if (eq type (semantic-token-token (cadr bucket)))
 	  (progn
-	    (ecb-add-token-bucket node bucket display sorted)
+	    (ecb-add-token-bucket node bucket display sort-method)
 	    (setcdr buckets (cddr buckets)))
-	(ecb-find-add-token-bucket node type display sorted (cdr buckets))))))
+	(ecb-find-add-token-bucket node type display sort-method
+				   (cdr buckets))))))
 
-(defun ecb-add-token-bucket (node bucket display sorted)
+(defun ecb-add-token-bucket (node bucket display sort-method)
   "Adds a token bucket to a node."
   (when bucket
     (let ((name (concat "[" (car bucket) "]"))
@@ -744,7 +748,7 @@ cleared!) ECB by running `ecb-deactivate'."
 	(unless (eq 'flattened display)
 	  (setq bucket-node (tree-node-new name 1 nil nil node))
 	  (tree-node-set-expanded bucket-node (eq 'expanded display)))
-	(dolist (token (if sorted (ecb-sort-tokens (cdr bucket)) (cdr bucket)))
+	(dolist (token (ecb-sort-tokens sort-method (cdr bucket)))
 	  (ecb-update-token-node token
 				 (tree-node-new "" 0 token t bucket-node)))))))
 
@@ -755,9 +759,10 @@ cleared!) ECB by running `ecb-deactivate'."
     ;; Always expand types, maybe this should be customizable and more
     ;; flexible
     (tree-node-set-expanded node (eq 'type (semantic-token-token token)))
-    (ecb-add-tokens node children token)
-    (tree-node-set-expandable
-     node (not (eq nil (tree-node-get-children node))))))
+    (unless (eq 'function (semantic-token-token token))
+      (ecb-add-tokens node children token)
+      (tree-node-set-expandable
+       node (not (eq nil (tree-node-get-children node)))))))
 
 (defun ecb-dump-toplevel ()
   (interactive)
@@ -775,9 +780,27 @@ cleared!) ECB by running `ecb-deactivate'."
   (when tokens
     (ecb-add-token-buckets node parent-token (semantic-bucketize tokens))))
 
-(defun ecb-sort-tokens (tokens)
-  (sort tokens (function (lambda(a b) (string< (semantic-token-name a)
-					       (semantic-token-name b))))))
+(defun ecb-access-order (access)
+  (cond
+   ((eq 'public access) 0)
+   ((eq 'protected access) 1)
+   ((eq 'private access) 3)
+   (t  2)))
+
+(defun ecb-sort-tokens (sort-method tokens)
+  (if sort-method
+      (let ((tokens-by-name
+	     (sort tokens (function (lambda (a b)
+				      (string< (semantic-token-name a)
+					       (semantic-token-name b)))))))
+	(if (eq 'access sort-method)
+	    (sort tokens-by-name
+		  (function
+		   (lambda (a b)
+		     (< (ecb-access-order (semantic-nonterminal-protection a))
+			(ecb-access-order (semantic-nonterminal-protection b))))))
+	  tokens-by-name))
+    tokens))
 
 (defun ecb-add-token-buckets (node parent-token buckets)
   "Creates and adds token nodes to the given node."
@@ -785,19 +808,19 @@ cleared!) ECB by running `ecb-deactivate'."
    (dolist (token-display ecb-show-tokens)
      (let* ((type (car token-display))
 	    (display (cadr token-display))
-	    (sorted (caddr token-display)))
+	    (sort-method (caddr token-display)))
        (cond
         ((eq 'parent type)
  	(when (and parent-token
  		   (eq 'type (semantic-token-token parent-token)))
- 	  (let ((node (ecb-create-node node display "[Parents]" nil 1)))
- 	    (when node
- 	      (dolist (parent
-		       (if sorted
-			   (sort (ecb-get-token-parents parent-token) 'string<)
-			 (ecb-get-token-parents parent-token)))
- 		(tree-node-new parent 2 parent t node))))))
-        (t (ecb-find-add-token-bucket node type display sorted buckets)))))
+ 	  (let ((parents (ecb-get-token-parents parent-token)))
+	    (when parents
+	      (let ((node (ecb-create-node node display "[Parents]" nil 1)))
+		(when node
+		  (dolist (parent (if sort-method
+				      (sort parents 'string<) parents))
+		    (tree-node-new parent 2 parent t node))))))))
+        (t (ecb-find-add-token-bucket node type display sort-method buckets)))))
    (let ((type-display (ecb-get-token-type-display t)))
      (dolist (bucket buckets)
        (ecb-add-token-bucket node bucket (cadr type-display)
