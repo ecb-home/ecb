@@ -41,7 +41,7 @@ mouse. There are currently three different types of ECB-windows:
 
 1. ECB Directories:
 
-- Select directories and, if enabled, source files, in the \"*ECB
+- Select directories \(and - if enabled - source files) in the \"*ECB
   Directories*\" buffer by clicking a mouse button (see \"Usage of ECB\"
   below) on the directory name or by hitting ENTER/RETURN when the cursor is
   placed on the item line.
@@ -54,8 +54,8 @@ mouse. There are currently three different types of ECB-windows:
 - Right clicking on an item will open a popup menu where different operations
   on the item under the mouse cursor can be performed.
 
-- Pressing F1 in the packages buffer will update it. Pressing F2 will open the
-  ECB customization group in the edit window ECB Sources:
+- Pressing F1 in the directories buffer will update it. Pressing F2 will open
+  the ECB customization group in the edit window ECB Sources:
 
 2. ECB Sources:
 

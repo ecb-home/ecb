@@ -4,6 +4,13 @@
 *** Author: Kevin A. Burton ( burton@apache.org | burton@openprivacy.org )
 ********************************************************************************
 
+- KB: Intelligent automatic scrolling the ECB-buffers. If i expand a
+   node (e.g. in the directory buffer), the tree-buffer should auto.
+   scroll so i can see the expanded node and as much as possible of
+   it´s subnodes. It´s annoying to expand the node in the last visible
+   line of the directory-window and then i must manually scroll down
+   to see the subnodes!
+
 - other-window ignores all the ECB windows.  I realize that the goal was to only
   have the side windows as non-important to your current editing activity but if
   you want to use ECB without the mouse then this is impossible :(
@@ -11,17 +18,6 @@
    KB: In current version the advice of 'other-window' can either be
    deactivated or - and this is the better way - you can set the
    behavior of it via the option 'ecb-other-window-jump-behavior'!
-
-- single click on any ECB buffers should NOT do anything.  This should be moved
-  to mouse-2
-
-   KB: No, this should not be moved. The left- and the middle-mouse
-   button jumps to different edit windows amd this is a very useful behavior.
-
-- All of the ECB special buffer accept text input( I can type in this buffer if
-  I wanted to ).  This buffer should be read-only.  
-
-   KB: I agree.
 
 - KB: Special keymap for all ECB-buffers for better keyboard-usability:
   If the ECB-buffers are readonly (see above) then we can do the
