@@ -1580,6 +1580,8 @@ always the ECB-frame if called from another frame."
     ;; acivates at its end also the adviced functions if necessary!
     (ecb-redraw-layout)
 
+    (ecb-update-directories-buffer)
+
     ;; now update all the ECB-buffer-modelines
     (ecb-mode-line-format)
 

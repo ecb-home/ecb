@@ -1196,8 +1196,6 @@ this function the edit-window is selected."
       ;; Restore saved window sizes
       (ecb-restore-window-sizes)
 
-      (ecb-update-directories-buffer)
-
       ;; at the end of the redraw we always stay in that edit-window as before
       ;; the redraw
       (ecb-select-edit-window)
