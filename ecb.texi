@@ -109,8 +109,8 @@ mailing list @email{ecb-list@@lists.sourceforge.net} via
 * Tips and tricks::             Useful hints and tips
 * Elisp programming::           Entry points for elisp programmers
 * Conflicts and bugs::          Known Conflicts with other packages and bugs
-* Function Index::              Index for functions
-* Variable Index::              Index for variables and options
+* Command Index::               Index for interactive commands
+* Option Index::                Index for user options
 * Concept Index::               Index for concepts and terms
 @comment * Index::
 
@@ -194,9 +194,17 @@ Tips and tricks
 * Small screens::               Working with small screens
 * Simulating speedbar::         Simulating speedbar without an extra frame
 * Integrating speedbar::        Integrating speedbar in the ECB-frame
-* Optimize scrolling::           Optimize scrolling in the edit-window
+* Optimize scrolling::          Optimize scrolling in the edit-window
 * Large directories::           Working with large directories
 * Using eshell::                Optimal using of eshell in ECB
+
+Entry points for elisp programmers
+
+* List of variables::           Which variables an elisp-program can use
+* List of hooks::               All available hooks
+* tree-buffer::                 Some words to the tree-buffer-library
+* Adviced functions::           How to deal with the adviced functions
+* New layouts::                 How to program new layouts
 
 Known conflicts and bugs of ECB
 
@@ -3432,13 +3440,32 @@ Documentation currently not available.
 @node Elisp programming, Conflicts and bugs, Tips and tricks, Top
 @chapter Entry points for elisp programmers
 
+This chapter describes how ECB can be used/programmed/driven by an
+elisp-program. This contains:
+
+@menu
+* List of variables::           Which variables an elisp-program can use
+* List of hooks::               All available hooks
+* tree-buffer::                 Some words to the tree-buffer-library
+* Adviced functions::           How to deal with the adviced functions
+* New layouts::                 How to program new layouts
+@end menu
+
+@node List of variables, List of hooks, Elisp programming, Elisp programming
+@section Variables for elisp-programs
+
 Variables an elisp-program can use:
 
 @itemize @bullet
 @item @code{ecb-source-path-functions}
 @end itemize
 
-Available hooks:
+Look at the documentation of these variables to get a description.
+
+@node List of hooks, tree-buffer, List of variables, Elisp programming
+@section Available hooks of ECB
+
+The following hooks are available:
 
 @cindex Hooks
 @itemize @bullet
@@ -3451,24 +3478,49 @@ Available hooks:
 @item @code{ecb-current-buffer-sync-hook}
 @end itemize
 
-Look at the documentation of these variables and hooks to get a
-description.
+Look at the documentation of these hooks to get a description.
 
-Remark to the library tree-buffer: This library is ECB independent and
-can be used for other applications too. But such an application is not
-allowed to use any of the variables of tree-buffer.el especially not
-the following:
+@node tree-buffer, Adviced functions, List of hooks, Elisp programming
+@section The library tree-buffer.el
+
+The library tree-buffer.el is ECB independent and can be used for
+other applications too. But such an application is not allowed to use
+any of the variables of tree-buffer.el especially not the variable
+@strong{tree-buffers}!
 
 @code{tree-buffers}: Only for internal use. It contains all
-tree-buffers of current Emacs-instance, means all tree-buffers of all
-applications which uses currently tree-buffers. Every application must
-store its own tree-buffers in an own variable! For example: ECB stores
-its tree-buffers in @code{ecb-tree-buffers}!
+tree-buffers of current Emacs-instance, means @strong{all}
+tree-buffers of @strong{all} applications which uses currently
+tree-buffers. Every application must store its own collection of
+tree-buffers in an own variable! For example: ECB stores its
+tree-buffer set in @code{ecb-tree-buffers}!
 
-An application can only use the methods tree-buffer.el provides!
+An application may only use the methods tree-buffer.el provides but no
+internal variables!
 
+@node Adviced functions, New layouts, tree-buffer, Elisp programming
+@section How to deal with the adviced window-functions
 
-@node Conflicts and bugs, Function Index, Elisp programming, Top
+ECB offers for packages which work during activated ECB three macros
+for easy temporally@footnote{I.e. regardless of the settings in
+@code{ecb-advice-window-functions}!} using all original-functions, all
+adviced functions or only some adviced functions:
+
+@itemize @minus
+@item @code{ecb-with-original-functions}
+@item @code{ecb-with-adviced-functions}
+@item @code{ecb-with-some-adviced-functions}
+@end itemize
+
+For a detailed explanation of each macro read the documentation with
+@code{describe-function}!
+
+@node New layouts, , Adviced functions, Elisp programming
+@section How to program new layouts
+
+Documentation will be added in future!
+
+@node Conflicts and bugs, Command Index, Elisp programming, Top
 @chapter Known conflicts and bugs of ECB
 
 This chapter describes all already known conflicts with other packages
@@ -3543,6 +3595,8 @@ size but splits the window equally. But if you add this to your
           (function (lambda ()
                       (when (and ecb-minor-mode
                                  (ecb-point-in-edit-window))
+                        ;; if no horizontal split then nothing
+                        ;; special to do
                         (or (= (frame-width) (window-width))
                             (shrink-window (- (window-height) 9))))
                      )))
@@ -3565,23 +3619,23 @@ echo-area instead of creating a new small window!
 This section describes all currently known bugs of ECB. The
 maintainers of ECB try to fix these bugs as soon as possible.
 
-@node Function Index, Variable Index, Conflicts and bugs, Top
-@unnumbered Function Index
+@node Command Index, Option Index, Conflicts and bugs, Top
+@unnumbered Command Index
 
 @noindent
 This index contains all user commands of ECB:
 
 @printindex fn
 
-@node Variable Index, Concept Index, Function Index, Top
-@unnumbered Variable Index
+@node Option Index, Concept Index, Command Index, Top
+@unnumbered Option Index
 
 @noindent
 This index contains all customizable options of ECB:
 
 @printindex vr
 
-@node Concept Index, , Variable Index, Top
+@node Concept Index, , Option Index, Top
 @unnumbered Concept Index
 
 @printindex cp

@@ -59,7 +59,7 @@
 ;; The latest version of the ECB is available at
 ;; http://home.swipnet.se/mayhem/ecb.html
 
-;; $Id: ecb.el,v 1.236 2002/08/10 17:57:02 berndl Exp $
+;; $Id: ecb.el,v 1.237 2002/08/11 21:31:14 berndl Exp $
 
 ;;; Code:
 
@@ -3350,7 +3350,7 @@ That is remove the unsupported :help stuff."
      [ "List of all commands"
        (let ((ecb-show-help-format 'info))
          (ecb-show-help)
-         (Info-goto-node "Function Index"))
+         (Info-goto-node "Command Index"))
        :active (equal (selected-frame) ecb-frame)
        :help "Displays an index of all commands in the online-help."
        ])
@@ -3358,7 +3358,7 @@ That is remove the unsupported :help stuff."
      [ "List of all options"
        (let ((ecb-show-help-format 'info))
          (ecb-show-help)
-         (Info-goto-node "Variable Index"))
+         (Info-goto-node "Option Index"))
        :active (equal (selected-frame) ecb-frame)
        :help "Displays an index of all user-options in the online-help."
        ])

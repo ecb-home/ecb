@@ -36,8 +36,8 @@ mailing list <ecb-list@lists.sourceforge.net> via the URL
 * Tips and tricks::             Useful hints and tips
 * Elisp programming::           Entry points for elisp programmers
 * Conflicts and bugs::          Known Conflicts with other packages and bugs
-* Function Index::              Index for functions
-* Variable Index::              Index for variables and options
+* Command Index::               Index for interactive commands
+* Option Index::                Index for user options
 * Concept Index::               Index for concepts and terms
 
  --- The Detailed Node Listing ---
@@ -119,9 +119,17 @@ Tips and tricks
 * Small screens::               Working with small screens
 * Simulating speedbar::         Simulating speedbar without an extra frame
 * Integrating speedbar::        Integrating speedbar in the ECB-frame
-* Optimize scrolling::           Optimize scrolling in the edit-window
+* Optimize scrolling::          Optimize scrolling in the edit-window
 * Large directories::           Working with large directories
 * Using eshell::                Optimal using of eshell in ECB
+
+Entry points for elisp programmers
+
+* List of variables::           Which variables an elisp-program can use
+* List of hooks::               All available hooks
+* tree-buffer::                 Some words to the tree-buffer-library
+* Adviced functions::           How to deal with the adviced functions
+* New layouts::                 How to program new layouts
 
 Known conflicts and bugs of ECB
 
@@ -3158,11 +3166,36 @@ File: ecb.info,  Node: Elisp programming,  Next: Conflicts and bugs,  Prev: Tips
 Entry points for elisp programmers
 **********************************
 
+This chapter describes how ECB can be used/programmed/driven by an
+elisp-program. This contains:
+
+* Menu:
+
+* List of variables::           Which variables an elisp-program can use
+* List of hooks::               All available hooks
+* tree-buffer::                 Some words to the tree-buffer-library
+* Adviced functions::           How to deal with the adviced functions
+* New layouts::                 How to program new layouts
+
+
+File: ecb.info,  Node: List of variables,  Next: List of hooks,  Prev: Elisp programming,  Up: Elisp programming
+
+Variables for elisp-programs
+============================
+
 Variables an elisp-program can use:
 
  * `ecb-source-path-functions'
 
-Available hooks:
+Look at the documentation of these variables to get a description.
+
+
+File: ecb.info,  Node: List of hooks,  Next: tree-buffer,  Prev: List of variables,  Up: Elisp programming
+
+Available hooks of ECB
+======================
+
+The following hooks are available:
 
  * `ecb-activate-before-new-frame-created-hook'
 
@@ -3178,24 +3211,61 @@ Available hooks:
 
  * `ecb-current-buffer-sync-hook'
 
-Look at the documentation of these variables and hooks to get a
-description.
-
-Remark to the library tree-buffer: This library is ECB independent and
-can be used for other applications too. But such an application is not
-allowed to use any of the variables of tree-buffer.el especially not
-the following:
-
-`tree-buffers': Only for internal use. It contains all tree-buffers of
-current Emacs-instance, means all tree-buffers of all applications
-which uses currently tree-buffers. Every application must store its own
-tree-buffers in an own variable! For example: ECB stores its
-tree-buffers in `ecb-tree-buffers'!
-
-An application can only use the methods tree-buffer.el provides!
+Look at the documentation of these hooks to get a description.
 
 
-File: ecb.info,  Node: Conflicts and bugs,  Next: Function Index,  Prev: Elisp programming,  Up: Top
+File: ecb.info,  Node: tree-buffer,  Next: Adviced functions,  Prev: List of hooks,  Up: Elisp programming
+
+The library tree-buffer.el
+==========================
+
+The library tree-buffer.el is ECB independent and can be used for other
+applications too. But such an application is not allowed to use any of
+the variables of tree-buffer.el especially not the variable
+*tree-buffers*!
+
+`tree-buffers': Only for internal use. It contains all tree-buffers of
+current Emacs-instance, means *all* tree-buffers of *all* applications
+which uses currently tree-buffers. Every application must store its own
+collection of tree-buffers in an own variable! For example: ECB stores
+its tree-buffer set in `ecb-tree-buffers'!
+
+An application may only use the methods tree-buffer.el provides but no
+internal variables!
+
+
+File: ecb.info,  Node: Adviced functions,  Next: New layouts,  Prev: tree-buffer,  Up: Elisp programming
+
+How to deal with the adviced window-functions
+=============================================
+
+ECB offers for packages which work during activated ECB three macros
+for easy temporally(1) using all original-functions, all adviced
+functions or only some adviced functions:
+
+ - `ecb-with-original-functions'
+
+ - `ecb-with-adviced-functions'
+
+ - `ecb-with-some-adviced-functions'
+
+For a detailed explanation of each macro read the documentation with
+`describe-function'!
+
+---------- Footnotes ----------
+
+(1) I.e. regardless of the settings in `ecb-advice-window-functions'!
+
+
+File: ecb.info,  Node: New layouts,  Prev: Adviced functions,  Up: Elisp programming
+
+How to program new layouts
+==========================
+
+Documentation will be added in future!
+
+
+File: ecb.info,  Node: Conflicts and bugs,  Next: Command Index,  Prev: Elisp programming,  Up: Top
 
 Known conflicts and bugs of ECB
 *******************************
@@ -3278,6 +3348,8 @@ size but splits the window equally. But if you add this to your
              (function (lambda ()
                          (when (and ecb-minor-mode
                                     (ecb-point-in-edit-window))
+                           ;; if no horizontal split then nothing
+                           ;; special to do
                            (or (= (frame-width) (window-width))
                                (shrink-window (- (window-height) 9))))
                         )))
@@ -3305,10 +3377,10 @@ This section describes all currently known bugs of ECB. The maintainers
 of ECB try to fix these bugs as soon as possible.
 
 
-File: ecb.info,  Node: Function Index,  Next: Variable Index,  Prev: Conflicts and bugs,  Up: Top
+File: ecb.info,  Node: Command Index,  Next: Option Index,  Prev: Conflicts and bugs,  Up: Top
 
-Function Index
-**************
+Command Index
+*************
 
 This index contains all user commands of ECB:
 
@@ -3343,10 +3415,10 @@ This index contains all user commands of ECB:
 * ecb-upgrade-options:                   Interactive ECB commands.
 
 
-File: ecb.info,  Node: Variable Index,  Next: Concept Index,  Prev: Function Index,  Up: Top
+File: ecb.info,  Node: Option Index,  Next: Concept Index,  Prev: Command Index,  Up: Top
 
-Variable Index
-**************
+Option Index
+************
 
 This index contains all customizable options of ECB:
 
@@ -3446,7 +3518,7 @@ This index contains all customizable options of ECB:
 * ecb-windows-width:                     ecb-layout.
 
 
-File: ecb.info,  Node: Concept Index,  Prev: Variable Index,  Up: Top
+File: ecb.info,  Node: Concept Index,  Prev: Option Index,  Up: Top
 
 Concept Index
 *************
@@ -3474,7 +3546,7 @@ Concept Index
 * help buffers:                          Temp- and compile-buffers.
 * Hide windows:                          Hiding the ECB windows.
 * History:                               ECB Sources.
-* Hooks:                                 Elisp programming.
+* Hooks:                                 List of hooks.
 * Incremental search:                    Incremental search.
 * layout:                                The ECB-layout.
 * Methods:                               ECB Methods.
@@ -3503,76 +3575,82 @@ Concept Index
 
 Tag Table:
 Node: Top183
-Node: Install and first steps5640
-Node: Installation6036
-Node: First steps8841
-Ref: First steps-Footnote-19988
-Node: Overview10217
-Ref: Overview-Footnote-112961
-Node: ECB Directories13050
-Node: ECB Sources14030
-Node: ECB Methods15193
-Node: Activation and Deactivation15714
-Node: Standard activation16084
-Node: Automatic activation16662
-Node: Usage of ECB17712
-Node: Using the mouse18623
-Ref: Using the mouse-Footnote-120898
-Node: Using the keyboard20944
-Node: Navigation21761
-Node: Incremental search23104
-Node: The edit-window25255
-Node: Temp- and compile-buffers27061
-Node: The Methods buffer29108
-Node: Customizing the display29549
-Node: Rebuilding the Methods31271
-Node: The ECB-layout32125
-Node: Changing the ECB-layout32675
-Node: Redrawing the ECB-layout33777
-Node: Hiding the ECB windows34580
-Node: Back/forward navigation35153
-Ref: Back/forward navigation-Footnote-136254
-Node: ECB-window synchronizing36313
-Node: Interactive ECB commands38895
-Node: Customizing47715
-Node: Most important options49228
-Node: Customizable options51020
-Node: ecb-general51936
-Node: ecb-directories70322
-Node: ecb-sources75302
-Node: ecb-methods77172
-Node: ecb-history89179
-Node: ecb-layout90871
-Node: ecb-face-options104803
-Node: ecb-faces106463
-Node: ecb-download110470
-Node: Submitting problem report111692
-Node: Upgrading112849
-Node: Downloading new versions113612
-Ref: Download required packages115369
-Ref: Downloading new versions-Footnote-1116467
-Node: Auto. option-upgrading116516
-Node: User interface116824
-Node: Background information117713
-Node: Tips and tricks121111
-Node: Changing faces121804
-Node: Small screens122610
-Node: Simulating speedbar124013
-Node: Integrating speedbar124825
-Node: Optimize scrolling125091
-Node: Large directories126170
-Node: Using eshell126836
-Node: Elisp programming127026
-Node: Conflicts and bugs128209
-Node: Conflicts128695
-Node: VC129284
-Node: follow-mouse129577
-Node: avoid130255
-Node: calendar130619
-Node: calculator131255
-Node: Bugs131757
-Node: Function Index131977
-Node: Variable Index133976
-Node: Concept Index139208
+Node: Install and first steps6003
+Node: Installation6399
+Node: First steps9204
+Ref: First steps-Footnote-110351
+Node: Overview10580
+Ref: Overview-Footnote-113324
+Node: ECB Directories13413
+Node: ECB Sources14393
+Node: ECB Methods15556
+Node: Activation and Deactivation16077
+Node: Standard activation16447
+Node: Automatic activation17025
+Node: Usage of ECB18075
+Node: Using the mouse18986
+Ref: Using the mouse-Footnote-121261
+Node: Using the keyboard21307
+Node: Navigation22124
+Node: Incremental search23467
+Node: The edit-window25618
+Node: Temp- and compile-buffers27424
+Node: The Methods buffer29471
+Node: Customizing the display29912
+Node: Rebuilding the Methods31634
+Node: The ECB-layout32488
+Node: Changing the ECB-layout33038
+Node: Redrawing the ECB-layout34140
+Node: Hiding the ECB windows34943
+Node: Back/forward navigation35516
+Ref: Back/forward navigation-Footnote-136617
+Node: ECB-window synchronizing36676
+Node: Interactive ECB commands39258
+Node: Customizing48078
+Node: Most important options49591
+Node: Customizable options51383
+Node: ecb-general52299
+Node: ecb-directories70685
+Node: ecb-sources75665
+Node: ecb-methods77535
+Node: ecb-history89542
+Node: ecb-layout91234
+Node: ecb-face-options105166
+Node: ecb-faces106826
+Node: ecb-download110833
+Node: Submitting problem report112055
+Node: Upgrading113212
+Node: Downloading new versions113975
+Ref: Download required packages115732
+Ref: Downloading new versions-Footnote-1116830
+Node: Auto. option-upgrading116879
+Node: User interface117187
+Node: Background information118076
+Node: Tips and tricks121474
+Node: Changing faces122167
+Node: Small screens122973
+Node: Simulating speedbar124376
+Node: Integrating speedbar125188
+Node: Optimize scrolling125454
+Node: Large directories126533
+Node: Using eshell127199
+Node: Elisp programming127389
+Node: List of variables127998
+Node: List of hooks128310
+Node: tree-buffer128808
+Node: Adviced functions129614
+Ref: Adviced functions-Footnote-1130221
+Node: New layouts130292
+Node: Conflicts and bugs130475
+Node: Conflicts130960
+Node: VC131549
+Node: follow-mouse131842
+Node: avoid132520
+Node: calendar132884
+Node: calculator133630
+Node: Bugs134132
+Node: Command Index134352
+Node: Option Index136346
+Node: Concept Index141571
 
 End Tag Table

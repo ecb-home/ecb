@@ -42,8 +42,8 @@ mailing list <a href="mailto:ecb-list@lists.sourceforge.net">ecb-list@lists.sour
 <li><a accesskey=8 href="#Tips%20and%20tricks">Tips and tricks</a>:              Useful hints and tips
 <li><a accesskey=9 href="#Elisp%20programming">Elisp programming</a>:            Entry points for elisp programmers
 <li><a href="#Conflicts%20and%20bugs">Conflicts and bugs</a>:           Known Conflicts with other packages and bugs
-<li><a href="#Function%20Index">Function Index</a>:               Index for functions
-<li><a href="#Variable%20Index">Variable Index</a>:               Index for variables and options
+<li><a href="#Command%20Index">Command Index</a>:                Index for interactive commands
+<li><a href="#Option%20Index">Option Index</a>:                 Index for user options
 <li><a href="#Concept%20Index">Concept Index</a>:                Index for concepts and terms
 
 <p>--- The Detailed Node Listing ---
@@ -125,9 +125,17 @@ mailing list <a href="mailto:ecb-list@lists.sourceforge.net">ecb-list@lists.sour
 <li><a href="#Small%20screens">Small screens</a>:                Working with small screens
 <li><a href="#Simulating%20speedbar">Simulating speedbar</a>:          Simulating speedbar without an extra frame
 <li><a href="#Integrating%20speedbar">Integrating speedbar</a>:         Integrating speedbar in the ECB-frame
-<li><a href="#Optimize%20scrolling">Optimize scrolling</a>:            Optimize scrolling in the edit-window
+<li><a href="#Optimize%20scrolling">Optimize scrolling</a>:           Optimize scrolling in the edit-window
 <li><a href="#Large%20directories">Large directories</a>:            Working with large directories
 <li><a href="#Using%20eshell">Using eshell</a>:                 Optimal using of eshell in ECB
+
+<p>Entry points for elisp programmers
+
+</p><li><a href="#List%20of%20variables">List of variables</a>:            Which variables an elisp-program can use
+<li><a href="#List%20of%20hooks">List of hooks</a>:                All available hooks
+<li><a href="#tree-buffer">tree-buffer</a>:                  Some words to the tree-buffer-library
+<li><a href="#Adviced%20functions">Adviced functions</a>:            How to deal with the adviced functions
+<li><a href="#New%20layouts">New layouts</a>:                  How to program new layouts
 
 <p>Known conflicts and bugs of ECB
 
@@ -4708,13 +4716,44 @@ Up:<a rel=up accesskey=u href="#Top">Top</a>
 
 <h2>Entry points for elisp programmers</h2>
 
+<p>This chapter describes how ECB can be used/programmed/driven by an
+elisp-program. This contains:
+
+<ul>
+<li><a accesskey=1 href="#List%20of%20variables">List of variables</a>:            Which variables an elisp-program can use
+<li><a accesskey=2 href="#List%20of%20hooks">List of hooks</a>:                All available hooks
+<li><a accesskey=3 href="#tree-buffer">tree-buffer</a>:                  Some words to the tree-buffer-library
+<li><a accesskey=4 href="#Adviced%20functions">Adviced functions</a>:            How to deal with the adviced functions
+<li><a accesskey=5 href="#New%20layouts">New layouts</a>:                  How to program new layouts
+</ul>
+
+<p><hr>
+Node:<a name="List%20of%20variables">List of variables</a>,
+Next:<a rel=next accesskey=n href="#List%20of%20hooks">List of hooks</a>,
+Previous:<a rel=previous accesskey=p href="#Elisp%20programming">Elisp programming</a>,
+Up:<a rel=up accesskey=u href="#Elisp%20programming">Elisp programming</a>
+<br>
+
+<h3>Variables for elisp-programs</h3>
+
 <p>Variables an elisp-program can use:
 
 <ul>
 <li><code>ecb-source-path-functions</code>
 </ul>
 
-<p>Available hooks:
+<p>Look at the documentation of these variables to get a description.
+
+<p><hr>
+Node:<a name="List%20of%20hooks">List of hooks</a>,
+Next:<a rel=next accesskey=n href="#tree-buffer">tree-buffer</a>,
+Previous:<a rel=previous accesskey=p href="#List%20of%20variables">List of variables</a>,
+Up:<a rel=up accesskey=u href="#Elisp%20programming">Elisp programming</a>
+<br>
+
+<h3>Available hooks of ECB</h3>
+
+<p>The following hooks are available:
 
 <ul>
 <li><code>ecb-activate-before-new-frame-created-hook</code>
@@ -4726,25 +4765,67 @@ Up:<a rel=up accesskey=u href="#Top">Top</a>
 <li><code>ecb-current-buffer-sync-hook</code>
 </ul>
 
-<p>Look at the documentation of these variables and hooks to get a
-description.
+<p>Look at the documentation of these hooks to get a description.
 
-<p>Remark to the library tree-buffer: This library is ECB independent and
-can be used for other applications too. But such an application is not
-allowed to use any of the variables of tree-buffer.el especially not
-the following:
+<p><hr>
+Node:<a name="tree-buffer">tree-buffer</a>,
+Next:<a rel=next accesskey=n href="#Adviced%20functions">Adviced functions</a>,
+Previous:<a rel=previous accesskey=p href="#List%20of%20hooks">List of hooks</a>,
+Up:<a rel=up accesskey=u href="#Elisp%20programming">Elisp programming</a>
+<br>
+
+<h3>The library tree-buffer.el</h3>
+
+<p>The library tree-buffer.el is ECB independent and can be used for
+other applications too. But such an application is not allowed to use
+any of the variables of tree-buffer.el especially not the variable
+<strong>tree-buffers</strong>!
 
 <p><code>tree-buffers</code>: Only for internal use. It contains all
-tree-buffers of current Emacs-instance, means all tree-buffers of all
-applications which uses currently tree-buffers. Every application must
-store its own tree-buffers in an own variable! For example: ECB stores
-its tree-buffers in <code>ecb-tree-buffers</code>!
+tree-buffers of current Emacs-instance, means <strong>all</strong>
+tree-buffers of <strong>all</strong> applications which uses currently
+tree-buffers. Every application must store its own collection of
+tree-buffers in an own variable! For example: ECB stores its
+tree-buffer set in <code>ecb-tree-buffers</code>!
 
-<p>An application can only use the methods tree-buffer.el provides!
+<p>An application may only use the methods tree-buffer.el provides but no
+internal variables!
+
+<p><hr>
+Node:<a name="Adviced%20functions">Adviced functions</a>,
+Next:<a rel=next accesskey=n href="#New%20layouts">New layouts</a>,
+Previous:<a rel=previous accesskey=p href="#tree-buffer">tree-buffer</a>,
+Up:<a rel=up accesskey=u href="#Elisp%20programming">Elisp programming</a>
+<br>
+
+<h3>How to deal with the adviced window-functions</h3>
+
+<p>ECB offers for packages which work during activated ECB three macros
+for easy temporally<a rel=footnote href="#fn-6"><sup>6</sup></a> using all original-functions, all
+adviced functions or only some adviced functions:
+
+<ul>
+<li><code>ecb-with-original-functions</code>
+<li><code>ecb-with-adviced-functions</code>
+<li><code>ecb-with-some-adviced-functions</code>
+</ul>
+
+<p>For a detailed explanation of each macro read the documentation with
+<code>describe-function</code>!
+
+<p><hr>
+Node:<a name="New%20layouts">New layouts</a>,
+Previous:<a rel=previous accesskey=p href="#Adviced%20functions">Adviced functions</a>,
+Up:<a rel=up accesskey=u href="#Elisp%20programming">Elisp programming</a>
+<br>
+
+<h3>How to program new layouts</h3>
+
+<p>Documentation will be added in future!
 
 <p><hr>
 Node:<a name="Conflicts%20and%20bugs">Conflicts and bugs</a>,
-Next:<a rel=next accesskey=n href="#Function%20Index">Function Index</a>,
+Next:<a rel=next accesskey=n href="#Command%20Index">Command Index</a>,
 Previous:<a rel=previous accesskey=p href="#Elisp%20programming">Elisp programming</a>,
 Up:<a rel=up accesskey=u href="#Top">Top</a>
 <br>
@@ -4843,6 +4924,8 @@ size but splits the window equally. But if you add this to your
           (function (lambda ()
                       (when (and ecb-minor-mode
                                  (ecb-point-in-edit-window))
+                        ;; if no horizontal split then nothing
+                        ;; special to do
                         (or (= (frame-width) (window-width))
                             (shrink-window (- (window-height) 9))))
                      )))
@@ -4875,13 +4958,13 @@ Up:<a rel=up accesskey=u href="#Conflicts%20and%20bugs">Conflicts and bugs</a>
 maintainers of ECB try to fix these bugs as soon as possible.
 
 <p><hr>
-Node:<a name="Function%20Index">Function Index</a>,
-Next:<a rel=next accesskey=n href="#Variable%20Index">Variable Index</a>,
+Node:<a name="Command%20Index">Command Index</a>,
+Next:<a rel=next accesskey=n href="#Option%20Index">Option Index</a>,
 Previous:<a rel=previous accesskey=p href="#Conflicts%20and%20bugs">Conflicts and bugs</a>,
 Up:<a rel=up accesskey=u href="#Top">Top</a>
 <br>
 
-<h2>Function Index</h2>
+<h2>Command Index</h2>
 
 <p>This index contains all user commands of ECB:
 
@@ -4915,13 +4998,13 @@ Up:<a rel=up accesskey=u href="#Top">Top</a>
 <li><code>ecb-upgrade-options</code>: <a href="#Interactive%20ECB%20commands">Interactive ECB commands</a>
 </ul>
 <p><hr>
-Node:<a name="Variable%20Index">Variable Index</a>,
+Node:<a name="Option%20Index">Option Index</a>,
 Next:<a rel=next accesskey=n href="#Concept%20Index">Concept Index</a>,
-Previous:<a rel=previous accesskey=p href="#Function%20Index">Function Index</a>,
+Previous:<a rel=previous accesskey=p href="#Command%20Index">Command Index</a>,
 Up:<a rel=up accesskey=u href="#Top">Top</a>
 <br>
 
-<h2>Variable Index</h2>
+<h2>Option Index</h2>
 
 <p>This index contains all customizable options of ECB:
 
@@ -5021,7 +5104,7 @@ Up:<a rel=up accesskey=u href="#Top">Top</a>
 </ul>
 <p><hr>
 Node:<a name="Concept%20Index">Concept Index</a>,
-Previous:<a rel=previous accesskey=p href="#Variable%20Index">Variable Index</a>,
+Previous:<a rel=previous accesskey=p href="#Option%20Index">Option Index</a>,
 Up:<a rel=up accesskey=u href="#Top">Top</a>
 <br>
 
@@ -5049,7 +5132,7 @@ Up:<a rel=up accesskey=u href="#Top">Top</a>
 <li>help buffers: <a href="#Temp-%20and%20compile-buffers">Temp- and compile-buffers</a>
 <li>Hide windows: <a href="#Hiding%20the%20ECB%20windows">Hiding the ECB windows</a>
 <li>History: <a href="#ECB%20Sources">ECB Sources</a>
-<li>Hooks: <a href="#Elisp%20programming">Elisp programming</a>
+<li>Hooks: <a href="#List%20of%20hooks">List of hooks</a>
 <li>Incremental search: <a href="#Incremental%20search">Incremental search</a>
 <li>layout: <a href="#The%20ECB-layout">The ECB-layout</a>
 <li>Methods: <a href="#ECB%20Methods">ECB Methods</a>
@@ -5164,6 +5247,13 @@ Up:<a rel=up accesskey=u href="#Top">Top</a>
 </ul>
 <li><a name="toc_Elisp%20programming"></a>
     <a href="#Elisp%20programming">Entry points for elisp programmers</a>
+<ul>
+<li><a href="#List%20of%20variables">Variables for elisp-programs</a>
+<li><a href="#List%20of%20hooks">Available hooks of ECB</a>
+<li><a href="#tree-buffer">The library tree-buffer.el</a>
+<li><a href="#Adviced%20functions">How to deal with the adviced window-functions</a>
+<li><a href="#New%20layouts">How to program new layouts</a>
+</ul>
 <li><a name="toc_Conflicts%20and%20bugs"></a>
     <a href="#Conflicts%20and%20bugs">Known conflicts and bugs of ECB</a>
 <ul>
@@ -5177,10 +5267,10 @@ Up:<a rel=up accesskey=u href="#Top">Top</a>
 </ul>
 <li><a href="#Bugs">Known bugs</a>
 </ul>
-<li><a name="toc_Function%20Index"></a>
-    <a href="#Function%20Index">Function Index</a>
-<li><a name="toc_Variable%20Index"></a>
-    <a href="#Variable%20Index">Variable Index</a>
+<li><a name="toc_Command%20Index"></a>
+    <a href="#Command%20Index">Command Index</a>
+<li><a name="toc_Option%20Index"></a>
+    <a href="#Option%20Index">Option Index</a>
 <li><a name="toc_Concept%20Index"></a>
     <a href="#Concept%20Index">Concept Index</a>
 </ul>
@@ -5211,6 +5301,10 @@ a variable or any other semantic token</p>
 <p>cygwin is available at
 <a href="http://cygwin.com/">http://cygwin.com/</a>
 </p>
+
+<li><a name="fn-6"></a>
+<p>I.e. regardless of the settings in
+<code>ecb-advice-window-functions</code>!</p>
 
 </ol><hr>
 
