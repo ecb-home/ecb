@@ -1,6 +1,9 @@
 Version 1.30 (???):
 -------------------
 
+- Mouse over files, methods etc. should now work even if follow-mouse isn't
+  activated. (Jesper)
+
 - Popup menus should now work in XEmacs. (Jesper)
 
 - You can now specify paths with env-vars like $HOME in the option
