@@ -738,6 +738,11 @@ key-bindings only for the history-buffer of ECB."
 
 
 (defun ecb-expand-directory-tree (path node)
+  "Expands the directory part so the node representing PATH is visible.
+Start with the childrens of NODE. Return not nil when an expansion has been
+done \(so normally the tree-buffer must be rebuild). Return nil if the
+expansion-state of the tree can show without any further expansion the node
+representing PATH."
   (catch 'exit
     (dolist (child (tree-node-get-children node))
       (let ((data (tree-node-get-data child)))
@@ -1194,7 +1199,7 @@ then nothing is done unless first optional argument FORCE is not nil."
                                         (tree-node-is-expanded start)))
                  ;; expand the best-match node itself
                  (tree-node-set-expanded start t)
-                 ;; This functions ensures a correct expandable-state of
+                 ;; This function ensures a correct expandable-state of
                  ;; start-node
                  (ecb-update-directory-node start))
                ;; start recursive expanding of either the best-matching node or
@@ -2279,6 +2284,7 @@ So you get a better overlooking. There are three choices:
   (tree-buffer-create
    ecb-directories-buffer-name
    ecb-frame
+   ecb-tree-mouse-action-trigger
    'ecb-interpret-mouse-click
    'ecb-tree-buffer-node-select-callback
    'ecb-tree-buffer-node-expand-callback
@@ -2327,6 +2333,7 @@ So you get a better overlooking. There are three choices:
   (tree-buffer-create
    ecb-sources-buffer-name
    ecb-frame
+   ecb-tree-mouse-action-trigger
    'ecb-interpret-mouse-click
    'ecb-tree-buffer-node-select-callback
    'ecb-tree-buffer-node-expand-callback
@@ -2368,6 +2375,7 @@ So you get a better overlooking. There are three choices:
   (tree-buffer-create
    ecb-history-buffer-name
    ecb-frame
+   ecb-tree-mouse-action-trigger
    'ecb-interpret-mouse-click
    'ecb-tree-buffer-node-select-callback
    'ecb-tree-buffer-node-expand-callback

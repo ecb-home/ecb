@@ -3133,6 +3133,15 @@ Note: All this is only valid for file-types parsed by semantic. For other file
 types which are parsed by imenu or etags \(see
 `ecb-process-non-semantic-files') FORCE-ALL is always true!"
   (save-selected-window
+    ;; for buffers which are not parsed by semantic we always set force-all to
+    ;; t! We "misuse" (ecb-methods-get-data-store
+    ;; 'semantic-symbol->name-assoc-list) to decide if a buffer is parsed by
+    ;; semantic or not because only semantic-parsed buffers can have a value
+    ;; not nil!
+    (setq force-all
+          (if (not (ecb-methods-get-data-store 'semantic-symbol->name-assoc-list))
+              t
+            force-all))
     (ecb-exec-in-methods-window
      (let ( ;; normalizing the elements of `ecb-methods-nodes-expand-spec'
            ;; and `ecb-methods-nodes-collapse-spec'.
@@ -3868,6 +3877,7 @@ pattern.")
   (tree-buffer-create
    ecb-methods-buffer-name
    ecb-frame
+   ecb-tree-mouse-action-trigger
    'ecb-interpret-mouse-click
    'ecb-tree-buffer-node-select-callback
    'ecb-tree-buffer-node-expand-callback

@@ -1,3 +1,13 @@
+- Distinction of include-tags by "" or <>. This can be done via
+  (semantic-tag-include-system-p TAG). Thanks to Markus grietsch.
+
+- Displaying the version-control-state of a file concerning (for this we can
+  probably steal 90% of the needed code from speedbar). Probably we should
+  display this with a appropriate suffix (or a image)
+
+- Displaying the read-only-state of a file (probably by using a different
+  face)
+
 - (BUG) if a buffer is opened from within an archive (zip or tar) then
   clicking onto a method in this buffer tries to jump somewhere in the archive
   (tar or zip) buffer (Klaus)

@@ -227,7 +227,16 @@ This command generates in the edit-window a problem-report which contains
 already the current values of all ECB options, the current backtrace-buffer if
 there is any and the current message-buffer. You will be asked for a
 problem-report subject and then you must insert a description of the problem.
-Please describe the problem as detailed as possible!"
+Please describe the problem as detailed as possible!
+
+*IMPORTANT*: Cause of extra appearance of SPAM in the mailing-lists,
+SourceForge has changed its policy: Now it is only possible to post to the
+mailing-list for users who have subscribed this mailing-list. So please be
+aware you will not be able to send comments, bug reports and improvement
+suggestions before you have subscribed the ECB-mailing-list. See the section
+\"Mailing-list\" at the ECB-website at http://ecb.sourceforge.net how to do
+this."
+
   (interactive)
   (when (or ecb-minor-mode
             (y-or-n-p "ECB should be active when submitting a problem-report. Force report? "))

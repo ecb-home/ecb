@@ -149,7 +149,7 @@ escreen.el!"
             (ecb-enable-advices ecb-winman-escreen-adviced-functions)
             (add-hook 'escreen-goto-screen-hook
                       'ecb-winman-escreen-goto-escreen-hook)
-            (message "ECB %s: support for escreen enabled." ecb-version))
+            (ecb-info-message "Support for escreen enabled."))
         (error
          (ecb-winman-escreen-disable-support)
          (ecb-error "The escreen-support can not be properly installed!")))
@@ -209,7 +209,7 @@ winring.el!"
           (progn
             (require 'winring)
             (ecb-enable-advices ecb-winman-winring-adviced-functions)
-            (message "ECB %s: support for winring enabled." ecb-version))
+            (ecb-info-message "Support for winring enabled."))
         (error
          (ecb-winman-winring-disable-support)
          (ecb-error "The winring-support can not be properly installed!")))
