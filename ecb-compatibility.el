@@ -24,7 +24,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-compatibility.el,v 1.1 2004/02/02 11:59:12 berndl Exp $
+;; $Id: ecb-compatibility.el,v 1.2 2004/02/13 16:10:06 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -52,7 +52,9 @@
 ;; All advices of `ecb-compatibility-advices' will be autom. enabled when ECB
 ;; starts and autom. disabled when ECB shuts down.
 
-(defvar ecb-compatibility-advices '((bs-show . before))
+(defvar ecb-compatibility-advices '((bs-show . before)
+                                    (Electric-pop-up-window . around)
+                                    (electric-buffer-list . after))
   "Contains all advices needed for package-compatibility.")
 
 (defadvice bs-show (before ecb)
@@ -69,7 +71,13 @@ edit-window. Does nothing if called in another frame as the `ecb-frame'."
           (ecb-with-adviced-functions
            (display-buffer (buffer-name my-bs-buffer)))))))
 
+(defadvice Electric-pop-up-window (around ecb)
+  (ecb-with-ecb-advice 'one-window-p 'around
+    ad-do-it))
 
+(defadvice electric-buffer-list (after ecb)
+  (if (get-buffer "*Buffer List*")
+      (bury-buffer (get-buffer "*Buffer List*"))))
 
 ;; we disable the advices at load-time
 (ecb-disable-advices ecb-compatibility-advices)

@@ -6,13 +6,12 @@
 # Or type "make all" or "make upload-build" to generate the whole website
 # and build an uploadable ecb-website.tar.gz file.
 
-# $Id: Makefile,v 1.16 2004/01/20 08:06:58 berndl Exp $
+# $Id: Makefile,v 1.17 2004/02/13 16:09:47 berndl Exp $
 
 EMACS=emacs
 
-RM=rm -f
-CP=cp
-MKDIR=mkdir -p
+include ../ecb-makedef.mk
+
 TARC=tar -czvf
 SCP=scp
 SSH=ssh -l berndl ecb.sourceforge.net
@@ -26,7 +25,7 @@ ecb_HTMLSOURCE=ecb-html.el
 ecb_HTML_GEN=logo.html javabrowser.html main.html menu.html links.html \
              top.html all-news.html downloads.html
 ecb_HTMLDOCU_DIR=./docs
-ecb_TEXI=../ecb.texi
+ecb_TEXI_FILE=../ecb.texi
 
 ecb_SCREENSHOTS=screenshots/index.html screenshots/*.png
 
@@ -64,10 +63,10 @@ all: upload-build
 website: $(ecb_HTMLSOURCE)
 	@$(RM) $(ecb_HTML_GEN)
 	@$(RM) *.elc
-	$(EMACS) -batch -no-site-file -l $(CEDETLOAD) $< -f eval-current-buffer
+	$(EBATCH) -l $(CEDETLOAD) $< -f eval-current-buffer
 
 # Generates HTML-docu from ecb.texi into ./docs/
-online-docu: $(ecb_TEXI)
+online-docu: $(ecb_TEXI_FILE)
 	@$(MKDIR) $(ecb_HTMLDOCU_DIR)
 	@$(RM) $(ecb_HTMLDOCU_DIR)/*.html
 	$(MAKEINFO) --html --output=$(ecb_HTMLDOCU_DIR) $<
@@ -102,10 +101,26 @@ upload-update:
 	$(SSH) "cd $(ecb_WEBSITE_LOC); gzip -d update.tar.gz; tar -xf update.tar; rm -f update.tar"; \
 	$(RM) update.tar.gz)
 
-# update latest cvs-snapshot on the ECB-webiste
+# update latest cvs-snapshot on the ECB-webiste - seems curently not working
+# update-cvs-snapshot:
+# 	@echo "Updating latest stable CVS-snapshot..."
+# 	$(SSH) "cvs -d:pserver:anonymous@cvs1:/cvsroot/ecb export -Dtomorrow ecb && rm -Rf ecb/html ecb/ecb2 && tar czvf $(ecb_WEBSITE_LOC)/cvs_snapshots/ecb.tar.gz ecb && rm -Rf ecb"
+
 update-cvs-snapshot:
 	@echo "Updating latest stable CVS-snapshot..."
-	$(SSH) "cvs -d:pserver:anonymous@cvs1:/cvsroot/ecb export -Dtomorrow ecb && rm -Rf ecb/html ecb/ecb2 && tar czvf $(ecb_WEBSITE_LOC)/cvs_snapshots/ecb.tar.gz ecb && rm -Rf ecb"
+	@$(RM) ecb.tar.gz
+	@$(RM) -R ecb-snap
+	@$(MKDIR) ecb-snap
+	@(cd ..; \
+	$(CP) $(ecb_DISTRIB_FILES) html/ecb-snap; \
+	$(CP) -r $(ecb_IMAGE_DIR) html/ecb-snap)
+	@find ecb-snap/$(ecb_IMAGE_DIR) -name CVS -print | xargs rm -Rf
+	@find ecb-snap/$(ecb_IMAGE_DIR) -name *~ -print | xargs $(RM)
+	@$(TARC) ecb.tar.gz ecb-snap
+	@$(RM) -R ecb-snap
+	$(SCP) ecb.tar.gz $(ecb_SF_login):$(ecb_WEBSITE_LOC)/cvs_snapshots
+	@$(RM) ecb.tar.gz
+
 
 clean:
 	@$(RM) -R $(ecb_HTMLDOCU_DIR)

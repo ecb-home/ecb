@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-layout.el,v 1.213 2004/02/07 11:08:45 berndl Exp $
+;; $Id: ecb-layout.el,v 1.214 2004/02/13 16:10:05 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -1244,13 +1244,16 @@ either not activated or it behaves exactly like the original version!"
                                             (ecb-normalize-number
                                              ecb-compile-window-height
                                              (1- (frame-height)))))
+             (comp-win-height-value (ecb-buffer-local-value
+                                     'compilation-window-height
+                                     (window-buffer (ad-get-arg 0))))
              (compilation-window-height (if (and ecb-compile-window-prevent-shrink-below-height
-                                                 compilation-window-height
+                                                 comp-win-height-value
                                                  compile-window-height-lines
-                                                 (< compilation-window-height
+                                                 (< comp-win-height-value
                                                     compile-window-height-lines))
                                             compile-window-height-lines
-                                          compilation-window-height)))
+                                          comp-win-height-value)))
         (and compilation-window-height
              ;; Klaus Berndl <klaus.berndl@sdm.de>: we do nothing if an unsplitted
              ;; edit-window should be resized because this would fail (e.g. if
@@ -1328,32 +1331,11 @@ if `scroll-all-mode' is nil return the number of visible windows."
      (ecb-with-original-functions
       ad-do-it))))
 
-
-(defun ecb-enable-walk-windows-advice (arg)
-  "Enable the around-advice for `walk-windows' if arg >= 0 otherwise disable
-it."
-  (if (< arg 0)
-      (progn
-        (ad-disable-advice 'walk-windows 'around 'ecb)
-        (ad-activate 'walk-windows))
-    (ad-enable-advice 'walk-windows 'around 'ecb)
-    (ad-activate 'walk-windows)))
-
-(defmacro ecb-with-adviced-walk-windows (&rest body)
-  "Evaluates BODY with an adviced version of `walk-windows' which walks only
-through the edit-windows of the `ecb-frame' if `walk-windows' is called for the
-`ecb-frame'."
-  `(unwind-protect
-       (progn
-         (ecb-enable-walk-windows-advice 1)
-         ,@body)
-     (ecb-enable-walk-windows-advice -1)))
-
 (defadvice walk-windows (around ecb)
   "Walk only through the edit-windows of ECB. When ECB is not active or
 called for other frames than for the `ecb-frame' then act like the original.
 This adviced version of `walk-windows' is not for direct usage therefore it is
-always disabled; use the macro `ecb-with-adviced-walk-windows' instead if you
+always disabled; use the macro `ecb-with-ecb-advice' instead if you
 need this adviced version of `walk-windows'!"
   (if (or (equal (ad-get-arg 2) ecb-frame)
           (and (null (ad-get-arg 2))
@@ -1371,6 +1353,18 @@ need this adviced version of `walk-windows'!"
                                         (funcall ecb-walk-windows-advice-proc w))))
                           (ad-get-arg 1)
                           (ad-get-arg 2)))))
+    ad-do-it))
+
+(defadvice one-window-p (around ecb)
+  "If called for the `ecb-frame' is only returns not nil if there is exactly
+one edit-window. Neither the ecb-windows nor the compile-window nor the
+minibuffer-window are considered. This adviced version of `one-window-p' is
+not for direct usage therefore it is always disabled; use the macro
+`ecb-with-ecb-advice' instead if you need this adviced version of
+`one-window-p'!"
+  (if (equal (selected-frame) ecb-frame)
+      (setq ad-return-value
+            (= (length (ecb-canonical-edit-windows-list)) 1))
     ad-do-it))
 
 (defun ecb-toggle-scroll-other-window-scrolls-compile (&optional arg)
@@ -2753,10 +2747,7 @@ If called for other frames it works like the original version."
                                             nth-window)
   "Implements the situation of an active minibuffer, see
 `ecb-other-window-behavior'."
-  (let* ((nth-win (or nth-window 1))
-         (next-listelem-fcn (if (< nth-win 0)
-                                'ecb-prev-listelem
-                              'ecb-next-listelem)))
+  (let ((nth-win (or nth-window 1)))
     (if (equal point-loc 'minibuf)
         (if (= nth-win 1)
             (or (if (and minibuffer-scroll-window
@@ -2766,15 +2757,14 @@ If called for other frames it works like the original version."
                     minibuffer-scroll-window)
                 comp-win
                 ecb-last-edit-window-with-point)
-          (funcall next-listelem-fcn (append edit-win-list
-                                             (if comp-win
-                                                 (list comp-win))
-                                             (if minibuf-win
-                                                 (list minibuf-win)))
-                   (selected-window) nth-win))
-      (funcall next-listelem-fcn (append win-list (if minibuf-win
-                                                      (list minibuf-win)))
-               (selected-window) nth-win))))
+          (ecb-next-listelem (append edit-win-list
+                                     (if comp-win
+                                         (list comp-win))
+                                     (if minibuf-win
+                                         (list minibuf-win)))
+                             (selected-window) nth-win))
+      (ecb-next-listelem (append win-list (if minibuf-win (list minibuf-win)))
+                         (selected-window) nth-win))))
   
 
 
@@ -2797,31 +2787,25 @@ If called for other frames it works like the original version."
                                            point-loc
                                            nth-window)
     ;; here we have no active minibuffer!
-    (let* ((nth-win (or nth-window 1))
-           (next-listelem-fcn (if (< nth-win 0)
-                                  'ecb-prev-listelem
-                                'ecb-next-listelem)))
+    (let ((nth-win (or nth-window 1)))
       (cond ((equal point-loc 'ecb)
-             (funcall next-listelem-fcn ecb-win-list
-                      (selected-window) nth-win))
+             (ecb-next-listelem ecb-win-list (selected-window) nth-win))
             ((equal point-loc 'compile)
              (if (= nth-win 1)
                  (or (and ecb-last-edit-window-with-point
                           (window-live-p ecb-last-edit-window-with-point)
                           ecb-last-edit-window-with-point)
                      (car edit-win-list))
-               (funcall next-listelem-fcn
-                        (append edit-win-list (list (selected-window)))
-                        (selected-window)
-                        nth-win)))
+               (ecb-next-listelem (append edit-win-list (list (selected-window)))
+                                  (selected-window)
+                                  nth-win)))
             (t ;; must be an edit-window
-             (funcall next-listelem-fcn
-                      (append edit-win-list
-                              (if (and comp-win
-                                       (= (length edit-win-list) 1))
-                                  (list comp-win)))
-                      (selected-window)
-                      nth-win))))))
+             (ecb-next-listelem (append edit-win-list
+                                        (if (and comp-win
+                                                 (= (length edit-win-list) 1))
+                                            (list comp-win)))
+                                (selected-window)
+                                nth-win))))))
 
 (defun ecb-get-other-window (nth-window)
   "Return the \"other window\" according to `ecb-other-window-behavior'.
@@ -2835,10 +2819,7 @@ NTH-WINDOW is nil then it is treated as 1."
          (point-loc (ecb-where-is-point edit-win-list))
          (compwin-state (ecb-compile-window-state))
          (minibuf-win (if (> (minibuffer-depth) 0)
-                          (minibuffer-window ecb-frame)))
-         (next-listelem-fcn (if (< nth-win 0)
-                                'ecb-prev-listelem
-                              'ecb-next-listelem)))
+                          (minibuffer-window ecb-frame))))
     (if (functionp ecb-other-window-behavior)
         (let ((other-win (funcall ecb-other-window-behavior
                                   windows-list
@@ -2851,9 +2832,8 @@ NTH-WINDOW is nil then it is treated as 1."
                                   nth-window)))
           (if (and other-win (window-live-p other-win))
               other-win
-            (funcall next-listelem-fcn
-                     (append windows-list (list minibuf-win))
-                     (selected-window) nth-win)))
+            (ecb-next-listelem (append windows-list (list minibuf-win))
+                               (selected-window) nth-win)))
       (if minibuf-win
           (ecb-get-other-window-minibuf-active windows-list
                                                edit-win-list
@@ -2865,8 +2845,8 @@ NTH-WINDOW is nil then it is treated as 1."
                                                nth-window)
         ;; in the following there is no minibuffer active...
         (cond ((equal 'all ecb-other-window-behavior)
-               (funcall next-listelem-fcn windows-list
-                      (selected-window) nth-win))
+               (ecb-next-listelem windows-list
+                                  (selected-window) nth-win))
               ((equal 'only-edit ecb-other-window-behavior)
                (if (not (integerp point-loc))
                    (if (= nth-win 1)
@@ -2874,20 +2854,19 @@ NTH-WINDOW is nil then it is treated as 1."
                                 (window-live-p ecb-last-edit-window-with-point)
                                 ecb-last-edit-window-with-point)
                            (car edit-win-list))
-                     (funcall next-listelem-fcn windows-list
-                              (selected-window) nth-win))
-                 (funcall next-listelem-fcn edit-win-list
-                          (selected-window) nth-win)))
+                     (ecb-next-listelem windows-list
+                                        (selected-window) nth-win))
+                 (ecb-next-listelem edit-win-list
+                                    (selected-window) nth-win)))
               ((equal 'edit-and-compile ecb-other-window-behavior)
                (if (equal point-loc 'ecb)
-                   (funcall next-listelem-fcn windows-list
-                            (selected-window) nth-win)
-                 (funcall next-listelem-fcn
-                          (append edit-win-list
-                                  (if (equal compwin-state 'visible)
-                                      (list ecb-compile-window)))
-                          (selected-window)
-                          nth-win)))
+                   (ecb-next-listelem windows-list
+                                      (selected-window) nth-win)
+                 (ecb-next-listelem (append edit-win-list
+                                            (if (equal compwin-state 'visible)
+                                                (list ecb-compile-window)))
+                                    (selected-window)
+                                    nth-win)))
               (t ;; = 'smart
                (ecb-get-other-window-smart windows-list
                                            edit-win-list
@@ -3396,8 +3375,8 @@ Otherwise it depends completely on the setting in `ecb-other-window-behavior'."
 
 (defadvice balance-windows (around ecb)
   "When called in the `ecb-frame' then only the edit-windows are balanced."
-  (ecb-with-adviced-walk-windows
-   ad-do-it))
+  (ecb-with-ecb-advice 'walk-windows 'around
+    ad-do-it))
 
 ;; here come the prefixed equivalents to the adviced originals
 (defun ecb-switch-to-buffer ()
@@ -4284,6 +4263,7 @@ ring-cache as add-on to CONFIGURATION."
      (ecb-layout-debug-error "advice of set-window-configuration failed: (error-type: %S, error-data: %S)"
                              (car oops) (cdr oops))))
   ad-return-value)
+
 
 
 (defun ecb-current-window-configuration ()

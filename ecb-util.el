@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-util.el,v 1.95 2004/02/07 11:08:44 berndl Exp $
+;; $Id: ecb-util.el,v 1.96 2004/02/13 16:10:05 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -59,6 +59,7 @@
 ;; Emacs
 (silentcomp-defvar noninteractive)
 (silentcomp-defun window-edges)
+(silentcomp-defun buffer-local-value)
 ;; XEmacs
 (silentcomp-defun mswindows-cygwin-to-win32-path)
 (silentcomp-defun make-dialog-box)
@@ -360,6 +361,31 @@ of exactly the functions in `ecb-basic-adviced-functions'!"
          (ecb-disable-advices ecb-basic-adviced-functions)
          ,@body)
      (ecb-enable-advices ecb-basic-adviced-functions)))
+
+(defun ecb-enable-ecb-advice (function-symbol advice-type arg)
+  "If ARG is greater or equal zero then enable the adviced version of
+FUNCTION-SYMBOL. The advice must be of type of the ADVICE-TYPE which can be
+'around, 'before or 'after."
+  (if (< arg 0)
+      (progn
+        (ad-disable-advice function-symbol advice-type 'ecb)
+        (ad-activate function-symbol))
+    (ad-enable-advice function-symbol advice-type  'ecb)
+    (ad-activate function-symbol)))
+
+(defmacro ecb-with-ecb-advice (function-symbol advice-type &rest body)
+  "Evaluates BODY with the adviced version of FUNCTION-SYMBOL. The advice must
+be of type of the ADVICE-TYPE which can be 'around, 'before or 'after. Such an
+advice has to ensure that it behaves as its original version when called for
+another frame than the `ecb-frame'."
+  `(unwind-protect
+       (progn
+         (ecb-enable-ecb-advice ,function-symbol ,advice-type 1)
+         ,@body)
+     (ecb-enable-ecb-advice ,function-symbol ,advice-type -1)))
+
+(put 'ecb-with-ecb-advice 'lisp-indent-function 2)
+
 
 ;; some basic advices
 
@@ -982,25 +1008,15 @@ are compared with `equal'.
 If NTH-NEXT is an integer then the NTH-NEXT element of LIST in the meaning
 described above is returned, i.e. the algorithm above is applied NTH-NEXT
 times. Example: Suppose LIST = '\(a b c d), ELEM is 'c and NTH-NEXT = 3 then
-'b is returned - same result for NTH-NEXT = 7, 11..."
+'b is returned - same result for NTH-NEXT = 7, 11... It works also for
+negative integers, so when NTH-NEXT is -1 in the example above then 'b is
+returned."
   (let ((elem-pos (ecb-position list elem))
         (next (or nth-next 1)))
     (and elem-pos
          (nth (mod (+ elem-pos next)
                    (length list))
               list))))
-
-(defun ecb-prev-listelem (list elem &optional nth-prev)
-  "Return that element of LIST which preceeds directly ELEM when ELEM is an
-element of LIST. If ELEM is the first element of LIST then return the last
-element of LIST. If ELEM is not an element of LIST nil is returned. Elements
-are compared with `equal'.
-
-If NTH-PREV is an integer then the NTH-PREV element of LIST in the meaning
-described above is returned, i.e. the algorithm above is applied NTH-PREV
-times. Example: Suppose LIST = '\(a b c d), ELEM is 'c and NTH-PREV = 3 then
-'d is returned - same result for NTH-PREV = 7, 11..."
-  (ecb-next-listelem (reverse list) elem nth-prev))
 
 (defun ecb-file-content-as-string (file)
   "If FILE exists and is readable returns the contents as a string otherwise
@@ -1087,6 +1103,16 @@ the same ordering as `other-window' would walk through the frame."
                                    (frame-first-window ecb-frame))
                                 (window-list)))))))
 
+
+(defun ecb-buffer-local-value (sym buffer)
+  "Get the buffer-local value of variable SYM in BUFFER. If there is no
+buffer-local value in BUFFER then the global value of SYM is used."
+  (if (fboundp 'buffer-local-value)
+      (buffer-local-value sym buffer)
+    (or (cdr (assoc sym (buffer-local-variables buffer)))
+        (save-excursion
+          (set-buffer buffer)
+          (symbol-value sym)))))
 
 ;; ringstuff
 
