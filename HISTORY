@@ -1,6 +1,9 @@
 Version 1.53:
 -------------
 
+- New hook ecb-current-buffer-sync-hook allows developers to add code to be
+  evaluated after the ECB is synchronized with the current buffer.
+
 - ecb-auto-expand-directory-tree now offers two options:
   - best: Expand always the best matching source-path for a file
   - first: Expand always the first matching source-path for a file (Klaus)
