@@ -68,11 +68,10 @@
    `ecb-fix-window-size' is not nil for current layout. Thanks for suggestion
    Massimiliano Mirra <mmirra@libero.it>. Only relevant for GNU Emacs 21.X.
 
-** ECB can work together with the escreen.el-library.
-   See the new command `ecb-escreen-enable-integration'. Thanks to Johann ???
-   <myrkraverk@users.sourceforge.net> who has reported me some bugs related to
-   escreen and has furthermore helped me to find an important bug related to
-   dedicated windows.
+** ECB can work together with the window-managers escreen and winring
+   Thanks to Johann ??? <myrkraverk@users.sourceforge.net> who has reported
+   some bugs related to escreen and has therefore motivated a lot to add
+   support for the well known window-managers escreen and winring.
             
 ** Fixed Bugs
 
@@ -93,6 +92,8 @@
 *** Fixed a bug in `ecb-toggle-enlarged-compilation-window'.
 
 *** Fixed a bug in the layout-engine related to dedicated windows.
+    Thanks to Johann ??? <myrkraverk@users.sourceforge.net> who
+    helped to find this bug.
 
 
 

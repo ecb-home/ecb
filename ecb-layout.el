@@ -1011,17 +1011,17 @@ either not activated or it behaves exactly like the original version!"
       ad-do-it)))
 
 
-(defadvice winner-mode (around ecb)
+(defadvice winner-mode (before ecb)
   "Prevents `winner-mode' from being activated for the ECB-frame."
   (if (equal (selected-frame) ecb-frame)
       (ecb-error "Can't use winner-mode functions in the ecb-frame.")))
 
-(defadvice winner-redo (around ecb)
+(defadvice winner-redo (before ecb)
   "Prevents `winner-redo' from being used within the ECB-frame."
   (if (equal (selected-frame) ecb-frame)
       (ecb-error "Can't use winner-mode functions in the ecb-frame.")))
 
-(defadvice winner-undo (around ecb)
+(defadvice winner-undo (before ecb)
   "Prevents `winner-undo' from being used within the ECB-frame."
   (if (equal (selected-frame) ecb-frame)
       (ecb-error "Can't use winner-mode functions in the ecb-frame.")))

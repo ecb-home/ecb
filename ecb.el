@@ -163,7 +163,7 @@
 (require 'ecb-tod)
 (require 'ecb-speedbar)
 (require 'ecb-autogen)
-(require 'ecb-escreen)
+(require 'ecb-winman-support)
 ;;(require 'ecb-profile)
 
 ;; various loads
@@ -5093,6 +5093,12 @@ That is remove the unsupported :help stuff."
       (customize-group "ecb-non-semantic")
       :active t
       :help "Customize options for parsing non-semantic-sources"
+      ])
+    (ecb-menu-item
+     ["Supporting window-managers..."
+      (customize-group "ecb-winman-support")
+      :active t
+      :help "Customize options for the window-manager-support"
       ])
     )
    (list

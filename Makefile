@@ -139,7 +139,7 @@ ecb_LISP_EL=tree-buffer.el ecb-util.el ecb-mode-line.el ecb-help.el \
             ecb-eshell.el ecb-cycle.el ecb-face.el ecb-compilation.el \
             ecb-upgrade.el ecb-create-layout.el silentcomp.el \
             ecb-speedbar.el ecb-examples.el ecb-tod.el ecb-autogen.el \
-	    ecb-jde.el
+	    ecb-jde.el ecb-winman-support.el
 
 ecb_LISP_ELC=$(ecb_LISP_EL:.el=.elc)
 
