@@ -655,7 +655,7 @@ either not activated or it behaves exactly like the original version!"
                            temp-buffer-max-height))
              (win-height (1- (window-height)))
              (min-height (1- window-min-height))
-             (text-height (window-buffer-height(selected-window)))
+             (text-height (window-buffer-height (selected-window)))
              (new-height (max (min text-height max-height) min-height)))
         (enlarge-window (- new-height win-height))))))
 
