@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-util.el,v 1.85 2003/11/13 18:53:40 berndl Exp $
+;; $Id: ecb-util.el,v 1.86 2003/11/23 19:13:18 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -300,6 +300,16 @@ by semantic and also killed afterwards."
 
 
 ;; some function from cl - but we do not want to call cl-functions at runtime
+
+;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: Is this the best way to do this? 
+(defun ecb-filter (seq pred)
+  "Filter out those elements of SEQUENCE for which PREDICATE returns nil."
+  (let ((res))
+    (while seq
+      (if (if pred (funcall pred (car seq)) (car seq))
+          (setq res (append res (list (car seq)))))
+      (setq seq (cdr seq)))
+    res))
 
 (defun ecb-some (cl-pred cl-seq &rest cl-rest)
   "Return true if PREDICATE is true of any element of SEQ or SEQs.
@@ -709,10 +719,17 @@ with a single space-character."
                       (substring s (match-end 0)))))
     s))
 
+;; Klaus Berndl <klaus.berndl@sdm.de>: we have to take account that GNU Emacs
+;; > 21.3 has changed its split-string function! For the new split-string is
+;; >      (cdr (split-string ...)) not nil (at least in our context below),
+;; >      for GNU Emacs <= 21.3 nil!
 (defun ecb-left-trim (str)
   "Return a string stripped of all leading whitespaces of STR."
-  (or (car (split-string str "^[\n\t ]*")) ""))
-    
+  (let ((split-result (split-string str "^[\n\t ]*")))
+    (or (or (and (cdr split-result) ;; GNU Emacs > 21.3
+                 (car (cdr split-result)))
+            (car split-result)) "")))
+
 (defun ecb-right-trim (str)
   "Return a string stripped of all trailing whitespaces of STR."
   (or (car (split-string str "[\n\t ]*$")) ""))

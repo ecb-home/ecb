@@ -26,7 +26,7 @@
 @c GNU Emacs; see the file COPYING.  If not, write to the Free Software
 @c Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-@c $Id: ecb.texi,v 1.131 2003/11/13 18:53:40 berndl Exp $
+@c $Id: ecb.texi,v 1.132 2003/11/23 19:13:17 berndl Exp $
 
 @setfilename ecb.info
 
@@ -5136,21 +5136,26 @@ supported by semantic!
 @end defopt
 
 
-
 @defopt post-process-semantic-taglist
 Define mode-dependent post-processing for the semantic-taglist. This
-is an alist where the car is a major-mode symbol and the cdr is a
-function-symbol of a function which should be used for post-processing
-the taglist (returned by @code{semantic-bovinate-toplevel}) for a
-buffer in this major-mode. Such a function is called with current
+is an alist where the car is a major-mode symbol and the cdr is a list
+of function-symbols of functions which should be used for
+post-processing the taglist (returned by
+@code{ecb--semantic-bovinate-toplevel}) for a buffer in this
+major-mode. The first function in the list is called with current
 semantic taglist of current buffer and must return a valid taglist
-again.
+again. All other functions are called with the result-taglist of its
+preceding function and have to return a new taglist again.
 
 For oo-programming languages where the methods of a class can be
 defined outside the class-definition (e.g. C++, Eieio) the function
-@code{ecb-group-function-tags-with-parents} can be used to get a
-much better method-display in the methods-window of ECB, because all
-method implementations of a class are grouped together.
+@code{ecb-group-function-tags-with-parents} can be used to get a much
+better method-display in the methods-window of ECB, because all method
+implementations of a class are grouped together.
+
+Another senseful usage is to filter out certain tags, e.g. prototype
+tags in @code{c-mode}. For this you can set
+@code{ecb-filter-prototyp-tags}.
 
 This options takes only effect for semantic-sources - means sources
 supported by semantic!

@@ -6,7 +6,7 @@
 # Or type "make all" or "make upload-build" to generate the whole website
 # and build an uploadable ecb-website.tar.gz file.
 
-# $Id: Makefile,v 1.13 2003/11/13 18:53:40 berndl Exp $
+# $Id: Makefile,v 1.14 2003/11/23 19:13:15 berndl Exp $
 
 EMACS=emacs
 
@@ -18,7 +18,7 @@ SCP=scp
 SSH=ssh -l berndl ecb.sourceforge.net
 GNUCLIENT=gnuclient
 
-CEDETLOAD=C:/Programme/emacs-21/site-lisp/multi-file-packages/cedet-1.0beta1b/common/cedet.el
+CEDETLOAD=C:/Programme/emacs-21/site-lisp/multi-file-packages/cedet-1.0beta1c/common/cedet.el
 
 MAKEINFO=/usr/bin/makeinfo
 

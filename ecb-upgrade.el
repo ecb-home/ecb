@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-upgrade.el,v 1.51 2003/11/13 18:53:40 berndl Exp $
+;; $Id: ecb-upgrade.el,v 1.52 2003/11/23 19:13:18 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -222,7 +222,9 @@
     (ecb-token-visit-post-actions . (ecb-tag-visit-post-actions
                                      ecb-upgrade-token-visit-post-actions))
     (ecb-token-header-face . (ecb-tag-header-face
-                              ecb-upgrade-token-header-face)))
+                              ecb-upgrade-token-header-face))
+    (ecb-post-process-semantic-taglist . (ecb-post-process-semantic-taglist
+                                          ecb-upgrade-post-process-semantic-taglist)))
   "Alist of all options which should be upgraded for current ECB-version.
 There are several reasons why an option should be contained in this alist:
 a) An old option has just be renamed in current-ECB version but has still the
@@ -470,6 +472,13 @@ The car is the old option symbol and the cdr is a 2-element-list with:
   (if (equal old-val 'ecb-token-header-face)
       'ecb-tag-header-face
     old-val))
+
+(defun ecb-upgrade-post-process-semantic-taglist (old-val)
+  (let ((l (copy-tree old-val)))
+    (dolist (elem l)
+      (if (cdr elem)
+          (setcdr elem (list (cdr elem)))))
+    l))
 
 ;; ----------------------------------------------------------------------
 ;; internal functions. Dot change anything below this line

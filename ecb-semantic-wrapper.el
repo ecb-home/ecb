@@ -23,7 +23,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-semantic-wrapper.el,v 1.2 2003/11/13 18:53:41 berndl Exp $
+;; $Id: ecb-semantic-wrapper.el,v 1.3 2003/11/23 19:13:18 berndl Exp $
 
 ;;; Commentary:
 
@@ -44,6 +44,10 @@
 
 (eval-when-compile
   (require 'silentcomp))
+
+;; semantic 1.X does not have this
+(silentcomp-defvar semanticdb-search-system-databases)
+
 
 ;; -- getter functions for all variables of semantic currently used by ECB ---
 
@@ -102,6 +106,7 @@
     (semantic-overlay-p              . semantic-overlay-p)
     (semantic-token-buffer           . semantic-tag-buffer)
     (semantic-token-end              . semantic-tag-end)
+    (semantic-token-extra-spec       . semantic-tag-get-attribute)
     (semantic-token-function-parent  . semantic-tag-function-parent)
     (semantic-token-get              . semantic--tag-get-property)
     (semantic-token-name             . semantic-tag-name)

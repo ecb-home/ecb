@@ -24,7 +24,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-method-browser.el,v 1.4 2003/11/13 18:53:41 berndl Exp $
+;; $Id: ecb-method-browser.el,v 1.5 2003/11/23 19:13:18 berndl Exp $
 
 ;;; Commentary:
 
@@ -508,16 +508,18 @@ position but groups some external members having the same parent-tag."
                  text)
              (funcall (quote ,(cdr elem)) tag parent-tag colorize)))))
 
-
 (defcustom ecb-post-process-semantic-taglist
-  '((c++-mode . ecb-group-function-tags-with-parents)
-    (emacs-lisp-mode . ecb-group-function-tags-with-parents))
+  '((c++-mode . (ecb-group-function-tags-with-parents))
+    (emacs-lisp-mode . (ecb-group-function-tags-with-parents))
+    (c-mode . (ecb-filter-prototype-tags)))
   "*Define mode-dependent post-processing for the semantic-taglist.
-This is an alist where the car is a major-mode symbol and the cdr is a
-function-symbol of a function which should be used for post-processing the
+This is an alist where the car is a major-mode symbol and the cdr is a list of
+function-symbols of functions which should be used for post-processing the
 taglist \(returned by `ecb--semantic-bovinate-toplevel') for a buffer in this
-major-mode. Such a function is called with current semantic taglist of
-current buffer and must return a valid taglist again.
+major-mode. The first function in the list is called with current semantic
+taglist of current buffer and must return a valid taglist again. All other
+functions are called with the result-taglist of its preceding function and
+have to return a new taglist again.
 
 For oo-programming languages where the methods of a class can be defined
 outside the class-definition \(e.g. C++, Eieio) the function
@@ -525,12 +527,14 @@ outside the class-definition \(e.g. C++, Eieio) the function
 method-display in the methods-window of ECB, because all method
 implementations of a class are grouped together.
 
+Another senseful usage is to filter out certain tags, e.g. prototype tags in
+`c-mode'. For this you can set `ecb-filter-prototype-tags'.
+
 This options takes only effect for semantic-sources - means sources supported
 by semantic!"
   :group 'ecb-methods
   :type '(repeat (cons (symbol :tag "Major-mode")
-                       (function :tag "Post-process function"))))
-
+                       (repeat (function :tag "Post-process function")))))
 
 (defcustom ecb-show-only-positioned-tags t
   "*Show only nodes in the method-buffer which are \"jump-able\".
@@ -1181,10 +1185,11 @@ PARENT-TAG is only propagated to `ecb-add-tag-bucket'."
   "If for current major-mode a post-process function is found in
 `ecb-post-process-semantic-taglist' then this function is called with
 TAGLIST otherwise TAGLIST is returned."
-  (let ((fcn (cdr (assoc major-mode ecb-post-process-semantic-taglist))))
-    (if (fboundp fcn)
-        (funcall fcn taglist)
-      taglist)))
+  (let ((fcn-list (cdr (assoc major-mode ecb-post-process-semantic-taglist))))
+    (dolist (fcn fcn-list)
+      (if (fboundp fcn)
+        (setq taglist (funcall fcn taglist))))
+    taglist))
 
 (defun ecb-group-function-tags-with-parents (taglist)
   "Return a new taglist based on TAGLIST where all function-tags in
@@ -1194,58 +1199,18 @@ and then all grouped tags.
 
 This is useful for oo-programming languages where the methods of a class can
 be defined outside the class-definition, e.g. C++, Eieio."
-  (if (fboundp 'ecb--semantic-adopt-external-members)
-      (ecb--semantic-adopt-external-members taglist)
-    (let ((parent-alist nil)
-          (parents nil)
-          (parentless nil))
-      (while taglist
-        (cond ((and (eq (ecb--semantic-tag-class (car taglist)) 'function)
-                    (ecb--semantic-tag-function-parent (car taglist)))
-               ;; Find or Create a faux parent tag in `parents'
-               ;; and add this tag to it.
-               (let ((elem (assoc (ecb--semantic-tag-function-parent (car taglist))
-                                  parent-alist)))
-                 (if elem
-                     (setcdr elem (cons (car taglist) (cdr elem)))
-                   (setq parent-alist
-                         (cons (cons (ecb--semantic-tag-function-parent (car
-                                                                         taglist))
-                                     (list (car taglist)))
-                               parent-alist)))))
-              (t
-               (setq parentless (cons (car taglist) parentless))))
-        (setq taglist (cdr taglist)))
-      ;; now we have an alist with an element for each parent where the key is
-      ;; the class-name (string) and the value is a list of all method-tags
-      ;; for this class.
+  (ecb--semantic-adopt-external-members taglist))
 
-      ;; Now we must build a new tag-list
-      (dolist (alist-elem parent-alist)
-        (let ((group-tag (list (concat (car alist-elem) " (Methods)")
-                                 'type
-                                 ;; if we set "struct" the protection will be
-                                 ;; public, with "class" it will be private.
-                                 ;; Unfortunately there is no way to display
-                                 ;; the right protection, but i think public
-                                 ;; is better then private. The best would be
-                                 ;; a blank protection symbol but this will
-                                 ;; be first available with semantic-1.4beta13.
-                                 "struct"
-                                 ;; the PART-LIST, means all the methods of
-                                 ;; this class. But first we must nreverse
-                                 ;; the list because we have build the list
-                                 ;; with cons.
-                                 (nreverse (cdr alist-elem))
-                                 nil nil nil nil nil)))
-          ;; now we mark our new group tag
-          (ecb--semantic--tag-put-property group-tag 'ecb-group-tag t)
-          (setq parents (cons group-tag parents))))
-
-      ;; We nreverse the parent-less (because build with cons) and append then
-      ;; all the parents.
-      (append (nreverse parentless) parents))))
-
+(defun ecb-filter-prototype-tags (taglist)
+  "Filter out all prototypes.
+For example this is useful for editing C files which have the function
+prototypes defined at the top of the file and the implementations at the
+bottom. This means that everything appears twice in the methods buffer, but
+probably nobody wants to jump to the prototypes, they are only wasting space
+in the methods buffer."
+  (ecb-filter taglist
+              (function (lambda (x)
+                           (not (ecb--semantic-tag-get-attribute x 'prototype))))))
 
 (defun ecb-add-tags (node tags &optional parent-tag no-bucketize)
   "If NO-BUCKETIZE is not nil then TAGS will not bucketized by
@@ -1871,6 +1836,9 @@ types which are parsed by imenu or etags \(see
                                     (symbol-name elem))))))
             spec)))
 
+;; semantic 1.X does not have this
+(silentcomp-defvar semanticdb-search-system-databases)
+
 ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: Maybe an option for searching
 ;; system dbs too?!
 (defun ecb-semanticdb-get-type-definition-list (typename &optional
@@ -1893,8 +1861,7 @@ be found or if the semanticdb is not active then nil is returned."
              (search-result (ecb--semanticdb-find-tags-by-name typename))
              (result-tags (and search-result
                                (ecb--semanticdb-strip-find-results search-result)))
-             (type-tag-numbers nil)
-             (filename-tag-alist nil))
+             (type-tag-numbers nil))
         (when (and result-tags
                    ;; some paranoia
                    (= (length result-tags)

@@ -28,7 +28,7 @@
 ;; Do not change any html-file besides the index.html manually but do all
 ;; changes in this elisp file!
 
-;; $Id: ecb-html.el,v 1.55 2003/11/13 18:53:40 berndl Exp $
+;; $Id: ecb-html.el,v 1.56 2003/11/23 19:13:15 berndl Exp $
 
 ;;; Code:
 
@@ -77,7 +77,7 @@
   "List of latest news displayed on the main page.")
 (setq ecb-latest-news
       `(
-        ,(h-sub-section "ECB 2.11 released! (2003-11-04)"
+        ,(h-sub-section "ECB 2.11 released! (2003-11-14)"
                         "Semanticdb is used for jumping to external type-definitions. Special-display-buffers are handled correctly. Automatic upgrading has been fixed for this new version. Some bug fixes. "
                         (h-link "docs/Install-and-first-steps.html#Install%20and%20first%20steps" "Here") " is a short installation guide. "
                         "Click " (h-link "NEWS.html" "here")
