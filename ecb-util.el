@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-util.el,v 1.126 2004/12/29 08:36:08 berndl Exp $
+;; $Id: ecb-util.el,v 1.127 2005/01/03 14:24:43 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -546,7 +546,7 @@ If so, return the true (non-nil) value returned by PREDICATE."
       cl-x)))
 
 (defun ecb-copy-list (list)
-  "Return a copy of a list, which may be a dotted list.
+  "Return a copy of a LIST, which may be a dotted list.
 The elements of the list are not copied, just the list structure itself."
   (if (consp list)
       (let ((res nil))
@@ -1684,10 +1684,6 @@ During the evaluation of BODY the following local variables are bound:
     (if (file-exists-p exp-file)
         (delete-file exp-file))))
 
-(defun ecb-buffer-select (buffer-or-name)
-  "Make buffer of BUFFER-OR-NAME current - do not display it."
-  (set-buffer (ecb-buffer-obj buffer-or-name)))
-
 (defun ecb-buffer-name (buffer-or-name)
   "Return the buffer-name of BUFFER-OR-NAME."
   (cond ((stringp buffer-or-name)
@@ -1825,14 +1821,28 @@ height is that fraction of the frame."
               (enlarge-window enlargement))))
     (error "Window is not alive!")))
 
-(defun ecb-window-select (name)
-  "Select that window which displays the buffer with NAME in the `ecb-frame'
-and return the window-object. If that buffer is not displayed in the
-`ecb-frame' then nothing happens and nil is returned."
-  (let ((window (get-buffer-window name ecb-frame)))
+(defun ecb-window-select (buffer-or-name)
+  "Select that window which displays in the `ecb-frame' the buffer
+BUFFER-OR-NAME which can be either a buffer-object or a buffer-name. Return
+the window-object. If that buffer is not displayed in the `ecb-frame' then
+nothing happens and nil is returned."
+  (let ((window (get-buffer-window buffer-or-name ecb-frame)))
     (if window
 	(select-window window)
       nil)))
+
+(defmacro ecb-exec-in-window (buffer-or-name &rest body)
+  "Evaluates BODY in that window which displays the buffer BUFFER-OR-NAME
+which can be either a buffer-object or a buffer-name. If that window is not
+visible then BODY is not evaluated and the symbol 'window-not-visible is
+returned. Otherwise the return value of BODY is returned. Runs encapsulated in
+`save-selected-window'."
+  `(save-selected-window
+     (if (not (ecb-window-select ,buffer-or-name))
+         'window-not-visible
+       ,@body)))
+
+(put 'ecb-exec-in-window 'lisp-indent-function 1)
 
 (defun ecb-make-windows-not-dedicated (&optional frame)
   "Make all windows of FRAME not dedicated."
