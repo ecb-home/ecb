@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb.el,v 1.418 2004/12/06 17:52:18 berndl Exp $
+;; $Id: ecb.el,v 1.419 2004/12/10 12:54:38 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -705,7 +705,7 @@ tasks are performed:
                                                ;; also the drive is added.
                                                (substring norm-filename 0 2)))
                                          ;; add the full directory as source-path
-                                         (file-name-directory norm-filename))))
+                                         (ecb-file-name-directory norm-filename))))
                      (ecb-add-source-path source-path (ecb-fix-filename source-path)
                                           (not (cdr ecb-add-path-for-not-matching-files)))))
 
@@ -732,7 +732,7 @@ tasks are performed:
                (eq major-mode 'dired-mode)
                (ecb-set-selected-directory
                 (or (and (stringp dired-directory)
-                         (file-exists-p dired-directory)
+                         (ecb-file-exists-p dired-directory)
                          dired-directory)
                     (and (listp dired-directory)
                          (car dired-directory)))))
@@ -2135,9 +2135,9 @@ if the minor mode is enabled.
 (defun ecb-compile-file-if-necessary (file &optional force)
   "Compile the ECB-file FILE if necessary. This is done if FORCE is not nil or
 FILE.el is newer than FILE.elc or if FILE.elc doesn't exist."
-  (let ((elc-file (concat (file-name-sans-extension file) ".elc")))
+  (let ((elc-file (concat (ecb-file-name-sans-extension file) ".elc")))
     (if (or force
-	    (not (file-exists-p elc-file))
+	    (not (ecb-file-exists-p elc-file))
 	    (file-newer-than-file-p file elc-file))
         (byte-compile-file file))))
 
@@ -2153,19 +2153,19 @@ exist."
           (ecb-error "Incorrect requirements; check the versions of semantic, eieio and speedbar!"))
     (ecb-check-requirements))
   (let ((load-path
-	 (append (list (file-name-directory
+	 (append (list (ecb-file-name-directory
 			(or (locate-library "semantic")
 			    (ecb-error "Semantic is not in the load-path!")))
-                       (file-name-directory
+                       (ecb-file-name-directory
 			(or (locate-library "eieio")
 			    (ecb-error "Eieio is not in the load-path!")))
-                       (file-name-directory
+                       (ecb-file-name-directory
 			(or (locate-library "speedbar")
 			    (ecb-error "Speedbar is not in the load-path!")))
-		       (file-name-directory (locate-library "ecb")))
+		       (ecb-file-name-directory (locate-library "ecb")))
 		 load-path))
-	(files (directory-files (file-name-directory (locate-library "ecb"))
-				t)))
+	(files (ecb-directory-files (ecb-file-name-directory (locate-library "ecb"))
+                                    t)))
     (save-excursion
       (dolist (file files)
 	(if (and (string-match "\\(silentcomp\\|tree-buffer\\|ecb.*\\)\\.el$" file)

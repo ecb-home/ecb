@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-speedbar.el,v 1.61 2004/11/17 17:28:23 berndl Exp $
+;; $Id: ecb-speedbar.el,v 1.62 2004/12/10 12:54:41 berndl Exp $
 
 ;;; Commentary:
 
@@ -128,8 +128,8 @@ after clicking onto a filename in the speedbar."
              (equal (selected-frame) ecb-frame)
              (window-live-p (get-buffer-window ecb-speedbar-buffer-name))
              (and item
-                  (file-exists-p item)
-                  (not (file-directory-p item))))
+                  (ecb-file-exists-p item)
+                  (not (ecb-file-directory-p item))))
         (ecb-select-edit-window))))
 
 

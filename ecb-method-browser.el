@@ -24,7 +24,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-method-browser.el,v 1.62 2004/11/22 16:59:16 berndl Exp $
+;; $Id: ecb-method-browser.el,v 1.63 2004/12/10 12:54:41 berndl Exp $
 
 ;;; Commentary:
 
@@ -3338,7 +3338,7 @@ be found or if the semanticdb is not active then nil is returned."
                                               search-result n)))
                                       (if (and (cdr r)
                                                (stringp (cdr r))
-                                               (file-readable-p (cdr r)))
+                                               (ecb-file-readable-p (cdr r)))
                                           (cons (cdr r) (car r))))))
                         type-tag-numbers)))))))
 
@@ -3412,7 +3412,7 @@ should be displayed. For 1 and 2 the value of EDIT-WINDOW-NR is ignored."
           (progn
             (set-buffer (get-file-buffer ecb-path-selected-source))
             (let ((file (ecb--semantic-dependency-tag-file tag)))
-              (when (and file (file-exists-p file))
+              (when (and file (ecb-file-exists-p file))
                 (ecb-find-file-and-display
                  file (ecb-combine-ecb-button/edit-win-nr ecb-button edit-window-nr)))))
         (ecb-jump-to-tag filename
