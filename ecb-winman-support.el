@@ -21,7 +21,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-winman-support.el,v 1.9 2004/01/19 20:03:26 berndl Exp $
+;; $Id: ecb-winman-support.el,v 1.10 2004/02/02 11:57:54 berndl Exp $
 
 ;;; Commentary
 ;;
@@ -85,11 +85,6 @@
 ;;; BUGS
 ;;
 ;; Currently not known
-
-
-;;; TODO
-;;
-;; More tests.
 
 
 ;; Thanks to Johann "Myrkraverk" Oskarsson <myrkraverk@users.sourceforge.net>

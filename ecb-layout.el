@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-layout.el,v 1.210 2004/01/28 19:21:37 berndl Exp $
+;; $Id: ecb-layout.el,v 1.211 2004/02/02 11:57:54 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -2328,12 +2328,6 @@ can use these variables."
 ;;    (ecb-layout-debug-error "ecb-minibuffer-exit-hook: shrink after leaving minibuf")
 ;;   (ecb-toggle-compile-window-height -1))
 
-;; (defun ecb-minibuffer-exit-hook ()
-;;   (message "Klausi-minib-exit-hook: %s"
-;;            (save-excursion
-;;              (set-buffer (window-buffer (minibuffer-window ecb-frame)))
-;;              (buffer-string))))
-
 ;; (add-hook 'minibuffer-exit-hook 'ecb-minibuffer-exit-hook)
 
 (defvar ecb-layout-prevent-handle-compile-window-selection nil)
@@ -4232,10 +4226,13 @@ informations needed by ECB will be set by the adviced version of
 
 ;; redrawing the layout
 
-(defun ecb-redraw-layout (&optional do-not-preserve-state)
+(defun ecb-redraw-layout (&optional arg)
   "Redraw the ECB screen.
-Without the prefix-argument DO-NOT-PRESERVE-STATE the state of the
-ECB-frame-layout will preserved. This means:
+
+Do not call this command from elisp-program but only interactively!
+
+Called without a prefix-argument the state of the ECB-frame-layout will
+preserved. This means:
 - The state of compile-window \(hidden or visible) will be preserved but if
   visible then the height will be as specified in `ecb-compile-window-height'.
 - The state of the ECB-windows will be preserved \(hidden or visible) but if
@@ -4243,9 +4240,17 @@ ECB-frame-layout will preserved. This means:
   options `ecb-windows-width' and `ecb-windows-height') or as stored with
   `ecb-store-window-sizes'.
 
-If DO-NOT-PRESERVE-STATE is not nil or called with a prefix-argument then the
-layout will bedrawn with all ECB-windows and also with a visible
-compile-window \(when `ecb-compile-window-height' is not nil).
+If called with ONE prefix-argument \(\[C-u]) then the layout will be drawn
+with all ECB-windows and also with a visible compile-window \(when
+`ecb-compile-window-height' is not nil). The splitting-state of the edit-area
+will be preserved.
+
+If called with TWO prefix-arguments \(i.e. hitting \[C-u] twice: \[C-u]
+\[C-u]) then an emergency-redraw will be performed. This means the same as if
+called with one prefix-argument \(s.a.) but the splitting-state of the
+edit-area will NOT be preserved but all edit-windows besides the current one
+will be deleted. Use this only if there are some anomalies after standard
+redraws!
 
 If the variable `ecb-redraw-layout-quickly' is not nil then the redraw is done
 by the `ecb-redraw-layout-quickly' function, otherwise by
@@ -4268,12 +4273,14 @@ for the quick version!"
           (condition-case nil
               (ecb-redraw-layout-quickly)
             (error (message "ECB: Quick redraw failed...full redraw will be performed!")
-                   (ecb-redraw-layout-full nil nil nil (and (not do-not-preserve-state)
-                                                            ecb-windows-hidden))))
-        (ecb-redraw-layout-full nil nil nil (and (not do-not-preserve-state)
-                                                 ecb-windows-hidden)))
+                   (ecb-redraw-layout-full nil nil nil (and (not arg)
+                                                            ecb-windows-hidden)
+                                           (equal arg '(16)))))
+        (ecb-redraw-layout-full nil nil nil (and (not arg)
+                                                 ecb-windows-hidden)
+                                (equal arg '(16))))
       
-      (if (and (not do-not-preserve-state) compwin-hidden)
+      (if (and (not arg) compwin-hidden)
           (ecb-toggle-compile-window -1)))
 
     ;;make sure we are in the edit window if necessary.
@@ -4288,9 +4295,17 @@ for the quick version!"
 
 (defun ecb-redraw-layout-full (&optional no-buffer-sync ecb-windows-creator
                                          window-configuration-data
-                                         no-ecb-windows)
+                                         no-ecb-windows emergency)
   "Redraw the ECB screen according to the layout set in `ecb-layout-name'. After
-this function the edit-window is selected which was current before redrawing."
+this function the edit-window is selected which was current before redrawing.
+If NO-BUFFER-SYNC is not nil then the ecb-buffers will not be synchronized. If
+ECB-WINDOWS-CREATOR is not nil then it will be used to draw the layout instead
+of the standard layout. If WINDOW-CONFIGURATION-DATA is not nil it must be an
+object returned by `ecb-window-configuration-data' and will be used for
+restoring the layout. If EMERGENCY is not nil then all other args will be
+ignored and the layout will be redrawn like defined in the current layout and
+the edit-area will be unsplitted and will just contain the buffer before the
+emergency-redraw."
   (when (and ecb-minor-mode
              (equal (selected-frame) ecb-frame))
     ;; this functions are only needed at runtime!
@@ -4336,7 +4351,7 @@ this function the edit-window is selected which was current before redrawing."
                ecb-compile-window nil)
 
          ;; Now we call the layout-function
-         (if no-ecb-windows
+         (if (and (not emergency) no-ecb-windows)
              (progn
                (when ecb-compile-window-height
                  (ecb-split-ver (- ecb-compile-window-height) t t)
@@ -4352,7 +4367,8 @@ this function the edit-window is selected which was current before redrawing."
                    ecb-layout-name)))
 
          ;; resetting some states if we have a full layout
-         (when (and (null ecb-windows-creator) (not no-ecb-windows))
+         (when (or emergency
+                   (and (null ecb-windows-creator) (not no-ecb-windows)))
            (setq ecb-current-maximized-ecb-buffer-name nil)
            (setq ecb-cycle-ecb-buffer-state nil))
 
@@ -4362,7 +4378,9 @@ this function the edit-window is selected which was current before redrawing."
         
          ) ;; end ecb-do-with-unfixed-ecb-buffers
 
-        (setq ecb-windows-hidden no-ecb-windows)
+        (if emergency
+            (setq ecb-windows-hidden nil)
+          (setq ecb-windows-hidden no-ecb-windows))
        
         ;; Now all the windows must be created and the editing window must not
         ;; be splitted! In addition the variables `ecb-edit-window' and
@@ -4395,21 +4413,24 @@ this function the edit-window is selected which was current before redrawing."
                                           ;; ecb-with-original-permanent-functions
 
        ;; now we restore the edit-windows as before the redraw
-      (if (= (length edit-win-data-before-redraw)
-             (ecb-edit-area-creators-number-of-edit-windows))
+      (if (and (not emergency)
+               (= (length edit-win-data-before-redraw)
+                  (ecb-edit-area-creators-number-of-edit-windows)))
           (ecb-with-original-functions
            (ecb-with-original-permanent-functions
             (ecb-restore-edit-area)))
         (ecb-edit-area-creators-init))
 
-      (setq edit-win-list-after-redraw (ecb-canonical-edit-windows-list))
-      (setq edit-area-size (ecb-get-edit-area-size))
+      (when (not emergency)
+        (setq edit-win-list-after-redraw (ecb-canonical-edit-windows-list))
+        (setq edit-area-size (ecb-get-edit-area-size)))
 
       ;; a safety-check if we have now after redrawing at least as many
       ;; edit-windows as before redrawing. If yes we restore all window-data
       ;; as before redraw.
-      (when (= (length edit-win-list-after-redraw)
-               (length edit-win-data-before-redraw))
+      (when (and (not emergency)
+                 (= (length edit-win-list-after-redraw)
+                    (length edit-win-data-before-redraw)))
         (dotimes (i (length edit-win-data-before-redraw))
           (let ((win (nth i edit-win-list-after-redraw))
                 (data (nth i edit-win-data-before-redraw)))
@@ -4443,7 +4464,8 @@ this function the edit-window is selected which was current before redrawing."
           (goto-char pos-before-redraw)))
 
       ;; Restore saved window sizes
-      (when (and (null ecb-windows-creator) (not no-ecb-windows))
+      (when (or emergency
+                (and (null ecb-windows-creator) (not no-ecb-windows)))
         (ecb-restore-window-sizes))
 
       (setq ecb-last-source-buffer (current-buffer))
@@ -4451,12 +4473,12 @@ this function the edit-window is selected which was current before redrawing."
 
       ;; updating and synchronizing of the ecb-windows but only when we have a
       ;; full redraw incl. the ecb-windows.
-      (when (not no-ecb-windows)
+      (when (or emergency (not no-ecb-windows))
         (let ((current-ecb-buffers (ecb-get-current-visible-ecb-buffers)))
           ;; fill-up the history new with all buffers if the history buffer was
           ;; not shown before the redisplay but now (means if the layout has
           ;; changed)
-          (when (null ecb-windows-creator)
+          (when (or emergency (null ecb-windows-creator))
             (setq ecb-tree-buffers-of-current-layout
                   (mapcar 'buffer-name current-ecb-buffers)))
           (when (and (not (member (get-buffer ecb-history-buffer-name)
@@ -4614,9 +4636,11 @@ floating-point-numbers. Default referencial width rsp. height are
                                (* (cdr size) ref-height)
                              (cdr size)))
            (enlarge-width (if (numberp absolut-width)
-                              (- (round absolut-width) (ecb-window-full-width window))))
+                              (- (round absolut-width)
+                                 (ecb-window-full-width window))))
            (enlarge-height (if (numberp absolut-height)
-                               (- (round absolut-height) (ecb-window-full-height window)))))
+                               (- (round absolut-height)
+                                  (ecb-window-full-height window)))))
       (save-selected-window
         (select-window window)
         (if (and (numberp enlarge-width) (/= enlarge-width 0))

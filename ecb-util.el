@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-util.el,v 1.92 2004/01/28 19:21:36 berndl Exp $
+;; $Id: ecb-util.el,v 1.93 2004/02/02 11:57:54 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -330,7 +330,6 @@ by semantic and also killed afterwards."
 
 ;; some function from cl - but we do not want to call cl-functions at runtime
 
-;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: Is this the best way to do this? 
 (defun ecb-filter (seq pred)
   "Filter out those elements of SEQUENCE for which PREDICATE returns nil."
   (let ((res))

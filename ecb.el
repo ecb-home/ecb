@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb.el,v 1.368 2004/01/28 19:21:17 berndl Exp $
+;; $Id: ecb.el,v 1.369 2004/02/02 11:57:53 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -196,6 +196,7 @@
 (require 'ecb-speedbar)
 (require 'ecb-autogen)
 (require 'ecb-winman-support)
+(require 'ecb-compatibility)
 
 ;; various loads
 (require 'assoc)
@@ -2083,6 +2084,14 @@ That is remove the unsupported :help stuff."
        :help "Show the FAQ of ECB."
        ])
     (ecb-menu-item
+     [ "Conflicts with other packages"
+       (let ((ecb-show-help-format 'info))
+         (ecb-show-help)
+         (Info-goto-node "Conflicts and bugs"))
+       :active t
+       :help "What to do for conflicts with other packages."
+       ])
+    (ecb-menu-item
      [ "Submit problem report"
        ecb-submit-problem-report
        :active t
@@ -2379,6 +2388,9 @@ ECB has been deactivated. Do not set this variable!")
 
             ;; enable advices for not supported window-managers
             (ecb-enable-advices ecb-winman-not-supported-function-advices)
+
+            ;; enable advices for the compatibility with other packages
+            (ecb-enable-advices ecb-compatibility-advices)
             
             ;; set the ecb-frame
             (let ((old-ecb-frame ecb-frame))
@@ -2839,6 +2851,7 @@ does all necessary after finishing ediff."
       (ecb-disable-advices ecb-speedbar-adviced-functions)
       (ecb-disable-advices ecb-eshell-adviced-functions)
       (ecb-disable-advices ecb-winman-not-supported-function-advices)
+      (ecb-disable-advices ecb-compatibility-advices)
       ;; we disable the permanent advices later
 
       (ecb-enable-own-temp-buffer-show-function nil)      

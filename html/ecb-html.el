@@ -28,7 +28,7 @@
 ;; Do not change any html-file besides the index.html manually but do all
 ;; changes in this elisp file!
 
-;; $Id: ecb-html.el,v 1.59 2004/01/15 13:00:54 berndl Exp $
+;; $Id: ecb-html.el,v 1.60 2004/02/02 11:57:53 berndl Exp $
 
 ;;; Code:
 
@@ -77,8 +77,8 @@
   "List of latest news displayed on the main page.")
 (setq ecb-latest-news
       `(
-        ,(h-sub-section "ECB 2.20 released! (2004-??-??)"
-                        "The most important news at the beginning: The restriction of only two edit-windows has been gone; now you can get as many edit-windows as you need! The window-layout of the edit-area will be fully preserved between deactivation/activation and hidding/showing ecb-windows! A lot of improvements for the tree-buffers. A lot of bug fixes. "
+        ,(h-sub-section "ECB 2.20 released! (2004-02-02)"
+                        "The most important news at the beginning: The restriction of only two edit-windows has been gone; now you can get as many edit-windows as you need! The window-layout of the edit-area will be fully preserved between deactivation/activation and hidding/showing ecb-windows! A lot of improvements for the tree-buffers. Much better compatibility with other packages. A lot of bug fixes. "
                         (h-link "docs/Install-and-first-steps.html#Install%20and%20first%20steps" "Here") " is a short installation guide. "
                         "Click " (h-link "NEWS.html" "here")
                         " for information about changes in the new version. ")
@@ -89,11 +89,6 @@
                         (h-link "docs/Install-and-first-steps.html#Install%20and%20first%20steps" "Here") " is a short installation guide. "
                         "Click " (h-link "NEWS.html" "here")
                         " for information about changes in the new version. ")
-        ,(h-sub-section "ECB 2.01 released! (2003-11-04)"
-                        "New image-style tree-buffers. Complete overhaul of the popup-menu mechanism - now submenus are allowed and some new default entries. If the special ECB-windows are hidden then there are no restrictions about the window-layout of the ecb-frame. Runs with cedet 1.0. Some bug fixes. "
-                        (h-link "docs/Install-and-first-steps.html#Install%20and%20first%20steps" "Here") " is a short installation guide. "
-                        "Click " (h-link "NEWS.html" "here")
-                        " for information about changes in the new version. ")
         ))
 
 (defvar ecb-rest-news nil
@@ -101,6 +96,11 @@
 `ecb-html-all-news'.")
 (setq ecb-rest-news
       `(
+        ,(h-sub-section "ECB 2.01 released! (2003-11-04)"
+                        "New image-style tree-buffers. Complete overhaul of the popup-menu mechanism - now submenus are allowed and some new default entries. If the special ECB-windows are hidden then there are no restrictions about the window-layout of the ecb-frame. Runs with cedet 1.0. Some bug fixes. "
+                        (h-link "docs/Install-and-first-steps.html#Install%20and%20first%20steps" "Here") " is a short installation guide. "
+                        "Click " (h-link "NEWS.html" "here")
+                        " for information about changes in the new version. ")
         ,(h-sub-section "ECB 1.96 released! (2003-09-15)"
                         "Support for window-managers like winring and escreen and therefore possibilty to run apps like Gnus and ECB in one frame. Complete overhaul of the compile-window mechanism - now it is much more stable. Some other nice features and bug fixes. "
                         (h-link "docs/Install-and-first-steps.html#Install%20and%20first%20steps" "Here") " is a short installation guide. "
@@ -282,6 +282,7 @@
    (h-center
     (h-link "main.html" '(target . "main")
 	    (h-img "ecb_logo.gif" "border='0'")))))
+;;             (h-img "screenshot.png" "border='0'")))))
 
   
 (defun ecb-html-links()
@@ -338,8 +339,11 @@
      (h-p
       (h-b "Updated: ") h-br
       (h-date))
-      )
-    (setq h-section-text-bgcolor old)))
+;;      (h-p
+;;       (h-b "Screenshot: ") h-br
+;;       (h-link "screenshots/index.html" '(target . "_top") (h-img "screenshot.png" "width='140' height='113' border='0' alt='ECB Screenshot'")))
+     )
+  (setq h-section-text-bgcolor old)))
 
 (defun ecb-html-downloads()
   (h-doc

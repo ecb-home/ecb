@@ -26,7 +26,7 @@
 # GNU Emacs; see the file COPYING.  If not, write to the Free Software
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-# $Id: Makefile,v 1.80 2004/01/07 10:23:40 berndl Exp $
+# $Id: Makefile,v 1.81 2004/02/02 11:57:54 berndl Exp $
 
 
 # ========================================================================
@@ -138,7 +138,7 @@ INSTALLINFO=/usr/bin/install-info
 
 # Do not change anything below!
 
-# $Id: Makefile,v 1.80 2004/01/07 10:23:40 berndl Exp $
+# $Id: Makefile,v 1.81 2004/02/02 11:57:54 berndl Exp $
 
 # For the ECB-maintainers: Change the version-number here and not
 # elsewhere!
@@ -158,7 +158,8 @@ ecb_LISP_EL=tree-buffer.el ecb-util.el ecb-mode-line.el ecb-help.el \
             ecb-upgrade.el ecb-create-layout.el silentcomp.el \
             ecb-speedbar.el ecb-examples.el ecb-tod.el ecb-autogen.el \
 	    ecb-jde.el ecb-file-browser.el ecb-method-browser.el \
-	    ecb-winman-support.el ecb-semantic-wrapper.el
+	    ecb-winman-support.el ecb-semantic-wrapper.el \
+	    ecb-compatibility.el
 
 ecb_LISP_ELC=$(ecb_LISP_EL:.el=.elc)
 

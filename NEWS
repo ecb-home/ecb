@@ -76,8 +76,11 @@
 *** Higher compatibility of ECB with other packages
     Without the 2-edit-window-restriction ECB is now more compatible with
     other packages. For example the package calculator.el can now also being
-    used without setting `calculator-electric-mode' to not nil - regardless
-    in how many edit-windows the edit-area of ECB is splitted.
+    used without setting `calculator-electric-mode' to not nil - regardless in
+    how many edit-windows the edit-area of ECB is splitted. Also the package
+    bs.el (command `bs-show') benefits from the new layout-flexibility. As of
+    ECB-version 2.20 there should be no conflicts between this package and
+    ECB.
 
 ** Enhancements to the tree-buffers of ECB
     
@@ -180,12 +183,13 @@
    See the docstring for more details. Thanks for suggestion to Jeff Jensen
    <jeffjensen@nospam.visi.com>
 
-** The command `ecb-redraw-layout' has now a prefix-argument.
-   Called with a prefix-argument the command behaves as with ECB-versions <
+** The command `ecb-redraw-layout' can be called with prefix-argument(s).
+   Called with ONE prefix-argument the command behaves as with ECB-versions <
    2.20, i.e. redrawing the full layout regardless of the current
    visibility-state of the ecb-windows or the compile-window. Called without a
    prefix-arg this command now preserves the state of the ecb-windows as well
-   as the state of the compile-window.
+   as the state of the compile-window. Called with TWO prefix-args means an
+   emergence-redraw (see documentation of `ecb-redraw-layout').
 
 ** New command `ecb-display-news-for-upgrade'.
    ECB autom. displays after an upgrade a short summary of the most important
