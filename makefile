@@ -19,7 +19,7 @@
 all:
 	rm -f *.elc ecb-compile-script-init
 	echo "(add-to-list 'load-path nil)" > ecb-compile-script-init
-	echo "(add-to-list 'load-path \"../semantic-1.3.2\")" >> ecb-compile-script-init
+	echo "(add-to-list 'load-path \"../semantic-1.3.3\")" >> ecb-compile-script-init
 	echo "(setq debug-on-error t)" >> ecb-compile-script-init
 	emacs -batch -no-site-file -l ecb-compile-script-init -f batch-byte-compile *.el
 	rm -f ecb-compile-script-init
