@@ -1882,6 +1882,7 @@ edit-windows. Otherwise return nil."
 
 (defun ecb-directories-menu-creator (tree-buffer-name)
   "Creates the popup-menus for the directories-buffer."
+  (setq ecb-layout-prevent-handle-ecb-window-selection t)
   (let ((dyn-user-extension
          (and (functionp ecb-directories-menu-user-extension-function)
               (funcall ecb-directories-menu-user-extension-function)))
@@ -1991,6 +1992,7 @@ edit-windows. Otherwise return nil."
 
 (defun ecb-sources-menu-creator (tree-buffer-name)
   "Creates the popup-menus for the sources-buffer."
+  (setq ecb-layout-prevent-handle-ecb-window-selection t)
   (let ((dyn-user-extension
          (and (functionp ecb-sources-menu-user-extension-function)
               (funcall ecb-sources-menu-user-extension-function)))
@@ -2094,6 +2096,7 @@ So you get a better overlooking. There are three choices:
 
 (defun ecb-history-menu-creator (tree-buffer-name)
   "Creates the popup-menus for the history-buffer."
+  (setq ecb-layout-prevent-handle-ecb-window-selection t)
   (let ((dyn-user-extension
          (and (functionp ecb-history-menu-user-extension-function)
               (funcall ecb-history-menu-user-extension-function)))

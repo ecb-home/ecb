@@ -2410,6 +2410,7 @@ edit-windows. Otherwise return nil."
 
 (defun ecb-methods-menu-creator (tree-buffer-name)
   "Creates the popup-menus for the methods-buffer."
+  (setq ecb-layout-prevent-handle-ecb-window-selection t)
   (let ((dyn-user-extension
          (and (functionp ecb-methods-menu-user-extension-function)
               (funcall ecb-methods-menu-user-extension-function)))
