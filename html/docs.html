@@ -3142,7 +3142,12 @@ as in <code>ecb-major-modes-deactivate</code> then ECB is activated!
 is unsplitted and point is in the edit-window to avoid changing
 unnecessarily or unintentionally the frame-layout if the user just
 jumps between different edit-windows, the tree-windows and the
-compile-window of ECB. 
+compile-window of ECB.
+
+<p>There is one exception from this rule: If the edit-window is splitted
+and one window contains a dired-buffer and a "ECB-deactivating"-file
+is openend via dired then opening this file deactivates ECB (resp. 
+hides the ECB-windows). 
 </td></tr>
 </table>
 

@@ -2428,6 +2428,11 @@ This group contains the following options:
    or unintentionally the frame-layout if the user just jumps between
    different edit-windows, the tree-windows and the compile-window of ECB.
 
+   There is one exception from this rule: If the edit-window is splitted and
+   one window contains a dired-buffer and a "ECB-deactivating"-file is
+   openend via dired then opening this file deactivates ECB (resp.  hides the
+   ECB-windows).
+
  - User Option: minor-mode-text
    String to display in the mode line when ECB minor mode is active.  (When
    the string is not empty, make sure that it has a leading space.)
@@ -5561,57 +5566,57 @@ Ref: General aspects-Footnote-193843
 Node: Most important options93975
 Node: Customizable options95770
 Node: ecb-general97200
-Node: ecb-directories118642
-Node: ecb-sources125538
-Node: ecb-methods127793
-Node: ecb-history140062
-Node: ecb-layout142123
-Node: ecb-compilation-content159119
-Node: ecb-create-layout159685
-Node: ecb-face-options160201
-Node: ecb-faces163630
-Node: ecb-download167622
-Node: ecb-help168848
-Node: ecb-eshell170832
-Node: Submitting problem report171681
-Node: Upgrading173044
-Node: Downloading new versions173807
-Ref: Download required packages175564
-Ref: Downloading new versions-Footnote-1176662
-Node: Auto. option-upgrading176711
-Node: User interface177019
-Node: Background information177905
-Node: Tips and tricks181303
-Node: Changing faces182053
-Ref: Changing faces-Footnote-1184889
-Node: Small screens185065
-Node: Big screens186459
-Node: Simulating speedbar187294
-Node: Integrating speedbar188264
-Ref: Integrating speedbar-Footnote-1190619
-Ref: Integrating speedbar-Footnote-2190795
-Node: Optimize scrolling190953
-Node: Large directories192033
-Node: Using eshell192698
-Ref: Using eshell-Footnote-1194789
-Node: Elisp programming194941
-Node: List of variables195567
-Node: List of hooks195879
-Node: tree-buffer196835
-Node: Adviced functions197641
-Ref: Adviced functions-Footnote-1198254
-Node: The layout-engine198325
-Node: Programming a new layout199498
-Node: Programming special windows206373
-Ref: Programming special windows-Footnote-1216156
-Node: The layout-engine API216208
-Node: Conflicts and bugs217790
-Node: Conflicts218265
-Node: Bugs221975
-Node: FAQ222195
-Ref: FAQ-Footnote-1227364
-Node: Command Index227395
-Node: Option Index229914
-Node: Concept Index236664
+Node: ecb-directories118886
+Node: ecb-sources125782
+Node: ecb-methods128037
+Node: ecb-history140306
+Node: ecb-layout142367
+Node: ecb-compilation-content159363
+Node: ecb-create-layout159929
+Node: ecb-face-options160445
+Node: ecb-faces163874
+Node: ecb-download167866
+Node: ecb-help169092
+Node: ecb-eshell171076
+Node: Submitting problem report171925
+Node: Upgrading173288
+Node: Downloading new versions174051
+Ref: Download required packages175808
+Ref: Downloading new versions-Footnote-1176906
+Node: Auto. option-upgrading176955
+Node: User interface177263
+Node: Background information178149
+Node: Tips and tricks181547
+Node: Changing faces182297
+Ref: Changing faces-Footnote-1185133
+Node: Small screens185309
+Node: Big screens186703
+Node: Simulating speedbar187538
+Node: Integrating speedbar188508
+Ref: Integrating speedbar-Footnote-1190863
+Ref: Integrating speedbar-Footnote-2191039
+Node: Optimize scrolling191197
+Node: Large directories192277
+Node: Using eshell192942
+Ref: Using eshell-Footnote-1195033
+Node: Elisp programming195185
+Node: List of variables195811
+Node: List of hooks196123
+Node: tree-buffer197079
+Node: Adviced functions197885
+Ref: Adviced functions-Footnote-1198498
+Node: The layout-engine198569
+Node: Programming a new layout199742
+Node: Programming special windows206617
+Ref: Programming special windows-Footnote-1216400
+Node: The layout-engine API216452
+Node: Conflicts and bugs218034
+Node: Conflicts218509
+Node: Bugs222219
+Node: FAQ222439
+Ref: FAQ-Footnote-1227608
+Node: Command Index227639
+Node: Option Index230158
+Node: Concept Index236908
 
 End Tag Table
