@@ -10,7 +10,7 @@
 
 ;; IMPORTANT: The version-number is auto-frobbed from the Makefile. Do not
 ;; change it here!
-(defconst ecb-version "1.95"
+(defconst ecb-version "1.95.1"
   "Current ECB version.")
 
 ;; This program is free software; you can redistribute it and/or modify it under
@@ -88,7 +88,7 @@
 ;; For the ChangeLog of this file see the CVS-repository. For a complete
 ;; history of the ECB-package see the file NEWS.
 
-;; $Id: ecb.el,v 1.318 2003/07/15 13:27:23 berndl Exp $
+;; $Id: ecb.el,v 1.319 2003/07/15 13:48:17 berndl Exp $
 
 ;;; Code:
 

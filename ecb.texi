@@ -25,7 +25,7 @@
 @c Free Software Foundation, Inc., 59 Temple Place - Suite 330,
 @c Boston, MA 02111-1307, USA.
 
-@c $Id: ecb.texi,v 1.102 2003/07/15 13:27:23 berndl Exp $
+@c $Id: ecb.texi,v 1.103 2003/07/15 13:48:17 berndl Exp $
 
 @setfilename ecb.info
 
@@ -48,7 +48,7 @@
 @c edit the Makefile to change the version number. mechanism stolen
 @c from Tramp
 @macro ecbver{}
-1.95
+1.95.1
 @end macro
 
 
