@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb.el,v 1.334 2003/09/08 17:32:28 berndl Exp $
+;; $Id: ecb.el,v 1.335 2003/09/09 09:45:27 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -163,6 +163,7 @@
 (require 'ecb-tod)
 (require 'ecb-speedbar)
 (require 'ecb-autogen)
+(require 'ecb-escreen)
 ;;(require 'ecb-profile)
 
 ;; various loads
@@ -5895,31 +5896,34 @@ does all necessary after finishing ediff."
                    (buf-1 (window-buffer ecb-edit-window))
                    (buf-2 (if split (window-buffer (next-window ecb-edit-window))))
                    (sel-win (ecb-point-in-edit-window)))
-              ;; first we delete all ECB-windows.
+              ;; first we make all windows of the ECB-frame not dedicated and
+              ;; then we delete all ECB-windows
               (ecb-select-edit-window)
-              (mapc (function (lambda (w)
-                                (set-window-dedicated-p w nil)))
-                    (ecb-window-list ecb-frame 0))
+              (ecb-make-windows-not-dedicated ecb-frame)
               (delete-other-windows)
+              ;; some paranoia....
               (set-window-dedicated-p (selected-window) nil)
               ;; now we try to restore the split-state
               (cond ((equal split 'vertical)
                      (split-window-vertically))
-              ((equal split 'horizontal)
-               (split-window-horizontally)))
+                    ((equal split 'horizontal)
+                     (split-window-horizontally)))
               (when split
-              (set-window-buffer (selected-window) buf-1)
-              (set-window-buffer (next-window (selected-window))
-                                 buf-2)
-              (if (and sel-win
-                       (= sel-win 2))
-                  (select-window (next-window)))))
+                (set-window-buffer (selected-window) buf-1)
+                (set-window-buffer (next-window (selected-window))
+                                   buf-2)
+                (if (and sel-win
+                         (= sel-win 2))
+                    (select-window (next-window)))))
           (error
-           ;; in case of an error we delete at least all other windows.
+           ;; in case of an error we make all windows not dedicated and delete
+           ;; at least all other windows
+           (message "ECB %s: ecb-deactivate-internal: Error during frame cleanup!")
+           (ignore-errors (ecb-make-windows-not-dedicated ecb-frame))
            (ignore-errors (delete-other-windows))))
         
-          (if (get 'ecb-frame 'ecb-new-frame-created)
-              (ignore-errors (delete-frame ecb-frame t))))
+        (if (get 'ecb-frame 'ecb-new-frame-created)
+            (ignore-errors (delete-frame ecb-frame t))))
         
       (ecb-initialize-layout)
 

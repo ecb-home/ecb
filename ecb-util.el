@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-util.el,v 1.73 2003/09/08 12:20:17 berndl Exp $
+;; $Id: ecb-util.el,v 1.74 2003/09/09 09:45:27 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -687,6 +687,12 @@ for FILE, but proper EOL-conversion and character interpretation is done!"
           (insert-file-contents exp-filename)
           (buffer-string)))))
 
+(defun ecb-make-windows-not-dedicated (&optional frame)
+  "Make all windows of FRAME not dedicated."
+  (mapc (function (lambda (w)
+                    (set-window-dedicated-p w nil)))
+        (ecb-window-list (or frame (selected-frame)))))
+  
 
 (silentcomp-provide 'ecb-util)
 
