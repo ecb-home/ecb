@@ -211,15 +211,13 @@ prepended by the window-number, see `ecb-mode-line-display-window-number'."
                                                        nil))
                                                     (t (ecb-error "ecb-mode-line-format: Can not get prefix-elem: %s" p)))))
                                            ecb-mode-line-prefixes))
-                    (prefix-str (cond ((null prefix-elem)
-                                       nil)
-                                      ((stringp prefix-elem)
-                                       prefix-elem)
-                                      ((functionp prefix-elem)
-                                       (funcall prefix-elem
-                                                (buffer-name buffer)
-                                                ecb-path-selected-directory
-                                                ecb-path-selected-source))))
+                    (prefix-str (typecase prefix-elem
+                                  (null nil)
+                                  (string prefix-elem)
+                                  (function (funcall prefix-elem
+                                                     (buffer-name buffer)
+                                                     ecb-path-selected-directory
+                                                     ecb-path-selected-source))))
                     (data-elem (ecb-some (function
                                           (lambda (p)
                                             (cond ((stringp (car p))

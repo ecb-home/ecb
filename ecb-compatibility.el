@@ -96,14 +96,14 @@ BUFFER is displayed in an edit-window!"
   "Ensures that the electric-* commands work well with ECB."
   (when (and ecb-minor-mode
              (equal (selected-frame) ecb-frame)
-             (ecb-point-in-ecb-window))
+             (ecb-point-in-dedicated-special-buffer))
     (ecb-select-edit-window)))
 
 (defadvice electric-buffer-list (before ecb)
   "Ensures that the electric-* commands work well with ECB."
   (when (and ecb-minor-mode
              (equal (selected-frame) ecb-frame)
-             (ecb-point-in-ecb-window))
+             (ecb-point-in-dedicated-special-buffer))
     (ecb-select-edit-window)))
 
 (defadvice electric-buffer-list (after ecb)

@@ -71,6 +71,10 @@
 (require 'ecb-semantic-wrapper)
 (require 'ecb-common-browser)
 
+(eval-when-compile
+  ;; to avoid compiler grips
+  (require 'cl))
+
 
 ;; imenu
 (silentcomp-defvar imenu--rescan-item)
@@ -251,11 +255,9 @@ future this could break."
                       (lambda (event count)
                         (if (/= (event-button event) 1)
                             nil		; Do normal operations.
-                          (cond ((eq count 1)
-                                 (dframe-quick-mouse event))
-                                ((or (eq count 2)
-                                     (eq count 3))
-                                 (dframe-click event)))
+                          (case count
+                            (1 (dframe-quick-mouse event))
+                            ((2 3) (dframe-click event)))
                           ;; Don't do normal operations.
                           t))))
         ;; Enable mouse tracking in emacs
@@ -392,63 +394,65 @@ Return NODE."
   (let ((new-node nil)
         (new-tag nil))
     (dolist (tag tag-list)
-      (cond ((null tag) nil)            ;this would be a separator
-            ((speedbar-generic-list-tag-p tag)
-             ;; the semantic tag for this tag
-             (setq new-tag (ecb--semantic-tag (car tag)
-                                              (intern (car tag))))
-             (ecb--semantic--tag-set-overlay new-tag (make-vector 2 (cdr tag)))
-             (ecb--semantic--tag-put-property new-tag 'ecb-speedbar-tag t)
-             (ecb-apply-user-filter-to-tags (list new-tag))
-             (when (not (ecb-tag-forbidden-display-p new-tag))
-               (tree-node-new (progn
-                                (set-text-properties
-                                 0 (length (car tag))
-                                 `(face ,ecb-method-non-semantic-face) (car tag))
-                                (car tag))
-                              0
-                              new-tag
-                              t
-                              node)))
-            ((speedbar-generic-list-positioned-group-p tag)
-             ;; the semantic tag for this tag
-             (setq new-tag (ecb--semantic-tag (car tag)
-                                              (intern (car tag))))
-             (ecb--semantic--tag-set-overlay new-tag
-                                             (make-vector 2 (car (cdr tag))))
-             (ecb--semantic--tag-put-property new-tag 'ecb-speedbar-tag t)
-             (ecb-apply-user-filter-to-tags (list new-tag))
-             (when (not (ecb-tag-forbidden-display-p new-tag))             
-               (ecb-create-non-semantic-tree
-                (setq new-node
-                      (tree-node-new (progn
-                                       (set-text-properties
-                                        0 (length (car tag))
-                                        `(face ,ecb-method-non-semantic-face) (car tag))
-                                       (car tag))
-                                     0
-                                     new-tag
-                                     nil node))
-                (cdr (cdr tag)))
-               (tree-node-set-expanded new-node
-                                       (member major-mode
-                                               ecb-non-semantic-methods-initial-expand))))
-            ((speedbar-generic-list-group-p tag)
-             (ecb-create-non-semantic-tree
-              (setq new-node
-                    (tree-node-new (progn
-                                     (set-text-properties
-                                      0 (length (car tag))
-                                      `(face ,ecb-method-non-semantic-face) (car tag))
-                                     (car tag))
-                                   1
-                                   nil nil node))
-              (cdr tag))
-             (tree-node-set-expanded new-node
-                                     (member major-mode
-                                             ecb-non-semantic-methods-initial-expand)))
-            (t (ecb-error "ecb-create-non-semantic-tree: malformed tag-list!")
-               )))
+      (typecase tag
+        (null nil) ;; this would be a separator
+        (speedbar-generic-list-tag
+         ;; the semantic tag for this tag
+         (setq new-tag (ecb--semantic-tag (car tag)
+                                          (intern (car tag))))
+         (ecb--semantic--tag-set-overlay new-tag (make-vector 2 (cdr tag)))
+         (ecb--semantic--tag-put-property new-tag 'ecb-speedbar-tag t)
+         (ecb-apply-user-filter-to-tags (list new-tag))
+         (when (not (ecb-tag-forbidden-display-p new-tag))
+           (tree-node-new (progn
+                            (set-text-properties
+                             0 (length (car tag))
+                             `(face ,ecb-method-non-semantic-face) (car tag))
+                            (car tag))
+                          0
+                          new-tag
+                          t
+                          node)))
+        (speedbar-generic-list-positioned-group
+         ;; the semantic tag for this tag
+         (setq new-tag (ecb--semantic-tag (car tag)
+                                          (intern (car tag))))
+         (ecb--semantic--tag-set-overlay new-tag
+                                         (make-vector 2 (car (cdr tag))))
+         (ecb--semantic--tag-put-property new-tag 'ecb-speedbar-tag t)
+         (ecb-apply-user-filter-to-tags (list new-tag))
+         (when (not (ecb-tag-forbidden-display-p new-tag))             
+           (ecb-create-non-semantic-tree
+            (setq new-node
+                  (tree-node-new (progn
+                                   (set-text-properties
+                                    0 (length (car tag))
+                                    `(face ,ecb-method-non-semantic-face) (car tag))
+                                   (car tag))
+                                 0
+                                 new-tag
+                                 nil node))
+            (cdr (cdr tag)))
+           (setf (tree-node->expanded new-node)
+                 (member major-mode
+                         ecb-non-semantic-methods-initial-expand))))
+        (speedbar-generic-list-group
+         (ecb-create-non-semantic-tree
+          (setq new-node
+                (tree-node-new (progn
+                                 (set-text-properties
+                                  0 (length (car tag))
+                                  `(face ,ecb-method-non-semantic-face) (car tag))
+                                 (car tag))
+                               1
+                               nil nil node))
+          (cdr tag))
+         (setf (tree-node->expanded new-node)
+               (member major-mode
+                       ecb-non-semantic-methods-initial-expand)))
+        (otherwise
+         (ecb-error "ecb-create-non-semantic-tree: malformed tag-list!")
+         )))
     node))
 
 (defun ecb-get-tags-for-non-semantic-files ()

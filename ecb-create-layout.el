@@ -43,6 +43,10 @@
 (eval-when-compile
   (require 'silentcomp))
 
+(eval-when-compile
+  ;; to avoid compiler grips
+  (require 'cl))
+
 (require 'ecb-mode-line)
 (require 'ecb-util)
 (require 'ecb-compilation)
@@ -669,15 +673,16 @@ never selects the edit-window."
     (setq ecb-create-layout-type (intern (ecb-query-string
                                           "Location of the the ECB-tree-windows:"
                                           '("left" "right" "top" "left-right")))))
-  (cond ((equal ecb-create-layout-type 'left)
-         (ecb-split-hor ecb-windows-width))
-        ((equal ecb-create-layout-type 'right)
-         (ecb-split-hor (- ecb-windows-width) t))
-        ((equal ecb-create-layout-type 'top)
-         (ecb-split-ver ecb-windows-height))
-        (t
-         (ecb-split-hor (- (* 0.667 ecb-windows-width)) t)
-         (ecb-split-hor (* 0.667 ecb-windows-width) nil t)))
+  (case ecb-create-layout-type
+    (left
+     (ecb-split-hor ecb-windows-width))
+    (right
+     (ecb-split-hor (- ecb-windows-width) t))
+    (top
+     (ecb-split-ver ecb-windows-height))
+    (otherwise
+     (ecb-split-hor (- (* 0.667 ecb-windows-width)) t)
+     (ecb-split-hor (* 0.667 ecb-windows-width) nil t)))
   ;; we set the buffer in the big edit-window
   (ecb-create-layout-new-buffer t)
   ;; now we insert the help in the edit-window

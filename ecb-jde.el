@@ -158,14 +158,15 @@ is not available then `find-file' is called."
 
 (defun ecb-jde-update-ecb-source-paths ()
   (interactive)
-  (cond ((equal ecb-jde-set-directories-buffer-to-jde-sourcepath 'add)
-         (add-hook 'ecb-source-path-functions
-                   'ecb-jde-get-source-path))
-        ((equal ecb-jde-set-directories-buffer-to-jde-sourcepath 'replace)
-         (setq ecb-source-path (ecb-jde-get-source-path)))
-        (t
-         (remove-hook 'ecb-source-path-functions
-                      'ecb-jde-get-source-path)))
+  (case ecb-jde-set-directories-buffer-to-jde-sourcepath
+    (add
+     (add-hook 'ecb-source-path-functions
+               'ecb-jde-get-source-path))
+    (replace
+     (setq ecb-source-path (ecb-jde-get-source-path)))
+    (otherwise
+     (remove-hook 'ecb-source-path-functions
+                  'ecb-jde-get-source-path)))
   (ecb-update-directories-buffer))
 
 

@@ -53,6 +53,10 @@
 (eval-when-compile
   (require 'silentcomp))
 
+(eval-when-compile
+  ;; to avoid compiler grips
+  (require 'cl))
+
 ;; semantic 1.X does not have this
 (silentcomp-defvar semanticdb-search-system-databases)
 (silentcomp-defvar semantic-format-use-images-flag)
@@ -270,11 +274,10 @@ unloaded buffer representation."
     (defalias 'ecb--semantic-tag-components
       'semantic-tag-components)
   (defun ecb--semantic-tag-components (tag)
-    (cond ((equal (ecb--semantic-tag-class tag) 'type)
-           (ecb--semantic-tag-type-members tag))
-          ((equal (ecb--semantic-tag-class tag) 'function)
-           (ecb--semantic-tag-function-arguments tag))
-          (t nil))))
+    (case (ecb--semantic-tag-class tag)
+      (type (ecb--semantic-tag-type-members tag))
+      (function (ecb--semantic-tag-function-arguments tag))
+      (otherwise nil))))
 
 (if (fboundp 'semantic-flatten-tags-table)
     (defalias 'ecb--semantic-flatten-tags-table

@@ -66,6 +66,9 @@
 (require 'ecb-layout)
 (require 'ecb-common-browser)
 
+(eval-when-compile
+  ;; to avoid compiler grips
+  (require 'cl))
 
 ;; ---------------------------------------------------------------------------
 ;; --- Code for the bufferinfo buffer ----------------------------------------
