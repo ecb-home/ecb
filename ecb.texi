@@ -6363,8 +6363,9 @@ are: @code{ecb-tag-visit-highlight-tag-header}
 function for details what they do.
 
 But you can add any arbitrary function if the following conditions are
-fulfilled: The function gets the semantic tag as argument returns
-the (new) point after finishing its job.
+fulfilled: The function gets the semantic tag as argument, returns the
+(new) point after finishing its job and the function must not put the
+point outside the tag-boundaries of the tag-argument.
 @end defopt
 
 
