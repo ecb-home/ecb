@@ -1,6 +1,6 @@
 ;;; ecb-speedbar.el --- 
 
-;; $Id: ecb-speedbar.el,v 1.10 2002/01/23 07:39:58 burtonator Exp $
+;; $Id: ecb-speedbar.el,v 1.11 2002/01/28 00:08:20 burtonator Exp $
 
 ;; Copyright (C) 2000-2003 Free Software Foundation, Inc.
 ;; Copyright (C) 2000-2003 Kevin A. Burton (burton@openprivacy.org)
@@ -84,12 +84,20 @@
 
 ;;; TODO:
 
+;; - BUG: when I sync to a buffer in the ECB frame, the speedbar will show the
+;;   correct directory.  Then, when I open another frame, and change to a buffer
+;;   there, the buffer in the new frame will be synched with the speedbar.  This
+;;   needs to stay in synch with the file currently open in the ECB.
+;;
 ;; - BUG: for some reason if we hit <ENTER> in the ecb-speedbar window,
 ;;   sometimes a new frame will come up.
 ;;
 ;;   - this only comes up the FIRST time I select a buffer.  Could some variable
 ;;     be changed?  Maybe the `dframe-attached-frame' or
 ;;     `speedbar-attached-frame' needs to be setup correctly.
+;;
+;;   - Actually it seems to be a problem if we have one ECB frame and then I
+;;     create another frame.
 ;;    
 ;; - instead of ecb-layout-function-20 use ecb-layout-function-speedbar-1
 ;;
