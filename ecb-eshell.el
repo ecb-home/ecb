@@ -1,6 +1,6 @@
 ;;; ecb-eshell.el --- eshell integration for the ECB.
 
-;; $Id: ecb-eshell.el,v 1.60 2003/01/06 00:31:48 burtonator Exp $
+;; $Id: ecb-eshell.el,v 1.61 2003/01/07 14:37:05 berndl Exp $
 
 ;; Copyright (C) 2000-2003 Free Software Foundation, Inc.
 ;; Copyright (C) 2000-2003 Kevin A. Burton (burton@openprivacy.org)
@@ -256,14 +256,16 @@ interactively or `ecb-eshell-synchronize' is not nil."
                  (select-window visible-window)
                  (eshell-send-input)))
              
-             (ecb-eshell-recenter))))))
+             (ecb-eshell-recenter)
 
-    ;; we need to make sure that that the eshell buffer isn't at the top of the
-    ;; buffer history list just because we implicity changed its directory and
-    ;; switched to it.  It might not be a good idea in the long term to put it all
-    ;; the way at the end of the history list but it is better than leaving it at
-    ;; the top.
-    (bury-buffer eshell-buffer-name)))
+             ;; we need to make sure that that the eshell buffer isn't at the
+             ;; top of the buffer history list just because we implicity
+             ;; changed its directory and switched to it. It might not be a
+             ;; good idea in the long term to put it all the way at the end of
+             ;; the history list but it is better than leaving it at the top.
+             (bury-buffer eshell-buffer-name))))))))
+
+
 
 (defmacro ecb-eshell-save-buffer-history (&rest body)
   "Protect the buffer-list so that the eshell buffer name is not placed early
@@ -309,8 +311,9 @@ start it."
   (when ecb-eshell-enlarge-when-selecting
     (ecb-eshell-enlarge))
 
-  ;;always recenter because if the point is at the top of the eshell buffer and
-  ;;we switch to it the user is not going to be able to type a command right away.
+  ;;always recenter because if the point is at the top of the eshell buffer
+  ;;and we switch to it the user is not going to be able to type a command
+  ;;right away.
   (ecb-eshell-recenter)  
   
   ;;sync to the current buffer
