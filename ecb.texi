@@ -26,7 +26,7 @@
 @c GNU Emacs; see the file COPYING.  If not, write to the Free Software
 @c Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-@c $Id: ecb.texi,v 1.137 2004/01/12 16:42:36 berndl Exp $
+@c $Id: ecb.texi,v 1.138 2004/01/12 17:58:47 berndl Exp $
 
 @setfilename ecb.info
 
@@ -49,7 +49,7 @@
 @c edit the Makefile to change the version number. mechanism stolen
 @c from Tramp
 @macro ecbver{}
-2.12
+2.20
 @end macro
 
 
@@ -1023,6 +1023,11 @@ ECB commands}) depending which major-mode is active.
 If you activate ECB on a major-mode basis you probably want switch off
 displaying the tip of the day. You can do this with the option
 @code{ecb-tip-of-the-day}.
+
+Regardless of the activation type the option
+@code{ecb-split-edit-window-after-start} determines if and how ECB
+should preserve the state of ECB between deactivations and
+(re)-activations.
 
 @node Usage of ECB, Customizing, Activation and Deactivation, Top
 @chapter Usage of ECB
@@ -6121,11 +6126,14 @@ start of ECB.
 
 @item @code{before-deactivation}:
 Split the edit-area into a window-layout ECB had in its edit-area
-direct before the ECB-deactivation. But this can only be done if
-important layout-options have not been changed in the meanwhile. These
-are the options @code{ecb-layout-name},
-@code{ecb-compile-window-height}, @code{ecb-compile-window-width},
-@code{ecb-windows-width} and @code{ecb-windows-height}.
+direct before the ECB-deactivation. This value preserves the full
+state between activations of ECB, i.e. the visibility of the
+ECB-windows, the visibility of a compile-window and also the full
+split-state of the edit-area. But this can only be done if important
+layout-options have not been changed in the meanwhile. These are the
+options @code{ecb-layout-name}, @code{ecb-compile-window-height},
+@code{ecb-compile-window-width}, @code{ecb-windows-width} and
+@code{ecb-windows-height}.
 @end itemize
 
 Default value is @code{before-deactivation}.
@@ -7823,11 +7831,24 @@ Add the following to your .emacs:
 @example
 (add-hook 'ecb-activate-hook
           (lambda ()
-             (ecb-toggle-compile-window -1)))
+            (let ((compwin-buffer (ecb-get-compile-window-buffer)))
+            (if (not (and compwin-buffer
+                          (ecb-compilation-buffer-p compwin-buffer)))
+                (ecb-toggle-compile-window -1)))))
 @end example
 
 This hides the extra compile-window direct after the start of ECB
-because there is no need for a compile-window at this moment.
+because there is no need for a compile-window at this moment. But the
+hiding will not be done if there is a compile-window and if a
+``compile-buffer'' in the sense of @code{ecb-compilation-buffer-p} is
+displayed in this compile-window. Without this additional check the
+compile-window would always be hidden after the ECB-start even when
+ECB is reactivated after a deactivation by the window-manager-support
+of ECB (@pxref{Window-managers and ECB}) or by the options
+@code{ecb-major-modes-activate} or @code{ecb-major-modes-deactivate};
+but in these cases we want to preserve the state before deactivation
+as good as possible (see also option
+@code{ecb-split-edit-window-after-start}).
 
 @end enumerate
 
@@ -10169,6 +10190,14 @@ Does ECB disable all advices after deactivation?
 ``Nes''@footnote{Nes is a combination of No and Yes :-)}, see remarks
 in the documentation of the option
 @code{ecb-split-edit-window-after-start}.
+
+@item @tab @tab
+
+@item
+Can ECB preserve the full state of ECB between deactivation and next
+activation?
+@tab @tab
+Yes, see the option @code{ecb-split-edit-window-after-start}.
 
 @end multitable
 

@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-layout.el,v 1.201 2004/01/12 16:42:37 berndl Exp $
+;; $Id: ecb-layout.el,v 1.202 2004/01/12 17:58:47 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -501,10 +501,6 @@ This means, that all values of `special-display-function',
       (and (equal ecb-ignore-special-display 'compile-window)
            ecb-compile-window-height)))
 
-;; TODO: Klaus Berndl <klaus.berndl@sdm.de>:
-;; 5. winring.el und escreen.el mit dem neuen Verhalten testen!
-;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: Maybe we should also preserve the
-;; hidden-state between the activations
 (defcustom ecb-split-edit-window-after-start 'before-deactivation
   "*Sets how and if the edit window should be splitted after ECB-start.
 But be aware: This option determines only if and how the edit-window should be
@@ -518,10 +514,13 @@ this option:
   edit-area will have after start a window-layout as the whole frame had
   before the start of ECB.
 - 'before-deactivation: Split the edit-area into a window-layout ECB had in
-  its edit-area direct before the ECB-deactivation. But this can only be done
-  if important layout-options have not been changed in the meanwhile. These
-  are the options `ecb-layout-name', `ecb-compile-window-height',
-  `ecb-compile-window-width', `ecb-windows-width' and `ecb-windows-height'.
+  its edit-area direct before the ECB-deactivation. This value preserves the
+  full state between activations of ECB, i.e. the visibility of the
+  ECB-windows, the visibility of a compile-window and also the full
+  split-state of the edit-area. But this can only be done if important
+  layout-options have not been changed in the meanwhile. These are the options
+  `ecb-layout-name', `ecb-compile-window-height', `ecb-compile-window-width',
+  `ecb-windows-width' and `ecb-windows-height'.
 
 Default value is 'before-deactivation.
 
@@ -1065,6 +1064,12 @@ not change this variable!")
     (if display-msg
         (message "No compile-window visible in current ECB-layout!"))
     nil))
+
+(defun ecb-get-compile-window-buffer ()
+  "Return the buffer currently displayed in the compile-window or nil if there
+is no compile-window displayed."
+  (if (ecb-compile-window-live-p)
+      (window-buffer ecb-compile-window)))
 
 ;; Klaus Berndl <klaus.berndl@sdm.de>: This function is only there for
 ;; backward compatibility and is not needed for ECB-versions > 2.11

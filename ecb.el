@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb.el,v 1.358 2004/01/12 16:42:37 berndl Exp $
+;; $Id: ecb.el,v 1.359 2004/01/12 17:58:47 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -2669,23 +2669,28 @@ has been deactivated. Do not set this variable!")
           ;; now we draw the layout chosen in `ecb-layout'. This function
           ;; activates at its end also the adviced functions if necessary!
           ;; Here the directories- and history-buffer will be updated.
-          (let ((ecb-redraw-layout-quickly nil))
-            (if (and ecb-last-window-config-before-deactivation
-                     (equal ecb-split-edit-window-after-start
-                            'before-deactivation)
-                     (not (ecb-window-configuration-invalidp
-                           ecb-last-window-config-before-deactivation)))                     
+          (let ((ecb-redraw-layout-quickly nil)
+                (use-last-win-conf (and ecb-last-window-config-before-deactivation
+                                        (equal ecb-split-edit-window-after-start
+                                               'before-deactivation)
+                                        (not (ecb-window-configuration-invalidp
+                                              ecb-last-window-config-before-deactivation)))))
+            (if use-last-win-conf                     
                 (setq ecb-edit-area-creators
                       (nth 4 ecb-last-window-config-before-deactivation)))
             (run-hooks 'ecb-redraw-layout-before-hook)
             (ecb-redraw-layout-full 'no-buffer-sync
                                     nil
-                                    (if (and ecb-last-window-config-before-deactivation
-                                             (equal ecb-split-edit-window-after-start
-                                                    'before-deactivation)
-                                             (not (ecb-window-configuration-invalidp
-                                                   ecb-last-window-config-before-deactivation)))
-                                        (nth 6 ecb-last-window-config-before-deactivation)))
+                                    (if use-last-win-conf
+                                        (nth 6 ecb-last-window-config-before-deactivation))
+                                    (if use-last-win-conf
+                                        (nth 5 ecb-last-window-config-before-deactivation)
+                                      nil))
+            ;; if there was no compile-window before deactivation then we have
+            ;; to hide the compile-window after activation
+            (if (and use-last-win-conf
+                     (null (nth 2 ecb-last-window-config-before-deactivation)))
+                (ecb-toggle-compile-window -1))
             (run-hooks 'ecb-redraw-layout-after-hook)
 
             (when (member ecb-split-edit-window-after-start
@@ -2769,7 +2774,8 @@ has been deactivated. Do not set this variable!")
           (ecb-set-activated-window-configuration)
         (error
          (ecb-clean-up-after-activation-failure
-          "Errors during the snapshot of the windows-configuration." err-obj))))))
+          "Errors during the snapshot of the windows-configuration." err-obj)))
+      )))
 
 
 (defun ecb-set-activated-window-configuration()

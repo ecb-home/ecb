@@ -1,4 +1,4 @@
-* Changes for ECB version 2.12
+* Changes for ECB version 2.20
 
 ** The restriction of only two edit-windows has been gone!
 
@@ -10,6 +10,14 @@
     of certain edit-windows will never destroy the special ECB-windows or the
     compile-window. Just work with the edit-area of ECB as if it would be an
     extra frame!
+
+*** Option `ecb-split-edit-window' has been renamed in
+    `ecb-split-edit-window-after-start' because this new name reflects much
+    better the purpose of this option. In addition there is offered a new
+    value 'before-deactivation which is also the new default value. This new
+    value preserves the full state between activations of ECB, i.e. the
+    visibility of the ECB-windows, the visibility of a compile-window and also
+    the full split-state of the edit-area. ECB auto. upgrades your setting!
 
 *** Compile-window can now be displayed even when the ECB-windows are hidden.
     So now you can have the same compile-window functionality when the
@@ -42,12 +50,6 @@
     other packages. For example the package calculator.el can now also being
     used without setting `calculator-electric-mode' to not nil - regardless
     in how many edit-windows the edit-area of ECB is splitted.
-
-*** Option `ecb-split-edit-window' has been renamed in
-    `ecb-split-edit-window-after-start' because this new name reflects much
-    better the purpose of this option. In addition there is offered a new
-    value 'before-deactivation which is also the new default value. ECB auto.
-    upgrades your setting!
 
 ** Enhancements to the tree-buffers of ECB
     
