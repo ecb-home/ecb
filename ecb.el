@@ -386,10 +386,15 @@ This option takes only effect if `ecb-font-lock-methods' is on."
   :group 'ecb-general
   :type 'boolean)
 
-(defcustom ecb-show-node-name-in-minibuffer t
+(defcustom ecb-show-node-name-in-minibuffer 'always
   "*Show the name of the item under mouse in minibuffer."
   :group 'ecb-general
-  :type 'boolean)
+  :type '(radio (const :tag "Always"
+                       :value always)
+                (const :tag "If longer than window-width"
+                       :value if-to-long)
+                (const :tag "Never"
+                       :value nil)))
 
 (defcustom ecb-activate-before-layout-draw-hook nil
   "*Normal hook run at the end of activating the ecb-package by running
@@ -931,8 +936,14 @@ For further explanation see `ecb-clear-history-behavior'."
       (goto-char (semantic-token-start (tree-node-get-data node))))))
 
 (defun ecb-mouse-over-node(node)
-  (if ecb-show-node-name-in-minibuffer
-      (message (tree-node-get-name node))))
+  (cond ((eq ecb-show-node-name-in-minibuffer 'always)
+         (message "%s" (tree-node-get-name node)))
+        ((eq ecb-show-node-name-in-minibuffer 'if-to-long)
+         (if (>= (length (tree-node-get-name node)) (window-width))
+             (message "%s" (tree-node-get-name node))
+           ;; we must delete here the old message so no wrong info is
+           ;; displayed.
+           (message nil)))))
 
 (defun ecb-mouse-over-method-node(node)
   (if ecb-show-node-name-in-minibuffer
