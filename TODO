@@ -11,9 +11,6 @@
   already the buffer we want to switch to, we should NOT split the window again
   because this would yeild two windows each with the same buffer.
 
-- (BUG) ecb-current-buffer-sync doesn't seem to run from dired.  At least hooks
-  aren't run.  The speedbar, eshell and methods buffers all need to be updated.
-
 - KB: Option to auto. expand also "[+] Variables" and "[+] Classname"
    in the methods buffer if 'ecb-highlight-token-with-point' is
    'highlight-scroll. (Like the auto. expand directory feature)
