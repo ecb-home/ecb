@@ -24,7 +24,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-method-browser.el,v 1.31 2004/04/02 14:26:56 berndl Exp $
+;; $Id: ecb-method-browser.el,v 1.32 2004/04/02 15:46:03 berndl Exp $
 
 ;;; Commentary:
 
@@ -535,6 +535,11 @@ This option takes only effect if Emacs can display images and if
 `ecb-tree-buffer-style' is set to 'image."
   :group 'ecb-methods
   :type 'boolean)
+
+(defsubst ecb-use-images-for-semantic-tags ()
+  (and ecb-display-image-icons-for-semantic-tags
+       ecb-images-can-be-used
+       (equal ecb-tree-buffer-style 'image)))
 
 (defcustom ecb-post-process-semantic-taglist
   '((c++-mode . (ecb-group-function-tags-with-parents))
@@ -1334,11 +1339,6 @@ Methods-buffer."
                          (ecb-forbid-tag-display tag)))
                     (t nil)))))))))
 
-(defsubst ecb-use-images-for-semantic-tags ()
-  (and ecb-display-image-icons-for-semantic-tags
-       ecb-images-can-be-used
-       (equal ecb-tree-buffer-style 'image)))
-       
 
 (defun ecb-add-tag-bucket (node bucket display sort-method
                                   &optional parent-tag no-bucketize)
@@ -1472,7 +1472,8 @@ to an existing icon-file-name.")
          (tag-name nil))
     (save-excursion
       (set-buffer ecb-methods-buffer-name)
-      (setq image (and (ecb-use-images-for-semantic-tags)
+      (setq image (and image-name
+                       (ecb-use-images-for-semantic-tags)
                        (tree-buffer-find-image image-name)))
       (setq tag-name
             (if image
@@ -2289,6 +2290,12 @@ to be rescanned/reparsed and therefore the Method-buffer will be rebuild too."
            (cache (assoc norm-buffer-file-name ecb-tag-tree-cache))
            (curr-buff (current-buffer))
            (curr-major-mode major-mode)
+           (ezimage-use-images (if (ecb-use-images-for-semantic-tags)
+                                   nil
+                                 ezimage-use-images))
+           (semantic-format-use-images-flag (if (ecb-use-images-for-semantic-tags)
+                                                nil
+                                              semantic-format-use-images-flag))
            (semantic-bucketize-tag-class
             (function (lambda (tag)
                         (if (ecb--semantic-tag-prototype-p tag)
