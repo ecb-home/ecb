@@ -1,6 +1,11 @@
 Version 1.30 (???):
 -------------------
 
+- Added menu items for modification of the source paths in the directories
+  buffer. (Jesper)
+
+- Added buttons to directories buffer. (Jesper)
+
 - Mouse over files, methods etc. should now work even if follow-mouse isn't
   activated. (Jesper)
 
