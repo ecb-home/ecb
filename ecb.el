@@ -908,7 +908,11 @@ mouse-button and [C-RET] as secondary mouse-button!"
 
 (defcustom ecb-minor-mode-text " ECB"
   "*String to display in the mode line when ECB minor mode is active.
-\(When the string is not empty, make sure that it has a leading space.)"
+\(When the string is not empty, make sure that it has a leading space.)
+
+Because for ECB it is quite obvious if it is active or not when the
+ECB-windows are visible this text is only display in the modeline if the
+ECB-windows are hidden."
   :group 'ecb-general
   :type 'string)
 

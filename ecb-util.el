@@ -1152,8 +1152,28 @@ buffer-local value in BUFFER then the global value of SYM is used."
 (defun ecb-ring-elements (ring)
   "Return a list of the lements of RING."
   (mapcar #'identity (cddr ring)))
-      
 
+(defvar ecb-max-submenu-depth 4
+  "The maximum depth of nesting submenus for the tree-buffers.")
+
+(defun ecb-create-menu-user-ext-type (curr-level max-level)
+  "Creates the :type-definition for the *-menu-user-extension options.
+This allows nested submenus for the popup-menus of the tree-buffers up to a
+maximum level of MAX-LEVEL. CURR-LEVEL must be 1 when used in a
+defcustom-clause and has to be <= MAX-LEVEL."
+  (list 'repeat (delq nil
+                      (list 'choice ':tag "Menu-entry" ':menu-tag "Menu-entry"
+                            ':value '(ignore "")
+                            (list 'const ':tag "Separator" ':value '("---"))
+                            (list 'list ':tag "Menu-command"
+                                  (list 'function ':tag "Function" ':value 'ignore)
+                                  (list 'string ':tag "Entry-name"))
+                            (if (= curr-level max-level)
+                                nil
+                              (list 'cons ':tag "Submenu"
+                                    (list 'string ':tag "Submenu-title")
+                                    (ecb-create-menu-user-ext-type (1+ curr-level)
+                                                                   max-level)))))))
 (silentcomp-provide 'ecb-util)
 
 ;;; ecb-util.el ends here

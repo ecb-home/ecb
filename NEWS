@@ -1,7 +1,5 @@
 * Changes for ECB version 2.22
 
-TODO: News have to be added to ecb-upgrade.el to.
-
 ** New nifty feature for filtering the tags displayed in the Methods-buffer
    You can filter by regexp, protection, tag-class etc. See the new command
    `ecb-methods-filter' (bound to [C-c . f m] and the new option
@@ -14,17 +12,26 @@ TODO: News have to be added to ecb-upgrade.el to.
    all currently applied filters by moving the mouse over this section of the
    modeline: The filters will be displayed as help-echo.
 
-   The new functionality is also completely available in the popup-menu of the
-   Methods-buffer.
+   The new functionality is also completely available via the popup-menu of
+   the Methods-buffer.
 
-   Currently we do not apply a filter to tags of class 'type. Maybe this
-   behavior should be optional?!
+   Currently tags of class 'type can not be filtered out, because especially
+   in OO-languages like Java or C++ this makes only less sense because if the
+   class is filtered out then no filter can be applied to its members like
+   methods or attributes.
 
-   The feature works stable but the kind of possible filters is currently
-   experimental. Try the new feature and if you miss some useful filters then
-   mail a suggestion to the ECB-mailing-list.
-
-   TODO: Add this new feature to the info-manual
+** The popup-menus can now be nested into 4 levels of submenus. In general there
+   could be an infinite depth of nesting but it makes no sense - if possible
+   at all - to define infinite nested defcustom-types. So there is a limit of
+   4 levels until a user asks for more - then this wish can be satisfied
+   during 1 minute: Just increase the value of the `ecb-max-submenu-depth'
+   before loading ECB. This enhancement affects the four options with name
+   `ecb-*-menu-user-extension'.
+   
+** The indication for ECB in the minor-mode is now hidden when the ECB-windows
+   are visible because in this case the activity of ECB is quite obvious. When
+   the ECB-windows are hidden the the value of `ecb-minor-mode-text' is
+   displayed in the modeline.
 
 ** Compatibility enhancements
 
