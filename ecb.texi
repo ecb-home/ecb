@@ -19,7 +19,7 @@
 @c Free Software Foundation, Inc., 59 Temple Place - Suite 330,
 @c Boston, MA 02111-1307, USA.
 
-@c $Id: ecb.texi,v 1.68 2003/02/02 07:00:59 berndl Exp $
+@c $Id: ecb.texi,v 1.69 2003/02/07 15:54:35 berndl Exp $
 
 @setfilename ecb.info
 
@@ -2289,18 +2289,55 @@ Display a message-buffer which options have been upgraded or reset.
 @end deffn
 
 @deffn Command download-ecb
-Download ECB from the ECB-website and install it. For this the options
-@code{ecb-download-url} and @code{ecb-download-version} must be set
-correct, whereas the default value of the former one should always be
-correct.
+Download ECB from the ECB-website and install it. For this the option
+@code{ecb-download-url} must be set correct, whereas the default value of
+this option should always be correct.
+
+If @code{ecb-download-package-version-type} is set to -1 (means asking
+for a version) then you will be ask in the minibuffer for the version
+to download. Otherwise ECB downloads autom. the latest version
+available for the type specified in
+@code{ecb-download-package-version-type}. If no newer version than the
+current one is available no download will be done.
 
 For details about downloading and what requirements must be satisfied
-see @ref{Downloading new versions}!
+see function @code{ecb-package-download} and option
+@code{ecb-download-package-version-type}!
 
 After sucessfull downloading the new ECB will be installed in a
-directory parallel to current ECB-directory. After adding this new
-directory tp @code{load-path} and restarting Emacs the new ECB version can
-be activated by @code{ecb-activate}.
+subdirectory of @code{ecb-download-install-parent-dir}. After adding
+this subdirectory to @code{load-path} and restarting Emacs the new ECB
+version can be activated by @code{ecb-activate}.
+
+If current running ECB is installed as regular XEmacs-package and not
+with the archive available at the ECB website then this function asks
+for proceeding!
+@end deffn
+
+@deffn Command download-semantic
+Download semantic from the semantic-website and install it. For this
+the variable @code{ecb-semantic-eieio-url} must be set correct,
+whereas the default value of this variable should always be correct.
+
+If @code{ecb-download-package-version-type} is set to -1 (means asking
+for a version) then you will be ask in the minibuffer for the version
+to download. Otherwise ECB downloads autom. the latest version
+available for the type specified in
+@code{ecb-download-package-version-type}. If no newer version than the
+current one is available no download will be done.
+
+For details about downloading and what requirements must be satisfied
+see function @code{ecb-package-download} and option
+@code{ecb-download-package-version-type}!
+
+After sucessfull downloading the new semantic will be installed in a
+subdirectory of @code{ecb-download-install-parent-dir}. After adding
+this new subdirectory to @code{load-path} and restarting Emacs the new
+semantic version is loaded and is used after next start of ECB.
+
+If current running semantic is installed as regular XEmacs-package and
+not with the archive available at the semantic website then this
+function asks for proceeding!
 @end deffn
 
 @deffn Command expand-methods-nodes &optional force-all
@@ -4686,6 +4723,45 @@ Archive will never be deleted.
 @end itemize
 @end defopt
 
+@defopt download-install-parent-dir
+Parent directory where downloaded packages are installed.
+
+ECB installs a downloaded package in this directory, i.e. the downloaded
+archive X.tar.gz will be extracted in this directory so afterwards this
+directory contains a new subdirectory X which contains the downloaded package.
+
+This directory must be writeable!
+@end defopt
+
+@defopt download-package-version-type
+Version type ECB is allowed to download for upgrading.
+
+If you want to upgrade to a newer ECB-version via
+@code{ecb-download-ecb} or if you must upgrade to newer semantic-
+and/or eieio-versions (because ECB requires these newer versions) then
+this option specifies which version-types are allowed. ECB checks on
+the download-sites of ECB/semantic/eieio which versions are currently
+available and then downloads always the latest version matching the
+specified type:
+
+@itemize @minus
+@item 2: Get the newest version of all stable versions available.
+@item 1: Get the newest version of all stable and beta versions available.
+@item 0: Get the newest version of all stable, beta and alpha versions
+available.
+@item -1: Ask before downloading in the minibuffer for a version
+(TAB-completion of all available versions is possible).
+@end itemize
+
+So, 2 means stable, 1 means stable and betas, 0 means stable, betas and alphas
+and -1 means ask the user for a version.
+
+Per default stable and beta-versions are allowed (value 1).
+
+But all versions must match the restrictions of the specified min- and
+max-versions of the required packages. For this see the file README!
+@end defopt
+
 @defopt download-url
 URL where downloadable ECB-versions are located. The ECB-archive-file
 (e.g. ecb-1.70.tar.gz) will be appended to this URL and
@@ -4694,12 +4770,6 @@ URL where downloadable ECB-versions are located. The ECB-archive-file
 Note: Normally this URL should never change but who knows...
 @end defopt
 
-@defopt download-version
-Which version of ECB should be downloaded by @code{ecb-download-ecb}.
-Valid values are either the string ``latest'' or a version number like
-``1.70''. ECB creates automatically the correct URL for download, see
-@code{ecb-download-ecb} (@pxref{Interactive ECB commands}).
-@end defopt
 
 @node ecb-help, ecb-eshell, ecb-download, Customizable options
 @subsection Group ecb-help
@@ -4879,50 +4949,58 @@ A description for this command you will find in @ref{Interactive ECB
 commands}. Check also the options of the customize-group
 'ecb-download' (@pxref{ecb-download}).
 
-ECB will try to download the file:
-
-@example
-<URL><PACKAGE>-<VERSION>.tar.gz
-@end example
-
-where
-
-@table @code
-@item URL
-Value of the option @code{ecb-download-url}.
-@item PACKAGE
-The string ``ecb''
-@item VERSION
-Value of the option @code{ecb-download-version}.
-@end table
-
 @anchor{Download required packages}
 @item Download and install of required packages:
 
 ECB checks at start-time if the required versions of semantic and
 eieio (see @file{README}) are installed and loaded into Emacs. If not
 you will be asked if you want auto. download and install them. If you
-confirm this and the download and install succeeds then you will get a
-message-buffer which tells you something like:
+confirm this then ECB does the following:
+
+@enumerate
+@item
+Checking which versions are available at the download-site of the
+required packages. With the option
+@code{ecb-download-package-version-type} you can specify which type of
+versions (only stable, stable and betas or stable, betas and alphas)
+you allow to download and install. This option offers also the choice
+of asking you for a certain version. Depending of this setting ECB
+either ask you which version it should download and install or chooses
+autom. the newest version available which is matching both its
+min-max-requirements and the setting in
+@code{ecb-download-package-version-type}.
+
+@item
+Downloading and installing the right version (see 1.) of the required
+packages. ECB downloads and installs the new package versions in
+subdirectories of @code{ecb-download-install-parent-dir}.
+@end enumerate
+
+If both of these actions succeed then you will get a message-buffer
+which tells you something like:
 
 @example
 @group
 ---------------------------------------------------------------
 Current state of the required packages semantic and eieio:
 
-- semantic 1.4:
+- semantic author-version must be [1.4, 1.4.9]:
   Installed in /usr/local/lib/site-lisp/semantic-1.4
   
-- eieio 0.17:
+- eieio author-version must be [0.17, 0.17.9]:
   Correct version already loaded!
 
 After adding the new directory to your @code{load-path} and then
 restarting Emacs the new package(s) can be activated.
 ---------------------------------------------------------------
+
 @end group
 @end example
 
-@strong{Note}: By setting the option @code{ecb-version-check} to
+@strong{Note1}: "P author-version must be [x y]" means, that ECB requires
+package P in a version-number >= x and <= <.
+
+@strong{Note2}: By setting the option @code{ecb-version-check} to
 @code{nil} you can prevent ECB from checking correct versions of
 semantic and eieio, but it's strongly recommended not to do this!
 @end itemize

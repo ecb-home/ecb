@@ -26,7 +26,7 @@
 ;; This file is part of the ECB package which can be found at:
 ;; http://ecb.sourceforge.net
 
-;; $Id: ecb-util.el,v 1.52 2003/02/06 09:36:25 berndl Exp $
+;; $Id: ecb-util.el,v 1.53 2003/02/07 15:54:43 berndl Exp $
 
 ;;; Code:
 
@@ -72,6 +72,16 @@
 
 (if ecb-running-xemacs
     (progn
+      (defun ecb-subst-char-in-string (fromchar tochar string &optional inplace)
+        "Replace FROMCHAR with TOCHAR in STRING each time it occurs.
+Unless optional argument INPLACE is non-nil, return a new string."
+        (let ((i (length string))
+              (newstr (if inplace string (copy-sequence string))))
+          (while (> i 0)
+            (setq i (1- i))
+            (if (eq (aref newstr i) fromchar)
+                (aset newstr i tochar)))
+          newstr))
       (defalias 'ecb-frame-parameter 'frame-property)
       (defalias 'ecb-line-beginning-pos 'point-at-bol)
       (defalias 'ecb-line-end-pos 'point-at-eol)
@@ -85,6 +95,7 @@
                 (/ (nth 1 pix-edges) (ecb-frame-char-height))
                 (/ (nth 2 pix-edges) (ecb-frame-char-width))
                 (/ (nth 3 pix-edges) (ecb-frame-char-height))))))
+  (defalias 'ecb-subst-char-in-string 'subst-char-in-string)
   (defalias 'ecb-frame-parameter 'frame-parameter)
   (defalias 'ecb-line-beginning-pos 'line-beginning-position)
   (defalias 'ecb-line-end-pos 'line-end-position)

@@ -19,7 +19,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-upgrade.el,v 1.25 2003/02/06 09:37:08 berndl Exp $
+;; $Id: ecb-upgrade.el,v 1.26 2003/02/07 15:54:44 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -135,9 +135,9 @@
 ;;   - Defining suitable transforming-functions for every of these options.
 ;;   See the comment of `ecb-upgradable-option-alist'.
 
-;; As an addition to this upgrade feature this library offers a function
-;; `ecb-download-ecb' to download a newer version of ECB direct from the
-;; website!
+;; As an addition to this upgrade feature this library offers a set of
+;; functions ecb-package-... for downloading and installing newer versions of
+;; packages (ecb itself and the required packages)!
 
 ;;; Code
 
@@ -512,14 +512,52 @@ Note: Normally this URL should never change but who knows..."
   :group 'ecb-download
   :type 'string)
 
-(defcustom ecb-download-version "latest"
-  "*Which version of ECB should be downloaded by `ecb-download-ecb'.
-Valid values are either the string \"latest\" or a version number like
-\"1.70\". ECB creates automatically the correct URL for download, see
-`ecb-download-ecb'."
+(defcustom ecb-download-package-version-type 1
+  "*Version type ECB is allowed to download for upgrading.
+
+If you want to upgrade to a newer ECB-version via `ecb-download-ecb' or if you
+must upgrade to newer semantic- and/or eieio-versions \(because ECB requires
+these newer versions) then this option specifies which version-types are
+allowed. ECB checks on the download-sites of ECB/semantic/eieio which versions
+are currently available and then downloads always the latest version matching
+the specified type:
+
+2: Gets the newest version of all stable versions available.
+1: Gets the newest version of all stable and beta versions available.
+0: Gets the newest version of all stable, beta and alpha versions
+   available.
+-1: Ask before downloading in the minibuffer for a version \(TAB-completion
+    of all available versions is possible).
+
+So, 2 means stable, 1 means stable and betas, 0 means stable, betas and alphas
+and -1 means ask the user for a version.
+
+Per default stable and beta-versions are allowed \(value 1).
+
+But all versions must match the restrictions of the specified min- and
+max-versions of the required packages. For this see the file README!"
   :group 'ecb-download
-  :type '(radio (const :tag "Latest ECB version" :value "latest")
-                (string :tag "ECB version")))
+  :type '(radio (const :tag "Only stable versions"
+                       :value 2)
+                (const :tag "Allow beta versions"
+                       :value 1)
+                (const :tag "Allow alpha versions"
+                       :value 0)
+                (const :tag "Ask for version"
+                       :value -1)))
+
+(defcustom ecb-download-install-parent-dir (or (and (file-writable-p ecb-ecb-parent-dir)
+                                                    ecb-ecb-parent-dir)
+                                               "~")
+  "*Parent directory where dowloaded packages are installed.
+
+ECB installs a downloaded package in this directory, i.e. the downloaded
+archive X.tar.gz will be extracted in this directory so afterwards this
+directory contains a new subdirectory X which contains the downloaded package.
+
+This directory must be writeable!"
+  :group 'ecb-download
+  :type 'directory)
 
 (defcustom ecb-download-delete-archive 'always
   "*Should the downloaded archive be deleted after successfull
@@ -548,60 +586,253 @@ are:
            ;; if bash is used as shell-file-name then the command must
            ;; not contain newlines!
            (ecb-trim
-            (subst-char-in-string ?\n 32
+            (ecb-subst-char-in-string ?\n 32
                                   (shell-command-to-string
                                    (concat "cygpath -u " ,arg))))
          (ecb-error "Cannot find the cygpath utility!"))
      ,arg))
 
+
+(defun ecb-package-version-str2list (ver-str)
+  "Convert the version-str VER-STR to the internal version-list format with
+the following elemnts of the version-list:
+1. Major-version
+2. Minor-version
+3. 0 = alpha, 1 = beta, 2 = nothing \(e.g. \"1.4\"), 3 = . \(e.g. \"1.4.3\"
+4. Subversion after the alpha, beta or .
+
+Return nil if ver-str has not the required syntax:
+<major>.<minor>\[.|beta|alpha]\[<sub-stable/beta/alpha-version>]"
+  (let ((str ver-str))
+    (if (string-match "^\\([0-9]+\\)\\.\\([0-9]+\\)\\(beta\\|alpha\\|\\.\\)?\\([0-9]+\\)?$" str)
+        (list (string-to-number (match-string 1 str))
+              (string-to-number (match-string 2 str))
+              (if (string= (match-string 3 str) "alpha")
+                  0
+                (if (string= (match-string 3 str) "beta")
+                    1
+                  (if (string= (match-string 3 str) ".")
+                      3
+                    2)))
+              (if (match-string 4 str)
+                  (string-to-number (match-string 4 str))
+                0)))))
+
+(defun ecb-package-version-list< (ver1 ver2)
+  "Return non-nil if VER1 is less than VER2."
+  (let ((v1-0 (nth 0 ver1))
+	(v1-1 (nth 1 ver1))
+	(v1-2 (nth 2 ver1))
+	(v1-3 (nth 3 ver1))
+	;; v2
+	(v2-0 (nth 0 ver2))
+	(v2-1 (nth 1 ver2))
+	(v2-2 (nth 2 ver2))
+	(v2-3 (nth 3 ver2)))
+    (or (< v1-0 v2-0)
+        (and (= v1-0 v2-0)
+             (< v1-1 v2-1))
+        (and (= v1-0 v2-0)
+             (= v1-1 v2-1)
+             (< v1-2 v2-2))
+        (and (= v1-0 v2-0)
+             (= v1-1 v2-1)
+             (= v1-2 v2-2)
+             (< v1-3 v2-3)))))
+
+(defun ecb-package-version-string< (ver1-str ver2-str)
+  "Return non nil if VER-STR1 is logically less then VER-STR2."
+  (let ((ver1 (ecb-package-version-str2list ver1-str))
+        (ver2 (ecb-package-version-str2list ver2-str)))
+    (ecb-package-version-list< ver1 ver2)))
+
+(defun ecb-package-version-list2str (ver)
+  "Complementary function to `ecb-package-version-str2list'."
+  (concat (number-to-string (nth 0 ver))
+          "."
+          (number-to-string (nth 1 ver))
+          (cond ((= (nth 2 ver) 0)
+                 "alpha")
+                ((= (nth 2 ver) 1)
+                 "beta")
+                ((= (nth 2 ver) 3)
+                 ".")
+                (t ""))
+          (if (not (= (nth 2 ver) 2))
+              (number-to-string (nth 3 ver))
+            "")))
+
+(defun ecb-package-get-matching-versions-str (package package-url
+                                                      min-list max-list)
+  "Get from PACKAGE-URL all available version-numbers of PACKAGE. Remove all
+version-numbers which are not between MIN-LIST and MAX-LIST and which do not
+match the setting in `ecb-download-package-version-type'.
+
+If `ecb-download-package-version-type' = -1 then let the user choose a version
+of the remaining version-numbers \(default is the newest version) otherwise
+return autom. the newest version-number as version-string."
+  (let* ((full-version-list (ecb-package-get-available-versions
+                             package package-url))
+         (sorted-matching-ver-list
+          (sort (delete nil
+                        (mapcar (function
+                                 (lambda (ver-str)
+                                   (let ((ver-list
+                                          (ecb-package-version-str2list ver-str)))
+                                     (if (and ver-list
+                                              (not (ecb-package-version-list<
+                                                    ver-list
+                                                    min-list))
+                                              (not (ecb-package-version-list<
+                                                    max-list
+                                                    ver-list))
+                                              (<= ecb-download-package-version-type
+                                                  (nth 2 ver-list)))
+                                         ver-list))))
+                                full-version-list))
+                'ecb-package-version-list<))
+         (sorted-matching-ver-str
+          (nreverse (mapcar (function (lambda (x)
+                                        (list (ecb-package-version-list2str x)
+                                              t)))
+                            sorted-matching-ver-list))))
+    (if sorted-matching-ver-str
+        (if (= ecb-download-package-version-type -1)
+            (completing-read "Choose a version: "
+                             sorted-matching-ver-str
+                             nil t nil nil (caar sorted-matching-ver-str))
+          (caar sorted-matching-ver-str))
+      (ecb-error "No matching versions avaiable for %s at %s."
+                 package package-url))))
+
+
+;; tests
+;; (setq version-str
+;;       (ecb-package-get-matching-versions-str
+;;        "semantic" ecb-semantic-eieio-url
+;;        '(1 4 1 1)
+;;        '(1 4 3 9)))
+;; (ecb-package-download-ecb/semantic "semantic"
+;;                                    semantic-version
+;;                                    ecb-semantic-eieio-url)
+
 (defun ecb-download-ecb ()
-  "Download ECB from the ECB-website and install it. For this the options
-`ecb-download-url' and `ecb-download-version' must be set correct, whereas the
-default value of the former one should always be correct.
+  "Download ECB from the ECB-website and install it. For this the option
+`ecb-download-url' must be set correct, whereas the default value of this 
+option should always be correct.
+
+If `ecb-download-package-version-type' is set to -1 \(means asking for a
+version) then you will be ask in the minibuffer for the version to download.
+Otherwise ECB downloads autom. the latest version available for the type
+specified in `ecb-download-package-version-type'. If no newer version than the
+current one is available no download will be done.
 
 For details about downloading and what requirements must be satisfied see
-`ecb-download-package'!
+function `ecb-package-download' and option `ecb-download-package-version-type'!
 
-After sucessfull downloading the new ECB will be installed in a directory
-parallel to current ECB-directory. After adding this new directory to
+After sucessfull downloading the new ECB will be installed in a subdirectory
+of `ecb-download-install-parent-dir'. After adding this new subdirectory to
 `load-path' and restarting Emacs the new ECB version can be activated by
 `ecb-activate'.
 
 If current running ECB is installed as regular XEmacs-package and not with the
 archive available at the ECB website then this function asks for proceeding!"
   (interactive)
+  (ecb-package-download-ecb/semantic "ecb"
+                                     ecb-version
+                                     ecb-download-url))
+
+(defun ecb-download-semantic ()
+  "Download semantic from the semantic-website and install it. For this the
+variable `ecb-semantic-eieio-url' must be set correct, whereas the default
+value of this variable should always be correct.
+
+If `ecb-download-package-version-type' is set to -1 \(means asking for a
+version) then you will be ask in the minibuffer for the version to download.
+Otherwise ECB downloads autom. the latest version available for the type
+specified in `ecb-download-package-version-type'. If no newer version than the
+current one is available no download will be done.
+
+For details about downloading and what requirements must be satisfied see
+function `ecb-package-download' and option `ecb-download-package-version-type'!
+
+After sucessfull downloading the new semantic will be installed in a
+subdirectory of `ecb-download-install-parent-dir'. After adding this new
+subdirectory to `load-path' and restarting Emacs the new semantic version is
+loaded and is used after next start of ECB.
+
+If current running semantic is installed as regular XEmacs-package and not
+with the archive available at the semantic website then this function asks for
+proceeding!"
+  (interactive)
+  (ecb-package-download-ecb/semantic "semantic"
+                                     semantic-version
+                                     ecb-semantic-eieio-url))
+
+
+(defun ecb-package-download-ecb/semantic (package curr-version url)
+  "Download PACKAGE from URL. CURR-VERSION must be the current version of
+current active version of PACKAGE."
   (let ((proceed t))
     (when ecb-regular-xemacs-package-p
       (with-output-to-temp-buffer "*ECB downloading and installing*"
-        (princ "Current ECB is installed as regular XEmacs package and not with the\n")
-        (princ "archive available at the ECB-website. So you should use the package-manager\n")
-        (princ "of XEmacs to get the latest version of ECB! If you proceed installing from\n")
-        (princ "the ECB website then the new ECB is NOT installed as regular XEmacs-package\n")
-        (princ "but as \"flat\" package parallel to the current ECB directory!\n\n"))
-      (setq proceed (yes-or-no-p "Do you want to proceed installing from the ECB-website? ")))
+        (princ (concat "Current "
+                       package
+                       " is installed as regular XEmacs package and not with the\n"))
+        (princ (concat "archive available at the "
+                       package
+                       "-website. So you should use the package-manager\n"))
+        (princ (concat "of XEmacs to get the latest version of "
+                       package
+                       "! If you proceed installing from\n"))
+        (princ (concat "the "
+                       package
+                       "-website then the new "
+                       package
+                       " is NOT installed as regular XEmacs-\n"))
+        (princ "package but as \"flat\" package into `ecb-download-package-version-type'!\n\n"))
+      (setq proceed (yes-or-no-p (concat "Do you want to proceed installing from the "
+                                         package
+                                         "-website? "))))
     (when proceed
-      (let ((install-dir (ecb-download-package "ecb" ecb-download-version
-                                               ecb-download-url)))
+      (let ((ver (ecb-package-get-matching-versions-str
+                  package url
+                  (if (= ecb-download-package-version-type -1)
+                      '(0 0 0 0) ;; smallest possible version-number
+                    (ecb-package-version-str2list curr-version))
+                  '(100 99 3 99))) ;; this version-number should be the biggest;-) 
+            (install-dir nil))
+        (if (string= ver curr-version)
+            (ecb-error "You tried to download an already installed version %s - Stop!"
+                       ver))
+        (setq install-dir (ecb-package-download package ver url))
         (when install-dir
-          (message "New ECB successfully installed!")
+          (message "New %s successfully installed!" package)
           (with-output-to-temp-buffer "*ECB downloading and installing*"
-            (princ "ECB has successfully installed the new ECB version in a directory parallel to\n")
-            (princ "current ECB.\n\n")
-            (princ (concat "+ Current ECB: " ecb-ecb-dir "\n"))
-            (princ (concat "+ New ECB: " install-dir))
+            (princ (concat "New "
+                           package
+                           " version is installed.\n\n"))
+            (princ (concat "+ Current " package ": "
+                           (file-name-directory (locate-library package))
+                           "\n"))
+            (princ (concat "+ New " package ": " install-dir))
             (princ "\n\n")
-            (princ "After replacing the current ECB-directory with the new one in your `load-path'\n")
-            (princ "and then restarting Emacs the new ECB version can be activated by `ecb-activate'.\n\n")
-            (princ "If the value of `ecb-auto-compatibility-check' is not nil then the new version\n")
-            (princ "checks at start-time if there are incompatible options! Please read the\n")
-            (princ "documentation of this option!")
+            (princ "After replacing the current directory with the new one in your `load-path'\n")
+            (princ (concat "and then restarting Emacs the new version of "
+                           package
+                           " is loaded."))
+            (when (string= package "ecb")
+              (princ "\n\nIf the value of `ecb-auto-compatibility-check' is not nil then the new version\n")
+              (princ "checks at start-time if there are incompatible options! Please read the\n")
+              (princ "documentation of this option!"))
             (princ "\n\n")))))))
-    
 
-(defun ecb-download-package (package version url)
-  "Download VERSION of PACKAGE from URL and install it. If no failure occurs
-during this process the full path of the directory is returned in which the
-new package is installed. Otherwise an error is reported.
+
+(defun ecb-package-download (package version url)
+  "Download VERSION of PACKAGE from URL and install it in a new subdirectory
+of `ecb-download-install-parent-dir'. If no failure occurs during this process
+the full path of the directory is returned in which the new package is
+installed. Otherwise an error is reported.
 
 For correct downloading and installing the utilities \"wget\", \"tar\" and
 \"gzip\" are needed which are available for unix and also for windows with
@@ -618,29 +849,32 @@ following wget-configuration in your \"~/.wgetrc\"-file:
    use_proxy = on
 
 ECB will try to download the file: \"<URL><PACKAGE>-<VERSION>.tar.gz\".
-Example: For PACKAGE = \"ecb\", VERSION = \"latest\" and URL =
+Example: For PACKAGE = \"ecb\", VERSION = \"1.90\" and URL =
 \"http://ftp1.sourceforge.net/ecb/\" the download-file would be
-\"http://ftp1.sourceforge.net/ecb/ecb-latest.tar.gz\".
+\"http://ftp1.sourceforge.net/ecb/ecb-1.90.tar.gz\".
 
 After sucessfull downloading the new package version will be installed in a
-directory parallel to current ECB-directory. After adding this new directory
-tp `load-path' and restarting Emacs the new package version can be activated."
-  (let ((downloaded-filename (concat ecb-ecb-parent-dir
-                                     package "-download.tar.gz"))
-        (success t)
-        process-result install-dir)
+new subdirectory of `ecb-download-install-parent-dir'. After adding this new
+subdirectory to `load-path' and restarting Emacs the new package version can be
+activated."
+  (let* ((download-install-dir (file-name-as-directory
+                                ecb-download-install-parent-dir))
+         (downloaded-filename (concat download-install-dir
+                                      package "-download.tar.gz"))
+         (success t)
+         process-result)
 
-    ;; a first simple check if the new version is already installed - will not
-    ;; work for "latest"
+    ;; a first simple check if the new version is already installed
     
-    (if (not (or (not (file-directory-p (concat ecb-ecb-parent-dir package "-"
+    (if (not (or (not (file-directory-p (concat download-install-dir
+                                                package "-"
                                                 version)))
                  (yes-or-no-p
                   (format "%s %s seems to be already installed in directory %s! Force? "
                           package version
                           (concat package "-" version)))))
         ;; we can go back with this install dir
-        (concat ecb-ecb-parent-dir package "-" version)
+        (concat download-install-dir package "-" version)
       
       ;; cleaning up
 
@@ -725,43 +959,15 @@ tp `load-path' and restarting Emacs the new package version can be activated."
               (princ "\n\n")
               (princ process-result))))
 
-        ;; checking the version of the new package
-
-        (when success
-          (message "Uncompressing new %s...done" package)
-          (message "Checking if already installed...")
-          (setq process-result
-                (shell-command-to-string
-                 (concat "tar"
-                         " -tf "
-                         (ecb-create-shell-argument
-                          (file-name-sans-extension downloaded-filename)))))
-          (if (string-match (format "^%s-\\(.+\\)/" package) process-result)
-              (let ((downloaded-version (match-string 1 process-result)))
-                (setq install-dir (concat package "-" downloaded-version))
-                (when (not (or (not (file-directory-p (concat ecb-ecb-parent-dir
-                                                              install-dir)))
-                               (yes-or-no-p
-                                (format "%s %s seems to be already installed in directory %s! Force? "
-                                        package downloaded-version install-dir))))
-                  ;; we have finished an can go back with this install dir
-                  (return install-dir)))
-            (setq success nil)
-            (with-output-to-temp-buffer "*ECB-archive-failure*"
-              (princ (format "Checking the archive of %s has failed cause of the following problems:"
-                             package))
-              (princ "\n\n")
-              (princ process-result))))
-
         ;; unpacking new package
 
         (when success
-          (message "Checking if already installed...done")
+          (message "Uncompressing new %s...done" package)
           (message "Unpacking new %s..." package)
           (setq process-result
                 (shell-command-to-string
                  (concat "tar -C "
-                         (ecb-create-shell-argument ecb-ecb-parent-dir)
+                         (ecb-create-shell-argument download-install-dir)
                          " -xf "
                          (ecb-create-shell-argument
                           (file-name-sans-extension downloaded-filename)))))
@@ -778,11 +984,115 @@ tp `load-path' and restarting Emacs the new package version can be activated."
         (when (or (and success ecb-download-delete-archive)
                   (and (not success) (eq ecb-download-delete-archive 'always)))
           (ecb-delete-file (file-name-sans-extension downloaded-filename))
-          (ecb-delete-file downloaded-filename))))
-    ;; now we return if we had success or not
-    (if success
-        (concat ecb-ecb-parent-dir install-dir)
-      (ecb-error "Downloading or installing failure for %s %s" package version))))
+          (ecb-delete-file downloaded-filename))
+    
+        ;; now we return if we had success or not
+        (if success
+            (concat download-install-dir package "-" version)
+          (ecb-error "Downloading or installing failure for %s %s" package version))))))
+
+
+(defun ecb-package-get-available-versions (package package-url)
+  "Get a list of available versions of PACKAGE downloadable at PACKAGE-URL.
+This is done with the utility \"wget\", so please see `ecb-package-download'
+for details about using \"wget\"."
+  (let ((downloaded-filename (concat ecb-temp-dir "package-index.html"))
+        (success t)
+        (version-list nil)
+        process-result)
+
+    (if (not (executable-find
+              (if (eq system-type 'windows-nt) "wget.exe" "wget")))
+        (ecb-error
+         (concat "Cannot find wget. This utilitiy is needed "
+                 "to get available-package-list."))
+
+      ;; OK, now we begin....
+
+      (let (
+            (ecb-window-sync nil)
+            (kill-buffer-hook nil)
+            (semantic-after-toplevel-cache-change-hook nil)
+            (semantic-after-partial-cache-change-hook nil)
+            (auto-mode-alist nil)
+            )
+        (if (get-buffer ecb-download-buffername)
+            (kill-buffer ecb-download-buffername))
+        (ecb-delete-file downloaded-filename))
+        
+      ;; Downloading with working-display
+
+      (working-status-call-process
+       0.1
+       (concat "Getting list of available versions of package " package)
+       "done"
+       (if (eq system-type 'windows-nt)
+           "wget.exe"
+         "wget")
+       nil
+       ecb-download-buffername
+       nil
+       "-O"
+       downloaded-filename
+       package-url)
+
+      ;; checking the download-result
+
+      (save-excursion
+        (set-buffer ecb-download-buffername)
+        (setq process-result (buffer-string))
+        (goto-char (point-min))
+        (when (not (and (save-excursion
+                          (search-forward-regexp "200" nil t))
+                        (search-forward-regexp
+                         (concat (regexp-quote downloaded-filename) ".*saved.*")
+                         nil t)
+                        (file-exists-p downloaded-filename)))
+          (setq success nil)))
+      (unless success
+        (with-output-to-temp-buffer "*ECB-download-failure*"
+          (princ "______________________________________________________________________________\n\n")
+          (princ process-result)
+          (princ "\n______________________________________________________________________________")
+          (princ "\n\n")))
+      (kill-buffer ecb-download-buffername)
+
+      ;; getting the list from downloaded-filename.
+
+      (when success
+        (let (
+              (ecb-window-sync nil)
+              (kill-buffer-hook nil)
+              (semantic-after-toplevel-cache-change-hook nil)
+              (semantic-after-partial-cache-change-hook nil)
+              (auto-mode-alist nil)
+              )
+          (save-excursion
+            (set-buffer (find-file-noselect downloaded-filename t t))
+            (goto-char (point-min))
+            (while (re-search-forward
+                    (concat "<A HREF=\""
+                            package
+                            "-\\([^<>]+\\)\\.tar\\.gz\">")
+                    nil t)
+              (add-to-list 'version-list (match-string 1)))
+            (kill-buffer (current-buffer)))))
+        
+      ;; maybe cleaning up
+      (let (
+            (ecb-window-sync nil)
+            (kill-buffer-hook nil)
+            (semantic-after-toplevel-cache-change-hook nil)
+            (semantic-after-partial-cache-change-hook nil)
+            (auto-mode-alist nil)
+            )
+        (if (get-buffer ecb-download-buffername)
+            (kill-buffer ecb-download-buffername))
+        (ecb-delete-file downloaded-filename))
+
+      ;; now we return the version-list
+      version-list)))
+
 
 (silentcomp-provide 'ecb-upgrade)
 
