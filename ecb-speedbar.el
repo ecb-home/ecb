@@ -1,6 +1,6 @@
 ;;; ecb-speedbar.el --- 
 
-;; $Id: ecb-speedbar.el,v 1.12 2002/01/29 11:30:41 burtonator Exp $
+;; $Id: ecb-speedbar.el,v 1.13 2002/02/11 12:09:31 burtonator Exp $
 
 ;; Copyright (C) 2000-2003 Free Software Foundation, Inc.
 ;; Copyright (C) 2000-2003 Kevin A. Burton (burton@openprivacy.org)
@@ -104,9 +104,14 @@
 ;; - RFE: what do we do about integration with the standard JDE?  Could we tell
 ;;   the existing layout functions to use the speedbar instead of the
 ;;   directories buffer?
-
+;;
 ;; we need to be able to goto the speedbar window via C-c . b (AKA bar)
 ;; (ecb-goto-window-speedbar)
+;;
+;; - BUG: bug in speedbar.  Need a feature so that the speedbar doesn't require
+;;   that we HAVE to have the speedbar in a frame.  If we try to run (speedbar)
+;;   when ecb-speedbar is active the ecb-frame will go away :(
+
 
 ;;; Code:
 

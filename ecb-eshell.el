@@ -1,6 +1,6 @@
 ;;; ecb-eshell.el --- eshell integration for the ECB.
 
-;; $Id: ecb-eshell.el,v 1.32 2002/02/05 06:45:13 burtonator Exp $
+;; $Id: ecb-eshell.el,v 1.33 2002/02/11 12:09:31 burtonator Exp $
 
 ;; Copyright (C) 2000-2003 Free Software Foundation, Inc.
 ;; Copyright (C) 2000-2003 Kevin A. Burton (burton@openprivacy.org)
@@ -120,6 +120,8 @@
 ;; - BUG: when ecb-eshell-enlarge-when-selecting is nil we need to recenter.  If
 ;; we don't we just end up with the point in the middle of the eshell.
 ;;
+;; - BUG: enable just-in-time current-buffer-sync... only execute if the current
+;; buffer's directlry is not equal to the ecb directory.
 
 ;;; Code:
 

@@ -1,6 +1,6 @@
 ;;; ecb-cycle.el --- cycle buffers through ecb windows.
 
-;; $Id: ecb-cycle.el,v 1.10 2002/02/01 09:35:23 burtonator Exp $
+;; $Id: ecb-cycle.el,v 1.11 2002/02/11 12:09:31 burtonator Exp $
 
 ;; Copyright (C) 2000-2003 Free Software Foundation, Inc.
 ;; Copyright (C) 2000-2003 Kevin A. Burton (burton@openprivacy.org)
@@ -121,7 +121,7 @@ we hit the end we go back to the beginning.  See `ecb-compilation-buffer-p'."
   "Switch to the given compilation buffer in the compilation window."
   (interactive
    (list
-    (completing-read "ECB compilation buffer: " (ecb-get-compilation-buffers))))
+    (completing-read "ECB compilation buffer: " (ecb-compilation-get-buffers))))
 
   (when ecb-cycle-enlarge-compile-window
     (ecb-enlarge-window ecb-compile-window))
