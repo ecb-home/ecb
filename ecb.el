@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb.el,v 1.322 2003/08/01 15:24:34 berndl Exp $
+;; $Id: ecb.el,v 1.323 2003/08/01 15:53:38 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -5666,10 +5666,12 @@ if the minor mode is enabled.
       (find-file (concat dir "/" filename)))
     (when (= (point-min) (point-max))
       (set-buffer-modified-p t)
-      (save-buffer)
+      (let ((ecb-auto-update-methods-after-save nil))
+        (save-buffer))
       (ecb-rebuild-methods-buffer-with-tokencache nil nil t))
     (ecb-remove-dir-from-caches dir)
-    (ecb-set-selected-directory dir t)))
+    (ecb-set-selected-directory dir t)
+    (ecb-current-buffer-sync)))
 
 (defun ecb-grep-directory-internal (node find)
   (select-window (or ecb-last-edit-window-with-point ecb-edit-window))
@@ -5754,7 +5756,6 @@ function which is called with current node and has to return a string.")
   "Deletes current sourcefile."
   (let* ((file (tree-node-get-data node))
          (dir (ecb-fix-filename (file-name-directory file))))
-    (message "KLausi: %s, %s" file dir)
     (when (ecb-confirm (concat "Really delete " (file-name-nondirectory file) "? "))
       (when (get-file-buffer file)
         (kill-buffer (get-file-buffer file)))

@@ -1,4 +1,4 @@
-* Changes for ECB version 1.95.2
+* Changes for ECB version
 
 ** ECB selects autom. the current default-directory after activation even if
    no file-buffer is displayed in the edit-window. This is useful if ECB is
