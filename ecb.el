@@ -59,7 +59,7 @@
 ;; The latest version of the ECB is available at
 ;; http://home.swipnet.se/mayhem/ecb.html
 
-;; $Id: ecb.el,v 1.253 2002/12/11 10:32:17 berndl Exp $
+;; $Id: ecb.el,v 1.254 2002/12/11 16:53:50 berndl Exp $
 
 ;;; Code:
 
@@ -4021,6 +4021,17 @@ always the ECB-frame if called from another frame."
     (set-window-buffer ecb-edit-window (get-buffer-create "*scratch*"))
     
     (setq ecb-activated-window-configuration (current-window-configuration))))
+
+(defun ecb-ediff-quit-hook ()
+  "Added to the end of `ediff-quit-hook' during ECB is activated. It
+does all necessary after finishing ediff."
+  (when ecb-minor-mode
+    (if (and (not (equal (selected-frame) ecb-frame))
+             (y-or-n-p
+              "Ediff finished. Do you want to delete the extra ediff-frame? "))
+        (delete-frame (selected-frame) t))
+    (select-frame ecb-frame)
+    (ecb-redraw-layout)))
 
 (defun ecb-deactivate ()
   "Deactivates the ECB and kills all ECB buffers and windows."

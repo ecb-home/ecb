@@ -103,7 +103,7 @@
 ;; - `ecb-with-some-adviced-functions'
 ;;
 
-;; $Id: ecb-layout.el,v 1.131 2002/12/11 10:32:19 berndl Exp $
+;; $Id: ecb-layout.el,v 1.132 2002/12/11 16:53:52 berndl Exp $
 
 ;;; Code:
 
@@ -1077,16 +1077,6 @@ handle `ecb-compile-window-temporally-enlarge'."
                 (not (ecb-point-in-compile-window)))
            (ecb-toggle-enlarged-compilation-window -1)))))
 
-(defun ecb-ediff-quit-hook ()
-  "Added to the end of `ediff-quit-hook' during ECB is activated. It
-does all necessary after finishing ediff."
-  (when ecb-minor-mode
-    (if (and (not (equal (selected-frame) ecb-frame))
-             (y-or-n-p
-              "Ediff finished. Do you want to delete the extra ediff-frame? "))
-        (delete-frame (selected-frame) t))
-    (select-frame ecb-frame)
-    (ecb-redraw-layout)))
 
 ;; here come the advices
 
@@ -1094,24 +1084,6 @@ does all necessary after finishing ediff."
 ;; `split-window-horizontally' and `split-window-vertically' need none of the
 ;; other advices and can therefore be used savely by the other advices (means,
 ;; other functions or advices can savely (de)activate these "basic"-advices!
-;; (defadvice other-window (around ecb)
-;;   "The ECB-version of `other-window'. Works exactly like the original function
-;; with the following ECB-ajustment:
-;; The behavior depends on `ecb-other-window-jump-behavior'."
-;;   (if (or (not (equal (selected-frame) ecb-frame))
-;;           (equal ecb-other-window-jump-behavior 'all))
-;;       ;; here we process the 'all value of `ecb-other-window-jump-behavior'
-;;       ad-do-it
-;;     (if (not (ecb-point-in-edit-window))
-;;         (ecb-select-edit-window)
-;;       ;; if the edit-window is splitted and if (mod ARG 2) > 0 we must jump in
-;;       ;; the "other" edit-window.
-;;       (when (and (ecb-edit-window-splitted)
-;;                  (> (mod (if (ad-get-arg 0) (ad-get-arg 0) 1) 2) 0))
-;;         (if (equal (ecb-point-in-edit-window) 1)
-;;             (select-window (next-window))
-;;           ;; we are in the other edit window
-;;           (ignore-errors (select-window ecb-edit-window)))))))
 
 (defadvice other-window (around ecb)
   "The ECB-version of `other-window'. Works exactly like the original function
