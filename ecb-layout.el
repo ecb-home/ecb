@@ -104,7 +104,7 @@
 ;; - `ecb-with-some-adviced-functions'
 ;;
 
-;; $Id: ecb-layout.el,v 1.145 2003/01/14 16:22:50 berndl Exp $
+;; $Id: ecb-layout.el,v 1.146 2003/01/15 11:14:50 berndl Exp $
 
 ;;; Code:
 
@@ -158,9 +158,12 @@
                          (frame-live-p ecb-frame))
                 (let ((curr-frame (selected-frame))
                       (ecb-redraw-layout-quickly nil))
-                  (select-frame ecb-frame)
-		  (ecb-redraw-layout-full)
-                  (select-frame curr-frame))))))
+                  (unwind-protect
+                      (progn
+                        (select-frame ecb-frame)
+                        (ecb-redraw-layout-full))
+                    (select-frame curr-frame)))))))
+                    
 
 (defcustom ecb-select-edit-window-on-redraw nil
   "*Select the first edit window on `ecb-redraw-layout'."
