@@ -26,7 +26,7 @@
 ;; This file is part of the ECB package which can be found at:
 ;; http://home.swipnet.se/mayhem/ecb.html
 
-;; $Id: tree-buffer.el,v 1.99 2002/12/09 07:36:27 berndl Exp $
+;; $Id: tree-buffer.el,v 1.100 2002/12/22 14:11:50 berndl Exp $
 
 ;;; Code:
 
@@ -149,6 +149,23 @@ node name.")
 mouse-tracking is activated by `tree-buffer-activate-mouse-tracking'")
 (defvar tree-buffer-old-mouse-avoidance-mode
   (if (null mouse-avoidance-mode) 'none mouse-avoidance-mode))
+
+(defvar tree-buffer-syntax-table nil
+  "Syntax-table used in a tree-buffer.")
+
+(if tree-buffer-syntax-table
+    nil
+  (setq tree-buffer-syntax-table (make-syntax-table))
+  ;; turn off paren matching around here.
+  (modify-syntax-entry ?\' " " tree-buffer-syntax-table)
+  (modify-syntax-entry ?\" " " tree-buffer-syntax-table)
+  (modify-syntax-entry ?\( " " tree-buffer-syntax-table)
+  (modify-syntax-entry ?\) " " tree-buffer-syntax-table)
+  (modify-syntax-entry ?\{ " " tree-buffer-syntax-table)
+  (modify-syntax-entry ?\} " " tree-buffer-syntax-table)
+  (modify-syntax-entry ?\[ " " tree-buffer-syntax-table)
+  (modify-syntax-entry ?\] " " tree-buffer-syntax-table))
+
 
 (defun tree-buffer-nolog-message (&rest args)
   "Works exactly like `message' but does not log the message"
@@ -1067,6 +1084,9 @@ AFTER-CREATE-HOOK: A function or a list of functions \(with no arguments)
     (setq tree-buffer-last-incr-searchpattern "")
     (setq tree-buffer-incr-search incr-search)
 
+    ;; set a special syntax table for tree-buffers
+    (set-syntax-table tree-buffer-syntax-table)
+    
     ;; keyboard setting
     (when incr-search
       ;; settings for the incremental search.
