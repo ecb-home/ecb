@@ -1,6 +1,6 @@
 ;;; ecb-speedbar.el --- 
 
-;; $Id: ecb-speedbar.el,v 1.26 2002/12/18 14:30:21 berndl Exp $
+;; $Id: ecb-speedbar.el,v 1.27 2002/12/19 00:09:05 burtonator Exp $
 
 ;; Copyright (C) 2000-2003 Free Software Foundation, Inc.
 ;; Copyright (C) 2000-2003 Kevin A. Burton (burton@openprivacy.org)
@@ -210,6 +210,13 @@ will/could break."
 ;; speedbar-do-function-pointer in senseful ways but no success :-(( Maybe we
 ;; have to ask Eric....
 
+;;  TODO: Kevin Burton <burton@peerfear.org> Klaus.  Your problem is due to the
+;;  speedbar bugs I was talking about.  I can give you a copy of my speedbar.  I
+;;  will try to get a decent patch setup and at least documented.  My changes
+;;  were made to 0.14b2.  I do not seem to have this problem with 0.14b4 but it
+;;  might just be my installation.
+;; 
+
 ;; (defun speedbar-find-file-in-frame(file)
 ;;   "This will load FILE into the speedbar attached frame.  If the file is being
 ;; displayed in a different frame already, then raise that frame instead.  Note
@@ -264,6 +271,11 @@ will/could break."
 ;; So we would not need extra layouts for the speedbar-integration but we could
 ;; use speedbar for all layouts which have a directories-window in its layout.
 ;; So the following layout-definition would be superfluous...
+
+;; TODO: Kevin Burton <burton@peerfear.org> +1 I am in favor of this option. I
+;; haven't looked back at setting up alternative window layouts.  Since it
+;; wasn't stable I never went back and look at providing an alternative to the
+;; directories buffer.
 
 ;; the special speedbar layout.
 (ecb-layout-define "speedbar1" right
