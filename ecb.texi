@@ -19,7 +19,7 @@
 @c Free Software Foundation, Inc., 59 Temple Place - Suite 330,
 @c Boston, MA 02111-1307, USA.
 
-@c $Id: ecb.texi,v 1.89 2003/03/28 09:48:24 berndl Exp $
+@c $Id: ecb.texi,v 1.90 2003/03/31 15:40:18 berndl Exp $
 
 @setfilename ecb.info
 
@@ -1218,8 +1218,9 @@ splitted first. The variables @code{temp-buffer-max-height} and
 Same for all compilation output-buffers (e.g. after a @code{compile} or
 @code{grep}) and the variable @code{compilation-window-height}.
 
-In general: With the options @code{ecb-compilation-buffer-names} and
-@code{ecb-compilation-major-modes} you can define which buffers should
+In general: With the options @code{ecb-compilation-buffer-names},
+@code{ecb-compilation-major-modes} and
+@code{ecb-compilation-predicates} you can define which buffers should
 be displayed in the compile-window of ECB for example if you call
 @code{switch-to-buffer} for a buffer.
 
@@ -4904,6 +4905,23 @@ window of ECB even if @code{compilation-buffer-p} says nil.
 Additional major-mode that should be displayed in the compilation
 window of ECB even if @code{compilation-buffer-p} says nil.
 @end defopt
+
+
+@defopt compilation-predicates
+Predicate when a buffer should be treaten as compilation-buffer. Every
+element of this list has to be a function or lambda-expression which
+gets as argument a buffer-object and which has to return not nil when
+this buffer should be treaten as compilation-buffer and therefore
+displayed in the compile-window of ECB (if there is any).
+
+In combination with the values of @code{ecb-compilation-buffer-names}
+and @code{ecb-compilation-major-modes} ECB decides when a buffer is
+displayed in the compile-window.
+
+Default value is the function @code{comint-check-proc} which returns
+not nil when the buffer-argument is related to a living process.
+@end defopt
+
 
 
 @node ecb-create-layout, ecb-face-options, ecb-compilation-content, Customizable options
