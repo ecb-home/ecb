@@ -1,6 +1,8 @@
 * Changes for ECB version 2.23
 
-** Enhancements for the Methods-buffer:
+** New cedet1.0beta2 is supported.
+
+** Enhancements for the Methods-buffer
 
 *** New feature for applying default tag-filters for certain files.
     The new option `ecb-default-tag-filter' allow to define default
@@ -88,6 +90,9 @@
     sense of `ecb-compilation-buffer-p' and a hidden compile-window is
     shown by display-buffer to display this buffer. The latter one for example
     has prevented the ant-server of JDEE from working properly.
+
+*** Fixed a bug so now always the correct directory in the directories-buffer
+    is higlighted.
 
     
 

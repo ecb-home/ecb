@@ -1529,7 +1529,10 @@ should be displayed. For 1 and 2 the value of EDIT-WINDOW-NR is ignored."
         (progn
           (if (= 2 ecb-button)
               (when (tree-node-is-expandable node)
-                (tree-node-toggle-expanded node))
+                (tree-node-toggle-expanded node)
+                (ecb-exec-in-directories-window
+                 ;; Update the tree-buffer with optimized display of NODE
+                 (tree-buffer-update node)))                
             
             ;; Removing the element from the sources-cache and the
             ;; files-and-subdirs-cache
@@ -1539,11 +1542,11 @@ should be displayed. For 1 and 2 the value of EDIT-WINDOW-NR is ignored."
             (ecb-set-selected-directory (tree-node-get-data node) shift-mode)
             ;; if we have running an integrated speedbar we must update the
             ;; speedbar 
-            (ecb-directory-update-speedbar (tree-node-get-data node)))
+            (ecb-directory-update-speedbar (tree-node-get-data node))))
           
-          (ecb-exec-in-directories-window
-           ;; Update the tree-buffer with optimized display of NODE
-           (tree-buffer-update node)))
+;;           (ecb-exec-in-directories-window
+;;            ;; Update the tree-buffer with optimized display of NODE
+;;            (tree-buffer-update node)))
       (ecb-set-selected-source (tree-node-get-data node)
                                (ecb-combine-ecb-button/edit-win-nr ecb-button edit-window-nr)
 			       shift-mode))))
@@ -2074,8 +2077,9 @@ So you get a better overlooking. There are three choices:
 	("Filter"
          (ecb-popup-history-filter-by-ext "Filter by extension")
          (ecb-popup-history-filter-by-regexp "Filter by regexp")
-         (ecb-popup-history-filter-all-existing "No filter (all file-buffers)"))
+         (ecb-popup-history-filter-all-existing "No filter"))
         ("---")
+        (ecb-popup-history-filter-all-existing "Exactly all living file-buffers")
         (ecb-history-kill-buffer "Kill Buffer")
         (ecb-delete-source "Delete Sourcefile")
         ("---")

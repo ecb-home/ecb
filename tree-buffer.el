@@ -1143,7 +1143,10 @@ of CONTENT."
           (setq tree-buffer-nodes (cdr content)))
       (tree-buffer-build-tree-buffer-nodes))
     (tree-buffer-display-in-general-face)
-    (tree-buffer-highlight-node-data tree-buffer-highlighted-node-data)
+    (tree-buffer-highlight-node-data (or (and node
+                                              (tree-node-get-data node))
+                                         tree-buffer-highlighted-node-data)
+                                     node nil)
     (goto-char p)
     (set-window-start w ws)
     ;; let´s optimize the display of the expanded node NODE and it´s children.

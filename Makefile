@@ -47,7 +47,7 @@ EMACS=emacs
 # to the cedet-installation directory.
 
 #CEDET=
-CEDET=C:/Programme/emacs-21/site-lisp/multi-file-packages/cedet-1.0beta1c
+CEDET=C:/Programme/emacs-21/site-lisp/multi-file-packages/cedet-1.0beta2a
 
 # -------- Compiling ECB with the semantic < 2.0 -------------------------
 
