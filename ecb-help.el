@@ -26,7 +26,7 @@
 ;;
 ;; Contains all online-help for ECB (stolen something from recentf.el)
 
-;; $Id: ecb-help.el,v 1.67 2002/04/19 13:15:28 berndl Exp $
+;; $Id: ecb-help.el,v 1.68 2002/05/05 19:22:50 berndl Exp $
 
 ;;; Code
 
@@ -107,6 +107,10 @@ selects the ECB-frame even if ECB is already started.
 
 Because ECB is a global minor-mode it can also be (de)activated/toggled by
 M-x `ecb-minor-mode'.
+
+There are three options for auto. \(de)activation ECB after Emacs-start and
+also major-mode based. See `ecb-auto-activate', `ecb-major-modes-activate' and
+`ecb-major-modes-deactivate'.
 
 
 
@@ -389,6 +393,8 @@ customize groups is via the menu \"ECB\".
 Here are the most important options \(it is recommended to check the
 following options before working with ECB):
 - `ecb-source-path': You must set this option!
+- `ecb-auto-activate', `ecb-major-modes-activate',
+  `ecb-major-modes-deactivate': Auto. \(de)activation of ECB.
 - `ecb-key-map': All ECB-keybindings incl. a common prefixkey.
 - `ecb-new-ecb-frame': Should ECB create a new frame at activation time.
 - `ecb-primary-secondary-mouse-buttons', `ecb-primary-mouse-jump-destination':
