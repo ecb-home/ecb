@@ -2020,6 +2020,7 @@ NOT* be changed via `setq' or elisp-code but only with the customize-feature!
 `ecb-token-display-function'            `ecb-tree-RET-selects-edit-window'
 `ecb-type-token-display'                `ecb-windows-height'
 `ecb-window-sync-delay'                 `ecb-windows-width'
+`ecb-use-speedbar-for-directories'      `ecb-toggle-layout-sequence'
 
 *NOTE*: If you are the administrator for an Emacs-site, means you are
 responsible for the basic customization of a lot of Emacs users, then you
@@ -4227,6 +4228,9 @@ So with the option `ecb-use-speedbar-for-directories' you have the choice
 which way of displaying and handling directories and source-files you want
 (the speedbar- or the ECB-way).
 
+Note: ECB can only integrate speedbar-versions >= 0.14beta1! If you use lower
+versions of speedbar `ecb-use-speedbar-for-directories' has no effect.
+
 ---------- Footnotes ----------
 
 (1) The latter one is not needed if you use speedbar because speedbar
@@ -5034,54 +5038,54 @@ Node: ECB-window synchronizing77240
 Node: Interactive ECB commands79822
 Node: Customizing89284
 Node: General aspects89918
-Ref: General aspects-Footnote-192682
-Node: Most important options92814
-Node: Customizable options94609
-Node: ecb-general95972
-Node: ecb-directories115922
-Node: ecb-sources122818
-Node: ecb-methods125073
-Node: ecb-history137342
-Node: ecb-layout139403
-Node: ecb-compilation-content156399
-Node: ecb-create-layout156965
-Node: ecb-face-options157481
-Node: ecb-faces160910
-Node: ecb-download164902
-Node: ecb-help166128
-Node: Submitting problem report168093
-Node: Upgrading169456
-Node: Downloading new versions170219
-Ref: Download required packages171976
-Ref: Downloading new versions-Footnote-1173074
-Node: Auto. option-upgrading173123
-Node: User interface173431
-Node: Background information174317
-Node: Tips and tricks177715
-Node: Changing faces178465
-Ref: Changing faces-Footnote-1181301
-Node: Small screens181477
-Node: Big screens182871
-Node: Simulating speedbar183712
-Node: Integrating speedbar184682
-Ref: Integrating speedbar-Footnote-1185942
-Node: Optimize scrolling186118
-Node: Large directories187198
-Node: Using eshell187863
-Node: Elisp programming188053
-Node: List of variables188662
-Node: List of hooks188974
-Node: tree-buffer189930
-Node: Adviced functions190736
-Ref: Adviced functions-Footnote-1191355
-Node: Programming new layouts191426
-Node: Conflicts and bugs197130
-Node: Conflicts197605
-Node: Bugs201315
-Node: FAQ201535
-Ref: FAQ-Footnote-1206704
-Node: Command Index206735
-Node: Option Index209186
-Node: Concept Index215777
+Ref: General aspects-Footnote-192751
+Node: Most important options92883
+Node: Customizable options94678
+Node: ecb-general96041
+Node: ecb-directories115991
+Node: ecb-sources122887
+Node: ecb-methods125142
+Node: ecb-history137411
+Node: ecb-layout139472
+Node: ecb-compilation-content156468
+Node: ecb-create-layout157034
+Node: ecb-face-options157550
+Node: ecb-faces160979
+Node: ecb-download164971
+Node: ecb-help166197
+Node: Submitting problem report168162
+Node: Upgrading169525
+Node: Downloading new versions170288
+Ref: Download required packages172045
+Ref: Downloading new versions-Footnote-1173143
+Node: Auto. option-upgrading173192
+Node: User interface173500
+Node: Background information174386
+Node: Tips and tricks177784
+Node: Changing faces178534
+Ref: Changing faces-Footnote-1181370
+Node: Small screens181546
+Node: Big screens182940
+Node: Simulating speedbar183781
+Node: Integrating speedbar184751
+Ref: Integrating speedbar-Footnote-1186161
+Node: Optimize scrolling186337
+Node: Large directories187417
+Node: Using eshell188082
+Node: Elisp programming188272
+Node: List of variables188881
+Node: List of hooks189193
+Node: tree-buffer190149
+Node: Adviced functions190955
+Ref: Adviced functions-Footnote-1191574
+Node: Programming new layouts191645
+Node: Conflicts and bugs197349
+Node: Conflicts197824
+Node: Bugs201534
+Node: FAQ201754
+Ref: FAQ-Footnote-1206923
+Node: Command Index206954
+Node: Option Index209405
+Node: Concept Index215996
 
 End Tag Table

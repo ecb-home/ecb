@@ -3,7 +3,12 @@ Version 1.90:
 
 - Speedbar is now integrated in ECB and can be used instead of the standard
   ECB-directories buffer. Most of the work has been done by Kevin
-  A. Burton. See new option 'ecb-use-speedbar-for-directories'. (Klaus)
+  A. Burton. See new option 'ecb-use-speedbar-for-directories'.
+
+  + Version-checking for correct speedbar version (>= 0.14beta1). For lower
+    version ecb-use-speedbar-for-directories has no effect. (Klaus)
+  + ecb-speedbar and speedbar first loaded direct before drawing the layout
+    with integrated speedbar. (Klaus)
 
 - Naming and managing of layouts has been changed! Now a layout is not
   identified by an integer but by an arbitrary string! Example: The layout
