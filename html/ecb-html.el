@@ -28,7 +28,7 @@
 ;; Do not change any html-file besides the index.html manually but do all
 ;; changes in this elisp file!
 
-;; $Id: ecb-html.el,v 1.44 2003/02/26 17:18:10 berndl Exp $
+;; $Id: ecb-html.el,v 1.45 2003/03/05 09:05:50 berndl Exp $
 
 ;;; Code:
 
@@ -76,7 +76,12 @@
 (defvar ecb-latest-news nil
   "List of latest news displayed on the main page.")
 (setq ecb-latest-news
-      `(,(h-sub-section "Bugfixes for ECB 1.92 available. (2003-02-26)"
+      `(,(h-sub-section "ECB 1.92.1 released! (2003-03-05)"
+                        "This is a bugfix-release without new features. "
+                        (h-link "docs/Install-and-first-steps.html#Install%20and%20first%20steps" "Here") " is a short installation guide. "
+                        "Click " (h-link "NEWS.html" "here")
+                        " for information about changes in the new version. ")
+        ,(h-sub-section "Bugfixes for ECB 1.92 available. (2003-02-26)"
                         "Click " (h-link "downloads.html" "here") " to get it.")
         ,(h-sub-section "ECB 1.92 released! (2003-02-24)"
                         "This release fixes some bugs and enhances layout and tree-buffer customizing. "
@@ -87,17 +92,18 @@
                         "This is mostly a bugfix-release which fixes some annoying bugs! "
                         (h-link "docs/Install-and-first-steps.html#Install%20and%20first%20steps" "Here") " is a short installation guide. "
                         "Click " (h-link "NEWS.html" "here")
-                        " for information about changes in the new version. ")
-        ,(h-sub-section "Bugfixes for ECB 1.90 available. (2003-02-06)"
-                        "Click " (h-link "downloads.html" "here") " to get it.")
-        ,(h-sub-section "Usermanual now available ín PDF-format! (2003-02-03)"
-                        "Click " (h-link "downloads.html" "here") " to get it.")))
+                        " for information about changes in the new version. ")))
 
 (defvar ecb-rest-news nil
   "List of older news - these news are displayed in all-news.html ; see
 `ecb-html-all-news'.")
 (setq ecb-rest-news
-      `(,(h-sub-section "ECB 1.80 is now an official XEmacs package! (2003-02-01)"
+      `(,(h-sub-section "Bugfixes for ECB 1.90 available. (2003-02-06)"
+                        "Click " (h-link "downloads.html" "here") " to get it.")
+        ,(h-sub-section "Usermanual now available ín PDF-format! (2003-02-03)"
+                        "Click " (h-link "downloads.html" "here") " to get
+                        it.")
+        ,(h-sub-section "ECB 1.80 is now an official XEmacs package! (2003-02-01)"
                         "The ECB XEmacs-package has the version-number 1.01 and can "
                         "be installed either via "
                         (h-link "http://www.xemacs.org/Download/win32/setup.exe"
@@ -309,24 +315,25 @@
      (h-line)
      (h-sub-section
       "Download Patches"
-      (concat "Available patches for ECB " ecb-version ":")
-      (h-bullet-link-list
-       ecb-bullet
-       (list
-        ;;; Add here all patches which should offered directly on the website.
-        '("patches/ecb.el" "ecb.el" "Fixes a bug which always truncates lines in the ECB-windows regardless of the setting in ecb-truncate-lines.")
+      (concat "There are no patches available for current ECB " ecb-version "!")
+;;       (concat "Available patches for ECB " ecb-version ":")
+;;       (h-bullet-link-list
+;;        ecb-bullet
+;;        (list
+;;         ;;; Add here all patches which should offered directly on the website.
+;;         '("patches/ecb.el" "ecb.el" "Fixes a bug which always truncates lines in the ECB-windows regardless of the setting in ecb-truncate-lines.")
 ;;         '("patches/ecb-navigate.el" "ecb-navigate.el" "Fixes a bug in ECB 1.90 which can inhibit that a user can open sources or clicking onto methods.")
 ;;         '("patches/ecb-layout.el" "ecb-layout.el" "Fixes a bug in the command ecb-store-window-sizes of ECB 1.90.")
-        )
-       "_top")
-      h-br "Instructions:"
-      (h-numbered-list
-       "Download the patched files you need."
-       "Replace the old-versions in the ECB-installation directory with the new downloaded versions."
-       (concat "Re-byte-compile ECB with the command "
-               (h-i "ecb-byte-compile")
-               " if you use ECB byte-compiled.")
-       "Restart Emacs and ECB.")
+;;         )
+;;        "_top")
+;;       h-br "Instructions:"
+;;       (h-numbered-list
+;;        "Download the patched files you need."
+;;        "Replace the old-versions in the ECB-installation directory with the new downloaded versions."
+;;        (concat "Re-byte-compile ECB with the command "
+;;                (h-i "ecb-byte-compile")
+;;                " if you use ECB byte-compiled.")
+;;        "Restart Emacs and ECB.")
       (h-line)
       (h-link "main.html" "Back") " to main section")))))
 
