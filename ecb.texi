@@ -26,7 +26,7 @@
 @c GNU Emacs; see the file COPYING.  If not, write to the Free Software
 @c Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-@c $Id: ecb.texi,v 1.197 2004/12/06 17:52:18 berndl Exp $
+@c $Id: ecb.texi,v 1.198 2004/12/10 12:57:11 berndl Exp $
 
 @setfilename ecb.info
 
@@ -49,7 +49,7 @@
 @c edit the Makefile to change the version number. mechanism stolen
 @c from Tramp
 @macro ecbver{}
-2.31beta1
+2.31
 @end macro
 
 
@@ -323,6 +323,7 @@ Supporting Version control systems
 * Remote repositories::         What you should now about this
 * Refreshing the VC-state::     How to refresh when state changed outside
 * Adding new backends::         Necessary steps for adding new backends
+* Known VC-problems::           Currently known problems of the VC-support
 
 Displaying the trees of the ECB-windows with different styles
 
@@ -8644,6 +8645,23 @@ then an element (ecb-vc-dir-managed-by-CVS . vc-recompute-state)
 should be added at the beginning of this option.
 @end defopt
 
+@defopt vc-xemacs-exclude-remote-cvs-repository
+Exclude directories with a remote cvs-repository from VC-check. This
+option takes only effect for XEmacs and is needed cause of the
+outdated VC-package of XEmacs which offers no heuristic state-checking
+and also no option @code{vc-cvs-stay-local}. So this option takes only
+effect if @code{vc-cvs-stay-local} is not avaiable. In this case ECB
+treats directories which are managed by CVS but have a remote
+repository as if the directory would be not managed by CVS (so the
+files are not checked for their VC-state). This si done to avoid
+blocking XEmacs when running full cvs-commands (e.g. ``cvs status'')
+over the net.
+
+Note: When ECB can find the option @code{vc-cvs-stay-local} then this
+option will automatically take no effect regardless which
+Emacs-version is used.
+@end defopt
+
 
 @node Submitting problem report, Upgrading, Customizing, Top
 @chapter Submitting a problem report
@@ -9422,6 +9440,7 @@ remote repositories.
 * Remote repositories::         What you should now about this
 * Refreshing the VC-state::     How to refresh when state changed outside
 * Adding new backends::         Necessary steps for adding new backends
+* Known VC-problems::           Currently known problems of the VC-support
 @end menu
 
 @node Identifying backends, Checking the state, Version-control support, Version-control support
@@ -9493,7 +9512,7 @@ no backend-independent check-vc-state-function available (like
 @code{vc-state} for GNU Emacs). Only for CVS a check-vc-state-function
 is available: @code{vc-cvs-status}. Therefore ECB adds per default
 only support for CVS and uses @code{ecb-vc-managed-by-CVS} rsp.
-@code{vc-cvs-status}.
+@code{vc-cvs-status}. See also @ref{Known VC-problems}!
 
 @node Checking the state, Remote repositories, Identifying backends, Version-control support
 @subsection How ECB checks the VC-state of a file
@@ -9604,7 +9623,8 @@ ECB offers first an option @code{ecb-vc-directory-exclude-regexps} to
 exclude such directories with a remote repository from the VC-support
 of ECB and secondary the identify-backend-funtion
 @code{ecb-vc-dir-managed-by-CVS} behaves smart with that respect
-(@pxref{Identifying backends}).
+(@pxref{Identifying backends}). See also
+@code{ecb-vc-xemacs-exclude-remote-cvs-repository}!
 
 @subsubsection Remote paths and the VC-support of ECB
 
@@ -9682,7 +9702,7 @@ In addition to these popup-commands using the POWER- rsp. Shift-click
 ECB refreshes the VC-state-values of all files contained in this
 directory too.
 
-@node Adding new backends, ,Refreshing the VC-state, Version-control support
+@node Adding new backends, Known VC-problems, Refreshing the VC-state, Version-control support
 @subsection Necessary steps and informations for adding new backends
 
 There are mainly three necessary steps for adding a new@footnote{i.e.
@@ -9751,6 +9771,31 @@ checkedin file is cleared. Uses `ecb-checkedin-file' as last checked-in file."
 @end example
 
 @end enumerate
+
+@node Known VC-problems, ,Adding new backends, Version-control support
+@subsection Currently know problems with the VC-support
+
+@subsubsection Remote repositories and XEmacs
+
+Currently there are mostly problems related to XEmacs - cause of its
+outdated VC-package which allows no heuristic state-computation but
+always runs ``cvs status'' to get the VC-state for a file (done by
+@code{vc-cvs-status}). This can be horrible slow for remote
+CVS-root-repositories. Now ECB performs the VC-check stealthy and only
+in idle-time of Emacs but even so XEmacs can be blocked espcially if
+the cygwin-build of XEmacs is used: This XEmacs-version is
+substantially slower concering file-operations and has sometimes a
+very slow and delayed response-behavior for mouse- and keyboard
+interrupts - so even ECB let the user interrupt by using
+@code{input-pending-p} before getting the VC-state of a file XEmacs
+sometimes does not react to such user-interrupts and seems to be
+blocked.
+
+Current solution: ECB offers the option
+@code{ecb-vc-xemacs-exclude-remote-cvs-repository} which excludes
+remote repositories from being checked. This option is per default t
+for XEmacs. Whenever XEmacs syncs up its VC-package with the Emacs one
+this option will automatically take no effect.
 
 @node Using eshell, Grepping directories, Version-control support, Tips and tricks
 @section Optimal using of eshell in ECB
@@ -12486,6 +12531,19 @@ that this option contains a value suitable for your ping-program (see
 @*
 @end ifinfo
 See also @ref{Remote directories}.
+
+@item @tab @tab
+
+@item
+ECB seems to be blocked a long time.
+@tab @tab
+Maybe you use cygwin-XEmacs. Then either the empty-dir-check (see
+option @code{ecb-prescan-directories-for-emptyness}) or the VC-support
+(see @code{ecb-vc-enable-support}) can block ECB. 
+@ifinfo
+@*
+@end ifinfo
+For the latter one see @ref{Known VC-problems}.
 
 @item @tab @tab
 
