@@ -1392,12 +1392,8 @@ with the actually choosen layout \(see `ecb-layout-nr')."
     (add-hook 'post-command-hook 'ecb-hook)
     (add-hook 'pre-command-hook 'ecb-pre-command-hook-function)
     (add-hook 'after-save-hook 'ecb-update-methods-after-saving)
-    ;; we add a function to this hook at the end because this function should
-    ;; be called at the end of all hook-functions of this hook!
-    (add-hook 'compilation-finish-functions
-              'ecb-layout-return-from-compilation t)
     (add-hook 'compilation-mode-hook
-              'ecb-layout-go-to-compile-window)
+              'ecb-layout-compilation-initialize)
     (add-hook 'compilation-mode-hook
               'ecb-set-edit-window-split-hook-function)
     (add-hook 'help-mode-hook
@@ -1455,10 +1451,8 @@ with the actually choosen layout \(see `ecb-layout-nr')."
     (remove-hook 'post-command-hook 'ecb-hook)
     (remove-hook 'pre-command-hook 'ecb-pre-command-hook-function)
     (remove-hook 'after-save-hook 'ecb-update-methods-after-saving)
-    (remove-hook 'compilation-finish-functions
-                 'ecb-layout-return-from-compilation)
     (remove-hook 'compilation-mode-hook
-                 'ecb-layout-go-to-compile-window)
+                 'ecb-layout-compilation-initialize)
     (remove-hook 'compilation-mode-hook
                  'ecb-set-edit-window-split-hook-function)
     (remove-hook 'help-mode-hook

@@ -929,11 +929,21 @@ command was called.")
   "Stores always the last compile-buffer \(e.g. *igrep*, *compilation*
 etc...) after a compile for better relayouting later")
 
-(defun ecb-layout-go-to-compile-window ()
-  "Saves the window point was before a compilation-process and jumps then to
-the end of the compilation-window if any defined in the churrent ECB-layout.
-This is only be done if `ecb-select-compile-window' is non nil.
-This hook will only be added to `compilation-mode-hook' if ECB was activated."
+(defvar ecb-old-compilation-finish-function nil)
+(defun ecb-layout-compilation-initialize ()
+  "First it stores the value of `compilation-finish-function' in
+`ecb-old-compilation-finish-function'. Then it saves the window point was
+before a compilation-process and jumps then to the end of the
+compilation-window if any defined in the churrent ECB-layout. This is only be
+done if `ecb-select-compile-window' is non nil. This hook will only be added
+to `compilation-mode-hook' if ECB was activated."
+  ;; always save a previous function for calling later (see
+  ;; `ecb-layout-return-from-compilation') and then set our own finishing
+  ;; function.
+  (setq ecb-old-compilation-finish-function compilation-finish-function)
+  (setq compilation-finish-function 'ecb-layout-return-from-compilation)
+
+  ;; do all the jump stuff
   (setq ecb-layout-selected-window-before-compile (selected-window))
   (if ecb-select-compile-window
       ;; we must du this with ignore-errors because maybe the
@@ -945,15 +955,21 @@ This hook will only be added to `compilation-mode-hook' if ECB was activated."
           (end-of-buffer)))))
 
 (defun ecb-layout-return-from-compilation (comp-buf process-state)
-  "Jumps back to the window from which the compilation-process was started.
-This is only be done if `ecb-select-compile-window' is non nil.
-This hook will only be added to `compilation-finish-functions' if ECB was
-activated. The arguments are required by `compilation-finish-functions' but
-will not be evaluated here."
-  (setq ecb-last-compile-window-buffer (buffer-name))
-  (if ecb-select-compile-window
-      (ignore-errors
-        (select-window ecb-layout-selected-window-before-compile))))
+  "First it calls the function stored in `ecb-old-compilation-finish-function'
+and then it does all necessary ECB-stuff. This is motivated cause of the lack
+of `compilation-finish-functions' in XEmacs."
+  (unwind-protect
+      (when (functionp ecb-old-compilation-finish-function)
+        (funcall ecb-old-compilation-finish-function comp-buf process-state))
+    ;; if this called function has not cleared itself from
+    ;; `compilation-finish-function' we set back it´s value.
+    (if compilation-finish-function
+        (setq compilation-finish-function ecb-old-compilation-finish-function))    
+    (setq ecb-last-compile-window-buffer (buffer-name))
+    (if ecb-select-compile-window
+        (ignore-errors
+          (select-window ecb-layout-selected-window-before-compile)))))
+    
 
 (defun ecb-set-edit-window-split-hook-function ()
   "This function is added to `compilation-mode-hook' and `help-mode-hook' to

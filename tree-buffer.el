@@ -510,7 +510,9 @@ EXPAND-SYMBOL-BEFORE: If not nil then the expand-symbol \(is displayed before
     (define-key tree-buffer-key-map [triple-mouse-2] nop)
 
     ;; mouse-3
-    (define-key tree-buffer-key-map [down-mouse-3] 'tree-buffer-show-menu)
+    (define-key tree-buffer-key-map
+      (if running-xemacs '(button3) [down-mouse-3])
+      'tree-buffer-show-menu)
     (define-key tree-buffer-key-map [mouse-3] nop)
     (define-key tree-buffer-key-map [double-mouse-3] nop)
     (define-key tree-buffer-key-map [triple-mouse-3] nop)
