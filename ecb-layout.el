@@ -104,7 +104,7 @@
 ;; - `ecb-with-some-adviced-functions'
 ;;
 
-;; $Id: ecb-layout.el,v 1.152 2003/02/11 14:39:05 berndl Exp $
+;; $Id: ecb-layout.el,v 1.153 2003/02/19 13:57:35 berndl Exp $
 
 ;;; Code:
 
@@ -115,7 +115,6 @@
 (require 'ecb-compilation)
 (require 'ecb-create-layout)
 
-(silentcomp-defvar jde-open-class-at-point-find-file-function)
 ;; XEmacs
 (silentcomp-defvar scrollbars-visible-p)
 ;; Emacs
@@ -1475,16 +1474,6 @@ is no durable compilation-window then always the first edit-window is choosen."
     (let ((other-window-scroll-buffer (window-buffer ecb-edit-window)))
       ad-do-it)))
     
-(defun ecb-jde-open-class-at-point-ff-function (filename &optional wildcards)
-  "Special handling of the class opening at point JDE feature. This function
-calls the value of `jde-open-class-at-point-find-file-function' with activated
-ECB-adviced functions."
-  (ecb-with-adviced-functions
-   (if (and (boundp 'jde-open-class-at-point-find-file-function)
-            (fboundp jde-open-class-at-point-find-file-function))
-       (funcall jde-open-class-at-point-find-file-function
-                filename wildcards))))
-
 ;; here come the prefixed equivalents to the adviced originals
 (defun ecb-switch-to-buffer ()
   "Acts like the adviced version of `switch-to-buffer'."

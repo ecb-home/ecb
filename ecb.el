@@ -62,7 +62,7 @@
 ;; The latest version of the ECB is available at
 ;; http://ecb.sourceforge.net
 
-;; $Id: ecb.el,v 1.289 2003/02/18 16:17:54 berndl Exp $
+;; $Id: ecb.el,v 1.290 2003/02/19 13:57:35 berndl Exp $
 
 ;;; Code:
 
@@ -90,6 +90,7 @@
 
 ;; ecb loads
 (require 'tree-buffer)
+(require 'ecb-jde)
 (require 'ecb-layout)
 (require 'ecb-create-layout)
 (require 'ecb-mode-line)
@@ -119,7 +120,6 @@
 (silentcomp-defun force-mode-line-update)
 
 (silentcomp-defvar dired-directory)
-(silentcomp-defun jde-show-class-source)
 (silentcomp-defun add-submenu)
 (silentcomp-defun semanticdb-minor-mode-p)
 (silentcomp-defun semanticdb-find-nonterminal-by-name)
@@ -2867,7 +2867,7 @@ is not changed."
       ;; the edit-window because then the METHODS buffer would be
       ;; immediately updated with the methods of the edit-window.
       (save-excursion
-	(set-buffer (find-file-noselect ecb-path-selected-source))
+	(set-buffer (find-file-noselect filename))
 	(ecb-update-methods-buffer--internal 'scroll-to-begin))
     ;; open the selected source in the edit-window and do all the update and
     ;; parsing stuff with this buffer
@@ -3629,12 +3629,7 @@ can last a long time - depending of machine- and disk-performance."
      ((= type 2)
       (set-buffer (get-file-buffer ecb-path-selected-source))
       ;; Try to find source using JDE
-      (when (eq major-mode 'jde-mode)
-        (condition-case nil
-            (progn
-              (jde-show-class-source data)
-              (setq found t))
-          (error nil)))
+      (setq found (ecb-jde-show-class-source data))
       ;; Try to find source using Semantic DB
       (when (and (not found) (featurep 'semanticdb) (semanticdb-minor-mode-p))
         (let ((parent (semanticdb-find-nonterminal-by-name data)))

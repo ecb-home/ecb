@@ -2,21 +2,24 @@
 
 ** Fixed bugs:
 
-*** Fixed small bugs in the popup-menu of the history-buffer (Klaus).
+*** Fixed small bugs in the popup-menu of the history-buffer.
 
-*** Fixed some not working links in the FAQ. (Klaus)
-
-** Renamed previous HISTORY file to NEWS and reformate it for outline-mode.
-  (Klaus)
+*** Fixed some not working links in the FAQ.
 
 ** ECB now includes a file "ecb-autoloads.el" which contains all available
-   autoloads of ECB. Therefore loading this file is enough. (Klaus)
+   autoloads of ECB. Therefore loading this file is enough.
   
+** "Create Source" in the popup-menues now work also for non-java-files.
+
+** Added a command `ecb-jde-display-class-at-point' which displays the contents
+   of class under point in the methods-buffer of ECB
+
 ** ecb-truncate-lines can now set different for each ECB-tree-buffer.
-   (Klaus)
 
 ** Easy horizontal mouse-scrolling of the ECB tree-buffers. See new option
-   `ecb-tree-easy-hor-scroll'. (Klaus)
+   `ecb-tree-easy-hor-scroll'.
+
+** Renamed previous HISTORY file to NEWS and reformate it for outline-mode.
 
 
 

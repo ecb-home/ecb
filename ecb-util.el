@@ -26,7 +26,7 @@
 ;; This file is part of the ECB package which can be found at:
 ;; http://ecb.sourceforge.net
 
-;; $Id: ecb-util.el,v 1.54 2003/02/11 14:39:04 berndl Exp $
+;; $Id: ecb-util.el,v 1.55 2003/02/19 13:57:35 berndl Exp $
 
 ;;; Code:
 
@@ -34,8 +34,6 @@
   (require 'silentcomp))
 
 
-;; JDE
-(silentcomp-defun jde-gen-class-buffer)
 ;; XEmacs
 (silentcomp-defun mswindows-cygwin-to-win32-path)
 (silentcomp-defun frame-property)
@@ -249,18 +247,15 @@ not nil then in both PATH and FILENAME env-var substitution is done. If the
 (defun ecb-confirm (text)
   (yes-or-no-p text))
 
-;; Klaus TODO: Making this function more general, means useable for non java
-;; code!!
-
 
 (defun ecb-create-source-internal (dir)
-  (let ((filename (read-from-minibuffer "Source name: ")))
+  (let* ((use-dialog-box nil)
+         (filename (file-name-nondirectory (read-file-name "Source name: "
+                                                           (concat dir "/")))))
     (ecb-select-edit-window)
-    (jde-gen-class-buffer (concat dir
-                                  "/"
-                                  filename
-                                  (if (not (string-match "\\." filename))
-                                      ".java")))))
+    (if (string-match "\\.java$" filename)
+        (ecb-jde-gen-class-buffer dir filename)
+      (find-file (concat dir "/" filename)))))
 
 
 (defun ecb-create-directory-source (node)
