@@ -26,7 +26,7 @@
 @c GNU Emacs; see the file COPYING.  If not, write to the Free Software
 @c Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-@c $Id: ecb.texi,v 1.172 2004/04/13 14:55:17 berndl Exp $
+@c $Id: ecb.texi,v 1.173 2004/04/14 10:17:06 berndl Exp $
 
 @setfilename ecb.info
 
@@ -2148,7 +2148,27 @@ depends for semantic-sources on the options
 all node-types are expanded/collapsed, i.e. the two options above
 takes no effect for these files.
 
-@subsubsection Automatic expanding the ECB-methods-buffer
+@subsubsection Automatic expansion ot tags after buffer-parsing
+
+With the option @code{ecb-show-tags} you tell ECB how to display tags
+of a certain tag-class (@pxref{Customizing the display}). Among other
+things you can tell ECB that a certain tag-class should be combined
+under an expanded or collapsed bucket-node. But such a setting defines
+the expansion-state of such a bucket-node only direct afterwards the
+buffer has been (re)parsed, which can occur after opening a file,
+after autom. reparsing the buffer via semantic or after manually
+rebuilding the methods-buffer of ECB.
+
+The tag-class @code{type} (classes, interfaces, enumerations etc.) is
+divided into several subtypes by semantic. The subtypes are stings
+which names exactly if the tag with tag-class @code{type} is a class,
+an interface, an enumeration, a typedef etc. With the option
+@code{ecb-type-tag-expansion} you can tell ECB if these type-tags
+should be autom. expanded after (reparsing) a buffer (see above) or if
+they should be displayed collapsed - so all its members (methods,
+variables etc.) are hidden.
+
+@subsubsection Automatic expanding the ECB-methods-buffer for current tag
 
 If the option @code{ecb-highlight-tag-with-point} is switched on, then
 always that node in the method-buffer is highlighted which belongs to
@@ -2175,8 +2195,8 @@ collapsed or the containing type of a tag (e.g. the class of a method)
 was collapsed. So in most cases much more was expanded as needed to
 make the current tag visible.
 
-The mechanism of ECB 2.22 only expands the needed parts of the
-tree-buffer to make the related node visible: First we try to
+The mechanism of ECB 2.22 and higher only expands the needed parts of
+the tree-buffer to make the related node visible: First we try to
 highlight the current tag with current expansion-state of the
 Methods-buffer. If the node is not visible so the tag can not be
 highlighted then we go upstairs the ladder of type-tags the current
@@ -2223,9 +2243,35 @@ fontify them (i.e. syntax-highlighting) and something more.
 
 @table @code
 @item ecb-show-tags
-Which semantic-tags (e.g. types, methods, variables etc.) should be
-displayed and should they be collapsed, flattened or expanded. Sorting
-is also possible.
+With the option @code{ecb-show-tags} you specify how ECB should
+display the tags returned by the semantic parser. Semantic divides its
+tags in several so called @dfn{tag classes}. A tag-class is always a
+symbol and can be for example @code{type} (tags which represent a
+class@footnote{Do not confuse the term ``class'' in the context of a
+tag, which means the class of the tag and which is a semantic-term and
+a ``class'' in the context of an object oriented language like Java or
+C++! Normally the surrounding context sould be sufficient to
+understand which type of ``class'' is meant whenever the term
+``class'' is used in this manual.}, a interface, an enumeration etc.),
+@code{function} (tags which represent function or methods),
+@code{variable} (variables and attributes), @code{include}
+(import-statements) etc. There is no predefined superset of allowed
+tag-class-symbols because each language-parser can define its own
+tag-classes. But to get an overview of the most common tag-classes see
+the default value of the option @code{ecb-show-tags}.
+
+With the option @code{ecb-show-tags} you can now specify how ECB
+should display tags of a certain tag-class in a certain major-mode.
+You can tell ECB that all tags of a tag-class @code{X} should be
+displayed in an expanded bucket and all tags of a tag-class @code{Y}
+should be displayed in a collapsed bucket and all tags of a tag-class
+@code{Z} should be displayed flattened (means not contained in a
+expandable/collapsable bucket-node). These settings can be made
+separately for each major-mode but you can also define a
+default-display which takes effect when for a major-mode no special
+setting can be found in @code{ecb-show-tags}.
+
+For every tag-class you can tell ECB how the tags should be sorted.
 
 @item ecb-font-lock-tags
 @itemx ecb-type-tag-display
