@@ -803,7 +803,8 @@ AFTER-CREATE-HOOK: A function \(with no arguments) called directly after
          (unless (not (equal (selected-frame) tree-buffer-frame))
            (let ((node (tree-buffer-get-node-at-point)))
              (when (tree-node-is-expandable node)
-               (when (not (tree-node-is-expanded node))
+               (when (and tree-node-expanded-fn
+                          (not (tree-node-is-expanded node)))
                  (funcall tree-node-expanded-fn node 0 nil nil (buffer-name)))
                (when (tree-node-is-expandable node)
                  (tree-node-toggle-expanded node))
