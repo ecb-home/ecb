@@ -50,7 +50,7 @@
 ;; The latest version of the ECB is available at
 ;; http://home.swipnet.se/mayhem/ecb.html
 
-;; $Id: ecb.el,v 1.58 2001/04/27 23:15:26 creator Exp $
+;; $Id: ecb.el,v 1.59 2001/04/28 10:10:24 creator Exp $
 
 ;;; Code:
 
@@ -129,13 +129,13 @@
 (defcustom ecb-source-path nil
   "*Path where to find code sources."
   :group 'ecb-directories
-  :set '(lambda(symbol value)
-          (set symbol (mapcar (lambda (path)
-                                (ecb-fix-filename path))
-                              value))
-          (if (and ecb-activated
-                   (functionp 'ecb-update-directories-buffer))
-              (ecb-update-directories-buffer)))
+  :set (function (lambda(symbol value)
+		   (set symbol (mapcar (lambda (path)
+					 (ecb-fix-filename path))
+				       value))
+		   (if (and ecb-activated
+			    (functionp 'ecb-update-directories-buffer))
+		       (ecb-update-directories-buffer))))
   :type '(repeat (directory :tag "Path")))
 
 (defcustom ecb-show-sources-in-directories-buffer nil
@@ -800,27 +800,22 @@ given."
 
     ;; Update history buffer
     (ecb-exec-in-history-window
-     (let ((child (tree-node-find-child-data
-		   (tree-buffer-get-root) ecb-path-selected-source)))
-       (when child
-	 (tree-node-remove-child
-	  (tree-buffer-get-root) child))
-       (tree-node-set-children
-	(tree-buffer-get-root)
-	(let ((history-items
-	       (cons
-		(tree-node-new (ecb-get-source-name filename) 0
-			       ecb-path-selected-source t
-			       (tree-buffer-get-root))
-		(tree-node-get-children (tree-buffer-get-root)))))
-	  (if ecb-sort-history-items
-	      (sort history-items
-		    (function (lambda (l r) (string< (tree-node-get-name l)
-						     (tree-node-get-name r)))))
-	    history-items)))
-       (tree-buffer-highlight-node-data ecb-path-selected-source)
-       (tree-buffer-scroll (point-min) (point-min))
-       (tree-buffer-update)))))
+     (tree-node-remove-child-data (tree-buffer-get-root) ecb-path-selected-source)
+     (tree-node-set-children
+      (tree-buffer-get-root)
+      (let ((history-items
+	     (cons
+	      (tree-node-new (ecb-get-source-name ecb-path-selected-source) 0
+			     ecb-path-selected-source t
+			     (tree-buffer-get-root))
+	      (tree-node-get-children (tree-buffer-get-root)))))
+	(if ecb-sort-history-items
+	    (sort history-items
+		  (function (lambda (l r) (string< (tree-node-get-name l)
+						   (tree-node-get-name r)))))
+	  history-items)))
+     (tree-buffer-update)
+     (tree-buffer-highlight-node-data ecb-path-selected-source))))
 
 (defun ecb-update-methods-after-saving ()
   "Updates the methods-buffer after saving if this option is turned on and if
@@ -849,47 +844,50 @@ displayed with window-start and point at beginning of buffer."
   ;; Set here `ecb-method-buffer-needs-rebuild' to t so we can see below if
   ;; `ecb-rebuild-methods-buffer-after-parsing' was called auto. after
   ;; `semantic-bovinate-toplevel'.
-  (setq ecb-method-buffer-needs-rebuild t)
-  (semantic-bovinate-toplevel t)
 
-  ;; Only if the `semantic-bovinate-toplevel' has done no reparsing but only
-  ;; used it´s still valid `semantic-toplevel-bovine-cache' the hooks in
-  ;; `semantic-after-toplevel-bovinate-hook' are not evaluated and therefore
-  ;; `ecb-rebuild-methods-buffer-after-parsing' was not called. Therefore we
-  ;; call it here manually. `ecb-rebuild-methods-buffer-after-parsing' is the
-  ;; only function which sets `ecb-method-buffer-needs-rebuild' to nil to
-  ;; signalize that a "manually" rebuild of the method buffer is not necessary.
-  (if ecb-method-buffer-needs-rebuild
-      (ecb-rebuild-methods-buffer-after-parsing))
-  (when scroll-to-top
-    (save-selected-window
-      (ecb-exec-in-methods-window
-       (tree-buffer-scroll (point-min) (point-min))))))
+  (when (get-buffer-window ecb-methods-buffer-name)
+    (setq ecb-method-buffer-needs-rebuild t)
+    (semantic-bovinate-toplevel t)
+
+    ;; Only if the `semantic-bovinate-toplevel' has done no reparsing but only
+    ;; used it´s still valid `semantic-toplevel-bovine-cache' the hooks in
+    ;; `semantic-after-toplevel-bovinate-hook' are not evaluated and therefore
+    ;; `ecb-rebuild-methods-buffer-after-parsing' was not called. Therefore we
+    ;; call it here manually. `ecb-rebuild-methods-buffer-after-parsing' is the
+    ;; only function which sets `ecb-method-buffer-needs-rebuild' to nil to
+    ;; signalize that a "manually" rebuild of the method buffer is not necessary.
+    (if ecb-method-buffer-needs-rebuild
+	(ecb-rebuild-methods-buffer-after-parsing))
+    (when scroll-to-top
+      (save-selected-window
+	(ecb-exec-in-methods-window
+	 (tree-buffer-scroll (point-min) (point-min)))))))
   
 (defun ecb-rebuild-methods-buffer-after-parsing ()
   "Rebuilds the ECB-method buffer after toplevel-parsing by semantic. This
   function is added to the hook `semantic-after-toplevel-bovinate-hook'."
   ;; This is a fix for semantic 1.4beta2
   ;; otherwise it parses the mini-buffer
-  (unless (string-match "^ *\\*" (buffer-name))
-    (tree-node-set-children ecb-methods-root-node nil)
-    (ecb-add-tokens ecb-methods-root-node
-		    ;; this works because at call-time of the hooks in
-		    ;; `semantic-after-toplevel-bovinate-hook' the cache is
-		    ;; always either still valid or rebuild.
-		    ;;
-		    ;; TODO: Ugly fix to make it work with semantic 1.4
-		    (if (listp (caar semantic-toplevel-bovine-cache))
-			(car semantic-toplevel-bovine-cache)
-		      semantic-toplevel-bovine-cache)
-		    t)
-    ;; also the whole buffer informations should be preserved!
-    (save-excursion
-      (ecb-buffer-select ecb-methods-buffer-name)
-      (tree-buffer-update))
-    (ecb-mode-line-format)
-    ;; signalize that the rebuild has already be done
-    (setq ecb-method-buffer-needs-rebuild nil)))
+  (when (get-buffer-window ecb-methods-buffer-name)
+    (unless (string-match "^ *\\*" (buffer-name))
+      (tree-node-set-children ecb-methods-root-node nil)
+      (ecb-add-tokens ecb-methods-root-node
+		      ;; this works because at call-time of the hooks in
+		      ;; `semantic-after-toplevel-bovinate-hook' the cache is
+		      ;; always either still valid or rebuild.
+		      ;;
+		      ;; TODO: Ugly fix to make it work with semantic 1.4
+		      (if (listp (caar semantic-toplevel-bovine-cache))
+			  (car semantic-toplevel-bovine-cache)
+			semantic-toplevel-bovine-cache)
+		      t)
+      ;; also the whole buffer informations should be preserved!
+      (save-excursion
+	(ecb-buffer-select ecb-methods-buffer-name)
+	(tree-buffer-update))
+      (ecb-mode-line-format)
+      ;; signalize that the rebuild has already be done
+      (setq ecb-method-buffer-needs-rebuild nil))))
 
 (defun ecb-rebuild-methods-buffer ()
   "Updates the methods buffer with the current buffer after deleting the
@@ -1009,11 +1007,13 @@ OTHER-WINDOW."
   (node path files type include-extension old-children &optional not-expandable)
   (dolist (file (if ecb-sources-sort-method
 		    (let ((sorted-files (sort files 
-					      '(lambda(a b) (string< a b)))))
+					      (function
+					       (lambda(a b) (string< a b))))))
 		      (if (eq ecb-sources-sort-method 'extension)
 			  (sort sorted-files 
-				'(lambda(a b) (string< (file-name-extension a t)
-						       (file-name-extension b t))))
+				(function (lambda(a b)
+					    (string< (file-name-extension a t)
+						     (file-name-extension b t)))))
 			sorted-files))))
     (let ((filename (concat path ecb-directory-sep-string file))
           child)
@@ -1294,10 +1294,10 @@ with the actually choosen layout \(see `ecb-layout-nr')."
         ;; keymap.
         (define-key tree-buffer-key-map [f1] 'ecb-update-directories-buffer)
         (define-key tree-buffer-key-map [f2]
-          '(lambda()
-             (interactive)
-             (ecb-switch-to-edit-buffer)
-             (customize-group 'ecb))))        
+          (function (lambda()
+		      (interactive)
+		      (ecb-switch-to-edit-buffer)
+		      (customize-group 'ecb)))))
       
       (unless (member ecb-sources-buffer-name curr-buffer-list)
         (tree-buffer-create
@@ -1320,7 +1320,8 @@ with the actually choosen layout \(see `ecb-layout-nr')."
          nil
          ecb-truncate-lines
          t
-         (list (cons 0 t))
+	 nil
+;;         (list (cons 0 t))
          ecb-tree-expand-symbol-before)
         (setq ecb-methods-root-node (tree-buffer-get-root)))
       
