@@ -15,6 +15,15 @@
     NEWS) in the Methods-buffer only the level-1-headings by defining a
     regexp-filter "^\* .*"
 
+*** New keybindings and commands for faster applying certain tag-filters.
+    Here are the new bindings:
+    [C-c . fr] --> `ecb-methods-filter-regexp'
+    [C-c . ft] --> `ecb-methods-filter-tagclass'
+    [C-c . fp] --> `ecb-methods-filter-protection'
+    [C-c . fn] --> `ecb-methods-filter-nofilter'
+    [C-c . fl] --> `ecb-methods-filter-delete-last'
+    [C-c . ff] --> `ecb-methods-filter-function'
+
 *** The popup-menu contains now mode-dependend tag-filter entries.
     This means for sources not supported by semantic no protection- or
     tag-class filters will be offered. And for semantic-supported sources
