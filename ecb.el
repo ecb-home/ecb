@@ -95,10 +95,7 @@
 (defvar ecb-methods-root-node nil
   "Path to currently selected source.")
 
-(defvar ecb-directories-buffer-name "*ECB Directories*")
-(defvar ecb-sources-buffer-name "*ECB Sources*")
-(defvar ecb-methods-buffer-name "*ECB Methods*")
-(defvar ecb-history-buffer-name "*ECB History*")
+
 (defvar ecb-activated nil
   "Do not set this variable directly. Use `ecb-activate' and
 `ecb-deactivate'!")
@@ -153,6 +150,19 @@
   :group 'ecb-directories
   :type 'boolean)
 
+(defcustom ecb-directories-buffer-name "*ECB Directories*"
+  "*Name of the ECB-directory-buffer which is displayed in the modeline.
+Because it is not a normal buffer for editing you should enclose the name with
+stars, e.g. \"*ECB Directories*\".
+
+If it is necessary for you you can get emacs-lisp access to the buffer-object
+of the ECB-directory-buffer by this name, e.g. by a call of `set-buffer'.
+
+Changes for this option at runtime will take affect only after deactivating
+and then activating ECB again!"
+  :group 'ecb-directories
+  :type 'string)
+
 (defface ecb-sources-face
   '((((class color) (background light)) (:foreground "medium blue"))
     (((class color) (background dark))  (:foreground "LightBlue1"))
@@ -178,6 +188,19 @@ list. The value of this variable should be a regular expression."
   :group 'ecb-directories
   :type 'boolean)
 
+(defcustom ecb-sources-buffer-name "*ECB Sources*"
+  "*Name of the ECB-sources-buffer which is displayed in the modeline.
+Because it is not a normal buffer for editing you should enclose the name with
+stars, e.g. \"*ECB Sources*\".
+
+If it is necessary for you you can get emacs-lisp access to the buffer-object
+of the ECB-sources-buffer by this name, e.g. by a call of `set-buffer'.
+
+Changes for this option at runtime will take affect only after deactivating
+and then activating ECB again!"
+  :group 'ecb-sources
+  :type 'string)
+
 (defcustom ecb-source-file-regexp "\\(\\(M\\|m\\)akefile\\|.*\\.\\(java\\|el\\|c\\|cc\\|h\\|hh\\|txt\\|html\\|mk\\)\\)$"
   "*Files matching this regular expression will be shown in the source
 buffer."
@@ -188,6 +211,19 @@ buffer."
   "*Show the file extension of source files."
   :group 'ecb-sources
   :type 'boolean)
+
+(defcustom ecb-history-buffer-name "*ECB History*"
+  "*Name of the ECB-history-buffer which is displayed in the modeline.
+Because it is not a normal buffer for editing you should enclose the name with
+stars, e.g. \"*ECB History*\".
+
+If it is necessary for you you can get emacs-lisp access to the buffer-object
+of the ECB-history-buffer by this name, e.g. by a call of `set-buffer'.
+
+Changes for this option at runtime will take affect only after deactivating
+and then activating ECB again!"
+  :group 'ecb-history
+  :type 'string)
 
 (defcustom ecb-sort-history-items nil
   "*Sorts the items in the history buffer."
@@ -209,8 +245,21 @@ buffer."
                 (const :tag "All entries"
                        :value all)))
                 
+(defcustom ecb-methods-buffer-name "*ECB Methods*"
+  "*Name of the ECB-methods-buffer which is displayed in the modeline.
+Because it is not a normal buffer for editing you should enclose the name with
+stars, e.g. \"*ECB Methods*\".
+
+If it is necessary for you you can get emacs-lisp access to the buffer-object
+of the ECB-methods-buffer by this name, e.g. by a call of `set-buffer'.
+
+Changes for this option at runtime will take affect only after deactivating
+and then activating ECB again!"
+  :group 'ecb-methods
+  :type 'string)
+
 (defcustom ecb-show-method-arguments 'only-type
-  "*Show method argument types and/or names. You have the following
+         "*Show method argument types and/or names. You have the following
 choices:
 - only-type: Show only the type of the argument
 - type-and-name: Show both type and name
@@ -817,7 +866,7 @@ with the actually choosen layout \(see `ecb-layout')."
   (interactive)
   (if ecb-activated
       (ecb-redraw-layout)
-    (catch 'exit
+;;     (catch 'exit
       (let ((curr-buffer-list (mapcar (lambda (buff)
 					(buffer-name buff))
 				      (buffer-list))))
@@ -889,8 +938,9 @@ with the actually choosen layout \(see `ecb-layout')."
       ;; at the real end we run any personal hooks
       (run-hooks 'ecb-activate-hook)
       (message "The ECB is now activated.")
-      (recursive-edit))
-    (ecb-deactivate)))
+;;       (recursive-edit))
+;;     (ecb-deactivate)))
+      ))
 
 (defun ecb-deactivate ()
   "Deactivates the ECB and kills all ECB buffers and windows."
