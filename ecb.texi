@@ -26,7 +26,7 @@
 @c GNU Emacs; see the file COPYING.  If not, write to the Free Software
 @c Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-@c $Id: ecb.texi,v 1.120 2003/09/12 09:19:23 berndl Exp $
+@c $Id: ecb.texi,v 1.121 2003/09/15 08:31:04 berndl Exp $
 
 @setfilename ecb.info
 
@@ -84,9 +84,9 @@ TeX, LaTeX etc.).
 @sp 1
 @end iftex
 
-@strong{NOTE}: Experienced ECB users find a complete alphabetical list
-of all commands and user-options in @ref{Interactive ECB commands} and
-@ref{Customizable options}.
+@strong{Please note}: Experienced ECB users find a complete
+alphabetical list of all commands and user-options in @ref{Interactive
+ECB commands} and @ref{Customizable options}.
 
 @c In the following two paragraphs we distinct between HTML-, info-,
 @c and tex-format concerning the display of the URLs.
@@ -309,9 +309,9 @@ downloading/installing ECB or for upgrading to a newer version of ECB.
 Here is a short guide (for details about the package-manager of XEmacs
 see the related info-manual):
 
-@strong{Note}: If ECB is already installed and you just want upgrading
-to a newer version then it is recommended to deactivate ECB before
-proceeding with the steps below!
+@strong{Caution}: If ECB is already installed and you just want
+upgrading to a newer version then it is recommended to deactivate ECB
+before proceeding with the steps below!
 
 @enumerate
 @item Choose a download-site
@@ -378,10 +378,10 @@ required semantic-, eieio- and speedbar-version@footnote{The
 speedbar-version shipped with GNU Emacs <= 21.3 does not satisfy the
 requirements for this feature - download a newer one!}.
 
-@strong{Note}: ECB maybe requires a newer version of these libraries
-than shipped with (X)Emacs. You have to install exactly a version ECB
-requires and also to make sure that the correct version is loaded into
-(X)Emacs!
+@strong{Please note}: ECB maybe requires a newer version of these
+libraries than shipped with (X)Emacs. You have to install exactly a
+version ECB requires and also to make sure that the correct version is
+loaded into (X)Emacs!
 
 But ECB performs two autom checks:
 
@@ -515,9 +515,9 @@ online help of ECB is always available though, see
 @node Setting up Emacs, First steps, Installation, Install and first steps
 @section How to set up Emacs for file parsing with ECB
 
-@strong{NOTE}: Normally it should not necessary for you to bother with
-the following stuff unless you have problems getting ECB working
-correctly for you.
+@strong{Please note}: Normally it should not necessary for you to
+bother with the following stuff unless you have problems getting ECB
+working correctly for you.
 
 @menu
 * General hints::               General hints for a correct setup
@@ -602,7 +602,7 @@ ECB semantic is completely setup by ECB itself, i.e. ECB sets up
 semantic for you! You have only to add the installation directory of
 semantic to your @code{load-path} (in an appropriate way)!
 
-@strong{NOTE}: If you setup semantic for yourself following the
+@strong{Please note}: If you setup semantic for yourself following the
 recommendations in the installation instructions of semantic then you
 have probably added code to your startup-file like:
 
@@ -1333,12 +1333,14 @@ ECB offers you to advice the following functions so they work best with ECB:
 @item @code{split-window-horizontally}
 @item @code{split-window-vertically}
 @item @code{split-window}
+@item @code{display-buffer}
 @item @code{switch-to-buffer}
 @item @code{switch-to-buffer-other-window}
 @item @code{other-window-for-scrolling}
 @end itemize
 
-The behavior of the adviced functions is:
+
+The behavior of the adviced functions is (slightly simplified):
 
 @itemize @bullet
 @item
@@ -1348,9 +1350,10 @@ would be the only window(s) of the ECB-frame. So the edit-window(s) of
 ECB seems to be a normal Emacs-frame to the user.
 
 @item
-If called in a not edit-window of ECB all these function jumps first
-to the (first) edit-window, so you can never destroy the ECB-window
-layout unintentionally.
+If there is a durable compile-window (@pxref{Temp- and
+compile-buffers}) then all compilation-buffers in the sense of
+@code{ecb-compilation-buffer-p} will be displayed in the
+compile-window.
 
 @item
 If called in another frame than the ECB-frame these functions behave
@@ -1367,6 +1370,208 @@ carefully the documentation of this option!
 
 Another interesting option in the context of the edit-window and these
 adviced functions is @code{ecb-layout-always-operate-in-edit-window}!
+
+@subsection Documentation of the adviced window functions
+
+This section describes for every adviced window function (s.a.) how it
+differs from the original version. Only the differences are mentioned,
+so if you want the full documentation of such a function call
+@code{describe-function} or @kbd{C-h f}.
+
+@deffn Command other-window ARG &optional ALL-FRAMES
+Around-advice @code{ecb}: The ECB-version of @code{other-window}.
+Works exactly like the original function with the following
+ECB-adjustment: The behavior depends on
+@code{ecb-other-window-jump-behavior}.
+@end deffn
+
+@deffn Command delete-window &optional WINDOW
+Around-advice @code{ecb}: The ECB-version of @code{delete-window}.
+Works exactly like the original function with the following
+ECB-adjustment:
+
+If optional argument @var{WINDOW} is nil (i.e. probably called
+interactively): If called in a splitted edit-window then it works like
+as if the two parts of the splitted edit window would be the only
+windows in the frame. This means the part of the splitted edit-window
+which contains the point will be destroyed and the other part fills
+the whole edit-window. If called in an unsplitted edit-window then
+nothing is done. If called in any other window of the current
+ECB-layout there are two alternatives:
+
+@itemize @minus
+@item
+If the function is contained in
+@code{ecb-layout-always-operate-in-edit-window} it jumps first in the
+(first) edit-window and does then it´s job.
+
+@item
+Otherwise an error is reported.
+@end itemize
+
+If optional argument @var{WINDOW} is a live window (i.e. called from
+program): If @var{WINDOW} is an edit-window then this window is
+deleted, otherwise an error is reported.
+@end deffn
+
+@deffn Command delete-other-windows &optional WINDOW
+Around-advice @code{ecb}: The ECB-version of
+@code{delete-other-windows}. Works exactly like the original function
+with the following ECB-adjustment:
+
+If optional argument @var{WINDOW} is nil (i.e. probably called
+interactively): If called in a splitted edit-window then it works like
+as if the two parts of the splitted edit window would be the only
+windows in the frame. This means the part of the splitted edit-window
+which contains the point fills the whole edit-window.
+
+@itemize @minus
+@item
+If called in an unsplitted edit-window then nothing is done.
+
+@item
+If called in one of the ecb-windows then the current one is maximized, i.e.
+the other ecb-windows (not the edit-windows!) are deleted.
+
+@item
+If called in the compile window there are two alternatives: If the
+function is contained in
+@code{ecb-layout-always-operate-in-edit-window} it jumps first in the
+(first) edit-window and does then it´s job. Otherwise an error is
+reported.
+@end itemize
+
+If optional argument @var{WINDOW} is a live window (i.e. called from
+program): If @var{WINDOW} is an edit-window then this window is
+maximized (i.e. the other edit-window is deleted), if @var{WINDOW} is
+an ecb-window then only the other ecb-windows are deleted and in all
+other cases an error is reported.
+@end deffn
+
+@deffn Command delete-windows-on BUFFER &optional FRAME
+Around-advice @code{ecb}: The ECB-version of @code{delete-windows-on}.
+Works exactly like the original function with the following
+ECB-adjustment:
+
+An error is reported if @var{BUFFER} is an ECB-tree-buffer. These
+windows are not allowed to be deleted.
+@end deffn
+
+@deffn Command split-window &optional WINDOW SIZE HORFLAG
+Around-advice @code{ecb}: The ECB-version of @code{split-window}. The
+meaning of @var{WINDOW} must be one of the edit-windows of ECB
+otherwise an error is reported. If the edit-window is already splitted
+then nothing will be done. Besides this (e.g. called for a window in
+another frame than the @code{ecb-frame}) it behaves like the original
+version.
+@end deffn
+
+@deffn Command split-window-vertically
+Around-advice @code{ecb}: The ECB-version of
+@code{split-window-vertically}. Works exactly like the original
+function with the following ECB-adjustment:
+
+Called in an unsplitted edit-window then the edit window will be
+splitted vertically. If called in an already splitted edit-window then
+nothing is done. If called in any other window of the current
+ECB-layout it stops with an error if this function is not contained in
+@code{ecb-layout-always-operate-in-edit-window}.
+@end deffn
+
+
+@deffn Command split-window-horizontally
+Around-advice @code{ecb}: The ECB-version of
+@code{split-window-horizontally}. Works exactly like the original
+function with the following ECB-adjustment:
+
+Called in an unsplitted edit-window then the edit window will be
+splitted horizontally. If called in an already splitted edit-window
+then nothing is done. If called in any other window of the current
+ECB-layout it stops with an error if this function is not contained in
+@code{ecb-layout-always-operate-in-edit-window}!
+@end deffn
+
+@deffn Command display-buffer BUFFER &optional NOT-THIS-WINDOW FRAME
+Around-advice @code{ecb}: Makes this function compatible with ECB if
+called in or for the ecb-frame. It displays all buffers which are
+``compilation-buffers'' in the sense of
+@code{ecb-compilation-buffer-p} in the compile-window of ECB. If the
+compile-window is temporally hidden then it will be displayed first.
+
+If there is no compile-window (@code{ecb-compile-window-height} is
+nil) then it splits the edit-window if unsplitted and displays
+@var{BUFFER} in the other edit-window but only if
+@code{pop-up-windows} is not nil (otherwise the edit-window will not
+splitted).
+
+If called from outside the edit-area for a non-``compilation-buffers''
+(s.a.) then it behaves as if called from within an edit-window if
+@code{display-buffer} is contained in
+@code{ecb-layout-always-operate-in-edit-window}: It depends on
+@code{pop-up-windows} if the edit-window is automatically splitted ot
+not. If @code{ecb-layout-always-operate-in-edit-window} does not
+contain @code{display-buffer} then the buffer is displayed in the
+edit-window without splitting it (if unsplitted).
+
+If called for other frames it works like the original version.
+@end deffn
+
+@deffn Command switch-to-buffer BUFFER &optional NORECORD
+Around-advice @code{ecb}: The ECB-version of @code{switch-to-buffer}.
+Works exactly like the original but with the following enhancements
+for ECB:
+
+``compilation-buffers'' in the sense of
+@code{ecb-compilation-buffer-p} will be displayed always in the
+compile-window of ECB (if @code{ecb-compile-window-height} is not nil)
+- if the compile-window is temporally hidden then it will be displayed
+first. If you do not want this you have to modify the options
+@code{ecb-compilation-buffer-names},
+@code{ecb-compilation-major-modes} or
+@code{ecb-compilation-predicates}.
+
+If called for non ``compilation-buffers'' (s.a.) from outside the
+edit-area of ECB it behaves as if called from an edit-window if
+@code{switch-to-buffer} is contained in the option
+@code{ecb-layout-always-operate-in-edit-window}. Otherwise an error is
+reported.
+@end deffn
+
+@deffn Command switch-to-buffer-other-window BUFFER &optional FRAME
+Around-advice @code{ecb}: The ECB-version of
+@code{switch-to-buffer-other-window}. Works exactly like the original
+but with some adaptions for ECB so this function works in a
+``natural'' way:
+
+If called in any special ecb-window of the current ECB-layout then it
+goes always to the first edit-window and then goes on as if called
+from this edit-window.
+
+If a compile-window is used (i.e. @code{ecb-compile-window-height} is
+not nil) then ``compilation-buffers'' in the sense of
+@code{ecb-compilation-buffer-p} are always displayed in the
+compile-window. If the compile-window is temporally hidden then it
+will be displayed first. If no compile-window is used it behaves like
+the original.
+
+If called from within the compile-window then ``compilation-buffers''
+will be displayed still there and all other buffers are displayed in
+one of the edit-windows - if the destination-buffer is already
+displayed in one of the edit-windows then this one is used otherwise
+it behaves like the original.
+
+If called within an edit-window it behaves like the original function
+except for compilation-buffers (if a compile-window is used, see
+above).
+@end deffn
+
+@deffn Function other-window-for-scrolling
+Around-advice `ecb': This function determines the window which is
+scrolled if any of the ``other-window-scrolling-functions'' is called
+(e.g. @code{scroll-other-window}). If edit-window is splitted, point
+stays in the ``other'' edit-window and there is no durable
+compilation-window then always the first edit-window is chosen.
+@end deffn
 
 @node Temp- and compile-buffers, The Methods buffer, The edit-window, Usage of ECB
 @section Temp- and compile-buffers display in ECB
@@ -1419,7 +1624,8 @@ With the command @code{ecb-toggle-compile-window} (bound to @kbd{C-c .
 (@pxref{Interactive ECB commands}).
 
 There are some more useful options and commands related to the
-compile-window of ECB:
+compile-window of ECB (to see all options for the compile-window see
+the customization group @ref{ecb-compilation}):
 
 @itemize @bullet
 @item
@@ -2376,8 +2582,8 @@ After this layout ``left1'' will be always drawn with the new sizes
 until you call @code{ecb-restore-default-window-sizes} during layout
 ``left1'' is active.
 
-@strong{NOTE}: @code{ecb-store-window-sizes} stores the width and
-height of the windows per default as fractions of the width (rsp.
+@strong{Please note}: @code{ecb-store-window-sizes} stores the width
+and height of the windows per default as fractions of the width (rsp.
 height) of the ECB-frame, so the stored sizes are always correct
 regardless of the current frame-size! But if called with a prefix
 argument then fixed sizes are stored.
@@ -2530,9 +2736,9 @@ There is no need for you to load the file
 @code{ecb-create-layout-file} manually into your Emacs because it's
 automatically loaded by ECB!
 
-@strong{NOTE}: During the layout-creation process only the commands
-displayed in the help-screen are available. ALL other commands are
-temporally disabled (even the mouse-commands).
+@strong{Please note}: During the layout-creation process only the
+commands displayed in the help-screen are available. ALL other
+commands are temporally disabled (even the mouse-commands).
 
 For programming new layouts with emacs-lisp see @ref{The layout-engine}.
 
@@ -2704,9 +2910,9 @@ If you often need to toggle between autom. synchronization on and off
 then customizing the option @code{ecb-window-sync} is inefficient and
 therefore ECB offers the command @code{ecb-toggle-window-sync}.
 
-@strong{NOTE}: With the command @code{ecb-window-sync} you can do a
-manually synchronization if the automatic one is switched off or if
-you just want to do this!
+@strong{Please note}: With the command @code{ecb-window-sync} you can
+do a manually synchronization if the automatic one is switched off or
+if you just want to do this!
 
 @node Interactive ECB commands, , ECB-window synchronizing, Usage of ECB
 @section Interactive ECB commands
@@ -2726,10 +2932,10 @@ You can choose one of the options enclosed in brackets with
 TAB-completion; hitting RET direct after the prompt chooses auto. the
 first offered option (in the example above ``all'').
 
-@strong{Note}: The following interactive commands of ECB are listed
-without the prefix ``ecb-'' (e.g. the command @code{ecb-activate} is
-listed with name ``activate''). This has been done for a better
-readable command index. @xref{Command Index}.
+@strong{Please note}: The following interactive commands of ECB are
+listed without the prefix ``ecb-'' (e.g. the command
+@code{ecb-activate} is listed with name ``activate''). This has been
+done for a better readable command index. @xref{Command Index}.
 
 @deffn Command activate
 Activates ECB and creates the special buffers for the choosen layout.
@@ -3251,15 +3457,16 @@ Elisp-code but only with the customize-feature!
 @item @code{ecb-use-speedbar-instead-native-tree-buffer}
 @tab @code{ecb-toggle-layout-sequence}
 @item @code{ecb-mode-line-data}
-@item @code{ecb-mode-line-display-window-number}
+@tab @code{ecb-mode-line-display-window-number}
+@item @code{ecb-compile-window-width}
 @end multitable
 
-@strong{NOTE}: If you are the administrator for an Emacs-site, means
-you are responsible for the basic customization of a lot of Emacs
-users, then you maybe need a way to customize Emacs and ECB without
-changing everyones @file{.emacs}-file and normally you will do this
-with the file @file{site-start.el}. You can customize all options of
-ECB in a central @file{site-start.el} (even the options mentioned
+@strong{IMPORTANT}: If you are the administrator for an Emacs-site,
+means you are responsible for the basic customization of a lot of
+Emacs users, then you maybe need a way to customize Emacs and ECB
+without changing everyones @file{.emacs}-file and normally you will do
+this with the file @file{site-start.el}. You can customize all options
+of ECB in a central @file{site-start.el} (even the options mentioned
 above!) but you @strong{MUST NOT} do this via @code{setq} but you have
 to use @code{custom-set-variables}@footnote{At least for the options
 for which @code{setq} is explicitly forbidden, but it is recommended
@@ -3347,10 +3554,10 @@ All customization of ECB is divided into the following ``customize
 groups''. You can highly customize all the ECB behavior/layout so just
 go to these groups and you will see all well documented ECB-options.
 
-@strong{Note}: All options in the following subsections are listed
-without the prefix ``ecb-'' (e.g. the option @code{ecb-layout-name} is
-listed with name ``layout-name''). This has been done for a better
-readable option index. @xref{Option Index}.
+@strong{Please note}: All options in the following subsections are
+listed without the prefix ``ecb-'' (e.g. the option
+@code{ecb-layout-name} is listed with name ``layout-name''). This has
+been done for a better readable option index. @xref{Option Index}.
 
 @menu
 * ecb-general::                 General customizing ECB
@@ -5502,6 +5709,22 @@ changed the ECB-screen-layout by any action you can always go back to
 this layout with @code{ecb-redraw-layout}
 @end defopt
 
+@defopt compile-window-prevent-shrink-below-height
+Allow the compile-window to be shrunken below its height. A non nil
+value means ECB prevents the compile-window from being shrunken below
+the threshold of @code{ecb-compile-window-height} by displaying
+temp-buffers (e.g. *Help* etc.) or after running compilations or
+greps. But interactively it is always allowed to shrink it to every
+height!
+
+If nil then ECB does nothing to prevent being shrunken below the value
+of @code{ecb-compile-window-height}.
+
+Default is t.
+@end defopt
+
+
+
 @defopt compile-window-temporally-enlarge
 Let Emacs temporally enlarge the compile-window of the ECB-layout.
 This option has only an effect if @code{ecb-compile-window-height} is
@@ -6275,10 +6498,10 @@ restarting Emacs the new package(s) can be activated.
 @end group
 @end example
 
-@strong{Note1}: "P author-version must be [x y]" means, that ECB requires
-package P in a version-number >= x and <= y.
+@strong{Remark 1}: "P author-version must be [x y]" means, that ECB
+requires package P in a version-number >= x and <= y.
 
-@strong{Note2}: By setting the option @code{ecb-version-check} to
+@strong{Remark 2}: By setting the option @code{ecb-version-check} to
 @code{nil} you can prevent ECB from checking correct versions of
 semantic, eieio and speedbar but it's strongly recommended not to do
 this!
@@ -6463,7 +6686,7 @@ for ALL ECB-tree-buffers. But you are also able to display each
 ECB-tree-buffer with different faces, see the different options for
 every tree-buffer mentioned above.
 
-@strong{NOTE} (only for XEmacs users): Cause of the lack of the
+@strong{Please note} (only for XEmacs users): Cause of the lack of the
 font-inheritance feature using ONE other font for the ECB-methods
 buffer can NOT be achieved just by setting
 @code{ecb-methods-general-face} to @code{ecb-default-general-face} and
@@ -6665,8 +6888,8 @@ edit-window@footnote{The standard behavior is switching between the
 speedbar-frame and the attached frame, but this make obviously no
 sense during running speedbar with ECB.}.
 
-@strong{NOTE}: ECB can only integrate speedbar-versions >= 0.14beta1!
-If you use lower versions of speedbar
+@strong{IMPORTANT}: ECB can only integrate speedbar-versions >=
+0.14beta1! If you use lower versions of speedbar
 @code{ecb-use-speedbar-for-directories} has no effect.
 
 @node Optimize scrolling, Large directories, Integrating speedbar, Tips and tricks
@@ -7055,7 +7278,7 @@ Without special support by ECB these window-managers would not work in
 combination with ECB!
 
 ECB currently supports the following managers:
-@email{ecb-list@@lists.sourceforge.net} 
+ 
 @itemize @bullet
 @item winring.el:
 Written by Barry A. Warsaw @email{bwarsaw@@python.org}, available at
@@ -7076,13 +7299,13 @@ Written by Noah Friedman @email{friedman@@splode.com}, available at
 @end ifnothtml
 @end itemize
 
-@strong{Note}: With one of these window-managers installed and active
-you can run applications like Gnus, VM or BBDB in the same frame as
-ECB! Just use different window-configurations (winring.el) or escreens
-(escreen.el) for ECB and the other applications. Especially with
-winring.el you can give every configuration a descriptive name like
-``ECB'' or ``Gnus''; afterwards you can jump to a window-configuration
-by name!
+@strong{IMPORTANT}: With one of these window-managers installed and
+active you can run applications like Gnus, VM or BBDB in the same
+frame as ECB! Just use different window-configurations (winring.el) or
+escreens (escreen.el) for ECB and the other applications. Especially
+with winring.el you can give every configuration a descriptive name
+like ``ECB'' or ``Gnus''; afterwards you can jump to a
+window-configuration by name!
 
 The rest of this section describes how to enable the special
 ECB-support for these window-managers and how to use them.
@@ -8772,9 +8995,9 @@ Yes, see option @code{ecb-mode-line-display-window-number}.
 @noindent
 This index contains all user commands of ECB.
 
-@strong{Note}: The commands in this index are listed without the
-prefix ``ecb-'' (e.g. the command @code{ecb-activate} is listed with
-name ``activate'').
+@strong{Please note}: The commands in this index are listed without
+the prefix ``ecb-'' (e.g. the command @code{ecb-activate} is listed
+with name ``activate'').
 
 @printindex fn
 
@@ -8784,9 +9007,9 @@ name ``activate'').
 @noindent
 This index contains all customizable options of ECB.
 
-@strong{Note}: All options in this index are listed without the prefix
-``ecb-'' (e.g. the option @code{ecb-layout-name} is listed with name
-``layout-name'').
+@strong{Please note}: All options in this index are listed without the
+prefix ``ecb-'' (e.g. the option @code{ecb-layout-name} is listed with
+name ``layout-name'').
 
 @printindex vr
 

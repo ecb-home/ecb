@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-layout.el,v 1.187 2003/09/12 09:19:24 berndl Exp $
+;; $Id: ecb-layout.el,v 1.188 2003/09/15 08:31:05 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -375,8 +375,6 @@ To restore the ECB-layout after such a buffer-enlarge just call
                        :value after-selection)
                 (const :tag "Both of them" :value both)
                 (const :tag "Never" :value nil)))
-
-;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: in texi docu hinzufügen...
 
 ;; A value of never makes no sense because it is not much effort to prevent
 ;; all interactive shrinking commands (incl. mouse-commands) from shrinking it
@@ -879,13 +877,6 @@ not do what you think it should do etc...) then please do the following steps:
 ;; ====== internal variables ====================================
 
 
-(defun ecb-layout-debug-error (&rest args)
-  "Run ARGS through `format' and write it to the *Messages*-buffer."
-  (when ecb-layout-debug-mode
-    (message (concat (format "ECB %s layout debug: " ecb-version)
-                     (apply 'format args)))))
-
-
 (defvar ecb-frame nil
   "Frame where ECB runs")
 
@@ -916,6 +907,13 @@ command.")
         ecb-cycle-ecb-buffer-state nil
         ecb-compile-window nil
         ecb-compile-window-was-selected-before-command nil))
+
+(defun ecb-layout-debug-error (&rest args)
+  "Run ARGS through `format' and write it to the *Messages*-buffer."
+  (when ecb-layout-debug-mode
+    (message (concat (format "ECB %s layout debug: " ecb-version)
+                     (apply 'format args)))))
+
 
 (defun ecb-compile-window-live-p (&optional display-msg)
   (if (and ecb-compile-window (window-live-p ecb-compile-window))
@@ -1006,22 +1004,6 @@ either not activated or it behaves exactly like the original version!"
       ad-do-it
     (let ((other-window-scroll-buffer (window-buffer (other-window-for-scrolling))))
       ad-do-it)))
-
-
-(defadvice winner-mode (before ecb)
-  "Prevents `winner-mode' from being activated for the ECB-frame."
-  (if (equal (selected-frame) ecb-frame)
-      (ecb-error "Can't use winner-mode functions in the ecb-frame.")))
-
-(defadvice winner-redo (before ecb)
-  "Prevents `winner-redo' from being used within the ECB-frame."
-  (if (equal (selected-frame) ecb-frame)
-      (ecb-error "Can't use winner-mode functions in the ecb-frame.")))
-
-(defadvice winner-undo (before ecb)
-  "Prevents `winner-undo' from being used within the ECB-frame."
-  (if (equal (selected-frame) ecb-frame)
-      (ecb-error "Can't use winner-mode functions in the ecb-frame.")))
 
 
 (defadvice scroll-all-mode (after ecb)
@@ -1902,7 +1884,8 @@ handle `ecb-compile-window-temporally-enlarge'."
 (defadvice display-buffer (around ecb)
   "Makes this function compatible with ECB if called in or for the ecb-frame.
 It displays all buffers which are \"compilation-buffers\" in the sense of
-`ecb-compilation-buffer-p' in the compile-window of ECB.
+`ecb-compilation-buffer-p' in the compile-window of ECB. If the compile-window
+is temporally hidden then it will be displayed first.
 
 If there is no compile-window \(`ecb-compile-window-height' is nil) then it
 splits the edit-window if unsplitted and displays BUFFER in the other
@@ -1974,7 +1957,7 @@ If called for other frames it works like the original version."
                              ;; `display-buffer' tries no splitting. But this
                              ;; works only for GNU Emacs. XEmacs does not
                              ;; shrink to fit if `pop-up-windows' is nil so we
-                             ;; must make here set it to t and make the frame
+                             ;; must set it here to t and make the frame
                              ;; unsplittable.
                              (let ((pop-up-windows (if ecb-running-xemacs t nil)))
                                (ecb-layout-debug-error
@@ -2329,7 +2312,8 @@ original function with the following ECB-adjustment:
 Called in an unsplitted edit-window then the edit window will be splitted
 horizontally. If called in an already splitted edit-window then nothing is
 done. If called in any other window of the current ECB-layout it stops with an
-error if this function is not contained in `ecb-layout-always-operate-in-edit-window'!"
+error if this function is not contained in
+`ecb-layout-always-operate-in-edit-window'!"
   (if (or (not ecb-minor-mode)
           (not (equal (selected-frame) ecb-frame)))
       (ecb-with-original-functions
@@ -2350,7 +2334,8 @@ original function with the following ECB-adjustment:
 Called in an unsplitted edit-window then the edit window will be splitted
 vertically. If called in an already splitted edit-window then nothing is done.
 If called in any other window of the current ECB-layout it stops with an error
-if this function is not contained in `ecb-layout-always-operate-in-edit-window'."
+if this function is not contained in
+`ecb-layout-always-operate-in-edit-window'."
   (if (or (not ecb-minor-mode)
           (not (equal (selected-frame) ecb-frame)))
       (ecb-with-original-functions
@@ -2366,8 +2351,9 @@ if this function is not contained in `ecb-layout-always-operate-in-edit-window'.
 (defadvice split-window (around ecb)
   "The ECB-version of `split-window'. The meaning of WINDOW must be one of the
 edit-windows of ECB otherwise an error is reported. If the edit-window is
-already splitted then nothing will be done. Besides this it behaves like the
-original version."
+already splitted then nothing will be done. Besides this \(e.g. called for a
+window in another frame than the `ecb-frame') it behaves like the original
+version."
   (if (or (not ecb-minor-mode)
           (not (equal (selected-frame) ecb-frame)))
       ad-do-it
@@ -2408,12 +2394,12 @@ always to the first edit-window and then goes on as if called from this
 edit-window.
 
 If a compile-window is used \(i.e. `ecb-compile-window-height' is not nil)
-then compilation-buffers in the sense of `ecb-compilation-buffer-p' are always
-displayed in the compile-window. If the compile-window is temporally hidden
-then it will be displayed first. If no compile-window is used it behaves like
-the original.
+then \"compilation-buffers\" in the sense of `ecb-compilation-buffer-p' are
+always displayed in the compile-window. If the compile-window is temporally
+hidden then it will be displayed first. If no compile-window is used it
+behaves like the original.
 
-If called from within the compile-window then compilation-buffers will be
+If called from within the compile-window then \"compilation-buffers\" will be
 displayed still there and all other buffers are displayed in one of the
 edit-windows - if the destination-buffer is already displayed in one of the
 edit-windows then this one is used otherwise it behaves like the original.
@@ -2437,14 +2423,15 @@ for compilation-buffers \(if a compile-window is used, see above)."
   "The ECB-version of `switch-to-buffer'. Works exactly like the original but
 with the following enhancements for ECB:
 
-\"compile-buffers\" in the sense of `ecb-compilation-buffer-p' will be
+\"compilation-buffers\" in the sense of `ecb-compilation-buffer-p' will be
 displayed always in the compile-window of ECB \(if `ecb-compile-window-height'
-is not nil). If you do not want this you have to modify the options
+is not nil) - if the compile-window is temporally hidden then it will be
+displayed first. If you do not want this you have to modify the options
 `ecb-compilation-buffer-names', `ecb-compilation-major-modes' or
 `ecb-compilation-predicates'.
 
-If called for not \"compile-buffers\" \(s.a.) from outside the edit-area of
-ECB it behaves as if called from an edit-window if `switch-to-buffer' is
+If called for non \"compilation-buffers\" \(s.a.) from outside the edit-area
+of ECB it behaves as if called from an edit-window if `switch-to-buffer' is
 contained in the option `ecb-layout-always-operate-in-edit-window'. Otherwise
 an error is reported."
   (if (or (not ecb-minor-mode)
@@ -3469,8 +3456,8 @@ this function the edit-window is selected which was current before redrawing."
 
        (select-window ecb-edit-window)
        
-         ;; Maybe we must split the editing window again if it was splitted before
-       ;; the redraw
+       ;; Maybe we must split the editing window again if it was splitted
+       ;; before the redraw
        (cond ((equal split-before-redraw 'horizontal)
               (ecb-split-hor 0.5 t))
              ((equal split-before-redraw 'vertical)

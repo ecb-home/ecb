@@ -28,7 +28,7 @@
 ;; Do not change any html-file besides the index.html manually but do all
 ;; changes in this elisp file!
 
-;; $Id: ecb-html.el,v 1.53 2003/07/07 06:52:30 berndl Exp $
+;; $Id: ecb-html.el,v 1.54 2003/09/15 08:31:04 berndl Exp $
 
 ;;; Code:
 
@@ -77,11 +77,28 @@
   "List of latest news displayed on the main page.")
 (setq ecb-latest-news
       `(
+        ,(h-sub-section "ECB 1.96 released! (2003-09-15)"
+                        "Support for window-managers like winring and escreen and therefore possibilty to run apps like Gnus and ECB in one frame. Complete overhaul of the compile-window mechanism - now it is much more stable. Some other nice features and bug fixes. "
+                        (h-link "docs/Install-and-first-steps.html#Install%20and%20first%20steps" "Here") " is a short installation guide. "
+                        "Click " (h-link "NEWS.html" "here")
+                        " for information about changes in the new version. ")
+        ,(h-sub-section "ECB 1.95.1 released! (2003-07-16)"
+                        "Now every ECB-window can be maximized, so afterwards only this ecb-window and the edit-window(s) are visible. Some bug fixes. "
+                        (h-link "docs/Install-and-first-steps.html#Install%20and%20first%20steps" "Here") " is a short installation guide. "
+                        "Click " (h-link "NEWS.html" "here")
+                        " for information about changes in the new version. ")
         ,(h-sub-section "ECB 1.95 released! (2003-07-07)"
                         "ECB-tree-windows now use image-icons. Hideshow was added to the popup-menu of the Methods-buffer. "
                         (h-link "docs/Install-and-first-steps.html#Install%20and%20first%20steps" "Here") " is a short installation guide. "
                         "Click " (h-link "NEWS.html" "here")
                         " for information about changes in the new version. ")
+        ))
+
+(defvar ecb-rest-news nil
+  "List of older news - these news are displayed in all-news.html ; see
+`ecb-html-all-news'.")
+(setq ecb-rest-news
+      `(
         ,(h-sub-section "ECB 1.94 now available as XEmacs package 1.08! (2003-06-30)"
                         "The XEmacs-package ECB 1.08 can be installed either via "
                         (h-link "http://www.xemacs.org/Download/win32/setup.exe"
@@ -93,13 +110,6 @@
                         (h-link "docs/Install-and-first-steps.html#Install%20and%20first%20steps" "Here") " is a short installation guide. "
                         "Click " (h-link "NEWS.html" "here")
                         " for information about changes in the new version. ")
-        ))
-
-(defvar ecb-rest-news nil
-  "List of older news - these news are displayed in all-news.html ; see
-`ecb-html-all-news'.")
-(setq ecb-rest-news
-      `(
         ,(h-sub-section "ECB 1.93 now available as XEmacs package 1.06! (2003-04-09)"
                         "The XEmacs-package ECB 1.06 can be installed either via "
                         (h-link "http://www.xemacs.org/Download/win32/setup.exe"
@@ -198,7 +208,7 @@
 		 ("http://cedet.sourceforge.net/speedbar.shtml" "Speedbar" "Version 0.14beta1 or higher.")
 		 ("http://jdee.sunsite.dk" "JDEE (optional)" "If you use ECB for Java development."))
 		 "_top")
-	      (h-p "If you use XEmacs you must have the fsf-compat (contains overlay.el) and mail-lib packages installed."))
+	      (h-p "If you use XEmacs you must have the packages fsf-compat (contains overlay.el), mail-lib and c-support (contains hideshow.el) installed."))
 
    (h-section "Developers"
 	      (h-bullet-link-list
@@ -349,7 +359,7 @@
      (h-line)
      (h-sub-section
       "Download Patches"
-      (concat "There are no patches available for current ECB " ecb-version "!")
+      (concat "There are no patches available for current ECB " ecb-version "!"))
 ;;       (concat "Available patches for ECB " ecb-version ":")
 ;;       (h-bullet-link-list
 ;;        ecb-bullet
@@ -368,8 +378,19 @@
 ;;                (h-i "ecb-byte-compile")
 ;;                " if you use ECB byte-compiled.")
 ;;        "Restart Emacs and ECB.")
-      (h-line)
-      (h-link "main.html" "Back") " to main section")))))
+     (h-line)
+     (h-sub-section
+      "Download third party tools"
+      (h-bullet-link-list
+       ecb-bullet
+       (list
+        '("http://www.python.org/emacs" "winring.el" "A nifty window-manager written by Barry A. Warsaw")
+        '("http://www.splode.com/~friedman/software/emacs-lisp/" "escreen.el" "Another nifty window-manager written by Noah Friedman")
+        )
+       "_top"))
+     (h-line)
+     (h-link "main.html" "Back") " to main section")     
+     )))
 
      
 (defun ecb-html-top()

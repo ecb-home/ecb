@@ -117,10 +117,13 @@
     and strings of the sources.
 
 *** Fixed a bug in `ecb-toggle-enlarged-compilation-window'.
+    This function has been also renamed to `ecb-toggle-compile-window-height'.
 
 *** Fixed a bug in the layout-engine related to dedicated windows.
     Thanks to Johann Myrkraverk <myrkraverk@users.sourceforge.net> who helped
     to find this bug.
+
+*** Fixed some references in the info-manual of ECB.
 
 
 

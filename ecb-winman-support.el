@@ -21,7 +21,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-winman-support.el,v 1.3 2003/09/10 16:01:41 berndl Exp $
+;; $Id: ecb-winman-support.el,v 1.4 2003/09/15 08:31:05 berndl Exp $
 
 ;;; Commentary
 ;;
@@ -162,8 +162,8 @@ escreen.el!"
 (defun ecb-winman-escreen-disable-support ()
   "Disable the escreen-support of ECB."
   (interactive)
+  (ecb-disable-advices ecb-winman-escreen-adviced-functions)
   (when (featurep 'escreen)
-    (ecb-disable-advices ecb-winman-escreen-adviced-functions)
     (remove-hook 'escreen-goto-screen-hook
                  'ecb-winman-escreen-goto-escreen-hook)))
     
@@ -221,8 +221,7 @@ winring.el!"
 (defun ecb-winman-winring-disable-support ()
   "Disable the winring-support of ECB."
   (interactive)
-  (when (featurep 'winring)
-    (ecb-disable-advices ecb-winman-winring-adviced-functions)))
+  (ecb-disable-advices ecb-winman-winring-adviced-functions))
 
 
 (defvar ecb-winman-winring-ecb-frame nil
@@ -279,8 +278,58 @@ window-configuration gets always the name `ecb-winman-winring-name'."
            (equal ecb-frame (selected-frame)))
       (winring-set-name ecb-winman-winring-name)))
 
+
+;; not supported window-managing functions------------------------------------
+
+(defconst ecb-winman-not-supported-function-advices
+  (if ecb-running-xemacs
+      '((winner-mode . before)
+        (winner-redo . before)
+        (winner-undo . before)
+        (push-window-configuration . before)
+        (pop-window-configuration . before)
+        (unpop-window-configuration . before))
+    '((winner-mode . before)
+      (winner-redo . before)
+      (winner-undo . before))))
+
+(defadvice winner-mode (before ecb)
+  "Prevents `winner-mode' from being activated for the ECB-frame."
+  (if (equal (selected-frame) ecb-frame)
+      (ecb-error "Can't use winner-mode functions in the ecb-frame.")))
+
+(defadvice winner-redo (before ecb)
+  "Prevents `winner-redo' from being used within the ECB-frame."
+  (if (equal (selected-frame) ecb-frame)
+      (ecb-error "Can't use winner-mode functions in the ecb-frame.")))
+
+(defadvice winner-undo (before ecb)
+  "Prevents `winner-undo' from being used within the ECB-frame."
+  (if (equal (selected-frame) ecb-frame)
+      (ecb-error "Can't use winner-mode functions in the ecb-frame.")))
+
+(when ecb-running-xemacs
+  (defadvice push-window-configuration (before ecb)
+    (if (and (equal (selected-frame) ecb-frame)
+             (interactive-p))
+        (ecb-error "Can't use interactive push-window-configuration in the ecb-frame.")))
+
+  (defadvice pop-window-configuration (before ecb)
+    (if (and (equal (selected-frame) ecb-frame)
+             (interactive-p))
+        (ecb-error "Can't use interactive pop-window-configuration in the ecb-frame.")))
+  
+  (defadvice unpop-window-configuration (before ecb)
+    (if (and (equal (selected-frame) ecb-frame)
+             (interactive-p))
+        (ecb-error "Can't use interactive unpop-window-configuration in the ecb-frame.")))
+  )
+
+;; we disable all advices per default.
+
 (ecb-disable-advices ecb-winman-winring-adviced-functions)
 (ecb-disable-advices ecb-winman-escreen-adviced-functions)
+(ecb-disable-advices ecb-winman-not-supported-function-advices)
 
 (silentcomp-provide 'ecb-winman-support)
 

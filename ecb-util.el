@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-util.el,v 1.77 2003/09/12 09:19:24 berndl Exp $
+;; $Id: ecb-util.el,v 1.78 2003/09/15 08:31:05 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -181,9 +181,6 @@ means not to count the minibuffer even if it is active."
                                             (pop-to-buffer . around)
                                             (scroll-other-window . around)
                                             (custom-save-all . around)
-                                            (winner-mode . before)
-                                            (winner-redo . before)
-                                            (winner-undo . before)
                                             (count-windows . around)
                                             (narrow-to-region . before)
                                             (narrow-to-defun . before)
@@ -202,9 +199,6 @@ means not to count the minibuffer even if it is active."
                                           (tmm-menubar . around)
                                           (scroll-other-window . around)
                                           (custom-save-all . around)
-                                          (winner-mode . before)
-                                          (winner-redo . before)
-                                          (winner-undo . before)
                                           (narrow-to-region . before)
                                           (narrow-to-defun . before)
                                           (narrow-to-page . before)
