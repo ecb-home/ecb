@@ -17,6 +17,9 @@
 # Adapted by Klaus Berndl from the makefile to compile the JDE
 
 # Define here the correct path to your Emacs or XEmacs
+
+# $Id$
+
 EMACSPROG=emacs
 
 all:

@@ -26,6 +26,8 @@
 ;; This file is part of the ECB package which can be found at:
 ;; http://home.swipnet.se/mayhem/ecb.html
 
+;; $Id$
+
 ;;; Code:
 (defun ecb-strip-slash(path)
   (let ((norm-path (expand-file-name path)))

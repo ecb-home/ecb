@@ -122,6 +122,8 @@
 ;;   + The edit-window must not be splitted and the point must reside in
 ;;     the not deleted edit-window.
 
+;; $Id$
+
 ;;; Code:
 
 ;;; Options

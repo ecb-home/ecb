@@ -25,6 +25,8 @@
 ;;
 ;; Contains all mode-line enhancements for ECB.
 
+;; $Id$
+
 
 (defun ecb-mode-line-format()
   "Update all of the modelines of each buffer."

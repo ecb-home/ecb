@@ -26,6 +26,8 @@
 ;;
 ;; Contains all online-help for ECB (stolen something from recentf.el)
 
+;; $Id$
+
 ;;; Code
 
 (require 'ecb-layout)
