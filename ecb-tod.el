@@ -22,7 +22,7 @@
 ;; with GNU Emacs; see the file COPYING. If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-tod.el,v 1.4 2003/02/11 14:39:04 berndl Exp $
+;; $Id: ecb-tod.el,v 1.5 2003/02/14 11:47:02 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -98,6 +98,7 @@
     "Use `scroll-all-mode' to scroll both edit-windows of ECB simultaneously - and no other windows are scrolled!"
     "You can toggle having a compile window with `ecb-toggle-compile-window' if `ecb-compile-window-height' is not nil."
     "Start ECB automatically after Emacs is started. Use option `ecb-auto-activate'"
+    "Easy horizontal scrolling the tree-buffers with the mouse with [M-mouse-1] and [M-mouse-3]; see `ecb-tree-easy-hor-scroll'."
     )
   "List of all available tips of the day.")
 

@@ -62,7 +62,7 @@
 ;; The latest version of the ECB is available at
 ;; http://ecb.sourceforge.net
 
-;; $Id: ecb.el,v 1.285 2003/02/14 09:32:02 berndl Exp $
+;; $Id: ecb.el,v 1.286 2003/02/14 11:47:02 berndl Exp $
 
 ;;; Code:
 
@@ -1280,15 +1280,15 @@ quite impossible to scroll smoothly right and left. The functions
 `scroll-left' and `scroll-right' can be annoying and are also not bound to
 mouse-buttons.
 
-If this option is not nil \(means either t or a positive integer) then in all
-ECB-tree-buffers the keys \[M-mouse-1] and [M-mouse-3] are bound to scrolling
-left resp. right. If the value is t then the default scroll-step of
-`scroll-left' or `scroll-right' is used, if an integer then this number is
-used as scroll-step. Default is a scroll-step of 5."
+If this option is a positive integer S then in all ECB-tree-buffers the keys
+\[M-mouse-1] and \[M-mouse-3] are bound to scrolling left resp. right with
+scroll-step S. Additionally \[C-M-mouse-1] and \[C-M-mouse-3] are bound to
+scrolling left resp. right with scroll-step `window-width' - 2. Default is a
+scroll-step of 5. If the value is nil then no keys for horizontal scrolling
+are bound."
   :group 'ecb-general
   :type '(radio :value 5
                 (const :tag "No hor. mouse scrolling" :value nil)
-                (const :tag "Default step" :value t)
                 (integer :tag "Scroll step")))
 
 (defcustom ecb-truncate-long-names t
@@ -4861,14 +4861,20 @@ if the minor mode is enabled.
 
 ;; three easy-entry functions for the history menu for conveniance
 ;; Note: The node argument in the first two functions is not used.
+
+(defun ecb-add-history-buffers-popup (node)
+  (ecb-add-all-buffers-to-history))
+
 (defun ecb-clear-history-only-not-existing (node)
   "Removes all history entries from the ECB history buffer where related
 buffers does not exist anymore."
-  (ecb-clear-history -1))
+  (let ((ecb-clear-history-behavior 'not-existing-buffers))
+    (ecb-clear-history)))
 
 (defun ecb-clear-history-all (node)
   "Removes all history entries from the ECB history buffer."
-  (ecb-clear-history 0))
+  (let ((ecb-clear-history-behavior 'all))
+    (ecb-clear-history)))
 
 (defun ecb-clear-history-node (node)
   "Removes current entry from the ECB history buffer."
@@ -4893,6 +4899,8 @@ buffers does not exist anymore."
         ("---")
         ("Delete File" ecb-delete-source-2)
         ("Kill Buffer" ecb-history-kill-buffer)
+        ("---")
+        ("Add all filebuffer to history" ecb-add-history-buffers-popup)
         ("---")
 	("Remove Current Entry" ecb-clear-history-node)
 	("Remove All Entries" ecb-clear-history-all)
