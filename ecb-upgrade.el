@@ -140,11 +140,11 @@
 ;;; Code
 
 (eval-when-compile
-  (require 'ecb-bytecomp))
+  (require 'silentcomp))
 
 (require 'ecb-util)
 
-(ecb-bytecomp-defun widget-convert)
+(silentcomp-defun widget-convert)
 
 ;; ----------------------------------------------------------------------
 ;; define in this defconst all options which should be upgraded
@@ -712,6 +712,6 @@ tp `load-path' and restarting Emacs the new package version can be activated."
         (concat ecb-ecb-parent-dir install-dir)
       (ecb-error "Downloading or installing failure for %s %s" package version))))
 
-(ecb-provide 'ecb-upgrade)
+(silentcomp-provide 'ecb-upgrade)
 
 ;;; ecb-upgrade.el ends here

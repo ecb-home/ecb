@@ -78,7 +78,7 @@ INSTALLINFO=/usr/bin/install-info
 
 # Do not change anything below!
 
-# $Id: Makefile,v 1.44 2002/11/15 15:49:20 berndl Exp $
+# $Id: Makefile,v 1.45 2002/12/06 20:41:25 berndl Exp $
 
 RM=rm -f
 CP=cp
@@ -86,7 +86,7 @@ CP=cp
 ecb_LISP_EL=tree-buffer.el ecb-util.el ecb-mode-line.el ecb-help.el \
             ecb-layout.el ecb-layout-defs.el ecb-navigate.el ecb.el \
             ecb-eshell.el ecb-cycle.el ecb-face.el ecb-compilation.el \
-            ecb-upgrade.el ecb-create-layout.el ecb-bytecomp.el
+            ecb-upgrade.el ecb-create-layout.el silentcomp.el
 ecb_LISP_ELC=$(ecb_LISP_EL:.el=.elc)
 ecb_TEXI=ecb.texi
 ecb_INFO=$(ecb_TEXI:.texi=.info)

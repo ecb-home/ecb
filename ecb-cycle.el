@@ -1,6 +1,6 @@
 ;;; ecb-cycle.el --- cycle buffers through ecb windows.
 
-;; $Id: ecb-cycle.el,v 1.18 2002/11/06 11:25:38 berndl Exp $
+;; $Id: ecb-cycle.el,v 1.19 2002/12/06 20:40:57 berndl Exp $
 
 ;; Copyright (C) 2000-2003 Free Software Foundation, Inc.
 ;; Copyright (C) 2000-2003 Kevin A. Burton (burton@openprivacy.org)
@@ -60,7 +60,7 @@
 ;;; Code:
 
 (eval-when-compile
-  (require 'ecb-bytecomp))
+  (require 'silentcomp))
 
 (require 'ecb-compilation)
 (require 'ecb-layout)
@@ -131,6 +131,6 @@ offers any buffer but switches to `ecb-compile-window' if a compilation-buffer!"
                (1+ index) (length compilation-buffers) buffer-name)
       (switch-to-buffer buffer-name))))
 
-(ecb-provide 'ecb-cycle)
+(silentcomp-provide 'ecb-cycle)
 
 ;;; ecb-cycle.el ends here

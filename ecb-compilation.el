@@ -1,6 +1,6 @@
 ;;; ecb-compilation.el --- 
 
-;; $Id: ecb-compilation.el,v 1.8 2002/11/06 11:25:38 berndl Exp $
+;; $Id: ecb-compilation.el,v 1.9 2002/12/06 20:41:21 berndl Exp $
 
 ;; Copyright (C) 2000-2003 Free Software Foundation, Inc.
 ;; Copyright (C) 2000-2003 Kevin A. Burton (burton@openprivacy.org)
@@ -34,7 +34,7 @@
 ;;; Code:
 
 (eval-when-compile
-  (require 'ecb-bytecomp))
+  (require 'silentcomp))
 
 (defgroup ecb-compilation nil
   "Settings for all things displayed in the compile window of ECB."
@@ -106,6 +106,6 @@ This function non-nil if the name of BUFFER is either contained in
               (member major-mode ecb-compilation-major-modes))
             (compilation-buffer-p buf)))))
 
-(ecb-provide 'ecb-compilation)
+(silentcomp-provide 'ecb-compilation)
 
 ;;; ecb-compilation.el ends here

@@ -103,17 +103,17 @@
 ;; - `ecb-with-some-adviced-functions'
 ;;
 
-;; $Id: ecb-layout.el,v 1.128 2002/11/06 11:25:38 berndl Exp $
+;; $Id: ecb-layout.el,v 1.129 2002/12/06 20:40:07 berndl Exp $
 
 ;;; Code:
 
 (eval-when-compile
-  (require 'ecb-bytecomp))
+  (require 'silentcomp))
 
 (require 'ecb-util)
 (require 'ecb-create-layout)
 
-(ecb-bytecomp-defvar jde-open-class-at-point-find-file-function)
+(silentcomp-defvar jde-open-class-at-point-find-file-function)
 
 (if ecb-running-xemacs
     ;; because we want only check if the car of this function is equal for two
@@ -2168,6 +2168,6 @@ The `ecb-compile-window' is enlarged depending on the value of
             (enlarge-window (max 0 (- max-height (window-height)))))))
     (message "No ecb-compile-window in current ECB-layout!")))
 
-(ecb-provide 'ecb-layout)
+(silentcomp-provide 'ecb-layout)
 
 ;;; ecb-layout.el ends here

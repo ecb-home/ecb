@@ -27,7 +27,7 @@
 ;; http://home.swipnet.se/mayhem/ecb.html
 
 (eval-when-compile
-  (require 'ecb-bytecomp))
+  (require 'silentcomp))
 
 (require 'ecb-util)
 (require 'ecb-layout)
@@ -672,6 +672,6 @@ to non nil!"
   (ecb-set-methods-buffer)
   (select-window (next-window)))
 
-(ecb-provide 'ecb-layout-defs)
+(silentcomp-provide 'ecb-layout-defs)
 
 ;;; ecb-layout-defs.el ends here

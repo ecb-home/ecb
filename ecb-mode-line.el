@@ -25,10 +25,10 @@
 ;;
 ;; Contains all mode-line enhancements for ECB.
 
-;; $Id: ecb-mode-line.el,v 1.13 2002/11/06 11:25:38 berndl Exp $
+;; $Id: ecb-mode-line.el,v 1.14 2002/12/06 20:40:07 berndl Exp $
 
 (eval-when-compile
-  (require 'ecb-bytecomp))
+  (require 'silentcomp))
 
 (defcustom ecb-mode-line-prefixes '(nil
                                     nil
@@ -136,7 +136,7 @@ stretch past the screen."
         (force-mode-line-update))
     (message "This buffer isn't available: %s"  buffer-name)))
 
-(ecb-provide 'ecb-mode-line)
+(silentcomp-provide 'ecb-mode-line)
 
 ;;; ecb-mode-line.el end here
 

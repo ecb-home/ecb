@@ -26,27 +26,27 @@
 ;;
 ;; Contains all online-help for ECB (stolen something from recentf.el)
 
-;; $Id: ecb-help.el,v 1.87 2002/11/15 15:49:19 berndl Exp $
+;; $Id: ecb-help.el,v 1.88 2002/12/06 20:40:19 berndl Exp $
 
 ;;; Code
 
 (eval-when-compile
-  (require 'ecb-bytecomp))
+  (require 'silentcomp))
 
 (require 'ecb-layout)
 (require 'ecb-util)
 
 ;; XEmacs and Emacs 20.X
-(ecb-bytecomp-defvar browse-url-new-window-p)
-(ecb-bytecomp-defun browse-url)
+(silentcomp-defvar browse-url-new-window-p)
+(silentcomp-defun browse-url)
 ;; Emacs 21
-(ecb-bytecomp-defvar browse-url-new-window-flag)
+(silentcomp-defvar browse-url-new-window-flag)
 ;; JDE
-(ecb-bytecomp-defvar jde-version)
+(silentcomp-defvar jde-version)
 ;; mail and reporter
-(ecb-bytecomp-defun mail-subject)
-(ecb-bytecomp-defun mail-text)
-(ecb-bytecomp-defun reporter-submit-bug-report)
+(silentcomp-defun mail-subject)
+(silentcomp-defun mail-text)
+(silentcomp-defun reporter-submit-bug-report)
 
 (defconst ecb-help-info-start-file "ecb.info")
 (defconst ecb-help-html-start-file "ecb.html")
@@ -105,7 +105,7 @@ Normally there should be no need to change this option!"
                                           "../../etc/ecb/html/"))
                                  "./")
                                ecb-help-html-start-file)
-  "**Path where the ECB online help in HTML format resides.
+  "*Path where the ECB online help in HTML format resides.
 This must be the location of the file \"ecb.html\" which comes with the ECB
 distribution. If is installed by unpacking the archive available on the ECB
 website then this is the installation directory of ECB, i.e. where the elisp
@@ -324,6 +324,6 @@ could be interesting for support."
     (append emacs-vars semantic-vars ecb-internal-vars ecb-options)))
 
 
-(ecb-provide 'ecb-help)
+(silentcomp-provide 'ecb-help)
 
 ;; ecb-help.el ends here

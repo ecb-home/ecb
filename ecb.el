@@ -59,12 +59,12 @@
 ;; The latest version of the ECB is available at
 ;; http://home.swipnet.se/mayhem/ecb.html
 
-;; $Id: ecb.el,v 1.250 2002/11/15 15:49:18 berndl Exp $
+;; $Id: ecb.el,v 1.251 2002/12/06 20:40:01 berndl Exp $
 
 ;;; Code:
 
 (eval-when-compile
-  (require 'ecb-bytecomp))
+  (require 'silentcomp))
 
 ;; semantic load
 (require 'semantic)
@@ -104,14 +104,14 @@
   ;; to avoid compiler grips
   (require 'cl))
 
-(ecb-bytecomp-defvar dired-directory)
-(ecb-bytecomp-defun jde-show-class-source)
-(ecb-bytecomp-defun add-submenu)
-(ecb-bytecomp-defun semanticdb-minor-mode-p)
-(ecb-bytecomp-defun semanticdb-find-nonterminal-by-name)
-(ecb-bytecomp-defun semanticdb-full-filename)
-(ecb-bytecomp-defun ediff-cleanup-mess)
-(ecb-bytecomp-defvar ediff-quit-hook)
+(silentcomp-defvar dired-directory)
+(silentcomp-defun jde-show-class-source)
+(silentcomp-defun add-submenu)
+(silentcomp-defun semanticdb-minor-mode-p)
+(silentcomp-defun semanticdb-find-nonterminal-by-name)
+(silentcomp-defun semanticdb-full-filename)
+(silentcomp-defun ediff-cleanup-mess)
+(silentcomp-defvar ediff-quit-hook)
 
 ;;====================================================
 ;; Variables
@@ -4206,7 +4206,6 @@ FILE.elc or if FILE.elc doesn't exist."
       (if (ecb-check-requirements t)
           (ecb-error "Incorrect requirements; check the versions of semantic and eieio!"))
     (ecb-check-requirements))
-;;  (load-file "ecb-bytecomp.el")
   (let ((load-path
 	 (append (list (file-name-directory
 			(or (locate-library "semantic")
@@ -4217,7 +4216,7 @@ FILE.elc or if FILE.elc doesn't exist."
 				t)))
     (save-excursion
       (dolist (file files)
-	(if (string-match "\\(tree-buffer\\|ecb.*\\)\\.el$" file)
+	(if (string-match "\\(silentcomp\\|tree-buffer\\|ecb.*\\)\\.el$" file)
 	    (ecb-compile-file-if-necessary file force-all))))))
 
 (defun ecb-auto-activate-hook()
@@ -4324,6 +4323,6 @@ changed there should be no performance-problem!"
 
 (add-hook 'emacs-startup-hook 'ecb-auto-activate-hook)
 
-(ecb-provide 'ecb)
+(silentcomp-provide 'ecb)
 
 ;;;ecb.el ends here

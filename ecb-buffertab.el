@@ -1,6 +1,6 @@
 ;;; ecb-buffertab.el --- 
 
-;; $Id: ecb-buffertab.el,v 1.5 2002/11/06 11:25:38 berndl Exp $
+;; $Id: ecb-buffertab.el,v 1.6 2002/12/06 20:41:25 berndl Exp $
 
 ;; Copyright (C) 2000-2003 Free Software Foundation, Inc.
 ;; Copyright (C) 2000-2003 Kevin A. Burton (burton@openprivacy.org)
@@ -46,7 +46,7 @@
 ;;   correctly.
 
 (eval-when-compile
-  (require 'ecb-bytecomp))
+  (require 'silentcomp))
 
 (require 'ecb-compilation)
 
@@ -89,6 +89,6 @@
 
     (setq mode-line-format modeline-tab)))
 
-(ecb-provide 'ecb-buffertab)
+(silentcomp-provide 'ecb-buffertab)
 
 ;;; ecb-buffertab.el ends here

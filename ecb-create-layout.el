@@ -29,18 +29,18 @@
 ;;; Code
 
 (eval-when-compile
-  (require 'ecb-bytecomp))
+  (require 'silentcomp))
 
 (require 'ecb-mode-line)
 (require 'ecb-util)
 
 ;; XEmacs stuff
-(ecb-bytecomp-defvar vertical-divider-map)
-(ecb-bytecomp-defvar modeline-map)
+(silentcomp-defvar vertical-divider-map)
+(silentcomp-defvar modeline-map)
 ;; Emacs 21.X stuff
-(ecb-bytecomp-defvar automatic-hscrolling)
-(ecb-bytecomp-defvar before-make-frame-hook)
-(ecb-bytecomp-defvar after-make-frame-functions)
+(silentcomp-defvar automatic-hscrolling)
+(silentcomp-defvar before-make-frame-hook)
+(silentcomp-defvar after-make-frame-functions)
 
 
 (defgroup ecb-create-layout nil
@@ -755,6 +755,6 @@ DELETE-FRAME is not nil then the new created frame will be deleted and the
            (ecb-create-layout-buffer-type)
            (ecb-create-layout-buffer-factor)))
 
-(ecb-provide 'ecb-create-layout)
+(silentcomp-provide 'ecb-create-layout)
 
 ;; ecb-help.el ends here
