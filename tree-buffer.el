@@ -933,6 +933,15 @@ child."
       (when (equal (tree-node-get-name child) child-name)
         (throw 'exit child)))))
 
+(defun tree-node-find-data-recursively (node data)
+  (if (eq data (tree-node-get-data node))
+      node
+    (catch 'exit
+      (dolist (child (tree-node-get-children node))
+	(let ((n (tree-node-find-data-recursively child data)))
+	  (when n
+	    (throw 'exit n)))))))
+
 ;;; Tree node
 
 (defconst tree-node-name 0)

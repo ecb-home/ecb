@@ -1,6 +1,13 @@
 Version 1.40:
 -------------
 
+- Added a function to semantic-clean-token-hooks that just updates the token
+  changed instead of re-building the entire token tree. (Jesper)
+
+- Implemented a token tree cache that stores recently opened buffers' token
+  trees. This makes the buffer switching much faster and also saves expanded
+  nodes and window positions. The cache is unlimited at the moment. (Jesper)
+
 - Added a speedbar-like layout nr. 11. This is very useful (like also layout
   nr. 10) either for users with small screens or users which normally do not
   need/want the ECB-windows but sometimes browsing/selecting
