@@ -142,9 +142,10 @@
 
 (defmethod ecb-nav-save ((item ecb-nav-token-history-item))
   (let ((token (ecb-nav-get-token item)))
-    (ecb-nav-set-pos item (- (point) (semantic-token-start token)))
-    (ecb-nav-set-window-start item (- (window-start)
-				      (semantic-token-start token)))))
+    (when (semantic-token-start token)
+      (ecb-nav-set-pos item (- (point) (semantic-token-start token)))
+      (ecb-nav-set-window-start item (- (window-start)
+					(semantic-token-start token))))))
 
 (defmethod ecb-nav-to-string ((item ecb-nav-token-history-item))
   (concat (semantic-token-name (ecb-nav-get-token item)) ":" (call-next-method)))
