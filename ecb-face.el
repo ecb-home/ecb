@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-face.el,v 1.21 2004/08/31 15:33:04 berndl Exp $
+;; $Id: ecb-face.el,v 1.22 2004/12/20 17:11:00 berndl Exp $
 
 ;;; Commentary:
 
@@ -209,7 +209,7 @@ color etc."
   :group 'ecb-faces)
 
 (defcustom ecb-history-general-face 'ecb-default-general-face
-  "*Basic face for the ECB directory buffer.
+  "*Basic face for the ECB history buffer.
 This defines the basic face the whole history buffer should displayed with. If
 the face 'ecb-default-general-face' is used then the display of all
 ECB-tree-buffers can be changed by modifying only the face
@@ -347,6 +347,101 @@ Changes take first effect after finishing and reactivating ECB!"
                        :value ecb-default-highlight-face)
                 (face :tag "Special face"
                       :value ecb-history-face)))
+
+(defface ecb-analyse-face (ecb-face-default nil nil nil
+                                            'ecb-default-highlight-face
+                                            "yellow" nil
+                                            "cornflower blue" "magenta"
+                                            nil nil t)
+  "*Define face used for highlighting current entry in the analyse buffer."
+  :group 'ecb-faces)
+
+(defcustom ecb-analyse-face 'ecb-default-highlight-face
+  "*Face used for highlighting current entry in the analyse buffer.
+If the face 'ecb-default-highlight-face' is used then the display of all
+ECB-tree-buffers can be changed by modifying only the face
+'ecb-default-highlight-face'.
+
+Changes take first effect after finishing and reactivating ECB!"
+  :group 'ecb-face-options
+  :group 'ecb-analyse
+  :type '(radio (const :tag "Use ecb-default-highlight-face"
+                       :value ecb-default-highlight-face)
+                (face :tag "Special face"
+                      :value ecb-analyse-face)))
+
+(defface ecb-analyse-general-face (ecb-face-default 1.0 nil nil
+                                                    'ecb-default-general-face)
+  "*Basic face for the ECB analyse buffer.
+It´s recommended to define here the font-family, the font-size, the basic
+color etc."
+  :group 'ecb-faces)
+
+(defcustom ecb-analyse-general-face 'ecb-default-general-face
+  "*Basic face for the ECB analyse buffer.
+This defines the basic face the whole history buffer should displayed with. If
+the face 'ecb-default-general-face' is used then the display of all
+ECB-tree-buffers can be changed by modifying only the face
+'ecb-default-general-face'.
+
+Changes take first effect after finishing and reactivating ECB!"
+  :group 'ecb-face-options
+  :group 'ecb-analyse
+  :type '(radio (const :tag "Use ecb-default-general-face"
+                       :value ecb-default-general-face)
+                (face :tag "Special face"
+                      :value ecb-analyse-general-face)))
+
+(defface ecb-analyse-bucket-element-face (ecb-face-default nil nil nil
+                                                           'ecb-default-general-face
+                                                           "brown")
+  "*Face used for displaying elements of buckets in the ECB-analyse-buffer.
+
+In GNU Emacs 21.X this face inherits from the face 'ecb-default-general-face'.
+
+With XEmacs and GNU Emacs 20.X there is no inheritance-feature so if the
+buckets in the ECB-buffers should be displayed with the same basic
+attributes set by 'ecb-default-general-face' this set of basic attributes have
+to be set in 'ecb-analyse-bucket-node-face' too!"
+  :group 'ecb-faces)
+
+(defcustom ecb-analyse-bucket-element-face 'ecb-analyse-bucket-element-face
+  "*Basic face for displaying elements of buckets in the ECB-analyse-buffer.
+This defines the basic face for the elements of category-buckets like Context,
+Prefix, Completions etc. in the ECB-analyse-buffer.
+
+Changes take first effect after finishing and reactivating ECB!"
+  :group 'ecb-face-options
+  :group 'ecb-analyse
+  :type '(radio (const :tag "Use ecb-default-general-face"
+                       :value ecb-default-general-face)
+                (face :tag "Special face"
+                      :value ecb-analyse-bucket-element-face)))
+
+(defface ecb-analyse-bucket-node-face (ecb-face-default nil t nil
+                                                           'ecb-default-general-face)
+  "*Face used for displaying a bucket-node in the ECB-analyse-buffer.
+
+In GNU Emacs 21.X this face inherits from the face 'ecb-default-general-face'.
+
+With XEmacs and GNU Emacs 20.X there is no inheritance-feature so if the
+buckets in the ECB-buffers should be displayed with the same basic
+attributes set by 'ecb-default-general-face' this set of basic attributes have
+to be set in 'ecb-analyse-bucket-node-face' too!"
+  :group 'ecb-faces)
+
+(defcustom ecb-analyse-bucket-node-face 'ecb-analyse-bucket-node-face
+  "*Basic face for displaying a bucket-node in the ECB-analyse-buffer.
+This defines the basic face for the bucket-nodes like Context, Prefix,
+Completions etc. in the ECB-analyse-buffer.
+
+Changes take first effect after finishing and reactivating ECB!"
+  :group 'ecb-face-options
+  :group 'ecb-analyse
+  :type '(radio (const :tag "Use ecb-default-general-face"
+                       :value ecb-default-general-face)
+                (face :tag "Special face"
+                      :value ecb-analyse-bucket-node-face)))
 
 (defface ecb-tag-header-face (ecb-face-default nil nil nil nil nil nil
                                                "SeaGreen1" "SeaGreen1"
