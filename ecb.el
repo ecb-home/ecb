@@ -73,7 +73,7 @@
 ;; For the ChangeLog of this file see the CVS-repository. For a complete
 ;; history of the ECB-package see the file NEWS.
 
-;; $Id: ecb.el,v 1.307 2003/05/06 08:26:38 berndl Exp $
+;; $Id: ecb.el,v 1.308 2003/06/13 15:13:05 berndl Exp $
 
 ;;; Code:
 
@@ -2985,7 +2985,7 @@ current-buffer is saved."
              ecb-last-edit-window-with-point
              ;; this prevents updating the method buffer after saving a not
              ;; current buffer (e.g. with `save-some-buffers'), because this
-            ;; would result in displaying a method-buffer not belonging to the
+             ;; would result in displaying a method-buffer not belonging to the
              ;; current source-buffer.
              (equal (current-buffer)
                     (window-buffer ecb-last-edit-window-with-point)))
@@ -3033,7 +3033,13 @@ displayed with window-start and point at beginning of buffer."
       ;; `ecb-rebuild-methods-buffer-with-tokencache'...
       (if ecb-method-buffer-needs-rebuild
           ;; the hook was not called therefore here manually
-          (ecb-rebuild-methods-buffer-with-tokencache current-tokencache t)))
+          (ecb-rebuild-methods-buffer-with-tokencache
+           current-tokencache
+           ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: Maybe this can cause
+           ;; performance-drawbacks because with this non-semantic (but imenu
+           ;; or etags buffers) will be rescaned in
+           ;; `ecb-rebuild-methods-buffer-with-tokencache'!)
+           (semantic-active-p))))
     (when scroll-to-top
       (save-selected-window
 	(ecb-exec-in-methods-window
@@ -3056,67 +3062,60 @@ removes only the token-tree for SOURCE-FILE-NAME from the cache."
 
 (defun ecb-handle-non-semantic-tags ()
   (require 'speedbar)
+  (require 'imenu)
   (let* ((lst (speedbar-fetch-dynamic-tags (buffer-file-name
                                             (current-buffer))))
-         (fnc (car lst))
          (tag-list (cdr lst))
          (methods speedbar-tag-hierarchy-method)
          (speedbar-tag-split-minimum-length 2)
          (speedbar-tag-regroup-maximum-length 2)
          bucket-list token-list misc-token-list token)
-    (if (string= (car (car tag-list)) "*Rescan*")
+    (if (string= (car (car tag-list)) (car imenu--rescan-item))
         (setq tag-list (cdr tag-list)))
-    ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: Hier erstmal testen, ob etags
-    ;; oder imenu vielleicht schon Gruppen liefert (etags eher nein, imenu bei
-    ;; cperl in jedem Fall). Falls bereits Gruppen vorhanden, dann nicht mehr
-    ;; neu gruppieren!!!
+    ;; If imenu or etags returns already groups (etags will do this probably
+    ;; not, but imenu will do this sometimes - e.g. with cperl) then we do not
+    ;; regrouping with the speedbar-methods of
+    ;; `speedbar-tag-hierarchy-method'! 
     (when (dolist (tag tag-list t)
             (if (or (speedbar-generic-list-positioned-group-p tag)
                     (speedbar-generic-list-group-p tag))
                 (return nil)))
-      (message "Neugruppierung der Tags")
       (while methods
         (setq tag-list (funcall (car methods) tag-list)
               methods (cdr methods)))
       )
-    ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: fertigen bucketierten(!)
-    ;; Token-stream erzeugen. ECB wird diesen Stream nicht mehr bucketieren
-    ;; --> ecb-add-tokens hat bereits neues Argument no-bucketize!
+    ;; Here we create a new token-stream in semantic format which is in
+    ;; addition already bucketized (in the meaning of `semantic-bucketize').
+    ;; ECB will not bucketize this stream again because `ecb-add-tokens' has
+    ;; an additional argument which prevents this.
     (while tag-list
       (cond ((null (car-safe tag-list)) nil) ;this would be a separator
 	    ((speedbar-generic-list-tag-p (car tag-list))
              (setq token
                    (list (car (car tag-list))
-                         'misc
-                         ;; (intern (car (car tag-list)))
+                         'misc ;; was: (intern (car (car tag-list)))
                          nil nil nil
                          (make-vector 2 (cdr (car tag-list)))))
              (setq misc-token-list
                    (cons token misc-token-list)))
-            ((speedbar-generic-list-positioned-group-p (car tag-list)) nil)
-            ;; 	     (speedbar-make-tag-line expand-button
-            ;; 				     ?+ expand-fun (cdr (cdr (car tag-list)))
-            ;; 				     (car (car tag-list)) ;button name
-            ;; 				     find-fun ;function
-            ;; 				     (car (cdr (car tag-list))) ;token is posn
-            ;; 				     'speedbar-tag-face
-            ;; 				     (1+ level)))
+            ((speedbar-generic-list-positioned-group-p (car tag-list))
+             ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: currently we do not
+             ;; interpret positioned groups....maybe in future versions....
+             nil)
             ((speedbar-generic-list-group-p (car tag-list))
              (setq token-list nil)
-             ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: Hier muss rekursiv
-             ;; vorgegangen werden, da die einzelnen Tags wiederum Gruppen
-             ;; sein können!! Beispiel: bigfloat.pl!!
-             ;; Gruppen werden ab hier als type-tokens interpretiert.
-             ;; Type-token: ("name" 'type "typename" (children)
+             ;; Here we must process recursive, because some of the tags can
+             ;; be groups itself (example: files in cperl-mode)
+             ;; groups will be intepreted as type-tokens like:
+             ;; type-token: ("name" 'type "typename" (children)
              ;;              nil nil [start end])
              ;;
-             ;; "typename" ist dann der Gruppenname, (children) ist die Liste
-             ;; an Gruppen-elementen...für welche dann das Spiel von vorne
-             ;; (rekursion!) beginnt! Die Children eines neuen Types sind
-             ;; entweder:
-             ;; - wiederum Gruppen, dann 'type und gleiches Spiel von vorne
-             ;; - plain tags, dann neues Token mit dem Gruppenname als type
-
+             ;; "typename" is the groupname, (children) ist the list of
+             ;; group-elements...for these the recursions begins again...
+             ;;
+             ;; The Children of a new type a either:
+             ;; - groups, then 'type and the game begins again
+             ;; - plain tags, then new token with the groupname als type
              (setq token-list (ecb-handle-non-semantic-generic-list-group
                                (car (car tag-list)) (cdr (car tag-list))))
              (setq bucket-list
@@ -3133,8 +3132,40 @@ removes only the token-tree for SOURCE-FILE-NAME from the cache."
     bucket-list
     ))
 
-;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: bigfloat.pl funktioniert bzgl.
-;; +Hierarchy+... immer noch nicht!
+;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: cperl-mode files do not work 100%
+;; because the hierachies of +Hierarchie+ etc...are not displayed as a
+;; hierarchie but only a one single token....We have to fix this later...
+(defun ecb-handle-non-semantic-generic-list-group (group-name group-children
+                                                              &optional bucketize)
+  (let ((token-list nil)
+        (misc-token-list nil))
+    (dolist (tag group-children)
+      (if (speedbar-generic-list-group-p tag)
+          (setq token-list
+                (cons (list (car tag)
+                            'type
+                            "class" ;; was: group-name
+                            (ecb-handle-non-semantic-generic-list-group
+                             (car tag) (cdr tag) t)
+                            nil nil nil (make-vector 2 1))
+                      token-list))
+        (setq misc-token-list
+              (cons (list (car tag)
+                          (intern group-name)
+                          nil nil nil
+                          (make-vector 2 (cdr tag)))
+                    misc-token-list))))
+    (if bucketize
+        (progn
+          (cons (cons "Misc"
+                      misc-token-list)
+                (if token-list
+                    (list (cons "Types"
+                                token-list))
+                  token-list)))
+      (append token-list misc-token-list))))
+
+;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: A not very well working version:
 ;; (defun ecb-handle-non-semantic-generic-list-group (group-name group-children
 ;;                                                               &optional bucketize)
 ;;   (let ((token-list nil)
@@ -3145,67 +3176,21 @@ removes only the token-tree for SOURCE-FILE-NAME from the cache."
 ;;                 (cons (list (car tag)
 ;;                             'type
 ;;                             group-name
-;;                             (ecb-handle-non-semantic-generic-list-group
-;;                              (car tag) (cdr tag) t)
+;;                             (if bucketize
+;;                                 (semantic-bucketize
+;;                                  (ecb-handle-non-semantic-generic-list-group
+;;                                   (car tag) (cdr tag) t))
+;;                               (ecb-handle-non-semantic-generic-list-group
+;;                                (car tag) (cdr tag) t))
 ;;                             nil nil nil (make-vector 2 1))
 ;;                       token-list))
-;;         (setq misc-token-list
+;;         (setq token-list
 ;;               (cons (list (car tag)
 ;;                           (intern group-name)
 ;;                           nil nil nil
 ;;                           (make-vector 2 (cdr tag)))
-;;                     misc-token-list))))
-;;     (if bucketize
-;;         (progn
-;;           (cons (cons "Misc"
-;;                       misc-token-list)
-;;                 (if token-list
-;;                     (list (cons "Types"
-;;                                 token-list))
-;;                   token-list)))
-;;       (append token-list misc-token-list))))
-
-(defun ecb-handle-non-semantic-generic-list-group (group-name group-children
-                                                              &optional bucketize)
-  (let ((token-list nil)
-        (misc-token-list nil))
-    (dolist (tag group-children)
-      (if (speedbar-generic-list-group-p tag)
-          (setq token-list
-                (cons (list (car tag)
-                            'type
-                            group-name
-                            (if bucketize
-                                (semantic-bucketize
-                                 (ecb-handle-non-semantic-generic-list-group
-                                  (car tag) (cdr tag) t))
-                              (ecb-handle-non-semantic-generic-list-group
-                               (car tag) (cdr tag) t))
-                            nil nil nil (make-vector 2 1))
-                      token-list))
-        (setq token-list
-              (cons (list (car tag)
-                          (intern group-name)
-                          nil nil nil
-                          (make-vector 2 (cdr tag)))
-                    token-list))))
-    token-list))
-
-
-;; (insert (pp-to-string (ecb-handle-non-semantic-generic-list-group    
-;; "main"
-;;  '(("norm" . 1742)
-;;    ("neg" . 2478)
-;;    ("abs"
-;;     ("normabs" . 2774)
-;;     ("norm"
-;;      ("norm1" . 2774)
-;;      ("norm2" . 2774)
-;;      ("norm3" . 2774))
-;;     ("Morm"
-;;      ("Morm1" . 2774)
-;;      ("Morm2" . 2774)
-;;      ("Morm3" . 2774)))))))
+;;                     token-list))))
+;;     token-list))
 
 
 
@@ -3229,11 +3214,7 @@ it is cleared."
              (ecb-point-in-edit-window)
 ;;              (equal (selected-frame) ecb-frame)
              (get-buffer-window ecb-methods-buffer-name)
-             (buffer-file-name (current-buffer))
-             ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>:
-;;              (not (string= (buffer-name (current-buffer))
-;;              jde-project-file-name))
-             
+             (buffer-file-name (current-buffer))             
              ;; The functions of the hook
              ;; `semantic-after-toplevel-cache-change-hook' are also called
              ;; after clearing the cache to set the cache to nil if a buffer
@@ -3267,8 +3248,7 @@ it is cleared."
       (if ecb-debug-mode
           (dolist (tok updated-cache)
             (ecb-semantic-assert-valid-token tok)))
-      ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: Hier updating auch für
-      ;; non-semantic buffers.
+      ;; here we process non-semantic buffers if the user wants this
       (when (and ecb-process-non-semantic-files
                  (null updated-cache) (not (semantic-active-p))
                  (buffer-file-name (current-buffer)))
@@ -3322,7 +3302,12 @@ Examples when a call to this function is necessary:
              (y-or-n-p "Do you want completely rebuilding the method buffer? "))
     ;; to force a really complete rebuild we must completely clear the
     ;; semantic cache
-    (semantic-clear-toplevel-cache)
+    (if (semantic-active-p)
+        (semantic-clear-toplevel-cache)
+      ;; for non-semantic-buffers not parsed via imenu (but maybe with etags)
+      ;; we must save the buffer because otherwise it can not be reparsed by
+      ;; tools like etags.
+      (if (null imenu--index-alist) (save-buffer)))
     (ecb-update-methods-buffer--internal)))
 
 (defun ecb-set-selected-source (filename other-edit-window

@@ -110,7 +110,7 @@
 ;; For the ChangeLog of this file see the CVS-repository. For a complete
 ;; history of the ECB-package see the file NEWS.
 
-;; $Id: ecb-layout.el,v 1.164 2003/04/29 08:19:40 berndl Exp $
+;; $Id: ecb-layout.el,v 1.165 2003/06/13 15:13:06 berndl Exp $
 
 ;;; Code:
 
@@ -2244,6 +2244,7 @@ Things CREATE-CODE has to do:
    + `ecb-set-sources-buffer'
    + `ecb-set-methods-buffer'
    + `ecb-set-history-buffer'
+   + `ecb-set-speedbar-buffer'
    Each layout can only contain one of each tree-buffer-type!
 
    In addition to these functions there is a general macro:

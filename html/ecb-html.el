@@ -28,7 +28,7 @@
 ;; Do not change any html-file besides the index.html manually but do all
 ;; changes in this elisp file!
 
-;; $Id: ecb-html.el,v 1.48 2003/04/03 16:47:12 berndl Exp $
+;; $Id: ecb-html.el,v 1.49 2003/06/13 15:13:02 berndl Exp $
 
 ;;; Code:
 
@@ -76,7 +76,13 @@
 (defvar ecb-latest-news nil
   "List of latest news displayed on the main page.")
 (setq ecb-latest-news
-      `(,(h-sub-section "ECB 1.93 released! (2003-03-27)"
+      `(,(h-sub-section "ECB 1.93 now available as XEmacs package 1.06! (2003-04-09)"
+                        "The XEmacs-package ECB 1.06 can be installed either via "
+                        (h-link "http://www.xemacs.org/Download/win32/setup.exe"
+                                "XEmacs-netinstaller")
+                        " (for Windows) or from " (h-link "ftp://ftp.xemacs.org:/pub/xemacs/packages/" "ftp.xemacs.org")
+                        " or via the package-manager of XEmacs.")
+        ,(h-sub-section "ECB 1.93 released! (2003-03-27)"
                         "Fixes some bugs and enhances the layout-engine. Offers also some new features. "
                         (h-link "docs/Install-and-first-steps.html#Install%20and%20first%20steps" "Here") " is a short installation guide. "
                         "Click " (h-link "NEWS.html" "here")
@@ -87,18 +93,18 @@
                         "Click " (h-link "NEWS.html" "here")
                         " for information about changes in the new version. ")
         ,(h-sub-section "Bugfixes for ECB 1.92 available. (2003-02-26)"
-                        "Click " (h-link "downloads.html" "here") " to get it.")
-        ,(h-sub-section "ECB 1.92 released! (2003-02-24)"
-                        "This release fixes some bugs and enhances layout and tree-buffer customizing. "
-                        (h-link "docs/Install-and-first-steps.html#Install%20and%20first%20steps" "Here") " is a short installation guide. "
-                        "Click " (h-link "NEWS.html" "here")
-                        " for information about changes in the new version. ")))
+                        "Click " (h-link "downloads.html" "here") " to get it.")))
 
 (defvar ecb-rest-news nil
   "List of older news - these news are displayed in all-news.html ; see
 `ecb-html-all-news'.")
 (setq ecb-rest-news
-      `(,(h-sub-section "ECB 1.91.1 released! (2003-02-11)"
+      `(,(h-sub-section "ECB 1.92 released! (2003-02-24)"
+                        "This release fixes some bugs and enhances layout and tree-buffer customizing. "
+                        (h-link "docs/Install-and-first-steps.html#Install%20and%20first%20steps" "Here") " is a short installation guide. "
+                        "Click " (h-link "NEWS.html" "here")
+                        " for information about changes in the new version. ")
+        ,(h-sub-section "ECB 1.91.1 released! (2003-02-11)"
                         "This is mostly a bugfix-release which fixes some annoying bugs! "
                         (h-link "docs/Install-and-first-steps.html#Install%20and%20first%20steps" "Here") " is a short installation guide. "
                         "Click " (h-link "NEWS.html" "here")

@@ -1,6 +1,6 @@
 # This Makefile byte-compiles the ECB lisp files and generates online-help.
 
-# $Id: Makefile,v 1.62 2003/05/06 08:26:11 berndl Exp $
+# $Id: Makefile,v 1.63 2003/06/13 15:13:06 berndl Exp $
 
 # ========================================================================
 # User configurable section
@@ -91,7 +91,7 @@ INSTALLINFO=/usr/bin/install-info
 
 # Do not change anything below!
 
-# $Id: Makefile,v 1.62 2003/05/06 08:26:11 berndl Exp $
+# $Id: Makefile,v 1.63 2003/06/13 15:13:06 berndl Exp $
 
 # For the ECB-maintainers: Change the version-number here and not
 # elsewhere!
@@ -135,13 +135,13 @@ ecb: $(ecb_LISP_EL)
 	@echo "Byte-compiling ECB with LOADPATH=${LOADPATH} ..."
 	@$(RM) $(ecb_LISP_ELC) ecb-compile-script
 	@echo "(add-to-list 'load-path nil)" > ecb-compile-script
-	@if test ! -z "${SEMANTIC}" ; then\
+	@if test ! -z "${SEMANTIC}"; then\
 	   echo "(add-to-list 'load-path \"$(SEMANTIC)\")" >> ecb-compile-script; \
 	fi
-	@if test ! -z "${EIEIO}" ; then\
+	@if test ! -z "${EIEIO}"; then\
 	   echo "(add-to-list 'load-path \"$(EIEIO)\")" >> ecb-compile-script; \
 	fi
-	@if test ! -z "${LOADPATH}" ; then\
+	@if test ! -z "${LOADPATH}"; then\
 	   for loadpath in ${LOADPATH}; do \
 	      echo "(add-to-list 'load-path \"$$loadpath\")" >> ecb-compile-script; \
 	   done; \
@@ -154,7 +154,7 @@ ecb: $(ecb_LISP_EL)
 all: ecb online-help
 
 online-help: $(ecb_TEXI)
-	@if test -x "$(MAKEINFO)" ; then\
+	@if test -x "$(MAKEINFO)"; then\
 	   $(RM) -R $(ecb_INFO_DIR) $(ecb_HTML_DIR); \
 	   $(MKDIR) $(ecb_INFO_DIR) $(ecb_HTML_DIR); \
 	   echo Generating info-format...; \
@@ -181,7 +181,7 @@ pdf: $(ecb_TEXI)
 	   $(TEXI2DVI) --clean $<; \
 	   $(DVIPDFM) $(ecb_DVI); \
 	   $(RM) $(ecb_DVI); \
-	elif test -x "$(TEXI2DVI)" -a -x "$(DVIPS)" -a -x "$(PS2PDF)" ; then\
+	elif test -x "$(TEXI2DVI)" -a -x "$(DVIPS)" -a -x "$(PS2PDF)"; then\
 	   $(RM) $(ecb_DVI) $(ecb_PS) $(ecb_PDF); \
 	   echo Generating pdf-format with dvips and ps2pdf ...; \
 	   $(TEXI2DVI) --quiet --clean $<; \
@@ -198,7 +198,7 @@ pdf: $(ecb_TEXI)
 
 
 install-help: $(ecb_INFO_DIR)/$(ecb_INFO)
-	@if test -x "$(INSTALLINFO)" -a -f "$(EMACSINFOPATH)/dir" ; then\
+	@if test -x "$(INSTALLINFO)" -a -f "$(EMACSINFOPATH)/dir"; then\
 	   echo Installing the Online-help in $(INSTALLINFO)...; \
 	   $(CP) $(ecb_INFO_DIR)/*info* $(EMACSINFOPATH); \
 	   $(INSTALLINFO) $< $(EMACSINFOPATH)/dir; \

@@ -19,7 +19,7 @@
 @c Free Software Foundation, Inc., 59 Temple Place - Suite 330,
 @c Boston, MA 02111-1307, USA.
 
-@c $Id: ecb.texi,v 1.92 2003/04/03 16:46:17 berndl Exp $
+@c $Id: ecb.texi,v 1.93 2003/06/13 15:13:04 berndl Exp $
 
 @setfilename ecb.info
 
@@ -2169,8 +2169,8 @@ which can be either
 @itemize @bullet
 @item One of the builtin types
 
-This can be either ``directories'', ``sources'', ``methods'' or
-``history''.
+This can be either ``directories'', ``sources'', ``methods'',
+``history'' or ``speedbar''.
 
 @item Any user-defined type:
 
@@ -5795,17 +5795,36 @@ it into the ECB and the ECB-frame, @xref{Integrating speedbar}.
 @node Integrating speedbar, Optimize scrolling, Simulating speedbar, Tips and tricks
 @section Integrating speedbar in the ECB-frame
 
-It is very easy to integrate speedbar in the directories window of
-ECB. This makes sense for people...
+It is very easy to integrate speedbar into ECB. There are two
+different ways to do this:
+
+You can either use speedbar in the directories window of ECB instead
+of the builtin directory-browser of ECB. Or you can integrate an extra
+speedbar-window into a layout independent of the existence of a
+directory-window. The former one can be done via the option
+@code{ecb-use-speedbar-for-directories} and for the latter one you can
+either use the builtin layout ``left-dir-plus-speedbar'' or you have
+to create your own layout interactively with the command
+@code{ecb-create-new-layout}.
+
+In general integrating speedbar into the ECB-frame makes sense for
+people...
 
 @itemize @bullet
 @item
-...who likes the speedbar way of handling directories and source-files
+...who like the speedbar way of handling directories and source-files
 but also like the ECB-way of displaying the buffer-contents (like
-methods and variables in a source-file)
+methods and variables in a source-file). This people should use the
+option @code{ecb-use-speedbar-for-directories}.
 
 @item
-...who likes the speedbar way of browsing things like directories,
+...who like the ECB-way of browsing things like directories,
+source-files, file-contents but who need or want also browsing types
+of sources for which currently no semantic-parser exist but which can
+be parsed by imenu or etags.
+
+@item
+...who like the speedbar way of browsing things like directories,
 files, file-contents etc. but who dislike the extra speedbar-frame
 @end itemize
 
@@ -6170,9 +6189,10 @@ subsection.
 @subsection How to program a new layout
 
 If you just want creating a new layout with the standard ECB-windows
-like directories, sources, methods and history it's is strongly
-recommended to define the new layout interactively with the command
-@code{ecb-create-new-layout} (@pxref{Creating a new ECB-layout}).
+like directories, sources, methods, history and speedbar it's is
+strongly recommended to define the new layout interactively with the
+command @code{ecb-create-new-layout} (@pxref{Creating a new
+ECB-layout}).
 
 If you want creating a new layout and if this layout should contain
 other special windows than the standard ECB-windows then it's still
@@ -6241,6 +6261,7 @@ one of the following functions:
 @item @code{ecb-set-sources-buffer}
 @item @code{ecb-set-methods-buffer}
 @item @code{ecb-set-history-buffer}
+@item @code{ecb-set-speedbar-buffer}
 @end itemize
 Each layout can only contain one of each tree-buffer-type!
 
