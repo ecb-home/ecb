@@ -1,6 +1,10 @@
 Version 1.80:
 -------------
 
+- Much better and more powerful auto. upgrading-mechanism of incompatible or
+  renamed ECB-options to latest ECB-version. See the option
+  ecb-auto-compatibility-check! (Klaus)
+
 - Fixed formatting of "Parent" nodes in token buffer. (Jesper)
 
 - New option ecb-tree-RET-selects-edit-window: Possibility not to select the

@@ -22,9 +22,10 @@ Upgrading from any previous version:
 The type of the option 'ecb-token-display-function' has changed.
 
 ECB has a new feature 'ecb-auto-compatibility-check' which enables a check for
-incompatible ECB-options at ECB startup. These options are then auto. reset to
-the default-values of current ECB-version and displayed to the user with their
-old and new values.
+incompatible or renamed ECB-options at ECB startup. These options are then
+auto. upgraded to the new type or reset to the default-values of current
+ECB-version if no upgrade is possible. All upgraded or reset options are
+displayed to the user with their old and new values!
 
 
 Upgrading from any version < 1.60:

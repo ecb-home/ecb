@@ -54,7 +54,7 @@
 ;; The latest version of the ECB is available at
 ;; http://home.swipnet.se/mayhem/ecb.html
 
-;; $Id: ecb.el,v 1.209 2002/03/24 16:33:15 berndl Exp $
+;; $Id: ecb.el,v 1.210 2002/04/03 15:18:17 berndl Exp $
 
 ;;; Code:
 
@@ -168,6 +168,7 @@
   "Settings for the history buffer in the Emacs code browser."
   :group 'ecb
   :prefix "ecb-")
+
 
 (defcustom ecb-use-recursive-edit nil
   "*Tell ECB to use a recursive edit so that it can easily be deactivated
@@ -1196,12 +1197,14 @@ Note: A click with the secondary mouse-button \(see again
 (defcustom ecb-auto-compatibility-check t
   "*Check at ECB-startup if all ECB-options have correct values.
 If not nil then all ECB-options are checked if their current value have the
-correct type. It the type is incorrect the option is reset to the
-default-value of current ECB. After startup all reset options are displayed
-with their old \(before reset) and new values.
-See also the commands `ecb-check-and-reset-incompatible-options' and
-`ecb-display-reset-options'. If this option is off then the user can perform
-the check and reset manually with `ecb-check-and-reset-incompatible-options'."
+correct type. It the type is incorrect the option is either auto. upgraded to
+the new type or reset to the default-value of current ECB if no upgrade is
+possible. This feature can also upgrade options which are renamed in current
+ECB and try to transform the old-value to the new named option. After startup
+all upgraded or reset options are displayed with their old \(before
+upgrade/reset) and new values. See also the commands `ecb-upgrade-options' and
+`ecb-display-upgraded-options'. If this option is off then the user can
+perform the check and reset manually with `ecb-upgrade-options'."
   :group 'ecb-general
   :type 'boolean)
 
@@ -2933,10 +2936,10 @@ That is remove the unsupported :help stuff."
        :help "Show the online help of ECB."
        ])
     (ecb-menu-item
-     [ "Check incompatible ECB-options"
-       ecb-check-and-reset-incompatible-options
+     [ "Upgrade ECB-options to current ECB-version"
+       ecb-upgrade-options
        :active (equal (selected-frame) ecb-frame)
-       :help "Check incompatible values of ECB-options and reset them."
+       :help "Try to upgrade ECB-options to current ECB-version if necessary."
        ])
     (ecb-menu-item
      [ "Submit problem report"
@@ -3120,10 +3123,12 @@ always the ECB-frame if called from another frame."
 	(ecb-redraw-layout)
 	(ecb-update-directories-buffer))
 
-    ;; maybe we must reset some not anymore compatible options
+    ;; maybe we must upgrade some not anymore compatible or even renamed
+    ;; options
     (when ecb-auto-compatibility-check
       (ecb-check-not-compatible-options)
-      (ecb-reset-not-compatible-options))
+      (ecb-upgrade-not-compatible-options)
+      (ecb-upgrade-renamed-options))
 
     (setq ecb-old-compilation-window-height compilation-window-height)
     
@@ -3349,9 +3354,10 @@ always the ECB-frame if called from another frame."
     
     (message "The ECB is now activated.")
 
-    ;; now we display all `ecb-not-compatible-options'
+    ;; now we display all `ecb-not-compatible-options' and
+    ;; `ecb-renamed-options'
     (when ecb-auto-compatibility-check
-      (ecb-display-reset-options))
+      (ecb-display-upgraded-options))
     
     ;;now take a snapshot of the current window configuration
     (ecb-set-activated-window-configuration)))
