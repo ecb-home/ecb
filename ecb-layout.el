@@ -122,7 +122,7 @@
 ;;   + The edit-window must not be splitted and the point must reside in
 ;;     the not deleted edit-window.
 
-;; $Id: ecb-layout.el,v 1.27 2001/04/23 19:05:56 berndl Exp $
+;; $Id: ecb-layout.el,v 1.28 2001/04/24 04:11:41 berndl Exp $
 
 ;;; Code:
 
@@ -473,7 +473,7 @@ temporally deactivates the advices because otherwise ediff does not work."
   (ecb-activate-adviced-functions nil))
 
 (defun ecb-ediff-quit-hook ()
-  "Added to the `ediff-quit-hook' during ECB is activated. It
+  "Added to the end of `ediff-quit-hook' during ECB is activated. It
 restores the advices after finishing ediff."
   (ecb-activate-adviced-functions ecb-advice-window-functions))
 

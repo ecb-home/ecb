@@ -47,7 +47,7 @@
 ;; The latest version of the ECB is available at
 ;; http://home.swipnet.se/mayhem/ecb.html
 
-;; $Id: ecb.el,v 1.46 2001/04/23 18:59:28 berndl Exp $
+;; $Id: ecb.el,v 1.47 2001/04/24 04:11:41 berndl Exp $
 
 ;;; Code:
 
@@ -1298,8 +1298,8 @@ with the actually choosen layout \(see `ecb-layout-nr')."
               'ecb-ediff-before-setup-hook)
     (if (boundp 'ediff-quit-hook)
         (put 'ediff-quit-hook 'ecb-ediff-quit-hook-value ediff-quit-hook))
-    (add-hook 'ediff-quit-hook 'ecb-ediff-quit-hook)
-    (add-hook 'ediff-quit-hook 'ediff-cleanup-mess t)
+    (add-hook 'ediff-quit-hook 'ediff-cleanup-mess)
+    (add-hook 'ediff-quit-hook 'ecb-ediff-quit-hook t)
     
     (setq ecb-activated t)
     ;; we must update the directories buffer first time
