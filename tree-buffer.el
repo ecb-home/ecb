@@ -1127,7 +1127,7 @@ AFTER-CREATE-HOOK: A function or a list of functions \(with no arguments)
 
     ;; initialize the user-data-storage for this tree-buffer.
     (set (make-local-variable 'tree-buffer-data-store) nil)
-    
+
     (setq truncate-lines tr-lines)
     (setq truncate-partial-width-windows tr-lines)
     (setq buffer-read-only read-only)
