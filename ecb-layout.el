@@ -122,7 +122,7 @@
 ;;   + The edit-window must not be splitted and the point must reside in
 ;;     the not deleted edit-window.
 
-;; $Id: ecb-layout.el,v 1.26 2001/04/23 18:58:57 berndl Exp $
+;; $Id: ecb-layout.el,v 1.27 2001/04/23 19:05:56 berndl Exp $
 
 ;;; Code:
 
@@ -320,7 +320,9 @@ of the ECB-frame:
 For working most conveniant with ECB it is the best to advice all these
 functions, because then all the standard-shortcuts of these functions are also
 useable with ECB without doing anything else. Also other packages can interact
-best with ECB if these functions are all adviced.
+best with ECB if these functions are all adviced. If these adviced functions
+are called in another frame than the ECB-frame they behave all exactly like the
+not adviced versions!
 
 But please read also the following:
 

@@ -1,6 +1,9 @@
 Version 1.20 (???):
 -------------------
 
+- Now all adviced function behave only special in the ECB-frame. In each other
+  frame they behave exactly like the not adviced functions. (Klaus)
+
 - Fix "invalid method-buffer"-bug (Klaus, with a lot of help by Eric Ludlam
   and David Ponce).
 
@@ -18,8 +21,8 @@ Version 1.20 (???):
   Note: The name of the option 'ecb-left-mouse-jump-destination' has been
   changed to `ecb-primary-mouse-jump-destination'!
 
-- Now ECB is ediff-friendly: During ediff is active the advices of ECB are
-  temporally deactivated! (Klaus)
+- Now ECB is really ediff-friendly: During ediff is active the advices of ECB
+  are temporally deactivated! (Klaus)
 
 - Now all tree-buffers (ECB-buffers) are read-only (Klaus)!
 
