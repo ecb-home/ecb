@@ -527,6 +527,18 @@ Available hooks:
 
 Look at the documentation of these variables and hooks to get description.
 
+Remark to the library tree-buffer: This library is ECB independent and can be
+used for other applications too. But such an application is not allowed to use
+any of the variables of tree-buffer.el especially not the following:
+
+- `tree-buffers': Only for internal use. It contains all tree-buffers of
+  current Emacs-Instance, means all tree-buffers of all applications which
+  uses currently tree-buffers. Every application must store its own
+  tree-buffers in an own variable!
+  For example: ECB stores its tree-buffers in `ecb-tree-buffers'!
+
+An application can only use the methods tree-buffer.el provides!
+
 
                         ===================================
                         Known conflicts with other packages

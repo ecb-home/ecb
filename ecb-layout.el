@@ -1362,7 +1362,7 @@ multiplied with the current window-width."
                       (if (window-live-p (get-buffer-window tree-buffer))
                           tree-buffer
                         nil)))
-          tree-buffers))
+          ecb-tree-buffers))
 
 (defvar ecb-windows-hidden t
   "Used with `ecb-toggle-ecb-windows'.  If true the ECB windows are hidden.")
@@ -1616,7 +1616,7 @@ this function the edit-window is selected which was current before redrawing."
       ;; activating the adviced functions again
       (ecb-activate-adviced-functions ecb-advice-window-functions)
       
-      ;; synchronize the tree-buffers if necessary (means if not all
+      ;; synchronize the ecb-tree-buffers if necessary (means if not all
       ;; tree-windows of current layout were visible before redraw).
       (if (not (equal tree-windows-before-redraw
                       (ecb-layout-get-current-tree-windows)))
