@@ -26,7 +26,7 @@
 ;; This file is part of the ECB package which can be found at:
 ;; http://home.swipnet.se/mayhem/ecb.html
 
-;; $Id: tree-buffer.el,v 1.96 2002/11/06 11:25:38 berndl Exp $
+;; $Id: tree-buffer.el,v 1.97 2002/11/15 15:37:58 berndl Exp $
 
 ;;; Code:
 
@@ -236,7 +236,8 @@ with the same arguments as `tree-node-expanded-fn'."
             (setq tree-buffer-incr-searchpattern "")
             (when tree-node-selected-fn
               (funcall tree-node-selected-fn node mouse-button
-                       shift-pressed control-pressed (buffer-name)))))))))
+                       shift-pressed control-pressed (buffer-name))))))
+      )))
 
 (defun tree-buffer-get-node-at-point (&optional p)
   (save-excursion
@@ -298,6 +299,19 @@ with the same arguments as `tree-node-expanded-fn'."
         facer
       nil)))
 
+(defun tree-buffer-pos-hor-visible-p (pos window)
+  "Returns non nil if POS is horizontal visible otherwise nil."
+  (save-excursion
+    (goto-char pos)
+    (and (>= (- (current-column) (window-hscroll window)) 0)
+         (< (- (current-column) (window-hscroll window))
+            (window-width window)))))
+
+(defun tree-buffer-scroll-hor (amount)
+  (let ((current-prefix-arg amount))
+    (call-interactively 'scroll-left)))
+
+(defvar tree-buffer-current-hor-scroll-amount 0)
 (defun tree-buffer-recenter (node window)
   "If NODE is not visible then first recenter the window WINDOW so NODE is
 best visible, means NODE is displayed in the middle of the window if possible.
@@ -372,11 +386,23 @@ displayed without empty-lines at the end, means WINDOW is always best filled."
                                     (goto-char (window-start window))
                                     (forward-line (- full-lines-in-window w-height))
                                     (tree-buffer-line-beginning-pos)))))))
-    ;; now we optimize the horizontal display of the tree-buffer, so that at
-    ;; least of NODE and all its visible subnodes the expand/collapse-button
-    ;; is visible and as much as possible of the nodenames.
-    
-    ))
+    )
+
+  ;; now we have to hor. recenter the whole window/buffer to the last computed
+  ;; value
+;;   (tree-buffer-scroll-hor tree-buffer-current-hor-scroll-amount)
+  
+;;   ;; now we optimize the horizontal display of the tree-buffer, so that at
+;;   ;; least of NODE and all its visible subnodes the expand/collapse-button
+;;   ;; is visible and as much as possible of the nodenames.
+;;   (let ((node-end-point (save-excursion
+;;                           (goto-line (tree-buffer-find-node node))
+;;                           (tree-buffer-line-end-pos))))
+;;     (when (not (tree-buffer-pos-hor-visible-p node-end-point window))
+;;       (setq tree-buffer-current-hor-scroll-amount
+;;             (+ 5 tree-buffer-current-hor-scroll-amount))
+;;       (tree-buffer-scroll-hor tree-buffer-current-hor-scroll-amount)))
+  )
 
 ;; Klaus: Now we use overlays to highlight current node in a tree-buffer. This
 ;; makes it easier to do some facing with the nodes itself and above all this
