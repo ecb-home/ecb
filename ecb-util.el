@@ -26,10 +26,23 @@
 ;; This file is part of the ECB package which can be found at:
 ;; http://home.swipnet.se/mayhem/ecb.html
 
-;; $Id: ecb-util.el,v 1.31 2002/11/03 11:02:17 berndl Exp $
+;; $Id: ecb-util.el,v 1.32 2002/11/05 13:47:41 berndl Exp $
 
 ;;; Code:
 
+(when (featurep 'ecb-bytecomp)
+  ;; JDE
+  (ecb-bytecomp-defun jde-gen-class-buffer)
+  ;; XEmacs
+  (ecb-bytecomp-defun mswindows-cygwin-to-win32-path)
+  (ecb-bytecomp-defun frame-property)
+  (ecb-bytecomp-defun point-at-bol)
+  (ecb-bytecomp-defun point-at-eol)
+  ;; Emacs
+  (ecb-bytecomp-defun frame-parameter)
+  (ecb-bytecomp-defun line-beginning-position)
+  (ecb-bytecomp-defun line-end-position))
+  
 ;; Some constants
 (defconst ecb-running-xemacs (string-match "XEmacs\\|Lucid" emacs-version))
 (defconst ecb-running-emacs-21 (and (not ecb-running-xemacs)
@@ -48,6 +61,14 @@
 
 (defconst ecb-emacs-info-dir (expand-file-name(concat ecb-emacs-dir "info/")))
 
+(if ecb-running-xemacs
+    (progn
+      (defalias 'ecb-frame-parameter 'frame-property)
+      (defalias 'ecb-line-beginning-pos 'point-at-bol)
+      (defalias 'ecb-line-end-pos 'point-at-eol))
+  (defalias 'ecb-frame-parameter 'frame-parameter)
+  (defalias 'ecb-line-beginning-pos 'line-beginning-position)
+  (defalias 'ecb-line-end-pos 'line-end-position))
 
 (defun ecb-remove-assoc (list key)
   (delete* key list :test (function (lambda (key item) (eq key (car item))))))

@@ -1,6 +1,6 @@
 ;;; ecb-eshell.el --- eshell integration for the ECB.
 
-;; $Id: ecb-eshell.el,v 1.44 2002/10/31 00:03:12 burtonator Exp $
+;; $Id: ecb-eshell.el,v 1.45 2002/11/05 13:47:40 berndl Exp $
 
 ;; Copyright (C) 2000-2003 Free Software Foundation, Inc.
 ;; Copyright (C) 2000-2003 Kevin A. Burton (burton@openprivacy.org)
@@ -113,6 +113,15 @@
 
 ;;; Code:
 
+(require 'ecb-util)
+
+(when (featurep 'ecb-bytecomp)
+  (ecb-bytecomp-defvar eshell-buffer-name)
+  (ecb-bytecomp-defun eshell)
+  (ecb-bytecomp-defun eshell/cd)
+  (ecb-bytecomp-defun eshell-send-input)
+  (ecb-bytecomp-defun eshell-bol))
+
 (defgroup ecb-eshell nil
   "Settings for eshell integration within the ECB."
   :group 'ecb
@@ -155,7 +164,8 @@ eshell is currently visible."
 
       (if (ecb-eshell-running-p)
           (let((source-buffer-directory nil)
-               (eshell-buffer-list (frame-parameter nil 'buffer-list))
+               (eshell-buffer-list (ecb-frame-parameter (selected-frame)
+                                                        'buffer-list))
                (ecb-buffer-directory nil)
                (window nil))
 
@@ -204,7 +214,8 @@ eshell is currently visible."
   "Protect the buffer-list so that the eshell buffer name is not places early in
 the buffer list or at all if it currently doesn't exist."
   `(unwind-protect
-       (let((eshell-buffer-list (frame-parameter nil 'buffer-list)))
+       (let((eshell-buffer-list (ecb-frame-parameter (selected-frame)
+                                                     'buffer-list)))
          ,@body
          (modify-frame-parameters nil (list (cons 'buffer-list eshell-buffer-list))))))
 

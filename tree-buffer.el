@@ -26,7 +26,7 @@
 ;; This file is part of the ECB package which can be found at:
 ;; http://home.swipnet.se/mayhem/ecb.html
 
-;; $Id: tree-buffer.el,v 1.93 2002/10/18 10:45:45 berndl Exp $
+;; $Id: tree-buffer.el,v 1.94 2002/11/05 13:47:41 berndl Exp $
 
 ;;; Code:
 
@@ -39,6 +39,25 @@
 (defconst tree-buffer-running-emacs-21
   (and (not tree-buffer-running-xemacs)
        (> emacs-major-version 20)))
+
+(when (featurep 'ecb-bytecomp)
+  ;; XEmacs stuff
+  (ecb-bytecomp-defun button-release-event-p)
+  (ecb-bytecomp-defun button-press-event-p)
+  (ecb-bytecomp-defun event-key)
+  (ecb-bytecomp-defun display-message)
+  (ecb-bytecomp-defun clear-message)
+  ;; Emacs
+  (ecb-bytecomp-defvar message-log-max)
+  (ecb-bytecomp-defvar message-truncate-lines)
+  (ecb-bytecomp-defvar track-mouse)
+  (ecb-bytecomp-defvar special-event-map)
+  (ecb-bytecomp-defun posn-window)
+  (ecb-bytecomp-defun event-start)
+  (ecb-bytecomp-defun posn-point)
+  (ecb-bytecomp-defun event-basic-type))
+
+
 (if tree-buffer-running-xemacs
     ;; XEmacs
     (progn
@@ -145,10 +164,10 @@ mouse-tracking is activated by `tree-buffer-activate-mouse-tracking'")
             (display-message 'no-log msg)
           (clear-message 'no-log))
       ;; Emacs way of preventing log messages.
-      (let ((message-log-max nil))
+      (let ((message-log-max nil)
+            (message-truncate-lines nil))
         (if msg
-            (let ((message-truncate-lines nil))
-              (message "%s" msg))
+            (message "%s" msg)
           (message nil))))
     msg))
 

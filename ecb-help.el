@@ -26,14 +26,26 @@
 ;;
 ;; Contains all online-help for ECB (stolen something from recentf.el)
 
-;; $Id: ecb-help.el,v 1.83 2002/10/23 16:09:30 berndl Exp $
+;; $Id: ecb-help.el,v 1.84 2002/11/05 13:47:40 berndl Exp $
 
 ;;; Code
 
 (require 'ecb-layout)
 (require 'ecb-util)
 
-
+(when (featurep 'ecb-bytecomp)
+  ;; Emacs 21.X stuff
+  (ecb-bytecomp-defvar browse-url-new-window-flag)
+  ;; Xemacs and Emacs 20.X
+  (ecb-bytecomp-defvar browse-url-new-window-p)
+  (ecb-bytecomp-defun browse-url)
+  ;; JDE
+  (ecb-bytecomp-defvar jde-version)
+  ;; mail and reporter
+  (ecb-bytecomp-defun mail-subject)
+  (ecb-bytecomp-defun mail-text)
+  (ecb-bytecomp-defun reporter-submit-bug-report))
+  
 (defcustom ecb-show-help-format 'info
   "*The format `ecb-show-help' shows its online help. Allowed values are 'info
 \(for the Info format) and 'html \(for HTML format). If the value is 'html
@@ -62,15 +74,18 @@ FORMAT is not nil then the user is prompted to choose the format of the help
             (info (concat ecb-ecb-dir "ecb.info"))
           (ecb-error "File %s does not exist" (concat ecb-ecb-dir "ecb.info")))
       (message "Opening ECB online-help in a web-browser...")
-      (if (file-exists-p (concat ecb-ecb-dir "ecb.html"))
-          (progn
-            (browse-url (concat "file://"
-                                (ecb-fix-filename ecb-ecb-dir "ecb.html"))
-                        (if (boundp 'browse-url-new-window-flag)
-                            browse-url-new-window-flag
-                          browse-url-new-window-p))
-            (message "Opening ECB online-help in a web-browser...done"))
-        (ecb-error "File %s does not exist" (concat ecb-ecb-dir "ecb.html"))))))
+      (if (not (file-exists-p (concat ecb-ecb-dir "ecb.html")))
+          (ecb-error "File %s does not exist" (concat ecb-ecb-dir "ecb.html"))
+        (if (not (and (locate-library "browse-url")
+                      (require 'browse-url)
+                      (fboundp 'browse-url)))
+            (ecb-error "Function 'browse-url needed for displaying HTML-help!")
+          (browse-url (concat "file://"
+                              (ecb-fix-filename ecb-ecb-dir "ecb.html"))
+                      (if (boundp 'browse-url-new-window-flag)
+                          browse-url-new-window-flag
+                        browse-url-new-window-p))
+          (message "Opening ECB online-help in a web-browser...done"))))))
 
 ;;
 ;; Problem reporting functions stolen from JDE

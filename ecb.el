@@ -59,7 +59,7 @@
 ;; The latest version of the ECB is available at
 ;; http://home.swipnet.se/mayhem/ecb.html
 
-;; $Id: ecb.el,v 1.246 2002/10/24 16:05:53 berndl Exp $
+;; $Id: ecb.el,v 1.247 2002/11/05 13:47:41 berndl Exp $
 
 ;;; Code:
 
@@ -77,8 +77,7 @@
 (message "ECB %s uses semantic %s and eieio %s" ecb-version
          semantic-version eieio-version)
 
-(let ((semantic-load-turn-everything-on nil))
-  (require 'semantic-load))
+(require 'semantic-load)
 
 ;; ecb loads
 (require 'tree-buffer)
@@ -101,6 +100,16 @@
 (eval-when-compile
   ;; to avoid compiler grips
   (require 'cl))
+
+(when (featurep 'ecb-bytecomp)
+  (ecb-bytecomp-defvar dired-directory)
+  (ecb-bytecomp-defun jde-show-class-source)
+  (ecb-bytecomp-defun add-submenu)
+  (ecb-bytecomp-defun semanticdb-minor-mode-p)
+  (ecb-bytecomp-defun semanticdb-find-nonterminal-by-name)
+  (ecb-bytecomp-defun semanticdb-full-filename)
+  (ecb-bytecomp-defun ediff-cleanup-mess)
+  (ecb-bytecomp-defvar ediff-quit-hook))
 
 ;;====================================================
 ;; Variables
@@ -1569,11 +1578,7 @@ If JUST-CHECK is not nil then
                 (princ "\n\n")
                 (princ "After adding the new directory to your `load-path' and then restarting\n")
                 (princ "Emacs the new package(s) can be activated.\n\n")
-                (princ "\n\n")
-                (save-excursion
-                  (set-buffer "*ECB downloading and installing*")
-                  (goto-char (point-min))
-                  (ignore-errors (help-make-xrefs))))
+                (princ "\n\n"))
               (ecb-error "Please restart Emacs with the required packages!")))))))
 
 (defun ecb-enter-debugger (&rest error-args)
@@ -1858,7 +1863,7 @@ PARENT-TOKEN is only propagated to `ecb-add-token-bucket'."
   "Adds a token bucket to a node unless DISPLAY equals 'hidden."
   (when bucket
     (let ((name (ecb-format-bucket-name (car bucket)))
-          (type (semantic-token-token (cadr bucket)))
+          ;;(type (semantic-token-token (cadr bucket)))
 	  (bucket-node node))
       (unless (eq 'hidden display)
 	(unless (eq 'flattened display)
@@ -3891,7 +3896,7 @@ always the ECB-frame if called from another frame."
       ;; warnings
       (if (boundp 'ediff-quit-hook)
           (put 'ediff-quit-hook 'ecb-ediff-quit-hook-value
-               (symbol-value 'ediff-quit-hook)))
+               ediff-quit-hook))
       (add-hook 'ediff-quit-hook 'ediff-cleanup-mess)
       (add-hook 'ediff-quit-hook 'ecb-ediff-quit-hook t)
       
@@ -4006,7 +4011,7 @@ always the ECB-frame if called from another frame."
       ;; ediff-stuff; we operate here only with symbols to avoid bytecompiler
       ;; warnings
       (if (get 'ediff-quit-hook 'ecb-ediff-quit-hook-value)
-          (set 'ediff-quit-hook (get 'ediff-quit-hook
+          (setq ediff-quit-hook (get 'ediff-quit-hook
                                      'ecb-ediff-quit-hook-value))
         (remove-hook 'ediff-quit-hook 'ecb-ediff-quit-hook))
 
@@ -4172,6 +4177,7 @@ FILE.elc or if FILE.elc doesn't exist."
       (if (ecb-check-requirements t)
           (ecb-error "Incorrect requirements; check the versions of semantic and eieio!"))
     (ecb-check-requirements))
+  (load-file "ecb-bytecomp.el")
   (let ((load-path
 	 (append (list (file-name-directory
 			(or (locate-library "semantic")

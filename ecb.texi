@@ -311,12 +311,12 @@ using ECB or you can do these optional installation steps:
 Maybe you are interested to read the online-help of ECB before first
 start.
 
-@item Calling @code{ecb-byte-compile}
+@item Bytecompiling ECB with @code{ecb-byte-compile}
 
-This byte compiles ECB. You can safely ignore all messages.
-(You can also bytecompile ECB from the command-line either by using
-the @file{Makefile} or by using the batch-file @file{make.bat}. Just
-read the comments in that file you choose.)
+This byte compiles ECB. You can safely ignore all messages if there
+are any. (You can also bytecompile ECB from the command-line either by
+using the @file{Makefile} or by using the batch-file @file{make.bat};
+just read the comments in that file you choose.)
 
 @item Installing the supplied @file{ecb.info}
 

@@ -31,6 +31,16 @@
 (require 'ecb-mode-line)
 (require 'ecb-util)
 
+(when (featurep 'ecb-bytecomp)
+  ;; XEmacs stuff
+  (ecb-bytecomp-defvar vertical-divider-map)
+  (ecb-bytecomp-defvar modeline-map)
+  ;; Emacs 21.X stuff
+  (ecb-bytecomp-defvar automatic-hscrolling)
+  (ecb-bytecomp-defvar before-make-frame-hook)
+  (ecb-bytecomp-defvar after-make-frame-functions))
+
+
 (defgroup ecb-create-layout nil
   "Settings for creating new ECB-layouts."
   :group 'ecb-layout
@@ -162,6 +172,8 @@ There are NO other commands or keys avaliable. ALL other keys are disabled in th
 (defvar ecb-create-layout-old-frame nil)
 (defvar ecb-create-layout-old-vertical-div-map nil)
 (defvar ecb-create-layout-old-modeline-map nil)
+(defvar ecb-create-layout-old-after-frame-h nil)
+(defvar ecb-create-layout-old-before-frame-h nil)
 
 (defvar ecb-create-layout-generated-lisp nil)
 (defvar ecb-create-layout-gen-counter 0)
@@ -185,13 +197,15 @@ There are NO other commands or keys avaliable. ALL other keys are disabled in th
   (when ecb-running-xemacs
     (setq ecb-create-layout-old-vertical-div-map nil)
     (setq ecb-create-layout-old-modeline-map nil))
-  
+  (when ecb-running-emacs-21
+    (setq ecb-create-layout-old-after-frame-h nil)
+    (setq ecb-create-layout-old-before-frame-h nil))
   (setq ecb-create-layout-generated-lisp nil)
   (setq ecb-create-layout-gen-counter 0))
 
 (defadvice delete-frame (before ecb-create-layout)
   (let ((frame (or (ad-get-arg 0) (selected-frame))))
-    (when (string= (frame-parameter frame 'name)
+    (when (string= (ecb-frame-parameter frame 'name)
                    ecb-create-layout-frame-name)
       (ecb-create-layout-cancel))))
 
@@ -233,6 +247,10 @@ DELETE-FRAME is not nil then the new created frame will be deleted and the
   (when ecb-running-xemacs
     (setq vertical-divider-map ecb-create-layout-old-vertical-div-map)
     (setq modeline-map ecb-create-layout-old-modeline-map))
+  ;; before and after makeing frame stuff
+  (when ecb-running-emacs-21
+    (setq before-make-frame-hook ecb-create-layout-old-before-frame-h)
+    (setq after-make-frame-functions ecb-create-layout-old-after-frame-h))
   ;; restore old debug-on-error
   (setq debug-on-error ecb-create-layout-old-debug-on-error)
   ;; delete the layout-frame and select the ecb-create-layout-old-frame
@@ -372,7 +390,7 @@ DELETE-FRAME is not nil then the new created frame will be deleted and the
 
 (defun ecb-create-layout-split-hor (&optional fraction)
   (let ((factor (or fraction
-                    (/ (float (- (point) (line-beginning-position)))
+                    (/ (float (- (point) (ecb-line-beginning-pos)))
                        (float (- (window-width) 3))))))
     (ecb-split-hor factor t)
     (ecb-create-layout-gen-lisp `(ecb-split-hor ,factor t))
@@ -480,10 +498,10 @@ DELETE-FRAME is not nil then the new created frame will be deleted and the
 (defun ecb-create-layout-forward-char ()
   (interactive)
   (when (ecb-create-layout-frame-ok)
-    (unless (> (- (point) (line-beginning-position)) (- (window-width)
-                                                        (if ecb-running-emacs-21
-                                                            2
-                                                          3)))
+    (unless (> (- (point) (ecb-line-beginning-pos)) (- (window-width)
+                                                       (if ecb-running-emacs-21
+                                                           2
+                                                         3)))
       (call-interactively 'forward-char))))
 
 (defun ecb-create-layout-next-window ()
@@ -684,6 +702,13 @@ DELETE-FRAME is not nil then the new created frame will be deleted and the
       (error "This command works not with Emacs 20.X; use the macro 'ecb-layout-define'!")
     (ecb-create-layout-initilize)
 
+    ;; before- and after make frame stuff
+    (when ecb-running-emacs-21
+      (setq ecb-create-layout-old-after-frame-h after-make-frame-functions)
+      (setq after-make-frame-functions nil)
+      (setq ecb-create-layout-old-before-frame-h before-make-frame-hook)
+      (setq before-make-frame-hook nil))
+    
     ;; saving old frame
     (setq ecb-create-layout-old-frame (selected-frame))
 

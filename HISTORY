@@ -1,6 +1,10 @@
 Version 1.90:
 -------------
 
+- Silencing the byte-compiler, i.e. byte-compilation of ECB should now be
+  warning free. If byte-compilation still throws warnings please send uthis
+  to our mailing list. (Klaus)
+
 - ecb-eshell now recenters after command execution. (burton)s
 
 - ecb-eshell now recenters if there are any window resizes.  This is done so
