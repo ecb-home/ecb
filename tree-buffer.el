@@ -938,7 +938,7 @@ mentioned above!"
                (make-vector 1
                             (setq counter (1+ counter)))
                (cons (car item)
-                     (emacs-create-menu (cdr item) (car item)))))))
+                     (tree-buffer-create-menu-emacs (cdr item) (car item)))))))
     map))
 
 

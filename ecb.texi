@@ -4543,7 +4543,7 @@ non-selectable menu-separator is displayed.
 A list where the first element is the title of the submenu displayed
 in the main-menu and all other elements are either menu-commands (see
 1) or separators (see 2).
-@end itemize
+@end enumerate
 
 The function of a menu-command must follow the following guidelines:
 It takes one argument which is the tree-buffer-node of the selected
