@@ -1,6 +1,6 @@
 ;;; ecb-compilation.el --- 
 
-;; $Id: ecb-compilation.el,v 1.13 2002/12/22 06:45:54 burtonator Exp $
+;; $Id: ecb-compilation.el,v 1.14 2002/12/23 14:47:41 berndl Exp $
 
 ;; Copyright (C) 2000-2003 Free Software Foundation, Inc.
 ;; Copyright (C) 2000-2003 Kevin A. Burton (burton@openprivacy.org)
@@ -31,39 +31,61 @@
 ;; NOTE: If you enjoy this software, please consider a donation to the EFF
 ;; (http://www.eff.org)
 
-;;; TODO: 
-
 ;;; Code:
 
 (eval-when-compile
- (require 'silentcomp))
+  (require 'silentcomp))
+
+(silentcomp-defun comint-check-proc)
+
+(require 'ecb-util)
 
 (defgroup ecb-compilation-content nil
   "Settings for all things displayed in the compile window of ECB."
   :group 'ecb
   :prefix "ecb-compilation-")
 
-(defcustom ecb-compilation-buffer-names '("*Calculator*"
-                                          "*Apropos*"
-                                          "*Help*"
-                                          "*Backtrace*"
-                                          "*shell*"
-                                          "*bsh*"
-                                          "*Messages*")
+(defcustom ecb-compilation-buffer-names `(("*Calculator*" . nil)
+                                          ("*Apropos*" . nil)
+                                          ,(if ecb-running-xemacs
+                                               '("\\*Help.*\\*" . t)
+                                              '("*Help*" . nil))
+                                          ("*Backtrace*" . nil)
+                                          ("*shell*" . nil)
+                                          ("*bsh*" . nil)
+                                          (,(if ecb-running-xemacs
+                                               " *Message-Log*"
+                                             "*Messages*") . nil))
   "*Additional buffer names that should be displayed in the compilation
 window of ECB even if `compilation-buffer-p' says nil."
   :group 'ecb-compilation-content
   :group 'ecb-layout
-  :type '(repeat (string :tag "Buffer name")))
+  :type '(repeat (cons (string :tag "Buffer name")
+                       (boolean :tag "Handled as regexp"))))
 
 (defvar ecb-compilation-buffer-names-internal nil
   "This variable is for ECB internal use and can be used by ECB to add
-buffer-names to the set displayed in the compile-window.")
+buffer-names to the set displayed in the compile-window. Type is the same as
+of option `ecb-compilation-buffer-names'")
 
 (defun ecb-compilation-buffer-names ()
-  "Return all buffer-name which should be displayed in the compile-window."
+  "Return the set of buffer names which should be displayed in the
+compile-window of ECB."
   (append ecb-compilation-buffer-names
           ecb-compilation-buffer-names-internal))
+
+(defun ecb-compilation-registered-buffer-p (name)
+  "Check if name belongs to the set of buffers returned by
+`ecb-compilation-buffer-names'. If yes returns NAME."
+  (catch 'exit
+    (dolist (b (ecb-compilation-buffer-names))
+      (if (null (cdr b))
+          (if (string= name (car b))
+              (throw 'exit name))
+        (save-match-data
+          (if (string-match (car b) name)
+              (throw 'exit name))))
+      nil)))
 
 (defcustom ecb-compilation-major-modes (list 'eshell-mode 'compilation-mode)
   "*Additional major-mode that should be displayed in the compilation
@@ -102,10 +124,12 @@ compile-window."
         (setq index (1+ index))))
 
     buffer-names))
-  
+
+;; (ecb-compilation-registered-buffer-p "*Help: insert*")
+
 (defun ecb-compilation-buffer-p(buffer-or-name)
   "Test if the given buffer is a compilation buffer. Note that in this case we
-  define 'compilation buffer' as a buffer that should ideally be displayed in the
+define 'compilation buffer' as a buffer that should ideally be displayed in the
 `ecb-compile-window'. This means that in some situations this might not be the
 result of a `compile-internal'. A good example would be the *Help* buffer or the
 `ecb-eshell-buffer-name'.
@@ -128,7 +152,7 @@ is contained in the list returned by the function
     (when buffer
 
       ;;test if this is a valid buffer by name.
-      (if (member (buffer-name buffer) (ecb-compilation-buffer-names))
+      (if (ecb-compilation-registered-buffer-p (buffer-name buffer))
           t
         ;;else test if this is a valid buffer by mode
         (if (save-excursion
@@ -139,7 +163,8 @@ is contained in the list returned by the function
           (if (compilation-buffer-p buffer)
               t
             ;;else check if this is a comint buffer
-            (if (comint-check-proc buffer)
+            (if (and (fboundp 'comint-check-proc)
+                     (comint-check-proc buffer))
                 t
               ;;else it isn't a complication buffer
               nil)))))))
@@ -148,9 +173,8 @@ is contained in the list returned by the function
   "Create an install a menu that allows the user to navigate buffers that are
 valid ECB compilation buffers.  See `ecb-compilation-buffer-p' for more
 information about compilation buffers."
-  (interactive)
 
-  (let((submenu '("Compilation Buffers"))
+  (let((submenu nil)
        (buffers (ecb-compilation-get-buffers)))
 
     (dolist(buffer buffers)
@@ -158,9 +182,11 @@ information about compilation buffers."
                                     (list 'switch-to-buffer (car buffer))
                                     :active t) t))
 
-    (easy-menu-add-item 'ecb-minor-menu nil submenu "Navigate")))
+    (easy-menu-change (list ecb-menu-name)
+                      "Compilation Buffers"
+                      submenu
+                      "Navigate")))
 
-(add-hook 'menu-bar-update-hook 'ecb-compilation-update-menu)
 
 (silentcomp-provide 'ecb-compilation)
 

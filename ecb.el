@@ -60,7 +60,7 @@
 ;; The latest version of the ECB is available at
 ;; http://home.swipnet.se/mayhem/ecb.html
 
-;; $Id: ecb.el,v 1.260 2002/12/22 14:25:35 berndl Exp $
+;; $Id: ecb.el,v 1.261 2002/12/23 14:47:40 berndl Exp $
 
 ;;; Code:
 
@@ -4055,11 +4055,16 @@ always the ECB-frame if called from another frame."
       (add-hook 'ediff-quit-hook 'ediff-cleanup-mess)
       (add-hook 'ediff-quit-hook 'ecb-ediff-quit-hook t)
       
+      (setq ecb-minor-mode t)
+
       ;; menus
       (if ecb-running-xemacs
           (add-submenu nil ecb-minor-menu))
 
-      (setq ecb-minor-mode t)
+      (add-hook (if ecb-running-xemacs
+                    'activate-menubar-hook
+                  'menu-bar-update-hook)
+                'ecb-compilation-update-menu)
 
       ;; run personal hooks before drawing the layout
       (run-hooks 'ecb-activate-before-layout-draw-hook)
@@ -4112,6 +4117,8 @@ always the ECB-frame if called from another frame."
         (let ((ecb-show-help-format 'info))
           (ecb-show-help)
           (Info-goto-node "First steps")))
+
+      
       
       ;;now take a snapshot of the current window configuration
       (ecb-set-activated-window-configuration))))
@@ -4189,6 +4196,11 @@ does all necessary after finishing ediff."
       (if ecb-running-xemacs
           (easy-menu-remove ecb-minor-menu))
 
+      (remove-hook (if ecb-running-xemacs
+                       'activate-menubar-hook
+                     'menu-bar-update-hook)
+                   'ecb-compilation-update-menu)
+
       ;; run any personal hooks
       (run-hooks 'ecb-deactivate-hook)
     
@@ -4216,7 +4228,7 @@ does all necessary after finishing ediff."
       ;; clear the caches
       (ecb-clear-token-tree-cache)
       (ecb-clear-files-and-subdirs-cache)
-    
+      
       (setq ecb-minor-mode nil)))
   (if (null ecb-minor-mode)
       (message "The ECB is now deactivated."))

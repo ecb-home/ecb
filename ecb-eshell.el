@@ -1,6 +1,6 @@
 ;;; ecb-eshell.el --- eshell integration for the ECB.
 
-;; $Id: ecb-eshell.el,v 1.51 2002/12/22 14:25:37 berndl Exp $
+;; $Id: ecb-eshell.el,v 1.52 2002/12/23 14:47:41 berndl Exp $
 
 ;; Copyright (C) 2000-2003 Free Software Foundation, Inc.
 ;; Copyright (C) 2000-2003 Kevin A. Burton (burton@openprivacy.org)
@@ -353,7 +353,9 @@ to because the command didn't output much text, go ahead and shrink it again."
   (when (equal frame ecb-frame)
     (ecb-eshell-recenter)))
 
-(add-to-list 'ecb-compilation-buffer-names-internal ecb-eshell-buffer-name)
+(add-to-list 'ecb-compilation-buffer-names-internal
+             (cons ecb-eshell-buffer-name nil))
+             
 
 (add-hook 'ecb-activate-hook 'ecb-eshell-auto-activate-hook)
   
