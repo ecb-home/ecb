@@ -23,7 +23,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-semantic-wrapper.el,v 1.21 2004/12/29 08:36:08 berndl Exp $
+;; $Id: ecb-semantic-wrapper.el,v 1.22 2005/01/13 12:12:34 berndl Exp $
 
 ;;; Commentary:
 
@@ -196,6 +196,12 @@ function ECB uses from the semanticdb library.")
   (if (fboundp 'semantic-tag)
       (apply 'semantic-tag name class ignore)
     (list name class nil nil nil nil)))
+
+(defsubst ecb--semantic-tag-new-variable (name type default-value &rest attributes)
+  "Create a semantic tag of class variable"
+  (if (fboundp 'semantic-tag-new-variable)
+      (apply 'semantic-tag-new-variable name type default-value attributes)
+    (list name 'variable nil nil nil nil)))
 
 (defsubst ecb--semantic--tag-set-overlay (tag overlay)
   "Set the overlay part of TAG with OVERLAY. OVERLAY can be an overlay or an
