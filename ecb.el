@@ -50,7 +50,7 @@
 ;; The latest version of the ECB is available at
 ;; http://home.swipnet.se/mayhem/ecb.html
 
-;; $Id: ecb.el,v 1.50 2001/04/24 21:40:57 creator Exp $
+;; $Id: ecb.el,v 1.51 2001/04/24 22:34:46 creator Exp $
 
 ;;; Code:
 
@@ -810,6 +810,7 @@ displayed with window-start and point at beginning of buffer."
 ;;      ;; semantic >= 1.3.1
 ;;      (semantic-bovinate-toplevel t)))
   (semantic-bovinate-toplevel t)
+
   ;; Only if the `semantic-bovinate-toplevel' has done no reparsing but only
   ;; used it´s still valid `semantic-toplevel-bovine-cache' the hooks in
   ;; `semantic-after-toplevel-bovinate-hook' are not evaluated and therefore
@@ -833,7 +834,11 @@ function is added to the hook `semantic-after-toplevel-bovinate-hook'."
                   ;; this works because at call-time of the hooks in
                   ;; `semantic-after-toplevel-bovinate-hook' the cache is
                   ;; always either still valid or rebuild.
-                  (car semantic-toplevel-bovine-cache)
+		  ;;
+		  ;; Ugly fix to make it work with semantic 1.4
+		  (if (listp (caar semantic-toplevel-bovine-cache))
+		      (car semantic-toplevel-bovine-cache)
+		    semantic-toplevel-bovine-cache)
                   t)
   (save-selected-window
     ;; also the whole buffer informations should be preserved!
