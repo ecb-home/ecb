@@ -35,6 +35,10 @@ Version 1.0 (2001-03-17):
 
 Contributed by Klaus Berndl <klaus.berndl@sdm.de>:
 
+- A lot of intelligent ECB window-functions (e.g. ecb-delete-window) which
+  gives you the feeling as if the edit-window is the only window of the ECB
+  frame.
+
 - New layout functionality.
 
 - The history buffer can optionally be sorted and also cleared.
