@@ -1,6 +1,11 @@
 Version 1.80:
 -------------
 
+- Enhancing the option 'ecb-window-sync': Now the synchronisation can take
+  place for all buffers which have a relation to files AND directories, i.e.
+  now also for dired-buffers. But per default this is switched off, see the
+  doc-string. (Klaus)
+
 - Now the ECB online help is available in the standard Info-format and also in
   HTML-format. With the new option 'ecb-show-help-format' you can choose which
   format is used by the function 'ecb-show-help'. (Klaus)

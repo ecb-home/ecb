@@ -62,6 +62,7 @@ Usage of ECB
 * The Methods buffer::          Using and customizing he Methods-buffer
 * The ECB-layout::              Changing, customizing, redrawing the layout
 * Hiding the ECB windows::      Hiding/Showing the ECB-windows
+* ECB-window synchronizing::    Auto./manual synchronizing the ECB-windows
 * Interactive ECB commands::    All interactive user-commands of ECB
 
 Working with the keyboard in the ECB-windows
@@ -364,6 +365,7 @@ Emacs Code Browser.
 * The Methods buffer::          Using and customizing he Methods-buffer
 * The ECB-layout::              Changing, customizing, redrawing the layout
 * Hiding the ECB windows::      Hiding/Showing the ECB-windows
+* ECB-window synchronizing::    Auto./manual synchronizing the ECB-windows
 * Interactive ECB commands::    All interactive user-commands of ECB
 
 
@@ -759,7 +761,7 @@ may have some drawbacks! On normal machines the full redraw should be
 done in << 1s!
 
 
-File: ecb.info,  Node: Hiding the ECB windows,  Next: Interactive ECB commands,  Prev: The ECB-layout,  Up: Usage of ECB
+File: ecb.info,  Node: Hiding the ECB windows,  Next: ECB-window synchronizing,  Prev: The ECB-layout,  Up: Usage of ECB
 
 Hiding/Showing the ECB windows
 ==============================
@@ -772,7 +774,41 @@ deactivating the advices for `delete-other-windows' and/or
 editing and you don't need the browsing windows all the time.
 
 
-File: ecb.info,  Node: Interactive ECB commands,  Prev: Hiding the ECB windows,  Up: Usage of ECB
+File: ecb.info,  Node: ECB-window synchronizing,  Next: Interactive ECB commands,  Prev: Hiding the ECB windows,  Up: Usage of ECB
+
+Synchronization of the ECB-windows
+==================================
+
+Per default ECB synchronizes automatically the contents of the
+ECB-windows/tree-buffers with the current active edit-window (rsp. the
+current buffer of the edit window). The feature can be customized with
+the option `ecb-window-sync':
+
+If active then the synchronization takes place always a buffer changes
+in the edit window, if deactivated then never. But you can also set
+this option to a list of major-modes and then the sync. will only be
+done if the major-mode of the current buffer belongs NOT to this list.
+
+But in every case the synchronization takes only place if the
+major-mode of the current-buffer in the edit-window has a relation to
+files or directories. Examples for the former one are all
+programming-language-modes like `c++-mode' or `java-mode', `Info-mode'
+too, an example for the latter one is `dired-mode'. For all major-modes
+related to non-file/directory-buffers like `help-mode',
+`customize-mode' and others never a synchronization will be done!
+
+It's recommended to exclude at least `Info-mode' because it makes no
+sense to synchronize the ECB-windows after calling the Info help.  Per
+default also `dired-mode' is excluded but it can also making sense to
+synchronize the ECB-directories/sources windows with the current
+directory of the dired-buffer in the edit-window.
+
+*NOTE*: With the command `ecb-current-buffer-sync' you can do a
+manually synchronization if the automatic one is switched off or if you
+just want to do this!
+
+
+File: ecb.info,  Node: Interactive ECB commands,  Prev: ECB-window synchronizing,  Up: Usage of ECB
 
 Interactive ECB commands
 ========================
@@ -1070,9 +1106,9 @@ least the following options before working with ECB):
 
 `ecb-tree-expand-symbol-before'
 `ecb-tree-indent'
-   The look&feel of the trees. Maybe you like a value of 4 for the
-   latter one if you display the expand-symbol before (*note Changing
-   the ECB-layout::).
+   The look&feel of the trees in the tree-buffers. Maybe you like a
+   value of 4 for the latter one if you display the expand-symbol before
+   (*note Changing the ECB-layout::).
 
 `ecb-source-file-regexps'
    Which files will (not) be shown in ECB.
@@ -1505,10 +1541,25 @@ This group contains the following options:
    by (keyboard-escape-quit).
 
  - User Option: ecb-window-sync
-   Synchronize the ECB-windows with current edit window. If t then the
-   synchronization takes place always a buffer changes in the edit
-   window, if nil then never. If a list of major-modes then only if the
-   major-mode of the new buffer belongs NOT to this list.
+   Synchronize the ECB-windows automatically with current edit window.
+   If `always' then the synchronization takes place always a buffer
+   changes in the edit window, if `nil' then never. If a list of
+   major-modes then only if the `major-mode' of the new buffer belongs
+   NOT to this list.
+
+   But in every case the synchronization takes only place if the
+   current-buffer in the edit-window has a relation to files or
+   directories. Examples for the former one are all
+   programming-language-modes, `Info-mode' too, an example for the
+   latter one is `dired-mode'. For all major-modes related to
+   non-file/directory-buffers like `help-mode', `customize-mode' and
+   others never a synchronization will be done!
+
+   It's recommended to exclude at least `Info-mode' because it makes no
+   sense to synchronize the ECB-windows after calling the Info help.
+   Per default also `dired-mode' is excluded but it can also making
+   sense to synchronize the ECB-directories/sources windows with the
+   current directory in the dired-buffer.
 
  - User Option: ecb-window-sync-delay
    Time Emacs must be idle before the ECB-windows are synchronized with
@@ -3145,62 +3196,63 @@ Concept Index
 
 Tag Table:
 Node: Top183
-Node: Install4975
-Node: Overview7440
-Node: ECB Directories8486
-Node: ECB Sources9466
-Node: ECB Methods10629
-Node: Activation and Deactivation11150
-Node: Standard activation11520
-Node: Automatic activation12098
-Node: Usage of ECB13148
-Node: Using the mouse13908
-Node: Using the keyboard16200
-Node: Navigation16994
-Node: Incremental search18337
-Node: The edit-window20488
-Node: Temp- and compile-buffers22294
-Node: The Methods buffer24341
-Node: Customizing the display24782
-Node: Rebuilding the Methods26504
-Node: The ECB-layout27358
-Node: Changing the ECB-layout27908
-Node: Redrawing the ECB-layout28946
-Node: Hiding the ECB windows29749
-Node: Interactive ECB commands30323
-Node: Customizing39065
-Node: Most important options40578
-Node: Customizable options42350
-Node: ecb-general43266
-Node: ecb-directories60719
-Node: ecb-sources65699
-Node: ecb-methods67569
-Node: ecb-history79710
-Node: ecb-layout81402
-Node: ecb-face-options95307
-Node: ecb-faces96967
-Node: ecb-download100974
-Node: Submitting problem report102161
-Node: Upgrading103318
-Node: Downloading new version103675
-Node: Auto. option-upgrading104230
-Node: User interface104537
-Node: Background information105426
-Node: Tips and tricks108824
-Node: Changing faces109383
-Node: Small screens110189
-Node: Simulating speedbar111592
-Node: Optimze scrolling112401
-Node: Large directories113476
-Node: Elisp programming114120
-Node: Conflicts115230
-Node: VC115813
-Node: follow-mouse116106
-Node: avoid116784
-Node: calendar117148
-Node: calculator117784
-Node: Function Index118286
-Node: Variable Index120142
-Node: Concept Index125320
+Node: Install5050
+Node: Overview7515
+Node: ECB Directories8561
+Node: ECB Sources9541
+Node: ECB Methods10704
+Node: Activation and Deactivation11225
+Node: Standard activation11595
+Node: Automatic activation12173
+Node: Usage of ECB13223
+Node: Using the mouse14058
+Node: Using the keyboard16350
+Node: Navigation17144
+Node: Incremental search18487
+Node: The edit-window20638
+Node: Temp- and compile-buffers22444
+Node: The Methods buffer24491
+Node: Customizing the display24932
+Node: Rebuilding the Methods26654
+Node: The ECB-layout27508
+Node: Changing the ECB-layout28058
+Node: Redrawing the ECB-layout29096
+Node: Hiding the ECB windows29899
+Node: ECB-window synchronizing30473
+Node: Interactive ECB commands32135
+Node: Customizing40879
+Node: Most important options42392
+Node: Customizable options44184
+Node: ecb-general45100
+Node: ecb-directories63330
+Node: ecb-sources68310
+Node: ecb-methods70180
+Node: ecb-history82321
+Node: ecb-layout84013
+Node: ecb-face-options97918
+Node: ecb-faces99578
+Node: ecb-download103585
+Node: Submitting problem report104772
+Node: Upgrading105929
+Node: Downloading new version106286
+Node: Auto. option-upgrading106841
+Node: User interface107148
+Node: Background information108037
+Node: Tips and tricks111435
+Node: Changing faces111994
+Node: Small screens112800
+Node: Simulating speedbar114203
+Node: Optimze scrolling115012
+Node: Large directories116087
+Node: Elisp programming116731
+Node: Conflicts117841
+Node: VC118424
+Node: follow-mouse118717
+Node: avoid119395
+Node: calendar119759
+Node: calculator120395
+Node: Function Index120897
+Node: Variable Index122753
+Node: Concept Index127931
 
 End Tag Table

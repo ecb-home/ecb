@@ -18,7 +18,10 @@ No special notes beyond the contents of README.
 Upgrading from any previous version:
 ------------------------------------
 
-The type of the option 'ecb-token-display-function' has changed.
+The type of the following options has changed:
+
+- 'ecb-token-display-function'
+- 'ecb-window-sync'
 
 ECB has a new feature 'ecb-auto-compatibility-check' which enables a check for
 incompatible or renamed ECB-options at ECB startup. These options are then
