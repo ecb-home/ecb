@@ -668,10 +668,11 @@ For further explanation see @code{ecb-clear-history-behavior}.
 Add all current file-buffers to the history-buffer of ECB.
 @end defun
 
-@defun ecb-show-help &optional force-info
+@defun ecb-show-help &optional format
 Shows the online help of ECB either in Info or in HTML format
-depending of the value of @code{ecb-show-help-format}. If
-@var{FORCE-INFO} is not nil then always the Info format is used.
+depending of the value of @code{ecb-show-help-format}. If called with
+prefix argument, i.e. if @var{FORMAT} is not nil then the user is prompted
+to choose the format of the help (Info or HTML).
 @end defun
 
 @defun ecb-submit-problem-report

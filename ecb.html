@@ -790,7 +790,7 @@ Add all current file-buffers to the history-buffer of ECB.
 <p>
 <table width="100%">
 <tr>
-<td align="left"><b>ecb-show-help</b><i> &amp;optional force-info
+<td align="left"><b>ecb-show-help</b><i> &amp;optional format
 </i></td>
 <td align="right">Function</td>
 </tr>
@@ -798,8 +798,9 @@ Add all current file-buffers to the history-buffer of ECB.
 <table width="95%" align="center">
 <tr><td>
 Shows the online help of ECB either in Info or in HTML format
-depending of the value of <code>ecb-show-help-format</code>. If
-<var>FORCE-INFO</var> is not nil then always the Info format is used. 
+depending of the value of <code>ecb-show-help-format</code>. If called with
+prefix argument, i.e. if <var>FORMAT</var> is not nil then the user is prompted
+to choose the format of the help (Info or HTML). 
 </td></tr>
 </table>
 
