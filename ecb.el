@@ -54,7 +54,7 @@
 ;; The latest version of the ECB is available at
 ;; http://home.swipnet.se/mayhem/ecb.html
 
-;; $Id: ecb.el,v 1.202 2002/02/28 18:27:48 creator Exp $
+;; $Id: ecb.el,v 1.203 2002/03/01 09:57:03 berndl Exp $
 
 ;;; Code:
 
@@ -472,6 +472,25 @@ or call `widen' (C-x n w)."
 `semantic-token->text-functions' with name \"semantic-XYZ\" and the key is a
 symbol with name \"ecb-XYZ\".")
 
+(defcustom ecb-bucket-token-display '("" "" ecb-bucket-token-face)
+  "*How ECB displays bucket tokens in the ECB methods buffer.
+Bucket tokens are tokens like \"[+] Variables\", \"[+] Dependencies\" etc. The
+name of the bucket-token comes from semantic but you can define a prefix, a
+suffix and a special face for the bucket token.
+
+The default are empty prefix/suffix-strings and 'ecb-bucket-token-face'. But
+an alternative can be for example '\(\"[\" \"]\" nil) which means no special
+face and a display like \"[+] [<bucket-name>]\"."
+  :group 'ecb-methods
+  :set (function (lambda (symbol value)
+		   (set symbol value)
+		   (ecb-clear-token-tree-cache)))
+  :type '(list (string :tag "Bucket-prefix" :value "[")
+               (string :tag "Bucket-suffix" :value "]")
+               (choice :tag "Bucket-face" :menu-tag "Bucket-face"
+                       (const :tag "No special face" :value nil)
+                       (face :tag "Face" :value ecb-bucket-token-face)))
+  :initialize 'custom-initialize-default)
 
 (defcustom ecb-token-display-function '((default . ecb-prototype-nonterminal))
   "*Function to use for displaying tokens in the methods buffer.
@@ -638,28 +657,30 @@ face-attributes of FACE take effect and but the values of all face-attributes
 of TEXT which are not set by FACE are preserved.
 For XEmacs this merge does currently not work therefore here FACE replaces all
 faces of TEXT!"
-  (let ((newtext (concat text)))
-    (if running-xemacs
-        (add-text-properties 0 (length newtext) (list 'face face) newtext)
-      (alter-text-property 0 (length newtext) 'face
-                           (lambda (current-face)
-                             (let ((cf
-                                    (cond ((facep current-face)
-                                           (list current-face))
-                                          ((listp current-face)
-                                           current-face)
-                                          (t nil)))
-                                   (nf
-                                    (cond ((facep face)
-                                           (list face))
-                                          ((listp face)
-                                           face)
-                                          (t nil))))
-                               ;; we must add the new-face in front of
-                               ;; current-face to get the right merge!
-                               (append nf cf)))
-                           newtext))
-    newtext))
+  (if (null face)
+      text
+    (let ((newtext (concat text)))
+      (if running-xemacs
+          (add-text-properties 0 (length newtext) (list 'face face) newtext)
+        (alter-text-property 0 (length newtext) 'face
+                             (lambda (current-face)
+                               (let ((cf
+                                      (cond ((facep current-face)
+                                             (list current-face))
+                                            ((listp current-face)
+                                             current-face)
+                                            (t nil)))
+                                     (nf
+                                      (cond ((facep face)
+                                             (list face))
+                                            ((listp face)
+                                             face)
+                                            (t nil))))
+                                 ;; we must add the new-face in front of
+                                 ;; current-face to get the right merge!
+                                 (append nf cf)))
+                             newtext))
+      newtext)))
 
 
 (dolist (elem ecb-token->text-functions)
@@ -1297,18 +1318,21 @@ PARENT-TOKEN is only propagated to `ecb-add-token-bucket'."
 	(ecb-find-add-token-bucket node type display sort-method
 				   (cdr buckets) parent-token)))))
 
-
 (defun ecb-add-token-bucket (node bucket display sort-method
                                   &optional parent-token)
   "Adds a token bucket to a node unless DISPLAY equals 'hidden."
   (when bucket
-    (let ((name (concat (car bucket)))
-	  (type (semantic-token-token (cadr bucket)))
+    (let ((name (concat (nth 0 ecb-bucket-token-display)
+                        (car bucket)
+                        (nth 1 ecb-bucket-token-display)))
+          (type (semantic-token-token (cadr bucket)))
 	  (bucket-node node))
       (unless (eq 'hidden display)
 	(unless (eq 'flattened display)
-	  (unless running-xemacs
-	    (put-text-property 0 (length name) 'face '(weight . bold) name))
+          (setq name
+                (ecb-merge-face-into-text name (nth 2 ecb-bucket-token-display)))
+;; 	  (unless running-xemacs
+;; 	    (put-text-property 0 (length name) 'face '(weight . bold) name))
 	  (setq bucket-node (tree-node-new name 1 nil nil node
 					   (if ecb-truncate-long-names 'end)))
 	  (tree-node-set-expanded bucket-node (eq 'expanded display)))
