@@ -1,6 +1,6 @@
 ;;; ecb-speedbar.el --- 
 
-;; $Id: ecb-speedbar.el,v 1.6 2001/12/15 10:11:35 burtonator Exp $
+;; $Id: ecb-speedbar.el,v 1.7 2001/12/15 20:18:56 burtonator Exp $
 
 ;; Copyright (C) 2000-2003 Free Software Foundation, Inc.
 ;; Copyright (C) 2000-2003 Kevin A. Burton (burton@openprivacy.org)
@@ -56,13 +56,10 @@
 ;;   - if we hit [ENTER] in the speedbar window the invisible frame is made
 ;;     visible  :(
 
-;;; NOTE: it could be possible to fix this.  We could setup two variables.
-;;; ecb-speedbar-invisible-frame and ecb-frame (actually already defined).
-;;; Within ecb-current-buffer-sync-hook we could then set speedbar-frame and
-;;; dframe-attached-frame to ecb-speedbar-invisible-frame and then restore these
-;;; variables to ecb-frame when complete.
-
 ;;; History:
+;;
+;; - Sat Dec 15 2001 03:10 AM (burton@openprivacy.org): only sync up the eshell
+;; if the current file is in a different dir than the speedbar.
 ;;
 ;; - Fri Dec 14 2001 10:11 PM (burton@openprivacy.org): when we hit <ENTER> on a
 ;; file in the speedbar window, a new window is created.
@@ -78,8 +75,9 @@
 
 ;;; TODO:
 
-;; - only sync up the eshell if the current file is in a different dir than the
-;; speedbar.  
+;; - BUGL for some reason if we hit <ENTER> in the ecb-speedbar window,
+;; sometimes a new frame will come up.
+;;
 
 ;; - instead of ecb-layout-function-20 use ecb-layout-function-speedbar-1
 
@@ -180,14 +178,22 @@ will/could break."
   "Update the speedbar so that we sync up with the current file."
   (interactive)
 
-  (if ecb-minor-mode
+  (save-excursion
+    (let(speedbar-directory current-directory)
 
       (save-excursion
+        (setq current-directory default-directory)
+      
+        (set-buffer ecb-speedbar-buffer-name)
+        
+        (setq speedbar-directory default-directory))
 
-        (if (and speedbar-buffer
-                 (buffer-live-p speedbar-buffer))
-            (speedbar-update-contents)))))
-
+      (if (and (not (string-equal speedbar-directory current-directory))
+               ecb-minor-mode
+               speedbar-buffer
+               (buffer-live-p speedbar-buffer))
+          (speedbar-update-contents)))))
+    
 (defun ecb-speedbar-goto-speedbar()
   (interactive)
 

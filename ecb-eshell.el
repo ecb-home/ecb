@@ -1,6 +1,6 @@
 ;;; ecb-eshell.el --- eshell integration for the ECB.
 
-;; $Id: ecb-eshell.el,v 1.15 2001/12/15 10:11:54 burtonator Exp $
+;; $Id: ecb-eshell.el,v 1.17 2001/12/15 20:18:56 burtonator Exp $
 
 ;; Copyright (C) 2000-2003 Free Software Foundation, Inc.
 ;; Copyright (C) 2000-2003 Kevin A. Burton (burton@openprivacy.org)
@@ -77,64 +77,80 @@
 ;; - Sun Nov 18 2001 07:20 PM (burton@openprivacy.org): putting the cursor one
 ;;   line from the bottom of the window.
 
+;;; Design:
+;;
+;; Synching the current buffer with the eshell is done two ways.  If the buffer
+;; is visible in a window, we always resynch.  If it is not visible then
+;; ecb-eshell-goto-eshell will synch up when the user goes to the eshell buffer.
+
 ;;; TODO:
 ;;
 ;; - Right now ecb-eshell doesn't work with dired.  Why?  Try to setup a hook
 ;; and an ecb-eshell-dired-buffer-sync function that will take care of this.
 
-;; - BUG: ecb-eshell STILL recenters itself!!!  This is BS.
-;; 
-;;   - this only manifests itself when I an runing eshell.
-;;
-;;   - the bug is in ecb-eshell-current-buffer-sync
-;;
-;;   - the problem is in (eshell-send-input)
-
 ;;; Code:
 
 (defun ecb-eshell-current-buffer-sync()
-  "Synchronize the eshell with the current buffer."
+  "Synchronize the eshell with the current buffer.  This is only done if the
+eshell is currently visible."
   (interactive)
 
   ;;only do this if the user is looking at the eshell buffer
 
   (if (ecb-eshell-running-p)      
-      (let((source-buffer-directory default-directory))
+      (let((source-buffer-directory nil)
+           (ecb-buffer-directory nil)
+           (window nil))
 
-        (set-buffer (get-buffer-create eshell-buffer-name))
+        ;;get copies of the current source directory.
+        
+        (setq source-buffer-directory default-directory)
+
+        (setq window (get-buffer-window eshell-buffer-name))
+
+        (save-excursion
+          (set-buffer (get-buffer-create eshell-buffer-name))
+
+          (setq ecb-buffer-directory default-directory))
 
         ;;at this point source-buffer-directory is a snapshot of the source
         ;;buffer window and default directory is the directory in the eshell
         ;;window
+        
+        (when (and window
+                   (window-live-p window)
+                   (not (string-equal source-buffer-directory ecb-buffer-directory)))
+          (save-excursion
 
-        (if (not (string-equal source-buffer-directory default-directory))
-            (progn 
-
-              (save-excursion
-
-                (set-buffer eshell-buffer-name)
-
-                ;;change the directory without showing the cd command
-                (eshell/cd source-buffer-directory)
-
-                ;;execute the command
-                (save-selected-window
-                  (select-window (get-buffer-window eshell-buffer-name))
-                
-                  (eshell-send-input)))
+            (set-buffer eshell-buffer-name)
+            
+            ;;change the directory without showing the cd command
+            (eshell/cd source-buffer-directory)
+            
+            ;;execute the command
+            (save-selected-window
+              (select-window window)
               
-              (ecb-eshell-recenter))))))
+              (eshell-send-input)))
+          
+          (ecb-eshell-recenter)))))
 
 (defun ecb-eshell-recenter()
   "Recenter the eshell window so that the prompt is at the end of the buffer."
 
-  (when (ecb-eshell-running-p)
+  (save-selected-window
 
-    (save-selected-window
+    (let(window)
 
-      (select-window (get-buffer-window eshell-buffer-name))
-        
-      (recenter -2))))
+      (setq window (get-buffer-window eshell-buffer-name))
+
+      (when (and (ecb-eshell-running-p)
+                 window
+                 (window-live-p window))
+          
+        (select-window window)
+          
+        (recenter -2)))))
 
 (defun ecb-eshell-running-p()
   "Return true if eshell is currently running."
@@ -191,9 +207,9 @@
 
 ;;(add-hook 'dired-after-readin-hook 'ecb-eshell-current-buffer-sync)
 
-(remove-hook 'ecb-redraw-layout-hooks 'ecb-eshell-recenter)
+(add-hook 'ecb-redraw-layout-hooks 'ecb-eshell-recenter)
 
-(remove-hook 'eshell-pre-command-hook 'ecb-eshell-resize)
+(add-hook 'eshell-pre-command-hook 'ecb-eshell-resize)
 
 (define-key ecb-mode-map "\C-c.e" 'ecb-eshell-goto-eshell)
 
