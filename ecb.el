@@ -7,7 +7,7 @@
 ;; Keywords: browser, code, programming, tools
 ;; Created: Jul 2000
 
-(defvar ecb-version "1.80"
+(defvar ecb-version "1.90"
   "Current ECB version.")
 
 ;; This program is free software; you can redistribute it and/or modify it under
@@ -59,7 +59,7 @@
 ;; The latest version of the ECB is available at
 ;; http://home.swipnet.se/mayhem/ecb.html
 
-;; $Id: ecb.el,v 1.239 2002/10/06 11:05:48 berndl Exp $
+;; $Id: ecb.el,v 1.240 2002/10/07 15:01:19 berndl Exp $
 
 ;;; Code:
 
@@ -1393,6 +1393,59 @@ cleared!) ECB by running `ecb-deactivate'."
 (defcustom ecb-current-buffer-sync-hook nil 
   "*Normal hook run at the end of `ecb-current-buffer-sync'."
   :group 'ecb-general
+  :type 'hook)
+
+(defcustom ecb-common-tree-buffer-after-create-hook nil 
+  "*Local hook running at the end of each tree-buffer creation.
+Every function of this hook is called once without arguments direct after
+creating a tree-buffer of ECB and it's local keymap. So for example a function
+could be added which performs calls of `local-set-key' to define new
+keybindings for EVERY tree-buffer.
+
+The following keys must not be rebind in all tree-buffers:
+- <RET> and all combinations with <Shift> and <Ctrl>
+- <TAB>
+- `C-t'"
+  :group 'ecb-general
+  :type 'hook)
+
+(defcustom ecb-directories-buffer-after-create-hook nil 
+  "*Local hook running after the creation of the directories-buffer.
+Every function of this hook is called once without arguments direct after
+creating the directories-buffer of ECB and it's local keymap. So for example a
+function could be added which performs calls of `local-set-key' to define new
+keybindings only for the directories-buffer of ECB.
+
+The following keys must not be rebind in the directories-buffer:
+<F2>, <F3> and <F4>"
+  :group 'ecb-directories
+  :type 'hook)
+
+(defcustom ecb-sources-buffer-after-create-hook nil 
+  "*Local hook running after the creation of the sources-buffer.
+Every function of this hook is called once without arguments direct after
+creating the sources-buffer of ECB and it's local keymap. So for example a
+function could be added which performs calls of `local-set-key' to define new
+keybindings only for the sources-buffer of ECB."
+  :group 'ecb-sources
+  :type 'hook)
+
+(defcustom ecb-methods-buffer-after-create-hook nil 
+  "*Local hook running after the creation of the methods-buffer.
+Every function of this hook is called once without arguments direct after
+creating the methods-buffer of ECB and it's local keymap. So for example a
+function could be added which performs calls of `local-set-key' to define new
+keybindings only for the methods-buffer of ECB."
+  :group 'ecb-methods
+  :type 'hook)
+
+(defcustom ecb-history-buffer-after-create-hook nil 
+  "*Local hook running after the creation of the history-buffer.
+Every function of this hook is called once without arguments direct after
+creating the history-buffer of ECB and it's local keymap. So for example a
+function could be added which performs calls of `local-set-key' to define new
+keybindings only for the history-buffer of ECB."
+  :group 'ecb-history
   :type 'hook)
 
 ;;====================================================
@@ -3638,12 +3691,15 @@ always the ECB-frame if called from another frame."
          ecb-directory-face
          ecb-directories-general-face
          ;; we add an after-create-hook to the tree-buffer
-         (function (lambda ()
-                     (local-set-key [f2] 'ecb-customize)
-                     (local-set-key [f3] 'ecb-show-help)
-                     (local-set-key [f4] 'ecb-add-source-path)
-                     (local-set-key (kbd "C-t")
-                                    'ecb-toggle-RET-selects-edit-window)))
+         (append
+          (list (function (lambda ()
+                            (local-set-key [f2] 'ecb-customize)
+                            (local-set-key [f3] 'ecb-show-help)
+                            (local-set-key [f4] 'ecb-add-source-path)
+                            (local-set-key (kbd "C-t")
+                                           'ecb-toggle-RET-selects-edit-window))))
+          ecb-common-tree-buffer-after-create-hook
+          ecb-directories-buffer-after-create-hook)
          ))
       
       (unless (member ecb-sources-buffer-name curr-buffer-list)
@@ -3665,9 +3721,12 @@ always the ECB-frame if called from another frame."
          nil
          ecb-source-face
          ecb-sources-general-face
-         (function (lambda ()
-                     (local-set-key (kbd "C-t")
-                                    'ecb-toggle-RET-selects-edit-window)))))
+         (append
+          (list (function (lambda ()
+                            (local-set-key (kbd "C-t")
+                                           'ecb-toggle-RET-selects-edit-window))))
+          ecb-common-tree-buffer-after-create-hook
+          ecb-directories-buffer-after-create-hook)))
       
       (unless (member ecb-methods-buffer-name curr-buffer-list)
         (tree-buffer-create
@@ -3709,9 +3768,12 @@ always the ECB-frame if called from another frame."
          ecb-tree-expand-symbol-before
          ecb-method-face
          ecb-methods-general-face
-         (function (lambda ()
-                     (local-set-key (kbd "C-t")
-                                    'ecb-toggle-RET-selects-edit-window))))
+         (append
+          (list (function (lambda ()
+                            (local-set-key (kbd "C-t")
+                                           'ecb-toggle-RET-selects-edit-window))))
+          ecb-common-tree-buffer-after-create-hook
+          ecb-directories-buffer-after-create-hook))
         (setq ecb-methods-root-node (tree-buffer-get-root)))
       
       (unless (member ecb-history-buffer-name curr-buffer-list)
@@ -3733,9 +3795,12 @@ always the ECB-frame if called from another frame."
          nil
          ecb-history-face
          ecb-history-general-face
-         (function (lambda ()
-                     (local-set-key (kbd "C-t")
-                                    'ecb-toggle-RET-selects-edit-window))))))
+         (append
+          (list (function (lambda ()
+                            (local-set-key (kbd "C-t")
+                                           'ecb-toggle-RET-selects-edit-window))))
+          ecb-common-tree-buffer-after-create-hook
+          ecb-directories-buffer-after-create-hook))))
     
     ;; Now store all tree-buffer-names used by ECB
     ;; ECB must not use the variable `tree-buffers' but must always refer to

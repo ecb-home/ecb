@@ -26,7 +26,7 @@
 ;; This file is part of the ECB package which can be found at:
 ;; http://home.swipnet.se/mayhem/ecb.html
 
-;; $Id: ecb-util.el,v 1.25 2002/10/06 11:05:48 berndl Exp $
+;; $Id: ecb-util.el,v 1.26 2002/10/07 15:01:18 berndl Exp $
 
 ;;; Code:
 
@@ -131,7 +131,8 @@ not nil then in both PATH and FILENAME env-var substitution is done. If the
     (ecb-clear-history -1)))
 
 (defun ecb-create-directory (parent-node)
-  (make-directory (concat (tree-node-get-data parent-node) "/" (read-from-minibuffer "Directory name: ")))
+  (make-directory (concat (tree-node-get-data parent-node) "/"
+                          (read-from-minibuffer "Directory name: ")))
   (ecb-update-directory-node parent-node)
   (tree-buffer-update))
 

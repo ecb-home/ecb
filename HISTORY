@@ -6,7 +6,18 @@ Version 1.90:
   directory without buffer-switching before. See also the new options
   `ecb-grep-function' and `ecb-grep-find-function'. (Klaus)
 
-
+- Added 5 new hooks for the ECB tree-buffers:
+  + ecb-common-tree-buffer-after-create-hook
+  + ecb-directories-buffer-after-create-hook
+  + ecb-sources-buffer-after-create-hook
+  + ecb-methods-buffer-after-create-hook
+  + ecb-history-buffer-after-create-hook
+  These hooks are called directly after tree-buffer creation so they can be
+  used for example to add personal local keybindings either to all
+  tree-buffers (ecb-common-tree-buffer-after-create-hook) or just to a certain
+  tree-buffer. Please read the documentation. (Klaus)
+  
+  
 Version 1.80:
 -------------
 

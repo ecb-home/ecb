@@ -152,6 +152,7 @@ Working with the keyboard in the ECB-windows
 
 * Navigation::                  Keyboard navigation in a tree-buffer
 * Incremental search::          Find nodes as fast as possible
+* Personal keybindings::        Adding personal keybindings to a tree-buffer
 
 Using and customizing the ECB-Methods buffer
 
@@ -758,7 +759,9 @@ for the clicked item where you can choose several senseful actions.
 @section Working with the keyboard in the ECB-windows
 
 ECB offers the @code{ecb-mode-map} which binds the most important
-functions of ECB to keys so you can easily use ECB without a mouse.
+functions of ECB to keys so you can easily use ECB in every
+window@footnote{Regardless if a tree-window or an edit-window} without
+a mouse.
 
 IMPORTANT: Do not modify @code{ecb-mode-map} directly! The option
 @code{ecb-key-map} defines all ECB keybindings, including a common
@@ -767,9 +770,13 @@ with other minor-modes or packages you can define very easy another
 prefix. Please read carefully the description of @code{ecb-key-map}
 (@pxref{ecb-general}).!
 
+The following sections describe special topics about using the
+keyboard in the ECB-tree-buffers:
+
 @menu
 * Navigation::                  Keyboard navigation in a tree-buffer
 * Incremental search::          Find nodes as fast as possible
+* Personal keybindings::        Adding personal keybindings to a tree-buffer
 @end menu
 
 @node Navigation, Incremental search, Using the keyboard, Using the keyboard
@@ -816,7 +823,7 @@ Onto a not expandable node the horizontal arrow-keys go one character in the
 senseful correct direction.
 
 
-@node Incremental search, , Navigation, Using the keyboard
+@node Incremental search, Personal keybindings, Navigation, Using the keyboard
 @subsection Incremental search for a node in current tree-buffer
 
 @cindex Incremental search
@@ -867,6 +874,63 @@ Tip: The @code{ecb-minor-mode} offers you in the @code{ecb-mode-map}
 of the ecb-frame. This makes window-selection a child´s play. For
 example you can jump into the method-window by hitting @kbd{C-c . m}.
 
+@node Personal keybindings, , Incremental search, Using the keyboard
+@subsection Adding personal keybindings
+
+There are five hooks which can be used for adding personal keybindings
+to the ECB tree-buffers:
+
+@itemize @minus
+@item @code{ecb-common-tree-buffer-after-create-hook}
+@item @code{ecb-directories-buffer-after-create-hook}
+@item @code{ecb-sources-buffer-after-create-hook}
+@item @code{ecb-methods-buffer-after-create-hook}
+@item @code{ecb-history-buffer-after-create-hook}
+@end itemize
+
+These hooks are called directly after tree-buffer creation so they can
+be used to add personal local keybindings@footnote{To be more general:
+They can be used to run any arbitrary lisp code after a tree-buffer
+creation!} either to all tree-buffers
+(@code{ecb-common-tree-buffer-after-create-hook}) or just to a certain
+tree-buffer. Here is a list which keys MUST NOT be rebind:
+
+@itemize @bullet
+@item @kbd{RET} and all combinations with @kbd{Shift} and @kbd{Ctrl}:
+Used for selecting nodes in all tree-buffers.
+@item @kbd{TAB}:
+Used for expanding/collapsing nodes in all tree-buffers.
+@item @kbd{C-t}:
+Used for toggling ``jump after selection'' in all tree-buffers, see
+command @code{ecb-toggle-RET-selects-edit-window}.
+@item All self-inserting characters:
+Used for easy and fast navigation in all tree-buffers,
+@xref{Incremental search}.
+@item @kbd{F2}, @kbd{F3}, @kbd{F4}:
+Used for customizing ECB, adding source-path in the directories buffer.
+@end itemize
+
+The following example binds @kbd{C-a} to some useful code in ALL
+tree-buffers and @kbd{C-d} to even more useful code ONLY in the
+directories buffer:
+
+@example
+@group
+(add-hook 'ecb-common-tree-buffer-after-create-hook
+          (lambda ()
+             (local-set-key (kbd "C-a")
+                            (lambda ()
+                               (interactive)
+                               (message "ECB is great!")))))
+
+(add-hook 'ecb-directories-buffer-after-create-hook
+          (lambda ()
+             (local-set-key (kbd "C-d")
+                            (lambda ()
+                               (interactive)
+                               (message "ECB is wonderful!")))))
+@end group
+@end example
 
 @node The edit-window, Temp- and compile-buffers, Using the keyboard, Usage of ECB
 @section Working with the edit-window
@@ -2088,6 +2152,21 @@ user can perform the check and reset manually with
 @xref{Auto. option-upgrading}.
 @end defopt
 
+@defopt common-tree-buffer-after-create-hook
+Local hook running at the end of each tree-buffer creation. Every
+function of this hook is called once without arguments direct after
+creating a tree-buffer of ECB and it's local keymap. So for example a
+function could be added which performs calls of @code{local-set-key}
+to define new keybindings for EVERY tree-buffer.
+
+The following keys must not be rebind in all tree-buffers:
+@itemize @minus
+@item @kbd{RET} and all combinations with @kbd{Shift} and @kbd{Ctrl}
+@item @kbd{TAB}
+@item @code{C-t}
+@end itemize
+@end defopt
+
 @defopt current-buffer-sync-hook
 Normal hook run at the end of @code{ecb-current-buffer-sync}.
 @end defopt
@@ -2622,6 +2701,19 @@ cache can be cleared, see @code{ecb-clear-directory-cache}. This will
 change in a future version.
 @end defopt
 
+@defopt directories-buffer-after-create-hook
+Local hook running after the creation of the directories-buffer. Every
+function of this hook is called once without arguments direct after
+creating the directories-buffer of ECB and it's local keymap. So for
+example a function could be added which performs calls of
+@code{local-set-key} to define new keybindings only for the
+directories-buffer of ECB.
+
+The following keys must not be rebind in the directories-buffer:
+@kbd{F2}, @kbd{F3} and @kbd{F4}
+@end defopt
+
+
 @defopt directories-buffer-name
 Name of the ECB directory buffer. Because it is not a normal buffer
 for editing you should enclose the name with stars, e.g. `` *ECB
@@ -2704,6 +2796,16 @@ means all files except those starting with ``.'', ``#'' or ending with
 In addition to these predefined values a custom exclude and include
 combination can be defined.
 @end defopt
+
+@defopt sources-buffer-after-create-hook
+Local hook running after the creation of the sources-buffer. Every
+function of this hook is called once without arguments direct after
+creating the sources-buffer of ECB and it's local keymap. So for
+example a function could be added which performs calls of
+@code{local-set-key} to define new keybindings only for the
+sources-buffer of ECB.
+@end defopt
+
 
 @defopt sources-buffer-name
 Name of the ECB sources buffer. Because it is not a normal buffer for
@@ -2809,6 +2911,16 @@ a source file or call @code{widen} @kbd{C-x n w}.
 Jumping to a token from the ECB-method buffer now sets the mark so the
 user can easily jump back.
 @end defopt
+
+@defopt methods-buffer-after-create-hook
+Local hook running after the creation of the methods-buffer. Every
+function of this hook is called once without arguments direct after
+creating the methods-buffer of ECB and it's local keymap. So for
+example a function could be added which performs calls of
+@code{local-set-key} to define new keybindings only for the
+methods-buffer of ECB.
+@end defopt
+
 
 @defopt methods-buffer-name
 Name of the ECB methods buffer. Because it is not a normal buffer for
@@ -3075,6 +3187,16 @@ The opposite of 'not-existing-buffers.
 The whole history will be cleared.
 @end itemize
 @end defopt
+
+@defopt history-buffer-after-create-hook
+Local hook running after the creation of the history-buffer. Every
+function of this hook is called once without arguments direct after
+creating the history-buffer of ECB and it's local keymap. So for
+example a function could be added which performs calls of
+@code{local-set-key} to define new keybindings only for the
+history-buffer of ECB.
+@end defopt
+
 
 @defopt history-buffer-name
 Name of the ECB history buffer. Because it is not a normal buffer for
@@ -4203,10 +4325,15 @@ The following hooks are available:
 @item @code{ecb-activate-before-new-frame-created-hook}
 @item @code{ecb-activate-before-layout-draw-hook}
 @item @code{ecb-activate-hook}
-@item @code{ecb-deactivate-hook}
-@item @code{ecb-show-ecb-windows-hook}
-@item @code{ecb-hide-ecb-windows-hook}
+@item @code{ecb-common-tree-buffer-after-create-hook}
 @item @code{ecb-current-buffer-sync-hook}
+@item @code{ecb-deactivate-hook}
+@item @code{ecb-directories-buffer-after-create-hook}
+@item @code{ecb-hide-ecb-windows-hook}
+@item @code{ecb-history-buffer-after-create-hook}
+@item @code{ecb-methods-buffer-after-create-hook}
+@item @code{ecb-show-ecb-windows-hook}
+@item @code{ecb-sources-buffer-after-create-hook}
 @end itemize
 
 Look at the documentation of these hooks to get a description.

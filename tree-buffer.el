@@ -26,7 +26,7 @@
 ;; This file is part of the ECB package which can be found at:
 ;; http://home.swipnet.se/mayhem/ecb.html
 
-;; $Id: tree-buffer.el,v 1.91 2002/10/06 11:05:51 berndl Exp $
+;; $Id: tree-buffer.el,v 1.92 2002/10/07 15:01:37 berndl Exp $
 
 ;;; Code:
 
@@ -952,11 +952,14 @@ EXPAND-SYMBOL-BEFORE: If not nil then the expand-symbol \(is displayed before
 HIGHLIGHT-NODE-FACE: Face used for highlighting current node in this
                      tree-buffer.
 GENERAL-FACE: General face in which the whole tree-buffer should be displayed.
-AFTER-CREATE-HOOK: A function \(with no arguments) called directly after
-                   creating the tree-buffer and defining it's local keymap.
-                   For example this function can add additional keybindings
-                   for this tree-buffer local keymap."
-  (let ((nop (function (lambda() (interactive)))))
+AFTER-CREATE-HOOK: A function or a list of functions \(with no arguments)
+                   called directly after creating the tree-buffer and defining
+                   it's local keymap. For example such a function can add
+                   additional keybindings for this tree-buffer local keymap."
+  (let ((nop (function (lambda() (interactive))))
+        (a-c-h (if (functionp after-create-hook)
+                   (list after-create-hook)
+                 after-create-hook)))
     (set-buffer (get-buffer-create name))
 
     (make-local-variable 'truncate-lines)
@@ -1122,8 +1125,8 @@ AFTER-CREATE-HOOK: A function \(with no arguments) called directly after
 
     (prog1
         (current-buffer)
-      (if (functionp after-create-hook)
-          (funcall after-create-hook)))))
+      (dolist (f a-c-h)
+        (funcall f)))))
 
 (defun tree-buffer-destroy (buffer)
   "Destroy the tree-buffer"

@@ -77,6 +77,7 @@ Working with the keyboard in the ECB-windows
 
 * Navigation::                  Keyboard navigation in a tree-buffer
 * Incremental search::          Find nodes as fast as possible
+* Personal keybindings::        Adding personal keybindings to a tree-buffer
 
 Using and customizing the ECB-Methods buffer
 
@@ -614,7 +615,7 @@ Working with the keyboard in the ECB-windows
 ============================================
 
 ECB offers the `ecb-mode-map' which binds the most important functions of ECB
-to keys so you can easily use ECB without a mouse.
+to keys so you can easily use ECB in every window(1) without a mouse.
 
 IMPORTANT: Do not modify `ecb-mode-map' directly! The option `ecb-key-map'
 defines all ECB keybindings, including a common prefixkey (This is by default
@@ -622,10 +623,18 @@ defines all ECB keybindings, including a common prefixkey (This is by default
 define very easy another prefix. Please read carefully the description of
 `ecb-key-map' (*note ecb-general::).!
 
+The following sections describe special topics about using the keyboard in
+the ECB-tree-buffers:
+
 * Menu:
 
 * Navigation::                  Keyboard navigation in a tree-buffer
 * Incremental search::          Find nodes as fast as possible
+* Personal keybindings::        Adding personal keybindings to a tree-buffer
+
+---------- Footnotes ----------
+
+(1) Regardless if a tree-window or an edit-window
 
 
 File: ecb.info,  Node: Navigation,  Next: Incremental search,  Prev: Using the keyboard,  Up: Using the keyboard
@@ -661,7 +670,7 @@ Onto a not expandable node the horizontal arrow-keys go one character in the
 senseful correct direction.
 
 
-File: ecb.info,  Node: Incremental search,  Prev: Navigation,  Up: Using the keyboard
+File: ecb.info,  Node: Incremental search,  Next: Personal keybindings,  Prev: Navigation,  Up: Using the keyboard
 
 Incremental search for a node in current tree-buffer
 ----------------------------------------------------
@@ -710,6 +719,66 @@ Tip: The `ecb-minor-mode' offers you in the `ecb-mode-map' (customizable via
 `ecb-key-map') some keys for selecting every window of the ecb-frame. This
 makes window-selection a child´s play. For example you can jump into the
 method-window by hitting `C-c . m'.
+
+
+File: ecb.info,  Node: Personal keybindings,  Prev: Incremental search,  Up: Using the keyboard
+
+Adding personal keybindings
+---------------------------
+
+There are five hooks which can be used for adding personal keybindings to the
+ECB tree-buffers:
+
+ - `ecb-common-tree-buffer-after-create-hook'
+
+ - `ecb-directories-buffer-after-create-hook'
+
+ - `ecb-sources-buffer-after-create-hook'
+
+ - `ecb-methods-buffer-after-create-hook'
+
+ - `ecb-history-buffer-after-create-hook'
+
+These hooks are called directly after tree-buffer creation so they can be
+used to add personal local keybindings(1) either to all tree-buffers
+(`ecb-common-tree-buffer-after-create-hook') or just to a certain
+tree-buffer. Here is a list which keys MUST NOT be rebind:
+
+ * `RET' and all combinations with `Shift' and `Ctrl': Used for selecting
+   nodes in all tree-buffers.
+
+ * `TAB': Used for expanding/collapsing nodes in all tree-buffers.
+
+ * `C-t': Used for toggling "jump after selection" in all tree-buffers, see
+   command `ecb-toggle-RET-selects-edit-window'.
+
+ * All self-inserting characters: Used for easy and fast navigation in all
+   tree-buffers, *Note Incremental search::.
+
+ * `F2', `F3', `F4': Used for customizing ECB, adding source-path in the
+   directories buffer.
+
+The following example binds `C-a' to some useful code in ALL tree-buffers and
+`C-d' to even more useful code ONLY in the directories buffer:
+
+   (add-hook 'ecb-common-tree-buffer-after-create-hook
+             (lambda ()
+                (local-set-key (kbd "C-a")
+                               (lambda ()
+                                  (interactive)
+                                  (message "ECB is great!")))))
+   
+   (add-hook 'ecb-directories-buffer-after-create-hook
+             (lambda ()
+                (local-set-key (kbd "C-d")
+                               (lambda ()
+                                  (interactive)
+                                  (message "ECB is wonderful!")))))
+
+---------- Footnotes ----------
+
+(1) To be more general: They can be used to run any arbitrary lisp code after
+a tree-buffer creation!
 
 
 File: ecb.info,  Node: The edit-window,  Next: Temp- and compile-buffers,  Prev: Using the keyboard,  Up: Usage of ECB
@@ -1822,6 +1891,20 @@ This group contains the following options:
    is off then the user can perform the check and reset manually with
    `ecb-upgrade-options'.  *Note Auto. option-upgrading::.
 
+ - User Option: common-tree-buffer-after-create-hook
+   Local hook running at the end of each tree-buffer creation. Every function
+   of this hook is called once without arguments direct after creating a
+   tree-buffer of ECB and it's local keymap. So for example a function could
+   be added which performs calls of `local-set-key' to define new keybindings
+   for EVERY tree-buffer.
+
+   The following keys must not be rebind in all tree-buffers:
+    - `RET' and all combinations with `Shift' and `Ctrl'
+
+    - `TAB'
+
+    - `C-t'
+
  - User Option: current-buffer-sync-hook
    Normal hook run at the end of `ecb-current-buffer-sync'.
 
@@ -2264,6 +2347,16 @@ This group contains the following options:
    cleared, see `ecb-clear-directory-cache'. This will change in a future
    version.
 
+ - User Option: directories-buffer-after-create-hook
+   Local hook running after the creation of the directories-buffer. Every
+   function of this hook is called once without arguments direct after
+   creating the directories-buffer of ECB and it's local keymap. So for
+   example a function could be added which performs calls of `local-set-key'
+   to define new keybindings only for the directories-buffer of ECB.
+
+   The following keys must not be rebind in the directories-buffer: `F2',
+   `F3' and `F4'
+
  - User Option: directories-buffer-name
    Name of the ECB directory buffer. Because it is not a normal buffer for
    editing you should enclose the name with stars, e.g. " *ECB Directories*".
@@ -2332,6 +2425,13 @@ This group contains the following options:
 
    In addition to these predefined values a custom exclude and include
    combination can be defined.
+
+ - User Option: sources-buffer-after-create-hook
+   Local hook running after the creation of the sources-buffer. Every
+   function of this hook is called once without arguments direct after
+   creating the sources-buffer of ECB and it's local keymap. So for example a
+   function could be added which performs calls of `local-set-key' to define
+   new keybindings only for the sources-buffer of ECB.
 
  - User Option: sources-buffer-name
    Name of the ECB sources buffer. Because it is not a normal buffer for
@@ -2419,6 +2519,13 @@ This group contains the following options:
  - User Option: token-jump-sets-mark
    Jumping to a token from the ECB-method buffer now sets the mark so the
    user can easily jump back.
+
+ - User Option: methods-buffer-after-create-hook
+   Local hook running after the creation of the methods-buffer. Every
+   function of this hook is called once without arguments direct after
+   creating the methods-buffer of ECB and it's local keymap. So for example a
+   function could be added which performs calls of `local-set-key' to define
+   new keybindings only for the methods-buffer of ECB.
 
  - User Option: methods-buffer-name
    Name of the ECB methods buffer. Because it is not a normal buffer for
@@ -2643,6 +2750,13 @@ This group contains the following options:
     - `existing-buffers': The opposite of 'not-existing-buffers.
 
     - `all': The whole history will be cleared.
+
+ - User Option: history-buffer-after-create-hook
+   Local hook running after the creation of the history-buffer. Every
+   function of this hook is called once without arguments direct after
+   creating the history-buffer of ECB and it's local keymap. So for example a
+   function could be added which performs calls of `local-set-key' to define
+   new keybindings only for the history-buffer of ECB.
 
  - User Option: history-buffer-name
    Name of the ECB history buffer. Because it is not a normal buffer for
@@ -3669,13 +3783,23 @@ The following hooks are available:
 
  * `ecb-activate-hook'
 
+ * `ecb-common-tree-buffer-after-create-hook'
+
+ * `ecb-current-buffer-sync-hook'
+
  * `ecb-deactivate-hook'
 
- * `ecb-show-ecb-windows-hook'
+ * `ecb-directories-buffer-after-create-hook'
 
  * `ecb-hide-ecb-windows-hook'
 
- * `ecb-current-buffer-sync-hook'
+ * `ecb-history-buffer-after-create-hook'
+
+ * `ecb-methods-buffer-after-create-hook'
+
+ * `ecb-show-ecb-windows-hook'
+
+ * `ecb-sources-buffer-after-create-hook'
 
 Look at the documentation of these hooks to get a description.
 
@@ -3973,12 +4097,14 @@ the option `ecb-layout-nr' is listed with name "layout-nr").
 * bucket-token-display:                  ecb-methods.
 * cache-directory-contents:              ecb-directories.
 * clear-history-behavior:                ecb-history.
+* common-tree-buffer-after-create-hook:  ecb-general.
 * compile-window-enlarge-by-select:      ecb-layout.
 * compile-window-height:                 ecb-layout.
 * compile-window-temporally-enlarge:     ecb-layout.
 * current-buffer-sync-hook:              ecb-general.
 * deactivate-hook:                       ecb-general.
 * debug-mode:                            ecb-general.
+* directories-buffer-after-create-hook:  ecb-directories.
 * directories-buffer-name:               ecb-directories.
 * directories-general-face:              ecb-face-options.
 * directory-face:                        ecb-face-options.
@@ -3994,6 +4120,7 @@ the option `ecb-layout-nr' is listed with name "layout-nr").
 * highlight-token-header-after-jump:     ecb-methods.
 * highlight-token-with-point:            ecb-methods.
 * highlight-token-with-point-delay:      ecb-methods.
+* history-buffer-after-create-hook:      ecb-history.
 * history-buffer-name:                   ecb-history.
 * history-face:                          ecb-face-options.
 * history-general-face:                  ecb-face-options.
@@ -4007,6 +4134,7 @@ the option `ecb-layout-nr' is listed with name "layout-nr").
 * major-modes-activate:                  ecb-general.
 * major-modes-deactivate:                ecb-general.
 * method-face:                           ecb-face-options.
+* methods-buffer-after-create-hook:      ecb-methods.
 * methods-buffer-name:                   ecb-methods.
 * methods-general-face:                  ecb-face-options.
 * minor-mode-text:                       ecb-general.
@@ -4031,6 +4159,7 @@ the option `ecb-layout-nr' is listed with name "layout-nr").
 * source-file-regexps:                   ecb-sources.
 * source-in-directories-buffer-face:     ecb-face-options.
 * source-path:                           ecb-directories.
+* sources-buffer-after-create-hook:      ecb-sources.
 * sources-buffer-name:                   ecb-sources.
 * sources-general-face:                  ecb-face-options.
 * sources-sort-method:                   ecb-sources.
@@ -4114,88 +4243,91 @@ Concept Index
 
 Tag Table:
 Node: Top183
-Node: Install and first steps5861
-Node: Installation6357
-Node: Setting up Emacs9162
-Ref: Checking your hooks11108
-Ref: Setting up Emacs-Footnote-112305
-Ref: Setting up Emacs-Footnote-212409
-Ref: Setting up Emacs-Footnote-312510
-Ref: Setting up Emacs-Footnote-412569
-Node: First steps12718
-Ref: First steps-Footnote-113866
-Node: Overview14095
-Ref: Overview-Footnote-116846
-Node: ECB Directories16939
-Node: ECB Sources17956
-Node: ECB Methods19110
-Node: Activation and Deactivation19659
-Node: Standard activation20029
-Node: Automatic activation20607
-Node: Usage of ECB21657
-Node: Using the mouse22568
-Ref: Using the mouse-Footnote-124843
-Node: Using the keyboard24889
-Node: Navigation25706
-Node: Incremental search27046
-Node: The edit-window29193
-Node: Temp- and compile-buffers31023
-Node: The Methods buffer33067
-Node: Customizing the display33508
-Node: Rebuilding the Methods35230
-Node: The ECB-layout36085
-Node: Changing the ECB-layout36635
-Node: Redrawing the ECB-layout59484
-Node: Hiding the ECB windows60287
-Node: Back/forward navigation60860
-Ref: Back/forward navigation-Footnote-161961
-Node: ECB-window synchronizing62020
-Node: Interactive ECB commands64602
-Node: Customizing73449
-Node: General aspects74083
-Ref: General aspects-Footnote-176847
-Node: Most important options76979
-Node: Customizable options78772
-Node: ecb-general79919
-Node: ecb-directories98102
-Node: ecb-sources103748
-Node: ecb-methods105602
-Node: ecb-history117470
-Node: ecb-layout119130
-Node: ecb-face-options132913
-Node: ecb-faces136335
-Node: ecb-download140327
-Node: Submitting problem report141536
-Node: Upgrading142899
-Node: Downloading new versions143662
-Ref: Download required packages145419
-Ref: Downloading new versions-Footnote-1146517
-Node: Auto. option-upgrading146566
-Node: User interface146874
-Node: Background information147760
-Node: Tips and tricks151158
-Node: Changing faces151851
-Ref: Changing faces-Footnote-1154687
-Node: Small screens154863
-Node: Simulating speedbar156257
-Node: Integrating speedbar157066
-Node: Optimize scrolling157332
-Node: Large directories158412
-Node: Using eshell159078
-Node: Elisp programming159268
-Node: List of variables159877
-Node: List of hooks160189
-Node: tree-buffer160687
-Node: Adviced functions161493
-Ref: Adviced functions-Footnote-1162100
-Node: New layouts162171
-Node: Conflicts and bugs162354
-Node: Conflicts162829
-Node: Bugs165285
-Node: FAQ165505
-Ref: FAQ-Footnote-1170257
-Node: Command Index170288
-Node: Option Index172405
-Node: Concept Index177875
+Node: Install and first steps5938
+Node: Installation6434
+Node: Setting up Emacs9239
+Ref: Checking your hooks11185
+Ref: Setting up Emacs-Footnote-112382
+Ref: Setting up Emacs-Footnote-212486
+Ref: Setting up Emacs-Footnote-312587
+Ref: Setting up Emacs-Footnote-412646
+Node: First steps12795
+Ref: First steps-Footnote-113943
+Node: Overview14172
+Ref: Overview-Footnote-116923
+Node: ECB Directories17016
+Node: ECB Sources18033
+Node: ECB Methods19187
+Node: Activation and Deactivation19736
+Node: Standard activation20106
+Node: Automatic activation20684
+Node: Usage of ECB21734
+Node: Using the mouse22645
+Ref: Using the mouse-Footnote-124920
+Node: Using the keyboard24966
+Ref: Using the keyboard-Footnote-126010
+Node: Navigation26061
+Node: Incremental search27401
+Node: Personal keybindings29577
+Ref: Personal keybindings-Footnote-131575
+Node: The edit-window31678
+Node: Temp- and compile-buffers33508
+Node: The Methods buffer35552
+Node: Customizing the display35993
+Node: Rebuilding the Methods37715
+Node: The ECB-layout38570
+Node: Changing the ECB-layout39120
+Node: Redrawing the ECB-layout61969
+Node: Hiding the ECB windows62772
+Node: Back/forward navigation63345
+Ref: Back/forward navigation-Footnote-164446
+Node: ECB-window synchronizing64505
+Node: Interactive ECB commands67087
+Node: Customizing75934
+Node: General aspects76568
+Ref: General aspects-Footnote-179332
+Node: Most important options79464
+Node: Customizable options81257
+Node: ecb-general82404
+Node: ecb-directories101119
+Node: ecb-sources107274
+Node: ecb-methods109529
+Node: ecb-history121798
+Node: ecb-layout123859
+Node: ecb-face-options137642
+Node: ecb-faces141064
+Node: ecb-download145056
+Node: Submitting problem report146265
+Node: Upgrading147628
+Node: Downloading new versions148391
+Ref: Download required packages150148
+Ref: Downloading new versions-Footnote-1151246
+Node: Auto. option-upgrading151295
+Node: User interface151603
+Node: Background information152489
+Node: Tips and tricks155887
+Node: Changing faces156580
+Ref: Changing faces-Footnote-1159416
+Node: Small screens159592
+Node: Simulating speedbar160986
+Node: Integrating speedbar161795
+Node: Optimize scrolling162061
+Node: Large directories163141
+Node: Using eshell163807
+Node: Elisp programming163997
+Node: List of variables164606
+Node: List of hooks164918
+Node: tree-buffer165639
+Node: Adviced functions166445
+Ref: Adviced functions-Footnote-1167052
+Node: New layouts167123
+Node: Conflicts and bugs167306
+Node: Conflicts167781
+Node: Bugs170237
+Node: FAQ170457
+Ref: FAQ-Footnote-1175209
+Node: Command Index175240
+Node: Option Index177357
+Node: Concept Index183101
 
 End Tag Table
