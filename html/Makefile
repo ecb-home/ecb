@@ -1,6 +1,6 @@
 # this file generates the HTML-website of ECB
 
-# $Id: Makefile,v 1.2 2003/01/30 11:23:25 berndl Exp $
+# $Id: Makefile,v 1.3 2003/01/30 15:36:10 berndl Exp $
 
 EMACS=emacs
 
@@ -8,6 +8,7 @@ RM=rm -f
 CP=cp
 MKDIR=mkdir -p
 TARC=tar -czvf
+SCP=scp
 
 MAKEINFO=/usr/bin/makeinfo
 
@@ -18,9 +19,12 @@ ecb_TEXI=../ecb.texi
 ecb_UPLOAD_ARC=ecb-website.tar.gz
 
 ecb_WEBSITE_CONTENT=*.html docs/*.html screenshots/index.html \
-                    screenshots/*.png HISTORY
+                    screenshots/*.png HISTORY *.gif
 
-all: website online-docu upload-build
+ecb_WEBSITE_LOC=/home/groups/e/ec/ecb/htdocs
+ecb_SF_login=berndl@ecb.sourceforge.net
+
+all: upload-build
 
 website: $(ecb_HTMLSOURCE)
 	$(EMACS) -batch -no-site-file $< -f eval-current-buffer
@@ -32,8 +36,17 @@ online-docu: $(ecb_TEXI)
 
 $(ecb_HTMLDOCU_DIR)/index.html: online-docu
 
-upload-build: $(ecb_HTMLDOCU_DIR)/index.html
+upload-build: $(ecb_HTMLDOCU_DIR)/index.html website
 	@$(CP) ../HISTORY .
 	@$(RM) $(ecb_UPLOAD_ARC)
 	$(TARC) $(ecb_UPLOAD_ARC) $(ecb_WEBSITE_CONTENT)
+
+
+upload: website upload-build
+	$(SCP) $(ecb_UPLOAD_ARC) $(ecb_SF_login):$(ecb_WEBSITE_LOC)
+
+
+clean:
+	@$(RM) -R $(ecb_HTMLDOCU_DIR)
+	@$(RM) HISTORY *.elc $(ecb_UPLOAD_ARC)
 

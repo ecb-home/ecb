@@ -21,7 +21,7 @@
 
 ;; Generates ECB HTML pages.
 
-;; $Id: ecb-html.el,v 1.32 2003/01/30 11:13:50 berndl Exp $
+;; $Id: ecb-html.el,v 1.33 2003/01/30 15:36:09 berndl Exp $
 
 ;;; Code:
 
@@ -352,4 +352,4 @@
 (ecb-html-links)
 ;; Not used anymore
 ;; (ecb-html-screenshots)
-;; (ecb-html-old)
+(ecb-html-old)
