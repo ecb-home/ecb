@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-util.el,v 1.130 2005/02/28 11:31:54 berndl Exp $
+;; $Id: ecb-util.el,v 1.131 2005/03/10 16:35:19 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -50,6 +50,9 @@
 ;;; ----- Silentcomp-Defs ----------------------------------
 
 ;; XEmacs
+(silentcomp-defun button-release-event-p)
+(silentcomp-defun button-press-event-p)
+(silentcomp-defun event-key)
 (silentcomp-defun frame-property)
 (silentcomp-defun point-at-bol)
 (silentcomp-defun point-at-eol)
@@ -59,6 +62,7 @@
 (silentcomp-defun window-pixel-edges)
 (silentcomp-defun noninteractive)
 ;; Emacs
+(silentcomp-defun event-basic-type)
 (silentcomp-defvar noninteractive)
 (silentcomp-defun window-edges)
 (silentcomp-defun buffer-local-value)
@@ -189,6 +193,16 @@ want the BODY being parsed by semantic!. If not use the form
 ;; therefore i do not use the macro `when-ecb-running-xemacs'!
 
 (when ecb-running-xemacs
+  (defun ecb-event-to-key (event)
+    (cond ((button-release-event-p event)
+           'mouse-release)
+          ((button-press-event-p event)
+           'mouse-press)
+          (t
+           ;; the ignore-errors is a little hack because i don't know all
+           ;; events of XEmacs so sometimes event-key produces a
+           ;; wrong-type-argument error.
+           (ignore-errors (event-key event)))))
   (defun ecb-facep (face)
     (memq face (face-list)))
   (defun ecb-noninteractive ()
@@ -232,6 +246,18 @@ Uses the `derived-mode-parent' property of the symbol to trace backwards."
             (/ (nth 3 pix-edges) (ecb-frame-char-height))))))
 
 (unless ecb-running-xemacs
+  (defun ecb-event-to-key (event)
+    (let ((type (event-basic-type event)))
+      (cond ((or (equal type 'mouse-1)
+                 (equal type 'mouse-2)
+                 (equal type 'mouse-3))
+             'mouse-release)
+            ((or (equal type 'down-mouse-1)
+                 (equal type 'down-mouse-2)
+                 (equal type 'down-mouse-3))
+             'mouse-press)
+            (t
+             (event-basic-type event)))))
   (defalias 'ecb-facep 'facep)
   (defun ecb-noninteractive ()
     "Return non-nil if running non-interactively, i.e. in batch mode."
@@ -505,7 +531,6 @@ in exactly this sequence."
 (defun ecb-find-assoc (key list)
   (assoc key list))
 
-
 ;;; ----- Some function from cl ----------------------------
 
 (defun ecb-filter (seq pred)
@@ -533,11 +558,13 @@ If so, return the true (non-nil) value returned by PREDICATE."
 (defun ecb-copy-list (list)
   "Return a copy of a LIST, which may be a dotted list.
 The elements of the list are not copied, just the list structure itself."
-  (if (consp list)
-      (let ((res nil))
-	(while (consp list) (push (pop list) res))
-	(prog1 (nreverse res) (setcdr res list)))
-    (car list)))
+  (if (fboundp 'copy-sequence)
+      (copy-sequence list)
+    (if (consp list)
+        (let ((res nil))
+          (while (consp list) (push (pop list) res))
+          (prog1 (nreverse res) (setcdr res list)))
+      (car list))))
 
 (defun ecb-set-difference (list1 list2)
   "Combine LIST1 and LIST2 using a set-difference operation.
@@ -554,13 +581,36 @@ to avoid corrupting the original LIST1 and LIST2."
         (pop list1))
       res)))
 
-(defun ecb-member (item list)
+(defun ecb-member (item list &optional test-fcn)
   "Find the first occurrence of ITEM in LIST.
-Return the sublist of LIST whose car is ITEM."
-  (if (and (numberp item) (not (integerp item)))
-      (member item list)
-    (memq item list)))
+Return the sublist of LIST whose car is ITEM. Comparison is done via `equal'
+unless TEST-FCN is not nil: In this case TEST-FCN will be used to compare ITEM
+with the elements of LIST. If TEST-FCN is `eq' then `memq' is called for
+optimization."
+  (if test-fcn
+      (if (eq test-fcn 'eq)
+          ;; some optimization
+          (memq item list)
+        (progn
+          (while (and list (not (funcall test-fcn item (car list))))
+            (setq list (cdr list)))
+          list))
+    (member item list)))
 
+(defun ecb-position (seq elem &optional test-fcn)
+  "Return the position of ELEM within SEQ counting from 0. Comparison is done
+with `equal' unless TEST-FCN is not nil: In this case TEST-FCN will be used to
+compare ITEM with the elements of SEQ."
+  (if (listp seq)
+      (let ((pos (- (length seq) (length (ecb-member elem seq test-fcn)))))
+        (if (= pos (length seq))
+            nil
+          pos))
+    (catch 'found
+      (dotimes (i (length seq))
+        (if (funcall (or test-fcn 'equal) elem (aref seq i))
+            (throw 'found i)))
+      nil)))
 
 (defun ecb-set-elt (seq n val)
   "Set VAL as new N-th element of SEQ. SEQ can be any sequence. SEQ will be
@@ -569,6 +619,11 @@ changed because this is desctructive function. SEQ is returned."
       (setcar (nthcdr n seq) val)
     (aset seq n val))
   seq)
+
+(defun ecb-remove-elt (seq n)
+  "Remove N-th element from SEQ. SEQ can be any sequence. SEQ will be
+changed because this is desctructive function. SEQ is returned."
+  (delq 'ecb-util-remove-marker (ecb-set-elt seq n 'ecb-util-remove-marker)))
 
 (defun ecb-replace-first-occurence (seq old-elem new-elem)
   "Replace in SEQ the first occurence of OLD-ELEM with NEW-ELEM. Comparison is
@@ -588,15 +643,17 @@ done by `equal'. This is desctructive function. SEQ is returned."
 (defun ecb-remove-first-occurence-from-list (list elem)
   "Replace first occurence of ELEM from LIST. Comparison is done by `equal'.
 This is desctructive function. LIST is returned."
-  (delq nil (ecb-replace-first-occurence list elem nil)))
+  (delq 'ecb-util-remove-marker
+        (ecb-replace-first-occurence list elem 'ecb-util-remove-marker)))
 
 (defun ecb-remove-all-occurences-from-list (list elem)
   "Replace all occurences of ELEM from LIST. Comparison is done by `equal'.
 This is desctructive function. LIST is returned."
-  (delq nil
+  (delq 'ecb-util-remove-marker
         (progn          
           (while (ecb-position list elem)
-            (setq list (ecb-replace-first-occurence list elem nil)))
+            (setq list (ecb-replace-first-occurence list elem
+                                                    'ecb-util-remove-marker)))
           list)))
 
 (defun ecb-subseq (seq start &optional end)
@@ -643,20 +700,6 @@ e f a b). If START-ELEM is not contained in SEQ then nil is returned."
                              ((vectorp seq) 'vector))
                        (ecb-subseq seq start-pos)
                        (ecb-subseq seq 0 start-pos)))))
-
-(defun ecb-position (seq elem)
-  "Return the position of ELEM within SEQ counting from 0. Comparison is done
-with `equal'."
-  (if (listp seq)
-      (let ((pos (- (length seq) (length (member elem seq)))))
-        (if (= pos (length seq))
-            nil
-          pos))
-    (catch 'found
-      (dotimes (i (length seq))
-        (if (equal elem (aref seq i))
-            (throw 'found i)))
-      nil)))
 
 (defun ecb-last (seq)
   "Return the last elem of the sequence SEQ."
@@ -1790,7 +1833,7 @@ means not to count the minibuffer even if it is active."
   through these windows."
   (ecb-window-list ecb-frame 0 (frame-first-window ecb-frame)))
 
-(defun ecb-enlarge-window(window &optional val)
+(defun ecb-enlarge-window (window &optional val)
   "Enlarge the given window.
 If VAL is nil then WINDOW is enlarged so that it is 1/2 of the current frame.
 If VAL is a positive integer then WINDOW is enlarged so that its new height is
@@ -1806,6 +1849,12 @@ height is that fraction of the frame."
           (if (> enlargement 0)
               (enlarge-window enlargement))))
     (error "Window is not alive!")))
+
+(defun ecb-scroll-window (point window-start)
+  "Scrolls window of current buffer. The window will start at WINDOW-START and
+point will stay on POINT."
+  (goto-char point)
+  (set-window-start (get-buffer-window (current-buffer)) window-start))
 
 (defun ecb-window-select (buffer-or-name)
   "Select that window which displays in the `ecb-frame' the buffer
