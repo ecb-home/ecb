@@ -774,19 +774,20 @@ highlighting of the methods if `ecb-font-lock-methods' is not nil."
                                                     ecb-classtype)
                                 0 type)))
 	    (parents (delq nil
-                           (mapcar (function (lambda (p)
-                                               (if (or (not ecb-exclude-parents-regexp)
-                                                       (not (string-match
-                                                             ecb-exclude-parents-regexp p)))
-                                                   p)))
+                           (mapcar (function
+				    (lambda (p)
+				      (if (or (not p)
+					      (not ecb-exclude-parents-regexp)
+					      (not (string-match
+						    ecb-exclude-parents-regexp p)))
+					  p)))
                                    (semantic-token-type-parent type)))))
 	(when (and parents ecb-show-parents)
 	  (let ((pn (tree-node-new "[Parents]" 1 nil)))
 	    (dolist (p (if (listp parents) parents (list parents)))
-	      (when p
-		(tree-node-add-child
-		 pn
-		 (tree-node-new (ecb-highlight-text p ecb-classtype) 2 p t))))
+	      (tree-node-add-child
+	       pn
+	       (tree-node-new (ecb-highlight-text p ecb-classtype) 2 p t)))
 	    (when (eq ecb-show-parents 'expanded)
 	      (tree-node-set-expanded pn t))
 	    (tree-node-add-child n pn)))
