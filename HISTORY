@@ -1,13 +1,19 @@
 Version 1.80:
 -------------
 
+
+- Fixed a bug which results in a "wrong-type-argument"-error or "destroyed
+  extent" with XEmacs under some circumstances. (Klaus)
+
 - Two new options: ecb-major-modes-activate and ecb-major-modes-deactivate.
   Allow (de)activation of ECB on major-mode base. Instead of deactivation also
   just hiding the ECB-windows is possible. Read the docstrings. (Klaus)
+  Suggested by Daniel Hegyi <daniel_hegyi@hotmail.com>
 
 - Redefining of the option 'ecb-compile-window-temporally-enlarge': Now you
   can specify that the compile-window is auto. enlarged after selecting it and
   auto. shrinked after leaving it. Read the docstring! (Klaus)
+  Suggested by Daniel Hegyi <daniel_hegyi@hotmail.com>
 
 - Much better and more powerful auto. upgrading-mechanism of incompatible or
   renamed ECB-options to latest ECB-version. See the option
