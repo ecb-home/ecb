@@ -47,7 +47,7 @@
 ;; The latest version of the ECB is available at
 ;; http://home.swipnet.se/mayhem/ecb.html
 
-;; $Id: ecb.el,v 1.43 2001/04/22 18:51:38 berndl Exp $
+;; $Id: ecb.el,v 1.44 2001/04/23 09:44:19 berndl Exp $
 
 ;;; Code:
 
@@ -197,7 +197,7 @@ buffer."
   :group 'ecb-sources
   :type 'regexp)
 
-(defcustom ecb-source-file-exclude-regexp "\\(^\\.[^eg]*\\|~$\\)"
+(defcustom ecb-source-file-exclude-regexp "\\(^\\.[^eg].*\\|~$\\)"
   "*Files matching this regular expression will not be shown in the source
 buffer."
   :group 'ecb-sources
