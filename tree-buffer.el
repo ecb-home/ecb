@@ -960,8 +960,7 @@ functionality is done with the `help-echo'-property and the function
 	(when (and tree-node-expanded-fn
 		   (not (tree-node-is-expanded node)))
 	  (funcall tree-node-expanded-fn node 0 nil nil (buffer-name)))
-	(when (tree-node-is-expandable node)
-	  (tree-node-toggle-expanded node))
+        (tree-node-toggle-expanded node)
 	;; Update the tree-buffer with optimized display of NODE           
 	(tree-buffer-update node)))))
 
