@@ -998,6 +998,11 @@ ECB offers several predefined layouts with different sets and also different
 locations of ECB-windows. See below the "ascii-screenshot" of all currently
 available layouts.
 
+In addition to these predefined layouts you can either interactively create
+new layouts "by example" (*note Creating a new ECB-layout::) or program new
+layouts with the macro `ecb-layout-define' (*note Programming new layouts::).
+The former method is the recommened one!
+
 If you want to switch fast between some layouts see the option
 `ecb-toggle-layout-sequence' and the command `ecb-toggle-layout' (*note
 Simulating speedbar::)
@@ -1507,6 +1512,9 @@ If you are satisfied with your new layout just hit `C-q'. You will be asked
 for a new layout-number and after inserting this number the new layout is
 saved in the file defined by the option `ecb-create-layout-file'. The new
 layout is now available via the option `ecb-layout-nr'.
+
+There is no need for you to load the file `ecb-create-layout-file' manually
+into your Emacs because it's automatically loaded by ECB!
 
 *NOTE*: During the layout-creation process only the commands displayed in the
 help-screen are available. ALL other commands are temporaly disabled (even
@@ -3212,8 +3220,8 @@ This group contains the following options:
 
  - User Option: toggle-layout-sequence
    Toggle sequence for layout toggling with `ecb-toggle-layout'.  Every
-   element of this list has to be a valid layout-number (see option
-   `ecb-layout-nr').
+   element of this list has to be a valid layout-number i.e. either one of
+   the predefined layouts or one of the user-defined layouts.
 
    You can add here as many layouts as you want but to use this option most
    effective you should not add more than 2 or 3 layouts so every layout can
@@ -4610,60 +4618,60 @@ Node: Customizing the display37091
 Node: Rebuilding the Methods38813
 Node: The ECB-layout39668
 Node: Changing the ECB-layout40315
-Node: Redrawing the ECB-layout64549
-Node: Creating a new ECB-layout65386
-Ref: Creating a new ECB-layout-Footnote-168989
-Node: Hiding the ECB windows69163
-Node: Back/forward navigation69736
-Ref: Back/forward navigation-Footnote-170837
-Node: ECB-window synchronizing70896
-Node: Interactive ECB commands73478
-Node: Customizing82457
-Node: General aspects83091
-Ref: General aspects-Footnote-185855
-Node: Most important options85987
-Node: Customizable options87780
-Node: ecb-general89000
-Node: ecb-directories108610
-Node: ecb-sources114765
-Node: ecb-methods117020
-Node: ecb-history129289
-Node: ecb-layout131350
-Node: ecb-create-layout145159
-Node: ecb-face-options145662
-Node: ecb-faces149091
-Node: ecb-download153083
-Node: Submitting problem report154292
-Node: Upgrading155655
-Node: Downloading new versions156418
-Ref: Download required packages158175
-Ref: Downloading new versions-Footnote-1159273
-Node: Auto. option-upgrading159322
-Node: User interface159630
-Node: Background information160516
-Node: Tips and tricks163914
-Node: Changing faces164607
-Ref: Changing faces-Footnote-1167443
-Node: Small screens167619
-Node: Simulating speedbar169013
-Node: Integrating speedbar169822
-Node: Optimize scrolling170088
-Node: Large directories171168
-Node: Using eshell171834
-Node: Elisp programming172024
-Node: List of variables172633
-Node: List of hooks172945
-Node: tree-buffer173730
-Node: Adviced functions174536
-Ref: Adviced functions-Footnote-1175155
-Node: Programming new layouts175226
-Node: Conflicts and bugs180554
-Node: Conflicts181029
-Node: Bugs184487
-Node: FAQ184707
-Ref: FAQ-Footnote-1189459
-Node: Command Index189490
-Node: Option Index191740
-Node: Concept Index197772
+Node: Redrawing the ECB-layout64821
+Node: Creating a new ECB-layout65658
+Ref: Creating a new ECB-layout-Footnote-169396
+Node: Hiding the ECB windows69570
+Node: Back/forward navigation70143
+Ref: Back/forward navigation-Footnote-171244
+Node: ECB-window synchronizing71303
+Node: Interactive ECB commands73885
+Node: Customizing82864
+Node: General aspects83498
+Ref: General aspects-Footnote-186262
+Node: Most important options86394
+Node: Customizable options88187
+Node: ecb-general89407
+Node: ecb-directories109017
+Node: ecb-sources115172
+Node: ecb-methods117427
+Node: ecb-history129696
+Node: ecb-layout131757
+Node: ecb-create-layout145614
+Node: ecb-face-options146117
+Node: ecb-faces149546
+Node: ecb-download153538
+Node: Submitting problem report154747
+Node: Upgrading156110
+Node: Downloading new versions156873
+Ref: Download required packages158630
+Ref: Downloading new versions-Footnote-1159728
+Node: Auto. option-upgrading159777
+Node: User interface160085
+Node: Background information160971
+Node: Tips and tricks164369
+Node: Changing faces165062
+Ref: Changing faces-Footnote-1167898
+Node: Small screens168074
+Node: Simulating speedbar169468
+Node: Integrating speedbar170277
+Node: Optimize scrolling170543
+Node: Large directories171623
+Node: Using eshell172289
+Node: Elisp programming172479
+Node: List of variables173088
+Node: List of hooks173400
+Node: tree-buffer174185
+Node: Adviced functions174991
+Ref: Adviced functions-Footnote-1175610
+Node: Programming new layouts175681
+Node: Conflicts and bugs181009
+Node: Conflicts181484
+Node: Bugs184942
+Node: FAQ185162
+Ref: FAQ-Footnote-1189914
+Node: Command Index189945
+Node: Option Index192195
+Node: Concept Index198227
 
 End Tag Table

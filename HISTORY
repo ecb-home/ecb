@@ -1,7 +1,7 @@
 Version 1.90:
 -------------
 
-- Now ECB can "loaded" with autoload, i.e. ecb-activate, ecb-minor-mode,
+- Now ECB can be "loaded" with autoload, i.e. ecb-activate, ecb-minor-mode,
   ecb-byte-compile and ecb-show-help are autoload-able via '(autoload ...)'
   (Klaus)
 
