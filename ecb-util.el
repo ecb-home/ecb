@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-util.el,v 1.121 2004/11/17 17:28:23 berndl Exp $
+;; $Id: ecb-util.el,v 1.122 2004/11/22 16:58:34 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -89,7 +89,9 @@
 
 ;;; ----- Some constants -----------------------------------
 
+;;;###autoload
 (defconst ecb-running-xemacs (string-match "XEmacs\\|Lucid" emacs-version))
+;;;###autoload
 (defconst ecb-running-emacs-21 (and (not ecb-running-xemacs)
                                     (> emacs-major-version 20)))
 
@@ -336,6 +338,8 @@ Uses the `derived-mode-parent' property of the symbol to trace backwards."
                                             (shrink-window-if-larger-than-buffer . around)
                                             (show-temp-buffer-in-current-frame . around)
                                             (pop-to-buffer . around)
+                                            (find-file . around)
+                                            (find-file-other-window . around)
                                             (current-window-configuration . after)
                                             (set-window-configuration . after)
                                             (scroll-other-window . around)
@@ -349,6 +353,8 @@ Uses the `derived-mode-parent' property of the symbol to trace backwards."
                                           (mouse-drag-vertical-line . around)
                                           (mouse-drag-mode-line . around)
                                           (pop-to-buffer . around)
+                                          (find-file . around)
+                                          (find-file-other-window . around)
                                           (current-window-configuration . after)
                                           (set-window-configuration . after)
                                           (enlarge-window . around)
@@ -1734,30 +1740,41 @@ the same ordering as `other-window' would walk through the frame."
                                   (ecb-canonical-windows-list)
                                 (window-list)))))))
 
-;;; Timestamp stuff
+;;; Time  stuff
 
-;; stolen from tramp
-(defun ecb-time-diff (t1 t2)
-  "Return the difference between the two times, in seconds.
-T1 and T2 are time values (as returned by `current-time' for example).
+;; next three functions stolen from gnus
+(defun ecb-time-to-seconds (time)
+  "Convert TIME to a floating point number."
+  (+ (* (car time) 65536.0)
+     (cadr time)
+     (/ (or (nth 2 time) 0) 1000000.0)))
 
-NOTE: This function will fail if the time difference is too large to
-fit in an integer."
-  ;; Pacify byte-compiler with `symbol-function'.
-  (cond ((fboundp 'subtract-time)
-         (cadr (funcall (symbol-function 'subtract-time) t1 t2)))
-        ((fboundp 'itimer-time-difference)
-         (floor (funcall
-		 (symbol-function 'itimer-time-difference)
-		 (if (< (length t1) 3) (append t1 '(0)) t1)
-		 (if (< (length t2) 3) (append t2 '(0)) t2))))
-        (t
-         ;; snarfed from Emacs 21 time-date.el
-         (cadr (let ((borrow (< (cadr t1) (cadr t2))))
-                 (list (- (car t1) (car t2) (if borrow 1 0))
-                       (- (+ (if borrow 65536 0) (cadr t1)) (cadr t2))))))))
+(defun ecb-seconds-to-time (seconds)
+  "Convert SECONDS (a floating point number) to an Emacs time structure."
+  (list (floor seconds 65536)
+	(floor (mod seconds 65536))
+	(floor (* (- seconds (ffloor seconds)) 1000000))))
 
-;; stolen from gnus
+(defun ecb-subtract-time (t1 t2)
+  "Subtract two internal times and return the result as internal time."
+  (let ((borrow (< (cadr t1) (cadr t2))))
+    (list (- (car t1) (car t2) (if borrow 1 0))
+	  (- (+ (if borrow 65536 0) (cadr t1)) (cadr t2)))))
+
+(defun ecb-time-diff (t1 t2 &optional rounded)
+  "Return the difference between time T1 and T2 in seconds \(can be a
+floating-point number). If optional arg ROUNDED is not nil the result is a
+rounded integer."
+  (funcall (if rounded 'round 'identity)
+           (ecb-time-to-seconds (ecb-subtract-time t1 t2))))
+  
+;; (let ((t1 nil)
+;;       (t2 nil))
+;;   (setq t1 (current-time))
+;;   (sit-for 5)
+;;   (setq t2 (current-time))
+;;   (ecb-time-diff t2 t1 t))
+
 (defun ecb-time-less-p (t1 t2)
   "Say whether time T1 is less than time T2."
   (or (< (car t1) (car t2))
@@ -1800,6 +1817,32 @@ defcustom-clause and has to be <= MAX-LEVEL."
                                     (list 'string ':tag "Submenu-title")
                                     (ecb-create-menu-user-ext-type (1+ curr-level)
                                                                    max-level)))))))
+
+;;; net-stuff
+
+;; currently not used!
+(defun ecb-online-p ()
+  (let ((website-to-check "http://ecb.sourceforge.net"))
+      ;; Emacs 20.X does not autoload executable-find :-(
+      (require 'executable)
+      (if (not (executable-find
+                (if (eq system-type 'windows-nt) "wget.exe" "wget")))
+          (ecb-error
+           (concat "Cannot find wget. This utilities is needed "
+                   "to check if the computer in online")))
+      (= 0 (ecb-working-status-call-process
+            0.1
+            "Checking if online"
+            "done"
+            (if (eq system-type 'windows-nt)
+                "wget.exe"
+              "wget")
+            nil
+            nil
+            nil
+            "-q"
+            "--spider"
+            website-to-check))))
 
 ;;; ----- Provide ------------------------------------------
 
