@@ -3,6 +3,7 @@
 (setq version "1.0")
 (setq dirname (concat "ecb-" version))
 (setq zipname (concat dirname ".zip"))
+(setq url (concat "http://ftp1.sourceforge.net/ecb/" zipname))
 (setq date "2001-03-17")
 
 (h-doc
@@ -10,7 +11,7 @@
  "ECB - Emacs Code Browser"
  (h-h2 "ECB - Emacs Code Browser")
  (h-p "Updated: " date)
- (h-p (h-b "Download the latest version: " (h-link zipname)))
+ (h-p (h-b "Download the latest version: " (h-link url zipname)))
 
  (h-p (h-b "This project is hosted by " (h-link "http://sourceforge.net/projects/ecb" (h-img "http://sourceforge.net/sflogo.php?group_id=17484&type=1" "width='88' height='31' border='0' alt='SourceForge Logo'"))))
  (h-p (h-b "The CVS tree can be accessed " (h-link "http://cvs.sourceforge.net/cgi-bin/cvsweb.cgi/?cvsroot=ecb" "here") "."))
@@ -47,7 +48,7 @@
  (h-p "It's easier to navigate and scroll the ECB buffers if you install " (h-link "http://www.deja.com/getdoc.xp?AN=610250245&fmt=raw" "follow-mouse.el") " and activate your " (h-link "ftp://ftp.cs.indiana.edu/pub/elisp/mwheel.el" "wheel mouse") " in Emacs.")
  
  (h-h3 "Download")
- (h-p "The latest version: " (h-link zipname))
+ (h-p "The latest version: " (h-link url zipname))
  (h-p "Older versions:" h-br
       (h-link "jde-jcb-0.04.zip") h-br
       (h-link "jde-jcb-0.03.zip") h-br
