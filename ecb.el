@@ -54,7 +54,7 @@
 ;; The latest version of the ECB is available at
 ;; http://home.swipnet.se/mayhem/ecb.html
 
-;; $Id: ecb.el,v 1.122 2001/07/03 19:16:28 berndl Exp $
+;; $Id: ecb.el,v 1.123 2001/07/08 14:20:33 berndl Exp $
 
 ;;; Code:
 
@@ -773,6 +773,7 @@ cleared!) ECB by running `ecb-deactivate'."
       (if display
 	  (cadr display)
 	'hidden))))
+
 
 (defun ecb-add-tokens (node token)
   ;; Semantic 1.4beta2 fix for EIEIO class parts

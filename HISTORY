@@ -1,6 +1,9 @@
 Version 1.40:
 -------------
 
+- Much saver ecb-redraw-layout: Now the layout can be restored ALWAYS
+  regardless what messy thing has been done before. (Klaus)
+
 - New advice for 'other-window-for-scrolling', so all scroll-functions for the
   "other" window can also scroll the first edit-window if point stays in the
   second one. (Klaus)

@@ -125,7 +125,7 @@
 ;;   + The edit-window must not be splitted and the point must reside in
 ;;     the not deleted edit-window.
 
-;; $Id: ecb-layout.el,v 1.69 2001/07/04 16:12:45 uid40339 Exp $
+;; $Id: ecb-layout.el,v 1.70 2001/07/08 14:20:33 berndl Exp $
 
 ;;; Code:
 
@@ -1353,9 +1353,12 @@ this function the edit-window is selected which was current before redrawing."
       (if (and ecb-edit-window (window-live-p ecb-edit-window))
           (ecb-select-edit-window)
         ;; if the edit-window is destroyed (what should never happen) we go to
-        ;; the scratch-buffer.
+        ;; either to the last edited buffer or - if this buffer is not longer
+        ;; existing - to the scratch-buffer.
         (set-window-dedicated-p (selected-window) nil)
-        (switch-to-buffer (get-buffer-create "*scratch*")))
+        (switch-to-buffer (or (and (buffer-live-p ecb-last-source-buffer)
+                                   ecb-last-source-buffer)
+                              (get-buffer-create "*scratch*"))))
       
       ;; Do some actions regardless of the choosen layout
       (delete-other-windows)
