@@ -142,7 +142,7 @@ Usage of ECB
 * The edit-window::             How to use the edit-window(s)
 * Temp- and compile-buffers::   Displaying temp- and compilation-buffers
 * The Methods buffer::          Using and customizing he Methods-buffer
-* The ECB-layout::              Changing, customizing, redrawing the layout
+* The ECB-layout::              Changing, customizing, redrawing, creating
 * Hiding the ECB windows::      Hiding/Showing the ECB-windows
 * Back/forward navigation::     Back- and forward navigation like a browser
 * ECB-window synchronizing::    Auto./manual synchronizing the ECB-windows
@@ -159,7 +159,7 @@ Using and customizing the ECB-Methods buffer
 * Customizing the display::     How to customize the Methods-buffer display
 * Rebuilding the Methods::      When to rebuild the Methods-buffer      
 
-Changing, customizing and redrawing the ECB-layout
+Changing, customizing, redrawing and creating layouts
 
 * Changing the ECB-layout::     How to change and customize the layout
 * Redrawing the ECB-layout::    How and when redrawing the layout
@@ -684,7 +684,7 @@ Emacs Code Browser.
 * The edit-window::             How to use the edit-window(s)
 * Temp- and compile-buffers::   Displaying temp- and compilation-buffers
 * The Methods buffer::          Using and customizing he Methods-buffer
-* The ECB-layout::              Changing, customizing, redrawing the layout
+* The ECB-layout::              Changing, customizing, redrawing, creating
 * Hiding the ECB windows::      Hiding/Showing the ECB-windows
 * Back/forward navigation::     Back- and forward navigation like a browser
 * ECB-window synchronizing::    Auto./manual synchronizing the ECB-windows
@@ -1107,7 +1107,7 @@ method buffer!
 A complete manually rebuild is done by @code{ecb-rebuild-methods-buffer}.
 
 @node The ECB-layout, Hiding the ECB windows, The Methods buffer, Usage of ECB
-@section Changing, customizing and redrawing the ECB-layout
+@section Changing, customizing, redrawing and creating layouts
 
 @cindex layout
 @cindex ECB-layout
@@ -1649,12 +1649,13 @@ If you want to create your own ECB-layout then you can do this very
 easy ``by example'' with the command @code{ecb-create-new-layout}.
 This command creates a new empty frame and offers a small set of keys
 to create the new layout by splitting windows.
-@code{ecb-create-new-layout} and these keys are your guide during the
-layout-creation-process.
+@code{ecb-create-new-layout} and this couple of keys are your guide
+during the layout-creation-process.
 
 After calling @code{ecb-create-new-layout} you will be asked which
-type of layout you want to create: left, right, top. Here you specify
-where the ECB-tree-windows/buffers should be located in the ECB-frame:
+type of layout you want to create: ``left'', ``right'', ``top''. Here
+you specify where the ECB-tree-windows/buffers should be located in
+the ECB-frame:
 @itemize @minus
 @item left: All ECB-tree-windows are located on the left side
 @item right: All ECB-tree-windows are located on the right side
@@ -1662,7 +1663,7 @@ where the ECB-tree-windows/buffers should be located in the ECB-frame:
 @end itemize
 
 Afterwards you will see a frame like follows (here the layout-type is
-left):
+``left''):
 
 @example
 @group
@@ -1696,7 +1697,7 @@ splitted by you wherever you want (@kbd{C-s}). You must give every
 ECB-tree-window you create a type (@kbd{C-t}) which can be either
 ``directories'', ``sources'', ``methods'' or ``history''.
 
-If you are satisfied with your new layout just hit @kbd{C-q}. You wil
+If you are satisfied with your new layout just hit @kbd{C-q}. You will
 be asked for a new layout-number and after inserting this number the
 new layout is saved in the file defined by the option
 @code{ecb-create-layout-file}. The new layout is now available via the
