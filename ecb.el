@@ -54,7 +54,7 @@
 ;; The latest version of the ECB is available at
 ;; http://home.swipnet.se/mayhem/ecb.html
 
-;; $Id: ecb.el,v 1.136 2001/07/16 18:21:40 berndl Exp $
+;; $Id: ecb.el,v 1.137 2001/07/17 20:26:59 berndl Exp $
 
 ;;; Code:
 
@@ -2136,14 +2136,22 @@ buffers does not exist anymore."
   "Removes current entry from the ECB history buffer."
   (save-selected-window
     (ecb-exec-in-history-window
-     (let ((buffer-file-name-list (mapcar (lambda (buff)
-					    (buffer-file-name buff))
-					  (buffer-list))))
-       (when (or (not (member (tree-node-get-data node) buffer-file-name-list))
-		 (not (equal ecb-clear-history-behavior 'not-existing-buffers)))
-	 (ecb-remove-from-current-tree-buffer node)
-	 (tree-buffer-update)
-	 (tree-buffer-highlight-node-data ecb-path-selected-source))))))
+     (ecb-remove-from-current-tree-buffer node)
+     (tree-buffer-update)
+     (tree-buffer-highlight-node-data ecb-path-selected-source))))
+
+;; (defun ecb-clear-history-node (node)
+;;   "Removes current entry from the ECB history buffer."
+;;   (save-selected-window
+;;     (ecb-exec-in-history-window
+;;      (let ((buffer-file-name-list (mapcar (lambda (buff)
+;; 					    (buffer-file-name buff))
+;; 					  (buffer-list))))
+;;        (when (or (not (member (tree-node-get-data node) buffer-file-name-list))
+;; 		 (not (equal ecb-clear-history-behavior 'not-existing-buffers)))
+;; 	 (ecb-remove-from-current-tree-buffer node)
+;; 	 (tree-buffer-update)
+;; 	 (tree-buffer-highlight-node-data ecb-path-selected-source))))))
 
 (defvar ecb-history-menu nil)
 (setq ecb-history-menu
