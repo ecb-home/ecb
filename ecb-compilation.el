@@ -1,6 +1,6 @@
 ;;; ecb-compilation.el --- 
 
-;; $Id: ecb-compilation.el,v 1.11 2002/12/16 13:16:46 berndl Exp $
+;; $Id: ecb-compilation.el,v 1.12 2002/12/21 03:58:28 burtonator Exp $
 
 ;; Copyright (C) 2000-2003 Free Software Foundation, Inc.
 ;; Copyright (C) 2000-2003 Kevin A. Burton (burton@openprivacy.org)
@@ -136,8 +136,11 @@ is contained in the list returned by the function
           ;;else test if this is a regular compilation buffer
           (if (compilation-buffer-p buffer)
               t
-            ;;else it isn't a complication buffer
-            nil))))))
+            ;;else check if this is a comint buffer
+            (if (comint-check-proc buffer)
+                t
+              ;;else it isn't a complication buffer
+              nil)))))))
 
 (silentcomp-provide 'ecb-compilation)
 
