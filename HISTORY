@@ -1,8 +1,8 @@
 Version 1.30 (???):
 -------------------
 
-- ECB now optionally create its own frame when activated. See the new options
-  'ecb-new-ecb-frame' and 'ecb-auto-raise-ecb-frame'. (Klaus)
+- ECB now optionally create its own frame when activated. See the new option
+  'ecb-new-ecb-frame'. (Klaus)
 
 - Intelligent recentering of tree-buffers now completely implemented without
   the function 'recenter'. This means no flickering and flashing the whole
