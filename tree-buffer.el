@@ -992,8 +992,10 @@ AFTER-CREATE-HOOK: A function \(with no arguments) called directly after
         (funcall after-create-hook))))
 
 (defun tree-buffer-destroy (buffer)
-  (setq tree-buffers (delq (get-buffer buffer) tree-buffers))
-  (kill-buffer buffer))
+  "Destroy the tree-buffer"
+  (when buffer
+    (setq tree-buffers (delq (get-buffer buffer) tree-buffers))
+    (kill-buffer buffer)))
 
 ;;; Tree node
 

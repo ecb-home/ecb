@@ -2697,6 +2697,9 @@ always the ECB-frame if called from another frame."
 
 (defun ecb-activate--impl ()
   "See `ecb-activate'.  This is the implementation of ECB activation."
+
+  (when (null ecb-frame)
+    (setq ecb-frame (selected-frame)))
   
   (if ecb-minor-mode
       (progn
