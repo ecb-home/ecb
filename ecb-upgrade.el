@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-upgrade.el,v 1.48 2003/10/18 18:08:19 berndl Exp $
+;; $Id: ecb-upgrade.el,v 1.49 2003/10/21 06:36:14 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -204,7 +204,8 @@
     (ecb-methods-menu-user-extension . (ecb-methods-menu-user-extension
                                         ecb-upgrade-methods-menu-ext))
     (ecb-history-menu-user-extension . (ecb-history-menu-user-extension
-                                        ecb-upgrade-history-menu-ext)))
+                                        ecb-upgrade-history-menu-ext))
+    (ecb-bucket-token-display . (ecb-bucket-node-display identity)))
   "Alist of all options which should be upgraded for current ECB-version.
 There are several reasons why an option should be contained in this alist:
 a) An old option has just be renamed in current-ECB version but has still the

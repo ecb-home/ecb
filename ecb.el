@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb.el,v 1.348 2003/10/18 18:08:18 berndl Exp $
+;; $Id: ecb.el,v 1.349 2003/10/21 06:36:14 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -340,6 +340,36 @@ dired then opening this file deactivates ECB \(rsp. hides the ECB-windows)."
                                       :value hide
                                       (const :tag "Just Hide" hide)
                                       (const :tag "Deactivate" deactivate))))))
+
+(defcustom ecb-bucket-node-display '("" "" ecb-bucket-node-face)
+  "*How ECB displays bucket-nodes in a ECB tree-buffer.
+Bucket-nodes have only one job: Nodes with similar properties will be dropped
+into one bucket for such a common property and all these nodes will be added
+as children to the bucket-node. Besides being expandable and collapsable a
+bucket-node has no senseful action assigned. Examples for bucket-nodes are
+\"[+] Variables\", \"[+] Dependencies\" etc. in the Methods-buffer or buckets
+which combine filenames with same extension under a bucket-node with name this
+extension.
+
+This option defines how bucket-node should be displayed. The name of the
+bucket-node is computed by ECB but you can define a prefix, a suffix and a
+special face for the bucket-node
+
+The default are empty prefix/suffix-strings and 'ecb-bucket-node-face'. But
+an alternative can be for example '\(\"[\" \"]\" nil) which means no special
+face and a display like \"[+] [<bucket-name>]\"."
+  :group 'ecb-general
+  :set (function (lambda (symbol value)
+		   (set symbol value)
+                   ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: Hier
+                   ;; wahrscedhinlich auch einen sources-cache löschen
+		   (ecb-clear-token-tree-cache)))
+  :type '(list (string :tag "Bucket-prefix" :value "[")
+               (string :tag "Bucket-suffix" :value "]")
+               (choice :tag "Bucket-face" :menu-tag "Bucket-face"
+                       (const :tag "No special face" :value nil)
+                       (face :tag "Face" :value ecb-bucket-node-face)))
+  :initialize 'custom-initialize-default)
 
 (defcustom ecb-use-speedbar-instead-native-tree-buffer nil
   "*If true then uses speedbar for directories, sources or methods.

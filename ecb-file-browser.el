@@ -23,7 +23,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-file-browser.el,v 1.1 2003/10/18 18:08:19 berndl Exp $
+;; $Id: ecb-file-browser.el,v 1.2 2003/10/21 06:36:14 berndl Exp $
 
 ;;; Commentary:
 
@@ -48,12 +48,6 @@
   (require 'silentcomp))
 
 (silentcomp-defun ecb-speedbar-update-contents)
-
-;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: Eventuell den History buffer als
-;; tree-buffer mit richtigem Tree und alle entries gruppiert nach buffer-type
-;; (entweder major-mode oder extension). Customizable! Gleiches könnte auch
-;; für sources buffer möglich sein!
-
 
 (defvar ecb-path-selected-directory nil
   "Path to currently selected directory.")
@@ -225,8 +219,9 @@ The value 'auto \(see above) takes exactly these two scenarios into account."
               (member ecb-layout-name
                       ecb-show-sources-in-directories-buffer)))))
 
-
-(defcustom ecb-cache-directory-contents nil
+;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: Diesen neuen Default-wert nochmal
+;; überdenken. 
+(defcustom ecb-cache-directory-contents '((".*" . 0))
   "*Cache contents of certain directories.
 This can be useful if `ecb-source-path' contains directories with many files
 and subdirs, especially if these directories are mounted net-drives \(\"many\"
@@ -884,29 +879,211 @@ according to `ecb-sources-sort-method'."
 (defvar ecb-sources-cache nil
   "Cache for the contents of the buffer `ecb-sources-buffer-name'. This is an
 alist where every element is a cons cell which looks like:
- \(directory . \(tree-buffer-root <copy of tree-buffer-nodes> buffer-string)")
+ \(<directory> . <cache-entry>) whereas <cache-entry> is a cons-cell too which
+contains as car a 3-elem list \(tree-buffer-root <copy of tree-buffer-nodes>
+buffer-string) for a full \(i.e. all files) cache and as cdr a 4-elem list
+\(tree-buffer-root, tree-buffer-nodes, sources-buffer-string, <filter>) for a
+filtered cache where <filter> is another cons-cell \(<filter-regexp> .
+<filter-display>).")
 
 
 (defun ecb-sources-cache-remove (dir)
+  "Remove the cache-entry for DIR in `ecb-sources-cache'."
   (let ((cache-elem (assoc dir ecb-sources-cache)))
     (if cache-elem
-        (setq ecb-sources-cache (delete cache-elem ecb-sources-cache)))))
+        (setq ecb-sources-cache (delq cache-elem ecb-sources-cache)))))
 
 
-(defun ecb-sources-cache-add (cache-elem)
-  (if (not (ecb-sources-cache-get (car cache-elem)))
-      (setq ecb-sources-cache (cons cache-elem ecb-sources-cache))))
+(defun ecb-sources-cache-add-full (dir cache-elem-full)
+  "Add the full sources-cache CACHE-ELEM-FULL for DIR to
+`ecb-sources-cache'. If there is already a full cache-entry then replace it."
+  (let ((elem (assoc dir ecb-sources-cache)))
+    (if (not elem)
+        (setq ecb-sources-cache
+              (cons (cons dir (cons cache-elem-full nil))
+                    ecb-sources-cache))
+      (setcdr elem (cons cache-elem-full
+                         (cdr (cdr elem)))))))
 
+(defun ecb-sources-cache-add-filtered (dir cache-elem-filtered)
+  "Add the filtered sources-cache CACHE-ELEM-FILTERED for DIR to
+`ecb-sources-cache'. If there is already a filtered cache-entry then replace
+it."
+  (let ((elem (assoc dir ecb-sources-cache)))
+    (if (not elem)
+        (setq ecb-sources-cache
+              (cons (cons dir (cons nil cache-elem-filtered))
+                    ecb-sources-cache))
+      (setcdr elem (cons (car (cdr elem))
+                         cache-elem-filtered)))))
 
-(defun ecb-sources-cache-get (dir)
-  "Return the value of a cached-directory DIR, means the 3-element-list. If no
+(defun ecb-sources-cache-get-full (dir)
+  "Return the full value of a cached-directory DIR, means the 3-element-list
+\(tree-buffer-root, tree-buffer-nodes, sources-buffer-string). If no
 cache-entry for DIR is available then nil is returned."
-  (cdr (assoc dir ecb-sources-cache)))
+  (car (cdr (assoc dir ecb-sources-cache))))
 
+(defun ecb-sources-cache-get-filtered (dir)
+  "Return the filtered value of a cached-directory DIR, means the
+4-element-list \(tree-buffer-root, tree-buffer-nodes, sources-buffer-string,
+filter-regexp). If no cache-entry for DIR is available then nil is returned."
+  (cdr (cdr (assoc dir ecb-sources-cache))))
 
 (defun ecb-sources-cache-clear ()
+  "Clear the whole cache of `ecb-sources-cache'."
   (setq ecb-sources-cache nil))
 
+
+(defun ecb-update-sources-buffer (dir-before-update)
+  "Updates the sources-buffer with all sources contained in
+`ecb-path-selected-directory' - the contents are either newly computed or come
+from the `ecb-sources-cache'. DIR-BEFORE-UPDATE is the directory which was
+selected before this update."
+  ;;Here we add a cache-mechanism which caches for each path the
+  ;;node-tree and the whole buffer-string of the sources-buffer. A
+  ;;cache-elem would be removed from the cache if a directory is
+  ;;POWER-clicked in the directories buffer because this is the only way
+  ;;to synchronize the sources-buffer with the disk-contents of the
+  ;;clicked directory.
+  (ecb-exec-in-sources-window
+   ;; if we have a filtered cache we must display it - otherwise we use the
+   ;; full cache if there is any
+   (let ((cache-elem (or (ecb-sources-cache-get-filtered ecb-path-selected-directory)
+                         (ecb-sources-cache-get-full ecb-path-selected-directory))))
+     (if cache-elem
+         (progn
+           (tree-buffer-set-root (nth 0 cache-elem))
+           (setq tree-buffer-nodes (nth 1 cache-elem))
+           (let ((buffer-read-only nil))
+             (erase-buffer)
+             (insert (nth 2 cache-elem))
+             (tree-buffer-display-in-general-face)))
+       (let ((new-tree (tree-node-new "root" 0 nil))
+             (old-children (tree-node-get-children (tree-buffer-get-root)))
+             (new-cache-elem nil))
+         ;; building up the new files-tree
+         (ecb-tree-node-add-files
+          new-tree
+          ecb-path-selected-directory
+          (car (ecb-get-files-and-subdirs ecb-path-selected-directory))
+          0 ecb-show-source-file-extension old-children t)
+
+         ;; updating the buffer itself
+         (tree-buffer-set-root new-tree)
+         (tree-buffer-update)
+               
+         ;; check if the sources buffer for this directory must be
+         ;; cached: If yes update the cache
+         (when (ecb-check-directory-for-caching
+                ecb-path-selected-directory
+                (length tree-buffer-nodes))
+           (setq new-cache-elem (list (tree-buffer-get-root)
+                                      (ecb-copy-list tree-buffer-nodes)
+                                      (buffer-string)))
+           (ecb-sources-cache-add-full ecb-path-selected-directory
+                                       new-cache-elem))))
+           
+     (when (not (string= dir-before-update ecb-path-selected-directory))
+       (tree-buffer-scroll (point-min) (point-min))))))
+
+
+(defun ecb-sources-filter-by-ext (node)
+  (let ((ext-str (read-string "Insert the filter-extension without leading dot: "
+                              (and node
+                                   (file-name-extension (tree-node-get-data node))))))
+    (if (= (length ext-str) 0)
+        (ecb-apply-filter-to-sources-buffer
+         "^[^.]+$" ;; matches only filenames with no extension
+         "No ext.")
+      (ecb-apply-filter-to-sources-buffer
+       (format "\\.%s\\'" ext-str)
+       (format "*.%s" ext-str)))))
+       
+  
+(defun ecb-sources-filter-by-regexp (node)
+  (let ((regexp-str (read-string "Insert the filter-regexp: ")))
+    (if (> (length regexp-str) 0)
+        (ecb-apply-filter-to-sources-buffer regexp-str))))
+  
+(defun ecb-sources-filter-none (node)
+  (ecb-apply-filter-to-sources-buffer nil))
+  
+
+(defun ecb-sources-filter ()
+  (interactive)
+  (let ((choice (ecb-query-string "Filter by:"
+                                  '("extension" "regexp" "nothing"))))
+    (cond ((string= choice "extension")
+           (ecb-sources-filter-by-ext nil))
+          ((string= choice "regexp")
+           (ecb-sources-filter-by-regexp nil))
+          (t (ecb-sources-filter-none nil)))))
+
+(defun ecb-sources-filter-modeline-prefix (buffer-name sel-dir sel-source)
+  "Compute a mode-line prefix for the Sources-buffer so the current filter
+applied to the sources is displayed. This function is only for using by
+the option `ecb-mode-line-prefixes'."
+  (let ((filtered-cache-elem (ecb-sources-cache-get-filtered sel-dir)))
+    (if (null filtered-cache-elem)
+        nil ;; no prefix if no filter
+      (format "[Filter: %s]" (cdr (nth 3 filtered-cache-elem))))))
+
+;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: Das auch testen, wenn
+;; `ecb-cache-directory-contents' is nil oder was anderes als der aktuelle
+;; default, der ja alles cached!
+(defun ecb-apply-filter-to-sources-buffer (filter-regexp &optional filter-display)
+  "Apply the regular expression FILTER-REGEXP to the files of
+`ecb-path-selected-directory' and display only the filtered files in the
+Sources-buffer. If FILTER-REGEXP is nil then any applied filter is removed and
+all files are displayed."
+  (message "Klausi: %s" filter-regexp)
+  (save-selected-window
+    (ecb-exec-in-sources-window
+     (if (null filter-regexp)
+         ;; no filtering
+         (progn
+           ;; remove the filtered cache by setting it to nil
+           (ecb-sources-cache-add-filtered ecb-path-selected-directory nil)
+           ;; update the sources buffer - because the filtered cache is nil
+           ;; the full sources are displayed.
+           (ecb-update-sources-buffer ecb-path-selected-directory)
+           (tree-buffer-highlight-node-data ecb-path-selected-source))
+       ;; apply the filter-regexp
+       (let ((new-tree (tree-node-new "root" 0 nil))
+             (old-children (tree-node-get-children (tree-buffer-get-root)))
+             (new-cache-elem nil)
+             (all-files (car (ecb-get-files-and-subdirs ecb-path-selected-directory)))
+             (filtered-files nil))
+         (dolist (file all-files)
+           (if (string-match filter-regexp file)
+               (setq filtered-files
+                     (cons file filtered-files))))
+         ;; building up the new files-tree
+         (ecb-tree-node-add-files
+          new-tree
+          ecb-path-selected-directory
+          filtered-files
+          0 ecb-show-source-file-extension old-children t)
+
+         ;; updating the buffer itself
+         (tree-buffer-set-root new-tree)
+         (tree-buffer-update)
+         (tree-buffer-scroll (point-min) (point-min))
+         (tree-buffer-highlight-node-data ecb-path-selected-source)
+
+         ;; add the new filter to the cache, so the next call to
+         ;; `ecb-update-sources-buffer' displays the filtered sources.
+         (ecb-sources-cache-add-filtered ecb-path-selected-directory
+                                         (list (tree-buffer-get-root)
+                                               (ecb-copy-list tree-buffer-nodes)
+                                               (buffer-string)
+                                               (cons filter-regexp
+                                                     (or filter-display
+                                                         filter-regexp))))))))
+  ;; now we update the mode-lines so the current filter (can be no filter) is
+  ;; displayed in the mode-line. See `ecb-sources-filter-modeline-prefix'.
+  (ecb-mode-line-format))
+    
 
 (defun ecb-set-selected-directory (path &optional force)
   "Set the contents of the ECB-directories and -sources buffer correct for the
@@ -961,50 +1138,8 @@ then nothing is done unless first optional argument FORCE is not nil."
              (when (not (ecb-show-sources-in-directories-buffer-p))
                (tree-buffer-highlight-node-data ecb-path-selected-directory
                                                 start)))))
-
-        ;;Here we add a cache-mechanism which caches for each path the
-        ;;node-tree and the whole buffer-string of the sources-buffer. A
-        ;;cache-elem would be removed from the cache if a directory is
-        ;;POWER-clicked in the directories buffer because this is the only way
-        ;;to synchronize the sources-buffer with the disk-contents of the
-        ;;clicked directory.
-        (ecb-exec-in-sources-window
-         (let ((cache-elem (ecb-sources-cache-get ecb-path-selected-directory)))
-           (if cache-elem
-               (progn
-                 (tree-buffer-set-root (nth 0 cache-elem))
-                 (setq tree-buffer-nodes (nth 1 cache-elem))
-                 (let ((buffer-read-only nil))
-                   (erase-buffer)
-                   (insert (nth 2 cache-elem))
-                   (tree-buffer-display-in-general-face)))
-             (let ((new-tree (tree-node-new "root" 0 nil))
-                   (old-children (tree-node-get-children (tree-buffer-get-root)))
-                   (new-cache-elem nil))
-               ;; building up the new files-tree
-               (ecb-tree-node-add-files
-                new-tree
-                ecb-path-selected-directory
-                (car (ecb-get-files-and-subdirs ecb-path-selected-directory))
-                0 ecb-show-source-file-extension old-children t)
-
-               ;; updating the buffer itself
-               (tree-buffer-set-root new-tree)
-               (tree-buffer-update)
-               
-               ;; check if the sources buffer for this directory must be
-               ;; cached: If yes update the cache
-               (when (ecb-check-directory-for-caching
-                      ecb-path-selected-directory
-                      (length tree-buffer-nodes))
-                 (setq new-cache-elem (cons ecb-path-selected-directory
-                                            (list (tree-buffer-get-root)
-                                                  (ecb-copy-list tree-buffer-nodes)
-                                                  (buffer-string))))
-                 (ecb-sources-cache-add new-cache-elem))))
-           
-           (when (not (string= last-dir ecb-path-selected-directory))
-             (tree-buffer-scroll (point-min) (point-min))))))))
+        ;; now we update the sources buffer for `ecb-path-selected-directory'
+        (ecb-update-sources-buffer last-dir))))
   
   ;; set the default-directory of each tree-buffer to current selected
   ;; directory so we can open files via find-file from each tree-buffer.
@@ -1643,8 +1778,6 @@ help-text should be printed here."
 (defvar ecb-directories-menu nil
   "Built-in menu for the directories-buffer for directories which are not a
 source-path of `ecb-source-path'.")
-
-
 (setq ecb-directories-menu
       (append
        ecb-common-directories-menu
@@ -1670,8 +1803,6 @@ function which is called with current node and has to return a string.")
 (defvar ecb-source-path-menu nil
   "Built-in menu for the directories-buffer for directories which are elements of
 `ecb-source-path'.")
-
-
 (setq ecb-source-path-menu
       (append
        ecb-common-directories-menu
@@ -1739,6 +1870,11 @@ function which is called with current node and has to return a string.")
          (ecb-dired-directory "Open Dir in Dired")
          (ecb-dired-directory-other-window "Open Dir in Dired other window"))
         ("---")
+        ("Filter"
+         (ecb-sources-filter-by-ext "Filter by extension")
+         (ecb-sources-filter-by-regexp "Filter by a regexp")
+         (ecb-sources-filter-none "No filter"))
+        ("---")        
 	(ecb-create-source "Create Sourcefile")
         (ecb-delete-source "Delete Sourcefile")
         ("---")
@@ -1780,8 +1916,8 @@ buffers does not exist anymore."
 
 (defun ecb-history-kill-buffer (node)
   "Kills the buffer for current entry."
-  (ecb-clear-history-node node)
   (let ((data (tree-node-get-data node)))
+    (ecb-clear-history-node node)
     (when (get-file-buffer data)
       (kill-buffer (get-file-buffer data)))))
 

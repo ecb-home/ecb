@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-mode-line.el,v 1.23 2003/09/12 09:19:24 berndl Exp $
+;; $Id: ecb-mode-line.el,v 1.24 2003/10/21 06:36:14 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -51,7 +51,7 @@
 
 
 (defcustom ecb-mode-line-prefixes '((ecb-directories-buffer-name . nil)
-                                    (ecb-sources-buffer-name . nil)
+                                    (ecb-sources-buffer-name . ecb-sources-filter-modeline-prefix)
                                     (ecb-methods-buffer-name . nil)
                                     (ecb-history-buffer-name . "History"))
   "*Prefixes shown in the modelines of the special ECB-buffers.
@@ -247,7 +247,18 @@ as \"W-<number>\"."
   (when (get-buffer-window buffer-name ecb-frame)
     (let ((shown-prefix (if (stringp prefix)
                             (concat " " prefix (if (stringp text) ": " ""))
-                          (if (stringp text) " " ""))))
+                          (if (stringp text) " " "")))
+          (win-width (window-width (get-buffer-window buffer-name)))
+          (avaiable-text-width nil))
+      (setq shown-prefix (if (> (length shown-prefix) win-width)
+                             ""
+                           shown-prefix))
+      (setq avaiable-text-width (- win-width
+                                   (+ (length shown-prefix)
+                                      (if (and ecb-running-emacs-21
+                                               ecb-mode-line-display-window-number
+                                               (not no-win-nr))
+                                          4 0))))
       (ecb-mode-line-update-buffer
        buffer-name
        (list (if (and ecb-running-emacs-21
@@ -257,46 +268,8 @@ as \"W-<number>\"."
                "")
              (concat shown-prefix
                      (if (stringp text)
-                         (ecb-mode-line-get-directory
-                          (+ (length shown-prefix)
-                             (if (and ecb-running-emacs-21
-                                      ecb-mode-line-display-window-number
-                                      (not no-win-nr))
-                                 4 0))
-                          text
-                          (window-width (get-buffer-window buffer-name))))))))))
+                         (ecb-fit-str-to-width text avaiable-text-width))))))))
 
-(defun ecb-mode-line-get-directory (prefix-length directory width)
-  "Given the prefix-length for the mode-line \(' ECB Sources: '), the
-directory to display, and the width of the window, compute what directory name
-to display. This should trim the beginning of the directory so that the
-mode-line does not stretch past the screen."
-
-  (if (< width prefix-length)
-      (ecb-error "Given prefix-length '%d' is longer than modeline, increase window width" prefix-length))
-
-  ;;make modifications to directory so that the line is the correct length
-  ;;remove the first characters of directory so that we have ... at the beginning.
-  (if (> (+ prefix-length
-            (length directory))
-         width)
-
-      ;;basically we need to figure out what the ideal length of the
-      ;;directory string should be based on prefix-length and directory
-      (let ((len-dir (length directory))
-            offset)
-        (setq offset (- (+ prefix-length len-dir)
-                        width))
-        ;; we want to prepend "..." to the shorten directory
-        (setq offset (+ offset 3))
-        ;; at least we must shorten directory from left by (run-over + ...)
-        ;; characters. If this is not possible we show no directory.
-        (if (>= offset len-dir)
-            (setq directory "")
-          (setq directory (substring directory offset len-dir))
-          (setq directory (concat "..." directory)))))
-  ;; return now a window-width fitting directory
-  directory)
 
 (defun ecb-mode-line-update-buffer (buffer-name new-mode-line-format)
   "Update the given buffer...."

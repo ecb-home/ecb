@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-util.el,v 1.82 2003/10/18 18:08:19 berndl Exp $
+;; $Id: ecb-util.el,v 1.83 2003/10/21 06:36:14 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -801,6 +801,19 @@ nil whereas in the latter case the current-buffer is assumed."
                    (set-buffer (find-file-noselect filename))
                    (ecb-current-buffer-archive-extract-p))
                (ecb-current-buffer-archive-extract-p))))))
+
+(defun ecb-fit-str-to-width (str width)
+  "If STR is longer than WIDTH then fit it to WIDTH by stripping from left and
+prepend \"...\" to signalize that the string is stripped. If WIDTH >= length
+of STR the always STR is returned. If either WIDTH or length of STR is < 5
+then an empty string is returned because stripping makes no sense here."
+  (let ((len-str (length str)))
+    (if (>= width len-str)
+        str
+      (if (or (< len-str 5) ;; we want at least two characters visible of str
+              (< width 5))
+          ""
+        (concat "..." (substring str (* -1 (- width 3))))))))
 
 (defun ecb-make-windows-not-dedicated (&optional frame)
   "Make all windows of FRAME not dedicated."

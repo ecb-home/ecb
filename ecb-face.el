@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-face.el,v 1.17 2003/10/13 16:37:38 berndl Exp $
+;; $Id: ecb-face.el,v 1.18 2003/10/21 06:36:15 berndl Exp $
 
 ;;; Commentary:
 
@@ -408,18 +408,18 @@ jumping to it by clicking onto a node in the methods buffer."
   "*Define face used with option `ecb-type-token-display'."
   :group 'ecb-faces)
 
-(defface ecb-bucket-token-face (ecb-face-default nil t nil
-                                                 'ecb-default-general-face)
-  "*Face used for displaying bucket tokens in the methods buffer.
-See also `ecb-bucket-token-display'.
+(defface ecb-bucket-node-face (ecb-face-default nil t nil
+                                                'ecb-default-general-face)
+  "*Face used for displaying bucket-nodes in the ECB-buffers.
+See also `ecb-bucket-node-display'.
 
 In GNU Emacs 21.X this face inherits from the face 'ecb-default-general-face'.
 
 With XEmacs and GNU Emacs 20.X there is no inheritance-feature so if the
-buckets in the ECB-methods-buffer should be displayed with the same basic
+buckets in the ECB-buffers should be displayed with the same basic
 attributes set by 'ecb-default-general-face' this set of basic attributes have
-to be set in 'ecb-bucket-token-face' too!"
-:group 'ecb-faces)
+to be set in 'ecb-bucket-node-face' too!"
+  :group 'ecb-faces)
 
 (silentcomp-provide 'ecb-face)
 

@@ -24,7 +24,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-method-browser.el,v 1.1 2003/10/18 18:08:19 berndl Exp $
+;; $Id: ecb-method-browser.el,v 1.2 2003/10/21 06:36:14 berndl Exp $
 
 ;;; Commentary:
 
@@ -179,31 +179,6 @@ If set the user can easily jump back."
 `semantic-token->text-functions' where the value is the member of
 `semantic-token->text-functions' with name \"semantic-XYZ\" and the key is a
 symbol with name \"ecb-XYZ\".")
-
-
-(defcustom ecb-bucket-token-display '("" "" ecb-bucket-token-face)
-  "*How ECB displays bucket tokens in the ECB methods buffer.
-Bucket tokens are tokens like \"[+] Variables\", \"[+] Dependencies\" etc. The
-name of the bucket-token comes from semantic but you can define a prefix, a
-suffix and a special face for the bucket token.
-
-The default are empty prefix/suffix-strings and 'ecb-bucket-token-face'. But
-an alternative can be for example '\(\"[\" \"]\" nil) which means no special
-face and a display like \"[+] [<bucket-name>]\".
-
-This options takes only effect for semantic-sources - means sources supported
-by semantic!"
-  :group 'ecb-methods
-  :set (function (lambda (symbol value)
-		   (set symbol value)
-		   (ecb-clear-token-tree-cache)))
-  :type '(list (string :tag "Bucket-prefix" :value "[")
-               (string :tag "Bucket-suffix" :value "]")
-               (choice :tag "Bucket-face" :menu-tag "Bucket-face"
-                       (const :tag "No special face" :value nil)
-                       (face :tag "Face" :value ecb-bucket-token-face)))
-  :initialize 'custom-initialize-default)
-
 
 (defcustom ecb-token-display-function '((default . ecb-prototype-nonterminal))
   "*Function to use for displaying tokens in the methods buffer.
@@ -574,7 +549,7 @@ But this option also defines if bucket-nodes in the ECB-method-buffer \(e.g.
 are also all cars of the variable `semantic-symbol->name-assoc-list'.
 
 If there is a bucket-name \(the node-name stripped of the settings in
-`ecb-bucket-token-display') which is not contained as cdr in
+`ecb-bucket-node-display') which is not contained as cdr in
 `semantic-symbol->name-assoc-list' then the symbol with this bucket-name as
 name is also a valid symbol for this list. Example: In ECB there are buckets
 \"\[Parents\]\". The bucket-name is \"Parents\" and the valid symbol-name is
@@ -1065,10 +1040,10 @@ PARENT-TOKEN is only propagated to `ecb-add-token-bucket'."
 
 
 (defun ecb-format-bucket-name (name)
-  (let ((formatted-name (concat (nth 0 ecb-bucket-token-display)
+  (let ((formatted-name (concat (nth 0 ecb-bucket-node-display)
 				name
-				(nth 1 ecb-bucket-token-display))))
-    (setq formatted-name (ecb-merge-face-into-text formatted-name (nth 2 ecb-bucket-token-display)))
+				(nth 1 ecb-bucket-node-display))))
+    (setq formatted-name (ecb-merge-face-into-text formatted-name (nth 2 ecb-bucket-node-display)))
     formatted-name))
 
 
@@ -1661,9 +1636,9 @@ OTHER-EDIT-WINDOW."
   (cond ((= 1 (tree-node-get-type node))
          (let ((bucket-name
                 (save-match-data
-                  (if (string-match (concat (regexp-quote (nth 0 ecb-bucket-token-display))
+                  (if (string-match (concat (regexp-quote (nth 0 ecb-bucket-node-display))
                                             "\\(.+\\)"
-                                            (regexp-quote (nth 1 ecb-bucket-token-display)))
+                                            (regexp-quote (nth 1 ecb-bucket-node-display)))
                                     (tree-node-get-name node))
                       (match-string 1 (tree-node-get-name node))))))
            (if (stringp bucket-name)
