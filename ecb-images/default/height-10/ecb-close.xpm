@@ -7,7 +7,7 @@ static char * ecbclose_xpm[] = {
 "$	c #7898B5",
 "%	c #FCFCFB",
 "&	c #FDFDFB",
-"'	c #060606",
+"'	c #040404",
 "(	c #FCFCFA",
 ")	c #F7F6F3",
 "*	c #F7F7F5",
