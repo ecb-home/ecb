@@ -8,13 +8,22 @@
    displays the contents of this directory. See new option
    `ecb-display-default-dir-after-start'. 
 
+** The popup-menu of the Directories-buffer allows opening a dir with Dired.
+   The Sources-Buffer offers the same for the current selected directory. In
+   the History-buffer the directory of the selected file-buffer can be
+   "dired".
+
+** Now manually resizing of the ECB-windows is possible even if
+   `ecb-fix-window-size' is not nil for current layout. Thanks for suggestion
+   Massimiliano Mirra <mmirra@libero.it>. Only relevant for GNU Emacs 21.X.
+      
 ** Fixed Bugs
 
 *** Fixed all the file- and directory-commands in the popup-menus.
     Now the Directories- and Sources-buffers are autom. updated after creating
-    rsp. deleting sourcefiles or directories.
+    rsp. deleting source-files or directories.
 
-*** Jumping to some token for Perl sources failed. This is fixed now.
+*** Jumping to some tokens for Perl sources failed. This is fixed now.
 
 *** Now the buffer-names displayed in the History-window are always uptodate,
     even if file-buffers are killed/opened during hidden ECB-windows.

@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb.el,v 1.323 2003/08/01 15:53:38 berndl Exp $
+;; $Id: ecb.el,v 1.324 2003/08/05 07:58:10 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -1531,17 +1531,16 @@ to take effect."
 
 (defcustom ecb-window-sync '(Info-mode dired-mode)
   "*Synchronize the ECB-windows automatically with current edit window.
-The real synchronization is done by `ecb-current-buffer-sync'. If 'always then
-the synchronization by `ecb-current-buffer-sync' takes place always a buffer
-changes in the edit window, if nil then never. If a list of major-modes then
-only if the `major-mode' of the new buffer belongs NOT to this list.
+If 'always then the synchronization takes place always a buffer changes in the
+edit window, if nil then never. If a list of major-modes then only if the
+`major-mode' of the new buffer belongs NOT to this list.
 
-But in every case the synchronization by `ecb-current-buffer-sync' takes only
-place if the current-buffer in the edit-window has a relation to files or
-directories. Examples for the former one are all programming-language-modes,
-`Info-mode' too, an example for the latter one is `dired-mode'. For all
-major-modes related to non-file/directory-buffers like `help-mode',
-`customize-mode' and others never an autom. synchronization will be done!
+But in every case the synchronization takes only place if the current-buffer
+in the edit-window has a relation to files or directories. Examples for the
+former one are all programming-language-modes, `Info-mode' too, an example for
+the latter one is `dired-mode'. For all major-modes related to
+non-file/directory-buffers like `help-mode', `customize-mode' and others never
+an autom. synchronization will be done!
 
 It's recommended to exclude at least `Info-mode' because it makes no sense to
 synchronize the ECB-windows after calling the Info help. Per default also
@@ -1549,10 +1548,8 @@ synchronize the ECB-windows after calling the Info help. Per default also
 ECB-directories/sources windows with the current directory in the
 dired-buffer.
 
-IMPORTANT NOTE: The synchronization is done by `ecb-current-buffer-sync' and
-therefore the hook `ecb-current-buffer-sync-hook' is evaluated every time
-`ecb-current-buffer-sync' is called \(see above and documentation of
-`ecb-current-buffer-sync')!"
+IMPORTANT NOTE: Every time the synchronization is done the hook
+`ecb-current-buffer-sync-hook' is evaluated."
   :group 'ecb-general
   :type '(radio :tag "Synchronize ECB windows"
                 (const :tag "Always" :value always)
@@ -3623,9 +3620,11 @@ nil whereas in the latter case the current-buffer is assumed."
                    (ecb-current-buffer-archive-extract-p))
                (ecb-current-buffer-archive-extract-p))))))
 
-
+;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: In all sources and the texi-file
+;; replacing of interactive using of ecb-current-buffer-sync with
+;; ecb-window-sync! 
 (defun ecb-current-buffer-sync (&optional force)
-  "Synchronizes the current buffer with any other buffers.
+  "Synchronizes all special ECB-buffers with current buffer.
 
 Depending on the contents of current buffer this function performs different
 synchronizing tasks but only if ECB is active and point stays in an
@@ -3644,9 +3643,7 @@ tasks are performed:
 
 - Always:
 
-  Running the hooks in `ecb-current-buffer-sync-hook'."
-  
-  (interactive "P")
+  Running the hooks in `ecb-current-buffer-sync-hook'."  
   (when (and ecb-minor-mode
              (not ecb-windows-hidden)
              (ecb-point-in-edit-window))
@@ -3730,6 +3727,25 @@ tasks are performed:
                  (not (member major-mode ecb-window-sync))))
     (ecb-current-buffer-sync)))
 
+
+(defun ecb-window-sync ()
+  "Synchronizes all special ECB-buffers with current buffer.
+
+Depending on the contents of current buffer this command performs different
+synchronizing tasks but only if ECB is active and point stays in an
+edit-window.
+
+- If current buffer is a file-buffer then all special ECB-tree-buffers are
+  synchronized with current buffer.
+
+- If current buffer is a dired-buffer then the directory- and
+  the sources-tree-buffer are synchronized if visible
+
+In addition to this the hooks in `ecb-current-buffer-sync-hook' run."
+  (interactive)
+  (ecb-current-buffer-sync t))
+
+
 (defun ecb-get-edit-window (other-edit-window)
   (save-selected-window
     (if (eq ecb-primary-mouse-jump-destination 'left-top)
@@ -3743,7 +3759,7 @@ tasks are performed:
 
 (defun ecb-find-file-and-display (filename other-edit-window)
   "Finds the file in the correct window. What the correct window is depends on
-the setting in `ecb-primary-mouse-jump-destination' and the value of
+  the setting in `ecb-primary-mouse-jump-destination' and the value of
 OTHER-EDIT-WINDOW."
   (select-window (ecb-get-edit-window other-edit-window))
   (ecb-nav-save-current)
@@ -4585,7 +4601,7 @@ That is remove the unsupported :help stuff."
       ])
    (ecb-menu-item
     [ "Synchronize ECB windows"
-      (ecb-current-buffer-sync t)
+      (ecb-window-sync)
       :active (and (equal (selected-frame) ecb-frame)
                    (ecb-point-in-edit-window))
       :help "Synchronize the ECB windows with the current edit-window."
@@ -5025,6 +5041,7 @@ That is remove the unsupported :help stuff."
                (t "lr" ecb-redraw-layout)
                (t "lw" ecb-toggle-ecb-windows)
                (t "lt" ecb-toggle-layout)
+               (t "s" ecb-window-sync)
                (t "r" ecb-rebuild-methods-buffer)
                (t "a" ecb-toggle-auto-expand-token-tree)
                (t "x" ecb-expand-methods-nodes)
@@ -5710,6 +5727,29 @@ if the minor mode is enabled.
       (ecb-update-directory-node (tree-node-get-parent node))
       (tree-buffer-update))))
 
+(defun ecb-dired-directory-internal (node &optional other)
+  (if (not (ecb-edit-window-splitted))
+      (ecb-select-edit-window)
+    (select-window (or (and ecb-last-edit-window-with-point
+                            (window-live-p ecb-last-edit-window-with-point)
+                            ecb-last-edit-window-with-point)
+                       ecb-edit-window)))
+  (let ((dir (ecb-fix-filename
+              (funcall (if (file-directory-p (tree-node-get-data node))
+                           'identity
+                         'file-name-directory)
+                       (tree-node-get-data node)))))
+    (ecb-with-adviced-functions
+     (funcall (if other
+                  'dired-other-window
+                'dired)
+              dir))))
+
+(defun ecb-dired-directory (node)
+  (ecb-dired-directory-internal node))
+
+(defun ecb-dired-directory-other-window (node)
+  (ecb-dired-directory-internal node 'other))
 
 
 (defvar ecb-common-directories-menu nil)
@@ -5717,6 +5757,9 @@ if the minor mode is enabled.
       '(("Grep Directory" ecb-grep-directory t)
         ("Grep Directory recursive" ecb-grep-find-directory t)
         ("---")
+        ("Dired" ecb-dired-directory t)
+        ("Dired other window" ecb-dired-directory-other-window t)
+        ("---")        
 	("Create Sourcefile" ecb-create-source t)
 	("Create Child Directory" ecb-create-directory t)
 	("Delete Directory" ecb-delete-directory t)
@@ -5769,6 +5812,9 @@ function which is called with current node and has to return a string.")
 (setq ecb-sources-menu
       '(("Grep Directory" ecb-grep-directory t)
         ("Grep Directory recursive" ecb-grep-find-directory t)
+        ("---")
+        ("Dired" ecb-dired-directory t)
+        ("Dired other window" ecb-dired-directory-other-window t)
         ("---")
 	("Create Sourcefile" ecb-create-source t)
         ("Delete Sourcefile" ecb-delete-source t)
@@ -5921,6 +5967,9 @@ buffers does not exist anymore."
 (setq ecb-history-menu
       '(("Grep Directory" ecb-grep-directory t)
         ("Grep Directory recursive" ecb-grep-find-directory t)
+        ("---")
+        ("Dired" ecb-dired-directory t)
+        ("Dired other window" ecb-dired-directory-other-window t)
         ("---")
         ("Delete Sourcefile" ecb-delete-source t)
         ("Kill Buffer" ecb-history-kill-buffer t)

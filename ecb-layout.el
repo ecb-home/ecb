@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-layout.el,v 1.173 2003/08/01 15:23:29 berndl Exp $
+;; $Id: ecb-layout.el,v 1.174 2003/08/05 07:58:11 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -400,10 +400,14 @@ For a detailed description of the valid values see documentation of
 `window-size-fixed' which is newly introduced in GNU Emacs 21 and is only
 available there. Therefore this option takes only effect with GNU Emacs 21.
 
-Note1: The description of `window-size-fixed' in the elisp-info-manual is more
+Note1: Manually resizing the ECB-windows via `enlarge-window',
+`shrink-window', `mouse-drag-vertical-line' and `mouse-drag-mode-line' is
+still possible even if the window-sizes are fixed for frame-resizing!
+
+Note2: The description of `window-size-fixed' in the elisp-info-manual is more
 detailed than the description offered by \[C-h v]!
 
-Note2: With current Emacs 21.2.X there seems to be no distinction between
+Note3: With current Emacs 21.2.X there seems to be no distinction between
 'width, 'height and t. Therefore this option takes no effect \(means all
 ecb-windows have always unfixed sizes) if `ecb-compile-window-height' is not
 nil.
@@ -1047,6 +1051,48 @@ only enabled and disabled by `ecb-enable-count-windows-advice'!"
       ) ;; end of progn
 
   ;; only GNU Emacs basic advices
+  (defadvice mouse-drag-vertical-line (around ecb)
+    "Allows manually window-resizing even if `ecb-fix-window-size' is not nil
+    for current layout."
+    (if (and ecb-minor-mode
+             (equal (selected-frame) ecb-frame)
+             (ecb-get-window-fix-type ecb-layout-name))
+        (ecb-do-with-unfixed-ecb-buffers ad-do-it)
+      ad-do-it))
+
+
+  (defadvice mouse-drag-mode-line (around ecb)
+    "Allows manually window-resizing even if `ecb-fix-window-size' is not nil
+    for current layout."
+    (if (and ecb-minor-mode
+             (equal (selected-frame) ecb-frame)
+             (ecb-get-window-fix-type ecb-layout-name)
+             (member (car (car (cdr (ad-get-arg 0)))) ;; the window of the event
+                     (ecb-canonical-ecb-windows-list)))
+        (ecb-do-with-unfixed-ecb-buffers ad-do-it)
+      ad-do-it))
+
+  (defadvice enlarge-window (around ecb)
+    "Allows manually window-resizing even if `ecb-fix-window-size' is not nil
+    for current layout."
+    (if (and ecb-minor-mode
+             (equal (selected-frame) ecb-frame)
+             (ecb-get-window-fix-type ecb-layout-name)
+             (member (selected-window) (ecb-canonical-ecb-windows-list)))
+        (ecb-do-with-unfixed-ecb-buffers ad-do-it)
+      ad-do-it))
+
+  (defadvice shrink-window (around ecb)
+    "Allows manually window-resizing even if `ecb-fix-window-size' is not nil
+    for current layout."
+    (if (and ecb-minor-mode
+             (equal (selected-frame) ecb-frame)
+             ;; See comment of defadvice for mouse-drag-mode-line
+             (ecb-get-window-fix-type ecb-layout-name)
+             (member (selected-window) (ecb-canonical-ecb-windows-list)))
+        (ecb-do-with-unfixed-ecb-buffers ad-do-it)
+      ad-do-it))
+
   (defadvice shrink-window-if-larger-than-buffer (around ecb)
     "Makes the function compatible with ECB."
     (if (or (not (equal (selected-frame) ecb-frame))

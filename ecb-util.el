@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-util.el,v 1.65 2003/08/01 15:22:23 berndl Exp $
+;; $Id: ecb-util.el,v 1.66 2003/08/05 07:58:11 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -183,6 +183,10 @@ means not to count the minibuffer even if it is active."
                                           (compilation-set-window-height . around)
                                           (resize-temp-buffer-window . around)
                                           (shrink-window-if-larger-than-buffer . around)
+                                          (mouse-drag-vertical-line . around)
+                                          (mouse-drag-mode-line . around)
+                                          (enlarge-window . around)
+                                          (shrink-window . around)
                                           (scroll-other-window . around)
                                           (compile-internal . before)
                                           (custom-save-all . around)
