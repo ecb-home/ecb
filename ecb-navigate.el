@@ -30,6 +30,7 @@
 
 (require 'eieio)
 
+
 ;;====================================================
 ;; 
 ;;====================================================
@@ -128,26 +129,33 @@
   (oref item narrow))
 
 (defmethod ecb-nav-goto ((item ecb-nav-token-history-item))
-  (ignore-errors
-    (let ((token (ecb-nav-get-token item)))
-      (set-window-buffer (selected-window) (semantic-token-buffer token))
-      (widen)
-      (goto-char (semantic-token-start token))
-      (when (ecb-nav-get-narrow item)
-        (narrow-to-region (tree-buffer-line-beginning-pos)
-                          (semantic-token-end token)))
-      (goto-char (+ (semantic-token-start token) (ecb-nav-get-pos item)))
-      (set-window-start (selected-window)
-                        (+ (semantic-token-start token)
-                           (ecb-nav-get-window-start item))))))
+  (let ((token (ecb-nav-get-token item)))
+    (set-window-buffer (selected-window) (semantic-token-buffer token))
+    (widen)
+    (goto-char (or (ecb-semantic-token-start token)
+                   (when ecb-debug-mode
+                     (message "ecb-nav-token-history-item:ecb-nav-goto: Token-start not available!")
+                     nil)))
+    (when (ecb-nav-get-narrow item)
+      (narrow-to-region (tree-buffer-line-beginning-pos)
+                        (or (ecb-semantic-token-end token)
+                            (when ecb-debug-mode
+                              (message "ecb-nav-token-history-item:ecb-nav-goto: Token-end not available!")
+                              nil))))
+    (goto-char (+ (ecb-semantic-token-start token) (ecb-nav-get-pos item)))
+    (set-window-start (selected-window)
+                      (+ (ecb-semantic-token-start token)
+                         (ecb-nav-get-window-start item)))))
 
 (defmethod ecb-nav-save ((item ecb-nav-token-history-item))
-  (ignore-errors
-    (let ((token (ecb-nav-get-token item)))
-      (when (semantic-token-start token)
-        (ecb-nav-set-pos item (- (point) (semantic-token-start token)))
-        (ecb-nav-set-window-start item (- (window-start)
-                                          (semantic-token-start token)))))))
+  (let* ((token (ecb-nav-get-token item))
+         (token-start (or (ecb-semantic-token-start token)
+                          (when ecb-debug-mode
+                            (message "ecb-nav-token-history-item:ecb-nav-save: Token-start not available!")
+                            nil))))
+    (when token-start
+      (ecb-nav-set-pos item (- (point) token-start))
+      (ecb-nav-set-window-start item (- (window-start) token-start)))))
 
 (defmethod ecb-nav-to-string ((item ecb-nav-token-history-item))
   (concat (semantic-token-name (ecb-nav-get-token item)) ":" (call-next-method)))
@@ -218,8 +226,7 @@
     (setq ecb-nav-current-node node)))
 
 (defun ecb-nav-save-current ()
-  (ignore-errors
-    (ecb-nav-save (ecb-get-data ecb-nav-current-node))))
+  (ecb-nav-save (ecb-get-data ecb-nav-current-node)))
 
 (defun ecb-nav-goto-next ()
   "Go forward in the navigator history list."
