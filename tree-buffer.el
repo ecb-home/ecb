@@ -26,7 +26,7 @@
 ;; This file is part of the ECB package which can be found at:
 ;; http://home.swipnet.se/mayhem/ecb.html
 
-;; $Id: tree-buffer.el,v 1.31 2001/05/03 16:08:46 berndl Exp $
+;; $Id: tree-buffer.el,v 1.32 2001/05/03 16:17:03 berndl Exp $
 
 ;;; Code:
 
@@ -400,7 +400,7 @@ mentioned above!"
          ((equal last-command-char 'end)
           (let* ((node-name-list (mapcar 'tree-node-get-name
                                          (tree-node-get-children tree-buffer-root)))
-                 (common-prefix (tree-buffer-find-common-substring
+                 (common-prefix (tree-buffer-find-common-prefix
                                  node-name-list tree-buffer-incr-searchpattern)))
             (if (stringp common-prefix)
                 (setq tree-buffer-incr-searchpattern common-prefix))))
