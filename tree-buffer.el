@@ -26,7 +26,7 @@
 ;; This file is part of the ECB package which can be found at:
 ;; http://home.swipnet.se/mayhem/ecb.html
 
-;; $Id: tree-buffer.el,v 1.84 2002/03/24 16:33:15 berndl Exp $
+;; $Id: tree-buffer.el,v 1.85 2002/04/20 15:22:32 berndl Exp $
 
 ;;; Code:
 
@@ -222,18 +222,22 @@ with the same arguments as `tree-node-expanded-fn'."
 (defun tree-buffer-get-node-indent (node)
   (* tree-buffer-indent (1- (tree-node-get-depth node))))
 
+(defun tree-buffer-node-data-equal-p (node-data-1 node-data-2)
+  (and node-data-1 node-data-2
+       (funcall tree-node-data-equal-fn node-data-1 node-data-2)))
+
 (defun tree-buffer-find-node-data (node-data)
   (catch 'exit
     (dolist (node tree-buffer-nodes)
-      (when (funcall tree-node-data-equal-fn
-                     (tree-node-get-data (cdr node)) node-data)
+      (when (tree-buffer-node-data-equal-p (tree-node-get-data (cdr node))
+                                           node-data)
         (throw 'exit (cdr node))))))
 
 (defun tree-buffer-find-name-node-data (node-data)
   (catch 'exit
     (dolist (node tree-buffer-nodes)
-      (when (funcall tree-node-data-equal-fn
-                     (tree-node-get-data (cdr node)) node-data)
+      (when (tree-buffer-node-data-equal-p (tree-node-get-data (cdr node))
+                                           node-data)
         (throw 'exit node)))))
 
 (defun tree-buffer-find-node (node)
@@ -1101,8 +1105,8 @@ AFTER-CREATE-HOOK: A function \(with no arguments) called directly after
   "Finds the first child with the given child-data."
   (catch 'exit
     (dolist (child (tree-node-get-children node))
-      (when (funcall tree-node-data-equal-fn
-                     (tree-node-get-data child) child-data)
+      (when (tree-buffer-node-data-equal-p (tree-node-get-data child)
+                                           child-data)
         (throw 'exit child)))))
 
 (defun tree-node-remove-child-data (node child-data)
@@ -1112,8 +1116,8 @@ child."
     (let ((last-cell nil)
 	  (cell (tree-node-get-children node)))
       (while cell
-	(when (funcall tree-node-data-equal-fn
-                       (tree-node-get-data (car cell)) child-data)
+	(when (tree-buffer-node-data-equal-p (tree-node-get-data (car cell))
+                                             child-data)
 	  (if last-cell
 	      (setcdr last-cell (cdr cell))
 	    (tree-node-set-children node (cdr cell)))
@@ -1130,8 +1134,7 @@ child."
         (throw 'exit child)))))
 
 (defun tree-node-find-data-recursively (node data)
-  (if (funcall tree-node-data-equal-fn
-               data (tree-node-get-data node))
+  (if (tree-buffer-node-data-equal-p data (tree-node-get-data node))
       node
     (catch 'exit
       (dolist (child (tree-node-get-children node))
