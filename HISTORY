@@ -1,5 +1,5 @@
-Version 1.90:
--------------
+Version 1.90
+------------
 
 * Added new command 'ecb-toggle-compile-window': Toggle the visibility of the
   compile-window of ECB (Klaus).

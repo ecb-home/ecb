@@ -8,7 +8,9 @@
 ;; Keywords: browser, code, programming, tools
 ;; Created: Jul 2000
 
-(defvar ecb-version "1.90"
+;; IMPORTANT: The version-number is auto-frobbed from the Makefile. Do not
+;; change it here!
+(defconst ecb-version "1.90"
   "Current ECB version.")
 
 ;; This program is free software; you can redistribute it and/or modify it under
