@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-util.el,v 1.107 2004/05/06 09:02:04 berndl Exp $
+;; $Id: ecb-util.el,v 1.108 2004/07/15 15:26:27 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -297,10 +297,6 @@ If string STR1 is greater, the value is a positive number N;
                 (t)))
       )))
 
-;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: Jetzt neue optionen für die
-;; Sortierung von Sourcen und History-Eibnträgen, ob case-sensitive oder
-;; nicht. dann im Code anstelle ecb-string< bzw. ecb-string= mit dem Wert der
-;; neuen option als drittem Argument aufrufen.
 (defsubst ecb-string= (str1 str2 &optional ignore-case)
   (let ((s1 (or (and (stringp str1) str1) (symbol-name str1)))
         (s2 (or (and (stringp str2) str2) (symbol-name str2))))
@@ -715,7 +711,7 @@ height is that fraction of the frame."
     (error "Window is not alive!")))
 
 ;; stolen from query.el and slightly enhanced
-;; This for a small number of choices each of them a short string
+;; This is for a small number of choices each of them a short string
 (defun ecb-query-string (prompt choices &optional other-prompt)
   "Prints PROMPT and returns a string which must be one of CHOICES.
 CHOICES is either a list of strings whereas the first choice is the default

@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb.el,v 1.393 2004/06/14 11:02:13 berndl Exp $
+;; $Id: ecb.el,v 1.394 2004/07/15 15:26:26 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -830,6 +830,36 @@ Do NOT set this option directly via setq but use always customize!"
                              (const :tag "Node-name" :value name)
                              (const :tag "Node-name + type" :value name+type)))))
 
+;; access-functions for when and what value of
+;; `ecb-show-node-info-in-minibuffer':
+(defun ecb-show-any-node-info-by-mouse-moving-p ()
+  "Return not nil if for at least one tree-buffer showing node info only by
+moving the mouse over a node is activated. See
+`ecb-show-node-info-in-minibuffer'."
+  (let ((when-list (mapcar (lambda (elem)
+                             (car elem))
+                           ecb-show-node-info-in-minibuffer)))
+    (or (member 'if-too-long when-list)
+        (member 'always when-list))))
+
+(defun ecb-show-node-info-index (tree-buffer-name)
+  (cond ((ecb-string= tree-buffer-name ecb-directories-buffer-name)
+         0)
+        ((ecb-string= tree-buffer-name ecb-sources-buffer-name)
+         1)
+        ((ecb-string= tree-buffer-name ecb-history-buffer-name)
+         2)
+        ((ecb-string= tree-buffer-name ecb-methods-buffer-name)
+         3)))
+
+(defun ecb-show-node-info-when (tree-buffer-name)
+  (car (nth (ecb-show-node-info-index tree-buffer-name)
+            ecb-show-node-info-in-minibuffer)))
+
+(defun ecb-show-node-info-what (tree-buffer-name)
+  (cdr (nth (ecb-show-node-info-index tree-buffer-name)
+            ecb-show-node-info-in-minibuffer)))
+
 (defcustom ecb-primary-secondary-mouse-buttons 'mouse-2--C-mouse-2
   "*Primary- and secondary mouse button for using the ECB-buffers.
 A click with the primary button causes the main effect in each ECB-buffer:
@@ -877,6 +907,19 @@ ECB again to take effect!"
                        :value mouse-1--C-mouse-1)
                 (const :tag "Primary: mouse-1, secondary: mouse-2"
                        :value mouse-1--mouse-2)))
+
+(defcustom ecb-tree-mouse-action-trigger 'button-release
+  "*When the tree-buffer mouse-action should be triggered.
+This option determines the moment a mouse-action in a tree-buffer is
+triggered. This can be either direct after pressing a mouse-button \(value
+'button-press) or not until releasing the mouse-button \(value:
+'button-release).
+
+If you change this during ECB is activated you must deactivate and activate
+ECB again to take effect!"
+  :group 'ecb-tree-buffer
+  :type '(radio (const :tag "After button release" :value button-release)
+                (const :tag "After button press" :value button-press)))
 
 ;; Thanks to David Hay for the suggestion <David.Hay@requisite.com>
 (defcustom ecb-mouse-click-destination 'last-point
@@ -1071,12 +1114,23 @@ The following keys must not be rebind in all tree-buffers:
 
 
 (defun ecb-window-select (name)
+  "Select that window which displays the buffer with NAME in the `ecb-frame'
+and return the window-object. If that buffer is not displayed in the
+`ecb-frame' then nothing happens and nil is returned."
   (let ((window (get-buffer-window name ecb-frame)))
     (if window
 	(select-window window)
       nil)))
 
 (defun ecb-goto-ecb-window (name)
+  "Select that special ecb-window with name NAME. Only names defined
+for the current layout \(see `ecb-tree-buffers-of-current-layout') or the
+buffer-name of the integrated speedbar are accepted. If such a window can not
+be selected then probably because another ecb-window of current layout is
+currently maximized; therefore in such a case the layout has been redrawn and
+then tried to select the window again. This function does nothing if NAME
+fulfills not the described conditions or if the ecb-windows are hidden or ECB
+is not active. If necessary the `ecb-frame' will be first raised."
   (when (and ecb-minor-mode
              (not ecb-windows-hidden)
              (or (equal name ecb-speedbar-buffer-name)
@@ -1409,19 +1463,17 @@ by this command. See also the option `ecb-window-sync'."
                       (if (<= (prefix-numeric-value arg) 0)
                           (progn
                             (if ecb-window-sync
-                                (setq ecb-window-sync-old
-                                      ecb-window-sync))
+                                (setq ecb-window-sync-old ecb-window-sync))
                             nil)
-                        (or ecb-window-sync
-                            ecb-window-sync-old)))))
+                        (or ecb-window-sync ecb-window-sync-old)))))
     (setq ecb-window-sync new-value)
     (message "Automatic synchronizing the ECB-windows is %s \(Value: %s\)."
-               (if new-value "on" "off")
-               new-value)))
+             (if new-value "on" "off")
+             new-value)))
 
 (defun ecb-combine-ecb-button/edit-win-nr (ecb-button edit-window-nr)
   "Depending on ECB-BUTTON and EDIT-WINDOW-NR return one value:
-- nil id ECB-BUTTON is 1.
+- nil if ECB-BUTTON is 1.
 - t if ECB-BUTTON is 2 and the edit-area of ECB is splitted.
 - EDIT-WINDOW-NR if ECB-BUTTON is 3."
   (cond ((eq ecb-button 1) nil)
@@ -1594,38 +1646,6 @@ Currently the fourth argument TREE-BUFFER-NAME is not used here."
 	       (list (if control-pressed 2 1) shift-pressed)))
 	    (t nil)))))
 
-(defun ecb-show-any-node-info-by-mouse-moving-p ()
-  "Return not nil if for at least one tree-buffer showing node info only by
-moving the mouse over a node is activated. See
-`ecb-show-node-info-in-minibuffer'."
-  (let ((when-list (mapcar (lambda (elem)
-                             (car elem))
-                           ecb-show-node-info-in-minibuffer)))
-    (or (member 'if-too-long when-list)
-        (member 'always when-list))))
-
-;; access-functions for when and what value of
-;; `ecb-show-node-info-in-minibuffer':
-(defun ecb-show-node-info-index (tree-buffer-name)
-  (cond ((ecb-string= tree-buffer-name ecb-directories-buffer-name)
-         0)
-        ((ecb-string= tree-buffer-name ecb-sources-buffer-name)
-         1)
-        ((ecb-string= tree-buffer-name ecb-history-buffer-name)
-         2)
-        ((ecb-string= tree-buffer-name ecb-methods-buffer-name)
-         3)))
-
-(defun ecb-show-node-info-when (tree-buffer-name)
-  (car (nth (ecb-show-node-info-index tree-buffer-name)
-            ecb-show-node-info-in-minibuffer)))
-
-(defun ecb-show-node-info-what (tree-buffer-name)
-  (cdr (nth (ecb-show-node-info-index tree-buffer-name)
-            ecb-show-node-info-in-minibuffer)))
-
-
-
 (defun ecb-show-minibuffer-info (node window tree-buffer-name)
   "Checks if in the minibuffer should be displayed any info about the current
 node in the ECB-window WINDOW for the tree-buffer TREE-BUFFER-NAME only by
@@ -1638,7 +1658,442 @@ mouse-moving."
                     (tree-buffer-get-node-indent node))
                  (window-width window))))))
 
+(defun tree-buffer-create-1 (name frame is-click-valid-fn node-selected-fn
+                                  node-expanded-fn node-collapsed-fn node-mouse-over-fn
+                                  node-data-equal-fn maybe-empty-node-types leaf-node-types
+                                  menu-creator menu-titles tr-lines read-only tree-indent
+                                  incr-search incr-search-add-pattern arrow-navigation hor-scroll
+                                  &optional
+                                  default-image-dir add-image-dir tree-style ascii-guide-face
+                                  type-facer expand-symbol-before highlight-node-face general-face
+                                  after-create-hook)
+  "Creates a new tree buffer and returns the newly created buffer.
+This function creates also a special data-storage for this tree-buffer which
+can be accessed via `tree-buffer-set-data-store' and `tree-buffer-get-data-store'.
+The user of this tree-buffer can store any arbitrary data in this storage.
+Before using the accessor-functions above the tree-buffer has to be the
+current buffer!
 
+NAME: Name of the buffer.
+FRAME: Frame in which the tree-buffer is displayed and valid. All key-bindings
+       and interactive functions of the tree-buffer work only if called in
+       FRAME otherwise nothing is done!
+IS-CLICK-VALID-FN: `tree-buffer-create' rebinds down-mouse-1, down-mouse-2,
+                   RET \(and TAB) and also in combination with shift and
+                   control \(not with TAB). IS-CLICK-VALID-FN is called first
+                   if a node or an expand-symbol is clicked. This function is
+                   called with four arguments:
+                   - mouse-button: The clicked mouse-button or RET or TAB \(0
+                     = RET or TAB, 1 = mouse-1, 2 = mouse 2)
+                   - shift-pressed: non nil if the SHIFT-key was pressed
+                     during mouse-click or RET/TAB.
+                   - control-pressed: non nil if the CONTROL-key was pressed
+                     during mouse-click or RET/TAB.
+                   - tree-buffer-name: The buffer-name of the tree-buffer
+                     where the node has been clicked.
+                   The function must return not nil iff exactly this click/hit
+                   is accepted. If the function returns nil then really
+                   nothing is done by the tree-buffer after this click/hit!
+NODE-SELECTED-FN: Function to call if a node has been selected
+                  This function is called with the following parameters:
+                  - node: The selected node
+                  - mouse-button \(0 = RET, 1 = mouse-1, 2 = mouse 2)
+                  - shift-pressed
+                  - control-pressed
+                  - tree-buffer-name
+                  For the last four arguments see the description above. This
+                  function has to ensure that the expandable- and
+                  expanded-state of the selected node is correct after
+                  returning.
+NODE-EXPANDED-FN: Function to call if a node is expandable, point stays onto
+                  the expand-symbol and node is not already expanded. This
+                  function is called with the following parameters:
+                  - node: The selected node
+                  - mouse-button \(0 = TAB, 1 = mouse-1, 2 = mouse 2)
+                  - shift-pressed
+                  - control-pressed
+                  - tree-buffer-name
+                  This function should add all children nodes to this node
+                  \(if possible). This function has to ensure that the
+                  expandable- and expanded state of the selected node is
+                  correct after returning!
+NODE-COLLAPSED-FN: Function to call if a node is expandable, point stays
+                   onto the expand-symbol and node is already expanded.
+                   This function is called with the following parameters:
+                   - node: The selected node
+                   - mouse-button \(0 = TAB, 1 = mouse-1, 2 = mouse 2)
+                   - shift-pressed
+                   - control-pressed
+                   - tree-buffer-name
+                   This function is only a callback to inform the user of
+                   this tree-buffer that this node has been collapsed. This
+                   function must not modify the expandable- or expanded
+                   state of the selected node!
+NODE-MOUSE-OVER-FN: Function to call when the mouse is moved over a node. This
+                    function is called with three arguments: NODE, WINDOW,
+                    NO-PRINT, each of them related to the current tree-buffer.
+                    If NO-PRINT is nil then the function must print the text
+                    itself in any manner.
+                    This function must always return the text which either is
+                    printed by the function itself or by the caller \(if
+                    NO-PRINT is not nil).
+                    The current buffer for this function is the tree-buffer.
+                    With XEmacs and GNU Emacs 20.X this function is only
+                    called if the tree-buffer track-mouse mechanism is
+                    activated \(see `tree-buffer-activate-mouse-tracking').
+                    With GNU Emacs 21 this function is called by the
+                    `help-echo' property added to each node.
+NODE-DATA-EQUAL-FN: Function used by the tree-buffer to test if the data of
+                    two tree-nodes are equal. The data of node can be set/get
+                    with `tree-node-set-data'/`tree-node-get-data'.
+MAYBE-EMPTY-NODE-TYPES: Nil or a list of node-types \(a node-type is an
+                        integer which must be set for `tree-node-new'). Nodes
+                        with one of these types are treated as empty if they
+                        are not expandable \(i.e. they have no children) and
+                        will be displayed with the empty-symbol \(\[x]); for
+                        other nodes see next argument.
+LEAF-NODE-TYPES: Nil or a list of node-types \(see above). Nodes
+                  with one of these types are treated as leafs and will be
+                  displayed with the leaf-symbol \(*). Summary:
+                  * Expandable nodes will always be displayed either with the
+                    open- or with the close-symbol.
+                  * Not-expandable nodes with a node-type contained in
+                    MAYBE-EMPTY-NODE-TYPES will be displayed with the
+                    empty-symbol.
+                  * Not-expandable nodes with a node-type contained in
+                    LEAF-NODE-TYPES will be displayed with the leaf-symbol.
+                  * All other nodes will be displayed with no symbol just with
+                    correct indentation.
+MENU-CREATOR: A function which has to return nil or a list of one to three
+              conses, each cons for a node-type \(0, 1 or 2) Example: \(\(0 .
+              menu-for-type-0) \(1 . menu-for-type-1)). The cdr of a cons must
+              be a menu. This function gets one argument: The name of the
+              tree-buffer for which a popup-menu should be opened.
+MENU-TITLES: Nil or a list of one to three conses, each cons for a node-type
+             \(0, 1 or 2). See MENU-CREATOR. The cdr of a cons must be either
+             a string or a function which will be called with current node
+             under point and must return a string which is displayed as the
+             menu-title.
+TR-LINES: Should lines in this tree buffer be truncated \(not nil)
+READ-ONLY: Should the treebuffer be read-only \(not nil)
+TREE-INDENT: spaces subnodes should be indented.
+INCR-SEARCH: Should the incremental search be enabled in the tree-buffer.
+             Three choices: 'prefix, 'substring, nil. See
+             `tree-buffer-incremental-node-search'.
+INCR-SEARCH-ADD-PATTERN: Every search-pattern is prefixed at least with
+                         `tree-buffer-incr-searchpattern-indent-prefix' and
+                         `tree-buffer-incr-searchpattern-expand-prefix' to
+                         jump over not important stuff. If this argument is
+                         not nil then it must be a cons-cell where car is a
+                         string which should be a regexp-pattern which is
+                         added to the basic-prefix pattern and both of them
+                         prefix the incr-search-pattern. The cdr is the number
+                         of subexpr. in this pattern.
+ARROW-NAVIGATION: If not nil then smart navigation with horizontal arrow keys.
+HOR-SCROLL: Number of columns a hor. scroll in the tree-buffer should scroll.
+            If not nil then M-mouse-1 and M-mouse-2 scroll left and right and
+            also M-<left-arrow> and M-<right-arrow>.
+DEFAULT-IMAGE-DIR: Full path where the default images for the tree-buffer can
+                   be found. It should contain an image for every name of
+                   `tree-buffer-tree-image-names'.
+ADD-IMAGE-DIR: Additional image-dir which should be searched first for images
+               needed for current tree-buffer. If the image can not be found
+               in this directory then DEFAULT-IMAGE-DIR is searched. If the
+               image can't even found here the related ascii-symbol is used.
+TREE-STYLE: If 'image then images are used for the tree-buffer - if possible.
+            If 'ascii-guides then the tree is drwan with pure ascii but with
+            guide-lines. If 'ascii-no-guides then an ascii-tree w/o
+            guide-lines is drawn
+ASCII-GUIDE-FACE: If TREE-STYLE is 'ascii-guides then this defines the face
+                  the guides should be displayed with.
+TYPE-FACER: Nil or a list of one or more conses, each cons for a node-type \(a
+            node-type is an integer which must be set for `tree-node-new').
+            The cdr of a cons can be:
+            - a symbol of a face
+            - a symbol of a function which gets to arguments \(see
+              `tree-buffer-insert-text'). This function can do anything, but
+              normally it should face a tree-buffer node.
+            - the symbol t. Then the tree-buffer assumes that the node-text is
+              already faced and therefore it does not face the node, means it
+              does nothing then inserting the node-text, if the tree-buffer is
+              updated.
+EXPAND-SYMBOL-BEFORE: If not nil then the expand-symbol \(is displayed before
+                      the node-text.
+HIGHLIGHT-NODE-FACE: Face used for highlighting current node in this
+                     tree-buffer.
+GENERAL-FACE: General face in which the whole tree-buffer should be displayed.
+AFTER-CREATE-HOOK: A function or a list of functions \(with no arguments)
+                   called directly after creating the tree-buffer and defining
+                   it's local keymap. For example such a function can add
+                   additional key-bindings for this tree-buffer local keymap."
+  (let ((nop (function (lambda() (interactive))))
+        (a-c-h (if (functionp after-create-hook)
+                   (list after-create-hook)
+                 after-create-hook)))
+    (set-buffer (get-buffer-create name))
+
+    (make-local-variable 'truncate-lines)
+    (make-local-variable 'truncate-partial-width-windows)
+    (make-local-variable 'tree-buffer-key-map)
+    (make-local-variable 'tree-buffer-frame)
+    (make-local-variable 'tree-buffer-root)
+    (make-local-variable 'tree-buffer-nodes)
+    (make-local-variable 'tree-buffer-indent)
+    (make-local-variable 'tree-buffer-is-click-valid-fn)
+    (make-local-variable 'tree-node-selected-fn)
+    (make-local-variable 'tree-node-expanded-fn)
+    (make-local-variable 'tree-node-collapsed-fn)
+    (make-local-variable 'tree-node-update-fn)
+    (make-local-variable 'tree-node-mouse-over-fn)
+    (make-local-variable 'tree-node-data-equal-fn)
+    (make-local-variable 'tree-buffer-maybe-empty-node-types)
+    (make-local-variable 'tree-buffer-leaf-node-types)
+    (make-local-variable 'tree-buffer-highlighted-node-data)
+    (make-local-variable 'tree-buffer-menu-creator)
+    (make-local-variable 'tree-buffer-menu-titles)
+    (make-local-variable 'tree-buffer-type-facer)
+    (make-local-variable 'tree-buffer-expand-symbol-before)
+    (make-local-variable 'tree-buffer-highlight-overlay)
+    (make-local-variable 'tree-buffer-general-face)
+    (make-local-variable 'tree-buffer-general-overlay)
+    (make-local-variable 'tree-buffer-incr-searchpattern)
+    (make-local-variable 'tree-buffer-last-incr-searchpattern)
+    (make-local-variable 'tree-buffer-incr-search)
+    (make-local-variable 'tree-buffer-incr-searchpattern-indent-prefix)
+    (make-local-variable 'tree-buffer-incr-search-additional-pattern)
+    (make-local-variable 'tree-buffer-hor-scroll-step)
+    (make-local-variable 'tree-buffer-default-images-dir)
+    (make-local-variable 'tree-buffer-additional-images-dir)
+    (make-local-variable 'tree-buffer-style)
+    (make-local-variable 'tree-buffer-ascii-guide-face)
+    (make-local-variable 'tree-buffer-hscroll-number)
+    
+    ;; initialize the user-data-storage for this tree-buffer.
+    (set (make-local-variable 'tree-buffer-data-store) nil)
+    ;; initialize the local image-cache for this tree-buffer
+    (set (make-local-variable 'tree-buffer-local-image-dir-cache) nil)
+
+    (setq truncate-lines tr-lines)
+    (setq truncate-partial-width-windows tr-lines)
+    (setq buffer-read-only read-only)
+    (setq tree-buffer-key-map (make-sparse-keymap))
+    (setq tree-buffer-frame frame)
+    (setq tree-buffer-is-click-valid-fn is-click-valid-fn)
+    (setq tree-node-selected-fn node-selected-fn)
+    (setq tree-node-expanded-fn node-expanded-fn)
+    (setq tree-node-collapsed-fn node-collapsed-fn)
+    (setq tree-node-mouse-over-fn node-mouse-over-fn)
+    (setq tree-node-data-equal-fn node-data-equal-fn)
+    (setq tree-buffer-maybe-empty-node-types maybe-empty-node-types)
+    (setq tree-buffer-leaf-node-types leaf-node-types)
+    (setq tree-buffer-highlighted-node-data nil)
+    (setq tree-buffer-menu-creator menu-creator)
+    (setq tree-buffer-menu-titles menu-titles)
+    (setq tree-buffer-root (tree-node-new-root))
+    (setq tree-buffer-type-facer type-facer)
+    (setq tree-buffer-highlight-overlay (tree-buffer-make-overlay 1 1))
+    (tree-buffer-overlay-put tree-buffer-highlight-overlay
+                             'face highlight-node-face)
+    ;; setting general face and overlay for the tree-buffer
+    (setq tree-buffer-general-face general-face)
+    (setq tree-buffer-general-overlay (tree-buffer-make-overlay 1 1))
+    (tree-buffer-overlay-put tree-buffer-general-overlay 'face
+                             tree-buffer-general-face)
+    ;; initializing the search-pattern
+    (setq tree-buffer-incr-searchpattern "")
+    (setq tree-buffer-last-incr-searchpattern "")
+    (setq tree-buffer-incr-search incr-search)
+    (setq tree-buffer-incr-search-additional-pattern incr-search-add-pattern)
+    (setq tree-buffer-hor-scroll-step hor-scroll)
+    (setq tree-buffer-default-images-dir default-image-dir)
+    (setq tree-buffer-additional-images-dir add-image-dir)
+    (setq tree-buffer-style tree-style)
+    (setq tree-buffer-ascii-guide-face ascii-guide-face)
+    (setq tree-buffer-hscroll-number 0)
+
+    ;; special settings for tree-buffer-indent and
+    ;; tree-buffer-expand-symbol-before
+    (cond ((equal 'image (tree-buffer-style))
+           (setq tree-buffer-indent tree-buffer-indent-with-images
+                 tree-buffer-expand-symbol-before t))
+          (expand-symbol-before
+           (setq tree-buffer-indent
+                 (if (< tree-indent
+                        tree-buffer-indent-w/o-images-before-min)
+                     tree-buffer-indent-w/o-images-before-min
+                   tree-indent)
+                 tree-buffer-expand-symbol-before expand-symbol-before))
+          (t
+           (setq tree-buffer-indent
+                 (if (< tree-indent
+                        tree-buffer-indent-w/o-images-after-min)
+                     tree-buffer-indent-w/o-images-after-min
+                   tree-indent)
+                 tree-buffer-expand-symbol-before expand-symbol-before)))
+
+    (setq tree-buffer-incr-searchpattern-indent-prefix
+          (tree-buffer-gen-searchpattern-indent-prefix))
+    
+    ;; set a special syntax table for tree-buffers
+    (set-syntax-table tree-buffer-syntax-table)
+    
+    ;; keyboard setting
+    (when incr-search
+      ;; settings for the incremental search.
+      ;; for all keys which are bound to `self-insert-command' in `global-map'
+      ;; we change this binding to `tree-buffer-incremental-node-search'.
+      (substitute-key-definition 'self-insert-command
+                                 'tree-buffer-incremental-node-search
+                                 tree-buffer-key-map
+                                 global-map)
+      (define-key tree-buffer-key-map [delete]
+        'tree-buffer-incremental-node-search)
+      (define-key tree-buffer-key-map [backspace]
+        'tree-buffer-incremental-node-search)
+      (define-key tree-buffer-key-map [home]
+        'tree-buffer-incremental-node-search)
+      (define-key tree-buffer-key-map [end]
+        'tree-buffer-incremental-node-search))
+    
+    (define-key tree-buffer-key-map (kbd "<RET>")
+      (function (lambda ()
+                  (interactive)
+                  (tree-buffer-return-pressed nil nil))))
+    (define-key tree-buffer-key-map (kbd "<C-return>")
+      (function (lambda ()
+                  (interactive)
+                  (tree-buffer-return-pressed nil t))))
+    (define-key tree-buffer-key-map (kbd "<S-return>")
+      (function (lambda ()
+                  (interactive)
+                  (tree-buffer-return-pressed t nil))))
+    (define-key tree-buffer-key-map (kbd "<C-S-return>")
+      (function (lambda ()
+                  (interactive)
+                  (tree-buffer-return-pressed t t))))
+    
+    (define-key tree-buffer-key-map (kbd "TAB") 'tree-buffer-tab-pressed)
+
+    (when arrow-navigation
+      (define-key tree-buffer-key-map (kbd "<right>") 'tree-buffer-arrow-pressed)
+      (define-key tree-buffer-key-map (kbd "<left>") 'tree-buffer-arrow-pressed))
+    
+    ;; mouse-1
+    (define-key tree-buffer-key-map
+      (if tree-buffer-running-xemacs '(button1) [down-mouse-1])
+      (function (lambda(e)
+		  (interactive "e")
+                  (tree-buffer-mouse-set-point e)
+                  (tree-buffer-select 1 nil nil))))
+  
+    (define-key tree-buffer-key-map
+      (if tree-buffer-running-xemacs '(shift button1) [S-down-mouse-1])
+      (function (lambda(e)
+		  (interactive "e")
+                  (tree-buffer-mouse-set-point e)
+                  (tree-buffer-select 1 t nil))))
+
+    (define-key tree-buffer-key-map
+      (if tree-buffer-running-xemacs '(control button1) [C-down-mouse-1])
+      (function (lambda(e)
+		  (interactive "e")
+                  (tree-buffer-mouse-set-point e)
+                  (tree-buffer-select 1 nil t))))
+
+    (define-key tree-buffer-key-map [drag-mouse-1] nop)
+    (define-key tree-buffer-key-map [mouse-1] nop)
+    (define-key tree-buffer-key-map [double-mouse-1] nop)
+    (define-key tree-buffer-key-map [triple-mouse-1] nop)
+
+    ;; mouse-2
+    (define-key tree-buffer-key-map
+      (if tree-buffer-running-xemacs '(button2) [down-mouse-2])
+      (function (lambda(e)
+		  (interactive "e")
+                  (tree-buffer-mouse-set-point e)
+                  (tree-buffer-select 2 nil nil))))
+
+    (define-key tree-buffer-key-map
+      (if tree-buffer-running-xemacs '(shift button2) [S-down-mouse-2])
+      (function (lambda(e)
+		  (interactive "e")
+                  (tree-buffer-mouse-set-point e)
+                  (tree-buffer-select 2 t nil))))
+
+    (define-key tree-buffer-key-map
+      (if tree-buffer-running-xemacs '(control button2) [C-down-mouse-2])
+      (function (lambda(e)
+		  (interactive "e")
+                  (tree-buffer-mouse-set-point e)
+                  (tree-buffer-select 2 nil t))))
+
+    (define-key tree-buffer-key-map [mouse-2] nop)
+    (define-key tree-buffer-key-map [double-mouse-2] nop)
+    (define-key tree-buffer-key-map [triple-mouse-2] nop)
+
+    ;; mouse-3
+    (define-key tree-buffer-key-map
+      (if tree-buffer-running-xemacs '(button3) [down-mouse-3])
+      (function (lambda(e)
+		  (interactive "e")
+                  (tree-buffer-mouse-set-point e)
+                  (tree-buffer-show-menu e))))
+    (define-key tree-buffer-key-map (kbd "M-m")
+      'tree-buffer-show-menu-keyboard)
+    
+    (define-key tree-buffer-key-map [mouse-3] nop)
+    (define-key tree-buffer-key-map [double-mouse-3] nop)
+    (define-key tree-buffer-key-map [triple-mouse-3] nop)
+
+    ;; scrolling horiz.
+    (when (and (not tree-buffer-running-xemacs)
+               tree-buffer-hor-scroll-step)
+      (define-key tree-buffer-key-map
+        [M-down-mouse-1]
+        (function (lambda(e)
+                    (interactive "e")
+                    (tree-buffer-mouse-set-point e)
+                    (tree-buffer-hscroll (- tree-buffer-hor-scroll-step)))))
+
+      (define-key tree-buffer-key-map
+        [M-down-mouse-3]
+        (function (lambda(e)
+                    (interactive "e")
+                    (tree-buffer-mouse-set-point e)
+                    (tree-buffer-hscroll tree-buffer-hor-scroll-step))))
+      
+      (define-key tree-buffer-key-map
+        [C-M-down-mouse-1]
+        (function (lambda(e)
+                    (interactive "e")
+                    (tree-buffer-mouse-set-point e)
+                    (tree-buffer-hscroll (- (- (window-width) 2))))))
+      
+      (define-key tree-buffer-key-map
+        [C-M-down-mouse-3]
+        (function (lambda(e)
+                    (interactive "e")
+                    (tree-buffer-mouse-set-point e)
+                    (tree-buffer-hscroll (- (window-width) 2)))))
+      
+      ;; This lets the GNU Emacs user scroll as if we had a horiz.
+      ;; scrollbar...
+      (define-key tree-buffer-key-map
+        [mode-line mouse-1] 'tree-buffer-mouse-hscroll)
+      
+      (define-key tree-buffer-key-map [M-mouse-1] nop)
+      (define-key tree-buffer-key-map [M-mouse-3] nop)
+      (define-key tree-buffer-key-map [C-M-mouse-1] nop)
+      (define-key tree-buffer-key-map [C-M-mouse-3] nop))
+    
+    (use-local-map tree-buffer-key-map)
+
+    (setq tree-buffers (cons (current-buffer) tree-buffers))
+
+    (prog1
+        (current-buffer)
+      (dolist (f a-c-h)
+        (funcall f)))))
 
 (defvar ecb-idle-timer-alist nil)
 (defvar ecb-post-command-hooks nil)
@@ -2699,6 +3154,7 @@ does all necessary after finishing ediff."
 ;; `ediff-before-setup-hook' is called only once - so it can be used to store
 ;; window-configs!
 (defun ecb-ediff-before-setup-hook ()
+  "Special ecb-setup before starting ediff."
   (if (and ecb-minor-mode
            (equal (selected-frame) ecb-frame))
       (progn
@@ -2987,7 +3443,8 @@ performance-problem!"
   ;; to a nop.
   ;; At least this is my current interpretation and it works :-)
   ;; TODO: detecting the real reason why this happens and fixing it.
-  (if ecb-item-in-tree-buffer-selected
+  (if (and ecb-item-in-tree-buffer-selected
+           (equal ecb-tree-mouse-action-trigger 'button-press))
       (setq ecb-item-in-tree-buffer-selected nil)
     ;; do nothing if major-mode has not been changed or if a minibuffer is
     ;; active or if now one of the ecb-buffers is active

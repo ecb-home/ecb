@@ -26,7 +26,7 @@
 @c GNU Emacs; see the file COPYING.  If not, write to the Free Software
 @c Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-@c $Id: ecb.texi,v 1.178 2004/07/02 05:49:18 berndl Exp $
+@c $Id: ecb.texi,v 1.179 2004/07/15 15:26:20 berndl Exp $
 
 @setfilename ecb.info
 
@@ -118,6 +118,7 @@ The latest version of ECB can always be found at the URL
 To send bug reports, or participate in discussions about ECB, use the
 mailing list @email{ecb-list@@lists.sourceforge.net} via the URL
 @url{http://lists.sourceforge.net/lists/listinfo/ecb-list}.
+
 @end ifinfo
 
 @iftex
@@ -141,6 +142,21 @@ To send bug reports, or participate in discussions about ECB, use the
 mailing list @email{ecb-list@@lists.sourceforge.net} via 
 @uref{http://lists.sourceforge.net/lists/listinfo/ecb-list}
 @end ifhtml
+
+@strong{IMPORTANT}: Cause of extra appearance of SPAM in the
+mailing-lists, SourceForge has changed its policy: Now it is only
+possible to post to the mailing-list for users who have subscribed
+this mailing-list. So please be aware you will not be able to send
+comments, bug reports and improvement suggestions before you have
+subscribed the ECB-mailing-list. See the section "Mailing-list" at the
+ECB-website at
+@ifhtml
+@uref{http://ecb.sourceforge.net}
+@end ifhtml
+@ifnothtml
+@url{http://ecb.sourceforge.net}
+@end ifnothtml
+how to do this.
 
 @menu
 * Install and first steps::     Installing ECB and first steps
@@ -5335,6 +5351,18 @@ Indent size for tree buffer. If you change this during ECB is
 activated you must deactivate and activate ECB again to take effect.
 @end defopt
 
+@defopt tree-mouse-action-trigger
+When the tree-buffer mouse-action should be triggered. This option
+determines the moment a mouse-action in a tree-buffer is triggered.
+This can be either direct after pressing a mouse-button (value
+@code{button-press}) or not until releasing the mouse-button (value:
+@code{button-release}).
+
+If you change this during ECB is activated you must deactivate and
+activate ECB again to take effect!
+@end defopt
+
+
 @defopt tree-navigation-by-arrow
 Enable smart navigation in the tree-windows by horiz. arrow-keys. If
 not nil then the left- and right-arrow keys work in the ECB
@@ -8044,6 +8072,21 @@ problem report. Just call @code{ecb-submit-problem-report}! Please
 read the documentation of this command, see @ref{Interactive ECB
 commands}.
 
+@strong{IMPORTANT}: Cause of extra appearance of SPAM in the
+mailing-lists, SourceForge has changed its policy: Now it is only
+possible to post to the mailing-list for users who have subscribed
+this mailing-list. So please be aware you will not be able to send
+comments, bug reports and improvement suggestions before you have
+subscribed the ECB-mailing-list. See the section "Mailing-list" at the
+ECB-website at
+@ifhtml
+@uref{http://ecb.sourceforge.net}
+@end ifhtml
+@ifnothtml
+@url{http://ecb.sourceforge.net}
+@end ifnothtml
+how to do this.
+
 If you think there are problems concerning parsing-results for certain
 sources supported by semantic then you should call
 @code{ecb-dump-semantic-toplevel} for the problematic source-buffer
@@ -8587,7 +8630,7 @@ sense during running speedbar with ECB.}.
 
 @strong{IMPORTANT}: ECB can only integrate speedbar-versions >=
 0.14beta1! If you use lower versions of speedbar
-@code{ecb-use-speedbar-for-directories} has no effect.
+@code{ecb-use-speedbar-instead-native-tree-buffer} has no effect.
 
 @node Optimize scrolling, Large directories, Integrating speedbar, Tips and tricks
 @section Optimize scrolling in the edit-window

@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: tree-buffer.el,v 1.144 2004/06/14 11:02:12 berndl Exp $
+;; $Id: tree-buffer.el,v 1.145 2004/07/15 15:26:19 berndl Exp $
 
 ;;; Commentary:
 
@@ -246,6 +246,7 @@ node name.")
 (defvar tree-buffer-menu-titles nil)
 (defvar tree-buffer-type-facer nil)
 (defvar tree-buffer-expand-symbol-before nil)
+(defvar tree-buffer-mouse-action-trigger nil)
 (defvar tree-buffer-is-click-valid-fn nil)
 (defvar tree-node-selected-fn nil)
 (defvar tree-node-expanded-fn nil)
@@ -1707,7 +1708,37 @@ functionality is done with the `help-echo'-property and the function
 
 ;; tree-buffer creation
 
-(defun tree-buffer-create (name frame is-click-valid-fn node-selected-fn
+(defun tree-buffer-create-mouse-key (button trigger &optional modifier)
+  "Create a mouse-key which can be bound to a command via `define-key'.
+BUTTON is the number of the mouse-button which can be 1, 2 or 3. TRIGGER
+determines when the command is triggered, values can be 'button-press and
+'button-release. The optional modifier can be one of the symbols `shift,
+'control or 'meta."
+  (let ((mouse-button (if tree-buffer-running-xemacs
+                          (format "button%d%s"
+                                  button
+                                  (if (equal trigger 'button-press)
+                                      ""
+                                    "up"))
+                        (format "%smouse-%d"
+                                (if (equal trigger 'button-press)
+                                    "down-"
+                                  "")
+                                button)))
+        (modifier-elem (if tree-buffer-running-xemacs
+                           modifier
+                         (cond ((equal modifier 'shift)
+                                "S-")
+                               ((equal modifier 'control)
+                                "C-")
+                               ((equal modifier 'meta)
+                                "M-")
+                               (t "")))))
+    (if tree-buffer-running-xemacs
+        (delete nil (list modifier-elem (intern mouse-button)))
+      (make-vector 1 (intern (concat modifier-elem mouse-button))))))
+
+(defun tree-buffer-create (name frame mouse-action-trigger is-click-valid-fn node-selected-fn
                                 node-expanded-fn node-collapsed-fn node-mouse-over-fn
                                 node-data-equal-fn maybe-empty-node-types leaf-node-types
                                 menu-creator menu-titles tr-lines read-only tree-indent
@@ -1727,6 +1758,8 @@ NAME: Name of the buffer.
 FRAME: Frame in which the tree-buffer is displayed and valid. All key-bindings
        and interactive functions of the tree-buffer work only if called in
        FRAME otherwise nothing is done!
+MOUSE-ACTION-TRIGGER: When a mouse-action is triggered. Allowed values:
+                      'button-release and 'button-press.
 IS-CLICK-VALID-FN: `tree-buffer-create' rebinds down-mouse-1, down-mouse-2,
                    RET \(and TAB) and also in combination with shift and
                    control \(not with TAB). IS-CLICK-VALID-FN is called first
@@ -1875,10 +1908,15 @@ AFTER-CREATE-HOOK: A function or a list of functions \(with no arguments)
                    called directly after creating the tree-buffer and defining
                    it's local keymap. For example such a function can add
                    additional key-bindings for this tree-buffer local keymap."
-  (let ((nop (function (lambda() (interactive))))
+  (let ((nop (function (lambda(e) (interactive "e"))))
         (a-c-h (if (functionp after-create-hook)
                    (list after-create-hook)
-                 after-create-hook)))
+                 after-create-hook))
+        (mouse-action-trigger-not (if (equal mouse-action-trigger
+                                             'button-press)
+                                      'button-release
+                                    'button-press)))
+        
     (set-buffer (get-buffer-create name))
 
     (make-local-variable 'truncate-lines)
@@ -1888,6 +1926,7 @@ AFTER-CREATE-HOOK: A function or a list of functions \(with no arguments)
     (make-local-variable 'tree-buffer-root)
     (make-local-variable 'tree-buffer-nodes)
     (make-local-variable 'tree-buffer-indent)
+    (make-local-variable 'tree-buffer-mouse-action-trigger)
     (make-local-variable 'tree-buffer-is-click-valid-fn)
     (make-local-variable 'tree-node-selected-fn)
     (make-local-variable 'tree-node-expanded-fn)
@@ -1927,6 +1966,7 @@ AFTER-CREATE-HOOK: A function or a list of functions \(with no arguments)
     (setq buffer-read-only read-only)
     (setq tree-buffer-key-map (make-sparse-keymap))
     (setq tree-buffer-frame frame)
+    (setq tree-buffer-mouse-action-trigger mouse-action-trigger)
     (setq tree-buffer-is-click-valid-fn is-click-valid-fn)
     (setq tree-node-selected-fn node-selected-fn)
     (setq tree-node-expanded-fn node-expanded-fn)
@@ -2029,60 +2069,70 @@ AFTER-CREATE-HOOK: A function or a list of functions \(with no arguments)
     
     ;; mouse-1
     (define-key tree-buffer-key-map
-      (if tree-buffer-running-xemacs '(button1) [down-mouse-1])
-      (function (lambda(e)
+      (tree-buffer-create-mouse-key 1 mouse-action-trigger nil)
+       (function (lambda(e)
 		  (interactive "e")
                   (tree-buffer-mouse-set-point e)
                   (tree-buffer-select 1 nil nil))))
   
     (define-key tree-buffer-key-map
-      (if tree-buffer-running-xemacs '(shift button1) [S-down-mouse-1])
+      (tree-buffer-create-mouse-key 1 mouse-action-trigger 'shift)
       (function (lambda(e)
 		  (interactive "e")
                   (tree-buffer-mouse-set-point e)
                   (tree-buffer-select 1 t nil))))
 
     (define-key tree-buffer-key-map
-      (if tree-buffer-running-xemacs '(control button1) [C-down-mouse-1])
+      (tree-buffer-create-mouse-key 1 mouse-action-trigger 'control)
       (function (lambda(e)
 		  (interactive "e")
                   (tree-buffer-mouse-set-point e)
                   (tree-buffer-select 1 nil t))))
 
     (define-key tree-buffer-key-map [drag-mouse-1] nop)
-    (define-key tree-buffer-key-map [mouse-1] nop)
+    (define-key tree-buffer-key-map
+      (tree-buffer-create-mouse-key 1 mouse-action-trigger-not nil) nop)
+    (define-key tree-buffer-key-map
+      (tree-buffer-create-mouse-key 1 mouse-action-trigger-not 'shift) nop)
+    (define-key tree-buffer-key-map
+      (tree-buffer-create-mouse-key 1 mouse-action-trigger-not 'control) nop)
     (define-key tree-buffer-key-map [double-mouse-1] nop)
     (define-key tree-buffer-key-map [triple-mouse-1] nop)
 
     ;; mouse-2
     (define-key tree-buffer-key-map
-      (if tree-buffer-running-xemacs '(button2) [down-mouse-2])
+      (tree-buffer-create-mouse-key 2 mouse-action-trigger nil)
       (function (lambda(e)
 		  (interactive "e")
                   (tree-buffer-mouse-set-point e)
                   (tree-buffer-select 2 nil nil))))
 
     (define-key tree-buffer-key-map
-      (if tree-buffer-running-xemacs '(shift button2) [S-down-mouse-2])
+      (tree-buffer-create-mouse-key 2 mouse-action-trigger 'shift)
       (function (lambda(e)
 		  (interactive "e")
                   (tree-buffer-mouse-set-point e)
                   (tree-buffer-select 2 t nil))))
 
     (define-key tree-buffer-key-map
-      (if tree-buffer-running-xemacs '(control button2) [C-down-mouse-2])
+      (tree-buffer-create-mouse-key 2 mouse-action-trigger 'control)
       (function (lambda(e)
 		  (interactive "e")
                   (tree-buffer-mouse-set-point e)
                   (tree-buffer-select 2 nil t))))
 
-    (define-key tree-buffer-key-map [mouse-2] nop)
+    (define-key tree-buffer-key-map
+      (tree-buffer-create-mouse-key 2 mouse-action-trigger-not nil) nop)
+    (define-key tree-buffer-key-map
+      (tree-buffer-create-mouse-key 2 mouse-action-trigger-not 'shift) nop)
+    (define-key tree-buffer-key-map
+      (tree-buffer-create-mouse-key 2 mouse-action-trigger-not 'control) nop)
     (define-key tree-buffer-key-map [double-mouse-2] nop)
     (define-key tree-buffer-key-map [triple-mouse-2] nop)
 
     ;; mouse-3
     (define-key tree-buffer-key-map
-      (if tree-buffer-running-xemacs '(button3) [down-mouse-3])
+      (tree-buffer-create-mouse-key 3 mouse-action-trigger nil)
       (function (lambda(e)
 		  (interactive "e")
                   (tree-buffer-mouse-set-point e)
@@ -2090,7 +2140,16 @@ AFTER-CREATE-HOOK: A function or a list of functions \(with no arguments)
     (define-key tree-buffer-key-map (kbd "M-m")
       'tree-buffer-show-menu-keyboard)
     
-    (define-key tree-buffer-key-map [mouse-3] nop)
+    (define-key tree-buffer-key-map
+      (tree-buffer-create-mouse-key 3 mouse-action-trigger-not nil) nop)
+    (define-key tree-buffer-key-map
+      (tree-buffer-create-mouse-key 3 mouse-action-trigger-not 'shift) nop)
+    (define-key tree-buffer-key-map
+      (tree-buffer-create-mouse-key 3 mouse-action-trigger-not 'control) nop)
+    (define-key tree-buffer-key-map
+      (tree-buffer-create-mouse-key 3 mouse-action-trigger 'shift) nop)
+    (define-key tree-buffer-key-map
+      (tree-buffer-create-mouse-key 3 mouse-action-trigger 'control) nop)
     (define-key tree-buffer-key-map [double-mouse-3] nop)
     (define-key tree-buffer-key-map [triple-mouse-3] nop)
 
