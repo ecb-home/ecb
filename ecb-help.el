@@ -26,7 +26,7 @@
 ;;
 ;; Contains all online-help for ECB (stolen something from recentf.el)
 
-;; $Id: ecb-help.el,v 1.49 2001/11/06 12:08:17 berndl Exp $
+;; $Id: ecb-help.el,v 1.50 2001/11/19 12:11:54 berndl Exp $
 
 ;;; Code
 
@@ -131,9 +131,11 @@ A click with the primary button causes the main effect in each ECB-buffer:
 
 Per default the complete node-name of an item in a tree-buffer is displayed in
 the echo-area if the mouse moves over it, regardless if the related window is
-the active one or not \(for this see also the option
-`ecb-show-node-name-in-minibuffer'). You get the same effect if you click with
-the primary mouse-button onto a node while SHIFT is held.
+the active one or not. You can get the same effect if you click with
+the primary mouse-button onto a node while SHIFT is held. In general: Via
+`ecb-show-node-info-in-minibuffer' you can specify in a detailled manner for
+every ECB tree-buffer when and which node-info should be displayed in the
+minibuffe. 
 
 IMPORTANT: Doing this SHIFT-click in the \"*ECB Sources*\" or \"*ECB
 History*\" windows does not only show the node in the echo-area but it also
@@ -326,7 +328,7 @@ Available interactive ECB commands:
 - `ecb-show-help'
 - `ecb-submit-problem-report'.
 - `ecb-goto-window-directories' \(and much more `ecb-goto-window...'
-  functions)
+   functions)
 - `ecb-toggle-ecb-windows'
 
 Most of these functions are also available via the menu \"ECB\" and also via
@@ -345,6 +347,7 @@ All customization of ECB is divided into the following customize groups:
 - ecb-methods: Customization of the ECB-methods buffer.
 - ecb-history: Customization of the ECB-history buffer.
 - ecb-layout: Customization of the layout of ECB.
+- ecb-faces: All faces used by ECB to highlight nodes and some other stuff.
 
 You can highly customize all the ECB behavior/layout so just go to this groups
 and you will see all well documented ECB-options. The easiest access for this
@@ -360,12 +363,11 @@ following options before working with ECB):
 - `ecb-tree-expand-symbol-before' and `ecb-tree-indent' \(maybe you like a
   value of 4 for the latter one if you display the expand-symbol before!).
 - `ecb-source-file-regexps': Which files will \(not) be shown in ECB.
-- `ecb-show-node-name-in-minibuffer': When the complete nodename should be
-  displayed in the minibuffer? Default is when the mouse moves over it and the
-  nodename is longer than the window-width.
+- `ecb-show-node-info-in-minibuffer': When and which node-info should be
+  displayed in the minibuffer?
 - `ecb-layout-nr': The ECB layout, means which windows you want to be
   displayed in the ECB-frame and also the location of these windows.
-- All the options in the customize group 'ecb-layout'
+- All the options in the customize groups 'ecb-layout' and 'ecb-faces'.
 
 
                          ===========================
@@ -430,17 +432,21 @@ You can simuate a speedbar-like layout within ONE frame by doing the following:
 Optimze Scrolling in the edit-windows:
 --------------------------------------
 
-Emacs seems to slow down scrolling if there is a horizontal split in the frame
-and/or a lot of overlays in the buffer which is scrolled. This is independend
-of ECB! But because almost all layouts of ECB uses horizontal splits of the
-frame and because ECB is based on semantic which uses overlays intensively
-there can be poor scrolling performance in large buffers, especially with
-java-buffers in `jde-mode'.
+Emacs 20.X seems to slow down scrolling if there is a horizontal split in the
+frame and/or a lot of overlays in the buffer which is scrolled. This is
+independend of ECB! But because almost all layouts of ECB uses horizontal
+splits of the frame and because ECB is based on semantic which uses overlays
+intensively there can be poor scrolling performance in large buffers,
+especially with java-buffers in `jde-mode'.
 
 This scrolling performance can be increased a lot if the options
 `scroll-conservatively' and `scroll-step' are set appropriatelly: The former
 one should have a value of 0 during ECB is active and the latter one a value
 of either 0 or > 1 \(the exact value depends on the power of your machine).
+
+As far as we know this is not a problem of Emacs 21.X or XEmacs. With these
+versions of Emacs there should be no scrolling problem even with `scroll-step'
+has value 1.
 
 
                         ==================================
@@ -470,7 +476,7 @@ solutions/hints/workarounds:
    The variable `vc-delete-logbuf-window' must be set to nil during active
    ECB. This can be done with the hooks mentioned above.
 
-2. Package follow-mouse.el
+2. Package follow-mouse.el \(only Emacs 20.X)
    ECB works very well with follow-mouse if follow-mouse is turned on BEFORE
    ECB is activated \(e.g. within the `ecb-activate-hook'). But if you
    activate follow-mouse first after ECB is already activated, then the
@@ -481,8 +487,8 @@ solutions/hints/workarounds:
    and saver as without activated ECB!
 
 3. Package avoid.el
-   With GNU Emacs ECB must deactivate `mouse-avoidance-mode' if the option
-   `ecb-show-node-name-in-minibuffer' is set to either 'if-too-long or
+   With GNU Emacs 20.X ECB must deactivate `mouse-avoidance-mode' if the
+   option `ecb-show-node-name-in-minibuffer' is set to either 'if-too-long or
    'always. This is done automatically but only as long ECB is activated.
 
 4. Package calendar.el:

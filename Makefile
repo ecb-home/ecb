@@ -6,6 +6,7 @@
 # Define here the correct path to your Emacs or XEmacs
 EMACS=emacs
 
+
 # Set here the load-path of the semantic-version and eieio-version loaded
 # into your Emacs. If you use JDE then add also the path to the lisp
 # directory of JDE. (use always forward-slashes as directory-separator even
@@ -22,9 +23,9 @@ LOADPATH=../semantic-1.4beta11 ../eieio-0.17beta3 ../jde-2.2.9beta4/lisp
 
 # Do not change anything below!
 
-# $Id: Makefile,v 1.16 2001/10/29 11:04:25 berndl Exp $
+# $Id: Makefile,v 1.17 2001/11/19 12:11:54 berndl Exp $
 
-ecb_LISP_EL=tree-buffer.el ecb-util.el ecb-mode-line.el ecb-help.el ecb-layout.el ecb-navigate.el ecb.el
+ecb_LISP_EL=tree-buffer.el ecb-util.el ecb-mode-line.el ecb-help.el ecb-layout.el ecb-navigate.el ecb.el ecb-eshell.el ecb-speedbar.el
 ecb_LISP_ELC=$(ecb_LISP_EL:.el=.elc)
 
 all: $(ecb_LISP_EL)

@@ -7,7 +7,7 @@
 ;; Keywords: java, class, browser
 ;; Created: Jul 2000
 
-(defvar ecb-version "1.53"
+(defvar ecb-version "1.60"
   "Current ECB version.")
 
 ;; This program is free software; you can redistribute it and/or modify it under
@@ -54,7 +54,7 @@
 ;; The latest version of the ECB is available at
 ;; http://home.swipnet.se/mayhem/ecb.html
 
-;; $Id: ecb.el,v 1.158 2001/11/17 06:10:00 burtonator Exp $
+;; $Id: ecb.el,v 1.159 2001/11/19 12:11:54 berndl Exp $
 
 ;;; Code:
 
@@ -67,7 +67,7 @@
 (let ((version-error nil))
   (if (not (and (boundp 'semantic-version)
                 (string-match "^1\\.4\\(beta1[1-9]\\)?$" semantic-version)))
-(setq version-error "Semantic >= 1.40beta11"))
+      (setq version-error "Semantic >= 1.40beta11"))
   (if (not (and (boundp 'eieio-version)
                 (string-match "^0\\.1[6-9]" eieio-version)))
       (setq version-error
@@ -148,6 +148,81 @@
   "Settings for the history buffer in the Emacs code browser."
   :group 'ecb
   :prefix "ecb-")
+
+(defgroup ecb-faces nil
+  "Settings for all faces used in ECB."
+  :group 'ecb
+  :prefix "ecb-")
+
+(defface ecb-directory-face
+  '((((class color)) (:background "cornflower blue"))
+    (t (:reverse-video t)))
+  "*Define face used for highlighting current directory in the
+directories buffer."
+  :group 'faces)
+
+(defcustom ecb-directory-face 'ecb-directory-face
+  "*Face used for highlighting current directory in the
+directories buffer."
+  :group 'faces
+  :group 'ecb-faces
+  :type 'face)
+
+(defface ecb-source-face
+  '((((class color)) (:background "cornflower blue"))
+    (t (:reverse-video t)))
+  "*Define face used for highlighting current source in the
+sources buffer."
+  :group 'faces)
+
+(defcustom ecb-source-face 'ecb-source-face
+  "*Face used for highlighting current source in the
+sources buffer."
+  :group 'faces
+  :group 'ecb-faces
+  :type 'face)
+
+(defface ecb-method-face
+  '((((class color)) (:background "khaki"))
+    (t (:reverse-video t)))
+  "*Define face used for highlighting current method, class or variable
+in the methods buffer."
+  :group 'faces)
+
+(defcustom ecb-method-face 'ecb-method-face
+  "*Face used for highlighting current method, class or variable in the
+methods buffer."
+  :group 'faces
+  :group 'ecb-faces
+  :type 'face)
+
+(defface ecb-history-face
+  '((((class color)) (:background "cornflower blue"))
+    (t (:reverse-video t)))
+  "*Define face used for highlighting current history-entry in the
+history buffer."
+  :group 'faces)
+
+(defcustom ecb-history-face 'ecb-history-face
+  "*Face used for highlighting current history-entry in the
+history buffer."
+  :group 'faces
+  :group 'ecb-faces
+  :type 'face)
+
+(defface ecb-token-header-face
+  '((((class color)) (:background "khaki"))
+    (t (:reverse-video t)))
+  "*Define face used for highlighting the token header after jumping to
+it by clicking onto a node in the methods buffer."
+  :group 'faces)
+  
+(defcustom ecb-token-header-face 'ecb-token-header-face
+  "*Face used for highlighting the token header after jumping to
+it by clicking onto a node in the methods buffer."
+  :group 'faces
+  :group 'ecb-faces
+  :type 'face)
 
 (defcustom ecb-use-recursive-edit nil
   "*Tell ECB to use a recursive edit so that it can easily be deactivated
@@ -505,7 +580,8 @@ Therefore the default value is a delay of 0.25 seconds."
 (defvar ecb-method-overlay (make-overlay 1 1)
   "Internal overlay used for the first line of a method.")
 
-(defcustom ecb-highlight-token-header-after-jump 'secondary-selection
+
+(defcustom ecb-highlight-token-header-after-jump ecb-token-header-face
   "*If not nil then highlight the token line in the source-buffer
 after jumping to this method by clicking in the ECB-method-buffer onto this
 method. If not nil then it must be a face."
@@ -516,7 +592,7 @@ method. If not nil then it must be a face."
                        (overlay-put ecb-method-overlay 'face value))))
   :type '(radio (const :tag "No highlighting of token header" :value nil)
                 (face :tag "Face for the highligthing"
-                      :value secondary-selection)))
+                      :value ecb-token-header-face)))
 
 (defcustom ecb-scroll-window-after-jump nil
   "*How to scroll the window when jumping to a token."
@@ -585,39 +661,91 @@ activate ECB again to take effect."
                 (const :tag "No incremental search"
                        :value nil)))
 
-(defcustom ecb-show-node-name-in-minibuffer 'if-too-long
-  "*Show the name of the ECB-buffer item under mouse in minibuffer.
-If set to 'always of 'if-too-long then this works always only by moving the
-mouse over a node regardless if the ECB-window is the active window or not."
+(defcustom ecb-show-node-info-in-minibuffer '((if-too-long . path)
+                                              (if-too-long . name)
+                                              (always . path)
+                                              (if-too-long . name+type))
+  "*Define which node info should displayed in a tree-buffer after
+mouse moving over the node or after a shift click onto the node.
+
+For every tree-buffer you can define \"when\" node info should be displayed:
+- always: Node info is displayed by moving with the mouse over a node.
+- if-too-long: Node info is only displayed by moving with the mouse over a
+  node does not fit into the window-width of the tree-buffer window.
+  In the ECB directories buffer this means also if a node is shortend or if
+  the node has an alias \(see `ecb-source-path').
+- shift-click: Node info is only displayed after a shift click with the
+  primary mouse button onto the node.
+- never: Node info is never displayed.
+
+For every tree-buffer you can define what info should be displayed:
++ Directory-buffer:
+  - name: Only the full node-name is displayed.
+  - path: The full-path of the node is displayed.
++ Sources-buffer:
+  - name: Only the full node-name is displayed.
+  - file-info: File infos for this file are displayed.
+  - file-info-full: Fill infos incl. full path for this file are displayed.
++ History-buffer:
+  see Directories-buffer.
++ Methods-buffer:
+  - name: Only the full node name is displayed.
+  - name+type: The full name + the type of the node \(function, class,
+    variable) is displayed.
+
+Do NOT set this option directly via setq but use always customize!"
   :group 'ecb-general
   :set (function (lambda (symbol value)
                    (set symbol value)
                    (if (and (boundp 'ecb-minor-mode)
                             ecb-minor-mode)
-                       (if (or (equal value 'always)
-                               (equal value 'if-too-long))
-                           (tree-buffer-activate-follow-mouse)
-                         (tree-buffer-deactivate-follow-mouse)
-                         (tree-buffer-deactivate-mouse-tracking)))))
-  :type '(radio (const :tag "Always"
-                       :value always)
-                (const :tag "If longer than window-width"
-                       :value if-too-long)
-                (const :tag "After SHIFT-primary-mouse-button-click"
-                       :value shift-click)
-                (const :tag "Never"
-                       :value nil)))
-
-(defcustom ecb-show-file-info-in-minibuffer t
-  "*Show file information about the file under mouse in minibuffer."
-  :group 'ecb-general
-  :type 'boolean)
-
-(defcustom ecb-show-complete-file-name-in-minibuffer nil
-  "*Show the complete file name including directories for the file under mouse
-in minibuffer."
-  :group 'ecb-general
-  :type 'boolean)
+                       (let ((when-list (mapcar (lambda (elem)
+                                                  (car elem))
+                                                value)))
+                         (if (or (member 'if-too-long when-list)
+                                 (member 'always when-list))
+                             (tree-buffer-activate-follow-mouse)
+                           (tree-buffer-deactivate-follow-mouse)
+                           (tree-buffer-deactivate-mouse-tracking))))))
+  :type '(list (cons :tag "* Directories-buffer"
+                     (choice :tag "When"
+                             (const :tag "Always" :value always)
+                             (const :tag "If too long" :value if-too-long)
+                             (const :tag "After shift click" :value shift-click)
+                             (const :tag "Never" :value never))
+                     (choice :tag "What"
+                             (const :tag "Node-name" :value name)
+                             (const :tag "Full path" :value path)))
+               (cons :tag "* Sources-buffer"
+                     (choice :tag "When"
+                             (const :tag "Always" :value always)
+                             (const :tag "If too long" :value if-too-long)
+                             (const :tag "After shift click" :value shift-click)
+                             (const :tag "Never" :value never))
+                     (choice :tag "What"
+                             (const :tag "Node-name" :value name)
+                             (const :tag "File info" :value file-info)
+                             (const :tag "File info \(full path)"
+                                    :value file-info-full)))
+               (cons :tag "* History-buffer"
+                     (choice :tag "When"
+                             (const :tag "Always" :value always)
+                             (const :tag "If too long" :value if-too-long)
+                             (const :tag "After shift click" :value shift-click)
+                             (const :tag "Never" :value never))
+                     (choice :tag "What"
+                             (const :tag "Node-name" :value name)
+                             (const :tag "Full path" :value path)))
+               (cons :tag "* Method-buffer"
+                     (choice :tag "When"
+                             (const :tag "Always" :value always)
+                             (const :tag "If too long" :value if-too-long)
+                             (const :tag "After shift click" :value shift-click)
+                             (const :tag "Never" :value never))
+                     (choice :tag "What"
+                             (const :tag "Node-name" :value name)
+                             (const :tag "Node-name + type" :value name+type)))))
+ 
 
 (defcustom ecb-primary-secondary-mouse-buttons 'mouse-2--C-mouse-2
   "*Primary- and secondary mouse button for using the ECB-buffers.
@@ -1656,7 +1784,7 @@ combination is invalid \(see `ecb-interpret-mouse-click'."
 	    ((string= tree-buffer-name ecb-sources-buffer-name)
 	     (ecb-source-clicked node ecb-button shift-mode))
 	    ((string= tree-buffer-name ecb-history-buffer-name)
-	     (ecb-source-clicked node ecb-button shift-mode))
+	     (ecb-history-clicked node ecb-button shift-mode))
 	    ((string= tree-buffer-name ecb-methods-buffer-name)
 	     (ecb-method-clicked node ecb-button shift-mode))
 	    (t nil)))))
@@ -1681,7 +1809,7 @@ combination is invalid \(see `ecb-interpret-mouse-click'."
 	    ((string= tree-buffer-name ecb-sources-buffer-name)
 	     (ecb-source-clicked node ecb-button shift-mode))
 	    ((string= tree-buffer-name ecb-history-buffer-name)
-	     (ecb-source-clicked node ecb-button shift-mode))
+	     (ecb-history-clicked node ecb-button shift-mode))
 	    ((string= tree-buffer-name ecb-methods-buffer-name)
 	     nil)
 	    (t nil)))))
@@ -1726,7 +1854,7 @@ Currently the fourth argument TREE-BUFFER-NAME is not used here."
     (ecb-update-directory-node node)
     (if (or (= 0 (tree-node-get-type node)) (= 2 (tree-node-get-type node)))
 	(if shift-mode
-	    (ecb-mouse-over-directory-node node)
+	    (ecb-mouse-over-directory-node node nil nil 'force)
 	  (progn
 	    (if (= 2 ecb-button)
 		(tree-node-toggle-expanded node)
@@ -1740,7 +1868,14 @@ Currently the fourth argument TREE-BUFFER-NAME is not used here."
 
 (defun ecb-source-clicked (node ecb-button shift-mode)
   (if shift-mode
-      (ecb-mouse-over-source-node node))
+      (ecb-mouse-over-source-node node nil nil 'force))
+  (ecb-set-selected-source (tree-node-get-data node)
+			   (and (ecb-edit-window-splitted) (eq ecb-button 2))
+			   shift-mode))
+
+(defun ecb-history-clicked (node ecb-button shift-mode)
+  (if shift-mode
+      (ecb-mouse-over-history-node node nil nil 'force))
   (ecb-set-selected-source (tree-node-get-data node)
 			   (and (ecb-edit-window-splitted) (eq ecb-button 2))
 			   shift-mode))
@@ -1760,7 +1895,7 @@ Currently the fourth argument TREE-BUFFER-NAME is not used here."
 
 (defun ecb-method-clicked (node ecb-button shift-mode)
   (if shift-mode
-      (ecb-mouse-over-method-node node)
+      (ecb-mouse-over-method-node node nil nil 'force)
     (let ((data (tree-node-get-data node))
 	  (type (tree-node-get-type node))
 	  (filename ecb-path-selected-source)
@@ -1841,7 +1976,29 @@ Currently the fourth argument TREE-BUFFER-NAME is not used here."
     (setq ecb-unhighlight-hook-called nil)
     (add-hook 'pre-command-hook 'ecb-unhighlight-token-header)))
 
+;; access-functions for when and what value of
+;; `ecb-show-node-info-in-minibuffer':
+(defun ecb-show-node-info-index (tree-buffer-name)
+  (cond ((string= tree-buffer-name ecb-directories-buffer-name)
+         0)
+        ((string= tree-buffer-name ecb-sources-buffer-name)
+         1)
+        ((string= tree-buffer-name ecb-history-buffer-name)
+         2)
+        ((string= tree-buffer-name ecb-methods-buffer-name)
+         3)))
+
+(defun ecb-show-node-info-when (tree-buffer-name)
+  (car (nth (ecb-show-node-info-index tree-buffer-name)
+            ecb-show-node-info-in-minibuffer)))
+
+(defun ecb-show-node-info-what (tree-buffer-name)
+  (cdr (nth (ecb-show-node-info-index tree-buffer-name)
+            ecb-show-node-info-in-minibuffer)))
+
+
 (defun ecb-get-file-info-text (file)
+  "Return a file-info string for a file in the ECB sources buffer"
   (let ((attrs (file-attributes file)))
     (format "%s %8s %4d %10d %s %s"
 	    (nth 8 attrs)
@@ -1849,53 +2006,108 @@ Currently the fourth argument TREE-BUFFER-NAME is not used here."
 	    (nth 3 attrs)
 	    (nth 7 attrs)
 	    (format-time-string "%Y/%m/%d %H:%M" (nth 5 attrs))
-	    (if ecb-show-complete-file-name-in-minibuffer file
-	      (file-name-nondirectory file))
-	    )))
+            (if (equal (ecb-show-node-info-what ecb-sources-buffer-name)
+                       'file-info-full)
+                file
+              (file-name-nondirectory file)))
+    ))
 
-(defun ecb-show-minibuffer-info (node window)
-  "Checks if in the minibuffer should displayed any info about the current
-node in the ECB-window WINDOW."
-  (or (eq ecb-show-node-name-in-minibuffer 'always)
-      (eq ecb-show-node-name-in-minibuffer 'shift-click)
-      (and (eq ecb-show-node-name-in-minibuffer 'if-too-long)
-	   (>= (+ (length (tree-node-get-name node))
-		  (tree-buffer-get-node-indent node))
-	       (window-width window)))))
+(defun ecb-show-minibuffer-info (node window tree-buffer-name)
+  "Checks if in the minibuffer should be displayed any info about the current
+node in the ECB-window WINDOW for the tree-buffer TREE-BUFFER-NAME only by
+mouse-moving."
+  (let ((when-elem (ecb-show-node-info-when tree-buffer-name)))
+    (or (eq when-elem 'always)
+        (and (eq when-elem 'if-too-long)
+             window
+             (>= (+ (length (tree-node-get-name node))
+                    (tree-buffer-get-node-indent node))
+                 (window-width window))))))
 
-;; argument buffer currently not used in the following three functions!
-(defun ecb-mouse-over-directory-node (node &optional buffer window)
+(defun ecb-mouse-over-directory-node (node &optional window no-message click-force)
+  "Displays help text if mouse moves over a node in the directory buffer or if
+CLICK-FORCE is not nil and always with regards to the settings in
+`ecb-show-node-info-in-minibuffer'. NODE is the node for which help text
+should be displayed, WINDOW is the related window, NO-MESSAGE defines if the
+help-text should be printed here."
   (if (= (tree-node-get-type node) 1)
-      (ecb-mouse-over-source-node node)
+      (ecb-mouse-over-source-node node window no-message click-force)
     (if (not (= (tree-node-get-type node) 3))
-	(tree-buffer-nolog-message
-         (when (or (ecb-show-minibuffer-info node window)
-                   (and (not (string= (tree-node-get-data node)
-                                      (tree-node-get-name node)))
-                        (eq (tree-node-get-parent node)
-                            (tree-buffer-get-root))))
-           (tree-node-get-data node))))))
+        (let ((str (when (or click-force
+                             (ecb-show-minibuffer-info node window
+                                                       ecb-directories-buffer-name)
+                             (and (not (equal (ecb-show-node-info-when ecb-directories-buffer-name)
+                                              'never))
+                                  (not (string= (tree-node-get-data node)
+                                                (tree-node-get-name node)))
+                                  (eq (tree-node-get-parent node)
+                                      (tree-buffer-get-root))))
+                     (if (equal (ecb-show-node-info-what ecb-directories-buffer-name)
+                                'name)
+                         (tree-node-get-name node)
+                       (tree-node-get-data node)))))
+          (prog1 str
+            (unless no-message
+              (tree-buffer-nolog-message str)))))))
 
-(defun ecb-mouse-over-source-node (node &optional buffer window)
-  ;; For buffers that hasnt been saved yet
-  (ignore-errors
-    (tree-buffer-nolog-message
-     (when (ecb-show-minibuffer-info node window)
-       (if ecb-show-file-info-in-minibuffer
-           (ecb-get-file-info-text (tree-node-get-data node))
-         (if ecb-show-complete-file-name-in-minibuffer
-             (tree-node-get-data node)
-           (tree-node-get-name node)))))))
+(defun ecb-mouse-over-source-node (node &optional window no-message click-force)
+  "Displays help text if mouse moves over a node in the sources buffer or if
+CLICK-FORCE is not nil and always with regards to the settings in
+`ecb-show-node-info-in-minibuffer'. NODE is the node for which help text
+should be displayed, WINDOW is the related window, NO-MESSAGE defines if the
+help-text should be printed here."
+  (let ((str (ignore-errors ;; For buffers that hasnt been saved yet
+               (when (or click-force
+                         (ecb-show-minibuffer-info node window
+                                                   ecb-sources-buffer-name))
+                 (if (equal (ecb-show-node-info-what ecb-sources-buffer-name)
+                            'name)
+                     (tree-node-get-name node)
+                   (ecb-get-file-info-text (tree-node-get-data node)))))))
+    (prog1 str
+      (unless no-message
+        (tree-buffer-nolog-message str)))))
 
-(defun ecb-mouse-over-method-node (node &optional buffer window)
-  (tree-buffer-nolog-message
-   (when (ecb-show-minibuffer-info node window)
-     (concat
-      (tree-node-get-name node)
-      (if (and (= 0 (tree-node-get-type node)) (tree-node-get-data node))
-	  (concat ", "
-		  (symbol-name (semantic-token-token (tree-node-get-data node))))
-	"")))))
+(defun ecb-mouse-over-history-node (node &optional window no-message click-force)
+  "Displays help text if mouse moves over a node in the history buffer or if
+CLICK-FORCE is not nil and always with regards to the settings in
+`ecb-show-node-info-in-minibuffer'. NODE is the node for which help text
+should be displayed, WINDOW is the related window, NO-MESSAGE defines if the
+help-text should be printed here."
+  (let ((str (ignore-errors ;; For buffers that hasnt been saved yet
+               (when (or click-force
+                         (ecb-show-minibuffer-info node window
+                                                   ecb-history-buffer-name))
+                 (if (equal (ecb-show-node-info-what ecb-history-buffer-name)
+                            'name)
+                     (tree-node-get-name node)
+                   (tree-node-get-data node))))))
+    (prog1 str
+      (unless no-message
+        (tree-buffer-nolog-message str)))))
+
+(defun ecb-mouse-over-method-node (node &optional window no-message click-force)
+  "Displays help text if mouse moves over a node in the method buffer or if
+CLICK-FORCE is not nil and always with regards to the settings in
+`ecb-show-node-info-in-minibuffer'. NODE is the node for which help text
+should be displayed, WINDOW is the related window, NO-MESSAGE defines if the
+help-text should be printed here."
+  (let ((str (when (or click-force
+                       (ecb-show-minibuffer-info node window
+                                                 ecb-methods-buffer-name))
+               (concat
+                (tree-node-get-name node)
+                (if (and (= 0 (tree-node-get-type node)) (tree-node-get-data
+                                                          node)
+                         (equal (ecb-show-node-info-what ecb-methods-buffer-name)
+                                'name+type))
+                    (concat ", "
+                            (symbol-name (semantic-token-token (tree-node-get-data node))))
+                  "")))))
+    (prog1 str
+      (unless no-message
+        (tree-buffer-nolog-message str)))))
+
 
 (defvar ecb-idle-timer-alist nil)
 (defvar ecb-post-command-hooks nil)
@@ -2069,6 +2281,12 @@ That is remove the unsupported :help stuff."
       (customize-group "ecb-layout")
       :active t
       :help "Customize ECB layout"
+      ])
+    (ecb-menu-item
+     ["Faces..."
+      (customize-group "ecb-faces")
+      :active t
+      :help "Customize ECB faces"
       ])
     )
    (list
@@ -2297,6 +2515,7 @@ always the ECB-frame if called from another frame."
 	 ecb-tree-incremental-search
 	 (list (cons 1 ecb-source-in-directories-buffer-face))
 	 ecb-tree-expand-symbol-before
+         ecb-directory-face
 	 ;; we add an after-create-hook to the tree-buffer
 	 (function (lambda ()
 		     (local-set-key [f1] 'ecb-add-source-path)
@@ -2316,7 +2535,10 @@ always the ECB-frame if called from another frame."
 	 ecb-truncate-lines
 	 t
 	 ecb-tree-indent
-	 ecb-tree-incremental-search))
+	 ecb-tree-incremental-search
+         nil
+         nil
+         ecb-source-face))
       
       (unless (member ecb-methods-buffer-name curr-buffer-list)
 	(tree-buffer-create
@@ -2332,7 +2554,8 @@ always the ECB-frame if called from another frame."
 	 ecb-tree-indent
 	 ecb-tree-incremental-search
 	 nil
-	 ecb-tree-expand-symbol-before)
+	 ecb-tree-expand-symbol-before
+         ecb-method-face)
 	(setq ecb-methods-root-node (tree-buffer-get-root)))
       
       (unless (member ecb-history-buffer-name curr-buffer-list)
@@ -2342,12 +2565,15 @@ always the ECB-frame if called from another frame."
 	 'ecb-interpret-mouse-click
 	 'ecb-tree-buffer-node-select-callback
 	 'ecb-tree-buffer-node-expand-callback
-         'ecb-mouse-over-source-node
+         'ecb-mouse-over-history-node
 	 (list (cons 0 ecb-history-menu))
 	 ecb-truncate-lines
 	 t
 	 ecb-tree-indent
-	 ecb-tree-incremental-search)))
+	 ecb-tree-incremental-search
+         nil
+         nil
+         ecb-history-face)))
     
     ;; we need some hooks
     (add-hook 'semantic-after-partial-cache-change-hook

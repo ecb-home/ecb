@@ -26,7 +26,7 @@
 ;; This file is part of the ECB package which can be found at:
 ;; http://home.swipnet.se/mayhem/ecb.html
 
-;; $Id: tree-buffer.el,v 1.67 2001/10/21 11:56:37 berndl Exp $
+;; $Id: tree-buffer.el,v 1.68 2001/11/19 12:11:54 berndl Exp $
 
 ;;; Code:
 
@@ -35,7 +35,8 @@
   (require 'cl))
 
 (defconst running-xemacs (string-match "XEmacs\\|Lucid" emacs-version))
-
+(defconst running-emacs-21 (and (not running-xemacs)
+                                (> emacs-major-version 20)))
 (if running-xemacs
     ;; XEmacs
     (progn
@@ -55,11 +56,7 @@
       (defalias 'tree-buffer-event-window 'event-window)
       (defalias 'tree-buffer-event-point 'event-point)
       (require 'overlay)
-      (defface secondary-selection
-        '((((class color) (background light)) (:foreground "blue" :background "LightGray"))
-          (((class color) (background dark))  (:foreground "blue" :background "LightGray"))
-          (t ()))
-        "Face for highlights."))
+      )
   ;; GNU Emacs
   ;; needed to handle correct mouse avoidance
   (require 'avoid)
@@ -136,7 +133,8 @@ mouse-tracking is activated by `tree-buffer-activate-mouse-tracking'")
       ;; Emacs way of preventing log messages.
       (let ((message-log-max nil))
         (if msg
-            (message "%s" msg)
+            (let ((message-truncate-lines nil))
+              (message "%s" msg))
           (message nil))))
     msg))
 
@@ -355,7 +353,22 @@ displayed without empty-lines at the end, means WINDOW is always best filled."
             (tree-buffer-recenter node w))))
     (tree-buffer-remove-highlight)))
 
-(defun tree-buffer-insert-text (text &optional facer)
+(defun tree-buffer-help-echo-fn (win obj pos)
+  "This function is the value of the `help-echo' property of each tree-node.
+This is only used with GNU Emacs 21!"
+  (let* ((window win)
+         (position pos)
+         (buffer (window-buffer window))
+         node)
+    (save-excursion
+      (set-buffer buffer)
+      (setq node (tree-buffer-get-node-at-point position))
+      (or (and tree-node-mouse-over-fn
+               node
+               (funcall tree-node-mouse-over-fn node window 'no-print)) ""))))
+
+
+(defun tree-buffer-insert-text (text &optional facer help-echo)
   "Insert TEXT at point and faces it with FACER. FACER can be a face then the
 text gets this face or it can be a function-symbol which is called to face the
 inserted TEXT. Such a function gets two arguments: Point where TEXT has been
@@ -363,6 +376,9 @@ inserted and the TEXT itself"
   (let ((p (point)))
     (insert text)
     (put-text-property p (+ p (length text)) 'mouse-face 'highlight)
+    (if (and help-echo (not running-xemacs))
+       (put-text-property p (+ p (length text)) 'help-echo
+                          'tree-buffer-help-echo-fn))
     (if facer
 	(if (functionp facer)
 	    (funcall facer p text)
@@ -389,7 +405,7 @@ inserted and the TEXT itself"
 	       (tree-node-is-expandable node))
       (tree-buffer-insert-text (if (tree-node-is-expanded node) "[-]" "[+]"))
       (insert " "))
-    (tree-buffer-insert-text name (tree-buffer-get-node-facer node))
+    (tree-buffer-insert-text name (tree-buffer-get-node-facer node) t)
     (when (and (not tree-buffer-expand-symbol-before)
 	       (tree-node-is-expandable node))
       (insert " ")
@@ -639,7 +655,6 @@ mentioned above!"
       (let ((node (tree-buffer-get-node-at-point p)))
 	(when (and tree-node-mouse-over-fn node)
 	  (funcall tree-node-mouse-over-fn node
-                   (current-buffer)
                    (get-buffer-window (current-buffer))))))))
 
 (defvar tree-buffer-uncompleted-keyseq nil
@@ -673,14 +688,16 @@ keysequence!"
   (setq track-mouse nil))
 
 (defun tree-buffer-activate-mouse-tracking ()
-  "Activates GNU Emacs mouse tracking for all tree-buffers."
-  (unless running-xemacs
+  "Activates GNU Emacs < version 21 mouse tracking for all tree-buffers.
+With GNU Emacs 21 this functionality is done with the `help-echo'-property and
+the function `tree-buffer-help-echo-fn'!"
+  (unless (or running-xemacs running-emacs-21)
     (unless tree-buffer-track-mouse-timer
       ;; disable mouse avoidance because this can be very annoying with
       ;; key-sequences: If a key is pressed during mouse is over point then
       ;; the mouse goes away and therefore the key-sequence is broken because
       ;; the mouse move generates a mouse-movement event.
-      (setq tree-buffer-old-mouse-avoidance-mode mouse-avoidance-mode)
+;;       (setq tree-buffer-old-mouse-avoidance-mode mouse-avoidance-mode)
       (mouse-avoidance-mode 'none)
       (setq tree-buffer-saved-track-mouse track-mouse)
       (setq tree-buffer-track-mouse-timer
@@ -688,11 +705,14 @@ keysequence!"
                                  t 'tree-buffer-do-mouse-tracking)))))
 
 (defun tree-buffer-deactivate-mouse-tracking ()
-  "Deactivates GNU Emacs mouse tracking for all tree-buffers."
-  (unless running-xemacs
+  "Deactivates GNU Emacs < version 21 mouse tracking for all tree-buffers.
+With GNU Emacs 21 this functionality is done with the `help-echo'-property and
+the function `tree-buffer-help-echo-fn'!"
+  (unless (or running-xemacs running-emacs-21)
     (unless (not tree-buffer-track-mouse-timer)
       ;; restore the old value
-      (mouse-avoidance-mode tree-buffer-old-mouse-avoidance-mode)
+;;       (mouse-avoidance-mode tree-buffer-old-mouse-avoidance-mode)
+      (mouse-avoidance-mode 'none)
       (setq track-mouse tree-buffer-saved-track-mouse)
       (cancel-timer tree-buffer-track-mouse-timer)
       (setq tree-buffer-track-mouse-timer nil))))
@@ -700,17 +720,22 @@ keysequence!"
 (defun tree-buffer-activate-follow-mouse ()
   "Activates that in all tree-buffer-windows - regardless if the active window
 or not - a mouse-over-node-function is called if mouse moves over a node. See
-also the NODE-MOUSE-OVER-FN argument of `tree-buffer-create'."
+also the NODE-MOUSE-OVER-FN argument of `tree-buffer-create'.
+
+This function does nothing for GNU Emacs 21; with this version this
+functionality is done with the `help-echo'-property and the function
+`tree-buffer-help-echo-fn'!"
   (tree-buffer-activate-mouse-tracking)
   (if running-xemacs
       (dolist (buf tree-buffers)
         (save-excursion
           (set-buffer buf)
           (add-hook 'mode-motion-hook 'tree-buffer-follow-mouse)))
-    (let ((saved-fn (lookup-key special-event-map [mouse-movement])))
-      (unless (equal saved-fn 'tree-buffer-follow-mouse)
-        (setq tree-buffer-saved-mouse-movement-fn saved-fn)
-        (define-key special-event-map [mouse-movement] 'tree-buffer-follow-mouse)))))
+    (unless running-emacs-21
+      (let ((saved-fn (lookup-key special-event-map [mouse-movement])))
+        (unless (equal saved-fn 'tree-buffer-follow-mouse)
+          (setq tree-buffer-saved-mouse-movement-fn saved-fn)
+          (define-key special-event-map [mouse-movement] 'tree-buffer-follow-mouse))))))
 
 (defun tree-buffer-deactivate-follow-mouse ()
   (if running-xemacs
@@ -718,7 +743,8 @@ also the NODE-MOUSE-OVER-FN argument of `tree-buffer-create'."
         (save-excursion
           (set-buffer buf)
           (remove-hook 'mode-motion-hook 'tree-buffer-follow-mouse)))
-    (define-key special-event-map [mouse-movement] tree-buffer-saved-mouse-movement-fn)))
+    (unless running-emacs-21
+      (define-key special-event-map [mouse-movement] tree-buffer-saved-mouse-movement-fn))))
 
 (defun tree-buffer-tab-pressed ()
   (interactive)
@@ -745,7 +771,7 @@ also the NODE-MOUSE-OVER-FN argument of `tree-buffer-create'."
                                 menus tr-lines read-only tree-indent
                                 incr-search
                                 &optional type-facer expand-symbol-before
-                                after-create-hook)
+                                highlight-node-face after-create-hook)
   "Creates a new tree buffer with
 NAME: Name of the buffer
 FRAME: Frame in which the tree-buffer is displayed and valid. All keybindings
@@ -781,11 +807,19 @@ NODE-EXPANDED-FN: Function to call if a node is expandable, point stays onto
                   NODE-SELECTED-FN and should add all children nodes to this
                   node \(if possible).
 NODE-MOUSE-OVER-FN: Function to call when the mouse is moved over a node. This
-                    function is called with three arguments: NODE, BUFFER,
-                    WINDOW, each of them current related to the tree-buffer.
-                    This function is only called if the tree-buffer
-                    track-mouse mechanism is activated \(see
-                    `tree-buffer-activate-mouse-tracking').
+                    function is called with three arguments: NODE, WINDOW,
+                    NO-PRINT, each of them related to the current tree-buffer.
+                    If NO-PRINT is nil then the function must print the text
+                    itself in any manner.
+                    This function must always return the text which either is
+                    printed by the function itself or by the caller \(if
+                    NO-PRINT is not nil).
+                    The current buffer for this function is the tree-buffer.
+                    With XEmacs and GNU Emacs 20.X this function is only
+                    called if the tree-buffer track-mouse mechanism is
+                    activated \(see `tree-buffer-activate-mouse-tracking').
+                    With GNU Emacs 21 this function is called by the
+                    `help-echo' property added to each node.
 MENUS: Nil or a list of one or two conses, each cons for a node-type \(0 or 1)
        Example: \(\(0 . menu-for-type-0) \(1 . menu-for-type-1)). The cdr of a
        cons must be a menu.
@@ -807,6 +841,8 @@ TYPE-FACER: Nil or a list of one or two conses, each cons for a node-type \(0
               updated.
 EXPAND-SYMBOL-BEFORE: If not nil then the expand-symbol \(is displayed before
                       the node-text.
+HIGHLIGHT-NODE-FACE: Face used for highlighting current node in this
+                     tree-buffer. 
 AFTER-CREATE-HOOK: A function \(with no arguments) called directly after
                    creating the tree-buffer and defining it's local keymap.
                    For example this function can add additional keybindings
@@ -850,7 +886,7 @@ AFTER-CREATE-HOOK: A function \(with no arguments) called directly after
     (setq tree-buffer-type-facer type-facer)
     (setq tree-buffer-expand-symbol-before expand-symbol-before)
     (setq tree-buffer-highlight-overlay (make-overlay 1 1))
-    (overlay-put tree-buffer-highlight-overlay 'face 'secondary-selection)
+    (overlay-put tree-buffer-highlight-overlay 'face highlight-node-face)
     (setq tree-buffer-incr-searchpattern "")
     (setq tree-buffer-incr-search incr-search)
 
