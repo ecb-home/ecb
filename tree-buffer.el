@@ -26,7 +26,7 @@
 ;; This file is part of the ECB package which can be found at:
 ;; http://home.swipnet.se/mayhem/ecb.html
 
-;; $Id: tree-buffer.el,v 1.29 2001/04/30 11:30:29 berndl Exp $
+;; $Id: tree-buffer.el,v 1.30 2001/05/02 17:11:44 berndl Exp $
 
 ;;; Code:
 
@@ -510,7 +510,9 @@ EXPAND-SYMBOL-BEFORE: If not nil then the expand-symbol \(is displayed before
     (define-key tree-buffer-key-map [triple-mouse-2] nop)
 
     ;; mouse-3
-    (define-key tree-buffer-key-map [down-mouse-3] 'tree-buffer-show-menu)
+    (define-key tree-buffer-key-map
+      (if running-xemacs '(button3) [down-mouse-3])
+      'tree-buffer-show-menu)
     (define-key tree-buffer-key-map [mouse-3] nop)
     (define-key tree-buffer-key-map [double-mouse-3] nop)
     (define-key tree-buffer-key-map [triple-mouse-3] nop)
