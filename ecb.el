@@ -68,7 +68,7 @@
 ;; The latest version of the ECB is available at
 ;; http://ecb.sourceforge.net
 
-;; $Id: ecb.el,v 1.291 2003/02/24 12:40:14 berndl Exp $
+;; $Id: ecb.el,v 1.292 2003/02/25 20:37:19 berndl Exp $
 
 ;;; Code:
 
@@ -4475,7 +4475,7 @@ always the ECB-frame if called from another frame."
            'equal
            (list (cons 0 ecb-directories-menu) (cons 1 ecb-sources-menu)
                  (cons 2 ecb-source-path-menu))
-           ecb-truncate-lines
+           (nth 0 ecb-truncate-lines)
            t
            ecb-tree-indent
            ecb-tree-incremental-search
@@ -4507,7 +4507,7 @@ always the ECB-frame if called from another frame."
            'ecb-mouse-over-source-node
            'equal
            (list (cons 0 ecb-sources-menu))
-           ecb-truncate-lines
+           (nth 1 ecb-truncate-lines)
            t
            ecb-tree-indent
            ecb-tree-incremental-search
@@ -4548,7 +4548,7 @@ always the ECB-frame if called from another frame."
                      (eq (ecb-semantic-token-start l) (ecb-semantic-token-start r))
                      (eq (ecb-semantic-token-end l) (ecb-semantic-token-end r))))))
            nil
-           ecb-truncate-lines
+           (nth 2 ecb-truncate-lines)
            t
            ecb-tree-indent
            ecb-tree-incremental-search
@@ -4576,7 +4576,7 @@ always the ECB-frame if called from another frame."
            'ecb-mouse-over-history-node
            'equal
            (list (cons 0 ecb-history-menu))
-           ecb-truncate-lines
+           (nth 3 ecb-truncate-lines)
            t
            ecb-tree-indent
            ecb-tree-incremental-search
