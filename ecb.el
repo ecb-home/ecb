@@ -54,7 +54,7 @@
 ;; The latest version of the ECB is available at
 ;; http://home.swipnet.se/mayhem/ecb.html
 
-;; $Id: ecb.el,v 1.199 2002/02/28 08:16:49 berndl Exp $
+;; $Id: ecb.el,v 1.200 2002/02/28 09:15:02 berndl Exp $
 
 ;;; Code:
 
@@ -730,6 +730,10 @@ displaying the tokens."
   "*Define face used with option `ecb-type-token-display'."
   :group 'ecb-face-definition)
 
+(defface ecb-type-token-interface-face (ecb-face-default nil t)
+  "*Define face used with option `ecb-type-token-display'."
+  :group 'ecb-face-definition)
+
 (defface ecb-type-token-struct-face (ecb-face-default nil t)
   "*Define face used with option `ecb-type-token-display'."
   :group 'ecb-face-definition)
@@ -769,10 +773,10 @@ cons-cells:
   the 'default cons-cell is used.
 - The cdr is a list of 3-element-lists:
   1. First entry is a semantic type specifier in string-form. Current
-     available type specifiers are for example \"class\", \"struct\",
-     \"typedef\" and \"enum\". In addition to these ones there is also a
-     special ECB type specifier \"group\" which is related to grouping tokens
-     \(see `ecb-post-process-semantic-tokenlist' and
+     available type specifiers are for example \"class\", \"interface\",
+     \"struct\", \"typedef\" and \"enum\". In addition to these ones there is
+     also a special ECB type specifier \"group\" which is related to grouping
+     tokens \(see `ecb-post-process-semantic-tokenlist' and
      `ecb-group-function-tokens-with-parents'). Any arbitrary specifier can be
      set here but if it is not \"group\" or not known by semantic it will be
      useless.
@@ -816,6 +820,8 @@ specifier-string is removed from the display."
                                              :menu-tag "Specifier list"
                                              (const :tag "class"
                                                     :value "class")
+                                             (const :tag "interface"
+                                                    :value "interface")
                                              (const :tag "struct"
                                                     :value "struct")
                                              (const :tag "typedef"
