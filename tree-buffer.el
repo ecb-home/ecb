@@ -26,7 +26,7 @@
 ;; This file is part of the ECB package which can be found at:
 ;; http://home.swipnet.se/mayhem/ecb.html
 
-;; $Id: tree-buffer.el,v 1.85 2002/04/20 15:22:32 berndl Exp $
+;; $Id: tree-buffer.el,v 1.86 2002/05/17 12:09:22 berndl Exp $
 
 ;;; Code:
 
@@ -224,7 +224,10 @@ with the same arguments as `tree-node-expanded-fn'."
 
 (defun tree-buffer-node-data-equal-p (node-data-1 node-data-2)
   (and node-data-1 node-data-2
-       (funcall tree-node-data-equal-fn node-data-1 node-data-2)))
+       ;; if this comparison-function runs into an error we handle this as
+       ;; non-equality!
+       (ignore-errors
+         (funcall tree-node-data-equal-fn node-data-1 node-data-2))))
 
 (defun tree-buffer-find-node-data (node-data)
   (catch 'exit

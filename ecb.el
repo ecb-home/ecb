@@ -54,7 +54,7 @@
 ;; The latest version of the ECB is available at
 ;; http://home.swipnet.se/mayhem/ecb.html
 
-;; $Id: ecb.el,v 1.215 2002/05/05 19:22:50 berndl Exp $
+;; $Id: ecb.el,v 1.216 2002/05/17 12:09:22 berndl Exp $
 
 ;;; Code:
 
@@ -2642,39 +2642,44 @@ Currently the fourth argument TREE-BUFFER-NAME is not used here."
 						  (eq ecb-button 2)))))))))
 
 (defun ecb-jump-to-token (filename token &optional window)
-  (unless window
-    (setq window (selected-window)))
-  (select-window window)
-  (ecb-nav-save-current)
-  (find-file filename)
-  ;; let us set the mark so the user can easily jump back.
-  (if ecb-token-jump-sets-mark
-      (push-mark))
-  ;; Semantic 1.4beta2 fix for EIEIO class parts
-  ;;	  (ignore-errors
-  (when ecb-token-jump-narrow
-    (widen))
-  (goto-char (semantic-token-start token))
-  (if ecb-token-jump-narrow
-      (narrow-to-region (tree-buffer-line-beginning-pos)
-			(semantic-token-end token))
-    (cond
-     ((eq 'top ecb-scroll-window-after-jump)
-      (set-window-start (selected-window)
-			(tree-buffer-line-beginning-pos)))
-     ((eq 'center ecb-scroll-window-after-jump)
-      (set-window-start
-       (selected-window)
-       (tree-buffer-line-beginning-pos (- (/ (window-height) 2)))))))
-  (ecb-nav-add-item (ecb-nav-token-history-item-new token ecb-token-jump-narrow))
-  (when ecb-highlight-token-header-after-jump
-    (save-excursion
-      (move-overlay ecb-method-overlay
-		    (tree-buffer-line-beginning-pos)
-		    (tree-buffer-line-end-pos)
-		    (current-buffer)))
-    (setq ecb-unhighlight-hook-called nil)
-    (add-hook 'pre-command-hook 'ecb-unhighlight-token-header)))
+  (cond ((not (semantic-token-p token))
+         (error "ECB: ecb-jump-to-token: token is nil"))
+        ((not (file-readable-p filename))
+         (error "ECB: ecb-jump-to-token: filename not readable"))
+        (t
+         (unless window
+           (setq window (selected-window)))
+         (select-window window)
+         (ecb-nav-save-current)
+         (find-file filename)
+         ;; let us set the mark so the user can easily jump back.
+         (if ecb-token-jump-sets-mark
+             (push-mark))
+         ;; Semantic 1.4beta2 fix for EIEIO class parts
+         ;;	  (ignore-errors
+         (when ecb-token-jump-narrow
+           (widen))
+         (goto-char (semantic-token-start token))
+         (if ecb-token-jump-narrow
+             (narrow-to-region (tree-buffer-line-beginning-pos)
+                               (semantic-token-end token))
+           (cond
+            ((eq 'top ecb-scroll-window-after-jump)
+             (set-window-start (selected-window)
+                               (tree-buffer-line-beginning-pos)))
+            ((eq 'center ecb-scroll-window-after-jump)
+             (set-window-start
+              (selected-window)
+              (tree-buffer-line-beginning-pos (- (/ (window-height) 2)))))))
+         (ecb-nav-add-item (ecb-nav-token-history-item-new token ecb-token-jump-narrow))
+         (when ecb-highlight-token-header-after-jump
+           (save-excursion
+             (move-overlay ecb-method-overlay
+                           (tree-buffer-line-beginning-pos)
+                           (tree-buffer-line-end-pos)
+                           (current-buffer)))
+           (setq ecb-unhighlight-hook-called nil)
+           (add-hook 'pre-command-hook 'ecb-unhighlight-token-header)))))
 
 (defun ecb-show-any-node-info-by-mouse-moving-p ()
   "Return not nil if for at least one tree-buffer showing node info only by
