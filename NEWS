@@ -2,6 +2,10 @@
 
 ** Fixed bugs:
 
+*** `winner-mode' and `winner-redo' are now only forbidden in the ecb-frame.
+
+*** Removed the annoying message "Partial reparsing..."
+
 ** ECB now also works with buffers "online" extracted from archives.
    Buffers extracted from an archive in `tar-mode' or `archive-mode' are now
    correct handled as if they were normal file-buffers. This feature doesn't
