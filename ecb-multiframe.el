@@ -62,6 +62,10 @@
 ;; - Make sure I don't have any hooks that might run on deleted buffers.
 ;;
 ;; - Make sure we clean up when a frame is deleted.
+;;
+;; - Is it possible to migrate some of this code into default-frame-alist
+;; instead of using a hook?
+
 
 ;; NOTE: If you enjoy this software, please consider a donation to the EFF
 ;; (http://www.eff.org)
@@ -102,6 +106,10 @@
 
     ;;set ECB special buffer names
 
+    (make-variable-frame-local 'ecb-history-buffer-name-buffer-name)
+    (modify-frame-parameters frame (list (cons 'ecb-history-buffer-name
+                                               (concat " *ECB History <" index ">*"))))
+
     (make-variable-frame-local 'ecb-sources-buffer-name)
     (modify-frame-parameters frame (list (cons 'ecb-sources-buffer-name
                                                (concat " *ECB Sources <" index ">*"))))
@@ -112,7 +120,14 @@
 
     (make-variable-frame-local 'ecb-methods-buffer-name)
     (modify-frame-parameters frame (list (cons 'ecb-methods-buffer-name
-                                               (concat " *ECB Methods <" index ">*"))))))
+                                               (concat " *ECB Methods <" index ">*")))))
+
+  ;;fix speedbar by binding the given speedbar frame value with the current frame
+  (mapcar (lambda(sframe)
+            (when (boundp sframe)
+              (make-variable-frame-local sframe)
+              (modify-frame-parameters frame (list (cons sframe frame)))))
+          '(speedbar-frame speedbar-attached-frame dframe-attached-frame)))
 
 (defun ecb-deactivate-internal ()
   "Deactivates the ECB and kills all ECB buffers and windows."
