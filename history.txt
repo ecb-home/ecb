@@ -10,7 +10,7 @@ Version XXXX (2001-03-17):
   face. Thanks to Kevin A. Burton <burton@relativity.yi.org> for this
   patch.
 
-- ecb-activate now de-activates ECB when keyboard-escape-quit is
+- ECB is now correctly de-activated when keyboard-escape-quit is
   called. Thanks to Kevin A. Burton <burton@relativity.yi.org> for
   this patch.
 
