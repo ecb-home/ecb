@@ -95,6 +95,11 @@ with `ecb-activate' or read the online-help with `ecb-show-help'.
    changing the `load-path' variable directly in your `.emacs' or
    `site-lisp/site-start.el' or by working with a file `subdirs.el'.
 
+   So for example the needed entry for your .emacs-file could be:
+
+      (add-to-list 'load-path
+                   "/path/to/your/ecb/installation/directory")
+
    *ATTENTION*: ECB is NOT properly installed if it's directory is not added
    to `load-path' and for example just loaded by
 
@@ -118,6 +123,9 @@ with `ecb-activate' or read the online-help with `ecb-show-help'.
 
    This loads all available autoloads (e.g. `ecb-activate', `ecb-minor-mode',
    `ecb-show-help' or `ecb-byte-compile') of current ECB.
+
+   Regardless which method you prefer: In both cases the used statement must
+   be placed *after* the statement of step 3!
 
 5. Restart (X)Emacs.
 

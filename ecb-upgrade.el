@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-upgrade.el,v 1.63 2004/02/17 16:50:10 berndl Exp $
+;; $Id: ecb-upgrade.el,v 1.64 2004/02/24 11:50:01 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -176,7 +176,8 @@
 
 ;; Each NEWS-string should be a one-liner shorter than 70 chars
 (defconst ecb-upgrade-news
-  '(("2.21" . ("Advice for `balance-windows' so only the edit-windows are balanced."
+  '(("2.22" . ("New nifty feature for filtering the tags displayed in the Methods-buffer"))
+    ("2.21" . ("Advice for `balance-windows' so only the edit-windows are balanced."
                "Gnus, BBDB, VM, Xrefactory etc. work even when ECB-windows are visible."
                "Commands using `Electric-pop-up-window' now work correctly with ECB."
                "Fixed some annoying bugs and one fatal bug."))

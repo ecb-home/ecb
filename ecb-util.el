@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-util.el,v 1.98 2004/02/20 16:38:53 berndl Exp $
+;; $Id: ecb-util.el,v 1.99 2004/02/24 11:50:01 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -1152,8 +1152,28 @@ buffer-local value in BUFFER then the global value of SYM is used."
 (defun ecb-ring-elements (ring)
   "Return a list of the lements of RING."
   (mapcar #'identity (cddr ring)))
-      
 
+(defvar ecb-max-submenu-depth 4
+  "The maximum depth of nesting submenus for the tree-buffers.")
+
+(defun ecb-create-menu-user-ext-type (curr-level max-level)
+  "Creates the :type-definition for the *-menu-user-extension options.
+This allows nested submenus for the popup-menus of the tree-buffers up to a
+maximum level of MAX-LEVEL. CURR-LEVEL must be 1 when used in a
+defcustom-clause and has to be <= MAX-LEVEL."
+  (list 'repeat (delq nil
+                      (list 'choice ':tag "Menu-entry" ':menu-tag "Menu-entry"
+                            ':value '(ignore "")
+                            (list 'const ':tag "Separator" ':value '("---"))
+                            (list 'list ':tag "Menu-command"
+                                  (list 'function ':tag "Function" ':value 'ignore)
+                                  (list 'string ':tag "Entry-name"))
+                            (if (= curr-level max-level)
+                                nil
+                              (list 'cons ':tag "Submenu"
+                                    (list 'string ':tag "Submenu-title")
+                                    (ecb-create-menu-user-ext-type (1+ curr-level)
+                                                                   max-level)))))))
 (silentcomp-provide 'ecb-util)
 
 ;;; ecb-util.el ends here

@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-layout.el,v 1.217 2004/02/20 16:38:54 berndl Exp $
+;; $Id: ecb-layout.el,v 1.218 2004/02/24 11:50:02 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -3577,6 +3577,13 @@ special ecb-window."
                       (window-buffer window)))
           (ecb-canonical-ecb-windows-list)))
 
+(defun ecb-set-minor-mode-text ()
+  (setq ecb-minor-mode-text
+        (if ecb-windows-hidden
+            (or (ecb-option-get-value 'ecb-minor-mode-text 'saved-value)
+                (ecb-option-get-value 'ecb-minor-mode-text 'standard-value))
+          "")))
+
 ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: For left-right-layouts: Not only
 ;; hiding all the ecb-windows but offering to hide only one of the left or the
 ;; right column. Maybe toggling in the sequence "Hide left" --> "Hide all" -->
@@ -4301,7 +4308,8 @@ ring-cache as add-on to CONFIGURATION."
                      (setq ecb-compile-window (nth (nth 2 config) win-list)))))
             ;; (nth 3 config) is not used and needed within this function!
             (setq ecb-edit-area-creators (nth 4 config))
-            (setq ecb-windows-hidden (nth 5 config)))))
+            (setq ecb-windows-hidden (nth 5 config))
+            (ecb-set-minor-mode-text))))
     (error
      (ecb-layout-debug-error "advice of set-window-configuration failed: (error-type: %S, error-data: %S)"
                              (car oops) (cdr oops))))
@@ -4506,6 +4514,7 @@ emergency-redraw."
         (if emergency
             (setq ecb-windows-hidden nil)
           (setq ecb-windows-hidden no-ecb-windows))
+        (ecb-set-minor-mode-text)
        
         ;; Now all the windows must be created and the editing window must not
         ;; be splitted! In addition the variables `ecb-edit-window' and

@@ -23,7 +23,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-file-browser.el,v 1.10 2004/02/16 08:56:41 berndl Exp $
+;; $Id: ecb-file-browser.el,v 1.11 2004/02/24 11:50:02 berndl Exp $
 
 ;;; Commentary:
 
@@ -489,7 +489,12 @@ b) Separator: A one-element-list and the element is the string \"---\": Then a
    non-selectable menu-separator is displayed.
 c) Submenu: A list where the first element is the title of the submenu
    displayed in the main-menu and all other elements are either menu-commands
-   \(see a) or separators \(see b).
+   \(see a) or separators \(see b) or another submenu \(see c). This allows
+   deep nested menu-submenu-structures. Currently a level of 4 is allowed but
+   in general there could be an infinite depth of nesting but it makes no
+   sense - if possible at all - to define infinite nested defcustom-types. So
+   there is a limit of 4 levels but tis is not a hard limit: Just increase the
+   value of the `ecb-max-submenu-depth' *BEFORE* first loading ECB!
 
 The function of a menu-command must follow the following guidelines: Such a
 function must be defined with the macro `tree-buffer-defpopup-command! This
@@ -511,21 +516,7 @@ re-arranged with `ecb-directories-menu-sorter'.
 These menu-extensions are static. A dynamic menu-extension can be achieved via
 `ecb-directories-menu-user-extension-function'."
   :group 'ecb-directories
-  :type '(repeat (choice :tag "Menu-entry" :menu-tag "Menu-entry"
-                         :value (ignore "")
-                         (const :tag "Separator" :value ("---"))
-                         (list :tag "Menu-command"
-                               (function :tag "Function" :value ignore)
-                               (string :tag "Entry-name"))
-                         (cons :tag "Submenu"
-                               (string :tag "Submenu-title")
-                               (repeat (choice :tag "Submenu-entry" :menu-tag "Submenu-entry"
-                                               :value (ignore "")
-                                               (const :tag "Separator" :value ("---"))
-                                               (list :tag "Submenu-command"
-                                                     (function :tag "Function"
-                                                               :value ignore)
-                                                     (string :tag "Entry-name"))))))))
+  :type (ecb-create-menu-user-ext-type 1 ecb-max-submenu-depth))
 
 (defcustom ecb-directories-menu-user-extension-function nil
   "*Dynamic user extensions for the popup-menu of the directories buffer.
@@ -557,21 +548,7 @@ Per default the static user-extensions are added at the beginning of the
 built-in menu-entries of `ecb-sources-menu' but the whole menu can be
 re-arranged with `ecb-sources-menu-sorter'."
   :group 'ecb-sources
-  :type '(repeat (choice :tag "Menu-entry" :menu-tag "Menu-entry"
-                         :value (ignore "")
-                         (const :tag "Separator" :value ("---"))
-                         (list :tag "Menu-command"
-                               (function :tag "Function" :value ignore)
-                               (string :tag "Entry-name"))
-                         (cons :tag "Submenu"
-                               (string :tag "Submenu-title")
-                               (repeat (choice :tag "Submenu-entry" :menu-tag "Submenu-entry"
-                                               :value (ignore "")
-                                               (const :tag "Separator" :value ("---"))
-                                               (list :tag "Submenu-command"
-                                                     (function :tag "Function"
-                                                               :value ignore)
-                                                     (string :tag "Entry-name"))))))))
+  :type (ecb-create-menu-user-ext-type 1 ecb-max-submenu-depth))
 
 (defcustom ecb-sources-menu-user-extension-function nil
   "*Dynamic user extensions for the popup-menu of the sources buffer.
@@ -603,22 +580,7 @@ Per default the static user-extensions are added at the beginning of the
 built-in menu-entries of `ecb-history-menu' but the whole menu can be
 re-arranged with `ecb-history-menu-sorter'."
   :group 'ecb-history
-  :type '(repeat (choice :tag "Menu-entry" :menu-tag "Menu-entry"
-                         :value (ignore "")
-                         (const :tag "Separator" :value ("---"))
-                         (list :tag "Menu-command"
-                               (function :tag "Function" :value ignore)
-                               (string :tag "Entry-name"))
-                         (cons :tag "Submenu"
-                               (string :tag "Submenu-title")
-                               (repeat (choice :tag "Submenu-entry" :menu-tag "Submenu-entry"
-                                               :value (ignore "")
-                                               (const :tag "Separator" :value ("---"))
-                                               (list :tag "Submenu-command"
-                                                     (function :tag "Function"
-                                                               :value ignore)
-                                                     (string :tag "Entry-name"))))))))
-
+  :type (ecb-create-menu-user-ext-type 1 ecb-max-submenu-depth))
 
 (defcustom ecb-history-menu-user-extension-function nil
   "*Dynamic user extensions for the popup-menu of the history buffer.
