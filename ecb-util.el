@@ -338,8 +338,6 @@ Uses the `derived-mode-parent' property of the symbol to trace backwards."
                                             (shrink-window-if-larger-than-buffer . around)
                                             (show-temp-buffer-in-current-frame . around)
                                             (pop-to-buffer . around)
-                                            (find-file . around)
-                                            (find-file-other-window . around)
                                             (current-window-configuration . after)
                                             (set-window-configuration . after)
                                             (scroll-other-window . around)
@@ -353,8 +351,6 @@ Uses the `derived-mode-parent' property of the symbol to trace backwards."
                                           (mouse-drag-vertical-line . around)
                                           (mouse-drag-mode-line . around)
                                           (pop-to-buffer . around)
-                                          (find-file . around)
-                                          (find-file-other-window . around)
                                           (current-window-configuration . after)
                                           (set-window-configuration . after)
                                           (enlarge-window . around)
@@ -677,7 +673,7 @@ with `equal'."
   "Return the last elem of the sequence SEQ."
   (if (listp seq)
       (car (last seq))
-    (if seq
+    (if (> (length seq) 0)
         (aref seq (1- (length seq)))
       nil)))
 
@@ -685,7 +681,7 @@ with `equal'."
   "Return the first elem of the sequence SEQ."
   (if (listp seq)
       (car seq)
-    (if seq
+    (if (> (length seq) 0)
         (aref seq 0)
       nil)))
   
