@@ -1,6 +1,6 @@
 ;;; ecb-compilation.el --- 
 
-;; $Id: ecb-compilation.el,v 1.5 2002/07/15 12:58:56 berndl Exp $
+;; $Id: ecb-compilation.el,v 1.6 2002/10/31 00:03:12 burtonator Exp $
 
 ;; Copyright (C) 2000-2003 Free Software Foundation, Inc.
 ;; Copyright (C) 2000-2003 Kevin A. Burton (burton@openprivacy.org)
@@ -50,6 +50,12 @@ window even if `compilation-buffer-p' says nil."
   :group 'ecb-compilation
   :type '(repeat (string :tag "Buffer name")))
 
+(defcustom ecb-compilation-major-modes (list 'eshell-mode 'compilation-mode)
+  "*Additional major-mode that should be displayed in compilation window even if
+`compilation-buffer-p' says nil."
+  :group 'ecb-compilation
+  :type '(repeat (symbol :tag "major-mode name")))
+
 (defun ecb-compilation-get-buffers()
   "Get all known compilation buffer names.  See `ecb-compilation-buffer-p'."
 
@@ -73,15 +79,16 @@ window even if `compilation-buffer-p' says nil."
   
 (defun ecb-compilation-buffer-p(buffer)
   "Test if the given buffer is a compilation buffer. Note that in this case we
-define 'compilation buffer' as a buffer that should ideally be displayed in
-the `ecb-compile-window'. This means that in some situations this might not be
-the result of a `compile-internal'. A good example would be the *Help* buffer
-or the `ecb-eshell-buffer-name'.
+define 'compilation buffer' as a buffer that should ideally be displayed in the
+`ecb-compile-window'. This means that in some situations this might not be the
+result of a `compile-internal'. A good example would be the *Help* buffer or the
+`ecb-eshell-buffer-name'.
 
 BUFFER can be the name of a buffer or a buffer-objekt.
 
-This function returns true if the name of BUFFER is either contained in
-`ecb-compilation-buffer-names' or if `compilation-buffer-p' returns true."
+This function non-nil if the name of BUFFER is either contained in
+`ecb-compilation-buffer-names', or its `major-mode' is in
+`ecb-compilation-major-modes', or if `compilation-buffer-p' returns true."
 
   (let ((buf (cond ((stringp buffer)
                     (get-buffer buffer))
@@ -91,6 +98,9 @@ This function returns true if the name of BUFFER is either contained in
                     nil))))
     (if buf
         (or (member (buffer-name buf) ecb-compilation-buffer-names)
+            (save-excursion
+              (set-buffer buffer)
+              (member major-mode ecb-compilation-major-modes))
             (compilation-buffer-p buf)))))
 
 (provide 'ecb-compilation)

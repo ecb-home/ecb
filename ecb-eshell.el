@@ -1,6 +1,6 @@
 ;;; ecb-eshell.el --- eshell integration for the ECB.
 
-;; $Id: ecb-eshell.el,v 1.43 2002/10/30 10:23:28 burtonator Exp $
+;; $Id: ecb-eshell.el,v 1.44 2002/10/31 00:03:12 burtonator Exp $
 
 ;; Copyright (C) 2000-2003 Free Software Foundation, Inc.
 ;; Copyright (C) 2000-2003 Kevin A. Burton (burton@openprivacy.org)
@@ -108,24 +108,8 @@
 ;; - Right now ecb-eshell doesn't work with dired.  Why?  Try to setup a hook
 ;; and an ecb-eshell-dired-buffer-sync function that will take care of this.
 ;;
-;; - BUG: when we exit the eshell, we enlarge the compilation buffer.... there
-;; is not needed since the buffer is about to exit.
-;;
-;;    - this might be fixed by using an eshell post command hook.
-;;
-;; - RFE: could we possibly find a way to avoid window enlargement if we launch
-;; a background process like 'xterm &'.  This would require determining what the
-;; command is and then making sure it is acceptable.
-;;
-;; - BUG: when ecb-eshell-enlarge-when-selecting is nil we need to recenter.  If
-;; we don't we just end up with the point in the middle of the eshell.
-;;
 ;; - BUG: enable just-in-time current-buffer-sync... only execute if the current
 ;; buffer's directlry is not equal to the ecb directory.
-
-;;; - FIXME: is there a way to hook into when a window is resized so that we can
-;;; recenter when this happens in the ecb-compile-window
-;;; ... yes... window-size-change-functions
 
 ;;; Code:
 
@@ -216,6 +200,14 @@ eshell is currently visible."
             ;;now update the buffer list to remove the eshell.
             (modify-frame-parameters nil (list (cons 'buffer-list eshell-buffer-list))))))))
 
+(defmacro ecb-eshell-save-buffer-history (&rest body)
+  "Protect the buffer-list so that the eshell buffer name is not places early in
+the buffer list or at all if it currently doesn't exist."
+  `(unwind-protect
+       (let((eshell-buffer-list (frame-parameter nil 'buffer-list)))
+         ,@body
+         (modify-frame-parameters nil (list (cons 'buffer-list eshell-buffer-list))))))
+
 (defun ecb-eshell-recenter(&optional display-errors)
   "Recenter the eshell window so that the prompt is at the end of the buffer."
   (interactive
@@ -255,6 +247,7 @@ eshell is currently visible."
       (when (ecb-compile-window-live-p 'display-msg)
         (set-window-buffer ecb-compile-window ecb-eshell-buffer-name)
         (select-window ecb-compile-window)
+
         (if ecb-eshell-enlarge-when-selecting
             (ecb-eshell-enlarge)
           ;;else just recenter
@@ -262,15 +255,22 @@ eshell is currently visible."
 
     ;;we auto start the eshell here?  I think so..
     (ecb-eshell-activate)
+
     (when ecb-eshell-enlarge-when-starting
-      (ecb-eshell-enlarge))))
+      (ecb-eshell-enlarge)))
+
+  ;;sync to the current buffer
+  (ecb-eshell-current-buffer-sync))
 
 (defun ecb-eshell-activate()
   "Startup the eshell in the compile window."
 
-  (when (ecb-compile-window-live-p 'display-msg)
-    (select-window ecb-compile-window)
-    (eshell)))
+  (ecb-eshell-save-buffer-history
+   (save-excursion
+     (when (ecb-compile-window-live-p 'display-msg)
+       (select-window ecb-compile-window)
+       (eshell)
+       (set-window-buffer ecb-compile-window (get-buffer eshell-buffer-name))))))
   
 (defun ecb-eshell-enlarge()
   "Enlarge the eshell so more information is visible.  This is usually done so

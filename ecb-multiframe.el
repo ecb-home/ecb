@@ -1,6 +1,6 @@
 ;;; ecb-multiframe.el --- 
 
-;; $Id: ecb-multiframe.el,v 1.7 2002/10/30 07:06:44 burtonator Exp $
+;; $Id: ecb-multiframe.el,v 1.8 2002/10/31 00:03:12 burtonator Exp $
 
 ;; Copyright (C) 2000-2003 Free Software Foundation, Inc.
 ;; Copyright (C) 2000-2003 Kevin A. Burton (burton@openprivacy.org)
@@ -162,9 +162,30 @@ frame.  When complete return the new buffer name."
   "Hook to run to initialize multiframe support"
 
   ;;disable ECB frame management for this frame
-  (ad-deactivate 'delete-frame))
+  (ad-deactivate 'delete-frame)
 
-(add-hook 'ecb-activate-hook 'ecb-multiframe-activate-hook)
+  ;;now make sure that the buffer being displayed in the edit window isn't a
+  ;;compilation buffer.  (NOTE: I actually think this should be a standard part
+  ;;of the ECB)
+  (ecb-multiframe-edit-window-non-compilation-buffer))
+
+(defun ecb-multiframe-edit-window-non-compilation-buffer()
+  "Go through the buffer list making the edit window a non compilation buffer."
+  (interactive)
+  
+  (let((buffer-list (buffer-list))
+       (index 0))
+
+    (while (and (or (ecb-compilation-buffer-p (window-buffer ecb-edit-window))
+                    (null (buffer-file-name (window-buffer ecb-edit-window))))
+                (< index (length buffer-list)))
+
+      (set-window-buffer ecb-edit-window (nth index buffer-list))
+      
+      (setq index (1+ index)))))
+
+;;this needs to happen last and it should be the last hook
+(add-hook 'ecb-activate-hook 'ecb-multiframe-activate-hook t)
 
 ;;we need to modify frame parameters for new frames
 (add-hook 'after-make-frame-functions 'ecb-multiframe-make-frame-hook)
