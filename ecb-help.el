@@ -650,7 +650,7 @@ a backtrace-buffer and inserts the contents of that."
   "List all variables starting with `ecb-' and some other variables which
 could be interesting for support."
   (let ((emacs-vars `(semantic-after-toplevel-cache-change-hook
-                      semantic-clean-token-hooks
+                      semantic-after-partial-cache-change-hook
                       pre-command-hook
                       post-command-hook
                       after-save-hook

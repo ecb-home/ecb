@@ -333,7 +333,6 @@ displayed without empty-lines at the end, means WINDOW is always best filled."
         (delete-overlay tree-buffer-highlight-overlay))))
   (setq tree-buffer-highlighted-node-data nil))
 
-(defvar ecb-klaus-test nil)
 (defun tree-buffer-highlight-node-data (node-data &optional dont-make-visible)
   (if node-data
       (let* ((name-node (tree-buffer-find-name-node-data node-data))

@@ -1,6 +1,14 @@
 Version 1.xx:
 -------------
 
+- Now the names of all ECB buffers begin with a SPC per default. (Klaus)
+
+- ECB now can handle not only full but also partial buffer reparsing if done
+  by semantic and other tools (e.g. JDE >= 2.2.9). The method buffer will
+  always be uptodate if for a major-mode auto. reparsing after buffer changes
+  is enabled (the auto. buffer reparsing itself is not an ECB feature but must
+  be supplied by the major-mode, e.g. JDE). (Klaus)
+
 - Incremental node-search in the ECB-buffers now uses the value of
   `case-fold-search'. (Klaus)
 

@@ -988,7 +988,7 @@ the \(first) edit-window and does then it´s job \(see above)."
     (if (and (not (ecb-point-in-edit-window))
              (not (ecb-point-in-compile-window)))
         (ecb-select-edit-window))
-      ;; now we are always in the edit window, so we can switch to the buffer
+    ;; now we are always in the edit window, so we can switch to the buffer
     ad-do-it))
 
 (defadvice other-window-for-scrolling (around ecb)

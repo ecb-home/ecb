@@ -12,10 +12,3 @@
    intelligent tree-buffer recentering.
 
 - Ignore source files specified in .cvsignore files. (JN)
-
-- Add history back/forward functions. Should behave similar to web browser
-  history, which means we should keep a history list and a current position
-  in the history list. (JN)
-
-- Optionally add "(file . line-nr)" to history when clicking on methods in
-  the methods buffer. (JN)
