@@ -599,6 +599,27 @@ raises and selects the ECB-frame even if ECB is already started.
 <p>Because ECB is a global minor-mode it can also be
 (de)activated/toggled by <kbd>M-x ecb-minor-mode</kbd>.
 
+<p><a name="Activation%20hook-sequence"></a>
+The following sequence of hooks is evaluated during activation of ECB:
+<ol type=1 start=1>
+</p><li><code>ecb-before-activate-hook</code>
+<li>&lt;All actions for activation but no layout drawing&gt;
+<li><code>ecb-activate-before-layout-draw-hook</code>
+<li><code>ecb-redraw-layout-before-hook</code>
+<li>&lt;Drawing the layout&gt;
+<li><code>ecb-redraw-layout-after-hook</code>
+<li><code>ecb-activate-hook</code>
+</ol>
+
+<p><a name="Deactivation%20hook-sequence"></a>
+The following sequence of hooks is evaluated during deactivation of
+ECB:
+<ol type=1 start=1>
+</p><li><code>ecb-before-deactivate-hook</code>
+<li>&lt;All actions for deactivation of ECB&gt;
+<li><code>ecb-deactivate-hook</code>
+</ol>
+
 <p><hr>
 Node:<a name="Automatic%20activation">Automatic activation</a>,
 Previous:<a rel=previous accesskey=p href="#Standard%20activation">Standard activation</a>,
@@ -619,7 +640,8 @@ to not nil and ECB will automaticaly be started after Emacs comes up.
 <dt><code>ecb-major-modes-deactivate</code>
 <dd>These option give you the possibility to activate (rsp. deactivate)
 ECB on a major-mode basis, means you can define for which major-modes
-ECB should be activated and for which modes it should activated.
+ECB should be activated and for which modes it should deactivated (See
+<a href="#Activation%20hook-sequence">Activation hook-sequence</a> and <a href="#Deactivation%20hook-sequence">Deactivation hook-sequence</a>).
 
 <p>If activating or deactivating is too strong you can also customize ECB
 with these two option only hiding/showing it's ECB-windows
@@ -1657,6 +1679,9 @@ takes several seconds because the quick redraw is not really safe and
 may have some drawbacks! On normal machines the full redraw should be
 done in &lt;&lt; 1s!
 
+<p>See also the hooks <code>ecb-redraw-layout-after-hook</code> and
+<code>ecb-redraw-layout-before-hook</code>!
+
 <p><hr>
 Node:<a name="Creating%20a%20new%20ECB-layout">Creating a new ECB-layout</a>,
 Previous:<a rel=previous accesskey=p href="#Redrawing%20the%20ECB-layout">Redrawing the ECB-layout</a>,
@@ -1759,12 +1784,31 @@ Up:<a rel=up accesskey=u href="#Usage%20of%20ECB">Usage of ECB</a>
 
 <h3>Hiding/Showing the ECB windows</h3>
 
-<p>With <code>ecb-toggle-ecb-windows</code> you can hide/show all the ECB windows
+<p>With <code>ecb-toggle-ecb-windows</code>, <code>ecb-hide-ecb-windows</code> and
+<code>ecb-show-ecb-windows</code> you can hide/show all the ECB windows
 without changing the activation state of ECB and also without
 deactivating the advices for <code>delete-other-windows</code> and/or
-<code>delete-window</code>. This is most useful if you use a layout like nr.10
-(see <a href="#Tips%20and%20tricks">Tips and tricks</a>) or if you want to have maximum space for
-editing and you don't need the browsing windows all the time.
+<code>delete-window</code>. This is most useful if you use a layout like
+nr.10 (see <a href="#Tips%20and%20tricks">Tips and tricks</a>) or if you want to have maximum space
+for editing and you don't need the browsing windows all the time.
+
+<p>The following sequence of hooks is evaluated during showing again the
+hidden ECB-windows:
+<ol type=1 start=1>
+</p><li><code>ecb-show-ecb-windows-before-hook</code>
+<li><code>ecb-redraw-layout-before-hook</code>
+<li>&lt;Redrawing the layout to show the hidden ECB-windows&gt;
+<li><code>ecb-redraw-layout-after-hook</code>
+<li><code>ecb-show-ecb-windows-after-hook</code>
+</ol>
+
+<p>The following sequence of hooks is evaluated during hidding the
+ECB-windows:
+<ol type=1 start=1>
+</p><li><code>ecb-hide-ecb-windows-before-hook</code>
+<li>&lt;Hidding the ECB-windows&gt;
+<li><code>ecb-hide-ecb-windows-after-hook</code>
+</ol>
 
 <p><hr>
 Node:<a name="Back%2fforward%20navigation">Back/forward navigation</a>,
@@ -2586,7 +2630,22 @@ example, because this should be done before the layout is drawn
 because ECB computes the size of the ECB-windows with the current
 frame size! If you need a hook-option for the real end of the
 activating process (i.e. after the layout-drawing) look at
-<code>ecb-activate-hook</code>. 
+<code>ecb-activate-hook</code>.
+
+<p>IMPORTANT: The difference between this hook and
+<code>ecb-redraw-layout-before-hook</code> is that the latter one is
+evaluated always before the layout is redrawn (for example after
+calling <code>ecb-redraw-layout</code>) whereas the former one (this hook)
+is only evaluated exactly once during the activation-process of ECB. 
+So during the activation process there is the following sequence of
+hooks:
+<ol type=1 start=1>
+</p><li><code>ecb-activate-before-layout-draw-hook</code> \(this one)
+<li><code>ecb-redraw-layout-before-hook</code>
+<li>&lt;Drawing the layout&gt;
+<li><code>ecb-redraw-layout-after-hook</code>
+<li><code>ecb-activate-hook</code>
+</ol>
 </td></tr>
 </table>
 
@@ -4639,15 +4698,31 @@ max-height of 1/3 the frame-height).
 <p>
 <table width="100%">
 <tr>
-<td align="left"><b>hide-ecb-windows-hook</b><i>
+<td align="left"><b>hide-ecb-windows-after-hook</b><i>
 </i></td>
 <td align="right">User Option</td>
 </tr>
 </table>
 <table width="95%" align="center">
 <tr><td>
-Hooks run after the ECB windows have been hidden either by
-<code>ecb-toggle-ecb-windows</code> or <code>ecb-hide-ecb-windows</code>. 
+Hooks run direct after the ECB windows have been hidden
+either by <code>ecb-toggle-ecb-windows</code> or <code>ecb-hide-ecb-windows</code>. 
+</td></tr>
+</table>
+
+<p>
+<table width="100%">
+<tr>
+<td align="left"><b>hide-ecb-windows-before-hook</b><i>
+</i></td>
+<td align="right">User Option</td>
+</tr>
+</table>
+<table width="95%" align="center">
+<tr><td>
+Hooks run direct before the ECB windows will be hidden either by
+<code>ecb-toggle-ecb-windows</code> or <code>ecb-hide-ecb-windows</code>. This means that at runtime
+of this hook all the ECB-tree-windows of current layout are visible. 
 </td></tr>
 </table>
 
@@ -4845,6 +4920,38 @@ Like 'only-edit plus the compile window if any.
 <p>
 <table width="100%">
 <tr>
+<td align="left"><b>redraw-layout-after-hook</b><i>
+</i></td>
+<td align="right">User Option</td>
+</tr>
+</table>
+<table width="95%" align="center">
+<tr><td>
+Hooks run direct before the ECB windows will be shown either by
+<code>ecb-toggle-ecb-windows</code> or <code>ecb-show-ecb-windows</code>. This
+means that at runtime of this hook the ECB-windows are already
+visible. 
+</td></tr>
+</table>
+
+<p>
+<table width="100%">
+<tr>
+<td align="left"><b>redraw-layout-before-hook</b><i>
+</i></td>
+<td align="right">User Option</td>
+</tr>
+</table>
+<table width="95%" align="center">
+<tr><td>
+Hooks run direct before the ECB-layout will be redrawn by either
+<code>ecb-redraw-layout</code>. 
+</td></tr>
+</table>
+
+<p>
+<table width="100%">
+<tr>
 <td align="left"><b>redraw-layout-quickly</b><i>
 </i></td>
 <td align="right">User Option</td>
@@ -4874,15 +4981,63 @@ Select the first edit window on <code>ecb-redraw-layout</code>.
 <p>
 <table width="100%">
 <tr>
-<td align="left"><b>show-ecb-windows-hook</b><i>
+<td align="left"><b>show-ecb-windows-after-hook</b><i>
 </i></td>
 <td align="right">User Option</td>
 </tr>
 </table>
 <table width="95%" align="center">
 <tr><td>
-Hooks run after the ECB windows have been shown either by
-<code>ecb-toggle-ecb-windows</code> or <code>ecb-show-ecb-windows</code>. 
+Hooks run direct before the ECB windows will be shown either by
+<code>ecb-toggle-ecb-windows</code> or <code>ecb-show-ecb-windows</code>. This
+means that at runtime of this hook the ECB-windows are already
+visible.
+
+<p>IMPORTANT: Showing the hidden ECB-windows is internally done by
+calling <code>ecb-redraw-layout</code> and therefore also the hooks
+<code>ecb-redraw-layout-before-hook</code> and
+<code>ecb-redraw-layout-after-hook</code> are evaluated. So there is the
+following sequence of hooks during the process of showing the hidden
+ECB-windows:
+<ol type=1 start=1>
+</p><li><code>ecb-show-ecb-windows-before-hook</code>
+<li><code>ecb-redraw-layout-before-hook</code>
+<li>&lt;redrawing the layout to show the hidden ECB-windows&gt;
+<li><code>ecb-redraw-layout-after-hook</code>
+<li><code>ecb-show-ecb-windows-after-hook</code>
+</ol>
+So be aware which code you add to which hook! 
+</td></tr>
+</table>
+
+<p>
+<table width="100%">
+<tr>
+<td align="left"><b>show-ecb-windows-before-hook</b><i>
+</i></td>
+<td align="right">User Option</td>
+</tr>
+</table>
+<table width="95%" align="center">
+<tr><td>
+Hooks run direct before the ECB windows will be shown either by
+<code>ecb-toggle-ecb-windows</code> or <code>ecb-show-ecb-windows</code>. This
+means that at runtime of this hook the ECB-windows are still hidden.
+
+<p>IMPORTANT: Showing the hidden ECB-windows is internally done by
+calling <code>ecb-redraw-layout</code> and therefore also the hooks
+<code>ecb-redraw-layout-before-hook</code> and
+<code>ecb-redraw-layout-after-hook</code> are evaluated. So there is the
+following sequence of hooks during the process of showing the hidden
+ECB-windows:
+<ol type=1 start=1>
+</p><li><code>ecb-show-ecb-windows-before-hook</code>
+<li><code>ecb-redraw-layout-before-hook</code>
+<li>&lt;redrawing the layout to show the hidden ECB-windows&gt;
+<li><code>ecb-redraw-layout-after-hook</code>
+<li><code>ecb-show-ecb-windows-after-hook</code>
+</ol>
+So be aware which code you add to which hook! 
 </td></tr>
 </table>
 
@@ -6067,14 +6222,18 @@ Up:<a rel=up accesskey=u href="#Elisp%20programming">Elisp programming</a>
 <li><code>ecb-current-buffer-sync-hook</code>
 <li><code>ecb-deactivate-hook</code>
 <li><code>ecb-directories-buffer-after-create-hook</code>
-<li><code>ecb-hide-ecb-windows-hook</code>
+<li><code>ecb-hide-ecb-windows-after-hook</code>
+<li><code>ecb-hide-ecb-windows-before-hook</code>
 <li><code>ecb-history-buffer-after-create-hook</code>
 <li><code>ecb-methods-buffer-after-create-hook</code>
-<li><code>ecb-show-ecb-windows-hook</code>
+<li><code>ecb-redraw-layout-after-hook</code>
+<li><code>ecb-redraw-layout-before-hook</code>
+<li><code>ecb-show-ecb-windows-after-hook</code>
+<li><code>ecb-show-ecb-windows-before-hook</code>
 <li><code>ecb-sources-buffer-after-create-hook</code>
 </ul>
 
-<p>Look at the documentation of these hooks to get a description.
+<p>Look at the documentation of these hooks to get a detailled description.
 
 <p><hr>
 Node:<a name="tree-buffer">tree-buffer</a>,
@@ -6637,7 +6796,8 @@ Up:<a rel=up accesskey=u href="#Top">Top</a>
 <li><code>grep-function</code>: <a href="#ecb-directories">ecb-directories</a>
 <li><code>help-html-path</code>: <a href="#ecb-help">ecb-help</a>
 <li><code>help-info-path</code>: <a href="#ecb-help">ecb-help</a>
-<li><code>hide-ecb-windows-hook</code>: <a href="#ecb-layout">ecb-layout</a>
+<li><code>hide-ecb-windows-after-hook</code>: <a href="#ecb-layout">ecb-layout</a>
+<li><code>hide-ecb-windows-before-hook</code>: <a href="#ecb-layout">ecb-layout</a>
 <li><code>highlight-token-header-after-jump</code>: <a href="#ecb-methods">ecb-methods</a>
 <li><code>highlight-token-with-point</code>: <a href="#ecb-methods">ecb-methods</a>
 <li><code>highlight-token-with-point-delay</code>: <a href="#ecb-methods">ecb-methods</a>
@@ -6665,10 +6825,13 @@ Up:<a rel=up accesskey=u href="#Top">Top</a>
 <li><code>post-process-semantic-tokenlist</code>: <a href="#ecb-methods">ecb-methods</a>
 <li><code>primary-mouse-jump-destination</code>: <a href="#ecb-general">ecb-general</a>
 <li><code>primary-secondary-mouse-buttons</code>: <a href="#ecb-general">ecb-general</a>
+<li><code>redraw-layout-after-hook</code>: <a href="#ecb-layout">ecb-layout</a>
+<li><code>redraw-layout-before-hook</code>: <a href="#ecb-layout">ecb-layout</a>
 <li><code>redraw-layout-quickly</code>: <a href="#ecb-layout">ecb-layout</a>
 <li><code>scroll-window-after-jump</code>: <a href="#ecb-methods">ecb-methods</a>
 <li><code>select-edit-window-on-redraw</code>: <a href="#ecb-layout">ecb-layout</a>
-<li><code>show-ecb-windows-hook</code>: <a href="#ecb-layout">ecb-layout</a>
+<li><code>show-ecb-windows-after-hook</code>: <a href="#ecb-layout">ecb-layout</a>
+<li><code>show-ecb-windows-before-hook</code>: <a href="#ecb-layout">ecb-layout</a>
 <li><code>show-help-format</code>: <a href="#ecb-help">ecb-help</a>
 <li><code>show-node-info-in-minibuffer</code>: <a href="#ecb-general">ecb-general</a>
 <li><code>show-only-positioned-tokens</code>: <a href="#ecb-methods">ecb-methods</a>
@@ -6715,6 +6878,7 @@ Up:<a rel=up accesskey=u href="#Top">Top</a>
 <h2>Concept Index</h2>
 
 <ul compact>
+<li>Activation hook-sequence: <a href="#Standard%20activation">Standard activation</a>
 <li>Adviced functions: <a href="#The%20edit-window">The edit-window</a>
 <li>Automatic activation: <a href="#Automatic%20activation">Automatic activation</a>
 <li>Automatic deactivation: <a href="#Automatic%20activation">Automatic activation</a>
@@ -6726,6 +6890,7 @@ Up:<a rel=up accesskey=u href="#Top">Top</a>
 <li>compilation buffers: <a href="#Temp-%20and%20compile-buffers">Temp- and compile-buffers</a>
 <li>Creating new layouts: <a href="#Creating%20a%20new%20ECB-layout">Creating a new ECB-layout</a>
 <li>cygwin-mount package: <a href="#Conflicts">Conflicts</a>
+<li>Deactivation hook-sequence: <a href="#Standard%20activation">Standard activation</a>
 <li>Directories: <a href="#ECB%20Directories">ECB Directories</a>
 <li>Download: <a href="#Downloading%20new%20versions">Downloading new versions</a>
 <li>ECB-layout: <a href="#The%20ECB-layout">The ECB-layout</a>

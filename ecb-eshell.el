@@ -364,9 +364,6 @@ to because the command didn't output much text, go ahead and shrink it again."
   
 (add-hook 'ecb-current-buffer-sync-hook 'ecb-eshell-current-buffer-sync)
 
-;;always recenter after the ECB redraws
-(add-hook 'ecb-redraw-layout-hook 'ecb-eshell-recenter)
-
 ;;always recenter after a command has been executed
 (add-hook 'eshell-post-command-hook 'ecb-eshell-recenter)
 

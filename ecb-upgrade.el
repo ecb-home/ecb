@@ -151,11 +151,11 @@
 ;; ----------------------------------------------------------------------
 
 (defconst ecb-upgradable-option-alist
-  '((ecb-compile-window-temporally-enlarge
-     .
-     (ecb-compile-window-temporally-enlarge
-      ecb-upgrade-compile-window-temporally-enlarge))
-    (ecb-window-sync . (ecb-window-sync ecb-upgrade-window-sync)))
+  '((ecb-compile-window-temporally-enlarge . (ecb-compile-window-temporally-enlarge
+                                              ecb-upgrade-compile-window-temporally-enlarge))
+    (ecb-window-sync . (ecb-window-sync ecb-upgrade-window-sync))
+    (ecb-hide-ecb-windows-hook . (ecb-hide-ecb-windows-before-hook identity))
+    (ecb-show-ecb-windows-hook . (ecb-show-ecb-windows-before-hook identity)))
   
   "Alist of all options which should be upgraded for current ECB-version.
 There are several reasons why an option should be contained in this alist:
@@ -405,12 +405,12 @@ Note: This function upgrades only the renamed but not the incompatible options
                            (if (equal new-value 'ecb-no-upgrade-conversion)
                                ;; we print the new default value.
                                (prin1-to-string (symbol-value (nth 2 option)))
-                             (if (and (not (equal new-value nil))
-                                      (not (equal new-value t))
-                                      (or (symbolp new-value)
-                                          (listp new-value)))
-                                 "'")
-                             (prin1-to-string new-value))))
+                             (concat (if (and (not (equal new-value nil))
+                                              (not (equal new-value t))
+                                              (or (symbolp new-value)
+                                                  (listp new-value)))
+                                         "'")
+                                     (prin1-to-string new-value)))))
             (if (equal new-value 'ecb-no-upgrade-conversion)
                 (princ "\n  (The old value couldn't be transformed - this is the current default!)"))
             (princ "\n\n")))
