@@ -19,7 +19,7 @@
 @c Free Software Foundation, Inc., 59 Temple Place - Suite 330,
 @c Boston, MA 02111-1307, USA.
 
-@c $Id: ecb.texi,v 1.91 2003/04/01 07:58:14 berndl Exp $
+@c $Id: ecb.texi,v 1.92 2003/04/03 16:46:17 berndl Exp $
 
 @setfilename ecb.info
 
@@ -743,6 +743,11 @@ option @code{ecb-token-jump-narrow}).
 @item
 Clicking on a method/variable with the secondary mouse button or C-RETURN
 (@pxref{Usage of ECB}) will jump to the method in the other edit window.
+
+@item
+Right clicking on a method/variable will open a popup menu where
+different operation on the item under the mouse cursor can be
+performed.
 @end itemize
 
 @node Activation and Deactivation, Usage of ECB, Overview, Top
@@ -2822,6 +2827,7 @@ elisp-code but only with the customize-feature!
 @tab @code{ecb-windows-width}
 @item @code{ecb-use-speedbar-for-directories}
 @tab @code{ecb-toggle-layout-sequence}
+@item @code{ecb-mode-line-data}
 @end multitable
 
 @strong{NOTE}: If you are the administrator for an Emacs-site, means
@@ -3255,6 +3261,32 @@ hides the ECB-windows).
 String to display in the mode line when ECB minor mode is active.
 (When the string is not empty, make sure that it has a leading space.)
 @end defopt
+
+@defopt mode-line-data
+Data shown in the modelines of the standard ECB tree-buffers. For
+every ECB-tree-buffer there are two predefined values:
+
+@itemize @minus
+@item ECB-directories:
+@code{selected} (current selected directory) and nil (Nothing).
+@item ECB-sources:
+@code{selected} (current selected directory) and nil (Nothing).
+@item ECB-methods:
+@code{selected} (current selected source) and nil (Nothing).
+@item ECB-history:
+nil (Nothing).
+@end itemize
+
+In addition for every tree-buffer a function can be specified which
+gets three args (name of the tree-buffer, current selected directory
+and current selected source-file) and must return a string which will
+be displayed in the modeline.
+
+The whole modeline of the tree-buffer consists of the prefix of
+@code{ecb-mode-line-prefixes} and the data of
+@code{ecb-mode-line-data}.
+@end defopt
+
 
 @defopt mode-line-prefixes
 Prefixes shown in the modelines of the ECB buffers. The displayed
@@ -7430,6 +7462,14 @@ Yes, see @ref{Tips and tricks}.
 Which buffers are treated as compilation-buffers by ECB?
 @tab @tab
 See the docstring of the function @code{ecb-compilation-buffer-p}.
+
+@item @tab @tab
+
+@item
+How can i change the modeline of an ECB-tree-buffer?
+@tab @tab
+You can change it with the options @code{ecb-mode-line-prefixes} and
+@code{ecb-mode-line-data}.
 
 @end multitable
 

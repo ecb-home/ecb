@@ -30,7 +30,7 @@
 ;; For the ChangeLog of this file see the CVS-repository. For a complete
 ;; history of the ECB-package see the file NEWS.
 
-;; $Id: ecb-mode-line.el,v 1.18 2003/03/20 16:43:30 berndl Exp $
+;; $Id: ecb-mode-line.el,v 1.19 2003/04/03 16:46:18 berndl Exp $
 
 ;;; Code
 
@@ -78,19 +78,97 @@ sources buffer) then also the string \": \" is appended."
                       (string :tag "Custom prefix" :value ""))))
 
 
+(defcustom ecb-mode-line-data '(selected selected selected nil)
+  "*Data shown in the modelines of the standard ECB tree-buffers.
+For every ECB-tree-buffer there are two predefined values:
+ECB-directories: 'selected \(current selected directory) and nil \(Nothing).
+ECB-sources: 'selected \(current selected directory) and nil \(Nothing).
+ECB-methods: 'selected \(current selected source) and nil \(Nothing).
+ECB-history: nil \(Nothing).
+
+In addition for every tree-buffer a function can be specified which gets three
+args \(name of the tree-buffer, current selected directory and current
+selected source-file) and must return a string which will be displayed in the
+modeline.
+
+The whole modeline of the tree-buffer consists of the prefix of
+`ecb-mode-line-prefixes' and the data of `ecb-mode-line-data'."
+  :group 'ecb-general
+  :set (function (lambda (symbol value)
+                   (set symbol value)
+                   (if (and (boundp 'ecb-minor-mode)
+                            ecb-minor-mode)
+                       (ecb-mode-line-format))))
+  :initialize 'custom-initialize-default
+  :type '(list (radio :tag "Directory-buffer"
+                      (const :tag "Current selected directory"
+                             :value selected)
+                      (const :tag "Nothing" :value nil)
+                      (function :tag "Custom function" :value ignore))
+               (radio :tag "Sources-buffer"
+                      (const :tag "Current selected directory"
+                             :value selected)
+                      (const :tag "Nothing" :value nil)
+                      (function :tag "Custom function" :value ignore))
+               (radio :tag "Methods-buffer"
+                      (const :tag "Current selected source"
+                             :value selected)
+                      (const :tag "Nothing" :value nil)
+                      (function :tag "Custom function" :value ignore))
+               (radio :tag "History-buffer"
+                      (const :tag "Nothing" :value nil)
+                      (function :tag "Custom function" :value ignore))))
+  
+
 (defun ecb-mode-line-format ()
   "Update all of the modelines of each buffer."
   (save-excursion
     ;; update the modeline for each visible(!!) ECB-buffer (some ECB-buffers
     ;; are not visible in all layouts!)  
-    (ecb-mode-line-set ecb-directories-buffer-name (nth 0 ecb-mode-line-prefixes)
-		       ecb-path-selected-directory)
-    (ecb-mode-line-set ecb-sources-buffer-name (nth 1 ecb-mode-line-prefixes)
-		       ecb-path-selected-directory)
-    (ecb-mode-line-set ecb-methods-buffer-name (nth 2 ecb-mode-line-prefixes)
-		       (when ecb-path-selected-source
-			 (file-name-nondirectory ecb-path-selected-source)))
-    (ecb-mode-line-set ecb-history-buffer-name (nth 3 ecb-mode-line-prefixes))))
+    (ecb-mode-line-set ecb-directories-buffer-name
+                       (nth 0 ecb-mode-line-prefixes)
+                       (cond ((equal (nth 0 ecb-mode-line-data) 'selected)
+                              ecb-path-selected-directory)
+                             ((null (nth 0 ecb-mode-line-data))
+                              nil)
+                             ((functionp (nth 0 ecb-mode-line-data))
+                              (funcall (nth 0 ecb-mode-line-data)
+                                       ecb-directories-buffer-name
+                                       ecb-path-selected-directory
+                                       ecb-path-selected-source))))
+    (ecb-mode-line-set ecb-sources-buffer-name
+                       (nth 1 ecb-mode-line-prefixes)
+                       (cond ((equal (nth 1 ecb-mode-line-data) 'selected)
+                              ecb-path-selected-directory)
+                             ((null (nth 1 ecb-mode-line-data))
+                              nil)
+                             ((functionp (nth 1 ecb-mode-line-data))
+                              (funcall (nth 1 ecb-mode-line-data)
+                                       ecb-sources-buffer-name
+                                       ecb-path-selected-directory
+                                       ecb-path-selected-source))))
+    (ecb-mode-line-set ecb-methods-buffer-name
+                       (nth 2 ecb-mode-line-prefixes)
+                       (cond ((equal (nth 2 ecb-mode-line-data) 'selected)
+                              (when ecb-path-selected-source
+                                (file-name-nondirectory ecb-path-selected-source)))
+                             ((null (nth 2 ecb-mode-line-data))
+                              nil)
+                             ((functionp (nth 2 ecb-mode-line-data))
+                              (funcall (nth 2 ecb-mode-line-data)
+                                       ecb-methods-buffer-name
+                                       ecb-path-selected-directory
+                                       ecb-path-selected-source))))
+    (ecb-mode-line-set ecb-history-buffer-name
+                       (nth 3 ecb-mode-line-prefixes)
+                       (cond ((null (nth 3 ecb-mode-line-data))
+                              nil)
+                             ((functionp (nth 3 ecb-mode-line-data))
+                              (funcall (nth 3 ecb-mode-line-data)
+                                       ecb-history-buffer-name
+                                       ecb-path-selected-directory
+                                       ecb-path-selected-source))))))
+                       
 
 (defun ecb-mode-line-set (buffer-name prefix &optional text)
   "Sets the mode line for a buffer. The mode line has the scheme:
@@ -102,7 +180,7 @@ sources buffer) then also the string \": \" is appended."
       (ecb-mode-line-update-buffer
        buffer-name
        (concat shown-prefix
-               (if text
+               (if (stringp text)
                    (ecb-mode-line-get-directory
                     shown-prefix
                     text
