@@ -42,6 +42,8 @@
 ;; sent to the author.  Without these patches ecb-speedbar will work but your
 ;; source buffer may recenter itself when you change buffers.  Fully functionaly
 ;; but very annoying.  Hopefully these patches will make it into a 0.14beta3.
+;;
+;;   - UPDATE:  the patches are in his queue but have not made it in yet.
 
 ;; If you enjoy this software, please consider a donation to the EFF
 ;; (http://www.eff.org)
@@ -82,14 +84,20 @@
 
 ;;; TODO:
 
-;; - BUGL for some reason if we hit <ENTER> in the ecb-speedbar window,
-;; sometimes a new frame will come up.
+;; - BUG: for some reason if we hit <ENTER> in the ecb-speedbar window,
+;;   sometimes a new frame will come up.
 ;;
-
+;;   - this only comes up the FIRST time I select a buffer.  Could some variable
+;;     be changed?
+;;    
 ;; - instead of ecb-layout-function-20 use ecb-layout-function-speedbar-1
+;;
+;; - RFE: what do we do about integration with the standard JDE?  Could we tell
+;;   the existing layout functions to use the speedbar instead of the
+;;   directories buffer?
 
-;; we need to be able to goto the speedbar window via C-c . d
-;; (ecb-speedbar-goto-window)
+;; we need to be able to goto the speedbar window via C-c . b (AKA bar)
+;; (ecb-goto-window-speedbar)
 
 ;;; Code:
 
@@ -207,6 +215,9 @@ will/could break."
   (select-window (get-buffer-window ecb-speedbar-buffer-name)))
 
 (add-hook 'ecb-current-buffer-sync-hook 'ecb-speedbar-current-buffer-sync)
+
+;;FIXME: migrate this into ecb-mode-map
+(define-key ecb-mode-map "\C-c.b" 'ecb-speedbar-goto-speedbar)
 
 (provide 'ecb-speedbar)
 
