@@ -12,10 +12,9 @@ Version 1.90:
   back to "foo" the next entry in your buffer list is "*eshell*" so this would
   break a lot of completion tools like 'switch-to-buffer.  (burton)
 
-- ECB now supports ecb-toggle-enlarged-compilation-window-use-max-height which
-  can be use to ALWAYS split the buffer by 1/2 the frame size.  This was the
-  original behavior of 'ecb-toggle-enlarged-compilation-window but it has been
-  changed over time. (burton)
+- ECB now supports `ecb-enlarged-compilation-window-max-height' which can be
+  used for defining the max. height of the ecb-compile-window if enlarged by
+  `ecb-toggle-enlarged-compilation-window'. (burton)
 
 - Now ECB can be "autoloaded", i.e.
   + ecb-activate,

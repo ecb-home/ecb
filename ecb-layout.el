@@ -103,7 +103,7 @@
 ;; - `ecb-with-some-adviced-functions'
 ;;
 
-;; $Id: ecb-layout.el,v 1.124 2002/10/30 00:34:59 burtonator Exp $
+;; $Id: ecb-layout.el,v 1.125 2002/10/31 13:38:23 berndl Exp $
 
 ;;; Code:
 
@@ -287,6 +287,31 @@ deselecting \(means selecting another window after point was in
 See also the documentation of this function!"
   :group 'ecb-layout
   :type 'boolean)
+
+(defcustom ecb-enlarged-compilation-window-max-height 'best
+  "*The max height of the compilation window after enlarging it
+by `ecb-toggle-enlarged-compilation-window'. The following values are allowed:
+
+- best: Minimum is the value of `ecb-compile-window-height' and max. the half
+        of the frame-height of the ECB-frame, best depending on the values of
+        `compilation-window-height' \(before ECB was started!) and the number
+        of lines of current buffer in `ecb-compile-window'. If
+        `compilation-window-height' is set before ECB was started then ECB
+        never enlarges the `ecb-compile-window' over the value of
+        `compilation-window-height'! Changing `compilation-window-height'
+        during activated ECB takes first effect after restarting ECB!
+
+- half: 1/2 the frame-height of the ECB-frame
+
+- any number: Max height in lines. If the number is less than 1.0 the height
+              is a fraction of the frame height \(e.g. 0.33 results in a
+              max-height of 1/3 the frame-height)."
+  :group 'ecb-layout
+  :type '(radio (const :tag "Compute best height"
+                       :value best)
+                (const :tag "1/2 the frame height)"
+                       :value half)
+                (number :tag "Height" :value 0.3)))
 
 (defcustom ecb-split-edit-window nil
   "*Sets how and if the edit window should be splitted.
@@ -588,12 +613,6 @@ done.")
 (defvar ecb-compile-window-was-selected-before-command nil
   "Not nil only if the `ecb-compile-window' was selected before most recent
 command.")
-
-(defcustom ecb-toggle-enlarged-compilation-window-use-max-height nil
-  "If true we will always use the maximum height for the compilation buffer
-which is 1/2 the frame height."
-  :group 'ecb-layout
-  :type 'boolean)
 
 (defun ecb-initialize-layout ()
   (setq ecb-frame nil
@@ -1426,10 +1445,7 @@ ECB-adviced functions."
   "Splits the current-window horizontally and returns the absolute amount in
 columns. If AMOUNT is greater than -1.0 and lower than +1.0 then the value is
 multiplied with the current window-width."
-  (let ((abs-amout (floor (if (and (< amount 1.0)
-                                   (> amount -1.0))
-                              (* (window-width) amount)
-                            amount))))
+  (let ((abs-amout (ecb-normalize-number amount (window-width))))
     (ecb-split-hor-abs abs-amout dont-switch-window)
     abs-amout))
 
@@ -1440,10 +1456,7 @@ multiplied with the current window-width."
 
 (defun ecb-split-ver (amount &optional dont-switch-window)
   "Splits the current-window and returns the absolute amount in lines"
-  (let ((abs-amout (floor (if (and (< amount 1.0)
-                                   (> amount -1.0))
-                              (* (window-height) amount)
-                            amount))))
+  (let ((abs-amout (ecb-normalize-number amount (window-height))))
     (ecb-split-ver-abs abs-amout dont-switch-window)
     abs-amout))
 
@@ -1814,11 +1827,9 @@ this function the edit-window is selected which was current before redrawing."
            (saved-edit-1 (nth 3 config))
            (saved-edit-2 (nth 4 config))
            (compile-window-height-lines (if ecb-compile-window-height
-                                            (floor
-                                             (if (< ecb-compile-window-height 1.0)
-                                                 (* (1- (frame-height))
-                                                    ecb-compile-window-height)
-                                               ecb-compile-window-height))))
+                                            (ecb-normalize-number
+                                             ecb-compile-window-height
+                                             (1- (frame-height)))))
            (compile-buffer-before-redraw (if (and ecb-compile-window-height
                                                   (ecb-compile-window-live-p))
                                              (window-buffer ecb-compile-window)))
@@ -2112,14 +2123,8 @@ then enlarge to a sensefull value \(see below), if ARG <= 0 then shrink
 `ecb-compile-window' to `ecb-compile-window-height' and if ARG is nil then
 toggle the enlarge-state.
 
-The `ecb-compile-window' is enlarged to the following value: At least to the
-value of `ecb-compile-window-height' and max. to half of the frame-height of
-the ECB-frame, best depending on the values of `compilation-window-height'
-\(before ECB was started!) and the number of lines of current buffer in
-`ecb-compile-window'. If `compilation-window-height' is set before ECB was
-started then ECB never enlarges the `ecb-compile-window' over the value of
-`compilation-window-height'! Changing this option during activated ECB takes
-first effect after restarting ECB!"
+The `ecb-compile-window' is enlarged depending on the value of
+`ecb-enlarged-compilation-window-max-height'."
   (interactive "P")
   (if (and ecb-minor-mode
            (equal (selected-frame) ecb-frame)
@@ -2130,28 +2135,27 @@ first effect after restarting ECB!"
                                   ecb-compile-window-height)
                              (<= (prefix-numeric-value arg) 0)))
             (compile-window-height-lines (if ecb-compile-window-height
-                                             (floor
-                                              (if (< ecb-compile-window-height 1.0)
-                                                  (* (1- (frame-height))
-                                                     ecb-compile-window-height)
-                                                ecb-compile-window-height))))
+                                             (ecb-normalize-number
+                                              ecb-compile-window-height
+                                              (1- (frame-height)))))
             (max-height nil))
         
         (save-selected-window
           (select-window ecb-compile-window)
-          ;;           (setq max-height
-;;                 (min (or ecb-old-compilation-window-height (/ (frame-height) 2))
-          ;;                      (max compile-window-height-lines
-         ;;                           (count-lines (point-min) (point-max)))))
-
-          (if ecb-toggle-enlarged-compilation-window-use-max-height
-              (setq max-height (/ (frame-height) 2))
-            (setq max-height
-                  (min (or compilation-window-height
-                           ecb-old-compilation-window-height
-                           (/ (frame-height) 2))
-                       (count-lines (point-min) (point-max)))))
-          
+          (setq max-height
+                (cond ((equal ecb-enlarged-compilation-window-max-height
+                              'best)
+                       (min (or compilation-window-height
+                                ecb-old-compilation-window-height
+                                (floor (/ (1- (frame-height)) 2)))
+                            (count-lines (point-min) (point-max))))
+                      ((equal ecb-enlarged-compilation-window-max-height
+                              'half)
+                       (floor (/ (1- (frame-height)) 2)))
+                      ((numberp ecb-enlarged-compilation-window-max-height)
+                       (ecb-normalize-number
+                        ecb-enlarged-compilation-window-max-height
+                        (1- (frame-height))))))
           (if should-shrink
               ;;restore the window configuration to ecb-compile-window-height
               (shrink-window (max 0 (- (window-height)
