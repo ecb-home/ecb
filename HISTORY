@@ -1,6 +1,15 @@
 Version 1.80:
 -------------
 
+- Some default keybindings have changed; see `ecb-key-map'. (Klaus)
+
+- New feature: Possibility to define a sequence of layouts with new option
+  `ecb-toggle-layout-sequence' and toggle very fast between them via
+  `ecb-toggle-layout' (Klaus).
+
+- Fixed: Now no empty tooltips are displayed if mouse moves over nodes in the
+  tree-buffers of ECB which can be displayed completely in the window. (Klaus)
+
 - Two new hooks: ecb-hide-ecb-windows-hook and ecb-show-ecb-windows-hook. Read
   the documentation. (Klaus)
   Suggested by Daniel Hegyi <daniel_hegyi@hotmail.com>
