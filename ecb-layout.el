@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-layout.el,v 1.246 2005/01/03 14:24:44 berndl Exp $
+;; $Id: ecb-layout.el,v 1.247 2005/01/12 10:25:32 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -1486,35 +1486,38 @@ not for direct usage therefore it is always disabled; use the macro
             (= (length (ecb-canonical-edit-windows-list)) 1))
     ad-do-it))
 
-(defadvice find-file (around ecb)
-  "Workaround for the annoying \(X)Emacs-behavior to resize some of the
-special ecb-windows after opening a file. This advices restores the sizes of
-the ecb-windows exactly as before this command."
-  (if (and ecb-minor-mode
-           (equal (selected-frame) ecb-frame)
-           (not ecb-windows-hidden))
-      (let ((ecb-sizes-before (ecb-get-ecb-window-sizes t)))
-        ad-do-it
-        ;; this seems to be necessary - otherwise the reszing seems not to
-        ;; take effect...
-        (sit-for 0)
-        (ignore-errors (ecb-set-ecb-window-sizes ecb-sizes-before)))
-    ad-do-it))
+;; The following two advices are currently not activated because with XEmacs
+;; we now set `progress-feedback-use-echo-area' to t which prevents this
+;; window-resizing!
+;; (defadvice find-file (around ecb)
+;;   "Workaround for the annoying \(X)Emacs-behavior to resize some of the
+;; special ecb-windows after opening a file. This advices restores the sizes of
+;; the ecb-windows exactly as before this command."
+;;   (if (and ecb-minor-mode
+;;            (equal (selected-frame) ecb-frame)
+;;            (not ecb-windows-hidden))
+;;       (let ((ecb-sizes-before (ecb-get-ecb-window-sizes t)))
+;;         ad-do-it
+;;         ;; this seems to be necessary - otherwise the reszing seems not to
+;;         ;; take effect...
+;;         (sit-for 0)
+;;         (ignore-errors (ecb-set-ecb-window-sizes ecb-sizes-before)))
+;;     ad-do-it))
       
-(defadvice find-file-other-window (around ecb)
-  "Workaround for the annoying \(X)Emacs-behavior to resize some of the
-special ecb-windows after opening a file. This advices restores the sizes of
-the ecb-windows exactly as before this command."
-  (if (and ecb-minor-mode
-           (equal (selected-frame) ecb-frame)
-           (not ecb-windows-hidden))
-      (let ((ecb-sizes-before (ecb-get-ecb-window-sizes t)))
-        ad-do-it
-        ;; this seems to be necessary - otherwise the reszing seems not to
-        ;; take effect...
-        (sit-for 0)
-        (ignore-errors (ecb-set-ecb-window-sizes ecb-sizes-before)))
-    ad-do-it))
+;; (defadvice find-file-other-window (around ecb)
+;;   "Workaround for the annoying \(X)Emacs-behavior to resize some of the
+;; special ecb-windows after opening a file. This advices restores the sizes of
+;; the ecb-windows exactly as before this command."
+;;   (if (and ecb-minor-mode
+;;            (equal (selected-frame) ecb-frame)
+;;            (not ecb-windows-hidden))
+;;       (let ((ecb-sizes-before (ecb-get-ecb-window-sizes t)))
+;;         ad-do-it
+;;         ;; this seems to be necessary - otherwise the reszing seems not to
+;;         ;; take effect...
+;;         (sit-for 0)
+;;         (ignore-errors (ecb-set-ecb-window-sizes ecb-sizes-before)))
+;;     ad-do-it))
 
 (defun ecb-toggle-scroll-other-window-scrolls-compile (&optional arg)
   "Toggle the state of `ecb-scroll-other-window-scrolls-compile-window'.
