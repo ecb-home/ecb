@@ -26,7 +26,7 @@
 ;; This file is part of the ECB package which can be found at:
 ;; http://home.swipnet.se/mayhem/ecb.html
 
-;; $Id: tree-buffer.el,v 1.27 2001/04/28 15:26:40 creator Exp $
+;; $Id: tree-buffer.el,v 1.28 2001/04/30 05:22:43 berndl Exp $
 
 ;;; Code:
 
@@ -419,8 +419,8 @@ EXPAND-SYMBOL-BEFORE: If not nil then the expand-symbol \(is displayed before
     (make-local-variable 'tree-buffer-highlight-overlay)
   
     (setq truncate-lines tr-lines)
-    (setq buffer-read-only read-only)
     (setq truncate-partial-width-windows tr-lines)
+    (setq buffer-read-only read-only)
     (setq tree-buffer-key-map (make-sparse-keymap))
     (setq tree-buffer-is-click-valid-fn is-click-valid-fn)
     (setq tree-node-selected-fn node-selected-fn)

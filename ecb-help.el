@@ -26,7 +26,7 @@
 ;;
 ;; Contains all online-help for ECB (stolen something from recentf.el)
 
-;; $Id: ecb-help.el,v 1.8 2001/04/28 12:21:34 berndl Exp $
+;; $Id: ecb-help.el,v 1.9 2001/04/30 05:22:43 berndl Exp $
 
 ;;; Code
 
@@ -235,8 +235,8 @@ Here are some of them:
 + If an elisp-file is parsed which contains in the middle a defun X where the
   closing ) is missing then semantic parses only until this defun X is reached
   and you will get an incomplete ECB-method buffer. In such a case you must
-  complete the defun X and then call this function to completely reparse the
-  elisp-file and rebuild the ECB method buffer!
+  complete the defun X and then completely reparse the elisp-file and rebuild
+  the ECB method buffer!
 + If you change only the name of a method or a variable and you want the new
   name be shown immediately in the ECB-method buffer then you must call this
   function.
