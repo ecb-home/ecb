@@ -15,9 +15,10 @@ Requirements
 ------------
 
 ECB requires the following packages being properly installed:
-- Semantic, version 1.4 or higher
+- Semantic, author version 1.4 or higher
   (http://cedet.sourceforge.net/semantic.shtml)
-- Eieio, version 0.17 or higher (http://cedet.sourceforge.net/eieio.shtml).
+- Eieio, author version 0.17 or higher
+  (http://cedet.sourceforge.net/eieio.shtml).
 - If Java code is edited the ECB works best when the JDE package
   (http://sunsite.auc.dk/jde) is installed.
 
@@ -29,6 +30,13 @@ installed!
 
 Installation
 ------------
+
+*IMPORTANT*: The following steps 1., 2., 3., 7. and 8. describe installation
+tasks if you got the archive in the format available at the ECB website. If
+you use XEmacs and got ECB as regular XEmacs-package (e.g. downloaded and
+installed by the net-installer of XEmacs) then the steps 1., 2., 3., 7. and 8.
+are not necessary for you; please start reading at point 4.
+
 
 1. Unpack the ECB archive (probably you have already done this :-)
 
@@ -54,7 +62,7 @@ Installation
 
    Do not do this!
 
-4. Load ECB by adding code to your `.emacs' or `site-lisp/site-start.el'.
+4. Load ECB by adding code to your `.emacs':
 
    If you want to load the complete ECB at Emacs-loadtime (Advantage: All
    ECB-options available after loading Emacs. Disadvantage: Increasing

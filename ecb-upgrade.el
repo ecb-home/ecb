@@ -491,28 +491,39 @@ For details about downloading and what requirements must be satisfied see
 `ecb-download-package'!
 
 After sucessfull downloading the new ECB will be installed in a directory
-parallel to current ECB-directory. After adding this new directory tp
+parallel to current ECB-directory. After adding this new directory to
 `load-path' and restarting Emacs the new ECB version can be activated by
-`ecb-activate'."
-  (interactive)
-        ;; Installing the new version finished - displaying a message-buffer
+`ecb-activate'.
 
-  (let ((install-dir (ecb-download-package "ecb" ecb-download-version
-                                           ecb-download-url)))
-    (when install-dir
-      (message "New ECB successfully installed!")
+If current running ECB is installed as regular XEmacs-package and not with the
+archive available at the ECB website then this function asks for proceeding!"
+  (interactive)
+  (let ((proceed t))
+    (when ecb-regular-xemacs-package-p
       (with-output-to-temp-buffer "*ECB downloading and installing*"
-        (princ "ECB has successfully installed the new ECB version in a directory parallel to\n")
-        (princ "current ECB.\n\n")
-        (princ (concat "+ Current ECB: " ecb-ecb-dir "\n"))
-        (princ (concat "+ New ECB: " install-dir))
-        (princ "\n\n")
-        (princ "After replacing the current ECB-directory with the new one in your `load-path'\n")
-        (princ "and then restarting Emacs the new ECB version can be activated by `ecb-activate'.\n\n")
-        (princ "If the value of `ecb-auto-compatibility-check' is not nil then the new version\n")
-        (princ "checks at start-time if there are incompatible options! Please read the\n")
-        (princ "documentation of this option!")
-        (princ "\n\n")))))
+        (princ "Current ECB is installed as regular XEmacs package and not with the\n")
+        (princ "archive available at the ECB-website. So you should use the package-manager\n")
+        (princ "of XEmacs to get the latest version of ECB! If you proceed installing from\n")
+        (princ "the ECB website then the new ECB is NOT installed as regular XEmacs-package\n")
+        (princ "but as \"flat\" package parallel to the current ECB directory!\n\n"))
+      (setq proceed (yes-or-no-p "Do you want to proceed installing from the ECB-website? ")))
+    (when proceed
+      (let ((install-dir (ecb-download-package "ecb" ecb-download-version
+                                               ecb-download-url)))
+        (when install-dir
+          (message "New ECB successfully installed!")
+          (with-output-to-temp-buffer "*ECB downloading and installing*"
+            (princ "ECB has successfully installed the new ECB version in a directory parallel to\n")
+            (princ "current ECB.\n\n")
+            (princ (concat "+ Current ECB: " ecb-ecb-dir "\n"))
+            (princ (concat "+ New ECB: " install-dir))
+            (princ "\n\n")
+            (princ "After replacing the current ECB-directory with the new one in your `load-path'\n")
+            (princ "and then restarting Emacs the new ECB version can be activated by `ecb-activate'.\n\n")
+            (princ "If the value of `ecb-auto-compatibility-check' is not nil then the new version\n")
+            (princ "checks at start-time if there are incompatible options! Please read the\n")
+            (princ "documentation of this option!")
+            (princ "\n\n")))))))
     
 
 (defun ecb-download-package (package version url)

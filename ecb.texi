@@ -183,6 +183,7 @@ All customizable options of ECB
 * ecb-face-options::            Customizing options for faces
 * ecb-faces::                   Customizing the faces
 * ecb-download::                Customizing how to download ECB
+* ecb-help::                    Customizing the online help of ECB
 
 Upgrading and downloading packages
 
@@ -235,6 +236,13 @@ what are the first steps after activation of ECB.
 @node Installation, Setting up Emacs, Install and first steps, Install and first steps
 @section Installation of ECB
 
+@strong{IMPORTANT}: The following steps 1., 2., 3., 7. and 8. describe
+installation tasks if you got the archive in the format available at
+the ECB website. If you use XEmacs and got ECB as regular
+XEmacs-package (e.g. downloaded and installed by the net-installer of
+XEmacs) then the steps 1., 2., 3., 7. and 8. are not necessary for
+you.
+
 @enumerate
 
 @item
@@ -274,8 +282,7 @@ ECB is NOT properly installed if it's directory is not added to
 Do not do this!
 
 @item
-Load ECB by adding code to your @file{.emacs} or
-@file{site-lisp/site-start.el}.
+Load ECB by adding code to your @file{.emacs}:
 
 If you want to load the complete ECB at Emacs-loadtime (Advantage: All
 ECB-options available after loading Emacs. Disadvantage: Increasing
@@ -2042,8 +2049,11 @@ machines the full drawback should be done in << 1s!
 @deffn Command show-help &optional format
 Shows the online help of ECB either in Info or in HTML format
 depending of the value of @code{ecb-show-help-format}. If called with
-prefix argument, i.e. if @var{FORMAT} is not nil then the user is prompted
-to choose the format of the help (Info or HTML).
+prefix argument, i.e. if @var{FORMAT} is not nil then the user is
+prompted to choose the format of the help (Info or HTML). If an error
+about not finding the needed help-file occurs please take a look at
+the options @code{ecb-help-info-start-file} and
+@code{ecb-help-html-start-file}!
 @end deffn
 
 @deffn Command submit-problem-report
@@ -2254,6 +2264,7 @@ readable option index. @xref{Option Index}.
 * ecb-face-options::            Customizing options for faces
 * ecb-faces::                   Customizing the faces
 * ecb-download::                Customizing how to download ECB
+* ecb-help::                    Customizing the online help of ECB
 @end menu
 
 @node ecb-general, ecb-directories, Customizable options, Customizable options
@@ -2603,13 +2614,6 @@ primary: mouse-1, secondary: mouse-2
 
 If you change this during ECB is activated you must deactivate and
 activate ECB again to take effect
-@end defopt
-
-@defopt show-help-format
-The format @code{ecb-show-help} shows its online help. Allowed values
-are 'info (for the Info format) and 'html (for HTML format). If the
-value is 'html then @code{browse-url-browser-function} says which
-browser is used.
 @end defopt
 
 @defopt show-node-info-in-minibuffer
@@ -4008,7 +4012,7 @@ Just call @code{customize-face <face-name>} to customize these faces
 for your personal taste. Or customize the related option in the group
 @ref{ecb-face-options}.
 
-@node ecb-download, , ecb-faces, Customizable options
+@node ecb-download, ecb-help, ecb-faces, Customizable options
 @subsection Group ecb-download
 
 @noindent
@@ -4043,6 +4047,55 @@ Which version of ECB should be downloaded by @code{ecb-download-ecb}.
 Valid values are either the string ``latest'' or a version number like
 ``1.70''. ECB creates automatically the correct URL for download, see
 @code{ecb-download-ecb} (@pxref{Interactive ECB commands}).
+@end defopt
+
+@node ecb-help, , ecb-download, Customizable options
+@subsection Group ecb-help
+
+@noindent
+This group contains the following options:
+
+
+@defopt help-html-path
+Path where the ECB online help in HTML format resides. This must be
+the location of the @file{ecb.html} which comes with the ECB
+distribution. If is installed by unpacking the archive available on
+the ECB website then this is the installation directory of ECB, i.e.
+where the elisp files of ECB reside. If it is installed as
+XEmacs-package (e.g. via the package manager of XEmacs) then this is
+probably not the directory where the elisp files of ECB reside but
+either the directory ``../../html/'' or ``../../etc/ecb/html/'' (both
+relativ to the elisp directory of ECB).
+
+The path can either be an absolute path or a path relativ to the directory
+where the elisp files of ECB are.
+
+Normally there should be no need to change this option!
+@end defopt
+
+
+@defopt help-info-path
+Path where the ECB online help in info format resides. This must be
+the location of the @file{ecb.info} which comes with the ECB
+distribution. If is installed by unpacking the archive available on
+the ECB website then this is the installation directory of ECB, i.e.
+where the elisp files of ECB reside. If it is installed as
+XEmacs-package (e.g. via the package manager of XEmacs) then this is
+probably not the directory where the elisp files of ECB reside but the
+directory ``../../info/'' (relativ to the elisp directory of ECB).
+
+The path can either be an absolute path or a path relativ to the directory
+where the elisp files of ECB are.
+
+Normally there should be no need to change this option!
+@end defopt
+
+
+@defopt show-help-format
+The format @code{ecb-show-help} shows its online help. Allowed values
+are 'info (for the Info format) and 'html (for HTML format). If the
+value is 'html then @code{browse-url-browser-function} says which
+browser is used.
 @end defopt
 
 

@@ -59,7 +59,7 @@
 ;; The latest version of the ECB is available at
 ;; http://home.swipnet.se/mayhem/ecb.html
 
-;; $Id: ecb.el,v 1.249 2002/11/06 11:25:38 berndl Exp $
+;; $Id: ecb.el,v 1.250 2002/11/15 15:49:18 berndl Exp $
 
 ;;; Code:
 
@@ -1524,7 +1524,10 @@ If JUST-CHECK is not nil then
           (failed-result)
           (version-error nil)
           (semantic-dir nil)
-          (eieio-dir nil))
+          (semantic-state nil)
+          (eieio-dir nil)
+          (eieio-state nil)
+          (proceed-if-failed t))
       (when (not (and (fboundp 'semantic-require-version)
                       (not (semantic-require-version
                             (nth 0 ecb-required-semantic-version)
@@ -1547,41 +1550,54 @@ If JUST-CHECK is not nil then
           (setq ecb-all-requirements-available t))
       (if just-check
           failed-result
-        (if failed-result
-            (if (not (yes-or-no-p (format "ECB requires %s. Do you want to download it? "
-                                          version-error)))
-                (ecb-error "ECB can only be started with %s! Sorry!" version-error)
-              ;; no we try to download the required versions
-              (message nil)
-              (if (string-match "semantic" version-error)
-                  (setq semantic-dir
-                        (ecb-download-package "semantic"
-                                              semantic-required-version-str
-                                              ecb-semantic-eieio-url)))
-              (if (string-match "eieio" version-error)
-                  (setq eieio-dir (ecb-download-package "eieio"
-                                                        eieio-required-version-str
-                                                        ecb-semantic-eieio-url)))
-              (with-output-to-temp-buffer "*ECB downloading and installing*"
-                (princ "Current state of the required packages semantic and eieio:\n\n")
-                (princ (concat "- semantic " semantic-required-version-str ":\n  "))
-                (princ (if (string-match "semantic" version-error)
-                           (if semantic-dir
-                               (concat "Installed in " semantic-dir)
-                             "Download- or installing-failure!")
-                         "Correct version already loaded!"))
-                (princ "\n")
-                (princ (concat "- eieio " eieio-required-version-str ":\n  "))
-                (princ (if (string-match "eieio" version-error)
-                           (if eieio-dir
-                               (concat "Installed in " eieio-dir)
-                             "Download- or installing-failure!")
-                         "Correct version already loaded!"))
-                (princ "\n\n")
-                (princ "After adding the new directory to your `load-path' and then restarting\n")
-                (princ "Emacs the new package(s) can be activated.\n\n")
-                (princ "\n\n"))
-              (ecb-error "Please restart Emacs with the required packages!")))))))
+        (when failed-result
+          (when ecb-regular-xemacs-package-p
+            (with-output-to-temp-buffer "*ECB downloading and installing*"
+              (princ "Current ECB is installed as regular XEmacs package and not with the\n")
+              (princ "archive available at the ECB-website. So you should use the package-manager\n")
+              (princ "of XEmacs to get the required versions of semantic and/or eieio and to\n")
+              (princ "install them also as regular XEmacs-packages! If you now proceed installing\n")
+              (princ "from the CEDET-website then the new versions will NOT be installed as\n")
+              (princ "regular XEmacs-package(s) but as \"flat\" package(s) parallel to the current\n")
+              (princ "ECB directory!\n\n")))
+          (if (not (yes-or-no-p (format "ECB requires %s. Download now? "
+                                        version-error)))
+              (ecb-error "ECB can only be started with %s! Sorry!" version-error)
+            (message nil)
+            ;; try to download semantic and set state
+            (if (not (string-match "semantic" version-error))
+                (setq semantic-state "Correct version already loaded!")
+              (setq semantic-dir
+                    (ecb-download-package "semantic"
+                                          semantic-required-version-str
+                                          ecb-semantic-eieio-url))
+              (setq semantic-state (if semantic-dir
+                                       (concat "Installed in " semantic-dir)
+                                     "Download- or installing-failure!")))
+            ;; try to download eieio and set state
+            (if (not (string-match "eieio" version-error))
+                (setq eieio-state "Correct version already loaded!")
+              (setq eieio-dir (ecb-download-package "eieio"
+                                                    eieio-required-version-str
+                                                    ecb-semantic-eieio-url))
+              (setq eieio-state (if eieio-dir
+                                    (concat "Installed in " eieio-dir)
+                                  "Download- or installing-failure!")))
+            ;; display the success
+            (with-output-to-temp-buffer "*ECB downloading and installing*"
+              (princ "Current state of the required packages semantic and eieio:\n\n")
+              (princ (concat "- Required version of semantic \(author version) "
+                             semantic-required-version-str ":\n  "))
+              (princ semantic-state)
+              (princ "\n")
+              (princ (concat "- Required version of eieio \(author version) "
+                             eieio-required-version-str ":\n  "))
+              (princ eieio-state)
+              (princ "\n\n")
+              (princ "After adding the new directory to your `load-path' and then restarting\n")
+              (princ "Emacs the new package(s) can be activated.\n\n")
+              (princ "\n\n"))
+            (ecb-error "Please restart Emacs with the required packages!")))))))
 
 (defun ecb-enter-debugger (&rest error-args)
   "If `ecb-debug-mode' is not nil then enter the Emacs-debugger and signal an
@@ -3459,6 +3475,12 @@ That is remove the unsupported :help stuff."
       :active t
       :help "Customize options for downloading ECB"
       ])
+    (ecb-menu-item
+     ["Help options..."
+      (customize-group "ecb-help")
+      :active t
+      :help "Customize options for the online help of ECB"
+      ])
     )
    (list
     "Upgrade and Download"
@@ -3513,6 +3535,13 @@ That is remove the unsupported :help stuff."
        :selected ecb-debug-mode
        :help "Print debug-informations in the message buffer."
        ])
+    "-"
+    (ecb-menu-item
+     ["Help preferences..."
+      (customize-group "ecb-help")
+      :active t
+      :help "Customize options for the online help of ECB"
+      ])
     "-"
     (concat "ECB " ecb-version)
     )
@@ -3694,7 +3723,8 @@ always the ECB-frame if called from another frame."
 
     ;; we activate only if all before-hooks return non nil
     (when (run-hook-with-args-until-failure 'ecb-before-activate-hook)
-      
+
+      ;; checking the requirements
       (ecb-check-requirements)
 
       ;; initialize the navigate-library

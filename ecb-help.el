@@ -26,7 +26,7 @@
 ;;
 ;; Contains all online-help for ECB (stolen something from recentf.el)
 
-;; $Id: ecb-help.el,v 1.86 2002/11/06 11:25:38 berndl Exp $
+;; $Id: ecb-help.el,v 1.87 2002/11/15 15:49:19 berndl Exp $
 
 ;;; Code
 
@@ -36,33 +36,131 @@
 (require 'ecb-layout)
 (require 'ecb-util)
 
-;; Emacs 21.X stuff
-(ecb-bytecomp-defvar browse-url-new-window-flag)
-;; Xemacs and Emacs 20.X
+;; XEmacs and Emacs 20.X
 (ecb-bytecomp-defvar browse-url-new-window-p)
 (ecb-bytecomp-defun browse-url)
+;; Emacs 21
+(ecb-bytecomp-defvar browse-url-new-window-flag)
 ;; JDE
 (ecb-bytecomp-defvar jde-version)
 ;; mail and reporter
 (ecb-bytecomp-defun mail-subject)
 (ecb-bytecomp-defun mail-text)
 (ecb-bytecomp-defun reporter-submit-bug-report)
-  
+
+(defconst ecb-help-info-start-file "ecb.info")
+(defconst ecb-help-html-start-file "ecb.html")
+
+(defgroup ecb-help nil
+  "Settings for the ECB online help"
+  :group 'ecb)
+
 (defcustom ecb-show-help-format 'info
   "*The format `ecb-show-help' shows its online help. Allowed values are 'info
 \(for the Info format) and 'html \(for HTML format). If the value is 'html
 then `browse-url-browser-function' says which browser is used."
-  :group 'ecb-general
+  :group 'ecb-help
   :type '(choice :tag "Online-help format" :menu-tag "Online-help format"
                  (const :tag "Info" :value info)
                  (const :tag "Html" :value html)))
+
+
+(defcustom ecb-help-info-path (concat
+                               (if ecb-running-xemacs
+                                   (if (file-exists-p
+                                        (concat ecb-ecb-dir
+                                                ecb-help-info-start-file))
+                                       "./"
+                                     "../../info/")
+                                 "./")
+                               ecb-help-info-start-file)
+  "*Path where the ECB online help in info format resides.
+This must be the location of the file \"ecb.info\" which comes with the ECB
+distribution. If is installed by unpacking the archive available on the ECB
+website then this is the installation directory of ECB, i.e. where the elisp
+files of ECB reside. If it is installed as XEmacs-package \(e.g. via the
+package manager of XEmacs) then this is probably not the directory where the
+elisp files of ECB reside but the directory \"../../info/\" \(relativ to the
+elisp directory of ECB).
+
+The path can either be an absolute path or a path relativ to the directory
+where the elisp files of ECB are.
+
+Normally there should be no need to change this option!"
+  :group 'ecb-help
+  :type 'file)
+
+(defcustom ecb-help-html-path (concat
+                               (if ecb-running-xemacs
+                                   (cond ((file-exists-p
+                                           (concat ecb-ecb-dir
+                                                   ecb-help-html-start-file))
+                                          "./")
+                                         ((file-exists-p
+                                           (concat ecb-ecb-dir
+                                                   "../../html/"
+                                                   ecb-help-html-start-file))
+                                          "../../html/")
+                                         (t
+                                          "../../etc/ecb/html/"))
+                                 "./")
+                               ecb-help-html-start-file)
+  "**Path where the ECB online help in HTML format resides.
+This must be the location of the file \"ecb.html\" which comes with the ECB
+distribution. If is installed by unpacking the archive available on the ECB
+website then this is the installation directory of ECB, i.e. where the elisp
+files of ECB reside. If it is installed as XEmacs-package \(e.g. via the
+package manager of XEmacs) then this is probably not the directory where the
+elisp files of ECB reside but either the directory \"../../html/\" or
+\"../../etc/ecb/html/\" \(both relativ to the elisp directory of ECB).
+
+The path can either be an absolute path or a path relativ to the directory
+where the elisp files of ECB are.
+
+Normally there should be no need to change this option!"
+  :group 'ecb-help
+  :type 'file)
+
+
+(defun ecb-info (info-file &optional no-file-not-exist-err)
+  "Starts `info' with INFO-FILE. If INFO-FILE does not exists then nil is
+returned otherwise true. If NO-FILE-NOT-EXIST-ERR is not nil then just nil is
+returned if INFO-FILE does not exist otherwise an error is reported."
+  (if (file-exists-p info-file)
+      (prog1 t
+        (info info-file))
+    (unless no-file-not-exist-err
+      (ecb-error "Info file %s does not exists!" info-file))
+    nil))
+
+(defun ecb-browse-html-file (html-file &optional no-file-not-exist-err)
+  "Opens HTML-FILE in the standard-webbrowser with `browse-url'. If INFO-FILE
+does not exists then nil is returned otherwise true. If NO-FILE-NOT-EXIST-ERR
+is not nil then just nil is returned if HTML-FILE does not exist otherwise an
+error is reported."
+  (if (file-exists-p html-file)
+      (prog1 t
+        (if (and (locate-library "browse-url")
+                 (require 'browse-url)
+                 (fboundp 'browse-url))
+            (browse-url (concat "file://" html-file)
+                        (if (boundp 'browse-url-new-window-flag)
+                            browse-url-new-window-flag
+                          browse-url-new-window-p))
+          (ecb-error "Function 'browse-url needed for displaying HTML!")))
+    (unless no-file-not-exist-err
+      (ecb-error "HTML file %s does not exists!" html-file))
+    nil))
 
 ;;;###autoload
 (defun ecb-show-help (&optional format)
   "Shows the online help of ECB in Info or HTML-format depending on the value
 of the option `ecb-show-help-format'. If called with prefix argument, i.e. if
 FORMAT is not nil then the user is prompted to choose the format of the help
-\(Info or Html)."
+\(Info or Html).
+
+If an error about not finding the needed help-file occurs please take a look
+at the options `ecb-help-info-start-file' and `ecb-help-html-start-file'!"
   (interactive "P")
   (let ((f (if format
                (intern (ecb-query-string "Choose format of online-help:"
@@ -70,24 +168,28 @@ FORMAT is not nil then the user is prompted to choose the format of the help
                                                     'html)
                                              '("info" "html")
                                            '("html" "info"))))
-             ecb-show-help-format)))
+             ecb-show-help-format))
+        (info-path-abs (expand-file-name
+                        (if (or (string-match "^\\." ecb-help-info-path)
+                                (string-match (concat "^"
+                                                      (regexp-quote
+                                                       ecb-help-info-start-file))
+                                              ecb-help-info-path))
+                            (concat ecb-ecb-dir ecb-help-info-path)
+                          ecb-help-info-path)))
+        (html-path-abs (ecb-fix-filename
+                        (if (or (string-match "^\\." ecb-help-html-path)
+                                (string-match (concat "^"
+                                                      (regexp-quote
+                                                       ecb-help-html-start-file))
+                                              ecb-help-html-path))
+                            (concat ecb-ecb-dir ecb-help-html-path)
+                          ecb-help-html-path))))
     (if (equal f 'info)
-        (if (file-exists-p (concat ecb-ecb-dir "ecb.info"))
-            (info (concat ecb-ecb-dir "ecb.info"))
-          (ecb-error "File %s does not exist" (concat ecb-ecb-dir "ecb.info")))
+        (ecb-info info-path-abs)
       (message "Opening ECB online-help in a web-browser...")
-      (if (not (file-exists-p (concat ecb-ecb-dir "ecb.html")))
-          (ecb-error "File %s does not exist" (concat ecb-ecb-dir "ecb.html"))
-        (if (not (and (locate-library "browse-url")
-                      (require 'browse-url)
-                      (fboundp 'browse-url)))
-            (ecb-error "Function 'browse-url needed for displaying HTML-help!")
-          (browse-url (concat "file://"
-                              (ecb-fix-filename ecb-ecb-dir "ecb.html"))
-                      (if (boundp 'browse-url-new-window-flag)
-                          browse-url-new-window-flag
-                        browse-url-new-window-p))
-          (message "Opening ECB online-help in a web-browser...done"))))))
+      (ecb-browse-html-file html-path-abs))))
+
 
 ;;
 ;; Problem reporting functions stolen from JDEE

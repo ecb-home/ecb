@@ -26,12 +26,13 @@
 ;; This file is part of the ECB package which can be found at:
 ;; http://home.swipnet.se/mayhem/ecb.html
 
-;; $Id: ecb-util.el,v 1.34 2002/11/06 11:25:38 berndl Exp $
+;; $Id: ecb-util.el,v 1.35 2002/11/15 15:49:19 berndl Exp $
 
 ;;; Code:
 
 (eval-when-compile
   (require 'ecb-bytecomp))
+
 
 ;; JDE
 (ecb-bytecomp-defun jde-gen-class-buffer)
@@ -40,7 +41,6 @@
 (ecb-bytecomp-defun frame-property)
 (ecb-bytecomp-defun point-at-bol)
 (ecb-bytecomp-defun point-at-eol)
-;; Emacs
 (ecb-bytecomp-defun frame-parameter)
 (ecb-bytecomp-defun line-beginning-position)
 (ecb-bytecomp-defun line-end-position)
@@ -58,10 +58,13 @@
   (expand-file-name (file-name-directory (locate-library "ecb"))))
 (defconst ecb-ecb-parent-dir (expand-file-name (concat ecb-ecb-dir "../")))
 
-(defconst ecb-emacs-dir
-  (expand-file-name (concat invocation-directory "../")))
-
-(defconst ecb-emacs-info-dir (expand-file-name(concat ecb-emacs-dir "info/")))
+;; we assume that current loaded ECB is a regular XEmacs-package if and only
+;; if `ecb-ecb-dir' contains the files "_pkg.el" and "auto-autoloads.el" and
+;; we are running XEmacs
+(defconst ecb-regular-xemacs-package-p
+  (and ecb-running-xemacs
+       (file-exists-p (expand-file-name (concat ecb-ecb-dir "_pkg.el")))
+       (file-exists-p (expand-file-name (concat ecb-ecb-dir "auto-autoloads.el")))))
 
 (if ecb-running-xemacs
     (progn
@@ -260,6 +263,8 @@ the user is prompted with OTHER-PROMPT to insert any arbitrary string."
                   (numberp ref-value))
              (* ref-value value)
            value)))
+
+
 
 (defmacro ecb-error (&rest args)
   "Signals an error but prevents it from entering the debugger. This is
