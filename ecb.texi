@@ -26,7 +26,7 @@
 @c GNU Emacs; see the file COPYING.  If not, write to the Free Software
 @c Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-@c $Id: ecb.texi,v 1.105 2003/07/31 16:02:07 berndl Exp $
+@c $Id: ecb.texi,v 1.106 2003/08/01 15:22:53 berndl Exp $
 
 @setfilename ecb.info
 
@@ -4100,6 +4100,24 @@ can be re-arranged with @code{ecb-directories-menu-sorter}.
 If you change this option you have to restart ECB to take effect.
 @end defopt
 
+@defopt display-default-dir-after-start
+Automatically display current default-directory after activating ECB.
+
+If a file-buffer is displayed in the edit-window then ECB synchronizes
+its tree-buffers to this file-buffer - at least if the option
+@code{ecb-window-sync} it not nil. So for this situation
+@code{ecb-display-default-dir-after-start} takes no effect but this
+option is for the case if no file-buffer is displayed in the
+edit-window after startup:
+
+If true then ECB selects autom. the current default-directory after
+activation even if no file-buffer is displayed in the edit-window.
+This is useful if ECB is autom. activated after startup of Emacs and
+Emacs is started without a file-argument. So the directory from which
+the startup has performed is auto. selected in the ECB-directories
+buffer and the ECB-sources buffer displays the contents of this
+directory.
+@end defopt
 
 
 @defopt excluded-directories-regexp
