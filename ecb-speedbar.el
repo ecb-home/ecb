@@ -1,6 +1,6 @@
 ;;; ecb-speedbar.el --- 
 
-;; $Id: ecb-speedbar.el,v 1.9 2002/01/22 09:37:36 burtonator Exp $
+;; $Id: ecb-speedbar.el,v 1.10 2002/01/23 07:39:58 burtonator Exp $
 
 ;; Copyright (C) 2000-2003 Free Software Foundation, Inc.
 ;; Copyright (C) 2000-2003 Kevin A. Burton (burton@openprivacy.org)
@@ -88,7 +88,8 @@
 ;;   sometimes a new frame will come up.
 ;;
 ;;   - this only comes up the FIRST time I select a buffer.  Could some variable
-;;     be changed?
+;;     be changed?  Maybe the `dframe-attached-frame' or
+;;     `speedbar-attached-frame' needs to be setup correctly.
 ;;    
 ;; - instead of ecb-layout-function-20 use ecb-layout-function-speedbar-1
 ;;

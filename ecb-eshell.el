@@ -1,6 +1,6 @@
 ;;; ecb-eshell.el --- eshell integration for the ECB.
 
-;; $Id: ecb-eshell.el,v 1.23 2002/01/22 06:36:25 burtonator Exp $
+;; $Id: ecb-eshell.el,v 1.24 2002/01/23 07:39:58 burtonator Exp $
 
 ;; Copyright (C) 2000-2003 Free Software Foundation, Inc.
 ;; Copyright (C) 2000-2003 Kevin A. Burton (burton@openprivacy.org)
@@ -57,6 +57,8 @@
 
 ;;; History:
 ;;
+;; - Tue Jan 22 2002 11:38 PM (burton@openprivacy.org): enable customization
+;; 
 ;; - Tue Dec 25 2001 07:54 PM (burton@openprivacy.org): We now enlarge the ecb
 ;;   window when you go to it.
 ;;    
@@ -99,15 +101,24 @@
 ;;   - ecb source buffer changes.
 ;;
 ;;   we could setup a variable ecb-eshell-inhibit-resize which we could set in
-;;   ecb-eshell-current-buffer-sync. ecb-eshell-resize would need to pay
+;;   ecb-eshell-current-buffer-sync. ecb-eshell-enlarge would need to pay
 ;;   attention to this.
-;;
 ;;
 ;; - Include the ability to startup the eshell when the ECB is started.  This
 ;; may require a new hook.
 
-
 ;;; Code:
+
+(defgroup ecb-eshell nil
+  "General settings for the Emacs code browser."
+  :group 'ecb
+  :prefix "ecb-eshell-")
+
+(defcustom ecb-eshell-enlarge-when-selecting t
+  "When selecting the `ecb-eshell-buffer-name' buffer, enlarge the buffer if
+  non-nil."
+  :group 'ecb-eshell
+  :type 'boolean)
 
 (defvar ecb-eshell-buffer-name "*eshell*"
   "Buffer name for the eshell.  We define it here so that we don't need to have
@@ -196,15 +207,13 @@ eshell is currently visible."
 
     ;;we auto start the eshell here?  I think so..
     (select-window ecb-compile-window)
-    
     (eshell))
 
-  (ecb-eshell-resize)
-  
-  (ecb-eshell-recenter))
+  (when ecb-eshell-enlarge-when-selecting
+    (ecb-eshell-enlarge)))
 
-(defun ecb-eshell-resize()
-  "Resize the eshell so more information is available.  This is usually done so
+(defun ecb-eshell-enlarge()
+  "Enlarge the eshell so more information is visible.  This is usually done so
 that the eshell has more screen space after we execute a command. "
   (interactive)
 
@@ -226,7 +235,8 @@ that the eshell has more screen space after we execute a command. "
         (setq enlargement (- (/ (frame-height) 2) (window-height)))
         
         (if (> enlargement 0)
-            (enlarge-window enlargement))))))
+            (enlarge-window enlargement)))))
+  (ecb-eshell-recenter))
 
 (add-hook 'ecb-current-buffer-sync-hook 'ecb-eshell-current-buffer-sync)
 
@@ -234,7 +244,7 @@ that the eshell has more screen space after we execute a command. "
 
 (add-hook 'ecb-redraw-layout-hooks 'ecb-eshell-recenter)
 
-(add-hook 'eshell-pre-command-hook 'ecb-eshell-resize)
+(add-hook 'eshell-pre-command-hook 'ecb-eshell-enlarge)
 
 (provide 'ecb-eshell)
 
