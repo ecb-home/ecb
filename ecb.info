@@ -14,11 +14,11 @@ to browse directories, files and methods. It supports method parsing
 for Java, C, C++, Elisp and some more.
 
 The latest version of ECB can always be found at the URL
-<http://home.swipnet.se/mayhem/ecb.html>
+<http://home.swipnet.se/mayhem/ecb.html>.
 
 To send bug reports, or participate in discussions about ECB, use the
 mailing list <ecb-list@lists.sourceforge.net> via the URL
-<http://lists.sourceforge.net/lists/listinfo/ecb-list>
+<http://lists.sourceforge.net/lists/listinfo/ecb-list>.
 
 * Menu:
 
@@ -765,10 +765,8 @@ File: ecb.info,  Node: Interactive ECB commands,  Prev: Hiding the ECB windows, 
 Interactive ECB commands
 ========================
 
- - Command: ecb-minor-mode &optional arg
-   Toggle ECB minor mode. With prefix argument ARG, turn on if
-   positive, otherwise off. Return non-`nil' if the minor mode is
-   enabled.
+ECB offers the following interactive commands (listed in alphabetical
+order):
 
  - Command: ecb-activate
    Activates the ECB and creates all the buffers and draws the
@@ -777,44 +775,8 @@ Interactive ECB commands
    frame. This is the same as calling `ecb-minor-mode' with a positive
    argument.
 
- - Command: ecb-deactivate
-   Deactivates the ECB and kills all ECB buffers and windows.
-
- - Command: ecb-update-directories-buffer
-   Updates the ECB directories buffer.
-
- - Command: ecb-current-buffer-sync &optional force
-   Synchronizes the ECB buffers with the current buffer. Unless FORCE
-   is non-`nil' then do this only if current-buffer differs from the
-   source displayed in the ECB tree-buffers.
-
- - Command: ecb-rebuild-methods-buffer
-   Updates the methods buffer with the current buffer after deleting the
-   complete previous parser-information, means no semantic-cache is
-   used!  Point must stay in an edit-window otherwise nothing is done.
-   This method is merely needed if semantic parses not the whole buffer
-   because it reaches a not parsable code. Examples when a call to this
-   function is necessary:
-
-   If an elisp-file is parsed which contains in the middle a defun X
-   where the closing ) is missing then semantic parses only until this
-   defun X is reached and you will get an incomplete ECB-method buffer.
-   In such a case you must complete the defun X and then call this
-   function to completely reparse the elisp-file and rebuild the ECB
-   method buffer!
-
-   If you change only the name of a method or a variable and you want
-   the new name be shown immediately in the ECB-method buffer then you
-   must call this function.
-
- - Command: ecb-redraw-layout
-   Redraw the ECB screen. If the variable `ecb-redraw-layout-quickly' is
-   not nil then the redraw is done by the `ecb-redraw-layout-quickly'
-   function, otherwise by `ecb-redraw-layout-full'. But it's strongly
-   recommended to use the quick redraw only if you have really slow
-   machines where a full redraw takes several seconds because the quick
-   redraw is not really safe and may have some drawbacks! On normal
-   machines the full drawback should be done in << 1s!
+ - Command: ecb-add-all-buffers-to-history
+   Add all current file-buffers to the history-buffer of ECB.
 
  - Command: ecb-clear-history &optional clearall
    Clears the ECB history-buffer. If CLEARALL is `nil' then the
@@ -829,59 +791,10 @@ Interactive ECB commands
 
    For further explanation see `ecb-clear-history-behavior'.
 
- - Command: ecb-add-all-buffers-to-history
-   Add all current file-buffers to the history-buffer of ECB.
-
- - Command: ecb-show-help &optional format
-   Shows the online help of ECB either in Info or in HTML format
-   depending of the value of `ecb-show-help-format'. If called with
-   prefix argument, i.e. if FORMAT is not nil then the user is prompted
-   to choose the format of the help (Info or HTML).
-
- - Command: ecb-submit-problem-report
-   Submit a problem report for the ECB to the ECB mailing-list. This
-   command generates in the edit-window a problem-report which contains
-   already the current values of all ECB options, the current
-   backtrace-buffer if there is any and the current message-buffer. You
-   will be asked for a problem-report subject and then you must insert a
-   description of the problem. Please describe the problem as detailed
-   as possible!
-
- - Command: ecb-goto-window-directories
-
- - Command: ecb-goto-window-sources
-
- - Command: ecb-goto-window-methods
-
- - Command: ecb-goto-window-history
-
- - Command: ecb-toggle-ecb-windows &optional arg
-   Toggle visibilty of the ECB-windows. With prefix argument ARG, make
-   visible if positive, otherwise invisible. This has nothing to do
-   with (de)activating ECB but only affects the visibility of the ECB
-   windows. ECB minor mode remains active!
-
- - Command: ecb-toggle-layout
-   Toggles between the layouts defined in `ecb-toggle-layout-sequence'.
-   Note: This function works by changing the options `ecb-layout-nr' and
-   `ecb-show-sources-in-directories-buffer' but only for current
-   Emacs-session.
-
- - Command: ecb-toggle-enlarged-compilation-window &optional arg
-   Toggle whether the `ecb-compile-window' is enlarged or not. If ARG >
-   0 then enlarge to a sensefull value (see below), if ARG <= 0 then
-   shrink `ecb-compile-window' to `ecb-compile-window-height' and if
-   ARG is nil then toggle the enlarge-state.
-
-   The `ecb-compile-window' is enlarged to the following value: At least
-   to the value of `ecb-compile-window-height' and max. to half of the
-   frame-height of the ECB-frame, best depending on the values of
-   `compilation-window-height' (before ECB was started!) and the number
-   of lines of current buffer in `ecb-compile-window'. If
-   `compilation-window-height' is set before ECB was started then ECB
-   never enlarges the `ecb-compile-window' over the value of
-   `compilation-window-height'! Changing this option during activated
-   ECB takes first effect after restarting ECB!
+ - Command: ecb-current-buffer-sync &optional force
+   Synchronizes the ECB buffers with the current buffer. Unless FORCE
+   is non-`nil' then do this only if current-buffer differs from the
+   source displayed in the ECB tree-buffers.
 
  - Command: ecb-cycle-through-compilation-buffers &optional
       choose-buffer
@@ -901,12 +814,8 @@ Interactive ECB commands
    whereas the adviced version of `switch-to-buffer' offers any buffer
    but switches to `ecb-compile-window' if a compilation-buffer!
 
- - Command: ecb-upgrade-options
-   Check for all ECB-options if their current value is compatible to the
-   defined type. If not upgrade it to the new type or reset it to the
-   default-value of current ECB. Try also to upgrade renamed options.
-   Displays all upgraded or reset options with their old (before the
-   upgrade/reset) and new values.
+ - Command: ecb-deactivate
+   Deactivates the ECB and kills all ECB buffers and windows.
 
  - Command: ecb-display-upgraded-options
    Display a message-buffer which options have been upgraded or reset.
@@ -938,6 +847,113 @@ Interactive ECB commands
    directory parallel to current ECB-directory. After adding this new
    directory tp `load-path' and restarting Emacs the new ECB version can
    be activated by `ecb-activate'.
+
+ - Command: ecb-goto-window-compilation
+   Goto the ecb compilation window `ecb-compile-window'.
+
+ - Command: ecb-goto-window-directories
+   Make the ECB-directories window the current window.
+
+ - Command: ecb-goto-window-edit1
+   Make the (first) edit-window window the current window.
+
+ - Command: ecb-goto-window-edit2
+   Make the second edit-window (if available) window the current window.
+
+ - Command: ecb-goto-window-history
+   Make the ECB-history window the current window.
+
+ - Command: ecb-goto-window-methods
+   Make the ECB-methods window the current window.
+
+ - Command: ecb-goto-window-sources
+   Make the ECB-sources window the current window.
+
+ - Command: ecb-minor-mode &optional arg
+   Toggle ECB minor mode. With prefix argument ARG, turn on if
+   positive, otherwise off. Return non-`nil' if the minor mode is
+   enabled.
+
+ - Command: ecb-rebuild-methods-buffer
+   Updates the methods buffer with the current buffer after deleting the
+   complete previous parser-information, means no semantic-cache is
+   used!  Point must stay in an edit-window otherwise nothing is done.
+   This method is merely needed if semantic parses not the whole buffer
+   because it reaches a not parsable code. Examples when a call to this
+   function is necessary:
+
+   If an elisp-file is parsed which contains in the middle a defun X
+   where the closing ) is missing then semantic parses only until this
+   defun X is reached and you will get an incomplete ECB-method buffer.
+   In such a case you must complete the defun X and then call this
+   function to completely reparse the elisp-file and rebuild the ECB
+   method buffer!
+
+   If you change only the name of a method or a variable and you want
+   the new name be shown immediately in the ECB-method buffer then you
+   must call this function.
+
+ - Command: ecb-redraw-layout
+   Redraw the ECB screen. If the variable `ecb-redraw-layout-quickly' is
+   not nil then the redraw is done by the `ecb-redraw-layout-quickly'
+   function, otherwise by `ecb-redraw-layout-full'. But it's strongly
+   recommended to use the quick redraw only if you have really slow
+   machines where a full redraw takes several seconds because the quick
+   redraw is not really safe and may have some drawbacks! On normal
+   machines the full drawback should be done in << 1s!
+
+ - Command: ecb-show-help &optional format
+   Shows the online help of ECB either in Info or in HTML format
+   depending of the value of `ecb-show-help-format'. If called with
+   prefix argument, i.e. if FORMAT is not nil then the user is prompted
+   to choose the format of the help (Info or HTML).
+
+ - Command: ecb-submit-problem-report
+   Submit a problem report for the ECB to the ECB mailing-list. This
+   command generates in the edit-window a problem-report which contains
+   already the current values of all ECB options, the current
+   backtrace-buffer if there is any and the current message-buffer. You
+   will be asked for a problem-report subject and then you must insert a
+   description of the problem. Please describe the problem as detailed
+   as possible!
+
+ - Command: ecb-toggle-ecb-windows &optional arg
+   Toggle visibilty of the ECB-windows. With prefix argument ARG, make
+   visible if positive, otherwise invisible. This has nothing to do
+   with (de)activating ECB but only affects the visibility of the ECB
+   windows. ECB minor mode remains active!
+
+ - Command: ecb-toggle-enlarged-compilation-window &optional arg
+   Toggle whether the `ecb-compile-window' is enlarged or not. If ARG >
+   0 then enlarge to a sensefull value (see below), if ARG <= 0 then
+   shrink `ecb-compile-window' to `ecb-compile-window-height' and if
+   ARG is nil then toggle the enlarge-state.
+
+   The `ecb-compile-window' is enlarged to the following value: At least
+   to the value of `ecb-compile-window-height' and max. to half of the
+   frame-height of the ECB-frame, best depending on the values of
+   `compilation-window-height' (before ECB was started!) and the number
+   of lines of current buffer in `ecb-compile-window'. If
+   `compilation-window-height' is set before ECB was started then ECB
+   never enlarges the `ecb-compile-window' over the value of
+   `compilation-window-height'! Changing this option during activated
+   ECB takes first effect after restarting ECB!
+
+ - Command: ecb-toggle-layout
+   Toggles between the layouts defined in `ecb-toggle-layout-sequence'.
+   Note: This function works by changing the options `ecb-layout-nr' and
+   `ecb-show-sources-in-directories-buffer' but only for current
+   Emacs-session.
+
+ - Command: ecb-update-directories-buffer
+   Updates the ECB directories buffer.
+
+ - Command: ecb-upgrade-options
+   Check for all ECB-options if their current value is compatible to the
+   defined type. If not upgrade it to the new type or reset it to the
+   default-value of current ECB. Try also to upgrade renamed options.
+   Displays all upgraded or reset options with their old (before the
+   upgrade/reset) and new values.
 
 Most of these functions are also available via the menu "ECB" and also
 via the ECB keymap with prefix `C-c .' (see `ecb-minor-mode' for a
@@ -2596,6 +2612,9 @@ File: ecb.info,  Node: Tips and tricks,  Next: Elisp programming,  Prev: Upgradi
 Tips and tricks
 ***************
 
+This chapter contains some tips and tricks how to deal best with some
+situations.
+
 * Menu:
 
 * Changing faces::              Changing faces in the ECB tree-buffers
@@ -2865,7 +2884,10 @@ Function Index
 * ecb-deactivate:                        Interactive ECB commands.
 * ecb-display-upgraded-options:          Interactive ECB commands.
 * ecb-download-ecb:                      Interactive ECB commands.
+* ecb-goto-window-compilation:           Interactive ECB commands.
 * ecb-goto-window-directories:           Interactive ECB commands.
+* ecb-goto-window-edit1:                 Interactive ECB commands.
+* ecb-goto-window-edit2:                 Interactive ECB commands.
 * ecb-goto-window-history:               Interactive ECB commands.
 * ecb-goto-window-methods:               Interactive ECB commands.
 * ecb-goto-window-sources:               Interactive ECB commands.
@@ -3037,62 +3059,62 @@ Concept Index
 
 Tag Table:
 Node: Top183
-Node: Install4805
-Node: Overview7268
-Node: ECB Directories8164
-Node: ECB Sources9144
-Node: ECB Methods10307
-Node: Activation and Deactivation10828
-Node: Standard activation11198
-Node: Automatic activation11776
-Node: Usage of ECB12826
-Node: Using the mouse13586
-Node: Using the keyboard15878
-Node: Navigation16672
-Node: Incremental search18015
-Node: The edit-window20166
-Node: Temp- and compile-buffers21972
-Node: The Methods buffer24019
-Node: Customizing the display24460
-Node: Rebuilding the Methods26182
-Node: The ECB-layout27036
-Node: Changing the ECB-layout27586
-Node: Redrawing the ECB-layout28624
-Node: Hiding the ECB windows29427
-Node: Interactive ECB commands30001
-Node: Customizing38156
-Node: Most important options38606
-Node: Customizable options40378
-Node: ecb-general41294
-Node: ecb-directories58370
-Node: ecb-sources63349
-Node: ecb-methods65219
-Node: ecb-history76980
-Node: ecb-layout78672
-Node: ecb-face-options92577
-Node: ecb-faces94237
-Node: ecb-download98244
-Node: Submitting problem report99431
-Node: Upgrading100588
-Node: Downloading new version100945
-Node: Auto. option-upgrading101500
-Node: User interface101807
-Node: Background information102696
-Node: Tips and tricks106094
-Node: Changing faces106570
-Node: Small screens107376
-Node: Simulating speedbar108779
-Node: Optimze scrolling109588
-Node: Large directories110663
-Node: Elisp programming111307
-Node: Conflicts112417
-Node: VC113000
-Node: follow-mouse113293
-Node: avoid113971
-Node: calendar114335
-Node: calculator114910
-Node: Function Index115412
-Node: Variable Index117020
-Node: Concept Index122090
+Node: Install4807
+Node: Overview7270
+Node: ECB Directories8166
+Node: ECB Sources9146
+Node: ECB Methods10309
+Node: Activation and Deactivation10830
+Node: Standard activation11200
+Node: Automatic activation11778
+Node: Usage of ECB12828
+Node: Using the mouse13588
+Node: Using the keyboard15880
+Node: Navigation16674
+Node: Incremental search18017
+Node: The edit-window20168
+Node: Temp- and compile-buffers21974
+Node: The Methods buffer24021
+Node: Customizing the display24462
+Node: Rebuilding the Methods26184
+Node: The ECB-layout27038
+Node: Changing the ECB-layout27588
+Node: Redrawing the ECB-layout28626
+Node: Hiding the ECB windows29429
+Node: Interactive ECB commands30003
+Node: Customizing38745
+Node: Most important options39195
+Node: Customizable options40967
+Node: ecb-general41883
+Node: ecb-directories58959
+Node: ecb-sources63938
+Node: ecb-methods65808
+Node: ecb-history77569
+Node: ecb-layout79261
+Node: ecb-face-options93166
+Node: ecb-faces94826
+Node: ecb-download98833
+Node: Submitting problem report100020
+Node: Upgrading101177
+Node: Downloading new version101534
+Node: Auto. option-upgrading102089
+Node: User interface102396
+Node: Background information103285
+Node: Tips and tricks106683
+Node: Changing faces107242
+Node: Small screens108048
+Node: Simulating speedbar109451
+Node: Optimze scrolling110260
+Node: Large directories111335
+Node: Elisp programming111979
+Node: Conflicts113089
+Node: VC113672
+Node: follow-mouse113965
+Node: avoid114643
+Node: calendar115007
+Node: calculator115582
+Node: Function Index116084
+Node: Variable Index117893
+Node: Concept Index122963
 
 End Tag Table

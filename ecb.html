@@ -864,21 +864,8 @@ Up:<a rel=up accesskey=u href="#Usage%20of%20ECB">Usage of ECB</a>
 
 <h3>Interactive ECB commands</h3>
 
-<p>
-<table width="100%">
-<tr>
-<td align="left"><b>ecb-minor-mode</b><i> &amp;optional arg
-</i></td>
-<td align="right">Command</td>
-</tr>
-</table>
-<table width="95%" align="center">
-<tr><td>
-Toggle ECB minor mode. With prefix argument <var>ARG</var>, turn on if
-positive, otherwise off. Return non-<code>nil</code> if the minor mode is
-enabled. 
-</td></tr>
-</table>
+<p>ECB offers the following interactive commands (listed in alphabetical
+order):
 
 <p>
 <table width="100%">
@@ -900,28 +887,39 @@ same as calling <code>ecb-minor-mode</code> with a positive argument.
 <p>
 <table width="100%">
 <tr>
-<td align="left"><b>ecb-deactivate</b><i>
+<td align="left"><b>ecb-add-all-buffers-to-history</b><i>
 </i></td>
 <td align="right">Command</td>
 </tr>
 </table>
 <table width="95%" align="center">
 <tr><td>
-Deactivates the ECB and kills all ECB buffers and windows. 
+Add all current file-buffers to the history-buffer of ECB. 
 </td></tr>
 </table>
 
 <p>
 <table width="100%">
 <tr>
-<td align="left"><b>ecb-update-directories-buffer</b><i>
+<td align="left"><b>ecb-clear-history</b><i> &amp;optional clearall
 </i></td>
 <td align="right">Command</td>
 </tr>
 </table>
 <table width="95%" align="center">
 <tr><td>
-Updates the ECB directories buffer. 
+Clears the ECB history-buffer. If <var>CLEARALL</var> is <code>nil</code> then
+the behavior is defined in the option <code>ecb-clear-history-behavior</code>
+otherwise the value of <var>CLEARALL</var> overrides the value of this
+option:
+
+<ul>
+<li>&lt; 0: Means not-existing-buffers
+<li>&gt; 0: Means existing-buffers
+<li>= 0: Means all
+</ul>
+
+<p>For further explanation see <code>ecb-clear-history-behavior</code>. 
 </td></tr>
 </table>
 
@@ -938,6 +936,216 @@ Updates the ECB directories buffer.
 Synchronizes the ECB buffers with the current buffer. Unless
 <var>FORCE</var> is non-<code>nil</code> then do this only if current-buffer
 differs from the source displayed in the ECB tree-buffers. 
+</td></tr>
+</table>
+
+<p>
+<table width="100%">
+<tr>
+<td align="left"><b>ecb-cycle-through-compilation-buffers</b><i> &amp;optional choose-buffer
+</i></td>
+<td align="right">Command</td>
+</tr>
+</table>
+<table width="95%" align="center">
+<tr><td>
+Cycle through all compilation buffers currently open and display them
+within the compilation window <code>ecb-compile-window</code>. If the
+currently opened buffer within the compilation window is not a
+compilation buffer, we jump to the first compilation buffer. If not we
+try to loop through all compilation buffers. If we hit the end we go
+back to the beginning.
+
+<p>If <var>CHOOSE-BUFFER</var> is not <code>nil</code> then the user will be
+prompted for the compilation-buffer to swtich to.
+
+<p>See also the option <code>ecb-layout-switch-to-compilation-window</code>! 
+The difference is that this cycling-function offers only
+compilation-buffers in the sense of <code>ecb-compilation-buffer-p</code>
+whereas the adviced version of <code>switch-to-buffer</code> offers any
+buffer but switches to <code>ecb-compile-window</code> if a
+compilation-buffer! 
+</td></tr>
+</table>
+
+<p>
+<table width="100%">
+<tr>
+<td align="left"><b>ecb-deactivate</b><i>
+</i></td>
+<td align="right">Command</td>
+</tr>
+</table>
+<table width="95%" align="center">
+<tr><td>
+Deactivates the ECB and kills all ECB buffers and windows. 
+</td></tr>
+</table>
+
+<p>
+<table width="100%">
+<tr>
+<td align="left"><b>ecb-display-upgraded-options</b><i>
+</i></td>
+<td align="right">Command</td>
+</tr>
+</table>
+<table width="95%" align="center">
+<tr><td>
+Display a message-buffer which options have been upgraded or reset. 
+</td></tr>
+</table>
+
+<p>
+<table width="100%">
+<tr>
+<td align="left"><b>ecb-download-ecb</b><i>
+</i></td>
+<td align="right">Command</td>
+</tr>
+</table>
+<table width="95%" align="center">
+<tr><td>
+Download ECB from the ECB-website and install it. For this the utilities
+"wget", "tar" and "gzip" are needed which are available for unix and
+also for windows with cygwin. All utilities must reside in your PATH!
+
+<p>If you are behind a firewall and you have to use a proxy you maybe
+need the following wget-configuration in your file <code>~/.wgetrc</code>:
+
+<br><pre># Define your proxies (where 8080 and 8081 are examples
+# for the portnumbers)
+http_proxy = http://your.proxy.com:8080
+ftp_proxy  = http://your.ftpproxy.com:8081
+
+# If you do not want to use proxy at all, set this to off.
+use_proxy = on
+</pre>
+
+<p>ECB will try to download the following url:
+"&lt;ecb-download-url&gt;ecb-&lt;ecb-download-version&gt;.tar.gz". For this the
+options <code>ecb-download-url</code> and <code>ecb-download-version</code> must be set
+correct, whereas the default value of the former one should always be
+correct.
+
+<p>After sucessfull downloading the new ECB will be installed in a
+directory parallel to current ECB-directory. After adding this new
+directory tp <code>load-path</code> and restarting Emacs the new ECB version can
+be activated by <code>ecb-activate</code>. 
+</td></tr>
+</table>
+
+<p>
+<table width="100%">
+<tr>
+<td align="left"><b>ecb-goto-window-compilation</b><i>
+</i></td>
+<td align="right">Command</td>
+</tr>
+</table>
+<table width="95%" align="center">
+<tr><td>
+Goto the ecb compilation window <code>ecb-compile-window</code>. 
+</td></tr>
+</table>
+
+<p>
+<table width="100%">
+<tr>
+<td align="left"><b>ecb-goto-window-directories</b><i>
+</i></td>
+<td align="right">Command</td>
+</tr>
+</table>
+<table width="95%" align="center">
+<tr><td>
+Make the ECB-directories window the current window. 
+</td></tr>
+</table>
+
+<p>
+<table width="100%">
+<tr>
+<td align="left"><b>ecb-goto-window-edit1</b><i>
+</i></td>
+<td align="right">Command</td>
+</tr>
+</table>
+<table width="95%" align="center">
+<tr><td>
+Make the (first) edit-window window the current window. 
+</td></tr>
+</table>
+
+<p>
+<table width="100%">
+<tr>
+<td align="left"><b>ecb-goto-window-edit2</b><i>
+</i></td>
+<td align="right">Command</td>
+</tr>
+</table>
+<table width="95%" align="center">
+<tr><td>
+Make the second edit-window (if available) window the current window. 
+</td></tr>
+</table>
+
+<p>
+<table width="100%">
+<tr>
+<td align="left"><b>ecb-goto-window-history</b><i>
+</i></td>
+<td align="right">Command</td>
+</tr>
+</table>
+<table width="95%" align="center">
+<tr><td>
+Make the ECB-history window the current window. 
+</td></tr>
+</table>
+
+<p>
+<table width="100%">
+<tr>
+<td align="left"><b>ecb-goto-window-methods</b><i>
+</i></td>
+<td align="right">Command</td>
+</tr>
+</table>
+<table width="95%" align="center">
+<tr><td>
+Make the ECB-methods window the current window. 
+</td></tr>
+</table>
+
+<p>
+<table width="100%">
+<tr>
+<td align="left"><b>ecb-goto-window-sources</b><i>
+</i></td>
+<td align="right">Command</td>
+</tr>
+</table>
+<table width="95%" align="center">
+<tr><td>
+Make the ECB-sources window the current window. 
+</td></tr>
+</table>
+
+<p>
+<table width="100%">
+<tr>
+<td align="left"><b>ecb-minor-mode</b><i> &amp;optional arg
+</i></td>
+<td align="right">Command</td>
+</tr>
+</table>
+<table width="95%" align="center">
+<tr><td>
+Toggle ECB minor mode. With prefix argument <var>ARG</var>, turn on if
+positive, otherwise off. Return non-<code>nil</code> if the minor mode is
+enabled. 
 </td></tr>
 </table>
 
@@ -994,45 +1202,6 @@ machines the full drawback should be done in &lt;&lt; 1s!
 <p>
 <table width="100%">
 <tr>
-<td align="left"><b>ecb-clear-history</b><i> &amp;optional clearall
-</i></td>
-<td align="right">Command</td>
-</tr>
-</table>
-<table width="95%" align="center">
-<tr><td>
-Clears the ECB history-buffer. If <var>CLEARALL</var> is <code>nil</code> then
-the behavior is defined in the option <code>ecb-clear-history-behavior</code>
-otherwise the value of <var>CLEARALL</var> overrides the value of this
-option:
-
-<ul>
-<li>&lt; 0: Means not-existing-buffers
-<li>&gt; 0: Means existing-buffers
-<li>= 0: Means all
-</ul>
-
-<p>For further explanation see <code>ecb-clear-history-behavior</code>. 
-</td></tr>
-</table>
-
-<p>
-<table width="100%">
-<tr>
-<td align="left"><b>ecb-add-all-buffers-to-history</b><i>
-</i></td>
-<td align="right">Command</td>
-</tr>
-</table>
-<table width="95%" align="center">
-<tr><td>
-Add all current file-buffers to the history-buffer of ECB. 
-</td></tr>
-</table>
-
-<p>
-<table width="100%">
-<tr>
 <td align="left"><b>ecb-show-help</b><i> &amp;optional format
 </i></td>
 <td align="right">Command</td>
@@ -1070,58 +1239,6 @@ possible!
 <p>
 <table width="100%">
 <tr>
-<td align="left"><b>ecb-goto-window-directories</b><i>
-</i></td>
-<td align="right">Command</td>
-</tr>
-</table>
-<table width="95%" align="center">
-<tr><td>
-</td></tr>
-</table>
-
-<p>
-<table width="100%">
-<tr>
-<td align="left"><b>ecb-goto-window-sources</b><i>
-</i></td>
-<td align="right">Command</td>
-</tr>
-</table>
-<table width="95%" align="center">
-<tr><td>
-</td></tr>
-</table>
-
-<p>
-<table width="100%">
-<tr>
-<td align="left"><b>ecb-goto-window-methods</b><i>
-</i></td>
-<td align="right">Command</td>
-</tr>
-</table>
-<table width="95%" align="center">
-<tr><td>
-</td></tr>
-</table>
-
-<p>
-<table width="100%">
-<tr>
-<td align="left"><b>ecb-goto-window-history</b><i>
-</i></td>
-<td align="right">Command</td>
-</tr>
-</table>
-<table width="95%" align="center">
-<tr><td>
-</td></tr>
-</table>
-
-<p>
-<table width="100%">
-<tr>
 <td align="left"><b>ecb-toggle-ecb-windows</b><i> &amp;optional arg
 </i></td>
 <td align="right">Command</td>
@@ -1133,23 +1250,6 @@ Toggle visibilty of the ECB-windows. With prefix argument <var>ARG</var>,
 make visible if positive, otherwise invisible. This has nothing to do
 with (de)activating ECB but only affects the visibility of the ECB
 windows. ECB minor mode remains active! 
-</td></tr>
-</table>
-
-<p>
-<table width="100%">
-<tr>
-<td align="left"><b>ecb-toggle-layout</b><i>
-</i></td>
-<td align="right">Command</td>
-</tr>
-</table>
-<table width="95%" align="center">
-<tr><td>
-Toggles between the layouts defined in <code>ecb-toggle-layout-sequence</code>. 
-Note: This function works by changing the options <code>ecb-layout-nr</code> and
-<code>ecb-show-sources-in-directories-buffer</code> but only for current
-Emacs-session. 
 </td></tr>
 </table>
 
@@ -1184,29 +1284,31 @@ takes first effect after restarting ECB!
 <p>
 <table width="100%">
 <tr>
-<td align="left"><b>ecb-cycle-through-compilation-buffers</b><i> &amp;optional choose-buffer
+<td align="left"><b>ecb-toggle-layout</b><i>
 </i></td>
 <td align="right">Command</td>
 </tr>
 </table>
 <table width="95%" align="center">
 <tr><td>
-Cycle through all compilation buffers currently open and display them
-within the compilation window <code>ecb-compile-window</code>. If the
-currently opened buffer within the compilation window is not a
-compilation buffer, we jump to the first compilation buffer. If not we
-try to loop through all compilation buffers. If we hit the end we go
-back to the beginning.
+Toggles between the layouts defined in <code>ecb-toggle-layout-sequence</code>. 
+Note: This function works by changing the options <code>ecb-layout-nr</code> and
+<code>ecb-show-sources-in-directories-buffer</code> but only for current
+Emacs-session. 
+</td></tr>
+</table>
 
-<p>If <var>CHOOSE-BUFFER</var> is not <code>nil</code> then the user will be
-prompted for the compilation-buffer to swtich to.
-
-<p>See also the option <code>ecb-layout-switch-to-compilation-window</code>! 
-The difference is that this cycling-function offers only
-compilation-buffers in the sense of <code>ecb-compilation-buffer-p</code>
-whereas the adviced version of <code>switch-to-buffer</code> offers any
-buffer but switches to <code>ecb-compile-window</code> if a
-compilation-buffer! 
+<p>
+<table width="100%">
+<tr>
+<td align="left"><b>ecb-update-directories-buffer</b><i>
+</i></td>
+<td align="right">Command</td>
+</tr>
+</table>
+<table width="95%" align="center">
+<tr><td>
+Updates the ECB directories buffer. 
 </td></tr>
 </table>
 
@@ -1225,59 +1327,6 @@ defined type. If not upgrade it to the new type or reset it to the
 default-value of current ECB. Try also to upgrade renamed options. 
 Displays all upgraded or reset options with their old (before the
 upgrade/reset) and new values. 
-</td></tr>
-</table>
-
-<p>
-<table width="100%">
-<tr>
-<td align="left"><b>ecb-display-upgraded-options</b><i>
-</i></td>
-<td align="right">Command</td>
-</tr>
-</table>
-<table width="95%" align="center">
-<tr><td>
-Display a message-buffer which options have been upgraded or reset. 
-</td></tr>
-</table>
-
-<p>
-<table width="100%">
-<tr>
-<td align="left"><b>ecb-download-ecb</b><i>
-</i></td>
-<td align="right">Command</td>
-</tr>
-</table>
-<table width="95%" align="center">
-<tr><td>
-Download ECB from the ECB-website and install it. For this the utilities
-"wget", "tar" and "gzip" are needed which are available for unix and
-also for windows with cygwin. All utilities must reside in your PATH!
-
-<p>If you are behind a firewall and you have to use a proxy you maybe
-need the following wget-configuration in your file <code>~/.wgetrc</code>:
-
-<br><pre># Define your proxies (where 8080 and 8081 are examples
-# for the portnumbers)
-http_proxy = http://your.proxy.com:8080
-ftp_proxy  = http://your.ftpproxy.com:8081
-
-# If you do not want to use proxy at all, set this to off.
-use_proxy = on
-</pre>
-
-<p>ECB will try to download the following url:
-"&lt;ecb-download-url&gt;ecb-&lt;ecb-download-version&gt;.tar.gz". For this the
-options <code>ecb-download-url</code> and <code>ecb-download-version</code> must be set
-correct, whereas the default value of the former one should always be
-correct.
-
-<p>After sucessfull downloading the new ECB will be installed in a
-directory parallel to current ECB-directory. After adding this new
-directory tp <code>load-path</code> and restarting Emacs the new ECB version can
-be activated by <code>ecb-activate</code>. 
 </td></tr>
 </table>
 
@@ -4036,6 +4085,9 @@ Up:<a rel=up accesskey=u href="#Top">Top</a>
 
 <h2>Tips and tricks</h2>
 
+<p>This chapter contains some tips and tricks how to deal best with some
+situations.
+
 <ul>
 <li><a accesskey=1 href="#Changing%20faces">Changing faces</a>:               Changing faces in the ECB tree-buffers
 <li><a accesskey=2 href="#Small%20screens">Small screens</a>:                Working with small screens
@@ -4347,7 +4399,10 @@ Up:<a rel=up accesskey=u href="#Top">Top</a>
 <li><code>ecb-deactivate</code>: <a href="#Interactive%20ECB%20commands">Interactive ECB commands</a>
 <li><code>ecb-display-upgraded-options</code>: <a href="#Interactive%20ECB%20commands">Interactive ECB commands</a>
 <li><code>ecb-download-ecb</code>: <a href="#Interactive%20ECB%20commands">Interactive ECB commands</a>
+<li><code>ecb-goto-window-compilation</code>: <a href="#Interactive%20ECB%20commands">Interactive ECB commands</a>
 <li><code>ecb-goto-window-directories</code>: <a href="#Interactive%20ECB%20commands">Interactive ECB commands</a>
+<li><code>ecb-goto-window-edit1</code>: <a href="#Interactive%20ECB%20commands">Interactive ECB commands</a>
+<li><code>ecb-goto-window-edit2</code>: <a href="#Interactive%20ECB%20commands">Interactive ECB commands</a>
 <li><code>ecb-goto-window-history</code>: <a href="#Interactive%20ECB%20commands">Interactive ECB commands</a>
 <li><code>ecb-goto-window-methods</code>: <a href="#Interactive%20ECB%20commands">Interactive ECB commands</a>
 <li><code>ecb-goto-window-sources</code>: <a href="#Interactive%20ECB%20commands">Interactive ECB commands</a>

@@ -28,12 +28,13 @@ EMACSINFOPATH=/C/Programme/emacs-21.1/info
 
 # Do not change anything below!
 
-# $Id: Makefile,v 1.30 2002/07/22 12:38:16 berndl Exp $
+# $Id: Makefile,v 1.31 2002/07/24 09:46:48 berndl Exp $
 
 RM=rm -f
 CP=cp
-MAKEINFO=makeinfo --no-split
-INSTALLINFO=install-info
+MAKEINFO=/usr/bin/makeinfo --no-split
+INSTALLINFO=/usr/bin/install-info
+TEXI2DVI=/D/Programme/Tools/tex/texmf/miktex/bin/texi2dvi
 
 ecb_LISP_EL=tree-buffer.el ecb-util.el ecb-mode-line.el ecb-help.el ecb-layout.el ecb-navigate.el ecb.el ecb-eshell.el ecb-cycle.el ecb-face.el ecb-compilation.el ecb-upgrade.el
 ecb_LISP_ELC=$(ecb_LISP_EL:.el=.elc)
@@ -41,7 +42,7 @@ ecb_TEXI=ecb.texi
 ecb_INFO=$(ecb_TEXI:.texi=.info)
 ecb_HTML=$(ecb_TEXI:.texi=.html)
 
-all: ecb help
+all: ecb
 
 ecb: $(ecb_LISP_EL)
 	@echo "Byte-compiling ECB with LOADPATH=${LOADPATH} ..."
@@ -61,6 +62,7 @@ ecb: $(ecb_LISP_EL)
 help: $(ecb_TEXI)
 	$(MAKEINFO) $<
 	$(MAKEINFO) --html $<
+	$(TEXI2DVI) --clean $<
 
 install-help: $(ecb_INFO)
 	$(CP) $< $(EMACSINFOPATH)
