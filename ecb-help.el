@@ -152,6 +152,17 @@ In the ECB-buffers RET and TAB work as primary \"buttons\" \(see above), means
 RET selects a directory or opens a source or jumps to a method and TAB toggles
 expanding/collapsing of an expandable node.
 
+Incremental search for a node in current tree-buffer. Each displayable key
+\(e.g. all keys normally bound to `self-insert-command') is appended to the
+current seach-pattern. The tree-buffer tries to jump to the first node which
+beginns with the current search-pattern. If no match is found then nothing is
+done. There are some special keys:
+- \[backspace] and \[delete]: Delete the last character from the search-pattern.
+- \[home]: Delete the complete search-pattern
+- \[end]: Expand to the greates common prefix of the nodes
+For better overlooking the current search-pattern is shown in the echo area.
+After selecting a node with RET the search-pattern is cleared out.
+
 For easy jumping to a certain ECB-buffer with the keyboard you should ensure
 that `ecb-other-window-jump-behavior' is set to 'all.
 
