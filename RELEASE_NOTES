@@ -18,6 +18,10 @@ No special notes beyond the contents of README.
 Upgrading from any version:
 ---------------------------
 
+The options `ecb-mode-line-data' and `ecb-mode-line-prefixes' have chenged
+their type. ECB will autom. upgrade the old values of these options as best as
+possible to the new types!
+
 The option `ecb-layout-switch-to-compilation-window' has been removed. This
 mimic is now done automatically.
 

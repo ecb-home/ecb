@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-mode-line.el,v 1.21 2003/07/31 16:02:08 berndl Exp $
+;; $Id: ecb-mode-line.el,v 1.22 2003/09/10 16:01:42 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -43,21 +43,42 @@
   (require 'silentcomp))
 
 (require 'ecb-util)
+(require 'cl)
 
 ;; XEmacs
 (silentcomp-defun redraw-modeline)
 ;; Emacs
 (silentcomp-defun force-mode-line-update)
 
-(defcustom ecb-mode-line-prefixes '(nil
-                                    nil
-                                    nil
-                                    "History")
-  "*Prefixes shown in the modelines of the standard ECB tree-buffers.
+
+(defcustom ecb-mode-line-prefixes '((ecb-directories-buffer-name . nil)
+                                    (ecb-sources-buffer-name . nil)
+                                    (ecb-methods-buffer-name . nil)
+                                    (ecb-history-buffer-name . "History"))
+  "*Prefixes shown in the modelines of the special ECB-buffers.
 The displayed prefix then looks like: \"[ <PREFIX>[: ]]\", means if a prefix
-is defined for an ECB tree-buffer then a single space is prepended and if
+is defined for an special ECB-buffer then a single space is prepended and if
 there is additional text to display \(e.g. the current directory in the
-sources buffer) then also the string \": \" is appended."
+sources buffer, see `ecb-mode-line-data') then also the string \": \" is
+appended.
+
+Everey element of this list is a cons-cell where the car is used to define a
+buffer-name and the cdr to define the modeline-prefix for that buffer.
+
+The buffer-name can either be defined as plain string or with a symbol which
+contains the buffer-name as value. The latter one is recommended to define a
+prefix for one of the builtin ECB-tree-buffers because then simply the related
+option-symbol can be used. To add a prefix for the builtin directories
+tree-buffer just set the symbol `ecb-directories-buffer-name' as car.
+
+The cdr is the prefix for a buffer and can either be a string which used as it
+is or a function-symbol which is called with three argument \(the buffer-name,
+the current selected directory and the current selected source-file) and must
+return either nil \(for no prefix) or a string which is then used a prefix.
+
+If a special ECB-buffer should not have a prefix in its modeline then this
+buffer-name should either not being added to this option or added with \"No
+prefix\" \(= nil as cdr)."
   :group 'ecb-general
   :set (function (lambda (symbol value)
                    (set symbol value)
@@ -65,152 +86,207 @@ sources buffer) then also the string \": \" is appended."
                             ecb-minor-mode)
                        (ecb-mode-line-format))))
   :initialize 'custom-initialize-default
-  :type '(list (radio :tag "Directory-buffer"
-                      (const :value "Directories")
-                      (const :tag "No prefix" :value nil)
-                      (string :tag "Custom prefix" :value ""))
-               (radio :tag "Sources-buffer"
-                      (const :value "Sources")
-                      (const :tag "No prefix" :value nil)
-                      (string :tag "Custom prefix" :value ""))
-               (radio :tag "Methods-buffer"
-                      (const :value "Methods")
-                      (const :tag "No prefix" :value nil)
-                      (string :tag "Custom prefix" :value ""))
-               (radio :tag "History-buffer"
-                      (const :value "History")
-                      (const :tag "No prefix" :value nil)
-                      (string :tag "Custom prefix" :value ""))))
-
-
-(defcustom ecb-mode-line-data '(selected selected selected nil)
-  "*Data shown in the modelines of the standard ECB tree-buffers.
-For every ECB-tree-buffer there are two predefined values:
-ECB-directories: 'selected \(current selected directory) and nil \(Nothing).
-ECB-sources: 'selected \(current selected directory) and nil \(Nothing).
-ECB-methods: 'selected \(current selected source) and nil \(Nothing).
-ECB-history: nil \(Nothing).
-
-In addition for every tree-buffer a function can be specified which gets three
-args \(name of the tree-buffer, current selected directory and current
-selected source-file) and must return a string which will be displayed in the
-modeline.
-
-The whole modeline of the tree-buffer consists of the prefix of
-`ecb-mode-line-prefixes' and the data of `ecb-mode-line-data'."
-  :group 'ecb-general
-  :set (function (lambda (symbol value)
-                   (set symbol value)
-                   (if (and (boundp 'ecb-minor-mode)
-                            ecb-minor-mode)
-                       (ecb-mode-line-format))))
-  :initialize 'custom-initialize-default
-  :type '(list (radio :tag "Directory-buffer"
-                      (const :tag "Current selected directory"
-                             :value selected)
-                      (const :tag "Nothing" :value nil)
-                      (function :tag "Custom function" :value ignore))
-               (radio :tag "Sources-buffer"
-                      (const :tag "Current selected directory"
-                             :value selected)
-                      (const :tag "Nothing" :value nil)
-                      (function :tag "Custom function" :value ignore))
-               (radio :tag "Methods-buffer"
-                      (const :tag "Current selected source"
-                             :value selected)
-                      (const :tag "Nothing" :value nil)
-                      (function :tag "Custom function" :value ignore))
-               (radio :tag "History-buffer"
-                      (const :tag "Nothing" :value nil)
-                      (function :tag "Custom function" :value ignore))))
+  :type '(repeat (cons :tag "Prefix-definition"
+                       (choice :tag "Buffer-name" :menu-tag "Buffer-name"
+                               (string :tag "Buffer-name as string")
+                               (symbol :tag "Symbol containing buffer-name"))
+                       (choice :tag "Prefix" :menu-tag "Prefix"
+                               (const :tag "No prefix" :value nil)
+                               (string :tag "Prefix-string")
+                               (function :tag "Compute prefix with")))))
   
 
-(defun ecb-mode-line-format ()
-  "Update all of the modelines of each buffer."
-  (save-excursion
-    ;; update the modeline for each visible(!!) ECB-buffer (some ECB-buffers
-    ;; are not visible in all layouts!)  
-    (ecb-mode-line-set ecb-directories-buffer-name
-                       (nth 0 ecb-mode-line-prefixes)
-                       (cond ((equal (nth 0 ecb-mode-line-data) 'selected)
-                              ecb-path-selected-directory)
-                             ((null (nth 0 ecb-mode-line-data))
-                              nil)
-                             ((functionp (nth 0 ecb-mode-line-data))
-                              (funcall (nth 0 ecb-mode-line-data)
-                                       ecb-directories-buffer-name
-                                       ecb-path-selected-directory
-                                       ecb-path-selected-source))))
-    (ecb-mode-line-set ecb-sources-buffer-name
-                       (nth 1 ecb-mode-line-prefixes)
-                       (cond ((equal (nth 1 ecb-mode-line-data) 'selected)
-                              ecb-path-selected-directory)
-                             ((null (nth 1 ecb-mode-line-data))
-                              nil)
-                             ((functionp (nth 1 ecb-mode-line-data))
-                              (funcall (nth 1 ecb-mode-line-data)
-                                       ecb-sources-buffer-name
-                                       ecb-path-selected-directory
-                                       ecb-path-selected-source))))
-    (ecb-mode-line-set ecb-methods-buffer-name
-                       (nth 2 ecb-mode-line-prefixes)
-                       (cond ((equal (nth 2 ecb-mode-line-data) 'selected)
-                              (when ecb-path-selected-source
-                                (file-name-nondirectory ecb-path-selected-source)))
-                             ((null (nth 2 ecb-mode-line-data))
-                              nil)
-                             ((functionp (nth 2 ecb-mode-line-data))
-                              (funcall (nth 2 ecb-mode-line-data)
-                                       ecb-methods-buffer-name
-                                       ecb-path-selected-directory
-                                       ecb-path-selected-source))))
-    (ecb-mode-line-set ecb-history-buffer-name
-                       (nth 3 ecb-mode-line-prefixes)
-                       (cond ((null (nth 3 ecb-mode-line-data))
-                              nil)
-                             ((functionp (nth 3 ecb-mode-line-data))
-                              (funcall (nth 3 ecb-mode-line-data)
-                                       ecb-history-buffer-name
-                                       ecb-path-selected-directory
-                                       ecb-path-selected-source))))))
-                       
 
-(defun ecb-mode-line-set (buffer-name prefix &optional text)
+(defcustom ecb-mode-line-display-window-number t
+  "*Display in the modeline of every special ECB-window the window-number.
+The left-top-most window in a frame has the window-number 0 and all other
+windows are numbered with increasing numbers in the sequence, functions like
+`other-window' or `next-window' would walk through the frame.
+
+This can be used to jump to windows by number with commands like:
+
+  \(defun my-switch-to-window-number \(number)
+    \"Switch to the nth window\"
+    \(interactive \"P\")
+    \(if \(integerp number)
+        \(select-window \(nth number \(window-list)))))
+
+Currently this feature is only available for GNU Emacs 21.X, because neither
+GNU Emacs < 21 nor XEmacs can evaluate dynamically forms in the mode-line."
+  :group 'ecb-general
+  :set (function (lambda (symbol value)
+                   (set symbol value)
+                   (if (and (boundp 'ecb-minor-mode)
+                            ecb-minor-mode)
+                       (ecb-mode-line-format))))
+  :initialize 'custom-initialize-default
+  :type 'boolean)
+
+
+  
+
+(defcustom ecb-mode-line-data '((ecb-directories-buffer-name . sel-dir)
+                                (ecb-sources-buffer-name . sel-dir)
+                                (ecb-methods-buffer-name . sel-source)
+                                (ecb-history-buffer-name . nil))
+  "*Data shown in the modelines of the special ECB-buffers.
+Everey element of this list is a cons-cell where the car is used to define a
+buffer-name and the cdr to define the modeline-data for that buffer. For
+details about how to defining a buffer-name see `ecb-mode-line-prefixes' - its
+completely the same.
+
+The cdr is the data for ths modeline and can either be the symbol 'sel-dir or
+'sel-source whereas the former one displays the current selected directory as
+modeline-data and the latter one the current selected source-file \(without
+path).
+
+In addition to these two predefined values for every special ECB-buffer a
+function can be specified which gets three args \(name of the buffer, current
+selected directory and current selected source-file) and must return a string
+which will be displayed in the modeline \(or nil if no data should be
+displayed).
+
+If a special ECB-buffer should not display special data in its modeline then
+this buffer-name should either not being added to this option or added with
+\"No data\" \(= nil as cdr).
+
+The whole modeline of the special ECB-buffer consists of the prefix of
+`ecb-mode-line-prefixes' and the data of `ecb-mode-line-data' - eventually
+prepended by the window-number, see `ecb-mode-line-display-window-number'."
+  :group 'ecb-general
+  :set (function (lambda (symbol value)
+                   (set symbol value)
+                   (if (and (boundp 'ecb-minor-mode)
+                            ecb-minor-mode)
+                       (ecb-mode-line-format))))
+  :initialize 'custom-initialize-default
+  :type '(repeat (cons :tag "Data-definition"
+                       (choice :tag "Buffer-name" :menu-tag "Buffer-name"
+                               (string :tag "Buffer-name as string")
+                               (symbol :tag "Symbol containing buffer-name"))
+                       (choice :tag "Modeline-data" :menu-tag "Modeline-data"
+                               (const :tag "No data" :value nil)
+                               (const :tag "Current selected directory"
+                                      :value sel-dir)
+                               (const :tag "Current selected source"
+                                      :value sel-source)
+                               (function :tag "Compute data with")))))
+
+
+(defun ecb-mode-line-format ()
+  "Update all of the modelines of each ecb buffer."
+  (save-excursion
+    ;; update the modeline for each visible(!!) ECB-buffer
+    (mapc (function
+           (lambda (buffer)
+             (let* ((prefix-elem (some (function
+                                        (lambda (p)
+                                          (cond ((stringp (car p))
+                                                 (if (string= (car p)
+                                                              (buffer-name buffer))
+                                                     (cdr p)
+                                                   nil))
+                                                ((and (symbolp (car p))
+                                                      (boundp (car p))
+                                                      (stringp (symbol-value (car p))))
+                                                 (if (string= (symbol-value (car p))
+                                                              (buffer-name buffer))
+                                                     (cdr p)
+                                                   nil))
+                                                (t (ecb-error "ecb-mode-line-format: Can not get prefix-elem: %s" p)))))
+                                       ecb-mode-line-prefixes))
+                    (prefix-str (cond ((null prefix-elem)
+                                       nil)
+                                      ((stringp prefix-elem)
+                                       prefix-elem)
+                                      ((functionp prefix-elem)
+                                       (funcall prefix-elem
+                                                (buffer-name buffer)
+                                                ecb-path-selected-directory
+                                                ecb-path-selected-source))))
+                    (data-elem (some (function
+                                      (lambda (p)
+                                        (cond ((stringp (car p))
+                                                    (if (string= (car p)
+                                                                 (buffer-name buffer))
+                                                        (cdr p)
+                                                      nil))
+                                              ((and (symbolp (car p))
+                                                    (boundp (car p))
+                                                    (stringp (symbol-value (car p))))
+                                               (if (string= (symbol-value (car p))
+                                                            (buffer-name buffer))
+                                                   (cdr p)
+                                                 nil))
+                                              (t (ecb-error "ecb-mode-line-format: Can not get data-elem: %s" p)))))
+                                     ecb-mode-line-data))
+                    (data-str (cond ((equal data-elem 'sel-dir)
+                                     ecb-path-selected-directory)
+                                    ((equal data-elem 'sel-source)
+                                     (and ecb-path-selected-source
+                                          (file-name-nondirectory ecb-path-selected-source)))
+                                    ((null data-elem)
+                                     nil)
+                                    ((functionp data-elem)
+                                     (funcall data-elem
+                                              (buffer-name buffer)
+                                              ecb-path-selected-directory
+                                              ecb-path-selected-source)))))
+               (ecb-mode-line-set (buffer-name buffer)
+                                  prefix-str
+                                  data-str))))
+          (ecb-get-current-visible-ecb-buffers))))
+
+
+(defun ecb-mode-line-set (buffer-name prefix &optional text no-win-nr)
   "Sets the mode line for a buffer. The mode line has the scheme:
-\"[PREFIX[: ]][TEXT]\"."
-  (when (get-buffer-window buffer-name)
+\"[WIN-NR ][PREFIX[: ]][TEXT]\". WIN-NR is the number of the window which
+displays BUFFER-NAME and is only displayed if the option
+`ecb-mode-line-display-window-number' is not nil and if NO-WIN-NR is nil. See
+this option for a description of the window-number. WIN-NR will be displayed
+as \"W-<number>\"."
+  (when (get-buffer-window buffer-name ecb-frame)
     (let ((shown-prefix (if (stringp prefix)
                             (concat " " prefix (if (stringp text) ": " ""))
                           (if (stringp text) " " ""))))
       (ecb-mode-line-update-buffer
        buffer-name
-       (concat shown-prefix
-               (if (stringp text)
-                   (ecb-mode-line-get-directory
-                    shown-prefix
-                    text
-                    (window-width (get-buffer-window buffer-name)))))))))
+       (list (if (and ecb-running-emacs-21
+                      ecb-mode-line-display-window-number
+                      (not no-win-nr))
+                 '(:eval (format " W-%d" (ecb-window-number)))
+               "")
+             (concat shown-prefix
+                     (if (stringp text)
+                         (ecb-mode-line-get-directory
+                          (+ (length shown-prefix)
+                             (if (and ecb-running-emacs-21
+                                      ecb-mode-line-display-window-number
+                                      (not no-win-nr))
+                                 4 0))
+                          text
+                          (window-width (get-buffer-window buffer-name))))))))))
 
-(defun ecb-mode-line-get-directory (prefix directory width)
-  "Given the prefix for the mode-line \(' ECB Sources: '), the directory to
-display, and the width of the window,  compute what directory name to display.
-This should trim the beginning of the directory so that the mode-line does not
-stretch past the screen."
+(defun ecb-mode-line-get-directory (prefix-length directory width)
+  "Given the prefix-length for the mode-line \(' ECB Sources: '), the
+directory to display, and the width of the window, compute what directory name
+to display. This should trim the beginning of the directory so that the
+mode-line does not stretch past the screen."
 
-  (if (< width (length prefix))
-      (ecb-error "Given prefix '%s' is longer than modeline, increase window width" prefix))
+  (if (< width prefix-length)
+      (ecb-error "Given prefix-length '%d' is longer than modeline, increase window width" prefix-length))
 
   ;;make modifications to directory so that the line is the correct length
   ;;remove the first characters of directory so that we have ... at the beginning.
-  (if (> (+ (length prefix)
+  (if (> (+ prefix-length
             (length directory))
          width)
 
       ;;basically we need to figure out what the ideal length of the
-      ;;directory string should be based on prefix and directory
+      ;;directory string should be based on prefix-length and directory
       (let ((len-dir (length directory))
             offset)
-        (setq offset (- (+ (length prefix) len-dir)
+        (setq offset (- (+ prefix-length len-dir)
                         width))
         ;; we want to prepend "..." to the shorten directory
         (setq offset (+ offset 3))

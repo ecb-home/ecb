@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-create-layout.el,v 1.24 2003/08/06 09:15:20 berndl Exp $
+;; $Id: ecb-create-layout.el,v 1.25 2003/09/10 16:01:42 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -448,7 +448,7 @@ DELETE-FRAME is not nil then the new created frame will be deleted and the
       ;; removing the new buffer type from the available-list
       (ecb-create-layout-remove-from-buf-type new-type)
       (ecb-mode-line-set (buffer-name (current-buffer))
-                         (concat "ECB " new-type))
+                         (concat "ECB " new-type) nil t)
       ;; setting the new buffer type in the buffer itself
       (ecb-create-layout-set-buffer-type new-type)
       (when (interactive-p)
@@ -654,7 +654,7 @@ never selects the edit-window."
   (setq mode-name "ECB Create-Layout")
   (use-local-map ecb-create-layout-mode-map)
   (make-variable-buffer-local 'buffer-read-only)
-  (ecb-mode-line-set (buffer-name (current-buffer)) "")
+  (ecb-mode-line-set (buffer-name (current-buffer)) "" nil t)
   (setq buffer-read-only t))
 
 (defun ecb-create-layout-init-layout (&optional new)
@@ -681,7 +681,7 @@ never selects the edit-window."
                 ecb-create-layout-help-text-top
               ecb-create-layout-help-text-left-right)))
   (setq ecb-create-layout-edit-window (selected-window))
-  (ecb-mode-line-set (buffer-name (current-buffer)) "   ECB edit-window")
+  (ecb-mode-line-set (buffer-name (current-buffer)) "   ECB edit-window" nil t)
   ;; The edit window must not be dedicated
   (set-window-dedicated-p (selected-window) nil)
   ;; we set the buffer for the (currently unsplitted) ECB-window

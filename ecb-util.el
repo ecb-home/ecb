@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-util.el,v 1.75 2003/09/09 15:37:00 berndl Exp $
+;; $Id: ecb-util.el,v 1.76 2003/09/10 16:01:42 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -154,6 +154,8 @@ means not to count the minibuffer even if it is active."
     (unwind-protect
         (save-window-excursion
           (select-frame frame)
+          ;; this is needed for correct start-point
+          (select-window window)
           (walk-windows
            (function (lambda (cur-window)
                        (if (not (eq window cur-window))
@@ -693,6 +695,16 @@ for FILE, but proper EOL-conversion and character interpretation is done!"
                     (set-window-dedicated-p w nil)))
         (ecb-window-list (or frame (selected-frame)))))
   
+
+(defun ecb-window-number (&optional window)
+  "Return the number of WINDOW or - if nil - of the current selected window.
+The left-top-most window of the ecb-frame has number 0. The other windows have
+the same ordering as `other-window' would walk through the frame."
+  (1- (length (memq (or window (selected-window))
+                      (nreverse (ecb-window-list
+                                 ecb-frame 0
+                                 (frame-first-window ecb-frame)))))))
+
 
 (silentcomp-provide 'ecb-util)
 

@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-upgrade.el,v 1.44 2003/09/05 07:27:34 berndl Exp $
+;; $Id: ecb-upgrade.el,v 1.45 2003/09/10 16:01:42 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -184,6 +184,10 @@
                                                  ecb-upgrade-alway-operate-in-edit-window))
     (ecb-truncate-lines . (ecb-truncate-lines
                            ecb-upgrade-truncate-lines))
+    (ecb-mode-line-prefixes . (ecb-mode-line-prefixes
+                               ecb-upgrade-mode-line-prefixes))
+    (ecb-mode-line-data . (ecb-mode-line-data
+                               ecb-upgrade-mode-line-data))
     (ecb-use-speedbar-for-directories . (ecb-use-speedbar-instead-native-tree-buffer
                                          ecb-upgrade-use-speedbar-for-directories)))
   "Alist of all options which should be upgraded for current ECB-version.
@@ -319,6 +323,32 @@ The car is the old option symbol and the cdr is a 2-element-list with:
   (let ((l (copy-tree old-val)))
     (setq l (delete 'switch-to-buffer-other-window l))
     l))
+
+(defun ecb-upgrade-mode-line-prefixes (old-val)
+  (list (cons 'ecb-directories-buffer-name
+              (nth 0 old-val))
+        (cons 'ecb-sources-buffer-name
+              (nth 1 old-val))
+        (cons 'ecb-methods-buffer-name
+              (nth 2 old-val))
+        (cons 'ecb-history-buffer-name
+              (nth 3 old-val))))
+
+(defun ecb-upgrade-mode-line-data (old-val)
+  (list (cons 'ecb-directories-buffer-name
+              (if (equal (nth 0 old-val) 'selected)
+                  'sel-dir
+                (nth 0 old-val)))
+        (cons 'ecb-sources-buffer-name
+              (if (equal (nth 1 old-val) 'selected)
+                  'sel-dir
+                (nth 1 old-val)))
+        (cons 'ecb-methods-buffer-name
+              (if (equal (nth 2 old-val) 'selected)
+                  'sel-source
+                (nth 2 old-val)))
+        (cons 'ecb-history-buffer-name
+              (nth 3 old-val))))
 
 ;; ----------------------------------------------------------------------
 ;; internal functions. Dot change anything below this line
