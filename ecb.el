@@ -940,7 +940,9 @@ For further explanation see `ecb-clear-history-behavior'."
   (cond ((eq ecb-show-node-name-in-minibuffer 'always)
          (message "%s" (tree-node-get-name node)))
         ((eq ecb-show-node-name-in-minibuffer 'if-too-long)
-         (if (>= (length (tree-node-get-name node)) (window-width))
+         (if (>= (+ (length (tree-node-get-name node))
+                    (tree-buffer-get-node-indent node))
+                 (window-width))
              (message "%s" (tree-node-get-name node))
            ;; we must delete here the old message so no wrong info is
            ;; displayed.
