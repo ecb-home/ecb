@@ -1142,8 +1142,9 @@ can change the location of the collapse- and expand-symbols and the
 indendation of sub-nodes in a tree. See @code{ecb-tree-indent} and
 @code{ecb-tree-expand-symbol-before}.
 
-Here are all currently available layouts (Just customize the option
-@code{ecb-layout-nr} to the related number):
+Here are all currently available layouts (for creating own new layouts
+see @ref{Creating a new ECB-layout}); just customize the option
+@code{ecb-layout-nr} to the related number:
 
 @table @asis
 @item Layout Nr. 0
@@ -1645,22 +1646,38 @@ done in << 1s!
 
 @cindex New layouts
 @cindex Creating new layouts
+
+@strong{For Emacs 20.X users:}
+
+Creating new layouts is only possible (but nevertheless quite easy) by
+programming them with emacs-lisp, see @ref{Programming new layouts}.
+
+@strong{For Emacs 21.X and XEmacs 21.X users:}
+
 If you want to create your own ECB-layout then you can do this very
 easy ``by example'' with the command @code{ecb-create-new-layout}.
 This command creates a new empty frame and offers a small set of keys
 to create the new layout by splitting windows.
 @code{ecb-create-new-layout} and this couple of keys are your guide
-during the layout-creation-process.
+during the layout-creation-process@footnote{During the creation
+process you will be asked in the minibuffer for several options; here
+you can use TAB-completion and an ``empty'' RET chooses always the
+first option!}.
 
 After calling @code{ecb-create-new-layout} you will be asked which
 type of layout you want to create: ``left'', ``right'', ``top''. Here
 you specify where the ECB-tree-windows/buffers should be located in
 the ECB-frame:
+
 @itemize @minus
 @item left: All ECB-tree-windows are located on the left side
 @item right: All ECB-tree-windows are located on the right side
 @item top: All ECB-tree-windows are located on the top side
 @end itemize
+
+Depending on the type you choose the window is splitted by the values
+of the options @code{ecb-windows-width} (types ``left'' and ``right'')
+or @code{ecb-windows-height} (type ``top'').
 
 Afterwards you will see a frame like follows (here the layout-type is
 ``left''):
@@ -1684,6 +1701,10 @@ Afterwards you will see a frame like follows (here the layout-type is
 |              |                                      |
 |              |                                      |
 -------------------------------------------------------
+               |
+               |   ,---
+               `---| Splitted by the value of @code{ecb-windows-width}.
+                   `---
 @end group
 @end example
 
@@ -4525,11 +4546,13 @@ For a detailed explanation of each macro read the documentation with
 @node Programming new layouts, , Adviced functions, Elisp programming
 @section How to program new layouts
 
-It's is strongly recommended to define new layouts interactively with
-the command @code{ecb-create-new-layout} (@pxref{Creating a new
-ECB-layout}). But if you want to program a new layout with elisp-code
-use the macro @code{ecb-layout-define} (the following definiton has
-stripped the prefix ``ecb-'' for better indexing this manual):
+At least for Emacs 21.X and XEmacs 21.X users it's is strongly
+recommended to define new layouts interactively with the command
+@code{ecb-create-new-layout} (@pxref{Creating a new ECB-layout}). But
+if you want (with Emacs 20.X you must) to program a new layout with
+elisp-code use the macro @code{ecb-layout-define} (the following
+definiton has stripped the prefix ``ecb-'' for better indexing this
+manual):
 
 @defmac layout-define number type &rest create-code
 Creates a new ECB-layout with number @var{NUMBER}. @var{TYPE} is the
@@ -4727,29 +4750,6 @@ size but splits the window equally. But if you add this to your
 @end group
 @end example
 
-@subsection Package follow-mouse.el
-
-@noindent
-The following is only relevant for Emacs 20.X!
-
-@cindex follow-mouse package
-ECB works very well with follow-mouse if follow-mouse is turned on
-@strong{BEFORE} ECB is activated (e.g. within the
-@code{ecb-activate-hook}). But if you activate follow-mouse first
-after ECB is already activated, then the follow-mouse stuff prevents
-the complete node-name to be displayed in the echo-area if mouse moves
-over it. Because ECB has a much more intelligent mouse tracking
-mechanism than follow-mouse the follow-mouse stuff profit from ECB and
-works even better and saver as without activated ECB!
-
-@subsection Package VC (Version Control)
-
-@cindex VC package
-@cindex Version control
-The variable @code{vc-delete-logbuf-window} must be set to nil during
-active ECB. This can be done with the hooks mentioned in @ref{Elisp
-programming}.
-
 @subsection Package cygwin-mount.el
 
 @cindex cygwin-mount package
@@ -4775,7 +4775,6 @@ first *AFTER* ECB is activated. This can be done with the hook
 
 @example
 @group
-
 (add-hook 'ecb-activate-hook
           (function (lambda ()
                       (require 'cygwin-mount)
@@ -4784,6 +4783,30 @@ first *AFTER* ECB is activated. This can be done with the hook
 
 @end group
 @end example
+
+@subsection Package follow-mouse.el
+
+@noindent
+The following is only relevant for Emacs 20.X!
+
+@cindex follow-mouse package
+ECB works very well with follow-mouse if follow-mouse is turned on
+@strong{BEFORE} ECB is activated (e.g. within the
+@code{ecb-activate-hook}). But if you activate follow-mouse first
+after ECB is already activated, then the follow-mouse stuff prevents
+the complete node-name to be displayed in the echo-area if mouse moves
+over it. Because ECB has a much more intelligent mouse tracking
+mechanism than follow-mouse the follow-mouse stuff profit from ECB and
+works even better and saver as without activated ECB!
+
+@subsection Package VC (Version Control)
+
+@cindex VC package
+@cindex Version control
+The variable @code{vc-delete-logbuf-window} must be set to nil during
+active ECB. This can be done with the hooks mentioned in @ref{Elisp
+programming}.
+
 
 @node Bugs, , Conflicts, Conflicts and bugs
 @section Known bugs
