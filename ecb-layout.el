@@ -160,9 +160,6 @@
 (silentcomp-defun fit-window-to-buffer)
 (silentcomp-defvar temp-buffer-resize-mode)
 
-;; needed for the `some'-function.
-(require 'cl)
-
 (defvar ecb-layouts-reload-needed t)
 (defun ecb-load-layouts ()
   "Load all defined layouts"
@@ -3463,11 +3460,11 @@ this function the edit-window is selected which was current before redrawing."
           ecb-compile-window
           (or (and compile-buffer-before-redraw
                    (ecb-compilation-buffer-p compile-buffer-before-redraw))
-              (some (function (lambda (buf)
-                                (and (not (string= "*Completions*"
-                                                   (buffer-name buf)))
-                                     (ecb-compilation-buffer-p buf))))
-                    (buffer-list ecb-frame))
+              (ecb-some (function (lambda (buf)
+                                    (and (not (string= "*Completions*"
+                                                       (buffer-name buf)))
+                                         (ecb-compilation-buffer-p buf))))
+                        (buffer-list ecb-frame))
               (get-buffer-create "*scratch*"))))
 
        (select-window ecb-edit-window)
@@ -3623,10 +3620,10 @@ frame sizes too. But if FIX is not nil \(means called with a prefix argument)
 then the fixed values of current width and height are stored!"
   (interactive "P")
   (when (equal (selected-frame) ecb-frame)
-    (let ((a (ecb-find-assoc ecb-layout-window-sizes ecb-layout-name)))
+    (let ((a (ecb-find-assoc ecb-layout-name ecb-layout-window-sizes)))
       (unless a
 	(setq a (cons ecb-layout-name nil))
-	(setq ecb-layout-window-sizes (ecb-add-assoc ecb-layout-window-sizes a)))
+	(setq ecb-layout-window-sizes (ecb-add-assoc a ecb-layout-window-sizes)))
       (setcdr a (ecb-get-window-sizes fix))
       (customize-save-variable 'ecb-layout-window-sizes ecb-layout-window-sizes))))
 
@@ -3635,15 +3632,15 @@ then the fixed values of current width and height are stored!"
   "Sets the sizes of the ECB windows to their stored values."
   (interactive)
   (when (equal (selected-frame) ecb-frame)
-    (ecb-set-window-sizes (ecb-find-assoc-value ecb-layout-window-sizes
-						ecb-layout-name))))
+    (ecb-set-window-sizes (ecb-find-assoc-value ecb-layout-name
+                                                ecb-layout-window-sizes))))
 
 (defun ecb-restore-default-window-sizes ()
   "Resets the sizes of the ECB windows to their default values."
   (interactive)
   (when (equal (selected-frame) ecb-frame)
     (setq ecb-layout-window-sizes
-	  (ecb-remove-assoc ecb-layout-window-sizes ecb-layout-name))
+	  (ecb-remove-assoc ecb-layout-name ecb-layout-window-sizes))
     (customize-save-variable 'ecb-layout-window-sizes ecb-layout-window-sizes)))
 
 ;; Now per default returns fractions of the ecb-frame; thanks to Geert Ribbers

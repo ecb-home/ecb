@@ -873,7 +873,7 @@ little more place. This layout works best if it is contained in
   (select-window (next-window)))
 
 
-(defconst ecb-buildin-layouts (copy-list ecb-available-layouts)
+(defconst ecb-buildin-layouts (ecb-copy-list ecb-available-layouts)
   "All layouts defined until now.")
 
 (silentcomp-provide 'ecb-layout-defs)
