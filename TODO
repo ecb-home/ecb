@@ -15,3 +15,5 @@
    intelligent tree-buffer recentering.
 
 - Ignore source files specified in .cvsignore files. (JN)
+
+- Add a grep-find command to the directory popup menu. (JN)
