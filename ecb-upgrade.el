@@ -654,7 +654,7 @@ always true."
               (princ "from the CEDET-website then the new versions will NOT be installed as\n")
               (princ "regular XEmacs-package(s) but as \"flat\" package(s) parallel to the current\n")
               (princ "ECB directory!\n\n")))
-          (if (not (yes-or-no-p (format "ECB requires %s. Download now? "
+          (if (not (ecb-confirm (format "ECB requires %s. Download now? "
                                         version-error)))
               (ecb-error "ECB can only be used with %s! Sorry!"
                          version-error)
@@ -1043,7 +1043,7 @@ proceed with downloading. Return not nil if proceeding."
                    package
                    " is NOT installed as regular XEmacs-\n"))
     (princ "package but as \"flat\" package into `ecb-download-package-version-type'!\n\n"))
-  (yes-or-no-p (concat "Do you want to proceed installing from the "
+  (ecb-confirm (concat "Do you want to proceed installing from the "
                        package
                        "-website? ")))
 
@@ -1125,7 +1125,7 @@ activated."
     (if (not (or (not (file-directory-p (concat download-install-dir
                                                 package "-"
                                                 version)))
-                 (yes-or-no-p
+                 (ecb-confirm
                   (format "%s %s seems to be already installed in directory %s! Force? "
                           package version
                           (concat package "-" version)))))
