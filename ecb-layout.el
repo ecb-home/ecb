@@ -122,7 +122,7 @@
 ;;   + The edit-window must not be splitted and the point must reside in
 ;;     the not deleted edit-window.
 
-;; $Id: ecb-layout.el,v 1.55 2001/05/28 22:00:11 berndl Exp $
+;; $Id: ecb-layout.el,v 1.56 2001/05/30 19:48:47 berndl Exp $
 
 ;;; Code:
 
@@ -1217,10 +1217,11 @@ this function the edit-window is selected."
       ;; tree-windows of current layout were visible before redraw).
       (when pos-before-redraw
         (goto-char pos-before-redraw)
-        (setq ecb-last-source-buffer (current-buffer))
-        (if (not (equal tree-windows-before-redraw
-                        (ecb-layout-get-current-tree-windows)))
-            (ecb-current-buffer-sync t))))))
+        (setq ecb-last-source-buffer (current-buffer)))
+      
+      (if (not (equal tree-windows-before-redraw
+                      (ecb-layout-get-current-tree-windows)))
+          (ecb-current-buffer-sync t)))))
 
 
 (defun ecb-store-window-sizes ()
