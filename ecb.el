@@ -54,7 +54,7 @@
 ;; The latest version of the ECB is available at
 ;; http://home.swipnet.se/mayhem/ecb.html
 
-;; $Id: ecb.el,v 1.142 2001/08/08 20:15:54 creator Exp $
+;; $Id: ecb.el,v 1.143 2001/08/10 21:09:30 creator Exp $
 
 ;;; Code:
 
@@ -142,14 +142,20 @@ by \(keyboard-escape-quit)."
   :type 'boolean)
 
 (defcustom ecb-source-path nil
-  "*Path where to find code sources."
+  "*Paths where to find code sources. Each path can have an optional alias that
+is used as it's display name. If no alias is set, the path is used as display
+name."
   :group 'ecb-directories
-  :set (function (lambda(symbol value)
+  :set (function (lambda (symbol value)
 		   (set symbol value)
 		   (if (and ecb-minor-mode
 			    (functionp 'ecb-update-directories-buffer))
 		       (ecb-update-directories-buffer))))
-  :type '(repeat (directory :tag "Path")))
+  :type '(repeat (choice :tag "Display type"
+			 (directory :tag "Path")
+			 (list :tag "Path with alias"
+			       (directory :tag "Path")
+			       (string :tag "Alias")))))
 
 (defvar ecb-source-path-functions nil
   "List of functions to call for finding sources. Each time the function
@@ -286,6 +292,14 @@ then activating ECB again!"
                        :value existing-buffers)
                 (const :tag "All entries"
                        :value all)))
+                
+(defcustom ecb-history-item-name 'buffer-name
+  "*The name to use for items in the history buffer."
+  :group 'ecb-history
+  :type '(radio (const :tag "Buffer name"
+                       :value buffer-name)
+                (const :tag "File name"
+                       :value file-name)))
                 
 (defcustom ecb-methods-buffer-name "*ECB Methods*"
   "*Name of the ECB methods buffer. Because it is not a normal buffer for
@@ -456,6 +470,13 @@ method. If not nil then it must be a face."
   :type '(radio (const :tag "No highlighting of token header" :value nil)
                 (face :tag "Face for the highligthing"
                       :value secondary-selection)))
+
+(defcustom ecb-scroll-window-after-jump nil
+  "*How to scroll the window when jumping to a token."
+  :group 'ecb-methods
+  :type '(radio (const :tag "Scroll so that the token is at the top of the window" :value top)
+		(const :tag "Scroll so that the token is at the center of the window" :value center)
+		(const :tag "Normal scrolling" :value nil)))
 
 (defcustom ecb-tree-indent 2
   "*Indent size for tree buffer. If you change this during ECB is activated
@@ -833,7 +854,7 @@ cleared!) ECB by running `ecb-deactivate'."
       (erase-buffer)
       (ecb-dump-tokens tokens ""))))
 
-(defun ecb-dump-type (tok)
+(defun ecb-dump-type (tok prefix)
   (dolist (parent (ecb-get-token-parents tok))
     (insert (concat prefix "  " parent))))
 
@@ -851,7 +872,7 @@ cleared!) ECB by running `ecb-deactivate'."
 		"<unknown type>")
 	      "\n")
       (if (eq 'type (semantic-token-token tok))
-	  (ecb-dump-type tok))
+	  (ecb-dump-type tok prefix))
       (ecb-dump-tokens (semantic-nonterminal-children tok t)
 		       (concat prefix "  ")))))
 
@@ -1015,8 +1036,15 @@ given."
      (tree-node-remove-child-data (tree-buffer-get-root) ecb-path-selected-source)
      (tree-node-add-child-first
       (tree-buffer-get-root)
-      (tree-node-new (ecb-get-source-name ecb-path-selected-source) 0
-		     ecb-path-selected-source t))
+      (tree-node-new
+       (if (eq ecb-history-item-name 'buffer-name)
+	   (let ((b (get-file-buffer ecb-path-selected-source)))
+	     (if b
+		 (buffer-name b)
+	       (ecb-get-source-name ecb-path-selected-source)))
+	 (ecb-get-source-name ecb-path-selected-source))
+       0
+       ecb-path-selected-source t))
      (when ecb-sort-history-items
        (tree-node-sort-children
 	(tree-buffer-get-root)
@@ -1351,13 +1379,16 @@ OTHER-EDIT-WINDOW."
        (setq tree-buffer-indent ecb-tree-indent)
        (let* ((node (tree-buffer-get-root))
               (old-children (tree-node-get-children node))
-              (paths (append (ecb-get-source-paths-from-functions) ecb-source-path)))
+              (paths (append (ecb-get-source-paths-from-functions)
+			     ecb-source-path)))
          (tree-node-set-children node nil)
 	 (dolist (dir paths)
-	   (let ((norm-dir (ecb-fix-filename dir t)))
+	   (let* ((path (if (listp dir) (car dir) dir))
+		  (norm-dir (ecb-fix-filename path t))
+		  (name (if (listp dir) (cadr dir) norm-dir)))
 	     (tree-node-add-child
 	      node
-	      (ecb-new-child old-children norm-dir 2 norm-dir nil
+	      (ecb-new-child old-children name 2 norm-dir nil
 			     (if ecb-truncate-long-names 'beginning)))))
 	 (when (not paths)
 	   (tree-node-add-child node (tree-node-new "Welcome to ECB! Please select:"
@@ -1387,9 +1418,11 @@ OTHER-EDIT-WINDOW."
       (tree-node-set-shorten-name node shorten-name)
       node)))
 
-(defun ecb-add-source-path (&optional dir)
-  (interactive "DAdd source path: ")
-  (setq ecb-source-path (append ecb-source-path (list dir)))
+(defun ecb-add-source-path (&optional dir alias)
+  (interactive "DAdd source path: \nsAlias (empty string = no alias): ")
+  (setq ecb-source-path (append ecb-source-path
+				(list (if (and alias (> (length alias) 0))
+					  (list dir alias) dir))))
   (ecb-update-directories-buffer)
   (customize-save-variable 'ecb-source-path ecb-source-path))
 
@@ -1596,16 +1629,25 @@ Currently the fourth argument TREE-BUFFER-NAME is not used here."
 	  (if ecb-token-jump-sets-mark
 	      (push-mark))
 	  ;; Semantic 1.4beta2 fix for EIEIO class parts
-	  (ignore-errors
-	  (goto-char (semantic-token-start token)))
+;;	  (ignore-errors
+	  (goto-char (semantic-token-start token))
+	  (cond
+	   ((eq 'top ecb-scroll-window-after-jump)
+	    (set-window-start (selected-window) (semantic-token-start token)))
+	   ((eq 'center ecb-scroll-window-after-jump)
+	    (set-window-start
+	     (selected-window)
+	     (save-excursion
+	       (forward-line (- (/ (window-height) 2)))
+	       (point)))))
 	  (when ecb-highlight-token-header-after-jump
-	  (save-excursion
-	    (move-overlay ecb-method-overlay
-			  (tree-buffer-line-beginning-pos)
-			  (tree-buffer-line-end-pos)
-			  (current-buffer)))
-	  (setq ecb-unhighlight-hook-called nil)
-	  (add-hook 'pre-command-hook 'ecb-unhighlight-token-header)))))))
+	    (save-excursion
+	      (move-overlay ecb-method-overlay
+			    (tree-buffer-line-beginning-pos)
+			    (tree-buffer-line-end-pos)
+			    (current-buffer)))
+	    (setq ecb-unhighlight-hook-called nil)
+	    (add-hook 'pre-command-hook 'ecb-unhighlight-token-header)))))))
 
 (defun ecb-get-file-info-text (file)
   (let ((attrs (file-attributes file)))

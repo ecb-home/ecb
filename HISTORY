@@ -1,6 +1,19 @@
 Version 1.42:
 -------------
 
+- Added a new layout (nr. 12). Thanks to Nick Cross
+  <nick.cross@prismtechnologies.com> for this layout.
+
+- Each source path can now have an alias that is displayed instead of the path
+  name in the directories buffer. (Jesper)
+
+- The history items can now use the buffer name instead of the file
+  name. Customizable with ecb-history-item-name. (Jesper)
+
+- When jumping to a token the window can be scrolled so that the token starts 
+  at the top or center of the window. This behaviour is customizable with
+  the variable ecb-scroll-window-after-jump. (Jesper)
+
 - Fixed a bug when retrieving parent names for a token. (Jesper)
 
 + Now the option 'ecb-prefix-key' is customizable so you can define another
