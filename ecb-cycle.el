@@ -60,7 +60,7 @@
 ;;; Code:
 
 (eval-when-compile
-  (require 'ecb-bytecomp))
+  (require 'silentcomp))
 
 (require 'ecb-compilation)
 (require 'ecb-layout)
@@ -131,6 +131,6 @@ offers any buffer but switches to `ecb-compile-window' if a compilation-buffer!"
                (1+ index) (length compilation-buffers) buffer-name)
       (switch-to-buffer buffer-name))))
 
-(ecb-provide 'ecb-cycle)
+(silentcomp-provide 'ecb-cycle)
 
 ;;; ecb-cycle.el ends here

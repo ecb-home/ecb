@@ -31,19 +31,19 @@
 ;;; Code:
 
 (eval-when-compile
-  (require 'ecb-bytecomp))
+  (require 'silentcomp))
 
 
 ;; JDE
-(ecb-bytecomp-defun jde-gen-class-buffer)
+(silentcomp-defun jde-gen-class-buffer)
 ;; XEmacs
-(ecb-bytecomp-defun mswindows-cygwin-to-win32-path)
-(ecb-bytecomp-defun frame-property)
-(ecb-bytecomp-defun point-at-bol)
-(ecb-bytecomp-defun point-at-eol)
-(ecb-bytecomp-defun frame-parameter)
-(ecb-bytecomp-defun line-beginning-position)
-(ecb-bytecomp-defun line-end-position)
+(silentcomp-defun mswindows-cygwin-to-win32-path)
+(silentcomp-defun frame-property)
+(silentcomp-defun point-at-bol)
+(silentcomp-defun point-at-eol)
+(silentcomp-defun frame-parameter)
+(silentcomp-defun line-beginning-position)
+(silentcomp-defun line-end-position)
   
 ;; Some constants
 (defconst ecb-running-xemacs (string-match "XEmacs\\|Lucid" emacs-version))
@@ -274,7 +274,7 @@ should stopped but no debugging is senseful."
      (error ,@args)))
 
 
-(ecb-provide 'ecb-util)
+(silentcomp-provide 'ecb-util)
 
 ;;; ecb-util.el ends here
 

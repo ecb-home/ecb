@@ -117,14 +117,14 @@
 ;;; Code:
 
 (eval-when-compile
-  (require 'ecb-bytecomp))
+  (require 'silentcomp))
 
 (require 'ecb)
 (require 'speedbar)
 
-(ecb-bytecomp-defvar speedbar-attached-frame)
-(ecb-bytecomp-defvar dframe-attached-frame)
-(ecb-bytecomp-defvar speedbar-select-frame-method)
+(silentcomp-defvar speedbar-attached-frame)
+(silentcomp-defvar dframe-attached-frame)
+(silentcomp-defvar speedbar-select-frame-method)
 
 (defvar ecb-speedbar-buffer-name " SPEEDBAR" "Name of the ECB speedbar buffer.")
 
@@ -249,6 +249,6 @@ that this is a reimplemntation of this for the ECB that does no frame selection"
 ;;always stay in the current frame
 (setq speedbar-select-frame-method 0)
 
-(ecb-provide 'ecb-speedbar)
+(silentcomp-provide 'ecb-speedbar)
 
 ;;; ecb-speedbar.el ends here

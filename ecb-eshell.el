@@ -114,15 +114,15 @@
 ;;; Code:
 
 (eval-when-compile
-  (require 'ecb-bytecomp))
+  (require 'silentcomp))
 
 (require 'ecb-util)
 
-(ecb-bytecomp-defvar eshell-buffer-name)
-(ecb-bytecomp-defun eshell)
-(ecb-bytecomp-defun eshell/cd)
-(ecb-bytecomp-defun eshell-send-input)
-(ecb-bytecomp-defun eshell-bol)
+(silentcomp-defvar eshell-buffer-name)
+(silentcomp-defun eshell)
+(silentcomp-defun eshell/cd)
+(silentcomp-defun eshell-send-input)
+(silentcomp-defun eshell-bol)
 
 (defgroup ecb-eshell nil
   "Settings for eshell integration within the ECB."
@@ -375,6 +375,6 @@ to because the command didn't output much text, go ahead and shrink it again."
 
 (add-hook 'window-size-change-functions 'ecb-eshell-window-size-change)
 
-(ecb-provide 'ecb-eshell)
+(silentcomp-provide 'ecb-eshell)
 
 ;;; ecb-eshell.el ends here

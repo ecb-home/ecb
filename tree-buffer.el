@@ -31,7 +31,7 @@
 ;;; Code:
 
 (eval-when-compile
-  (require 'ecb-bytecomp))
+  (require 'silentcomp))
 
 (eval-when-compile
   ;; to avoid compiler grips
@@ -44,20 +44,20 @@
        (> emacs-major-version 20)))
 
 ;; XEmacs stuff
-(ecb-bytecomp-defun button-release-event-p)
-(ecb-bytecomp-defun button-press-event-p)
-(ecb-bytecomp-defun event-key)
-(ecb-bytecomp-defun display-message)
-(ecb-bytecomp-defun clear-message)
+(silentcomp-defun button-release-event-p)
+(silentcomp-defun button-press-event-p)
+(silentcomp-defun event-key)
+(silentcomp-defun display-message)
+(silentcomp-defun clear-message)
 ;; Emacs
-(ecb-bytecomp-defvar message-log-max)
-(ecb-bytecomp-defvar message-truncate-lines)
-(ecb-bytecomp-defvar track-mouse)
-(ecb-bytecomp-defvar special-event-map)
-(ecb-bytecomp-defun posn-window)
-(ecb-bytecomp-defun event-start)
-(ecb-bytecomp-defun posn-point)
-(ecb-bytecomp-defun event-basic-type)
+(silentcomp-defvar message-log-max)
+(silentcomp-defvar message-truncate-lines)
+(silentcomp-defvar track-mouse)
+(silentcomp-defvar special-event-map)
+(silentcomp-defun posn-window)
+(silentcomp-defun event-start)
+(silentcomp-defun posn-point)
+(silentcomp-defun event-basic-type)
 
 
 (if tree-buffer-running-xemacs
@@ -1330,6 +1330,6 @@ child."
 (defun tree-node-get-shorten-name (node)
   (aref node tree-node-shorten-name))
 
-(ecb-provide 'tree-buffer)
+(silentcomp-provide 'tree-buffer)
 
 ;;; tree-buffer.el ends here

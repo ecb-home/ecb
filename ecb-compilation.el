@@ -34,7 +34,7 @@
 ;;; Code:
 
 (eval-when-compile
-  (require 'ecb-bytecomp))
+  (require 'silentcomp))
 
 (defgroup ecb-compilation nil
   "Settings for all things displayed in the compile window of ECB."
@@ -106,6 +106,6 @@ This function non-nil if the name of BUFFER is either contained in
               (member major-mode ecb-compilation-major-modes))
             (compilation-buffer-p buf)))))
 
-(ecb-provide 'ecb-compilation)
+(silentcomp-provide 'ecb-compilation)
 
 ;;; ecb-compilation.el ends here

@@ -29,7 +29,7 @@
 ;;; Code:
 
 (eval-when-compile
-  (require 'ecb-bytecomp))
+  (require 'silentcomp))
 
 (require 'eieio)
 
@@ -266,6 +266,6 @@
     (setq ecb-nav-current-node node)
     (ecb-nav-goto (ecb-get-data node))))
 
-(ecb-provide 'ecb-navigate)
+(silentcomp-provide 'ecb-navigate)
 
 ;;; ecb-navigate.el ends here

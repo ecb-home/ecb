@@ -28,7 +28,7 @@
 ;; $Id$
 
 (eval-when-compile
-  (require 'ecb-bytecomp))
+  (require 'silentcomp))
 
 (defcustom ecb-mode-line-prefixes '(nil
                                     nil
@@ -136,7 +136,7 @@ stretch past the screen."
         (force-mode-line-update))
     (message "This buffer isn't available: %s"  buffer-name)))
 
-(ecb-provide 'ecb-mode-line)
+(silentcomp-provide 'ecb-mode-line)
 
 ;;; ecb-mode-line.el end here
 

@@ -46,7 +46,7 @@
 ;;   correctly.
 
 (eval-when-compile
-  (require 'ecb-bytecomp))
+  (require 'silentcomp))
 
 (require 'ecb-compilation)
 
@@ -89,6 +89,6 @@
 
     (setq mode-line-format modeline-tab)))
 
-(ecb-provide 'ecb-buffertab)
+(silentcomp-provide 'ecb-buffertab)
 
 ;;; ecb-buffertab.el ends here

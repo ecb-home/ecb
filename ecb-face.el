@@ -26,7 +26,7 @@
 ;; ECB.
 
 (eval-when-compile
-  (require 'ecb-bytecomp))
+  (require 'silentcomp))
 
 (defgroup ecb-face-options nil
   "Settings for all faces used in ECB."
@@ -378,6 +378,6 @@ attributes set by 'ecb-default-general-face' this set of basic attributes have
 to be set in 'ecb-bucket-token-face' too!"
 :group 'ecb-faces)
 
-(ecb-provide 'ecb-face)
+(silentcomp-provide 'ecb-face)
 
 ;;; ecb-face.el ends here
