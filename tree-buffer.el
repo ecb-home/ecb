@@ -26,7 +26,7 @@
 ;; This file is part of the ECB package which can be found at:
 ;; http://home.swipnet.se/mayhem/ecb.html
 
-;; $Id: tree-buffer.el,v 1.33 2001/05/03 19:58:08 berndl Exp $
+;; $Id: tree-buffer.el,v 1.34 2001/05/03 20:07:16 creator Exp $
 
 ;;; Code:
 
@@ -229,23 +229,26 @@ NODE must be valid and already be visible in WINDOW!"
         (delete-overlay tree-buffer-highlight-overlay))))
   (setq tree-buffer-highlighted-node-data nil))
 
-(defun tree-buffer-highlight-node-data(node-data)
-  (when node-data
-    (let ((node (tree-buffer-find-node-data node-data))
-          (w (get-buffer-window (current-buffer))))
+(defun tree-buffer-highlight-node-data(node-data &optional dont-make-visible)
+  (if node-data
+    (let* ((node (tree-buffer-find-node-data node-data))
+	   (w (get-buffer-window (current-buffer)))
+	   (ws (window-start w)))
       (when node
-        (tree-buffer-remove-highlight)
-        (setq tree-buffer-highlighted-node-data node-data)        
-        (move-overlay tree-buffer-highlight-overlay
-                      (tree-buffer-get-node-name-start-point node)
-                      (tree-buffer-get-node-name-end-point node))
-        (if (not (pos-visible-in-window-p
-                  (tree-buffer-get-node-name-start-point node) w))
-            ;; make node visible
-            (recenter))
-        ;; maybe we must optimize the recentering
-        (tree-buffer-recenter node w)
-        ))))
+;;        (tree-buffer-remove-highlight)
+        (setq tree-buffer-highlighted-node-data node-data)
+	(save-excursion
+	  (move-overlay tree-buffer-highlight-overlay
+			(tree-buffer-get-node-name-start-point node)
+			(tree-buffer-get-node-name-end-point node)))
+	(when (not dont-make-visible)
+	  (if (not (pos-visible-in-window-p
+		    (tree-buffer-get-node-name-start-point node) w))
+	      ;; make node visible
+	      (recenter w))
+	  ;; maybe we must optimize the recentering
+	  (tree-buffer-recenter node w))))
+    (tree-buffer-remove-highlight)))
   
 (defun tree-buffer-insert-text(text &optional facer)
   "Insert TEXT at point and faces it with FACER. FACER can be a face then the
