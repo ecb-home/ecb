@@ -176,7 +176,8 @@
 
 ;; Each NEWS-string should be a one-liner shorter than 70 chars
 (defconst ecb-upgrade-news
-  '(("2.20" . ("New keybinding for the online-help: [C-c . h]"
+  '(("2.20" . ("Fixed a bug preventing tree-buffers with expand-symbol \'before\' to work"
+               "New keybinding for the online-help: [C-c . h]"
                "The edit-area can be splitted in more than 2 windows."
                "`ecb-other-window-jump-behavior' renamed in `ecb-other-window-behavior'"
                "New option `ecb-maximize-ecb-window-after-selection'"

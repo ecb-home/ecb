@@ -185,6 +185,8 @@
       
 ** Fixed Bugs
 
+*** Fixed a bug preventing tree-buffers with expand-symbol "before" to work
+
 *** Fixed a bug in the adviced version of `other-window'.
     Now it works correctly also when a durable compile-window is set but
     currently hidden.
