@@ -26,7 +26,7 @@
 ;; This file is part of the ECB package which can be found at:
 ;; http://home.swipnet.se/mayhem/ecb.html
 
-;; $Id: tree-buffer.el,v 1.102 2003/01/27 10:39:39 berndl Exp $
+;; $Id: tree-buffer.el,v 1.103 2003/01/29 14:34:33 berndl Exp $
 
 ;;; Code:
 
@@ -440,17 +440,25 @@ START-NODE is nil or equal to the root-node then all nodes of current
 tree-buffer are searched from beginning until the node with data NODE-DATA has
 been found otherwise the search starts with START-NODE. If DONT-MAKE-VISIBLE
 is true then no tree-buffer recentering has been done to make this node
-visible."
+visible.
+
+If either NODE-DATA is nil or if the node belonging to NODE-DATA can not be
+found because it is invisible \(probably because its parent-node is not
+expanded) then no highlighting takes place but the existing highlighting is
+removed and nil is returned. Otherwise the node is highlighted and not nil is
+returned."
   (if node-data
       (let* ((name-node (tree-buffer-find-name-node-data node-data start-node))
 	     (name (car name-node))
 	     (node (cdr name-node))
 	     (w (get-buffer-window (current-buffer))))
         (if (null node)
-            ;; node can not be found because maybe the node is a subnode and
-            ;; it´s parent is not expanded --> then there is no node for
-            ;; NODE-DATA; therefore we must remove the highlighting
-            (tree-buffer-remove-highlight)
+            (progn
+              ;; node can not be found because maybe the node is a subnode and
+              ;; it´s parent is not expanded --> then there is no node for
+              ;; NODE-DATA; therefore we must remove the highlighting
+              (tree-buffer-remove-highlight)
+              nil)
           (setq tree-buffer-highlighted-node-data node-data)
           (save-excursion
             (move-overlay tree-buffer-highlight-overlay
@@ -459,8 +467,11 @@ visible."
           (when (not dont-make-visible)
             ;; make node visible if not and optimize the windows display for
             ;; the node.
-            (tree-buffer-recenter node w))))
-    (tree-buffer-remove-highlight)))
+            (tree-buffer-recenter node w))
+          ;; we have highlighted the node wo we return not nil.
+          t))
+    (tree-buffer-remove-highlight)
+    nil))
 
 (defun tree-buffer-help-echo-fn (win obj pos)
   "This function is the value of the `help-echo' property of each
