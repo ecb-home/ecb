@@ -31,6 +31,7 @@ echo (add-to-list 'load-path nil) > ecb-compile-script-init
 REM !!! Check these lines and change it if necessary (see comments above) !!!
 echo (add-to-list 'load-path "../semantic") >> ecb-compile-script-init
 echo (add-to-list 'load-path "../eieio") >> ecb-compile-script-init
+echo (add-to-list 'load-path "../jde/lisp") >> ecb-compile-script-init
 
 echo (setq debug-on-error t) >> ecb-compile-script-init
 %EMACS% -batch -no-site-file -l ecb-compile-script-init -f batch-byte-compile *.el
