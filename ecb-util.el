@@ -26,7 +26,7 @@
 ;; This file is part of the ECB package which can be found at:
 ;; http://ecb.sourceforge.net
 
-;; $Id: ecb-util.el,v 1.51 2003/02/02 07:00:59 berndl Exp $
+;; $Id: ecb-util.el,v 1.52 2003/02/06 09:36:25 berndl Exp $
 
 ;;; Code:
 
@@ -498,6 +498,34 @@ should stopped but no debugging is senseful."
   `(let ((debug-on-error nil))
      (error (concat "ECB " ecb-version ": "
                     (format ,@args)))))
+
+;; trimming
+
+(defun ecb-excessive-trim (str)
+  "Return a string where all double-and-more whitespaces in STR are replaced
+with a single space-character."
+  (let ((s str))
+    (while (string-match "[ \t][ \t]+" s)
+      (setq s (concat (substring s 0 (match-beginning 0))
+                      " "
+                      (substring s (match-end 0)))))
+    s))
+
+(defun ecb-left-trim (str)
+  "Return a string stripped of all leading whitespaces of STR."
+  (or (car (split-string str "^[\n\t ]*")) ""))
+    
+(defun ecb-right-trim (str)
+  "Return a string stripped of all trailing whitespaces of STR."
+  (or (car (split-string str "[\n\t ]*$")) ""))
+
+(defun ecb-trim (str)
+  "Applies `ecb-right-trim' and `ecb-left-trim' to STR."
+  (ecb-left-trim (ecb-right-trim str)))
+
+(defun ecb-full-trim (str)
+  "Applies `ecb-trim' and `ecb-middle-trim' to STR."
+  (ecb-excessive-trim (ecb-trim str)))
 
 
 (silentcomp-provide 'ecb-util)
