@@ -1,3 +1,17 @@
+* Changes for ECB version 1.95.2
+
+** Fixed Bugs
+
+*** Jumping to some token for Perl sources failed. This is fixed now.
+
+*** Now the buffer-names displayed in the History-window are always uptodate,
+    even if file-buffers are killed/opened during hidden ECB-windows.
+
+*** Fixed a lot of misspellings in the ECB-online-help and also in all comments
+    and strings of the sources.
+
+
+
 * Changes for ECB version 1.95.1
 
 ** Now the ecb-windows can be "maximized", means all other ecb-windows are
@@ -9,13 +23,22 @@
    history, speedbar}. There is also a command
    `ecb-cycle-maximized-ecb-buffers'.
 
-** All popup-menus of the ECB-tree-buffers can be openend via [Meta-m]
+   *Note*: If there are byte-compiled(!) user-defined layouts - either created
+   interactively by `ecb-create-new-layout' or programmed with the macro
+   `ecb-layout-define' - then the file where these user-defined layouts are
+   saved (see option `ecb-create-layout-file') must be re-byte-compiled with
+   latest ECB version >= 1.95.1! If the user-defined layouts are not
+   byte-compiled then there is nothing to do.
+
+** Some default key-bindings have changed; see RELEASE_NOTES for details.
+
+** All popup-menus of the ECB-tree-buffers can be opened via [Meta-m]
 
 ** Fixed bugs
 
-*** Clicking onto the image-icons of an integrated speedbar failed for XEmacs.
-    This comes from a bug in speedbar which is now fixed locally in ECB by
-    advicing `dframe-mouse-set-point' if speedbar is integrated in the
+*** Clicking onto the image-icons of an integrated speedbar has failed for
+    XEmacs. This comes from a bug in speedbar which is now fixed locally in
+    ECB by advicing `dframe-mouse-set-point' if speedbar is integrated in the
     ECB-frame.
 
 
@@ -27,18 +50,18 @@
    `ecb-tree-use-image-icons'.
 
 ** Adding hideshow to the popup-menu of the Methods-buffer.
-   This popup-menu now offers two entries for hiding resp. showing the block
-   of that token in the Methods-buffer for which the popup-menu was openend.
+   This popup-menu now offers two entries for hiding rsp. showing the block
+   of that token in the Methods-buffer for which the popup-menu was opened.
    This is done with the hideshow.el library.
    Thanks to Christoff Pale <christoff_pale@yahoo.com> for suggestion.
 
 ** Horizontal scrolling of the tree-buffers by clicking the edges of the
    modeline with mouse-1 or mouse-2. I.e. if you click with mouse-1 onto the
-   left (resp right) egde of the modeline you will scroll left (resp. right)
+   left (rsp right) edge of the modeline you will scroll left (rsp. right)
    with the scroll-step defined in `ecb-tree-easy-hor-scroll'. This is only
    for GNU Emacs because XEmacs has hor. scrollbars.
    
-** Changed default keybindings:
+** Changed default key-bindings:
    - C-c . r:  `ecb-rebuild-methods-buffer'
    - C-c . lc: `ecb-change-layout'
    - C-c . lr: `ecb-redraw-layout'
@@ -149,7 +172,7 @@
 
 ** Enhancements to the tree-buffers:
    
-*** Now user-extensions can be added to the popup-menues of the tree-buffers.
+*** Now user-extensions can be added to the popup-menus of the tree-buffers.
     See new options `ecb-directories-menu-user-extension',
     `ecb-sources-menu-user-extension', `ecb-methods-menu-user-extension',
     `ecb-history-menu-user-extension'.
@@ -214,13 +237,13 @@
      
 *** The command `ecb-store-window-sizes' can now also store fixed sizes.
     If called with a prefix arg then fixed sizes are stored instead of
-    fractions of frame-width resp. -height.
+    fractions of frame-width rsp. -height.
 
 *** The command `split-window' is now also adviced to work properly.
 
 ** Enhancements for the tree-buffers
 
-*** "Create Source" in the popup-menues now work also for non-java-files.
+*** "Create Source" in the popup-menus now work also for non-java-files.
 
 *** ecb-truncate-lines can now be set different for each ECB-tree-buffer.
 
@@ -230,7 +253,7 @@
 ** Added a command `ecb-jde-display-class-at-point' which displays the contents
    of the java-class under point in the methods-buffer of ECB.
 
-** Renamed previous HISTORY file to NEWS and reformate it for outline-mode.
+** Renamed previous HISTORY file to NEWS and reformated it for outline-mode.
 
 
 
@@ -247,7 +270,7 @@
 *** Fixes a bug in upgrading stored window-sizes from ECB 1.80 to ECB >= 1.90.
     Fixes also two bugs in `ecb-store-window-sizes' if default-values are used in
     `ecb-layout-window-sizes' or if ecb-windows have frame-height as height
-    (resp. frame-width as width) . (Klaus)
+    (rsp. frame-width as width) . (Klaus)
 
 *** Fixed a bug in the navigation-history of ECB which sometimes has prevented
     that a user can open files from the sources/history buffer or clicking onto
@@ -279,7 +302,7 @@
    
 *** Fixed an annoying bug which results in an error "Wrong type argument:
     integer-or-marker-p nil)" after a full buffer reparse. ECB 1.80 has repaired
-    its internal state but nevertheless the user had to reclick on the same
+    its internal state but nevertheless the user had to re-click on the same
     token after this error to really jump to a token. With ECB 1.90 this bug has
     been gone (Klaus).
 
@@ -325,7 +348,7 @@
 
 *** Silencing the byte-compiler, i.e. byte-compilation of ECB should now be
     warning free. If byte-compilation still throws warnings during
-    byte-compilation with 'ecb-byte-compile' (resp. using the Makefile or
+    byte-compilation with 'ecb-byte-compile' (rsp. using the Makefile or
     make.bat) please send this to our mailing list. (Klaus)
 
 ** Enhancements to the methods/variable/token tree-buffer:
@@ -333,7 +356,7 @@
 *** New feature: Now the methods buffer is auto. expanded if the node related to
     the current token in the edit-window is not visible (probably because its
     parent is collapsed). See new options `ecb-auto-expand-token-tree' and
-    `ecb-expand-methods-switch-off-auto-expand' and the new comand
+    `ecb-expand-methods-switch-off-auto-expand' and the new command
     `ecb-toggle-auto-expand-token-tree' (Klaus).
   
 *** New command `ecb-expand-methods-nodes' which allows precisely expanding
@@ -373,7 +396,7 @@
 
 **** Therefore the name of the option 'ecb-layout-nr' has changed to
      'ecb-layout-name'! See the docstring of 'ecb-layout-name' for the names
-     of all buildin layouts.
+     of all built-in layouts.
 
 **** In this context also the type of ecb-show-sources-in-directories-buffer has
      changed so it is now a list of layout-names where the sources should be
@@ -385,7 +408,7 @@
      - ecb-delete-new-layout: Delete an user-created (by 'ecb-create-new-layout')
        layout.
      - ecb-show-layout-help: Displays the docstring of a layout which at least
-       for buildin layouts contains a picture of the outline of this layout.
+       for built-in layouts contains a picture of the outline of this layout.
      All three commands offer TAB-completion for easy selecting a layout name.
 
 **** ECB autom. upgrades the following options to theirs new names/types:
@@ -404,7 +427,7 @@
     be located at the left and the right side of the ECB-frame. See the new
     layouts "leftright1", "leftright2" and "leftright3" for examples. Other
     layouts of this type can be created or programmed very easy with
-    'ecb-create-newlayout' resp. the macro 'ecb-layout-define'. (Klaus)
+    'ecb-create-newlayout' rsp. the macro 'ecb-layout-define'. (Klaus)
 
 *** Now ECB offers a command `ecb-create-new-layout' for interactively creating
     new layouts "by example". Read the online-help. (Klaus)
@@ -412,7 +435,7 @@
 *** Rewritten the mechanism for storing customized window-sizes. See option
     ecb-layout-window-sizes and the command ecb-store-window-sizes and
     ecb-restore-window-sizes. Now the sizes are always saved as fractions of
-    the width (resp. height) of the ECB-frame, so the stored sizes are always
+    the width (rsp. height) of the ECB-frame, so the stored sizes are always
     correct regardless of the current frame-size (Klaus). Suggested and first
     implementation by Geert Ribbers [geert.ribbers@realworld.nl]
 
@@ -512,7 +535,7 @@
     + ecb-methods-buffer-after-create-hook
     + ecb-history-buffer-after-create-hook
     These hooks are called directly after tree-buffer creation so they can be
-    used for example to add personal local keybindings either to all
+    used for example to add personal local key-bindings either to all
     tree-buffers (ecb-common-tree-buffer-after-create-hook) or just to a certain
     tree-buffer. Please read the documentation. (Klaus)
 
@@ -529,7 +552,7 @@
 
 ** Fixed bugs:
    
-*** Fixed: Now no empty tooltips are displayed if mouse moves over nodes in the
+*** Fixed: Now no empty tool-tips are displayed if mouse moves over nodes in the
     tree-buffers of ECB which can be displayed completely in the tree-window.
     (Klaus)
 
@@ -570,7 +593,7 @@
    That is because F1 is such an important key in many OS and tools (e.g. opens
    help in all windows-programs), so ECB should not hardly "rebind" it. (Klaus)
 
-** Enhancing the option 'ecb-window-sync': Now the synchronisation can take
+** Enhancing the option 'ecb-window-sync': Now the synchronization can take
    place for all buffers which have a relation to files AND directories, i.e.
    now also for dired-buffers. But per default this is switched off, see the
    doc-string. (Klaus)
@@ -581,7 +604,7 @@
 
 ** New feature and command: ecb-download-ecb. With this function you can
    download and install any arbitrary ECB-version from the ECB-website from
-   within Emacs. This is especially usefull for upgrading to the latest
+   within Emacs. This is especially useful for upgrading to the latest
    version. (Klaus)
 
 ** New debug mode for ECB which prints some debug informations in the message
@@ -589,7 +612,7 @@
    New option 'ecb-debug-mode' (also available in the Help-menu of ECB).
    (Klaus)
 
-** Some default keybindings have changed; see `ecb-key-map'. (Klaus)
+** Some default key-bindings have changed; see `ecb-key-map'. (Klaus)
 
 ** New feature: Possibility to define a sequence of layouts with new option
    `ecb-toggle-layout-sequence' and toggle very fast between them via
@@ -627,7 +650,7 @@
    + The function tree-buffer-create has a new argument NODE-DATA-EQUAL-FN. See
      the doc-string for a description (Klaus).
    + For each tree-buffer a special user-data-storage (for any arbitrary data)
-     is ceated which can be accessed via `tree-buffer-set-data-store' and
+     is created which can be accessed via `tree-buffer-set-data-store' and
      `tree-buffer-get-data-store'. See the docstring of `tree-buffer-create'.
      (Klaus)
 
@@ -637,7 +660,7 @@
 
 ** New option ecb-bucket-token-display. See doc-string for details. (Klaus)
 
-** Reorganisation of the faces used by ECB. The group 'ecb-face-options'
+** Reorganization of the faces used by ECB. The group 'ecb-face-options'
    contains now all options which type is 'face (i.e. the defcustom's) and the
    group 'ecb-faces' contains all face-definition (the defface's). In addition
    it is now possible to change easily and fast the general face for ALL
@@ -654,7 +677,7 @@
    current ECB-release. This is done during activation. If there are
    incompatible options ECB resets them to the default value of current ECB
    release and displays after activation in a temporary window which options
-   have been reset, inkl. their old-value (before the reset) and new-value
+   have been reset, incl. their old-value (before the reset) and new-value
    (after the reset). (Klaus)
 
 ** New feature ecb-tree-navigation-by-arrow: Smarter navigation in the
@@ -700,7 +723,7 @@
        buffers.
   
 ** Much better performance of the directory and file-browser in ECB, especially
-   for directories with a lot of entries (means ~ >1000, dependend on your
+   for directories with a lot of entries (means ~ >1000, dependent on your
    machine and the net-connection in case of network-drives). See also the new
    feature: ecb-cache-directory-contents. (Klaus)
 
@@ -733,8 +756,8 @@
 ** ecb-highlight-token-header-after-jump is now a boolean; which face is used
    for highlighting is defined in ecb-token-header-face. (Klaus)
 
-** New option 'ecb-post-process-semantic-tokenlist': Special postprocessing of
-   the semantic tokenlist for certain major-modes. This is usefull for
+** New option 'ecb-post-process-semantic-tokenlist': Special post-processing of
+   the semantic tokenlist for certain major-modes. This is useful for
    c++-mode. Now with the default value of this option all methods in a
    c++-implementation-file (no class/method-declaration but only method
    implementations) are grouped with respect to the class they belong. (Klaus)
@@ -742,14 +765,14 @@
 ** Now also with C++ Sources the method- and variable-protection is displayed
    correct in the ECB-method buffer (Klaus).
 
-** Fixed a bug which prevented ECB using the root path "/" on unix-like systems
+** Fixed a bug which prevented ECB using the root path "/" on Unix-like systems
    as a source-path. (Klaus)
 
-** If a file via the standard-mechanisms of Emacs (e.g. find-file) is openend,
-   then the auto. window synch (see `ecb-window-sync') has worked only correct
+** If a file via the standard-mechanisms of Emacs (e.g. find-file) is opened,
+   then the auto. window sync (see `ecb-window-sync') has worked only correct
    if the new file is located in any of the paths in `ecb-source-path'. Now ECB
    adds the path of the new file at least temporally via `ecb-add-source-path'
-   to the list of paths in `ecb-source-path', so the window-synch works always
+   to the list of paths in `ecb-source-path', so the window-sync works always
    correct. ECB asks the user if the new path should saved also for future
    sessions. (Klaus)
 
@@ -787,7 +810,7 @@
 
 ** If mouse is moved over an history-entry then the full path is shown in the
    echo-area so you can distinct better between two entries with the same name
-   but with differnt pathes; see also 'ecb-show-node-info-in-minibuffer'
+   but with different paths; see also 'ecb-show-node-info-in-minibuffer'
    (Klaus).
 
 ** New option for the history: ecb-kill-buffer-clears-history defines if
@@ -815,9 +838,9 @@
 ** Incremental node-search in the ECB-buffers now uses the value of
    `case-fold-search'. (Klaus)
 
-** Complete new customization of the ECB-keybindings. The option
+** Complete new customization of the ECB-key-bindings. The option
    `ecb-prefix-key' has been removed. There is one new option `ecb-key-map'
-   where you can customize all keysettings of ECB (including a common
+   where you can customize all key-settings of ECB (including a common
    prefixkey). (Klaus)
 
 ** ecb-add-source-path and ecb-delete-source-path now ask if saving should be
@@ -852,7 +875,7 @@
    name. Customizable with ecb-history-item-name. (Jesper)
 
 ** When jumping to a token the window can be scrolled so that the token starts 
-   at the top or center of the window. This behaviour is customizable with
+   at the top or center of the window. This behavior is customizable with
    the variable ecb-scroll-window-after-jump. (Jesper)
 
 ** Fixed a bug when retrieving parent names for a token. (Jesper)
@@ -873,9 +896,9 @@
 ** Tree-incremental-search in the ecb-windows now ignores all non interesting
    stuff:
    + any leading spaces
-   + expand/collapse-buttons: [+] resp. [-]
+   + expand/collapse-buttons: [+] rsp. [-]
    + protection-signs (+, -, #) in the method-window if uml-notation is used
-   + variables types or returntypes in front of variable- or method-names.
+   + variables types or return-types in front of variable- or method-names.
    + const specifier for variables
    This makes incremental-searching in a tree-buffer much faster and easier.
    (Klaus)
@@ -937,7 +960,7 @@
    hide all ECB windows without deactivating ECB (see 'ecb-toggle-ecb-windows')
    (Klaus).
 
-** ECB is now a global minor mode with itÅ¥s own menu "ECB" and itÅ¥s own keymap
+** ECB is now a global minor mode with itÅ¥s own menu "ECB" and itÅ¥s own key-map
    with prefix "C-c .". New function to (de)activate/toggle ECB with
    'ecb-minor-mode'. (Klaus)
 
@@ -1002,7 +1025,7 @@
 ** Added a section "Tips and Tricks" to the ECB online-help. (Klaus)
 
 ** Added a new layout Nr. 10 for very small screen resolutions where all
-   squarecentimeters are needed for the editing itself. This layout only
+   square-centimeters are needed for the editing itself. This layout only
    displays a method-window and a edit-window. (Klaus).
 
 ** The messages displayed after moving the mouse over a node in a tree-buffer
@@ -1073,8 +1096,8 @@
 
 ** Now the ECB-buffers are intelligent in displaying nodes (Klaus):
    + Expandable nodes: (e.g. a directory with itÅ¥s subdirectories). An
-     ECB-tree-window now tries always to make visisble as much as possible of
-     the subnodes of a node if a node is expanded (e.g. by clicking onto itÅ¥s
+     ECB-tree-window now tries always to make visible as much as possible of
+     the sub-nodes of a node if a node is expanded (e.g. by clicking onto itÅ¥s
      expand-symbol).
    + Other nodes: A ECB-tree-window is always best filled, means no empty lines
      if there are enough lines to fill the whole window.
@@ -1111,7 +1134,7 @@
 
 ** Now all tree-buffers (ECB-buffers) are read-only (Klaus)!
 
-** Better implementation of advising the functions. Now all adviceable
+** Better implementation of advising the functions. Now all advice-able
    functions are completely independent from each other (Klaus)!
 
 ** Removes the redundant modeline info and shows important
@@ -1119,7 +1142,7 @@
 
 ** Added new option `ecb-advice-window-functions'. Enabling the intelligent
    window functions via customize. No hook hacking necessary anymore!
-   Now the intelligent window functions are implemented by advicing (klaus).
+   Now the intelligent window functions are implemented by advicing (Klaus).
 
 ** Better online help display (Klaus).
 
@@ -1127,7 +1150,7 @@
    for suggestion <David.Hay@requisite.com>.
 
 ** Adviced 'other-window' acts now exactly like the original but always related
-   to 'ecb-other-window-jump-behavior' (klaus)!
+   to 'ecb-other-window-jump-behavior' (Klaus)!
 
 ** Fixed bug with 'ecb-compile-window-height'. Now ECB has always the correct
    compile-window height after compilation-output (compile, grep etc.)

@@ -64,7 +64,7 @@
   "Name of the auto-generated autoloads file.")
 
 (defconst ecb-autoload-feature "ecb-autoloads"
-  "Featurename of the autoloads")
+  "Feature-name of the autoloads")
 
 (defvar ecb-autogen-subdirs nil
   "Sub-directories to scan for autoloads.")

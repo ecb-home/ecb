@@ -209,7 +209,7 @@ stretch past the screen."
                         width))
         ;; we want to prepend "..." to the shorten directory
         (setq offset (+ offset 3))
-        ;; at least we must shorten directory from left by (runover + ...)
+        ;; at least we must shorten directory from left by (run-over + ...)
         ;; characters. If this is not possible we show no directory.
         (if (>= offset len-dir)
             (setq directory "")

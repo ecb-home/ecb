@@ -21,10 +21,11 @@ Upgrading from any version:
 If there are byte-compiled(!) user-defined layouts - either created
 interactively by `ecb-create-new-layout' or programmed with the macro
 `ecb-layout-define' - then the file where these user-defined layouts are saved
-must be re-byte-compiled with latest ECB version >= 1.95.1! If the use-defined
-layouts are not byte-compiled then there is nothing to do.
+(see option `ecb-create-layout-file') must be re-byte-compiled with latest ECB
+version >= 1.95.1! If the user-defined layouts are not byte-compiled then
+there is nothing to do.
 
-Some default keybindings have changed; the new bindings are:
+Some default key-bindings have changed; the new bindings are:
 
   C-c . g1: `ecb-goto-window-edit1'       (was C-c . 1)
   C-c . g2: `ecb-goto-window-edit2'       (was C-c . 2)
@@ -39,7 +40,7 @@ Some default keybindings have changed; the new bindings are:
 Upgrading from version < 1.95:
 ------------------------------
 
-Some default keybindings have changed; the new bindings are:
+Some default key-bindings have changed; the new bindings are:
 
   C-c . r:  `ecb-rebuild-methods-buffer' (was not bound before)
   C-c . lc: `ecb-change-layout'          (was C-c . l)
@@ -113,14 +114,14 @@ Upgrading from versions < 1.52:
 + ECB now requires eieio >= 0.16 (see also README)
 
 + The option ecb-prefix-key has been removed. Now all customization of
-  keybindings is done via the new option ecb-key-map.
+  key-bindings is done via the new option ecb-key-map.
 
 + ecb-layout-window-sizes is now an association list. If you have customized
   this variable or used the ecb-store-window-sizes function, there will be an
   error when drawing the ECB layout. Reset ecb-layout-window-sizes to it's
   default value (nil) and store your window sizes using ecb-store-window-sizes.
 
-+ A new customization variable ecb-show-tokens controls the behaviour of the
++ A new customization variable ecb-show-tokens controls the behavior of the
   methods buffer. Read the documentation for more information.
 
   
@@ -128,7 +129,7 @@ Upgrading from versions < 1.20:
 -------------------------------
 
 + Now mouse-1 and mouse-2 for opening source-files and jumping to
-  methods/variables is not longer the default keybinding. Please take a look
+  methods/variables is not longer the default key-binding. Please take a look
   at the new options 'ecb-primary-secondary-mouse-buttons' and
   'ecb-primary-mouse-jump-destination'.
 

@@ -115,7 +115,7 @@ after clicking onto a filename in the speedbar."
   ;; Klaus Berndl <klaus.berndl@sdm.de>: We must use an around-advice because
   ;; we need exactly the information if the *clicked* item is a file or not.
   ;; This is only available before the original speedbar-click actions because
-  ;; speedbar seems to do some inteligent stuff like autom. using the first
+  ;; speedbar seems to do some intelligent stuff like autom. using the first
   ;; file if a clicked directory contains any.
   (let ((item (and (fboundp 'speedbar-line-file)
                    (speedbar-line-file))))
@@ -194,7 +194,7 @@ the point was not set by `mouse-set-point'."
 (defvar ecb-speedbar-select-frame-method-old nil)
 
 (defun ecb-speedbar-activate()
-  "Make sure the speedbar is running. WARNING: This could be dependend on the
+  "Make sure the speedbar is running. WARNING: This could be dependent on the
 current speedbar implementation but normally it should work with recent
 speedbar versions >= 0.14beta1. But be aware: If the speedbar impl changes in
 future this could break."

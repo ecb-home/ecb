@@ -83,7 +83,7 @@ compilation buffer. If not we try to loop through all compilation buffers. If
 we hit the end we go back to the beginning.
 
 If CHOOSE-BUFFER is not nil then the user will be prompted for the
-compilation-buffer to swtich to.
+compilation-buffer to switch to.
 
 Afterwards always the compile-window of ECB is selected.
 
@@ -112,7 +112,7 @@ offers any buffer but switches to `ecb-compile-window' if a compilation-buffer!"
            (ecb-error "No compilation buffers available."))
 
          (if (not (ecb-compilation-buffer-p current-buffer))
-             ;;if the current bufffer is not a compilation buffer, goto the first
+             ;;if the current buffer is not a compilation buffer, goto the first
              ;;compilation buffer.
 
              (ecb-cycle-set-compilation-buffer 0 compilation-buffers)

@@ -128,8 +128,8 @@
 ;; Klaus Berndl <klaus.berndl@sdm.de>: Changed this class from storing the
 ;; whole token to storing explicitly the token-buffer, the marker of the
 ;; token-start, the marker of the token-end. This prevents the stored
-;; navigation-items from getting invalid und unuseable after a full
-;; semantic-reparse because such a reparse makes the overlays containd in the
+;; navigation-items from getting invalid and unusable after a full
+;; semantic-reparse because such a reparse makes the overlays contained in the
 ;; stored tokens invalid so we can not uses their informations.
 (defclass ecb-nav-token-history-item (ecb-nav-history-item)
   ((token-buffer :initarg :token-buffer :initform nil); :protection :private)

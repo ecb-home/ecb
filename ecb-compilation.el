@@ -192,7 +192,7 @@ compilation-buffer - if:
 - one of the predicates returned by `ecb-compilation-predicates' returns not
   nil for the buffer.
 
-Summary for ECB-endusers: A buffer will be treated as compilation-buffer if
+Summary for ECB-end-users: A buffer will be treated as compilation-buffer if
 either 
 - `compilation-buffer-p' returns not nil, i.e. if a real compilation-buffer or
 - if at least one of the options `ecb-compilation-buffer-names',
