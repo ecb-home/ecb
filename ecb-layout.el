@@ -124,7 +124,7 @@
 ;;   + The edit-window must not be splitted and the point must reside in
 ;;     the not deleted edit-window.
 
-;; $Id: ecb-layout.el,v 1.110 2002/06/09 08:40:47 berndl Exp $
+;; $Id: ecb-layout.el,v 1.111 2002/07/13 17:11:26 burtonator Exp $
 
 ;;; Code:
 
@@ -443,20 +443,20 @@ rebind it to the original function in the `ecb-deactivate-hook'."
     delete-other-windows
     switch-to-buffer
     switch-to-buffer-other-window)
-  "*Adviced window functions work always in the edit-window.
+  "*Advised window functions work always in the edit-window.
 If we are in an ECB special buffer (methods, directories, etc), and any of the
-adviced windowing functions is called \(see `ecb-advice-window-functions'), we
+advised windowing functions is called \(see `ecb-advice-window-functions'), we
 will select the `ecb-edit-window' first. This is useful if you have any
 functions that use such functions and you don't want them to just error with a
 method complaining that the current buffer can not be split, or something
 similar.
 
-Because this may not be desirable in all situations and all adviced functions
-this can be enabled separately for every advicable function \(see also
-`ecb-advice-window-functions'). If the symbol of an adviced function is
+Because this may not be desirable in all situations and all advised functions
+this can be enabled separately for every advisable function \(see also
+`ecb-advice-window-functions'). If the symbol of an advised function is
 contained in the value of this option, then the edit-window is first selected
 otherwise either an error is reported or some other special reaction; see the
-documentation of the adviced functions for this.
+documentation of the advised functions for this.
 
 For `other-window' and `other-window-for-scrolling' this makes no sense,
 therefore you can not enable this for both of them.
@@ -476,6 +476,37 @@ Per default this is enabled for `delete-window', `delete-other-windows',
                      :value switch-to-buffer)
               (const :tag "switch-to-buffer-other-window"
                      :value switch-to-buffer-other-window)))
+
+(defcustom ecb-layout-switch-to-compilation-window
+  '(switch-to-buffer)
+  "*Advised window functions work always in the `ecb-compile-window' If we are
+in an compilation buffer as defined with `ecb-compilation-buffer-p', and any of
+the advised windowing functions is called \(see `ecb-advice-window-functions'),
+we will select the `ecb-compile-window' first. This is useful if you always want
+your compilation buffers within the compilation window and now within the edit
+window.
+
+Because this may not be desirable in all situations and all advised functions
+this can be enabled separately for every advisable function \(see also
+`ecb-advice-window-functions'). If the symbol of an advised function is
+contained in the value of this option, then the edit-window is first selected
+otherwise either an error is reported or some other special reaction; see the
+documentation of the advised functions for this.
+
+Per default this is enabled for `switch-to-buffer'.  We provide the option for
+`switch-to-buffer-other-window' but the assumption is that when a user asks for
+a buffer in another window it should always be presented in another window."
+  :group 'ecb-layout
+  :type '(set (const :tag "switch-to-buffer"
+                     :value switch-to-buffer)
+              (const :tag "switch-to-buffer-other-window"
+                     :value switch-to-buffer-other-window)))
+
+(defcustom ecb-layout-switch-to-compilation-window-auto-enlarge nil
+  "*When we automatically switch to a compilation buffer, automatically enlarge
+the buffer to 1/2 the frame height."
+  :group 'ecb-layout
+  :type 'boolean)
 
 (defconst ecb-number-of-layouts 13)
 (defcustom ecb-layout-window-sizes nil
@@ -1184,7 +1215,14 @@ split it."
                        ecb-layout-always-operate-in-edit-window)
                (not (ecb-point-in-edit-window)))
       (ecb-select-edit-window))
-    
+
+    (when (and (member 'switch-to-buffer-other-window
+                       ecb-layout-switch-to-compilation-window)
+               (ecb-compilation-buffer-p (ad-get-arg 0)))
+      (select-window ecb-compile-window)
+      (when ecb-layout-switch-to-compilation-window-auto-enlarge
+        (ecb-toggle-enlarged-compilation-window 1)))
+                       
     ;; if we have not selected the edit-window before and we are still not in
     ;; an edit-window then we simply jump to the first edit-window. This is
     ;; then the right other window for the buffer to switch.
@@ -1217,9 +1255,18 @@ alternatives:
                        ecb-layout-always-operate-in-edit-window)
                (not (ecb-point-in-edit-window)))
       (ecb-select-edit-window))
-    
-    (if (not (ecb-point-in-edit-window))
-        (error "Only in an edit-window the buffer can be switched!"))
+
+    (if (and (member 'switch-to-buffer
+                     ecb-layout-switch-to-compilation-window)
+             (ecb-compilation-buffer-p (ad-get-arg 0)))
+        (progn
+          (select-window ecb-compile-window)
+
+          (when ecb-layout-switch-to-compilation-window-auto-enlarge
+            (ecb-toggle-enlarged-compilation-window 1)))
+          
+      (if (not (ecb-point-in-edit-window))
+          (error "Only in an edit-window the buffer can be switched!")))
 
     ;; now we are always in the edit window, so we can switch to the buffer
     ad-do-it))
@@ -1937,22 +1984,23 @@ first effect after restarting ECB!"
            ecb-compile-window-height
            (ecb-compile-window-live-p))
       (let ((should-shrink (if (null arg)
-                             (> (window-height ecb-compile-window)
-                                ecb-compile-window-height)
-                           (<= (prefix-numeric-value arg) 0)))
+                               (> (window-height ecb-compile-window)
+                                  ecb-compile-window-height)
+                             (<= (prefix-numeric-value arg) 0)))
             (compile-window-height-lines (if ecb-compile-window-height
                                              (floor
                                               (if (< ecb-compile-window-height 1.0)
                                                   (* (1- (frame-height))
                                                      ecb-compile-window-height)
                                                 ecb-compile-window-height))))
-            max-height)
+            (max-height nil))
+        
         (save-selected-window
           (select-window ecb-compile-window)
-          (setq max-height
-                (min (or ecb-old-compilation-window-height (/ (frame-height) 2))
-                     (max compile-window-height-lines
-                          (count-lines (point-min) (point-max)))))
+          (setq max-height (or ecb-old-compilation-window-height
+                               compilation-window-height
+                               (/ (frame-height) 2)))
+
           (if should-shrink
               ;;restore the window configuration to ecb-compile-window-height
               (shrink-window (max 0 (- (window-height)

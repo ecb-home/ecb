@@ -1,6 +1,6 @@
 ;;; ecb-compilation.el --- 
 
-;; $Id: ecb-compilation.el,v 1.2 2002/02/22 08:30:43 berndl Exp $
+;; $Id: ecb-compilation.el,v 1.3 2002/07/13 17:11:26 burtonator Exp $
 
 ;; Copyright (C) 2000-2003 Free Software Foundation, Inc.
 ;; Copyright (C) 2000-2003 Kevin A. Burton (burton@openprivacy.org)
@@ -43,7 +43,8 @@
                                               "*Help*"
                                               "*Backtrace*"
                                               "*shell*"
-                                              "*bsh*")
+                                              "*bsh*"
+                                              "*Messages*")
   "*Additional buffer names that should be displayed in compilation
 window."
   :group 'ecb-compilation
@@ -76,6 +77,9 @@ define 'compilation buffer' as a buffer that should ideally be displayed in
 the `ecb-compile-window'. This means that in some situations this might not be
 the result of a `compile-internal'. A good example would be the *Help* buffer
 or the `ecb-eshell-buffer-name'. See `compilation-buffer-p'."
+
+  (when (stringp buffer)
+    (setq buffer (get-buffer buffer)))
   
   (let((buffer-name (buffer-name buffer)))
 
