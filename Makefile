@@ -131,10 +131,10 @@ ecb: $(ecb_LISP_EL)
 	@$(RM) $(ecb_LISP_ELC) ecb-compile-script
 	@echo "(add-to-list 'load-path nil)" > ecb-compile-script
 	@if test ! -z "${SEMANTIC}" ; then\
-	   @echo "(add-to-list 'load-path \"$(SEMANTIC)\")" >> ecb-compile-script; \
+	   echo "(add-to-list 'load-path \"$(SEMANTIC)\")" >> ecb-compile-script; \
 	fi
 	@if test ! -z "${EIEIO}" ; then\
-	   @echo "(add-to-list 'load-path \"$(EIEIO)\")" >> ecb-compile-script; \
+	   echo "(add-to-list 'load-path \"$(EIEIO)\")" >> ecb-compile-script; \
 	fi
 	@if test ! -z "${LOADPATH}" ; then\
 	   for loadpath in ${LOADPATH}; do \
