@@ -1,6 +1,6 @@
 ;;; ecb-eshell.el --- eshell integration for the ECB.
 
-;; $Id: ecb-eshell.el,v 1.36 2002/02/27 17:15:47 creator Exp $
+;; $Id: ecb-eshell.el,v 1.37 2002/03/19 00:44:24 burtonator Exp $
 
 ;; Copyright (C) 2000-2003 Free Software Foundation, Inc.
 ;; Copyright (C) 2000-2003 Kevin A. Burton (burton@openprivacy.org)
@@ -161,6 +161,9 @@ eshell is currently visible."
            (ecb-buffer-directory nil)
            (window nil))
 
+        ;;make sure we are clean.
+        (ecb-eshell-cleanse)
+        
         ;;get copies of the current source directory.
         
         (setq source-buffer-directory default-directory)
@@ -273,6 +276,21 @@ that the eshell has more screen space after we execute a command. "
 
       (ecb-enlarge-window window)))
   (ecb-eshell-recenter))
+
+(defun ecb-eshell-cleanse()
+  "If the user has entered text in the eshell, we need to clean it.  If we don't
+  do this we could end up executing a strange command resulting in a 'command
+  not found'."
+  
+  (save-excursion
+
+    (set-buffer ecb-eshell-buffer-name)
+
+    (end-of-buffer)
+
+    (eshell-bol)
+
+    (delete-region (point) (point-at-eol))))
 
 (defun ecb-eshell-auto-activate-hook()
   "Activate the eshell when ECB is activated.  See `ecb-eshell-auto-activate'."

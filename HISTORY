@@ -1,11 +1,17 @@
 Version 1.80:
 -------------
 
+* Fixed a bug in ecb-eshell.  If we are running with current buffer sync, and
+  there is garbage on the current line, when we change buffers this garbage will
+  be executed which could result in a 'command not found' or even worse, a
+  damaging command executed.  We now cleanse the command line prior to directory
+  changed. (Kevin A. Burton) 
+
 * Fixed a bug in ecb-speedbar.  The speedbar was doing its own updating outside
   of the ECB.  This means that if you were to change buffers in a frame outside
   of the ECB frame, the ECB's Speedbar would be updated to reflect a buffer not
   within the ECB.  We now disable Speedbar's automatic update and have ECB
-  handle this.  (Kevin)
+  handle this.  (Kevin A. Burton) 
 
 + Better grouping of external methods, i.e. methods which are implemented
   outside the class-definition, like in C++, CLOS and EIEIO. Now this is done
