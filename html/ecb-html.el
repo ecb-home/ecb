@@ -21,10 +21,13 @@
 
 ;; Generates ECB HTML pages.
 
-;; $Id: ecb-html.el,v 1.3 2001/04/30 05:22:43 berndl Exp $
+;; $Id: ecb-html.el,v 1.4 2001/04/30 11:30:50 berndl Exp $
 
 ;;; Code:
-(require 'html-helper)
+
+;; here a load-file is better because then we don´t need adding the html
+;; subdir to the load-path.
+(load-file "./html-helper.el")
 (require 'ecb)
 
 ;; Colors
@@ -199,6 +202,9 @@
     
    (ecb-faq-section
    "Common Problems"
+   (ecb-faq-section
+    "Why is the truncation setting in the ECB-buffers not correct?"
+    "Check the variable `truncate-partial-width-windows' and set it to the correct value.")
    (ecb-faq-q-and-a
     "Why doesn't ECB work correct with VC?"
     "The variable `vc-delete-logbuf-window' must be set to nil during active ECB. This can be done with the hooks of ECB.")
