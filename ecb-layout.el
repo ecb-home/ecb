@@ -190,8 +190,8 @@ layout with `ecb-redraw-layout'"
   :set ecb-layout-option-set-function
   :type 'integer)
 
-(defconst ecb-old-compilation-window-height compilation-window-height)
-(defconst ecb-old-temp-buffer-max-height temp-buffer-max-height)
+(defvar ecb-old-compilation-window-height compilation-window-height)
+(defvar ecb-old-temp-buffer-max-height temp-buffer-max-height)
 
 (defcustom ecb-compile-window-height 5.0
   "*If you want a compilation window shown at the bottom

@@ -1547,6 +1547,10 @@ always the ECB-frame if called from another frame."
 
     ;; run personal hooks before drawing the layout
     (run-hooks 'ecb-activate-before-layout-draw-hook)
+
+    (setq ecb-old-compilation-window-height compilation-window-height)
+    (setq ecb-old-temp-buffer-max-height temp-buffer-max-height)
+    
     ;; now we draw the layout choosen in `ecb-layout'. This function
     ;; acivates at its end also the adviced functions if necessary!
     (ecb-redraw-layout)
