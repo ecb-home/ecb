@@ -31,7 +31,7 @@
 ;; For the ChangeLog of this file see the CVS-repository. For a complete
 ;; history of the ECB-package see the file NEWS.
 
-;; $Id: tree-buffer.el,v 1.109 2003/03/27 14:42:36 berndl Exp $
+;; $Id: tree-buffer.el,v 1.110 2003/03/28 09:48:23 berndl Exp $
 
 ;;; Code:
 
@@ -975,32 +975,30 @@ functionality is done with the `help-echo'-property and the function
   (interactive)
   (unless (not (equal (selected-frame) tree-buffer-frame))
     (let ((node (tree-buffer-get-node-at-point))
-          (arrow-key (tree-buffer-event-to-key last-command-event))
-          node-expanded-p)
-      (if (tree-node-is-expandable node)
-          (progn
-            (setq node-expanded-p (tree-node-is-expanded node))
-            (cond ((equal arrow-key 'right)
-                   (if (not node-expanded-p)
-                       (tree-buffer-tab-pressed)))
-                  ((equal arrow-key 'left)
-                   (if node-expanded-p
-                       (tree-buffer-tab-pressed)
-                     ;; jump to next higher node
-                     (let* ((indent (tree-buffer-get-node-indent node))
-                            (new-indent (max 0 (- indent tree-buffer-indent)))
-                            (search-string
-                             (concat "^"
-                                     (buffer-substring
-                                      (tree-buffer-line-beginning-pos)
-                                      (+ (tree-buffer-line-beginning-pos)
-                                          new-indent))
-                                     "[^ \t]")))
-                       (re-search-backward search-string nil t))))))
-        (cond ((equal arrow-key 'left)
-               (forward-char -1))
-              ((equal arrow-key 'right)
-               (forward-char +1)))))))
+          (arrow-key (tree-buffer-event-to-key last-command-event)))
+      (cond ((equal arrow-key 'right)
+             (if (and (tree-node-is-expandable node)
+                      (not (tree-node-is-expanded node)))
+                 (tree-buffer-tab-pressed)
+               ;; jump to the first subnode
+               (forward-line 1)
+               (back-to-indentation)))
+            ((equal arrow-key 'left)
+             (if (tree-node-is-expanded node)
+                 (tree-buffer-tab-pressed)
+               ;; jump to next higher node
+               (let* ((indent (tree-buffer-get-node-indent node))
+                      (new-indent (max 0 (- indent tree-buffer-indent)))
+                      (search-string
+                       (concat "^"
+                               (buffer-substring
+                                (tree-buffer-line-beginning-pos)
+                                (+ (tree-buffer-line-beginning-pos)
+                                   new-indent))
+                               "[^ \t]")))
+                 (re-search-backward search-string nil t)
+                 (back-to-indentation))))))))
+
 
 ;; tree-buffer creation
 

@@ -19,7 +19,7 @@
 @c Free Software Foundation, Inc., 59 Temple Place - Suite 330,
 @c Boston, MA 02111-1307, USA.
 
-@c $Id: ecb.texi,v 1.88 2003/03/21 13:29:34 berndl Exp $
+@c $Id: ecb.texi,v 1.89 2003/03/28 09:48:24 berndl Exp $
 
 @setfilename ecb.info
 
@@ -1019,22 +1019,23 @@ TAB always expands or collapses expandable nodes.
 The RETURN and TAB keys can not be (re)defined with @code{ecb-key-map}!
 
 If you set @code{ecb-tree-navigation-by-arrow} to not nil then the left- and
-right-arrow keys work in the ECB tree-window in the following smart way if
-onto an expandable node:
+right-arrow keys work in the ECB tree-window in the following smart way:
 
 @itemize @bullet
 @item
 Left-arrow: If node is expanded then it will be collapsed otherwise
-point jumps to the next ``higher'' node in the hierarchical tree (higher
-means the next higher level or - if no higher level available - the
-next higher node on the same level).
+(i.e. current node is either not expandable or not expanded) point
+jumps to the next ``higher'' node in the hierarchical tree (higher
+means the next higher level or - if no higher level available
+- the next higher node on the same level).
 
 @item
-Right-arrow: If node is not expanded then it will be expanded.
+Right-arrow: If node is expandable but not expanded then it will be
+expanded. Otherwise (i.e. current node is either not expandable or
+already expanded) point jumps to the next following node (which is the
+first subnode in case of an already expanded node or simply the next
+node in the following line).
 @end itemize
-
-Onto a not expandable node the horizontal arrow-keys go one character in the
-senseful correct direction.
 
 
 @node Incremental search, Personal keybindings, Navigation/Selection, Using the keyboard
