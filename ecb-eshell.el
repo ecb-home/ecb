@@ -1,6 +1,6 @@
 ;;; ecb-eshell.el --- eshell integration for the ECB.
 
-;; $Id: ecb-eshell.el,v 1.26 2002/01/26 09:37:07 burtonator Exp $
+;; $Id: ecb-eshell.el,v 1.27 2002/01/29 11:30:41 burtonator Exp $
 
 ;; Copyright (C) 2000-2003 Free Software Foundation, Inc.
 ;; Copyright (C) 2000-2003 Kevin A. Burton (burton@openprivacy.org)
@@ -105,7 +105,7 @@
 ;;   attention to this.
 ;;
 ;; - Include the ability to startup the eshell when the ECB is started.  This
-;; may require a new hook.
+;;   may require a new hook.
 ;;
 ;; - BUG: when we exit the eshell, we resize the compilation buffer.... there is
 ;; no need since the buffer is about to exit.
@@ -116,6 +116,8 @@
 ;; - RFE: could we possibly find a way to avoid window enlargement if we launch
 ;; a background process like 'xterm &'.  This would require determining what the
 ;; command is and then making sure it is acceptable.
+;;
+;; - BUG: when ecb-eshell-enlarge-when-selecting is nil we need to recenter.
 
 ;;; Code:
 
@@ -132,6 +134,11 @@ non-nil."
 
 (defcustom ecb-eshell-enlarge-when-starting t
   "When starting the eshell, enlarge the buffer if non-nil."
+  :group 'ecb-eshell
+  :type 'boolean)
+
+(defcustom ecb-eshell-auto-activate nil
+  "Startup the eshell when the ECB is activated."
   :group 'ecb-eshell
   :type 'boolean)
 
@@ -221,15 +228,22 @@ eshell is currently visible."
 
         (select-window ecb-compile-window)
         
-        (when ecb-eshell-enlarge-when-selecting
-          (ecb-eshell-enlarge)))
+        (if ecb-eshell-enlarge-when-selecting
+            (ecb-eshell-enlarge)
+          ;;else just recenter
+          (ecb-eshell-recenter)))
 
     ;;we auto start the eshell here?  I think so..
-    (select-window ecb-compile-window)
-    (eshell)
+    (ecb-eshell-activate)
     (when ecb-eshell-enlarge-when-starting
       (ecb-eshell-enlarge))))
 
+(defun ecb-eshell-activate()
+  "Startup the eshell in the compile window."
+
+  (select-window ecb-compile-window)
+  (eshell))
+  
 (defun ecb-eshell-enlarge()
   "Enlarge the eshell so more information is visible.  This is usually done so
 that the eshell has more screen space after we execute a command. "
@@ -249,6 +263,14 @@ that the eshell has more screen space after we execute a command. "
       (ecb-enlarge-window window)))
   (ecb-eshell-recenter))
 
+(defun ecb-eshell-auto-activate-hook()
+  "Activate the eshell when ECB is activated.  See `ecb-eshell-auto-activate'."
+
+  (when ecb-eshell-auto-activate
+    (ecb-eshell-activate)))
+
+(add-hook 'ecb-activate-hook 'ecb-eshell-auto-activate-hook)
+  
 (add-hook 'ecb-current-buffer-sync-hook 'ecb-eshell-current-buffer-sync)
 
 (add-hook 'ecb-redraw-layout-hooks 'ecb-eshell-recenter)
