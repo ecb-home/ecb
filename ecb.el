@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb.el,v 1.377 2004/02/28 16:14:45 berndl Exp $
+;; $Id: ecb.el,v 1.378 2004/03/01 06:28:04 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -2540,9 +2540,15 @@ ECB has been deactivated. Do not set this variable!")
                  ;; If `ecb--semantic-equivalent-tag-p' fails we return the
                  ;; result of an eq-comparison.
                  (function (lambda (l r)
-                             (condition-case nil
-                                 (ecb--semantic-equivalent-tag-p l r)
-                               (error (eq l r)))))
+                             (cond ((or (stringp l) (stringp r))
+                                    (equal l r))
+                                   ((or (equal 'ecb-bucket-node (car l))
+                                        (equal 'ecb-bucket-node (car r)))
+                                    (equal l r))
+                                   (t ;; tags
+                                    (condition-case nil
+                                        (ecb--semantic-equivalent-tag-p l r)
+                                      (error (eq l r)))))))
                  (list 1)
                  nil
                  'ecb-methods-menu-creator

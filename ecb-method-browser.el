@@ -24,7 +24,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-method-browser.el,v 1.18 2004/02/28 16:14:46 berndl Exp $
+;; $Id: ecb-method-browser.el,v 1.19 2004/03/01 06:28:04 berndl Exp $
 
 ;;; Commentary:
 
@@ -124,6 +124,14 @@ by semantic!"
                 (const :tag "Expand as specified" :value expand-spec)
                 (const :tag "Expand all" :value all)))
 
+
+(defcustom ecb-auto-expand-tag-tree-collapse-other nil
+  "*Auto. expanding the tag-tree collapses all not related nodes.
+If t then all nodes which have no relevance for the currently highlighted node
+will be collapsed, because they are not necessary to make the highlighted node
+visible."
+  :group 'ecb-methods
+  :type 'boolean)
 
 (defcustom ecb-expand-methods-switch-off-auto-expand t
   "*Switch off auto expanding in the ECB-method buffer.
@@ -1268,8 +1276,13 @@ Methods-buffer."
                     ;; we must not create a bucket-node when each tag in the
                     ;; bucket is forbidden to be displayed
                     (not (ecb-show-at-least-one-tag-p (cdr bucket))))
-	  (setq bucket-node (tree-node-new name 1 nil nil node
-					   (if ecb-truncate-long-names 'end)))
+	  (setq bucket-node
+                (tree-node-new name 1
+                               (list 'ecb-bucket-node
+                                     (car bucket)
+                                     (ecb--semantic-tag-class (car (cdr bucket))))
+                               nil node
+                               (if ecb-truncate-long-names 'end)))
 	  (tree-node-set-expanded bucket-node (eq 'expanded display)))
 	(dolist (tag (ecb-sort-tags sort-method (cdr bucket)))
           ;; we create only a new node for a tag of the bucket when the tag is
@@ -1536,7 +1549,8 @@ then nil is returned."
   (let ((parent (tree-node-get-parent curr-node)))
     (catch 'found
       (while (not (eq (tree-buffer-get-root) parent))
-        (if (equal (ecb--semantic-tag-class (tree-node-get-data parent))
+        (if (equal (and (= (tree-node-get-type parent) 0)
+                        (ecb--semantic-tag-class (tree-node-get-data parent)))
                    'type)
             (throw 'found (tree-node-get-data parent))
           (setq parent (tree-node-get-parent parent))))
@@ -1792,8 +1806,13 @@ The PARENT-TAG is propagated to the functions `ecb-add-tag-bucket' and
  		   (eq 'type (ecb--semantic-tag-class parent-tag)))
  	  (let ((parents (ecb-get-tag-parents parent-tag)))
 	    (when parents
-	      (let ((node (ecb-create-node node display (ecb-format-bucket-name "Parents") nil 1)))
-		(when node
+	      (let ((node (ecb-create-node node display
+                                           (ecb-format-bucket-name "Parents")
+                                           (list 'ecb-bucket-node
+                                                 "Parents"
+                                                 'parent)
+                                           1)))
+                    (when node
 		  (dolist (parent (if sort-method
 				      (sort parents 'string<) parents))
 		    (tree-node-new (if ecb-font-lock-tags
@@ -2214,7 +2233,9 @@ by this command."
              (if new-value "on" "off")
              new-value)))
 
-
+;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: Define this with define-overload
+;; when the cedet 1.0 is stable - then we can remove the semantic 1.4 support
+;; - but first when cedet 1.0 is also available as XEmacs-package!
 (defun ecb-get-real-curr-tag ()
   "Get the \"real\" current tag. This will be in most cases the tag returned
 by `ecb--semantic-current-tag' but there are exceptions:
@@ -2246,27 +2267,68 @@ we return nil otherwise true \(the HIGHLIGHT-TAG is highlighted).
 If called from program: HIGHLIGHT-TAG is the tag to highlight, CURR-TAG has to
 be equal to HIGHLIGHT-TAG and TABLE must be the current tag-table of the
 current buffer."
-  (let ((type-tag (and curr-tag
-                       (ecb-get-type-tag-of-tag curr-tag table t)))
-        (type-node nil))
+  (let* ((type-tag (and curr-tag
+                        (ecb-get-type-tag-of-tag curr-tag table t)))
+         (bucket-data (and (not type-tag)
+                           (list 'ecb-bucket-node
+                                 (cdr (assoc (ecb--semantic-tag-class highlight-tag)
+                                             (ecb--semantic-symbol->name-assoc-list)))
+                                 (ecb--semantic-tag-class highlight-tag))))
+         (type-node nil))
     (or (and curr-tag
              (save-selected-window
                (ecb-exec-in-methods-window
                 (or (tree-buffer-highlight-node-data
                      highlight-tag nil
                      (equal ecb-highlight-tag-with-point 'highlight))
+                    ;; If the tag could not be highlighted and if there is no
+                    ;; containing type for this tag then this tag is probably
+                    ;; contained in a toplevel bucket. Then we search the
+                    ;; bucket-node for the tag if this tag-class is specified
+                    ;; as expanded or collapsed (ie not flattened or hidden
+                    ;; because in these cases no bucket would exist). If we
+                    ;; find the bucket-node then we expand only this
+                    ;; bucket-node and try highlighting again.
+                    (when (and highlight-tag
+                               bucket-data ;; tag has no containing type
+                               (member (car (cdr (assoc (ecb--semantic-tag-class highlight-tag)
+                                                        ecb-show-tags)))
+                                       '(expanded collapsed))
+                               (or (equal ecb-auto-expand-tag-tree 'all)
+                                   (member (ecb--semantic-tag-class highlight-tag)
+                                           (ecb-normalize-expand-spec
+                                            ecb-methods-nodes-expand-spec))))
+                      (let ((bucket-node
+                             (tree-buffer-search-node-list
+                              (function (lambda (node)
+                                          (if (and (tree-buffer-node-data-equal-p
+                                                    (tree-node-get-data node)
+                                                    bucket-data)
+                                                   (eq (tree-buffer-get-root)
+                                                       (tree-node-get-parent node)))
+                                              node))))))
+                        (when bucket-node
+                          (ecb-expand-methods-node-internal
+                           bucket-node
+                           100
+                           (equal ecb-auto-expand-tag-tree 'all)
+                           nil t)
+                          (tree-buffer-highlight-node-data
+                           highlight-tag nil
+                           (equal ecb-highlight-tag-with-point 'highlight)))))
                     ;; The node representing HIGHLIGHT-TAG could not be
                     ;; highlighted by `tree-buffer-highlight-node-data' -
                     ;; probably it is invisible. Let's try to make expand its
-                    ;; containing type and then highlighting again.
+                    ;; containing type (if there is any) and then highlighting
+                    ;; again.
                     (when (and highlight-tag
+                               type-tag
                                (or (equal ecb-auto-expand-tag-tree 'all)
                                    (member (ecb--semantic-tag-class highlight-tag)
                                            (ecb-normalize-expand-spec
                                             ecb-methods-nodes-expand-spec))))
                       (setq type-node
-                            (cdr (and type-tag
-                                      (tree-buffer-find-name-node-data type-tag))))
+                            (cdr (tree-buffer-find-name-node-data type-tag)))
                       (when type-node
                         (ecb-expand-methods-node-internal
                          type-node
@@ -2297,10 +2359,32 @@ current buffer."
               (save-selected-window
                 (ecb-exec-in-methods-window
                  (tree-buffer-highlight-node-data nil)))
+            ;; Maybe we must first collapse all so only the needed parts are
+            ;; expanded afterwards. Klaus Berndl <klaus.berndl@sdm.de>: Is it
+            ;; necessary to update the tree-buffer after collapsing? IMO yes,
+            ;; because otherwise we set the expansion-state of the tree-buffer
+            ;; to all collapsed and if we find really nothing to highlight and
+            ;; do also no node-expanding (which would update the tree-buffer)
+            ;; then we have an inconsistent state - would be probably very
+            ;; seldom but could be - so let us per somehow paranoid ;-)
+            (if ecb-auto-expand-tag-tree-collapse-other
+                (save-selected-window
+                  (ecb-exec-in-methods-window
+                   (when (and curr-tag
+                              (or (equal ecb-auto-expand-tag-tree 'all)
+                                  (member (ecb--semantic-tag-class curr-tag)
+                                          (ecb-normalize-expand-spec
+                                           ecb-methods-nodes-expand-spec))))
+                     (ecb-expand-methods-node-internal
+                      (tree-buffer-get-root)
+                      -1
+                      (equal ecb-auto-expand-tag-tree 'all)
+                      nil t)))))
             ;; First we try to expand only the absolute needed parts - this
             ;; means we go upstairs the ladder of types the current tag
-            ;; belongs to. If this has no success then we expand the full
-            ;; tree-buffer and try it again.
+            ;; belongs to. If there is no containing type then we try to
+            ;; expand only the containing toplevel bucket. If this has no
+            ;; success then we expand the full tree-buffer and try it again.
             (if (not (ecb-try-highlight-tag curr-tag curr-tag
                                             (ecb-get-current-tag-table)))
                 ;; The node representing CURR-TAG could not be highlighted by
@@ -2341,32 +2425,12 @@ OTHER-EDIT-WINDOW \(for this see `ecb-combine-ecb-button/edit-win-nr')."
     string))
 
 
-(defun ecb-methods-node-get-semantic-type (node symbol->name-assoc-list)
+(defun ecb-methods-node-get-semantic-type (node)
   (cond ((= 1 (tree-node-get-type node))
-         (let ((bucket-name
-                (save-match-data
-                  (if (string-match (concat (regexp-quote (nth 0 ecb-bucket-node-display))
-                                            "\\(.+\\)"
-                                            (regexp-quote (nth 1 ecb-bucket-node-display)))
-                                    (tree-node-get-name node))
-                      (match-string 1 (tree-node-get-name node))))))
-           (if (stringp bucket-name)
-               (or (car (delete nil (mapcar (function (lambda (elem)
-                                                        (if (string= (cdr elem)
-                                                                     bucket-name)
-                                                            (car elem))))
-                                            symbol->name-assoc-list)))
-                   ;; This is a little hack for bucket-names not defined in
-                   ;; symbol->name-assoc-list: First we strip a trailing 's'
-                   ;; if there is any to be consistent with the singular names
-                   ;; of the cars of symbol->name-assoc-list. Then we downcase
-                   ;; the bucket-name and convert it to a symbol. This is done
-                   ;; for example for the ECB created bucket-name "Parents"!
-                   (intern (downcase (ecb-string-make-singular bucket-name)))))))
+         (nth 2 (tree-node-get-data node)))
         ((= 0 (tree-node-get-type node))
          (ignore-errors (ecb--semantic-tag-class (tree-node-get-data node))))
         (t nil)))
-
 
 (defun ecb-expand-methods-nodes (&optional force-all)
   "Set the expand level of the nodes in the ECB-methods-buffer.
@@ -2442,51 +2506,39 @@ after the expansion.
 Note: All this is only valid for file-types parsed by semantic. For other file
 types which are parsed by imenu or etags \(see
 `ecb-process-non-semantic-files') FORCE-ALL is always true!"
-  (let ((symbol->name-assoc-list
-         ;; if possible we get the local semantic-symbol->name-assoc-list of
-         ;; the source-buffer.
-         (or (save-excursion
-               (ignore-errors
-                 (set-buffer (get-file-buffer ecb-path-selected-source))
-                 ;; for non-semantic buffers we set force-all always to t
-                 (setq force-all (or force-all
-                                     (not (ecb--semantic-active-p))))
-                 (ecb--semantic-symbol->name-assoc-list)))
-             (ecb--semantic-symbol->name-assoc-list))))
-    (save-selected-window
-      (ecb-exec-in-methods-window
-       (let (;; normalizing the elements of `ecb-methods-nodes-expand-spec'
-             ;; and `ecb-methods-nodes-collapse-spec'.
-             (norm-expand-types (ecb-normalize-expand-spec
-                                 ecb-methods-nodes-expand-spec))
-             (norm-collapse-types (ecb-normalize-expand-spec
-                                   ecb-methods-nodes-collapse-spec))
-             (node-list (if (equal node (tree-buffer-get-root))
-                            (tree-node-get-children (tree-buffer-get-root))
-                          (list node))))
-         (dolist (node node-list)
-           (tree-buffer-expand-node
-            node
-            level
-            (and (not force-all)
-                 (function (lambda (node current-level)
-                             (or (equal norm-expand-types 'all)
-                                 (member (ecb-methods-node-get-semantic-type
-                                          node symbol->name-assoc-list)
-                                         norm-expand-types)))))
-            (and (not force-all)
-                 (function (lambda (node current-level)
-                             (or (equal norm-collapse-types 'all)
-                                 (member (ecb-methods-node-get-semantic-type
-                                          node symbol->name-assoc-list)
-                                         norm-collapse-types)))))))
-         (if update-tree-buffer
-             (tree-buffer-update)
-           (tree-buffer-scroll (point-min) (point-min))))))
+  (save-selected-window
+    (ecb-exec-in-methods-window
+     (let ( ;; normalizing the elements of `ecb-methods-nodes-expand-spec'
+           ;; and `ecb-methods-nodes-collapse-spec'.
+           (norm-expand-types (ecb-normalize-expand-spec
+                               ecb-methods-nodes-expand-spec))
+           (norm-collapse-types (ecb-normalize-expand-spec
+                                 ecb-methods-nodes-collapse-spec))
+           (node-list (if (equal node (tree-buffer-get-root))
+                          (tree-node-get-children (tree-buffer-get-root))
+                        (list node))))
+       (dolist (node node-list)
+         (tree-buffer-expand-node
+          node
+          level
+          (and (not force-all)
+               (function (lambda (node current-level)
+                           (or (equal norm-expand-types 'all)
+                               (member (ecb-methods-node-get-semantic-type node)
+                                       norm-expand-types)))))
+          (and (not force-all)
+               (function (lambda (node current-level)
+                           (or (equal norm-collapse-types 'all)
+                               (member (ecb-methods-node-get-semantic-type node)
+                                       norm-collapse-types)))))))
+       (if update-tree-buffer
+           (tree-buffer-update)
+         (tree-buffer-scroll (point-min) (point-min))))))
 
-    ;; we want resync the new method-buffer to the current tag in the
-    ;; edit-window.
-    (if resync-tag (ecb-tag-sync 'force))))
+  ;; we want resync the new method-buffer to the current tag in the
+  ;; edit-window.
+  (if resync-tag (ecb-tag-sync 'force)))
+
 
 
 (defun ecb-normalize-expand-spec (spec)
@@ -2805,12 +2857,12 @@ help-text should be printed here."
                                                  ecb-methods-buffer-name))
                (concat
                 (tree-node-get-name node)
-                (if (and (= 0 (tree-node-get-type node)) (tree-node-get-data
-                                                          node)
+                (if (and (= 0 (tree-node-get-type node)) (tree-node-get-data node)
                          (equal (ecb-show-node-info-what ecb-methods-buffer-name)
                                 'name+type))
                     (concat ", "
-                            (symbol-name (ecb--semantic-tag-class (tree-node-get-data node))))
+                            (symbol-name (ecb--semantic-tag-class
+                                          (tree-node-get-data node))))
                   "")))))
     (prog1 str
       (unless no-message
@@ -3000,7 +3052,7 @@ this fails then nil is returned otherwise t."
 (defvar ecb-methods-menu-title-creator
   (function (lambda (node)
               (let ((data (tree-node-get-data node)))
-                (if data
+                (if (and data (/= 1 (tree-node-get-type node)))
                     (cond ((ecb--semantic-tag-p data)
                            (ecb--semantic-tag-name data))
                           ((stringp data)
