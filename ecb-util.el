@@ -192,6 +192,13 @@ Unless optional argument INPLACE is non-nil, return a new string."
             (if (eq (aref newstr i) fromchar)
                 (aset newstr i tochar)))
           newstr))
+      (defun ecb-derived-mode-p (&rest modes)
+        "Non-nil if the current major mode is derived from one of MODES.
+Uses the `derived-mode-parent' property of the symbol to trace backwards."
+        (let ((parent major-mode))
+          (while (and (not (memq parent modes))
+                      (setq parent (get parent 'derived-mode-parent))))
+          parent))
       (defalias 'ecb-frame-parameter 'frame-property)
       (defalias 'ecb-line-beginning-pos 'point-at-bol)
       (defalias 'ecb-line-end-pos 'point-at-eol)
@@ -216,6 +223,7 @@ Unless optional argument INPLACE is non-nil, return a new string."
     "Return non-nil if running non-interactively, i.e. in batch mode."
     noninteractive)
   (defalias 'ecb-subst-char-in-string 'subst-char-in-string)
+  (defalias 'ecb-derived-mode-p 'derived-mode-p)
   (defalias 'ecb-frame-parameter 'frame-parameter)
   (defalias 'ecb-line-beginning-pos 'line-beginning-position)
   (defalias 'ecb-line-end-pos 'line-end-position)
@@ -1440,7 +1448,6 @@ buffer-local value in BUFFER then the global value of SYM is used."
         (save-excursion
           (set-buffer buffer)
           (symbol-value sym)))))
-
 
 
 ;; ringstuff

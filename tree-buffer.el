@@ -76,6 +76,7 @@
 (silentcomp-defun image-type-available-p)
 (silentcomp-defun count-screen-lines)
 (silentcomp-defun tmm-prompt)
+(silentcomp-defun font-lock-add-keywords)
 ;; timer stuff for XEmacs
 (silentcomp-defun delete-itimer)
 (silentcomp-defun start-itimer)

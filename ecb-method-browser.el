@@ -38,6 +38,7 @@
 (require 'ecb-navigate)
 (require 'ecb-face)
 (require 'ecb-speedbar)
+(require 'ecb-common-browser)
 
 (require 'ecb-semantic-wrapper)
 ;; This loads the semantic-setups for the major-modes.
@@ -886,7 +887,7 @@ by semantic!"
                         :value 0.25))
   :set (function (lambda (symbol value)
                    (set symbol value)
-                   (if ecb-minor-mode
+                   (if (and (boundp 'ecb-minor-mode) ecb-minor-mode)
                        (ecb-activate-ecb-autocontrol-functions value
                                                                'ecb-tag-sync))))
   :initialize 'custom-initialize-default)
