@@ -103,7 +103,7 @@
 ;; - `ecb-with-some-adviced-functions'
 ;;
 
-;; $Id: ecb-layout.el,v 1.134 2002/12/16 10:54:29 berndl Exp $
+;; $Id: ecb-layout.el,v 1.135 2002/12/16 13:18:55 berndl Exp $
 
 ;;; Code:
 
@@ -111,6 +111,7 @@
   (require 'silentcomp))
 
 (require 'ecb-util)
+(require 'ecb-compilation)
 (require 'ecb-create-layout)
 
 (silentcomp-defvar jde-open-class-at-point-find-file-function)
