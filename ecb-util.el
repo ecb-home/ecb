@@ -1,6 +1,6 @@
 ;;; ecb-util.el --- utility functions for ECB
 
-;; Copyright (C) 2000 Jesper Nordenberg
+;; Copyright (C) 2000, 2001 Jesper Nordenberg
 
 ;; Author: Jesper Nordenberg <mayhem@home.se>
 ;; Maintainer: Jesper Nordenberg <mayhem@home.se>
@@ -26,7 +26,7 @@
 ;; This file is part of the ECB package which can be found at:
 ;; http://home.swipnet.se/mayhem/ecb.html
 
-;; $Id: ecb-util.el,v 1.9 2001/04/27 23:13:50 creator Exp $
+;; $Id: ecb-util.el,v 1.10 2001/04/28 15:26:40 creator Exp $
 
 ;;; Code:
 (defconst running-xemacs (string-match "XEmacs\\|Lucid" emacs-version))

@@ -1,6 +1,6 @@
 ;;; ecb-layout.el --- layout for ECB
 
-;; Copyright (C) 2000 Jesper Nordenberg
+;; Copyright (C) 2000, 2001 Jesper Nordenberg
 
 ;; Author: Jesper Nordenberg <mayhem@home.se>
 ;; Maintainer: Jesper Nordenberg <mayhem@home.se>
@@ -122,7 +122,7 @@
 ;;   + The edit-window must not be splitted and the point must reside in
 ;;     the not deleted edit-window.
 
-;; $Id: ecb-layout.el,v 1.34 2001/04/28 10:08:34 creator Exp $
+;; $Id: ecb-layout.el,v 1.35 2001/04/28 15:26:40 creator Exp $
 
 ;;; Code:
 

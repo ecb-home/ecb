@@ -1,6 +1,6 @@
 ;;; tree-buffer.el --- functions for tree buffers
 
-;; Copyright (C) 2000 by Free Software Foundation, Inc.
+;; Copyright (C) 2000, 2001 Jesper Nordenberg
 
 ;; Author: Jesper Nordenberg <mayhem@home.se>
 ;; Maintainer: Jesper Nordenberg <mayhem@home.se>
@@ -26,7 +26,7 @@
 ;; This file is part of the ECB package which can be found at:
 ;; http://home.swipnet.se/mayhem/ecb.html
 
-;; $Id: tree-buffer.el,v 1.26 2001/04/28 12:19:06 berndl Exp $
+;; $Id: tree-buffer.el,v 1.27 2001/04/28 15:26:40 creator Exp $
 
 ;;; Code:
 
@@ -194,7 +194,9 @@ NODE must be valid and already be visible in WINDOW!"
     ;; line. If they are we scroll until the whole window is filled with
     ;; non-empty lines.
     (if (not (tree-node-is-expandable node))
-        (let ((w-height (1- (window-height window)))
+        (let ((w-height (if running-xemacs
+			    (window-displayed-height window)
+			  (1- (window-height window))))
               (full-lines-in-window (count-lines (window-start window)
                                                  (window-end window t))))
           (if (< full-lines-in-window
@@ -203,7 +205,9 @@ NODE must be valid and already be visible in WINDOW!"
                                 (save-excursion
                                   (goto-char (window-start window))
                                   (forward-line (- full-lines-in-window w-height))
-                                  (line-beginning-position))))))))
+                                  (if running-xemacs
+				      (point-at-bol)
+				    (line-beginning-position)))))))))
 
 ;; Klaus: Now we use overlays to highlight current node in a tree-buffer. This
 ;; makes it easier to do some facing with the nodes itself and above all this
