@@ -4,14 +4,25 @@
 *** Author: Kevin A. Burton ( burton@apache.org | burton@openprivacy.org )
 ********************************************************************************
 
+- Maybe ECB should optionally create its own frame when activated. (JN)
+
+- Ignore source files specified in .cvsignore files. (JN)
+
+- Add history back/forward functions. Should behave similar to web browser
+  history, which means we should keep a history list and a current position
+  in the history list. (JN)
+
+- Optionally add "(file . line-nr)" to history when clicking on methods in
+  the methods buffer. (JN)
+
 - KB: support env vars, like the latest JDE, for settings like the source paths?
 
 - KB: use the JDE source paths if the JDE variable is available 
    (perhaps there are other variables to use by default as well?). We
    should add an option where this external source-paths can be defined.
 
-- JN: Possibility to save the current sizes of the windows. This will make it
-      possible to customize the layout better.
+- Possibility to save the current sizes of the windows. This will make it
+  possible to customize the layout better. (JN)
 
 - KB: Special keymap for all ECB-buffers for better keyboard-usability:
   If the ECB-buffers are readonly (see above) then we can do the
