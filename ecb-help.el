@@ -280,7 +280,8 @@ Redrawing the ECB-layout:
 -------------------------
 
 If you have unintenionally destroyed the ECB-layout, you can always restore the
-layout with calling `ecb-redraw-layout'.
+layout with calling `ecb-redraw-layout'. This is even true, if you get
+messages like \"wrong-type-argument window-live-p #<window 222>\".
 
 
 Hiding/Showing the ECB windows:

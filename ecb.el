@@ -1836,8 +1836,8 @@ always the ECB-frame if called from another frame."
 
     ;; menus
     (if running-xemacs
-        (add-submenu nil ecb-minor-menu)
-      (easy-menu-add ecb-minor-menu))
+        (add-submenu nil ecb-minor-menu))
+;;       (easy-menu-add ecb-minor-menu))
 
     (setq ecb-minor-mode t)
 
@@ -1922,7 +1922,8 @@ always the ECB-frame if called from another frame."
       (remove-hook 'ediff-quit-hook 'ecb-ediff-quit-hook))
 
     ;; menus
-    (easy-menu-remove ecb-minor-menu)
+    (if running-xemacs
+        (easy-menu-remove ecb-minor-menu))
 
     ;; run any personal hooks
     (run-hooks 'ecb-deactivate-hook)

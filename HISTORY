@@ -1,6 +1,10 @@
 Version 1.40:
 -------------
 
+- New advice for 'other-window-for-scrolling', so all scroll-functions for the
+  "other" window can also scroll the first edit-window if point stays in the
+  second one. (Klaus)
+
 - ecb-toggle-ecb-windows now preserves the split, the split-amount, the buffer
   contents, the window starts and current point. (Klaus)
 
