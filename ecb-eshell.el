@@ -1,6 +1,6 @@
 ;;; ecb-eshell.el --- eshell integration for the ECB.
 
-;; $Id: ecb-eshell.el,v 1.38 2002/10/29 11:09:15 burtonator Exp $
+;; $Id: ecb-eshell.el,v 1.39 2002/10/29 20:17:14 burtonator Exp $
 
 ;; Copyright (C) 2000-2003 Free Software Foundation, Inc.
 ;; Copyright (C) 2000-2003 Kevin A. Burton (burton@openprivacy.org)
@@ -152,6 +152,9 @@ the eshell loaded for ecb-eshell to function properly.")
 (defvar ecb-eshell-pre-command-point nil
   "Point in the buffer we are at before we executed a command.")
 
+(defvar ecb-eshell-pre-window-enlarged nil
+  "True if we enlarged the window before we executed a command.")
+
 (defun ecb-eshell-current-buffer-sync()
   "Synchronize the eshell with the current buffer.  This is only done if the
 eshell is currently visible."
@@ -264,14 +267,11 @@ eshell is currently visible."
 that the eshell has more screen space after we execute a command. "
   (interactive)
 
-  ;;FIXME: us the eshell-pre-command-hook to see the point and then only enlarge
-  ;;if we enlarge past the maximum amount of lines we can use.
-
+  ;;us the eshell-pre-command-hook to see the point and then only enlarge if we
+  ;;enlarge past the maximum amount of lines we can use.
   (setq ecb-eshell-pre-command-point (point))
 
-  (let(window)
-  
-    (setq window (get-buffer-window ecb-eshell-buffer-name))
+  (let((window (get-buffer-window ecb-eshell-buffer-name)))
     
     (when (and (ecb-eshell-running-p)
                (window-live-p window)
@@ -282,20 +282,33 @@ that the eshell has more screen space after we execute a command. "
       ;;to have emacs split or expand a window by 50% like it is done in a lot
       ;;of other places (display-buffer, etc)
 
-      (ecb-enlarge-window window)))
+      ;;determine if we should actually go ahead and do this.
+      (when (< (window-height ecb-compile-window)
+               (/ (frame-height) 2))
+
+        (setq ecb-eshell-pre-window-enlarged t)
+        
+        (ecb-enlarge-window window))))
   (ecb-eshell-recenter))
 
 (defun ecb-eshell-shrink-if-necessary()
-  ""
+  "If we have expanded the compile buffer after a command, but there was no need
+to because the command didn't output much text, go ahead and shrink it again."
 
-  (when (and ecb-eshell-pre-command-point
+  ;;only shrink up if we expanded... we don't want to shrink if we just happend
+  ;;to be runnning in large mode
+  
+  (when (and ecb-eshell-pre-command-point ecb-eshell-pre-window-enlarged
              (< (count-lines ecb-eshell-pre-command-point
                              (point))
                 ecb-compile-window-height))
     (ecb-toggle-enlarged-compilation-window -1)
 
+    (ecb-eshell-recenter))
+
   ;;reset
-  (setq ecb-eshell-pre-command-point nil)))
+  (setq ecb-eshell-pre-command-point nil)
+  (setq ecb-eshell-pre-window-enlarged nil))
 
 (defun ecb-eshell-cleanse()
   "If the user has entered text in the eshell, we need to clean it.  If we don't
