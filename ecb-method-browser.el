@@ -24,7 +24,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-method-browser.el,v 1.47 2004/08/03 09:37:20 berndl Exp $
+;; $Id: ecb-method-browser.el,v 1.48 2004/08/06 15:59:17 berndl Exp $
 
 ;;; Commentary:
 
@@ -917,7 +917,9 @@ See the documentation of these function for details what they do.
 But you can add any arbitrary function if the following conditions are
 fulfilled:
 - The function gets the semantic tag as argument and
-- the function returns the \(new) point after finishing its job."
+- the function returns the \(new) point after finishing its job.
+- The function must not put the point outside the tag-boundaries of the
+  tag-argument."
   :group 'ecb-methods
   :type '(repeat (cons :value (nil . (ecb-tag-visit-recenter))
                        (symbol :tag "Major-mode or default")
@@ -2950,6 +2952,20 @@ current buffer."
                       (when type-node
                         (ecb-expand-methods-node-internal
                          type-node
+                         ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: Maybe we
+                         ;; should not immediately fully expand the type but
+                         ;; in two steps:
+                         ;; 1. We expand only the first level of the type and
+                         ;;    check if the tag is contained in a flattended
+                         ;;    bucket. If yes we will have success and are
+                         ;;    finished because the tag must be contained in
+                         ;;    the type-tag. If no we go to step 2.
+                         ;; 2. because the tag MUST be contained in that
+                         ;;    type-node we now know that it must be contained
+                         ;;    in a collapsed bucket-subnode of this
+                         ;;    type-node. So we have to expand this
+                         ;;    bucket-subnode (similar to the mechanism above)
+                         ;;    and then try again...
                          100
                          (equal ecb-auto-expand-tag-tree 'all)
                          nil t)
@@ -2971,10 +2987,21 @@ current buffer."
              ;; done via post-command-hook and not via an idle-timer.
              (not (ecb-point-in-dedicated-special-buffer))
              (not (ecb-point-in-compile-window)))
-    (if ecb-tag-sync-do-nothing
+    (if nil ;; ecb-tag-sync-do-nothing
         ;; user has selected a tag via the Methods-window so there is nothing
-        ;; to sync - but we must reset this flag so the resync-mechanism runs
+        ;; to sync - we must prevent from syncing here because in some modes
+        ;; the point stays after a click outside of the selected tag (see
+        ;; `ecb-tag-visit-post-actions') and if we would sync then in the
+        ;; methods-buffer the selected tag will be unhighlighted and the
+        ;; surrounding one will be highlighted (e.g. java the class of the
+        ;; tag). But we must reset this flag so the resync-mechanism runs
         ;; next time...
+        ;; Klaus Berndl <klaus.berndl@sdm.de>: Now all functions of
+        ;; ecb-tag-visit-post-actions are forbidden to put the point outside
+        ;; of the tag-boundaries. Therefore we can now remove this mechanism
+        ;; so now synching can take place also after a click. But i let the
+        ;; code in because im not at 100% sure if there are other needs in ECB
+        ;; which need this mechanism - but for now we can disable it.... ;-)
         (setq ecb-tag-sync-do-nothing nil)
       (when ecb-highlight-tag-with-point
         (let ((curr-tag (ecb-get-real-curr-tag)))
@@ -2992,7 +3019,7 @@ current buffer."
               ;; to all collapsed and if we find really nothing to highlight and
               ;; do also no node-expanding (which would update the tree-buffer)
               ;; then we have an inconsistent state - would be probably very
-              ;; seldom but could be - so let us per somehow paranoid ;-)
+              ;; seldom but could be - so let us be somehow paranoid ;-)
               (if ecb-auto-expand-tag-tree-collapse-other
                   (save-selected-window
                     (ecb-exec-in-methods-window
@@ -3336,6 +3363,7 @@ should be displayed. For 1 and 2 the value of EDIT-WINDOW-NR is ignored."
           (ecb-run-with-idle-timer 0.001 nil 'ecb-hide-ecb-windows)))))
 ;;           (ecb-hide-ecb-windows)))))
 
+
 (defun ecb-tag-visit-smart-tag-start (tag)
   "Go to the real tag-name of TAG in a somehow smart way.
 This is especially needed for languages like c++ where a often used style is
@@ -3380,15 +3408,17 @@ return the start of the documentation. Otherwise return nil"
         (ecb--semantic-lex-token-start comment))))
 
 
-(defun ecb-tag-visit-goto-doc-start (tag)
-  "Go to the beginning of the documentation of TAG if defined outside.
+(defun ecb-tag-visit-display-doc-start (tag)
+  "Display the beginning of the documentation of TAG if defined outside.
+This means move the window-start of current edit-window so the whole
+documentation is visible. But points still stays onto the tag-start!
 This is useful especially for languages like Java where the documentation
 resides direct before the TAG in Javadoc format.
 If the documentation is located within TAG then nothing is done.
 
 If this function is set in `ecb-tag-visit-post-actions' then it's strongly
-recommended to add `ecb-tag-visit-recenter' or
-`ecb-tag-visit-recenter-top' at the end too!
+recommended not to add `ecb-tag-visit-recenter' or
+`ecb-tag-visit-recenter-top' after this this function!
 
 This action is not recommended for sources of type TeX, texinfo etc. So you
 should not add this action to the 'default element of
@@ -3396,12 +3426,18 @@ should not add this action to the 'default element of
 
 Returns current point."
   (let ((tag-doc-start  (ecb-start-of-tag-doc tag)))
-    (when tag-doc-start
-      (goto-char tag-doc-start))
+    (when (and tag-doc-start
+               (not (pos-visible-in-window-p tag-doc-start)))
+      ;; tag-doc-start must be above the current window-start so we must must
+      ;; reset the window-start
+      (set-window-start (selected-window) tag-doc-start))
+;;      (goto-char tag-doc-start))
     (point)))
 
+;; for backward-compatibility
+(defalias 'ecb-tag-visit-goto-doc-start 'ecb-tag-visit-display-doc-start)
 
-(defvar ecb-unhighlight-hook-called nil
+  (defvar ecb-unhighlight-hook-called nil
   "This mechanism is necessary because tree-buffer creates for mouse releasing a
 new nop-command \(otherwise the cursor jumps back to the tree-buffer).")
 
@@ -3461,10 +3497,20 @@ nil too then no post-actions are performed."
          ;; the following 2 lines prevent the autom. tag-sync-mechanism from
          ;; starting.
          (setq ecb-tag-sync-do-nothing t)
-         (setq ecb-selected-tag tag)
+         ;; Klaus Berndl <klaus.berndl@sdm.de>: See the comment in
+         ;; `ecb-tag-sync' for an explanation why this is now commented out.
+         ;; (setq ecb-selected-tag tag)
          ;; process post action
          (unless no-tag-visit-post-actions
-           ;; first the default post actions
+           ;; first the default post actions TODO: Klaus Berndl
+           ;; <klaus.berndl@sdm.de>: We should here check if a function moves
+           ;; the point outside the tag-boundaries of TAG and if yes we undo
+           ;; the action (this can be done with a first save-excursion call of
+           ;; the function, storing the result point, checcking if the
+           ;; returned point is inside the boundaries and if yes, we go to the
+           ;; result point and then to the next function and if no, we go
+           ;; immediately to the next function - the save-excursion is our
+           ;; undo) 
            (dolist (f (cdr (assoc 'default ecb-tag-visit-post-actions)))
              (funcall f tag))
            ;; now the mode specific actions

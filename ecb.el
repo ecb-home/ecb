@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb.el,v 1.397 2004/08/03 09:37:20 berndl Exp $
+;; $Id: ecb.el,v 1.398 2004/08/06 15:59:14 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -344,6 +344,7 @@ should be preserved for next activation."
   :group 'ecb-general
   :type 'boolean)
 
+;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: XXX: --> common-browser
 (defcustom ecb-bucket-node-display '("" "" ecb-bucket-node-face)
   "*How ECB displays bucket-nodes in a ECB tree-buffer.
 Bucket-nodes have only one job: Nodes with similar properties will be dropped
@@ -372,6 +373,7 @@ face and a display like \"[+] [<bucket-name>]\"."
                        (face :tag "Face" :value ecb-bucket-node-face)))
   :initialize 'custom-initialize-default)
 
+;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: XXX: --> common-browser
 (defcustom ecb-use-speedbar-instead-native-tree-buffer nil
   "*If true then uses speedbar for directories, sources or methods.
 This means that speedbar is integrated in the ECB-frame and is displayed in
@@ -440,11 +442,13 @@ For more Details see option `ecb-grep-function' and replace \"grep\" with
   :group 'ecb-general
   :type 'function)
 
+;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: XXX: --> common-browser
 (defvar ecb-tree-RET-selects-edit-window--internal nil
   "Only set by customizing `ecb-tree-RET-selects-edit-window' or calling
 `ecb-toggle-RET-selects-edit-window'!
 Do not set this variable directly, it is only for internal uses!")
 
+;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: XXX: --> common-browser
 (defcustom ecb-tree-RET-selects-edit-window
   (list ecb-directories-buffer-name
         ecb-sources-buffer-name
@@ -480,6 +484,7 @@ for future Emacs sessions!"
               (const :tag ,ecb-history-buffer-name
                      :value ,ecb-history-buffer-name)))
 
+;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: XXX: --> common-browser
 (defcustom ecb-tree-indent 4
   "*Indent size for tree buffer.
 If you change this during ECB is activated you must deactivate and activate
@@ -488,6 +493,7 @@ ECB again to take effect."
   :group 'ecb-most-important
   :type 'integer)
 
+;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: XXX: --> common-browser
 (defcustom ecb-tree-expand-symbol-before t
   "*Show the expand symbol before the items in a tree.
 When the expand-symbol is located before the items then the tree looks like:
@@ -517,6 +523,7 @@ the tree-buffer has to be horizontal scrolled to expand an item."
   :type 'boolean)
 
 
+;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: XXX: --> common-browser
 (defcustom ecb-tree-buffer-style (if ecb-images-can-be-used
                                      'image
                                    'ascii-guides)
@@ -572,6 +579,7 @@ With both ascii-styles the tree-layout can be affected with the options
                 (const :tag "Ascii-style with guide-lines" :value ascii-guides)
                 (const :tag "Ascii-style w/o guide-lines" :value ascii-no-guides)))
 
+;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: XXX: --> common-browser
 (defcustom ecb-tree-image-icons-directories
   (let ((base (concat (if ecb-regular-xemacs-package-p
                           (format "%s" (locate-data-directory "ecb"))
@@ -625,6 +633,7 @@ ECB-etc data-directory \(the directory returned by \(locate-data-directory
                        (const :tag "No special path" :value nil)
                        (directory :tag "Full image-path for history"))))
 
+;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: XXX: --> common-browser
 (defcustom ecb-truncate-lines '(t t t t)
   "*Truncate lines in ECB buffers.
 If you change this during ECB is activated you must deactivate and activate
@@ -636,6 +645,7 @@ ECB again to take effect."
                (boolean :tag "Methods buffer")
                (boolean :tag "History buffer")))
 
+;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: XXX: --> common-browser
 (defcustom ecb-tree-easy-hor-scroll 5
   "*Scroll step for easy hor. scrolling via mouse-click in tree-buffers.
 XEmacs has horizontal scroll-bars so invisible parts beyond the right
@@ -659,6 +669,7 @@ nil then no keys for horizontal scrolling are bound."
                 (const :tag "No hor. mouse scrolling" :value nil)
                 (integer :tag "Scroll step")))
 
+;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: XXX: --> common-browser
 (defcustom ecb-truncate-long-names t
   "*Truncate long names that don't fit in the width of the ECB windows.
 If you change this during ECB is activated you must deactivate and activate
@@ -713,6 +724,7 @@ almost the same effect as if you set no delay."
                         value 'ecb-window-sync-function))))
   :initialize 'custom-initialize-default)
 
+;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: XXX: --> common-browser
 (defcustom ecb-tree-incremental-search 'prefix
   "*Enable incremental search in the ECB-tree-buffers.
 For a detailed explanation see the online help section \"Working with the
@@ -726,6 +738,7 @@ must deactivate and activate ECB again to take effect."
                 (const :tag "No incremental search"
                        :value nil)))
 
+;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: XXX: --> common-browser
 (defcustom ecb-tree-navigation-by-arrow t
   "*Enable smart navigation in the tree-windows by horizontal arrow-keys.
 If not nil then the left- and right-arrow keys work in the ECB tree-window in
@@ -743,6 +756,7 @@ ECB and then activating it again!"
   :group 'ecb-tree-buffer
   :type 'boolean)
 
+;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: XXX: --> common-browser
 (defcustom ecb-show-node-info-in-minibuffer '((if-too-long . path)
                                               (if-too-long . name)
                                               (always . path)
@@ -830,8 +844,7 @@ Do NOT set this option directly via setq but use always customize!"
                              (const :tag "Node-name" :value name)
                              (const :tag "Node-name + type" :value name+type)))))
 
-;; access-functions for when and what value of
-;; `ecb-show-node-info-in-minibuffer':
+;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: XXX: --> common-browser
 (defun ecb-show-any-node-info-by-mouse-moving-p ()
   "Return not nil if for at least one tree-buffer showing node info only by
 moving the mouse over a node is activated. See
@@ -842,6 +855,7 @@ moving the mouse over a node is activated. See
     (or (member 'if-too-long when-list)
         (member 'always when-list))))
 
+;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: XXX: --> common-browser
 (defun ecb-show-node-info-index (tree-buffer-name)
   (cond ((ecb-string= tree-buffer-name ecb-directories-buffer-name)
          0)
@@ -852,14 +866,17 @@ moving the mouse over a node is activated. See
         ((ecb-string= tree-buffer-name ecb-methods-buffer-name)
          3)))
 
+;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: XXX: --> common-browser
 (defun ecb-show-node-info-when (tree-buffer-name)
   (car (nth (ecb-show-node-info-index tree-buffer-name)
             ecb-show-node-info-in-minibuffer)))
 
+;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: XXX: --> common-browser
 (defun ecb-show-node-info-what (tree-buffer-name)
   (cdr (nth (ecb-show-node-info-index tree-buffer-name)
             ecb-show-node-info-in-minibuffer)))
 
+;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: XXX: --> common-browser
 (defcustom ecb-primary-secondary-mouse-buttons 'mouse-2--C-mouse-2
   "*Primary- and secondary mouse button for using the ECB-buffers.
 A click with the primary button causes the main effect in each ECB-buffer:
@@ -908,6 +925,7 @@ ECB again to take effect!"
                 (const :tag "Primary: mouse-1, secondary: mouse-2"
                        :value mouse-1--mouse-2)))
 
+;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: XXX: --> common-browser
 (defcustom ecb-tree-mouse-action-trigger 'button-release
   "*When the tree-buffer mouse-action should be triggered.
 This option determines the moment a mouse-action in a tree-buffer is
@@ -921,7 +939,7 @@ ECB again to take effect!"
   :type '(radio (const :tag "After button release" :value button-release)
                 (const :tag "After button press" :value button-press)))
 
-;; Thanks to David Hay for the suggestion <David.Hay@requisite.com>
+;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: XXX: --> common-browser
 (defcustom ecb-mouse-click-destination 'last-point
   "*Destination of a mouse-button click.
 Defines in which edit-window \(if splitted) ECB does the \"right\" action
@@ -1094,6 +1112,7 @@ examples how to use this macro!"
   :group 'ecb-general
   :type 'hook)
 
+;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: XXX: --> common-browser
 (defcustom ecb-common-tree-buffer-after-create-hook nil
   "*Local hook running at the end of each tree-buffer creation.
 Every function of this hook is called once without arguments direct after
@@ -1113,6 +1132,7 @@ The following keys must not be rebind in all tree-buffers:
 ;;====================================================
 
 
+;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: XXX: --> layout
 (defun ecb-window-select (name)
   "Select that window which displays the buffer with NAME in the `ecb-frame'
 and return the window-object. If that buffer is not displayed in the
@@ -1122,6 +1142,7 @@ and return the window-object. If that buffer is not displayed in the
 	(select-window window)
       nil)))
 
+;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: XXX: --> layout
 (defun ecb-goto-ecb-window (name)
   "Select that special ecb-window with name NAME. Only names defined
 for the current layout \(see `ecb-tree-buffers-of-current-layout') or the
@@ -1145,6 +1166,7 @@ is not active. If necessary the `ecb-frame' will be first raised."
           ;; now we can go to the window
           (ecb-window-select name)))))
 
+;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: XXX: --> file-browser
 (defun ecb-goto-window-directories ()
   "Make the ECB-directories window the current window.
 If `ecb-use-speedbar-instead-native-tree-buffer' is 'dir then goto to the
@@ -1154,6 +1176,7 @@ speedbar-window."
       (and (equal ecb-use-speedbar-instead-native-tree-buffer 'dir)
            (ecb-goto-window-speedbar))))
 
+;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: XXX: --> file-browser
 (defun ecb-goto-window-sources ()
   "Make the ECB-sources window the current window.
 If `ecb-use-speedbar-instead-native-tree-buffer' is 'source then goto to the
@@ -1163,6 +1186,7 @@ speedbar-window."
       (and (equal ecb-use-speedbar-instead-native-tree-buffer 'source)
            (ecb-goto-window-speedbar))))
 
+;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: XXX: --> methods-browser
 (defun ecb-goto-window-methods ()
   "Make the ECB-methods window the current window.
 If `ecb-use-speedbar-instead-native-tree-buffer' is 'method then goto to the
@@ -1172,11 +1196,13 @@ speedbar-window."
       (and (equal ecb-use-speedbar-instead-native-tree-buffer 'method)
            (ecb-goto-window-speedbar))))
 
+;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: XXX: --> file-browser
 (defun ecb-goto-window-history ()
   "Make the ECB-history window the current window."
   (interactive)
   (ecb-goto-ecb-window ecb-history-buffer-name))
 
+;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: XXX: --> speedbar???
 (defun ecb-goto-window-speedbar ()
   "Make the ECB-speedbar window the current window.
 This command does nothing if no integrated speedbar is visible in the
@@ -1184,6 +1210,7 @@ ECB-frame."
   (interactive)
   (ecb-goto-ecb-window ecb-speedbar-buffer-name))
 
+;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: XXX: --> layout
 (defun ecb-goto-window-edit-last ()
   "Make the last selected edit-window window the current window. This is the
 same as if `ecb-mouse-click-destination' is set to 'last-point."
@@ -1194,6 +1221,7 @@ same as if `ecb-mouse-click-destination' is set to 'last-point."
     (let ((ecb-mouse-click-destination 'last-point))
       (ecb-select-edit-window))))
 
+;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: XXX: --> layout
 (defun ecb-goto-window-edit1 ()
   "Make the \(first) edit-window window the current window."
   (interactive)
@@ -1202,6 +1230,7 @@ same as if `ecb-mouse-click-destination' is set to 'last-point."
     (select-frame ecb-frame)
     (ecb-select-edit-window 1)))
 
+;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: XXX: --> layout
 (defun ecb-goto-window-edit2 ()
   "Make the second edit-window \(if available) window the current window."
   (interactive)
@@ -1210,6 +1239,7 @@ same as if `ecb-mouse-click-destination' is set to 'last-point."
     (select-frame ecb-frame)
     (ecb-select-edit-window t)))
 
+;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: XXX: --> layout
 (defun ecb-goto-window-compilation ()
   "Goto the ecb compilation window `ecb-compile-window'."
   (interactive)
@@ -1219,9 +1249,11 @@ same as if `ecb-mouse-click-destination' is set to 'last-point."
     (select-frame ecb-frame)
     (select-window ecb-compile-window)))
 
+;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: XXX: --> layout
 (defun ecb-buffer-select (name)
   (set-buffer (get-buffer name)))
 
+;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: XXX: --> file-browser
 (defun ecb-maximize-window-directories ()
   "Maximize the ECB-directories-window.
 I.e. delete all other ECB-windows, so only one ECB-window and the
@@ -1232,6 +1264,7 @@ ECB-directories-window is not visible in current layout."
       (ecb-maximize-window-speedbar)
     (ecb-display-one-ecb-buffer ecb-directories-buffer-name)))
 
+;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: XXX: --> file-browser
 (defun ecb-maximize-window-sources ()
   "Maximize the ECB-sources-window.
 I.e. delete all other ECB-windows, so only one ECB-window and the
@@ -1242,6 +1275,7 @@ ECB-sources-window is not visible in current layout."
       (ecb-maximize-window-speedbar)
     (ecb-display-one-ecb-buffer ecb-sources-buffer-name)))
 
+;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: XXX: --> methods-browser
 (defun ecb-maximize-window-methods ()
   "Maximize the ECB-methods-window.
 I.e. delete all other ECB-windows, so only one ECB-window and the
@@ -1252,6 +1286,7 @@ ECB-methods-window is not visible in current layout."
       (ecb-maximize-window-speedbar)
     (ecb-display-one-ecb-buffer ecb-methods-buffer-name)))
 
+;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: XXX: --> file-browser
 (defun ecb-maximize-window-history ()
   "Maximize the ECB-history-window.
 I.e. delete all other ECB-windows, so only one ECB-window and the
@@ -1260,6 +1295,7 @@ ECB-history-window is not visible in current layout."
   (interactive)
   (ecb-display-one-ecb-buffer ecb-history-buffer-name))
 
+;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: XXX: --> speedbar???
 (defun ecb-maximize-window-speedbar ()
   "Maximize the ECB-speedbar-window.
 I.e. delete all other ECB-windows, so only one ECB-window and the
@@ -1268,6 +1304,7 @@ speedbar-window is not visible within the ECB-frame."
   (interactive)
   (ecb-display-one-ecb-buffer ecb-speedbar-buffer-name))
 
+;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: XXX: --> common-browser
 (defun ecb-toggle-RET-selects-edit-window ()
   "Toggles if RET in a tree-buffer should finally select the edit-window.
 See also the option `ecb-tree-RET-selects-edit-window'."
@@ -1471,6 +1508,7 @@ by this command. See also the option `ecb-window-sync'."
              (if new-value "on" "off")
              new-value)))
 
+;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: XXX: --> common-browser??
 (defun ecb-combine-ecb-button/edit-win-nr (ecb-button edit-window-nr)
   "Depending on ECB-BUTTON and EDIT-WINDOW-NR return one value:
 - nil if ECB-BUTTON is 1.
@@ -1480,6 +1518,7 @@ by this command. See also the option `ecb-window-sync'."
         ((eq ecb-button 2) (ecb-edit-window-splitted))
         ((eq ecb-button 3) edit-window-nr)))
 
+;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: XXX: --> common-browser??
 (defun ecb-get-edit-window (other-edit-window)
   "Get the correct edit-window. Which one is the correct one depends on the
 value of OTHER-EDIT-WINDOW \(which is a value returned by
@@ -1521,6 +1560,7 @@ value of OTHER-EDIT-WINDOW \(which is a value returned by
 ;; Mouse functions
 ;;====================================================
 
+;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: XXX: --> common-browser
 (defun ecb-tree-buffer-node-select-callback (node
 					     mouse-button
 					     shift-pressed
@@ -1580,6 +1620,7 @@ combination is invalid \(see `ecb-interpret-mouse-click'."
       (tree-buffer-remove-highlight))))
 
 
+;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: XXX: --> common-browser
 (defun ecb-tree-buffer-node-collapsed-callback (node
                                                 mouse-button
                                                 shift-pressed
@@ -1591,6 +1632,7 @@ when a node has been collapsed."
   (if (/= mouse-button 0)
       (setq ecb-layout-prevent-handle-ecb-window-selection t)))
 
+;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: XXX: --> common-browser
 (defun ecb-tree-buffer-node-expand-callback (node
 					     mouse-button
 					     shift-pressed
@@ -1621,6 +1663,7 @@ combination is invalid \(see `ecb-interpret-mouse-click')."
 	     nil)
 	    (t nil)))))
 
+;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: XXX: --> common-browser
 (defun ecb-interpret-mouse-click (mouse-button
                                   shift-pressed
                                   control-pressed
@@ -1657,6 +1700,7 @@ Currently the fourth argument TREE-BUFFER-NAME is not used here."
 	       (list (if control-pressed 2 1) shift-pressed meta-pressed)))
 	    (t nil)))))
 
+;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: XXX: --> common-browser??
 (defun ecb-show-minibuffer-info (node window tree-buffer-name)
   "Checks if in the minibuffer should be displayed any info about the current
 node in the ECB-window WINDOW for the tree-buffer TREE-BUFFER-NAME only by
@@ -2952,6 +2996,7 @@ if the minor mode is enabled.
   ecb-minor-mode)
 
 
+;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: XXX: --> common-browser
 (tree-buffer-defpopup-command ecb-maximize-ecb-window-menu-wrapper
   "Expand the current ECB-window from popup-menu."
   (ecb-display-one-ecb-buffer (buffer-name (current-buffer))))
