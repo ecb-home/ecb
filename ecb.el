@@ -52,7 +52,7 @@
 ;; The latest version of the ECB is available at
 ;; http://home.swipnet.se/mayhem/ecb.html
 
-;; $Id: ecb.el,v 1.80 2001/05/09 10:15:46 berndl Exp $
+;; $Id: ecb.el,v 1.81 2001/05/09 18:12:32 berndl Exp $
 
 ;;; Code:
 
@@ -548,8 +548,8 @@ run direct before the layout-drawing look at
   :type 'hook)
 
 (defcustom ecb-deactivate-hook nil
-  "*Normal hook run at the end of deactivating the ecb-package by running
-`ecb-deactivate'."
+  "*Normal hook run at the end of deactivating \(but before the ecb-layout is
+cleared!) ECB by running `ecb-deactivate'."
   :group 'ecb-general
   :type 'hook)
 
@@ -1078,9 +1078,6 @@ OTHER-WINDOW."
    (find-file ecb-path-selected-source)
    (pop-to-buffer (buffer-name))))
 
-(defun ecb-switch-to-edit-buffer ()
-  (select-window ecb-edit-window))
-  
 (defun ecb-tree-node-add-files
   (node path files type include-extension old-children sort-method
 	&optional not-expandable)
@@ -1370,8 +1367,15 @@ always the ECB-frame if called from another frame."
   "See `ecb-activate'.  This is the implementation of ECB activation."
   
   (if ecb-activated
-      (ecb-redraw-layout)
-    ;; first set the ecb-frame
+      (progn
+        (raise-frame ecb-frame)
+        (select-frame ecb-frame)
+        (ecb-redraw-layout))
+
+    ;; first initialize the whole layout-engine
+    (ecb-initialize-layout)
+
+    ;; set the ecb-frame
     (if ecb-new-ecb-frame
         (progn
           (run-hooks 'ecb-activate-before-new-frame-created-hook)
@@ -1380,6 +1384,7 @@ always the ECB-frame if called from another frame."
       (setq ecb-frame (selected-frame))
       (put 'ecb-frame 'ecb-new-frame-created nil))
     (raise-frame ecb-frame)
+    (select-frame ecb-frame)
     
     ;; now we can activate ECB
     (let ((curr-buffer-list (mapcar (lambda (buff)
@@ -1410,8 +1415,8 @@ always the ECB-frame if called from another frame."
         (define-key tree-buffer-key-map [f2]
           (function (lambda()
 		      (interactive)
-		      (ecb-switch-to-edit-buffer)
-		      (customize-group 'ecb)))))
+		      (ecb-select-edit-window)
+                      (customize-group 'ecb)))))
       
       (unless (member ecb-sources-buffer-name curr-buffer-list)
         (tree-buffer-create
@@ -1441,7 +1446,6 @@ always the ECB-frame if called from another frame."
          ecb-tree-indent
          ecb-tree-incremental-search
 	 nil
-;;         (list (cons 0 t))
          ecb-tree-expand-symbol-before)
         (setq ecb-methods-root-node (tree-buffer-get-root)))
       
@@ -1482,6 +1486,7 @@ always the ECB-frame if called from another frame."
     (add-hook 'ediff-quit-hook 'ecb-ediff-quit-hook t)
     
     (setq ecb-activated t)
+
     ;; we must update the directories buffer first time
     (ecb-update-directories-buffer)
 
@@ -1501,20 +1506,13 @@ always the ECB-frame if called from another frame."
   "Deactivates the ECB and kills all ECB buffers and windows."
   (interactive)
   (unless (not ecb-activated)
-    (select-frame ecb-frame)
-    (raise-frame)
+    
     ;; deactivating the adviced functions
     (ecb-activate-adviced-functions nil)
 
     ;; restore the old compilation-window-height
     (setq compilation-window-height ecb-old-compilation-window-height)
 
-    (when (frame-live-p ecb-frame)
-      (if ecb-edit-window
-          (ecb-switch-to-edit-buffer))   
-      ;; first we delete all ECB-windows.
-      (delete-other-windows))
-    
     ;; we can safely do the kills because killing non existing buffers
     ;; doesn´t matter.
     (kill-buffer ecb-directories-buffer-name)
@@ -1539,13 +1537,23 @@ always the ECB-frame if called from another frame."
         (set 'ediff-quit-hook (get 'ediff-quit-hook
                                    'ecb-ediff-quit-hook-value))
       (remove-hook 'ediff-quit-hook 'ecb-ediff-quit-hook))
-    (setq ecb-activated nil)
-    (if (and (frame-live-p ecb-frame)
-             (get 'ecb-frame 'ecb-new-frame-created))
-        (ignore-errors (delete-frame ecb-frame t)))
-    (setq ecb-frame nil)
+
     ;; run any personal hooks
-    (run-hooks 'ecb-deactivate-hook))
+    (run-hooks 'ecb-deactivate-hook)
+    
+    ;; clear the ecb-frame
+    (when (frame-live-p ecb-frame)
+      (raise-frame ecb-frame)
+      (select-frame ecb-frame)
+      (ecb-select-edit-window)
+      ;; first we delete all ECB-windows.
+      (delete-other-windows)
+      (if (get 'ecb-frame 'ecb-new-frame-created)
+          (ignore-errors (delete-frame ecb-frame t))))
+    
+    (ecb-initialize-layout)
+
+    (setq ecb-activated nil))
   (message "The ECB is now deactivated."))
 
 (defvar ecb-directories-menu nil)

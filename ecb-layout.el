@@ -122,7 +122,7 @@
 ;;   + The edit-window must not be splitted and the point must reside in
 ;;     the not deleted edit-window.
 
-;; $Id: ecb-layout.el,v 1.45 2001/05/07 16:06:23 berndl Exp $
+;; $Id: ecb-layout.el,v 1.46 2001/05/09 18:12:32 berndl Exp $
 
 ;;; Code:
 
@@ -444,6 +444,12 @@ done.")
 (defvar ecb-compile-window nil
   "Window to display compile-output in.")
 
+(defun ecb-initialize-layout()
+  (setq ecb-frame nil
+        ecb-edit-window nil
+        ecb-last-edit-window-with-point nil
+        ecb-compile-window))
+
 ;; =========== intelligent window functions ==========================
 
 (defconst ecb-adviceable-functions
@@ -543,13 +549,16 @@ If point already stays in the right edit-window nothing is done."
     (cond ((not point-location) ;; point not in an edit-window
            (ignore-errors (select-window ecb-edit-window))
            (if (and other-edit-window ecb-split-edit-window)
-               (select-window (next-window))))
+               (select-window (next-window)))
+             )
           ((equal point-location 1) ;; point in main edit-window
            (if (and other-edit-window ecb-split-edit-window)
-               (select-window (next-window))))
+               (select-window (next-window)))
+             )
           ((equal point-location 2) ;; point in other edit window
            (if (not other-edit-window)
-               (select-window (previous-window (selected-window) 0))))
+               (select-window (previous-window (selected-window) 0)))
+             )
           (t
            (error "Internal layout error; redraw the whole layout!")))))
 
@@ -1072,9 +1081,7 @@ this function the edit-window is selected."
       ;; original function-definitions.
       (ecb-activate-adviced-functions nil)
       
-      ;; first we go to the edit-window we must do this with ignore-errors
-      ;; because maybe the edit-window was destroyed by some mistake or error
-      ;; and `ecb-edit-window' was not nil.
+      ;; first we go to the edit-window
       (ecb-select-edit-window)
       
       ;; Do some actions regardless of the choosen layout
@@ -1087,8 +1094,7 @@ this function the edit-window is selected."
             ecb-compile-window nil)
       
       ;; Now we call the layout-function
-      (funcall (intern (format "ecb-layout-function-%d"
-                               ecb-layout-nr)))
+      (funcall (intern (format "ecb-layout-function-%d" ecb-layout-nr)))
       
       ;; Now all the windows must be created and the editing window must not be
       ;; splitted! In addition the variables `ecb-edit-window' and
@@ -1142,7 +1148,7 @@ this function the edit-window is selected."
       
       ;; Restore saved window sizes
       (ecb-restore-window-sizes)
-      
+
       ;; at the end of the redraw we always stay in that edit-window as before
       ;; the redraw
       (ecb-select-edit-window)
@@ -1169,19 +1175,22 @@ ECB windows will be set to their stored values when `ecb-redraw-layout' or
 `ecb-restore-window-sizes' is called. To reset the window sizes to their default
 values call `ecb-restore-default-window-sizes'."
   (interactive)
-  (aset ecb-layout-window-sizes ecb-layout-nr (ecb-get-window-sizes))
-  (customize-save-variable 'ecb-layout-window-sizes ecb-layout-window-sizes))
+  (when (equal (selected-frame) ecb-frame)
+    (aset ecb-layout-window-sizes ecb-layout-nr (ecb-get-window-sizes))
+    (customize-save-variable 'ecb-layout-window-sizes ecb-layout-window-sizes)))
 
 (defun ecb-restore-window-sizes ()
   "Sets the sizes of the ECB windows to their stored values."
   (interactive)
-  (ecb-set-window-sizes (aref ecb-layout-window-sizes ecb-layout-nr)))
+  (when (equal (selected-frame) ecb-frame)
+    (ecb-set-window-sizes (aref ecb-layout-window-sizes ecb-layout-nr))))
 
 (defun ecb-restore-default-window-sizes ()
   "Resets the sizes of the ECB windows to their default values."
   (interactive)
-  (aset ecb-layout-window-sizes ecb-layout-nr nil)
-  (ecb-redraw-layout))
+  (when (equal (selected-frame) ecb-frame)
+    (aset ecb-layout-window-sizes ecb-layout-nr nil)
+    (ecb-redraw-layout)))
 
 (defun ecb-get-window-size (window)
   (when window
