@@ -26,7 +26,7 @@
 ;;
 ;; Contains all online-help for ECB (stolen something from recentf.el)
 
-;; $Id: ecb-help.el,v 1.22 2001/05/22 12:48:33 berndl Exp $
+;; $Id: ecb-help.el,v 1.23 2001/05/27 16:02:08 berndl Exp $
 
 ;;; Code
 
@@ -310,7 +310,39 @@ following options before working with ECB):
 - `ecb-show-node-name-in-minibuffer': When the complete nodename should be
   displayed in the minibuffer? Default is when the mouse moves over it and the
   nodename is longer than the window-width.
+- `ecb-layout-nr': The ECB layout, means which windows you want to be
+  displayed in the ECB-frame and also the location of these windows.
 - All the options in the customize group 'ecb-layout'
+
+
+                              ===============
+                              Tips and tricks
+                              ===============
+
+Working with small screens:
+---------------------------
+
+If your screen is very small so you need every sqare-centimeter for displaying
+the buffer which you want to edit, ECB offers you a special layout, where only
+the ECB-methods buffer is displayed on top. Here comes what you should/can do
+to work best with ECB in such a situation:
+- First customize your ECB:
+  1. Customize `ecb-layout-nr' to layout nr. 10.
+  2. Do not display a durable compile-window \(see `ecb-compile-window-height').
+  3. Disable all adviced functions with option `ecb-advice-window-functions';
+     here deselect all functions.
+  4. Save your changes.
+- Bind `ecb-redraw-layout' to a key, e.g. F10.
+- To browse and select functions:
+  Call `ecb-redraw-layout' by hitting your key to make the ECB-method buffer
+  visible if not already. If you want select a method/variable with the
+  keyboard instead with the mouse yopu should read the section \"Working with
+  the keyboard in the ECB-buffers\" in this online help!
+- To edit your buffers:
+  Call \"C-x 1\" or `delete-other-windows' from within your edit-window to
+  throw away the ECB-method buffer so you get all the place of your screen for
+  editing \(Note: This works only if you have at least disabled the advice for
+  `delete-other-windows', see above).
 
 
                         ==================================

@@ -122,7 +122,7 @@
 ;;   + The edit-window must not be splitted and the point must reside in
 ;;     the not deleted edit-window.
 
-;; $Id: ecb-layout.el,v 1.51 2001/05/22 13:55:16 berndl Exp $
+;; $Id: ecb-layout.el,v 1.52 2001/05/27 16:02:08 berndl Exp $
 
 ;;; Code:
 
@@ -164,8 +164,8 @@
 
 (defcustom ecb-layout-nr 9
   "*Define the window layout of ECB. A positive integer which sets the
-general layout. Currently there are 10 predefined layouts with index from 0 to
-9. You can savely try out any of them by changing this value and saving it
+general layout. Currently there are 11 predefined layouts with index from 0 to
+10. You can savely try out any of them by changing this value and saving it
 only for the current session. If you are sure which layout you want you can
 save it for future sessions. To get a picture of the layout for index <index>
 call C-h f ecb-layout-function-<index>, e.g. `ecb-layout-function-9'.
@@ -181,6 +181,7 @@ Currently available layouts \(see the doc-string for a picture ot the layout):
 `ecb-layout-function-7'
 `ecb-layout-function-8'
 `ecb-layout-function-9'
+`ecb-layout-function-10'
 
 Regardless of the settings you define here: If you have destroyed or
 changed the ECB-screen-layout by any action you can always go back to this
@@ -326,15 +327,6 @@ frame height."
                 (const :tag "Edit + compile window" edit-and-compile)))
 
 
-;; (defcustom ecb-delete-other-windows-behavior 'smart
-;;   "*What should ECB do when deleting other windows.  This should be used in all
-;; advice to enable/disable smart deletion of other windows."
-;;   :group 'ecb-layout
-;;   :type '(radio (const :tag "Smart deletion of windows within ECB"
-;;                        :value smart)
-;;                 (const :tag "Standard deletion of all windows"
-;;                        :value standard)))
-
 (defcustom ecb-advice-window-functions '(other-window
                                          delete-window
                                          delete-other-windows
@@ -413,7 +405,9 @@ the `ecb-deactivate-hook'."
   :group 'ecb-layout
   :type 'boolean)
 
-(defcustom ecb-layout-window-sizes (make-vector 10 (make-list 5 nil))
+(defconst ecb-number-of-layouts 11)
+(defcustom ecb-layout-window-sizes (make-vector ecb-number-of-layouts
+                                                (make-list 5 nil))
   "*Specifies the sizes of the ECB windows for each layout. The easiest way to
 change this variable is to change the window sizes by dragging the window
 borders using the mouse and then store the window sizes by calling the
@@ -424,7 +418,7 @@ borders using the mouse and then store the window sizes by calling the
   :type (cons
 	 'vector
 	 (let ((i 0) l)
-	   (while (< i 10)
+	   (while (< i ecb-number-of-layouts)
 	     (setq l (append
 		      l
 		      (list
@@ -960,6 +954,10 @@ ECB-adviced functions."
          t)
         (t nil)))
 
+(defalias 'ecb-delete-other-windows-in-editwindow-10
+  'ecb-delete-other-windows-in-editwindow-7)
+(defalias 'ecb-delete-window-in-editwindow-10
+  'ecb-delete-window-in-editwindow-7)
 
 
 ;;======= Helper-functions ===========================================
@@ -1591,10 +1589,10 @@ place."
       (progn
         (select-window (next-window))
         (ecb-split-ver (* -1 ecb-compile-window-height) t)
-        (setq ecb-compile-window (next-window))
-        (select-window (next-window))
-        (switch-to-buffer ecb-history-buffer-name)
-        (select-window (previous-window)))
+        (setq ecb-compile-window (next-window)))
+;;         (select-window (next-window))
+;;         (switch-to-buffer ecb-history-buffer-name)
+;;         (select-window (previous-window)))
     (select-window (next-window)))
   (setq ecb-edit-window (selected-window)))
 
@@ -1681,6 +1679,44 @@ place."
   (ecb-split-ver 0.65)
   (ecb-set-history-buffer)
   (select-window (next-window))
+  (setq ecb-edit-window (selected-window)))
+
+(defun ecb-layout-function-10 ()
+  "This function creates the following layout:
+
+   -------------------------------------------------------
+   |                                                     |
+   |                                                     |
+   |                    Methods                          |
+   |                                                     |
+   |                                                     |
+   |-----------------------------------------------------|
+   |                                                     |
+   |                                                     |
+   |                                                     |
+   |                                                     |
+   |                    Edit                             |
+   |                                                     |
+   |                                                     |
+   |                                                     |
+   |                                                     |
+   -------------------------------------------------------
+   |                                                     |
+   |                    Compilation                      |
+   |                                                     |
+   -------------------------------------------------------
+
+If you have not set a compilation-window in `ecb-layout-nr' then the layout
+contains no compilation window and the other windows get a little more
+place."
+  (ecb-split-ver ecb-windows-height t)
+  (ecb-set-methods-buffer)
+  (if ecb-compile-window-height
+      (progn
+        (select-window (next-window))
+        (ecb-split-ver (* -1 ecb-compile-window-height) t)
+        (setq ecb-compile-window (next-window)))
+    (select-window (next-window)))
   (setq ecb-edit-window (selected-window)))
 
 
