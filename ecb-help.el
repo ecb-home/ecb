@@ -379,8 +379,9 @@ These are the special commands of `ecb-dialog-mode' mode:
   "Shows the online help of ECB."
   (interactive)
 
-  (if (not (ecb-point-in-edit-window))
-      (ecb-other-window))
+  (when (not (ecb-point-in-edit-window))
+    (ecb-select-edit-window))
+  
   (if (get-buffer ecb-help-buffer-name)
       (switch-to-buffer ecb-help-buffer-name t)
     (if (not ecb-buffer-before-help)
