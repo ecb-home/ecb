@@ -709,6 +709,9 @@ current-buffer is saved."
   "Updates the methods buffer with the current buffer. Point must stay in an
 edit-window otherwise nothing is done."
   (interactive)
+
+  (ecb-toggle-read-only -1)
+  
   (when (ecb-point-in-edit-window)
     (tree-node-set-children ecb-methods-root-node nil)
     ;;  (print (semantic-bovinate-toplevel t))
@@ -874,6 +877,9 @@ the setting in `ecb-left-mouse-jump-destination'."
 (defun ecb-update-directories-buffer()
   "Updates the ECB directories buffer."
   (interactive)
+
+  (ecb-toggle-read-only -1)
+  
   (save-current-buffer
     (ecb-buffer-select ecb-directories-buffer-name)
     ;;     (setq tree-buffer-type-faces
@@ -976,26 +982,26 @@ with the actually choosen layout \(see `ecb-layout-nr')."
   (interactive)
 
   (if ecb-use-recursive-edit
-      (progn
-
-        (if ecb-activated
-            (progn
-              
-              (message "ECB already activated.  Drawing layout.")
-              
-              (ecb-redraw-layout))
-          (catch 'exit
-            (progn
-              (ecb-activate--impl)
-              (recursive-edit))
-            (ecb-deactivate))))
-
+      (if ecb-activated
+          (progn
+            (message "ECB already activated.  Drawing layout.")
+            
+            (ecb-redraw-layout))
+        (catch 'exit
+          (progn
+            (ecb-activate--impl)
+            (recursive-edit))
+          (ecb-deactivate)))
+    
     (ecb-activate--impl)))
 
 (defun ecb-activate--impl()
   "See `ecb-activate'.  This is the implementation of ECB activation."
+
+  
   (if ecb-activated
       (ecb-redraw-layout)
+
     (let ((curr-buffer-list (mapcar (lambda (buff)
                                       (buffer-name buff))
                                     (buffer-list))))
@@ -1080,6 +1086,9 @@ with the actually choosen layout \(see `ecb-layout-nr')."
     (ecb-update-methods-buffer)
     ;; at the real end we run any personal hooks
     (run-hooks 'ecb-activate-hook)
+
+    (ecb-toggle-read-only 1)
+    
     (message "The ECB is now activated.")))
 
 (defun ecb-deactivate ()
