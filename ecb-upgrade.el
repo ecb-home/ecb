@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-upgrade.el,v 1.71 2004/03/25 18:14:07 berndl Exp $
+;; $Id: ecb-upgrade.el,v 1.72 2004/03/29 06:05:39 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -839,6 +839,11 @@ options with their old \(before the upgrade/reset) and new values."
   (ecb-upgrade-renamed-options)
   (ecb-display-upgraded-options))
 
+;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: We should here check for the
+;; existens of either `custom-file' or - if this is not set - for
+;; `user-init-file' - if they do not exist then we must not try to write to
+;; them.
+
 ;; ----------------------------------------------------------------------
 ;; all needs for the requirements check
 ;; ----------------------------------------------------------------------
@@ -855,12 +860,8 @@ options with their old \(before the upgrade/reset) and new values."
 ;; when cedet is stable (or a stable beta ;-) then we should add here a
 ;; cedet-required-version-min|max etc....
 
-;; (defconst ecb-required-semantic-version-min '(1 4 2 0))
-;; (defconst ecb-required-semantic-version-max '(2 0 3 9))
-;; (defconst ecb-required-eieio-version-min '(0 17 2 0))
-;; (defconst ecb-required-eieio-version-max '(0 18 3 9))
-;; (defconst ecb-required-speedbar-version-min '(0 14 1 1))
-;; (defconst ecb-required-speedbar-version-max '(0 15 3 9))
+;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: We should only support the latest
+;; cedet-beta!
 
 (defvar ecb-all-requirements-available nil)
 

@@ -24,7 +24,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-method-browser.el,v 1.27 2004/03/26 16:00:35 berndl Exp $
+;; $Id: ecb-method-browser.el,v 1.28 2004/03/29 06:05:39 berndl Exp $
 
 ;;; Commentary:
 
@@ -614,29 +614,38 @@ by semantic!"
 
 (defcustom ecb-show-tags
   '((default . ((include collapsed nil)
-               (parent collapsed nil)
-               (type flattened nil)
-               (variable collapsed access)
-               (function flattened access)
-               (rule flattened name)
-               (label hidden nil)
-               (t collapsed nil)))
+                (parent collapsed nil)
+                (type flattened nil)
+                (variable collapsed access)
+                (function flattened access)
+                (label hidden nil)
+                (t collapsed nil)))
     (c++-mode . ((include collapsed nil)
                  (parent collapsed nil)
                  (type flattened nil)
                  (variable collapsed access)
-                 (function collapsed access) ;; for Method-prototypes
                  (function flattened access) ;; for Methods
+                 (function collapsed access) ;; for Method-prototypes
                  (label hidden nil)
                  (t collapsed nil)))
     (c-mode . ((include collapsed nil)
                (parent collapsed nil)
                (type flattened nil)
                (variable collapsed access)
-               (function collapsed access) ;; for Function-prototypes
                (function flattened access) ;; for Functions
+               (function collapsed access) ;; for Function-prototypes
                (label hidden nil)
                (t collapsed nil)))
+    (bovine-grammar-mode . ((keyword collapsed name)
+                            (token collapsed name)
+                            (nonterminal flattened name)
+                            (rule flattened name)
+                            (t collapsed nil)))
+    (wisent-grammar-mode . ((keyword collapsed name)
+                            (token collapsed name)
+                            (nonterminal flattened name)
+                            (rule flattened name)
+                            (t collapsed nil)))
     (texinfo-mode . ((section flattened nil)
                      (def collapsed name)
                      (t collapsed nil))))
@@ -1399,28 +1408,28 @@ Methods-buffer."
     ("class-private-t" . "class-private")
     ("class-protected-t" . "class-protected")
     ("class-public-t" . "class-public")
-    ("constructor-nil-nil" . "constructor-public")
-    ("constructor-unknown-nil" . "constructor-public")
+    ("constructor-nil-nil" . "constructor-unknown")
+    ("constructor-unknown-nil" . "constructor-unknown")
     ("constructor-private-nil" . "constructor-private")
     ("constructor-protected-nil" . "constructor-protected")
     ("constructor-public-nil" . "constructor-public")
-    ("function-nil-nil" . "function-public")
-    ("function-unknown-nil" . "function-public")
+    ("function-nil-nil" . "function-unknown")
+    ("function-unknown-nil" . "function-unknown")
     ("function-private-nil" . "function-private")
     ("function-protected-nil" . "function-protected")
     ("function-public-nil" . "function-public")
-    ("function-nil-t" . "function-public-static")
-    ("function-unknown-t" . "function-public-static")
+    ("function-nil-t" . "function-unknown-static")
+    ("function-unknown-t" . "function-unknown-static")
     ("function-private-t" . "function-private-static")
     ("function-protected-t" . "function-protected-static")
     ("function-public-t" . "function-public-static")
-    ("variable-nil-nil" . "variable-public")
-    ("variable-unknown-nil" . "variable-public")
+    ("variable-nil-nil" . "variable-unknown")
+    ("variable-unknown-nil" . "variable-unknown")
     ("variable-private-nil" . "variable-private")
     ("variable-protected-nil" . "variable-protected")
     ("variable-public-nil" . "variable-public")
-    ("variable-nil-t" . "variable-public-static")
-    ("variable-unknown-t" . "variable-public-static")
+    ("variable-nil-t" . "variable-unknown-static")
+    ("variable-unknown-t" . "variable-unknown-static")
     ("variable-private-t" . "variable-private-static")
     ("variable-protected-t" . "variable-protected-static")
     ("variable-public-t" . "variable-public-static")
@@ -1447,7 +1456,9 @@ to an existing icon-file-name.")
                                        (and (ecb--semantic-tag-function-constructor-p tag)
                                             'constructor)
                                        (ecb--semantic-tag-class tag))
-                                   (ecb--semantic-tag-protection tag parent-tag)
+                                   (or (and (ecb--semantic--tag-get-property tag 'adopted)
+                                            'unknown)
+                                       (ecb--semantic-tag-protection tag parent-tag))
                                    (ecb--semantic-tag-static tag parent-tag)))
          (image-name (cdr (assoc image-name-alias
                                  ecb-tag-image-name-alias-alist)))
@@ -2028,7 +2039,6 @@ removes itself from the `post-command-hook'."
 	  tags-by-name))
     tags))
 
-
 (defun ecb-add-tag-buckets (node parent-tag buckets &optional no-bucketize)
   "Creates and adds tag nodes to the given node.
 The PARENT-TAG is propagated to the functions `ecb-add-tag-bucket' and
@@ -2281,23 +2291,27 @@ to be rescanned/reparsed and therefore the Method-buffer will be rebuild too."
            (semantic-symbol->name-assoc-list-for-type-parts
             (and (ecb--semantic-active-p)
                  (ecb--semantic-symbol->name-assoc-list-for-type-parts)
-                 (cons (cons 'prototype
-                             (format "%s-prototypes"
-                                     (ecb-string-make-singular
-                                      (cdr (assoc 'function
-                                                  (ecb--semantic-symbol->name-assoc-list-for-type-parts)
-                                                  )))))
-                       (ecb--semantic-symbol->name-assoc-list-for-type-parts))))
+                 (or (and (null (cdr (assoc 'function
+                                            (ecb--semantic-symbol->name-assoc-list-for-type-parts))))
+                          (ecb--semantic-symbol->name-assoc-list-for-type-parts))
+                     (append (ecb--semantic-symbol->name-assoc-list-for-type-parts)
+                             (list (cons 'prototype
+                                         (format "%s-prototypes"
+                                                 (ecb-string-make-singular
+                                                  (cdr (assoc 'function
+                                                              (ecb--semantic-symbol->name-assoc-list-for-type-parts)))))))))))
            (semantic-symbol->name-assoc-list
             (and (ecb--semantic-active-p)
                  (ecb--semantic-symbol->name-assoc-list)
-                 (cons (cons 'prototype
-                             (format "%s-prototypes"
-                                     (ecb-string-make-singular
-                                      (cdr (assoc 'function
-                                                  (ecb--semantic-symbol->name-assoc-list)
-                                                  )))))
-                       (ecb--semantic-symbol->name-assoc-list))))
+                 (or (and (null (cdr (assoc 'function
+                                            (ecb--semantic-symbol->name-assoc-list))))
+                          (ecb--semantic-symbol->name-assoc-list))
+                     (append (ecb--semantic-symbol->name-assoc-list)
+                             (list (cons 'prototype
+                                         (format "%s-prototypes"
+                                                 (ecb-string-make-singular
+                                                  (cdr (assoc 'function
+                                                              (ecb--semantic-symbol->name-assoc-list)))))))))))
            (curr-semantic-symbol->name-assoc-list semantic-symbol->name-assoc-list)
            new-tree non-semantic-handling)
       
