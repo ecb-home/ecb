@@ -62,7 +62,7 @@
 ;; The latest version of the ECB is available at
 ;; http://ecb.sourceforge.net
 
-;; $Id: ecb.el,v 1.281 2003/01/30 16:13:34 berndl Exp $
+;; $Id: ecb.el,v 1.282 2003/02/06 09:36:43 berndl Exp $
 
 ;;; Code:
 
@@ -4111,6 +4111,14 @@ That is remove the unsupported :help stuff."
        :help "Displays an index of all user-options in the online-help."
        ])
     (ecb-menu-item
+     [ "FAQ"
+       (let ((ecb-show-help-format 'info))
+         (ecb-show-help)
+         (Info-goto-node "FAQ"))
+       :active t
+       :help "Show the FAQ of ECB."
+       ])
+    (ecb-menu-item
      [ "Submit problem report"
        ecb-submit-problem-report
        :active t
@@ -4824,6 +4832,9 @@ FILE.elc or if FILE.elc doesn't exist."
 	 (append (list (file-name-directory
 			(or (locate-library "semantic")
 			    (ecb-error "Semantic is not in the load-path!")))
+                       (file-name-directory
+			(or (locate-library "eieio")
+			    (ecb-error "Eieio is not in the load-path!")))
 		       (file-name-directory (locate-library "ecb")))
 		 load-path))
 	(files (directory-files (file-name-directory (locate-library "ecb"))
