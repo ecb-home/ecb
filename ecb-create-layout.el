@@ -332,9 +332,10 @@ DELETE-FRAME is not nil then the new created frame will be deleted and the
     (while (progn
              ;;the while body
              (setq layout-name
-                   (ecb-choose-layout-name ecb-available-layouts nil))
+                   (ecb-choose-layout-name (ecb-available-layouts-of-type nil)
+                                           nil))
              ;; the while condition
-             (member layout-name ecb-available-layouts)))
+             (ecb-available-layouts-member-p layout-name)))
     (with-temp-file (expand-file-name ecb-create-layout-file)
       (erase-buffer)
       (if (file-readable-p (expand-file-name ecb-create-layout-file))
@@ -749,10 +750,13 @@ unbound."
   (interactive)
   ;; ensure we have load all layouts defined until now
   (ecb-load-layouts)
-  (let ((new-layout-list (sort (set-difference ecb-available-layouts
-                                               ecb-buildin-layouts
-                                               :test 'string=)
-                               'string<))
+  (let ((new-layout-list
+         (sort (set-difference (ecb-available-layouts-of-type nil)
+                               (mapcar (function (lambda (elem)
+                                                   (car elem)))
+                                       ecb-buildin-layouts)
+                               :test 'string=)
+               'string<))
         (layout-name nil))
     (if (= (length new-layout-list) 0)
         (ecb-error "There are no layouts to delete!")

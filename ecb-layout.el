@@ -103,7 +103,7 @@
 ;; - `ecb-with-some-adviced-functions'
 ;;
 
-;; $Id: ecb-layout.el,v 1.139 2002/12/22 14:25:36 berndl Exp $
+;; $Id: ecb-layout.el,v 1.140 2002/12/24 14:02:42 berndl Exp $
 
 ;;; Code:
 
@@ -1782,21 +1782,70 @@ during evaluating BODY the current window is always dedicated at the end!"
          t)
         (t nil)))
 
-;; Macro for easy defining new layouts
+
+(defconst ecb-layout-types '(left right top left-right))
+
+(defun ecb-layout-type-p (type &optional err)
+  (if (not (member type ecb-layout-types))
+      (if err
+          (error "Only left, right, top and left-right are allowed as types!")
+        nil)
+    t))
 
 (defvar ecb-available-layouts nil
   "List of all current avaiable layout names. Do not change this variable!
-This variable is only modified by `ecb-layout-define'.")
+This variable is only modified by `ecb-available-layouts-add' and
+`ecb-available-layouts-remove'. These functions are only called by
+`ecb-layout-define' and `ecb-layout-undefine'!")
 
+;; Accessors for `ecb-available-layouts':
+(defun ecb-available-layouts-of-type (type)
+  "Return a list of all layout-names for given type TYPE. Type must be an
+element of `ecb-layout-types' or nil \(then return all layout-names
+regardless of the type)."
+  (if type (ecb-layout-type-p type t))
+  (delete nil (mapcar (function (lambda (elem)
+                                  (if (or (not type)
+                                          (equal (cdr elem) type))
+                                      (car elem))))
+                      ecb-available-layouts)))
+
+(defun ecb-available-layouts-member-p (layout-name)
+  "Return a non nil value iff LAYOUT-NAME is the name of a layout of
+`ecb-available-layouts'."
+  (member layout-name (ecb-available-layouts-of-type nil)))
+
+(defun ecb-available-layouts-add (name type)
+  "Add layout with NAME and TYPE to `ecb-available-layouts'. NAME is a string
+and TYPE must be an element of `ecb-layout-types'."
+  (add-to-list 'ecb-available-layouts (cons name type))
+  (setq ecb-available-layouts
+        (sort ecb-available-layouts
+              (function (lambda (l r)
+                          (string< (car l) (car r)))))))
+
+(defun ecb-available-layouts-remove (name)
+  "Remove layout with NAME from `ecb-available-layouts'."
+  (let ((elem (assoc name ecb-available-layouts)))
+    (when elem
+      (setq ecb-available-layouts
+            (sort (delete elem ecb-available-layouts)
+                  (function (lambda (l r)
+                              (string< (car l) (car r)))))))))
+
+(defun ecb-get-layout-type (name)
+  "Return the type of layout NAME."
+  (cdr (assoc name ecb-available-layouts)))
+
+
+;; Macro for easy defining new layouts
 (defmacro ecb-layout-define (name type doc &rest create-code)
   "Creates a new ECB-layout with name NAME which must be a string. TYPE is the
 type of the new layout and is literal, i.e. not evaluated. It can be left,
 right, top or left-right. DOC is the docstring for the new layout-function
 \"ecb-layout-function-<name>\". CREATE-CODE is all the lisp code which is
-necessary to define the ECB-windows/buffers. This macro adds the layout-name
-NAME to the internal variable `ecb-available-layouts' which is used by
-`ecb-change-layout', `ecb-toggle-layout', `ecb-show-layout-help' and
-`ecb-layout-get-type'.
+necessary to define the ECB-windows/buffers. This macro adds the layout with
+NAME and TYPE to the internal variable `ecb-available-layouts'.
 
 Preconditions for CREATE-CODE:
 1. Current frame is splitted at least in one edit-window and the column\(s)
@@ -1813,12 +1862,11 @@ Preconditions for CREATE-CODE:
 
 
 Things CREATE-CODE has to do:
-1. Splitting the ECB-tree-windows-column\(s)/row \(s.a.) in all the
-   ECB-windows the layout should contain \(directories, sources, methods and
-   history). The split must not be done with other functions than
-   `ecb-split-hor' and `ecb-split-ver'! It is recommened not to to use a
-   \"hard\" number of split-lines or -rows but using fractions between 0.1 and
-   0.9!
+1. Splitting the ECB-windows-column\(s)/row \(s.a.) in all the ECB-windows the
+   layout should contain \(e.g. directories, sources, methods and history).
+   The split must not be done with other functions than `ecb-split-hor' and
+   `ecb-split-ver'! It is recommened not to to use a \"hard\" number of
+   split-lines or -columns but using fractions between 0.1 and 0.9!
 
 2. Making each special ECB-window a dedicated window. This can be done with
    one of the following functions:
@@ -1862,6 +1910,7 @@ Postconditions for CREATE-CODE:
 2. Every window besides the edit-window \(and the compile-window) must be
    a dedicated window \(e.g. a ECB-tree-window)."
   `(progn
+     (ecb-layout-type-p (quote ,type) t)
      (defun ,(intern (format "ecb-layout-function-%s" name)) ()
        ,doc
        (when ecb-compile-window-height
@@ -1889,8 +1938,7 @@ Postconditions for CREATE-CODE:
                                 name)))
        (quote ,(intern
                 (format "ecb-delete-window-ecb-windows-%s" type))))
-     (add-to-list 'ecb-available-layouts ,name)
-     (setq ecb-available-layouts (sort ecb-available-layouts 'string<))))
+     (ecb-available-layouts-add ,name (quote ,type))))
 
 (put 'ecb-layout-define 'lisp-indent-function 1)
 
@@ -1903,8 +1951,7 @@ ecb-delete-other-windows-ecb-windows-<NAME> and remove NAME from
   (fmakunbound (intern (format "ecb-delete-window-ecb-windows-%s" name)))
   (fmakunbound (intern (format "ecb-delete-other-windows-ecb-windows-%s"
                                name)))
-  (setq ecb-available-layouts (sort (delete name ecb-available-layouts)
-                                    'string<)))
+  (ecb-available-layouts-remove name))
 
 
 (defun ecb-choose-layout-name (layout-list require-match)
@@ -1920,16 +1967,26 @@ input the first element of LAYOUT-LIST is returned."
       result)))
 
 
-(defun ecb-change-layout ()
+(defun ecb-change-layout (&optional preselect-type)
   "Select a layout-name from all current available layouts \(TAB-completion is
-offered) and change the layout to the selected layout-name.
+offered) and change the layout to the selected layout-name. If optional
+argument PRESELECT-TYPE is not nil then you can preselect a layout-type
+\(TAB-completion is offered too) and then will be asked only for layouts of
+that preselected type.
 Note: This function works by changing the option `ecb-layout-name' but only
 for current Emacs-session."
-  (interactive)
+  (interactive "P")
   (when (and ecb-minor-mode
              (equal (selected-frame) ecb-frame))
-    (customize-set-variable 'ecb-layout-name
-                            (ecb-choose-layout-name ecb-available-layouts t))))
+    (let ((type (if preselect-type
+                    (intern (ecb-query-string
+                             "Insert a layout type:"
+                             (mapcar (function (lambda (elem)
+                                                 (symbol-name elem)))
+                                     ecb-layout-types))))))
+      (customize-set-variable 'ecb-layout-name
+                              (ecb-choose-layout-name
+                               (ecb-available-layouts-of-type type) t)))))
 
 (defun ecb-show-layout-help ()
   "Select a name of a layout and shows the documentation of the associated
@@ -1940,7 +1997,8 @@ picture of the outline of the choosen layout."
   (ecb-load-layouts)
   (describe-function
    (intern (format "ecb-layout-function-%s"
-                   (ecb-choose-layout-name ecb-available-layouts t)))))
+                   (ecb-choose-layout-name (ecb-available-layouts-of-type nil)
+                                           t)))))
 
 (defun ecb-redraw-layout()
   "Redraw the ECB screen. If the variable `ecb-redraw-layout-quickly' is not nil
@@ -2020,7 +2078,7 @@ this function the edit-window is selected which was current before redrawing."
       (delete-other-windows)
       (set-window-dedicated-p (selected-window) nil)
       
-      ;; we force a layout-function to set both of this windows
+      ;; we force a layout-function to set both of these windows
       ;; correctly.
       (setq ecb-edit-window nil
             ecb-compile-window nil)
@@ -2044,8 +2102,8 @@ this function the edit-window is selected which was current before redrawing."
                            ecb-compile-window
                          (error "Compilations-window not set in the layout-function")))
         
-       ;; go one window back, so display-buffer always shows the buffer in the
-        ;; next window, which is then savely the compile-window.
+        ;; go one window back, so display-buffer always shows the buffer in
+        ;; the next window, which is then savely the compile-window.
         (select-window (previous-window (selected-window) 0))
         (display-buffer
          (save-excursion
@@ -2072,11 +2130,9 @@ this function the edit-window is selected which was current before redrawing."
                 (equal ecb-compile-window-temporally-enlarge 'both))
             (setq compilation-window-height ecb-old-compilation-window-height)))
 
-      (select-window (if ecb-edit-window
-                         ecb-edit-window
-                       (error "Edit-window not set in the layout-function")))
+      (select-window ecb-edit-window)
       
-     ;; Maybe we must split the editing window again if it was splitted before
+      ;; Maybe we must split the editing window again if it was splitted before
       ;; the redraw
       (cond ((equal split-before-redraw 'horizontal)
              (ecb-split-hor 0.5 t))
