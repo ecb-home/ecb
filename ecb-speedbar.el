@@ -1,6 +1,6 @@
 ;;; ecb-speedbar.el --- 
 
-;; $Id: ecb-speedbar.el,v 1.33 2002/12/28 19:14:50 berndl Exp $
+;; $Id: ecb-speedbar.el,v 1.34 2002/12/30 10:11:17 berndl Exp $
 
 ;; Copyright (C) 2000-2003 Free Software Foundation, Inc.
 ;; Copyright (C) 2000-2003 Kevin A. Burton (burton@openprivacy.org)
@@ -72,24 +72,7 @@
 ;; Sat Nov 10 2001 09:30 PM (burton@openprivacy.org): implementation of
 ;; ecb-delete-other-windows-in-editwindow-20
 
-;;
 
-;;; TODO:
-
-;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: Seems to be fixed already!
-
-;; - BUG: for some reason if we hit <ENTER> in the ecb-speedbar window,
-;;   sometimes a new frame will come up.
-;;
-;;   - this only comes up the FIRST time I select a buffer.  Could some variable
-;;     be changed?  Maybe the `dframe-attached-frame' or
-;;     `speedbar-attached-frame' needs to be setup correctly.
-;;
-;;   - Actually it seems to be a problem if we have one ECB frame and then I
-;;     create another frame.
-
-;; (speedbar-current-frame) doesn't seem to work right..
-;; 
 
 ;;; Code:
 
@@ -97,10 +80,6 @@
   (require 'silentcomp))
 
 (require 'speedbar)
-
-(silentcomp-defvar speedbar-attached-frame)
-(silentcomp-defvar dframe-attached-frame)
-(silentcomp-defvar speedbar-select-frame-method)
 
 (defconst ecb-speedbar-version-ok (string-match "^0\\.\\(1[4-9]\\|[2-9][0-9]*\\)"
                                                 speedbar-version)
@@ -165,7 +144,8 @@ speedbar-window is active, then select the edit-window."
 (defun ecb-set-speedbar-buffer()
   "Set the speedbar buffer within ECB."
   (ecb-speedbar-activate)
-  (set-window-buffer (selected-window) (get-buffer-create ecb-speedbar-buffer-name))
+  (set-window-buffer (selected-window)
+                     (get-buffer-create ecb-speedbar-buffer-name))
   (if ecb-running-emacs-21
       (set (make-local-variable 'automatic-hscrolling) nil)))
 
@@ -208,7 +188,6 @@ future this could break."
     ;;Set the frame that the speedbar should use.  This should be the selected
     ;;frame.  AKA the frame that ECB is running in.
     (setq speedbar-frame ecb-frame)
-    (setq speedbar-attached-frame ecb-frame)
     (setq dframe-attached-frame ecb-frame)
   
     ;;this needs to be 0 because we can't have the speedbar too chatty in the
@@ -232,7 +211,6 @@ future this could break."
     (ecb-speedbar-disable-advices)
   
     (setq speedbar-frame nil)
-    (setq speedbar-attached-frame nil)
     (setq dframe-attached-frame nil)
 
     (speedbar-enable-update)
