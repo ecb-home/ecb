@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb.el,v 1.417 2004/12/01 14:19:37 berndl Exp $
+;; $Id: ecb.el,v 1.418 2004/12/06 17:52:18 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -440,6 +440,7 @@ Here the interval is defined ECB has to be idle before starting with these
 stealthy tasks. It can be a floating-point value in seconds. The value can
 also be changed during running ECB."
   :group 'ecb-general
+  :group 'ecb-most-important
   :type '(number :tag "Idle time before running stealthy tasks"
                  :value 1)
   :initialize 'custom-initialize-default
@@ -705,7 +706,7 @@ tasks are performed:
                                                (substring norm-filename 0 2)))
                                          ;; add the full directory as source-path
                                          (file-name-directory norm-filename))))
-                     (ecb-add-source-path source-path source-path
+                     (ecb-add-source-path source-path (ecb-fix-filename source-path)
                                           (not (cdr ecb-add-path-for-not-matching-files)))))
 
                ;; now we can be sure that a matching source-path exists
