@@ -4834,6 +4834,14 @@ So with the option @code{ecb-use-speedbar-for-directories} you have
 the choice which way of displaying and handling directories and
 source-files you want (the speedbar- or the ECB-way).
 
+During speedbar is running within ECB (i.e.
+@code{ecb-use-speedbar-for-directories} is not nil) the
+speedbar-command @code{speedbar} is disabled and the speedbar-command
+@code{speedbar-get-focus} switches between the speedbar-window and the
+edit-window@footnote{The standard behavior is switching between the
+speedbar-frame and the attached frame, but this make obviously no
+sense during running speedbar with ECB.}.
+
 Note: ECB can only integrate speedbar-versions >= 0.14beta1! If you
 use lower versions of speedbar @code{ecb-use-speedbar-for-directories}
 has no effect.
@@ -5482,5 +5490,8 @@ This index contains all customizable options of ECB.
 @printindex cp
 
 @contents
+
+
+@c TEXI DOCSTRING MAGIC: ecb-check-directory-for-caching
 
 @bye

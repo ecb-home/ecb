@@ -4228,6 +4228,11 @@ So with the option `ecb-use-speedbar-for-directories' you have the choice
 which way of displaying and handling directories and source-files you want
 (the speedbar- or the ECB-way).
 
+During speedbar is running within ECB (i.e.
+`ecb-use-speedbar-for-directories' is not nil) the speedbar-command
+`speedbar' is disabled and the speedbar-command `speedbar-get-focus' switches
+between the speedbar-window and the edit-window(2).
+
 Note: ECB can only integrate speedbar-versions >= 0.14beta1! If you use lower
 versions of speedbar `ecb-use-speedbar-for-directories' has no effect.
 
@@ -4236,6 +4241,10 @@ versions of speedbar `ecb-use-speedbar-for-directories' has no effect.
 (1) The latter one is not needed if you use speedbar because speedbar
 displays directories and sources in one window. But if you like you can also
 use a sources window too...
+
+(2) The standard behavior is switching between the speedbar-frame and the
+attached frame, but this make obviously no sense during running speedbar with
+ECB.
 
 
 File: ecb.info,  Node: Optimize scrolling,  Next: Large directories,  Prev: Integrating speedbar,  Up: Tips and tricks
@@ -5068,24 +5077,25 @@ Node: Small screens181546
 Node: Big screens182940
 Node: Simulating speedbar183781
 Node: Integrating speedbar184751
-Ref: Integrating speedbar-Footnote-1186161
-Node: Optimize scrolling186337
-Node: Large directories187417
-Node: Using eshell188082
-Node: Elisp programming188272
-Node: List of variables188881
-Node: List of hooks189193
-Node: tree-buffer190149
-Node: Adviced functions190955
-Ref: Adviced functions-Footnote-1191574
-Node: Programming new layouts191645
-Node: Conflicts and bugs197349
-Node: Conflicts197824
-Node: Bugs201534
-Node: FAQ201754
-Ref: FAQ-Footnote-1206923
-Node: Command Index206954
-Node: Option Index209405
-Node: Concept Index215996
+Ref: Integrating speedbar-Footnote-1186404
+Ref: Integrating speedbar-Footnote-2186580
+Node: Optimize scrolling186738
+Node: Large directories187818
+Node: Using eshell188483
+Node: Elisp programming188673
+Node: List of variables189282
+Node: List of hooks189594
+Node: tree-buffer190550
+Node: Adviced functions191356
+Ref: Adviced functions-Footnote-1191975
+Node: Programming new layouts192046
+Node: Conflicts and bugs197750
+Node: Conflicts198225
+Node: Bugs201935
+Node: FAQ202155
+Ref: FAQ-Footnote-1207324
+Node: Command Index207355
+Node: Option Index209806
+Node: Concept Index216397
 
 End Tag Table
