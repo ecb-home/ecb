@@ -54,7 +54,7 @@
 ;; The latest version of the ECB is available at
 ;; http://home.swipnet.se/mayhem/ecb.html
 
-;; $Id: ecb.el,v 1.149 2001/08/30 11:30:57 berndl Exp $
+;; $Id: ecb.el,v 1.150 2001/08/31 16:22:16 berndl Exp $
 
 ;;; Code:
 
@@ -1859,6 +1859,13 @@ That is remove the unsupported :help stuff."
    (list
     "Preferences"
     (ecb-menu-item
+     ["All..."
+      (ecb-customize)
+      :active t
+      :help "Display all available option-groups..."
+      ])
+    "-"
+    (ecb-menu-item
      ["General..."
       (customize-group "ecb-general")
       :active t
@@ -1917,114 +1924,125 @@ That is remove the unsupported :help stuff."
   "Menu for ECB minor mode.")
 
 
+(defun ecb-add-to-minor-modes ()
+  "Does all necessary to add ECB as a minor mode with current values of
+`ecb-mode-map' and `ecb-minor-mode-text'"
+  (if (fboundp 'add-minor-mode)
+      ;; Emacs 21 & XEmacs
+      ;; These Emacs-versions do all necessary itself
+      (add-minor-mode 'ecb-minor-mode
+                      'ecb-minor-mode-text ecb-mode-map)
+    ;; Emacs 20.X
+    (let (el)
+      (if (setq el (assq 'ecb-minor-mode minor-mode-alist))
+          ;; `minor-mode-alist' contains lists, not conses!!
+          (setcar (cdr el) 'ecb-minor-mode-text)
+        (setq minor-mode-alist
+              (cons (list 'ecb-minor-mode 'ecb-minor-mode-text)
+                    minor-mode-alist)))
+      (if (setq el (assq 'ecb-minor-mode minor-mode-map-alist))
+          (setcdr el ecb-mode-map)
+        (setq minor-mode-map-alist
+              (cons (cons 'ecb-minor-mode ecb-mode-map)
+                    minor-mode-map-alist))))))
+
 (defvar ecb-mode-map nil
-  "Keymap for ECB minor mode.")
+  "Internal keymap for ECB minor mode.")
 
-(defvar ecb-prefix-map
-  (let ((km (make-sparse-keymap)))
-    (define-key km "f" 'ecb-activate)
-    (define-key km "l" 'ecb-redraw-layout)
-    (define-key km "t" 'ecb-toggle-ecb-windows)
-    (define-key km "r" 'ecb-rebuild-methods-buffer)
-    (define-key km "o" 'ecb-show-help)
-    (define-key km "1" 'ecb-goto-window-edit1)
-    (define-key km "2" 'ecb-goto-window-edit2)
-    (define-key km "c" 'ecb-goto-window-compilation)
-    (define-key km "d" 'ecb-goto-window-directories)
-    (define-key km "s" 'ecb-goto-window-sources)
-    (define-key km "m" 'ecb-goto-window-methods)
-    (define-key km "h" 'ecb-goto-window-history)
-    km)
-  "Default key bindings in ECB minor mode.")
+(defcustom ecb-key-map
+  '("C-c ." . ((t "f" ecb-activate)
+               (t "p" ecb-nav-goto-previous)
+               (t "n" ecb-nav-goto-next)
+               (t "l" ecb-redraw-layout)
+               (t "t" ecb-toggle-ecb-windows)
+               (t "r" ecb-rebuild-methods-buffer)
+               (t "o" ecb-show-help)
+               (t "1" ecb-goto-window-edit1)
+               (t "2" ecb-goto-window-edit2)
+               (t "c" ecb-goto-window-compilation)
+               (t "d" ecb-goto-window-directories)
+               (t "s" ecb-goto-window-sources)
+               (t "m" ecb-goto-window-methods)
+               (t "h" ecb-goto-window-history)))
+  "*Specifies all keybindings for the ECB minor-mode keymap.
+The value is a cons-cell where the car is a common-prefix key for all the
+keybindings. The cdr is a list of keybindings each of them a list again. A
+keybinding has the following form:
 
-(defvar ecb-prefix-key--internal nil
-  "The common prefix key in ECB minor mode. Do not change this variable
-directly, but use instead `ecb-prefix-key'!")
+  '\(<common-prefix-flag> <keysequence> <function>) where
 
-(defcustom ecb-prefix-key "[?\C-c ?.]"
-  "*Specifies the prefix-keysequence for the ECB minor-mode keymap.
-The keysequence must be inserted as a string. Here's how the string must
-look like:
-
-   \[?<key-1> ... ?<key-n>]
-
-Description:
-- The whole string must be enclosed in brackets \"\[...]\".
-- Every key of the sequence must begin with a question-mark \"?\"
-- The real <key-x> must directly follow the question-mark.
-- <key-x> has to be either:
-  + A single printable character \(incl. SPC)
-  + A printable character \(incl. SPC) combined with a modifier \(like Ctrl,
-    Meta ...). To enter a key with a modifier, type C-q followed by the
-    desired modified keystroke. For example, to enter C-c \(Ctrl c) as the key
-    to be bound, type C-q C-c in the key-field in the customization buffer.
-- Every \"?<key-x>\"-element of the keysequence can be surrounded by any
-  whitespace.
-
-Example:
-\[?^C ?.] binds the keysequence \"C-c .\" as prefix-keysequence for the ECB
-keymap. This key has to be inserted by the following keystrokes \(for better
-clearness of the display every real keystroke you have to hit onto your
-keyboard is enclosed in \' and is separated by a \'+\'):
-\'\[\' + \'?\' + \'C-q\' + \'C-c\' + ' ' + \'?\' + \'.\' + \']\'
+<common-prefix-flag>: If t then the common-prefixkey defined as car of the
+                      value \(see above) is used.
+<keysequence>: If the common prefixkey is used then the final keybinding is the
+               concatenation of the common-prefixkey \(see above) and this
+               keysequence.
+<function>: The function to bind to the key. This can also be a
+            lambda-expression .
 
 It is highly recommended to use one of the standard keys C-c or C-x as first key
-of your prefix-key sequence!"
+of your common-prefixkey!
+
+You MUST change this option via customize to take effect!
+
+All keysequences must be inserted as a string and must follow the syntax needed
+by `read-kbd-macro' or `kbd'. This means you can insert the key in the same
+manner \"C-h k\" displays keysequences. Here is the summary of the syntax:
+
+Text is divided into \"words \" separated by whitespace. Except for the words
+described below, the characters of each word go directly as characters of the
+keysequence. The whitespace that separates words is ignored. Whitespace in the
+macro must be written explicitly, as in \"C-c SPC\".
+
+  * The special words RET, SPC, TAB, DEL, LFD, ESC, and NUL represent special
+   control characters. The words must be written in uppercase.
+
+  * A word in angle brackets, e.g., <return>, <down>, <left> or <f1>, represents
+    a function key. \(Note that in the standard configuration, the function
+    key <return> and the control key RET are synonymous.). You can use angle
+    brackets on the words RET, SPC, etc., but they are not required there.
+
+  * Keys can be written by their ASCII code, using a backslash followed by up
+    to six octal digits. This is the only way to represent keys with codes
+    above \377.
+
+  * One or more prefixes M- \(meta), C- \(control), S- \(shift), A- \(alt),
+    H- \(hyper), and s- \(super) may precede a character or key notation. For
+    function keys, the prefixes may go inside or outside of the brackets:
+    C-<down> = <C-down>. The prefixes may be written in any order: M-C-x =
+    C-M-x.
+    Prefixes are not allowed on multi-key words, e.g., C-abc, except that the
+    Meta prefix is allowed on a sequence of digits and optional minus sign:
+    M--123 = M-- M-1 M-2 M-3.
+
+  * The `^' notation for control characters also works:  ^M = C-m."
   :group 'ecb-general
-  :type '(string :tag "Keysequence")
+  :type '(cons (choice :tag "Common prefix-key"
+                       (const :tag "No common prefix-key" :value nil)
+                       (string :tag "Prefix-key" :value "C-c ."))
+               (repeat :tag "Keybindings"
+                       (list :tag "Key-definition"
+                             (boolean :tag "o Use common prefix-key" :value t)
+                             (string :tag "o Key")
+                             (function :tag "o Function or lambda-expression"
+                                       :value nil))))
   :set (function (lambda (symbol value)
-                   ;; check if the keysequence is valid
-                   (if (not (string-match "^\\[[ \t]*\\(\\?.[ \t]*\\)+\\]$"
-                                          value))
-                       (error "ecb-prefix-key contains not a valid keysequence!"))
                    (set symbol value)
-                   ;; make a key and save it
-                   (setq ecb-prefix-key--internal
-                         (car (read-from-string value)))
                    ;; make a mode-map and save it
                    (setq ecb-mode-map
-                         (let ((km (make-sparse-keymap)))
-                           (define-key km ecb-prefix-key--internal ecb-prefix-map)
+                         (let ((km (make-sparse-keymap))
+                               (val-list (copy-list (cdr value)))
+                               keq-string)
+                           (dolist (elem val-list)
+                             (setq key-string (concat (if (nth 0 elem) (car value))
+                                                      " " (nth 1 elem)))
+                             (define-key km (read-kbd-macro key-string) (nth 2 elem)))
                            (easy-menu-define ecb-minor-menu km
                                              "ECB Minor Mode Menu" ecb-menu-bar)
                            km))
                    ;; add the minor-mode and and the minor-mode-map to the
                    ;; alists if not already contained. In this case just
                    ;; replace the values in the alists
-                   (if (fboundp 'add-minor-mode)
-                       ;; Emacs 21 & XEmacs
-                       ;; These Emacs-versions do all necessary itself
-                       (add-minor-mode 'ecb-minor-mode
-                                       'ecb-minor-mode-text ecb-mode-map)
-                     ;; Emacs 20.X
-                     (let (el)
-                       (if (setq el (assq 'ecb-minor-mode minor-mode-alist))
-                           ;; `minor-mode-alist' contains lists, not conses!!
-                           (setcar (cdr el) 'ecb-minor-mode-text)
-                         (setq minor-mode-alist
-                               (cons (list 'ecb-minor-mode 'ecb-minor-mode-text)
-                                     minor-mode-alist)))
-                       (if (setq el (assq 'ecb-minor-mode minor-mode-map-alist))
-                           (setcdr el ecb-mode-map)
-                         (setq minor-mode-map-alist
-                               (cons (cons 'ecb-minor-mode ecb-mode-map)
-                                     minor-mode-map-alist))))))))
-                     
-;; ;; Adding ECB to the minor modes
-;; (if (fboundp 'add-minor-mode)
-;;     ;; Emacs 21 & XEmacs
-;;     (add-minor-mode 'ecb-minor-mode
-;;                     'ecb-minor-mode-text ecb-mode-map)
-;;   ;; Emacs 20.X
-;;   (or (assq 'ecb-minor-mode minor-mode-alist)
-;;       (setq minor-mode-alist
-;;             (cons (list 'ecb-minor-mode 'ecb-minor-mode-text)
-;;                   minor-mode-alist)))
-    
-;;   (or (assq 'ecb-minor-mode minor-mode-map-alist)
-;;       (setq minor-mode-map-alist
-;;             (cons (cons 'ecb-minor-mode ecb-mode-map)
-;;                   minor-mode-map-alist))))
+                   (ecb-add-to-minor-modes))))
 
 
 (defun ecb-activate ()
