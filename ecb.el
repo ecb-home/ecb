@@ -7,7 +7,7 @@
 ;; Keywords: java, class, browser
 ;; Created: Jul 2000
 
-(defvar ecb-version "1.40beta2"
+(defvar ecb-version "1.40"
   "Current ECB version.")
 
 ;; This program is free software; you can redistribute it and/or modify it under
@@ -54,7 +54,7 @@
 ;; The latest version of the ECB is available at
 ;; http://home.swipnet.se/mayhem/ecb.html
 
-;; $Id: ecb.el,v 1.137 2001/07/17 20:26:59 berndl Exp $
+;; $Id: ecb.el,v 1.138 2001/07/17 20:43:41 creator Exp $
 
 ;;; Code:
 
@@ -321,7 +321,7 @@ so the user can easily jump back."
   :type 'boolean)
 
 (defcustom ecb-token-display-function 'semantic-prototype-nonterminal
-  "*Function to use when displaying tokens in the methods buffer.
+  "*Semantic function to use for displaying tokens in the methods buffer.
 Some useful functions are found in `semantic-token->text-functions'."
   :group 'ecb-methods
   :set (function (lambda (symbol value)
@@ -337,18 +337,46 @@ Some useful functions are found in `semantic-token->text-functions'."
                              (function flattened access)
                              (rule flattened name)
                              (t collapsed name))
-  "*How to show tokens in the methods buffer. This variable is a list
-where each item is a list of a Semantic token type symbol and a symbol which
-describes how the token type shall be shown:
-- expanded: The tokens are shown in an expanded node.
+  "*How to show tokens in the methods buffer. This variable is a list where each
+element represents a type of tokens:
+
+(<token type> <display type> <sort method>)
+
+The tokens in the methods buffer are displayed in the order as they appear in
+this list.
+
+
+Token Type
+----------
+
+A Semantic token type symbol (function, variable, rule, include etc.) or one of
+the following:
+
+- t:      All token types not specified anywhere else in the list.
+- parent: The parents of a type.
+
+
+Display Type
+------------
+
+A symbol which describes how the tokens of this type shall be shown:
+
+- expanded:  The tokens are shown in an expanded node.
 - collapsed: The tokens are shown in a collapsed node.
 - flattened: The tokens are added to the parent node.
-- hidden: The tokens are not shown.
-The token type symbol can be any symbol returned from Semantic \(type,
-function, variable, rule, include etc.), the symbol 't which includes all
-tokens not specified anywhere else in the list or one of the following:
-- parent: The parent types of a type
-The tokens in the methods buffer are displayed in the order as they appear in this list."
+- hidden:    The tokens are not shown.
+
+
+Sort Method
+-----------
+
+A symbol describing how to sort the tokens of this type:
+
+- name:   Sort by the token name.
+- access: Sort by token access (public, protected, private) and then by name.
+- nil:    Don't sort tokens. They appear in the same order as in the source
+          buffer.
+"
   :group 'ecb-methods
   :set (function (lambda (symbol value)
 		   (set symbol value)
@@ -443,6 +471,13 @@ you must deactivate and activate ECB again to take effect."
 (defcustom ecb-truncate-lines t
   "*Truncate lines in ECB buffers. If you change this during ECB is activated
 you must deactivate and activate ECB again to take effect."
+  :group 'ecb-general
+  :type 'boolean)
+
+(defcustom ecb-truncate-long-names t
+  "*Truncate long names that don't fit in the width of the ECB windows. If you
+change this during ECB is activated you must deactivate and activate ECB again
+to take effect."
   :group 'ecb-general
   :type 'boolean)
 
@@ -707,7 +742,8 @@ cleared!) ECB by running `ecb-deactivate'."
       nil
     (if (eq 'flattened display)
 	parent-node
-      (let ((node (tree-node-new name type data nil parent-node)))
+      (let ((node (tree-node-new name type data nil parent-node
+				 (if ecb-truncate-long-names 'end))))
 	(when (eq 'expanded display)
 	  (tree-node-set-expanded node t))
 	node))))
@@ -762,11 +798,13 @@ cleared!) ECB by running `ecb-deactivate'."
 	  (bucket-node node))
       (unless (eq 'hidden display)
 	(unless (eq 'flattened display)
-	  (setq bucket-node (tree-node-new name 1 nil nil node))
+	  (setq bucket-node (tree-node-new name 1 nil nil node
+					   (if ecb-truncate-long-names 'end)))
 	  (tree-node-set-expanded bucket-node (eq 'expanded display)))
 	(dolist (token (ecb-sort-tokens sort-method (cdr bucket)))
-	  (ecb-update-token-node token
-				 (tree-node-new "" 0 token t bucket-node)))))))
+	  (ecb-update-token-node token (tree-node-new "" 0 token t bucket-node
+						      (if ecb-truncate-long-names
+							  'end))))))))
 
 (defun ecb-update-token-node (token node)
   "Updates a node containing a token."
@@ -782,15 +820,20 @@ cleared!) ECB by running `ecb-deactivate'."
 
 (defun ecb-dump-toplevel ()
   (interactive)
-  (ecb-dump-tokens (semantic-bovinate-toplevel t) ""))
+  (let ((tokens (semantic-bovinate-toplevel t)))
+    (save-current-buffer
+      (set-buffer (get-buffer-create "ecb-dump"))
+      (erase-buffer)
+      (ecb-dump-tokens tokens ""))))
   
 (defun ecb-dump-tokens (tokens prefix)
-  (when tokens
-    (progn
-      (dolist (tok tokens)
-	(prin1 (concat prefix (semantic-token-name tok)))
-	(ecb-dump-tokens (semantic-nonterminal-children tok t)
-			 (concat prefix "  "))))))
+  (dolist (tok tokens)
+    (if (stringp tok)
+	(insert prefix tok)
+      (insert prefix (semantic-token-name tok) ": "
+	      (symbol-name (semantic-token-token tok)) "\n")
+      (ecb-dump-tokens (semantic-nonterminal-children tok t)
+		       (concat prefix "  ")))))
 
 (defun ecb-add-tokens (node tokens &optional parent-token)
   (ecb-add-token-buckets node parent-token (semantic-bucketize tokens)))
@@ -837,7 +880,8 @@ cleared!) ECB by running `ecb-deactivate'."
 		    (tree-node-new (if ecb-font-lock-tokens
 				       (semantic-colorize-text parent 'type)
 				     parent)
-				   2 parent t node))))))))
+				   2 parent t node
+				   (if ecb-truncate-long-names 'end)))))))))
         (t (ecb-find-add-token-bucket node type display sort-method buckets)))))
    (let ((type-display (ecb-get-token-type-display t)))
      (dolist (bucket buckets)
@@ -1239,7 +1283,7 @@ OTHER-EDIT-WINDOW."
         (if include-extension
             file
           (file-name-sans-extension file))
-        type filename (or not-expandable (= type 1)) 'end)))))
+        type filename (or not-expandable (= type 1)) (if ecb-truncate-long-names 'end))))))
   
 (defun ecb-update-directory-node (node)
   "Updates the directory node NODE and add all subnodes if any."
@@ -1291,8 +1335,10 @@ OTHER-EDIT-WINDOW."
          (tree-node-set-children node nil)
 	 (dolist (dir paths)
 	   (let ((norm-dir (ecb-fix-filename dir t)))
-	     (tree-node-add-child node (ecb-new-child old-children
-						      norm-dir 2 norm-dir nil 'beginning))))
+	     (tree-node-add-child
+	      node
+	      (ecb-new-child old-children norm-dir 2 norm-dir nil
+			     (if ecb-truncate-long-names 'beginning)))))
 	 (when (not paths)
 	   (tree-node-add-child node (tree-node-new "Welcome to ECB! Please select:"
 						    3 '(lambda()) t))
@@ -1316,7 +1362,8 @@ OTHER-EDIT-WINDOW."
         (if not-expandable
             (tree-node-set-expandable child nil))
         (throw 'exit child)))
-    (let ((node (tree-node-new name type data not-expandable)))
+    (let ((node (tree-node-new name type data not-expandable nil
+			       (if ecb-truncate-long-names 'end))))
       (tree-node-set-shorten-name node shorten-name)
       node)))
 

@@ -26,7 +26,7 @@
 ;; This file is part of the ECB package which can be found at:
 ;; http://home.swipnet.se/mayhem/ecb.html
 
-;; $Id: tree-buffer.el,v 1.62 2001/07/17 20:26:59 berndl Exp $
+;; $Id: tree-buffer.el,v 1.63 2001/07/17 20:43:41 creator Exp $
 
 ;;; Code:
 
@@ -1029,7 +1029,7 @@ child."
 - nil: The name is never truncated."
   )
 
-(defun tree-node-new (name type data &optional not-expandable parent)
+(defun tree-node-new (name type data &optional not-expandable parent shorten-name)
   (let ((a (make-vector 8 nil)))
     (tree-node-set-name a name)
     (tree-node-set-type a type)
@@ -1038,7 +1038,7 @@ child."
     (tree-node-set-children a nil)
     (tree-node-set-parent a parent)
     (tree-node-set-expandable a (not not-expandable))
-    (tree-node-set-shorten-name a 'end)
+    (tree-node-set-shorten-name a shorten-name)
     (when parent
       (tree-node-add-child parent a))
     a))
