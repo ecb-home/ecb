@@ -1,6 +1,6 @@
 ;;; ecb-eshell.el --- eshell integration for the ECB.
 
-;; $Id: ecb-eshell.el,v 1.18 2001/12/16 09:38:48 burtonator Exp $
+;; $Id: ecb-eshell.el,v 1.19 2001/12/22 06:52:05 burtonator Exp $
 
 ;; Copyright (C) 2000-2003 Free Software Foundation, Inc.
 ;; Copyright (C) 2000-2003 Kevin A. Burton (burton@openprivacy.org)
@@ -101,6 +101,10 @@
 
 ;;; Code:
 
+(defvar ecb-eshell-buffer-name "*eshell*"
+  "Buffer name for the eshell.  We define it here so that we don't need to have
+  the eshell loaded for ecb-eshell to function properly.")
+
 (defun ecb-eshell-current-buffer-sync()
   "Synchronize the eshell with the current buffer.  This is only done if the
 eshell is currently visible."
@@ -117,10 +121,10 @@ eshell is currently visible."
         
         (setq source-buffer-directory default-directory)
 
-        (setq window (get-buffer-window eshell-buffer-name))
+        (setq window (get-buffer-window ecb-eshell-buffer-name))
 
         (save-excursion
-          (set-buffer (get-buffer-create eshell-buffer-name))
+          (set-buffer (get-buffer-create ecb-eshell-buffer-name))
 
           (setq ecb-buffer-directory default-directory))
 
@@ -133,7 +137,7 @@ eshell is currently visible."
                    (not (string-equal source-buffer-directory ecb-buffer-directory)))
           (save-excursion
 
-            (set-buffer eshell-buffer-name)
+            (set-buffer ecb-eshell-buffer-name)
             
             ;;change the directory without showing the cd command
             (eshell/cd source-buffer-directory)
@@ -153,7 +157,7 @@ eshell is currently visible."
 
     (let(window)
 
-      (setq window (get-buffer-window eshell-buffer-name))
+      (setq window (get-buffer-window ecb-eshell-buffer-name))
 
       (when (and (ecb-eshell-running-p)
                  window
@@ -166,9 +170,9 @@ eshell is currently visible."
 (defun ecb-eshell-running-p()
   "Return true if eshell is currently running."
 
-  (and (boundp 'eshell-buffer-name)
-       eshell-buffer-name
-       (get-buffer eshell-buffer-name)))
+  (and (boundp 'ecb-eshell-buffer-name)
+       ecb-eshell-buffer-name
+       (get-buffer ecb-eshell-buffer-name)))
   
 (defun ecb-eshell-goto-eshell()
   (interactive)
@@ -180,7 +184,7 @@ eshell is currently visible."
       (progn 
         (select-window ecb-compile-window)
 
-        (switch-to-buffer eshell-buffer-name))
+        (switch-to-buffer ecb-eshell-buffer-name))
 
     ;;we auto start the eshell here?  I think so..
     (select-window ecb-compile-window)
@@ -196,7 +200,7 @@ eshell is currently visible."
 
   (let(enlargement window)
   
-    (setq window (get-buffer-window eshell-buffer-name))
+    (setq window (get-buffer-window ecb-eshell-buffer-name))
     
     (when (and (ecb-eshell-running-p)
                (window-live-p window)
