@@ -103,7 +103,7 @@
 ;; - `ecb-with-some-adviced-functions'
 ;;
 
-;; $Id: ecb-layout.el,v 1.120 2002/10/21 11:38:34 berndl Exp $
+;; $Id: ecb-layout.el,v 1.121 2002/10/22 14:08:43 berndl Exp $
 
 ;;; Code:
 
@@ -192,7 +192,13 @@ changed the ECB-screen-layout by any action you can always go back to this
 layout with `ecb-redraw-layout'"
   :group 'ecb-layout
   :initialize 'custom-initialize-default
-  :set ecb-layout-option-set-function
+  :set (function (lambda (symbol value)
+                   (if (fboundp (intern (format "ecb-layout-function-%d"
+                                                value)))
+                       (funcall ecb-layout-option-set-function
+                                symbol value)
+                     (error "There is no layout with number %d available!"
+                            value))))
   :type 'integer)
 
 (defvar ecb-old-compilation-window-height compilation-window-height)

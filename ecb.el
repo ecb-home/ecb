@@ -59,7 +59,7 @@
 ;; The latest version of the ECB is available at
 ;; http://home.swipnet.se/mayhem/ecb.html
 
-;; $Id: ecb.el,v 1.243 2002/10/18 10:45:44 berndl Exp $
+;; $Id: ecb.el,v 1.244 2002/10/22 14:08:44 berndl Exp $
 
 ;;; Code:
 
@@ -419,7 +419,20 @@ The popup-menu of the tree-buffers \"Directories\", \"Sources\" and
   clicking the right mouse-button onto a node.
 - Sources-buffer: The grep is performed in the current selected directory.
 - History-buffer: The grep is performed in the directory of the current
-  popup-source after clicking the right mouse-button onto a node."
+  popup-source after clicking the right mouse-button onto a node.
+
+Conditions for such a function:
+- The function is called interactively via `call-interactively'
+- During the function-call the `default-directory' is temp. set to that
+  directory mentioned above with \"... is performed in ...\", i.e. the
+  function can use the value of `default-directory' to determine the directory
+  to grep.
+- The function must read all it's arguments itself.
+- The function is completely responsible for performing the grep itself and
+  displaying the results.
+
+Normaly one of the standard-grepping functions like `grep' or `igrep' \(or
+some wrappers around it) should be used!"
   :group 'ecb-directories
   :type 'function)
 
@@ -427,7 +440,7 @@ The popup-menu of the tree-buffers \"Directories\", \"Sources\" and
                                       'igrep-find 'grep-find)
   "*Function used for performing a recursive grep.
 For more Details see option `ecb-grep-function' and replace \"grep\" with
-\"recursive grep\"."
+\"recursive grep\" or \"grep-find\"."
   :group 'ecb-directories
   :type 'function)
 
