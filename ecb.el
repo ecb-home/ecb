@@ -54,7 +54,7 @@
 ;; The latest version of the ECB is available at
 ;; http://home.swipnet.se/mayhem/ecb.html
 
-;; $Id: ecb.el,v 1.219 2002/06/09 08:40:47 berndl Exp $
+;; $Id: ecb.el,v 1.220 2002/06/14 09:35:50 berndl Exp $
 
 ;;; Code:
 
@@ -1290,6 +1290,7 @@ Note: A click with the secondary mouse-button \(see again
   :group 'ecb-general
   :type 'string)
 
+
 (defcustom ecb-auto-compatibility-check t
   "*Check at ECB-startup if all ECB-options have correct values.
 If not nil then all ECB-options are checked if their current value have the
@@ -1352,33 +1353,94 @@ cleared!) ECB by running `ecb-deactivate'."
 ;; Internals
 ;;====================================================
 
+(defun ecb-enter-debugger (&rest error-args)
+  "If `ecb-debug-mode' is not nil then enter the Emacs-debugger and signal an
+error with ERROR-ARGS."
+  (when ecb-debug-mode
+    (let ((debug-on-error t))
+      (apply 'error error-args))))
+
 ;; encapsulation all semantic-functions ECB uses if they operate with the
 ;; semantic-overlays, so we can handle an error if these overlays (extends for
 ;; XEmacs) are destroyed and invalid cause of some mysterious circumstances.
 
+;; (delete-overlay (car (semantic-overlays-at (point))))
+;; (semantic-overlay-start (semantic-token-overlay klaus))
+;; (setq klaus (semantic-current-nonterminal))
+
+(defun ecb-semantic-assert-valid-token (token &optional no-reparse)
+  "Assert that TOKEN is a valid token. If not valid then `ecb-enter-debugger'
+is called."
+  (if (semantic-token-p token)
+      (if (semantic-token-with-position-p token)
+          (let ((o  (semantic-token-overlay token)))
+            (if (and (semantic-overlay-p o)
+                     (not (semantic-overlay-live-p o)))
+                (progn
+                  (when (not no-reparse)
+                    ;; we need this because:
+                    ;; 1. After every jump to a token X via the method-buffer of
+                    ;;    ECB this token X is added to the navigation history list
+                    ;;    as new ecb-nav-token-history-item.
+                    ;; 2. Before every select of a source in the sources- or
+                    ;;    history-buffer or of a node in the method-buffer
+                    ;;    `ecb-nav-save-current' is called which operates onto
+                    ;;    the last saved history-item which is often a
+                    ;;    token-history-item (see 1.): `ecb-nav-save-current'
+                    ;;    saves for token-history-items current-position and
+                    ;;    window-start relative to the token position of the
+                    ;;    last saved token-history-item which is token X from
+                    ;;    1.
+                    ;; Now suppose that after 1. and before 2. the overlay of
+                    ;; token X has been destroyed cause of some reason. Then
+                    ;; the token-history-item of 1. contains now a token with
+                    ;; a destroyed overlay. Now step 2. is performed and now
+                    ;; we see why from this moment every click onto a node in
+                    ;; the source-, history- or method-buffer must fail:
+                    ;; During step 2. `ecb-nav-save-current' gets the token
+                    ;; from the last token-history-item and calls for this
+                    ;; token `semantic-token-start' which fails now because
+                    ;; the contained overlay of this token is destroyed in the
+                    ;; meanwhile. Therefore we must throw away this last
+                    ;; token-history-item containing the token with the
+                    ;; destroyed overlay. Then after a complete reparse of the
+                    ;; source-buffer and following rebuild of the
+                    ;; ECB-method-buffer ECB is in correct state again!
+                    (ecb-nav-initialize)
+;;                     (ecb-nav-remove-current-node)
+                    (semantic-clear-toplevel-cache)
+                    (ecb-update-methods-buffer--internal))
+                  (ecb-enter-debugger "Token %S is invalid!" token))
+              ;; else, token is OK.
+              ))
+        ;; Positionless tokens are also ok.
+        )
+    ;; For no semantic-tokens a reparse makes no sense!
+    (ecb-enter-debugger "Not a semantic token: %S" token)))
+
+
 (defun ecb-semantic-token-start (token)
-  (condition-case nil
-      (semantic-token-start token)
-    (error (message "semantic-token-start has problems with tokens --> buffer is reparsed!")
-           (when (ecb-point-in-edit-window)
-             (semantic-clear-toplevel-cache)
-             (ecb-update-methods-buffer--internal)
-             nil))))
+  (ecb-semantic-assert-valid-token token)
+  ;; if ecb-debug-mode is not nil then the TOKEN is valid if we pass the
+  ;; assert. If ecb-debug-mode is nil then we call simply the semantic
+  ;; function and see what happens.
+  (semantic-token-start token))
 
-           
 (defun ecb-semantic-token-end (token)
-  (condition-case nil
-      (semantic-token-end token)
-    (error (message "semantic-token-end has problems with tokens --> buffer is reparsed!")
-           (when (ecb-point-in-edit-window)
-             (semantic-clear-toplevel-cache)
-             (ecb-update-methods-buffer--internal)
-             nil))))
+  (ecb-semantic-assert-valid-token token)
+  ;; if ecb-debug-mode is not nil then the TOKEN is valid if we pass the
+  ;; assert. If ecb-debug-mode is nil then we call simply the semantic
+  ;; function and see what happens.
+  (semantic-token-end token))
 
+;; Klaus: We must not reparse the buffer if `semantic-current-nonterminal'
+;; returns nil because here this is no error but nil is always returned for
+;; example if point stays within a comment. Therefore here we only catch real
+;; errors!
 (defun ecb-semantic-current-nonterminal ()
   (condition-case nil
       (semantic-current-nonterminal)
-    (error (message "semantic-current-nonterminal has problems with tokens --> buffer is reparsed!")
+    (error (message "semantic-current-nonterminal has problems --> reparsed is performed!")
            (when (ecb-point-in-edit-window)
              (semantic-clear-toplevel-cache)
              (ecb-update-methods-buffer--internal)
@@ -2721,16 +2783,10 @@ Currently the fourth argument TREE-BUFFER-NAME is not used here."
              (push-mark))
          (when ecb-token-jump-narrow
            (widen))
-         (goto-char (or (ecb-semantic-token-start token)
-                        (when ecb-debug-mode
-                          (message "ecb-jump-to-token: Token-start not available!")
-                          nil)))
+         (goto-char (ecb-semantic-token-start token))
          (if ecb-token-jump-narrow
              (narrow-to-region (tree-buffer-line-beginning-pos)
-                               (or (ecb-semantic-token-end token)
-                                   (when ecb-debug-mode
-                                     (message "ecb-jump-to-token: Token-end not available!")
-                                     nil)))
+                               (ecb-semantic-token-end token))
            (cond
             ((eq 'top ecb-scroll-window-after-jump)
              (set-window-start (selected-window)
@@ -3312,6 +3368,9 @@ always the ECB-frame if called from another frame."
 	(ecb-redraw-layout)
 	(ecb-update-directories-buffer))
 
+    ;; initialize the navigate-library
+    (ecb-nav-initialize)
+
     ;; maybe we must upgrade some not anymore compatible or even renamed
     ;; options
     (when ecb-auto-compatibility-check
@@ -3430,22 +3489,8 @@ always the ECB-frame if called from another frame."
             (lambda (l r)
               (and (string= (semantic-token-name l) (semantic-token-name r))
                    (eq (semantic-token-token l) (semantic-token-token r))
-                   (eq (or (ecb-semantic-token-start l)
-                           (when ecb-debug-mode
-                             (message "Token-equivalence: Token-start for l not available!")
-                             nil))
-                       (or (ecb-semantic-token-start r)
-                           (when ecb-debug-mode
-                             (message "Token-equivalence: Token-start for r not available!")
-                             nil)))
-                   (eq (or (ecb-semantic-token-end l)
-                           (when ecb-debug-mode
-                             (message "Token-equivalence: Token-end for l not available!")
-                             nil))
-                       (or (ecb-semantic-token-end r)
-                           (when ecb-debug-mode
-                             (message "Token-equivalence: Token-end for r not available!")
-                             nil)))))))
+                   (eq (ecb-semantic-token-start l) (ecb-semantic-token-start r))
+                   (eq (ecb-semantic-token-end l) (ecb-semantic-token-end r))))))
          nil
          ecb-truncate-lines
          t
@@ -3877,3 +3922,5 @@ changed there should be no performance-problem!"
 (provide 'ecb)
 
 ;;; ecb.el ends here
+
+

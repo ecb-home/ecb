@@ -132,16 +132,10 @@
   (let ((token (ecb-nav-get-token item)))
     (set-window-buffer (selected-window) (semantic-token-buffer token))
     (widen)
-    (goto-char (or (ecb-semantic-token-start token)
-                   (when ecb-debug-mode
-                     (message "ecb-nav-token-history-item:ecb-nav-goto: Token-start not available!")
-                     nil)))
+    (goto-char (ecb-semantic-token-start token))
     (when (ecb-nav-get-narrow item)
       (narrow-to-region (tree-buffer-line-beginning-pos)
-                        (or (ecb-semantic-token-end token)
-                            (when ecb-debug-mode
-                              (message "ecb-nav-token-history-item:ecb-nav-goto: Token-end not available!")
-                              nil))))
+                        (ecb-semantic-token-end token)))
     (goto-char (+ (ecb-semantic-token-start token) (ecb-nav-get-pos item)))
     (set-window-start (selected-window)
                       (+ (ecb-semantic-token-start token)
@@ -149,10 +143,7 @@
 
 (defmethod ecb-nav-save ((item ecb-nav-token-history-item))
   (let* ((token (ecb-nav-get-token item))
-         (token-start (or (ecb-semantic-token-start token)
-                          (when ecb-debug-mode
-                            (message "ecb-nav-token-history-item:ecb-nav-save: Token-start not available!")
-                            nil))))
+         (token-start (ecb-semantic-token-start token)))
     (when token-start
       (ecb-nav-set-pos item (- (point) token-start))
       (ecb-nav-set-window-start item (- (window-start) token-start)))))
@@ -209,6 +200,13 @@
 (defvar ecb-nav-current-node nil)
 (setq ecb-nav-current-node ecb-nav-first-node)
 
+
+(defun ecb-nav-initialize ()
+  (setq ecb-nav-first-node
+        (ecb-dlist-node-new (ecb-nav-history-item "First item")))
+  (setq ecb-nav-current-node ecb-nav-first-node))
+  
+
 (defun ecb-nav-jump-to-token (file token &optional narrow)
   (ecb-nav-save-current)
   (find-file file)
@@ -220,10 +218,21 @@
   (ecb-nav-add-item (ecb-nav-file-history-item file)))
 
 (defun ecb-nav-add-item (item)
-  (let*	((node (ecb-dlist-node-new item)))
+  (let ((node (ecb-dlist-node-new item)))
     (ecb-set-next node (ecb-get-next ecb-nav-current-node))
     (ecb-set-next ecb-nav-current-node node)
     (setq ecb-nav-current-node node)))
+
+(defun ecb-nav-remove-current-node ()
+  (if (ecb-get-previous ecb-nav-current-node)
+      (let ((prev (ecb-get-previous ecb-nav-current-node)))
+        (ecb-set-next prev (ecb-get-next ecb-nav-current-node))
+        (setq ecb-nav-current-node prev))
+    (if (ecb-get-next ecb-nav-current-node)
+        (let ((next (ecb-get-next ecb-nav-current-node)))
+          (ecb-set-previous next nil)
+          (setq ecb-nav-current-node next))
+      (ecb-nav-initialize))))
 
 (defun ecb-nav-save-current ()
   (ecb-nav-save (ecb-get-data ecb-nav-current-node)))
