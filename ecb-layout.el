@@ -122,7 +122,7 @@
 ;;   + The edit-window must not be splitted and the point must reside in
 ;;     the not deleted edit-window.
 
-;; $Id: ecb-layout.el,v 1.42 2001/05/06 12:43:58 creator Exp $
+;; $Id: ecb-layout.el,v 1.43 2001/05/06 18:01:40 creator Exp $
 
 ;;; Code:
 
@@ -765,7 +765,7 @@ the \(first) edit-window and does then it´s job \(see above)."
       ;; now we are always in the other window, so we can switch to the buffer
       (switch-to-buffer (ad-get-arg 0) (ad-get-arg 1)))))
 
-(defun ecb-jde-open-class-at-point-ff-function(filename &optional wildcards)
+(defun ecb-jde-open-class-at-point-ff-function (filename &optional wildcards)
   "Special handling of the class opening at point JDE feature. This function
 calls the value of `jde-open-class-at-point-find-file-function' with activated
 ECB-adviced functions."
@@ -935,7 +935,7 @@ ECB-adviced functions."
 
 ;;======= Helper-functions ===========================================
 
-(defun ecb-split-hor(amount &optional dont-switch-window)
+(defun ecb-split-hor (amount &optional dont-switch-window)
   "Splits the current-window and returns the absolute amount in columns"
   (let ((abs-amout (floor (if (and (< amount 1.0)
                                    (> amount -1.0))
@@ -944,12 +944,12 @@ ECB-adviced functions."
     (ecb-split-hor-abs abs-amout dont-switch-window)
     abs-amout))
 
-(defun ecb-split-hor-abs(amount &optional dont-switch-window)
+(defun ecb-split-hor-abs (amount &optional dont-switch-window)
   (split-window-horizontally amount)
   (if (not dont-switch-window)
       (select-window (next-window))))
 
-(defun ecb-split-ver(amount &optional dont-switch-window)
+(defun ecb-split-ver (amount &optional dont-switch-window)
   "Splits the current-window and returns the absolute amount in lines"
   (let ((abs-amout (floor (if (and (< amount 1.0)
                                    (> amount -1.0))
@@ -958,25 +958,25 @@ ECB-adviced functions."
     (ecb-split-ver-abs abs-amout dont-switch-window)
     abs-amout))
 
-(defun ecb-split-ver-abs(amount &optional dont-switch-window)
+(defun ecb-split-ver-abs (amount &optional dont-switch-window)
   (split-window-vertically amount)
   (if (not dont-switch-window)
       (select-window (next-window))))
 
-(defun ecb-set-buffer(name)
+(defun ecb-set-buffer (name)
   (switch-to-buffer name)
   (set-window-dedicated-p (selected-window) ecb-use-dedicated-windows))
 
-(defun ecb-set-directories-buffer()
+(defun ecb-set-directories-buffer ()
   (ecb-set-buffer ecb-directories-buffer-name))
 
-(defun ecb-set-sources-buffer()
+(defun ecb-set-sources-buffer ()
   (ecb-set-buffer ecb-sources-buffer-name))
 
-(defun ecb-set-methods-buffer()
+(defun ecb-set-methods-buffer ()
   (ecb-set-buffer ecb-methods-buffer-name))
 
-(defun ecb-set-history-buffer()
+(defun ecb-set-history-buffer ()
   (ecb-set-buffer ecb-history-buffer-name))
 
 ;;======= The new layout mechanism========================================
@@ -1182,7 +1182,7 @@ this function the edit-window is selected."
 	(goto-char pos-before-redraw))))
 
 
-(defun ecb-store-window-sizes()
+(defun ecb-store-window-sizes ()
   "Stores the sizes of the ECB windows for the current layout. The size of the
 ECB windows will be set to their stored values when `ecb-redraw-layout' or
 `ecb-restore-window-sizes' is called. To reset the window sizes to their default
@@ -1191,22 +1191,22 @@ values call `ecb-restore-default-window-sizes'."
   (aset ecb-layout-window-sizes ecb-layout-nr (ecb-get-window-sizes))
   (customize-save-variable 'ecb-layout-window-sizes ecb-layout-window-sizes))
 
-(defun ecb-restore-window-sizes()
+(defun ecb-restore-window-sizes ()
   "Sets the sizes of the ECB windows to their stored values."
   (interactive)
   (ecb-set-window-sizes (aref ecb-layout-window-sizes ecb-layout-nr)))
 
-(defun ecb-restore-default-window-sizes()
+(defun ecb-restore-default-window-sizes ()
   "Resets the sizes of the ECB windows to their default values."
   (interactive)
   (aset ecb-layout-window-sizes ecb-layout-nr nil)
   (ecb-redraw-layout))
 
-(defun ecb-get-window-size(window)
+(defun ecb-get-window-size (window)
   (when window
     (cons (window-width window) (window-height window))))
 
-(defun ecb-get-window-sizes()
+(defun ecb-get-window-sizes ()
   (cons
    (ecb-get-window-size ecb-edit-window)
    (mapcar
@@ -1217,14 +1217,14 @@ values call `ecb-restore-default-window-sizes'."
 	  ecb-history-buffer-name
 	  ecb-methods-buffer-name))))
 
-(defun ecb-set-window-size(window size)
+(defun ecb-set-window-size (window size)
   (when (and window size)
     (save-selected-window
       (select-window window)
       (enlarge-window (- (car size) (window-width window)) t)
       (enlarge-window (- (cdr size) (window-height window))))))
 
-(defun ecb-set-window-sizes(sizes)
+(defun ecb-set-window-sizes (sizes)
   (when sizes
     (ecb-set-window-size ecb-edit-window (car sizes))
     (let ((buffers (list ecb-directories-buffer-name
@@ -1484,7 +1484,7 @@ place."
   (ecb-split-ver 0.5)
   (ecb-set-methods-buffer))
 
-(defun ecb-layout-function-6()
+(defun ecb-layout-function-6 ()
   "This function creates the following layout:
 
    -------------------------------------------------------

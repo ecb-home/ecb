@@ -26,51 +26,51 @@
 ;; This file is part of the ECB package which can be found at:
 ;; http://home.swipnet.se/mayhem/ecb.html
 
-;; $Id: ecb-util.el,v 1.12 2001/05/03 19:20:02 creator Exp $
+;; $Id: ecb-util.el,v 1.13 2001/05/06 18:01:40 creator Exp $
 
 ;;; Code:
 (defconst running-xemacs (string-match "XEmacs\\|Lucid" emacs-version))
 (defconst ecb-directory-sep-char directory-sep-char)
 (defconst ecb-directory-sep-string (char-to-string ecb-directory-sep-char))
 
-(defun ecb-fix-filename(name)
+(defun ecb-fix-filename (name)
   (let ((norm-path (expand-file-name name)))
     (if (= (aref norm-path (1- (length norm-path))) ecb-directory-sep-char)
         (substring norm-path 0 (1- (length norm-path)))
       norm-path)))
 
-(defun ecb-confirm(text)
+(defun ecb-confirm (text)
   (x-popup-dialog (list '(0 0) (selected-window)) (list text '("Yes" . t) '("No" . nil))))
 
 ;; Klaus TODO: Making this function more general, means useable for non java
 ;; code!!
-(defun ecb-create-source(dir)
+(defun ecb-create-source (dir)
   (let ((filename (read-from-minibuffer "Source name: ")))
     (ecb-switch-to-edit-buffer)
     (jde-gen-class-buffer (concat dir "/" filename (if (not (string-match "\\." filename)) ".java")))))
 
-(defun ecb-create-directory-source(node)
+(defun ecb-create-directory-source (node)
   (ecb-create-source (tree-node-get-data node)))
 
-(defun ecb-create-source-2(node)
+(defun ecb-create-source-2 (node)
   (ecb-create-source (ecb-fix-filename (file-name-directory
 					(tree-node-get-data node)))))
 
-(defun ecb-create-file(node)
+(defun ecb-create-file (node)
   (ecb-create-file-3 (tree-node-get-data node)))
 
-(defun ecb-create-file-3(dir)
+(defun ecb-create-file-3 (dir)
   (ecb-switch-to-edit-buffer)
   (find-file (concat dir "/" (read-from-minibuffer "File name: "))))
 
-(defun ecb-create-file-2(node)
+(defun ecb-create-file-2 (node)
   (ecb-create-file-3 (ecb-fix-filename (file-name-directory
 					(tree-node-get-data node)))))
 
-(defun ecb-delete-source-2(node)
+(defun ecb-delete-source-2 (node)
   (ecb-delete-source (tree-node-get-data node)))
 
-(defun ecb-delete-source(file)
+(defun ecb-delete-source (file)
   (when (ecb-confirm (concat "Delete " file "?"))
     (when (get-file-buffer file)
       (kill-buffer (get-file-buffer file)))
@@ -78,12 +78,12 @@
     (delete-file file)
     (ecb-select-source-file ecb-path-selected-source)))
 
-(defun ecb-create-directory(parent-node)
+(defun ecb-create-directory (parent-node)
   (make-directory (concat (tree-node-get-data parent-node) "/" (read-from-minibuffer "Directory name: ")))
   (ecb-update-directory-node parent-node)
   (tree-buffer-update))
 
-(defun ecb-delete-directory(node)
+(defun ecb-delete-directory (node)
   (delete-directory (tree-node-get-data node))
   (ecb-update-directory-node (tree-node-get-parent node))
   (tree-buffer-update))

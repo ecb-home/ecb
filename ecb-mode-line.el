@@ -25,7 +25,7 @@
 ;;
 ;; Contains all mode-line enhancements for ECB.
 
-;; $Id: ecb-mode-line.el,v 1.8 2001/05/02 12:46:31 berndl Exp $
+;; $Id: ecb-mode-line.el,v 1.9 2001/05/06 18:01:40 creator Exp $
 
 (defcustom ecb-mode-line-prefixes '(nil
                                     nil
@@ -61,7 +61,7 @@ then also the string \": \" is appended."
                       (string :tag "Custom prefix" :value ""))))
 
 
-(defun ecb-mode-line-format()
+(defun ecb-mode-line-format ()
   "Update all of the modelines of each buffer."
   (save-excursion
     ;; update the modeline for each visible(!!) ECB-buffer (some ECB-buffers
@@ -75,7 +75,7 @@ then also the string \": \" is appended."
 			 (file-name-nondirectory ecb-path-selected-source)))
     (ecb-mode-line-set ecb-history-buffer-name (nth 3 ecb-mode-line-prefixes))))
 
-(defun ecb-mode-line-set(buffer-name prefix &optional text)
+(defun ecb-mode-line-set (buffer-name prefix &optional text)
   "Sets the mode line for a buffer. The mode line has the scheme:
 \"[PREFIX[: ]][TEXT]\"."
   (let ((shown-prefix (if (stringp prefix)
@@ -91,7 +91,7 @@ then also the string \": \" is appended."
 	     text
 	     (window-width (get-buffer-window buffer-name)))))))))
 
-(defun ecb-mode-line-get-directory(prefix directory width)
+(defun ecb-mode-line-get-directory (prefix directory width)
   "Given the prefix for the mode-line (' ECB Sources: '), the directory to
 display, and the width of the window,  compute what directory name to display.
 This should trim the beginning of the directory so that the mode-line does not
@@ -123,7 +123,7 @@ stretch past the screen."
   ;; return now a window-width fitting directory
   directory)
 
-(defun ecb-mode-line-update-buffer(buffer-name new-mode-line-format)
+(defun ecb-mode-line-update-buffer (buffer-name new-mode-line-format)
   "Update the given buffer...."
 
   (if (get-buffer buffer-name)
