@@ -167,16 +167,6 @@
   :group 'ecb-directories
   :type 'face)
 
-(defcustom ecb-directory-indent 2
-  "*Indent size for directories."
-  :group 'ecb-directories
-  :type 'integer)
-
-(defcustom ecb-directory-expand-symbol-before nil
-  "*Show the directory expand symbol before the directory name."
-  :group 'ecb-directories
-  :type 'boolean)
-
 (defcustom ecb-excluded-directories-regexp ".*CVS.*"
   "*Specifies directories that should not be included in the directories
 list. The value of this variable should be a regular expression."
@@ -253,6 +243,16 @@ is displayed:
   :group 'ecb-methods
   :type 'boolean)
 
+(defcustom ecb-show-classes 'before
+  "*How to show classes in the methods buffer."
+  :group 'ecb-methods
+  :type '(radio (const :tag "Display before methods"
+                       :value before)
+		(const :tag "Display after methods"
+                       :value after)
+                (const :tag "Do not show classes"
+                       :value nil)))
+
 (defcustom ecb-font-lock-method-faces '(font-lock-function-name-face
                                         font-lock-type-face
                                         font-lock-variable-name-face
@@ -280,6 +280,16 @@ This option takes only effect if `ecb-font-lock-methods' is on."
 (defcustom ecb-sort-methods t
    "*Sort the contents of the methods buffer." 
   :group 'ecb-methods
+  :type 'boolean)
+
+(defcustom ecb-tree-indent 2
+  "*Indent size for trees."
+  :group 'ecb-general
+  :type 'integer)
+
+(defcustom ecb-tree-expand-symbol-before nil
+  "*Show the expand symbol before the items in a tree."
+  :group 'ecb-general
   :type 'boolean)
 
 (defcustom ecb-truncate-lines t
@@ -418,13 +428,18 @@ highlighting of the methods if `ecb-font-lock-methods' is not nil."
                    return-type))
           (t method-and-args))))
   
-(defun ecb-add-types-methods(node token)
-  (tree-node-set-expanded node t)
-  (dolist (type (semantic-find-nonterminal-by-token 'type token))
-    (let ((n (tree-node-new (semantic-token-name type) 0
-			    (semantic-token-start type))))
-      (tree-node-add-child node n)
-      (ecb-add-types-methods n (semantic-token-type-parts type))))
+(defun ecb-add-classes(node token &optional flatten)
+  (let ((children (semantic-find-nonterminal-by-token 'type token)))
+    (dolist (type children)
+      (let ((n (if (and flatten (= 1 (length children)))
+		   node
+		 (tree-node-new (semantic-token-name type) 0
+			    (semantic-token-start type)))))
+	(unless (and flatten (= 1 (length children)))
+	    (tree-node-add-child node n))
+	(ecb-add-classes-methods n (semantic-token-type-parts type))))))
+  
+(defun ecb-add-methods(node token)
   (let ((methods (semantic-find-nonterminal-by-token 'function token)))
      (if ecb-sort-methods
  	(setq methods (sort methods (lambda(a b)
@@ -434,6 +449,14 @@ highlighting of the methods if `ecb-font-lock-methods' is not nil."
        (tree-node-add-child node (tree-node-new
 				  (ecb-get-method-sig method) 0
 				  (semantic-token-start method) t)))))
+  
+(defun ecb-add-classes-methods(node token &optional flatten)
+  (tree-node-set-expanded node t)
+  (when (eq ecb-show-classes 'before)
+    (ecb-add-classes node token flatten))
+  (ecb-add-methods node token)
+  (when (eq ecb-show-classes 'after)
+    (ecb-add-classes node token flatten)))
 
 (defun ecb-expand-tree(path node)
   (catch 'exit
@@ -528,13 +551,14 @@ highlighting of the methods if `ecb-font-lock-methods' is not nil."
 (defun ecb-update-methods-buffer()
   "Updates the methods buffer with the current buffer."
   (tree-node-set-children ecb-methods-root-node nil)
-  (ecb-add-types-methods ecb-methods-root-node
-			 (condition-case nil
-			     ;; semantic <= 1.2.1
-			     (semantic-bovinate-toplevel 0 nil t)
-			   (wrong-number-of-arguments
-			    ;; semantic >= 1.3.1
-			    (semantic-bovinate-toplevel t))))
+  (ecb-add-classes-methods ecb-methods-root-node
+			   (condition-case nil
+			       ;; semantic <= 1.2.1
+			       (semantic-bovinate-toplevel 0 nil t)
+			     (wrong-number-of-arguments
+			      ;; semantic >= 1.3.1
+			      (semantic-bovinate-toplevel t)))
+			   t)
   (save-selected-window
     (ecb-buffer-select ecb-methods-buffer-name)
     (tree-buffer-update)
@@ -701,7 +725,7 @@ For further explanation see `ecb-clear-history-behavior'."
     (ecb-buffer-select ecb-directories-buffer-name)
 ;;     (setq tree-buffer-type-faces
 ;; 	  (list (cons 1 ecb-source-in-directories-buffer-face)))
-    (setq tree-buffer-indent ecb-directory-indent)
+    (setq tree-buffer-indent ecb-tree-indent)
     (let* ((node (tree-buffer-get-root))
 	   (old-children (tree-node-get-children node)))
       (tree-node-set-children node nil)
@@ -785,76 +809,80 @@ with the actually choosen layout \(see `ecb-layout')."
   (interactive)
   (if ecb-activated
       (ecb-redraw-layout)
-    (let ((curr-buffer-list (mapcar (lambda (buff)
-                                      (buffer-name buff))
-                                    (buffer-list))))
-      ;; create all the ECB-buffers if they don´t already exist
-      (unless (member ecb-directories-buffer-name curr-buffer-list)
-        (tree-buffer-create
-         ecb-directories-buffer-name
-         'ecb-directory-clicked
-         'ecb-update-directory-node
-         (list (cons 0 ecb-directories-menu) (cons 1 ecb-sources-menu))
-         ecb-truncate-lines
-         (list (cons 1 ecb-source-in-directories-buffer-face))
-	 ecb-directory-expand-symbol-before)
-        ;; if we want some keys only defined in a certain tree-buffer we
-        ;; must do this directly after calling the tree-buffer-create
-        ;; function because this function makes the tree-buffer-key-map
-        ;; variable buffer-local for its tree-buffer and creates the sparse
-        ;; keymap.
-        (define-key tree-buffer-key-map [f1] 'ecb-update-directories-buffer)
-        (define-key tree-buffer-key-map [f2]
-          '(lambda()
-             (interactive)
-             (ecb-switch-to-edit-buffer)
-             (customize-group 'ecb))))        
+    (catch 'exit
+      (let ((curr-buffer-list (mapcar (lambda (buff)
+					(buffer-name buff))
+				      (buffer-list))))
+	;; create all the ECB-buffers if they don´t already exist
+	(unless (member ecb-directories-buffer-name curr-buffer-list)
+	  (tree-buffer-create
+	   ecb-directories-buffer-name
+	   'ecb-directory-clicked
+	   'ecb-update-directory-node
+	   (list (cons 0 ecb-directories-menu) (cons 1 ecb-sources-menu))
+	   ecb-truncate-lines
+	   (list (cons 1 ecb-source-in-directories-buffer-face))
+	   ecb-tree-expand-symbol-before)
+	  ;; if we want some keys only defined in a certain tree-buffer we
+	  ;; must do this directly after calling the tree-buffer-create
+	  ;; function because this function makes the tree-buffer-key-map
+	  ;; variable buffer-local for its tree-buffer and creates the sparse
+	  ;; keymap.
+	  (define-key tree-buffer-key-map [f1] 'ecb-update-directories-buffer)
+	  (define-key tree-buffer-key-map [f2]
+	    '(lambda()
+	       (interactive)
+	       (ecb-switch-to-edit-buffer)
+	       (customize-group 'ecb))))        
 
-      (unless (member ecb-sources-buffer-name curr-buffer-list)
-        (tree-buffer-create
-         ecb-sources-buffer-name
-         'ecb-source-clicked
-         'ecb-source-clicked
-         (list (cons 0 ecb-sources-menu))
-         ecb-truncate-lines))
+	(unless (member ecb-sources-buffer-name curr-buffer-list)
+	  (tree-buffer-create
+	   ecb-sources-buffer-name
+	   'ecb-source-clicked
+	   'ecb-source-clicked
+	   (list (cons 0 ecb-sources-menu))
+	   ecb-truncate-lines))
 
-      (unless (member ecb-methods-buffer-name curr-buffer-list)
-        (tree-buffer-create
-         ecb-methods-buffer-name
-         'ecb-method-clicked
-	 nil
-         nil
-         ecb-truncate-lines
-         (list (cons 0 t)))
-	(setq ecb-methods-root-node (tree-buffer-get-root)))
+	(unless (member ecb-methods-buffer-name curr-buffer-list)
+	  (tree-buffer-create
+	   ecb-methods-buffer-name
+	   'ecb-method-clicked
+	   nil
+	   nil
+	   ecb-truncate-lines
+	   (list (cons 0 t))
+	   ecb-tree-expand-symbol-before)
+	  (setq ecb-methods-root-node (tree-buffer-get-root)))
       
-      (unless (member ecb-history-buffer-name curr-buffer-list)
-        (tree-buffer-create
-         ecb-history-buffer-name
-         'ecb-source-clicked
-         'ecb-source-clicked
-         (list (cons 0 ecb-history-menu))
-         ecb-truncate-lines)))
+	(unless (member ecb-history-buffer-name curr-buffer-list)
+	  (tree-buffer-create
+	   ecb-history-buffer-name
+	   'ecb-source-clicked
+	   'ecb-source-clicked
+	   (list (cons 0 ecb-history-menu))
+	   ecb-truncate-lines)))
 
-    ;; we need some hooks
-    (remove-hook 'post-command-hook 'ecb-hook)
-    (add-hook 'post-command-hook 'ecb-hook)
-    ;; we add a function to this hook at the end because this function should
-    ;; be called at the end of all hook-functions of this hook!
-    (add-hook 'compilation-finish-functions
-              'ecb-layout-return-from-compilation t)
-    (add-hook 'compilation-mode-hook
-              'ecb-layout-go-to-compile-window)
-    (setq ecb-activated t)
-    ;; we must update the directories buffer first time
-    (ecb-update-directories-buffer)
-    ;; run personal hooks before drawing the layout
-    (run-hooks 'ecb-activate-before-layout-draw-hook)
-    ;; now we draw the layout choosen in `ecb-layout'.
-    (ecb-redraw-layout)
-    ;; at the real end we run any personal hooks
-    (run-hooks 'ecb-activate-hook))
-  (message "The ECB is now activated."))
+      ;; we need some hooks
+      (remove-hook 'post-command-hook 'ecb-hook)
+      (add-hook 'post-command-hook 'ecb-hook)
+      ;; we add a function to this hook at the end because this function should
+      ;; be called at the end of all hook-functions of this hook!
+      (add-hook 'compilation-finish-functions
+		'ecb-layout-return-from-compilation t)
+      (add-hook 'compilation-mode-hook
+		'ecb-layout-go-to-compile-window)
+      (setq ecb-activated t)
+      ;; we must update the directories buffer first time
+      (ecb-update-directories-buffer)
+      ;; run personal hooks before drawing the layout
+      (run-hooks 'ecb-activate-before-layout-draw-hook)
+      ;; now we draw the layout choosen in `ecb-layout'.
+      (ecb-redraw-layout)
+      ;; at the real end we run any personal hooks
+      (run-hooks 'ecb-activate-hook)
+      (message "The ECB is now activated.")
+      (recursive-edit))
+    (ecb-deactivate)))
 
 (defun ecb-deactivate ()
   "Deactivates the ECB and kills all ECB buffers and windows."
