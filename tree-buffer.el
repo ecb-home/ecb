@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: tree-buffer.el,v 1.146 2004/07/28 16:50:21 berndl Exp $
+;; $Id: tree-buffer.el,v 1.147 2004/07/30 15:27:01 berndl Exp $
 
 ;;; Commentary:
 
@@ -2179,9 +2179,13 @@ AFTER-CREATE-HOOK: A function or a list of functions \(with no arguments)
     (define-key tree-buffer-key-map
       (tree-buffer-create-mouse-key 3 mouse-action-trigger-not 'control) nop)
     (define-key tree-buffer-key-map
+      (tree-buffer-create-mouse-key 3 mouse-action-trigger-not 'meta) nop)
+    (define-key tree-buffer-key-map
       (tree-buffer-create-mouse-key 3 mouse-action-trigger 'shift) nop)
     (define-key tree-buffer-key-map
       (tree-buffer-create-mouse-key 3 mouse-action-trigger 'control) nop)
+    (define-key tree-buffer-key-map
+      (tree-buffer-create-mouse-key 3 mouse-action-trigger 'meta) nop)
     (define-key tree-buffer-key-map [double-mouse-3] nop)
     (define-key tree-buffer-key-map [triple-mouse-3] nop)
 
@@ -2222,13 +2226,8 @@ AFTER-CREATE-HOOK: A function or a list of functions \(with no arguments)
       ;; This lets the GNU Emacs user scroll as if we had a horiz.
       ;; scrollbar...
       (define-key tree-buffer-key-map
-        [mode-line mouse-1] 'tree-buffer-mouse-hscroll)
+        [mode-line mouse-1] 'tree-buffer-mouse-hscroll))
       
-      (define-key tree-buffer-key-map [M-mouse-1] nop)
-      (define-key tree-buffer-key-map [M-mouse-3] nop)
-      (define-key tree-buffer-key-map [C-M-mouse-1] nop)
-      (define-key tree-buffer-key-map [C-M-mouse-3] nop))
-    
     (use-local-map tree-buffer-key-map)
 
     (setq tree-buffers (cons (current-buffer) tree-buffers))

@@ -24,7 +24,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-method-browser.el,v 1.45 2004/07/15 15:26:27 berndl Exp $
+;; $Id: ecb-method-browser.el,v 1.46 2004/07/30 15:27:03 berndl Exp $
 
 ;;; Commentary:
 
@@ -3258,8 +3258,9 @@ is a full filename and cdr is a tag for TYPENAME. "
                  type-definition-alist)
         (car type-definition-alist)))))
     
-(defun ecb-method-clicked (node ecb-button edit-window-nr shift-mode
-                                &optional no-post-action additional-post-action-list)
+(defun ecb-method-clicked (node ecb-button edit-window-nr shift-mode meta-mode
+                                &optional no-post-action
+                                additional-post-action-list)
   "Handle clicking onto NODE in the methods-buffer. ECB-BUTTON can be 1, 2 or
 3. If 3 then EDIT-WINDOW-NR contains the number of the edit-window the NODE
 should be displayed. For 1 and 2 the value of EDIT-WINDOW-NR is ignored."
@@ -3325,8 +3326,18 @@ should be displayed. For 1 and 2 the value of EDIT-WINDOW-NR is ignored."
                                                additional-post-action-list)))
                              (cons 'ecb-tag-visit-narrow-tag
                                    additional-post-action-list)
-                           additional-post-action-list))))))
-
+                           additional-post-action-list)))
+      ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: I really have no clue why
+      ;; calling here directly ecb-hide-ecb-windows fails and why even going
+      ;; the way via post-command-hooks fails too...running with an idle-times
+      ;; seems to work so for the moment we can do this.......
+      ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: Eventually we should check
+      ;; if the method-window is the only one and only then we hide?!
+      (if (and meta-mode
+               (equal ecb-current-maximized-ecb-buffer-name
+                      ecb-methods-buffer-name))
+          (ecb-run-with-idle-timer 0.001 nil 'ecb-hide-ecb-windows)))))
+;;           (ecb-hide-ecb-windows)))))
 
 (defun ecb-tag-visit-smart-tag-start (tag)
   "Go to the real tag-name of TAG in a somehow smart way.
@@ -3550,8 +3561,8 @@ Returns current point."
 
 (tree-buffer-defpopup-command ecb-methods-menu-jump-and-narrow
   "Jump to the token related to the node under point an narrow to this token."
-  (ecb-method-clicked node 1 nil nil t '(ecb-tag-visit-narrow-tag
-                                         ecb-tag-visit-highlight-tag-header)))
+  (ecb-method-clicked node 1 nil nil nil t '(ecb-tag-visit-narrow-tag
+                                             ecb-tag-visit-highlight-tag-header)))
 
 
 (tree-buffer-defpopup-command ecb-methods-menu-widen
@@ -3586,7 +3597,7 @@ this fails then nil is returned otherwise t."
   (if (not (ecb-methods-menu-activate-hs))
       (ecb-error "hs-minor-mode can not be activated!")
     ;; point must be at beginning of tag-name
-    (ecb-method-clicked node 1 nil nil t '(ecb-tag-visit-smart-tag-start))
+    (ecb-method-clicked node 1 nil nil nil t '(ecb-tag-visit-smart-tag-start))
     (save-excursion
       (or (looking-at hs-block-start-regexp)
           (re-search-forward hs-block-start-regexp nil t))
@@ -3601,7 +3612,7 @@ this fails then nil is returned otherwise t."
   (if (not (ecb-methods-menu-activate-hs))
       (ecb-error "hs-minor-mode can not be activated!")
     ;; point must be at beginning of tag-name
-    (ecb-method-clicked node 1 nil nil t '(ecb-tag-visit-smart-tag-start))
+    (ecb-method-clicked node 1 nil nil nil t '(ecb-tag-visit-smart-tag-start))
     (save-excursion
       (or (looking-at hs-block-start-regexp)
           (re-search-forward hs-block-start-regexp nil t))
@@ -3678,7 +3689,7 @@ this fails then nil is returned otherwise t."
   (eval `(tree-buffer-defpopup-command
              ,(intern (format "ecb-jump-to-tag-in-editwin%d" (1+ i)))
            ,(format "Jump to current tag in the %d. edit-window." (1+ i))
-           (ecb-method-clicked node 3 ,(1+ i) nil))))
+           (ecb-method-clicked node 3 ,(1+ i) nil nil))))
 
 (defun ecb-methods-menu-editwin-entries ()
   "Generate popup-menu-entries for each edit-window if there are at least 2
