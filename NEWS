@@ -39,6 +39,9 @@
 
     There is also a new option `ecb-stealthy-tasks-delay'.    
 
+*** New hook which runs directly after the selected directory has changed.
+    See documentation of `ecb-after-directory-change-hook'.
+    
 ** Automatically upgraded ecb-option-settings are now not saved by default.
    This means that ECB has now the new policy "Never touching the
    customization-files of a user without asking". The result is a completely
