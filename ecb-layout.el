@@ -103,7 +103,7 @@
 ;; - `ecb-with-some-adviced-functions'
 ;;
 
-;; $Id: ecb-layout.el,v 1.135 2002/12/16 13:18:55 berndl Exp $
+;; $Id: ecb-layout.el,v 1.136 2002/12/19 18:01:58 berndl Exp $
 
 ;;; Code:
 
@@ -1621,7 +1621,10 @@ visibility of the ECB windows. ECB minor mode remains active!"
   (set-window-dedicated-p (selected-window) ecb-use-dedicated-windows))
 
 (defun ecb-set-directories-buffer ()
-  (ecb-set-buffer ecb-directories-buffer-name))
+  (if ecb-use-speedbar-for-directories
+      (ecb-set-speedbar-buffer)
+    (ecb-speedbar-deactivate)
+    (ecb-set-buffer ecb-directories-buffer-name)))
 
 (defun ecb-set-sources-buffer ()
   (ecb-set-buffer ecb-sources-buffer-name))
@@ -1839,20 +1842,6 @@ Postconditions for CREATE-CODE:
 
 (put 'ecb-layout-define 'lisp-indent-function 1)
 
-;; (insert (pp (macroexpand
-;;              `(ecb-layout-define "left1" left
-;;                                 "This function creates the following layout:"
-;;                                 (ecb-set-directories-buffer)
-;;                                 (ecb-split-ver 0.3)
-;;                                 (ecb-set-sources-buffer)
-;;                                 (ecb-split-ver 0.5)
-;;                                 (ecb-set-methods-buffer)
-;;                                 (select-window (previous-window))
-;;                                 (ecb-split-hor 0.5)
-;;                                 (ecb-set-history-buffer)
-;;                                 (select-window (next-window
-;;                                 (next-window)))))))
-
 
 (defun ecb-layout-undefine (name)
   "Unbind ecb-layout-function-<NAME>, ecb-delete-window-ecb-windows-<NAME>,
@@ -1958,7 +1947,7 @@ this function the edit-window is selected which was current before redrawing."
                                              (window-buffer ecb-compile-window)))
            (tree-windows-before-redraw (ecb-layout-get-current-tree-windows)))
 
-    ;; deactivating the adviced functions, so the layout-functions can use the
+      ;; deactivating the adviced functions, so the layout-functions can use the
       ;; original function-definitions.
       (ecb-activate-adviced-functions nil)
       

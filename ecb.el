@@ -59,7 +59,7 @@
 ;; The latest version of the ECB is available at
 ;; http://home.swipnet.se/mayhem/ecb.html
 
-;; $Id: ecb.el,v 1.256 2002/12/19 16:20:34 berndl Exp $
+;; $Id: ecb.el,v 1.257 2002/12/19 18:01:56 berndl Exp $
 
 ;;; Code:
 
@@ -343,6 +343,27 @@ layouts sources should be displayed in the directories window."
                 (const :tag "Never" :value never)
                 (repeat :tag "With these layouts"
                         (string :tag "Layout name"))))
+
+
+(defcustom ecb-use-speedbar-for-directories nil
+  "*If true then uses speedbar for displaying and handling directories.
+This means that speedbar is integrated in the ECB-frame and is displayed in
+that window normally displaying the standard ECB-directories-buffer.
+
+This option takes effect in all layouts which contain a directory window.
+
+Note: A similar effect and useability is available by setting this option to
+nil and setting `ecb-show-sources-in-directories-buffer' to not nil, because
+this combination displays also directories and sources in one window.
+
+`ecb-use-speedbar-for-directories' is for people who like the speedbar way
+handling directories amd source-files and want it in conjunction with ECB."
+  :group 'ecb-directories
+  :type 'boolean
+  :set (function (lambda (sym val)
+                   (set sym val)
+                   (ecb-redraw-layout-full))))
+
 
 (defun ecb-show-sources-in-directories-buffer-p ()
   (cond ((equal ecb-show-sources-in-directories-buffer 'never)

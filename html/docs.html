@@ -3760,6 +3760,31 @@ used as display name.
 </td></tr>
 </table>
 
+<p>
+<table width="100%">
+<tr>
+<td align="left"><b>use-speedbar-for-directories</b><i>
+</i></td>
+<td align="right">User Option</td>
+</tr>
+</table>
+<table width="95%" align="center">
+<tr><td>
+If true then uses speedbar for displaying and handling directories. 
+This means that speedbar is integrated in the ECB-frame and is displayed in
+that window normally displaying the standard ECB-directories-buffer.
+
+<p>This option takes effect in all layouts which contain a directory window.
+
+<p>Note: A similar effect and useability is available by setting this option to
+nil and setting <code>ecb-show-sources-in-directories-buffer</code> to not nil, because
+this combination displays also directories and sources in one window.
+
+<p><code>ecb-use-speedbar-for-directories</code> is for people who like the speedbar way
+handling directories amd source-files and want it in conjunction with ECB. 
+</td></tr>
+</table>
+
 <p><hr>
 Node:<a name="ecb-sources">ecb-sources</a>,
 Next:<a rel=next accesskey=n href="#ecb-methods">ecb-methods</a>,
@@ -6207,6 +6232,9 @@ directories-tree-buffer.
 <li>Save your changes.
 </ol>
 
+<p>But not only simulating speedbar is possible but also full integrating
+it into the ECB and the ECB-frame, See <a href="#Integrating%20speedbar">Integrating speedbar</a>.
+
 <p><hr>
 Node:<a name="Integrating%20speedbar">Integrating speedbar</a>,
 Next:<a rel=next accesskey=n href="#Optimize%20scrolling">Optimize scrolling</a>,
@@ -6216,7 +6244,30 @@ Up:<a rel=up accesskey=u href="#Tips%20and%20tricks">Tips and tricks</a>
 
 <h3>Integrating speedbar in the ECB-frame</h3>
 
-<p>This feature will be first available in future versions of ECB.
+<p>It is very easy to integrate speedbar in the directories window of
+ECB. So people who likes the speedbar way of handling directories and
+source-files but also like the ECB-way of displaying the
+buffer-contents (like methods and variables in a source-file) can
+combine both worlds:
+
+<ol type=1 start=1>
+</p><li>Choose a layout which contains a directories-window but no
+sources-window<a rel=footnote href="#fn-19"><sup>19</sup></a>.
+
+<li>Set the option <code>ecb-use-speedbar-for-directories</code> to not
+nil. After this the directories window of ECB will contain a full
+featured speedbar (the only difference to standard speedbar is not
+residing in an extra frame).
+</ol>
+
+<p>Note: A similar effect and useability is available by setting
+<code>ecb-use-speedbar-for-directories</code> to nil and setting
+<code>ecb-show-sources-in-directories-buffer</code> to not nil, because this
+combination displays also directories and sources in one window.
+
+<p>So with the option <code>ecb-use-speedbar-for-directories</code> you have
+the choice which way of displaying and handling directories and
+source-files you want (the speedbar- or the ECB-way).
 
 <p><hr>
 Node:<a name="Optimize%20scrolling">Optimize scrolling</a>,
@@ -6378,7 +6429,7 @@ Up:<a rel=up accesskey=u href="#Elisp%20programming">Elisp programming</a>
 <h3>How to deal with the adviced window-functions</h3>
 
 <p>ECB offers for packages which work during activated ECB three macros
-for easy temporally<a rel=footnote href="#fn-19"><sup>19</sup></a> using all original-functions, all
+for easy temporally<a rel=footnote href="#fn-20"><sup>20</sup></a> using all original-functions, all
 adviced functions or only some adviced functions:
 
 <ul>
@@ -6805,7 +6856,7 @@ to the ECB-history after ECB-start.
 
 <br></td></tr><tr align="left"><td valign="top">Is there an "Intellisense"-mechanism like with other IDEs? 
 </td><td valign="top"></td><td valign="top">
-For Java the JDEE<a rel=footnote href="#fn-20"><sup>20</sup></a> has this feature and for all other languages
+For Java the JDEE<a rel=footnote href="#fn-21"><sup>21</sup></a> has this feature and for all other languages
 semantic offer something similar, see
 <a href="http://cedet.sourceforge.net/intellisense.shtml">http://cedet.sourceforge.net/intellisense.shtml</a>
 
@@ -6993,6 +7044,7 @@ Up:<a rel=up accesskey=u href="#Top">Top</a>
 <li><code>truncate-long-names</code>: <a href="#ecb-general">ecb-general</a>
 <li><code>type-token-display</code>: <a href="#ecb-methods">ecb-methods</a>
 <li><code>use-recursive-edit</code>: <a href="#ecb-general">ecb-general</a>
+<li><code>use-speedbar-for-directories</code>: <a href="#ecb-directories">ecb-directories</a>
 <li><code>version-check</code>: <a href="#ecb-general">ecb-general</a>
 <li><code>window-sync</code>: <a href="#ecb-general">ecb-general</a>
 <li><code>window-sync-delay</code>: <a href="#ecb-general">ecb-general</a>
@@ -7278,10 +7330,15 @@ to use always <code>custom-set-variables</code>!</p>
 <code>ecb-default-general-face</code>!</p>
 
 <li><a name="fn-19"></a>
+<p>The latter one is not needed if you use speedbar
+because speedbar displays directories and sources in one window. But
+if you like you can also use a sources window too...</p>
+
+<li><a name="fn-20"></a>
 <p>I.e. regardless of the settings in
 <code>ecb-advice-window-functions</code>!</p>
 
-<li><a name="fn-20"></a>
+<li><a name="fn-21"></a>
 <p>
 <a href="http://jdee.sunsite.dk/">http://jdee.sunsite.dk/</a>
 </p>

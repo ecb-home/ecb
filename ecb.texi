@@ -3116,6 +3116,21 @@ that is used as it's display name. If no alias is set, the path is
 used as display name.
 @end defopt
 
+@defopt use-speedbar-for-directories
+If true then uses speedbar for displaying and handling directories.
+This means that speedbar is integrated in the ECB-frame and is displayed in
+that window normally displaying the standard ECB-directories-buffer.
+
+This option takes effect in all layouts which contain a directory window.
+
+Note: A similar effect and useability is available by setting this option to
+nil and setting @code{ecb-show-sources-in-directories-buffer} to not nil, because
+this combination displays also directories and sources in one window.
+
+@code{ecb-use-speedbar-for-directories} is for people who like the speedbar way
+handling directories amd source-files and want it in conjunction with ECB.
+@end defopt
+
 
 @node ecb-sources, ecb-methods, ecb-directories, Customizable options
 @subsection Group ecb-sources
@@ -4784,10 +4799,38 @@ directories-tree-buffer.
 Save your changes.
 @end enumerate
 
+But not only simulating speedbar is possible but also full integrating
+it into the ECB and the ECB-frame, @xref{Integrating speedbar}.
+
 @node Integrating speedbar, Optimize scrolling, Simulating speedbar, Tips and tricks
 @section Integrating speedbar in the ECB-frame
 
-This feature will be first available in future versions of ECB.
+It is very easy to integrate speedbar in the directories window of
+ECB. So people who likes the speedbar way of handling directories and
+source-files but also like the ECB-way of displaying the
+buffer-contents (like methods and variables in a source-file) can
+combine both worlds:
+
+@enumerate
+@item Choose a layout which contains a directories-window but no
+sources-window@footnote{The latter one is not needed if you use speedbar
+because speedbar displays directories and sources in one window. But
+if you like you can also use a sources window too...}.
+
+@item Set the option @code{ecb-use-speedbar-for-directories} to not
+nil. After this the directories window of ECB will contain a full
+featured speedbar (the only difference to standard speedbar is not
+residing in an extra frame).
+@end enumerate
+
+Note: A similar effect and useability is available by setting
+@code{ecb-use-speedbar-for-directories} to nil and setting
+@code{ecb-show-sources-in-directories-buffer} to not nil, because this
+combination displays also directories and sources in one window.
+
+So with the option @code{ecb-use-speedbar-for-directories} you have
+the choice which way of displaying and handling directories and
+source-files you want (the speedbar- or the ECB-way).
 
 @node Optimize scrolling, Large directories, Integrating speedbar, Tips and tricks
 @section Optimize scrolling in the edit-window

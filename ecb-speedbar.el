@@ -1,6 +1,6 @@
 ;;; ecb-speedbar.el --- 
 
-;; $Id: ecb-speedbar.el,v 1.28 2002/12/19 16:20:05 berndl Exp $
+;; $Id: ecb-speedbar.el,v 1.29 2002/12/19 18:01:58 berndl Exp $
 
 ;; Copyright (C) 2000-2003 Free Software Foundation, Inc.
 ;; Copyright (C) 2000-2003 Kevin A. Burton (burton@openprivacy.org)
@@ -9,7 +9,7 @@
 ;; Maintainer: Kevin A. Burton (burton@openprivacy.org)
 ;; Location: http://relativity.yi.org
 ;; Keywords: 
-;; Version: 1.0.0
+;; Version: 1.1.
 
 ;; This file is [not yet] part of GNU Emacs.
 
@@ -36,8 +36,13 @@
 ;;
 ;; - Files opened with the speedbar are displayed in the ecb source window.
 ;;
-;; Note that this is only known to work under Speedbar 0.14beta2
+;; Note that this is tested with recent speedbars >= 0.14beta2. If the
+;; speedbar implementation changes a lot this could break.
 ;;
+;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: IMHO the following WARNING is not
+;; necessary anymore because IMHO we need no patched speedbar at least not
+;; when 0.14beta4 is used.
+
 ;; WARNING: currently ecb-speedbar depends on patches to the speedbar which I
 ;; sent to the author.  Without these patches ecb-speedbar will work but your
 ;; source buffer may recenter itself when you change buffers.  Fully functionaly
@@ -52,9 +57,13 @@
 
 ;; There are two major issues we have with the speedbar-frame variable.
 ;;
+;;TODO: Klaus Berndl <klaus.berndl@sdm.de>: Not an issue anymore, at
+;;least IMHO
 ;; 1. If we set this value to the (selected-frame), when set change buffers,
 ;; the current buffers point is reset to (point-min)
 ;;
+;;TODO: Klaus Berndl <klaus.berndl@sdm.de>: Not an alternative anymore, at
+;;least IMHO
 ;; 2. If we set this to a newly created frame, say an invisible frame, we have
 ;; the following problems:
 ;;
@@ -64,6 +73,9 @@
 ;;     visible  :(
 
 ;;; History:
+;;
+;; - Thu DEc 19 2002 6:54 PM (klaus.berndl@sdm.de): Full integrated in ECB and
+;;   fixed some bugs. Now the speedbar integration seems to work very well.
 ;;
 ;; - Sat Dec 15 2001 03:10 AM (burton@openprivacy.org): only sync up the eshell
 ;; if the current file is in a different dir than the speedbar.
@@ -88,6 +100,7 @@
 ;;   there, the buffer in the new frame will be synched with the speedbar.  This
 ;;   needs to stay in synch with the file currently open in the ECB.
 ;;
+;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: Seems to be fixed already!
 ;; - BUG: for some reason if we hit <ENTER> in the ecb-speedbar window,
 ;;   sometimes a new frame will come up.
 ;;
@@ -97,16 +110,9 @@
 ;;
 ;;   - Actually it seems to be a problem if we have one ECB frame and then I
 ;;     create another frame.
-;;    
-;; - instead of ecb-layout-function-20 use ecb-layout-function-speedbar-1
 ;;
-;; - RFE: what do we do about integration with the standard JDE?  Could we tell
-;;   the existing layout functions to use the speedbar instead of the
-;;   directories buffer?
-;;
-;; we need to be able to goto the speedbar window via C-c . b (AKA bar)
-;; (ecb-goto-window-speedbar)
-;;
+;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: Seems to be gone at least with
+;;       speedbar 0.14beta4 which i'm using.
 ;; - BUG: bug in speedbar.  Need a feature so that the speedbar doesn't require
 ;;   that we HAVE to have the speedbar in a frame.  If we try to run (speedbar)
 ;;   when ecb-speedbar is active the ecb-frame will go away :(
@@ -271,30 +277,6 @@ this could break."
                    (buffer-live-p speedbar-buffer))
 
             (speedbar-update-contents))))))
-
-
-
-;;TODO: Klaus Berndl <klaus.berndl@sdm.de>: It should not be hard introducing
-;;a new option ecb-use-speedbar-for-directories and evaluating it in
-;;ecb-set-directories-buffer like follows:
-;;
-;; (defun ecb-set-directories-buffer ()
-;;   (if ecb-use-speedbar-for-directories
-;;       (ecb-set-speedbar-buffer)
-;;     (ecb-set-buffer ecb-directories-buffer-name)))
-;;
-;; So we would not need extra layouts for the speedbar-integration but we could
-;; use speedbar for all layouts which have a directories-window in its layout.
-;; So the following layout-definition would be superfluous...
-
-;; the special speedbar layout.
-(ecb-layout-define "speedbar1" right
-  "ECB layout with integrated speedbar."  
-  (let ((edit-win (previous-window (selected-window) 0)))
-    (ecb-set-speedbar-buffer)
-    (ecb-split-ver 0.5)
-    (ecb-set-methods-buffer)
-    (select-window edit-win)))
 
 (silentcomp-provide 'ecb-speedbar)
 
