@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-upgrade.el,v 1.82 2004/07/02 05:49:19 berndl Exp $
+;; $Id: ecb-upgrade.el,v 1.83 2004/08/12 14:05:09 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -177,6 +177,10 @@
 ;; Each NEWS-string should be a one-liner shorter than 70 chars
 (defconst ecb-upgrade-news
   '(
+    ("2.26" . ("Some regexp-options has been changed to regexp-list-options. See NEWS."
+               "New option `ecb-history-exclude-file-regexps'."
+               "`ecb-expand-methods-nodes' works for non-semantic-buffers too."
+               "Readonly-sourcefiles are display in a different face."))
     ("2.25" . ("`ecb-sort-history-items' has been renamed to `ecb-history-sort-method'"
                "New options `ecb-sources-sort-ignore-case' and `ecb-history-sort-ignore-case'"
                "New icons for parent-display in the Methods-buffer"))
@@ -232,8 +236,6 @@
                                    ecb-upgrade-toggle-layout-sequence))
     (ecb-cache-directory-contents . (ecb-cache-directory-contents
                                      ecb-upgrade-cache-directory-contents))
-    (ecb-source-file-regexps . (ecb-source-file-regexps
-                                ecb-upgrade-source-file-regexps))
     (ecb-layout-always-operate-in-edit-window . (ecb-layout-always-operate-in-edit-window
                                                  ecb-upgrade-alway-operate-in-edit-window))
     (ecb-truncate-lines . (ecb-truncate-lines
@@ -275,7 +277,13 @@
     (ecb-primary-mouse-jump-destination . (ecb-mouse-click-destination identity))
     (ecb-split-edit-window . (ecb-split-edit-window-after-start ecb-upgrade-split-edit-window))
     (ecb-sort-history-items . (ecb-history-sort-method ecb-upgrade-sort-history-items))
-    (ecb-other-window-jump-behavior . (ecb-other-window-behavior ecb-upgrade-other-window-jump-behavior)))
+    (ecb-other-window-jump-behavior . (ecb-other-window-behavior ecb-upgrade-other-window-jump-behavior))
+    (ecb-excluded-directories-regexp . (ecb-excluded-directories-regexps
+                                        ecb-upgrade-excluded-directories-regexp))
+    (ecb-source-file-regexps . (ecb-source-file-regexps
+                                ecb-upgrade-source-file-regexps))
+    (ecb-exclude-parents-regexp . (ecb-exclude-parents-regexps
+                                   ecb-upgrade-exclude-parents-regexp)))
   "Alist of all options which should be upgraded for current ECB-version.
 There are several reasons why an option should be contained in this alist:
 a) An old option has just be renamed in current-ECB version but has still the
@@ -381,9 +389,6 @@ The car is the old option symbol and the cdr is a 2-element-list with:
   (mapcar (function (lambda (elem)
                       (cons (nth 0 elem) (nth 1 elem))))
           old-val))
-
-(defun ecb-upgrade-source-file-regexps (old-val)
-  (list (cons ".*" old-val)))
 
 (defun ecb-upgrade-truncate-lines (old-val)
   (if old-val
@@ -548,6 +553,18 @@ The car is the old option symbol and the cdr is a 2-element-list with:
 
 (defun ecb-upgrade-sort-history-items (old-val)
   (if old-val ecb-sources-sort-method))
+
+(defun ecb-upgrade-excluded-directories-regexp (old-val)
+  (list old-val))
+
+(defun ecb-upgrade-source-file-regexps (old-val)
+  (let ((l (copy-tree old-val)))
+    (dolist (elem l)
+      (setcdr elem (list (list (cadr elem)) (list (caddr elem)))))
+    l))
+    
+(defun ecb-upgrade-exclude-parents-regexp (old-val)
+  (if old-val (list old-val)))
 
 ;; ----------------------------------------------------------------------
 ;; internal functions. Dot change anything below this line

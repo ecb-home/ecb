@@ -27,10 +27,45 @@
    the permanent compile-window or when deactivating ECB the original settings
    of these modes are restored!
       
+** Some regexp-options has been changed to regexp-list-options:
+   `ecb-excluded-directories-regexp' --> `ecb-excluded-directories-regexps'
+   `ecb-source-file-regexps'         --> `ecb-source-file-regexps'
+   `ecb-exclude-parents-regexp'      --> `ecb-exclude-parents-regexps'
+
+   All these options now accept (and require) a list of regexps instead of
+   exactly one big regexp. This allows easier regexp-definition and follows
+   now the way Emacs goes with other regexp-options like `same-window-regexps'
+   or `special-display-regexps' which are also lists of regexps.
+
+   ECB autom. upgrades your old settings to the new option-types rsp. also
+   -names (if the option has been renamed).
+
+** New option `ecb-history-exclude-file-regexps' for excluding certain files
+   from being displayed in the history-buffer of ECB. Currently the filenames
+   TAGS and semantic.cache are excluded per default. Thanks to Javier Oviedo
+   <joviedo@telogy.com> for the suggestion.
+
+** ECB now displays read-only sourcefiles in a different face.
+   For this a new option and a new face are offered both named
+   `ecb-source-read-only-face' (default: italic) which is used to display
+   source-files in the sources-tree-buffer (or in the directories-tree-buffer
+   if `ecb-show-sources-in-directories-buffer' is not nil) if the file is
+   read-only.
+       
 ** Fixed bugs
+
+*** Fixed merging faces with XEmacs.
+    Now options like `ecb-type-tag-display' (merges own ECB-faces to already
+    by semantic faced tags) work also correct with XEmacs. ECB-versions prior
+    to 2.26 has not merged the ECB-faces to the already applied faces of a
+    text but instead replaced the applied faces with the ECB ones. Now all
+    faces are merged.
 
 *** Now the command `ecb-expand-methods-nodes' and all the expand-* menu-entries
     in the popup-menu of the methods-buffer work for non-semantic-buffers too.
+
+*** Fixed a bug concerning `ecb-auto-expand-tag-tree-collapse-other'.
+    Thanks to Javier Oviedo <joviedo@telogy.com> for pointing to the problem.
 
     
 
@@ -50,7 +85,7 @@
 ** New icons for parent-display in the Methods-buffer.
    Thanks to Markus Gritsch <gritsch@iue.tuwien.ac.at> for contributing the
    icon-images.
-    
+
 ** Fixed Bugs
 
 *** Fixed an annoying bug which results sometimes in an error "stack-overflow

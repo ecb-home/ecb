@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-face.el,v 1.19 2003/11/04 17:39:40 berndl Exp $
+;; $Id: ecb-face.el,v 1.20 2004/08/12 14:05:10 berndl Exp $
 
 ;;; Commentary:
 
@@ -376,6 +376,18 @@ jumping to it by clicking onto a node in the methods buffer."
 (defcustom ecb-source-in-directories-buffer-face
   'ecb-source-in-directories-buffer-face
   "*Face for source files in the directories buffer."
+  :group 'ecb-directories
+  :group 'ecb-face-options
+  :type 'face)
+
+(defface ecb-source-read-only-face (ecb-face-default nil nil t)
+  "*Define a face for displaying read-only sources."
+  :group 'ecb-faces)
+ 
+(defcustom ecb-source-read-only-face
+  'ecb-source-read-only-face
+  "*Face for read-only sources."
+  :group 'ecb-sources
   :group 'ecb-directories
   :group 'ecb-face-options
   :type 'face)

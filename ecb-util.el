@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-util.el,v 1.108 2004/07/15 15:26:27 berndl Exp $
+;; $Id: ecb-util.el,v 1.109 2004/08/12 14:05:09 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -140,6 +140,8 @@
 (if ecb-running-xemacs
     (progn
 ;;; Compatibility
+      (defun ecb-facep (face)
+        (memq face (face-list)))
       (defun ecb-noninteractive ()
         "Return non-nil if running non-interactively, i.e. in batch mode."
         (noninteractive))
@@ -172,11 +174,11 @@ Unless optional argument INPLACE is non-nil, return a new string."
                 (/ (nth 2 pix-edges) (ecb-frame-char-width))
                 (/ (nth 3 pix-edges) (ecb-frame-char-height))))))
       
+  (defalias 'ecb-facep 'facep)
   (defun ecb-noninteractive ()
     "Return non-nil if running non-interactively, i.e. in batch mode."
     noninteractive)
   (defalias 'ecb-subst-char-in-string 'subst-char-in-string)
-  (defalias 'ecb-thing-at-point 'thing-at-point)
   (defalias 'ecb-frame-parameter 'frame-parameter)
   (defalias 'ecb-line-beginning-pos 'line-beginning-position)
   (defalias 'ecb-line-end-pos 'line-end-position)
@@ -563,6 +565,24 @@ Return the sublist of LIST whose car is ITEM."
       (member item list)
     (memq item list)))
 
+(defsubst ecb-match-regexp-list (str regexp-list &optional elem-accessor
+                                     return-accessor)
+  "Return not nil if STR matches one of the regexps in REGEXP-LIST. If
+ELEM-ACCESSOR is a function then it is used to get the regexp from the
+processed elem of REGEXP-LIST. If nil the elem itself is used. If
+RETURN-ACCESSOR is a function then it is used to get from the matching elem
+the object to return. If nil then the matching elem itself is returned."
+  (let ((elem-acc (or elem-accessor 'identity))
+        (return-acc (or return-accessor 'identity)))
+    (catch 'exit
+      (dolist (elem regexp-list)
+        (let ((case-fold-search t))
+          (save-match-data
+            (if (string-match (funcall elem-acc elem) str)
+                (throw 'exit (funcall return-acc elem))))
+          nil)))))
+
+
 (defun ecb-set-elt (seq n val)
   "Set VAL as new N-th element of SEQ. SEQ can be any sequence. SEQ will be
 changed because this is desctructive function. SEQ is returned."
@@ -934,34 +954,49 @@ If `window-system' is nil then a simple message is displayed in the echo-area."
 (defun ecb-merge-face-into-text (text face)
   "Merge FACE to the already precolored TEXT so the values of all
 face-attributes of FACE take effect and but the values of all face-attributes
-of TEXT which are not set by FACE are preserved.
-For XEmacs this merge does currently not work therefore here FACE replaces all
-faces of TEXT!"
+of TEXT which are not set by FACE are preserved."
   (if (null face)
       text
-    (let ((newtext (concat text)))
-      (if ecb-running-xemacs
-          (add-text-properties 0 (length newtext) (list 'face face) newtext)
-        (alter-text-property 0 (length newtext) 'face
-                             (lambda (current-face)
-                               (let ((cf
-                                      (cond ((facep current-face)
-                                             (list current-face))
-                                            ((listp current-face)
-                                             current-face)
-                                            (t nil)))
-                                     (nf
-                                      (cond ((facep face)
-                                             (list face))
-                                            ((listp face)
-                                             face)
-                                            (t nil))))
-                                 ;; we must add the new-face in front of
-                                 ;; current-face to get the right merge!
-                                 (append nf cf)))
-                             newtext))
-      newtext)))
-
+    (if ecb-running-xemacs
+        (put-text-property 0 (length text) 'face
+                           (let* ((current-face (get-text-property 0
+                                                                   'face
+                                                                   text))
+                                  (cf
+                                   (cond ((ecb-facep current-face)
+                                          (list current-face))
+                                         ((listp current-face)
+                                          current-face)
+                                         (t nil)))
+                                  (nf
+                                   (cond ((ecb-facep face)
+                                          (list face))
+                                         ((listp face)
+                                          face)
+                                         (t nil))))
+                             ;; we must add the new-face in front of
+                             ;; current-face to get the right merge!
+                             (append nf cf))
+                           text)
+      (alter-text-property 0 (length text) 'face
+                           (lambda (current-face)
+                             (let ((cf
+                                    (cond ((ecb-facep current-face)
+                                           (list current-face))
+                                          ((listp current-face)
+                                           current-face)
+                                          (t nil)))
+                                   (nf
+                                    (cond ((ecb-facep face)
+                                           (list face))
+                                          ((listp face)
+                                           face)
+                                          (t nil))))
+                               ;; we must add the new-face in front of
+                               ;; current-face to get the right merge!
+                               (append nf cf)))
+                           text))
+    text))
 
 (defun ecb-error (&rest args)
   "Signals an error but prevents it from entering the debugger. This is

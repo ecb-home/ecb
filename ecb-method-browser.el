@@ -24,7 +24,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-method-browser.el,v 1.48 2004/08/06 15:59:17 berndl Exp $
+;; $Id: ecb-method-browser.el,v 1.49 2004/08/12 14:05:10 berndl Exp $
 
 ;;; Commentary:
 
@@ -525,7 +525,7 @@ position but groups some external members having the same parent-tag."
                                         col-type-spec))))
                  ;; now we add some own colorizing if necessary
                  (if face
-                     (setq text (ecb-merge-face-into-text text face)))
+                     (ecb-merge-face-into-text text face))
                  text)
              (funcall (quote ,(cdr elem)) tag parent-tag colorize)))))
 
@@ -823,8 +823,8 @@ by semantic!"
                         (symbol :tag "Node-type"))))
 
 
-(defcustom ecb-exclude-parents-regexp nil
-  "*Regexp which parent classes should not be shown in the methods buffer.
+(defcustom ecb-exclude-parents-regexps nil
+  "*Regexps which parent classes should not be shown in the methods buffer.
 If nil then all parents will be shown if `ecb-show-parents' is not nil.
 
 This options takes only effect for semantic-sources - means sources supported
@@ -833,11 +833,11 @@ by semantic!"
   :set (function (lambda (symbol value)
 		   (set symbol value)
 		   (ecb-clear-tag-tree-cache)))
-  :type '(radio (const :tag "Do not exclude any parents"
-                       :value nil)
-                (regexp :tag "Parents-regexp to exclude"))
+  :type '(repeat (regexp :tag "Parents-regexp to exclude"))
   :initialize 'custom-initialize-default)
 
+(defsubst ecb-check-parent-for-exclude (parent-name)
+  (ecb-match-regexp-list parent-name ecb-exclude-parents-regexps))
 
 (defcustom ecb-highlight-tag-with-point 'highlight-scroll
   "*How to highlight the method or variable under the cursor.
@@ -1245,8 +1245,7 @@ check the result if `ecb-debug-mode' is nil in which case the function
 		  ((stringp parent)
 		   (ecb--semantic--format-colorize-text parent 'type)))))
       (if name
-	  (if (and ecb-exclude-parents-regexp
-		   (string-match ecb-exclude-parents-regexp name))
+	  (if (ecb-check-parent-for-exclude name)
 	      (ecb-get-tag-parent-names (cdr parents))
 	    (cons name (ecb-get-tag-parent-names (cdr parents))))
 	(if (listp parent)
@@ -1292,7 +1291,7 @@ PARENT-TAG is only propagated to `ecb-add-tag-bucket'."
   (let ((formatted-name (concat (nth 0 ecb-bucket-node-display)
 				name
 				(nth 1 ecb-bucket-node-display))))
-    (setq formatted-name (ecb-merge-face-into-text formatted-name (nth 2 ecb-bucket-node-display)))
+    (ecb-merge-face-into-text formatted-name (nth 2 ecb-bucket-node-display))
     formatted-name))
 
 (defsubst ecb-forbid-tag-display (tag)
@@ -2971,7 +2970,8 @@ current buffer."
                          nil t)
                         (tree-buffer-highlight-node-data
                          highlight-tag nil
-                         (equal ecb-highlight-tag-with-point 'highlight))))))))
+                         (equal ecb-highlight-tag-with-point 'highlight))
+                        ))))))
         (if curr-tag
             (ecb-try-highlight-tag highlight-tag type-tag table)))))
 
@@ -3437,7 +3437,7 @@ Returns current point."
 ;; for backward-compatibility
 (defalias 'ecb-tag-visit-goto-doc-start 'ecb-tag-visit-display-doc-start)
 
-  (defvar ecb-unhighlight-hook-called nil
+(defvar ecb-unhighlight-hook-called nil
   "This mechanism is necessary because tree-buffer creates for mouse releasing a
 new nop-command \(otherwise the cursor jumps back to the tree-buffer).")
 
@@ -3502,23 +3502,15 @@ nil too then no post-actions are performed."
          ;; (setq ecb-selected-tag tag)
          ;; process post action
          (unless no-tag-visit-post-actions
-           ;; first the default post actions TODO: Klaus Berndl
-           ;; <klaus.berndl@sdm.de>: We should here check if a function moves
-           ;; the point outside the tag-boundaries of TAG and if yes we undo
-           ;; the action (this can be done with a first save-excursion call of
-           ;; the function, storing the result point, checcking if the
-           ;; returned point is inside the boundaries and if yes, we go to the
-           ;; result point and then to the next function and if no, we go
-           ;; immediately to the next function - the save-excursion is our
-           ;; undo) 
+           ;; first the default post actions
            (dolist (f (cdr (assoc 'default ecb-tag-visit-post-actions)))
-             (funcall f tag))
+             (ecb-call-tag-visit-function tag f))
            ;; now the mode specific actions
            (dolist (f (cdr (assoc major-mode ecb-tag-visit-post-actions)))
-             (funcall f tag)))
+             (ecb-call-tag-visit-function tag f)))
          ;; now we perform the additional-post-action-list
          (dolist (f additional-post-action-list)
-           (funcall f tag))
+           (ecb-call-tag-visit-function tag f))
          ;; Klaus Berndl <klaus.berndl@sdm.de>: Now we use a different
          ;; implementation of ecb-nav-tag-history-item. Not longer storing
          ;; the whole tag but the tag-buffer and markers of tag-start
@@ -3564,6 +3556,21 @@ help-text should be printed here."
 
 ;;; popup-menu stuff for the methods-buffer
 
+(defun ecb-call-tag-visit-function (tag fcn)
+  "Call FCN with TAG as argument and check if the resulting point is between
+the tag-boundaries of TAG. If yes, then go to this point if no point stays at
+the location before calling FCN."
+  (when (fboundp fcn)
+    (let* ((start (ecb--semantic-tag-start tag))
+           (end (ecb--semantic-tag-end tag))
+           (result-point (save-excursion
+                           (funcall fcn tag))))
+      (if (and (>= result-point start)
+               (<= result-point end))
+          (goto-char result-point)
+        (ecb-warning "The tag-visit-function `%s' moves point outside of tag - ignored!"
+                     fcn)))))
+
 (defun ecb-tag-visit-narrow-tag (tag)
   "Narrow the source buffer to TAG.
 If an outside located documentation belongs to TAG and if this documentation
@@ -3591,7 +3598,6 @@ Returns current point."
    (ecb-line-beginning-pos (- (/ (ecb-window-full-height) 2))))
   (point))
 
-
 (defun ecb-tag-visit-recenter-top (tag)
   "Recenter the source-buffer, so current line is in the middle of the window.
 If this function is added to `ecb-tag-visit-post-actions' then it's
@@ -3600,7 +3606,8 @@ or a `major-mode' and not to add the function `ecb-tag-visit-recenter' too!
 
 Returns current point."
   (set-window-start (selected-window)
-                    (ecb-line-beginning-pos)))
+                    (ecb-line-beginning-pos))
+  (point))
 
 (tree-buffer-defpopup-command ecb-methods-menu-jump-and-narrow
   "Jump to the token related to the node under point an narrow to this token."

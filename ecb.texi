@@ -26,7 +26,7 @@
 @c GNU Emacs; see the file COPYING.  If not, write to the Free Software
 @c Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-@c $Id: ecb.texi,v 1.181 2004/08/06 15:59:14 berndl Exp $
+@c $Id: ecb.texi,v 1.182 2004/08/12 14:05:03 berndl Exp $
 
 @setfilename ecb.info
 
@@ -238,7 +238,9 @@ Using and customizing the ECB-Methods buffer
 
 Applying filters to the special ECB-tree-buffers
 
-* Filtering Sources::           Applying filters to Sources- and History-buffer
+* Filtering Directories::       Applying filters to the Directories-buffer
+* Filtering Sources::           Applying filters to the Sources--buffer
+* Filtering History::           Applying filters to the History-buffer
 * Filtering Methods::           Applying filters to the Methods-buffer
 
 Changing, customizing, redrawing and creating layouts
@@ -2360,28 +2362,85 @@ latest contents!
 
 @cindex Filter
 To get a fast and good overlook of the contents of a tree-buffer ECB
-offers a filter-mechanism for the Sources-, the History- and the
-Methods-buffer whereas the former one are quite identical.
+offers a filter-mechanism for the Directories-, Sources-, the History-
+and the Methods-buffer.
 
 @menu
-* Filtering Sources::           Applying filters to Sources- and History-buffer
+* Filtering Directories::       Applying filters to the Directories-buffer
+* Filtering Sources::           Applying filters to the Sources--buffer
+* Filtering History::           Applying filters to the History-buffer
 * Filtering Methods::           Applying filters to the Methods-buffer
 @end menu
 
-@node Filtering Sources, Filtering Methods, Filtering the tree-buffers, Filtering the tree-buffers
-@subsection Applying filters to the Sources- and History-buffer
+@node Filtering Directories, Filtering Sources, Filtering the tree-buffers, Filtering the tree-buffers
+@subsection Applying filters to the Directories-buffer
 
-The commands @code{ecb-sources-filter} and @code{ecb-history-filter}
-allow to filter these tree-buffer either by a regular expression or by
-an extension (e.g. java, cc, el for java-, c++- rsp elisp-sources).
-This functionality is also available via the popup-menu of the
-particular tree-buffer.
+With the option @code{ecb-excluded-directories-regexps} certain
+directories can be excluded from being displayed in the
+directories-browser of ECB. This can be done by defining regular
+expressions. If the name of a directory matches at least one of the
+regexps of this option the directory is not displayed in the
+directories-tree-buffer.
+
+The option @code{ecb-sources-exclude-cvsignore} allows to exclude
+source-files from the sources-tree-buffer if their name is listed in a
+so called @file{.cvsignore}-file. This option is a list of regular
+expressions and if a directory-name matches at least one of these
+regexps then all files listed in the @file{.cvsignore}-file of this
+directory are not displayed in the sources-tree-buffer.
+
+@node Filtering Sources, Filtering History, Filtering Directories, Filtering the tree-buffers
+@subsection Applying filters to the Sources-buffer
+
+@subsubsection Interactive Sources-filters
+
+The command @code{ecb-sources-filter} allows to filter these
+tree-buffer either by a regular expression or by an extension (e.g.
+java, cc, el for java-, c++- rsp elisp-sources). This functionality is
+also available via the popup-menu of the Sources-tree-buffer.
 
 The currently applied filter is indicated in the modeline of the
 related tree-buffer. Applying a new filter replaces an eventually
 already applied filter.
 
-@node Filtering Methods, , Filtering Sources, Filtering the tree-buffers
+@subsubsection Default Sources-filters
+
+The option @code{ecb-source-file-regexps} allow to specify which
+source-files should be displayed and which not. This is done on a
+directory-basis, ie. for each directory-regexp the files to display
+can be specified. See the documentation of this option for all
+details.
+
+In addition to this option you should also know the option
+@code{ecb-sources-exclude-cvsignore} (@pxref{Filtering Directories}).
+
+@node Filtering History, Filtering Methods, Filtering Sources, Filtering the tree-buffers
+@subsection Applying filters to the History-buffer
+
+@subsubsection Interactive History-filters
+
+The command @code{ecb-history-filter} allows to filter these
+tree-buffer either by a regular expression or by an extension (e.g.
+java, cc, el for java-, c++- rsp elisp-sources). This functionality is
+also available via the popup-menu of the History-tree-buffer.
+
+The currently applied filter is indicated in the modeline of the
+related tree-buffer. Applying a new filter replaces an eventually
+already applied filter.
+
+@subsubsection Default History-filters
+
+The option @code{ecb-history-exclude-file-regexps} allows to exclude
+source-files from being historized (ie. displayed in the
+History-buffer). Despite the fact that the History-buffer already
+excludes all non-file-buffers there can be still buffers which name
+you do not wat to be displayed in the history. These are file-buffer
+like @file{TAGS} or @file{semantic.cache} which store
+meta-informations used by Emacs and its tools (etags, semantic etc.).
+These files can be excluded via
+@code{ecb-history-exclude-file-regexps}.
+
+@node Filtering Methods, , Filtering History, Filtering the tree-buffers
 @subsection Applying filters to the Methods-buffer
 
 The commands @code{ecb-methods-filter},
@@ -5656,9 +5715,9 @@ contents of this directory.
 @end defopt
 
 
-@defopt excluded-directories-regexp
+@defopt excluded-directories-regexps
 Directories that should not be included in the directories list. The
-value of this variable should be a regular expression.
+value of this variable should be a list of regular expression.
 @end defopt
 
 @defopt prescan-directories-for-emptyness
@@ -5738,10 +5797,10 @@ should contain an always matching directory-regexp (@code{".*"})!
 
 So the value of this option is a list of cons-cells where the car is a
 directory regexp and the cdr is a 2 element list where the first
-element is a exclude regexp and the second element is a include
-regexp. A file is displayed in the source-buffer of ECB iff: The file
-does not match the exclude regexp OR the file matches the include
-regexp.
+element is a list of exclude regexps and the second element is a list
+of include regexps. A file is displayed in the source-buffer of ECB
+iff: The file does not match any of the exclude regexps OR the file
+matches at least one of the include regexps.
 
 But regardless of the value of this option a file F is never displayed
 in the sources-buffer if the directory matches
@@ -5935,7 +5994,7 @@ This option takes only effect if Emacs can display images and if
 @end defopt
 
 @defopt exclude-parents-regexp
-Regexp which parent classes should not be shown in the methods buffer
+Regexps which parent classes should not be shown in the methods buffer
 (see also @code{ecb-show-parents}). If nil then all parents will be
 shown if @code{ecb-show-parents} is not nil.
 
@@ -6510,6 +6569,13 @@ of @code{set-buffer}.
 
 Changes for this option at runtime will take affect only after
 deactivating and then activating ECB again!
+@end defopt
+
+@defopt history-exclude-file-regexps
+List of regexps which exclude source-files from being historized. Be
+aware that each always full filenames (ie. incl. full path) are
+matched against these regexps! Therefore be carefore with regexps
+beginning with ^!
 @end defopt
 
 @defopt history-item-name

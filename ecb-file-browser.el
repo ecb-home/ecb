@@ -23,7 +23,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-file-browser.el,v 1.25 2004/08/03 09:37:21 berndl Exp $
+;; $Id: ecb-file-browser.el,v 1.26 2004/08/12 14:05:10 berndl Exp $
 
 ;;; Commentary:
 
@@ -315,12 +315,14 @@ then activating ECB again!"
   :type 'string)
 
 
-(defcustom ecb-excluded-directories-regexp "^\\(CVS\\|\\.[^xX]*\\)$"
+(defcustom ecb-excluded-directories-regexps '("^\\(CVS\\|\\.[^xX]*\\)$")
   "*Directories that should not be included in the directories list.
-The value of this variable should be a regular expression."
+The value of this variable should be a list of regular expressions."
   :group 'ecb-directories
-  :type 'regexp)
+  :type '(repeat (regexp :tag "Directory-regexp")))
 
+(defsubst ecb-check-dir-exclude (dir)
+  (ecb-match-regexp-list dir ecb-excluded-directories-regexps))
 
 (defcustom ecb-auto-expand-directory-tree 'best
   "*Automatically expand the directory tree to the current source file.
@@ -366,10 +368,9 @@ option to nil. This is the default."
   :group 'ecb-directories
   :type '(repeat (regexp :tag "Directory-regexp")))
 
-
 (defcustom ecb-source-file-regexps
-  '((".*" . ("\\(^\\(\\.\\|#\\)\\|\\(~$\\|\\.\\(elc\\|obj\\|o\\|class\\|lib\\|dll\\|a\\|so\\|cache\\)$\\)\\)"
-             "^\\.\\(emacs\\|gnus\\)$")))
+  '((".*" . (("\\(^\\(\\.\\|#\\)\\|\\(~$\\|\\.\\(elc\\|obj\\|o\\|class\\|lib\\|dll\\|a\\|so\\|cache\\)$\\)\\)")
+             ("^\\.\\(emacs\\|gnus\\)$"))))
   "*Specifies which files are shown as source files.
 This is done on directory-base, which means for each directory-regexp the
 files to display can be specified. If more than one directory-regexp matches
@@ -382,9 +383,10 @@ contain an always matching directory-regexp \(\".*\")!
 
 So the value of this option is a list of cons-cells where the car is a
 directory regexp and the cdr is a 2 element list where the first element is a
-exclude regexp and the second element is a include regexp. A file is displayed
-in the sources-buffer of ECB iff: The file does not match the exclude regexp
-OR the file matches the include regexp.
+list of exclude regexps and the second element is a list of include regexps. A
+file is displayed in the sources-buffer of ECB iff: The file does not match
+any of the exclude regexps OR the file matches at least one of the include
+regexps.
 
 But regardless of the value of this option a file F is never displayed in the
 sources-buffer if the directory matches `ecb-sources-exclude-cvsignore'
@@ -399,7 +401,8 @@ regexp:
   (but including .emacs and .gnus)
 - Common source file types (.c, .java etc.)
 In addition to these predefined values a custom exclude and include
-combination can be defined.
+combination can be defined. Here each list must at least contain one regexp -
+this can be a least the empty regexp \"\"!
 
 Tips for the directory- and file-regexps: \"$^\" matches no files/directories,
 \".*\" matches all files/directories."
@@ -410,16 +413,16 @@ Tips for the directory- and file-regexps: \"$^\" matches no files/directories,
                        (choice :tag "Files to display"
                                :menu-tag "Files to display"
                                (const :tag "All files"
-                                      :value ("" ""))
+                                      :value (("") ("")))
                                (const :tag "All, but no backups, objects, etc..."
-                                      :value ("\\(^\\(\\.\\|#\\)\\|\\(~$\\|\\.\\(elc\\|obj\\|o\\|class\\|lib\\|dll\\|a\\|so\\|cache\\)$\\)\\)" "^\\.\\(x?emacs\\|gnus\\)$"))
+                                      :value (("\\(^\\(\\.\\|#\\)\\|\\(~$\\|\\.\\(elc\\|obj\\|o\\|class\\|lib\\|dll\\|a\\|so\\|cache\\)$\\)\\)") ("^\\.\\(x?emacs\\|gnus\\)$")))
                                (const :tag "Common source file types"
-                                      :value ("" "\\(\\(M\\|m\\)akefile\\|.*\\.\\(java\\|el\\|c\\|cc\\|h\\|hh\\|txt\\|html\\|texi\\|info\\|bnf\\)\\)$"))
+                                      :value (("") ("\\(\\(M\\|m\\)akefile\\|.*\\.\\(java\\|el\\|c\\|cc\\|h\\|hh\\|txt\\|html\\|texi\\|info\\|bnf\\)\\)$")))
                                (list :tag "Custom"
-                                     (regexp :tag "Exclude regexp"
-                                             :value "")
-                                     (regexp :tag "Include regexp"
-                                             :value ""))))))
+                                     (repeat (regexp :tag "Exclude regexp"
+                                                     :value ""))
+                                     (repeat (regexp :tag "Include regexp"
+                                                     :value "")))))))
 
 
 (defcustom ecb-show-source-file-extension t
@@ -461,6 +464,15 @@ then activating ECB again!"
   :group 'ecb-history
   :type 'string)
 
+(defcustom ecb-history-exclude-file-regexps '("TAGS$" "semantic\\.cache$")
+  "*List of regexps which exclude source-files from being historized. Be aware
+that each always full filenames \(ie. incl. full path) are matched against
+these regexps! Therefore be carefore with regexps beginning with ^!"
+  :group 'ecb-history
+  :type '(repeat (regexp :tag "Source-regexp")))
+
+(defsubst ecb-check-filename-for-history-exclude (filename)
+  (ecb-match-regexp-list filename ecb-history-exclude-file-regexps))
 
 (defcustom ecb-history-sort-method 'name
   "*Defines how the entries in the history-buffer are sorted.
@@ -813,13 +825,7 @@ related threshold."
   "Return the related source-exclude-include-regexps of
 `ecb-source-file-regexps' if DIR matches any directory-regexp in
 `ecb-source-file-regexps'."
-  (catch 'exit
-    (dolist (elem ecb-source-file-regexps)
-      (let ((case-fold-search t))
-        (save-match-data
-          (if (string-match (car elem) dir)
-              (throw 'exit (cdr elem))))
-        nil))))
+  (ecb-match-regexp-list dir ecb-source-file-regexps 'car 'cdr))
 
 
 (defun ecb-files-from-cvsignore (dir)
@@ -839,13 +845,7 @@ file in current directory."
 
 (defun ecb-check-directory-for-cvsignore-exclude (dir)
   "Return not nil if DIR matches a regexp in `ecb-sources-exclude-cvsignore'."
-  (catch 'exit
-    (dolist (elem ecb-sources-exclude-cvsignore)
-      (let ((case-fold-search t))
-        (save-match-data
-          (if (string-match elem dir)
-              (throw 'exit elem)))
-        nil))))
+  (ecb-match-regexp-list dir ecb-sources-exclude-cvsignore))
 
 (defun ecb-get-sources-sort-function (sort-method &optional ignore-case)
   "According to SORT-METHOD \(which can either be 'name, 'extension or nil)
@@ -863,8 +863,8 @@ and IGNORE-CASE return a function which can be used as argument for `sort'."
                 (ecb-string< ext-a ext-b ecb-sources-sort-ignore-case))))))
         (t (function (lambda (a b)
                        nil)))))
-  
-                                                   
+
+
 (defun ecb-get-files-and-subdirs (dir)
   "Return a cons cell where car is a list of all files to display in DIR and
 cdr is a list of all subdirs to display in DIR. Both lists are sorted
@@ -874,7 +874,7 @@ according to `ecb-sources-sort-method'."
       (let ((files (directory-files (ecb-fix-path dir) nil nil t))
             (source-regexps (or (ecb-check-directory-for-source-regexps
                                  (ecb-fix-filename dir))
-                                '("" "")))
+                                '(("") (""))))
             (cvsignore-files (if (ecb-check-directory-for-cvsignore-exclude dir)
                                  (ecb-files-from-cvsignore dir)))
             sorted-files source-files subdirs cache-elem)
@@ -889,12 +889,14 @@ according to `ecb-sources-sort-method'."
         ;; file-browser of ECB.
         (dolist (file sorted-files)
           (if (file-directory-p (ecb-fix-filename dir file))
-              (if (not (string-match ecb-excluded-directories-regexp file))
+              (if (not (ecb-check-dir-exclude file))
                   (setq subdirs (append subdirs (list file))))
-            (if (and (not (member file cvsignore-files))
-                     (or (string-match (cadr source-regexps) file)
-                         (not (string-match (car source-regexps) file))))
-                (setq source-files (append source-files (list file))))))
+            (when (and (not (member file cvsignore-files))
+                       (or (ecb-match-regexp-list file (cadr source-regexps))
+                           (not (ecb-match-regexp-list file (car source-regexps)))))
+              (when (not (file-writable-p file))
+                (ecb-merge-face-into-text file ecb-source-read-only-face))
+              (setq source-files (append source-files (list file))))))
         
         (setq cache-elem (cons dir (cons source-files subdirs)))
         ;; check if this directory must be cached
@@ -1285,8 +1287,6 @@ should be added.")
 
 (ecb-reset-history-filter)
 
-;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: Docstring in tzexi anpassen -
-;; history-option hat sich geändert.
 (defun ecb-add-all-buffers-to-history ()
   "Add all current file-buffers to the history-buffer of ECB.
 Dependend on the value of `ecb-history-sort-method' afterwards the history is
@@ -1335,8 +1335,8 @@ by the option `ecb-mode-line-prefixes'."
   (save-excursion
     (ecb-buffer-select ecb-history-buffer-name)
     (tree-node-remove-child-data (tree-buffer-get-root) filename)
-    (when (funcall (car ecb-history-filter)
-                   filename)
+    (when (and (not (ecb-check-filename-for-history-exclude filename))
+               (funcall (car ecb-history-filter) filename))
       (tree-node-add-child-first
        (tree-buffer-get-root)
        (tree-node-new
@@ -1425,7 +1425,7 @@ ecb-windows after displaying the file in an edit-window."
        (tree-buffer-highlight-node-data ecb-path-selected-source)))))
 
 
-(defun ecb-tree-node-add-files
+ (defun ecb-tree-node-add-files
   (node path files type include-extension old-children
         &optional not-expandable)
   "For every file in FILES add a child-node to NODE."
@@ -1435,8 +1435,6 @@ ecb-windows after displaying the file in an edit-window."
                        file
                      (file-name-sans-extension file)))
            (displayed-file file-1))
-      ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: Hier wenn dann den
-      ;; empty-check einbauen wenn type = 0!
       (tree-node-add-child
        node
        (ecb-new-child
@@ -1503,15 +1501,12 @@ ecb-windows after displaying the file in an edit-window."
 		  (name (if (listp dir) (cadr dir) norm-dir)))
 	     (tree-node-add-child
 	      node
-              ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: Hier wenn dann den
-              ;; empty-check einbauen!
 	      (ecb-new-child old-children name 2 norm-dir
                              (ecb-check-emptyness-of-dir norm-dir)
 			     (if ecb-truncate-long-names 'beginning)))))
          (tree-buffer-update))))))
 
 
-;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: DAS TESTEN TESTEN TESTEN
 (defvar ecb-directory-empty-cache nil
   "Cache for every directory if it is empty or not. This is an alist where an
 element looks like:
@@ -1574,37 +1569,6 @@ element looks like:
 a node with matching TYPE and DATA in OLD-CHILDREN. If found no new node is
 created but only the fields of this node will be updated. Otherwise a new node
 is created."
-  ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: Here we prescan for emptyness
-  ;; of directories in case DATA is a directory. We do this with
-  ;; `ecb-get-files-and-subdirs' because:
-  ;; - only this function takes all ecb-options into account which influences
-  ;;   the display of certain directories or files
-  ;; - this function gets its informations from a fast cache access if
-  ;;   possible
-  ;; - stores autom. all scanned directories in its cache so for the next time
-  ;;   the access is as fast as possible.
-  ;; Nevertheless this mechanism increases the time ECB now needs when
-  ;; clicking onto a directory or expanding a directory - the real loss of
-  ;; time depends on the number of entries for the directory of DATA! So it
-  ;; would be good if we good enhance this! The best would be a fast routine
-  ;; which checks only if a directory contains subdirs and/or files and then
-  ;; we give 'ecb-get-files-and-subdirs' a new argument which tells this
-  ;; function if only the dir should be checked for emptyness or if a full
-  ;; files- and subdirs-contents-access should be made. But i doubt if this is
-  ;; possible.
-  ;; When all this performs fast enough then we make an customizable option
-  ;; for `ecb-prescan-directories-for-emptyness'
-;;   (if (and ecb-prescan-directories-for-emptyness
-;;            (file-directory-p data))
-;;       (let ((files-and-subdirs (ecb-get-files-and-subdirs data)))
-;;         (if (and (= (length (cdr files-and-subdirs)) 0)
-;;                  (or (not (ecb-show-sources-in-directories-buffer-p))
-;;                      (= (length (car files-and-subdirs)) 0)))
-;;             (setq not-expandable t))))
-;;   (if (and ecb-prescan-directories-for-emptyness
-;;            (file-directory-p data)
-;;            (ecb-check-emptyness-of-dir data))
-;;       (setq not-expandable t))
   (catch 'exit
     (dolist (child old-children)
       (when (and (equal (tree-node-get-data child) data)

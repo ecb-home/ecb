@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: tree-buffer.el,v 1.147 2004/07/30 15:27:01 berndl Exp $
+;; $Id: tree-buffer.el,v 1.148 2004/08/12 14:05:01 berndl Exp $
 
 ;;; Commentary:
 
@@ -106,6 +106,8 @@
 (if tree-buffer-running-xemacs
     ;; XEmacs
     (progn
+      (defun tree-buffer-facep (face)
+        (memq face (face-list)))
       (defsubst tree-buffer-create-image (file type)
         "Create an image of type TYPE from FILE. Return the new image."
         (apply 'make-glyph
@@ -143,6 +145,7 @@ Image types are symbols like `xbm' or `jpeg'."
                   (goto-char (1- (extent-end-position ext))))))))
 
   ;; GNU Emacs
+  (defalias 'tree-buffer-facep 'facep)
   (defsubst tree-buffer-create-image (file type)
     (apply 'create-image
            `(,file ,type nil
@@ -875,6 +878,51 @@ tree-node. This is only used with GNU Emacs 21!"
            node
            (funcall tree-node-mouse-over-fn node window 'no-print)))))
 
+(defun tree-buffer-merge-face-into-text (text face)
+  "Merge FACE to the already precolored TEXT so the values of all
+face-attributes of FACE take effect and but the values of all face-attributes
+of TEXT which are not set by FACE are preserved."
+  (if (null face)
+      text
+    (if tree-buffer-running-xemacs
+        (put-text-property 0 (length text) 'face
+                           (let* ((current-face (get-text-property 0
+                                                                   'face
+                                                                   text))
+                                  (cf
+                                   (cond ((tree-buffer-facep current-face)
+                                          (list current-face))
+                                         ((listp current-face)
+                                          current-face)
+                                         (t nil)))
+                                  (nf
+                                   (cond ((tree-buffer-facep face)
+                                          (list face))
+                                         ((listp face)
+                                          face)
+                                         (t nil))))
+                             ;; we must add the new-face in front of
+                             ;; current-face to get the right merge!
+                             (append nf cf))
+                           text)
+      (alter-text-property 0 (length text) 'face
+                           (lambda (current-face)
+                             (let ((cf
+                                    (cond ((tree-buffer-facep current-face)
+                                           (list current-face))
+                                          ((listp current-face)
+                                           current-face)
+                                          (t nil)))
+                                   (nf
+                                    (cond ((tree-buffer-facep face)
+                                           (list face))
+                                          ((listp face)
+                                           face)
+                                          (t nil))))
+                               ;; we must add the new-face in front of
+                               ;; current-face to get the right merge!
+                               (append nf cf)))
+                           text))))
 
 (defun tree-buffer-insert-text (text &optional facer help-echo mouse-highlight)
   "Insert TEXT at point and faces it with FACER. FACER can be a face then the
@@ -883,17 +931,16 @@ inserted TEXT. Such a function gets two arguments: Point where TEXT has been
 inserted and the TEXT itself"
   (when (stringp text)
     (let ((p (point)))
-      (insert text)
       (if mouse-highlight
-          (put-text-property p (+ p (length text)) 'mouse-face 'highlight))
+          (put-text-property 0 (length text) 'mouse-face 'highlight text))
       (if (and help-echo (not tree-buffer-running-xemacs))
-          (put-text-property p (+ p (length text)) 'help-echo
-                             'tree-buffer-help-echo-fn))
+          (put-text-property 0 (length text) 'help-echo
+                             'tree-buffer-help-echo-fn text))
       (if facer
           (if (functionp facer)
               (funcall facer p text)
-            (put-text-property p (+ p (length text)) 'face facer))))))
-
+            (tree-buffer-merge-face-into-text text facer)))
+      (insert text))))
 
 (defun tree-buffer-insert-node-display (node node-display-name)
   (let* ((node-type (tree-node-get-type node))
@@ -2192,37 +2239,6 @@ AFTER-CREATE-HOOK: A function or a list of functions \(with no arguments)
     ;; scrolling horiz.
     (when (and (not tree-buffer-running-xemacs)
                tree-buffer-hor-scroll-step)
-      ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: Deactivate these
-      ;; meta-down-mouse-1 stuff for horiz. scrolling when we add meta as an
-      ;; allowed modifier for mouse-clicks above!!
-;;       (define-key tree-buffer-key-map
-;;         [M-down-mouse-1]
-;;         (function (lambda(e)
-;;                     (interactive "e")
-;;                     (tree-buffer-mouse-set-point e)
-;;                     (tree-buffer-hscroll (- tree-buffer-hor-scroll-step)))))
-
-;;       (define-key tree-buffer-key-map
-;;         [M-down-mouse-3]
-;;         (function (lambda(e)
-;;                     (interactive "e")
-;;                     (tree-buffer-mouse-set-point e)
-;;                     (tree-buffer-hscroll tree-buffer-hor-scroll-step))))
-      
-;;       (define-key tree-buffer-key-map
-;;         [C-M-down-mouse-1]
-;;         (function (lambda(e)
-;;                     (interactive "e")
-;;                     (tree-buffer-mouse-set-point e)
-;;                     (tree-buffer-hscroll (- (- (window-width) 2))))))
-      
-;;       (define-key tree-buffer-key-map
-;;         [C-M-down-mouse-3]
-;;         (function (lambda(e)
-;;                     (interactive "e")
-;;                     (tree-buffer-mouse-set-point e)
-;;                     (tree-buffer-hscroll (- (window-width) 2)))))
-      
       ;; This lets the GNU Emacs user scroll as if we had a horiz.
       ;; scrollbar...
       (define-key tree-buffer-key-map

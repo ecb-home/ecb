@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb.el,v 1.398 2004/08/06 15:59:14 berndl Exp $
+;; $Id: ecb.el,v 1.399 2004/08/12 14:05:04 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -1584,8 +1584,6 @@ combination is invalid \(see `ecb-interpret-mouse-click'."
     (if (/= mouse-button 0)
         (setq ecb-layout-prevent-handle-ecb-window-selection t))
     ;; first we dispatch to the right action
-    ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: Enable meta-mode in
-    ;; ecb-file-browser.el too!
     (when ecb-button-list
       (cond ((ecb-string= tree-buffer-name ecb-directories-buffer-name)
 	     (ecb-directory-clicked node ecb-button nil shift-mode meta-mode))
