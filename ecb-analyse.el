@@ -20,7 +20,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-analyse.el,v 1.3 2004/12/29 08:36:04 berndl Exp $
+;; $Id: ecb-analyse.el,v 1.4 2005/01/03 14:27:20 berndl Exp $
 
 
 ;;; Commentary:
@@ -302,10 +302,8 @@ This means in fact display the current analysis for current point."
 mentioned in `ecb-analyse-collapsed-buckets'. BUCKET-NAME is the name a bucket
 should be displayed with. LIST is a list of tags for this bucket. NODETYPE is
 an integer which will be added as type to the nodes created for the elements
-of LIST. If optional arg FONTIFY-TAGS is not nil then the tags contained in
-LIST will be displayed as in the methods-buffer of ECB \(if
-`ecb-font-lock-tags' is not nil)."
-  (when (> (length list) 0)
+of LIST."
+  (when list
     (save-excursion
       (set-buffer ecb-analyse-buffer-name)
       (let* ((bucket-name-formatted (ecb-merge-face-into-text bucket-name
@@ -342,14 +340,14 @@ LIST will be displayed as in the methods-buffer of ECB \(if
                              (list elem ecb-analyse-nodedata-no-tag nodetype)
                              t bucket-node nil))))))))
 
-(defun ecb-compare-analyse-buffer-node-data (left right)
+(defun ecb-analyse-compare-node-data (left right)
   "Return not nil when LEFT and RIGHT are identical node-datas."
   (and (equal (nth 2 left) (nth 2 right))
        (ecb-compare-methods-buffer-node-data (car left) (car right))))
 
 (tree-buffer-defpopup-command ecb-analyse-jump-to-tag
   "Jump to the definition of current tag of the analyse-buffer.
-If first arg of the rest-arg-list is not nil then it must be a window and then
+If first arg of the REST-ARG-LIST is not nil then it must be a window and then
 ECB jumps to that window. If nil then `ecb-last-edit-window-with-point' is
 used as window."
   (let ((window (nth 0 rest-arg-list)))
@@ -551,14 +549,15 @@ analyse-buffer."
                       (cons nodetype
                             (function (lambda (node)
                                         (tree-node-get-name node))))))
-          '(ecb-analyse-nodetype-context
-            ecb-analyse-nodetype-arguments
-            ecb-analyse-nodetype-completions
-            ecb-analyse-nodetype-localvars
-            ecb-analyse-nodetype-prefix
-            ecb-analyse-nodetype-assignee
-            ecb-analyse-nodetype-function
-            ecb-analyse-nodetype-function-arg)))
+          `(,ecb-analyse-nodetype-context
+            ,ecb-analyse-nodetype-arguments
+            ,ecb-analyse-nodetype-completions
+            ,ecb-analyse-nodetype-localvars
+            ,ecb-analyse-nodetype-prefix
+            ,ecb-analyse-nodetype-assignee
+            ,ecb-analyse-nodetype-function
+            ,ecb-analyse-nodetype-function-arg)))
+
 
 (defecb-tree-buffer-creator ecb-create-analyse-tree-buffer ecb-analyse-buffer-name
   "Create the tree-buffer for analyse-display."
@@ -572,7 +571,7 @@ analyse-buffer."
    'ecb-tree-buffer-node-collapsed-callback
    'ecb-mouse-over-analyse-node
    'ecb-analyse-node-mouse-highlighted-p
-   'ecb-compare-analyse-buffer-node-data
+   'ecb-analyse-compare-node-data
    nil
    nil
    'ecb-analyse-menu-creator
