@@ -2,6 +2,10 @@
 
 ** Fixed bugs:
 
+*** Using "Add source path" from the popup-menu now doesn't open the Windows
+    file-dialog-box onto Windows-systems because this would prevent this
+    command from working.
+
 *** Smart arrowkey-navigation in the tree-buffers is now even smarter.
     Thanks to John Russel <jorussel@cisco.com> for suggestion.
 
