@@ -1,6 +1,6 @@
 ;;; ecb-compilation.el --- 
 
-;; $Id: ecb-compilation.el,v 1.10 2002/12/16 00:03:30 burtonator Exp $
+;; $Id: ecb-compilation.el,v 1.11 2002/12/16 13:16:46 berndl Exp $
 
 ;; Copyright (C) 2000-2003 Free Software Foundation, Inc.
 ;; Copyright (C) 2000-2003 Kevin A. Burton (burton@openprivacy.org)
@@ -36,29 +36,49 @@
 (eval-when-compile
   (require 'silentcomp))
 
-(defgroup ecb-compilation nil
+(defgroup ecb-compilation-content nil
   "Settings for all things displayed in the compile window of ECB."
   :group 'ecb
   :prefix "ecb-compilation-")
 
-(defcustom ecb-compilation-buffer-names (list ecb-eshell-buffer-name
-                                              "*Calculator*"
-                                              "*Apropos*"
-                                              "*Help*"
-                                              "*Backtrace*"
-                                              "*shell*"
-                                              "*bsh*"
-                                              "*Messages*")
-  "*Additional buffer names that should be displayed in compilation
-window even if `compilation-buffer-p' says nil."
-  :group 'ecb-compilation
+(defcustom ecb-compilation-buffer-names '("*Calculator*"
+                                          "*Apropos*"
+                                          "*Help*"
+                                          "*Backtrace*"
+                                          "*shell*"
+                                          "*bsh*"
+                                          "*Messages*")
+  "*Additional buffer names that should be displayed in the compilation
+window of ECB even if `compilation-buffer-p' says nil."
+  :group 'ecb-compilation-content
+  :group 'ecb-layout
   :type '(repeat (string :tag "Buffer name")))
 
+(defvar ecb-compilation-buffer-names-internal nil
+  "This variable is for ECB internal use and can be used by ECB to add
+buffer-names to the set displayed in the compile-window.")
+
+(defun ecb-compilation-buffer-names ()
+  "Return all buffer-name which should be displayed in the compile-window."
+  (append ecb-compilation-buffer-names
+          ecb-compilation-buffer-names-internal))
+
 (defcustom ecb-compilation-major-modes (list 'eshell-mode 'compilation-mode)
-  "*Additional major-mode that should be displayed in compilation window even if
-`compilation-buffer-p' says nil."
-  :group 'ecb-compilation
+  "*Additional major-mode that should be displayed in the compilation
+window of ECB even if `compilation-buffer-p' says nil."
+  :group 'ecb-compilation-content
+  :group 'ecb-layout
   :type '(repeat (symbol :tag "major-mode name")))
+
+(defvar ecb-compilation-major-modes-internal nil
+  "This variable is for ECB internal use and can be used by ECB to add
+  major-mode symbols to the set displayed in the compile-window.")
+
+(defun ecb-compilation-major-modes ()
+  "Return all major-mode symbols which should be displayed in the
+compile-window."
+  (append ecb-compilation-major-modes
+          ecb-compilation-major-modes-internal))
 
 (defun ecb-compilation-get-buffers()
   "Get all known compilation buffer names.  See `ecb-compilation-buffer-p'."
@@ -83,15 +103,16 @@ window even if `compilation-buffer-p' says nil."
   
 (defun ecb-compilation-buffer-p(buffer-or-name)
   "Test if the given buffer is a compilation buffer. Note that in this case we
-define 'compilation buffer' as a buffer that should ideally be displayed in the
+  define 'compilation buffer' as a buffer that should ideally be displayed in the
 `ecb-compile-window'. This means that in some situations this might not be the
 result of a `compile-internal'. A good example would be the *Help* buffer or the
 `ecb-eshell-buffer-name'.
 
 BUFFER can be the name of a buffer or a buffer-objekt.
 
-This function non-nil if the name of BUFFER is either contained in
-`ecb-compilation-buffer-names', or its `major-mode' is in
+This function is non-nil if the name of BUFFER is either contained in the list
+returned by the function `ecb-compilation-buffer-names', or its `major-mode'
+is contained in the list returned by the function
 `ecb-compilation-major-modes', or if `compilation-buffer-p' returns true."
 
   ;;determine the best valid for the buffer.
@@ -105,12 +126,12 @@ This function non-nil if the name of BUFFER is either contained in
     (when buffer
 
       ;;test if this is a valid buffer by name.
-      (if (member (buffer-name buffer) ecb-compilation-buffer-names)
+      (if (member (buffer-name buffer) (ecb-compilation-buffer-names))
           t
         ;;else test if this is a valid buffer by mode
         (if (save-excursion
               (set-buffer buffer)
-              (member major-mode ecb-compilation-major-modes))
+              (member major-mode (ecb-compilation-major-modes)))
             t
           ;;else test if this is a regular compilation buffer
           (if (compilation-buffer-p buffer)
