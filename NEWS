@@ -100,6 +100,13 @@
     Now only in the special ECB-tree-buffer a special ECB-modeline-menu is
     bound to mouse-3, all other buffers display the standard modeline-menu of
     XEmacs.
+
+*** Fixed a bug which occurs with XEmacs in combination with func-menu.
+    But there are still some incompatibilities between ECB and func-menu. So
+    the recommendation is to disable func-menu-support when using ECB.
+    Normally using func-menu makes no sense in combination with ECB because
+    ECB provides the same and even more informations as func-menu - so
+    func-menu is redundant ;-)
     
 
 

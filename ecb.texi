@@ -26,7 +26,7 @@
 @c GNU Emacs; see the file COPYING.  If not, write to the Free Software
 @c Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-@c $Id: ecb.texi,v 1.161 2004/03/02 06:48:35 berndl Exp $
+@c $Id: ecb.texi,v 1.162 2004/03/08 18:51:30 berndl Exp $
 
 @setfilename ecb.info
 
@@ -10384,6 +10384,16 @@ over it. Because ECB has a much more intelligent mouse tracking
 mechanism than follow-mouse the follow-mouse stuff profit from ECB and
 works even better and saver as without activated ECB!
 
+@subsubsection Package func-menu.el
+
+@cindex func-menu package
+This package has been reported to produce some conflicts under some
+circumstances when ECB is activated. Some of them could be reproduced
+by the ECB-maintainer. So the recommendation is to disable
+func-menu-support when using ECB. Normally using func-menu makes no
+sense in combination with ECB because ECB provides the same and even
+more informations as func-menu - so func-menu is redundant ;-)
+
 @subsubsection Package Gnus (Newsreader)
 
 @cindex Gnus
@@ -11020,6 +11030,15 @@ Yes, see the docstring of the option
 Can i apply some filters to the Tree-buffers.
 @tab @tab
 Yes, see @ref{Filtering the tree-buffers}
+
+@item @tab @tab
+
+@item
+With XEmacs i get sometimes an error ``Wrong number of arguments:
+widen (1)''. What can i do?
+@tab @tab
+Disable the func-menu support in your XEmacs-setup. See
+@ref{Conflicts}.
 
 @end multitable
 

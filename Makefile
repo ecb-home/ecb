@@ -26,7 +26,7 @@
 # GNU Emacs; see the file COPYING.  If not, write to the Free Software
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-# $Id: Makefile,v 1.84 2004/03/04 17:28:28 berndl Exp $
+# $Id: Makefile,v 1.85 2004/03/08 18:51:31 berndl Exp $
 
 
 # ========================================================================
@@ -78,11 +78,11 @@ LOADPATH=
 # - Call "make" to byte-compile the ECB. You can savely ignore the messages.
 # - Or call
 #
-#      make EMACS="path/to/emacs" (rsp. make EMACS="path/to/xemacs)
+#      make EMACS="path/to/emacs"
 #
 #      or
 #
-#      make CEDET="path/to/cedet"           #(for compiling with cedet 1.0)
+#      make CEDET="path/to/cedet"           (for compiling with cedet 1.0)
 #
 #      or
 #
@@ -139,7 +139,7 @@ INSTALLINFO=/usr/bin/install-info
 
 # Do not change anything below!
 
-# $Id: Makefile,v 1.84 2004/03/04 17:28:28 berndl Exp $
+# $Id: Makefile,v 1.85 2004/03/08 18:51:31 berndl Exp $
 
 # For the ECB-maintainers: Change the version-number here and not
 # elsewhere!
