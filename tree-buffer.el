@@ -26,7 +26,7 @@
 ;; This file is part of the ECB package which can be found at:
 ;; http://home.swipnet.se/mayhem/ecb.html
 
-;; $Id: tree-buffer.el,v 1.45 2001/05/16 21:00:50 creator Exp $
+;; $Id: tree-buffer.el,v 1.46 2001/05/16 23:06:43 creator Exp $
 
 ;;; Code:
 
@@ -71,6 +71,8 @@
 (defvar tree-buffer-highlight-overlay nil)
 (defvar tree-buffer-incr-searchpattern nil)
 (defvar tree-buffer-incr-search nil)
+(defvar tree-buffers nil)
+(defvar tree-buffer-saved-mouse-movement nil)
 
 (defun tree-buffer-get-node-name-start-column (node)
   "Returns the buffer column where the name of the node starts."
@@ -134,9 +136,11 @@ with the same arguments as `tree-node-expanded-fn'."
               (funcall tree-node-selected-fn node mouse-button
                        shift-pressed control-pressed (buffer-name)))))))))
 
-(defun tree-buffer-get-node-at-point ()
-  (let ((linenr (+ (count-lines 1 (point)) (if (= (current-column) 0) 0 -1))))
-    (nth linenr tree-buffer-nodes)))
+(defun tree-buffer-get-node-at-point (&optional p)
+  (save-excursion
+    (if p (goto-char p))
+    (let ((linenr (+ (count-lines 1 (point)) (if (= (current-column) 0) 0 -1))))
+      (nth linenr tree-buffer-nodes))))
 
 (defun tree-buffer-get-node-indent (node)
   (* tree-buffer-indent (1- (tree-node-get-depth node))))
@@ -484,6 +488,36 @@ mentioned above!"
 		(tree-buffer-create-menu (cdar menus)))
 	  (tree-buffer-create-menus (cdr menus)))))
 
+(defun tree-buffer-follow-mouse (event)
+  (interactive "e")
+  (let ((window (if running-xemacs
+		    (event-window event)
+		  (posn-window (event-start event))))
+	(current-window (get-buffer-window (current-buffer))))
+    (if (and (or (not (window-minibuffer-p current-window))
+		 (not (minibuffer-window-active-p current-window)))
+	     (windowp window)
+	     (member (window-buffer window) tree-buffers))
+	(tree-buffer-mouse-movement event)))
+  (if (not running-xemacs)
+      (if tree-buffer-saved-mouse-movement
+	  (funcall tree-buffer-saved-mouse-movement event)
+	;; Enable dragging
+	(setq unread-command-events
+	      (nconc unread-command-events (list event))))))
+
+(defun tree-buffer-mouse-movement (event)
+  (interactive "e")
+  (set-buffer (window-buffer (if running-xemacs (event-window event)
+			       (posn-window (event-start event)))))
+  (let ((p (if running-xemacs (event-point event)
+	     (posn-point (event-start event)))))
+    (when (integer-or-marker-p p)
+;;      (unless (not (equal (selected-frame) tree-buffer-frame))
+      (let ((node (tree-buffer-get-node-at-point p)))
+	(when (and tree-node-mouse-over-fn node)
+	  (funcall tree-node-mouse-over-fn node))))))
+
 (defun tree-buffer-create (name frame is-click-valid-fn node-selected-fn
                                 node-expanded-fn node-mouse-over-fn
                                 menus tr-lines read-only tree-indent
@@ -593,6 +627,17 @@ AFTER-CREATE-HOOK: A function \(with no arguments) called directly after
     (setq tree-buffer-incr-searchpattern "")
     (setq tree-buffer-incr-search incr-search)
 
+    ;; Follow mouse stuff
+    (if running-xemacs
+	(progn
+	  (make-local-hook 'mode-motion-hook)
+	  (add-hook 'mode-motion-hook 'tree-buffer-follow-mouse))
+      (let ((saved-fn (lookup-key special-event-map [mouse-movement])))
+	(when (not (eq saved-fn 'tree-buffer-follow-mouse))
+	  (setq tree-buffer-saved-mouse-movement saved-fn)
+	  (setq track-mouse t)
+	  (define-key special-event-map [mouse-movement] 'tree-buffer-follow-mouse))))
+  
     (when incr-search
       ;; settings for the incremental search.
       ;; for all keys which are bound to `self-insert-command' in `global-map'
@@ -694,20 +739,18 @@ AFTER-CREATE-HOOK: A function \(with no arguments) called directly after
     (define-key tree-buffer-key-map [triple-mouse-3] nop)
 
     ;; mouse-movement
-    (define-key tree-buffer-key-map [mouse-movement]
-      (function (lambda(e)
-		  (interactive "e")
-                  (save-excursion
-                    (mouse-set-point e);; (cadadr e)
-                    (unless (not (equal (selected-frame) tree-buffer-frame))
-                      (let ((node (tree-buffer-get-node-at-point)))
-                        (when (and tree-node-mouse-over-fn node)
-                          (funcall tree-node-mouse-over-fn node))))))))
+    (define-key tree-buffer-key-map [mouse-movement] 'tree-buffer-mouse-movement)
 
     (use-local-map tree-buffer-key-map)
 
+    (setq tree-buffers (cons (current-buffer) tree-buffers))
+    
     (if (functionp after-create-hook)
         (funcall after-create-hook))))
+
+(defun tree-buffer-destroy (buffer)
+  (setq tree-buffers (delq (get-buffer buffer) tree-buffers))
+  (kill-buffer buffer))
 
 ;;; Tree node
 
