@@ -159,7 +159,7 @@
 
 ;; IMPORTANT: The version-number is auto-frobbed from the Makefile. Do not
 ;; change it here!
-(defconst ecb-version "2.26"
+(defconst ecb-version "2.27"
   "Current ECB version.")
 
 (eval-when-compile
@@ -283,7 +283,9 @@
     (ecb-source-file-regexps . (ecb-source-file-regexps
                                 ecb-upgrade-source-file-regexps))
     (ecb-exclude-parents-regexp . (ecb-exclude-parents-regexps
-                                   ecb-upgrade-exclude-parents-regexp)))
+                                   ecb-upgrade-exclude-parents-regexp))
+    (ecb-auto-expand-tag-tree-collapse-other . (ecb-auto-expand-tag-tree-collapse-other
+                                                ecb-upgrade-auto-expand-tag-tree-collapse-other)))
   "Alist of all options which should be upgraded for current ECB-version.
 There are several reasons why an option should be contained in this alist:
 a) An old option has just be renamed in current-ECB version but has still the
@@ -565,6 +567,11 @@ The car is the old option symbol and the cdr is a 2-element-list with:
     
 (defun ecb-upgrade-exclude-parents-regexp (old-val)
   (if old-val (list old-val)))
+
+(defun ecb-upgrade-auto-expand-tag-tree-collapse-other (old-val)
+  (if old-val
+      'only-if-on-tag
+    nil))
 
 ;; ----------------------------------------------------------------------
 ;; internal functions. Dot change anything below this line

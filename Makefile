@@ -148,7 +148,7 @@ INSTALLINFO=/usr/bin/install-info
 
 # For the ECB-maintainers: Change the version-number here and not
 # elsewhere!
-ecb_VERSION=2.26
+ecb_VERSION=2.27
 
 include ecb-makedef.mk
 
