@@ -59,7 +59,7 @@
 ;; The latest version of the ECB is available at
 ;; http://home.swipnet.se/mayhem/ecb.html
 
-;; $Id: ecb.el,v 1.257 2002/12/19 18:01:56 berndl Exp $
+;; $Id: ecb.el,v 1.258 2002/12/20 14:33:13 berndl Exp $
 
 ;;; Code:
 
@@ -95,7 +95,6 @@
 (require 'ecb-cycle)
 (require 'ecb-face)
 (require 'ecb-upgrade)
-(require 'ecb-speedbar)
 
 ;; various loads
 (require 'easymenu)
@@ -113,6 +112,11 @@
 (silentcomp-defun semanticdb-full-filename)
 (silentcomp-defun ediff-cleanup-mess)
 (silentcomp-defvar ediff-quit-hook)
+
+;; ecb-speedbar is only loaded if ecb-use-speedbar-for-directories is set to
+;; true
+(silentcomp-defun ecb-speedbar-deactivate)
+
 
 ;;====================================================
 ;; Variables
@@ -4110,7 +4114,8 @@ does all necessary after finishing ediff."
       (ecb-disable-basic-advices)
 
       ;; deactivate and reset the speedbar stuff
-      (ecb-speedbar-deactivate)
+      (if (featurep 'ecb-speedbar)
+          (ecb-speedbar-deactivate))
       
       (tree-buffer-deactivate-mouse-tracking)
       (tree-buffer-deactivate-follow-mouse)
