@@ -26,7 +26,7 @@
 ;; This file is part of the ECB package which can be found at:
 ;; http://home.swipnet.se/mayhem/ecb.html
 
-;; $Id: ecb-util.el,v 1.38 2002/12/16 10:46:20 berndl Exp $
+;; $Id: ecb-util.el,v 1.39 2003/01/02 14:10:10 berndl Exp $
 
 ;;; Code:
 
@@ -270,6 +270,81 @@ the user is prompted with OTHER-PROMPT to insert any arbitrary string."
              (* ref-value value)
            value)))
 
+(defmacro ecb-with-readonly-buffer (buffer &rest body)
+  "Make buffer BUFFER current but do not display it. Evaluate BODY in buffer
+BUFFER \(not readonly an evaluation-time of BODY) and make afterwards BUFFER
+readonly. Note: All this is done with `save-excursion' so after BODY that
+buffer is current which was it before calling this macro."
+  `(if (buffer-live-p ,buffer)
+       (save-excursion
+         (set-buffer ,buffer)
+         (unwind-protect
+             (progn
+               (setq buffer-read-only nil)
+               ,@body)
+           (setq buffer-read-only t)))
+     (ecb-error "Try to set a not existing buffer.")))
+
+(put 'ecb-with-readonly-buffer 'lisp-indent-function 1)
+
+;; (defmacro ecb-do-if-buffer-visible-in-ecb-frame (buffer-name-symbol &rest body)
+;;   "Evaluate BODY if the following condititions are all true:
+;; - The symbol BUFFER-NAME-SYMBOL is bound
+;; - The value of BUFFER-NAME-SYMBOL is a name of a living buffer B
+;; - The buffer B is visible and displayed in a window of the `ecb-frame'
+;; - ECB is active
+;; - The current frame is the `ecb-frame'
+;; - The window of buffer B is not the `ecb-edit-window'.
+;; If one of these condititions is false then nothing will be done.
+
+;; During the evaluation of BODY the following local variables are bound:
+;; - ecb-buffer: The buffer-object which name is the value of
+;;   BUFFER-NAME-SYMBOL.
+;; - ecb-window: The window which displays ecb-buffer
+;; - edit-window-buffer: The buffer-object currently displayed in the
+;;   `ecb-edit-window' which is equal to `current-buffer'."
+;;   (let ((buffer-sym (make-symbol "ecb-buffer"))
+;;         (window-sym (make-symbol "ecb-window"))
+;;         (curr-buffer-sym (make-symbol "edit-window-buffer")))
+;;     `(let* ((,buffer-sym (if (and (boundp ,buffer-name-symbol)
+;;                                   (stringp (symbol-value ,buffer-name-symbol)))
+;;                              (get-buffer (symbol-value ,buffer-name-symbol))))
+;;             (,window-sym (if (bufferp ,buffer-sym)
+;;                              (get-buffer-window ,buffer-sym)))
+;;             (,curr-buffer-sym (current-buffer)))
+;;        (when (and ecb-minor-mode
+;;                   (equal (selected-frame) ecb-frame)
+;;                   ,window-sym
+;;                   (window-live-p ,window-sym)
+;;                   (not (equal ,window-sym ecb-edit-window)))
+;;          ,@body))))
+
+(defmacro ecb-do-if-buffer-visible-in-ecb-frame (buffer-name-symbol &rest body)
+  "Evaluate BODY if the following conditions are all true:
+- The symbol BUFFER-NAME-SYMBOL is bound
+- The value of BUFFER-NAME-SYMBOL is the name of a living buffer B
+- The buffer B is visible and displayed in a window of the `ecb-frame'
+- ECB is active
+- The current frame is the `ecb-frame'
+If one of these condititions is false then nothing will be done.
+
+See `ecb-eshell-current-buffer-sync' and `ecb-speedbar-current-buffer-sync'
+for examples how to use this macro."
+  `(when (and ecb-minor-mode
+              (equal (selected-frame) ecb-frame)
+              (boundp ,buffer-name-symbol)
+              (stringp (symbol-value ,buffer-name-symbol))
+              (get-buffer-window (symbol-value ,buffer-name-symbol)
+                                 ecb-frame))
+     ,@body))
+
+(put 'ecb-do-if-buffer-visible-in-ecb-frame 'lisp-indent-function 1)
+
+;; (insert (pp (macroexpand '(ecb-do-if-buffer-is-visible
+;;                            'eshell-buffer-name
+;;                            (if ters
+;;                                (do-it)
+;;                              (testerli))))))
 
 
 (defmacro ecb-error (&rest args)
@@ -277,7 +352,8 @@ the user is prompted with OTHER-PROMPT to insert any arbitrary string."
 usefull if an error-message should be signaled to the user and evaluating
 should stopped but no debugging is senseful."
   `(let ((debug-on-error nil))
-     (error ,@args)))
+     (error (concat "ECB " ecb-version ": "
+                    (format ,@args)))))
 
 
 (silentcomp-provide 'ecb-util)
