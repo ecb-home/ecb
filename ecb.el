@@ -54,7 +54,7 @@
 ;; The latest version of the ECB is available at
 ;; http://home.swipnet.se/mayhem/ecb.html
 
-;; $Id: ecb.el,v 1.165 2001/11/22 21:15:11 berndl Exp $
+;; $Id: ecb.el,v 1.166 2001/11/23 04:09:32 burtonator Exp $
 
 ;;; Code:
 
@@ -2650,6 +2650,8 @@ always the ECB-frame if called from another frame."
     (tree-buffer-destroy ecb-sources-buffer-name)
     (tree-buffer-destroy ecb-methods-buffer-name)
     (tree-buffer-destroy ecb-history-buffer-name)
+
+    (setq ecb-activated-window-configuration nil)
     
     (setq ecb-minor-mode nil))
   (message "The ECB is now deactivated.")

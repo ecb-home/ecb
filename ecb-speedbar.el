@@ -1,6 +1,6 @@
 ;;; ecb-speedbar.el --- 
 
-;; $Id: ecb-speedbar.el,v 1.2 2001/11/18 19:10:51 burtonator Exp $
+;; $Id: ecb-speedbar.el,v 1.3 2001/11/23 04:09:32 burtonator Exp $
 
 ;; Copyright (C) 2000-2003 Free Software Foundation, Inc.
 ;; Copyright (C) 2000-2003 Kevin A. Burton (burton@openprivacy.org)
@@ -59,13 +59,15 @@
 (require 'ecb)
 (require 'speedbar)
 
+(defvar ecb-speedbar-buffer-name " SPEEDBAR" "Name of the ECB speedbar buffer.")
+
 (defun ecb-set-speedbar-buffer()
 
   (ecb-speedbar-activate)
   
   (set-window-dedicated-p (selected-window) nil)
   
-  (set-window-buffer (selected-window) (get-buffer " SPEEDBAR"))
+  (set-window-buffer (selected-window) (get-buffer ecb-speedbar-buffer-name))
 
   (set-window-dedicated-p (selected-window) t))
 
@@ -114,7 +116,7 @@ will/could break."
 
   (if (not (buffer-live-p speedbar-buffer))
       (save-excursion
-        (setq speedbar-buffer (get-buffer-create " SPEEDBAR"))
+        (setq speedbar-buffer (get-buffer-create ecb-speedbar-buffer-name))
         (set-buffer speedbar-buffer)
         (speedbar-mode)))
 
@@ -152,7 +154,12 @@ will/could break."
         (if (and speedbar-buffer
                  (buffer-live-p speedbar-buffer))
             (speedbar-update-contents)))))
-  
+
+(defun ecb-speedbar-goto-speedbar()
+  (interactive)
+
+  (select-window (get-buffer-window ecb-speedbar-buffer-name)))
+
 (add-hook 'ecb-current-buffer-sync-hook 'ecb-speedbar-current-buffer-sync)
 
 (provide 'ecb-speedbar)

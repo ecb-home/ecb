@@ -124,7 +124,7 @@
 ;;   + The edit-window must not be splitted and the point must reside in
 ;;     the not deleted edit-window.
 
-;; $Id: ecb-layout.el,v 1.84 2001/11/22 21:15:11 berndl Exp $
+;; $Id: ecb-layout.el,v 1.85 2001/11/23 04:09:32 burtonator Exp $
 
 ;;; Code:
 
@@ -422,6 +422,8 @@ done.")
   "The source-buffer of `ecb-last-edit-window-with-point'.")
 (defvar ecb-compile-window nil
   "Window to display compile-output in.")
+
+(defvar ecb-redraw-layout-hooks nil "Hooks to run after we redraw the layout.")
 
 (defun ecb-initialize-layout ()
   (setq ecb-frame nil
@@ -1461,7 +1463,34 @@ this function the edit-window is selected which was current before redrawing."
       (if (not (equal tree-windows-before-redraw
                       (ecb-layout-get-current-tree-windows)))
           (ecb-current-buffer-sync t))
-      (setq ecb-windows-hidden nil))))
+
+      (setq ecb-windows-hidden nil)
+
+      (run-hooks 'ecb-redraw-layout-hooks))))
+
+(defun ecb-redraw-layout-quickly()
+  "Redraw the layout quickly using the cached window configuration
+  `ecb-activated-window-configuration'."
+
+  ;;save copies of:
+  ;;
+  ;; - the current buffer in the main window
+  ;; - the current buffer in the compilation window
+
+  (let((main-window-buffer nil)
+       (compilation-window-buffer nil))
+    
+    (setq main-window-buffer (window-buffer ecb-edit-window))
+
+    (setq compilation-window-buffer (window-buffer ecb-compile-window))
+    
+    (set-window-configuration ecb-activated-window-configuration)
+
+    ;;ok... now restore the buffers in the compile and edit windows..
+
+    (set-window-buffer ecb-edit-window main-window-buffer)
+
+    (set-window-buffer ecb-compile-window compilation-window-buffer)))
 
 (defun ecb-store-window-sizes ()
   "Stores the sizes of the ECB windows for the current layout. The size of the

@@ -1,6 +1,6 @@
 ;;; ecb-eshell.el --- eshell integration for the ECB.
 
-;; $Id: ecb-eshell.el,v 1.8 2001/11/23 02:34:27 burtonator Exp $
+;; $Id: ecb-eshell.el,v 1.9 2001/11/23 04:09:32 burtonator Exp $
 
 ;; Copyright (C) 2000-2003 Free Software Foundation, Inc.
 ;; Copyright (C) 2000-2003 Kevin A. Burton (burton@openprivacy.org)
@@ -48,7 +48,8 @@
 ;; - only run eshell/cd if the current directory is different than the
 ;; eshell/pwd.
 ;;
-;;
+;;   - we can't do this.  eshell/pwd does't return a string.  Instead we should
+;;     change to the eshell-buffer and see what the directory is there...
 
 ;;; Code:
 
@@ -125,9 +126,29 @@
 
   (ecb-eshell-recenter))
 
+(defun ecb-eshell-resize()
+  "Resize the eshell so more information is available.  This is usually done so
+  that the eshell has more screen space after we execute a command. "
+  (interactive)
+
+  (if (and (ecb-eshell-running-p)
+           ecb-minor-mode)
+
+      (progn 
+      
+;;         (other-window 1)
+        
+;;         (pop-to-buffer "*eshell*" t)
+
+;;         (other-window -1)
+
+        )))
+
 (add-hook 'ecb-current-buffer-sync-hook 'ecb-eshell-current-buffer-sync)
 
 (add-hook 'ecb-redraw-layout-hooks 'ecb-eshell-recenter)
+
+(add-hook 'eshell-pre-command-hook 'ecb-eshell-resize)
 
 (define-key ecb-mode-map "\C-c.e" 'ecb-eshell-goto-eshell)
 
