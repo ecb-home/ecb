@@ -21,7 +21,7 @@
 
 ;; Generates ECB HTML pages.
 
-;; $Id: ecb-html.el,v 1.31 2002/08/22 10:04:14 berndl Exp $
+;; $Id: ecb-html.el,v 1.32 2003/01/30 11:13:50 berndl Exp $
 
 ;;; Code:
 
@@ -57,12 +57,12 @@
    "ECB - Emacs Code Browser"
 
    (h-section "About"
-	      "ECB is source code browser for Emacs. It is a global minor-mode which displays a couple of windows that can be used to browse directories, files and methods. It supports method parsing for Java, C, C++, Elisp etc.")
+	      "ECB is source code browser for Emacs. It is a global minor-mode which displays a couple of windows that can be used to browse directories, files and methods. It supports method parsing for Java, C, C++, Elisp, Scheme etc.")
 
    (h-section "News"
 	      (h-sub-section "ECB 1.80 released! (2002-08-12)"
 			     (h-link "docs.html#Install%20and%20first%20steps" "Here") " is a short installation guide. "
-			     "Click " (h-link "history" "here") " for information about changes in the new version. ")
+			     "Click " (h-link "HISTORY" "here") " for information about changes in the new version. ")
 	      (h-sub-section "ECB 1.70 released! (2002-03-01)")
 	      (h-sub-section "ECB 1.60 released! (2002-01-20)"
 			     "Many improvements. Works fine with Emacs 21.")
@@ -87,8 +87,8 @@
 	      (h-bullet-link-list
 	       ecb-bullet
 	       '(
-		 ("mailto:mayhem@home.se" "Jesper Nordenberg")
 		 ("mailto:klaus.berndl@sdm.de" "Klaus Berndl")
+		 ("mailto:mayhem@home.se" "Jesper Nordenberg")
 		 ("mailto:burton@apache.org" "Kevin A. Burton")
 		 ("mailto:zappo@gnu.org" "Eric M. Ludlam")
 		 )))
@@ -106,7 +106,7 @@
   (h-doc
    "javabrowser.html"
    "Page has moved"
-   (h-p (h-b (h-link "ecb.html" "This page has moved.")))))
+   (h-p (h-b (h-link "index.html" "This page has moved.")))))
 
 (defun ecb-html-logo()
   (h-doc
@@ -121,6 +121,7 @@
     (h-link "main.html" '(target . "main")
 	    (h-img "ecb_logo.gif" "border='0'")))))
 
+;; Not used anymore.
 (defun ecb-html-screenshots()
   (h-doc
    "screenshots.html"
@@ -148,7 +149,7 @@
        '("http://www.xemacs.org" "XEmacs" "")
        '("http://jdee.sunsite.dk" "JDEE" "Recommended Java development environment for Emacs.")
        '("http://cedet.sourceforge.net" "CEDET" "A collection of Emacs development tools created by Eric M. Ludlam.")
-	'("http://www.anc.ed.ac.uk/~stephen/emacs/ell.html" "Emacs Lisp List" "A good collection of Emacs lisp packages.")
+       '("http://www.anc.ed.ac.uk/~stephen/emacs/ell.html" "Emacs Lisp List" "A good collection of Emacs lisp packages.")
 	)
      "_top"))))
 
@@ -168,10 +169,13 @@
        '(
 	 ("main.html" "Main")
 	 ("http://sourceforge.net/project/showfiles.php?group_id=17484" "Download")
-         ("docs.html#Install%20and%20first%20steps" "Installation")
-	 ("docs.html" "Documentation")
-	 ("docs.html#FAQ" "FAQ")
-	 ("history" "History")
+         ("docs/Install-and-first-steps.html#Install%20and%20first%20steps" "Installation")
+;;          ("docs.html#Install%20and%20first%20steps" "Installation")
+;; 	 ("docs.html" "Documentation")
+	 ("docs/index.html" "Documentation")
+	 ("docs/FAQ.html#FAQ" "FAQ")
+;; 	 ("docs,html#FAQ" "FAQ")
+	 ("history" "HISTORY")
 	 ("http://lists.sourceforge.net/lists/listinfo/ecb-list" "Mailing List")
 	 ("http://cvs.sourceforge.net/cgi-bin/viewcvs.cgi/ecb/" "CVS")
 	 ("screenshots/index.html" "Screenshots")
@@ -204,7 +208,7 @@
    '(alink . "#00a000")
    (h-table
     (h-tr (h-td '(nowrap) '(width . "100%") (h-fsize "5" (h-b "Emacs Code Browser")))
-	  (h-td '(nowrap) (h-email "mayhem@home.se" (h-img "mail.gif" "border='0'"))))
+	  (h-td '(nowrap) (h-email "klaus.berndl@sdm.de" (h-img "mail.gif" "border='0'"))))
     )))
 
 (defun ecb-faq-section(name &rest questions)
@@ -250,7 +254,7 @@
     "This depends strongly on Semantic, but all semantic-versions >= semantic-1.4beta13 should support C++ really well.")
    (ecb-faq-q-and-a
     "Why doesn't ECB display the node name in the echo area if mouse moves over it?"
-    "There can be several reasons: First the value of the option 'ecb-show-node-name-in-minibuffer' must be either 'always or 'if-too-long. If this is ok, then maybe you have turned on follow-mouse AFTER activating ECB; follow-mouse must be turned on BEFORE ECB is acivated, e.g. in the 'ecb-activate-hook'! But with Emacs 21.X and XEmacs there are no problems with this feature, just activate it.")
+    "There can be several reasons: First the value of the option 'ecb-show-node-name-in-minibuffer' must be either 'always or 'if-too-long. If this is ok, then maybe you have turned on follow-mouse AFTER activating ECB; follow-mouse must be turned on BEFORE ECB is acivated, e.g. in the 'ecb-activate-hook'! But with Emacs 21.X and XEmacs there are no problems with this feature, just activate it.") ;;
    (ecb-faq-q-and-a
     "What is the reason for poor scrolling performance with GNU Emacs 20.X in the edit-windows and what can i do?"
     "Set 'scroll-conservatively' to 0 and 'scroll-step' to a value > 1. For the exact reason see the online-help of ECB, section \"Tips and Tricks\".")
@@ -342,8 +346,10 @@
 (ecb-html-menu)
 (ecb-html-main)
 ;;(ecb-html-doc)
-(ecb-html-faq)
+;; Not used anymore
+;;(ecb-html-faq)
 (ecb-html-logo)
 (ecb-html-links)
-(ecb-html-screenshots)
-(ecb-html-old)
+;; Not used anymore
+;; (ecb-html-screenshots)
+;; (ecb-html-old)
