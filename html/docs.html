@@ -116,6 +116,7 @@ mailing list <a href="mailto:ecb-list@lists.sourceforge.net">ecb-list@lists.sour
 <li><a href="#ecb-faces">ecb-faces</a>:                    Customizing the faces
 <li><a href="#ecb-download">ecb-download</a>:                 Customizing how to download ECB
 <li><a href="#ecb-help">ecb-help</a>:                     Customizing the online help of ECB
+<li><a href="#ecb-eshell">ecb-eshell</a>:                   Customizing the eshell-integration
 
 <p>Upgrading and downloading packages
 
@@ -2698,6 +2699,7 @@ readable option index. See <a href="#Option%20Index">Option Index</a>.
 <li><a href="#ecb-faces">ecb-faces</a>:                    Customizing the faces
 <li><a href="#ecb-download">ecb-download</a>:                 Customizing how to download ECB
 <li><a href="#ecb-help">ecb-help</a>:                     Customizing the online help of ECB
+<li><a href="#ecb-eshell">ecb-eshell</a>:                   Customizing the eshell-integration
 </ul>
 
 <p><hr>
@@ -5742,6 +5744,7 @@ Valid values are either the string "latest" or a version number like
 
 <p><hr>
 Node:<a name="ecb-help">ecb-help</a>,
+Next:<a rel=next accesskey=n href="#ecb-eshell">ecb-eshell</a>,
 Previous:<a rel=previous accesskey=p href="#ecb-download">ecb-download</a>,
 Up:<a rel=up accesskey=u href="#Customizable%20options">Customizable options</a>
 <br>
@@ -5817,6 +5820,65 @@ The format <code>ecb-show-help</code> shows its online help. Allowed values
 are 'info (for the Info format) and 'html (for HTML format). If the
 value is 'html then <code>browse-url-browser-function</code> says which
 browser is used. 
+</td></tr>
+</table>
+
+<p><hr>
+Node:<a name="ecb-eshell">ecb-eshell</a>,
+Previous:<a rel=previous accesskey=p href="#ecb-help">ecb-help</a>,
+Up:<a rel=up accesskey=u href="#Customizable%20options">Customizable options</a>
+<br>
+
+<h4>Group ecb-eshell</h4>
+
+<p>This group contains the following options:
+
+<p>
+<table width="100%">
+<tr>
+<td align="left"><b>eshell-auto-activate</b><i>
+</i></td>
+<td align="right">User Option</td>
+</tr>
+</table>
+<table width="95%" align="center">
+<tr><td>
+Startup the eshell when the ECB is activated and display it in the
+compile-window. If current layout does not display a compile-window (see
+<code>ecb-compile-window-height</code>) then nothing is done. 
+</td></tr>
+</table>
+
+<p>
+<table width="100%">
+<tr>
+<td align="left"><b>eshell-enlarge-when-selecting</b><i>
+</i></td>
+<td align="right">User Option</td>
+</tr>
+</table>
+<table width="95%" align="center">
+<tr><td>
+Enlarge the compile-window if it displays the eshell and
+if it is selected by <code>ecb-eshell-goto-eshell</code>. 
+</td></tr>
+</table>
+
+<p>
+<table width="100%">
+<tr>
+<td align="left"><b>eshell-synchronize</b><i>
+</i></td>
+<td align="right">User Option</td>
+</tr>
+</table>
+<table width="95%" align="center">
+<tr><td>
+Synchronize the eshell with the default-directory of current
+source-buffer. The synchronization is done by
+<code>ecb-eshell-current-buffer-sync</code> which can be called
+interactively but normally it is called autom. by the
+<code>ecb-current-buffer-sync-hook</code>. 
 </td></tr>
 </table>
 
@@ -6396,7 +6458,52 @@ Up:<a rel=up accesskey=u href="#Tips%20and%20tricks">Tips and tricks</a>
 
 <h3>Optimal using of eshell in ECB</h3>
 
-<p>Documentation currently not available.
+<p>ECB offers a very smart integration of the "eshell" if you are using
+a compile window (see <a href="#Temp-%20and%20compile-buffers">Temp- and compile-buffers</a>)<a rel=footnote href="#fn-21"><sup>21</sup></a>
+
+<p>Here is a short summary of provided features:
+
+<ul>
+<li>Ability to jump to the eshell buffer within the compilation window
+<kbd>C-c . e</kbd>. If the eshell isn't running it will be started.
+
+<li>Expands the compilation window when you run commands. So for example
+it allows you to view the eshell in minimized mode and then when you
+run "ls" the window automatically expands (but always depending of
+the output of the command you run).
+
+<li>Sychronizes the current directory of the eshell with the current
+buffer in the edit-window of ECB.
+
+<li>Provides smart window layout of the eshell buffer. This makes sure
+that the eshell is taking up the exact amount of space and that
+nothing is hidden. 
+</ul>
+
+<p>Here comes a detailled explanation of these features and how to use it:
+
+<p>Just call <code>ecb-eshell-goto-eshell</code> (bound to <kbd>C-c . e</kbd>) and
+eshell will displayed in the compile-window of ECB (if eshell is not
+already alive then it will be started automatically).
+
+<p>ECB tries to display the contents of the eshell-buffer as best as
+possible, means ECB can autom. enlarge and shrink the compile-window
+so the contents of the eshell are fitting the window. See option
+<code>ecb-eshell-enlarge-when-selecting</code>. Normally this is done autom. 
+but you can also do it on demand with the command
+<code>ecb-eshell-enlarge</code>.
+
+<p>ECB tries also to recenter the eshell-buffer as best as possible. 
+Normally this is done autom but you can do it on demand with the
+command <code>ecb-eshell-recenter</code>.
+
+<p>If option <code>ecb-eshell-synchronize</code> is true then ECB always
+syncronizes the command prompt of eshell with the directory of current
+source-buffer of the edit-window.
+
+<p>With the option <code>ecb-eshell-auto-activate</code> you can start eshell
+autom. in the compile-window when ECB is started but of course if a
+compile-window exists.
 
 <p><hr>
 Node:<a name="Elisp%20programming">Elisp programming</a>,
@@ -6503,7 +6610,7 @@ Up:<a rel=up accesskey=u href="#Elisp%20programming">Elisp programming</a>
 <h3>How to deal with the adviced window-functions</h3>
 
 <p>ECB offers for packages which work during activated ECB three macros
-for easy temporally<a rel=footnote href="#fn-21"><sup>21</sup></a> using all original-functions, all
+for easy temporally<a rel=footnote href="#fn-22"><sup>22</sup></a> using all original-functions, all
 adviced functions or only some adviced functions:
 
 <ul>
@@ -6939,7 +7046,7 @@ to the ECB-history after ECB-start.
 
 <br></td></tr><tr align="left"><td valign="top">Is there an "Intellisense"-mechanism like with other IDEs? 
 </td><td valign="top"></td><td valign="top">
-For Java the JDEE<a rel=footnote href="#fn-22"><sup>22</sup></a> has this feature and for all other languages
+For Java the JDEE<a rel=footnote href="#fn-23"><sup>23</sup></a> has this feature and for all other languages
 semantic offer something similar, see
 <a href="http://cedet.sourceforge.net/intellisense.shtml">http://cedet.sourceforge.net/intellisense.shtml</a>
 
@@ -7053,6 +7160,9 @@ Up:<a rel=up accesskey=u href="#Top">Top</a>
 <li><code>ecb-create-layout-frame-height</code>: <a href="#ecb-create-layout">ecb-create-layout</a>
 <li><code>ecb-create-layout-frame-width</code>: <a href="#ecb-create-layout">ecb-create-layout</a>
 <li><code>enlarged-compilation-window-max-height</code>: <a href="#ecb-layout">ecb-layout</a>
+<li><code>eshell-auto-activate</code>: <a href="#ecb-eshell">ecb-eshell</a>
+<li><code>eshell-enlarge-when-selecting</code>: <a href="#ecb-eshell">ecb-eshell</a>
+<li><code>eshell-synchronize</code>: <a href="#ecb-eshell">ecb-eshell</a>
 <li><code>exclude-parents-regexp</code>: <a href="#ecb-methods">ecb-methods</a>
 <li><code>excluded-directories-regexp</code>: <a href="#ecb-directories">ecb-directories</a>
 <li><code>font-lock-tokens</code>: <a href="#ecb-methods">ecb-methods</a>
@@ -7161,6 +7271,7 @@ Up:<a rel=up accesskey=u href="#Top">Top</a>
 <li>ECB-layout: <a href="#The%20ECB-layout">The ECB-layout</a>
 <li>ECB-windows: <a href="#Overview">Overview</a>
 <li>edit-window: <a href="#The%20edit-window">The edit-window</a>
+<li>eshell: <a href="#Using%20eshell">Using eshell</a>
 <li>expanding: <a href="#Navigation">Navigation</a>
 <li>Faces: <a href="#Changing%20faces">Changing faces</a>
 <li>follow-mouse package: <a href="#Conflicts">Conflicts</a>
@@ -7265,6 +7376,7 @@ Up:<a rel=up accesskey=u href="#Top">Top</a>
 <li><a href="#ecb-faces">Group ecb-faces</a>
 <li><a href="#ecb-download">Group ecb-download</a>
 <li><a href="#ecb-help">Group ecb-help</a>
+<li><a href="#ecb-eshell">Group ecb-eshell</a>
 </ul>
 </ul>
 <li><a name="toc_Submitting%20problem%20report"></a>
@@ -7423,10 +7535,16 @@ speedbar-frame and the attached frame, but this make obviously no
 sense during running speedbar with ECB.</p>
 
 <li><a name="fn-21"></a>
+<p>Of
+course you can use eshell also if there is no compile-window. Then it
+is just displayed in the edit-window and there is no special
+integration.</p>
+
+<li><a name="fn-22"></a>
 <p>I.e. regardless of the settings in
 <code>ecb-advice-window-functions</code>!</p>
 
-<li><a name="fn-22"></a>
+<li><a name="fn-23"></a>
 <p>
 <a href="http://jdee.sunsite.dk/">http://jdee.sunsite.dk/</a>
 </p>

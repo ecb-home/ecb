@@ -1,6 +1,6 @@
 ;;; ecb-eshell.el --- eshell integration for the ECB.
 
-;; $Id: ecb-eshell.el,v 1.53 2002/12/28 19:15:31 berndl Exp $
+;; $Id: ecb-eshell.el,v 1.54 2002/12/29 10:13:06 berndl Exp $
 
 ;; Copyright (C) 2000-2003 Free Software Foundation, Inc.
 ;; Copyright (C) 2000-2003 Kevin A. Burton (burton@openprivacy.org)
@@ -9,7 +9,7 @@
 ;; Maintainer: Kevin A. Burton (burton@openprivacy.org)
 ;; Location: http://relativity.yi.org
 ;; Keywords: 
-;; Version: 1.0.0
+;; Version: 1.1.0
 
 ;; This file is [not yet] part of GNU Emacs.
 
@@ -57,6 +57,28 @@
 
 ;;; History:
 
+;; - Son Dec 29 2002 9:43 AM (klaus.berndl@sdm.de):
+;;   Fixes some bugs and cleans up the code:
+;;   + ecb-eshell-save-buffer-history: In macros with a let-clause we must
+;;     generate the local variables with make-symbol!!
+;;   + ecb-eshell-current-buffer-sync:
+;;     - Now only executed if called in ecb-compile-window; see comment in the
+;;       function itself.
+;;     - Normalizing directories before comparing it
+;;   + ecb-eshell-cleanse: removed (end-of-buffer) because this always sets
+;;     the mark. This should not be used in elisp-programs!
+;;   + Added to all functions ecb-eshell-running-p
+;;   + Removed a lot of superfluous save-excursion, save-window-excursion
+;;     etc...
+;;   + Removed ecb-eshell-enlarge-when-starting; eshell is always implicit
+;;     started and selected by `ecb-eshell-goto-eshell' so the option
+;;     `ecb-eshell-enlarge-when-selecting' should be enough.
+;;   + Removed the ecb-eshell-buffer-name
+;;   + Added new option ecb-eshell-synchronize
+;;   + Moved all add-hook into ecb-eshell-activate
+;;   + Added new function ecb-eshell-deactivate
+;;   + Made ecb-eshell-activate idempotent.
+;;   
 ;; - Mon Feb 04 2002 10:44 PM (burton@openprivacy.org): BUG: I think at certain
 ;; conditions, we might be able to get the eshell window to expand after we
 ;; automatically change directories.  I think this has to be:
@@ -128,21 +150,15 @@
   :prefix "ecb-eshell-")
 
 (defcustom ecb-eshell-enlarge-when-selecting t
-  "*Enlarge the `ecb-eshell-buffer-name' buffer if it has been selected."
+  "*Enlarge the compile-window if it displays the eshell and
+if it is selected by `ecb-eshell-goto-eshell'."
   :group 'ecb-eshell
   :type 'boolean)
 
-;; Klaus Berndl: Removed the following option because eshell is always
-;; implicit started and selected by `ecb-eshell-goto-eshell' so the option
-;; `ecb-eshell-enlarge-when-selecting' sould be enough.
-
-;; (defcustom ecb-eshell-enlarge-when-starting t
-;;   "*When starting the eshell, enlarge the buffer if non-nil."
-;;   :group 'ecb-eshell
-;;   :type 'boolean)
-
 (defcustom ecb-eshell-auto-activate nil
-  "*Startup the eshell when the ECB is activated."
+  "*Startup the eshell when the ECB is activated and display it in the
+compile-window. If current layout does not display a compile-window \(see
+`ecb-compile-window-height') then nothing is done."
   :group 'ecb-eshell
   :type 'boolean)
 
@@ -161,7 +177,7 @@ which can be called interactively but normally it is called autom. by the
   "True if we enlarged the window before we executed a command.")
 
 (defun ecb-eshell-current-buffer-sync()
-  "Synchronize the eshell with the current buffer.  This is only done if the
+  "Synchronize the eshell with the current buffer. This is only done if the
 eshell is currently visible and if either this function is called
 interactively or `ecb-eshell-synchronize' is not nil."
   (interactive)
@@ -217,42 +233,43 @@ interactively or `ecb-eshell-synchronize' is not nil."
 (defmacro ecb-eshell-save-buffer-history (&rest body)
   "Protect the buffer-list so that the eshell buffer name is not placed early
 in the buffer list or at all if it currently doesn't exist."
-  (let ((eshell-buffer-list (make-symbol "buffer-list")))
-    `(unwind-protect
-         (let((,eshell-buffer-list (ecb-frame-parameter (selected-frame)
-                                                        'buffer-list)))
-           ,@body
-           (modify-frame-parameters nil (list (cons 'buffer-list
-                                                    ,eshell-buffer-list)))))))
+  (let ((eshell-buffer-list (make-symbol "my-buffer-list")))
+    `(let ((,eshell-buffer-list (ecb-frame-parameter (selected-frame)
+                                                    'buffer-list)))
+       (unwind-protect
+           (progn
+             ,@body)
+         (modify-frame-parameters nil (list (cons 'buffer-list
+                                                  ,eshell-buffer-list)))))))
+
 
 (defun ecb-eshell-recenter(&optional display-errors)
   "Recenter the eshell window so that the prompt is at the end of the buffer."
   (interactive (list t))
 
-  (if (ecb-eshell-running-p)
-      (save-selected-window
-        (let((window (get-buffer-window eshell-buffer-name)))
-          (if (and window
-                   (window-live-p window)
-                   (equal window ecb-compile-window))
-              (progn
-                (select-window window)
-                (recenter -2)))))
+  (let ((window (and (ecb-eshell-running-p)
+                     (get-buffer-window eshell-buffer-name))))
+    (if (and window
+             (window-live-p window)
+             (equal window ecb-compile-window))
+        (save-selected-window
+          (select-window window)
+          (recenter -2)))
     (when display-errors
-      (error "Eshell not running or window not live"))))
+      (ecb-error "Eshell not running or compile-window not live!"))))
+
 
 (defun ecb-eshell-running-p()
   "Return true if eshell is currently running."
-
   (and (boundp 'eshell-buffer-name)
        (get-buffer eshell-buffer-name)))
 
 
 (defun ecb-eshell-goto-eshell()
-  "Go to the eshell buffer"
+  "Go to the eshell buffer in the compile-window. If eshell is not alive then
+start it."
   (interactive)
   
-  ;; we auto start the eshell here?  I think so..
   ;; This is idempotent!
   (ecb-eshell-activate)
 
@@ -268,39 +285,48 @@ in the buffer list or at all if it currently doesn't exist."
 (defun ecb-eshell-activate()
   "Startup the eshell in the compile window. If no compile-window is visible
 then an error is reported!"
-  (ecb-eshell-save-buffer-history
+ (ecb-eshell-save-buffer-history
    (save-excursion
      (when (ecb-compile-window-live-p 'display-msg)
        (select-window ecb-compile-window)
-       (if (not (ecb-eshell-running-p))
+       (if (and (not (ecb-eshell-running-p))
+                (fboundp 'eshell))
            (eshell))
-       (set-window-buffer ecb-compile-window
-                          (get-buffer eshell-buffer-name)))))
+       (if (ecb-eshell-running-p)
+           (set-window-buffer ecb-compile-window
+                              (get-buffer eshell-buffer-name))
+         (ecb-error "Can not start eshell. Please check eshell installation!")))))
   
-  (add-hook 'eshell-post-command-hook 'ecb-eshell-recenter)
-  (add-hook 'eshell-post-command-hook 'ecb-eshell-shrink-if-necessary)
-  (add-hook 'eshell-pre-command-hook 'ecb-eshell-enlarge)
-  
-  (add-hook 'window-size-change-functions 'ecb-eshell-window-size-change)
-
-  (add-to-list 'ecb-compilation-buffer-names-internal
-               (cons eshell-buffer-name nil)))
+ (when (and (ecb-compile-window-live-p 'display-msg)
+            (ecb-eshell-running-p))
+   (add-hook 'ecb-current-buffer-sync-hook 'ecb-eshell-current-buffer-sync)
+   
+   (add-hook 'eshell-post-command-hook 'ecb-eshell-recenter)
+   (add-hook 'eshell-post-command-hook 'ecb-eshell-shrink-if-necessary)
+   (add-hook 'eshell-pre-command-hook 'ecb-eshell-enlarge)
+   
+   (add-hook 'window-size-change-functions 'ecb-eshell-window-size-change)
+   
+   (add-to-list 'ecb-compilation-buffer-names-internal
+                (cons eshell-buffer-name nil))))
 
 (defun ecb-eshell-deactivate ()
   ;;TODO: Klaus Berndl <klaus.berndl@sdm.de>: Should we also try to exit the
-  ;;eshell itself? IMHO not...
+  ;;eshell itself? IMHO we should not...
+  (remove-hook 'ecb-current-buffer-sync-hook 'ecb-eshell-current-buffer-sync)
   (remove-hook 'eshell-post-command-hook 'ecb-eshell-recenter)
   (remove-hook 'eshell-post-command-hook 'ecb-eshell-shrink-if-necessary)
   (remove-hook 'eshell-pre-command-hook 'ecb-eshell-enlarge)
   (remove-hook 'window-size-change-functions 'ecb-eshell-window-size-change))  
+
 
 (defun ecb-eshell-enlarge()
   "Enlarge the eshell so more information is visible.  This is usually done so
 that the eshell has more screen space after we execute a command. "
   (interactive)
 
-  ;;us the eshell-pre-command-hook to see the point and then only enlarge if we
-  ;;enlarge past the maximum amount of lines we can use.
+  ;;use the eshell-pre-command-hook to see the point and then only enlarge if
+  ;;we enlarge past the maximum amount of lines we can use.
   (setq ecb-eshell-pre-command-point (point))
   
   (when (ecb-eshell-running-p)
@@ -329,26 +355,23 @@ that the eshell has more screen space after we execute a command. "
   "If we have expanded the compile buffer after a command, but there was no need
 to because the command didn't output much text, go ahead and shrink it again."
 
-  ;;only shrink up if we expanded... we don't want to shrink if we just happend
-  ;;to be runnning in large mode
-  (when (ecb-eshell-running-p)
-    (let((window (get-buffer-window eshell-buffer-name)))
-    
-      (when (and ecb-minor-mode
-                 window
-                 (window-live-p window)
-                 (equal (selected-window) ecb-compile-window))
+  (when (and (ecb-eshell-running-p)
+             ecb-minor-mode
+             (equal (selected-window) ecb-compile-window)
+             (equal ecb-compile-window (get-buffer-window eshell-buffer-name)))
         
-        (when (and ecb-eshell-pre-command-point ecb-eshell-pre-window-enlarged
-                   (< (count-lines ecb-eshell-pre-command-point
-                                   (point))
-                      ecb-compile-window-height))
-          (ecb-toggle-enlarged-compilation-window -1)
-          (ecb-eshell-recenter))
+    ;; only shrink up if we expanded... we don't want to shrink if we just
+    ;; happend to be runnning in large mode
+    (when (and ecb-eshell-pre-command-point ecb-eshell-pre-window-enlarged
+               (< (count-lines ecb-eshell-pre-command-point
+                               (point))
+                  ecb-compile-window-height))
+      (ecb-toggle-enlarged-compilation-window -1)
+      (ecb-eshell-recenter))
         
-        ;;reset
-        (setq ecb-eshell-pre-command-point nil)
-        (setq ecb-eshell-pre-window-enlarged nil)))))
+    ;;reset
+    (setq ecb-eshell-pre-command-point nil)
+    (setq ecb-eshell-pre-window-enlarged nil)))
 
 
 (defun ecb-eshell-cleanse()
@@ -365,20 +388,18 @@ don't do this we could end up executing a strange command resulting in a
 
 
 (defun ecb-eshell-auto-activate-hook()
-  "Activate the eshell when ECB is activated.  See
-  `ecb-eshell-auto-activate'."
+  "Activate the eshell when ECB is activated. See `ecb-eshell-auto-activate'."
   (when ecb-eshell-auto-activate
-    (ecb-eshell-activate)))
+    (ignore-errors (ecb-eshell-activate))))
 
 
 (defun ecb-eshell-window-size-change(frame)
   "Called when we change window sizes so that the eshell can resize."
-  (when (equal frame ecb-frame)
-    (ecb-eshell-recenter)))          
+  (when (and ecb-minor-mode
+             (equal frame ecb-frame))
+    (ignore-errors (ecb-eshell-recenter))))
 
 (add-hook 'ecb-activate-hook 'ecb-eshell-auto-activate-hook)
-  
-(add-hook 'ecb-current-buffer-sync-hook 'ecb-eshell-current-buffer-sync)
 
 (silentcomp-provide 'ecb-eshell)
 

@@ -110,6 +110,7 @@ All customizable options of ECB
 * ecb-faces::                   Customizing the faces
 * ecb-download::                Customizing how to download ECB
 * ecb-help::                    Customizing the online help of ECB
+* ecb-eshell::                  Customizing the eshell-integration
 
 Upgrading and downloading packages
 
@@ -2158,6 +2159,7 @@ Option Index::.
 * ecb-faces::                   Customizing the faces
 * ecb-download::                Customizing how to download ECB
 * ecb-help::                    Customizing the online help of ECB
+* ecb-eshell::                  Customizing the eshell-integration
 
 
 File: ecb.info,  Node: ecb-general,  Next: ecb-directories,  Prev: Customizable options,  Up: Customizable options
@@ -3792,7 +3794,7 @@ This group contains the following options:
    (*note Interactive ECB commands::).
 
 
-File: ecb.info,  Node: ecb-help,  Prev: ecb-download,  Up: Customizable options
+File: ecb.info,  Node: ecb-help,  Next: ecb-eshell,  Prev: ecb-download,  Up: Customizable options
 
 Group ecb-help
 --------------
@@ -3833,6 +3835,29 @@ This group contains the following options:
    The format `ecb-show-help' shows its online help. Allowed values are 'info
    (for the Info format) and 'html (for HTML format). If the value is 'html
    then `browse-url-browser-function' says which browser is used.
+
+
+File: ecb.info,  Node: ecb-eshell,  Prev: ecb-help,  Up: Customizable options
+
+Group ecb-eshell
+----------------
+
+This group contains the following options:
+
+ - User Option: eshell-auto-activate
+   Startup the eshell when the ECB is activated and display it in the
+   compile-window. If current layout does not display a compile-window (see
+   `ecb-compile-window-height') then nothing is done.
+
+ - User Option: eshell-enlarge-when-selecting
+   Enlarge the compile-window if it displays the eshell and if it is selected
+   by `ecb-eshell-goto-eshell'.
+
+ - User Option: eshell-synchronize
+   Synchronize the eshell with the default-directory of current
+   source-buffer. The synchronization is done by
+   `ecb-eshell-current-buffer-sync' which can be called interactively but
+   normally it is called autom. by the `ecb-current-buffer-sync-hook'.
 
 
 File: ecb.info,  Node: Submitting problem report,  Next: Upgrading,  Prev: Customizing,  Up: Top
@@ -4340,7 +4365,53 @@ File: ecb.info,  Node: Using eshell,  Prev: Large directories,  Up: Tips and tri
 Optimal using of eshell in ECB
 ==============================
 
-Documentation currently not available.
+ECB offers a very smart integration of the "eshell" if you are using a
+compile window (*note Temp- and compile-buffers::)(1)
+
+Here is a short summary of provided features:
+
+ * Ability to jump to the eshell buffer within the compilation window `C-c .
+   e'. If the eshell isn't running it will be started.
+
+ * Expands the compilation window when you run commands. So for example it
+   allows you to view the eshell in minimized mode and then when you run "ls"
+   the window automatically expands (but always depending of the output of
+   the command you run).
+
+ * Sychronizes the current directory of the eshell with the current buffer in
+   the edit-window of ECB.
+
+ * Provides smart window layout of the eshell buffer. This makes sure that
+   the eshell is taking up the exact amount of space and that nothing is
+   hidden.
+
+Here comes a detailled explanation of these features and how to use it:
+
+Just call `ecb-eshell-goto-eshell' (bound to `C-c . e') and eshell will
+displayed in the compile-window of ECB (if eshell is not already alive then
+it will be started automatically).
+
+ECB tries to display the contents of the eshell-buffer as best as possible,
+means ECB can autom. enlarge and shrink the compile-window so the contents of
+the eshell are fitting the window. See option
+`ecb-eshell-enlarge-when-selecting'. Normally this is done autom.  but you
+can also do it on demand with the command `ecb-eshell-enlarge'.
+
+ECB tries also to recenter the eshell-buffer as best as possible.  Normally
+this is done autom but you can do it on demand with the command
+`ecb-eshell-recenter'.
+
+If option `ecb-eshell-synchronize' is true then ECB always syncronizes the
+command prompt of eshell with the directory of current source-buffer of the
+edit-window.
+
+With the option `ecb-eshell-auto-activate' you can start eshell autom. in the
+compile-window when ECB is started but of course if a compile-window exists.
+
+---------- Footnotes ----------
+
+(1) Of course you can use eshell also if there is no compile-window. Then it
+is just displayed in the edit-window and there is no special integration.
 
 
 File: ecb.info,  Node: Elisp programming,  Next: Conflicts and bugs,  Prev: Tips and tricks,  Up: Top
@@ -4912,6 +4983,9 @@ the option `ecb-layout-name' is listed with name "layout-name").
 * ecb-create-layout-frame-height:        ecb-create-layout.
 * ecb-create-layout-frame-width:         ecb-create-layout.
 * enlarged-compilation-window-max-height: ecb-layout.
+* eshell-auto-activate:                  ecb-eshell.
+* eshell-enlarge-when-selecting:         ecb-eshell.
+* eshell-synchronize:                    ecb-eshell.
 * exclude-parents-regexp:                ecb-methods.
 * excluded-directories-regexp:           ecb-directories.
 * font-lock-tokens:                      ecb-methods.
@@ -5019,6 +5093,7 @@ Concept Index
 * ECB-layout:                            The ECB-layout.
 * ECB-windows:                           Overview.
 * edit-window:                           The edit-window.
+* eshell:                                Using eshell.
 * expanding:                             Navigation.
 * Faces:                                 Changing faces.
 * follow-mouse package:                  Conflicts.
@@ -5057,105 +5132,107 @@ Concept Index
 
 Tag Table:
 Node: Top183
-Node: Install and first steps6279
-Node: Installation6778
-Ref: Installation-Footnote-110704
-Ref: Installation-Footnote-210839
-Ref: Installation-Footnote-310951
-Node: Setting up Emacs11016
-Ref: Checking your hooks12962
-Ref: Setting up Emacs-Footnote-114159
-Ref: Setting up Emacs-Footnote-214263
-Ref: Setting up Emacs-Footnote-314364
-Ref: Setting up Emacs-Footnote-414423
-Node: First steps14572
-Ref: First steps-Footnote-115720
-Node: Overview15949
-Ref: Overview-Footnote-118700
-Node: ECB Directories18793
-Node: ECB Sources19810
-Node: ECB Methods20964
-Node: Activation and Deactivation21513
-Node: Standard activation21883
-Ref: Activation hook-sequence22461
-Ref: Deactivation hook-sequence22781
-Node: Automatic activation22955
-Node: Usage of ECB24088
-Node: Using the mouse24998
-Ref: Using the mouse-Footnote-127273
-Node: Using the keyboard27319
-Ref: Using the keyboard-Footnote-128363
-Node: Navigation28414
-Node: Incremental search29754
-Node: Personal keybindings31930
-Ref: Personal keybindings-Footnote-133928
-Node: The edit-window34031
-Node: Temp- and compile-buffers35861
-Node: The Methods buffer38143
-Node: Customizing the display38584
-Node: Rebuilding the Methods40306
-Node: The ECB-layout41161
-Node: Changing the ECB-layout41808
-Ref: Changing the ECB-layout-Footnote-169530
-Node: Redrawing the ECB-layout69622
-Node: Creating a new ECB-layout70547
-Ref: Creating a new ECB-layout-Footnote-174809
-Node: Hiding the ECB windows74983
-Node: Back/forward navigation76088
-Ref: Back/forward navigation-Footnote-177189
-Node: ECB-window synchronizing77248
-Node: Interactive ECB commands79830
-Node: Customizing90063
-Node: General aspects90697
-Ref: General aspects-Footnote-193530
-Node: Most important options93662
-Node: Customizable options95457
-Node: ecb-general96820
-Node: ecb-directories117790
-Node: ecb-sources124686
-Node: ecb-methods126941
-Node: ecb-history139210
-Node: ecb-layout141271
-Node: ecb-compilation-content158267
-Node: ecb-create-layout158833
-Node: ecb-face-options159349
-Node: ecb-faces162778
-Node: ecb-download166770
-Node: ecb-help167996
-Node: Submitting problem report169961
-Node: Upgrading171324
-Node: Downloading new versions172087
-Ref: Download required packages173844
-Ref: Downloading new versions-Footnote-1174942
-Node: Auto. option-upgrading174991
-Node: User interface175299
-Node: Background information176185
-Node: Tips and tricks179583
-Node: Changing faces180333
-Ref: Changing faces-Footnote-1183169
-Node: Small screens183345
-Node: Big screens184739
-Node: Simulating speedbar185580
-Node: Integrating speedbar186550
-Ref: Integrating speedbar-Footnote-1188905
-Ref: Integrating speedbar-Footnote-2189081
-Node: Optimize scrolling189239
-Node: Large directories190319
-Node: Using eshell190984
-Node: Elisp programming191174
-Node: List of variables191783
-Node: List of hooks192095
-Node: tree-buffer193051
-Node: Adviced functions193857
-Ref: Adviced functions-Footnote-1194476
-Node: Programming new layouts194547
-Node: Conflicts and bugs200806
-Node: Conflicts201281
-Node: Bugs204991
-Node: FAQ205211
-Ref: FAQ-Footnote-1210380
-Node: Command Index210411
-Node: Option Index212862
-Node: Concept Index219453
+Node: Install and first steps6346
+Node: Installation6845
+Ref: Installation-Footnote-110771
+Ref: Installation-Footnote-210906
+Ref: Installation-Footnote-311018
+Node: Setting up Emacs11083
+Ref: Checking your hooks13029
+Ref: Setting up Emacs-Footnote-114226
+Ref: Setting up Emacs-Footnote-214330
+Ref: Setting up Emacs-Footnote-314431
+Ref: Setting up Emacs-Footnote-414490
+Node: First steps14639
+Ref: First steps-Footnote-115787
+Node: Overview16016
+Ref: Overview-Footnote-118767
+Node: ECB Directories18860
+Node: ECB Sources19877
+Node: ECB Methods21031
+Node: Activation and Deactivation21580
+Node: Standard activation21950
+Ref: Activation hook-sequence22528
+Ref: Deactivation hook-sequence22848
+Node: Automatic activation23022
+Node: Usage of ECB24155
+Node: Using the mouse25065
+Ref: Using the mouse-Footnote-127340
+Node: Using the keyboard27386
+Ref: Using the keyboard-Footnote-128430
+Node: Navigation28481
+Node: Incremental search29821
+Node: Personal keybindings31997
+Ref: Personal keybindings-Footnote-133995
+Node: The edit-window34098
+Node: Temp- and compile-buffers35928
+Node: The Methods buffer38210
+Node: Customizing the display38651
+Node: Rebuilding the Methods40373
+Node: The ECB-layout41228
+Node: Changing the ECB-layout41875
+Ref: Changing the ECB-layout-Footnote-169597
+Node: Redrawing the ECB-layout69689
+Node: Creating a new ECB-layout70614
+Ref: Creating a new ECB-layout-Footnote-174876
+Node: Hiding the ECB windows75050
+Node: Back/forward navigation76155
+Ref: Back/forward navigation-Footnote-177256
+Node: ECB-window synchronizing77315
+Node: Interactive ECB commands79897
+Node: Customizing90130
+Node: General aspects90764
+Ref: General aspects-Footnote-193597
+Node: Most important options93729
+Node: Customizable options95524
+Node: ecb-general96954
+Node: ecb-directories117924
+Node: ecb-sources124820
+Node: ecb-methods127075
+Node: ecb-history139344
+Node: ecb-layout141405
+Node: ecb-compilation-content158401
+Node: ecb-create-layout158967
+Node: ecb-face-options159483
+Node: ecb-faces162912
+Node: ecb-download166904
+Node: ecb-help168130
+Node: ecb-eshell170114
+Node: Submitting problem report170963
+Node: Upgrading172326
+Node: Downloading new versions173089
+Ref: Download required packages174846
+Ref: Downloading new versions-Footnote-1175944
+Node: Auto. option-upgrading175993
+Node: User interface176301
+Node: Background information177187
+Node: Tips and tricks180585
+Node: Changing faces181335
+Ref: Changing faces-Footnote-1184171
+Node: Small screens184347
+Node: Big screens185741
+Node: Simulating speedbar186582
+Node: Integrating speedbar187552
+Ref: Integrating speedbar-Footnote-1189907
+Ref: Integrating speedbar-Footnote-2190083
+Node: Optimize scrolling190241
+Node: Large directories191321
+Node: Using eshell191986
+Ref: Using eshell-Footnote-1194077
+Node: Elisp programming194229
+Node: List of variables194838
+Node: List of hooks195150
+Node: tree-buffer196106
+Node: Adviced functions196912
+Ref: Adviced functions-Footnote-1197531
+Node: Programming new layouts197602
+Node: Conflicts and bugs203861
+Node: Conflicts204336
+Node: Bugs208046
+Node: FAQ208266
+Ref: FAQ-Footnote-1213435
+Node: Command Index213466
+Node: Option Index215917
+Node: Concept Index222667
 
 End Tag Table

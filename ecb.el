@@ -60,7 +60,7 @@
 ;; The latest version of the ECB is available at
 ;; http://home.swipnet.se/mayhem/ecb.html
 
-;; $Id: ecb.el,v 1.262 2002/12/28 19:12:52 berndl Exp $
+;; $Id: ecb.el,v 1.263 2002/12/29 10:13:05 berndl Exp $
 
 ;;; Code:
 
@@ -3600,6 +3600,12 @@ That is remove the unsupported :help stuff."
       (customize-group "ecb-help")
       :active t
       :help "Customize options for the online help of ECB"
+      ])
+    (ecb-menu-item
+     ["ECB/eshell options..."
+      (customize-group "ecb-eshell")
+      :active t
+      :help "Customize options for the eshell integration of ECB"
       ])
     )
    (list
