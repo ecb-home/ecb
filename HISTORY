@@ -1,6 +1,14 @@
 Version 1.90
 ------------
 
+* Rewritten the mechanism for storing customized window-sizes. See option
+  ecb-layout-window-sizes and the command ecb-store-window-sizes and
+  ecb-restore-window-sizes. Now the sizes are always saved as fractions of the
+  width (resp. height) of the ECB-frame, so the stored sizes are always
+  correct regardless of the current frame-size (Klaus).
+  Suggested and first implementation by Geert Ribbers
+  [geert.ribbers@realworld.nl]
+
 * Rewritten cache-mechanism for directories and sources:
   Depending on the value of the option ecb-cache-directory-contents the
   following is cached for a directory:
