@@ -1801,11 +1801,13 @@ Command Index::.
  - Command: add-all-buffers-to-history
    Add all current file-buffers to the history-buffer of ECB.
 
- - Command: change-layout
+ - Command: change-layout &optional preselect-type
    Select a layout-name from all current available layouts (TAB-completion is
-   offered) and change the layout to the selected layout-name. Note: This
-   function works by changing the option `ecb-layout-name' but only for
-   current Emacs-session.
+   offered) and change the layout to the selected layout-name. If optional
+   argument PRESELECT-TYPE is not nil then you can preselect a layout-type
+   \(TAB-completion is offered too) and then you will be asked only for
+   layouts of that preselected type. Note: This function works by changing
+   the option `ecb-layout-name' but only for current Emacs-session.
 
  - Command: clear-history &optional clearall
    Clears the ECB history-buffer. If CLEARALL is `nil' then the behavior is
@@ -4475,10 +4477,8 @@ for better indexing this manual):
    layout and is literal, i.e. not evaluated. It can be left, right, top or
    left-right. DOC is the docstring for the new layout-function
    "ecb-layout-function-<name>". CREATE-CODE is all the lisp code which is
-   necessary to define the ECB-windows/buffers. This macro adds the
-   layout-name NAME to the internal variable `ecb-available-layouts' which is
-   used by `ecb-change-layout', `ecb-toggle-layout', `ecb-show-layout-help'
-   and `ecb-layout-get-type'.
+   necessary to define the ECB-windows/buffers. This macro adds the layout
+   with NAME and TYPEto the internal variable `ecb-available-layouts'.
 
    Preconditions for CREATE-CODE:
    1. Current frame is splitted at least in one edit-window and the column
@@ -5105,57 +5105,57 @@ Node: Back/forward navigation76088
 Ref: Back/forward navigation-Footnote-177189
 Node: ECB-window synchronizing77248
 Node: Interactive ECB commands79830
-Node: Customizing89845
-Node: General aspects90479
-Ref: General aspects-Footnote-193312
-Node: Most important options93444
-Node: Customizable options95239
-Node: ecb-general96602
-Node: ecb-directories117572
-Node: ecb-sources124468
-Node: ecb-methods126723
-Node: ecb-history138992
-Node: ecb-layout141053
-Node: ecb-compilation-content158049
-Node: ecb-create-layout158615
-Node: ecb-face-options159131
-Node: ecb-faces162560
-Node: ecb-download166552
-Node: ecb-help167778
-Node: Submitting problem report169743
-Node: Upgrading171106
-Node: Downloading new versions171869
-Ref: Download required packages173626
-Ref: Downloading new versions-Footnote-1174724
-Node: Auto. option-upgrading174773
-Node: User interface175081
-Node: Background information175967
-Node: Tips and tricks179365
-Node: Changing faces180115
-Ref: Changing faces-Footnote-1182951
-Node: Small screens183127
-Node: Big screens184521
-Node: Simulating speedbar185362
-Node: Integrating speedbar186332
-Ref: Integrating speedbar-Footnote-1188687
-Ref: Integrating speedbar-Footnote-2188863
-Node: Optimize scrolling189021
-Node: Large directories190101
-Node: Using eshell190766
-Node: Elisp programming190956
-Node: List of variables191565
-Node: List of hooks191877
-Node: tree-buffer192833
-Node: Adviced functions193639
-Ref: Adviced functions-Footnote-1194258
-Node: Programming new layouts194329
-Node: Conflicts and bugs200694
-Node: Conflicts201169
-Node: Bugs204879
-Node: FAQ205099
-Ref: FAQ-Footnote-1210268
-Node: Command Index210299
-Node: Option Index212750
-Node: Concept Index219341
+Node: Customizing90063
+Node: General aspects90697
+Ref: General aspects-Footnote-193530
+Node: Most important options93662
+Node: Customizable options95457
+Node: ecb-general96820
+Node: ecb-directories117790
+Node: ecb-sources124686
+Node: ecb-methods126941
+Node: ecb-history139210
+Node: ecb-layout141271
+Node: ecb-compilation-content158267
+Node: ecb-create-layout158833
+Node: ecb-face-options159349
+Node: ecb-faces162778
+Node: ecb-download166770
+Node: ecb-help167996
+Node: Submitting problem report169961
+Node: Upgrading171324
+Node: Downloading new versions172087
+Ref: Download required packages173844
+Ref: Downloading new versions-Footnote-1174942
+Node: Auto. option-upgrading174991
+Node: User interface175299
+Node: Background information176185
+Node: Tips and tricks179583
+Node: Changing faces180333
+Ref: Changing faces-Footnote-1183169
+Node: Small screens183345
+Node: Big screens184739
+Node: Simulating speedbar185580
+Node: Integrating speedbar186550
+Ref: Integrating speedbar-Footnote-1188905
+Ref: Integrating speedbar-Footnote-2189081
+Node: Optimize scrolling189239
+Node: Large directories190319
+Node: Using eshell190984
+Node: Elisp programming191174
+Node: List of variables191783
+Node: List of hooks192095
+Node: tree-buffer193051
+Node: Adviced functions193857
+Ref: Adviced functions-Footnote-1194476
+Node: Programming new layouts194547
+Node: Conflicts and bugs200806
+Node: Conflicts201281
+Node: Bugs204991
+Node: FAQ205211
+Ref: FAQ-Footnote-1210380
+Node: Command Index210411
+Node: Option Index212862
+Node: Concept Index219453
 
 End Tag Table

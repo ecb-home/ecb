@@ -2045,11 +2045,14 @@ same as calling @code{ecb-minor-mode} with a positive argument.
 Add all current file-buffers to the history-buffer of ECB.
 @end deffn
 
-@deffn Command change-layout
+@deffn Command change-layout &optional preselect-type
 Select a layout-name from all current available layouts
 (TAB-completion is offered) and change the layout to the selected
-layout-name. Note: This function works by changing the option
-@code{ecb-layout-name} but only for current Emacs-session.
+layout-name. If optional argument PRESELECT-TYPE is not nil then you
+can preselect a layout-type \(TAB-completion is offered too) and then
+you will be asked only for layouts of that preselected type. Note:
+This function works by changing the option @code{ecb-layout-name} but
+only for current Emacs-session.
 @end deffn
 
 @deffn Command clear-history &optional clearall
@@ -5053,15 +5056,13 @@ definiton has stripped the prefix ``ecb-'' for better indexing this
 manual):
 
 @defmac layout-define name type &rest create-code
-Creates a new ECB-layout with name @var{NAME}. @var{TYPE} is the
-type of the new layout and is literal, i.e. not evaluated. It can be
-left, right, top or left-right. @var{DOC} is the docstring for the new
+Creates a new ECB-layout with name @var{NAME}. @var{TYPE} is the type
+of the new layout and is literal, i.e. not evaluated. It can be left,
+right, top or left-right. @var{DOC} is the docstring for the new
 layout-function ``ecb-layout-function-<name>''. @var{CREATE-CODE} is
 all the lisp code which is necessary to define the
-ECB-windows/buffers. This macro adds the layout-name @var{NAME} to the
-internal variable @code{ecb-available-layouts} which is used by
-@code{ecb-change-layout}, @code{ecb-toggle-layout},
-@code{ecb-show-layout-help} and @code{ecb-layout-get-type}.
+ECB-windows/buffers. This macro adds the layout with @var{NAME} and
+@var{TYPE}to the internal variable @code{ecb-available-layouts}.
 
 Preconditions for @var{CREATE-CODE}:
 @enumerate
