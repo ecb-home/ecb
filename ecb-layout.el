@@ -2368,17 +2368,23 @@ the `ecb-frame'."
   "Enlarge/shrink WINDOW to SIZE where SIZE is a cons with new width as car
 and new height as cdr. New width and height can be fractionals between -1 and
 +1."
-  (when (and window size)
-    (let ((absolut-width (if (and (< (car size) 1) (> (car size) -1))
+  (when (and window (consp size))
+    (let ((absolut-width (if (and (numberp (car size))
+                                  (< (car size) 1)
+                                  (> (car size) -1))
                              (round (* (car size) (frame-width ecb-frame)))
                            (car size)))
-          (absolut-height (if (and (< (cdr size) 1) (> (cdr size) -1))
-                             (round (* (cdr size) (frame-height ecb-frame)))
+          (absolut-height (if (and (numberp (car size))
+                                   (< (cdr size) 1)
+                                   (> (cdr size) -1))
+                              (round (* (cdr size) (frame-height ecb-frame)))
                            (cdr size))))
       (save-selected-window
         (select-window window)
-        (enlarge-window (- absolut-width (window-width window)) t)
-        (enlarge-window (- absolut-height (window-height window)))))))
+        (if (numberp absolut-width)
+            (enlarge-window (- absolut-width (window-width window)) t))
+        (if (numberp absolut-height)
+            (enlarge-window (- absolut-height (window-height window))))))))
 
 (defun ecb-set-window-sizes (sizes)
   (when sizes

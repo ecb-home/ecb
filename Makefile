@@ -46,7 +46,7 @@ LOADPATH=
 #   if they contain spaces!
 #
 # If there are any warning messages during byte-compilation (normally there
-# aren't any) you can savely ignore them!
+# are not any) you can savely ignore them!
 
 
 # ------------------------------------------------------------------------
@@ -95,7 +95,7 @@ INSTALLINFO=/usr/bin/install-info
 
 # For the ECB-maintainers: Change the version-number here and not
 # elsewhere!
-ecb_VERSION=1.91
+ecb_VERSION=1.91.1
 
 
 RM=rm -f
