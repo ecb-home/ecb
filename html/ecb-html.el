@@ -162,7 +162,7 @@
 	 ("faq.html" "FAQ")
 	 ("http://lists.sourceforge.net/lists/listinfo/ecb-list" "Mailing List")
 	 ("http://cvs.sourceforge.net/cgi-bin/viewcvs.cgi/ecb/" "CVS")
-	 ("screenshots.html" "Screenshots")
+	 ("screenshots/index.html" "Screenshots")
 	 ("links.html" "Links")
 	 )
        "main"))
