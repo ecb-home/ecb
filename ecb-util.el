@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-util.el,v 1.109 2004/08/12 14:05:09 berndl Exp $
+;; $Id: ecb-util.el,v 1.110 2004/08/18 16:07:14 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -132,6 +132,43 @@
        (if (fboundp 'display-images-p)
            (display-images-p)
          window-system)))
+
+;; -------------------------------------------------------------------
+;; Tracing - currently not used because we use the trace.el library!
+;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: Offer conveniant wrappers for the
+;; trace-function-background stuff so users can easily trace a set of
+;; ecb-functions if there occur problems where a backtrace can not be
+;; generated.
+
+(defvar ecb-trace-defun-enter t)
+(defvar ecb-trace-defun-leave t)
+
+(defsubst ecb-defun-trace (mode fcn)
+  (cond ((equal mode 'enter)
+         (and ecb-trace-defun-enter
+              (message "ECB-function %S entered!" fcn)))
+        ((equal mode 'leave)
+         (and ecb-trace-defun-leave
+              (message "ECB-function %S leaved!" fcn)))))
+
+(defmacro ecb-defun (name args docstring &rest body)
+  `(eval-and-compile
+     (defun ,name ,args
+       ,docstring
+       ,@(if (not (equal (caar body) 'interactive))
+             (append (list `(ecb-defun-trace 'enter (quote ,name)))
+                     (list `(prog1 (progn
+                                     ,@body)
+                              (ecb-defun-trace 'leave (quote ,name)))))
+           (append (list (car body))
+                   (list `(ecb-defun-trace 'enter (quote ,name)))
+                   (list `(prog1 (progn
+                                   ,@(cdr body))
+                            (ecb-defun-trace 'leave (quote ,name)))))))))
+
+
+;; -------------------------------------------------------------------
+
 
 ;; ---------- compatibility between GNU Emacs and XEmacs ---------------------
 
@@ -470,7 +507,10 @@ customize-options."
 file-buffer where the value is saved \(see option `custom-file') is not parsed
 by semantic and also killed afterwards."
   (if ecb-minor-mode
-      (let ((ecb-window-sync nil)
+      (let (;; XEmacs 21.4 does not set this so we do it here, to ensure that
+            ;; the custom-file is loadede in an emacs-lisp-mode buffer, s.b.
+            (default-major-mode 'emacs-lisp-mode)
+            (ecb-window-sync nil)
             (kill-buffer-hook nil)
             ;; we prevent parsing the custom-file
             (semantic-before-toplevel-bovination-hook (lambda ()
@@ -479,8 +519,27 @@ by semantic and also killed afterwards."
                                                 nil))
             (semantic-after-toplevel-cache-change-hook nil)
             (semantic-after-partial-cache-change-hook nil))
-        ;; now we do the standard task
-        ad-do-it
+        ;; Klaus Berndl <klaus.berndl@sdm.de>: we must ensure that the
+        ;; current-buffer has a lisp major-mode when the kernel of
+        ;; `custom-save-all' is called because cause of a bug (IMHO) in the
+        ;; `custom-save-delete' of GNU Emacs (which loads the file returned by
+        ;; `custom-file' with `default-major-mode' set to nil which in turn
+        ;; causes that new buffer will get the major-mode of the
+        ;; current-buffer) the file `custom-file' will get the major-mode of
+        ;; the current-buffer. So when the current-buffer has for example
+        ;; major-mode `c++-mode' then the file `custom-file' will be loaded
+        ;; into a buffer with major-mode c++-mode. The function
+        ;; `custom-save-delete' then parses this buffer with (forward-sexp
+        ;; (buffer-size)) which of course fails because forward-sexp tries to
+        ;; parse the custom-file (which is an emacs-lisp-file) as a c++-file
+        ;; with c++-paren-syntax.
+        ;; Solution: Ensure that the buffer *scratch* is current when calling
+        ;; custom-save-all so we have surely a lispy-buffer and therefore we
+        ;; can be sure that custom-file is loaded as lispy-buffer.
+        (save-excursion
+          (set-buffer (get-buffer-create "*scratch*"))
+          ;; now we do the standard task
+          ad-do-it)
         ;; now we have to kill the custom-file buffer otherwise semantic would
         ;; parse the buffer of custom-file and the method-buffer would be
         ;; updated with the contents of custom-file which is definitely not

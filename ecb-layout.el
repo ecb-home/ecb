@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-layout.el,v 1.229 2004/08/03 09:37:21 berndl Exp $
+;; $Id: ecb-layout.el,v 1.230 2004/08/18 16:07:15 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -4840,7 +4840,7 @@ then the fixed values of current width and height are stored!"
           (setq a (cons ecb-layout-name nil))
           (setq ecb-layout-window-sizes (ecb-add-assoc a ecb-layout-window-sizes)))
         (setcdr a (ecb-get-ecb-window-sizes fix))
-        (customize-save-variable 'ecb-layout-window-sizes ecb-layout-window-sizes)))))
+        (ecb-customize-save-variable 'ecb-layout-window-sizes ecb-layout-window-sizes)))))
 
 
 (defun ecb-restore-window-sizes ()
@@ -4856,7 +4856,7 @@ then the fixed values of current width and height are stored!"
   (when (equal (selected-frame) ecb-frame)
     (setq ecb-layout-window-sizes
 	  (ecb-remove-assoc ecb-layout-name ecb-layout-window-sizes))
-    (customize-save-variable 'ecb-layout-window-sizes ecb-layout-window-sizes)))
+    (ecb-customize-save-variable 'ecb-layout-window-sizes ecb-layout-window-sizes)))
 
 ;; Now per default returns fractions of the ecb-frame; thanks to Geert Ribbers
 ;; [geert.ribbers@realworld.nl] for a first implementation.

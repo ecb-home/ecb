@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-upgrade.el,v 1.84 2004/08/13 13:56:21 berndl Exp $
+;; $Id: ecb-upgrade.el,v 1.85 2004/08/18 16:07:14 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -734,6 +734,7 @@ done then the option is reset to the default-value of current ECB-version."
           (ecb-option-set-default (car option)))))
     ;; Now we store the version of the options
     (ecb-store-current-options-version)))
+    
 
 (defvar ecb-renamed-options nil)
 
@@ -1724,8 +1725,8 @@ for details about using \"wget\"."
             )
         (if (get-buffer ecb-download-buffername)
             (kill-buffer ecb-download-buffername))
-        (ecb-delete-file downloaded-filename))
-
+        (ecb-delete-file downloaded-filename)
+        )
       ;; now we return the version-list
       version-list)))
 

@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-help.el,v 1.106 2004/07/15 15:26:27 berndl Exp $
+;; $Id: ecb-help.el,v 1.107 2004/08/18 16:07:18 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -323,6 +323,18 @@ a backtrace-buffer and inserts the contents of that."
             (insert "\nEnd Insert *ecb-tag-dump* buffer" ))
         (insert "There was no *ecb-tag-dump* buffer" ))
       (insert "\n-----------------------------------------------------\n\n")
+
+      ;;insert the contents of the trace-output buffer if it is there. 
+;;       (insert "\n\n-----------------------------------------------------\n")
+;;       (if tag-dump-buffer
+;;           (progn
+;;             (insert "The contents of the *ecb-tag-dump* buffer were\n\n")
+;; 	    (insert-buffer tag-dump-buffer)
+;;             ;; we must force the mark
+;; 	    (goto-char (mark t))
+;;             (insert "\nEnd Insert *ecb-tag-dump* buffer" ))
+;;         (insert "There was no *ecb-tag-dump* buffer" ))
+;;       (insert "\n-----------------------------------------------------\n\n")
 
       ;;insert the contents of the backtrace buffer if it is there. 
       (insert "\n\n-----------------------------------------------------\n")

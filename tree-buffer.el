@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: tree-buffer.el,v 1.148 2004/08/12 14:05:01 berndl Exp $
+;; $Id: tree-buffer.el,v 1.149 2004/08/18 16:07:14 berndl Exp $
 
 ;;; Commentary:
 
@@ -1790,15 +1790,25 @@ determines when the command is triggered, values can be 'button-press and
         (delete nil (list modifier-elem (intern mouse-button)))
       (make-vector 1 (intern (concat modifier-elem mouse-button))))))
 
-(defun tree-buffer-create (name frame mouse-action-trigger is-click-valid-fn node-selected-fn
-                                node-expanded-fn node-collapsed-fn node-mouse-over-fn
-                                node-data-equal-fn maybe-empty-node-types leaf-node-types
-                                menu-creator menu-titles tr-lines read-only tree-indent
-                                incr-search incr-search-add-pattern arrow-navigation hor-scroll
-                                &optional
-                                default-image-dir add-image-dir tree-style ascii-guide-face
-                                type-facer expand-symbol-before highlight-node-face general-face
-                                after-create-hook)
+(defun tree-buffer-create (name
+                           frame
+                           mouse-action-trigger
+                           is-click-valid-fn node-selected-fn node-expanded-fn
+                           node-collapsed-fn node-mouse-over-fn node-data-equal-fn
+                           maybe-empty-node-types leaf-node-types
+                           menu-creator menu-titles
+                           tr-lines
+                           read-only
+                           tree-indent
+                           incr-search incr-search-add-pattern
+                           arrow-navigation hor-scroll
+                           &optional
+                           default-image-dir add-image-dir
+                           tree-style ascii-guide-face
+                           type-facer
+                           expand-symbol-before
+                           highlight-node-face general-face
+                           after-create-hook)
   "Creates a new tree buffer and returns the newly created buffer.
 This function creates also a special data-storage for this tree-buffer which
 can be accessed via `tree-buffer-set-data-store' and `tree-buffer-get-data-store'.
@@ -1893,7 +1903,8 @@ MAYBE-EMPTY-NODE-TYPES: Nil or a list of node-types \(a node-type is an
                         other nodes see next argument.
 LEAF-NODE-TYPES: Nil or a list of node-types \(see above). Nodes
                   with one of these types are treated as leafs and will be
-                  displayed with the leaf-symbol \(*). Summary:
+                  displayed with the leaf-symbol \(*). Summary for
+                  MAYBE-EMPTY-NODE-TYPES and LEAF-NODE-TYPES:
                   * Expandable nodes will always be displayed either with the
                     open- or with the close-symbol.
                   * Not-expandable nodes with a node-type contained in

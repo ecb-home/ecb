@@ -7,6 +7,14 @@
    old setting of this option to the new type. Thanks to Javier Oviedo
    <joviedo@telogy.com> for the suggestion.
 
+** Fixed Bugs
+
+*** Added a workaround for a bug in the custom-library of GNU Emacs which causes
+    under certain circumstances the autom. option-upgrading-feature of ECB to
+    fail. Same for the command `ecb-store-window-sizes'. Thanks for reporting
+    this annoying bug to Christoph Ludwig
+    <cludwig@cdc.informatik.tu-darmstadt.de>
+
 
 
 * Changes for ECB version 2.26

@@ -23,7 +23,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-file-browser.el,v 1.27 2004/08/12 15:11:19 berndl Exp $
+;; $Id: ecb-file-browser.el,v 1.28 2004/08/18 16:07:18 berndl Exp $
 
 ;;; Commentary:
 
@@ -1607,7 +1607,7 @@ is created."
     (ecb-update-directories-buffer)
     (if (and (not no-prompt-for-future-session)
              (y-or-n-p "Add the new source-path also for future-sessions? "))
-        (customize-save-variable 'ecb-source-path ecb-source-path)
+        (ecb-customize-save-variable 'ecb-source-path ecb-source-path)
       (customize-set-variable 'ecb-source-path ecb-source-path))))
 
 (tree-buffer-defpopup-command ecb-add-source-path-node
@@ -1636,7 +1636,7 @@ is created."
                              ecb-source-path))
       (ecb-update-directories-buffer)
       (if (y-or-n-p "Delete source-path also for future-sessions? ")
-          (customize-save-variable 'ecb-source-path ecb-source-path)
+          (ecb-customize-save-variable 'ecb-source-path ecb-source-path)
         (customize-set-variable 'ecb-source-path ecb-source-path)))))
 
 
@@ -2314,7 +2314,13 @@ So you get a better overlooking. There are three choices:
    'ecb-mouse-over-source-node
    'equal
    nil
-   nil                     ;(list 0) ;; set this list if you want leaf-symbols
+   ;; set this list if you want leaf-symbols TODO: Klaus Berndl
+   ;; <klaus.berndl@sdm.de>: If we want to display the VC-state in the
+   ;; sources-icon then we should set this argument to nil because then we
+   ;; must compute the needed icon in the file-browser and not in the
+   ;; tree-buffer-library (analogue to the methods-icons computet in the
+   ;; methods-browser).
+   nil ;; (list 0)
    'ecb-sources-menu-creator
    (list (cons 0 ecb-sources-menu-title-creator))
    (nth 1 ecb-truncate-lines)
