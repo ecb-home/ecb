@@ -59,15 +59,15 @@
 (defun list-append(list item)
   (if list
       (progn
-	(setcdr (last list) item)
-	list)
+        (setcdr (last list) item)
+        list)
     item))
 
 (defun filter(list fn)
   (let ((res nil))
     (while list
       (if (funcall fn (car list))
-	  (setq res (cons (car list) res)))
+          (setq res (cons (car list) res)))
       (setq list (cdr list)))
     (nreverse res)))
 
@@ -75,8 +75,8 @@
   "Returns the buffer column where the name of the node starts."
   (+ (tree-buffer-get-node-indent node)
      (if (and tree-buffer-expand-symbol-before
-	      (tree-node-is-expandable node))
-	 4 0)))
+              (tree-node-is-expandable node))
+         4 0)))
 
 (defun tree-buffer-get-node-name-start-point(node)
   "Returns the buffer point where the name of the node starts."
@@ -97,19 +97,19 @@
 
 (defun tree-buffer-select(mouse-button &optional shift-pressed)
   (let ((p (point))
-	(node (tree-buffer-get-node-at-point)))
+        (node (tree-buffer-get-node-at-point)))
     (when node
       (if (and (tree-node-is-expandable node)
-	       (tree-buffer-at-expand-symbol node (point)))
-	  (progn
-	    (when (and (not (tree-node-is-expanded node))
-		       tree-node-expanded-fn)
-	      (funcall tree-node-expanded-fn node))
-	    (when (tree-node-is-expandable node)
-	      (tree-node-toggle-expanded node))
-	    (tree-buffer-update))
-	(when tree-node-selected-fn
-	  (funcall tree-node-selected-fn node mouse-button shift-pressed))))))
+               (tree-buffer-at-expand-symbol node (point)))
+          (progn
+            (when (and (not (tree-node-is-expanded node))
+                       tree-node-expanded-fn)
+              (funcall tree-node-expanded-fn node))
+            (when (tree-node-is-expandable node)
+              (tree-node-toggle-expanded node))
+            (tree-buffer-update))
+        (when tree-node-selected-fn
+          (funcall tree-node-selected-fn node mouse-button shift-pressed))))))
 
 (defun tree-buffer-get-node-at-point()
   (let ((linenr (+ (count-lines 1 (point)) (if (= (current-column) 0) 0 -1))))
@@ -122,26 +122,26 @@
   (catch 'exit
     (dolist (node tree-buffer-nodes)
       (when (equal (tree-node-get-data node) node-data)
-	(throw 'exit node)))))
+        (throw 'exit node)))))
 
 (defun tree-buffer-find-node(node)
   (catch 'exit
     (let ((linenr 1))
       (dolist (node2 tree-buffer-nodes)
-	(when (eq node node2)
-	  (throw 'exit linenr))
-	(setq linenr (1+ linenr))))))
+        (when (eq node node2)
+          (throw 'exit linenr))
+        (setq linenr (1+ linenr))))))
 
 (defun tree-buffer-get-node-facer(node)
   (let ((facer (cdr (assoc (tree-node-get-type node) tree-buffer-type-facer))))
     (if facer
-	facer
+        facer
       'default)))
 
 (defun tree-buffer-node-set-face(node face)
   "Sets the face for a node name."
   (put-text-property (tree-buffer-get-node-name-start-point node)
-		     (tree-buffer-get-node-name-end-point node) 'face face))
+                     (tree-buffer-get-node-name-end-point node) 'face face))
 
 ;; Klaus: Now we use overlays to highlight current node in a tree-buffer. This
 ;; makes it easier to do same facing with the nodes itself and above all this
@@ -164,9 +164,9 @@
         (move-overlay tree-buffer-highlight-overlay
                       (tree-buffer-get-node-name-start-point node)
                       (tree-buffer-get-node-name-end-point node))
-	(if (not (pos-visible-in-window-p
-		  (tree-buffer-get-node-name-start-point node)))
-	    (recenter))))))
+        (if (not (pos-visible-in-window-p
+                  (tree-buffer-get-node-name-start-point node)))
+            (recenter))))))
   
 (defun tree-buffer-insert-text(text &optional facer)
   "Insert TEXT at point and faces it with FACER. FACER can be a face then the
@@ -181,30 +181,30 @@ inserted and the TEXT itself"
                (put-text-property p (+ p (length text)) 'face facer))
               ((functionp facer)
                (funcall facer p text))
-              (t ;; do nothing, maybe the inserted text is already faced
+              (t;; do nothing, maybe the inserted text is already faced
                )))))
                
     
 (defun tree-buffer-add-node(node depth)
   (insert (make-string (* depth tree-buffer-indent) ? ))
   (when (and tree-buffer-expand-symbol-before
-	     (tree-node-is-expandable node))
+             (tree-node-is-expandable node))
     (tree-buffer-insert-text (if (tree-node-is-expanded node) "[-]" "[+]"))
     (insert " "))
   (tree-buffer-insert-text (tree-node-get-name node) (tree-buffer-get-node-facer node))
   (when (and (not tree-buffer-expand-symbol-before)
-	     (tree-node-is-expandable node))
+             (tree-node-is-expandable node))
     (insert " ")
     (tree-buffer-insert-text (if (tree-node-is-expanded node) "[-]" "[+]")))
   (insert "\n")
   (setq tree-buffer-nodes (list-append tree-buffer-nodes (list node)))
   (if (tree-node-is-expanded node)
       (dolist (node (tree-node-get-children node))
-	(tree-buffer-add-node node (1+ depth)))))
+        (tree-buffer-add-node node (1+ depth)))))
 
 (defun tree-buffer-update()
   (let ((ws (window-start))
-	(p (point)))
+        (p (point)))
     (setq tree-buffer-nodes nil)
     (erase-buffer)
     (dolist (node (tree-node-get-children tree-buffer-root))
@@ -215,7 +215,7 @@ inserted and the TEXT itself"
 
 ;; (defun tree-buffer-update()
 ;;   (let ((ws (window-start))
-;; 	(p (point)))
+;;     (p (point)))
 ;;     (setq tree-buffer-nodes nil)
 ;;     (erase-buffer)
 ;;     (dolist (node (tree-node-get-children tree-buffer-root))
@@ -234,17 +234,17 @@ inserted and the TEXT itself"
   (mouse-set-point event)
   (when tree-buffer-menus
     (let* ((node (tree-buffer-get-node-at-point))
-	   (menu (cdr (assoc (tree-node-get-type node) tree-buffer-menus)))
-	   (map (make-sparse-keymap (tree-node-get-data node))))
+           (menu (cdr (assoc (tree-node-get-type node) tree-buffer-menus)))
+           (map (make-sparse-keymap (tree-node-get-data node))))
       (when menu
-	(set-keymap-parent map menu)
-	(let ((fn (x-popup-menu event map)))
-	  (if fn
-	      (eval (list (car fn) 'node))))))))
+        (set-keymap-parent map menu)
+        (let ((fn (x-popup-menu event map)))
+          (if fn
+              (eval (list (car fn) 'node))))))))
 
 (defun tree-buffer-create(name node-selected-fn node-expanded-fn node-mouse-over-fn
-			       menus tr-lines
-			       &optional type-facer expand-symbol-before)
+                               menus tr-lines
+                               &optional type-facer expand-symbol-before)
   "Creates a new tree buffer with
 NAME: Name of the buffer
 NODE-SELECTED-FN: Function to call if a node has been selected
@@ -307,12 +307,12 @@ EXPAND-SYMBOL-BEFORE: If not nil then the expand-symbol \(is displayed before
     '(lambda()
        (interactive)
        (let ((node (tree-buffer-get-node-at-point)))
-	 (when (tree-node-is-expandable node)
-	   (when (not (tree-node-is-expanded node))
-	     (funcall tree-node-expanded-fn node))
-	   (when (tree-node-is-expandable node)
-	     (tree-node-toggle-expanded node))
-	   (tree-buffer-update)))))
+         (when (tree-node-is-expandable node)
+           (when (not (tree-node-is-expanded node))
+             (funcall tree-node-expanded-fn node))
+           (when (tree-node-is-expandable node)
+             (tree-node-toggle-expanded node))
+           (tree-buffer-update)))))
 
   ;; mouse-1
   (define-key tree-buffer-key-map
@@ -367,37 +367,37 @@ EXPAND-SYMBOL-BEFORE: If not nil then the expand-symbol \(is displayed before
     '(lambda(e)
        (interactive "e")
        (save-excursion
-	 (mouse-set-point e) ;; (cadadr e)
-	 (let ((node (tree-buffer-get-node-at-point)))
-	   (when (and tree-node-mouse-over-fn node)
-	     (funcall tree-node-mouse-over-fn node))))))
+         (mouse-set-point e);; (cadadr e)
+         (let ((node (tree-buffer-get-node-at-point)))
+           (when (and tree-node-mouse-over-fn node)
+             (funcall tree-node-mouse-over-fn node))))))
 
   (use-local-map tree-buffer-key-map))
 
 
-; (defun tree-insert-line(line)
-;   (let ((p (point)))
-;     (insert line "\n")
-;     (put-text-property p (+ p (length line)) 'mouse-face 'highlight)))
+                                        ; (defun tree-insert-line(line)
+                                        ;   (let ((p (point)))
+                                        ;     (insert line "\n")
+                                        ;     (put-text-property p (+ p (length line)) 'mouse-face 'highlight)))
 
-; (defun delete-line(linenr)
-;   (goto-line (+ linenr 1))
-;   (let ((p (point)))
-;     (goto-line (1+ linenr))
-;     (delete-region (point) p)))
+                                        ; (defun delete-line(linenr)
+                                        ;   (goto-line (+ linenr 1))
+                                        ;   (let ((p (point)))
+                                        ;     (goto-line (1+ linenr))
+                                        ;     (delete-region (point) p)))
 
-; (defun tree-remove-line(linenr)
-;   (setcdr (nthcdr (1- pos) tree-buffer-nodes) (nthcdr (1+ pos) tree-buffer-nodes))
-;   (delete-line linenr))
+                                        ; (defun tree-remove-line(linenr)
+                                        ;   (setcdr (nthcdr (1- pos) tree-buffer-nodes) (nthcdr (1+ pos) tree-buffer-nodes))
+                                        ;   (delete-line linenr))
 
-; (defun tree-remove-node(node)
-;   (let ((pos (find tree-buffer-nodes node)))
-;     (if (> pos -1)
-; 	(tree-remove-line pos))))
+                                        ; (defun tree-remove-node(node)
+                                        ;   (let ((pos (find tree-buffer-nodes node)))
+                                        ;     (if (> pos -1)
+                                        ;     (tree-remove-line pos))))
       
   
-;   (tree-insert-line (tree-item-name item) (tree-item-type item))
-;   (setq tree-items (append tree-items item)))
+                                        ;   (tree-insert-line (tree-item-name item) (tree-item-type item))
+                                        ;   (setq tree-items (append tree-items item)))
 
 ;;; Tree node
 
@@ -408,19 +408,19 @@ EXPAND-SYMBOL-BEFORE: If not nil then the expand-symbol \(is displayed before
 (defun tree-node-remove-child(node child)
   (tree-node-set-parent child nil)
   (tree-node-set-children node
-			  (delq child (tree-node-get-children node))))
+                          (delq child (tree-node-get-children node))))
 
 (defun tree-node-find-child-data(node child-data)
   (catch 'exit
     (dolist (child (tree-node-get-children node))
       (when (equal (tree-node-get-data child) child-data)
-	(throw 'exit child)))))
+        (throw 'exit child)))))
 
 (defun tree-node-find-child-name(node child-name)
   (catch 'exit
     (dolist (child (tree-node-get-children node))
       (when (equal (tree-node-get-name child) child-name)
-	(throw 'exit child)))))
+        (throw 'exit child)))))
 
 ;;; Tree node
 
@@ -491,7 +491,7 @@ EXPAND-SYMBOL-BEFORE: If not nil then the expand-symbol \(is displayed before
 (defun tree-node-get-depth(node)
   (let ((parent (tree-node-get-parent node)))
     (if parent
-	(1+ (tree-node-get-depth parent))
+        (1+ (tree-node-get-depth parent))
       '0)))
 
 (provide 'tree-buffer)

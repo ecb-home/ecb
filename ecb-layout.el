@@ -242,7 +242,7 @@ ECB uses at start-time always the value you have set for this option!"
   :set ecb-layout-option-set-function
   :type '(radio (const :tag "Split horizontally"
                        :value horizontal)
-		(const :tag "Split vertically"
+                (const :tag "Split vertically"
                        :value vertical)
                 (const :tag "Do not split"
                        :value nil)))
@@ -360,15 +360,15 @@ correct subsets of adviced functions are set!"
             ;; `switch-to-buffer-other-window' needs the adviced version of
             ;; `split-window-vertically' we must add it
             (when (and (or (memq 'find-file-other-window real-value)
-                         (memq 'switch-to-buffer-other-window real-value))
-                     (not (memq 'split-window-vertically real-value)))
-                (setq real-value (cons 'split-window-vertically real-value))
-                (setq custom-reload t))
+                           (memq 'switch-to-buffer-other-window real-value))
+                       (not (memq 'split-window-vertically real-value)))
+              (setq real-value (cons 'split-window-vertically real-value))
+              (setq custom-reload t))
             ;; all other adviced functions need the adviced `other-window'
             (when (and (> (length real-value) 0)
-                     (not (memq 'other-window real-value)))
-                (setq real-value (cons 'other-window real-value))
-                (setq custom-reload t))
+                       (not (memq 'other-window real-value)))
+              (setq real-value (cons 'other-window real-value))
+              (setq custom-reload t))
             (set symbol real-value)
             (if (and (boundp 'ecb-activated)
                      ecb-activated)            
@@ -380,7 +380,7 @@ correct subsets of adviced functions are set!"
             (if (and custom-reload
                      (string-match "\*Customize " (buffer-name)))
                 (customize-option symbol))
-              ))
+            ))
   :type '(set (const :tag "other-window"
                      :value other-window)
               (const :tag "delete-window"
@@ -446,7 +446,7 @@ exactly the functions in `ecb-advice-window-functions'!"
   `(unwind-protect
        (progn
          (ecb-activate-adviced-functions nil)
-	 ,@body)
+         ,@body)
      (ecb-activate-adviced-functions ecb-advice-window-functions)))
 
 (defmacro ecb-with-adviced-functions (&rest body)
@@ -457,7 +457,7 @@ exactly the functions in `ecb-advice-window-functions'!"
   `(unwind-protect
        (progn
          (ecb-activate-adviced-functions ecb-adviceable-functions)
-	 ,@body)
+         ,@body)
      (ecb-activate-adviced-functions ecb-advice-window-functions)))
 
 (defmacro ecb-with-some-adviced-functions (functions &rest body)
@@ -469,7 +469,7 @@ FUNCTIONS must be nil or a subset of `ecb-adviceable-functions'!"
   `(unwind-protect
        (progn
          (ecb-activate-adviced-functions ,functions)
-	 ,@body)
+         ,@body)
      (ecb-activate-adviced-functions ecb-advice-window-functions)))
 
 (defun ecb-point-in-edit-window ()
@@ -832,7 +832,7 @@ ECB-adviced functions."
 (defun ecb-split-hor(amount &optional dont-switch-window)
   (ecb-split-hor-abs (floor (if (and (< amount 1.0)
                                      (> amount -1.0))
-				    (* (window-width) amount)
+                                (* (window-width) amount)
                               amount))
                      dont-switch-window))
 
@@ -911,7 +911,7 @@ will not be evaluated here."
   (setq ecb-last-compile-window-buffer (buffer-name))
   (if ecb-select-compile-window
       (ignore-errors
-          (select-window ecb-layout-selected-window-before-compile))))
+        (select-window ecb-layout-selected-window-before-compile))))
 
 (defun ecb-set-edit-window-split-hook-function ()
   "This function is added to `compilation-mode-hook' and `help-mode-hook' to
@@ -935,19 +935,19 @@ this function the edit-window is selected."
                                                ecb-edit-window))
                                       2)
                                      (t 0)))
-        (pos-before-redraw (and (> window-before-redraw 0) (point)))
-        ;; height of ecb-compile-window-height in lines
-        (ecb-compile-window-height-lines (if ecb-compile-window-height
-                                             (floor
-                                              (if (< ecb-compile-window-height 1.0)
-                                                  (* (1- (frame-height))
-                                                     ecb-compile-window-height)
-                                                ecb-compile-window-height))))
-        ;; height of compilation-window-height
-        (compile-window-height (if (and (not ecb-compile-window-temporally-enlarge)
-                                        ecb-compile-window-height)
-                                   ecb-compile-window-height-lines
-                                 ecb-old-compilation-window-height)))
+         (pos-before-redraw (and (> window-before-redraw 0) (point)))
+         ;; height of ecb-compile-window-height in lines
+         (ecb-compile-window-height-lines (if ecb-compile-window-height
+                                              (floor
+                                               (if (< ecb-compile-window-height 1.0)
+                                                   (* (1- (frame-height))
+                                                      ecb-compile-window-height)
+                                                 ecb-compile-window-height))))
+         ;; height of compilation-window-height
+         (compile-window-height (if (and (not ecb-compile-window-temporally-enlarge)
+                                         ecb-compile-window-height)
+                                    ecb-compile-window-height-lines
+                                  ecb-old-compilation-window-height)))
 
     ;; deactivating the adviced functions, so the layout-functions can use the
     ;; original function-definitions.
@@ -957,7 +957,7 @@ this function the edit-window is selected."
     ;; because maybe the edit-window was destroyed by some mistake or error
     ;; and `ecb-edit-window' was not nil.
     (ignore-errors
-        (select-window ecb-edit-window))
+      (select-window ecb-edit-window))
 
     ;; Do some actions regardless of the choosen layout
     (delete-other-windows)

@@ -31,28 +31,28 @@
 (defun ecb-mode-line-format()
   "Update all of the modelines of each buffer."
 
-    (save-excursion
+  (save-excursion
       
-      ;;display the directory but trim it so the whole thing is available.
-      (let(prefix directory line)
+    ;;display the directory but trim it so the whole thing is available.
+    (let(prefix directory line)
         
-        (setq prefix " ECB Sources: ")
+      (setq prefix " ECB Sources: ")
         
-        (setq directory (file-name-directory ecb-path-selected-source))
+      (setq directory (file-name-directory ecb-path-selected-source))
         
-        (setq directory (ecb-mode-line-get-directory prefix directory ecb-windows-width))
+      (setq directory (ecb-mode-line-get-directory prefix directory ecb-windows-width))
         
-        (setq line (concat prefix directory))
+      (setq line (concat prefix directory))
         
-        (ecb-mode-line-update-buffer ecb-sources-buffer-name line))
+      (ecb-mode-line-update-buffer ecb-sources-buffer-name line))
       
-      (ecb-mode-line-update-buffer ecb-methods-buffer-name
-                                   (concat " ECB Methods: "
-                                           (file-name-nondirectory ecb-path-selected-source)))
+    (ecb-mode-line-update-buffer ecb-methods-buffer-name
+                                 (concat " ECB Methods: "
+                                         (file-name-nondirectory ecb-path-selected-source)))
 
-      (ecb-mode-line-update-buffer ecb-directories-buffer-name" ECB Directories")
+    (ecb-mode-line-update-buffer ecb-directories-buffer-name" ECB Directories")
       
-      (ecb-mode-line-update-buffer ecb-history-buffer-name " ECB History")))
+    (ecb-mode-line-update-buffer ecb-history-buffer-name " ECB History")))
 
 (defun ecb-mode-line-get-directory(prefix directory width)
   "Given the prefix for the mode-line (' ECB Sources: '), the directory to

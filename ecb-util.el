@@ -32,8 +32,8 @@
 (defun ecb-strip-slash(path)
   (let ((norm-path (expand-file-name path)))
     (if (string= (char-to-string directory-sep-char) (substring norm-path -1))
-      (substring path 0 (1- (length path)))
-    path)))
+        (substring path 0 (1- (length path)))
+      path)))
 
 (defun ecb-confirm(text)
   (x-popup-dialog (list '(0 0) (selected-window)) (list text '("Yes" . t) '("No" . nil))))
@@ -50,7 +50,7 @@
 
 (defun ecb-create-source-2(node)
   (ecb-create-source (ecb-strip-slash (file-name-directory
-					      (tree-node-get-data node)))))
+                                       (tree-node-get-data node)))))
 
 (defun ecb-create-file(node)
   (ecb-create-file-3 (tree-node-get-data node)))
@@ -61,7 +61,7 @@
 
 (defun ecb-create-file-2(node)
   (ecb-create-file-3 (ecb-strip-slash (file-name-directory
-					     (tree-node-get-data node)))))
+                                       (tree-node-get-data node)))))
 
 (defun ecb-delete-source-2(node)
   (ecb-delete-source (tree-node-get-data node)))
@@ -75,12 +75,12 @@
 ;;   (save-current-buffer
 ;;     (ecb-buffer-select ecb-history-buffer-name)
 ;;     (tree-node-remove-child (tree-buffer-get-root)
-;; 			    (tree-node-find-child-data (tree-buffer-get-root)
-;; 						       file))
+;;                 (tree-node-find-child-data (tree-buffer-get-root)
+;;                                file))
 ;;     (ecb-buffer-select ecb-sources-buffer-name)
 ;;     (tree-node-remove-child (tree-buffer-get-root)
-;; 			    (tree-node-find-child-data (tree-buffer-get-root)
-;; 						       file))))
+;;                 (tree-node-find-child-data (tree-buffer-get-root)
+;;                                file))))
 
 (defun ecb-create-directory(parent-node)
   (make-directory (concat (tree-node-get-data parent-node) "/" (read-from-minibuffer "Directory name: ")))
