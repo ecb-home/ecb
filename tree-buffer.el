@@ -32,8 +32,7 @@
 
 (eval-when-compile
   ;; to avoid compiler grips
-  (require 'cl)
-  (require 'avoid))
+  (require 'cl))
 
 (defconst running-xemacs (string-match "XEmacs\\|Lucid" emacs-version))
 
@@ -52,6 +51,8 @@
           (t ()))
         "Face for highlights."))
   ;; GNU Emacs
+  ;; needed to handle correct mouse avoidance
+  (require 'avoid)
   (defalias 'tree-buffer-line-beginning-pos 'line-beginning-position)
   (defun tree-buffer-window-display-height (&optional window)
     (1- (window-height window)))

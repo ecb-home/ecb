@@ -1213,12 +1213,12 @@ this function the edit-window is selected."
       (ecb-activate-adviced-functions ecb-advice-window-functions)
       
       ;; if we were in an edit-window before redraw let us go to the old place
-      ;; and synchronize the tree-buffers if necessary (means if not all
-      ;; tree-windows of current layout were visible before redraw).
       (when pos-before-redraw
         (goto-char pos-before-redraw)
         (setq ecb-last-source-buffer (current-buffer)))
       
+      ;; synchronize the tree-buffers if necessary (means if not all
+      ;; tree-windows of current layout were visible before redraw).
       (if (not (equal tree-windows-before-redraw
                       (ecb-layout-get-current-tree-windows)))
           (ecb-current-buffer-sync t)))))
