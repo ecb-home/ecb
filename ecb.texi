@@ -2314,6 +2314,8 @@ elisp-code but only with the customize-feature!
 @tab @code{ecb-windows-height}
 @item @code{ecb-window-sync-delay}
 @tab @code{ecb-windows-width}
+@item @code{ecb-use-speedbar-for-directories}
+@tab @code{ecb-toggle-layout-sequence}
 @end multitable
 
 @strong{NOTE}: If you are the administrator for an Emacs-site, means
@@ -4831,6 +4833,10 @@ combination displays also directories and sources in one window.
 So with the option @code{ecb-use-speedbar-for-directories} you have
 the choice which way of displaying and handling directories and
 source-files you want (the speedbar- or the ECB-way).
+
+Note: ECB can only integrate speedbar-versions >= 0.14beta1! If you
+use lower versions of speedbar @code{ecb-use-speedbar-for-directories}
+has no effect.
 
 @node Optimize scrolling, Large directories, Integrating speedbar, Tips and tricks
 @section Optimize scrolling in the edit-window
