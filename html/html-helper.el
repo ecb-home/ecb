@@ -25,6 +25,7 @@
 
 ;;; Code:
 (defconst h-br "<br>\n")
+(defconst h-hr "<hr>")
 
 (defvar h-body-bgcolor)
 (setq h-body-bgcolor "white")
@@ -44,6 +45,20 @@
 (setq h-section-title-fgcolor "#ffffff")
 (setq h-section-text-bgcolor "#8080a0")
 (setq h-section-text-fgcolor "#000000")
+
+(defun h-line (&optional width-percent align)
+  (concat "<hr" (h-get-attrs
+                 (delete nil
+                         (list (if (numberp width-percent)
+                                   (cons 'width
+                                         (concat (number-to-string width-percent)
+                                                 "%")))
+                               (if align
+                                   (cons 'align
+                                         (if (stringp align)
+                                             align
+                                           (symbol-name align)))))))
+          ">"))
 
 (defun h-date()
   (format-time-string "%Y-%m-%d"))
