@@ -52,7 +52,7 @@
 ;; The latest version of the ECB is available at
 ;; http://home.swipnet.se/mayhem/ecb.html
 
-;; $Id: ecb.el,v 1.65 2001/05/01 04:26:44 berndl Exp $
+;; $Id: ecb.el,v 1.66 2001/05/01 13:31:16 creator Exp $
 
 ;;; Code:
 
@@ -146,15 +146,14 @@
   :type 'boolean)
 
 (defcustom ecb-directories-buffer-name "*ECB Directories*"
-  "*Name of the ECB-directory-buffer which is displayed in the modeline.
-Because it is not a normal buffer for editing you should enclose the name with
-stars, e.g. \"*ECB Directories*\".
+  "*Name of the ECB directory buffer. Because it is not a normal buffer for
+editing you should enclose the name with stars, e.g. \"*ECB Directories*\".
 
-If it is necessary for you you can get emacs-lisp access to the buffer-object
-of the ECB-directory-buffer by this name, e.g. by a call of `set-buffer'.
+If it is necessary for you you can get emacs-lisp access to the buffer-object of
+the ECB-directory-buffer by this name, e.g. by a call of `set-buffer'.
 
-Changes for this option at runtime will take affect only after deactivating
-and then activating ECB again!"
+Changes for this option at runtime will take affect only after deactivating and
+then activating ECB again!"
   :group 'ecb-directories
   :type 'string)
 
@@ -184,15 +183,14 @@ list. The value of this variable should be a regular expression."
   :type 'boolean)
 
 (defcustom ecb-sources-buffer-name "*ECB Sources*"
-  "*Name of the ECB-sources-buffer which is displayed in the modeline.
-Because it is not a normal buffer for editing you should enclose the name with
-stars, e.g. \"*ECB Sources*\".
+  "*Name of the ECB sources buffer. Because it is not a normal buffer for
+editing you should enclose the name with stars, e.g. \"*ECB Sources*\".
 
-If it is necessary for you you can get emacs-lisp access to the buffer-object
-of the ECB-sources-buffer by this name, e.g. by a call of `set-buffer'.
+If it is necessary for you you can get emacs-lisp access to the buffer-object of
+the ECB-sources-buffer by this name, e.g. by a call of `set-buffer'.
 
-Changes for this option at runtime will take affect only after deactivating
-and then activating ECB again!"
+Changes for this option at runtime will take affect only after deactivating and
+then activating ECB again!"
   :group 'ecb-sources
   :type 'string)
 
@@ -202,7 +200,7 @@ and then activating ECB again!"
   "*Specifies which files are shown as source files. Consists of one exclude
 regexp and one include regexp. A file is displayed in the source-buffer of ECB
 iff: The file does not match the exclude regexp OR the file matches the
-include regexp. There are three predefined and senseful combinations of an
+include regexp. There are three predefined and useful combinations of an
 exclude and include regexp:
 - All files
 - All, but no backup, object, lib or ini-files \(except .emacs and .gnus). This
@@ -241,15 +239,14 @@ combination can be defined."
                        :value nil)))
                 
 (defcustom ecb-history-buffer-name "*ECB History*"
-  "*Name of the ECB-history-buffer which is displayed in the modeline.
-Because it is not a normal buffer for editing you should enclose the name with
-stars, e.g. \"*ECB History*\".
+  "*Name of the ECB history buffer. Because it is not a normal buffer for
+editing you should enclose the name with stars, e.g. \"*ECB History*\".
 
-If it is necessary for you you can get emacs-lisp access to the buffer-object
-of the ECB-history-buffer by this name, e.g. by a call of `set-buffer'.
+If it is necessary for you you can get emacs-lisp access to the buffer-object of
+the ECB-history-buffer by this name, e.g. by a call of `set-buffer'.
 
-Changes for this option at runtime will take affect only after deactivating
-and then activating ECB again!"
+Changes for this option at runtime will take affect only after deactivating and
+then activating ECB again!"
   :group 'ecb-history
   :type 'string)
 
@@ -274,15 +271,14 @@ and then activating ECB again!"
                        :value all)))
                 
 (defcustom ecb-methods-buffer-name "*ECB Methods*"
-  "*Name of the ECB-methods-buffer which is displayed in the modeline.
-Because it is not a normal buffer for editing you should enclose the name with
-stars, e.g. \"*ECB Methods*\".
+  "*Name of the ECB methods buffer. Because it is not a normal buffer for
+editing you should enclose the name with stars, e.g. \"*ECB Methods*\".
 
-If it is necessary for you you can get emacs-lisp access to the buffer-object
-of the ECB-methods-buffer by this name, e.g. by a call of `set-buffer'.
+If it is necessary for you you can get emacs-lisp access to the buffer-object of
+the ECB-methods-buffer by this name, e.g. by a call of `set-buffer'.
 
-Changes for this option at runtime will take affect only after deactivating
-and then activating ECB again!"
+Changes for this option at runtime will take affect only after deactivating and
+then activating ECB again!"
   :group 'ecb-methods
   :type 'string)
 
@@ -436,6 +432,11 @@ you must deactivate and activate ECB again to take effect."
   :group 'ecb-general
   :type 'boolean)
 
+(defcustom ecb-mode-line-show-prefix nil
+  "*Show the ECB buffer prefix in the mode line."
+  :group 'ecb-general
+  :type 'boolean)
+
 (defcustom ecb-primary-secondary-mouse-buttons 'mouse-2--C-mouse-2
   "*Primary- and secondary mouse button for using the ECB-buffers.
 A click with the primary button causes the main effect in each ECB-buffer:
@@ -579,7 +580,9 @@ will get the face 'default. Returns TEXT."
         (if ecb-font-lock-methods
             (let* ((face-option-val (nth type ecb-font-lock-method-faces))
                    (face (or (and face-option-val
-                                  (facep face-option-val)
+				  (if running-xemacs
+				      (boundp face-option-val)
+				    (facep face-option-val))
                                   face-option-val)
                              'default)))
               (put-text-property 0 (length text) 'face face text)
@@ -778,10 +781,11 @@ highlighting of the methods if `ecb-font-lock-methods' is not nil."
 	   (directory-files ecb-path-selected-directory nil nil t))
 	  0
 	  ecb-show-source-file-extension
-	  old-children t))
+	  old-children ecb-sources-sort-method t))
        (tree-buffer-update)
        (when (not (string= last-dir ecb-path-selected-directory))
-	 (tree-buffer-scroll (point-min) (point-min)))))))
+	 (tree-buffer-scroll (point-min) (point-min))))))
+  (ecb-mode-line-format))
                    
 (defun ecb-get-source-name(filename)
   "Returns the source name of a file."
@@ -1014,12 +1018,13 @@ OTHER-WINDOW."
   (select-window ecb-edit-window))
   
 (defun ecb-tree-node-add-files
-  (node path files type include-extension old-children &optional not-expandable)
-  (dolist (file (if ecb-sources-sort-method
+  (node path files type include-extension old-children sort-method
+	&optional not-expandable)
+  (dolist (file (if sort-method
 		    (let ((sorted-files (sort files 
 					      (function
 					       (lambda(a b) (string< a b))))))
-		      (if (eq ecb-sources-sort-method 'extension)
+		      (if (eq sort-method 'extension)
 			  (sort sorted-files 
 				(function (lambda(a b)
 					    (string< (file-name-extension a t)
@@ -1049,11 +1054,11 @@ OTHER-WINDOW."
               (if (file-accessible-directory-p filename)
                   (if (not (string-match ecb-excluded-directories-regexp file))
                       (setq dirs (list-append dirs (list file)))))))
-          (ecb-tree-node-add-files node path dirs 0 t old-children)
+          (ecb-tree-node-add-files node path dirs 0 t old-children 'name)
           (if ecb-show-sources-in-directories-buffer
               (ecb-tree-node-add-files node path normal-files 1
                                        ecb-show-source-file-extension
-                                       old-children))
+                                       old-children ecb-sources-sort-method))
           (tree-node-set-expandable node (or (tree-node-get-children node)))))))
 
 (defun ecb-update-directories-buffer()
@@ -1151,13 +1156,13 @@ combination is invalid \(see `ecb-interpret-mouse-click'."
                                   shift-pressed
                                   control-pressed
                                   tree-buffer-name)
-  "Converts the pysical pressed MOUSE-BUTTON \(1 = mouse-1, 2 = mouse-2, 0 =
-no mouse-button but a key like RET or TAB) to ECB-mouse-buttons: either
-primary or secondary mouse-button depending on the value of CONTROL-PRESSED
-and the setting in `ecb-primary-secondary-mouse-buttons'. Returns a list
-'\(ECB-button shift-mode) where ECB-button is either 1 \(= primary) or 2 \(=
-secondary) and shift-mode is non nil if SHIFT-PRESSED is non nil. For an
-invalid and not accepted click combination nil is returned.
+  "Converts the physically pressed MOUSE-BUTTON \(1 = mouse-1, 2 = mouse-2, 0 =
+no mouse-button but a key like RET or TAB) to ECB-mouse-buttons: either primary
+or secondary mouse-button depending on the value of CONTROL-PRESSED and the
+setting in `ecb-primary-secondary-mouse-buttons'. Returns a list '\(ECB-button
+shift-mode) where ECB-button is either 1 \(= primary) or 2 \(= secondary) and
+shift-mode is non nil if SHIFT-PRESSED is non nil. For an invalid and not
+accepted click combination nil is returned.
 
 Note: If MOUSE-BUTTON is 0 \(means no mouse-button but a key like RET or TAB
 was hitted) then only nil is accepted for SHIFT-PRESSED and CONTROL-PRESSED.
