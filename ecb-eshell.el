@@ -44,6 +44,10 @@
 
 ;; - should I use eshell-pre-command-hook to increase the size of the window if
 ;; we are in an ECB layout?? (and the ecb is activated)...
+
+;; - only run eshell/cd if the current directory is different than the
+;; eshell/pwd.
+;;
 ;;
 
 ;;; Code:
