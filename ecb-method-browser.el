@@ -24,7 +24,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-method-browser.el,v 1.46 2004/07/30 15:27:03 berndl Exp $
+;; $Id: ecb-method-browser.el,v 1.47 2004/08/03 09:37:20 berndl Exp $
 
 ;;; Commentary:
 
@@ -3331,11 +3331,8 @@ should be displayed. For 1 and 2 the value of EDIT-WINDOW-NR is ignored."
       ;; calling here directly ecb-hide-ecb-windows fails and why even going
       ;; the way via post-command-hooks fails too...running with an idle-times
       ;; seems to work so for the moment we can do this.......
-      ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: Eventually we should check
-      ;; if the method-window is the only one and only then we hide?!
       (if (and meta-mode
-               (equal ecb-current-maximized-ecb-buffer-name
-                      ecb-methods-buffer-name))
+               t) ;;(ecb-buffer-is-the-only-visible-ecb-buffer-p ecb-methods-buffer-name))
           (ecb-run-with-idle-timer 0.001 nil 'ecb-hide-ecb-windows)))))
 ;;           (ecb-hide-ecb-windows)))))
 

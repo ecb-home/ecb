@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-jde.el,v 1.9 2004/06/14 11:02:20 berndl Exp $
+;; $Id: ecb-jde.el,v 1.10 2004/08/03 09:37:21 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -51,6 +51,7 @@
 (silentcomp-defun jde-open-get-path-prefix-list)
 (silentcomp-defun jde-open-find-java-file-name)
 (silentcomp-defun jde-gen-class-buffer)
+(silentcomp-defvar jde-sourcepath)
 
 (require 'ecb-util)
 (require 'ecb-layout)
@@ -115,7 +116,7 @@ available."
                   ;; we have found the java-sourcefile. So let´s display its
                   ;; contents in the method-buffer of ECB
                   (ecb-exec-in-methods-window
-                   (ecb-set-selected-source java-file-name nil t))))
+                   (ecb-set-selected-source java-file-name nil t nil))))
             
             (ecb-error "Can not parse the thing at point!")))
       (message "You need JDE >= 2.2.6 and Senator for using this feature!"))))

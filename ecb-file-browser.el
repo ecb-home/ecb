@@ -23,7 +23,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-file-browser.el,v 1.24 2004/07/15 15:26:28 berndl Exp $
+;; $Id: ecb-file-browser.el,v 1.25 2004/08/03 09:37:21 berndl Exp $
 
 ;;; Commentary:
 
@@ -1384,13 +1384,14 @@ by the option `ecb-mode-line-prefixes'."
      (tree-buffer-highlight-node-data filename))))
 
 (defun ecb-set-selected-source (filename other-edit-window
-					 no-edit-buffer-selection)
+					 no-edit-buffer-selection hide)
   "Updates all the ECB buffers and loads the file. The file is also
-displayed unless NO-EDIT-BUFFER-SELECTION is set to non nil. In such case
-the file is only loaded invisible in the background, all semantic-parsing
-and ECB-Buffer-updating is done but the content of the main-edit window
-is not changed. For the allowed values of OTHER-EDIT-WINDOW see
-`ecb-combine-ecb-button/edit-win-nr'."
+displayed unless NO-EDIT-BUFFER-SELECTION is set to non nil. In such case the
+file is only loaded invisible in the background, all semantic-parsing and
+ECB-Buffer-updating is done but the content of the main-edit window is not
+changed. For the allowed values of OTHER-EDIT-WINDOW see
+`ecb-combine-ecb-button/edit-win-nr'. If HIDE is not nil then ECB hides the
+ecb-windows after displaying the file in an edit-window."
   (ecb-select-source-file filename)
   (if no-edit-buffer-selection
       ;; load the selected source in an invisible buffer, do all the
@@ -1407,7 +1408,10 @@ is not changed. For the allowed values of OTHER-EDIT-WINDOW see
 			       other-edit-window)
     (ecb-update-methods-buffer--internal 'scroll-to-begin)
     (setq ecb-major-mode-selected-source major-mode)
-    (ecb-tag-sync 'force)))
+    (ecb-tag-sync 'force)
+    (if hide
+        (ecb-hide-ecb-windows))))
+             
 
 (defun ecb-clear-history ()
   "Clears the ECB history-buffer."
@@ -1688,7 +1692,7 @@ is created."
        (ecb-speedbar-update-contents)))
 
 
-(defun ecb-directory-clicked (node ecb-button edit-window-nr shift-mode)
+(defun ecb-directory-clicked (node ecb-button edit-window-nr shift-mode meta-mode)
   "Handle clicking onto NODE in the directories-buffer. ECB-BUTTON can be 1, 2
 or 3. If 3 then EDIT-WINDOW-NR contains the number of the edit-window the NODE
 should be displayed. For 1 and 2 the value of EDIT-WINDOW-NR is ignored."
@@ -1721,10 +1725,10 @@ should be displayed. For 1 and 2 the value of EDIT-WINDOW-NR is ignored."
 ;;            (tree-buffer-update node)))
       (ecb-set-selected-source (tree-node-get-data node)
                                (ecb-combine-ecb-button/edit-win-nr ecb-button edit-window-nr)
-			       shift-mode))))
+			       shift-mode meta-mode))))
 
 
-(defun ecb-source-clicked (node ecb-button edit-window-nr shift-mode)
+(defun ecb-source-clicked (node ecb-button edit-window-nr shift-mode meta-mode)
   "Handle clicking onto NODE in the sources-buffer. ECB-BUTTON can be 1, 2 or
 3. If 3 then EDIT-WINDOW-NR contains the number of the edit-window the NODE
 should be displayed. For 1 and 2 the value of EDIT-WINDOW-NR is ignored."
@@ -1732,10 +1736,10 @@ should be displayed. For 1 and 2 the value of EDIT-WINDOW-NR is ignored."
       (ecb-mouse-over-source-node node nil nil 'force))
   (ecb-set-selected-source (tree-node-get-data node)
                            (ecb-combine-ecb-button/edit-win-nr ecb-button edit-window-nr)
-			   shift-mode))
+			   shift-mode meta-mode))
 
 
-(defun ecb-history-clicked (node ecb-button edit-window-nr shift-mode)
+(defun ecb-history-clicked (node ecb-button edit-window-nr shift-mode meta-mode)
   "Handle clicking onto NODE in the history-buffer. ECB-BUTTON can be 1, 2 or
 3. If 3 then EDIT-WINDOW-NR contains the number of the edit-window the NODE
 should be displayed. For 1 and 2 the value of EDIT-WINDOW-NR is ignored."
@@ -1743,7 +1747,7 @@ should be displayed. For 1 and 2 the value of EDIT-WINDOW-NR is ignored."
       (ecb-mouse-over-history-node node nil nil 'force))
   (ecb-set-selected-source (tree-node-get-data node)
                            (ecb-combine-ecb-button/edit-win-nr ecb-button edit-window-nr)
-                           shift-mode))
+                           shift-mode meta-mode))
 
 (defun ecb-expand-directory-nodes (level)
   "Set the expand level of the nodes in the ECB-directories-buffer.
@@ -2002,28 +2006,28 @@ function which is called with current node and has to return a string.")
   "Open current source-file the 1. edit-window."
   ;; We can use `ecb-source-clicked' for history-buffer too because shift-mode
   ;; is nil.
-  (ecb-source-clicked node 3 1 nil))
+  (ecb-source-clicked node 3 1 nil nil))
 (tree-buffer-defpopup-command ecb-open-source-in-editwin2
   "Open current source-file the 2. edit-window."
-  (ecb-source-clicked node 3 2 nil))
+  (ecb-source-clicked node 3 2 nil nil))
 (tree-buffer-defpopup-command ecb-open-source-in-editwin3
   "Open current source-file the 3. edit-window."
-  (ecb-source-clicked node 3 3 nil))
+  (ecb-source-clicked node 3 3 nil nil))
 (tree-buffer-defpopup-command ecb-open-source-in-editwin4
   "Open current source-file the 4. edit-window."
-  (ecb-source-clicked node 3 4 nil))
+  (ecb-source-clicked node 3 4 nil nil))
 (tree-buffer-defpopup-command ecb-open-source-in-editwin5
   "Open current source-file the 5. edit-window."
-  (ecb-source-clicked node 3 5 nil))
+  (ecb-source-clicked node 3 5 nil nil))
 (tree-buffer-defpopup-command ecb-open-source-in-editwin6
   "Open current source-file the 6. edit-window."
-  (ecb-source-clicked node 3 6 nil))
+  (ecb-source-clicked node 3 6 nil nil))
 (tree-buffer-defpopup-command ecb-open-source-in-editwin7
   "Open current source-file the 7. edit-window."
-  (ecb-source-clicked node 3 7 nil))
+  (ecb-source-clicked node 3 7 nil nil))
 (tree-buffer-defpopup-command ecb-open-source-in-editwin8
   "Open current source-file the 8. edit-window."
-  (ecb-source-clicked node 3 8 nil))
+  (ecb-source-clicked node 3 8 nil nil))
 
 (defun ecb-dir/source/hist-menu-editwin-entries ()
   "Generate popup-menu-entries for each edit-window if there are at least 2

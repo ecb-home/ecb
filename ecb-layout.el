@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-layout.el,v 1.228 2004/07/28 16:50:23 berndl Exp $
+;; $Id: ecb-layout.el,v 1.229 2004/08/03 09:37:21 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -3689,7 +3689,12 @@ buffer-object or a buffer-name."
   (let ((buffer (ecb-buffer-obj buffer-or-name)))
     (member buffer (ecb-get-current-visible-ecb-buffers))))
 
-  
+(defun ecb-buffer-is-the-only-visible-ecb-buffer-p (buffer-or-name)
+  "Return not nil if BUFFER-OR-NAME is currently the only visible ecb-buffer."
+  (let ((buffer (ecb-buffer-obj buffer-or-name))
+        (current-ecb-buffers (ecb-get-current-visible-ecb-buffers)))
+    (and (= (length current-ecb-buffers) 1)
+         (equal buffer (car current-ecb-buffers)))))
 
 (defun ecb-set-minor-mode-text ()
   (setq ecb-minor-mode-text

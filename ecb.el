@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb.el,v 1.396 2004/07/30 15:27:02 berndl Exp $
+;; $Id: ecb.el,v 1.397 2004/08/03 09:37:20 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -1548,11 +1548,11 @@ combination is invalid \(see `ecb-interpret-mouse-click'."
     ;; ecb-file-browser.el too!
     (when ecb-button-list
       (cond ((ecb-string= tree-buffer-name ecb-directories-buffer-name)
-	     (ecb-directory-clicked node ecb-button nil shift-mode))
+	     (ecb-directory-clicked node ecb-button nil shift-mode meta-mode))
 	    ((ecb-string= tree-buffer-name ecb-sources-buffer-name)
-	     (ecb-source-clicked node ecb-button nil shift-mode))
+	     (ecb-source-clicked node ecb-button nil shift-mode meta-mode))
 	    ((ecb-string= tree-buffer-name ecb-history-buffer-name)
-	     (ecb-history-clicked node ecb-button nil shift-mode))
+	     (ecb-history-clicked node ecb-button nil shift-mode meta-mode))
 	    ((ecb-string= tree-buffer-name ecb-methods-buffer-name)
 	     (ecb-method-clicked node ecb-button nil shift-mode meta-mode))
 	    (t nil)))
@@ -1614,9 +1614,9 @@ combination is invalid \(see `ecb-interpret-mouse-click')."
       (cond ((ecb-string= tree-buffer-name ecb-directories-buffer-name)
 	     (ecb-update-directory-node node))
 	    ((ecb-string= tree-buffer-name ecb-sources-buffer-name)
-	     (ecb-source-clicked node ecb-button nil shift-mode))
+	     (ecb-source-clicked node ecb-button nil shift-mode meta-mode))
 	    ((ecb-string= tree-buffer-name ecb-history-buffer-name)
-	     (ecb-history-clicked node ecb-button nil shift-mode))
+	     (ecb-history-clicked node ecb-button nil shift-mode meta-mode))
 	    ((ecb-string= tree-buffer-name ecb-methods-buffer-name)
 	     nil)
 	    (t nil)))))
@@ -2802,7 +2802,7 @@ does all necessary after finishing ediff."
       (remove-hook 'after-save-hook 'ecb-update-methods-after-saving)
       (remove-hook 'kill-buffer-hook 'ecb-kill-buffer-hook)
 
-      (add-hook 'find-file-hooks 'ecb-find-file-hook)
+      (remove-hook 'find-file-hooks 'ecb-find-file-hook)
       
       (if (get 'ediff-quit-hook 'ecb-ediff-quit-hook-value)
           (setq ediff-quit-hook (get 'ediff-quit-hook
