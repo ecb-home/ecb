@@ -54,7 +54,7 @@
 ;; The latest version of the ECB is available at
 ;; http://home.swipnet.se/mayhem/ecb.html
 
-;; $Id: ecb.el,v 1.178 2002/01/22 01:19:20 burtonator Exp $
+;; $Id: ecb.el,v 1.179 2002/01/22 01:36:57 burtonator Exp $
 
 ;;; Code:
 
@@ -87,6 +87,7 @@
 (require 'ecb-util)
 (require 'ecb-help)
 (require 'ecb-navigate)
+(require 'ecb-eshell)
 
 ;; various loads
 (require 'easymenu)
@@ -2586,6 +2587,7 @@ That is remove the unsupported :help stuff."
                (t "s" ecb-goto-window-sources)
                (t "m" ecb-goto-window-methods)
                (t "h" ecb-goto-window-history)
+               (t "e" ecb-eshell-goto-eshell)
                (t "/" ecb-toggle-enlarged-compilation-window)))
   "*Specifies all keybindings for the ECB minor-mode keymap.
 The value is a cons-cell where the car is a common-prefix key for all the
