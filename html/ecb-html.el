@@ -21,7 +21,7 @@
 
 ;; Generates ECB HTML pages.
 
-;; $Id: ecb-html.el,v 1.7 2001/05/21 16:50:17 berndl Exp $
+;; $Id: ecb-html.el,v 1.8 2001/05/22 12:47:56 berndl Exp $
 
 ;;; Code:
 
@@ -216,7 +216,7 @@
     "The variable `vc-delete-logbuf-window' must be set to nil during active ECB. This can be done with the hooks of ECB.")
    (ecb-faq-q-and-a
     "Why ECB enlarges my compile window if i call `describe-function' (or similar functions)?"
-    "This is a known bug. But after calling `ecb-redraw-layout' the compile-window height is always correct.")
+    "With ECB >= 1.30 you can customize this behavior with the option 'ecb-compile-window-temporally-enlarge'. With an older ECB this is a known bug.")
    (ecb-faq-q-and-a
     "Why doesn't ECB parse my C++ files correctly?"
     "This is a problem in Semantic, which is used by ECB for parsing source files. At the moment it doesn't handle C++ source files very well.")
