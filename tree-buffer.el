@@ -37,6 +37,7 @@
 (defvar running-xemacs (string-match "XEmacs\\|Lucid" emacs-version))
 
 (when running-xemacs
+  (require 'overlay)
   (defface secondary-selection
     '((((class color) (background light)) (:foreground "blue" :background "LightGray"))
       (((class color) (background dark))  (:foreground "blue" :background "LightGray"))
