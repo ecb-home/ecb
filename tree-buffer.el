@@ -32,7 +32,7 @@
 ;; For the ChangeLog of this file see the CVS-repository. For a complete
 ;; history of the ECB-package see the file NEWS.
 
-;; $Id: tree-buffer.el,v 1.115 2003/07/07 06:53:02 berndl Exp $
+;; $Id: tree-buffer.el,v 1.116 2003/07/11 15:53:31 berndl Exp $
 
 ;;; Code:
 
@@ -67,6 +67,14 @@
 (silentcomp-defun event-start)
 (silentcomp-defun posn-point)
 (silentcomp-defun event-basic-type)
+(silentcomp-defun display-graphic-p)
+
+(defconst tree-buffer-images-can-be-used
+  (and (or (fboundp 'defimage)
+           (fboundp 'make-image-specifier))
+       (if (fboundp 'display-graphic-p)
+           (display-graphic-p)
+         window-system)))
 
 
 (if tree-buffer-running-xemacs
@@ -542,13 +550,42 @@ inserted and the TEXT itself"
             (put-text-property p (+ p (length text)) 'face facer))))))
 
 
-(defun tree-buffer-make-image-icon-maybe (start length symbol-string)
-  (when (and (ignore-errors (require 'sb-image))
-             symbol-string)
-    (let ((speedbar-expand-image-button-alist
-           (list (assoc symbol-string tree-buffer-expand-collapse-tokens))))
-      (speedbar-insert-image-button-maybe start length))))
+(defun tree-buffer-make-image-icon-maybe (symbol-str)
+  "Add an image button based on SYMBOL-STR to SYMBOL-STR which is a string. If
+SYMBOL-STR is unknown, do nothing. If we have an image-symbol associated with
+it, use that image-symbol. Symbol-strings are associated with image-symbols
+via `tree-buffer-expand-collapse-tokens'.
+
+Always return SYMBOL-STR."
+  (if symbol-str
+      (tree-buffer-add-image-icon-maybe
+       symbol-str
+       (cdr (assoc symbol-str tree-buffer-expand-collapse-tokens)))))
       
+
+(defun tree-buffer-add-image-icon-maybe (symbol-str image-icon)
+  "Add IMAGE-ICON to SYMBOL-STR which is a string. If IMAGE-ICON-SYMBOL is not
+nil and has a value \(which must be an image in the sense of \(X)Emacs) then
+add this image to SYMBOL-STR otherwise do nothing. Always return SYMBOL-STR."
+  (when tree-buffer-images-can-be-used
+	;; Regular images (created with `insert-image' are intangible
+	;; which (I suppose) make them more compatible with XEmacs 21.
+	;; Unfortunatly, there is a giant pile o code dependent on the
+	;; underlying text.  This means if we leave it tangible, then I
+	;; don't have to change said giant piles o code.
+	(if (and image-icon (symbol-value image-icon))
+	    (if (featurep 'xemacs)
+		(add-text-properties (length symbol-str) 0
+				     (list 'end-glyph (symbol-value image-icon)
+					   'rear-nonsticky (list 'display)
+					   'invisible t
+					   'detachable t)
+                                     symbol-str)
+	      (add-text-properties 0 (length symbol-str)
+				   (list 'display (symbol-value image-icon)
+					 'rear-nonsticky (list 'display))
+                                   symbol-str))))
+  symbol-str)
 
 (defun tree-buffer-add-node (node depth)
   (let* ((ww (window-width))
@@ -574,26 +611,22 @@ inserted and the TEXT itself"
     (insert (make-string (* depth tree-buffer-indent) ? ))
     (when (and tree-buffer-expand-symbol-before
 	       (tree-node-is-expandable node))
-      (tree-buffer-insert-text expand-collapse-token)
-      (tree-buffer-make-image-icon-maybe (- (point)
-                                            (length expand-collapse-token))
-                                         (length expand-collapse-token)
-                                         expand-collapse-token)
+      (tree-buffer-insert-text 
+       (tree-buffer-make-image-icon-maybe expand-collapse-token))
       (insert " "))
     (tree-buffer-insert-text name (tree-buffer-get-node-facer node) t)
     (when (and (not tree-buffer-expand-symbol-before)
 	       (tree-node-is-expandable node))
       (insert " ")
-      (tree-buffer-insert-text expand-collapse-token)
-      (tree-buffer-make-image-icon-maybe (- (point)
-                                            (length expand-collapse-token))
-                                         (length expand-collapse-token)
-                                         expand-collapse-token))
+      (tree-buffer-insert-text 
+       (tree-buffer-make-image-icon-maybe expand-collapse-token)))
     (insert "\n")
     (setq tree-buffer-nodes (append tree-buffer-nodes (list (cons name node))))
     (if (tree-node-is-expanded node)
 	(dolist (node (tree-node-get-children node))
 	  (tree-buffer-add-node node (1+ depth))))))
+
+
 
 (defun tree-node-count-subnodes-to-display (node)
   "Returns the number of ALL subnodes of NODE which will currently be displayed
@@ -728,9 +761,22 @@ see `tree-buffer-expand-nodes'."
 (defun tree-buffer-get-root ()
   tree-buffer-root)
 
-(defun tree-buffer-show-menu (event)
-  (interactive "e")
-  (tree-buffer-mouse-set-point event)
+;; Klaus Berndl <klaus.berndl@sdm.de>: Seems that the docstring of
+;; x-popup-menu is wrong because it seems this function needs offsets related
+;; to current window not to frame!
+;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: For XEmacs this does not work!
+(defun tree-buffer-show-menu-keyboard ()
+  (interactive)
+  (if tree-buffer-running-xemacs
+      (tree-buffer-show-menu)
+    (let ((curr-frame-ypos (* (/ (frame-pixel-height) (frame-height))
+                              (count-lines (window-start) (point))))
+          (curr-frame-xpos (* (/ (frame-pixel-width) (frame-width))
+                              (current-column))))
+      (tree-buffer-show-menu (list (list curr-frame-xpos curr-frame-ypos)
+                                   (selected-window))))))
+
+(defun tree-buffer-show-menu (&optional event)
   (unless (not (equal (selected-frame) tree-buffer-frame))
     (when tree-buffer-menus
       (let ((node (tree-buffer-get-node-at-point)))
@@ -750,6 +796,29 @@ see `tree-buffer-expand-nodes'."
 			   event (cons 'keymap (cons menu-title menu)))))
                   (when fn
 		    (funcall (car fn) node)))))))))))
+
+;; (defun tree-buffer-show-menu (event)
+;;   (interactive "e")
+;;   (tree-buffer-mouse-set-point event)
+;;   (unless (not (equal (selected-frame) tree-buffer-frame))
+;;     (when tree-buffer-menus
+;;       (let ((node (tree-buffer-get-node-at-point)))
+;; 	(when node
+;; 	  (let* ((menu (cdr (assoc (tree-node-get-type node) tree-buffer-menus)))
+;;                  (menu-title-creator
+;;                   (cdr (assoc (tree-node-get-type node) tree-buffer-menu-titles)))
+;;                  (menu-title (cond ((stringp menu-title-creator)
+;;                                     menu-title-creator)
+;;                                    ((functionp menu-title-creator)
+;;                                     (funcall menu-title-creator node))
+;;                                    (t "ECB-tree-buffer-menu"))))
+;;             (when menu
+;; 	      (if tree-buffer-running-xemacs
+;; 		  (popup-menu (cons menu-title menu))
+;; 		(let ((fn (x-popup-menu
+;; 			   event (cons 'keymap (cons menu-title menu)))))
+;;                   (when fn
+;; 		    (funcall (car fn) node)))))))))))
 
 (defconst tree-buffer-incr-searchpattern-basic-prefix
   "^[ \t]*\\([[<][+-][]>] \\)?"
@@ -1157,11 +1226,11 @@ HOR-SCROLL: Number of columns a hor. scroll in the tree-buffer should scroll.
             also M-<left-arrow> and M-<right-arrow>.
 EXPAND-COLLAPSE: A 2-elem list where the first elem is a cons cell where the
                  car is the token-string for the expand-symbol \(e.g.
-                 \"\[+]\") and the cdr is a speedbar-image-icon. The second
-                 elem is the same for the collapse symbol. Both elems can be
-                 nil; then no expand- or collapse-symbol is drawn. If only the
-                 cdr of an elem is nil then no image-icon is used but always
-                 the token-string.
+                 \"\[+]\") and the cdr is a symbol which has as value an image
+                 in the sense of \(X)Emacs. The second elem is the same for
+                 the collapse symbol. Both elems can be nil; then no expand-
+                 or collapse-symbol is drawn. If only the cdr of an elem is
+                 nil then no image-icon is used but always the token-string.
 TYPE-FACER: Nil or a list of one or two conses, each cons for a node-type \(0
             or 1). The cdr of a cons can be:
             - a symbol of a face
@@ -1348,7 +1417,13 @@ AFTER-CREATE-HOOK: A function or a list of functions \(with no arguments)
     ;; mouse-3
     (define-key tree-buffer-key-map
       (if tree-buffer-running-xemacs '(button3) [down-mouse-3])
-      'tree-buffer-show-menu)
+      (function (lambda(e)
+		  (interactive "e")
+                  (tree-buffer-mouse-set-point e)
+                  (tree-buffer-show-menu e))))
+    (define-key tree-buffer-key-map (kbd "M-m")
+      'tree-buffer-show-menu-keyboard)
+    
     (define-key tree-buffer-key-map [mouse-3] nop)
     (define-key tree-buffer-key-map [double-mouse-3] nop)
     (define-key tree-buffer-key-map [triple-mouse-3] nop)
