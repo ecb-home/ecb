@@ -28,7 +28,7 @@
 ;; Do not change any html-file besides the index.html manually but do all
 ;; changes in this elisp file!
 
-;; $Id: ecb-html.el,v 1.58 2004/01/14 17:22:21 berndl Exp $
+;; $Id: ecb-html.el,v 1.59 2004/01/15 13:00:54 berndl Exp $
 
 ;;; Code:
 
@@ -82,6 +82,8 @@
                         (h-link "docs/Install-and-first-steps.html#Install%20and%20first%20steps" "Here") " is a short installation guide. "
                         "Click " (h-link "NEWS.html" "here")
                         " for information about changes in the new version. ")
+        ,(h-sub-section "Now always the latest stable CVS-snapshot is available for download! (2004-01-15)"
+                        "Click " (h-link "downloads.html" "here") " to get it.")
         ,(h-sub-section "ECB 2.11 released! (2003-11-14)"
                         "Semanticdb is used for jumping to external type-definitions. Special-display-buffers are handled correctly. Automatic upgrading has been fixed for this new version. Some bug fixes. "
                         (h-link "docs/Install-and-first-steps.html#Install%20and%20first%20steps" "Here") " is a short installation guide. "
@@ -367,9 +369,13 @@
      (h-line)
      (h-sub-section
       "Download from CVS repository"
-      "Browse the "
-      (h-link "http://cvs.sourceforge.net/cgi-bin/viewcvs.cgi/ecb/ecb/"
-              "ECB CVS repository") " for downloading latest ECB-sources.")
+      (h-bullet-link-list
+       ecb-bullet
+       (list
+        '("http://cvs.sourceforge.net/cgi-bin/viewcvs.cgi/ecb/ecb/" "Full CVS repository" "Browse the CVS repository of ECB for downloading single files.")
+        '("cvs_snapshots/ecb.tar.gz" "Latest CVS-shapshot" "Download the latest stable CVS-snapshot of ECB")
+        )
+       "_top"))
      (h-line)
      (h-sub-section
       "Download Documentation"

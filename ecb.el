@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb.el,v 1.362 2004/01/14 17:22:22 berndl Exp $
+;; $Id: ecb.el,v 1.363 2004/01/15 13:00:54 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -289,9 +289,9 @@ If t then the ECB-frame is selected, if nil then it is not. If 'ask then ECB
 asks if the ECB-frame should be selected if the current-frame is not the
 `ecb-frame'."
   :group 'ecb-general
-  :type '(radio (const :tag "" :value t)
-                (const :tag "" :value ask)
-                (const :tag "" :value nil)))
+  :type '(radio (const :tag "Select the ECB-frame" :value t)
+                (const :tag "Ask if the ECB-frame should be selected" :value ask)
+                (const :tag "Do not select the ECB-frame" :value nil)))
 
 (defcustom ecb-major-modes-activate 'none
   "*List of major-modes for which ECB should be activated or shown.
