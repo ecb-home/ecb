@@ -196,6 +196,13 @@ It´s recommended to define here the font-family, the font-size, the basic
 color etc."
   :group 'faces)
 
+(defcustom ecb-auto-activate nil
+  "Automatically startup ECB when Emacs starts up.  This should only be run if
+  you always want to run `ecb-activate'."
+  :group 'ecb-general
+  :type 'boolean)
+
+
 (defcustom ecb-directories-general-face 'ecb-directories-general-face
   "Basic face for the ECB directories buffer. This defines the basic
 face the whole directory buffer should displayed with. If nil then no special
@@ -3223,6 +3230,16 @@ FILE.elc or if FILE.elc doesn't exist."
       (dolist (file files)
 	(if (string-match "\\(tree-buffer\\|ecb.*\\)\\.el$" file)
 	    (ecb-compile-file-if-necessary file force-all))))))
+
+(defun ecb-auto-activate-hook()
+  "If necessary, run `ecb-activate' when Emacs is started."
+
+  (when ecb-auto-activate
+    (ecb-activate)))
+
+(add-hook 'emacs-startup-hook 'ecb-auto-activate-hook)
+  
+;;tell ECB to automatically startup.
 
 (provide 'ecb)
 
