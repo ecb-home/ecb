@@ -21,7 +21,7 @@
 
 ;; Generates ECB HTML pages.
 
-;; $Id: ecb-html.el,v 1.10 2001/05/29 15:11:08 berndl Exp $
+;; $Id: ecb-html.el,v 1.11 2001/05/31 21:40:47 creator Exp $
 
 ;;; Code:
 
@@ -324,6 +324,8 @@
     (h-bullet-link-list
      ecb-bullet
      (list 
+      (list (concat ecb-download-url "ecb-1.30.zip") "ecb-1.30.zip")
+      (list (concat ecb-download-url "ecb-1.30.tar.gz") "ecb-1.30.tar.gz")
       (list (concat ecb-download-url "ecb-1.20.zip") "ecb-1.20.zip")
       (list (concat ecb-download-url "ecb-1.20.tar.gz") "ecb-1.20.tar.gz")
       (list (concat ecb-download-url "ecb-1.10.zip") "ecb-1.10.zip")
