@@ -28,7 +28,7 @@
 ;; Do not change any html-file besides the index.html manually but do all
 ;; changes in this elisp file!
 
-;; $Id: ecb-html.el,v 1.72 2004/11/26 16:20:25 berndl Exp $
+;; $Id: ecb-html.el,v 1.73 2004/11/30 18:42:06 berndl Exp $
 
 ;;; Code:
 
@@ -77,18 +77,18 @@
   "List of latest news displayed on the main page.")
 (setq ecb-latest-news
       `(
-        ,(h-sub-section "ECB 2.30 released! (2004-11-31)"
+        ,(h-sub-section "ECB 2.30.1 released! (2004-12-01)"
+                        "This is mostly a bug-fix-release which fixes the errors occured at load-time with ECB 2.30. In addition there are some enhancements to the VC-support introduced first with ECB 2.30. "
+                        (h-link "docs/Install-and-first-steps.html#Install%20and%20first%20steps" "Here") " is a short installation guide. "
+                        "Click " (h-link "NEWS.html" "here")
+                        " for information about changes in the new version. ")
+        ,(h-sub-section "ECB 2.30 released! (2004-11-26)"
                         "ECB can now display the version-control state of files in the tree-buffers; state is displayed with new image-icons. ECB is now capable of handling remote paths (e.g. TRAMP-, ANGE-FTP- or EFS-paths). Much better performance because all time consuming tasks (e.g. checking directories for emptyness or checking the VC-state) are performed stealthy. Now the current node in the methods-buffer can be expanded very precisely via new commands in the popup-menu. ECB has now the new upgrade policy \"Never touching the customization-files of a user without asking\". Some bug fixes. "
                         (h-link "docs/Install-and-first-steps.html#Install%20and%20first%20steps" "Here") " is a short installation guide. "
                         "Click " (h-link "NEWS.html" "here")
                         " for information about changes in the new version. ")
         ,(h-sub-section "ECB 2.27 released! (2004-08-31)"
                         "Much saver mechanism for resizing the permanent compile-window: Enlarging the compile-window does never destroy some ecb-windows, shrinking the compile-window shrinks always back to the correct size and all ecb-windows have their correct size after shrinking the compile-window. Some minor fixes. "
-                        (h-link "docs/Install-and-first-steps.html#Install%20and%20first%20steps" "Here") " is a short installation guide. "
-                        "Click " (h-link "NEWS.html" "here")
-                        " for information about changes in the new version. ")
-        ,(h-sub-section "ECB 2.26 released! (2004-08-11)"
-                        "Improved erformance of the directories-buffer-display. Some new minor-features. Fixed an important bug with XEmacs concerning merging faces. Some minor fixes. "
                         (h-link "docs/Install-and-first-steps.html#Install%20and%20first%20steps" "Here") " is a short installation guide. "
                         "Click " (h-link "NEWS.html" "here")
                         " for information about changes in the new version. ")
@@ -99,6 +99,11 @@
 `ecb-html-all-news'.")
 (setq ecb-rest-news
       `(
+        ,(h-sub-section "ECB 2.26 released! (2004-08-11)"
+                        "Improved erformance of the directories-buffer-display. Some new minor-features. Fixed an important bug with XEmacs concerning merging faces. Some minor fixes. "
+                        (h-link "docs/Install-and-first-steps.html#Install%20and%20first%20steps" "Here") " is a short installation guide. "
+                        "Click " (h-link "NEWS.html" "here")
+                        " for information about changes in the new version. ")
         ,(h-sub-section "ECB 2.25 released! (2004-06-14)"
                         "Fixed one annoying bug which often resulted in an error \"stack-overflow error in equal\" when using hippie-expand (or maybe also in other situations). The history-buffer can now be sorted by extension too. Some more small fixes. "
                         (h-link "docs/Install-and-first-steps.html#Install%20and%20first%20steps" "Here") " is a short installation guide. "

@@ -1,3 +1,36 @@
+* Changes for ECB version 2.30.1
+
+** Enhancement to the VC-support
+
+*** Better recomputing of the VC-state of a file when state changed outside
+    With the new check-state-function `ecb-vc-state' the heuristic state is
+    always computed right which is especially useful if the state for a file
+    has been changed outside Emacs (e.g. by checking in from command line or
+    Windows Explorer). This function is now added to the default-value of
+    `ecb-vc-supported-backends' for GNU Emacs.
+
+*** Added out-of-the-box support for VC-system Subversion
+    For this the latest version of the VC-package incl. the library vc-syn.el
+    is needed. Latest CVS Emacs contains this VC-version. The new function
+    `ecb-vc-dir-managed-by-SVN' is now added to the default-value of
+    `ecb-vc-supported-backends'. Thanks for first implementation to Ekkehard
+    GÅˆrlach <ekkehard.goerlach@pharma.novartis.com>.
+
+** Enhancement to the automatic option-upgrading mechanism
+   ECB now automatically makes a backup-file of that file which will be
+   modified by storing the upgraded rsp. renamed ECB-options. This backup file
+   gets a unique name by adding a suffix ".before_ecb_<version>" to the name
+   of the modified file. If such a file already exists ECB adds a unique number
+   to the end of the filename to make the filename unique.
+   This is a safety mechanism if something fails during storing the upgraded
+   options, so you never lose the contents of your customization-file!
+    
+** Fixed bugs
+
+*** Fixed errors occured at load-time of ECB 2.30
+
+
+
 * Changes for ECB version 2.30
 
 ** Enhancements to the file-browser
@@ -5,11 +38,11 @@
 *** Much better performance of the file-browser display because all
     time-consuming tasks (like the check if the displayed directories are
     empty of not) are now performed "stealthy" - means when Emacs is idle.
-    Each stealthy task is interruptable by the user so Emacs/ECB will not be
-    blocked by such tasks; next time Emacs is idle again the interrupted task
-    automatically proceeds from the state it has been interrupted.
-    There is a new macro `ecb-defstealthy' which can be used by a user to
-    program own stealthy tasks.
+    Each stealthy task is interruptable by the user just by hitting any key or
+    clicking the mouse so Emacs/ECB will not be blocked by such tasks; next
+    time Emacs is idle again the interrupted task automatically proceeds from
+    the state it has been interrupted. There is a new macro `defecb-stealthy'
+    which can be used by a user to program own stealthy tasks.
 
     Currently ECB performs three stealthy tasks:
 
