@@ -28,67 +28,92 @@ overlay.el).
 Installation
 ------------
 
-1. Unpack the ECB archive.
+1. Unpack the ECB archive (probably you have already done this :-)
 
 2. Install the required semantic- and eieio-version.
 
-   Note: ECB maybe requires a newer version of these libraries than shipped
+   *Note*: ECB maybe requires a newer version of these libraries than shipped
    with Emacs or XEmacs. You have to install exactly a version ECB requires
    and also to make sure that the correct version is loaded into (X)Emacs!
 
-3. Add the new directory to your load-path.
+   But ECB checks auto. during start-time if the correct versions of semantic
+   and eieio are installed and gives you proper feedback.
 
-   You MUST add the ECB-install-directory to the 'load-path' either by
-   changing the 'load-path' variable directly in your .emacs or
-   site-lisp/site-start.el or by working with a file subdirs.el.
+3. Add the new ECB-directory to your `load-path' variable.
 
-   ATTENTION: ECB is NOT properly installed if it's directory is not added to
-   'load-path' and for example just loaded by
+   You *MUST* add the ECB-install-directory to the `load-path' either by
+   changing the `load-path' variable directly in your `.emacs' or
+   `site-lisp/site-start.el' or by working with a file `subdirs.el'.
 
-     (load-file "/path/to/ecb/ecb.el")
+   *ATTENTION*: ECB is NOT properly installed if it's directory is not added
+   to `load-path' and for example just loaded by
+
+      (load-file "/path/to/ecb/ecb.el")
 
    Do not do this!
 
-4. Add to your .emacs or site-start.el file the line:
-   (require 'ecb)
+4. Load ECB by adding code to your `.emacs' or `site-lisp/site-start.el'.
+
+   If you want to load the complete ECB at Emacs-loadtime (Advantage: All
+   ECB-options available after loading Emacs. Disadvantage: Increasing
+   loadtime(1)):
+
+      (require 'ecb)
+
+   If you want to load the ECB first after starting it by `ecb-activate'
+   (Advantage: Fast loading(2). Disadvantage: ECB- and semantic-options first
+   available after starting ECB):
+
+      (autoload 'ecb-activate "ecb" "Activate ECB" t)
+      (autoload 'ecb-byte-compile "ecb" "Byte-compile ECB" t)
+      (autoload 'ecb-show-help "ecb-help" "Show the online help of ECB" t)
 
 5. Restart Emacs.
 
-ECB is now ready for use and can be activated by calling 'M-x ecb-activate'.
-Now you can either starting using ECB or you can do these optional
-installation steps:
+ECB is now ready for use and can be activated by calling `M-x ecb-activate' or
+`ecb-minor-mode'. Now you can either starting using ECB or you can do these
+optional installation steps:
 
-6. Call `ecb-byte-compile'. Byte compiles ECB. You can safely ignore all
-   messages. (You can also bytecompile ECB from the command-line either by
-   using the Makefile or by using the batch-file make.bat. Just read the
-   comments in that file you choose.)
+6. Reading the online help with `ecb-show-help'
 
-7. Install the supplied ecb.info
+   Maybe you are interested to read the online-help of ECB before first start.
 
-   The ECB distribution contains a file ecb.info which is the online-help of
+7. Calling `ecb-byte-compile'
+
+   This byte compiles ECB. You can safely ignore all messages. (You can also
+   bytecompile ECB from the command-line either by using the `Makefile' or by
+   using the batch-file `make.bat'. Just read the comments in that file you
+   choose.)
+
+8. Installing the supplied `ecb.info'
+
+   The ECB distribution contains a file `ecb.info' which is the online-help of
    ECB in Info-format. You can install this online help so it's available in
    the Top-directory of Info. There are two ways to do this:
 
-   * Use install-info (recommended):
-     1. Copy the file ecb.info into the info-directory of Emacs
-     2. Install it with the command install-info (if available on your system)
-        in the dir-file.
+    - Use "install-info" (recommended):
 
-     The supplied Makefile offers a target install-help which does both of
-     these steps. You have just to call "make install-help" with the correct
-     EMACSINFOPATH set (see the comment in Makefile). Here is an
-     example:
+      1. Copy the file `ecb.info' into the info-directory of Emacs
 
-        make EMACSINFOPATH=/path/to/emacs/info install-help
+      2. Install it with the command "install-info" (if available on your
+         system) in the `dir'-file.
 
-    * Manual Installation:
-      Copy the file ecb.info into the info-directory of Emacs and
-      modify the file dir manually.
+      The supplied `Makefile' offers a target `install-help' which does both
+      of these steps. You have just to call `make install-help' with the
+      correct EMACSINFOPATH set (see the comment in `Makefile'). Here is an
+      example:
 
-   But it doesn't matter if you do not execute this step (7.) because the
-   online help of ECB is always available though, see `ecb-show-help'!
+         make EMACSINFOPATH=/path/to/emacs/info install-help
 
+    - Manual Installation:
 
+      Copy the file `ecb.info' into the info-directory of Emacs and modify
+      the file `dir' manually.
+
+   But it doesn't matter if you do not execute this step (8.) because the
+   online help of ECB is always available though, see `ecb-show-help'.
+
+   
 Usage
 -----
 

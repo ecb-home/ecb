@@ -43,6 +43,7 @@ then `browse-url-browser-function' says which browser is used."
                  (const :tag "Info" :value info)
                  (const :tag "Html" :value html)))
 
+;;;###autoload
 (defun ecb-show-help (&optional format)
   "Shows the online help of ECB in Info or HTML-format depending on the value
 of the option `ecb-show-help-format'. If called with prefix argument, i.e. if
