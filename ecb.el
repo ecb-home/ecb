@@ -579,7 +579,7 @@ will get the face 'default. Returns TEXT."
         (if ecb-font-lock-methods
             (let* ((face-option-val (nth type ecb-font-lock-method-faces))
                    (face (or (and face-option-val
-                                  (boundp face-option-val)
+                                  (facep face-option-val)
                                   face-option-val)
                              'default)))
               (put-text-property 0 (length text) 'face face text)
