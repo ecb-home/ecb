@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb.el,v 1.401 2004/09/03 16:33:45 berndl Exp $
+;; $Id: ecb.el,v 1.402 2004/09/06 15:48:49 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -2581,6 +2581,11 @@ ECB has been deactivated. Do not set this variable!")
             ;; activate the monitoring
             (ecb-activate-ecb-autocontrol-functions 1 'ecb-monitor-autocontrol-functions)
 
+            ;; We activate the stealthy update mechanism
+            (ecb-stealthy-function-state-init)
+            (ecb-activate-ecb-autocontrol-functions 0.5
+                                                    'ecb-stealthy-updates)
+            
             ;; running the compilation-buffer update first time
             (ecb-compilation-buffer-list-init)
       
@@ -3114,6 +3119,40 @@ performance-problem!"
                          :active t
                          :help "Start the Emacs Code Browser."
                          ])))
+
+
+;; highlighting of some ecb-keywords
+(defconst ecb-font-lock-keywords
+  (eval-when-compile
+    (let* (
+           ;; Function declarations
+	   (vf '(
+                 "ecb-defstealthy"
+                 "tree-buffer-defpopup-command"
+		 ))
+           (kf (if vf (regexp-opt vf t) ""))
+           ;; Regexp depths
+           (kf-depth (if kf (regexp-opt-depth kf) nil))
+           (full (concat
+                  ;; Declarative things
+                  "(\\(" kf "\\)"
+                  ;; Whitespaces & name
+                  "\\>[ \t]*\\(\\sw+\\)?"
+                  ))
+           )
+      `((,full
+         (1 font-lock-keyword-face)
+         (,(+ 1 kf-depth 1)
+          (if (match-beginning 3)
+              font-lock-function-name-face)
+          nil t)))
+      ))
+  "Highlighted ecb keywords.")
+
+(when (fboundp 'font-lock-add-keywords)
+  (font-lock-add-keywords 'emacs-lisp-mode
+                          ecb-font-lock-keywords)
+  )
 
 
 ;; Klaus Berndl <klaus.berndl@sdm.de>: Cause of the magic autostart stuff of
