@@ -23,7 +23,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-semantic-wrapper.el,v 1.8 2004/03/25 18:14:07 berndl Exp $
+;; $Id: ecb-semantic-wrapper.el,v 1.9 2004/04/01 14:08:44 berndl Exp $
 
 ;;; Commentary:
 
@@ -97,7 +97,6 @@
     (semantic-find-nonterminal-by-overlay  . semantic-find-tag-by-overlay)
     (semantic-current-nonterminal-parent   . semantic-current-tag-parent)
     (semantic-adopt-external-members       . semantic-adopt-external-members)
-    (semantic-bovinate-toplevel            . semantic-bovinate-toplevel)
     (semantic-bucketize                    . semantic-bucketize)
     (semantic-c-template-string            . semantic-c-template-string)
     (semantic-clear-toplevel-cache         . semantic-clear-toplevel-cache)
@@ -109,7 +108,7 @@
     (semantic-flex-start                   . semantic-lex-token-start)
     (semantic-nonterminal-children         . semantic-tag-children-compatibility)
     (semantic-nonterminal-protection       . semantic-tag-protection)
-    (semantic-nonterminal-static           . semantic-tag-static)
+    (semantic-nonterminal-static           . semantic-tag-static-p)
     (semantic-overlay-live-p               . semantic-overlay-live-p)
     (semantic-overlay-p                    . semantic-overlay-p)
     (semantic-token-buffer                 . semantic-tag-buffer)
@@ -192,20 +191,37 @@ unloaded buffer representation."
 ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: This has to be changed for cedet
 ;; beta2 -- 'prototype --> :prototype-flag (see Davids renaming-mail).
 ;; constructor and descstructor the same.
+;; (defsubst ecb--semantic-tag-prototype-p (tag)
+;;   (ecb--semantic-tag-get-attribute tag 'prototype))
+
+;; (defsubst ecb--semantic-tag-function-constructor-p (tag)
+;;   (if (fboundp 'semantic-tag-function-constructor-p)
+;;       (apply 'semantic-tag-function-constructor-p (list tag))
+;;     (ecb--semantic-tag-get-attribute tag 'constructor)))
+    
+;; (defsubst ecb--semantic-tag-function-destructor-p (tag)
+;;   (if (fboundp 'semantic-tag-function-destructor-p)
+;;       (apply 'semantic-tag-function-destructor-p (list tag))
+;;     (ecb--semantic-tag-get-attribute tag 'destructor)))
+    
 (defsubst ecb--semantic-tag-prototype-p (tag)
-  (ecb--semantic-tag-get-attribute tag 'prototype))
+  (ecb--semantic-tag-get-attribute tag :prototype-flag))
 
 (defsubst ecb--semantic-tag-function-constructor-p (tag)
   (if (fboundp 'semantic-tag-function-constructor-p)
       (apply 'semantic-tag-function-constructor-p (list tag))
-    (ecb--semantic-tag-get-attribute tag 'constructor)))
+    (ecb--semantic-tag-get-attribute tag :constructor-flag)))
     
 (defsubst ecb--semantic-tag-function-destructor-p (tag)
   (if (fboundp 'semantic-tag-function-destructor-p)
       (apply 'semantic-tag-function-destructor-p (list tag))
-    (ecb--semantic-tag-get-attribute tag 'destructor)))
+    (ecb--semantic-tag-get-attribute tag :destructor-flag)))
     
-
+(defsubst ecb--semantic-fetch-tags (&optional check-cache)
+  (if (fboundp 'semantic-fetch-tags)
+      (apply 'semantic-fetch-tags nil)
+    (apply 'semantic-bovinate-toplevel (list check-cache))))
+  
 ;;; API Functions
 ;;
 ;; Once you have a search result, use these routines to operate
@@ -236,32 +252,43 @@ This makes it appear more like the results of a `semantic-find-' call."
 
 (defun ecb--semanticdb-find-result-nth (result n)
   "In RESULT, return the Nth search result.
+Like `semanticdb-find-result-nth', except that only the TAG
+is returned, and the buffer it is found it will be made current.
+If the result tag has no position information, the originating buffer
+is still made current."
+  (if (fboundp 'semanticdb-find-result-nth)
+      (apply 'semanticdb-find-result-nth (list result n))
+    (let ((ans nil)
+          (anstable nil))
+      ;; Loop over each single table hit.
+      (while (and (not ans) result)
+        ;; For each table result, get local length, and modify
+        ;; N to be that much less.
+        (let ((ll (length (cdr (car result))))) ;; local length
+          (if (> ll n)
+              ;; We have a local match.
+              (setq ans (nth n (cdr (car result)))
+                    anstable (car (car result)))
+            ;; More to go.  Decrement N.
+            (setq n (- n ll))))
+        ;; Keep moving.
+        (setq result (cdr result)))
+      (cons ans anstable))))
+
+(defun ecb--semanticdb-find-result-nth-with-file (result n)
+  "In RESULT, return the Nth search result.
 This is a 0 based search result, with the first match being element 0. Returns
 a cons cell with car is the searched and found tag and the cdr is the
 associated full filename of this tag. If the search result is not associated
-with a file, then the cdar of the result-cons is nil."
-  (let ((ans nil)
-        (ans-file nil))
-    ;; Loop over each single table hit.
-    (while (and (not ans) result)
-      ;; For each table result, get local length, and modify
-      ;; N to be that much less.
-      (let ((ll (length (cdr (car result))))) ;; local length
-        (if (> ll n)
-            ;; We have a local match.
-            (setq ans (nth n (cdr (car result))))
-          ;; More to go.  Decrement N.
-          (setq n (- n ll))))
-      ;; If we have a hit, double-check the find-file
-      ;; entry.  If the file must be loaded, then gat that table's
-      ;; source file into a buffer.
-      ;; Klaus Berndl <klaus.berndl@sdm.de>: Modified to return the
-      ;; full-filename too.
-      (when (and ans (ecb--semantic-tag-with-position-p ans))
-        (setq ans-file (ecb--semanticdb-full-filename (car (car result)))))
-      ;; Keep moving.
-      (setq result (cdr result)))
-    (cons ans ans-file)))
+with a file, then the cdr of the result-cons is nil."
+  (let ((result-nth (ecb--semanticdb-find-result-nth result n)))
+    (if (and (car result-nth)
+             (ecb--semantic-tag-with-position-p (car result-nth))
+             (cdr result-nth))
+        (cons (car result-nth)
+              (ecb--semanticdb-full-filename (cdr result-nth)))
+      (cons (car result-nth) nil))))
+    
 
 (silentcomp-provide 'ecb-semantic-wrapper)
 

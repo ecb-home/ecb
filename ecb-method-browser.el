@@ -24,7 +24,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-method-browser.el,v 1.29 2004/03/29 06:16:09 berndl Exp $
+;; $Id: ecb-method-browser.el,v 1.30 2004/04/01 14:08:44 berndl Exp $
 
 ;;; Commentary:
 
@@ -533,6 +533,13 @@ position but groups some external members having the same parent-tag."
                  text)
              (funcall (quote ,(cdr elem)) tag parent-tag colorize)))))
 
+(defcustom ecb-display-image-icons-for-semantic-tags ecb-images-can-be-used
+  "*Display nice and pretty icons for semantic-tags in the Methods-buffer.
+This option takes only effect if Emacs can display images and if
+`ecb-tree-buffer-style' is set to 'image."
+  :group 'ecb-methods
+  :type 'boolean)
+
 (defcustom ecb-post-process-semantic-taglist
   '((c++-mode . (ecb-group-function-tags-with-parents))
     (emacs-lisp-mode . (ecb-group-function-tags-with-parents))
@@ -540,7 +547,7 @@ position but groups some external members having the same parent-tag."
   "*Define mode-dependent post-processing for the semantic-taglist.
 This is an alist where the car is a major-mode symbol and the cdr is a list of
 function-symbols of functions which should be used for post-processing the
-taglist \(returned by `ecb--semantic-bovinate-toplevel') for a buffer in this
+taglist \(returned by `ecb--semantic-fetch-tags') for a buffer in this
 major-mode. The first function in the list is called with current semantic
 taglist of current buffer and must return a valid taglist again. All other
 functions are called with the result-taglist of its preceding function and
@@ -760,7 +767,8 @@ There are three different choices:
                 (const :tag "Always replace" :value always)
                 (const :tag "Ask if to replace" :value ask)))
 
-(defcustom ecb-methods-nodes-expand-spec '(type variable function section)
+(defcustom ecb-methods-nodes-expand-spec '(type variable function section
+                                                nonterminal keyword token)
   "*Semantic tag-types expanded by `ecb-expand-methods-nodes'.
 The value of this option is either the symbol 'all \(all tags are expanded
 regardless of their type) or a list of symbols where each symbol is a valid
@@ -1330,10 +1338,11 @@ Methods-buffer."
                          (ecb-forbid-tag-display tag)))
                     (t nil)))))))))
 
-;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: This is because this feature is
-;; currently still in a beta-state! If stable we either make a defcustom or we
-;; activate it autom.
-(defvar ecb-activate-tag-icon-display nil)
+(defsubst ecb-use-images-for-semantic-tags ()
+  (and ecb-display-image-icons-for-semantic-tags
+       ecb-images-can-be-used
+       (equal ecb-tree-buffer-style 'image)))
+       
 
 (defun ecb-add-tag-bucket (node bucket display sort-method
                                   &optional parent-tag no-bucketize)
@@ -1347,8 +1356,9 @@ Methods-buffer."
            (bucket-node node))
       (save-excursion
         (set-buffer ecb-methods-buffer-name)
-        (setq image (tree-buffer-find-image image-name))
-        (setq name (if (and ecb-activate-tag-icon-display image)
+        (setq image (and (ecb-use-images-for-semantic-tags)
+                         (tree-buffer-find-image image-name)))
+        (setq name (if image
                        (concat (tree-buffer-add-image-icon-maybe
                                 0 1 (make-string 1 ? ) image)
                                name-bucket)
@@ -1459,16 +1469,17 @@ to an existing icon-file-name.")
                                    (or (and (ecb--semantic--tag-get-property tag 'adopted)
                                             'unknown)
                                        (ecb--semantic-tag-protection tag parent-tag))
-                                   (ecb--semantic-tag-static tag parent-tag)))
+                                   (ecb--semantic-tag-static-p tag parent-tag)))
          (image-name (cdr (assoc image-name-alias
                                  ecb-tag-image-name-alias-alist)))
          (image nil)
          (tag-name nil))
     (save-excursion
       (set-buffer ecb-methods-buffer-name)
-      (setq image (tree-buffer-find-image image-name))
+      (setq image (and (ecb-use-images-for-semantic-tags)
+                       (tree-buffer-find-image image-name)))
       (setq tag-name
-            (if (and ecb-activate-tag-icon-display image)
+            (if image
                 (if has-protection
                     (tree-buffer-add-image-icon-maybe
                      0 1 plain-tag-name image)
@@ -1719,7 +1730,6 @@ TABLE is used."
   (interactive)
   (ecb-methods-filter-internal t))
 
-;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: Zu texi hinzufügen.
 (defun ecb-methods-filter-protection (&optional inverse)
   "Filter the methods-buffer by protection. If INVERSE is not nil \(called
 with a prefix arg) then an inverse filter is applied. For further details see
@@ -1895,7 +1905,7 @@ SOURCE-BUFFER arguments are ignored."
           (save-restriction
             (widen)
             (ecb-rebuild-methods-buffer-with-tagcache
-             (ecb--semantic-bovinate-toplevel t)))
+             (ecb--semantic-fetch-tags t)))
         (ecb-rebuild-methods-buffer)))
     (when (save-excursion
             (set-buffer ecb-methods-buffer-name)
@@ -2086,7 +2096,7 @@ semantic-reparse. This function is added to the hook
   ;; a mechanism where only the UPDATED-TAGS are used and only this ones are
   ;; updated. But for this we need also a tree-buffer-update which can update
   ;; single nodes without refreshing the whole tree-buffer like now.
-  (ecb-rebuild-methods-buffer-with-tagcache (ecb--semantic-bovinate-toplevel t)))
+  (ecb-rebuild-methods-buffer-with-tagcache (ecb--semantic-fetch-tags t)))
 
 
 (defun ecb-semantic-active-for-file (filename)
@@ -2138,7 +2148,7 @@ argument to not nil!"
              (get-buffer-window ecb-methods-buffer-name))
     ;; Set here `ecb-method-buffer-needs-rebuild' to t so we can see below if
     ;; `ecb-rebuild-methods-buffer-with-tagcache' was called auto. after
-    ;; `ecb--semantic-bovinate-toplevel'.
+    ;; `ecb--semantic-fetch-tags'.
     (setq ecb-method-buffer-needs-rebuild t)
 
     (let ((current-tagcache (and (ecb--semantic-active-p)
@@ -2147,8 +2157,8 @@ argument to not nil!"
                                    (save-excursion
                                      (save-restriction
                                        (widen)
-                                       (ecb--semantic-bovinate-toplevel t))))))
-      ;; If the `ecb--semantic-bovinate-toplevel' has done no reparsing but only
+                                       (ecb--semantic-fetch-tags t))))))
+      ;; If the `ecb--semantic-fetch-tags' has done no reparsing but only
       ;; used it´s still valid `semantic-toplevel-bovine-cache' then neither
       ;; the hooks of `semantic-after-toplevel-cache-change-hook' nor the
       ;; hooks in `semantic-after-partial-cache-change-hook' are evaluated and
@@ -2896,7 +2906,7 @@ be found or if the semanticdb is not active then nil is returned."
           ;; package/library.
           (delq nil
                 (mapcar (function (lambda (n)
-                                    (let ((r (ecb--semanticdb-find-result-nth
+                                    (let ((r (ecb--semanticdb-find-result-nth-with-file
                                               search-result n)))
                                       (if (and (cdr r)
                                                (stringp (cdr r))
@@ -3560,7 +3570,7 @@ edit-windows. Otherwise return nil."
 (defun ecb-dump-semantic-toplevel ()
   "Dump the current semantic-tags in special buffer and display them."
   (interactive)
-  (let ((tags (ecb-post-process-taglist (ecb--semantic-bovinate-toplevel t))))
+  (let ((tags (ecb-post-process-taglist (ecb--semantic-fetch-tags t))))
     (save-selected-window
       (set-buffer (get-buffer-create "ecb-dump"))
       (erase-buffer)

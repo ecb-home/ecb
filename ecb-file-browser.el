@@ -23,7 +23,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-file-browser.el,v 1.16 2004/03/13 19:17:10 berndl Exp $
+;; $Id: ecb-file-browser.el,v 1.17 2004/04/01 14:08:44 berndl Exp $
 
 ;;; Commentary:
 
@@ -1529,7 +1529,10 @@ should be displayed. For 1 and 2 the value of EDIT-WINDOW-NR is ignored."
         (progn
           (if (= 2 ecb-button)
               (when (tree-node-is-expandable node)
-                (tree-node-toggle-expanded node))
+                (tree-node-toggle-expanded node)
+                (ecb-exec-in-directories-window
+                 ;; Update the tree-buffer with optimized display of NODE
+                 (tree-buffer-update node)))                
             
             ;; Removing the element from the sources-cache and the
             ;; files-and-subdirs-cache
@@ -1539,11 +1542,11 @@ should be displayed. For 1 and 2 the value of EDIT-WINDOW-NR is ignored."
             (ecb-set-selected-directory (tree-node-get-data node) shift-mode)
             ;; if we have running an integrated speedbar we must update the
             ;; speedbar 
-            (ecb-directory-update-speedbar (tree-node-get-data node)))
+            (ecb-directory-update-speedbar (tree-node-get-data node))))
           
-          (ecb-exec-in-directories-window
-           ;; Update the tree-buffer with optimized display of NODE
-           (tree-buffer-update node)))
+;;           (ecb-exec-in-directories-window
+;;            ;; Update the tree-buffer with optimized display of NODE
+;;            (tree-buffer-update node)))
       (ecb-set-selected-source (tree-node-get-data node)
                                (ecb-combine-ecb-button/edit-win-nr ecb-button edit-window-nr)
 			       shift-mode))))
@@ -2074,8 +2077,9 @@ So you get a better overlooking. There are three choices:
 	("Filter"
          (ecb-popup-history-filter-by-ext "Filter by extension")
          (ecb-popup-history-filter-by-regexp "Filter by regexp")
-         (ecb-popup-history-filter-all-existing "No filter (all file-buffers)"))
+         (ecb-popup-history-filter-all-existing "No filter"))
         ("---")
+        (ecb-popup-history-filter-all-existing "Exactly all living file-buffers")
         (ecb-history-kill-buffer "Kill Buffer")
         (ecb-delete-source "Delete Sourcefile")
         ("---")

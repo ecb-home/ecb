@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-util.el,v 1.104 2004/03/14 19:05:47 berndl Exp $
+;; $Id: ecb-util.el,v 1.105 2004/04/01 14:08:43 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -84,6 +84,7 @@
 (silentcomp-defun thing-boundaries)
 (silentcomp-defun thing-symbol)
 
+(silentcomp-defun custom-file)
 
 ;; Some constants
 (defconst ecb-running-xemacs (string-match "XEmacs\\|Lucid" emacs-version))
@@ -397,6 +398,17 @@ another frame than the `ecb-frame'."
 
 ;; some basic advices
 
+(defun ecb-custom-file ()
+  "Filename of that file which is used by \(X)Emacs to store the
+customize-options."
+  (cond (ecb-running-xemacs
+         custom-file)
+        (ecb-running-emacs-21
+         (custom-file))
+        (t
+         (or custom-file
+             user-init-file))))
+
 (defadvice custom-save-all (around ecb)
   "Save the customized options completely in the background, i.e. the
 file-buffer where the value is saved \(see option `custom-file') is not parsed
@@ -407,6 +419,8 @@ by semantic and also killed afterwards."
             ;; we prevent parsing the custom-file
             (semantic-before-toplevel-bovination-hook (lambda ()
                                                         nil))
+            (semantic--before-fetch-tags-hook (lambda ()
+                                                nil))
             (semantic-after-toplevel-cache-change-hook nil)
             (semantic-after-partial-cache-change-hook nil))
         ;; now we do the standard task
@@ -416,13 +430,7 @@ by semantic and also killed afterwards."
         ;; updated with the contents of custom-file which is definitely not
         ;; desired.
         (ignore-errors
-          (kill-buffer (find-file-noselect (cond (ecb-running-xemacs
-                                                  custom-file)
-                                                 (ecb-running-emacs-21
-                                                  (custom-file))
-                                                 (t
-                                                  (or custom-file
-                                                      user-init-file)))))))
+          (kill-buffer (find-file-noselect (ecb-custom-file)))))
     ad-do-it))
 
 ;; assoc helpers
@@ -532,14 +540,15 @@ result will never end with the directory-separator! If SUBSTITUTE-ENV-VARS is
 not nil then in both PATH and FILENAME env-var substitution is done. If the
 `system-type' is 'cygwin32 then the path is converted to win32-path-style!"
   (when (stringp path)
-    (let (norm-path)    
+    (let (norm-path)
       (setq norm-path (if ecb-running-xemacs
                           (cond ((equal system-type 'cygwin32)
-                                 (mswindows-cygwin-to-win32-path path))
+                                 (mswindows-cygwin-to-win32-path
+                                  (expand-file-name path)))
                                 ((equal system-type 'windows-nt)
-                                 (ecb-fix-path path))
-                                (t path))
-                        path))
+                                 (expand-file-name (ecb-fix-path path)))
+                                (t (expand-file-name path)))
+                        (expand-file-name path)))
       ;; For windows systems we normalize drive-letters to downcase
       (setq norm-path (if (and (member system-type '(windows-nt cygwin32))
                                (> (length norm-path) 1)

@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: tree-buffer.el,v 1.140 2004/03/02 06:48:35 berndl Exp $
+;; $Id: tree-buffer.el,v 1.141 2004/04/01 14:08:43 berndl Exp $
 
 ;;; Commentary:
 
@@ -1143,7 +1143,10 @@ of CONTENT."
           (setq tree-buffer-nodes (cdr content)))
       (tree-buffer-build-tree-buffer-nodes))
     (tree-buffer-display-in-general-face)
-    (tree-buffer-highlight-node-data tree-buffer-highlighted-node-data)
+    (tree-buffer-highlight-node-data (or (and node
+                                              (tree-node-get-data node))
+                                         tree-buffer-highlighted-node-data)
+                                     node nil)
     (goto-char p)
     (set-window-start w ws)
     ;; let´s optimize the display of the expanded node NODE and it´s children.

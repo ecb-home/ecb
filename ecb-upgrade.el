@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-upgrade.el,v 1.72 2004/03/29 06:05:39 berndl Exp $
+;; $Id: ecb-upgrade.el,v 1.73 2004/04/01 14:08:43 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -176,7 +176,9 @@
 
 ;; Each NEWS-string should be a one-liner shorter than 70 chars
 (defconst ecb-upgrade-news
-  '(("2.23" . ("The command `ecb-toggle-layout' now has a prefix-argument"
+  '(("2.23" . ("New cedet1.0beta2 is supported."
+               "Distinction between functions and function-prototypes in the Methods-buffer"
+               "The command `ecb-toggle-layout' now has a prefix-argument"
                "Default tag-filters for certain files which are applied automatically"
                "Double-clicking the mouse-1-button now works with integrated speedbar"
                "A new hook `ecb-speedbar-before-activate-hook'"))
@@ -551,11 +553,18 @@ The car is the old option symbol and the cdr is a 2-element-list with:
   :group 'ecb-upgrade-internal
   :type 'string)
 
+(defun ecb-custom-file-writeable-p ()
+  (ignore-errors (file-writable-p (ecb-custom-file))))
+
+(defun ecb-customize-save-variable (option value)
+  (if (ecb-custom-file-writeable-p)
+      (customize-save-variable option value)
+    (customize-set-variable option value)))
 
 (defun ecb-option-set-default (option)
   "Save the ECB-option OPTION with current default value."
-  (customize-save-variable option
-                           (ecb-option-get-value option 'standard-value)))
+  (ecb-customize-save-variable option
+                               (ecb-option-get-value option 'standard-value)))
 
 (defun ecb-option-upgrade (old-option)
   "Upgrade the old ECB-option OLD-OPTION if the following conditions are ALL
@@ -601,7 +610,7 @@ result-list!"
       (when (not (equal new-value 'ecb-no-upgrade-conversion))
         ;; the old-value has been transformed successfully into the new type
         ;; so we can save it.
-        (customize-save-variable (nth 0 upgrade-elem) new-value))
+        (ecb-customize-save-variable (nth 0 upgrade-elem) new-value))
       ;; we return the value of the transforming-function even if it is
       ;; 'ecb-no-upgrade-conversion!
       (list new-value))))
@@ -623,7 +632,7 @@ after an ECB-upgrade.")
                     ecb-version))
     (setq ecb-old-ecb-version (ecb-option-get-value 'ecb-options-version
                                                     'saved-value))
-    (customize-save-variable 'ecb-options-version ecb-version)))
+    (ecb-customize-save-variable 'ecb-options-version ecb-version)))
   
 
 (defvar ecb-not-compatible-options nil
@@ -730,6 +739,13 @@ Note: This function upgrades only the renamed but not the incompatible options
   (if (or ecb-not-compatible-options ecb-renamed-options)
       (progn
         (with-output-to-temp-buffer "*ECB upgraded options*"
+          (when (and (or ecb-not-compatible-options ecb-renamed-options)
+                     (not (ecb-custom-file-writeable-p)))
+            (princ "Emacs can not save the upgraded options because the needed file\n")
+            (princ (if (ecb-custom-file)
+                       (concat (ecb-custom-file) " is not writeable!")
+                     "does not exist!"))
+            (princ "\nPlease ensure that the new values will be stored!\n\n"))
           (when ecb-not-compatible-options
             (princ "The values of the following options are incompatible with current type.\nECB has tried to transform the old-value to the new type. In cases where\nthis was not possible ECB has reset to the current default-value.")
             (princ "\n\n"))
@@ -838,11 +854,6 @@ options with their old \(before the upgrade/reset) and new values."
   (ecb-upgrade-not-compatible-options)
   (ecb-upgrade-renamed-options)
   (ecb-display-upgraded-options))
-
-;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: We should here check for the
-;; existens of either `custom-file' or - if this is not set - for
-;; `user-init-file' - if they do not exist then we must not try to write to
-;; them.
 
 ;; ----------------------------------------------------------------------
 ;; all needs for the requirements check

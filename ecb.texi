@@ -26,7 +26,7 @@
 @c GNU Emacs; see the file COPYING.  If not, write to the Free Software
 @c Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-@c $Id: ecb.texi,v 1.167 2004/03/25 18:14:04 berndl Exp $
+@c $Id: ecb.texi,v 1.168 2004/04/01 14:08:43 berndl Exp $
 
 @setfilename ecb.info
 
@@ -299,6 +299,7 @@ Displaying the trees of the ECB-windows with different styles
 * Style basics::                Basic knowledge about the styles
 * Ascii-based styles::          How to customize the ascii-styles
 * Tree-buffers with images::    Which images are used for the tree
+* Images for Methods-buffer::   Images for the tags in the Methods-buffer
 
 Entry points for Elisp programmers
 
@@ -5807,6 +5808,12 @@ Tag-classes which are completely hidden or excluded by the option
 regardless of the filters of this option!
 @end defopt
 
+@defopt display-image-icons-for-semantic-tags
+Display nice and pretty icons for semantic-tags in the Methods-buffer.
+This option takes only effect if Emacs can display images and if
+@code{ecb-tree-buffer-style} is set to @code{image}.
+@end defopt
+
 @defopt exclude-parents-regexp
 Regexp which parent classes should not be shown in the methods buffer
 (see also @code{ecb-show-parents}). If nil then all parents will be
@@ -9024,6 +9031,7 @@ images for drawing the tree-structure.
 * Style basics::                Basic knowledge about the styles
 * Ascii-based styles::          How to customize the ascii-styles
 * Tree-buffers with images::    Which images are used for the tree
+* Images for Methods-buffer::   Images for the tags in the Methods-buffer
 @end menu
 
 @node Style basics, Ascii-based styles, ,Tree-buffer styles
@@ -9145,7 +9153,7 @@ For the guide-style the face and color of the guide- and
 handle-symbols can be customized with the option
 @code{ecb-tree-guide-line-face} (default is the equal-named face).
 
-@node Tree-buffers with images, ,Ascii-based styles, Tree-buffer styles
+@node Tree-buffers with images, Images for Methods-buffer, Ascii-based styles, Tree-buffer styles
 @subsection Which images are used for the tree
 
 Depending on the value of @code{ecb-tree-buffer-style} and the
@@ -9168,16 +9176,16 @@ option to get all important details how and in which sequence ECB
 searches the directories of @code{ecb-tree-image-icons-directories}.
 
 ECB comes with predefined default-images usable for every tree-buffer
-and special images for the Directories-tree-buffer. They are defined
-in several different heights - so for the most senseful font-heights
-of a tree-buffer a fitting image-size should be available. The shipped
-images reside either in the subdirectory "ecb-images" of the
-ECB-installation or - if ECB is installed as regular XEmacs-package -
-in the ECB-etc data-directory (the directory returned by evaluating
-(locate-data-directory "ecb"). If you do not want to change the images
-then you normally have nothing to do because the default value of
-@code{ecb-tree-image-icons-directories} points already to the correct
-image-directories.
+and special images for the Directories- and the Methods-tree-buffer.
+They are defined in several different heights - so for the most
+senseful font-heights of a tree-buffer a fitting image-size should be
+available. The shipped images reside either in the subdirectory
+"ecb-images" of the ECB-installation or - if ECB is installed as
+regular XEmacs-package - in the ECB-etc data-directory (the directory
+returned by evaluating (locate-data-directory "ecb"). If you do not
+want to change the images then you normally have nothing to do because
+the default value of @code{ecb-tree-image-icons-directories} points
+already to the correct image-directories.
 
 @subsubsection A special note for XEmacs
 
@@ -9206,6 +9214,17 @@ whereever your emacs-setup is located):
 Then ECB uses images without any special work-around with XEmacs too.
 Just try it - if the tree-buffers look ugly then the XEmacs-bug is
 probably not fixed correctly.
+
+@subsection Special images for the Methods-buffer
+@node Images for Methods-buffer, ,Tree-buffers with images, Tree-buffer styles
+
+ECB can display all the semantic-tags in the Method-buffer with
+special icons for methods, variables and classes - each of them with a
+different icon dependend of the protection of the tag. This feature
+can be disabled/enabled via the option
+@code{ecb-display-image-icons-for-semantic-tags}. All the special
+images are located in that directory where the option
+@code{ecb-tree-image-icons-directories} point to for methods.
 
 @node Using semanticdb, , Tree-buffer styles, Tips and tricks
 @section Using semanticdb to jump to type-tags defined in other files
