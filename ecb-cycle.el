@@ -1,6 +1,6 @@
 ;;; ecb-cycle.el --- cycle buffers through ecb windows.
 
-;; $Id: ecb-cycle.el,v 1.2 2002/01/26 01:12:22 burtonator Exp $
+;; $Id: ecb-cycle.el,v 1.3 2002/01/26 01:22:42 burtonator Exp $
 
 ;; Copyright (C) 2000-2003 Free Software Foundation, Inc.
 ;; Copyright (C) 2000-2003 Kevin A. Burton (burton@openprivacy.org)
@@ -37,9 +37,26 @@
 
 ;;; TODO:
 ;;
-;; Add completion support so that I can do an ecb-cycle-set-compilation-buffer
+;; - Add completion support so that I can do an ecb-cycle-set-compilation-buffer
 ;; which will use completion to prompt for the buffer.  This will require us to
 ;; get the index and compilation buffer list interactively.
+;;
+;; - What is the pattern we should use for cycling through other windows?
+;;
+;;   - ecb-cycle-X-buffers (select the next X buffer)
+;;   - ecb-cycle-set-X-buffer (set the X buffer using completion)
+;;
+;; - How do we setup the menubar?
+;;
+;;          - ECB
+;;                Cycle
+;;                     - Forward Compilation Buffer
+;;                     - Set Compilation Buffer
+;;
+;; - What do we use for key bindings?
+;;
+;; - We need an easier way to setup completion and a better way to get the
+;;   index.
 
 ;;; Code:
 
