@@ -26,7 +26,7 @@
 @c GNU Emacs; see the file COPYING.  If not, write to the Free Software
 @c Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-@c $Id: ecb.texi,v 1.198 2004/12/10 12:57:11 berndl Exp $
+@c $Id: ecb.texi,v 1.199 2004/12/20 16:37:00 berndl Exp $
 
 @setfilename ecb.info
 
@@ -458,7 +458,11 @@ So, if the cedet 1.0 suite is loaded then the min- and max-version of
 semantic, eieio and speedbar (mentioned in the Requirements-section of
 the file @file{README}) have no relevance! If the new cedet 1.0 suite
 should be used then just install and load cedet 1.0 like described in
-the cedet-installation-instructions and go one with step 3.
+the cedet-installation-instructions and go one with step 3. But ensure
+you have loaded - as described in the cedet-@file{INSTALL}-file
+- the file @file{/path/to/cedet/common/cedet.el} because otherwise
+cedet is not properly installed and ECB can not savely recognize that
+the new cedet-suite is loaded and should be used.
 
 @enumerate
 
@@ -5375,66 +5379,19 @@ If you change this during ECB is activated you must deactivate and
 activate ECB again to take effect
 @end defopt
 
-@defopt show-node-info-in-minibuffer
-Node info to display in a tree-buffer. Define which node info should
-displayed in a tree-buffer after mouse moving over the node or after a
-shift click onto the node.
-
-For every tree-buffer you can define ``when'' node info should be
-displayed:
-
-@itemize @minus
-@item @code{always}:
-Node info is displayed by moving with the mouse over a node.
-@item @code{if-too-long}:
-Node info is only displayed by moving with the mouse over a node does
-not fit into the window-width of the tree-buffer window. In the ECB
-directories buffer this means also if a node is shortened or if the
-node has an alias (see @code{ecb-source-path}).
-@item @code{shift-click}:
-Node info is only displayed after a shift click with the primary mouse
-button onto the node.
-@item @code{never}:
-Node info is never displayed.
-@end itemize
-
-For every tree-buffer you can define what info should be displayed:
-
-@itemize @bullet
-@item Directory-buffer:
-@itemize @minus
-@item @code{name}: Only the full node-name is displayed.
-@item @code{path}: The full-path of the node is displayed.
-@end itemize
-
-@item Sources-buffer:
-@itemize @minus
-@item @code{name}: Only the full node-name is displayed.
-@item @code{file-info}: File infos for this file are displayed.
-@item @code{file-info-full}: Fill infos incl. full path for this file are
-displayed.
-@end itemize
-@item History-buffer: see Directories-buffer.
-@item Methods-buffer:
-@itemize @minus
-@item @code{name}: Only the full node name is displayed.
-@item @code{name+type}: The full name + the type of the node (function, class,
-variable) is displayed.
-@end itemize
-@end itemize
-
-Do NOT set this option directly via setq but use always customize!
-@end defopt
 
 @defopt tree-RET-selects-edit-window
-In which tree-buffers RET should finally select an edit-window. If one
-of the symbols @code{ecb-directories-buffer-name},
-@code{ecb-sources-buffer-name}, @code{ecb-methods-buffer-name} or
-@code{ecb-history-buffer-name} is contained in this list then hitting
-RET in the associated tree-buffer selects as last action the right
-edit-window otherwise only the right action is performed (opening a
-new source, selecting a method etc.) but point stays in the
-tree-buffer.
+In which tree-buffers RET should finally select an edit-window. If a
+buffer (either its name or the variable-symbol which holds the name)
+is contained in this list then hitting RET in the associated
+tree-buffer selects as last action the right edit-window otherwise
+only the right action is performed (opening a new source, selecting a
+method etc.) but point stays in the tree-buffer.
+
+The buffer-name can either be defined as plain string or with a symbol
+which contains the buffer-name as value. The latter one is recommended
+for the builtin ECB-tree-buffers because then simply the related
+option-symbol can be used.
 
 A special remark for the @code{ecb-directories-buffer-name}: Of course
 here the edit-window is only selected if the name of the current
@@ -5448,6 +5405,7 @@ With @code{ecb-toggle-RET-selects-edit-window} the behavior of RET can
 be changed fast and easy in a tree-buffer without customizing this
 option, but of course not for future Emacs sessions!
 @end defopt
+
 
 @defopt tree-buffer-style
 The style of the tree-buffers.
@@ -5567,34 +5525,38 @@ expand an item.
 @end defopt
 
 @defopt tree-image-icons-directories
-Directories where the images for the tree-buffer can be found.
-This is a five-element list where:
-@enumerate
-@item element: Default directory where the default images for the
-tree-buffer can be found. It should contain an image for every name of
+Directories where the images for the tree-buffer can be found. This is
+a cons cell where:
+
+car: Default directory where the default images for the tree-buffer
+can be found. It should contain an image for every name of
 @code{tree-buffer-tree-image-names}. The name of an image-file must
 be: ``ecb-<NAME of TREE-BUFFER-TREE-IMAGE-NAMES>.<ALLOWED
 EXTENSIONS>''.
-@item element: Directory for special images for the Directories-buffer.
-@item element: Directory for special images for the Sources-buffer.
-@item element: Directory for special images for the Methods-buffer.
-@item element: Directory for special images for the History-buffer.
-@end enumerate
 
-The directories of the element 2 - 5 are additional image-directories
-which are searched first for images needed for the respective
-tree-buffer. If the image can not be found in this directory then the
-default-directory (1. element) is searched. If the image can't even
-found there the related ascii-symbol is used.
+cdr: This is a list where each element is a cons again with: car is
+the buffer name of the tree-buffer for which a special image-path
+should be used. The buffer-name can either be defined as plain string
+or with a symbol which contains the buffer-name as value. The latter
+one is recommended for the builtin ECB-tree-buffers because then
+simply the related option-symbol can be used (e.g. the symbol
+@code{ecb-directories-buffer-name}). The cdr is the the full-path of
+an additional image-directorie which is searched first for images
+needed for the related tree-buffer. If the image can not be found in
+this directory then the default-directory (see above) is searched. If
+the image can't even be found there the related ascii-symbol is used -
+which is defined in @code{tree-buffer-tree-image-names}. If a
+tree-buffer is not contained in this list then there is no additional
+special image-directory for it.
 
-All but the first element (the default directory) can be nil.
-
-ECB comes with images in four diffenent heights - so for the most
-senseful font-heights of a tree-buffer a fitting image-size should be
-available. The images reside either in the subdirectory ``ecb-images''
-of the ECB-installation or - if ECB is installed as regular
-XEmacs-package - in the ECB-etc data-directory.
+ECB comes with predefined images in several different heights - so for
+the most senseful font-heights of a tree-buffer a fitting image-size
+should be available. The images reside either in the subdirectory
+``ecb-images'' of the ECB-installation or - if ECB is installed as
+regular XEmacs-package - in the ECB-etc data-directory (the directory
+returned by (locate-data-directory ``ecb'').
 @end defopt
+
 
 @defopt tree-incremental-search
 Enable incremental search in the ECB-tree-buffers. For a detailed
@@ -5642,9 +5604,20 @@ If this option is changed the new value takes first effect after deactivating
 ECB and then activating it again!
 @end defopt
 
-@defopt truncate-lines
-Truncate lines in ECB buffers. If you change this during ECB is
-activated you must deactivate and activate ECB again to take effect.
+@defopt tree-truncate-lines
+Truncate lines in ECB buffers. If a buffer (either its name or the
+variable-symbol which holds the name) is contained in this list then
+line-truncation is switched on for this buffer otherwise it is off.
+
+The buffer-name can either be defined as plain string or with a symbol
+which contains the buffer-name as value. The latter one is recommended
+to switch on line-truncation for one of the builtin ECB-tree-buffers
+because then simply the related option-symbol can be used. To truncate
+lines in the builtin directories tree-buffer just add the symbol
+@code{ecb-directories-buffer-name} to this option.
+
+If you change this during ECB is activated you must deactivate and
+activate ECB again to take effect.
 @end defopt
 
 @defopt truncate-long-names
@@ -5922,7 +5895,40 @@ the whole menu can be re-arranged with
 @code{ecb-directories-menu-sorter}.
 @end defopt
 
+@defopt directories-show-node-info
+When to display which node-info in the directories-buffer. Define
+which node info should displayed after moving the mouse over a node
+(or after a shift click onto the node) in the directories-buffer.
 
+You can define ``when'' a node-info should be displayed:
+
+@itemize @minus
+@item always:
+Node info is displayed by moving with the mouse over a node.
+
+@item if-too-long:
+Node info is only displayed by moving with the mouse over a node does
+not fit into the window-width of the tree-buffer window. In the ECB
+directories buffer this means also if a node is shortend or if the
+node has an alias (see @code{ecb-source-path}).
+
+@item shift-click:
+Node info is only displayed after a shift click with the primary mouse
+button onto the node.
+
+@item never:
+Node info is never displayed.
+@end itemize
+
+You can define what info should be displayed:
+
+@itemize @minus
+@item name: Only the full node-name is displayed.
+@item path: The full-path of the node is displayed.
+@end itemize
+
+Do NOT set this option directly via setq but use always customize!
+@end defopt
 
 @defopt display-default-dir-after-start
 Automatically display current default-directory after activating ECB.
@@ -6250,6 +6256,24 @@ fine granularity to exclude the sources of certain directories from
 the read-only state-check.
 @end defopt
 
+@defopt sources-show-node-info
+When to display which node-info in the sources-buffer. Define which
+node info should displayed after moving the mouse over a node (or
+after a shift click onto the node) in the sources-buffer.
+
+You can define ``when'' a node-info should be displayed: See
+@code{ecb-directories-show-node-info} for the possible choices.
+
+You can define what info should be displayed:
+@itemize @minus
+@item name: Only the full node-name is displayed.
+@item file-info: File infos for this file are displayed.
+@item file-info-full: Fill infos incl. full path for this file are displayed.
+@end itemize
+
+Do NOT set this option directly via setq but use always customize!
+@end defopt
+
 
 @defopt sources-sort-ignore-case
 Ignore case for sorting the source-files of the Sources-buffer. See
@@ -6558,6 +6582,29 @@ contains for all modes which distinct between prototypes and real
 functions/methods two entries for the tag-type 'function - see the
 documentation of this option.
 @end defopt
+
+@defopt methods-show-node-info
+When to display which node-info in the methods-buffer. Define which
+node info should displayed after moving the mouse over a node (or
+after a shift click onto the node) in the methods-buffer.
+
+You can define ``when'' a node-info should be displayed: See
+@code{ecb-directories-show-node-info} for the possible choices.
+
+You can define what info should be displayed:
+@itemize @minus
+@item name:
+Only the full node name is displayed.
+
+@item name+type:
+The full name + the type of the node (function, class, variable) is
+displayed.
+@end itemize
+
+Do NOT set this option directly via setq but use always customize!
+@end defopt
+
+
 
 @defopt post-process-semantic-taglist
 Define mode-dependent post-processing for the semantic-taglist. This
@@ -6979,6 +7026,21 @@ Per default the dynamic user-extensions are added in front of the
 static extensions of @code{ecb-history-menu-user-extension} but the
 whole menu can be re-arranged with @code{ecb-history-menu-sorter}.
 @end defopt
+
+@defopt history-show-node-info
+When to display which node-info in the history-buffer. Define which
+node info should displayed after moving the mouse over a node (or
+after a shift click onto the node) in the history-buffer.
+
+You can define ``when'' a node-info should be displayed: See
+@code{ecb-directories-show-node-info} for the possible choices.
+
+You can define what info should be displayed: See
+@code{ecb-directories-show-node-info} for the possible choices.
+
+Do NOT set this option directly via setq but use always customize!
+@end defopt
+
 
 @defopt history-sort-ignore-case
 Ignore case for sorting the history-entries. See also
@@ -8179,6 +8241,32 @@ URL where download-able ECB-versions are located. The ECB-archive-file
 Note: Normally this URL should never change but who knows...
 @end defopt
 
+@defopt gzip-setup
+Configuration for the gzip-utility. For a description about the
+possible settings see @code{ecb-wget-setup}.
+@end defopt
+
+@defopt tar-setup
+Configuration for the tar-utility. For a description about the
+possible settings see @code{ecb-wget-setup}.
+@end defopt
+
+@defopt wget-setup
+Configuration for the wget-utility. Value is a cons-cell where:
+
+@itemize @bullet
+
+@item
+car is the name of the wget-executable - if the executable can not be
+found in the @var{PATH} then it must be a full path.
+
+@item
+cdr is the path type of the file-arguments of this binary. Possible
+values are @code{cygwin}, @code{windows} and @code{other} whereas the
+latter one is used for all Unix, Linux, Mac OS etc... If @code{cygwin} is
+set then the cygpath-utility must be in the PATH!
+@end itemize
+@end defopt
 
 @node ecb-help, ecb-eshell, ecb-download, Customizable options
 @subsection Group ecb-help
@@ -8260,7 +8348,7 @@ Synchronize eshell with the default-directory of current
 source-buffer. The synchronization is done by
 @code{ecb-eshell-current-buffer-sync} which can be called
 interactively but normally it is called autom. by the
-@code{ecb-current-buffer-sync-hook}.
+@code{ecb-current-buffer-sync-hook-internal}.
 @end defopt
 
 @node ecb-speedbar, ecb-non-semantic, ecb-eshell, Customizable options
@@ -12566,6 +12654,17 @@ I have encountered some problems with the display of the VC-state in
 the tree-buffers.
 @tab @tab
 See also @ref{Version-control support} for hints what you can do.
+
+@item @tab @tab
+
+@item
+I get errors when trying to download new ECB with
+@code{ecb-download-ecb}.
+@tab @tab
+Ensure that the ECB-configuration of these tools is correct for your
+system (see @code{ecb-wget-setup}, @code{ecb-gzip-setup} and
+@code{ecb-tar-setup}).
+
 
 @end multitable
 
