@@ -26,7 +26,7 @@
 ;;
 ;; Contains all online-help for ECB (stolen something from recentf.el)
 
-;; $Id: ecb-help.el,v 1.46 2001/09/08 16:18:06 berndl Exp $
+;; $Id: ecb-help.el,v 1.47 2001/09/26 16:08:35 berndl Exp $
 
 ;;; Code
 
@@ -649,13 +649,14 @@ a backtrace-buffer and inserts the contents of that."
 (defun ecb-problem-report-list-all-variables()
   "List all variables starting with `ecb-' and some other variables which
 could be interesting for support."
-  (let ((emacs-vars `(semantic-after-toplevel-bovinate-hook
-                     pre-command-hook
-                     post-command-hook
-                     after-save-hook
-                     help-mode-hook
-                     ,(if (boundp 'ediff-quit-hook)
-                         'ediff-quit-hook)))
+  (let ((emacs-vars `(semantic-after-toplevel-cache-change-hook
+                      semantic-clean-token-hooks
+                      pre-command-hook
+                      post-command-hook
+                      after-save-hook
+                      help-mode-hook
+                      ,(if (boundp 'ediff-quit-hook)
+                           'ediff-quit-hook)))
         ecb-vars)
     (mapatoms
      (lambda (symbol)

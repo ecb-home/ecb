@@ -54,7 +54,7 @@
 ;; The latest version of the ECB is available at
 ;; http://home.swipnet.se/mayhem/ecb.html
 
-;; $Id: ecb.el,v 1.151 2001/09/02 19:36:28 berndl Exp $
+;; $Id: ecb.el,v 1.152 2001/09/26 16:08:35 berndl Exp $
 
 ;;; Code:
 
@@ -63,7 +63,7 @@
 
 (if (not (boundp 'semantic-after-toplevel-cache-change-hook))
     (error "ECB requires a semantic-version >= 1.40beta7!"))
-(message "ECB uses semantic %s" semantic-version)
+(message "ECB uses semantic %s and eieio %s" semantic-version eieio-version)
 (setq semantic-load-turn-everything-on nil)
 (require 'semantic-load)
 
@@ -1826,9 +1826,9 @@ That is remove the unsupported :help stuff."
       :help "Go to the first edit-window"
       ])
     (ecb-menu-item
-     ["Edit-window 2 \(if splitted\)"
+     ["Edit-window 2"
       ecb-goto-window-edit2
-      :active t
+      :active (ecb-edit-window-splitted)
       :help "Go to the second edit-window \(if splitted\)"
       ])
     (ecb-menu-item
