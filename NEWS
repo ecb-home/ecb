@@ -2,8 +2,11 @@
 
 ** Fixed bugs:
 
-*** The commands of `winner-mode'are now only forbidden in the ECB-frame but work
-    in any other frame.
+*** The adviced version of `other-window' now works correct too if a
+    minibuffer-window is active.
+
+*** The commands of `winner-mode' are now only forbidden in the ECB-frame
+    but work in any other frame.
 
 *** `scroll-all-mode' now works correct in other frames than the ECB-frame.
 

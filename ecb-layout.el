@@ -105,7 +105,7 @@
 ;; - `ecb-with-some-adviced-functions'
 ;;
 
-;; $Id: ecb-layout.el,v 1.158 2003/03/10 10:18:02 berndl Exp $
+;; $Id: ecb-layout.el,v 1.159 2003/03/14 17:33:20 berndl Exp $
 
 ;;; Code:
 
@@ -1266,31 +1266,49 @@ The behavior depends on `ecb-other-window-jump-behavior'."
                (if (= direction 1)
                    (if (ecb-edit-window-splitted)
                        (select-window (next-window))
-                     (if (and (equal ecb-other-window-jump-behavior 'edit-and-compile)
+                     (if (and (equal ecb-other-window-jump-behavior
+                                     'edit-and-compile)
                               ecb-compile-window)
                          (ignore-errors
-                           (select-window ecb-compile-window))))
-                 (if (and (equal ecb-other-window-jump-behavior 'edit-and-compile)
-                          ecb-compile-window)
-                     (ignore-errors
-                       (select-window ecb-compile-window))
-                   (if (ecb-edit-window-splitted)
-                       (select-window (next-window))))))
-              ((ecb-point-in-compile-window)
-               (ecb-select-edit-window)
-               (if (ecb-edit-window-splitted)
-                   (if (= direction -1)
-                       (select-window (next-window)))))
-              ((equal (ecb-point-in-edit-window) 2)
-               (if (= direction 1)
+                           (select-window ecb-compile-window))
+                       (if (> (minibuffer-depth) 0)
+                           (select-window (minibuffer-window ecb-frame)))))
+                 (if (> (minibuffer-depth) 0)
+                     (select-window (minibuffer-window ecb-frame))
                    (if (and (equal ecb-other-window-jump-behavior 'edit-and-compile)
                             ecb-compile-window)
                        (ignore-errors
                          (select-window ecb-compile-window))
-                     (ecb-select-edit-window))
+                     (if (ecb-edit-window-splitted)
+                         (select-window (next-window)))))))
+              ((ecb-point-in-compile-window)
+               (if (and (= direction 1) (> (minibuffer-depth) 0))
+                   (select-window (minibuffer-window ecb-frame))
+                 (ecb-select-edit-window)
+                 (if (and (ecb-edit-window-splitted) (= direction -1))
+                     (select-window (next-window)))))
+              ((equal (ecb-point-in-edit-window) 2)
+               (if (= direction 1)
+                   (if (and (equal ecb-other-window-jump-behavior
+                                   'edit-and-compile)
+                            ecb-compile-window)
+                       (ignore-errors
+                         (select-window ecb-compile-window))
+                     (if (> (minibuffer-depth) 0)
+                         (select-window (minibuffer-window ecb-frame))
+                       (ecb-select-edit-window)))
                  (ecb-select-edit-window)))
               (t
-               (ecb-select-edit-window)))))))
+               (if (equal (selected-window) (minibuffer-window ecb-frame))
+                   (if (= direction -1)
+                       (if (and (equal ecb-other-window-jump-behavior
+                                       'edit-and-compile)
+                                ecb-compile-window)
+                           (ignore-errors
+                             (select-window ecb-compile-window))
+                         (ecb-select-edit-window t))
+                     (ecb-select-edit-window))
+                 (ecb-select-edit-window))))))))
 
 (defadvice delete-windows-on (around ecb)
   "The ECB-version of `delete-windows-on'. Works exactly like the original

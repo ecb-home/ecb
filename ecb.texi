@@ -19,7 +19,7 @@
 @c Free Software Foundation, Inc., 59 Temple Place - Suite 330,
 @c Boston, MA 02111-1307, USA.
 
-@c $Id: ecb.texi,v 1.83 2003/03/10 09:09:45 berndl Exp $
+@c $Id: ecb.texi,v 1.84 2003/03/14 17:33:18 berndl Exp $
 
 @setfilename ecb.info
 
@@ -5357,7 +5357,7 @@ restarting Emacs the new package(s) can be activated.
 @end example
 
 @strong{Note1}: "P author-version must be [x y]" means, that ECB requires
-package P in a version-number >= x and <= <.
+package P in a version-number >= x and <= y.
 
 @strong{Note2}: By setting the option @code{ecb-version-check} to
 @code{nil} you can prevent ECB from checking correct versions of
