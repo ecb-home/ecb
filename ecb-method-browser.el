@@ -24,7 +24,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-method-browser.el,v 1.63 2004/12/10 12:54:41 berndl Exp $
+;; $Id: ecb-method-browser.el,v 1.64 2004/12/20 17:00:50 berndl Exp $
 
 ;;; Commentary:
 
@@ -844,6 +844,31 @@ by semantic!"
                 (repeat :tag "Node-type list"
                         (symbol :tag "Node-type"))))
 
+(defcustom ecb-methods-show-node-info '(if-too-long . name+type)
+  "*When to display which node-info in the methods-buffer.
+Define which node info should displayed after moving the mouse over a node
+\(or after a shift click onto the node) in the methods-buffer.
+
+You can define \"when\" a node-info should be displayed:
+See `ecb-directories-show-node-info' for the possible choices.
+
+You can define what info should be displayed:
+- name: Only the full node name is displayed.
+- name+type: The full name + the type of the node \(function, class,
+  variable) is displayed.
+
+Do NOT set this option directly via setq but use always customize!"
+  :group 'ecb-methods
+  :type '(cons :tag "* Method-buffer"
+               (choice :tag "When"
+                       (const :tag "Always" :value always)
+                       (const :tag "If too long" :value if-too-long)
+                       (const :tag "After shift click" :value shift-click)
+                       (const :tag "Never" :value never))
+               (choice :tag "What"
+                       (const :tag "Node-name" :value name)
+                       (const :tag "Node-name + type" :value name+type))))
+
 
 (defcustom ecb-exclude-parents-regexps nil
   "*Regexps which parent classes should not be shown in the methods buffer.
@@ -1258,6 +1283,28 @@ ECB-methods-window is not visible in current layout."
       (ecb-maximize-window-speedbar)
     (ecb-display-one-ecb-buffer ecb-methods-buffer-name)))
 
+(defun ecb-set-methods-buffer ()
+  (let ((set-methods-buffer
+         (not (equal ecb-use-speedbar-instead-native-tree-buffer 'method))))
+    ;; first we act depending on the value of
+    ;; ecb-use-speedbar-instead-native-tree-buffer
+    (when (not set-methods-buffer)
+      (condition-case error-data
+          (ecb-set-speedbar-buffer)
+        ;; setting the speedbar buffer has failed so we set
+        ;; set-method-buffer to t ==> standard-methods-buffer is set!
+        (error (message "%s" error-data)
+               (setq set-methods-buffer t))))
+    ;; maybe we need to set the standard methods buffer:
+    ;; - if ecb-use-speedbar-instead-native-tree-buffer is not 'method or
+    ;; - if setting the speedbar buffer has failed.
+    (when set-methods-buffer
+      (if (null ecb-use-speedbar-instead-native-tree-buffer)
+          (ignore-errors (ecb-speedbar-deactivate)))
+      (ecb-with-dedicated-window ecb-methods-buffer-name 'ecb-set-methods-buffer
+        (switch-to-buffer ecb-methods-buffer-name)))))
+
+
 (defun ecb-create-node (parent-node display name data type)
   (if (eq 'hidden display)
       nil
@@ -1330,14 +1377,6 @@ PARENT-TAG is only propagated to `ecb-add-tag-bucket'."
 	    (setcdr buckets (cddr buckets)))
 	(ecb-find-add-tag-bucket node type display sort-method
 				   (cdr buckets) parent-tag no-bucketize)))))
-
-
-(defun ecb-format-bucket-name (name)
-  (let ((formatted-name (concat (nth 0 ecb-bucket-node-display)
-				name
-				(nth 1 ecb-bucket-node-display))))
-    (ecb-merge-face-into-text formatted-name (nth 2 ecb-bucket-node-display))
-    formatted-name))
 
 (defsubst ecb-forbid-tag-display (tag)
   (ecb--semantic--tag-put-property tag 'hide-tag t))
@@ -1619,11 +1658,10 @@ abstract-static-tag-protection to an existing icon-file-name.")
 ;; can test the whole stuff. If Eric has added such icon-display to semantic
 ;; then we can throw away all this stuff and just using plain-tag-name as
 ;; node-name without any modification.
-(defun ecb-update-tag-node (tag node &optional parent-tag no-bucketize)
-  "Updates a node containing a tag."
-  (let* ((children (ecb--semantic-tag-children-compatibility
-                    tag ecb-show-only-positioned-tags))
-         (plain-tag-name (ecb-get-tag-name tag parent-tag))
+
+(defun ecb-displayed-tag-name (tag &optional parent-tag)
+  "Return the tag-name of TAG as it will be displayed in the methods-buffer."
+  (let* ((plain-tag-name (ecb-get-tag-name tag parent-tag))
          (has-protection (member (ecb-first plain-tag-name)
                                  '(?- ?# ?+)))
          (icon-name (ecb-get-icon-for-tag
@@ -1644,10 +1682,16 @@ abstract-static-tag-protection to an existing icon-file-name.")
                          (and (not (member (ecb--semantic-tag-class tag)
                                            '(type function variable)))
                               'unknown)
-                         (ecb--semantic-tag-protection tag parent-tag))))
-         (tag-name (ecb-tag-generate-node-name plain-tag-name
-                                               (if has-protection 1 -1)
-                                               icon-name)))
+                         (ecb--semantic-tag-protection tag parent-tag)))))
+    (ecb-tag-generate-node-name plain-tag-name
+                                (if has-protection 1 -1)
+                                icon-name)))
+
+(defun ecb-update-tag-node (tag node &optional parent-tag no-bucketize)
+  "Updates a node containing a tag."
+  (let ((children (ecb--semantic-tag-children-compatibility
+                    tag ecb-show-only-positioned-tags))
+        (tag-name (ecb-displayed-tag-name tag parent-tag)))
     (tree-node-set-name node tag-name)
     (unless (eq 'function (ecb--semantic-tag-class tag))
       (ecb-add-tags node children tag no-bucketize)
@@ -3608,19 +3652,18 @@ nil too then no post-actions are performed."
 (defun ecb-mouse-over-method-node (node &optional window no-message click-force)
   "Displays help text if mouse moves over a node in the method buffer or if
 CLICK-FORCE is not nil and always with regards to the settings in
-`ecb-show-node-info-in-minibuffer'. NODE is the node for which help text
-should be displayed, WINDOW is the related window, NO-MESSAGE defines if the
-help-text should be printed here."
+`ecb-methods-show-node-info'. NODE is the node for which help text should be
+displayed, WINDOW is the related window, NO-MESSAGE defines if the help-text
+should be printed here."
   (let ((str (when (or click-force
                        (ecb-show-minibuffer-info node window
-                                                 ecb-methods-buffer-name))
+                                                 (car ecb-methods-show-node-info)))
                (concat
                 (tree-node-get-name node)
                 (if (and (= ecb-methods-nodetype-tag
                             (tree-node-get-type node))
                          (tree-node-get-data node)
-                         (equal (ecb-show-node-info-what ecb-methods-buffer-name)
-                                'name+type))
+                         (equal (cdr ecb-methods-show-node-info) 'name+type))
                     (concat ", "
                             (symbol-name (ecb--semantic-tag-class
                                           (tree-node-get-data node))))
@@ -4042,6 +4085,7 @@ pattern.")
 
 (defun ecb-create-methods-tree-buffer ()
   "Create the tree-buffer for methods."
+  (ecb-tree-buffers-add ecb-methods-buffer-name 'ecb-methods-buffer-name)
   (tree-buffer-create
    ecb-methods-buffer-name
    ecb-frame
@@ -4051,6 +4095,7 @@ pattern.")
    'ecb-tree-buffer-node-expand-callback
    'ecb-tree-buffer-node-collapsed-callback
    'ecb-mouse-over-method-node
+   t ;; highlight each node when moving mouse over it
    'ecb-compare-methods-buffer-node-data
    (list ecb-methods-nodetype-bucket)
    nil
@@ -4058,15 +4103,18 @@ pattern.")
    (list (cons ecb-methods-nodetype-tag ecb-methods-menu-title-creator)
          (cons ecb-methods-nodetype-bucket ecb-methods-menu-title-creator)
          (cons ecb-methods-nodetype-externtag ecb-methods-menu-title-creator))
-   (nth 2 ecb-truncate-lines)
+   (ecb-member-of-symbol/value-list ecb-methods-buffer-name
+                                    ecb-tree-truncate-lines)
    t
    ecb-tree-indent
    ecb-tree-incremental-search
    ecb-methods-incr-searchpattern-node-prefix
    ecb-tree-navigation-by-arrow
    ecb-tree-easy-hor-scroll
-   (nth 0 ecb-tree-image-icons-directories)
-   (nth 3 ecb-tree-image-icons-directories)
+   (car ecb-tree-image-icons-directories)
+   (ecb-member-of-symbol/value-list ecb-methods-buffer-name
+                                    (cdr ecb-tree-image-icons-directories)
+                                    'car 'cdr)
    ecb-tree-buffer-style
    ecb-tree-guide-line-face
    nil
