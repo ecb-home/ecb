@@ -115,8 +115,8 @@ available."
                   
                   ;; we have found the java-sourcefile. So let´s display its
                   ;; contents in the method-buffer of ECB
-                  (ecb-exec-in-methods-window
-                   (ecb-set-selected-source java-file-name nil t nil))))
+                  (ecb-exec-in-window ecb-methods-buffer-name
+                    (ecb-set-selected-source java-file-name nil t nil))))
             
             (ecb-error "Can not parse the thing at point!")))
       (message "You need JDE >= 2.2.6 and Senator for using this feature!"))))

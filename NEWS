@@ -1,3 +1,50 @@
+* Changes for ECB version 2.32
+
+** New native ECB-display interactor for the semantic-analyzer
+   There is a new tree-buffer ECB-analyse which displays the tags and
+   informations of the semanic-analyzer in a smooth way. There are already
+   some new prebuild layouts which contain this new tree-buffer (TODO). But of
+   course it can be added to own build layouts (either via the command
+   `ecb-create-new-layout' or via a elisp-rogrammed new layout).
+   
+   TODO: + adding new section in the texi-manual
+         + enhance ecb-create-layout.el
+	 + fixes all docstring of ecb-analyse.el
+
+** Renamed options or options with new type
+   The following options have been renamed:
+   ecb-truncate-lines --> ecb-tree-truncate-lines
+
+   The following options have now a new type:
+   ecb-tree-RET-selects-edit-window
+   ecb-tree-image-icons-directories
+
+   ECB automatically upgrades the old values to the new options!
+
+** Better assistance fixing errors related to semantic-load problems
+   Often users report errors somehow related to problems running ECB with the
+   right semantic-version. There are different reasons for this:
+   - People do not install the cedet-suite as described in the INSTALL-file of
+     cedet.
+   - People byte-compile ECB with another semantic (also eieio and speedbar)
+     version then loaded into Emacs.
+   All of them prevent ECB from working correctly.
+
+   Now detects the error at startup-time and assists the user in finding the
+   reason of the problem and how to fix it.
+
+** More robust downloading of new ECB from within Emacs
+   Now `ecb-download-ecb' should work also with native Windows-XEmacs and also
+   when ECB is installed in a directory which name contains spaces. If there
+   are still problems in running this command please check the new options
+   `ecb-wget-setup', `ecb-gzip-setup' and `ecb-tar-setup'.
+
+** Fixed Bugs
+
+*** Handles not anymore existing files in the stealthy tasks (TODO!!!!!)
+
+
+
 * Changes for ECB version 2.31
 
 ** Fixed bugs

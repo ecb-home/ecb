@@ -1240,11 +1240,8 @@ If `window-system' is nil then a simple message is displayed in the echo-area."
 ;;   (setq ecb-window-config-before-msg-display
 ;;         (ecb-current-window-configuration))
 ;;   (with-output-to-temp-buffer msg-title
-;;     (message "Klausi-1")
 ;;     (widget-insert msg-content)
-;;     (message "Klausi-2")
 ;;     (widget-insert "\n\n")
-;;     (message "Klausi-3")
 ;;     ;; Insert the Save button
 ;;     (widget-create 'push-button
 ;;                    :button-keymap ecb-upgrade-button-keymap ; XEmacs
@@ -1256,11 +1253,8 @@ If `window-system' is nil then a simple message is displayed in the echo-area."
 ;;                                   ecb-window-config-before-msg-display))
 ;;                                (setq ecb-window-config-before-msg-display nil)))
 ;;                    "OK")
-;;     (message "Klausi-4")
 ;;     (widget-setup)
-;;     (message "Klausi-5")
-;;     (goto-char (point-min))
-;;     (message "Klausi-6")))
+;;     (goto-char (point-min))))
 
 ;; (defvar ecb-user-information-msg-buffer nil)
 

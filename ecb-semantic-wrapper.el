@@ -39,6 +39,8 @@
 
 
 (require 'semantic)
+(require 'semantic-ctxt)
+(require 'semantic-analyze)
 
 (defconst ecb-semantic-2-loaded (string-match "^2" semantic-version))
 (defconst ecb-semantic-2-beta-nr (if (and ecb-semantic-2-loaded
@@ -144,7 +146,11 @@
     (semantic-token-type                      . semantic-tag-type)
     (semantic-token-type-parent-superclass    . semantic-tag-type-superclass)
     (semantic-token-type-parent-implement     . semantic-tag-type-interfaces)
-    (semantic-token-with-position-p           . semantic-tag-with-position-p))
+    (semantic-token-with-position-p           . semantic-tag-with-position-p)
+    (semantic-analyze-current-context         . semantic-analyze-current-context)
+    (semantic-analyze-possible-completions    . semantic-analyze-possible-completions)
+    (semantic-get-local-arguments             . semantic-get-local-arguments)
+    (semantic-analyze-token-type              . semantic-analyze-tag-type))
   "Alist where the car is a function of semantic 1.X and the cdr is the
 equivalent new function of semantic 2.X. This alist should contain every
 function ECB uses from the semantic library.")

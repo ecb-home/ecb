@@ -522,11 +522,50 @@ The following keys must not be rebind in all tree-buffers:
 ;; Internals
 ;;====================================================
 
+;; all defined tree-buffer creators
+
+(defvar ecb-tree-buffer-creators nil
+  "The tree-buffer creators of ECB.
+An alist where each element is a cons where the car is a symbol which contains
+the name of a tree-buffer \(e.g. `ecb-sources-buffer-name') and the cdr is the
+associated function-symbol which creates the tree-buffer with that name.")
+
+(defsubst ecb-tree-buffer-creators-init ()
+  (setq ecb-tree-buffer-creators nil))
+
+(defsubst ecb-tree-buffer-creators-add (name-symbol fn)
+  (add-to-list 'ecb-tree-buffer-creators (cons name-symbol fn)))
+
+(defmacro defecb-tree-buffer-creator (creator
+                                      tree-buffer-name-symbol
+                                      docstring &rest body)
+  "Define a creator-function CREATOR for a tree-buffer which name is hold in
+the symbol TREE-BUFFER-NAME-SYMBOL. Do not quote CREATOR and
+TREE-BUFFER-NAME-SYMBOL. DOCSTRING is the docstring for CREATOR. BODY is all
+the program-code of CREATOR \(should contain a call to `tree-buffer-create').
+It makes sense that BODY returns the created tree-buffer.
+
+When creating a tree-buffer with this macro then this tree-buffer will be
+automatically created \(i.e. its creator-function defined with this macro will
+be called) when activating ECB and the tree-buffer will automatically
+registered at ECB."
+  `(eval-and-compile
+     (ecb-tree-buffer-creators-add (quote ,tree-buffer-name-symbol)
+                                   (quote ,creator))
+     (defun ,creator ()
+       ,docstring
+       (unless (ecb-tree-buffers-get-symbol ,tree-buffer-name-symbol)
+         (ecb-tree-buffers-add ,tree-buffer-name-symbol
+                               (quote ,tree-buffer-name-symbol))
+         ,@body))))
+
+(put 'defecb-tree-buffer-creator 'lisp-indent-function 2)
+
 ;; all created tree-buffers 
 
 (defvar ecb-tree-buffers nil
   "The tree-buffers of ECB.
-An alist which cons for each created \(do not confuse created with visible!)
+An alist with a cons for each created \(do not confuse created with visible!)
 tree-buffer where the car is the name of the tree-buffer and the cdr is the
 associated symbol which contains this name.")
 

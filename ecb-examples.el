@@ -150,18 +150,31 @@ it will be called autom. with `ecb-current-buffer-sync-hook'."
                                            (buffer-name (current-buffer)))))))
 
 
+;; Two conveniance-commands for the user
 
-;; The "dedicated setter" function for the bufferinfo-buffer. See
-;; `ecb-with-dedicated-window' for an explanation.
+(defun ecb-maximize-bufferinfo-window ()
+  "Maximize the bufferinfo-window.
+I.e. delete all other ECB-windows, so only one ECB-window and the
+edit-window\(s) are visible \(and maybe a compile-window). Works
+also if the ECB-analyse-window is not visible in current layout."
+  (interactive)
+  (ecb-display-one-ecb-buffer ecb-examples-bufferinfo-buffer-name))
 
-(defun ecb-examples-set-bufferinfo-buffer ()
+(defun ecb-goto-bufferinfo-window ()
+  "Make the bufferinfo-window the current window."
+  (interactive)
+  (ecb-goto-ecb-window ecb-examples-bufferinfo-buffer-name))
+
+
+;; The "window-dedicator"-function for the bufferinfo-buffer. See
+;; `defecb-window-dedicator' for an explanation.
+
+(defecb-window-dedicator ecb-examples-set-bufferinfo-buffer
+    ecb-examples-bufferinfo-buffer-name
   "Set the buffer in the current window to the bufferinfo-buffer and make this
 window dedicated for this buffer."
-  (ecb-with-dedicated-window
-      ecb-examples-bufferinfo-buffer-name
-      'ecb-examples-set-bufferinfo-buffer
-    (switch-to-buffer (get-buffer-create ecb-examples-bufferinfo-buffer-name))
-    (setq buffer-read-only t)))
+  (switch-to-buffer (get-buffer-create ecb-examples-bufferinfo-buffer-name))
+  (setq buffer-read-only t))
 
 ;; ---------------------------------------------------------------------------
 ;; --- Code for the action buffer --------------------------------------------
@@ -243,16 +256,30 @@ Otherwise nothing will be done."
           (t nil))))
 
 
+;; Two conveniance-commands for the user
 
-;; The "dedicated setter" function for the bufferinfo-buffer. See
-;; `ecb-with-dedicated-window' for an explanation.
+(defun ecb-maximize-action-window ()
+  "Maximize the action-window.
+I.e. delete all other ECB-windows, so only one ECB-window and the
+edit-window\(s) are visible \(and maybe a compile-window). Works
+also if the ECB-analyse-window is not visible in current layout."
+  (interactive)
+  (ecb-display-one-ecb-buffer ecb-examples-action-buffer-name))
 
-(defun ecb-examples-set-action-buffer ()
+(defun ecb-goto-action-window ()
+  "Make the action-window the current window."
+  (interactive)
+  (ecb-goto-ecb-window ecb-examples-action-buffer-name))
+
+
+;; The "window-dedicator"-function for the action-buffer. See
+;; `defecb-window-dedicator' for an explanation.
+
+(defecb-window-dedicator ecb-examples-set-action-buffer
+    (buffer-name (ecb-examples-action-buffer-create))
   "Set the buffer in the current window to the action-buffer and make this
 window dedicated for this buffer."
-  (let ((buf-name (buffer-name (ecb-examples-action-buffer-create))))
-    (ecb-with-dedicated-window buf-name 'ecb-examples-set-action-buffer
-      (switch-to-buffer (buffer-name (ecb-examples-action-buffer-create))))))
+  (switch-to-buffer (buffer-name (ecb-examples-action-buffer-create))))
 
 ;; ---------------------------------------------------------------------------
 ;; --- The layout definition with a bufferinfo- and a action-buffer -----------

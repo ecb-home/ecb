@@ -49,7 +49,12 @@ first available after first stable release of the new cedet-library 1.0.
 
 So, if the cedet 1.0 suite is loaded then the min- and max-version of
 semantic, eieio and speedbar (mentioned in the Requirements-section above)
-have no relevance!
+have no relevance! If the new cedet 1.0 suite should be used then just install
+and load cedet 1.0 like described in the cedet-installation-instructions and
+go one with step 3. But ensure you have loaded - as described in the
+cedet-INSTALL-file - the file "/path/to/cedet/common/cedet.el" because
+otherwise cedet is not properly installed and ECB can not savely recognize
+that the new cedet-suite is loaded and should be used!
 
 
 Installation
