@@ -1,10 +1,27 @@
 Version 1.90
 ------------
 
+* Fixed an annoying bug which results in an error "Wrong type argument:
+  integer-or-marker-p nil)" after a full buffer reparse. ECB 1.80 has repaired
+  its internal state but nevertheless the user had to reclick on the same
+  token after this error to really jump to a token. With ECB 1.90 this bug has
+  been gone (Klaus).
+
+* Fixed a small bug in `ecb-add-all-buffers-to-history': If
+  `ecb-sort-history-items' is nil then now the most recently used buffers are
+  added to the top of the history, the seldom used buffers at the bottom.
+  Thanks to Stefan Reichör <xsteve@riic.at>! (Klaus).
+
 * Now ECB displays at every start a "Tip of the day" in a dialog-box. This can
   be switched off with option `ecb-tip-of-the-day'. There is also a new
   command `ecb-show-tip-of-the-day' (Klaus).
 
+* New feature: Now the methods buffer is auto. expanded if the node related to
+  the current token in the edit-window is not visible (probably because its
+  parent is collapsed). See new options `ecb-auto-expand-token-tree' and
+  `ecb-expand-methods-switch-off-auto-expand' and the new comand
+  `ecb-toggle-auto-expand-token-tree' (Klaus).
+  
 * New command `ecb-expand-methods-nodes' which allows precisely expanding
   tokens with a certain indentation-level. There are also two new related
   options `ecb-methods-nodes-expand-spec' and
