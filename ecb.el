@@ -54,7 +54,7 @@
 ;; The latest version of the ECB is available at
 ;; http://home.swipnet.se/mayhem/ecb.html
 
-;; $Id: ecb.el,v 1.218 2002/06/07 16:12:32 berndl Exp $
+;; $Id: ecb.el,v 1.219 2002/06/09 08:40:47 berndl Exp $
 
 ;;; Code:
 
@@ -1304,6 +1304,17 @@ perform the check and reset manually with `ecb-upgrade-options'."
   :group 'ecb-general
   :type 'boolean)
 
+(defcustom ecb-debug-mode nil
+  "*If not nil ECB displays debug-information in the Messages-buffer.
+This is done for some critical situations concerning semantic-tokens and their
+overlays \(or extends for XEmacs). Normally you should not need this switched
+on! But if you get errors like \"destroyed extend\" for XEmacs or
+\"wrong-argument-type\" concerning overlays for GNU Emacs then you should
+switch on this option and submitting a bug-report to the ecb-mailing-list
+\(`ecb-submit-problem-report') after getting the error again!"
+  :group 'ecb-general
+  :type 'boolean)
+
 (defcustom ecb-activate-before-layout-draw-hook nil
   "*Normal hook run at the end of activating the ecb-package by running
 `ecb-activate'. This hooks are run after all the internal setup process
@@ -1338,8 +1349,42 @@ cleared!) ECB by running `ecb-deactivate'."
   :type 'hook)
 
 ;;====================================================
-;; Methods
+;; Internals
 ;;====================================================
+
+;; encapsulation all semantic-functions ECB uses if they operate with the
+;; semantic-overlays, so we can handle an error if these overlays (extends for
+;; XEmacs) are destroyed and invalid cause of some mysterious circumstances.
+
+(defun ecb-semantic-token-start (token)
+  (condition-case nil
+      (semantic-token-start token)
+    (error (message "semantic-token-start has problems with tokens --> buffer is reparsed!")
+           (when (ecb-point-in-edit-window)
+             (semantic-clear-toplevel-cache)
+             (ecb-update-methods-buffer--internal)
+             nil))))
+
+           
+(defun ecb-semantic-token-end (token)
+  (condition-case nil
+      (semantic-token-end token)
+    (error (message "semantic-token-end has problems with tokens --> buffer is reparsed!")
+           (when (ecb-point-in-edit-window)
+             (semantic-clear-toplevel-cache)
+             (ecb-update-methods-buffer--internal)
+             nil))))
+
+(defun ecb-semantic-current-nonterminal ()
+  (condition-case nil
+      (semantic-current-nonterminal)
+    (error (message "semantic-current-nonterminal has problems with tokens --> buffer is reparsed!")
+           (when (ecb-point-in-edit-window)
+             (semantic-clear-toplevel-cache)
+             (ecb-update-methods-buffer--internal)
+             (semantic-current-nonterminal)))))
+  
+;; macros and fuunctions selecting ecb-windows or operating in ecb-windows
 
 (defmacro ecb-exec-in-directories-window (&rest body)
   `(unwind-protect
@@ -1420,6 +1465,8 @@ cleared!) ECB by running `ecb-deactivate'."
 
 (defun ecb-buffer-select (name)
   (set-buffer (get-buffer name)))
+
+
 
 (defun ecb-toggle-RET-selects-edit-window ()
   "Toggles if RET in current tree-buffer should finally select the
@@ -2201,7 +2248,7 @@ For further explanation see `ecb-clear-history-behavior'."
   (when (and ecb-minor-mode
              (equal (selected-frame) ecb-frame))
     (when ecb-highlight-token-with-point
-      (let* ((tok (semantic-current-nonterminal)))
+      (let ((tok (ecb-semantic-current-nonterminal)))
         (when (not (equal ecb-selected-token tok))
           (setq ecb-selected-token tok)
           (save-selected-window
@@ -2672,14 +2719,18 @@ Currently the fourth argument TREE-BUFFER-NAME is not used here."
          ;; let us set the mark so the user can easily jump back.
          (if ecb-token-jump-sets-mark
              (push-mark))
-         ;; Semantic 1.4beta2 fix for EIEIO class parts
-         ;;	  (ignore-errors
          (when ecb-token-jump-narrow
            (widen))
-         (goto-char (semantic-token-start token))
+         (goto-char (or (ecb-semantic-token-start token)
+                        (when ecb-debug-mode
+                          (message "ecb-jump-to-token: Token-start not available!")
+                          nil)))
          (if ecb-token-jump-narrow
              (narrow-to-region (tree-buffer-line-beginning-pos)
-                               (semantic-token-end token))
+                               (or (ecb-semantic-token-end token)
+                                   (when ecb-debug-mode
+                                     (message "ecb-jump-to-token: Token-end not available!")
+                                     nil)))
            (cond
             ((eq 'top ecb-scroll-window-after-jump)
              (set-window-start (selected-window)
@@ -3076,6 +3127,14 @@ That is remove the unsupported :help stuff."
        :active (equal (selected-frame) ecb-frame)
        :help "Submit a problem report to the ECB mailing list."
        ])
+    (ecb-menu-item
+     [ "ECB Debug mode"
+       (setq ecb-debug-mode (not ecb-debug-mode))
+       :active t
+       :style toggle
+       :selected ecb-debug-mode
+       :help "Print debug-informations in the message buffer."
+       ])
     "-"
     (concat "ECB " ecb-version)
     )
@@ -3371,8 +3430,22 @@ always the ECB-frame if called from another frame."
             (lambda (l r)
               (and (string= (semantic-token-name l) (semantic-token-name r))
                    (eq (semantic-token-token l) (semantic-token-token r))
-                   (eq (semantic-token-start l) (semantic-token-start r))
-                   (eq (semantic-token-end l) (semantic-token-end r))))))
+                   (eq (or (ecb-semantic-token-start l)
+                           (when ecb-debug-mode
+                             (message "Token-equivalence: Token-start for l not available!")
+                             nil))
+                       (or (ecb-semantic-token-start r)
+                           (when ecb-debug-mode
+                             (message "Token-equivalence: Token-start for r not available!")
+                             nil)))
+                   (eq (or (ecb-semantic-token-end l)
+                           (when ecb-debug-mode
+                             (message "Token-equivalence: Token-end for l not available!")
+                             nil))
+                       (or (ecb-semantic-token-end r)
+                           (when ecb-debug-mode
+                             (message "Token-equivalence: Token-end for r not available!")
+                             nil)))))))
          nil
          ecb-truncate-lines
          t

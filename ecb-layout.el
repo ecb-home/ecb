@@ -124,7 +124,7 @@
 ;;   + The edit-window must not be splitted and the point must reside in
 ;;     the not deleted edit-window.
 
-;; $Id: ecb-layout.el,v 1.109 2002/06/07 16:12:32 berndl Exp $
+;; $Id: ecb-layout.el,v 1.110 2002/06/09 08:40:47 berndl Exp $
 
 ;;; Code:
 
@@ -528,10 +528,10 @@ tree-buffers are on the same side of the frame and the
 tree-buffer-\"column\" \(or -\"row\") has identical size for the layouts.
 
 Recommended values are for example:
-- \(11 16), toggles between methods and directories+sources/history
-- \(11 15), toggles between methods and directories+sources
+- \(11 16), toggles between methods and directories/history
+- \(11 15), toggles between methods and directories
 - \(11 14), toggles between methods and history
-- \(11 14 15), toggles between methods, history and directories+sources 
+- \(11 14 15), toggles between methods, history and directories 
 
 This option makes only sense if the value is a list with more than 1 element!"
   :group 'ecb-layout
@@ -1602,9 +1602,8 @@ On normal machines the full drawback should be done in << 1s!"
              ecb-activated-window-configuration)
         (condition-case nil
             (ecb-redraw-layout-quickly)
-          (progn
-            (message "ECB: Quick redraw failed...full redraw has been done!")
-            (ecb-redraw-layout-full)))
+          (error (message "ECB: Quick redraw failed...full redraw has been done!")
+                 (ecb-redraw-layout-full)))
       (ecb-redraw-layout-full)))
 
   ;;make sure we are in the edit window if necessary.

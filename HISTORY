@@ -1,21 +1,28 @@
 Version 1.80:
 -------------
 
+- New debug mode for ECB which prints some debug informations in the message
+  buffer for certain critical operations with semantic-overlays/extends.
+  New option 'ecb-debug-mode' (also available in the Help-menu of ECB).
+  (Klaus)
+
 - Some default keybindings have changed; see `ecb-key-map'. (Klaus)
 
 - New feature: Possibility to define a sequence of layouts with new option
   `ecb-toggle-layout-sequence' and toggle very fast between them via
-  `ecb-toggle-layout' (Klaus).
+  `ecb-toggle-layout'. Read the online-help section "Simulation a speedbar
+  without an extra frame"! (Klaus).
 
 - Fixed: Now no empty tooltips are displayed if mouse moves over nodes in the
-  tree-buffers of ECB which can be displayed completely in the window. (Klaus)
+  tree-buffers of ECB which can be displayed completely in the tree-window.
+  (Klaus)
 
 - Two new hooks: ecb-hide-ecb-windows-hook and ecb-show-ecb-windows-hook. Read
   the documentation. (Klaus)
   Suggested by Daniel Hegyi <daniel_hegyi@hotmail.com>
 
-- Fixed a bug which results in a "wrong-type-argument"-error or "destroyed
-  extent" with XEmacs under some circumstances. (Klaus)
+- (Hopefully) Fixed a bug which results in a "wrong-type-argument"-error (or
+  "destroyed extent"-error with XEmacs) under some circumstances. (Klaus)
 
 - Two new options: ecb-major-modes-activate and ecb-major-modes-deactivate.
   Allow (de)activation of ECB on major-mode base. Instead of deactivation also
@@ -55,8 +62,12 @@ Version 1.80:
   completely by semantic, but needs for this semantic >= 1.4beta14. (Klaus).
 
 - For application programmers using the tree-buffer library:
-  The function tree-buffer-create has a new argument NODE-DATA-EQUAL-FN. See
-  the doc-string for a description (Klaus).
+  + The function tree-buffer-create has a new argument NODE-DATA-EQUAL-FN. See
+    the doc-string for a description (Klaus).
+  + For each tree-buffer a special user-data-storage (for any arbitrary data)
+    is ceated which can be accessed via `tree-buffer-set-data-store' and
+    `tree-buffer-get-data-store'. See the docstring of `tree-buffer-create'.
+    (Klaus)
 
 Version 1.70:
 -------------

@@ -26,7 +26,7 @@
 ;;
 ;; Contains all online-help for ECB (stolen something from recentf.el)
 
-;; $Id: ecb-help.el,v 1.69 2002/06/07 16:12:32 berndl Exp $
+;; $Id: ecb-help.el,v 1.70 2002/06/09 08:40:47 berndl Exp $
 
 ;;; Code
 
@@ -431,6 +431,10 @@ can´t get working this mechanism you can simply copy the whole problem-report
 buffer after filling it out and sending it with your standard mail-client to
 <ecb-list@lists.sourceforge.net>!
 
+Please read also the documentation of the option `ecb-debug-mode' and switch
+on the debug mode of ECB \(also available in the Help-menu of ECB!) before
+submitting a problem-report!
+
 
                               ===============
                               Tips and tricks
@@ -768,6 +772,7 @@ could be interesting for support."
                       post-command-hook
                       after-save-hook
                       help-mode-hook
+                      compilation-mode-hook
                       ,(if (boundp 'ediff-quit-hook)
                            'ediff-quit-hook)))
         ecb-vars)
