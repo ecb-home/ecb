@@ -224,7 +224,10 @@ with the same arguments as `tree-node-expanded-fn'."
 
 (defun tree-buffer-node-data-equal-p (node-data-1 node-data-2)
   (and node-data-1 node-data-2
-       (funcall tree-node-data-equal-fn node-data-1 node-data-2)))
+       ;; if this comparison-function runs into an error we handle this as
+       ;; non-equality!
+       (ignore-errors
+         (funcall tree-node-data-equal-fn node-data-1 node-data-2))))
 
 (defun tree-buffer-find-node-data (node-data)
   (catch 'exit

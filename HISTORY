@@ -1,6 +1,9 @@
 Version 1.80:
 -------------
 
+- Two new hooks: ecb-hide-ecb-windows-hook and ecb-show-ecb-windows-hook. Read
+  the documentation. (Klaus)
+  Suggested by Daniel Hegyi <daniel_hegyi@hotmail.com>
 
 - Fixed a bug which results in a "wrong-type-argument"-error or "destroyed
   extent" with XEmacs under some circumstances. (Klaus)

@@ -512,6 +512,17 @@ Please read also carefully the documentation of `ecb-redraw-layout'."
   :type 'boolean
   :group 'ecb-layout)
 
+(defcustom ecb-hide-ecb-windows-hook nil
+  "*Hooks run after the ECB windows have been hidden
+either by `ecb-toggle-ecb-windows' or `ecb-hide-ecb-windows'."
+  :group 'ecb-layout
+  :type 'hook)
+
+(defcustom ecb-show-ecb-windows-hook nil
+  "*Hooks run after the ECB windows have been shown
+either by `ecb-toggle-ecb-windows' or `ecb-show-ecb-windows'."
+  :group 'ecb-layout
+  :type 'hook)
 
 ;; ====== internal variables ====================================
 
@@ -1463,6 +1474,7 @@ visibility of the ECB windows. ECB minor mode remains active!"
                 (tree-buffer-activate-follow-mouse))
             (ecb-redraw-layout)
             (setq ecb-windows-hidden nil)
+            (run-hooks 'ecb-show-ecb-windows-hook)
             (message "ECB windows are now visible."))
         (unless ecb-windows-hidden
           (tree-buffer-deactivate-mouse-tracking)
@@ -1502,7 +1514,7 @@ visibility of the ECB windows. ECB minor mode remains active!"
              (setq ecb-last-source-buffer (current-buffer))
              (setq ecb-last-edit-window-with-point (selected-window))))
           (setq ecb-windows-hidden t)
-
+          (run-hooks 'ecb-hide-ecb-windows-hook)
           (message "ECB windows are now hidden."))))))
 
 (defun ecb-hide-ecb-windows ()
