@@ -1,31 +1,30 @@
-* Changes for ECB version 1.96.1
+* Changes for ECB version 1.97
 
 ** Completely rewritten popup-menu mechanism.
 
-*** Now submenus are allowed.
+*** Now sub-menus are allowed for all popups
     To give a better lucidity of the popup-menus of the tree-buffers these
-    menus can now arranged in submenus. The default values now use already
-    submenus. So if you have added menu-entries to one of the options
+    menus can now being arranged in sub-menus. The default values now already
+    use sub-menus. So if you have added menu-entries to one of the options
     `ecb-directories-menu-user-extension', `ecb-sources-menu-user-extension',
     `ecb-methods-menu-user-extension' or `ecb-history-menu-user-extension' ECB
-    resets these options to the new defaults of ECB because the type of these
-    options has changed. So get the new submenu-structure. After that you can
-    add again your personal menu-entries. Thanks for suggestion to Ole Arndt
-    <ole@sugarshark.com>.
+    resets these options to the new defaults of ECB and adds at the top your
+    "old" personal entries. This comes because the type of these options has
+    changed. Thanks for general suggestion to Ole Arndt <ole@sugarshark.com>.
 
 *** Added new defaults to `ecb-directories-menu-user-extension'
-    Three new entries "CVS status", "CVS examine" and "CVS update" for running
-    CVS-commands against the directory. These menu-entries are added as new
-    default values to `ecb-directories-menu-user-extension' so a user can
-    delete or change them if he does not use CVS but another revision-tool
-    (e.g. Clearcase). Thanks for suggestion and first implementation to Ole
-    Arndt <ole@sugarshark.com>.
+    Three new entries "CVS status", "CVS examine" and "CVS update" in a new
+    sub-menu "Version control" for running CVS-commands against the directory.
+    These menu-entries are added as new default values to
+    `ecb-directories-menu-user-extension' so a user can delete or change them
+    if he does not use CVS but another revision-tool (e.g. Clearcase). Thanks
+    for suggestion and first implementation to Ole Arndt <ole@sugarshark.com>.
 
 *** Added new defaults to `ecb-sources-menu-user-extension'
-    One new entry "Ediff against revision" for easy diffing against the
-    revision of a source. See also new default for the option
-    `ecb-directories-menu-user-extension'. Thanks for suggestion and first
-    implementation to Ole Arndt <ole@sugarshark.com>.
+    One new sub-menu "Version control" with some senseful commands. See also
+    new default for the option `ecb-directories-menu-user-extension'. Same is
+    added to the `ecb-history-menu-user-extension'. Thanks for suggestion and
+    first implementation to Ole Arndt <ole@sugarshark.com>.
 
 ** No window-restrictions if the ECB-windows are hidden
    If the special ECB-windows are hidden (e.g. by `ecb-toggle-ecb-windows')

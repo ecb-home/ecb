@@ -49,7 +49,7 @@
 @c edit the Makefile to change the version number. mechanism stolen
 @c from Tramp
 @macro ecbver{}
-1.96.1
+1.97
 @end macro
 
 
@@ -4561,9 +4561,9 @@ Example for such a menu-function:
      (message ``Dir under node: %s'' node-data=dir)))
 @end example
 
-Per default the user-extensions are added at the beginning of the built-in
-menu-entries of @code{ecb-directories-menu} but the whole menu can be re-arranged
-with @code{ecb-directories-menu-sorter}.
+Per default the user-extensions are added at the beginning of the
+built-in menu-entries of @code{ecb-directories-menu} but the whole
+menu can be re-arranged with @code{ecb-directories-menu-sorter}.
 
 If you change this option you have to restart ECB to take effect.
 @end defopt

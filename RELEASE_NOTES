@@ -1,4 +1,4 @@
-This file contains some important release-notes for ECB version 1.96.1
+This file contains some important release-notes for ECB version 1.97
 
 General:
 --------
@@ -18,7 +18,21 @@ No special notes beyond the contents of README.
 Upgrading from any version:
 ---------------------------
 
-The options `ecb-mode-line-data' and `ecb-mode-line-prefixes' have chenged
+The type of the options `ecb-directories-menu-user-extension',
+`ecb-sources-menu-user-extension', `ecb-methods-menu-user-extension' and
+`ecb-history-menu-user-extension' has been changed - now sub-menus are
+allowed. The new default values of these options contains now entries, mostly
+concerning "version control". ECB autom. upgrades the old-values to the new
+option-type by appending the new defaults to your old values. So no old
+personal menu-entries are lost, but cuase of the new default maybe you have
+some entries twice. Feel free to delete via customize what you want from the
+new settings.
+
+
+Upgrading from versions < 1.96:
+-------------------------------
+
+The options `ecb-mode-line-data' and `ecb-mode-line-prefixes' have changed
 their type. ECB will autom. upgrade the old values of these options as best as
 possible to the new types!
 
