@@ -1899,13 +1899,6 @@ the current frame-size!
 @cindex New layouts
 @cindex Creating new layouts
 
-@strong{For Emacs 20.X users:}
-
-Creating new layouts is only possible (but nevertheless quite easy) by
-programming them with emacs-lisp, see @ref{The layout-engine}.
-
-@strong{For Emacs 21.X and XEmacs 21.X}
-
 If you want to create your own ECB-layout then you can do this very
 easy ``by example'' with the command @code{ecb-create-new-layout}.
 This command creates a new empty frame and offers a small set of keys
@@ -5311,15 +5304,14 @@ subsection.
 
 If you just want creating a new layout with the standard ECB-windows
 like directories, sources, methods and history it's is strongly
-recommended (at least for Emacs 21.X and XEmacs 21.X users) to define
-the new layout interactively with the command
+recommended to define the new layout interactively with the command
 @code{ecb-create-new-layout} (@pxref{Creating a new ECB-layout}).
 
-But if you want (with Emacs 20.X you must) programming a new layout
-with elisp-code and if this layout should even contain other special
-windows than the standard ECB-windows use the macro
-@code{ecb-layout-define} (the following definiton has stripped the
-prefix ``ecb-'' for better indexing this manual):
+But if you want programming a new layout with elisp-code and if this
+layout should even contain other special windows than the standard
+ECB-windows use the macro @code{ecb-layout-define} (the following
+definiton has stripped the prefix ``ecb-'' for better indexing this
+manual):
 
 @defmac layout-define name type &rest create-code
 Creates a new ECB-layout with name @var{NAME}. @var{TYPE} is the type
