@@ -31,11 +31,11 @@ ECB requires the following packages:
 - Optional: If Java code is edited the ECB works best when the JDEE package
   (http://sunsite.auc.dk/jde) is installed.
 
-If you use XEmacs you must have the packages fsf-compat (contains overlay.el)
-and c-support (contains hideshow.el) installed. If you want to read the
-online-help of ECB in HTML-format you must have the library browse-url (part
-of the mail-lib XEmacs package) installed; this package is also needed for
-submitting problem-reports to the ECB-maintainers!
+If you use XEmacs you must have installed the package c-support (contains
+hideshow.el). If you want to read the online-help of ECB in HTML-format you
+must have the library browse-url (part of the mail-lib XEmacs package)
+installed; this package is also needed for submitting problem-reports to the
+ECB-maintainers!
 
 
 Using the beta of cedet 1.0 (contains semantic 2.0)

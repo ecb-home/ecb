@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: tree-buffer.el,v 1.136 2004/01/21 17:17:45 berndl Exp $
+;; $Id: tree-buffer.el,v 1.137 2004/02/07 11:08:43 berndl Exp $
 
 ;;; Commentary:
 
@@ -76,6 +76,9 @@
 (silentcomp-defun image-type-available-p)
 (silentcomp-defun count-screen-lines)
 (silentcomp-defun tmm-prompt)
+;; timer stuff for XEmacs
+(silentcomp-defun delete-itimer)
+(silentcomp-defun start-itimer)
 
 (defconst tree-buffer-running-xemacs
   (string-match "XEmacs\\|Lucid" emacs-version))
@@ -97,6 +100,8 @@
 (defvar tree-buffer-image-properties-xemacs
   nil
   "Properties of XEmacs images.")
+
+;; miscellaneous differences
 
 (if tree-buffer-running-xemacs
     ;; XEmacs
@@ -135,9 +140,8 @@ Image types are symbols like `xbm' or `jpeg'."
               ;; This position is back inside the extent where the
               ;; junk we pushed into the property list lives.
               (if (extent-end-position ext)
-                  (goto-char (1- (extent-end-position ext)))))))
-      (require 'overlay)
-      )
+                  (goto-char (1- (extent-end-position ext))))))))
+
   ;; GNU Emacs
   (defsubst tree-buffer-create-image (file type)
     (apply 'create-image
@@ -180,6 +184,50 @@ Image types are symbols like `xbm' or `jpeg'."
              'mouse-press)
             (t
              (event-basic-type event))))))
+
+;; overlay/extend stuff
+
+(if (not tree-buffer-running-xemacs)
+    (progn
+      (defalias 'tree-buffer-make-overlay            'make-overlay)
+      (defalias 'tree-buffer-overlay-put             'overlay-put)
+      (defalias 'tree-buffer-overlay-move            'move-overlay)
+      (defalias 'tree-buffer-overlay-delete          'delete-overlay)
+      (defalias 'tree-buffer-overlay-kill            'delete-overlay))
+  ;; XEmacs
+  (defalias 'tree-buffer-make-overlay            'make-extent)
+  (defalias 'tree-buffer-overlay-put             'set-extent-property)
+  (defalias 'tree-buffer-overlay-move            'set-extent-endpoints)
+  (defalias 'tree-buffer-overlay-delete          'detach-extent)
+  (defalias 'tree-buffer-overlay-kill            'delete-extent))
+
+
+;; timer stuff
+
+(if (not ecb-running-xemacs)
+    (progn
+      (defalias 'tree-buffer-run-with-idle-timer 'run-with-idle-timer)
+      (defalias 'tree-buffer-cancel-timer 'cancel-timer))
+  ;; XEmacs
+  (if (fboundp 'run-with-idle-timer)
+      (defalias 'tree-buffer-run-with-idle-timer 'run-with-idle-timer)
+    (defun tree-buffer-run-with-idle-timer (secs repeat function &rest args)
+      "Perform an action the next time Emacs is idle for SECS seconds.
+If REPEAT is non-nil, do this each time Emacs is idle for SECS seconds.
+SECS may be an integer or a floating point number.
+The action is to call FUNCTION with arguments ARGS.
+
+This function returns a timer object which you can use in
+`tree-buffer-cancel-timer'."
+      (start-itimer "tree-buffer-idle-timer"
+                    function secs (if repeat secs nil)
+                    t (if args t nil) args)))
+
+  (if (fboundp 'cancel-timer)
+      (defalias 'tree-buffer-cancel-timer 'cancel-timer)
+    (defun tree-buffer-cancel-timer (timer)
+      "Remove TIMER from the list of active timers."
+      (delete-itimer timer))))  
 
 ;; tree-buffer local variables
 (defvar tree-buffer-root nil)
@@ -736,7 +784,7 @@ displayed without empty-lines at the end, means WINDOW is always best filled."
   (when tree-buffer-highlighted-node-data
     (let ((node (tree-buffer-find-node-data tree-buffer-highlighted-node-data)))
       (when node
-        (delete-overlay tree-buffer-highlight-overlay))))
+        (tree-buffer-overlay-delete tree-buffer-highlight-overlay))))
   (setq tree-buffer-highlighted-node-data nil))
 
 (defun tree-buffer-highlight-node-data (node-data &optional start-node
@@ -767,9 +815,9 @@ returned."
               nil)
           (setq tree-buffer-highlighted-node-data node-data)
           (save-excursion
-            (move-overlay tree-buffer-highlight-overlay
-                          (tree-buffer-get-node-name-start-point name node)
-                          (tree-buffer-get-node-name-end-point name node)))
+            (tree-buffer-overlay-move tree-buffer-highlight-overlay
+                                      (tree-buffer-get-node-name-start-point name node)
+                                      (tree-buffer-get-node-name-end-point name node)))
           (when (not dont-make-visible)
             ;; make node visible if not and optimize the windows display for
             ;; the node.
@@ -1051,7 +1099,8 @@ The result for NODE here is 10"
   "Apply the `tree-buffer-general-face' of current tree-buffer to current
 tree-buffer."
   (when tree-buffer-general-face
-    (move-overlay tree-buffer-general-overlay (point-min) (point-max))))
+    (tree-buffer-overlay-move tree-buffer-general-overlay
+                              (point-min) (point-max))))
 
 (defun tree-buffer-update (&optional node content)
   "Updates the current tree-buffer. The buffer will be completely rebuild with
@@ -1521,8 +1570,8 @@ the function `tree-buffer-help-echo-fn'!"
       (mouse-avoidance-mode 'none)
       (setq tree-buffer-saved-track-mouse track-mouse)
       (setq tree-buffer-track-mouse-timer
-            (run-with-idle-timer tree-buffer-track-mouse-idle-delay
-                                 t 'tree-buffer-do-mouse-tracking)))))
+            (tree-buffer-run-with-idle-timer tree-buffer-track-mouse-idle-delay
+                                             t 'tree-buffer-do-mouse-tracking)))))
 
 (defun tree-buffer-deactivate-mouse-tracking ()
   "Deactivates GNU Emacs < version 21 mouse tracking for all tree-buffers.
@@ -1533,7 +1582,7 @@ the function `tree-buffer-help-echo-fn'!"
       ;; restore the old value
       (mouse-avoidance-mode tree-buffer-old-mouse-avoidance-mode)
       (setq track-mouse tree-buffer-saved-track-mouse)
-      (cancel-timer tree-buffer-track-mouse-timer)
+      (tree-buffer-cancel-timer tree-buffer-track-mouse-timer)
       (setq tree-buffer-track-mouse-timer nil))))
 
 (defun tree-buffer-activate-follow-mouse ()
@@ -1854,13 +1903,14 @@ AFTER-CREATE-HOOK: A function or a list of functions \(with no arguments)
     (setq tree-buffer-menu-titles menu-titles)
     (setq tree-buffer-root (tree-node-new-root))
     (setq tree-buffer-type-facer type-facer)
-    (setq tree-buffer-highlight-overlay (make-overlay 1 1))
-    (overlay-put tree-buffer-highlight-overlay 'face highlight-node-face)
+    (setq tree-buffer-highlight-overlay (tree-buffer-make-overlay 1 1))
+    (tree-buffer-overlay-put tree-buffer-highlight-overlay
+                             'face highlight-node-face)
     ;; setting general face and overlay for the tree-buffer
     (setq tree-buffer-general-face general-face)
-    (setq tree-buffer-general-overlay (make-overlay 1 1))
-    (overlay-put tree-buffer-general-overlay 'face
-                 tree-buffer-general-face)
+    (setq tree-buffer-general-overlay (tree-buffer-make-overlay 1 1))
+    (tree-buffer-overlay-put tree-buffer-general-overlay 'face
+                             tree-buffer-general-face)
     ;; initializing the search-pattern
     (setq tree-buffer-incr-searchpattern "")
     (setq tree-buffer-last-incr-searchpattern "")

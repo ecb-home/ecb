@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-layout.el,v 1.212 2004/02/04 07:55:37 berndl Exp $
+;; $Id: ecb-layout.el,v 1.213 2004/02/07 11:08:45 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -501,6 +501,32 @@ This means, that all values of `special-display-function',
 (defsubst ecb-ignore-special-display ()
   (or (equal ecb-ignore-special-display 'always)
       (and (equal ecb-ignore-special-display 'compile-window)
+           ecb-compile-window-height)))
+
+(defcustom ecb-ignore-display-buffer-function 'always
+  "*Adviced `display-buffer' ignores `display-buffer-function'.
+This means, that the adviced version of `display-buffer' \(see
+`ecb-advice-window-functions') ignores the value of `display-buffer-function'
+when called for the `ecb-frame'. If this variable should not be ignored then
+the function of `display-buffer-function' is completely responsible which
+window is used for the buffer to display - no smart ECB-logic will help to
+deal best with the ECB-window-layout! You can define if and when
+`display-buffer-function' should be ignored:
+- only when durable compile window is used - i.e. if
+  `ecb-compile-window-height' is not nil
+- always when ECB is active - that means ignore when ECB is active otherwise
+  not - this is the default value
+- never, the adviced version of `display-buffer' always uses the value of
+  `display-buffer-function' if the value is a function."
+  :group 'ecb-layout
+  :type '(radio (const :tag "When a durable compile-window is used"
+                       :value compile-window)
+                (const :tag "Always" :value always)
+                (const :tag "Never" nil)))
+
+(defsubst ecb-ignore-display-buffer-function ()
+  (or (equal ecb-ignore-display-buffer-function 'always)
+      (and (equal ecb-ignore-display-buffer-function 'compile-window)
            ecb-compile-window-height)))
 
 (defcustom ecb-split-edit-window-after-start 'before-deactivation
@@ -2351,10 +2377,10 @@ can use these variables."
     ;; We MUST not use here `ecb-point-in-edit-window' because this would
     ;; slow-down the performance of all Emacs-versions unless GNU Emacs 21
     ;; because they have no builtin `window-list'-function.
-    (when (and (not (member (buffer-name) ecb-tree-buffers))
+    (when (and (not (ecb-point-in-tree-buffer))
                (not (equal (minibuffer-window ecb-frame)
                            (selected-window)))
-               (not (equal (selected-window) ecb-compile-window)))
+               (not (ecb-point-in-compile-window)))
       (setq ecb-last-edit-window-with-point (selected-window))
       (setq ecb-last-source-buffer (current-buffer)))
     (if (ecb-point-in-compile-window)
@@ -2411,10 +2437,10 @@ some special tasks:
                (equal (selected-frame) ecb-frame)
                (= (minibuffer-depth) 0))
       (cond ((and (not ecb-ecb-window-was-selected-before-command)
-                  (member (buffer-name) ecb-tree-buffers))
+                  (ecb-point-in-tree-buffer))
              (ecb-display-one-ecb-buffer (buffer-name)))
             ((and ecb-ecb-window-was-selected-before-command
-                  (not (member (buffer-name) ecb-tree-buffers)))
+                  (not (ecb-point-in-tree-buffer)))
              (ecb-redraw-layout-full nil nil nil nil))))))
 ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: need some more tests - see above
 ;; `ecb-minibuffer-exit-hook'
@@ -2496,6 +2522,12 @@ BUFFER-OR-NAME is contained or matches `special-display-buffer-names' or
 ;; This advice is the heart of the mechanism which displays all buffer in the
 ;; compile-window if they are are "compilation-buffers" in the sense of
 ;; `ecb-compilation-buffer-p'!
+
+;; We do not use `display-buffer-function' but we just handle it within the
+;; advice, because otherwise we would have to implement all window-choosing
+;; for ourself and with our advice we just "restrict" the windows
+;; `display-buffer' can use but the real choosing-task is done by the function
+;; itself - this is much better and smarter than implementing the whole stuff.
 (defadvice display-buffer (around ecb)
   "Makes this function compatible with ECB if called in or for the ecb-frame.
 It displays all buffers which are \"compilation-buffers\" in the sense of
@@ -2521,6 +2553,8 @@ not nil). But this behavior depends on the value of the option
 `ecb-ignore-special-display'. The values of `same-window-buffer-names' and
 `same-window-regexps' are supported as well.
 
+See the value of the option `ecb-ignore-display-buffer-function'!
+
 If called for other frames it works like the original version."
   (if ecb-running-xemacs
       (ecb-layout-debug-error "display-buffer entered with: %s %s %s %s"
@@ -2540,7 +2574,10 @@ If called for other frames it works like the original version."
                         (equal (ad-get-arg 2) t)
                         (equal (ad-get-arg 2) 0))
                     (equal (selected-frame) ecb-frame)))
-           (not (ecb-check-for-special-buffer (ad-get-arg 0))))
+           (not (ecb-check-for-special-buffer (ad-get-arg 0)))
+           (not (and (boundp 'display-buffer-function)
+                     (fboundp display-buffer-function)
+                     (not (ecb-ignore-display-buffer-function)))))
       (let ((special-display-function (if (ecb-ignore-special-display)
                                           nil
                                         special-display-function)))

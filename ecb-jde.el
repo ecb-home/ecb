@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-jde.el,v 1.7 2003/10/18 18:08:19 berndl Exp $
+;; $Id: ecb-jde.el,v 1.8 2004/02/07 11:08:45 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -52,8 +52,6 @@
 (silentcomp-defun jde-open-find-java-file-name)
 (silentcomp-defun jde-gen-class-buffer)
 
-(silentcomp-defun end-of-thing)
-
 (require 'ecb-util)
 (require 'ecb-layout)
 (require 'ecb-file-browser)
@@ -77,8 +75,8 @@ available."
              (equal major-mode 'jde-mode))
     (if (jde-open-functions-exist)
         (let* (
-               (thing-of-interest (thing-at-point 'symbol))
-               (pair (save-excursion (end-of-thing 'symbol)
+               (thing-of-interest (ecb-thing-at-point 'symbol))
+               (pair (save-excursion (ecb-end-of-thing 'symbol)
                                      (jde-parse-java-variable-at-point)))
                (class-to-open (jde-open-get-class-to-open
                                pair thing-of-interest))

@@ -24,7 +24,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-method-browser.el,v 1.13 2004/02/04 07:55:37 berndl Exp $
+;; $Id: ecb-method-browser.el,v 1.14 2004/02/07 11:08:44 berndl Exp $
 
 ;;; Commentary:
 
@@ -727,9 +727,9 @@ by semantic!"
   :initialize 'custom-initialize-default)
 
 
-(defvar ecb-method-overlay (make-overlay 1 1)
+(defvar ecb-method-overlay (ecb-make-overlay 1 1)
   "Internal overlay used for the first line of a method.")
-(overlay-put ecb-method-overlay 'face ecb-tag-header-face)
+(ecb-overlay-put ecb-method-overlay 'face ecb-tag-header-face)
 
 
 (defcustom ecb-tag-visit-post-actions '((default . (ecb-tag-visit-smart-tag-start
@@ -1678,47 +1678,84 @@ by this command."
              (if new-value "on" "off")
              new-value)))
 
+;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: Hier auch was möglich mit
+;;  (ecb-exec-in-methods-window
+;;    (tree-buffer-find-node-data curr-tag))
 
-(defun ecb-tag-sync (&optional force)
+(defun ecb-tag-sync-test (&optional force)
   (when (and ecb-minor-mode
-             (ecb-point-in-edit-window))
+             ;; we do not use here `ecb-point-in-ecb-window' because this
+             ;; would slow down Emacs dramatically when tag-synchronization is
+             ;; done via post-command-hook and not via an idle-timer.
+             (not (ecb-point-in-tree-buffer))
+             (not (ecb-point-in-compile-window)))
     (when ecb-highlight-tag-with-point
-      (let ((curr-tag (ecb-semantic-current-nonterminal))
-            ;; we compute the parent-tag first when the current-tag has
-            ;; changed so we do not lose performance
-            (parent-tag nil)
-            (real-tag nil))
+      (let* ((tagstack (reverse (ecb--semantic-find-tag-by-overlay)))
+             (curr-tag (car tagstack))
+             (next-tag (car (cdr tagstack)))
+             )
+        (if (and (equal (ecb--semantic-tag-class curr-tag) 'variable)
+                 (equal (ecb--semantic-tag-class next-tag) 'function)
+                 (member curr-tag (ecb--semantic-tag-function-arguments next-tag)))
+            (setq curr-tag next-tag))
         (when (or force (not (equal ecb-selected-tag curr-tag)))
-          ;; if the parent-tag of the current tag is of class 'function then
-          ;; we proceed with this parent-tag because we do not want sync for
-          ;; argument-lists of functions!
-          ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: Maybe this is not the
-          ;; best way, but for now it works...
-          (setq parent-tag (and curr-tag
-                                (ecb--semantic-tag-calculate-parent curr-tag)))
-          (if (and parent-tag
-                   (eq 'function (ecb--semantic-tag-class parent-tag)))
-              (setq real-tag parent-tag)
-            (setq real-tag curr-tag))
-          (setq ecb-selected-tag real-tag)
+          (setq ecb-selected-tag curr-tag)
           (save-selected-window
             (ecb-exec-in-methods-window
              (or (tree-buffer-highlight-node-data
-                  real-tag nil (equal ecb-highlight-tag-with-point 'highlight))
-                 ;; The node representing REAL-TAG could not be highlighted be
+                  curr-tag nil (equal ecb-highlight-tag-with-point 'highlight))
+                 ;; The node representing CURR-TAG could not be highlighted be
                  ;; `tree-buffer-highlight-node-data' - probably it is
                  ;; invisible. Let's try to make visible and then highlighting
                  ;; again.
-                 (when (and real-tag ecb-auto-expand-tag-tree
+                 (when (and curr-tag ecb-auto-expand-tag-tree
                             (or (equal ecb-auto-expand-tag-tree 'all)
-                                (member (ecb--semantic-tag-class real-tag)
+                                (member (ecb--semantic-tag-class curr-tag)
                                         (ecb-normalize-expand-spec
                                          ecb-methods-nodes-expand-spec))))
                    (ecb-expand-methods-nodes-internal
                     100
                     (equal ecb-auto-expand-tag-tree 'all))
                    (tree-buffer-highlight-node-data
-                    real-tag nil (equal ecb-highlight-tag-with-point 'highlight))
+                    curr-tag nil (equal ecb-highlight-tag-with-point 'highlight))
+                   )))))))))
+
+(defun ecb-tag-sync (&optional force)
+  (when (and ecb-minor-mode
+             ;; we do not use here `ecb-point-in-ecb-window' because this
+             ;; would slow down Emacs dramatically when tag-synchronization is
+             ;; done via post-command-hook and not via an idle-timer.
+             (not (ecb-point-in-tree-buffer))
+             (not (ecb-point-in-compile-window)))
+    (when ecb-highlight-tag-with-point
+      (let* ((tagstack (reverse (ecb--semantic-find-tag-by-overlay)))
+             (curr-tag (car tagstack))
+             (next-tag (car (cdr tagstack)))
+             )
+        (if (and (equal (ecb--semantic-tag-class curr-tag) 'variable)
+                 (equal (ecb--semantic-tag-class next-tag) 'function)
+                 (member curr-tag (ecb--semantic-tag-function-arguments next-tag)))
+            (setq curr-tag next-tag))
+        (when (or force (not (equal ecb-selected-tag curr-tag)))
+          (setq ecb-selected-tag curr-tag)
+          (save-selected-window
+            (ecb-exec-in-methods-window
+             (or (tree-buffer-highlight-node-data
+                  curr-tag nil (equal ecb-highlight-tag-with-point 'highlight))
+                 ;; The node representing CURR-TAG could not be highlighted be
+                 ;; `tree-buffer-highlight-node-data' - probably it is
+                 ;; invisible. Let's try to make visible and then highlighting
+                 ;; again.
+                 (when (and curr-tag ecb-auto-expand-tag-tree
+                            (or (equal ecb-auto-expand-tag-tree 'all)
+                                (member (ecb--semantic-tag-class curr-tag)
+                                        (ecb-normalize-expand-spec
+                                         ecb-methods-nodes-expand-spec))))
+                   (ecb-expand-methods-nodes-internal
+                    100
+                    (equal ecb-auto-expand-tag-tree 'all))
+                   (tree-buffer-highlight-node-data
+                    curr-tag nil (equal ecb-highlight-tag-with-point 'highlight))
                    )))))))))
 
 (defun ecb-find-file-and-display (filename other-edit-window)
@@ -2093,7 +2130,7 @@ new nop-command \(otherwise the cursor jumps back to the tree-buffer).")
     (when (not (or (and (equal key 'mouse-release)
                         (not ecb-unhighlight-hook-called))
                    (equal key 'mouse-movement)))
-      (delete-overlay ecb-method-overlay)
+      (ecb-overlay-delete ecb-method-overlay)
       (remove-hook 'pre-command-hook 'ecb-unhighlight-tag-header)))
   (setq ecb-unhighlight-hook-called t))
 
@@ -2103,10 +2140,10 @@ new nop-command \(otherwise the cursor jumps back to the tree-buffer).")
 TAG. Returns current point"
   (save-excursion
     (ecb-tag-visit-smart-tag-start tag)
-    (move-overlay ecb-method-overlay
-                  (ecb-line-beginning-pos)
-                  (ecb-line-end-pos)
-                  (current-buffer)))
+    (ecb-overlay-move ecb-method-overlay
+                      (ecb-line-beginning-pos)
+                      (ecb-line-end-pos)
+                      (current-buffer)))
   (setq ecb-unhighlight-hook-called nil)
   (add-hook 'pre-command-hook 'ecb-unhighlight-tag-header)
   (point))

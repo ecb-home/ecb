@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb.el,v 1.371 2004/02/04 07:55:36 berndl Exp $
+;; $Id: ecb.el,v 1.372 2004/02/07 11:08:44 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -1641,13 +1641,13 @@ with idle-time IDLE-VALUE if IDLE-VALUE not nil. If nil the FUNC is added to
   (let* ((timer-elem (assoc func ecb-idle-timer-alist))
          (timer (cdr timer-elem)))
     (when timer-elem
-      (cancel-timer timer)
+      (ecb-cancel-timer timer)
       (setq ecb-idle-timer-alist (delq timer-elem ecb-idle-timer-alist)))
     (remove-hook 'post-command-hook func)
     (setq ecb-post-command-hooks (delq func ecb-post-command-hooks))
     (if idle-value
         (add-to-list 'ecb-idle-timer-alist
-                     (cons func (run-with-idle-timer idle-value t func)))
+                     (cons func (ecb-run-with-idle-timer idle-value t func)))
       (add-hook 'post-command-hook func)
       (add-to-list 'ecb-post-command-hooks func))))
 
@@ -2875,7 +2875,7 @@ does all necessary after finishing ediff."
       (remove-hook (ecb--semantic-after-toplevel-cache-change-hook)
                    'ecb-rebuild-methods-buffer-with-tagcache)
       (dolist (timer-elem ecb-idle-timer-alist)
-        (cancel-timer (cdr timer-elem)))
+        (ecb-cancel-timer (cdr timer-elem)))
       (setq ecb-idle-timer-alist nil)
       (dolist (hook ecb-post-command-hooks)
         (remove-hook 'post-command-hook hook))

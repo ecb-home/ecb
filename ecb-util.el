@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-util.el,v 1.94 2004/02/04 07:55:37 berndl Exp $
+;; $Id: ecb-util.el,v 1.95 2004/02/07 11:08:44 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -48,7 +48,6 @@
 (eval-when-compile (require 'cl))
 
 ;; XEmacs
-(silentcomp-defun mswindows-cygwin-to-win32-path)
 (silentcomp-defun frame-property)
 (silentcomp-defun point-at-bol)
 (silentcomp-defun point-at-eol)
@@ -56,26 +55,37 @@
 (silentcomp-defun line-beginning-position)
 (silentcomp-defun line-end-position)
 (silentcomp-defun window-pixel-edges)
+(silentcomp-defun noninteractive)
+;; Emacs
+(silentcomp-defvar noninteractive)
+(silentcomp-defun window-edges)
+;; XEmacs
+(silentcomp-defun mswindows-cygwin-to-win32-path)
 (silentcomp-defun make-dialog-box)
 (silentcomp-defun display-message)
 (silentcomp-defun clear-message)
-(silentcomp-defun noninteractive)
 (silentcomp-defun make-event)
 ;; Emacs
 (silentcomp-defvar message-log-max)
 (silentcomp-defvar message-truncate-lines)
 (silentcomp-defun x-popup-dialog)
-(silentcomp-defvar noninteractive)
 (silentcomp-defun display-images-p)
-(silentcomp-defun window-edges)
-
 (silentcomp-defvar tar-subfile-mode)
 (silentcomp-defvar archive-subfile-mode)
+
+;; timer stuff for Xemacs
+(silentcomp-defun delete-itimer)
+(silentcomp-defun start-itimer)
+;; thing stuff for XEmacs
+(silentcomp-defun thing-boundaries)
+(silentcomp-defun thing-symbol)
+
 
 ;; Some constants
 (defconst ecb-running-xemacs (string-match "XEmacs\\|Lucid" emacs-version))
 (defconst ecb-running-emacs-21 (and (not ecb-running-xemacs)
-                                (> emacs-major-version 20)))
+                                    (> emacs-major-version 20)))
+
 (defconst ecb-directory-sep-char ?/)
 (defconst ecb-directory-sep-string (char-to-string ecb-directory-sep-char))
 
@@ -114,9 +124,16 @@
            (display-images-p)
          window-system)))
 
+;; ---------- compatibility between GNU Emacs and XEmacs ---------------------
+
+;; miscellaneous differences
 
 (if ecb-running-xemacs
     (progn
+;;; Compatibility
+      (defun ecb-noninteractive ()
+        "Return non-nil if running non-interactively, i.e. in batch mode."
+        (noninteractive))
       (defun ecb-subst-char-in-string (fromchar tochar string &optional inplace)
         "Replace FROMCHAR with TOCHAR in STRING each time it occurs.
 Unless optional argument INPLACE is non-nil, return a new string."
@@ -141,26 +158,13 @@ Unless optional argument INPLACE is non-nil, return a new string."
           (list (/ (nth 0 pix-edges) (ecb-frame-char-width))
                 (/ (nth 1 pix-edges) (ecb-frame-char-height))
                 (/ (nth 2 pix-edges) (ecb-frame-char-width))
-                (/ (nth 3 pix-edges) (ecb-frame-char-height)))))
-      ;; extends-stuff
-      (defalias 'ecb-overlay-make 'make-extent)
-      (defalias 'ecb-overlay-put 'set-extent-property)
-      (defalias 'ecb-overlay-move 'set-extent-endpoints)
-      (defalias 'ecb-overlay-delete 'delete-extent)
-      ;; timer stuff
-      (defun ecb-cancel-timer (timer)
-        (delete-itimer timer))
-      ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>:
-      ;;  ecb-run-with-idle-timer, ecb-run-with-timer, ecb-thing-at-point (for 'symbol)
-      (defun ecb-run-with-idle-timer (secs repeat function &rest args)
-        (let ((timer (timer-create)))
-          (timer-set-function timer function args)
-          (timer-set-idle-time timer secs repeat)
-          (timer-activate-when-idle timer)
-          timer))
-      (defun ecb-run-with-timer ()))
+                (/ (nth 3 pix-edges) (ecb-frame-char-height))))))
       
+  (defun ecb-noninteractive ()
+    "Return non-nil if running non-interactively, i.e. in batch mode."
+    noninteractive)
   (defalias 'ecb-subst-char-in-string 'subst-char-in-string)
+  (defalias 'ecb-thing-at-point 'thing-at-point)
   (defalias 'ecb-frame-parameter 'frame-parameter)
   (defalias 'ecb-line-beginning-pos 'line-beginning-position)
   (defalias 'ecb-line-end-pos 'line-end-position)
@@ -170,18 +174,68 @@ Unless optional argument INPLACE is non-nil, return a new string."
   (defalias 'ecb-window-full-height 'window-height)
   (defalias 'ecb-frame-char-width 'frame-char-width)
   (defalias 'ecb-frame-char-height 'frame-char-height)
-  (defalias 'ecb-window-edges 'window-edges)
-  ;; overlay-stuff
-  (defalias 'ecb-overlay-make 'make-overlay)
-  (defalias 'ecb-overlay-put 'overlay-put)
-  (defalias 'ecb-overlay-move 'move-overlay)
-  (defalias 'ecb-overlay-delete 'delete-overlay)
-  ;; timer-stuff
-  (defalias 'ecb-cancel-timer 'cancel-timer)
-  (defalias 'ecb-run-with-idle-timer 'run-with-idle-timer)
-  (defalias 'ecb-run-with-timer 'run-with-timer))
+  (defalias 'ecb-window-edges 'window-edges))
 
+;; thing at point stuff
 
+(if (not ecb-running-xemacs)
+    (progn
+      (require 'thingatpt)
+      (defalias 'ecb-thing-at-point 'thing-at-point)
+      (defalias 'ecb-end-of-thing 'end-of-thing)
+      (defalias 'ecb-beginning-of-thing 'beginning-of-thing))
+  ;; Xemacs
+  (require 'thing)
+  (defun ecb-thing-at-point (thing)
+    (let ((bounds (if (eq 'symbol thing)
+                      (thing-symbol (point))
+                    (thing-boundaries (point)))))
+      (buffer-substring (car bounds) (cdr bounds))))
+  (defun ecb-end-of-thing (thing)
+    (goto-char (cdr (if (eq 'symbol thing)
+                        (thing-symbol (point))
+                      (thing-boundaries (point))))))
+  (defun ecb-beginning-of-thing (thing)
+    (goto-char (car (if (eq 'symbol thing)
+                        (thing-symbol (point))
+                      (thing-boundaries (point)))))))
+
+;; overlay- and extend-stuff
+
+(if (not ecb-running-xemacs)
+    (progn
+      (defalias 'ecb-make-overlay            'make-overlay)
+      (defalias 'ecb-overlay-put             'overlay-put)
+      (defalias 'ecb-overlay-move            'move-overlay)
+      (defalias 'ecb-overlay-delete          'delete-overlay)
+      (defalias 'ecb-overlay-kill            'delete-overlay))
+  ;; XEmacs
+  (defalias 'ecb-make-overlay            'make-extent)
+  (defalias 'ecb-overlay-put             'set-extent-property)
+  (defalias 'ecb-overlay-move            'set-extent-endpoints)
+  (defalias 'ecb-overlay-delete          'detach-extent)
+  (defalias 'ecb-overlay-kill            'delete-extent))
+
+;; timer stuff
+
+(if (not ecb-running-xemacs)
+    (progn
+      (defalias 'ecb-run-with-timer 'run-with-timer)
+      (defalias 'ecb-run-with-idle-timer 'run-with-idle-timer)
+      (defalias 'ecb-cancel-timer 'cancel-timer))
+  ;; XEmacs
+  (defun ecb-run-with-timer (secs repeat function &rest args)
+    (start-itimer "ecb-timer" function secs repeat
+                  nil (if args t nil) args))
+  (defun ecb-run-with-idle-timer (secs repeat function &rest args)
+    (start-itimer "ecb-idle-timer"
+                  function secs (if repeat secs nil)
+                  t (if args t nil) args))
+  (defun ecb-cancel-timer (timer)
+    (delete-itimer timer))
+  )
+
+;; ---------- End of compatibility between GNU Emacs and XEmacs -------------
   
 ;; Emacs 20 has no window-list function and the XEmacs and Emacs 21 one has no
 ;; specified ordering. The following one is stolen from XEmacs and has fixed
@@ -416,13 +470,6 @@ Return the sublist of LIST whose car is ITEM."
   "Set VAL as new N-th element of SEQ. SEQ can be any sequence. SEQ will be
 changed."
   (if (listp seq) (setcar (nthcdr n seq) val) (aset seq n val)))
-
-;;; Compatibility
-(defun ecb-noninteractive ()
-  "Return non-nil if running non-interactively, i.e. in batch mode."
-  (if ecb-running-xemacs
-      (noninteractive)
-    noninteractive))
 
 ;; canonical filenames
 
@@ -889,10 +936,10 @@ to use when the functions `ecb-working-status' is called from FORMS."
             (ecb-working-ref1 0)
             (time ,timeout)
             (ecb-working-timer
-             (run-with-timer time time 'ecb-working-dynamic-status)))
+             (ecb-run-with-timer time time 'ecb-working-dynamic-status)))
        (unwind-protect
            (progn ,@forms)
-         (cancel-timer ecb-working-timer)
+         (ecb-cancel-timer ecb-working-timer)
          (ecb-working-dynamic-status t)
          (message ,current-message)))))
 
