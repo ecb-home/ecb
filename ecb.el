@@ -54,7 +54,7 @@
 ;; The latest version of the ECB is available at
 ;; http://home.swipnet.se/mayhem/ecb.html
 
-;; $Id: ecb.el,v 1.208 2002/03/23 15:28:24 berndl Exp $
+;; $Id: ecb.el,v 1.209 2002/03/24 16:33:15 berndl Exp $
 
 ;;; Code:
 
@@ -433,7 +433,12 @@ then activating ECB again!"
   :group 'ecb-methods
   :type 'string)
 
-(defcustom ecb-tree-buffer-RET-selects-edit-window
+(defvar ecb-tree-RET-selects-edit-window--internal nil
+  "Only set by customizing `ecb-tree-RET-selects-edit-window' or calling
+`ecb-toggle-RET-selects-edit-window'!
+Do not set this variable directly, it is only for internal uses!")
+
+(defcustom ecb-tree-RET-selects-edit-window
   (list ecb-directories-buffer-name
         ecb-sources-buffer-name
         ecb-methods-buffer-name
@@ -446,8 +451,17 @@ but point stays in the tree-buffer.
 
 A special remark for the `ecb-directories-buffer-name': Of course here the
 edit-window is only selected if `ecb-show-sources-in-directories-buffer' is
-not nil \(otherwise this would not make any sense)!"
-  :group 'ecb-generall
+not nil \(otherwise this would not make any sense)!
+
+The setting in this option is only the default for each tree-buffer. With
+`ecb-toggle-RET-selects-edit-window' the behavior of RET can be changed fast
+and easy in a tree-buffer without customizing this option, but of course not
+for future Emacs sessions!"
+  :group 'ecb-general
+  :set (function (lambda (sym val)
+                   (set sym val)
+                   (setq ecb-tree-RET-selects-edit-window--internal
+                         (copy-list val))))
   :type `(set (const :tag ,ecb-directories-buffer-name
                      :value ,ecb-directories-buffer-name)
               (const :tag ,ecb-sources-buffer-name
@@ -1307,6 +1321,25 @@ cleared!) ECB by running `ecb-deactivate'."
 
 (defun ecb-buffer-select (name)
   (set-buffer (get-buffer name)))
+
+(defun ecb-toggle-RET-selects-edit-window ()
+  "Toggles if RET in current tree-buffer should finally select the
+edit-window. See also the option `ecb-tree-RET-selects-edit-window'."
+  (interactive)
+  (let ((tree-buffer (ecb-point-in-tree-buffer)))
+    (if tree-buffer
+        (if (member (buffer-name tree-buffer)
+                    ecb-tree-RET-selects-edit-window--internal)
+            (progn
+              (setq ecb-tree-RET-selects-edit-window--internal
+                    (delete (buffer-name tree-buffer)
+                            ecb-tree-RET-selects-edit-window--internal))
+              (message "RET does not select the edit-window."))
+          (setq ecb-tree-RET-selects-edit-window--internal
+                (append ecb-tree-RET-selects-edit-window--internal
+                        (list (buffer-name tree-buffer))))
+          (message "RET selects the edit-window."))
+      (message "Point must stay in an ECB tree-buffer!"))))
 
 (defun ecb-create-node (parent-node display name data type)
   (if (eq 'hidden display)
@@ -2319,15 +2352,24 @@ combination is invalid \(see `ecb-interpret-mouse-click'."
 	    ((string= tree-buffer-name ecb-methods-buffer-name)
 	     (ecb-method-clicked node ecb-button shift-mode))
 	    (t nil)))
-    ;; now we go maybe back to the tree-buffer but only
-    ;; 1. mouse-button is 0, i.e. RET is pressed in the tree-buffer and
-    ;; 2. if the tree-buffer-name is not contained in
-    ;;    ecb-tree-buffer-RET-selects-edit-window and
+
+    ;; TODO: IMHO the mechanism how the pysical keys are mapped and
+    ;; interpreted to logical ecb-buttons and -actions should now slightly be
+    ;; redesigned because now we evaluate below MOUSE-PRESSED outside
+    ;; ecb-interpret-mouse-click and this is not very good. But for now it
+    ;; works and it is the only location where such an outside-interpretion is
+    ;; performed (Klaus).
+    
+    ;; now we go back to the tree-buffer but only if all of the following
+    ;; conditions are true:
+    ;; 1. mouse-button is 0, i.e. RET is pressed in the tree-buffer
+    ;; 2. The tree-buffer-name is not contained in
+    ;;    ecb-tree-RET-selects-edit-window--internal
     ;; 3. Either it is not the ecb-directories-buffer-name or
     ;;    at least ecb-show-sources-in-directories-buffer is true.
     (when (and (equal 0 mouse-button)
                (not (member tree-buffer-name
-                            ecb-tree-buffer-RET-selects-edit-window))
+                                ecb-tree-RET-selects-edit-window--internal))
                (or (not (string= tree-buffer-name ecb-directories-buffer-name))
                    ecb-show-sources-in-directories-buffer))
       (ecb-goto-window tree-buffer-name)
@@ -2363,8 +2405,8 @@ combination is invalid \(see `ecb-interpret-mouse-click'."
                                   control-pressed
                                   tree-buffer-name)
   "Converts the physically pressed MOUSE-BUTTON \(1 = mouse-1, 2 = mouse-2, 0 =
-no mouse-button but a key like RET or TAB) to ECB-mouse-buttons: either primary
-or secondary mouse-button depending on the value of CONTROL-PRESSED and the
+no mouse-button but RET or TAB) to ECB-mouse-buttons: either primary or
+secondary mouse-button depending on the value of CONTROL-PRESSED and the
 setting in `ecb-primary-secondary-mouse-buttons'. Returns a list '\(ECB-button
 shift-mode) where ECB-button is either 1 \(= primary) or 2 \(= secondary) and
 shift-mode is non nil if SHIFT-PRESSED is non nil. For an invalid and not
@@ -3138,7 +3180,9 @@ always the ECB-frame if called from another frame."
          (function (lambda ()
                      (local-set-key [f1] 'ecb-add-source-path)
                      (local-set-key [f2] 'ecb-customize)
-                     (local-set-key [f3] 'ecb-show-help)))
+                     (local-set-key [f3] 'ecb-show-help)
+                     (local-set-key (kbd "C-t")
+                                    'ecb-toggle-RET-selects-edit-window)))
          ))
       
       (unless (member ecb-sources-buffer-name curr-buffer-list)
@@ -3159,7 +3203,10 @@ always the ECB-frame if called from another frame."
          nil
          nil
          ecb-source-face
-         ecb-sources-general-face))
+         ecb-sources-general-face
+         (function (lambda ()
+                     (local-set-key (kbd "C-t")
+                                    'ecb-toggle-RET-selects-edit-window)))))
       
       (unless (member ecb-methods-buffer-name curr-buffer-list)
 	(tree-buffer-create
@@ -3200,8 +3247,11 @@ always the ECB-frame if called from another frame."
 	 nil
 	 ecb-tree-expand-symbol-before
          ecb-method-face
-         ecb-methods-general-face)
-	(setq ecb-methods-root-node (tree-buffer-get-root)))
+         ecb-methods-general-face
+         (function (lambda ()
+                     (local-set-key (kbd "C-t")
+                                    'ecb-toggle-RET-selects-edit-window))))
+         (setq ecb-methods-root-node (tree-buffer-get-root)))
       
       (unless (member ecb-history-buffer-name curr-buffer-list)
 	(tree-buffer-create
@@ -3221,7 +3271,10 @@ always the ECB-frame if called from another frame."
          nil
          nil
          ecb-history-face
-         ecb-history-general-face)))
+         ecb-history-general-face
+         (function (lambda ()
+                     (local-set-key (kbd "C-t")
+                                    'ecb-toggle-RET-selects-edit-window))))))
 
     ;; Now store all tree-buffer-names used by ECB
     ;; ECB must not use the variable `tree-buffers' but must always refer to

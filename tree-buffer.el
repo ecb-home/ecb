@@ -26,7 +26,7 @@
 ;; This file is part of the ECB package which can be found at:
 ;; http://home.swipnet.se/mayhem/ecb.html
 
-;; $Id: tree-buffer.el,v 1.83 2002/03/23 15:28:24 berndl Exp $
+;; $Id: tree-buffer.el,v 1.84 2002/03/24 16:33:15 berndl Exp $
 
 ;;; Code:
 
@@ -832,35 +832,40 @@ NAME: Name of the buffer
 FRAME: Frame in which the tree-buffer is displayed and valid. All keybindings
        and interactive functions of the tree-buffer work only if called in
        FRAME otherwise nothing is done!
-IS-CLICK-VALID-FN: `tree-buffer-create' rebinds down-mouse-1 and down-mouse-2
-                   and also in combination with shift and control to
-                   `tree-buffer-select'. IS-CLICK-VALID-FN is called first if
-                   a node or an expand-symbol is clicked. This function is
+IS-CLICK-VALID-FN: `tree-buffer-create' rebinds down-mouse-1, down-mouse-2,
+                   RET \(and TAB) and also in combination with shift and
+                   control \(not with TAB). IS-CLICK-VALID-FN is called first
+                   if a node or an expand-symbol is clicked. This function is
                    called with four arguments:
-                   - mouse-button: The clicked mouse-button \(1 = mouse-1, 2 =
-                     mouse 2)
+                   - mouse-button: The clicked mouse-button or RET or TAB \(0
+                     = RET or TAB, 1 = mouse-1, 2 = mouse 2)
                    - shift-pressed: non nil if the SHIFT-key was pressed
-                     during mouse-click.
+                     during mouse-click or RET/TAB.
                    - control-pressed: non nil if the CONTROL-key was pressed
-                     during mouse-click.
+                     during mouse-click or RET/TAB.
                    - tree-buffer-name: The buffer-name of the tree-buffer
                      where the node has been clicked.
-                   The function must return not nil iff exactly this click is
-                   accepted. If the function returns nil then really nothing is
-                   done by the tree-buffer after this click!
+                   The function must return not nil iff exactly this click/hit
+                   is accepted. If the function returns nil then really
+                   nothing is done by the tree-buffer after this click/hit!
 NODE-SELECTED-FN: Function to call if a node has been selected
                   This function is called with the following paramters:
                   - node: The selected node
-                  - mouse-button
+                  - mouse-button \(0 = RET, 1 = mouse-1, 2 = mouse 2)
                   - shift-pressed
                   - control-pressed
                   - tree-buffer-name
                   For the last four arguments see the description above.
 NODE-EXPANDED-FN: Function to call if a node is expandable, point stays onto
                   the expand-symbol and node is not already expanded. This
-                  function is called with the same arguments as
-                  NODE-SELECTED-FN and should add all children nodes to this
-                  node \(if possible).
+                  function is called with the following paramters:
+                  - node: The selected node
+                  - mouse-button \(0 = TAB, 1 = mouse-1, 2 = mouse 2)
+                  - shift-pressed
+                  - control-pressed
+                  - tree-buffer-name
+                  This function should add all children nodes to this node
+                  \(if possible).
 NODE-MOUSE-OVER-FN: Function to call when the mouse is moved over a node. This
                     function is called with three arguments: NODE, WINDOW,
                     NO-PRINT, each of them related to the current tree-buffer.
@@ -986,6 +991,10 @@ AFTER-CREATE-HOOK: A function \(with no arguments) called directly after
       (function (lambda ()
                   (interactive)
                   (tree-buffer-return-pressed t nil))))
+    (define-key tree-buffer-key-map (kbd "<C-S-return>")
+      (function (lambda ()
+                  (interactive)
+                  (tree-buffer-return-pressed t t))))
     
     (define-key tree-buffer-key-map (kbd "TAB") 'tree-buffer-tab-pressed)
 
