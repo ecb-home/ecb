@@ -1119,9 +1119,7 @@ ECB-frame."
   "Goto the ecb compilation window `ecb-compile-window'."
   (interactive)
   (when (and ecb-minor-mode
-             ecb-compile-window-height
-             ecb-compile-window
-             (window-live-p ecb-compile-window))
+             (equal 'visible (ecb-compile-window-state)))
     (raise-frame ecb-frame)
     (select-frame ecb-frame)
     (select-window ecb-compile-window)))
@@ -1799,8 +1797,7 @@ That is remove the unsupported :help stuff."
     (ecb-menu-item
      ["Compilation"
       ecb-goto-window-compilation
-      :active (and ecb-compile-window-height ecb-compile-window
-                   (window-live-p ecb-compile-window))
+      :active (equal 'visible (ecb-compile-window-state))
       :help "Go to the history window"
       ])
     )
