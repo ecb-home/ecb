@@ -54,7 +54,7 @@
 ;; The latest version of the ECB is available at
 ;; http://home.swipnet.se/mayhem/ecb.html
 
-;; $Id: ecb.el,v 1.150 2001/08/31 16:22:16 berndl Exp $
+;; $Id: ecb.el,v 1.151 2001/09/02 19:36:28 berndl Exp $
 
 ;;; Code:
 
@@ -1779,13 +1779,6 @@ That is remove the unsupported :help stuff."
   (list
    ecb-menu-name
    (ecb-menu-item
-    [ "Deactivate ECB"
-      ecb-deactivate
-      :active t
-      :help "Deactivate ECB."
-      ])
-   "-"
-   (ecb-menu-item
     [ "Select ECB frame"
       ecb-activate
       :active (not (equal (selected-frame) ecb-frame))
@@ -1810,6 +1803,20 @@ That is remove the unsupported :help stuff."
       :help "Rebuild the method buffer completely"
       ])
    "-"
+   (list
+    "Navigate"
+    (ecb-menu-item
+     ["Previous \(back)"
+      ecb-nav-goto-previous
+      :active t
+      :help "Go to the previous navigation point"
+      ])
+    (ecb-menu-item
+     ["Next \(forward)"
+      ecb-nav-goto-next
+      :active t
+      :help "Go to the next navigation point"
+      ]))
    (list
     "Goto window"
     (ecb-menu-item
@@ -1855,7 +1862,6 @@ That is remove the unsupported :help stuff."
       :help "Go to the history window"
       ])
     )
-   "-"
    (list
     "Preferences"
     (ecb-menu-item
@@ -1902,7 +1908,6 @@ That is remove the unsupported :help stuff."
       :help "Customize ECB layout"
       ])
     )
-   "-"
    (list
     "Help"
     (ecb-menu-item
@@ -1920,6 +1925,13 @@ That is remove the unsupported :help stuff."
     "-"
     (concat "ECB " ecb-version)
     )
+   "-"   
+   (ecb-menu-item
+    [ "Deactivate ECB"
+      ecb-deactivate
+      :active t
+      :help "Deactivate ECB."
+      ])
    )
   "Menu for ECB minor mode.")
 
