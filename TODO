@@ -1,3 +1,6 @@
+- Enable ECB to handle remote paths correct (e.g. angeftp, efs- or
+  tramp-paths)
+
 - Prevent layout-engine from splitting windows when smaller than
   window-min-height/width.
 

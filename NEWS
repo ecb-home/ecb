@@ -11,6 +11,18 @@
     There is a new macro `ecb-defstealthy' which can be used by a user to
     program own stealthy tasks.
 
+*** Automatically upgraded not-compatible ecb-option-settings are now not saved
+    by default. This means that ECB has now the new policy "Never touching the
+    customization-files of a user without asking". The result is a completely
+    redesigned upgraded-options-buffer: Now at the bottom of this buffer
+    (displayed by `ecb-display-upgraded-options') two clickable buttons [Save]
+    and [Cancel] are displayed which give the user the choice between saving
+    the upgraded options for future Emacs-sessions ot just to cancel this
+    buffer. In the latter case ECB has also upgraded the not compatible or
+    renamed options (as listed in the displayed upgraded-options-buffer) but
+    they will be not saved, i.e. no customization-file is touched and the
+    changed and upgraded values will be lost after quiting Emacs.
+
 ** Fixed bugs
 
 *** Fixed a bug in the upgrading feature (command `ecb-download-ecb') which has
