@@ -117,6 +117,7 @@
 	 ("download.html" "Download")
 	 ("docs.html" "Documentation")
 	 ("faq.html" "FAQ")
+	 ("http://lists.sourceforge.net/lists/listinfo/ecb-list" "Mailing List")
 	 ("http://cvs.sourceforge.net/cgi-bin/viewcvs.cgi/ecb/" "CVS")
 	 ("screenshots.html" "Screenshots")
 	 ("links.html" "Links")
@@ -171,8 +172,7 @@
 		 )))
 
    (h-section "Feedback"
-	      "Please feel free to contact me if you find the code browser useful, if you have found some bugs or if you some suggestions on how to improve it." h-br
-	      (h-email "mayhem@home.se" "Jesper Nordenberg"))
+	      "Please use " (h-link "http://lists.sourceforge.net/lists/listinfo/ecb-list" "the public ECB mailing list") " for reporting bugs, making suggestions and asking questions about ECB.")
 
    (h-table
     (h-tr (h-td "The page's WebCounter count says that you are visitor number ")
