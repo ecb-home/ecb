@@ -23,7 +23,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-file-browser.el,v 1.42 2004/11/22 17:04:00 berndl Exp $
+;; $Id: ecb-file-browser.el,v 1.43 2004/11/24 16:23:15 berndl Exp $
 
 ;;; Commentary:
 
@@ -49,6 +49,7 @@
   (require 'silentcomp))
 
 (silentcomp-defun ecb-speedbar-update-contents)
+(silentcomp-defvar vc-cvs-stay-local)
 
 ;;====================================================
 ;; Customization
@@ -1003,6 +1004,7 @@ state-values of `vc-state' and `vc-cvs-state' \(both GNU Emacs) and
                                (const :tag "ignored" :value ignored)
                                (const :tag "unknown" :value unknown)))))
 
+;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: mention vc-recompute-state!!
 (defcustom ecb-vc-supported-backends
   (if ecb-running-xemacs
       '((ecb-vc-dir-managed-by-CVS . vc-cvs-status))
@@ -1050,10 +1052,10 @@ especially there is no backend-independent check-vc-state-function available
 available: `vc-cvs-status'. Therefore ECB adds per default only support for
 CVS and uses `ecb-vc-managed-by-CVS' rsp. `vc-cvs-status'.
 
-Example for GNU Emacs: If `vc-cvs-state' \(to get real state-values not only
-heuristic ones) should be used to check the state for CVS-managed files and
-`vc-state' for all other backends then an element \(ecb-vc-managed-by-CVS .
-vc-cvs-state) sould be added at the beginning of this option."
+Example for GNU Emacs: If `vc-recompute-state' \(to get real state-values not
+only heuristic ones) should be used to check the state for CVS-managed files
+and `vc-state' for all other backends then an element \(ecb-vc-managed-by-CVS
+. vc-recompute-state) sould be added at the beginning of this option."
   :group 'ecb-version-control
   :group 'ecb-sources
   :initialize 'custom-initialize-default  
@@ -2395,10 +2397,10 @@ is writable or not."
 ;; So we have to call only once the identify-backend-function (see above) for
 ;; a directory. The check-state-function must only be called if the file has
 ;; been modified since the stored check-state-timestamp. With this caching
-;; even using real-VC-checks (as vc-cvs-state) which never uses heuristics is
-;; possible without loosing to much informations (only if a file is modified
-;; by another user can not be detected with this cache - but for this we have
-;; the power-click which always throws away any cache-state)
+;; even using real-VC-checks (as vc-recompute-state) which never uses
+;; heuristics is possible without loosing to much informations (only if a file
+;; is modified by another user can not be detected with this cache - but for
+;; this we have the power-click which always throws away any cache-state)
 
 (defconst ecb-vc-state-icon-alist '((up-to-date . ("vc-up-to-date" "(u)"))
                                     (edited . ("vc-edited" "(e)"))
@@ -2523,34 +2525,58 @@ the SOURCES-cache."
                                             (buffer-substring (point-min)
                                                               (point-max))))))))
 
+
 (defun ecb-vc-dir-managed-by-CVS (directory)
   "Return 'CVS if DIRECTORY is managed by CVS. nil if not.
 
+This function tries to be as smart as possible: First it checks if DIRECTORY
+is managed by CVS by checking if there is a subdir CVS. If no then nil is
+returned. If yes then for GNU Emacs it takes into account the value of
+`vc-cvs-stay-local': If t then just return 'CVS. Otherwise ECB checks the root
+repository if it is a remote repository. If not just 'CVS is returned. If a
+remote repository it checks if the value of `vc-cvs-stay-local' is a string
+and matches the host of that repository. If yes then just 'CVS is returned. If
+not then ECB checks if that host is currently accessible by performing a ping.
+If accessible 'CVS is returned otherwise nil. This has the advantage that ECB
+will not be blocked by trying to get the state from a remote repository while
+the host is not accessible \(e.g. because the user works offline).
+
 Special remark for XEmacs: XEmacs has a quite outdated VC-package which has no
 option `vc-cvs-stay-local' so the user can not work with remote
-CVS-repositories if working offline for example. So ECB uses a workaround by
-checking the root of the CVS-repsoitory \(get it from the file /CVS/Root) if
-it is a remote root and if yes it pings the host of that root-repository. If
-accessible then it returns 'CVS otherwise nil."
+CVS-repositories if working offline for example. So if there is no option
+`vc-cvs-stay-local' then ECB performs always the repository check mentioned
+above."
   (and (file-exists-p (concat directory "/CVS/"))
-       (if (not ecb-running-xemacs)
-           ;; GNU Emacs has a quite smart VC-package, so we can just use it...
-           'CVS
-	 ;; XEmacs has a quite outdated VC-package which has no option
-	 ;; `vc-cvs-stay-local' so the user can not work with remote directories
-	 ;; if working offline for example. so we add a kludgy workaround by
-	 ;; checking the root of the CVS-repsoitory (we can get it from the file
-	 ;; /CVS/Root) if it is a remote root and if yes we ping the host of
-	 ;; that root. If accessible ...
-	 (let* ((Root-content (ecb-file-content-as-string (concat directory
-                                                                  "/CVS/Root")))
-		(host (and Root-content
-			   (string-match "@\\(.+\\):" Root-content)
-			   (match-string 1 Root-content))))
-	   (if host
-               (and (ecb-host-accessible-p host) 'CVS)
-             ;; a local repository
-             'CVS)))))
+       (if (or (not (boundp 'vc-cvs-stay-local))
+               (not (eq vc-cvs-stay-local t)))
+           ;; XEmacs has a quite outdated VC-package which has no option
+           ;; `vc-cvs-stay-local' so the user can not work with remote
+           ;; directories if working offline for example. so we use a
+           ;; workaround by checking the root of the CVS-repsoitory (we can
+           ;; get it from the file /CVS/Root) if it is a remote root and if
+           ;; yes we ping the host of that root. If accessible ...
+           (let* ((Root-content (ecb-file-content-as-string (concat directory
+                                                                    "/CVS/Root")))
+                  (host (and Root-content
+                             ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: This
+                             ;; regexp will fail when the user@ is not
+                             ;; contained in the Root - it can be omitted if
+                             ;; the user on the local and remote machines is
+                             ;; the same! But for now it should be enough...
+                             (string-match "@\\(.+\\):" Root-content)
+                             (match-string 1 Root-content))))
+             (when (or (null host) ;; local repository
+                       ;; vc-cvs-stay-local says VC should stay local for this
+                       ;; host
+                       (and (boundp 'vc-cvs-stay-local)
+                            (stringp vc-cvs-stay-local)
+                            (string-match vc-cvs-stay-local host))
+                       ;; the host is at least accessible
+                       (ecb-host-accessible-p host))
+               'CVS))
+         ;; VC always will stay local so we are satisfied ;-)
+         'CVS)))
+
 
 (defun ecb-vc-dir-managed-by-RCS (directory)
   "Return 'RCS if DIRECTORY is managed by RCS. nil if not."
