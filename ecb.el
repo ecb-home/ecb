@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb.el,v 1.344 2003/10/02 08:35:21 berndl Exp $
+;; $Id: ecb.el,v 1.345 2003/10/02 09:17:47 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -1918,6 +1918,7 @@ If you change this option you have to restart ECB to take effect."
   '(("Version control"
      (ecb-file-popup-ediff-revision "Ediff against revision")
      ("---")
+     (ecb-file-popup-vc-next-action "Check In/Out")
      (ecb-file-popup-vc-log "Revision history")
      (ecb-file-popup-vc-annotate "Annotate")
      (ecb-file-popup-vc-diff "Diff against last version")))
@@ -1982,6 +1983,7 @@ If you change this option you have to restart ECB to take effect."
   '(("Version control"
      (ecb-file-popup-ediff-revision "Ediff against revision")
      ("---")
+     (ecb-file-popup-vc-next-action "Check In/Out")
      (ecb-file-popup-vc-log "Revision history")
      (ecb-file-popup-vc-annotate "Annotate")
      (ecb-file-popup-vc-diff "Diff against last version")))
@@ -6310,6 +6312,12 @@ function which is called with current node and has to return a string.")
   "Diff file against repository with ediff."
   (let ((file (tree-node-get-data node)))
     (ediff-revision file)))
+
+(defun ecb-file-popup-vc-next-action (node)
+  "Checkin/out file."
+  (let ((file (tree-node-get-data node)))
+    (find-file file)
+    (vc-next-action nil)))
 
 (defun ecb-file-popup-vc-log (node)
   "Print revision history of file."
