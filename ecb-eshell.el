@@ -1,6 +1,6 @@
 ;;; ecb-eshell.el --- eshell integration for the ECB.
 
-;; $Id: ecb-eshell.el,v 1.19 2001/12/22 06:52:05 burtonator Exp $
+;; $Id: ecb-eshell.el,v 1.20 2001/12/26 04:03:29 burtonator Exp $
 
 ;; Copyright (C) 2000-2003 Free Software Foundation, Inc.
 ;; Copyright (C) 2000-2003 Kevin A. Burton (burton@openprivacy.org)
@@ -57,8 +57,11 @@
 
 ;;; History:
 ;;
+;; - Tue Dec 25 2001 07:54 PM (burton@openprivacy.org): We now enlarge the ecb
+;;   window when you goto it.
+;;    
 ;; - Sat Dec 15 2001 01:50 AM (burton@openprivacy.org): We are not being much
-;; smarter about saving selected windows.
+;;   smarter about saving selected windows.
 ;;
 ;; - Fri Dec 14 2001 05:57 PM (burton@openprivacy.org): fixed a bug which caused 
 ;;
@@ -191,11 +194,13 @@ eshell is currently visible."
     
     (eshell))
 
+  (ecb-eshell-resize)
+  
   (ecb-eshell-recenter))
 
 (defun ecb-eshell-resize()
   "Resize the eshell so more information is available.  This is usually done so
-  that the eshell has more screen space after we execute a command. "
+that the eshell has more screen space after we execute a command. "
   (interactive)
 
   (let(enlargement window)
