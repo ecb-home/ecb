@@ -1,6 +1,6 @@
 # This Makefile byte-compiles the ECB lisp files and generates online-help.
 
-# $Id: Makefile,v 1.51 2003/01/31 12:28:40 berndl Exp $
+# $Id: Makefile,v 1.52 2003/02/04 11:10:42 berndl Exp $
 
 # ========================================================================
 # User configurable section
@@ -91,14 +91,17 @@ INSTALLINFO=/usr/bin/install-info
 
 # Do not change anything below!
 
-# $Id: Makefile,v 1.51 2003/01/31 12:28:40 berndl Exp $
+# $Id: Makefile,v 1.52 2003/02/04 11:10:42 berndl Exp $
+
+# For the ECB-maintainers: Change the version-number here and not
+# elsewhere!
+ecb_VERSION=1.91
+
 
 RM=rm -f
 CP=cp
 MV=mv -f
 MKDIR=mkdir -p
-
-ecb_VERSION=1.90
 
 ecb_LISP_EL=tree-buffer.el ecb-util.el ecb-mode-line.el ecb-help.el \
             ecb-layout.el ecb-layout-defs.el ecb-navigate.el ecb.el \
