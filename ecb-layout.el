@@ -124,7 +124,7 @@
 ;;   + The edit-window must not be splitted and the point must reside in
 ;;     the not deleted edit-window.
 
-;; $Id: ecb-layout.el,v 1.107 2002/05/17 12:09:22 berndl Exp $
+;; $Id: ecb-layout.el,v 1.108 2002/05/24 16:08:32 berndl Exp $
 
 ;;; Code:
 
@@ -562,6 +562,10 @@ command.")
 
 (defun ecb-edit-window-live-p ()
   (and ecb-edit-window (window-live-p ecb-edit-window)))
+
+(defun ecb-window-live-p (buffer-name)
+  "Return not nil if buffer BUFFER-NAME is displayed in an active window."
+  (and buffer-name (window-live-p (get-buffer-window buffer-name))))
 
 ;; ====== basic advices ===============================================
 

@@ -54,7 +54,7 @@
 ;; The latest version of the ECB is available at
 ;; http://home.swipnet.se/mayhem/ecb.html
 
-;; $Id: ecb.el,v 1.216 2002/05/17 12:09:22 berndl Exp $
+;; $Id: ecb.el,v 1.217 2002/05/24 16:08:33 berndl Exp $
 
 ;;; Code:
 
@@ -119,6 +119,9 @@
 (make-variable-buffer-local 'ecb-selected-token)
 (defvar ecb-methods-root-node nil
   "Path to currently selected source.")
+(defvar ecb-item-in-tree-buffer-selected nil
+  "Only true if any item in any tree-buffer has been selected in recent
+  command.")
 
 (defun ecb-initialize-internal-vars ()
   (setq ecb-tree-buffers nil
@@ -1896,26 +1899,45 @@ given."
      (tree-buffer-highlight-node-data ecb-path-selected-source))
 
     ;; Update history buffer always regardless of visibilty of history window
+    (ecb-add-item-to-history-buffer ecb-path-selected-source)
+    (ecb-sort-history-buffer)
+    ;; Update the history window only if it is visible
+    (ecb-update-history-window ecb-path-selected-source)))
+
+(defun ecb-add-item-to-history-buffer (filename)
+  "Add a new item for FILENAME to the history buffer."
+  (save-excursion
+    (ecb-buffer-select ecb-history-buffer-name)
+    (tree-node-remove-child-data (tree-buffer-get-root) filename)
+    (tree-node-add-child-first
+     (tree-buffer-get-root)
+     (tree-node-new
+      (if (eq ecb-history-item-name 'buffer-name)
+          (let ((b (get-file-buffer filename)))
+            (if b
+                (buffer-name b)
+              (ecb-get-source-name filename)))
+        (ecb-get-source-name filename))
+      0
+      filename t))))
+
+(defun ecb-sort-history-buffer ()
+  "Sort the history buffer according to `ecb-sort-history-items'."
+  (when ecb-sort-history-items
+    (save-excursion
+      (ecb-buffer-select ecb-history-buffer-name)
+      (tree-node-sort-children
+       (tree-buffer-get-root)
+       (function (lambda (l r) (string< (tree-node-get-name l)
+                                        (tree-node-get-name r))))))))
+
+(defun ecb-update-history-window (&optional filename)
+  "Updates the history window and highlights the item for FILENAME if given."
+  (save-selected-window
     (ecb-exec-in-history-window
-     (tree-node-remove-child-data (tree-buffer-get-root) ecb-path-selected-source)
-     (tree-node-add-child-first
-      (tree-buffer-get-root)
-      (tree-node-new
-       (if (eq ecb-history-item-name 'buffer-name)
-           (let ((b (get-file-buffer ecb-path-selected-source)))
-             (if b
-                 (buffer-name b)
-               (ecb-get-source-name ecb-path-selected-source)))
-         (ecb-get-source-name ecb-path-selected-source))
-       0
-       ecb-path-selected-source t))
-     (when ecb-sort-history-items
-       (tree-node-sort-children
-        (tree-buffer-get-root)
-        (function (lambda (l r) (string< (tree-node-get-name l)
-                                         (tree-node-get-name r))))))
      (tree-buffer-update)
-     (tree-buffer-highlight-node-data ecb-path-selected-source))))
+     (tree-buffer-highlight-node-data filename))))
+
 
 (defun ecb-update-methods-after-saving ()
   "Updates the methods-buffer after saving if this option is turned on and if
@@ -2437,6 +2459,9 @@ combination is invalid \(see `ecb-interpret-mouse-click'."
 						     tree-buffer-name))
 	 (ecb-button (car ecb-button-list))
 	 (shift-mode (cadr ecb-button-list)))
+    ;; we need maybe later that something has clicked in a tree-buffer, e.g.
+    ;; in `ecb-handle-major-mode-activation'.
+    (setq ecb-item-in-tree-buffer-selected t)
     ;; first we dispatch to the right action
     (when ecb-button-list
       (cond ((string= tree-buffer-name ecb-directories-buffer-name)
@@ -2547,24 +2572,6 @@ Currently the fourth argument TREE-BUFFER-NAME is not used here."
       (ecb-set-selected-source (tree-node-get-data node)
 			       (and (ecb-edit-window-splitted) (eq ecb-button 2))
 			       shift-mode))))
-
-;; (defun ecb-directory-clicked (node ecb-button shift-mode)
-;;   (if (= 3 (tree-node-get-type node))
-;;       (funcall (tree-node-get-data node))
-;;     (ecb-update-directory-node node)
-;;     (if (or (= 0 (tree-node-get-type node)) (= 2 (tree-node-get-type node)))
-;; 	(if shift-mode
-;; 	    (ecb-mouse-over-directory-node node nil nil 'force)
-;; 	  (progn
-;; 	    (if (= 2 ecb-button)
-;; 		(tree-node-toggle-expanded node)
-;; 	      (ecb-set-selected-directory (tree-node-get-data node)))
-;; 	    (ecb-exec-in-directories-window
-;; 	     ;; Update the tree-buffer with optimized display of NODE
-;; 	     (tree-buffer-update node))))
-;;       (ecb-set-selected-source (tree-node-get-data node)
-;; 			       (and (ecb-edit-window-splitted) (eq ecb-button 2))
-;; 			       shift-mode))))
 
 (defun ecb-source-clicked (node ecb-button shift-mode)
   (if shift-mode
@@ -3427,6 +3434,7 @@ always the ECB-frame if called from another frame."
     (ecb-redraw-layout)
     
     (ecb-with-adviced-functions
+     ;; activate the correct edit-window split
      (cond ((equal ecb-split-edit-window 'vertical)
             (split-window-vertically))
            ((equal ecb-split-edit-window 'horizontal)
@@ -3434,6 +3442,15 @@ always the ECB-frame if called from another frame."
            ((not ecb-split-edit-window)
             (delete-other-windows))))
 
+    ;; fill up the history-buffer with all file-buffers
+    (when (ecb-window-live-p ecb-history-buffer-name)
+      (mapc (lambda (buffer)
+              (when (buffer-file-name buffer)
+                (ecb-add-item-to-history-buffer (buffer-file-name buffer))))
+            (buffer-list))
+      (ecb-sort-history-buffer))
+    (ecb-update-history-window (buffer-file-name (current-buffer)))
+    
     (ecb-update-directories-buffer)
     ;; now update all the ECB-buffer-modelines
     (ecb-mode-line-format)
@@ -3441,7 +3458,7 @@ always the ECB-frame if called from another frame."
     ;; we run any personal hooks
     (run-hooks 'ecb-activate-hook)
 
-   ;; enable mouse-tracking for the ecb-tree-buffers; we do this after running
+    ;; enable mouse-tracking for the ecb-tree-buffers; we do this after running
     ;; the personal hooks because if a user put´s activation of
     ;; follow-mouse.el (`turn-on-follow-mouse') in the `ecb-activate-hook'
     ;; then our own ECb mouse-tracking must be activated later.
@@ -3674,82 +3691,93 @@ FILE.elc or if FILE.elc doesn't exist."
 values of `ecb-major-modes-activate' and `ecb-major-modes-deactivate'.
 Because this hook of `post-command-hook' does nothing if the major-mode has not
 changed there should be no performance-problem!"
-  ;; do nothing if major-mode has not been changed.
-  (when (not (equal ecb-last-major-mode major-mode))
-    (setq ecb-last-major-mode major-mode)
-    (ignore-errors
-      (cond (;; ecb-major-modes-activate is "All except deactivated:
-             (and (stringp ecb-major-modes-activate)
-                  ;; ecb-major-modes-deactivate must be the major-mode-list
-                  (listp ecb-major-modes-deactivate)
-                  ecb-major-modes-deactivate
-                  (not (listp (car ecb-major-modes-deactivate)))
-                  ;; current major-mode must not be contained in
-                  ;; ecb-major-modes-deactivate
-                  (not (assoc major-mode ecb-major-modes-deactivate))
-                  ;; the windwo must not be splitted
-                  (equal (selected-window) (next-window))
-                  ;; current major-mode must not match the regexp of
-                  ;; ecb-major-modes-activate.
-                  (not (save-match-data
-                         (string-match ecb-major-modes-activate
-                                       (symbol-name major-mode)))))
-             (if ecb-minor-mode
-                 (and (ecb-point-in-edit-window) (ecb-show-ecb-windows))
-               (ecb-activate)))
-            ;; ecb-major-modes-activate is a major-mode list:
-            ((and (listp ecb-major-modes-activate)
-                  ecb-major-modes-activate
-                  (assoc major-mode ecb-major-modes-activate)
-                  (equal (selected-window) (next-window)))
-             (if ecb-minor-mode
-                 (and (ecb-point-in-edit-window) (ecb-show-ecb-windows))
-               (ecb-activate)
-               (let* ((layout (cdr (assoc major-mode
-                                          ecb-major-modes-activate)))
-                      (layout-to-set (if (equal layout 'default)
-                                         (car (or (get 'ecb-layout-nr 'saved-value)
-                                                  (get 'ecb-layout-nr 'standard-value)))
-                                       layout)))
-                 ;; if we must set a new layout we do this via customizing
-                 ;; ecb-layout-nr for current Emacs-session!
-                 (if (not (eq layout-to-set ecb-layout-nr))
-                     (customize-set-variable 'ecb-layout-nr layout-to-set)))))
-            ;; ecb-major-modes-deactivate is "All except activated"
-            ((and (listp ecb-major-modes-deactivate)
-                  (member (car ecb-major-modes-deactivate)
-                          '(hide-all-except-activated
-                            deactivate-all-except-activated))
-                  (stringp (cdr ecb-major-modes-deactivate))
-                  ;; ecb-major-modes-activate must ne a major-mode list
-                  (listp ecb-major-modes-activate)
-                  ecb-major-modes-activate
-                  ;; current major-mode must not be contained in
-                  ;; ecb-major-modes-activate.
-                  (not (assoc major-mode ecb-major-modes-activate))
-                  ecb-minor-mode
-                  ;; point must be stay in the unsplitted edit-window of ECB
-                  (ecb-point-in-edit-window)
-                  (not (ecb-edit-window-splitted))
-                  (not (save-match-data
-                         (string-match (cdr ecb-major-modes-deactivate)
-                                       (symbol-name major-mode)))))
-             (if (equal (car ecb-major-modes-deactivate)
-                        'deactivate-all-except-activated)
-                 (ecb-deactivate)
-               (ecb-hide-ecb-windows)))
-            ;; ecb-major-modes-deactivate is a major-mode list
-            ((and (listp ecb-major-modes-deactivate)
-                  (listp (car ecb-major-modes-deactivate))
-                  ecb-major-modes-deactivate
-                  (assoc major-mode ecb-major-modes-deactivate)
-                  ecb-minor-mode
-                  (ecb-point-in-edit-window)
-                  (not (ecb-edit-window-splitted)))
-             (if (equal (cdr (assoc major-mode ecb-major-modes-deactivate))
-                        'hide)
-                 (ecb-hide-ecb-windows)
-               (ecb-deactivate)))))))
+  ;; Klaus: I think we need this to prevent doing here (de)activation
+  ;; immediatelly after the button-pressed event (which is a command) because
+  ;; then a mysterious window-live-p error for the minibuffer-window occurs if
+  ;; we click onto a file which deactivates ECB.
+  ;; With this the (de)activation is first done after the button-released
+  ;; event which is created by Emacs for every tree-buffer click and is bound
+  ;; to a nop.
+  ;; At least this is my current interpretation and it works :-)
+  ;; TODO: detecting the real reason why this happens and fixing it.
+  (if ecb-item-in-tree-buffer-selected
+      (setq ecb-item-in-tree-buffer-selected nil)
+    ;; do nothing if major-mode has not been changed.
+    (when (not (equal ecb-last-major-mode major-mode))
+      (setq ecb-last-major-mode major-mode)
+      (ignore-errors
+        (cond ( ;; ecb-major-modes-activate is "All except deactivated:
+               (and (stringp ecb-major-modes-activate)
+                    ;; ecb-major-modes-deactivate must be the major-mode-list
+                    (listp ecb-major-modes-deactivate)
+                    ecb-major-modes-deactivate
+                    (not (listp (car ecb-major-modes-deactivate)))
+                    ;; current major-mode must not be contained in
+                    ;; ecb-major-modes-deactivate
+                    (not (assoc major-mode ecb-major-modes-deactivate))
+                    ;; the windwo must not be splitted
+                    (equal (selected-window) (next-window))
+                    ;; current major-mode must not match the regexp of
+                    ;; ecb-major-modes-activate.
+                    (not (save-match-data
+                           (string-match ecb-major-modes-activate
+                                         (symbol-name major-mode)))))
+               (if ecb-minor-mode
+                   (and (ecb-point-in-edit-window) (ecb-show-ecb-windows))
+                 (ecb-activate)))
+              ;; ecb-major-modes-activate is a major-mode list:
+              ((and (listp ecb-major-modes-activate)
+                    ecb-major-modes-activate
+                    (assoc major-mode ecb-major-modes-activate)
+                    (equal (selected-window) (next-window)))
+               (if ecb-minor-mode
+                   (and (ecb-point-in-edit-window) (ecb-show-ecb-windows))
+                 (ecb-activate)
+                 (let* ((layout (cdr (assoc major-mode
+                                            ecb-major-modes-activate)))
+                        (layout-to-set (if (equal layout 'default)
+                                           (car (or (get 'ecb-layout-nr 'saved-value)
+                                                    (get 'ecb-layout-nr 'standard-value)))
+                                         layout)))
+                   ;; if we must set a new layout we do this via customizing
+                   ;; ecb-layout-nr for current Emacs-session!
+                   (if (not (eq layout-to-set ecb-layout-nr))
+                       (customize-set-variable 'ecb-layout-nr layout-to-set)))))
+              ;; ecb-major-modes-deactivate is "All except activated"
+              ((and (listp ecb-major-modes-deactivate)
+                    (member (car ecb-major-modes-deactivate)
+                            '(hide-all-except-activated
+                              deactivate-all-except-activated))
+                    (stringp (cdr ecb-major-modes-deactivate))
+                    ;; ecb-major-modes-activate must ne a major-mode list
+                    (listp ecb-major-modes-activate)
+                    ecb-major-modes-activate
+                    ;; current major-mode must not be contained in
+                    ;; ecb-major-modes-activate.
+                    (not (assoc major-mode ecb-major-modes-activate))
+                    ecb-minor-mode
+                    ;; point must be stay in the unsplitted edit-window of ECB
+                    (ecb-point-in-edit-window)
+                    (not (ecb-edit-window-splitted))
+                    (not (save-match-data
+                           (string-match (cdr ecb-major-modes-deactivate)
+                                         (symbol-name major-mode)))))
+               (if (equal (car ecb-major-modes-deactivate)
+                          'deactivate-all-except-activated)
+                   (ecb-deactivate)
+                 (ecb-hide-ecb-windows)))
+              ;; ecb-major-modes-deactivate is a major-mode list
+              ((and (listp ecb-major-modes-deactivate)
+                    (listp (car ecb-major-modes-deactivate))
+                    ecb-major-modes-deactivate
+                    (assoc major-mode ecb-major-modes-deactivate)
+                    ecb-minor-mode
+                    (ecb-point-in-edit-window)
+                    (not (ecb-edit-window-splitted)))
+               (if (equal (cdr (assoc major-mode ecb-major-modes-deactivate))
+                          'hide)
+                   (ecb-hide-ecb-windows)
+                 (ecb-deactivate))))))))
 
 
 (add-hook 'post-command-hook 'ecb-handle-major-mode-activation)
