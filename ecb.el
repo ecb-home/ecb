@@ -54,7 +54,7 @@
 ;; The latest version of the ECB is available at
 ;; http://home.swipnet.se/mayhem/ecb.html
 
-;; $Id: ecb.el,v 1.128 2001/07/13 19:57:19 creator Exp $
+;; $Id: ecb.el,v 1.129 2001/07/13 21:40:49 creator Exp $
 
 ;;; Code:
 
@@ -310,11 +310,6 @@ the current source-buffer."
   :group 'ecb-methods
   :type 'boolean)
 
-(defcustom ecb-sort-tokens t
-  "*Sort the tokens in the methods buffer." 
-  :group 'ecb-methods
-  :type 'boolean)
-
 (defcustom ecb-token-jump-sets-mark t
   "*Jumping to a token from the ECB-method buffer now sets the mark
 so the user can easily jump back."
@@ -327,13 +322,13 @@ Some useful functions are found in `semantic-token->text-functions'."
   :group 'ecb-methods
   :type semantic-token->text-custom-list)
 
-(defcustom ecb-show-tokens '((include collapsed)
-			     (parent collapsed)
-                             (type expanded)
-                             (variable collapsed)
-                             (function flattened)
-                             (rule flattened)
-                             (t collapsed))
+(defcustom ecb-show-tokens '((include collapsed nil)
+			     (parent collapsed nil)
+                             (type expanded nil)
+                             (variable collapsed t)
+                             (function flattened t)
+                             (rule flattened t)
+                             (t collapsed t))
   "*How to show tokens in the methods buffer. This variable is a list
 where each item is a list of a Semantic token type symbol and a symbol which
 describes how the token type shall be shown:
@@ -352,7 +347,8 @@ The tokens in the methods buffer are displayed in the order as they appear in th
 			       (const :tag "Expanded" expanded)
 			       (const :tag "Collapsed" collapsed)
 			       (const :tag "Flattened" flattened)
-			       (const :tag "Hidden" hidden)))))
+			       (const :tag "Hidden" hidden))
+		       (boolean :tag "Sorted" :value nil))))
 
 (defcustom ecb-exclude-parents-regexp nil
   "*Regexp which parent classes should not be shown in the methods buffer
@@ -701,12 +697,12 @@ cleared!) ECB by running `ecb-deactivate'."
   (let ((display (find token-type ecb-show-tokens :test
 		       (function (lambda (a b) (eq a (car b)))))))
     (if display
-	(cadr display)
+	display
       (setq display (find t ecb-show-tokens :test
 			  (function (lambda (a b) (eq a (car b))))))
       (if display
-	  (cadr display)
-	'hidden))))
+	  display
+	'(t hidden nil)))))
 
 (defun ecb-get-token-parents (token)
   (let ((parents
@@ -728,16 +724,17 @@ cleared!) ECB by running `ecb-deactivate'."
 	(funcall ecb-token-display-function token nil ecb-font-lock-tokens)
       (error (semantic-prototype-nonterminal token nil ecb-font-lock-tokens)))))
 
-(defun ecb-find-add-token-bucket (node type display buckets)
+(defun ecb-find-add-token-bucket (node type display sorted buckets)
+  "Finds a bucket containing tokens of the given type, creates nodes for them and adds them to the given node. The bucket is removed from the buckets list."
   (when (cdr buckets)
     (let ((bucket (cadr buckets)))
       (if (eq type (semantic-token-token (cadr bucket)))
 	  (progn
-	    (ecb-add-token-bucket node bucket display)
+	    (ecb-add-token-bucket node bucket display sorted)
 	    (setcdr buckets (cddr buckets)))
-	(ecb-find-add-token-bucket node type display (cdr buckets))))))
+	(ecb-find-add-token-bucket node type display sorted (cdr buckets))))))
 
-(defun ecb-add-token-bucket (node bucket display &optional node-type node-data)
+(defun ecb-add-token-bucket (node bucket display sorted)
   "Adds a token bucket to a node."
   (when bucket
     (let ((name (car bucket))
@@ -745,54 +742,65 @@ cleared!) ECB by running `ecb-deactivate'."
 	  (bucket-node node))
       (unless (eq 'hidden display)
 	(unless (eq 'flattened display)
-	  (setq bucket-node (tree-node-new name (if node-type node-type 1)
-					   node-data nil node))
+	  (setq bucket-node (tree-node-new name 1 nil nil node))
 	  (tree-node-set-expanded bucket-node (eq 'expanded display)))
-	(dolist (token (cdr bucket))
-	  (ecb-update-token-node
-	   token
-	   (tree-node-new "" 0 token t bucket-node)))))))
+	(dolist (token
+		 (if sorted
+		   (sort
+		    (cdr bucket)
+		    (function (lambda(a b) (string< (semantic-token-name a)
+						    (semantic-token-name b)))))
+		   (cdr bucket)))
+	  (ecb-update-token-node token
+				 (tree-node-new "" 0 token t bucket-node)))))))
 
 (defun ecb-update-token-node (token node)
   "Updates a node containing a token."
   (let* ((children (semantic-nonterminal-children token t)))
     (tree-node-set-name node (ecb-get-token-name token))
+    ;; Always expand types, maybe this should be customizable and more
+    ;; flexible
     (tree-node-set-expanded node (eq 'type (semantic-token-token token)))
     (ecb-add-tokens node children token)
     (tree-node-set-expandable
      node (not (eq nil (tree-node-get-children node))))))
 
+(defun ecb-dump-toplevel ()
+  (interactive)
+  (ecb-dump-tokens (semantic-bovinate-toplevel t) ""))
+  
+(defun ecb-dump-tokens (tokens prefix)
+  (when tokens
+    (progn
+      (dolist (tok tokens)
+	(prin1 (concat prefix (semantic-token-name tok)))
+	(ecb-dump-tokens (semantic-nonterminal-children tok t)
+			 (concat prefix "  "))))))
+
 (defun ecb-add-tokens (node tokens &optional parent-token)
+  (when tokens
+    (ecb-add-token-buckets node parent-token (semantic-bucketize tokens))))
+
+(defun ecb-add-token-buckets (node parent-token buckets)
   "Creates and adds token nodes to the given node."
-  (let* ((buckets
-	  (cons nil
-		(semantic-bucketize
-		 tokens
-		 (when ecb-sort-tokens
-		   (function
-		    (lambda (items)
-		      (sort items
-			    (function
-			     (lambda(a b)
-			       (string< (semantic-token-name a)
-					(semantic-token-name b))))))))))))
-    (dolist (token-display ecb-show-tokens)
-      (let* ((type (car token-display))
-	     (display (cadr token-display)))
-	(cond
-	 ((eq 'parent type)
-	  (when (and parent-token
-		     (eq 'type (semantic-token-token parent-token)))
-	    (let ((node (ecb-create-node node display "Parents" nil 1)))
-	      (when node
-		(dolist (parent (ecb-get-token-parents parent-token))
-		  (tree-node-new parent 2 parent t node))))))
-	 (t (ecb-find-add-token-bucket node (car token-display)
-				       (cadr token-display)
-				       buckets)))))
-    (let ((display (ecb-get-token-type-display t)))
-      (dolist (bucket buckets)
-	(ecb-add-token-bucket node bucket display)))))
+   (setq buckets (cons nil buckets))
+   (dolist (token-display ecb-show-tokens)
+     (let* ((type (car token-display))
+	    (display (cadr token-display))
+	    (sorted (caddr token-display)))
+       (cond
+        ((eq 'parent type)
+ 	(when (and parent-token
+ 		   (eq 'type (semantic-token-token parent-token)))
+ 	  (let ((node (ecb-create-node node display "Parents" nil 1)))
+ 	    (when node
+ 	      (dolist (parent (ecb-get-token-parents parent-token))
+ 		(tree-node-new parent 2 parent t node))))))
+        (t (ecb-find-add-token-bucket node type display sorted buckets)))))
+   (let ((type-display (ecb-get-token-type-display t)))
+     (dolist (bucket buckets)
+       (ecb-add-token-bucket node bucket (cadr type-display)
+			     (caddr type-display)))))
 
 (defun ecb-update-token (token)
   "Finds a node displaying token and updates it."
@@ -979,28 +987,25 @@ function is added to the hook `semantic-after-toplevel-cache-change-hook'."
              ;; again.
              (or updated-cache
                  (not (semantic-active-p))))
-    ;; This is a fix for semantic 1.4beta2
-    ;; otherwise it parses the mini-buffer
-    (unless (string-match "^ *\\*" (buffer-name))
+    (let ((cached-tree (assoc ecb-path-selected-source ecb-token-tree-cache)))
+      (unless (and no-update cached-tree)
+	(setq cached-tree (list ecb-path-selected-source
+				(tree-node-new "root" 0 nil)
+				1 1))
+	(ecb-add-tokens (cadr cached-tree) updated-cache)
+	(setq ecb-token-tree-cache (cons cached-tree ecb-token-tree-cache)))
       (save-selected-window
 	(ecb-exec-in-methods-window
 	 (when ecb-last-cached-tree
 	   (setcar (cddr ecb-last-cached-tree) (point))
 	   (setcar (cdddr ecb-last-cached-tree) (window-start)))
-	 (let ((cached-tree (assoc ecb-path-selected-source ecb-token-tree-cache)))
-	   (unless (and no-update cached-tree)
-	     (setq cached-tree (list ecb-path-selected-source
-				     (tree-node-new "root" 0 nil)
-				     (point-min) (point-min)))
-	     (ecb-add-tokens (cadr cached-tree) updated-cache)
-	     (setq ecb-token-tree-cache (cons cached-tree ecb-token-tree-cache)))
-	   (setq ecb-last-cached-tree cached-tree)
-	   (tree-buffer-set-root (cadr cached-tree))
-	   (setq ecb-methods-root-node (cadr cached-tree))
-	   (setq tree-buffer-indent ecb-tree-indent)
-	   (tree-buffer-update)
-	   (tree-buffer-scroll (caddr cached-tree) (cadddr cached-tree)))))
-      (ecb-mode-line-format))
+	 (setq ecb-last-cached-tree cached-tree)
+	 (tree-buffer-set-root (cadr cached-tree))
+	 (setq ecb-methods-root-node (cadr cached-tree))
+	 (setq tree-buffer-indent ecb-tree-indent)
+	 (tree-buffer-update)
+	 (tree-buffer-scroll (caddr cached-tree) (cadddr cached-tree)))))
+    (ecb-mode-line-format)
     ;; signalize that the rebuild has already be done
     (setq ecb-method-buffer-needs-rebuild nil)))
 
