@@ -32,6 +32,10 @@ Installation
 
 2. Install the required semantic- and eieio-version.
 
+   Note: ECB maybe requires a newer version of these libraries than shipped
+   with Emacs or XEmacs. You have to install exactly a version ECB requires
+   and also to make sure that the correct version is loaded into (X)Emacs!
+
 3. Add the new directory to your load-path.
 
    You MUST add the ECB-install-directory to the 'load-path' either by
@@ -48,7 +52,7 @@ Installation
 4. Add to your .emacs or site-start.el file the line:
    (require 'ecb)
 
-Optional steps:
+Now ECB is ready for use but you can do these optional steps:
 
 5. Restart Emacs.
 

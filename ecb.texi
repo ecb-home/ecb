@@ -68,6 +68,11 @@ Unpack the ECB archive.
 Read the file @file{README} in the ECB-directory and install the
 required semantic- and eieio-version.
 
+@strong{Note}: ECB maybe requires a newer version of these libraries than
+shipped with Emacs or XEmacs. You have to install exactly a version
+ECB requires and also to make sure that the correct version is loaded
+into (X)Emacs!
+
 @item
 Add the new ECB-directory to your @code{load-path} variable.
 
@@ -76,7 +81,7 @@ by changing the @code{load-path} variable directly in your
 @file{.emacs} or @file{site-lisp/site-start.el} or by working with
 a file @file{subdirs.el}.
 
-ATTENTION:
+@strong{ATTENTION}:
 ECB is NOT properly installed if it's directory is not added to
 @code{load-path} and for example just loaded by
 
@@ -95,7 +100,7 @@ Add to your @file{.emacs} or @file{site-lisp/site-start.el} the line:
 @end enumerate
 
 @noindent
-Optional steps:
+Now ECB is ready for use but you can do these optional steps:
 
 @enumerate 5
 @item Restart Emacs.
@@ -483,6 +488,8 @@ above but with the option @code{ecb-advice-window-functions} you can
 customizes which functions should be adviced by ECB. Please read
 carefully the documentation of this option!
 
+Another interesting option in the context of the edit-window and these
+adviced functions is @code{ecb-layout-always-operate-in-edit-window}!
 
 @node Temp- and compilation-buffers, Rebuilding the Methods buffer, Working with the edit-window, Usage of ECB
 @section Temp- and compilation-buffers display in ECB
@@ -518,6 +525,11 @@ With the option @code{ecb-compile-window-temporally-enlarge} you can allow
 Emacs to enlarge temporally the ECB-compile-window in some situations.
 Please read the comment of this option. See also the description of
 the function @code{ecb-toggle-enlarged-compilation-window}.
+
+@item
+With the option @code{ecb-layout-switch-to-compilation-window} you can
+modify the switch-to-buffer...-functions to work best if your layout
+contains a compilation-window. See the docstring of this option.
 @end itemize
 
 But because ECB works best without such a durable compilation-window
