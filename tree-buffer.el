@@ -231,6 +231,7 @@ inserted and the TEXT itself"
 NAME: Name of the buffer
 NODE-SELECTED-FN: Function to call if a node has been selected
 NODE-EXPANDED-FN: Function to call if a node has been expanded
+NODE-MOUSE-OVER-FN: Function to call when the mouse is moved over a node.
 MENUS: Nil or a list of one or two conses, each cons for a node-type \(0 or 1)
        Example: \(\(0 . menu-for-type-0) \(1 . menu-for-type-1)). The cdr of a
        cons must be a menu.
@@ -333,7 +334,9 @@ EXPAND-SYMBOL-BEFORE: If not nil then the expand-symbol \(is displayed before
   (define-key tree-buffer-key-map [mouse-3] '(lambda()(interactive)))
   (define-key tree-buffer-key-map [double-mouse-3] '(lambda()(interactive)))
   (define-key tree-buffer-key-map [triple-mouse-3] '(lambda()(interactive)))
-  (use-local-map tree-buffer-key-map)
+
+  (define-key tree-buffer-key-map [mouse-movement]
+    'tree-buffer-mouse-move)
 
   ;; mouse-movement
   (define-key tree-buffer-key-map [mouse-movement]
@@ -343,7 +346,10 @@ EXPAND-SYMBOL-BEFORE: If not nil then the expand-symbol \(is displayed before
 	 (mouse-set-point e) ;; (cadadr e)
 	 (let ((node (tree-buffer-get-node-at-point)))
 	   (when (and tree-node-mouse-over-fn node)
-	     (funcall tree-node-mouse-over-fn node)))))))
+	     (funcall tree-node-mouse-over-fn node))))))
+
+  (use-local-map tree-buffer-key-map))
+
 
 ; (defun tree-insert-line(line)
 ;   (let ((p (point)))

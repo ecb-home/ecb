@@ -97,7 +97,6 @@
 (defvar ecb-methods-root-node nil
   "Path to currently selected source.")
 
-
 (defvar ecb-activated nil
   "Do not set this variable directly. Use `ecb-activate' and
 `ecb-deactivate'!")
@@ -260,8 +259,14 @@ and then activating ECB again!"
   :group 'ecb-methods
   :type 'string)
 
+(defcustom ecb-auto-update-methods-after-save t
+  "*Automatically updating the ECB method buffer after saving
+a source-buffer."
+  :group 'ecb-methods
+  :type 'boolean)
+
 (defcustom ecb-show-method-arguments 'only-type
-         "*Show method argument types and/or names. You have the following
+  "*Show method argument types and/or names. You have the following
 choices:
 - only-type: Show only the type of the argument
 - type-and-name: Show both type and name
@@ -312,9 +317,10 @@ is displayed:
 					font-lock-variable-name-face
 					font-lock-type-face)
   "*Specify how to highlight the parts of a method in the method buffer.
-The value must be a list of exactly five elements each of them either nil
+The value must be a list of exactly seven elements each of them either nil
 \(not highlighting this part) or a face for this part. The sequence within the
-list must be \(methodename argumenttype argumentname returntype classtype).
+list must be \(methodename argumenttype argumentname returntype classtype
+variablename variabletype).
 
 This option takes only effect if `ecb-font-lock-methods' is on."
   :group 'ecb-methods
@@ -664,6 +670,10 @@ highlighting of the methods if `ecb-font-lock-methods' is not nil."
 	(setq tree-buffer-highlighted-node-data ecb-path-selected-source)
 	(tree-buffer-update)))))
 
+(defun ecb-update-methods-after-saving ()
+  (if ecb-auto-update-methods-after-save
+      (ecb-update-methods-buffer)))
+
 (defun ecb-update-methods-buffer()
   "Updates the methods buffer with the current buffer."
   (tree-node-set-children ecb-methods-root-node nil)
@@ -676,11 +686,13 @@ highlighting of the methods if `ecb-font-lock-methods' is not nil."
 		     (semantic-bovinate-toplevel t)))
 		  t)
   (save-selected-window
-    (ecb-buffer-select ecb-methods-buffer-name)
-    (setq tree-buffer-indent ecb-tree-indent)
-    (tree-buffer-update)
+    ;; also the whole buffer informations should be preserved!
+    (save-excursion
+      (ecb-buffer-select ecb-methods-buffer-name)
+      (setq tree-buffer-indent ecb-tree-indent)
+      (tree-buffer-update))
     (set-window-point (selected-window) 1)))
-  
+
 (defun ecb-set-selected-source(filename &optional window-skips
                                         no-edit-buffer-selection)
   "Updates all the ECB buffers and loads the file. The file is also
@@ -874,39 +886,49 @@ For further explanation see `ecb-clear-history-behavior'."
 ;;====================================================
 
 ;; Klaus
-(defun ecb-show-long-tree-element (node)
-  (when node
-    ;; display a message with the node name if a node is longer than the
-    ;; window-width.
-    (if (>= (length (tree-node-get-name node)) (window-width))
-        (message (format "%s" (tree-node-get-name node))))))
+;; not used furthermore
+;; (defun ecb-show-long-tree-element (node)
+;;   (when node
+;;     ;; display a message with the node name if a node is longer than the
+;;     ;; window-width.
+;;     (if (>= (length (tree-node-get-name node)) (window-width))
+;;         (message (format "%s" (tree-node-get-name node))))))
 
 (defun ecb-directory-clicked(node mouse-button shift-pressed)
   (ecb-update-directory-node node)
   (if (= 0 (tree-node-get-type node))
-      (progn
-	(when (= 1 mouse-button)
-	  (tree-node-toggle-expanded node))
-	(ecb-set-selected-directory (tree-node-get-data node))
-	(ecb-buffer-select ecb-directories-buffer-name)
-	(tree-buffer-update))
+      ;; Klaus
+      (if shift-pressed
+          (ecb-mouse-over-node node)
+        (progn
+          (when (= 1 mouse-button)
+            (tree-node-toggle-expanded node))
+          (ecb-set-selected-directory (tree-node-get-data node))
+          (ecb-buffer-select ecb-directories-buffer-name)
+          (tree-buffer-update)))
     (ecb-set-selected-source (tree-node-get-data node)
                              (if ecb-split-edit-window
                                  mouse-button 0)
                              shift-pressed)))
 
 (defun ecb-source-clicked(node mouse-button shift-pressed)
+  ;; Klaus
+  (if shift-pressed
+      (ecb-mouse-over-node node))
   (ecb-set-selected-source (tree-node-get-data node)
                            (if ecb-split-edit-window
                                mouse-button 0)
                            shift-pressed))
 
 (defun ecb-method-clicked(node mouse-button shift-pressed)
-  (when (tree-node-get-data node)
-    (ecb-find-file-and-display ecb-path-selected-source
-			       (if ecb-split-edit-window
-				   mouse-button 0))
-    (goto-char (semantic-token-start (tree-node-get-data node)))))
+  ;; Klaus
+  (if shift-pressed
+      (ecb-mouse-over-node node)
+    (when (tree-node-get-data node)
+      (ecb-find-file-and-display ecb-path-selected-source
+                                 (if ecb-split-edit-window
+                                     mouse-button 0))
+      (goto-char (semantic-token-start (tree-node-get-data node))))))
 
 (defun ecb-mouse-over-node(node)
   (if ecb-show-node-name-in-minibuffer
@@ -988,6 +1010,7 @@ with the actually choosen layout \(see `ecb-layout')."
       ;; we need some hooks
       (remove-hook 'post-command-hook 'ecb-hook)
       (add-hook 'post-command-hook 'ecb-hook)
+      (add-hook 'after-save-hook 'ecb-update-methods-after-saving)
       ;; we add a function to this hook at the end because this function should
       ;; be called at the end of all hook-functions of this hook!
       (add-hook 'compilation-finish-functions
@@ -1022,6 +1045,7 @@ with the actually choosen layout \(see `ecb-layout')."
     (kill-buffer ecb-history-buffer-name)
     ;; remove the hooks
     (remove-hook 'post-command-hook 'ecb-hook)
+    (remove-hook 'after-save-hook 'ecb-update-methods-after-saving)
     (remove-hook 'compilation-finish-functions
                  'ecb-layout-return-from-compilation)
     (remove-hook 'compilation-mode-hook

@@ -249,10 +249,10 @@ during compilation process."
   :group 'ecb-layout
   :type 'boolean)
 
-(defcustom ecb-windows-width 40.0
-  "*The width of the ECB windows when they are placed to the left or right
-of the edit window. If the number is less than 1.0 the width is a fraction
-of the frame width."
+(defcustom ecb-windows-width 0.33
+  "*The width of the ECB windows in columns when they are placed to the left
+or right of the edit window. If the number is less than 1.0 the width is a
+fraction of the frame width."
   :group 'ecb-layout
   :set '(lambda (symbol value)
 	  (set symbol value)
@@ -261,10 +261,10 @@ of the frame width."
               (ecb-redraw-layout)))
   :type 'number)
 
-(defcustom ecb-windows-height 20.0
-  "*The height of the ECB windows when they are placed above or below the
-edit window. If the number is less than 1.0 the width is a fraction
-of the frame height."
+(defcustom ecb-windows-height 0.33
+  "*The height of the ECB windows in lines when they are placed above or below
+the edit window. If the number is less than 1.0 the width is a fraction of the
+frame height."
   :group 'ecb-layout
   :set '(lambda (symbol value)
 	  (set symbol value)
@@ -1151,8 +1151,8 @@ to non nil!"
    |              |                                      |
    |  Methods     |                                      | 
    |              |                                      |
-   |--------------|                                      |
    |              |                                      |
+   |--------------|                                      |
    |  History     |                                      | 
    |              |                                      |
    -------------------------------------------------------
@@ -1173,7 +1173,7 @@ place."
   (ecb-set-sources-buffer)
   (ecb-split-ver 0.35)
   (ecb-set-methods-buffer)
-  (ecb-split-ver 0.5)
+  (ecb-split-ver 0.65)
   (ecb-set-history-buffer)
   (select-window (next-window))
   (setq ecb-edit-window (selected-window)))
