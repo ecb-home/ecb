@@ -26,7 +26,7 @@
 ;; This file is part of the ECB package which can be found at:
 ;; http://home.swipnet.se/mayhem/ecb.html
 
-;; $Id: tree-buffer.el,v 1.87 2002/06/07 16:12:33 berndl Exp $
+;; $Id: tree-buffer.el,v 1.88 2002/07/05 14:05:33 berndl Exp $
 
 ;;; Code:
 
@@ -243,12 +243,22 @@ with the same arguments as `tree-node-expanded-fn'."
                                            node-data)
         (throw 'exit (cdr node))))))
 
-(defun tree-buffer-find-name-node-data (node-data)
+(defun tree-buffer-find-name-node-data (node-data &optional start-node)
   (catch 'exit
-    (dolist (node tree-buffer-nodes)
-      (when (tree-buffer-node-data-equal-p (tree-node-get-data (cdr node))
-                                           node-data)
-        (throw 'exit node)))))
+    (let ((node-list (if (or (not start-node)
+                             (eq start-node (tree-buffer-get-root)))
+                         tree-buffer-nodes
+                       ;; because tree-buffer-nodes is a list of conses with
+                       ;; car is the node-name and cdr is the node itself we
+                       ;; must first create such a cons for START-NODE!
+                       (or (member (cons (tree-node-get-name start-node)
+                                         start-node)
+                                   tree-buffer-nodes)
+                           tree-buffer-nodes))))
+      (dolist (node node-list)
+        (when (tree-buffer-node-data-equal-p (tree-node-get-data (cdr node))
+                                             node-data)
+          (throw 'exit node))))))
 
 (defun tree-buffer-find-node (node)
   (catch 'exit
@@ -356,9 +366,16 @@ displayed without empty-lines at the end, means WINDOW is always best filled."
         (delete-overlay tree-buffer-highlight-overlay))))
   (setq tree-buffer-highlighted-node-data nil))
 
-(defun tree-buffer-highlight-node-data (node-data &optional dont-make-visible)
+(defun tree-buffer-highlight-node-data (node-data &optional start-node
+                                                  dont-make-visible)
+  "Highlights in current tree-buffer the node which has as data NODE-DATA. If
+START-NODE is nil or equal to the root-node then all nodes of current
+tree-buffer are searched from beginning until the node with data NODE-DATA has
+been found otherwise the search starts with START-NODE. If DONT-MAKE-VISIBLE
+is true then no tree-buffer recentering has been done to make this node
+visible."
   (if node-data
-      (let* ((name-node (tree-buffer-find-name-node-data node-data))
+      (let* ((name-node (tree-buffer-find-name-node-data node-data start-node))
 	     (name (car name-node))
 	     (node (cdr name-node))
 	     (w (get-buffer-window (current-buffer))))
@@ -1251,4 +1268,3 @@ child."
 (provide 'tree-buffer)
 
 ;;; tree-buffer.el ends here
-

@@ -54,7 +54,7 @@
 ;; The latest version of the ECB is available at
 ;; http://home.swipnet.se/mayhem/ecb.html
 
-;; $Id: ecb.el,v 1.222 2002/06/21 12:27:24 berndl Exp $
+;; $Id: ecb.el,v 1.223 2002/07/05 14:05:33 berndl Exp $
 
 ;;; Code:
 
@@ -220,7 +220,7 @@ jumps between different windows."
   :type '(radio :tag "Modes for activation"
                 (const :tag "None" none)
                 (regexp :tag "All except deactivated but not"
-                              :value "\\(Info\\|custom\\)-mode")
+                        :value "\\(Info\\|custom\\)-mode")
                 (repeat :tag "Mode list"
                         (cons (symbol :tag "Major-mode")
                               (choice :tag "Layout" :menu-tag "Layout"
@@ -1931,39 +1931,42 @@ according to `ecb-sources-sort-method'."
         (when (or (not ecb-show-sources-in-directories-buffer)
                   ecb-auto-expand-directory-tree)
           (ecb-exec-in-directories-window
-           (when ecb-auto-expand-directory-tree
-             ;; Expand tree to show selected directory
-             (let ((start
-                    (if (equal ecb-auto-expand-directory-tree 'best)
-                        ;; If none of the source-paths in the buffer
-                        ;; `ecb-directories-buffer-name' matches then nil
-                        ;; otherwise the node of the best matching source-path
-                        (cdar (sort (delete nil
-                                            (mapcar (lambda (elem)
-                                                      (let ((data (tree-node-get-data elem)))
-                                                        (save-match-data
-                                                          (if (string-match
-                                                               (concat "^"
-                                                                       (regexp-quote data))
-                                                               ecb-path-selected-directory)
-                                                              (cons data elem)
-                                                            nil))))
-                                                    (tree-node-get-children (tree-buffer-get-root))))
-                                    (lambda (lhs rhs)
-                                      (> (length (car lhs)) (length (car rhs))))))
-                      ;; we start at the root node
-                      (tree-buffer-get-root))))
+           (let (start)
+             (when ecb-auto-expand-directory-tree
+               ;; Expand tree to show selected directory
+               (setq start
+                     (if (equal ecb-auto-expand-directory-tree 'best)
+                         ;; If none of the source-paths in the buffer
+                         ;; `ecb-directories-buffer-name' matches then nil
+                         ;; otherwise the node of the best matching source-path
+                         (cdar (sort (delete nil
+                                             (mapcar (lambda (elem)
+                                                       (let ((data (tree-node-get-data elem)))
+                                                         (save-match-data
+                                                           (if (string-match
+                                                                (concat "^"
+                                                                        (regexp-quote data))
+                                                                ecb-path-selected-directory)
+                                                               (cons data elem)
+                                                             nil))))
+                                                     (tree-node-get-children (tree-buffer-get-root))))
+                                     (lambda (lhs rhs)
+                                       (> (length (car lhs)) (length (car rhs))))))
+                       ;; we start at the root node
+                       (tree-buffer-get-root)))
                (when (and (equal ecb-auto-expand-directory-tree 'best)
                           start)
                  ;; expand the best-match node itself
                  (tree-node-set-expanded start t)
                  (ecb-update-directory-node start))
-              ;; start recursive expanding of either the best-matching node or
+               ;; start recursive expanding of either the best-matching node or
                ;; the root-node itself.
                (ecb-expand-tree ecb-path-selected-directory start)
-               (tree-buffer-update)))
-           (when (not ecb-show-sources-in-directories-buffer)
-             (tree-buffer-highlight-node-data ecb-path-selected-directory))))
+               (tree-buffer-update))
+;;              (message "Klausi: %s" (pp start))
+             (when (not ecb-show-sources-in-directories-buffer)
+               (tree-buffer-highlight-node-data ecb-path-selected-directory
+                                                start)))))
 
         (ecb-exec-in-sources-window
          (let ((old-children (tree-node-get-children (tree-buffer-get-root))))
@@ -2327,7 +2330,7 @@ For further explanation see `ecb-clear-history-behavior'."
           (save-selected-window
             (ecb-exec-in-methods-window
              (tree-buffer-highlight-node-data
-              tok (equal ecb-highlight-token-with-point 'highlight)))))))))
+              tok nil (equal ecb-highlight-token-with-point 'highlight)))))))))
 
 (defun ecb-current-buffer-sync (&optional force opt-buffer)
   "Synchronizes the ECB buffers with the current buffer. Unless FORCE is non
@@ -2376,8 +2379,13 @@ the ECB tree-buffers."
                                     (file-name-directory norm-filename))))
                 (ecb-add-source-path source-path source-path
                                      (not (cdr ecb-add-path-for-not-matching-files)))))
+
           ;; now we can be sure that a matching source-path exists
-          (ecb-update-directories-buffer)
+
+          ;; Klaus: The explizit update of the directories buffer is not
+          ;; necessary because the synch with the current source is done by
+          ;; `ecb-select-source-file'!
+;;           (ecb-update-directories-buffer)
           (ecb-select-source-file filename)
           ;; selected source has changed, therfore we must initialize
           ;; ecb-selected-token again.
@@ -3025,6 +3033,12 @@ That is remove the unsupported :help stuff."
       ecb-rebuild-methods-buffer
       :active (equal (selected-frame) ecb-frame)
       :help "Rebuild the method buffer completely"
+      ])
+   (ecb-menu-item
+    [ "Update directories buffer"
+      ecb-update-directories-buffer
+      :active (equal (selected-frame) ecb-frame)
+      :help "Updates the directories buffer with current disk-state"
       ])
    (ecb-menu-item
     [ "Add buffers to history"

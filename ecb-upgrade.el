@@ -139,14 +139,16 @@
 
 ;;; Code
 
+(require 'ecb-util)
+
 ;; ----------------------------------------------------------------------
 ;; define in this defconst all options which should be upgraded
 ;; ----------------------------------------------------------------------
 
 (defconst ecb-upgradable-option-alist
   '((ecb-compile-window-temporally-enlarge .
-     (ecb-compile-window-temporally-enlarge
-      ecb-upgrade-compile-window-temporally-enlarge)))
+                                           (ecb-compile-window-temporally-enlarge
+                                            ecb-upgrade-compile-window-temporally-enlarge)))
   
   "Alist of all options which should be upgraded for current ECB-version.
 There are several reasons why an option should be contained in this alist:
@@ -438,15 +440,24 @@ Valid values are either the string \"latest\" or a version number like
   :type '(radio (const :tag "Latest ECB version" :value "latest")
                 (string :tag "ECB version")))
 
-(defcustom ecb-download-delete-archive-after-installing t
-  "*Should the downloaded archive be deleted after sucessfull installation."
+(defcustom ecb-download-delete-archive 'always
+  "*Should the downloaded archive be deleted after successfull
+installation or after failure during the installation-process. Possible values
+are:
+- only-after-success: Archive is only deleted after successfull installation
+  but not if a failure occurs during the installation process.
+- always: Archive is also deleted if an error occurs.
+- nil: Archive will never be deleted."
   :group 'ecb-download
-  :type 'boolean)
+  :type '(choice :tag "Delete archive" :menu-tag "Delete archive"
+                 (const :tag "After successfull installation" only-after-success)
+                 (const :tag "Always" always)
+                 (const :tag "Never" nil)))
 
 (defconst ecb-download-buffername " *ecb-download*")
 (defconst ecb-ecb-dir
   (expand-file-name (file-name-directory (locate-library "ecb"))))
-(defconst ecb-ecb-parent-dir (concat ecb-ecb-dir "../"))
+(defconst ecb-ecb-parent-dir (expand-file-name (concat ecb-ecb-dir "../")))
 
 ;; Klaus: Arrghhhhhhhhhhhhhhh... the cygwin version of tar does not accept
 ;; args in windows-style file-format :-( Therefore we convert it with cygpath.
@@ -486,21 +497,27 @@ parallel to current ECB-directory. After adding this new directory tp
   (let ((ecb-downloaded-filename (concat ecb-ecb-parent-dir
                                          "ecb-download.tar.gz"))
         (success t)
-        process-result)
+        process-result install-dir)
+
+    ;; a first simple check if the new version is already installed - will not
+    ;; work for "latest"
+    
     (when (or (not (file-directory-p (concat ecb-ecb-parent-dir "ecb-"
                                              ecb-download-version)))
               (yes-or-no-p
                (format "ECB %s seems to be already installed in directory %s! Continue? "
                        ecb-download-version
                        (concat "ecb-" ecb-download-version))))
+
       ;; cleaning up
+
       (if (get-buffer ecb-download-buffername)
           (kill-buffer ecb-download-buffername))
-      (if (file-exists-p ecb-downloaded-filename)
-          (delete-file ecb-downloaded-filename))
-      (if (file-exists-p (file-name-sans-extension ecb-downloaded-filename))
-          (delete-file (file-name-sans-extension ecb-downloaded-filename)))
+      (ecb-delete-file ecb-downloaded-filename)
+      (ecb-delete-file (file-name-sans-extension ecb-downloaded-filename))
+
       ;; checking if all necessary tools are available
+
       (if (not (and (executable-find
                      (if (eq system-type 'windows-nt) "wget.exe" "wget"))
                     (executable-find
@@ -525,9 +542,10 @@ parallel to current ECB-directory. After adding this new directory tp
          nil
          ecb-download-buffername
          nil
-         "--cache=off"
-         (concat "--output-document="
-                 ecb-downloaded-filename)
+         "-C"
+         "off"
+         "-O"
+         ecb-downloaded-filename
          (concat ecb-download-url "ecb-"
                  ecb-download-version ".tar.gz"))
 
@@ -577,10 +595,38 @@ parallel to current ECB-directory. After adding this new directory tp
               (princ "\n\n")
               (princ process-result))))
 
-        ;; unpacking with tar
+        ;; checking the version of the new ECB
 
         (when success
           (message "Uncompressing new ECB...done")
+          (message "Checking if already installed...")
+          (setq process-result
+                (shell-command-to-string
+                 (concat "tar"
+                         " -tf "
+                         (ecb-create-shell-argument
+                          (file-name-sans-extension (concat ecb-ecb-parent-dir
+                                                            "ecb-download.tar.gz"))))))
+          (if (string-match "^ecb-\\(.+\\)/" process-result)
+              (let ((downloaded-version (match-string 1 process-result)))
+                (setq install-dir (concat "ecb-" downloaded-version))
+                (when (not (or (not (file-directory-p (concat ecb-ecb-parent-dir
+                                                              install-dir)))
+                               (yes-or-no-p
+                                (format "ECB %s seems to be already installed in directory %s! Continue? "
+                                        downloaded-version install-dir))))
+                  ;; not really a failure but so we can finish the process
+                  (setq success nil)))
+            (setq success nil)
+            (with-output-to-temp-buffer "*ECB-archive-failure*"
+              (princ "Checking the archive of ECB has failed cause of the following problems:")
+              (princ "\n\n")
+              (princ process-result))))
+
+        ;; unpacking new ECB
+
+        (when success
+          (message "Checking if already installed...done")
           (message "Unpacking new ECB...")
           (setq process-result
                 (shell-command-to-string
@@ -603,7 +649,9 @@ parallel to current ECB-directory. After adding this new directory tp
           (message "New ECB successfully installed!")
           (with-output-to-temp-buffer "*ECB downloading and installing*"
             (princ "ECB has successfully installed the new ECB version in a directory parallel to\n")
-            (princ "current ECB!\n\n")
+            (princ "current ECB: ")
+            (princ (concat ecb-ecb-parent-dir install-dir))
+            (princ "\n\n")
             (princ "After adding this new directory to your `load-path' and then restarting Emacs\n")
             (princ "the new ECB version can activated by `ecb-activate'.\n\n")
             (princ "If the value of `ecb-auto-compatibility-check' is not nil then the new version\n")
@@ -613,11 +661,14 @@ parallel to current ECB-directory. After adding this new directory tp
             (save-excursion
               (set-buffer "*ECB downloading and installing*")
               (goto-char (point-min))
-              (ignore-errors (help-make-xrefs))))
-          ;; maybe cleaning up
-          (if (and ecb-download-delete-archive-after-installing
-                   (file-exists-p (file-name-sans-extension ecb-downloaded-filename)))
-              (delete-file (file-name-sans-extension ecb-downloaded-filename))))
+              (ignore-errors (help-make-xrefs)))))
+        
+        ;; maybe cleaning up
+
+        (when (or (and success ecb-download-delete-archive)
+                  (and (not success) (eq ecb-download-delete-archive 'always)))
+          (ecb-delete-file (file-name-sans-extension ecb-downloaded-filename))
+          (ecb-delete-file ecb-downloaded-filename))
         ))))
 
 (provide 'ecb-upgrade)
