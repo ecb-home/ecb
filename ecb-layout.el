@@ -200,7 +200,7 @@ layout with `ecb-redraw-layout'"
 ;; - `ecb-delete-window'
 ;; - `ecb-split-window-vertically'
 ;; - `ecb-split-window-horizontally'
-(defcustom ecb-split-edit-window 'horizontal
+(defcustom ecb-split-edit-window 'nil
   "*Sets how and if the edit window should be splitted.
 But be aware: ECB offers four somehow intelligent
 \"window-\(un)splitting\"-functions:

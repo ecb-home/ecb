@@ -6,7 +6,7 @@
 ;; Maintainer: Jesper Nordenberg <mayhem@home.se>
 ;; Keywords: java, class, browser
 ;; Created: Jul 2000
-;; Version: 1.0
+;; Version: 1.10
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -58,6 +58,8 @@
 ;; All files you have ever opened can be shown in the ECB history buffer. This
 ;; buffer can also be cleared in several ways by `ecb-clear-history'.
 ;;
+;; Execute `ecb-show-help' for more information.
+;;
 ;; TODO:
 ;; - Fix XEmacs incompatibilities (I need help on this one!)
 ;; - More layouts
@@ -76,6 +78,7 @@
 (require 'tree-buffer)
 (require 'ecb-layout)
 (require 'ecb-util)
+(require 'wid-browse)
 
 (require 'assoc) ;; Semantic fix
 
@@ -202,7 +205,7 @@ and then activating ECB again!"
   :group 'ecb-sources
   :type 'string)
 
-(defcustom ecb-source-file-regexp "\\(\\(M\\|m\\)akefile\\|.*\\.\\(java\\|el\\|c\\|cc\\|h\\|hh\\|txt\\|html\\|mk\\|xml\\|dtd\\)\\)$"
+(defcustom ecb-source-file-regexp "\\(\\(M\\|m\\)akefile\\|.*\\.\\(java\\|el\\|c\\|cc\\|h\\|hh\\|txt\\|html\\|mk\\|xml\\|dtd\\|texi\\|info\\|bnf\\|cpp\\|hpp\\)\\)$"
   "*Files matching this regular expression will be shown in the source
 buffer."
   :group 'ecb-sources
@@ -559,7 +562,7 @@ highlighting of the methods if `ecb-font-lock-methods' is not nil."
   (when (and ecb-show-variables variables)
     (let ((var-node node))
       (when (eq ecb-show-variables 'collapsed)
-	(setq var-node (tree-node-new "[Variables]" 0
+	(setq var-node (tree-node-new "[Variables]" 1
 				      nil))
 	(tree-node-add-child node var-node))
       (if ecb-sort-variables
@@ -930,6 +933,9 @@ For further explanation see `ecb-clear-history-behavior'."
   ;; Klaus
   (if shift-pressed
       (ecb-mouse-over-node node)
+    (when (= 1 (tree-node-get-type node))
+      (tree-node-toggle-expanded node)
+      (tree-buffer-update))
     (when (tree-node-get-data node)
       (ecb-find-file-and-display ecb-path-selected-source
                                  (if ecb-split-edit-window
@@ -955,7 +961,7 @@ For further explanation see `ecb-clear-history-behavior'."
 	  (when (stringp doc)
 	    (message doc))))))
 
-;; ECB help stuff, solen something from recentf.el
+;; ECB help stuff, stolen something from recentf.el
 
 (defconst ecb-help-message
 "
@@ -963,22 +969,22 @@ For further explanation see `ecb-clear-history-behavior'."
                               General description
                               ===================      
 
-ECB offers a few ECB-windows for browsing your sources comfortable. There are
-currently three different types of ECB-windows:
+ECB offers a few ECB-windows for browsing your sources comfortable with the
+mouse. There are currently three different types of ECB-windows:
 
 1. ECB Directories:
 
 Select directories and, if enabled, source files, in the \"*ECB Directories*\"
 buffer by clicking the left mouse button on the directory name or by hitting
-ENTER/RETURN when the cursor is placed on the item line. Directory names with a
-\"[+]\" symbol after \(or before) them can be expanded/collapsed by
+ENTER/RETURN when the cursor is placed on the item line. Directory names with
+a \"[+]\" symbol after \(or before) them can be expanded/collapsed by
 left-clicking on the symbol, pressing the TAB key when the cursor is placed on
 the package line or clicking the middle mouse button on the item. Right
 clicking on an item will open a popup menu where different operations on the
 item under the mouse cursor can be performed.
 
 Pressing F1 in the packages buffer will update it. Pressing F2 will open the
-ECB customization group in the edit window ECB Sources:
+ECB customization group in the edit window.
 
 2. ECB Sources:
 
@@ -1036,8 +1042,8 @@ so you can read the whole item.
 Redrawing the ECB-layout:
 -------------------------
 
-If you have unintenionally destroyed the ECB-layout, you can always restore
-the layout with calling `ecb-redraw-layout'.
+If you have unintenionally destroyed the ECB-layout, you can always restore the
+layout with calling `ecb-redraw-layout'.
 
 
 Working with the edit-window of ECB:
@@ -1131,12 +1137,6 @@ Available hooks:
 - `ecb-deactivate-hook'
 Look at the documentation of these hooks to get description.")
 
-(defun ecb-help-test ()
-  (interactive)
-  (with-output-to-temp-buffer "*ECB-help"
-    (princ ecb-help-message)
-    (print-help-return-message)))
-
 
 (defun ecb-cancel-dialog (&rest ignore)
   "Cancel the ECB dialog."
@@ -1164,7 +1164,16 @@ These are the special commands of `ecb-dialog-mode' mode:
   (setq mode-name "ecb-dialog")
   (use-local-map ecb-dialog-mode-map))
 
+;; The following version shows the help-message in the utility window with
+;; clickable links but not with a cancel button.
 (defun ecb-show-help ()
+  (interactive)
+  (with-output-to-temp-buffer "*ECB-help"
+    (princ ecb-help-message)))
+
+;; This version shows the help-message in the edit-window with not-clickable
+;; links but with a cancel button.
+(defun ecb-show-help-1 ()
   "Shows the online help of ECB."
   (interactive)
   (if (not (ecb-point-in-edit-window))

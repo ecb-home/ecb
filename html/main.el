@@ -1,10 +1,11 @@
 (require 'html-helper)
 
-(setq version "1.0")
+(setq version "1.10")
 (setq dirname (concat "ecb-" version))
 (setq zipname (concat dirname ".zip"))
+(setq download-url "http://ftp1.sourceforge.net/ecb/")
 (setq url (concat "http://ftp1.sourceforge.net/ecb/" zipname))
-(setq date "2001-03-22")
+(setq date "2001-03-25")
 
 (h-doc
  "ecb.html"
@@ -50,6 +51,7 @@
  (h-h3 "Download")
  (h-p "The latest version: " (h-link url zipname))
  (h-p "Older versions:" h-br
+      (h-link (concat download-url "ecb-1.0.zip") "ecb-1.0.zip") h-br
       (h-link "jde-jcb-0.04.zip") h-br
       (h-link "jde-jcb-0.03.zip") h-br
       (h-link "jde-jcb-0.02.zip") h-br

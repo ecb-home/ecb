@@ -1,5 +1,5 @@
-Readme for the Emacs Code Browser (ECB) v1.0
---------------------------------------------
+Readme for the Emacs Code Browser (ECB) v1.10
+---------------------------------------------
 
 About
 -----

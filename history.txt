@@ -1,4 +1,4 @@
-Version 1.10 (2001-03-17):
+Version 1.10 (2001-03-25):
 --------------------------
 
 - Automatic expansion of the directory tree.
@@ -19,6 +19,12 @@ Version 1.10 (2001-03-17):
 
 - The methods buffer can now be automatically updated when the source
   file is saved.
+
+- Help text is available with "ecb-show-help".
+
+- Moving the mouse over a node shows the name in the
+  mini-buffer. Currently this only works when follow-mouse is
+  activated.
 
 
 Version 1.0 (2001-03-17):
