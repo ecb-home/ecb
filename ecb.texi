@@ -26,7 +26,7 @@
 @c GNU Emacs; see the file COPYING.  If not, write to the Free Software
 @c Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-@c $Id: ecb.texi,v 1.149 2004/02/02 14:16:16 berndl Exp $
+@c $Id: ecb.texi,v 1.150 2004/02/04 07:55:36 berndl Exp $
 
 @setfilename ecb.info
 
@@ -1419,6 +1419,7 @@ ECB offers you to advice the following functions so they work best with ECB:
 @item @code{switch-to-buffer}
 @item @code{switch-to-buffer-other-window}
 @item @code{other-window-for-scrolling}
+@item @code{balance-windows}
 @end itemize
 
 
@@ -1690,6 +1691,11 @@ compile-window is scrolled!
 
 Otherwise it depends completely on the setting in
 @code{ecb-other-window-behavior}.
+@end deffn
+
+@deffn Command balance-windows
+Around-advice @code{ecb}: When called in the @code{ecb-frame} then
+only the edit-windows are balanced.
 @end deffn
 
 @node Temp- and compile-buffers, The other window, The edit-area, Usage of ECB
@@ -6064,6 +6070,8 @@ depends on @code{ecb-other-window-behavior}:
 @item @code{beginning-of-buffer-other-window}
 @item @code{end-of-buffer-other-window}
 @end itemize
+@item @code{balance-windows}:
+Only the edit-windows are balanced
 @end itemize
 
 For working most conveniently with ECB it is the best to advice all

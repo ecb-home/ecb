@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-util.el,v 1.93 2004/02/02 11:57:54 berndl Exp $
+;; $Id: ecb-util.el,v 1.94 2004/02/04 07:55:37 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -141,7 +141,25 @@ Unless optional argument INPLACE is non-nil, return a new string."
           (list (/ (nth 0 pix-edges) (ecb-frame-char-width))
                 (/ (nth 1 pix-edges) (ecb-frame-char-height))
                 (/ (nth 2 pix-edges) (ecb-frame-char-width))
-                (/ (nth 3 pix-edges) (ecb-frame-char-height))))))
+                (/ (nth 3 pix-edges) (ecb-frame-char-height)))))
+      ;; extends-stuff
+      (defalias 'ecb-overlay-make 'make-extent)
+      (defalias 'ecb-overlay-put 'set-extent-property)
+      (defalias 'ecb-overlay-move 'set-extent-endpoints)
+      (defalias 'ecb-overlay-delete 'delete-extent)
+      ;; timer stuff
+      (defun ecb-cancel-timer (timer)
+        (delete-itimer timer))
+      ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>:
+      ;;  ecb-run-with-idle-timer, ecb-run-with-timer, ecb-thing-at-point (for 'symbol)
+      (defun ecb-run-with-idle-timer (secs repeat function &rest args)
+        (let ((timer (timer-create)))
+          (timer-set-function timer function args)
+          (timer-set-idle-time timer secs repeat)
+          (timer-activate-when-idle timer)
+          timer))
+      (defun ecb-run-with-timer ()))
+      
   (defalias 'ecb-subst-char-in-string 'subst-char-in-string)
   (defalias 'ecb-frame-parameter 'frame-parameter)
   (defalias 'ecb-line-beginning-pos 'line-beginning-position)
@@ -152,8 +170,19 @@ Unless optional argument INPLACE is non-nil, return a new string."
   (defalias 'ecb-window-full-height 'window-height)
   (defalias 'ecb-frame-char-width 'frame-char-width)
   (defalias 'ecb-frame-char-height 'frame-char-height)
-  (defalias 'ecb-window-edges 'window-edges))
+  (defalias 'ecb-window-edges 'window-edges)
+  ;; overlay-stuff
+  (defalias 'ecb-overlay-make 'make-overlay)
+  (defalias 'ecb-overlay-put 'overlay-put)
+  (defalias 'ecb-overlay-move 'move-overlay)
+  (defalias 'ecb-overlay-delete 'delete-overlay)
+  ;; timer-stuff
+  (defalias 'ecb-cancel-timer 'cancel-timer)
+  (defalias 'ecb-run-with-idle-timer 'run-with-idle-timer)
+  (defalias 'ecb-run-with-timer 'run-with-timer))
 
+
+  
 ;; Emacs 20 has no window-list function and the XEmacs and Emacs 21 one has no
 ;; specified ordering. The following one is stolen from XEmacs and has fixed
 ;; this lack of a well defined order. We preserve also point of current

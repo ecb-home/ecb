@@ -24,7 +24,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-method-browser.el,v 1.12 2004/01/19 20:03:26 berndl Exp $
+;; $Id: ecb-method-browser.el,v 1.13 2004/02/04 07:55:37 berndl Exp $
 
 ;;; Commentary:
 
@@ -1683,27 +1683,42 @@ by this command."
   (when (and ecb-minor-mode
              (ecb-point-in-edit-window))
     (when ecb-highlight-tag-with-point
-      (let ((a-tag (ecb-semantic-current-nonterminal)))
-        (when (or force (not (equal ecb-selected-tag a-tag)))
-          (setq ecb-selected-tag a-tag)
+      (let ((curr-tag (ecb-semantic-current-nonterminal))
+            ;; we compute the parent-tag first when the current-tag has
+            ;; changed so we do not lose performance
+            (parent-tag nil)
+            (real-tag nil))
+        (when (or force (not (equal ecb-selected-tag curr-tag)))
+          ;; if the parent-tag of the current tag is of class 'function then
+          ;; we proceed with this parent-tag because we do not want sync for
+          ;; argument-lists of functions!
+          ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: Maybe this is not the
+          ;; best way, but for now it works...
+          (setq parent-tag (and curr-tag
+                                (ecb--semantic-tag-calculate-parent curr-tag)))
+          (if (and parent-tag
+                   (eq 'function (ecb--semantic-tag-class parent-tag)))
+              (setq real-tag parent-tag)
+            (setq real-tag curr-tag))
+          (setq ecb-selected-tag real-tag)
           (save-selected-window
             (ecb-exec-in-methods-window
              (or (tree-buffer-highlight-node-data
-                  a-tag nil (equal ecb-highlight-tag-with-point 'highlight))
-                 ;; The node representing A-TAG could not be highlighted be
+                  real-tag nil (equal ecb-highlight-tag-with-point 'highlight))
+                 ;; The node representing REAL-TAG could not be highlighted be
                  ;; `tree-buffer-highlight-node-data' - probably it is
                  ;; invisible. Let's try to make visible and then highlighting
                  ;; again.
-                 (when (and a-tag ecb-auto-expand-tag-tree
+                 (when (and real-tag ecb-auto-expand-tag-tree
                             (or (equal ecb-auto-expand-tag-tree 'all)
-                                (member (ecb--semantic-tag-class a-tag)
+                                (member (ecb--semantic-tag-class real-tag)
                                         (ecb-normalize-expand-spec
                                          ecb-methods-nodes-expand-spec))))
                    (ecb-expand-methods-nodes-internal
                     100
                     (equal ecb-auto-expand-tag-tree 'all))
                    (tree-buffer-highlight-node-data
-                    a-tag nil (equal ecb-highlight-tag-with-point 'highlight))
+                    real-tag nil (equal ecb-highlight-tag-with-point 'highlight))
                    )))))))))
 
 (defun ecb-find-file-and-display (filename other-edit-window)

@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-layout.el,v 1.211 2004/02/02 11:57:54 berndl Exp $
+;; $Id: ecb-layout.el,v 1.212 2004/02/04 07:55:37 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -95,6 +95,7 @@
 ;; - `switch-to-buffer'
 ;; - `switch-to-buffer-other-window'
 ;; - `other-window-for-scrolling'
+;; - `balance-windows'
 ;; The behavior of the adviced functions is:
 ;; - All these function behaves exactly like their corresponding original
 ;;   functions but they always act as if the edit-window(s) of ECB would be the
@@ -750,7 +751,8 @@ This function has to handle all properly situations for itself.
                                          switch-to-buffer
                                          switch-to-buffer-other-window
                                          display-buffer
-                                         other-window-for-scrolling)
+                                         other-window-for-scrolling
+                                         balance-windows)
   "*Advice functions to be more intelligent if used with ECB.
 You can choose the following functions to be adviced by ECB so they behave as
 if the edit-window\(s) of ECB would be the only windows\(s) of the ECB-frame:
@@ -775,6 +777,7 @@ if the edit-window\(s) of ECB would be the only windows\(s) of the ECB-frame:
   - `scroll-other-window-down'
   - `beginning-of-buffer-other-window'
   - `end-of-buffer-other-window'
+- `balance-windows': Only the edit-windows of the ecb-frame are balanced.
 
 For working most conveniently with ECB it is the best to advice all these
 functions, because then all the standard shortcuts of these functions are also
@@ -838,7 +841,9 @@ rebind it to the original function in the `ecb-deactivate-hook'."
               (const :tag "display-buffer"
                      :value display-buffer)
               (const :tag "other-window-for-scrolling"
-                     :value other-window-for-scrolling)))
+                     :value other-window-for-scrolling)
+              (const :tag "balance-windows"
+                     :value balance-windows)))
 
 (defcustom ecb-advice-window-functions-signal-error nil
   "*Signal an error if an adviced function can not do its job.
@@ -1296,6 +1301,51 @@ if `scroll-all-mode' is nil return the number of visible windows."
     (ecb-with-original-basic-functions
      (ecb-with-original-functions
       ad-do-it))))
+
+
+(defun ecb-enable-walk-windows-advice (arg)
+  "Enable the around-advice for `walk-windows' if arg >= 0 otherwise disable
+it."
+  (if (< arg 0)
+      (progn
+        (ad-disable-advice 'walk-windows 'around 'ecb)
+        (ad-activate 'walk-windows))
+    (ad-enable-advice 'walk-windows 'around 'ecb)
+    (ad-activate 'walk-windows)))
+
+(defmacro ecb-with-adviced-walk-windows (&rest body)
+  "Evaluates BODY with an adviced version of `walk-windows' which walks only
+through the edit-windows of the `ecb-frame' if `walk-windows' is called for the
+`ecb-frame'."
+  `(unwind-protect
+       (progn
+         (ecb-enable-walk-windows-advice 1)
+         ,@body)
+     (ecb-enable-walk-windows-advice -1)))
+
+(defadvice walk-windows (around ecb)
+  "Walk only through the edit-windows of ECB. When ECB is not active or
+called for other frames than for the `ecb-frame' then act like the original.
+This adviced version of `walk-windows' is not for direct usage therefore it is
+always disabled; use the macro `ecb-with-adviced-walk-windows' instead if you
+need this adviced version of `walk-windows'!"
+  (if (or (equal (ad-get-arg 2) ecb-frame)
+          (and (null (ad-get-arg 2))
+               (equal (selected-frame) ecb-frame)))
+      (progn
+        (let ((ecb-walk-windows-advice-proc (ad-get-arg 0)))
+          (ad-with-originals 'walk-windows
+            (walk-windows (function (lambda (w)
+                                      (if (or (member (buffer-name (window-buffer w))
+                                                      ecb-tree-buffers-of-current-layout)
+                                              (equal w ecb-compile-window))
+                                          nil
+                                        ;; for an edit-window we call the
+                                        ;; original PROC
+                                        (funcall ecb-walk-windows-advice-proc w))))
+                          (ad-get-arg 1)
+                          (ad-get-arg 2)))))
+    ad-do-it))
 
 (defun ecb-toggle-scroll-other-window-scrolls-compile (&optional arg)
   "Toggle the state of `ecb-scroll-other-window-scrolls-compile-window'.
@@ -2109,6 +2159,7 @@ of `temp-buffer-show-function'."
     switch-to-buffer-other-window
     display-buffer
     other-window-for-scrolling
+    balance-windows
     )
   "A list of functions which can be adviced by the ECB package.")
 
@@ -3305,7 +3356,12 @@ Otherwise it depends completely on the setting in `ecb-other-window-behavior'."
                                            nil
                                          o-w-s-b)))
       ad-do-it)))
-    
+
+(defadvice balance-windows (around ecb)
+  "When called in the `ecb-frame' then only the edit-windows are balanced."
+  (ecb-with-adviced-walk-windows
+   ad-do-it))
+
 ;; here come the prefixed equivalents to the adviced originals
 (defun ecb-switch-to-buffer ()
   "Acts like the adviced version of `switch-to-buffer'.
@@ -3386,6 +3442,15 @@ Use this function only interactively! For use in programs use the macros
   (interactive)
   (ecb-with-adviced-functions
    (call-interactively 'display-buffer)))
+
+(defun ecb-balance-windows ()
+  "Acts like the adviced version of `balance-windows'.
+Use this function only interactively! For use in programs use the macros
+`ecb-with-adviced-functions' or `ecb-with-some-adviced-functions'!"  
+  (interactive)
+  (ecb-with-adviced-functions
+   (call-interactively 'balance-windows)))
+  
 
 ;;======= Helper-functions ===========================================
 

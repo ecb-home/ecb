@@ -1,3 +1,15 @@
+* Changes for ECB version
+
+** Advice for `balance-windows' so only the edit-windows are balanced.
+   Thanks to for <> suggestion.
+
+** Fixed Bugs
+
+*** If point stays in the current source-buffer on a function argument then still
+    ECB highlights the function in the Methods-buffer.
+    
+
+
 * Changes for ECB version 2.20
 
 ** New customization group "ecb-most-important"
