@@ -4020,7 +4020,7 @@ pattern.")
                             'ecb-toggle-maximize-ecb-window-with-mouse))
                       (setq ecb-methods-root-node (tree-buffer-get-root)))))
     ecb-common-tree-buffer-after-create-hook
-    ecb-directories-buffer-after-create-hook)))
+    ecb-methods-buffer-after-create-hook)))
   
 (defun ecb-dump-semantic-toplevel ()
   "Dump the current semantic-tags in special buffer and display them."

@@ -375,6 +375,14 @@ with a file, then the cdr of the result-cons is nil."
 ;;      :documentation (semantic-elisp-do-doc (nth 2 rt))
 ;;      )
 ;;     )
+;;    ((eq ts 'ecb-defstealthy)
+;;     ;; ecb-defstealthy
+;;     (semantic-tag-new-function
+;;      sn nil nil
+;;      :user-visible-flag nil
+;;      :documentation (semantic-elisp-do-doc (nth 2 rt))
+;;      )
+;;     )
 ;;    ((eq ts 'ecb-layout-define)
 ;;     ;; ecb-layout-define
 ;;     (semantic-tag-new-function

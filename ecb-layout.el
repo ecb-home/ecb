@@ -4226,7 +4226,7 @@ Postconditions for CREATE-CODE:
 1. The edit-window must be the selected window and must not be dedicated.
 2. Every window besides the edit-window \(and the compile-window) must be
    a dedicated window \(e.g. a ECB-tree-window)."
-  `(progn
+  `(eval-and-compile
      (ecb-layout-type-p (quote ,type) t)
      (defun ,(intern (format "ecb-layout-function-%s" name)) (&optional create-code-fcn)
        ,doc
