@@ -4,9 +4,9 @@ Readme for the Emacs Code Browser (ECB) v1.10
 About
 -----
 
-This package contains a code browser for several languages for
-Emacs. For instructions on how to use the browser read the ecb.el
-file. The latest version of this package can be found at:
+This package contains a code browser for several languages for Emacs. For
+instructions on how to use the browser read the online-help (see "Usage"
+below) file. The latest version of this package can be found at:
 
 http://home.swipnet.se/mayhem/ecb.html
 
@@ -30,19 +30,26 @@ Installation
 
 Optional compilation steps:
 
-1. Check the makefile in the ECB directory if the semantic-path is
-   correct.  By default the makefile assumes that semantic is placed
-   in the directory where ECB was unpacked. But you always have to
-   check the correct semantic-version!
+1. - If you have a make-environment (either Unix or Windows plus cygwin):
+     You must check or edit the file "makefile" in the ECB directory.
+   - If you have not a make environment:
+     You must check or edit the file "make.bat" in the ECB directory.
 
-2. Call "make all" to byte-compile the ECB. You can savely ignore the
-   messages.
+2. Check the file you need for building ECB (see 1.) in the ECB directory if
+   the semantic-path is correct. By default the ECB build-process assumes that
+   semantic is placed in the directory where ECB was unpacked. But you always
+   have to check the correct semantic-version!
+   If the default-settings for semantic are not correct for your environment
+   change the file you need (see 1.)
+
+3. Call "make" to byte-compile the ECB. You can savely ignore the messages.
 
 
 Usage
 -----
 
-Call "M-x ecb-activate".
+Call "M-x ecb-activate" to activated ECB.
+Call "M-x ecb-show-help" to get a detailed online-help for ECB.
 
 
 Contacts

@@ -6,7 +6,7 @@ REM root
 REM   emacs
 REM 	site-lisp
 REM 	  ecb
-REM 	  semantic-1.3.2
+REM 	  semantic-1.3.3
 REM 
 REM If your installation is different, edit this batchfile to reflect the
 REM actual locations of the required packages relative to the ECB lisp

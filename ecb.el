@@ -1107,6 +1107,9 @@ the \"other\" edit-window if already splitted) vertically and displays the
 compilation-output there.
 Same for displaying help-buffers or similar stuff.
 
+With the option `ecb-compile-window-temporally-enlarge' you can allow Emacs to
+enlarge temporally the ECB-compile-window after finishing compilation-output.
+
 Know Bug: The setting in `ecb-compile-window-height' works correct for all
 compilation-output of Emacs (compile, grep etc.) but for some other output
 like help-buffers etc. Emacs enlarges the height of the compile-window for

@@ -5,7 +5,7 @@
 #   emacs
 #     site-lisp
 #       ecb
-#       semantic-1.3.2
+#       semantic-1.3.3
 #
 # If your installation is different, edit this makefile to reflect the
 # actual locations of the required packages relative to the ECB lisp
