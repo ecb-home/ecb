@@ -24,7 +24,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-method-browser.el,v 1.32 2004/04/02 15:46:03 berndl Exp $
+;; $Id: ecb-method-browser.el,v 1.33 2004/04/05 09:41:45 berndl Exp $
 
 ;;; Commentary:
 
@@ -377,7 +377,7 @@ current major-mode and TYPE-SPECIFIER or nil."
              (nth 1 (assoc type-specifier default-display))))))
 
 (defcustom ecb-type-tag-expansion
-  '((default . ("class" "interface" "group"))
+  '((default . ("class" "interface" "group" "namespace"))
     (c-mode .  ("struct")))
   "*Default expansion of semantic type-tags.
 Semantic groups type-tags into different type-specifiers. Current available
@@ -1414,6 +1414,10 @@ Methods-buffer."
     ("class-private-t" . "class-private")
     ("class-protected-t" . "class-protected")
     ("class-public-t" . "class-public")
+    ("enum-public-nil" . "enum-public")
+    ("enum-protected-nil" . "enum-protected")
+    ("enum-private-nil" . "enum-private")
+    ("enum-unknown-nil" . "enum-unknown")
     ("constructor-nil-nil" . "constructor-unknown")
     ("constructor-unknown-nil" . "constructor-unknown")
     ("constructor-private-nil" . "constructor-private")

@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb.el,v 1.383 2004/03/29 06:05:36 berndl Exp $
+;; $Id: ecb.el,v 1.384 2004/04/05 09:41:45 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -578,8 +578,12 @@ With both ascii-styles the tree-layout can be affected with the options
                       "ecb-images/")))
         (append (mapcar (function (lambda (i)
                                     (if i
-                                        (concat base i "/height-17"))))
-                        '("default" "directories" nil "methods" nil))))
+                                        (concat base i))))
+                        '("default/height-17"
+                          "directories/height-17"
+                          nil
+                          "methods/height-15_to_21"
+                          nil))))
   "*Directories where the images for the tree-buffer can be found.
 This is a five-element list where:
 1. element: Default directory where the default images for the tree-buffer can
