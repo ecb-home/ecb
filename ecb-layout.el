@@ -104,7 +104,7 @@
 ;; - `ecb-with-some-adviced-functions'
 ;;
 
-;; $Id: ecb-layout.el,v 1.146 2003/01/15 11:14:50 berndl Exp $
+;; $Id: ecb-layout.el,v 1.147 2003/01/21 18:05:53 berndl Exp $
 
 ;;; Code:
 
@@ -613,6 +613,23 @@ This option makes only sense if the value is a list with more than 1 element!"
                                     name)))
                    (set symbol value))))
 
+;; (defcustom ecb-scroll-all-behavior '(selected edit-windows edit-windows)
+;;   "*"
+;;   :group 'ecb-layout
+;;   :type '(list (choice :tag "ECB-windows" :menu-tag "ECB-windows"
+;;                        (const :tag "Selected window" :value selected)
+;;                        (const :tag "All ECB-windows" :value ecb-windows)
+;;                        (const :tag "All windows" :value all))
+;;                (choice :tag "Edit windows" :menu-tag "Edit-windows"
+;;                        (const :tag "Selected window" :value selected)
+;;                        (const :tag "Both Edit-windows" :value edit-windows)
+;;                        (const :tag "All windows" :value all))
+;;                (choice :tag "Compile-window" :menu-tag "Compile-windows"
+;;                        (const :tag "Selected window" :value selected)
+;;                        (const :tag "Compile- and edit-windows" :value edit-windows)
+;;                        (const :tag "All windows" :value all))))
+              
+
 (defcustom ecb-hide-ecb-windows-before-hook nil
   "*Hooks run direct before the ECB windows will be hidden either by
 `ecb-toggle-ecb-windows' or `ecb-hide-ecb-windows'. This means that at runtime
@@ -774,6 +791,35 @@ either not activated or it behaves exactly like the original version!"
       ad-do-it
     (let ((other-window-scroll-buffer (window-buffer (other-window-for-scrolling))))
       ad-do-it)))
+
+
+(defadvice winner-mode (around ecb)
+  "Prevents `winner-mode' from being activated during ECB is active."
+  (ecb-error "Activating winner-mode is not possible as long as ECB is active!"))
+
+(defadvice scroll-all-mode (after ecb)
+  "With active ECB `scroll-all-mode' scrolls only the two edit-windows if point
+stays in one of them. In all other situations just the selected window is scrolled."
+  (ecb-enable-count-windows-advice scroll-all-mode))
+
+(defadvice count-windows (around ecb)
+  "Return the current number of edit-windows if point is in an edit-window. If
+point is not in an edit-window return always 1. This advice is only enabled if
+`scroll-all-mode' is active! This advice is only enabled and disabled by
+`ecb-enable-count-windows-advice'!"
+  (setq ad-return-value (if (and (ecb-point-in-edit-window)
+                                 (ecb-edit-window-splitted))
+                            2
+                          1)))
+
+(defun ecb-enable-count-windows-advice (arg)
+  "Enable the around-advice of `count-windows'."
+  (if arg
+      (progn
+        (ad-enable-advice 'count-windows 'around 'ecb)
+        (ad-activate 'count-windows))
+    (ad-disable-advice 'count-windows 'around 'ecb)
+    (ad-activate 'count-windows)))
 
 ;; This function must safely work even if `ecb-edit-window' is not longer alive,
 ;; which should normally not happen! In this case nil is returned.
