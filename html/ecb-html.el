@@ -76,7 +76,12 @@
 (defvar ecb-latest-news nil
   "List of latest news displayed on the main page.")
 (setq ecb-latest-news
-      `(,(h-sub-section "ECB 1.92.1 released! (2003-03-05)"
+      `(,(h-sub-section "ECB 1.93 released! (2003-03-21)"
+                        "Fixes some bugs and enhances the layout-engine. Offers also some new features. "
+                        (h-link "docs/Install-and-first-steps.html#Install%20and%20first%20steps" "Here") " is a short installation guide. "
+                        "Click " (h-link "NEWS.html" "here")
+                        " for information about changes in the new version. ")
+        ,(h-sub-section "ECB 1.92.1 released! (2003-03-05)"
                         "This is a bugfix-release without new features. "
                         (h-link "docs/Install-and-first-steps.html#Install%20and%20first%20steps" "Here") " is a short installation guide. "
                         "Click " (h-link "NEWS.html" "here")
@@ -87,18 +92,18 @@
                         "This release fixes some bugs and enhances layout and tree-buffer customizing. "
                         (h-link "docs/Install-and-first-steps.html#Install%20and%20first%20steps" "Here") " is a short installation guide. "
                         "Click " (h-link "NEWS.html" "here")
-                        " for information about changes in the new version. ")
-        ,(h-sub-section "ECB 1.91.1 released! (2003-02-11)"
-                        "This is mostly a bugfix-release which fixes some annoying bugs! "
-                        (h-link "docs/Install-and-first-steps.html#Install%20and%20first%20steps" "Here") " is a short installation guide. "
-                        "Click " (h-link "NEWS.html" "here")
                         " for information about changes in the new version. ")))
 
 (defvar ecb-rest-news nil
   "List of older news - these news are displayed in all-news.html ; see
 `ecb-html-all-news'.")
 (setq ecb-rest-news
-      `(,(h-sub-section "Bugfixes for ECB 1.90 available. (2003-02-06)"
+      `(,(h-sub-section "ECB 1.91.1 released! (2003-02-11)"
+                        "This is mostly a bugfix-release which fixes some annoying bugs! "
+                        (h-link "docs/Install-and-first-steps.html#Install%20and%20first%20steps" "Here") " is a short installation guide. "
+                        "Click " (h-link "NEWS.html" "here")
+                        " for information about changes in the new version. ")
+        ,(h-sub-section "Bugfixes for ECB 1.90 available. (2003-02-06)"
                         "Click " (h-link "downloads.html" "here") " to get it.")
         ,(h-sub-section "Usermanual now available ín PDF-format! (2003-02-03)"
                         "Click " (h-link "downloads.html" "here") " to get

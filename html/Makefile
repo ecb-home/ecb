@@ -58,7 +58,7 @@ NEWS.html:
 	@$(CP) ../NEWS .
 	@$(RM) NEWS.html
 	@gnuclientw.exe -e '(progn (find-file "NEWS") (load-library "htmlfontify") (htmlfontify-buffer) (write-file "NEWS.html") (kill-buffer "NEWS") (kill-buffer "NEWS.html"))'
-	@$(RM) NEWS	
+	@$(RM) NEWS
 
 
 # Creates a complete new build of the whole website
