@@ -52,7 +52,7 @@
 ;; The latest version of the ECB is available at
 ;; http://home.swipnet.se/mayhem/ecb.html
 
-;; $Id: ecb.el,v 1.62 2001/04/29 16:37:14 creator Exp $
+;; $Id: ecb.el,v 1.63 2001/04/30 11:56:03 berndl Exp $
 
 ;;; Code:
 
@@ -657,7 +657,7 @@ highlighting of the methods if `ecb-font-lock-methods' is not nil."
           (t method-and-args))))
   
 (defun ecb-get-variable-text(var-token)
-  (let ((type (semantic-token-type var)))
+  (let ((type (semantic-token-type var-token)))
     (concat (ecb-highlight-text (semantic-token-name var-token) ecb-variablename)
             (if type
                 (concat " : " (ecb-highlight-text type ecb-variabletype))
@@ -962,7 +962,7 @@ For further explanation see `ecb-clear-history-behavior'."
 					 ((< clearall 0) 'not-existing-buffers)
 					 (t 'existing-buffers)))
 			       ecb-clear-history-behavior))
-	   child-data child)
+	   child-data)
        (while tree-childs
 	 (setq child-data (tree-node-get-data (car tree-childs)))
 	 (if (or (eq clear-behavior 'all)
