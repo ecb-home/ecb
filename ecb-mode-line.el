@@ -25,10 +25,17 @@
 ;;
 ;; Contains all mode-line enhancements for ECB.
 
-;; $Id: ecb-mode-line.el,v 1.16 2003/01/10 14:51:53 berndl Exp $
+;; $Id: ecb-mode-line.el,v 1.17 2003/01/20 07:18:32 berndl Exp $
 
 (eval-when-compile
   (require 'silentcomp))
+
+(require 'ecb-util)
+
+;; XEmacs
+(silentcomp-defun redraw-modeline)
+;; Emacs
+(silentcomp-defun force-mode-line-update)
 
 (defcustom ecb-mode-line-prefixes '(nil
                                     nil
@@ -133,7 +140,9 @@ stretch past the screen."
       (save-excursion
         (set-buffer buffer-name)
         (setq mode-line-format new-mode-line-format)
-        (force-mode-line-update))
+        (if ecb-running-xemacs
+            (redraw-modeline)
+          (force-mode-line-update)))
     (message "This buffer isn't available: %s"  buffer-name)))
 
 (silentcomp-provide 'ecb-mode-line)

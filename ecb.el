@@ -62,7 +62,7 @@
 ;; The latest version of the ECB is available at
 ;; http://home.swipnet.se/mayhem/ecb.html
 
-;; $Id: ecb.el,v 1.276 2003/01/16 10:33:29 berndl Exp $
+;; $Id: ecb.el,v 1.277 2003/01/20 07:18:31 berndl Exp $
 
 ;;; Code:
 
@@ -107,6 +107,11 @@
 (eval-when-compile
   ;; to avoid compiler grips
   (require 'cl))
+
+;; XEmacs
+(silentcomp-defun redraw-modeline)
+;; Emacs
+(silentcomp-defun force-mode-line-update)
 
 (silentcomp-defvar dired-directory)
 (silentcomp-defun jde-show-class-source)
@@ -4397,7 +4402,9 @@ if the minor mode is enabled.
     (if new-state
         (ecb-activate-internal)
       (ecb-deactivate-internal)))
-  (force-mode-line-update t)
+  (if ecb-running-xemacs
+      (redraw-modeline t)
+    (force-mode-line-update t))
   ecb-minor-mode)
 
 (defvar ecb-common-directories-menu nil)
