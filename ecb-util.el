@@ -676,7 +676,6 @@ for FILE, but proper EOL-conversion and character interpretation is done!"
           (insert-file-contents exp-filename)
           (buffer-string)))))
 
-
 (silentcomp-provide 'ecb-util)
 
 ;;; ecb-util.el ends here

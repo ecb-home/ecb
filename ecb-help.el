@@ -317,6 +317,10 @@ could be interesting for support."
                                     compilation-mode-hook
                                     truncate-partial-width-windows
                                     truncate-lines
+                                    ,(if (boundp 'compilation-window-height)
+                                         'compilation-window-height)
+                                    ,(if (boundp 'temp-buffer-max-height)
+                                         'temp-buffer-max-height)
                                     auto-mode-alist
                                     ,(if (boundp 'c-mode-hook)
                                          'c-mode-hook)
@@ -366,6 +370,7 @@ could be interesting for support."
                                    ecb-idle-timer-alist
                                    ecb-post-command-hooks
                                    ecb-old-compilation-window-height
+                                   ecb-old-temp-buffer-max-height
                                    ecb-minor-mode
                                    ecb-toggle-layout-state)
                                  (function (lambda (l r)
