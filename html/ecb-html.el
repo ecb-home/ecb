@@ -28,7 +28,7 @@
 ;; Do not change any html-file besides the index.html manually but do all
 ;; changes in this elisp file!
 
-;; $Id: ecb-html.el,v 1.41 2003/02/14 09:31:13 berndl Exp $
+;; $Id: ecb-html.el,v 1.42 2003/02/18 16:18:28 berndl Exp $
 
 ;;; Code:
 
@@ -90,9 +90,8 @@
                         "be installed either via "
                         (h-link "http://www.xemacs.org/Download/win32/setup.exe"
                                 "XEmacs-netinstaller")
-                        " (for Windows) or from " (h-link "ftp://ftp.xemacs.org" "ftp.xemacs.org")
-                        " (go to directory /pub/xemacs/packages/) or "
-                        " via the package-manager of XEmacs.")))
+                        " (for Windows) or from " (h-link "ftp://ftp.xemacs.org:/pub/xemacs/packages/" "ftp.xemacs.org")
+                        " or via the package-manager of XEmacs.")))
 
 (defvar ecb-rest-news nil
   "List of older news - these news are displayed in all-news.html ; see
@@ -235,7 +234,6 @@
        ecb-bullet
        '(
 	 ("main.html" "Main")
-;; 	 ("http://sourceforge.net/project/showfiles.php?group_id=17484" "Download")
 	 ("downloads.html" "Downloads")
          ("docs/Install-and-first-steps.html#Install%20and%20first%20steps" "Installation")
 	 ("docs/index.html" "Documentation")
@@ -273,6 +271,18 @@
       "Go to the "
       (h-link "http://sourceforge.net/project/showfiles.php?group_id=17484"
               "ECB-Download Area") " at SourceForge.")
+     (h-line)
+     (h-sub-section
+      "Download ECB as regular XEmacs-package."
+      "ECB >= 1.80 can also be installed as a regular XEmacs-package. There are several possibilties:"
+      (h-bullet-link-list
+       ecb-bullet
+       (list
+        '("http://www.xemacs.org/Download/win32/setup.exe" "Windows XEmacs-netinstaller" "Use the netinstaller for easy installing ECB direct from the web.")
+        '("ftp://ftp.xemacs.org:/pub/xemacs/packages/" "Download from xemacs.org" "FTP-download of XEmacs-packages.")
+        '("http://ftp.xemacs.org:/pub/xemacs/packages/" "Download from xemacs.org" "HTTP-download of XEmacs-packages.")
+        )
+       "_top"))
      (h-line)
      (h-sub-section
       "Download from CVS repository"
