@@ -173,12 +173,10 @@
         (tag-start (ecb-nav-get-tag-start item))
         (tag-end (ecb-nav-get-tag-end item)))
     (set-window-buffer (selected-window) tag-buffer)
-    (ecb-with-original-basic-functions
-     (widen))
+    (widen)
     (goto-char tag-start)
     (when (ecb-nav-get-narrow item)
-      (narrow-to-region (ecb-line-beginning-pos) tag-end)
-      (setq ecb-buffer-narrowed-by-ecb t))
+      (narrow-to-region (ecb-line-beginning-pos) tag-end))
     (goto-char (+ tag-start (ecb-nav-get-pos item)))
     (set-window-start (selected-window)
                       (+ tag-start (ecb-nav-get-window-start item)))))
@@ -238,8 +236,7 @@ case no position saving is done."
 
 (defmethod ecb-nav-goto ((item ecb-nav-file-history-item))
   (find-file (ecb-nav-get-file item))
-  (ecb-with-original-basic-functions
-   (widen))
+  (widen)
   (goto-char (ecb-nav-get-pos item))
   (set-window-start (selected-window) (ecb-nav-get-window-start item)))
   
