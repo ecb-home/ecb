@@ -1,30 +1,38 @@
-* Changes for ECB version 1.95.2
+* Changes for ECB version 1.96
 
-** Much better support of the compile-window
+** Much better support of the ECB-compile-window
 
-*** Completely rewritten mechanism for displaying buffers in the compile-window.
-    Now using a durable compile-window is much safer and works as well as
-    without one. Now all buffers displayed with `display-buffer' are checked
-    if they are "compilation-buffers" in the sense of the function
+*** General overhaul for displaying buffers in the ECB-compile-window.
+    The whole mechanism has been rewritten so now using a durable
+    compile-window is much safer and works as well as without one. Now all
+    buffers displayed with `display-buffer' are checked if they are
+    "compilation-buffers" in the sense of the function
     `ecb-compilation-buffer-p' and then displayed in the compile-window of
     ECB. Especially temp-buffers displayed with `with-output-to-temp-buffer'
     (e.g. *Help*-buffers) are now much better supported.
 
     Simply said: All buffers for which `ecb-compilation-buffer-p' says t are
-    now *always* displayed in the compile-window (if there is any) and all
-    other buffers not.
+    now *always* displayed in the compile-window (if there is any) with
+    complete consideration of Emacs-options like `compilation-window-height',
+    `temp-buffer-max-height', `temp-buffer-resize-mode' (GNU Emacs),
+    `temp-buffer-shrink-to-fit' (XEmacs) etc. All other buffer not.
 
 *** New layout-option `ecb-compile-window-width'.
     Thanks for suggestion to John S. Yates, Jr. <jyates@netezza.com>
 
 *** New layout-option `ecb-compile-window-prevent-shrink-below-height'
 
+*** Better and more reliable eshell-integration. Now the compile-window fits
+    always autom. to the output of the last eshell-command.
+
 *** All options related to the ECB-compile-window have been moved to the new
     customization-group "ecb-compilation" which is a subgroup of "ecb-layout".
     
 ** Safer handling of all adviced functions of ECB
    All ECB-advices are now active if and only if ECB is running. Just loading
-   the ECB-library doesn't activate any ECB-advice!
+   the ECB-library doesn't activate any ECB-advice! Also if there is an error
+   during the activation-process of ECB then all advices are always disabled
+   automatically.
 
 ** ECB can visit tokens in a smarter way
 

@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-tod.el,v 1.13 2003/08/25 08:24:01 berndl Exp $
+;; $Id: ecb-tod.el,v 1.14 2003/09/08 12:20:17 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -65,7 +65,7 @@
     "You can speedup access for big directories with option `ecb-cache-directory-contents'."
     "You can display the online help also in HTML-format with option `ecb-show-help-format'."
     "You can interactively create your own layouts with the command `ecb-create-new-layout'."
-    "You can start the eshell in the compile-window with `ecb-eshell-goto-eshell' [C-c . e]."
+    "You can start the eshell in the compile-window simply with `eshell' or [C-c . e]."
     "You can \(de)activate ECB on a major-mode basis with `ecb-major-modes-activate' and `ecb-major-modes-deactivate'."
     "Use the incremental search in the methods-buffer for fast node-selecting; see `ecb-tree-incremental-search'."
     "You can cycle through all currently opened \"compile-buffers\" with `ecb-cycle-through-compilation-buffers'."

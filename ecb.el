@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb.el,v 1.331 2003/09/05 07:27:34 berndl Exp $
+;; $Id: ecb.el,v 1.332 2003/09/08 12:20:16 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -92,7 +92,7 @@
 
 ;; IMPORTANT: The version-number is auto-frobbed from the Makefile. Do not
 ;; change it here!
-(defconst ecb-version "1.95.2"
+(defconst ecb-version "1.96"
   "Current ECB version.")
 
 (eval-when-compile
@@ -5241,7 +5241,7 @@ That is remove the unsupported :help stuff."
                (t "mm" ecb-maximize-window-methods)
                (t "mh" ecb-maximize-window-history)
                (t "mb" ecb-maximize-window-speedbar)
-               (t "e" ecb-eshell-goto-eshell)
+               (t "e" eshell)
                (t "\\" ecb-toggle-compile-window)
                (t "/" ecb-toggle-compile-window-height)
                (t "," ecb-cycle-maximized-ecb-buffers)
@@ -5359,6 +5359,16 @@ always the ECB-frame if called from another frame."
 
 (defvar ecb-upgrade-check-done nil)
 
+(defun ecb-clean-up-after-activation-failure (msg)
+  "Complete cleanup of all ECB-setups and report an error with message MSG."
+  (let ((ecb-minor-mode t))
+    (ecb-deactivate-internal t)
+    (if ecb-running-xemacs
+        (redraw-modeline t)
+      (force-mode-line-update t))
+    (error msg)))
+  
+
 (defun ecb-activate--impl ()
   "See `ecb-activate'.  This is the implementation of ECB activation."
 
@@ -5375,343 +5385,383 @@ always the ECB-frame if called from another frame."
     ;; we activate only if all before-hooks return non nil
     (when (run-hook-with-args-until-failure 'ecb-before-activate-hook)
 
-      ;; checking the requirements
-      (ecb-check-requirements)
-
-      ;; initialize the navigate-library
-      (ecb-nav-initialize)
-
-      ;; maybe we must upgrade some not anymore compatible or even renamed
-      ;; options
-      (when (and ecb-auto-compatibility-check
-                 (not ecb-upgrade-check-done))
-        (ecb-check-not-compatible-options)
-        (ecb-upgrade-not-compatible-options)
-        (ecb-upgrade-renamed-options)
-        (setq ecb-upgrade-check-done t))
-      
-      ;; first initialize the whole layout-engine
-      (ecb-initialize-layout)
-
-      ;; clear the token-tree-cache and the files-subdir-cache
-      (ecb-clear-token-tree-cache)
-      (ecb-clear-files-and-subdirs-cache)
-      (ecb-sources-cache-clear)
-
-      ;; initialize internal vars
-      (ecb-initialize-internal-vars)
-    
-      ;; enable basic advices
-      (ecb-enable-basic-advices)
-
-      ;; enable window-function advices
-      (ecb-activate-adviced-functions ecb-advice-window-functions)
-
-      ;; set the ecb-frame
-      (if ecb-new-ecb-frame
+      (condition-case nil
           (progn
-            (run-hooks 'ecb-activate-before-new-frame-created-hook)
-            (setq ecb-frame (make-frame))
-            (put 'ecb-frame 'ecb-new-frame-created t))
-        (setq ecb-frame (selected-frame))
-        (put 'ecb-frame 'ecb-new-frame-created nil))
-      (raise-frame ecb-frame)
-      (select-frame ecb-frame)
+            ;; checking the requirements
+            (ecb-check-requirements)
 
-      (ecb-enable-own-temp-buffer-show-function t)
+            ;; initialize the navigate-library
+            (ecb-nav-initialize)
+
+            ;; maybe we must upgrade some not anymore compatible or even renamed
+            ;; options
+            (when (and ecb-auto-compatibility-check
+                       (not ecb-upgrade-check-done))
+              (ecb-check-not-compatible-options)
+              (ecb-upgrade-not-compatible-options)
+              (ecb-upgrade-renamed-options)
+              (setq ecb-upgrade-check-done t))
       
-      ;; now we can activate ECB
-      (let ((curr-buffer-list (mapcar (lambda (buff)
-                                        (buffer-name buff))
-                                      (buffer-list))))
-        ;; create all the ECB-buffers if they don´t already exist
-        (unless (member ecb-directories-buffer-name curr-buffer-list)
-          (tree-buffer-create
-           ecb-directories-buffer-name
-           ecb-frame
-           'ecb-interpret-mouse-click
-           'ecb-tree-buffer-node-select-callback
-           'ecb-tree-buffer-node-expand-callback
-           'ecb-mouse-over-directory-node
-           'equal
-           (list (cons 0 (funcall (or ecb-directories-menu-sorter
-                                      'identity)
-                                  (append ecb-directories-menu-user-extension
-                                          ecb-directories-menu)))
-                 (cons 1 (funcall (or ecb-sources-menu-sorter
-                                      'identity)
-                                  (append ecb-sources-menu-user-extension
-                                          ecb-sources-menu)))
-                 (cons 2 (funcall (or ecb-directories-menu-sorter
-                                      'identity)
-                                  (append ecb-directories-menu-user-extension
-                                          ecb-source-path-menu))))
-           (list (cons 0 ecb-directories-menu-title-creator)
-                 (cons 1 ecb-directories-menu-title-creator)
-                 (cons 2 ecb-directories-menu-title-creator))
-           (nth 0 ecb-truncate-lines)
-           t
-           ecb-tree-indent
-           ecb-tree-incremental-search
-           ecb-tree-navigation-by-arrow
-           ecb-tree-easy-hor-scroll
-           (list (cons "[+]" (and ecb-tree-use-image-icons
-                                  (ignore-errors (require 'sb-image))
-                                  'speedbar-directory-plus))
-                 (cons "[-]" (and ecb-tree-use-image-icons
-                                  (ignore-errors (require 'sb-image))
-                                  'speedbar-directory-minus)))
-           (list (cons 1 ecb-source-in-directories-buffer-face))
-           ecb-tree-expand-symbol-before
-           ecb-directory-face
-           ecb-directories-general-face
-           ;; we add an after-create-hook to the tree-buffer
-           (append
-            (list (function (lambda ()
-                              (local-set-key [f2] 'ecb-customize)
-                              (local-set-key [f3] 'ecb-show-help)
-                              (local-set-key [f4] 'ecb-add-source-path)
-                              (local-set-key (kbd "C-t")
-                                             'ecb-toggle-RET-selects-edit-window))))
-            ecb-common-tree-buffer-after-create-hook
-            ecb-directories-buffer-after-create-hook)
-           ))
-      
-        (unless (member ecb-sources-buffer-name curr-buffer-list)
-          (tree-buffer-create
-           ecb-sources-buffer-name
-           ecb-frame
-           'ecb-interpret-mouse-click
-           'ecb-tree-buffer-node-select-callback
-           'ecb-tree-buffer-node-expand-callback
-           'ecb-mouse-over-source-node
-           'equal
-           (list (cons 0 (funcall (or ecb-sources-menu-sorter
-                                      'identity)
-                                  (append ecb-sources-menu-user-extension
-                                          ecb-sources-menu))))
-           (list (cons 0 ecb-sources-menu-title-creator))
-           (nth 1 ecb-truncate-lines)
-           t
-           ecb-tree-indent
-           ecb-tree-incremental-search
-           ecb-tree-navigation-by-arrow
-           ecb-tree-easy-hor-scroll
-           (list nil nil)
-           nil
-           nil
-           ecb-source-face
-           ecb-sources-general-face
-           (append
-            (list (function (lambda ()
-                              (local-set-key (kbd "C-t")
-                                             'ecb-toggle-RET-selects-edit-window))))
-            ecb-common-tree-buffer-after-create-hook
-            ecb-directories-buffer-after-create-hook)))
-      
-        (unless (member ecb-methods-buffer-name curr-buffer-list)
-          (tree-buffer-create
-           ecb-methods-buffer-name
-           ecb-frame
-           'ecb-interpret-mouse-click
-           'ecb-tree-buffer-node-select-callback
-           nil
-           'ecb-mouse-over-method-node
-           ;; Function which compares the node-data of a tree-buffer-node in the
-           ;; method-buffer for equality. We must compare semantic-tokens but we
-           ;; must not compare the tokens with eq or equal because they can be
-           ;; re-grouped by semantic-adopt-external-members. the following
-           ;; function is a save "equal"-condition for ECB because currently the
-           ;; method buffer always displays only tokens from exactly the buffer
-           ;; of the current edit-window.
-           (if (fboundp 'semantic-equivalent-tokens-p)
-               'semantic-equivalent-tokens-p
-             (function
-              (lambda (l r)
-                (and (string= (semantic-token-name l) (semantic-token-name r))
-                     (eq (semantic-token-token l) (semantic-token-token r))
-                     (eq (ecb-semantic-token-start l) (ecb-semantic-token-start r))
-                     (eq (ecb-semantic-token-end l) (ecb-semantic-token-end r))))))
-           (list (cons 0 (funcall (or ecb-methods-menu-sorter
-                                      'identity)
-                                  (append ecb-methods-menu-user-extension
-                                          ecb-methods-token-menu)))
-                 (cons 1 (funcall (or ecb-methods-menu-sorter
-                                      'identity)
-                                  (append ecb-methods-menu-user-extension
-                                          ecb-common-methods-menu)))
-                 (cons 2 (funcall (or ecb-methods-menu-sorter
-                                      'identity)
-                                  (append ecb-methods-menu-user-extension
-                                          ecb-common-methods-menu))))
-           (list (cons 0 ecb-methods-menu-title-creator)
-                 (cons 1 ecb-methods-menu-title-creator)
-                 (cons 2 ecb-methods-menu-title-creator))
-           (nth 2 ecb-truncate-lines)
-           t
-           ecb-tree-indent
-           ecb-tree-incremental-search
-           ecb-tree-navigation-by-arrow
-           ecb-tree-easy-hor-scroll
-           (list (cons "[+]" (and ecb-tree-use-image-icons
-                                  (ignore-errors (require 'sb-image))
-                                  'speedbar-box-plus))
-                 (cons "[-]" (and ecb-tree-use-image-icons
-                                  (ignore-errors (require 'sb-image))
-                                  'speedbar-box-minus)))
-           nil
-           ecb-tree-expand-symbol-before
-           ecb-method-face
-           ecb-methods-general-face
-           (append
-            (list (function (lambda ()
-                              (local-set-key (kbd "C-t")
-                                             'ecb-toggle-RET-selects-edit-window))))
-            ecb-common-tree-buffer-after-create-hook
-            ecb-directories-buffer-after-create-hook))
-          (setq ecb-methods-root-node (tree-buffer-get-root)))
-      
-        (unless (member ecb-history-buffer-name curr-buffer-list)
-          (tree-buffer-create
-           ecb-history-buffer-name
-           ecb-frame
-           'ecb-interpret-mouse-click
-           'ecb-tree-buffer-node-select-callback
-           'ecb-tree-buffer-node-expand-callback
-           'ecb-mouse-over-history-node
-           'equal
-           (list (cons 0 (funcall (or ecb-history-menu-sorter
-                                      'identity)
-                                  (append ecb-history-menu-user-extension
-                                          ecb-history-menu))))
-           (list (cons 0 ecb-history-menu-title-creator))
-           (nth 3 ecb-truncate-lines)
-           t
-           ecb-tree-indent
-           ecb-tree-incremental-search
-           ecb-tree-navigation-by-arrow
-           ecb-tree-easy-hor-scroll
-           (list nil nil)
-           nil
-           nil
-           ecb-history-face
-           ecb-history-general-face
-           (append
-            (list (function (lambda ()
-                              (local-set-key (kbd "C-t")
-                                             'ecb-toggle-RET-selects-edit-window))))
-            ecb-common-tree-buffer-after-create-hook
-            ecb-directories-buffer-after-create-hook))))
+            ;; first initialize the whole layout-engine
+            (ecb-initialize-layout)
+
+            ;; clear the token-tree-cache and the files-subdir-cache
+            (ecb-clear-token-tree-cache)
+            (ecb-clear-files-and-subdirs-cache)
+            (ecb-sources-cache-clear)
+
+            ;; initialize internal vars
+            (ecb-initialize-internal-vars)
     
-      ;; Now store all tree-buffer-names used by ECB
-      ;; ECB must not use the variable `tree-buffers' but must always refer to
-      ;; `ecb-tree-buffers'!!
-      (setq ecb-tree-buffers (list ecb-directories-buffer-name
-                                   ecb-sources-buffer-name
-                                   ecb-methods-buffer-name
-                                   ecb-history-buffer-name))
+            ;; enable basic advices
+            (ecb-enable-advices ecb-basic-adviced-functions)
+            ;; enable window-function advices
+            (ecb-activate-adviced-functions ecb-advice-window-functions)
 
-      ;; we need some hooks
-      (add-hook 'semantic-after-partial-cache-change-hook
-                'ecb-update-after-partial-reparse t)
-      (add-hook 'semantic-after-toplevel-cache-change-hook
-                'ecb-rebuild-methods-buffer-with-tokencache t)
-      (ecb-activate-ecb-sync-functions ecb-highlight-token-with-point-delay
-                                       'ecb-token-sync)
-      (ecb-activate-ecb-sync-functions ecb-window-sync-delay
-                                       'ecb-window-sync-function)
-      (ecb-activate-ecb-sync-functions ecb-compilation-update-idle-time
-                                       'ecb-compilation-buffer-list-changed-p)
-      (ecb-activate-ecb-sync-functions nil 'ecb-layout-post-command-hook)
-      (add-hook 'pre-command-hook 'ecb-layout-pre-command-hook)
-      (add-hook 'after-save-hook 'ecb-update-methods-after-saving)
-      (add-hook 'kill-buffer-hook 'ecb-kill-buffer-hook)
+            ;; set the ecb-frame
+            (if ecb-new-ecb-frame
+                (progn
+                  (run-hooks 'ecb-activate-before-new-frame-created-hook)
+                  (setq ecb-frame (make-frame))
+                  (put 'ecb-frame 'ecb-new-frame-created t))
+              (setq ecb-frame (selected-frame))
+              (put 'ecb-frame 'ecb-new-frame-created nil))
+            (raise-frame ecb-frame)
+            (select-frame ecb-frame)
 
-      ;; running the compilation-buffer update first time
-      (ecb-compilation-buffer-list-init)
+            (ecb-enable-own-temp-buffer-show-function t)
       
-      ;; ediff-stuff; we operate here only with symbols to avoid bytecompiler
-      ;; warnings
-      (if (boundp 'ediff-quit-hook)
-          (put 'ediff-quit-hook 'ecb-ediff-quit-hook-value
-               ediff-quit-hook))
-      (add-hook 'ediff-quit-hook 'ediff-cleanup-mess)
-      (add-hook 'ediff-quit-hook 'ecb-ediff-quit-hook t)
+            ;; now we can activate ECB
+            (let ((curr-buffer-list (mapcar (lambda (buff)
+                                              (buffer-name buff))
+                                            (buffer-list))))
+              ;; create all the ECB-buffers if they don´t already exist
+              (unless (member ecb-directories-buffer-name curr-buffer-list)
+                (tree-buffer-create
+                 ecb-directories-buffer-name
+                 ecb-frame
+                 'ecb-interpret-mouse-click
+                 'ecb-tree-buffer-node-select-callback
+                 'ecb-tree-buffer-node-expand-callback
+                 'ecb-mouse-over-directory-node
+                 'equal
+                 (list (cons 0 (funcall (or ecb-directories-menu-sorter
+                                            'identity)
+                                        (append ecb-directories-menu-user-extension
+                                                ecb-directories-menu)))
+                       (cons 1 (funcall (or ecb-sources-menu-sorter
+                                            'identity)
+                                        (append ecb-sources-menu-user-extension
+                                                ecb-sources-menu)))
+                       (cons 2 (funcall (or ecb-directories-menu-sorter
+                                            'identity)
+                                        (append ecb-directories-menu-user-extension
+                                                ecb-source-path-menu))))
+                 (list (cons 0 ecb-directories-menu-title-creator)
+                       (cons 1 ecb-directories-menu-title-creator)
+                       (cons 2 ecb-directories-menu-title-creator))
+                 (nth 0 ecb-truncate-lines)
+                 t
+                 ecb-tree-indent
+                 ecb-tree-incremental-search
+                 ecb-tree-navigation-by-arrow
+                 ecb-tree-easy-hor-scroll
+                 (list (cons "[+]" (and ecb-tree-use-image-icons
+                                        (ignore-errors (require 'sb-image))
+                                        'speedbar-directory-plus))
+                       (cons "[-]" (and ecb-tree-use-image-icons
+                                        (ignore-errors (require 'sb-image))
+                                        'speedbar-directory-minus)))
+                 (list (cons 1 ecb-source-in-directories-buffer-face))
+                 ecb-tree-expand-symbol-before
+                 ecb-directory-face
+                 ecb-directories-general-face
+                 ;; we add an after-create-hook to the tree-buffer
+                 (append
+                  (list (function (lambda ()
+                                    (local-set-key [f2] 'ecb-customize)
+                                    (local-set-key [f3] 'ecb-show-help)
+                                    (local-set-key [f4] 'ecb-add-source-path)
+                                    (local-set-key (kbd "C-t")
+                                                   'ecb-toggle-RET-selects-edit-window))))
+                  ecb-common-tree-buffer-after-create-hook
+                  ecb-directories-buffer-after-create-hook)
+                 ))
       
+              (unless (member ecb-sources-buffer-name curr-buffer-list)
+                (tree-buffer-create
+                 ecb-sources-buffer-name
+                 ecb-frame
+                 'ecb-interpret-mouse-click
+                 'ecb-tree-buffer-node-select-callback
+                 'ecb-tree-buffer-node-expand-callback
+                 'ecb-mouse-over-source-node
+                 'equal
+                 (list (cons 0 (funcall (or ecb-sources-menu-sorter
+                                            'identity)
+                                        (append ecb-sources-menu-user-extension
+                                                ecb-sources-menu))))
+                 (list (cons 0 ecb-sources-menu-title-creator))
+                 (nth 1 ecb-truncate-lines)
+                 t
+                 ecb-tree-indent
+                 ecb-tree-incremental-search
+                 ecb-tree-navigation-by-arrow
+                 ecb-tree-easy-hor-scroll
+                 (list nil nil)
+                 nil
+                 nil
+                 ecb-source-face
+                 ecb-sources-general-face
+                 (append
+                  (list (function (lambda ()
+                                    (local-set-key (kbd "C-t")
+                                                   'ecb-toggle-RET-selects-edit-window))))
+                  ecb-common-tree-buffer-after-create-hook
+                  ecb-directories-buffer-after-create-hook)))
+      
+              (unless (member ecb-methods-buffer-name curr-buffer-list)
+                (tree-buffer-create
+                 ecb-methods-buffer-name
+                 ecb-frame
+                 'ecb-interpret-mouse-click
+                 'ecb-tree-buffer-node-select-callback
+                 nil
+                 'ecb-mouse-over-method-node
+                 ;; Function which compares the node-data of a tree-buffer-node in the
+                 ;; method-buffer for equality. We must compare semantic-tokens but we
+                 ;; must not compare the tokens with eq or equal because they can be
+                 ;; re-grouped by semantic-adopt-external-members. the following
+                 ;; function is a save "equal"-condition for ECB because currently the
+                 ;; method buffer always displays only tokens from exactly the buffer
+                 ;; of the current edit-window.
+                 (if (fboundp 'semantic-equivalent-tokens-p)
+                     'semantic-equivalent-tokens-p
+                   (function
+                    (lambda (l r)
+                      (and (string= (semantic-token-name l) (semantic-token-name r))
+                           (eq (semantic-token-token l) (semantic-token-token r))
+                           (eq (ecb-semantic-token-start l) (ecb-semantic-token-start r))
+                           (eq (ecb-semantic-token-end l) (ecb-semantic-token-end r))))))
+                 (list (cons 0 (funcall (or ecb-methods-menu-sorter
+                                            'identity)
+                                        (append ecb-methods-menu-user-extension
+                                                ecb-methods-token-menu)))
+                       (cons 1 (funcall (or ecb-methods-menu-sorter
+                                            'identity)
+                                        (append ecb-methods-menu-user-extension
+                                                ecb-common-methods-menu)))
+                       (cons 2 (funcall (or ecb-methods-menu-sorter
+                                            'identity)
+                                        (append ecb-methods-menu-user-extension
+                                                ecb-common-methods-menu))))
+                 (list (cons 0 ecb-methods-menu-title-creator)
+                       (cons 1 ecb-methods-menu-title-creator)
+                       (cons 2 ecb-methods-menu-title-creator))
+                 (nth 2 ecb-truncate-lines)
+                 t
+                 ecb-tree-indent
+                 ecb-tree-incremental-search
+                 ecb-tree-navigation-by-arrow
+                 ecb-tree-easy-hor-scroll
+                 (list (cons "[+]" (and ecb-tree-use-image-icons
+                                        (ignore-errors (require 'sb-image))
+                                        'speedbar-box-plus))
+                       (cons "[-]" (and ecb-tree-use-image-icons
+                                        (ignore-errors (require 'sb-image))
+                                        'speedbar-box-minus)))
+                 nil
+                 ecb-tree-expand-symbol-before
+                 ecb-method-face
+                 ecb-methods-general-face
+                 (append
+                  (list (function (lambda ()
+                                    (local-set-key (kbd "C-t")
+                                                   'ecb-toggle-RET-selects-edit-window))))
+                  ecb-common-tree-buffer-after-create-hook
+                  ecb-directories-buffer-after-create-hook))
+                (setq ecb-methods-root-node (tree-buffer-get-root)))
+      
+              (unless (member ecb-history-buffer-name curr-buffer-list)
+                (tree-buffer-create
+                 ecb-history-buffer-name
+                 ecb-frame
+                 'ecb-interpret-mouse-click
+                 'ecb-tree-buffer-node-select-callback
+                 'ecb-tree-buffer-node-expand-callback
+                 'ecb-mouse-over-history-node
+                 'equal
+                 (list (cons 0 (funcall (or ecb-history-menu-sorter
+                                            'identity)
+                                        (append ecb-history-menu-user-extension
+                                                ecb-history-menu))))
+                 (list (cons 0 ecb-history-menu-title-creator))
+                 (nth 3 ecb-truncate-lines)
+                 t
+                 ecb-tree-indent
+                 ecb-tree-incremental-search
+                 ecb-tree-navigation-by-arrow
+                 ecb-tree-easy-hor-scroll
+                 (list nil nil)
+                 nil
+                 nil
+                 ecb-history-face
+                 ecb-history-general-face
+                 (append
+                  (list (function (lambda ()
+                                    (local-set-key (kbd "C-t")
+                                                   'ecb-toggle-RET-selects-edit-window))))
+                  ecb-common-tree-buffer-after-create-hook
+                  ecb-directories-buffer-after-create-hook))))
+    
+            ;; Now store all tree-buffer-names used by ECB
+            ;; ECB must not use the variable `tree-buffers' but must always refer to
+            ;; `ecb-tree-buffers'!!
+            (setq ecb-tree-buffers (list ecb-directories-buffer-name
+                                         ecb-sources-buffer-name
+                                         ecb-methods-buffer-name
+                                         ecb-history-buffer-name))
+
+            ;; activate the eshell-integration - does not load eshell but prepares
+            ;; ECB to run eshell right - if loaded and activated
+            (ecb-eshell-activate-integration)
+      
+            ;; we need some hooks
+            (add-hook 'semantic-after-partial-cache-change-hook
+                      'ecb-update-after-partial-reparse t)
+            (add-hook 'semantic-after-toplevel-cache-change-hook
+                      'ecb-rebuild-methods-buffer-with-tokencache t)
+            (ecb-activate-ecb-sync-functions ecb-highlight-token-with-point-delay
+                                             'ecb-token-sync)
+            (ecb-activate-ecb-sync-functions ecb-window-sync-delay
+                                             'ecb-window-sync-function)
+            (ecb-activate-ecb-sync-functions ecb-compilation-update-idle-time
+                                             'ecb-compilation-buffer-list-changed-p)
+            (ecb-activate-ecb-sync-functions nil 'ecb-layout-handle-compile-window-selection)
+            (add-hook 'pre-command-hook 'ecb-layout-pre-command-hook)
+            (add-hook 'after-save-hook 'ecb-update-methods-after-saving)
+            (add-hook 'kill-buffer-hook 'ecb-kill-buffer-hook)
+
+            ;; running the compilation-buffer update first time
+            (ecb-compilation-buffer-list-init)
+      
+            ;; ediff-stuff; we operate here only with symbols to avoid bytecompiler
+            ;; warnings
+            (if (boundp 'ediff-quit-hook)
+                (put 'ediff-quit-hook 'ecb-ediff-quit-hook-value
+                     ediff-quit-hook))
+            (add-hook 'ediff-quit-hook 'ediff-cleanup-mess)
+            (add-hook 'ediff-quit-hook 'ecb-ediff-quit-hook t)
+            
+            ;; menus
+            (if ecb-running-xemacs
+                (add-submenu nil ecb-minor-menu))
+
+            (add-hook (if ecb-running-xemacs
+                          'activate-menubar-hook
+                        'menu-bar-update-hook)
+                      'ecb-compilation-update-menu))
+        (error
+         (ecb-clean-up-after-activation-failure
+          "Errors during the basic setup of ECB.")))
+
+      (condition-case nil
+          ;; run personal hooks before drawing the layout
+          (run-hooks 'ecb-activate-before-layout-draw-hook)
+        (error
+         (ecb-clean-up-after-activation-failure
+          "Errors during the hooks of ecb-activate-before-layout-draw-hook.")))
+         
       (setq ecb-minor-mode t)
-
-      ;; menus
-      (if ecb-running-xemacs
-          (add-submenu nil ecb-minor-menu))
-
-      (add-hook (if ecb-running-xemacs
-                    'activate-menubar-hook
-                  'menu-bar-update-hook)
-                'ecb-compilation-update-menu)
-
-      ;; run personal hooks before drawing the layout
-      (run-hooks 'ecb-activate-before-layout-draw-hook)
-
-      ;; now we draw the layout chosen in `ecb-layout'. This function
-      ;; activates at its end also the adviced functions if necessary!
-      ;; Here are the directories- and history-buffer updated.
-      (let ((ecb-redraw-layout-quickly nil))
-        (ecb-redraw-layout-full 'no-buffer-sync))
-    
-      (ecb-with-adviced-functions
-       ;; activate the correct edit-window split
-       (cond ((equal ecb-split-edit-window 'vertical)
-              (split-window-vertically))
-             ((equal ecb-split-edit-window 'horizontal)
-              (split-window-horizontally))
-             ((not ecb-split-edit-window)
-              (delete-other-windows))))
-
-      ;; now we synchronize all ECB-windows
-      (ecb-current-buffer-sync 'force)
-    
-      ;; now update all the ECB-buffer-modelines
-      (ecb-mode-line-format)
-
-      (when (and ecb-display-default-dir-after-start
-                 (null (buffer-file-name (window-buffer ecb-edit-window))))
-        (ecb-set-selected-directory
-         (ecb-fix-filename (save-excursion
-                             (set-buffer (window-buffer ecb-edit-window))
-                             default-directory))))
       
-      ;; we run any personal hooks
-      (run-hooks 'ecb-activate-hook)
-
-      ;; enable mouse-tracking for the ecb-tree-buffers; we do this after running
-      ;; the personal hooks because if a user put´s activation of
-      ;; follow-mouse.el (`turn-on-follow-mouse') in the `ecb-activate-hook'
-      ;; then our own ECB mouse-tracking must be activated later.
-      ;; If `turn-on-follow-mouse' would be activated after our own follow-mouse
-      ;; stuff, it would overwrite our mechanism and the show-node-name stuff
-      ;; would not work!
-      (if (ecb-show-any-node-info-by-mouse-moving-p)
-          (tree-buffer-activate-follow-mouse))
+      (condition-case nil
+          (progn
+            ;; now we draw the layout chosen in `ecb-layout'. This function
+            ;; activates at its end also the adviced functions if necessary!
+            ;; Here are the directories- and history-buffer updated.
+            (let ((ecb-redraw-layout-quickly nil))
+              (ecb-redraw-layout-full 'no-buffer-sync))
     
+            (ecb-with-adviced-functions
+             ;; activate the correct edit-window split
+             (cond ((equal ecb-split-edit-window 'vertical)
+                    (split-window-vertically))
+                   ((equal ecb-split-edit-window 'horizontal)
+                    (split-window-horizontally))
+                   ((not ecb-split-edit-window)
+                    (delete-other-windows))))
+
+            ;; now we synchronize all ECB-windows
+            (ecb-current-buffer-sync 'force)
+    
+            ;; now update all the ECB-buffer-modelines
+            (ecb-mode-line-format))
+        (error
+         (ecb-clean-up-after-activation-failure
+          "Errors during the layout setup of ECB.")))
+
+      (condition-case nil
+          (when (and ecb-display-default-dir-after-start
+                     (null (buffer-file-name (window-buffer ecb-edit-window))))
+            (ecb-set-selected-directory
+             (ecb-fix-filename (save-excursion
+                                 (set-buffer (window-buffer ecb-edit-window))
+                                 default-directory))))
+        (error
+         (ecb-clean-up-after-activation-failure
+          "Errors during setting the default directory.")))
+
+      (condition-case nil
+          ;; we run any personal hooks
+          (run-hooks 'ecb-activate-hook)
+        (error
+         (ecb-clean-up-after-activation-failure
+          "Errors during the hooks of ecb-activate-hook.")))
+
+      (condition-case nil
+          ;; enable mouse-tracking for the ecb-tree-buffers; we do this after
+          ;; running the personal hooks because if a user put´s activation of
+          ;; follow-mouse.el (`turn-on-follow-mouse') in the
+          ;; `ecb-activate-hook' then our own ECB mouse-tracking must be
+          ;; activated later. If `turn-on-follow-mouse' would be activated
+          ;; after our own follow-mouse stuff, it would overwrite our
+          ;; mechanism and the show-node-name stuff would not work!
+          (if (ecb-show-any-node-info-by-mouse-moving-p)
+              (tree-buffer-activate-follow-mouse))
+        (error
+         (ecb-clean-up-after-activation-failure
+          "Errors during the mouse-tracking activation.")))
+
+      (setq ecb-minor-mode t)
       (message "The ECB is now activated.")
 
-      ;; now we display all `ecb-not-compatible-options' and
-      ;; `ecb-renamed-options'
-      (when ecb-auto-compatibility-check
-        (ecb-display-upgraded-options))
+      (condition-case nil
+          ;; now we display all `ecb-not-compatible-options' and
+          ;; `ecb-renamed-options'
+          (when ecb-auto-compatibility-check
+            (ecb-display-upgraded-options))
+        (error
+         (ecb-clean-up-after-activation-failure
+          "Error during the compatibility-check of ECB.")))
 
       ;; if we activate ECB first time then we display the node "First steps" of
       ;; the online-manual
-      (when (null ecb-source-path)
-        (let ((ecb-show-help-format 'info))
-          (ecb-show-help)
-          (Info-goto-node "First steps")))
+      (ignore-errors
+        (when (null ecb-source-path)
+          (let ((ecb-show-help-format 'info))
+            (ecb-show-help)
+            (Info-goto-node "First steps"))))
 
       ;; display tip of the day if `ecb-tip-of-the-day' is not nil
-      (ecb-show-tip-of-the-day)
-      
-      ;;now take a snapshot of the current window configuration
-      (ecb-set-activated-window-configuration))))
+      (ignore-errors
+        (ecb-show-tip-of-the-day))
+
+      (condition-case nil
+          ;;now take a snapshot of the current window configuration
+          (ecb-set-activated-window-configuration)
+        (error
+         (ecb-clean-up-after-activation-failure
+          "Errors during the snapshot of the windows-configuration."))))))
 
 
 (defun ecb-set-activated-window-configuration()
@@ -5742,26 +5792,31 @@ does all necessary after finishing ediff."
   (interactive)
   (ecb-minor-mode 0))
 
-(defun ecb-deactivate-internal ()
+(defun ecb-deactivate-internal (&optional run-no-hooks)
   "Deactivates the ECB and kills all ECB buffers and windows."
   (unless (not ecb-minor-mode)
 
-    (when (run-hook-with-args-until-failure 'ecb-before-deactivate-hook)
+    (when (or run-no-hooks
+              (run-hook-with-args-until-failure 'ecb-before-deactivate-hook))
       
       ;; deactivating the adviced functions
       (ecb-activate-adviced-functions nil)
-      (ecb-disable-basic-advices)
+      (ecb-disable-advices ecb-basic-adviced-functions)
+      (ecb-disable-advices ecb-speedbar-adviced-functions)
+      (ecb-disable-advices ecb-eshell-adviced-functions)
 
       (ecb-enable-own-temp-buffer-show-function nil)      
 
       ;; deactivate and reset the speedbar stuff
       (ignore-errors (ecb-speedbar-deactivate))
 
-      ;; deactivating the eshell stuff; activation is done implicitly by
-      ;; `ecb-eshell-goto-eshell'!
-      (ecb-eshell-deactivate)
-      
+      ;; deactivates the eshell-integration; this disables also the
+      ;; eshell-advices! 
+      (ecb-eshell-deactivate-integration)
+
+      (tree-buffer-activate-mouse-tracking)
       (tree-buffer-deactivate-mouse-tracking)
+      (tree-buffer-activate-follow-mouse)
       (tree-buffer-deactivate-follow-mouse)
 
       ;; remove the hooks
@@ -5784,8 +5839,9 @@ does all necessary after finishing ediff."
         (remove-hook 'ediff-quit-hook 'ecb-ediff-quit-hook))
 
       ;; menus
-      (if ecb-running-xemacs
-          (easy-menu-remove ecb-minor-menu))
+      (ignore-errors
+        (if ecb-running-xemacs
+            (easy-menu-remove ecb-minor-menu)))
 
       (remove-hook (if ecb-running-xemacs
                        'activate-menubar-hook
@@ -5793,7 +5849,8 @@ does all necessary after finishing ediff."
                    'ecb-compilation-update-menu)
 
       ;; run any personal hooks
-      (run-hooks 'ecb-deactivate-hook)
+      (unless run-no-hooks
+        (run-hooks 'ecb-deactivate-hook))
     
       ;; clear the ecb-frame
       (when (frame-live-p ecb-frame)
@@ -6354,9 +6411,10 @@ changed there should be no performance-problem!"
 ;; the advice-package we must disable at load-time all these advices!!
 ;; Otherwise would just loading ecb (not deactivating) activating each advice
 ;; AFTER the FIRST usage of our advices!!
-(ecb-disable-basic-advices)
+(ecb-disable-advices ecb-basic-adviced-functions)
+(ecb-disable-advices ecb-speedbar-adviced-functions)
+(ecb-disable-advices ecb-eshell-adviced-functions)
 (ecb-activate-adviced-functions nil)
-(ecb-speedbar-disable-advices)
 
 (silentcomp-provide 'ecb)
 

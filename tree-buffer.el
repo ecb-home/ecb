@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: tree-buffer.el,v 1.120 2003/08/06 09:15:15 berndl Exp $
+;; $Id: tree-buffer.el,v 1.121 2003/09/08 12:20:16 berndl Exp $
 
 ;;; Commentary:
 
@@ -1503,7 +1503,7 @@ AFTER-CREATE-HOOK: A function or a list of functions \(with no arguments)
   "Destroy the tree-buffer"
   (when buffer
     (setq tree-buffers (delq (get-buffer buffer) tree-buffers))
-    (kill-buffer buffer)))
+    (ignore-errors (kill-buffer buffer))))
 
 ;;; Tree node
 

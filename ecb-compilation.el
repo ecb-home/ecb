@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-compilation.el,v 1.28 2003/09/05 07:27:35 berndl Exp $
+;; $Id: ecb-compilation.el,v 1.29 2003/09/08 12:20:17 berndl Exp $
 
 ;;; Commentary:
 
@@ -73,7 +73,10 @@
 Buffer names can either be defined as strings or as regexps. If the
 buffer-name of a buffer matches one of the defined string or regexp then it
 will be displayed in the compile-window of ECB even if `compilation-buffer-p'
-says nil for this buffer."
+says nil for this buffer.
+
+It is not recommended to add the name of eshell-buffers to this list because
+ECB already handles the eshell-integration as best as possible."
   :group 'ecb-compilation
   :type '(repeat (cons (string :tag "Buffer name")
                        (boolean :tag "Handled as regexp"))))
@@ -103,10 +106,13 @@ compile-window of ECB. This is a list combined of
               (throw 'exit name))))
       nil)))
 
-(defcustom ecb-compilation-major-modes (list 'eshell-mode 'compilation-mode)
+(defcustom ecb-compilation-major-modes '(compilation-mode)
   "*Additional major-mode that should be displayed in the compile-window.
 All buffers of a major-mode contained in this list are displayed in the
-compile-window even if `compilation-buffer-p' says nil for such a buffer."
+compile-window even if `compilation-buffer-p' says nil for such a buffer.
+
+It is not recommended to add `eshell-mode' to this list because ECB already
+handles the eshell-integration as best as possible."
   :group 'ecb-compilation
   :type '(repeat (symbol :tag "major-mode name")))
 
@@ -156,21 +162,17 @@ displayed in the compile-window. This is a list combined of
   "Get all known compilation buffer names.  See `ecb-compilation-buffer-p'."
 
   (let((buffer-names '())
-       (buffer-list (buffer-list))
+       (buffer-list (buffer-list ecb-frame))
        (index 0))
 
     (setq buffer-list (sort buffer-list (lambda(first second)
                                           (string-lessp (buffer-name first)
                                                         (buffer-name second)))))
-
     (dolist(buffer buffer-list)
-
       (when (ecb-compilation-buffer-p buffer)
-
         (setq buffer-names
               (append buffer-names
                       (list (cons (buffer-name buffer) index))))
-        
         (setq index (1+ index))))
 
     buffer-names))
@@ -182,12 +184,12 @@ buffer. Note that in this case we define \"compilation buffer\" as a buffer
 that should ideally be displayed in the compile-window of ECB \(see
 `ecb-compile-window-height'). This means that in some situations this might
 not be the result of a real `compile-internal'. A good example would be the
-*Help* buffer or the `ecb-eshell-buffer-name'.
+*Help* buffer.
 
 BUFFER-OR-NAME can be the name of a buffer or a buffer-object.
 
-This function returns non-nil - i.e. buffer will be treated as
-compilation-buffer - if:
+This function returns the buffer-object of BUFFER-OR-NAME - i.e.
+BUFFER-OR-NAME will be treated as compilation-buffer - if:
 
 - The name of the buffer is contained in the list returned by the function
   `ecb-compilation-buffer-names' or
@@ -196,6 +198,8 @@ compilation-buffer - if:
 - if `compilation-buffer-p' returns true or
 - one of the predicates returned by `ecb-compilation-predicates' returns not
   nil for the buffer.
+
+Otherwise nil is returned.
 
 Summary for ECB-end-users: A buffer will be treated as compilation-buffer if
 either 
@@ -215,21 +219,21 @@ either
 
       ;;test if this is a valid buffer by name.
       (if (ecb-compilation-registered-buffer-p (buffer-name buffer))
-          t
+          buffer
         ;;else test if this is a valid buffer by mode
         (if (save-excursion
               (set-buffer buffer)
               (member major-mode (ecb-compilation-major-modes)))
-            t
+            buffer
           ;;else test if this is a regular compilation buffer
           (if (compilation-buffer-p buffer)
-              t
+              buffer
             ;; we do not use run-hook-with-args-until-success because we have
             ;; to check if the functions are bound!!
             (if (dolist (p ecb-comp-predicates)
                   (if (and (fboundp p) (funcall p buffer))
                       (return t)))
-                t
+                buffer
               nil)))))))
 
 ;; Klaus Berndl <klaus.berndl@sdm.de>: The following mechanism is necessary to

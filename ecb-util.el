@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-util.el,v 1.72 2003/09/05 07:27:34 berndl Exp $
+;; $Id: ecb-util.el,v 1.73 2003/09/08 12:20:17 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -218,15 +218,20 @@ class a cons must be added to this list.
 Every basic advice of ECB must be registered in this constant but can be
 implemented in another file!")
 
-(defun ecb-enable-basic-advices ()
-  (dolist (elem ecb-basic-adviced-functions)
+(defun ecb-enable-advices (advice-list)
+  "Enable all advices of ADVICE-LIST. ADVICE-LIST must have the format of
+`ecb-basic-adviced-functions'."
+  (dolist (elem advice-list)
     (ad-enable-advice (car elem) (cdr elem) 'ecb)
     (ad-activate (car elem))))
-
-(defun ecb-disable-basic-advices ()
-  (dolist (elem ecb-basic-adviced-functions)
+  
+(defun ecb-disable-advices (advice-list)
+  "Disable all advices of ADVICE-LIST. ADVICE-LIST must have the format of
+`ecb-basic-adviced-functions'."
+  (dolist (elem advice-list)
     (ad-disable-advice (car elem) (cdr elem) 'ecb)
     (ad-activate (car elem))))
+  
 
 (defmacro ecb-with-original-basic-functions (&rest body)
   "Evaluates BODY with all adviced basic-functions of ECB deactivated \(means
@@ -235,9 +240,9 @@ adviced basic-functions, means after evaluating BODY it activates the advices
 of exactly the functions in `ecb-basic-adviced-functions'!"
   `(unwind-protect
        (progn
-         (ecb-disable-basic-advices)
+         (ecb-disable-advices ecb-basic-adviced-functions)
          ,@body)
-     (ecb-enable-basic-advices)))
+     (ecb-enable-advices ecb-basic-adviced-functions)))
 
 ;; some basic advices
 
@@ -245,23 +250,26 @@ of exactly the functions in `ecb-basic-adviced-functions'!"
   "Save the customized options completely in the background, i.e. the
 file-buffer where the value is saved \(see option `custom-file') is not parsed
 by semantic and also killed afterwards."
-  (let ((ecb-window-sync nil)
-        (kill-buffer-hook nil)
-        (semantic-after-toplevel-cache-change-hook nil)
-        (semantic-after-partial-cache-change-hook nil))
-    ;; now we do the standard task
-    ad-do-it
-    ;; now we have to kill the custom-file buffer otherwise semantic would
-    ;; parse the buffer of custom-file and the method-buffer would be updated
-    ;; with the contents of custom-file which is definitely not desired.
-    (ignore-errors
-      (kill-buffer (find-file-noselect (cond (ecb-running-xemacs
-                                              custom-file)
-                                             (ecb-running-emacs-21
-                                              (custom-file))
-                                             (t
-                                              (or custom-file
-                                                  user-init-file))))))))
+  (if ecb-minor-mode
+      (let ((ecb-window-sync nil)
+            (kill-buffer-hook nil)
+            (semantic-after-toplevel-cache-change-hook nil)
+            (semantic-after-partial-cache-change-hook nil))
+        ;; now we do the standard task
+        ad-do-it
+        ;; now we have to kill the custom-file buffer otherwise semantic would
+        ;; parse the buffer of custom-file and the method-buffer would be
+        ;; updated with the contents of custom-file which is definitely not
+        ;; desired.
+        (ignore-errors
+          (kill-buffer (find-file-noselect (cond (ecb-running-xemacs
+                                                  custom-file)
+                                                 (ecb-running-emacs-21
+                                                  (custom-file))
+                                                 (t
+                                                  (or custom-file
+                                                      user-init-file)))))))
+    ad-do-it))
 
 ;; assoc helpers
 

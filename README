@@ -1,4 +1,4 @@
-README for the Emacs Code Browser (ECB) version 1.95.2
+README for the Emacs Code Browser (ECB) version 1.96
 
 
 About
@@ -151,9 +151,9 @@ Usage
 -----
 
 Call "M-x ecb-activate" to activated ECB.
-Call "M-x ecb-show-help" to get a detailed online-help for ECB.
-If you are using ECB the first time you should read the complete
-online help accurately!
+
+Call "M-x ecb-show-help" to get a detailed online-help for ECB. If you are
+using ECB the first time you should read the online help accurately!
 
 
 Contacts

@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-speedbar.el,v 1.48 2003/08/13 18:06:20 berndl Exp $
+;; $Id: ecb-speedbar.el,v 1.49 2003/09/08 12:20:17 berndl Exp $
 
 ;;; Commentary:
 
@@ -99,7 +99,8 @@ after clicking onto a filename in the speedbar."
   (let ((item (and (fboundp 'speedbar-line-file)
                    (speedbar-line-file))))
     ad-do-it
-    (if (and (equal (selected-frame) ecb-frame)
+    (if (and ecb-minor-mode
+             (equal (selected-frame) ecb-frame)
              (window-live-p (get-buffer-window ecb-speedbar-buffer-name))
              (and item
                   (file-exists-p item)
@@ -109,7 +110,9 @@ after clicking onto a filename in the speedbar."
 
 (defadvice speedbar-frame-mode (around ecb)
   "During running speedbar within ECB this command is disabled!"
-  (message "This command is disabled during running speedbar within ECB!"))
+  (if ecb-minor-mode
+      (message "This command is disabled during running speedbar within ECB!")
+    ad-do-it))
 
 
 (defadvice speedbar-get-focus (around ecb)
@@ -117,9 +120,11 @@ after clicking onto a filename in the speedbar."
 Change window focus to or from the ECB-speedbar-window. If the selected window
 is not speedbar-window, then the speedbar-window is selected. If the
 speedbar-window is active, then select the edit-window."
-  (if (equal (current-buffer) (get-buffer ecb-speedbar-buffer-name))
-      (ecb-select-edit-window)
-    (ecb-speedbar-select-speedbar-window)))
+  (if ecb-minor-mode
+      (if (equal (current-buffer) (get-buffer ecb-speedbar-buffer-name))
+          (ecb-select-edit-window)
+        (ecb-speedbar-select-speedbar-window))
+    ad-do-it))
 
 ;; Klaus Berndl <klaus.berndl@sdm.de>: This implementation is done to make
 ;; clear where the bug is fixed...a better impl. can be seen in
@@ -140,16 +145,6 @@ the point was not set by `mouse-set-point'."
     ;; We are not in XEmacs, OR we didn't click on a picture.
     (mouse-set-point e)))
   
-
-(defun ecb-speedbar-enable-advices ()
-  (dolist (elem ecb-speedbar-adviced-functions)
-    (ad-enable-advice (car elem) (cdr elem) 'ecb)
-    (ad-activate (car elem))))
-
-(defun ecb-speedbar-disable-advices ()
-  (dolist (elem ecb-speedbar-adviced-functions)
-    (ad-disable-advice (car elem) (cdr elem) 'ecb)
-    (ad-activate (car elem))))
 
 (defconst ecb-speedbar-buffer-name " SPEEDBAR"
   "Name of the ECB speedbar buffer.")
@@ -179,7 +174,7 @@ speedbar versions >= 0.14beta1. But be aware: If the speedbar impl changes in
 future this could break."
 
   ;; enable the advices for speedbar
-  (ecb-speedbar-enable-advices)
+  (ecb-enable-advices ecb-speedbar-adviced-functions)
   
   ;;disable automatic speedbar updates... let the ECB handle this with
   ;;ecb-current-buffer-sync
@@ -224,7 +219,7 @@ future this could break."
 
 (defun ecb-speedbar-deactivate ()
   "Reset things as before activating speedbar by ECB"
-  (ecb-speedbar-disable-advices)
+  (ecb-disable-advices ecb-speedbar-adviced-functions)
   
   (setq speedbar-frame nil)
   (setq dframe-attached-frame nil)
