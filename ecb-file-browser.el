@@ -23,7 +23,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-file-browser.el,v 1.29 2004/08/31 15:32:58 berndl Exp $
+;; $Id: ecb-file-browser.el,v 1.30 2004/09/03 16:32:08 berndl Exp $
 
 ;;; Commentary:
 
@@ -82,13 +82,21 @@
 (defcustom ecb-source-path nil
   "*Paths where to find code sources.
 Each path can have an optional alias that is used as it's display name. If no
-alias is set, the path is used as display name."
+alias is set, the path is used as display name.
+
+Lisp-type of tis option: The value must be a list L whereas each element of L
+is either
+- a simple string which has to be the full path of a directory \(this string
+  is displayed in the directory-browser of ECB) or
+- a 2-element list whereas the first element is the full path of a directory
+  \(string) and the second element is an arbitrary alias \(string) for this
+  directory which is then displayed instead of the underlying directory."
   :group 'ecb-directories
   :group 'ecb-most-important
   :initialize 'custom-initialize-default
   :set (function (lambda (symbol value)
-		   (set symbol value)
-		   (if (and ecb-minor-mode
+                   (set symbol value)
+                   (if (and ecb-minor-mode
 			    (functionp 'ecb-update-directories-buffer))
 		       (ecb-update-directories-buffer))))
   :type '(repeat (choice :tag "Display type"
@@ -1446,7 +1454,10 @@ ecb-windows after displaying the file in an edit-window."
         type filename
         (or not-expandable
             (= type 1)
-            (ecb-check-emptyness-of-dir filename))
+            ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: remove this if the
+            ;; stealthy mechanism works
+            (ecb-check-emptyness-of-dir filename)
+            )
         (if ecb-truncate-long-names 'end))))))
 
 
@@ -1506,6 +1517,8 @@ ecb-windows after displaying the file in an edit-window."
                  (tree-node-add-child
                   node
                   (ecb-new-child old-children name 2 norm-dir
+                                 ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: remove this if the
+                                 ;; stealthy mechanism works
                                  (ecb-check-emptyness-of-dir norm-dir)
                                  (if ecb-truncate-long-names 'beginning)))
                (if (listp dir)
@@ -1543,6 +1556,7 @@ element looks like:
 
 
 (defun ecb-check-emptyness-of-dir (dir)
+  "Checks if DIR is an empty directory. If empty return not nil otherwise nil."
   (if (not ecb-prescan-directories-for-emptyness)
       nil
     (let ((cache-value (ecb-directory-empty-cache-get dir))
@@ -1571,6 +1585,51 @@ element looks like:
                                                (cons empty-p show-sources)))
           empty-p)))))
 
+;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: Maybe we should perform the
+;; read-only check for source-files also stealthy?! The forthcoming VC-check
+;; too! 
+
+;; TODO: Klaus Berndl <klaus.berndl@sdm.de>:
+;; Works already quite nifty but probably we should it makes more smart:
+;; - save a state when interrupted and go on from this state when next time
+;;   called
+;; - Probably it would be best to steal the whole stealthy concept from
+;;   speedbar - for this the functions:
+;;   + speedbar-reset-scanners
+;;   + speedbar-stealthy-updates
+;;   + speedbar-timer-fn
+;;   + speedbar-set-timer
+;;   + speedbar-check-read-only (as an example how handling a state)
+(defun ecb-stealthy-empty-dir-check ()
+  (save-selected-window
+    (ecb-exec-in-directories-window
+     ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>:
+     ;; We probably should add a function tree-buffer-visit-nodes
+     ;; (visitor-fcn)
+     (let ((nodes (mapcar 'cdr tree-buffer-nodes))
+           (dir-empty-p nil))
+       (while (and (not (input-pending-p))
+                   nodes)
+         (setq dir-empty-p
+               (ecb-check-emptyness-of-dir (tree-node-get-data (car nodes))))
+         ;; we update the node only if we have an empty dir and the node is
+         ;; still expandable
+         (when (and dir-empty-p
+                    (tree-node-is-expandable (car nodes)))
+           (tree-buffer-update-node (car nodes)
+                                    (tree-node-get-name (car nodes))
+                                    (tree-node-get-shorten-name (car nodes))
+                                    (tree-node-get-type (car nodes))
+                                    (tree-node-get-data (car nodes))
+                                    nil ;; we set the node as not-expandable
+                                    t))
+         (setq nodes (cdr nodes)))
+       (when (input-pending-p)
+         (message "Klausi - we have interrupted by pending input"))))))
+
+;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: We do not activate it directly
+;; but we will implement a general stealthy mechanism like speedbar
+;; (ecb-activate-ecb-autocontrol-functions 1 'ecb-stealthy-empty-dir-check)
 
 (defun ecb-new-child (old-children name type data &optional not-expandable shorten-name)
   "Return a node with type = TYPE, data = DATA and name = NAME. Tries to find
