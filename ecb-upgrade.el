@@ -176,7 +176,9 @@
 
 ;; Each NEWS-string should be a one-liner shorter than 70 chars
 (defconst ecb-upgrade-news
-  '(("2.23" . ("New cedet1.0beta2 is supported."
+  '(
+    ("2.24" . ("New \"current-type\"-filter for the Methods-buffer"))
+    ("2.23" . ("New cedet1.0beta2 is supported."
                "Distinction between functions and function-prototypes in the Methods-buffer"
                "The command `ecb-toggle-layout' now has a prefix-argument"
                "Default tag-filters for certain files which are applied automatically"

@@ -726,7 +726,7 @@ must deactivate and activate ECB again to take effect."
                        :value nil)))
 
 (defconst ecb-methods-incr-searchpattern-node-prefix
-  '("\\([-+#]\\|[^-+#][^ \n]+ \\)?" . 1)
+  '("\\([-+#(]\\|[^-+#(][^ \n]+ \\)?" . 1)
   "Prefix-pattern which ignores all not interesting stuff of a node-name at
 incr. search. The following contents of a node-name are ignored by this
 pattern:

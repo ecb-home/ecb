@@ -1,4 +1,4 @@
-* Changes for ECB version 2.23
+* Changes for ECB version 2.24
 
 ** New "current-type"-filter for the Methods-buffer
    In languages which have types like Java or C++ this filter displays only
