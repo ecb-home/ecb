@@ -26,7 +26,7 @@
 @c GNU Emacs; see the file COPYING.  If not, write to the Free Software
 @c Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-@c $Id: ecb.texi,v 1.148 2004/02/02 11:57:53 berndl Exp $
+@c $Id: ecb.texi,v 1.149 2004/02/02 14:16:16 berndl Exp $
 
 @setfilename ecb.info
 
@@ -83,7 +83,7 @@ well as for source-types supported ``only'' by imenu or etags (e.g.
 perl, TeX, LaTeX etc.). In addition it offers (optional) a durable
 ``compile-window'' at the bottom of the frame which is used to display
 all help-, grep-, compile- and etc.-output. The rest of the frame is
-called the ``edit-area'' which can be devided in several (no limit)
+called the ``edit-area'' which can be divided in several (no limit)
 edit-windows which are used for editing of sources. Deleting some of
 the edit-windows does neither destroy the compile-window nor the
 browsing-windows.
@@ -219,6 +219,11 @@ Customizing ECB
 * General aspects::             General aspects for customizing ECB
 * Most important options::      Which option you must know
 * Customizable options::        All customizable options of ECB
+
+General aspects for customizing ECB
+
+* setq or customize::           Should i use setq or customize?
+* Site-wide customizing::       Site-wide customizing of ECB
 
 All customizable options of ECB
 
@@ -789,7 +794,7 @@ ECB-windows/tree-buffers:
 
 In addition to these ``special'' ECB-windows you have always an
 @dfn{edit-area} where you can edit sour source-files. The edit-area
-can be devided into several @dfn{edit-windows} - as many as you need
+can be divided into several @dfn{edit-windows} - as many as you need
 (@pxref{The edit-area}). And at the bottom of the ECB-frame a
 durable @dfn{compilation-window} (also called @dfn{compile-window})
 can be displayed (optional), where all the output of Emacs-compilation
@@ -1844,7 +1849,7 @@ would be not very intuitive and against that what the user wants to
 ``say'' when calling @code{other-window} or
 @code{scroll-other-window}.
 
-Therefore ECB devides the whole set of windows of the ECB-frame in
+Therefore ECB divides the whole set of windows of the ECB-frame in
 several subsets:
 
 @itemize @bullet
@@ -3134,9 +3139,9 @@ ECB IS still active in the ``background'' and all ECB-commands and all
 ECB-keybindings can be used. Of course some of them doesn't make much
 sense but nevertheless they can be called. Toggling the visibility of
 the ECB-windows preserves the splitting-state of the edit-area: If you
-hide the ECB-windows then the frame will be devided in the same
+hide the ECB-windows then the frame will be divided in the same
 window-layout the edit-area had before the hiding and if you show the
-ECB-windows again the edit-area will be devided into all the
+ECB-windows again the edit-area will be divided into all the
 edit-windows the ECB-frame had before the showing.
 
 Therefore it should be enough to hide the ECB-windows to run other
@@ -3925,6 +3930,19 @@ customize groups).
 @node General aspects, Most important options, Customizing, Customizing
 @section General aspects for customizing ECB
 
+This chapter contains all important informations you should know about
+customizing ECB. The first section gives an answer to the question
+``@code{setq} or @code{customize}'' and the second section describes
+what to do when you have to customize ECB for a lot of people.
+
+@menu
+* setq or customize::           Should i use setq or customize?
+* Site-wide customizing::       Site-wide customizing of ECB
+@end menu
+
+@node setq or customize, Site-wide customizing, General aspects, General aspects
+@subsection Setq or customize - what should i use?
+
 The best way to customize all the options of ECB is via the
 customize-feature of (X)Emacs, i.e. means calling the commands
 @code{customize-option} or @code{customize-group} etc. This is also
@@ -3965,17 +3983,33 @@ Elisp-code but only with the customize-feature!
 @item @code{ecb-windows-width}
 @end itemize
 
-@strong{IMPORTANT}: If you are the administrator for an Emacs-site,
-means you are responsible for the basic customization of a lot of
-Emacs users, then you maybe need a way to customize Emacs and ECB
-without changing everyones @file{.emacs}-file and normally you will do
-this with the file @file{site-start.el}. You can customize all options
-of ECB in a central @file{site-start.el} (even the options mentioned
-above!) but you @strong{MUST NOT} do this via @code{setq} but you have
-to use a mechanism like the following@footnote{At least for the options
-for which @code{setq} is explicitly forbidden, but it is recommended
-to use always such a mechanism}! Here is a short example
-how this can be done:
+@node Site-wide customizing, , setq or customize, General aspects
+@subsection Site-wide customizing of ECB
+
+If you are the administrator for an Emacs-site, means you are
+responsible for the basic customization of a lot of Emacs users, then
+you maybe need a way to customize Emacs and ECB without changing
+everyones @file{.emacs}-file and normally you will do this with the
+file @file{site-start.el}. You can customize all options of ECB in a
+central @file{site-start.el} (even the options mentioned above!) but
+you @strong{MUST NOT} do this via @code{setq} but you have to use a
+mechanism like the following@footnote{At least for the options for
+which @code{setq} is explicitly forbidden, but it is recommended to
+use always such a mechanism}!
+
+This section describes two methods how to pre-customize ECB site-wide.
+The elisp-code contained in the following two subsections has to be
+copied to the file @file{site-start.el} before it can be used.
+
+But ensure for both methods that you customize the options with the
+correct lisp format. Read carefully the docstrings of the options you
+want to customize from within Elisp-code!
+
+@subsubsection Storing all option-settings in the users custom-file
+
+The mechanism described here defines all site-wide-settings in a file
+@file{site-lisp.el} but stores the values in the users
+@code{custom-file} which is probably @file{.emacs}!
 
 First two helper functions are needed, namely
 @code{customize-option-get-value} and
@@ -4037,15 +4071,68 @@ site-wide pre-customized like follows:
 @end group
 @end example
 
-But ensure that you customize the options with the correct lisp
-format. Read carefully the docstrings of the options you want
-to customize from within Elisp-code!
+@subsubsection Using a special setq for site-wide settings
 
-@c TODO: Klaus Berndl <klaus.berndl@sdm.de>: This saves the
-@c pre-customized values always in the users custom-file (probably
-@c .emacs). If this is not preferred, then maybe we should mention
-@c here the function setq-save - but of course setq-save is only
-@c allowed for options which are not setq-forbidden!!
+The mechanism above saves the pre-customized values always in the
+users @code{custom-file} (probably @file{.emacs}). If this is not
+preferred, then you can use the following mechanism but of course the
+offered @code{setq-save} is only allowed for options which are not
+setq-forbidden (@pxref{setq or customize}).
+
+The mechanism below does not change the users @code{custom-file}. This
+mechanism is needed especially if ECB should be autoloaded and all
+site-wide settings should first loaded when ECB is activated by the
+user. This can be achieved for example via@footnote{The file
+@file{site-ecb.el} contains all site-wide settings for ECB}:
+
+@example
+@group
+(require 'ecb-autoloads))
+(eval-after-load "ecb"
+  '(require 'site-ecb))
+@end group
+@end example
+
+In such a situation the whole @code{custom-file} of a user is mostly
+loaded @strong{before} ECB is activated and therefore before the
+site-wide-settings are loaded. So the users own customizations are
+loaded before the site-wide ones.
+
+The @code{setq-save}-mechanism described below prevents the users own
+customisations contained in his @code{custom-file} from being
+overridden by the site-wide setq-settings. If @code{setq} would be
+used for the site-wide settings then in an autoload-situation the
+site-wide settings would override the users-settings and this should
+not be done!
+
+First two helper-macros are needed:
+
+@example
+@group
+(defmacro custom-saved-p (option)
+  "Return only not nil if OPTION is a defcustom-option and has a
+saved value. Option is a variable and is literal \(not evaluated)."
+  `(and (get (quote ,option) 'custom-type)
+        (get (quote ,option) 'saved-value)))
+
+(defmacro setq-save (option value)
+  "Sets OPTION to VALUE if and only if OPTION is not already saved
+by customize. Option is a variable and is literal \(not evaluated)."
+  `(and (not (custom-saved-p ,option))
+        (set (quote ,option) ,value)))
+@end group
+@end example
+
+With @code{setq-save} all ``not-setq-forbidden''-ECB-options can be
+site-wide pre-customized like follows:
+
+@example
+@group
+(setq-save ecb-tree-indent 4)
+(setq-save ecb-tree-expand-symbol-before t)
+(setq-save ecb-primary-secondary-mouse-buttons 'mouse-1--mouse-2)
+@end group
+@end example
 
 @node Most important options, Customizable options, General aspects, Customizing
 @section The most important options of ECB

@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb.el,v 1.369 2004/02/02 11:57:53 berndl Exp $
+;; $Id: ecb.el,v 1.370 2004/02/02 14:16:16 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -40,7 +40,7 @@
 ;; perl, TeX, LaTeX etc.). In addition it offers (optional) a durable
 ;; "compile-window" at the bottom of the frame which is used to display all
 ;; help-, grep-, compile- and etc.-output. The rest of the frame is called the
-;; "edit-area" which can be devided in several (no limit) edit-windows which
+;; "edit-area" which can be divided in several (no limit) edit-windows which
 ;; are used for editing of sources. Deleting some of the edit-windows does
 ;; neither destroy the compile-window nor the browsing-windows.
 ;;
