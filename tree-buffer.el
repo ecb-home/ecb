@@ -26,7 +26,7 @@
 ;; This file is part of the ECB package which can be found at:
 ;; http://home.swipnet.se/mayhem/ecb.html
 
-;; $Id: tree-buffer.el,v 1.65 2001/07/19 07:33:25 berndl Exp $
+;; $Id: tree-buffer.el,v 1.66 2001/09/08 16:18:06 berndl Exp $
 
 ;;; Code:
 
@@ -506,13 +506,11 @@ pattern:
                                  "\\(" (regexp-quote subs) "\\)"))
         res alist)
     (setq res (mapcar (function (lambda (word)
-                                  (let ((case-fold-search t)
-                                        (m (string-match change-word-sub word)))
-                                    (if m
-                                        (substring word
-                                                   (match-beginning (if only-prefix 2 1)))
-                                      ;; else no match
-                                      nil))))
+                                  (if (string-match change-word-sub word)
+                                      (substring word
+                                                 (match-beginning (if only-prefix 2 1)))
+                                    ;; else no match
+                                    nil)))
                       lis))
     (setq res (delq nil res));; remove any nil elements (shouldn't happen)
     (setq alist (mapcar (function (lambda (r)
@@ -579,16 +577,15 @@ mentioned above!"
        "%s node search: [%s]%s"
        (buffer-name (current-buffer))
        tree-buffer-incr-searchpattern
-       (if (let ((case-fold-search t))
-             (save-excursion
-               (goto-char (point-min))
-               (re-search-forward
-                (concat tree-buffer-incr-searchpattern-basic-prefix
-                        tree-buffer-incr-searchpattern-node-prefix
-                        (if (equal tree-buffer-incr-search 'substring)
-                            "[^()\n]*"
-                          "")
-                        (regexp-quote tree-buffer-incr-searchpattern)) nil t)))
+       (if (save-excursion
+             (goto-char (point-min))
+             (re-search-forward
+              (concat tree-buffer-incr-searchpattern-basic-prefix
+                      tree-buffer-incr-searchpattern-node-prefix
+                      (if (equal tree-buffer-incr-search 'substring)
+                          "[^()\n]*"
+                        "")
+                      (regexp-quote tree-buffer-incr-searchpattern)) nil t))
            ;; we have found a matching ==> jump to it
            (progn
              (goto-char (match-end 0))

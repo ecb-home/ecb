@@ -26,7 +26,7 @@
 ;;
 ;; Contains all online-help for ECB (stolen something from recentf.el)
 
-;; $Id: ecb-help.el,v 1.45 2001/08/31 16:22:16 berndl Exp $
+;; $Id: ecb-help.el,v 1.46 2001/09/08 16:18:06 berndl Exp $
 
 ;;; Code
 
@@ -199,6 +199,7 @@ search ignores the following non interesting stuff:
 This means: Just type in the prefix \(resp. a substring) of a class-,
 variable-, method-, directory- or filename and ECB will bring you as fast as
 possible to the node you want.
+Incremental node-search uses the value of `case-fold-search'.
 
 Tip: The `ecb-minor-mode' offers you in the `ecb-mode-map' some keys for
 selecting every window of the ecb-frame. This makes window-selection a child´s
