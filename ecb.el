@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb.el,v 1.413 2004/11/22 17:03:55 berndl Exp $
+;; $Id: ecb.el,v 1.414 2004/11/24 16:22:51 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -220,6 +220,7 @@
 ;; XEmacs
 (silentcomp-defun redraw-modeline)
 (silentcomp-defvar modeline-map)
+(silentcomp-defvar progress-feedback-use-echo-area)
 ;; Emacs
 (silentcomp-defun force-mode-line-update)
 (silentcomp-defun font-lock-add-keywords)
@@ -1528,8 +1529,30 @@ always the ECB-frame if called from another frame."
   "Contains the last `ecb-current-window-configuration' directly before
 ECB has been deactivated. Do not set this variable!")
 
-(defvar ecb-max-specpdl-size-old nil)
-(defvar ecb-max-lisp-eval-depth-old nil)
+(defvar ecb-temporary-changed-emacs-variables-alist nil
+  "Internal alist which stores old values of emacs variables/options which
+have to be changed during running ECB. Use only `ecb-modify-emacs-variable'
+for modifying this alist.")
+
+(defun ecb-modify-emacs-variable (var action &optional new-value)
+  "Stores or restores the old value of the Emacs-variable symbol VAR.
+VAR has to be a bound symbol for a variable. ACTION is either 'store or
+'restore. The optional arg NEW-VALUE is only used when ACTION is 'store and is
+that value VAR should be set to. After calling with ACTION is 'restore the
+value of VAR is as before storing a NEW-VALUE for variable-symbol VAR."
+  (cond ((equal action 'store)
+         (or (ecb-find-assoc var ecb-temporary-changed-emacs-variables-alist)
+             (progn
+               (setq ecb-temporary-changed-emacs-variables-alist
+                     (ecb-add-assoc (cons var (symbol-value var))
+                                    ecb-temporary-changed-emacs-variables-alist))
+               (set var new-value))))
+        ((equal action 'restore)
+         (let ((elem (ecb-find-assoc var ecb-temporary-changed-emacs-variables-alist)))
+           (when elem
+             (set var (cdr elem))
+             (setq ecb-temporary-changed-emacs-variables-alist
+                   (ecb-remove-assoc var ecb-temporary-changed-emacs-variables-alist)))))))
 
 (defun ecb-activate--impl ()
   "See `ecb-activate'.  This is the implementation of ECB activation."
@@ -1548,13 +1571,14 @@ ECB has been deactivated. Do not set this variable!")
     ;; we activate only if all before-hooks return non nil
     (when (run-hook-with-args-until-failure 'ecb-before-activate-hook)
 
-      ;; max-specpdl-size and max-lisp-eval-depth
+      ;; temporary changing some emacs-vars
       (when (< max-specpdl-size 3000)
-        (setq ecb-max-specpdl-size-old max-specpdl-size)
-        (setq max-specpdl-size 3000))
+        (ecb-modify-emacs-variable 'max-specpdl-size 'store 3000))
       (when (< max-lisp-eval-depth 1000)
-        (setq ecb-max-lisp-eval-depth-old max-lisp-eval-depth)
-        (setq max-lisp-eval-depth 1000))
+        (ecb-modify-emacs-variable 'max-lisp-eval-depth 'store 1000))
+      (when (and ecb-running-xemacs
+                 (boundp 'progress-feedback-use-echo-area))
+        (ecb-modify-emacs-variable 'progress-feedback-use-echo-area 'store t))
       
       (condition-case err-obj
           (progn
@@ -1659,7 +1683,7 @@ ECB has been deactivated. Do not set this variable!")
                                                     'ecb-layout-post-command-hook)
             (ecb-activate-ecb-autocontrol-functions 'pre
                                                     'ecb-layout-pre-command-hook)
-            (ecb-activate-ecb-autocontrol-functions 0.25
+            (ecb-activate-ecb-autocontrol-functions 0.5
                                                     'ecb-repair-only-ecb-window-layout)
             (add-hook 'after-save-hook 'ecb-update-methods-after-saving)
             (add-hook 'kill-buffer-hook 'ecb-kill-buffer-hook)
@@ -2072,11 +2096,13 @@ does all necessary after finishing ediff."
 
       (setq ecb-minor-mode nil)
 
-      ;; max-specpdl-size and max-lisp-eval-depth
-      (when ecb-max-specpdl-size-old
-        (setq max-specpdl-size ecb-max-specpdl-size-old))
-      (when ecb-max-lisp-eval-depth-old
-        (setq max-lisp-eval-depth ecb-max-lisp-eval-depth-old))))
+      ;; restoring the value of temporary modified vars
+      (ecb-modify-emacs-variable 'max-specpdl-size 'restore)
+      (ecb-modify-emacs-variable 'max-lisp-eval-depth 'restore)
+      (when (and ecb-running-xemacs
+                 (boundp 'progress-feedback-use-echo-area))
+        (ecb-modify-emacs-variable 'progress-feedback-use-echo-area 'restore))))
+      
   
   (if (null ecb-minor-mode)
       (message "The ECB is now deactivated."))
