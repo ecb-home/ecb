@@ -1,6 +1,10 @@
 Version 1.80:
 -------------
 
+- Now the ECB online help is available in the standard Info-format and also in
+  HTML-format. With the new option 'ecb-show-help-format' you can choose which
+  format is used by the function 'ecb-show-help'. (Klaus)
+
 - New feature: ecb-download-ecb. With this function you can download and
   install any arbitrary ECB-version from the ECB-website from within Emacs.
   This is especially usefull for upgrading to the latest version.
@@ -694,4 +698,3 @@ Version 0.01 (2000-07-08):
 --------------------------
 
 - Initial version.
- 
