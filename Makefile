@@ -72,7 +72,7 @@ CP=cp
 ecb_LISP_EL=tree-buffer.el ecb-util.el ecb-mode-line.el ecb-help.el \
             ecb-layout.el ecb-layout-defs.el ecb-navigate.el ecb.el \
             ecb-eshell.el ecb-cycle.el ecb-face.el ecb-compilation.el \
-            ecb-upgrade.el ecb-create-layout.el
+            ecb-upgrade.el ecb-create-layout.el ecb-bytecomp.el
 ecb_LISP_ELC=$(ecb_LISP_EL:.el=.elc)
 ecb_TEXI=ecb.texi
 ecb_INFO=$(ecb_TEXI:.texi=.info)
@@ -90,6 +90,7 @@ ecb: $(ecb_LISP_EL)
 	      echo "(add-to-list 'load-path \"$$loadpath\")" >> ecb-compile-script; \
 	   done; \
 	fi
+	@echo "(require 'ecb-bytecomp)" >> ecb-compile-script
 	@echo "(require 'ecb)" >> ecb-compile-script
 	@echo "(setq debug-on-error t)" >> ecb-compile-script
 	$(EMACS) -batch -no-site-file -l ecb-compile-script --eval '(ecb-byte-compile t)'

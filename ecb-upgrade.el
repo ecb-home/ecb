@@ -141,6 +141,9 @@
 
 (require 'ecb-util)
 
+(when (featurep 'ecb-bytecomp)
+  (ecb-bytecomp-defun widget-convert))
+
 ;; ----------------------------------------------------------------------
 ;; define in this defconst all options which should be upgraded
 ;; ----------------------------------------------------------------------
@@ -507,11 +510,7 @@ parallel to current ECB-directory. After adding this new directory tp
         (princ "If the value of `ecb-auto-compatibility-check' is not nil then the new version\n")
         (princ "checks at start-time if there are incompatible options! Please read the\n")
         (princ "documentation of this option!")
-        (princ "\n\n")
-        (save-excursion
-          (set-buffer "*ECB downloading and installing*")
-          (goto-char (point-min))
-          (ignore-errors (help-make-xrefs)))))))
+        (princ "\n\n")))))
     
 
 (defun ecb-download-package (package version url)
@@ -625,10 +624,6 @@ tp `load-path' and restarting Emacs the new package version can be activated."
             (princ (concat "  " url package "-" version ".tar.gz"))
             (princ "\n\n")
             (princ "Maybe this URL does not exist...please check this!\n\n")))
-;;             (save-excursion
-;;               (set-buffer "*ECB-download-failure*")
-;;               (goto-char (point-min))
-;;               (ignore-errors (help-make-xrefs)))))
         (kill-buffer ecb-download-buffername)
 
         ;; uncompressing with gzip

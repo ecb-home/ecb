@@ -119,6 +119,10 @@
 (require 'ecb)
 (require 'speedbar)
 
+(when (featurep 'ecb-bytecomp)
+  (ecb-bytecomp-defvar speedbar-attached-frame)
+  (ecb-bytecomp-defvar speedbar-select-frame-method))
+
 (defvar ecb-speedbar-buffer-name " SPEEDBAR" "Name of the ECB speedbar buffer.")
 
 (defun ecb-set-speedbar-buffer()

@@ -110,6 +110,9 @@
 (require 'ecb-util)
 (require 'ecb-create-layout)
 
+(when (featurep 'ecb-bytecomp)
+  (ecb-bytecomp-defvar jde-open-class-at-point-find-file-function))
+
 (if ecb-running-xemacs
     ;; because we want only check if the car of this function is equal for two
     ;; different windows for the sake if the two window are located side by

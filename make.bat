@@ -33,8 +33,9 @@ if exist ecb.elc del *.elc
 echo (add-to-list 'load-path nil) > ecb-compile-script-init
 echo (add-to-list 'load-path "%SEMANTIC%") >> ecb-compile-script-init
 echo (add-to-list 'load-path "%EIEIO%") >> ecb-compile-script-init
-
+echo (require 'ecb-bytecomp) >> ecb-compile-script-init
 echo (setq debug-on-error t) >> ecb-compile-script-init
+
 %EMACS% -batch -no-site-file -l ecb-compile-script-init -f batch-byte-compile %EL%
 
 del ecb-compile-script-init

@@ -215,12 +215,12 @@ these optional installation steps:
 
    Maybe you are interested to read the online-help of ECB before first start.
 
-7. Calling `ecb-byte-compile'
+7. Bytecompiling ECB with `ecb-byte-compile'
 
-   This byte compiles ECB. You can safely ignore all messages.  (You can also
-   bytecompile ECB from the command-line either by using the `Makefile' or by
-   using the batch-file `make.bat'. Just read the comments in that file you
-   choose.)
+   This byte compiles ECB. You can safely ignore all messages if there are
+   any. (You can also bytecompile ECB from the command-line either by using
+   the `Makefile' or by using the batch-file `make.bat'; just read the
+   comments in that file you choose.)
 
 8. Installing the supplied `ecb.info'
 
@@ -4600,95 +4600,95 @@ Tag Table:
 Node: Top183
 Node: Install and first steps6080
 Node: Installation6576
-Ref: Installation-Footnote-110164
-Ref: Installation-Footnote-210299
-Ref: Installation-Footnote-310411
-Node: Setting up Emacs10476
-Ref: Checking your hooks12422
-Ref: Setting up Emacs-Footnote-113619
-Ref: Setting up Emacs-Footnote-213723
-Ref: Setting up Emacs-Footnote-313824
-Ref: Setting up Emacs-Footnote-413883
-Node: First steps14032
-Ref: First steps-Footnote-115180
-Node: Overview15409
-Ref: Overview-Footnote-118160
-Node: ECB Directories18253
-Node: ECB Sources19270
-Node: ECB Methods20424
-Node: Activation and Deactivation20973
-Node: Standard activation21343
-Node: Automatic activation21921
-Node: Usage of ECB22971
-Node: Using the mouse23881
-Ref: Using the mouse-Footnote-126156
-Node: Using the keyboard26202
-Ref: Using the keyboard-Footnote-127246
-Node: Navigation27297
-Node: Incremental search28637
-Node: Personal keybindings30813
-Ref: Personal keybindings-Footnote-132811
-Node: The edit-window32914
-Node: Temp- and compile-buffers34744
-Node: The Methods buffer36788
-Node: Customizing the display37229
-Node: Rebuilding the Methods38951
-Node: The ECB-layout39806
-Node: Changing the ECB-layout40453
-Node: Redrawing the ECB-layout64959
-Node: Creating a new ECB-layout65796
-Ref: Creating a new ECB-layout-Footnote-169534
-Node: Hiding the ECB windows69708
-Node: Back/forward navigation70281
-Ref: Back/forward navigation-Footnote-171382
-Node: ECB-window synchronizing71441
-Node: Interactive ECB commands74023
-Node: Customizing82519
-Node: General aspects83153
-Ref: General aspects-Footnote-185917
-Node: Most important options86049
-Node: Customizable options87842
-Node: ecb-general89062
-Node: ecb-directories108672
-Node: ecb-sources114827
-Node: ecb-methods117082
-Node: ecb-history129351
-Node: ecb-layout131412
-Node: ecb-create-layout146282
-Node: ecb-face-options146785
-Node: ecb-faces150214
-Node: ecb-download154206
-Node: Submitting problem report155415
-Node: Upgrading156778
-Node: Downloading new versions157541
-Ref: Download required packages159298
-Ref: Downloading new versions-Footnote-1160396
-Node: Auto. option-upgrading160445
-Node: User interface160753
-Node: Background information161639
-Node: Tips and tricks165037
-Node: Changing faces165730
-Ref: Changing faces-Footnote-1168566
-Node: Small screens168742
-Node: Simulating speedbar170136
-Node: Integrating speedbar170945
-Node: Optimize scrolling171211
-Node: Large directories172291
-Node: Using eshell172957
-Node: Elisp programming173147
-Node: List of variables173756
-Node: List of hooks174068
-Node: tree-buffer174853
-Node: Adviced functions175659
-Ref: Adviced functions-Footnote-1176278
-Node: Programming new layouts176349
-Node: Conflicts and bugs181677
-Node: Conflicts182152
-Node: Bugs185610
-Node: FAQ185830
-Ref: FAQ-Footnote-1190582
-Node: Command Index190613
-Node: Option Index192863
-Node: Concept Index198949
+Ref: Installation-Footnote-110195
+Ref: Installation-Footnote-210330
+Ref: Installation-Footnote-310442
+Node: Setting up Emacs10507
+Ref: Checking your hooks12453
+Ref: Setting up Emacs-Footnote-113650
+Ref: Setting up Emacs-Footnote-213754
+Ref: Setting up Emacs-Footnote-313855
+Ref: Setting up Emacs-Footnote-413914
+Node: First steps14063
+Ref: First steps-Footnote-115211
+Node: Overview15440
+Ref: Overview-Footnote-118191
+Node: ECB Directories18284
+Node: ECB Sources19301
+Node: ECB Methods20455
+Node: Activation and Deactivation21004
+Node: Standard activation21374
+Node: Automatic activation21952
+Node: Usage of ECB23002
+Node: Using the mouse23912
+Ref: Using the mouse-Footnote-126187
+Node: Using the keyboard26233
+Ref: Using the keyboard-Footnote-127277
+Node: Navigation27328
+Node: Incremental search28668
+Node: Personal keybindings30844
+Ref: Personal keybindings-Footnote-132842
+Node: The edit-window32945
+Node: Temp- and compile-buffers34775
+Node: The Methods buffer36819
+Node: Customizing the display37260
+Node: Rebuilding the Methods38982
+Node: The ECB-layout39837
+Node: Changing the ECB-layout40484
+Node: Redrawing the ECB-layout64990
+Node: Creating a new ECB-layout65827
+Ref: Creating a new ECB-layout-Footnote-169565
+Node: Hiding the ECB windows69739
+Node: Back/forward navigation70312
+Ref: Back/forward navigation-Footnote-171413
+Node: ECB-window synchronizing71472
+Node: Interactive ECB commands74054
+Node: Customizing82550
+Node: General aspects83184
+Ref: General aspects-Footnote-185948
+Node: Most important options86080
+Node: Customizable options87873
+Node: ecb-general89093
+Node: ecb-directories108703
+Node: ecb-sources114858
+Node: ecb-methods117113
+Node: ecb-history129382
+Node: ecb-layout131443
+Node: ecb-create-layout146313
+Node: ecb-face-options146816
+Node: ecb-faces150245
+Node: ecb-download154237
+Node: Submitting problem report155446
+Node: Upgrading156809
+Node: Downloading new versions157572
+Ref: Download required packages159329
+Ref: Downloading new versions-Footnote-1160427
+Node: Auto. option-upgrading160476
+Node: User interface160784
+Node: Background information161670
+Node: Tips and tricks165068
+Node: Changing faces165761
+Ref: Changing faces-Footnote-1168597
+Node: Small screens168773
+Node: Simulating speedbar170167
+Node: Integrating speedbar170976
+Node: Optimize scrolling171242
+Node: Large directories172322
+Node: Using eshell172988
+Node: Elisp programming173178
+Node: List of variables173787
+Node: List of hooks174099
+Node: tree-buffer174884
+Node: Adviced functions175690
+Ref: Adviced functions-Footnote-1176309
+Node: Programming new layouts176380
+Node: Conflicts and bugs181708
+Node: Conflicts182183
+Node: Bugs185641
+Node: FAQ185861
+Ref: FAQ-Footnote-1190613
+Node: Command Index190644
+Node: Option Index192894
+Node: Concept Index198980
 
 End Tag Table
