@@ -889,8 +889,11 @@ according to `ecb-sources-sort-method'."
         ;; file-browser of ECB.
         (dolist (file sorted-files)
           (if (file-directory-p (ecb-fix-filename dir file))
-              (if (not (ecb-check-dir-exclude file))
-                  (setq subdirs (append subdirs (list file))))
+              (when (not (ecb-check-dir-exclude file))
+                (when (ecb-string= file "C:/System Volume Information" t) ;; (not (file-accessible-directory-p file))
+                  (ecb-merge-face-into-text file
+                                            ecb-directory-not-accessible-face))
+                (setq subdirs (append subdirs (list file))))
             (when (and (not (member file cvsignore-files))
                        (or (ecb-match-regexp-list file (cadr source-regexps))
                            (not (ecb-match-regexp-list file (car source-regexps)))))
@@ -1499,16 +1502,16 @@ ecb-windows after displaying the file in an edit-window."
 	   (let* ((path (if (listp dir) (car dir) dir))
 		  (norm-dir (ecb-fix-filename path nil t))
 		  (name (if (listp dir) (cadr dir) norm-dir)))
-             (if (file-exists-p norm-dir)
+             (if (file-accessible-directory-p norm-dir)
                  (tree-node-add-child
                   node
                   (ecb-new-child old-children name 2 norm-dir
                                  (ecb-check-emptyness-of-dir norm-dir)
                                  (if ecb-truncate-long-names 'beginning)))
                (if (listp dir)
-                   (ecb-warning "Source-path %s with alias %s does not exist - ignored!"
+                   (ecb-warning "Source-path %s with alias %s is not accessible - ignored!"
                                 norm-dir (cadr dir))
-                 (ecb-warning "Source-path %s does not exist - ignored!" norm-dir)))))
+                 (ecb-warning "Source-path %s is not accessible - ignored!" norm-dir)))))
          (tree-buffer-update))))))
 
 

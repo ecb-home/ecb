@@ -392,6 +392,22 @@ jumping to it by clicking onto a node in the methods buffer."
   :group 'ecb-face-options
   :type 'face)
 
+(defface ecb-directory-not-accessible-face (ecb-face-default nil nil nil
+                                                             'ecb-default-general-face
+                                                             "gray60"
+                                                             "gray60"
+                                                             nil nil
+                                                             nil "gray60")
+  "*Define a face for displaying not accessible dirs in the directories buffer."
+  :group 'ecb-faces)
+ 
+(defcustom ecb-directory-not-accessible-face
+  'ecb-directory-not-accessible-face
+  "*Face for not accessible dirs in the directories buffer."
+  :group 'ecb-directories
+  :group 'ecb-face-options
+  :type 'face)
+
 (defface ecb-type-tag-class-face (ecb-face-default nil t)
   "*Define face used with option `ecb-type-tag-display'."
   :group 'ecb-faces)
