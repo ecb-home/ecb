@@ -75,11 +75,19 @@
 (defconst ecb-methods-nodetype-bucket 1)
 (defconst ecb-methods-nodetype-externtag 2)
 
-(defun ecb-method-browser-initialize ()
+(defun ecb-method-browser-initialize-caches ()
+  "Initialize the caches of the method-browser of ECB."
+  (ecb-clear-tag-tree-cache))
+
+(defun ecb-method-browser-initialize (&optional no-caches)
+  "Initialize the method-browser of ECB. If optional arg NO-CACHES is not nil
+then the caches used by the method-browser will not be initialized."
   (setq ecb-selected-tag nil)
   (setq ecb-methods-root-node nil)
   (setq ecb-methods-user-filter-alist nil)
-  (setq ecb-current-post-processed-tag-table nil))
+  (setq ecb-current-post-processed-tag-table nil)
+  (unless no-caches
+    (ecb-method-browser-initialize-caches)))
 
 ;;====================================================
 ;; Customization
