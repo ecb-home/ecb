@@ -13,6 +13,10 @@
    (default), when a compile-window is used or never.
 
 ** Compatibility enhancements
+   In general the current layout-engine of ECB is so flexible that there
+   should be no - or at least very few - conflicts between ECB and any other
+   elisp-library - even when another lib is running during the ECB-windows are
+   visible.
 
 *** Commands like `bs-show' of the library bs.el now work correctly with ECB
 

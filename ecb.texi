@@ -26,7 +26,7 @@
 @c GNU Emacs; see the file COPYING.  If not, write to the Free Software
 @c Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-@c $Id: ecb.texi,v 1.153 2004/02/16 08:56:24 berndl Exp $
+@c $Id: ecb.texi,v 1.154 2004/02/16 18:53:56 berndl Exp $
 
 @setfilename ecb.info
 
@@ -9988,8 +9988,8 @@ BBDB can be used even when the ECB-windows are visible.
 
 But if you encounter problems then it is recommened to use one of the
 window-managers escreen.el or winring.el (@pxref{Window-managers and
-ECB}). With such a window-manager ECB and BBDB should work very well
-together under all circumstances!
+ECB}). With such a window-manager ECB and BBDB should work together
+very well under all circumstances!
 
 @subsubsection Package calculator.el
 
@@ -10059,6 +10059,12 @@ first *AFTER* ECB is activated. This can be done with the hook
 @end group
 @end example
 
+@subsubsection Package edebug (Lisp Debugger)
+
+@cindex edebug
+It is strongly recommended to run edebug only when the ECB-windows are
+hidden. With visible ECB-windows there will probably serious conflicts
+between the ECB-layout and the edebug-window-manager.
 
 @subsubsection Package ediff.el
 
@@ -10100,8 +10106,8 @@ Gnus can be used even when the ECB-windows are visible.
 
 But if you encounter problems then it is recommened to use one of the
 window-managers escreen.el or winring.el (@pxref{Window-managers and
-ECB}). With such a window-manager ECB and Gnus should work very well
-together under all circumstances!
+ECB}). With such a window-manager ECB and Gnus should work together
+very well under all circumstances!
 
 @subsubsection Package JDEE (Java Development Environment)
 
@@ -10151,6 +10157,18 @@ with version 1.95.2 ECB autom. ensures that every code which uses
 The variable @code{vc-delete-logbuf-window} must be set to nil during
 active ECB. This can be done with the hooks mentioned in @ref{Elisp
 programming}.
+
+@subsubsection Package VM (Emacs Mail-Client)
+
+@cindex VM package
+As of ECB 2.21 there should be no conflicts between VM and ECB, so
+VM can be used even when the ECB-windows are visible.
+
+But if you encounter problems then it is recommened to use one of the
+window-managers escreen.el or winring.el (@pxref{Window-managers and
+ECB}). With such a window-manager ECB and VM should work together very
+well under all circumstances!
+
 
 @subsubsection Package winner.el (winner-mode)
 
