@@ -20,12 +20,19 @@ Upgrading from any version:
 
 All user-defined extensions written for and added to one of the options
 `ecb-directories-menu-user-extension', `ecb-sources-menu-user-extension',
-`ecb-methods-menu-user-extension' or `ecb-history-menu-user-extension' must be
+`ecb-methods-menu-user-extension' or `ecb-history-menu-user-extension' MUST be
 rewritten and redefined via the new macro `tree-buffer-defpopup-command'!
 
 The option `ecb-primary-mouse-jump-destination' has been renamed to
 `ecb-mouse-click-destination' and has also changed its default value to
 'last-point. ECB autom. upgrades your setting to the new name.
+
+The option `ecb-split-edit-window' has been renamed in
+`ecb-split-edit-window-after-start'. In addition the value t is not allowed
+anymore for this option - use 'before-activation instead. ECB autom. upgrades
+your setting to the new name and the new value if necessary. In a further
+addition this option has a new default value 'before-deactivation. See the
+docstring of this option to get all details.
 
 
 Upgrading from versions < 2.11:

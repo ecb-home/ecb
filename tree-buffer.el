@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: tree-buffer.el,v 1.133 2004/01/07 10:23:38 berndl Exp $
+;; $Id: tree-buffer.el,v 1.134 2004/01/12 16:42:36 berndl Exp $
 
 ;;; Commentary:
 
@@ -378,11 +378,12 @@ image-object created from this image-file.")
 
 (defun tree-buffer-find-image (tree-image-name)
   "Return an image-object for the TREE-IMAGE-NAME. The needed image-file with
-name TREE-IMAGE-NAME.<a supported image-file-extension>. is first searched in
-current `tree-buffer-additional-images-dir' \(if not nil) and then - if there
-is no image found for this name - in `tree-buffer-default-images-dir'. All
-found and created image-objectes will be cached so every image is only created
-once! Returns the image-object for TREE-IMAGE-NAME."
+name \"ecb-<TREE-IMAGE-NAME>.<a supported image-file-extension>\" is first
+searched in current `tree-buffer-additional-images-dir' \(if not nil) and then
+- if there is no image found for this name - in
+`tree-buffer-default-images-dir'. All found and created image-objectes will be
+cached so every image is only created once! Returns the image-object for
+TREE-IMAGE-NAME."
   (and (equal 'image (tree-buffer-style))
        ;; Klaus Berndl <klaus.berndl@sdm.de>: This comes from the XEmacs-bug
        ;; not able to display adjacent images.
@@ -406,7 +407,7 @@ once! Returns the image-object for TREE-IMAGE-NAME."
                    (setq loc-dirs dirs)
                    (while (and loc-dirs (not file))
                      (setq file-name (concat (car loc-dirs)
-                                             "/"
+                                             "/ecb-"
                                              tree-image-name
                                              (car fmt-exts)))
                      (when (file-readable-p file-name)
@@ -2001,8 +2002,6 @@ AFTER-CREATE-HOOK: A function or a list of functions \(with no arguments)
       ;; scrollbar...
       (define-key tree-buffer-key-map
         [mode-line mouse-1] 'tree-buffer-mouse-hscroll)
-;;       (define-key tree-buffer-key-map
-;;         [mode-line mouse-2] 'tree-buffer-mouse-hscroll)
       
       (define-key tree-buffer-key-map [M-mouse-1] nop)
       (define-key tree-buffer-key-map [M-mouse-3] nop)

@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-navigate.el,v 1.19 2003/11/04 17:39:40 berndl Exp $
+;; $Id: ecb-navigate.el,v 1.20 2004/01/12 16:42:37 berndl Exp $
 
 ;;; Commentary:
 
@@ -238,7 +238,8 @@ case no position saving is done."
 
 (defmethod ecb-nav-goto ((item ecb-nav-file-history-item))
   (find-file (ecb-nav-get-file item))
-  (widen)
+  (ecb-with-original-basic-functions
+   (widen))
   (goto-char (ecb-nav-get-pos item))
   (set-window-start (selected-window) (ecb-nav-get-window-start item)))
   

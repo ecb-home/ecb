@@ -21,7 +21,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-winman-support.el,v 1.7 2003/11/04 17:39:40 berndl Exp $
+;; $Id: ecb-winman-support.el,v 1.8 2004/01/12 16:42:37 berndl Exp $
 
 ;;; Commentary
 ;;
@@ -174,7 +174,7 @@ escreen.el!"
            (not ecb-minor-mode)
            (= escreen-current-screen-number
               ecb-winman-escreen-number))
-      (let ((ecb-split-edit-window t))
+      (let ((ecb-split-edit-window-after-start 'before-deactivation))
         (ecb-activate))))
 
 (defadvice escreen-save-current-screen-configuration (before ecb)
@@ -184,7 +184,7 @@ uses dedicated windows. So we deactivate ECB before running this function."
   (if (and (boundp 'ecb-minor-mode)
            ecb-minor-mode
            (equal ecb-frame (selected-frame)))
-      (let ((ecb-split-edit-window t))
+      (let ((ecb-split-edit-window-after-start 'before-deactivation))
         (ecb-deactivate))))
 
 ;; support for the library winring.el ---------------------------------------
@@ -242,7 +242,7 @@ ECB if we set the name `ecb-winman-winring-name'."
                (not ecb-minor-mode)
                (equal (or (ad-get-arg 1)
                           (selected-frame)) ecb-winman-winring-ecb-frame))
-      (let ((ecb-split-edit-window t))
+      (let ((ecb-split-edit-window-after-start 'before-deactivation))
         (ecb-activate)))))
 
 (defadvice winring-duplicate-configuration (before ecb)
@@ -255,7 +255,7 @@ ECB if we set the name `ecb-winman-winring-name'."
   (if (and (string= (winring-name-of-current) ecb-winman-winring-name)
            (boundp 'ecb-minor-mode)
            ecb-minor-mode)
-      (let ((ecb-split-edit-window t))
+      (let ((ecb-split-edit-window-after-start 'before-deactivation))
         (ecb-deactivate))))
   
 
@@ -266,7 +266,7 @@ uses dedicated windows. So we deactivate ECB before running this function."
   (if (and (boundp 'ecb-minor-mode)
            ecb-minor-mode
            (equal ecb-frame (selected-frame)))
-      (let ((ecb-split-edit-window t))
+      (let ((ecb-split-edit-window-after-start 'before-deactivation))
         (ecb-deactivate))))
 
   

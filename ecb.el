@@ -26,16 +26,49 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb.el,v 1.357 2004/01/07 13:27:31 berndl Exp $
+;; $Id: ecb.el,v 1.358 2004/01/12 16:42:37 berndl Exp $
 
 ;;; Commentary:
 ;;
-;; ECB stands for "Emacs Code Browser" and is a source code browser for
-;; (X)Emacs. It is a global minor-mode which displays a couple of windows that
-;; can be used to browse directories, files and file-contents like methods and
-;; variables. It supports source-code parsing for semantic-supported languages
-;; like Java, C, C++, Elisp and Scheme as well as for source-types supported
-;; "only" by imenu or etags (e.g. perl, TeX, LaTeX etc.).
+;; ECB stands for "Emacs Code Browser" and is a source-code-browser for
+;; (X)Emacs. It is a global minor-mode which offers a language-independent and
+;; complete IDE (Integrated Development Environment) within one Emacs-frame.
+;; It displays a couple of windows that can be used to browse directories,
+;; files and file-contents like methods and variables. It supports source-code
+;; parsing for semantic-supported languages like Java, C, C++, Elisp and
+;; Scheme as well as for source-types supported "only" by imenu or etags (e.g.
+;; perl, TeX, LaTeX etc.). In addition it offers (optional) a durable
+;; "compile-window" at the bottom of the frame which is used to display all
+;; help-, grep-, compile- and etc.-output. The rest of the frame is called the
+;; "edit-area" which can be devided in several (no limit) edit-windows which
+;; are used for editing of sources. Deleting some of the edit-windows does
+;; neither destroy the compile-window nor the browsing-windows.
+;;
+;; Here is an ascii-screenshot of what ECB offers you:
+;;
+;;   ------------------------------------------------------------------
+;;   |              |                                                 |
+;;   | Directories  |                                                 |
+;;   |              |                                                 |
+;;   |--------------|                                                 |
+;;   |              |                                                 |
+;;   | Sources      |                                                 |
+;;   |              |                                                 |
+;;   |--------------|                   Edit-area                     |
+;;   |              |    (can be splitted in several edit-windows)    |
+;;   | Methods/Vars |                                                 |
+;;   |              |                                                 |
+;;   |--------------|                                                 |
+;;   |              |                                                 |
+;;   | History      |                                                 |
+;;   |              |                                                 |
+;;   ------------------------------------------------------------------
+;;   |                                                                |
+;;   |                 Compilation-window (optional)                  |
+;;   |                                                                |
+;;   ------------------------------------------------------------------
+;;
+;; This is only one example-layout - ECB offers a lot of different layouts.
 
 ;;; Installation
 ;;
@@ -174,6 +207,7 @@
 
 ;; XEmacs
 (silentcomp-defun redraw-modeline)
+(silentcomp-defvar modeline-map)
 ;; Emacs
 (silentcomp-defun force-mode-line-update)
 
@@ -586,7 +620,8 @@ With both ascii-styles the tree-layout can be affected with the options
 This is a five-element list where:
 1. element: Default directory where the default images for the tree-buffer can
    be found. It should contain an image for every name of
-   `tree-buffer-tree-image-names'.
+   `tree-buffer-tree-image-names'. The name of an image-file must be:
+   \"ecb-<NAME of TREE-BUFFER-TREE-IMAGE-NAMES>.<ALLOWED EXTENSIONS>\".
 2. element: Directory for special images for the Directories-buffer.
 3. element: Directory for special images for the Sources-buffer.
 4. element: Directory for special images for the Methods-buffer.
@@ -1239,14 +1274,14 @@ It does several tasks:
       (let ((node (if buffer-file
                       (save-selected-window
                         (ecb-exec-in-history-window (tree-buffer-find-node-data buffer-file))))))
-        (when node
-          (if (or (equal ecb-kill-buffer-clears-history 'auto)
-                  (and (equal ecb-kill-buffer-clears-history 'ask)
-                       (y-or-n-p "Remove history entry for this buffer? ")))
-              (save-selected-window
-                (ecb-exec-in-history-window
-                 (tree-buffer-remove-node node)))
-              (ecb-update-history-window)))))
+        (when (and node
+                   (or (equal ecb-kill-buffer-clears-history 'auto)
+                       (and (equal ecb-kill-buffer-clears-history 'ask)
+                            (y-or-n-p "Remove history entry for this buffer? "))))
+          (save-selected-window
+            (ecb-exec-in-history-window
+             (tree-buffer-remove-node node)))
+          (ecb-update-history-window))))
 
     ;; 2. clearing the method buffer if a file-buffer is killed
     (if buffer-file
@@ -1265,7 +1300,7 @@ It does several tasks:
 (defun ecb-current-buffer-sync (&optional force)
   "Synchronizes all special ECB-buffers with current buffer.
 
-Depending on the contents of current buffer this function performs different
+Depending on the contents of current buffer this function performs several
 synchronizing tasks but only if ECB is active and point stays in an
 edit-window. If this is true under the following additional conditions some
 tasks are performed:
@@ -2081,10 +2116,11 @@ That is remove the unsupported :help stuff."
 
 ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: Modeline should display some
 ;; states of ECB:
-;; - visibility of ecb-windows: v|h
-;; - auto-expand-state of the methods-buffer: a|-
-;; - is a durable compile-window used: c|-
+;; - visibility of ecb-windows: v|h (state: ecb-windows-hidden)
+;; - auto-expand-state of the methods-buffer: a|- (state: ecb-auto-expand-tag-tree)
+;; - is a durable compile-window used: c|- (state: ecb-compile-window-height)
 ;; - scroll-other-window-scrolls-compwin: se|sc (ScrollEdit|ScrollComp)
+;;   (state: ecb-scroll-other-window-scrolls-compile-window)
 ;; - ....
 ;; An Example: " ECB[h|a|c|se]" would mean that the ECB-windows are hidden,
 ;; methods-buffer will be auto-expanded, a compile-window is used (maybe
@@ -2282,6 +2318,10 @@ always the ECB-frame if called from another frame."
            (car err) (cdr err))))
   
 
+(defvar ecb-last-window-config-before-deactivation nil
+  "Contains the last `ecb-current-window-configuration' directly before ECB
+has been deactivated. Do not set this variable!")
+
 (defun ecb-activate--impl ()
   "See `ecb-activate'.  This is the implementation of ECB activation."
   (when (or (null ecb-frame) (not (frame-live-p ecb-frame)))
@@ -2334,8 +2374,8 @@ always the ECB-frame if called from another frame."
 
             ;; enable permanent advices - these advices will never being
             ;; deactivated after first activation of ECB unless
-            ;; `ecb-split-edit-window' is not t (see
-            ;; `ecb-deactivate-internal')
+            ;; `ecb-split-edit-window-after-start' is not 'before-activation
+            ;; (see `ecb-deactivate-internal')
             (ecb-enable-advices ecb-permanent-adviced-functions)
 
             ;; enable advices for not supported window-managers
@@ -2402,7 +2442,12 @@ always the ECB-frame if called from another frame."
                                     (local-set-key [f3] 'ecb-show-help)
                                     (local-set-key [f4] 'ecb-add-source-path)
                                     (local-set-key (kbd "C-t")
-                                                   'ecb-toggle-RET-selects-edit-window))))
+                                                   'ecb-toggle-RET-selects-edit-window)
+                                    (if ecb-running-xemacs
+                                        (define-key modeline-map 'button3 'ecb-modeline-menu)
+                                      (define-key tree-buffer-key-map
+                                        [mode-line mouse-2]
+                                        'ecb-toggle-maximize-ecb-window-with-mouse)))))
                   ecb-common-tree-buffer-after-create-hook
                   ecb-directories-buffer-after-create-hook)
                  ))
@@ -2438,7 +2483,11 @@ always the ECB-frame if called from another frame."
                  (append
                   (list (function (lambda ()
                                     (local-set-key (kbd "C-t")
-                                                   'ecb-toggle-RET-selects-edit-window))))
+                                                   'ecb-toggle-RET-selects-edit-window)
+                                    (if (not ecb-running-xemacs)
+                                        (define-key tree-buffer-key-map
+                                          [mode-line mouse-2]
+                                          'ecb-toggle-maximize-ecb-window-with-mouse)))))
                   ecb-common-tree-buffer-after-create-hook
                   ecb-directories-buffer-after-create-hook)))
       
@@ -2490,7 +2539,11 @@ always the ECB-frame if called from another frame."
                  (append
                   (list (function (lambda ()
                                     (local-set-key (kbd "C-t")
-                                                   'ecb-toggle-RET-selects-edit-window))))
+                                                   'ecb-toggle-RET-selects-edit-window)
+                                    (if (not ecb-running-xemacs)
+                                        (define-key tree-buffer-key-map
+                                          [mode-line mouse-2]
+                                          'ecb-toggle-maximize-ecb-window-with-mouse)))))
                   ecb-common-tree-buffer-after-create-hook
                   ecb-directories-buffer-after-create-hook))
                 (setq ecb-methods-root-node (tree-buffer-get-root)))
@@ -2526,7 +2579,11 @@ always the ECB-frame if called from another frame."
                  (append
                   (list (function (lambda ()
                                     (local-set-key (kbd "C-t")
-                                                   'ecb-toggle-RET-selects-edit-window))))
+                                                   'ecb-toggle-RET-selects-edit-window)
+                                    (if (not ecb-running-xemacs)
+                                        (define-key tree-buffer-key-map
+                                          [mode-line mouse-2]
+                                          'ecb-toggle-maximize-ecb-window-with-mouse)))))
                   ecb-common-tree-buffer-after-create-hook
                   ecb-directories-buffer-after-create-hook))))
     
@@ -2613,16 +2670,31 @@ always the ECB-frame if called from another frame."
           ;; activates at its end also the adviced functions if necessary!
           ;; Here the directories- and history-buffer will be updated.
           (let ((ecb-redraw-layout-quickly nil))
+            (if (and ecb-last-window-config-before-deactivation
+                     (equal ecb-split-edit-window-after-start
+                            'before-deactivation)
+                     (not (ecb-window-configuration-invalidp
+                           ecb-last-window-config-before-deactivation)))                     
+                (setq ecb-edit-area-creators
+                      (nth 4 ecb-last-window-config-before-deactivation)))
             (run-hooks 'ecb-redraw-layout-before-hook)
-            (ecb-redraw-layout-full 'no-buffer-sync)
+            (ecb-redraw-layout-full 'no-buffer-sync
+                                    nil
+                                    (if (and ecb-last-window-config-before-deactivation
+                                             (equal ecb-split-edit-window-after-start
+                                                    'before-deactivation)
+                                             (not (ecb-window-configuration-invalidp
+                                                   ecb-last-window-config-before-deactivation)))
+                                        (nth 6 ecb-last-window-config-before-deactivation)))
             (run-hooks 'ecb-redraw-layout-after-hook)
 
-            (when (not (equal ecb-split-edit-window t))
+            (when (member ecb-split-edit-window-after-start
+                          '(vertical horizontal nil))
               (ecb-with-adviced-functions
                 (delete-other-windows)
-                (cond ((equal ecb-split-edit-window 'horizontal)
+                (cond ((equal ecb-split-edit-window-after-start 'horizontal)
                        (split-window-horizontally))
-                      ((equal ecb-split-edit-window 'vertical)
+                      ((equal ecb-split-edit-window-after-start 'vertical)
                        (split-window-vertically)))))
             
             ;; now we synchronize all ECB-windows
@@ -2656,7 +2728,7 @@ always the ECB-frame if called from another frame."
 
       (condition-case err-obj
           ;; enable mouse-tracking for the ecb-tree-buffers; we do this after
-          ;; running the personal hooks because if a user putÂ´s activation of
+          ;; running the personal hooks because if a user put´s activation of
           ;; follow-mouse.el (`turn-on-follow-mouse') in the
           ;; `ecb-activate-hook' then our own ECB mouse-tracking must be
           ;; activated later. If `turn-on-follow-mouse' would be activated
@@ -2751,6 +2823,9 @@ does all necessary after finishing ediff."
 
     (when (or run-no-hooks
               (run-hook-with-args-until-failure 'ecb-before-deactivate-hook))
+
+      (setq ecb-last-window-config-before-deactivation
+            (ecb-current-window-configuration))
       
       ;; deactivating the adviced functions
       (ecb-activate-adviced-functions nil)
@@ -2860,7 +2935,7 @@ does all necessary after finishing ediff."
                         (ecb-set-window-size win (nth 3 data)))
                     )))
 
-              ;; at the end always stay in that window as before the
+              ;; at the end we always stay in that window as before the
               ;; deactivation.
               (when (integerp window-before-redraw)
                 (ecb-select-edit-window window-before-redraw))       
@@ -2884,12 +2959,12 @@ does all necessary after finishing ediff."
       ;; we do NOT disable the permanent-advices of
       ;; `ecb-permanent-adviced-functions' unless the user don't want
       ;; preserving the split-state after reactivating ECB.
-      (when (not (equal ecb-split-edit-window t))
+      (when (not (equal ecb-split-edit-window-after-start 'before-activation))
         (ecb-disable-advices ecb-permanent-adviced-functions)
         (ecb-edit-area-creators-init))
 
       ;; we can safely do the kills because killing non existing buffers
-      ;; doesnÂ´t matter.
+      ;; doesn´t matter.
       (tree-buffer-destroy ecb-directories-buffer-name)
       (tree-buffer-destroy ecb-sources-buffer-name)
       (tree-buffer-destroy ecb-methods-buffer-name)
@@ -2976,7 +3051,6 @@ exist."
 
 (defvar ecb-last-major-mode nil)
 
-;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: testen!
 (defun ecb-handle-major-mode-activation ()
   "Added to `post-command-hook' after loading the ecb-library. Handles the
 values of `ecb-major-modes-activate' and `ecb-major-modes-deactivate'.
@@ -2993,8 +3067,9 @@ changed there should be no performance-problem!"
   ;; TODO: detecting the real reason why this happens and fixing it.
   (if ecb-item-in-tree-buffer-selected
       (setq ecb-item-in-tree-buffer-selected nil)
-    ;; do nothing if major-mode has not been changed.
-    (when (not (equal ecb-last-major-mode major-mode))
+    ;; do nothing if major-mode has not been changed or if a minibuffer is active
+    (when (and (not (> (minibuffer-depth) 0))
+               (not (equal ecb-last-major-mode major-mode)))
       (let ((last-mode ecb-last-major-mode))
         (setq ecb-last-major-mode major-mode)
         (ignore-errors
@@ -3003,7 +3078,7 @@ changed there should be no performance-problem!"
                       ;; ecb-major-modes-deactivate must be the major-mode-list
                       (listp ecb-major-modes-deactivate)
                       ecb-major-modes-deactivate
-                      (not (listp (car ecb-major-modes-deactivate)))
+                      (listp (car ecb-major-modes-deactivate))
                       ;; current major-mode must not be contained in
                       ;; ecb-major-modes-deactivate
                       (not (assoc major-mode ecb-major-modes-deactivate))
@@ -3111,7 +3186,7 @@ changed there should be no performance-problem!"
 
 ;; Klaus Berndl <klaus.berndl@sdm.de>: Cause of the magic autostart stuff of
 ;; the advice-package we must disable at load-time all these advices!!
-;; Otherwise would just loading ecb (not deactivating) activating each advice
+;; Otherwise would just loading ecb (not activating!) activate each advice
 ;; AFTER the FIRST usage of our advices!!
 (ecb-disable-advices ecb-basic-adviced-functions)
 (ecb-disable-advices ecb-speedbar-adviced-functions)

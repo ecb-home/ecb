@@ -24,7 +24,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-method-browser.el,v 1.9 2004/01/07 10:23:39 berndl Exp $
+;; $Id: ecb-method-browser.el,v 1.10 2004/01/12 16:42:37 berndl Exp $
 
 ;;; Commentary:
 
@@ -2118,7 +2118,8 @@ nil too then no post-actions are performed."
          ;; let us set the mark so the user can easily jump back.
          (if ecb-tag-jump-sets-mark
              (push-mark nil t))
-         (widen)
+         (ecb-with-original-basic-functions
+          (widen))
          (goto-char (ecb-semantic-tag-start tag))
          ;; process post action
          (unless no-tag-visit-post-actions
