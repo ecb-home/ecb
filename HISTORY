@@ -1,5 +1,10 @@
-Version 1.42:
+Version 1.50:
 -------------
+
+- Fixed a minor bug that occured when de-activating ECB under XEmacs. (Jesper)
+
+- ecb-layout-window-sizes variable is now an association list, which makes it
+  easier to add and remove layouts. (Jesper)
 
 - Added a new layout (nr. 12). Thanks to Nick Cross
   <nick.cross@prismtechnologies.com> for this layout.

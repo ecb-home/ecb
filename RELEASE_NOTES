@@ -1,4 +1,4 @@
-This file contains some important release-notes for ECB 1.41
+This file contains some important release-notes for ECB 1.50
 
 General:
 --------
@@ -17,6 +17,11 @@ No special notes beyond the contents of README.
 
 Upgrading from any previous version:
 ------------------------------------
+
++ ecb-layout-window-sizes is now an association list. If you have customized
+  this variable or used the ecb-store-window-sizes function, there will be an
+  error when drawing the ECB layout. Reset ecb-layout-window-sizes to it's
+  default value (nil) and store your window sizes using ecb-store-window-sizes.
 
 + ECB now requires Semantic 1.4beta8. Semantic 1.3.x is no longer supported.
 
