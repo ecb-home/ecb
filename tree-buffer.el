@@ -26,7 +26,7 @@
 ;; This file is part of the ECB package which can be found at:
 ;; http://home.swipnet.se/mayhem/ecb.html
 
-;; $Id: tree-buffer.el,v 1.23 2001/04/26 12:59:37 berndl Exp $
+;; $Id: tree-buffer.el,v 1.24 2001/04/27 23:12:13 creator Exp $
 
 ;;; Code:
 
@@ -37,6 +37,7 @@
 (defvar running-xemacs (string-match "XEmacs\\|Lucid" emacs-version))
 
 (when running-xemacs
+  (require 'overlay)
   (defface secondary-selection
     '((((class color) (background light)) (:foreground "blue" :background "LightGray"))
       (((class color) (background dark))  (:foreground "blue" :background "LightGray"))
