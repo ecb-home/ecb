@@ -1,6 +1,6 @@
 ********************************************************************************
-*** Last-Modified: $Date: 2001/05/10 09:25:53 $ 
-*** Version: $Id: TODO,v 1.15 2001/05/10 09:25:53 berndl Exp $
+*** Last-Modified: $Date: 2001/05/14 14:36:35 $ 
+*** Version: $Id: TODO,v 1.16 2001/05/14 14:36:35 berndl Exp $
 *** Author: Kevin A. Burton ( burton@apache.org | burton@openprivacy.org )
 ********************************************************************************
 
@@ -21,8 +21,6 @@
 
 - Optionally add "(file . line-nr)" to history when clicking on methods in
   the methods buffer. (JN)
-
-- KB: support env vars, like the latest JDE, for settings like the source paths?
 
 - KB: use the JDE source paths if the JDE variable is available 
    (perhaps there are other variables to use by default as well?). We
