@@ -1,9 +1,6 @@
 - Prevent layout-engine from splitting windows when smaller than
   window-min-height/width.
 
-- Maybe compile-window shrinking should be done by restoring a previously
-  saved window-config?!
-
 - Implementing the class-browser of speedbar native with ECB in an
   additional special ecb-window - a very important todo of high
   priority!

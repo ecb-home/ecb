@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-layout.el,v 1.232 2004/08/27 15:42:20 berndl Exp $
+;; $Id: ecb-layout.el,v 1.233 2004/08/31 15:33:52 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -164,6 +164,9 @@
 (silentcomp-defun fit-window-to-buffer)
 (silentcomp-defvar temp-buffer-resize-mode)
 (silentcomp-defun temp-buffer-resize-mode)
+
+;; Emacs 21
+(silentcomp-defvar grep-window-height)
 
 (eval-when-compile
   ;; to avoid compiler grips
@@ -1214,10 +1217,28 @@ done.")
 (defvar ecb-compile-window nil
   "Window to display compile-output in.")
 
+;; We need this absolute # of lines of the compile-window-height because if it
+;; is specified by a fraction of the frame (e.g. 0.1) we need this information
+;; at all places where the compile-window will be shrunken back to its
+;; specified height and computing the height from the value of
+;; `ecb-compile-window-height' will often be unequal to that height drawn by
+;; `ecb-redraw-layout-full' ==> we store and use the height drawn by this
+;; function.
+(defvar ecb-compile-window-height-lines nil
+  "Contains always the absolute number of lines \(incl. modeline) of the
+compile-window direct after a full redraw. Only set by
+`ecb-redraw-layout-full' and evaluated and used by *all* mechanisms of ECB
+which shrink back the compile-window to its specified height without doing a
+full redraw!!")
+
 ;; Klaus Berndl <klaus.berndl@sdm.de>: FRAME-LOCAL
 (defvar ecb-compile-window-was-selected-before-command nil
   "Not nil only if the `ecb-compile-window' was selected before most recent
 command.")
+
+(defvar ecb-layout-default-window-sizes nil
+  "Contains the the sizes of the ecb-windows of the current layout exactly as
+drawn by the layout-function \(see `ecb-redraw-layout-full').")
 
 ;; Klaus Berndl <klaus.berndl@sdm.de>: FRAME-LOCAL
 (defvar ecb-windows-hidden nil
@@ -1296,14 +1317,18 @@ either not activated or it behaves exactly like the original version!"
 
 (require 'compile)
 
-;; TODO: Klaus Berndl <klaus.berndl@sdm.de>:
-;; The new variables `grep-window-height', `grep-auto-highlight', and
-;; `grep-scroll-output' can beused to override the corresponding compilation mode
-;; settings for grep commands. This is new in Emacs 21.4 so we have to handle it!
-
+;; GNU Emacs 21.4 has has a new variable `grep-window-height'. Cause of the
+;; smart mechanism of the new compile-library of Emacs 21.4 which sets autom.
+;; for all compilation-* variables local values in the derived modes (like
+;; `grep-mode) according to the value of the equivalent variable in the
+;; derived mode (e.g. if `grep-window-height' has a special value in
+;; `grep-mode' then the new macro `define-compilation-mode' sets the local
+;; value of `compilation-window-height' to the value of `grep-window-height').
+;; we have not to deal with special variables like `grep-window-height' (see
+;; `define-compilation-mode') in the functions `compilation-set-window-height'
+;; and `ecb-toggle-compile-window-height'!
 (defadvice compilation-set-window-height (around ecb)
   "Makes the function compatible with ECB."
-;;   (if (or (not (equal (window-frame (ad-get-arg 0)) ecb-frame))
   (if (not (equal (window-frame (ad-get-arg 0)) ecb-frame))
       (ecb-with-original-basic-functions
        (ecb-with-original-functions
@@ -4546,20 +4571,6 @@ for the quick version!"
   
     (message "ECB redrawing layout...done")))
 
-;; We need this absolute # of lines of the compile-window-height because if it
-;; is specified by a fraction of the frame (e.g. 0.1) we need this information
-;; at all places where the compile-window will be shrunken back to its
-;; specified height and computing the height from the value of
-;; `ecb-compile-window-height' will often be unequal to that height drawn by
-;; `ecb-redraw-layout-full' ==> we store and use the height drawn by this
-;; function.
-(defvar ecb-compile-window-height-lines nil
-  "Contains always the absolute number of lines \(incl. modeline) of the
-compile-window direct after a full redraw. Only set by
-`ecb-redraw-layout-full' and evaluated and used by *all* mechanisms of ECB
-which shrink back the compile-window to its specified height without doing a
-full redraw!!")
-
 
 (defun ecb-repair-only-ecb-window-layout ()
   (interactive)
@@ -4703,7 +4714,8 @@ emergency-redraw."
          (setq ecb-edit-window nil
                ecb-compile-window nil)
 
-         ;; Now we call the layout-function
+         ;; Now we draw the compile-window and also the ecb-windows - the
+         ;; latter ones by calling the layout-function
          (if (and (not emergency) no-ecb-windows)
              ;; we want a layout-redraw without ecb-windows
              (progn
@@ -4731,6 +4743,15 @@ emergency-redraw."
              (ecb-draw-compile-window (and window-configuration-data
                                            compile-window-config
                                            (nth 2 compile-window-config)))))
+
+         ;; Now we store the window-sizes of the ecb-windows but only if we
+         ;; have drawn them either without a compile-window or with a
+         ;; compile-window with height as specified in
+         ;; `ecb-compile-window-height'
+         (if (or (not ecb-compile-window-height-lines)
+                 (not (and window-configuration-data
+                           compile-window-config)))
+             (setq ecb-layout-default-window-sizes (ecb-get-ecb-window-sizes)))
 
          ;; Here all needed windows are created
 
@@ -4972,7 +4993,7 @@ of current width and height are stored!"
   (interactive)
   (when (equal (selected-frame) ecb-frame)
     (ecb-set-ecb-window-sizes (ecb-find-assoc-value ecb-layout-name
-                                                ecb-layout-window-sizes))))
+                                                    ecb-layout-window-sizes))))
 
 (defun ecb-restore-default-window-sizes ()
   "Resets the sizes of the ECB windows to their default values."
@@ -5056,15 +5077,16 @@ floating-point-numbers. Default referencial width rsp. height are
         (if (and (numberp enlarge-height) (/= enlarge-height 0))
             (ignore-errors (enlarge-window enlarge-height)))))))
 
-(defun ecb-set-ecb-window-sizes (sizes)
+(defun ecb-set-ecb-window-sizes (window-sizes)
   (ecb-do-with-unfixed-ecb-buffers
-   (when sizes
-     (let ((windows (ecb-canonical-ecb-windows-list))
-           (ref-width (frame-width ecb-frame))
-           (ref-height (if (ecb-compile-window-live-p)
-                           (- (frame-height ecb-frame)
-                              (ecb-window-full-height ecb-compile-window))
-                         (frame-height ecb-frame))))
+   (let ((sizes (or window-sizes ecb-layout-default-window-sizes))
+         (windows (ecb-canonical-ecb-windows-list))
+         (ref-width (frame-width ecb-frame))
+         (ref-height (if (ecb-compile-window-live-p)
+                         (- (frame-height ecb-frame)
+                            (ecb-window-full-height ecb-compile-window))
+                       (frame-height ecb-frame))))
+     (when sizes
        (if (= (length windows) (length sizes))
            (dolist (size sizes)
              (ecb-set-window-size (car windows) size (cons ref-width ref-height))
@@ -5106,6 +5128,11 @@ floating-point-numbers. Default referencial width rsp. height are
                           (ecb-window-full-height ecb-compile-window)
                         0))))))))
 
+
+;; Klaus Berndl <klaus.berndl@sdm.de>: Cause of a much better repair-mechanism
+;; (see `ecb-repair-only-ecb-window-layout') the following code and mechanism
+;; is not used - but who knows, maybe we can need it later.................
+
 ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>:
 ;; - this var must be set with the `current-window-configuration' in
 ;;   + `ecb-restore-window-sizes' (`ecb-store-window-sizes' and
@@ -5138,7 +5165,7 @@ config contains always a visible compile-window of height
 ;; Klaus Berndl <klaus.berndl@sdm.de>: Not really necessary but a
 ;; fallback-mechanism to disable in an easy way the new
 ;; window-config-shrinking if there occur problems.
-(defvar ecb-use-window-config-for-compwin-shrink t)
+(defvar ecb-use-window-config-for-compwin-shrink nil)
 
 (defun ecb-store-compile-window-specified-height-config ()
   "Store the current ecb-window-configuration in
@@ -5204,7 +5231,11 @@ toggle the enlarge-state."
                   (when (not (ecb-reset-compile-window-specified-height-config))
                     (ecb-layout-debug-error "ecb-toggle-compile-window-height: call shrink-window!")
                     (shrink-window (max 0 (- (ecb-window-full-height)
-                                             ecb-compile-window-height-lines)))))
+                                             ecb-compile-window-height-lines)))
+                    ;; we restore the window-sizes (either the default or the
+                    ;; stored sizes
+                    (ecb-restore-window-sizes)
+                    ))
               (if (equal ecb-enlarged-compilation-window-max-height 'best)
                   ;; With GNU Emacs we could use `fit-window-to-buffer' but
                   ;; XEmacs doesn't have such a function; Therefore...
@@ -5220,7 +5251,8 @@ toggle the enlarge-state."
                   (progn
                     (setq max-height
                           (max (min (floor (/ (1- (frame-height)) 2))
-                                    (or (if (equal major-mode 'compilation-mode)
+                                    (or (if (equal (derived-mode-class major-mode)
+                                                   'compilation-mode)
                                             compilation-window-height
                                           (if ecb-running-xemacs
                                               (ignore-errors ; if temp-buffer-... is nil!
@@ -5338,6 +5370,7 @@ you have to quit with `C-g')."
              (ecb-with-original-basic-functions
               (ecb-with-original-permanent-functions
                (delete-window ecb-compile-window))))
+            (ecb-restore-window-sizes)
             ;; If point was in the compile-window we move it back to the first
             ;; edit-window
             (if (equal point-location 'compile)

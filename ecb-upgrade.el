@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-upgrade.el,v 1.85 2004/08/18 16:07:14 berndl Exp $
+;; $Id: ecb-upgrade.el,v 1.86 2004/08/31 15:33:52 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -177,6 +177,7 @@
 ;; Each NEWS-string should be a one-liner shorter than 70 chars
 (defconst ecb-upgrade-news
   '(
+    ("2.27" . ("Much saver resizing-mechanism for permanent compile-window. See NEWS."))
     ("2.26" . ("Some regexp-options has been changed to regexp-list-options. See NEWS."
                "New option `ecb-history-exclude-file-regexps'."
                "`ecb-expand-methods-nodes' works for non-semantic-buffers too."
