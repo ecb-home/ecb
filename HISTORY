@@ -1,3 +1,10 @@
+Version 1.42:
+-------------
+
++ Now the option 'ecb-prefix-key' is customizable so you can define another
+  prefix if there are conflicts with other minor-modes or packages (Klaus).
+
+  
 Version 1.41:
 -------------
 

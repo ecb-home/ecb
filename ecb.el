@@ -54,7 +54,7 @@
 ;; The latest version of the ECB is available at
 ;; http://home.swipnet.se/mayhem/ecb.html
 
-;; $Id: ecb.el,v 1.139 2001/07/19 19:45:17 creator Exp $
+;; $Id: ecb.el,v 1.140 2001/07/20 09:38:44 berndl Exp $
 
 ;;; Code:
 
@@ -1662,26 +1662,6 @@ with idle-time IDLE-VALUE if IDLE-VALUE not nil. If nil the FUNC is added to
 ;; ECB minor mode: Create buffers & menus & maps
 ;;====================================================
 
-(defvar ecb-prefix-key [(control ?c) ?.]
-  "The common prefix key in ECB minor mode.")
-
-(defvar ecb-prefix-map
-  (let ((km (make-sparse-keymap)))
-    (define-key km "f" 'ecb-activate)
-    (define-key km "l" 'ecb-redraw-layout)
-    (define-key km "t" 'ecb-toggle-ecb-windows)
-    (define-key km "r" 'ecb-rebuild-methods-buffer)
-    (define-key km "o" 'ecb-show-help)
-    (define-key km "1" 'ecb-goto-window-edit1)
-    (define-key km "2" 'ecb-goto-window-edit2)
-    (define-key km "c" 'ecb-goto-window-compilation)
-    (define-key km "d" 'ecb-goto-window-directories)
-    (define-key km "s" 'ecb-goto-window-sources)
-    (define-key km "m" 'ecb-goto-window-methods)
-    (define-key km "h" 'ecb-goto-window-history)
-    km)
-  "Default key bindings in ECB minor mode.")
-
 (defun ecb-menu-item (item)
   "Build an XEmacs compatible menu item from vector ITEM.
 That is remove the unsupported :help stuff."
@@ -1841,12 +1821,113 @@ That is remove the unsupported :help stuff."
    )
   "Menu for ECB minor mode.")
 
-(defvar ecb-mode-map
-  (let ((km (make-sparse-keymap)))
-    (define-key km ecb-prefix-key ecb-prefix-map)
-    (easy-menu-define ecb-minor-menu km "ECB Minor Mode Menu" ecb-menu-bar)
-    km)
+
+(defvar ecb-mode-map nil
   "Keymap for ECB minor mode.")
+
+(defvar ecb-prefix-map
+  (let ((km (make-sparse-keymap)))
+    (define-key km "f" 'ecb-activate)
+    (define-key km "l" 'ecb-redraw-layout)
+    (define-key km "t" 'ecb-toggle-ecb-windows)
+    (define-key km "r" 'ecb-rebuild-methods-buffer)
+    (define-key km "o" 'ecb-show-help)
+    (define-key km "1" 'ecb-goto-window-edit1)
+    (define-key km "2" 'ecb-goto-window-edit2)
+    (define-key km "c" 'ecb-goto-window-compilation)
+    (define-key km "d" 'ecb-goto-window-directories)
+    (define-key km "s" 'ecb-goto-window-sources)
+    (define-key km "m" 'ecb-goto-window-methods)
+    (define-key km "h" 'ecb-goto-window-history)
+    km)
+  "Default key bindings in ECB minor mode.")
+
+(defvar ecb-prefix-key--internal nil
+  "The common prefix key in ECB minor mode. Do not change this variable
+directly, but use instead `ecb-prefix-key'!")
+
+(defcustom ecb-prefix-key "[?\C-c ?.]"
+  "*Specifies the prefix-keysequence for the ECB minor-mode keymap.
+The keysequence must be inserted as string. Here comes how the string must
+look like:
+
+   \[?<key-1> ... ?<key-n>]
+
+Description:
+- The whole string must be enclosed in brackets \"\[...]\".
+- Every key of the sequence must begin with a question-mark \"?\"
+- The real <key-x> must directly follow the question-mark.
+- <key-x> has to be either:
+  + A single printable character
+  + A printable character combined with a modifier \(like Ctrl, Meta ...). To
+    enter a key with a modifier, type C-q followed by the desired modified
+    keystroke. For example, to enter C-c \(Ctrl c) as the key to be bound,
+    type C-q C-c in the key-field in the customization buffer.
+
+Example:
+\[?^C ?.] binds the keysequence \"C-c .\" as prefix-keysequence for the ECB
+keymap. This key has to be inserted by the following keystrokes \(for better
+clearness of the display every real keystroke you have to hit onto your
+keyboard is enclosed in \' and is separated by a \'+\'):
+\'\[\' + \'?\' + \'C-q\' + \'C-c\' + ' ' + \'?\' + \'.\' + \']\'
+
+It is highly recommended to use at first key of your prefix-keysequence one of
+the standard keys C-c or C-x!"
+  :group 'ecb-general
+  :type '(string :tag "Keysequence")
+  :set (function (lambda (symbol value)
+                   ;; make a key-string if the user has not done it already
+                   (if (not (string-match "^\\[.+\\]$" value))
+                       (setq value (concat "[" value "]")))
+                   (set symbol value)
+                   ;; make a key and save it
+                   (setq ecb-prefix-key--internal
+                         (car (read-from-string value)))
+                   ;; make a mode-map and save it
+                   (setq ecb-mode-map
+                         (let ((km (make-sparse-keymap)))
+                           (define-key km ecb-prefix-key--internal ecb-prefix-map)
+                           (easy-menu-define ecb-minor-menu km
+                                             "ECB Minor Mode Menu" ecb-menu-bar)
+                           km))
+                   ;; add the minor-mode and and the minor-mode-map to the
+                   ;; alists if not already contained. In this case just
+                   ;; replace the values in the alists
+                   (if (fboundp 'add-minor-mode)
+                       ;; Emacs 21 & XEmacs
+                       ;; These Emacs-versions do all necessary itself
+                       (add-minor-mode 'ecb-minor-mode
+                                       'ecb-minor-mode-text ecb-mode-map)
+                     ;; Emacs 20.X
+                     (let (el)
+                       (if (setq el (assq 'ecb-minor-mode minor-mode-alist))
+                           ;; `minor-mode-alist' contains lists, not conses!!
+                           (setcar (cdr el) 'ecb-minor-mode-text)
+                         (setq minor-mode-alist
+                               (cons (list 'ecb-minor-mode 'ecb-minor-mode-text)
+                                     minor-mode-alist)))
+                       (if (setq el (assq 'ecb-minor-mode minor-mode-map-alist))
+                           (setcdr el ecb-mode-map)
+                         (setq minor-mode-map-alist
+                               (cons (cons 'ecb-minor-mode ecb-mode-map)
+                                     minor-mode-map-alist))))))))
+                     
+;; ;; Adding ECB to the minor modes
+;; (if (fboundp 'add-minor-mode)
+;;     ;; Emacs 21 & XEmacs
+;;     (add-minor-mode 'ecb-minor-mode
+;;                     'ecb-minor-mode-text ecb-mode-map)
+;;   ;; Emacs 20.X
+;;   (or (assq 'ecb-minor-mode minor-mode-alist)
+;;       (setq minor-mode-alist
+;;             (cons (list 'ecb-minor-mode 'ecb-minor-mode-text)
+;;                   minor-mode-alist)))
+    
+;;   (or (assq 'ecb-minor-mode minor-mode-map-alist)
+;;       (setq minor-mode-map-alist
+;;             (cons (cons 'ecb-minor-mode ecb-mode-map)
+;;                   minor-mode-map-alist))))
+
 
 (defun ecb-activate ()
   "Activates the ECB and creates all the buffers and draws the ECB-screen
@@ -2124,22 +2205,6 @@ if the minor mode is enabled.
       (ecb-deactivate-internal)))
   (force-mode-line-update t)
   ecb-minor-mode)
-
-;; Adding ECB to the minor modes
-(if (fboundp 'add-minor-mode)
-    ;; Emacs 21 & XEmacs
-    (add-minor-mode 'ecb-minor-mode
-                    'ecb-minor-mode-text ecb-mode-map)
-  ;; Emacs 20.X
-  (or (assq 'ecb-minor-mode minor-mode-alist)
-      (setq minor-mode-alist
-            (cons (list 'ecb-minor-mode 'ecb-minor-mode-text)
-                  minor-mode-alist)))
-    
-  (or (assq 'ecb-minor-mode minor-mode-map-alist)
-      (setq minor-mode-map-alist
-            (cons (cons 'ecb-minor-mode ecb-mode-map)
-                  minor-mode-map-alist))))
 
 
 (defvar ecb-common-directories-menu nil)
