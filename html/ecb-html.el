@@ -28,7 +28,7 @@
 ;; Do not change any html-file besides the index.html manually but do all
 ;; changes in this elisp file!
 
-;; $Id: ecb-html.el,v 1.71 2004/08/31 15:33:52 berndl Exp $
+;; $Id: ecb-html.el,v 1.72 2004/11/26 16:20:25 berndl Exp $
 
 ;;; Code:
 
@@ -77,6 +77,11 @@
   "List of latest news displayed on the main page.")
 (setq ecb-latest-news
       `(
+        ,(h-sub-section "ECB 2.30 released! (2004-11-31)"
+                        "ECB can now display the version-control state of files in the tree-buffers; state is displayed with new image-icons. ECB is now capable of handling remote paths (e.g. TRAMP-, ANGE-FTP- or EFS-paths). Much better performance because all time consuming tasks (e.g. checking directories for emptyness or checking the VC-state) are performed stealthy. Now the current node in the methods-buffer can be expanded very precisely via new commands in the popup-menu. ECB has now the new upgrade policy \"Never touching the customization-files of a user without asking\". Some bug fixes. "
+                        (h-link "docs/Install-and-first-steps.html#Install%20and%20first%20steps" "Here") " is a short installation guide. "
+                        "Click " (h-link "NEWS.html" "here")
+                        " for information about changes in the new version. ")
         ,(h-sub-section "ECB 2.27 released! (2004-08-31)"
                         "Much saver mechanism for resizing the permanent compile-window: Enlarging the compile-window does never destroy some ecb-windows, shrinking the compile-window shrinks always back to the correct size and all ecb-windows have their correct size after shrinking the compile-window. Some minor fixes. "
                         (h-link "docs/Install-and-first-steps.html#Install%20and%20first%20steps" "Here") " is a short installation guide. "
@@ -87,11 +92,6 @@
                         (h-link "docs/Install-and-first-steps.html#Install%20and%20first%20steps" "Here") " is a short installation guide. "
                         "Click " (h-link "NEWS.html" "here")
                         " for information about changes in the new version. ")
-        ,(h-sub-section "ECB 2.25 released! (2004-06-14)"
-                        "Fixed one annoying bug which often resulted in an error \"stack-overflow error in equal\" when using hippie-expand (or maybe also in other situations). The history-buffer can now be sorted by extension too. Some more small fixes. "
-                        (h-link "docs/Install-and-first-steps.html#Install%20and%20first%20steps" "Here") " is a short installation guide. "
-                        "Click " (h-link "NEWS.html" "here")
-                        " for information about changes in the new version. ")
         ))
 
 (defvar ecb-rest-news nil
@@ -99,6 +99,11 @@
 `ecb-html-all-news'.")
 (setq ecb-rest-news
       `(
+        ,(h-sub-section "ECB 2.25 released! (2004-06-14)"
+                        "Fixed one annoying bug which often resulted in an error \"stack-overflow error in equal\" when using hippie-expand (or maybe also in other situations). The history-buffer can now be sorted by extension too. Some more small fixes. "
+                        (h-link "docs/Install-and-first-steps.html#Install%20and%20first%20steps" "Here") " is a short installation guide. "
+                        "Click " (h-link "NEWS.html" "here")
+                        " for information about changes in the new version. ")
         ,(h-sub-section "ECB 2.24 now available as XEmacs package 1.18! (2004-05-19)"
                         "The XEmacs-package ECB 1.18 can be installed either via "
                         (h-link "http://www.xemacs.org/Download/win32/setup.exe"
