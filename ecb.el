@@ -54,7 +54,7 @@
 ;; The latest version of the ECB is available at
 ;; http://home.swipnet.se/mayhem/ecb.html
 
-;; $Id: ecb.el,v 1.147 2001/08/19 17:04:15 creator Exp $
+;; $Id: ecb.el,v 1.148 2001/08/26 09:58:24 berndl Exp $
 
 ;;; Code:
 
@@ -1441,7 +1441,9 @@ OTHER-EDIT-WINDOW."
 				(list (if (and alias (> (length alias) 0))
 					  (list dir alias) dir))))
   (ecb-update-directories-buffer)
-  (customize-save-variable 'ecb-source-path ecb-source-path))
+  (if (y-or-n-p "Add source-path also for future-sessions? ")
+      (customize-save-variable 'ecb-source-path ecb-source-path)
+    (customize-set-variable 'ecb-source-path ecb-source-path)))
 
 (defun ecb-add-source-path-node (node)
   (call-interactively 'ecb-add-source-path))
@@ -1460,7 +1462,9 @@ OTHER-EDIT-WINDOW."
 			 node (tree-node-get-children (tree-node-get-parent node))
 			 ecb-source-path))
   (ecb-update-directories-buffer)
-  (customize-save-variable 'ecb-source-path ecb-source-path))
+  (if (y-or-n-p "Delete source-path also for future-sessions? ")
+      (customize-save-variable 'ecb-source-path ecb-source-path)
+    (customize-set-variable 'ecb-source-path ecb-source-path)))
 
 (defun ecb-customize ()
   (interactive)

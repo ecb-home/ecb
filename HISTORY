@@ -1,6 +1,9 @@
 Version 1.xx:
 -------------
 
+- ecb-add-source-path and ecb-delete-source-path now ask if saving should be
+  done for future sessions (Klaus).
+
 - Added new navigator functionality. Makes it easy to go to the back and forward
   in navigated tokens and buffers. See ecb-nav-goto-next and 
   ecb-nav-goto-previous. (Jesper)

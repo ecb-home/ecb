@@ -155,7 +155,7 @@
 ;;====================================================
 
 (defclass ecb-nav-file-history-item (ecb-nav-history-item)
-  ((file :initarg :file :initform "" :protection :private)
+  ((file :initarg :file :initform ""); :protection :private)
    )
   )
 
