@@ -1,6 +1,8 @@
 Version 1.90
 ------------
 
+* Interactively creating new layouts now works also with Emacs 20.X (Klaus).
+
 * Rewritten the mechanism for storing customized window-sizes. See option
   ecb-layout-window-sizes and the command ecb-store-window-sizes and
   ecb-restore-window-sizes. Now the sizes are always saved as fractions of the
