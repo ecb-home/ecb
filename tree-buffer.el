@@ -26,7 +26,7 @@
 ;; This file is part of the ECB package which can be found at:
 ;; http://home.swipnet.se/mayhem/ecb.html
 
-;; $Id: tree-buffer.el,v 1.64 2001/07/18 19:07:12 creator Exp $
+;; $Id: tree-buffer.el,v 1.65 2001/07/19 07:33:25 berndl Exp $
 
 ;;; Code:
 
@@ -48,7 +48,10 @@
               ((button-press-event-p event)
                'mouse-press)
               (t
-               (event-key event))))
+               ;; the ignore-errors is a little hack because i don't no all
+               ;; events of XEmacs so sometimes event-key produces a
+               ;; wrong-type-argument error.
+               (ignore-errors (event-key event)))))
       (defalias 'tree-buffer-event-window 'event-window)
       (defalias 'tree-buffer-event-point 'event-point)
       (require 'overlay)
@@ -85,7 +88,10 @@
 (defvar tree-buffer-root nil)
 
 (defvar tree-buffer-nodes nil
-  "Contains all the visible nodes in the buffer in top-to-bottom order. Each item in this list is a cons pair of the displayed node name and the node. Note that the displayed node name can be truncated and therefor different from the node name.")
+  "Contains all the visible nodes in the buffer in top-to-bottom order. Each
+item in this list is a cons pair of the displayed node name and the node. Note
+that the displayed node name can be truncated and therefore different from the
+node name.")
 
 (defvar tree-buffer-frame nil)
 (defvar tree-buffer-key-map nil)
@@ -372,11 +378,13 @@ inserted and the TEXT itself"
     ;; Truncate name if necessary
     (when (>= width ww)
       (if (eq 'beginning (tree-node-get-shorten-name node))
-	  (setq name (concat "..." (substring name (+ 4 (- width ww)))))
+	  (setq name (concat "..." (substring name (+ (if running-xemacs 5 4)
+                                                      (- width ww)))))
 	(if (and (not tree-buffer-expand-symbol-before)
 		 (tree-node-is-expandable node)
 		 (eq 'end (tree-node-get-shorten-name node)))
-	    (setq name (concat (substring name 0 (- (+ 4 (- width ww)))) "...")))))
+	    (setq name (concat (substring name 0 (- (+ (if running-xemacs 5 4)
+                                                       (- width ww)))) "...")))))
     (insert (make-string (* depth tree-buffer-indent) ? ))
     (when (and tree-buffer-expand-symbol-before
 	       (tree-node-is-expandable node))
@@ -560,6 +568,8 @@ mentioned above!"
                                      (if (equal tree-buffer-incr-search 'prefix) t))))
                 (if (stringp common-prefix)
                     (setq tree-buffer-incr-searchpattern common-prefix))))
+             ((null last-comm)
+              nil) ;; do nothing
              (t
               ;; add the last command to the end
               (setq tree-buffer-incr-searchpattern
