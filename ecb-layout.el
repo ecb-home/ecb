@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-layout.el,v 1.175 2003/08/06 09:15:19 berndl Exp $
+;; $Id: ecb-layout.el,v 1.176 2003/08/25 08:24:01 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -322,16 +322,6 @@ To restore the ECB-layout after such a buffer-enlarge just call
                        :value after-selection)
                 (const :tag "Both of them" :value both)
                 (const :tag "Never" :value nil)))
-
-(defcustom ecb-compile-window-enlarge-by-select nil
-  "*The compile-window is auto. enlarged after selecting it.
-If not nil then selecting the `ecb-compile-window' auto. enlarges it and
-de-selecting \(means selecting another window after point was in
-`ecb-compile-window') auto. shrinks it. Enlarging and shrinking the
-`ecb-compile-window' is done with `ecb-toggle-enlarged-compilation-window'.
-See also the documentation of this function!"
-  :group 'ecb-layout
-  :type 'boolean)
 
 (defcustom ecb-enlarged-compilation-window-max-height 'best
   "*The max height of the compilation window after enlarging it.
@@ -1092,6 +1082,11 @@ only enabled and disabled by `ecb-enable-count-windows-advice'!"
         (ecb-do-with-unfixed-ecb-buffers ad-do-it)
       ad-do-it))
 
+  (defadvice tmm-menubar (around ecb)
+    "Make it compatible with ECB."
+    (let ((ecb-other-window-jump-behavior 'only-edit))
+      ad-do-it))
+
   (defadvice shrink-window-if-larger-than-buffer (around ecb)
     "Makes the function compatible with ECB."
     (if (or (not (equal (selected-frame) ecb-frame))
@@ -1161,11 +1156,6 @@ only enabled and disabled by `ecb-enable-count-windows-advice'!"
   ) ;; end of (if ecb-running-xemacs...)
 
 ;; =========== intelligent window function advices ===================
-
-;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: offer window-size-fixed for Emacs
-;; 21. For this we have probably to advice enlarge-window, shrink-window,
-;; split-window-vertically, split-window-horizontally, split-window. The last
-;; one should be adviced anyway.
 
 (defconst ecb-adviceable-functions
   '(other-window
@@ -2362,6 +2352,11 @@ and TYPE must be an element of `ecb-layout-types'."
   "Return the type of layout NAME."
   (cdr (assoc name ecb-available-layouts)))
 
+;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: test code for implementing
+;; compile-window with width of edit-window and not of frame.
+(defvar ecb-compile-window-width 'frame
+  "Possible values: 'frame and 'edit-window. This should become a defcustom if
+it works reliable")
 
 ;; Macro for easy defining new layouts
 (defmacro ecb-layout-define (name type doc &rest create-code)
@@ -2448,7 +2443,9 @@ Postconditions for CREATE-CODE:
      (ecb-layout-type-p (quote ,type) t)
      (defun ,(intern (format "ecb-layout-function-%s" name)) (&optional create-code-fcn)
        ,doc
-       (when ecb-compile-window-height
+       (when (and ecb-compile-window-height
+                  (or (equal ecb-compile-window-width 'frame)
+                      (equal (ecb-get-layout-type ecb-layout-name) 'top)))
          (ecb-split-ver (- ecb-compile-window-height) t)
          (setq ecb-compile-window (next-window)))
        ,(cond ((equal type 'left)
@@ -2471,6 +2468,11 @@ Postconditions for CREATE-CODE:
              (funcall create-code-fcn)
              (select-window (next-window)))
          ,@create-code)
+       (when (and ecb-compile-window-height
+                  (equal ecb-compile-window-width 'edit-window)
+                  (not (equal (ecb-get-layout-type ecb-layout-name) 'top)))
+         (ecb-split-ver (- ecb-compile-window-height) t)
+         (setq ecb-compile-window (next-window)))
        (setq ecb-edit-window (selected-window)))
      (defalias (quote ,(intern
                         (format "ecb-delete-other-windows-in-editwindow-%s"
@@ -2483,6 +2485,11 @@ Postconditions for CREATE-CODE:
        (quote ,(intern
                 (format "ecb-delete-window-ecb-windows-%s" type))))
      (ecb-available-layouts-add ,name (quote ,type))))
+
+;; Only a test for the macro above
+;; (insert (pp (macroexpand '(ecb-layout-define "klaus" top "doc"
+;;                                              (ecb-split-ver 5 t)))))
+
 
 ;; we want proper editing with ecb-layout-define like follows:
 ;; (ecb-layout-define "name" left
@@ -2956,22 +2963,22 @@ The `ecb-compile-window' is enlarged depending on the value of
            (equal (selected-frame) ecb-frame)
            ecb-compile-window-height
            (ecb-compile-window-live-p))
-      (let ((should-shrink (if (null arg)
-                               (> (window-height ecb-compile-window)
-                                  ecb-compile-window-height)
-                             (<= (prefix-numeric-value arg) 0)))
-            (compile-window-height-lines (if ecb-compile-window-height
-                                             (ecb-normalize-number
-                                              ecb-compile-window-height
-                                              (1- (frame-height)))))
-            (max-height nil))
+      (let* ((compile-window-height-lines (if ecb-compile-window-height
+                                              (ecb-normalize-number
+                                               ecb-compile-window-height
+                                               (1- (frame-height)))))
+             (should-shrink (if (null arg)
+                                (> (window-height ecb-compile-window)
+                                   compile-window-height-lines)
+                              (<= (prefix-numeric-value arg) 0)))
+             (max-height nil))
         
         (save-selected-window
           (select-window ecb-compile-window)
           (setq max-height
                 (cond ((equal ecb-enlarged-compilation-window-max-height
                               'best)
-                       (min (or compilation-window-height
+                       (min (or ;; compilation-window-height
                                 ecb-old-compilation-window-height
                                 (floor (/ (1- (frame-height)) 2)))
                             (count-lines (point-min) (point-max))))

@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-tod.el,v 1.12 2003/08/13 18:06:20 berndl Exp $
+;; $Id: ecb-tod.el,v 1.13 2003/08/25 08:24:01 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -81,7 +81,7 @@
     "Grep a directory \(recursive) by using the popup-menu \(the right mouse-button) in the directories buffer."
     "Customize the sorting of the sources with the option `ecb-sources-sort-method'."
     "Narrow the source-buffer to the selected token in the methods-buffer with `ecb-token-visit-post-actions'."
-    "Enable autom. enlarging of the compile-window by select with the option `ecb-compile-window-enlarge-by-select'."
+    "Enable autom. enlarging of the compile-window by select with the option `ecb-compile-window-temporally-enlarge'."
     "Customize with `ecb-compile-window-temporally-enlarge' the situations the compile-window is allowed to enlarge."
     "Customize the jump-behavior of `other-window' [C-x o] with the option `ecb-other-window-jump-behavior'."
     "Customize height and width of the ECB-windows with `ecb-windows-height' and `ecb-windows-width'."

@@ -26,7 +26,7 @@
 @c GNU Emacs; see the file COPYING.  If not, write to the Free Software
 @c Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-@c $Id: ecb.texi,v 1.109 2003/08/13 18:06:20 berndl Exp $
+@c $Id: ecb.texi,v 1.110 2003/08/25 08:24:00 berndl Exp $
 
 @setfilename ecb.info
 
@@ -49,7 +49,7 @@
 @c edit the Makefile to change the version number. mechanism stolen
 @c from Tramp
 @macro ecbver{}
-1.95.1
+1.95.2
 @end macro
 
 
@@ -7829,6 +7829,13 @@ option @code{ecb-show-node-info-in-minibuffer} activates for at least one
 ECB tree-buffer 'if-too-long or 'always. This is done automatically
 but only as long ECB is activated.
 
+@subsection Package BBDB
+
+@cindex BBDB
+It is recommended not to use BBDB and ECB simultaneously in one frame
+because each of them has its own window-management and probably there
+will be conflicts. Use different frames for ECB and BBDB!
+
 @subsection Package calculator.el
 
 @cindex calculator package
@@ -7916,12 +7923,46 @@ It is recommended not to use Gnus and ECB simultaneously in one frame
 because each of them has its own window-management and probably there
 will be conflicts. Use different frames for ECB and Gnus!
 
-@subsection Package BBDB
+@subsection Package JDEE (Java Development Environment)
 
-@cindex BBDB
-It is recommended not to use BBDB and ECB simultaneously in one frame
-because each of them has its own window-management and probably there
-will be conflicts. Use different frames for ECB and BBDB!
+@cindex JDEE
+JDEE has a lot of ``dialogs'' where the user can select among several
+choices. An example is importing classes via the command
+@code{jde-import-find-and-import}. These dialogs are strongly designed
+to work in an environment where a new temporary window is created, the
+contents of the dialog are displayed in the new window, the user
+select his choice and hits [OK]. After that the new window is deleted
+and the selection is performed (for example the chosen import
+statement are inserted in the source-buffer.
+
+ECB can be work very well with this dialogs but only if no
+@strong{durable} compilation-window is used, i.e. if the option
+@code{ecb-compile-window-height} is nil. See @ref{Temp- and
+compile-buffers}.
+
+If @code{ecb-compile-window-height} is not @code{nil} then these
+JDEE-dialogs will not work correct!
+
+@subsection Package scroll-all.el (scroll-all-mode)
+
+@cindex scroll-all-mode
+@cindex scroll-all
+ECB advices @code{scroll-all-mode} so it is working correct during
+running ECB. This means if point stays in an edit-window and the
+edit-window is splitted then both edit-windows are scrolled by
+@code{scroll-all-mode} and no other window! If point stays in any
+other window just this selected window is scrolled. This is the only
+senseful behavior of @code{scroll-all-mode} with ECB.
+
+@subsection Package tmm.el (Text mode menubar)
+
+@cindex tmm-menubar
+@cindex tmm
+In general this library does not work perfectly with ECB. But if the
+option @code{ecb-other-window-jump-behavior} is not set to @code{all}
+then it should work acceptable. Beginning with version 1.95.2 ECB
+ensures autom. that @code{tmm-menubar} works - regardless of the value
+of @code{ecb-other-window-jump-behavior}.
 
 @subsection Package VC (Version Control)
 
@@ -7939,37 +7980,6 @@ programming}.
 has its own window-management which is completely incompatible with
 @code{winner-mode}! But @code{winner-mode} makes also not really sense
 with ECB.
-
-@subsection Package scroll-all.el (scroll-all-mode)
-
-@cindex scroll-all-mode
-@cindex scroll-all
-ECB advices @code{scroll-all-mode} so it is working correct during
-running ECB. This means if point stays in an edit-window and the
-edit-window is splitted then both edit-windows are scrolled by
-@code{scroll-all-mode} and no other window! If point stays in any
-other window just this selected window is scrolled. This is the only
-senseful behavior of @code{scroll-all-mode} with ECB.
-
-@subsection Package JDE (Java Development Environment)
-
-@cindex JDE
-JDEE has a lot of ``dialogs'' where the user can select among several
-choices. An example is importing classes via the command
-@code{jde-import-find-and-import}. These dialogs are strongly designed
-to work in an environment where a new temporary window is created, the
-contents of the dialog are displayed in the new window, the user
-select his choice and hits [OK]. After that the new window is deleted
-and the selection is performed (for example the chosen import
-statement are inserted in the source-buffer.
-
-ECB can be work very well with this dialogs but only if no
-@strong{durable} compilation-window is used, i.e. if the option
-@code{ecb-compile-window-height} is nil. See @ref{Temp- and
-compile-buffers}.
-
-If @code{ecb-compile-window-height} is not @code{nil} then these
-JDE-dialogs will not work correct!
 
 @node Bugs, , Conflicts, Conflicts and bugs
 @section Known bugs

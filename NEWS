@@ -1,4 +1,4 @@
-* Changes for ECB version
+* Changes for ECB version 1.95.2
 
 ** ECB can visit tokens in a smarter way
 
@@ -41,8 +41,12 @@
 *** Now the buffer-names displayed in the History-window are always uptodate,
     even if file-buffers are killed/opened during hidden ECB-windows.
 
+*** Fixed a conflict between ECB and `tmm-menubar' (tmm.el)
+    
 *** Fixed a lot of misspellings in the ECB-online-help and also in all comments
     and strings of the sources.
+
+*** Fixed a bug in `ecb-toggle-enlarged-compilation-window'.
 
 
 
