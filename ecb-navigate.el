@@ -22,6 +22,8 @@
 ;; the Free Software Foundation, Inc., 59 Temple Place - Suite 330,
 ;; Boston, MA 02111-1307, USA.
 
+;; $Id: ecb-navigate.el,v 1.12 2003/01/29 14:29:37 berndl Exp $
+
 ;;; Commentary:
 
 ;; 
@@ -114,45 +116,66 @@
 ;; 
 ;;====================================================
 
+;; Klaus Berndl <klaus.berndl@sdm.de>: Changed this class from storing the
+;; whole token to storing explicitly the token-buffer, the marker of the
+;; token-start, the marker of the token-end. This prevents the stored
+;; navigation-items from getting invalid und unuseable after a full
+;; semantic-reparse because such a reparse makes the overlays containd in the
+;; stored tokens invalid so we can not uses their informations.
 (defclass ecb-nav-token-history-item (ecb-nav-history-item)
-  ((token :initarg :token :initform nil); :protection :private)
+  ((token-buffer :initarg :token-buffer :initform nil); :protection :private)
+   (token-start :initarg :token-start :initform nil) ; :protection :private)
+   (token-end :initarg :token-end :initform nil) ; :protection :private)
+   (token-name :initarg :token-name :initform nil) ; :protection :private)
    (narrow :initarg :narrow :initform nil); :protection :private)
    )
   )
 
-(defun ecb-nav-token-history-item-new (token &optional narrow)
-  (ecb-nav-token-history-item (semantic-token-name token)
-                              :token token
+(defun ecb-nav-token-history-item-new (token-name token-buffer token-start
+                                                  token-end &optional narrow)
+  (ecb-nav-token-history-item token-name
+                              :token-buffer token-buffer
+                              :token-start token-start
+                              :token-end token-end
+                              :token-name token-name
                               :narrow narrow))
 
-(defmethod ecb-nav-get-token ((item ecb-nav-token-history-item))
-  (oref item token))
+(defmethod ecb-nav-get-token-buffer ((item ecb-nav-token-history-item))
+  (oref item token-buffer))
+
+(defmethod ecb-nav-get-token-start ((item ecb-nav-token-history-item))
+  (oref item token-start))
+
+(defmethod ecb-nav-get-token-end ((item ecb-nav-token-history-item))
+  (oref item token-end))
+
+(defmethod ecb-nav-get-token-name ((item ecb-nav-token-history-item))
+  (oref item token-name))
 
 (defmethod ecb-nav-get-narrow ((item ecb-nav-token-history-item))
   (oref item narrow))
 
 (defmethod ecb-nav-goto ((item ecb-nav-token-history-item))
-  (let ((token (ecb-nav-get-token item)))
-    (set-window-buffer (selected-window) (semantic-token-buffer token))
+  (let ((tok-buffer (ecb-nav-get-token-buffer item))
+        (tok-start (ecb-nav-get-token-start item))
+        (tok-end (ecb-nav-get-token-end item)))
+    (set-window-buffer (selected-window) tok-buffer)
     (widen)
-    (goto-char (ecb-semantic-token-start token))
+    (goto-char tok-start)
     (when (ecb-nav-get-narrow item)
-      (narrow-to-region (tree-buffer-line-beginning-pos)
-                        (ecb-semantic-token-end token)))
-    (goto-char (+ (ecb-semantic-token-start token) (ecb-nav-get-pos item)))
+      (narrow-to-region (ecb-line-beginning-pos) tok-end))
+    (goto-char (+ tok-start (ecb-nav-get-pos item)))
     (set-window-start (selected-window)
-                      (+ (ecb-semantic-token-start token)
-                         (ecb-nav-get-window-start item)))))
+                      (+ tok-start (ecb-nav-get-window-start item)))))
 
 (defmethod ecb-nav-save ((item ecb-nav-token-history-item))
-  (let* ((token (ecb-nav-get-token item))
-         (token-start (ecb-semantic-token-start token)))
-    (when token-start
-      (ecb-nav-set-pos item (- (point) token-start))
-      (ecb-nav-set-window-start item (- (window-start) token-start)))))
+  (let ((tok-start (ecb-nav-get-token-start item)))
+    (when tok-start
+      (ecb-nav-set-pos item (- (point) tok-start))
+      (ecb-nav-set-window-start item (- (window-start) tok-start)))))
 
 (defmethod ecb-nav-to-string ((item ecb-nav-token-history-item))
-  (concat (semantic-token-name (ecb-nav-get-token item)) ":" (call-next-method)))
+  (concat (ecb-nav-get-token-name item) ":" (call-next-method)))
 
 
 ;;====================================================
