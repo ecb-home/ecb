@@ -54,7 +54,7 @@
 ;; The latest version of the ECB is available at
 ;; http://home.swipnet.se/mayhem/ecb.html
 
-;; $Id: ecb.el,v 1.175 2002/01/20 14:06:26 berndl Exp $
+;; $Id: ecb.el,v 1.176 2002/01/21 07:35:39 burtonator Exp $
 
 ;;; Code:
 
@@ -1017,6 +1017,7 @@ cleared!) ECB by running `ecb-deactivate'."
     (ecb-select-edit-window t)))
 
 (defun ecb-goto-window-compilation ()
+  "Goto the ecb compilation window `ecb-compile-window'."
   (interactive)
   (when (and ecb-minor-mode
              ecb-compile-window-height
