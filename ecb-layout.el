@@ -181,9 +181,48 @@ layout with `ecb-redraw-layout'"
   :type '(radio (const :tag "No compilation window" nil)
                 (number :tag "Window height")))
 
+;; This variable is also set by the following functions:
+;; - `ecb-delete-other-windows'
+;; - `ecb-delete-window'
+;; - `ecb-split-window-vertically'
+;; - `ecb-split-window-horizontally'
 (defcustom ecb-split-edit-window 'horizontal
-  "*Sets how and if the edit window should be splitted."
+  "*Sets how and if the edit window should be splitted.
+But be aware: ECB offers four somehow intelligent
+\"window-\(un)splitting\"-functions:
+- `ecb-delete-other-windows'
+- `ecb-delete-window'
+- `ecb-split-window-vertically'
+- `ecb-split-window-horizontally'.
+These function are the replacements for the corresponding standard-Emacs
+functions. Just remove the prefix \"ecb-\" to get the name of the
+standard-function and to know what the function does.
+You can bind these replacement functions in the ECB-hooks like
+`ecb-activate-hook' to the standard keys you like for the standard-functions
+to get the same behavior just for the edit-window of ECB.
+An example: You can bind `ecb-delete-other-window' to [C-x 0] in the hook.
+Then always you hit [C-x 0] in the splitted edit-window only the other half of
+the edit-window will be removed and NOT the browser windows too!
+These replacement function give you the feeling to work with the edit-window
+of ECB as if it would be just a normal Emacs-frame.
+
+And now attention:
+These function change the value of this option too so do not wonder if you
+open a customize buffer for this option and it contains a value you have not
+set. This value has been set from one of these replacement functions! Also
+`ecb-redraw-layout' is always oriented on the CURRENT value of this option
+regardless if set by your customization or by one of these replacement
+functions!
+
+But you can always \(un)split the edit-window by customizing this option and
+ECB uses at start-time always the value you have set for this option!"
   :group 'ecb-layout
+  :initialize 'custom-initialize-default
+  :set '(lambda (symbol value)
+	  (set symbol value)
+          (if (and (boundp 'ecb-activated)
+                   ecb-activated)
+              (ecb-redraw-layout)))
   :type '(radio (const :tag "Split horizontally"
                        :value horizontal)
 		(const :tag "Split vertically"
@@ -259,19 +298,6 @@ of the frame height."
   "Window to edit source in.")
 (defvar ecb-compile-window nil
   "Window to display compile-output in.")
-(defvar ecb-layout-edit-window-splitted nil
-  "Is only non nil if the edit-window has been splitted by calling
-`ecb-split-window-horizontally' or `ecb-split-window-vertically'.
-This variable can have the following values:
-- nil: edit-window is not splitted
-- 'horizontal: edit-window is splitted horizontally
-- 'vertical: edit-window is splitted vertically.
-
-This variable is only set by the following functions:
-- `ecb-delete-other-windows'
-- `ecb-delete-window'
-- `ecb-split-window-vertically'
-- `ecb-split-window-horizontally'.")
 
 ;; =========== intelligent window functions ==========================
 
@@ -280,7 +306,7 @@ This variable is only set by the following functions:
 function but opens the file always in another edit-window."
   (interactive "FFind file in other edit-window: \np")
   (let ((ecb-other-window-jump-behavior 'only-edit))
-    (if ecb-layout-edit-window-splitted
+    (if ecb-split-edit-window
         (ecb-other-window)
       (ecb-split-window-vertically)
       (ecb-other-window))
@@ -315,7 +341,7 @@ Otherwise the behavior depends on `ecb-other-window-jump-behavior'."
     ;; in the following cond-clause `ecb-other-window-jump-behavior' can only
     ;; have the values 'only-edit and 'edit-and-compile!
     (cond ((eq (selected-window) ecb-edit-window)
-           (if ecb-layout-edit-window-splitted
+           (if ecb-split-edit-window
                (select-window (next-window))
              (if (eq ecb-other-window-jump-behavior 'edit-and-compile)
                  (condition-case ()
@@ -326,7 +352,7 @@ Otherwise the behavior depends on `ecb-other-window-jump-behavior'."
            (condition-case ()
                (select-window ecb-edit-window)
              (error nil)))
-          ((and ecb-layout-edit-window-splitted
+          ((and ecb-split-edit-window
                 (eq (previous-window (selected-window) 0) ecb-edit-window))
            (if (and (eq ecb-other-window-jump-behavior 'edit-and-compile)
                     ecb-compile-window)
@@ -355,10 +381,10 @@ called, means the current window fills the whole frame."
   (interactive "P")
   (if original
       (delete-other-windows)
-    (if ecb-layout-edit-window-splitted
+    (if ecb-split-edit-window
         (if (funcall (intern (format "ecb-delete-other-windows-in-editwindow-%d"
                                      ecb-layout-nr)))
-            (setq ecb-layout-edit-window-splitted nil)
+            (setq ecb-split-edit-window nil)
           (ecb-redraw-layout))
       (ecb-redraw-layout))))
 
@@ -378,10 +404,10 @@ called, means the current window fills the whole frame."
   (interactive "P")
   (if original
       (delete-window)
-    (if ecb-layout-edit-window-splitted
+    (if ecb-split-edit-window
         (if (funcall (intern (format "ecb-delete-window-in-editwindow-%d"
                                      ecb-layout-nr)))
-            (setq ecb-layout-edit-window-splitted nil)
+            (setq ecb-split-edit-window nil)
           (ecb-redraw-layout))
       (ecb-redraw-layout))))
 
@@ -401,10 +427,10 @@ horizontally."
   (interactive "P")
   (if original
       (split-window-vertically)
-    (when (and (not ecb-layout-edit-window-splitted)
+    (when (and (not ecb-split-edit-window)
                (eq (selected-window) ecb-edit-window))
       (ecb-split-ver 0.5 t)
-      (setq ecb-layout-edit-window-splitted 'vertical))))
+      (setq ecb-split-edit-window 'vertical))))
 
 (defun ecb-split-window-horizontally (&optional original)
   "If called in an unsplitted edit-window then the edit window will be
@@ -421,10 +447,10 @@ horizontally."
   (interactive "P")
   (if original
       (split-window-horizontally)
-    (when (and (not ecb-layout-edit-window-splitted)
+    (when (and (not ecb-split-edit-window)
                (eq (selected-window) ecb-edit-window))
       (ecb-split-hor 0.5 t)
-      (setq ecb-layout-edit-window-splitted 'horizontal))))
+      (setq ecb-split-edit-window 'horizontal))))
 
 
   
@@ -442,7 +468,7 @@ horizontally."
                                           (selected-window) 0))))
            (setq ecb-edit-window (selected-window))
            (delete-window (previous-window (selected-window) 0))
-           (if (eq ecb-layout-edit-window-splitted 'horizontal)
+           (if (eq ecb-split-edit-window 'horizontal)
                (enlarge-window (+ 2 prev-width) t))
            t))
         (t nil)))
@@ -452,7 +478,7 @@ horizontally."
          (let ((width (window-width (selected-window))))
            (setq ecb-edit-window (next-window))
            (delete-window)
-           (if (eq ecb-layout-edit-window-splitted 'horizontal)
+           (if (eq ecb-split-edit-window 'horizontal)
                (enlarge-window (+ 2 width) t))
            t))
         ((eq (previous-window (selected-window) 0)
@@ -526,7 +552,7 @@ horizontally."
                                             (selected-window) 0))))
            (setq ecb-edit-window (selected-window))
            (delete-window (previous-window (selected-window) 0))
-           (if (eq ecb-layout-edit-window-splitted 'vertical)
+           (if (eq ecb-split-edit-window 'vertical)
                (enlarge-window prev-height))
            t))
         (t nil)))
@@ -536,7 +562,7 @@ horizontally."
          (let ((height (window-height (selected-window))))
            (setq ecb-edit-window (next-window))
            (delete-window)
-           (if (eq ecb-layout-edit-window-splitted 'vertical)
+           (if (eq ecb-split-edit-window 'vertical)
                (enlarge-window height))
            t))
         ((eq (previous-window (selected-window) 0)
@@ -647,7 +673,7 @@ this function the edit-window is selected."
 
   (let* ((window-before-redraw (cond ((eq (selected-window) ecb-edit-window)
                                       1)
-                                     ((and ecb-layout-edit-window-splitted
+                                     ((and ecb-split-edit-window
                                            (eq (previous-window (selected-window) 0)
                                                ecb-edit-window))
                                       2)
@@ -710,12 +736,10 @@ this function the edit-window is selected."
                      (error "Edit-window not set in the layout-function")))
 
     ;; Maybe we must split the editing window again if it was splitted before
-    ;; the redraw
-    (setq ecb-layout-edit-window-splitted ecb-split-edit-window)
-    
-    (cond ((eq ecb-layout-edit-window-splitted 'horizontal)
+    ;; the redraw  
+    (cond ((eq ecb-split-edit-window 'horizontal)
            (ecb-split-hor 0.5 t))
-          ((eq ecb-layout-edit-window-splitted 'vertical)
+          ((eq ecb-split-edit-window 'vertical)
            (ecb-split-ver 0.5 t)))
 
     ;; at the end of the redraw we always stay in that edit-window as before

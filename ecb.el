@@ -256,11 +256,12 @@ is displayed:
 (defcustom ecb-font-lock-method-faces '(font-lock-function-name-face
                                         font-lock-type-face
                                         font-lock-variable-name-face
-                                        font-lock-type-face)
+                                        font-lock-type-face
+                                        bold)
   "*Specify how to highlight the parts of a method in the method buffer.
-The value must be a list of exactly four elements each of them either nil
+The value must be a list of exactly five elements each of them either nil
 \(not highlighting this part) or a face for this part. The sequence within the
-list must be \(methodename argumenttype argumentname returntype).
+list must be \(methodename argumenttype argumentname returntype classtype).
 
 This option takes only effect if `ecb-font-lock-methods' is on."
   :group 'ecb-methods
@@ -274,6 +275,9 @@ This option takes only effect if `ecb-font-lock-methods' is on."
                       (const :tag "Do not highlight" :value nil)
                       (face))
                (radio :tag "Returntype"
+                      (const :tag "Do not highlight" :value nil)
+                      (face))
+               (radio :tag "Classtype"
                       (const :tag "Do not highlight" :value nil)
                       (face))))
 
@@ -341,6 +345,7 @@ run direct before the layout-drawing look at
 (defconst ecb-argumenttype 1)
 (defconst ecb-argumentname 2)
 (defconst ecb-returntype 3)
+(defconst ecb-classtype 4)
 
 (defun ecb-highlight-text(orig-text type)
   "If `ecb-font-lock-methods' is not nil then dependend to TYPE the face
@@ -433,8 +438,10 @@ highlighting of the methods if `ecb-font-lock-methods' is not nil."
     (dolist (type children)
       (let ((n (if (and flatten (= 1 (length children)))
 		   node
-		 (tree-node-new (semantic-token-name type) 0
-			    (semantic-token-start type)))))
+		 (tree-node-new (ecb-highlight-text (semantic-token-name type)
+                                                    ecb-classtype)
+                                0
+                                (semantic-token-start type)))))
 	(unless (and flatten (= 1 (length children)))
 	    (tree-node-add-child node n))
 	(ecb-add-classes-methods n (semantic-token-type-parts type))))))
@@ -561,6 +568,7 @@ highlighting of the methods if `ecb-font-lock-methods' is not nil."
 			   t)
   (save-selected-window
     (ecb-buffer-select ecb-methods-buffer-name)
+    (setq tree-buffer-indent ecb-tree-indent)
     (tree-buffer-update)
     (set-window-point (selected-window) 1)))
   
@@ -777,7 +785,7 @@ For further explanation see `ecb-clear-history-behavior'."
           (ecb-buffer-select ecb-directories-buffer-name)
           (tree-buffer-update)))
     (ecb-set-selected-source (tree-node-get-data node)
-                             (if ecb-layout-edit-window-splitted
+                             (if ecb-split-edit-window
                                  mouse-button 0)
                              shift-pressed)))
 
@@ -786,7 +794,7 @@ For further explanation see `ecb-clear-history-behavior'."
   (if shift-pressed
       (ecb-show-long-tree-element node))
   (ecb-set-selected-source (tree-node-get-data node)
-                           (if ecb-layout-edit-window-splitted
+                           (if ecb-split-edit-window
                                mouse-button 0)
                            shift-pressed))
 
@@ -795,7 +803,7 @@ For further explanation see `ecb-clear-history-behavior'."
   (if shift-pressed
       (ecb-show-long-tree-element node)
     (ecb-find-file-and-display ecb-path-selected-source
-                               (if ecb-layout-edit-window-splitted
+                               (if ecb-split-edit-window
                                    mouse-button 0))
     (goto-char (tree-node-get-data node))))
 
