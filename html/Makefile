@@ -17,7 +17,7 @@ SCP=scp
 SSH=ssh -l berndl ecb.sourceforge.net
 GNUCLIENT=gnuclient
 
-CEDETLOAD=C:/Programme/emacs-21/site-lisp/multi-file-packages/cedet-1.0beta2b/common/cedet.el
+CEDETLOAD=c:/Programme/emacs-21/site-lisp/package-development/cedet/common/cedet.el
 
 MAKEINFO=/usr/bin/makeinfo
 
