@@ -21,7 +21,7 @@
 
 ;; Generates ECB HTML pages.
 
-;; $Id: ecb-html.el,v 1.6 2001/05/01 13:33:44 creator Exp $
+;; $Id: ecb-html.el,v 1.7 2001/05/21 16:50:17 berndl Exp $
 
 ;;; Code:
 
@@ -220,6 +220,9 @@
    (ecb-faq-q-and-a
     "Why doesn't ECB parse my C++ files correctly?"
     "This is a problem in Semantic, which is used by ECB for parsing source files. At the moment it doesn't handle C++ source files very well.")
+   (ecb-faq-q-and-a
+    "Why doesn't ECB display the node name in the echo area if mouse moves over it?"
+    "There can be several reasons: First the value of the option 'ecb-show-node-name-in-minibuffer' must be either 'always or 'if-too-long. If this is ok, then maybe you have turned on follow-mouse AFTER activating ECB; follow-mouse must be turned on BEFORE ECB is acivated, e.g. in the 'ecb-activate-hook'!")
    )
    ))
 
