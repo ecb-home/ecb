@@ -1306,7 +1306,7 @@ Currently the fourth argument TREE-BUFFER-NAME is not used here."
 	    (nth 3 attrs)
 	    (nth 7 attrs)
 	    (format-time-string "%Y/%m/%d %H:%M" (nth 5 attrs))
-	    (file-name-nondirectory file)
+	    file
 	    )))
 
 (defun ecb-show-minibuffer-info (node)
@@ -1317,9 +1317,10 @@ Currently the fourth argument TREE-BUFFER-NAME is not used here."
 	       (window-width)))))
 
 (defun ecb-mouse-over-directory-node (node)
-  (if (= (tree-node-get-type node) 1)
-      (ecb-mouse-over-node node)
-    (message (tree-node-get-data node))))
+  (when (ecb-show-minibuffer-info node)
+    (if (= (tree-node-get-type node) 1)
+	(ecb-mouse-over-node node)
+      (message (tree-node-get-data node)))))
 
 (defun ecb-mouse-over-node (node)
   ;; For buffers that hasnt been saved yet
@@ -1509,10 +1510,10 @@ always the ECB-frame if called from another frame."
 
     ;; we can safely do the kills because killing non existing buffers
     ;; doesn´t matter.
-    (kill-buffer ecb-directories-buffer-name)
-    (kill-buffer ecb-sources-buffer-name)
-    (kill-buffer ecb-methods-buffer-name)
-    (kill-buffer ecb-history-buffer-name)
+    (tree-buffer-destroy ecb-directories-buffer-name)
+    (tree-buffer-destroy ecb-sources-buffer-name)
+    (tree-buffer-destroy ecb-methods-buffer-name)
+    (tree-buffer-destroy ecb-history-buffer-name)
     ;; remove the hooks
     (remove-hook 'semantic-after-toplevel-bovinate-hook
                  'ecb-rebuild-methods-buffer-after-parsing)
