@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: tree-buffer.el,v 1.122 2003/10/01 17:41:33 berndl Exp $
+;; $Id: tree-buffer.el,v 1.123 2003/10/01 17:44:45 berndl Exp $
 
 ;;; Commentary:
 
@@ -938,7 +938,7 @@ mentioned above!"
                (make-vector 1
                             (setq counter (1+ counter)))
                (cons (car item)
-                     (emacs-create-menu (cdr item) (car item)))))))
+                     (tree-buffer-create-menu-emacs (cdr item) (car item)))))))
     map))
 
 

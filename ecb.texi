@@ -26,7 +26,7 @@
 @c GNU Emacs; see the file COPYING.  If not, write to the Free Software
 @c Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-@c $Id: ecb.texi,v 1.126 2003/10/01 17:41:34 berndl Exp $
+@c $Id: ecb.texi,v 1.127 2003/10/01 17:44:45 berndl Exp $
 
 @setfilename ecb.info
 
@@ -4543,7 +4543,7 @@ non-selectable menu-separator is displayed.
 A list where the first element is the title of the submenu displayed
 in the main-menu and all other elements are either menu-commands (see
 1) or separators (see 2).
-@end itemize
+@end enumerate
 
 The function of a menu-command must follow the following guidelines:
 It takes one argument which is the tree-buffer-node of the selected
