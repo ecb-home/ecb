@@ -9,6 +9,9 @@ Version 1.90:
   + Standard emacs-hooks are not clobbered with ecb-eshell-functions if ECB is
     not active.
 
+* Added online documentation for the eshell integration. See section
+  "Tips and tricks". (Klaus)
+
 * ECB now has a list of valid compilation buffers within the ECB menu. (Kevin)
 
 * Modified syntax-table for all tree-buffers with all paren, braces and
