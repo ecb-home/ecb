@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb.el,v 1.415 2004/11/25 18:10:10 berndl Exp $
+;; $Id: ecb.el,v 1.416 2004/11/30 18:40:06 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -1843,12 +1843,13 @@ value of VAR is as before storing a NEW-VALUE for variable-symbol VAR."
             ;; now we display all `ecb-not-compatible-options' and
             ;; `ecb-renamed-options'
             (if (and ecb-auto-compatibility-check
-                     (ecb-not-compatible-or-renamed-options-detected))
+                     (or (ecb-not-compatible-or-renamed-options-detected)
+                         (not (ecb-options-version=ecb-version-p))))
                 ;; we must run this with an idle-times because otherwise these
                 ;; options are never displayed when Emacs is started with a
-                ;; file-argument and ECB is automatically activated. I this case
-                ;; the buffer of the file-argument would be displayed after the
-                ;; option-display and would so hide this buffer.
+                ;; file-argument and ECB is automatically activated. I this
+                ;; case the buffer of the file-argument would be displayed
+                ;; after the option-display and would so hide this buffer.
                 (ecb-run-with-idle-timer 0.25 nil 'ecb-display-upgraded-options)
               (ecb-display-news-for-upgrade))
           (error
@@ -2225,16 +2226,23 @@ performance-problem!"
 
 (add-hook 'emacs-startup-hook 'ecb-auto-activate-hook)
 
-(progn
-  (require 'easymenu)
-  (easy-menu-add-item nil
-                      '("Tools") 
-                      (ecb-menu-item
-                       [ "Start Code Browser (ECB)"
-                         ecb-activate
-                         :active t
-                         :help "Start the Emacs Code Browser."
-                         ])))
+;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: CVS Emacs has changed some
+;; internals of easymenu.el so the following under some environments fails -
+;; therefore we make all this error-save!
+(condition-case oops
+    (progn
+      (require 'easymenu)
+      (easy-menu-add-item nil
+                          '("tools") 
+                          (ecb-menu-item
+                           [ "Start Code Browser (ECB)"
+                             ecb-activate
+                             :active t
+                             :help "Start the Emacs Code Browser."
+                             ])))
+  (error
+   (ecb-warning "added menu-entry to Tools (error-type: %S, error-data: %S)"
+                (car oops) (cdr oops))))
 
 
 ;; some goodies for editing the ecb-elisp-code
@@ -2242,118 +2250,128 @@ performance-problem!"
 ;; parsing of our ecb-macros
 
 (eval-after-load "semantic-el"
-  (when (fboundp 'semantic-elisp-setup-form-parser)
-    ;; defecb-multicache
-    (semantic-elisp-reuse-form-parser defvar defecb-multicache)
-    ;; defecb-stealthy and tree-buffer-defpopup-command
-    (semantic-elisp-setup-form-parser
-        (lambda (read-lobject start end)
-          (semantic-tag-new-function
-           (symbol-name (nth 1 read-lobject)) nil nil
-           :user-visible-flag nil
-           :documentation (semantic-elisp-do-doc (nth 2 read-lobject))))
-      defecb-stealthy
-      tree-buffer-defpopup-command)
-    ;; ecb-layout-define
-    (semantic-elisp-setup-form-parser
-        (lambda (read-lobject start end)
-          (semantic-tag-new-function
-           (nth 1 read-lobject) nil
-           (semantic-elisp-desymbolify (list (nth 2 read-lobject)))
-           :user-visible-flag nil
-           :documentation (semantic-elisp-do-doc (nth 3 read-lobject))))
-      ecb-layout-define)
-    ;; when-ecb-running-... macros
-    (semantic-elisp-reuse-form-parser eval-and-compile
-                                      when-ecb-running-xemacs
-                                      when-ecb-running-emacs-21
-                                      when-ecb-running-emacs-20
-                                      when-ecb-running-emacs)
-    ))
+  (condition-case oops
+      (when (fboundp 'semantic-elisp-setup-form-parser)
+        ;; defecb-multicache
+        (semantic-elisp-reuse-form-parser defvar defecb-multicache)
+        ;; defecb-stealthy and tree-buffer-defpopup-command
+        (semantic-elisp-setup-form-parser
+            (lambda (read-lobject start end)
+              (semantic-tag-new-function
+               (symbol-name (nth 1 read-lobject)) nil nil
+               :user-visible-flag nil
+               :documentation (semantic-elisp-do-doc (nth 2 read-lobject))))
+          defecb-stealthy
+          tree-buffer-defpopup-command)
+        ;; ecb-layout-define
+        (semantic-elisp-setup-form-parser
+            (lambda (read-lobject start end)
+              (semantic-tag-new-function
+               (nth 1 read-lobject) nil
+               (semantic-elisp-desymbolify (list (nth 2 read-lobject)))
+               :user-visible-flag nil
+               :documentation (semantic-elisp-do-doc (nth 3 read-lobject))))
+          ecb-layout-define)
+        ;; when-ecb-running-... macros
+        (semantic-elisp-reuse-form-parser eval-and-compile
+                                          when-ecb-running-xemacs
+                                          when-ecb-running-emacs-21
+                                          when-ecb-running-emacs-20
+                                          when-ecb-running-emacs)
+        )
+    (error
+     (ecb-warning "support parsing the ecb-macros: (error-type: %S, error-data: %S)"
+                  (car oops) (cdr oops)))))
 
 ;; highlighting of some ecb-keywords
-(defconst ecb-font-lock-keywords
-  (eval-when-compile
-    (let* (
-           ;; Function declarations and exec-with-macros
-	   (variable-defs '(
-                            "defecb-multicache"
-                            ))
-	   (function-defs '(
-                            "defecb-stealthy"
-                            ))
-           (plain-keywords '(
-                             "ecb-exec-in-history-window"
-                             "ecb-exec-in-directories-window"
-                             "ecb-exec-in-sources-window"
-                             "ecb-exec-in-methods-window"
-                             "ecb-do-with-unfixed-ecb-buffers"
-                             "ecb-with-original-functions"
-                             "ecb-with-adviced-functions"
-                             "ecb-with-some-adviced-functions"
-                             "ecb-with-original-permanent-functions"
-                             "ecb-with-dedicated-window"
-                             "ecb-with-original-basic-functions"
-                             "ecb-with-ecb-advice"
-                             "ecb-with-readonly-buffer"
-                             "ecb-do-if-buffer-visible-in-ecb-frame"
-                             "ecb-layout-define"
-                             "when-ecb-running-xemacs"
-                             "when-ecb-running-emacs-21"
-                             "when-ecb-running-emacs-20"
-                             "when-ecb-running-emacs"
-                             ))
-           (v-regexp (regexp-opt variable-defs t))
-           (f-regexp (regexp-opt function-defs t))
-           (k-regexp (regexp-opt plain-keywords t))
-           ;; Regexp depths
-           (v-depth (regexp-opt-depth v-regexp))
-           (f-depth (regexp-opt-depth f-regexp))
-           (k-depth (regexp-opt-depth k-regexp))
-           (full (concat
-                  ;; Declarative things: the whole parenthesis expr has always
-                  ;; number 1 ==> The paren-expression number for a keyword
-                  ;; contained in (append variable-defs function-defs
-                  ;; plain-keywords) is always 1
-                  "(\\(" v-regexp "\\|" f-regexp "\\|" k-regexp "\\)"
-                  ;; Whitespaces & name: The parenthesis expr for name has
-                  ;; always the number
-                  ;; (+ 1        -- the whole paren-expr for the declarative
-                  ;;                things
-                  ;;    v-depth  -- all paren-expressions of the variable-defs
-                  ;;    f-depth  -- all paren-expressions of the function-defs
-                  ;;    k-depth  -- all paren-expressions of the plain keywords
-                  ;;    1        -- The \\(\\sw+\\)?: This is the name in case
-                  ;;                of a variable- or function-def
-                  ;;  )
-                  ;; So variable, functions and keywords have the following
-                  ;; numbers:
-                  ;; - variable-match: Always 2 (The whole surrounding
-                  ;;   paren-expr + the surrounding paren-expr defined with
-                  ;;   regexp-opt for the variable-defs
-                  ;; - function-match: 1 (for the whole surrounding
-                  ;;   paren-expr) + v-depth (to jump over the paren-expr of
-                  ;;   the variable-defs + 1 (the surrounding paren-expr
-                  ;;   defined with regexp-opt for the function-defs
-                  "\\>[ \t]*\\(\\sw+\\)?"
-                  ))
-           )
-      `((,full
-         (1 font-lock-keyword-face)
-         (,(+ 1 v-depth f-depth k-depth 1) ;; see explanation above
-          (cond ((match-beginning 2) ;; see explanation above
-                 font-lock-variable-name-face)
-                ((match-beginning ,(+ 1 v-depth 1)) ;; see explanation above
-                 font-lock-function-name-face)
-                (t nil))
-          nil t)))
-      ))
-  "Highlighted ecb keywords.")
+(condition-case oops
+    (progn
+      (defconst ecb-font-lock-keywords
+        (eval-when-compile
+          (let* (
+                 ;; Function declarations and exec-with-macros
+                 (variable-defs '(
+                                  "defecb-multicache"
+                                  ))
+                 (function-defs '(
+                                  "defecb-stealthy"
+                                  ))
+                 (plain-keywords '(
+                                   "ecb-exec-in-history-window"
+                                   "ecb-exec-in-directories-window"
+                                   "ecb-exec-in-sources-window"
+                                   "ecb-exec-in-methods-window"
+                                   "ecb-do-with-unfixed-ecb-buffers"
+                                   "ecb-with-original-functions"
+                                   "ecb-with-adviced-functions"
+                                   "ecb-with-some-adviced-functions"
+                                   "ecb-with-original-permanent-functions"
+                                   "ecb-with-dedicated-window"
+                                   "ecb-with-original-basic-functions"
+                                   "ecb-with-ecb-advice"
+                                   "ecb-with-readonly-buffer"
+                                   "ecb-do-if-buffer-visible-in-ecb-frame"
+                                   "ecb-layout-define"
+                                   "when-ecb-running-xemacs"
+                                   "when-ecb-running-emacs-21"
+                                   "when-ecb-running-emacs-20"
+                                   "when-ecb-running-emacs"
+                                   ))
+                 (v-regexp (regexp-opt variable-defs t))
+                 (f-regexp (regexp-opt function-defs t))
+                 (k-regexp (regexp-opt plain-keywords t))
+                 ;; Regexp depths
+                 (v-depth (regexp-opt-depth v-regexp))
+                 (f-depth (regexp-opt-depth f-regexp))
+                 (k-depth (regexp-opt-depth k-regexp))
+                 (full (concat
+                        ;; Declarative things: the whole parenthesis expr has always
+                        ;; number 1 ==> The paren-expression number for a keyword
+                        ;; contained in (append variable-defs function-defs
+                        ;; plain-keywords) is always 1
+                        "(\\(" v-regexp "\\|" f-regexp "\\|" k-regexp "\\)"
+                        ;; Whitespaces & name: The parenthesis expr for name has
+                        ;; always the number
+                        ;; (+ 1        -- the whole paren-expr for the declarative
+                        ;;                things
+                        ;;    v-depth  -- all paren-expressions of the variable-defs
+                        ;;    f-depth  -- all paren-expressions of the function-defs
+                        ;;    k-depth  -- all paren-expressions of the plain keywords
+                        ;;    1        -- The \\(\\sw+\\)?: This is the name in case
+                        ;;                of a variable- or function-def
+                        ;;  )
+                        ;; So variable, functions and keywords have the following
+                        ;; numbers:
+                        ;; - variable-match: Always 2 (The whole surrounding
+                        ;;   paren-expr + the surrounding paren-expr defined with
+                        ;;   regexp-opt for the variable-defs
+                        ;; - function-match: 1 (for the whole surrounding
+                        ;;   paren-expr) + v-depth (to jump over the paren-expr of
+                        ;;   the variable-defs + 1 (the surrounding paren-expr
+                        ;;   defined with regexp-opt for the function-defs
+                        "\\>[ \t]*\\(\\sw+\\)?"
+                        ))
+                 )
+            `((,full
+               (1 font-lock-keyword-face)
+               (,(+ 1 v-depth f-depth k-depth 1) ;; see explanation above
+                (cond ((match-beginning 2) ;; see explanation above
+                       font-lock-variable-name-face)
+                      ((match-beginning ,(+ 1 v-depth 1)) ;; see explanation above
+                       font-lock-function-name-face)
+                      (t nil))
+                nil t)))
+            ))
+        "Highlighted ecb keywords.")
 
-(when (fboundp 'font-lock-add-keywords)
-  (font-lock-add-keywords 'emacs-lisp-mode
-                          ecb-font-lock-keywords)
-  )
+      (when (fboundp 'font-lock-add-keywords)
+        (font-lock-add-keywords 'emacs-lisp-mode
+                                ecb-font-lock-keywords)
+        ))
+  (error
+   (ecb-warning "support fontifying the ecb-macros: (error-type: %S, error-data: %S)"
+                (car oops) (cdr oops))))
+  
 
 ;; Klaus Berndl <klaus.berndl@sdm.de>: Cause of the magic autostart stuff of
 ;; the advice-package we must disable at load-time all these advices!!
