@@ -124,6 +124,19 @@ win32-path-style!"
   (ecb-update-directory-node (tree-node-get-parent node))
   (tree-buffer-update))
 
+(defun ecb-enlarge-window(window)
+  "Enlarge the given window so that it is 1/2 of the current frame."
+
+  (save-selected-window
+    (let(enlargement)
+    
+      (select-window window)
+      
+      (setq enlargement (- (/ (frame-height) 2) (window-height)))
+      
+      (if (> enlargement 0)
+          (enlarge-window enlargement)))))
+
 (provide 'ecb-util)
 
 ;;; ecb-util.el ends here
