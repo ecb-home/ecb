@@ -195,15 +195,26 @@ and then activating ECB again!"
   :type 'string)
 
 (defcustom ecb-source-file-regexps
- '("\\(^\\(\\.\\|#\\)\\|~$\\)" "^\\.\\(emacs\\|gnus\\)$")
- "*Specifies which files are shown as source files. Consists of one exclude regexp and one include regexp. A file is displayed in the source-buffer of ECB iff:
-the file does not match the exclude regexp OR the file matches the include
-regexp."
+ '("\\(^\\(\\.\\|#\\)\\|\\(~$\\|\\.\\(elc\\|obj\\|o\\|lib\\|dll\\|a\\|so\\)$\\)\\)"
+   "^\\.\\(emacs\\|gnus\\)$")
+ "*Specifies which files are shown as source files. Consists of one exclude
+regexp and one include regexp. A file is displayed in the source-buffer of ECB
+iff: The file does not match the exclude regexp OR the file matches the
+include regexp. There are three predefined and senseful combinations of an
+exclude and include regexp:
+- All files
+- All, but no backup, object, lib or ini-files \(except .emacs and .gnus). This
+  means all files except those starting with \".\", \"#\" or ending with
+  \"~\", \".elc\", \".obj\", \".o\", \".lib\", \".dll\", \".a\", \".so\".
+  (but including .emacs and .gnus)
+- Common source file types (.c, .java etc.)
+In addition to these predefined values a custom exclude and include
+combination can be defined."
  :group 'ecb-sources
  :type '(radio (const :tag "All files"
 		      :value ("" ""))
-	       (const :tag "All files except those starting with \".\", \"#\" or ending with \"~\" (but including .emacs and .gnus)"
-		      :value ("\\(^\\(\\.\\|#\\)\\|~$\\)" "^\\.\\(emacs\\|gnus\\)$"))
+	       (const :tag "All, but no backup, object, lib or ini-files \(except .emacs and .gnus)"
+		      :value ("\\(^\\(\\.\\|#\\)\\|\\(~$\\|\\.\\(elc\\|obj\\|o\\|lib\\|dll\\|a\\|so\\)$\\)\\)" "^\\.\\(emacs\\|gnus\\)$"))
 	       (const :tag "Common source file types (.c, .java etc.)"
 		      :value ("" "\\(\\(M\\|m\\)akefile\\|.*\\.\\(java\\|el\\|c\\|cc\\|h\\|hh\\|txt\\|html\\|texi\\|info\\|bnf\\)\\)$"))
 	       (list :tag "Custom (tips: \"$^\" matches no files, \"\" mathes all files)"
@@ -835,7 +846,7 @@ function is added to the hook `semantic-after-toplevel-bovinate-hook'."
                   ;; `semantic-after-toplevel-bovinate-hook' the cache is
                   ;; always either still valid or rebuild.
 		  ;;
-		  ;; Ugly fix to make it work with semantic 1.4
+		  ;; TODO: Ugly fix to make it work with semantic 1.4
 		  (if (listp (caar semantic-toplevel-bovine-cache))
 		      (car semantic-toplevel-bovine-cache)
 		    semantic-toplevel-bovine-cache)
@@ -1142,7 +1153,8 @@ Currently the fourth argument TREE-BUFFER-NAME is not used here."
             (tree-node-toggle-expanded node))
           (ecb-set-selected-directory (tree-node-get-data node))
           (ecb-buffer-select ecb-directories-buffer-name)
-          (tree-buffer-update)))
+          ;; Update the tree-buffer with optimized display of NODE
+          (tree-buffer-update node)))
     (ecb-set-selected-source (tree-node-get-data node)
                              (and ecb-split-edit-window (eq ecb-button 2))
                              shift-mode)))
@@ -1159,7 +1171,8 @@ Currently the fourth argument TREE-BUFFER-NAME is not used here."
       (ecb-mouse-over-method-node node)
     (when (= 1 (tree-node-get-type node))
       (tree-node-toggle-expanded node)
-      (tree-buffer-update))
+      ;; Update the tree-buffer with optimized display of NODE
+      (tree-buffer-update node))
     (when (tree-node-get-data node)
       (ecb-find-file-and-display ecb-path-selected-source
                                  (and ecb-split-edit-window (eq ecb-button 2)))

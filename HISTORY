@@ -1,6 +1,11 @@
 Version 1.20 (???):
 -------------------
 
+- Now the ECB-buffers are somehow intelligent in displaying expanded nodes
+  (e.g. a directory with it´s subdirectories). An ECB-buffer now tries always
+  to make visisble as much as possible of the subnodes of a node if a node
+  has been expanded (e.g. by clicking onto it´s expand-symbol). (Klaus)
+
 - Now all adviced functions behave only special in the ECB-frame. In each other
   frame they behave exactly like the not adviced functions. (Klaus)
 
@@ -10,8 +15,8 @@ Version 1.20 (???):
 - Source files can now be sorted by name, extension or not sorted at all
   (Jesper).
 
-- Added functionality and a customization variable to exclude source files
-  matching a regular expression (Jesper).
+- Now you can precisely define by an exclude and include regexp which files
+  should be displayed by ECB. (Jesper).
 
 - Jumping to a method/variable from the ECB-method buffer now sets the mark so
   the user can easily jump back (see `ecb-method-jump-sets-mark'). (Klaus)

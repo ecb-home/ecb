@@ -31,7 +31,7 @@ Installation
 Optional byte-compilation steps:
 
 4. Restart Emacs.
-5. Call `ecb-bytecompile-ecb'. You can safely ignore all messages.
+5. Call `ecb-byte-compile'. You can safely ignore all messages.
 
 (You can also bytecompile ECB from the command-line either by using the
 Makefile or by using the batch-file make.bat. Just read the comments in that
