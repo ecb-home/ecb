@@ -26,7 +26,7 @@
 ;;
 ;; Contains all online-help for ECB (stolen something from recentf.el)
 
-;; $Id: ecb-help.el,v 1.77 2002/07/12 16:27:44 berndl Exp $
+;; $Id: ecb-help.el,v 1.78 2002/07/22 12:38:16 berndl Exp $
 
 ;;; Code
 
@@ -51,17 +51,25 @@ FORMAT is not nil then the user is prompted to choose the format of the help
   (interactive "P")
   (let ((f (if format
                (intern (ecb-query-string "Choose format of online-help:"
-                                          '("info" "html")))
+                                         (if (equal 'ecb-show-help-format
+                                                    'html)
+                                             '("info" "html")
+                                           '("html" "info"))))
              ecb-show-help-format)))
-  (if (equal f 'info)
-      (info (concat ecb-ecb-dir "ecb.info"))
-    (message "Opening ECB online-help in a web-browser...")
-    (browse-url (concat "file://"
-                        (ecb-fix-filename ecb-ecb-dir "ecb.html"))
-                (if (boundp 'browse-url-new-window-flag)
-                    browse-url-new-window-flag
-                  browse-url-new-window-p))
-    (message "Opening ECB online-help in a web-browser...done"))))
+    (if (equal f 'info)
+        (if (file-exists-p (concat ecb-ecb-dir "ecb.info"))
+            (info (concat ecb-ecb-dir "ecb.info"))
+          (error "File %s does not exist" (concat ecb-ecb-dir "ecb.info")))
+      (message "Opening ECB online-help in a web-browser...")
+      (if (file-exists-p (concat ecb-ecb-dir "ecb.html"))
+          (progn
+            (browse-url (concat "file://"
+                                (ecb-fix-filename ecb-ecb-dir "ecb.html"))
+                        (if (boundp 'browse-url-new-window-flag)
+                            browse-url-new-window-flag
+                          browse-url-new-window-p))
+            (message "Opening ECB online-help in a web-browser...done"))
+        (error "File %s does not exist" (concat ecb-ecb-dir "ecb.html"))))))
 
 ;;
 ;; Problem reporting functions stolen from JDE
@@ -191,5 +199,3 @@ could be interesting for support."
 (provide 'ecb-help)
 
 ;; ecb-help.el ends here
-
-

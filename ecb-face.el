@@ -308,7 +308,7 @@ it by clicking onto a node in the methods buffer."
                                                                  nil "gray")
   "*Define a face for displaying sources in the directories buffer."
   :group 'ecb-faces)
-
+ 
 (defcustom ecb-source-in-directories-buffer-face
   'ecb-source-in-directories-buffer-face
   "*Face for source files in the directories buffer."

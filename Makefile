@@ -10,9 +10,13 @@ EMACS=emacs
 # Set here the load-path of the semantic-version and eieio-version loaded
 # into your Emacs. If you use JDE then add also the path to the lisp
 # directory of JDE. (use always forward-slashes as directory-separator even
-# with MS Windows systems). Make sure you compile ECB with the semantic
-# version you load into Emacs!
+# with MS Windows systems). Make sure you compile ECB with the semantic-
+# and eieio-version you load into Emacs!
 LOADPATH=../semantic ../eieio ../jde/lisp
+
+# Set here the path of the info subdirectory of your (X)Emacs installation
+# which contains the dir file.
+EMACSINFOPATH=/C/Programme/emacs-21.1/info
 
 # Two ways to build ECB:
 # - Call "make" to byte-compile the ECB. You can savely ignore the messages.
@@ -24,14 +28,18 @@ LOADPATH=../semantic ../eieio ../jde/lisp
 
 # Do not change anything below!
 
-# $Id: Makefile,v 1.29 2002/07/12 08:46:43 berndl Exp $
+# $Id: Makefile,v 1.30 2002/07/22 12:38:16 berndl Exp $
 
 RM=rm -f
+CP=cp
 MAKEINFO=makeinfo --no-split
+INSTALLINFO=install-info
 
 ecb_LISP_EL=tree-buffer.el ecb-util.el ecb-mode-line.el ecb-help.el ecb-layout.el ecb-navigate.el ecb.el ecb-eshell.el ecb-cycle.el ecb-face.el ecb-compilation.el ecb-upgrade.el
 ecb_LISP_ELC=$(ecb_LISP_EL:.el=.elc)
 ecb_TEXI=ecb.texi
+ecb_INFO=$(ecb_TEXI:.texi=.info)
+ecb_HTML=$(ecb_TEXI:.texi=.html)
 
 all: ecb help
 
@@ -53,6 +61,10 @@ ecb: $(ecb_LISP_EL)
 help: $(ecb_TEXI)
 	$(MAKEINFO) $<
 	$(MAKEINFO) --html $<
+
+install-help: $(ecb_INFO)
+	$(CP) $< $(EMACSINFOPATH)
+	$(INSTALLINFO) $< $(EMACSINFOPATH)/dir
 
 clean:
 	@$(RM) $(ecb_LISP_ELC) ecb-compile-script

@@ -20,12 +20,12 @@ global minor-mode which displays a couple of windows that can be used
 to browse directories, files and methods. It supports method parsing
 for Java, C, C++, Elisp and some more.
 
-<p>The latest version of ECB can always be found at the URL:
-&lt;<code>http://home.swipnet.se/mayhem/ecb.html</code>&gt;
+<p>The latest version of ECB can always be found at
+<a href="http://home.swipnet.se/mayhem/ecb.html">http://home.swipnet.se/mayhem/ecb.html</a>
 
 <p>To send bug reports, or participate in discussions about ECB, use the
-mailing list <a href="mailto:ecb-list@lists.sourceforge.net">ecb-list@lists.sourceforge.net</a> via the URL:
-&lt;<code>http://lists.sourceforge.net/lists/listinfo/ecb-list</code>&gt;
+mailing list <a href="mailto:ecb-list@lists.sourceforge.net">ecb-list@lists.sourceforge.net</a> via
+<a href="http://lists.sourceforge.net/lists/listinfo/ecb-list">http://lists.sourceforge.net/lists/listinfo/ecb-list</a>
 
 <ul>
 <li><a accesskey=1 href="#Install">Install</a>:                      Installing ECB. 
@@ -41,6 +41,89 @@ mailing list <a href="mailto:ecb-list@lists.sourceforge.net">ecb-list@lists.sour
 <li><a href="#Function%20Index">Function Index</a>:               Index for functions
 <li><a href="#Variable%20Index">Variable Index</a>:               Index for variables and options
 <li><a href="#Concept%20Index">Concept Index</a>:                Index for concepts and terms
+
+<p>--- The Detailed Node Listing ---
+
+<p>Overview
+
+</p><li><a href="#ECB%20Directories">ECB Directories</a>:              Contents of the ECB Directories-buffer
+<li><a href="#ECB%20Sources">ECB Sources</a>:                  Contents of the ECB Sources/history-buffer
+<li><a href="#ECB%20Methods">ECB Methods</a>:                  Contents of the ECB Methods-buffer
+
+<p>Activation and Deactivation
+
+</p><li><a href="#Standard%20activation">Standard activation</a>:          How to manually (de)activate ECB
+<li><a href="#Automatic%20activation">Automatic activation</a>:         Automaticaly (de)activating ECB
+
+<p>Usage of ECB
+
+</p><li><a href="#Using%20the%20mouse">Using the mouse</a>:              Working with the mouse
+<li><a href="#Using%20the%20keyboard">Using the keyboard</a>:           Working with the keyboard
+<li><a href="#The%20edit-window">The edit-window</a>:              How to use the edit-window(s)
+<li><a href="#Temp-%20and%20compile-buffers">Temp- and compile-buffers</a>:    Displaying temp- and compilation-buffers
+<li><a href="#The%20Methods%20buffer">The Methods buffer</a>:           Using and customizing he Methods-buffer
+<li><a href="#The%20ECB-layout">The ECB-layout</a>:               Changing, customizing, redrawing the layout
+<li><a href="#Hiding%20the%20ECB%20windows">Hiding the ECB windows</a>:       Hiding/Showing the ECB-windows
+<li><a href="#Interactive%20ECB%20commands">Interactive ECB commands</a>:     All interactive user-commands of ECB
+
+<p>Working with the keyboard in the ECB-windows
+
+</p><li><a href="#Navigation">Navigation</a>:                   Keyboard navigation in a tree-buffer
+<li><a href="#Incremental%20search">Incremental search</a>:           Find nodes as fast as possible
+
+<p>Using and customizing the ECB-Methods buffer
+
+</p><li><a href="#Customizing%20the%20display">Customizing the display</a>:      How to customize the Methods-buffer display
+<li><a href="#Rebuilding%20the%20Methods">Rebuilding the Methods</a>:       When to rebuild the Methods-buffer
+
+<p>Changing, customizing and redrawing the ECB-layout
+
+</p><li><a href="#Changing%20the%20ECB-layout">Changing the ECB-layout</a>:      How to change and customize the layout
+<li><a href="#Redrawing%20the%20ECB-layout">Redrawing the ECB-layout</a>:     How and when redrawing the layout
+
+<p>Customizing ECB
+
+</p><li><a href="#Most%20important%20options">Most important options</a>:       Which option you must know
+<li><a href="#Customizable%20options">Customizable options</a>:         All customizable options of ECB
+
+<p>All customizable options of ECB
+
+</p><li><a href="#ecb-general">ecb-general</a>:                  General customizing ECB
+<li><a href="#ecb-directories">ecb-directories</a>:              Customizing the ECB-directories
+<li><a href="#ecb-sources">ecb-sources</a>:                  Customizing the ECB-sources
+<li><a href="#ecb-methods">ecb-methods</a>:                  Customizing the ECB-methods
+<li><a href="#ecb-history">ecb-history</a>:                  Customizing the ECB-history
+<li><a href="#ecb-layout">ecb-layout</a>:                   Customizing the ECB-layout
+<li><a href="#ecb-face-options">ecb-face-options</a>:             Customizing options for faces
+<li><a href="#ecb-faces">ecb-faces</a>:                    Customizing the faces
+<li><a href="#ecb-download">ecb-download</a>:                 Customizing how to download ECB
+
+<p>Upgrading ECB
+
+</p><li><a href="#Downloading%20new%20version">Downloading new version</a>:      How to download a newer version of ECB
+<li><a href="#Auto.%20option-upgrading">Auto. option-upgrading</a>:       ECB can auto. upgrade your options
+
+<p>Automatic upgrading of options
+
+</p><li><a href="#User%20interface">User interface</a>:               Options and commands you should know
+<li><a href="#Background%20information">Background information</a>:       Maybe some interesting informations
+
+<p>Tips and tricks
+
+</p><li><a href="#Changing%20faces">Changing faces</a>:               Changing faces in the ECB tree-buffers
+<li><a href="#Small%20screens">Small screens</a>:                Working with small screens
+<li><a href="#Simulating%20speedbar">Simulating speedbar</a>:          Simulating speedbar without an extra frame
+<li><a href="#Optimze%20scrolling">Optimze scrolling</a>:            Optimze scrolling in the edit-window
+<li><a href="#Large%20directories">Large directories</a>:            Working with large directories
+
+<p>Known conflicts with other packages
+
+</p><li><a href="#VC">VC</a>:                           Conflicts with Version Control
+<li><a href="#follow-mouse">follow-mouse</a>:                 Conflicts with follow-mouse.el
+<li><a href="#avoid">avoid</a>:                        Conflicts with avoid.el
+<li><a href="#calendar">calendar</a>:                     Conflicts with calendar.el
+<li><a href="#calculator">calculator</a>:                   Conflicts with calculator.el
+
 </ul>
 
 <p><hr>
@@ -89,29 +172,49 @@ ECB is NOT properly installed if it's directory is not added to
 <p>Now ECB is ready for use but you can do these optional steps:
 
 <ol type=1 start=5>
-</p><li>Restart Emacs. 
-<li>Call <code>ecb-byte-compile</code>. 
-This byte compiles ECB. You can safely ignore all messages. 
+</p><li>Restart Emacs.
+
+<li>Call <code>ecb-byte-compile</code>
+
+<p>This byte compiles ECB. You can safely ignore all messages. 
 (You can also bytecompile ECB from the command-line either by using
 the <code>Makefile</code> or by using the batch-file <code>make.bat</code>. Just
 read the comments in that file you choose.)
 
-<li>Install the supplied <code>ecb.info</code>
-The ECB distribution contains a file <code>ecb.info</code> which is the
+</p><li>Install the supplied <code>ecb.info</code>
+
+<p>The ECB distribution contains a file <code>ecb.info</code> which is the
 online-help of ECB in Info-format. You can install this online help so
 it's available in the Top-directory of Info. There are two ways to do
 this:
 
 <ul>
-<li>Use the command "install-info" if available on your system
-(recommended). 
-<li>Copy the file <code>ecb.info</code> into the info-directory of Emacs and
+<li>Use "install-info" (recommended):
+
+<ol type=1 start=1>
+<li>Copy the file <code>ecb.info</code> into the info-directory of Emacs
+
+<li>Install it with the command "install-info" (if available on your
+system) in the <code>dir</code>-file.
+</ol>
+
+<p>The supplied <code>Makefile</code> offers a target <code>install-help</code> which
+does both of these steps. You have just to call <code>make
+install-help</code> with the correct EMACSINFOPATH set (see the comment in
+<code>Makefile</code>). Here is an example:
+
+<br><pre>make EMACSINFOPATH=/path/to/emacs/info install-help
+</pre>
+
+</p><li>Manual Installation:
+
+<p>Copy the file <code>ecb.info</code> into the info-directory of Emacs and
 modify the file <code>dir</code> manually. 
 </ul>
 
-<p>It doesn't matter if you do not execute this step because the online
-help of ECB is always available though, see <code>ecb-show-help</code>
-(see <a href="#Interactive%20ECB%20commands">Interactive ECB commands</a>).
+<p>But it doesn't matter if you do not execute this step (7.) because the
+online help of ECB is always available though, see
+<code>ecb-show-help</code> (see <a href="#Interactive%20ECB%20commands">Interactive ECB commands</a>).
 
 </ol>
 
@@ -131,16 +234,16 @@ manual. There are currently three different types of
 ECB-windows/tree-buffers:
 
 <ul>
-<li><a accesskey=1 href="#ECB%20Directories">ECB Directories</a>: 
-<li><a accesskey=2 href="#ECB%20Sources">ECB Sources</a>: 
-<li><a accesskey=3 href="#ECB%20Methods">ECB Methods</a>: 
+<li><a accesskey=1 href="#ECB%20Directories">ECB Directories</a>:              Contents of the ECB Directories-buffer
+<li><a accesskey=2 href="#ECB%20Sources">ECB Sources</a>:                  Contents of the ECB Sources/history-buffer
+<li><a accesskey=3 href="#ECB%20Methods">ECB Methods</a>:                  Contents of the ECB Methods-buffer
 </ul>
 
 <p>In addition to these ECB-windows you have always one or two
-<dfn>edit-windows</dfn> (see <a href="#Working%20with%20the%20edit-window">Working with the edit-window</a>) in the
+<dfn>edit-windows</dfn> (see <a href="#The%20edit-window">The edit-window</a>) in the
 ECB-frame and (if you want) at the bottom a <dfn>compilation-window</dfn>,
 where all the output of Emacs-compilation (compile, grep etc.) is
-shown (see <a href="#Temp-%20and%20compilation-buffers">Temp- and compilation-buffers</a>).
+shown (see <a href="#Temp-%20and%20compile-buffers">Temp- and compile-buffers</a>).
 
 <p><hr>
 Node:<a name="ECB%20Directories">ECB Directories</a>,
@@ -181,13 +284,12 @@ Up:<a rel=up accesskey=u href="#Overview">Overview</a>
 <h3>ECB Sources</h3>
 
 <ul>
-<li>Source files can be selected by clicking a mouse button
-(see <a href="#Working%20with%20the%20mouse">Working with the mouse</a>) or hitting RETURN (see <a href="#Working%20with%20the%20keyboard">Working with the keyboard</a>) on the source row in the <dfn>ECB-Sources</dfn> or
-<dfn>ECB- History</dfn> windows.
+<li>Source files can be selected by clicking a mouse button (see <a href="#Using%20the%20mouse">Using the mouse</a>) or hitting RETURN (see <a href="#Using%20the%20keyboard">Using the keyboard</a>) on the
+source row in the <dfn>ECB-Sources</dfn> or <dfn>ECB- History</dfn> windows.
 
 <p>IMPORTANT: If you hold down the SHIFT-key while clicking with the
-primary mouse button (see <a href="#Working%20with%20the%20mouse">Working with the mouse</a>) or RETURN
-(see <a href="#Working%20with%20the%20keyboard">Working with the keyboard</a>) on a source row in the ECB-Sources
+primary mouse button (see <a href="#Using%20the%20mouse">Using the mouse</a>) or RETURN
+(see <a href="#Using%20the%20keyboard">Using the keyboard</a>) on a source row in the ECB-Sources
 or ECB-History windows then the source will not be displayed in the
 edit-window but it will be scanned in the background and all its
 contents (e.g. methods and variables) are listed in the <dfn>ECB
@@ -229,6 +331,22 @@ Up:<a rel=up accesskey=u href="#Top">Top</a>
 
 <h2>Activation and Deactivation</h2>
 
+<p>This chapter describes all aspects of activating and deactivating ECB.
+
+<ul>
+<li><a accesskey=1 href="#Standard%20activation">Standard activation</a>:          How to manually (de)activate ECB
+<li><a accesskey=2 href="#Automatic%20activation">Automatic activation</a>:         Automaticaly (de)activating ECB
+</ul>
+
+<p><hr>
+Node:<a name="Standard%20activation">Standard activation</a>,
+Next:<a rel=next accesskey=n href="#Automatic%20activation">Automatic activation</a>,
+Previous:<a rel=previous accesskey=p href="#Activation%20and%20Deactivation">Activation and Deactivation</a>,
+Up:<a rel=up accesskey=u href="#Activation%20and%20Deactivation">Activation and Deactivation</a>
+<br>
+
+<h3>Standard activation and deactivation</h3>
+
 <p>Call <kbd>M-x ecb-activate</kbd> and <kbd>M-x ecb-deactivate</kbd> to activate or
 deactivate ECB. If you want ECB started in a new frame see the option
 <code>ecb-new-ecb-frame</code> (default is nil). <code>ecb-activate</code> always
@@ -237,9 +355,33 @@ raises and selects the ECB-frame even if ECB is already started.
 <p>Because ECB is a global minor-mode it can also be
 (de)activated/toggled by <kbd>M-x ecb-minor-mode</kbd>.
 
+<p><hr>
+Node:<a name="Automatic%20activation">Automatic activation</a>,
+Previous:<a rel=previous accesskey=p href="#Standard%20activation">Standard activation</a>,
+Up:<a rel=up accesskey=u href="#Activation%20and%20Deactivation">Activation and Deactivation</a>
+<br>
+
+<h3>Automatic activation and deactivation</h3>
+
 <p>There are three options for auto. (de)activation ECB after Emacs-start
-and also major-mode based. See <code>ecb-auto-activate</code>,
-<code>ecb-major-modes-activate</code> and <code>ecb-major-modes-deactivate</code>.
+and also major-mode based.
+
+<dl>
+<dt><code>ecb-auto-activate</code>
+<dd>This option is for auto. activating ECB after Emacs-startup. Set this
+to not nil and ECB will automaticaly be started after Emacs comes up.
+
+<br><dt><code>ecb-major-modes-activate</code>
+<dt><code>ecb-major-modes-deactivate</code>
+<dd>These option give you the possibility to activate (rsp. deactivate)
+ECB on a major-mode basis, means you can define for which major-modes
+ECB should be activated and for which modes it should activated.
+
+<p>If activating or deactivating is too strong you can also customize ECB
+with these two option only hiding/showing it's ECB-windows
+(tree-buffers) on a major-mode basis. At last this is nothing more
+than auto. calling <code>ecb-toggle-ecb-windows</code> (see <a href="#Interactive%20ECB%20commands">Interactive ECB commands</a> depending which major-mode is active. 
+</dl>
 
 <p><hr>
 Node:<a name="Usage%20of%20ECB">Usage of ECB</a>,
@@ -254,20 +396,19 @@ Up:<a rel=up accesskey=u href="#Top">Top</a>
 Emacs Code Browser.
 
 <ul>
-<li><a accesskey=1 href="#Working%20with%20the%20mouse">Working with the mouse</a>: 
-<li><a accesskey=2 href="#Working%20with%20the%20keyboard">Working with the keyboard</a>: 
-<li><a accesskey=3 href="#Working%20with%20the%20edit-window">Working with the edit-window</a>: 
-<li><a accesskey=4 href="#Temp-%20and%20compilation-buffers">Temp- and compilation-buffers</a>: 
-<li><a accesskey=5 href="#Rebuilding%20the%20Methods%20buffer">Rebuilding the Methods buffer</a>: 
-<li><a accesskey=6 href="#Changing%20the%20ECB-layout">Changing the ECB-layout</a>: 
-<li><a accesskey=7 href="#Redrawing%20the%20ECB-layout">Redrawing the ECB-layout</a>: 
-<li><a accesskey=8 href="#Hiding%2fShowing%20the%20ECB%20windows">Hiding/Showing the ECB windows</a>: 
-<li><a accesskey=9 href="#Interactive%20ECB%20commands">Interactive ECB commands</a>: 
+<li><a accesskey=1 href="#Using%20the%20mouse">Using the mouse</a>:              Working with the mouse
+<li><a accesskey=2 href="#Using%20the%20keyboard">Using the keyboard</a>:           Working with the keyboard
+<li><a accesskey=3 href="#The%20edit-window">The edit-window</a>:              How to use the edit-window(s)
+<li><a accesskey=4 href="#Temp-%20and%20compile-buffers">Temp- and compile-buffers</a>:    Displaying temp- and compilation-buffers
+<li><a accesskey=5 href="#The%20Methods%20buffer">The Methods buffer</a>:           Using and customizing he Methods-buffer
+<li><a accesskey=6 href="#The%20ECB-layout">The ECB-layout</a>:               Changing, customizing, redrawing the layout
+<li><a accesskey=7 href="#Hiding%20the%20ECB%20windows">Hiding the ECB windows</a>:       Hiding/Showing the ECB-windows
+<li><a accesskey=8 href="#Interactive%20ECB%20commands">Interactive ECB commands</a>:     All interactive user-commands of ECB
 </ul>
 
 <p><hr>
-Node:<a name="Working%20with%20the%20mouse">Working with the mouse</a>,
-Next:<a rel=next accesskey=n href="#Working%20with%20the%20keyboard">Working with the keyboard</a>,
+Node:<a name="Using%20the%20mouse">Using the mouse</a>,
+Next:<a rel=next accesskey=n href="#Using%20the%20keyboard">Using the keyboard</a>,
 Previous:<a rel=previous accesskey=p href="#Usage%20of%20ECB">Usage of ECB</a>,
 Up:<a rel=up accesskey=u href="#Usage%20of%20ECB">Usage of ECB</a>
 <br>
@@ -316,8 +457,10 @@ combinations of primary and secondary mouse-buttons are possible:
 
 <ul>
 <li>primary: mouse-2, secondary: C-mouse-2 (means mouse-2 while CTRL-key
-is pressed). This is the default setting. 
+is pressed). This is the default setting.
+
 <li>primary: mouse-1, secondary: C-mouse-1
+
 <li>primary: mouse-1, secondary: mouse-2
 </ul>
 
@@ -328,9 +471,9 @@ ECB again to take effect
 for the clicked item where you can choose several senseful actions.
 
 <p><hr>
-Node:<a name="Working%20with%20the%20keyboard">Working with the keyboard</a>,
-Next:<a rel=next accesskey=n href="#Working%20with%20the%20edit-window">Working with the edit-window</a>,
-Previous:<a rel=previous accesskey=p href="#Working%20with%20the%20mouse">Working with the mouse</a>,
+Node:<a name="Using%20the%20keyboard">Using the keyboard</a>,
+Next:<a rel=next accesskey=n href="#The%20edit-window">The edit-window</a>,
+Previous:<a rel=previous accesskey=p href="#Using%20the%20mouse">Using the mouse</a>,
 Up:<a rel=up accesskey=u href="#Usage%20of%20ECB">Usage of ECB</a>
 <br>
 
@@ -346,15 +489,15 @@ other minor-modes or packages you can define very easy another prefix.
 Please read carefully the description of <code>ecb-key-map</code>!
 
 <ul>
-<li><a accesskey=1 href="#Navigation">Navigation</a>: 
-<li><a accesskey=2 href="#Incremental%20search">Incremental search</a>: 
+<li><a accesskey=1 href="#Navigation">Navigation</a>:                   Keyboard navigation in a tree-buffer
+<li><a accesskey=2 href="#Incremental%20search">Incremental search</a>:           Find nodes as fast as possible
 </ul>
 
 <p><hr>
 Node:<a name="Navigation">Navigation</a>,
 Next:<a rel=next accesskey=n href="#Incremental%20search">Incremental search</a>,
-Previous:<a rel=previous accesskey=p href="#Working%20with%20the%20keyboard">Working with the keyboard</a>,
-Up:<a rel=up accesskey=u href="#Working%20with%20the%20keyboard">Working with the keyboard</a>
+Previous:<a rel=previous accesskey=p href="#Using%20the%20keyboard">Using the keyboard</a>,
+Up:<a rel=up accesskey=u href="#Using%20the%20keyboard">Using the keyboard</a>
 <br>
 
 <h4>Navigation</h4>
@@ -364,7 +507,7 @@ Up:<a rel=up accesskey=u href="#Working%20with%20the%20keyboard">Working with th
 <ul>
 <li>RETURN does the same as the primary button and C-RETURN does the same
 as the secondary button. The terms primary and secondary are explained
-in <a href="#Working%20with%20the%20mouse">Working with the mouse</a>. S-RETURN is the same as the
+in <a href="#Using%20the%20mouse">Using the mouse</a>. S-RETURN is the same as the
 SHIFT-click (see <a href="#ECB%20Sources">ECB Sources</a>). See also the option
 <code>ecb-tree-RET-selects-edit-window</code> and the function
 <code>ecb-toggle-RET-selects-edit-window</code> which is bound to <kbd>C-t</kbd>
@@ -394,7 +537,7 @@ senseful correct direction.
 <p><hr>
 Node:<a name="Incremental%20search">Incremental search</a>,
 Previous:<a rel=previous accesskey=p href="#Navigation">Navigation</a>,
-Up:<a rel=up accesskey=u href="#Working%20with%20the%20keyboard">Working with the keyboard</a>
+Up:<a rel=up accesskey=u href="#Using%20the%20keyboard">Using the keyboard</a>
 <br>
 
 <h4>Incremental search for a node in current tree-buffer</h4>
@@ -447,9 +590,9 @@ of the ecb-frame. This makes window-selection a child´s play. For
 example you can jump into the method-window by hitting <kbd>C-c . m</kbd>.
 
 <p><hr>
-Node:<a name="Working%20with%20the%20edit-window">Working with the edit-window</a>,
-Next:<a rel=next accesskey=n href="#Temp-%20and%20compilation-buffers">Temp- and compilation-buffers</a>,
-Previous:<a rel=previous accesskey=p href="#Working%20with%20the%20keyboard">Working with the keyboard</a>,
+Node:<a name="The%20edit-window">The edit-window</a>,
+Next:<a rel=next accesskey=n href="#Temp-%20and%20compile-buffers">Temp- and compile-buffers</a>,
+Previous:<a rel=previous accesskey=p href="#Using%20the%20keyboard">Using the keyboard</a>,
 Up:<a rel=up accesskey=u href="#Usage%20of%20ECB">Usage of ECB</a>
 <br>
 
@@ -499,13 +642,13 @@ carefully the documentation of this option!
 adviced functions is <code>ecb-layout-always-operate-in-edit-window</code>!
 
 <p><hr>
-Node:<a name="Temp-%20and%20compilation-buffers">Temp- and compilation-buffers</a>,
-Next:<a rel=next accesskey=n href="#Rebuilding%20the%20Methods%20buffer">Rebuilding the Methods buffer</a>,
-Previous:<a rel=previous accesskey=p href="#Working%20with%20the%20edit-window">Working with the edit-window</a>,
+Node:<a name="Temp-%20and%20compile-buffers">Temp- and compile-buffers</a>,
+Next:<a rel=next accesskey=n href="#The%20Methods%20buffer">The Methods buffer</a>,
+Previous:<a rel=previous accesskey=p href="#The%20edit-window">The edit-window</a>,
 Up:<a rel=up accesskey=u href="#Usage%20of%20ECB">Usage of ECB</a>
 <br>
 
-<h3>Temp- and compilation-buffers display in ECB</h3>
+<h3>Temp- and compile-buffers display in ECB</h3>
 
 <p>If you call any help in Emacs, e.g. by calling <code>describe-function</code>, or
 if you do a completion in the minibuffer, then Emacs displays the
@@ -535,22 +678,89 @@ the function <code>ecb-toggle-enlarged-compilation-window</code>.
 
 <li>With the option <code>ecb-layout-switch-to-compilation-window</code> you can
 modify the switch-to-buffer...-functions to work best if your layout
-contains a compilation-window. See the docstring of this option. 
+contains a compilation-window. See the docstring of this option.
+
+<li>With the command <code>ecb-cycle-through-compilation-buffers</code>
+(see <a href="#Interactive%20ECB%20commands">Interactive ECB commands</a>) you can cycle through all current
+open compilation-buffers in the sense of
+<code>ecb-compilation-buffer-p</code> very fast. 
 </ul>
 
 <p>But because ECB works best without such a durable compilation-window
 you should read the documentation of these two options carefully!
 
 <p><hr>
-Node:<a name="Rebuilding%20the%20Methods%20buffer">Rebuilding the Methods buffer</a>,
-Next:<a rel=next accesskey=n href="#Changing%20the%20ECB-layout">Changing the ECB-layout</a>,
-Previous:<a rel=previous accesskey=p href="#Temp-%20and%20compilation-buffers">Temp- and compilation-buffers</a>,
+Node:<a name="The%20Methods%20buffer">The Methods buffer</a>,
+Next:<a rel=next accesskey=n href="#The%20ECB-layout">The ECB-layout</a>,
+Previous:<a rel=previous accesskey=p href="#Temp-%20and%20compile-buffers">Temp- and compile-buffers</a>,
 Up:<a rel=up accesskey=u href="#Usage%20of%20ECB">Usage of ECB</a>
 <br>
 
-<h3>Rebuilding the ECB-Methods buffer</h3>
+<h3>Using and customizing the ECB-Methods buffer</h3>
 
-<p>In almost all cases there is NO need to manually rebuild the
+<p>This chapter describes how to use and customize the Methods-buffer of
+ECB.
+
+<ul>
+<li><a accesskey=1 href="#Customizing%20the%20display">Customizing the display</a>:      How to customize the Methods-buffer display
+<li><a accesskey=2 href="#Rebuilding%20the%20Methods">Rebuilding the Methods</a>:       When to rebuild the Methods-buffer
+</ul>
+
+<p><hr>
+Node:<a name="Customizing%20the%20display">Customizing the display</a>,
+Next:<a rel=next accesskey=n href="#Rebuilding%20the%20Methods">Rebuilding the Methods</a>,
+Previous:<a rel=previous accesskey=p href="#The%20Methods%20buffer">The Methods buffer</a>,
+Up:<a rel=up accesskey=u href="#The%20Methods%20buffer">The Methods buffer</a>
+<br>
+
+<h4>Customizing the display of the Methods-buffer</h4>
+
+<p>The ECB-Methods buffer is probably the most important browsing window
+offeren by ECB. It displays all semantic informations of the current
+buffer in the edit-window.
+
+<p>ECB gets all informations displayed in this Methods-buffer from the
+semantic-library. This library parses auto. the current source-buffer
+in the edit-window of ECB and returns all information in form of
+<dfn>tokens</dfn> to ECB which displays them in a browsable form in its
+Method-buffer. See <a href="#ECB%20Methods">ECB Methods</a> for information how to use the
+Methods-buffer.
+
+<p>There are several options to customize which tokens ECB should display
+in general, if the tokens should be collapsed or expanded, how to
+fontify them (i.e. syntax-highlighting) and something more.
+
+<dl>
+<dt><code>ecb-show-tokens</code>
+<dd>Which semantic-tokens (e.g. types, methods, variables etc.) should be
+displayed and should they be collapsed, flattened or expanded. Sorting
+is also possible.
+
+<br><dt><code>ecb-font-lock-tokens</code>
+<dt><code>ecb-type-token-display</code>
+<dd>How to fontify the tokens in the Method-buffer
+
+<br><dt><code>ecb-token-display-function</code>
+<dd>ECB and semantic offer several predefined functions for displaying the
+tokens. Here you can customize, what informations tokens should
+contain (only the method-name or the whole signature or something
+else) and what notation should be used, e.g. UML or not.
+
+</dl>
+
+<p>These are the most important options for this topic but it is
+recommended to have a look into the customize-group <code>ecb-methods</code>
+(see <a href="#ecb-methods">ecb-methods</a>) and check all the options offered there!
+
+<p><hr>
+Node:<a name="Rebuilding%20the%20Methods">Rebuilding the Methods</a>,
+Previous:<a rel=previous accesskey=p href="#Customizing%20the%20display">Customizing the display</a>,
+Up:<a rel=up accesskey=u href="#The%20Methods%20buffer">The Methods buffer</a>
+<br>
+
+<h4>Rebuilding the Methods-buffer</h4>
+
+<p>In almost all cases there is <strong>NO</strong> need to manually rebuild the
 method-buffer, because it is always done automatically if necessary. 
 But nevertheless there exist a few rare scenarios where a complete
 manual rebuild can be necessary. Here is one example:
@@ -565,13 +775,31 @@ method buffer!
 <p>A complete manually rebuild is done by <code>ecb-rebuild-methods-buffer</code>.
 
 <p><hr>
-Node:<a name="Changing%20the%20ECB-layout">Changing the ECB-layout</a>,
-Next:<a rel=next accesskey=n href="#Redrawing%20the%20ECB-layout">Redrawing the ECB-layout</a>,
-Previous:<a rel=previous accesskey=p href="#Rebuilding%20the%20Methods%20buffer">Rebuilding the Methods buffer</a>,
+Node:<a name="The%20ECB-layout">The ECB-layout</a>,
+Next:<a rel=next accesskey=n href="#Hiding%20the%20ECB%20windows">Hiding the ECB windows</a>,
+Previous:<a rel=previous accesskey=p href="#The%20Methods%20buffer">The Methods buffer</a>,
 Up:<a rel=up accesskey=u href="#Usage%20of%20ECB">Usage of ECB</a>
 <br>
 
-<h3>Changing and customizing the ECB-layout</h3>
+<h3>Changing, customizing and redrawing the ECB-layout</h3>
+
+<p>The term <dfn>ECB-layout</dfn> means in which windows the ECB-frame is
+divided. This chapter describes all aspects concerning this layout,
+especially changing, customizing and redrawing it.
+
+<ul>
+<li><a accesskey=1 href="#Changing%20the%20ECB-layout">Changing the ECB-layout</a>:      How to change and customize the layout
+<li><a accesskey=2 href="#Redrawing%20the%20ECB-layout">Redrawing the ECB-layout</a>:     How and when redrawing the layout
+</ul>
+
+<p><hr>
+Node:<a name="Changing%20the%20ECB-layout">Changing the ECB-layout</a>,
+Next:<a rel=next accesskey=n href="#Redrawing%20the%20ECB-layout">Redrawing the ECB-layout</a>,
+Previous:<a rel=previous accesskey=p href="#The%20ECB-layout">The ECB-layout</a>,
+Up:<a rel=up accesskey=u href="#The%20ECB-layout">The ECB-layout</a>
+<br>
+
+<h4>Changing and customizing the ECB-layout</h4>
 
 <p>ECB offers several predefined layouts. To see which layouts are
 available and choose an appropriate one just customize the option
@@ -584,7 +812,7 @@ the different available layouts.
 
 <p>In addition to the general layout you can specify if the layout should
 contain a durable compilation-window at the bottom of the frame, see
-<code>ecb-compile-window-height</code> (see <a href="#Temp-%20and%20compilation-buffers">Temp- and compilation-buffers</a>).
+<code>ecb-compile-window-height</code> (see <a href="#Temp-%20and%20compile-buffers">Temp- and compile-buffers</a>).
 
 <p>Maybe you want also change the look&amp;feel of the tree-buffers. Then you
 can change the location of the collapse- and expand-symbols and the
@@ -593,12 +821,11 @@ indendation of sub-nodes in a tree. See <code>ecb-tree-indent</code> and
 
 <p><hr>
 Node:<a name="Redrawing%20the%20ECB-layout">Redrawing the ECB-layout</a>,
-Next:<a rel=next accesskey=n href="#Hiding%2fShowing%20the%20ECB%20windows">Hiding/Showing the ECB windows</a>,
 Previous:<a rel=previous accesskey=p href="#Changing%20the%20ECB-layout">Changing the ECB-layout</a>,
-Up:<a rel=up accesskey=u href="#Usage%20of%20ECB">Usage of ECB</a>
+Up:<a rel=up accesskey=u href="#The%20ECB-layout">The ECB-layout</a>
 <br>
 
-<h3>Redrawing the ECB-layout</h3>
+<h4>Redrawing the ECB-layout</h4>
 
 <p>If you have unintenionally destroyed the ECB-layout, you can always
 restore the layout with calling <code>ecb-redraw-layout</code>. This is even
@@ -614,9 +841,9 @@ may have some drawbacks! On normal machines the full redraw should be
 done in &lt;&lt; 1s!
 
 <p><hr>
-Node:<a name="Hiding%2fShowing%20the%20ECB%20windows">Hiding/Showing the ECB windows</a>,
+Node:<a name="Hiding%20the%20ECB%20windows">Hiding the ECB windows</a>,
 Next:<a rel=next accesskey=n href="#Interactive%20ECB%20commands">Interactive ECB commands</a>,
-Previous:<a rel=previous accesskey=p href="#Redrawing%20the%20ECB-layout">Redrawing the ECB-layout</a>,
+Previous:<a rel=previous accesskey=p href="#The%20ECB-layout">The ECB-layout</a>,
 Up:<a rel=up accesskey=u href="#Usage%20of%20ECB">Usage of ECB</a>
 <br>
 
@@ -631,7 +858,7 @@ editing and you don't need the browsing windows all the time.
 
 <p><hr>
 Node:<a name="Interactive%20ECB%20commands">Interactive ECB commands</a>,
-Previous:<a rel=previous accesskey=p href="#Hiding%2fShowing%20the%20ECB%20windows">Hiding/Showing the ECB windows</a>,
+Previous:<a rel=previous accesskey=p href="#Hiding%20the%20ECB%20windows">Hiding the ECB windows</a>,
 Up:<a rel=up accesskey=u href="#Usage%20of%20ECB">Usage of ECB</a>
 <br>
 
@@ -730,13 +957,15 @@ Point must stay in an edit-window otherwise nothing is done. This
 method is merely needed if semantic parses not the whole buffer
 because it reaches a not parsable code. Examples when a call to this
 function is necessary:
-If an elisp-file is parsed which contains in the middle a defun X
+
+<p>If an elisp-file is parsed which contains in the middle a defun X
 where the closing ) is missing then semantic parses only until this
 defun X is reached and you will get an incomplete ECB-method buffer. 
 In such a case you must complete the defun X and then call this
 function to completely reparse the elisp-file and rebuild the ECB
-method buffer! 
-If you change only the name of a method or a variable and you want
+method buffer!
+
+<p>If you change only the name of a method or a variable and you want
 the new name be shown immediately in the ECB-method buffer then you
 must call this function. 
 </td></tr>
@@ -776,12 +1005,14 @@ Clears the ECB history-buffer. If <var>CLEARALL</var> is <code>nil</code> then
 the behavior is defined in the option <code>ecb-clear-history-behavior</code>
 otherwise the value of <var>CLEARALL</var> overrides the value of this
 option:
+
 <ul>
 <li>&lt; 0: Means not-existing-buffers
 <li>&gt; 0: Means existing-buffers
 <li>= 0: Means all
 </ul>
-For further explanation see <code>ecb-clear-history-behavior</code>. 
+
+<p>For further explanation see <code>ecb-clear-history-behavior</code>. 
 </td></tr>
 </table>
 
@@ -953,21 +1184,7 @@ takes first effect after restarting ECB!
 <p>
 <table width="100%">
 <tr>
-<td align="left"><b>ecb-cycle-switch-to-compilation-buffer</b><i>
-</i></td>
-<td align="right">Command</td>
-</tr>
-</table>
-<table width="95%" align="center">
-<tr><td>
-Switch to the given compilation buffer in the compilation window. 
-</td></tr>
-</table>
-
-<p>
-<table width="100%">
-<tr>
-<td align="left"><b>ecb-cycle-through-compilation-buffers</b><i>
+<td align="left"><b>ecb-cycle-through-compilation-buffers</b><i> &amp;optional choose-buffer
 </i></td>
 <td align="right">Command</td>
 </tr>
@@ -975,11 +1192,21 @@ Switch to the given compilation buffer in the compilation window.
 <table width="95%" align="center">
 <tr><td>
 Cycle through all compilation buffers currently open and display them
-within the compilation window <code>ecb-compile-window</code>. If the currently
-opened buffer within the compilation window is not a compilation
-buffer, we jump to the first compilation buffer. If not we try to loop
-through all compilation buffers. If we hit the end we go back to the
-beginning. See <code>ecb-compilation-buffer-p</code>. 
+within the compilation window <code>ecb-compile-window</code>. If the
+currently opened buffer within the compilation window is not a
+compilation buffer, we jump to the first compilation buffer. If not we
+try to loop through all compilation buffers. If we hit the end we go
+back to the beginning.
+
+<p>If <var>CHOOSE-BUFFER</var> is not <code>nil</code> then the user will be
+prompted for the compilation-buffer to swtich to.
+
+<p>See also the option <code>ecb-layout-switch-to-compilation-window</code>! 
+The difference is that this cycling-function offers only
+compilation-buffers in the sense of <code>ecb-compilation-buffer-p</code>
+whereas the adviced version of <code>switch-to-buffer</code> offers any
+buffer but switches to <code>ecb-compile-window</code> if a
+compilation-buffer! 
 </td></tr>
 </table>
 
@@ -1067,26 +1294,26 @@ Up:<a rel=up accesskey=u href="#Top">Top</a>
 
 <h2>Customizing ECB</h2>
 
-<p>All customization of ECB is divided into the following customize
-groups:
+<p>This chapter describes how to customize ECB for your personal taste. 
+The first chapter gives an overview of the most important options and
+the second one lists all options of ECB.
 
 <ul>
-<li>ecb-general: General customization of ECB
-<li>ecb-directories: Customization of the ECB-directories buffer. 
-<li>ecb-sources: Customization of the ECB-sources buffer. 
-<li>ecb-methods: Customization of the ECB-methods buffer. 
-<li>ecb-history: Customization of the ECB-history buffer. 
-<li>ecb-layout: Customization of the layout of ECB. 
-<li>ecb-faces: All faces used by ECB to highlight nodes and some other stuff. 
-<li>ecb-download: Options for downloading another ECB version from within ECB. 
+<li><a accesskey=1 href="#Most%20important%20options">Most important options</a>:       Which option you must know
+<li><a accesskey=2 href="#Customizable%20options">Customizable options</a>:         All customizable options of ECB
 </ul>
 
-<p>You can highly customize all the ECB behavior/layout so just go to
-this groups and you will see all well documented ECB-options. The
-easiest access for this customize groups is via the menu "ECB".
+<p><hr>
+Node:<a name="Most%20important%20options">Most important options</a>,
+Next:<a rel=next accesskey=n href="#Customizable%20options">Customizable options</a>,
+Previous:<a rel=previous accesskey=p href="#Customizing">Customizing</a>,
+Up:<a rel=up accesskey=u href="#Customizing">Customizing</a>
+<br>
 
-<p>Here are the most important options (it is recommended to check the following
-options before working with ECB):
+<h3>The most important options of ECB</h3>
+
+<p>Here are the most important options (it is recommended to check at
+least the following options before working with ECB):
 
 <dl>
 <dt><code>ecb-source-path</code>
@@ -1099,12 +1326,12 @@ or in HTML format in a web-browser.
 <dt><code>ecb-major-modes-deactivate</code>
 <dd>Auto. (de)activation of ECB
 <br><dt><code>ecb-key-map</code>
-<dd>All ECB-keybindings incl. a common prefixkey (see <a href="#Working%20with%20the%20keyboard">Working with the keyboard</a>). 
+<dd>All ECB-keybindings incl. a common prefixkey (see <a href="#Using%20the%20keyboard">Using the keyboard</a>). 
 <br><dt><code>ecb-new-ecb-frame</code>
 <dd>Should ECB create a new frame at activation time. 
 <br><dt><code>ecb-primary-secondary-mouse-buttons</code>
 <dt><code>ecb-primary-mouse-jump-destination</code>
-<dd>Define how to use the mouse (see <a href="#Working%20with%20the%20mouse">Working with the mouse</a>). 
+<dd>Define how to use the mouse (see <a href="#Using%20the%20mouse">Using the mouse</a>). 
 <br><dt><code>ecb-tree-expand-symbol-before</code>
 <dt><code>ecb-tree-indent</code>
 <dd>The look&amp;feel of the trees. Maybe you like a value of 4 for the
@@ -1118,11 +1345,2509 @@ latter one if you display the expand-symbol before (see <a href="#Changing%20the
 ECB-frame and also the location of these windows (see <a href="#Changing%20the%20ECB-layout">Changing the ECB-layout</a>). 
 <br><dt><code>ecb-token-display-function</code>
 <dt><code>ecb-type-token-display</code>
-<dd>How to display the entries in the ECB-method window. 
+<dt><code>ecb-show-tokens</code>
+<dd>How to display the entries in the ECB-method window
+(see <a href="#Customizing%20the%20display">Customizing the display</a>). 
 </dl>
 
-<p>But especially all the options in the customize groups 'ecb-layout',
-'ecb-methods' and 'ecb-face-options' are also worth to be checked.
+<p>But to make ECB working best for you it is also recommened to have a
+look at <a href="#Customizable%20options">Customizable options</a>!
+
+<p><hr>
+Node:<a name="Customizable%20options">Customizable options</a>,
+Previous:<a rel=previous accesskey=p href="#Most%20important%20options">Most important options</a>,
+Up:<a rel=up accesskey=u href="#Customizing">Customizing</a>
+<br>
+
+<h3>All customizable options of ECB</h3>
+
+<p>All customization of ECB is divided into the following "customize
+groups". You can highly customize all the ECB behavior/layout so just
+go to these groups and you will see all well documented ECB-options.
+
+<ul>
+<li><a accesskey=1 href="#ecb-general">ecb-general</a>:                  General customizing ECB
+<li><a accesskey=2 href="#ecb-directories">ecb-directories</a>:              Customizing the ECB-directories
+<li><a accesskey=3 href="#ecb-sources">ecb-sources</a>:                  Customizing the ECB-sources
+<li><a accesskey=4 href="#ecb-methods">ecb-methods</a>:                  Customizing the ECB-methods
+<li><a accesskey=5 href="#ecb-history">ecb-history</a>:                  Customizing the ECB-history
+<li><a accesskey=6 href="#ecb-layout">ecb-layout</a>:                   Customizing the ECB-layout
+<li><a accesskey=7 href="#ecb-face-options">ecb-face-options</a>:             Customizing options for faces
+<li><a accesskey=8 href="#ecb-faces">ecb-faces</a>:                    Customizing the faces
+<li><a accesskey=9 href="#ecb-download">ecb-download</a>:                 Customizing how to download ECB
+</ul>
+
+<p><hr>
+Node:<a name="ecb-general">ecb-general</a>,
+Next:<a rel=next accesskey=n href="#ecb-directories">ecb-directories</a>,
+Previous:<a rel=previous accesskey=p href="#Customizable%20options">Customizable options</a>,
+Up:<a rel=up accesskey=u href="#Customizable%20options">Customizable options</a>
+<br>
+
+<h4>Group ecb-general</h4>
+
+<p>This group contains the following options:
+
+<p>
+<table width="100%">
+<tr>
+<td align="left"><b>ecb-activate-before-layout-draw-hook</b><i>
+</i></td>
+<td align="right">User Option</td>
+</tr>
+</table>
+<table width="95%" align="center">
+<tr><td>
+Normal hook run at the end of activating the ecb-package by running
+<code>ecb-activate</code>. This hooks are run after all the internal setup
+process but directly before(!) drawing the layout specified in
+<code>ecb-layout</code> (means before dividing the frame into several
+windows).
+
+<p>A senseful using of this hook can be maximizing the Emacs-frame for
+example, because this should be done before the layout is drawn
+because ECB computes the size of the ECB-windows with the current
+frame size! If you need a hook-option for the real end of the
+activating process (i.e. after the layout-drawing) look at
+<code>ecb-activate-hook</code>. 
+</td></tr>
+</table>
+
+<p>
+<table width="100%">
+<tr>
+<td align="left"><b>ecb-activate-hook</b><i>
+</i></td>
+<td align="right">User Option</td>
+</tr>
+</table>
+<table width="95%" align="center">
+<tr><td>
+Normal hook run at the end of activating the ecb-package by running
+<code>ecb-activate</code>. This hooks are run at the real end of the
+activating process, means after the layout has been drawn!. If you
+need hooks which are run direct before the layout-drawing look at
+<code>ecb-activate-before-layout-draw-hook</code>. 
+</td></tr>
+</table>
+
+<p>
+<table width="100%">
+<tr>
+<td align="left"><b>ecb-auto-activate</b><i>
+</i></td>
+<td align="right">User Option</td>
+</tr>
+</table>
+<table width="95%" align="center">
+<tr><td>
+Automatically startup ECB when Emacs starts up. This should only be
+true if you always want to run <code>ecb-activate</code>. 
+</td></tr>
+</table>
+
+<p>
+<table width="100%">
+<tr>
+<td align="left"><b>ecb-auto-compatibility-check</b><i>
+</i></td>
+<td align="right">User Option</td>
+</tr>
+</table>
+<table width="95%" align="center">
+<tr><td>
+Check at ECB-startup if all ECB-options have correct values. If not
+nil then all ECB-options are checked if their current value have the
+correct type. It the type is incorrect the option is either auto. 
+upgraded to the new type or reset to the default-value of current ECB
+if no upgrade is possible. This feature can also upgrade options which
+are renamed in current ECB and try to transform the old-value to the
+new named option. After startup all upgraded or reset options are
+displayed with their old (before upgrade/reset) and new values. See
+also the commands <code>ecb-upgrade-options</code> and
+<code>ecb-display-upgraded-options</code>. If this option is off then the
+user can perform the check and reset manually with
+<code>ecb-upgrade-options</code>. 
+See <a href="#Auto.%20option-upgrading">Auto. option-upgrading</a>. 
+</td></tr>
+</table>
+
+<p>
+<table width="100%">
+<tr>
+<td align="left"><b>ecb-current-buffer-sync-hook</b><i>
+</i></td>
+<td align="right">User Option</td>
+</tr>
+</table>
+<table width="95%" align="center">
+<tr><td>
+Normal hook run at the end of <code>ecb-current-buffer-sync</code>. 
+</td></tr>
+</table>
+
+<p>
+<table width="100%">
+<tr>
+<td align="left"><b>ecb-deactivate-hook</b><i>
+</i></td>
+<td align="right">User Option</td>
+</tr>
+</table>
+<table width="95%" align="center">
+<tr><td>
+Normal hook run at the end of deactivating (but before the ecb-layout
+is cleared!) ECB by running <code>ecb-deactivate</code>. 
+</td></tr>
+</table>
+
+<p>
+<table width="100%">
+<tr>
+<td align="left"><b>ecb-debug-mode</b><i>
+</i></td>
+<td align="right">User Option</td>
+</tr>
+</table>
+<table width="95%" align="center">
+<tr><td>
+If not nil ECB displays debug-information in the Messages-buffer. This
+is done for some critical situations concerning semantic-tokens and
+their overlays (or extends for XEmacs). Normally you should not need
+this switched on! But if you get errors like "destroyed extend" for
+XEmacs or "wrong-argument-type" concerning overlays for GNU Emacs then
+you should switch on this option and submitting a bug-report to the
+ecb-mailing-list (<code>ecb-submit-problem-report</code>) after getting the
+error again! 
+</td></tr>
+</table>
+
+<p>
+<table width="100%">
+<tr>
+<td align="left"><b>ecb-key-map</b><i>
+</i></td>
+<td align="right">User Option</td>
+</tr>
+</table>
+<table width="95%" align="center">
+<tr><td>
+Specifies all keybindings for the ECB minor-mode keymap. The value is
+a cons-cell where the car is a common-prefix key for all the
+keybindings. The cdr is a list of keybindings each of them a list
+again. A keybinding has the following form:
+
+<br><pre>'(&lt;common-prefix-flag&gt; &lt;keysequence&gt; &lt;function&gt;) where
+</pre>
+
+<dl>
+<dt><code>&lt;common-prefix-flag&gt;</code>
+<dd>If t then the common-prefixkey defined as car of the value (see above)
+is used.
+
+<br><dt><code>&lt;keysequence&gt;</code>
+<dd>If the common prefixkey is used then the final keybinding is the
+concatenation of the common-prefixkey (see above) and this
+keysequence.
+
+<br><dt><code>&lt;function&gt;:</code>
+<dd>The function to bind to the key. This can also be a lambda-expression
+. 
+</dl>
+
+<p>It is highly recommended to use one of the standard keys C-c or C-x as
+first key of your common-prefixkey!
+
+<p>You MUST change this option via customize to take effect!
+
+<p>All keysequences must be inserted as a string and must follow the
+syntax needed by <code>read-kbd-macro</code> or <code>kbd</code>. This means you
+can insert the key in the same manner <kbd>C-h k</kbd> displays keysequences. 
+Here is the summary of the syntax:
+
+<p>Text is divided into "words" separated by whitespace. Except for the words
+described below, the characters of each word go directly as characters of the
+keysequence. The whitespace that separates words is ignored. Whitespace in the
+macro must be written explicitly, as in <kbd>C-c SPC</kbd>.
+
+<ul>
+<li>The special words RET, SPC, TAB, DEL, LFD, ESC, and NUL represent
+special control characters. The words must be written in uppercase.
+
+<li>A word in angle brackets, e.g., &lt;return&gt;, &lt;down&gt;, &lt;left&gt; or &lt;f1&gt;,
+represents a function key. (Note that in the standard configuration,
+the function key &lt;return&gt; and the control key RET are synonymous.). 
+You can use angle brackets on the words RET, SPC, etc., but they are
+not required there.
+
+<li>Keys can be written by their ASCII code, using a backslash followed by
+up to six octal digits. This is the only way to represent keys with
+codes above ÿ.
+
+<li>One or more prefixes M- (meta), C- (control), S- (shift), A- (alt), H-
+(hyper), and s- (super) may precede a character or key notation. For
+function keys, the prefixes may go inside or outside of the brackets:
+C-&lt;down&gt; = &lt;C-down&gt;. The prefixes may be written in any order: M-C-x =
+C-M-x. Prefixes are not allowed on multi-key words, e.g., C-abc,
+except that the Meta prefix is allowed on a sequence of digits and
+optional minus sign: M-123 = M- M-1 M-2 M-3.
+
+<li>The <code>^</code> notation for control characters also works: ^M = C-m. 
+</ul>
+
+</td></tr>
+</table>
+
+<p>
+<table width="100%">
+<tr>
+<td align="left"><b>ecb-major-modes-activate</b><i>
+</i></td>
+<td align="right">User Option</td>
+</tr>
+</table>
+<table width="95%" align="center">
+<tr><td>
+List of major-modes for which ECB shoulb be activated or shown. Do not
+mistake this option with <code>ecb-auto-activate</code>. The latter one is
+for activating ECB after Emacs-startup (even without opening a buffer)
+and this one is for defining for which major-modes ECB should be
+activated if the mode goes active!
+
+<p>The behaviour is like follows: If a mode is contained in this option
+ECB is activated after activating this mode (if ECB was deactivated
+before) or the ECB-windows are shown if ECB was already active but its
+windows were hidden. In every case ECB is activated with visible
+ECB-windows afterwards!
+
+<p>For every major mode there can be specified an <code>ecb-layout-nr</code>:
+
+<ul>
+<li><code>default</code>:
+The value customized with <code>ecb-layout-nr</code> is choosen. 
+<li>an integer:
+ECB is activated with this layout-nr. This changes the value of
+<code>ecb-layout-nr</code> but only for current emacs-session! But the
+layout is only changed if ECB was activated, if just the ECB-windows
+were shown, the current layout is used! 
+</ul>
+
+<p>There are two additional options:
+
+<ul>
+<li><code>none</code>:
+No major-modes should activate ECB automatically. 
+<li>a regexp:
+This means all major-modes which are not listed in
+<code>ecb-major-modes-deactivate</code> activate ECB except the symbol-name
+of <code>major-mode</code> matches this regexp. If this option is set then
+the default regexp excludes all Info- and customize-buffers because
+this buffers should not change anything in the ECB-activation state. 
+</ul>
+
+<p>Any auto. activation is only done if the current-frame is unsplitted
+to avoid changing unnecessarily or unintentionally the frame-layout if
+the user just jumps between different windows. 
+</td></tr>
+</table>
+
+<p>
+<table width="100%">
+<tr>
+<td align="left"><b>ecb-major-modes-deactivate</b><i>
+</i></td>
+<td align="right">User Option</td>
+</tr>
+</table>
+<table width="95%" align="center">
+<tr><td>
+List of major-modes for which ECB should be deactivated or hidden. 
+Specify if ECB should be deactivated or at least hidden if a
+major-mode is active. For each major-mode there must be added an
+action what should be done:
+
+<ul>
+<li><code>hide</code>:
+ECB just hides all the ECB windows like with <code>ecb-hide-ecb-windows</code>. 
+<li><code>deactivate</code>:
+ECB is completely deactivated after activating the major-mode. 
+</ul>
+
+<p>There are two additional options:
+
+<ul>
+<li><code>none</code>:
+No major-modes should deactivate/hide ECB automatically.
+
+<li>A cons for the meaning "All except the activated modes of
+<code>ecb-major-modes-activate</code>". The car of this cons can be:
+
+<ul>
+<li><code>hide-all-except-activated</code>:
+All major-modes which are not listed in
+<code>ecb-major-modes-activate</code> hide the ECB-windows. 
+<li><code>deactivate-all-except-activated</code>:
+All major-modes which are not listed in
+<code>ecb-major-modes-activate</code> deactivate ECB. 
+</ul>
+
+<p>The cdr of this cons is a regexp: This means all major-modes which are
+not listed in <code>ecb-major-modes-activate</code> deactivate/hide ECB
+except the symbol-name of <code>major-mode</code> matches this regexp. If
+this option is set then the default regexp excludes all Info- and
+customize-buffers because this buffers should not change anything in
+the ECB-activation state. 
+</ul>
+
+<p>If a major-mode is listed in <code>ecb-major-modes-activate</code> as well
+as in <code>ecb-major-modes-deactivate</code> then ECB is activated!
+
+<p>Any auto. deactivation/hiding is only done if the edit-window of ECB
+is unsplitted and point is in the edit-window to avoid changing
+unnecessarily or unintentionally the frame-layout if the user just
+jumps between different edit-windows, the tree-windows and the
+compile-window of ECB. 
+</td></tr>
+</table>
+
+<p>
+<table width="100%">
+<tr>
+<td align="left"><b>ecb-minor-mode-text</b><i>
+</i></td>
+<td align="right">User Option</td>
+</tr>
+</table>
+<table width="95%" align="center">
+<tr><td>
+String to display in the mode line when ECB minor mode is active. 
+(When the string is not empty, make sure that it has a leading space.) 
+</td></tr>
+</table>
+
+<p>
+<table width="100%">
+<tr>
+<td align="left"><b>ecb-primary-mouse-jump-destination</b><i>
+</i></td>
+<td align="right">User Option</td>
+</tr>
+</table>
+<table width="95%" align="center">
+<tr><td>
+Jump-destination of a primary mouse-button click (see
+<code>ecb-primary-secondary-mouse-buttons</code>) in an ECB-window, if you
+click onto a source or method or variable. Defines in which
+edit-window (if splitted) ECB does the "right" action (opening the
+source, jumping to a method/variable). There are two possible choices:
+
+<ul>
+<li><code>left-top</code>:
+Does the "right" action always in the left/topmost edit-window. 
+<li><code>last-point</code>:
+Does the "right" action always in that edit-window which had the point
+before. 
+</ul>
+
+<p>If the edit-window is not splitted this setting doesn't matter.
+
+<p>Note: A click with the secondary mouse-button (see again
+<code>ecb-primary-secondary-mouse-buttons</code> does the "right" action
+always in the "other" window related to the setting in this option. 
+</td></tr>
+</table>
+
+<p>
+<table width="100%">
+<tr>
+<td align="left"><b>ecb-primary-secondary-mouse-buttons</b><i>
+</i></td>
+<td align="right">User Option</td>
+</tr>
+</table>
+<table width="95%" align="center">
+<tr><td>
+Primary- and secondary mouse button for using the ECB-buffers. A click
+with the primary button causes the main effect in each ECB-buffer:
+
+<ul>
+<li>ECB Directories:
+Expanding/collapsing nodes and displaying files in the ECB
+Sources buffer.
+
+<li>ECB sources/history:
+Opening the file in that edit-window specified by the option
+<code>ecb-primary-mouse-jump-destination</code>.
+
+<li>ECB Methods:
+Jumping to the method in that edit-window specified by the option
+<code>ecb-primary-mouse-jump-destination</code>. 
+</ul>
+
+<p>A click with the primary mouse-button while the SHIFT-key is pressed
+only displays the complete clicked node in the minibuffer. This is
+useful if the node is longer as the window-width of the ECB-window and
+<code>ecb-truncate-lines</code> is not nil.
+
+<p>The secondary mouse-button is for opening (jumping to) the file in the
+other window (see the documentation
+<code>ecb-primary-mouse-jump-destination</code>).
+
+<p>The following combinations are possible:
+
+<ul>
+<li>primary: mouse-2, secondary: C-mouse-2 (means mouse-2 while CTRL-key is
+pressed). This is the default setting. 
+<li>primary: mouse-1, secondary: C-mouse-1
+<li>primary: mouse-1, secondary: mouse-2
+</ul>
+
+<p>If you change this during ECB is activated you must deactivate and
+activate ECB again to take effect
+</td></tr>
+</table>
+
+<p>
+<table width="100%">
+<tr>
+<td align="left"><b>ecb-show-help-format</b><i>
+</i></td>
+<td align="right">User Option</td>
+</tr>
+</table>
+<table width="95%" align="center">
+<tr><td>
+The format <code>ecb-show-help</code> shows its online help. Allowed values
+are 'info (for the Info format) and 'html (for HTML format). If the
+value is 'html then <code>browse-url-browser-function</code> says which
+browser is used. 
+</td></tr>
+</table>
+
+<p>
+<table width="100%">
+<tr>
+<td align="left"><b>ecb-show-node-info-in-minibuffer</b><i>
+</i></td>
+<td align="right">User Option</td>
+</tr>
+</table>
+<table width="95%" align="center">
+<tr><td>
+Define which node info should displayed in a tree-buffer after mouse
+moving over the node or after a shift click onto the node.
+
+<p>For every tree-buffer you can define "when" node info should be
+displayed:
+
+<ul>
+<li><code>always</code>:
+Node info is displayed by moving with the mouse over a node. 
+<li><code>if-too-long</code>:
+Node info is only displayed by moving with the mouse over a node does
+not fit into the window-width of the tree-buffer window. In the ECB
+directories buffer this means also if a node is shortend or if the
+node has an alias (see <code>ecb-source-path</code>). 
+<li><code>shift-click</code>:
+Node info is only displayed after a shift click with the primary mouse
+button onto the node. 
+<li><code>never</code>:
+Node info is never displayed. 
+</ul>
+
+<p>For every tree-buffer you can define what info should be displayed:
+
+<ul>
+<li>Directory-buffer:
+<ul>
+<li><code>name</code>: Only the full node-name is displayed. 
+<li><code>path</code>: The full-path of the node is displayed. 
+</ul>
+
+<li>Sources-buffer:
+<ul>
+<li><code>name</code>: Only the full node-name is displayed. 
+<li><code>file-info</code>: File infos for this file are displayed. 
+<li><code>file-info-full</code>: Fill infos incl. full path for this file are
+displayed. 
+</ul>
+<li>History-buffer: see Directories-buffer. 
+<li>Methods-buffer:
+<ul>
+<li><code>name</code>: Only the full node name is displayed. 
+<li><code>name+type</code>: The full name + the type of the node (function, class,
+variable) is displayed. 
+</ul>
+</ul>
+
+<p>Do NOT set this option directly via setq but use always customize! 
+</td></tr>
+</table>
+
+<p>
+<table width="100%">
+<tr>
+<td align="left"><b>ecb-temp-dir</b><i>
+</i></td>
+<td align="right">User Option</td>
+</tr>
+</table>
+<table width="95%" align="center">
+<tr><td>
+Specify a directory where ECB can store temporary files. This is for
+example needed for upgrading ECB by <code>ecb-upgrade-ecb</code>. 
+</td></tr>
+</table>
+
+<p>
+<table width="100%">
+<tr>
+<td align="left"><b>ecb-tree-RET-selects-edit-window</b><i>
+</i></td>
+<td align="right">User Option</td>
+</tr>
+</table>
+<table width="95%" align="center">
+<tr><td>
+In which tree-buffers RET should finally select an edit-window. If a
+name of an ECB tree-buffer is contained in this list then hitting RET
+in this tree-buffer selects as last action the right edit-window
+otherwise only the right action is performed (opening a new source,
+selecting a method etc.) but point stays in the tree-buffer.
+
+<p>A special remark for the <code>ecb-directories-buffer-name</code>: Of course
+here the edit-window is only selected if
+<code>ecb-show-sources-in-directories-buffer</code> is not nil (otherwise
+this would not make any sense)!
+
+<p>The setting in this option is only the default for each tree-buffer. 
+With <code>ecb-toggle-RET-selects-edit-window</code> the behavior of RET can
+be changed fast and easy in a tree-buffer without customizing this
+option, but of course not for future Emacs sessions! 
+</td></tr>
+</table>
+
+<p>
+<table width="100%">
+<tr>
+<td align="left"><b>ecb-tree-expand-symbol-before</b><i>
+</i></td>
+<td align="right">User Option</td>
+</tr>
+</table>
+<table width="95%" align="center">
+<tr><td>
+Show the expand symbol before the items in a tree. 
+</td></tr>
+</table>
+
+<p>
+<table width="100%">
+<tr>
+<td align="left"><b>ecb-tree-incremental-search</b><i>
+</i></td>
+<td align="right">User Option</td>
+</tr>
+</table>
+<table width="95%" align="center">
+<tr><td>
+Enable incremental search in the ECB-tree-buffers. For a detailed
+explanation see <a href="#Using%20the%20keyboard">Using the keyboard</a>. If you change this
+during ECB is activated you must deactivate and activate ECB again to
+take effect. 
+</td></tr>
+</table>
+
+<p>
+<table width="100%">
+<tr>
+<td align="left"><b>ecb-tree-indent</b><i>
+</i></td>
+<td align="right">User Option</td>
+</tr>
+</table>
+<table width="95%" align="center">
+<tr><td>
+Indent size for tree buffer. If you change this during ECB is
+activated you must deactivate and activate ECB again to take effect. 
+</td></tr>
+</table>
+
+<p>
+<table width="100%">
+<tr>
+<td align="left"><b>ecb-tree-navigation-by-arrow</b><i>
+</i></td>
+<td align="right">User Option</td>
+</tr>
+</table>
+<table width="95%" align="center">
+<tr><td>
+Enable smart navigation in the tree-windows by horiz. arrow-keys. If
+not nil then the left- and right-arrow keys work in the ECB
+tree-window in the following smart way if onto an expandable node:
+
+<ul>
+<li>Left-arrow:
+If node is expanded then it will be collapsed otherwise point jumps to
+the next "higher" node in the hierarchical tree (higher means the next
+higher tree-level or - if no higher level available - the next higher
+node on the same level).
+
+<li>Right-arrow:
+If node is not expanded then it will be expanded. Onto a not
+expandable node the horizontal arrow-keys go one character in the
+senseful correct direction. 
+</ul>
+
+<p>If this option is changed the new value takes first effect after deactivating
+ECB and then activating it again! 
+</td></tr>
+</table>
+
+<p>
+<table width="100%">
+<tr>
+<td align="left"><b>ecb-truncate-lines</b><i>
+</i></td>
+<td align="right">User Option</td>
+</tr>
+</table>
+<table width="95%" align="center">
+<tr><td>
+Truncate lines in ECB buffers. If you change this during ECB is
+activated you must deactivate and activate ECB again to take effect. 
+</td></tr>
+</table>
+
+<p>
+<table width="100%">
+<tr>
+<td align="left"><b>ecb-truncate-long-names</b><i>
+</i></td>
+<td align="right">User Option</td>
+</tr>
+</table>
+<table width="95%" align="center">
+<tr><td>
+Truncate long names that don't fit in the width of the ECB windows. If
+you change this during ECB is activated you must deactivate and
+activate ECB again to take effect. 
+</td></tr>
+</table>
+
+<p>
+<table width="100%">
+<tr>
+<td align="left"><b>ecb-use-recursive-edit</b><i>
+</i></td>
+<td align="right">User Option</td>
+</tr>
+</table>
+<table width="95%" align="center">
+<tr><td>
+Tell ECB to use a recursive edit so that it can easily be deactivated
+by (keyboard-escape-quit). 
+</td></tr>
+</table>
+
+<p>
+<table width="100%">
+<tr>
+<td align="left"><b>ecb-window-sync</b><i>
+</i></td>
+<td align="right">User Option</td>
+</tr>
+</table>
+<table width="95%" align="center">
+<tr><td>
+Synchronize the ECB-windows with current edit window. If t then the
+synchronization takes place always a buffer changes in the edit
+window, if nil then never. If a list of major-modes then only if the
+major-mode of the new buffer belongs NOT to this list. 
+</td></tr>
+</table>
+
+<p>
+<table width="100%">
+<tr>
+<td align="left"><b>ecb-window-sync-delay</b><i>
+</i></td>
+<td align="right">User Option</td>
+</tr>
+</table>
+<table width="95%" align="center">
+<tr><td>
+Time Emacs must be idle before the ECB-windows are synchronized with
+current edit window. If nil then there is no delay, means
+synchronization takes place immediately. A small value of about 0.25
+seconds saves CPU resources and you get even though almost the same
+effect as if you set no delay. 
+</td></tr>
+</table>
+
+<p><hr>
+Node:<a name="ecb-directories">ecb-directories</a>,
+Next:<a rel=next accesskey=n href="#ecb-sources">ecb-sources</a>,
+Previous:<a rel=previous accesskey=p href="#ecb-general">ecb-general</a>,
+Up:<a rel=up accesskey=u href="#Customizable%20options">Customizable options</a>
+<br>
+
+<h4>Group ecb-directories</h4>
+
+<p>This group contains the following options:
+
+<p>
+<table width="100%">
+<tr>
+<td align="left"><b>ecb-add-path-for-not-matching-files</b><i>
+</i></td>
+<td align="right">User Option</td>
+</tr>
+</table>
+<table width="95%" align="center">
+<tr><td>
+Add path of a file to <code>ecb-source-path</code> if not already contained. 
+This is done during the auto. windows synchronization which happens if
+a file is opened not via the file/directory-browser of ECB. In such a
+situation ECB adds the path of the new file auto. to
+<code>ecb-source-path</code> at least temporally for the current Emacs
+session. This option defines two things:
+
+<ol type=1 start=1>
+</p><li>Should only the root-part (which means for unix-like systems always
+'/' and for windows-like systems the drive) of the new file be added
+as source-path to <code>ecb-source-path</code> or the whole directory-part? 
+<li>Should this path be added for future sessions too?
+</ol>
+
+<p>The value of this option is a cons-cell where the car is a boolean for
+1. and the cdr is a boolean for 2.
+
+<p>A value of not nil for the car (1.) is reasonably if a user often
+opens files not via the ECB-browser which are not located in any of
+the paths of <code>ecb-source-path</code> because then only one path for
+each drive (windows) or the root-path (unix) is added to the directory
+buffer of ECB. 
+</td></tr>
+</table>
+
+<p>
+<table width="100%">
+<tr>
+<td align="left"><b>ecb-auto-expand-directory-tree</b><i>
+</i></td>
+<td align="right">User Option</td>
+</tr>
+</table>
+<table width="95%" align="center">
+<tr><td>
+Automatically expand the directory tree to the current source file. 
+There are three options:
+
+<ul>
+<li><code>best</code>: Expand the best-matching source-path
+<li><code>first</code>: Expand the first matching source-path
+<li><code>nil</code>: Do not automatically expand the directory tree. 
+</ul>
+</td></tr>
+</table>
+
+<p>
+<table width="100%">
+<tr>
+<td align="left"><b>ecb-cache-directory-contents</b><i>
+</i></td>
+<td align="right">User Option</td>
+</tr>
+</table>
+<table width="95%" align="center">
+<tr><td>
+Cache contents of directories.
+
+<p>This can be useful if <code>ecb-source-path</code> contains directories with
+many files and subdirs, especially if these directories are mounted
+net-drives ("many" means here something &gt; 1000, dependend of the speed
+of the net-connection and the machine). For these directories
+actualizing the sources- and/or directories- buffer of ECB (if
+displayed in current layout!) can slow down dramatically so a caching
+increases speed a lot.
+
+<p>The value of this option is a list where each element looks like:
+
+<br><pre>  (&lt;dir-regexp&gt; &lt;filenumber threshold&gt; &lt;cache clearing&gt; with
+</pre>
+
+<dl>
+<dt><code>&lt;dir-regexp&gt;:</code>
+<dd>Regular expression a directory must match to be cached. 
+<br><dt><code>&lt;filenumber threshold&gt;:</code>
+<dd>Number of directory contents must exceed this number. 
+<br><dt><code>&lt;cache clearing&gt;:</code>
+<dd>When the cache should be cleared:
+
+<ul>
+<li><code>demand</code>:
+Cache will only be cleared on user demand. See
+<code>ecb-clear-directory-cache</code>. 
+<li><code>auto</code>:
+Cache will be cleared if the contents of the directory have been
+changed. ECB can detect this automatically. This works for Unix- but
+probably not for Windows-systems, because Windows offers no way to
+detect when the contents of a directory have been changed. 
+<li><code>&lt;number&gt;</code>:
+First selection of directories matching the regexp after &lt;number&gt;
+seconds after last caching time will rescan the directory. 
+</ul>
+</dl>
+
+<p>A directory will we only be cached if and only if the directory-name
+matches one rexexp of this option and it's content-number exceeds the
+related threshold.
+
+<p>Example: A value of <code>("~/bigdir*" 1000 3600)</code> means the
+contents of every subdirectory of the home-directory with name
+beginning with "bigdir" will be cached if the directory contains more
+than 1000 entries. One hour after the last caching time of such a
+directory the next selection (clicking onto it in the
+directories-window, changing buffers so the directory becomes current
+in the directories-window, etc...) will rescan the directory and
+update the cache.
+
+<p><strong>Attention</strong>: Currently the &lt;cache clearing&gt; part is ignored. 
+Currently the cache can only be cleared on demand and only the whole
+cache can be cleared, see <code>ecb-clear-directory-cache</code>. This will
+change in a future version. 
+</td></tr>
+</table>
+
+<p>
+<table width="100%">
+<tr>
+<td align="left"><b>ecb-directories-buffer-name</b><i>
+</i></td>
+<td align="right">User Option</td>
+</tr>
+</table>
+<table width="95%" align="center">
+<tr><td>
+Name of the ECB directory buffer. Because it is not a normal buffer
+for editing you should enclose the name with stars, e.g. "*ECB
+Directories*".
+
+<p>If it is necessary for you you can get emacs-lisp access to the buffer-object of
+the ECB-directory-buffer by this name, e.g. by a call of <code>set-buffer</code>.
+
+<p>Changes for this option at runtime will take affect only after
+deactivating and then activating ECB again! 
+</td></tr>
+</table>
+
+<p>
+<table width="100%">
+<tr>
+<td align="left"><b>ecb-excluded-directories-regexp</b><i>
+</i></td>
+<td align="right">User Option</td>
+</tr>
+</table>
+<table width="95%" align="center">
+<tr><td>
+Specifies directories that should not be included in the directories
+list. The value of this variable should be a regular expression. 
+</td></tr>
+</table>
+
+<p>
+<table width="100%">
+<tr>
+<td align="left"><b>ecb-show-sources-in-directories-buffer</b><i>
+</i></td>
+<td align="right">User Option</td>
+</tr>
+</table>
+<table width="95%" align="center">
+<tr><td>
+Show source files in directories buffer. 
+</td></tr>
+</table>
+
+<p>
+<table width="100%">
+<tr>
+<td align="left"><b>ecb-source-path</b><i>
+</i></td>
+<td align="right">User Option</td>
+</tr>
+</table>
+<table width="95%" align="center">
+<tr><td>
+Paths where to find code sources. Each path can have an optional alias
+that is used as it's display name. If no alias is set, the path is
+used as display name. 
+</td></tr>
+</table>
+
+<p><hr>
+Node:<a name="ecb-sources">ecb-sources</a>,
+Next:<a rel=next accesskey=n href="#ecb-methods">ecb-methods</a>,
+Previous:<a rel=previous accesskey=p href="#ecb-directories">ecb-directories</a>,
+Up:<a rel=up accesskey=u href="#Customizable%20options">Customizable options</a>
+<br>
+
+<h4>Group ecb-sources</h4>
+
+<p>This group contains the following options:
+
+<p>
+<table width="100%">
+<tr>
+<td align="left"><b>ecb-show-source-file-extension</b><i>
+</i></td>
+<td align="right">User Option</td>
+</tr>
+</table>
+<table width="95%" align="center">
+<tr><td>
+Show the file extension of source files. 
+</td></tr>
+</table>
+
+<p>
+<table width="100%">
+<tr>
+<td align="left"><b>ecb-source-file-regexps</b><i>
+</i></td>
+<td align="right">User Option</td>
+</tr>
+</table>
+<table width="95%" align="center">
+<tr><td>
+Specifies which files are shown as source files. Consists of one
+exclude regexp and one include regexp. A file is displayed in the
+source-buffer of ECB iff: The file does not match the exclude regexp
+OR the file matches the include regexp. There are three predefined and
+useful combinations of an exclude and include regexp:
+
+<ul>
+<li>All files
+
+<li>All, but no backup, object, lib or ini-files (except .emacs and .gnus). This
+means all files except those starting with ".", "#" or ending with
+"~", ".elc", ".obj", ".o", ".lib", ".dll", ".a", ".so". (but including
+.emacs and .gnus)
+
+<li>Common source file types (.c, .java etc.) 
+</ul>
+
+<p>In addition to these predefined values a custom exclude and include
+combination can be defined. 
+</td></tr>
+</table>
+
+<p>
+<table width="100%">
+<tr>
+<td align="left"><b>ecb-sources-buffer-name</b><i>
+</i></td>
+<td align="right">User Option</td>
+</tr>
+</table>
+<table width="95%" align="center">
+<tr><td>
+Name of the ECB sources buffer. Because it is not a normal buffer for
+editing you should enclose the name with stars, e.g. "*ECB Sources*".
+
+<p>If it is necessary for you you can get emacs-lisp access to the
+buffer-object of the ECB-sources-buffer by this name, e.g. by a call
+of <code>set-buffer</code>.
+
+<p>Changes for this option at runtime will take affect only after
+deactivating and then activating ECB again! 
+</td></tr>
+</table>
+
+<p>
+<table width="100%">
+<tr>
+<td align="left"><b>ecb-sources-sort-method</b><i>
+</i></td>
+<td align="right">User Option</td>
+</tr>
+</table>
+<table width="95%" align="center">
+<tr><td>
+Defines how the source files are sorted.
+
+<ul>
+<li><code>name</code>:
+Sorting by name. 
+<li><code>extension</code>:
+Sorting first by name and then by extension. 
+<li><code>nil</code>:
+No sorting, means source files are displayed in the sequence returned
+by <code>directory-files</code> (called without sorting). 
+</ul>
+</td></tr>
+</table>
+
+<p><hr>
+Node:<a name="ecb-methods">ecb-methods</a>,
+Next:<a rel=next accesskey=n href="#ecb-history">ecb-history</a>,
+Previous:<a rel=previous accesskey=p href="#ecb-sources">ecb-sources</a>,
+Up:<a rel=up accesskey=u href="#Customizable%20options">Customizable options</a>
+<br>
+
+<h4>Group ecb-methods</h4>
+
+<p>This group contains the following options:
+
+<p>
+<table width="100%">
+<tr>
+<td align="left"><b>ecb-auto-update-methods-after-save</b><i>
+</i></td>
+<td align="right">User Option</td>
+</tr>
+</table>
+<table width="95%" align="center">
+<tr><td>
+Automatically updating the ECB method buffer after saving the current
+source-buffer. 
+</td></tr>
+</table>
+
+<p>
+<table width="100%">
+<tr>
+<td align="left"><b>ecb-bucket-token-display</b><i>
+</i></td>
+<td align="right">User Option</td>
+</tr>
+</table>
+<table width="95%" align="center">
+<tr><td>
+How ECB displays bucket tokens in the ECB methods buffer. Bucket
+tokens are tokens like "[+] Variables", "[+] Dependencies" etc. The
+name of the bucket-token comes from semantic but you can define a
+prefix, a suffix and a special face for the bucket token.
+
+<p>The default are empty prefix/suffix-strings and
+'ecb-bucket-token-face'. But an alternative can be for example <code>("["
+"]" nil)</code> which means no special face and a display like "[+]
+[&lt;bucket-name&gt;]". 
+</td></tr>
+</table>
+
+<p>
+<table width="100%">
+<tr>
+<td align="left"><b>ecb-exclude-parents-regexp</b><i>
+</i></td>
+<td align="right">User Option</td>
+</tr>
+</table>
+<table width="95%" align="center">
+<tr><td>
+Regexp which parent classes should not be shown in the methods buffer
+(see also <code>ecb-show-parents</code>). If nil then all parents will be
+shown if <code>ecb-show-parents</code> is not nil. 
+</td></tr>
+</table>
+
+<p>
+<table width="100%">
+<tr>
+<td align="left"><b>ecb-font-lock-tokens</b><i>
+</i></td>
+<td align="right">User Option</td>
+</tr>
+</table>
+<table width="95%" align="center">
+<tr><td>
+Adds font-locking (means highlighting) to the ECB-method buffer. 
+</td></tr>
+</table>
+
+<p>
+<table width="100%">
+<tr>
+<td align="left"><b>ecb-highlight-token-header-after-jump</b><i>
+</i></td>
+<td align="right">User Option</td>
+</tr>
+</table>
+<table width="95%" align="center">
+<tr><td>
+If not nil then highlight the token line in the source-buffer after
+jumping to this method by clicking in the ECB-method-buffer onto this
+method. For highlighting <code>ecb-token-header-face</code> is used. 
+</td></tr>
+</table>
+
+<p>
+<table width="100%">
+<tr>
+<td align="left"><b>ecb-highlight-token-with-point</b><i>
+</i></td>
+<td align="right">User Option</td>
+</tr>
+</table>
+<table width="95%" align="center">
+<tr><td>
+How to highlight the method or variable under the cursor.
+
+<ul>
+<li><code>highlight-scroll</code>:
+Always scroll the method buffer, so the current method of the
+edit-window is highlighted in the method-window. 
+<li><code>highlight</code>:
+Only highlight the current method of the edit window in the
+method window if the method is visible in the method-window. 
+<li><code>nil</code>:
+No highlighting is done. 
+</ul>
+
+<p>See also <code>ecb-highlight-token-with-point-delay</code>. 
+</td></tr>
+</table>
+
+<p>
+<table width="100%">
+<tr>
+<td align="left"><b>ecb-highlight-token-with-point-delay</b><i>
+</i></td>
+<td align="right">User Option</td>
+</tr>
+</table>
+<table width="95%" align="center">
+<tr><td>
+Time Emacs must be idle before current token is highlighted. If nil
+then there is no delay, means current token is highlighted
+immediately. A small value of about 0.25 seconds saves CPU resources
+and you get even though almost the same effect as if you set no delay. 
+But such a delay prevents also "jumping backward/forward" during
+scrolling within java-classes if point goes out of method-definition
+into class-definition. Therefore the default value is a delay of 0.25
+seconds. 
+</td></tr>
+</table>
+
+<p>
+<table width="100%">
+<tr>
+<td align="left"><b>ecb-methods-buffer-name</b><i>
+</i></td>
+<td align="right">User Option</td>
+</tr>
+</table>
+<table width="95%" align="center">
+<tr><td>
+Name of the ECB methods buffer. Because it is not a normal buffer for
+editing you should enclose the name with stars, e.g. "*ECB
+Methods*".
+
+<p>If it is necessary for you you can get emacs-lisp access to the
+buffer-object of the ECB-methods-buffer by this name, e.g. by a call
+of <code>set-buffer</code>.
+
+<p>Changes for this option at runtime will take affect only after
+deactivating and then activating ECB again! 
+</td></tr>
+</table>
+
+<p>
+<table width="100%">
+<tr>
+<td align="left"><b>ecb-post-process-semantic-tokenlist</b><i>
+</i></td>
+<td align="right">User Option</td>
+</tr>
+</table>
+<table width="95%" align="center">
+<tr><td>
+Define mode-dependend postprocessing for the semantic-tokenlist. This
+is an alist where the car is a major-mode symbol and the cdr is a
+function-symbol of a function which should be used for post-processing
+the tokenlist (returned by <code>semantic-bovinate-toplevel</code>) for a
+buffer in this major-mode. Such a function is called with current
+semantic tokenlist of current buffer and must return a valid tokenlist
+again.
+
+<p>For oo-programming languages where the methods of a class can be
+defined outside the class-definition (e.g. C++, Eieio) the function
+<code>ecb-group-function-tokens-with-parents</code> can be used to get a
+much better method-display in the methods-window of ECB, because all
+method implementations of a class are grouped together. 
+</td></tr>
+</table>
+
+<p>
+<table width="100%">
+<tr>
+<td align="left"><b>ecb-scroll-window-after-jump</b><i>
+</i></td>
+<td align="right">User Option</td>
+</tr>
+</table>
+<table width="95%" align="center">
+<tr><td>
+How to scroll the window when jumping to a token. 
+</td></tr>
+</table>
+
+<p>
+<table width="100%">
+<tr>
+<td align="left"><b>ecb-show-only-positioned-tokens</b><i>
+</i></td>
+<td align="right">User Option</td>
+</tr>
+</table>
+<table width="95%" align="center">
+<tr><td>
+Show only nodes in the method-buffer which are "jumpable". If not nil
+then ECB displays in the method-buffer only nodes which are
+"jumpable", i.e. after selecting it by clicking or with RET then ECB
+jumps to the corresponding location in the edit-window. Example: With
+CLOS or Eieio source-code there can exist some positionless nodes like
+variable-attributes in a <code>defclass</code> form which are only displayed
+if this option is nil. Displaying such nodes can be sensefull even if
+they can not be jumped.
+
+<p>This option works only correct if a <code>semantic-version</code> &gt;
+semantic-1.4beta14 is installed. Otherwise this option should be nil! 
+</td></tr>
+</table>
+
+<p>
+<table width="100%">
+<tr>
+<td align="left"><b>ecb-show-tokens</b><i>
+</i></td>
+<td align="right">User Option</td>
+</tr>
+</table>
+<table width="95%" align="center">
+<tr><td>
+How to show tokens in the methods buffer. This variable is a list
+where each element represents a type of tokens:
+
+<br><pre>(&lt;token type&gt; &lt;display type&gt; &lt;sort method&gt;)
+</pre>
+
+<p>The tokens in the methods buffer are displayed in the order as they appear in
+this list.
+
+<dl>
+<dt><code>&lt;token type&gt;</code>
+<dd>A Semantic token type symbol (function, variable, rule, include etc.) 
+or one of the following:
+
+<ul>
+<li><code>t</code>: All token types not specified anywhere else in the list. 
+<li><code>parent</code>: The parents of a type. 
+</ul>
+
+<br><dt><code>&lt;display type&gt;</code>
+<dd>A symbol which describes how the tokens of this type shall be shown:
+
+<ul>
+<li><code>expanded</code>: The tokens are shown in an expanded node. 
+<li><code>collapsed</code>: The tokens are shown in a collapsed node. 
+<li><code>flattened</code>: The tokens are added to the parent node. 
+<li><code>hidden</code>: The tokens are not shown. 
+</ul>
+
+<br><dt><code>&lt;sort method&gt;</code>
+<dd>A symbol describing how to sort the tokens of this type:
+
+<ul>
+<li><code>name</code>:
+Sort by the token name. 
+<li><code>access</code>:
+Sort by token access (public, protected, private) and then by name. 
+<li><code>nil</code>:
+Don't sort tokens. They appear in the same order as in the source
+buffer. 
+</ul>
+</dl>
+
+</td></tr>
+</table>
+
+<p>
+<table width="100%">
+<tr>
+<td align="left"><b>ecb-token-display-function</b><i>
+</i></td>
+<td align="right">User Option</td>
+</tr>
+</table>
+<table width="95%" align="center">
+<tr><td>
+Function to use for displaying tokens in the methods buffer. This
+functionality is set on major-mode base, i.e. for every major-mode a
+different function can be used. The value of this option is a list of
+cons-cells:
+
+<ul>
+<li>The car is either a major-mode symbol or the special symbol 'default which
+means if no function for a certain major-mode is defined then the cdr of
+the 'default cons-cell is used. 
+<li>The cdr is the function used for displaying a token in the related
+major-mode. 
+</ul>
+
+<p>Every function is called with 3 arguments:
+
+<ol type=1 start=1>
+</p><li>The token
+<li>The parent-token of token (can be nil)
+<li>The value of <code>ecb-font-lock-tokens</code>.
+</ol>
+
+<p>Every function must return the display of the token as string,
+colorized if the third argument is not nil.
+
+<p>The following functions are predefined:
+
+<ul>
+<li>All functions of <code>semantic-token-&gt;text-functions</code>.
+
+<li>For every function in <code>semantic-token-&gt;text-functions</code> with name
+"semantic-XYZ" a function with name "ecb-XYC" is predefined. The
+differences between the semantic- and the ECB-version are:
+
+<ul>
+<li>The ECB-version displays for type tokens only the type-name and nothing
+else (exception: In c++-mode a template specifier is appended to the
+type-name if a template instead a normal class). 
+<li>The ECB-version displays type-tokens according to the setting in
+<code>ecb-type-token-display</code>. This is useful for better recognizing
+different classes, structs etc. in the ECB-method window. 
+</ul>
+
+<p>For all tokens which are not types the display of the ECB-version is
+identical to the semantic version. Example: For <code>semantic-name-nonterminal</code>
+the pendant is <code>ecb-name-nonterminal</code>. 
+</ul>
+
+<p>This functionality also allows the user to display tokens as UML. To
+enable this functionality set the function for a major-mode (e.g. 
+<code>jde-mode</code>) to <code>semantic-uml-concise-prototype-nonterminal</code>,
+<code>semantic-uml-prototype-nonterminal</code>, or
+<code>semantic-uml-abbreviate-nonterminal</code> or the ECB-versions of
+these functions.
+
+<p>If the value is <code>nil</code>, i.e. neither a function for a major-mode
+is defined nor the special 'default, then
+<code>semantic-prototype-nonterminal</code> is used for displaying the
+tokens. 
+</td></tr>
+</table>
+
+<p>
+<table width="100%">
+<tr>
+<td align="left"><b>ecb-token-jump-narrow</b><i>
+</i></td>
+<td align="right">User Option</td>
+</tr>
+</table>
+<table width="95%" align="center">
+<tr><td>
+When jumping to a token from the ECB methods buffer narrows the buffer
+to only show that token. To display the entire buffer again, click on
+a source file or call <code>widen</code> (<kbd>C-x n w</kbd>). 
+</td></tr>
+</table>
+
+<p>
+<table width="100%">
+<tr>
+<td align="left"><b>ecb-token-jump-sets-mark</b><i>
+</i></td>
+<td align="right">User Option</td>
+</tr>
+</table>
+<table width="95%" align="center">
+<tr><td>
+Jumping to a token from the ECB-method buffer now sets the mark so the
+user can easily jump back. 
+</td></tr>
+</table>
+
+<p>
+<table width="100%">
+<tr>
+<td align="left"><b>ecb-type-token-display</b><i>
+</i></td>
+<td align="right">User Option</td>
+</tr>
+</table>
+<table width="95%" align="center">
+<tr><td>
+How to display semantic type-tokens in the methods buffer. Normally
+all token displaying, colorizing and facing is done by semantic
+according to the value of <code>semantic-face-alist</code> and the semantic
+display-function (e.g. one from
+<code>semantic-token-&gt;text-functions</code>). But sometimes a finer
+distinction in displaying the different type specifiers of type-tokens
+can be usefull. For a description when this option is evaluated look
+at <code>ecb-token-display-function</code>!
+
+<p>This functionality is set on a major-mode base, i.e. for every
+major-mode a different setting can be used. The value of this option
+is a list of cons-cells:
+
+<ul>
+<li>The car is either a major-mode symbol or the special symbol 'default which
+means if no setting for a certain major-mode is defined then the cdr of
+the 'default cons-cell is used.
+
+<li>The cdr is a list of 3-element-lists:
+
+<ol type=1 start=1>
+<li>First entry is a semantic type specifier in string-form. Current
+available type specifiers are for example "class", "interface",
+"struct", "typedef" and "enum". In addition to these ones there
+is also a special ECB type specifier "group" which is related to
+grouping tokens (see <code>ecb-post-process-semantic-tokenlist</code> and
+<code>ecb-group-function-tokens-with-parents</code>). Any arbitrary
+specifier can be set here but if it is not "group" or not known by
+semantic it will be useless. 
+<li>Second entry is a flag which indicates if the type-specifier string
+from (1.) itself should be removed (if there is any) from the display. 
+<li>Third entry is the face which is used in the ECB-method window to
+display type-tokens with this specifier. ECB has some predefined faces
+for this (<code>ecb-type-token-class-face</code>,
+<code>ecb-type-token-struct-face</code>, <code>ecb-type-token-typedef-face</code>,
+<code>ecb-type-token-enum-face</code> and <code>ecb-type-token-group-face</code>)
+but any arbitrary face can be set here. This face is merged with the
+faces semantic already uses to display a token,
+i.e. the result is a display where all face-attributes of the ECB-face
+take effect plus all face-attributes of the semantic-faces which are not
+set in the ECB-face (with XEmacs this merge doesn't work so here the
+ECB-face replaces the semantic-faces; this may be fixed in future
+versions).
+</ol>
+</ul>
+
+<p>The default value is nil means there is no special ECB-displaying of
+type-tokens in addition to the displaying and colorizing semantic
+does. But a value like the following could be a usefull setting:
+
+<br><pre>((default
+   ("class" t ecb-type-token-class-face)
+   ("group" nil ecb-type-token-group-face))
+ (c-mode
+  ("struct" nil ecb-type-token-struct-face)
+  ("typedef" nil ecb-type-token-typedef-face)))
+</pre>
+
+<p>This means that in <code>c-mode</code> only "struct"s and "typedef"s are
+displayed with special faces (the specifiers itself are not removed)
+and in all other modes "class"es and grouping-tokens (see
+<code>ecb-token-display-function</code>,
+<code>ecb-group-function-tokens-with-parents</code>) have special faces and
+the "class" specifier-string is removed from the display. 
+</td></tr>
+</table>
+
+<p><hr>
+Node:<a name="ecb-history">ecb-history</a>,
+Next:<a rel=next accesskey=n href="#ecb-layout">ecb-layout</a>,
+Previous:<a rel=previous accesskey=p href="#ecb-methods">ecb-methods</a>,
+Up:<a rel=up accesskey=u href="#Customizable%20options">Customizable options</a>
+<br>
+
+<h4>Group ecb-history</h4>
+
+<p>This group contains the following options:
+
+<p>
+<table width="100%">
+<tr>
+<td align="left"><b>ecb-clear-history-behavior</b><i>
+</i></td>
+<td align="right">User Option</td>
+</tr>
+</table>
+<table width="95%" align="center">
+<tr><td>
+Defines which entries of the history buffer should be deleted if
+<code>ecb-clear-history</code> is called. Three options are available:
+
+<ul>
+<li><code>not-existing-buffers</code>:
+All entries which represent a buffername not existing
+anymore in the bufferlist will be cleared. Probably the most senseful value. 
+<li><code>existing-buffers</code>:
+The opposite of 'not-existing-buffers. 
+<li><code>all</code>:
+The whole history will be cleared. 
+</ul>
+</td></tr>
+</table>
+
+<p>
+<table width="100%">
+<tr>
+<td align="left"><b>ecb-history-buffer-name</b><i>
+</i></td>
+<td align="right">User Option</td>
+</tr>
+</table>
+<table width="95%" align="center">
+<tr><td>
+Name of the ECB history buffer. Because it is not a normal buffer for
+editing you should enclose the name with stars, e.g. "*ECB
+History*".
+
+<p>If it is necessary for you you can get emacs-lisp access to the
+buffer-object of the ECB-history-buffer by this name, e.g. by a call
+of <code>set-buffer</code>.
+
+<p>Changes for this option at runtime will take affect only after
+deactivating and then activating ECB again! 
+</td></tr>
+</table>
+
+<p>
+<table width="100%">
+<tr>
+<td align="left"><b>ecb-history-item-name</b><i>
+</i></td>
+<td align="right">User Option</td>
+</tr>
+</table>
+<table width="95%" align="center">
+<tr><td>
+The name to use for items in the history buffer. 
+</td></tr>
+</table>
+
+<p>
+<table width="100%">
+<tr>
+<td align="left"><b>ecb-kill-buffer-clears-history</b><i>
+</i></td>
+<td align="right">User Option</td>
+</tr>
+</table>
+<table width="95%" align="center">
+<tr><td>
+Define if <code>kill-buffer</code> should also clear the history. There are
+three options:
+
+<ul>
+<li><code>auto</code>:
+Removes automatically the corresponding history-entry after the buffer
+has been killed. 
+<li><code>ask</code>:
+Asks, if the history-entry should be removed after the kill. 
+<li><code>nil</code>:
+<code>kill-buffer</code> does not affect the history (this is the default). 
+</ul>
+</td></tr>
+</table>
+
+<p>
+<table width="100%">
+<tr>
+<td align="left"><b>ecb-sort-history-items</b><i>
+</i></td>
+<td align="right">User Option</td>
+</tr>
+</table>
+<table width="95%" align="center">
+<tr><td>
+Sorts the items in the history buffer. 
+</td></tr>
+</table>
+
+<p><hr>
+Node:<a name="ecb-layout">ecb-layout</a>,
+Next:<a rel=next accesskey=n href="#ecb-face-options">ecb-face-options</a>,
+Previous:<a rel=previous accesskey=p href="#ecb-history">ecb-history</a>,
+Up:<a rel=up accesskey=u href="#Customizable%20options">Customizable options</a>
+<br>
+
+<h4>Group ecb-layout</h4>
+
+<p>This group contains the following options:
+
+<p>
+<table width="100%">
+<tr>
+<td align="left"><b>ecb-activate-before-new-frame-created-hook</b><i>
+</i></td>
+<td align="right">User Option</td>
+</tr>
+</table>
+<table width="95%" align="center">
+<tr><td>
+Normal hook run before the new ECB-frame is created if
+<code>ecb-new-ecb-frame</code> is not nil (otherwise this hook is not
+evaluated). 
+</td></tr>
+</table>
+
+<p>
+<table width="100%">
+<tr>
+<td align="left"><b>ecb-advice-window-functions</b><i>
+</i></td>
+<td align="right">User Option</td>
+</tr>
+</table>
+<table width="95%" align="center">
+<tr><td>
+Use the intelligent windows functions of ECB instead of the standard
+Emacs functions. You can choose the following functions to be adviced
+by ECB so they behave as if the edit-window(s) of ECB would be the
+only windows(s) of the ECB-frame:
+
+<ul>
+<li><code>other-window</code>
+For this one see also the option <code>ecb-other-window-jump-behavior</code>! 
+<li><code>delete-window</code>
+<li><code>delete-other-windows</code>
+<li><code>split-window-horizontally</code>
+<li><code>split-window-vertically</code>
+<li><code>switch-to-buffer</code>
+<li><code>switch-to-buffer-other-window</code>
+<li><code>other-window-for-scrolling</code>
+If this advice is enabled then the following functions scroll always
+the first edit-window if the edit-window is splitted, point stays in
+the "other" edit-window and there is no durable compilation-window
+(see <code>ecb-compile-window-height</code>):
+
+<ul>
+<li><code>scroll-other-window</code>
+<li><code>scroll-other-window-down</code>
+<li><code>beginning-of-buffer-other-window</code>
+<li><code>end-of-buffer-other-window</code>
+</ul>
+
+<p>This advice is per default not enabled. 
+</ul>
+
+<p>For working most conveniantly with ECB it is the best to advice all
+these functions, because then all the standard shortcuts of these
+functions are also usable with ECB without doing anything else. Also
+other packages can interact best with ECB if these functions are all
+adviced. If these adviced functions are called in another frame than
+the ECB-frame they behave all exactly like the not adviced versions!
+
+<p>But please read also the following:
+
+<p>Normally all packages should work correct with ECB and it´s adviced
+functions but if there occur problems with a package cause of some of
+these adviced functions ECB offers the following fall-back solution:
+
+<ol type=1 start=1>
+</p><li>Deactivate in <code>ecb-advice-window-functions</code> all the
+adviced-functions which make problems with other packages. 
+<li>For every of the adviceable functions &lt;adv-func&gt; ECB offers a
+interactively function named "ecb-&lt;adv-func&gt;" which does exactly the
+same as the adviced version of &lt;adv-func&gt;. Use "ecb-&lt;adv-func&gt;"
+instead the original one to get the proper ECB behavior even if the
+function is not adviced anymore. 
+<li>You can bind in <code>ecb-activate-hook</code> the standard-shortcut of
+&lt;adv-func&gt; to "ecb-&lt;adv-func&gt;" and rebind it in
+<code>ecb-deactivate-hook</code> to &lt;adv-func&gt;. 
+<li>Now you have the best of both worlds: The problematic package works
+and you have the ECB-behavior of &lt;adv-func&gt; as if it would be adviced.
+</ol>
+
+<p>Here is an example: Suppose you must deactivating the advice for
+<code>switch-to-buffer-other-window</code>. Then you deactivate this
+function with this option and you can use
+<code>ecb-switch-to-buffer-other-window</code> instead. Bind the shortcut
+you normally use for <code>switch-to-buffer-other-window</code> to
+<code>ecb-switch-to-buffer-other-window</code> (use <code>ecb-activate-hook</code>
+for this) and rebind it to the original function in the
+<code>ecb-deactivate-hook</code>. 
+</td></tr>
+</table>
+
+<p>
+<table width="100%">
+<tr>
+<td align="left"><b>ecb-compile-window-enlarge-by-select</b><i>
+</i></td>
+<td align="right">User Option</td>
+</tr>
+</table>
+<table width="95%" align="center">
+<tr><td>
+The compile-window is auto. enlarged after selecting it. If not nil
+then selecting the <code>ecb-compile-window</code> auto. enlarges it and
+deselecting (means selecting another window after point was in
+<code>ecb-compile-window</code>) auto. shrinks it. Enlarging and shrinking
+the <code>ecb-compile-window</code> is done with
+<code>ecb-toggle-enlarged-compilation-window</code>. See also the
+documentation of this function! 
+</td></tr>
+</table>
+
+<p>
+<table width="100%">
+<tr>
+<td align="left"><b>ecb-compile-window-height</b><i>
+</i></td>
+<td align="right">User Option</td>
+</tr>
+</table>
+<table width="95%" align="center">
+<tr><td>
+If you want a compilation window shown at the bottom of the ECB-layout
+then set here the height of it (Default is a height of 5). If you
+redraw the current layout with <code>ecb-redraw-layout</code> then the
+compilation window (if any) has the heigth you set here. If the number
+is less than 1.0 the height is a fraction of the frame height.
+
+<p>If you do not set a durable compilation window then doing a
+compilation splits temporally the edit window vertically if the edit
+window is not splitted already or uses the "other" edit window
+temporally for comilation output if the edit window is already
+splitted. This is the recommended value for this option!
+
+<p>Beware: If you set a durable compilation window then ECB can not
+guarantee always behaving like a standard Emacs concerning displaying
+temp-buffers and compilation-buffers. It should work in most cases but
+maybe not in all. Just try it out.
+
+<p>See also the option <code>ecb-compile-window-temporally-enlarge</code> and
+also the function <code>ecb-toggle-enlarged-compilation-window</code>!
+
+<p>See <a href="#Temp-%20and%20compile-buffers">Temp- and compile-buffers</a>.
+
+<p>Regardless of the settings you define here: If you have destroyed or
+changed the ECB-screen-layout by any action you can always go back to
+this layout with <code>ecb-redraw-layout</code>
+</td></tr>
+</table>
+
+<p>
+<table width="100%">
+<tr>
+<td align="left"><b>ecb-compile-window-temporally-enlarge</b><i>
+</i></td>
+<td align="right">User Option</td>
+</tr>
+</table>
+<table width="95%" align="center">
+<tr><td>
+Let Emacs temporally enlarge the compile-window of the ECB-layout.
+
+<p>This option has only an effect if <code>ecb-compile-window-height</code> is
+not nil!
+
+<p>The following values are possible:
+
+<ul>
+<li><code>after-compilation</code>:
+After finishing the compilation-output and during jumping to the
+errors ECB let temporally enlarge all compilation-buffers in
+<code>ecb-compile-window</code> (e.g. compile- and grep-buffers) to
+<code>compilation-window-height</code>. But be aware this setting is
+currently not meaningful for temporary buffers like help-buffers
+because these buffers currently enlarge always to
+<code>temp-buffer-max-height</code>.
+
+<li><code>after-selection</code>:
+Selecting the <code>ecb-compile-window</code> auto. enlarges it and
+deselecting (means leaving <code>ecb-compile-window</code>) auto. shrinks
+it. Enlarging and shrinking the <code>ecb-compile-window</code> is done with
+<code>ecb-toggle-enlarged-compilation-window</code>. See also the
+documentation of this function! This is possible for all buffers in
+<code>ecb-compile-window</code> not only for compilation-buffers!
+
+<li><code>both</code>:
+The combination of 'after-compilation and 'after-selection.
+
+<li><code>nil</code>:
+ECB tries to fix always the height of the <code>ecb-compile-window</code> at
+the value of <code>ecb-compile-window-height</code>. But for all temporary
+buffers (e.g. help-buffers) this is currently not possible. 
+</ul>
+
+<p>To restore the ECB-layout after such a buffer-enlarge just call
+<code>ecb-toggle-enlarged-compilation-window</code> or
+<code>ecb-redraw-layout</code>. 
+</td></tr>
+</table>
+
+<p>
+<table width="100%">
+<tr>
+<td align="left"><b>ecb-hide-ecb-windows-hook</b><i>
+</i></td>
+<td align="right">User Option</td>
+</tr>
+</table>
+<table width="95%" align="center">
+<tr><td>
+Hooks run after the ECB windows have been hidden either by
+<code>ecb-toggle-ecb-windows</code> or <code>ecb-hide-ecb-windows</code>. 
+</td></tr>
+</table>
+
+<p>
+<table width="100%">
+<tr>
+<td align="left"><b>ecb-layout-always-operate-in-edit-window</b><i>
+</i></td>
+<td align="right">User Option</td>
+</tr>
+</table>
+<table width="95%" align="center">
+<tr><td>
+Adviced window functions work always in the edit-window. If we are in
+an ECB special buffer (methods, directories, etc), and any of the
+adviced windowing functions is called (see
+<code>ecb-advice-window-functions</code>), we will select the
+<code>ecb-edit-window</code> first. This is useful if you have any functions
+that use such functions and you don't want them to just error with a
+method complaining that the current buffer can not be split, or
+something similar.
+
+<p>Because this may not be desirable in all situations and all adviced
+functions this can be enabled separately for every advisable function
+(see also <code>ecb-advice-window-functions</code>). If the symbol of an
+adviced function is contained in the value of this option, then the
+edit-window is first selected otherwise either an error is reported or
+some other special reaction; see the documentation of the adviced
+functions for this.
+
+<p>For <code>other-window</code> and <code>other-window-for-scrolling</code> this
+makes no sense, therefore you can not enable this for both of them.
+
+<p>Per default this is enabled for <code>delete-window</code>,
+<code>delete-other-windows</code>, <code>switch-to-buffer</code> and
+<code>switch-to-buffer-other-window</code>. 
+</td></tr>
+</table>
+
+<p>
+<table width="100%">
+<tr>
+<td align="left"><b>ecb-layout-nr</b><i>
+</i></td>
+<td align="right">User Option</td>
+</tr>
+</table>
+<table width="95%" align="center">
+<tr><td>
+Define the window layout of ECB. A positive integer which sets the
+general layout. Currently there are 17 predefined layouts with index from 0 to
+16. You can savely try out any of them by changing this value and saving it
+only for the current session. If you are sure which layout you want
+you can save it for future sessions. To get a picture of the layout
+for index &lt;index&gt; call C-h f ecb-layout-function-&lt;index&gt;, e.g. 
+<code>ecb-layout-function-9</code>.
+
+<p>Currently available layouts (see the doc-string for a picture ot the
+layout):
+
+<p><code>ecb-layout-function-0</code>
+<code>ecb-layout-function-1</code>
+<code>ecb-layout-function-2</code>
+<code>ecb-layout-function-3</code>
+<code>ecb-layout-function-4</code>
+<code>ecb-layout-function-5</code>
+<code>ecb-layout-function-6</code>
+<code>ecb-layout-function-7</code>
+<code>ecb-layout-function-8</code>
+<code>ecb-layout-function-9</code>
+<code>ecb-layout-function-10</code>
+<code>ecb-layout-function-11</code>
+<code>ecb-layout-function-12</code>
+<code>ecb-layout-function-13</code>
+<code>ecb-layout-function-14</code>
+<code>ecb-layout-function-15</code>
+<code>ecb-layout-function-16</code>
+
+<p>Regardless of the settings you define here: If you have destroyed or
+changed the ECB-screen-layout by any action you can always go back to
+this layout with <code>ecb-redraw-layout</code>
+</td></tr>
+</table>
+
+<p>
+<table width="100%">
+<tr>
+<td align="left"><b>ecb-layout-switch-to-compilation-window</b><i>
+</i></td>
+<td align="right">User Option</td>
+</tr>
+</table>
+<table width="95%" align="center">
+<tr><td>
+Switch-to-buffer...-functions switch to <code>ecb-compile-window</code>. If
+the buffer argument of <code>switch-to-buffer</code> or
+<code>switch-to-buffer-other-window</code> is an compilation buffer as
+defined with <code>ecb-compilation-buffer-p</code> we will select the
+<code>ecb-compile-window</code> first. This is useful if you always want
+your compilation buffers within the compilation window and now within
+the edit window.
+
+<p>Note the difference between
+<code>ecb-layout-always-operate-in-edit-window</code> and this option: If a
+switch-to-buffer...-function is contained in the former one, then we
+always jump first into the edit-window regardless of the destination
+buffer. If also contained in this option then ECB checks the
+destination buffer and then selects the <code>ecb-compile-window</code> if
+it is a compilation-buffer in the meaning of
+<code>ecb-compilation-buffer-p</code>!
+
+<p>Per default this is only enabled for <code>switch-to-buffer</code>. We
+provide the option for <code>switch-to-buffer-other-window</code> too but
+the assumption is that when a user asks for a buffer in another window
+it should always be presented in another window. 
+</td></tr>
+</table>
+
+<p>
+<table width="100%">
+<tr>
+<td align="left"><b>ecb-layout-window-sizes</b><i>
+</i></td>
+<td align="right">User Option</td>
+</tr>
+</table>
+<table width="95%" align="center">
+<tr><td>
+Specifies the sizes of the ECB windows for each layout. The easiest
+way to change this variable is to change the window sizes by dragging
+the window borders using the mouse and then store the window sizes by
+calling the <code>ecb-store-window-sizes</code> function. Next time the
+layout is redrawn the values stored in this option will be used.
+
+<p>But be aware: These values are only suitable for the frame-size the
+ecb-frame had at the time you store the values by calling
+<code>ecb-store-window-sizes</code>. Therefore ensure always before calling
+<code>ecb-store-window-sizes</code> that the ecb-frame has the size it has
+normally during your work with ECB!. 
+</td></tr>
+</table>
+
+<p>
+<table width="100%">
+<tr>
+<td align="left"><b>ecb-new-ecb-frame</b><i>
+</i></td>
+<td align="right">User Option</td>
+</tr>
+</table>
+<table width="95%" align="center">
+<tr><td>
+Create a new frame at activation time of ECB. 
+</td></tr>
+</table>
+
+<p>
+<table width="100%">
+<tr>
+<td align="left"><b>ecb-other-window-jump-behavior</b><i>
+</i></td>
+<td align="right">User Option</td>
+</tr>
+</table>
+<table width="95%" align="center">
+<tr><td>
+Which windows of ECB should be accessible by the ECB-adviced function
+<code>other-window</code>, an intelligent replacement for the Emacs standard
+version of <code>other-window</code>. The following settings are possible:
+
+<ul>
+<li><code>all</code>:
+ECB will cycle through all windows of ECB, means it behaves like the
+original <code>other-window</code>. 
+<li><code>only-edit</code>:
+ECB will only cycle through the (max. 2) edit-windows of ECB. 
+<li><code>edit-and-compile</code>:
+Like 'only-edit plus the compile window if any. 
+</ul>
+</td></tr>
+</table>
+
+<p>
+<table width="100%">
+<tr>
+<td align="left"><b>ecb-redraw-layout-quickly</b><i>
+</i></td>
+<td align="right">User Option</td>
+</tr>
+</table>
+<table width="95%" align="center">
+<tr><td>
+If non-nil, we will attempt to redraw the layout quickly. Please read
+also carefully the documentation of <code>ecb-redraw-layout</code>. 
+</td></tr>
+</table>
+
+<p>
+<table width="100%">
+<tr>
+<td align="left"><b>ecb-select-edit-window-on-redraw</b><i>
+</i></td>
+<td align="right">User Option</td>
+</tr>
+</table>
+<table width="95%" align="center">
+<tr><td>
+Select the first edit window on <code>ecb-redraw-layout</code>. 
+</td></tr>
+</table>
+
+<p>
+<table width="100%">
+<tr>
+<td align="left"><b>ecb-show-ecb-windows-hook</b><i>
+</i></td>
+<td align="right">User Option</td>
+</tr>
+</table>
+<table width="95%" align="center">
+<tr><td>
+Hooks run after the ECB windows have been shown either by
+<code>ecb-toggle-ecb-windows</code> or <code>ecb-show-ecb-windows</code>. 
+</td></tr>
+</table>
+
+<p>
+<table width="100%">
+<tr>
+<td align="left"><b>ecb-split-edit-window</b><i>
+</i></td>
+<td align="right">User Option</td>
+</tr>
+</table>
+<table width="95%" align="center">
+<tr><td>
+Sets how and if the edit window should be splitted. But be aware: This
+option determines only if the edit-window should be splitted at
+start-time of ECB. 
+</td></tr>
+</table>
+
+<p>
+<table width="100%">
+<tr>
+<td align="left"><b>ecb-toggle-layout-sequence</b><i>
+</i></td>
+<td align="right">User Option</td>
+</tr>
+</table>
+<table width="95%" align="center">
+<tr><td>
+Toggle sequence for layout toggling with <code>ecb-toggle-layout</code>. 
+Every element of this list has to be a valid layout-number (see option
+<code>ecb-layout-nr</code>).
+
+<p>You can add here as many layouts as you want but to use this option
+most effective you should not add more than 2 or 3 layouts so every
+layout can be accessed very fast by toggling with
+<code>ecb-toggle-layout</code>. It is also senseful to add layouts which
+have the same principal outline, i.e. all their tree-buffers are on
+the same side of the frame and the tree-buffer-"column" (or
+-"row") has identical size for the layouts.
+
+<p>Recommended values are for example:
+
+<ul>
+<li>(11 16), toggles between methods and directories/history
+<li>(11 15), toggles between methods and directories
+<li>(11 14), toggles between methods and history
+<li>(11 14 15), toggles between methods, history and directories
+</ul>
+
+<p>This option makes only sense if the value is a list with more than 1
+element! 
+</td></tr>
+</table>
+
+<p>
+<table width="100%">
+<tr>
+<td align="left"><b>ecb-windows-height</b><i>
+</i></td>
+<td align="right">User Option</td>
+</tr>
+</table>
+<table width="95%" align="center">
+<tr><td>
+The height of the ECB windows in lines when they are placed above or
+below the edit window. If the number is less than 1.0 the width is a
+fraction of the frame height. 
+</td></tr>
+</table>
+
+<p>
+<table width="100%">
+<tr>
+<td align="left"><b>ecb-windows-width</b><i>
+</i></td>
+<td align="right">User Option</td>
+</tr>
+</table>
+<table width="95%" align="center">
+<tr><td>
+The width of the ECB windows in columns when they are placed to the
+left or right of the edit window. If the number is less than 1.0 the
+width is a fraction of the frame width. 
+</td></tr>
+</table>
+
+<p><hr>
+Node:<a name="ecb-face-options">ecb-face-options</a>,
+Next:<a rel=next accesskey=n href="#ecb-faces">ecb-faces</a>,
+Previous:<a rel=previous accesskey=p href="#ecb-layout">ecb-layout</a>,
+Up:<a rel=up accesskey=u href="#Customizable%20options">Customizable options</a>
+<br>
+
+<h4>Group ecb-face-options</h4>
+
+<p>This group contains the following options:
+
+<p>
+<table width="100%">
+<tr>
+<td align="left"><b>ecb-directories-general-face</b><i>
+</i></td>
+<td align="right">User Option</td>
+</tr>
+</table>
+<table width="95%" align="center">
+<tr><td>
+Basic face for the ECB directories buffer. It´s recommended to define
+here the font-family, the font-size, the basic color etc. 
+</td></tr>
+</table>
+
+<p>
+<table width="100%">
+<tr>
+<td align="left"><b>ecb-directory-face</b><i>
+</i></td>
+<td align="right">User Option</td>
+</tr>
+</table>
+<table width="95%" align="center">
+<tr><td>
+Define face used for highlighting current directory in the directories
+buffer. 
+</td></tr>
+</table>
+
+<p>
+<table width="100%">
+<tr>
+<td align="left"><b>ecb-history-face</b><i>
+</i></td>
+<td align="right">User Option</td>
+</tr>
+</table>
+<table width="95%" align="center">
+<tr><td>
+Define face used for highlighting current history-entry in the history
+buffer. 
+</td></tr>
+</table>
+
+<p>
+<table width="100%">
+<tr>
+<td align="left"><b>ecb-history-general-face</b><i>
+</i></td>
+<td align="right">User Option</td>
+</tr>
+</table>
+<table width="95%" align="center">
+<tr><td>
+Basic face for the ECB history buffer. It´s recommended to define here
+the font-family, the font-size, the basic color etc. 
+</td></tr>
+</table>
+
+<p>
+<table width="100%">
+<tr>
+<td align="left"><b>ecb-method-face</b><i>
+</i></td>
+<td align="right">User Option</td>
+</tr>
+</table>
+<table width="95%" align="center">
+<tr><td>
+Define face used for highlighting current method, class or variable in
+the methods buffer. 
+</td></tr>
+</table>
+
+<p>
+<table width="100%">
+<tr>
+<td align="left"><b>ecb-methods-general-face</b><i>
+</i></td>
+<td align="right">User Option</td>
+</tr>
+</table>
+<table width="95%" align="center">
+<tr><td>
+Basic face for the ECB methods buffer. It´s recommended to define here
+the font-family, the font-size, the basic color etc. 
+</td></tr>
+</table>
+
+<p>
+<table width="100%">
+<tr>
+<td align="left"><b>ecb-source-face</b><i>
+</i></td>
+<td align="right">User Option</td>
+</tr>
+</table>
+<table width="95%" align="center">
+<tr><td>
+Define face used for highlighting current source in the sources
+buffer. 
+</td></tr>
+</table>
+
+<p>
+<table width="100%">
+<tr>
+<td align="left"><b>ecb-source-in-directories-buffer-face</b><i>
+</i></td>
+<td align="right">User Option</td>
+</tr>
+</table>
+<table width="95%" align="center">
+<tr><td>
+Define a face for displaying sources in the directories buffer. 
+</td></tr>
+</table>
+
+<p>
+<table width="100%">
+<tr>
+<td align="left"><b>ecb-sources-general-face</b><i>
+</i></td>
+<td align="right">User Option</td>
+</tr>
+</table>
+<table width="95%" align="center">
+<tr><td>
+Basic face for the ECB sources buffer. It´s recommended to define here
+the font-family, the font-size, the basic color etc. 
+</td></tr>
+</table>
+
+<p>
+<table width="100%">
+<tr>
+<td align="left"><b>ecb-token-header-face</b><i>
+</i></td>
+<td align="right">User Option</td>
+</tr>
+</table>
+<table width="95%" align="center">
+<tr><td>
+Define face used for highlighting the token header after jumping to it
+by clicking onto a node in the methods buffer. 
+</td></tr>
+</table>
+
+<p><hr>
+Node:<a name="ecb-faces">ecb-faces</a>,
+Next:<a rel=next accesskey=n href="#ecb-download">ecb-download</a>,
+Previous:<a rel=previous accesskey=p href="#ecb-face-options">ecb-face-options</a>,
+Up:<a rel=up accesskey=u href="#Customizable%20options">Customizable options</a>
+<br>
+
+<h4>Group ecb-faces</h4>
+
+<p>This group contains the following faces:
+
+<dl>
+<dt><code>ecb-bucket-token-face:</code>
+<dd>Face which can be used for displaying bucket tokens in the methods
+buffer. See also `ecb-bucket-token-display'.
+
+<br><dt><code>ecb-default-general-face:</code>
+<dd>Basic face for all ECB tree-buffers. 
+It's recommended to define here the font-family, the font-size, the basic
+color etc.
+
+<p>In GNU Emacs 21.X all faces (even the face
+<code>ecb-default-highlight-face</code>) used in the ECB tree-buffers inherit
+from this face. Therefore the default attributes like font etc. of a
+face used in a tree-buffer can be very easily changed with face
+<code>ecb-default-general-face</code>.
+
+<p>With XEmacs and GNU Emacs 20.X there is no inheritance-feature but the
+options <code>ecb-directories-general-face</code>,
+<code>ecb-sources-general-face</code>, <code>ecb-methods-general-face</code> and
+<code>ecb-history-general-face</code> offer the choice to use the face
+<code>ecb-default-general-face</code> so also with XEmacs and GNU Emacs 20.X
+the basic face-settings can be easily changed just by customizing the
+face <code>ecb-default-general-face</code>!
+
+<br><dt><code>ecb-default-highlight-face:</code>
+<dd>Define basic face for highlighting the selected node in an ECB
+tree-buffer.
+
+<p>In GNU Emacs 21.X all highlighting faces in the ECB tree-buffers
+inherit from this face. Therefore the default attributes like font
+etc. of a face used in a tree-buffer for highlighting the current
+token can be very easily changed with face
+<code>ecb-default-highlight-face</code>.
+
+<p>With XEmacs and GNU Emacs 20.X there is no inheritance-feature but the
+options <code>ecb-directory-face</code>, <code>ecb-source-face</code>,
+<code>ecb-method-face</code> and <code>ecb-history-face</code> offer the choice to
+use the face <code>ecb-default-highlight-face</code> so also with XEmacs and
+GNU Emacs 20.X the basic face-settings can be easily changed just by
+customizing the face <code>ecb-default-highlight-face</code>!
+
+<br><dt><code>ecb-directories-general-face:</code>
+<dd>Basic face for the ECB directories buffer. It´s recommended to define
+here the font-family, the font-size, the basic color etc.
+
+<br><dt><code>ecb-directory-face:</code>
+<dd>Define face used for highlighting current directory in the directories
+buffer.
+
+<br><dt><code>ecb-history-face:</code>
+<dd>Define face used for highlighting current history-entry in the history
+buffer.
+
+<br><dt><code>ecb-history-general-face:</code>
+<dd>Basic face for the ECB history buffer. It´s recommended to define here
+the font-family, the font-size, the basic color etc.
+
+<br><dt><code>ecb-method-face:</code>
+<dd>Define face used for highlighting current method, class or variable in
+the methods buffer.
+
+<br><dt><code>ecb-methods-general-face:</code>
+<dd>Basic face for the ECB methods buffer. It´s recommended to define here
+the font-family, the font-size, the basic color etc.
+
+<br><dt><code>ecb-source-face:</code>
+<dd>Define face used for highlighting current source in the sources
+buffer.
+
+<br><dt><code>ecb-source-in-directories-buffer-face:</code>
+<dd>Define a face for displaying sources in the directories buffer.
+
+<br><dt><code>ecb-sources-general-face:</code>
+<dd>Basic face for the ECB sources buffer. It´s recommended to define here
+the font-family, the font-size, the basic color etc.
+
+<br><dt><code>ecb-token-header-face:</code>
+<dd>Define face used for highlighting the token header after jumping to it
+by clicking onto a node in the methods buffer.
+
+<br><dt><code>ecb-type-token-class-face:</code>
+<dd>Define face used with option <code>ecb-type-token-display</code>.
+
+<br><dt><code>ecb-type-token-enum-face:</code>
+<dd>Define face used with option <code>ecb-type-token-display</code>.
+
+<br><dt><code>ecb-type-token-group-face:</code>
+<dd>Define face used with option <code>ecb-type-token-display</code>.
+
+<br><dt><code>ecb-type-token-interface-face:</code>
+<dd>Define face used with option <code>ecb-type-token-display</code>.
+
+<br><dt><code>ecb-type-token-struct-face:</code>
+<dd>Define face used with option <code>ecb-type-token-display</code>.
+
+<br><dt><code>ecb-type-token-typedef-face:</code>
+<dd>Define face used with option <code>ecb-type-token-display</code>.
+
+</dl>
+
+<p>Just call <code>customize-face &lt;face-name&gt;</code> to customize these faces
+for your personal taste. Or customize the related option in the group
+<a href="#ecb-face-options">ecb-face-options</a>.
+
+<p><hr>
+Node:<a name="ecb-download">ecb-download</a>,
+Previous:<a rel=previous accesskey=p href="#ecb-faces">ecb-faces</a>,
+Up:<a rel=up accesskey=u href="#Customizable%20options">Customizable options</a>
+<br>
+
+<h4>Group ecb-download</h4>
+
+<p>This group contains the following options:
+
+<p>
+<table width="100%">
+<tr>
+<td align="left"><b>ecb-download-delete-archive</b><i>
+</i></td>
+<td align="right">User Option</td>
+</tr>
+</table>
+<table width="95%" align="center">
+<tr><td>
+Should the downloaded archive be deleted after successfull
+installation or after failure during the installation-process. 
+Possible values are:
+
+<ul>
+<li><code>only-after-success</code>:
+Archive is only deleted after successfull installation
+but not if a failure occurs during the installation process. 
+<li><code>always</code>:
+Archive is also deleted if an error occurs. 
+<li><code>nil</code>:
+Archive will never be deleted. 
+</ul>
+</td></tr>
+</table>
+
+<p>
+<table width="100%">
+<tr>
+<td align="left"><b>ecb-download-url</b><i>
+</i></td>
+<td align="right">User Option</td>
+</tr>
+</table>
+<table width="95%" align="center">
+<tr><td>
+URL where downloadable ECB-versions are located. The ECB-archive-file
+(e.g. ecb-1.70.tar.gz) will be appended to this URL and
+<code>ecb-download-ecb</code> will try to download this archive.
+
+<p>Note: Normally this URL should never change but who knows... 
+</td></tr>
+</table>
+
+<p>
+<table width="100%">
+<tr>
+<td align="left"><b>ecb-download-version</b><i>
+</i></td>
+<td align="right">User Option</td>
+</tr>
+</table>
+<table width="95%" align="center">
+<tr><td>
+Which version of ECB should be downloaded by <code>ecb-download-ecb</code>. 
+Valid values are either the string "latest" or a version number like
+"1.70". ECB creates automatically the correct URL for download, see
+<code>ecb-download-ecb</code>. 
+</td></tr>
+</table>
 
 <p><hr>
 Node:<a name="Submitting%20problem%20report">Submitting problem report</a>,
@@ -1161,12 +3886,146 @@ Up:<a rel=up accesskey=u href="#Top">Top</a>
 
 <h2>Upgrading ECB</h2>
 
+<p>This chapter describes all apsects of upgrading to a newer version of
+ECB.
+
+<ul>
+<li><a accesskey=1 href="#Downloading%20new%20version">Downloading new version</a>:      How to download a newer version of ECB
+<li><a accesskey=2 href="#Auto.%20option-upgrading">Auto. option-upgrading</a>:       ECB can auto. upgrade your options
+</ul>
+
+<p><hr>
+Node:<a name="Downloading%20new%20version">Downloading new version</a>,
+Next:<a rel=next accesskey=n href="#Auto.%20option-upgrading">Auto. option-upgrading</a>,
+Previous:<a rel=previous accesskey=p href="#Upgrading">Upgrading</a>,
+Up:<a rel=up accesskey=u href="#Upgrading">Upgrading</a>
+<br>
+
+<h3>Downloading a new version of ECB</h3>
+
 <p>ECB offers the possibility to upgrade to newer versions direct from
-the ECB-website. This can be done with <code>ecb-download-ecb</code> if the tools
-wget, tar and gzip are installed onto the system and a connection to
-the web is available. Please read the documentation of
-<code>ecb-download-ecb</code> and the options of the customize-group
-'ecb-download'!
+the ECB-website. This can be done with <code>ecb-download-ecb</code> if the
+tools wget, tar and gzip are installed onto the system and a
+connection to the web is available. Please read the documentation of
+<code>ecb-download-ecb</code> (see <a href="#Interactive%20ECB%20commands">Interactive ECB commands</a>) and the
+options of the customize-group 'ecb-download'!
+
+<p><hr>
+Node:<a name="Auto.%20option-upgrading">Auto. option-upgrading</a>,
+Previous:<a rel=previous accesskey=p href="#Downloading%20new%20version">Downloading new version</a>,
+Up:<a rel=up accesskey=u href="#Upgrading">Upgrading</a>
+<br>
+
+<h3>Automatic upgrading of options</h3>
+
+<ul>
+<li><a accesskey=1 href="#User%20interface">User interface</a>:               Options and commands you should know
+<li><a accesskey=2 href="#Background%20information">Background information</a>:       Maybe some interesting informations
+</ul>
+
+<p><hr>
+Node:<a name="User%20interface">User interface</a>,
+Next:<a rel=next accesskey=n href="#Background%20information">Background information</a>,
+Previous:<a rel=previous accesskey=p href="#Auto.%20option-upgrading">Auto. option-upgrading</a>,
+Up:<a rel=up accesskey=u href="#Auto.%20option-upgrading">Auto. option-upgrading</a>
+<br>
+
+<h4>User interface for option-upgrading</h4>
+
+<p>There are two interactive commands (see <a href="#Interactive%20ECB%20commands">Interactive ECB commands</a>):
+
+<ul>
+<li><code>ecb-upgrade-options</code>:
+Does all necessary beginning with a incompatibility-check for all
+options, upgrading/resetting incompatible options and ending with the
+display of all upgraded or reset options.
+
+<li><code>ecb-display-upgraded-options</code>:
+Displays a temp. buffer with all upgraded or resetted ECB-options with
+their old and new values. 
+</ul>
+
+<p>If the option <code>ecb-auto-compatibility-check</code> has a non-nil value
+(which is the default) then ECB does all this stuff automatically at
+startup. This is very recommended!
+
+<p>If you are interested in some background information, read
+<a href="#Background%20information">Background information</a>!
+
+<p><hr>
+Node:<a name="Background%20information">Background information</a>,
+Previous:<a rel=previous accesskey=p href="#User%20interface">User interface</a>,
+Up:<a rel=up accesskey=u href="#Auto.%20option-upgrading">Auto. option-upgrading</a>
+<br>
+
+<h4>Background information</h4>
+
+<p>Big packages like ECB will be enhanced and developed continously so
+sometimes a new version must be released. Such packages offer in
+general a lot of customizable options so probably some of these
+options change the type or are renamed because the old type and/or
+name of the option makes no sense in the new release.
+
+<p>Especially options which have changed the type of their value are now
+a problem for the user which want to upgrade to the latest
+ECB-version: If the user has saved a certain value for option X in its
+file <code>.emacs</code> but the type of this saved value doesn't match the
+new defined type in the defcustom-form after an ECB-upgrade then there
+can occur serious problems like ECB can not be started anymore or even
+Emacs can not be startet without errors.
+
+<p>Until now there was only one way to fix these problems: The user must
+manually edit his file <code>.emacs</code> and remove all entries for
+options which have now another type. After this and after restarting
+Emacs the new default-values of the type-changed options in the new
+ECB-release are active and the user can go on using Emacs and ECB. But
+this approach to fix the incompatible-option-problem has two serious
+drawbacks:
+
+<ol type=1 start=1>
+</p><li>The user must manually edit the customize-section in his file
+<code>.emacs</code>. This should normally not be done and if then only by
+old-handed Emacs-users.
+
+<li>The customized value of the option X in the old-release (with the old
+type) is lost because after removing the related entry from the
+file <code>.emacs</code> the new default-value is active, so the user must
+re-customize the option X.
+</ol>
+
+<p>Ok, this is one half of the option-upgrade-problem but a new ECB-release
+can also rename a option from name X to name Y because the new name Y makes
+much more sense and/or is more mnemonic. If only the name has changed but
+not the type this is not a serious problem like above but also annoying
+because the customized value of the old-option X takes no effect in the new
+release but instead the default-value of the new-option Y is now active. 
+But nevertheless this problem has the drawback number 2 (see above).
+
+<p>The last category of upgrade-problems is a renamed option which has also
+changed its type.
+
+<p>ECB has a solution for all these problems:
+
+<ul>
+
+<li>It checks all customized values of all ECB-optons if they are still
+type-compatible. If not then it tries to upgrade the old-value to the
+new value-type and if this is not possible then it resets the option
+to the new default value and store it via customize in the .emacs-file
+(or in any file which is used for customized options).
+
+<li>It offers a special constant <code>ecb-upgradable-option-alist</code> which
+allows the ECB-maintainers to define special transformings for renamed
+options so even the value of an old-option X can be savely transformed
+to the new-option Y and the old setting is not lost. 
+</ul>
+
+<p>All these checks and transformings are done at beginning of activating
+ECB - if the option <code>ecb-auto-compatibility-check</code> is not nil. If
+ECB has recognized incompatible or renamed options it does its
+upgrading/reseting-job so all ECB-options have correct types so ECB
+can start correct. After ECB is started it displays a list of all
+upgraded or resetted option with their old and new values.
 
 <p><hr>
 Node:<a name="Tips%20and%20tricks">Tips and tricks</a>,
@@ -1198,8 +4057,9 @@ Up:<a rel=up accesskey=u href="#Tips%20and%20tricks">Tips and tricks</a>
 
 <ul>
 <li><code>ecb-default-general-face</code>:
-Basic face for displaying an ECB-tree-buffer. 
-<li><code>ecb-default-highlight-face</code>:
+
+<p>Basic face for displaying an ECB-tree-buffer. 
+</p><li><code>ecb-default-highlight-face</code>:
 Basic face for highlighting the current node in an ECB-tree-buffer. 
 </ul>
 
@@ -1231,8 +4091,11 @@ such a situation:
 
 <ol type=1 start=1>
 <li>Customize <code>ecb-layout-nr</code> to layout nr. 10 (on top) or nr. 11 (on left-side)
-<li>Ensure that <code>ecb-compile-window-height</code> is nil. 
-<li>Optional: Ajust the <code>ecb-windows-height</code> resp. <code>ecb-windows-width</code>. 
+
+<li>Ensure that <code>ecb-compile-window-height</code> is nil.
+
+<li>Optional: Ajust the <code>ecb-windows-height</code> resp. <code>ecb-windows-width</code>.
+
 <li>Save your changes.
 </ol>
 
@@ -1245,7 +4108,7 @@ so you get all the place of your screen for editing.
 Call <code>ecb-toggle-ecb-windows</code> or <code>ecb-show-ecb-windows</code> to
 make the ECB-method buffer visible if not already. If you want select
 a method/variable with the keyboard instead with the mouse you should
-read the section <a href="#Working%20with%20the%20keyboard">Working with the keyboard</a> in this online help! 
+read the section <a href="#Using%20the%20keyboard">Using the keyboard</a> in this online help! 
 </ul>
 
 <p>The possibility of hiding temporally the ECB windows like described
@@ -1265,14 +4128,19 @@ following:
 
 <ol type=1 start=1>
 </p><li>Customize <code>ecb-layout-nr</code> to layout nr. 11, 14, 15 or 16 dependend to
-what you like. 
-<li>Optional: Ensure that <code>ecb-compile-window-height</code> is nil. 
-<li>Optional: Ajust the <code>ecb-windows-width</code>. 
+what you like.
+
+<li>Optional: Ensure that <code>ecb-compile-window-height</code> is nil.
+
+<li>Optional: Ajust the <code>ecb-windows-width</code>.
+
 <li>Optional: Customize <code>ecb-toggle-layout-sequence</code> and toggle very fast
-between several layouts by <code>ecb-toggle-layout</code>. See the doc-strings! 
+between several layouts by <code>ecb-toggle-layout</code>. See the doc-strings!
+
 <li>Optional: Customize <code>ecb-show-sources-in-directories-buffer</code> to not
 nil if the choosen layout (see 1. and 4.) contains a
-directories-tree-buffer. 
+directories-tree-buffer.
+
 <li>Save your changes.
 </ol>
 
@@ -1344,7 +4212,8 @@ Up:<a rel=up accesskey=u href="#Top">Top</a>
 <li><code>ecb-current-buffer-sync-hook</code>
 </ul>
 
-<p>Look at the documentation of these variables and hooks to get description.
+<p>Look at the documentation of these variables and hooks to get a
+description.
 
 <p>Remark to the library tree-buffer: This library is ECB independent and
 can be used for other applications too. But such an application is not
@@ -1372,11 +4241,11 @@ Up:<a rel=up accesskey=u href="#Top">Top</a>
 helpful solutions/hints/workarounds:
 
 <ul>
-<li><a accesskey=1 href="#VC">VC</a>: 
-<li><a accesskey=2 href="#follow-mouse">follow-mouse</a>: 
-<li><a accesskey=3 href="#avoid">avoid</a>: 
-<li><a accesskey=4 href="#calendar">calendar</a>: 
-<li><a accesskey=5 href="#calculator">calculator</a>: 
+<li><a accesskey=1 href="#VC">VC</a>:                           Conflicts with Version Control
+<li><a accesskey=2 href="#follow-mouse">follow-mouse</a>:                 Conflicts with follow-mouse.el
+<li><a accesskey=3 href="#avoid">avoid</a>:                        Conflicts with avoid.el
+<li><a accesskey=4 href="#calendar">calendar</a>:                     Conflicts with calendar.el
+<li><a accesskey=5 href="#calculator">calculator</a>:                   Conflicts with calculator.el
 </ul>
 
 <p><hr>
@@ -1389,7 +4258,7 @@ Up:<a rel=up accesskey=u href="#Conflicts">Conflicts</a>
 <h3>Package VC (Version Control)</h3>
 
 <p>The variable <code>vc-delete-logbuf-window</code> must be set to nil during
-active ECB. This can be done with the hooks mentioned above.
+active ECB. This can be done with the hooks mentioned in <a href="#Elisp%20programming">Elisp programming</a>.
 
 <p><hr>
 Node:<a name="follow-mouse">follow-mouse</a>,
@@ -1400,14 +4269,16 @@ Up:<a rel=up accesskey=u href="#Conflicts">Conflicts</a>
 
 <h3>Package follow-mouse.el</h3>
 
+<p>The following is only relevant for Emacs 20.X!
+
 <p>ECB works very well with follow-mouse if follow-mouse is turned on
-BEFORE ECB is activated (e.g. within the <code>ecb-activate-hook</code>). But if
-you activate follow-mouse first after ECB is already activated, then
-the follow-mouse stuff prevents the complete node-name to be displayed
-in the echo-area if mouse moves over it. Because ECB has a much more
-intelligent mouse tracking mechanism than follow-mouse the
-follow-mouse stuff profit from ECB and works even better and saver as
-without activated ECB!
+<strong>BEFORE</strong> ECB is activated (e.g. within the
+<code>ecb-activate-hook</code>). But if you activate follow-mouse first
+after ECB is already activated, then the follow-mouse stuff prevents
+the complete node-name to be displayed in the echo-area if mouse moves
+over it. Because ECB has a much more intelligent mouse tracking
+mechanism than follow-mouse the follow-mouse stuff profit from ECB and
+works even better and saver as without activated ECB!
 
 <p><hr>
 Node:<a name="avoid">avoid</a>,
@@ -1472,7 +4343,6 @@ Up:<a rel=up accesskey=u href="#Top">Top</a>
 <li><code>ecb-add-all-buffers-to-history</code>: <a href="#Interactive%20ECB%20commands">Interactive ECB commands</a>
 <li><code>ecb-clear-history</code>: <a href="#Interactive%20ECB%20commands">Interactive ECB commands</a>
 <li><code>ecb-current-buffer-sync</code>: <a href="#Interactive%20ECB%20commands">Interactive ECB commands</a>
-<li><code>ecb-cycle-switch-to-compilation-buffer</code>: <a href="#Interactive%20ECB%20commands">Interactive ECB commands</a>
 <li><code>ecb-cycle-through-compilation-buffers</code>: <a href="#Interactive%20ECB%20commands">Interactive ECB commands</a>
 <li><code>ecb-deactivate</code>: <a href="#Interactive%20ECB%20commands">Interactive ECB commands</a>
 <li><code>ecb-display-upgraded-options</code>: <a href="#Interactive%20ECB%20commands">Interactive ECB commands</a>
@@ -1501,25 +4371,97 @@ Up:<a rel=up accesskey=u href="#Top">Top</a>
 
 <h2>Variable Index</h2>
 
-<p>This index contains only the most important options of ECB!
-
 <ul compact>
-<li><code>ecb-auto-activate</code>: <a href="#Customizing">Customizing</a>
-<li><code>ecb-key-map</code>: <a href="#Customizing">Customizing</a>
-<li><code>ecb-layout-nr</code>: <a href="#Customizing">Customizing</a>
-<li><code>ecb-major-modes-activate</code>: <a href="#Customizing">Customizing</a>
-<li><code>ecb-major-modes-deactivate</code>: <a href="#Customizing">Customizing</a>
-<li><code>ecb-new-ecb-frame</code>: <a href="#Customizing">Customizing</a>
-<li><code>ecb-primary-mouse-jump-destination</code>: <a href="#Customizing">Customizing</a>
-<li><code>ecb-primary-secondary-mouse-buttons</code>: <a href="#Customizing">Customizing</a>
-<li><code>ecb-show-help-format</code>: <a href="#Customizing">Customizing</a>
-<li><code>ecb-show-node-info-in-minibuffer</code>: <a href="#Customizing">Customizing</a>
-<li><code>ecb-source-file-regexps</code>: <a href="#Customizing">Customizing</a>
-<li><code>ecb-source-path</code>: <a href="#Customizing">Customizing</a>
-<li><code>ecb-token-display-function</code>: <a href="#Customizing">Customizing</a>
-<li><code>ecb-tree-expand-symbol-before</code>: <a href="#Customizing">Customizing</a>
-<li><code>ecb-tree-indent</code>: <a href="#Customizing">Customizing</a>
-<li><code>ecb-type-token-display</code>: <a href="#Customizing">Customizing</a>
+<li><code>ecb-activate-before-layout-draw-hook</code>: <a href="#ecb-general">ecb-general</a>
+<li><code>ecb-activate-before-new-frame-created-hook</code>: <a href="#ecb-layout">ecb-layout</a>
+<li><code>ecb-activate-hook</code>: <a href="#ecb-general">ecb-general</a>
+<li><code>ecb-add-path-for-not-matching-files</code>: <a href="#ecb-directories">ecb-directories</a>
+<li><code>ecb-advice-window-functions</code>: <a href="#ecb-layout">ecb-layout</a>
+<li><code>ecb-auto-activate</code>: <a href="#ecb-general">ecb-general</a>
+<li><code>ecb-auto-compatibility-check</code>: <a href="#ecb-general">ecb-general</a>
+<li><code>ecb-auto-expand-directory-tree</code>: <a href="#ecb-directories">ecb-directories</a>
+<li><code>ecb-auto-update-methods-after-save</code>: <a href="#ecb-methods">ecb-methods</a>
+<li><code>ecb-bucket-token-display</code>: <a href="#ecb-methods">ecb-methods</a>
+<li><code>ecb-cache-directory-contents</code>: <a href="#ecb-directories">ecb-directories</a>
+<li><code>ecb-clear-history-behavior</code>: <a href="#ecb-history">ecb-history</a>
+<li><code>ecb-compile-window-enlarge-by-select</code>: <a href="#ecb-layout">ecb-layout</a>
+<li><code>ecb-compile-window-height</code>: <a href="#ecb-layout">ecb-layout</a>
+<li><code>ecb-compile-window-temporally-enlarge</code>: <a href="#ecb-layout">ecb-layout</a>
+<li><code>ecb-current-buffer-sync-hook</code>: <a href="#ecb-general">ecb-general</a>
+<li><code>ecb-deactivate-hook</code>: <a href="#ecb-general">ecb-general</a>
+<li><code>ecb-debug-mode</code>: <a href="#ecb-general">ecb-general</a>
+<li><code>ecb-directories-buffer-name</code>: <a href="#ecb-directories">ecb-directories</a>
+<li><code>ecb-directories-general-face</code>: <a href="#ecb-face-options">ecb-face-options</a>
+<li><code>ecb-directory-face</code>: <a href="#ecb-face-options">ecb-face-options</a>
+<li><code>ecb-download-delete-archive</code>: <a href="#ecb-download">ecb-download</a>
+<li><code>ecb-download-url</code>: <a href="#ecb-download">ecb-download</a>
+<li><code>ecb-download-version</code>: <a href="#ecb-download">ecb-download</a>
+<li><code>ecb-exclude-parents-regexp</code>: <a href="#ecb-methods">ecb-methods</a>
+<li><code>ecb-excluded-directories-regexp</code>: <a href="#ecb-directories">ecb-directories</a>
+<li><code>ecb-font-lock-tokens</code>: <a href="#ecb-methods">ecb-methods</a>
+<li><code>ecb-hide-ecb-windows-hook</code>: <a href="#ecb-layout">ecb-layout</a>
+<li><code>ecb-highlight-token-header-after-jump</code>: <a href="#ecb-methods">ecb-methods</a>
+<li><code>ecb-highlight-token-with-point</code>: <a href="#ecb-methods">ecb-methods</a>
+<li><code>ecb-highlight-token-with-point-delay</code>: <a href="#ecb-methods">ecb-methods</a>
+<li><code>ecb-history-buffer-name</code>: <a href="#ecb-history">ecb-history</a>
+<li><code>ecb-history-face</code>: <a href="#ecb-face-options">ecb-face-options</a>
+<li><code>ecb-history-general-face</code>: <a href="#ecb-face-options">ecb-face-options</a>
+<li><code>ecb-history-item-name</code>: <a href="#ecb-history">ecb-history</a>
+<li><code>ecb-key-map</code>: <a href="#ecb-general">ecb-general</a>
+<li><code>ecb-kill-buffer-clears-history</code>: <a href="#ecb-history">ecb-history</a>
+<li><code>ecb-layout-always-operate-in-edit-window</code>: <a href="#ecb-layout">ecb-layout</a>
+<li><code>ecb-layout-nr</code>: <a href="#ecb-layout">ecb-layout</a>
+<li><code>ecb-layout-switch-to-compilation-window</code>: <a href="#ecb-layout">ecb-layout</a>
+<li><code>ecb-layout-window-sizes</code>: <a href="#ecb-layout">ecb-layout</a>
+<li><code>ecb-major-modes-activate</code>: <a href="#ecb-general">ecb-general</a>
+<li><code>ecb-major-modes-deactivate</code>: <a href="#ecb-general">ecb-general</a>
+<li><code>ecb-method-face</code>: <a href="#ecb-face-options">ecb-face-options</a>
+<li><code>ecb-methods-buffer-name</code>: <a href="#ecb-methods">ecb-methods</a>
+<li><code>ecb-methods-general-face</code>: <a href="#ecb-face-options">ecb-face-options</a>
+<li><code>ecb-minor-mode-text</code>: <a href="#ecb-general">ecb-general</a>
+<li><code>ecb-new-ecb-frame</code>: <a href="#ecb-layout">ecb-layout</a>
+<li><code>ecb-other-window-jump-behavior</code>: <a href="#ecb-layout">ecb-layout</a>
+<li><code>ecb-post-process-semantic-tokenlist</code>: <a href="#ecb-methods">ecb-methods</a>
+<li><code>ecb-primary-mouse-jump-destination</code>: <a href="#ecb-general">ecb-general</a>
+<li><code>ecb-primary-secondary-mouse-buttons</code>: <a href="#ecb-general">ecb-general</a>
+<li><code>ecb-redraw-layout-quickly</code>: <a href="#ecb-layout">ecb-layout</a>
+<li><code>ecb-scroll-window-after-jump</code>: <a href="#ecb-methods">ecb-methods</a>
+<li><code>ecb-select-edit-window-on-redraw</code>: <a href="#ecb-layout">ecb-layout</a>
+<li><code>ecb-show-ecb-windows-hook</code>: <a href="#ecb-layout">ecb-layout</a>
+<li><code>ecb-show-help-format</code>: <a href="#ecb-general">ecb-general</a>
+<li><code>ecb-show-node-info-in-minibuffer</code>: <a href="#ecb-general">ecb-general</a>
+<li><code>ecb-show-only-positioned-tokens</code>: <a href="#ecb-methods">ecb-methods</a>
+<li><code>ecb-show-source-file-extension</code>: <a href="#ecb-sources">ecb-sources</a>
+<li><code>ecb-show-sources-in-directories-buffer</code>: <a href="#ecb-directories">ecb-directories</a>
+<li><code>ecb-show-tokens</code>: <a href="#ecb-methods">ecb-methods</a>
+<li><code>ecb-sort-history-items</code>: <a href="#ecb-history">ecb-history</a>
+<li><code>ecb-source-face</code>: <a href="#ecb-face-options">ecb-face-options</a>
+<li><code>ecb-source-file-regexps</code>: <a href="#ecb-sources">ecb-sources</a>
+<li><code>ecb-source-in-directories-buffer-face</code>: <a href="#ecb-face-options">ecb-face-options</a>
+<li><code>ecb-source-path</code>: <a href="#ecb-directories">ecb-directories</a>
+<li><code>ecb-sources-buffer-name</code>: <a href="#ecb-sources">ecb-sources</a>
+<li><code>ecb-sources-general-face</code>: <a href="#ecb-face-options">ecb-face-options</a>
+<li><code>ecb-sources-sort-method</code>: <a href="#ecb-sources">ecb-sources</a>
+<li><code>ecb-split-edit-window</code>: <a href="#ecb-layout">ecb-layout</a>
+<li><code>ecb-temp-dir</code>: <a href="#ecb-general">ecb-general</a>
+<li><code>ecb-toggle-layout-sequence</code>: <a href="#ecb-layout">ecb-layout</a>
+<li><code>ecb-token-display-function</code>: <a href="#ecb-methods">ecb-methods</a>
+<li><code>ecb-token-header-face</code>: <a href="#ecb-face-options">ecb-face-options</a>
+<li><code>ecb-token-jump-narrow</code>: <a href="#ecb-methods">ecb-methods</a>
+<li><code>ecb-token-jump-sets-mark</code>: <a href="#ecb-methods">ecb-methods</a>
+<li><code>ecb-tree-expand-symbol-before</code>: <a href="#ecb-general">ecb-general</a>
+<li><code>ecb-tree-incremental-search</code>: <a href="#ecb-general">ecb-general</a>
+<li><code>ecb-tree-indent</code>: <a href="#ecb-general">ecb-general</a>
+<li><code>ecb-tree-navigation-by-arrow</code>: <a href="#ecb-general">ecb-general</a>
+<li><code>ecb-tree-RET-selects-edit-window</code>: <a href="#ecb-general">ecb-general</a>
+<li><code>ecb-truncate-lines</code>: <a href="#ecb-general">ecb-general</a>
+<li><code>ecb-truncate-long-names</code>: <a href="#ecb-general">ecb-general</a>
+<li><code>ecb-type-token-display</code>: <a href="#ecb-methods">ecb-methods</a>
+<li><code>ecb-use-recursive-edit</code>: <a href="#ecb-general">ecb-general</a>
+<li><code>ecb-window-sync</code>: <a href="#ecb-general">ecb-general</a>
+<li><code>ecb-window-sync-delay</code>: <a href="#ecb-general">ecb-general</a>
+<li><code>ecb-windows-height</code>: <a href="#ecb-layout">ecb-layout</a>
+<li><code>ecb-windows-width</code>: <a href="#ecb-layout">ecb-layout</a>
 </ul>
 <p><hr>
 Node:<a name="Concept%20Index">Concept Index</a>,
@@ -1530,46 +4472,151 @@ Up:<a rel=up accesskey=u href="#Top">Top</a>
 <h2>Concept Index</h2>
 
 <ul compact>
-<li>Adviced functions: <a href="#Working%20with%20the%20edit-window">Working with the edit-window</a>
+<li>Adviced functions: <a href="#The%20edit-window">The edit-window</a>
+<li>Automatic activation: <a href="#Automatic%20activation">Automatic activation</a>
+<li>Automatic deactivation: <a href="#Automatic%20activation">Automatic activation</a>
 <li>avoid package: <a href="#avoid">avoid</a>
 <li>Bug report: <a href="#Submitting%20problem%20report">Submitting problem report</a>
 <li>calculator package: <a href="#calculator">calculator</a>
 <li>calendar package: <a href="#calendar">calendar</a>
 <li>collapsing: <a href="#Navigation">Navigation</a>
-<li>compilation buffers: <a href="#Temp-%20and%20compilation-buffers">Temp- and compilation-buffers</a>
+<li>compilation buffers: <a href="#Temp-%20and%20compile-buffers">Temp- and compile-buffers</a>
 <li>Directories: <a href="#ECB%20Directories">ECB Directories</a>
-<li>Download: <a href="#Upgrading">Upgrading</a>
-<li>edit-window: <a href="#Working%20with%20the%20edit-window">Working with the edit-window</a>
+<li>Download: <a href="#Downloading%20new%20version">Downloading new version</a>
+<li>ECB-layout: <a href="#The%20ECB-layout">The ECB-layout</a>
+<li>ECB-windows: <a href="#Overview">Overview</a>
+<li>edit-window: <a href="#The%20edit-window">The edit-window</a>
 <li>expanding: <a href="#Navigation">Navigation</a>
 <li>Faces: <a href="#Changing%20faces">Changing faces</a>
 <li>follow-mouse package: <a href="#follow-mouse">follow-mouse</a>
-<li>grep buffers: <a href="#Temp-%20and%20compilation-buffers">Temp- and compilation-buffers</a>
-<li>help buffers: <a href="#Temp-%20and%20compilation-buffers">Temp- and compilation-buffers</a>
-<li>Hide windows: <a href="#Hiding%2fShowing%20the%20ECB%20windows">Hiding/Showing the ECB windows</a>
+<li>grep buffers: <a href="#Temp-%20and%20compile-buffers">Temp- and compile-buffers</a>
+<li>help buffers: <a href="#Temp-%20and%20compile-buffers">Temp- and compile-buffers</a>
+<li>Hide windows: <a href="#Hiding%20the%20ECB%20windows">Hiding the ECB windows</a>
 <li>History: <a href="#ECB%20Sources">ECB Sources</a>
 <li>Hooks: <a href="#Elisp%20programming">Elisp programming</a>
 <li>Incremental search: <a href="#Incremental%20search">Incremental search</a>
-<li>layout: <a href="#Changing%20the%20ECB-layout">Changing the ECB-layout</a>
+<li>layout: <a href="#The%20ECB-layout">The ECB-layout</a>
 <li>Methods: <a href="#ECB%20Methods">ECB Methods</a>
-<li>mouse button: <a href="#Working%20with%20the%20mouse">Working with the mouse</a>
-<li>primary button: <a href="#Working%20with%20the%20mouse">Working with the mouse</a>
+<li>minor mode: <a href="#Standard%20activation">Standard activation</a>
+<li>mouse button: <a href="#Using%20the%20mouse">Using the mouse</a>
+<li>primary button: <a href="#Using%20the%20mouse">Using the mouse</a>
 <li>Problem report: <a href="#Submitting%20problem%20report">Submitting problem report</a>
 <li>redraw: <a href="#Redrawing%20the%20ECB-layout">Redrawing the ECB-layout</a>
 <li>RETURN key: <a href="#Navigation">Navigation</a>
 <li>Scrolling: <a href="#Optimze%20scrolling">Optimze scrolling</a>
-<li>secondary button: <a href="#Working%20with%20the%20mouse">Working with the mouse</a>
-<li>SHIFT-click: <a href="#Working%20with%20the%20mouse">Working with the mouse</a>
-<li>Show windows: <a href="#Hiding%2fShowing%20the%20ECB%20windows">Hiding/Showing the ECB windows</a>
+<li>secondary button: <a href="#Using%20the%20mouse">Using the mouse</a>
+<li>semantic token: <a href="#Customizing%20the%20display">Customizing the display</a>
+<li>SHIFT-click: <a href="#Using%20the%20mouse">Using the mouse</a>
+<li>Show windows: <a href="#Hiding%20the%20ECB%20windows">Hiding the ECB windows</a>
 <li>Small screen: <a href="#Small%20screens">Small screens</a>
 <li>Sources: <a href="#ECB%20Sources">ECB Sources</a>
 <li>Speedbar: <a href="#Simulating%20speedbar">Simulating speedbar</a>
 <li>TAB key: <a href="#Navigation">Navigation</a>
-<li>temporary buffers: <a href="#Temp-%20and%20compilation-buffers">Temp- and compilation-buffers</a>
+<li>temporary buffers: <a href="#Temp-%20and%20compile-buffers">Temp- and compile-buffers</a>
+<li>token: <a href="#Customizing%20the%20display">Customizing the display</a>
 <li>tree-buffer: <a href="#Overview">Overview</a>
-<li>Upgrade: <a href="#Upgrading">Upgrading</a>
 <li>VC package: <a href="#VC">VC</a>
 <li>Version control: <a href="#VC">VC</a>
 </ul>
+
+<h2>Table of Contents</h2>
+<ul>
+<li><a name="toc_Install"></a>
+    <a href="#Install">Installation</a>
+<li><a name="toc_Overview"></a>
+    <a href="#Overview">Overview</a>
+<ul>
+<li><a href="#ECB%20Directories">ECB Directories</a>
+<li><a href="#ECB%20Sources">ECB Sources</a>
+<li><a href="#ECB%20Methods">ECB Methods</a>
+</ul>
+<li><a name="toc_Activation%20and%20Deactivation"></a>
+    <a href="#Activation%20and%20Deactivation">Activation and Deactivation</a>
+<ul>
+<li><a href="#Standard%20activation">Standard activation and deactivation</a>
+<li><a href="#Automatic%20activation">Automatic activation and deactivation</a>
+</ul>
+<li><a name="toc_Usage%20of%20ECB"></a>
+    <a href="#Usage%20of%20ECB">Usage of ECB</a>
+<ul>
+<li><a href="#Using%20the%20mouse">Working with the mouse in the ECB-windows</a>
+<li><a href="#Using%20the%20keyboard">Working with the keyboard in the ECB-windows</a>
+<ul>
+<li><a href="#Navigation">Navigation</a>
+<li><a href="#Incremental%20search">Incremental search for a node in current tree-buffer</a>
+</ul>
+<li><a href="#The%20edit-window">Working with the edit-window</a>
+<li><a href="#Temp-%20and%20compile-buffers">Temp- and compile-buffers display in ECB</a>
+<li><a href="#The%20Methods%20buffer">Using and customizing the ECB-Methods buffer</a>
+<ul>
+<li><a href="#Customizing%20the%20display">Customizing the display of the Methods-buffer</a>
+<li><a href="#Rebuilding%20the%20Methods">Rebuilding the Methods-buffer</a>
+</ul>
+<li><a href="#The%20ECB-layout">Changing, customizing and redrawing the ECB-layout</a>
+<ul>
+<li><a href="#Changing%20the%20ECB-layout">Changing and customizing the ECB-layout</a>
+<li><a href="#Redrawing%20the%20ECB-layout">Redrawing the ECB-layout</a>
+</ul>
+<li><a href="#Hiding%20the%20ECB%20windows">Hiding/Showing the ECB windows</a>
+<li><a href="#Interactive%20ECB%20commands">Interactive ECB commands</a>
+</ul>
+<li><a name="toc_Customizing"></a>
+    <a href="#Customizing">Customizing ECB</a>
+<ul>
+<li><a href="#Most%20important%20options">The most important options of ECB</a>
+<li><a href="#Customizable%20options">All customizable options of ECB</a>
+<ul>
+<li><a href="#ecb-general">Group ecb-general</a>
+<li><a href="#ecb-directories">Group ecb-directories</a>
+<li><a href="#ecb-sources">Group ecb-sources</a>
+<li><a href="#ecb-methods">Group ecb-methods</a>
+<li><a href="#ecb-history">Group ecb-history</a>
+<li><a href="#ecb-layout">Group ecb-layout</a>
+<li><a href="#ecb-face-options">Group ecb-face-options</a>
+<li><a href="#ecb-faces">Group ecb-faces</a>
+<li><a href="#ecb-download">Group ecb-download</a>
+</ul>
+</ul>
+<li><a name="toc_Submitting%20problem%20report"></a>
+    <a href="#Submitting%20problem%20report">Submitting a problem report</a>
+<li><a name="toc_Upgrading"></a>
+    <a href="#Upgrading">Upgrading ECB</a>
+<ul>
+<li><a href="#Downloading%20new%20version">Downloading a new version of ECB</a>
+<li><a href="#Auto.%20option-upgrading">Automatic upgrading of options</a>
+<ul>
+<li><a href="#User%20interface">User interface for option-upgrading</a>
+<li><a href="#Background%20information">Background information</a>
+</ul>
+</ul>
+<li><a name="toc_Tips%20and%20tricks"></a>
+    <a href="#Tips%20and%20tricks">Tips and tricks</a>
+<ul>
+<li><a href="#Changing%20faces">Changing faces in the ECB tree-buffers</a>
+<li><a href="#Small%20screens">Working with small screens</a>
+<li><a href="#Simulating%20speedbar">Simulating speedbar without an extra frame</a>
+<li><a href="#Optimze%20scrolling">Optimze scrolling in the edit-window</a>
+<li><a href="#Large%20directories">Working with large directories</a>
+</ul>
+<li><a name="toc_Elisp%20programming"></a>
+    <a href="#Elisp%20programming">Entry points for elisp programmers</a>
+<li><a name="toc_Conflicts"></a>
+    <a href="#Conflicts">Known conflicts with other packages</a>
+<ul>
+<li><a href="#VC">Package VC (Version Control)</a>
+<li><a href="#follow-mouse">Package follow-mouse.el</a>
+<li><a href="#avoid">Package avoid.el</a>
+<li><a href="#calendar">Package calendar.el</a>
+<li><a href="#calculator">Package calculator.el</a>
+</ul>
+<li><a name="toc_Function%20Index"></a>
+    <a href="#Function%20Index">Function Index</a>
+<li><a name="toc_Variable%20Index"></a>
+    <a href="#Variable%20Index">Variable Index</a>
+<li><a name="toc_Concept%20Index"></a>
+    <a href="#Concept%20Index">Concept Index</a>
+</ul>
+
 
 </body></html>
 

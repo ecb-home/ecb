@@ -124,7 +124,7 @@
 ;;   + The edit-window must not be splitted and the point must reside in
 ;;     the not deleted edit-window.
 
-;; $Id: ecb-layout.el,v 1.113 2002/07/15 12:32:53 berndl Exp $
+;; $Id: ecb-layout.el,v 1.114 2002/07/22 12:38:16 berndl Exp $
 
 ;;; Code:
 
@@ -133,7 +133,7 @@
 (if running-xemacs
     ;; because we want only check if the car of this function is equal for two
     ;; different windows for the sake if the two window are located side by
-    ;; side or not be can here define this alias even if this function does in
+    ;; side or not we can here define this alias even if this function does in
     ;; XEmacs soemthing different.
     (defalias 'window-edges 'window-pixel-edges))
 
@@ -503,11 +503,11 @@ window."
               (const :tag "switch-to-buffer-other-window"
                      :value switch-to-buffer-other-window)))
 
-(defcustom ecb-layout-switch-to-compilation-window-auto-enlarge nil
-  "*When we automatically switch to a compilation buffer, automatically enlarge
-the buffer with `ecb-toggle-enlarged-compilation-window'."
-  :group 'ecb-layout
-  :type 'boolean)
+;; (defcustom ecb-layout-switch-to-compilation-window-auto-enlarge nil
+;;   "*When we automatically switch to a compilation buffer, automatically enlarge
+;; the buffer with `ecb-toggle-enlarged-compilation-window'."
+;;   :group 'ecb-layout
+;;   :type 'boolean)
 
 (defconst ecb-number-of-layouts 13)
 (defcustom ecb-layout-window-sizes nil
@@ -608,7 +608,8 @@ command.")
         ecb-edit-window nil
         ecb-last-edit-window-with-point nil
         ecb-last-source-buffer nil
-        ecb-compile-window nil))
+        ecb-compile-window nil
+        ecb-compile-window-was-selected-before-command nil))
 
 (defun ecb-compile-window-live-p (&optional display-msg)
   (if (and ecb-compile-window (window-live-p ecb-compile-window))
@@ -1219,10 +1220,11 @@ split it."
 
     (when (and (member 'switch-to-buffer-other-window
                        ecb-layout-switch-to-compilation-window)
+               (ecb-compile-window-live-p)
                (ecb-compilation-buffer-p (ad-get-arg 0)))
-      (select-window ecb-compile-window)
-      (when ecb-layout-switch-to-compilation-window-auto-enlarge
-        (ecb-toggle-enlarged-compilation-window 1)))
+      (select-window ecb-compile-window))
+;;       (when ecb-layout-switch-to-compilation-window-auto-enlarge
+;;         (ecb-toggle-enlarged-compilation-window 1)))
                        
     ;; if we have not selected the edit-window before and we are still not in
     ;; an edit-window then we simply jump to the first edit-window. This is
@@ -1259,15 +1261,17 @@ alternatives:
 
     (if (and (member 'switch-to-buffer
                      ecb-layout-switch-to-compilation-window)
+             (ecb-compile-window-live-p)
              (ecb-compilation-buffer-p (ad-get-arg 0)))
         (progn
-          (select-window ecb-compile-window)
+          (select-window ecb-compile-window))
 
-          (when ecb-layout-switch-to-compilation-window-auto-enlarge
-            (ecb-toggle-enlarged-compilation-window 1)))
+;;           (when ecb-layout-switch-to-compilation-window-auto-enlarge
+;;             (ecb-toggle-enlarged-compilation-window 1)))
           
       (if (not (ecb-point-in-edit-window))
-          (error "Only in an edit-window the buffer can be switched!")))
+          (error "Only in an edit-window the buffer can be switched!"))
+      )
 
     ;; now we are always in the edit window, so we can switch to the buffer
     ad-do-it))

@@ -26,7 +26,7 @@
 ;; This file is part of the ECB package which can be found at:
 ;; http://home.swipnet.se/mayhem/ecb.html
 
-;; $Id: tree-buffer.el,v 1.88 2002/07/05 14:05:33 berndl Exp $
+;; $Id: tree-buffer.el,v 1.89 2002/07/22 12:38:17 berndl Exp $
 
 ;;; Code:
 
@@ -800,6 +800,8 @@ functionality is done with the `help-echo'-property and the function
     (unless running-emacs-21
       (define-key special-event-map [mouse-movement] tree-buffer-saved-mouse-movement-fn))))
 
+;; pressed keys
+
 (defun tree-buffer-tab-pressed ()
   (interactive)
   (unless (not (equal (selected-frame) tree-buffer-frame))
@@ -849,6 +851,8 @@ functionality is done with the `help-echo'-property and the function
                (forward-char -1))
               ((equal arrow-key 'right)
                (forward-char +1)))))))
+
+;; tree-buffer creation
 
 (defun tree-buffer-create (name frame is-click-valid-fn node-selected-fn
                                 node-expanded-fn node-mouse-over-fn
