@@ -26,7 +26,7 @@
 ;;
 ;; Contains all online-help for ECB (stolen something from recentf.el)
 
-;; $Id: ecb-help.el,v 1.7 2001/04/26 12:59:37 berndl Exp $
+;; $Id: ecb-help.el,v 1.8 2001/04/28 12:21:34 berndl Exp $
 
 ;;; Code
 
@@ -149,11 +149,11 @@ Working with the keyboard in the ECB-buffers:
 ---------------------------------------------
 
 In the ECB-buffers RET and TAB work as primary \"buttons\" \(see above), means
-RET opens a source or jumps to a method and TAB toggles expanding/collapsing
-of an expandable node.
+RET selects a directory or opens a source or jumps to a method and TAB toggles
+expanding/collapsing of an expandable node.
 
-For easy jumping to a certain ECB-buffer with the keyboard you should set
-`ecb-other-window-jump-behavior' to 'all.
+For easy jumping to a certain ECB-buffer with the keyboard you should ensure
+that `ecb-other-window-jump-behavior' is set to 'all.
 
 Tip: You can install the package windmove.el for selection of windows in a
 frame geometrically. This makes window-selection a child´s play.
@@ -258,7 +258,7 @@ Available interactive ECB commands:
 - `ecb-deactivate'
 - `ecb-update-directories-buffer' \(normally not needed)
 - `ecb-current-buffer-sync' \(normally not needed)
-- `ecb-rebuild-methods-buffer' \(see the doc-string of this function)
+- `ecb-rebuild-methods-buffer' \(see \"Rebuilding the ECB-method buffer\")
 - `ecb-redraw-layout'
 - `ecb-clear-history'
 - `ecb-show-help'
@@ -279,9 +279,15 @@ All customization of ECB is divided into the following customize groups:
 You can highly customize all the ECB behavior/layout so just go to this groups
 and you will see all well documented ECB-options.
 
-But you must always customize the option `ecb-source-path'!
-Maybe you should also check all the options in the customize group
-'ecb-layout' before you begin to work with ECB.
+Here are the most important options \(it is recommended to check the following
+options before working with ECB):
+- `ecb-source-path': You must set this option!
+- `ecb-primary-secondary-mouse-buttons', `ecb-primary-mouse-jump-destination':
+  Define how to use the mouse.
+- `ecb-tree-expand-symbol-before' and `ecb-tree-indent' \(maybe you like a
+  value of 4 for the latter one if you display the expand-symbol before!).
+- `ecb-source-file-regexps': Which files will \(not) be shown in ECB.
+- All the options in the customize group 'ecb-layout'
 
 Available hooks:
 - `ecb-activate-before-layout-draw-hook'
@@ -361,7 +367,7 @@ These are the special commands of `ecb-dialog-mode' mode:
       (setq buffer-read-only t)
       (ecb-dialog-mode)
       (goto-char (point-min))
-      (help-make-xrefs)
+      (ignore-errors (help-make-xrefs))
       (goto-char (point-min)))))
 
 
