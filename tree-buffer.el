@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: tree-buffer.el,v 1.160 2004/12/10 12:52:41 berndl Exp $
+;; $Id: tree-buffer.el,v 1.161 2004/12/20 16:57:42 berndl Exp $
 
 ;;; Commentary:
 
@@ -272,6 +272,7 @@ node name.")
 (defvar tree-node-expanded-fn nil)
 (defvar tree-node-collapsed-fn nil)
 (defvar tree-node-mouse-over-fn nil)
+(defvar tree-buffer-mouse-highlight-fn nil)
 (defvar tree-node-data-equal-fn nil)
 (defvar tree-buffer-maybe-empty-node-types nil)
 (defvar tree-buffer-leaf-node-types nil)
@@ -1154,14 +1155,14 @@ tree-node. This is only used with GNU Emacs 21!"
            node
            (funcall tree-node-mouse-over-fn node window 'no-print)))))
 
-(defun tree-buffer-merge-face-into-text (text face)
+(defun tree-buffer-merge-face-into-text (face start end &optional text)
   "Merge FACE to the already precolored TEXT so the values of all
-face-attributes of FACE take effect and but the values of all face-attributes
+face-attributes of FACE take effect and the values of all face-attributes
 of TEXT which are not set by FACE are preserved."
   (if (null face)
       text
     (if tree-buffer-running-xemacs
-        (put-text-property 0 (length text) 'face
+        (put-text-property start end 'face
                            (let* ((current-face (get-text-property 0
                                                                    'face
                                                                    text))
@@ -1181,7 +1182,7 @@ of TEXT which are not set by FACE are preserved."
                              ;; current-face to get the right merge!
                              (append nf cf))
                            text)
-      (alter-text-property 0 (length text) 'face
+      (alter-text-property start end 'face
                            (lambda (current-face)
                              (let ((cf
                                     (cond ((tree-buffer-facep current-face)
@@ -1200,6 +1201,8 @@ of TEXT which are not set by FACE are preserved."
                                (append nf cf)))
                            text))))
 
+;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: try to insert first and then add
+;; text-properties... 
 (defun tree-buffer-insert-text (text &optional facer help-echo mouse-highlight)
   "Insert TEXT at point and faces it with FACER. FACER can be a face then the
 text gets this face or it can be a function-symbol which is called to face the
@@ -1207,16 +1210,18 @@ inserted TEXT. Such a function gets two arguments: Point where TEXT has been
 inserted and the TEXT itself"
   (when (stringp text)
     (let ((p (point)))
+      (insert text)
       (if mouse-highlight
-          (put-text-property 0 (length text) 'mouse-face 'highlight text))
+          (put-text-property p (point) 'mouse-face 'highlight))
       (if (and help-echo (not tree-buffer-running-xemacs))
-          (put-text-property 0 (length text) 'help-echo
-                             'tree-buffer-help-echo-fn text))
+          (put-text-property p (point) 'help-echo
+                             'tree-buffer-help-echo-fn))
       (if facer
           (if (functionp facer)
               (funcall facer p text)
-            (tree-buffer-merge-face-into-text text facer)))
-      (insert text))))
+            (tree-buffer-merge-face-into-text facer p (point))))
+      )))
+
 
 (defun tree-buffer-node-display-name (node)
   "Computes that string which is used to display the name of NODE. If optional
@@ -1268,23 +1273,27 @@ newline is inserted after the node."
                                     nil))
                               "close")))
          (ascii-symbol (tree-buffer-ascii-symbol-4-image-name tree-image-name))
-         (display-name (tree-buffer-node-display-name node)))
+         (display-name (tree-buffer-node-display-name node))
+         (mouse-highlight (or (equal t tree-buffer-mouse-highlight-fn)
+                              (and tree-buffer-mouse-highlight-fn
+                                   (funcall tree-buffer-mouse-highlight-fn node)))))
     (when (and tree-buffer-expand-symbol-before
 	       ascii-symbol tree-image-name)
       (tree-buffer-insert-text 
        (tree-buffer-add-image-icon-maybe
         0 (length ascii-symbol)
         ascii-symbol (tree-buffer-find-image tree-image-name))
-       nil nil t)
+       nil nil mouse-highlight)
       (if (or tree-buffer-enable-xemacs-image-bug-hack
               (not (equal 'image (tree-buffer-style))))
           (insert " ")))
     (tree-buffer-insert-text display-name
-                             (tree-buffer-get-node-facer node) t t)
+                             (tree-buffer-get-node-facer node)
+                             t mouse-highlight)
     (when (and (not tree-buffer-expand-symbol-before)
 	       ascii-symbol)
       (insert " ")
-      (tree-buffer-insert-text ascii-symbol nil nil t))
+      (tree-buffer-insert-text ascii-symbol nil nil mouse-highlight))
     (unless no-newline (insert "\n"))
     display-name))
 
@@ -2133,7 +2142,8 @@ determines when the command is triggered, values can be 'button-press and
                            frame
                            mouse-action-trigger
                            is-click-valid-fn node-selected-fn node-expanded-fn
-                           node-collapsed-fn node-mouse-over-fn node-data-equal-fn
+                           node-collapsed-fn node-mouse-over-fn
+                           mouse-hightlight-fn node-data-equal-fn
                            maybe-empty-node-types leaf-node-types
                            menu-creator menu-titles
                            tr-lines
@@ -2232,6 +2242,12 @@ NODE-MOUSE-OVER-FN: Function to call when the mouse is moved over a node. This
                     activated \(see `tree-buffer-activate-mouse-tracking').
                     With GNU Emacs 21 this function is called by the
                     `help-echo' property added to each node.
+MOUSE-HIGHLIGHT-FN: If nil then in this tree-buffer no node is highlighted
+                    when the mouse moves over it. If t then each node is
+                    highlighted when the mouse moves over it. If a function
+                    then it is called with a node as argument and if it
+                    returns not nil then the node will be highlighted when the
+                    mouse moves over it otherwise not.
 NODE-DATA-EQUAL-FN: Function used by the tree-buffer to test if the data of
                     two tree-nodes are equal. The data of node can be set/get
                     with `tree-node-set-data'/`tree-node-get-data'.
@@ -2254,16 +2270,16 @@ LEAF-NODE-TYPES: Nil or a list of node-types \(see above). Nodes
                     LEAF-NODE-TYPES will be displayed with the leaf-symbol.
                   * All other nodes will be displayed with no symbol just with
                     correct indentation.
-MENU-CREATOR: A function which has to return nil or a list of one to three
-              conses, each cons for a node-type \(0, 1 or 2) Example: \(\(0 .
-              menu-for-type-0) \(1 . menu-for-type-1)). The cdr of a cons must
-              be a menu. This function gets one argument: The name of the
-              tree-buffer for which a popup-menu should be opened.
-MENU-TITLES: Nil or a list of one to three conses, each cons for a node-type
-             \(0, 1 or 2). See MENU-CREATOR. The cdr of a cons must be either
-             a string or a function which will be called with current node
-             under point and must return a string which is displayed as the
-             menu-title.
+MENU-CREATOR: A function which has to return nil or a list conses, each cons
+              for a known node-type of this tree-buffer \(the node-type of a
+              node is an integer). Example: \(\(0 . menu-for-type-0) \(1 .
+              menu-for-type-1)). The cdr of a cons must be a menu. This
+              function gets one argument: The name of the tree-buffer for
+              which a popup-menu should be opened.
+MENU-TITLES: Nil or a list conses, each cons for a node-type. See
+             MENU-CREATOR. The cdr of a cons must be either a string or a
+             function which will be called with current node under point and
+             must return a string which is displayed as the menu-title.
 TR-LINES: Should lines in this tree buffer be truncated \(not nil)
 READ-ONLY: Should the treebuffer be read-only \(not nil)
 TREE-INDENT: spaces subnodes should be indented.
@@ -2345,6 +2361,7 @@ AFTER-UPDATE-HOOK: A function or a list of functions \(with no arguments)
     (make-local-variable 'tree-node-collapsed-fn)
     (make-local-variable 'tree-node-update-fn)
     (make-local-variable 'tree-node-mouse-over-fn)
+    (make-local-variable 'tree-buffer-mouse-highlight-fn)
     (make-local-variable 'tree-node-data-equal-fn)
     (make-local-variable 'tree-buffer-maybe-empty-node-types)
     (make-local-variable 'tree-buffer-leaf-node-types)
@@ -2388,6 +2405,7 @@ AFTER-UPDATE-HOOK: A function or a list of functions \(with no arguments)
     (setq tree-node-expanded-fn node-expanded-fn)
     (setq tree-node-collapsed-fn node-collapsed-fn)
     (setq tree-node-mouse-over-fn node-mouse-over-fn)
+    (setq tree-buffer-mouse-highlight-fn mouse-hightlight-fn)
     (setq tree-node-data-equal-fn node-data-equal-fn)
     (setq tree-buffer-maybe-empty-node-types maybe-empty-node-types)
     (setq tree-buffer-leaf-node-types leaf-node-types)
