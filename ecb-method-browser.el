@@ -24,7 +24,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-method-browser.el,v 1.67 2005/01/12 10:20:33 berndl Exp $
+;; $Id: ecb-method-browser.el,v 1.68 2005/01/13 12:11:59 berndl Exp $
 
 ;;; Commentary:
 
@@ -1684,10 +1684,25 @@ abstract-static-tag-protection to an existing icon-file-name.")
                                 (if has-protection 1 -1)
                                 icon-name)))
 
+(defun ecb-children-tags (parent-tag)
+  "Return a list of children-tags of PARENT-TAG. If a child is not a
+semantic-tag \(but a plain string) then it will be converted to a positionless
+tag of class 'variable."
+  (mapcar (function (lambda (c)
+                      (cond ((ecb--semantic-tag-p c)
+                             c)
+                            ((stringp c)
+                             (ecb--semantic-tag-new-variable c nil nil nil))
+                            (t
+                             (ecb-error "Tag with name %s contains invalid childrens"
+                                        (ecb--semantic-tag-name parent-tag))))))
+          (ecb--semantic-tag-children-compatibility
+           parent-tag ecb-show-only-positioned-tags)))
+                        
+
 (defun ecb-update-tag-node (tag node &optional parent-tag no-bucketize)
   "Updates a node containing a tag."
-  (let ((children (ecb--semantic-tag-children-compatibility
-                    tag ecb-show-only-positioned-tags))
+  (let ((children (ecb-children-tags tag))
         (tag-name (ecb-displayed-tag-name tag parent-tag)))
     (tree-node-set-name node tag-name)
     (unless (eq 'function (ecb--semantic-tag-class tag))
@@ -1761,8 +1776,7 @@ is returned which contains only the leaf-type in the hierarchy."
                 ;; then we can not apply this current-type filter so we have to
                 ;; return the original tag-list
                 (throw 'not-found taglist))
-            (setq new-tag-list
-                  (ecb--semantic-tag-children-compatibility found-type-tag))))
+            (setq new-tag-list (ecb-children-tags found-type-tag))))
         ;; when we reach this point we can be sure that the whole type-hierarchy
         ;; has been found and so we return just our current-type as new taglist.
         (list found-type-tag)))))
@@ -1979,7 +1993,7 @@ TABLE is used."
                                               (if (ecb--semantic-equivalent-tag-p
                                                    child curr-tag)
                                                   curr-tag))
-                                            (ecb--semantic-tag-children-compatibility tag t))))
+                                            (ecb-children-tags tag))))
                          (throw 'found tag)))
                    nil)
                ;; we are already inside the parent-type - if there is any, so
@@ -2494,7 +2508,7 @@ semantic-reparse. This function is added to the hook
   ;; updating the associated node instead of a full reparse and then full
   ;; tree-buffer-update.
   (if (and (= 1 (length updated-tags))
-           (null (ecb--semantic-tag-children-compatibility (car updated-tags) t)))
+           (null (ecb-children-tags (car updated-tags))))
       ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: 
       ;; we could update this single node if we can find this node. But this
       ;; could be difficult (or impossible?) because here we only know the new
@@ -4172,12 +4186,13 @@ moved over it."
                     ", tag-class: "
                     (format "%s" (ecb--semantic-tag-class tag))
                     "\n"))
-    (ecb-dump-semantic-tags-internal (ecb--semantic-tag-children-compatibility tag t)
-                                     (if (equal (ecb--semantic-tag-class tag)
-                                                'type)
-                                         tag)
-                                     source-buffer
-                                     (+ 2 indent))))
+    (unless (equal (ecb--semantic-tag-class tag) 'function)
+      (ecb-dump-semantic-tags-internal (ecb-children-tags tag)
+                                       (if (equal (ecb--semantic-tag-class tag)
+                                                  'type)
+                                           tag)
+                                       source-buffer
+                                       (+ 2 indent)))))
 
 (silentcomp-provide 'ecb-method-browser)
 
