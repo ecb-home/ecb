@@ -245,7 +245,9 @@ NODE must be valid and already be visible in WINDOW!"
 	  (if (not (pos-visible-in-window-p
 		    (tree-buffer-get-node-name-start-point node) w))
 	      ;; make node visible
-	      (recenter w))
+	      (save-selected-window
+		(select-window w)
+		(recenter)))
 	  ;; maybe we must optimize the recentering
 	  (tree-buffer-recenter node w))))
     (tree-buffer-remove-highlight)))
