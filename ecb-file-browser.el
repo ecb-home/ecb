@@ -23,7 +23,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-file-browser.el,v 1.34 2004/09/09 15:46:17 berndl Exp $
+;; $Id: ecb-file-browser.el,v 1.35 2004/09/15 17:04:43 berndl Exp $
 
 ;;; Commentary:
 
@@ -55,6 +55,13 @@
 
 (defvar ecb-path-selected-source nil
   "Path to currently selected source.")
+
+(defconst ecb-directories-nodetype-directory 0)
+(defconst ecb-directories-nodetype-sourcefile 1)
+(defconst ecb-directories-nodetype-sourcepath 2)
+(defconst ecb-sources-nodetype-sourcefile 0)
+(defconst ecb-history-nodetype-sourcefile 0)
+
 
 (defun ecb-file-browser-initialize ()
   (setq ecb-path-selected-directory nil
@@ -1076,7 +1083,8 @@ selected before this update."
           new-tree
           ecb-path-selected-directory
           (car (ecb-get-files-and-subdirs ecb-path-selected-directory))
-          0 ecb-show-source-file-extension old-children t)
+          ecb-sources-nodetype-sourcefile
+          ecb-show-source-file-extension old-children t)
 
          ;; updating the buffer itself
          (tree-buffer-set-root new-tree)
@@ -1191,7 +1199,8 @@ all files are displayed."
             new-tree
             ecb-path-selected-directory
             (nreverse filtered-files)
-            0 ecb-show-source-file-extension old-children t)
+            ecb-sources-nodetype-sourcefile
+            ecb-show-source-file-extension old-children t)
 
            ;; updating the buffer itself
            (tree-buffer-set-root new-tree)
@@ -1428,7 +1437,7 @@ by the option `ecb-mode-line-prefixes'."
                   (buffer-name b)
                 (ecb-get-source-name filename)))
           (ecb-get-source-name filename))
-        0
+        ecb-sources-nodetype-sourcefile
         filename t)))))
 
 
@@ -1524,7 +1533,7 @@ ecb-windows after displaying the file in an edit-window."
         displayed-file
         type filename
         (or not-expandable
-            (= type 1)
+            (= type ecb-directories-nodetype-sourcefile)
             ;; The empty-dir-check is performed stealthy
             nil ;;(ecb-check-emptyness-of-dir filename)
             )
@@ -1539,9 +1548,11 @@ ecb-windows after displaying the file in an edit-window."
     (if (file-accessible-directory-p path)
         (let ((files-and-dirs (ecb-get-files-and-subdirs path)))
           (ecb-tree-node-add-files node path (cdr files-and-dirs)
-                                   0 t old-children)
+                                   ecb-directories-nodetype-directory
+                                   t old-children)
           (if (ecb-show-sources-in-directories-buffer-p)
-              (ecb-tree-node-add-files node path (car files-and-dirs) 1
+              (ecb-tree-node-add-files node path (car files-and-dirs)
+                                       ecb-directories-nodetype-sourcefile
                                        ecb-show-source-file-extension
                                        old-children t))
           (tree-node-set-expandable node (or (tree-node-get-children node)))
@@ -1586,7 +1597,9 @@ ecb-windows after displaying the file in an edit-window."
              (if (file-accessible-directory-p norm-dir)
                  (tree-node-add-child
                   node
-                  (ecb-new-child old-children name 2 norm-dir
+                  (ecb-new-child old-children name
+                                 ecb-directories-nodetype-sourcepath
+                                 norm-dir
                                  ;; The empty-dir-check is performed stealthy
                                  nil ;;(ecb-check-emptyness-of-dir norm-dir)
                                  (if ecb-truncate-long-names 'beginning)))
@@ -1734,8 +1747,8 @@ when called. Return the new state-value."
           (read-only-p nil)
           (node-type-to-check (if (string= (buffer-name (current-buffer))
                                            ecb-sources-buffer-name)
-                                  0
-                                1)))
+                                  ecb-sources-nodetype-sourcefile
+                                ecb-directories-nodetype-sourcefile)))
       (save-excursion
         (while (and (not (input-pending-p))
                     (<= state lines-of-buffer))
@@ -1801,6 +1814,101 @@ performing a `tree-buffer-update' for this buffer."
 performing a `tree-buffer-update' for this buffer."
   (ecb-stealthy-function-state-init 'ecb-stealthy-read-only-check)
   )
+
+
+;; version control support
+
+(defcustom ecb-vc-supported-backends '((vc-backend . vc-state))
+  "*Define how to to identify the VC-backend and how to check the state.
+The value of this option is a list containing cons-cells where the car is a
+function which is called to identify the VC-backend for a fill and the cdr is
+a function which is called to check the VC-state of a file. Both functions get
+two arguments: the directory-part and the filename-part of a sourcefile \(both
+args concatenated are the full path of the sourcefile-name.
+
+Identify-backend-function: Has to return a unique symbol for the VC-backend of
+the file \(e.g. 'CVS for the CVS-system or 'RCS for the RCS-system) or nil if
+the file is not managed by a version-control-system.
+
+Check-state-function: Has to return one of the following values:
+
+  'up-to-date        The working file is unmodified with respect to the
+                     latest version on the current branch, and not locked.
+
+  'edited            The working file has been edited by the user. If
+                     locking is used for the file, this state means that
+                     the current version is locked by the calling user.
+
+  USER               The current version of the working file is locked by
+                     some other USER \(a string).
+            
+  'needs-patch       The file has not been edited by the user, but there is
+                     a more recent version on the current branch stored
+                     in the master file.
+
+  'needs-merge       The file has been edited by the user, and there is also
+                     a more recent version on the current branch stored in
+                     the master file. This state can only occur if locking
+                     is not used for the file.
+
+  'unlocked-changes  The current version of the working file is not locked,
+                     but the working file has been changed with respect
+                     to that version. This state can only occur for files
+                     with locking\; it represents an erroneous condition that
+                     should be resolved by the user.
+
+  nil                The state of the file can not be retrieved\; probably the
+                     file is not under a version-control-system.
+
+ECB runs all identify-backend-functions in that order they are listed in this
+option. For the first on which returns a value unequal nil the associated
+check-state-function is used to retrieve the VC-state of the sourcefile.
+
+To prepend ECB from checking the VC-state for any file just set this option to
+nil.
+
+Per default ECB uses `vc-backend' to identify the VC-backend of a file
+\(supports per default the backends RCS, CVS and SCCS) and `vc-state' to check
+the state of a file. If other functions should be used for one of the backends
+RCS, CVS or SCCS they should be added to this option *before* this default
+because otherwise these other function would never be called because
+`vc-backend' returns not nil for these three backends!
+
+Example: If `vc-cvs-state' should be used to check the state for CVS-managed
+files then an element \(vc-backend . vc-cvs-state) could be added at the
+beginning of this option."
+  :group 'ecb-sources
+  :type '(repeat (cons (function :tag "Identify-backend-function")
+                       (function :tag "Check-state-function"))))
+
+;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: We need a cache which stores for
+;; a file the identified backend and the most recent state plus the
+;; check-timestamp for this state. So we have to call
+;; only once the identify-backend-function (see above) for a file. The
+;; check-state-function must only be called if the file has been modified
+;; since the stored check-state-timestamp (timestamps: (nth 5 (file-attributes
+;; FILE)) gets the timestamp for the last modification-time of a file and
+;; (ecb-subseq (current-time) 0 2) gets the current time which can be used as
+;; recent VC-check-state-time which is then stored in our cache.) With this
+;; caching even using real-VC-checks (as vc-cvs-state) which never uses
+;; heuristics is possible  without lossing to much informations (only if a
+;; file is modified by another user can not be detected with this cache - but
+;; for this we have the power-click which always throws away any cache-state)
+
+;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: probably now it would make sense
+;; to merge all caches with directory-names or filenames as key (the
+;; empty-dir-cache, the ecb-sources-cache and the ecb-files-and-subdirs-cache,
+;; the VC-cache) into one cache of the form
+;; - key: filename/directory-name
+;; - value: an assoc-list of the form
+;;         ((empty-dir-cache . (...empty-dir-values...))
+;;          (vc-cache . (...vc-values))
+;;          (...      . (............)))
+;;
+;; This cache is build as hash-table (XEmacs >= 21.4.13 and >= Emacs 21.X
+;; supports both the same hash-table-API): (make-hash-table :test 'equal). Use
+;; the new ecb-assoc-cache- for this
+
 
 (defun ecb-new-child (old-children name type data
                                    &optional not-expandable shorten-name)
@@ -1904,7 +2012,10 @@ should be displayed. For 1 and 2 the value of EDIT-WINDOW-NR is ignored."
     (ecb-update-directory-node node)
     (if shift-mode
         (ecb-mouse-over-directory-node node nil nil 'force))
-    (if (or (= 0 (tree-node-get-type node)) (= 2 (tree-node-get-type node)))
+    (if (or (= ecb-directories-nodetype-directory
+               (tree-node-get-type node))
+            (= ecb-directories-nodetype-sourcepath
+               (tree-node-get-type node)))
         (progn
           (if (= 2 ecb-button)
               (when (tree-node-is-expandable node)
@@ -1991,7 +2102,7 @@ CLICK-FORCE is not nil and always with regards to the settings in
 `ecb-show-node-info-in-minibuffer'. NODE is the node for which help text
 should be displayed, WINDOW is the related window, NO-MESSAGE defines if the
 help-text should be printed here."
-  (if (= (tree-node-get-type node) 1)
+  (if (= (tree-node-get-type node) ecb-directories-nodetype-sourcefile)
       (ecb-mouse-over-source-node node window no-message click-force)
     (if (not (= (tree-node-get-type node) 3))
         (let ((str (when (or click-force
@@ -2049,6 +2160,7 @@ help-text should be printed here."
       (unless no-message
         (tree-buffer-nolog-message str)))))
 
+;; popups
 
 ;; needs methods
 (tree-buffer-defpopup-command ecb-create-source
@@ -2197,11 +2309,11 @@ source-path of `ecb-source-path'.")
   (function (lambda (node)
               (let ((node-type (tree-node-get-type node))
                     (node-data (tree-node-get-name node)))
-                    (cond ((= node-type 0) ;; directory
+                    (cond ((= node-type ecb-directories-nodetype-directory)
                            (format "%s  (Directory)" node-data))
-                          ((= node-type 1) ;; source-file
+                          ((= node-type ecb-directories-nodetype-sourcefile)
                            (format "%s  (File)" node-data))
-                          ((= node-type 2) ;; source-path
+                          ((= node-type ecb-directories-nodetype-sourcepath)
                            (format "%s  (Source-path)" node-data))))))
   "The menu-title for the directories menu. Has to be either a string or a
 function which is called with current node and has to return a string.")
@@ -2257,23 +2369,27 @@ edit-windows. Otherwise return nil."
          (and (functionp ecb-directories-menu-user-extension-function)
               (funcall ecb-directories-menu-user-extension-function)))
         (dyn-builtin-extension (ecb-dir/source/hist-menu-editwin-entries)))
-    (list (cons 0 (funcall (or ecb-directories-menu-sorter
-                               'identity)
-                           (append dyn-user-extension
-                                   ecb-directories-menu-user-extension
-                                   ecb-directories-menu)))
-          (cons 1 (funcall (or ecb-sources-menu-sorter
-                               'identity)
-                           (append dyn-user-extension
-                                   ecb-sources-menu-user-extension
-                                   ecb-sources-menu
-                                   dyn-builtin-extension)))
-          (cons 2 (funcall (or ecb-directories-menu-sorter
-                               'identity)
-                           (append dyn-user-extension
-                                   ecb-directories-menu-user-extension
-                                   ecb-source-path-menu))))))
+    (list (cons ecb-directories-nodetype-directory
+                (funcall (or ecb-directories-menu-sorter
+                             'identity)
+                         (append dyn-user-extension
+                                 ecb-directories-menu-user-extension
+                                 ecb-directories-menu)))
+          (cons ecb-directories-nodetype-sourcefile
+                (funcall (or ecb-sources-menu-sorter
+                             'identity)
+                         (append dyn-user-extension
+                                 ecb-sources-menu-user-extension
+                                 ecb-sources-menu
+                                 dyn-builtin-extension)))
+          (cons ecb-directories-nodetype-sourcepath
+                (funcall (or ecb-directories-menu-sorter
+                             'identity)
+                         (append dyn-user-extension
+                                 ecb-directories-menu-user-extension
+                                 ecb-source-path-menu))))))
 
+;; source-path tokens
 
 (defvar ecb-source-path-menu nil
   "Built-in menu for the directories-buffer for directories which are elements of
@@ -2367,12 +2483,13 @@ edit-windows. Otherwise return nil."
          (and (functionp ecb-sources-menu-user-extension-function)
               (funcall ecb-sources-menu-user-extension-function)))
         (dyn-builtin-extension (ecb-dir/source/hist-menu-editwin-entries)))
-    (list (cons 0 (funcall (or ecb-sources-menu-sorter
-                               'identity)
-                           (append dyn-user-extension
-                                   ecb-sources-menu-user-extension
-                                   ecb-sources-menu
-                                   dyn-builtin-extension))))))
+    (list (cons ecb-sources-nodetype-sourcefile
+                (funcall (or ecb-sources-menu-sorter
+                             'identity)
+                         (append dyn-user-extension
+                                 ecb-sources-menu-user-extension
+                                 ecb-sources-menu
+                                 dyn-builtin-extension))))))
 
 ;; history popups
 
@@ -2480,13 +2597,15 @@ So you get a better overlooking. There are three choices:
          (and (functionp ecb-history-menu-user-extension-function)
               (funcall ecb-history-menu-user-extension-function)))
         (dyn-builtin-extension (ecb-dir/source/hist-menu-editwin-entries)))
-    (list (cons 0 (funcall (or ecb-history-menu-sorter
-                               'identity)
-                           (append dyn-user-extension
-                                   ecb-history-menu-user-extension
-                                   ecb-history-menu
-                                   dyn-builtin-extension))))))
+    (list (cons ecb-history-nodetype-sourcefile
+                (funcall (or ecb-history-menu-sorter
+                             'identity)
+                         (append dyn-user-extension
+                                 ecb-history-menu-user-extension
+                                 ecb-history-menu
+                                 dyn-builtin-extension))))))
 
+;; create the tree-buffers
 
 (defun ecb-create-directories-tree-buffer ()
   "Create the tree-buffer for directories"
@@ -2500,12 +2619,15 @@ So you get a better overlooking. There are three choices:
    'ecb-tree-buffer-node-collapsed-callback
    'ecb-mouse-over-directory-node
    'equal
-   (list 0)
-   (list 1)
+   (list ecb-directories-nodetype-directory)
+   (list ecb-directories-nodetype-sourcefile)
    'ecb-directories-menu-creator
-   (list (cons 0 ecb-directories-menu-title-creator)
-         (cons 1 ecb-directories-menu-title-creator)
-         (cons 2 ecb-directories-menu-title-creator))
+   (list (cons ecb-directories-nodetype-directory
+               ecb-directories-menu-title-creator)
+         (cons ecb-directories-nodetype-sourcefile
+               ecb-directories-menu-title-creator)
+         (cons ecb-directories-nodetype-sourcepath
+               ecb-directories-menu-title-creator))
    (nth 0 ecb-truncate-lines)
    t
    ecb-tree-indent
@@ -2517,7 +2639,8 @@ So you get a better overlooking. There are three choices:
    (nth 1 ecb-tree-image-icons-directories)
    ecb-tree-buffer-style
    ecb-tree-guide-line-face
-   (list (cons 1 ecb-source-in-directories-buffer-face))
+   (list (cons ecb-directories-nodetype-sourcefile
+               ecb-source-in-directories-buffer-face))
    ecb-tree-expand-symbol-before
    ecb-directory-face
    ecb-directories-general-face
@@ -2557,9 +2680,9 @@ So you get a better overlooking. There are three choices:
    ;; must compute the needed icon in the file-browser and not in the
    ;; tree-buffer-library (analogue to the methods-icons computet in the
    ;; methods-browser).
-   nil ;; (list 0)
+   nil ;; (list ecb-sources-nodetype-sourcefile)
    'ecb-sources-menu-creator
-   (list (cons 0 ecb-sources-menu-title-creator))
+   (list (cons ecb-sources-nodetype-sourcefile ecb-sources-menu-title-creator))
    (nth 1 ecb-truncate-lines)
    t
    ecb-tree-indent
@@ -2602,7 +2725,8 @@ So you get a better overlooking. There are three choices:
    nil
    nil
    'ecb-history-menu-creator
-   (list (cons 0 ecb-history-menu-title-creator))
+   (list (cons ecb-history-nodetype-sourcefile
+               ecb-history-menu-title-creator))
    (nth 3 ecb-truncate-lines)
    t
    ecb-tree-indent

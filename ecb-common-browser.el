@@ -25,7 +25,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-common-browser.el,v 1.2 2004/09/09 15:46:17 berndl Exp $
+;; $Id: ecb-common-browser.el,v 1.3 2004/09/15 17:04:44 berndl Exp $
 
 
 ;;; History
@@ -145,8 +145,8 @@ etc.) but point stays in the tree-buffer.
 A special remark for the `ecb-directories-buffer-name': Of course here the
 edit-window is only selected if the name of the current layout is contained in
 `ecb-show-sources-in-directories-buffer' or if the value of
-`ecb-show-sources-in-directories-buffer' is 'always \(otherwise this would not
-make any sense)!
+`ecb-show-sources-in-directories-buffer' is 'always and the hitted node
+represents a sourcefile \(otherwise this would not make any sense)!
 
 The setting in this option is only the default for each tree-buffer. With
 `ecb-toggle-RET-selects-edit-window' the behavior of RET can be changed fast
@@ -521,7 +521,7 @@ POWER-click occurs):
   semantic!
 
 In addition always the whole node-name is displayed in the minibuffer after a
-POWER-click \(for this see also `ecb-show-node-info-in-minibuffer').
+POWER-click \(for this see `ecb-show-node-info-in-minibuffer').
 
 The secondary mouse-button is for opening \(jumping to) the file in another
 edit-window \(see the documentation `ecb-mouse-click-destination').
@@ -678,7 +678,7 @@ value of OTHER-EDIT-WINDOW \(which is a value returned by
                                 ecb-last-edit-window-with-point))))))
 
 ;;====================================================
-;; Mouse functions
+;; Mouse callbacks
 ;;====================================================
 
 (defun ecb-tree-buffer-node-select-callback (node
@@ -695,13 +695,14 @@ combination is invalid \(see `ecb-interpret-mouse-click'."
 						     control-pressed
                                                      meta-pressed
 						     tree-buffer-name))
-	 (ecb-button (car ecb-button-list))
-	 (shift-mode (cadr ecb-button-list))
-         (meta-mode (nth 2 ecb-button-list)))
+	 (ecb-button (nth 0 ecb-button-list))
+	 (shift-mode (nth 1 ecb-button-list))
+         (meta-mode (nth 2 ecb-button-list))
+         (keyboard-p (equal (nth 3 ecb-button-list) 'keyboard)))
     ;; we need maybe later that something has clicked in a tree-buffer, e.g.
     ;; in `ecb-handle-major-mode-visibilty'.
     (setq ecb-item-in-tree-buffer-selected t)
-    (if (/= mouse-button 0)
+    (if (not keyboard-p)
         (setq ecb-layout-prevent-handle-ecb-window-selection t))
     ;; first we dispatch to the right action
     (when ecb-button-list
@@ -715,25 +716,21 @@ combination is invalid \(see `ecb-interpret-mouse-click'."
 	     (ecb-method-clicked node ecb-button nil shift-mode meta-mode))
 	    (t nil)))
 
-    ;; TODO: IMHO the mechanism how the physical keys are mapped and
-    ;; interpreted to logical ecb-buttons and -actions should now slightly be
-    ;; redesigned because now we evaluate below MOUSE-PRESSED outside
-    ;; ecb-interpret-mouse-click and this is not very good. But for now it
-    ;; works and it is the only location where such an outside-interpretation is
-    ;; performed (Klaus).
-    
     ;; now we go back to the tree-buffer but only if all of the following
     ;; conditions are true:
-    ;; 1. mouse-button is 0, i.e. RET is pressed in the tree-buffer
+    ;; 1. RET is pressed in the tree-buffer
     ;; 2. The tree-buffer-name is not contained in
     ;;    ecb-tree-RET-selects-edit-window--internal
     ;; 3. Either it is not the ecb-directories-buffer-name or
-    ;;    at least `ecb-show-sources-in-directories-buffer-p' is true.
-    (when (and (equal 0 mouse-button)
+    ;;    at least `ecb-show-sources-in-directories-buffer-p' is true and the
+    ;;    hitted node is a sourcefile
+    (when (and keyboard-p
                (not (member (ecb-find-optionsym-for-tree-buffer-name tree-buffer-name)
                             ecb-tree-RET-selects-edit-window--internal))
                (or (not (ecb-string= tree-buffer-name ecb-directories-buffer-name))
-                   (ecb-show-sources-in-directories-buffer-p)))
+                   (and (ecb-show-sources-in-directories-buffer-p)
+                        (= ecb-directories-nodetype-sourcefile
+                           (tree-node-get-type node)))))
       (ecb-goto-ecb-window tree-buffer-name)
       (tree-buffer-remove-highlight))))
 
@@ -746,8 +743,14 @@ combination is invalid \(see `ecb-interpret-mouse-click'."
                                                 tree-buffer-name)
   "This is the callback-function ecb.el gives to every tree-buffer to call
 when a node has been collapsed."
-  (if (/= mouse-button 0)
-      (setq ecb-layout-prevent-handle-ecb-window-selection t)))
+  (let* ((ecb-button-list (ecb-interpret-mouse-click mouse-button
+						     shift-pressed
+						     control-pressed
+                                                     meta-pressed
+						     tree-buffer-name))
+         (keyboard-p (equal (nth 3 ecb-button-list) 'keyboard)))
+    (if (not keyboard-p)
+        (setq ecb-layout-prevent-handle-ecb-window-selection t))))
 
 (defun ecb-tree-buffer-node-expand-callback (node
 					     mouse-button
@@ -765,8 +768,9 @@ combination is invalid \(see `ecb-interpret-mouse-click')."
 						     tree-buffer-name))
 	 (ecb-button (nth 0 ecb-button-list))
 	 (shift-mode (nth 1 ecb-button-list))
-         (meta-mode (nth 2 ecb-button-list)))
-    (if (/= mouse-button 0)
+         (meta-mode (nth 2 ecb-button-list))
+         (keyboard-p (equal (nth 3 ecb-button-list) 'keyboard)))
+    (if (not keyboard-p)
         (setq ecb-layout-prevent-handle-ecb-window-selection t))
     (when ecb-button-list
       (cond ((ecb-string= tree-buffer-name ecb-directories-buffer-name)
@@ -785,34 +789,36 @@ combination is invalid \(see `ecb-interpret-mouse-click')."
                                   meta-pressed
                                   tree-buffer-name)
   "Converts the physically pressed MOUSE-BUTTON \(1 = mouse-1, 2 = mouse-2, 0 =
-no mouse-button but RET or TAB) to ECB-mouse-buttons: either primary or
-secondary mouse-button depending on the value of CONTROL-PRESSED and the
-setting in `ecb-primary-secondary-mouse-buttons'. Returns a list '\(ECB-button
-shift-mode meta-mode) where ECB-button is either 1 \(= primary) or 2 \(=
-secondary) and shift-mode and meta-mode are non nil if SHIFT-PRESSED rsp.
-META-PRESSED is non nil. For an invalid and not accepted click combination nil
-is returned.
+no mouse-button but the keys RET or TAB) to ECB-mouse-buttons: either primary
+or secondary mouse-button depending on the value of CONTROL-PRESSED and the
+setting in `ecb-primary-secondary-mouse-buttons'. Returns a list
+'\(<ECB-button> <shift-mode> <meta-mode> <device>) where <ECB-button> is
+either 1 \(= primary) or 2 \(= secondary) and <shift-mode> and <meta-mode> are
+non nil if SHIFT-PRESSED rsp. META-PRESSED is non nil. <device> is either
+'mouse or 'keyboard dependent if the uses has used the mouse rsp. the keyboard
+in the tree-buffer. For an invalid and not accepted click combination nil is
+returned.
 
 Note: If MOUSE-BUTTON is 0 \(means no mouse-button but a key like RET or TAB
 was hitted) then CONTROL-PRESSED is interpreted as ECB-button 2.
 
 Currently the fourth argument TREE-BUFFER-NAME is not used here."
   (if (eq mouse-button 0)
-      (list (if control-pressed 2 1) shift-pressed meta-pressed)
+      (list (if control-pressed 2 1) shift-pressed meta-pressed 'keyboard)
     (if (and (not (eq mouse-button 1)) (not (eq mouse-button 2)))
 	nil
       (cond ((eq ecb-primary-secondary-mouse-buttons 'mouse-1--mouse-2)
 	     (if control-pressed
 		 nil
-	       (list mouse-button shift-pressed meta-pressed)))
+	       (list mouse-button shift-pressed meta-pressed 'mouse)))
 	    ((eq ecb-primary-secondary-mouse-buttons 'mouse-1--C-mouse-1)
 	     (if (not (eq mouse-button 1))
 		 nil
-	       (list (if control-pressed 2 1) shift-pressed meta-pressed)))
+	       (list (if control-pressed 2 1) shift-pressed meta-pressed 'mouse)))
 	    ((eq ecb-primary-secondary-mouse-buttons 'mouse-2--C-mouse-2)
 	     (if (not (eq mouse-button 2))
 		 nil
-	       (list (if control-pressed 2 1) shift-pressed meta-pressed)))
+	       (list (if control-pressed 2 1) shift-pressed meta-pressed 'mouse)))
 	    (t nil)))))
 
 (defun ecb-show-minibuffer-info (node window tree-buffer-name)
@@ -848,7 +854,7 @@ this is autom. done by the macro `ecb-defstealthy'!")
 
 (defun ecb-stealthy-function-state-alist-add (fcn)
   (add-to-list 'ecb-stealthy-function-state-alist
-               (cons fcn nil)))
+               (cons fcn 'done)))
 
 (defun ecb-stealthy-function-state-get (fcn)
   "Getter for `ecb-stealthy-function-state-alist'. Return state for the
@@ -896,6 +902,9 @@ after the state for this function has been reset to something else than 'done
 \(mostly to 'restart)\; such a reset of the state for a stealthy function can
 be done by any code and must be done via `ecb-stealthy-function-state-init'!"
   `(progn
+     (unless (fboundp (quote ,name))
+       (ecb-stealthy-function-list-add (quote ,name))
+       (ecb-stealthy-function-state-alist-add (quote ,name)))
      (eval-and-compile
        (unless (fboundp (quote ,name))
          (defun ,name nil
@@ -903,9 +912,7 @@ be done by any code and must be done via `ecb-stealthy-function-state-init'!"
            (let ((state (ecb-stealthy-function-state-get (quote ,name))))
              (unless (equal state 'done)
                ,@body)
-             (ecb-stealthy-function-state-set (quote ,name) state)))))
-     (ecb-stealthy-function-list-add (quote ,name))
-     (ecb-stealthy-function-state-alist-add (quote ,name))))
+             (ecb-stealthy-function-state-set (quote ,name) state)))))))
   
 (put 'ecb-defstealthy 'lisp-indent-function 1)
 

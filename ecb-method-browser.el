@@ -24,7 +24,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-method-browser.el,v 1.55 2004/09/09 15:46:16 berndl Exp $
+;; $Id: ecb-method-browser.el,v 1.56 2004/09/15 17:04:43 berndl Exp $
 
 ;;; Commentary:
 
@@ -70,6 +70,10 @@
 
 (defvar ecb-methods-root-node nil
   "Path to currently selected source.")
+
+(defconst ecb-methods-nodetype-tag 0)
+(defconst ecb-methods-nodetype-bucket 1)
+(defconst ecb-methods-nodetype-externtag 2)
 
 (defun ecb-method-browser-initialize ()
   (setq ecb-selected-tag nil)
@@ -515,8 +519,8 @@ position but groups some external members having the same parent-tag."
                                                  (match-string 2 text)))
                        (setq col-type-name text))
                      (when (and (equal major-mode 'c++-mode)
-                                (fboundp 'ecb--semantic-c-template-string))
-                       (setq template-text (ecb--semantic-c-template-string
+                                (fboundp 'semantic-c-template-string))
+                       (setq template-text (semantic-c-template-string
                                             tag parent-tag colorize))
                        ;; Removing {...} from within the template-text.
                        ;; Normally the semantic-formatters should not add this
@@ -1429,7 +1433,7 @@ returned."
                     ;; bucket is forbidden to be displayed
                     (not (ecb-show-at-least-one-tag-p (cdr bucket))))
 	  (setq bucket-node
-                (tree-node-new name 1
+                (tree-node-new name ecb-methods-nodetype-bucket
                                (list 'ecb-bucket-node
                                      (car bucket)
                                      (ecb--semantic-tag-class (car (cdr bucket))))
@@ -1441,7 +1445,8 @@ returned."
           ;; not forbidden to be displayed.
           (if (not (ecb-tag-forbidden-display-p tag))
               (ecb-update-tag-node tag
-                                   (tree-node-new "" 0 tag t bucket-node
+                                   (tree-node-new "" ecb-methods-nodetype-tag
+                                                  tag t bucket-node
                                                   (if ecb-truncate-long-names 'end))
                                    parent-tag no-bucketize))
           ;; now we allow each tag to be displayed. This can be done because
@@ -1870,7 +1875,7 @@ then nil is returned."
   (let ((parent (tree-node-get-parent node)))
     (catch 'found
       (while (not (eq (tree-buffer-get-root) parent))
-        (if (equal (and (= (tree-node-get-type parent) 0)
+        (if (equal (and (= (tree-node-get-type parent) ecb-methods-nodetype-tag)
                         (ecb--semantic-tag-class (tree-node-get-data parent)))
                    'type)
             (throw 'found parent)
@@ -1890,7 +1895,7 @@ the returned list contains just the name of the tag of the current node."
   (let ((type-hierarchy nil)
         (curr-node (tree-buffer-get-node-at-point)))
     (when (and curr-node
-               (= (tree-node-get-type curr-node) 0))
+               (= (tree-node-get-type curr-node) ecb-methods-nodetype-tag))
       (while (progn
                (setq type-hierarchy (cons (ecb--semantic-tag-name
                                            (tree-node-get-data curr-node))
@@ -2397,7 +2402,7 @@ The PARENT-TAG is propagated to the functions `ecb-add-tag-bucket' and
                                                    (list 'ecb-bucket-node
                                                          "Parents"
                                                          'parent)
-                                                   1))
+                                                   ecb-methods-nodetype-bucket))
                 (when node
 		  (dolist (parent (if sort-method
 				      (sort parents 'ecb-string<) parents))
@@ -2414,7 +2419,8 @@ The PARENT-TAG is propagated to the functions `ecb-add-tag-bucket' and
                                                                 -1
                                                                 "parent-unknown")))
                       (tree-node-new parent-name
-                                     2 parent t parent-node
+                                     ecb-methods-nodetype-externtag
+                                     parent t parent-node
                                      (if ecb-truncate-long-names 'end))))))))))
        (t (ecb-find-add-tag-bucket node type display sort-method buckets
                                    parent-tag no-bucketize)))))
@@ -3147,9 +3153,9 @@ OTHER-EDIT-WINDOW \(for this see `ecb-combine-ecb-button/edit-win-nr')."
 
 
 (defun ecb-methods-node-get-semantic-type (node)
-  (cond ((= 1 (tree-node-get-type node))
+  (cond ((= ecb-methods-nodetype-bucket (tree-node-get-type node))
          (nth 2 (tree-node-get-data node)))
-        ((= 0 (tree-node-get-type node))
+        ((= ecb-methods-nodetype-tag (tree-node-get-type node))
          (ignore-errors (ecb--semantic-tag-class (tree-node-get-data node))))
         (t nil)))
 
@@ -3368,8 +3374,8 @@ should be displayed. For 1 and 2 the value of EDIT-WINDOW-NR is ignored."
     ;; Klaus Berndl <klaus.berndl@sdm.de>: We must highlight the tag
     (tree-buffer-highlight-node-data data)
     (cond
-     ;; Type 0 = a tag
-     ((= type 0)
+     ;; Type ecb-methods-nodetype-tag = a tag
+     ((= type ecb-methods-nodetype-tag)
       (setq tag data)
       ;; If we have a virtual faux-group type-tag then we try to find it via
       ;; semanticdb
@@ -3380,17 +3386,17 @@ should be displayed. For 1 and 2 the value of EDIT-WINDOW-NR is ignored."
           (when faux-group
             (setq tag (cdr faux-group))
             (setq filename (car faux-group))))))
-     ;; Type 1 = a title of a group
+     ;; Type ecb-methods-nodetype-bucket = a title of a group
      ;; Just expand/collapse the node
-     ((= type 1)
+     ((= type ecb-methods-nodetype-bucket)
       (tree-node-toggle-expanded node)
       ;; Update the tree-buffer with optimized display of NODE
       (tree-buffer-update node))
 
-     ;; Type 2 = a tag name for a tag not defined in current buffer; e.g.
-     ;; parent or include tags can be such tags!
-     ;; Try to find the tag
-     ((= type 2)
+     ;; Type ecb-methods-nodetype-externtag = a tag name for a tag not defined
+     ;; in current buffer; e.g. parent or include tags can be such tags! Try
+     ;; to find the tag
+     ((= type ecb-methods-nodetype-externtag)
       (set-buffer (get-file-buffer ecb-path-selected-source))
       ;; Try to find source using JDE
       (setq found (ecb-jde-show-class-source data))
@@ -3611,7 +3617,9 @@ help-text should be printed here."
                                                  ecb-methods-buffer-name))
                (concat
                 (tree-node-get-name node)
-                (if (and (= 0 (tree-node-get-type node)) (tree-node-get-data node)
+                (if (and (= ecb-methods-nodetype-tag
+                            (tree-node-get-type node))
+                         (tree-node-get-data node)
                          (equal (ecb-show-node-info-what ecb-methods-buffer-name)
                                 'name+type))
                     (concat ", "
@@ -3793,7 +3801,8 @@ this fails then nil is returned otherwise t."
 (defvar ecb-methods-menu-title-creator
   (function (lambda (node)
               (let ((data (tree-node-get-data node)))
-                (if (and data (/= 1 (tree-node-get-type node)))
+                (if (and data (/= ecb-methods-nodetype-bucket
+                                  (tree-node-get-type node)))
                     (cond ((ecb--semantic-tag-p data)
                            (ecb--semantic-tag-name data))
                           ((stringp data)
@@ -3950,25 +3959,28 @@ edit-windows. Otherwise return nil."
               (funcall ecb-methods-menu-user-extension-function)))
         (dyn-builtin-extension-edit-win (ecb-methods-menu-editwin-entries))
         (dyn-builtin-extension-tagfilter (ecb-methods-menu-tagfilter-entries)))
-    (list (cons 0 (funcall (or ecb-methods-menu-sorter
-                               'identity)
-                           (append dyn-user-extension
-                                   ecb-methods-menu-user-extension
-                                   dyn-builtin-extension-tagfilter
-                                   ecb-methods-tag-menu
-                                   dyn-builtin-extension-edit-win)))
-          (cons 1 (funcall (or ecb-methods-menu-sorter
-                               'identity)
-                           (append dyn-user-extension
-                                   ecb-methods-menu-user-extension
-                                   dyn-builtin-extension-tagfilter
-                                   ecb-common-methods-menu)))
-          (cons 2 (funcall (or ecb-methods-menu-sorter
-                               'identity)
-                           (append dyn-user-extension
-                                   ecb-methods-menu-user-extension
-                                   dyn-builtin-extension-tagfilter
-                                   ecb-common-methods-menu))))))
+    (list (cons ecb-methods-nodetype-tag
+                (funcall (or ecb-methods-menu-sorter
+                             'identity)
+                         (append dyn-user-extension
+                                 ecb-methods-menu-user-extension
+                                 dyn-builtin-extension-tagfilter
+                                 ecb-methods-tag-menu
+                                 dyn-builtin-extension-edit-win)))
+          (cons ecb-methods-nodetype-bucket
+                (funcall (or ecb-methods-menu-sorter
+                             'identity)
+                         (append dyn-user-extension
+                                 ecb-methods-menu-user-extension
+                                 dyn-builtin-extension-tagfilter
+                                 ecb-common-methods-menu)))
+          (cons ecb-methods-nodetype-externtag
+                (funcall (or ecb-methods-menu-sorter
+                             'identity)
+                         (append dyn-user-extension
+                                 ecb-methods-menu-user-extension
+                                 dyn-builtin-extension-tagfilter
+                                 ecb-common-methods-menu))))))
 
 (defconst ecb-methods-incr-searchpattern-node-prefix
   '("\\([-+#(]\\|[^-+#(][^ \n]+ \\)?" . 1)
@@ -4013,12 +4025,12 @@ pattern.")
    'ecb-tree-buffer-node-collapsed-callback
    'ecb-mouse-over-method-node
    'ecb-compare-methods-buffer-node-data
-   (list 1)
+   (list ecb-methods-nodetype-bucket)
    nil
    'ecb-methods-menu-creator
-   (list (cons 0 ecb-methods-menu-title-creator)
-         (cons 1 ecb-methods-menu-title-creator)
-         (cons 2 ecb-methods-menu-title-creator))
+   (list (cons ecb-methods-nodetype-tag ecb-methods-menu-title-creator)
+         (cons ecb-methods-nodetype-bucket ecb-methods-menu-title-creator)
+         (cons ecb-methods-nodetype-externtag ecb-methods-menu-title-creator))
    (nth 2 ecb-truncate-lines)
    t
    ecb-tree-indent
