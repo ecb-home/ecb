@@ -1,6 +1,16 @@
 Version 1.40:
 -------------
 
+- Tree-incremental-search in the ecb-windows now ignores all non interesting
+  stuff:
+  + any leading spaces
+  + expand/collapse-buttons: [+] resp. [-]
+  + protection-signs (+, -, #) in the method-window if uml-notation is used
+  + variables types or returntypes in front of variable- or method-names.
+  + const specifier for variables
+  This makes incremental-searching in a tree-buffer much faster and easier.
+  (Klaus)
+
 - ECB now uses Semantic DB to find parents of types. (Jesper)
 
 - Long source paths in the directories buffer are now truncated at the

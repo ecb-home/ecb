@@ -54,7 +54,7 @@
 ;; The latest version of the ECB is available at
 ;; http://home.swipnet.se/mayhem/ecb.html
 
-;; $Id: ecb.el,v 1.135 2001/07/15 13:23:36 creator Exp $
+;; $Id: ecb.el,v 1.136 2001/07/16 18:21:40 berndl Exp $
 
 ;;; Code:
 
@@ -1842,6 +1842,9 @@ always the ECB-frame if called from another frame."
     ;; first initialize the whole layout-engine
     (ecb-initialize-layout)
 
+    ;; clear the token-tree-cache
+    (ecb-clear-token-tree-cache)
+    
     ;; enable basic advices
     (ecb-enable-basic-advices)
     

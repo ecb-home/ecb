@@ -26,7 +26,7 @@
 ;;
 ;; Contains all online-help for ECB (stolen something from recentf.el)
 
-;; $Id: ecb-help.el,v 1.40 2001/07/13 10:21:56 berndl Exp $
+;; $Id: ecb-help.el,v 1.41 2001/07/16 18:21:40 berndl Exp $
 
 ;;; Code
 
@@ -180,6 +180,17 @@ After selecting a node with RET the search-pattern is cleared out.
 With `ecb-tree-incremental-search' you can specify if the current
 search-pattern must be a real prefix of the node \(default) or if any
 substring is matched.
+
+For faster and easier finding the right node in a ecb-window thi incremental
+search ignores the following non interesting stuff:
++ any leading spaces
++ expand/collapse-buttons: [+] resp. [-]
++ protection-signs (+, -, #) in the method-window if uml-notation is used
++ variables types or returntypes in front of variable- or method-names.
++ const specifier for variables
+This means: Just type in the prefix \(resp. a substring) of a class-,
+variable-, method-, directory- or filename and ECB will bring you as fast as
+possible to the node you want.
 
 Tip: The `ecb-minor-mode' offers you in the `ecb-mode-map' some keys for
 selecting every window of the ecb-frame. This makes window-selection a child´s

@@ -26,7 +26,7 @@
 ;; This file is part of the ECB package which can be found at:
 ;; http://home.swipnet.se/mayhem/ecb.html
 
-;; $Id: tree-buffer.el,v 1.60 2001/07/14 13:14:17 creator Exp $
+;; $Id: tree-buffer.el,v 1.61 2001/07/16 18:21:40 berndl Exp $
 
 ;;; Code:
 
@@ -472,18 +472,37 @@ point will stay on POINT."
 		  (when fn
 		    (funcall (car fn) node)))))))))))
 
+(defconst tree-buffer-incr-searchpattern-basic-prefix
+  "^[ \t]*\\(\\[[+-]\\]\\)?"
+  "Prefix-pattern which ignores all not interesting basic stuff of a displayed
+token at incr. search. The following contents of a displayed token are ignored
+by this pattern:
+- beginning spaces
+- The expand/collapse-button: \[+] resp. \[-]")
+
+(defconst tree-buffer-incr-searchpattern-node-prefix "\\([^ ]+ \\|[-+#]\\)?"
+  "Prefix-pattern which ignores all not interesting stuff of a node-name at
+incr. search. The following contents of a node-name are ignored by this
+pattern:
+- types of a variable or returntypes of a method
+- const specifier of variables
+- protection sign of a variable/method: +, - or #")
+
 ;; idea is stolen from ido.el, written by Kim F. Storm <stormware@get2net.dk>
 (defun tree-buffer-find-common-substring (lis subs &optional only-prefix)
   "Return common substring beginning with SUBS in each element of LIS. If
-ONLY-PREFIX is not nil then only common prefix is returned."
-  (let ((change-word-sub (concat (if only-prefix "^" "")
-                                 (regexp-quote subs)))
+  ONLY-PREFIX is not nil then only common prefix is returned."
+  (let ((change-word-sub (concat (if only-prefix
+                                     (concat "^" tree-buffer-incr-searchpattern-node-prefix)
+                                   "")
+                                 "\\(" (regexp-quote subs) "\\)"))
         res alist)
     (setq res (mapcar (function (lambda (word)
                                   (let ((case-fold-search t)
                                         (m (string-match change-word-sub word)))
                                     (if m
-                                        (substring word m)
+                                        (substring word
+                                                   (match-beginning (if only-prefix 2 1)))
                                       ;; else no match
                                       nil))))
                       lis))
@@ -496,7 +515,14 @@ ONLY-PREFIX is not nil then only common prefix is returned."
     (let ((completion-ignore-case t))
       (try-completion subs alist))))
 
-(defconst tree-buffer-incr-searchpattern-prefix "^[ \t]*\\(\\[[+-]\\]\\)? ?")
+(defun tree-node-get-all-visible-node-names (start-node)
+  (let ((result (if (not (equal tree-buffer-root start-node))
+                    (list (tree-node-get-name start-node)))))
+    (when (tree-node-is-expanded start-node)
+      (dolist (child (tree-node-get-children start-node))
+        (setq result (append result (tree-node-get-all-visible-node-names child)))))
+    result))
+
 (defun tree-buffer-incremental-node-search ()
   "Incremental search for a node in current tree-buffer. Each displayable
 key \(e.g. all keys normally bound to `self-insert-command') is appended to
@@ -526,8 +552,8 @@ mentioned above!"
               (setq tree-buffer-incr-searchpattern ""))
              ;; expand to the max. common prefix
              ((equal last-comm 'end)
-              (let* ((node-name-list (mapcar 'tree-node-get-name
-                                             (tree-node-get-children tree-buffer-root)))
+              (let* ((node-name-list (tree-node-get-all-visible-node-names
+                                      tree-buffer-root))
                      (common-prefix (tree-buffer-find-common-substring
                                      node-name-list tree-buffer-incr-searchpattern
                                      (if (equal tree-buffer-incr-search 'prefix) t))))
@@ -538,23 +564,25 @@ mentioned above!"
               (setq tree-buffer-incr-searchpattern
                     (concat tree-buffer-incr-searchpattern
                             (char-to-string last-comm)))))
-      (tree-buffer-nolog-message "%s node search: [%s]%s"
-               (buffer-name (current-buffer))
-               tree-buffer-incr-searchpattern
-               (if (let ((case-fold-search t))
-                     (save-excursion
-                       (goto-char (point-min))
-                       (re-search-forward
-                        (concat tree-buffer-incr-searchpattern-prefix
-                                (if (equal tree-buffer-incr-search 'substring)
-                                    "[^()]*"
-                                  "")
-                                (regexp-quote tree-buffer-incr-searchpattern)) nil t)))
-                   ;; we have found a matching ==> jump to it
-                   (progn
-                     (goto-char (match-end 0))
-                     "")
-                 " - no match")))))
+      (tree-buffer-nolog-message
+       "%s node search: [%s]%s"
+       (buffer-name (current-buffer))
+       tree-buffer-incr-searchpattern
+       (if (let ((case-fold-search t))
+             (save-excursion
+               (goto-char (point-min))
+               (re-search-forward
+                (concat tree-buffer-incr-searchpattern-basic-prefix
+                        tree-buffer-incr-searchpattern-node-prefix
+                        (if (equal tree-buffer-incr-search 'substring)
+                            "[^()\n]*"
+                          "")
+                        (regexp-quote tree-buffer-incr-searchpattern)) nil t)))
+           ;; we have found a matching ==> jump to it
+           (progn
+             (goto-char (match-end 0))
+             "")
+         " - no match")))))
 
 (defun tree-buffer-create-menu (menu-items)
   "Creates a popup menu from a list with menu items."
