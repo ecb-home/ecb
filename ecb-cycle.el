@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-cycle.el,v 1.23 2003/07/31 16:02:08 berndl Exp $
+;; $Id: ecb-cycle.el,v 1.24 2003/08/06 09:15:20 berndl Exp $
 
 ;;; Commentary:
 
@@ -75,12 +75,13 @@
 
 
 (defun ecb-cycle-through-compilation-buffers(&optional choose-buffer)
-  "Cycle through all compilation buffers currently open and display them
-within the compilation window `ecb-compile-window' \(if this window doesn't
-exist then an error is displayed). If the currently opened buffer within the
-compilation window is not a compilation buffer, we jump to the first
-compilation buffer. If not we try to loop through all compilation buffers. If
-we hit the end we go back to the beginning.
+  "Cycle through all compilation buffers currently open.
+The choosen compilation buffer is displayed within the compilation window
+`ecb-compile-window' \(if this window doesn't exist then an error is
+displayed). If the currently opened buffer within the compilation window is
+not a compilation buffer, we jump to the first compilation buffer. If not we
+try to loop through all compilation buffers. If we hit the end we go back to
+the beginning.
 
 If CHOOSE-BUFFER is not nil then the user will be prompted for the
 compilation-buffer to switch to.

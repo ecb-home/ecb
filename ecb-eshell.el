@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-eshell.el,v 1.67 2003/07/31 16:02:08 berndl Exp $
+;; $Id: ecb-eshell.el,v 1.68 2003/08/06 09:15:20 berndl Exp $
 
 ;;; Commentary:
 
@@ -89,22 +89,22 @@
   :prefix "ecb-eshell-")
 
 (defcustom ecb-eshell-enlarge-when-selecting t
-  "*Enlarge the compile-window if it displays the eshell and
-if it is selected by `ecb-eshell-goto-eshell'."
+  "*Enlarge the compile-window if it displays the eshell.
+This is only done if it is selected by `ecb-eshell-goto-eshell'."
   :group 'ecb-eshell
   :type 'boolean)
 
 (defcustom ecb-eshell-auto-activate nil
-  "*Startup the eshell when the ECB is activated and display it in the
-compile-window. If current layout does not display a compile-window \(see
+  "*Startup the eshell and display it in the compile-window.
+If current layout does not display a compile-window \(see
 `ecb-compile-window-height') then nothing is done."
   :group 'ecb-eshell
   :type 'boolean)
 
 (defcustom ecb-eshell-synchronize t
-  "*Synchronize the eshell with the default-directory of current
-source-buffer. The synchronization is done by `ecb-eshell-current-buffer-sync'
-which can be called interactively but normally it is called autom. by the
+  "*Synchronize eshell with the default-directory of current source-buffer.
+The synchronization is done by `ecb-eshell-current-buffer-sync' which can be
+called interactively but normally it is called autom. by the
 `ecb-current-buffer-sync-hook'."
   :group 'ecb-eshell
   :type 'boolean)
@@ -127,9 +127,9 @@ in that window where this function is called from!"
   (eshell-mode))
 
 (defun ecb-eshell-current-buffer-sync()
-  "Synchronize the eshell with the current buffer. This is only done if the
-eshell is currently visible and if either this function is called
-interactively or `ecb-eshell-synchronize' is not nil."
+  "Synchronize the eshell with the current source-buffer.
+This is only done if the eshell is currently visible and if either this
+function is called interactively or `ecb-eshell-synchronize' is not nil."
   (interactive)
 
   (when (and (or ecb-eshell-synchronize (interactive-p))
@@ -205,7 +205,7 @@ in the buffer list or at all if it currently doesn't exist."
                                                   ,eshell-buffer-list)))))))
 
 (defun ecb-eshell-recenter(&optional display-errors)
-  "Recenter the eshell window so that the prompt is at the end of the buffer."
+  "Recenter the eshell window so that the prompt is at the buffer-end."
   (interactive (list t))
 
   (let ((window (and (ecb-eshell-running-p)
@@ -226,8 +226,8 @@ in the buffer list or at all if it currently doesn't exist."
        (get-buffer eshell-buffer-name)))
 
 (defun ecb-eshell-goto-eshell()
-  "Go to the eshell buffer in the compile-window. If eshell is not alive then
-start it."
+  "Go to the eshell buffer in the compile-window.
+If eshell is not alive then start it."
   (interactive)
   
   ;; This is idempotent!
@@ -284,8 +284,9 @@ then an error is reported!"
   (remove-hook 'window-size-change-functions 'ecb-eshell-window-size-change))  
 
 (defun ecb-eshell-enlarge()
-  "Enlarge the eshell so more information is visible.  This is usually done so
-that the eshell has more screen space after we execute a command. "
+  "Enlarge the eshell so more information is visible.
+This is usually done so that the eshell has more screen space after we execute
+a command."
   (interactive)
 
   ;;use the eshell-pre-command-hook to see the point and then only enlarge if

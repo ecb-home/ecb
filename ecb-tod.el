@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-tod.el,v 1.10 2003/07/31 16:02:08 berndl Exp $
+;; $Id: ecb-tod.el,v 1.11 2003/08/06 09:15:18 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -116,8 +116,7 @@
 
 
 (defun ecb-show-tip-of-the-day ()
-  "Show tip of the day if `ecb-tip-of-the-day' is not nil or if called
-interactively."
+  "Show tip of the day if `ecb-tip-of-the-day' is not nil."
   (interactive)
   (when (or (interactive-p) ecb-tip-of-the-day)
     (ignore-errors (load-file ecb-tip-of-the-day-file))

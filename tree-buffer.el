@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: tree-buffer.el,v 1.119 2003/07/31 16:02:07 berndl Exp $
+;; $Id: tree-buffer.el,v 1.120 2003/08/06 09:15:15 berndl Exp $
 
 ;;; Commentary:
 
@@ -386,7 +386,7 @@ with the same arguments as `tree-node-expanded-fn'."
 ;; is no use, as we have horizontal scrollbar (as the docstring
 ;; hints.)
 (defun tree-buffer-mouse-hscroll (e)
-  "Read a mouse event E from the mode line, and horizontally scroll.
+  "Read a mouse event E from the mode line and scroll horizontally.
 If the mouse is being clicked on the far left, or far right of the
 mode-line.  This is only useful for non-XEmacs"
   (interactive "e")
@@ -782,6 +782,7 @@ see `tree-buffer-expand-nodes'."
 ;; to current window not to frame!
 ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: For XEmacs this does not work!
 (defun tree-buffer-show-menu-keyboard ()
+  "Activate the popup-menu of current tree-buffer via keyboard."
   (interactive)
   (if tree-buffer-running-xemacs
       (tree-buffer-show-menu)
@@ -887,10 +888,11 @@ pattern:
     result))
 
 (defun tree-buffer-incremental-node-search ()
-  "Incremental search for a node in current tree-buffer. Each display-able
-key \(e.g. all keys normally bound to `self-insert-command') is appended to
-the current search-pattern. The tree-buffer tries to jump to the current
-search-pattern. If no match is found then nothing is done. Some special keys:
+  "Incremental search for a node in current tree-buffer.
+Each display-able key \(e.g. all keys normally bound to `self-insert-command')
+is appended to the current search-pattern. The tree-buffer tries to jump to
+the current search-pattern. If no match is found then nothing is done. Some
+special keys:
 - \[backspace] and \[delete]: Delete the last character from the search-pattern.
 - \[home]: Delete the complete search-pattern
 - \[end]: Expand either to a complete node if current search-pattern is
@@ -1103,6 +1105,7 @@ functionality is done with the `help-echo'-property and the function
 ;; pressed keys
 
 (defun tree-buffer-tab-pressed ()
+  "Perform the defined action after a TAB-hit."
   (interactive)
   (unless (not (equal (selected-frame) tree-buffer-frame))
     (let ((node (tree-buffer-get-node-at-point)))
@@ -1121,6 +1124,7 @@ functionality is done with the `help-echo'-property and the function
     (tree-buffer-select 0 shift-pressed control-pressed)))
 
 (defun tree-buffer-arrow-pressed ()
+  "Perform smart arrow-key navigation/movement."
   (interactive)
   (unless (not (equal (selected-frame) tree-buffer-frame))
     (let ((node (tree-buffer-get-node-at-point))

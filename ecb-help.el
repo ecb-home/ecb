@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-help.el,v 1.95 2003/07/31 16:02:08 berndl Exp $
+;; $Id: ecb-help.el,v 1.96 2003/08/06 09:15:19 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -67,9 +67,10 @@
   :group 'ecb)
 
 (defcustom ecb-show-help-format 'info
-  "*The format `ecb-show-help' shows its online help. Allowed values are 'info
-\(for the Info format) and 'html \(for HTML format). If the value is 'html
-then `browse-url-browser-function' says which browser is used.
+  "*The format `ecb-show-help' shows its online help.
+Allowed values are 'info \(for the Info format) and 'html \(for HTML format).
+If the value is 'html then `browse-url-browser-function' says which browser is
+used.
 
 Note: If you got ECB as a standard XEmacs-package maybe the
 HTML-online-documentation is not included."
@@ -171,10 +172,10 @@ error is reported."
 
 ;;;###autoload
 (defun ecb-show-help (&optional format)
-  "Shows the online help of ECB in Info or HTML-format depending on the value
-of the option `ecb-show-help-format'. If called with prefix argument, i.e. if
-FORMAT is not nil then the user is prompted to choose the format of the help
-\(Info or Html).
+  "Shows the online help of ECB in Info or HTML-format.
+The format depends on the setting in `ecb-show-help-format'. If called with
+prefix argument, i.e. if FORMAT is not nil then the user is prompted to choose
+the format of the help \(Info or Html).
 
 If an error about not finding the needed help-file occurs please take a look
 at the options `ecb-help-info-start-file' and `ecb-help-html-start-file'!
@@ -220,12 +221,12 @@ HTML-online-documentation is not included."
   "Please enter the details of your bug report here")
 
 (defun ecb-submit-problem-report()
-  "Submit a problem report for the ECB to the ECB mailing-list. This command
-generates in the edit-window a problem-report which contains already the
-current values of all ECB options, the current backtrace-buffer if there is
-any and the current message-buffer. You will be asked for a problem-report
-subject and then you must insert a description of the problem. Please describe
-the problem as detailed as possible!"
+  "Submit a problem report for the ECB to the ECB mailing-list.
+This command generates in the edit-window a problem-report which contains
+already the current values of all ECB options, the current backtrace-buffer if
+there is any and the current message-buffer. You will be asked for a
+problem-report subject and then you must insert a description of the problem.
+Please describe the problem as detailed as possible!"
   (interactive)
   (if (and (equal ecb-frame (selected-frame))
            (not (ecb-point-in-edit-window)))

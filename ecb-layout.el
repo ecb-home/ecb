@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-layout.el,v 1.174 2003/08/05 07:58:11 berndl Exp $
+;; $Id: ecb-layout.el,v 1.175 2003/08/06 09:15:19 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -191,20 +191,22 @@
   :type 'boolean)
 
 (defcustom ecb-activate-before-new-frame-created-hook nil
-  "*Normal hook run before the new ECB-frame is created if
-`ecb-new-ecb-frame' is not nil \(otherwise this hook is not evaluated)."
+  "*Hook run before the new ECB-frame is created.
+This has only an effect if `ecb-new-ecb-frame' is not nil \(otherwise this
+hook is not evaluated)."
   :group 'ecb-layout
   :type 'hook)
 
 
 (defcustom ecb-layout-name "left8"
-  "*Select a window layout of ECB. Value is any arbitrary string. There are
-four different types of layouts: left, right, top and left-right, which means
-the location of the ECB-tree-windows in the ECB-frame. Currently there are 20
-predefined layouts; names the below. You can savely try out any of them by
-changing this value and saving it only for the current session. If you are
-sure which layout you want you can save it for future sessions. To get a
-picture of the layout for name <name> call `ecb-show-layout-help'.
+  "*Select a window layout of ECB.
+Value is any arbitrary string. There are four different types of layouts:
+left, right, top and left-right, which means the location of the
+ECB-tree-windows in the ECB-frame. Currently there are 20 predefined layouts;
+names the below. You can savely try out any of them by changing this value and
+saving it only for the current session. If you are sure which layout you want
+you can save it for future sessions. To get a picture of the layout for name
+<name> call `ecb-show-layout-help'.
 
 Currently available layouts:
 
@@ -250,7 +252,8 @@ layout with `ecb-redraw-layout'"
 (defvar ecb-old-compilation-window-height compilation-window-height)
 
 (defcustom ecb-compile-window-height nil
-  "*If you want a compilation window shown at the bottom of the ECB-layout
+  "*Height of the durable compilation-window of ECB.
+If you want a compilation window shown at the bottom of the ECB-layout
 then set here the height of it \(Default is a height of 5). If you redraw the
 current layout with `ecb-redraw-layout' then the compilation window (if any)
 has the height you set here. If the number is less than 1.0 the height is a
@@ -285,7 +288,6 @@ layout with `ecb-redraw-layout'"
 
 (defcustom ecb-compile-window-temporally-enlarge 'after-compilation
   "*Let Emacs temporally enlarge the compile-window of the ECB-layout.
-
 This option has only an effect if `ecb-compile-window-height' is not nil!
 
 The following values are possible:
@@ -332,8 +334,9 @@ See also the documentation of this function!"
   :type 'boolean)
 
 (defcustom ecb-enlarged-compilation-window-max-height 'best
-  "*The max height of the compilation window after enlarging it
-by `ecb-toggle-enlarged-compilation-window'. The following values are allowed:
+  "*The max height of the compilation window after enlarging it.
+The max height of the compilation window after enlarged by
+`ecb-toggle-enlarged-compilation-window'. The following values are allowed:
 
 - best: Minimum is the value of `ecb-compile-window-height' and max. the half
         of the frame-height of the ECB-frame, best depending on the values of
@@ -369,18 +372,16 @@ splitted at start-time of ECB."
                        :value nil)))
 
 (defcustom ecb-windows-width 0.33
-  "*The width of the ECB windows in columns when they are placed to the left
-or right of the edit window. If the number is less than 1.0 the width is a
-fraction of the frame width."
+  "*The width of the ECB windows in columns for left- and right layouts.
+If the number is less than 1.0 the width is a fraction of the frame width."
   :group 'ecb-layout
   :initialize 'custom-initialize-default
   :set ecb-layout-option-set-function
   :type 'number)
 
 (defcustom ecb-windows-height 0.33
-  "*The height of the ECB windows in lines when they are placed above or below
-the edit window. If the number is less than 1.0 the width is a fraction of the
-frame height."
+  "*The height of the ECB windows in lines for top layouts.
+If the number is less than 1.0 the width is a fraction of the frame height."
   :group 'ecb-layout
   :initialize 'custom-initialize-default
   :set ecb-layout-option-set-function
@@ -474,9 +475,9 @@ buffer-local `window-size-fixed' from the setting in `ecb-fix-window-size'."
 
 
 (defcustom ecb-other-window-jump-behavior 'all
-  "*Which windows of ECB should be accessible by the ECB-adviced function
-`other-window', an intelligent replacement for the Emacs standard version of
-`other-window'. The following settings are possible:
+  "*Which windows of ECB should be accessible by the command `other-window'.
+This has an effect if `other-window' is adviced by ECB, see
+`ecb-advice-window-functions'. The following settings are possible:
 - 'all: ECB will cycle through all windows of ECB, means it behaves like the
   original `other-window'.
 - 'only-edit: ECB will only cycle through the \(max. 2) edit-windows of ECB.
@@ -495,10 +496,9 @@ buffer-local `window-size-fixed' from the setting in `ecb-fix-window-size'."
                                          split-window
                                          switch-to-buffer
                                          switch-to-buffer-other-window)
-  "*Use the intelligent windows functions of ECB instead of the standard
-Emacs functions. You can choose the following functions to be adviced by ECB
-so they behave as if the edit-window\(s) of ECB would be the only windows\(s)
-of the ECB-frame:
+  "*Advice functions to be more intelligent if used with ECB.
+You can choose the following functions to be adviced by ECB so they behave as
+if the edit-window\(s) of ECB would be the only windows\(s) of the ECB-frame:
 - `other-window'
   For this one see also the option `ecb-other-window-jump-behavior'!
 - `delete-window'
@@ -626,7 +626,6 @@ Per default this is enabled for `delete-window', `delete-other-windows',
 (defcustom ecb-layout-switch-to-compilation-window
   '(switch-to-buffer)
   "*Switching buffer functions switch always in `ecb-compile-window'.
-
 If the buffer argument of such functions \(e.g. `switch-to-buffer') is a
 compilation buffer as defined with `ecb-compilation-buffer-p' we will select
 the `ecb-compile-window' and display there the buffer. This is useful if you
@@ -657,7 +656,6 @@ would walk through these windows."
 
 (defcustom ecb-layout-window-sizes nil
   "*Specifies the sizes of the ECB windows for each layout.
-
 The easiest way \(and also the strongly recommended way) to change this
 variable is to change the window sizes by dragging the window borders using
 the mouse and then store the window sizes by calling the command
@@ -739,22 +737,23 @@ This option makes only sense if the value is a list with more than 1 element!"
 
 
 (defcustom ecb-hide-ecb-windows-before-hook nil
-  "*Hooks run direct before the ECB windows will be hidden either by
-`ecb-toggle-ecb-windows' or `ecb-hide-ecb-windows'. This means that at runtime
-of this hook all the ECB-tree-windows of current layout are visible."
+  "*Hook run direct before the ECB windows will be hidden.
+Hiding is done either by `ecb-toggle-ecb-windows' or `ecb-hide-ecb-windows'.
+This means that at runtime of this hook all the ECB-tree-windows of current
+layout are visible."
   :group 'ecb-layout
   :type 'hook)
 
 (defcustom ecb-hide-ecb-windows-after-hook nil
-  "*Hooks run direct after the ECB windows have been hidden
-either by `ecb-toggle-ecb-windows' or `ecb-hide-ecb-windows'."
+  "*Hooks run direct after the ECB windows have been hidden.
+Hiding was done either by `ecb-toggle-ecb-windows' or `ecb-hide-ecb-windows'."
   :group 'ecb-layout
   :type 'hook)
 
 (defcustom ecb-show-ecb-windows-before-hook nil
-  "*Hooks run direct before the ECB windows will be shown either by
-`ecb-toggle-ecb-windows' or `ecb-show-ecb-windows'. This means that at runtime
-of this hook the ECB-windows are still hidden.
+  "*Hooks run direct before the ECB windows will be shown.
+Showing is done either by `ecb-toggle-ecb-windows' or `ecb-show-ecb-windows'.
+This means that at runtime of this hook the ECB-windows are still hidden.
 
 IMPORTANT: Showing the hidden ECB-windows is internally done by calling
 `ecb-redraw-layout' and therefore also the hooks
@@ -771,9 +770,10 @@ So be aware which code you add to which hook!"
   :type 'hook)
 
 (defcustom ecb-show-ecb-windows-after-hook nil
-  "*Hooks run direct before the ECB windows will be shown either by
-`ecb-toggle-ecb-windows' or `ecb-show-ecb-windows'. This means that at runtime
-of this hook the ECB-windows are already visible.
+  "*Hooks run direct before the ECB windows will be shown.
+Showing has been done either by `ecb-toggle-ecb-windows' or
+`ecb-show-ecb-windows'. This means that at runtime of this hook the
+ECB-windows are already visible.
 
 IMPORTANT: Showing the hidden ECB-windows is internally done by calling
 `ecb-redraw-layout' and therefore also the hooks
@@ -790,15 +790,14 @@ So be aware which code you add to which hook!"
   :type 'hook)
 
 (defcustom ecb-redraw-layout-after-hook '(ecb-eshell-recenter)
-  "*Hooks run direct after the ECB-layout has been redrawn. If you use the
-eshell-integration of ECB then the function `ecb-eshell-recenter' should be in
-this hook."
+  "*Hooks run direct after the ECB-layout has been redrawn.
+If you use the eshell-integration of ECB then the function
+`ecb-eshell-recenter' should be in this hook."
   :group 'ecb-layout
   :type 'hook)
 
 (defcustom ecb-redraw-layout-before-hook nil
-  "*Hooks run direct before the ECB-layout will be redrawn by either
-`ecb-redraw-layout'."
+  "*Hooks run direct before the ECB-layout will be redrawn."
   :group 'ecb-layout
   :type 'hook)
 
@@ -2006,8 +2005,7 @@ buffer-name is the next one in the cycle-sequence. Is only set by
 `ecb-redraw-layout-full' and `ecb-cycle-maximized-ecb-buffers'.")
 
 (defun ecb-cycle-maximized-ecb-buffers ()
-  "Cycles through all ecb-buffers of current layout by maximizing exactly one
-of the ecb-windows after every cycle-step."
+  "Cycles through all ecb-buffers by maximizing one at each step."
   (interactive)
   (when (null ecb-cycle-ecb-buffer-state)
     ;; we have redrawn the complete layout and therefore the cycle-state
@@ -2523,11 +2521,10 @@ first element of LAYOUT-LIST is returned."
   
 
 (defun ecb-change-layout (&optional preselect-type)
-  "Select a layout-name from all current available layouts \(TAB-completion is
-offered) and change the layout to the selected layout-name. If optional
-argument PRESELECT-TYPE is not nil then you can preselect a layout-type
-\(TAB-completion is offered too) and then will be asked only for layouts of
-that preselected type.
+  "Change to one of current available layouts.
+For this TAB-completion is offered. If optional argument PRESELECT-TYPE is not
+nil then you can preselect a layout-type \(TAB-completion is offered too) and
+then will be asked only for layouts of that preselected type.
 
 Note: Do not use this function from within elisp-programs; use
 `ecb-layout-switch'!"
@@ -2544,9 +2541,9 @@ Note: Do not use this function from within elisp-programs; use
                           (ecb-available-layouts-of-type type) t)))))
 
 (defun ecb-show-layout-help ()
-  "Select a name of a layout and shows the documentation of the associated
-layout-function. At least for the built-in layouts the documentation contains a
-picture of the outline of the chosen layout."
+  "Select a layout-name and shows the documentation of the layout-function.
+At least for the built-in layouts the documentation contains a picture of the
+outline of the chosen layout."
   (interactive)
   ;; ensure we have load all layouts defined until now
   (ecb-load-layouts)
@@ -2556,12 +2553,13 @@ picture of the outline of the chosen layout."
                                            t)))))
 
 (defun ecb-redraw-layout()
-  "Redraw the ECB screen. If the variable `ecb-redraw-layout-quickly' is not nil
-then the redraw is done by the `ecb-redraw-layout-quickly' function, otherwise
-by `ecb-redraw-layout-full'.  But it's strongly recommended to use the quick
+  "Redraw the ECB screen.
+If the variable `ecb-redraw-layout-quickly' is not nil then the redraw is done
+by the `ecb-redraw-layout-quickly' function, otherwise by
+`ecb-redraw-layout-full'. But it's strongly recommended to use the quick
 redraw only if you have really slow machines where a full redraw takes several
-seconds because the quick redraw is not really safe and may have some drawbacks!
-On normal machines the full drawback should be done in << 1s!"
+seconds because the quick redraw is not really safe and may have some
+drawbacks! On normal machines the full drawback should be done in << 1s!"
   (interactive)
 
   (message "ECB redrawing layout...")
@@ -2837,8 +2835,8 @@ this function the edit-window is selected which was current before redrawing."
 (defvar ecb-toggle-layout-state 0
   "Internal state of `ecb-toggle-layout'. Do not change it!")
 (defun ecb-toggle-layout ()
-  "Toggles between the layouts defined in `ecb-toggle-layout-sequence'
-\(See also option `ecb-show-sources-in-directories-buffer')."
+  "Toggles between the layouts defined in `ecb-toggle-layout-sequence'.
+See also option `ecb-show-sources-in-directories-buffer'."
   (interactive)
   (let ((layout-name (nth ecb-toggle-layout-state ecb-toggle-layout-sequence))
         (next-index (if (< (1+ ecb-toggle-layout-state)
@@ -2850,11 +2848,11 @@ this function the edit-window is selected which was current before redrawing."
       (ecb-layout-switch layout-name))))
 
 (defun ecb-store-window-sizes (&optional fix)
-  "Stores the sizes of the ECB windows for the current layout. The size of the
-ECB windows will be set to their stored values when `ecb-redraw-layout' or
-`ecb-restore-window-sizes' is called. To reset the window sizes to their
-default values call `ecb-restore-default-window-sizes'. Please read also the
-documentation of `ecb-layout-window-sizes'!
+  "Stores the sizes of the ECB windows for the current layout.
+The size of the ECB windows will be set to their stored values when
+`ecb-redraw-layout' or `ecb-restore-window-sizes' is called. To reset the
+window sizes to their default values call `ecb-restore-default-window-sizes'.
+Please read also the documentation of `ecb-layout-window-sizes'!
 
 The windows sizes are stored per default as fractions of current frame-width
 and -height of the ecb-frame, so the stored values will \"work\" for other
@@ -2946,10 +2944,10 @@ and new height as cdr. New width and height can be fractionals between -1 and
                     ecb-layout-name))))))
 
 (defun ecb-toggle-enlarged-compilation-window (&optional arg)
-  "Toggle whether the `ecb-compile-window' is enlarged or not. If ARG > 0
-then enlarge to a senseful value \(see below), if ARG <= 0 then shrink
-`ecb-compile-window' to `ecb-compile-window-height' and if ARG is nil then
-toggle the enlarge-state.
+  "Toggle whether the `ecb-compile-window' is enlarged or not.
+If ARG > 0 then enlarge to a senseful value \(see below), if ARG <= 0 then
+shrink `ecb-compile-window' to `ecb-compile-window-height' and if ARG is nil
+then toggle the enlarge-state.
 
 The `ecb-compile-window' is enlarged depending on the value of
 `ecb-enlarged-compilation-window-max-height'."
@@ -3000,12 +2998,12 @@ before the compile/grep/ect. runs the compile-window gets visible."
       (ecb-toggle-compile-window 1)))
 
 (defun ecb-toggle-compile-window (&optional arg)
-  "Toggle the visibility of the compile-window of ECB. With prefix argument
-ARG, make visible if positive, otherwise invisible. The height of the
-compile-window is always the current *saved* \(for future sessions) value of
-`ecb-compile-window-height', i.e. this command can only display a
-compile-window if `ecb-compile-window-height' has such a saved value of not
-nil!"
+  "Toggle the visibility of the compile-window of ECB.
+With prefix argument ARG, make visible if positive, otherwise invisible. The
+height of the compile-window is always the current *saved* \(for future
+sessions) value of `ecb-compile-window-height', i.e. this command can only
+display a compile-window if `ecb-compile-window-height' has such a saved value
+of not nil!"
   (interactive "P")
   (unless (or (not ecb-minor-mode)
               (not (equal (selected-frame) ecb-frame)))

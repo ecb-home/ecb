@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-compilation.el,v 1.24 2003/07/31 16:02:08 berndl Exp $
+;; $Id: ecb-compilation.el,v 1.25 2003/08/06 09:15:20 berndl Exp $
 
 ;;; Commentary:
 
@@ -66,8 +66,11 @@
                                           (,(if ecb-running-xemacs
                                                " *Message-Log*"
                                              "*Messages*") . nil))
-  "*Additional buffer names that should be displayed in the compilation
-window of ECB even if `compilation-buffer-p' says nil."
+  "*Additional buffer names that should be displayed in the compile-window.
+Buffer names can either be defined as strings or as regexps. If the
+buffer-name of a buffer matches one of the defined string or regexp then it
+will be displayed in the compile-window of ECB even if `compilation-buffer-p'
+says nil for this buffer."
   :group 'ecb-compilation-content
   :group 'ecb-layout
   :type '(repeat (cons (string :tag "Buffer name")
@@ -99,8 +102,9 @@ compile-window of ECB. This is a list combined of
       nil)))
 
 (defcustom ecb-compilation-major-modes (list 'eshell-mode 'compilation-mode)
-  "*Additional major-mode that should be displayed in the compilation
-window of ECB even if `compilation-buffer-p' says nil."
+  "*Additional major-mode that should be displayed in the compile-window.
+All buffers of a major-mode contained in this list are displayed in the
+compile-window even if `compilation-buffer-p' says nil for such a buffer."
   :group 'ecb-compilation-content
   :group 'ecb-layout
   :type '(repeat (symbol :tag "major-mode name")))
@@ -118,13 +122,12 @@ compile-window. This is a list combined of `ecb-compilation-major-modes' and
 
 
 (defcustom ecb-compilation-predicates '(comint-check-proc)
-  "*Predicate when a buffer should be treated as compilation-buffer -
-even if `compilation-buffer-p' says nil.
-
+  "*Predicates when a buffer should be treated as compilation-buffer.
 Every element of this list has to be a function or lambda-expression which
 gets as argument a buffer-object and which has to return not nil when this
-buffer should be treated as compilation-buffer and therefore be displayed in
-the compile-window of ECB \(if there is any).
+buffer should be treated as compilation-buffer \(even if
+`compilation-buffer-p' says nil) and therefore be displayed in the
+compile-window of ECB \(if there is any).
 
 In combination with the values of `ecb-compilation-buffer-names' and
 `ecb-compilation-major-modes' ECB decides when a buffer is displayed in the

@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-create-layout.el,v 1.23 2003/07/31 16:02:08 berndl Exp $
+;; $Id: ecb-create-layout.el,v 1.24 2003/08/06 09:15:20 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -247,6 +247,7 @@ layout-creation frame."
 
 
 (defun ecb-create-layout-cancel (&rest ignore)
+  "Cancel layout-creation without saving the layout."
   (interactive)
   (when (ecb-create-layout-frame-ok)
     (ecb-create-layout-clear-all (interactive-p))
@@ -434,6 +435,7 @@ DELETE-FRAME is not nil then the new created frame will be deleted and the
   
 
 (defun ecb-create-layout-set-buffer-to-type (&optional type)
+  "Give current ECB-buffer a type."
   (interactive)
   (when (ecb-create-layout-frame-ok)
     ;; adding the old buffer type to the available-list
@@ -466,6 +468,7 @@ DELETE-FRAME is not nil then the new created frame will be deleted and the
                                        (other-window 1))))))
 
 (defun ecb-create-layout-split ()
+  "Split current window."
   (interactive)
   (when (ecb-create-layout-frame-ok)
     ;; splitting
@@ -501,6 +504,7 @@ DELETE-FRAME is not nil then the new created frame will be deleted and the
       (ecb-create-layout-next-window))))
 
 (defun ecb-create-layout-forward-char ()
+  "Move one character forward."
   (interactive)
   (when (ecb-create-layout-frame-ok)
     (unless (> (- (point) (ecb-line-beginning-pos)) (- (window-width)
@@ -510,6 +514,9 @@ DELETE-FRAME is not nil then the new created frame will be deleted and the
       (call-interactively 'forward-char))))
 
 (defun ecb-create-layout-next-window ()
+  "Go to the next window.
+This command always goes to the next special ECB-window, i.e. it never selects
+the edit-window."
   (interactive)
   (when (ecb-create-layout-frame-ok)
     (let ((steps (if (equal (next-window) ecb-create-layout-edit-window) 2 1)))
@@ -521,6 +528,9 @@ DELETE-FRAME is not nil then the new created frame will be deleted and the
                                          (other-window 1)))))))
 
 (defun ecb-create-layout-previous-window ()
+  "Go to the previous window.
+This command always goes to the ECB-window preceding current window, i.e. it
+never selects the edit-window."
   (interactive)
   (when (ecb-create-layout-frame-ok)
     (let ((steps (if (equal (previous-window (selected-window) 0)
@@ -534,6 +544,7 @@ DELETE-FRAME is not nil then the new created frame will be deleted and the
                                          (other-window -1)))))))
 
 (defun ecb-create-layout-delete-window ()
+  "Delete current window."
   (interactive)
   (when (ecb-create-layout-frame-ok)
     (unless (or (equal (selected-window) ecb-create-layout-edit-window)
@@ -778,8 +789,8 @@ DELETE-FRAME is not nil then the new created frame will be deleted and the
 
 
 (defun ecb-delete-new-layout ()
-  "Select a layout-name for a layout created by `ecb-create-new-layout' and
-delete this layout. This means the layout-definition is removed from the file
+  "Select a layout-name and delete this layout.
+This means the layout-definition is removed from the file
 `ecb-create-layout-file' and the layout-function and associated aliases are
 unbound."
   (interactive)
@@ -819,6 +830,7 @@ unbound."
         (ecb-error "This layout is not defined in %s!" ecb-create-layout-file)))))
 
 (defun ecb-create-layout-debug ()
+  "Debugging command for the ECB-developers."
   (interactive)
   (message "Layout-Debug: Type: %s, Factor: %s"
            (ecb-create-layout-buffer-type)

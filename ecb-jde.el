@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-jde.el,v 1.5 2003/07/31 16:02:08 berndl Exp $
+;; $Id: ecb-jde.el,v 1.6 2003/08/06 09:15:19 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -58,13 +58,14 @@
 (require 'ecb-layout)
 
 (defun ecb-jde-display-class-at-point ()
-  "Displays in the ECB-methods-buffer the contents \(methods, attributes
-etc...) of the class which contains the definition of the \"thing\" under
-point \(this can be a variablename, classname, methodname, attributename).
-This function needs the same requirements to work as the method-completion
-feature of JDE \(see `jde-complete-at-point')!. The source-file is searched
-first in `jde-sourcepath', then in `jde-global-classpath', then in $CLASSPATH,
-then in current-directory.
+  "Displays in the ECB-methods-buffer contents of class under point.
+This means displays the contents \(methods, attributes etc...) of the class
+which contains the definition of the \"thing\" under point \(this can be a
+variablename, classname, methodname, attributename). This function needs the
+same requirements to work as the method-completion feature of JDE \(see
+`jde-complete-at-point')!. The source-file is searched first in
+`jde-sourcepath', then in `jde-global-classpath', then in $CLASSPATH, then in
+current-directory.
 
 Works only for classes where the source-code \(i.e. the *.java-file) is
 available."

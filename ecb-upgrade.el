@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-upgrade.el,v 1.41 2003/08/01 15:23:29 berndl Exp $
+;; $Id: ecb-upgrade.el,v 1.42 2003/08/06 09:15:18 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -531,11 +531,10 @@ Note: This function upgrades only the renamed but not the incompatible options
     (message "There were no incompatible or renamed options!")))
 
 (defun ecb-upgrade-options ()
-  "Check for all ECB-options if their current value is compatible to the
-defined type. If not upgrade it to the new type or reset it to the
-default-value of current ECB. Try also to upgrade renamed options. Displays
-all upgraded or reset options with their old \(before the upgrade/reset) and
-new values."
+  "Check for all ECB-options if the current value is compatible to the type.
+If not upgrade it to the new type or reset it to the default-value of current
+ECB. Try also to upgrade renamed options. Displays all upgraded or reset
+options with their old \(before the upgrade/reset) and new values."
   (interactive)
   (ecb-check-not-compatible-options)
   (ecb-upgrade-not-compatible-options)
@@ -763,7 +762,6 @@ Note: Normally this URL should never change but who knows..."
 
 (defcustom ecb-download-package-version-type 1
   "*Version type ECB is allowed to download for upgrading.
-
 If you want to upgrade to a newer ECB-version via `ecb-download-ecb' or if you
 must upgrade to newer semantic- and/or eieio-versions \(because ECB requires
 these newer versions) then this option specifies which version-types are
@@ -801,7 +799,6 @@ max-versions of the required packages. For this see the file README!"
                                                     ecb-ecb-parent-dir)
                                                "~")
   "*Parent directory where downloaded packages are installed.
-
 ECB installs a downloaded package in this directory, i.e. the downloaded
 archive X.tar.gz will be extracted in this directory so afterwards this
 directory contains a new subdirectory X which contains the downloaded package.
@@ -811,9 +808,8 @@ This directory must be write-able!"
   :type 'directory)
 
 (defcustom ecb-download-delete-archive 'always
-  "*Should the downloaded archive be deleted after successful
-installation or after failure during the installation-process. Possible values
-are:
+  "*Should the downloaded archive be deleted after success or failure.
+Possible values are:
 - only-after-success: Archive is only deleted after successful installation
   but not if a failure occurs during the installation process.
 - always: Archive is also deleted if an error occurs.
@@ -968,9 +964,9 @@ return autom. the newest version-number as version-string."
 
 
 (defun ecb-download-ecb ()
-  "Download ECB from the ECB-website and install it. For this the option
-`ecb-download-url' must be set correct, whereas the default value of this 
-option should always be correct.
+  "Download ECB from the ECB-website and install it.
+For this the option `ecb-download-url' must be set correct, whereas the
+default value of this option should always be correct.
 
 If `ecb-download-package-version-type' is set to -1 \(means asking for a
 version) then you will be ask in the minibuffer for the version to download.
@@ -996,8 +992,8 @@ archive available at the ECB website then this function asks for proceeding!"
                                        ecb-download-url)))
 
 (defun ecb-download-semantic ()
-  "Download semantic from the semantic-website and install it. For this the
-variable `ecb-cedet-url' must be set correct, whereas the default
+  "Download semantic from the semantic-website and install it.
+For this the variable `ecb-cedet-url' must be set correct, whereas the default
 value of this variable should always be correct.
 
 If `ecb-download-package-version-type' is set to -1 \(means asking for a

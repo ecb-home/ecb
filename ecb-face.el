@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-face.el,v 1.15 2003/07/31 16:02:08 berndl Exp $
+;; $Id: ecb-face.el,v 1.16 2003/08/06 09:15:19 berndl Exp $
 
 ;;; Commentary:
 
@@ -127,10 +127,11 @@ color etc."
   :group 'ecb-faces)
 
 (defcustom ecb-directories-general-face 'ecb-default-general-face
-  "*Basic face for the ECB directories buffer. This defines the basic
-face the whole directory buffer should displayed with. If the face
-'ecb-default-general-face' is used then the display of all ECB-tree-buffers
-can be changed by modifying only the face 'ecb-default-general-face'.
+  "*Basic face for the ECB directories buffer.
+This defines the basic face the whole directory buffer should displayed with.
+If the face 'ecb-default-general-face' is used then the display of all
+ECB-tree-buffers can be changed by modifying only the face
+'ecb-default-general-face'.
 
 Changes take first effect after finishing and reactivating ECB!"
   :group 'ecb-face-options
@@ -148,10 +149,11 @@ color etc."
   :group 'ecb-faces)
 
 (defcustom ecb-sources-general-face 'ecb-default-general-face
-  "*Basic face for the ECB sources buffer. This defines the basic
-face the whole sources buffer should displayed with. If the face
-'ecb-default-general-face' is used then the display of all ECB-tree-buffers
-can be changed by modifying only the face 'ecb-default-general-face'.
+  "*Basic face for the ECB sources buffer.
+This defines the basic face the whole sources buffer should displayed with. If
+the face 'ecb-default-general-face' is used then the display of all
+ECB-tree-buffers can be changed by modifying only the face
+'ecb-default-general-face'.
 
 Changes take first effect after finishing and reactivating ECB!"
   :group 'ecb-face-options
@@ -170,10 +172,11 @@ color etc."
   :group 'ecb-faces)
 
 (defcustom ecb-methods-general-face 'ecb-default-general-face
-  "*Basic face for the ECB methods buffer. This defines the basic
-face the whole methods buffer should displayed with. If the face
-'ecb-default-general-face' is used then the display of all ECB-tree-buffers
-can be changed by modifying only the face 'ecb-default-general-face'.
+  "*Basic face for the ECB methods buffer.
+This defines the basic face the whole methods buffer should displayed with. If
+the face 'ecb-default-general-face' is used then the display of all
+ECB-tree-buffers can be changed by modifying only the face
+'ecb-default-general-face'.
 
 Changes take first effect after finishing and reactivating ECB!"
   :group 'ecb-face-options
@@ -191,10 +194,11 @@ color etc."
   :group 'ecb-faces)
 
 (defcustom ecb-history-general-face 'ecb-default-general-face
-  "*Basic face for the ECB directory buffer. This defines the basic
-face the whole history buffer should displayed with. If the face
-'ecb-default-general-face' is used then the display of all ECB-tree-buffers
-can be changed by modifying only the face 'ecb-default-general-face'.
+  "*Basic face for the ECB directory buffer.
+This defines the basic face the whole history buffer should displayed with. If
+the face 'ecb-default-general-face' is used then the display of all
+ECB-tree-buffers can be changed by modifying only the face
+'ecb-default-general-face'.
 
 Changes take first effect after finishing and reactivating ECB!"
   :group 'ecb-face-options
@@ -212,9 +216,7 @@ Changes take first effect after finishing and reactivating ECB!"
                                                       "yellow" nil
                                                       "cornflower blue" "magenta"
                                                       nil nil t)
-  "*Define basic face for highlighting the selected node in an ECB
-tree-buffer.
-
+  "*Define basic face for highlighting the selected node in a tree-buffer.
 In GNU Emacs 21.X all highlighting faces in the ECB tree-buffers inherit from
 this face. Therefore the default attributes like font etc. of a face used in a
 tree-buffer for highlighting the current token can be very easily changed with
@@ -233,14 +235,13 @@ face-settings can be easily changed just by customizing the face
                                               "yellow" nil
                                               "cornflower blue" "magenta"
                                               nil nil t)
-  "*Define face used for highlighting current directory in the
-directories buffer."
+  "*Define face used for highlighting current dir in directories buffer."
   :group 'ecb-faces)
 
 (defcustom ecb-directory-face 'ecb-default-highlight-face
-  "*Face used for highlighting current directory in the directories
-buffer. If the face 'ecb-default-highlight-face' is used then the display of
-all ECB-tree-buffers can be changed by modifying only the face
+  "*Face used for highlighting current directory in the directories-buffer.
+If the face 'ecb-default-highlight-face' is used then the display of all
+ECB-tree-buffers can be changed by modifying only the face
 'ecb-default-highlight-face'.
 
 Changes take first effect after finishing and reactivating ECB!"
@@ -256,8 +257,7 @@ Changes take first effect after finishing and reactivating ECB!"
                                            "yellow" nil
                                            "cornflower blue" "magenta"
                                            nil nil t)
-  "*Define face used for highlighting current source in the
-sources buffer."
+  "*Define face used for highlighting current source in the sources buffer."
   :group 'ecb-faces)
 
 (defcustom ecb-source-face 'ecb-default-highlight-face
@@ -279,14 +279,13 @@ Changes take first effect after finishing and reactivating ECB!"
                                            "yellow" nil
                                            "cornflower blue" "magenta"
                                            nil nil t)
-  "*Define face used for highlighting current method, class or variable
-in the methods buffer."
+  "*Define face used for highlighting current token in the methods buffer."
   :group 'ecb-faces)
 
 (defcustom ecb-method-face 'ecb-default-highlight-face
-  "*Face used for highlighting current method, class or variable in the
-methods buffer. If the face 'ecb-default-highlight-face' is used then the
-display of all ECB-tree-buffers can be changed by modifying only the face
+  "*Face used for highlighting current token in the methods buffer.
+If the face 'ecb-default-highlight-face' is used then the display of all
+ECB-tree-buffers can be changed by modifying only the face
 'ecb-default-highlight-face'.
 
 Changes take first effect after finishing and reactivating ECB!"
@@ -300,13 +299,12 @@ Changes take first effect after finishing and reactivating ECB!"
 (defface ecb-method-non-semantic-face (ecb-face-default nil nil nil
                                            'ecb-methods-general-face
                                            "brown" "brown")
-  "*Define face used for displaying tokens of sources not supported by
-semantic."
+  "*Define face used for displaying tokens of non-semantic-sources."
   :group 'ecb-faces)
 
 (defcustom ecb-method-non-semantic-face 'speedbar-tag-face
-  "*Face used for for displaying tokens of sources not supported by
-semantic. Default is the face used by speedbar for tags.
+  "*Face used for for displaying tokens of non-semantic-sources.
+Default is the face used by speedbar for tags.
 
 Changes take first effect after finishing and reactivating ECB!"
   :group 'ecb-face-options
@@ -321,14 +319,13 @@ Changes take first effect after finishing and reactivating ECB!"
                                             "yellow" nil
                                             "cornflower blue" "magenta"
                                             nil nil t)
-  "*Define face used for highlighting current history-entry in the
-history buffer."
+  "*Define face used for highlighting current entry in the history buffer."
   :group 'ecb-faces)
 
 (defcustom ecb-history-face 'ecb-default-highlight-face
-  "*Face used for highlighting current history-entry in the history
-buffer. If the face 'ecb-default-highlight-face' is used then the display of
-all ECB-tree-buffers can be changed by modifying only the face
+  "*Face used for highlighting current entry in the history buffer.
+If the face 'ecb-default-highlight-face' is used then the display of all
+ECB-tree-buffers can be changed by modifying only the face
 'ecb-default-highlight-face'.
 
 Changes take first effect after finishing and reactivating ECB!"
@@ -342,13 +339,15 @@ Changes take first effect after finishing and reactivating ECB!"
 (defface ecb-token-header-face (ecb-face-default nil nil nil nil nil nil
                                                  "SeaGreen1" "SeaGreen1"
                                                  nil nil t)
-  "*Define face used for highlighting the token header after jumping to
-  it by clicking onto a node in the methods buffer."
+  "*Define face used for highlighting the token header.
+The token header is the first line of the token which is highlighted after
+jumping to it by clicking onto a node in the methods buffer."
   :group 'ecb-faces)
   
 (defcustom ecb-token-header-face 'ecb-token-header-face
-  "*Face used for highlighting the token header after jumping to
-it by clicking onto a node in the methods buffer."
+  "*Face used for highlighting the token header.
+The token header is the first line of the token which is highlighted after
+jumping to it by clicking onto a node in the methods buffer."
   :group 'ecb-face-options
   :group 'ecb-methods
   :type 'face)
@@ -401,8 +400,8 @@ it by clicking onto a node in the methods buffer."
 
 (defface ecb-bucket-token-face (ecb-face-default nil t nil
                                                  'ecb-default-general-face)
-  "*Face used for displaying bucket tokens in the methods
-buffer. See also `ecb-bucket-token-display'.
+  "*Face used for displaying bucket tokens in the methods buffer.
+See also `ecb-bucket-token-display'.
 
 In GNU Emacs 21.X this face inherits from the face 'ecb-default-general-face'.
 
