@@ -1,6 +1,8 @@
 Version 1.30 (???):
 -------------------
 
+- ECB now also works with semantic >= 1.4 (Klaus).
+
 - Now the ecb-compile-window-height is also preserved after displaying
   temp-buffers (e.g. help-buffers after C-h f) - if you want this. See the
   documentation of the option 'ecb-compile-window-temporally-enlarge'. (Klaus)

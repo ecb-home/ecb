@@ -56,9 +56,21 @@
 
 ;;; Code:
 
-(require 'semantic)
-(require 'semantic-el)
-(require 'semantic-c)
+(if (and (boundp 'semantic-version)
+         (string-match "^1\\.4" semantic-version))
+    (progn
+      (setq semantic-load-turn-everything-on nil)
+      (require 'semantic-load)
+      ;; we need all the macros of semantic-util
+      (eval-when-compile
+        (require 'semantic-util)))
+  ;; semantic 1.3.X
+  (require 'semantic)
+  (require 'semantic-el)
+  (require 'semantic-c)
+  (require 'semantic-make)
+)
+
 (require 'tree-buffer)
 (require 'ecb-layout)
 (require 'ecb-mode-line)

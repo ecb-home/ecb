@@ -20,12 +20,14 @@ REM Call "make" to byte-compile the ECB. You can savely ignore the messages.
 REM Define here the correct path to your Emacs or XEmacs
 set EMACSPROG=emacs
 
+echo Byte-compiling ECB with make.bat...
+
 if exist ecb-compile-script-init del ecb-compile-script-init
 if exist ecb.elc del *.elc
 echo (add-to-list 'load-path nil) > ecb-compile-script-init
 
 REM !!! Check this line and change it if necessary (see comments above) !!!
-echo (add-to-list 'load-path "../semantic-1.3.3") >> ecb-compile-script-init
+echo (add-to-list 'load-path "../semantic-1.4beta6") >> ecb-compile-script-init
 
 echo (setq debug-on-error t) >> ecb-compile-script-init
 %EMACSPROG% -batch -no-site-file -l ecb-compile-script-init -f batch-byte-compile *.el
