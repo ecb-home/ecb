@@ -3,7 +3,7 @@
 # Script for creating ECB releases.
 # Author: Jesper Nordenberg
 #
-# $Id: make_release.sh,v 1.13 2003/01/07 14:46:15 berndl Exp $
+# $Id: make_release.sh,v 1.14 2003/01/07 19:20:15 berndl Exp $
 
 if( "$1" == "" ) then
     echo "Usage: make_release.sh <version-number>"
@@ -16,7 +16,7 @@ make ecb_VERSION=$1 distrib
 name=ecb-$1
 release_dir=releases
 
-cp $name.tar.gz $release_dir
+mv -f $name.tar.gz $release_dir
 cd $release_dir
 rm -Rf $name
 tar -xzvf $name.tar.gz 
