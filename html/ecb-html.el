@@ -28,7 +28,7 @@
 ;; Do not change any html-file besides the index.html manually but do all
 ;; changes in this elisp file!
 
-;; $Id: ecb-html.el,v 1.36 2003/02/02 06:58:42 berndl Exp $
+;; $Id: ecb-html.el,v 1.37 2003/02/04 11:10:13 berndl Exp $
 
 ;;; Code:
 
@@ -61,11 +61,24 @@
 (setq ecb-zip-url (concat ecb-download-url ecb-zip-name))
 (defvar ecb-gz-url nil)
 (setq ecb-gz-url (concat ecb-download-url ecb-gz-name))
+(defvar ecb-pdf-name nil)
+(setq ecb-pdf-name (concat ecb-dirname ".pdf"))
+(defvar ecb-pdf-zip-name nil)
+(setq ecb-pdf-zip-name (concat ecb-pdf-name ".zip"))
+(defvar ecb-pdf-gz-name nil)
+(setq ecb-pdf-gz-name (concat ecb-pdf-name ".gz"))
+(defvar ecb-pdf-zip-url nil)
+(setq ecb-pdf-zip-url (concat ecb-download-url ecb-pdf-zip-name))
+(defvar ecb-pdf-gz-url nil)
+(setq ecb-pdf-gz-url (concat ecb-download-url ecb-pdf-gz-name))
+
 
 (defvar ecb-latest-news nil
   "List of latest news displayed on the main page.")
 (setq ecb-latest-news
-      `(,(h-sub-section "ECB 1.80 is now an official XEmacs package! (2003-02-01)"
+      `(,(h-sub-section "Usermanual now available ín PDF-format! (2003-02-03)"
+                        "Click " (h-link "downloads.html" "here") " to get it.")
+        ,(h-sub-section "ECB 1.80 is now an official XEmacs package! (2003-02-01)"
                         "The ECB XEmacs-package has the version-number 1.01 and can "
                         "be installed either via "
                         (h-link "http://www.xemacs.org/Download/win32/setup.exe"
@@ -84,19 +97,19 @@
                         ". The "
                         (h-link "http://home.swipnet.se/mayhem/ecb.html"
                                 "old website")
-                        " is not longer supported!")
-        ,(h-sub-section "ECB has a new maintainer. (2003-01-30)"
-                        "Maintainance of ECB has been moved from "
-                        (h-email "mayhem@home.se" "Jesper Nordenberg")
-                        " to "
-                        (h-email "klaus.berndl@sdm.de" "Klaus Berndl")
-                        ".")))
+                        " is not longer supported!")))
 
 (defvar ecb-rest-news nil
   "List of older news - these news are displayed in all-news.html ; see
 `ecb-html-all-news'.")
 (setq ecb-rest-news
-      `(,(h-sub-section "ECB 1.80 released! (2002-08-12)")
+      `(,(h-sub-section "ECB has a new maintainer. (2003-01-30)"
+                        "Maintainance of ECB has been moved from "
+                        (h-email "mayhem@home.se" "Jesper Nordenberg")
+                        " to "
+                        (h-email "klaus.berndl@sdm.de" "Klaus Berndl")
+                        ".")
+        ,(h-sub-section "ECB 1.80 released! (2002-08-12)")
         ,(h-sub-section "ECB 1.70 released! (2002-03-01)")
         ,(h-sub-section "ECB 1.60 released! (2002-01-20)"
                         "Many improvements. Works fine with Emacs 21.")
@@ -215,13 +228,14 @@
        ecb-bullet
        '(
 	 ("main.html" "Main")
-	 ("http://sourceforge.net/project/showfiles.php?group_id=17484" "Download")
+;; 	 ("http://sourceforge.net/project/showfiles.php?group_id=17484" "Download")
+	 ("downloads.html" "Downloads")
          ("docs/Install-and-first-steps.html#Install%20and%20first%20steps" "Installation")
 	 ("docs/index.html" "Documentation")
 	 ("docs/FAQ.html#FAQ" "FAQ")
 	 ("history" "History")
 	 ("http://lists.sourceforge.net/lists/listinfo/ecb-list" "Mailing List")
-	 ("http://cvs.sourceforge.net/cgi-bin/viewcvs.cgi/ecb/" "CVS")
+	 ("http://cvs.sourceforge.net/cgi-bin/viewcvs.cgi/ecb/ecb/" "CVS")
 	 ("screenshots/index.html" "Screenshots")
 	 ("links.html" "Links")
 	 )
@@ -239,6 +253,57 @@
       )
     (setq h-section-text-bgcolor old)))
 
+(defun ecb-html-downloads()
+  (h-doc
+   "downloads.html"
+   "ECB Download Area"
+   (h-section
+    "ECB Download Area"
+    (list
+     h-br
+     (h-sub-section
+      "Download from SourceForge Download Area"
+      "Go to the "
+      (h-link "http://sourceforge.net/project/showfiles.php?group_id=17484"
+              "ECB-Download Area") " at SourceForge.")
+     (h-line)
+     (h-sub-section
+      "Download from CVS repository"
+      "Browse the "
+      (h-link "http://cvs.sourceforge.net/cgi-bin/viewcvs.cgi/ecb/ecb/"
+              "ECB CVS repository") " for downloading latest ECB-sources.")
+     (h-line)
+     (h-sub-section
+      "Download Documentation"
+      (h-bullet-link-list
+       ecb-bullet
+       (list
+        `(,ecb-pdf-gz-url ,ecb-pdf-gz-name "Usermanual in PDF format - gzipped.")
+        `(,ecb-pdf-zip-url ,ecb-pdf-zip-name "Usermanual in PDF format - zipped.")
+        )
+       "_top"))
+     (h-line)
+     (h-sub-section
+      "Download Patches"
+      (h-bullet-link-list
+       ecb-bullet
+       (list
+        ;;; Add here all patches which should offered directly on the website.
+        '("patches/ecb-upgrade.el" "ecb-upgrade.el" "Fixes a bug related to package-downloading in ECB 1.90.")
+        )
+       "_top")
+      h-br "Instructions:"
+      (h-numbered-list
+       "Download the patched files you need."
+       "Replace the old-versions in the ECB-installation directory with the new downloaded versions."
+       (concat "Re-byte-compile ECB with the command "
+               (h-i "ecb-byte-compile")
+               " if you use ECB byte-compiled.")
+       "Restart Emacs and ECB.")
+      (h-line)
+      (h-link "main.html" "Back") " to main section")))))
+
+     
 (defun ecb-html-top()
   (h-doc
    "top.html"
@@ -265,9 +330,4 @@
 (ecb-html-links)
 (ecb-html-old)
 (ecb-html-all-news)
-
-
-;;; Local Variables:
-;;; eval:(load-file "./html-helper.el")
-;;; auto-fill-function:nil
-;;; End:
+(ecb-html-downloads)

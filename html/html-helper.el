@@ -21,7 +21,7 @@
 
 ;; Functions for generating HTML pages.
 
-;; $Id: html-helper.el,v 1.5 2003/01/31 12:29:16 berndl Exp $
+;; $Id: html-helper.el,v 1.6 2003/02/04 11:10:12 berndl Exp $
 
 ;;; Code:
 (defconst h-br "<br>\n")
@@ -141,6 +141,9 @@
 
 (defun h-p(&rest items)
   (h-element "p" items t))
+
+(defun h-i(&rest items)
+  (h-element "i" items t))
 
 (defun h-fsize(size &rest items)
   (h-element "font" (cons (cons 'size size) items)))

@@ -6,7 +6,7 @@
 # Or type "make all" or "make upload-build" to generate the whole website
 # and build an uploadable ecb-website.tar.gz file.
 
-# $Id: Makefile,v 1.5 2003/01/31 12:29:16 berndl Exp $
+# $Id: Makefile,v 1.6 2003/02/04 11:10:13 berndl Exp $
 
 EMACS=emacs
 
@@ -20,7 +20,7 @@ MAKEINFO=/usr/bin/makeinfo
 
 ecb_HTMLSOURCE=ecb-html.el
 ecb_HTML_GEN=logo.html javabrowser.html main.html menu.html links.html \
-             top.html all-news.html
+             top.html all-news.html downloads.html
 ecb_HTMLDOCU_DIR=./docs
 ecb_TEXI=../ecb.texi
 
@@ -38,11 +38,13 @@ ecb_SF_login=berndl@ecb.sourceforge.net
 
 all: upload-build
 
+# Creates the html-files from ecb-html.el
 website: $(ecb_HTMLSOURCE)
 	@$(RM) $(ecb_HTML_GEN)
 	@$(RM) *.elc
 	$(EMACS) -batch -no-site-file $< -f eval-current-buffer
 
+# Generates HTML-docu from ecb.texi into ./docs/
 online-docu: $(ecb_TEXI)
 	@$(MKDIR) $(ecb_HTMLDOCU_DIR)
 	@$(RM) $(ecb_HTMLDOCU_DIR)/*.html
@@ -50,15 +52,22 @@ online-docu: $(ecb_TEXI)
 
 $(ecb_HTMLDOCU_DIR)/index.html: online-docu
 
+# Creates a complete new build of the whole website
 upload-build: $(ecb_HTMLDOCU_DIR)/index.html website
 	@$(CP) ../HISTORY history
 	@$(RM) $(ecb_UPLOAD_ARC)
 	$(TARC) $(ecb_UPLOAD_ARC) $(ecb_WEBSITE_CONTENT)
 
-
+# Uploads a complete new website build to ecb.sourceforge.net
 upload: website upload-build
 	$(SCP) $(ecb_UPLOAD_ARC) $(ecb_SF_login):$(ecb_WEBSITE_LOC)
 
+# Uploads all files curently in ./files-for-upload
+upload-update:
+	@(cd files-for-upload; \
+	$(TARC) update.tar.gz *; \
+	$(SCP) update.tar.gz $(ecb_SF_login):$(ecb_WEBSITE_LOC); \
+	$(RM) update.tar.gz)
 
 clean:
 	@$(RM) -R $(ecb_HTMLDOCU_DIR)
