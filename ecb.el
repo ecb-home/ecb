@@ -1293,9 +1293,14 @@ with the actually choosen layout \(see `ecb-layout-nr')."
               'ecb-set-edit-window-split-hook-function)
     (add-hook 'help-mode-hook
               'ecb-set-edit-window-split-hook-function)
+    ;; ediff-stuff
     (add-hook 'ediff-before-setup-windows-hook
               'ecb-ediff-before-setup-hook)
-    (add-hook 'ediff-cleanup-hook 'ecb-ediff-cleanup-hook)
+    (if (boundp 'ediff-quit-hook)
+        (put 'ediff-quit-hook 'ecb-ediff-quit-hook-value ediff-quit-hook))
+    (add-hook 'ediff-quit-hook 'ecb-ediff-quit-hook)
+    (add-hook 'ediff-quit-hook 'ediff-cleanup-mess t)
+    
     (setq ecb-activated t)
     ;; we must update the directories buffer first time
     (ecb-update-directories-buffer)
@@ -1347,8 +1352,12 @@ with the actually choosen layout \(see `ecb-layout-nr')."
     (remove-hook 'help-mode-hook
                  'ecb-set-edit-window-split-hook-function)
     (remove-hook 'ediff-before-setup-windows-hook
-              'ecb-ediff-before-setup-hook)
-    (remove-hook 'ediff-cleanup-hook 'ecb-ediff-cleanup-hook)
+                 'ecb-ediff-before-setup-hook)
+    ;; ediff-stuff
+    (if (get 'ediff-quit-hook 'ecb-ediff-quit-hook-value)
+        (setq ediff-quit-hook (get 'ediff-quit-hook
+                                   'ecb-ediff-quit-hook-value))
+      (remove-hook 'ediff-quit-hook 'ecb-ediff-quit-hook))
     (setq ecb-activated nil)
     ;; run any personal hooks
     (run-hooks 'ecb-deactivate-hook))
