@@ -53,6 +53,8 @@ help:
 	@echo "- upload-update: Uploads all files which reside in the subdir"
 	@echo "                 'files-for-upload' (incl. the patches in the"
 	@echo "                 subdir files-for-upload/patches'."
+	@echo "- update-cvs-snapshot: Updates the latest stable CVS-snapshot"
+	@echo "                       at the ECB-website"
 	@echo "All 'upload*'-targets needs a running Emacs-instance connectable"
 	@echo "by gnuclient."
 
@@ -99,6 +101,11 @@ upload-update:
 	echo "Unpacking the updates..."; \
 	$(SSH) "cd $(ecb_WEBSITE_LOC); gzip -d update.tar.gz; tar -xf update.tar; rm -f update.tar"; \
 	$(RM) update.tar.gz)
+
+# update latest cvs-snapshot on the ECB-webiste
+update-cvs-snapshot:
+	@echo "Updating latest stable CVS-snapshot..."
+	$(SSH) "cvs -d:pserver:anonymous@cvs1:/cvsroot/ecb export -Dtomorrow ecb && tar czvf $(ecb_WEBSITE_LOC)/cvs_snapshots/ecb.tar.gz ecb && rm -Rf ecb"
 
 clean:
 	@$(RM) -R $(ecb_HTMLDOCU_DIR)

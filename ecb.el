@@ -289,9 +289,9 @@ If t then the ECB-frame is selected, if nil then it is not. If 'ask then ECB
 asks if the ECB-frame should be selected if the current-frame is not the
 `ecb-frame'."
   :group 'ecb-general
-  :type '(radio (const :tag "" :value t)
-                (const :tag "" :value ask)
-                (const :tag "" :value nil)))
+  :type '(radio (const :tag "Select the ECB-frame" :value t)
+                (const :tag "Ask if the ECB-frame should be selected" :value ask)
+                (const :tag "Do not select the ECB-frame" :value nil)))
 
 (defcustom ecb-major-modes-activate 'none
   "*List of major-modes for which ECB should be activated or shown.
