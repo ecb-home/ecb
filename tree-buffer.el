@@ -71,21 +71,6 @@
 (defvar tree-buffer-incr-searchpattern nil)
 (defvar tree-buffer-incr-search nil)
 
-(defun list-append (list item)
-  (if list
-      (progn
-        (setcdr (last list) item)
-        list)
-    item))
-
-(defun filter (list fn)
-  (let ((res nil))
-    (while list
-      (if (funcall fn (car list))
-          (setq res (cons (car list) res)))
-      (setq list (cdr list)))
-    (nreverse res)))
-
 (defun tree-buffer-get-node-name-start-column (node)
   "Returns the buffer column where the name of the node starts."
   (+ (tree-buffer-get-node-indent node)
@@ -308,7 +293,7 @@ inserted and the TEXT itself"
     (insert " ")
     (tree-buffer-insert-text (if (tree-node-is-expanded node) "[-]" "[+]")))
   (insert "\n")
-  (setq tree-buffer-nodes (list-append tree-buffer-nodes (list node)))
+  (setq tree-buffer-nodes (append tree-buffer-nodes (list node)))
   (if (tree-node-is-expanded node)
       (dolist (node (tree-node-get-children node))
         (tree-buffer-add-node node (1+ depth)))))
@@ -686,7 +671,7 @@ EXPAND-SYMBOL-BEFORE: If not nil then the expand-symbol \(is displayed before
 ;;; Tree node
 
 (defun tree-node-add-child (node child)
-  (tree-node-set-children node (list-append (tree-node-get-children node) (list child)))
+  (tree-node-set-children node (append (tree-node-get-children node) (list child)))
   (tree-node-set-parent child node))
 
 (defun tree-node-remove-child (node child)
