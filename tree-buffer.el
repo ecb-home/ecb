@@ -26,7 +26,7 @@
 ;; This file is part of the ECB package which can be found at:
 ;; http://home.swipnet.se/mayhem/ecb.html
 
-;; $Id: tree-buffer.el,v 1.25 2001/04/28 10:12:01 creator Exp $
+;; $Id: tree-buffer.el,v 1.26 2001/04/28 12:19:06 berndl Exp $
 
 ;;; Code:
 
@@ -113,7 +113,13 @@ with the same arguments as `tree-node-expanded-fn'."
           (node (tree-buffer-get-node-at-point)))
       (when node
         (if (and (tree-node-is-expandable node)
-                 (tree-buffer-at-expand-symbol node p))
+                 (tree-buffer-at-expand-symbol node p)
+                 ;; if the expand-symbol is displayed before and mouse-button
+                 ;; = 0, means RET is pressed, we do not toggle-expand but work
+                 ;; as if point would not be at expand-symbol. This is for
+                 ;; conveniance.
+                 (not (and (= mouse-button 0)
+                           tree-buffer-expand-symbol-before)))
             (progn
               (when (and (not (tree-node-is-expanded node))
                          tree-node-expanded-fn)
@@ -159,6 +165,46 @@ with the same arguments as `tree-node-expanded-fn'."
   (put-text-property (tree-buffer-get-node-name-start-point node)
                      (tree-buffer-get-node-name-end-point node) 'face face))
 
+(defun tree-buffer-recenter (node window)
+  "Recenter the window WINDOW, so as much as possible subnodes of NODE are
+visible if NODE is expanded. If NODE is not expandable then WINDOW is always
+displayed without empty-lines at the end, means WINDOW is always best filled.
+NODE must be valid and already be visible in WINDOW!"
+  (if (tree-node-is-expanded node)
+      (let ((exp-node-children-count (tree-node-count-subnodes-to-display node))
+            (node-point (save-excursion
+                          (goto-line (tree-buffer-find-node node))
+                          (point))))
+        ;; if the current node is not already displayed in the first line of the
+        ;; window (= condition 1) and if not all of it큦 children are visible in
+        ;; the window then we can do some optimization.
+        (if (and (save-excursion
+                   (goto-char node-point)
+                   (forward-line -1)
+                   (pos-visible-in-window-p (point) window))
+                 (not (save-excursion
+                        (goto-char node-point)
+                        (forward-line exp-node-children-count)
+                        (pos-visible-in-window-p (point) window))))
+            ;; optimize the display of NODE and it큦 children so as much as
+            ;; possible are visible.
+            (recenter (max 0 (- (1- (window-height window))
+                                (1+ exp-node-children-count))))))
+    ;; maybe there are empty lines in the window after the last non-empty
+    ;; line. If they are we scroll until the whole window is filled with
+    ;; non-empty lines.
+    (if (not (tree-node-is-expandable node))
+        (let ((w-height (1- (window-height window)))
+              (full-lines-in-window (count-lines (window-start window)
+                                                 (window-end window t))))
+          (if (< full-lines-in-window
+                 w-height)
+              (set-window-start window
+                                (save-excursion
+                                  (goto-char (window-start window))
+                                  (forward-line (- full-lines-in-window w-height))
+                                  (line-beginning-position))))))))
+
 ;; Klaus: Now we use overlays to highlight current node in a tree-buffer. This
 ;; makes it easier to do some facing with the nodes itself and above all this
 ;; the faces of the node are always visible even if the node is highlighted
@@ -172,19 +218,22 @@ with the same arguments as `tree-node-expanded-fn'."
   (setq tree-buffer-highlighted-node-data nil))
 
 (defun tree-buffer-highlight-node-data(node-data)
-  (tree-buffer-remove-highlight)
-  (setq tree-buffer-highlighted-node-data node-data)
-  (when tree-buffer-highlighted-node-data
-    (let ((node (tree-buffer-find-node-data
-                 tree-buffer-highlighted-node-data))
+  (when node-data
+    (let ((node (tree-buffer-find-node-data node-data))
           (w (get-buffer-window (current-buffer))))
       (when node
+        (tree-buffer-remove-highlight)
+        (setq tree-buffer-highlighted-node-data node-data)        
         (move-overlay tree-buffer-highlight-overlay
                       (tree-buffer-get-node-name-start-point node)
                       (tree-buffer-get-node-name-end-point node))
         (if (not (pos-visible-in-window-p
                   (tree-buffer-get-node-name-start-point node) w))
-            (recenter))))))
+            ;; make node visible
+            (recenter))
+        ;; maybe we must optimize the recentering
+        (tree-buffer-recenter node w)
+        ))))
   
 (defun tree-buffer-insert-text(text &optional facer)
   "Insert TEXT at point and faces it with FACER. FACER can be a face then the
@@ -252,10 +301,6 @@ current tree-buffer."
   (let* ((w (get-buffer-window (current-buffer)))
          (ws (window-start w))
          (p (point))
-         (exp-node-children-count
-          (if node
-              (tree-node-count-subnodes-to-display node)
-            0))
          (buffer-read-only nil)
          (next-line-add-newlines nil))
     (setq tree-buffer-nodes nil)
@@ -266,21 +311,8 @@ current tree-buffer."
     (goto-char p)
     (set-window-start w ws)
     ;; let큦 optimize the display of the expanded node NODE and it큦 children.
-    (when (and node (tree-node-is-expanded node))
-      (goto-line (tree-buffer-find-node node))
-      ;; if the current node is not already displayed in the first line of the
-      ;; window (= condition 1) and if not all of it큦 children are visible in
-      ;; the window then we can do some optimization.
-      (when (and (save-excursion
-                   (forward-line -1)
-                   (pos-visible-in-window-p (point) w))
-                 (not (save-excursion
-                        (forward-line exp-node-children-count)
-                        (pos-visible-in-window-p (point) w))))
-        ;; optimize the display of NODE and it큦 children so as much as
-        ;; possible are visible.
-        (recenter (max 0 (- (1- (window-height w))
-                            (1+ exp-node-children-count))))))))
+    (when node
+      (tree-buffer-recenter node w))))
 
 (defun tree-buffer-scroll(point window-start)
   "Scrolls current tree-buffer. The window will start at WINDOW-START and
@@ -310,10 +342,10 @@ point will stay on POINT."
 
 (defun tree-buffer-create(name is-click-valid-fn node-selected-fn
                                node-expanded-fn node-mouse-over-fn
-                               menus tr-lines read-only
+                               menus tr-lines read-only tree-indent
                                &optional type-facer expand-symbol-before)
   "Creates a new tree buffer with
-  NAME: Name of the buffer
+NAME: Name of the buffer
 IS-CLICK-VALID-FN: `tree-buffer-create' rebinds down-mouse-1 and down-mouse-2
                    and also in combination with shift and control to
                    `tree-buffer-select'. IS-CLICK-VALID-FN is called first if
@@ -349,6 +381,7 @@ MENUS: Nil or a list of one or two conses, each cons for a node-type \(0 or 1)
        cons must be a menu.
 TR-LINES: Should lines in this tree buffer be truncated \(not nil)
 READ-ONLY: Should the treebuffer be read-only \(not nil)
+TREE-INDENT: spaces subnodes should be indented.
 TYPE-FACER: Nil or a list of one or two conses, each cons for a node-type \(0
             or 1). The cdr of a cons can be:
             - a symbol of a face
@@ -389,7 +422,7 @@ EXPAND-SYMBOL-BEFORE: If not nil then the expand-symbol \(is displayed before
     (setq tree-node-selected-fn node-selected-fn)
     (setq tree-node-expanded-fn node-expanded-fn)
     (setq tree-node-mouse-over-fn node-mouse-over-fn)
-    (setq tree-buffer-indent 2)
+    (setq tree-buffer-indent tree-indent)
     (setq tree-buffer-highlighted-node-data nil)
     (setq tree-buffer-menus menus)
     (setq tree-buffer-root (tree-node-new "root" 0 "root"))
@@ -509,7 +542,8 @@ EXPAND-SYMBOL-BEFORE: If not nil then the expand-symbol \(is displayed before
         (throw 'exit child)))))
 
 (defun tree-node-remove-child-data(node child-data)
-  "Removes the first child with the given child-data. Returns the removed child."
+  "Removes the first child with the given child-data. Returns the removed
+child."
   (catch 'exit
     (let ((last-cell nil)
 	  (cell (tree-node-get-children node)))
