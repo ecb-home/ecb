@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-upgrade.el,v 1.57 2004/01/19 20:03:26 berndl Exp $
+;; $Id: ecb-upgrade.el,v 1.58 2004/01/20 16:46:11 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -168,6 +168,32 @@
 (require 'ecb-util)
 
 (silentcomp-defun widget-convert)
+
+;; -------------------------------------------------------------------------
+;; define in this defconst all important NEWS which a user should know after
+;; upgrading to the new version.
+;; -------------------------------------------------------------------------
+
+;; Each NEWS-string should be a one-liner shorter than 70 chars
+(defconst ecb-upgrade-news
+  '(("2.20" . ("New keybinding for the online-help: [C-c . h]"
+               "The edit-area can be splitted in more than 2 windows."
+               "`ecb-other-window-jump-behavior' renamed in `ecb-other-window-behavior'"
+               "New option `ecb-maximize-ecb-window-after-selection'"
+               "popup-menus of the tree-buffers can be used with the tmm-library"
+               "New option `ecb-change-layout-preserves-compwin-state'"
+               "`delete-window' and `delete-other-windows' handle the compile-window"
+               "Support of the default modeline-mechanisms for deleting other windows"))
+    ("2.11" . ("Using semanticdb to jump to type-tags defined in other files"))
+    ("2.01" . ("Support for semantic 2.0"
+               "The tree-buffers can be displayed graphically with images"
+               "Popup-menus of the tree-buffers support submenus"
+               "The sources- and the history-buffer can be filtered"
+               "Ediff runs per default in the ECB-frame"))
+    ("1.96" . ("ECB can work together with the window-managers escreen and winring"
+               "Much better support of the ECB-compile-window"))))
+
+
 
 ;; ----------------------------------------------------------------------
 ;; define in this defconst all options which should be upgraded
@@ -570,11 +596,17 @@ its current defcustom-definition."
   (widget-apply (widget-convert (get option 'custom-type))
                 :match (symbol-value option)))
 
+(defvar ecb-old-ecb-version nil
+  "Only not nil if ECB has upgraded the options to a newer options-version
+after an ECB-upgrade.")
+
 (defun ecb-store-current-options-version ()
-  (if (not (equal (ecb-option-get-value 'ecb-options-version
-                                        'saved-value)
-                  ecb-version))
-      (customize-save-variable 'ecb-options-version ecb-version)))
+  (when (not (equal (ecb-option-get-value 'ecb-options-version
+                                          'saved-value)
+                    ecb-version))
+    (setq ecb-old-ecb-version (ecb-option-get-value 'ecb-options-version
+                                                    'saved-value))
+    (customize-save-variable 'ecb-options-version ecb-version)))
   
 
 (defvar ecb-not-compatible-options nil
@@ -679,70 +711,106 @@ Note: This function upgrades only the renamed but not the incompatible options
   "Display a message-buffer which options have been upgraded or reset."
   (interactive)
   (if (or ecb-not-compatible-options ecb-renamed-options)
-      (with-output-to-temp-buffer "*ECB upgraded options*"
-        (when ecb-not-compatible-options
-          (princ "The values of the following options are incompatible with current type.\nECB has tried to transform the old-value to the new type. In cases where\nthis was not possible ECB has reset to the current default-value.")
-          (princ "\n\n"))
-        (dolist (option ecb-not-compatible-options)
-          (let ((option-name (symbol-name (car option)))
-                (old-value (cdr option))
-                (new-value (symbol-value (car option))))
-            (princ (concat "+ Option:   " option-name))
-            (princ "\n")
-            (princ (concat "  Old value: "
-                           (if (and (not (equal old-value nil))
-                                    (not (equal old-value t))
-                                    (or (symbolp old-value)
-                                        (listp old-value)))
-                               "'")
-                           (prin1-to-string old-value)))
-            (princ "\n")
-            (princ (concat "  New value: "
-                           (if (and (not (equal new-value nil))
-                                    (not (equal new-value t))
-                                    (or (symbolp new-value)
-                                        (listp new-value)))
-                               "'")
-                           (prin1-to-string new-value)))
-            (princ "\n\n")))
-        (when ecb-renamed-options
-          (princ "The following options are not longer valid and have now new names. ECB has\ntried to transform the old value to the new option. In cases where this\nwas not possible the current default value is active!")
-          (princ "\n\n"))
-        (dolist (option ecb-renamed-options)
-          (let ((old-option-name (symbol-name (nth 0 option)))
-                (old-value (nth 1 option))
-                (new-option-name (symbol-name (nth 2 option)))
-                (new-value (nth 3 option)))
-            (princ (concat "+ Old option: " old-option-name))
-            (princ "\n")
-            (princ (concat "  Old value:  "
-                           (if (and (not (equal old-value nil))
-                                    (not (equal old-value t))
-                                    (or (symbolp old-value)
-                                        (listp old-value)))
-                               "'")
-                           (prin1-to-string old-value)))
-            (princ "\n")
-            (princ (concat "  New option: " new-option-name))
-            (princ "\n")
-            (princ (concat "  New value:  "
-                           (if (equal new-value 'ecb-no-upgrade-conversion)
-                               ;; we print the new default value.
-                               (prin1-to-string (symbol-value (nth 2 option)))
-                             (concat (if (and (not (equal new-value nil))
-                                              (not (equal new-value t))
-                                              (or (symbolp new-value)
-                                                  (listp new-value)))
-                                         "'")
-                                     (prin1-to-string new-value)))))
-            (if (equal new-value 'ecb-no-upgrade-conversion)
-                (princ "\n  (The old value couldn't be transformed - this is the current default!)"))
-            (princ "\n\n")))
-        (princ "If the new values are not what you want please re-customize!")
-        (princ "\n\n")
-        (print-help-return-message))
-    (message "There are no incompatible or renamed options!")))
+      (progn
+        (with-output-to-temp-buffer "*ECB upgraded options*"
+          (when ecb-not-compatible-options
+            (princ "The values of the following options are incompatible with current type.\nECB has tried to transform the old-value to the new type. In cases where\nthis was not possible ECB has reset to the current default-value.")
+            (princ "\n\n"))
+          (dolist (option ecb-not-compatible-options)
+            (let ((option-name (symbol-name (car option)))
+                  (old-value (cdr option))
+                  (new-value (symbol-value (car option))))
+              (princ (concat "+ Option:   " option-name))
+              (princ "\n")
+              (princ (concat "  Old value: "
+                             (if (and (not (equal old-value nil))
+                                      (not (equal old-value t))
+                                      (or (symbolp old-value)
+                                          (listp old-value)))
+                                 "'")
+                             (prin1-to-string old-value)))
+              (princ "\n")
+              (princ (concat "  New value: "
+                             (if (and (not (equal new-value nil))
+                                      (not (equal new-value t))
+                                      (or (symbolp new-value)
+                                          (listp new-value)))
+                                 "'")
+                             (prin1-to-string new-value)))
+              (princ "\n\n")))
+          (when ecb-renamed-options
+            (princ "The following options are not longer valid and have now new names. ECB has\ntried to transform the old value to the new option. In cases where this\nwas not possible the current default value is active!")
+            (princ "\n\n"))
+          (dolist (option ecb-renamed-options)
+            (let ((old-option-name (symbol-name (nth 0 option)))
+                  (old-value (nth 1 option))
+                  (new-option-name (symbol-name (nth 2 option)))
+                  (new-value (nth 3 option)))
+              (princ (concat "+ Old option: " old-option-name))
+              (princ "\n")
+              (princ (concat "  Old value:  "
+                             (if (and (not (equal old-value nil))
+                                      (not (equal old-value t))
+                                      (or (symbolp old-value)
+                                          (listp old-value)))
+                                 "'")
+                             (prin1-to-string old-value)))
+              (princ "\n")
+              (princ (concat "  New option: " new-option-name))
+              (princ "\n")
+              (princ (concat "  New value:  "
+                             (if (equal new-value 'ecb-no-upgrade-conversion)
+                                 ;; we print the new default value.
+                                 (prin1-to-string (symbol-value (nth 2 option)))
+                               (concat (if (and (not (equal new-value nil))
+                                                (not (equal new-value t))
+                                                (or (symbolp new-value)
+                                                    (listp new-value)))
+                                           "'")
+                                       (prin1-to-string new-value)))))
+              (if (equal new-value 'ecb-no-upgrade-conversion)
+                  (princ "\n  (The old value couldn't be transformed - this is the current default!)"))
+              (princ "\n\n")))
+          (princ "If the new values are not what you want please re-customize!")
+          (princ "\n\n")
+          (princ "For a list of the most important NEWS call `ecb-display-news-for-upgrade'!\n\n")
+          (print-help-return-message))
+        t)
+    (message "There are no incompatible or renamed options!")
+    nil))
 
+(defvar ecb-news-for-upgrade-displayed nil)
+
+(defun ecb-display-news-for-upgrade (&optional full-news)
+  "Display the most important NEWS after an ECB-upgrade.
+If you call this function but no ECB-upgrade has been performed before
+starting ECB then nothing is display unless FULL-NEWS is not nil.
+
+If FULL-NEWS is not nil then the NEWS-file is displayed in another window."
+  (interactive "P")
+  (if full-news
+      (find-file-other-window (concat ecb-ecb-dir "NEWS"))
+    (if (and ecb-old-ecb-version
+             (or (not ecb-news-for-upgrade-displayed)
+                 (interactive-p)))
+        (progn
+          (with-output-to-temp-buffer "*News for the new ECB-version*"
+            (princ (format "You have upgraded ECB from version %s to %s.\n\n"
+                           ecb-old-ecb-version ecb-version))
+            (princ "Here are the most important NEWS:\n\n")
+            (mapc (function (lambda (version)
+                              (if (ecb-package-version-list<
+                                   (ecb-package-version-str2list ecb-old-ecb-version)
+                                   (ecb-package-version-str2list (car version)))
+                                  (dolist (news (cdr version))
+                                    (princ (concat "* " news "\n"))))))
+                  ecb-upgrade-news)
+            (princ "\nFor more details see the attached NEWS-file."))
+          ;; We want this being displayed only once
+          (setq ecb-news-for-upgrade-displayed t))
+      (message "There are no NEWS to display."))))
+    
+  
 (defun ecb-upgrade-options ()
   "Check for all ECB-options if the current value is compatible to the type.
 If not upgrade it to the new type or reset it to the default-value of current
@@ -766,7 +834,7 @@ options with their old \(before the upgrade/reset) and new values."
 (defconst ecb-required-speedbar-version-max '(0 15 3 9))
 
 ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: Currently we support the
-;; cedet-library by hacking ecb-check-requirements 8see the TODO there). But
+;; cedet-library by hacking ecb-check-requirements see the TODO there). But
 ;; when cedet is stable (or a stable beta ;-) then we should add here a
 ;; cedet-required-version-min|max etc....
 

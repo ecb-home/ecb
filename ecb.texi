@@ -26,7 +26,7 @@
 @c GNU Emacs; see the file COPYING.  If not, write to the Free Software
 @c Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-@c $Id: ecb.texi,v 1.143 2004/01/20 08:06:20 berndl Exp $
+@c $Id: ecb.texi,v 1.144 2004/01/20 16:46:11 berndl Exp $
 
 @setfilename ecb.info
 
@@ -181,8 +181,9 @@ Usage of ECB
 
 * Using the mouse::             Working with the mouse
 * Using the keyboard::          Working with the keyboard
-* The edit-window::             How to use the edit-window(s)
+* The edit-area::               How to use the edit-area
 * Temp- and compile-buffers::   Displaying temp- and compilation-buffers
+* The other window::            How the ``other window'' is determined
 * The Methods buffer::          Using and customizing he Methods-buffer
 * The ECB-layout::              Changing, customizing, redrawing, creating
 * Hiding the ECB windows::      Hiding/Showing the ECB-windows
@@ -789,7 +790,7 @@ ECB-windows/tree-buffers:
 In addition to these ``special'' ECB-windows you have always an
 @dfn{edit-area} where you can edit sour source-files. The edit-area
 can be devided into several @dfn{edit-windows} - as many as you need
-(@pxref{The edit-window}). And at the bottom of the ECB-frame a
+(@pxref{The edit-area}). And at the bottom of the ECB-frame a
 durable @dfn{compilation-window} (also called @dfn{compile-window})
 can be displayed (optional), where all the output of Emacs-compilation
 (compile, grep etc.) is shown (@pxref{Temp- and compile-buffers}).
@@ -1044,8 +1045,9 @@ Emacs Code Browser.
 @menu
 * Using the mouse::             Working with the mouse
 * Using the keyboard::          Working with the keyboard
-* The edit-window::             How to use the edit-window(s)
+* The edit-area::               How to use the edit-area
 * Temp- and compile-buffers::   Displaying temp- and compilation-buffers
+* The other window::            How the ``other window'' is determined
 * The Methods buffer::          Using and customizing he Methods-buffer
 * The ECB-layout::              Changing, customizing, redrawing, creating
 * Hiding the ECB windows::      Hiding/Showing the ECB-windows
@@ -1206,7 +1208,7 @@ want scrolling left and right with the mouse in XEmacs then activate
 the horizontal scrollbars.
 
 
-@node Using the keyboard, The edit-window, Using the mouse, Usage of ECB
+@node Using the keyboard, The edit-area, Using the mouse, Usage of ECB
 @section Working with the keyboard in the ECB-windows
 
 ECB offers the @code{ecb-mode-map} which binds the most important
@@ -1405,8 +1407,8 @@ displayed when `tmm-menubar' is called). This tmm-display is only
 available for GNU Emacs.
 
 
-@node The edit-window, Temp- and compile-buffers, Using the keyboard, Usage of ECB
-@section Working with the edit-window
+@node The edit-area, Temp- and compile-buffers, Using the keyboard, Usage of ECB
+@section Working with the edit-window(s) of the edit-area
 
 @cindex edit-window
 ECB offers you all what you need to work with the edit-area as if the
@@ -1538,11 +1540,14 @@ i.e. the other ecb-windows (not the edit-windows!) are deleted.
 If called in the compile window there are two alternatives:
 
 @itemize @minus
-@item If the function is contained in @code{ecb-layout-always-operate-in-edit-window}
-the right edit-window is selected (depends on the value of the option
+@item
+If the function is contained in
+@code{ecb-layout-always-operate-in-edit-window} the right edit-window
+is selected (depends on the value of the option
 @code{ecb-mouse-click-destination}) and then it does it´s job.
 
-@item Otherwise the behavior depends on the value of the option
+@item
+Otherwise the behavior depends on the value of the option
 @code{ecb-advice-window-functions-signal-error}.
 @end itemize
 @end itemize
@@ -1696,7 +1701,7 @@ Otherwise it depends completely on the setting in
 @code{ecb-other-window-behavior}.
 @end deffn
 
-@node Temp- and compile-buffers, The Methods buffer, The edit-window, Usage of ECB
+@node Temp- and compile-buffers, The other window, The edit-area, Usage of ECB
 @section Temp- and compile-buffers display in ECB
 
 @cindex temporary buffers
@@ -1833,7 +1838,199 @@ compile-window is set or not. In the latter case using
 @code{display-buffer} or @code{pop-to-buffer} takes always account for
 the values of these options - like the original behavior of Emacs.
 
-@node The Methods buffer, The ECB-layout, Temp- and compile-buffers, Usage of ECB
+@node The other window, The Methods buffer, Temp- and compile-buffers, Usage of ECB
+@section How the ``other window'' is determined by ECB
+
+@cindex other window
+Normally all windows in an Emacs-frame are arranged in a cyclic order
+and window-selecting-commands like @code{other-window} or
+window-scrolling-commands like @code{scroll-other-window} choose
+simply the next@footnote{@code{other-window} allows to select ARG'th
+different window, i.e. the window ARG steps away from current window
+in the cyclic order of the windows} window after the current window as
+``other window''.
+
+@subsection ``Other window''-basics in ECB
+
+With a typical window-layout of ECB such a cyclic order of
+@strong{all} windows in the ECB-frame does not make sense because it
+would be not very intuitive and against that what the user wants to
+``say'' when calling @code{other-window} or
+@code{scroll-other-window}.
+
+Therefore ECB devides the whole set of windows of the ECB-frame in
+several subsets:
+
+@itemize @bullet
+@item The edit-windows of the edit-area
+@item The special tree-windows for browsing-tasks
+@item The compile-window at the bottom (if there is one)
+@item The minibuffer-window of the ECB-frame (if active)
+@end itemize
+
+Each of these subsets will be treated as a cyclic ordered subset, i.e.
+all windows in each of these subsets are ordered as the function
+@code{walk-windows} would visit the windows when the windows of a
+subset would be the only windows of a
+frame@footnote{@code{other-window} uses the same window-ordering as
+@code{walk-windows}}.
+
+@subsection Builtin ``other window'' behaviors of ECB
+
+ECB now offers to specify the behavior of commands like
+@code{other-window} or @code{scroll-other-window} within the
+ECB-frame. This can be done with the option
+@code{ecb-other-window-behavior}. This option offers several builtin
+behaviors:
+
+@itemize @bullet
+@item All windows of the ECB-frame are considered
+
+ECB will cycle through all windows of the ECB-frame or scroll simply
+the next window in the ECB-frame, means it behaves like the original
+@code{other-window} rsp. the original
+@code{other-window-for-scrolling}.
+
+@item Only the windows of the edit-area are considered
+
+ECB will only cycle through the edit-windows of ECB or only scroll
+another edit-window. If the selected window is not an edit-window then
+all windows are taken into account.
+
+@item The edit-windos and the compile-window are considered
+
+Like above but the compile-window will be added to the subset of the
+edit-windows.
+
+@item Behave as smart and intuitive as possible
+
+This is the default behavior of ECB. ECB tries to choose the
+@code{other-window}-destination or the ``other window'' to scroll in a
+smart and intuitive way: If point is in one of the edit-windows and if
+the edit-area is splitted then always the ``next'' edit-window is
+choosen (whereas the next edit-window of the last edit-window is the
+first edit-window)- if the edit-area is unsplitted then the
+compile-window is used if there is one. In the context of an
+@code{other-window}-call the @var{ARG} of @code{other-window} will be
+taken into account.
+
+If one of the special ecb-windows is selected then always the ``next''
+ecb-window is choosen (whereas the next ecb-window of the last
+ecb-window is the first ecb-window). In the context of an
+@code{other-window}-call the @var{ARG} of @code{other-window} will be
+taken into account.
+
+If the compile-window is selected then always the last edit-window
+which had the point will be used unless @code{other-window} has been
+called with a prefix-argument unequal 1.
+@end itemize
+
+Regardless of the different behaviors above ECB handles the situation
+of an active minibuffer during a call to @code{other-window} or
+@code{scroll-other-window} like follows:
+
+If the minibuffer-window is selected then ECB always chooses the
+window @code{minibuffer-scroll-window} points to (when this variable
+is set, otherwise the compile-window or the last selected edit-window
+is choosen) when the called command is called to choose the 1. next
+window (always true for scrolling another window or true when
+@code{other-window} called without prefix-arg or with prefix-arg equal
+1). Otherwise the window ARG steps away is choosen (in case of
+@code{other-window}).
+
+If there is an active minibuffer but the minibuffer-window is not
+selected then @code{other-window} and @code{scroll-other-window}
+behave like the original version.
+
+@subsection User-defined ``other window'' behavior
+
+In addition to the builtin ``other window'' behaviors ECB offers a
+user to completely define for himself how ECB should choose another
+window for scrolling it or selecting it. This can be done with the
+option @code{ecb-other-window-behavior} too because this option can
+also have a function-symbol as value:
+
+Such a function gets seven arguments:
+@enumerate
+@item
+A canonical list of all currently visible windows of the
+@code{ecb-frame}
+@item
+A canonical list of all currently visible edit-windows
+@item
+A canonical list of all currently visible ecb-windows
+@item
+The window-object of the compile-window if there is any.
+@item
+The minibuffer-window of the ECB-frame if there is an active
+minibuffer.
+@item
+The result of the function @code{ecb-where-is-point} - see the
+documentation of this function for details.
+@item
+An integer which indicates how many steps away from the current
+selected window the ``other-window'' is. Is nil when this function is
+called in another context then for @code{other-window}.
+@end enumerate
+
+The function has to return a window-object which is then used as
+``other window'' for the command @code{other-window} or for scrolling
+another window (e.g. with @code{scroll-other-window}). Such a function
+has to handle properly all situation for itself.
+
+Here is an example for such a function:
+
+@example
+@group
+(defun ecb-get-other-window-smart (win-list
+                                   edit-win-list
+                                   ecb-win-list
+                                   comp-win
+                                   minibuf-win
+                                   point-loc
+                                   nth-window)
+  (if minibuf-win
+      ;; if we have an active mini-buffer we delegate this to
+      ;; `ecb-get-other-window-minibuf-active'
+      (ecb-get-other-window-minibuf-active win-list
+                                           edit-win-list
+                                           ecb-win-list
+                                           comp-win
+                                           minibuf-win
+                                           point-loc
+                                           nth-window)
+    ;; here we have no active minibuffer!
+    (let* ((nth-win (or nth-window 1))
+           (next-listelem-fcn (if (< nth-win 0)
+                                  'ecb-prev-listelem
+                                'ecb-next-listelem)))
+      (cond ((equal point-loc 'ecb)
+             (funcall next-listelem-fcn ecb-win-list
+                      (selected-window) nth-win))
+            ((equal point-loc 'compile)
+             (if (= nth-win 1)
+                 (or (and ecb-last-edit-window-with-point
+                          (window-live-p ecb-last-edit-window-with-point)
+                          ecb-last-edit-window-with-point)
+                     (car edit-win-list))
+               (funcall next-listelem-fcn
+                        (append edit-win-list (list (selected-window)))
+                        (selected-window)
+                        nth-win)))
+            (t ;; must be an edit-window
+             (funcall next-listelem-fcn
+                      (append edit-win-list
+                              (if (and comp-win
+                                       (= (length edit-win-list) 1))
+                                  (list comp-win)))
+                      (selected-window)
+                      nth-win))))))
+@end group
+@end example
+
+This example implements the builtin smart behavior described above.
+
+@node The Methods buffer, The ECB-layout, The other window, Usage of ECB
 @section Using and customizing the ECB-Methods buffer
 
 ECB is mostly designed to display parsing information for files
@@ -2983,7 +3180,7 @@ Via the main ``ECB''-menu and here ``Display window maximized''
 @item
 Via calling the adviced version of
 @code{delete-other-windows}@footnote{This command is adviced per
-default, see @ref{The edit-window}.} (bound to @kbd{C-x 1}) in one of
+default, see @ref{The edit-area}.} (bound to @kbd{C-x 1}) in one of
 the ECB windows.
 
 @item
@@ -3211,6 +3408,15 @@ Select a layout-name for a layout created by
 layout-definition is removed from the file
 @code{ecb-create-layout-file} and the layout-function and associated
 aliases are unbound.
+@end deffn
+
+@deffn Command display-news-for-upgrade &optional FULL-NEWS
+Display the most important NEWS after an ECB-upgrade. If you call this
+function but no ECB-upgrade has been performed before starting ECB
+then nothing is display unless @var{FULL-NEWS} is not nil.
+
+If @var{FULL-NEWS} is not nil then the NEWS-file is displayed in
+another window.
 @end deffn
 
 @deffn Command display-upgraded-options
@@ -6164,9 +6370,31 @@ If the compile-window is selected then always the last edit-window
 which had the point will be used unless @code{other-window} has been
 called with a prefix-argument unequal 1.
 
+If there is an active minibuffer:
+
+Regardless of the allowed values above ECB handles the situation of an
+active minibuffer during a call to @code{other-window} or
+@code{scroll-other-window} like follows:
+
+If the minibuffer-window is selected then ECB always chooses the
+window @code{minibuffer-scroll-window} points to (when this variable
+is set, otherwise the compile-window or the last selected edit-window
+is choosen) when the called command is called to choose the 1. next
+window (always true for scrolling another window or true when
+@code{other-window} called without prefix-arg or with prefix-arg equal
+1). Otherwise the window ARG steps away is choosen (in case of
+@code{other-window}).
+
+If there is an active minibuffer but the minibuffer-window is not
+selected then @code{other-window} and @code{scroll-other-window}
+behave like the original version.
+
+In addition to the allowed values above the value of this option can
+also be a function:
+
 A function:
 
-This function gets six arguments:
+This function gets seven arguments:
 @enumerate
 @item
 A canonical list of all currently visible windows of the
@@ -6191,7 +6419,8 @@ called in another context then for @code{other-window}.
 
 The function has to return a window-object which is then used as
 ``other window'' for the command @code{other-window} or for scrolling
-another window (e.g. with @code{scroll-other-window}).
+another window (e.g. with @code{scroll-other-window}). Such a function
+has to handle properly all situation for itself.
 @code{ecb-get-other-window-smart} is an example for such a function.
 @end defopt
 
@@ -9782,12 +10011,9 @@ senseful behavior of @code{scroll-all-mode} with ECB.
 
 @cindex tmm-menubar
 @cindex tmm
-In general this library does not work perfectly with ECB. But if the
-option @code{ecb-other-window-behavior} is not set to @code{all}
-then it should work acceptable. Beginning with version 1.95.2 ECB
-ensures autom. that every code which uses @code{tmm-prompt} (e.g.
-@code{tmm-menubar}) works - regardless of the value of
-@code{ecb-other-window-behavior}.
+In general this library does not work perfectly with ECB. Beginning
+with version 1.95.2 ECB autom. ensures that every code which uses
+@code{tmm-prompt} (e.g. @code{tmm-menubar}) works.
 
 @subsection Package VC (Version Control)
 
@@ -10363,6 +10589,14 @@ Can ECB preserve the full state of ECB between deactivation and next
 activation?
 @tab @tab
 Yes, see the option @code{ecb-split-edit-window-after-start}.
+
+@item @tab @tab
+
+@item
+Can i change the behavior how ECB chooses another window for selecting
+it or scrolling it.
+@tab @tab
+Yes, see @ref{The other window}.
 
 @end multitable
 

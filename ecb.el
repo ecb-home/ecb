@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb.el,v 1.364 2004/01/19 20:03:25 berndl Exp $
+;; $Id: ecb.el,v 1.365 2004/01/20 16:46:11 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -2104,6 +2104,12 @@ That is remove the unsupported :help stuff."
        :help "Show the online help of ECB."
        ])
     (ecb-menu-item
+     [ "ECB NEWS"
+       (ecb-display-news-for-upgrade t)
+       :active t
+       :help "Displays the NEWS-file of ECB."
+       ])
+    (ecb-menu-item
      [ "List of most important options"
        (let ((ecb-show-help-format 'info))
          (ecb-show-help)
@@ -2215,7 +2221,7 @@ That is remove the unsupported :help stuff."
                (t "r" ecb-rebuild-methods-buffer)
                (t "a" ecb-toggle-auto-expand-tag-tree)
                (t "x" ecb-expand-methods-nodes)
-               (t "o" ecb-show-help)
+               (t "h" ecb-show-help)
                (t "gl" ecb-goto-window-edit-last)
                (t "g1" ecb-goto-window-edit1)
                (t "g2" ecb-goto-window-edit2)
@@ -2231,6 +2237,7 @@ That is remove the unsupported :help stuff."
                (t "mh" ecb-maximize-window-history)
                (t "mb" ecb-maximize-window-speedbar)
                (t "e" eshell)
+               (t "o" ecb-toggle-scroll-other-window-scrolls-compile)
                (t "\\" ecb-toggle-compile-window)
                (t "/" ecb-toggle-compile-window-height)
                (t "," ecb-cycle-maximized-ecb-buffers)
@@ -2793,8 +2800,10 @@ has been deactivated. Do not set this variable!")
       (condition-case err-obj
           ;; now we display all `ecb-not-compatible-options' and
           ;; `ecb-renamed-options'
-          (when ecb-auto-compatibility-check
-            (ecb-display-upgraded-options))
+          (if ecb-auto-compatibility-check
+              (if (not (ecb-display-upgraded-options))
+                  (ecb-display-news-for-upgrade))
+            (ecb-display-news-for-upgrade))
         (error
          (ecb-clean-up-after-activation-failure
           "Error during the compatibility-check of ECB." err-obj)))

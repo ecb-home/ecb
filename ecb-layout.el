@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-layout.el,v 1.207 2004/01/20 08:06:20 berndl Exp $
+;; $Id: ecb-layout.el,v 1.208 2004/01/20 16:46:12 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -693,11 +693,30 @@ ecb-window is choosen \(whereas the next ecb-window of the last ecb-window is
 the first ecb-window). In the context of an `other-window'-call the ARG of
 `other-window' will be taken into account.
 
-If the compile-window is selected then always the last edit-window which had
-the point will be used unless `other-window' has been called with a
-prefix-argument unequal 1.
+If the compile-window is selected then always the last selected edit-window
+will be used unless `other-window' has been called with a prefix-argument
+unequal 1.
 
-A function:
+If there is an active minibuffer:
+
+Regardless of the allowed values above ECB handles the situation of an active
+minibuffer during a call to `other-window' or `scroll-other-window' like
+follows:
+
+If the minibuffer-window is selected then ECB always chooses the window
+`minibuffer-scroll-window' points to \(when this variable is set, otherwise
+the compile-window or the last selected edit-window is choosen) when the
+called command is called to choose the 1. next window \(always true for
+scrolling another window or true when `other-window' called without prefix-arg
+or with prefix-arg equal 1). Otherwise the window ARG steps away is choosen
+\(in case of `other-window).
+
+If there is an active minibuffer but the minibuffer-window is not selected
+then `other-window' and `scroll-other-window' behave like the original
+version.
+
+In addition to the allowed values above the value of this option can also be a
+function:
 
 This function gets seven arguments:
 1. A canonical list of all currently visible windows of the `ecb-frame'
@@ -712,8 +731,10 @@ This function gets seven arguments:
    another context then for `other-window'.
 The function has to return a window-object which is then used as \"other
 window\" for the command `other-window' or for scrolling another window
-\(e.g. with `scroll-other-window'). `ecb-get-other-window-smart' is an example
-for such a function."
+\(e.g. with `scroll-other-window').
+
+This function has to handle all properly situations for itself.
+`ecb-get-other-window-smart' is an example for such a function."
   :group 'ecb-layout
   :group 'ecb-most-important
   :type '(radio (const :tag "Smart" :value smart)
@@ -1240,8 +1261,11 @@ either not activated or it behaves exactly like the original version!"
       (ecb-with-original-basic-functions
        (ecb-with-original-functions
         ad-do-it))
-    (let* ((o-w-s-b (window-buffer (other-window-for-scrolling)))
-           (other-window-scroll-buffer (if (equal (current-buffer) o-w-s-b)
+    (let* ((o-w (other-window-for-scrolling))
+           (o-w-s-b (window-buffer o-w))
+           (other-window-scroll-buffer (if (or (equal (current-buffer) o-w-s-b)
+                                               (equal (minibuffer-window ecb-frame)
+                                                      o-w))
                                            nil
                                          o-w-s-b)))
       ad-do-it)))
@@ -1286,7 +1310,9 @@ the scroll-behavior of `scroll-other-window' see the advice documentation of
     (setq ecb-scroll-other-window-scrolls-compile-window
           (if (null arg)
               (not ecb-scroll-other-window-scrolls-compile-window)
-            (>= (prefix-numeric-value arg) 0)))))
+            (>= (prefix-numeric-value arg) 0)))
+    (message "Scrolling the other-window scrolls compile-window is now %s."
+             (if ecb-scroll-other-window-scrolls-compile-window "ON" "OFF"))))
       
 
   
@@ -1515,9 +1541,14 @@ for current layout."
         (ecb-with-original-basic-functions
          (ecb-with-original-functions
           ad-do-it))
-      ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: falls nicht in edit-window
-      ;; erstmal edit-window selecten
-      (let ((ecb-other-window-behavior 'only-edit)
+      ;; we set temporally `ecb-other-window-behavior' to a function which
+      ;; always selects the "next" window after the
+      ;; `ecb-last-edit-window-with-point'
+      (let ((ecb-other-window-behavior
+             (lambda (win-list edit-win-list ecb-win-list comp-win
+                               mini-win point-loc nth-win)
+               (ecb-next-listelem edit-win-list
+                                  ecb-last-edit-window-with-point)))
             ;; we must not handle the tmm-stuff as compilation-buffer
             (ecb-compilation-buffer-names nil)
             (ecb-compilation-major-modes nil)
@@ -2596,6 +2627,8 @@ If called for other frames it works like the original version."
                                             minibuf-win
                                             point-loc
                                             nth-window)
+  "Implements the situation of an active minibuffer, see
+`ecb-other-window-behavior'."
   (let* ((nth-win (or nth-window 1))
          (next-listelem-fcn (if (< nth-win 0)
                                 'ecb-prev-listelem
@@ -2628,7 +2661,10 @@ If called for other frames it works like the original version."
                                    minibuf-win
                                    point-loc
                                    nth-window)
+  "Implements the smart-setting of `ecb-other-window-behavior'."
   (if minibuf-win
+      ;; if we have an active mini-buffer we delegate this to
+      ;; `ecb-get-other-window-minibuf-active'
       (ecb-get-other-window-minibuf-active win-list
                                            edit-win-list
                                            ecb-win-list
@@ -2663,8 +2699,6 @@ If called for other frames it works like the original version."
                       (selected-window)
                       nth-win))))))
 
-;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: Noch das verhalten bei aktivem
-;; Minibuffer dokumentieren!!
 (defun ecb-get-other-window (nth-window)
   "Return the \"other window\" according to `ecb-other-window-behavior'.
 Returns the window NTH-WINDOW steps away from the current window. If
@@ -2727,7 +2761,7 @@ NTH-WINDOW is nil then it is treated as 1."
                  (funcall next-listelem-fcn
                           (append edit-win-list
                                   (if (equal compwin-state 'visible)
-                                      ecb-compile-window))
+                                      (list ecb-compile-window)))
                           (selected-window)
                           nth-win)))
               (t ;; = 'smart
@@ -2739,11 +2773,6 @@ NTH-WINDOW is nil then it is treated as 1."
                                            minibuf-win
                                            point-loc
                                            nth-window)))))))
-
-;; Important: `other-window', `delete-window', `split-window' need none of the
-;; other advices and can therefore be used savely by the other advices (means,
-;; other functions or advices can savely (de)activate these "basic"-advices!
-
 
 (defadvice other-window (around ecb)
   "The ECB-version of `other-window'. Works exactly like the original function
