@@ -21,7 +21,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-winman-support.el,v 1.4 2003/09/15 08:31:05 berndl Exp $
+;; $Id: ecb-winman-support.el,v 1.5 2003/09/18 10:00:58 berndl Exp $
 
 ;;; Commentary
 ;;
@@ -92,9 +92,9 @@
 ;; More tests.
 
 
-;; Thanks to Johann Myrkraverk <myrkraverk@users.sourceforge.net> for the
-;; first trigger for this suport-library. He has suggested to integrate ECB
-;; with escreen.
+;; Thanks to Johann "Myrkraverk" Oskarsson <myrkraverk@users.sourceforge.net>
+;; for the first trigger for this suport-library. He has suggested to
+;; integrate ECB with escreen.
 
 
 ;;; Code

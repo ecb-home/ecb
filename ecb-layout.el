@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-layout.el,v 1.188 2003/09/15 08:31:05 berndl Exp $
+;; $Id: ecb-layout.el,v 1.189 2003/09/18 10:00:58 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -658,6 +658,26 @@ rebind it to the original function in the `ecb-deactivate-hook'."
                      :value display-buffer)
               (const :tag "other-window-for-scrolling"
                      :value other-window-for-scrolling)))
+
+;; TODO: Klaus Berndl <klaus.berndl@sdm.de>:
+;; - zu texi hinzufügen
+;; - eventuell hier nil als Default?!
+(defcustom ecb-advice-window-functions-signal-error t
+  "*Signal an error if an adviced function can not do its job.
+If not nil then an error is signaled if one of the adviced functions \(see
+`ecb-advice-window-functions') can not its job. So for example if the user
+tries to split the compile-window or an ecb-tree-window or if one tries to
+switch to another buffer in one of the ecb-tree-windows. For details see the
+documentation of each of the adviced functions to get info when an error is
+signaled.
+
+If this option is nil then no error is signaled but the called adviced
+function does simply nothing.
+
+Default is t but it can also be useful not to signal errors - especially if
+there are conflicts with other packages."
+  :group 'ecb-layout
+  :type 'boolean)
 
 (defcustom ecb-layout-always-operate-in-edit-window
   '(delete-window

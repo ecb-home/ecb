@@ -26,7 +26,7 @@
 @c GNU Emacs; see the file COPYING.  If not, write to the Free Software
 @c Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-@c $Id: ecb.texi,v 1.121 2003/09/15 08:31:04 berndl Exp $
+@c $Id: ecb.texi,v 1.122 2003/09/18 10:00:57 berndl Exp $
 
 @setfilename ecb.info
 
@@ -3432,34 +3432,34 @@ change the values of many but not all of the options. The values of
 the following options @strong{MUST NOT} be changed via @code{setq} or
 Elisp-code but only with the customize-feature!
 
-@multitable @columnfractions 0.5 0.5
-
+@itemize @minus
 @item @code{ecb-advice-window-functions}
-@tab @code{ecb-bucket-token-display}
+@item @code{ecb-bucket-token-display}
 @item @code{ecb-compile-window-height}
-@tab @code{ecb-compile-window-temporally-enlarge}
-@item @code{ecb-exclude-parents-regexp}
-@tab @code{ecb-font-lock-tokens}
-@item @code{ecb-highlight-token-with-point-delay}
-@tab @code{ecb-key-map}
-@item @code{ecb-layout-name}
-@tab @code{ecb-layout-window-sizes}
-@item @code{ecb-mode-line-prefixes}
-@tab @code{ecb-show-node-info-in-minibuffer}
-@item @code{ecb-show-tokens}
-@tab @code{ecb-source-path}
-@item @code{ecb-token-display-function}
-@tab @code{ecb-tree-RET-selects-edit-window}
-@item @code{ecb-type-token-display}
-@tab @code{ecb-windows-height}
-@item @code{ecb-window-sync-delay}
-@tab @code{ecb-windows-width}
-@item @code{ecb-use-speedbar-instead-native-tree-buffer}
-@tab @code{ecb-toggle-layout-sequence}
-@item @code{ecb-mode-line-data}
-@tab @code{ecb-mode-line-display-window-number}
+@item @code{ecb-compile-window-temporally-enlarge}
 @item @code{ecb-compile-window-width}
-@end multitable
+@item @code{ecb-exclude-parents-regexp}
+@item @code{ecb-fix-window-size}
+@item @code{ecb-font-lock-tokens}
+@item @code{ecb-highlight-token-with-point-delay}
+@item @code{ecb-key-map}
+@item @code{ecb-layout-name}
+@item @code{ecb-layout-window-sizes}
+@item @code{ecb-mode-line-data}
+@item @code{ecb-mode-line-display-window-number}
+@item @code{ecb-mode-line-prefixes}
+@item @code{ecb-show-node-info-in-minibuffer}
+@item @code{ecb-show-tokens}
+@item @code{ecb-source-path}
+@item @code{ecb-toggle-layout-sequence}
+@item @code{ecb-token-display-function}
+@item @code{ecb-tree-RET-selects-edit-window}
+@item @code{ecb-type-token-display}
+@item @code{ecb-use-speedbar-instead-native-tree-buffer}
+@item @code{ecb-window-sync-delay}
+@item @code{ecb-windows-height}
+@item @code{ecb-windows-width}
+@end itemize
 
 @strong{IMPORTANT}: If you are the administrator for an Emacs-site,
 means you are responsible for the basic customization of a lot of
@@ -3468,31 +3468,80 @@ without changing everyones @file{.emacs}-file and normally you will do
 this with the file @file{site-start.el}. You can customize all options
 of ECB in a central @file{site-start.el} (even the options mentioned
 above!) but you @strong{MUST NOT} do this via @code{setq} but you have
-to use @code{custom-set-variables}@footnote{At least for the options
+to use a mechanism like the following@footnote{At least for the options
 for which @code{setq} is explicitly forbidden, but it is recommended
-to use always @code{custom-set-variables}!}! Here is a short example
+to use always such a mechanism}! Here is a short example
 how this can be done:
+
+First two helper functions are needed, namely
+@code{customize-option-get-value} and
+@code{customize-save-variable-save} whereas the latter one sets the
+value for an option via the customize-mechanism (and is therefore
+allowed for the setq-forbidden options!) but only if the option has no
+saved value until now (i.e. the user has not saved this option for
+future sessions until now)
 
 @example
 @group
-(custom-set-variables '(ecb-show-tokens ((include collapsed nil)
-                                         (parent collapsed nil)
-                                         (type flattened nil)
-                                         (variable collapsed name)
-                                         (function flattened name)
-                                         (rule flattened name)
-                                         (section flattened nil)
-                                         (def collapsed name)
-                                         (t collapsed name)))
-                      '(ecb-font-lock-tokens t)
-                      ;; add here more options of ECB it you want
-                      )
+(defun customize-option-get-value (option type)
+  "Return the value of a customizable option OPTION with TYPE, where TYPE
+can either be 'standard-value \(the default-value of the defcustom) or
+'saved-value \(the value stored durable by the user via customize)."
+  (let ((val (car (get option type))))
+    (cond ((not (listp val)) val)
+          ((equal 'quote (car val)) (car (cdr val)))
+          (t (car val)))))
+
+(defun customize-save-variable-save (option value &optional override)
+  "Calls `customize-save-variable' with OPTION and VALUE if OPTION is a
+custom-type and if OPTION has no saved-value until now.
+If OVERRIDE is a function or lambda-form then it is called with two arguments:
+- OLD-SAVED-VAL: The saved value of OPTION
+- NEW-VALUE: see argument VALUE.
+OVERRIDE is only called if OPTION has already a saved-value. If OVERIDE
+returns not nil then `customize-save-variable' is called for OPTION with VALUE
+even if OPTION has no saved-value until now."
+  (and (get option 'custom-type)
+       (or (not (get option 'saved-value))
+           (and (functionp override)
+                (funcall override
+                         (customize-option-get-value option 'saved-value)
+                         value)))
+       (progn
+         (message "Overriding saved value for option %s with %s" option value)
+         (customize-save-variable option value))))
+@end group
+@end example
+
+With @code{customize-save-variable-save} all ECB-options can be
+site-wide pre-customized like follows:
+
+@example
+@group
+(customize-save-variable-save 'ecb-show-tokens
+                              '((include collapsed nil)
+                                (parent collapsed nil)
+                                (type flattened nil)
+                                (variable collapsed name)
+                                (function flattened name)
+                                (rule flattened name)
+                                (section flattened nil)
+                                (def collapsed name)
+                                (t collapsed name)))
+(customize-save-variable-save 'ecb-font-lock-tokens t)
+;; add here more options of ECB it you want
 @end group
 @end example
 
 But ensure that you customize the options with the correct lisp
 format. Read carefully the docstrings of the options you want
 to customize from within Elisp-code!
+
+@c TODO: Klaus Berndl <klaus.berndl@sdm.de>: This saves the
+@c pre-customized values always in the users custom-file (probably
+@c .emacs). If this is not preferred, then maybe we should mention
+@c here the function setq-save - but of course setq-save is only
+@c allowed for options which are not setq-forbidden!!
 
 @node Most important options, Customizable options, General aspects, Customizing
 @section The most important options of ECB
