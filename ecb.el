@@ -33,7 +33,7 @@
 ;; (require 'ecb)
 ;;
 ;; Optional: You can byte-compile ECB after the ECB-package is loaded with
-;; `ecb-bytecompile-ecb'.
+;; `ecb-byte-compile'.
 ;;
 ;; ECB requires version 1.3.3 of Eric's semantic bovinator
 ;; (http://www.ultranet.com/~zappo/semantic.shtml).
@@ -1438,7 +1438,7 @@ FILE.el is newer than FILE.elc or if FILE.elc doesn't exist."
           (byte-compile-file file)))))
 
 
-(defun ecb-bytecompile-ecb (&optional force-all)
+(defun ecb-byte-compile (&optional force-all)
   "Bytecompiles the ECB package. This is done for all lisp-files of ECB if
 FORCE-ALL is not nil or for each lisp-file FILE.el which is either newer than
 FILE.elc or if FILE.elc doesn't exist."
