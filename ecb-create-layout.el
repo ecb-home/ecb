@@ -573,6 +573,8 @@ DELETE-FRAME is not nil then the new created frame will be deleted and the
     (define-key ecb-create-layout-mode-map
       (string (+ i 48)) 'self-insert-command))
 
+  (define-key ecb-create-layout-mode-map "." 'self-insert-command)
+  
   (if ecb-running-xemacs
       (define-key ecb-create-layout-mode-map (kbd "<BS>")
         'delete-backward-char)
