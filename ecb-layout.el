@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-layout.el,v 1.225 2004/04/14 09:29:37 berndl Exp $
+;; $Id: ecb-layout.el,v 1.226 2004/05/06 09:02:05 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -430,6 +430,15 @@ To restore the ECB-layout after such a buffer-enlarge just call
                        :value after-selection)
                 (const :tag "Both of them" :value both)
                 (const :tag "Never" :value nil)))
+
+(defcustom ecb-maximize-ecb-window-after-selection nil
+  "*If not nil maximize current tree-window after selection.
+When selecting another not-tree-window after such an automatic maximizing all
+tree-windows of current layout are displayed again. But a tree-window is not
+maximized if either a node has been selected via primary- oder secondarc
+mouse-button or the popup-menu of that tree-buffer has been opened."
+  :group 'ecb-layout
+  :type 'boolean)
 
 ;; A value of never makes no sense because it is not much effort to prevent
 ;; all interactive shrinking commands (incl. mouse-commands) from shrinking it
@@ -1140,7 +1149,7 @@ not do what you think it should do etc...) then please do the following steps:
 
 ;; ====== internal variables ====================================
 
-
+;; Klaus Berndl <klaus.berndl@sdm.de>: FRAME-LOCAL
 (defvar ecb-frame nil
   "Frame where ECB runs. This frame is only set if this variable is nil or the
 value points to a dead frame. Deactivation and activation of ECB does not set
@@ -1149,21 +1158,35 @@ this variable to nil!")
 (defvar ecb-edit-window nil
   "Only used internally by `ecb-redraw-layout-full'. Do not refer to this
 variable because the value is not predictable!")
+
+;; Klaus Berndl <klaus.berndl@sdm.de>: FRAME-LOCAL
 (defvar ecb-last-edit-window-with-point nil
   "The edit-window of ECB which had the point before an emacs-command is
 done.")
+
+;; Klaus Berndl <klaus.berndl@sdm.de>: FRAME-LOCAL
 (defvar ecb-last-source-buffer nil
   "The source-buffer of `ecb-last-edit-window-with-point'.")
+
+;; Klaus Berndl <klaus.berndl@sdm.de>: FRAME-LOCAL
 (defvar ecb-last-compile-buffer-in-compile-window nil
   "The buffer in the compile-window before an emacs-command is done.")
+
+;; Klaus Berndl <klaus.berndl@sdm.de>: FRAME-LOCAL
 (defvar ecb-compile-window nil
   "Window to display compile-output in.")
+
+;; Klaus Berndl <klaus.berndl@sdm.de>: FRAME-LOCAL
 (defvar ecb-compile-window-was-selected-before-command nil
   "Not nil only if the `ecb-compile-window' was selected before most recent
 command.")
+
+;; Klaus Berndl <klaus.berndl@sdm.de>: FRAME-LOCAL
 (defvar ecb-windows-hidden nil
   "Used with `ecb-toggle-ecb-windows'. If true the ECB windows are hidden. Do
 not change this variable!")
+
+;; Klaus Berndl <klaus.berndl@sdm.de>: FRAME-LOCAL ???
 (defvar ecb-tree-buffers-of-current-layout nil)
 
 (defun ecb-initialize-layout ()
@@ -1508,8 +1531,8 @@ arguments. Do never set this variable; it is only set by
                    (member ecb-compile-window-temporally-enlarge
                            '(after-selection nil))
                    ;; The *Completions*-buffer must always being enlarged!
-                   (not (string= (buffer-name (window-buffer (ad-get-arg 0)))
-                                 "*Completions*")))
+                   (not (ecb-string= (buffer-name (window-buffer (ad-get-arg 0)))
+                                     "*Completions*")))
               (ecb-toggle-compile-window-height -1)
             (save-excursion
               (set-buffer (window-buffer (ad-get-arg 0)))
@@ -1723,7 +1746,7 @@ for current layout."
                (member ecb-compile-window-temporally-enlarge
                        '(after-selection nil))
                ;; The *Completions* buffer must always being enlarged!!
-               (not (string= (buffer-name (current-buffer)) "*Completions*")))
+               (not (ecb-string= (buffer-name (current-buffer)) "*Completions*")))
           (progn
             (ecb-layout-debug-error "resize-temp-buffer-window: buffer: shrink to comp-win-height")
             (ecb-toggle-compile-window-height -1))
@@ -2407,15 +2430,6 @@ nothing is done."
 (defvar ecb-ecb-window-was-selected-before-command nil)
 (defvar ecb-layout-prevent-handle-ecb-window-selection nil)
 
-(defcustom ecb-maximize-ecb-window-after-selection nil
-  "*If not nil maximize current tree-window after selection.
-When selecting another not-tree-window after such an automatic maximizing all
-tree-windows of current layout are displayed again. But a tree-window is not
-maximized if either a node has been selected via primary- oder secondarc
-mouse-button or the popup-menu of that tree-buffer has been opened."
-  :group 'ecb-layout
-  :type 'boolean)
-
 ;; VERY IMPORTANT: pre-command- and the post-command-hook must NOT use any
 ;; function which calls `ecb-window-list' because this would slow-down the
 ;; performance of all Emacs-versions unless GNU Emacs 21 because they have no
@@ -3024,12 +3038,13 @@ allowed to be deleted."
              ;; we must check if the current-buffer in the edit-window is
              ;; the same as the buffer argument for the current call and if
              ;; yes we must switch to the buffer returned by `other-buffer'.
-             (if (string= buf-name
-                          (buffer-name (window-buffer (car (ecb-canonical-edit-windows-list)))))
+             (if (ecb-string= buf-name
+                              (buffer-name (window-buffer (car (ecb-canonical-edit-windows-list)))))
                  (switch-to-buffer (other-buffer buf-name
                                                  nil ecb-frame))))
             (select-frame curr-frame)))))))
 
+;; Klaus Berndl <klaus.berndl@sdm.de>: FRAME-LOCAL
 (defvar ecb-edit-area-creators nil)
 
 (defsubst ecb-edit-area-creators-init ()
@@ -3691,6 +3706,7 @@ visibility of the ECB windows. ECB minor mode remains active!"
   (ecb-toggle-ecb-windows 1))
 
 
+;; Klaus Berndl <klaus.berndl@sdm.de>: FRAME-LOCAL
 (defvar ecb-current-maximized-ecb-buffer-name nil
   "If not nil then it contains the buffer-name of the current maximized
 ecb-buffer. If nil then this means currently there is no ecb-buffer maximized.
@@ -3770,6 +3786,7 @@ edit-window is selected."
           ((equal curr-point 'compile)
            (ecb-window-select ecb-compile-window)))))
 
+;; Klaus Berndl <klaus.berndl@sdm.de>: FRAME-LOCAL
 (defvar ecb-cycle-ecb-buffer-state nil
   "State of ecb-buffer-cycling. An alist where the car is the list of all
 buffer-names of the ecb-buffers of current layout and the cdr the index which
@@ -4052,7 +4069,7 @@ and TYPE must be an element of `ecb-layout-types'."
   (setq ecb-available-layouts
         (sort ecb-available-layouts
               (function (lambda (l r)
-                          (string< (car l) (car r)))))))
+                          (ecb-string< (car l) (car r)))))))
 
 (defun ecb-available-layouts-remove (name)
   "Remove layout with NAME from `ecb-available-layouts'."
@@ -4061,7 +4078,7 @@ and TYPE must be an element of `ecb-layout-types'."
       (setq ecb-available-layouts
             (sort (delete elem ecb-available-layouts)
                   (function (lambda (l r)
-                              (string< (car l) (car r)))))))))
+                              (ecb-string< (car l) (car r)))))))))
 
 (defun ecb-get-layout-type (name)
   "Return the type of layout NAME."
@@ -4590,8 +4607,8 @@ emergency-redraw."
            (or (and compile-buffer-before-redraw
                     (ecb-compilation-buffer-p compile-buffer-before-redraw))
                (ecb-some (function (lambda (buf)
-                                     (and (not (string= "*Completions*"
-                                                        (buffer-name buf)))
+                                     (and (not (ecb-string= "*Completions*"
+                                                            (buffer-name buf)))
                                           (not (ecb-check-for-special-buffer buf))
                                           (ecb-compilation-buffer-p buf))))
                          (buffer-list ecb-frame))
@@ -4725,6 +4742,7 @@ emergency-redraw."
     (run-hooks 'ecb-redraw-layout-after-hook)))
 
 
+;; Klaus Berndl <klaus.berndl@sdm.de>: FRAME-LOCAL
 (defvar ecb-toggle-layout-state 0
   "Internal state of `ecb-toggle-layout'. Do not change it!")
 (defun ecb-toggle-layout (&optional last-one)

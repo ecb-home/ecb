@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-autogen.el,v 1.11 2003/09/12 09:19:26 berndl Exp $
+;; $Id: ecb-autogen.el,v 1.12 2004/05/06 09:02:08 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -79,7 +79,7 @@
 (defun ecb-autogen-update-header ()
   "Update header of the auto-generated autoloads file.
 Run as `write-contents-hooks'."
-  (when (string-equal generated-autoload-file (buffer-file-name))
+  (when (ecb-string= generated-autoload-file (buffer-file-name))
     (let ((tag (format ";;; %s ---" (file-name-nondirectory
                                      (buffer-file-name)))))
       (message "Updating header...")

@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-speedbar.el,v 1.58 2004/03/23 17:29:54 berndl Exp $
+;; $Id: ecb-speedbar.el,v 1.59 2004/05/06 09:02:05 berndl Exp $
 
 ;;; Commentary:
 
@@ -313,9 +313,9 @@ future this could break."
              (set-buffer visible-buffer)
              (ecb-fix-filename default-directory)))
           (ecb-default-directory (ecb-fix-filename default-directory)))
-      (when (and (or (not (string-equal speedbar-default-directory
-                                        ecb-default-directory))
-                     (string= speedbar-initial-expansion-list-name "buffers"))
+      (when (and (or (not (ecb-string= speedbar-default-directory
+                                       ecb-default-directory))
+                     (ecb-string= speedbar-initial-expansion-list-name "buffers"))
                  speedbar-buffer
                  (buffer-live-p speedbar-buffer))
         (ecb-speedbar-update-contents)))))
@@ -425,7 +425,7 @@ Return NODE."
            (methods speedbar-tag-hierarchy-method))
     
       ;; removing the imenu-Rescan-item
-      (if (string= (car (car tag-list)) (car imenu--rescan-item))
+      (if (ecb-string= (car (car tag-list)) (car imenu--rescan-item))
           (setq tag-list (cdr tag-list)))
       ;; If imenu or etags returns already groups (etags will do this probably
       ;; not, but imenu will do this sometimes - e.g. with cperl) then we do not

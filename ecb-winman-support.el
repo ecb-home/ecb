@@ -21,7 +21,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-winman-support.el,v 1.10 2004/02/02 11:57:54 berndl Exp $
+;; $Id: ecb-winman-support.el,v 1.11 2004/05/06 09:02:04 berndl Exp $
 
 ;;; Commentary
 ;;
@@ -229,7 +229,7 @@ winring.el!"
 ECB if we set the name `ecb-winman-winring-name'."
   ;; Because this is an after advice of winring-name-of-current returns here
   ;; already the new name!
-  (when (string= (winring-name-of-current) ecb-winman-winring-name)
+  (when (ecb-string= (winring-name-of-current) ecb-winman-winring-name)
     ;; we do this only the first time
     (when (null ecb-winman-winring-ecb-frame)
       (setq ecb-winman-winring-ecb-frame
@@ -244,12 +244,12 @@ ECB if we set the name `ecb-winman-winring-name'."
 
 (defadvice winring-duplicate-configuration (before ecb)
   "Prevent the ECB-window-configuration from being duplicated."
-  (if (string= (winring-name-of-current) ecb-winman-winring-name)
+  (if (ecb-string= (winring-name-of-current) ecb-winman-winring-name)
       (ecb-error "The ECB-window-configuration can not be duplicated!")))
 
 (defadvice winring-restore-configuration (before ecb)
   "Deactivates ECB if the ECB-window-configuration is active."
-  (if (and (string= (winring-name-of-current) ecb-winman-winring-name)
+  (if (and (ecb-string= (winring-name-of-current) ecb-winman-winring-name)
            (boundp 'ecb-minor-mode)
            ecb-minor-mode)
       (let ((ecb-split-edit-window-after-start 'before-deactivation))

@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb.el,v 1.389 2004/04/15 16:34:05 berndl Exp $
+;; $Id: ecb.el,v 1.390 2004/05/06 09:02:01 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -257,6 +257,7 @@ command.")
   (ecb-file-browser-initialize)
   (ecb-method-browser-initialize))
 
+;; Klaus Berndl <klaus.berndl@sdm.de>: FRAME-LOCAL
 (defvar ecb-minor-mode nil
   "Do not set this variable directly. Use `ecb-activate' and
 `ecb-deactivate' or `ecb-minor-mode'.!")
@@ -1299,7 +1300,7 @@ tasks are performed:
                (and filename
                     (ecb-buffer-or-file-readable-p)
                     (or force
-                        (not (string= filename ecb-path-selected-source))))
+                        (not (ecb-string= filename ecb-path-selected-source))))
           
                ;; * KB: Problem: seems this little sleep is necessary because
                ;;   otherwise jumping to certain markers in new opened files (e.g.
@@ -1489,13 +1490,13 @@ combination is invalid \(see `ecb-interpret-mouse-click'."
         (setq ecb-layout-prevent-handle-ecb-window-selection t))
     ;; first we dispatch to the right action
     (when ecb-button-list
-      (cond ((string= tree-buffer-name ecb-directories-buffer-name)
+      (cond ((ecb-string= tree-buffer-name ecb-directories-buffer-name)
 	     (ecb-directory-clicked node ecb-button nil shift-mode))
-	    ((string= tree-buffer-name ecb-sources-buffer-name)
+	    ((ecb-string= tree-buffer-name ecb-sources-buffer-name)
 	     (ecb-source-clicked node ecb-button nil shift-mode))
-	    ((string= tree-buffer-name ecb-history-buffer-name)
+	    ((ecb-string= tree-buffer-name ecb-history-buffer-name)
 	     (ecb-history-clicked node ecb-button nil shift-mode))
-	    ((string= tree-buffer-name ecb-methods-buffer-name)
+	    ((ecb-string= tree-buffer-name ecb-methods-buffer-name)
 	     (ecb-method-clicked node ecb-button nil shift-mode))
 	    (t nil)))
 
@@ -1516,7 +1517,7 @@ combination is invalid \(see `ecb-interpret-mouse-click'."
     (when (and (equal 0 mouse-button)
                (not (member tree-buffer-name
                             ecb-tree-RET-selects-edit-window--internal))
-               (or (not (string= tree-buffer-name ecb-directories-buffer-name))
+               (or (not (ecb-string= tree-buffer-name ecb-directories-buffer-name))
                    (ecb-show-sources-in-directories-buffer-p)))
       (ecb-goto-ecb-window tree-buffer-name)
       (tree-buffer-remove-highlight))))
@@ -1549,13 +1550,13 @@ combination is invalid \(see `ecb-interpret-mouse-click')."
     (if (/= mouse-button 0)
         (setq ecb-layout-prevent-handle-ecb-window-selection t))
     (when ecb-button-list
-      (cond ((string= tree-buffer-name ecb-directories-buffer-name)
+      (cond ((ecb-string= tree-buffer-name ecb-directories-buffer-name)
 	     (ecb-update-directory-node node))
-	    ((string= tree-buffer-name ecb-sources-buffer-name)
+	    ((ecb-string= tree-buffer-name ecb-sources-buffer-name)
 	     (ecb-source-clicked node ecb-button nil shift-mode))
-	    ((string= tree-buffer-name ecb-history-buffer-name)
+	    ((ecb-string= tree-buffer-name ecb-history-buffer-name)
 	     (ecb-history-clicked node ecb-button nil shift-mode))
-	    ((string= tree-buffer-name ecb-methods-buffer-name)
+	    ((ecb-string= tree-buffer-name ecb-methods-buffer-name)
 	     nil)
 	    (t nil)))))
 
@@ -1606,13 +1607,13 @@ moving the mouse over a node is activated. See
 ;; access-functions for when and what value of
 ;; `ecb-show-node-info-in-minibuffer':
 (defun ecb-show-node-info-index (tree-buffer-name)
-  (cond ((string= tree-buffer-name ecb-directories-buffer-name)
+  (cond ((ecb-string= tree-buffer-name ecb-directories-buffer-name)
          0)
-        ((string= tree-buffer-name ecb-sources-buffer-name)
+        ((ecb-string= tree-buffer-name ecb-sources-buffer-name)
          1)
-        ((string= tree-buffer-name ecb-history-buffer-name)
+        ((ecb-string= tree-buffer-name ecb-history-buffer-name)
          2)
-        ((string= tree-buffer-name ecb-methods-buffer-name)
+        ((ecb-string= tree-buffer-name ecb-methods-buffer-name)
          3)))
 
 (defun ecb-show-node-info-when (tree-buffer-name)

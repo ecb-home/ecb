@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: tree-buffer.el,v 1.142 2004/04/13 14:55:16 berndl Exp $
+;; $Id: tree-buffer.el,v 1.143 2004/05/06 09:02:00 berndl Exp $
 
 ;;; Commentary:
 
@@ -1375,7 +1375,7 @@ mentioned above!"
         (counter 0)
         (menu-items (reverse menu-def)))
     (dolist (item menu-items)
-      (cond ((string-equal (car item) "---")
+      (cond ((string= (car item) "---")
              (define-key map
                (make-vector 1
                             (setq counter (1+ counter)))
@@ -1397,7 +1397,7 @@ mentioned above!"
 (defun tree-buffer-create-menu-xemacs (menu-def)
   (when menu-def
     (let ((item (car menu-def)))
-      (cons (cond ((string-equal (car item) "---")
+      (cons (cond ((string= (car item) "---")
 		   (car item))
 		  ((stringp (cadr item)) ;; menu-entry
                    (let ((v (make-vector 3 t)))

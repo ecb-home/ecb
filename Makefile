@@ -26,7 +26,7 @@
 # GNU Emacs; see the file COPYING.  If not, write to the Free Software
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-# $Id: Makefile,v 1.89 2004/04/14 09:29:37 berndl Exp $
+# $Id: Makefile,v 1.90 2004/05/06 09:02:08 berndl Exp $
 
 
 # ========================================================================
@@ -40,27 +40,31 @@
 # have set this variable to 'xemacs' if you want byte-compile with XEmacs!
 EMACS=emacs
 
+# In the following path-settings of this section use always FORWARD-SLASHES
+# as directory-separator even with MS Windows systems.
+
 # -------- Compiling ECB with the cedet-library 1.0 ----------------------
 
 # cedet 1.0 (contains a.o. semantic 2.0, eieio 0.18 and speedbar 0.15). If
 # you want compile ECB with the cedet library then set here the full path
-# to the cedet-installation directory.
+# to the cedet-installation directory. If you do not want using the
+# cedet-suite but separate semantic-, eieio- and speedbar-pathes set this
+# variable to empty.
 
 #CEDET=
 CEDET=C:/Programme/emacs-21/site-lisp/multi-file-packages/cedet-1.0beta2b
 
 # -------- Compiling ECB with the semantic < 2.0 -------------------------
 
-# If you want not compile ECB with the cedet1.0-library then do not set
-# CEDET above!
+# If you do not want compiling ECB with the cedet1.0-library then do not
+# set CEDET above!
 
 # If semantic, eieio and speedbar are added to load-path within some
 # Elisp-statements in the Emacs initialization-files (e.g. .emacs or
 # site-start.el) then set here again the load-path of the semantic-version,
-# the eieio-version and the speedbar-version loaded into your Emacs (use
-# always FORWARD-SLASHES as directory-separator even with MS Windows
-# systems). Make sure you compile ECB with the semantic-, eieio- and
-# speedbar-version you load into Emacs!
+# the eieio-version and the speedbar-version loaded into your Emacs. Make
+# sure you compile ECB with the semantic-, eieio- and speedbar-version you
+# load into Emacs!
 
 # If you are using XEmacs with already installed XEmacs-packages for
 # semantic, eieio and speedbar or if you are using a file subdirs.el with
@@ -139,11 +143,11 @@ INSTALLINFO=/usr/bin/install-info
 
 # Do not change anything below!
 
-# $Id: Makefile,v 1.89 2004/04/14 09:29:37 berndl Exp $
+# $Id: Makefile,v 1.90 2004/05/06 09:02:08 berndl Exp $
 
 # For the ECB-maintainers: Change the version-number here and not
 # elsewhere!
-ecb_VERSION=2.24
+ecb_VERSION=2.25
 
 include ecb-makedef.mk
 

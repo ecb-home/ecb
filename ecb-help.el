@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-help.el,v 1.104 2004/04/06 15:17:30 berndl Exp $
+;; $Id: ecb-help.el,v 1.105 2004/05/06 09:02:07 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -372,8 +372,8 @@ could be interesting for support."
                                     ,(if (boundp 'ediff-quit-hook)
                                          'ediff-quit-hook)))
                           (function (lambda (l r)
-                                      (string< (symbol-name l)
-                                               (symbol-name r))))))
+                                      (ecb-string< (symbol-name l)
+                                                   (symbol-name r))))))
         (semantic-vars (sort (delete nil
                                      `(semantic-after-toplevel-cache-change-hook
                                        semantic-after-partial-cache-change-hook
@@ -383,8 +383,8 @@ could be interesting for support."
                                        semantic-uml-colon-string
                                        semantic-orphaned-member-metaparent-type))
                              (function (lambda (l r)
-                                         (string< (symbol-name l)
-                                                  (symbol-name r))))))
+                                         (ecb-string< (symbol-name l)
+                                                      (symbol-name r))))))
         (speedbar-vars (sort '(speedbar-dynamic-tags-function-list
                                speedbar-tag-hierarchy-method
                                speedbar-tag-group-name-minimum-length
@@ -394,14 +394,14 @@ could be interesting for support."
                                speedbar-fetch-etags-arguments
                                speedbar-fetch-etags-parse-list)
                              (function (lambda (l r)
-                                         (string< (symbol-name l)
-                                                  (symbol-name r))))))
+                                         (ecb-string< (symbol-name l)
+                                                      (symbol-name r))))))
         (ecb-options (mapcar
                       'intern
                       (sort
                        (let (completion-ignore-case)
                          (all-completions "ecb-" obarray 'user-variable-p))
-                       'string-lessp)))
+                       'ecb-string<)))
         (ecb-internal-vars (sort '(ecb-path-selected-directory
                                    ecb-path-selected-source
                                    ecb-use-semantic-grouping
@@ -417,8 +417,8 @@ could be interesting for support."
                                    ecb-current-maximized-ecb-buffer-name
                                    ecb-tree-buffers-of-current-layout)
                                  (function (lambda (l r)
-                                             (string< (symbol-name l)
-                                                      (symbol-name r)))))))
+                                             (ecb-string< (symbol-name l)
+                                                          (symbol-name r)))))))
     (append emacs-vars semantic-vars speedbar-vars
             ecb-internal-vars ecb-options)))
 

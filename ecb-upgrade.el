@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-upgrade.el,v 1.77 2004/04/14 10:17:07 berndl Exp $
+;; $Id: ecb-upgrade.el,v 1.78 2004/05/06 09:02:04 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -1188,11 +1188,11 @@ Return nil if ver-str has not the required syntax:
     (if (string-match "^\\([0-9]+\\)\\.\\([0-9]+\\)\\(beta\\|alpha\\|\\.\\)?\\([0-9]+\\)?$" str)
         (list (string-to-number (match-string 1 str))
               (string-to-number (match-string 2 str))
-              (if (string= (match-string 3 str) "alpha")
+              (if (ecb-string= (match-string 3 str) "alpha")
                   0
-                (if (string= (match-string 3 str) "beta")
+                (if (ecb-string= (match-string 3 str) "beta")
                     1
-                  (if (string= (match-string 3 str) ".")
+                  (if (ecb-string= (match-string 3 str) ".")
                       3
                     2)))
               (if (match-string 4 str)
@@ -1384,7 +1384,7 @@ current active version of PACKAGE."
                 (ecb-package-version-str2list curr-version))
               '(100 99 3 99))) ;; this version-number should be the biggest;-) 
         (install-dir nil))
-    (if (string= ver curr-version)
+    (if (ecb-string= ver curr-version)
         (ecb-error "You tried to download an already installed version %s - Stop!"
                    ver))
     (setq install-dir (ecb-package-download package ver url))
@@ -1403,7 +1403,7 @@ current active version of PACKAGE."
         (princ (concat "and then restarting Emacs the new version of "
                        package
                        " is loaded."))
-        (when (string= package "ecb")
+        (when (ecb-string= package "ecb")
           (princ "\n\nIf the value of `ecb-auto-compatibility-check' is not nil then the new version\n")
           (princ "checks at start-time if there are incompatible options! Please read the\n")
           (princ "documentation of this option!"))
@@ -1643,7 +1643,7 @@ for details about using \"wget\"."
           (princ "\n______________________________________________________________________________")
           (princ "\n\n")
           (princ "Please check the wget configuration in \"~/.wgetrc\" and also the value\n")
-          (princ (format "of the option %s." (if (string= package "ecb")
+          (princ (format "of the option %s." (if (ecb-string= package "ecb")
                                                  "`ecb-download-url'"
                                                "`ecb-cedet-url'")))
           (princ " ECB has tried to get informations from\nthe following URL:\n\n")

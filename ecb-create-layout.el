@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-create-layout.el,v 1.28 2004/04/13 14:55:29 berndl Exp $
+;; $Id: ecb-create-layout.el,v 1.29 2004/05/06 09:02:08 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -234,8 +234,8 @@
   "Ensure calling `ecb-create-layout-cancel' during deleting the
 layout-creation frame."
   (let ((frame (or (ad-get-arg 0) (selected-frame))))
-    (when (string= (ecb-frame-parameter frame 'name)
-                   ecb-create-layout-frame-name)
+    (when (ecb-string= (ecb-frame-parameter frame 'name)
+                       ecb-create-layout-frame-name)
       (ecb-create-layout-cancel))))
 
 (defun ecb-create-layout-frame-ok ()
@@ -403,12 +403,12 @@ DELETE-FRAME is not nil then the new created frame will be deleted and the
              (member type ecb-create-layout-all-buf-types))
     (add-to-list 'ecb-create-layout-buf-types type)
     (setq ecb-create-layout-buf-types
-          (sort ecb-create-layout-buf-types 'string-lessp))))
+          (sort ecb-create-layout-buf-types 'ecb-string<))))
 
 (defun ecb-create-layout-remove-from-buf-type (type)
   (when (stringp type)
     (setq ecb-create-layout-buf-types
-          (sort (delete type ecb-create-layout-buf-types) 'string-lessp))))
+          (sort (delete type ecb-create-layout-buf-types) 'ecb-string<))))
 
 (defun ecb-create-layout-buffer-type ()
   (get-text-property (point-min) 'ecb-create-layout-type))
@@ -485,15 +485,15 @@ DELETE-FRAME is not nil then the new created frame will be deleted and the
             (ecb-query-string "Split method:"
                               '("at-point" "half")
                               "Insert a fraction between 0.1 and 0.9"))
-           (fraction (cond ((string= split-method "at-point")
+           (fraction (cond ((ecb-string= split-method "at-point")
                             nil)
-                           ((string= split-method "half")
+                           ((ecb-string= split-method "half")
                             0.5)
                            ((floatp (string-to-number split-method))
                             (string-to-number split-method))
                            (t 0.5)))
            (real-split-factor
-            (if (string= split-type "horizontal")
+            (if (ecb-string= split-type "horizontal")
                 (ecb-create-layout-split-hor fraction)
               (ecb-create-layout-split-ver fraction))))
       ;; creating new fitting buffers
@@ -814,7 +814,7 @@ unbound."
                                (mapcar (function (lambda (elem)
                                                    (car elem)))
                                        ecb-buildin-layouts))
-               'string<))
+               'ecb-string<))
         (layout-name nil))
     (if (= (length new-layout-list) 0)
         (ecb-error "There are no layouts to delete!")

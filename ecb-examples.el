@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-examples.el,v 1.12 2003/08/06 09:15:19 berndl Exp $
+;; $Id: ecb-examples.el,v 1.13 2004/05/06 09:02:08 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -135,9 +135,9 @@ it will be called autom. with `ecb-current-buffer-sync-hook'."
           ;; synchronizing for real filesource-buffers
             
           ;; Let us be smart: We synchronize only if sourcebuffer has changed
-          (when (not (string= (ecb-fix-filename filename)
-                              (ecb-fix-filename
-                               ecb-examples-bufferinfo-last-file)))
+          (when (not (ecb-string= (ecb-fix-filename filename)
+                                  (ecb-fix-filename
+                                   ecb-examples-bufferinfo-last-file)))
             ;; set new last-file-name so we can check next time if changed
             (setq ecb-examples-bufferinfo-last-file filename)
             ;; we display the file-infos for current source-file
@@ -361,7 +361,7 @@ preactivation-state is saved and will be restored by
           "ECB must be activated!")
   (assert (equal (selected-frame) ecb-frame) nil
           "The ECB-frame must be selected!")
-  (assert (not (string= ecb-layout-name "example-layout1")) nil
+  (assert (not (ecb-string= ecb-layout-name "example-layout1")) nil
           "The examples-layout1 is already active!")
   
   ;; activating the synchronization of the bufferinfo-window
@@ -373,8 +373,9 @@ preactivation-state is saved and will be restored by
 
   ;; switch to our prefered layout
   (setq ecb-windows-height 6)
-  (setq ecb-compile-window-height 5)
-  (ecb-layout-switch "example-layout1"))
+  (setq ecb-compile-window-height 8)
+  (let ((ecb-change-layout-preserves-compwin-state nil))
+    (ecb-layout-switch "example-layout1")))
 
 
 
@@ -392,7 +393,7 @@ restore the state as before activation."
           "ECB must be activated!")
   (assert (equal (selected-frame) ecb-frame) nil
           "The ECB-frame must be selected!")
-  (assert (string= ecb-layout-name "example-layout1") nil
+  (assert (ecb-string= ecb-layout-name "example-layout1") nil
           "The example-layout1 is not active!")
   
   (remove-hook 'ecb-current-buffer-sync-hook

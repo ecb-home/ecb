@@ -24,7 +24,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-method-browser.el,v 1.41 2004/04/15 16:34:08 berndl Exp $
+;; $Id: ecb-method-browser.el,v 1.42 2004/05/06 09:02:05 berndl Exp $
 
 ;;; Commentary:
 
@@ -1763,7 +1763,7 @@ onto the whole tag-table are performed by `ecb-apply-tag-table-filters'.")
          (class (or tag-class
                     (symbol-name
                      (car (delq nil (mapcar (function (lambda (e)
-                                                        (if (string= (cdr e) choice)
+                                                        (if (ecb-string= (cdr e) choice)
                                                             (car e))))
                                             curr-semantic-symbol->name-assoc-list)))))))
     (ecb-methods-filter-apply 'tag-class
@@ -1893,8 +1893,8 @@ TABLE is used."
                  (catch 'found
                    (dolist (tag (ecb--semantic-flatten-tags-table table))
                      (if (and (equal (ecb--semantic-tag-class tag) 'type)
-                              (string= (ecb--semantic-tag-name tag)
-                                       function-parent)
+                              (ecb-string= (ecb--semantic-tag-name tag)
+                                           function-parent)
                               (delq nil
                                     (mapcar (lambda (child)
                                               (if (ecb--semantic-equivalent-tag-p
@@ -2123,19 +2123,19 @@ applied default-tag-filters."
                                         (if semantic-source-p "tag-class")
                                         (if semantic-source-p "curr-type")
                                         "function" "no filter" "delete last"))))))
-      (cond ((string= choice "protection")
+      (cond ((ecb-string= choice "protection")
              (ecb-methods-filter-by-prot inverse source-buffer))
-            ((string= choice "tag-class")
+            ((ecb-string= choice "tag-class")
              (ecb-methods-filter-by-tag-class inverse source-buffer))
-            ((string= choice "regexp")
+            ((ecb-string= choice "regexp")
              (ecb-methods-filter-by-regexp inverse source-buffer))
-            ((string= choice "curr-type")
+            ((ecb-string= choice "curr-type")
              (ecb-methods-filter-by-current-type inverse source-buffer))
-            ((string= choice "function")
+            ((ecb-string= choice "function")
              (ecb-methods-filter-by-function inverse source-buffer))
-            ((string= choice "delete last")
+            ((ecb-string= choice "delete last")
              (ecb-methods-filter-apply nil nil nil "" "" source-buffer t))
-            ((string= choice "no filter")
+            ((ecb-string= choice "no filter")
              (ecb-methods-filter-apply nil nil nil "" "" source-buffer))
             (t (ecb-methods-filter-apply nil nil nil "" "" source-buffer))))))
 
@@ -2327,8 +2327,8 @@ removes itself from the `post-command-hook'."
   (if sort-method
       (let ((tags-by-name
 	     (sort tags (function (lambda (a b)
-				      (string< (ecb--semantic-tag-name a)
-					       (ecb--semantic-tag-name b)))))))
+				      (ecb-string< (ecb--semantic-tag-name a)
+                                                   (ecb--semantic-tag-name b)))))))
 	(if (eq 'access sort-method)
 	    (sort tags-by-name
 		  (function
@@ -2361,7 +2361,7 @@ The PARENT-TAG is propagated to the functions `ecb-add-tag-bucket' and
                                            1)))
                     (when node
 		  (dolist (parent (if sort-method
-				      (sort parents 'string<) parents))
+				      (sort parents 'ecb-string<) parents))
 		    (tree-node-new (if ecb-font-lock-tags
 				       (ecb--semantic--format-colorize-text parent 'type)
 				     parent)
@@ -3829,7 +3829,24 @@ pattern:
 Format: cons with car is the pattern and cdr is the number of subexpr in this
 pattern.")
 
-
+;; Function which compares the node-data of a tree-buffer-node in the
+;; method-buffer for equality. We must compare semantic-tags but we must not
+;; compare the tags with eq or equal because they can be re-grouped by
+;; ecb--semantic-adopt-external-members. the following function is a save
+;; "equal"-condition for ECB because currently the method buffer always
+;; displays only tags from exactly the buffer of the current edit-window. If
+;; `ecb--semantic-equivalent-tag-p' fails we return the result of an
+;; eq-comparison.
+(defun ecb-compare-methods-buffer-node-data (l r)
+  (cond ((or (stringp l) (stringp r))
+         (equal l r))
+        ((or (equal 'ecb-bucket-node (car l))
+             (equal 'ecb-bucket-node (car r)))
+         (equal l r))
+        (t ;; tags
+         (condition-case nil
+             (ecb--semantic-equivalent-tag-p l r)
+           (error (eq l r))))))
 
 (defun ecb-create-methods-tree-buffer ()
   "Create the tree-buffer for methods."
@@ -3841,26 +3858,7 @@ pattern.")
    'ecb-tree-buffer-node-expand-callback
    'ecb-tree-buffer-node-collapsed-callback
    'ecb-mouse-over-method-node
-   ;; Function which compares the node-data of a
-   ;; tree-buffer-node in the method-buffer for equality. We
-   ;; must compare semantic-tags but we must not compare the
-   ;; tags with eq or equal because they can be re-grouped by
-   ;; ecb--semantic-adopt-external-members. the following
-   ;; function is a save "equal"-condition for ECB because
-   ;; currently the method buffer always displays only tags
-   ;; from exactly the buffer of the current edit-window.
-   ;; If `ecb--semantic-equivalent-tag-p' fails we return the
-   ;; result of an eq-comparison.
-   (function (lambda (l r)
-               (cond ((or (stringp l) (stringp r))
-                      (equal l r))
-                     ((or (equal 'ecb-bucket-node (car l))
-                          (equal 'ecb-bucket-node (car r)))
-                      (equal l r))
-                     (t ;; tags
-                      (condition-case nil
-                          (ecb--semantic-equivalent-tag-p l r)
-                        (error (eq l r)))))))
+   'ecb-compare-methods-buffer-node-data
    (list 1)
    nil
    'ecb-methods-menu-creator

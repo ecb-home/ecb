@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-util.el,v 1.106 2004/04/07 11:57:59 berndl Exp $
+;; $Id: ecb-util.el,v 1.107 2004/05/06 09:02:04 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -255,6 +255,64 @@ Unless optional argument INPLACE is non-nil, return a new string."
 
 ;; ---------- End of compatibility between GNU Emacs and XEmacs -------------
   
+(if (fboundp 'compare-strings)
+    (defalias 'ecb-compare-strings 'compare-strings)
+  (defun ecb-compare-strings (str1 start1 end1 str2 start2 end2 &optional ignore-case)
+    "Compare the contents of two strings.
+In string STR1, skip the first START1 characters and stop at END1.
+In string STR2, skip the first START2 characters and stop at END2.
+END1 and END2 default to the full lengths of the respective strings.
+
+Case is significant in this comparison if IGNORE-CASE is nil.
+
+The value is t if the strings (or specified portions) match.
+If string STR1 is less, the value is a negative number N;
+  - 1 - N is the number of characters that match at the beginning.
+If string STR1 is greater, the value is a positive number N;
+  N - 1 is the number of characters that match at the beginning."
+    (or start1 (setq start1 0))
+    (or start2 (setq start2 0))
+    (setq end1 (if end1
+                   (min end1 (length str1))
+                 (length str1)))
+    (setq end2 (if end2
+                   (min end2 (length str2))
+                 (length str2)))
+    (let ((i1 start1)
+          (i2 start2)
+          result c1 c2)
+      (while (and (not result) (< i1 end1) (< i2 end2))
+        (setq c1 (aref str1 i1)
+              c2 (aref str2 i2)
+              i1 (1+ i1)
+              i2 (1+ i2))
+        (if ignore-case
+            (setq c1 (upcase c1)
+                  c2 (upcase c2)))
+        (setq result (cond ((< c1 c2) (- i1))
+                           ((> c1 c2) i1))))
+      (or result
+          (cond ((< i1 end1) (1+ (- i1 start1)))
+                ((< i2 end2) (1- (- start1 i1)))
+                (t)))
+      )))
+
+;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: Jetzt neue optionen für die
+;; Sortierung von Sourcen und History-Eibnträgen, ob case-sensitive oder
+;; nicht. dann im Code anstelle ecb-string< bzw. ecb-string= mit dem Wert der
+;; neuen option als drittem Argument aufrufen.
+(defsubst ecb-string= (str1 str2 &optional ignore-case)
+  (let ((s1 (or (and (stringp str1) str1) (symbol-name str1)))
+        (s2 (or (and (stringp str2) str2) (symbol-name str2))))
+    (eq (ecb-compare-strings s1 nil nil s2 nil nil ignore-case) t)))
+
+(defsubst ecb-string< (str1 str2 &optional ignore-case)
+  (let ((s1 (or (and (stringp str1) str1) (symbol-name str1)))
+        (s2 (or (and (stringp str2) str2) (symbol-name str2)))
+        (result nil))
+    (setq result (ecb-compare-strings s1 nil nil s2 nil nil ignore-case))
+    (and (numberp result) (< result 0))))
+
 ;; Emacs 20 has no window-list function and the XEmacs and Emacs 21 one has no
 ;; specified ordering. The following one is stolen from XEmacs and has fixed
 ;; this lack of a well defined order. We preserve also point of current
@@ -682,9 +740,9 @@ the user is prompted with OTHER-PROMPT to insert any arbitrary string."
                                      new-choices)
                              '('("" t))))
     (setq answer (completing-read prompt new-choices nil t))
-    (cond ((string= answer "")
+    (cond ((ecb-string= answer "")
            (setq answer default))
-          ((string= answer "other")
+          ((ecb-string= answer "other")
            (setq answer (read-string (concat other-prompt ": ")))))
     answer))
 
@@ -706,7 +764,7 @@ be made either with the mouse or with the keyboard."
                                   completion-list
                                   nil t
                                   (try-completion "" completion-list))))
-    (if (string= answer "")
+    (if (ecb-string= answer "")
         (car choices)
       answer)))
 
@@ -729,7 +787,7 @@ be made either with the mouse or with the keyboard."
                   (mapcar (function (lambda (x) (list x t)))
                           choices)
                   nil t)))
-    (if (string= answer "")
+    (if (ecb-string= answer "")
         (car choices)
       answer)))
 
@@ -752,7 +810,7 @@ be made either with the mouse or with the keyboard."
                  (mapcar (function (lambda (x) (list x t)))
                          choices)
                  nil t)))
-    (if (string= answer "")
+    (if (ecb-string= answer "")
         (car choices)
       answer)))
 
@@ -817,7 +875,7 @@ INIT-VALUE can be either a number or a string-representation of a number."
   (let ((init (cond ((numberp init-value)
                      (number-to-string init-value))
                     ((stringp init-value)
-                     (if (string= init-value "0")
+                     (if (ecb-string= init-value "0")
                          init-value
                        (if (not (= 0 (string-to-number init-value)))
                            init-value
@@ -826,7 +884,7 @@ INIT-VALUE can be either a number or a string-representation of a number."
         result)
     (while (progn
              (setq result (read-string prompt init))
-             (not (or (string= "0" result)
+             (not (or (ecb-string= "0" result)
                       (not (= 0 (string-to-number result)))))))
     (string-to-number result)))
 
@@ -1195,6 +1253,7 @@ then an empty string is returned because stripping makes no sense here."
         (if (equal from 'left)
             (concat "..." (substring str (* -1 (- width 3))))
           (concat (substring str 0 (- width 3)) "..."))))))
+
 
 (defun ecb-make-windows-not-dedicated (&optional frame)
   "Make all windows of FRAME not dedicated."

@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-compilation.el,v 1.33 2004/03/14 19:05:49 berndl Exp $
+;; $Id: ecb-compilation.el,v 1.34 2004/05/06 09:02:08 berndl Exp $
 
 ;;; Commentary:
 
@@ -103,7 +103,7 @@ compile-window of ECB. This is a list combined of
   (catch 'exit
     (dolist (b (ecb-compilation-buffer-names))
       (if (null (cdr b))
-          (if (string= name (car b))
+          (if (ecb-string= name (car b))
               (throw 'exit name))
         (save-match-data
           (if (string-match (car b) name)
@@ -170,8 +170,8 @@ displayed in the compile-window. This is a list combined of
        (index 0))
 
     (setq buffer-list (sort buffer-list (lambda(first second)
-                                          (string-lessp (buffer-name first)
-                                                        (buffer-name second)))))
+                                          (ecb-string< (buffer-name first)
+                                                       (buffer-name second)))))
     (dolist(buffer buffer-list)
       (when (ecb-compilation-buffer-p buffer)
         (setq buffer-names

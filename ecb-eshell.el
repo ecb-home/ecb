@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-eshell.el,v 1.72 2003/12/09 16:47:57 berndl Exp $
+;; $Id: ecb-eshell.el,v 1.73 2004/05/06 09:02:08 berndl Exp $
 
 ;;; Commentary:
 
@@ -243,8 +243,8 @@ ECB and if either this function is called interactively or
       (when (and (bufferp my-eshell-buffer)
                  (stringp my-reference-directory)
                  (stringp my-eshell-directory)
-                 (not (string-equal (ecb-fix-filename my-reference-directory)
-                                    (ecb-fix-filename my-eshell-directory))))
+                 (not (ecb-string= (ecb-fix-filename my-reference-directory)
+                                   (ecb-fix-filename my-eshell-directory))))
         (ecb-eshell-save-buffer-history
          (save-excursion
            (set-buffer my-eshell-buffer)

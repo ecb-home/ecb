@@ -26,7 +26,7 @@
 @c GNU Emacs; see the file COPYING.  If not, write to the Free Software
 @c Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-@c $Id: ecb.texi,v 1.174 2004/04/15 16:34:04 berndl Exp $
+@c $Id: ecb.texi,v 1.175 2004/05/06 09:02:01 berndl Exp $
 
 @setfilename ecb.info
 
@@ -832,7 +832,7 @@ durable @dfn{compilation-window} (also called @dfn{compile-window})
 can be displayed (optional), where all the output of Emacs-compilation
 (compile, grep etc.) is shown (@pxref{Temp- and compile-buffers}).
 
-The following ``ascii-screenshot'' illustrates the typical layout of
+The following ``screenshot'' illustrates the typical layout of
 the ECB-frame@footnote{This is only one example of the layouts ECB
 offers, see @ref{Changing the ECB-layout}}:
 
@@ -3588,11 +3588,15 @@ calling @code{ecb-minor-mode} with a positive argument.
 @end deffn
 
 @deffn Command add-all-buffers-to-history
-Add all current file-buffers to the history-buffer of ECB. If
-@code{ecb-sort-history-items} is not nil then afterwards the history
-is sorted alphabetically. Otherwise the most recently used buffers are
-on the top of the history and the seldom used buffers at the bottom.
+Add all current file-buffers to the history-buffer of ECB. Dependend
+on the value of @code{ecb-history-sort-method} afterwards the history
+is sorted either by name or by extension. If
+@code{ecb-history-sort-method} is nil the most recently used buffers
+are on the top of the history and the seldom used buffers at the
+bottom.
 @end deffn
+
+
 
 @deffn Command change-layout &optional preselect-type
 Select a layout-name from all current available layouts
@@ -5812,7 +5816,10 @@ static extensions of @code{ecb-sources-menu-user-extension} but the
 whole menu can be re-arranged with @code{ecb-sources-menu-sorter}.
 @end defopt
 
-
+@defopt sources-sort-ignore-case
+Ignore case for sorting the source-files of the Sources-buffer. See
+also @code{ecb-sources-sort-method}.
+@end defopt
 
 @defopt sources-sort-method
 Defines how the source files are sorted.
@@ -5821,11 +5828,13 @@ Defines how the source files are sorted.
 @item @code{name}:
 Sorting by name.
 @item @code{extension}:
-Sorting first by name and then by extension.
+Sorting first by extension and then by name.
 @item @code{nil}:
 No sorting, means source files are displayed in the sequence returned
 by @code{directory-files} (called without sorting).
 @end itemize
+
+See also @code{ecb-sources-sort-ignore-case}
 @end defopt
 
 
@@ -6513,6 +6522,26 @@ static extensions of @code{ecb-history-menu-user-extension} but the
 whole menu can be re-arranged with @code{ecb-history-menu-sorter}.
 @end defopt
 
+@defopt history-sort-ignore-case
+Ignore case for sorting the history-entries. See also
+@code{ecb-history-sort-method}.
+@end defopt
+
+@defopt history-sort-method
+Defines how the entries in the history-buffer are sorted.
+@itemize @minus
+@item @code{name}:
+Sorting by name (default).
+@item @code{extension}:
+Sorting first by extension and then by name.
+@item @code{nil}:
+No sorting, means the most recently used buffers are on the top of the
+history and the seldom used buffers at the bottom.
+@end itemize
+
+See also @code{ecb-history-sort-ignore-case}.
+@end defopt
+
 @defopt kill-buffer-clears-history
 Define if @code{kill-buffer} should also clear the history. There are
 three options:
@@ -6526,10 +6555,6 @@ Asks, if the history-entry should be removed after the kill.
 @item @code{nil}:
 @code{kill-buffer} does not affect the history (this is the default).
 @end itemize
-@end defopt
-
-@defopt sort-history-items
-Sorts the items in the history buffer.
 @end defopt
 
 @node ecb-layout, ecb-compilation, ecb-history, Customizable options
@@ -9192,7 +9217,7 @@ A tree will be build-up with these elements like follows:
 @group
 [-] node-with-subnodes      (open)
  |-[+] not-empty-subnode1   (guide+handle+close)
- |-[X] empty-subnode        (guide+handle+empty)
+ |-[x] empty-subnode        (guide+handle+empty)
  `-[-] not-empty-subnode2   (end-guide+handle+open)
     |-* leaf-1              (no-guide+no-handle+guide+handle+leaf)
     `-* leaf-2              (no-guide+no-handle+end-guide+handle+leaf)
@@ -9264,15 +9289,16 @@ handle-symbols can be customized with the option
 
 Depending on the value of @code{ecb-tree-buffer-style} and the
 image-support of (X)Emacs, the tree-buffer try to use images instead
-of strings to draw a nice-looking tree. If images can and should be
-used then the option @code{ecb-tree-image-icons-directories} tells ECB
-where to search for suitable image-icons for each of the nine
-image-names (see above). An image is used for displaying a control
-with name ``XXX'' if one of the directories of
-@code{ecb-tree-image-icons-directories} contains an image-file with
-basename ``ecb-XXX'' and an extension which is supported by (X)Emacs.
-Currently supported extensions are ``.xpm'', ``.png'', ``.gif'',
-``.jpeg'', .''jpg'' and ``.xbm''.
+of strings to draw a nice-looking tree.
+
+If images can and should be used then the option
+@code{ecb-tree-image-icons-directories} tells ECB where to search for
+suitable image-icons for each of the nine image-names (see above). An
+image is used for displaying a control with name ``XXX'' if one of the
+directories of @code{ecb-tree-image-icons-directories} contains an
+image-file with basename ``ecb-XXX'' and an extension which is
+supported by (X)Emacs. Currently supported extensions are ``.xpm'',
+``.png'', ``.gif'', ``.jpeg'', .''jpg'' and ``.xbm''.
 
 Example: To display the control with name ``open'' with a suitable
 image then one of the directories of
@@ -9321,8 +9347,8 @@ Then ECB uses images without any special work-around with XEmacs too.
 Just try it - if the tree-buffers look ugly then the XEmacs-bug is
 probably not fixed correctly.
 
-@subsection Special images for the Methods-buffer
 @node Images for Methods-buffer, ,Tree-buffers with images, Tree-buffer styles
+@subsection Special images for the Methods-buffer
 
 ECB can display all the semantic-tags in the Method-buffer with
 special icons for methods, variables and classes - each of them with a
@@ -10681,6 +10707,10 @@ well under all circumstances!
 has its own window-management which is completely incompatible with
 @code{winner-mode}! But @code{winner-mode} makes also not really sense
 with ECB.
+
+@subsubsection Package wb-line-number.el
+@cindex wb-line-number
+TODO: 
 
 @subsubsection Application xrefactory
 

@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-mode-line.el,v 1.28 2004/04/13 14:55:28 berndl Exp $
+;; $Id: ecb-mode-line.el,v 1.29 2004/05/06 09:02:05 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -197,15 +197,15 @@ prepended by the window-number, see `ecb-mode-line-display-window-number'."
              (let* ((prefix-elem (ecb-some (function
                                             (lambda (p)
                                               (cond ((stringp (car p))
-                                                     (if (string= (car p)
-                                                                  (buffer-name buffer))
+                                                     (if (ecb-string= (car p)
+                                                                      (buffer-name buffer))
                                                          (cdr p)
                                                        nil))
                                                     ((and (symbolp (car p))
                                                           (boundp (car p))
                                                           (stringp (symbol-value (car p))))
-                                                     (if (string= (symbol-value (car p))
-                                                                  (buffer-name buffer))
+                                                     (if (ecb-string= (symbol-value (car p))
+                                                                      (buffer-name buffer))
                                                          (cdr p)
                                                        nil))
                                                     (t (ecb-error "ecb-mode-line-format: Can not get prefix-elem: %s" p)))))
@@ -222,15 +222,15 @@ prepended by the window-number, see `ecb-mode-line-display-window-number'."
                     (data-elem (ecb-some (function
                                           (lambda (p)
                                             (cond ((stringp (car p))
-                                                   (if (string= (car p)
-                                                                (buffer-name buffer))
+                                                   (if (ecb-string= (car p)
+                                                                    (buffer-name buffer))
                                                        (cdr p)
                                                      nil))
                                                   ((and (symbolp (car p))
                                                         (boundp (car p))
                                                         (stringp (symbol-value (car p))))
-                                                   (if (string= (symbol-value (car p))
-                                                                (buffer-name buffer))
+                                                   (if (ecb-string= (symbol-value (car p))
+                                                                    (buffer-name buffer))
                                                        (cdr p)
                                                      nil))
                                                   (t (ecb-error "ecb-mode-line-format: Can not get data-elem: %s" p)))))

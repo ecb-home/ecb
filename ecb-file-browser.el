@@ -23,7 +23,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-file-browser.el,v 1.20 2004/04/15 16:34:08 berndl Exp $
+;; $Id: ecb-file-browser.el,v 1.21 2004/05/06 09:02:08 berndl Exp $
 
 ;;; Commentary:
 
@@ -427,13 +427,13 @@ Tips for the directory- and file-regexps: \"$^\" matches no files/directories,
   :group 'ecb-sources
   :type 'boolean)
 
-
 (defcustom ecb-sources-sort-method 'name
   "*Defines how the source files are sorted.
 - 'name: Sorting by name.
-- 'extension: Sorting first by name and then by extension.
+- 'extension: Sorting first by extension and then by name.
 - nil: No sorting, means source files are displayed in the sequence returned by
-  `directory-files' \(called without sorting)."
+  `directory-files' \(called without sorting).
+See also `ecb-sources-sort-ignore-case'."
   :group 'ecb-sources
   :type '(radio (const :tag "By name"
                        :value name)
@@ -442,6 +442,11 @@ Tips for the directory- and file-regexps: \"$^\" matches no files/directories,
                 (const :tag "No sorting"
                        :value nil)))
 
+(defcustom ecb-sources-sort-ignore-case t
+  "*Ignore case for sorting the source-files of the Sources-buffer.
+See also `ecb-sources-sort-method'."
+  :group 'ecb-sources
+  :type 'boolean)
 
 (defcustom ecb-history-buffer-name " *ECB History*"
   "*Name of the ECB history buffer.
@@ -457,8 +462,24 @@ then activating ECB again!"
   :type 'string)
 
 
-(defcustom ecb-sort-history-items nil
-  "*Sorts the items in the history buffer."
+(defcustom ecb-history-sort-method 'name
+  "*Defines how the entries in the history-buffer are sorted.
+- 'name: Sorting by name.
+- 'extension: Sorting first by extension and then by name.
+- nil: No sorting, means the most recently used buffers are on the top of the
+       history and the seldom used buffers at the bottom.
+See also `ecb-history-sort-ignore-case'."
+  :group 'ecb-sources
+  :type '(radio (const :tag "By name"
+                       :value name)
+                (const :tag "By extension"
+                       :value extension)
+                (const :tag "No sorting"
+                       :value nil)))
+
+(defcustom ecb-history-sort-ignore-case t
+  "*Ignore case for sorting the history-entries.
+See also `ecb-history-sort-method'."
   :group 'ecb-history
   :type 'boolean)
 
@@ -721,7 +742,7 @@ key-bindings only for the history-buffer of ECB."
     (dolist (child (tree-node-get-children node))
       (let ((data (tree-node-get-data child)))
         (when (and (>= (length path) (length data))
-                   (string= (substring path 0 (length data)) data)
+                   (ecb-string= (substring path 0 (length data)) data)
                    (or (= (length path) (length data))
                        (eq (elt path (length data)) ecb-directory-sep-char)))
           (let ((was-expanded (tree-node-is-expanded child)))
@@ -820,6 +841,23 @@ file in current directory."
               (throw 'exit elem)))
         nil))))
 
+(defun ecb-get-sources-sort-function (sort-method &optional ignore-case)
+  "According to SORT-METHOD \(which can either be 'name, 'extension or nil)
+and IGNORE-CASE return a function which can be used as argument for `sort'."
+  (cond ((equal sort-method 'name)
+         (function (lambda (a b)
+                     (ecb-string< a b ecb-sources-sort-ignore-case))))
+        ((equal sort-method 'extension)
+         (function
+          (lambda(a b)
+            (let ((ext-a (file-name-extension a t))
+                  (ext-b (file-name-extension b t)))
+              (if (ecb-string= ext-a ext-b ecb-sources-sort-ignore-case)
+                  (ecb-string< a b ecb-sources-sort-ignore-case)
+                (ecb-string< ext-a ext-b ecb-sources-sort-ignore-case))))))
+        (t (function (lambda (a b)
+                       nil)))))
+  
                                                    
 (defun ecb-get-files-and-subdirs (dir)
   "Return a cons cell where car is a list of all files to display in DIR and
@@ -836,17 +874,10 @@ according to `ecb-sources-sort-method'."
             sorted-files source-files subdirs cache-elem)
         ;; if necessary sort FILES
         (setq sorted-files
-              (cond ((equal ecb-sources-sort-method 'name)
-                     (sort files 'string<))
-                    ((equal ecb-sources-sort-method 'extension)
-                     (sort files (function
-                                  (lambda(a b)
-                                    (let ((ext-a (file-name-extension a t))
-                                          (ext-b (file-name-extension b t)))
-                                      (if (string= ext-a ext-b)
-                                          (string< a b)
-                                        (string< ext-a ext-b)))))))
-                    (t files)))
+              (if ecb-sources-sort-method
+                  (sort files (ecb-get-sources-sort-function
+                               ecb-sources-sort-method))
+                files))
         ;; divide real files and subdirs. For really large directories (~ >=
         ;; 2000 entries) this is the performance-bottleneck in the
         ;; file-browser of ECB.
@@ -977,7 +1008,7 @@ selected before this update."
            (ecb-sources-cache-add-full ecb-path-selected-directory
                                        new-cache-elem))))
            
-     (when (not (string= dir-before-update ecb-path-selected-directory))
+     (when (not (ecb-string= dir-before-update ecb-path-selected-directory))
        (tree-buffer-scroll (point-min) (point-min))))))
 
 (defun ecb-sources-filter-by-ext (ext-str)
@@ -1026,10 +1057,10 @@ directory has its own filtered sources-buffer."
   (interactive)
   (let ((choice (ecb-query-string "Filter sources by:"
                                   '("extension" "regexp" "nothing"))))
-    (cond ((string= choice "extension")
+    (cond ((ecb-string= choice "extension")
            (ecb-sources-filter-by-ext
             (read-string "Insert the filter-extension without leading dot: ")))
-          ((string= choice "regexp")
+          ((ecb-string= choice "regexp")
            (ecb-sources-filter-by-regexp))
           (t (ecb-apply-filter-to-sources-buffer nil)))))
 
@@ -1105,7 +1136,7 @@ then nothing is done unless first optional argument FORCE is not nil."
       ;; if ecb-path-selected-directory has not changed then there is no need
       ;; to do anything here because neither the content of directory buffer
       ;; nor the content of the sources buffer can have been changed!
-      (when (or force (not (string= last-dir ecb-path-selected-directory)))
+      (when (or force (not (ecb-string= last-dir ecb-path-selected-directory)))
         (when (or (not (ecb-show-sources-in-directories-buffer-p))
                   ecb-auto-expand-directory-tree)
           (ecb-exec-in-directories-window
@@ -1216,11 +1247,14 @@ should be added.")
 
 (ecb-reset-history-filter)
 
+;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: Docstring in tzexi anpassen -
+;; history-option hat sich geändert.
 (defun ecb-add-all-buffers-to-history ()
   "Add all current file-buffers to the history-buffer of ECB.
-If `ecb-sort-history-items' is not nil then afterwards the history is sorted
-alphabetically. Otherwise the most recently used buffers are on the top of the
-history and the seldom used buffers at the bottom."
+Dependend on the value of `ecb-history-sort-method' afterwards the history is
+sorted either by name or by extension. If `ecb-history-sort-method' is nil the
+most recently used buffers are on the top of the history and the seldom used
+buffers at the bottom."
   (interactive)
   (ecb-reset-history-filter)
   (ecb-add-buffers-to-history))
@@ -1279,14 +1313,29 @@ by the option `ecb-mode-line-prefixes'."
 
 
 (defun ecb-sort-history-buffer ()
-  "Sort the history buffer according to `ecb-sort-history-items'."
-  (when ecb-sort-history-items
+  "Sort the history buffer according to `ecb-history-sort-method'."
+  (when ecb-history-sort-method
     (save-excursion
       (ecb-buffer-select ecb-history-buffer-name)
       (tree-node-sort-children
        (tree-buffer-get-root)
-       (function (lambda (l r) (string< (tree-node-get-name l)
-                                        (tree-node-get-name r))))))))
+       (cond ((equal ecb-history-sort-method 'name)
+              (function (lambda (l r)
+                          (ecb-string< (tree-node-get-name l)
+                                       (tree-node-get-name r)
+                                       ecb-history-sort-ignore-case))))
+             ((equal ecb-history-sort-method 'extension)
+              (function
+               (lambda (l r)
+                 (let* ((a (tree-node-get-name l))
+                        (b (tree-node-get-name r))
+                        (ext-a (file-name-extension a t))
+                        (ext-b (file-name-extension b t)))
+                   (if (ecb-string= ext-a ext-b ecb-history-sort-ignore-case)
+                       (ecb-string< a b ecb-history-sort-ignore-case)
+                     (ecb-string< ext-a ext-b ecb-history-sort-ignore-case))))))
+             (t (function (lambda (a b)
+                            nil))))))))
 
 
 (defun ecb-update-history-window (&optional filename)
@@ -1716,8 +1765,8 @@ help-text should be printed here."
                                                        ecb-directories-buffer-name)
                              (and (not (equal (ecb-show-node-info-when ecb-directories-buffer-name)
                                               'never))
-                                  (not (string= (tree-node-get-data node)
-                                                (tree-node-get-name node)))
+                                  (not (ecb-string= (tree-node-get-data node)
+                                                    (tree-node-get-name node)))
                                   (eq (tree-node-get-parent node)
                                       (tree-buffer-get-root))))
                      (if (equal (ecb-show-node-info-what ecb-directories-buffer-name)
@@ -2153,10 +2202,10 @@ So you get a better overlooking. There are three choices:
   (interactive)
   (let ((choice (ecb-query-string "Filter history by:"
                                   '("extension" "regexp" "no filter"))))
-    (cond ((string= choice "extension")
+    (cond ((ecb-string= choice "extension")
            (ecb-history-filter-by-ext
             (read-string "Insert the filter-extension without leading dot: ")))
-          ((string= choice "regexp")
+          ((ecb-string= choice "regexp")
            (ecb-history-filter-by-regexp))
           (t (ecb-add-all-buffers-to-history)))))
 
