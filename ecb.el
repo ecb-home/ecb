@@ -3,7 +3,8 @@
 ;; Copyright (C) 2000, 2001 Jesper Nordenberg
 
 ;; Author: Jesper Nordenberg <mayhem@home.se>
-;; Maintainer: Jesper Nordenberg <mayhem@home.se>
+;; Maintainer: Jesper Nordenberg <mayhem@home.se>,
+;;             Klaus Berndl <klaus.berndl@sdm.de>
 ;; Keywords: browser, code, programming, tools
 ;; Created: Jul 2000
 
@@ -34,8 +35,8 @@
 ;;
 ;; (require 'ecb)
 ;;
-;; Optional: You can byte-compile ECB after the ECB-package is loaded with
-;; `ecb-byte-compile'.
+;; Optional: You can byte-compile ECB with `ecb-byte-compile' after the
+;;           ECB-package is loaded
 ;;
 ;; ECB requires:
 ;; - Semantic, version 1.4 or higher
@@ -59,7 +60,7 @@
 ;; The latest version of the ECB is available at
 ;; http://home.swipnet.se/mayhem/ecb.html
 
-;; $Id: ecb.el,v 1.258 2002/12/20 14:33:13 berndl Exp $
+;; $Id: ecb.el,v 1.259 2002/12/21 14:12:14 berndl Exp $
 
 ;;; Code:
 
@@ -113,10 +114,10 @@
 (silentcomp-defun ediff-cleanup-mess)
 (silentcomp-defvar ediff-quit-hook)
 
-;; ecb-speedbar is only loaded if ecb-use-speedbar-for-directories is set to
+;; ecb-speedbar is first loaded if ecb-use-speedbar-for-directories is set to
 ;; true
 (silentcomp-defun ecb-speedbar-deactivate)
-
+(silentcomp-defvar ecb-speedbar-buffer-name)
 
 ;;====================================================
 ;; Variables
@@ -1785,9 +1786,12 @@ is called."
     (ecb-window-select name)))
 
 (defun ecb-goto-window-directories ()
-  "Make the ECB-directories window the current window."
+  "Make the ECB-directories window the current window. If
+`ecb-use-speedbar-for-directories' is not nil then goto to the
+speedbar-window."
   (interactive)
-  (ecb-goto-window ecb-directories-buffer-name))
+  (or (ecb-goto-window ecb-directories-buffer-name)
+      (ecb-goto-window ecb-speedbar-buffer-name)))
 
 (defun ecb-goto-window-sources ()
   "Make the ECB-sources window the current window."
@@ -3469,25 +3473,26 @@ That is remove the unsupported :help stuff."
     (ecb-menu-item
      ["Directories"
       ecb-goto-window-directories
-      :active t
+      :active (or (ecb-window-live-p ecb-directories-buffer-name)
+                  (ignore-errors (ecb-window-live-p ecb-speedbar-buffer-name)))
       :help "Go to the directories window"
       ])
     (ecb-menu-item
      ["Sources"
       ecb-goto-window-sources
-      :active t
+      :active (ecb-window-live-p ecb-sources-buffer-name)
       :help "Go to the sources window"
       ])
     (ecb-menu-item
      ["Methods and Variables"
       ecb-goto-window-methods
-      :active t
+      :active (ecb-window-live-p ecb-methods-buffer-name)
       :help "Go to the methods/variables window"
       ])
     (ecb-menu-item
      ["History"
       ecb-goto-window-history
-      :active t
+      :active (ecb-window-live-p ecb-history-buffer-name)
       :help "Go to the history window"
       ])
     (ecb-menu-item
