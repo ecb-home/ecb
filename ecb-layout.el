@@ -124,7 +124,7 @@
 ;;   + The edit-window must not be splitted and the point must reside in
 ;;     the not deleted edit-window.
 
-;; $Id: ecb-layout.el,v 1.102 2002/02/22 08:30:43 berndl Exp $
+;; $Id: ecb-layout.el,v 1.103 2002/02/26 10:08:12 berndl Exp $
 
 ;;; Code:
 
@@ -209,7 +209,7 @@ layout with `ecb-redraw-layout'"
   :group 'ecb-layout
   :initialize 'custom-initialize-default
   :set ecb-layout-option-set-function
-  :type 'string)
+  :type 'integer)
 
 (defvar ecb-old-compilation-window-height compilation-window-height)
 

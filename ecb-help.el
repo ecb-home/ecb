@@ -26,7 +26,7 @@
 ;;
 ;; Contains all online-help for ECB (stolen something from recentf.el)
 
-;; $Id: ecb-help.el,v 1.57 2002/02/24 18:51:43 berndl Exp $
+;; $Id: ecb-help.el,v 1.58 2002/02/26 10:08:12 berndl Exp $
 
 ;;; Code
 
@@ -357,6 +357,7 @@ Available interactive ECB commands:
 - `ecb-toggle-enlarged-compilation-window'
 - `ecb-cycle-switch-to-compilation-buffer'
 - `ecb-cycle-through-compilation-buffers'
+- `ecb-check-and-reset-incompatible-options'
 
 Most of these functions are also available via the menu \"ECB\" and also via
 the ECB keymap with prefix \"C-c .\" \(see `ecb-minor-mode' for a complete

@@ -54,7 +54,7 @@
 ;; The latest version of the ECB is available at
 ;; http://home.swipnet.se/mayhem/ecb.html
 
-;; $Id: ecb.el,v 1.195 2002/02/25 11:13:43 berndl Exp $
+;; $Id: ecb.el,v 1.196 2002/02/26 10:08:12 berndl Exp $
 
 ;;; Code:
 
@@ -1306,6 +1306,18 @@ Note: A click with the secondary mouse-button \(see again
 \(When the string is not empty, make sure that it has a leading space.)"
   :group 'ecb-general
   :type 'string)
+
+(defcustom ecb-auto-compatibility-check t
+  "*Check at ECB-startup if all ECB-options have correct values.
+If not nil then all ECB-options are checked if their current value has the
+correct type. It the type is incorrect the option is reset to the
+default-value of current ECB. After startup all reset options are displayed
+with their old \(before reset) and new values.
+See also the commands `ecb-check-and-reset-incompatible-options' and
+`ecb-display-reset-options'. If this option is off then the user can perform
+the check and reset manually with `ecb-check-and-reset-incompatible-options'."
+  :group 'ecb-general
+  :type 'boolean)
 
 (defcustom ecb-activate-before-layout-draw-hook nil
   "*Normal hook run at the end of activating the ecb-package by running
@@ -2972,6 +2984,12 @@ That is remove the unsupported :help stuff."
        :help "Show the online help of ECB."
        ])
     (ecb-menu-item
+     [ "Check incompatible ECB-options"
+       ecb-check-and-reset-incompatible-options
+       :active (equal (selected-frame) ecb-frame)
+       :help "Check incompatible values of ECB-options and reset them."
+       ])
+    (ecb-menu-item
      [ "Submit problem report"
        ecb-submit-problem-report
        :active (equal (selected-frame) ecb-frame)
@@ -3116,57 +3134,84 @@ macro must be written explicitly, as in \"C-c SPC\".
 
 (defvar ecb-not-compatible-options nil)
 
-(defun ecb-reset-not-compatible-options ()
-  "Reset all not anymore compatible options to their default-values and
-store this options for later display in `ecb-not-compatible-options'."
-  ;; reset all with current version not compatible options to their new
-  ;; default values.
-
+(defun ecb-check-not-compatible-options ()
+  "Check for all ECB-options if their current value is compatible to the
+defined type. If not store it in `ecb-not-compatible-options'."
   (setq ecb-not-compatible-options nil)
-  
-  ;; ecb-token-display-function
-  (when (not (listp ecb-token-display-function))
-    (setq ecb-not-compatible-options (cons (cons 'ecb-token-display-function
-                                                 ecb-token-display-function)
-                                           ecb-not-compatible-options))
-    (customize-save-variable 'ecb-token-display-function
-                             (car (cdar (get 'ecb-token-display-function
-                                             'standard-value)))))
 
-  ;; maybe we need here more resettings in future...
-  )
+  ;; get all options of ECB
+  (let ((ecb-options nil))
+    (mapatoms
+     (lambda (symbol)
+       (when (and (string-match "ecb-" (symbol-name symbol))
+                  (get symbol 'custom-type))
+         (setq ecb-options (cons symbol ecb-options)))))
+
+    ;; check if all current values of ECB options match their types. Add not
+    ;; matching options to `ecb-not-compatible-options'.
+    (dolist (option ecb-options)
+      (require 'cus-edit)
+      (unless (widget-apply (widget-convert (get option 'custom-type))
+                            :match (symbol-value option))
+        (setq ecb-not-compatible-options
+              (cons (cons option
+                          (symbol-value option))
+                    ecb-not-compatible-options))))))
+
+(defun ecb-reset-not-compatible-options ()
+  "Reset all not anymore compatible options of `ecb-not-compatible-options' to
+their current default-values."
+  ;; For every not compatible option reset it to the current default-value.
+  (dolist (option ecb-not-compatible-options)
+    (let* ((default-val (car (get (car option) 'standard-value))))
+      (setq default-val (cond ((not (listp default-val)) default-val)
+                              ((equal 'quote (car default-val))
+                               (car (cdr default-val)))
+                              (t (car default-val))))
+      (customize-save-variable (car option) default-val))))
+
 
 (defun ecb-display-reset-options ()
   "Display a message-buffer which options have been reset."
-  (when ecb-not-compatible-options
-    (with-output-to-temp-buffer "*ECB reset options*"
-      (princ (format "ECB %s has reset the following options to the new default values\nof current ECB because the old customized values are not compatible.\nPlease re-customize if the new default value is not what you need!"
-                     ecb-version))
-      (princ "\n\n")
-      (while ecb-not-compatible-options
-        (let ((option-name (symbol-name (car (car ecb-not-compatible-options))))
-              (old-value (cdr (car ecb-not-compatible-options)))
-              (new-value (symbol-value (car (car ecb-not-compatible-options)))))
-          (princ (concat "+ Option :   " option-name))
-          (princ "\n")
-          (princ (concat "  Old value: "
-                         (if (and (not (equal old-value nil))
-                                  (not (equal old-value t))
-                                  (or (symbolp old-value)
-                                      (listp old-value)))
-                             "'")
-                         (prin1-to-string old-value)))
-          (princ "\n")
-          (princ (concat "  New value: "
-                         (if (and (not (equal new-value nil))
-                                  (not (equal new-value t))
-                                  (or (symbolp new-value)
-                                      (listp new-value)))
-                             "'")
-                         (prin1-to-string new-value)))
-          (princ "\n\n"))
-        (setq ecb-not-compatible-options (cdr ecb-not-compatible-options)))
-      (print-help-return-message))))
+  (interactive)
+  (if ecb-not-compatible-options
+      (with-output-to-temp-buffer "*ECB reset options*"
+        (princ (format "ECB %s has reset the following options to the new default values\nof current ECB because the old customized values are not compatible.\nPlease re-customize if the new default value is not what you need!"
+                       ecb-version))
+        (princ "\n\n")
+        (dolist (option ecb-not-compatible-options)
+          (let ((option-name (symbol-name (car option)))
+                (old-value (cdr option))
+                (new-value (symbol-value (car option))))
+            (princ (concat "+ Option :   " option-name))
+            (princ "\n")
+            (princ (concat "  Old value: "
+                           (if (and (not (equal old-value nil))
+                                    (not (equal old-value t))
+                                    (or (symbolp old-value)
+                                        (listp old-value)))
+                               "'")
+                           (prin1-to-string old-value)))
+            (princ "\n")
+            (princ (concat "  New value: "
+                           (if (and (not (equal new-value nil))
+                                    (not (equal new-value t))
+                                    (or (symbolp new-value)
+                                        (listp new-value)))
+                               "'")
+                           (prin1-to-string new-value)))
+            (princ "\n\n")))
+        (print-help-return-message))
+    (message "There were no incompatible options and therefore no resets!")))
+
+(defun ecb-check-and-reset-incompatible-options ()
+  "Check for all ECB-options if their current value is compatible to the
+defined type. If not reset it to the default-value of current ECB. Displays
+all reset options with their old \(before the reset) and new values."
+  (interactive)
+  (ecb-check-not-compatible-options)
+  (ecb-reset-not-compatible-options)
+  (ecb-display-reset-options))
 
 (defun ecb-activate ()
   "Activates the ECB and creates all the buffers and draws the ECB-screen
@@ -3208,7 +3253,9 @@ always the ECB-frame if called from another frame."
 	(ecb-update-directories-buffer))
 
     ;; maybe we must reset some not anymore compatible options
-    (ecb-reset-not-compatible-options)
+    (when ecb-auto-compatibility-check
+      (ecb-check-not-compatible-options)
+      (ecb-reset-not-compatible-options))
     
     (setq ecb-old-compilation-window-height compilation-window-height)
     
@@ -3391,7 +3438,8 @@ always the ECB-frame if called from another frame."
     (message "The ECB is now activated.")
 
     ;; now we display all `ecb-not-compatible-options'
-    (ecb-display-reset-options)
+    (when ecb-auto-compatibility-check
+      (ecb-display-reset-options))
     
     ;;now take a snapshot of the current window configuration
     (ecb-set-activated-window-configuration)))
@@ -3599,13 +3647,10 @@ FILE.elc or if FILE.elc doesn't exist."
 
 (defun ecb-auto-activate-hook()
   "If necessary, run `ecb-activate' when Emacs is started."
-
   (when ecb-auto-activate
     (ecb-activate)))
 
 (add-hook 'emacs-startup-hook 'ecb-auto-activate-hook)
-  
-;;tell ECB to automatically startup.
 
 (provide 'ecb)
 
