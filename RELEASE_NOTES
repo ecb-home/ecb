@@ -26,6 +26,7 @@ The type or name of the following options has changed:
 - ecb-layout-window-sizes: New type
 - ecb-show-sources-in-directories-buffer: New type
 - ecb-cache-directory-contents: New type
+- ecb-source-file-regexps: New type
 - ecb-show-ecb-windows-hook: New name is ecb-show-ecb-windows-before-hook
 - ecb-hide-ecb-windows-hook: New name is ecb-hide-ecb-windows-before-hook
 

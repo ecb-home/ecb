@@ -3328,11 +3328,25 @@ Show the file extension of source files.
 @end defopt
 
 @defopt source-file-regexps
-Specifies which files are shown as source files. Consists of one
-exclude regexp and one include regexp. A file is displayed in the
-source-buffer of ECB iff: The file does not match the exclude regexp
-OR the file matches the include regexp. There are three predefined and
-useful combinations of an exclude and include regexp:
+Specifies which files are shown as source files.
+
+This is done on directory-base, which means for each directory-regexp
+the files to display can be specified. If more than one
+direcory-regexp matches the current selected directory then always the
+first one (and its related file-exclude/include-regexps) is used! If
+no directory-regexp matches then all files are displayed for the
+currently selected directory.
+
+Important note: It is recommended that the *LAST* element of this list
+should contain an always matching directory-regexp (@code{".*"})!
+
+So the value of this option is a list of cons-cells where the car is a
+directory regexp and the cdr is a 2 element list where the first
+element is a exclude regexp and the second element is a include
+regexp. A file is displayed in the source-buffer of ECB iff: The file
+does not match the exclude regexp OR the file matches the include
+regexp. There are three predefined and useful combinations of an
+exclude and include regexp:
 
 @itemize @bullet
 @item All files
@@ -3347,6 +3361,9 @@ means all files except those starting with ``.'', ``#'' or ending with
 
 In addition to these predefined values a custom exclude and include
 combination can be defined.
+
+Tips for the directory- and file-rexexps: @code{"$^"} matches no
+files/directories, @code{".*"} matches all files/directories.
 @end defopt
 
 @defopt sources-buffer-after-create-hook
