@@ -122,7 +122,7 @@
 ;;   + The edit-window must not be splitted and the point must reside in
 ;;     the not deleted edit-window.
 
-;; $Id: ecb-layout.el,v 1.25 2001/04/23 14:38:19 berndl Exp $
+;; $Id: ecb-layout.el,v 1.26 2001/04/23 18:58:57 berndl Exp $
 
 ;;; Code:
 
@@ -470,8 +470,8 @@ this variable."
 temporally deactivates the advices because otherwise ediff does not work."
   (ecb-activate-adviced-functions nil))
 
-(defun ecb-ediff-cleanup-hook ()
-  "Added to the `ediff-cleanup-hook' during ECB is activated. It
+(defun ecb-ediff-quit-hook ()
+  "Added to the `ediff-quit-hook' during ECB is activated. It
 restores the advices after finishing ediff."
   (ecb-activate-adviced-functions ecb-advice-window-functions))
 
@@ -487,7 +487,8 @@ restores the advices after finishing ediff."
 with the following ECB-ajustment:
 
 The behavior depends on `ecb-other-window-jump-behavior'."
-  (if (eq ecb-other-window-jump-behavior 'all)
+  (if (or (not (eq (selected-frame) ecb-frame))
+          (eq ecb-other-window-jump-behavior 'all))
       ;; here we process the 'all value of `ecb-other-window-jump-behavior'
       ad-do-it
     ;; in the following cond-clause `ecb-other-window-jump-behavior' can only
@@ -548,13 +549,15 @@ destroyed and the other part fills the whole edit-window.
 If called in an unsplitted edit-window then nothing is done.
 If called in any other window of the current ECB-layout it jumps first in the
 \(first) edit-window and does then it큦 job \(see above)."
-  (if (not (ecb-point-in-edit-window))
-      (ignore-errors (select-window ecb-edit-window)))
-  (ad-with-originals 'delete-window
-    (if ecb-split-edit-window
-        (if (funcall (intern (format "ecb-delete-window-in-editwindow-%d"
-                                     ecb-layout-nr)))
-            (setq ecb-split-edit-window nil)))))
+  (if (not (eq (selected-frame) ecb-frame))
+      ad-do-it
+    (if (not (ecb-point-in-edit-window))
+        (ignore-errors (select-window ecb-edit-window)))
+    (ad-with-originals 'delete-window
+      (if ecb-split-edit-window
+          (if (funcall (intern (format "ecb-delete-window-in-editwindow-%d"
+                                       ecb-layout-nr)))
+              (setq ecb-split-edit-window nil))))))
 
 (defadvice delete-other-windows (around ecb)
   "The ECB-version of `delete-other-windows'. Works exactly like the
@@ -567,13 +570,15 @@ edit-window.
 If called in an unsplitted edit-window then nothing is done.
 If called in any other window of the current ECB-layout it jumps first in the
 \(first) edit-window and does then it큦 job \(see above)."
-  (if (not (ecb-point-in-edit-window))
-      (ignore-errors (select-window ecb-edit-window)))
-  (ad-with-originals 'delete-window
-    (if ecb-split-edit-window
-        (if (funcall (intern (format "ecb-delete-other-windows-in-editwindow-%d"
-                                     ecb-layout-nr)))
-            (setq ecb-split-edit-window nil)))))
+  (if (not (eq (selected-frame) ecb-frame))
+      ad-do-it
+    (if (not (ecb-point-in-edit-window))
+        (ignore-errors (select-window ecb-edit-window)))
+    (ad-with-originals 'delete-window
+      (if ecb-split-edit-window
+          (if (funcall (intern (format "ecb-delete-other-windows-in-editwindow-%d"
+                                       ecb-layout-nr)))
+              (setq ecb-split-edit-window nil))))))
 
 (defadvice split-window-horizontally (around ecb)
   "The ECB-version of `split-window-horizontally'. Works exactly like the
@@ -584,13 +589,15 @@ horizontally.
 If called in an already splitted edit-window then nothing is done.
 If called in any other window of the current ECB-layout it jumps first in the
 \(first) edit-window and does then it큦 job \(see above)."
-  (if (not (ecb-point-in-edit-window))
-      (ignore-errors (select-window ecb-edit-window)))
-  (when (and (not ecb-split-edit-window)
-             (eq (selected-window) ecb-edit-window))
-    (ad-with-originals 'split-window-horizontally
-      (ecb-split-hor 0.5 t))
-    (setq ecb-split-edit-window 'horizontal)))
+  (if (not (eq (selected-frame) ecb-frame))
+      ad-do-it
+    (if (not (ecb-point-in-edit-window))
+        (ignore-errors (select-window ecb-edit-window)))
+    (when (and (not ecb-split-edit-window)
+               (eq (selected-window) ecb-edit-window))
+      (ad-with-originals 'split-window-horizontally
+        (ecb-split-hor 0.5 t))
+      (setq ecb-split-edit-window 'horizontal))))
 
 (defadvice split-window-vertically (around ecb)
   "The ECB-version of `split-window-vertically'. Works exactly like the
@@ -601,13 +608,15 @@ vertically.
 If called in an already splitted edit-window then nothing is done.
 If called in any other window of the current ECB-layout it jumps first in the
 \(first) edit-window and does then it큦 job \(see above)."
-  (if (not (ecb-point-in-edit-window))
-      (ignore-errors (select-window ecb-edit-window)))
-  (when (and (not ecb-split-edit-window)
-             (eq (selected-window) ecb-edit-window))
-    (ad-with-originals 'split-window-vertically
-      (ecb-split-ver 0.5 t))
-    (setq ecb-split-edit-window 'vertical)))
+  (if (not (eq (selected-frame) ecb-frame))
+      ad-do-it
+    (if (not (ecb-point-in-edit-window))
+        (ignore-errors (select-window ecb-edit-window)))
+    (when (and (not ecb-split-edit-window)
+               (eq (selected-window) ecb-edit-window))
+      (ad-with-originals 'split-window-vertically
+        (ecb-split-ver 0.5 t))
+      (setq ecb-split-edit-window 'vertical))))
 
 (defadvice find-file-other-window (around ecb)
   "The ECB-version of `find-file-other-window'. Works exactly like the
@@ -615,16 +624,18 @@ original function but opens the file always in another edit-window.
 
 If called in any non edit-window of the current ECB-layout it jumps first in
 the \(first) edit-window and does then it큦 job \(see above)."
-  (if (not (ecb-point-in-edit-window))
-      (ignore-errors (select-window ecb-edit-window)))
-  (let ((ecb-other-window-jump-behavior 'only-edit))
-    (ecb-with-adviced-functions
-     (if ecb-split-edit-window
-         (other-window 1)
-       (split-window-vertically)
-       (other-window 1)))
-    ;; now we are always in the other window, so we can now open the file.
-    (find-file (ad-get-arg 0) (ad-get-arg 1))))
+  (if (not (eq (selected-frame) ecb-frame))
+      ad-do-it
+    (if (not (ecb-point-in-edit-window))
+        (ignore-errors (select-window ecb-edit-window)))
+    (let ((ecb-other-window-jump-behavior 'only-edit))
+      (ecb-with-adviced-functions
+       (if ecb-split-edit-window
+           (other-window 1)
+         (split-window-vertically)
+         (other-window 1)))
+      ;; now we are always in the other window, so we can now open the file.
+      (find-file (ad-get-arg 0) (ad-get-arg 1)))))
 
 (defadvice switch-to-buffer-other-window (around ecb)
   "The ECB-version of `switch-to-buffer-other-window'. Works exactly
@@ -632,16 +643,18 @@ like the original but switch to the buffer always in another edit-window.
 
 If called in any non edit-window of the current ECB-layout it jumps first in
 the \(first) edit-window and does then it큦 job \(see above)."
-  (if (not (ecb-point-in-edit-window))
-      (ignore-errors (select-window ecb-edit-window)))
-  (let ((ecb-other-window-jump-behavior 'only-edit))
-    (ecb-with-adviced-functions
-     (if ecb-split-edit-window
-         (other-window 1)
-       (split-window-vertically)
-       (other-window 1)))
-    ;; now we are always in the other window, so we can switch to the buffer
-    (switch-to-buffer (ad-get-arg 0) (ad-get-arg 1))))
+  (if (not (eq (selected-frame) ecb-frame))
+      ad-do-it
+    (if (not (ecb-point-in-edit-window))
+        (ignore-errors (select-window ecb-edit-window)))
+    (let ((ecb-other-window-jump-behavior 'only-edit))
+      (ecb-with-adviced-functions
+       (if ecb-split-edit-window
+           (other-window 1)
+         (split-window-vertically)
+         (other-window 1)))
+      ;; now we are always in the other window, so we can switch to the buffer
+      (switch-to-buffer (ad-get-arg 0) (ad-get-arg 1)))))
 
 (defun ecb-jde-open-class-at-point-ff-function(filename &optional wildcards)
   "Special handling of the class opening at point JDE feature. This function
