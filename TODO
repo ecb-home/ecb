@@ -9,8 +9,6 @@
 
 - Fix pop-up menus in XEmacs. (JN)
 
-- Maybe ECB should optionally create its own frame when activated. (JN)
-
 - Ignore source files specified in .cvsignore files. (JN)
 
 - Add history back/forward functions. Should behave similar to web browser
