@@ -563,6 +563,10 @@ command.")
 (defun ecb-edit-window-live-p ()
   (and ecb-edit-window (window-live-p ecb-edit-window)))
 
+(defun ecb-window-live-p (buffer-name)
+  "Return not nil if buffer BUFFER-NAME is displayed in an active window."
+  (and buffer-name (window-live-p (get-buffer-window buffer-name))))
+
 ;; ====== basic advices ===============================================
 
 (defconst ecb-basic-adviced-functions (if running-xemacs
