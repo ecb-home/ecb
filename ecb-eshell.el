@@ -1,6 +1,6 @@
 ;;; ecb-eshell.el --- eshell integration for the ECB.
 
-;; $Id: ecb-eshell.el,v 1.2 2001/11/18 19:10:51 burtonator Exp $
+;; $Id: ecb-eshell.el,v 1.3 2001/11/19 03:32:56 burtonator Exp $
 
 ;; Copyright (C) 2000-2003 Free Software Foundation, Inc.
 ;; Copyright (C) 2000-2003 Kevin A. Burton (burton@openprivacy.org)
@@ -35,6 +35,17 @@
 ;; If you enjoy this software, please consider a donation to the EFF
 ;; (http://www.eff.org)
 
+;;; History:
+
+;; - Sun Nov 18 2001 07:20 PM (burton@openprivacy.org): putting the cursor one
+;;   line from the bottom of the window.
+
+;;; TODO:
+
+;; - should I use eshell-pre-command-hook to increase the size of the window if
+;; we are in an ECB layout?? (and the ecb is activated)...
+;;
+
 ;;; Code:
 
 (defun ecb-eshell-current-buffer-sync()
@@ -43,8 +54,6 @@
 
   ;;only do this if the user is looking at the eshell buffer
 
-  ;;FIXME: if there a way to change the directory without showing the cd command?
-  
   (if (ecb-eshell-running-p)      
       (let((new-directory default-directory))
     
@@ -52,18 +61,38 @@
         
         (end-of-buffer)
         
-        ;;(eshell/clear)
-        
-        ;;(insert (format "cd %s" new-directory))
-
+        ;;change the directory without showing the cd command
         (eshell/cd new-directory)
         
-        ;;(select-window ecb-compile-window)execute the command
+        ;;execute the command
         (eshell-send-input)
-        
-        (end-of-buffer)
-        
+
+        (ecb-eshell-recenter)
+
         (set-window-point (get-buffer-window eshell-buffer-name) (point-max)))))
+
+(defun ecb-eshell-recenter()
+  "Recenter the eshell window so that the prompt is at the end of the buffer."
+  (interactive)
+  
+  (let((window-start nil)
+       (eshell-window nil))
+
+    (setq eshell-window (get-buffer-window eshell-buffer-name))
+    
+    (save-excursion
+      
+      (set-buffer eshell-buffer-name)
+      
+      (end-of-buffer)
+      
+      (forward-line (* -1 (- (window-height eshell-window) 3)))
+      
+      (beginning-of-line)
+      
+      (setq window-start (point)))
+    
+    (set-window-start eshell-window window-start)))
 
 (defun ecb-eshell-running-p()
   "Return true if eshell is currently running."
