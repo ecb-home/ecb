@@ -1,6 +1,14 @@
 Version 1.20 (???):
 -------------------
 
+- Jumping to a method/variable from the ECB-method buffer now sets the mark so
+  the user can easily jump back (see `ecb-method-jump-sets-mark'). (Klaus)
+
+- Now you can define a primary and a secondary mouse-button for ECB. See the
+  new variable `ecb-primary-secondary-mouse-buttons'.
+  Note: The name of the option 'ecb-left-mouse-jump-destination' has been
+  changed to `ecb-primary-mouse-jump-destination'!
+
 - Now ECB is ediff-friendly: During ediff is active the advices of ECB are
   temporally deactivated! (Klaus)
 
@@ -19,8 +27,8 @@ Version 1.20 (???):
 
 - Better online help display (Klaus).
 
-- Added new option 'ecb-left-mouse-jump-destination' (thanks to David Hay for
-  suggestion <David.Hay@requisite.com>.
+- Added new option 'ecb-primary-mouse-jump-destination' (thanks to David Hay
+  for suggestion <David.Hay@requisite.com>.
 
 - Adviced 'other-window' acts now exactly like the original but always related
   to 'ecb-other-window-jump-behavior' (klaus)!

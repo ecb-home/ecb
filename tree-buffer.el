@@ -49,6 +49,7 @@
 (defvar tree-buffer-menus nil)
 (defvar tree-buffer-type-facer nil)
 (defvar tree-buffer-expand-symbol-before nil)
+(defvar tree-buffer-is-click-valid-fn nil)
 (defvar tree-node-selected-fn nil)
 (defvar tree-node-expanded-fn nil)
 (defvar tree-node-mouse-over-fn nil)
@@ -93,21 +94,33 @@
       (< p (1- (tree-buffer-get-node-name-start-point node)))
     (> p (tree-buffer-get-node-name-end-point node))))
 
-(defun tree-buffer-select(mouse-button &optional shift-pressed)
-  (let ((p (point))
-        (node (tree-buffer-get-node-at-point)))
-    (when node
-      (if (and (tree-node-is-expandable node)
-               (tree-buffer-at-expand-symbol node (point)))
-          (progn
-            (when (and (not (tree-node-is-expanded node))
-                       tree-node-expanded-fn)
-              (funcall tree-node-expanded-fn node))
-            (when (tree-node-is-expandable node)
-              (tree-node-toggle-expanded node))
-            (tree-buffer-update))
-        (when tree-node-selected-fn
-          (funcall tree-node-selected-fn node mouse-button shift-pressed))))))
+(defun tree-buffer-select(mouse-button shift-pressed control-pressed)
+  "If the callback-function in `tree-buffer-is-click-valid-fn' returns nil
+then nothing is done. Otherwise:
+If the node is expandable and the node is not expanded then the
+callback-function in `tree-node-expanded-fn' is called with the node as
+argument. If the node is not expandable then the callback-function in
+`tree-node-selected-fn' is called with the node, the clicked MOUSE-BUTTON \(1
+for mouse-1, 2 for mouse-2) and SHIFT-PRESSED and CONTROL-PRESSED informations
+as arguments."
+  (when (and tree-buffer-is-click-valid-fn
+             (funcall tree-buffer-is-click-valid-fn mouse-button
+                      shift-pressed control-pressed))
+    (let ((p (point))
+          (node (tree-buffer-get-node-at-point)))
+      (when node
+        (if (and (tree-node-is-expandable node)
+                 (tree-buffer-at-expand-symbol node p))
+            (progn
+              (when (and (not (tree-node-is-expanded node))
+                         tree-node-expanded-fn)
+                (funcall tree-node-expanded-fn node))
+              (when (tree-node-is-expandable node)
+                (tree-node-toggle-expanded node))
+              (tree-buffer-update))
+          (when tree-node-selected-fn
+            (funcall tree-node-selected-fn node mouse-button
+                     shift-pressed control-pressed)))))))
 
 (defun tree-buffer-get-node-at-point()
   (let ((linenr (+ (count-lines 1 (point)) (if (= (current-column) 0) 0 -1))))
@@ -241,13 +254,37 @@ inserted and the TEXT itself"
           (if fn
               (eval (list (car fn) 'node))))))))
 
-(defun tree-buffer-create(name node-selected-fn node-expanded-fn node-mouse-over-fn
+(defun tree-buffer-create(name is-click-valid-fn node-selected-fn
+                               node-expanded-fn node-mouse-over-fn
                                menus tr-lines read-only
                                &optional type-facer expand-symbol-before)
   "Creates a new tree buffer with
 NAME: Name of the buffer
+IS-CLICK-VALID-FN: `tree-buffer-create' rebinds down-mouse-1 and down-mouse-2
+                   and also in combination with shift and control to
+                   `tree-buffer-select'. IS-CLICK-VALID-FN is called first if
+                   a node or an expand-symbol is clicked. This function is
+                   called with three-arguments:
+                   - mouse-button: The clicked mouse-button \(1 = mouse-1, 2 =
+                     mouse 2)
+                   - shift-pressed: non nil if the SHIFT-key was pressed
+                     during mouse-click.
+                   - control-pressed: non nil if the CONTROL-key was pressed
+                     during mouse-click.
+                   The function must return not nil iff exactly this click is
+                   accepted. If the function returns nil then really nothing is
+                   done by the tree-buffer after this click!
 NODE-SELECTED-FN: Function to call if a node has been selected
-NODE-EXPANDED-FN: Function to call if a node has been expanded
+                  This function is called with the following paramters:
+                  - node: The selected node
+                  - mouse-button
+                  - shift-pressed
+                  - control-pressed
+                  For the last three arguments see the description above.
+NODE-EXPANDED-FN: Function to call if a node is expandable, point stays onto
+                  the expand-symbol and node is not already expanded. This
+                  function is called with the node as argument and should add
+                  all children nodes to this node \(if possible).
 NODE-MOUSE-OVER-FN: Function to call when the mouse is moved over a node.
 MENUS: Nil or a list of one or two conses, each cons for a node-type \(0 or 1)
        Example: \(\(0 . menu-for-type-0) \(1 . menu-for-type-1)). The cdr of a
@@ -274,6 +311,7 @@ EXPAND-SYMBOL-BEFORE: If not nil then the expand-symbol \(is displayed before
   (make-local-variable 'tree-buffer-root)
   (make-local-variable 'tree-buffer-nodes)
   (make-local-variable 'tree-buffer-indent)
+  (make-local-variable 'tree-buffer-is-click-valid-fn)
   (make-local-variable 'tree-node-selected-fn)
   (make-local-variable 'tree-node-expanded-fn)
   (make-local-variable 'tree-node-update-fn)
@@ -288,6 +326,7 @@ EXPAND-SYMBOL-BEFORE: If not nil then the expand-symbol \(is displayed before
   (setq buffer-read-only read-only)
   (setq truncate-partial-width-windows tr-lines)
   (setq tree-buffer-key-map (make-sparse-keymap))
+  (setq tree-buffer-is-click-valid-fn is-click-valid-fn)
   (setq tree-node-selected-fn node-selected-fn)
   (setq tree-node-expanded-fn node-expanded-fn)
   (setq tree-node-mouse-over-fn node-mouse-over-fn)
@@ -321,14 +360,21 @@ EXPAND-SYMBOL-BEFORE: If not nil then the expand-symbol \(is displayed before
     '(lambda(e)
        (interactive "e")
        (mouse-set-point e)
-       (tree-buffer-select 0)))
+       (tree-buffer-select 1 nil nil)))
   
   (define-key tree-buffer-key-map
     (if running-xemacs '(shift button1) [S-down-mouse-1])
     '(lambda(e)
        (interactive "e")
        (mouse-set-point e)
-       (tree-buffer-select 0 t)))
+       (tree-buffer-select 1 t nil)))
+
+  (define-key tree-buffer-key-map
+    (if running-xemacs '(control button1) [C-down-mouse-1])
+    '(lambda(e)
+       (interactive "e")
+       (mouse-set-point e)
+       (tree-buffer-select 1 nil t)))
 
   (define-key tree-buffer-key-map [drag-mouse-1] '(lambda()(interactive)))
   (define-key tree-buffer-key-map [mouse-1] '(lambda()(interactive)))
@@ -341,14 +387,21 @@ EXPAND-SYMBOL-BEFORE: If not nil then the expand-symbol \(is displayed before
     '(lambda(e)
        (interactive "e")
        (mouse-set-point e)
-       (tree-buffer-select 1)))
+       (tree-buffer-select 2 nil nil)))
 
   (define-key tree-buffer-key-map
     (if running-xemacs '(shift button2) [S-down-mouse-2])
     '(lambda(e)
        (interactive "e")
        (mouse-set-point e)
-       (tree-buffer-select 1 t)))
+       (tree-buffer-select 2 t nil)))
+
+  (define-key tree-buffer-key-map
+    (if running-xemacs '(control button2) [C-down-mouse-2])
+    '(lambda(e)
+       (interactive "e")
+       (mouse-set-point e)
+       (tree-buffer-select 2 nil t)))
 
   (define-key tree-buffer-key-map [mouse-2] '(lambda()(interactive)))
   (define-key tree-buffer-key-map [double-mouse-2] '(lambda()(interactive)))
@@ -374,31 +427,6 @@ EXPAND-SYMBOL-BEFORE: If not nil then the expand-symbol \(is displayed before
              (funcall tree-node-mouse-over-fn node))))))
 
   (use-local-map tree-buffer-key-map))
-
-
-                                        ; (defun tree-insert-line(line)
-                                        ;   (let ((p (point)))
-                                        ;     (insert line "\n")
-                                        ;     (put-text-property p (+ p (length line)) 'mouse-face 'highlight)))
-
-                                        ; (defun delete-line(linenr)
-                                        ;   (goto-line (+ linenr 1))
-                                        ;   (let ((p (point)))
-                                        ;     (goto-line (1+ linenr))
-                                        ;     (delete-region (point) p)))
-
-                                        ; (defun tree-remove-line(linenr)
-                                        ;   (setcdr (nthcdr (1- pos) tree-buffer-nodes) (nthcdr (1+ pos) tree-buffer-nodes))
-                                        ;   (delete-line linenr))
-
-                                        ; (defun tree-remove-node(node)
-                                        ;   (let ((pos (find tree-buffer-nodes node)))
-                                        ;     (if (> pos -1)
-                                        ;     (tree-remove-line pos))))
-      
-  
-                                        ;   (tree-insert-line (tree-item-name item) (tree-item-type item))
-                                        ;   (setq tree-items (append tree-items item)))
 
 ;;; Tree node
 

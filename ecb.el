@@ -346,6 +346,12 @@ This option takes only effect if `ecb-font-lock-methods' is on."
   :group 'ecb-methods
   :type 'boolean)
 
+(defcustom ecb-method-jump-sets-mark t
+  "*Jumping to a method from the ECB-method buffer now sets the mark
+so the user can easily jump back."
+  :group 'ecb-methods
+  :type 'boolean)
+
 (defcustom ecb-sort-variables t
   "*Sort the variables in the methods buffer." 
   :group 'ecb-methods
@@ -372,7 +378,8 @@ This option takes only effect if `ecb-font-lock-methods' is on."
   :type 'boolean)
 
 (defcustom ecb-truncate-lines t
-  "*Truncate lines in ECB buffers."
+  "*Truncate lines in ECB buffers. If you change this during ECB is activated
+you must deactivate and activate ECB again to take effect."
   :group 'ecb-general
   :type 'boolean)
 
@@ -391,20 +398,57 @@ This option takes only effect if `ecb-font-lock-methods' is on."
                 (const :tag "Never"
                        :value nil)))
 
+(defcustom ecb-primary-secondary-mouse-buttons 'mouse-2--C-mouse-2
+  "*Primary- and secondary mouse button for using the ECB-buffers.
+A click with the primary button causes the main effect in each ECB-buffer:
+- ECB Directories: Expanding/collapsing nodes and displaying files in the ECB
+  Sources buffer.
+- ECB sources/history: Opening the file in that edit-window specified by the
+  option `ecb-primary-mouse-jump-destination'.
+- ECB Methods: Jumping to the method in that edit-window specified by the
+  option `ecb-primary-mouse-jump-destination'.
+A click with the primary mouse-button while the SHIFT-key is pressed only
+displays the complete clicked node in the minibuffer. This is useful if the
+node is longer as the window-width of the ECB-window and `ecb-truncate-lines'
+is not nil.
+
+The secondary mouse-button is for opening \(jumping to) the file in the other
+window \(see the documentation `ecb-primary-mouse-jump-destination').
+
+The following combinations are possible:
+- primary: mouse-2, secondary: C-mouse-2 \(means mouse-2 while CTRL-key is
+  pressed). This is the default setting.
+- primary: mouse-1, secondary: C-mouse-1
+- primary: mouse-1, secondary: mouse-2
+
+If you change this during ECB is activated you must deactivate and activate
+ECB again to take effect"
+  :group 'ecb-general
+  :type '(radio (const :tag "Primary: mouse-2, secondary: Ctrl-mouse-2"
+                       :value mouse-2--C-mouse-2)
+                (const :tag "Primary: mouse-1, secondary: Ctrl-mouse-1"
+                       :value mouse-1--C-mouse-1)
+                (const :tag "Primary: mouse-1, secondary: mouse-2"
+                       :value mouse-1--mouse-2)))
+  
+  
+
 ;; Thanks to David Hay for the suggestion <David.Hay@requisite.com>
-(defcustom ecb-left-mouse-jump-destination 'left-top
-  "*Jump-destination of a left-mouse-button click in an ECB-window,
-if you click onto a source or method or variable. Defines in which edit-window
-\(if splitted) ECB does the \"right\" action \(opening the source, jumping to
-a method/variable). There are two possible choices:
-- left-top: Does the \"right\" action alyways in the left/topmost edit-window.
-- last-point: Does the \"right\" action alyways in that edit-window which had
+(defcustom ecb-primary-mouse-jump-destination 'left-top
+  "*Jump-destination of a primary mouse-button click \(see
+`ecb-primary-secondary-mouse-buttons') in an ECB-window, if you click onto a
+source or method or variable. Defines in which edit-window \(if splitted) ECB
+does the \"right\" action \(opening the source, jumping to a method/variable).
+There are two possible choices:
+- left-top: Does the \"right\" action always in the left/topmost edit-window.
+- last-point: Does the \"right\" action always in that edit-window which had
   the point before.
 
 If the edit-window is not splitted this setting doesn´t matter.
 
-Note: A click with the middle-mouse-button does the \"right\" action always in
-the \"other\" window related to the setting in this option."
+Note: A click with the secondary mouse-button \(see again
+`ecb-primary-secondary-mouse-buttons' does the \"right\" action always in the
+\"other\" window related to the setting in this option."
   :group 'ecb-general
   :type '(radio (const :tag "Left/topmost edit-window"
                        :value left-top)
@@ -738,13 +782,13 @@ edit-window otherwise nothing is done."
   (ecb-mode-line-format))
   
 
-(defun ecb-set-selected-source(filename &optional window-skips
+(defun ecb-set-selected-source(filename other-edit-window
                                         no-edit-buffer-selection)
   "Updates all the ECB buffers and loads the file. The file is also
-  displayed unless NO-EDIT-BUFFER-SELECTION is set to non nil. In such case
-  the file is only loaded invisible in the background, all semantic-parsing
-  and ECB-Buffer-updating is done but the content of the main-edit window
-  is not changed."
+displayed unless NO-EDIT-BUFFER-SELECTION is set to non nil. In such case
+the file is only loaded invisible in the background, all semantic-parsing
+and ECB-Buffer-updating is done but the content of the main-edit window
+is not changed."
   (ecb-select-source-file filename)
   (if no-edit-buffer-selection
       ;; load the selected source in an invisible buffer, do all the
@@ -759,7 +803,7 @@ edit-window otherwise nothing is done."
     ;; open the selected source in the edit-window and do all the update and
     ;; parsing stuff with this buffer
     (ecb-find-file-and-display ecb-path-selected-source
-                               window-skips)
+                               other-edit-window)
     (ecb-update-methods-buffer--internal)))
 
 (defun ecb-select-method(method-start)
@@ -821,16 +865,17 @@ For further explanation see `ecb-clear-history-behavior'."
 
       (ecb-update-methods-buffer--internal))))
 
-(defun ecb-find-file-and-display(filename &optional window-skips)
+(defun ecb-find-file-and-display(filename other-edit-window)
   "Finds the file in the correct window. What the correct window is depends on
-the setting in `ecb-left-mouse-jump-destination'."
-  (if (eq ecb-left-mouse-jump-destination 'left-top)
+the setting in `ecb-primary-mouse-jump-destination' and the value of
+OTHER-WINDOW."
+  (if (eq ecb-primary-mouse-jump-destination 'left-top)
       (select-window ecb-edit-window)
     (select-window ecb-last-edit-window-with-point))
   (ecb-with-adviced-functions
-   (if window-skips
+   (if other-edit-window
        (let ((ecb-other-window-jump-behavior 'only-edit))
-         (other-window window-skips))))
+         (other-window 1))))
   (ecb-with-original-functions
    (find-file ecb-path-selected-source)
    (pop-to-buffer (buffer-name))))
@@ -881,6 +926,7 @@ the setting in `ecb-left-mouse-jump-destination'."
                                        old-children))
           (tree-node-set-expandable node (or (tree-node-get-children node)))))))
 
+
 (defun ecb-update-directories-buffer()
   "Updates the ECB directories buffer."
   (interactive)
@@ -923,41 +969,89 @@ the setting in `ecb-left-mouse-jump-destination'."
 ;; Mouse functions
 ;;====================================================
 
-(defun ecb-directory-clicked(node mouse-button shift-pressed)
-  (ecb-update-directory-node node)
-  (if (= 0 (tree-node-get-type node))
-      (if shift-pressed
+(defun ecb-interpret-mouse-click (mouse-button shift-pressed control-pressed)
+  "Converts the pysical pressed MOUSE-BUTTON to ECB-mouse-buttons: either
+primary or secondary mouse-button depending on the value of CONTROL-PRESSED
+and the setting in `ecb-primary-secondary-mouse-buttons'.
+Returns a list '\(ECB-button shift-mode) where ECB-button is either 1 \(=
+primary) or 2 \(= secondary) and shift-mode is non nil if SHIFT-PRESSED is non
+nil. For an invalid and not accepted click combination nil is returned."
+  (if (and (not (eq mouse-button 1)) (not (eq mouse-button 2)))
+      nil
+    (cond ((eq ecb-primary-secondary-mouse-buttons 'mouse-1--mouse-2)
+           (if control-pressed
+               nil
+             (list mouse-button shift-pressed)))
+          ((eq ecb-primary-secondary-mouse-buttons 'mouse-1--C-mouse-1)
+           (if (not (eq mouse-button 1))
+               nil
+             (list (if control-pressed 2 1) shift-pressed)))
+          ((eq ecb-primary-secondary-mouse-buttons 'mouse-2--C-mouse-2)
+           (if (not (eq mouse-button 2))
+               nil           
+             (list (if control-pressed 2 1) shift-pressed)))
+          (t nil))))
+
+(defun ecb-directory-clicked(node mouse-button shift-pressed control-pressed)
+  (let* ((ecb-button-list (ecb-interpret-mouse-click mouse-button
+                                                      shift-pressed
+                                                      control-pressed))
+         (ecb-button (car ecb-button-list))
+         (shift-mode (cadr ecb-button-list)))
+    ;; in the following we only operate with ecb-button and shift-mode and
+    ;; never with mouse-button, shift-pressed and control-pressed!!
+    (when ecb-button-list
+      (ecb-update-directory-node node)
+      (if (= 0 (tree-node-get-type node))
+          (if shift-mode
+              (ecb-mouse-over-node node)
+            (progn
+              (when (= 2 ecb-button)
+                (tree-node-toggle-expanded node))
+              (ecb-set-selected-directory (tree-node-get-data node))
+              (ecb-buffer-select ecb-directories-buffer-name)
+              (tree-buffer-update)))
+        (ecb-set-selected-source (tree-node-get-data node)
+                                 (and ecb-split-edit-window (eq ecb-button 2))
+                                 shift-mode)))))
+
+(defun ecb-source-clicked(node mouse-button shift-pressed control-pressed)
+  (let* ((ecb-button-list (ecb-interpret-mouse-click mouse-button
+                                                     shift-pressed
+                                                     control-pressed))
+         (ecb-button (car ecb-button-list))
+         (shift-mode (cadr ecb-button-list)))
+    ;; in the following we only operate with ecb-button and shift-mode and
+    ;; never with mouse-button, shift-pressed and control-pressed!!
+    (when ecb-button-list
+      (if shift-mode
+          (ecb-mouse-over-node node))
+      (ecb-set-selected-source (tree-node-get-data node)
+                               (and ecb-split-edit-window (eq ecb-button 2))
+                               shift-mode))))
+
+(defun ecb-method-clicked(node mouse-button shift-pressed control-pressed)
+  (let* ((ecb-button-list (ecb-interpret-mouse-click mouse-button
+                                                     shift-pressed
+                                                     control-pressed))
+         (ecb-button (car ecb-button-list))
+         (shift-mode (cadr ecb-button-list)))
+    ;; in the following we only operate with ecb-button and shift-mode and
+    ;; never with mouse-button, shift-pressed and control-pressed!!
+    (when ecb-button-list
+      (if shift-mode
           (ecb-mouse-over-node node)
-        (progn
-          (when (= 1 mouse-button)
-            (tree-node-toggle-expanded node))
-          (ecb-set-selected-directory (tree-node-get-data node))
-          (ecb-buffer-select ecb-directories-buffer-name)
-          (tree-buffer-update)))
-    (ecb-set-selected-source (tree-node-get-data node)
-                             (if ecb-split-edit-window
-                                 mouse-button 0)
-                             shift-pressed)))
-
-(defun ecb-source-clicked(node mouse-button shift-pressed)
-  (if shift-pressed
-      (ecb-mouse-over-node node))
-  (ecb-set-selected-source (tree-node-get-data node)
-                           (if ecb-split-edit-window
-                               mouse-button 0)
-                           shift-pressed))
-
-(defun ecb-method-clicked(node mouse-button shift-pressed)
-  (if shift-pressed
-      (ecb-mouse-over-node node)
-    (when (= 1 (tree-node-get-type node))
-      (tree-node-toggle-expanded node)
-      (tree-buffer-update))
-    (when (tree-node-get-data node)
-      (ecb-find-file-and-display ecb-path-selected-source
-                                 (if ecb-split-edit-window
-                                     mouse-button 0))
-      (goto-char (semantic-token-start (tree-node-get-data node))))))
+        (when (= 1 (tree-node-get-type node))
+          (tree-node-toggle-expanded node)
+          (tree-buffer-update))
+        (when (tree-node-get-data node)
+          (ecb-find-file-and-display ecb-path-selected-source
+                                     (and ecb-split-edit-window (eq ecb-button
+                                     2)))
+          ;; let us set the mark so the user can easily jump back.
+          (if ecb-method-jump-sets-mark
+              (push-mark))
+          (goto-char (semantic-token-start (tree-node-get-data node))))))))
 
 (defun ecb-mouse-over-node(node)
   (cond ((eq ecb-show-node-name-in-minibuffer 'always)
@@ -1016,6 +1110,7 @@ with the actually choosen layout \(see `ecb-layout-nr')."
       (unless (member ecb-directories-buffer-name curr-buffer-list)
         (tree-buffer-create
          ecb-directories-buffer-name
+         'ecb-interpret-mouse-click
          'ecb-directory-clicked
          'ecb-update-directory-node
          'ecb-mouse-over-node
@@ -1039,6 +1134,7 @@ with the actually choosen layout \(see `ecb-layout-nr')."
       (unless (member ecb-sources-buffer-name curr-buffer-list)
         (tree-buffer-create
          ecb-sources-buffer-name
+         'ecb-interpret-mouse-click
          'ecb-source-clicked
          'ecb-source-clicked
          'ecb-mouse-over-node
@@ -1049,6 +1145,7 @@ with the actually choosen layout \(see `ecb-layout-nr')."
       (unless (member ecb-methods-buffer-name curr-buffer-list)
         (tree-buffer-create
          ecb-methods-buffer-name
+         'ecb-interpret-mouse-click
          'ecb-method-clicked
          nil
          'ecb-mouse-over-node
@@ -1062,6 +1159,7 @@ with the actually choosen layout \(see `ecb-layout-nr')."
       (unless (member ecb-history-buffer-name curr-buffer-list)
         (tree-buffer-create
          ecb-history-buffer-name
+         'ecb-interpret-mouse-click
          'ecb-source-clicked
          'ecb-source-clicked
          'ecb-mouse-over-node
