@@ -411,8 +411,7 @@ other window (see the documentation
 With the option `ecb-primary-secondary-mouse-buttons' the following
 combinations of primary and secondary mouse-buttons are possible:
 
- - primary: mouse-2, secondary: C-mouse-2 (means mouse-2 while CTRL-key
-   is pressed). This is the default setting.
+ - primary: mouse-2, secondary: C-mouse-2(1). This is the default.
 
  - primary: mouse-1, secondary: C-mouse-1
 
@@ -424,6 +423,10 @@ activate ECB again to take effect
 In each ECB-buffer mouse-3 (= right button) opens a special context
 popup-menu for the clicked item where you can choose several senseful
 actions.
+
+---------- Footnotes ----------
+
+(1) means mouse-2 while CTRL-key is pressed.
 
 
 File: ecb.info,  Node: Using the keyboard,  Next: The edit-window,  Prev: Using the mouse,  Up: Usage of ECB
@@ -3206,53 +3209,54 @@ Node: Standard activation11595
 Node: Automatic activation12173
 Node: Usage of ECB13223
 Node: Using the mouse14058
-Node: Using the keyboard16350
-Node: Navigation17144
-Node: Incremental search18487
-Node: The edit-window20638
-Node: Temp- and compile-buffers22444
-Node: The Methods buffer24491
-Node: Customizing the display24932
-Node: Rebuilding the Methods26654
-Node: The ECB-layout27508
-Node: Changing the ECB-layout28058
-Node: Redrawing the ECB-layout29096
-Node: Hiding the ECB windows29899
-Node: ECB-window synchronizing30473
-Node: Interactive ECB commands32135
-Node: Customizing40879
-Node: Most important options42392
-Node: Customizable options44184
-Node: ecb-general45100
-Node: ecb-directories63330
-Node: ecb-sources68310
-Node: ecb-methods70180
-Node: ecb-history82321
-Node: ecb-layout84013
-Node: ecb-face-options97918
-Node: ecb-faces99578
-Node: ecb-download103585
-Node: Submitting problem report104772
-Node: Upgrading105929
-Node: Downloading new version106286
-Node: Auto. option-upgrading106841
-Node: User interface107148
-Node: Background information108037
-Node: Tips and tricks111435
-Node: Changing faces111994
-Node: Small screens112800
-Node: Simulating speedbar114203
-Node: Optimze scrolling115012
-Node: Large directories116087
-Node: Elisp programming116731
-Node: Conflicts117841
-Node: VC118424
-Node: follow-mouse118717
-Node: avoid119395
-Node: calendar119759
-Node: calculator120395
-Node: Function Index120897
-Node: Variable Index122753
-Node: Concept Index127931
+Ref: Using the mouse-Footnote-116333
+Node: Using the keyboard16379
+Node: Navigation17173
+Node: Incremental search18516
+Node: The edit-window20667
+Node: Temp- and compile-buffers22473
+Node: The Methods buffer24520
+Node: Customizing the display24961
+Node: Rebuilding the Methods26683
+Node: The ECB-layout27537
+Node: Changing the ECB-layout28087
+Node: Redrawing the ECB-layout29125
+Node: Hiding the ECB windows29928
+Node: ECB-window synchronizing30502
+Node: Interactive ECB commands32164
+Node: Customizing40908
+Node: Most important options42421
+Node: Customizable options44213
+Node: ecb-general45129
+Node: ecb-directories63359
+Node: ecb-sources68339
+Node: ecb-methods70209
+Node: ecb-history82350
+Node: ecb-layout84042
+Node: ecb-face-options97947
+Node: ecb-faces99607
+Node: ecb-download103614
+Node: Submitting problem report104801
+Node: Upgrading105958
+Node: Downloading new version106315
+Node: Auto. option-upgrading106870
+Node: User interface107177
+Node: Background information108066
+Node: Tips and tricks111464
+Node: Changing faces112023
+Node: Small screens112829
+Node: Simulating speedbar114232
+Node: Optimze scrolling115041
+Node: Large directories116116
+Node: Elisp programming116760
+Node: Conflicts117870
+Node: VC118453
+Node: follow-mouse118746
+Node: avoid119424
+Node: calendar119788
+Node: calculator120424
+Node: Function Index120926
+Node: Variable Index122782
+Node: Concept Index127960
 
 End Tag Table

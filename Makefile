@@ -35,6 +35,10 @@ LOADPATH=../semantic ../eieio ../jde/lisp
 # PDF-format you will need an installed TeX and Ghostscript!
 MAKEINFO=/usr/bin/makeinfo
 TEXI2DVI=/D/Programme/Tools/tex/texmf/miktex/bin/texi2dvi
+# You need either the dvipdfm-tool
+DVIPDFM=/D/Programme/Tools/tex/texmf/miktex/bin/dvipdfm
+# or the tools dvips and ps2pdf. If dvipdfm is available the Makefile uses
+# this one!
 DVIPS=/D/Programme/Tools/tex/texmf/miktex/bin/dvips
 PS2PDF=/D/home/bin/ps2pdf
 
@@ -103,9 +107,15 @@ online-help: $(ecb_TEXI)
 	   echo - makeinfo in $(MAKEINFO); \
 	   echo is not available!; \
 	fi
-	@if test -x "$(TEXI2DVI)" -a -x "$(DVIPS)" -a -x "$(PS2PDF)" ; then\
+	@if test -x "$(TEXI2DVI)" -a -x "$(DVIPDFM)"; then\
+	   $(RM) $(ecb_DVI) $(ecb_PDF); \
+	   echo Generating pdf-format with dvipdfm ...; \
+	   $(TEXI2DVI) --clean $<; \
+	   $(DVIPDFM) $(ecb_DVI); \
+	   $(RM) $(ecb_DVI); \
+	elif test -x "$(TEXI2DVI)" -a -x "$(DVIPS)" -a -x "$(PS2PDF)" ; then\
 	   $(RM) $(ecb_DVI) $(ecb_PS) $(ecb_PDF); \
-	   echo Generating pdf-format...; \
+	   echo Generating pdf-format with dvips and ps2pdf ...; \
 	   $(TEXI2DVI) --clean $<; \
 	   $(DVIPS) -Pcmz -q $(ecb_DVI) -o $(ecb_PS); \
 	   $(PS2PDF) $(ecb_PS); \
