@@ -26,7 +26,7 @@
 ;; This file is part of the ECB package which can be found at:
 ;; http://home.swipnet.se/mayhem/ecb.html
 
-;; $Id: tree-buffer.el,v 1.36 2001/05/04 13:21:44 berndl Exp $
+;; $Id: tree-buffer.el,v 1.37 2001/05/04 19:09:43 berndl Exp $
 
 ;;; Code:
 
@@ -102,7 +102,8 @@
 
 (defun tree-buffer-get-node-name-end-point(node)
   "Returns the buffer point where the name of the node ends."
-  (+ (tree-buffer-get-node-name-start-point node) (length (tree-node-get-name node))))
+  (+ (tree-buffer-get-node-name-start-point node)
+     (length (tree-node-get-name node))))
 
 (defun tree-buffer-at-expand-symbol(node p)
   (if tree-buffer-expand-symbol-before
@@ -178,44 +179,65 @@ with the same arguments as `tree-node-expanded-fn'."
                      (tree-buffer-get-node-name-end-point node) 'face face))
 
 (defun tree-buffer-recenter (node window)
-  "Recenter the window WINDOW, so as much as possible subnodes of NODE are
-visible if NODE is expanded. If NODE is not expandable then WINDOW is always
-displayed without empty-lines at the end, means WINDOW is always best filled.
-NODE must be valid and already be visible in WINDOW!"
-  (if (tree-node-is-expanded node)
-      (let ((exp-node-children-count (tree-node-count-subnodes-to-display node))
-            (node-point (save-excursion
-                          (goto-line (tree-buffer-find-node node))
-                          (point))))
-        ;; if the current node is not already displayed in the first line of the
-        ;; window (= condition 1) and if not all of it큦 children are visible in
-        ;; the window then we can do some optimization.
-        (if (and (save-excursion
-                   (goto-char node-point)
-                   (forward-line -1)
-                   (pos-visible-in-window-p (point) window))
-                 (not (save-excursion
-                        (goto-char node-point)
-                        (forward-line exp-node-children-count)
-                        (pos-visible-in-window-p (point) window))))
-            ;; optimize the display of NODE and it큦 children so as much as
-            ;; possible are visible.
-            (recenter (max 0 (- (tree-buffer-window-display-height window)
-                                (1+ exp-node-children-count))))))
-    ;; maybe there are empty lines in the window after the last non-empty
-    ;; line. If they are we scroll until the whole window is filled with
-    ;; non-empty lines.
-    (if (not (tree-node-is-expandable node))
-        (let ((w-height (tree-buffer-window-display-height window))
-              (full-lines-in-window (count-lines (window-start window)
-                                                 (window-end window t))))
-          (if (< full-lines-in-window
-                 w-height)
+  "If NODE is not visible then first recenter the window WINDOW so NODE is
+at least visible. If NODE is expanded then recenter the WINDOW so as much as
+possible subnodes of NODE will be visible. If NODE is not expandable then
+WINDOW is always displayed without empty-lines at the end, means WINDOW is
+always best filled."
+  (let ((node-point (save-excursion
+                      (goto-line (tree-buffer-find-node node))
+                      (tree-buffer-line-beginning-pos))))
+    ;; first make point at least visible if not
+    (if (not (pos-visible-in-window-p node-point window))
+        (if (< node-point (window-start window))
+            (set-window-start window node-point)
+          (set-window-start window
+                            (save-excursion
+                              (goto-char (window-start window))
+                              (forward-line
+                               (- (1+ (count-lines (window-start window) node-point))
+                                  (tree-buffer-window-display-height window)))
+                              (tree-buffer-line-beginning-pos)))))
+    ;; now optimize the window display
+    (if (tree-node-is-expanded node)
+        (let ((exp-node-children-count (tree-node-count-subnodes-to-display node))
+              (point-window-line (count-lines (window-start window) node-point)))
+          ;; if the current node is not already displayed in the first line of the
+          ;; window (= condition 1) and if not all of it큦 children are visible in
+          ;; the window then we can do some optimization.
+          (if (and (save-excursion
+                     (goto-char node-point)
+                     (forward-line -1)
+                     (pos-visible-in-window-p (point) window))
+                   (not (save-excursion
+                          (goto-char node-point)
+                          (forward-line exp-node-children-count)
+                          (pos-visible-in-window-p (point) window))))
+              ;; optimize the display of NODE and it큦 children so as much as
+              ;; possible are visible.
               (set-window-start window
                                 (save-excursion
                                   (goto-char (window-start window))
-                                  (forward-line (- full-lines-in-window w-height))
-                                  (tree-buffer-line-beginning-pos))))))))
+                                  (forward-line
+                                   (min point-window-line
+                                        (- (+ 1 point-window-line
+                                              exp-node-children-count)
+                                           (tree-buffer-window-display-height window))))
+                                  (tree-buffer-line-beginning-pos)))))
+      ;; maybe there are empty lines in the window after the last non-empty
+      ;; line. If they are we scroll until the whole window is filled with
+      ;; non-empty lines.
+      (if (not (tree-node-is-expandable node))
+          (let ((w-height (tree-buffer-window-display-height window))
+                (full-lines-in-window (count-lines (window-start window)
+                                                   (window-end window t))))
+            (if (< full-lines-in-window
+                   w-height)
+                (set-window-start window
+                                  (save-excursion
+                                    (goto-char (window-start window))
+                                    (forward-line (- full-lines-in-window w-height))
+                                    (tree-buffer-line-beginning-pos)))))))))
 
 ;; Klaus: Now we use overlays to highlight current node in a tree-buffer. This
 ;; makes it easier to do some facing with the nodes itself and above all this
@@ -231,26 +253,21 @@ NODE must be valid and already be visible in WINDOW!"
 
 (defun tree-buffer-highlight-node-data(node-data &optional dont-make-visible)
   (if node-data
-    (let ((node (tree-buffer-find-node-data node-data))
-          (w (get-buffer-window (current-buffer))))
-      (when node
+      (let ((node (tree-buffer-find-node-data node-data))
+            (w (get-buffer-window (current-buffer))))
+        (when node
 ;;        (tree-buffer-remove-highlight)
-        (setq tree-buffer-highlighted-node-data node-data)
-	(save-excursion
-	  (move-overlay tree-buffer-highlight-overlay
-			(tree-buffer-get-node-name-start-point node)
-			(tree-buffer-get-node-name-end-point node)))
-	(when (not dont-make-visible)
-	  (if (not (pos-visible-in-window-p
-		    (tree-buffer-get-node-name-start-point node) w))
-	      ;; make node visible
-	      (save-selected-window
-		(select-window w)
-		(recenter)))
-	  ;; maybe we must optimize the recentering
-	  (tree-buffer-recenter node w))))
+          (setq tree-buffer-highlighted-node-data node-data)
+          (save-excursion
+            (move-overlay tree-buffer-highlight-overlay
+                          (tree-buffer-get-node-name-start-point node)
+                          (tree-buffer-get-node-name-end-point node)))
+          (when (not dont-make-visible)
+            ;; make node visible if not and optimize the windows display for
+            ;; the node.
+            (tree-buffer-recenter node w))))
     (tree-buffer-remove-highlight)))
-  
+
 (defun tree-buffer-insert-text(text &optional facer)
   "Insert TEXT at point and faces it with FACER. FACER can be a face then the
 text gets this face or it can be a function-symbol which is called to face the
