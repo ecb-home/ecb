@@ -986,7 +986,7 @@ mentioned above!"
                                     menu-title-creator)
                                    ((functionp menu-title-creator)
                                     (funcall menu-title-creator node))
-                                   (t "ECB-tree-buffer-menu"))))
+                                   (t "Tree-buffer-menu"))))
             (when menu
 	      (if tree-buffer-running-xemacs
 		  (popup-menu (cons menu-title menu))

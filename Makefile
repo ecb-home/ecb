@@ -124,7 +124,7 @@ INSTALLINFO=/usr/bin/install-info
 
 # For the ECB-maintainers: Change the version-number here and not
 # elsewhere!
-ecb_VERSION=1.96.1
+ecb_VERSION=1.97
 
 
 RM=rm -f

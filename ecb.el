@@ -167,7 +167,6 @@
 ;;(require 'ecb-profile)
 
 ;; various loads
-(require 'easymenu)
 (require 'assoc)
 
 (eval-when-compile
@@ -6684,20 +6683,21 @@ changed there should be no performance-problem!"
 
 (add-hook 'emacs-startup-hook 'ecb-auto-activate-hook)
 
-
 (defun ecb-run-from-menubar ()
   "Activate ECB from the Tools-menu. See `ecb-activate'."
   (interactive)
   (ecb-activate))
 
-(easy-menu-add-item nil
-                    '("tools") 
-                    (ecb-menu-item
-                     [ "Start Code Browser (ECB)"
-                       ecb-run-from-menubar
-                       :active t
-                       :help "Start the Emacs Code Browser."
-                       ]))
+(progn
+  (require 'easymenu)
+  (easy-menu-add-item nil
+                      '("tools") 
+                      (ecb-menu-item
+                       [ "Start Code Browser (ECB)"
+                         ecb-run-from-menubar
+                         :active t
+                         :help "Start the Emacs Code Browser."
+                         ])))
 
 
 ;; Klaus Berndl <klaus.berndl@sdm.de>: Cause of the magic autostart stuff of
