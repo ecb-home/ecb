@@ -1,5 +1,7 @@
 - Distinction of include-tags by "" or <>. This can be done via
   (semantic-tag-include-system-p TAG). Thanks to Markus grietsch.
+  But probably it would be the best if semantic itself does this special
+  formating! 
 
 - Displaying the version-control-state of a file concerning (for this we can
   probably steal 90% of the needed code from speedbar). Probably we should

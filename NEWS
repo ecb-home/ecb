@@ -5,7 +5,7 @@
    when just switching between buffers and the related directories are already
    expanded. This can dramatically increase the speed of the tree-buffer
    display when displaying the sources-files in the directories-buffer (see
-   `ecb-show-sources-in-directories-buffer') Thanks to Rob Walker
+   `ecb-show-sources-in-directories-buffer'). Thanks to Rob Walker
    <rob.lists@tenfoot.org.uk> for tracking down the performance bottleneck and
    supplying a first patch.
 
@@ -18,6 +18,14 @@
    As a side effect now the ECB-tree-buffers can be used during an active
    isearch - at least with GNU Emacs. Thanks to Markus Gritsch
    <gritsch@iue.tuwien.ac.at> for pointing to this problem.
+
+** ECB sets autom. temp-buffer-resize-mode rsp. temp-buffer-shrink-to-fit when
+   needed. This modes are needed when a permanent compile-window is used
+   because otherwise the correct sizing of the compile-window according to the
+   settings in ecb-compile-window-temporally-enlarge and
+   ecb-enlarged-compilation-window-max-height is not possible. After disabling
+   the permanent compile-window or when deactivating ECB the original settings
+   of these modes are restored!
       
 ** Fixed bugs
 
