@@ -52,7 +52,7 @@
 ;; The latest version of the ECB is available at
 ;; http://home.swipnet.se/mayhem/ecb.html
 
-;; $Id: ecb.el,v 1.69 2001/05/02 13:40:22 zappo Exp $
+;; $Id: ecb.el,v 1.70 2001/05/02 14:19:55 berndl Exp $
 
 ;;; Code:
 
@@ -141,7 +141,10 @@
   :type '(repeat (directory :tag "Path")))
 
 (defvar ecb-source-path-functions nil
-  "List of functions to call for finding sources.")
+  "List of functions to call for finding sources. Each time the function
+`ecb-update-directories-buffer' is called, the functions in this variable will
+be evaluated. Such a function must return either nil or a list of strings
+where each string is a path.")
 
 (defcustom ecb-show-sources-in-directories-buffer nil
   "*Show source files in directories buffer."
