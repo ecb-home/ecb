@@ -705,6 +705,30 @@ Currently there are three subcaches managed within this cache:
 (defsubst ecb-directory-sep-string (&optional refdir)
   (char-to-string (ecb-directory-sep-char refdir)))   
 
+
+;;; ----- Wrappers for file- and directory-operations ------
+
+(dolist (f '(file-name-nondirectory
+             file-exists-p
+             file-name-directory
+             file-readable-p
+             file-attributes
+             file-name-extension
+             file-directory-p
+             file-accessible-directory-p
+             file-name-sans-extension
+             file-writable-p
+             file-name-as-directory
+             directory-files))
+  (fset (intern (format "ecb-%s" f))
+        `(lambda (file-or-dir-name &rest args)
+           ,(format "Delegate all args to `%s' but call first `ecb-fix-path' for FILE-OR-DIR-NAME." f)
+           (apply (quote ,f) (ecb-fix-path file-or-dir-name) args))))
+
+(defun ecb-expand-file-name (name &optional default-dir)
+  "Delegate all args to `expand-file-name' but call first `ecb-fix-path' for both args."
+  (expand-file-name (ecb-fix-path name) (ecb-fix-path default-dir)))
+
 ;;; ----- Canonical filenames ------------------------------
 
 (defun ecb-fix-path (path)

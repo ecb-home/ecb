@@ -128,8 +128,8 @@ after clicking onto a filename in the speedbar."
              (equal (selected-frame) ecb-frame)
              (window-live-p (get-buffer-window ecb-speedbar-buffer-name))
              (and item
-                  (file-exists-p item)
-                  (not (file-directory-p item))))
+                  (ecb-file-exists-p item)
+                  (not (ecb-file-directory-p item))))
         (ecb-select-edit-window))))
 
 

@@ -3338,7 +3338,7 @@ be found or if the semanticdb is not active then nil is returned."
                                               search-result n)))
                                       (if (and (cdr r)
                                                (stringp (cdr r))
-                                               (file-readable-p (cdr r)))
+                                               (ecb-file-readable-p (cdr r)))
                                           (cons (cdr r) (car r))))))
                         type-tag-numbers)))))))
 
@@ -3412,7 +3412,7 @@ should be displayed. For 1 and 2 the value of EDIT-WINDOW-NR is ignored."
           (progn
             (set-buffer (get-file-buffer ecb-path-selected-source))
             (let ((file (ecb--semantic-dependency-tag-file tag)))
-              (when (and file (file-exists-p file))
+              (when (and file (ecb-file-exists-p file))
                 (ecb-find-file-and-display
                  file (ecb-combine-ecb-button/edit-win-nr ecb-button edit-window-nr)))))
         (ecb-jump-to-tag filename
