@@ -1,4 +1,4 @@
-Version XXXX (2001-03-17):
+Version 1.10 (2001-03-17):
 --------------------------
 
 - Automatic expansion of the directory tree.
@@ -12,7 +12,13 @@ Version XXXX (2001-03-17):
   face. Thanks to Kevin A. Burton <burton@relativity.yi.org> for this
   patch.
 
-- Name of item under mouse is shown in minibuffer.
+- Fixed some issues with XEmacs. Thanks to Colin Marquardt
+  <colin.marquardt@usa.alcatel.com> for this.
+
+- Fixed bug with truncating lines in tree-buffer.el.
+
+- The methods buffer can now be automatically updated when the source
+  file is saved.
 
 
 Version 1.0 (2001-03-17):

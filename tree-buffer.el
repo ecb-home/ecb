@@ -34,6 +34,15 @@
   ;; to avoid compiler grips
   (require 'cl))
 
+(defvar running-xemacs (string-match "XEmacs\\|Lucid" emacs-version))
+
+(when running-xemacs
+  (defface secondary-selection
+    '((((class color) (background light)) (:foreground "blue" :background "LightGray"))
+      (((class color) (background dark))  (:foreground "blue" :background "LightGray"))
+      (t ()))
+    "Face for highlights."))
+
 (defvar tree-buffer-root nil)
 (defvar tree-buffer-nodes nil)
 (defvar tree-buffer-key-map nil)
@@ -297,13 +306,15 @@ EXPAND-SYMBOL-BEFORE: If not nil then the expand-symbol \(is displayed before
 	   (tree-buffer-update)))))
 
   ;; mouse-1
-  (define-key tree-buffer-key-map [down-mouse-1]
+  (define-key tree-buffer-key-map
+    (if running-xemacs '(button1) [down-mouse-1])
     '(lambda(e)
        (interactive "e")
        (mouse-set-point e)
        (tree-buffer-select 0)))
   
-  (define-key tree-buffer-key-map [S-down-mouse-1]
+  (define-key tree-buffer-key-map
+    (if running-xemacs '(shift button1) [S-down-mouse-1])
     '(lambda(e)
        (interactive "e")
        (mouse-set-point e)
@@ -315,13 +326,15 @@ EXPAND-SYMBOL-BEFORE: If not nil then the expand-symbol \(is displayed before
   (define-key tree-buffer-key-map [triple-mouse-1] '(lambda()(interactive)))
 
   ;; mouse-2
-  (define-key tree-buffer-key-map [down-mouse-2]
+  (define-key tree-buffer-key-map
+    (if running-xemacs '(button2) [down-mouse-2])
     '(lambda(e)
        (interactive "e")
        (mouse-set-point e)
        (tree-buffer-select 1)))
 
-  (define-key tree-buffer-key-map [S-down-mouse-2]
+  (define-key tree-buffer-key-map
+    (if running-xemacs '(shift button2) [S-down-mouse-2])
     '(lambda(e)
        (interactive "e")
        (mouse-set-point e)
