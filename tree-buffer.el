@@ -26,7 +26,7 @@
 ;; This file is part of the ECB package which can be found at:
 ;; http://home.swipnet.se/mayhem/ecb.html
 
-;; $Id: tree-buffer.el,v 1.48 2001/05/21 12:16:49 berndl Exp $
+;; $Id: tree-buffer.el,v 1.49 2001/05/21 16:58:07 berndl Exp $
 
 ;;; Code:
 
@@ -83,7 +83,7 @@
 (defvar tree-buffer-saved-mouse-movement-fn nil)
 (defvar tree-buffer-saved-track-mouse nil)
 (defvar tree-buffer-track-mouse-timer nil)
-(defvar tree-buffer-track-mouse-idle-delay 0.25
+(defvar tree-buffer-track-mouse-idle-delay 0.2
   "After this idle-time of Emacs `tree-buffer-do-mouse-tracking' is called if
 mouse-tracking is activated by `tree-buffer-activate-mouse-tracking'")
 
@@ -562,30 +562,45 @@ keysequence!"
   (setq track-mouse nil))
 
 (defun tree-buffer-activate-mouse-tracking ()
-  "Activates mouse tracking for all tree-buffers. If activated then the
-function defined in `tree-buffer-create' is called, if the mouse is over a
-node in a tree-buffer."
-  (if running-xemacs
-      (add-hook 'mode-motion-hook 'tree-buffer-follow-mouse)
+  "Activates GNU Emacs mouse tracking for all tree-buffers."
+  (unless running-xemacs
     (unless tree-buffer-track-mouse-timer
-      (setq tree-buffer-saved-mouse-movement-fn
-            (lookup-key special-event-map [mouse-movement]))
-      (define-key special-event-map [mouse-movement] 'tree-buffer-follow-mouse)
       (setq tree-buffer-saved-track-mouse track-mouse)
       (setq tree-buffer-track-mouse-timer
             (run-with-idle-timer tree-buffer-track-mouse-idle-delay
                                  t 'tree-buffer-do-mouse-tracking)))))
 
 (defun tree-buffer-deactivate-mouse-tracking ()
-  "Deactivates mouse tracking for all tree-buffers."
-  (if running-xemacs
-      (remove-hook 'mode-motion-hook 'tree-buffer-follow-mouse)
+  "Deactivates GNU Emacs mouse tracking for all tree-buffers."
+  (unless running-xemacs
     (unless (not tree-buffer-track-mouse-timer)
-      (define-key special-event-map [mouse-movement] tree-buffer-saved-mouse-movement-fn)
       (setq track-mouse tree-buffer-saved-track-mouse)
       (cancel-timer tree-buffer-track-mouse-timer)
       (setq tree-buffer-track-mouse-timer nil))))
-  
+
+(defun tree-buffer-activate-follow-mouse ()
+  "Activates that in all tree-buffer-windows - regardless if the active window
+or not - a mouse-over-node-function is called if mouse moves over a node. See
+also the NODE-MOUSE-OVER-FN argument of `tree-buffer-create'."
+  (tree-buffer-activate-mouse-tracking)
+  (if running-xemacs
+      (dolist (buf tree-buffers)
+        (save-excursion
+          (set-buffer buf)
+          (add-hook 'mode-motion-hook 'tree-buffer-follow-mouse)))
+    (let ((saved-fn (lookup-key special-event-map [mouse-movement])))
+      (unless (equal saved-fn 'tree-buffer-follow-mouse)
+        (setq tree-buffer-saved-mouse-movement-fn saved-fn)
+        (define-key special-event-map [mouse-movement] 'tree-buffer-follow-mouse)))))
+
+(defun tree-buffer-deactivate-follow-mouse ()
+  (if running-xemacs
+      (dolist (buf tree-buffers)
+        (save-excursion
+          (set-buffer buf)
+          (remove-hook 'mode-motion-hook 'tree-buffer-follow-mouse)))
+    (define-key special-event-map [mouse-movement] tree-buffer-saved-mouse-movement-fn)))
+
 (defun tree-buffer-create (name frame is-click-valid-fn node-selected-fn
                                 node-expanded-fn node-mouse-over-fn
                                 menus tr-lines read-only tree-indent

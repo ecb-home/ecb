@@ -26,7 +26,7 @@
 ;;
 ;; Contains all online-help for ECB (stolen something from recentf.el)
 
-;; $Id: ecb-help.el,v 1.20 2001/05/21 12:16:49 berndl Exp $
+;; $Id: ecb-help.el,v 1.21 2001/05/21 16:58:07 berndl Exp $
 
 ;;; Code
 
@@ -123,15 +123,18 @@ A click with the primary button causes the main effect in each ECB-buffer:
   option `ecb-primary-mouse-jump-destination'.
 - ECB Methods: Jumping to the method in that edit-window specified by the
   option `ecb-primary-mouse-jump-destination'.
-A click with the primary mouse-button while the SHIFT-key is pressed only
-displays the complete clicked node in the minibuffer. This is useful if the
-node is longer as the window-width of the ECB-window and `ecb-truncate-lines'
-is not nil (for this see also the option `ecb-show-node-name-in-minibuffer').
 
-IMPORTANT: Doing this in the \"*ECB Sources*\" or \"*ECB History*\" windows
-does not only show the node in the echo area but it also opens the clicked
-source only in the background and shows all its methods/variables in \"ECB
-Methods\"; the buffer of the edit-window is not changed!
+Per default the complete node-name of an item in a tree-buffer is displayed in
+the echo-area if the mouse moves over it, regardless if the related window is
+the active one or not \(for this see also the option
+`ecb-show-node-name-in-minibuffer'). You get the same effect if you click with
+the primary mouse-button onto a node while SHIFT is held.
+
+IMPORTANT: Doing this SHIFT-click in the \"*ECB Sources*\" or \"*ECB
+History*\" windows does not only show the node in the echo-area but it also
+opens the clicked source only in the background and shows all its
+methods/variables in \"ECB Methods\"; the buffer of the edit-window is not
+changed! This is very useful to get only an overlook for a certain source.
 
 The secondary mouse-button is for opening \(jumping to) the file in the other
 window \(see the documentation `ecb-primary-mouse-jump-destination').
@@ -309,9 +312,9 @@ following options before working with ECB):
 - `ecb-tree-expand-symbol-before' and `ecb-tree-indent' \(maybe you like a
   value of 4 for the latter one if you display the expand-symbol before!).
 - `ecb-source-file-regexps': Which files will \(not) be shown in ECB.
-- `ecb-show-node-name-in-minibuffer': When the whole nodename should be
-  displayed in the minibuffer? Please read carefully the documentation of this
-  option.
+- `ecb-show-node-name-in-minibuffer': When the complete nodename should be
+  displayed in the minibuffer? Default is when the mouse moves over it and the
+  nodename is longer than the window-width.
 - All the options in the customize group 'ecb-layout'
 
 
@@ -336,11 +339,21 @@ Look at the documentation of these variables and hooks to get description.
                       ===================================
 
 Here is a list of known conflicts of ECB with other packages and helpful
-workarounds:
+solutions/hints/workarounds:
 
 1. Package VC
    The variable `vc-delete-logbuf-window' must be set to nil during active
    ECB. This can be done with the hooks mentioned above.
+
+2. Package follow-mouse.el
+   ECB works very well with follow-mouse if follow-mouse is turned on BEFORE
+   ECB is activated \(e.g. within the `ecb-activate-hook'). But if you
+   activate follow-mouse first after ECB is already activated, then the
+   follow-mouse stuff prevents the complete node-name to be displayed in the
+   echo-area if mouse moves over it.
+   Because ECB has a much more intelligent mouse tracking mechanism than
+   follow-mouse the follow-mouse stuff profit from ECB and works even better
+   and saver as without activated ECB!
 ")
 
 (defconst ecb-help-buffer-name "*ECB help*")

@@ -52,7 +52,7 @@
 ;; The latest version of the ECB is available at
 ;; http://home.swipnet.se/mayhem/ecb.html
 
-;; $Id: ecb.el,v 1.90 2001/05/21 12:16:49 berndl Exp $
+;; $Id: ecb.el,v 1.91 2001/05/21 16:58:07 berndl Exp $
 
 ;;; Code:
 
@@ -446,12 +446,10 @@ activate ECB again to take effect."
                 (const :tag "No incremental search"
                        :value nil)))
 
-(defcustom ecb-show-node-name-in-minibuffer 'shift-click
+(defcustom ecb-show-node-name-in-minibuffer 'if-too-long
   "*Show the name of the ECB-buffer item under mouse in minibuffer.
 If set to 'always of 'if-too-long then this works always only by moving the
-mouse over a node regardless if the ECB-window is the active window or not.
-In this case the node-name is shown with a delay of about ~1 seconds after you
-have moved the mouse over a node."
+mouse over a node regardless if the ECB-window is the active window or not."
   :group 'ecb-general
   :set (function (lambda (symbol value)
                    (set symbol value)
@@ -459,7 +457,8 @@ have moved the mouse over a node."
                             ecb-activated)
                        (if (or (equal value 'always)
                                (equal value 'if-too-long))
-                           (tree-buffer-activate-mouse-tracking)
+                           (tree-buffer-activate-follow-mouse)
+                         (tree-buffer-deactivate-follow-mouse)
                          (tree-buffer-deactivate-mouse-tracking)))))
   :type '(radio (const :tag "Always"
                        :value always)
@@ -1553,13 +1552,20 @@ always the ECB-frame if called from another frame."
     (ecb-redraw-layout)
     ;; now update all the ECB-buffer-modelines
     (ecb-mode-line-format)
-    ;; enable mouse-tracking for the tree-buffers
+
+    ;; we run any personal hooks
+    (run-hooks 'ecb-activate-hook)
+
+    ;; enable mouse-tracking for the tree-buffers; we do this after running
+    ;; the personal hooks because if a user put´s activation of
+    ;; follow-mouse.el (`turn-on-follow-mouse') in the `ecb-activate-hook'
+    ;; then our own ECb mouse-tracking must be activated later.
+    ;; If `turn-on-follow-mouse' would be activated after our own follow-mouse
+    ;; stuff, it would overwrite our mechanism and the show-node-name stuff
+    ;; would not work!
     (if (or (equal ecb-show-node-name-in-minibuffer 'always)
             (equal ecb-show-node-name-in-minibuffer 'if-too-long))
-        (tree-buffer-activate-mouse-tracking))
-    
-    ;; at the real end we run any personal hooks
-    (run-hooks 'ecb-activate-hook)
+        (tree-buffer-activate-follow-mouse))
     
     (message "The ECB is now activated.")))
 
@@ -1573,6 +1579,7 @@ always the ECB-frame if called from another frame."
     (ecb-disable-delete-frame-advice)
 
     (tree-buffer-deactivate-mouse-tracking)
+    (tree-buffer-deactivate-follow-mouse)
     
     ;; restore the old compilation-window-height
     (setq compilation-window-height ecb-old-compilation-window-height)
