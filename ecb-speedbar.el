@@ -53,25 +53,6 @@
 ;; If you enjoy this software, please consider a donation to the EFF
 ;; (http://www.eff.org)
 
-;;; Design:
-
-;; There are two major issues we have with the speedbar-frame variable.
-;;
-;;TODO: Klaus Berndl <klaus.berndl@sdm.de>: Not an issue anymore, at
-;;least IMHO
-;; 1. If we set this value to the (selected-frame), when set change buffers,
-;; the current buffers point is reset to (point-min)
-;;
-;;TODO: Klaus Berndl <klaus.berndl@sdm.de>: Not an alternative anymore, at
-;;least IMHO
-;; 2. If we set this to a newly created frame, say an invisible frame, we have
-;; the following problems:
-;;
-;;   - all the glphys in the speedbar window are NOT set.
-;;
-;;   - if we hit [ENTER] in the speedbar window the invisible frame is made
-;;     visible  :(
-
 ;;; History:
 ;;
 ;; - Thu DEc 19 2002 6:54 PM (klaus.berndl@sdm.de): Full integrated in ECB and
@@ -283,19 +264,18 @@ future this could break."
              (equal (selected-frame) ecb-frame)
              (get-buffer-window ecb-speedbar-buffer-name)
              (window-live-p (get-buffer-window ecb-speedbar-buffer-name)))
-    (save-excursion
-      (let(speedbar-default-directory ecb-default-directory)
-        (setq ecb-default-directory default-directory)
-
-        (save-excursion
-          (set-buffer ecb-speedbar-buffer-name)
-          (setq speedbar-default-directory default-directory))
-
-        (when (and (not (string-equal speedbar-default-directory
-                                      ecb-default-directory))
-                   speedbar-buffer
-                   (buffer-live-p speedbar-buffer))
-            (speedbar-update-contents))))))
+    
+    (let ((speedbar-default-directory
+           (save-excursion
+             (set-buffer ecb-speedbar-buffer-name)
+             (ecb-fix-filename default-directory)))
+          (ecb-default-directory (ecb-fix-filename default-directory)))
+      
+      (when (and (not (string-equal speedbar-default-directory
+                                    ecb-default-directory))
+                 speedbar-buffer
+                 (buffer-live-p speedbar-buffer))
+        (speedbar-update-contents)))))
 
 (silentcomp-provide 'ecb-speedbar)
 
