@@ -2507,18 +2507,6 @@ is not active. If necessary the `ecb-frame' will be first raised."
           ;; now we can go to the window
           (ecb-window-select name)))))
 
-(defmacro ecb-exec-in-window (buffer-name &rest body)
-  "Evaluates BODY in that ecb-window which displays the buffer BUFFER-NAME. If
-that window is not visible then BODY is not evaluated and the symbol
-'window-not-visible is returned. Otherwise the return value of BODY is
-returned. Runs encapsulated in `save-selected-window'."
-  `(save-selected-window
-     (if (not (ecb-window-select ,buffer-name))
-         'window-not-visible
-       ,@body)))
-
-(put 'ecb-exec-in-window 'lisp-indent-function 1)
-
 (defun ecb-goto-window-edit-last ()
   "Make the last selected edit-window window the current window. This is the
 same as if `ecb-mouse-click-destination' is set to 'last-point."
@@ -4342,11 +4330,6 @@ Postconditions for CREATE-CODE:
          (quote ,(intern
                   (format "ecb-delete-window-ecb-windows-%s" type)))))
      (ecb-available-layouts-add ,name (quote ,type))))
-
-;; Only a test for the macro above
-;; (insert (pp (macroexpand '(ecb-layout-define "klaus" top "doc"
-;;                                              (ecb-split-ver 5 t)))))
-
 
 ;; we want proper editing with ecb-layout-define like follows:
 ;; (ecb-layout-define "name" left
