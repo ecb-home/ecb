@@ -60,10 +60,7 @@
 ;;      + The edit window must not be splitted! (This is done outside a
 ;;        layout-function)
 ;;      + The edit window must be stored in `ecb-edit-window'
-;;      + The compilation window (if one) must be stored in
-;;        `ecb-compile-window'.
 ;;    - Things a layout function can/should use:
-;;      + Height of the compilation window (if any): `ecb-compile-window-height'
 ;;      + Height of the ECB-windows: `ecb-windows-height'
 ;;      + Width of the ECB-windows: `ecb-windows-width'
 ;;    A good recipe to make a new layout-function is to copy an existing
@@ -124,7 +121,7 @@
 ;;   + The edit-window must not be splitted and the point must reside in
 ;;     the not deleted edit-window.
 
-;; $Id: ecb-layout.el,v 1.61 2001/06/22 09:08:02 berndl Exp $
+;; $Id: ecb-layout.el,v 1.62 2001/06/22 17:40:02 berndl Exp $
 
 ;;; Code:
 
@@ -202,59 +199,6 @@ layout with `ecb-redraw-layout'"
   :set ecb-layout-option-set-function
   :type 'integer)
 
-(defvar ecb-old-compilation-window-height compilation-window-height)
-(defvar ecb-old-temp-buffer-max-height temp-buffer-max-height)
-
-;; Klaus: because the durable compilation window just generates a lot of
-;; problems in the layouting-engine and it is not very muched uses by the
-;; users (most of them dislike and disable it), we change first the default
-;; value to nil. later we will throw the whole durable compile-window stuff
-;; away!
-(defcustom ecb-compile-window-height nil
-  "*If you want a compilation window shown at the bottom
-of the ECB-layout then set here the height of it \(Default is a height of 5).
-If you redraw the current layout with `ecb-redraw-layout' then the compilation
-window (if any) shows always your last \"compile\"-output \(this can be a real
-compilation, a grepping or any opther things using the compilation-mode of
-Emacs) and has the heigth you set here. If the number is less than 1.0 the
-height is a fraction of the frame height.
-
-If you do not set a durable compilation window then doing a compilation splits
-temporally the edit window vertically if the edit window is not splitted
-already or uses the \"other\" edit window temporally for comilation output if
-the edit window is already splitted.
-
-Regardless of the settings you define here: If you have destroyed or
-changed the ECB-screen-layout by any action you can always go back to this
-layout with `ecb-redraw-layout'"
-  :group 'ecb-layout
-  :initialize 'custom-initialize-default
-  :set ecb-layout-option-set-function
-  :type '(radio (const :tag "No compilation window" nil)
-                (number :tag "Window height")))
-
-(defcustom ecb-compile-window-temporally-enlarge '(temp)
-  "*Let Emacs temporally enlarge the compile-window of the ECB-layout
-after finishing the compilation-output or after displaying a temp-buffer
-\(e.g. a help-buffer). If nil then the compile-window has always exactly the
-height defined in `ecb-compile-window-height' otherwise ECB let temporally
-enlarge all temp-buffers \(e.g. all help-buffers) to the value of
-`temp-buffer-max-height' or all compile-buffers \(e.g. compile- and
-grep-buffers) to `compilation-window-height'. To restore the ECB-layout after
-this buffer-enlarge just call `ecb-redraw-layout'.
-
-Default is to let only temp-buffers temporally enlarge because these type of
-buffer should be best readable whereas there is no need to enlarge
-compile-buffers because there must be only visible a small piece of the
-compilation-output."
-  :group 'ecb-layout
-  :initialize 'custom-initialize-default
-  :set ecb-layout-option-set-function
-  :type '(set (const :tag "Enlarge temp-buffers, e.g. help-output."
-                     :value temp)
-              (const :tag "Enlarge compile-buffers, e.g. compile-output."
-                     :value compile)))
-
 
 (defcustom ecb-split-edit-window nil
   "*Sets how and if the edit window should be splitted.
@@ -268,24 +212,6 @@ splitted at start-time of ECB."
                 (const :tag "Do not split"
                        :value nil)))
 
-(defcustom ecb-select-compile-window nil
-  "*Set this to non nil if compilation-output is not displayed in the
-ECB-compile-window of the choosen ECB-layout. Normally this should not be
-necessary because compilation automatically takes place in the
-ECB-compile-window and the point remains in the edit-window. But maybe you
-have defined a new \"wild\" layout and with this layout compilation is somehow
-magically done in some other window than the ECB-compile-window. Then you can
-set this variable to non nil and the following takes place:
-1. At begin of the compilation the point jumps explicitly into the
-   ECB-compile-window.
-2. Compilation is done in the compile window. During the whole process the
-   point stays in the compile window.
-3. After finishing compilation the point jumps back to the edit-window from
-   which compilation has been started.
-The drawback of this method is that the point stays in the ECB-compile-window
-during compilation process."
-  :group 'ecb-layout
-  :type 'boolean)
 
 (defcustom ecb-windows-width 0.33
   "*The width of the ECB windows in columns when they are placed to the left
@@ -311,12 +237,10 @@ frame height."
 `other-window'. The following settings are possible:
 - 'all: ECB will cycle through all windows of ECB, means it behaves like the
   original `other-window'.
-- 'only-edit: ECB will only cycle through the edit-windows of ECB.
-- 'edit-and-compile: Like 'only-edit plus the compile window if any."
+- 'only-edit: ECB will only cycle through the \(max. 2) edit-windows of ECB."
   :group 'ecb-layout
   :type '(radio (const :tag "All windows" all)
-                (const :tag "Only edit windows" only-edit)
-                (const :tag "Edit + compile window" edit-and-compile)))
+                (const :tag "Only edit windows" only-edit)))
 
 
 (defcustom ecb-advice-window-functions '(other-window
@@ -392,10 +316,9 @@ rebind it to the original function in the `ecb-deactivate-hook'."
                      :value switch-to-buffer-other-window)))
 
 
-(defcustom ecb-use-dedicated-windows t
-  "*Use dedicated windows for the ECB buffers."
-  :group 'ecb-layout
-  :type 'boolean)
+(defvar ecb-use-dedicated-windows t
+  "Use dedicated windows for the ECB buffers.
+Attention: You should never change this!")
 
 (defconst ecb-number-of-layouts 11)
 (defcustom ecb-layout-window-sizes (make-vector ecb-number-of-layouts
@@ -452,15 +375,12 @@ edit-windows! ")
 done.")
 (defvar ecb-last-source-buffer nil
   "The source-buffer of `ecb-last-edit-window-with-point'.")
-(defvar ecb-compile-window nil
-  "Window to display compile-output in.")
 
 (defun ecb-initialize-layout()
   (setq ecb-frame nil
         ecb-edit-window nil
         ecb-last-edit-window-with-point nil
-        ecb-last-source-buffer nil
-        ecb-compile-window nil))
+        ecb-last-source-buffer nil))
 
 ;; ====== basic advices ===============================================
 
@@ -738,11 +658,6 @@ is in the left/topmost edit-window or 2 if in the other edit-window."
               2)
              (t nil))))
 
-(defun ecb-point-in-compile-window ()
-  "Return non nil iff point is in the compile-window of ECB"
-  (and (equal (selected-frame) ecb-frame)
-       (equal (selected-window) ecb-compile-window)))
-
 (defun ecb-point-in-tree-buffer ()
   "Return nil if point is not in any tree-buffer of ECB otherwise return the
 buffer-object."
@@ -809,52 +724,21 @@ does all necessary after finishing ediff."
 (defadvice other-window (around ecb)
   "The ECB-version of `other-window'. Works exactly like the original function
 with the following ECB-ajustment:
-
 The behavior depends on `ecb-other-window-jump-behavior'."
   (if (or (not (equal (selected-frame) ecb-frame))
           (equal ecb-other-window-jump-behavior 'all))
       ;; here we process the 'all value of `ecb-other-window-jump-behavior'
       ad-do-it
-    ;; in the following cond-clause `ecb-other-window-jump-behavior' can only
-    ;; have the values 'only-edit and 'edit-and-compile! we have implemented
-    ;; the logic for the values 1 and -1 for ARG-argument of other-window.
-    ;; This algorithm is called ARG-times with the right direction if ARG != 1
-    ;; or -1.
-    (let ((count (if (ad-get-arg 0)
-                     (if (< (ad-get-arg 0) 0)
-                         (* -1 (ad-get-arg 0))
-                       (ad-get-arg 0))
-                   1))
-          (direction (if (or (not (ad-get-arg 0)) (>= (ad-get-arg 0) 0)) 1 -1)))
-      (while (> count 0)
-        (setq count (1- count))
-        (cond ((equal (ecb-point-in-edit-window) 1)
-               (if (= direction 1)
-                   (if (ecb-edit-window-splitted)
-                       (select-window (next-window))
-                     (if (equal ecb-other-window-jump-behavior 'edit-and-compile)
-                         (ignore-errors
-                           (select-window ecb-compile-window))))
-                 (if (equal ecb-other-window-jump-behavior 'edit-and-compile)
-                     (ignore-errors
-                       (select-window ecb-compile-window))
-                   (if (ecb-edit-window-splitted)
-                       (select-window (next-window))))))
-              ((ecb-point-in-compile-window)
-               (ecb-select-edit-window)
-               (if (ecb-edit-window-splitted)
-                   (if (= direction -1)
-                       (select-window (next-window)))))
-              ((equal (ecb-point-in-edit-window) 2)
-               (if (= direction 1)
-                   (if (and (equal ecb-other-window-jump-behavior 'edit-and-compile)
-                            ecb-compile-window)
-                       (ignore-errors
-                         (select-window ecb-compile-window))
-                     (ecb-select-edit-window))
-                 (ecb-select-edit-window)))
-              (t
-               (ecb-select-edit-window)))))))
+    (if (not (ecb-point-in-edit-window))
+        (ecb-select-edit-window)
+      ;; if the edit-window is splitted and if (mod ARG 2) > 0 we must jump in
+      ;; the "other" edit-window.
+      (when (and (ecb-edit-window-splitted)
+                 (> (mod (if (ad-get-arg 0) (ad-get-arg 0) 1) 2) 0))
+        (if (equal (ecb-point-in-edit-window) 1)
+            (select-window (next-window))
+          ;; we are in the other edit window
+          (ignore-errors (select-window ecb-edit-window)))))))
 
 (defadvice delete-window (around ecb)
   "The ECB-version of `delete-window'. Works exactly like the original
@@ -1190,68 +1074,6 @@ ECB-adviced functions."
 ;; convenient.
 
 
-;; the next section makes handling of the compilation window (if any) much
-;; better and more convenient.
-
-(defvar ecb-layout-selected-window-before-compile nil
-  "Contains the window from which a compilation-process \(compile, igrep etc.)
-command was called.")
-
-(defvar ecb-last-compile-window-buffer "*scratch*"
-  "Stores always the last compile-buffer \(e.g. *igrep*, *compilation*
-etc...) after a compile for better relayouting later")
-
-(defvar ecb-old-compilation-finish-function nil)
-(defun ecb-layout-compilation-initialize ()
-  "First it stores the value of `compilation-finish-function' in
-`ecb-old-compilation-finish-function'. Then it saves the window point was
-before a compilation-process and jumps then to the end of the
-compilation-window if any defined in the churrent ECB-layout. This is only be
-done if `ecb-select-compile-window' is non nil. This hook will only be added
-to `compilation-mode-hook' if ECB was activated."
-  ;; always save a previous function for calling later (see
-  ;; `ecb-layout-return-from-compilation') and then set our own finishing
-  ;; function.
-  (when (and ecb-minor-mode
-             (equal (selected-frame) ecb-frame))
-    (setq ecb-old-compilation-finish-function
-          (if (not (equal compilation-finish-function
-                          'ecb-layout-return-from-compilation))
-              compilation-finish-function
-            nil))
-    (setq compilation-finish-function 'ecb-layout-return-from-compilation)
-    ;; do all the jump stuff
-    (setq ecb-layout-selected-window-before-compile (selected-window))
-    (if ecb-select-compile-window
-        ;; we must du this with ignore-errors because maybe the
-        ;; compilation-window was destroyed and `ecb-compile-window' was
-        ;; not nil.
-        (ignore-errors
-          (progn
-            (select-window ecb-compile-window)
-            (end-of-buffer))))))
-
-(defun ecb-layout-return-from-compilation (comp-buf process-state)
-  "First it calls the function stored in `ecb-old-compilation-finish-function'
-and then it does all necessary ECB-stuff. This is motivated cause of the lack
-of `compilation-finish-functions' in XEmacs."
-  (when (and ecb-minor-mode
-             (equal (selected-frame) ecb-frame))
-    (unwind-protect
-        (when (and (functionp ecb-old-compilation-finish-function)
-                   (not (equal ecb-old-compilation-finish-function
-                               'ecb-layout-return-from-compilation)))
-          (funcall ecb-old-compilation-finish-function comp-buf process-state))
-      (setq ecb-last-compile-window-buffer (buffer-name))
-      (if ecb-select-compile-window
-          (ignore-errors
-            (select-window ecb-layout-selected-window-before-compile)))
-      ;; if the old finish-function has not cleared itself from
-      ;; `compilation-finish-function' we set back it´s value.
-      (if compilation-finish-function
-          (setq compilation-finish-function ecb-old-compilation-finish-function)))))
-    
-
 (defun ecb-layout-get-current-tree-windows ()
   "Return a list of all tree-buffers whose windows are currently visible." 
   (mapcar (function (lambda (tree-buffer)
@@ -1318,13 +1140,6 @@ this function the edit-window is selected which was current before redrawing."
                                         2)
                                        (t 0)))
            (pos-before-redraw (and (> window-before-redraw 0) (point)))
-           ;; height of ecb-compile-window-height in lines
-           (ecb-compile-window-height-lines (if ecb-compile-window-height
-                                                (floor
-                                                 (if (< ecb-compile-window-height 1.0)
-                                                     (* (1- (frame-height))
-                                                        ecb-compile-window-height)
-                                                   ecb-compile-window-height))))
            (tree-windows-before-redraw (ecb-layout-get-current-tree-windows)))
       
       ;; deactivating the adviced functions, so the layout-functions can use the
@@ -1338,52 +1153,15 @@ this function the edit-window is selected which was current before redrawing."
       (delete-other-windows)
       (set-window-dedicated-p (selected-window) nil)
       
-      ;; we force a layout-function to set both of this windows
-      ;; correctly.
-      (setq ecb-edit-window nil
-            ecb-compile-window nil)
+      ;; we force a layout-function to set this windows correctly.
+      (setq ecb-edit-window nil)
       
       ;; Now we call the layout-function
       (funcall (intern (format "ecb-layout-function-%d" ecb-layout-nr)))
       
-      ;; Now all the windows must be created and the editing window must not be
-      ;; splitted! In addition the variables `ecb-edit-window' and
-      ;; `ecb-compile-window' must be set the correct windows.
-      
-      ;; The following when-expression is added for better relayouting the
-      ;; choosen layout if we have a compilation-window.
-      (when ecb-compile-window-height
-        ;; here we always stay in the `ecb-edit-window'
-        (select-window (if ecb-compile-window
-                           ecb-compile-window
-                         (error "Compilations-window not set in the layout-function")))
-        
-        ;; go one window back, so display-buffer always shows the buffer in the
-        ;; next window, which is then savely the compile-window.
-        (select-window (previous-window (selected-window) 0))
-        ;; if a relayouting is done we always display the last
-        ;; compile-buffer; this can be for example a *igrep*-, a
-        ;; *compilation*- or any other buffer with compile-mode.
-        (display-buffer (or (get-buffer ecb-last-compile-window-buffer)
-                            (get-buffer-create "*scratch*")))
-
-        ;; Cause of display-buffer changes the height of the compile-window we
-        ;; must resize it again to the correct value
-        (select-window (next-window))
-        (shrink-window (- (window-height)
-                          ecb-compile-window-height-lines)))
-      
-      ;; set compilation-window-height and/or temp-buffer-max-height to the
-      ;; correct values.
-      (if (not ecb-compile-window-height)
-          (setq compilation-window-height ecb-old-compilation-window-height
-                temp-buffer-max-height ecb-old-temp-buffer-max-height)
-        (setq compilation-window-height ecb-compile-window-height-lines
-              temp-buffer-max-height (1- ecb-compile-window-height-lines))
-        (if (member 'temp ecb-compile-window-temporally-enlarge)
-            (setq temp-buffer-max-height ecb-old-temp-buffer-max-height))
-        (if (member 'compile ecb-compile-window-temporally-enlarge)
-            (setq compilation-window-height ecb-old-compilation-window-height)))
+      ;; Now all the windows must be created and the editing window must not
+      ;; be splitted! In addition the variables `ecb-edit-window' must be set
+      ;; the correct windows.
       
       (select-window (if ecb-edit-window
                          ecb-edit-window
@@ -1515,18 +1293,7 @@ documentation of `ecb-layout-window-sizes'!"
    |  Methods     |                                      |
    |              |                                      |
    |              |                                      |
-   -------------------------------------------------------
-   |                                                     |
-   |                    Compilation                      |
-   |                                                     |
-   -------------------------------------------------------
-
-If you have not set a compilation-window in `ecb-layout-nr' then the layout
-contains no compilation window and the other windows get a little more
-place."
-  (when ecb-compile-window-height
-    (ecb-split-ver (* -1 ecb-compile-window-height) t)
-    (setq ecb-compile-window (next-window)))
+   -------------------------------------------------------"
   (ecb-split-hor ecb-windows-width t)
   (ecb-set-directories-buffer)
   (ecb-split-ver 0.3)
@@ -1558,18 +1325,7 @@ place."
    |              |                                      |
    |              |                                      |
    |              |                                      |
-   -------------------------------------------------------
-   |                                                     |
-   |                    Compilation                      |
-   |                                                     |
-   -------------------------------------------------------
-
-If you have not set a compilation-window in `ecb-layout-nr' then the layout
-contains no compilation window and the other windows get a little more
-place."
-  (when ecb-compile-window-height
-    (ecb-split-ver (* -1 ecb-compile-window-height) t)
-    (setq ecb-compile-window (next-window)))
+   -------------------------------------------------------"
   (ecb-split-hor ecb-windows-width t)
   (ecb-set-directories-buffer)
   (ecb-split-ver 0.5)
@@ -1596,18 +1352,7 @@ place."
    |  Methods     |                                      |
    |              |                                      |
    |              |                                      |
-   -------------------------------------------------------
-   |                                                     |
-   |                    Compilation                      |
-   |                                                     |
-   -------------------------------------------------------
-
-If you have not set a compilation-window in `ecb-layout-nr' then the layout
-contains no compilation window and the other windows get a little more
-place."
-  (when ecb-compile-window-height
-    (ecb-split-ver (* -1 ecb-compile-window-height) t)
-    (setq ecb-compile-window (next-window)))
+   -------------------------------------------------------"
   (ecb-split-hor ecb-windows-width t)
   (ecb-set-directories-buffer)
   (ecb-split-ver 0.3)
@@ -1636,18 +1381,7 @@ place."
    |      |       |                                      |
    |      |       |                                      |
    |      |       |                                      |
-   -------------------------------------------------------
-   |                                                     |
-   |                    Compilation                      |
-   |                                                     |
-   -------------------------------------------------------
-
-If you have not set a compilation-window in `ecb-layout-nr' then the layout
-contains no compilation window and the other windows get a little more
-place."
-  (when ecb-compile-window-height
-    (ecb-split-ver (* -1 ecb-compile-window-height) t)
-    (setq ecb-compile-window (next-window)))
+   -------------------------------------------------------"
   (ecb-split-hor ecb-windows-width t)
   (ecb-set-directories-buffer)
   (ecb-split-ver 0.5)
@@ -1676,18 +1410,7 @@ place."
    |  History     |                                      |
    |              |                                      |
    |              |                                      |
-   -------------------------------------------------------
-   |                                                     |
-   |                    Compilation                      |
-   |                                                     |
-   -------------------------------------------------------
-
-If you have not set a compilation-window in `ecb-layout-nr' then the layout
-contains no compilation window and the other windows get a little more
-place."
-  (when ecb-compile-window-height
-    (ecb-split-ver (* -1 ecb-compile-window-height) t)
-    (setq ecb-compile-window (next-window)))
+   -------------------------------------------------------"
   (ecb-split-hor ecb-windows-width t)
   (ecb-set-directories-buffer)
   (ecb-split-ver 0.3)
@@ -1716,18 +1439,7 @@ place."
    |                                      |  Methods     |
    |                                      |              |
    |                                      |              |
-   -------------------------------------------------------
-   |                                                     |
-   |                    Compilation                      |
-   |                                                     |
-   -------------------------------------------------------
-
-If you have not set a compilation-window in `ecb-layout-nr' then the layout
-contains no compilation window and the other windows get a little more
-place."
-  (when ecb-compile-window-height
-    (ecb-split-ver (* -1 ecb-compile-window-height) t)
-    (setq ecb-compile-window (next-window)))
+   -------------------------------------------------------"
   (ecb-split-hor (- ecb-windows-width) t)
   (setq ecb-edit-window (selected-window))
   (select-window (next-window))
@@ -1752,22 +1464,8 @@ place."
    |              |                                      |
    |--------------|                                      |
    |  History     |                                      |
-   -------------------------------------------------------
-   |                                                     |
-   |                    Compilation                      |
-   |                                                     |
-   -------------------------------------------------------
-
-If you have not set a compilation-window in `ecb-layout-nr' then the layout
-contains no compilation window and the other windows get a little more
-place."
-  (when ecb-compile-window-height
-    (ecb-split-ver (* -1 ecb-compile-window-height) t)
-    (setq ecb-compile-window (next-window)))
+   -------------------------------------------------------"
   (ecb-split-hor ecb-windows-width t)
-
-  ;;(ecb-set-directories-buffer)
-  ;;(ecb-split-ver 0.3)
   (ecb-set-sources-buffer)
   (ecb-split-ver 0.2)
   (ecb-set-methods-buffer)
@@ -1795,30 +1493,14 @@ place."
    |                                                     |
    |                                                     |
    |                                                     |
-   -------------------------------------------------------
-   |                                                     |
-   |                    Compilation                      |
-   |                                                     |
-   -------------------------------------------------------
-
-If you have not set a compilation-window in `ecb-layout-nr' then the layout
-contains no compilation window and the other windows get a little more
-place."
+   -------------------------------------------------------"
   (ecb-split-ver ecb-windows-height t)
   (ecb-set-directories-buffer)
   (ecb-split-hor 0.5)
   (ecb-set-sources-buffer)
   (ecb-split-hor 0.5)
   (ecb-set-methods-buffer)
-  (if ecb-compile-window-height
-      (progn
-        (select-window (next-window))
-        (ecb-split-ver (* -1 ecb-compile-window-height) t)
-        (setq ecb-compile-window (next-window)))
-;;         (select-window (next-window))
-;;         (switch-to-buffer ecb-history-buffer-name)
-;;         (select-window (previous-window)))
-    (select-window (next-window)))
+  (select-window (next-window))
   (setq ecb-edit-window (selected-window)))
 
 (defun ecb-layout-function-8 ()
@@ -1841,19 +1523,8 @@ place."
    |  Methods     |                                      |
    |              |                                      |
    -------------------------------------------------------
-   |                                                     |
-   |                    Compilation                      |
-   |                                                     |
-   -------------------------------------------------------
-
-If you have not set a compilation-window in `ecb-layout-nr' then the layout
-contains no compilation window and the other windows get a little more
-place.
 This layout works best if you set `ecb-show-sources-in-directories-buffer'
 to non nil!"
-  (when ecb-compile-window-height
-    (ecb-split-ver (* -1 ecb-compile-window-height) t)
-    (setq ecb-compile-window (next-window)))
   (ecb-split-hor ecb-windows-width t)
   (ecb-set-directories-buffer)
   (ecb-split-ver 0.6)
@@ -1883,18 +1554,7 @@ to non nil!"
    |--------------|                                      |
    |  History     |                                      |
    |              |                                      |
-   -------------------------------------------------------
-   |                                                     |
-   |                    Compilation                      |
-   |                                                     |
-   -------------------------------------------------------
-
-If you have not set a compilation-window in `ecb-layout-nr' then the layout
-contains no compilation window and the other windows get a little more
-place."
-  (when ecb-compile-window-height
-    (ecb-split-ver (* -1 ecb-compile-window-height) t)
-    (setq ecb-compile-window (next-window)))
+   -------------------------------------------------------"
   (ecb-split-hor ecb-windows-width t)
   (ecb-set-directories-buffer)
   (ecb-split-ver 0.3)
@@ -1925,23 +1585,10 @@ place."
    |                                                     |
    |                                                     |
    |                                                     |
-   -------------------------------------------------------
-   |                                                     |
-   |                    Compilation                      |
-   |                                                     |
-   -------------------------------------------------------
-
-If you have not set a compilation-window in `ecb-layout-nr' then the layout
-contains no compilation window and the other windows get a little more
-place."
+   -------------------------------------------------------"
   (ecb-split-ver ecb-windows-height t)
   (ecb-set-methods-buffer)
-  (if ecb-compile-window-height
-      (progn
-        (select-window (next-window))
-        (ecb-split-ver (* -1 ecb-compile-window-height) t)
-        (setq ecb-compile-window (next-window)))
-    (select-window (next-window)))
+  (select-window (next-window))
   (setq ecb-edit-window (selected-window)))
 
 

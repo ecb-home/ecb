@@ -54,7 +54,7 @@
 ;; The latest version of the ECB is available at
 ;; http://home.swipnet.se/mayhem/ecb.html
 
-;; $Id: ecb.el,v 1.115 2001/06/22 09:08:02 berndl Exp $
+;; $Id: ecb.el,v 1.116 2001/06/22 17:40:02 berndl Exp $
 
 ;;; Code:
 
@@ -758,13 +758,6 @@ cleared!) ECB by running `ecb-deactivate'."
     (select-frame ecb-frame)    
     (ecb-select-edit-window t)))
 
-(defun ecb-goto-window-compilation ()
-  (interactive)
-  (when (and ecb-minor-mode ecb-compile-window-height)
-    (raise-frame ecb-frame)
-    (select-frame ecb-frame)        
-    (ignore-errors (select-window ecb-compile-window))))
-
 (defun ecb-buffer-select (name)
   (set-buffer (get-buffer name)))
 
@@ -1013,7 +1006,12 @@ highlighting of the methods if `ecb-font-lock-methods' is not nil."
   (save-excursion
     (dolist (buf tree-buffers)
       (set-buffer buf)
-      (setq default-directory ecb-path-selected-directory)))
+      (setq default-directory
+            (concat ecb-path-selected-directory
+                    (and (not (= (aref ecb-path-selected-directory
+                                       (1- (length ecb-path-selected-directory)))
+                                 ecb-directory-sep-char))
+                         ecb-directory-sep-string)))))
   ;; set the modelines of all visible tree-buffers new
   (ecb-mode-line-format))
 
@@ -1276,7 +1274,7 @@ the ECB tree-buffers."
 (defun ecb-find-file-and-display (filename other-edit-window)
   "Finds the file in the correct window. What the correct window is depends on
 the setting in `ecb-primary-mouse-jump-destination' and the value of
-OTHER-WINDOW."
+OTHER-EDIT-WINDOW."
   (if (eq ecb-primary-mouse-jump-destination 'left-top)
       (select-window ecb-edit-window)
     (select-window ecb-last-edit-window-with-point))
@@ -1661,7 +1659,6 @@ with idle-time IDLE-VALUE if IDLE-VALUE not nil. If nil the FUNC is added to
     (define-key km "s" 'ecb-goto-window-sources)
     (define-key km "m" 'ecb-goto-window-methods)
     (define-key km "h" 'ecb-goto-window-history)
-    (define-key km "c" 'ecb-goto-window-compilation)
     km)
   "Default key bindings in ECB minor mode.")
 
@@ -1755,12 +1752,6 @@ That is remove the unsupported :help stuff."
       ecb-goto-window-history
       :active t
       :help "Go to the history window"
-      ])
-    (ecb-menu-item
-     ["Compilation"
-      ecb-goto-window-compilation
-      :active t
-      :help "Go to the compilation-output window"
       ])
     )
    "-"
@@ -1966,8 +1957,6 @@ always the ECB-frame if called from another frame."
                                      'ecb-window-sync-function)
     (add-hook 'pre-command-hook 'ecb-pre-command-hook-function)
     (add-hook 'after-save-hook 'ecb-update-methods-after-saving)
-    (add-hook 'compilation-mode-hook
-	      'ecb-layout-compilation-initialize)
 
     ;; ediff-stuff; we operate here only with symbols to avoid bytecompiler
     ;; warnings
@@ -1990,9 +1979,6 @@ always the ECB-frame if called from another frame."
     ;; run personal hooks before drawing the layout
     (run-hooks 'ecb-activate-before-layout-draw-hook)
 
-    (setq ecb-old-compilation-window-height compilation-window-height)
-    (setq ecb-old-temp-buffer-max-height temp-buffer-max-height)
-    
     ;; now we draw the layout choosen in `ecb-layout'. This function
     ;; acivates at its end also the adviced functions if necessary!
     (ecb-redraw-layout)
@@ -2041,10 +2027,6 @@ always the ECB-frame if called from another frame."
     (tree-buffer-deactivate-mouse-tracking)
     (tree-buffer-deactivate-follow-mouse)
     
-    ;; restore the old values
-    (setq compilation-window-height ecb-old-compilation-window-height
-          temp-buffer-max-height ecb-old-temp-buffer-max-height)
-
     ;; we can safely do the kills because killing non existing buffers
     ;; doesn´t matter.
     (tree-buffer-destroy ecb-directories-buffer-name)
@@ -2062,8 +2044,6 @@ always the ECB-frame if called from another frame."
     (setq ecb-post-command-hooks nil)
     (remove-hook 'pre-command-hook 'ecb-pre-command-hook-function)
     (remove-hook 'after-save-hook 'ecb-update-methods-after-saving)
-    (remove-hook 'compilation-mode-hook
-		 'ecb-layout-compilation-initialize)
     ;; ediff-stuff; we operate here only with symbols to avoid bytecompiler
     ;; warnings
     (if (get 'ediff-quit-hook 'ecb-ediff-quit-hook-value)

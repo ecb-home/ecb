@@ -21,7 +21,7 @@
 
 ;; Generates ECB HTML pages.
 
-;; $Id: ecb-html.el,v 1.14 2001/06/12 08:38:21 berndl Exp $
+;; $Id: ecb-html.el,v 1.15 2001/06/22 17:40:02 berndl Exp $
 
 ;;; Code:
 
@@ -210,14 +210,11 @@
    (ecb-faq-section
    "Common Problems"
    (ecb-faq-section
-    "Why is the truncation setting in the ECB-buffers not correct?"
-    "Check the variable `truncate-partial-width-windows' and set it to the correct value.")
+    "Why are the lines in the ECB-buffers, temp-buffers and compilation-buffers not wrapped but truncated?"
+    "Check the variable `truncate-partial-width-windows' and set it to nil.")
    (ecb-faq-q-and-a
     "Why doesn't ECB work correct with VC?"
     "The variable `vc-delete-logbuf-window' must be set to nil during active ECB. This can be done with the hooks of ECB.")
-   (ecb-faq-q-and-a
-    "Why ECB enlarges my compile window if i call `describe-function' (or similar functions)?"
-    "With ECB >= 1.30 you can customize this behavior with the option 'ecb-compile-window-temporally-enlarge'. With an older ECB this is a known bug.")
    (ecb-faq-q-and-a
     "Why doesn't ECB parse my C++ files correctly?"
     "This is a problem in Semantic, which is used by ECB for parsing source files. At the moment it doesn't handle C++ source files very well.")

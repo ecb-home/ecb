@@ -26,7 +26,7 @@
 ;;
 ;; Contains all online-help for ECB (stolen something from recentf.el)
 
-;; $Id: ecb-help.el,v 1.31 2001/06/22 09:08:02 berndl Exp $
+;; $Id: ecb-help.el,v 1.32 2001/06/22 17:40:02 berndl Exp $
 
 ;;; Code
 
@@ -91,8 +91,7 @@ different types of ECB-windows:
   of ECB\" below) will jump to the method in the other edit window.
 
 In addition to these ECB-windows you have always one or two edit-windows in
-the ECB-frame and \(if you want) at the bottom a compilation-window, where all
-the output of Emacs-compilation \(compile, grep etc.) is shown.
+the ECB-frame where you can do all your editing stuff.
 
 
                           ===========================
@@ -181,9 +180,6 @@ With `ecb-tree-incremental-search' you can specify if the current
 search-pattern must be a real prefix of the node \(default) or if any
 substring is matched.
 
-For easy jumping to a certain ECB-buffer with the keyboard you should ensure
-that `ecb-other-window-jump-behavior' is set to 'all.
-
 Tip: You can install the package windmove.el for selection of windows in a
 frame geometrically. This makes window-selection a child´s play.
 
@@ -231,21 +227,19 @@ The jump-behavior of the advices `other-window' can be customized with
 exactly like the not adviced orginal version.
 
 
-Working with or without a compile window:
------------------------------------------
+Temp-buffer and compilation-buffer display in ECB:
+--------------------------------------------------
 
-With the option `ecb-compile-window-height' you can define if the ECB layout
-should contain per default a compilation-window at the bottom \(and if yes the
-height of it). If yes ECB displays all output of compilation-mode \(compile,
-grep etc.) in this special window. If not ECB splits the edit-window \(or uses
-the \"other\" edit-window if already splitted) vertically and displays the
-compilation-output there.
-Same for displaying help-buffers or similar stuff.
+If you call any help in Emacs, e.g. by calling `describe-function', or if you
+do a completion in the minibuffer, then Emacs displays the result-buffer in
+another window. This behavior you have alos in ECB. If the edit-window is
+already splitted then the temp-buffer is displayed in the \"other\"
+edit-window otherwise the edit-window will be splitted first. The variables
+`temp-buffer-max-height' and `temp-buffer-resize-mode' work also correctly
+with ECB.
 
-With the option `ecb-compile-window-temporally-enlarge' you can allow Emacs to
-enlarge temporally the ECB-compile-window after finishing compilation-output
-and/or displaying temp-buffers \(e.g. help-buffers). Please read the comment
-of this option.
+Same for all compilation output-buffers \(e.g. after a `compile' or `grep')
+and the variable `compilation-window-height'.
 
 
 Rebuilding the ECB-method buffer:
@@ -289,6 +283,7 @@ time.
 Available interactive ECB commands:
 -----------------------------------
 
+- `ecb-minor-mode'
 - `ecb-activate'
 - `ecb-deactivate'
 - `ecb-update-directories-buffer'
@@ -371,9 +366,8 @@ the ECB-methods buffer is displayed on top. Here comes what you should/can do
 to work best with ECB in such a situation:
 - First customize your ECB:
   1. Customize `ecb-layout-nr' to layout nr. 10.
-  2. Do not display a durable compile-window \(see `ecb-compile-window-height').
-  3. Optional: Ajust the `ecb-windows-height'.
-  4. Save your changes.
+  2. Optional: Ajust the `ecb-windows-height'.
+  3. Save your changes.
 - To edit your buffers:
   Call `ecb-toggle-ecb-windows' \(also available via the menu \"ECB\" and by
   \"C-c . t\") or `ecb-hide-ecb-windows' to hide the ECB-method buffer so you
@@ -594,7 +588,6 @@ could be interesting for support."
                      pre-command-hook
                      post-command-hook
                      after-save-hook
-                     compilation-mode-hook
                      help-mode-hook
                      ,(if (boundp 'ediff-quit-hook)
                          'ediff-quit-hook)))
