@@ -1,6 +1,11 @@
 Version 1.40:
 -------------
 
+- Better extraction of tokens from current buffer. ECB now displays any token
+  type in any order. (Jesper)
+
+- ECB now uses Semantic to display tokens in the methods buffer. (Jesper)
+
 - Much saver ecb-redraw-layout: Now the layout can be restored ALWAYS
   regardless what messy thing has been done before. (Klaus)
 
