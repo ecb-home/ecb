@@ -1,6 +1,8 @@
 Version 1.40:
 -------------
 
+- ECB now uses Semantic DB to find parents of types. (Jesper)
+
 - Long source paths in the directories buffer are now truncated at the
   beginning. (Jesper)
 
