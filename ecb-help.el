@@ -70,12 +70,12 @@ different types of ECB-windows:
   mouse button or RETURN (see \"Usage of ECB\" below) on a source row in the
   \"*ECB Sources*\" or \"*ECB History*\" windows then the source will not be
   displayed in the edit-window but it will be scanned in the background and
-  all it´s methods and variables are listed in the \"ECB Methods\" window. So
-  you can get an overlook over the source without changing the buffer in the
-  edit-window.
+  all its contents \(e.g. methods and variables) are listed in the \"ECB
+  Methods\" window. So you can get an overlook over the source without
+  changing the buffer in the edit-window.
 
 - Clicking on the source file with the secondary mouse button or C-RETURN (see
-  \"Usage of ECB\" below) will open the class file in the other edit window.
+  \"Usage of ECB\" below) will open the source file in the other edit window.
 
 - Right clicking on a source file will open a popup menu where different
   operation on the item under the mouse cursor can be performed.
@@ -360,7 +360,8 @@ Available interactive ECB commands:
 - `ecb-toggle-enlarged-compilation-window'
 - `ecb-cycle-switch-to-compilation-buffer'
 - `ecb-cycle-through-compilation-buffers'
-- `ecb-check-and-reset-incompatible-options'
+- `ecb-upgrade-options'
+- `ecb-display-upgraded-options'
 
 Most of these functions are also available via the menu \"ECB\" and also via
 the ECB keymap with prefix \"C-c .\" \(see `ecb-minor-mode' for a complete
