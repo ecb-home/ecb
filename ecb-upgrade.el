@@ -167,6 +167,10 @@
                                      ecb-upgrade-cache-directory-contents))
     (ecb-source-file-regexps . (ecb-source-file-regexps
                                 ecb-upgrade-source-file-regexps))
+    (ecb-layout-always-operate-in-edit-window . (ecb-layout-always-operate-in-edit-window
+                                                 ecb-upgrade-alway-operate-in-edit-window))
+    (ecb-layout-switch-to-compilation-window . (ecb-layout-switch-to-compilation-window
+                                                 ecb-upgrade-switch-to-compilation-window))
     (ecb-truncate-lines . (ecb-truncate-lines
                            ecb-upgrade-truncate-lines)))
   
@@ -293,6 +297,12 @@ The car is the old option symbol and the cdr is a 2-element-list with:
       '(t t t t)
     '(nil nil nil nil)))
 
+(defun ecb-upgrade-alway-operate-in-edit-window (old-val)
+  (let ((l (copy-tree old-val)))
+    (delete 'switch-to-buffer-other-window l)))
+
+(defun ecb-upgrade-switch-to-compilation-window (old-val)
+  (ecb-upgrade-alway-operate-in-edit-window old-val))
 
 ;; ----------------------------------------------------------------------
 ;; internal functions. Dot change anything below this line
