@@ -2,7 +2,7 @@
 static char * ecb_constructor_protected_xpm[] = {
 "16 14 31 1",
 " 	c None",
-".	c #060606",
+".	c #040404",
 "+	c #FFFFFF",
 "@	c #FEE99F",
 "#	c #FEF0B7",

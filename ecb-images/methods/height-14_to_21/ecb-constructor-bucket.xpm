@@ -2,7 +2,7 @@
 static char * Constructors_xpm[] = {
 "16 14 94 2",
 "  	c None",
-". 	c #000000",
+". 	c #040404",
 "+ 	c #FFFFFF",
 "@ 	c #FFE9AD",
 "# 	c #848484",

@@ -10,7 +10,7 @@ static char * ecb_variable_unknown_static_xpm[] = {
 "%	c #E7EBD8",
 "&	c #8296BD",
 "*	c #FFFFFF",
-"=	c #060606",
+"=	c #040404",
 "-	c #2D3544",
 ";	c #CBCEBD",
 ">	c #5C729A",

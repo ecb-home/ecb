@@ -2,7 +2,7 @@
 static char * ecb_variable_unknown_xpm[] = {
 "12 14 37 1",
 " 	c None",
-".	c #060606",
+".	c #040404",
 "+	c #C2CBDF",
 "@	c #8AAAEA",
 "#	c #83A1DE",
