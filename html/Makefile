@@ -6,7 +6,7 @@
 # Or type "make all" or "make upload-build" to generate the whole website
 # and build an uploadable ecb-website.tar.gz file.
 
-# $Id: Makefile,v 1.19 2004/04/14 09:29:41 berndl Exp $
+# $Id: Makefile,v 1.20 2004/05/10 11:01:52 berndl Exp $
 
 EMACS=emacs
 
@@ -116,6 +116,7 @@ update-cvs-snapshot:
 	$(CP) -r $(ecb_IMAGE_DIR) html/ecb-snap)
 	@find ecb-snap/$(ecb_IMAGE_DIR) -name CVS -print | xargs rm -Rf
 	@find ecb-snap/$(ecb_IMAGE_DIR) -name *~ -print | xargs $(RM)
+	@find ecb-snap/$(ecb_IMAGE_DIR) -name *.png -print | xargs $(RM)
 	@$(TARC) ecb.tar.gz ecb-snap
 	@$(RM) -R ecb-snap
 	$(SCP) ecb.tar.gz $(ecb_SF_login):$(ecb_WEBSITE_LOC)/cvs_snapshots
