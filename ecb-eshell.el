@@ -183,8 +183,6 @@
               (if (> enlargement 0)
                   (enlarge-window enlargement)))))))
 
-;;BUG: THIS HOOK CAUSES THE SOURCE BUFFER TO CHANGE!!!
-
 (add-hook 'ecb-current-buffer-sync-hook 'ecb-eshell-current-buffer-sync)
 
 ;;(add-hook 'dired-after-readin-hook 'ecb-eshell-current-buffer-sync)
