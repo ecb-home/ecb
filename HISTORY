@@ -1,6 +1,16 @@
 Version 1.61:
 -------------
 
+- Fixed a bug in `ecb-toggle-ecb-windows'.  For starters we weren't setting
+  `ecb-window-hidden' when we redraw the layout.  This means that the ecb
+  windows could be hidden but never shown. (Kevin)
+
+    Other things:
+
+        - ecb-windows-hidden now has documentation
+
+        - we display status messages when we hide windows.
+
 - Fixed bug in `ecb-redraw-layout-quickly'.  If for come reason any of the ECB
   windows are not alive, we do not return with a hard error.  Instead, we use
   the scratch buffer.  (Kevin)
