@@ -3746,7 +3746,8 @@ is created."
   (interactive)
   ;; we must manually cut a filename because we must not add filenames to
   ;; `ecb-source-path'!
-  (let* ((my-dir (ecb-fix-filename
+  (let* ((use-dialog-box nil)
+         (my-dir (ecb-fix-filename
                   (or dir
                       (file-name-directory (read-file-name "Add source path: ")))
                   t))

@@ -684,7 +684,7 @@ see `tree-buffer-expand-nodes'."
 		  (popup-menu (cons menu-title menu))
 		(let ((fn (x-popup-menu
 			   event (cons 'keymap (cons menu-title menu)))))
-		  (when fn
+                  (when fn
 		    (funcall (car fn) node)))))))))))
 
 (defconst tree-buffer-incr-searchpattern-basic-prefix
