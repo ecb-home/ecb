@@ -136,8 +136,11 @@ is contained in the list returned by the function
           ;;else test if this is a regular compilation buffer
           (if (compilation-buffer-p buffer)
               t
-            ;;else it isn't a complication buffer
-            nil))))))
+            ;;else check if this is a comint buffer
+            (if (comint-check-proc buffer)
+                t
+              ;;else it isn't a complication buffer
+              nil)))))))
 
 (silentcomp-provide 'ecb-compilation)
 
