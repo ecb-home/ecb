@@ -1581,8 +1581,9 @@ always the ECB-frame if called from another frame."
     (tree-buffer-deactivate-mouse-tracking)
     (tree-buffer-deactivate-follow-mouse)
     
-    ;; restore the old compilation-window-height
-    (setq compilation-window-height ecb-old-compilation-window-height)
+    ;; restore the old compilation-window-height and temp-buffer-max-height
+    (setq compilation-window-height ecb-old-compilation-window-height
+          temp-buffer-max-height ecb-old-temp-buffer-max-height)
 
     ;; we can safely do the kills because killing non existing buffers
     ;; doesn´t matter.
