@@ -12,7 +12,7 @@
    Therefore it should be enough to hide the ECB-windows to run other
    Emacs-applications which have their own window-layout-managing. There
    should be no conflicts. But nevertheless the most recommended method for
-   running ECB and other applications (e.g. xrefactory, Gnus etc.) in the sane
+   running ECB and other applications (e.g. xrefactory, Gnus etc.) in the same
    frame is to use a window-manager like winring.el or escreen.el!
 
 ** Ediff runs per default in the ECB-frame.
@@ -21,6 +21,20 @@
    ECB also restores exactly the "before-ediff" window-layout of the ecb-frame
    See new option `ecb-run-ediff-in-ecb-frame'.
 
+** Added new defaults to `ecb-directories-menu-user-extension'
+   Three new entries "CVS status", "CVS examine" and "CVS update" for running
+   CVS-commands against the directory. These menu-entries are added as new
+   default values to `ecb-directories-menu-user-extension' so a user can
+   delete or change them if he does not use CVS but another revision-tool
+   (e.g. Clearcase). Thanks for suggestion and first implementation to Ole
+   Arndt <ole@sugarshark.com>.
+
+** Added new defaults to `ecb-sources-menu-user-extension'
+   One new entry "Ediff against revision" for easy diffing against the
+   revision of a source. See also new default for the option
+   `ecb-directories-menu-user-extension'. Thanks for suggestion and first
+   implementation to Ole Arndt <ole@sugarshark.com>.
+   
 ** New option `ecb-advice-window-functions-signal-error'
    Now the adviced window functions of `ecb-advice-window-functions' do not
    signal per default an error if called in situations which are not allowed -

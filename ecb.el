@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb.el,v 1.341 2003/09/25 12:13:04 berndl Exp $
+;; $Id: ecb.el,v 1.342 2003/09/25 15:41:55 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -466,6 +466,13 @@ contents of this directory."
 The value is either 'always or 'never or a list of layout-names for which
 layouts sources should be displayed in the directories window."
   :group 'ecb-directories
+  :initialize 'custom-initialize-default
+  :set (function (lambda (symbol value)
+		   (set symbol value)
+		   (if (and ecb-minor-mode
+			    (functionp 'ecb-set-selected-directory)
+                            ecb-path-selected-directory)
+		       (ecb-set-selected-directory ecb-path-selected-directory t))))
   :type '(radio (const :tag "Always" :value always)
                 (const :tag "Never" :value never)
                 (repeat :tag "With these layouts"
@@ -1825,7 +1832,11 @@ switch on this option and submitting a bug-report to the ecb-mailing-list
   :group 'ecb-general
   :type 'boolean)
 
-(defcustom ecb-directories-menu-user-extension nil
+(defcustom ecb-directories-menu-user-extension
+  '(("CVS Status" ecb-dir-popup-cvs-status)
+    ("CVS Examine" ecb-dir-popup-cvs-examine)
+    ("CVS Update" ecb-dir-popup-cvs-update)
+    ("---"))
   "*User extensions for the popup-menu of the directories buffer.
 Value is a list of elements of the following type: Each element defines a new
 menu-entry and is a list containing two sub-elements, whereas the first is the
@@ -1860,7 +1871,9 @@ If you change this option you have to restart ECB to take effect."
                                (string :tag "Entry-name")
                                (function :tag "Function" :value ignore)))))
 
-(defcustom ecb-sources-menu-user-extension nil
+(defcustom ecb-sources-menu-user-extension
+  '(("Ediff against revision" ecb-file-popup-ediff-revision)
+    ("---"))
   "*User extensions for the popup-menu of the sources buffer.
 For further explanations see `ecb-directories-menu-user-extension'.
 
@@ -2969,7 +2982,6 @@ cache-entry for DIR is available then nil is returned."
 
 (defun ecb-sources-cache-clear ()
   (setq ecb-sources-cache nil))
-
 
 (defun ecb-set-selected-directory (path &optional force)
   "Set the contents of the ECB-directories and -sources buffer correct for the
@@ -6119,6 +6131,23 @@ if the minor mode is enabled.
 (defun ecb-dired-directory-other-window (node)
   (ecb-dired-directory-internal node 'other))
 
+(defun ecb-dir-run-cvs-op (node op)
+  (let ((default-directory (tree-node-get-data node)))
+    (call-interactively op)))
+
+(defun ecb-dir-popup-cvs-status (node)
+  "Check status of directory \(and below) in pcl-cvs mode."
+  (ecb-dir-run-cvs-op node 'cvs-status))
+
+(defun ecb-dir-popup-cvs-examine (node)
+  "Examine directory \(and below) in pcl-cvs mode."
+  (ecb-dir-run-cvs-op node 'cvs-examine))
+
+(defun ecb-dir-popup-cvs-update (node)
+  "Update directory \(and below) in pcl-cvs mode."
+  (ecb-dir-run-cvs-op node 'cvs-update))
+
+
 
 (defvar ecb-common-directories-menu nil)
 (setq ecb-common-directories-menu
@@ -6127,7 +6156,7 @@ if the minor mode is enabled.
         ("---")
         ("Open in Dired" ecb-dired-directory t)
         ("Open in Dired other window" ecb-dired-directory-other-window t)
-        ("---")        
+        ("---")
 	("Create Sourcefile" ecb-create-source t)
 	("Create Child Directory" ecb-create-directory t)
 	("Delete Directory" ecb-delete-directory t)
@@ -6174,6 +6203,11 @@ function which is called with current node and has to return a string.")
       (ecb-remove-dir-from-caches dir)
       (ecb-set-selected-directory dir t))))
 
+
+(defun ecb-file-popup-ediff-revision (node)
+  "Diff file against repository with ediff."
+  (let ((file (tree-node-get-data node)))
+    (ediff-revision file)))
 
 (defvar ecb-sources-menu nil
   "Built-in menu for the sources-buffer.")

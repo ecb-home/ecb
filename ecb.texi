@@ -26,7 +26,7 @@
 @c GNU Emacs; see the file COPYING.  If not, write to the Free Software
 @c Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-@c $Id: ecb.texi,v 1.124 2003/09/25 12:13:03 berndl Exp $
+@c $Id: ecb.texi,v 1.125 2003/09/25 15:41:55 berndl Exp $
 
 @setfilename ecb.info
 
@@ -7144,7 +7144,29 @@ the contents of the class which contains the definition of the
 The popup-menus in the directories- and the sources-buffer offer a
 command ``Create Source'' which allows easy creating new java-sources
 by calling the command @code{jde-gen-class-buffer}.
+
+@item Adding user-extensions to the popup-menus
+
+The options @code{ecb-directories-menu-user-extension} and
+@code{ecb-sources-menu-user-extension} allow adding often used
+JDEE-commands to the popup-menus of the directories- or
+sources-buffer. One example is to add building the project of current
+directory. Here is a function which could be added to
+@code{ecb-directories-menu-user-extension}:
+
+@example
+@group
+(defun ecb-dir-popup-jde-build (node)
+  "Build project in directory."
+  (let ((project-file 
+	 (expand-file-name jde-ant-buildfile (tree-node-get-data node))))
+    (jde-ant-build project-file "build")))
+@end group
+@end example
+
 @end itemize
+
+
 
 @node Compile-window on demand, Non-semantic sources, Working with JDEE, Tips and tricks
 @section Displaying the compile-window on demand
@@ -8657,7 +8679,47 @@ winring.el. See @ref{Window-managers and ECB}.
 @subsection Application xrefactory
 
 @cindex xrefactory
-@c TODO: Klaus Berndl <klaus.berndl@sdm.de>: einfuegen
+Xrefactory (also known as Xref, X-ref and Xref-Speller), the
+refactoring browser for (X)Emacs@footnote{Xrefactory is available at
+@ifhtml
+@uref{http://www.xref-tech.com}
+@end ifhtml
+@ifnothtml
+@url{http://www.xref-tech.com}
+@end ifnothtml
+}, can be used during running ECB so long as
+not the Xrefactory-browser is used (e.g. via
+@code{xref-show-browser}). using the Xrefactory-broswer confuses the
+ECB-layout-engine as well as the Xrefactory window-layouter because
+the latter one does some wild window splitting and resizing of its
+own. The symbol completion window plays nice with ECB, but the source
+code browsers 3 window layout won't work with ECB enabled. It is so
+deeply confused by ECB that it drops a window. Normally hiding the ECB
+windows before starting the Xref-brwoser should help because with
+hidden ECB-windows there are no restrictions on the part of ECB
+concering window-layout. But to get sure ECB can also be deactivated
+;-)
+
+This can be achieved with the following advice which should be put in
+the @file{.emacs}:
+
+@example
+@group
+(defadvice xref-create-browser-windows 
+     (before hide-or-deactivate-ecb-for-xref first nil compile)
+   "deactivate ecb when invoking the xrefactory browser"
+   (when ecb-minor-mode
+     (ecb-toggle-ecb-windows -1)
+     ;; or if you want completely deactivating ECB uncomment this
+     ;; (ecb-deactivate)
+     )
+@end group
+@end example
+
+But the most recommended way is to use a window-manager as
+escreen.el or winring.el (and then use different escreens or
+window-configurations for ECB and Xrefactory-browsing -
+@ref{Window-managers and ECB}).
 
 @node Bugs, , Conflicts, Conflicts and bugs
 @section Known bugs
