@@ -38,7 +38,7 @@
 ;; `ecb-byte-compile'.
 ;;
 ;; ECB requires:
-;; - Semantic, version 1.4beta11 or higher
+;; - Semantic, version 1.4 or higher
 ;;   (http://cedet.sourceforge.net/semantic.shtml).
 ;; - Eieio, version 0.16 or higher (http://cedet.sourceforge.net/eieio.shtml).
 ;;
@@ -58,7 +58,7 @@
 ;; The latest version of the ECB is available at
 ;; http://home.swipnet.se/mayhem/ecb.html
 
-;; $Id: ecb.el,v 1.230 2002/08/02 15:04:31 berndl Exp $
+;; $Id: ecb.el,v 1.231 2002/08/03 13:41:28 berndl Exp $
 
 ;;; Code:
 
@@ -69,9 +69,12 @@
 
 ;;ensure that we use the right semantic-version and right eieio-version
 (let ((version-error nil))
+;;   (if (not (and (boundp 'semantic-version)
+;;                 (string-match "^1\\.4\\(beta1[1-9]\\)?$" semantic-version)))
+;;       (setq version-error "Semantic >= 1.4beta11"))
   (if (not (and (boundp 'semantic-version)
-                (string-match "^1\\.4\\(beta1[1-9]\\)?$" semantic-version)))
-      (setq version-error "Semantic >= 1.4beta11"))
+                (string-match "^1\\.4$" semantic-version)))
+      (setq version-error "Semantic >= 1.4"))
   (if (not (and (boundp 'eieio-version)
                 (string-match "^0\\.1[6-9]" eieio-version)))
       (setq version-error
@@ -836,12 +839,12 @@ faces of TEXT!"
 ;; working perfect then we throw away this variable! With semantic beta14 the
 ;; semantic grouping works already very well, but there are still some small
 ;; drawbacks. Eric has already fixed them and the fixes are in CVS!
-(defvar ecb-use-semantic-grouping t)
-(defun ecb-toggle-use-semantic-grouping ()
-  (interactive)
-  (setq ecb-use-semantic-grouping (not ecb-use-semantic-grouping))
-  (message "Semantic-grouping: %s"
-           (if ecb-use-semantic-grouping "On" "Off")))
+;; (defvar ecb-use-semantic-grouping t)
+;; (defun ecb-toggle-use-semantic-grouping ()
+;;   (interactive)
+;;   (setq ecb-use-semantic-grouping (not ecb-use-semantic-grouping))
+;;   (message "Semantic-grouping: %s"
+;;            (if ecb-use-semantic-grouping "On" "Off")))
 
 (dolist (elem ecb-token->text-functions)
   (fset (car elem)
@@ -937,8 +940,7 @@ implementations of a class are grouped together."
   :type '(repeat (cons (symbol :tag "Major-mode")
                        (function :tag "Postprocess function"))))
 
-(defcustom ecb-show-only-positioned-tokens
-  (if (string-match "^1\\.4\\(beta1[5-9]\\)?$" semantic-version) t nil)
+(defcustom ecb-show-only-positioned-tokens t
   "*Show only nodes in the method-buffer which are \"jumpable\".
 If not nil then ECB displays in the method-buffer only nodes which are
 \"jumpable\", i.e. after selecting it by clicking or with RET then ECB jumps
@@ -946,10 +948,7 @@ to the corresponding location in the edit-window.
 Example: With CLOS or Eieio source-code there can exist some positionless
 nodes like variable-attributes in a `defclass' form which are only displayed
 if this option is nil. Displaying such nodes can be sensefull even if they can
-not be jumped.
-
-This option works only correct if a `semantic-version' > semantic-1.4beta14 is
-installed. Otherwise this option should be nil!"
+not be jumped."
   :group 'ecb-methods
   :type 'boolean)
 
@@ -1720,8 +1719,7 @@ and then all grouped tokens.
 
 This is usefull for oo-programming languages where the methods of a class can
 be defined outside the class-definition, e.g. C++, Eieio."
-  (if (and ecb-use-semantic-grouping
-           (fboundp 'semantic-adopt-external-members))
+  (if (fboundp 'semantic-adopt-external-members)
       (semantic-adopt-external-members tokenlist)
     (let ((parent-alist nil)
           (parents nil)
@@ -1757,7 +1755,7 @@ be defined outside the class-definition, e.g. C++, Eieio."
                                  ;; the right protection, but i think public
                                  ;; is better then private. The best would be
                                  ;; a blank protection symbol but this will
-                                ;; be first available with semantic-1.4beta13.
+                                 ;; be first available with semantic-1.4beta13.
                                  "struct"
                                  ;; the PART-LIST, means all the methods of
                                  ;; this class. But first we must nreverse
