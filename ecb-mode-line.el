@@ -25,6 +25,8 @@
 ;;
 ;; Contains all mode-line enhancements for ECB.
 
+;; $Id: ecb-mode-line.el,v 1.6 2001/04/22 15:45:01 creator Exp $
+
 
 (defun ecb-mode-line-format()
   "Update all of the modelines of each buffer."

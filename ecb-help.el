@@ -26,6 +26,8 @@
 ;;
 ;; Contains all online-help for ECB (stolen something from recentf.el)
 
+;; $Id: ecb-help.el,v 1.4 2001/04/22 15:45:01 creator Exp $
+
 ;;; Code
 
 (require 'ecb-layout)

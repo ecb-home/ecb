@@ -26,6 +26,8 @@
 ;; This file is part of the ECB package which can be found at:
 ;; http://home.swipnet.se/mayhem/ecb.html
 
+;; $Id: tree-buffer.el,v 1.19 2001/04/22 15:45:01 creator Exp $
+
 ;;; Code:
 
 (eval-when-compile
