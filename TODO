@@ -1,6 +1,6 @@
 ********************************************************************************
-*** Last-Modified: $Date: 2001/05/14 14:36:35 $ 
-*** Version: $Id: TODO,v 1.16 2001/05/14 14:36:35 berndl Exp $
+*** Last-Modified: $Date: 2001/05/16 21:01:03 $ 
+*** Version: $Id: TODO,v 1.17 2001/05/16 21:01:03 creator Exp $
 *** Author: Kevin A. Burton ( burton@apache.org | burton@openprivacy.org )
 ********************************************************************************
 
@@ -10,8 +10,6 @@
 
 - KB: Support horizontal scrolling (especially with XEmacs) in the
    intelligent tree-buffer recentering.
-
-- Fix pop-up menus in XEmacs. (JN)
 
 - Ignore source files specified in .cvsignore files. (JN)
 
@@ -25,9 +23,6 @@
 - KB: use the JDE source paths if the JDE variable is available 
    (perhaps there are other variables to use by default as well?). We
    should add an option where this external source-paths can be defined.
-
-- Possibility to save the current sizes of the windows. This will make it
-  possible to customize the layout better. (JN)
 
 - KB: Easy selecting of a certain ECB-buffer with a ECB-keymap like.
    This means we need an ECB minor mode with
