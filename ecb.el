@@ -94,7 +94,6 @@
 (require 'ecb-face)
 (require 'ecb-upgrade)
 
-
 ;; various loads
 (require 'easymenu)
 (require 'assoc)
@@ -434,6 +433,11 @@ then activating ECB again!"
   :group 'ecb-methods
   :type 'string)
 
+(defcustom ecb-methods-select-edit-window t
+  "*Select the edit window when you select a method."
+  :group 'ecb-methods
+  :type 'boolean)
+
 (defcustom ecb-auto-update-methods-after-save t
   "*Automatically updating the ECB method buffer after saving
 the current source-buffer."
@@ -461,7 +465,6 @@ only show that token. To display the entire buffer again, click on a source file
 or call `widen' (C-x n w)."
   :group 'ecb-methods
   :type 'boolean)
-
 
 (defconst ecb-token->text-functions
   (mapcar (lambda (fkt)
@@ -558,7 +561,6 @@ displaying the tokens."
                                     ecb-token->text-functions)
                             (list '(function :tag "Function"))))))
   :initialize 'custom-initialize-default)
-
 
 (defcustom ecb-type-token-display nil
   "*How to display semantic type-tokens in the methods buffer.
@@ -773,7 +775,6 @@ faces of TEXT!"
                      (setq text (ecb-merge-face-into-text text face)))
                  text)
              (funcall (quote ,(cdr elem)) token parent-token colorize)))))
-  
 
 (defcustom ecb-post-process-semantic-tokenlist
   '((c++-mode . ecb-group-function-tokens-with-parents)
@@ -1977,8 +1978,6 @@ It does several tasks:
     ;;    created again by `ecb-rebuild-methods-buffer-with-tokencache'.
     (if buffer-file
         (ecb-clear-token-tree-cache buffer-file))))
-
-    
 
 (defun ecb-clear-history (&optional clearall)
   "Clears the ECB history-buffer. If CLEARALL is nil then the behavior is
@@ -3500,7 +3499,6 @@ FILE.elc or if FILE.elc doesn't exist."
         (if node
             (message "Klausi: %s" name)
           (message "Klausi: No node found"))))))
-
 
 (provide 'ecb)
 

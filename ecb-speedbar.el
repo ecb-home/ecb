@@ -225,7 +225,8 @@ will/could break."
                    ecb-minor-mode
                    speedbar-buffer
                    (buffer-live-p speedbar-buffer))
-          (speedbar-update-contents))))))
+
+            (speedbar-update-contents))))))
 
 (defun ecb-speedbar-goto-speedbar()
   "Goto the speedbar window."
@@ -238,7 +239,8 @@ will/could break."
 ;;FIXME: migrate this into ecb-mode-map when speedbar is ready.
 (define-key ecb-mode-map "\C-c.b" 'ecb-speedbar-goto-speedbar)
 
-;;disable automatic speedbar updates... let the ECB handle this.
+;;disable automatic speedbar updates... let the ECB handle this with
+;;ecb-current-buffer-sync
 (speedbar-disable-update)
 
 (provide 'ecb-speedbar)

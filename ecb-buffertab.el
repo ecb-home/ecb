@@ -39,7 +39,11 @@
 ;;
 ;; - write a function that generates a popup menu
 ;;
-;; 
+;; - the popup menu should allow the user to check a buffer view to set it as
+;;   the default when opening new files.
+;;
+;;   - is this possible?  I think it might but I would need to set it up
+;;   correctly.
 
 (require 'ecb-compilation)
 
