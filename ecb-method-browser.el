@@ -24,7 +24,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-method-browser.el,v 1.61 2004/11/17 17:25:08 berndl Exp $
+;; $Id: ecb-method-browser.el,v 1.62 2004/11/22 16:59:16 berndl Exp $
 
 ;;; Commentary:
 
@@ -1402,14 +1402,23 @@ Methods-buffer."
                     (t nil)))))))))
 
 
+(defun ecb-tag-generate-node-name (text-name first-chars icon-name)
+  "Generate an suitable node name. Add needed image-icons if possible and
+necessary. For the arguments TEXT-NAME, FIRST-CHARS and ICON-NAME see
+`ecb-generate-node-name'."
+  (if (ecb-use-images-for-semantic-tags)
+      (ecb-generate-node-name text-name first-chars icon-name
+                              ecb-methods-buffer-name)
+    text-name))
+
+
 (defun ecb-add-tag-bucket (node bucket display sort-method
                                 &optional parent-tag no-bucketize)
   "Adds a tag bucket to a node unless DISPLAY equals 'hidden."
   (when bucket
     (let* ((name-bucket (ecb-format-bucket-name (car bucket)))
            (image-name (format "%s-bucket" (ecb--semantic-tag-class (cadr bucket))))
-           (name (ecb-generate-node-name name-bucket -1
-                                         image-name ecb-methods-buffer-name))
+           (name (ecb-tag-generate-node-name name-bucket -1 image-name))
            ;;(type (ecb--semantic-tag-class (cadr bucket)))
            (bucket-node node))
       (unless (eq 'hidden display)
@@ -1636,10 +1645,9 @@ abstract-static-tag-protection to an existing icon-file-name.")
                                            '(type function variable)))
                               'unknown)
                          (ecb--semantic-tag-protection tag parent-tag))))
-         (tag-name (ecb-generate-node-name plain-tag-name
-                                           (if has-protection 1 -1)
-                                           icon-name
-                                           ecb-methods-buffer-name)))
+         (tag-name (ecb-tag-generate-node-name plain-tag-name
+                                               (if has-protection 1 -1)
+                                               icon-name)))
     (tree-node-set-name node tag-name)
     (unless (eq 'function (ecb--semantic-tag-class tag))
       (ecb-add-tags node children tag no-bucketize)
@@ -1654,6 +1662,8 @@ abstract-static-tag-protection to an existing icon-file-name.")
            node
            (and (tree-node-is-expandable node)
                 (ecb-type-tag-expansion type-specifier))))))))
+
+;; (ecb-tag-generate-node-name "klaus" 1 "function-public")
 
 (defun ecb-post-process-taglist (taglist)
   "If for current major-mode post-process functions are found in
@@ -2382,9 +2392,8 @@ The PARENT-TAG is propagated to the functions `ecb-add-tag-bucket' and
  	  (let ((parents (ecb-get-tag-parents parent-tag)))
 	    (when parents
 	      (let* ((name-bucket (ecb-format-bucket-name "Parents"))
-                     (name (ecb-generate-node-name name-bucket -1
-                                                   "parent-bucket"
-                                                   ecb-methods-buffer-name))
+                     (name (ecb-tag-generate-node-name name-bucket -1
+                                                       "parent-bucket"))
                      (parent-node nil))
                 (setq parent-node (ecb-create-node node display
                                                    name
@@ -2404,10 +2413,9 @@ The PARENT-TAG is propagated to the functions `ecb-add-tag-bucket' and
                            ;; the protection of the inheritance (like possible
                            ;; in C++) then we have to adjust this code and
                            ;; compute the correct icon-name.
-                           (parent-name (ecb-generate-node-name plain-parent-name
-                                                                -1
-                                                                "parent-unknown"
-                                                                ecb-methods-buffer-name)))
+                           (parent-name (ecb-tag-generate-node-name plain-parent-name
+                                                                    -1
+                                                                    "parent-unknown")))
                       (tree-node-new parent-name
                                      ecb-methods-nodetype-externtag
                                      parent t parent-node
