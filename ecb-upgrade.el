@@ -933,7 +933,7 @@ activated."
         
         ;; Downloading with working-display
 
-        (working-status-call-process
+        (ecb-working-status-call-process
          0.1
          (concat "Downloading new " package)
          "done"
@@ -1057,7 +1057,7 @@ for details about using \"wget\"."
         
       ;; Downloading with working-display
 
-      (working-status-call-process
+      (ecb-working-status-call-process
        0.1
        (concat "Getting list of available versions of package " package)
        "done"

@@ -1,4 +1,4 @@
-* Changes for ECB version
+* Changes for ECB version 1.93
 
 ** Fixed bugs:
 
@@ -40,8 +40,13 @@
    `ecb-sources-menu-user-extension', `ecb-methods-menu-user-extension',
    `ecb-history-menu-user-extension'.
 
+** ECB now checks at load-time if the required packages semantic and eieio are
+   at least available - regardless of the needed version. If at least one of
+   these packages is missing then ECB offers to download and install it. More
+   details are available in the installation instructions.
 
-   
+
+
 * Changes for ECB version 1.92.1
 
 ** Fixed bugs:
