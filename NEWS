@@ -13,6 +13,9 @@
    should be treated as compilation-buffers and therefore be displayed in the
    compile-window of ECB - if there is any.
    
+** Better customizing of the mode-line of an ECB-tree-buffer.
+   See the new option `ecb-mode-line-data'.
+
     
 
 * Changes for ECB version 1.93
