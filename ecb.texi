@@ -5511,10 +5511,10 @@ edit-window if that buffer has changed.
     ;; of `ecb-frame'
 
     ;; The macro `ecb-do-if-buffer-visible-in-ecb-frame' locally binds
-    ;; the variables visible-buffer, visible-window and
-    ;; edit-window-buffer!! See documentation of this macro!
+    ;; the variables visible-buffer and visible-window!! See
+    ;; documentation of this macro!
 
-    (let ((filename (buffer-file-name edit-window-buffer)))
+    (let ((filename (buffer-file-name (current-buffer))))
      
       (if (and filename (file-readable-p filename))
             
@@ -5526,7 +5526,7 @@ edit-window if that buffer has changed.
         (setq ecb-examples-bufferinfo-last-file nil)
         (ecb-examples-print-non-filebuffer visible-buffer
                                            (buffer-name
-                                             edit-window-buffer))
+                                             (current-buffer)))
         ))))
 @end lisp
 

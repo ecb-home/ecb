@@ -1,6 +1,6 @@
 ;;; ecb-speedbar.el --- 
 
-;; $Id: ecb-speedbar.el,v 1.36 2003/01/02 18:07:53 berndl Exp $
+;; $Id: ecb-speedbar.el,v 1.37 2003/01/08 10:28:05 berndl Exp $
 
 ;; Copyright (C) 2000-2003 Free Software Foundation, Inc.
 ;; Copyright (C) 2000-2003 Kevin A. Burton (burton@openprivacy.org)
@@ -239,8 +239,7 @@ future this could break."
   ;;only operate if the current frame is the ECB frame and the
   ;;ecb-speedbar-buffer is visible!
   (ecb-do-if-buffer-visible-in-ecb-frame 'ecb-speedbar-buffer-name
-    ;; this macro binds the local variables visible-buffer, visible-window and
-    ;; edit-window-buffer!
+    ;; this macro binds the local variables visible-buffer and visible-window!
     (let ((speedbar-default-directory
            (save-excursion
              (set-buffer visible-buffer)

@@ -26,7 +26,7 @@
 ;; This file is part of the ECB package which can be found at:
 ;; http://home.swipnet.se/mayhem/ecb.html
 
-;; $Id: ecb-util.el,v 1.41 2003/01/06 15:56:27 berndl Exp $
+;; $Id: ecb-util.el,v 1.42 2003/01/08 10:28:05 berndl Exp $
 
 ;;; Code:
 
@@ -308,15 +308,12 @@ If one of these condititions is false then nothing will be done.
 During the evaluation of BODY the following local variables are bound:
 - visible-buffer: The buffer-object which name is the value of
   BUFFER-NAME-SYMBOL.
-- visible-window: The window which displays visible-buffer
-- edit-window-buffer: The buffer-object currently displayed in the
-  `ecb-edit-window' which is equal to `current-buffer'."
+- visible-window: The window which displays visible-buffer"
   `(let* ((visible-buffer (if (and (boundp ,buffer-name-symbol)
                                    (stringp (symbol-value ,buffer-name-symbol)))
                               (get-buffer (symbol-value ,buffer-name-symbol))))
           (visible-window (if (bufferp visible-buffer)
-                              (get-buffer-window visible-buffer)))
-          (edit-window-buffer (current-buffer)))
+                              (get-buffer-window visible-buffer))))
      (when (and ecb-minor-mode
                 (equal (selected-frame) ecb-frame)
                 visible-window

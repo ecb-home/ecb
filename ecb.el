@@ -62,7 +62,7 @@
 ;; The latest version of the ECB is available at
 ;; http://home.swipnet.se/mayhem/ecb.html
 
-;; $Id: ecb.el,v 1.268 2003/01/07 16:19:30 berndl Exp $
+;; $Id: ecb.el,v 1.269 2003/01/08 10:28:04 berndl Exp $
 
 ;;; Code:
 
@@ -1514,7 +1514,7 @@ See documentation of `ecb-current-buffer-sync' for conditions when
 synchronization takes place and so in turn these hooks are evaluated.
 
 Precondition for such a hook:
-Current buffer is the buffer of the current selected edit-window.
+Current buffer is the buffer of the currently selected edit-window.
 
 Postcondition for such a hook:
 Point must stay in the same edit-window as before evaluating the hook.

@@ -1,6 +1,6 @@
 ;;; ecb-eshell.el --- eshell integration for the ECB.
 
-;; $Id: ecb-eshell.el,v 1.61 2003/01/07 14:37:05 berndl Exp $
+;; $Id: ecb-eshell.el,v 1.62 2003/01/08 10:28:05 berndl Exp $
 
 ;; Copyright (C) 2000-2003 Free Software Foundation, Inc.
 ;; Copyright (C) 2000-2003 Kevin A. Burton (burton@openprivacy.org)
@@ -156,6 +156,7 @@
 (silentcomp-defun eshell-send-input)
 (silentcomp-defun eshell-bol)
 
+
 (defgroup ecb-eshell nil
   "Settings for eshell integration within the ECB."
   :group 'ecb
@@ -216,8 +217,8 @@ interactively or `ecb-eshell-synchronize' is not nil."
       ;; here we can be sure that the eshell is visible in a window of
       ;; `ecb-frame'.
 
-      ;; This macro locally binds the variables visible-buffer, visible-window
-      ;; and edit-window-buffer! See documentation.
+      ;; This macro locally binds the variables visible-buffer and
+      ;; visible-window. See documentation.
 
       (let ((source-buffer-directory nil)
             (ecb-buffer-directory nil))
