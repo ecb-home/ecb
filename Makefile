@@ -1,11 +1,10 @@
-# This makefile byte-compiles the ECB lisp files.
+# This Makefile byte-compiles the ECB lisp files.
 
 # ========================================================================
 # User configurable section
-
+#
 # Define here the correct path to your Emacs or XEmacs binary
 EMACS=emacs
-
 
 # Set here the load-path of the semantic-version and eieio-version loaded
 # into your Emacs. If you use JDE then add also the path to the lisp
@@ -23,16 +22,17 @@ EMACSINFOPATH=/C/Programme/emacs-21.1/info
 # - Or call "make LOADPATH=<your loadpath> EMACS=<path to emacs binary>" if
 #   you want to set a different LOADPATH and or Emacs-binary and you do not
 #   want edit the makefile.
-
+#
+# end of user configurable section
 # ========================================================================
 
 # Do not change anything below!
 
-# $Id: Makefile,v 1.31 2002/07/24 09:46:48 berndl Exp $
+# $Id: Makefile,v 1.32 2002/07/24 10:21:17 berndl Exp $
 
 RM=rm -f
 CP=cp
-MAKEINFO=/usr/bin/makeinfo --no-split
+MAKEINFO=/usr/bin/makeinfo
 INSTALLINFO=/usr/bin/install-info
 TEXI2DVI=/D/Programme/Tools/tex/texmf/miktex/bin/texi2dvi
 
@@ -41,8 +41,6 @@ ecb_LISP_ELC=$(ecb_LISP_EL:.el=.elc)
 ecb_TEXI=ecb.texi
 ecb_INFO=$(ecb_TEXI:.texi=.info)
 ecb_HTML=$(ecb_TEXI:.texi=.html)
-
-all: ecb
 
 ecb: $(ecb_LISP_EL)
 	@echo "Byte-compiling ECB with LOADPATH=${LOADPATH} ..."
@@ -59,9 +57,11 @@ ecb: $(ecb_LISP_EL)
 	$(EMACS) -batch -no-site-file -l ecb-compile-script --eval '(ecb-byte-compile t)'
 	@$(RM) ecb-compile-script
 
+all: ecb help
+
 help: $(ecb_TEXI)
-	$(MAKEINFO) $<
-	$(MAKEINFO) --html $<
+	$(MAKEINFO) --no-split $<
+	$(MAKEINFO) --no-split --html $<
 	$(TEXI2DVI) --clean $<
 
 install-help: $(ecb_INFO)
@@ -71,4 +71,4 @@ install-help: $(ecb_INFO)
 clean:
 	@$(RM) $(ecb_LISP_ELC) ecb-compile-script
 
-# End of makefile
+# End of Makefile
