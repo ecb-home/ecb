@@ -54,7 +54,7 @@
 ;; The latest version of the ECB is available at
 ;; http://home.swipnet.se/mayhem/ecb.html
 
-;; $Id: ecb.el,v 1.179 2002/01/22 01:36:57 burtonator Exp $
+;; $Id: ecb.el,v 1.180 2002/01/23 07:17:53 burtonator Exp $
 
 ;;; Code:
 
@@ -2697,6 +2697,9 @@ always the ECB-frame if called from another frame."
 
 (defun ecb-activate--impl ()
   "See `ecb-activate'.  This is the implementation of ECB activation."
+
+  (when (null ecb-frame)
+    (setq ecb-frame (selected-frame)))
   
   (if ecb-minor-mode
       (progn

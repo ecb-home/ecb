@@ -26,7 +26,7 @@
 ;; This file is part of the ECB package which can be found at:
 ;; http://home.swipnet.se/mayhem/ecb.html
 
-;; $Id: tree-buffer.el,v 1.71 2001/12/13 13:59:08 berndl Exp $
+;; $Id: tree-buffer.el,v 1.72 2002/01/23 07:17:53 burtonator Exp $
 
 ;;; Code:
 
@@ -992,8 +992,10 @@ AFTER-CREATE-HOOK: A function \(with no arguments) called directly after
         (funcall after-create-hook))))
 
 (defun tree-buffer-destroy (buffer)
-  (setq tree-buffers (delq (get-buffer buffer) tree-buffers))
-  (kill-buffer buffer))
+  "Destroy the tree-buffer"
+  (when buffer
+    (setq tree-buffers (delq (get-buffer buffer) tree-buffers))
+    (kill-buffer buffer)))
 
 ;;; Tree node
 

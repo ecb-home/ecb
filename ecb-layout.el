@@ -124,7 +124,7 @@
 ;;   + The edit-window must not be splitted and the point must reside in
 ;;     the not deleted edit-window.
 
-;; $Id: ecb-layout.el,v 1.97 2002/01/22 21:19:12 burtonator Exp $
+;; $Id: ecb-layout.el,v 1.98 2002/01/23 07:17:53 burtonator Exp $
 
 ;;; Code:
 
@@ -517,12 +517,14 @@ either not activated or it behaves exactly like the original version!"
     (let ((other-window-scroll-buffer (window-buffer (other-window-for-scrolling))))
       ad-do-it)))
 
-;; This function must savely work even if `ecb-edit-window' is not longer
-;; alive, which should normally not happen! In this case nil is returned.
+;; This function must safely work even if `ecb-edit-window' is not longer alive,
+;; which should normally not happen! In this case nil is returned.
+
 (defun ecb-edit-window-splitted ()
   "Returns either nil if the ECB edit-window is not splitted or 'vertical or
 'horizontal depending on the splitting."
-  (when (and ecb-edit-window (window-live-p ecb-edit-window))
+  (when (and ecb-edit-window
+             (window-live-p ecb-edit-window))
     (let ((next-w (next-window ecb-edit-window 0 ecb-frame)))
       (if (or (equal next-w ecb-edit-window)
               (window-dedicated-p next-w)
@@ -984,24 +986,32 @@ error."
                 (if (= p 1) (next-window) ecb-edit-window)))))))
 
 (defadvice switch-to-buffer-other-window (around ecb)
-  "The ECB-version of `switch-to-buffer-other-window'. Works exactly
-like the original but switch to the buffer always in another edit-window.
+  "The ECB-version of `switch-to-buffer-other-window'. Works exactly like the
+original but switch to the buffer always in another edit-window.
 
-If called in any non edit-window of the current ECB-layout it jumps first in
-the \(first) edit-window and does then it´s job \(see above)."
+If called in any non edit-window of the current ECB-layout it switches to the
+\(first) edit-window.  If it is already within the edit-window, and we only have
+one edit window, we split it."
+
   (if (not (equal (selected-frame) ecb-frame))
+      ;;if we aren't in the ECB frame, we don't need to do anything, AKA perform
+      ;;default behavior.
       ad-do-it
+
+    ;;we should always be in the edit window
     (if (not (ecb-point-in-edit-window))
-        (ecb-select-edit-window))
-    (let ((ecb-other-window-jump-behavior 'only-edit))
-      (ecb-with-adviced-functions
-       (if (ecb-edit-window-splitted)
-           (other-window 1)
-         (split-window-vertically)
-         (other-window 1)))
-      ;; now we are always in the other window, so we can switch to the buffer
-      (ad-with-originals 'switch-to-buffer
-        (switch-to-buffer (ad-get-arg 0) (ad-get-arg 1))))))
+        (ecb-select-edit-window)
+      
+      (let ((ecb-other-window-jump-behavior 'only-edit))
+        (ecb-with-adviced-functions
+         (if (ecb-edit-window-splitted)
+             (other-window 1)
+           (split-window-vertically)
+           (other-window 1)))))
+
+    ;; now we are always in the other window, so we can switch to the buffer
+    (ad-with-originals 'switch-to-buffer
+      (switch-to-buffer (ad-get-arg 0) (ad-get-arg 1)))))
 
 (defadvice switch-to-buffer (around ecb)
   "The ECB-version of `switch-to-buffer'. Works exactly like the original but
