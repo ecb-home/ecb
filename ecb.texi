@@ -26,7 +26,7 @@
 @c GNU Emacs; see the file COPYING.  If not, write to the Free Software
 @c Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-@c $Id: ecb.texi,v 1.166 2004/03/23 17:29:52 berndl Exp $
+@c $Id: ecb.texi,v 1.167 2004/03/25 18:14:04 berndl Exp $
 
 @setfilename ecb.info
 
@@ -6052,6 +6052,18 @@ The cdr is a list where each element represents a type of tags:
 @example
 (<tag type> <display type> <sort method>)
 @end example
+
+There can be more than 1 element for a certain <tag type>. This is for
+example useful for C++ and C because these languages distinct between
+a method-prototype (rsp. function-prototype for C) and the method
+(rsp. function for C) itself. The default value of these option
+contains two entries for <tag type> is @code{function} whereas the
+first one is responsible for the ``real'' methods (rsp. functions) and
+the second one for the prototypes. So if the methods should be
+flattened and the prototypes collapsed the show-tags-list for C++ and
+C must contain two entries for <tag type> @code{function}, the first
+one defined as @code{flattened} and the second one defined as
+@code{collapsed}.
 
 The tags in the methods buffer are displayed in the order as they appear in
 this list.

@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-upgrade.el,v 1.70 2004/03/23 17:29:53 berndl Exp $
+;; $Id: ecb-upgrade.el,v 1.71 2004/03/25 18:14:07 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -534,8 +534,8 @@ The car is the old option symbol and the cdr is a 2-element-list with:
                           'standard-value)))
 
 (defun ecb-upgrade-show-tags (old-val)
-  (list (cons 'default
-              old-val)))
+  (ecb-option-get-value 'ecb-show-tags
+                        'standard-value))
 
 ;; ----------------------------------------------------------------------
 ;; internal functions. Dot change anything below this line

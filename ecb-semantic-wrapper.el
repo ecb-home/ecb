@@ -23,7 +23,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-semantic-wrapper.el,v 1.7 2004/03/14 19:05:47 berndl Exp $
+;; $Id: ecb-semantic-wrapper.el,v 1.8 2004/03/25 18:14:07 berndl Exp $
 
 ;;; Commentary:
 
@@ -109,6 +109,7 @@
     (semantic-flex-start                   . semantic-lex-token-start)
     (semantic-nonterminal-children         . semantic-tag-children-compatibility)
     (semantic-nonterminal-protection       . semantic-tag-protection)
+    (semantic-nonterminal-static           . semantic-tag-static)
     (semantic-overlay-live-p               . semantic-overlay-live-p)
     (semantic-overlay-p                    . semantic-overlay-p)
     (semantic-token-buffer                 . semantic-tag-buffer)
@@ -188,6 +189,22 @@ unloaded buffer representation."
       (goto-char (ecb--semantic-tag-start tag))
       (ecb--semantic-current-tag-parent))))
 
+;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: This has to be changed for cedet
+;; beta2 -- 'prototype --> :prototype-flag (see Davids renaming-mail).
+;; constructor and descstructor the same.
+(defsubst ecb--semantic-tag-prototype-p (tag)
+  (ecb--semantic-tag-get-attribute tag 'prototype))
+
+(defsubst ecb--semantic-tag-function-constructor-p (tag)
+  (if (fboundp 'semantic-tag-function-constructor-p)
+      (apply 'semantic-tag-function-constructor-p (list tag))
+    (ecb--semantic-tag-get-attribute tag 'constructor)))
+    
+(defsubst ecb--semantic-tag-function-destructor-p (tag)
+  (if (fboundp 'semantic-tag-function-destructor-p)
+      (apply 'semantic-tag-function-destructor-p (list tag))
+    (ecb--semantic-tag-get-attribute tag 'destructor)))
+    
 
 ;;; API Functions
 ;;

@@ -29,6 +29,21 @@
     This means you can have different settings for each major-mode. ECB autom.
     upgrades your old setting to the new option-type.
 
+*** Distinction between functions and function-prototypes in the Methods-buffer
+    This is for example useful for C++ and C because these languages distinct
+    between a method-prototype (rsp. function-prototype for C) and the method
+    (rsp. function for C) itself. The new default value of `ecb-show-tags'
+    displayes per default the methods as flattened and the method-prototype as
+    collapsed when opening a C- or C++-buffer. ECB autom. updates your old
+    setting of this option to the new default value.
+
+*** The look&feel of the Methods-buffer has been polished a lot with new icons.
+    ECB contains now a lot of new icons for displaying the Method-buffer as
+    pretty and professional as possible. The new default-value of the option
+    `ecb-tree-image-icons-directories' points autom. to the new icon-images.
+    Thanks a lot to Markus Gritsch <gritsch@iue.tuwien.ac.at> for providing
+    these new icons.
+
 ** The command `ecb-toggle-layout' now has a prefix-argument:
    If this optional argument is not nil (e.g. if called with a prefix-arg)
    then always the last selected layout was choosen regardless of the setting
