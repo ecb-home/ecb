@@ -104,7 +104,7 @@
 ;; - `ecb-with-some-adviced-functions'
 ;;
 
-;; $Id: ecb-layout.el,v 1.143 2003/01/06 15:56:27 berndl Exp $
+;; $Id: ecb-layout.el,v 1.144 2003/01/14 13:46:41 berndl Exp $
 
 ;;; Code:
 
@@ -520,35 +520,53 @@ window."
               (const :tag "switch-to-buffer-other-window"
                      :value switch-to-buffer-other-window)))
 
-(defcustom ecb-layout-window-sizes nil
-  "*Specifies the sizes of the ECB windows for each layout. The easiest way to
-change this variable is to change the window sizes by dragging the window
-borders using the mouse and then store the window sizes by calling the
-`ecb-store-window-sizes' function. Next time the layout is redrawn the values
-stored in this option will be used.
+(defun ecb-canonical-ecb-windows-list ()
+  "Return a list of all current visible special dedicated ECB-windows
+\(starting from the left-most top-most window) in the order `other-window'
+would walk through these windows."
+  (if (not (or ecb-running-xemacs ecb-running-emacs-21))
+      (error "Canonical window list not possible with Emacs 20.X!")
+    (delete nil (mapcar (function (lambda (elem)
+                                    (if (window-dedicated-p elem)
+                                        elem)))
+                        (window-list ecb-frame 0
+                                     (frame-first-window ecb-frame))))))
 
-But be aware: These values are only suitable for the frame-size the ecb-frame
-had at the time you store the values by calling `ecb-store-window-sizes'.
-Therefore ensure always before calling `ecb-store-window-sizes' that the
-ecb-frame has the size it has normally during your work with ECB!."
+(defcustom ecb-layout-window-sizes nil
+  "*Specifies the sizes of the ECB windows for each layout.
+
+The easiest way \(and also the strongly recommended way) to change this
+variable is to change the window sizes by dragging the window borders using
+the mouse and then store the window sizes by calling the command
+`ecb-store-window-sizes'. Next time the layout is redrawn the values stored in
+this option will be used.
+
+If `ecb-store-window-sizes' is used then the windows sizes are stored as
+fractions of current frame-width and -height of the ecb-frame, so the stored
+values will \"work\" for other frame sizes too.
+
+If this option is set \"by hand\" \(i.e. not by `ecb-store-window-sizes') then
+the following is important:
+- It is recommended to use fractions of frame-width and -height!.
+- The order of the sequence of the inserted window sizes must be the same as
+  `other-window' \(the not-adviced version!) would walk!"
   :group 'ecb-layout
   :initialize 'custom-initialize-default
   :set ecb-layout-option-set-function
-  :type (list
-	 'repeat
-	 (list 'cons ':tag "Window layout" '(string :tag "Layout name")
-	       (nconc '(list :tag "Window sizes")
-                      (mapcar
-                       (function
-                        (lambda (item)
-                          (list 'choice ':tag item
-                                '(cons :tag "Custom size"
-                                       :value (0 . 0)
-                                       (integer :tag "Width")
-                                       (integer :tag "Height"))
-                                '(const :tag "Default size" nil))))
-                       '("ECB Directories" "ECB Sources"
-                         "ECB History" "ECB Methods"))))))
+  :type '(repeat (cons :tag "Window layout"
+                       (string :tag "Layout name")
+                       (repeat :tag "Window sizes"
+                               (cons (choice :tag "Width"
+                                             :menu-tag "Width"
+                                             :value 0.0
+                                             (const :tag "Default value"
+                                                    :value nil)
+                                             (number :tag "Custom size"))
+                                     (choice :tag "Height"
+                                             :menu-tag "Height"
+                                             (const :tag "Default value"
+                                                    :value nil)
+                                             (number :tag "Custom size")))))))
 
 (defcustom ecb-redraw-layout-quickly nil
   "If non-nil, we will attempt to redraw the layout quickly.
@@ -701,24 +719,9 @@ command.")
   "Return not nil if buffer BUFFER-NAME is displayed in an active window."
   (and buffer-name (window-live-p (get-buffer-window buffer-name))))
 
-;; ====== basic advices ===============================================
-
-(defconst ecb-basic-adviced-functions (if ecb-running-xemacs
-                                          '((delete-frame . around)
-                                            (compilation-set-window-height . around)
-                                            (shrink-window-if-larger-than-buffer . around)
-                                            (show-temp-buffer-in-current-frame . around)
-                                            (scroll-other-window . around))
-                                        '((delete-frame . around)
-                                          (compilation-set-window-height . around)
-                                          (resize-temp-buffer-window . around)
-                                          (shrink-window-if-larger-than-buffer . around)
-                                          (scroll-other-window . around)))
-  "These functions are always adviced if ECB is active. Each element of the
-list is a cons-cell where the car is the function-symbol and the cdr the
-advice-class \(before, around or after). If a function should be adviced with
-more than one class \(e.g. with a before and an after-advice) then for every
-class a cons must be added to this list.")
+;; ====== basic advices ======================================================
+;; every advice beside the advices of `ecb-advice-window-functions'! must be
+;; registered in the constant ecb-basic-adviced-functions in ecb-util.el!
 
 (defadvice delete-frame (around ecb)
   "If FRAME is equal to the ECB frame then the user will be asked if he want
@@ -920,16 +923,6 @@ either not activated or it behaves exactly like the original version!"
 
   ) ;; end of (if ecb-running-xemacs...)
 
-(defun ecb-enable-basic-advices ()
-  (dolist (elem ecb-basic-adviced-functions)
-    (ad-enable-advice (car elem) (cdr elem) 'ecb)
-    (ad-activate (car elem))))
-
-(defun ecb-disable-basic-advices ()
-  (dolist (elem ecb-basic-adviced-functions)
-    (ad-disable-advice (car elem) (cdr elem) 'ecb)
-    (ad-activate (car elem))))
-
 ;; =========== intelligent window function advices ===================
 
 (defconst ecb-adviceable-functions
@@ -1011,23 +1004,23 @@ is in the left/topmost edit-window or 2 if in the other edit-window."
        (equal (selected-frame) ecb-frame)
        (equal (selected-window) ecb-compile-window)))
 
-(defun ecb-point-in-tree-buffer (&optional incl-speedbar)
+
+(defun ecb-point-in-tree-buffer ()
   "Return nil if point is not in any tree-buffer of ECB otherwise return the
-buffer-object. If INCL-SPEEDBAR is not nil then the `ecb-speedbar-buffer-name'
-belongs to the tree-buffers."
-  (let ((curr-buf (current-buffer))
-        (dir-buf (get-buffer ecb-directories-buffer-name))
-        (speedbar-buf (ignore-errors (get-buffer ecb-speedbar-buffer-name)))
-        (source-buf (get-buffer ecb-sources-buffer-name))
-        (method-buf (get-buffer ecb-methods-buffer-name))
-        (hist-buf (get-buffer ecb-history-buffer-name)))
-    (and (equal (selected-frame) ecb-frame)
-         (or (if (equal curr-buf dir-buf) dir-buf nil)
-             (if incl-speedbar
-                 (if (equal curr-buf speedbar-buf) speedbar-buf nil))
-             (if (equal curr-buf source-buf) source-buf nil)
-             (if (equal curr-buf method-buf) method-buf nil)
-             (if (equal curr-buf hist-buf) hist-buf nil)))))
+buffer-object."
+  (when (and (equal (selected-frame) ecb-frame)
+             (member (buffer-name (current-buffer)) ecb-tree-buffers))
+    (current-buffer)))
+
+(defun ecb-point-in-ecb-window ()
+  "Return nil if point is not in any of the special dedicated ECB-windows
+otherwise return the window-object of this ECB-window. This works for every
+dedicated special ECB-window not only for the buildin standard tree-buffers!"
+  (when (and (equal (selected-frame) ecb-frame)
+             (member (selected-window) (ecb-canonical-ecb-windows-list)))
+    (selected-window)))
+  
+
 
 (defun ecb-select-edit-window (&optional other-edit-window)
   "Moves point into the edit-window. If optional OTHER-EDIT-WINDOW is non nil
@@ -1169,8 +1162,8 @@ allowed to be deleted."
                       ( ;; a certain frame
                        (frame-live-p (ad-get-arg 1))
                        (list (ad-get-arg 1))))))
-    (if (member buf-name ecb-tree-buffers)
-        (ecb-error "delete-windows-on is not allowed for the ECB-tree-buffers!")
+    (if (member (get-buffer buf-name) (ecb-get-current-visible-ecb-buffers))
+        (ecb-error "delete-windows-on is not allowed for the special ECB-buffers!")
       (dolist (f frames)
         (if (not (equal f ecb-frame))
             (progn
@@ -1526,13 +1519,12 @@ with the current window-height \(frame-height if USE-FRAME is not nil)."
 ;; straightforward, more customizable by users and slightly more
 ;; convenient.
 
-(defun ecb-layout-get-current-tree-windows ()
-  "Return a list of all tree-buffers whose windows are currently visible." 
-  (mapcar (function (lambda (tree-buffer)
-                      (if (window-live-p (get-buffer-window tree-buffer))
-                          tree-buffer
-                        nil)))
-          ecb-tree-buffers))
+(defun ecb-get-current-visible-ecb-buffers ()
+  "Return a list of all buffers displayed in a current visible dedicated
+special ecb-window."
+  (mapcar (function (lambda (window)
+                      (window-buffer window)))
+          (ecb-canonical-ecb-windows-list)))
 
 (defvar ecb-windows-hidden t
   "Used with `ecb-toggle-ecb-windows'. If true the ECB windows are hidden. Do
@@ -2072,7 +2064,7 @@ this function the edit-window is selected which was current before redrawing."
            (compile-buffer-before-redraw (if (and ecb-compile-window-height
                                                   (ecb-compile-window-live-p))
                                              (window-buffer ecb-compile-window)))
-           (tree-windows-before-redraw (ecb-layout-get-current-tree-windows)))
+           (ecb-windows-before-redraw (ecb-get-current-visible-ecb-buffers)))
 
       ;; The following code runs with deactivated adviced functions, so the
       ;; layout-functions can use the original function-definitions.
@@ -2192,16 +2184,16 @@ this function the edit-window is selected which was current before redrawing."
       
       (setq ecb-windows-hidden nil)
 
-      ;; synchronize the ecb-tree-buffers if necessary (means if not all
-      ;; tree-windows of current layout were visible before redraw) and
+      ;; synchronize the special ecb-buffers if necessary (means if not all
+      ;; ecb-windows of current layout were visible before redraw) and
       ;; fillup the history new with all buffers if the history buffer was not
       ;; shown before the redisplay but now (means if the layout has changed)
-      (let ((current-tree-windows (ecb-layout-get-current-tree-windows)))
+      (let ((current-ecb-windows (ecb-get-current-visible-ecb-buffers)))
         (if (and (not (member ecb-history-buffer-name
-                              tree-windows-before-redraw))
-                 (member ecb-history-buffer-name current-tree-windows))
+                              ecb-windows-before-redraw))
+                 (member ecb-history-buffer-name current-ecb-windows))
             (ecb-add-all-buffers-to-history))
-        (if (and (not (equal tree-windows-before-redraw current-tree-windows))
+        (if (and (not (equal ecb-windows-before-redraw current-ecb-windows))
                  (not no-buffer-sync))
             (ecb-current-buffer-sync t)))
 
@@ -2282,6 +2274,7 @@ documentation of `ecb-layout-window-sizes'!"
       (setcdr a (ecb-get-window-sizes))
       (customize-save-variable 'ecb-layout-window-sizes ecb-layout-window-sizes))))
 
+
 (defun ecb-restore-window-sizes ()
   "Sets the sizes of the ECB windows to their stored values."
   (interactive)
@@ -2295,43 +2288,52 @@ documentation of `ecb-layout-window-sizes'!"
   (when (equal (selected-frame) ecb-frame)
     (setq ecb-layout-window-sizes
 	  (ecb-remove-assoc ecb-layout-window-sizes ecb-layout-name))
-    (ecb-redraw-layout)
     (customize-save-variable 'ecb-layout-window-sizes ecb-layout-window-sizes)))
 
+;; Now always returns fractions of the ecb-frame; thanks to Geert Ribbers
+;; [geert.ribbers@realworld.nl] for a first implementation.
 (defun ecb-get-window-size (window)
+  "Return the sizes of WINDOW as a cons where the car is the width and the cdr
+is the height. Both values are fractions of the frame-width (resp. height) of
+the `ecb-frame'."
   (when window
-    (cons (window-width window) (window-height window))))
+    (cons (/ (window-width window) (* 1.0 (frame-width ecb-frame)))
+          (/ (window-height window) (* 1.0 (frame-height ecb-frame))))))
 
-;; (defun ecb-get-window-sizes ()
-;;   (cons
-;;     (ecb-get-window-size ecb-edit-window)
-;;    (mapcar
-;;     (function (lambda (buffer)
-;; 		(ecb-get-window-size (get-buffer-window buffer))))
-;;     (list ecb-directories-buffer-name
-;; 	  ecb-sources-buffer-name
-;; 	  ecb-history-buffer-name
-;; 	  ecb-methods-buffer-name))))
 
 (defun ecb-get-window-sizes ()
-  (mapcar
-   (function (lambda (buffer)
-               (ecb-get-window-size (get-buffer-window buffer))))
-   ecb-tree-buffers))
+  (mapcar (function (lambda (window)
+                      (ecb-get-window-size window)))
+          (ecb-canonical-ecb-windows-list)))
 
+
+;; Now possible to set fractional sizes; thanks to Geert Ribbers
+;; [geert.ribbers@realworld.nl] for a first implementation.
 (defun ecb-set-window-size (window size)
+  "Enlarge/shrink WINDOW to SIZE where SIZE is a cons with new width as car
+and new height as cdr. New width and height can be fractionals between -1 and
++1."
   (when (and window size)
-    (save-selected-window
-      (select-window window)
-      (enlarge-window (- (car size) (window-width window)) t)
-      (enlarge-window (- (cdr size) (window-height window))))))
+    (let ((absolut-width (if (and (< (car size) 1) (> (car size) -1))
+                             (round (* (car size) (frame-width ecb-frame)))
+                           (car size)))
+          (absolut-height (if (and (< (cdr size) 1) (> (cdr size) -1))
+                             (round (* (cdr size) (frame-height ecb-frame)))
+                           (cdr size))))
+      (save-selected-window
+        (select-window window)
+        (enlarge-window (- absolut-width (window-width window)) t)
+        (enlarge-window (- absolut-height (window-height window)))))))
 
 (defun ecb-set-window-sizes (sizes)
   (when sizes
-    (let ((buffers ecb-tree-buffers))
-      (dolist (size sizes)
-	(ecb-set-window-size (get-buffer-window (car buffers)) size)
-	(setq buffers (cdr buffers))))))
+    (let ((windows (ecb-canonical-ecb-windows-list)))
+      (if (= (length windows) (length sizes))
+          (dolist (size sizes)
+            (ecb-set-window-size (car windows) size)
+            (setq windows (cdr windows)))
+        (ecb-error "Stored sizes of layout %s not applicable for current window layout!"
+                   ecb-layout-name)))))
 
 (defun ecb-toggle-enlarged-compilation-window (&optional arg)
   "Toggle whether the `ecb-compile-window' is enlarged or not. If ARG > 0

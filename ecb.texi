@@ -163,6 +163,7 @@ Changing, customizing, redrawing and creating layouts
 
 * Changing the ECB-layout::     How to change and customize the layout
 * Redrawing the ECB-layout::    How and when redrawing the layout
+* Changing window sizes::       Changing sizes of the ECB-windows
 * Creating a new ECB-layout::   Interactively creating new layouts
 
 Customizing ECB
@@ -1223,6 +1224,7 @@ layouts.
 @menu
 * Changing the ECB-layout::     How to change and customize the layout
 * Redrawing the ECB-layout::    How and when redrawing the layout
+* Changing window sizes::       Changing sizes of the ECB-windows
 * Creating a new ECB-layout::   Interactively creating new layouts
 @end menu
 
@@ -1832,7 +1834,7 @@ see @ref{Creating a new ECB-layout}); just customize the option
 
 @end table
 
-@node Redrawing the ECB-layout, Creating a new ECB-layout, Changing the ECB-layout, The ECB-layout
+@node Redrawing the ECB-layout, Changing window sizes, Changing the ECB-layout, The ECB-layout
 @subsection Redrawing the ECB-layout
 
 @cindex Redraw
@@ -1852,7 +1854,46 @@ done in << 1s!
 See also the hooks @code{ecb-redraw-layout-after-hook} and
 @code{ecb-redraw-layout-before-hook}!
 
-@node Creating a new ECB-layout, , Redrawing the ECB-layout, The ECB-layout
+@node Changing window sizes, Creating a new ECB-layout, Redrawing the ECB-layout, The ECB-layout
+@subsection Changing the sizes of the special ECB-windows
+
+The standard width and height of the special ECB-windows is defined
+with the options @code{ecb-windows-width} and
+@code{ecb-windows-height}. But changing these options always
+influences all layouts which is not always desired.
+
+ECB offers to re-adjust the width and height of the ECB-windows (e.g. by
+dragging the windows-borders via the mouse) and then saving exactly
+these current window-sizes for the current layout so after activating
+this layout all windows have autom. the stored sizes.
+
+This is done via the option @code{ecb-layout-window-sizes} and the
+commands @code{ecb-store-window-sizes},
+@code{ecb-restore-window-sizes} and
+@code{ecb-restore-default-window-sizes}.
+
+Here is an example how to resize and store the sizes of the
+ECB-windows of layout ``left1'':
+
+@enumerate
+@item
+Switch to layout ``left1'' via @code{ecb-change-layout} (@kbd{C-c . l})
+@item
+Resize the ECB-windows by dragging the window-borders with the mouse
+@item
+Call @code{ecb-store-window-sizes}
+@end enumerate
+
+After this layout ``left1'' will be always drawn with the new sizes
+until you call @code{ecb-restore-default-window-sizes} during layout
+``left1'' is active.
+
+@strong{NOTE}: @code{ecb-store-window-sizes} always stores the width
+and height of the windows as fractions of the width (resp. height) of
+the ECB-frame, so the stored sizes are always correct regardless of
+the current frame-size!
+
+@node Creating a new ECB-layout, , Changing window sizes, The ECB-layout
 @subsection Interactively creating new layouts
 
 @cindex New layouts
@@ -4026,23 +4067,28 @@ the assumption is that when a user asks for a buffer in another window
 it should always be presented in another window.
 @end defopt
 
-@c @defopt layout-switch-to-compilation-window-auto-enlarge
-@c When we automatically switch to a compilation buffer, automatically enlarge
-@c the buffer with @code{ecb-toggle-enlarged-compilation-window}.
-@c @end defopt
-
 @defopt layout-window-sizes
 Specifies the sizes of the ECB windows for each layout. The easiest
-way to change this variable is to change the window sizes by dragging
-the window borders using the mouse and then store the window sizes by
-calling the @code{ecb-store-window-sizes} function. Next time the
-layout is redrawn the values stored in this option will be used.
+way (and also the strongly recommended way) to change this variable is
+to change the window sizes by dragging the window borders using the
+mouse and then store the window sizes by calling the command
+@code{ecb-store-window-sizes}. Next time the layout is redrawn the
+values stored in this option will be used.
 
-But be aware: These values are only suitable for the frame-size the
-ecb-frame had at the time you store the values by calling
-@code{ecb-store-window-sizes}. Therefore ensure always before calling
-@code{ecb-store-window-sizes} that the ecb-frame has the size it has
-normally during your work with ECB!.
+If @code{ecb-store-window-sizes} is used then the windows sizes are
+stored as fractions of current frame-width and -height of the
+ecb-frame, so the stored values will ``work'' for other frame sizes
+too.
+
+If this option is set ``by hand'' (i.e. not by
+@code{ecb-store-window-sizes}) then the following is important:
+@itemize @minus
+@item
+It is recommended to use fractions of frame-width and -height!.
+@item
+The order of the sequence of the inserted window sizes must be the same as
+@code{other-window} (the not-adviced version!) would walk!
+@end itemize
 @end defopt
 
 @defopt new-ecb-frame
@@ -5978,16 +6024,19 @@ the layout-engine API of ECB offers foreign packages. Call
 @code{describe-function} resp. @code{describe-variable} to get a
 detailed description.
 
-Functions for programming layout and special windows:
+Functions for programming with layouts and special ecb-windows:
 @itemize @minus
 @item ecb-available-layouts-member-p
+@item ecb-canonical-ecb-windows-list
 @item ecb-compile-window-live-p
 @item ecb-do-if-buffer-visible-in-ecb-frame
 @item ecb-edit-window-live-p
+@item ecb-get-current-visible-ecb-buffers
 @item ecb-layout-define
 @item ecb-layout-switch
 @item ecb-layout-undefine
 @item ecb-point-in-compile-window
+@item ecb-point-in-ecb-window
 @item ecb-point-in-edit-window
 @item ecb-select-edit-window
 @item ecb-split-hor

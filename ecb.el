@@ -62,7 +62,7 @@
 ;; The latest version of the ECB is available at
 ;; http://home.swipnet.se/mayhem/ecb.html
 
-;; $Id: ecb.el,v 1.272 2003/01/14 01:34:57 burtonator Exp $
+;; $Id: ecb.el,v 1.273 2003/01/14 13:46:39 berndl Exp $
 
 ;;; Code:
 
@@ -191,6 +191,7 @@
   "Settings for the history buffer in the Emacs code browser."
   :group 'ecb
   :prefix "ecb-")
+
 
 (defcustom ecb-use-recursive-edit nil
   "*Tell ECB to use a recursive edit so that it can easily be deactivated
@@ -354,6 +355,7 @@ layouts sources should be displayed in the directories window."
                 (repeat :tag "With these layouts"
                         (string :tag "Layout name"))))
 
+
 (defcustom ecb-use-speedbar-for-directories nil
   "*If true then uses speedbar for displaying and handling directories.
 This means that speedbar is integrated in the ECB-frame and is displayed in
@@ -373,6 +375,7 @@ handling directories amd source-files and want it in conjunction with ECB."
                    (set sym val)
                    (let ((ecb-redraw-layout-quickly nil))
                      (ecb-redraw-layout-full)))))
+
 
 (defun ecb-show-sources-in-directories-buffer-p ()
   (cond ((equal ecb-show-sources-in-directories-buffer 'never)
@@ -1465,6 +1468,7 @@ following sequence of hooks:
   :group 'ecb-general
   :type 'hook)
 
+
 (defcustom ecb-before-activate-hook nil
   "*Normal hook run at the beginning of activating the ecb-package
 by running `ecb-activate'. These hooks run before any other tasks of the
@@ -1477,6 +1481,7 @@ nil if Gnus is running. Then calling `ecb-activate' or `ecb-minor-mode' will
 only start ECB if Gnus is not already running."
   :group 'ecb-general
   :type 'hook)
+
 
 (defcustom ecb-activate-hook nil
   "*Normal hook run at the end of activating the ecb-package by running
@@ -1747,6 +1752,7 @@ is called."
     ;; For no semantic-tokens a reparse makes no sense!
     (ecb-enter-debugger "Not a semantic token: %S" token)))
 
+
 (defun ecb-semantic-token-start (token)
   (ecb-semantic-assert-valid-token token)
   ;; if ecb-debug-mode is not nil then the TOKEN is valid if we pass the
@@ -1864,6 +1870,8 @@ speedbar-window."
 
 (defun ecb-buffer-select (name)
   (set-buffer (get-buffer name)))
+
+
 
 (defun ecb-toggle-RET-selects-edit-window ()
   "Toggles if RET in current tree-buffer should finally select the
@@ -2160,6 +2168,7 @@ semantic-reparse. This function is added to the hook
   ;; updated. But for this we need also a tree-buffer-update which can update
   ;; single nodes without refreshing the whole tree-buffer like now.
   (ecb-rebuild-methods-buffer-with-tokencache (semantic-bovinate-toplevel t)))
+
 
 (defun ecb-expand-directory-tree (path node)
   (catch 'exit
@@ -2691,10 +2700,9 @@ It does several tasks:
     (if buffer-file
         (ecb-clear-token-tree-cache buffer-file))
 
-    ;; 4. Preventing from killing the tree-buffers by accident
-    (if (member (buffer-name (current-buffer))
-                ecb-tree-buffers)
-        (ecb-error "Killing an ECB-tree-buffer is not possible!"))))
+    ;; 4. Preventing from killing the special-ecb-buffers by accident
+    (if (member (current-buffer) (ecb-get-current-visible-ecb-buffers))
+        (ecb-error "Killing an special ECB-buffer is not possible!"))))
 
 (defun ecb-clear-history (&optional clearall)
   "Clears the ECB history-buffer. If CLEARALL is nil then the behavior is
@@ -2834,6 +2842,7 @@ tasks are performed:
 
     ;; at the end we are running the hooks
     (run-hooks 'ecb-current-buffer-sync-hook)))
+
 
 (defun ecb-window-sync-function ()
   (when (and ecb-window-sync
@@ -3915,6 +3924,7 @@ always the ECB-frame if called from another frame."
     (ecb-activate--impl))
   ecb-minor-mode)
 
+
 (defun ecb-activate--impl ()
   "See `ecb-activate'.  This is the implementation of ECB activation."
 
@@ -4204,8 +4214,11 @@ always the ECB-frame if called from another frame."
           (ecb-show-help)
           (Info-goto-node "First steps")))
 
+      
+      
       ;;now take a snapshot of the current window configuration
       (ecb-set-activated-window-configuration))))
+
 
 (defun ecb-set-activated-window-configuration()
   "Set the `ecb-activated-window-configuration' after the ECB is activated."
@@ -4444,7 +4457,8 @@ FILE.elc or if FILE.elc doesn't exist."
       (if (ecb-check-requirements t)
           (ecb-error "Incorrect requirements; check the versions of semantic and eieio!"))
     (ecb-check-requirements))
-  (let ((load-path
+  (let (;; (byte-compile-warnings nil)
+        (load-path
 	 (append (list (file-name-directory
 			(or (locate-library "semantic")
 			    (ecb-error "Semantic is not in the load-path!")))

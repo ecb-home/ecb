@@ -26,7 +26,7 @@
 ;; This file is part of the ECB package which can be found at:
 ;; http://home.swipnet.se/mayhem/ecb.html
 
-;; $Id: ecb-util.el,v 1.42 2003/01/08 10:28:05 berndl Exp $
+;; $Id: ecb-util.el,v 1.43 2003/01/14 13:46:41 berndl Exp $
 
 ;;; Code:
 
@@ -89,8 +89,64 @@
   (defalias 'ecb-frame-char-height 'frame-char-height)
   (defalias 'ecb-window-edges 'window-edges))
 
+
+(defconst ecb-basic-adviced-functions (if ecb-running-xemacs
+                                          '((delete-frame . around)
+                                            (compilation-set-window-height . around)
+                                            (shrink-window-if-larger-than-buffer . around)
+                                            (show-temp-buffer-in-current-frame . around)
+                                            (scroll-other-window . around)
+                                            (custom-save-all . around))
+                                        '((delete-frame . around)
+                                          (compilation-set-window-height . around)
+                                          (resize-temp-buffer-window . around)
+                                          (shrink-window-if-larger-than-buffer . around)
+                                          (scroll-other-window . around)
+                                          (custom-save-all . around)))
+  "These functions are always adviced if ECB is active. Each element of the
+list is a cons-cell where the car is the function-symbol and the cdr the
+advice-class \(before, around or after). If a function should be adviced with
+more than one class \(e.g. with a before and an after-advice) then for every
+class a cons must be added to this list.
+
+Every basic advice of ECB must be registered in this constant but can be
+implemented in another file!")
+
+(defun ecb-enable-basic-advices ()
+  (dolist (elem ecb-basic-adviced-functions)
+    (ad-enable-advice (car elem) (cdr elem) 'ecb)
+    (ad-activate (car elem))))
+
+(defun ecb-disable-basic-advices ()
+  (dolist (elem ecb-basic-adviced-functions)
+    (ad-disable-advice (car elem) (cdr elem) 'ecb)
+    (ad-activate (car elem))))
+
+
+;; some basic advices
+
+(defadvice custom-save-all (around ecb)
+  "Save the customized options completely in the background, i.e. the
+file-buffer where the value is saved \(see option `custom-file') is not parsed
+by semantic and also killed afterwards."
+  (let ((ecb-window-sync nil)
+        (kill-buffer-hook nil)
+        (semantic-after-toplevel-cache-change-hook nil)
+        (semantic-after-partial-cache-change-hook nil))
+    ;; now we do the standard task
+    ad-do-it
+    ;; now we have to kill the custom-file buffer otherwise semantic would
+    ;; parse the buffer of custom-file and the method-buffer would be updated
+    ;; with the contents of custom-file which is definitely not desired.
+    (ignore-errors
+      (kill-buffer (find-file-noselect (if ecb-running-xemacs
+                                           custom-file
+                                         (custom-file)))))))
+
+;; assoc helpers
+
 (defun ecb-remove-assoc (list key)
-  (delete* key list :test (function (lambda (key item) (eq key (car item))))))
+  (delete* key list :test (function (lambda (key item) (string= key (car item))))))
 
 (defun ecb-add-assoc (list key-value)
   (cons key-value list))
@@ -100,6 +156,8 @@
 
 (defun ecb-find-assoc (list key)
   (assoc key list))
+
+;; canonical filenames
 
 (defun ecb-fix-filename (path &optional filename substitute-env-vars)
   "Normalizes path- and filenames for ECB. If FILENAME is not nil its pure
@@ -322,7 +380,6 @@ During the evaluation of BODY the following local variables are bound:
        ,@body)))
 
 (put 'ecb-do-if-buffer-visible-in-ecb-frame 'lisp-indent-function 1)
-
 
 (defmacro ecb-error (&rest args)
   "Signals an error but prevents it from entering the debugger. This is
