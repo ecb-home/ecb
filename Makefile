@@ -4,7 +4,7 @@
 # User configurable section
 
 # Define here the correct path to your Emacs or XEmacs
-EMACS=emacs
+EMACS=emacs -no-site-file
 
 
 # Set here the load-path of the semantic-version and eieio-version loaded
@@ -12,7 +12,7 @@ EMACS=emacs
 # directory of JDE. (use always forward-slashes as directory-separator even
 # with MS Windows systems). Make sure you compile ECB with the semantic
 # version you load into Emacs!
-LOADPATH=../semantic-1.4beta11 ../eieio-0.17beta3 ../jde-2.2.9beta4/lisp
+LOADPATH=../semantic-1.4beta12 ../eieio-0.17beta3 ../jde-2.2.9beta6/lisp
 
 # Two ways to build ECB:
 # - Call "make" to byte-compile the ECB. You can savely ignore the messages.
@@ -23,7 +23,7 @@ LOADPATH=../semantic-1.4beta11 ../eieio-0.17beta3 ../jde-2.2.9beta4/lisp
 
 # Do not change anything below!
 
-# $Id: Makefile,v 1.17 2001/11/19 12:11:54 berndl Exp $
+# $Id: Makefile,v 1.18 2001/12/03 10:12:34 berndl Exp $
 
 ecb_LISP_EL=tree-buffer.el ecb-util.el ecb-mode-line.el ecb-help.el ecb-layout.el ecb-navigate.el ecb.el ecb-eshell.el ecb-speedbar.el
 ecb_LISP_ELC=$(ecb_LISP_EL:.el=.elc)
@@ -40,7 +40,7 @@ all: $(ecb_LISP_EL)
 	@echo "(if (locate-library \"jde\") (require 'jde))" >> ecb-compile-script
 	@echo "(require 'ecb)" >> ecb-compile-script
 	@echo "(setq debug-on-error t)" >> ecb-compile-script
-	$(EMACS) -batch -no-site-file -l ecb-compile-script --eval '(ecb-byte-compile t)'
+	$(EMACS) -batch -l ecb-compile-script --eval '(ecb-byte-compile t)'
 	@rm -f ecb-compile-script
 
 clean:

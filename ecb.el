@@ -54,7 +54,7 @@
 ;; The latest version of the ECB is available at
 ;; http://home.swipnet.se/mayhem/ecb.html
 
-;; $Id: ecb.el,v 1.166 2001/11/23 04:09:32 burtonator Exp $
+;; $Id: ecb.el,v 1.167 2001/12/03 10:12:34 berndl Exp $
 
 ;;; Code:
 
@@ -90,7 +90,7 @@
 
 ;; various loads
 (require 'easymenu)
-(require 'assoc);; Semantic fix
+(require 'assoc) ;; Semantic fix
 
 (eval-when-compile
   ;; to avoid compiler grips
@@ -157,9 +157,90 @@
   :group 'ecb
   :prefix "ecb-")
 
-(defface ecb-directory-face
-  '((((class color)) (:background "cornflower blue"))
-    (t (:reverse-video t)))
+(defmacro ecb-face-default (&optional height
+                                      fg-light-col fg-dark-col
+                                      bg-light-col bg-dark-col
+                                      fg-rest bg-rest
+                                      reverse-video)
+  "Macro for setting default values for an ECB face.
+The parameters are set for the following display-types:
+- ((class color) (background light)): HEIGHT, FG-LIGHT-COL, BG-LIGHT-COL
+- ((class color) (background dark)): HEIGHT, FG-DARK-COL, BG-DARK-COL
+- t: HEIGHT, FG-REST, BG-REST, REVERSE-VIDEO."
+  `(list (list '((class color) (background light))
+               (append (if (and ,height running-emacs-21) (list :height ,height))
+                       (if ,fg-light-col (list :foreground ,fg-light-col))
+                       (if ,bg-light-col (list :background ,bg-light-col))))
+         (list '((class color) (background dark))
+               (append (if (and ,height running-emacs-21) (list :height ,height))
+                       (if ,fg-dark-col (list :foreground ,fg-dark-col))
+                       (if ,bg-dark-col (list :background ,bg-dark-col))))
+         (list 't (append (if (and ,height running-emacs-21) (list :height ,height))
+                          (if ,fg-rest (list :foreground ,fg-rest))
+                          (if ,bg-rest (list :foreground ,bg-rest))
+                          (if ,reverse-video (list :reverse-video t))))))
+
+
+(defface ecb-directories-general-face (ecb-face-default 0.9)
+  "Basic face for the ECB directories buffer.
+It´s recommended to define here the font-family, the font-size, the basic
+color etc."
+  :group 'faces)
+
+(defcustom ecb-directories-general-face 'ecb-directories-general-face
+  "Basic face for the ECB directories buffer. This defines the basic
+face the whole directory buffer should displayed with. If nil then no special
+face is used but always the default-face."
+  :group 'ecb-faces
+  :group 'ecb-directories
+  :type '(choice (const :tag "No special face" :value nil)
+                 face))
+
+(defface ecb-sources-general-face (ecb-face-default 0.9)
+  "Basic face for the ECB sources buffer.
+It´s recommended to define here the font-family, the font-size, the basic
+color etc."
+  :group 'faces)
+
+(defcustom ecb-sources-general-face 'ecb-sources-general-face
+  "Basic face for the ECB sources buffer. This defines the basic
+face the whole directory buffer should displayed with. If nil then no special
+face is used but always the default-face."
+  :group 'ecb-faces
+  :group 'ecb-sources
+  :type 'face)
+
+(defface ecb-methods-general-face (ecb-face-default 0.9)
+  "Basic face for the ECB methods buffer.
+It´s recommended to define here the font-family, the font-size, the basic
+color etc."
+  :group 'faces)
+
+(defcustom ecb-methods-general-face 'ecb-methods-general-face
+  "Basic face for the ECB methods buffer. This defines the basic
+face the whole directory buffer should displayed with. If nil then no special
+face is used but always the default-face."
+  :group 'ecb-faces
+  :group 'ecb-methods
+  :type 'face)
+
+(defface ecb-history-general-face (ecb-face-default 0.9)
+  "Basic face for the ECB history buffer.
+It´s recommended to define here the font-family, the font-size, the basic
+color etc."
+  :group 'faces)
+
+(defcustom ecb-history-general-face 'ecb-history-general-face
+  "Basic face for the ECB directory buffer. This defines the basic
+face the whole directory buffer should displayed with. If nil then no special
+face is used but always the default-face."
+  :group 'ecb-faces
+  :group 'ecb-history
+  :type 'face)
+
+(defface ecb-directory-face (ecb-face-default nil "yellow" nil
+                                              "cornflower blue" "magenta"
+                                              nil nil t)
   "*Define face used for highlighting current directory in the
 directories buffer."
   :group 'faces)
@@ -167,13 +248,13 @@ directories buffer."
 (defcustom ecb-directory-face 'ecb-directory-face
   "*Face used for highlighting current directory in the
 directories buffer."
-  :group 'faces
   :group 'ecb-faces
+  :group 'ecb-directories
   :type 'face)
 
-(defface ecb-source-face
-  '((((class color)) (:background "cornflower blue"))
-    (t (:reverse-video t)))
+(defface ecb-source-face (ecb-face-default nil "yellow" nil
+                                           "cornflower blue" "magenta"
+                                           nil nil t)
   "*Define face used for highlighting current source in the
 sources buffer."
   :group 'faces)
@@ -181,13 +262,12 @@ sources buffer."
 (defcustom ecb-source-face 'ecb-source-face
   "*Face used for highlighting current source in the
 sources buffer."
-  :group 'faces
   :group 'ecb-faces
+  :group 'ecb-sources
   :type 'face)
 
-(defface ecb-method-face
-  '((((class color)) (:background "khaki"))
-    (t (:reverse-video t)))
+(defface ecb-method-face (ecb-face-default nil nil nil
+                                           "khaki" "khaki" nil nil t)
   "*Define face used for highlighting current method, class or variable
 in the methods buffer."
   :group 'faces)
@@ -195,13 +275,13 @@ in the methods buffer."
 (defcustom ecb-method-face 'ecb-method-face
   "*Face used for highlighting current method, class or variable in the
 methods buffer."
-  :group 'faces
   :group 'ecb-faces
+  :group 'ecb-methods
   :type 'face)
 
-(defface ecb-history-face
-  '((((class color)) (:background "cornflower blue"))
-    (t (:reverse-video t)))
+(defface ecb-history-face (ecb-face-default nil "yellow" nil
+                                            "cornflower blue" "magenta"
+                                            nil nil t)
   "*Define face used for highlighting current history-entry in the
 history buffer."
   :group 'faces)
@@ -209,13 +289,13 @@ history buffer."
 (defcustom ecb-history-face 'ecb-history-face
   "*Face used for highlighting current history-entry in the
 history buffer."
-  :group 'faces
   :group 'ecb-faces
+  :group 'ecb-history
   :type 'face)
 
-(defface ecb-token-header-face
-  '((((class color)) (:background "khaki"))
-    (t (:reverse-video t)))
+(defface ecb-token-header-face (ecb-face-default nil nil nil
+                                                 "khaki" "khaki"
+                                                 nil nil t)
   "*Define face used for highlighting the token header after jumping to
 it by clicking onto a node in the methods buffer."
   :group 'faces)
@@ -223,8 +303,8 @@ it by clicking onto a node in the methods buffer."
 (defcustom ecb-token-header-face 'ecb-token-header-face
   "*Face used for highlighting the token header after jumping to
 it by clicking onto a node in the methods buffer."
-  :group 'faces
   :group 'ecb-faces
+  :group 'ecb-methods
   :type 'face)
 
 (defcustom ecb-use-recursive-edit nil
@@ -249,6 +329,23 @@ name."
 			       (directory :tag "Path")
 			       (string :tag "Alias")))))
 
+(defcustom ecb-add-only-root-path-for-not-matching-files t
+  "*If not nil then ECB adds only the root-path of a filename to
+`ecb-source-path' during the auto. windows synchronization which happens if a
+file is opened not via the file/directory-browser of ECB. In such a situation
+ECB adds the path of the new file auto. to `ecb-source-path' but asks the uses
+also if he wants to save the new path for future sessions too.
+This options defines if the whole directory-part of the new file is added as
+source-path to `ecb-source-path' or only the root-part \(which means for
+unix-like systems always '/' and for windows-like systems the drive).
+
+A value of not nil is reasonably if a user often opens files not via the
+ECB-browser which are not located in any of the paths of `ecb-source-path'
+because then only one path for each drive \(windows) or the root-path \(unix)
+is added to the directory buffer of ECB."
+  :group 'ecb-directories
+  :type 'boolean)
+
 (defvar ecb-source-path-functions nil
   "List of functions to call for finding sources. Each time the function
 `ecb-update-directories-buffer' is called, the functions in this variable will
@@ -272,18 +369,19 @@ then activating ECB again!"
   :group 'ecb-directories
   :type 'string)
 
-(defface ecb-sources-face
-  '((((class color) (background light)) (:foreground "medium blue"))
-    (((class color) (background dark))  (:foreground "LightBlue1"))
-    (t (:background "gray")))
+(defface ecb-source-in-directories-buffer-face (ecb-face-default nil
+                                                                 "medium blue"
+                                                                 "LightBlue1"
+                                                                 nil nil
+                                                                 nil "gray")
   "*Define a face for displaying sources in the directories buffer."
-  :group 'faces
-  :group 'ecb-directories)
+  :group 'faces)
 
 (defcustom ecb-source-in-directories-buffer-face
-  'ecb-sources-face
+  'ecb-source-in-directories-buffer-face
   "*Face for source files in the directories buffer."
   :group 'ecb-directories
+  :group 'ecb-faces
   :type 'face)
 
 (defcustom ecb-excluded-directories-regexp "^\\(CVS\\|\\..*\\)$"
@@ -482,7 +580,7 @@ functionality set this value to either
   "*How to show tokens in the methods buffer. This variable is a list where each
 element represents a type of tokens:
 
-(<token type> <display type> <sort method>)
+\(<token type> <display type> <sort method>)
 
 The tokens in the methods buffer are displayed in the order as they appear in
 this list.
@@ -1070,13 +1168,13 @@ cleared!) ECB by running `ecb-deactivate'."
 
 (defun ecb-add-token-buckets (node parent-token buckets)
   "Creates and adds token nodes to the given node."
-   (setq buckets (cons nil buckets))
-   (dolist (token-display ecb-show-tokens)
-     (let* ((type (car token-display))
-	    (display (cadr token-display))
-	    (sort-method (caddr token-display)))
-       (cond
-        ((eq 'parent type)
+  (setq buckets (cons nil buckets))
+  (dolist (token-display ecb-show-tokens)
+    (let* ((type (car token-display))
+           (display (cadr token-display))
+           (sort-method (caddr token-display)))
+      (cond
+       ((eq 'parent type)
  	(when (and parent-token
  		   (eq 'type (semantic-token-token parent-token)))
  	  (let ((parents (ecb-get-token-parents parent-token)))
@@ -1090,11 +1188,11 @@ cleared!) ECB by running `ecb-deactivate'."
 				     parent)
 				   2 parent t node
 				   (if ecb-truncate-long-names 'end)))))))))
-        (t (ecb-find-add-token-bucket node type display sort-method buckets)))))
-   (let ((type-display (ecb-get-token-type-display t)))
-     (dolist (bucket buckets)
-       (ecb-add-token-bucket node bucket (cadr type-display)
-			     (caddr type-display)))))
+       (t (ecb-find-add-token-bucket node type display sort-method buckets)))))
+  (let ((type-display (ecb-get-token-type-display t)))
+    (dolist (bucket buckets)
+      (ecb-add-token-bucket node bucket (cadr type-display)
+                            (caddr type-display)))))
 
 (defun ecb-update-after-partial-reparse (updated-tokens)
   "Updates the method buffer and all internal ECB-caches after a partial
@@ -1132,7 +1230,7 @@ semantic-reparse. This function is added to the hook
 (defun ecb-get-source-files (dir files)
   (let (source-files)
     (dolist (file files)
-      (let ((long-file-name (concat dir ecb-directory-sep-string file)))
+      (let ((long-file-name (ecb-fix-filename dir file)))
 	(if (and (not (file-directory-p long-file-name))
 		 (or (string-match (cadr ecb-source-file-regexps) file)
 		     (not (string-match (car ecb-source-file-regexps) file))))
@@ -1263,7 +1361,7 @@ current-buffer is saved."
              ecb-last-edit-window-with-point
              ;; this prevents updating the method buffer after saving a not
              ;; current buffer (e.g. with `save-some-buffers'), because this
-             ;; would result in displaying a method-buffer not belonging to the
+            ;; would result in displaying a method-buffer not belonging to the
              ;; current source-buffer.
              (equal (current-buffer)
                     (window-buffer ecb-last-edit-window-with-point)))
@@ -1289,8 +1387,8 @@ displayed with window-start and point at beginning of buffer."
     (setq ecb-method-buffer-needs-rebuild t)
 
     (let ((current-tokencache (semantic-bovinate-toplevel t)))
-      ;; If the `semantic-bovinate-toplevel' has done no full reparsing but only
-      ;; used it´s still valid `semantic-toplevel-bovine-cache' or only has done
+    ;; If the `semantic-bovinate-toplevel' has done no full reparsing but only
+    ;; used it´s still valid `semantic-toplevel-bovine-cache' or only has done
       ;; a partial reparsing of dirty tokens the hooks in
       ;; `semantic-after-toplevel-cache-change-hook' are not evaluated and
       ;; therefore `ecb-rebuild-methods-buffer-with-tokencache' was not
@@ -1489,18 +1587,44 @@ nil then do this only if current-buffer differs from the source displayed in
 the ECB tree-buffers."
   (interactive "P")
   (when (and ecb-minor-mode
+             (not ecb-windows-hidden)
              (equal (selected-frame) ecb-frame))
     (ignore-errors
       (let ((filename (buffer-file-name (if opt-buffer opt-buffer (current-buffer)))))
         (when (and filename
+                   (file-readable-p filename)
                    (or force
                        (not (string= filename ecb-path-selected-source))))
-          ;; KB: seems this little sleep is necessary because otherwise jumping to
-          ;; certain markers in new opened files (e.g. with next-error etc. )
-          ;; doesn´t work correct. Can´t debug down this mysterious thing!
-          ;; Regardless of the size of the file to load, this 0.1 fraction of a
-          ;; sec is enough!
-          (sit-for 0.1)
+          
+          ;; * KB: Problem: seems this little sleep is necessary because
+          ;;   otherwise jumping to certain markers in new opened files (e.g.
+          ;;   with next-error etc. ) doesn´t work correct. Can´t debug down
+          ;;   this mysterious thing! Regardless of the size of the file to
+          ;;   load, this 0.1 fraction of a sec is enough!
+          ;; * KB: With current ECB implementation this sit-for seems not
+          ;;   longer necessary, it works with every Emacs version correct.
+          ;;   Therefore i comment out the sit-for until this error occurs
+          ;;   again.
+          ;;           (sit-for 0.1)
+          
+          ;; if the file is not located in any of the paths in
+          ;; `ecb-source-path' or in the pathes returned from
+          ;; `ecb-source-path-functions' we must at least add the new source
+          ;; path temporally to our paths. But the uses has also the choice to
+          ;; save it for future sessions too.
+          (if (not (ecb-path-matching-any-source-path-p filename))
+              (let ((norm-filename (ecb-fix-filename filename)))
+                (ecb-add-source-path
+                 (if ecb-add-only-root-path-for-not-matching-files
+                     (if (= (aref norm-filename 0) ?/)
+                         ;; for unix-style-path we add the root-dir
+                         (substring norm-filename 0 1)
+                       ;; for win32-style-path we add the drive; because
+                       ;; `ecb-fix-filename' also converts cygwin-path-style
+                       ;; to win32-path-style here also the drive is added.
+                       (substring norm-filename 0 2))
+                   (file-name-directory norm-filename)))))
+          ;; now we can be sure that a matching source-path exists
           (ecb-update-directories-buffer)
           (ecb-select-source-file filename)
           ;; selected source has changed, therfore we must initialize
@@ -1550,7 +1674,7 @@ OTHER-EDIT-WINDOW."
 					    (string< (file-name-extension a t)
 						     (file-name-extension b t)))))
 			sorted-files))))
-    (let ((filename (concat path ecb-directory-sep-string file)))
+    (let ((filename (ecb-fix-filename path file)))
       (tree-node-add-child
        node
        (ecb-new-child
@@ -1570,7 +1694,7 @@ OTHER-EDIT-WINDOW."
 	       dirs
 	       (normal-files (ecb-get-source-files path files)))
           (dolist (file files)
-            (let ((filename (concat path ecb-directory-sep-string file)))
+            (let ((filename (ecb-fix-filename path file)))
               (if (file-accessible-directory-p filename)
                   (if (not (string-match ecb-excluded-directories-regexp file))
                       (setq dirs (append dirs (list file)))))))
@@ -1594,6 +1718,19 @@ OTHER-EDIT-WINDOW."
 	    paths (cdr paths)))
     rpaths))
 
+(defun ecb-path-matching-any-source-path-p (path)
+  (let ((source-paths (append (ecb-get-source-paths-from-functions)
+                              ecb-source-path)))
+    (catch 'exit
+      (dolist (dir source-paths)
+        (let ((norm-dir (ecb-fix-filename (if (listp dir) (car dir) dir) nil t)))
+          (save-match-data
+            (if (string-match (regexp-quote norm-dir)
+                              (ecb-fix-filename (file-name-directory path)))
+                (throw 'exit norm-dir)))
+          nil)))))
+        
+
 (defun ecb-update-directories-buffer ()
   "Updates the ECB directories buffer."
   (interactive)
@@ -1611,7 +1748,7 @@ OTHER-EDIT-WINDOW."
          (tree-node-set-children node nil)
 	 (dolist (dir paths)
 	   (let* ((path (if (listp dir) (car dir) dir))
-		  (norm-dir (ecb-fix-filename path t))
+		  (norm-dir (ecb-fix-filename path nil t))
 		  (name (if (listp dir) (cadr dir) norm-dir)))
 	     (tree-node-add-child
 	      node
@@ -1646,14 +1783,23 @@ OTHER-EDIT-WINDOW."
       node)))
 
 (defun ecb-add-source-path (&optional dir alias)
-  (interactive "DAdd source path: \nsAlias (empty string = no alias): ")
-  (setq ecb-source-path (append ecb-source-path
-				(list (if (and alias (> (length alias) 0))
-					  (list dir alias) dir))))
-  (ecb-update-directories-buffer)
-  (if (y-or-n-p "Add source-path also for future-sessions? ")
-      (customize-save-variable 'ecb-source-path ecb-source-path)
-    (customize-set-variable 'ecb-source-path ecb-source-path)))
+  (interactive)
+  ;; we must manually cut a filename because we must not add filenames to
+  ;; `ecb-source-path'!
+  (let* ((my-dir (ecb-fix-filename
+                  (or dir
+                      (file-name-directory (read-file-name "Add source path: ")))
+                  t))
+         (my-alias (or alias
+                       (read-string (format "Alias for \"%s\" (empty = no alias): "
+                                            my-dir)))))
+    (setq ecb-source-path (append ecb-source-path
+                                  (list (if (and alias (> (length alias) 0))
+                                            (list my-dir alias) my-dir))))
+    (ecb-update-directories-buffer)
+    (if (y-or-n-p "Add the new source-path also for future-sessions? ")
+        (customize-save-variable 'ecb-source-path ecb-source-path)
+      (customize-set-variable 'ecb-source-path ecb-source-path))))
 
 (defun ecb-add-source-path-node (node)
   (call-interactively 'ecb-add-source-path))
@@ -2360,7 +2506,7 @@ macro must be written explicitly, as in \"C-c SPC\".
                                                       " " (nth 1 elem)))
                              (define-key km (read-kbd-macro key-string) (nth 2 elem)))
                            (easy-menu-define ecb-minor-menu km
-                                             "ECB Minor Mode Menu" ecb-menu-bar)
+                             "ECB Minor Mode Menu" ecb-menu-bar)
                            km))
                    ;; add the minor-mode and and the minor-mode-map to the
                    ;; alists if not already contained. In this case just
@@ -2447,6 +2593,7 @@ always the ECB-frame if called from another frame."
 	 (list (cons 1 ecb-source-in-directories-buffer-face))
 	 ecb-tree-expand-symbol-before
          ecb-directory-face
+         ecb-directories-general-face
 	 ;; we add an after-create-hook to the tree-buffer
 	 (function (lambda ()
 		     (local-set-key [f1] 'ecb-add-source-path)
@@ -2469,7 +2616,8 @@ always the ECB-frame if called from another frame."
 	 ecb-tree-incremental-search
          nil
          nil
-         ecb-source-face))
+         ecb-source-face
+         ecb-sources-general-face))
       
       (unless (member ecb-methods-buffer-name curr-buffer-list)
 	(tree-buffer-create
@@ -2486,7 +2634,8 @@ always the ECB-frame if called from another frame."
 	 ecb-tree-incremental-search
 	 nil
 	 ecb-tree-expand-symbol-before
-         ecb-method-face)
+         ecb-method-face
+         ecb-methods-general-face)
 	(setq ecb-methods-root-node (tree-buffer-get-root)))
       
       (unless (member ecb-history-buffer-name curr-buffer-list)
@@ -2504,7 +2653,8 @@ always the ECB-frame if called from another frame."
 	 ecb-tree-incremental-search
          nil
          nil
-         ecb-history-face)))
+         ecb-history-face
+         ecb-history-general-face)))
     
     ;; we need some hooks
     (add-hook 'semantic-after-partial-cache-change-hook
@@ -2530,15 +2680,15 @@ always the ECB-frame if called from another frame."
     ;; menus
     (if running-xemacs
         (add-submenu nil ecb-minor-menu))
-;;       (easy-menu-add ecb-minor-menu))
+    ;;       (easy-menu-add ecb-minor-menu))
 
     (setq ecb-minor-mode t)
 
-    ;; we must update the directories buffer first time
-    (ecb-update-directories-buffer)
-
     ;; run personal hooks before drawing the layout
     (run-hooks 'ecb-activate-before-layout-draw-hook)
+
+    ;; we must update the directories buffer first time
+    (ecb-update-directories-buffer)
 
     ;; now we draw the layout choosen in `ecb-layout'. This function
     ;; acivates at its end also the adviced functions if necessary!
@@ -2579,7 +2729,7 @@ always the ECB-frame if called from another frame."
 
   (save-window-excursion
 
-    ;;set the edit window buffer to *scratch* so that we are not dependent on a
+   ;;set the edit window buffer to *scratch* so that we are not dependent on a
     ;;specific window being available
     
     (set-window-buffer ecb-edit-window (get-buffer-create "*scratch*"))

@@ -26,7 +26,7 @@
 ;; This file is part of the ECB package which can be found at:
 ;; http://home.swipnet.se/mayhem/ecb.html
 
-;; $Id: tree-buffer.el,v 1.68 2001/11/19 12:11:54 berndl Exp $
+;; $Id: tree-buffer.el,v 1.69 2001/12/03 10:12:34 berndl Exp $
 
 ;;; Code:
 
@@ -102,6 +102,7 @@ node name.")
 (defvar tree-node-expanded-fn nil)
 (defvar tree-node-mouse-over-fn nil)
 (defvar tree-buffer-highlight-overlay nil)
+(defvar tree-buffer-general-face nil)
 (defvar tree-buffer-incr-searchpattern nil)
 (defvar tree-buffer-incr-search nil)
 
@@ -317,7 +318,12 @@ displayed without empty-lines at the end, means WINDOW is always best filled."
                                   (save-excursion
                                     (goto-char (window-start window))
                                     (forward-line (- full-lines-in-window w-height))
-                                    (tree-buffer-line-beginning-pos)))))))))
+                                    (tree-buffer-line-beginning-pos)))))))
+    ;; now we optimize the horizontal display of the tree-buffer, so that at
+    ;; least of NODE and all its visible subnodes the expand/collapse-button
+    ;; is visible and as much as possible of the nodenames.
+    
+    ))
 
 ;; Klaus: Now we use overlays to highlight current node in a tree-buffer. This
 ;; makes it easier to do some facing with the nodes itself and above all this
@@ -399,7 +405,8 @@ inserted and the TEXT itself"
 		 (tree-node-is-expandable node)
 		 (eq 'end (tree-node-get-shorten-name node)))
 	    (setq name (concat (substring name 0 (- (+ (if running-xemacs 5 4)
-                                                       (- width ww)))) "...")))))
+                                                       (- width ww))))
+                                                       "...")))))
     (insert (make-string (* depth tree-buffer-indent) ? ))
     (when (and tree-buffer-expand-symbol-before
 	       (tree-node-is-expandable node))
@@ -458,6 +465,9 @@ current tree-buffer."
     (erase-buffer)
     (dolist (node (tree-node-get-children tree-buffer-root))
       (tree-buffer-add-node node 0))
+    (if tree-buffer-general-face
+        (overlay-put (make-overlay (point-min) (point-max)) 'face
+                     tree-buffer-general-face))
     (tree-buffer-highlight-node-data tree-buffer-highlighted-node-data)
     (goto-char p)
     (set-window-start w ws)
@@ -771,7 +781,8 @@ functionality is done with the `help-echo'-property and the function
                                 menus tr-lines read-only tree-indent
                                 incr-search
                                 &optional type-facer expand-symbol-before
-                                highlight-node-face after-create-hook)
+                                highlight-node-face general-face
+                                after-create-hook)
   "Creates a new tree buffer with
 NAME: Name of the buffer
 FRAME: Frame in which the tree-buffer is displayed and valid. All keybindings
@@ -842,7 +853,8 @@ TYPE-FACER: Nil or a list of one or two conses, each cons for a node-type \(0
 EXPAND-SYMBOL-BEFORE: If not nil then the expand-symbol \(is displayed before
                       the node-text.
 HIGHLIGHT-NODE-FACE: Face used for highlighting current node in this
-                     tree-buffer. 
+                     tree-buffer.
+GENERAL-FACE: General face in which the whole tree-buffer should be displayed.
 AFTER-CREATE-HOOK: A function \(with no arguments) called directly after
                    creating the tree-buffer and defining it's local keymap.
                    For example this function can add additional keybindings
@@ -867,6 +879,7 @@ AFTER-CREATE-HOOK: A function \(with no arguments) called directly after
     (make-local-variable 'tree-buffer-type-facer)
     (make-local-variable 'tree-buffer-expand-symbol-before)
     (make-local-variable 'tree-buffer-highlight-overlay)
+    (make-local-variable 'tree-buffer-general-face)
     (make-local-variable 'tree-buffer-incr-searchpattern)
     (make-local-variable 'tree-buffer-incr-search)
   
@@ -887,6 +900,7 @@ AFTER-CREATE-HOOK: A function \(with no arguments) called directly after
     (setq tree-buffer-expand-symbol-before expand-symbol-before)
     (setq tree-buffer-highlight-overlay (make-overlay 1 1))
     (overlay-put tree-buffer-highlight-overlay 'face highlight-node-face)
+    (setq tree-buffer-general-face general-face)
     (setq tree-buffer-incr-searchpattern "")
     (setq tree-buffer-incr-search incr-search)
 

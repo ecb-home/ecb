@@ -26,11 +26,13 @@
 ;; This file is part of the ECB package which can be found at:
 ;; http://home.swipnet.se/mayhem/ecb.html
 
-;; $Id: ecb-util.el,v 1.17 2001/11/06 12:08:17 berndl Exp $
+;; $Id: ecb-util.el,v 1.18 2001/12/03 10:12:34 berndl Exp $
 
 ;;; Code:
 (defconst running-xemacs (string-match "XEmacs\\|Lucid" emacs-version))
-(defconst ecb-directory-sep-char directory-sep-char)
+(defconst ecb-directory-sep-char (if (boundp 'directory-sep-char)
+                                     directory-sep-char
+                                   ?/))
 (defconst ecb-directory-sep-string (char-to-string ecb-directory-sep-char))
 
 (defun ecb-remove-assoc (list key)
@@ -45,14 +47,33 @@
 (defun ecb-find-assoc (list key)
   (assoc key list))
 
-(defun ecb-fix-filename (name &optional substitute-env-vars)
-  (when (stringp name)
-    (let ((norm-path (expand-file-name (if substitute-env-vars
-                                           (substitute-in-file-name name)
-                                         name))))
-      (if (= (aref norm-path (1- (length norm-path))) ecb-directory-sep-char)
-          (substring norm-path 0 (1- (length norm-path)))
-        norm-path))))
+(defun ecb-fix-filename (path &optional filename substitute-env-vars)
+  "Normalizes path- and filenames for ECB. If FILENAME is not nil its pure
+filename \(i.e. without directory part) will be concatenated to PATH. The
+result will never end in the directory-separator. If SUBSTITUTE-ENV-VARS is
+not nil then in both PATH and FILENAME env-var substitution is done.
+If the `system-type' is 'cygwin32 then the path is converted to
+win32-path-style!"
+  (when (stringp path)
+    (let (norm-path)    
+      (setq norm-path (if (and running-xemacs (equal system-type 'cygwin32))
+                          (mswindows-cygwin-to-win32-path path)
+                        path))
+      (setq norm-path (expand-file-name (if substitute-env-vars
+                                            (substitute-in-file-name norm-path)
+                                          norm-path)))
+      (setq norm-path (if (and (> (length norm-path) 1)
+                               (= (aref norm-path
+                                        (1- (length norm-path))) ecb-directory-sep-char))
+                          (substring norm-path 0 (1- (length norm-path)))
+                        norm-path))
+      (concat norm-path
+              (if (stringp filename)
+                  (concat (if (> (length norm-path) 1)
+                              ecb-directory-sep-string)
+                          (file-name-nondirectory (if substitute-env-vars
+                                                      (substitute-in-file-name filename)
+                                                    filename))))))))
 
 (defun ecb-confirm (text)
   (yes-or-no-p text))
