@@ -142,6 +142,9 @@
 (defun h-p(&rest items)
   (h-element "p" items t))
 
+(defun h-i(&rest items)
+  (h-element "i" items t))
+
 (defun h-fsize(size &rest items)
   (h-element "font" (cons (cons 'size size) items)))
 
