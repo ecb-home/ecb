@@ -1,6 +1,10 @@
 Version 1.30 (???):
 -------------------
 
+- Now the ecb-compile-window-height is also preserved after displaying
+  temp-buffers (e.g. help-buffers after C-h f) - if you want this. See the
+  documentation of the option 'ecb-compile-window-temporally-enlarge'. (Klaus)
+
 - Added menu items for modification of the source paths in the directories
   buffer. (Jesper)
 

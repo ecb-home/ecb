@@ -26,7 +26,7 @@
 ;;
 ;; Contains all online-help for ECB (stolen something from recentf.el)
 
-;; $Id: ecb-help.el,v 1.21 2001/05/21 16:58:07 berndl Exp $
+;; $Id: ecb-help.el,v 1.22 2001/05/22 12:48:33 berndl Exp $
 
 ;;; Code
 
@@ -238,14 +238,9 @@ compilation-output there.
 Same for displaying help-buffers or similar stuff.
 
 With the option `ecb-compile-window-temporally-enlarge' you can allow Emacs to
-enlarge temporally the ECB-compile-window after finishing compilation-output.
-
-Known Bug: The setting in `ecb-compile-window-height' works correctly for all
-compilation-output of Emacs (compile, grep etc.) but for some other output like
-help-buffers etc. Emacs enlarges the height of the compile-window for its
-output. Currently ECB can´t restore the height of the compile-window for such
-outputs automatically. But you can always restore the correct layout by calling
-`ecb-redraw-layout'!.
+enlarge temporally the ECB-compile-window after finishing compilation-output
+and/or displaying temp-buffers \(e.g. help-buffers). Please read the comment
+of this option.
 
 
 Rebuilding the ECB-method buffer:

@@ -122,7 +122,7 @@
 ;;   + The edit-window must not be splitted and the point must reside in
 ;;     the not deleted edit-window.
 
-;; $Id: ecb-layout.el,v 1.49 2001/05/16 20:36:23 creator Exp $
+;; $Id: ecb-layout.el,v 1.50 2001/05/22 12:48:33 berndl Exp $
 
 ;;; Code:
 
@@ -191,6 +191,7 @@ layout with `ecb-redraw-layout'"
   :type 'integer)
 
 (defconst ecb-old-compilation-window-height compilation-window-height)
+(defconst ecb-old-temp-buffer-max-height temp-buffer-max-height)
 
 (defcustom ecb-compile-window-height 5.0
   "*If you want a compilation window shown at the bottom
@@ -217,16 +218,28 @@ layout with `ecb-redraw-layout'"
   :type '(radio (const :tag "No compilation window" nil)
                 (number :tag "Window height")))
 
-(defcustom ecb-compile-window-temporally-enlarge nil
-  "*Let Emacs the compile-window of the ECB-layout temporally enlarge
-after finishing the compilation-output. If nil then the compile-window has
-always exactly the height defined in `ecb-compile-window-height' otherwise it
-is enlarged to the value of `compilation-window-height' after finishing
-compilation. To restore the ECB-layout just call `ecb-redraw-layout'."
+(defcustom ecb-compile-window-temporally-enlarge '(temp)
+  "*Let Emacs temporally enlarge the compile-window of the ECB-layout
+after finishing the compilation-output or after displaying a temp-buffer
+\(e.g. a help-buffer). If nil then the compile-window has always exactly the
+height defined in `ecb-compile-window-height' otherwise ECB let temporally
+enlarge all temp-buffers \(e.g. all help-buffers) to the value of
+`temp-buffer-max-height' or all compile-buffers \(e.g. compile- and
+grep-buffers) to `compilation-window-height'. To restore the ECB-layout after
+this buffer-enlarge just call `ecb-redraw-layout'.
+
+Default is to let only temp-buffers temporally enlarge because these type of
+buffer should be best readable whereas there is no need to enlarge
+compile-buffers because there must be only visible a small piece of the
+compilation-output."
   :group 'ecb-layout
   :initialize 'custom-initialize-default
   :set ecb-layout-option-set-function
-  :type 'boolean)
+  :type '(set (const :tag "Enlarge temp-buffers, e.g. help-output."
+                     :value temp)
+              (const :tag "Enlarge compile-buffers, e.g. compile-output."
+                     :value compile)))
+
 
 ;; This variable is also set by the following adviced functions:
 ;; - `delete-other-windows'
@@ -1095,12 +1108,7 @@ this function the edit-window is selected."
                                                  (if (< ecb-compile-window-height 1.0)
                                                      (* (1- (frame-height))
                                                         ecb-compile-window-height)
-                                                   ecb-compile-window-height))))
-           ;; height of compilation-window-height
-           (compile-window-height (if (and (not ecb-compile-window-temporally-enlarge)
-                                           ecb-compile-window-height)
-                                      ecb-compile-window-height-lines
-                                    ecb-old-compilation-window-height)))
+                                                   ecb-compile-window-height)))))
       
       ;; deactivating the adviced functions, so the layout-functions can use the
       ;; original function-definitions.
@@ -1141,17 +1149,24 @@ this function the edit-window is selected."
         ;; *compilation*- or any other buffer with compile-mode.
         (display-buffer (or (get-buffer ecb-last-compile-window-buffer)
                             (get-buffer "*scratch*")))
-        ;; setting compilation-window-height
-        (if compile-window-height
-            (setq compilation-window-height compile-window-height))
+
         ;; Cause of display-buffer changes the height of the compile-window we
         ;; must resize it again to the correct value
         (select-window (next-window))
         (shrink-window (- (window-height)
                           ecb-compile-window-height-lines)))
       
-      ;; set compilation-window-height to the correct value.
-      (setq compilation-window-height compile-window-height)
+      ;; set compilation-window-height and/or temp-buffer-max-height to the
+      ;; correct values.
+      (if (not ecb-compile-window-height)
+          (setq compilation-window-height ecb-old-compilation-window-height
+                temp-buffer-max-height ecb-old-temp-buffer-max-height)
+        (setq compilation-window-height ecb-compile-window-height-lines
+              temp-buffer-max-height (1- ecb-compile-window-height-lines))
+        (if (member 'temp ecb-compile-window-temporally-enlarge)
+            (setq temp-buffer-max-height ecb-old-temp-buffer-max-height))
+        (if (member 'compile ecb-compile-window-temporally-enlarge)
+            (setq compilation-window-height ecb-old-compilation-window-height)))
       
       (select-window (if ecb-edit-window
                          ecb-edit-window
