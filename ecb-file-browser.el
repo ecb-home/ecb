@@ -23,7 +23,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-file-browser.el,v 1.22 2004/06/14 11:02:20 berndl Exp $
+;; $Id: ecb-file-browser.el,v 1.23 2004/07/02 05:49:19 berndl Exp $
 
 ;;; Commentary:
 
@@ -745,7 +745,8 @@ key-bindings only for the history-buffer of ECB."
                    (ecb-string= (substring path 0 (length data)) data)
                    (or (= (length path) (length data))
                        (eq (elt path (length data)) ecb-directory-sep-char)))
-          (let ((was-expanded (tree-node-is-expanded child)))
+          (let ((was-expanded (or (not (tree-node-is-expandable child))
+                                  (tree-node-is-expanded child))))
             (tree-node-set-expanded child t)
             (ecb-update-directory-node child)
             (throw 'exit
@@ -1170,7 +1171,7 @@ then nothing is done unless first optional argument FORCE is not nil."
         (when (or (not (ecb-show-sources-in-directories-buffer-p))
                   ecb-auto-expand-directory-tree)
           (ecb-exec-in-directories-window
-           (let (start)
+           (let (start was-expanded)
              (when ecb-auto-expand-directory-tree
                ;; Expand tree to show selected directory
                (setq start
@@ -1189,6 +1190,8 @@ then nothing is done unless first optional argument FORCE is not nil."
                        (tree-buffer-get-root)))
                (when (and (equal ecb-auto-expand-directory-tree 'best)
                           start)
+                 (setq was-expanded (or (not (tree-node-is-expandable start))
+                                        (tree-node-is-expanded start)))
                  ;; expand the best-match node itself
                  (tree-node-set-expanded start t)
                  ;; This functions ensures a correct expandable-state of
@@ -1196,10 +1199,16 @@ then nothing is done unless first optional argument FORCE is not nil."
                  (ecb-update-directory-node start))
                ;; start recursive expanding of either the best-matching node or
                ;; the root-node itself.
-               (ecb-expand-directory-tree ecb-path-selected-directory
-                                          (or start
-                                              (tree-buffer-get-root)))
-               (tree-buffer-update))
+               (if (or (ecb-expand-directory-tree ecb-path-selected-directory
+                                                  (or start
+                                                      (tree-buffer-get-root)))
+                       (not was-expanded))
+                   (tree-buffer-update)
+                 (tree-buffer-recenter start (selected-window))))
+;;              (ecb-expand-directory-tree ecb-path-selected-directory
+;;                                           (or start
+;;                                               (tree-buffer-get-root)))
+;;                (tree-buffer-update))
              (when (not (ecb-show-sources-in-directories-buffer-p))
                (tree-buffer-highlight-node-data ecb-path-selected-directory
                                                 start)))))
