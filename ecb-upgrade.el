@@ -202,6 +202,7 @@ The car is the old option symbol and the cdr is a 2-element-list with:
 
 ;; upgrading ecb-compile-window-temporally-enlarge
 (defun ecb-upgrade-compile-window-temporally-enlarge (old-val)
+  "save"
   (cond ((equal old-val t)
          'after-compilation)
         ((null old-val)
@@ -279,15 +280,6 @@ The car is the old option symbol and the cdr is a 2-element-list with:
 ;; ----------------------------------------------------------------------
 ;; internal functions. Dot change anything below this line
 ;; ----------------------------------------------------------------------
-
-(defun ecb-option-get-value (option type)
-  "Return the value of a customizable ECB-option OPTION with TYPE, where TYPE
-can either be 'standard-value \(the default-value of the defcustom) or
-'saved-value \(the value stored durable by the user via customize)."
-  (let ((val (car (get option type))))
-    (cond ((not (listp val)) val)
-          ((equal 'quote (car val)) (car (cdr val)))
-          (t (car val)))))
 
 (defun ecb-option-set-default (option)
   "Save the ECB-option OPTION with current default value."
