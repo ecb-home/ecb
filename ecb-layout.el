@@ -122,7 +122,7 @@
 ;;   + The edit-window must not be splitted and the point must reside in
 ;;     the not deleted edit-window.
 
-;; $Id: ecb-layout.el,v 1.48 2001/05/10 17:20:20 berndl Exp $
+;; $Id: ecb-layout.el,v 1.49 2001/05/16 20:36:23 creator Exp $
 
 ;;; Code:
 
@@ -452,7 +452,7 @@ done.")
   (setq ecb-frame nil
         ecb-edit-window nil
         ecb-last-edit-window-with-point nil
-        ecb-compile-window))
+        ecb-compile-window nil))
 
 (defadvice delete-frame (around ecb)
   "If FRAME is equal to the ECB frame then the user will be asked if he want
