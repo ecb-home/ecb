@@ -233,12 +233,7 @@ eshell is currently visible."
               
             (select-window window)
 
-            ;;this needs to be present under GNU Emacs or recenter will fail.
-            (end-of-buffer) 
-        
-            (recenter -2)
-
-            (end-of-buffer))
+            (recenter -2))
         (when display-errors
           (error "Eshell not running or window not live"))))))
 
