@@ -124,7 +124,7 @@
 ;;   + The edit-window must not be splitted and the point must reside in
 ;;     the not deleted edit-window.
 
-;; $Id: ecb-layout.el,v 1.94 2002/01/22 06:36:25 burtonator Exp $
+;; $Id: ecb-layout.el,v 1.95 2002/01/22 06:50:44 burtonator Exp $
 
 ;;; Code:
 
@@ -1246,7 +1246,9 @@ multiplied with the current window-width."
                         nil)))
           tree-buffers))
 
-(defvar ecb-windows-hidden t)
+(defvar ecb-windows-hidden t
+  "Used with `ecb-toggle-ecb-windows'.  If true the ECB windows are hidden.")
+
 (defun ecb-toggle-ecb-windows (&optional arg)
   "Toggle visibilty of the ECB-windows.
 With prefix argument ARG, make visible if positive, otherwise invisible.
@@ -1255,6 +1257,7 @@ visibility of the ECB windows. ECB minor mode remains active!"
   (interactive "P")
   (unless (or (not ecb-minor-mode)
               (not (equal (selected-frame) ecb-frame)))
+
     (let ((new-state (if (null arg)
                          (not ecb-windows-hidden)
                        (<= (prefix-numeric-value arg) 0))))
@@ -1262,7 +1265,9 @@ visibility of the ECB windows. ECB minor mode remains active!"
           (progn
             (if (ecb-show-any-node-info-by-mouse-moving-p)
                 (tree-buffer-activate-follow-mouse))
-            (ecb-redraw-layout))
+            (ecb-redraw-layout)
+            (setq ecb-windows-hidden nil)
+            (message "ECB windows are now visible."))
         (unless ecb-windows-hidden
           (tree-buffer-deactivate-mouse-tracking)
           (tree-buffer-deactivate-follow-mouse)
@@ -1300,7 +1305,9 @@ visibility of the ECB windows. ECB minor mode remains active!"
                (goto-char pos-before-redraw))
              (setq ecb-last-source-buffer (current-buffer))
              (setq ecb-last-edit-window-with-point (selected-window))))
-          (setq ecb-windows-hidden t))))))
+          (setq ecb-windows-hidden t)
+
+          (message "ECB windows are now hidden."))))))
 
 (defun ecb-hide-ecb-windows ()
   "Hide the ECB windows if not already hidden."
