@@ -698,24 +698,27 @@ current-buffer is saved."
       (ecb-update-methods-buffer)))
 
 (defun ecb-update-methods-buffer()
-  "Updates the methods buffer with the current buffer."
-  (tree-node-set-children ecb-methods-root-node nil)
-  ;;  (print (semantic-bovinate-toplevel t))
-  (ecb-add-tokens ecb-methods-root-node
-                  (condition-case nil
-                      ;; semantic <= 1.2.1
-                      (semantic-bovinate-toplevel 0 nil t)
-                    (wrong-number-of-arguments
-                     ;; semantic >= 1.3.1
-                     (semantic-bovinate-toplevel t)))
-                  t)
-  (save-selected-window
-    ;; also the whole buffer informations should be preserved!
-    (save-excursion
-      (ecb-buffer-select ecb-methods-buffer-name)
-      (setq tree-buffer-indent ecb-tree-indent)
-      (tree-buffer-update)))
-  (ecb-mode-line-format))
+  "Updates the methods buffer with the current buffer. Point must stay in an
+edit-window otherwise nothing is done."
+  (interactive)
+  (when (ecb-point-in-edit-window)
+    (tree-node-set-children ecb-methods-root-node nil)
+    ;;  (print (semantic-bovinate-toplevel t))
+    (ecb-add-tokens ecb-methods-root-node
+                    (condition-case nil
+                        ;; semantic <= 1.2.1
+                        (semantic-bovinate-toplevel 0 nil t)
+                      (wrong-number-of-arguments
+                       ;; semantic >= 1.3.1
+                       (semantic-bovinate-toplevel t)))
+                    t)
+    (save-selected-window
+      ;; also the whole buffer informations should be preserved!
+      (save-excursion
+        (ecb-buffer-select ecb-methods-buffer-name)
+        (setq tree-buffer-indent ecb-tree-indent)
+        (tree-buffer-update)))
+    (ecb-mode-line-format)))
 
 (defun ecb-set-selected-source(filename &optional window-skips
                                         no-edit-buffer-selection)
