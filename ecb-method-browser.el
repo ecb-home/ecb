@@ -24,7 +24,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-method-browser.el,v 1.39 2004/04/13 14:55:28 berndl Exp $
+;; $Id: ecb-method-browser.el,v 1.40 2004/04/14 09:29:38 berndl Exp $
 
 ;;; Commentary:
 
@@ -1701,7 +1701,7 @@ be defined outside the class-definition, e.g. C++, Eieio."
 (defun ecb-filter-c-prototype-tags (taglist)
   "Filter out all prototypes.
 Beginning with version 2.24 of ECB this function does nothing when
-`ecb-methods-separate' is set to not nil \(default).
+`ecb-methods-separate-prototypes' is set to not nil \(default).
 
 For example this is useful for editing C files which have the function
 prototypes defined at the top of the file and the implementations at the
@@ -1934,30 +1934,25 @@ used; if point does not stay on a tag then nil is returned."
                (setq curr-tag (ecb-get-type-tag-of-tag curr-tag nil t)))))
     (nreverse type-hierarchy)))
 
-;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: Wenn wir im methods-buffer auf
-;; einem Bucket stehen, wird momentan kein type ermittelt.. Mittels
-;; ecb-get-type-name-hierarchy-of-current-node (und kleinen Änderungen) ginge
-;; das aber sehr leicht!
-
 (defun ecb-methods-filter-by-current-type (inverse source-buffer &optional
                                                    tag)
   "Display only the current-type and its contents in the methods-buffer. The
 argument INVERSE is ignored here."
-  (let* ((curr-tag (or tag
-                       (cond ((ecb-point-in-edit-window)
-                              (if (ecb--semantic-active-p)
-                                  (ecb-get-real-curr-tag)))
-                             ((equal (current-buffer)
-                                     (get-buffer ecb-methods-buffer-name))
-                              (let ((node (tree-buffer-get-node-at-point)))
-                                (and node
-                                     (= (tree-node-get-type node) 0)
-                                     (tree-node-get-data node))))
-                             (t (ecb-error "ECB can not identify the current-type!")))))
-         (curr-type-tag (and (ecb--semantic-tag-p curr-tag)
-                             (save-excursion
-                               (set-buffer source-buffer)
-                               (ecb-get-type-tag-of-tag curr-tag))))
+  (let* ((curr-type-tag (or (and (ecb--semantic-tag-p tag)
+                                 (save-excursion
+                                   (set-buffer source-buffer)
+                                   (ecb-get-type-tag-of-tag tag)))
+                            (cond ((ecb-point-in-edit-window)
+                                   (if (ecb--semantic-active-p)
+                                       (save-excursion
+                                         (set-buffer source-buffer)
+                                         (ecb-get-type-tag-of-tag (ecb-get-real-curr-tag)))))
+                                  ((equal (current-buffer)
+                                          (get-buffer ecb-methods-buffer-name))
+                                   (let ((node (tree-buffer-get-node-at-point)))
+                                     (and node
+                                          (tree-node-get-data (ecb-get-type-node-of-node node)))))
+                                  (t (ecb-error "ECB can not identify the current-type-tag!")))))
          (curr-tag-type-name-hierachy (and curr-type-tag
                                            (save-excursion
                                              (set-buffer source-buffer)
@@ -1975,10 +1970,9 @@ argument INVERSE is ignored here."
                           
 (tree-buffer-defpopup-command ecb-methods-filter-by-current-type-popup
   "Display only the current-type from popup."
-  (if (= (tree-node-get-type node) 0)
-      (ecb-methods-filter-by-current-type nil
-                                          (ecb-methods-get-data-store 'source-buffer)
-                                          (tree-node-get-data node))))
+  (ecb-methods-filter-by-current-type nil
+                                      (ecb-methods-get-data-store 'source-buffer)
+                                      (tree-node-get-data node)))
 
 
 (defun ecb-get-source-buffer-for-tag-filter ()
