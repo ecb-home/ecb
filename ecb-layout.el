@@ -200,7 +200,7 @@ standard-function and to know what the function does.
 You can bind these replacement functions in the ECB-hooks like
 `ecb-activate-hook' to the standard keys you like for the standard-functions
 to get the same behavior just for the edit-window of ECB.
-An example: You can bind `ecb-delete-other-window' to [C-x 0] in the hook.
+An example: You can bind `ecb-delete-other-windows' to [C-x 0] in the hook.
 Then always you hit [C-x 0] in the splitted edit-window only the other half of
 the edit-window will be removed and NOT the browser windows too!
 These replacement function give you the feeling to work with the edit-window
