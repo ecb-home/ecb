@@ -445,6 +445,7 @@ FUNCTIONS must be nil or a subset of `ecb-adviceable-functions'!"
 
 (defun ecb-point-in-edit-window ()
   "Return non nil iff point stays in an edit-window nil otherwise."
+
   (cond ((eq (selected-window) ecb-edit-window)
          t)
         ((and ecb-split-edit-window

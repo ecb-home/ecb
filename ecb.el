@@ -712,9 +712,32 @@ edit-window otherwise nothing is done."
 
   (ecb-toggle-read-only -1)
   
-  (when (ecb-point-in-edit-window)
+;   (when (ecb-point-in-edit-window)
+
+;     (tree-node-set-children ecb-methods-root-node nil)
+;     ;;  (print (semantic-bovinate-toplevel t))
+
+;     (ecb-add-tokens ecb-methods-root-node
+;                     (condition-case nil
+;                         ;; semantic <= 1.2.1
+;                         (semantic-bovinate-toplevel 0 nil t)
+;                       (wrong-number-of-arguments
+;                        ;; semantic >= 1.3.1
+;                        (semantic-bovinate-toplevel t)))
+;                     t)
+;     (save-selected-window
+;       ;; also the whole buffer informations should be preserved!
+;       (save-excursion
+;         (ecb-buffer-select ecb-methods-buffer-name)
+;         (setq tree-buffer-indent ecb-tree-indent)
+;         (tree-buffer-update)))
+
+;     (ecb-mode-line-format)))
+
+
     (tree-node-set-children ecb-methods-root-node nil)
     ;;  (print (semantic-bovinate-toplevel t))
+
     (ecb-add-tokens ecb-methods-root-node
                     (condition-case nil
                         ;; semantic <= 1.2.1
@@ -729,7 +752,9 @@ edit-window otherwise nothing is done."
         (ecb-buffer-select ecb-methods-buffer-name)
         (setq tree-buffer-indent ecb-tree-indent)
         (tree-buffer-update)))
-    (ecb-mode-line-format)))
+
+    (ecb-mode-line-format))
+  
 
 (defun ecb-set-selected-source(filename &optional window-skips
                                         no-edit-buffer-selection)
@@ -1087,7 +1112,7 @@ with the actually choosen layout \(see `ecb-layout-nr')."
     ;; at the real end we run any personal hooks
     (run-hooks 'ecb-activate-hook)
 
-    (ecb-toggle-read-only 1)
+    ;;(ecb-toggle-read-only 1)
     
     (message "The ECB is now activated.")))
 
