@@ -29,15 +29,14 @@
 ;; http://home.swipnet.se/mayhem/ecb.html
 
 ;;; Code:
-
 (defun ecb-strip-slash(path)
-  (if (string= "/" (substring path (1- (length path))))
+  (let ((norm-path (expand-file-name path)))
+    (if (string= (char-to-string directory-sep-char) (substring norm-path -1))
       (substring path 0 (1- (length path)))
-    path))
+    path)))
 
 (defun ecb-confirm(text)
   (x-popup-dialog (list '(0 0) (selected-window)) (list text '("Yes" . t) '("No" . nil))))
-
 
 ;; Klaus TODO: Making this function more general, means useable for non java
 ;; code!!
