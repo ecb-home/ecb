@@ -8,20 +8,31 @@
 
 ** ECB now includes a file "ecb-autoloads.el" which contains all available
    autoloads of ECB. Therefore loading this file is enough.
-  
-** The command `ecb-store-window-sizes' can now also store fixed sizes.
-   If called with a prefix arg then fixed sizes are stored instead of
-   fractions of frame-width resp. -height.
 
-** "Create Source" in the popup-menues now work also for non-java-files.
+** Enhancements to the layout
+
+*** The sizes of the ecb-windows can be fixed even during frame-resizing
+    This new feature is only available with GNU Emacs 21.X. See new option
+    `ecb-fix-window-size'.
+    Suggested by Gunther Ohrner <G.Ohrner@post.rwth-aachen.de>
+     
+*** The command `ecb-store-window-sizes' can now also store fixed sizes.
+    If called with a prefix arg then fixed sizes are stored instead of
+    fractions of frame-width resp. -height.
+
+*** The command `split-window' is now also adviced to work properly.
+
+** Enhancements for the tree-buffers
+
+*** "Create Source" in the popup-menues now work also for non-java-files.
+
+*** ecb-truncate-lines can now set different for each ECB-tree-buffer.
+
+*** Easy horizontal mouse-scrolling of the ECB tree-buffers. See new option
+    `ecb-tree-easy-hor-scroll'.
 
 ** Added a command `ecb-jde-display-class-at-point' which displays the contents
-   of class under point in the methods-buffer of ECB
-
-** ecb-truncate-lines can now set different for each ECB-tree-buffer.
-
-** Easy horizontal mouse-scrolling of the ECB tree-buffers. See new option
-   `ecb-tree-easy-hor-scroll'.
+   of the java-class under point in the methods-buffer of ECB
 
 ** Renamed previous HISTORY file to NEWS and reformate it for outline-mode.
 
