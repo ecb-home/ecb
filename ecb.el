@@ -1842,6 +1842,9 @@ always the ECB-frame if called from another frame."
     ;; first initialize the whole layout-engine
     (ecb-initialize-layout)
 
+    ;; clear the token-tree-cache
+    (ecb-clear-token-tree-cache)
+    
     ;; enable basic advices
     (ecb-enable-basic-advices)
     
