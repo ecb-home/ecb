@@ -54,7 +54,7 @@
 ;; The latest version of the ECB is available at
 ;; http://home.swipnet.se/mayhem/ecb.html
 
-;; $Id: ecb.el,v 1.220 2002/06/14 09:35:50 berndl Exp $
+;; $Id: ecb.el,v 1.221 2002/06/14 16:13:37 berndl Exp $
 
 ;;; Code:
 
@@ -1407,7 +1407,6 @@ is called."
                     ;; source-buffer and following rebuild of the
                     ;; ECB-method-buffer ECB is in correct state again!
                     (ecb-nav-initialize)
-;;                     (ecb-nav-remove-current-node)
                     (semantic-clear-toplevel-cache)
                     (ecb-update-methods-buffer--internal))
                   (ecb-enter-debugger "Token %S is invalid!" token))
@@ -2170,6 +2169,9 @@ it is cleared."
                                    (buffer-file-name (current-buffer))))
            (cached-tree (assoc norm-buffer-file-name ecb-token-tree-cache))
            new-tree)
+      (if ecb-debug-mode
+          (dolist (tok updated-cache)
+            (ecb-semantic-assert-valid-token tok)))
       (unless (and no-update cached-tree)
 	(setq new-tree (tree-node-new "root" 0 nil))
 	(ecb-add-tokens new-tree (ecb-post-process-tokenlist updated-cache))
@@ -2754,6 +2756,7 @@ Currently the fourth argument TREE-BUFFER-NAME is not used here."
 	      (setq filename (semanticdb-full-filename (caar parent)))))))
        )
       (when (and token (not found))
+        (ecb-semantic-assert-valid-token token)
 	(if (eq 'include (semantic-token-token token))
 	    ;; Include token -> try to find source
 	    (progn
@@ -2768,14 +2771,13 @@ Currently the fourth argument TREE-BUFFER-NAME is not used here."
 						  (eq ecb-button 2)))))))))
 
 (defun ecb-jump-to-token (filename token &optional window)
-  (cond ((not (semantic-token-p token))
-         (error "ECB: ecb-jump-to-token: token is nil"))
-        ((not (file-readable-p filename))
+  (cond ((not (file-readable-p filename))
          (error "ECB: ecb-jump-to-token: filename not readable"))
         (t
          (unless window
            (setq window (selected-window)))
          (select-window window)
+         (ecb-semantic-assert-valid-token token)
          (ecb-nav-save-current)
          (find-file filename)
          ;; let us set the mark so the user can easily jump back.
