@@ -46,12 +46,13 @@
   (assoc key list))
 
 (defun ecb-fix-filename (name &optional substitute-env-vars)
-  (let ((norm-path (expand-file-name (if substitute-env-vars
-                                         (substitute-in-file-name name)
-                                       name))))
-    (if (= (aref norm-path (1- (length norm-path))) ecb-directory-sep-char)
-        (substring norm-path 0 (1- (length norm-path)))
-      norm-path)))
+  (when (stringp name)
+    (let ((norm-path (expand-file-name (if substitute-env-vars
+                                           (substitute-in-file-name name)
+                                         name))))
+      (if (= (aref norm-path (1- (length norm-path))) ecb-directory-sep-char)
+          (substring norm-path 0 (1- (length norm-path)))
+        norm-path))))
 
 (defun ecb-confirm (text)
   (yes-or-no-p text))

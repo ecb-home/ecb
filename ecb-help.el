@@ -427,6 +427,22 @@ You can simuate a speedbar-like layout within ONE frame by doing the following:
 4. Save your changes.
 
 
+Optimze Scrolling in the edit-windows:
+--------------------------------------
+
+Emacs seems to slow down scrolling if there is a horizontal split in the frame
+and/or a lot of overlays in the buffer which is scrolled. This is independend
+of ECB! But because almost all layouts of ECB uses horizontal splits of the
+frame and because ECB is based on semantic which uses overlays intensively
+there can be poor scrolling performance in large buffers, especially with
+java-buffers in `jde-mode'.
+
+This scrolling performance can be increased a lot if the options
+`scroll-conservatively' and `scroll-step' are set appropriatelly: The former
+one should have a value of 0 during ECB is active and the latter one a value
+of either 0 or > 1 \(the exact value depends on the power of your machine).
+
+
                         ==================================
                         Entry points for elisp programmers
                         ==================================

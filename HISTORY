@@ -1,7 +1,7 @@
 Version 1.53:
 -------------
 
-- ecb-auto-expand-directory-tree now offers to options:
+- ecb-auto-expand-directory-tree now offers two options:
   - best: Expand always the best matching source-path for a file
   - first: Expand always the first matching source-path for a file (Klaus)
 
@@ -10,6 +10,10 @@ Version 1.53:
 
 - If mouse is moved over an alias in the directories buffer then the real path
   is shown in the echo-area. (Klaus)
+
+- New option for the history: ecb-kill-buffer-clears-history defines if
+  `kill-buffer' should also remove the corresponding history entry. There are
+  several options.
 
 Version 1.52:
 -------------
