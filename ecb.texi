@@ -25,7 +25,7 @@
 @c Free Software Foundation, Inc., 59 Temple Place - Suite 330,
 @c Boston, MA 02111-1307, USA.
 
-@c $Id: ecb.texi,v 1.101 2003/07/15 07:57:19 berndl Exp $
+@c $Id: ecb.texi,v 1.102 2003/07/15 13:27:23 berndl Exp $
 
 @setfilename ecb.info
 
@@ -1173,7 +1173,7 @@ the value of @code{case-fold-search}.
 Tip: The @code{ecb-minor-mode} offers you in the @code{ecb-mode-map}
 (customizable via @code{ecb-key-map}) some keys for selecting every window
 of the ecb-frame. This makes window-selection a child´s play. For
-example you can jump into the method-window by hitting @kbd{C-c . m}.
+example you can jump into the method-window by hitting @kbd{C-c . gm}.
 
 @node Personal keybindings, , Incremental search, Using the keyboard
 @subsection Adding personal keybindings
@@ -2430,11 +2430,34 @@ ECB-windows:
 To get a better overlook about the contents of a certain ECB-window
 every ECB-window can be ``maximized'', means all other ECB-windows are
 deleted so only the edit-window(s) and this maximized ECB-window are
-visible (and maybe a compile-window if active). This can be done
-either via the popup-menus of the ECB-windows or via calling the
-adviced version of @code{delete-other-windows}@footnote{This command
-is adviced per default, see @ref{The edit-window}.} (bound to @kbd{C-x
-1}) in one of the ECB windows.
+visible (and maybe a compile-window if active). There are several ways
+to do this:
+
+@itemize @bullet
+@item
+Via the popup-menus of the ECB-windows
+
+@item
+Via the main ``ECB''-menu and here ``Display window maximized''
+
+@item
+Via calling the adviced version of
+@code{delete-other-windows}@footnote{This command is adviced per
+default, see @ref{The edit-window}.} (bound to @kbd{C-x 1}) in one of
+the ECB windows.
+
+@item
+Via one of the commands @code{ecb-maximize-window-directories},
+@code{ecb-maximize-window-sources}, @code{ecb-maximize-window-methods},
+@code{ecb-maximize-window-history} or
+@code{ecb-maximize-window-speedbar} or the bound short-cuts for those
+commands.
+
+@item
+Via the new command @code{ecb-cycle-maximized-ecb-buffers} which
+cycles through all ecb-buffers of current layout by maximizing exactly
+one of the ecb-windows after every cycle-step.
+@end itemize
 
 Minimizing such a maximized ECB-window, i.e. bringing back to its
 original size, can simply be done by redrawing the layout via the
@@ -2620,6 +2643,11 @@ Running the hooks in @code{ecb-current-buffer-sync-hook}.
 @end itemize
 @end deffn
 
+@deffn Command cycle-maximized-ecb-buffers
+Cycles through all ecb-buffers of current layout by maximizing exactly
+one of the ecb-windows after every cycle-step.
+@end deffn
+
 @deffn Command cycle-through-compilation-buffers &optional choose-buffer
 Cycle through all compilation buffers currently open and display them
 within the compilation window @code{ecb-compile-window}. If the
@@ -2803,6 +2831,41 @@ the method-completion feature of JDEE (see
 
 Works only for classes where the source-code (i.e. the *.java-file) is
 available.
+@end deffn
+
+@deffn Command maximize-window-directories
+Maximize the ECB-directories-window, i.e. delete all other
+ECB-windows, so only one ECB-window and the edit-window(s) are visible
+(and maybe a compile-window). Works also if the ECB-directories-window
+is not visible in current layout.
+@end deffn
+
+@deffn Command maximize-window-sources
+Maximize the ECB-sources-window, i.e. delete all other ECB-windows, so
+only one ECB-window and the edit-window(s) are visible (and maybe a
+compile-window). Works also if the ECB-sources-window is not visible
+in current layout.
+@end deffn
+
+@deffn Command maximize-window-methods
+Maximize the ECB-methods-window, i.e. delete all other ECB-windows, so
+only one ECB-window and the edit-window(s) are visible (and maybe a
+compile-window). Works also if the ECB-methods-window is not visible
+in current layout.
+@end deffn
+
+@deffn Command maximize-window-history
+Maximize the ECB-history-window, i.e. delete all other ECB-windows, so
+only one ECB-window and the edit-window(s) are visible (and maybe a
+compile-window). Works also if the ECB-history-window is not visible
+in current layout.
+@end deffn
+
+@deffn Command maximize-window-speedbar
+Maximize the ECB-speedbar-window, i.e. delete all other ECB-windows,
+so only one ECB-window and the edit-window(s) are visible (and maybe a
+compile-window). Does nothing if the speedbar-window is not visible
+within the ECB-frame.
 @end deffn
 
 @deffn Command minor-mode &optional arg
@@ -6238,10 +6301,8 @@ use a layout with both windows...}.
 
 Because speedbar has also display-modes for buffers and info-nodes and
 some other useful things (which can be changed by the speedbar-command
-@code{speedbar-change-initial-expansion-list}, which is bound for
-convenience to the keysequence @kbd{C-c . bc} in the
-@code{ecb-key-map}) we recommend layouts like ``left15'' or
-``leftright3'' for using with speedbar.
+@code{speedbar-change-initial-expansion-list} we recommend layouts
+like ``left15'' or ``leftright3'' for using with speedbar.
 
 @item Set the option
 @code{ecb-use-speedbar-instead-native-tree-buffer} to not nil. After

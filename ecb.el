@@ -88,7 +88,7 @@
 ;; For the ChangeLog of this file see the CVS-repository. For a complete
 ;; history of the ECB-package see the file NEWS.
 
-;; $Id: ecb.el,v 1.317 2003/07/14 14:48:41 berndl Exp $
+;; $Id: ecb.el,v 1.318 2003/07/15 13:27:23 berndl Exp $
 
 ;;; Code:
 
@@ -2393,7 +2393,52 @@ if no integrated speedbar is visible in the ECB-frame."
 (defun ecb-buffer-select (name)
   (set-buffer (get-buffer name)))
 
+(defun ecb-maximize-window-directories ()
+  "Maximize the ECB-directories-window, i.e. delete all other
+ECB-windows, so only one ECB-window and the edit-window\(s) are visible
+\(and maybe a compile-window). Works also if the ECB-directories-window
+is not visible in current layout."
+  (interactive)
+  (if (equal ecb-use-speedbar-instead-native-tree-buffer 'dir)
+      (ecb-maximize-window-speedbar)
+    (ecb-display-one-ecb-buffer ecb-directories-buffer-name)))
 
+(defun ecb-maximize-window-sources ()
+  "Maximize the ECB-sources-window, i.e. delete all other ECB-windows, so
+only one ECB-window and the edit-window\(s) are visible \(and maybe a
+compile-window). Works also if the ECB-sources-window is not visible in
+current layout."
+  (interactive)
+  (if (equal ecb-use-speedbar-instead-native-tree-buffer 'source)
+      (ecb-maximize-window-speedbar)
+    (ecb-display-one-ecb-buffer ecb-sources-buffer-name)))
+
+(defun ecb-maximize-window-methods ()
+  "Maximize the ECB-methods-window, i.e. delete all other ECB-windows, so
+only one ECB-window and the edit-window\(s) are visible \(and maybe a
+compile-window). Works also if the ECB-methods-window is not visible in
+current layout."
+  (interactive)
+  (if (equal ecb-use-speedbar-instead-native-tree-buffer 'method)
+      (ecb-maximize-window-speedbar)
+    (ecb-display-one-ecb-buffer ecb-methods-buffer-name)))
+
+(defun ecb-maximize-window-history ()
+  "Maximize the ECB-history-window, i.e. delete all other ECB-windows, so
+only one ECB-window and the edit-window\(s) are visible \(and maybe a
+compile-window). Works also if the ECB-history-window is not visible in
+current layout."
+  (interactive)
+  (ecb-display-one-ecb-buffer ecb-history-buffer-name))
+
+(defun ecb-maximize-window-speedbar ()
+  "Maximize the ECB-speedbar-window, i.e. delete all other ECB-windows,
+so only one ECB-window and the edit-window\(s) are visible \(and maybe a
+compile-window). Does nothing if the speedbar-window is not visible within the
+ECB-frame."
+  (interactive)
+  (if (ecb-speedbar-active-p)
+      (ecb-display-one-ecb-buffer ecb-speedbar-buffer-name)))
 
 (defun ecb-toggle-RET-selects-edit-window ()
   "Toggles if RET in current tree-buffer should finally select the
@@ -4686,6 +4731,58 @@ That is remove the unsupported :help stuff."
       ])
     )
    (list
+    "Display window maximized"
+    (ecb-menu-item
+     ["Edit-window 1"
+      (progn
+        (ecb-goto-window-edit1)
+        (ecb-with-adviced-functions
+         (delete-other-windows)))
+      :active (ecb-edit-window-splitted)
+      :help "Maximize the first edit-window"
+      ])
+    (ecb-menu-item
+     ["Edit-window 2"
+      (progn
+        (ecb-goto-window-edit2)
+        (ecb-with-adviced-functions
+         (delete-other-windows)))
+      :active (ecb-edit-window-splitted)
+      :help "Maximize the second edit-window"
+      ])
+    (ecb-menu-item
+     ["Directories"
+      ecb-maximize-window-directories
+      :active t
+      :help "Maximize the directories window - even if currently not visible"
+      ])
+    (ecb-menu-item
+     ["Sources"
+      ecb-maximize-window-sources
+      :active t
+      :help "Maximize the sources window - even if currently not visible"
+      ])
+    (ecb-menu-item
+     ["Methods and Variables"
+      ecb-maximize-window-methods
+      :active t
+      :help "Maximize the methods/variables window - even if currently not visible"
+      ])
+    (ecb-menu-item
+     ["History"
+      ecb-maximize-window-history
+      :active (ecb-window-live-p ecb-history-buffer-name)
+      :help "Maximize the history window - even if currently not visible"
+      ])
+    (ecb-menu-item
+     ["Speedbar"
+      ecb-maximize-window-speedbar
+      :active (ignore-errors (ecb-speedbar-active-p))
+      :help "Maximize the integrated speedbar window if visible"
+      ])
+    )
+   "-"
+   (list
     "Preferences"
     (ecb-menu-item
      ["All..."
@@ -4884,20 +4981,25 @@ That is remove the unsupported :help stuff."
                (t "lt" ecb-toggle-layout)
                (t "r" ecb-rebuild-methods-buffer)
                (t "a" ecb-toggle-auto-expand-token-tree)
-               (t "o" ecb-show-help)
-               (t "1" ecb-goto-window-edit1)
-               (t "2" ecb-goto-window-edit2)
-               (t "c" ecb-goto-window-compilation)
-               (t "d" ecb-goto-window-directories)
-               (t "s" ecb-goto-window-sources)
-               (t "m" ecb-goto-window-methods)
-               (t "h" ecb-goto-window-history)
-               (t "bw" ecb-goto-window-speedbar)
-               (t "bc" speedbar-change-initial-expansion-list)
-               (t "e" ecb-eshell-goto-eshell)
                (t "x" ecb-expand-methods-nodes)
+               (t "o" ecb-show-help)
+               (t "g1" ecb-goto-window-edit1)
+               (t "g2" ecb-goto-window-edit2)
+               (t "gc" ecb-goto-window-compilation)
+               (t "gd" ecb-goto-window-directories)
+               (t "gs" ecb-goto-window-sources)
+               (t "gm" ecb-goto-window-methods)
+               (t "gh" ecb-goto-window-history)
+               (t "gb" ecb-goto-window-speedbar)
+               (t "md" ecb-maximize-window-directories)
+               (t "ms" ecb-maximize-window-sources)
+               (t "mm" ecb-maximize-window-methods)
+               (t "mh" ecb-maximize-window-history)
+               (t "mb" ecb-maximize-window-speedbar)
+               (t "e" ecb-eshell-goto-eshell)
                (t "\\" ecb-toggle-compile-window)
                (t "/" ecb-toggle-enlarged-compilation-window)
+               (t "," ecb-cycle-maximized-ecb-buffers)
                (t "." ecb-cycle-through-compilation-buffers)))
 
   "*Specifies all keybindings for the ECB minor-mode keymap.

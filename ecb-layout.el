@@ -110,7 +110,7 @@
 ;; For the ChangeLog of this file see the CVS-repository. For a complete
 ;; history of the ECB-package see the file NEWS.
 
-;; $Id: ecb-layout.el,v 1.169 2003/07/14 14:48:41 berndl Exp $
+;; $Id: ecb-layout.el,v 1.170 2003/07/15 13:27:23 berndl Exp $
 
 ;;; Code:
 
@@ -818,6 +818,8 @@ command.")
         ecb-edit-window nil
         ecb-last-edit-window-with-point nil
         ecb-last-source-buffer nil
+        ecb-current-maximized-ecb-buffer-name nil
+        ecb-cycle-ecb-buffer-state nil
         ecb-compile-window nil
         ecb-compile-window-was-selected-before-command nil))
 
@@ -1935,6 +1937,48 @@ edit-window is selected."
                    ecb-buffer-setfunction-registration)))
       (setq ecb-current-maximized-ecb-buffer-name buf-name))))
 
+(defun ecb-display-one-ecb-buffer (ecb-buffer-name)
+  (let ((curr-point (ecb-where-is-point)))
+    (ecb-maximize-ecb-window ecb-buffer-name)
+    ;; point is now in the edit-buffer so maybe we have to move point to the
+    ;; buffer where it was before.
+    (cond ((equal curr-point 'ecb)
+           (ecb-window-select ecb-buffer-name))
+          ((equal curr-point 'compile)
+           (ecb-window-select ecb-compile-window)))))
+
+(defvar ecb-cycle-ecb-buffer-state nil
+  "State of ecb-buffer-cycling. An alist where the car is the list of all
+buffer-names of the ecb-buffers of current layout and the cdr the index which
+buffer-name is the next one in the cycle-sequence. Is only set by
+`ecb-redraw-layout-full' and `ecb-cycle-maximized-ecb-buffers'.")
+
+(defun ecb-cycle-maximized-ecb-buffers ()
+  "Cycles through all ecb-buffers of current layout by maximizing exactly one
+of the ecb-windows after every cycle-step."
+  (interactive)
+  (when (null ecb-cycle-ecb-buffer-state)
+    ;; we have redrawn the complete layout and therefore the cycle-state
+    ;; has been reset. If we start the cycling with an already maximized
+    ;; ecb-window we have first redraw fully so we get a correct
+    ;; initialization!
+    (ecb-redraw-layout-full)
+    (setq ecb-cycle-ecb-buffer-state
+          (cons (mapcar (function (lambda (w)
+                                    (buffer-name (window-buffer w))))
+                        (ecb-canonical-ecb-windows-list))
+                0)))
+  ;; now we have a valid cycle-state so we can display the next ecb-buffer
+  (ecb-display-one-ecb-buffer (nth (cdr ecb-cycle-ecb-buffer-state)
+                                   (car ecb-cycle-ecb-buffer-state)))
+  ;; now we have to move forward the cycle-state
+  (setcdr ecb-cycle-ecb-buffer-state
+          (if (= (cdr ecb-cycle-ecb-buffer-state)
+                 (1- (length (car ecb-cycle-ecb-buffer-state))))
+              0
+            (1+ (cdr ecb-cycle-ecb-buffer-state)))))
+
+
 ;; This function must savely work even if `ecb-edit-window' is not longer
 ;; alive, which should normally not happen!
 (defun ecb-window-configuration ()
@@ -2554,8 +2598,10 @@ this function the edit-window is selected which was current before redrawing."
            (error "Edit-window not set in function 'ecb-layout-function-%s"
                   ecb-layout-name)))
 
-        (if (null ecb-windows-creator)
-            (setq ecb-current-maximized-ecb-buffer-name nil))
+        ;; resetting some states if we have a full layout
+        (when (null ecb-windows-creator)
+          (setq ecb-current-maximized-ecb-buffer-name nil)
+          (setq ecb-cycle-ecb-buffer-state nil))
 
         ;; now regarless of the value of ecb-windows-creator the selected
         ;; window is the edit-window and ecb-edit-window is set to this
