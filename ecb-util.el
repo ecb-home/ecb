@@ -26,14 +26,11 @@
 ;; This file is part of the ECB package which can be found at:
 ;; http://home.swipnet.se/mayhem/ecb.html
 
-;; $Id: ecb-util.el,v 1.10 2001/04/28 15:26:40 creator Exp $
+;; $Id: ecb-util.el,v 1.11 2001/05/01 13:31:53 creator Exp $
 
 ;;; Code:
 (defconst running-xemacs (string-match "XEmacs\\|Lucid" emacs-version))
-
-(defconst ecb-directory-sep-char (if running-xemacs
-				     directory-sep-char
-				   ?/))
+(defconst ecb-directory-sep-char directory-sep-char)
 (defconst ecb-directory-sep-string (char-to-string ecb-directory-sep-char))
 
 (defun ecb-fix-filename(name)
