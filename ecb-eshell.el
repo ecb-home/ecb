@@ -1,6 +1,6 @@
 ;;; ecb-eshell.el --- eshell integration for the ECB.
 
-;; $Id: ecb-eshell.el,v 1.6 2001/11/22 21:15:11 berndl Exp $
+;; $Id: ecb-eshell.el,v 1.7 2001/11/22 23:28:00 burtonator Exp $
 
 ;; Copyright (C) 2000-2003 Free Software Foundation, Inc.
 ;; Copyright (C) 2000-2003 Kevin A. Burton (burton@openprivacy.org)
@@ -48,7 +48,8 @@
 ;; - only run eshell/cd if the current directory is different than the
 ;; eshell/pwd.
 ;;
-;;
+;;   - we can't do this.  eshell/pwd does't return a string.  Instead we should
+;;   change to the eshell-buffer and see what the directory is there...
 
 ;;; Code:
 
@@ -60,14 +61,14 @@
 
   (if (ecb-eshell-running-p)      
       (let((new-directory default-directory))
-    
+
         (set-buffer (get-buffer-create eshell-buffer-name))
-        
+              
         (end-of-buffer)
-        
+              
         ;;change the directory without showing the cd command
         (eshell/cd new-directory)
-        
+              
         ;;execute the command
         (eshell-send-input)
 
@@ -120,8 +121,32 @@
       ;;FIXME: should we auto start the eshell here?  I think so..
     (error "The eshell is not running")))
 
+(defun ecb-eshell-resize()
+  "Resize the eshell so more information is available.  This is usually done so
+  that the eshell has more screen space after we execute a command. "
+  (interactive)
+
+  (if (and (ecb-eshell-running-p)
+           ecb-minor-mode)
+
+      (progn 
+      
+;;         (other-window 1)
+        
+;;         (pop-to-buffer "*eshell*" t)
+
+;;         (other-window -1)
+
+        )))
+  
 (add-hook 'ecb-current-buffer-sync-hook 'ecb-eshell-current-buffer-sync)
-          
+
+(add-hook 'ecb-redraw-layout-hooks 'ecb-eshell-recenter)
+
+(add-hook 'eshell-pre-command-hook 'ecb-eshell-resize)
+
+(define-key ecb-mode-map "\C-c.e" 'ecb-eshell-goto-eshell)
+
 (provide 'ecb-eshell)
 
 ;;; ecb-eshell.el ends here
