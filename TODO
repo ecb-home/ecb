@@ -1,4 +1,7 @@
 
+- In online-help:
+  + pointer to the intellisense feature of semantic
+	
 - (BUG) if we are in a compilation buffer, and we do a
   switch-to-buffer-other-window, and the buffer currently in the edit window is
   already the buffer we want to switch to, we should NOT split the window again

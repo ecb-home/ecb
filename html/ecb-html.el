@@ -168,8 +168,9 @@
        '(
 	 ("main.html" "Main")
 	 ("http://sourceforge.net/project/showfiles.php?group_id=17484" "Download")
+         ("docs.html#Install%20and%20first%20steps" "Installation")
 	 ("docs.html" "Documentation")
-	 ("faq.html" "FAQ")
+	 ("docs.html#FAQ" "FAQ")
 	 ("history" "History")
 	 ("http://lists.sourceforge.net/lists/listinfo/ecb-list" "Mailing List")
 	 ("http://cvs.sourceforge.net/cgi-bin/viewcvs.cgi/ecb/" "CVS")

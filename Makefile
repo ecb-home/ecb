@@ -99,7 +99,7 @@ online-help: $(ecb_TEXI)
 	@if test -x "$(MAKEINFO)" ; then\
 	   $(RM) $(ecb_INFO) $(ecb_HTML); \
 	   echo Generating info-format...; \
-	   $(MAKEINFO) --no-split $<; \
+	   $(MAKEINFO) --fill-column=78 --no-split $<; \
 	   echo Generating html-format...; \
 	   $(MAKEINFO) --no-split --html $<; \
 	else \

@@ -109,6 +109,7 @@ mailing list @email{ecb-list@@lists.sourceforge.net} via
 * Tips and tricks::             Useful hints and tips
 * Elisp programming::           Entry points for elisp programmers
 * Conflicts and bugs::          Known Conflicts with other packages and bugs
+* FAQ::                         Frequent asked questions
 * Command Index::               Index for interactive commands
 * Option Index::                Index for user options
 * Concept Index::               Index for concepts and terms
@@ -120,6 +121,7 @@ mailing list @email{ecb-list@@lists.sourceforge.net} via
 Installation and first steps of ECB
 
 * Installation::                Installation of ECB
+* Setting up Emacs::            How to set up Emacs for semantic and ECB
 * First steps::                 First steps after activating ECB first time
 
 Overview
@@ -225,15 +227,16 @@ Known conflicts with other packages
 @node Install and first steps, Overview, Top, Top
 @chapter Installation and first steps of ECB
 
-This chapter describes how to install ECB and what are the first
-steps after activation of ECB
+This chapter describes how to install ECB and setup Emacs correctly and
+what are the first steps after activation of ECB.
 
 @menu
 * Installation::                Installation of ECB
+* Setting up Emacs::            How to set up Emacs for semantic and ECB
 * First steps::                 First steps after activating ECB first time
 @end menu
 
-@node Installation, First steps, Install and first steps, Install and first steps
+@node Installation, Setting up Emacs, Install and first steps, Install and first steps
 @section Installation of ECB
 
 @enumerate
@@ -335,7 +338,77 @@ online help of ECB is always available though, see
 
 @end enumerate
 
-@node First steps, , Installation, Install and first steps
+@node Setting up Emacs, First steps, Installation, Install and first steps
+@section How to set up Emacs for file parsing
+
+Parsing files is done completely by semantic. ECB just displays the
+parsing results. For all needs of ECB semantic is completely setup by
+ECB itself, i.e. ECB sets up semantic for you! You have only to add
+the installation directory of semantic to your @code{load-path} (in an
+appropriate way)!
+
+@strong{NOTE}: ECB is for browsing source-files and therefore you have
+to setup your Emacs-configuration properly so semantic can be
+activated automatically for parsing your Emacs-Lisp, C, C++ or Java
+buffers@footnote{semantic supports some more ``languages'' like
+Makefiles etc. but these are the most important ones.}. For this Emacs must activate the correct @code{major-mode}
+for the source-files and Emacs can only do this if the option
+@code{auto-mode-alist} is setup correctly. The correct major-modes and
+possible file-extensions@footnote{Especially for C++ and C you can
+use any extension you want but these are the most common ones!} are:
+
+@multitable @columnfractions 0.20 0.50 0.30
+
+@item
+@ifnotinfo
+@strong{Language}
+@end ifnotinfo
+@ifinfo
+LANGUAGE
+@end ifinfo
+@tab
+@ifnotinfo
+@strong{Major-mode}
+@end ifnotinfo
+@ifinfo
+MAJOR-MODE
+@end ifinfo
+@tab
+@ifnotinfo
+@strong{Extension(s)}
+@end ifnotinfo
+@ifinfo
+EXTENSION(S)
+@end ifinfo
+
+@item Emacs Lisp @tab @code{emacs-lisp-mode} @tab .el
+
+@item C @tab @code{c-mode} @tab .h, .c
+
+@item C++ @tab @code{c++-mode} @tab .h, .hxx, .hh, .HH, .cxx, .cpp,
+.cc, .CC
+
+@item Java @tab @code{java-mode} or @code{jde-mode} (if you use JDEE)
+@tab .java
+@end multitable
+
+@sp 1
+
+If your source-files are ``running'' with correct @code{major-mode}
+ECB and semantic will do what you expect them doing!
+
+Example: If you want files with extension ``.cpp'' being c++-parsed by
+semantic and ECB, your @code{auto-mode-alist} must contain an entry
+like:
+
+@example
+("\\.cpp\\'" . c++-mode)
+@end example
+
+After this ECB will correctly parse your ``.cpp''-sources and display
+all the semantic information in the ECB-methods buffer.
+
+@node First steps, , Setting up Emacs, Install and first steps
 @section First steps after activating ECB first time
 
 This section of the ECB online-help is displayed automatically by ECB
@@ -3520,7 +3593,7 @@ For a detailed explanation of each macro read the documentation with
 
 Documentation will be added in future!
 
-@node Conflicts and bugs, Command Index, Elisp programming, Top
+@node Conflicts and bugs, FAQ, Elisp programming, Top
 @chapter Known conflicts and bugs of ECB
 
 This chapter describes all already known conflicts with other packages
@@ -3619,7 +3692,128 @@ echo-area instead of creating a new small window!
 This section describes all currently known bugs of ECB. The
 maintainers of ECB try to fix these bugs as soon as possible.
 
-@node Command Index, Option Index, Conflicts and bugs, Top
+@node FAQ, Command Index, Conflicts and bugs, Top
+@chapter Frequent asked questions
+
+This is the Emacs Code Browser FAQ.
+
+@c To produce prettier output we make an empty column between the
+@c question- and the answer-column. Therefore every Q/A-item must look
+@c like:
+@c
+@c    @c an empty line between every Q/A-item
+@c    @item @tab @tab
+@c
+@c    @c The Q/A-item
+@c    @item
+@c    <The text of the question?>
+@c    @tab @tab
+@c    <The text of the answer>
+
+@multitable @columnfractions 0.40 0.01 0.59
+
+@item
+@ifnotinfo
+@strong{Question}
+@end ifnotinfo
+@ifinfo
+QUESTION
+@end ifinfo
+@tab @tab
+@ifnotinfo
+@strong{Answer}
+@end ifnotinfo
+@ifinfo
+ANSWER
+@end ifinfo
+
+@c an empty line between every Q/A-item
+@item @tab @tab
+
+@c The Q/A-item
+@item
+What is the first step i should do if i have problems with ECB?
+@tab @tab
+Read carefully the complete online-help of ECB.
+
+@item @tab @tab
+
+@item
+What should i do, if a have a problem which can not be solved even
+after reading the online-help?
+@tab @tab
+Send a problem-report to the ECB-mailing-list with the command
+@code{ecb-submit-problem-report}, @xref{Submitting problem report}.
+
+@item @tab @tab
+
+@item
+What should i do, if another package seems not to work correct with
+ECB?
+@tab @tab
+Take a look into @ref{Conflicts}. If your package is not listed there
+then submit a problem-report.
+
+@item @tab @tab
+
+@item
+Why are the lines in the ECB-, temp- and compilation-buffers not
+wrapped but truncated?
+@tab @tab
+Check the variable @code{truncate-partial-width-windows} and set it to
+nil.
+
+@item @tab @tab
+
+@item
+Why doesn't ECB work correct with VC?
+@tab @tab
+The variable @code{vc-delete-logbuf-window} must be set to nil during
+active ECB. This can be done with the hooks of ECB.
+
+@item @tab @tab
+
+@item
+Does ECB support C++ as well as Java?
+@tab @tab
+This depends strongly on Semantic, but all semantic-versions >=
+semantic-1.4beta13 should support C++ really well.
+
+@item @tab @tab
+
+@item
+Why does ECB not recognize my source-files for C++?
+@tab @tab
+Your C++-files have probably an extension which is not mapped to
+c++-mode in @code{auto-mode-alist}, @xref{Setting up Emacs}.
+
+@item @tab @tab
+
+@item
+Why doesn't ECB display the node name in the echo area if mouse moves
+over it?
+@tab @tab
+There can be several reasons: First the value of the option
+@code{ecb-show-node-name-in-minibuffer} must be either @code{always} or
+@code{if-too-long}. If this is ok, then maybe you have turned on
+follow-mouse AFTER activating ECB; follow-mouse must be turned on
+BEFORE ECB is acivated, e.g. in the @code{ecb-activate-hook}! But with
+Emacs 21.X and XEmacs there are no problems with this feature, just
+activate it.
+
+@item @tab @tab
+
+@item
+What is the reason for poor scrolling performance with GNU Emacs 20.X
+in the edit-windows and what can i do?
+@tab @tab
+Set @code{scroll-conservatively} to 0 and @code{scroll-step} to a
+value > 1. For the exact reason look at @ref{Optimize scrolling}.
+
+@end multitable
+
+
+@node Command Index, Option Index, FAQ, Top
 @unnumbered Command Index
 
 @noindent
