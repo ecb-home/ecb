@@ -1453,6 +1453,46 @@ place."
   (select-window (next-window))
   (setq ecb-edit-window (selected-window)))
 
+(defun ecb-layout-function-10()
+  "This function creates the following layout:
+
+   -------------------------------------------------------
+   |  Sources     |                                      | 
+   |--------------|                                      |
+   |              |                                      |
+   |              |                                      |
+   |              |                                      |
+   |  Methods     |                 Edit                 |
+   |              |                                      | 
+   |              |                                      |
+   |              |                                      |
+   |--------------|                                      |
+   |  History     |                                      |
+   -------------------------------------------------------
+   |                                                     |
+   |                    Compilation                      |
+   |                                                     |
+   -------------------------------------------------------
+
+If you have not set a compilation-window in `ecb-layout-nr' then the layout
+contains no compilation window and the other windows get a little more
+place."
+  (when ecb-compile-window-height
+    (ecb-split-ver (* -1 ecb-compile-window-height) t)
+    (setq ecb-compile-window (next-window)))
+  (ecb-split-hor ecb-windows-width t)
+
+  ;;(ecb-set-directories-buffer)
+  ;;(ecb-split-ver 0.3)
+  (ecb-set-sources-buffer)
+  (ecb-split-ver 0.2)
+  (ecb-set-methods-buffer)
+  (ecb-split-ver 0.75)
+  (ecb-set-history-buffer)
+  (select-window (next-window))
+  (setq ecb-edit-window (selected-window)))
+
+
 (provide 'ecb-layout)
 
 ;;; ecb-layout.el ends here
