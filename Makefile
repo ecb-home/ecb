@@ -89,7 +89,7 @@ INSTALLINFO=/usr/bin/install-info
 
 # Do not change anything below!
 
-# $Id: Makefile,v 1.48 2003/01/07 16:19:44 berndl Exp $
+# $Id: Makefile,v 1.49 2003/01/27 10:41:31 berndl Exp $
 
 RM=rm -f
 CP=cp
@@ -102,9 +102,11 @@ ecb_LISP_EL=tree-buffer.el ecb-util.el ecb-mode-line.el ecb-help.el \
             ecb-layout.el ecb-layout-defs.el ecb-navigate.el ecb.el \
             ecb-eshell.el ecb-cycle.el ecb-face.el ecb-compilation.el \
             ecb-upgrade.el ecb-create-layout.el silentcomp.el \
-            ecb-speedbar.el ecb-examples.el
+            ecb-speedbar.el ecb-examples.el ecb-tod.el
 
 ecb_LISP_ELC=$(ecb_LISP_EL:.el=.elc)
+
+ecb_ETC=HISTORY README RELEASE_NOTES Makefile make.bat
 
 ecb_TEXI=ecb.texi
 
@@ -117,8 +119,7 @@ ecb_DVI=$(ecb_TEXI:.texi=.dvi)
 ecb_PS=$(ecb_TEXI:.texi=.ps)
 ecb_PDF=$(ecb_TEXI:.texi=.pdf)
 
-ecb_DISTRIB_FILES=$(ecb_LISP_EL) $(ecb_TEXI) \
-                  HISTORY README RELEASE_NOTES Makefile make.bat
+ecb_DISTRIB_FILES=$(ecb_LISP_EL) $(ecb_TEXI) $(ecb_ETC)
 
 ecb: $(ecb_LISP_EL)
 	@echo "Byte-compiling ECB with LOADPATH=${LOADPATH} ..."
