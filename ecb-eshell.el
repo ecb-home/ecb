@@ -1,6 +1,6 @@
 ;;; ecb-eshell.el --- eshell integration for the ECB.
 
-;; $Id: ecb-eshell.el,v 1.50 2002/12/16 13:18:22 berndl Exp $
+;; $Id: ecb-eshell.el,v 1.51 2002/12/22 14:25:37 berndl Exp $
 
 ;; Copyright (C) 2000-2003 Free Software Foundation, Inc.
 ;; Copyright (C) 2000-2003 Kevin A. Burton (burton@openprivacy.org)
@@ -105,9 +105,6 @@
 
 ;;; TODO:
 ;;
-;; - Right now ecb-eshell doesn't work with dired.  Why?  Try to setup a hook
-;; and an ecb-eshell-dired-buffer-sync function that will take care of this.
-;;
 ;; - BUG: enable just-in-time current-buffer-sync... only execute if the current
 ;; buffer's directlry is not equal to the ecb directory.
 
@@ -155,22 +152,24 @@ the eshell loaded for ecb-eshell to function properly.")
 (defvar ecb-eshell-pre-window-enlarged nil
   "True if we enlarged the window before we executed a command.")
 
+;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: Maybe there are some save-....
+;;       calls superfluous in this function...
 (defun ecb-eshell-current-buffer-sync()
   "Synchronize the eshell with the current buffer.  This is only done if the
 eshell is currently visible."
   (interactive)
 
-  ;;only do this if the user is looking at the eshell buffer
-
-  (save-excursion
-    (save-window-excursion
-
-      (if (ecb-eshell-running-p)
-          (let((source-buffer-directory nil)
-               (eshell-buffer-list (ecb-frame-parameter (selected-frame)
-                                                        'buffer-list))
-               (ecb-buffer-directory nil)
-               (window nil))
+  (let((source-buffer-directory nil)
+       (eshell-buffer-list (ecb-frame-parameter (selected-frame)
+                                                'buffer-list))
+       (ecb-buffer-directory nil)
+       (window (get-buffer-window ecb-eshell-buffer-name)))
+    
+    ;;only do this if the user is looking at the eshell buffer
+  
+    (if (and (ecb-eshell-running-p) window (window-live-p window))
+        (save-excursion
+          (save-window-excursion
 
             ;;make sure we are clean.
             (ecb-eshell-cleanse)
@@ -179,39 +178,32 @@ eshell is currently visible."
         
             (setq source-buffer-directory default-directory)
 
-            (setq window (get-buffer-window ecb-eshell-buffer-name))
-
             (save-excursion
               (set-buffer (get-buffer-create ecb-eshell-buffer-name))
-
               (setq buffer-read-only nil)
-          
               (setq ecb-buffer-directory default-directory))
 
             ;;at this point source-buffer-directory is a snapshot of the source
             ;;buffer window and default directory is the directory in the eshell
             ;;window
         
-            (when (and window
-                       (window-live-p window)
-                       (not (string-equal source-buffer-directory ecb-buffer-directory)))
+            (when (not (string-equal source-buffer-directory ecb-buffer-directory))
               (save-excursion
-
                 (set-buffer ecb-eshell-buffer-name)
-            
                 ;;change the directory without showing the cd command
                 (eshell/cd source-buffer-directory)
-            
+                
                 ;;execute the command
                 (save-selected-window
                   (select-window window)
-              
                   (eshell-send-input)))
           
               (ecb-eshell-recenter))
 
             ;;now update the buffer list to remove the eshell.
-            (modify-frame-parameters nil (list (cons 'buffer-list eshell-buffer-list))))))))
+            (modify-frame-parameters nil
+                                     (list (cons 'buffer-list
+                                                 eshell-buffer-list))))))))
 
 (defmacro ecb-eshell-save-buffer-history (&rest body)
   "Protect the buffer-list so that the eshell buffer name is not places early in

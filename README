@@ -5,7 +5,7 @@ About
 -----
 
 This package contains a code browser for several programming-languages for
-Emacs. For instructions on how to use the browser read the online-help (see
+(X)Emacs. For instructions on how to use the browser read the online-help (see
 "Usage" below). The latest version of this package can be found at:
 
 http://home.swipnet.se/mayhem/ecb.html
@@ -19,7 +19,11 @@ ECB requires the following packages being properly installed:
   (http://cedet.sourceforge.net/semantic.shtml)
 - Eieio, author version 0.17 or higher
   (http://cedet.sourceforge.net/eieio.shtml).
-- If Java code is edited the ECB works best when the JDE package
+
+- Optional: speedbar, author version 0.14beta1 or higher
+  (http://cedet.sourceforge.net/eieio.shtml)
+  This is only needed if the speedbar-integration of ECB is used
+- Optional: If Java code is edited the ECB works best when the JDE package
   (http://sunsite.auc.dk/jde) is installed.
 
 If you use XEmacs you must have the fsf-compat package installed (contains
@@ -43,8 +47,8 @@ are not necessary for you; please start reading at point 4.
 2. Install the required semantic- and eieio-version.
 
    *Note*: ECB maybe requires a newer version of these libraries than shipped
-   with Emacs or XEmacs. You have to install exactly a version ECB requires
-   and also to make sure that the correct version is loaded into (X)Emacs!
+   with (X)Emacs. You have to install exactly a version ECB requires and also
+   to make sure that the correct version is loaded into (X)Emacs!
 
    But ECB checks auto. during start-time if the correct versions of semantic
    and eieio are installed and gives you proper feedback.
@@ -64,9 +68,9 @@ are not necessary for you; please start reading at point 4.
 
 4. Load ECB by adding code to your `.emacs':
 
-   If you want to load the complete ECB at Emacs-loadtime (Advantage: All
-   ECB-options available after loading Emacs. Disadvantage: Increasing
-   loadtime(1)):
+   If you want to load the complete ECB at (X)Emacs-loadtime (Advantage: All
+   ECB-options available after loading (X)Emacs. Disadvantage: Increasing
+   loadtime):
 
       (require 'ecb)
 
@@ -78,7 +82,7 @@ are not necessary for you; please start reading at point 4.
       (autoload 'ecb-byte-compile "ecb" "Byte-compile ECB" t)
       (autoload 'ecb-show-help "ecb-help" "Show the online help of ECB" t)
 
-5. Restart Emacs.
+5. Restart (X)Emacs.
 
 ECB is now ready for use and can be activated by calling `M-x ecb-activate' or
 `ecb-minor-mode'. Now you can either starting using ECB or you can do these

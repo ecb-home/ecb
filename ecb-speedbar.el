@@ -1,6 +1,6 @@
 ;;; ecb-speedbar.el --- 
 
-;; $Id: ecb-speedbar.el,v 1.31 2002/12/21 14:21:55 berndl Exp $
+;; $Id: ecb-speedbar.el,v 1.32 2002/12/22 14:25:36 berndl Exp $
 
 ;; Copyright (C) 2000-2003 Free Software Foundation, Inc.
 ;; Copyright (C) 2000-2003 Kevin A. Burton (burton@openprivacy.org)
@@ -41,7 +41,7 @@
 ;;
 ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: IMHO the following WARNING is not
 ;; necessary anymore because IMHO we need no patched speedbar at least not
-;; when 0.14beta4 is used.
+;; when a version >= 0.14beta1 is used.
 
 ;; WARNING: currently ecb-speedbar depends on patches to the speedbar which I
 ;; sent to the author.  Without these patches ecb-speedbar will work but your
@@ -95,12 +95,8 @@
 
 ;;; TODO:
 
-;; - BUG: when I sync to a buffer in the ECB frame, the speedbar will show the
-;;   correct directory.  Then, when I open another frame, and change to a buffer
-;;   there, the buffer in the new frame will be synched with the speedbar.  This
-;;   needs to stay in synch with the file currently open in the ECB.
-;;
 ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: Seems to be fixed already!
+
 ;; - BUG: for some reason if we hit <ENTER> in the ecb-speedbar window,
 ;;   sometimes a new frame will come up.
 ;;
@@ -110,12 +106,6 @@
 ;;
 ;;   - Actually it seems to be a problem if we have one ECB frame and then I
 ;;     create another frame.
-;;
-;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: Seems to be gone at least with
-;;       speedbar 0.14beta4 which i'm using.
-;; - BUG: bug in speedbar.  Need a feature so that the speedbar doesn't require
-;;   that we HAVE to have the speedbar in a frame.  If we try to run (speedbar)
-;;   when ecb-speedbar is active the ecb-frame will go away :(
 
 ;; (speedbar-current-frame) doesn't seem to work right..
 ;; 
@@ -194,9 +184,7 @@ speedbar-window is active, then select the edit-window."
 (defun ecb-set-speedbar-buffer()
   "Set the speedbar buffer within ECB."
   (ecb-speedbar-activate)
-  (set-window-dedicated-p (selected-window) nil)
   (set-window-buffer (selected-window) (get-buffer-create ecb-speedbar-buffer-name))
-  (set-window-dedicated-p (selected-window) t)
   (if ecb-running-emacs-21
       (set (make-local-variable 'automatic-hscrolling) nil)))
 
@@ -291,26 +279,22 @@ future this could break."
 
   ;;only operate if the current frame is the ECB frame and the
   ;;ecb-speedbar-buffer is visible!
-  (when (and (equal (selected-frame) ecb-frame)
+  (when (and ecb-minor-mode
+             (equal (selected-frame) ecb-frame)
+             (get-buffer-window ecb-speedbar-buffer-name)
              (window-live-p (get-buffer-window ecb-speedbar-buffer-name)))
-    
     (save-excursion
       (let(speedbar-default-directory ecb-default-directory)
-
         (setq ecb-default-directory default-directory)
 
         (save-excursion
-      
           (set-buffer ecb-speedbar-buffer-name)
-        
           (setq speedbar-default-directory default-directory))
 
         (when (and (not (string-equal speedbar-default-directory
                                       ecb-default-directory))
-                   ecb-minor-mode
                    speedbar-buffer
                    (buffer-live-p speedbar-buffer))
-
             (speedbar-update-contents))))))
 
 (silentcomp-provide 'ecb-speedbar)

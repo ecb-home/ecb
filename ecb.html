@@ -15,10 +15,10 @@ Previous:<a rel=previous accesskey=p href="#dir">(dir)</a>,
 Up:<a rel=up accesskey=u href="#dir">(dir)</a>
 <br>
 
-<p>ECB (Emacs Code Browser) is a source code browser for Emacs. It is a
-global minor-mode which displays a couple of windows that can be used
-to browse directories, files and methods. It supports method parsing
-for Java, C, C++, Elisp and some more.
+<p>ECB (Emacs Code Browser) is a source code browser for (X)Emacs. It is
+a global minor-mode which displays a couple of windows that can be
+used to browse directories, files and methods. It supports method
+parsing for Java, C, C++, Elisp and some more.
 
 <p><strong>NOTE</strong>: Experienced ECB users find a complete alphabetical list
 of all commands and user-options in <a href="#Interactive%20ECB%20commands">Interactive ECB commands</a> and
@@ -162,8 +162,8 @@ Up:<a rel=up accesskey=u href="#Top">Top</a>
 
 <h2>Installation and first steps of ECB</h2>
 
-<p>This chapter describes how to install ECB and setup Emacs correctly and
-what are the first steps after activation of ECB.
+<p>This chapter describes how to install ECB and setup (X)Emacs correctly
+and what are the first steps after activation of ECB.
 
 <ul>
 <li><a accesskey=1 href="#Installation">Installation</a>:                 Installation of ECB
@@ -194,10 +194,10 @@ you.
 <li>Read the file <code>README</code> in the ECB-directory and install the
 required semantic- and eieio-version.
 
-<p><strong>Note</strong>: ECB maybe requires a newer version of these libraries than
-shipped with Emacs or XEmacs. You have to install exactly a version
-ECB requires and also to make sure that the correct version is loaded
-into (X)Emacs!
+<p><strong>Note</strong>: ECB maybe requires a newer version of these libraries
+than shipped with (X)Emacs. You have to install exactly a version ECB
+requires and also to make sure that the correct version is loaded into
+(X)Emacs!
 
 <p>But ECB checks auto. during start-time if the correct versions of
 semantic and eieio are installed and gives you proper feedback. 
@@ -221,9 +221,9 @@ ECB is NOT properly installed if it's directory is not added to
 
 </p><li>Load ECB by adding code to your <code>.emacs</code>:
 
-<p>If you want to load the complete ECB at Emacs-loadtime (Advantage: All
-ECB-options available after loading Emacs. Disadvantage: Increasing
-loadtime<a rel=footnote href="#fn-2"><sup>2</sup></a>):
+<p>If you want to load the complete ECB at (X)Emacs-loadtime (Advantage:
+All ECB-options available after loading (X)Emacs. Disadvantage:
+Increasing loadtime<a rel=footnote href="#fn-2"><sup>2</sup></a>):
 
 <br><pre>(require 'ecb)
 </pre>
@@ -237,7 +237,7 @@ ECB- and semantic-options first available after starting ECB):
 (autoload 'ecb-show-help "ecb-help" "Show the online help of ECB" t)
 </pre>
 
-</p><li>Restart Emacs.
+</p><li>Restart (X)Emacs.
 </ol>
 
 <p>ECB is now ready for use and can be activated by calling <code>M-x
@@ -2056,9 +2056,28 @@ Start process for interactively creating a new ECB-layout
 </table>
 <table width="95%" align="center">
 <tr><td>
-Synchronizes the ECB buffers with the current buffer. Unless
-<var>FORCE</var> is non-<code>nil</code> then do this only if current-buffer
-differs from the source displayed in the ECB tree-buffers. 
+Synchronizes the current buffer with any other buffers.
+
+<p>Depending on the contents of current buffer this function performs different
+synchronizing tasks but only if ECB is active and point stays in an
+edit-window. If this is true under the following additional conditions some
+tasks are performed:
+
+<ul>
+<li>Current buffer is a file-buffer and either <var>force</var> is not nil or
+the buffer is different from the source-file currently displayed in
+the ECB-tree-buffers:
+
+<p>Synchronizing all <code>tree-buffers</code> with the current buffer
+
+</p><li>Current buffer is a dired-buffer:
+
+<p>Synchronizing the directory- and sources-tree-buffer if visible
+
+</p><li>Always:
+
+<p>Running the hooks in <code>ecb-current-buffer-sync-hook</code>. 
+</ul>
 </td></tr>
 </table>
 
@@ -2864,7 +2883,20 @@ to define new keybindings for EVERY tree-buffer.
 </table>
 <table width="95%" align="center">
 <tr><td>
-Normal hook run at the end of <code>ecb-current-buffer-sync</code>. 
+Normal hook run at the end of <code>ecb-current-buffer-sync</code>.
+
+<p>See documentation of <code>ecb-current-buffer-sync</code> for conditions
+when synchronization takes place and so in turn these hooks are
+evaluated.
+
+<p>Important note: If <code>ecb-window-sync</code> is not nil
+<code>ecb-current-buffer-sync</code> is running either every time Emacs is
+idle or even after every command (see <code>ecb-window-sync-delay</code>). 
+So these hooks can be really called very often! Therefore each
+function of this hook should/must check in an efficient way at
+beginning if its task have to be really performed and then do them
+only if really necessary! Otherwise performance of Emacs could slow
+down dramatically! 
 </td></tr>
 </table>
 
@@ -3459,25 +3491,35 @@ recommended to set this option to not <code>nil</code>!
 </table>
 <table width="95%" align="center">
 <tr><td>
-Synchronize the ECB-windows automatically with current edit window. If
-<code>always</code> then the synchronization takes place always a buffer
-changes in the edit window, if <code>nil</code> then never. If a list of
-major-modes then only if the <code>major-mode</code> of the new buffer
-belongs NOT to this list.
+Synchronize the ECB-windows automatically with current edit window. 
+The real synchronization is done by <code>ecb-current-buffer-sync</code>. If
+<code>always</code> then the synchronization by
+<code>ecb-current-buffer-sync</code> takes place always a buffer changes in
+the edit window, if <code>nil</code> then never. If a list of major-modes
+then only if the major-mode of the new buffer belongs NOT to this
+list.
 
-<p>But in every case the synchronization takes only place if the
-current-buffer in the edit-window has a relation to files or
-directories. Examples for the former one are all
-programming-language-modes, <code>Info-mode</code> too, an example for the
-latter one is <code>dired-mode</code>. For all major-modes related to
+<p>But in every case the synchronization by
+<code>ecb-current-buffer-sync</code> takes only place if the current-buffer
+in the edit-window has a relation to files or directories. Examples
+for the former one are all programming-language-modes,
+<code>Info-mode</code> too, an example for the latter one is
+<code>dired-mode</code>. For all major-modes related to
 non-file/directory-buffers like <code>help-mode</code>,
-<code>customize-mode</code> and others never a synchronization will be done!
+<code>customize-mode</code> and others never an autom. synchronization will
+be done!
 
 <p>It's recommended to exclude at least <code>Info-mode</code> because it makes
 no sense to synchronize the ECB-windows after calling the Info help. 
 Per default also <code>dired-mode</code> is excluded but it can also making
 sense to synchronize the ECB-directories/sources windows with the
-current directory in the dired-buffer. 
+current directory in the dired-buffer.
+
+<p>IMPORTANT NOTE: The synchronization is done by
+<code>ecb-current-buffer-sync</code> and therefore the hook
+<code>ecb-current-buffer-sync-hook</code> is evaluated every time
+<code>ecb-current-buffer-sync</code> is called (see above and documentation
+of <code>ecb-current-buffer-sync</code>)! 
 </td></tr>
 </table>
 
@@ -6247,22 +6289,39 @@ Up:<a rel=up accesskey=u href="#Tips%20and%20tricks">Tips and tricks</a>
 <h3>Integrating speedbar in the ECB-frame</h3>
 
 <p>It is very easy to integrate speedbar in the directories window of
-ECB. So people who likes the speedbar way of handling directories and
-source-files but also like the ECB-way of displaying the
-buffer-contents (like methods and variables in a source-file) can
-combine both worlds:
+ECB. This makes sense for people...
+
+<ul>
+<li>...who likes the speedbar way of handling directories and source-files
+but also like the ECB-way of displaying the buffer-contents (like
+methods and variables in a source-file)
+
+<li>...who likes the speedbar way of browsing things like directories,
+files, file-contents etc. but who dislike the extra speedbar-frame
+</ul>
+
+<p>Regardles the group you belong, with the speedbar-integration feature
+of ECB you can combine both worlds, the speedbar- and the ECB-world:
 
 <ol type=1 start=1>
 </p><li>Choose a layout which contains a directories-window but no
 sources-window<a rel=footnote href="#fn-19"><sup>19</sup></a>.
 
-<li>Set the option <code>ecb-use-speedbar-for-directories</code> to not
+<p>Because speedbar has also display-modes for buffers and info-nodes and
+some other useful things (which can be changed by the speedbar-command
+<code>speedbar-change-initial-expansion-list</code>, which is bound for
+convenience to the keysequence <kbd>C-c . bc</kbd> in the
+<code>ecb-key-map</code>) we recommend layouts like "left15" or
+"leftright3" for using with speedbar.
+
+</p><li>Set the option <code>ecb-use-speedbar-for-directories</code> to not
 nil. After this the directories window of ECB will contain a full
 featured speedbar (the only difference to standard speedbar is not
 residing in an extra frame).
 </ol>
 
-<p>Note: A similar effect and useability is available by setting
+<p>Note: If you belong to the first group of people (s.a.) a similar
+effect and useability is available by setting
 <code>ecb-use-speedbar-for-directories</code> to nil and setting
 <code>ecb-show-sources-in-directories-buffer</code> to not nil, because this
 combination displays also directories and sources in one window.
@@ -6277,9 +6336,9 @@ speedbar-command <code>speedbar</code> is disabled and the speedbar-command
 <code>speedbar-get-focus</code> switches between the speedbar-window and the
 edit-window<a rel=footnote href="#fn-20"><sup>20</sup></a>.
 
-<p>Note: ECB can only integrate speedbar-versions &gt;= 0.14beta1! If you
-use lower versions of speedbar <code>ecb-use-speedbar-for-directories</code>
-has no effect.
+<p><strong>NOTE</strong>: ECB can only integrate speedbar-versions &gt;= 0.14beta1! 
+If you use lower versions of speedbar
+<code>ecb-use-speedbar-for-directories</code> has no effect.
 
 <p><hr>
 Node:<a name="Optimize%20scrolling">Optimize scrolling</a>,
@@ -6484,13 +6543,16 @@ type of the new layout and is literal, i.e. not evaluated. It can be
 left, right, top or left-right. <var>DOC</var> is the docstring for the new
 layout-function "ecb-layout-function-&lt;name&gt;". <var>CREATE-CODE</var> is
 all the lisp code which is necessary to define the
-ECB-windows/buffers.
+ECB-windows/buffers. This macro adds the layout-name <var>NAME</var> to the
+internal variable <code>ecb-available-layouts</code> which is used by
+<code>ecb-change-layout</code>, <code>ecb-toggle-layout</code>,
+<code>ecb-show-layout-help</code> and <code>ecb-layout-get-type</code>.
 
 <p>Preconditions for <var>CREATE-CODE</var>:
 <ol type=1 start=1>
 </p><li>Current frame is splitted at least in one edit-window and the column
 (for layout types left, right and left-right) resp. row (for a top
-layout) for the ECB-tree-windows/buffers. Depending on the value of
+layout) for the special ECB-windows/buffers. Depending on the value of
 the option <code>ecb-compile-window-height</code> there is also a compile
 window at the bottom of the frame which is stored in
 <code>ecb-compile-window</code>.
@@ -6517,7 +6579,8 @@ and history). The split must not be done with other functions than
 to use a "hard" number of split-lines or -rows but using fractions
 between 0.1 and 0.9!
 
-<li>Naming each ECB-tree-window with one of the following functions:
+<li>Making each special ECB-window a dedicated window. This can be done with
+one of the following functions:
 <ul>
 <li><code>ecb-set-directories-buffer</code>
 <li><code>ecb-set-sources-buffer</code>
@@ -6526,10 +6589,16 @@ between 0.1 and 0.9!
 </ul>
 Each layout can only contain one of each tree-buffer-type!
 
-<li>The ECB-tree-windows-column(s)/row must contain at least one named
-ECB-tree-window.
+<p>In addition to these functions there is a general macro
+`ecb-with-dedicated-window'. This macro performs any arbitrary code in
+current window and makes the window autom. dedicated at the end. This
+can be used by third party packages like JDEE to create arbitrary
+ECB-windows besides the standard tree-windows.
 
-<li>Every(!) ECB-tree-window must be named as described in 2.
+<p>It's strongly recommended not to use any other function/macro to make
+a window dedicated!
+
+</p><li>Every(!) special ECB-window must be dedicated as described in 2.
 
 <li><var>CREATE-CODE</var> must work correctly regardless if there is already a
 compile-window (stored in <code>ecb-compile-window</code>) or not
@@ -6548,7 +6617,7 @@ there is one). Using the values of <code>ecb-compile-window-height</code>,
 </p><li>Splitting the edit-window
 <li>Creating a compile-window
 <li>Deleting the edit-window, the compile-window (if there is any) or the
-ECB-tree-windows-column(s)/row (see Precondition 1.) 
+ECB-windows-column(s)/row (see Precondition 1.) 
 <li>Referring to the value of <code>ecb-edit-window</code> because this is always nil
 during <var>CREATE-CODE</var>.
 </ol>
@@ -6558,7 +6627,7 @@ during <var>CREATE-CODE</var>.
 </p><li>The edit-window must be the selected window and must not be dedicated.
 
 <li>Every window besides the edit-window \(and the compile-window) must be
-set as a ECB-tree-window."
+a dedicated window \(e.g. a ECB-tree-window).
 </ol>
 </td></tr>
 </table>
@@ -6566,7 +6635,8 @@ set as a ECB-tree-window."
 <p>Use this macro to program new layouts within your <code>.emacs</code> or any
 other file which is loaded into your Emacs. After loading the file(s)
 with all the new layout-definitions you can use it by customizing the
-option <code>ecb-layout-name</code> to the appropriate name.
+option <code>ecb-layout-name</code> to the appropriate name or with the
+command <code>ecb-change-layout</code>.
 
 <p>Here is an example:
 
@@ -7263,8 +7333,8 @@ Emacs 20.X and Emacs 21.X but XEmacs may have slightly different
 mechanisms; see the XEmacs documentation</p>
 
 <li><a name="fn-2"></a>
-<p>Cause of full loading of ECB itself and also
-the packages semantic and eieio regardless if ECB is started.</p>
+<p>Cause of full loading of ECB itself and
+also the packages semantic and eieio regardless if ECB is started.</p>
 
 <li><a name="fn-3"></a>
 <p>ECB, semantic

@@ -60,7 +60,7 @@
 ;; The latest version of the ECB is available at
 ;; http://home.swipnet.se/mayhem/ecb.html
 
-;; $Id: ecb.el,v 1.259 2002/12/21 14:12:14 berndl Exp $
+;; $Id: ecb.el,v 1.260 2002/12/22 14:25:35 berndl Exp $
 
 ;;; Code:
 
@@ -1174,22 +1174,28 @@ to take effect."
 
 (defcustom ecb-window-sync '(Info-mode dired-mode)
   "*Synchronize the ECB-windows automatically with current edit window.
-If 'always then the synchronization takes place always a buffer changes in the
-edit window, if nil then never. If a list of major-modes then only if the
-major-mode of the new buffer belongs NOT to this list.
+The real synchronization is done by `ecb-current-buffer-sync'. If 'always then
+the synchronization by `ecb-current-buffer-sync' takes place always a buffer
+changes in the edit window, if nil then never. If a list of major-modes then
+only if the major-mode of the new buffer belongs NOT to this list.
 
-But in every case the synchronization takes only place if the current-buffer
-in the edit-window has a relation to files or directories. Examples for the
-former one are all programming-language-modes, `Info-mode' too, an example for
-the latter one is `dired-mode'.
-For all major-modes related to non-file/directory-buffers like `help-mode',
-`customize-mode' and others never a synchronization will be done!
+But in every case the synchronization by `ecb-current-buffer-sync' takes only
+place if the current-buffer in the edit-window has a relation to files or
+directories. Examples for the former one are all programming-language-modes,
+`Info-mode' too, an example for the latter one is `dired-mode'. For all
+major-modes related to non-file/directory-buffers like `help-mode',
+`customize-mode' and others never an autom. synchronization will be done!
 
 It's recommended to exclude at least `Info-mode' because it makes no sense to
 synchronize the ECB-windows after calling the Info help. Per default also
 `dired-mode' is excluded but it can also making sense to synchronize the
 ECB-directories/sources windows with the current directory in the
-dired-buffer."
+dired-buffer.
+
+IMPORTANT NOTE: The synchronization is done by `ecb-current-buffer-sync' and
+therefore the hook `ecb-current-buffer-sync-hook' is evaluated every time
+`ecb-current-buffer-sync' is called \(see above and documentation of
+`ecb-current-buffer-sync')!"
   :group 'ecb-general
   :type '(radio :tag "Synchronize ECB windows"
                 (const :tag "Always" :value always)
@@ -1495,7 +1501,18 @@ will not be deactivated! See also `ecb-before-activate-hook'."
   :type 'hook)
 
 (defcustom ecb-current-buffer-sync-hook nil 
-  "*Normal hook run at the end of `ecb-current-buffer-sync'."
+  "*Normal hook run at the end of `ecb-current-buffer-sync'.
+
+See documentation of `ecb-current-buffer-sync' for conditions when
+synchronization takes place and so in turn these hooks are evaluated.
+
+Important note: If `ecb-window-sync' is not nil `ecb-current-buffer-sync' is
+running either every time Emacs is idle or even after every command \(see
+`ecb-window-sync-delay'). So these hooks can be really called very often!
+Therefore each function of this hook should/must check in an efficient way at
+beginning if its task have to be really performed and then do them only if
+really necessary! Otherwise performance of Emacs could slow down
+dramatically!"
   :group 'ecb-general
   :type 'hook)
 
@@ -2659,13 +2676,31 @@ For further explanation see `ecb-clear-history-behavior'."
               tok nil (equal ecb-highlight-token-with-point 'highlight)))))))))
 
 (defun ecb-current-buffer-sync (&optional force)
-  "Synchronizes the ECB buffers with the current buffer. Unless FORCE is non
-nil then do this only if current-buffer differs from the source displayed in
-the ECB tree-buffers."
+  "Synchronizes the current buffer with any other buffers.
+
+Depending on the contents of current buffer this function performs different
+synchronizing tasks but only if ECB is active and point stays in an
+edit-window. If this is true under the following additional conditions some
+tasks are performed:
+
+- Current buffer is a file-buffer and either FORCE is not nil or the buffer
+  is different from the source-file currently displayed in the
+  ECB-tree-buffers:
+
+  Synchronizing all tree-buffers with the current buffer
+
+- Current buffer is a dired-buffer:
+
+  Synchronizing the directory- and sources-tree-buffer if visible
+
+- Always:
+
+  Running the hooks in `ecb-current-buffer-sync-hook'."
+  
   (interactive "P")
   (when (and ecb-minor-mode
              (not ecb-windows-hidden)
-             (eq (selected-frame) ecb-frame))
+             (ecb-point-in-edit-window))
     (ignore-errors
       (let ((filename (buffer-file-name (current-buffer))))
         (cond (;; synchronizing for real filesource-buffers
@@ -2718,9 +2753,7 @@ the ECB tree-buffers."
                ;; ecb-selected-token again.
                (setq ecb-selected-token nil)
                (ecb-update-methods-buffer--internal 'scroll-to-begin)
-               (ecb-token-sync)
-               (run-hooks 'ecb-current-buffer-sync-hook))
-              
+               (ecb-token-sync))
               
               (;; synchronizing for dired-mode
                (eq major-mode 'dired-mode)
@@ -2730,14 +2763,16 @@ the ECB tree-buffers."
                          dired-directory)
                     (and (listp dired-directory)
                          (car dired-directory)))))
-              (t nil))))))
+              (t nil))))
+
+    ;; at the end we are running the hooks
+    (run-hooks 'ecb-current-buffer-sync-hook)))
+
 
 (defun ecb-window-sync-function ()
   (when (and ecb-window-sync
              (or (equal 'always ecb-window-sync)
-                 (not (member major-mode ecb-window-sync)))
-             ecb-minor-mode
-             (ecb-point-in-edit-window))
+                 (not (member major-mode ecb-window-sync))))
     (ecb-current-buffer-sync)))
 
 (defun ecb-get-edit-window (other-edit-window)
@@ -3681,6 +3716,8 @@ That is remove the unsupported :help stuff."
                (t "s" ecb-goto-window-sources)
                (t "m" ecb-goto-window-methods)
                (t "h" ecb-goto-window-history)
+               (t "bg" ecb-goto-window-directories)
+               (t "bc" speedbar-change-initial-expansion-list)
                (t "e" ecb-eshell-goto-eshell)
                (t "/" ecb-toggle-enlarged-compilation-window)
                (t "." ecb-cycle-through-compilation-buffers)))

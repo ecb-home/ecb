@@ -786,6 +786,42 @@ little more place."
  (ecb-set-history-buffer)
  (select-window (previous-window (previous-window (selected-window) 0) 0)))
 
+;; Layout leftright3 -----------------------------------------------------
+
+(ecb-layout-define "leftright3" left-right
+  "This function creates the following layout:
+
+   --------------------------------------------------------------
+   |              |                               |             |
+   |  Directories |                               |  Methods    |
+   |              |                               |             |
+   |              |                               |             |
+   |              |                               |             |
+   |              |                               |             |
+   |              |                               |             |
+   |              |             Edit              |             |
+   |              |                               |             |
+   |              |                               |             |
+   |              |                               |             |
+   |              |                               |             |
+   |              |                               |             |
+   |              |                               |             |
+   |              |                               |             |
+   --------------------------------------------------------------
+   |                                                            |
+   |                    Compilation                             |
+   |                                                            |
+   --------------------------------------------------------------
+
+If you have not set a compilation-window in `ecb-compile-window-height' then
+the layout contains no durable compilation window and the other windows get a
+little more place."
+  (ecb-set-directories-buffer)
+  (select-window (next-window (next-window)))
+  (ecb-set-methods-buffer)
+  (select-window (previous-window (selected-window) 0)))
+
+
 (defconst ecb-buildin-layouts (copy-list ecb-available-layouts)
   "All layouts defined until now.")
 

@@ -103,7 +103,7 @@
 ;; - `ecb-with-some-adviced-functions'
 ;;
 
-;; $Id: ecb-layout.el,v 1.138 2002/12/21 14:14:33 berndl Exp $
+;; $Id: ecb-layout.el,v 1.139 2002/12/22 14:25:36 berndl Exp $
 
 ;;; Code:
 
@@ -138,9 +138,8 @@
         (load-file ecb-create-layout-file))
     (setq ecb-layouts-reload-needed nil)))
 
-(defvar ecb-use-dedicated-windows t
-  "Use dedicated windows for the ECB buffers.
-Attention: You should never change this!")
+(defconst ecb-use-dedicated-windows t
+  "Use dedicated windows for the ECB buffers.")
 
 (defgroup ecb-layout nil
   "Settings for the screenlayout of the Emacs code browser."
@@ -200,7 +199,7 @@ Currently available layouts:
   top1 top2
 
 + Left-right layouts:
-  leftright1 leftright2
+  leftright1 leftright2 leftright3
 
 Regardless of the settings you define here: If you have destroyed or
 changed the ECB-screen-layout by any action you can always go back to this
@@ -1627,11 +1626,15 @@ visibility of the ECB windows. ECB minor mode remains active!"
 
 ;; =================== Helper functions ==================================
 
-
-(defun ecb-set-buffer (name)
-  (set-window-dedicated-p (selected-window) nil)
-  (switch-to-buffer name)
-  (set-window-dedicated-p (selected-window) ecb-use-dedicated-windows))
+(defmacro ecb-with-dedicated-window (&rest body)
+  "Make current selected window not dedicated, evaluate BODY in current
+window and make this window dedicated at the end. Even if an error occurs
+during evaluating BODY the current window is always dedicated at the end!"
+  `(unwind-protect
+       (progn
+         (set-window-dedicated-p (selected-window) nil)
+         ,@body)
+     (set-window-dedicated-p (selected-window) t)))
 
 (defun ecb-set-directories-buffer ()
   (let ((set-directories-buffer (not ecb-use-speedbar-for-directories)))
@@ -1639,7 +1642,8 @@ visibility of the ECB windows. ECB minor mode remains active!"
     (when (not set-directories-buffer)
       (require 'ecb-speedbar)
       (condition-case error-data
-          (ecb-set-speedbar-buffer)
+          (ecb-with-dedicated-window
+           (ecb-set-speedbar-buffer))
         ;; setting the speedbar buffer has failed so we set
         ;; set-directories-buffer to t ==> standard-directories-buffer is set!
         (error (message "%s" error-data)
@@ -1650,16 +1654,20 @@ visibility of the ECB windows. ECB minor mode remains active!"
     (when set-directories-buffer
       (if (featurep 'ecb-speedbar)
           (ignore-errors (ecb-speedbar-deactivate)))
-      (ecb-set-buffer ecb-directories-buffer-name))))
+      (ecb-with-dedicated-window
+       (switch-to-buffer ecb-directories-buffer-name)))))
 
 (defun ecb-set-sources-buffer ()
-  (ecb-set-buffer ecb-sources-buffer-name))
+  (ecb-with-dedicated-window
+   (switch-to-buffer ecb-sources-buffer-name)))
 
 (defun ecb-set-methods-buffer ()
-  (ecb-set-buffer ecb-methods-buffer-name))
+  (ecb-with-dedicated-window
+   (switch-to-buffer ecb-methods-buffer-name)))
 
 (defun ecb-set-history-buffer ()
-  (ecb-set-buffer ecb-history-buffer-name))
+  (ecb-with-dedicated-window
+   (switch-to-buffer ecb-history-buffer-name)))
 
 
 ;; ======== Delete-window-functions for the different layout-types ==========
@@ -1785,18 +1793,24 @@ This variable is only modified by `ecb-layout-define'.")
 type of the new layout and is literal, i.e. not evaluated. It can be left,
 right, top or left-right. DOC is the docstring for the new layout-function
 \"ecb-layout-function-<name>\". CREATE-CODE is all the lisp code which is
-necessary to define the ECB-windows/buffers.
+necessary to define the ECB-windows/buffers. This macro adds the layout-name
+NAME to the internal variable `ecb-available-layouts' which is used by
+`ecb-change-layout', `ecb-toggle-layout', `ecb-show-layout-help' and
+`ecb-layout-get-type'.
 
 Preconditions for CREATE-CODE:
 1. Current frame is splitted at least in one edit-window and the column\(s)
-   (for layout types left, right and left-right) resp. row \(for a top
-   layout) for the ECB-tree-windows/buffers. Depending on the value of the
-   option `ecb-compile-window-height' there is also a compile window at the
-   bottom of the frame which is stored in `ecb-compile-window'.
+   (for layout types left, right and left-right) resp. row \(for a top layout)
+   for the special ECB-windows/buffers. Depending on the value of the option
+   `ecb-compile-window-height' there is also a compile window at the bottom of
+   the frame which is stored in `ecb-compile-window'.
+
 2. All windows are not dedicated.
+
 3. Neither the edit-window nor the compile-window \(if there is one) are
    selected for types left, right and top. For type left-right the left
    column-window is selected.
+
 
 Things CREATE-CODE has to do:
 1. Splitting the ECB-tree-windows-column\(s)/row \(s.a.) in all the
@@ -1805,16 +1819,28 @@ Things CREATE-CODE has to do:
    `ecb-split-hor' and `ecb-split-ver'! It is recommened not to to use a
    \"hard\" number of split-lines or -rows but using fractions between 0.1 and
    0.9!
-2. Naming each ECB-tree-window with one of the following functions:
+
+2. Making each special ECB-window a dedicated window. This can be done with
+   one of the following functions:
    + `ecb-set-directories-buffer'
    + `ecb-set-sources-buffer'
    + `ecb-set-methods-buffer'
    + `ecb-set-history-buffer'
    Each layout can only contain one of each tree-buffer-type!
-3. The ECB-tree-windows-column/row must contain at least one named
-   ECB-tree-window.
-4. Every\(!) ECB-tree-window must be named as described in 2.
-5. CREATE-CODE must work correctly regardless if there is already a
+
+   In addition to these functions there is a general macro:
+   + `ecb-with-dedicated-window'
+   This macro performs any arbitrary code in current window and makes the
+   window autom. dedicated at the end. This can be used by third party
+   packages like JDEE to create arbitrary ECB-windows besides the standard
+   tree-windows.
+
+   It's strongly recommended not to use any other function/macro to make a
+   window dedicated!
+
+3. Every\(!) special ECB-window must be dedicated as described in 2.
+
+4. CREATE-CODE must work correctly regardless if there is already a
    compile-window \(stored in `ecb-compile-window') or not
    \(`ecb-compile-window' is nil)
 
@@ -1827,14 +1853,14 @@ Things CREATE-CODE must NOT do:
 1. Splitting the edit-window
 2. Creating a compile-window
 3. Deleting the edit-window, the compile-window \(if there is any) or the
-   ECB-tree-windows-column\(s)/row \(see Precondition 1.)
+   ECB-windows-column\(s)/row \(see Precondition 1.)
 4. Referring to the value of `ecb-edit-window' because this is always nil or
    undefined during CREATE-CODE.
 
 Postconditions for CREATE-CODE:
 1. The edit-window must be the selected window and must not be dedicated.
 2. Every window besides the edit-window \(and the compile-window) must be
-   set as a ECB-tree-window."
+   a dedicated window \(e.g. a ECB-tree-window)."
   `(progn
      (defun ,(intern (format "ecb-layout-function-%s" name)) ()
        ,doc
