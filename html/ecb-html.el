@@ -28,7 +28,7 @@
 ;; Do not change any html-file besides the index.html manually but do all
 ;; changes in this elisp file!
 
-;; $Id: ecb-html.el,v 1.37 2003/02/04 11:10:13 berndl Exp $
+;; $Id: ecb-html.el,v 1.38 2003/02/06 09:34:06 berndl Exp $
 
 ;;; Code:
 
@@ -76,7 +76,9 @@
 (defvar ecb-latest-news nil
   "List of latest news displayed on the main page.")
 (setq ecb-latest-news
-      `(,(h-sub-section "Usermanual now available ín PDF-format! (2003-02-03)"
+      `(,(h-sub-section "Bugfixes for ECB 1.90 available. (2003-06-03)"
+                        "Click " (h-link "downloads.html" "here") " to get it.")
+        ,(h-sub-section "Usermanual now available ín PDF-format! (2003-02-03)"
                         "Click " (h-link "downloads.html" "here") " to get it.")
         ,(h-sub-section "ECB 1.80 is now an official XEmacs package! (2003-02-01)"
                         "The ECB XEmacs-package has the version-number 1.01 and can "
@@ -90,20 +92,20 @@
                         "A lot of new features! Fixed some annoying bugs! "
                         (h-link "docs/Install-and-first-steps.html#Install%20and%20first%20steps" "Here") " is a short installation guide. "
                         "Click " (h-link "history" "here")
-                        " for information about changes in the new version. ")
-        ,(h-sub-section "ECB has a new official website! (2003-01-30)"
-                        "You are already visiting the "
-                        (h-link "main.html" "new webiste")
-                        ". The "
-                        (h-link "http://home.swipnet.se/mayhem/ecb.html"
-                                "old website")
-                        " is not longer supported!")))
+                        " for information about changes in the new version. ")))
 
 (defvar ecb-rest-news nil
   "List of older news - these news are displayed in all-news.html ; see
 `ecb-html-all-news'.")
 (setq ecb-rest-news
-      `(,(h-sub-section "ECB has a new maintainer. (2003-01-30)"
+      `(,(h-sub-section "ECB has a new official website! (2003-01-30)"
+                        "You are already visiting the "
+                        (h-link "main.html" "new webiste")
+                        ". The "
+                        (h-link "http://home.swipnet.se/mayhem/ecb.html"
+                                "old website")
+                        " is not longer supported!")
+        ,(h-sub-section "ECB has a new maintainer. (2003-01-30)"
                         "Maintainance of ECB has been moved from "
                         (h-email "mayhem@home.se" "Jesper Nordenberg")
                         " to "
@@ -289,7 +291,8 @@
        ecb-bullet
        (list
         ;;; Add here all patches which should offered directly on the website.
-        '("patches/ecb-upgrade.el" "ecb-upgrade.el" "Fixes a bug related to package-downloading in ECB 1.90.")
+        '("patches/ecb-upgrade.el" "ecb-upgrade.el" "Fixes a bug in ECB 1.90 related to package-downloading.")
+        '("patches/ecb-navigate.el" "ecb-navigate.el" "Fixes a bug in ECB 1.90 which can inhibit that a user can open sources or clicking onto methods.")
         )
        "_top")
       h-br "Instructions:"

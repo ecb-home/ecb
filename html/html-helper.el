@@ -21,7 +21,7 @@
 
 ;; Functions for generating HTML pages.
 
-;; $Id: html-helper.el,v 1.6 2003/02/04 11:10:12 berndl Exp $
+;; $Id: html-helper.el,v 1.7 2003/02/06 09:34:06 berndl Exp $
 
 ;;; Code:
 (defconst h-br "<br>\n")
@@ -225,8 +225,9 @@
   (h-table
    (mapconcat
     (lambda (item)
-      (h-tr (h-td '(nowrap) (h-img bullet) " "
-		  (h-link (car item)
+      (h-tr '(valign . "top")
+            (h-td '(nowrap) (h-img bullet) " "
+                  (h-link (car item)
 			  (h-b (if (cdr item) (cadr item) (car item)))
 			  (cons 'target target)))
 	    (h-td (if (and (cdr item) (cddr item)) (caddr item) ""))))
