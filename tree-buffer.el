@@ -985,7 +985,7 @@ AFTER-CREATE-HOOK: A function \(with no arguments) called directly after
                   (interactive)
                   (tree-buffer-return-pressed t nil))))
     
-    (define-key tree-buffer-key-map [tab] 'tree-buffer-tab-pressed)
+    (define-key tree-buffer-key-map (kbd "TAB") 'tree-buffer-tab-pressed)
 
     (when arrow-navigation
       (define-key tree-buffer-key-map (kbd "<right>") 'tree-buffer-arrow-pressed)
