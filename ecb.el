@@ -52,7 +52,7 @@
 ;; The latest version of the ECB is available at
 ;; http://home.swipnet.se/mayhem/ecb.html
 
-;; $Id: ecb.el,v 1.89 2001/05/17 22:21:05 creator Exp $
+;; $Id: ecb.el,v 1.90 2001/05/21 12:16:49 berndl Exp $
 
 ;;; Code:
 
@@ -450,20 +450,17 @@ activate ECB again to take effect."
   "*Show the name of the ECB-buffer item under mouse in minibuffer.
 If set to 'always of 'if-too-long then this works always only by moving the
 mouse over a node regardless if the ECB-window is the active window or not.
-
-But beware: If you set this to 'always or 'if-too-long then there can occur
-an annoying effect: If your mouse moves between a keysequence \(e.g. C-h v,
-i.e. the mouse moves between the C-h and the v) then the keysequence is
-terminated and the key after the move is evaluated as single key \(e.g. the v
-is not longer evaluated in combination with the C-h, means 'describe-variable'
-is called, but the v is inserted in the current buffer, because the mousemove
-has terminated the C-h). This should normally not occur but under some
-circumstances the mouse can be moved without your interaction, e.g. if your
-table is not really stable or something similar.
-
-If you change this option during active ECB you must deactivate and activate
-it again to take effect!"
+In this case the node-name is shown with a delay of about ~1 seconds after you
+have moved the mouse over a node."
   :group 'ecb-general
+  :set (function (lambda (symbol value)
+                   (set symbol value)
+                   (if (and (boundp 'ecb-activated)
+                            ecb-activated)
+                       (if (or (equal value 'always)
+                               (equal value 'if-too-long))
+                           (tree-buffer-activate-mouse-tracking)
+                         (tree-buffer-deactivate-mouse-tracking)))))
   :type '(radio (const :tag "Always"
                        :value always)
                 (const :tag "If longer than window-width"
@@ -479,7 +476,8 @@ it again to take effect!"
   :type 'boolean)
 
 (defcustom ecb-show-complete-file-name-in-minibuffer nil
-  "*Show the complete file name including directories for the file under mouse in minibuffer."
+  "*Show the complete file name including directories for the file under mouse
+in minibuffer."
   :group 'ecb-general
   :type 'boolean)
 
@@ -1319,7 +1317,7 @@ Currently the fourth argument TREE-BUFFER-NAME is not used here."
     (ecb-update-directory-node node)
     (if (or (= 0 (tree-node-get-type node)) (= 2 (tree-node-get-type node)))
 	(if shift-mode
-	    (ecb-mouse-over-source-node node)
+	    (ecb-mouse-over-directory-node node)
 	  (progn
 	    (if (= 2 ecb-button)
 		(tree-node-toggle-expanded node)
@@ -1460,10 +1458,7 @@ always the ECB-frame if called from another frame."
 	 'ecb-interpret-mouse-click
 	 'ecb-tree-buffer-node-select-callback
 	 'ecb-tree-buffer-node-expand-callback
-	 (if (or (equal ecb-show-node-name-in-minibuffer 'shift-click)
-		 (null ecb-show-node-name-in-minibuffer))
-	     nil
-	   'ecb-mouse-over-directory-node)
+         'ecb-mouse-over-directory-node
 	 (list (cons 0 ecb-directories-menu) (cons 1 ecb-sources-menu)
 	       (cons 2 ecb-source-path-menu))
 	 ecb-truncate-lines
@@ -1486,10 +1481,7 @@ always the ECB-frame if called from another frame."
 	 'ecb-interpret-mouse-click
 	 'ecb-tree-buffer-node-select-callback
 	 'ecb-tree-buffer-node-expand-callback
-	 (if (or (equal ecb-show-node-name-in-minibuffer 'shift-click)
-		 (null ecb-show-node-name-in-minibuffer))
-	     nil
-	   'ecb-mouse-over-source-node)
+         'ecb-mouse-over-source-node
 	 (list (cons 0 ecb-sources-menu))
 	 ecb-truncate-lines
 	 t
@@ -1503,10 +1495,7 @@ always the ECB-frame if called from another frame."
 	 'ecb-interpret-mouse-click
 	 'ecb-tree-buffer-node-select-callback
 	 nil
-	 (if (or (equal ecb-show-node-name-in-minibuffer 'shift-click)
-		 (null ecb-show-node-name-in-minibuffer))
-	     nil
-	   'ecb-mouse-over-method-node)
+         'ecb-mouse-over-method-node
 	 nil
 	 ecb-truncate-lines
 	 t
@@ -1523,10 +1512,7 @@ always the ECB-frame if called from another frame."
 	 'ecb-interpret-mouse-click
 	 'ecb-tree-buffer-node-select-callback
 	 'ecb-tree-buffer-node-expand-callback
-	 (if (or (equal ecb-show-node-name-in-minibuffer 'shift-click)
-		 (null ecb-show-node-name-in-minibuffer))
-	     nil
-	   'ecb-mouse-over-source-node)
+         'ecb-mouse-over-source-node
 	 (list (cons 0 ecb-history-menu))
 	 ecb-truncate-lines
 	 t
@@ -1567,6 +1553,11 @@ always the ECB-frame if called from another frame."
     (ecb-redraw-layout)
     ;; now update all the ECB-buffer-modelines
     (ecb-mode-line-format)
+    ;; enable mouse-tracking for the tree-buffers
+    (if (or (equal ecb-show-node-name-in-minibuffer 'always)
+            (equal ecb-show-node-name-in-minibuffer 'if-too-long))
+        (tree-buffer-activate-mouse-tracking))
+    
     ;; at the real end we run any personal hooks
     (run-hooks 'ecb-activate-hook)
     
@@ -1581,6 +1572,8 @@ always the ECB-frame if called from another frame."
     (ecb-activate-adviced-functions nil)
     (ecb-disable-delete-frame-advice)
 
+    (tree-buffer-deactivate-mouse-tracking)
+    
     ;; restore the old compilation-window-height
     (setq compilation-window-height ecb-old-compilation-window-height)
 

@@ -26,7 +26,7 @@
 ;; This file is part of the ECB package which can be found at:
 ;; http://home.swipnet.se/mayhem/ecb.html
 
-;; $Id: tree-buffer.el,v 1.47 2001/05/17 13:42:21 berndl Exp $
+;; $Id: tree-buffer.el,v 1.48 2001/05/21 12:16:49 berndl Exp $
 
 ;;; Code:
 
@@ -60,7 +60,7 @@
     (posn-point (event-start event)))
   (defalias 'tree-buffer-event-to-key 'event-basic-type))
 
-
+;; tree-buffer local variables
 (defvar tree-buffer-root nil)
 (defvar tree-buffer-nodes nil)
 (defvar tree-buffer-frame nil)
@@ -77,8 +77,15 @@
 (defvar tree-buffer-highlight-overlay nil)
 (defvar tree-buffer-incr-searchpattern nil)
 (defvar tree-buffer-incr-search nil)
+
+;; tree-buffer global variables
 (defvar tree-buffers nil)
-(defvar tree-buffer-saved-mouse-movement nil)
+(defvar tree-buffer-saved-mouse-movement-fn nil)
+(defvar tree-buffer-saved-track-mouse nil)
+(defvar tree-buffer-track-mouse-timer nil)
+(defvar tree-buffer-track-mouse-idle-delay 0.25
+  "After this idle-time of Emacs `tree-buffer-do-mouse-tracking' is called if
+mouse-tracking is activated by `tree-buffer-activate-mouse-tracking'")
 
 (defun tree-buffer-get-node-name-start-column (node)
   "Returns the buffer column where the name of the node starts."
@@ -494,6 +501,8 @@ mentioned above!"
 		(tree-buffer-create-menu (cdar menus)))
 	  (tree-buffer-create-menus (cdr menus)))))
 
+;; mouse tracking stuff
+
 (defun tree-buffer-follow-mouse (event)
   (interactive "e")
   (let ((window (tree-buffer-event-window event))
@@ -504,8 +513,8 @@ mentioned above!"
 	     (member (window-buffer window) tree-buffers))
 	(tree-buffer-mouse-movement event)))
   (if (not running-xemacs)
-      (if tree-buffer-saved-mouse-movement
-	  (funcall tree-buffer-saved-mouse-movement event)
+      (if tree-buffer-saved-mouse-movement-fn
+	  (funcall tree-buffer-saved-mouse-movement-fn event)
 	;; Enable dragging
 	(setq unread-command-events
 	      (nconc unread-command-events (list event))))))
@@ -522,6 +531,61 @@ mentioned above!"
                    (current-buffer)
                    (get-buffer-window (current-buffer))))))))
 
+(defvar tree-buffer-uncompleted-keyseq nil
+  "Not nil only if there is at evaluation-time of this variable an uncompleted
+keysequence, e.g. the \"C-h\" of the keysequence \"C-h v\".")
+
+(defun tree-buffer-do-mouse-tracking ()
+  "This function is called every time Emacs is idle for seconds defined in
+`tree-buffer-track-mouse-idle-delay'. It enables mouse-tracking but only if
+isearch is not active and if no uncompleted keysequence is open, means if this
+function is called by the idle timer during a keysequence is inserted by the
+user \(e.g. between the \"C-h\" and the \"v\" of the keysequence \"C-h v\"),
+then mouse-tracking is always not enabled, because otherwise all very slighly
+\(invisible) and unintended mouse-movements \(can occur for example only by
+the convulsion cause of hitting keys onto the keyboard!) would break the
+keysequence!"
+  (setq track-mouse nil)
+  (if (not (equal (tree-buffer-event-to-key last-input-event)
+                  'mouse-movement))
+      (setq tree-buffer-uncompleted-keyseq
+            (not (equal last-input-event last-command-event))))
+  (unless (or tree-buffer-uncompleted-keyseq
+              ;; maybe there are even more similar modes where we should not
+              ;; activate mouse-tracking?!
+              isearch-mode)
+    (setq track-mouse t))
+  (add-hook 'post-command-hook 'tree-buffer-stop-mouse-tracking))
+
+(defun tree-buffer-stop-mouse-tracking ()
+  (remove-hook 'post-command-hook 'tree-buffer-stop-mouse-tracking)
+  (setq track-mouse nil))
+
+(defun tree-buffer-activate-mouse-tracking ()
+  "Activates mouse tracking for all tree-buffers. If activated then the
+function defined in `tree-buffer-create' is called, if the mouse is over a
+node in a tree-buffer."
+  (if running-xemacs
+      (add-hook 'mode-motion-hook 'tree-buffer-follow-mouse)
+    (unless tree-buffer-track-mouse-timer
+      (setq tree-buffer-saved-mouse-movement-fn
+            (lookup-key special-event-map [mouse-movement]))
+      (define-key special-event-map [mouse-movement] 'tree-buffer-follow-mouse)
+      (setq tree-buffer-saved-track-mouse track-mouse)
+      (setq tree-buffer-track-mouse-timer
+            (run-with-idle-timer tree-buffer-track-mouse-idle-delay
+                                 t 'tree-buffer-do-mouse-tracking)))))
+
+(defun tree-buffer-deactivate-mouse-tracking ()
+  "Deactivates mouse tracking for all tree-buffers."
+  (if running-xemacs
+      (remove-hook 'mode-motion-hook 'tree-buffer-follow-mouse)
+    (unless (not tree-buffer-track-mouse-timer)
+      (define-key special-event-map [mouse-movement] tree-buffer-saved-mouse-movement-fn)
+      (setq track-mouse tree-buffer-saved-track-mouse)
+      (cancel-timer tree-buffer-track-mouse-timer)
+      (setq tree-buffer-track-mouse-timer nil))))
+  
 (defun tree-buffer-create (name frame is-click-valid-fn node-selected-fn
                                 node-expanded-fn node-mouse-over-fn
                                 menus tr-lines read-only tree-indent
@@ -565,8 +629,9 @@ NODE-EXPANDED-FN: Function to call if a node is expandable, point stays onto
 NODE-MOUSE-OVER-FN: Function to call when the mouse is moved over a node. This
                     function is called with three arguments: NODE, BUFFER,
                     WINDOW, each of them current related to the tree-buffer.
-                    If nil then the follow-mouse/track-mouse mechanism is not
-                    used!
+                    This function is only called if the tree-buffer
+                    track-mouse mechanism is activated \(see
+                    `tree-buffer-activate-mouse-tracking').
 MENUS: Nil or a list of one or two conses, each cons for a node-type \(0 or 1)
        Example: \(\(0 . menu-for-type-0) \(1 . menu-for-type-1)). The cdr of a
        cons must be a menu.
@@ -634,21 +699,6 @@ AFTER-CREATE-HOOK: A function \(with no arguments) called directly after
     (overlay-put tree-buffer-highlight-overlay 'face 'secondary-selection)
     (setq tree-buffer-incr-searchpattern "")
     (setq tree-buffer-incr-search incr-search)
-
-    ;; Follow mouse stuff
-    (when tree-node-mouse-over-fn
-      (if running-xemacs
-          (progn
-            (make-local-hook 'mode-motion-hook)
-            (add-hook 'mode-motion-hook 'tree-buffer-follow-mouse))
-        (let ((saved-fn (lookup-key special-event-map [mouse-movement])))
-          (when (not (eq saved-fn 'tree-buffer-follow-mouse))
-            (setq tree-buffer-saved-mouse-movement saved-fn)
-            (setq track-mouse t)
-            (define-key special-event-map [mouse-movement] 'tree-buffer-follow-mouse))))
-      
-      ;; mouse-movement
-      (define-key tree-buffer-key-map [mouse-movement] 'tree-buffer-mouse-movement))
 
     (when incr-search
       ;; settings for the incremental search.

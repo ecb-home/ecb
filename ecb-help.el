@@ -26,7 +26,7 @@
 ;;
 ;; Contains all online-help for ECB (stolen something from recentf.el)
 
-;; $Id: ecb-help.el,v 1.19 2001/05/17 22:21:31 creator Exp $
+;; $Id: ecb-help.el,v 1.20 2001/05/21 12:16:49 berndl Exp $
 
 ;;; Code
 
@@ -126,7 +126,8 @@ A click with the primary button causes the main effect in each ECB-buffer:
 A click with the primary mouse-button while the SHIFT-key is pressed only
 displays the complete clicked node in the minibuffer. This is useful if the
 node is longer as the window-width of the ECB-window and `ecb-truncate-lines'
-is not nil.
+is not nil (for this see also the option `ecb-show-node-name-in-minibuffer').
+
 IMPORTANT: Doing this in the \"*ECB Sources*\" or \"*ECB History*\" windows
 does not only show the node in the echo area but it also opens the clicked
 source only in the background and shows all its methods/variables in \"ECB
