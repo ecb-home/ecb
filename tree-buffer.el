@@ -26,7 +26,7 @@
 ;; This file is part of the ECB package which can be found at:
 ;; http://home.swipnet.se/mayhem/ecb.html
 
-;; $Id: tree-buffer.el,v 1.70 2001/12/11 12:12:47 berndl Exp $
+;; $Id: tree-buffer.el,v 1.71 2001/12/13 13:59:08 berndl Exp $
 
 ;;; Code:
 
@@ -707,7 +707,7 @@ the function `tree-buffer-help-echo-fn'!"
       ;; key-sequences: If a key is pressed during mouse is over point then
       ;; the mouse goes away and therefore the key-sequence is broken because
       ;; the mouse move generates a mouse-movement event.
-;;       (setq tree-buffer-old-mouse-avoidance-mode mouse-avoidance-mode)
+      (setq tree-buffer-old-mouse-avoidance-mode mouse-avoidance-mode)
       (mouse-avoidance-mode 'none)
       (setq tree-buffer-saved-track-mouse track-mouse)
       (setq tree-buffer-track-mouse-timer
@@ -721,8 +721,7 @@ the function `tree-buffer-help-echo-fn'!"
   (unless (or running-xemacs running-emacs-21)
     (unless (not tree-buffer-track-mouse-timer)
       ;; restore the old value
-;;       (mouse-avoidance-mode tree-buffer-old-mouse-avoidance-mode)
-      (mouse-avoidance-mode 'none)
+      (mouse-avoidance-mode tree-buffer-old-mouse-avoidance-mode)
       (setq track-mouse tree-buffer-saved-track-mouse)
       (cancel-timer tree-buffer-track-mouse-timer)
       (setq tree-buffer-track-mouse-timer nil))))

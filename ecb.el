@@ -54,7 +54,7 @@
 ;; The latest version of the ECB is available at
 ;; http://home.swipnet.se/mayhem/ecb.html
 
-;; $Id: ecb.el,v 1.171 2001/12/12 16:15:06 berndl Exp $
+;; $Id: ecb.el,v 1.172 2001/12/13 13:59:07 berndl Exp $
 
 ;;; Code:
 
@@ -1237,7 +1237,7 @@ TOKENLIST otherwise TOKENLIST is returned."
 
 (defun ecb-dump-toplevel ()
   (interactive)
-  (let ((tokens (ecb-klaus-test (semantic-bovinate-toplevel t))))
+  (let ((tokens (ecb-post-process-tokenlist (semantic-bovinate-toplevel t))))
     (save-current-buffer
       (set-buffer (get-buffer-create "ecb-dump"))
       (erase-buffer)
