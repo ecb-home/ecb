@@ -25,7 +25,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-common-browser.el,v 1.8 2004/11/17 17:28:39 berndl Exp $
+;; $Id: ecb-common-browser.el,v 1.9 2004/11/22 17:00:56 berndl Exp $
 
 
 ;;; History
@@ -616,7 +616,9 @@ The following keys must not be rebind in all tree-buffers:
                                                 EMPTY-DIR-P
                                                 SOURCES
                                                 VC
-                                                FIXED-FILENAMES)
+                                                FIXED-FILENAMES
+                                                REMOTE-PATH
+                                                HOST-ACCESSIBLE)
   "Cache used for the filebrowser to cache all necessary informations
 associated to file- or directory-names.
 
@@ -666,7 +668,23 @@ Currently there are three subcaches managed within this cache:
   Cache for fixed filenames which can speedup handling-remote-paths \(like
   tramp-paths)
      key: The concatenation of the args PATH and FILENAME of `ecb-fix-filename'.
-     value: The result of `ecb-fix-filename' for these args.")
+     value: The result of `ecb-fix-filename' for these args.
+
+  REMOTE-PATH:
+
+  Cache if a path is a remote path and store its components if yes.
+     key: a path
+     value: 'NOT-REMOTE if not a remote path otherwise the result of
+     `ecb-remote-path'.
+
+  HOST-ACCESSIBLE:
+
+  Cache if a host is accessible or not.
+     key: a host \(e.g. ecb.sourceforge.net)
+     value: \(<timestamp> . <value>) whereas <timestamp> is the cache time of
+     <value> and <value> is either 'NOT-ACCESSIBLE if host is not accessible
+     or t if accessible.
+")
 
 (defun ecb-filename-cache-init ()
   "Initialize the whole cache for file- and directory-names"
@@ -742,16 +760,25 @@ not nil then in both PATH and FILENAME env-var substitution is done. If the
 `system-type' is 'cygwin32 then the path is converted to win32-path-style!"
   (when (stringp path)
     (or (ecb-fixed-filename-cache-get path filename)
-        (let ((norm-path nil)
+        (let ((remote-path (ecb-remote-path path))
+              (norm-path nil)
               (result nil))
-          (setq norm-path (if ecb-running-xemacs
-                              (cond ((equal system-type 'cygwin32)
-                                     (mswindows-cygwin-to-win32-path
-                                      (expand-file-name path)))
-                                    ((equal system-type 'windows-nt)
-                                     (expand-file-name (ecb-fix-path path)))
-                                    (t (expand-file-name path)))
-                            (expand-file-name path)))
+          (if (or (not remote-path)
+                  (ecb-host-accessible-p (nth 1 remote-path)))
+              (progn
+                (setq norm-path (if ecb-running-xemacs
+                                    (cond ((equal system-type 'cygwin32)
+                                           (mswindows-cygwin-to-win32-path
+                                            (expand-file-name path)))
+                                          ((equal system-type 'windows-nt)
+                                           (expand-file-name (ecb-fix-path path)))
+                                          (t (expand-file-name path)))
+                                  (expand-file-name path)))
+                ;; substitute environment-variables
+                (setq norm-path (expand-file-name (if substitute-env-vars
+                                                      (substitute-in-file-name norm-path)
+                                                    norm-path))))
+            (setq norm-path path))
           ;; For windows systems we normalize drive-letters to downcase
           (setq norm-path (if (and (member system-type '(windows-nt cygwin32))
                                    (> (length norm-path) 1)
@@ -759,10 +786,6 @@ not nil then in both PATH and FILENAME env-var substitution is done. If the
                               (concat (downcase (substring norm-path 0 2))
                                       (substring norm-path 2))
                             norm-path))
-          ;; substitute environment-variables
-          (setq norm-path (expand-file-name (if substitute-env-vars
-                                                (substitute-in-file-name norm-path)
-                                              norm-path)))
           ;; delete a trailing directory-separator if there is any
           (setq norm-path (if (and (> (length norm-path) 1)
                                    (= (aref norm-path (1- (length norm-path)))
@@ -1122,6 +1145,9 @@ run starts with this interrupted function."
 
 ;; generation of nodes rsp. of attributes of nodes
 
+;; (save-excursion
+;;   (set-buffer ecb-sources-buffer-name)
+;;   (tree-buffer-find-image "vc-added"))
 
 (defun ecb-generate-node-name (text-name first-chars icon-name name-of-buffer)
   "Generate a new name from TEXT-NAME by adding an appropriate image according
@@ -1134,9 +1160,7 @@ node-name will be displayed."
   (let ((image nil))
     (save-excursion
       (set-buffer name-of-buffer)
-      (setq image (and icon-name
-                       (ecb-use-images-for-semantic-tags)
-                       (tree-buffer-find-image icon-name)))
+      (setq image (and icon-name (tree-buffer-find-image icon-name)))
       (if image
           (if (> first-chars 0)
               (tree-buffer-add-image-icon-maybe
