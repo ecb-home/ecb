@@ -284,18 +284,18 @@ frame height."
   :set ecb-layout-option-set-function
   :type 'number)
 
-(defcustom ecb-other-window-jump-behavior 'only-edit
+(defcustom ecb-other-window-jump-behavior 'all
   "*Which windows of ECB should be accessable by the ECB-adviced function
 `other-window', an intelligent replacement for the Emacs standard version of
 `other-window'. Following settings are possible:
-- 'only-edit: ECB will only cycle through the edit-windows of ECB.
-- 'edit-and-compile: Like 'only-edit plus the compile window if any.
 - 'all: ECB will cycle through all windows of ECB, means it behaves like the
-  original `other-window'."
+  original `other-window'.
+- 'only-edit: ECB will only cycle through the edit-windows of ECB.
+- 'edit-and-compile: Like 'only-edit plus the compile window if any."
   :group 'ecb-layout
-  :type '(radio (const :tag "Only edit windows" only-edit)
-                (const :tag "Edit + compile window" edit-and-compile)
-                (const :tag "All windows" all)))
+  :type '(radio (const :tag "All windows" all)
+                (const :tag "Only edit windows" only-edit)
+                (const :tag "Edit + compile window" edit-and-compile)))
 
 
 (defcustom ecb-advice-window-functions '(other-window

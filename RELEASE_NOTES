@@ -17,6 +17,8 @@ No special notes.
 Upgrading from versions < 1.20:
 -------------------------------
 
++ Now ECB requires Semantic 1.3.3. Semantic 1.2.1 is no longer supported!
+
 + Now mouse-1 and mouse-2 for opening source-files and jumping to
   methods/variables is not longer the default keybinding. Please take a look
   at the new options 'ecb-primary-secondary-mouse-buttons' and
@@ -35,6 +37,8 @@ Upgrading from versions < 1.20:
   This way will work also in ECB 1.20 but it is NOT the recommended way
   because the new option 'ecb-advice-window-functions' makes this much easier
   and better. Please read the documentation of this option exactly!
+
++ Default-value of `ecb-other-window-jump-behavior' is now 'all.
 
 + Interactively calling 'ecb-update-methods-buffer' is not longer necessary as
   work-around for the bug, that sometimes the error "Wrong type argument,

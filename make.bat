@@ -14,11 +14,11 @@ REM directory.
 REM 
 REM Make sure you compile ECB with the semantic version you load into Emacs
 REM (see below)!
+REM
+REM Call "make" to byte-compile the ECB. You can savely ignore the messages.
 
 REM Define here the correct path to your Emacs or XEmacs
 set EMACSPROG=emacs
-
-REM Adapted by Klaus Berndl
 
 if exist ecb-compile-script-init del ecb-compile-script-init
 if exist ecb.elc del *.elc

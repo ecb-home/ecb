@@ -532,4 +532,4 @@ EXPAND-SYMBOL-BEFORE: If not nil then the expand-symbol \(is displayed before
 
 (provide 'tree-buffer)
 
-;;; dirtest.el ends here
+;;; tree-buffer.el ends here

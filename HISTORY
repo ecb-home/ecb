@@ -1,7 +1,7 @@
 Version 1.20 (???):
 -------------------
 
-- Now all adviced function behave only special in the ECB-frame. In each other
+- Now all adviced functions behave only special in the ECB-frame. In each other
   frame they behave exactly like the not adviced functions. (Klaus)
 
 - Fix "invalid method-buffer"-bug (Klaus, with a lot of help by Eric Ludlam
