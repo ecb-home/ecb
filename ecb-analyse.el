@@ -20,19 +20,17 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-analyse.el,v 1.1 2004/12/20 17:15:16 berndl Exp $
+;; $Id: ecb-analyse.el,v 1.2 2004/12/22 17:21:28 berndl Exp $
 
 
 ;;; Commentary:
 ;;
-;; Displays the analysing informations of semantic-analyse in a special
+;; Displays the analysing informations of semantic-analyze in a special
 ;; tree-buffer.
 ;;
 
 ;;; Code:
 
-;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: we must set this error-save when
-;; run with semantic 1.X?
 (require 'semantic-analyze)
 (require 'ecb-common-browser)
 (require 'ecb-method-browser)
@@ -163,17 +161,37 @@ fontified see the options `ecb-analyse-bucket-node-face' rsp.
                          (const :tag "Completions" :value "Completions")
                          (string :tag "Other bucketname"))))
 
-;; TODO: Klaus Berndl <klaus.berndl@sdm.de>:  add such items to the
-;; anslyse-popup-menu!
-(defvar ecb----semantic-ia-sb-easymenu-definition
-  '( "---"
-;     [ "Expand" speedbar-expand-line nil ]
-;     [ "Contract" speedbar-contract-line nil ]
-     [ "Tag Information" semantic-ia-sb-show-tag-info t ]
-     [ "Jump to Tag" speedbar-edit-line t ]
-     [ "Complete" speedbar-edit-line t ]
-     )
-  "Extra menu items Analysis mode.")
+(defcustom ecb-analyse-gen-tag-info-fn nil
+  "*Which info should be displayed for a tag of the analyse-buffer.
+If nil then the default information about a tag will be displayed. If a
+function then this function gets as argument the tag for which tag-information
+should be displayed. This function has to return a string which will be then
+display as tag-info. This string has to be fully formatted \(e.g. must already
+include line-breaks if the tag-info should be displayed in several lines).
+
+See `ecb-analyse-show-tag-info-fn' how the tag-info is displayed."
+  :group 'ecb-analyse
+  :type '(radio (const :tag "Default info" :value nil)
+                (function :tag "")))
+
+(defcustom ecb-analyse-show-tag-info-fn 'message
+  "*How to display the tag-info for a tag of the analyse-buffer.
+The value of this option is a function which will be called with the
+info-string generated for the current tag of the analyse-buffer. This function
+must do all things necessary for displaying this info. When this function is
+called the window stored in `ecb-last-edit-window-with-point' is the selected
+window!
+
+ECB offers two builtin ways: Display the info in the echo-area \(via the
+function `message') or in a temp-buffer in the edit-area \(via the function
+`ecb-analyse-show-tag-info-in-temp-buffer'). Default is echo-area-display.
+
+See also `ecb-analyse-gen-tag-info-fn'."
+  :group 'ecb-analyse
+  :type '(radio (const :tag "Display in the echo-area" :value message)
+                (const :tag "Display in a temp-buffer"
+                       :value ecb-analyse-show-tag-info-in-temp-buffer)
+                (function :tag "Info display-function")))
 
 ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: first we start simple by creating
 ;; an anaylse-tree-buffer which can be included in a layout and all should
@@ -216,11 +234,11 @@ This means in fact display the current analysis for current point."
       ;; Try and get some sort of analysis
       (ignore-errors
         (save-excursion
-          (setq analysis (semantic-analyze-current-context (point)))
-          (setq cnt (semantic-find-tag-by-overlay))
+          (setq analysis (ecb--semantic-analyze-current-context (point)))
+          (setq cnt (ecb--semantic-find-tag-by-overlay))
           (when analysis
-            (setq completions (semantic-analyze-possible-completions analysis))
-            (setq fnargs (semantic-get-local-arguments (point)))
+            (setq completions (ecb--semantic-analyze-possible-completions analysis))
+            (setq fnargs (ecb--semantic-get-local-arguments (point)))
             )))
       (save-selected-window
         (ecb-exec-in-analyse-window
@@ -308,9 +326,6 @@ LIST will be displayed as in the methods-buffer of ECB \(if
                                                ecb-analyse-nodetype-bucket)
                                          nil
                                          (tree-buffer-get-root))))
-        ;; We expand per default all categories (= Buckets)
-        ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: Maybe customize this with
-        ;; an option?
         (tree-node-set-expanded bucket-node (not (member bucket
                                                          ecb-analyse-collapsed-buckets)))
         (dolist (elem list)
@@ -326,8 +341,6 @@ LIST will be displayed as in the methods-buffer of ECB \(if
             (unless fontify-tags
               (ecb-merge-face-into-text string ecb-analyse-bucket-element-face))
             (if (ecb--semantic-tag-p elem)
-                ;; In case of a semantic-tag the speedbar-code does some nifty
-                ;; tag-info-display when clicking onto the exp-button
                 (tree-node-new string nodetype
                                (list elem
                                      (if (ecb--semantic-tag-with-position-p elem)
@@ -344,6 +357,55 @@ LIST will be displayed as in the methods-buffer of ECB \(if
   (and (equal (nth 2 left) (nth 2 right))
        (ecb-compare-methods-buffer-node-data (car left) (car right))))
 
+;; This is also used as a popup-command. We do not use
+;; tree-buffer-defpopup-command here because we need more arguments than node.
+;; (TODO: maybe we should enhance this macro......)
+(defun ecb-analyse-jump-to-tag (&optional node window)
+  "Jump to the definition of current tag of the analyse-buffer.
+If WINDOW is not nil then it must be a window and then ECB jumps to that
+window. If nil `ecb-last-edit-window-with-point' is used as window."
+  (interactive)
+  (let ((node (if (and (interactive-p) (null node))
+                  (tree-buffer-get-node-at-point)
+                node)))
+    (when node
+      (let* ((data (tree-node-get-data node))
+             (tag (nth 0 data)))
+        ;; if we have a positioned tag we jump to it
+        (when (and tag (= (nth 1 data) ecb-analyse-nodedata-tag-with-pos))
+          ;; We must highlight the tag
+          (tree-buffer-highlight-node-data data)
+          (ecb-jump-to-tag (or (and (ecb--semantic-tag-buffer tag)
+                                    (buffer-file-name (ecb--semantic-tag-buffer tag)))
+                               ;; then we have a tag with no buffer but only
+                               ;; buffer-start- and buffer-end-pos
+                               ecb-path-selected-source)
+                           tag
+                           (or window ecb-last-edit-window-with-point)
+                           t nil))))))
+
+(tree-buffer-defpopup-command ecb-analyse-complete
+  "Complete at current point of the edit-window the selected completion-tag."
+  ;; We must highlight the tag
+  (let* ((data (tree-node-get-data node))
+         (tag (nth 0 data))
+         (type (tree-node-get-type node)))
+    (when (= type ecb-analyse-nodetype-completions)
+      (tree-buffer-highlight-node-data data)
+      (ecb-find-file-and-display ecb-path-selected-source nil)
+      (let* ((a (ecb--semantic-analyze-current-context (point)))
+             (bounds (oref a bounds))
+             (movepoint nil))
+        (save-excursion
+          (if (and (<= (point) (cdr bounds)) (>= (point) (car bounds)))
+              (setq movepoint t))
+          (goto-char (car bounds))
+          (delete-region (car bounds) (cdr bounds))
+          (insert (ecb--semantic-tag-name tag))
+          (if movepoint (setq movepoint (point))))
+        (if movepoint
+            (goto-char movepoint))))))
+
 (defun ecb-analyse-node-clicked (node ecb-button edit-window-nr
                                       shift-mode meta-mode)
   "Handle clicking onto NODE in the analyse-buffer. ECB-BUTTON can be 1, 2 or
@@ -357,36 +419,14 @@ should be displayed. For 1 and 2 the value of EDIT-WINDOW-NR is ignored."
     (cond
      ((= type ecb-analyse-nodetype-bucket)
       (tree-node-toggle-expanded node)
-      ;; Update the tree-buffer with optimized display of NODE
       (tree-buffer-update node))
      ((= type ecb-analyse-nodetype-completions)
-      ;; We must highlight the tag
-      (tree-buffer-highlight-node-data data)
-      (ecb-find-file-and-display ecb-path-selected-source nil)
-      (let* ((a (semantic-analyze-current-context (point)))
-             (bounds (oref a bounds))
-             (movepoint nil))
-        (save-excursion
-          (if (and (<= (point) (cdr bounds)) (>= (point) (car bounds)))
-              (setq movepoint t))
-          (goto-char (car bounds))
-          (delete-region (car bounds) (cdr bounds))
-          (insert (semantic-tag-name tag))
-          (if movepoint (setq movepoint (point))))
-        (if movepoint
-            (goto-char movepoint))))
+      (ecb-analyse-complete node))
      (t
-      ;; We must highlight the tag
-      (tree-buffer-highlight-node-data data)
-      ;; if we have a positioned tag we jump to it
+      (ecb-analyse-jump-to-tag node (ecb-get-edit-window
+                                     (ecb-combine-ecb-button/edit-win-nr
+                                      ecb-button edit-window-nr)))
       (when (and tag (= (nth 1 data) ecb-analyse-nodedata-tag-with-pos))
-        (ecb-semantic-assert-valid-tag tag)
-        (ecb-jump-to-tag (buffer-file-name (ecb--semantic-tag-buffer tag))
-                         tag
-                         (ecb-get-edit-window
-                          (ecb-combine-ecb-button/edit-win-nr
-                           ecb-button edit-window-nr))
-                         t nil)
         (when meta-mode
           (ecb-run-with-idle-timer 0.001 nil 'ecb-hide-ecb-windows)))))))
 
@@ -408,68 +448,58 @@ ECB-analyse-window is not visible in current layout."
   (interactive)
   (ecb-goto-ecb-window ecb-analyse-buffer-name))
 
-
-;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: entweder die beiden folgenden
-;; Funktionen anpassen oder erstmal weglassen
-(defun ecb----semantic-ia-sb-show-tag-info ()
-  "Display information about the tag on the current line.
-Same as clicking on the <i> button.
-See `semantic-ia-sb-tag-info' for more."
-  (interactive)
-  (let ((tok nil))
+(defun ecb-analyse-show-tag-info-in-temp-buffer (info-string)
+  "Display INFO-STRING in a temp-buffer in the edit-area." 
+  (with-output-to-temp-buffer "*Tag Information*"
     (save-excursion
-      (end-of-line)
-      (forward-char -1)
-      (setq tok (get-text-property (point) 'speedbar-token)))
-    (semantic-ia-sb-tag-info nil tok 0)))
+      (set-buffer "*Tag Information*")
+      (insert info-string)))
+  ;; Make it small
+  (shrink-window-if-larger-than-buffer
+   (get-buffer-window "*Tag Information*")))
 
-(defun ecb----semantic-ia-sb-tag-info (text tag indent)
-  "Display as much information as we can about tag.
-Show the information in a shrunk split-buffer and expand
-out as many details as possible.
-TEXT, TAG, and INDENT are speedbar function arguments."
-  (when (semantic-tag-p tag)
-    (unwind-protect
-	(let ((ob nil))
-	  (speedbar-select-attached-frame)
-	  (setq ob (current-buffer))
-	  (with-output-to-temp-buffer "*Tag Information*"
-	    ;; Output something about this tag:
-	    (save-excursion
-	      (set-buffer "*Tag Information*")
-	      (goto-char (point-max))
-	      (insert
-	       (semantic-format-tag-prototype tag nil t)
-	       "\n")
-	      (let ((typetok
-		     (condition-case nil
-			 (save-excursion
-			   (set-buffer ob)
-			   (semantic-analyze-tag-type tag))
-		       (error nil))))
-		(if typetok
-		    (insert (semantic-format-tag-prototype
-			     typetok nil t))
-		  ;; No type found by the analyzer
-		  ;; The below used to try and select the buffer from the last
-		  ;; analysis, but since we are already in the correct buffer, I
-		  ;; don't think that is needed.
-		  (let ((type (semantic-tag-type tag)))
-		    (cond ((semantic-tag-p type)
-			   (setq type (semantic-tag-name type)))
-			  ((listp type)
-			   (setq type (car type))))
-		    (if (semantic-lex-keyword-p type)
-			(setq typetok
-			      (semantic-lex-keyword-get type 'summary))))
-		  (if typetok
-		      (insert typetok))
-		  ))
-	      ))
-	  ;; Make it small
-	  (shrink-window-if-larger-than-buffer
-	   (get-buffer-window "*Tag Information*")))
-      (select-frame speedbar-frame))))
+(defun ecb-analyse-gen-tag-info (tag)
+  "Return the info-string for TAG."
+  (or (and (functionp ecb-analyse-gen-tag-info-fn)
+           (or (funcall ecb-analyse-gen-tag-info-fn tag)
+               (format "No info generated by `%s'." ecb-analyse-gen-tag-info-fn)))
+      (concat (ecb-displayed-tag-name tag)
+              "\n"
+              (let ((typetag
+                     (condition-case nil
+                         (save-excursion
+                           (ecb--semantic-analyze-tag-type tag))
+                       (error nil))))
+                (if typetag
+                    (ecb-displayed-tag-name typetag)
+                  ;; No type found by the analyzer The below used
+                  ;; to try and select the buffer from the last
+                  ;; analysis, but since we are already in the
+                  ;; correct buffer, I don't think that is needed.
+                  (when (fboundp 'semantic-lex-keyword-p)
+                    (let ((type (ecb--semantic-tag-type tag)))
+                      (cond ((ecb--semantic-tag-p type)
+                             (setq type (ecb--semantic-tag-name type)))
+                            ((listp type)
+                             (setq type (car type))))
+                      (if (semantic-lex-keyword-p type)
+                          (setq typetag
+                                (semantic-lex-keyword-get type 'summary))))
+                    (if typetag
+                        typetag))
+                  )))))
+
+
+(tree-buffer-defpopup-command ecb-analyse-show-tag-info
+  "Display as much information as possible about current tag.
+Show the information in a shrunk split-buffer and expand out as many details
+as possible."
+  (let* ((data (tree-node-get-data node))
+         (tag (car data)))
+    (when (ecb--semantic-tag-p tag)
+      (save-selected-window
+        (select-window ecb-last-edit-window-with-point)
+        (funcall ecb-analyse-show-tag-info-fn (ecb-analyse-gen-tag-info tag))))))
 
 (defun ecb-mouse-over-analyse-node (node &optional window no-message click-force)
   "Displays help text if mouse moves over a node in the analyse buffer or if
@@ -479,9 +509,11 @@ displayed, WINDOW is the related window, NO-MESSAGE defines if the help-text
 should be printed here."
   (let ((str (when (or click-force
                        (ecb-show-minibuffer-info node window
-                                                 (car ecb-analyse-show-node-info)))
-               (tree-node-get-name node))))
-    ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: Implement the full-info part.
+                                                 (car
+                                                 ecb-analyse-show-node-info)))
+               (if (equal (cdr ecb-analyse-show-node-info) 'full-info)
+                   (ecb-analyse-gen-tag-info (car (tree-node-get-data node)))
+                 (tree-node-get-name node)))))
     (prog1 str
       (unless no-message
         (tree-buffer-nolog-message str)))))
@@ -493,9 +525,53 @@ completions."
              (nth 1 (tree-node-get-data node)))
       (= (tree-node-get-type node) ecb-analyse-nodetype-completions)))
 
-(defun ecb-analyse-menu-creator (tree-buffer-name)
-  ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: Implement this
-  nil)
+(defun ecb-analyse-create-menu (node &optional with-completion)
+  (let* ((data (tree-node-get-data node))
+         (tag-p (not (equal (nth 0 data) ecb-analyse-nodedata-no-tag)))
+         (tag-with-pos-p (equal (nth 0 data) ecb-analyse-nodedata-tag-with-pos)))
+    (delq nil (list (if with-completion
+                        '("Complete" ecb-analyse-complete))
+                    (if tag-p
+                        '("Show tag info" ecb-analyse-show-tag-info))
+                    (if tag-with-pos-p
+                        '("Jump to tag" ecb-analyse-jump-to-tag))))))
+    
+(defun ecb-analyse-menu-creator (tree-buffer-name node)
+  "Creates the popup-menus for the analyse-buffer."
+  (setq ecb-layout-prevent-handle-ecb-window-selection t)
+  (let ((nodetype (tree-node-get-type node)))
+    (unless (equal nodetype ecb-analyse-nodetype-bucket)
+      (mapcar (function (lambda (nodetype)
+                          (cons nodetype
+                                (ecb-analyse-create-menu
+                                 node
+                                 (equal nodetype
+                                        ecb-analyse-nodetype-completions)))))
+              '(ecb-analyse-nodetype-context
+                ecb-analyse-nodetype-arguments
+                ecb-analyse-nodetype-completions
+                ecb-analyse-nodetype-localvars
+                ecb-analyse-nodetype-prefix
+                ecb-analyse-nodetype-assignee
+                ecb-analyse-nodetype-function
+                ecb-analyse-nodetype-function-arg)))))
+
+
+(defun ecb-analyse-gen-menu-title-creator ()
+  "Returns a menu-title-create-function for the nodetypes of the
+analyse-buffer."
+  (mapcar (function (lambda (nodetype)
+                      (cons nodetype
+                            (function (lambda (node)
+                                        (tree-node-get-name node))))))
+          '(ecb-analyse-nodetype-context
+            ecb-analyse-nodetype-arguments
+            ecb-analyse-nodetype-completions
+            ecb-analyse-nodetype-localvars
+            ecb-analyse-nodetype-prefix
+            ecb-analyse-nodetype-assignee
+            ecb-analyse-nodetype-function
+            ecb-analyse-nodetype-function-arg)))
 
 (defun ecb-create-analyse-tree-buffer ()
   "Create the tree-buffer for analyse-display."
@@ -514,10 +590,7 @@ completions."
    nil
    nil
    'ecb-analyse-menu-creator
-   nil ;; TODO: menu-titles coming later
-;;    (list (cons ecb-methods-nodetype-tag ecb-methods-menu-title-creator)
-;;          (cons ecb-methods-nodetype-bucket ecb-methods-menu-title-creator)
-;;          (cons ecb-methods-nodetype-externtag ecb-methods-menu-title-creator))
+   (ecb-analyse-gen-menu-title-creator)
    (ecb-member-of-symbol/value-list ecb-analyse-buffer-name
                                     ecb-tree-truncate-lines)
    t
