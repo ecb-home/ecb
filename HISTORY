@@ -1,3 +1,9 @@
+Version 1.41:
+-------------
+
+- Fixed bug when clicking on token in the methods buffer in XEmacs.
+
+
 Version 1.40:
 -------------
 

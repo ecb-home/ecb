@@ -21,7 +21,7 @@
 
 ;; Generates ECB HTML pages.
 
-;; $Id: ecb-html.el,v 1.16 2001/07/18 19:27:51 creator Exp $
+;; $Id: ecb-html.el,v 1.17 2001/07/19 19:45:17 creator Exp $
 
 ;;; Code:
 
@@ -50,6 +50,43 @@
 (setq ecb-gz-name (concat ecb-dirname ".tar.gz"))
 (setq ecb-zip-url (concat ecb-download-url ecb-zip-name))
 (setq ecb-gz-url (concat ecb-download-url ecb-gz-name))
+
+(defun ecb-html-main()
+  (h-doc
+   "main.html"
+   "ECB - Emacs Code Browser"
+
+   (h-section "About"
+	      "ECB is source code browser for Emacs. It is a global minor-mode which displays a couple of windows that can be used to browse directories, files and methods. It supports method parsing for Java, C, C++, Elisp etc.")
+
+   (h-section "News"
+	      (h-sub-section "ECB 1.41 released! (2001-07-19)"
+			     "Fixes a bug that occured under XEmacs when clicking a method or variable in the methods buffer.")
+	      (h-sub-section "ECB 1.40 released! (2001-07-18)"
+			     "Many improvements and bug fixes, so download it now!")
+	       )
+
+   (h-section "Dependencies"
+	      "ECB requires version 1.4beta8 or higher of " (h-link "http://cedet.sourceforge.net/semantic.shtml" '(target . "_top") "Eric Ludlam's semantic bovinator") ". If you use ECB for Java development you also need " (h-link "http://sunsite.auc.dk/jde/" '(target . "_top") "JDE") "." h-br "If you use XEmacs you must have the fsf-compat package installed (contains overlay.el).")
+
+   (h-section "Developers"
+	      (h-bullet-link-list
+	       ecb-bullet
+	       '(
+		 ("mailto:mayhem@home.se" "Jesper Nordenberg")
+		 ("mailto:klaus.berndl@sdm.de" "Klaus Berndl")
+		 ("mailto:burton@apache.org" "Kevin A. Burton")
+		 ("mailto:zappo@gnu.org" "Eric M. Ludlam")
+		 )))
+
+   (h-section "Feedback"
+	      "Please use " (h-link "http://lists.sourceforge.net/lists/listinfo/ecb-list" "the public ECB mailing list") " for reporting bugs, making suggestions and asking questions about ECB.")
+
+   (h-table
+    (h-tr (h-td "The page's WebCounter count says that you are visitor number ")
+	  (h-td	(h-img "http://counter.digits.com/wc/-d/4/javabrowser" "ALIGN=middle WIDTH=60 HEIGHT=20 BORDER=0 HSPACE=4 VSPACE=2"))
+	  (h-td " since 2000-07-28.")))
+   ))
 
 (defun ecb-html-old()
   (h-doc
@@ -148,41 +185,6 @@
 	  (h-td '(nowrap) (h-b "Hosted by: "))
 	  (h-td '(nowrap) (h-link "http://sourceforge.net/projects/ecb" '(target . "_top") (h-img "http://sourceforge.net/sflogo.php?group_id=17484&type=1" "width='88' height='31' border='0' alt='SourceForge Logo'")))
 	  ))
-   ))
-
-(defun ecb-html-main()
-  (h-doc
-   "main.html"
-   "ECB - Emacs Code Browser"
-
-   (h-section "About"
-	      "ECB is source code browser for Emacs. It is a global minor-mode which displays a couple of windows that can be used to browse directories, files and methods. It supports method parsing for Java, C, C++, Elisp etc.")
-
-   (h-section "News"
-	      (h-sub-section "ECB 1.40 released! (2001-07-18)"
-			     "Many improvements and bug fixes, so download it now!")
-	       )
-
-   (h-section "Dependencies"
-	      "ECB requires version 1.4beta8 or higher of " (h-link "http://cedet.sourceforge.net/semantic.shtml" '(target . "_top") "Eric Ludlam's semantic bovinator") ". If you use ECB for Java development you also need " (h-link "http://sunsite.auc.dk/jde/" '(target . "_top") "JDE") "." h-br "If you use XEmacs you must have the fsf-compat package installed (contains overlay.el).")
-
-   (h-section "Developers"
-	      (h-bullet-link-list
-	       ecb-bullet
-	       '(
-		 ("mailto:mayhem@home.se" "Jesper Nordenberg")
-		 ("mailto:klaus.berndl@sdm.de" "Klaus Berndl")
-		 ("mailto:burton@apache.org" "Kevin A. Burton")
-		 ("mailto:zappo@gnu.org" "Eric M. Ludlam")
-		 )))
-
-   (h-section "Feedback"
-	      "Please use " (h-link "http://lists.sourceforge.net/lists/listinfo/ecb-list" "the public ECB mailing list") " for reporting bugs, making suggestions and asking questions about ECB.")
-
-   (h-table
-    (h-tr (h-td "The page's WebCounter count says that you are visitor number ")
-	  (h-td	(h-img "http://counter.digits.com/wc/-d/4/javabrowser" "ALIGN=middle WIDTH=60 HEIGHT=20 BORDER=0 HSPACE=4 VSPACE=2"))
-	  (h-td " since 2000-07-28.")))
    ))
 
 (defun ecb-faq-section(name &rest questions)
@@ -326,6 +328,8 @@
     (h-bullet-link-list
      ecb-bullet
      (list 
+      (list (concat ecb-download-url "ecb-1.40.zip") "ecb-1.40.zip")
+      (list (concat ecb-download-url "ecb-1.40.tar.gz") "ecb-1.40.tar.gz")
       (list (concat ecb-download-url "ecb-1.32.zip") "ecb-1.32.zip")
       (list (concat ecb-download-url "ecb-1.32.tar.gz") "ecb-1.32.tar.gz")
       (list (concat ecb-download-url "ecb-1.31.zip") "ecb-1.31.zip")
