@@ -19,7 +19,7 @@
 @c Free Software Foundation, Inc., 59 Temple Place - Suite 330,
 @c Boston, MA 02111-1307, USA.
 
-@c $Id: ecb.texi,v 1.74 2003/02/14 11:46:28 berndl Exp $
+@c $Id: ecb.texi,v 1.75 2003/02/14 16:42:07 berndl Exp $
 
 @setfilename ecb.info
 
@@ -262,12 +262,13 @@ and what are the first steps after activation of ECB.
 @node Installation, Setting up Emacs, Install and first steps, Install and first steps
 @section Installation of ECB
 
-@strong{IMPORTANT}: The following steps 1., 2., 3., 7. and 8. describe
-installation tasks if you got the archive in the format available at
-the ECB website. If you use XEmacs and got ECB as regular
-XEmacs-package (e.g. downloaded and installed by the net-installer of
-XEmacs) then the steps 1., 2., 3., 7. and 8. are not necessary for
-you.
+@strong{IMPORTANT}: The following steps 1 to 8. describe installation
+tasks if you got the archive in the format available at the ECB
+website. If you use XEmacs and got ECB as a regular XEmacs-package
+(e.g. downloaded and installed by the net-installer or package-manager
+of XEmacs) then there is nothing to do for you, but you can
+immediately start ECB with @code{ecb-activate} or read the online-help
+with @code{ecb-show-help}!
 
 @enumerate
 
@@ -325,10 +326,12 @@ and eieio are first loaded after starting ECB}. Disadvantage:
 ECB- and semantic-options first available after starting ECB):
 
 @example
-(autoload 'ecb-activate "ecb" "Activate ECB" t)
-(autoload 'ecb-byte-compile "ecb" "Byte-compile ECB" t)
-(autoload 'ecb-show-help "ecb-help" "Show the online help of ECB" t)
+(load-library "ecb-al")
 @end example
+
+This loads all available autoloads of ECB, e.g. @code{ecb-activate},
+@code{ecb-minor-mode}, @code{ecb-byte-compile} and
+@code{ecb-show-help}.
 
 @item Restart (X)Emacs.
 @end enumerate

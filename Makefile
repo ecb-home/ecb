@@ -1,6 +1,6 @@
 # This Makefile byte-compiles the ECB lisp files and generates online-help.
 
-# $Id: Makefile,v 1.55 2003/02/14 09:32:03 berndl Exp $
+# $Id: Makefile,v 1.56 2003/02/14 16:42:17 berndl Exp $
 
 # ========================================================================
 # User configurable section
@@ -91,7 +91,7 @@ INSTALLINFO=/usr/bin/install-info
 
 # Do not change anything below!
 
-# $Id: Makefile,v 1.55 2003/02/14 09:32:03 berndl Exp $
+# $Id: Makefile,v 1.56 2003/02/14 16:42:17 berndl Exp $
 
 # For the ECB-maintainers: Change the version-number here and not
 # elsewhere!
@@ -103,13 +103,17 @@ CP=cp
 MV=mv -f
 MKDIR=mkdir -p
 
+EBATCH=$(EMACS) -batch -no-site-file
+
 ecb_LISP_EL=tree-buffer.el ecb-util.el ecb-mode-line.el ecb-help.el \
             ecb-layout.el ecb-layout-defs.el ecb-navigate.el ecb.el \
             ecb-eshell.el ecb-cycle.el ecb-face.el ecb-compilation.el \
             ecb-upgrade.el ecb-create-layout.el silentcomp.el \
-            ecb-speedbar.el ecb-examples.el ecb-tod.el
+            ecb-speedbar.el ecb-examples.el ecb-tod.el ecb-autogen.el
 
 ecb_LISP_ELC=$(ecb_LISP_EL:.el=.elc)
+
+ecb_AUTOLOADS=ecb-al.el
 
 ecb_ETC=NEWS README RELEASE_NOTES Makefile make.bat
 
@@ -124,7 +128,7 @@ ecb_DVI=$(ecb_TEXI:.texi=.dvi)
 ecb_PS=$(ecb_TEXI:.texi=.ps)
 ecb_PDF=$(ecb_TEXI:.texi=.pdf)
 
-ecb_DISTRIB_FILES=$(ecb_LISP_EL) $(ecb_TEXI) $(ecb_ETC)
+ecb_DISTRIB_FILES=$(ecb_LISP_EL) $(ecb_AUTOLOADS) $(ecb_TEXI) $(ecb_ETC)
 
 ecb: $(ecb_LISP_EL)
 	@echo "Byte-compiling ECB with LOADPATH=${LOADPATH} ..."
@@ -143,7 +147,7 @@ ecb: $(ecb_LISP_EL)
 	fi
 	@echo "(require 'ecb)" >> ecb-compile-script
 	@echo "(setq debug-on-error t)" >> ecb-compile-script
-	$(EMACS) -batch -no-site-file -l ecb-compile-script --eval '(ecb-byte-compile t)'
+	$(EBATCH) -l ecb-compile-script --eval '(ecb-byte-compile t)'
 	@$(RM) ecb-compile-script
 
 all: ecb online-help
@@ -236,8 +240,11 @@ prepversion:
 	  echo "q") | ed -s $(ecb_TEXI) 1> /dev/null
 
 
+autoloads:
+	$(EBATCH) -l ecb-autogen -f ecb-update-autoloads
+
 # builds the distribution file $(ecb_VERSION).tar.gz
-distrib: $(ecb_INFO_DIR)/$(ecb_INFO) prepversion ecb
+distrib: $(ecb_INFO_DIR)/$(ecb_INFO) prepversion autoloads ecb
 	@$(RM) ecb-$(ecb_VERSION).tar.gz
 	@$(RM) -R ecb-$(ecb_VERSION)
 	@$(MKDIR) ecb-$(ecb_VERSION)
