@@ -105,7 +105,7 @@ upload-update:
 # update latest cvs-snapshot on the ECB-webiste
 update-cvs-snapshot:
 	@echo "Updating latest stable CVS-snapshot..."
-	$(SSH) "cvs -d:pserver:anonymous@cvs1:/cvsroot/ecb export -Dtomorrow ecb && tar czvf $(ecb_WEBSITE_LOC)/cvs_snapshots/ecb.tar.gz ecb && rm -Rf ecb"
+	$(SSH) "cvs -d:pserver:anonymous@cvs1:/cvsroot/ecb export -Dtomorrow ecb && rm -Rf ecb/html ecb/ecb2 && tar czvf $(ecb_WEBSITE_LOC)/cvs_snapshots/ecb.tar.gz ecb && rm -Rf ecb"
 
 clean:
 	@$(RM) -R $(ecb_HTMLDOCU_DIR)
