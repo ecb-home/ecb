@@ -10,7 +10,7 @@ REM user configurable section
 REM Define here the correct paths to your (X)Emacs-executable and the
 REM required packages (use always forward slashes in the paths!)
 
-set EMACS=D:/Programme/Tools/Editor/emacs-21.2/bin/emacs.exe
+set EMACS=C:/Programme/emacs-21/bin/emacs.exe
 set SEMANTIC=../semantic
 set EIEIO=../eieio
 set JDE=../jde/lisp
@@ -24,7 +24,7 @@ REM =======================================================================
 REM Do not change anything below!
 
 
-set EL=tree-buffer.el ecb-util.el ecb-mode-line.el ecb-help.el ecb-layout.el ecb-navigate.el ecb.el ecb-eshell.el ecb-cycle.el ecb-face.el ecb-compilation.el ecb-upgrade.el
+set EL=tree-buffer.el ecb-util.el ecb-mode-line.el ecb-help.el ecb-layout.el ecb-layout-defs.el ecb-navigate.el ecb.el ecb-eshell.el ecb-cycle.el ecb-face.el ecb-compilation.el ecb-upgrade.el
 
 echo Byte-compiling ECB with LOADPATH= %SEMANTIC% %EIEIO% %JDE% 
 
