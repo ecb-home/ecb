@@ -113,7 +113,7 @@ ecb_LISP_EL=tree-buffer.el ecb-util.el ecb-mode-line.el ecb-help.el \
 
 ecb_LISP_ELC=$(ecb_LISP_EL:.el=.elc)
 
-ecb_AUTOLOADS=ecb-al.el
+ecb_AUTOLOADS=ecb-autoloads.el
 
 ecb_ETC=NEWS README RELEASE_NOTES Makefile make.bat
 
