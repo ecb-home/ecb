@@ -52,7 +52,7 @@
 ;; The latest version of the ECB is available at
 ;; http://home.swipnet.se/mayhem/ecb.html
 
-;; $Id: ecb.el,v 1.85 2001/05/14 14:36:35 berndl Exp $
+;; $Id: ecb.el,v 1.86 2001/05/16 20:37:33 creator Exp $
 
 ;;; Code:
 
@@ -1551,20 +1551,17 @@ always the ECB-frame if called from another frame."
   (message "The ECB is now deactivated."))
 
 (defvar ecb-directories-menu nil)
-(setq ecb-directories-menu (make-sparse-keymap "Directory Menu"))
-(define-key ecb-directories-menu [ecb-create-file] '("Create File" . t))
-(define-key ecb-directories-menu [ecb-create-directory-source]
-  '("Create Source" . t))
-(define-key ecb-directories-menu [ecb-delete-directory]
-  '("Delete Directory" . t))
-(define-key ecb-directories-menu [ecb-create-directory]
-  '("Create Child Directory" . t))
+(setq ecb-directories-menu
+      '(("Create File" ecb-create-file)
+	("Create Source" ecb-create-directory-source)
+	("Delete Directory" ecb-delete-directory)
+	("Create Child Directory" ecb-create-directory)))
 
 (defvar ecb-sources-menu nil)
-(setq ecb-sources-menu (make-sparse-keymap "Source Menu"))
-(define-key ecb-sources-menu [ecb-delete-source-2] '("Delete File" . t))
-(define-key ecb-sources-menu [ecb-create-file-2] '("Create File" . t))
-(define-key ecb-sources-menu [ecb-create-source-2] '("Create Source" . t))
+(setq ecb-sources-menu
+      '(("Delete File" ecb-delete-source-2)
+	("Create File" ecb-create-file-2)
+	("Create Source" ecb-create-source-2)))
 
 ;; three easy-entry functions for the history menu for conveniance
 ;; Note: The node argument in the first two functions is not used.
@@ -1576,7 +1573,6 @@ buffers does not exist anymore."
 (defun ecb-clear-history-all (node)
   "Removes all history entries from the ECB history buffer."
   (ecb-clear-history 0))
-
 
 (defun ecb-clear-history-node (node)
   "Removes current entry from the ECB history buffer."
@@ -1592,14 +1588,11 @@ buffers does not exist anymore."
          (tree-buffer-highlight-node-data ecb-path-selected-source))))))
 
 (defvar ecb-history-menu nil)
-(setq ecb-history-menu (make-sparse-keymap "History Menu"))
-(define-key ecb-history-menu [ecb-delete-source-2] '("Delete Source" . t))
-(define-key ecb-history-menu [ecb-clear-history-node]
-  '("Remove current entry" . t))
-(define-key ecb-history-menu [ecb-clear-history-all]
-  '("Remove all entries" . t))
-(define-key ecb-history-menu [ecb-clear-history-only-not-existing]
-  '("Remove not existing buffer-entries" . t))
+(setq ecb-history-menu
+      '(("Delete File" ecb-delete-source-2)
+	("Remove Current Entry" ecb-clear-history-node)
+	("Remove All Entries" ecb-clear-history-all)
+	("Remove Non Existing Buffer Entries" ecb-clear-history-only-not-existing)))
 
 (defun ecb-post-command-hook ()
   (when (and ecb-window-sync ecb-activated (equal (selected-frame) ecb-frame))

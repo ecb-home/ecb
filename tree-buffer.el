@@ -26,7 +26,7 @@
 ;; This file is part of the ECB package which can be found at:
 ;; http://home.swipnet.se/mayhem/ecb.html
 
-;; $Id: tree-buffer.el,v 1.43 2001/05/13 07:37:43 berndl Exp $
+;; $Id: tree-buffer.el,v 1.44 2001/05/16 20:37:18 creator Exp $
 
 ;;; Code:
 
@@ -368,13 +368,14 @@ point will stay on POINT."
   (unless (not (equal (selected-frame) tree-buffer-frame))
     (when tree-buffer-menus
       (let* ((node (tree-buffer-get-node-at-point))
-             (menu (cdr (assoc (tree-node-get-type node) tree-buffer-menus)))
-             (map (make-sparse-keymap (tree-node-get-data node))))
+             (menu (cdr (assoc (tree-node-get-type node) tree-buffer-menus))))
         (when menu
-          (set-keymap-parent map menu)
-          (let ((fn (x-popup-menu event map)))
-            (if fn
-                (eval (list (car fn) 'node)))))))))
+	  (if running-xemacs
+	      (popup-menu (cons (tree-node-get-data node) menu))
+	    (let ((fn (x-popup-menu
+		       event (cons 'keymap (cons (tree-node-get-data node) menu)))))
+	      (if fn
+		  (eval (list (car fn) 'node))))))))))
 
 ;; idea is stolen from ido.el, written by Kim F. Storm <stormware@get2net.dk>
 (defun tree-buffer-find-common-substring (lis subs &optional only-prefix)
@@ -459,7 +460,28 @@ mentioned above!"
                      (goto-char (match-end 0))
                      "")
                  " - no match")))))
-  
+
+(defun tree-buffer-create-menu (menu-items)
+  "Creates a popup menu from a list with menu items."
+  (when menu-items
+    (cons
+     (if running-xemacs
+	 (let ((v (make-vector 3 t)))
+	   (aset v 0 (caar menu-items))
+	   (aset v 1 (list (cadar menu-items)
+			   '(tree-buffer-get-node-at-point)))
+	   v)
+       (cons (cadar menu-items)
+	     (cons (caar menu-items) t)))
+     (tree-buffer-create-menu (cdr menu-items)))))
+
+(defun tree-buffer-create-menus (menus)
+  "Creates a popup menus from an assoc list with menus."
+  (when menus
+    (cons (cons (caar menus)
+		(tree-buffer-create-menu (cdar menus)))
+	  (tree-buffer-create-menus (cdr menus)))))
+
 (defun tree-buffer-create (name frame is-click-valid-fn node-selected-fn
                                 node-expanded-fn node-mouse-over-fn
                                 menus tr-lines read-only tree-indent
@@ -560,7 +582,7 @@ AFTER-CREATE-HOOK: A function \(with no arguments) called directly after
     (setq tree-node-mouse-over-fn node-mouse-over-fn)
     (setq tree-buffer-indent tree-indent)
     (setq tree-buffer-highlighted-node-data nil)
-    (setq tree-buffer-menus menus)
+    (setq tree-buffer-menus (tree-buffer-create-menus menus))
     (setq tree-buffer-root (tree-node-new "root" 0 "root"))
     (setq tree-buffer-type-facer type-facer)
     (setq tree-buffer-expand-symbol-before expand-symbol-before)
