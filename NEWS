@@ -1,4 +1,4 @@
-* Changes for ECB version 2.32beta1
+* Changes for ECB version 2.32beta2
 
 ** Support for (X)Emacs < 21 has been officialy removed.
    ECB requires now (X)Emacs >= 21. ECB stops activation with an appropriate
@@ -14,6 +14,16 @@
    TODO: + adding new section in the texi-manual
 	 + fixes all docstring of ecb-analyse.el
 
+** New smart-arrow-navigation in a tree-buffer with up- and down-arrow
+   Point jumps to the first character of the previous (up) rsp. next node
+   (down). "First" character means either the first character of the
+   expand-symbol (in case `ecb-tree-expand-symbol-before' is not nil) or of
+   the displayed node-name. Or with other words: The first non-indentation and
+   non-guide-line (see `ecb-tree-buffer-style') character of a node.
+
+   Left- and right-arrow were already smart - see the existing option
+   `ecb-tree-navigation-by-arrow'.
+	 
 ** Renamed options or options with new type
    The following options have been renamed:
    ecb-truncate-lines --> ecb-tree-truncate-lines
