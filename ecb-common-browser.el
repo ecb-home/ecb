@@ -25,7 +25,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-common-browser.el,v 1.11 2004/12/10 12:54:42 berndl Exp $
+;; $Id: ecb-common-browser.el,v 1.12 2004/12/20 17:14:27 berndl Exp $
 
 
 ;;; History
@@ -133,14 +133,19 @@ Do not set this variable directly, it is only for internal uses!")
   '(ecb-directories-buffer-name
     ecb-sources-buffer-name
     ecb-methods-buffer-name
-    ecb-history-buffer-name)
+    ecb-history-buffer-name
+    ecb-analyse-buffer-name)
   "*In which tree-buffers RET should finally select an edit-window.
-If one of the symbols `ecb-directories-buffer-name',
-`ecb-sources-buffer-name', `ecb-methods-buffer-name' or
-`ecb-history-buffer-name' is contained in this list then hitting RET in the
-associated tree-buffer selects as last action the right edit-window otherwise
-only the right action is performed \(opening a new source, selecting a method
-etc.) but point stays in the tree-buffer.
+If a buffer \(either its name or the variable-symbol which holds the name) is
+contained in this list then hitting RET in the associated tree-buffer selects
+as last action the right edit-window otherwise only the right action is
+performed \(opening a new source, selecting a method etc.) but point stays in
+the tree-buffer.
+
+The buffer-name can either be defined as plain string or with a symbol which
+contains the buffer-name as value. The latter one is recommended for the
+builtin ECB-tree-buffers because then simply the related option-symbol can be
+used.
 
 A special remark for the `ecb-directories-buffer-name': Of course here the
 edit-window is only selected if the name of the current layout is contained in
@@ -157,14 +162,10 @@ for future Emacs sessions!"
                    (set sym val)
                    (setq ecb-tree-RET-selects-edit-window--internal
                          (ecb-copy-list val))))
-  :type '(set (const :tag "ecb-directories-buffer-name"
-                     :value ecb-directories-buffer-name)
-              (const :tag "ecb-sources-buffer-name"
-                     :value ecb-sources-buffer-name)
-              (const :tag "ecb-methods-buffer-name"
-                     :value ecb-methods-buffer-name)
-              (const :tag "ecb-history-buffer-name"
-                     :value ecb-history-buffer-name)))
+  :type '(repeat (choice :menu-tag "Buffer-name"
+                        (string :tag "Buffer-name as string")
+                        (symbol :tag "Symbol holding buffer-name"))))
+
 
 (defcustom ecb-tree-indent 4
   "*Indent size for tree buffer.
@@ -258,69 +259,79 @@ With both ascii-styles the tree-layout can be affected with the options
                 (const :tag "Ascii-style with guide-lines" :value ascii-guides)
                 (const :tag "Ascii-style w/o guide-lines" :value ascii-no-guides)))
 
+;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: add here the analyse buffer if
+;; additonal images are necessary - but currently i don't think we need
+;; special images for this analyse-stuff.
 (defcustom ecb-tree-image-icons-directories
   (let ((base (concat (if ecb-regular-xemacs-package-p
                           (format "%s" (locate-data-directory "ecb"))
                         ecb-ecb-dir)
                       "ecb-images/")))
-        (append (mapcar (function (lambda (i)
-                                    (if i
-                                        (concat base i))))
-                        '("default/height-17"
-                          "directories/height-17"
-                          "sources/height-14_to_21"
-                          "methods/height-14_to_21"
-                          nil))))
+    (cons (concat base "default/height-17")
+          (mapcar (function (lambda (i)
+                              (cons (car i) (concat base (cdr i)))))
+                  '((ecb-directories-buffer-name . "directories/height-17")
+                    (ecb-sources-buffer-name . "sources/height-14_to_21")
+                    (ecb-methods-buffer-name . "methods/height-14_to_21")))))
   "*Directories where the images for the tree-buffer can be found.
-This is a five-element list where:
-1. element: Default directory where the default images for the tree-buffer can
-   be found. It should contain an image for every name of
-   `tree-buffer-tree-image-names'. The name of an image-file must be:
-   \"ecb-<NAME of TREE-BUFFER-TREE-IMAGE-NAMES>.<ALLOWED EXTENSIONS>\".
-2. element: Directory for special images for the Directories-buffer.
-3. element: Directory for special images for the Sources-buffer.
-4. element: Directory for special images for the Methods-buffer.
-5. element: Directory for special images for the History-buffer.
+This is a cons cell where:
 
-The directories of the elements 2 - 5 are additional image-directories which
-are searched first for images needed for the respective tree-buffer. If the
-image can not be found in this directory then the default-directory \(1.
-element) is searched. If the image can't even be found there the related
-ascii-symbol is used - which is defined in `tree-buffer-tree-image-names'.
+car: Default directory where the default images for the tree-buffer can be
+found. It should contain an image for every name of
+`tree-buffer-tree-image-names'. The name of an image-file must be:
+\"ecb-<NAME of TREE-BUFFER-TREE-IMAGE-NAMES>.<ALLOWED EXTENSIONS>\".
 
-All but the first element \(the default directory) can be nil.
+cdr: This is a list where each element is a cons again with: car is the buffer
+name of the tree-buffer for which a special image-path should be used. The
+buffer-name can either be defined as plain string or with a symbol which
+contains the buffer-name as value. The latter one is recommended for the
+builtin ECB-tree-buffers because then simply the related option-symbol can be
+used \(e.g. the symbol `ecb-directories-buffer-name'). The cdr is the the
+full-path of an additional image-directorie which is searched first for images
+needed for the related tree-buffer. If the image can not be found in this
+directory then the default-directory \(see above) is searched. If the
+image can't even be found there the related ascii-symbol is used - which is
+defined in `tree-buffer-tree-image-names'. If a tree-buffer is not contained
+in this list then there is no additional special image-directory for it.
 
-ECB comes with images defined in four different heights - so for the most
-senseful font-heights of a tree-buffer a fitting image-size should be
+ECB comes with predefined images in several different heights - so for the
+most senseful font-heights of a tree-buffer a fitting image-size should be
 available. The images reside either in the subdirectory \"ecb-images\" of the
 ECB-installation or - if ECB is installed as regular XEmacs-package - in the
 ECB-etc data-directory \(the directory returned by \(locate-data-directory
 \"ecb\")."
   :group 'ecb-tree-buffer
-  :type '(list (directory :tag "Full default image-path")
-               (choice :tag "Directories" :menu-tag "Directories"
-                       (const :tag "No special path" :value nil)
-                       (directory :tag "Full image-path for directories"))
-               (choice :tag "Sources" :menu-tag "Sources"
-                       (const :tag "No special path" :value nil)
-                       (directory :tag "Full image-path for sources"))
-               (choice :tag "Methods" :menu-tag "Methods"
-                       (const :tag "No special path" :value nil)
-                       (directory :tag "Full image-path for methods"))
-               (choice :tag "History" :menu-tag "History"
-                       (const :tag "No special path" :value nil)
-                       (directory :tag "Full image-path for history"))))
+  :type '(cons (directory :tag "Full default image-path")
+               (repeat (cons (choice :menu-tag "Buffer-name"
+                                     (string :tag "Buffer-name as string")
+                                     (symbol :tag "Symbol holding
+                                     buffer-name"))                             
+                             (directory :tag "Full image-path for this tree-buffer")))))
 
-(defcustom ecb-truncate-lines '(t t t t)
+(defcustom ecb-tree-truncate-lines '(ecb-directories-buffer-name
+                                     ecb-sources-buffer-name
+                                     ecb-methods-buffer-name
+                                     ecb-history-buffer-name
+                                     ecb-analyse-buffer-name)
   "*Truncate lines in ECB buffers.
+If a buffer \(either its name or the variable-symbol which holds the name) is
+contained in this list then line-truncation is switched on for this buffer
+otherwise it is off.
+
+The buffer-name can either be defined as plain string or with a symbol which
+contains the buffer-name as value. The latter one is recommended to switch on
+line-truncation for one of the builtin ECB-tree-buffers because then simply
+the related option-symbol can be used. To truncate lines in the builtin
+directories tree-buffer just add the symbol `ecb-directories-buffer-name' to
+this option.
+
 If you change this during ECB is activated you must deactivate and activate
 ECB again to take effect."
   :group 'ecb-tree-buffer
   :group 'ecb-most-important
-  :type '(list (boolean :tag "Directories buffer")
-               (boolean :tag "Sources buffer")
-               (boolean :tag "Methods buffer")
-               (boolean :tag "History buffer")))
+  :type '(repeat (choice :menu-tag "Buffer-name"
+                         (string :tag "Buffer-name as string")
+                         (symbol :tag "Symbol holding buffer-name"))))
 
 (defcustom ecb-tree-easy-hor-scroll 5
   "*Scroll step for easy hor. scrolling via mouse-click in tree-buffers.
@@ -345,6 +356,8 @@ nil then no keys for horizontal scrolling are bound."
                 (const :tag "No hor. mouse scrolling" :value nil)
                 (integer :tag "Scroll step")))
 
+;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: maybe we should change this to a
+;; type analogous to ecb-tree-truncate-lines
 (defcustom ecb-truncate-long-names t
   "*Truncate long names that don't fit in the width of the ECB windows.
 If you change this during ECB is activated you must deactivate and activate
@@ -383,121 +396,20 @@ ECB and then activating it again!"
   :group 'ecb-tree-buffer
   :type 'boolean)
 
-(defcustom ecb-show-node-info-in-minibuffer '((if-too-long . path)
-                                              (if-too-long . name)
-                                              (always . path)
-                                              (if-too-long . name+type))
-  "*Node info to display in a tree-buffer.
-Define which node info should displayed in a tree-buffer after
-mouse moving over the node or after a shift click onto the node.
-
-For every tree-buffer you can define \"when\" node info should be displayed:
-- always: Node info is displayed by moving with the mouse over a node.
-- if-too-long: Node info is only displayed by moving with the mouse over a
-  node does not fit into the window-width of the tree-buffer window.
-  In the ECB directories buffer this means also if a node is shortend or if
-  the node has an alias \(see `ecb-source-path').
-- shift-click: Node info is only displayed after a shift click with the
-  primary mouse button onto the node.
-- never: Node info is never displayed.
-
-For every tree-buffer you can define what info should be displayed:
-+ Directory-buffer:
-  - name: Only the full node-name is displayed.
-  - path: The full-path of the node is displayed.
-+ Sources-buffer:
-  - name: Only the full node-name is displayed.
-  - file-info: File infos for this file are displayed.
-  - file-info-full: Fill infos incl. full path for this file are displayed.
-+ History-buffer:
-  see Directories-buffer.
-+ Methods-buffer:
-  - name: Only the full node name is displayed.
-  - name+type: The full name + the type of the node \(function, class,
-    variable) is displayed.
-
-Do NOT set this option directly via setq but use always customize!"
-  :group 'ecb-tree-buffer
-  :group 'ecb-most-important
-  :set (function (lambda (symbol value)
-                   (set symbol value)
-                   (if (and (boundp 'ecb-minor-mode)
-                            ecb-minor-mode)
-                       (let ((when-list (mapcar (lambda (elem)
-                                                  (car elem))
-                                                value)))
-                         (if (or (member 'if-too-long when-list)
-                                 (member 'always when-list))
-                             (tree-buffer-activate-follow-mouse)
-                           (tree-buffer-deactivate-follow-mouse)
-                           (tree-buffer-deactivate-mouse-tracking))))))
-  :initialize 'custom-initialize-default 
-  :type '(list (cons :tag "* Directories-buffer"
-                     (choice :tag "When"
-                             (const :tag "Always" :value always)
-                             (const :tag "If too long" :value if-too-long)
-                             (const :tag "After shift click" :value shift-click)
-                             (const :tag "Never" :value never))
-                     (choice :tag "What"
-                             (const :tag "Node-name" :value name)
-                             (const :tag "Full path" :value path)))
-               (cons :tag "* Sources-buffer"
-                     (choice :tag "When"
-                             (const :tag "Always" :value always)
-                             (const :tag "If too long" :value if-too-long)
-                             (const :tag "After shift click" :value shift-click)
-                             (const :tag "Never" :value never))
-                     (choice :tag "What"
-                             (const :tag "Node-name" :value name)
-                             (const :tag "File info" :value file-info)
-                             (const :tag "File info \(full path)"
-                                    :value file-info-full)))
-               (cons :tag "* History-buffer"
-                     (choice :tag "When"
-                             (const :tag "Always" :value always)
-                             (const :tag "If too long" :value if-too-long)
-                             (const :tag "After shift click" :value shift-click)
-                             (const :tag "Never" :value never))
-                     (choice :tag "What"
-                             (const :tag "Node-name" :value name)
-                             (const :tag "Full path" :value path)))
-               (cons :tag "* Method-buffer"
-                     (choice :tag "When"
-                             (const :tag "Always" :value always)
-                             (const :tag "If too long" :value if-too-long)
-                             (const :tag "After shift click" :value shift-click)
-                             (const :tag "Never" :value never))
-                     (choice :tag "What"
-                             (const :tag "Node-name" :value name)
-                             (const :tag "Node-name + type" :value name+type)))))
-
 (defun ecb-show-any-node-info-by-mouse-moving-p ()
   "Return not nil if for at least one tree-buffer showing node info only by
 moving the mouse over a node is activated. See
-`ecb-show-node-info-in-minibuffer'."
-  (let ((when-list (mapcar (lambda (elem)
-                             (car elem))
-                           ecb-show-node-info-in-minibuffer)))
+`ecb-directories-show-node-info' etc...."
+  (let ((when-list (mapcar (function (lambda (elem)
+                                       (car (symbol-value elem))))
+                           '(ecb-directories-show-node-info
+                             ecb-sources-show-node-info
+                             ecb-methods-show-node-info
+                             ecb-history-show-node-info
+                             ecb-analyse-show-node-info
+                             ))))
     (or (member 'if-too-long when-list)
         (member 'always when-list))))
-
-(defun ecb-show-node-info-index (tree-buffer-name)
-  (cond ((ecb-string= tree-buffer-name ecb-directories-buffer-name)
-         0)
-        ((ecb-string= tree-buffer-name ecb-sources-buffer-name)
-         1)
-        ((ecb-string= tree-buffer-name ecb-history-buffer-name)
-         2)
-        ((ecb-string= tree-buffer-name ecb-methods-buffer-name)
-         3)))
-
-(defun ecb-show-node-info-when (tree-buffer-name)
-  (car (nth (ecb-show-node-info-index tree-buffer-name)
-            ecb-show-node-info-in-minibuffer)))
-
-(defun ecb-show-node-info-what (tree-buffer-name)
-  (cdr (nth (ecb-show-node-info-index tree-buffer-name)
-            ecb-show-node-info-in-minibuffer)))
 
 (defcustom ecb-primary-secondary-mouse-buttons 'mouse-2--C-mouse-2
   "*Primary- and secondary mouse button for using the ECB-buffers.
@@ -521,7 +433,7 @@ POWER-click occurs):
   semantic!
 
 In addition always the whole node-name is displayed in the minibuffer after a
-POWER-click \(for this see `ecb-show-node-info-in-minibuffer').
+POWER-click \(for this see `ecb-directories-show-node-info' etc...).
 
 The secondary mouse-button is for opening \(jumping to) the file in another
 edit-window \(see the documentation `ecb-mouse-click-destination').
@@ -610,6 +522,36 @@ The following keys must not be rebind in all tree-buffers:
 ;; Internals
 ;;====================================================
 
+;; all created tree-buffers 
+
+(defvar ecb-tree-buffers nil
+  "The tree-buffers of ECB.
+An alist which cons for each created \(do not confuse created with visible!)
+tree-buffer where the car is the name of the tree-buffer and the cdr is the
+associated symbol which contains this name.")
+
+(defsubst ecb-tree-buffers-init ()
+  (setq ecb-tree-buffers nil))
+
+(defsubst ecb-tree-buffers-add (name name-symbol)
+  (unless (ecb-find-assoc name ecb-tree-buffers)
+    (setq ecb-tree-buffers
+          (ecb-add-assoc (cons name name-symbol) ecb-tree-buffers))))
+
+(defsubst ecb-tree-buffers-name-list ()
+  (mapcar (function (lambda (e) (car e))) ecb-tree-buffers))
+
+(defsubst ecb-tree-buffers-symbol-list ()
+  (mapcar (function (lambda (e) (cdr e))) ecb-tree-buffers))
+
+(defsubst ecb-tree-buffers-buffer-list ()
+  (mapcar (function (lambda (e) (get-buffer (car e)))) ecb-tree-buffers))
+
+(defsubst ecb-tree-buffers-get-symbol (name)
+  (ecb-find-assoc-value name ecb-tree-buffers))
+
+
+  
 ;; the filename/path cache
 
 (defecb-multicache ecb-filename-cache 500 nil '(FILES-AND-SUBDIRS
@@ -834,16 +776,14 @@ not nil then in both PATH and FILENAME env-var substitution is done. If the
 
 ;; -- end of canonical filenames
 
-(defun ecb-find-optionsym-for-tree-buffer-name (name)
-  (cond ((string= name ecb-directories-buffer-name)
-         'ecb-directories-buffer-name)
-        ((string= name ecb-sources-buffer-name)
-         'ecb-sources-buffer-name)
-        ((string= name ecb-methods-buffer-name)
-         'ecb-methods-buffer-name)
-        ((string= name ecb-history-buffer-name)
-         'ecb-history-buffer-name)
-        (t (error "%s is not an ecb-tree-buffer!" name))))
+
+(defun ecb-format-bucket-name (name)
+  "Format NAME as a bucket-name according to `ecb-bucket-node-display'."
+  (let ((formatted-name (concat (nth 0 ecb-bucket-node-display)
+				name
+				(nth 1 ecb-bucket-node-display))))
+    (ecb-merge-face-into-text formatted-name (nth 2 ecb-bucket-node-display))
+    formatted-name))
 
 (defun ecb-toggle-RET-selects-edit-window ()
   "Toggles if RET in a tree-buffer should finally select the edit-window.
@@ -851,18 +791,23 @@ See also the option `ecb-tree-RET-selects-edit-window'."
   (interactive)
   (let ((tree-buffer (ecb-point-in-ecb-tree-buffer)))
     (if tree-buffer
-        (let ((optionsym (ecb-find-optionsym-for-tree-buffer-name
-                          (buffer-name tree-buffer))))
-          (if (member optionsym
-                      ecb-tree-RET-selects-edit-window--internal)
+        (let ((tree-buf-name (buffer-name tree-buffer)))
+          (if (ecb-member-of-symbol/value-list
+               tree-buf-name
+               ecb-tree-RET-selects-edit-window--internal)
               (progn
                 (setq ecb-tree-RET-selects-edit-window--internal
-                      (delete optionsym
-                              ecb-tree-RET-selects-edit-window--internal))
+                      ;; we must try both - the symbol of the tree-buffer-name
+                      ;; and the tree-buffer-name because we do not know what
+                      ;; the user has specified in
+                      ;; `ecb-tree-RET-selects-edit-window'!
+                      (delete (ecb-tree-buffers-get-symbol tree-buf-name)
+                              (delete tree-buf-name
+                                      ecb-tree-RET-selects-edit-window--internal)))
                 (message "RET does not select the edit-window."))
             (setq ecb-tree-RET-selects-edit-window--internal
                   (append ecb-tree-RET-selects-edit-window--internal
-                          (list optionsym)))
+                          (list (ecb-tree-buffers-get-symbol tree-buf-name))))
             (message "RET selects the edit-window.")))
       (message "Point must stay in an ECB tree-buffer!"))))
 
@@ -937,6 +882,8 @@ combination is invalid \(see `ecb-interpret-mouse-click'."
 	     (ecb-history-clicked node ecb-button nil shift-mode meta-mode))
 	    ((ecb-string= tree-buffer-name ecb-methods-buffer-name)
 	     (ecb-method-clicked node ecb-button nil shift-mode meta-mode))
+	    ((ecb-string= tree-buffer-name ecb-analyse-buffer-name)
+	     (ecb-analyse-node-clicked node ecb-button nil shift-mode meta-mode))
 	    (t nil)))
 
     ;; now we go back to the tree-buffer but only if all of the following
@@ -948,8 +895,9 @@ combination is invalid \(see `ecb-interpret-mouse-click'."
     ;;    at least `ecb-show-sources-in-directories-buffer-p' is true and the
     ;;    hitted node is a sourcefile
     (when (and keyboard-p
-               (not (member (ecb-find-optionsym-for-tree-buffer-name tree-buffer-name)
-                            ecb-tree-RET-selects-edit-window--internal))
+               (not (ecb-member-of-symbol/value-list
+                     tree-buffer-name
+                     ecb-tree-RET-selects-edit-window--internal))
                (or (not (ecb-string= tree-buffer-name ecb-directories-buffer-name))
                    (and (ecb-show-sources-in-directories-buffer-p)
                         (= ecb-directories-nodetype-sourcefile
@@ -1044,17 +992,16 @@ Currently the fourth argument TREE-BUFFER-NAME is not used here."
 	       (list (if control-pressed 2 1) shift-pressed meta-pressed 'mouse)))
 	    (t nil)))))
 
-(defun ecb-show-minibuffer-info (node window tree-buffer-name)
-  "Checks if in the minibuffer should be displayed any info about the current
-node in the ECB-window WINDOW for the tree-buffer TREE-BUFFER-NAME only by
-mouse-moving."
-  (let ((when-elem (ecb-show-node-info-when tree-buffer-name)))
-    (or (eq when-elem 'always)
-        (and (eq when-elem 'if-too-long)
-             window
-             (>= (+ (length (tree-node-get-name node))
-                    (tree-node-get-indentlength node))
-                 (window-width window))))))
+(defun ecb-show-minibuffer-info (node window when-spec)
+  "Checks if any info about the current node in the ECB-window WINDOW should
+be displayed. WHEN-SPEC must have the same format as the car of
+`ecb-directories-show-node-info'."
+  (or (eq when-spec 'always)
+      (and (eq when-spec 'if-too-long)
+           window
+           (>= (+ (length (tree-node-get-name node))
+                  (tree-node-get-indentlength node))
+               (window-width window)))))
 
 
 (tree-buffer-defpopup-command ecb-maximize-ecb-window-menu-wrapper
