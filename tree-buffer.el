@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: tree-buffer.el,v 1.150 2004/09/03 16:31:11 berndl Exp $
+;; $Id: tree-buffer.el,v 1.151 2004/09/06 15:47:39 berndl Exp $
 
 ;;; Commentary:
 
@@ -251,6 +251,7 @@ node name.")
 (defvar tree-buffer-expand-symbol-before nil)
 (defvar tree-buffer-mouse-action-trigger nil)
 (defvar tree-buffer-is-click-valid-fn nil)
+(defvar tree-buffer-after-update-hook nil)
 (defvar tree-node-selected-fn nil)
 (defvar tree-node-expanded-fn nil)
 (defvar tree-node-collapsed-fn nil)
@@ -496,12 +497,19 @@ and DATA=nil."
   (tree-node-new "root" -1 nil))
 
 (defun tree-node-update (node name shorten-name type data expandable)
-  "Update NODE with setable datas."
-  (tree-node-set-name node name)
-  (tree-node-set-shorten-name node shorten-name)
-  (tree-node-set-type node type)
-  (tree-node-set-data node data)
-  (tree-node-set-expandable node expandable))
+  "Update NODE with setable datas. Each of the arguments NAME, SHORTEN-NAME,
+TYPE, DATA and EXPANDABLE can have the special value 'use-old-value\; this
+means that attribute of NODE will not be updated."
+  (unless (eq name 'use-old-value)
+    (tree-node-set-name node name))
+  (unless (eq shorten-name 'use-old-value)
+    (tree-node-set-shorten-name node shorten-name))
+  (unless (eq type 'use-old-value)
+    (tree-node-set-type node type))
+  (unless (eq data 'use-old-value)
+    (tree-node-set-data node data))
+  (unless (eq expandable 'use-old-value)
+    (tree-node-set-expandable node expandable)))
 
 
 (defun tree-node-count-subnodes-to-display (node)
@@ -706,6 +714,10 @@ TREE-IMAGE-NAME."
             (message "%s" msg)
           (message nil))))
     msg))
+
+(defsubst tree-buffer-current-line ()
+  "Return the current line-number - the first line in a buffer has number 1."
+  (+ (count-lines 1 (point)) (if (= (current-column) 0) 1 0)))
 
 (defun tree-buffer-get-node-name-start-column (node)
   "Returns the buffer column where the name of the node starts."
@@ -1054,7 +1066,7 @@ returned."
         (if (null node)
             (progn
               ;; node can not be found because maybe the node is a subnode and
-              ;; it큦 parent is not expanded --> then there is no node for
+              ;; it's parent is not expanded --> then there is no node for
               ;; NODE-DATA; therefore we must remove the highlighting
               (tree-buffer-remove-highlight)
               nil)
@@ -1351,27 +1363,57 @@ end-guide."
 (defun tree-buffer-update-node (node name shorten-name type data expandable
                                      &optional redisplay)
   "This function updates the NODE with the new datas NAME, SHORTEN-NAME, TYPE,
-DATA and EXPANDABLE. If first optional arg REDISLAY is not nil then NODE will
-be completely redisplayed according its new data."
-  (let ((node-line (if redisplay
-                       (tree-buffer-find-node node)))
-        (old-node-data (tree-node-get-data node))
-        (buffer-read-only nil))
-    (tree-node-update node name shorten-name type data expandable)
+DATA and EXPANDABLE. If NODE is nil then the node at current point will be
+updated. Each of the arguments NAME, SHORTEN-NAME, TYPE, DATA and EXPANDABLE
+can have the special value 'use-old-value\; this means that attribute of NODE
+will not be updated. If first optional arg REDISLAY is not nil then NODE will
+be completely redisplayed according to its new data."
+  (let* ((my-node (or node (tree-buffer-get-node-at-point)))
+         (node-line (when redisplay
+                      ;; Klaus Berndl <klaus.berndl@sdm.de>: We could simply
+                      ;; here call (tree-buffer-find-node my-node) but for
+                      ;; best possible performance we just use the
+                      ;; current linenumber if NODE is nil (means we stay
+                      ;; already at the right point and there is no need to
+                      ;; waste performance by searching a node we have
+                      ;; already "found"...maybe paranoid ;-)
+                      (if node
+                          (tree-buffer-find-node node)
+                        (tree-buffer-current-line))))
+         (old-node-data (tree-node-get-data my-node))
+         (buffer-read-only nil))
+    (tree-node-update my-node name shorten-name type data expandable)
     (when node-line
       (save-excursion
         (goto-line node-line)
         (beginning-of-line)
         (delete-region (tree-buffer-line-beginning-pos)
                        (tree-buffer-line-end-pos))
-        (insert (tree-node-get-indentstr node))
-        (tree-buffer-insert-node-display node 'no-newline)
+        (insert (tree-node-get-indentstr my-node))
+        (tree-buffer-insert-node-display my-node 'no-newline)
         ;; rehighlight here the current highlighted node again - this is
         ;; necessary if we have redisplayed the currently highlighted node.
-        (if (tree-buffer-node-data-equal-p old-node-data
-                                           (car tree-buffer-highlighted-node-data))
-            (tree-buffer-highlight-node-data old-node-data nil t))))))
+        ;; For this check we have to compare the old-node-data (before the
+        ;; update!) with that node-data stored in
+        ;; `tree-buffer-highlighted-node-data' - but the rehighlight has to be
+        ;; done with the new node-data (after the update) because the node is
+        ;; already updated so the node is only findable via the new node-data!
+        (when (tree-buffer-node-data-equal-p old-node-data
+                                             (car tree-buffer-highlighted-node-data))
+          (tree-buffer-highlight-node-data (tree-node-get-data my-node)
+                                           nil t))))))
 
+;; Klaus Berndl <klaus.berndl@sdm.de>: Just a test-function - not used
+(defun tree-buffer-test-update-node ()
+  (tree-buffer-update-node nil
+                           'use-old-value
+                           'use-old-value
+                           'use-old-value
+                           'use-old-value
+                           nil ;; we set the node as not-expandable
+                           t))
+
+  
 (defun tree-buffer-clear ()
   "Clear current tree-buffer, i.e. remove all children of the root-node"
   (dolist (child (tree-node-get-children (tree-buffer-get-root)))
@@ -1413,12 +1455,17 @@ tree-buffer."
 (defun tree-buffer-empty-p ()
   (= (point-min) (point-max)))
 
+(defun tree-buffer-run-after-update-hook ()
+  "Run all functions of `tree-buffer-after-update-hook'"
+  (dolist (f tree-buffer-after-update-hook)
+    (funcall f)))
+
 (defun tree-buffer-update (&optional node content)
   "Updates the current tree-buffer. The buffer will be completely rebuild with
-it큦 current nodes. Window-start and point will be preserved. If NODE is not
+it's current nodes. Window-start and point will be preserved. If NODE is not
 nil and a valid and expanded node with at least one child then the display of
-this node is optimized so the node itself and as much as possible of it큦
-children \(and also recursive the children of a child if it큦 already
+this node is optimized so the node itself and as much as possible of it's
+children \(and also recursive the children of a child if it's already
 expanded, see `tree-node-count-subnodes-to-display') are visible in current
 tree-buffer. If CONTENT is not nil then it must be a cons-cell where the car
 is the whole string of the tree-buffer and the cdr is the value of
@@ -1445,9 +1492,15 @@ of CONTENT."
      nil)
     (goto-char p)
     (set-window-start w ws)
-    ;; let큦 optimize the display of the expanded node NODE and it큦 children.
+    ;; let's optimize the display of the expanded node NODE and it's children.
     (when node
-      (tree-buffer-recenter node w))))
+      (tree-buffer-recenter node w))
+    ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: Should we run regardless of
+    ;; content?? maybe we should define tree-buffer-after-update-hook so for
+    ;; each function can be defined if should be run in veery case or only if
+    ;; real update (not from content-cache)
+    (unless (consp content)
+      (tree-buffer-run-after-update-hook))))
 
 
 (defun tree-buffer-scroll (point window-start)
@@ -2026,7 +2079,8 @@ determines when the command is triggered, values can be 'button-press and
                            type-facer
                            expand-symbol-before
                            highlight-node-face general-face
-                           after-create-hook)
+                           after-create-hook
+                           after-update-hook)
   "Creates a new tree buffer and returns the newly created buffer.
 This function creates also a special data-storage for this tree-buffer which
 can be accessed via `tree-buffer-set-data-store' and `tree-buffer-get-data-store'.
@@ -2193,7 +2247,10 @@ GENERAL-FACE: General face in which the whole tree-buffer should be displayed.
 AFTER-CREATE-HOOK: A function or a list of functions \(with no arguments)
                    called directly after creating the tree-buffer and defining
                    it's local keymap. For example such a function can add
-                   additional key-bindings for this tree-buffer local keymap."
+                   additional key-bindings for this tree-buffer local keymap.
+AFTER-UPDATE-HOOK: A function or a list of functions \(with no arguments)
+                   called each time after the tree-buffer has been updated via
+                   `tree-buffer-update'."
   (let ((nop (function (lambda(e) (interactive "e"))))
         (a-c-h (if (functionp after-create-hook)
                    (list after-create-hook)
@@ -2214,6 +2271,7 @@ AFTER-CREATE-HOOK: A function or a list of functions \(with no arguments)
     (make-local-variable 'tree-buffer-indent)
     (make-local-variable 'tree-buffer-mouse-action-trigger)
     (make-local-variable 'tree-buffer-is-click-valid-fn)
+    (make-local-variable 'tree-buffer-after-update-hook)
     (make-local-variable 'tree-node-selected-fn)
     (make-local-variable 'tree-node-expanded-fn)
     (make-local-variable 'tree-node-collapsed-fn)
@@ -2254,6 +2312,10 @@ AFTER-CREATE-HOOK: A function or a list of functions \(with no arguments)
     (setq tree-buffer-frame frame)
     (setq tree-buffer-mouse-action-trigger mouse-action-trigger)
     (setq tree-buffer-is-click-valid-fn is-click-valid-fn)
+    (setq tree-buffer-after-update-hook
+          (if (functionp after-update-hook)
+              (list after-update-hook)
+            after-update-hook))
     (setq tree-node-selected-fn node-selected-fn)
     (setq tree-node-expanded-fn node-expanded-fn)
     (setq tree-node-collapsed-fn node-collapsed-fn)
