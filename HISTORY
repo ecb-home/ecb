@@ -1,6 +1,8 @@
 Version 1.90:
 -------------
 
+* ECB now has a list of valid compilation buffers within the ECB menu. (Kevin)
+
 * Speedbar is now integrated in ECB and can be used instead of the standard
   ECB-directories buffer. Most of the work has been done by Kevin
   A. Burton. See new option 'ecb-use-speedbar-for-directories'.
