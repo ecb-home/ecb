@@ -124,7 +124,7 @@
 ;;   + The edit-window must not be splitted and the point must reside in
 ;;     the not deleted edit-window.
 
-;; $Id: ecb-layout.el,v 1.88 2001/11/26 14:59:00 berndl Exp $
+;; $Id: ecb-layout.el,v 1.89 2001/12/12 01:02:49 burtonator Exp $
 
 ;;; Code:
 
@@ -405,6 +405,12 @@ ecb-frame has the size it has normally during your work with ECB!."
 ;; 		      '("ECB Editwindow" "ECB Directories" "ECB Sources"
                       '("ECB Directories" "ECB Sources"
                         "ECB History" "ECB Methods"))))))
+
+(defcustom ecb-redraw-layout-quickly nil
+  "If non-nil, we will attempt to redraw the layout quickly.  See
+`ecb-redraw-layout'."
+  :type 'boolean
+  :group 'ecb-layout)
 
 ;; ====== internal variables ====================================
 
@@ -1323,17 +1329,17 @@ visibility of the ECB windows. ECB minor mode remains active!"
           )
     ))
 
-(defun ecb-redraw-layout (&optional quickly)
-  "Redraw the ECB screen. If QUICKLY is not nil then the redraw is done by
-`ecb-redraw-layout-quickly' otherwise by `ecb-redraw-layout'.
-But it's strongly recommended to use the quick redraw only if you have really
-slow machines where a full redraw takes several seconds because the quick
-redraw is not really save and some drawbacks! On normal machines the full
-drawback should be done in < 1s!"
-  (interactive "P")
+(defun ecb-redraw-layout()
+  "Redraw the ECB screen. If the variable `ecb-redraw-layout-quickly' is not nil
+then the redraw is done by the `ecb-redraw-layout-quickly' function, otherwise
+by `ecb-redraw-layout-full'.  But it's strongly recommended to use the quick
+redraw only if you have really slow machines where a full redraw takes several
+seconds because the quick redraw is not really safe and may have some drawbacks!
+On normal machines the full drawback should be done in < 1s!"
+  (interactive)
   (when (and ecb-minor-mode
              (equal (selected-frame) ecb-frame))
-    (if (and quickly
+    (if (and ecb-redraw-layout-quickly
              ecb-activated-window-configuration)
         (condition-case nil
             (ecb-redraw-layout-quickly)
@@ -1490,6 +1496,7 @@ this function the edit-window is selected which was current before redrawing."
       (run-hooks 'ecb-redraw-layout-hooks))))
 
 ;; TODO: this function is a first try to use the buildin window-configuration stuff
+
 ;; of Emacs for the layout-redraw. But currently this does not work really
 ;; well, there is a lot of work to do (klaus).
 
