@@ -26,7 +26,7 @@
 ;; This file is part of the ECB package which can be found at:
 ;; http://home.swipnet.se/mayhem/ecb.html
 
-;; $Id: tree-buffer.el,v 1.44 2001/05/16 20:37:18 creator Exp $
+;; $Id: tree-buffer.el,v 1.45 2001/05/16 21:00:50 creator Exp $
 
 ;;; Code:
 
@@ -367,15 +367,17 @@ point will stay on POINT."
   (mouse-set-point event)
   (unless (not (equal (selected-frame) tree-buffer-frame))
     (when tree-buffer-menus
-      (let* ((node (tree-buffer-get-node-at-point))
-             (menu (cdr (assoc (tree-node-get-type node) tree-buffer-menus))))
-        (when menu
-	  (if running-xemacs
-	      (popup-menu (cons (tree-node-get-data node) menu))
-	    (let ((fn (x-popup-menu
-		       event (cons 'keymap (cons (tree-node-get-data node) menu)))))
-	      (if fn
-		  (eval (list (car fn) 'node))))))))))
+      (let ((node (tree-buffer-get-node-at-point)))
+	(when node
+	  (let ((menu (cdr (assoc (tree-node-get-type node) tree-buffer-menus))))
+	    (when menu
+	      (if running-xemacs
+		  (popup-menu (cons (tree-node-get-data node) menu))
+		(let ((fn (x-popup-menu
+			   event (cons 'keymap
+				       (cons (tree-node-get-data node) menu)))))
+		  (when fn
+		    (funcall (car fn) node)))))))))))
 
 ;; idea is stolen from ido.el, written by Kim F. Storm <stormware@get2net.dk>
 (defun tree-buffer-find-common-substring (lis subs &optional only-prefix)
