@@ -73,7 +73,7 @@
 ;; For the ChangeLog of this file see the CVS-repository. For a complete
 ;; history of the ECB-package see the file NEWS.
 
-;; $Id: ecb.el,v 1.302 2003/03/21 13:29:34 berndl Exp $
+;; $Id: ecb.el,v 1.303 2003/03/21 15:32:21 berndl Exp $
 
 ;;; Code:
 
@@ -1823,9 +1823,12 @@ with `ecb-sources-menu-sorter'.
 
 If you change this option you have to restart ECB to take effect."
   :group 'ecb-sources
-  :type '(repeat (list :tag "Menu-entry"
-                       (string :tag "Entry-name")
-                       (function :tag "Function" :value ignore))))
+  :type '(repeat (choice :tag "Menu-entry" :menu-tag "Menu-entry"
+                         :value ("" ignore)
+                         (const :tag "Separator" :value ("---"))
+                         (list :tag "Menu-entry"
+                               (string :tag "Entry-name")
+                               (function :tag "Function" :value ignore)))))
 
 (defcustom ecb-methods-menu-user-extension nil
   "*User extensions for the popup-menu of the methods buffer.
@@ -1841,9 +1844,12 @@ with `ecb-methods-menu-sorter'.
 
 If you change this option you have to restart ECB to take effect."
   :group 'ecb-methods
-  :type '(repeat (list :tag "Menu-entry"
-                       (string :tag "Entry-name")
-                       (function :tag "Function" :value ignore))))
+  :type '(repeat (choice :tag "Menu-entry" :menu-tag "Menu-entry"
+                         :value ("" ignore)
+                         (const :tag "Separator" :value ("---"))
+                         (list :tag "Menu-entry"
+                               (string :tag "Entry-name")
+                               (function :tag "Function" :value ignore)))))
 
 (defcustom ecb-history-menu-user-extension nil
   "*User extensions for the popup-menu of the history buffer.
@@ -1859,9 +1865,12 @@ with `ecb-history-menu-sorter'.
 
 If you change this option you have to restart ECB to take effect."
   :group 'ecb-history
-  :type '(repeat (list :tag "Menu-entry"
-                       (string :tag "Entry-name")
-                       (function :tag "Function" :value ignore))))
+  :type '(repeat (choice :tag "Menu-entry" :menu-tag "Menu-entry"
+                         :value ("" ignore)
+                         (const :tag "Separator" :value ("---"))
+                         (list :tag "Menu-entry"
+                               (string :tag "Entry-name")
+                               (function :tag "Function" :value ignore)))))
 
 
 (defcustom ecb-directories-menu-sorter nil
@@ -2637,7 +2646,7 @@ file in current directory."
         (files nil))
     (when cvsignore-content
       (dolist (f (split-string cvsignore-content))
-        (setq files (append (directory-files dir nil (wildcard-to-regexp f))
+        (setq files (append (directory-files dir nil (wildcard-to-regexp f) t)
                             files)))
       files)))
 
@@ -3255,27 +3264,6 @@ minor-mode `tar-subfile-mode' or `archive-subfile-mode'."
            tar-subfile-mode)
       (and (boundp 'archive-subfile-mode)
            archive-subfile-mode)))
-
-;; (defun ecb-buffer-or-file-readable-p (&optional buffer-or-file)
-;;   "Checks if a buffer or file is a readable file in the sense of ECB which
-;; means either a real physical file or an auto-extracted file from an archive.
-;; See `ecb-current-buffer-archive-extract-p'. BUFFER-OR-FILE is either a buffer
-;; or a filename or nil whereas in the latter case the current-buffer is assumed."
-;;   (let* ((buffer (cond ((not buffer-or-file)
-;;                         (current-buffer))
-;;                        ((bufferp buffer-or-file)
-;;                         buffer-or-file)
-;;                        (t nil)))
-;;          (file (if buffer
-;;                    (buffer-file-name buffer)
-;;                  buffer-or-file)))
-;;     (or (and file (file-readable-p file))
-;;         (if buffer
-;;             (ecb-current-buffer-archive-extract-p)
-;;           (save-excursion
-;;             ;; buffer is nil here therefore file can not be nil!
-;;             (set-buffer (find-file-noselect file))
-;;             (ecb-current-buffer-archive-extract-p))))))
 
 (defun ecb-buffer-or-file-readable-p (&optional filename)
   "Checks if a buffer or a file is a readable file in the sense of ECB which
