@@ -259,7 +259,9 @@ Add the new ECB-directory to your @code{load-path} variable.
 You @strong{MUST} add the ECB-install-directory to the
 @code{load-path} either by changing the @code{load-path} variable
 directly in your @file{.emacs} or @file{site-lisp/site-start.el} or by
-working with a file @file{subdirs.el}.
+working with a file @file{subdirs.el}@footnote{This works at least for
+Emacs 20.X and Emacs 21.X but XEmacs may have slightly different
+mechanisms; see the XEmacs documentation}.
 
 @strong{ATTENTION}:
 ECB is NOT properly installed if it's directory is not added to
