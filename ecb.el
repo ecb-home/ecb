@@ -1,4 +1,4 @@
- ;;; ecb.el --- a code browser for Emacs
+;;; ecb.el --- a code browser for Emacs
 
 ;; Copyright (C) 2000 - 2003 Jesper Nordenberg,
 ;;                           Klaus Berndl,
@@ -1770,9 +1770,14 @@ ECB has been deactivated. Do not set this variable!")
       (condition-case err-obj
           ;; now we display all `ecb-not-compatible-options' and
           ;; `ecb-renamed-options'
-          (if ecb-auto-compatibility-check
-              (if (not (ecb-display-upgraded-options))
-                  (ecb-display-news-for-upgrade))
+          (if (and ecb-auto-compatibility-check
+                   (ecb-not-compatible-or-renamed-options-detected))
+              ;; we must run this with an idle-times because otherwise these
+              ;; options are never displayed when Emacs is started with a
+              ;; file-argument and ECB is automatically activated. I this case
+              ;; the buffer of the file-argument would be displayed after the
+              ;; option-display and would so hide this buffer.
+              (ecb-run-with-idle-timer 0.25 nil 'ecb-display-upgraded-options)
             (ecb-display-news-for-upgrade))
         (error
          (ecb-clean-up-after-activation-failure
