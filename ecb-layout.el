@@ -103,7 +103,7 @@
 ;; - `ecb-with-some-adviced-functions'
 ;;
 
-;; $Id: ecb-layout.el,v 1.140 2002/12/24 14:02:42 berndl Exp $
+;; $Id: ecb-layout.el,v 1.141 2002/12/28 19:16:48 berndl Exp $
 
 ;;; Code:
 
@@ -2104,18 +2104,26 @@ this function the edit-window is selected which was current before redrawing."
         
         ;; go one window back, so display-buffer always shows the buffer in
         ;; the next window, which is then savely the compile-window.
+        ;; For this we must temporalily set `same-window-buffer-names' and
+        ;; `same-window-regexps' to nil to ensure displaying the
+        ;; compilation-buffers really in the compile-window.
+        ;; Eshell is an example which adds its buffer-name *eshell* to the
+        ;; former option which would prevent working redrawing the layout
+        ;; correctly.
         (select-window (previous-window (selected-window) 0))
-        (display-buffer
-         (save-excursion
+        (let ((same-window-buffer-names nil)
+              (same-window-regexps))
+          (display-buffer
            (or compile-buffer-before-redraw
                (some (function (lambda (mode)
                                  (some (function (lambda (buf)
-                                                   (set-buffer buf)
-                                                   (if (equal major-mode mode)
-                                                       buf nil)))
+                                                   (save-excursion
+                                                     (set-buffer buf)
+                                                     (if (equal major-mode mode)
+                                                         buf nil))))
                                        (buffer-list ecb-frame))))
                      '(compilation-mode occur-mode help-mode))
-               (get-buffer-create "*scratch*"))))
+               (get-buffer-create "*scratch*")) t))
                
         ;; Cause of display-buffer changes the height of the compile-window we
         ;; must resize it again to the correct value
