@@ -26,23 +26,35 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb.el,v 1.375 2004/02/24 11:49:59 berndl Exp $
+;; $Id: ecb.el,v 1.376 2004/02/24 12:51:02 berndl Exp $
 
 ;;; Commentary:
 ;;
-;; ECB stands for "Emacs Code Browser" and is a source-code-browser for
-;; (X)Emacs. It is a global minor-mode which offers a language-independent and
-;; complete IDE (Integrated Development Environment) within one Emacs-frame.
-;; It displays a couple of windows that can be used to browse directories,
-;; files and file-contents like methods and variables. It supports source-code
-;; parsing for semantic-supported languages like Java, C, C++, Elisp and
-;; Scheme as well as for source-types supported "only" by imenu or etags (e.g.
-;; perl, TeX, LaTeX etc.). In addition it offers (optional) a durable
-;; "compile-window" at the bottom of the frame which is used to display all
-;; help-, grep-, compile- and etc.-output. The rest of the frame is called the
-;; "edit-area" which can be divided in several (no limit) edit-windows which
-;; are used for editing of sources. Deleting some of the edit-windows does
-;; neither destroy the compile-window nor the browsing-windows.
+;; ECB stands for "Emacs Code Browser".  While Emacs already has good
+;; *editing* support for many modes, its *browsing* support is somewhat
+;; lacking. That's where ECB comes in: it displays a number of informational
+;; windows that allow for easy source code navigation and overview.
+;;
+;; The informational windows can contain:
+;;
+;; - A directory tree,
+;; - a list of source files in the current directory,
+;; - a list of functions/classes/methods/... in the current file, (ECB uses
+;;   the Semantic Bovinator, or Imenu, or etags, for getting this list so all
+;;   languages supported by any of these tools are automatically supported by
+;;   ECB too)
+;; - a history of recently visited files, 
+;; - the Speedbar and
+;; - output from compilation (the "*compilation*" window) and other modes like
+;;   help, grep etc. or whatever a user defines to be displayed in this
+;;   window.
+;;
+;; As an added bonus, ECB makes sure to keep these informational windows visible,
+;; even when you use C-x 1 and similar commands.
+;;
+;; It goes without saying that you can configure the layout, ie which
+;; informational windows should be displayed where. ECB comes with a number of
+;; ready-made window layouts to choose from.
 ;;
 ;; Here is an ascii-screenshot of what ECB offers you:
 ;;
@@ -68,7 +80,6 @@
 ;;   |                                                                |
 ;;   ------------------------------------------------------------------
 ;;
-;; This is only one example-layout - ECB offers a lot of different layouts.
 
 ;;; Installation
 ;;
@@ -89,11 +100,11 @@
 
 ;;; Requirements
 ;;
-;; - Semantic, author-version between 1.4 and 1.4.9
+;; - Semantic, author-version between >= 1.4
 ;;   (http://cedet.sourceforge.net/semantic.shtml).
-;; - Eieio, author-version between 0.17 and 0.17.9
+;; - Eieio, author-version >= 0.17
 ;;   (http://cedet.sourceforge.net/eieio.shtml).
-;; - speedbar, author version 0.14beta1 or higher
+;; - speedbar, author version >= 0.14beta1
 ;;   (http://cedet.sourceforge.net/speedbar.shtml)
 ;; - Optional: If Java code is edited the ECB works best when the JDEE package
 ;;   (http://sunsite.auc.dk/jde) is installed.

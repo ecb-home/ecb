@@ -28,7 +28,7 @@
 ;; Do not change any html-file besides the index.html manually but do all
 ;; changes in this elisp file!
 
-;; $Id: ecb-html.el,v 1.64 2004/02/17 16:50:03 berndl Exp $
+;; $Id: ecb-html.el,v 1.65 2004/02/24 12:51:01 berndl Exp $
 
 ;;; Code:
 
@@ -208,23 +208,32 @@
    "ECB - Emacs Code Browser"
 
    (h-section "About"
-              "ECB stands for \"Emacs Code Browser\" and is a source-code-"
-              "browser for (X)Emacs. It is a global minor-mode which offers a "
-              "language-independent and complete IDE (Integrated Development "
-              "Environment) within one Emacs-frame. It displays a couple of "
-              "windows that can be used to browse directories, files and "
-              "file-contents like methods and variables. It supports "
-              "source-code parsing for semantic-supported languages like Java, "
-              "C, C++, Elisp and Scheme as well as for source-types supported "
-              "\"only\" by imenu or etags (e.g. perl, TeX, LaTeX etc.). In "
-              "addition it offers (optional) a durable \"compile-window\" at "
-              "the bottom of the frame which is used to display all help-, "
-              "grep-, compile- and etc.-output. The rest of the frame is called "
-              "the \"edit-area\" which can be divided in several (no limit) "
-              "edit-windows which are used for editing of sources. Deleting "
-              "some of the edit-windows does neither destroy the compile-window "
-              "nor the browsing-windows.")
+              (h-p "ECB stands for \"Emacs Code Browser\". While Emacs already has good "
+                   (h-i "editing")
+                   " support for many modes, its "
+                   (h-i "browsing")
+                   " support is somewhat"
+                   " lacking. That's where ECB comes in: it displays a number of informational"
+                   " windows that allow for easy source code navigation and overview.")
 
+              (h-p "The informational windows can contain:")
+
+              (h-p (h-bullet-list
+                    "A directory tree,"
+                    "a list of source files in the current directory,"
+                    "a list of functions/classes/methods/... in the current file, (ECB uses the Semantic Bovinator, or Imenu, or etags, for getting this list so all languages supported by any of these tools are automatically supported by ECB too)"
+                    "a history of recently visited files,"
+                    "the Speedbar and"
+                    (concat "output from compilation (the " (h-i "compilation") " window) and other modes like help, grep etc. or whatever a user defines to be displayed in this window.")
+                    ))
+   
+              (h-p "As an added bonus, ECB makes sure to keep these informational windows visible,"
+                   " even when you use C-x 1 and similar commands.")
+
+              (h-p "It goes without saying that you can configure the layout, ie which"
+                   " informational windows should be displayed where. ECB comes with a number of"
+                   " ready-made window layouts to choose from."))
+   
    (apply 'h-section "News"
           (append ecb-latest-news
                   `("Click "

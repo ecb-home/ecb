@@ -21,7 +21,7 @@
 
 ;; Functions for generating HTML pages.
 
-;; $Id: html-helper.el,v 1.8 2003/04/03 16:47:06 berndl Exp $
+;; $Id: html-helper.el,v 1.9 2004/02/24 12:50:56 berndl Exp $
 
 ;;; Code:
 (defconst h-br "<br>\n")
@@ -163,6 +163,12 @@
 			      items)
 			    "<li>" "\n") t))
 
+(defun h-bullet-list(&rest items)
+  (h-element "ul" (h-filter (if (listp (car items))
+				(car items)
+			      items)
+			    "<li>" "\n") t))
+
 (defun h-email(email &rest items)
   (concat
    "<a href='mailto:" email "'>"
@@ -232,5 +238,7 @@
 			  (cons 'target target)))
 	    (h-td (if (and (cdr item) (cddr item)) (caddr item) ""))))
     items "")))
+
+
 
 (provide 'html-helper)
