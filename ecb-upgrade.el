@@ -560,9 +560,15 @@ The car is the old option symbol and the cdr is a 2-element-list with:
   (ignore-errors (file-writable-p (ecb-custom-file))))
 
 (defun ecb-customize-save-variable (option value)
-  (if (ecb-custom-file-writeable-p)
-      (customize-save-variable option value)
-    (customize-set-variable option value)))
+  ;; because the adviced version of `custom-save-all' do only all the special
+  ;; needed things if `ecb-minor-mode' is on we must temporally set here this
+  ;; variable to not nil because the that time this function is called this
+  ;; variable is still nil (will be first set to t if the ecb-activation can
+  ;; not fail).
+  (let ((ecb-minor-mode t))
+    (if (ecb-custom-file-writeable-p)
+        (customize-save-variable option value)
+      (customize-set-variable option value))))
 
 (defun ecb-option-set-default (option)
   "Save the ECB-option OPTION with current default value."
