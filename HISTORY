@@ -1,6 +1,10 @@
 Version 1.61:
 -------------
 
+- Fixed bug in `ecb-redraw-layout-quickly'.  If for come reason any of the ECB
+  windows are not alive, we do not return with a hard error.  Instead, we use
+  the scratch buffer.  (Kevin)
+
 - New function ecb-toggle-enlarged-compilation-window allows users to expand and
   then contract the compilation window with a new key binding C-c . / (Kevin)
 

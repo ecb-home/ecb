@@ -1523,12 +1523,15 @@ this function the edit-window is selected which was current before redrawing."
     
       (if (and ecb-edit-window (window-live-p ecb-edit-window))
           (setq main-window-buffer (window-buffer ecb-edit-window))
-        (error "ECB quick redraw: ecb-edit-window not alive!"))
+        (setq compilation-window-buffer "*scratch*")
+        (message "ECB quick redraw: ecb-edit-window not alive!"))
 
       (if ecb-compile-window
           (if (window-live-p ecb-compile-window)
               (setq compilation-window-buffer (window-buffer ecb-compile-window))
-            (error "ECB quick redraw: ecb-compile-window not alive!")))
+
+            (setq compilation-window-buffer "*scratch*")
+            (message "ECB quick redraw: ecb-compile-window not alive!")))
     
       (set-window-configuration ecb-activated-window-configuration)
 

@@ -58,7 +58,7 @@
 ;;; History:
 ;;
 ;; - Tue Dec 25 2001 07:54 PM (burton@openprivacy.org): We now enlarge the ecb
-;;   window when you goto it.
+;;   window when you go to it.
 ;;    
 ;; - Sat Dec 15 2001 01:50 AM (burton@openprivacy.org): We are not being much
 ;;   smarter about saving selected windows.
