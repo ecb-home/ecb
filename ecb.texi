@@ -19,6 +19,7 @@
 @c Free Software Foundation, Inc., 59 Temple Place - Suite 330,
 @c Boston, MA 02111-1307, USA.
 
+@c $Id: ecb.texi,v 1.65 2003/01/29 14:35:37 berndl Exp $
 
 @setfilename ecb.info
 
@@ -156,7 +157,7 @@ Working with the keyboard in the ECB-windows
 
 Using and customizing the ECB-Methods buffer
 
-* Fast overlook::               Getting a fast content-overlook
+* Expanding::                   Explicit and automatic expanding
 * Customizing the display::     How to customize the Methods-buffer display
 * Rebuilding the Methods::      When to rebuild the Methods-buffer      
 
@@ -1152,13 +1153,15 @@ This chapter describes how to use and customize the Methods-buffer of
 ECB.
 
 @menu
-* Fast overlook::               Getting a fast content-overlook
+* Expanding::                   Explicit and automatic expanding
 * Customizing the display::     How to customize the Methods-buffer display
 * Rebuilding the Methods::      When to rebuild the Methods-buffer      
 @end menu
 
-@node Fast overlook, Customizing the display, The Methods buffer, The Methods buffer
-@subsection Getting a fast overlook of the buffer-contents
+@node Expanding, Customizing the display, The Methods buffer, The Methods buffer
+@subsection Explicit and automatic expanding of the ECB-methods-buffer
+
+@subsubsection Explicit expanding to a certain expanding level
 
 With the command @code{ecb-expand-methods-nodes} (bound to @kbd{C-c .
 x}) you can get a fast overlook of the contents of the source-buffer,
@@ -1172,7 +1175,25 @@ Which node-types are expanded (resp. collapsed) by this command
 depends on the options @code{ecb-methods-nodes-expand-spec} and
 @code{ecb-methods-nodes-collapse-spec}!
 
-@node Customizing the display, Rebuilding the Methods, Fast overlook, The Methods buffer
+@subsubsection Automatic expanding the ECB-methods-buffer
+
+If the option @code{ecb-highlight-token-with-point} is switched on,
+then then always that node in the method-buffer is highlighted which
+belongs to the current semantic-token under point in the edit-window.
+But if this node is invisible (probably because its parent node is
+collapsed) then no node is highlighted if the auto. expanding feature
+is switched off.
+
+You can either switch on this feature with the option
+@code{ecb-auto-expand-token-tree} or with even easier with the command
+@code{ecb-toggle-auto-expand-token-tree}.
+
+There is another option
+@code{ecb-expand-methods-switch-off-auto-expand} which makes both
+explicit and auto. expanding best working together. See the
+documentation of this option to get the details.
+
+@node Customizing the display, Rebuilding the Methods, Expanding, The Methods buffer
 @subsection Customizing the display of the Methods-buffer
 
 @cindex semantic token
@@ -2163,7 +2184,10 @@ same as calling @code{ecb-minor-mode} with a positive argument.
 @end deffn
 
 @deffn Command add-all-buffers-to-history
-Add all current file-buffers to the history-buffer of ECB.
+Add all current file-buffers to the history-buffer of ECB. If
+@code{ecb-sort-history-items} is not nil then afterwards the history
+is sorted alphabetically. Otherwise the most recently used buffers are
+on the top of the history and the seldom used buffers at the bottom.
 @end deffn
 
 @deffn Command change-layout &optional preselect-type
@@ -2296,6 +2320,11 @@ or twice
 should normally expand all nodes expect there are nodes which are
 indented deeper than 10.
 @end itemize
+
+Note: This command switches off auto. expanding of the method-buffer
+if @code{ecb-expand-methods-switch-off-auto-expand} is not nil. But it
+can be switched on again quickly with
+@code{ecb-toggle-auto-expand-token-tree} or @kbd{[C-c . a]}.
 @end deffn
 
 @deffn Command expand-directory-nodes
@@ -2410,6 +2439,14 @@ backtrace-buffer if there is any and the current message-buffer. You
 will be asked for a problem-report subject and then you must insert a
 description of the problem. Please describe the problem as detailed as
 possible!
+@end deffn
+
+@deffn Command toggle-auto-expand-token-tree &optional arg
+Toggle auto expanding of the ECB-methods-buffer. With prefix argument
+@var{ARG}, make switch on if positive, otherwise switch off. If the
+effect is that auto-expanding is switched off then the current value
+of @code{ecb-auto-expand-token-tree} is saved so it can be used for
+the next switch on by this command.
 @end deffn
 
 @deffn Command toggle-compile-window &optional arg
@@ -3483,6 +3520,26 @@ by @code{directory-files} (called without sorting).
 @noindent
 This group contains the following options:
 
+@defopt auto-expand-token-tree
+Expand the methods-token-tree automatically if node invisible.
+
+This option has only an effect if option @code{ecb-highlight-token-with-point} is
+switched on too. There are three possible choices:
+@itemize @minus
+@item @code{nil}:
+No auto. expanding of the method buffer.
+@item @code{expand-spec}:
+Auto expand the method-buffer nodes if the node belonging to current
+token under point is invisible because its parent-node is collapsed.
+But expanding is only done if the type of the token under point in the
+edit-buffer is contained in @code{ecb-methods-nodes-expand-spec}.
+@item @code{all}:
+Like expand-spec but expands all tokens regardess of the setting in
+@code{ecb-methods-nodes-expand-spec}.
+@end itemize
+@end defopt
+
+
 @defopt auto-update-methods-after-save
 Automatically updating the ECB method buffer after saving the current
 source-buffer.
@@ -3505,6 +3562,23 @@ Regexp which parent classes should not be shown in the methods buffer
 (see also @code{ecb-show-parents}). If nil then all parents will be
 shown if @code{ecb-show-parents} is not nil.
 @end defopt
+
+@defopt expand-methods-switch-off-auto-expand
+Switch off auto expanding in the ECB-method buffer after explicit
+expanding or collapsing by @code{ecb-expand-methods-nodes}.
+
+This is done with @code{ecb-toggle-auto-expand-token-tree} so after
+the switch off the auto expanding feature can again switched on
+quickly.
+
+But after explicitly expanding/collapsing the methods-buffer to a
+certain level the auto. expanding could undo this when the node
+belonging to current token under point in the edit-window is invisible
+after @code{ecb-expand-methods-nodes} - then the auto. expand feature
+would make this node immediatelly visible and destroys the explicitly
+set expand-level.
+@end defopt
+
 
 @defopt font-lock-tokens
 Adds font-locking (means highlighting) to the ECB-method buffer.
