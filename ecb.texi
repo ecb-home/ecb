@@ -26,7 +26,7 @@
 @c GNU Emacs; see the file COPYING.  If not, write to the Free Software
 @c Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-@c $Id: ecb.texi,v 1.182 2004/08/12 14:05:03 berndl Exp $
+@c $Id: ecb.texi,v 1.183 2004/08/13 13:56:20 berndl Exp $
 
 @setfilename ecb.info
 
@@ -49,7 +49,7 @@
 @c edit the Makefile to change the version number. mechanism stolen
 @c from Tramp
 @macro ecbver{}
-2.26
+2.27
 @end macro
 
 
@@ -5956,11 +5956,26 @@ supported by semantic!
 @end defopt
 
 @defopt auto-expand-tag-tree-collapse-other
-Auto. expanding the tag-tree collapses all not related nodes. If t
-then all nodes which have no relevance for the currently highlighted
-node will be collapsed, because they are not necessary to make the
-highlighted node visible.
+Auto. expanding the tag-tree collapses all not related nodes. There
+are several choices:
+
+@itemize @minus
+@item Only if on tag:
+This means collapsing all nodes which have no relevance for the
+currently highlighted node will be collapsed, because they are not
+necessary to make the highlighted node visible. But do this only if
+point stays onto a tag in the selected edit-window.
+
+@item Always:
+Same as before but collapse also when point doesn't stays on a tag
+(e.g. between two defuns in elisp) in the selected edit-window. This
+means in such a situation a full collapsing of the methods-buffer.
+
+@item Never:
+Do not automatically collapse the methods-buffer.
+@end itemize
 @end defopt
+
 
 @defopt auto-update-methods-after-save
 Automatically updating the ECB method buffer after saving a source.

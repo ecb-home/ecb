@@ -1,3 +1,14 @@
+* Changes for ECB version 2.27
+
+** The option `ecb-auto-expand-tag-tree-collapse-other' now has three possible
+   choices. You can decide between auto-collapsing only when point stays onto
+   a tag in the edit-window or even when point doesn't stay onto a tag (which
+   then results in a full collapsed methods-buffer). ECB autom. upgrades the
+   old setting of this option to the new type. Thanks to Javier Oviedo
+   <joviedo@telogy.com> for the suggestion.
+
+
+
 * Changes for ECB version 2.26
 
 ** Improved the performance of the directories-buffer-display
@@ -68,6 +79,7 @@
     Thanks to Javier Oviedo <joviedo@telogy.com> for pointing to the problem.
 
 *** Handles not existing source-paths in `ecb-source-path' correct.
+    These paths are now ignored with a warning.
 
     
 

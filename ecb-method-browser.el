@@ -24,7 +24,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-method-browser.el,v 1.49 2004/08/12 14:05:10 berndl Exp $
+;; $Id: ecb-method-browser.el,v 1.50 2004/08/13 13:56:21 berndl Exp $
 
 ;;; Commentary:
 
@@ -128,11 +128,20 @@ by semantic!"
 
 (defcustom ecb-auto-expand-tag-tree-collapse-other nil
   "*Auto. expanding the tag-tree collapses all not related nodes.
-If t then all nodes which have no relevance for the currently highlighted node
-will be collapsed, because they are not necessary to make the highlighted node
-visible."
+There are several choices:
+- Only if on tag: This means collapsing all nodes which have no relevance for
+  the currently highlighted node will be collapsed, because they are not
+  necessary to make the highlighted node visible. But do this only if point
+  stays onto a tag in the selected edit-window.
+- Always: Same as before but collapse also when point doesn't stays on a tag
+  \(e.g. between two defuns in elisp) in the selected edit-window. This means
+  in such a situation a full collapsing of the methods-buffer.
+- Never: Do not automatically collapse the methods-buffer."
   :group 'ecb-methods
-  :type 'boolean)
+  :type '(radio (const :tag "Collapse only when point stays on a tag"
+                       :value only-if-on-tag)
+                (const :tag "Collapse always" :value always)
+                (const :tag "Never" :value nil)))
 
 (defcustom ecb-expand-methods-switch-off-auto-expand t
   "*Switch off auto expanding in the ECB-method buffer.
@@ -3007,11 +3016,20 @@ current buffer."
         (let ((curr-tag (ecb-get-real-curr-tag)))
           (when (or force (not (equal ecb-selected-tag curr-tag)))
             (setq ecb-selected-tag curr-tag)
-            ;; If there is no tag to highlight then we remove the highlighting
             (if (null curr-tag)
                 (save-selected-window
                   (ecb-exec-in-methods-window
-                   (tree-buffer-highlight-node-data nil)))
+                   ;; If there is no tag to highlight then we remove the
+                   ;; highlighting
+                   (tree-buffer-highlight-node-data nil)
+                   (if (equal ecb-auto-expand-tag-tree-collapse-other 'always)
+                       ;; If this option is t (means always) we collapse also
+                       ;; when point is not on a tag!
+                       (ecb-expand-methods-node-internal
+                        (tree-buffer-get-root)
+                        -1
+                        (equal ecb-auto-expand-tag-tree 'all)
+                        nil t))))
               ;; Maybe we must first collapse all so only the needed parts are
               ;; expanded afterwards. Klaus Berndl <klaus.berndl@sdm.de>: Is it
               ;; necessary to update the tree-buffer after collapsing? IMO yes,
