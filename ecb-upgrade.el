@@ -177,6 +177,7 @@
 ;; Each NEWS-string should be a one-liner shorter than 70 chars
 (defconst ecb-upgrade-news
   '(
+    ("2.27" . ("Much saver resizing-mechanism for permanent compile-window. See NEWS."))
     ("2.26" . ("Some regexp-options has been changed to regexp-list-options. See NEWS."
                "New option `ecb-history-exclude-file-regexps'."
                "`ecb-expand-methods-nodes' works for non-semantic-buffers too."
