@@ -26,7 +26,7 @@
 ;; This file is part of the ECB package which can be found at:
 ;; http://home.swipnet.se/mayhem/ecb.html
 
-;; $Id: ecb-util.el,v 1.30 2002/10/31 13:38:24 berndl Exp $
+;; $Id: ecb-util.el,v 1.31 2002/11/03 11:02:17 berndl Exp $
 
 ;;; Code:
 
@@ -180,17 +180,20 @@ not nil then in both PATH and FILENAME env-var substitution is done. If the
 (defun ecb-grep-directory (node)
   (ecb-grep-directory-internal node nil))
 
-(defun ecb-enlarge-window(window)
-  "Enlarge the given window so that it is 1/2 of the current frame."
+(defun ecb-enlarge-window(window &optional val)
+  "Enlarge the given window
+If VAL is nil then WINDOW is enlarged so that it is 1/2 of the current frame.
+If VAL is a positive integer then WINDOW is enlarged so that its new height is
+VAL lines. If VAL is > 0 and < 1 then WINDOW is enlarged so that its new
+height is that fraction of the frame."
 
   (if (and window (window-live-p window))
-      (save-selected-window
-        (let(enlargement)
-          
-          (select-window window)
-          
-          (setq enlargement (- (/ (frame-height) 2) (window-height)))
-          
+      (let* ((norm-val (if val
+                           (ecb-normalize-number val (1- (frame-height)))
+                         (/ (1- (frame-height)) 2)))
+             (enlargement (- norm-val (window-height window))))
+        (save-selected-window
+          (select-window window)          
           (if (> enlargement 0)
               (enlarge-window enlargement))))
     (error "Window is not alive!")))

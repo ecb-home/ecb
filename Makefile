@@ -11,11 +11,10 @@
 EMACS=emacs
 
 # Set here the load-path of the semantic-version and eieio-version loaded
-# into your Emacs. If you use JDE then add also the path to the lisp
-# directory of JDE. (use always forward-slashes as directory-separator even
+# into your Emacs (use always forward-slashes as directory-separator even
 # with MS Windows systems). Make sure you compile ECB with the semantic-
-# and eieio-, (and jde-) version you load into Emacs!
-LOADPATH=../semantic ../eieio ../jde/lisp
+# and eieio-version you load into Emacs!
+LOADPATH=../semantic ../eieio
 
 # Two ways to build ECB:
 # - Call "make" to byte-compile the ECB. You can savely ignore the messages.
@@ -65,7 +64,7 @@ INSTALLINFO=/usr/bin/install-info
 
 # Do not change anything below!
 
-# $Id: Makefile,v 1.39 2002/10/18 10:45:44 berndl Exp $
+# $Id: Makefile,v 1.40 2002/11/03 11:02:16 berndl Exp $
 
 RM=rm -f
 CP=cp
@@ -91,7 +90,6 @@ ecb: $(ecb_LISP_EL)
 	      echo "(add-to-list 'load-path \"$$loadpath\")" >> ecb-compile-script; \
 	   done; \
 	fi
-	@echo "(if (locate-library \"jde\") (require 'jde))" >> ecb-compile-script
 	@echo "(require 'ecb)" >> ecb-compile-script
 	@echo "(setq debug-on-error t)" >> ecb-compile-script
 	$(EMACS) -batch -no-site-file -l ecb-compile-script --eval '(ecb-byte-compile t)'
