@@ -540,6 +540,28 @@ selects the ECB-frame even if ECB is already started.
 Because ECB is a global minor-mode it can also be (de)activated/toggled by
 `M-x ecb-minor-mode'.
 
+The following sequence of hooks is evaluated during activation of ECB:
+1. `ecb-before-activate-hook'
+
+2. <All actions for activation but no layout drawing>
+
+3. `ecb-activate-before-layout-draw-hook'
+
+4. `ecb-redraw-layout-before-hook'
+
+5. <Drawing the layout>
+
+6. `ecb-redraw-layout-after-hook'
+
+7. `ecb-activate-hook'
+
+The following sequence of hooks is evaluated during deactivation of ECB:
+1. `ecb-before-deactivate-hook'
+
+2. <All actions for deactivation of ECB>
+
+3. `ecb-deactivate-hook'
+
 
 File: ecb.info,  Node: Automatic activation,  Prev: Standard activation,  Up: Activation and Deactivation
 
@@ -557,7 +579,8 @@ also major-mode based.
 `ecb-major-modes-deactivate'
    These option give you the possibility to activate (rsp. deactivate) ECB on
    a major-mode basis, means you can define for which major-modes ECB should
-   be activated and for which modes it should activated.
+   be activated and for which modes it should deactivated (See *Note
+   Activation hook-sequence:: and *Note Deactivation hook-sequence::).
 
    If activating or deactivating is too strong you can also customize ECB
    with these two option only hiding/showing it's ECB-windows (tree-buffers)
@@ -1497,6 +1520,9 @@ redraw only if you have really slow machines where a full redraw takes
 several seconds because the quick redraw is not really safe and may have some
 drawbacks! On normal machines the full redraw should be done in << 1s!
 
+See also the hooks `ecb-redraw-layout-after-hook' and
+`ecb-redraw-layout-before-hook'!
+
 
 File: ecb.info,  Node: Creating a new ECB-layout,  Prev: Redrawing the ECB-layout,  Up: The ECB-layout
 
@@ -1594,12 +1620,31 @@ File: ecb.info,  Node: Hiding the ECB windows,  Next: Back/forward navigation,  
 Hiding/Showing the ECB windows
 ==============================
 
-With `ecb-toggle-ecb-windows' you can hide/show all the ECB windows without
-changing the activation state of ECB and also without deactivating the
-advices for `delete-other-windows' and/or `delete-window'. This is most
-useful if you use a layout like nr.10 (*note Tips and tricks::) or if you
-want to have maximum space for editing and you don't need the browsing
-windows all the time.
+With `ecb-toggle-ecb-windows', `ecb-hide-ecb-windows' and
+`ecb-show-ecb-windows' you can hide/show all the ECB windows without changing
+the activation state of ECB and also without deactivating the advices for
+`delete-other-windows' and/or `delete-window'. This is most useful if you use
+a layout like nr.10 (*note Tips and tricks::) or if you want to have maximum
+space for editing and you don't need the browsing windows all the time.
+
+The following sequence of hooks is evaluated during showing again the hidden
+ECB-windows:
+1. `ecb-show-ecb-windows-before-hook'
+
+2. `ecb-redraw-layout-before-hook'
+
+3. <Redrawing the layout to show the hidden ECB-windows>
+
+4. `ecb-redraw-layout-after-hook'
+
+5. `ecb-show-ecb-windows-after-hook'
+
+The following sequence of hooks is evaluated during hidding the ECB-windows:
+1. `ecb-hide-ecb-windows-before-hook'
+
+2. <Hidding the ECB-windows>
+
+3. `ecb-hide-ecb-windows-after-hook'
 
 
 File: ecb.info,  Node: Back/forward navigation,  Next: ECB-window synchronizing,  Prev: Hiding the ECB windows,  Up: Usage of ECB
@@ -2069,6 +2114,22 @@ This group contains the following options:
    ECB computes the size of the ECB-windows with the current frame size! If
    you need a hook-option for the real end of the activating process (i.e.
    after the layout-drawing) look at `ecb-activate-hook'.
+
+   IMPORTANT: The difference between this hook and
+   `ecb-redraw-layout-before-hook' is that the latter one is evaluated always
+   before the layout is redrawn (for example after calling
+   `ecb-redraw-layout') whereas the former one (this hook) is only evaluated
+   exactly once during the activation-process of ECB.  So during the
+   activation process there is the following sequence of hooks:
+   1. `ecb-activate-before-layout-draw-hook' \(this one)
+
+   2. `ecb-redraw-layout-before-hook'
+
+   3. <Drawing the layout>
+
+   4. `ecb-redraw-layout-after-hook'
+
+   5. `ecb-activate-hook'
 
  - User Option: activate-hook
    Normal hook run at the end of activating the ecb-package by running
@@ -3173,9 +3234,15 @@ This group contains the following options:
       height is a fraction of the frame height (e.g. 0.33 results in a
       max-height of 1/3 the frame-height).
 
- - User Option: hide-ecb-windows-hook
-   Hooks run after the ECB windows have been hidden either by
+ - User Option: hide-ecb-windows-after-hook
+   Hooks run direct after the ECB windows have been hidden either by
    `ecb-toggle-ecb-windows' or `ecb-hide-ecb-windows'.
+
+ - User Option: hide-ecb-windows-before-hook
+   Hooks run direct before the ECB windows will be hidden either by
+   `ecb-toggle-ecb-windows' or `ecb-hide-ecb-windows'. This means that at
+   runtime of this hook all the ECB-tree-windows of current layout are
+   visible.
 
  - User Option: layout-always-operate-in-edit-window
    Adviced window functions work always in the edit-window. If we are in an
@@ -3279,6 +3346,15 @@ This group contains the following options:
 
     - `edit-and-compile': Like 'only-edit plus the compile window if any.
 
+ - User Option: redraw-layout-after-hook
+   Hooks run direct before the ECB windows will be shown either by
+   `ecb-toggle-ecb-windows' or `ecb-show-ecb-windows'. This means that at
+   runtime of this hook the ECB-windows are already visible.
+
+ - User Option: redraw-layout-before-hook
+   Hooks run direct before the ECB-layout will be redrawn by either
+   `ecb-redraw-layout'.
+
  - User Option: redraw-layout-quickly
    If non-nil, we will attempt to redraw the layout quickly. Please read also
    carefully the documentation of `ecb-redraw-layout'.
@@ -3286,9 +3362,47 @@ This group contains the following options:
  - User Option: select-edit-window-on-redraw
    Select the first edit window on `ecb-redraw-layout'.
 
- - User Option: show-ecb-windows-hook
-   Hooks run after the ECB windows have been shown either by
-   `ecb-toggle-ecb-windows' or `ecb-show-ecb-windows'.
+ - User Option: show-ecb-windows-after-hook
+   Hooks run direct before the ECB windows will be shown either by
+   `ecb-toggle-ecb-windows' or `ecb-show-ecb-windows'. This means that at
+   runtime of this hook the ECB-windows are already visible.
+
+   IMPORTANT: Showing the hidden ECB-windows is internally done by calling
+   `ecb-redraw-layout' and therefore also the hooks
+   `ecb-redraw-layout-before-hook' and `ecb-redraw-layout-after-hook' are
+   evaluated. So there is the following sequence of hooks during the process
+   of showing the hidden ECB-windows:
+   1. `ecb-show-ecb-windows-before-hook'
+
+   2. `ecb-redraw-layout-before-hook'
+
+   3. <redrawing the layout to show the hidden ECB-windows>
+
+   4. `ecb-redraw-layout-after-hook'
+
+   5. `ecb-show-ecb-windows-after-hook'
+      So be aware which code you add to which hook!
+
+ - User Option: show-ecb-windows-before-hook
+   Hooks run direct before the ECB windows will be shown either by
+   `ecb-toggle-ecb-windows' or `ecb-show-ecb-windows'. This means that at
+   runtime of this hook the ECB-windows are still hidden.
+
+   IMPORTANT: Showing the hidden ECB-windows is internally done by calling
+   `ecb-redraw-layout' and therefore also the hooks
+   `ecb-redraw-layout-before-hook' and `ecb-redraw-layout-after-hook' are
+   evaluated. So there is the following sequence of hooks during the process
+   of showing the hidden ECB-windows:
+   1. `ecb-show-ecb-windows-before-hook'
+
+   2. `ecb-redraw-layout-before-hook'
+
+   3. <redrawing the layout to show the hidden ECB-windows>
+
+   4. `ecb-redraw-layout-after-hook'
+
+   5. `ecb-show-ecb-windows-after-hook'
+      So be aware which code you add to which hook!
 
  - User Option: split-edit-window
    Sets how and if the edit window should be splitted. But be aware: This
@@ -4118,17 +4232,25 @@ The following hooks are available:
 
  * `ecb-directories-buffer-after-create-hook'
 
- * `ecb-hide-ecb-windows-hook'
+ * `ecb-hide-ecb-windows-after-hook'
+
+ * `ecb-hide-ecb-windows-before-hook'
 
  * `ecb-history-buffer-after-create-hook'
 
  * `ecb-methods-buffer-after-create-hook'
 
- * `ecb-show-ecb-windows-hook'
+ * `ecb-redraw-layout-after-hook'
+
+ * `ecb-redraw-layout-before-hook'
+
+ * `ecb-show-ecb-windows-after-hook'
+
+ * `ecb-show-ecb-windows-before-hook'
 
  * `ecb-sources-buffer-after-create-hook'
 
-Look at the documentation of these hooks to get a description.
+Look at the documentation of these hooks to get a detailled description.
 
 
 File: ecb.info,  Node: tree-buffer,  Next: Adviced functions,  Prev: List of hooks,  Up: Elisp programming
@@ -4604,7 +4726,8 @@ the option `ecb-layout-nr' is listed with name "layout-nr").
 * grep-function:                         ecb-directories.
 * help-html-path:                        ecb-help.
 * help-info-path:                        ecb-help.
-* hide-ecb-windows-hook:                 ecb-layout.
+* hide-ecb-windows-after-hook:           ecb-layout.
+* hide-ecb-windows-before-hook:          ecb-layout.
 * highlight-token-header-after-jump:     ecb-methods.
 * highlight-token-with-point:            ecb-methods.
 * highlight-token-with-point-delay:      ecb-methods.
@@ -4632,10 +4755,13 @@ the option `ecb-layout-nr' is listed with name "layout-nr").
 * post-process-semantic-tokenlist:       ecb-methods.
 * primary-mouse-jump-destination:        ecb-general.
 * primary-secondary-mouse-buttons:       ecb-general.
+* redraw-layout-after-hook:              ecb-layout.
+* redraw-layout-before-hook:             ecb-layout.
 * redraw-layout-quickly:                 ecb-layout.
 * scroll-window-after-jump:              ecb-methods.
 * select-edit-window-on-redraw:          ecb-layout.
-* show-ecb-windows-hook:                 ecb-layout.
+* show-ecb-windows-after-hook:           ecb-layout.
+* show-ecb-windows-before-hook:          ecb-layout.
 * show-help-format:                      ecb-help.
 * show-node-info-in-minibuffer:          ecb-general.
 * show-only-positioned-tokens:           ecb-methods.
@@ -4681,6 +4807,7 @@ Concept Index
 
 * Menu:
 
+* Activation hook-sequence:              Standard activation.
 * Adviced functions:                     The edit-window.
 * Automatic activation:                  Automatic activation.
 * Automatic deactivation:                Automatic activation.
@@ -4692,6 +4819,7 @@ Concept Index
 * compilation buffers:                   Temp- and compile-buffers.
 * Creating new layouts:                  Creating a new ECB-layout.
 * cygwin-mount package:                  Conflicts.
+* Deactivation hook-sequence:            Standard activation.
 * Directories:                           ECB Directories.
 * Download:                              Downloading new versions.
 * ECB-layout:                            The ECB-layout.
@@ -4754,79 +4882,81 @@ Node: ECB Sources19673
 Node: ECB Methods20827
 Node: Activation and Deactivation21376
 Node: Standard activation21746
-Node: Automatic activation22324
-Node: Usage of ECB23374
-Node: Using the mouse24284
-Ref: Using the mouse-Footnote-126559
-Node: Using the keyboard26605
-Ref: Using the keyboard-Footnote-127649
-Node: Navigation27700
-Node: Incremental search29040
-Node: Personal keybindings31216
-Ref: Personal keybindings-Footnote-133214
-Node: The edit-window33317
-Node: Temp- and compile-buffers35147
-Node: The Methods buffer37191
-Node: Customizing the display37632
-Node: Rebuilding the Methods39354
-Node: The ECB-layout40209
-Node: Changing the ECB-layout40856
-Node: Redrawing the ECB-layout67996
-Node: Creating a new ECB-layout68833
-Ref: Creating a new ECB-layout-Footnote-172879
-Node: Hiding the ECB windows73053
-Node: Back/forward navigation73626
-Ref: Back/forward navigation-Footnote-174727
-Node: ECB-window synchronizing74786
-Node: Interactive ECB commands77368
-Node: Customizing86021
-Node: General aspects86655
-Ref: General aspects-Footnote-189419
-Node: Most important options89551
-Node: Customizable options91344
-Node: ecb-general92631
-Node: ecb-directories111987
-Node: ecb-sources118142
-Node: ecb-methods120397
-Node: ecb-history132666
-Node: ecb-layout134727
-Node: ecb-create-layout149870
-Node: ecb-face-options150373
-Node: ecb-faces153802
-Node: ecb-download157794
-Node: ecb-help159020
-Node: Submitting problem report160985
-Node: Upgrading162348
-Node: Downloading new versions163111
-Ref: Download required packages164868
-Ref: Downloading new versions-Footnote-1165966
-Node: Auto. option-upgrading166015
-Node: User interface166323
-Node: Background information167209
-Node: Tips and tricks170607
-Node: Changing faces171357
-Ref: Changing faces-Footnote-1174193
-Node: Small screens174369
-Node: Big screens175755
-Node: Simulating speedbar176584
-Node: Integrating speedbar177391
-Node: Optimize scrolling177657
-Node: Large directories178737
-Node: Using eshell179403
-Node: Elisp programming179593
-Node: List of variables180202
-Node: List of hooks180514
-Node: tree-buffer181299
-Node: Adviced functions182105
-Ref: Adviced functions-Footnote-1182724
-Node: Programming new layouts182795
-Node: Conflicts and bugs188477
-Node: Conflicts188952
-Node: Bugs192410
-Node: FAQ192630
-Ref: FAQ-Footnote-1197382
-Node: Command Index197413
-Node: Option Index199663
-Node: Concept Index205848
+Ref: Activation hook-sequence22324
+Ref: Deactivation hook-sequence22644
+Node: Automatic activation22818
+Node: Usage of ECB23951
+Node: Using the mouse24861
+Ref: Using the mouse-Footnote-127136
+Node: Using the keyboard27182
+Ref: Using the keyboard-Footnote-128226
+Node: Navigation28277
+Node: Incremental search29617
+Node: Personal keybindings31793
+Ref: Personal keybindings-Footnote-133791
+Node: The edit-window33894
+Node: Temp- and compile-buffers35724
+Node: The Methods buffer37768
+Node: Customizing the display38209
+Node: Rebuilding the Methods39931
+Node: The ECB-layout40786
+Node: Changing the ECB-layout41433
+Node: Redrawing the ECB-layout68573
+Node: Creating a new ECB-layout69498
+Ref: Creating a new ECB-layout-Footnote-173544
+Node: Hiding the ECB windows73718
+Node: Back/forward navigation74822
+Ref: Back/forward navigation-Footnote-175923
+Node: ECB-window synchronizing75982
+Node: Interactive ECB commands78564
+Node: Customizing87217
+Node: General aspects87851
+Ref: General aspects-Footnote-190615
+Node: Most important options90747
+Node: Customizable options92540
+Node: ecb-general93827
+Node: ecb-directories113771
+Node: ecb-sources119926
+Node: ecb-methods122181
+Node: ecb-history134450
+Node: ecb-layout136511
+Node: ecb-create-layout153832
+Node: ecb-face-options154335
+Node: ecb-faces157764
+Node: ecb-download161756
+Node: ecb-help162982
+Node: Submitting problem report164947
+Node: Upgrading166310
+Node: Downloading new versions167073
+Ref: Download required packages168830
+Ref: Downloading new versions-Footnote-1169928
+Node: Auto. option-upgrading169977
+Node: User interface170285
+Node: Background information171171
+Node: Tips and tricks174569
+Node: Changing faces175319
+Ref: Changing faces-Footnote-1178155
+Node: Small screens178331
+Node: Big screens179717
+Node: Simulating speedbar180546
+Node: Integrating speedbar181353
+Node: Optimize scrolling181619
+Node: Large directories182699
+Node: Using eshell183365
+Node: Elisp programming183555
+Node: List of variables184164
+Node: List of hooks184476
+Node: tree-buffer185432
+Node: Adviced functions186238
+Ref: Adviced functions-Footnote-1186857
+Node: Programming new layouts186928
+Node: Conflicts and bugs192610
+Node: Conflicts193085
+Node: Bugs196543
+Node: FAQ196763
+Ref: FAQ-Footnote-1201515
+Node: Command Index201546
+Node: Option Index203796
+Node: Concept Index210193
 
 End Tag Table

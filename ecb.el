@@ -59,7 +59,7 @@
 ;; The latest version of the ECB is available at
 ;; http://home.swipnet.se/mayhem/ecb.html
 
-;; $Id: ecb.el,v 1.252 2002/12/09 07:36:27 berndl Exp $
+;; $Id: ecb.el,v 1.253 2002/12/11 10:32:17 berndl Exp $
 
 ;;; Code:
 
@@ -1396,7 +1396,19 @@ maximizing the Emacs-frame for example, because this should be done before the
 layout is drawn because ECB computes the size of the ECB-windows with the
 current frame size! If you need a hook-option for the real end of the
 activating process (i.e. after the layout-drawing) look at
-`ecb-activate-hook'."
+`ecb-activate-hook'.
+
+IMPORTANT: The difference between this hook and
+`ecb-redraw-layout-before-hook' is that the latter one is evaluated always
+before the layout is redrawn \(for example after calling `ecb-redraw-layout')
+whereas the former one \(this hook) is only evaluated exactly once during the
+activation-process of ECB. So during the activation process there is the
+following sequence of hooks:
+1. 'ecb-activate-before-layout-draw-hook' \(this one)
+2. `ecb-redraw-layout-before-hook'
+3. <Drawing the layout>
+4. `ecb-redraw-layout-after-hook'
+5. `ecb-activate-hook'"
   :group 'ecb-general
   :type 'hook)
 

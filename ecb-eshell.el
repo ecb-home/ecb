@@ -1,6 +1,6 @@
 ;;; ecb-eshell.el --- eshell integration for the ECB.
 
-;; $Id: ecb-eshell.el,v 1.48 2002/12/06 20:40:48 berndl Exp $
+;; $Id: ecb-eshell.el,v 1.49 2002/12/11 10:32:19 berndl Exp $
 
 ;; Copyright (C) 2000-2003 Free Software Foundation, Inc.
 ;; Copyright (C) 2000-2003 Kevin A. Burton (burton@openprivacy.org)
@@ -363,9 +363,6 @@ to because the command didn't output much text, go ahead and shrink it again."
 (add-hook 'ecb-activate-hook 'ecb-eshell-auto-activate-hook)
   
 (add-hook 'ecb-current-buffer-sync-hook 'ecb-eshell-current-buffer-sync)
-
-;;always recenter after the ECB redraws
-(add-hook 'ecb-redraw-layout-hook 'ecb-eshell-recenter)
 
 ;;always recenter after a command has been executed
 (add-hook 'eshell-post-command-hook 'ecb-eshell-recenter)

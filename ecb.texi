@@ -676,6 +676,29 @@ raises and selects the ECB-frame even if ECB is already started.
 Because ECB is a global minor-mode it can also be
 (de)activated/toggled by @kbd{M-x ecb-minor-mode}.
 
+@cindex Activation hook-sequence
+@anchor{Activation hook-sequence}
+The following sequence of hooks is evaluated during activation of ECB:
+@enumerate
+@item @code{ecb-before-activate-hook}
+@item <All actions for activation but no layout drawing>
+@item @code{ecb-activate-before-layout-draw-hook}
+@item @code{ecb-redraw-layout-before-hook}
+@item <Drawing the layout>
+@item @code{ecb-redraw-layout-after-hook}
+@item @code{ecb-activate-hook}
+@end enumerate
+
+@anchor{Deactivation hook-sequence}
+@cindex Deactivation hook-sequence
+The following sequence of hooks is evaluated during deactivation of
+ECB:
+@enumerate
+@item @code{ecb-before-deactivate-hook}
+@item <All actions for deactivation of ECB>
+@item @code{ecb-deactivate-hook}
+@end enumerate
+
 @node Automatic activation, , Standard activation, Activation and Deactivation
 @section Automatic activation and deactivation
 
@@ -693,7 +716,8 @@ to not nil and ECB will automaticaly be started after Emacs comes up.
 @itemx ecb-major-modes-deactivate
 These option give you the possibility to activate (rsp. deactivate)
 ECB on a major-mode basis, means you can define for which major-modes
-ECB should be activated and for which modes it should activated.
+ECB should be activated and for which modes it should deactivated (See
+@ref{Activation hook-sequence} and @ref{Deactivation hook-sequence}).
 
 If activating or deactivating is too strong you can also customize ECB
 with these two option only hiding/showing it's ECB-windows
@@ -1733,6 +1757,9 @@ takes several seconds because the quick redraw is not really safe and
 may have some drawbacks! On normal machines the full redraw should be
 done in << 1s!
 
+See also the hooks @code{ecb-redraw-layout-after-hook} and
+@code{ecb-redraw-layout-before-hook}!
+
 @node Creating a new ECB-layout, , Redrawing the ECB-layout, The ECB-layout
 @subsection Interactively creating new layouts
 
@@ -1836,12 +1863,32 @@ layouts}.
 
 @cindex Hide windows
 @cindex Show windows
-With @code{ecb-toggle-ecb-windows} you can hide/show all the ECB windows
+With @code{ecb-toggle-ecb-windows}, @code{ecb-hide-ecb-windows} and
+@code{ecb-show-ecb-windows} you can hide/show all the ECB windows
 without changing the activation state of ECB and also without
 deactivating the advices for @code{delete-other-windows} and/or
-@code{delete-window}. This is most useful if you use a layout like nr.10
-(@pxref{Tips and tricks}) or if you want to have maximum space for
-editing and you don't need the browsing windows all the time.
+@code{delete-window}. This is most useful if you use a layout like
+nr.10 (@pxref{Tips and tricks}) or if you want to have maximum space
+for editing and you don't need the browsing windows all the time.
+
+The following sequence of hooks is evaluated during showing again the
+hidden ECB-windows:
+@enumerate
+@item @code{ecb-show-ecb-windows-before-hook}
+@item @code{ecb-redraw-layout-before-hook}
+@item <Redrawing the layout to show the hidden ECB-windows>
+@item @code{ecb-redraw-layout-after-hook}
+@item @code{ecb-show-ecb-windows-after-hook}
+@end enumerate
+
+The following sequence of hooks is evaluated during hidding the
+ECB-windows:
+@enumerate
+@item @code{ecb-hide-ecb-windows-before-hook}
+@item <Hidding the ECB-windows>
+@item @code{ecb-hide-ecb-windows-after-hook}
+@end enumerate
+
 
 @node Back/forward navigation, ECB-window synchronizing, Hiding the ECB windows, Usage of ECB
 @section Back- and forward navigation like a browser
@@ -2345,6 +2392,21 @@ because ECB computes the size of the ECB-windows with the current
 frame size! If you need a hook-option for the real end of the
 activating process (i.e. after the layout-drawing) look at
 @code{ecb-activate-hook}.
+
+IMPORTANT: The difference between this hook and
+@code{ecb-redraw-layout-before-hook} is that the latter one is
+evaluated always before the layout is redrawn (for example after
+calling @code{ecb-redraw-layout}) whereas the former one (this hook)
+is only evaluated exactly once during the activation-process of ECB.
+So during the activation process there is the following sequence of
+hooks:
+@enumerate
+@item @code{ecb-activate-before-layout-draw-hook} \(this one)
+@item @code{ecb-redraw-layout-before-hook}
+@item <Drawing the layout>
+@item @code{ecb-redraw-layout-after-hook}
+@item @code{ecb-activate-hook}
+@end enumerate
 @end defopt
 
 @defopt activate-hook
@@ -3661,9 +3723,15 @@ max-height of 1/3 the frame-height).
 @end itemize
 @end defopt
 
-@defopt hide-ecb-windows-hook
-Hooks run after the ECB windows have been hidden either by
-@code{ecb-toggle-ecb-windows} or @code{ecb-hide-ecb-windows}.
+@defopt hide-ecb-windows-after-hook
+Hooks run direct after the ECB windows have been hidden
+either by @code{ecb-toggle-ecb-windows} or @code{ecb-hide-ecb-windows}.
+@end defopt
+
+@defopt hide-ecb-windows-before-hook
+Hooks run direct before the ECB windows will be hidden either by
+@code{ecb-toggle-ecb-windows} or @code{ecb-hide-ecb-windows}. This means that at runtime
+of this hook all the ECB-tree-windows of current layout are visible.
 @end defopt
 
 @defopt layout-always-operate-in-edit-window
@@ -3739,6 +3807,7 @@ changed the ECB-screen-layout by any action you can always go back to
 this layout with @code{ecb-redraw-layout}
 @end defopt
 
+
 @defopt layout-switch-to-compilation-window
 Switch-to-buffer...-functions switch to @code{ecb-compile-window}. If
 the buffer argument of @code{switch-to-buffer} or
@@ -3802,6 +3871,18 @@ Like 'only-edit plus the compile window if any.
 @end itemize
 @end defopt
 
+@defopt redraw-layout-after-hook
+Hooks run direct before the ECB windows will be shown either by
+@code{ecb-toggle-ecb-windows} or @code{ecb-show-ecb-windows}. This
+means that at runtime of this hook the ECB-windows are already
+visible.
+@end defopt
+
+@defopt redraw-layout-before-hook
+Hooks run direct before the ECB-layout will be redrawn by either
+@code{ecb-redraw-layout}.
+@end defopt
+
 @defopt redraw-layout-quickly
 If non-nil, we will attempt to redraw the layout quickly. Please read
 also carefully the documentation of @code{ecb-redraw-layout}.
@@ -3811,10 +3892,50 @@ also carefully the documentation of @code{ecb-redraw-layout}.
 Select the first edit window on @code{ecb-redraw-layout}.
 @end defopt
 
-@defopt show-ecb-windows-hook
-Hooks run after the ECB windows have been shown either by
-@code{ecb-toggle-ecb-windows} or @code{ecb-show-ecb-windows}.
+@defopt show-ecb-windows-after-hook
+Hooks run direct before the ECB windows will be shown either by
+@code{ecb-toggle-ecb-windows} or @code{ecb-show-ecb-windows}. This
+means that at runtime of this hook the ECB-windows are already
+visible.
+
+IMPORTANT: Showing the hidden ECB-windows is internally done by
+calling @code{ecb-redraw-layout} and therefore also the hooks
+@code{ecb-redraw-layout-before-hook} and
+@code{ecb-redraw-layout-after-hook} are evaluated. So there is the
+following sequence of hooks during the process of showing the hidden
+ECB-windows:
+@enumerate
+@item @code{ecb-show-ecb-windows-before-hook}
+@item @code{ecb-redraw-layout-before-hook}
+@item <redrawing the layout to show the hidden ECB-windows>
+@item @code{ecb-redraw-layout-after-hook}
+@item @code{ecb-show-ecb-windows-after-hook}
+@end enumerate
+So be aware which code you add to which hook!
 @end defopt
+
+@defopt show-ecb-windows-before-hook
+Hooks run direct before the ECB windows will be shown either by
+@code{ecb-toggle-ecb-windows} or @code{ecb-show-ecb-windows}. This
+means that at runtime of this hook the ECB-windows are still hidden.
+
+IMPORTANT: Showing the hidden ECB-windows is internally done by
+calling @code{ecb-redraw-layout} and therefore also the hooks
+@code{ecb-redraw-layout-before-hook} and
+@code{ecb-redraw-layout-after-hook} are evaluated. So there is the
+following sequence of hooks during the process of showing the hidden
+ECB-windows:
+@enumerate
+@item @code{ecb-show-ecb-windows-before-hook}
+@item @code{ecb-redraw-layout-before-hook}
+@item <redrawing the layout to show the hidden ECB-windows>
+@item @code{ecb-redraw-layout-after-hook}
+@item @code{ecb-show-ecb-windows-after-hook}
+@end enumerate
+So be aware which code you add to which hook!
+@end defopt
+
+
 
 @defopt split-edit-window
 Sets how and if the edit window should be splitted. But be aware: This
@@ -4691,14 +4812,18 @@ The following hooks are available:
 @item @code{ecb-current-buffer-sync-hook}
 @item @code{ecb-deactivate-hook}
 @item @code{ecb-directories-buffer-after-create-hook}
-@item @code{ecb-hide-ecb-windows-hook}
+@item @code{ecb-hide-ecb-windows-after-hook}
+@item @code{ecb-hide-ecb-windows-before-hook}
 @item @code{ecb-history-buffer-after-create-hook}
 @item @code{ecb-methods-buffer-after-create-hook}
-@item @code{ecb-show-ecb-windows-hook}
+@item @code{ecb-redraw-layout-after-hook}
+@item @code{ecb-redraw-layout-before-hook}
+@item @code{ecb-show-ecb-windows-after-hook}
+@item @code{ecb-show-ecb-windows-before-hook}
 @item @code{ecb-sources-buffer-after-create-hook}
 @end itemize
 
-Look at the documentation of these hooks to get a description.
+Look at the documentation of these hooks to get a detailled description.
 
 @node tree-buffer, Adviced functions, List of hooks, Elisp programming
 @section The library tree-buffer.el
