@@ -92,12 +92,14 @@
       (if (and (tree-node-is-expandable node)
 	       (tree-buffer-at-expand-symbol node (point)))
 	  (progn
-	    (when (not (tree-node-is-expanded node))
+	    (when (and (not (tree-node-is-expanded node))
+		       tree-node-expanded-fn)
 	      (funcall tree-node-expanded-fn node))
 	    (when (tree-node-is-expandable node)
 	      (tree-node-toggle-expanded node))
 	    (tree-buffer-update))
-	(funcall tree-node-selected-fn node mouse-button shift-pressed)))))
+	(when tree-node-selected-fn
+	  (funcall tree-node-selected-fn node mouse-button shift-pressed))))))
 
 (defun tree-buffer-get-node-at-point()
   (let ((linenr (+ (count-lines 1 (point)) (if (= (current-column) 0) 0 -1))))
@@ -166,7 +168,10 @@
       (when node
         (move-overlay tree-buffer-highlight-overlay
                       (tree-buffer-get-node-name-start-point node)
-                      (tree-buffer-get-node-name-end-point node))))))
+                      (tree-buffer-get-node-name-end-point node))
+	(if (not (pos-visible-in-window-p (tree-buffer-get-node-name-start-point node)))
+	    (recenter))
+	))))
   
 (defun tree-buffer-insert-text(text &optional facer)
   "Insert TEXT at point and faces it with FACER. FACER can be a face then the
@@ -380,6 +385,12 @@ EXPAND-SYMBOL-BEFORE: If not nil then the expand-symbol \(is displayed before
   (catch 'exit
     (dolist (child (tree-node-get-children node))
       (when (equal (tree-node-get-data child) child-data)
+	(throw 'exit child)))))
+
+(defun tree-node-find-child-name(node child-name)
+  (catch 'exit
+    (dolist (child (tree-node-get-children node))
+      (when (equal (tree-node-get-name child) child-name)
 	(throw 'exit child)))))
 
 ;;; Tree node

@@ -92,6 +92,8 @@
   "Path to currently selected directory.")
 (defvar ecb-path-selected-source nil
   "Path to currently selected source.")
+(defvar ecb-methods-root-node nil
+  "Path to currently selected source.")
 
 (defvar ecb-directories-buffer-name "*ECB Directories*")
 (defvar ecb-sources-buffer-name "*ECB Sources*")
@@ -180,6 +182,11 @@
 list. The value of this variable should be a regular expression."
   :group 'ecb-directories
   :type 'regexp)
+
+(defcustom ecb-auto-expand-directory-tree t
+  "*Automatically expand the directory tree to the current source file."
+  :group 'ecb-directories
+  :type 'boolean)
 
 (defcustom ecb-source-file-regexp "\\(\\(M\\|m\\)akefile\\|.*\\.\\(java\\|el\\|c\\|cc\\|h\\|hh\\|txt\\|html\\|mk\\)\\)$"
   "*Files matching this regular expression will be shown in the source
@@ -325,27 +332,28 @@ run direct before the layout-drawing look at
 (defconst ecb-argumentname 2)
 (defconst ecb-returntype 3)
 
-(defun ecb-highlight-text(text type)
+(defun ecb-highlight-text(orig-text type)
   "If `ecb-font-lock-methods' is not nil then dependend to TYPE the face
 specified in `ecb-font-lock-method-faces' is added to TEXT, otherwise TEXT
 will get the face 'default. Returns TEXT."
-  (if (stringp text)
-      (if ecb-font-lock-methods
-          (let ((face (or (nth type ecb-font-lock-method-faces) 'default)))
-            (put-text-property 0 (length text) 'face face text)
-            ;; some special heuristic for better handling of the lisp-dialects
-            (when (and (memq major-mode
-                             ecb-language-modes-args-separated-with-space)
-                       (eq type ecb-argumentname)
-                       (not (eq face 'default))
-                       ;; lets look if some special keywords like &optional or :key
-                       ;; are in the text.
-                       (or (string-match "^\\(&[^& \t]+\\)" text)
-                           (string-match "^\\(:[^: \t]+\\)" text)))
-              (put-text-property (match-beginning 1) (match-end 1)
-                                 'face 'font-lock-type-face text)))
-        (put-text-property 0 (length text) 'face 'default text)))
-  text)
+  (let ((text (copy-sequence orig-text)))
+    (if (stringp text)
+	(if ecb-font-lock-methods
+	    (let ((face (or (nth type ecb-font-lock-method-faces) 'default)))
+	      (put-text-property 0 (length text) 'face face text)
+	      ;; some special heuristic for better handling of the lisp-dialects
+	      (when (and (memq major-mode
+			       ecb-language-modes-args-separated-with-space)
+			 (eq type ecb-argumentname)
+			 (not (eq face 'default))
+			 ;; lets look if some special keywords like &optional or :key
+			 ;; are in the text.
+			 (or (string-match "^\\(&[^& \t]+\\)" text)
+			     (string-match "^\\(:[^: \t]+\\)" text)))
+		(put-text-property (match-beginning 1) (match-end 1)
+				   'face 'font-lock-type-face text)))
+	  (put-text-property 0 (length text) 'face 'default text)))
+    text))
 
 (defun ecb-get-method-sig(method-token)
   "Returns the complete method-signature as a string and does also the
@@ -410,45 +418,55 @@ highlighting of the methods if `ecb-font-lock-methods' is not nil."
                    return-type))
           (t method-and-args))))
   
-(defun ecb-default-get-methods()
-;  (save-current-buffer
-;    (bovinate))
-  (let* ((tokens (condition-case nil
-                     ;; semantic <= 1.2.1
-                     (semantic-bovinate-toplevel 0 nil t)
-                   (wrong-number-of-arguments
-                    ;; semantic >= 1.3.1
-                    (semantic-bovinate-toplevel t))))
-         (source (car (semantic-find-nonterminal-by-token 'type tokens)))
-	 (source-parts (semantic-token-type-parts source))
-	 (methods
-	  (semantic-find-nonterminal-by-token
-	   'function
-	   (if source-parts source-parts tokens))))
-    (setq ecb-methods
-	  (mapcar (lambda(method) (cons (semantic-token-start method)
-					(semantic-token-end method)))
-		  methods))
-    (if ecb-sort-methods
-	(setq methods (sort methods (lambda(a b)
-				      (string< (semantic-token-name a)
-					       (semantic-token-name b))))))
-    (mapcar
-     (lambda(method-token)
-       (cons
-	(ecb-get-method-sig method-token)
-	(semantic-token-start method-token)))
-     methods)))
+(defun ecb-add-types-methods(node token)
+  (tree-node-set-expanded node t)
+  (dolist (type (semantic-find-nonterminal-by-token 'type token))
+    (let ((n (tree-node-new (semantic-token-name type) 0
+			    (semantic-token-start type))))
+      (tree-node-add-child node n)
+      (ecb-add-methods n (semantic-token-type-parts type))))
+  (let ((methods (semantic-find-nonterminal-by-token 'function token)))
+     (if ecb-sort-methods
+ 	(setq methods (sort methods (lambda(a b)
+					    (string< (semantic-token-name a)
+						     (semantic-token-name b))))))
+     (dolist (method methods)
+       (tree-node-add-child node (tree-node-new
+				  (ecb-get-method-sig method) 0
+				  (semantic-token-start method) t)))))
+
+(defun ecb-expand-tree(path node)
+  (catch 'exit
+    (dolist (child (tree-node-get-children node))
+      (let ((name (tree-node-get-name child)))
+	(when (and (>= (length path) (length name))
+		   (string= (substring path 0 (length name)) name)
+		   (or (= (length path) (length name))
+		       (eq (elt path (length name)) ?/)))
+	  (let ((was-expanded (tree-node-is-expanded child)))
+	    (tree-node-set-expanded child t)
+	    (ecb-update-directory-node child)
+	    (throw 'exit
+		   (or (when (> (length path) (length name))
+			 (ecb-expand-tree (substring path (1+ (length name)))
+					  child))
+		       (not was-expanded)))))))))
 
 (defun ecb-set-selected-directory(path)
   (setq path (ecb-strip-slash path))
   (setq ecb-path-selected-directory path)
   
-  (when (not ecb-show-sources-in-directories-buffer)
+  (when (or (not ecb-show-sources-in-directories-buffer)
+	    ecb-auto-expand-directory-tree)
     (save-selected-window
-      (if (get-buffer-window ecb-directories-buffer-name)
-	  (pop-to-buffer ecb-directories-buffer-name))
-      (tree-buffer-highlight-node-data ecb-path-selected-directory)))
+      (when (get-buffer-window ecb-directories-buffer-name)
+	(pop-to-buffer ecb-directories-buffer-name)
+	(when ecb-auto-expand-directory-tree
+	  ;; Expand tree to show selected directory
+	  (if (ecb-expand-tree path (tree-buffer-get-root))
+	      (tree-buffer-update))´)
+	(when (not ecb-show-sources-in-directories-buffer)
+	  (tree-buffer-highlight-node-data ecb-path-selected-directory)))))
 
   (ecb-buffer-select ecb-sources-buffer-name)
   (let ((old-children (tree-node-get-children (tree-buffer-get-root))))
@@ -509,15 +527,18 @@ highlighting of the methods if `ecb-font-lock-methods' is not nil."
 
 (defun ecb-update-methods-buffer()
   "Updates the methods buffer with the current buffer."
-  (let ((methods (ecb-default-get-methods)))
-    (save-selected-window
-      (ecb-buffer-select ecb-methods-buffer-name)
-      (let ((node (tree-buffer-get-root)))
-	(tree-node-set-children node nil)
-	(dolist (method methods)
-	  (tree-node-add-child node (tree-node-new (car method) 0 (cdr method) t))))
-      (tree-buffer-update)
-      (set-window-point (selected-window) 1))))
+  (tree-node-set-children ecb-methods-root-node nil)
+  (ecb-add-types-methods ecb-methods-root-node
+			 (condition-case nil
+			     ;; semantic <= 1.2.1
+			     (semantic-bovinate-toplevel 0 nil t)
+			   (wrong-number-of-arguments
+			    ;; semantic >= 1.3.1
+			    (semantic-bovinate-toplevel t))))
+  (save-selected-window
+    (ecb-buffer-select ecb-methods-buffer-name)
+    (tree-buffer-update)
+    (set-window-point (selected-window) 1)))
   
 (defun ecb-set-selected-source(filename &optional window-skips
                                         no-edit-buffer-selection)
@@ -801,10 +822,11 @@ with the actually choosen layout \(see `ecb-layout')."
         (tree-buffer-create
          ecb-methods-buffer-name
          'ecb-method-clicked
-         'ecb-method-clicked
+	 nil
          nil
          ecb-truncate-lines
-         (list (cons 0 t))))
+         (list (cons 0 t)))
+	(setq ecb-methods-root-node (tree-buffer-get-root)))
       
       (unless (member ecb-history-buffer-name curr-buffer-list)
         (tree-buffer-create
