@@ -77,30 +77,35 @@
  ECB layout creation mode
  ========================
 
- This is the help-screen of this mode. The window displaying
- this help text is called the edit-window which is neither
- selectable nor deletable nor splittable in this mode.
+ This is the help-screen of this mode. The window
+ displaying this help text is called the edit-window
+ which is neither selectable nor deletable nor
+ splittable in this mode.
 
- <left/right/up/down-arrow>: Moving around in current window
- C-n, C-p: Go to next/previous window (beside the edit-window)
+ <left/right/up/down-arrow>: Moving around in current
+ window C-n, C-p: Go to next/previous window (beside
+ the edit-window)
 
  C-s: Split current window. You will be asked:
       - If \"vertical\" or \"horizontal\" split
-      - How to split: \"at-point\", \"half\" or \"other\" (i.e.
-        you can specify any fraction between 0.1 and 0.9)
-      - Which type (\"directories\", \"sources\", \"methods\"
-        or \"history\") the current window should be.
- C-u: Delete current window
- C-t: Give the current window a type (\"directories\", \"sources\",
-      \"methods\" or \"history\")
+      - How to split: \"at-point\", \"half\" or
+        \"other\" (i.e. you can specify any fraction
+        between 0.1 and 0.9)
+      - Which type (\"directories\", \"sources\",
+        \"methods\" or \"history\") the current window
+        should be.
+ C-u: Unsplit, ie. delete current window
+ C-t: Give the current window a type (\"directories\",
+      \"sources\", \"methods\" or \"history\")
 
- C-c: Cancel layout creation. This does not save the layout.
+ C-c: Cancel layout creation. This does not save the
+      layout. Deletes this frame.
+ C-q: Save current defined layout and quit the layout
+      creation. You will be asked for a layout-number.
       Deletes this frame.
- C-q: Save current defined layout and quit the layout creation.
-      You will be asked for a layout-number. Deletes this frame.
 
-There are NO other commands or keys avaliable. ALL other keys
-are disabled in this mode!
+ There are NO other commands or keys avaliable. ALL
+ other keys are disabled in this mode!
 ")
 
 (defconst ecb-create-layout-help-text-top
@@ -119,14 +124,14 @@ are disabled in this mode!
         fraction between 0.1 and 0.9)
       - Which type (\"directories\", \"sources\", \"methods\" or \"history\") the current
         window should be.
- C-u: Delete current window
+ C-u: Unsplit, ie. delete current window
  C-t: Give the current window a type (\"directories\", \"sources\", \"methods\" or \"history\")
 
  C-c: Cancel layout creation. This does not save the layout. Deletes this frame.
  C-q: Save current defined layout and quit the layout creation. You will be asked for a
       layout-number. Deletes this frame.
 
-There are NO other commands or keys avaliable. ALL other keys are disabled in this mode!
+ There are NO other commands or keys avaliable. ALL other keys are disabled in this mode!
 ")
 
 (defconst ecb-create-layout-file-header
@@ -184,7 +189,7 @@ There are NO other commands or keys avaliable. ALL other keys are disabled in th
 
 (defvar ecb-create-layout-buf-types nil)
 
-;; can be 'left, 'right or 'top
+;; can be 'left, 'right, 'top or 'left-right
 (defvar ecb-create-layout-type 'left)
 
 (defun ecb-create-layout-initilize ()
@@ -284,7 +289,7 @@ DELETE-FRAME is not nil then the new created frame will be deleted and the
 
 
 (defun ecb-create-layout-ready-for-save-p ()
-  "Returns only nil if all windows in current layout have a type."
+  "Returns only not nil if all windows in current layout have a type."
   (let ((save-p t))
     (save-excursion
       (dolist (win (window-list (selected-frame)))
@@ -305,7 +310,7 @@ DELETE-FRAME is not nil then the new created frame will be deleted and the
         (progn
           (if commit
               (ecb-query-string
-               (format "Layout %d is already defined. Use another numberr. Please commit!"
+               (format "Layout %d is already defined. Use another number. Please commit!"
                        nr) nil))
           nil)
       t)))
@@ -530,23 +535,29 @@ DELETE-FRAME is not nil then the new created frame will be deleted and the
                                                 ecb-compile-window)
                                          (other-window -1)))))))
 
-
 (defun ecb-create-layout-delete-window ()
   (interactive)
   (when (ecb-create-layout-frame-ok)
     (unless (or (equal (selected-window) ecb-create-layout-edit-window)
-                (equal (next-window)
-                       (previous-window (selected-window) 0)))
-      (let ((go-back (if (equal ecb-create-layout-type 'right)
-                         (not (= (nth 1 (window-edges)) 0))
-                       (not (and (= (nth 0 (window-edges)) 0)
-                                 (= (nth 1 (window-edges)) 0))))))
+                (= (length (window-list nil 0))
+                   (if (equal ecb-create-layout-type 'left-right) 3 2)))
+      (if (and (member ecb-create-layout-type '(right left-right))
+               (equal (previous-window (selected-window) 0)
+                      ecb-create-layout-edit-window)
+               (> (nth 0 (window-edges (next-window))) (nth 0 (window-edges)))
+               (= (nth 3 (window-edges ecb-create-layout-edit-window))
+                  (nth 3 (window-edges))))
+          ;; In exactly this window context we can not delete the current
+          ;; window because otherwise the edit-window would enlarge and the
+          ;; wrong window would be deleted!
+          (error "This window can not be deleted! Delete another one.")
         ;; add the buffer type of the deleted window to the available-list
         (ecb-create-layout-add-to-buf-types (ecb-create-layout-buffer-type))
         (kill-buffer (current-buffer))
         (delete-window)
         (ecb-create-layout-gen-lisp '(delete-window))
-        (if go-back (ecb-create-layout-previous-window))
+        (if (equal (selected-window) ecb-create-layout-edit-window)
+            (ecb-create-layout-previous-window))
         ;; add the buffer type of the new bigger window to the available-list
         (ecb-create-layout-add-to-buf-types (ecb-create-layout-buffer-type))
         (kill-buffer (current-buffer))
@@ -574,6 +585,7 @@ DELETE-FRAME is not nil then the new created frame will be deleted and the
       (string (+ i 48)) 'self-insert-command))
 
   (define-key ecb-create-layout-mode-map "." 'self-insert-command)
+  (define-key ecb-create-layout-mode-map "-" 'self-insert-command)
   
   (if ecb-running-xemacs
       (define-key ecb-create-layout-mode-map (kbd "<BS>")
@@ -599,14 +611,14 @@ DELETE-FRAME is not nil then the new created frame will be deleted and the
     'ecb-create-layout-next-window)
   (define-key ecb-create-layout-mode-map (kbd "C-p")
     'ecb-create-layout-previous-window)
-  (define-key ecb-create-layout-mode-map (kbd "C-h v")
-    'describe-variable)
-  (define-key ecb-create-layout-mode-map (kbd "C-h k")
-    'describe-key)
-  (define-key ecb-create-layout-mode-map (kbd "C-h d")
-    'ecb-create-layout-debug)
-  (define-key ecb-create-layout-mode-map (kbd "M-<down>")
-    'scroll-other-window)
+;;   (define-key ecb-create-layout-mode-map (kbd "C-h v")
+;;     'describe-variable)
+;;   (define-key ecb-create-layout-mode-map (kbd "C-h k")
+;;     'describe-key)
+;;   (define-key ecb-create-layout-mode-map (kbd "C-h d")
+;;     'ecb-create-layout-debug)
+;;   (define-key ecb-create-layout-mode-map (kbd "M-<down>")
+;;     'scroll-other-window)
   (set-keymap-parent ecb-create-layout-mode-map nil))
 
 
@@ -642,13 +654,16 @@ DELETE-FRAME is not nil then the new created frame will be deleted and the
   (when new
     (setq ecb-create-layout-type (intern (ecb-query-string
                                           "Location of the the ECB-tree-windows:"
-                                          '("left" "right" "top")))))
+                                          '("left" "right" "top" "left-right")))))
   (cond ((equal ecb-create-layout-type 'left)
          (ecb-split-hor ecb-windows-width))
         ((equal ecb-create-layout-type 'right)
          (ecb-split-hor (- ecb-windows-width) t))
         ((equal ecb-create-layout-type 'top)
-         (ecb-split-ver ecb-windows-height)))
+         (ecb-split-ver ecb-windows-height))
+        (t
+         (ecb-split-hor (* 0.667 ecb-windows-width))
+         (ecb-split-hor (- (* 0.667 ecb-windows-width)) t t)))
   ;; we set the buffer in the big edit-window
   (ecb-create-layout-new-buffer t)
   ;; now we insert the help in the edit-window
@@ -660,9 +675,14 @@ DELETE-FRAME is not nil then the new created frame will be deleted and the
   (ecb-mode-line-set (buffer-name (current-buffer)) "   ECB edit-window")
   ;; The edit window must not be dedicated
   (set-window-dedicated-p (selected-window) nil)
-  (other-window 1)
   ;; we set the buffer for the (currently unsplitted) ECB-window
-  (ecb-create-layout-new-buffer))
+  (other-window 1)
+  (ecb-create-layout-new-buffer)
+  ;; for the left-right type we have to set the other column too
+  (when (equal ecb-create-layout-type 'left-right)
+    (other-window 1)
+    (ecb-create-layout-new-buffer)))
+
 
 (defun ecb-create-layout-make-frame ()
   "Create a new frame for the layout creation process and return it."

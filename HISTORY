@@ -1,11 +1,18 @@
 Version 1.90:
 -------------
 
-- Silencing the byte-compiler, i.e. byte-compilation of ECB should now be
-  warning free. If byte-compilation still throws warnings please send uthis
-  to our mailing list. (Klaus)
+- Adding a new layout type "left-right" which allows the ECB-tree-windows to
+  be located at the left and the right side of the ECB-frame. See the new
+  layouts nr. 18 and nr. 19 for examples. Other layouts of this type can be
+  created or programmed very easy with 'ecb-create-newlayout' resp. the macro
+  'ecb-layout-define'. (Klaus)
 
-- ecb-eshell now recenters after command execution. (burton)s
+- Silencing the byte-compiler, i.e. byte-compilation of ECB should now be
+  warning free. If byte-compilation still throws warnings during
+  byte-compilation with 'ecb-byte-compile' (resp. using the Makefile or
+  make.bat) please send this to our mailing list. (Klaus)
+
+- ecb-eshell now recenters after command execution. (burton)
 
 - ecb-eshell now recenters if there are any window resizes.  This is done so
   that the prompt is always at the bottom of the window. (burton)

@@ -672,6 +672,89 @@ to non nil!"
   (ecb-set-methods-buffer)
   (select-window (next-window)))
 
+;; Layout Nr. 18 -----------------------------------------------------
+
+(ecb-layout-define 18 left-right
+ "This function creates the following layout:
+
+   --------------------------------------------------------------
+   |              |                               |             |
+   |  Directories |                               |  Methods    |
+   |              |                               |             |
+   |              |                               |             |
+   |              |                               |             |
+   |              |                               |             |
+   |              |                               |             |
+   |--------------|             Edit              |             |
+   |              |                               |             |
+   |  Sources     |                               |             |
+   |              |                               |             |
+   |--------------|                               |             |
+   |              |                               |             |
+   |  History     |                               |             |
+   |              |                               |             |
+   --------------------------------------------------------------
+   |                                                            |
+   |                    Compilation                             |
+   |                                                            |
+   --------------------------------------------------------------
+
+If you have not set a compilation-window in `ecb-compile-window-height' then
+the layout contains no durable compilation window and the other windows get a
+little more place.
+This layout works best if you set `ecb-show-sources-in-directories-buffer'
+to non nil!"
+ (ecb-set-directories-buffer)
+ (ecb-split-ver 0.4)
+ (ecb-set-sources-buffer)
+ (ecb-split-ver 0.5)
+ (ecb-set-history-buffer)
+ (select-window (next-window (next-window)))
+ (ecb-set-methods-buffer)
+ (select-window (previous-window (selected-window) 0)))
+
+;; Layout Nr. 19 -----------------------------------------------------
+
+(ecb-layout-define 19 left-right
+ "This function creates the following layout:
+
+   --------------------------------------------------------------
+   |              |                               |             |
+   |  Directories |                               |  Methods    |
+   |              |                               |             |
+   |              |                               |             |
+   |              |                               |             |
+   |              |                               |             |
+   |              |                               |             |
+   |--------------|             Edit              |-------------|
+   |              |                               |             |
+   |  Sources     |                               |  History    |
+   |              |                               |             |
+   |              |                               |             |
+   |              |                               |             |
+   |              |                               |             |
+   |              |                               |             |
+   --------------------------------------------------------------
+   |                                                            |
+   |                    Compilation                             |
+   |                                                            |
+   --------------------------------------------------------------
+
+If you have not set a compilation-window in `ecb-compile-window-height' then
+the layout contains no durable compilation window and the other windows get a
+little more place.
+This layout works best if you set `ecb-show-sources-in-directories-buffer'
+to non nil!"
+ (ecb-set-directories-buffer)
+ (ecb-split-ver 0.66)
+ (ecb-set-sources-buffer)
+ (select-window (next-window (next-window)))
+ (ecb-set-methods-buffer)
+ (ecb-split-ver 0.66)
+ (ecb-set-history-buffer)
+ (select-window (previous-window (previous-window (selected-window) 0) 0)))
+
+
 (silentcomp-provide 'ecb-layout-defs)
 
 ;;; ecb-layout-defs.el ends here

@@ -459,6 +459,7 @@ tree-node. This is only used with GNU Emacs 21!"
            node
            (funcall tree-node-mouse-over-fn node window 'no-print)))))
 
+
 (defun tree-buffer-insert-text (text &optional facer help-echo)
   "Insert TEXT at point and faces it with FACER. FACER can be a face then the
 text gets this face or it can be a function-symbol which is called to face the
