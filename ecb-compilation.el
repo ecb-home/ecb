@@ -121,7 +121,9 @@ compile-window."
 
       (when (ecb-compilation-buffer-p buffer)
 
-        (add-to-list 'buffer-names (cons (buffer-name buffer) index) t)
+        (setq buffer-names
+              (append buffer-names
+                      (list (cons (buffer-name buffer) index))))
         
         (setq index (1+ index))))
 
@@ -180,13 +182,16 @@ information about compilation buffers."
        (buffers (ecb-compilation-get-buffers)))
 
     (dolist(buffer buffers)
-      (add-to-list 'submenu (vector (car buffer)
-                                    `(funcall (if (ecb-compile-window-live-p)
-                                                  'switch-to-buffer
-                                                'switch-to-buffer-other-window)
-                                                ,(car buffer))
-                                    :active t) t))
+      (setq submenu
+            (append submenu
+                    (list (vector (car buffer)
+                                  `(funcall (if (ecb-compile-window-live-p)
+                                                'switch-to-buffer
+                                              'switch-to-buffer-other-window)
+                                            ,(car buffer))
+                                    :active t)))))
 
+    ;;TODO: Klaus Berndl <klaus.berndl@sdm.de>: Seems not to work with Emacs 20.X
     (easy-menu-change (list ecb-menu-name)
                       "Compilation Buffers"
                       submenu
