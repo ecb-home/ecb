@@ -26,7 +26,7 @@
 @c GNU Emacs; see the file COPYING.  If not, write to the Free Software
 @c Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-@c $Id: ecb.texi,v 1.155 2004/02/17 16:50:04 berndl Exp $
+@c $Id: ecb.texi,v 1.156 2004/02/20 16:38:53 berndl Exp $
 
 @setfilename ecb.info
 
@@ -7407,7 +7407,9 @@ ECB-buffer a plain string (which is displayed) or a function can be
 specified which gets three args (name of the buffer, current selected
 directory and current selected source-file) and must return a string
 which will be displayed in the modeline (or nil if no data should be
-displayed).
+displayed). Such a function can add the text-property @code{help-echo}
+to the result-string. Then this help-string will be displayed when the
+user moves the mouse over this section of the modeline.
 
 If a special ECB-buffer should not display special data in its
 modeline then this buffer-name should either not being added to this
@@ -7473,7 +7475,10 @@ The cdr is the prefix for a buffer and can either be a string which
 used as it is or a function-symbol which is called with three argument
 (the buffer-name, the current selected directory and the current
 selected source-file) and must return either nil (for no prefix) or a
-string which is then used a prefix.
+string which is then used a prefix. Such a function can add the
+text-property @code{help-echo} to the result-string. Then this
+help-string will be displayed when the user moves the mouse over this
+section of the modeline.
 
 If a special ECB-buffer should not have a prefix in its modeline then
 this buffer-name should either not being added to this option or added

@@ -1,12 +1,35 @@
 * Changes for ECB version 2.22
 
-TODO: News in ecb-upgrade.el nachziehen. Wenn nur Bug-fixes, dann lediglich
-eine Zeile "This is a bugfix-release."
+TODO: News have to be added to ecb-upgrade.el to.
+
+** New nifty feature for filtering the tags displayed in the Methods-buffer
+   You can filter by regexp, protection, tag-class etc. See the new command
+   `ecb-methods-filter' (bound to [C-c . f m] and the new option
+   `ecb-methods-filter-replace-existing' for getting all details.
+
+   Filters can be layered filters, i.e. you can apply filters on top of
+   already applied filters: An example of 3 combined filters would be: Display
+   only all public methods having the string "test" in its name. The modeline
+   of the Methods-buffer always displays the topmost filter. But you can see
+   all currently applied filters by moving the mouse over this section of the
+   modeline: The filters will be displayed as help-echo.
+
+   The new functionality is also completely available in the popup-menu of the
+   Methods-buffer.
+
+   Currently we do not apply a filter to tags of class 'type. Maybe this
+   behavior should be optional?!
+
+   The feature works stable but the kind of possible filters is currently
+   experimental. Try the new feature and if you miss some useful filters then
+   mail a suggestion to the ECB-mailing-list.
+
+   TODO: Add this new feature to the info-manual
 
 ** Compatibility enhancements
 
-*** Fixes a small bug in the compatibility-code for `bs-show' when the
-    buffer-selection should be displayed in the permanent compile-window.
+*** Cause of the fixed bugs the compatibility for `bs-show' has increased when
+    the buffer-selection should be displayed in the permanent compile-window.
 
 ** Fixed Bugs
 
@@ -14,6 +37,10 @@ eine Zeile "This is a bugfix-release."
     original version for all buffers which are neither ecb-tree-buffer nor
     compilation-buffers in the sense of `ecb-compilation-buffer-p'. These
     "source-buffers" are now also handled correctly in all situations.
+
+*** Fixed a small bug in `ecb-toggle-compile-window-height'. This bug has
+    influenced the behavior of `display-buffer' when called from programs for
+    "compilation-buffers".
     
 
 

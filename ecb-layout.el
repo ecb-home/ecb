@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-layout.el,v 1.216 2004/02/17 16:50:10 berndl Exp $
+;; $Id: ecb-layout.el,v 1.217 2004/02/20 16:38:54 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -1226,6 +1226,11 @@ either not activated or it behaves exactly like the original version!"
 
 (require 'compile)
 
+;; TODO: Klaus Berndl <klaus.berndl@sdm.de>:
+;; The new variables `grep-window-height', `grep-auto-highlight', and
+;; `grep-scroll-output' can beused to override the corresponding compilation mode
+;; settings for grep commands. This is new in Emacs 21.4 so we have to handle it!
+
 (defadvice compilation-set-window-height (around ecb)
   "Makes the function compatible with ECB."
 ;;   (if (or (not (equal (window-frame (ad-get-arg 0)) ecb-frame))
@@ -1300,6 +1305,20 @@ either not activated or it behaves exactly like the original version!"
                                            nil
                                          o-w-s-b)))
       ad-do-it)))
+
+;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: 
+;; ** master-mode.el implements a minor mode for scrolling a slave
+;; buffer without leaving your current buffer, the master buffer. This is new
+;; in Emacs 21.4 so maybe we have to make it compatible with ECB!
+
+;; TODO: Klaus Berndl <klaus.berndl@sdm.de>:
+;; *** The new package gdb-ui.el provides an enhanced graphical interface to
+;; GDB. You can interact with GDB through the GUD buffer in the usual way, but
+;; there are also further buffers which control the execution and describe the
+;; state of your program. It separates the input/output of your program from
+;; that of GDB and watches expressions in the speedbar. It also uses features
+;; of Emacs 21 such as the display margin for breakpoints, and the toolbar.
+;; This is new in Emacs 21.4 so maybe we have to make it compatible with ECB!
 
 
 (defadvice scroll-all-mode (after ecb)
@@ -2450,6 +2469,11 @@ some special tasks:
 
 ;; here come the advices
 
+;; TODO: Klaus Berndl <klaus.berndl@sdm.de>:
+;; ** `special-display-buffer-names' and `special-display-regexps' now
+;; understand two new boolean pseudo-frame-parameters `same-frame' and
+;; `same-window'. This is new in Emacs 21.4 so we have to integrate it!
+
 (defun ecb-check-for-special-buffer (buffer-or-name)
   "Return  not nil if and only if `special-display-function' is not nil and
 BUFFER-OR-NAME is contained or matches `special-display-buffer-names' or
@@ -2715,9 +2739,9 @@ If called for other frames it works like the original version."
                             (ecb-point-in-edit-window edit-win-list)
                             (not (ecb-check-for-same-window-buffer (ad-get-arg 0))))
                    (ecb-layout-debug-error "display-buffer for normal-buffer %s - split edit-window:"
-                   (ad-get-arg 0))
+                                           (ad-get-arg 0))
                    (ecb-with-adviced-functions
-                   (split-window (car edit-win-list)))))
+                    (split-window (car edit-win-list)))))
                (if (ecb-compile-window-live-p)
                    (unwind-protect
                        (progn
@@ -4774,21 +4798,21 @@ floating-point-numbers. Default referencial width rsp. height are
       (cond ((equal layout-type 'top)
              (cons (frame-width ecb-frame)
                    (- (frame-height ecb-frame)
-                      (ecb-window-full-height (car ecb-win-list))
+                      (ecb-window-full-height (ecb-first ecb-win-list))
                       (if (equal comp-win-state 'visible)
                           (ecb-window-full-height ecb-compile-window)
                         0))))
             ((equal layout-type 'left-right)
              (cons (- (frame-width ecb-frame)
-                      (ecb-window-full-width (car ecb-win-list))
-                      (ecb-window-full-width (car (last ecb-win-list))))
+                      (ecb-window-full-width (ecb-first ecb-win-list))
+                      (ecb-window-full-width (ecb-last ecb-win-list)))
                    (- (frame-height ecb-frame)
                       (if (equal comp-win-state 'visible)
                           (ecb-window-full-height ecb-compile-window)
                         0))))
             (t
              (cons (- (frame-width ecb-frame)
-                      (ecb-window-full-width (car ecb-win-list)))
+                      (ecb-window-full-width (ecb-first ecb-win-list)))
                    (- (frame-height ecb-frame)
                       (if (equal comp-win-state 'visible)
                           (ecb-window-full-height ecb-compile-window)
@@ -4820,64 +4844,68 @@ toggle the enlarge-state."
                                                ecb-compile-window))
              (max-height nil)
              (number-of-lines nil))
-        (save-selected-window
-          (select-window ecb-compile-window)
-          (setq number-of-lines (+ (if ecb-running-xemacs 2 1) ; XEmacs hor. scrollb.
-                                   (count-lines (point-min) (point-max))))
-          (ecb-layout-debug-error "ecb-toggle-compile-window-height: buffer: %s, lines: %d"
-                                  (current-buffer) number-of-lines)
-          (if should-shrink
-              (progn
-                (ecb-layout-debug-error "ecb-toggle-compile-window-height: buffer: %s, lines: %d shrink down to compile-window-height"
-                                        (current-buffer) number-of-lines)
-                (shrink-window (max 0 (- (ecb-window-full-height)
-                                         compile-window-height-lines))))
-            (if (equal ecb-enlarged-compilation-window-max-height 'best)
-                ;; With GNU Emacs we could use `fit-window-to-buffer' but
-                ;; XEmacs doesn't have such a function; Therefore...
-                ;; We fit the window to exactly this height:
-                ;; The minimum MIN of
-                ;; - half of frame-height
-                ;; - number of lines +1 in current buffer
-                ;; - temp-buffer-max-height or compilation-window-height (in
-                ;;   lines) - dependent on the mode of current buffer.
-                ;; Then we take the maximum of this MIN and the height of the
-                ;; compile-window as defined in `ecb-compile-window-height'
-                ;; (in lines).
+        ;; we must use save-excursion because otherwise this command behaves
+        ;; wrong when called from program within a (save-excursion (set-buffer
+        ;; ...)) call.
+        (save-excursion
+          (save-selected-window
+            (select-window ecb-compile-window)
+            (setq number-of-lines (+ (if ecb-running-xemacs 2 1) ; XEmacs hor. scrollb.
+                                     (count-lines (point-min) (point-max))))
+            (ecb-layout-debug-error "ecb-toggle-compile-window-height: buffer: %s, lines: %d"
+                                    (current-buffer) number-of-lines)
+            (if should-shrink
                 (progn
-                  (setq max-height
-                        (max (min (floor (/ (1- (frame-height)) 2))
-                                  (or (if (equal major-mode 'compilation-mode)
-                                          compilation-window-height
-                                        (if ecb-running-xemacs
-                                            (ignore-errors ; if temp-buffer-... is nil!
-                                              (ecb-normalize-number
-                                               temp-buffer-max-height
-                                               (1- (frame-height))))
-                                          (if (functionp temp-buffer-max-height)
-                                              (funcall temp-buffer-max-height
-                                                       (current-buffer))
-                                            temp-buffer-max-height)))
-                                      1000) ; 1000 is surely > then half of the frame
-                                  number-of-lines)
-                             compile-window-height-lines))
-                  (ecb-layout-debug-error "ecb-toggle-compile-window-height: max-height: %s, curr-win-height: %s"
-                                          max-height (ecb-window-full-height))
-                  (enlarge-window (- max-height (ecb-window-full-height))))
-              (setq max-height
-                    (cond ((equal ecb-enlarged-compilation-window-max-height
-                                  'half)
-                           (floor (/ (1- (frame-height)) 2)))
-                          ((numberp ecb-enlarged-compilation-window-max-height)
-                           (ecb-normalize-number
-                            ecb-enlarged-compilation-window-max-height
-                            (1- (frame-height))))))
-              (enlarge-window (- (max max-height compile-window-height-lines)
-                                 (ecb-window-full-height))))
-            ;; now we set the window-start
-            (when (and (not (equal major-mode 'compilation-mode))
-                       (not compile-window-selected-p))
-              (set-window-start ecb-compile-window (point-min))))))
+                  (ecb-layout-debug-error "ecb-toggle-compile-window-height: buffer: %s, lines: %d shrink down to compile-window-height"
+                                          (current-buffer) number-of-lines)
+                  (shrink-window (max 0 (- (ecb-window-full-height)
+                                           compile-window-height-lines))))
+              (if (equal ecb-enlarged-compilation-window-max-height 'best)
+                  ;; With GNU Emacs we could use `fit-window-to-buffer' but
+                  ;; XEmacs doesn't have such a function; Therefore...
+                  ;; We fit the window to exactly this height:
+                  ;; The minimum MIN of
+                  ;; - half of frame-height
+                  ;; - number of lines +1 in current buffer
+                  ;; - temp-buffer-max-height or compilation-window-height (in
+                  ;;   lines) - dependent on the mode of current buffer.
+                  ;; Then we take the maximum of this MIN and the height of the
+                  ;; compile-window as defined in `ecb-compile-window-height'
+                  ;; (in lines).
+                  (progn
+                    (setq max-height
+                          (max (min (floor (/ (1- (frame-height)) 2))
+                                    (or (if (equal major-mode 'compilation-mode)
+                                            compilation-window-height
+                                          (if ecb-running-xemacs
+                                              (ignore-errors ; if temp-buffer-... is nil!
+                                                (ecb-normalize-number
+                                                 temp-buffer-max-height
+                                                 (1- (frame-height))))
+                                            (if (functionp temp-buffer-max-height)
+                                                (funcall temp-buffer-max-height
+                                                         (current-buffer))
+                                              temp-buffer-max-height)))
+                                        1000) ; 1000 is surely > then half of the frame
+                                    number-of-lines)
+                               compile-window-height-lines))
+                    (ecb-layout-debug-error "ecb-toggle-compile-window-height: max-height: %s, curr-win-height: %s"
+                                            max-height (ecb-window-full-height))
+                    (enlarge-window (- max-height (ecb-window-full-height))))
+                (setq max-height
+                      (cond ((equal ecb-enlarged-compilation-window-max-height
+                                    'half)
+                             (floor (/ (1- (frame-height)) 2)))
+                            ((numberp ecb-enlarged-compilation-window-max-height)
+                             (ecb-normalize-number
+                              ecb-enlarged-compilation-window-max-height
+                              (1- (frame-height))))))
+                (enlarge-window (- (max max-height compile-window-height-lines)
+                                   (ecb-window-full-height))))
+              ;; now we set the window-start
+              (when (and (not (equal major-mode 'compilation-mode))
+                         (not compile-window-selected-p))
+                (set-window-start ecb-compile-window (point-min)))))))
     (message "No compile-window in current ECB-layout!")))
 
 ;; This function takes into account the value of of

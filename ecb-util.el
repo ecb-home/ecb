@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-util.el,v 1.97 2004/02/16 08:56:24 berndl Exp $
+;; $Id: ecb-util.el,v 1.98 2004/02/20 16:38:53 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -1003,6 +1003,23 @@ with `equal'."
         nil
       pos)))
 
+(defun ecb-last (seq)
+  "Return the last elem of the sequence SEQ."
+  (if (listp seq)
+      (car (last seq))
+    (if seq
+        (aref seq (1- (length seq)))
+      nil)))
+
+(defun ecb-first (seq)
+  "Return the first elem of the sequence SEQ."
+  (if (listp seq)
+      (car seq)
+    (if seq
+        (aref seq 0)
+      nil)))
+  
+
 (defun ecb-next-listelem (list elem &optional nth-next)
   "Return that element of LIST which follows directly ELEM when ELEM is an
 element of LIST. If ELEM is the last element of LIST then return the first
@@ -1057,9 +1074,10 @@ nil whereas in the latter case the current-buffer is assumed."
                    (ecb-current-buffer-archive-extract-p))
                (ecb-current-buffer-archive-extract-p))))))
 
-(defun ecb-fit-str-to-width (str width)
-  "If STR is longer than WIDTH then fit it to WIDTH by stripping from left and
-prepend \"...\" to signalize that the string is stripped. If WIDTH >= length
+(defun ecb-fit-str-to-width (str width from)
+  "If STR is longer than WIDTH then fit it to WIDTH by stripping from left or
+right \(depends on FROM which can be 'left or 'right) and prepend \(rsp.
+append) \"...\" to signalize that the string is stripped. If WIDTH >= length
 of STR the always STR is returned. If either WIDTH or length of STR is < 5
 then an empty string is returned because stripping makes no sense here."
   (let ((len-str (length str)))
@@ -1068,7 +1086,9 @@ then an empty string is returned because stripping makes no sense here."
       (if (or (< len-str 5) ;; we want at least two characters visible of str
               (< width 5))
           ""
-        (concat "..." (substring str (* -1 (- width 3))))))))
+        (if (equal from 'left)
+            (concat "..." (substring str (* -1 (- width 3))))
+          (concat (substring str 0 (- width 3)) "..."))))))
 
 (defun ecb-make-windows-not-dedicated (&optional frame)
   "Make all windows of FRAME not dedicated."
@@ -1117,6 +1137,8 @@ buffer-local value in BUFFER then the global value of SYM is used."
         (save-excursion
           (set-buffer buffer)
           (symbol-value sym)))))
+
+
 
 ;; ringstuff
 

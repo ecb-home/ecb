@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-mode-line.el,v 1.26 2003/11/04 17:39:40 berndl Exp $
+;; $Id: ecb-mode-line.el,v 1.27 2004/02/20 16:38:53 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -49,6 +49,7 @@
 (silentcomp-defun redraw-modeline)
 (silentcomp-defun make-extent)
 (silentcomp-defun set-extent-face)
+(silentcomp-defun set-extent-property)
 ;; Emacs
 (silentcomp-defun force-mode-line-update)
 (silentcomp-defun propertize)
@@ -61,7 +62,7 @@
 
 (defcustom ecb-mode-line-prefixes '((ecb-directories-buffer-name . nil)
                                     (ecb-sources-buffer-name . ecb-sources-filter-modeline-prefix)
-                                    (ecb-methods-buffer-name . nil)
+                                    (ecb-methods-buffer-name . ecb-methods-filter-modeline-prefix)
                                     (ecb-history-buffer-name . ecb-history-filter-modeline-prefix))
   "*Prefixes shown in the modelines of the special ECB-buffers.
 The displayed prefix then looks like: \"[ <PREFIX>[: ]]\", means if a prefix
@@ -83,6 +84,9 @@ The cdr is the prefix for a buffer and can either be a string which used as it
 is or a function-symbol which is called with three argument \(the buffer-name,
 the current selected directory and the current selected source-file) and must
 return either nil \(for no prefix) or a string which is then used a prefix.
+Such a function can add the text-property 'help-echo to the result-string.
+Then this help-string will be displayed when the user moves the mouse over
+this section of the modeline.
 
 If a special ECB-buffer should not have a prefix in its modeline then this
 buffer-name should either not being added to this option or added with \"No
@@ -151,7 +155,10 @@ In addition to these two predefined values for every special ECB-buffer either
 a simple string \(which will be displayed) or a function can be specified
 which gets three args \(name of the buffer, current selected directory and
 current selected source-file) and must return a string which will be displayed
-in the modeline \(or nil if no data should be displayed).
+in the modeline \(or nil if no data should be displayed). Such a function can
+add the text-property 'help-echo to the result-string. Then this help-string
+will be displayed when the user moves the mouse over this section of the
+modeline. 
 
 If a special ECB-buffer should not display special data in its modeline then
 this buffer-name should either not being added to this option or added with
@@ -249,16 +256,26 @@ prepended by the window-number, see `ecb-mode-line-display-window-number'."
 
 
 (defun ecb-mode-line-make-modeline-str (str face)
-  (cond (ecb-running-xemacs
-         (let ((ext (make-extent nil nil)))
-           (set-extent-face ext face)
-           (list (cons ext str))))
-        (ecb-running-emacs-21
-         (list (propertize str 'face face)))
-        (t ;; emacs 20.X
-         str)))
-
-
+  "Applies FACE to the STR. In additon it applies a help-echo to STR if STR
+contains a text-property 'help-echo."
+  (let ((strcp (copy-sequence str)))
+    (cond (ecb-running-xemacs
+           (let ((ext (make-extent nil nil))
+                 (help-echo-str
+                  (catch 'found
+                    (dotimes (i (length strcp))
+                      (if (get-text-property i 'help-echo strcp)
+                          (throw 'found
+                                 (get-text-property i 'help-echo strcp))))
+                    nil)))
+             (set-extent-face ext face)
+             (set-extent-property ext 'help-echo help-echo-str)
+             (list (cons ext strcp))))
+          (ecb-running-emacs-21
+           (list (propertize strcp 'face face)))
+          (t ;; emacs 20.X
+           strcp))))
+                 
 (defun ecb-mode-line-set (buffer-name prefix &optional text no-win-nr)
   "Sets the mode line for a buffer. The mode line has the scheme:
 \"[WIN-NR ][PREFIX[: ]][TEXT]\". WIN-NR is the number of the window which
@@ -272,9 +289,7 @@ as \"W-<number>\"."
                           (if (stringp text) " " "")))
           (win-width (window-width (get-buffer-window buffer-name)))
           (avaiable-text-width nil))
-      (setq shown-prefix (if (> (length shown-prefix) win-width)
-                             ""
-                           shown-prefix))
+      (setq shown-prefix (ecb-fit-str-to-width shown-prefix (1- win-width) 'right))
       (setq avaiable-text-width (- win-width
                                    (+ (length shown-prefix)
                                       (if (and ecb-running-emacs-21
@@ -295,9 +310,9 @@ as \"W-<number>\"."
                                               ecb-mode-line-prefix-face)
              (ecb-mode-line-make-modeline-str
               (concat (if (stringp text)
-                          (ecb-fit-str-to-width
-                           text
-                           avaiable-text-width)))
+                          (ecb-fit-str-to-width text
+                                                avaiable-text-width
+                                                'left)))
               ecb-mode-line-data-face))))))
 
 
