@@ -266,6 +266,7 @@ EXPAND-SYMBOL-BEFORE: If not nil then the expand-symbol \(is displayed before
   (make-local-variable 'tree-buffer-highlight-overlay)
   
   (setq truncate-lines tr-lines)
+  (setq track-mouse t)
   (setq tree-buffer-key-map (make-sparse-keymap))
   (setq tree-node-selected-fn node-selected-fn)
   (setq tree-node-expanded-fn node-expanded-fn)

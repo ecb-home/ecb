@@ -392,7 +392,7 @@ This option takes only effect if `ecb-font-lock-methods' is on."
   :type '(radio (const :tag "Always"
                        :value always)
                 (const :tag "If longer than window-width"
-                       :value if-to-long)
+                       :value if-too-long)
                 (const :tag "Never"
                        :value nil)))
 
@@ -682,6 +682,7 @@ highlighting of the methods if `ecb-font-lock-methods' is not nil."
 (defun ecb-update-methods-buffer()
   "Updates the methods buffer with the current buffer."
   (tree-node-set-children ecb-methods-root-node nil)
+  ;;  (print (semantic-bovinate-toplevel t))
   (ecb-add-tokens ecb-methods-root-node
 		  (condition-case nil
 		      ;; semantic <= 1.2.1
@@ -938,7 +939,7 @@ For further explanation see `ecb-clear-history-behavior'."
 (defun ecb-mouse-over-node(node)
   (cond ((eq ecb-show-node-name-in-minibuffer 'always)
          (message "%s" (tree-node-get-name node)))
-        ((eq ecb-show-node-name-in-minibuffer 'if-to-long)
+        ((eq ecb-show-node-name-in-minibuffer 'if-too-long)
          (if (>= (length (tree-node-get-name node)) (window-width))
              (message "%s" (tree-node-get-name node))
            ;; we must delete here the old message so no wrong info is
