@@ -1,16 +1,9 @@
-- Enable ECB to handle remote paths correct (e.g. angeftp, efs- or
-  tramp-paths)
-
 - Prevent layout-engine from splitting windows when smaller than
   window-min-height/width.
 
 - Implementing the class-browser of speedbar native with ECB in an
   additional special ecb-window - a very important todo of high
   priority!
-
-- Displaying the version-control-state of a file concerning (for this we can
-  probably steal 90% of the needed code from speedbar). Probably we should
-  display this with a appropriate suffix (or a image)
 
 - Distinction of include-tags by "" or <>. This can be done via
   (semantic-tag-include-system-p TAG). Thanks to Markus grietsch.
