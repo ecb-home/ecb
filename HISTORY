@@ -1,6 +1,9 @@
 Version 1.90:
 -------------
 
+* Now autom. (de)activating ECB via the options ecb-major-modes-activate and
+  ecb-major-modes-deactivate also works when opening files via dired (Klaus).
+
 * Added a complete new section "The layout-engine of ECB" to the online-help
   which describes in detail how to program new layouts and new special
   windows. This is for foreign packages which want to display own informations

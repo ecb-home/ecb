@@ -2768,6 +2768,11 @@ is unsplitted and point is in the edit-window to avoid changing
 unnecessarily or unintentionally the frame-layout if the user just
 jumps between different edit-windows, the tree-windows and the
 compile-window of ECB.
+
+There is one exception from this rule: If the edit-window is splitted
+and one window contains a dired-buffer and a ``ECB-deactivating''-file
+is openend via dired then opening this file deactivates ECB (resp.
+hides the ECB-windows).
 @end defopt
 
 @defopt minor-mode-text
