@@ -39,8 +39,8 @@ then also the string \": \" is appended."
   :group 'ecb-general
   :set (function (lambda (symbol value)
                    (set symbol value)
-                   (if (and (boundp 'ecb-activated)
-                            ecb-activated)
+                   (if (and (boundp 'ecb-minor-mode)
+                            ecb-minor-mode)
                        (ecb-mode-line-format))))
   :initialize 'custom-initialize-default
   :type '(list (radio :tag "Directory-buffer"
