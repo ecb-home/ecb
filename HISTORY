@@ -1,6 +1,8 @@
 Version 1.61:
 -------------
 
+- ecb-eshell now supports customization.  (Kevin)
+
 - New feature: If we are in an ECB special buffer (methods, directories, etc),
 and `split-window' or friends are called, we will select the `ecb-edit-window'
 first.  This is useful if you have any functions that split windows and you

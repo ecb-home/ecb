@@ -88,7 +88,8 @@
 ;;   sometimes a new frame will come up.
 ;;
 ;;   - this only comes up the FIRST time I select a buffer.  Could some variable
-;;     be changed?
+;;     be changed?  Maybe the `dframe-attached-frame' or
+;;     `speedbar-attached-frame' needs to be setup correctly.
 ;;    
 ;; - instead of ecb-layout-function-20 use ecb-layout-function-speedbar-1
 ;;
