@@ -197,7 +197,7 @@ buffer."
   :group 'ecb-sources
   :type 'regexp)
 
-(defcustom ecb-source-file-exclude-regexp "\\(^\\.[^eg]*\\|~$\\)"
+(defcustom ecb-source-file-exclude-regexp "\\(^\\.[^eg].*\\|~$\\)"
   "*Files matching this regular expression will not be shown in the source
 buffer."
   :group 'ecb-sources
