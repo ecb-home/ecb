@@ -4022,6 +4022,17 @@ always the ECB-frame if called from another frame."
     
     (setq ecb-activated-window-configuration (current-window-configuration))))
 
+(defun ecb-ediff-quit-hook ()
+  "Added to the end of `ediff-quit-hook' during ECB is activated. It
+does all necessary after finishing ediff."
+  (when ecb-minor-mode
+    (if (and (not (equal (selected-frame) ecb-frame))
+             (y-or-n-p
+              "Ediff finished. Do you want to delete the extra ediff-frame? "))
+        (delete-frame (selected-frame) t))
+    (select-frame ecb-frame)
+    (ecb-redraw-layout)))
+
 (defun ecb-deactivate ()
   "Deactivates the ECB and kills all ECB buffers and windows."
   (interactive)
