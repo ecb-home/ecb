@@ -24,7 +24,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-method-browser.el,v 1.22 2004/03/12 16:48:19 berndl Exp $
+;; $Id: ecb-method-browser.el,v 1.23 2004/03/14 19:05:47 berndl Exp $
 
 ;;; Commentary:
 
@@ -553,7 +553,7 @@ by semantic!"
 ;; (defcustom ecb-default-tag-filter nil
 ;;   "*"
 ;;   :group 'ecb-methods
-;;   :type 'boolean)
+;;   :type '(repeat ))
 
 (defcustom ecb-show-only-positioned-tags t
   "*Show only nodes in the method-buffer which are \"jump-able\".
@@ -819,40 +819,40 @@ fulfilled:
   (or (member fnc (cdr (assoc 'default ecb-tag-visit-post-actions)))
       (member fnc (cdr (assoc major-mode ecb-tag-visit-post-actions)))))
 
-(defcustom ecb-methods-menu-user-extension
-  '(("Filter tags"
-     (ecb-methods-filter-by-nothing-popup "No tag filter")
-     (ecb-methods-filter-delete-last-popup "Remove last added")
-      ("---")
-     (ecb-methods-filter-by-regexp-popup "By regexp")
-     ("By protection"
-      (ecb-methods-filter-by-private-prot "private")
-      (ecb-methods-filter-by-protected-prot "protected")
-      (ecb-methods-filter-by-public-prot "public"))
-     ("By tag-class"
-      (ecb-methods-filter-by-function-tagclass "function")
-      (ecb-methods-filter-by-variable-tagclass "variable")
-      (ecb-methods-filter-by-type-tagclass "type")
-      (ecb-methods-filter-by-include-tagclass "include")
-      (ecb-methods-filter-by-rule-tagclass "rule")
-      (ecb-methods-filter-by-section-tagclass "section")
-      (ecb-methods-filter-by-def-tagclass "def"))
-     (ecb-methods-filter-by-function-popup "By a filter-function")
-     ("---")
-     (ecb-methods-filter-by-regexp-popup-inverse "By inverse regexp")
-     ("By inverse protection"
-      (ecb-methods-filter-by-private-prot-inverse "not private")
-      (ecb-methods-filter-by-protected-prot-inverse "not protected")
-      (ecb-methods-filter-by-public-prot-inverse "not public"))
-     ("By inverse tag-class"
-      (ecb-methods-filter-by-function-tagclass-inverse "not function")
-      (ecb-methods-filter-by-variable-tagclass-inverse "not variable")
-      (ecb-methods-filter-by-type-tagclass-inverse "not type")
-      (ecb-methods-filter-by-include-tagclass-inverse "not include")
-      (ecb-methods-filter-by-rule-tagclass-inverse "not rule")
-      (ecb-methods-filter-by-section-tagclass-inverse "not section")
-      (ecb-methods-filter-by-def-tagclass-inverse "not def"))
-     (ecb-methods-filter-by-function-popup-inverse "By a inverse filter-function")))
+(defcustom ecb-methods-menu-user-extension nil
+;;   '(("Filter tags"
+;;      (ecb-methods-filter-by-nothing-popup "No tag filter")
+;;      (ecb-methods-filter-delete-last-popup "Remove last added")
+;;       ("---")
+;;      (ecb-methods-filter-by-regexp-popup "By regexp")
+;;      ("By protection"
+;;       (ecb-methods-filter-by-private-prot "private")
+;;       (ecb-methods-filter-by-protected-prot "protected")
+;;       (ecb-methods-filter-by-public-prot "public"))
+;;      ("By tag-class"
+;;       (ecb-methods-filter-by-function-tagclass "function")
+;;       (ecb-methods-filter-by-variable-tagclass "variable")
+;;       (ecb-methods-filter-by-type-tagclass "type")
+;;       (ecb-methods-filter-by-include-tagclass "include")
+;;       (ecb-methods-filter-by-rule-tagclass "rule")
+;;       (ecb-methods-filter-by-section-tagclass "section")
+;;       (ecb-methods-filter-by-def-tagclass "def"))
+;;      (ecb-methods-filter-by-function-popup "By a filter-function")
+;;      ("---")
+;;      (ecb-methods-filter-by-regexp-popup-inverse "By inverse regexp")
+;;      ("By inverse protection"
+;;       (ecb-methods-filter-by-private-prot-inverse "not private")
+;;       (ecb-methods-filter-by-protected-prot-inverse "not protected")
+;;       (ecb-methods-filter-by-public-prot-inverse "not public"))
+;;      ("By inverse tag-class"
+;;       (ecb-methods-filter-by-function-tagclass-inverse "not function")
+;;       (ecb-methods-filter-by-variable-tagclass-inverse "not variable")
+;;       (ecb-methods-filter-by-type-tagclass-inverse "not type")
+;;       (ecb-methods-filter-by-include-tagclass-inverse "not include")
+;;       (ecb-methods-filter-by-rule-tagclass-inverse "not rule")
+;;       (ecb-methods-filter-by-section-tagclass-inverse "not section")
+;;       (ecb-methods-filter-by-def-tagclass-inverse "not def"))
+;;      (ecb-methods-filter-by-function-popup-inverse "By a inverse filter-function")))
   "*Static user extensions for the popup-menu of the methods buffer.
 For further explanations see `ecb-directories-menu-user-extension'.
 
@@ -1391,124 +1391,36 @@ filter belongs and the value is the applied filter to that buffer.")
                               (concat (and inverse "^") "Prot")
                               source-buffer)))
 
-(tree-buffer-defpopup-command ecb-methods-filter-by-private-prot
-  "Filter all tags with private protection."
-  (ecb-methods-filter-by-prot nil
-                              (car (tree-buffer-get-data-store))
-                              "private"))
-(tree-buffer-defpopup-command ecb-methods-filter-by-protected-prot
-  "Filter all tags with protected protection."
-  (ecb-methods-filter-by-prot nil
-                              (car (tree-buffer-get-data-store))
-                              "protected"))
-(tree-buffer-defpopup-command ecb-methods-filter-by-public-prot
-  "Filter all tags with public protection."
-  (ecb-methods-filter-by-prot nil
-                              (car (tree-buffer-get-data-store))
-                              "public"))
-(tree-buffer-defpopup-command ecb-methods-filter-by-private-prot-inverse
-  "Filter all tags with not private protection."
-  (ecb-methods-filter-by-prot t
-                              (car (tree-buffer-get-data-store))
-                              "private"))
-(tree-buffer-defpopup-command ecb-methods-filter-by-protected-prot-inverse
-  "Filter all tags with not protected rtotection."
-  (ecb-methods-filter-by-prot t
-                              (car (tree-buffer-get-data-store))
-                              "protected"))
-(tree-buffer-defpopup-command ecb-methods-filter-by-public-prot-inverse
-  "Filter all tags with not public protection."
-  (ecb-methods-filter-by-prot t
-                              (car (tree-buffer-get-data-store))
-                              "public"))
-
 (defun ecb-methods-filter-by-tag-class (inverse source-buffer
                                                 &optional tag-class)
   "Filter the Methods-buffer by a tag-class."
-  (let* ((choice (or tag-class
+  (let* ((curr-semantic-symbol->name-assoc-list
+          (save-excursion
+            (set-buffer source-buffer)
+            (ecb--semantic-symbol->name-assoc-list)))
+         (choice (or tag-class
                      (ecb-query-string "Tag-class filter:"
-                                       '("function" "variable" "type"
-                                         "include" "rule" "section" "def")))))
+                                       (mapcar 'cdr
+                                               curr-semantic-symbol->name-assoc-list))))
+         (class (or tag-class
+                    (symbol-name
+                     (car (delq nil (mapcar (function (lambda (e)
+                                                        (if (string= (cdr e) choice)
+                                                            (car e))))
+                                            curr-semantic-symbol->name-assoc-list)))))))
+    (message "Klausi: %s, %s"
+             (if (symbolp class) "Symbol" "String")
+             class)
     (ecb-methods-filter-apply 'tag-class
-                              (intern choice)
+                              (intern class)
                               inverse
                               (concat (and inverse "^") "Tagclass")
                               source-buffer)))
 
-(tree-buffer-defpopup-command ecb-methods-filter-by-function-tagclass
-  "Filter all tags with tag-class function."
-  (ecb-methods-filter-by-tag-class nil
-                                   (car (tree-buffer-get-data-store))
-                                   "function"))
-(tree-buffer-defpopup-command ecb-methods-filter-by-variable-tagclass
-  "Filter all tags with tag-class variable."
-  (ecb-methods-filter-by-tag-class nil
-                                   (car (tree-buffer-get-data-store))
-                                   "variable"))
-(tree-buffer-defpopup-command ecb-methods-filter-by-type-tagclass
-  "Filter all tags with tag-class type."
-  (ecb-methods-filter-by-tag-class nil
-                                   (car (tree-buffer-get-data-store))
-                                   "type"))
-(tree-buffer-defpopup-command ecb-methods-filter-by-include-tagclass
-  "Filter all tags with tag-class include"
-  (ecb-methods-filter-by-tag-class nil
-                                   (car (tree-buffer-get-data-store))
-                                   "include"))
-(tree-buffer-defpopup-command ecb-methods-filter-by-rule-tagclass
-  "Filter all tags with tag-class rule."
-  (ecb-methods-filter-by-tag-class nil
-                                   (car (tree-buffer-get-data-store))
-                                   "rule"))
-(tree-buffer-defpopup-command ecb-methods-filter-by-section-tagclass
-  "Filter all tags with tag-class section."
-  (ecb-methods-filter-by-tag-class nil
-                                   (car (tree-buffer-get-data-store))
-                                   "section"))
-(tree-buffer-defpopup-command ecb-methods-filter-by-def-tagclass
-  "Filter all tags with tag-class def."
-  (ecb-methods-filter-by-tag-class nil
-                                   (car (tree-buffer-get-data-store))
-                                   "def"))
-(tree-buffer-defpopup-command ecb-methods-filter-by-function-tagclass-inverse
-  "Filter all tags with tag-class unequal function."
-  (ecb-methods-filter-by-tag-class t
-                                   (car (tree-buffer-get-data-store))
-                                   "function"))
-(tree-buffer-defpopup-command ecb-methods-filter-by-variable-tagclass-inverse
-  "Filter all tags with tag-class unequal variable."
-  (ecb-methods-filter-by-tag-class t
-                                   (car (tree-buffer-get-data-store))
-                                   "variable"))
-(tree-buffer-defpopup-command ecb-methods-filter-by-type-tagclass-inverse
-  "Filter all tags with tag-class unequal type."
-  (ecb-methods-filter-by-tag-class t
-                                   (car (tree-buffer-get-data-store))
-                                   "type"))
-(tree-buffer-defpopup-command ecb-methods-filter-by-include-tagclass-inverse
-  "Filter all tags with tag-class unequal include"
-  (ecb-methods-filter-by-tag-class t
-                                   (car (tree-buffer-get-data-store))
-                                   "include"))
-(tree-buffer-defpopup-command ecb-methods-filter-by-rule-tagclass-inverse
-  "Filter all tags with tag-class unequal rule."
-  (ecb-methods-filter-by-tag-class t
-                                   (car (tree-buffer-get-data-store))
-                                   "rule"))
-(tree-buffer-defpopup-command ecb-methods-filter-by-section-tagclass-inverse
-  "Filter all tags with tag-class unequal section."
-  (ecb-methods-filter-by-tag-class t
-                                   (car (tree-buffer-get-data-store))
-                                   "section"))
-(tree-buffer-defpopup-command ecb-methods-filter-by-def-tagclass-inverse
-  "Filter all tags with tag-class unequal def."
-  (ecb-methods-filter-by-tag-class t
-                                   (car (tree-buffer-get-data-store))
-                                   "def"))
 
-(defun ecb-methods-filter-by-regexp (inverse source-buffer)
+(defun ecb-methods-filter-by-regexp (inverse source-buffer &optional regexp)
   "Filter the Methods-buffer by a regular expression."
-  (let ((regexp-str (read-string "Filter-regexp: ")))
+  (let ((regexp-str (or regexp (read-string "Filter-regexp: "))))
     (ecb-methods-filter-apply 'regexp
                               (if (> (length regexp-str) 0) regexp-str nil)
                               inverse
@@ -1623,10 +1535,10 @@ So you get a better overlooking. There are six choices:
 - Filter by protection: Just insert the protection you want the Methods-buffer
   being filtered: private, protected or public!
 - Filter by regexp: Insert the filter as regular expression.
-- Filter by tag-class: You can filter by the tag-classes include, type,
-  variable, function, rule, section \(chapters and sections in `info-mode'),
-  def \(definitions in `info-mode'). These are just examples, in general all
-  tag-classes supported by semantic can be used.
+- Filter by tag-class: You can filter by the tag-classes of current
+  major-mode. The available tag-classes come from the variable
+  `semantic--symbol->name-assoc-list'. The are normally methods, variables
+  etc.
 - Filter by a filter-function: Such a function gets two arguments: a tag and
   the source-buffer of this tag. If the tag should be displayed \(i.e. not
   being filtered out) then the function has to return not nil otherwise nil.
@@ -1635,6 +1547,9 @@ So you get a better overlooking. There are six choices:
   will be all removed.
 - Delete the last added: This removes only the topmost filter-layer, means
   that filter added last.
+
+The protection- and the tag-class-filter is only available for
+semantic-supported sources.
 
 Be aware that the tag-list specified by the option `ecb-show-tags' is the
 basis of all filters, i.e. tags which are excluded by that option will never
@@ -1665,31 +1580,40 @@ parens. You can see all currently applied filters by moving the mouse over the
 filter-string in modeline of the Methods-buffer: They will displayed as
 help-echo."
   (interactive "P")
-  (let ((source-buffer (cond ((ecb-point-in-edit-window)
-                              (current-buffer))
-                             ((equal (current-buffer)
-                                     (get-buffer ecb-methods-buffer-name))
-                              (car (tree-buffer-get-data-store)))
-                             (t (or (and ecb-last-source-buffer
-                                         (buffer-live-p ecb-last-source-buffer)
-                                         ecb-last-source-buffer)
-                                    (ecb-error "There is no source-file to filter!")))))
-        (choice (ecb-query-string
-                 (format "Apply %sfilter:"
-                         (if inverse "inverse " ""))
-                 '("regexp" "protection" "tag-class"
-                   "function" "no filter" "delete last"))))
-    (cond ((string= choice "protection")
-           (ecb-methods-filter-by-prot inverse source-buffer))
-          ((string= choice "tag-class")
-           (ecb-methods-filter-by-tag-class inverse source-buffer))
-          ((string= choice "regexp")
-           (ecb-methods-filter-by-regexp inverse source-buffer))
-          ((string= choice "function")
-           (ecb-methods-filter-by-function inverse source-buffer))
-          ((string= choice "delete last")
-           (ecb-methods-filter-apply nil nil nil "" source-buffer t))
-          (t (ecb-methods-filter-apply nil nil nil "" source-buffer)))))
+  (if (save-excursion
+        (set-buffer ecb-methods-buffer-name)
+        (tree-buffer-empty-p))
+      (message "There is nothing to filter in an empty Methods-buffer!")
+    (let* ((source-buffer (cond ((ecb-point-in-edit-window)
+                                 (current-buffer))
+                                ((equal (current-buffer)
+                                        (get-buffer ecb-methods-buffer-name))
+                                 (car (tree-buffer-get-data-store)))
+                                (t (or (and ecb-last-source-buffer
+                                            (buffer-live-p ecb-last-source-buffer)
+                                            ecb-last-source-buffer)
+                                       (ecb-error "There is no source-file to filter!")))))
+           (semantic-source-p (save-excursion
+                                (set-buffer source-buffer)
+                                (ecb--semantic-active-p)))
+           (choice (ecb-query-string
+                    (format "Apply %sfilter:"
+                            (if inverse "inverse " ""))
+                    (delq nil (list "regexp"
+                                    (if semantic-source-p "protection")
+                                    (if semantic-source-p "tag-class")
+                                    "function" "no filter" "delete last")))))
+      (cond ((string= choice "protection")
+             (ecb-methods-filter-by-prot inverse source-buffer))
+            ((string= choice "tag-class")
+             (ecb-methods-filter-by-tag-class inverse source-buffer))
+            ((string= choice "regexp")
+             (ecb-methods-filter-by-regexp inverse source-buffer))
+            ((string= choice "function")
+             (ecb-methods-filter-by-function inverse source-buffer))
+            ((string= choice "delete last")
+             (ecb-methods-filter-apply nil nil nil "" source-buffer t))
+            (t (ecb-methods-filter-apply nil nil nil "" source-buffer))))))
 
 
 (defun ecb-methods-filter-apply (filtertype filter inverse filter-display
@@ -1772,11 +1696,15 @@ the option `ecb-mode-line-prefixes'."
 (defun ecb-add-tags (node tags &optional parent-tag no-bucketize)
   "If NO-BUCKETIZE is not nil then TAGS will not bucketized by
 `ecb--semantic-bucketize' but must already been bucketized!"
-  (ecb-add-tag-buckets node parent-tag
-                       (if no-bucketize
-                           tags
-                         (ecb--semantic-bucketize tags))
-                       no-bucketize))
+  (ecb-add-tag-buckets
+   node parent-tag
+   (if no-bucketize
+       tags
+     (ecb--semantic-bucketize tags
+                              (and parent-tag
+                                   (equal (ecb--semantic-tag-class parent-tag)
+                                          'type))))
+   no-bucketize))
 
 
 (defun ecb-access-order (access)
@@ -2041,7 +1969,10 @@ to be rescanned/reparsed and therefore the Method-buffer will be rebuild too."
            (cache (assoc norm-buffer-file-name ecb-tag-tree-cache))
            (curr-buff (current-buffer))
            (curr-major-mode major-mode)
-           new-tree non-semantic-handling)
+           (curr-semantic-symbol->name-assoc-list
+            (and (ecb--semantic-active-p)
+                 (ecb--semantic-symbol->name-assoc-list)))
+            new-tree non-semantic-handling)
       
       (if ecb-debug-mode
           (dolist (a-tag updated-cache)
@@ -2104,7 +2035,8 @@ to be rescanned/reparsed and therefore the Method-buffer will be rebuild too."
         (ecb-buffer-select ecb-methods-buffer-name)
         ;; we store in the tree-buffer the buffer and the major-mode for which
         ;; the tree-buffer has been build
-        (tree-buffer-set-data-store (cons curr-buff curr-major-mode))
+        (tree-buffer-set-data-store (list curr-buff curr-major-mode
+                                          curr-semantic-symbol->name-assoc-list))
         (tree-buffer-set-root (cdr cache))
         (setq ecb-methods-root-node (cdr cache))
         (tree-buffer-update)))
@@ -3043,30 +2975,11 @@ this fails then nil is returned otherwise t."
   "The menu-title for the methods menu. See
 `ecb-directories-menu-title-creator'.")
 
-(tree-buffer-defpopup-command ecb-jump-to-tag-in-editwin1
-  "Jump to current tag in the 1. edit-window."
-  (ecb-method-clicked node 3 1 nil))
-(tree-buffer-defpopup-command ecb-jump-to-tag-in-editwin2
-  "Jump to current tag in the 2. edit-window."
-  (ecb-method-clicked node 3 2 nil))
-(tree-buffer-defpopup-command ecb-jump-to-tag-in-editwin3
-  "Jump to current tag in the 3. edit-window."
-  (ecb-method-clicked node 3 3 nil))
-(tree-buffer-defpopup-command ecb-jump-to-tag-in-editwin4
-  "Jump to current tag in the 4. edit-window."
-  (ecb-method-clicked node 3 4 nil))
-(tree-buffer-defpopup-command ecb-jump-to-tag-in-editwin5
-  "Jump to current tag in the 5. edit-window."
-  (ecb-method-clicked node 3 5 nil))
-(tree-buffer-defpopup-command ecb-jump-to-tag-in-editwin6
-  "Jump to current tag in the 6. edit-window."
-  (ecb-method-clicked node 3 6 nil))
-(tree-buffer-defpopup-command ecb-jump-to-tag-in-editwin7
-  "Jump to current tag in the 7. edit-window."
-  (ecb-method-clicked node 3 7 nil))
-(tree-buffer-defpopup-command ecb-jump-to-tag-in-editwin8
-  "Jump to current tag in the 8. edit-window."
-  (ecb-method-clicked node 3 8 nil))
+(dotimes (i 8)
+  (eval `(tree-buffer-defpopup-command
+             ,(intern (format "ecb-jump-to-tag-in-editwin%d" (1+ i)))
+           ,(format "Jump to current tag in the %d. edit-window." (1+ i))
+           (ecb-method-clicked node 3 ,(1+ i) nil))))
 
 (defun ecb-methods-menu-editwin-entries ()
   "Generate popup-menu-entries for each edit-window if there are at least 2
@@ -3083,32 +2996,141 @@ edit-windows. Otherwise return nil."
               (list (append (list "Jump to tag in ...")
                             result))))))
 
-;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: Here we should create all
-;; tag-filter popup-menu entries; then we can do this dynamically according to
-;; the current major-mode (normally each major-mode has its own tag-class
-;; namings)
+
+(defun ecb-methods-menu-tagfilter-entries ()
+  "Generate popup-menu-entries for the tag-filtering"
+  (let* ((curr-semantic-symbol->name-assoc-list (nth 2 (tree-buffer-get-data-store)))
+         (prot-list '("private" "protected" "public"))
+         (prot-menu-elems nil)
+         (prot-menu-elems-inverse nil)
+         (prot-menu-entries nil)
+         (prot-menu-entries-inverse)
+         (tag-menu-class-elems nil)
+         (tag-menu-class-elems-inverse nil)
+         (tag-menu-class-entries nil)
+         (tag-menu-class-entries-inverse nil))
+    ;; First we have to define all the needed tree-buffer-commands for
+    ;; protection- and tagclass-filtering. But this is only done for
+    ;; semantic-sources and also the first time.
+    (when curr-semantic-symbol->name-assoc-list
+      (dolist (tag-class curr-semantic-symbol->name-assoc-list)
+        (let ((fcn-sym (intern (format "ecb-methods-filter-by-%s-tagclass"
+                                       (car tag-class)))))
+          (setq tag-menu-class-elems (cons (cons fcn-sym (cdr tag-class))
+                                           tag-menu-class-elems))
+          (when (not (fboundp fcn-sym))
+            (eval `(tree-buffer-defpopup-command ,fcn-sym
+                     ,(format "Filter all tags with tag-class '%s." (car tag-class))
+                     (ecb-methods-filter-by-tag-class nil
+                                                      (car (tree-buffer-get-data-store))
+                                                      ,(symbol-name (car tag-class))))))))
+      (dolist (tag-class curr-semantic-symbol->name-assoc-list)
+        (let ((fcn-sym (intern (format "ecb-methods-filter-by-%s-tagclass-inverse"
+                                       (car tag-class)))))
+          (setq tag-menu-class-elems-inverse
+                (cons (cons fcn-sym (concat "not " (cdr tag-class)))
+                      tag-menu-class-elems-inverse))
+          (when (not (fboundp fcn-sym))
+            (eval `(tree-buffer-defpopup-command ,fcn-sym
+                     ,(format "Filter all tags with tag-class unequal '%s."
+                              (car tag-class))
+                     (ecb-methods-filter-by-tag-class t
+                                                      (car (tree-buffer-get-data-store))
+                                                      ,(symbol-name (car tag-class))))))))
+      (dolist (prot prot-list)
+        (let ((fcn-sym (intern (format "ecb-methods-filter-by-%s-prot" prot))))
+          (setq prot-menu-elems (cons (cons fcn-sym prot)
+                                      prot-menu-elems))
+          (when (not (fboundp fcn-sym))
+            (eval `(tree-buffer-defpopup-command ,fcn-sym
+                     ,(format "Filter all tags with %s protection." prot)
+                     (ecb-methods-filter-by-prot nil
+                                                 (car (tree-buffer-get-data-store))
+                                                 ,prot))))))
+      (dolist (prot prot-list)
+        (let ((fcn-sym (intern (format "ecb-methods-filter-by-%s-prot-inverse" prot))))
+          (setq prot-menu-elems-inverse
+                (cons (cons fcn-sym (concat "not " prot))
+                      prot-menu-elems-inverse))
+          (when (not (fboundp fcn-sym))
+            (eval `(tree-buffer-defpopup-command ,fcn-sym
+                     ,(format "Filter all tags with not %s protection." prot)
+                     (ecb-methods-filter-by-prot t
+                                                 (car (tree-buffer-get-data-store))
+                                                 ,prot)))))))
+    ;; building the menu-entries-list for tag-classes and protections.
+    (dolist (elem tag-menu-class-elems)
+      (setq tag-menu-class-entries
+            (append tag-menu-class-entries
+                    (list (list (car elem) (cdr elem))))))
+    (dolist (elem tag-menu-class-elems-inverse)
+      (setq tag-menu-class-entries-inverse
+            (append tag-menu-class-entries-inverse
+                    (list (list (car elem) (cdr elem))))))
+    (dolist (elem prot-menu-elems)
+      (setq prot-menu-entries
+            (append prot-menu-entries
+                    (list (list (car elem) (cdr elem))))))
+    (dolist (elem prot-menu-elems-inverse)
+      (setq prot-menu-entries-inverse
+            (append prot-menu-entries-inverse
+                    (list (list (car elem) (cdr elem))))))
+    ;; building the complete filter-menu
+    (append nil ;; (list (list "---")) ;; we want a separator
+            (list (append (list "Filter tags")
+                          (list '(ecb-methods-filter-by-nothing-popup
+                                  "No tag filter")
+                                '(ecb-methods-filter-delete-last-popup
+                                  "Remove last added")
+                                '("---")
+                                '(ecb-methods-filter-by-regexp-popup
+                                  "By regexp"))
+                          (when prot-menu-entries
+                            (list (append (list "By protection")
+                                          prot-menu-entries)))
+                          (when tag-menu-class-entries
+                            (list (append (list "By tag-class")
+                                          tag-menu-class-entries)))
+                          (list '(ecb-methods-filter-by-function-popup
+                                  "By a filter-function")
+                                '("---")
+                                '(ecb-methods-filter-by-regexp-popup-inverse
+                                  "By inverse regexp"))
+                          (when prot-menu-entries-inverse
+                            (list (append (list "By inverse protection")
+                                          prot-menu-entries-inverse)))
+                          (when tag-menu-class-entries-inverse
+                            (list (append (list "By inverse tag-class")
+                                          tag-menu-class-entries-inverse)))
+                          (list '(ecb-methods-filter-by-function-popup-inverse
+                                  "By a inverse filter-function")))))))
+    
 (defun ecb-methods-menu-creator (tree-buffer-name)
   "Creates the popup-menus for the methods-buffer."
   (setq ecb-layout-prevent-handle-ecb-window-selection t)
   (let ((dyn-user-extension
          (and (functionp ecb-methods-menu-user-extension-function)
               (funcall ecb-methods-menu-user-extension-function)))
-        (dyn-builtin-extension (ecb-methods-menu-editwin-entries)))
+        (dyn-builtin-extension-edit-win (ecb-methods-menu-editwin-entries))
+        (dyn-builtin-extension-tagfilter (ecb-methods-menu-tagfilter-entries)))
     (list (cons 0 (funcall (or ecb-methods-menu-sorter
                                'identity)
                            (append dyn-user-extension
                                    ecb-methods-menu-user-extension
+                                   dyn-builtin-extension-tagfilter
                                    ecb-methods-tag-menu
-                                   dyn-builtin-extension)))
+                                   dyn-builtin-extension-edit-win)))
           (cons 1 (funcall (or ecb-methods-menu-sorter
                                'identity)
                            (append dyn-user-extension
                                    ecb-methods-menu-user-extension
+                                   dyn-builtin-extension-tagfilter
                                    ecb-common-methods-menu)))
           (cons 2 (funcall (or ecb-methods-menu-sorter
                                'identity)
                            (append dyn-user-extension
                                    ecb-methods-menu-user-extension
+                                   dyn-builtin-extension-tagfilter
                                    ecb-common-methods-menu))))))
 
 (defun ecb-create-methods-tree-buffer ()

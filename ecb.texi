@@ -26,7 +26,7 @@
 @c GNU Emacs; see the file COPYING.  If not, write to the Free Software
 @c Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-@c $Id: ecb.texi,v 1.164 2004/03/13 19:17:09 berndl Exp $
+@c $Id: ecb.texi,v 1.165 2004/03/14 19:05:46 berndl Exp $
 
 @setfilename ecb.info
 
@@ -1997,7 +1997,7 @@ documentation of this function for details.
 @item
 An integer which indicates how many steps away from the current
 selected window the ``other-window'' is. Is nil when this function is
-called in another context then for @code{other-window}.
+called in another context than for @code{other-window}.
 @end enumerate
 
 The function has to return a window-object which is then used as
@@ -2016,6 +2016,7 @@ Here is an example for such a function:
                                    minibuf-win
                                    point-loc
                                    nth-window)
+  "Implements the smart-setting of `ecb-other-window-behavior'."
   (if minibuf-win
       ;; if we have an active mini-buffer we delegate this to
       ;; `ecb-get-other-window-minibuf-active'
@@ -2027,31 +2028,27 @@ Here is an example for such a function:
                                            point-loc
                                            nth-window)
     ;; here we have no active minibuffer!
-    (let* ((nth-win (or nth-window 1))
-           (next-listelem-fcn (if (< nth-win 0)
-                                  'ecb-prev-listelem
-                                'ecb-next-listelem)))
+    (let ((nth-win (or nth-window 1)))
       (cond ((equal point-loc 'ecb)
-             (funcall next-listelem-fcn ecb-win-list
-                      (selected-window) nth-win))
+             (ecb-next-listelem ecb-win-list (selected-window) nth-win))
             ((equal point-loc 'compile)
              (if (= nth-win 1)
                  (or (and ecb-last-edit-window-with-point
                           (window-live-p ecb-last-edit-window-with-point)
                           ecb-last-edit-window-with-point)
                      (car edit-win-list))
-               (funcall next-listelem-fcn
-                        (append edit-win-list (list (selected-window)))
-                        (selected-window)
-                        nth-win)))
+               (ecb-next-listelem (append edit-win-list
+                                          (list (selected-window)))
+                                  (selected-window)
+                                  nth-win)))
             (t ;; must be an edit-window
-             (funcall next-listelem-fcn
-                      (append edit-win-list
-                              (if (and comp-win
-                                       (= (length edit-win-list) 1))
-                                  (list comp-win)))
-                      (selected-window)
-                      nth-win))))))
+             (ecb-next-listelem (append edit-win-list
+                                        (if (and comp-win
+                                                 (= (length edit-win-list)
+                                                    1))
+                                            (list comp-win)))
+                                (selected-window)
+                                nth-win))))))
 @end group
 @end example
 
@@ -2332,16 +2329,25 @@ popup-menu of the Methods-buffer.
 @itemize @bullet
 @item Filter by protection:
 Just insert the protection you want the Methods-buffer being filtered:
-private, protected or public!
+private, protected or public! For sources not supported by semantic
+the protection filter will not be offered because these informations
+are not available for such sources.
 
 @item Filter by regexp:
 Insert the filter as regular expression.
 
 @item Filter by tag-class:
-You can filter by the tag-classes include, type, variable, function,
-rule, section (chapters and sections in @code{Info-mode}), def
-(definitions in @code{Info-mode}). These are just examples, in general
-all tag-classes supported by semantic can be used.
+You can filter by tag-classes. The popup-menu contains mode-dependend
+tag-filter entries and the command @code{ecb-methods-filter} offers
+only the tag-classes of the current mode. This means for sources not
+supported by semantic the tag-class filter will not be offered. And
+for semantic-supported sources exactly these tag-classes are offered
+the semantic-parser for the current major-mode offers. For example
+texi-sources can only be filtered by the tag-classes ``Definitions''
+and ``Sections'' and java-sources can be filtered by ``Methods'',
+``Variables'', ``Classes'' etc. In general the semantic-variable
+@code{semantic-symbol->name-assoc-list} is used to get the right
+tag-classes.
 
 @item Filter by a filter-function:
 Such a function gets two arguments: a tag and the source-buffer of
@@ -2370,8 +2376,8 @@ source-buffer, i.e. each source-buffer can have its own tag-filters.
 These tag-filters can also applied to sources which are not supported
 by the semantic-parser but ``only'' by imenu or etags. But because for
 these sources not all information are avaiable the protection- and
-tag-class filter can not used with such ``non-semantic''-sources. See
-@ref{Non-semantic sources} for further details about working with
+tag-class filter are not offered with such ``non-semantic''-sources.
+See @ref{Non-semantic sources} for further details about working with
 source-files not supported by the semantic-parser.
 
 
@@ -3826,10 +3832,10 @@ private, protected or public!
 Insert the filter as regular expression.
 
 @item Filter by tag-class:
-You can filter by the tag-classes include, type, variable, function,
-rule, section (chapters and sections in @code{Info-mode}), def
-(definitions in @code{Info-mode}). These are just examples, in general
-all tag-classes supported by semantic can be used.
+You can filter by the tag-classes of current major-mode. The available
+tag-classes come from the variable
+@code{semantic--symbol->name-assoc-list}. The are normally methods,
+variables etc.
 
 @item Filter by a filter-function:
 Such a function gets two arguments: a tag and the source-buffer of
@@ -3845,6 +3851,9 @@ applied they will be all removed.
 This removes only the topmost filter-layer, means that filter added
 last.
 @end itemize
+
+The protection- and the tag-class-filter is only available for
+semantic-supported sources.
 
 Be aware that the tag-list specified by the option
 @code{ecb-show-tags} is the basis of all filters, i.e. tags which are

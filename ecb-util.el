@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-util.el,v 1.103 2004/03/07 10:25:22 berndl Exp $
+;; $Id: ecb-util.el,v 1.104 2004/03/14 19:05:47 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -1077,6 +1077,24 @@ returned."
          (nth (mod (+ elem-pos next)
                    (length list))
               list))))
+
+(defun ecb-buffer-name (buffer-or-name)
+  "Return the buffer-name of BUFFER-OR-NAME."
+  (cond ((stringp buffer-or-name)
+         buffer-or-name)
+        ((bufferp buffer-or-name)
+         (buffer-name buffer-or-name))
+        (t
+         nil)))
+
+(defun ecb-buffer-obj (buffer-or-name)
+  "Return the buffer-object of BUFFER-OR-NAME."
+  (cond ((stringp buffer-or-name)
+         (get-buffer buffer-or-name))
+        ((bufferp buffer-or-name)
+         buffer-or-name)
+        (t
+         nil)))
 
 (defun ecb-file-content-as-string (file)
   "If FILE exists and is readable returns the contents as a string otherwise

@@ -23,7 +23,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-semantic-wrapper.el,v 1.6 2004/02/07 11:08:44 berndl Exp $
+;; $Id: ecb-semantic-wrapper.el,v 1.7 2004/03/14 19:05:47 berndl Exp $
 
 ;;; Commentary:
 
@@ -54,6 +54,10 @@
 (defsubst ecb--semantic-symbol->name-assoc-list ()
   "Return the value of `semantic-symbol->name-assoc-list'."
   (symbol-value 'semantic-symbol->name-assoc-list))
+
+(defsubst ecb--semantic-symbol->name-assoc-list-for-type-parts ()
+  "Return the value of `semantic-symbol->name-assoc-list-for-type-parts'."
+  (symbol-value 'semantic-symbol->name-assoc-list-for-type-parts))
 
 (defsubst ecb--semantic-format-tag-functions ()
   "Return either the value of `semantic-format-tag-functions' or

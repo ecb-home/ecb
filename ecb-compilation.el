@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-compilation.el,v 1.32 2004/02/16 08:56:41 berndl Exp $
+;; $Id: ecb-compilation.el,v 1.33 2004/03/14 19:05:49 berndl Exp $
 
 ;;; Commentary:
 
@@ -212,12 +212,7 @@ either
   `ecb-compilation-major-modes' or `ecb-compilation-predicates' define the
   buffer as compilation-buffer."
   ;;determine the best valid for the buffer.
-  (let ((buffer (cond ((stringp buffer-or-name)
-                       (get-buffer buffer-or-name))
-                      ((bufferp buffer-or-name)
-                       buffer-or-name)
-                      (t
-                       nil)))
+  (let ((buffer (ecb-buffer-obj buffer-or-name))
         (ecb-comp-predicates (ecb-compilation-predicates)))
     (when buffer
 
