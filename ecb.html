@@ -68,6 +68,7 @@ mailing list <a href="mailto:ecb-list@lists.sourceforge.net">ecb-list@lists.sour
 <li><a href="#The%20Methods%20buffer">The Methods buffer</a>:           Using and customizing he Methods-buffer
 <li><a href="#The%20ECB-layout">The ECB-layout</a>:               Changing, customizing, redrawing the layout
 <li><a href="#Hiding%20the%20ECB%20windows">Hiding the ECB windows</a>:       Hiding/Showing the ECB-windows
+<li><a href="#ECB-window%20synchronizing">ECB-window synchronizing</a>:     Auto./manual synchronizing the ECB-windows
 <li><a href="#Interactive%20ECB%20commands">Interactive ECB commands</a>:     All interactive user-commands of ECB
 
 <p>Working with the keyboard in the ECB-windows
@@ -414,7 +415,8 @@ Emacs Code Browser.
 <li><a accesskey=5 href="#The%20Methods%20buffer">The Methods buffer</a>:           Using and customizing he Methods-buffer
 <li><a accesskey=6 href="#The%20ECB-layout">The ECB-layout</a>:               Changing, customizing, redrawing the layout
 <li><a accesskey=7 href="#Hiding%20the%20ECB%20windows">Hiding the ECB windows</a>:       Hiding/Showing the ECB-windows
-<li><a accesskey=8 href="#Interactive%20ECB%20commands">Interactive ECB commands</a>:     All interactive user-commands of ECB
+<li><a accesskey=8 href="#ECB-window%20synchronizing">ECB-window synchronizing</a>:     Auto./manual synchronizing the ECB-windows
+<li><a accesskey=9 href="#Interactive%20ECB%20commands">Interactive ECB commands</a>:     All interactive user-commands of ECB
 </ul>
 
 <p><hr>
@@ -853,7 +855,7 @@ done in &lt;&lt; 1s!
 
 <p><hr>
 Node:<a name="Hiding%20the%20ECB%20windows">Hiding the ECB windows</a>,
-Next:<a rel=next accesskey=n href="#Interactive%20ECB%20commands">Interactive ECB commands</a>,
+Next:<a rel=next accesskey=n href="#ECB-window%20synchronizing">ECB-window synchronizing</a>,
 Previous:<a rel=previous accesskey=p href="#The%20ECB-layout">The ECB-layout</a>,
 Up:<a rel=up accesskey=u href="#Usage%20of%20ECB">Usage of ECB</a>
 <br>
@@ -868,8 +870,46 @@ deactivating the advices for <code>delete-other-windows</code> and/or
 editing and you don't need the browsing windows all the time.
 
 <p><hr>
-Node:<a name="Interactive%20ECB%20commands">Interactive ECB commands</a>,
+Node:<a name="ECB-window%20synchronizing">ECB-window synchronizing</a>,
+Next:<a rel=next accesskey=n href="#Interactive%20ECB%20commands">Interactive ECB commands</a>,
 Previous:<a rel=previous accesskey=p href="#Hiding%20the%20ECB%20windows">Hiding the ECB windows</a>,
+Up:<a rel=up accesskey=u href="#Usage%20of%20ECB">Usage of ECB</a>
+<br>
+
+<h3>Synchronization of the ECB-windows</h3>
+
+<p>Per default ECB synchronizes automatically the contents of the
+ECB-windows/tree-buffers with the current active edit-window (rsp. the
+current buffer of the edit window). The feature can be customized with
+the option <code>ecb-window-sync</code>:
+
+<p>If active then the synchronization takes place always a buffer changes
+in the edit window, if deactivated then never. But you can also set
+this option to a list of major-modes and then the sync. will only be
+done if the major-mode of the current buffer belongs NOT to this list.
+
+<p>But in every case the synchronization takes only place if the
+major-mode of the current-buffer in the edit-window has a relation to
+files or directories. Examples for the former one are all
+programming-language-modes like <code>c++-mode</code> or <code>java-mode</code>,
+<code>Info-mode</code> too, an example for the latter one is
+<code>dired-mode</code>. For all major-modes related to
+non-file/directory-buffers like <code>help-mode</code>,
+<code>customize-mode</code> and others never a synchronization will be done!
+
+<p>It's recommended to exclude at least <code>Info-mode</code> because it makes
+no sense to synchronize the ECB-windows after calling the Info help. 
+Per default also <code>dired-mode</code> is excluded but it can also making
+sense to synchronize the ECB-directories/sources windows with the
+current directory of the dired-buffer in the edit-window.
+
+<p><strong>NOTE</strong>: With the command <code>ecb-current-buffer-sync</code> you can
+do a manually synchronization if the automatic one is switched off or
+if you just want to do this!
+
+<p><hr>
+Node:<a name="Interactive%20ECB%20commands">Interactive ECB commands</a>,
+Previous:<a rel=previous accesskey=p href="#ECB-window%20synchronizing">ECB-window synchronizing</a>,
 Up:<a rel=up accesskey=u href="#Usage%20of%20ECB">Usage of ECB</a>
 <br>
 
@@ -1427,8 +1467,9 @@ or in HTML format in a web-browser.
 <dd>Define how to use the mouse (see <a href="#Using%20the%20mouse">Using the mouse</a>). 
 <br><dt><code>ecb-tree-expand-symbol-before</code>
 <dt><code>ecb-tree-indent</code>
-<dd>The look&amp;feel of the trees. Maybe you like a value of 4 for the
-latter one if you display the expand-symbol before (see <a href="#Changing%20the%20ECB-layout">Changing the ECB-layout</a>). 
+<dd>The look&amp;feel of the trees in the tree-buffers. Maybe you like a value
+of 4 for the latter one if you display the expand-symbol before
+(see <a href="#Changing%20the%20ECB-layout">Changing the ECB-layout</a>). 
 <br><dt><code>ecb-source-file-regexps</code>
 <dd>Which files will (not) be shown in ECB. 
 <br><dt><code>ecb-show-node-info-in-minibuffer</code>
@@ -2172,10 +2213,25 @@ by (keyboard-escape-quit).
 </table>
 <table width="95%" align="center">
 <tr><td>
-Synchronize the ECB-windows with current edit window. If t then the
-synchronization takes place always a buffer changes in the edit
-window, if nil then never. If a list of major-modes then only if the
-major-mode of the new buffer belongs NOT to this list. 
+Synchronize the ECB-windows automatically with current edit window. If
+<code>always</code> then the synchronization takes place always a buffer
+changes in the edit window, if <code>nil</code> then never. If a list of
+major-modes then only if the <code>major-mode</code> of the new buffer
+belongs NOT to this list.
+
+<p>But in every case the synchronization takes only place if the
+current-buffer in the edit-window has a relation to files or
+directories. Examples for the former one are all
+programming-language-modes, <code>Info-mode</code> too, an example for the
+latter one is <code>dired-mode</code>. For all major-modes related to
+non-file/directory-buffers like <code>help-mode</code>,
+<code>customize-mode</code> and others never a synchronization will be done!
+
+<p>It's recommended to exclude at least <code>Info-mode</code> because it makes
+no sense to synchronize the ECB-windows after calling the Info help. 
+Per default also <code>dired-mode</code> is excluded but it can also making
+sense to synchronize the ECB-directories/sources windows with the
+current directory in the dired-buffer. 
 </td></tr>
 </table>
 
@@ -4713,6 +4769,7 @@ Up:<a rel=up accesskey=u href="#Top">Top</a>
 <li><a href="#Redrawing%20the%20ECB-layout">Redrawing the ECB-layout</a>
 </ul>
 <li><a href="#Hiding%20the%20ECB%20windows">Hiding/Showing the ECB windows</a>
+<li><a href="#ECB-window%20synchronizing">Synchronization of the ECB-windows</a>
 <li><a href="#Interactive%20ECB%20commands">Interactive ECB commands</a>
 </ul>
 <li><a name="toc_Customizing"></a>

@@ -58,7 +58,7 @@
 ;; The latest version of the ECB is available at
 ;; http://home.swipnet.se/mayhem/ecb.html
 
-;; $Id: ecb.el,v 1.227 2002/07/24 09:46:48 berndl Exp $
+;; $Id: ecb.el,v 1.228 2002/07/26 17:07:28 berndl Exp $
 
 ;;; Code:
 
@@ -1103,14 +1103,27 @@ to take effect."
   :group 'ecb-general
   :type 'boolean)
 
-(defcustom ecb-window-sync '(Info-mode)
-  "*Synchronize the ECB-windows with current edit window. If t then the
-synchronization takes place always a buffer changes in the edit window, if nil
-then never. If a list of major-modes then only if the major-mode of the new
-buffer belongs NOT to this list."
+(defcustom ecb-window-sync '(Info-mode dired-mode)
+  "*Synchronize the ECB-windows automatically with current edit window.
+If 'always then the synchronization takes place always a buffer changes in the
+edit window, if nil then never. If a list of major-modes then only if the
+major-mode of the new buffer belongs NOT to this list.
+
+But in every case the synchronization takes only place if the current-buffer
+in the edit-window has a relation to files or directories. Examples for the
+former one are all programming-language-modes, `Info-mode' too, an example for
+the latter one is `dired-mode'.
+For all major-modes related to non-file/directory-buffers like `help-mode',
+`customize-mode' and others never a synchronization will be done!
+
+It's recommended to exclude at least `Info-mode' because it makes no sense to
+synchronize the ECB-windows after calling the Info help. Per default also
+`dired-mode' is excluded but it can also making sense to synchronize the
+ECB-directories/sources windows with the current directory in the
+dired-buffer."
   :group 'ecb-general
   :type '(radio :tag "Synchronize ECB windows"
-                (const :tag "Always" t)
+                (const :tag "Always" :value always)
                 (const :tag "Never" nil)
                 (repeat :tag "Not with these modes"
                         (symbol :tag "mode"))))
@@ -1860,7 +1873,7 @@ semantic-reparse. This function is added to the hook
   ;; single nodes without refreshing the whole tree-buffer like now.
   (ecb-rebuild-methods-buffer-with-tokencache (semantic-bovinate-toplevel t)))
 
-(defun ecb-expand-tree (path node)
+(defun ecb-expand-directory-tree (path node)
   (catch 'exit
     (dolist (child (tree-node-get-children node))
       (let ((data (tree-node-get-data child)))
@@ -1873,7 +1886,7 @@ semantic-reparse. This function is added to the hook
             (ecb-update-directory-node child)
             (throw 'exit
                    (or (when (> (length path) (length data))
-                         (ecb-expand-tree path child))
+                         (ecb-expand-directory-tree path child))
                        (not was-expanded)))))))))
 
 ;; TODO: The timestamp-mechanism is not yet implemented (Klaus)
@@ -1986,7 +1999,7 @@ according to `ecb-sources-sort-method'."
                  (ecb-update-directory-node start))
               ;; start recursive expanding of either the best-matching node or
                ;; the root-node itself.
-               (ecb-expand-tree ecb-path-selected-directory start)
+               (ecb-expand-directory-tree ecb-path-selected-directory start)
                (tree-buffer-update))
              ;;              (message "Klausi: %s" (pp start))
              (when (not ecb-show-sources-in-directories-buffer)
@@ -2348,7 +2361,7 @@ For further explanation see `ecb-clear-history-behavior'."
 
 (defun ecb-token-sync ()
   (when (and ecb-minor-mode
-             (equal (selected-frame) ecb-frame))
+             (ecb-point-in-edit-window))
     (when ecb-highlight-token-with-point
       (let ((tok (ecb-semantic-current-nonterminal)))
         (when (not (equal ecb-selected-token tok))
@@ -2358,73 +2371,85 @@ For further explanation see `ecb-clear-history-behavior'."
              (tree-buffer-highlight-node-data
               tok nil (equal ecb-highlight-token-with-point 'highlight)))))))))
 
-(defun ecb-current-buffer-sync (&optional force opt-buffer)
+(defun ecb-current-buffer-sync (&optional force)
   "Synchronizes the ECB buffers with the current buffer. Unless FORCE is non
 nil then do this only if current-buffer differs from the source displayed in
 the ECB tree-buffers."
   (interactive "P")
   (when (and ecb-minor-mode
              (not ecb-windows-hidden)
-             (equal (selected-frame) ecb-frame))
+             (eq (selected-frame) ecb-frame))
     (ignore-errors
-      (let ((filename (buffer-file-name (if opt-buffer opt-buffer (current-buffer)))))
-        (when (and filename
-                   (file-readable-p filename)
-                   (or force
-                       (not (string= filename ecb-path-selected-source))))
+      (let ((filename (buffer-file-name (current-buffer))))
+        (cond (;; synchronizing for real filesource-buffers
+               (and filename
+                    (file-readable-p filename)
+                    (or force
+                        (not (string= filename ecb-path-selected-source))))
           
-          ;; * KB: Problem: seems this little sleep is necessary because
-          ;;   otherwise jumping to certain markers in new opened files (e.g.
-          ;;   with next-error etc. ) doesn´t work correct. Can´t debug down
-          ;;   this mysterious thing! Regardless of the size of the file to
-          ;;   load, this 0.1 fraction of a sec is enough!
-          ;; * KB: With current ECB implementation this sit-for seems not
-          ;;   longer necessary, it works with every Emacs version correct.
-          ;;   Therefore i comment out the sit-for until this error occurs
-          ;;   again.
-          ;;           (sit-for 0.1)
-          
-          ;; if the file is not located in any of the paths in
-          ;; `ecb-source-path' or in the pathes returned from
-          ;; `ecb-source-path-functions' we must at least add the new source
-          ;; path temporally to our paths. But the uses has also the choice to
-          ;; save it for future sessions too.
-          (if (not (ecb-path-matching-any-source-path-p filename))
-              (let* ((norm-filename (ecb-fix-filename filename))
-                     (source-path (if (car ecb-add-path-for-not-matching-files)
-                                      (if (= (aref norm-filename 0) ?/)
-                                          ;; for unix-style-path we add the
-                                          ;; root-dir
-                                          (substring norm-filename 0 1)
-                                        ;; for win32-style-path we add the
-                                        ;; drive; because `ecb-fix-filename'
-                                        ;; also converts cygwin-path-style to
-                                        ;; win32-path-style here also the
-                                        ;; drive is added.
-                                        (substring norm-filename 0 2))
-                                    (file-name-directory norm-filename))))
-                (ecb-add-source-path source-path source-path
-                                     (not (cdr ecb-add-path-for-not-matching-files)))))
+               ;; * KB: Problem: seems this little sleep is necessary because
+               ;;   otherwise jumping to certain markers in new opened files (e.g.
+               ;;   with next-error etc. ) doesn´t work correct. Can´t debug down
+               ;;   this mysterious thing! Regardless of the size of the file to
+               ;;   load, this 0.1 fraction of a sec is enough!
+               ;; * KB: With current ECB implementation this sit-for seems not
+               ;;   longer necessary, it works with every Emacs version correct.
+               ;;   Therefore i comment out the sit-for until this error occurs
+               ;;   again.
+               ;;           (sit-for 0.1)
+               
+               ;; if the file is not located in any of the paths in
+               ;; `ecb-source-path' or in the pathes returned from
+               ;; `ecb-source-path-functions' we must at least add the new source
+               ;; path temporally to our paths. But the uses has also the choice to
+               ;; save it for future sessions too.
+               (if (not (ecb-path-matching-any-source-path-p filename))
+                   (let* ((norm-filename (ecb-fix-filename filename))
+                          (source-path (if (car ecb-add-path-for-not-matching-files)
+                                           (if (= (aref norm-filename 0) ?/)
+                                               ;; for unix-style-path we add the
+                                               ;; root-dir
+                                               (substring norm-filename 0 1)
+                                             ;; for win32-style-path we add the
+                                             ;; drive; because `ecb-fix-filename'
+                                             ;; also converts cygwin-path-style to
+                                             ;; win32-path-style here also the
+                                             ;; drive is added.
+                                             (substring norm-filename 0 2))
+                                         (file-name-directory norm-filename))))
+                     (ecb-add-source-path source-path source-path
+                                          (not (cdr ecb-add-path-for-not-matching-files)))))
 
-          ;; now we can be sure that a matching source-path exists
-
-          ;; Klaus: The explizit update of the directories buffer is not
-          ;; necessary because the synch with the current source is done by
-          ;; `ecb-select-source-file'!
-          ;;           (ecb-update-directories-buffer)
-          (ecb-select-source-file filename)
-          ;; selected source has changed, therfore we must initialize
-          ;; ecb-selected-token again.
-          (setq ecb-selected-token nil)
-          (ecb-update-methods-buffer--internal 'scroll-to-begin)
-          (ecb-token-sync)
-
-          (run-hooks 'ecb-current-buffer-sync-hook))))))
+               ;; now we can be sure that a matching source-path exists
+               
+               ;; Klaus: The explizit update of the directories buffer is not
+               ;; necessary because the synch with the current source is done by
+               ;; `ecb-select-source-file'!
+               ;;           (ecb-update-directories-buffer)
+               (ecb-select-source-file filename)
+               ;; selected source has changed, therfore we must initialize
+               ;; ecb-selected-token again.
+               (setq ecb-selected-token nil)
+               (ecb-update-methods-buffer--internal 'scroll-to-begin)
+               (ecb-token-sync)
+               (run-hooks 'ecb-current-buffer-sync-hook))
+              
+              (;; synchronizing for dired-mode
+               (eq major-mode 'dired-mode)
+               (ecb-set-selected-directory
+                (or (and (stringp dired-directory)
+                         (file-exists-p dired-directory)
+                         dired-directory)
+                    (and (listp dired-directory)
+                         (car dired-directory)))))
+              (t nil))))))
 
 (defun ecb-window-sync-function ()
   (when (and ecb-window-sync
-             (not (member major-mode ecb-window-sync))
-             ecb-minor-mode (equal (selected-frame) ecb-frame))
+             (or (equal 'always ecb-window-sync)
+                 (not (member major-mode ecb-window-sync)))
+             ecb-minor-mode
+             (ecb-point-in-edit-window))
     (ecb-current-buffer-sync)))
 
 (defun ecb-get-edit-window (other-edit-window)

@@ -29,7 +29,9 @@
 @c @syncodeindex fn cp
 
 @c in info we do not want paragraph indenting
+@ifinfo
 @paragraphindent 0
+@end ifinfo
 
 @exampleindent   3
 
@@ -133,6 +135,7 @@ Usage of ECB
 * The Methods buffer::          Using and customizing he Methods-buffer
 * The ECB-layout::              Changing, customizing, redrawing the layout
 * Hiding the ECB windows::      Hiding/Showing the ECB-windows
+* ECB-window synchronizing::    Auto./manual synchronizing the ECB-windows
 * Interactive ECB commands::    All interactive user-commands of ECB
 
 Working with the keyboard in the ECB-windows
@@ -461,6 +464,7 @@ Emacs Code Browser.
 * The Methods buffer::          Using and customizing he Methods-buffer
 * The ECB-layout::              Changing, customizing, redrawing the layout
 * Hiding the ECB windows::      Hiding/Showing the ECB-windows
+* ECB-window synchronizing::    Auto./manual synchronizing the ECB-windows
 * Interactive ECB commands::    All interactive user-commands of ECB
 @end menu
 
@@ -867,7 +871,7 @@ may have some drawbacks! On normal machines the full redraw should be
 done in << 1s!
 
 
-@node Hiding the ECB windows, Interactive ECB commands, The ECB-layout, Usage of ECB
+@node Hiding the ECB windows, ECB-window synchronizing, The ECB-layout, Usage of ECB
 @section Hiding/Showing the ECB windows
 
 @cindex Hide windows
@@ -879,7 +883,39 @@ deactivating the advices for @code{delete-other-windows} and/or
 (@pxref{Tips and tricks}) or if you want to have maximum space for
 editing and you don't need the browsing windows all the time.
 
-@node Interactive ECB commands, , Hiding the ECB windows, Usage of ECB
+@node ECB-window synchronizing, Interactive ECB commands, Hiding the ECB windows, Usage of ECB
+@section Synchronization of the ECB-windows
+
+Per default ECB synchronizes automatically the contents of the
+ECB-windows/tree-buffers with the current active edit-window (rsp. the
+current buffer of the edit window). The feature can be customized with
+the option @code{ecb-window-sync}:
+
+If active then the synchronization takes place always a buffer changes
+in the edit window, if deactivated then never. But you can also set
+this option to a list of major-modes and then the sync. will only be
+done if the major-mode of the current buffer belongs NOT to this list.
+
+But in every case the synchronization takes only place if the
+major-mode of the current-buffer in the edit-window has a relation to
+files or directories. Examples for the former one are all
+programming-language-modes like @code{c++-mode} or @code{java-mode},
+@code{Info-mode} too, an example for the latter one is
+@code{dired-mode}. For all major-modes related to
+non-file/directory-buffers like @code{help-mode},
+@code{customize-mode} and others never a synchronization will be done!
+
+It's recommended to exclude at least @code{Info-mode} because it makes
+no sense to synchronize the ECB-windows after calling the Info help.
+Per default also @code{dired-mode} is excluded but it can also making
+sense to synchronize the ECB-directories/sources windows with the
+current directory of the dired-buffer in the edit-window.
+
+@strong{NOTE}: With the command @code{ecb-current-buffer-sync} you can
+do a manually synchronization if the automatic one is switched off or
+if you just want to do this!
+
+@node Interactive ECB commands, , ECB-window synchronizing, Usage of ECB
 @section Interactive ECB commands
 
 @noindent
@@ -1177,9 +1213,9 @@ Should ECB create a new frame at activation time.
 Define how to use the mouse (@pxref{Using the mouse}).
 @item  ecb-tree-expand-symbol-before
 @itemx ecb-tree-indent
-The look&feel of the trees. Maybe you like a value of 4 for the
-latter one if you display the expand-symbol before (@pxref{Changing the
-ECB-layout}).
+The look&feel of the trees in the tree-buffers. Maybe you like a value
+of 4 for the latter one if you display the expand-symbol before
+(@pxref{Changing the ECB-layout}).
 @item ecb-source-file-regexps
 Which files will (not) be shown in ECB.
 @item ecb-show-node-info-in-minibuffer
@@ -1665,10 +1701,25 @@ by (keyboard-escape-quit).
 @end defopt
 
 @defopt ecb-window-sync
-Synchronize the ECB-windows with current edit window. If t then the
-synchronization takes place always a buffer changes in the edit
-window, if nil then never. If a list of major-modes then only if the
-major-mode of the new buffer belongs NOT to this list.
+Synchronize the ECB-windows automatically with current edit window. If
+@code{always} then the synchronization takes place always a buffer
+changes in the edit window, if @code{nil} then never. If a list of
+major-modes then only if the @code{major-mode} of the new buffer
+belongs NOT to this list.
+
+But in every case the synchronization takes only place if the
+current-buffer in the edit-window has a relation to files or
+directories. Examples for the former one are all
+programming-language-modes, @code{Info-mode} too, an example for the
+latter one is @code{dired-mode}. For all major-modes related to
+non-file/directory-buffers like @code{help-mode},
+@code{customize-mode} and others never a synchronization will be done!
+
+It's recommended to exclude at least @code{Info-mode} because it makes
+no sense to synchronize the ECB-windows after calling the Info help.
+Per default also @code{dired-mode} is excluded but it can also making
+sense to synchronize the ECB-directories/sources windows with the
+current directory in the dired-buffer.
 @end defopt
 
 @defopt ecb-window-sync-delay
@@ -1678,7 +1729,6 @@ synchronization takes place immediately. A small value of about 0.25
 seconds saves CPU resources and you get even though almost the same
 effect as if you set no delay.
 @end defopt
-
 
 @node ecb-directories, ecb-sources, ecb-general, Customizable options
 @subsection Group ecb-directories

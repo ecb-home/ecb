@@ -146,9 +146,11 @@
 ;; ----------------------------------------------------------------------
 
 (defconst ecb-upgradable-option-alist
-  '((ecb-compile-window-temporally-enlarge .
-                                           (ecb-compile-window-temporally-enlarge
-                                            ecb-upgrade-compile-window-temporally-enlarge)))
+  '((ecb-compile-window-temporally-enlarge
+     .
+     (ecb-compile-window-temporally-enlarge
+      ecb-upgrade-compile-window-temporally-enlarge))
+    (ecb-window-sync . (ecb-window-sync ecb-upgrade-window-sync)))
   
   "Alist of all options which should be upgraded for current ECB-version.
 There are several reasons why an option should be contained in this alist:
@@ -181,13 +183,20 @@ The car is the old option symbol and the cdr is a 2-element-list with:
 ;; ----------------------------------------------------------------------
 ;; define here all necessary upgrade functions
 ;; ----------------------------------------------------------------------
- 
+
+;; upgrading ecb-compile-window-temporally-enlarge
 (defun ecb-upgrade-compile-window-temporally-enlarge (old-val)
   (cond ((equal old-val t)
          'after-compilation)
         ((null old-val)
          nil)
         (t 'ecb-no-upgrade-conversion)))
+
+;; upgrading ecb-window-sync
+(defun ecb-upgrade-window-sync (old-val)
+  (if (equal old-val t)
+      (ecb-option-get-value 'ecb-window-sync 'standard-value)
+    nil))
 
 ;; ----------------------------------------------------------------------
 ;; internal functions. Dot change anything below this line
