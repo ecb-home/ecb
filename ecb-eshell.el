@@ -1,6 +1,6 @@
 ;;; ecb-eshell.el --- eshell integration for the ECB.
 
-;; $Id: ecb-eshell.el,v 1.41 2002/10/30 05:13:07 burtonator Exp $
+;; $Id: ecb-eshell.el,v 1.42 2002/10/30 05:54:12 burtonator Exp $
 
 ;; Copyright (C) 2000-2003 Free Software Foundation, Inc.
 ;; Copyright (C) 2000-2003 Kevin A. Burton (burton@openprivacy.org)
@@ -216,28 +216,31 @@ eshell is currently visible."
             ;;now update the buffer list to remove the eshell.
             (modify-frame-parameters nil (list (cons 'buffer-list eshell-buffer-list))))))))
 
-(defun ecb-eshell-recenter()
+(defun ecb-eshell-recenter(&optional display-errors)
   "Recenter the eshell window so that the prompt is at the end of the buffer."
-  (interactive)
+  (interactive
+   (list t))
 
-  (save-excursion
-    (save-selected-window
+  (save-selected-window
   
-      (let(window)
-      
-        (setq window (get-buffer-window ecb-eshell-buffer-name))
-      
-        (when (and (ecb-eshell-running-p)
-                   window
-                   (window-live-p window)
-                   (equal window ecb-compile-window))
+    (let((window (get-buffer-window ecb-eshell-buffer-name)))
         
-          (select-window window)
+      (if (and (ecb-eshell-running-p)
+               window
+               (window-live-p window)
+               (equal window ecb-compile-window))
+          (progn
+              
+            (select-window window)
 
-          ;;this needs to be present under GNU Emacs or recenter will fail.
-          (end-of-buffer) 
+            ;;this needs to be present under GNU Emacs or recenter will fail.
+            (end-of-buffer) 
         
-          (recenter -2))))))
+            (recenter -2)
+
+            (end-of-buffer))
+        (when display-errors
+          (error "Eshell not running or window not live"))))))
 
 (defun ecb-eshell-running-p()
   "Return true if eshell is currently running."
