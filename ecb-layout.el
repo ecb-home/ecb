@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-layout.el,v 1.238 2004/09/20 15:09:31 berndl Exp $
+;; $Id: ecb-layout.el,v 1.239 2004/11/22 16:56:24 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -1475,6 +1475,34 @@ not for direct usage therefore it is always disabled; use the macro
   (if (equal (selected-frame) ecb-frame)
       (setq ad-return-value
             (= (length (ecb-canonical-edit-windows-list)) 1))
+    ad-do-it))
+
+(defadvice find-file (around ecb)
+  "Workaround for the annoying \(X)Emacs-behavior to resize some of the
+special ecb-windows after opening a file. This advices restores the sizes of
+the ecb-windows exactly as before this command."
+  (if (and ecb-minor-mode
+           (not ecb-windows-hidden))
+      (let ((ecb-sizes-before (ecb-get-ecb-window-sizes t)))
+        ad-do-it
+        ;; this seems to be necessary - otherwise the reszing seems not to
+        ;; take effect...
+        (sit-for 0)
+        (ignore-errors (ecb-set-ecb-window-sizes ecb-sizes-before)))
+    ad-do-it))
+      
+(defadvice find-file-other-window (around ecb)
+  "Workaround for the annoying \(X)Emacs-behavior to resize some of the
+special ecb-windows after opening a file. This advices restores the sizes of
+the ecb-windows exactly as before this command."
+  (if (and ecb-minor-mode
+           (not ecb-windows-hidden))
+      (let ((ecb-sizes-before (ecb-get-ecb-window-sizes t)))
+        ad-do-it
+        ;; this seems to be necessary - otherwise the reszing seems not to
+        ;; take effect...
+        (sit-for 0)
+        (ignore-errors (ecb-set-ecb-window-sizes ecb-sizes-before)))
     ad-do-it))
 
 (defun ecb-toggle-scroll-other-window-scrolls-compile (&optional arg)
@@ -4533,8 +4561,6 @@ ring-cache as add-on to CONFIGURATION."
                              (car oops) (cdr oops))))
   ad-return-value)
 
-
-
 (defun ecb-current-window-configuration ()
   "Return the current ecb-window-configuration"
   (progn
@@ -4546,6 +4572,15 @@ ring-cache as add-on to CONFIGURATION."
 informations needed by ECB will be set by the adviced version of
 `set-window-configuration'."
   (set-window-configuration (car ecb-window-config)))
+
+(defmacro ecb-save-window-excursion (&rest body)
+  "Same as `save-window-excursion' but it takes care of the ECB-needs."
+  (let ((current-window-config (make-symbol "curr-win-conf")))
+    `(let ((,current-window-config (ecb-current-window-configuration)))
+       (unwind-protect
+           (progn
+             ,@body)
+         (ecb-set-window-configuration ,current-window-config)))))
 
 ;; test of the advices of set-window-configuration and
 ;; current-window-configuration.
