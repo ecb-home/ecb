@@ -44,6 +44,7 @@
 (defvar tree-buffer-expand-symbol-before nil)
 (defvar tree-node-selected-fn nil)
 (defvar tree-node-expanded-fn nil)
+(defvar tree-node-mouse-over-fn nil)
 (defvar tree-buffer-highlight-overlay nil)
 
   (defun list-append(list item)
@@ -223,7 +224,8 @@ inserted and the TEXT itself"
 	  (if fn
 	      (eval (list (car fn) 'node))))))))
 
-(defun tree-buffer-create(name node-selected-fn node-expanded-fn menus tr-lines
+(defun tree-buffer-create(name node-selected-fn node-expanded-fn node-mouse-over-fn
+			       menus tr-lines
 			       &optional type-facer expand-symbol-before)
   "Creates a new tree buffer with
 NAME: Name of the buffer
@@ -255,6 +257,7 @@ EXPAND-SYMBOL-BEFORE: If not nil then the expand-symbol \(is displayed before
   (make-local-variable 'tree-node-selected-fn)
   (make-local-variable 'tree-node-expanded-fn)
   (make-local-variable 'tree-node-update-fn)
+  (make-local-variable 'tree-mouse-over-node-fn)
   (make-local-variable 'tree-buffer-highlighted-node-data)
   (make-local-variable 'tree-buffer-menus)
   (make-local-variable 'tree-buffer-type-facer)
@@ -265,6 +268,7 @@ EXPAND-SYMBOL-BEFORE: If not nil then the expand-symbol \(is displayed before
   (setq tree-buffer-key-map (make-sparse-keymap))
   (setq tree-node-selected-fn node-selected-fn)
   (setq tree-node-expanded-fn node-expanded-fn)
+  (setq tree-node-mouse-over-fn node-mouse-over-fn)
   (setq tree-buffer-indent 2)
   (setq tree-buffer-highlighted-node-data nil)
   (setq tree-buffer-menus menus)
@@ -329,7 +333,17 @@ EXPAND-SYMBOL-BEFORE: If not nil then the expand-symbol \(is displayed before
   (define-key tree-buffer-key-map [mouse-3] '(lambda()(interactive)))
   (define-key tree-buffer-key-map [double-mouse-3] '(lambda()(interactive)))
   (define-key tree-buffer-key-map [triple-mouse-3] '(lambda()(interactive)))
-  (use-local-map tree-buffer-key-map))
+  (use-local-map tree-buffer-key-map)
+
+  ;; mouse-movement
+  (define-key tree-buffer-key-map [mouse-movement]
+    '(lambda(e)
+       (interactive "e")
+       (save-excursion
+	 (mouse-set-point e) ;; (cadadr e)
+	 (let ((node (tree-buffer-get-node-at-point)))
+	   (when (and tree-node-mouse-over-fn node)
+	     (funcall tree-node-mouse-over-fn node)))))))
 
 ; (defun tree-insert-line(line)
 ;   (let ((p (point)))
