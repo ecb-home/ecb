@@ -1,6 +1,6 @@
 ;;; ecb-layout.el --- layout for ECB
 
-;; Copyright (C) 2000 Jesper Nordenberg
+;; Copyright (C) 2000, 2001 Jesper Nordenberg
 
 ;; Author: Jesper Nordenberg <mayhem@home.se>
 ;; Maintainer: Jesper Nordenberg <mayhem@home.se>

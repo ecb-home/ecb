@@ -1,11 +1,11 @@
 (require 'html-helper)
 
-(setq version "1.10")
+(setq version "1.20")
 (setq dirname (concat "ecb-" version))
 (setq zipname (concat dirname ".zip"))
 (setq download-url "http://ftp1.sourceforge.net/ecb/")
 (setq url (concat "http://ftp1.sourceforge.net/ecb/" zipname))
-(setq date "2001-04-22")
+(setq date "2001-04-28")
 
 (h-doc
  "ecb.html"
@@ -21,7 +21,8 @@
  (h-p "ECB is source code browser for Emacs. It displays a few windows that can be used to browse directories, files and methods. It supports method parsing for Java, C, C++, Elisp etc. " (h-link "ecb.png" "Here's") " a screenshot of the browser in action.")
 
  (h-h3 "Dependencies")
- (h-p "ECB requires version 1.2.x or higher of " (h-link "http://cedet.sourceforge.net/semantic.shtml" "Eric Ludlam's semantic bovinator") ". If you use ECB for Java development you also need version 2.1.9 or higher of " (h-link "http://sunsite.auc.dk/jde/" "JDE") ".")
+ (h-p "ECB requires version 1.3.3 of " (h-link "http://cedet.sourceforge.net/semantic.shtml" "Eric Ludlam's semantic bovinator") ". If you use ECB for Java development you also need version 2.1.9 or higher of " (h-link "http://sunsite.auc.dk/jde/" "JDE") ".")
+ (h-p "If you use XEmacs you must have the fsf-compat package installed (contains overlay.el).")
 
  (h-h3 "Installation and Setup")
  (h-numbered-list
@@ -51,6 +52,7 @@
  (h-h3 "Download")
  (h-p "The latest version: " (h-link url zipname))
  (h-p "Older versions:" h-br
+      (h-link (concat download-url "ecb-1.10.zip") "ecb-1.10.zip") h-br
       (h-link (concat download-url "ecb-1.0.zip") "ecb-1.0.zip") h-br
       (h-link "jde-jcb-0.04.zip") h-br
       (h-link "jde-jcb-0.03.zip") h-br

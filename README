@@ -5,8 +5,8 @@ About
 -----
 
 This package contains a code browser for several languages for Emacs. For
-instructions on how to use the browser read the online-help (see "Usage"
-below) file. The latest version of this package can be found at:
+instructions on how to use the browser read the online-help (see "Usage" below)
+file. The latest version of this package can be found at:
 
 http://home.swipnet.se/mayhem/ecb.html
 
@@ -15,9 +15,11 @@ Requirements
 ------------
 
 ECB requires version 1.3.3 of Eric's semantic bovinator
-(http://www.ultranet.com/~zappo/semantic.shtml).  If Java code is
-edited the ECB works best when the JDE package
-(http://sunsite.auc.dk/jde) is installed.
+(http://www.ultranet.com/~zappo/semantic.shtml).  If Java code is edited the ECB
+works best when the JDE package (http://sunsite.auc.dk/jde) is installed.
+
+If you use XEmacs you must have the fsf-compat package installed (contains
+overlay.el).
 
 
 Installation
@@ -33,9 +35,9 @@ Optional byte-compilation steps:
 4. Restart Emacs.
 5. Call `ecb-byte-compile'. You can safely ignore all messages.
 
-(You can also bytecompile ECB from the command-line either by using the
-Makefile or by using the batch-file make.bat. Just read the comments in that
-file you choose.)
+(You can also bytecompile ECB from the command-line either by using the Makefile
+or by using the batch-file make.bat. Just read the comments in that file you
+choose.)
 
 
 Usage

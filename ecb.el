@@ -1,12 +1,12 @@
 ;;; ecb.el --- a code browser
 
-;; Copyright (C) 2000 Jesper Nordenberg
+;; Copyright (C) 2000, 2001 Jesper Nordenberg
 
 ;; Author: Jesper Nordenberg <mayhem@home.se>
 ;; Maintainer: Jesper Nordenberg <mayhem@home.se>
 ;; Keywords: java, class, browser
 ;; Created: Jul 2000
-;; Version: 1.10
+;; Version: 1.20
 
 ;; This program is free software; you can redistribute it and/or modify it under
 ;; the terms of the GNU General Public License as published by the Free Software
@@ -398,7 +398,8 @@ so the user can easily jump back."
                        :value nil)))
 
 (defcustom ecb-tree-indent 2
-  "*Indent size for trees."
+  "*Indent size for tree buffer. If you change this during ECB is activated
+you must deactivate and activate ECB again to take effect."
   :group 'ecb-general
   :type 'integer)
 
