@@ -2,15 +2,14 @@
 
 ** Fixed bugs:
 
-*** Fixes small bugs in the popup-menu of the history-buffer.
+*** Fixed small bugs in the popup-menu of the history-buffer (Klaus).
 
-*** Reformatted some entries of the FAQ because otherwise some links in the
-    info-manual are not working. (Klaus)
+*** Fixed some not working links in the FAQ. (Klaus)
 
 ** Renamed previous HISTORY file to NEWS and reformate it for outline-mode.
   (Klaus)
 
-** ECB now includes a file "ecb-al.el" whioch contains all available
+** ECB now includes a file "ecb-autoloads.el" which contains all available
    autoloads of ECB. Therefore loading this file is enough. (Klaus)
   
 ** ecb-truncate-lines can now set different for each ECB-tree-buffer.
@@ -73,7 +72,7 @@
 *** Fixed a small bug in `ecb-add-all-buffers-to-history': If
     `ecb-sort-history-items' is nil then now the most recently used buffers are
     added to the top of the history, the seldom used buffers at the bottom.
-    Thanks to Stefan Reichˆr <xsteve@riic.at>! (Klaus).
+    Thanks to Stefan ReichÅˆr <xsteve@riic.at>! (Klaus).
 
 *** Fixed some bugs concerning the eshell-integration (Klaus):
 
@@ -546,7 +545,7 @@
 ** New hook ecb-current-buffer-sync-hook allows developers to add code to be
    evaluated after the ECB is synchronized with the current buffer.
 
-** Now all faces used by ECB for highlighting and displaying it¥s own stuff are
+** Now all faces used by ECB for highlighting and displaying itÅ¥s own stuff are
    customizable. See new group 'ecb-faces' (Klaus).
 
 ** ECB is now fully prepared for Emacs 21. The new feature
@@ -720,11 +719,11 @@
     (XEmacs) and 'temp-buffer-resize-mode' (GNU Emacs) are now fully supported
     by ECB if no durable compilation-window is shown.
 
-** New function to toggle visibility of the ECB windows. Now it¥s possible to
+** New function to toggle visibility of the ECB windows. Now itÅ¥s possible to
    hide all ECB windows without deactivating ECB (see 'ecb-toggle-ecb-windows')
    (Klaus).
 
-** ECB is now a global minor mode with it¥s own menu "ECB" and it¥s own keymap
+** ECB is now a global minor mode with itÅ¥s own menu "ECB" and itÅ¥s own keymap
    with prefix "C-c .". New function to (de)activate/toggle ECB with
    'ecb-minor-mode'. (Klaus)
 
@@ -859,9 +858,9 @@
 * Changes for ECB version 1.20
 
 ** Now the ECB-buffers are intelligent in displaying nodes (Klaus):
-   + Expandable nodes: (e.g. a directory with it¥s subdirectories). An
+   + Expandable nodes: (e.g. a directory with itÅ¥s subdirectories). An
      ECB-tree-window now tries always to make visisble as much as possible of
-     the subnodes of a node if a node is expanded (e.g. by clicking onto it¥s
+     the subnodes of a node if a node is expanded (e.g. by clicking onto itÅ¥s
      expand-symbol).
    + Other nodes: A ECB-tree-window is always best filled, means no empty lines
      if there are enough lines to fill the whole window.

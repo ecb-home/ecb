@@ -1,6 +1,6 @@
 # This Makefile byte-compiles the ECB lisp files and generates online-help.
 
-# $Id: Makefile,v 1.56 2003/02/14 16:42:17 berndl Exp $
+# $Id: Makefile,v 1.57 2003/02/18 16:17:21 berndl Exp $
 
 # ========================================================================
 # User configurable section
@@ -91,7 +91,7 @@ INSTALLINFO=/usr/bin/install-info
 
 # Do not change anything below!
 
-# $Id: Makefile,v 1.56 2003/02/14 16:42:17 berndl Exp $
+# $Id: Makefile,v 1.57 2003/02/18 16:17:21 berndl Exp $
 
 # For the ECB-maintainers: Change the version-number here and not
 # elsewhere!
@@ -113,7 +113,7 @@ ecb_LISP_EL=tree-buffer.el ecb-util.el ecb-mode-line.el ecb-help.el \
 
 ecb_LISP_ELC=$(ecb_LISP_EL:.el=.elc)
 
-ecb_AUTOLOADS=ecb-al.el
+ecb_AUTOLOADS=ecb-autoloads.el
 
 ecb_ETC=NEWS README RELEASE_NOTES Makefile make.bat
 
