@@ -89,7 +89,7 @@ INSTALLINFO=/usr/bin/install-info
 
 # Do not change anything below!
 
-# $Id: Makefile,v 1.47 2003/01/07 14:46:20 berndl Exp $
+# $Id: Makefile,v 1.48 2003/01/07 16:19:44 berndl Exp $
 
 RM=rm -f
 CP=cp
@@ -153,7 +153,7 @@ online-help: $(ecb_TEXI)
 	   $(MAKEINFO) --html --output=$(ecb_HTML_DIR) $<; \
 	   for file in $(ecb_HTML_DIR)/*.html; do\
 	      $(MV) $$file tmpfile; \
-	      sed "s/index\\.html/$(ecb_HTML)/" tmpfile > $$file; \
+	      sed "s/index\\.html/$(ecb_HTML)/g" tmpfile > $$file; \
 	      $(RM) tmpfile; \
 	   done; \
 	   $(MV) $(ecb_HTML_DIR)/index.html $(ecb_HTML_DIR)/$(ecb_HTML); \
@@ -206,8 +206,24 @@ clean:
 
 $(ecb_INFO_DIR)/$(ecb_INFO): online-help
 
+# updates RELEASE_NOTES, README, HISTORY and ecb.el to the version-number
+# of $(ecb_VERSION).
+prepversion:
+	@$(MV) RELEASE_NOTES RELEASE_NOTES.tmp
+	@sed "1s/version.*/version $(ecb_VERSION)/" RELEASE_NOTES.tmp > RELEASE_NOTES
+	@$(RM) RELEASE_NOTES.tmp
+	@$(MV) README README.tmp
+	@sed "1s/version.*/version $(ecb_VERSION)/" README.tmp > README
+	@$(RM) README.tmp
+	@$(MV) HISTORY HISTORY.tmp
+	@sed "1s/Version.*/Version $(ecb_VERSION)/" HISTORY.tmp > HISTORY
+	@$(RM) HISTORY.tmp
+	@$(MV) ecb.el ecb.el.tmp
+	@sed "s/^(defconst ecb-version.*/(defconst ecb-version \"$(ecb_VERSION)\"/" ecb.el.tmp > ecb.el
+	@$(RM) ecb.el.tmp
 
-distrib: $(ecb_INFO_DIR)/$(ecb_INFO)
+# builds the distribution file $(ecb_VERSION).tar.gz
+distrib: $(ecb_INFO_DIR)/$(ecb_INFO) prepversion ecb
 	@$(RM) ecb-$(ecb_VERSION).tar.gz
 	@$(RM) -R ecb-$(ecb_VERSION)
 	@$(MKDIR) ecb-$(ecb_VERSION)

@@ -8,7 +8,9 @@
 ;; Keywords: browser, code, programming, tools
 ;; Created: Jul 2000
 
-(defvar ecb-version "1.90"
+;; IMPORTANT: The version-number is auto-frobbed from the Makefile. Do not
+;; change it here!
+(defconst ecb-version "1.90"
   "Current ECB version.")
 
 ;; This program is free software; you can redistribute it and/or modify it under
@@ -60,7 +62,7 @@
 ;; The latest version of the ECB is available at
 ;; http://home.swipnet.se/mayhem/ecb.html
 
-;; $Id: ecb.el,v 1.267 2003/01/06 15:56:27 berndl Exp $
+;; $Id: ecb.el,v 1.268 2003/01/07 16:19:30 berndl Exp $
 
 ;;; Code:
 
