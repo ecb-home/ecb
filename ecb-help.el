@@ -26,65 +26,12 @@
 ;;
 ;; Contains all online-help for ECB (stolen something from recentf.el)
 
-;; $Id: ecb-help.el,v 1.75 2002/07/12 08:46:43 berndl Exp $
+;; $Id: ecb-help.el,v 1.76 2002/07/12 11:02:21 berndl Exp $
 
 ;;; Code
 
 (require 'ecb-layout)
 (require 'ecb-util)
-
-
-(defun ecb-install-help ()
-  "Installs the online-help of ECB by coping the file ecb.info into the
-info-directory of the Emacs installation and modifying the dir file."
-  (interactive)
-  (let ((success t))
-    ;; first copy the ecb info-file in the info dir of emacs
-    (copy-file (concat ecb-ecb-dir "ecb.info")
-               (concat ecb-emacs-info-dir "ecb.info") t)
-    ;; now install the info-file
-    (if (executable-find (if (eq system-type 'windows-nt)
-                             "install-info.exe" "install-info"))
-        (if (> (length (shell-command-to-string
-                        (concat "install-info "
-                                "-s Emacs "
-                                ecb-ecb-dir "ecb.info "
-                                ecb-emacs-info-dir "dir"))) 0)
-            (setq success nil))
-      (setq success nil))
-
-    ;; either install-info is not available or has failed...try to modify the
-    ;; dir-file "manually"
-    (when (not success)
-      (let ((dir-buffer (find-file-noselect (concat ecb-emacs-info-dir "dir"))))
-        (save-excursion
-          (set-buffer dir-buffer)
-          (goto-char (point-min))
-          (if (re-search-forward "^* ECB: +(ecb)" nil t)
-              (setq success t)
-            (when (re-search-forward "^X?Emacs$" nil t)
-              (newline)
-              (insert "* ECB: (ecb).		The Emacs Code Browser")
-              (save-buffer)
-              (setq success t))))
-        (kill-buffer dir-buffer)))
-    (when (not success)
-      (with-output-to-temp-buffer "*Install ECB-online-help failure*"
-        (princ "ECB has tried to install the ECB online-help in the directory\n")
-        (princ (concat "  " ecb-emacs-info-dir))
-        (princ (concat "\nand to modify the file\n  " ecb-emacs-info-dir "dir.\n\n"))
-        (princ "But this installation has failed due one of the following reasons\n")
-        (princ "- The command install-info is not available onto the system\n")
-        (princ "- The command install-info has failed\n")
-        (princ "- There is no Section Emacs or XEmacs in the file:\n")
-        (princ (concat "  " ecb-emacs-info-dir "dir"))
-        (princ "\n\n")
-        (princ "This is not a big problem, because with the function `ecb-show-help'\n")
-        (princ "you can always call the ECB online help!\n\n")
-        (princ "But if you want the ECB online-help in the *main* Info dir, please\n")
-        (princ "check this dir file and insert then manually the line\n\n")
-        (princ "  \"* ECB: (ecb).		The Emacs Code Browser\"\n\n")))))
-
 
 
 (defcustom ecb-show-help-format 'info
@@ -109,7 +56,8 @@ Info format is used."
                         (ecb-fix-filename ecb-ecb-dir "ecb.html"))
                 (if (boundp 'browse-url-new-window-flag)
                     browse-url-new-window-flag
-                  browse-url-new-window-p))))
+                  browse-url-new-window-p))
+    (message "Opening ECB online-help in a web-browser...done")))
 
 ;;
 ;; Problem reporting functions stolen from JDE

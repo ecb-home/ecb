@@ -105,15 +105,26 @@ This byte compiles ECB. You can safely ignore all messages.
 the @file{Makefile} or by using the batch-file @file{make.bat}. Just
 read the comments in that file you choose.)
 
-@item Call @code{ecb-install-help}.
-Installs the file @file{ecb.info} in the info-directory of Emacs and
-modifies the file @file{dir}. It doesn't matter if you do not execute
-this step because the online help of ECB is available though
+@item Install the supplied @file{ecb.info}
+The ECB distribution contains a file @file{ecb.info} which is the
+online-help of ECB in Info-format. You can install this online help so
+it's available in the Top-directory of Info. There are two ways to do
+this:
+
+@itemize @minus
+@item
+Use the command ``install-info'' if available on your system
+(recommended).
+@item
+Copy the file @file{ecb.info} into the info-directory of Emacs and
+modify the file @file{dir} manually.
+@end itemize
+
+It doesn't matter if you do not execute this step because the online
+help of ECB is always available though, see @code{ecb-show-help}
 (@pxref{Interactive ECB commands}).
 
 @end enumerate
-
-@noindent
 
 @node Overview, Activation and Deactivation , Install, Top
 @chapter Overview
