@@ -1,5 +1,16 @@
 * Changes for ECB version 2.28
 
+** Enhancements to the file-browser
+
+*** Much better performance of the file-browser display because all
+    time-consuming tasks (like the check if the displayed directories are
+    empty of not) are now performed "stealthy" - means when Emacs is idle.
+    Each stealthy task is interruptable by the user so Emacs/ECB will not be
+    blocked by such tasks; next time Emacs is idle again the interrupted task
+    automatically proceeds from the state it has been interrupted.
+    There is a new macro `ecb-defstealthy' which can be used by a user to
+    program own stealthy tasks.
+
 ** Fixed bugs
 
 *** Fixed a bug in the upgrading feature (command `ecb-download-ecb') which has
