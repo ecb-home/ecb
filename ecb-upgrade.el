@@ -176,7 +176,11 @@
 
 ;; Each NEWS-string should be a one-liner shorter than 70 chars
 (defconst ecb-upgrade-news
-  '(("2.20" . ("Fixed a bug preventing tree-buffers with expand-symbol \'before\' to work"
+  '(("2.21" . ("Advice for `balance-windows' so only the edit-windows are balanced."
+               "Gnus, BBDB, VM, Xrefactory etc. work even when ECB-windows are visible."
+               "Commands using `Electric-pop-up-window' now work correctly with ECB."
+               "Fixed some annoying bugs and one fatal bug."))
+    ("2.20" . ("Fixed a bug preventing tree-buffers with expand-symbol \'before\' to work"
                "'ecb-major-modes-\(de)activate' replaced by `ecb-major-modes-show-or-hide'"
                "New keybinding for the online-help: [C-c . h]"
                "The edit-area can be splitted in more than 2 windows."
