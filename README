@@ -29,18 +29,38 @@ Installation
 ------------
 
 1. Unpack the ECB archive.
-2. Add the new directory to your load-path.
-3. Add to your .emacs or site-start.el file the line:
+
+2. Install the required semantic- and eieio-version.
+
+3. Add the new directory to your load-path.
+
+   You MUST add the ECB-install-directory to the 'load-path' either by
+   changing the 'load-path' variable directly in your .emacs or
+   site-lisp/site-start.el or by working with a file subdirs.el.
+
+   ATTENTION: ECB is NOT properly installed if it's directory is not added to
+   'load-path' and for example just loaded by
+
+     (load-file "/path/to/ecb/ecb.el")
+
+   Do not do this!
+
+4. Add to your .emacs or site-start.el file the line:
    (require 'ecb)
 
-Optional byte-compilation steps:
+Optional steps:
 
-4. Restart Emacs.
-5. Call `ecb-byte-compile'. You can safely ignore all messages.
+5. Restart Emacs.
 
-(You can also bytecompile ECB from the command-line either by using the Makefile
-or by using the batch-file make.bat. Just read the comments in that file you
-choose.)
+6. Call `ecb-byte-compile'. Byte compiles ECB. You can safely ignore all
+   messages. (You can also bytecompile ECB from the command-line either by
+   using the Makefile or by using the batch-file make.bat. Just read the
+   comments in that file you choose.)
+
+7. Call `ecb-install-help'.
+   Installs the file ecb.info in the info-directory of Emacs and modifies the
+   dir file. It doesn't matter if you do not execute this step because the
+   online help of ECB is available though.
 
 
 Usage
@@ -58,3 +78,4 @@ Contacts
 Send comments, bug reports and improvement suggestions to:
 
 ecb-list@lists.sourceforge.net
+

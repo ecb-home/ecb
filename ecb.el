@@ -58,7 +58,7 @@
 ;; The latest version of the ECB is available at
 ;; http://home.swipnet.se/mayhem/ecb.html
 
-;; $Id: ecb.el,v 1.224 2002/07/06 15:40:57 berndl Exp $
+;; $Id: ecb.el,v 1.225 2002/07/12 08:46:43 berndl Exp $
 
 ;;; Code:
 
@@ -376,8 +376,8 @@ can only be cleared on demand and only the whole cache can be cleared, see
                        (integer :tag "Filenumber threshold" :value 1000)
                        (choice :tag "Clear cache" :menu-tag "Clear cache"
                                :value ,(if (eq system-type 'windows-nt)
-                                          'demand
-                                        'auto)
+                                           'demand
+                                         'auto)
                                (const :tag "Only on user demand" :value demand)
                                (const :tag "Automatic" :value auto)
                                (integer :tag "Seconds after caching time"
@@ -1103,10 +1103,17 @@ to take effect."
   :group 'ecb-general
   :type 'boolean)
 
-(defcustom ecb-window-sync t
-  "*Synchronize the ECB-windows with current edit window."
+(defcustom ecb-window-sync '(Info-mode)
+  "*Synchronize the ECB-windows with current edit window. If t then the
+synchronization takes place always a buffer changes in the edit window, if nil
+then never. If a list of major-modes then only if the major-mode of the new
+buffer belongs NOT to this list."
   :group 'ecb-general
-  :type 'boolean)
+  :type '(radio :tag "Synchronize ECB windows"
+                (const :tag "Always" t)
+                (const :tag "Never" nil)
+                (repeat :tag "Not with these modes"
+                        (symbol :tag "mode"))))
 
 (defcustom ecb-window-sync-delay 0.25
   "*Time Emacs must be idle before the ECB-windows are synchronized with
@@ -1400,8 +1407,8 @@ is called."
                 (progn
                   (when (not no-reparse)
                     ;; we need this because:
-                    ;; 1. After every jump to a token X via the method-buffer of
-                    ;;    ECB this token X is added to the navigation history list
+                  ;; 1. After every jump to a token X via the method-buffer of
+                ;;    ECB this token X is added to the navigation history list
                     ;;    as new ecb-nav-token-history-item.
                     ;; 2. Before every select of a source in the sources- or
                     ;;    history-buffer or of a node in the method-buffer
@@ -1950,7 +1957,7 @@ according to `ecb-sources-sort-method'."
                      (if (equal ecb-auto-expand-directory-tree 'best)
                          ;; If none of the source-paths in the buffer
                          ;; `ecb-directories-buffer-name' matches then nil
-                         ;; otherwise the node of the best matching source-path
+                        ;; otherwise the node of the best matching source-path
                          (cdar (sort (delete nil
                                              (mapcar (lambda (elem)
                                                        (let ((data (tree-node-get-data elem)))
@@ -1971,11 +1978,11 @@ according to `ecb-sources-sort-method'."
                  ;; expand the best-match node itself
                  (tree-node-set-expanded start t)
                  (ecb-update-directory-node start))
-               ;; start recursive expanding of either the best-matching node or
+              ;; start recursive expanding of either the best-matching node or
                ;; the root-node itself.
                (ecb-expand-tree ecb-path-selected-directory start)
                (tree-buffer-update))
-;;              (message "Klausi: %s" (pp start))
+             ;;              (message "Klausi: %s" (pp start))
              (when (not ecb-show-sources-in-directories-buffer)
                (tree-buffer-highlight-node-data ecb-path-selected-directory
                                                 start)))))
@@ -2398,7 +2405,7 @@ the ECB tree-buffers."
           ;; Klaus: The explizit update of the directories buffer is not
           ;; necessary because the synch with the current source is done by
           ;; `ecb-select-source-file'!
-;;           (ecb-update-directories-buffer)
+          ;;           (ecb-update-directories-buffer)
           (ecb-select-source-file filename)
           ;; selected source has changed, therfore we must initialize
           ;; ecb-selected-token again.
@@ -2409,7 +2416,9 @@ the ECB tree-buffers."
           (run-hooks 'ecb-current-buffer-sync-hook))))))
 
 (defun ecb-window-sync-function ()
-  (when (and ecb-window-sync ecb-minor-mode (equal (selected-frame) ecb-frame))
+  (when (and ecb-window-sync
+             (not (member major-mode ecb-window-sync))
+             ecb-minor-mode (equal (selected-frame) ecb-frame))
     (ecb-current-buffer-sync)))
 
 (defun ecb-get-edit-window (other-edit-window)
@@ -3636,7 +3645,7 @@ always the ECB-frame if called from another frame."
     ;; we run any personal hooks
     (run-hooks 'ecb-activate-hook)
 
-    ;; enable mouse-tracking for the ecb-tree-buffers; we do this after running
+   ;; enable mouse-tracking for the ecb-tree-buffers; we do this after running
     ;; the personal hooks because if a user put´s activation of
     ;; follow-mouse.el (`turn-on-follow-mouse') in the `ecb-activate-hook'
     ;; then our own ECb mouse-tracking must be activated later.
@@ -3965,3 +3974,4 @@ changed there should be no performance-problem!"
 (provide 'ecb)
 
 ;;; ecb.el ends here
+

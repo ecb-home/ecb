@@ -24,14 +24,20 @@ LOADPATH=../semantic ../eieio ../jde/lisp
 
 # Do not change anything below!
 
-# $Id: Makefile,v 1.28 2002/03/15 14:00:17 berndl Exp $
+# $Id: Makefile,v 1.29 2002/07/12 08:46:43 berndl Exp $
+
+RM=rm -f
+MAKEINFO=makeinfo --no-split
 
 ecb_LISP_EL=tree-buffer.el ecb-util.el ecb-mode-line.el ecb-help.el ecb-layout.el ecb-navigate.el ecb.el ecb-eshell.el ecb-cycle.el ecb-face.el ecb-compilation.el ecb-upgrade.el
 ecb_LISP_ELC=$(ecb_LISP_EL:.el=.elc)
+ecb_TEXI=ecb.texi
 
-all: $(ecb_LISP_EL)
+all: ecb help
+
+ecb: $(ecb_LISP_EL)
 	@echo "Byte-compiling ECB with LOADPATH=${LOADPATH} ..."
-	@rm -f $(ecb_LISP_ELC) ecb-compile-script
+	@$(RM) $(ecb_LISP_ELC) ecb-compile-script
 	@echo "(add-to-list 'load-path nil)" > ecb-compile-script
 	@if test ! -z "${LOADPATH}" ; then\
 	   for loadpath in ${LOADPATH}; do \
@@ -42,9 +48,13 @@ all: $(ecb_LISP_EL)
 	@echo "(require 'ecb)" >> ecb-compile-script
 	@echo "(setq debug-on-error t)" >> ecb-compile-script
 	$(EMACS) -batch -no-site-file -l ecb-compile-script --eval '(ecb-byte-compile t)'
-	@rm -f ecb-compile-script
+	@$(RM) ecb-compile-script
+
+help: $(ecb_TEXI)
+	$(MAKEINFO) $<
+	$(MAKEINFO) --html $<
 
 clean:
-	@rm -f $(ecb_LISP_ELC) ecb-compile-script
+	@$(RM) $(ecb_LISP_ELC) ecb-compile-script
 
 # End of makefile

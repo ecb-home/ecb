@@ -455,9 +455,6 @@ are:
                  (const :tag "Never" nil)))
 
 (defconst ecb-download-buffername " *ecb-download*")
-(defconst ecb-ecb-dir
-  (expand-file-name (file-name-directory (locate-library "ecb"))))
-(defconst ecb-ecb-parent-dir (expand-file-name (concat ecb-ecb-dir "../")))
 
 ;; Klaus: Arrghhhhhhhhhhhhhhh... the cygwin version of tar does not accept
 ;; args in windows-style file-format :-( Therefore we convert it with cygpath.
@@ -675,3 +672,4 @@ parallel to current ECB-directory. After adding this new directory tp
 (provide 'ecb-upgrade)
 
 ;;; ecb-upgrade.el ends here
+

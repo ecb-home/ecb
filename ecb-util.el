@@ -26,14 +26,26 @@
 ;; This file is part of the ECB package which can be found at:
 ;; http://home.swipnet.se/mayhem/ecb.html
 
-;; $Id: ecb-util.el,v 1.22 2002/07/05 14:05:33 berndl Exp $
+;; $Id: ecb-util.el,v 1.23 2002/07/12 08:46:43 berndl Exp $
 
 ;;; Code:
+
+;; Some constants
 (defconst running-xemacs (string-match "XEmacs\\|Lucid" emacs-version))
 (defconst ecb-directory-sep-char (if (boundp 'directory-sep-char)
                                      directory-sep-char
                                    ?/))
 (defconst ecb-directory-sep-string (char-to-string ecb-directory-sep-char))
+
+(defconst ecb-ecb-dir
+  (expand-file-name (file-name-directory (locate-library "ecb"))))
+(defconst ecb-ecb-parent-dir (expand-file-name (concat ecb-ecb-dir "../")))
+
+(defconst ecb-emacs-dir
+  (expand-file-name (concat invocation-directory "../")))
+
+(defconst ecb-emacs-info-dir (expand-file-name(concat ecb-emacs-dir "info/")))
+
 
 (defun ecb-remove-assoc (list key)
   (delete* key list :test (function (lambda (key item) (eq key (car item))))))
@@ -161,8 +173,8 @@ to insert any arbitrary string."
                          (mapconcat (function (lambda (x) x))
                                     new-choices ", ") "] "))
     (setq new-choices (nconc (mapcar (function (lambda (x) (list x t)))
-                                 new-choices)
-                         '('("" t))))
+                                     new-choices)
+                             '('("" t))))
     (setq answer (completing-read prompt new-choices nil t ""))
     (cond ((string= answer "")
            (setq answer default))
@@ -174,3 +186,4 @@ to insert any arbitrary string."
 (provide 'ecb-util)
 
 ;;; ecb-util.el ends here
+
