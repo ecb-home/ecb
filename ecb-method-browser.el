@@ -1216,8 +1216,12 @@ check the result if `ecb-debug-mode' is nil in which case the function
 
 
 (defmacro ecb-exec-in-methods-window (&rest body)
+  "Evaluates BODY in the methods-window of ECB. If that window is not
+visible then return the symbol 'window-not-visible. Otherwise the return
+value of BODY is returned."
   `(unwind-protect
-       (when (ecb-window-select ecb-methods-buffer-name)
+       (if (not (ecb-window-select ecb-methods-buffer-name))
+           'window-not-visible
 	 ,@body)
      ))
 
