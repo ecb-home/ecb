@@ -18,9 +18,11 @@ No special notes beyond the contents of README.
 Upgrading from any previous version:
 ------------------------------------
 
-+ The options 'ecb-compile-window-height', 'ecb-select-compile-window' and
-  'ecb-compile-window-temporally-enlarge' are not longer supported. See the
++ The option 'ecb-select-compile-window' is not longer supported. See the
   HISTORY-file.
+  
++ 'ecb-compile-window-temporally-enlarge' is now a boolean option. Only the
+  values nil and t are supported.
 
 + 'ecb-use-dedicated-windows' is not longer a user-customizable option.
 

@@ -1,31 +1,27 @@
-Version 1.40beta2:
-------------------
+Version 1.40:
+-------------
 
 - ecb-toggle-ecb-windows now preserves the split, the split-amount, the buffer
   contents, the window starts and current point. (Klaus)
 
+- Some important changes in the ECB-layout concerning displaying compilation-
+  and temp-buffers. (Klaus):
 
-Version 1.40beta1:
-------------------
-
-- Some important changes in the ECB-layout (Klaus):
-  + The option 'ecb-compile-window-height' is gone. This means you can not
-    longer define a durable separate compilation-window at the bottom of the
-    ECB-frame.
-  + Related options like 'ecb-compile-window-temporally-enlarge' and
-    'ecb-select-compile-window' are also gone because now they make no sense.
-  + The value 'edit-and-compile of the option 'ecb-other-window-jump-behavior'
-    has gone.
+  + 'ecb-select-compile-window' has been gone.
+  
   + 'ecb-use-dedicated-windows' is not longer a user-customizable option but
-    it is always set to t, because this is essantial for correct working of
+    it is always set to t, because this is essential for correct working of
     the ecb-layout engine!
 
-  + But now ECB does all necessary that your edit-window of ECB seems to be a
+  + 'ecb-compile-window-temporally-enlarge' is now a boolean option.  
+
+  + Now ECB does all necessary that your edit-window of ECB seems to be a
     normal Emacs frame, especially concerning displaying temp-buffers (like
     help- and completion-buffers) and compilation-buffers.
+    
   + The variables 'compilation-window-height' and 'temp-buffer-shrink-to-fit'
     (XEmacs) and 'temp-buffer-resize-mode' (GNU Emacs) are now fully supported
-    by ECB.
+    by ECB if no durable compilation-window is shown.
 
 - New function to toggle visibility of the ECB windows. Now it´s possible to
   hide all ECB windows without deactivating ECB (see 'ecb-toggle-ecb-windows')

@@ -26,7 +26,7 @@
 ;;
 ;; Contains all online-help for ECB (stolen something from recentf.el)
 
-;; $Id: ecb-help.el,v 1.32 2001/06/22 17:40:02 berndl Exp $
+;; $Id: ecb-help.el,v 1.33 2001/07/01 18:09:22 berndl Exp $
 
 ;;; Code
 
@@ -91,7 +91,8 @@ different types of ECB-windows:
   of ECB\" below) will jump to the method in the other edit window.
 
 In addition to these ECB-windows you have always one or two edit-windows in
-the ECB-frame where you can do all your editing stuff.
+the ECB-frame and \(if you want) at the bottom a compilation-window, where all
+the output of Emacs-compilation \(compile, grep etc.) is shown.
 
 
                           ===========================
@@ -232,7 +233,7 @@ Temp-buffer and compilation-buffer display in ECB:
 
 If you call any help in Emacs, e.g. by calling `describe-function', or if you
 do a completion in the minibuffer, then Emacs displays the result-buffer in
-another window. This behavior you have alos in ECB. If the edit-window is
+another window. This behavior you have also in ECB. If the edit-window is
 already splitted then the temp-buffer is displayed in the \"other\"
 edit-window otherwise the edit-window will be splitted first. The variables
 `temp-buffer-max-height' and `temp-buffer-resize-mode' work also correctly
@@ -240,6 +241,22 @@ with ECB.
 
 Same for all compilation output-buffers \(e.g. after a `compile' or `grep')
 and the variable `compilation-window-height'.
+
+This is default behavior of ECB. But there is also another way to display such
+buffers:
+
+With the option `ecb-compile-window-height' you can define if the ECB layout
+should contain per default a compilation-window at the bottom \(and if yes the
+height of it). If yes ECB displays all output of compilation-mode \(compile,
+grep etc.) in this special window. Same for displaying help-buffers or similar
+stuff.
+
+With the option `ecb-compile-window-temporally-enlarge' you can allow Emacs to
+enlarge temporally the ECB-compile-window after finishing compilation-output.
+Please read the comment of this option.
+
+But because ECB works best without such a durable compilation-window you
+should read the comments of these two option carefully!
 
 
 Rebuilding the ECB-method buffer:
@@ -366,8 +383,9 @@ the ECB-methods buffer is displayed on top. Here comes what you should/can do
 to work best with ECB in such a situation:
 - First customize your ECB:
   1. Customize `ecb-layout-nr' to layout nr. 10.
-  2. Optional: Ajust the `ecb-windows-height'.
-  3. Save your changes.
+  2. Ensure that `ecb-compile-window-height' is nil.
+  3. Optional: Ajust the `ecb-windows-height'.
+  4. Save your changes.
 - To edit your buffers:
   Call `ecb-toggle-ecb-windows' \(also available via the menu \"ECB\" and by
   \"C-c . t\") or `ecb-hide-ecb-windows' to hide the ECB-method buffer so you
