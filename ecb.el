@@ -73,7 +73,7 @@
 ;; For the ChangeLog of this file see the CVS-repository. For a complete
 ;; history of the ECB-package see the file NEWS.
 
-;; $Id: ecb.el,v 1.306 2003/04/29 08:21:13 berndl Exp $
+;; $Id: ecb.el,v 1.307 2003/05/06 08:26:38 berndl Exp $
 
 ;;; Code:
 
@@ -3746,7 +3746,8 @@ is created."
   (interactive)
   ;; we must manually cut a filename because we must not add filenames to
   ;; `ecb-source-path'!
-  (let* ((my-dir (ecb-fix-filename
+  (let* ((use-dialog-box nil)
+         (my-dir (ecb-fix-filename
                   (or dir
                       (file-name-directory (read-file-name "Add source path: ")))
                   t))

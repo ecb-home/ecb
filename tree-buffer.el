@@ -31,7 +31,7 @@
 ;; For the ChangeLog of this file see the CVS-repository. For a complete
 ;; history of the ECB-package see the file NEWS.
 
-;; $Id: tree-buffer.el,v 1.111 2003/04/03 16:46:40 berndl Exp $
+;; $Id: tree-buffer.el,v 1.112 2003/05/06 08:26:38 berndl Exp $
 
 ;;; Code:
 
@@ -684,7 +684,7 @@ see `tree-buffer-expand-nodes'."
 		  (popup-menu (cons menu-title menu))
 		(let ((fn (x-popup-menu
 			   event (cons 'keymap (cons menu-title menu)))))
-		  (when fn
+                  (when fn
 		    (funcall (car fn) node)))))))))))
 
 (defconst tree-buffer-incr-searchpattern-basic-prefix
