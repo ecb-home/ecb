@@ -15,6 +15,13 @@ Installing ECB first time:
 No special notes beyond the contents of README.
 
 
+Upgrading from any version:
+---------------------------
+
+The option `ecb-show-tags' has changed its type. ECB autom. upgrades your old
+setting to the new option-type.!
+
+
 Upgrading from versions < 2.20:
 -------------------------------
 

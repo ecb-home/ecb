@@ -1,13 +1,33 @@
 * Changes for ECB version 2.23
 
-** The popup-menu contains now mode-dependend tag-filter entries.
-   This means for sources not supported by semantic no protection- or
-   tag-class filters will be offered. And for semantic-supported sources
-   exactly these tag-classes are offered the semantic-parser for the current
-   major-mode offers. For example texi-sources can only be filtered by the
-   tag-classes "Definitions" and "Sections" and java-sources can be filtered
-   by "Methods", "Variables", "Classes" etc. In general the semantic-variable
-   `semantic-symbol->name-assoc-list' is used to get the right tag-classes.
+** Enhancements for the Methods-buffer:
+
+*** New feature for applying default tag-filters for certain files.
+    The new option `ecb-default-tag-filter' allow to define default
+    tag-filters for certain files which are applied automatically after
+    loading such a file into a buffer. The possible filters are the same as
+    offered by the command `ecb-methods-filter' and they are applied in the
+    same manner - the only difference is they are applied automatically. The
+    files can be specified on a combined major-mode- and
+    filename-regexp-basis.
+
+    Usage-example: This can be used to display for outline-mode files (e.g.
+    NEWS) in the Methods-buffer only the level-1-headings by defining a
+    regexp-filter "^\* .*"
+
+*** The popup-menu contains now mode-dependend tag-filter entries.
+    This means for sources not supported by semantic no protection- or
+    tag-class filters will be offered. And for semantic-supported sources
+    exactly these tag-classes are offered the semantic-parser for the current
+    major-mode offers. Same for the command `ecb-methods-filter'. For example
+    texi-sources can only be filtered by the tag-classes "Definitions" and
+    "Sections" and java-sources can be filtered by "Methods", "Variables",
+    "Classes" etc. In general the semantic-variable
+    `semantic-symbol->name-assoc-list' is used to get the right tag-classes.
+
+*** The option `ecb-show-tags' is now defined on a major-mode-basis.
+    This means you can have different settings for each major-mode. ECB autom.
+    upgrades your old setting to the new option-type.
 
 ** The command `ecb-toggle-layout' now has a prefix-argument:
    If this optional argument is not nil (e.g. if called with a prefix-arg)

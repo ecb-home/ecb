@@ -578,7 +578,7 @@ With both ascii-styles the tree-layout can be affected with the options
                       "ecb-images/")))
         (append (mapcar (function (lambda (i)
                                 (concat base i "/height-17")))
-                    '("default" "directories"))
+                    '("default" "directories" "methods"))
             '(nil nil nil)))
   "*Directories where the images for the tree-buffer can be found.
 This is a five-element list where:
@@ -2499,6 +2499,8 @@ ECB has been deactivated. Do not set this variable!")
             (add-hook 'after-save-hook 'ecb-update-methods-after-saving)
             (add-hook 'kill-buffer-hook 'ecb-kill-buffer-hook)
 
+            (add-hook 'find-file-hooks 'ecb-find-file-hook)
+
             ;; after adding all idle-timers and post- and pre-command-hooks we
             ;; activate the monitoring
             (ecb-activate-ecb-autocontrol-functions 1 'ecb-monitor-autocontrol-functions)
@@ -2763,6 +2765,9 @@ does all necessary after finishing ediff."
       (setq ecb-pre-command-hooks nil)
       (remove-hook 'after-save-hook 'ecb-update-methods-after-saving)
       (remove-hook 'kill-buffer-hook 'ecb-kill-buffer-hook)
+
+      (add-hook 'find-file-hooks 'ecb-find-file-hook)
+      
       (if (get 'ediff-quit-hook 'ecb-ediff-quit-hook-value)
           (setq ediff-quit-hook (get 'ediff-quit-hook
                                      'ecb-ediff-quit-hook-value))

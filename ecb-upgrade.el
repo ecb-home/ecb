@@ -177,6 +177,7 @@
 ;; Each NEWS-string should be a one-liner shorter than 70 chars
 (defconst ecb-upgrade-news
   '(("2.23" . ("The command `ecb-toggle-layout' now has a prefix-argument"
+               "Default tag-filters for certain files which are applied automatically"
                "Double-clicking the mouse-1-button now works with integrated speedbar"
                "A new hook `ecb-speedbar-before-activate-hook'"))
     ("2.22" . ("New nifty feature for filtering the tags displayed in the Methods-buffer"
@@ -253,7 +254,8 @@
     (ecb-post-process-semantic-tokenlist . (ecb-post-process-semantic-taglist
                                             ecb-upgrade-post-process-semantic-tokenlist))
     (ecb-show-only-positioned-tokens . (ecb-show-only-positioned-tags identity))
-    (ecb-show-tokens . (ecb-show-tags identity))
+    (ecb-show-tokens . (ecb-show-tags ecb-upgrade-show-tags))
+    (ecb-show-tags . (ecb-show-tags ecb-upgrade-show-tags))
     (ecb-highlight-token-with-point . (ecb-highlight-tag-with-point identity))
     (ecb-highlight-token-with-point-delay . (ecb-highlight-tag-with-point-delay identity))
     (ecb-token-visit-post-actions . (ecb-tag-visit-post-actions
@@ -530,6 +532,10 @@ The car is the old option symbol and the cdr is a 2-element-list with:
       'all
     (ecb-option-get-value 'ecb-other-window-behavior
                           'standard-value)))
+
+(defun ecb-upgrade-show-tags (old-val)
+  (list (cons 'default
+              old-val)))
 
 ;; ----------------------------------------------------------------------
 ;; internal functions. Dot change anything below this line
