@@ -54,7 +54,7 @@
 ;; The latest version of the ECB is available at
 ;; http://home.swipnet.se/mayhem/ecb.html
 
-;; $Id: ecb.el,v 1.160 2001/11/20 23:59:02 burtonator Exp $
+;; $Id: ecb.el,v 1.161 2001/11/21 02:20:50 burtonator Exp $
 
 ;;; Code:
 
@@ -117,6 +117,9 @@
 
 (defvar ecb-activated-window-configuration nil
   "Window configuration used after the ECB is activated.")
+
+(defvar ecb-show-node-name-in-minibuffer nil
+  "FIXME: where is this?")
 
 ;;====================================================
 ;; Customization
