@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-tod.el,v 1.17 2004/01/27 17:30:32 berndl Exp $
+;; $Id: ecb-tod.el,v 1.18 2004/03/23 17:29:54 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -59,10 +59,11 @@
 (defconst ecb-tod-tip-list
   '("You can expand the ECB-methods-buffer with `ecb-expand-methods-nodes' [C-c . x]."
     "You can toggle between different layouts with `ecb-toggle-layout' [C-c . t]."
+    "You can go back to the most recent layout with [C-u] `ecb-toggle-layout' [C-u C-c . t]."
     "You can toggle displaying the ECB-windows with `ecb-toggle-ecb-windows' [C-c . w]."
     "You can show and hide the ECB-windows on a major-mode-basis with `ecb-major-modes-show-or-hide'."
     "You can maximize a certain ECB-window either via its popup-menu or with [C-x 1] in that window."
-    "You can use speedbar as directory browser with option `ecb-use-speedbar-for-directories'."
+    "You can use speedbar instead of the native tree-buffers with option `ecb-use-speedbar-instead-native-tree-buffer'."
     "You can speedup access for big directories with option `ecb-cache-directory-contents'."
     "You can display the online help also in HTML-format with option `ecb-show-help-format'."
     "You can interactively create your own layouts with the command `ecb-create-new-layout'."
@@ -99,16 +100,21 @@
     "Add personal key-bindings to the methods-buffer with `ecb-methods-buffer-after-create-hook'."
     "Add personal key-bindings to the history-buffer with `ecb-history-buffer-after-create-hook'."
     "Pop up a menu with the right mouse-button and do senseful things in the tree-buffers."
+    "Extend the builtin popup-menus to your needs - see `ecb-directories-menu-user-extension'."
     "Call `ecb-show-help' [C-c . o] with a prefix-argument [C-u] and choose the help-format."
     "You can change the prefix [C-c .] of all ECB-key-bindings quick and easy with `ecb-key-map'."
     "Send a problem-report to the ECB-mailing-list quick and easy with `ecb-submit-problem-report'."
     "Switch on/off auto. expanding of the ECB-methods-buffer with `ecb-auto-expand-directory-tree'."
     "You can quickly toggle auto. expanding of the ECB-methods-buffer with `ecb-toggle-auto-expand-tag-tree'."
     "Highlight current semantic-tag of the edit-buffer in the ECB-methods-buffer with `ecb-highlight-tag-with-point'."
+    "Apply a filter to the sources-buffer either via `ecb-sources-filter' or via the popup-menu."
+    "Apply a filter to the history-buffer either via `ecb-history-filter' or via the popup-menu."
+    "Apply tag-filters (can be layered) to the methods-buffer either via `ecb-methods-filter' or via the popup-menu."
     "Use `scroll-all-mode' to scroll both edit-windows of ECB simultaneously - and no other windows are scrolled!"
     "You can toggle having a compile window with `ecb-toggle-compile-window' if `ecb-compile-window-height' is not nil."
     "Start ECB automatically after Emacs is started. Use option `ecb-auto-activate'"
-    "Easy horizontal scrolling the tree-buffers with the mouse with [M-mouse-1] and [M-mouse-3]; see `ecb-tree-easy-hor-scroll'."
+    "Maximize a tree-buffer via modeline - ECB supports the standard-mechanism of (X)Emacs for deleting other windows."
+    "Easy horizontal scrolling the tree-buffers with the mouse with [M-mouse-1] and [M-mouse-3]; see `ecb-tree-easy-hor-scroll'." ;;
     )
   "List of all available tips of the day.")
 

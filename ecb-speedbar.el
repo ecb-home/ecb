@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-speedbar.el,v 1.57 2004/03/13 19:17:09 berndl Exp $
+;; $Id: ecb-speedbar.el,v 1.58 2004/03/23 17:29:54 berndl Exp $
 
 ;;; Commentary:
 
@@ -75,6 +75,7 @@
 (silentcomp-defvar imenu--index-alist)
 ;; XEmacs
 (silentcomp-defun event-button)
+(silentcomp-defvar mouse-motion-handler)
 
 (defgroup ecb-speedbar nil
   "Settings for the speedbar-integration of ECB."

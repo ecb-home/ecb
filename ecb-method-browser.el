@@ -24,7 +24,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-method-browser.el,v 1.23 2004/03/14 19:05:47 berndl Exp $
+;; $Id: ecb-method-browser.el,v 1.24 2004/03/23 17:29:54 berndl Exp $
 
 ;;; Commentary:
 
@@ -549,12 +549,41 @@ by semantic!"
   :type '(repeat (cons (symbol :tag "Major-mode")
                        (repeat (function :tag "Post-process function")))))
 
-;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: 
-;; (defcustom ecb-default-tag-filter nil
-;;   "*"
-;;   :group 'ecb-methods
-;;   :type '(repeat ))
+(defcustom ecb-default-tag-filter nil
+  "*Default tag-filters for certain files.
+This option allow to define default tag-filters for certain files which are
+applied automatically after loading such a file into a buffer. The possible
+filters are the same as offered by the command `ecb-methods-filter' and they
+are applied in the same manner - the only difference is they are applied
+automatically. Please be aware that symbol-filters \(e.g. protection-symbols
+like public or private) must not be inserted with quotes whereas a
+filter-regexp has to be inserted with surrounding double-quotes! In addition
+backslashes in a regexp have to be doubled!
 
+For each file-spec \(a major-mode plus a file-regexp which both specify a
+file for which filters should be applied) there can be as much filters as
+needed - they are layered like with `ecb-methods-filter' too.
+
+Tag-classes which are completely hidden or excluded by the option
+`ecb-show-tags' will never being displayed in the Methods-buffer regardless of
+the filters of this option!"
+  :group 'ecb-methods
+  :type '(repeat (cons :tag "Default tag filter"
+                       (cons :tag "Filespec"
+                             (symbol :tag "Major-mode")
+                             (regexp :tag "Filename-regexp"))
+                       (repeat :tag "Default filters"
+                               (list :tag "Filterspec"
+                                     (choice :tag "Filter-type"
+                                             :menu-tag "Filtertype"
+                                             (const :tag "Regexp" :value regexp)
+                                             (const :tag "Protection" :value protection)
+                                             (const :tag "Tag-class" :value tag-class)
+                                             (const :tag "Funtion" :value function))
+                                     (sexp :tag "Filter-value")
+                                     (boolean :tag "inverse"))))))
+
+  
 (defcustom ecb-show-only-positioned-tags t
   "*Show only nodes in the method-buffer which are \"jump-able\".
 If not nil then ECB displays in the method-buffer only nodes which are
@@ -571,18 +600,27 @@ by semantic!"
   :type 'boolean)
 
 
-(defcustom ecb-show-tags '((include collapsed nil)
-                           (parent collapsed nil)
-                           (type flattened nil)
-                           (variable collapsed access)
-                           (function flattened access)
-                           (rule flattened name)
-                           (section flattened nil)
-                           (def collapsed name)
-                           (label hidden nil)
-                           (t collapsed name))
+(defcustom ecb-show-tags '((default . ((include collapsed nil)
+                                       (parent collapsed nil)
+                                       (type flattened nil)
+                                       (variable collapsed access)
+                                       (function flattened access)
+                                       (rule flattened name)
+                                       (section flattened nil)
+                                       (def collapsed name)
+                                       (label hidden nil)
+                                       (t collapsed name))))
   "*How to show tags in the methods buffer first time after find-file.
-This variable is a list where each element represents a type of tags:
+This functionality is set on a major-mode base, i.e. for every major-mode a
+different setting can be used. The value of this option is a list of
+cons-cells:
+
+The car is either a major-mode symbol or the special symbol 'default which
+means if no setting for a certain major-mode is defined then the cdr of
+the 'default cons-cell is used. This option should always contain a
+default-setting!
+
+The cdr is a list where each element represents a type of tags:
 
 \(<tag type> <display type> <sort method>)
 
@@ -634,17 +672,26 @@ by semantic!"
   :set (function (lambda (symbol value)
 		   (set symbol value)
 		   (ecb-clear-tag-tree-cache)))
-  :type '(repeat (list (symbol :tag "Tag symbol")
-		       (choice :tag "Display type" :value collapsed
-			       (const :tag "Expanded" expanded)
-			       (const :tag "Collapsed" collapsed)
-			       (const :tag "Flattened" flattened)
-			       (const :tag "Hidden" hidden))
-		       (choice :tag "Sort by" :value nil
-			       (const :tag "Name" name)
-			       (const :tag "Access then name" access)
-			       (const :tag "No sort" nil))))
+  :type '(repeat (cons (symbol :tag "Major-mode")
+                       (repeat (list (symbol :tag "Tag symbol")
+                                     (choice :tag "Display type" :value collapsed
+                                             (const :tag "Expanded" expanded)
+                                             (const :tag "Collapsed" collapsed)
+                                             (const :tag "Flattened" flattened)
+                                             (const :tag "Hidden" hidden))
+                                     (choice :tag "Sort by" :value nil
+                                             (const :tag "Name" name)
+                                             (const :tag "Access then name" access)
+                                             (const :tag "No sort" nil))))))
   :initialize 'custom-initialize-default)
+
+(defun ecb-get-show-tags-list ()
+  "Return the show-tags-list of `ecb-show-tags' for current major-mode."
+  (let ((mode-show-tag-list (cdr (assoc major-mode ecb-show-tags)))
+        (default-show-tag-list (cdr (assoc 'default ecb-show-tags))))
+    (or mode-show-tag-list
+        (and (null mode-show-tag-list)
+             default-show-tag-list))))
 
 (defcustom ecb-methods-filter-replace-existing 'never
   "*How the methods-filter should be applied to existing filters.
@@ -1135,10 +1182,11 @@ check the result if `ecb-debug-mode' is nil in which case the function
 
 
 (defun ecb-get-tag-type-display (tag-type)
-  (let ((display (ecb-find-assoc tag-type ecb-show-tags)))
+  (let* ((show-tags-list (ecb-get-show-tags-list))
+         (display (ecb-find-assoc tag-type show-tags-list)))
     (if display
 	display
-      (setq display (ecb-find-assoc t ecb-show-tags))
+      (setq display (ecb-find-assoc t show-tags-list))
       (if display
 	  display
 	'(t hidden nil)))))
@@ -1270,13 +1318,27 @@ Methods-buffer."
                          (ecb-forbid-tag-display tag)))
                     (t nil)))))))))
 
+;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: This is because this feature is
+;; currently still in a beta-state! If stable we either make a defcustom or we
+;; activate it autom.
+(defvar ecb-activate-tag-icon-display nil)
+
 (defun ecb-add-tag-bucket (node bucket display sort-method
                                   &optional parent-tag no-bucketize)
   "Adds a tag bucket to a node unless DISPLAY equals 'hidden."
   (when bucket
-    (let ((name (ecb-format-bucket-name (car bucket)))
-          ;;(type (ecb--semantic-tag-class (cadr bucket)))
-	  (bucket-node node))
+    (let* ((name-bucket (ecb-format-bucket-name (car bucket)))
+           (image-name (format "%s-bucket" (ecb--semantic-tag-class (cadr bucket))))
+           (name-icon-str (save-excursion
+                            (set-buffer ecb-methods-buffer-name)
+                            (tree-buffer-add-image-icon-maybe
+                             0 1
+                             " " (tree-buffer-find-image image-name))))
+           (name (if ecb-activate-tag-icon-display
+                     (concat name-icon-str name-bucket)
+                   name-bucket))
+           ;;(type (ecb--semantic-tag-class (cadr bucket)))
+           (bucket-node node))
       (unless (eq 'hidden display)
         (ecb-apply-user-filter-to-tags (cdr bucket))
 	(unless (or (eq 'flattened display)
@@ -1306,13 +1368,86 @@ Methods-buffer."
           ;; new filter (or no filter) without resetting the old filter before.
           (ecb-allow-tag-display tag))))))
 
+;; (defun ecb-add-tag-bucket (node bucket display sort-method
+;;                                 &optional parent-tag no-bucketize)
+;;   "Adds a tag bucket to a node unless DISPLAY equals 'hidden."
+;;   (when bucket
+;;     (let ((name (ecb-format-bucket-name (car bucket)))
+;;           ;;(type (ecb--semantic-tag-class (cadr bucket)))
+;; 	  (bucket-node node))
+;;       (unless (eq 'hidden display)
+;;         (ecb-apply-user-filter-to-tags (cdr bucket))
+;; 	(unless (or (eq 'flattened display)
+;;                     ;; we must not create a bucket-node when each tag in the
+;;                     ;; bucket is forbidden to be displayed
+;;                     (not (ecb-show-at-least-one-tag-p (cdr bucket))))
+;; 	  (setq bucket-node
+;;                 (tree-node-new name 1
+;;                                (list 'ecb-bucket-node
+;;                                      (car bucket)
+;;                                      (ecb--semantic-tag-class (car (cdr bucket))))
+;;                                nil node
+;;                                (if ecb-truncate-long-names 'end)))
+;; 	  (tree-node-set-expanded bucket-node (eq 'expanded display)))
+;; 	(dolist (tag (ecb-sort-tags sort-method (cdr bucket)))
+;;           ;; we create only a new node for a tag of the bucket when the tag is
+;;           ;; not forbidden to be displayed.
+;;           (if (not (ecb-tag-forbidden-display-p tag))
+;;               (ecb-update-tag-node tag
+;;                                    (tree-node-new "" 0 tag t bucket-node
+;;                                                   (if ecb-truncate-long-names 'end))
+;;                                    parent-tag no-bucketize))
+;;           ;; now we allow each tag to be displayed. This can be done because
+;;           ;; here we already excluded the tag from being added as a node to
+;;           ;; the tree-buffer and therefore from being displayed. So we can
+;;           ;; reset all tags to be shown by default. So we can apply a complete
+;;           ;; new filter (or no filter) without resetting the old filter before.
+;;           (ecb-allow-tag-display tag))))))
 
+
+(defconst ecb-tag-image-name-alias-alist
+  '(("struct-nil" . "class-unknown")
+    ("struct-unknown" . "class-unknown")
+    ("struct-private" . "class-private")
+    ("struct-protected" . "class-protected")
+    ("struct-public" . "class-public")
+    ("class-nil" . "class-unknown")
+    ("class-unknown" . "class-unknown")
+    ("class-private" . "class-private")
+    ("class-protected" . "class-protected")
+    ("class-public" . "class-public")
+    ("function-nil" . "function-unknown")
+    ("function-unknown" . "function-unknown")
+    ("function-private" . "function-private")
+    ("function-protected" . "function-protected")
+    ("function-public" . "function-public")
+    ("variable-nil" . "variable-unknown")
+    ("variable-unknown" . "variable-unknown")
+    ("variable-private" . "variable-private")
+    ("variable-protected" . "variable-protected")
+    ("variable-public" . "variable-public")))
 
 (defun ecb-update-tag-node (tag node &optional parent-tag no-bucketize)
   "Updates a node containing a tag."
   (let* ((children (ecb--semantic-tag-children-compatibility
-                    tag ecb-show-only-positioned-tags)))
-    (tree-node-set-name node (ecb-get-tag-name tag parent-tag))
+                    tag ecb-show-only-positioned-tags))
+         (tag-name (ecb-get-tag-name tag parent-tag))
+         (image-name-alias (format "%s-%s" (or (and (equal (ecb--semantic-tag-class tag)
+                                                           'type)
+                                                    (ecb--semantic-tag-type tag))
+                                               (ecb--semantic-tag-class tag))
+                                   (ecb--semantic-tag-protection tag parent-tag)))
+         (image-name (cdr (assoc image-name-alias
+                                 ecb-tag-image-name-alias-alist))))
+    (if (and ecb-activate-tag-icon-display image-name )
+        (save-excursion
+          (set-buffer ecb-methods-buffer-name)
+          (setq tag-name
+                (tree-buffer-add-image-icon-maybe
+                 0 1
+                 (concat " " tag-name)
+                 (tree-buffer-find-image image-name)))))
+    (tree-node-set-name node tag-name)
     (unless (eq 'function (ecb--semantic-tag-class tag))
       (ecb-add-tags node children tag no-bucketize)
       (tree-node-set-expandable
@@ -1326,7 +1461,26 @@ Methods-buffer."
            node
            (and (tree-node-is-expandable node)
                 (ecb-type-tag-expansion type-specifier))))))))
-    
+
+;; (defun ecb-update-tag-node (tag node &optional parent-tag no-bucketize)
+;;   "Updates a node containing a tag."
+;;   (let* ((children (ecb--semantic-tag-children-compatibility
+;;                     tag ecb-show-only-positioned-tags)))
+;;     (tree-node-set-name node (ecb-get-tag-name tag parent-tag))
+;;     (unless (eq 'function (ecb--semantic-tag-class tag))
+;;       (ecb-add-tags node children tag no-bucketize)
+;;       (tree-node-set-expandable
+;;        node (not (eq nil (tree-node-get-children node))))
+;;       ;; Always expand types, maybe this should be customizable and more
+;;       ;; flexible
+;;       (if (not (eq 'type (ecb--semantic-tag-class tag)))
+;;           (tree-node-set-expanded node nil)
+;;         (let ((type-specifier (ecb-get-type-specifier tag)))
+;;           (tree-node-set-expanded
+;;            node
+;;            (and (tree-node-is-expandable node)
+;;                 (ecb-type-tag-expansion type-specifier))))))))
+
 
 (defun ecb-post-process-taglist (taglist)
   "If for current major-mode a post-process function is found in
@@ -1389,6 +1543,7 @@ filter belongs and the value is the applied filter to that buffer.")
                               (intern choice)
                               inverse
                               (concat (and inverse "^") "Prot")
+                              choice
                               source-buffer)))
 
 (defun ecb-methods-filter-by-tag-class (inverse source-buffer
@@ -1408,15 +1563,17 @@ filter belongs and the value is the applied filter to that buffer.")
                                                         (if (string= (cdr e) choice)
                                                             (car e))))
                                             curr-semantic-symbol->name-assoc-list)))))))
-    (message "Klausi: %s, %s"
-             (if (symbolp class) "Symbol" "String")
-             class)
     (ecb-methods-filter-apply 'tag-class
                               (intern class)
                               inverse
                               (concat (and inverse "^") "Tagclass")
+                              (cdr (assoc (intern class)
+                                          curr-semantic-symbol->name-assoc-list))
                               source-buffer)))
 
+
+;; The popup-menu commands for protection- and tag-class-filters are generated
+;; dynamically - see `ecb-methods-menu-tagfilter-entries'.
 
 (defun ecb-methods-filter-by-regexp (inverse source-buffer &optional regexp)
   "Filter the Methods-buffer by a regular expression."
@@ -1425,6 +1582,7 @@ filter belongs and the value is the applied filter to that buffer.")
                               (if (> (length regexp-str) 0) regexp-str nil)
                               inverse
                               (concat (and inverse "^") "Regexp")
+                              (if (> (length regexp-str) 0) regexp-str nil)
                               source-buffer)))
 
 (tree-buffer-defpopup-command ecb-methods-filter-by-regexp-popup
@@ -1435,14 +1593,17 @@ filter belongs and the value is the applied filter to that buffer.")
   "Filter the Methods-buffer by inverse regexp from popup."
   (ecb-methods-filter-by-regexp t (car (tree-buffer-get-data-store))))
 
-(defun ecb-methods-filter-by-function (inverse source-buffer)
+(defun ecb-methods-filter-by-function (inverse source-buffer &optional fcn-name)
   "Filter the Methods-buffer by a filter-function."
-  (ecb-methods-filter-apply 'function
-                            (intern (completing-read "Tag-filter-function: "
-                                                     obarray 'fboundp t))
-                            inverse
-                            (concat (and inverse "^") "Function")
-                            source-buffer))
+  (let ((filter-fcn-name (or fcn-name
+                             (completing-read "Tag-filter-function: "
+                                              obarray 'fboundp t))))
+    (ecb-methods-filter-apply 'function
+                              (intern filter-fcn-name)
+                              inverse
+                              (concat (and inverse "^") "Function")
+                              filter-fcn-name
+                              source-buffer)))
 
 (tree-buffer-defpopup-command ecb-methods-filter-by-function-popup
   "Filter the Methods-buffer by function-filter from popup."
@@ -1454,11 +1615,11 @@ filter belongs and the value is the applied filter to that buffer.")
 
 (tree-buffer-defpopup-command ecb-methods-filter-by-nothing-popup
   "Remove any filter from the Methods-buffer from popup."
-  (ecb-methods-filter-apply nil nil nil "" (car (tree-buffer-get-data-store))))
+  (ecb-methods-filter-apply nil nil nil "" "" (car (tree-buffer-get-data-store))))
 
 (tree-buffer-defpopup-command ecb-methods-filter-delete-last-popup
   "Remove the last added filter from the Methods-buffer from popup."
-  (ecb-methods-filter-apply nil nil nil "" (car (tree-buffer-get-data-store)) t))
+  (ecb-methods-filter-apply nil nil nil "" "" (car (tree-buffer-get-data-store)) t))
 
 
 (defun ecb-get-type-tag-of-current-node (curr-node)
@@ -1522,12 +1683,64 @@ TABLE is used."
           nil)))))
 
 
-
+(defun ecb-get-source-buffer-for-tag-filter ()
+  "Return the source-buffer of the tag-list which should be filtered."
+  (cond ((ecb-point-in-edit-window)
+         (current-buffer))
+        ((equal (current-buffer)
+                (get-buffer ecb-methods-buffer-name))
+         (car (tree-buffer-get-data-store)))
+        (t (or (and ecb-last-source-buffer
+                    (buffer-live-p ecb-last-source-buffer)
+                    ecb-last-source-buffer)
+               (ecb-error "There is no source-file to filter!")))))
+  
 (defun ecb-methods-filter-inverse ()
   "Apply an inverse filter to the Methods-buffer. This is the same as calling
 `ecb-methods-filter' with a prefix arg."
   (interactive)
-  (ecb-methods-filter t))
+  (ecb-methods-filter-internal t))
+
+;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: Zu texi hinzufügen.
+(defun ecb-methods-filter-protection (&optional inverse)
+  "Filter the methods-buffer by protection. If INVERSE is not nil \(called
+with a prefix arg) then an inverse filter is applied. For further details see
+`ecb-methods-filter'."
+  (interactive "P")
+  (ecb-methods-filter-internal inverse "protection"))
+
+(defun ecb-methods-filter-tagclass (&optional inverse)
+  "Filter the methods-buffer by tag-class. If INVERSE is not nil \(called
+with a prefix arg) then an inverse filter is applied. For further details see
+`ecb-methods-filter'."
+  (interactive "P")
+  (ecb-methods-filter-internal inverse "tag-class"))
+
+(defun ecb-methods-filter-regexp (&optional inverse)
+  "Filter the methods-buffer by a regexp. If INVERSE is not nil \(called
+with a prefix arg) then an inverse filter is applied. For further details see
+`ecb-methods-filter'."
+  (interactive "P")
+  (ecb-methods-filter-internal inverse "regexp"))
+
+(defun ecb-methods-filter-function (&optional inverse)
+  "Filter the methods-buffer by a function. If INVERSE is not nil \(called
+with a prefix arg) then an inverse filter is applied. For further details see
+`ecb-methods-filter'."
+  (interactive "P")
+  (ecb-methods-filter-internal inverse "function"))
+
+(defun ecb-methods-filter-nofilter ()
+  "Remove any filter from the Methods-buffer. For further details see
+`ecb-methods-filter'."
+  (interactive)
+  (ecb-methods-filter-internal nil "no filter"))
+
+(defun ecb-methods-filter-delete-last ()
+  "Remove the most recent filter from the Methods-buffer. For further details see
+`ecb-methods-filter'."
+  (interactive)
+  (ecb-methods-filter-internal nil "delete last"))
 
 (defun ecb-methods-filter (&optional inverse)
   "Apply a filter to the Methods-buffer to reduce the number of entries.
@@ -1578,31 +1791,32 @@ then always the top-most filter is displayed in the modeline but the fact of
 more than 1 filter is visualized by the number of the filters - included in
 parens. You can see all currently applied filters by moving the mouse over the
 filter-string in modeline of the Methods-buffer: They will displayed as
-help-echo."
+help-echo.
+
+See the option `ecb-default-tag-filter' if you search for automatically
+applied default-tag-filters."
   (interactive "P")
+  (ecb-methods-filter-internal inverse))
+
+(defun ecb-methods-filter-internal (inverse &optional filter-type)
+  "FILTER-TYPE has to be one of the strings \"regexp\", \"protection\",
+\"tag-class\", \"function\", \"no filter\" or \"delete last\"."
   (if (save-excursion
         (set-buffer ecb-methods-buffer-name)
         (tree-buffer-empty-p))
       (message "There is nothing to filter in an empty Methods-buffer!")
-    (let* ((source-buffer (cond ((ecb-point-in-edit-window)
-                                 (current-buffer))
-                                ((equal (current-buffer)
-                                        (get-buffer ecb-methods-buffer-name))
-                                 (car (tree-buffer-get-data-store)))
-                                (t (or (and ecb-last-source-buffer
-                                            (buffer-live-p ecb-last-source-buffer)
-                                            ecb-last-source-buffer)
-                                       (ecb-error "There is no source-file to filter!")))))
+    (let* ((source-buffer (ecb-get-source-buffer-for-tag-filter))
            (semantic-source-p (save-excursion
                                 (set-buffer source-buffer)
                                 (ecb--semantic-active-p)))
-           (choice (ecb-query-string
-                    (format "Apply %sfilter:"
-                            (if inverse "inverse " ""))
-                    (delq nil (list "regexp"
-                                    (if semantic-source-p "protection")
-                                    (if semantic-source-p "tag-class")
-                                    "function" "no filter" "delete last")))))
+           (choice (or filter-type
+                       (ecb-query-string
+                        (format "Apply %sfilter:"
+                                (if inverse "inverse " ""))
+                        (delq nil (list "regexp"
+                                        (if semantic-source-p "protection")
+                                        (if semantic-source-p "tag-class")
+                                        "function" "no filter" "delete last"))))))
       (cond ((string= choice "protection")
              (ecb-methods-filter-by-prot inverse source-buffer))
             ((string= choice "tag-class")
@@ -1612,23 +1826,34 @@ help-echo."
             ((string= choice "function")
              (ecb-methods-filter-by-function inverse source-buffer))
             ((string= choice "delete last")
-             (ecb-methods-filter-apply nil nil nil "" source-buffer t))
-            (t (ecb-methods-filter-apply nil nil nil "" source-buffer))))))
+             (ecb-methods-filter-apply nil nil nil "" "" source-buffer t))
+            ((string= choice "no filter")
+             (ecb-methods-filter-apply nil nil nil "" "" source-buffer))
+            (t (ecb-methods-filter-apply nil nil nil "" "" source-buffer))))))
 
 
-(defun ecb-methods-filter-apply (filtertype filter inverse filter-display
+(defun ecb-methods-filter-apply (filtertype filter inverse filter-type-display
+                                            filter-display
                                             source-buffer &optional remove-last)
+  "Apply the FILTER of type FILTERTYPE to the buffer SOURCEBUFFER. If INVERSE
+is not nil then this filter will be applied inverse. FILTER-TYPE-DISPLAY and
+FILTER-DISPLAY are strings and specify how the FILTER of type FILTERTYPE
+should be displayed in the modeline of the methods-buffer. If REMOVE-LAST is
+not nil then the topmost filter will be removed and all other arguments unless
+SOURCE-BUFFER arguments are ignored."
   (save-excursion
     (set-buffer source-buffer)
-    (if (and (member filtertype '(protection tag-class))
+    (if (and (not remove-last)
+             (member filtertype '(protection tag-class))
              (not (ecb--semantic-active-p)))
         (ecb-error "A %s-filter '%s' can only applied to semantic-supported sources!"
                    filtertype filter)))
   (let* ((filter-elem (assoc source-buffer ecb-methods-user-filter-alist))
          (new-filter-spec (and filtertype
                                (list filtertype filter (if inverse 'not 'identity)
-                                     filter-display)))
-         (replace (and (not (equal ecb-methods-filter-replace-existing 'never))
+                                     filter-type-display filter-display)))
+         (replace (and (not remove-last)
+                       (not (equal ecb-methods-filter-replace-existing 'never))
                        (or (equal ecb-methods-filter-replace-existing 'always)
                            (y-or-n-p "Should the new filter replace existing ones? "))))
          (filters (or (and remove-last
@@ -1657,7 +1882,7 @@ help-echo."
     (when (save-excursion
             (set-buffer ecb-methods-buffer-name)
             (tree-buffer-empty-p))
-      (ecb-methods-filter-apply nil nil nil "" source-buffer t)
+      (ecb-methods-filter-apply nil nil nil "" "" source-buffer t)
       (message "ECB has not applied this filter because it would filter out all nodes!"))))
         
   
@@ -1670,7 +1895,7 @@ the option `ecb-mode-line-prefixes'."
                                    ecb-methods-user-filter-alist))))
          (top-filter-spec (ecb-last filters))
          (filter-type-str (nth 3 top-filter-spec))
-         (filter (nth 1 top-filter-spec)))
+         (filter-str (nth 4 top-filter-spec)))
     (if (null top-filter-spec)
         nil ;; no prefix if no filter
       (let ((str (format "[%s%s: %s]"
@@ -1678,18 +1903,83 @@ the option `ecb-mode-line-prefixes'."
                          (if (> (length filters) 1)
                              (format "(%d)" (length filters))
                            "")
-                         filter)))
+                         filter-str)))
         (put-text-property 0 (length str) 'help-echo
                            (mapconcat (function
                                        (lambda (f-elem)
                                          (let ((f-type-str (nth 3 f-elem) )
-                                               (f (nth 1 f-elem)))
+                                               (f-str (nth 4 f-elem)))
                                            (format "[%s: %s]"
-                                                   f-type-str f))))
+                                                   f-type-str f-str))))
                                       filters
                                       ", ")
                            str)
         str))))
+
+(defun ecb-default-tag-filter-for-current-file ()
+  "Check if for the file of the current buffer a default-tag-filter should be
+applied. If yes, then the filters-list of `ecb-default-tag-filter' is returned
+otherwise nil."
+  (catch 'found
+    (dolist (spec ecb-default-tag-filter)
+      (let ((m-mode (caar spec))
+            (regexp (cdar spec)))
+        (if (and (equal major-mode m-mode)
+                 (save-match-data
+                   (string-match regexp (buffer-file-name (current-buffer)))))
+            (throw 'found (cdr spec)))))
+    nil))
+
+(defun ecb-apply-default-tag-filter ()
+  "Applies all default-tag-filters specified in `ecb-default-tag-filter' for
+the current file."
+  (remove-hook 'post-command-hook 'ecb-apply-default-tag-filter)
+  (ignore-errors
+    (let ((tag-filter-list (ecb-default-tag-filter-for-current-file)))
+      (dolist (filter-spec tag-filter-list)
+        (let ((filter-apply-fcn
+               (cond ((equal (nth 0 filter-spec) 'protection)
+                      'ecb-methods-filter-by-prot)
+                     ((equal (nth 0 filter-spec) 'tag-class)
+                      'ecb-methods-filter-by-tag-class)
+                     ((equal (nth 0 filter-spec) 'regexp)
+                      'ecb-methods-filter-by-regexp)
+                     ((equal (nth 0 filter-spec) 'function)
+                      'ecb-methods-filter-by-function)))
+              (filter 
+               (cond ((equal (nth 0 filter-spec) 'protection)
+                      (cond ((symbolp (nth 1 filter-spec))
+                             (symbol-name (nth 1 filter-spec)))
+                            ((stringp (nth 1 filter-spec))
+                             (nth 1 filter-spec))
+                            (t (ecb-error "Not a valid tag-filter: %s"
+                                          (nth 1 filter-spec)))))
+                     ((equal (nth 0 filter-spec) 'tag-class)
+                      (cond ((symbolp (nth 1 filter-spec))
+                             (symbol-name (nth 1 filter-spec)))
+                            ((stringp (nth 1 filter-spec))
+                             (nth 1 filter-spec))
+                            (t (ecb-error "Not a valid tag-filter: %s"
+                                          (nth 1 filter-spec)))))
+                     ((equal (nth 0 filter-spec) 'regexp)
+                      (if (stringp (nth 1 filter-spec))
+                          (nth 1 filter-spec)
+                        (ecb-error "Not a valid tag-filter: %s"
+                                   (nth 1 filter-spec))))
+                     ((equal (nth 0 filter-spec) 'function)
+                      (cond ((symbolp (nth 1 filter-spec))
+                             (symbol-name (nth 1 filter-spec)))
+                            ((stringp (nth 1 filter-spec))
+                             (nth 1 filter-spec))
+                            (t (ecb-error "Not a valid tag-filter: %s"
+                                          (nth 1 filter-spec))))))))
+          (funcall filter-apply-fcn
+                   (nth 2 filter-spec) (current-buffer) filter))))))
+
+(defun ecb-find-file-hook ()
+  "Adds `ecb-apply-default-tag-filter' to `post-command-hook'. This function
+removes itself from the `post-command-hook'."
+  (add-hook 'post-command-hook 'ecb-apply-default-tag-filter))
 
 ;; adding tags to the Methods-buffer 
 
@@ -1702,6 +1992,7 @@ the option `ecb-mode-line-prefixes'."
        tags
      (ecb--semantic-bucketize tags
                               (and parent-tag
+                                   (ecb--semantic-symbol->name-assoc-list-for-type-parts)
                                    (equal (ecb--semantic-tag-class parent-tag)
                                           'type))))
    no-bucketize))
@@ -1736,7 +2027,7 @@ the option `ecb-mode-line-prefixes'."
 The PARENT-TAG is propagated to the functions `ecb-add-tag-bucket' and
 `ecb-find-add-tag-bucket'."
   (setq buckets (cons nil buckets))
-  (dolist (tag-display ecb-show-tags)
+  (dolist (tag-display (ecb-get-show-tags-list))
     (let* ((type (car tag-display))
            (display (cadr tag-display))
            (sort-method (caddr tag-display)))
@@ -2233,7 +2524,7 @@ current buffer."
                     (when (and highlight-tag
                                bucket-data ;; tag has no containing type
                                (member (car (cdr (assoc (ecb--semantic-tag-class highlight-tag)
-                                                        ecb-show-tags)))
+                                                        (ecb-get-show-tags-list))))
                                        '(expanded collapsed))
                                (or (equal ecb-auto-expand-tag-tree 'all)
                                    (member (ecb--semantic-tag-class highlight-tag)
