@@ -1,6 +1,8 @@
 Version 1.40:
 -------------
 
+- Tokens can now be sorted by access. (Jesper)
+
 - Added a function to semantic-clean-token-hooks that just updates the token
   changed instead of re-building the entire token tree. (Jesper)
 
