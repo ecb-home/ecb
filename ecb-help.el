@@ -75,6 +75,7 @@ used.
 Note: If you got ECB as a standard XEmacs-package maybe the
 HTML-online-documentation is not included."
   :group 'ecb-help
+  :group 'ecb-most-important
   :type '(choice :tag "Online-help format" :menu-tag "Online-help format"
                  (const :tag "Info" :value info)
                  (const :tag "Html" :value html)))

@@ -1,5 +1,10 @@
 * Changes for ECB version 2.20
 
+** New customization group "ecb-most-important"
+   This group centralizes the most important options of ECB in one group which
+   is also offered by the "Preferences" submenu ob the ECB-menu. These are
+   options you should at least know that they exist.
+
 ** The restriction of only two edit-windows has been gone!
 
 *** Beginning with this version 2.20 there are no restrictions about the
@@ -36,11 +41,22 @@
     Also available via the ECB-menu. The command is
     `ecb-goto-window-edit-last'.
 
+*** Option `ecb-other-window-jump-behavior' has been renamed to
+    `ecb-other-window-behavior' and has also two new allowed values: 'smart
+    (the new default) and an arbitrary function-symbol. With the latter one
+    the user can define his own other-window-behavior and the former one
+    chooses in a smart and intuitive way the "other window" for going to it
+    via `other-window' or for scrolling it via one of the "scroll another
+    window"-functions (e.g. `scroll-other-window'). Thanks to John S. Yates,
+    Jr. <john@yates-sheets.org> for suggesting the new smart behavior. ECB
+    autom. upgrades the old value of `ecb-other-window-jump-behavior' to the
+    new option-name.
+    
 *** New option `ecb-scroll-other-window-scrolls-compile-window' and new
     command `ecb-toggle-scroll-other-window-scrolls-compile'. If this new
     option is nil then ECB chooses very smart and intuitive the window which
     will be scrolled by commands like `scroll-other-window' (see documentation
-    of the advice of `other-window-for-scrolling'). But sometimes the user
+    of the the option `ecb-other-window-behavior'). But sometimes the user
     wants to scroll the compile-window from another window. With this new
     command the user can fest and easy toggle the behavior ECB chooses another
     window for scrolling.
@@ -142,6 +158,12 @@
     compile-window. Thanks to John S. Yates, Jr. <john@yates-sheets.org> for
     suggestion.
 
+*** Adviced `delete-window' and `delete-other-windows' handle compile-window.
+    The former one hides the compile-window if called in or for that window
+    whereas the latter one hides the compile-window if called in or for an
+    unsplitted edit-window. Thanks to John S. Yates, Jr.
+    <john@yates-sheets.org> for the suggestion.
+
 ** New option `ecb-activation-selects-ecb-frame-if-already-active'.
    See the docstring for more details. Thanks for suggestion to Jeff Jensen
    <jeffjensen@nospam.visi.com>
@@ -158,6 +180,10 @@
 *** Fixed a bug in the adviced version of `other-window'.
     Now it works correctly also when a durable compile-window is set but
     currently hidden.
+
+*** Fixed a bug when scrolling a window from within the minibuffer.
+    For example this bug has prevented scrolling the *Completion* buffer from
+    within the minibuffer. Now `minibuffer-scroll-window' is set correctly.
 
 *** Toggling the compile-window has not worked when `ecb-compile-window-height'
     has not been saved for future sessions. This is fixed now.

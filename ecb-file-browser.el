@@ -84,6 +84,7 @@
 Each path can have an optional alias that is used as it's display name. If no
 alias is set, the path is used as display name."
   :group 'ecb-directories
+  :group 'ecb-most-important
   :initialize 'custom-initialize-default
   :set (function (lambda (symbol value)
 		   (set symbol value)
@@ -258,6 +259,7 @@ entries.
 Please note: If you want your home-dir being cached then you MUST NOT use
 \"~\" because ECB tries always to match full path-names!"
   :group 'ecb-directories
+  :group 'ecb-most-important
   :type `(repeat (cons (regexp :tag "Directory-regexp")
                        (integer :tag "Filenumber threshold" :value 1000))))
 
@@ -389,6 +391,7 @@ combination can be defined.
 Tips for the directory- and file-regexps: \"$^\" matches no files/directories,
 \".*\" matches all files/directories."
   :group 'ecb-sources
+  :group 'ecb-most-important
   :type '(repeat (cons :tag "Directory file-spec"
                        (regexp :tag "Directory regexp")
                        (choice :tag "Files to display"

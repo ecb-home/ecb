@@ -25,16 +25,20 @@ rewritten and redefined via the new macro `tree-buffer-defpopup-command'!
 
 The option `ecb-primary-mouse-jump-destination' has been renamed to
 `ecb-mouse-click-destination' and has also changed its default value to
-'last-point. ECB autom. upgrades your setting to the new name.
+'last-point.
 
 The option `ecb-split-edit-window' has been renamed in
 `ecb-split-edit-window-after-start'. In addition the value t is not allowed
-anymore for this option - use 'before-activation instead. ECB autom. upgrades
-your setting to the new name and the new value if necessary. In a further
+anymore for this option - use 'before-activation instead. In a further
 addition this option has a new default value 'before-deactivation. See the
 docstring of this option to get all details.
 
+The Option `ecb-other-window-jump-behavior' has been renamed to
+`ecb-other-window-behavior'.
 
+ ECB autom. upgrades your old settings to the new option types/names!
+
+    
 Upgrading from versions < 2.11:
 -------------------------------
 

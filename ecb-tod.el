@@ -83,7 +83,7 @@
     "Narrow the source-buffer to the selected tag in the methods-buffer with `ecb-tag-visit-post-actions'."
     "Enable autom. enlarging of the compile-window by select with the option `ecb-compile-window-temporally-enlarge'."
     "Customize with `ecb-compile-window-temporally-enlarge' the situations the compile-window is allowed to enlarge."
-    "Customize the jump-behavior of `other-window' [C-x o] with the option `ecb-other-window-jump-behavior'."
+    "Customize the jump-behavior of `other-window' [C-x o] with the option `ecb-other-window-behavior'."
     "Customize height and width of the ECB-windows with `ecb-windows-height' and `ecb-windows-width'."
     "Define with `ecb-compilation-buffer-names' and `ecb-compilation-major-modes' which buffers are \"compile-buffers\"."
     "Customize all faces used by ECB with the customize-groups `ecb-face-options' and `ecb-faces'."

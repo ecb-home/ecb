@@ -118,6 +118,7 @@ Currently winring and escreen are supported."
 If you go to the escreen with this number you go always to the escreen with
 activated ECB. All other escreen-numbers are escreens with deactivated ECB!"
   :group 'ecb-winman-support
+  :group 'ecb-most-important
   :type 'integer)
 
 (defcustom ecb-winman-winring-name "ECB"
@@ -126,6 +127,7 @@ If you go to the window-configuration with this name you go always to the
 window-configuration with activated ECB. All other window-configuration are
 configurations with deactivated ECB!"
   :group 'ecb-winman-support
+  :group 'ecb-most-important
   :type 'string)
 
 ;; support for the library escreen.el ----------------------------------------
