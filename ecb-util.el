@@ -1,4 +1,4 @@
-;;; jde-jcb-util.el --- utility functions for ECB
+;;; ecb-util.el --- utility functions for ECB
 
 ;; Copyright (C) 2000 Jesper Nordenberg
 
@@ -93,6 +93,6 @@
   (ecb-update-directory-node (tree-node-get-parent node))
   (tree-buffer-update))
 
-(provide 'jde-jcb-util)
+(provide 'ecb-util)
 
-;;; jde-jcb-util.el ends here
+;;; ecb-util.el ends here

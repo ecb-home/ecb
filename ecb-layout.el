@@ -1,4 +1,4 @@
-;;; jde-jcb-layout.el --- layout for ECB
+;;; ecb-layout.el --- layout for ECB
 
 ;; Copyright (C) 2000 Jesper Nordenberg
 
@@ -37,7 +37,7 @@
 ;; new layouts, better redrawing and more straight forward code.
 ;; 1. Now all user-layouting is done by customizing the new option
 ;;    `ecb-layout-nr'. The function `ecb-redraw-layout' (formally
-;;    known as 'jde-jcb-set-layout) can still be called interactively but
+;;    known as 'ecb-set-layout) can still be called interactively but
 ;;    without arguments because it does only a redraw of the layout
 ;;    specified in `ecb-layout-nr'. All changes to the layout must be made
 ;;    by customizing this new option. Please read the very detailed comment
@@ -92,7 +92,7 @@
 ;;   regardless in which window the point is.
 ;;
 ;; You can rebind your key-shortcuts during ECB with the hooks. In
-;; jde-jcb.el you find a hook example how to this:
+;; ecb.el you find a hook example how to this:
 ;;
 ;; Important: For each new layout with index <index> the programmer must
 ;; write two functions for this feature:
@@ -711,7 +711,7 @@ If you have not set a compilation-window in `ecb-layout-nr' then the layout
 contains no compilation window and the other windows get a little more
 place."
   (when ecb-compile-window-height
-    (ecb-split-ver (* -1 ecb-compile-window-height))
+    (ecb-split-ver (* -1 ecb-compile-window-height) t)
     (setq ecb-compile-window (next-window)))
   (ecb-split-hor ecb-windows-width t)
   (ecb-set-directories-buffer)
@@ -754,7 +754,7 @@ If you have not set a compilation-window in `ecb-layout-nr' then the layout
 contains no compilation window and the other windows get a little more
 place."
   (when ecb-compile-window-height
-    (ecb-split-ver (* -1 ecb-compile-window-height))
+    (ecb-split-ver (* -1 ecb-compile-window-height) t)
     (setq ecb-compile-window (next-window)))    
   (ecb-split-hor ecb-windows-width t)
   (ecb-set-directories-buffer)
@@ -792,7 +792,7 @@ If you have not set a compilation-window in `ecb-layout-nr' then the layout
 contains no compilation window and the other windows get a little more
 place."
   (when ecb-compile-window-height
-    (ecb-split-ver (* -1 ecb-compile-window-height))
+    (ecb-split-ver (* -1 ecb-compile-window-height) t)
     (setq ecb-compile-window (next-window)))    
   (ecb-split-hor ecb-windows-width t)
   (ecb-set-directories-buffer)
@@ -832,7 +832,7 @@ If you have not set a compilation-window in `ecb-layout-nr' then the layout
 contains no compilation window and the other windows get a little more
 place."
   (when ecb-compile-window-height
-    (ecb-split-ver (* -1 ecb-compile-window-height))
+    (ecb-split-ver (* -1 ecb-compile-window-height) t)
     (setq ecb-compile-window (next-window)))    
   (ecb-split-hor ecb-windows-width t)
   (ecb-set-directories-buffer)
@@ -872,7 +872,7 @@ If you have not set a compilation-window in `ecb-layout-nr' then the layout
 contains no compilation window and the other windows get a little more
 place."
   (when ecb-compile-window-height
-    (ecb-split-ver (* -1 ecb-compile-window-height))
+    (ecb-split-ver (* -1 ecb-compile-window-height) t)
     (setq ecb-compile-window (next-window)))    
   (ecb-split-hor ecb-windows-width t)
   (ecb-set-directories-buffer)
@@ -912,7 +912,7 @@ If you have not set a compilation-window in `ecb-layout-nr' then the layout
 contains no compilation window and the other windows get a little more
 place."
   (when ecb-compile-window-height
-    (ecb-split-ver (* -1 ecb-compile-window-height))
+    (ecb-split-ver (* -1 ecb-compile-window-height) t)
     (setq ecb-compile-window (next-window)))    
   (ecb-split-hor (- ecb-windows-width) t)
   (setq ecb-edit-window (selected-window))
@@ -952,7 +952,7 @@ If you have not set a compilation-window in `ecb-layout-nr' then the layout
 contains no compilation window and the other windows get a little more
 place."
   (when ecb-compile-window-height
-    (ecb-split-ver (* -1 ecb-compile-window-height))
+    (ecb-split-ver (* -1 ecb-compile-window-height) t)
     (setq ecb-compile-window (next-window)))    
   (ecb-split-hor ecb-windows-width t)
   (ecb-set-directories-buffer)
@@ -1003,7 +1003,7 @@ place."
   (if ecb-compile-window-height
       (progn
         (select-window (next-window))
-        (ecb-split-ver (* -1 ecb-compile-window-height))
+        (ecb-split-ver (* -1 ecb-compile-window-height) t)
         (setq ecb-compile-window (next-window))        
         (select-window (next-window))
         (switch-to-buffer ecb-history-buffer-name)
@@ -1042,7 +1042,7 @@ place.
 This layout works best if you set `ecb-show-sources-in-directories-buffer'
 to non nil!"
   (when ecb-compile-window-height
-    (ecb-split-ver (* -1 ecb-compile-window-height))
+    (ecb-split-ver (* -1 ecb-compile-window-height) t)
     (setq ecb-compile-window (next-window)))
   (ecb-split-hor ecb-windows-width t)
   (ecb-set-directories-buffer)
@@ -1096,6 +1096,6 @@ place."
   (select-window (next-window))
   (setq ecb-edit-window (selected-window)))
 
-(provide 'jde-jcb-layout)
+(provide 'ecb-layout)
      
-;;; jde-jcb-layout.el ends here
+;;; ecb-layout.el ends here

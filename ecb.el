@@ -1,4 +1,4 @@
-;;; jde-jcb.el --- a code browser
+;;; ecb.el --- a code browser
 
 ;; Copyright (C) 2000 Jesper Nordenberg
 
@@ -33,7 +33,7 @@
 ;; To use the Emacs code browser add the ECB files to your load path
 ;; and add the following line to your .emacs file:
 ;;
-;; (require 'jde-jcb)
+;; (require 'ecb)
 ;;
 ;; ECB requires version 1.2.1 or higher of Eric's semantic bovinator
 ;; (http://www.ultranet.com/~zappo/semantic.shtml).
@@ -72,8 +72,8 @@
 (require 'semantic-el)
 (require 'semantic-c)
 (require 'tree-buffer)
-(require 'jde-jcb-layout)
-(require 'jde-jcb-util)
+(require 'ecb-layout)
+(require 'ecb-util)
 
 (eval-when-compile
   ;; to avoid compiler grips
@@ -696,6 +696,6 @@ with the actually choosen layout \(see `ecb-layout')."
 	  (ecb-current-buffer-sync)
 	(error nil))))
 
-(provide 'jde-jcb)
+(provide 'ecb)
 
-;;; jcb.el ends here
+;;; ecb.el ends here
