@@ -45,7 +45,7 @@
  (h-p "The \"*ECB Methods*\" buffer contains the methods in the selected source file. When a method is selected with the left mouse button or ENTER/RETURN the edit buffer will jump to the method. Clicking on a method with the middle mouse button will jump to the method in the other edit window.")
 
  (h-h3 "Emacs Tips")
- (h-p "It's easier to navigate and scroll the ECB buffers if you install " (h-link "follow-mouse.el") " and activate your " (h-link "ftp://ftp.cs.indiana.edu/pub/elisp/mwheel.el" "wheel mouse") " in Emacs.")
+ (h-p "It's easier to navigate and scroll the ECB buffers if you install " (h-link "follow-mouse.el") " and activate your " (h-link "mwheel.el" "wheel mouse") " in Emacs.")
  
  (h-h3 "Download")
  (h-p "The latest version: " (h-link url zipname))
