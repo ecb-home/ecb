@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb.el,v 1.356 2004/01/07 10:23:39 berndl Exp $
+;; $Id: ecb.el,v 1.357 2004/01/07 13:27:31 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -247,8 +247,17 @@ If set then it can easily be deactivated by \(keyboard-escape-quit)."
   "*Automatically startup ECB when Emacs starts up.
 This should only be true if you always want to run `ecb-activate'."
   :group 'ecb-general
-  :type
-  'boolean)
+  :type 'boolean)
+
+(defcustom ecb-activation-selects-ecb-frame-if-already-active 'ask
+  "*Trying to activate an already activated ECB selects the ECB-frame.
+If t then the ECB-frame is selected, if nil then it is not. If 'ask then ECB
+asks if the ECB-frame should be selected if the current-frame is not the
+`ecb-frame'."
+  :group 'ecb-general
+  :type '(radio (const :tag "" :value t)
+                (const :tag "" :value ask)
+                (const :tag "" :value nil)))
 
 (defcustom ecb-major-modes-activate 'none
   "*List of major-modes for which ECB should be activated or shown.
@@ -1287,7 +1296,7 @@ tasks are performed:
           
                ;; * KB: Problem: seems this little sleep is necessary because
                ;;   otherwise jumping to certain markers in new opened files (e.g.
-               ;;   with next-error etc. ) doesn´t work correct. Can´t debug down
+               ;;   with next-error etc. ) doesnÂ´t work correct. CanÂ´t debug down
                ;;   this mysterious thing! Regardless of the size of the file to
                ;;   load, this 0.1 fraction of a sec is enough!
                ;; * KB: With current ECB implementation this sit-for seems not
@@ -1649,8 +1658,9 @@ That is remove the unsupported :help stuff."
    ecb-menu-name
    (ecb-menu-item
     [ "Select ECB frame"
-      ecb-activate
-      :active (not (equal (selected-frame) ecb-frame))
+      ecb-select-ecb-frame
+      :active (and ecb-minor-mode
+                   (not (equal (selected-frame) ecb-frame)))
       :help "Select the ECB-frame."
       ])
    (ecb-menu-item
@@ -2278,14 +2288,12 @@ always the ECB-frame if called from another frame."
     (setq ecb-frame (selected-frame)))
   
   (if ecb-minor-mode
-      (progn
-        ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: We should here check if
-        ;; we are in another frame and if yes, we should ask if the user want
-        ;; so switch to the ecb-frame!
-	(raise-frame ecb-frame)
-	(select-frame ecb-frame)
-	(ecb-redraw-layout)
-	(ecb-update-directories-buffer))
+      (when (and (not (equal (selected-frame) ecb-frame))
+                 (or (equal ecb-activation-selects-ecb-frame-if-already-active t)
+                     (and (equal ecb-activation-selects-ecb-frame-if-already-active 'ask)
+                          (y-or-n-p "ECB is already active in another frame. Select it? "))))
+        (ecb-select-ecb-frame)
+        (ecb-update-directories-buffer))
 
     ;; we activate only if all before-hooks return non nil
     (when (run-hook-with-args-until-failure 'ecb-before-activate-hook)
@@ -2356,7 +2364,7 @@ always the ECB-frame if called from another frame."
             (let ((curr-buffer-list (mapcar (lambda (buff)
                                               (buffer-name buff))
                                             (buffer-list))))
-              ;; create all the ECB-buffers if they don´t already exist
+              ;; create all the ECB-buffers if they donÂ´t already exist
               (unless (member ecb-directories-buffer-name curr-buffer-list)
                 (tree-buffer-create
                  ecb-directories-buffer-name
@@ -2648,7 +2656,7 @@ always the ECB-frame if called from another frame."
 
       (condition-case err-obj
           ;; enable mouse-tracking for the ecb-tree-buffers; we do this after
-          ;; running the personal hooks because if a user put´s activation of
+          ;; running the personal hooks because if a user putÂ´s activation of
           ;; follow-mouse.el (`turn-on-follow-mouse') in the
           ;; `ecb-activate-hook' then our own ECB mouse-tracking must be
           ;; activated later. If `turn-on-follow-mouse' would be activated
@@ -2881,7 +2889,7 @@ does all necessary after finishing ediff."
         (ecb-edit-area-creators-init))
 
       ;; we can safely do the kills because killing non existing buffers
-      ;; doesn´t matter.
+      ;; doesnÂ´t matter.
       (tree-buffer-destroy ecb-directories-buffer-name)
       (tree-buffer-destroy ecb-sources-buffer-name)
       (tree-buffer-destroy ecb-methods-buffer-name)
