@@ -1,6 +1,6 @@
 ;;; ecb-speedbar.el --- 
 
-;; $Id: ecb-speedbar.el,v 1.23 2002/12/06 20:40:06 berndl Exp $
+;; $Id: ecb-speedbar.el,v 1.24 2002/12/11 09:57:23 berndl Exp $
 
 ;; Copyright (C) 2000-2003 Free Software Foundation, Inc.
 ;; Copyright (C) 2000-2003 Kevin A. Burton (burton@openprivacy.org)
@@ -207,29 +207,11 @@ that this is a reimplemntation of this for the ECB that does no frame selection"
 
   (find-file file))
 
-(defun ecb-layout-function-20()
-  "ECB layout function for the speedbar."
-  
-  (when ecb-compile-window-height
-    (ecb-split-ver (* -1 ecb-compile-window-height) t)
-    (setq ecb-compile-window (next-window)))
-
-  (ecb-split-hor (- ecb-windows-width) t)
-
-  (setq ecb-edit-window (selected-window))
-
-  (select-window (next-window))
-
+(ecb-layout-define 20 right
+  "ECB layout with integrated speedbar."  
   (ecb-set-speedbar-buffer)
-
   (ecb-split-ver 0.5)
   (ecb-set-methods-buffer))
-
-(defalias 'ecb-delete-other-windows-in-editwindow-20
-  'ecb-delete-other-windows-ecb-windows-right)
-
-(defalias 'ecb-delete-window-in-editwindow-20
-  'ecb-delete-window-ecb-windows-right)
 
 (defun ecb-speedbar-goto-speedbar()
   "Goto the speedbar window."
