@@ -104,9 +104,14 @@
 ;; - RFE: what do we do about integration with the standard JDE?  Could we tell
 ;;   the existing layout functions to use the speedbar instead of the
 ;;   directories buffer?
-
+;;
 ;; we need to be able to goto the speedbar window via C-c . b (AKA bar)
 ;; (ecb-goto-window-speedbar)
+;;
+;; - BUG: bug in speedbar.  Need a feature so that the speedbar doesn't require
+;;   that we HAVE to have the speedbar in a frame.  If we try to run (speedbar)
+;;   when ecb-speedbar is active the ecb-frame will go away :(
+
 
 ;;; Code:
 

@@ -120,6 +120,8 @@
 ;; - BUG: when ecb-eshell-enlarge-when-selecting is nil we need to recenter.  If
 ;; we don't we just end up with the point in the middle of the eshell.
 ;;
+;; - BUG: enable just-in-time current-buffer-sync... only execute if the current
+;; buffer's directlry is not equal to the ecb directory.
 
 ;;; Code:
 

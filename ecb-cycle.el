@@ -121,7 +121,7 @@ we hit the end we go back to the beginning.  See `ecb-compilation-buffer-p'."
   "Switch to the given compilation buffer in the compilation window."
   (interactive
    (list
-    (completing-read "ECB compilation buffer: " (ecb-get-compilation-buffers))))
+    (completing-read "ECB compilation buffer: " (ecb-compilation-get-buffers))))
 
   (when ecb-cycle-enlarge-compile-window
     (ecb-enlarge-window ecb-compile-window))
