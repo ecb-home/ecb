@@ -78,11 +78,11 @@ LOADPATH=
 # - Call "make" to byte-compile the ECB. You can savely ignore the messages.
 # - Or call
 #
-#      make EMACS="path/to/emacs" (rsp. make EMACS="path/to/xemacs)
+#      make EMACS="path/to/emacs"
 #
 #      or
 #
-#      make CEDET="path/to/cedet"           #(for compiling with cedet 1.0)
+#      make CEDET="path/to/cedet"           (for compiling with cedet 1.0)
 #
 #      or
 #
