@@ -209,8 +209,8 @@ clean:
 
 $(ecb_INFO_DIR)/$(ecb_INFO): online-help
 
-# updates RELEASE_NOTES, README, HISTORY and ecb.el to the version-number
-# of $(ecb_VERSION).
+# updates RELEASE_NOTES, README, HISTORY, ecb.texi and ecb.el to the
+# version-number of $(ecb_VERSION).
 prepversion:
 	@$(MV) RELEASE_NOTES RELEASE_NOTES.tmp
 	@sed "1s/version.*/version $(ecb_VERSION)/" RELEASE_NOTES.tmp > RELEASE_NOTES
@@ -224,6 +224,14 @@ prepversion:
 	@$(MV) ecb.el ecb.el.tmp
 	@sed "s/^(defconst ecb-version.*/(defconst ecb-version \"$(ecb_VERSION)\"/" ecb.el.tmp > ecb.el
 	@$(RM) ecb.el.tmp
+	@(echo "/@macro ecbver";		\
+	  echo "+";				\
+	  echo "c";				\
+	  echo "$(ecb_VERSION)";		\
+	  echo ".";				\
+	  echo "w";				\
+	  echo "q") | ed -s $(ecb_TEXI) 1> /dev/null
+
 
 # builds the distribution file $(ecb_VERSION).tar.gz
 distrib: $(ecb_INFO_DIR)/$(ecb_INFO) prepversion ecb

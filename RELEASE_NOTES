@@ -34,7 +34,7 @@ ECB autom. upgrades the values of these options to theirs new names/types!
 
 
 Upgrading from version < 1.80:
-------------------------------------
+------------------------------
 
 The type of the following options has changed:
 
