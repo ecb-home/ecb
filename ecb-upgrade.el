@@ -224,7 +224,8 @@
     (ecb-token-header-face . (ecb-tag-header-face
                               ecb-upgrade-token-header-face))
     (ecb-post-process-semantic-taglist . (ecb-post-process-semantic-taglist
-                                          ecb-upgrade-post-process-semantic-taglist)))
+                                          ecb-upgrade-post-process-semantic-taglist))
+    (ecb-primary-mouse-jump-destination . (ecb-mouse-click-destination identity)))
   "Alist of all options which should be upgraded for current ECB-version.
 There are several reasons why an option should be contained in this alist:
 a) An old option has just be renamed in current-ECB version but has still the

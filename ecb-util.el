@@ -906,9 +906,10 @@ times. Example: Suppose LIST = '\(a b c d), ELEM is 'c and NTH-NEXT = 3 then
 'b is returned - same result for NTH-NEXT = 7, 11..."
   (let ((elem-pos (ecb-position list elem))
         (next (or nth-next 1)))
-    (nth (mod (+ elem-pos next)
-              (length list))
-         list)))
+    (and elem-pos
+         (nth (mod (+ elem-pos next)
+                   (length list))
+              list))))
 
 (defun ecb-prev-listelem (list elem &optional nth-prev)
   "Return that element of LIST which preceeds directly ELEM when ELEM is an

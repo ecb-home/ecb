@@ -242,7 +242,7 @@ either
 ;; can slow down Emacs/ECB dramatically. Now we add an idle-times
 ;; check-function `ecb-compilation-buffer-list-changed-p' which checks if the
 ;; buffer-list has changed. If yes, then the variable
-;; `ecb-compilation-update-menu-p' is set to t. Only if this variable if not
+;; `ecb-compilation-update-menu-p' is set to t. Only if this variable is not
 ;; nil the menu-bar-update-hook `ecb-compilation-update-menu' updates the
 ;; ECB-menu.
 
