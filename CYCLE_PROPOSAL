@@ -30,26 +30,26 @@ document, we could use this same XML representation but expand to show <tasks>.
 
 There are a *lot* of uses for this:
 
-supporting a CLASSPATH browser
+- Support a Java CLASSPATH browser
 
-supporting jde-docindex integration for navigating sourcepath and
+- Supporting jde-docindex integration for navigating sourcepath and
   documentation based on hierarchical classname.
 
-using the methods buffer to navigate a list of files that are being tailed via
+- using the methods buffer to navigate a list of files that are being tailed via
   'tail -f' and displaying the result int the compilation buffer.
   
-support complex applications on top of ECB that can use ECB windows as their
+- Support complex applications on top of ECB that can use ECB windows as their
   UI.  (this would probably require another proposal)
 
-SQL browser (via JDBC, ODCB, etc)
+    - SQL browser (via JDBC, ODCB, etc)
 
-JDE/JPDA integration when a breakpoint it hit.  This would need to set buffers
-  in each window.  For example putting local variables in the methods winow and
-  possibly breakpoints in the directory window.
+    - JDE/JPDA integration when a breakpoint it hit.  This would need to set
+      buffers in each window.  For example putting local variables in the
+      methods winow and possibly breakpoints in the directory window.
 
-incremental compiler error lists (I plan on writing an incremental compile
-  integration package for jikes but I am waiting for them to fix a bug under
-  Linux).  It would be nice to navigate this list in the methods window.
+    - Incremental compiler error lists (I plan on writing an incremental compile
+      integration package for jikes but I am waiting for them to fix a bug under
+      Linux).  It would be nice to navigate this list in the methods window.
 
 From what I see, in order to implement this, we have to pay significant
 attention to making this convenient so that it isn't confusing for the user.
