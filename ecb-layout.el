@@ -828,11 +828,13 @@ ECB-adviced functions."
 ;;======= Helper-functions ===========================================
 
 (defun ecb-split-hor(amount &optional dont-switch-window)
-  (ecb-split-hor-abs (floor (if (and (< amount 1.0)
-                                     (> amount -1.0))
-                                (* (window-width) amount)
-                              amount))
-                     dont-switch-window))
+  "Splits the current-window and returns the absolute amount in columns"
+  (let ((abs-amout (floor (if (and (< amount 1.0)
+                                   (> amount -1.0))
+                              (* (window-width) amount)
+                            amount))))
+    (ecb-split-hor-abs abs-amout dont-switch-window)
+    abs-amout))
 
 (defun ecb-split-hor-abs(amount &optional dont-switch-window)
   (split-window-horizontally amount)
@@ -840,11 +842,13 @@ ECB-adviced functions."
       (select-window (next-window))))
 
 (defun ecb-split-ver(amount &optional dont-switch-window)
-  (ecb-split-ver-abs (floor (if (and (< amount 1.0)
-                                     (> amount -1.0))
-                                (* (window-height) amount)
-                              amount))
-                     dont-switch-window))
+  "Splits the current-window and returns the absolute amount in lines"
+  (let ((abs-amout (floor (if (and (< amount 1.0)
+                                   (> amount -1.0))
+                              (* (window-height) amount)
+                            amount))))
+    (ecb-split-ver-abs abs-amout dont-switch-window)
+    abs-amout))
 
 (defun ecb-split-ver-abs(amount &optional dont-switch-window)
   (split-window-vertically amount)

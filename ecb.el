@@ -714,8 +714,8 @@ current-buffer is saved."
     (save-excursion
       (ecb-buffer-select ecb-methods-buffer-name)
       (setq tree-buffer-indent ecb-tree-indent)
-      (tree-buffer-update))))
-;;     (set-window-point (selected-window) 1)))
+      (tree-buffer-update)))
+  (ecb-mode-line-format))
 
 (defun ecb-set-selected-source(filename &optional window-skips
                                         no-edit-buffer-selection)
@@ -798,9 +798,7 @@ For further explanation see `ecb-clear-history-behavior'."
       (sit-for 0.1)
       (ecb-select-source-file filename)
 
-      (ecb-update-methods-buffer)
-
-      (ecb-mode-line-format))))
+      (ecb-update-methods-buffer))))
 
 (defun ecb-find-file-and-display(filename &optional window-skips)
   "Finds the file in the correct window. What the correct window is depends on
@@ -1315,12 +1313,14 @@ with the actually choosen layout \(see `ecb-layout-nr')."
     (setq ecb-activated t)
     ;; we must update the directories buffer first time
     (ecb-update-directories-buffer)
-    
+
     ;; run personal hooks before drawing the layout
     (run-hooks 'ecb-activate-before-layout-draw-hook)
     ;; now we draw the layout choosen in `ecb-layout'. This function
     ;; acivates at its end also the adviced functions if necessary!
     (ecb-redraw-layout)
+    ;; now update all the ECB-buffer-modelines
+    (ecb-update-methods-buffer)
     ;; at the real end we run any personal hooks
     (run-hooks 'ecb-activate-hook)
     (message "The ECB is now activated.")))

@@ -30,27 +30,35 @@
   "Update all of the modelines of each buffer."
 
   (save-excursion
-      
-    ;;display the directory but trim it so the whole thing is available.
-    (let(prefix directory line)
-        
-      (setq prefix " ECB Sources: ")
-        
-      (setq directory (file-name-directory ecb-path-selected-source))
-        
-      (setq directory (ecb-mode-line-get-directory prefix directory ecb-windows-width))
-        
-      (setq line (concat prefix directory))
-        
-      (ecb-mode-line-update-buffer ecb-sources-buffer-name line))
-      
-    (ecb-mode-line-update-buffer ecb-methods-buffer-name
-                                 (concat " ECB Methods: "
-                                         (file-name-nondirectory ecb-path-selected-source)))
 
-    (ecb-mode-line-update-buffer ecb-directories-buffer-name" ECB Directories")
-      
-    (ecb-mode-line-update-buffer ecb-history-buffer-name " ECB History")))
+    ;; update the modeline for each visible(!!) ECB-buffer (some ECB-buffers
+    ;; are not visible in all layouts!)
+    
+    ;;display the directory but trim it so the whole thing is available.
+    (if (get-buffer-window ecb-sources-buffer-name)
+        (if ecb-path-selected-source
+            (let* ((prefix " ECB Sources: ")
+                   (directory (ecb-mode-line-get-directory
+                               prefix
+                               (file-name-directory ecb-path-selected-source)
+                               (window-width (get-buffer-window
+                                              ecb-sources-buffer-name))))
+                   (line (concat prefix directory)))
+              (ecb-mode-line-update-buffer ecb-sources-buffer-name line))
+          (ecb-mode-line-update-buffer ecb-sources-buffer-name " ECB Sources")))
+    
+    (if (get-buffer-window ecb-methods-buffer-name)
+        (if ecb-path-selected-source
+            (ecb-mode-line-update-buffer
+             ecb-methods-buffer-name (concat " ECB Methods: "
+                                             (file-name-nondirectory ecb-path-selected-source)))
+          (ecb-mode-line-update-buffer ecb-methods-buffer-name " ECB Methods")))
+
+    (if (get-buffer-window ecb-directories-buffer-name)
+        (ecb-mode-line-update-buffer ecb-directories-buffer-name " ECB Directories"))
+
+    (if (get-buffer-window ecb-history-buffer-name)
+        (ecb-mode-line-update-buffer ecb-history-buffer-name " ECB History"))))
 
 (defun ecb-mode-line-get-directory(prefix directory width)
   "Given the prefix for the mode-line (' ECB Sources: '), the directory to
@@ -69,27 +77,19 @@ stretch past the screen."
 
       ;;basically we need to figure out what the ideal length of the
       ;;directory string should be based on prefix and directory
-
-      (let(runover offset)
-        (setq runover (- (+ (length prefix)
-                            (length directory))
-                         width))
-
-        (setq offset (- (length directory)
-                        runover))
-
-        ;;;offset should be at least 3 if it is greater than 0
-        (if (and (> offset 0)
-                 (< offset (length directory)))
-            (progn 
-
-
-              (setq offset (max 3 offset))
-
-              (setq directory (substring directory offset (length directory)))
-
-              (setq directory (concat "..." directory))))))
-
+      (let ((len-dir (length directory))
+            offset)
+        (setq offset (- (+ (length prefix) len-dir)
+                        width))
+        ;; we want to prepend "..." to the shorten directory
+        (setq offset (+ offset 3))
+        ;; at least we must shorten directory from left by (runover + ...)
+        ;; characters. If this is not possible we show no directory.
+        (if (>= offset len-dir)
+            (setq directory "")
+          (setq directory (substring directory offset len-dir))
+          (setq directory (concat "..." directory)))))
+  ;; return now a window-width fitting directory
   directory)
 
 (defun ecb-mode-line-update-buffer(buffer-name new-mode-line-format)
@@ -98,7 +98,8 @@ stretch past the screen."
   (if (get-buffer buffer-name)
       (save-excursion
         (set-buffer buffer-name)
-        (setq mode-line-format new-mode-line-format))
+        (setq mode-line-format new-mode-line-format)
+        (force-mode-line-update))
     (message "This buffer isn't available: %s"  buffer-name)))
 
 (provide 'ecb-mode-line)
