@@ -377,7 +377,7 @@ current major-mode and TYPE-SPECIFIER or nil."
              (nth 1 (assoc type-specifier default-display))))))
 
 (defcustom ecb-type-tag-expansion
-  '((default . ("class" "interface" "group"))
+  '((default . ("class" "interface" "group" "namespace"))
     (c-mode .  ("struct")))
   "*Default expansion of semantic type-tags.
 Semantic groups type-tags into different type-specifiers. Current available
@@ -1414,6 +1414,10 @@ Methods-buffer."
     ("class-private-t" . "class-private")
     ("class-protected-t" . "class-protected")
     ("class-public-t" . "class-public")
+    ("enum-public-nil" . "enum-public")
+    ("enum-protected-nil" . "enum-protected")
+    ("enum-private-nil" . "enum-private")
+    ("enum-unknown-nil" . "enum-unknown")
     ("constructor-nil-nil" . "constructor-unknown")
     ("constructor-unknown-nil" . "constructor-unknown")
     ("constructor-private-nil" . "constructor-private")

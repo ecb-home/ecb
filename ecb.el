@@ -578,8 +578,12 @@ With both ascii-styles the tree-layout can be affected with the options
                       "ecb-images/")))
         (append (mapcar (function (lambda (i)
                                     (if i
-                                        (concat base i "/height-17"))))
-                        '("default" "directories" nil "methods" nil))))
+                                        (concat base i))))
+                        '("default/height-17"
+                          "directories/height-17"
+                          nil
+                          "methods/height-15_to_21"
+                          nil))))
   "*Directories where the images for the tree-buffer can be found.
 This is a five-element list where:
 1. element: Default directory where the default images for the tree-buffer can
