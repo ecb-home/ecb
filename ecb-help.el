@@ -289,11 +289,20 @@ following options before working with ECB):
 - `ecb-source-file-regexps': Which files will \(not) be shown in ECB.
 - All the options in the customize group 'ecb-layout'
 
+
+                        ==================================
+                        Entry points for elisp programmers
+                        ==================================
+
+Variables an elisp-program can use:
+- `ecb-source-path-functions'
+
 Available hooks:
 - `ecb-activate-before-layout-draw-hook'
 - `ecb-activate-hook'
 - `ecb-deactivate-hook'
-Look at the documentation of these hooks to get description.
+
+Look at the documentation of these variables and hooks to get description.
 
 
                       ===================================
