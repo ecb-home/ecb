@@ -400,7 +400,7 @@ mentioned above!"
          ((equal last-command-char 'end)
           (let* ((node-name-list (mapcar 'tree-node-get-name
                                          (tree-node-get-children tree-buffer-root)))
-                 (common-prefix (tree-buffer-find-common-substring
+                 (common-prefix (tree-buffer-find-common-prefix
                                  node-name-list tree-buffer-incr-searchpattern)))
             (if (stringp common-prefix)
                 (setq tree-buffer-incr-searchpattern common-prefix))))
