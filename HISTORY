@@ -1,6 +1,9 @@
 Version 1.20 (???):
 -------------------
 
+- Now ECB is ediff-friendly: During ediff is active the advices of ECB are
+  temporally deactivated! (Klaus)
+
 - Now all tree-buffers (ECB-buffers) are read-only (Klaus)!
 
 - Better implementation of advising the functions. Now all adviceable
