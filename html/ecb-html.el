@@ -21,7 +21,7 @@
 
 ;; Generates ECB HTML pages.
 
-;; $Id: ecb-html.el,v 1.21 2001/10/29 11:04:26 berndl Exp $
+;; $Id: ecb-html.el,v 1.22 2001/11/06 12:08:18 berndl Exp $
 
 ;;; Code:
 
@@ -222,7 +222,10 @@
     
    (ecb-faq-section
    "Common Problems"
-   (ecb-faq-section
+   (ecb-faq-q-and-a
+    "What is the first step i should do if i have problems with ECB?"
+    "Read carefully the complete online-help of ECB. Available via the menu \"ECB\", via \"M-x ecb-show-help RET\" or via \"C-c . o\".")
+   (ecb-faq-q-and-a
     "Why are the lines in the ECB-buffers, temp-buffers and compilation-buffers not wrapped but truncated?"
     "Check the variable `truncate-partial-width-windows' and set it to nil.")
    (ecb-faq-q-and-a
@@ -234,6 +237,9 @@
    (ecb-faq-q-and-a
     "Why doesn't ECB display the node name in the echo area if mouse moves over it?"
     "There can be several reasons: First the value of the option 'ecb-show-node-name-in-minibuffer' must be either 'always or 'if-too-long. If this is ok, then maybe you have turned on follow-mouse AFTER activating ECB; follow-mouse must be turned on BEFORE ECB is acivated, e.g. in the 'ecb-activate-hook'!")
+   (ecb-faq-q-and-a
+    "What is the reason for poor scrolling performance in the edit-windows and what can i do?"
+    "Set 'scroll-conservatively' to 0 and 'scroll-step' to a value > 1. For the exact reason see the online-help of ECB, section \"Tips and Tricks\".")
    )
    ))
 

@@ -7,7 +7,7 @@
 ;; Keywords: java, class, browser
 ;; Created: Jul 2000
 
-(defvar ecb-version "1.52"
+(defvar ecb-version "1.53"
   "Current ECB version.")
 
 ;; This program is free software; you can redistribute it and/or modify it under
@@ -54,7 +54,7 @@
 ;; The latest version of the ECB is available at
 ;; http://home.swipnet.se/mayhem/ecb.html
 
-;; $Id: ecb.el,v 1.156 2001/10/29 11:04:25 berndl Exp $
+;; $Id: ecb.el,v 1.157 2001/11/06 12:08:17 berndl Exp $
 
 ;;; Code:
 
@@ -64,10 +64,10 @@
 (require 'eieio)
 
 ;;ensure that we use the right semantic-version and right eieio-version
-(let ((version-error nil))      
+(let ((version-error nil))
   (if (not (and (boundp 'semantic-version)
                 (string-match "^1\\.4\\(beta1[1-9]\\)?$" semantic-version)))
-      (setq version-error "Semantic >= 1.40beta11"))
+(setq version-error "Semantic >= 1.40beta11"))
   (if (not (and (boundp 'eieio-version)
                 (string-match "^0\\.1[6-9]" eieio-version)))
       (setq version-error
@@ -316,7 +316,22 @@ then activating ECB again!"
                        :value existing-buffers)
                 (const :tag "All entries"
                        :value all)))
-                
+
+(defcustom ecb-kill-buffer-clears-history nil
+  "*Define if `kill-buffer' should also clear the history.
+There are three options:
+- auto: Removes automatically the corresponding history-entry after the buffer
+  has been killed.
+- ask: Asks, if the history-entry should be removed after the kill.
+- nil: `kill-buffer' does not affect the history \(this is the default)."
+  :group 'ecb-history
+  :type '(radio (const :tag "Remove history entry automatically"
+                       :value auto)
+                (const :tag "Ask if history entry should be removed"
+                       :value ask)
+                (const :tag "Do not clear the history"
+                       :value nil)))
+
 (defcustom ecb-history-item-name 'buffer-name
   "*The name to use for items in the history buffer."
   :group 'ecb-history
@@ -1355,6 +1370,22 @@ is not changed."
   (when node
     (tree-node-remove-child (tree-buffer-get-root) node)))
 
+(defun ecb-kill-buffer-hook ()
+  "Function added to the `kill-buffer-hook' during ECB activation.
+Depending on the value in `ecb-kill-buffer-clears-history' the
+corresponding entry in the history-buffer is removed."
+  (when ecb-kill-buffer-clears-history
+    (let* ((buffer-file (ecb-fix-filename (buffer-file-name (current-buffer))))
+           (node (if buffer-file
+                     (save-selected-window
+                       (ecb-exec-in-history-window (tree-buffer-find-node-data buffer-file))))))
+      (when node
+        (if (or (equal ecb-kill-buffer-clears-history 'auto)
+                (and (equal ecb-kill-buffer-clears-history 'ask)
+                     (y-or-n-p "Remove history entry for this buffer? ")))
+            (ecb-clear-history-node node))))))
+
+
 (defun ecb-clear-history (&optional clearall)
   "Clears the ECB history-buffer. If CLEARALL is nil then the behavior is
 defined in the option `ecb-clear-history-behavior' otherwise the value of
@@ -2330,6 +2361,7 @@ always the ECB-frame if called from another frame."
                                      'ecb-window-sync-function)
     (add-hook 'pre-command-hook 'ecb-pre-command-hook-function)
     (add-hook 'after-save-hook 'ecb-update-methods-after-saving)
+    (add-hook 'kill-buffer-hook 'ecb-kill-buffer-hook)
 
     ;; ediff-stuff; we operate here only with symbols to avoid bytecompiler
     ;; warnings
@@ -2415,6 +2447,7 @@ always the ECB-frame if called from another frame."
     (setq ecb-post-command-hooks nil)
     (remove-hook 'pre-command-hook 'ecb-pre-command-hook-function)
     (remove-hook 'after-save-hook 'ecb-update-methods-after-saving)
+    (remove-hook 'kill-buffer-hook 'ecb-kill-buffer-hook)
     ;; ediff-stuff; we operate here only with symbols to avoid bytecompiler
     ;; warnings
     (if (get 'ediff-quit-hook 'ecb-ediff-quit-hook-value)
