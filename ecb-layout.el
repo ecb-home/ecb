@@ -51,12 +51,12 @@
 ;; left-right) there are two functions:
 ;; - 'ecb-delete-other-windows-ecb-windows[left|right|top|left-right]' and
 ;; - 'ecb-delete-window-ecb-windows[left|right|top|left-right]'.
-;; Both of these functions follow these guide-lines:
+;; These functions follow these guide-lines:
 ;; - Preconditions for these functions:
 ;;   + the edit window is splitted
 ;;   + The function gets one argument 'split' which can have the values
 ;;     'horizontal and 'vertical.
-;;   + These functions are always(!) called with deactivated advice
+;;   + These functions are always(!) called with deactivated advice of
 ;;     `delete-window' function.
 ;; - What must they do:
 ;;   1. Checking if the point is in one of the two parts of the splitted
@@ -104,7 +104,7 @@
 ;; - `ecb-with-some-adviced-functions'
 ;;
 
-;; $Id: ecb-layout.el,v 1.142 2003/01/02 14:13:09 berndl Exp $
+;; $Id: ecb-layout.el,v 1.143 2003/01/06 15:56:27 berndl Exp $
 
 ;;; Code:
 
@@ -500,7 +500,7 @@ Per default this is enabled for `delete-window', `delete-other-windows',
 buffer argument of `switch-to-buffer' or `switch-to-buffer-other-window' is an
 compilation buffer as defined with `ecb-compilation-buffer-p' we will select
 the `ecb-compile-window' first. This is useful if you always want your
-compilation buffers within the compilation window and now within the edit
+compilation buffers within the compilation window and not within the edit
 window.
 
 Note the difference between `ecb-layout-always-operate-in-edit-window' and this
@@ -1864,13 +1864,17 @@ Preconditions for CREATE-CODE:
    selected for types left, right and top. For type left-right the left
    column-window is selected.
 
+4. All ECB-advices for the functions in `ecb-advice-window-functions' are
+   disabled!
 
 Things CREATE-CODE has to do:
 1. Splitting the ECB-windows-column\(s)/row \(s.a.) in all the ECB-windows the
    layout should contain \(e.g. directories, sources, methods and history).
    The split must not be done with other functions than `ecb-split-hor' and
    `ecb-split-ver'! It is recommened not to to use a \"hard\" number of
-   split-lines or -columns but using fractions between 0.1 and 0.9!
+   split-lines or -columns but using fractions between -0.9 and +0.9! Tip: It
+   is recommended to spilt from right to left and from bottom to top or with
+   other words: First create the right-most and bottom-most special windows!
 
 2. Making each special ECB-window a dedicated window. This can be done with
    one of the following functions:
@@ -1963,9 +1967,9 @@ ecb-delete-other-windows-ecb-windows-<NAME> and remove NAME from
 
 
 (defun ecb-choose-layout-name (layout-list require-match)
-  "Calls `completing-read' for LAYOUT-LIST which is a list of all layout-names
-or nil. For REQUIRE-MATCH see documentation of `completing-read'. For a null
-input the first element of LAYOUT-LIST is returned."
+  "Calls `completing-read' for LAYOUT-LIST which is a list of layout-names.
+For REQUIRE-MATCH see documentation of `completing-read'. For a null input the
+first element of LAYOUT-LIST is returned."
   (let ((result (completing-read "Insert a layout name: "
                                  (mapcar (function (lambda (x) (list x t)))
                                          layout-list)
@@ -2070,123 +2074,121 @@ this function the edit-window is selected which was current before redrawing."
                                              (window-buffer ecb-compile-window)))
            (tree-windows-before-redraw (ecb-layout-get-current-tree-windows)))
 
-      ;; deactivating the adviced functions, so the layout-functions can use the
-      ;; original function-definitions.
-      (ecb-activate-adviced-functions nil)
+      ;; The following code runs with deactivated adviced functions, so the
+      ;; layout-functions can use the original function-definitions.
+      (ecb-with-original-functions
       
-      ;; first we go to the edit-window
-      (if (ecb-edit-window-live-p)
-          (ecb-select-edit-window)
-        ;; if the edit-window is destroyed (what should never happen) we try
-        ;; to go first to the last edited buffer, second to the scratch-buffer
-        ;; or third - if both of them don't exist - we stay in the current
-        ;; buffer.
-        (set-window-dedicated-p (selected-window) nil)
-        (switch-to-buffer (or (and (buffer-live-p ecb-last-source-buffer)
-                                   ecb-last-source-buffer)
-                              (get-buffer "*scratch*")
-                              (current-buffer))))
-      
-      ;; Do some actions regardless of the choosen layout
-      (delete-other-windows)
-      (set-window-dedicated-p (selected-window) nil)
-      
-      ;; we force a layout-function to set both of these windows
-      ;; correctly.
-      (setq ecb-edit-window nil
-            ecb-compile-window nil)
+       ;; first we go to the edit-window
+       (if (ecb-edit-window-live-p)
+           (ecb-select-edit-window)
+         ;; if the edit-window is destroyed (what should never happen) we try
+         ;; to go first to the last edited buffer, second to the
+         ;; scratch-buffer or third - if both of them don't exist - we stay in
+         ;; the current buffer.
+         (set-window-dedicated-p (selected-window) nil)
+         (switch-to-buffer (or (and (buffer-live-p ecb-last-source-buffer)
+                                    ecb-last-source-buffer)
+                               (get-buffer "*scratch*")
+                               (current-buffer))))
+       
+       ;; Do some actions regardless of the choosen layout
+       (delete-other-windows)
+       (set-window-dedicated-p (selected-window) nil)
+       
+       ;; we force a layout-function to set both of these windows
+       ;; correctly.
+       (setq ecb-edit-window nil
+             ecb-compile-window nil)
+       
+       ;; Now we call the layout-function
+       (funcall (intern (format "ecb-layout-function-%s" ecb-layout-name)))
+       (select-window
+        (if ecb-edit-window
+            ecb-edit-window
+          (error "Edit-window not set in function 'ecb-layout-function-%s"
+                 ecb-layout-name)))
+       
+       ;; Now all the windows must be created and the editing window must not
+       ;; be splitted! In addition the variables `ecb-edit-window' and
+       ;; `ecb-compile-window' must be set to the correct windows.
+       
+       ;; The following when-expression is added for better relayouting the
+       ;; choosen layout if we have a compilation-window.
+       (when ecb-compile-window-height
+         (select-window (if ecb-compile-window
+                            ecb-compile-window
+                          (error "Compilations-window not set in the layout-function")))
+         
+         ;; go one window back, so display-buffer always shows the buffer in
+         ;; the next window, which is then savely the compile-window. For this
+         ;; we must temporalily set `same-window-buffer-names' and
+         ;; `same-window-regexps' to nil to ensure displaying the
+         ;; compilation-buffers really in the compile-window. Eshell is an
+         ;; example which adds its buffer-name *eshell* to the former option
+         ;; which would prevent working redrawing the layout correctly.
+         (select-window (previous-window (selected-window) 0))
+         (let ((same-window-buffer-names nil)
+               (same-window-regexps))
+           (display-buffer
+            (or compile-buffer-before-redraw
+                (some (function (lambda (mode)
+                                  (some (function (lambda (buf)
+                                                    (save-excursion
+                                                      (set-buffer buf)
+                                                      (if (equal major-mode mode)
+                                                          buf nil))))
+                                        (buffer-list ecb-frame))))
+                      '(compilation-mode occur-mode help-mode))
+                (get-buffer-create "*scratch*")) t))
+         
+         ;; Cause of display-buffer changes the height of the compile-window we
+         ;; must resize it again to the correct value
+         (select-window (next-window))
+         (shrink-window (- (window-height) compile-window-height-lines)))
+       
+       ;; set `compilation-window-height' to the correct value.
+       (if (not ecb-compile-window-height)
+           (setq compilation-window-height ecb-old-compilation-window-height)
+         (setq compilation-window-height compile-window-height-lines)
+         (if (or (equal ecb-compile-window-temporally-enlarge 'after-compilation)
+                 (equal ecb-compile-window-temporally-enlarge 'both))
+             (setq compilation-window-height ecb-old-compilation-window-height)))
+       
+       (select-window ecb-edit-window)
+       
+       ;; Maybe we must split the editing window again if it was splitted before
+       ;; the redraw
+       (cond ((equal split-before-redraw 'horizontal)
+              (ecb-split-hor 0.5 t))
+             ((equal split-before-redraw 'vertical)
+              (ecb-split-ver (if ecb-compile-window-height 0.5
+                               split-amount-before-redraw) t)))
+       
+       ;; Restore edit window buffers
+       (when saved-edit-1
+         (set-window-buffer ecb-edit-window (car saved-edit-1))
+         (set-window-start ecb-edit-window (cdr saved-edit-1)))
+       (when (and split-before-redraw saved-edit-2)
+         (set-window-buffer (next-window ecb-edit-window) (car saved-edit-2))
+         (set-window-start (next-window ecb-edit-window) (cdr saved-edit-2)))
+       
+       ;; Restore saved window sizes
+       (ecb-restore-window-sizes)
+       
+       ;; at the end of the redraw we always stay in that edit-window as before
+       ;; the redraw
+       (ecb-select-edit-window)    
+       (if (equal window-before-redraw 2)
+           (select-window (next-window)))
+       
+       ;; if we were in an edit-window before redraw let us go to the old place
+       (when pos-before-redraw
+         (goto-char pos-before-redraw))
+       
+       (setq ecb-last-source-buffer (current-buffer))
+       (setq ecb-last-edit-window-with-point (selected-window))
 
-      ;; Now we call the layout-function
-      (funcall (intern (format "ecb-layout-function-%s" ecb-layout-name)))
-      (select-window
-       (if ecb-edit-window
-           ecb-edit-window
-         (error "Edit-window not set in function 'ecb-layout-function-%s"
-                ecb-layout-name)))
-      
-      ;; Now all the windows must be created and the editing window must not
-      ;; be splitted! In addition the variables `ecb-edit-window' and
-      ;; `ecb-compile-window' must be set to the correct windows.
-
-      ;; The following when-expression is added for better relayouting the
-      ;; choosen layout if we have a compilation-window.
-      (when ecb-compile-window-height
-        (select-window (if ecb-compile-window
-                           ecb-compile-window
-                         (error "Compilations-window not set in the layout-function")))
-        
-        ;; go one window back, so display-buffer always shows the buffer in
-        ;; the next window, which is then savely the compile-window.
-        ;; For this we must temporalily set `same-window-buffer-names' and
-        ;; `same-window-regexps' to nil to ensure displaying the
-        ;; compilation-buffers really in the compile-window.
-        ;; Eshell is an example which adds its buffer-name *eshell* to the
-        ;; former option which would prevent working redrawing the layout
-        ;; correctly.
-        (select-window (previous-window (selected-window) 0))
-        (let ((same-window-buffer-names nil)
-              (same-window-regexps))
-          (display-buffer
-           (or compile-buffer-before-redraw
-               (some (function (lambda (mode)
-                                 (some (function (lambda (buf)
-                                                   (save-excursion
-                                                     (set-buffer buf)
-                                                     (if (equal major-mode mode)
-                                                         buf nil))))
-                                       (buffer-list ecb-frame))))
-                     '(compilation-mode occur-mode help-mode))
-               (get-buffer-create "*scratch*")) t))
-               
-        ;; Cause of display-buffer changes the height of the compile-window we
-        ;; must resize it again to the correct value
-        (select-window (next-window))
-        (shrink-window (- (window-height) compile-window-height-lines)))
-      
-      ;; set `compilation-window-height' to the correct value.
-      (if (not ecb-compile-window-height)
-          (setq compilation-window-height ecb-old-compilation-window-height)
-        (setq compilation-window-height compile-window-height-lines)
-        (if (or (equal ecb-compile-window-temporally-enlarge 'after-compilation)
-                (equal ecb-compile-window-temporally-enlarge 'both))
-            (setq compilation-window-height ecb-old-compilation-window-height)))
-
-      (select-window ecb-edit-window)
-      
-      ;; Maybe we must split the editing window again if it was splitted before
-      ;; the redraw
-      (cond ((equal split-before-redraw 'horizontal)
-             (ecb-split-hor 0.5 t))
-            ((equal split-before-redraw 'vertical)
-             (ecb-split-ver (if ecb-compile-window-height 0.5
-                              split-amount-before-redraw) t)))
-      
-      ;; Restore edit window buffers
-      (when saved-edit-1
-        (set-window-buffer ecb-edit-window (car saved-edit-1))
-        (set-window-start ecb-edit-window (cdr saved-edit-1)))
-      (when (and split-before-redraw saved-edit-2)
-        (set-window-buffer (next-window ecb-edit-window) (car saved-edit-2))
-        (set-window-start (next-window ecb-edit-window) (cdr saved-edit-2)))
-      
-      ;; Restore saved window sizes
-      (ecb-restore-window-sizes)
-
-      ;; at the end of the redraw we always stay in that edit-window as before
-      ;; the redraw
-      (ecb-select-edit-window)    
-      (if (equal window-before-redraw 2)
-          (select-window (next-window)))
-      
-      ;; if we were in an edit-window before redraw let us go to the old place
-      (when pos-before-redraw
-        (goto-char pos-before-redraw))
-      
-      (setq ecb-last-source-buffer (current-buffer))
-      (setq ecb-last-edit-window-with-point (selected-window))
-      
-      ;; activating the adviced functions again
-      (ecb-activate-adviced-functions ecb-advice-window-functions)
+       );; end of ecb-with-original-functions       
       
       (setq ecb-windows-hidden nil)
 
@@ -2376,6 +2378,25 @@ The `ecb-compile-window' is enlarged depending on the value of
                                        compile-window-height-lines)))
             (enlarge-window (max 0 (- max-height (window-height)))))))
     (message "No ecb-compile-window in current ECB-layout!")))
+
+(defun ecb-toggle-compile-window (&optional arg)
+  "Toggle the visibility of the compile-window of ECB. With prefix argument
+ARG, make display a compile-window, otherwise not. The height of the
+compile-window is always the current *saved* \(for future sessions) value of
+`ecb-compile-window-height', i.e. this command can only display a
+compile-window if `ecb-compile-window-height' has such a saved value of not
+nil!"
+  (interactive "P")
+  (unless (or (not ecb-minor-mode)
+              (not (equal (selected-frame) ecb-frame)))
+    (let ((new-state (if (null arg)
+                         (not (ecb-compile-window-live-p))
+                       (<= (prefix-numeric-value arg) 0))))
+      (if new-state
+          (let ((height (car (get 'ecb-compile-window-height 'saved-value))))
+            (when (numberp height)
+              (customize-set-variable 'ecb-compile-window-height height)))
+        (customize-set-variable 'ecb-compile-window-height nil)))))
 
 (silentcomp-provide 'ecb-layout)
 

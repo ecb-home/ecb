@@ -26,7 +26,7 @@
 ;; This file is part of the ECB package which can be found at:
 ;; http://home.swipnet.se/mayhem/ecb.html
 
-;; $Id: ecb-util.el,v 1.40 2003/01/02 18:07:52 berndl Exp $
+;; $Id: ecb-util.el,v 1.41 2003/01/06 15:56:27 berndl Exp $
 
 ;;; Code:
 
@@ -44,6 +44,7 @@
 (silentcomp-defun frame-parameter)
 (silentcomp-defun line-beginning-position)
 (silentcomp-defun line-end-position)
+(silentcomp-defun window-pixel-edges)
   
 ;; Some constants
 (defconst ecb-running-xemacs (string-match "XEmacs\\|Lucid" emacs-version))
@@ -71,14 +72,21 @@
       (defalias 'ecb-frame-parameter 'frame-property)
       (defalias 'ecb-line-beginning-pos 'point-at-bol)
       (defalias 'ecb-line-end-pos 'point-at-eol)
-      ;; because we want only check if the car of this function is equal for two
-      ;; different windows for the sake if the two window are located side by
-      ;; side or not we can here define this alias even if this function does in
-      ;; XEmacs soemthing different.
-      (defalias 'ecb-window-edges 'window-pixel-edges))
+      (defun ecb-frame-char-width (&optional frame)
+        (/ (frame-pixel-width frame) (frame-width frame)))
+      (defun ecb-frame-char-height (&optional frame)
+        (/ (frame-pixel-height frame) (frame-height frame)))
+      (defun ecb-window-edges (&optional window)
+        (let ((pix-edges (window-pixel-edges window)))
+          (list (/ (nth 0 pix-edges) (ecb-frame-char-width))
+                (/ (nth 1 pix-edges) (ecb-frame-char-height))
+                (/ (nth 2 pix-edges) (ecb-frame-char-width))
+                (/ (nth 3 pix-edges) (ecb-frame-char-height))))))
   (defalias 'ecb-frame-parameter 'frame-parameter)
   (defalias 'ecb-line-beginning-pos 'line-beginning-position)
   (defalias 'ecb-line-end-pos 'line-end-position)
+  (defalias 'ecb-frame-char-width 'frame-char-width)
+  (defalias 'ecb-frame-char-height 'frame-char-height)
   (defalias 'ecb-window-edges 'window-edges))
 
 (defun ecb-remove-assoc (list key)

@@ -1,6 +1,9 @@
 Version 1.90:
 -------------
 
+* Added new command 'ecb-toggle-compile-window': Toggle the visibility of the
+  compile-window of ECB (Klaus).
+
 * Now autom. (de)activating ECB via the options ecb-major-modes-activate and
   ecb-major-modes-deactivate also works when opening files via dired (Klaus).
 

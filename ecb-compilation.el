@@ -1,6 +1,6 @@
 ;;; ecb-compilation.el --- 
 
-;; $Id: ecb-compilation.el,v 1.15 2002/12/27 00:25:43 burtonator Exp $
+;; $Id: ecb-compilation.el,v 1.16 2003/01/06 15:56:28 berndl Exp $
 
 ;; Copyright (C) 2000-2003 Free Software Foundation, Inc.
 ;; Copyright (C) 2000-2003 Kevin A. Burton (burton@openprivacy.org)
@@ -181,7 +181,10 @@ information about compilation buffers."
 
     (dolist(buffer buffers)
       (add-to-list 'submenu (vector (car buffer)
-                                    (list 'switch-to-buffer (car buffer))
+                                    `(funcall (if (ecb-compile-window-live-p)
+                                                  'switch-to-buffer
+                                                'switch-to-buffer-other-window)
+                                                ,(car buffer))
                                     :active t) t))
 
     (easy-menu-change (list ecb-menu-name)
