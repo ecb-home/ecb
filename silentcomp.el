@@ -22,6 +22,8 @@
 ;; the Free Software Foundation, Inc., 59 Temple Place - Suite 330,
 ;; Boston, MA 02111-1307, USA.
 
+;; $Id$
+
 ;;; Location
 
 ;; The latest version of this package is always available at

@@ -1,5 +1,7 @@
 # This Makefile byte-compiles the ECB lisp files and generates online-help.
 
+# $Id$
+
 # ========================================================================
 # User configurable section
 

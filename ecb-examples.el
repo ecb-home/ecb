@@ -44,6 +44,8 @@
 ;; information. For example graphical debuggers (like JDEbug of JDEE) could be
 ;; made this way.
 
+;; $Id$
+
 ;;; Code
 
 ;; ---------------------------------------------------------------------------

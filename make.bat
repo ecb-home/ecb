@@ -1,6 +1,8 @@
 @echo off
 REM This batchfile byte-compiles the ECB lisp files.
 
+REM $Id$
+
 REM Make sure you byte-compile ECB with the semantic-and eieio-version you
 REM load into (X)Emacs (see below)!
 
