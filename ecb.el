@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb.el,v 1.337 2003/09/12 09:19:24 berndl Exp $
+;; $Id: ecb.el,v 1.338 2003/09/12 16:40:17 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -2507,7 +2507,7 @@ See also the option `ecb-tree-RET-selects-edit-window'."
 	node))))
 
 (defun ecb-get-token-type-display (token-type)
-  (let ((display (ecb-find-assoc 'rule ecb-show-tokens)))
+  (let ((display (ecb-find-assoc token-type ecb-show-tokens)))
     (if display
 	display
       (setq display (ecb-find-assoc t ecb-show-tokens))
