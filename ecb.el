@@ -62,7 +62,7 @@
 ;; The latest version of the ECB is available at
 ;; http://home.swipnet.se/mayhem/ecb.html
 
-;; $Id: ecb.el,v 1.273 2003/01/14 13:46:39 berndl Exp $
+;; $Id: ecb.el,v 1.274 2003/01/14 16:33:21 berndl Exp $
 
 ;;; Code:
 
@@ -3525,17 +3525,51 @@ That is remove the unsupported :help stuff."
       :help "Toggle between several layouts"
       ])
    (ecb-menu-item
-    [ "Show help for a layout"
-      ecb-show-layout-help
-      :active t
-      :help "Show the documentation for a layout."
-      ])
-   (ecb-menu-item
     [ "Toggle visibility of ECB windows"
       ecb-toggle-ecb-windows
       :active (equal (selected-frame) ecb-frame)
       :help "Toggle the visibility of all ECB windows."
       ])
+   (list
+    "Layout administration"
+    (ecb-menu-item
+     [ "Store current window-sizes"
+       ecb-store-window-sizes
+       :active t
+       :help "Store current sizes of the ecb-windows in current layout."
+       ])
+    (ecb-menu-item
+     [ "Restore sizes of the ecb-windows"
+       ecb-restore-window-sizes
+       :active t
+       :help "Restore the sizes of the ecb-windows in current layout."
+       ])
+    (ecb-menu-item
+     [ "Restore default-sizes of the ecb-windows"
+       ecb-restore-default-window-sizes
+       :active t
+       :help "Restore the default-sizes of the ecb-windows in current layout."
+       ])
+    "-"
+    (ecb-menu-item
+     [ "Create new layout"
+       ecb-create-new-layout
+       :active (equal (selected-frame) ecb-frame)
+       :help "Create a new ECB-layout."
+       ])
+    (ecb-menu-item
+     [ "Delete new layout"
+       ecb-delete-new-layout
+       :active (equal (selected-frame) ecb-frame)
+       :help "Delete an user-created ECB-layout."
+       ])
+    "-"
+    (ecb-menu-item
+     [ "Show help for a layout"
+       ecb-show-layout-help
+       :active t
+       :help "Show the documentation for a layout."
+       ]))
    "-"
    (ecb-menu-item
     [ "Toggle compilation window"
@@ -3550,19 +3584,6 @@ That is remove the unsupported :help stuff."
                    ecb-compile-window
                    (ecb-compile-window-live-p))
       :help "Toggle enlarged compilation window."
-      ])
-   "-"
-   (ecb-menu-item
-    [ "Create new layout"
-      ecb-create-new-layout
-      :active (equal (selected-frame) ecb-frame)
-      :help "Create a new ECB-layout."
-      ])
-   (ecb-menu-item
-    [ "Delete new layout"
-      ecb-delete-new-layout
-      :active (equal (selected-frame) ecb-frame)
-      :help "Delete an user-created ECB-layout."
       ])
    "-"
    (list
