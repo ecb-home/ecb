@@ -54,7 +54,7 @@
 ;; The latest version of the ECB is available at
 ;; http://home.swipnet.se/mayhem/ecb.html
 
-;; $Id: ecb.el,v 1.120 2001/07/01 18:20:37 berndl Exp $
+;; $Id: ecb.el,v 1.121 2001/07/03 13:47:15 berndl Exp $
 
 ;;; Code:
 
@@ -343,14 +343,23 @@ so the user can easily jump back."
 		 (const :tag "Language specific" language-specific)
 		 (const :tag "UML" uml)))
 
-(defcustom ecb-show-tokens '((include collapsed) (type expanded) (variable collapsed) (function flattened) (rule flattened) (t collapsed))
-  "*How to show tokens in the methods buffer. This variable is a list where each item is a list of a Semantic token type symbol and a symbol which describes how the token type shall be shown:
+(defcustom ecb-show-tokens '((include collapsed)
+                             (type expanded)
+                             (variable collapsed)
+                             (function flattened)
+                             (rule flattened)
+                             (t collapsed))
+  "*How to show tokens in the methods buffer. This variable is a list
+where each item is a list of a Semantic token type symbol and a symbol which
+describes how the token type shall be shown:
 - expanded: The tokens are shown in an expanded node.
 - collapsed: The tokens are shown in a collapsed node.
 - flattened: The tokens are added to the parent node.
 - hidden: The tokens are not shown.
-The token type symbol can be any symbol returned from Semantic (type, function, variable, rule, include etc.) or the symbol 't which includes all tokens not specified anywhere else in the list.
-The tokens in the methods buffer are displayed in the order as they appear in this list."
+The token type symbol can be any symbol returned from Semantic \(type,
+function, variable, rule, include etc.) or the symbol 't which includes all
+tokens not specified anywhere else in the list. The tokens in the methods
+buffer are displayed in the order as they appear in this list."
   :group 'ecb-methods
   :type '(repeat (list (symbol :tag "Token symbol")
 		       (choice :tag "Display type" :value collapsed

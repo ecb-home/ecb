@@ -78,6 +78,7 @@
 ;; - `split-window-vertically'
 ;; - `switch-to-buffer'
 ;; - `switch-to-buffer-other-window'
+;; - `other-window-for-scrolling'
 ;; The behavior of the adviced functions is:
 ;; - All these function behaves exactly like their corresponding original
 ;;   functons but they always act as if the edit-window(s) of ECB would be the
@@ -124,7 +125,7 @@
 ;;   + The edit-window must not be splitted and the point must reside in
 ;;     the not deleted edit-window.
 
-;; $Id: ecb-layout.el,v 1.65 2001/07/01 18:20:37 berndl Exp $
+;; $Id: ecb-layout.el,v 1.66 2001/07/03 13:47:15 berndl Exp $
 
 ;;; Code:
 
@@ -286,24 +287,45 @@ frame height."
                 (const :tag "Only edit windows" only-edit)
                 (const :tag "Edit + compile window" edit-and-compile)))
 
+(defcustom ecb-other-window-scroll-behavior 'standard
+  "*Determine which window should be scrolled if any of the
+\"other-window-scrolling-functions\" is called, which means one of these:
+- `scroll-other-window'
+- `scroll-other-window-down'
+- `beginning-of-buffer-other-window'
+- `end-of-buffer-other-window'
+There are two possible values:
+- 'standard: All these functions above behave like the original version.
+- 'only-edit-window: All these function scroll always the first edit window if
+  the edit-window is splitted and point stays in the second one.
+This option takes only effect if `other-window-for-scrolling' is adviced \(see
+`ecb-advice-window-functions')."
+  :group 'ecb-layout
+  :type '(radio (const :tag "Standard-behavior" standard)
+                (const :tag "Scroll always other edit-window" only-edit-window)))
+  
 (defcustom ecb-advice-window-functions '(other-window
                                          delete-window
                                          delete-other-windows
                                          split-window-horizontally
                                          split-window-vertically
                                          switch-to-buffer
-                                         switch-to-buffer-other-window)
+                                         switch-to-buffer-other-window
+                                         other-window-for-scrolling)
   "*Use the intelligent windows functions of ECB instead of the standard
 Emacs functions. You can choose the following functions to be adviced by ECB
 so they behave as if the edit-window\(s) of ECB would be the only windows\(s)
 of the ECB-frame:
-- `other-window'
+- `other-window' \(for this one see also the option
+                  `ecb-other-window-jump-behavior'!)
 - `delete-window'
 - `delete-other-windows'
 - `split-window-horizontally'
 - `split-window-vertically'
 - `switch-to-buffer'
 - `switch-to-buffer-other-window'
+- `other-window-for-scrolling' \(for this one see also the option
+                                `ecb-other-window-scroll-behavior'!)
 
 For working most conveniantly with ECB it is the best to advice all these
 functions, because then all the standard shortcuts of these functions are also
@@ -356,7 +378,9 @@ rebind it to the original function in the `ecb-deactivate-hook'."
               (const :tag "switch-to-buffer"
                      :value switch-to-buffer)
               (const :tag "switch-to-buffer-other-window"
-                     :value switch-to-buffer-other-window)))
+                     :value switch-to-buffer-other-window)
+              (const :tag "other-window-for-scrolling"
+                     :value other-window-for-scrolling)))
 
 
 (defvar ecb-use-dedicated-windows t
@@ -434,11 +458,13 @@ done.")
                                           '(delete-frame
                                             compilation-set-window-height
                                             shrink-window-if-larger-than-buffer
-                                            show-temp-buffer-in-current-frame)
+                                            show-temp-buffer-in-current-frame
+                                            scroll-other-window)
                                         '(delete-frame
                                           compilation-set-window-height
                                           resize-temp-buffer-window
-                                          shrink-window-if-larger-than-buffer))
+                                          shrink-window-if-larger-than-buffer
+                                          scroll-other-window))
   "This functions are always adviced if ECB is active.")
 
 (defadvice delete-frame (around ecb)
@@ -481,6 +507,17 @@ either not activated or it behaves exactly like the original version!"
                                       (window-height))))
                (select-window w)))))))
 
+;; We need this advice only because the ugly implementation of Emacs:
+;; `scroll-other-window' uses per default not the function
+;; `other-window-for-scrolling'.
+(defadvice scroll-other-window (around ecb)
+  "The bahavior depends on the advice of `other-window-for-scrolling' \(see
+`ecb-advice-window-functions') and the value of the related option
+`ecb-other-window-scroll-behavior'."
+  (if (not (equal (ecb-point-in-edit-window) 2))
+      ad-do-it
+    (let ((other-window-scroll-buffer (window-buffer (other-window-for-scrolling))))
+      ad-do-it)))
 
 (defun ecb-edit-window-splitted ()
   "Returns either nil if the ECB edit-window is not splitted or 'vertical or
@@ -654,6 +691,7 @@ either not activated or it behaves exactly like the original version!"
     delete-other-windows
     switch-to-buffer
     switch-to-buffer-other-window
+    other-window-for-scrolling
     )
   "A list of functions which can be advised by the ECB package.")
 
@@ -962,14 +1000,21 @@ the \(first) edit-window and does then it´s job \(see above)."
       ;; now we are always in the edit window, so we can switch to the buffer
     ad-do-it))
 
-;; TODO: Add a new option how this function should behave and implement the
-;; advice.
-(defadvice scroll-other-window (around ecb)
-  ""
-  (if (not (equal (selected-frame) ecb-frame))
+(defadvice other-window-for-scrolling (around ecb)
+  "This function determines the window which is scrolled if any of the
+\"other-window-scrolling-functions\" is called \(e.g. `scroll-other-window').
+The behavior depends on the option `ecb-other-window-scroll-behavior'."
+  (if (or (not (equal (selected-frame) ecb-frame))
+          (and ecb-compile-window-height ecb-compile-window
+               (window-live-p ecb-compile-window))
+          (equal ecb-other-window-scroll-behavior 'standard)
+          (not (equal (ecb-point-in-edit-window) 2)))
       ad-do-it
-    ()))
-
+    ;; point stays in the "other" edit-window and
+    ;; `ecb-other-window-scroll-behavior' is 'other-edit-window 
+    (let ((other-window-scroll-buffer (window-buffer ecb-edit-window)))
+      ad-do-it)))
+    
 (defun ecb-jde-open-class-at-point-ff-function (filename &optional wildcards)
   "Special handling of the class opening at point JDE feature. This function
 calls the value of `jde-open-class-at-point-find-file-function' with activated
