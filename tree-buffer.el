@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: tree-buffer.el,v 1.155 2004/10/04 15:53:03 berndl Exp $
+;; $Id: tree-buffer.el,v 1.156 2004/11/17 17:26:21 berndl Exp $
 
 ;;; Commentary:
 
@@ -1523,6 +1523,19 @@ relative to the NODE itself.
 A LEVEL value X means that all \(sub)nodes with an indentation-level <= X
 relative to NODE are expanded and all other are collapsed. A negative LEVEL
 value means that NODE is collapsed.
+
+Examples:
+
+- LEVEL = 0: If NODE is the root-node then this means expand only all nodes
+  with no indentation at all. If NODE is any other node then this means expand
+  only the NODE itself because it is the only node which has indentation 0 to
+  itself. All deeper indented nodes will be collapsed.
+
+- LEVEL = 1: If NODE is the root-node then this means expand all nodes with no
+  indentation at all and all subnodes of these nodes - all deeper indented
+  nodes will be collapsed. If NODE is any other node then this means expand
+  the NODE itself and all of its direct subnodes - because only the direct
+  subnodes of NODE have indentation-level 1 relativ to NODE.
 
 This function expands beginning from NODE the NODE itself and all subnodes of
 NODE with level <= LEVEL, so the subnodes of these nodes get visible and
