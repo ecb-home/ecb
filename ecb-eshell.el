@@ -1,6 +1,6 @@
 ;;; ecb-eshell.el --- eshell integration for the ECB.
 
-;; $Id: ecb-eshell.el,v 1.55 2002/12/29 10:15:12 burtonator Exp $
+;; $Id: ecb-eshell.el,v 1.56 2002/12/29 23:51:00 burtonator Exp $
 
 ;; Copyright (C) 2000-2003 Free Software Foundation, Inc.
 ;; Copyright (C) 2000-2003 Kevin A. Burton (burton@openprivacy.org)
@@ -73,7 +73,7 @@
 ;;   + Removed ecb-eshell-enlarge-when-starting; eshell is always implicit
 ;;     started and selected by `ecb-eshell-goto-eshell' so the option
 ;;     `ecb-eshell-enlarge-when-selecting' should be enough.
-;;   + Removed the ecb-eshell-buffer-name
+;;   + Removed the ecb-eshell-buffer-name.
 ;;   + Added new option ecb-eshell-synchronize
 ;;   + Moved all add-hook into ecb-eshell-activate
 ;;   + Added new function ecb-eshell-deactivate
@@ -230,7 +230,6 @@ interactively or `ecb-eshell-synchronize' is not nil."
              
              (ecb-eshell-recenter)))))))
 
-
 (defmacro ecb-eshell-save-buffer-history (&rest body)
   "Protect the buffer-list so that the eshell buffer name is not placed early
 in the buffer list or at all if it currently doesn't exist."
@@ -243,7 +242,6 @@ in the buffer list or at all if it currently doesn't exist."
          (modify-frame-parameters nil (list (cons 'buffer-list
                                                   ,eshell-buffer-list)))))))
 
-
 (defun ecb-eshell-recenter(&optional display-errors)
   "Recenter the eshell window so that the prompt is at the end of the buffer."
   (interactive (list t))
@@ -255,16 +253,15 @@ in the buffer list or at all if it currently doesn't exist."
              (equal window ecb-compile-window))
         (save-selected-window
           (select-window window)
-          (recenter -2)))
-    (when display-errors
-      (ecb-error "Eshell not running or compile-window not live!"))))
-
+          (goto-char (point-max))
+          (recenter -2))
+      (when display-errors
+        (ecb-error "Eshell not running or compile-window not live!")))))
 
 (defun ecb-eshell-running-p()
   "Return true if eshell is currently running."
   (and (boundp 'eshell-buffer-name)
        (get-buffer eshell-buffer-name)))
-
 
 (defun ecb-eshell-goto-eshell()
   "Go to the eshell buffer in the compile-window. If eshell is not alive then
@@ -281,7 +278,6 @@ start it."
 
   ;;sync to the current buffer
   (ecb-eshell-current-buffer-sync))
-
 
 (defun ecb-eshell-activate()
   "Startup the eshell in the compile window. If no compile-window is visible
@@ -320,7 +316,6 @@ then an error is reported!"
   (remove-hook 'eshell-pre-command-hook 'ecb-eshell-enlarge)
   (remove-hook 'window-size-change-functions 'ecb-eshell-window-size-change))  
 
-
 (defun ecb-eshell-enlarge()
   "Enlarge the eshell so more information is visible.  This is usually done so
 that the eshell has more screen space after we execute a command. "
@@ -351,7 +346,6 @@ that the eshell has more screen space after we execute a command. "
           (ecb-enlarge-window window))))
     (ecb-eshell-recenter)))
 
-
 (defun ecb-eshell-shrink-if-necessary()
   "If we have expanded the compile buffer after a command, but there was no need
 to because the command didn't output much text, go ahead and shrink it again."
@@ -374,7 +368,6 @@ to because the command didn't output much text, go ahead and shrink it again."
     (setq ecb-eshell-pre-command-point nil)
     (setq ecb-eshell-pre-window-enlarged nil)))
 
-
 (defun ecb-eshell-cleanse()
   "If the user has entered text in the eshell, we need to clean it. If we
 don't do this we could end up executing a strange command resulting in a
@@ -387,12 +380,10 @@ don't do this we could end up executing a strange command resulting in a
         (eshell-bol)
         (delete-region (point) (point-at-eol)))))
 
-
 (defun ecb-eshell-auto-activate-hook()
   "Activate the eshell when ECB is activated. See `ecb-eshell-auto-activate'."
   (when ecb-eshell-auto-activate
     (ignore-errors (ecb-eshell-activate))))
-
 
 (defun ecb-eshell-window-size-change(frame)
   "Called when we change window sizes so that the eshell can resize."
