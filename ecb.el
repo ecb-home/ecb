@@ -50,7 +50,7 @@
 ;; The latest version of the ECB is available at
 ;; http://home.swipnet.se/mayhem/ecb.html
 
-;; $Id: ecb.el,v 1.55 2001/04/26 21:41:31 creator Exp $
+;; $Id: ecb.el,v 1.56 2001/04/26 21:48:29 creator Exp $
 
 ;;; Code:
 
@@ -523,30 +523,6 @@ run direct before the layout-drawing look at
 ;; Methods
 ;;====================================================
 
-(defmacro ecb-exec-in-directories-buffer(&rest body)
-  `(unwind-protect
-       (when (ecb-buffer-select ecb-directories-buffer-name)
-	 ,@body)
-     ))
-
-(defmacro ecb-exec-in-sources-buffer(&rest body)
-  `(unwind-protect
-       (when (ecb-buffer-select ecb-sources-buffer-name)
-	 ,@body)
-     ))
-
-(defmacro ecb-exec-in-methods-buffer(&rest body)
-  `(unwind-protect
-       (when (ecb-buffer-select ecb-methods-buffer-name)
-	 ,@body)
-     ))
-
-(defmacro ecb-exec-in-history-buffer(&rest body)
-  `(unwind-protect
-       (when (ecb-buffer-select ecb-history-buffer-name)
-	 ,@body)
-     ))
-
 (defconst ecb-language-modes-args-separated-with-space
   '(emacs-lisp-mode scheme-mode lisp-mode))
 
@@ -557,6 +533,39 @@ run direct before the layout-drawing look at
 (defconst ecb-classtype 4)
 (defconst ecb-variablename 5)
 (defconst ecb-variabletype 6)
+
+(defmacro ecb-exec-in-directories-window(&rest body)
+  `(unwind-protect
+       (when (ecb-window-select ecb-directories-buffer-name)
+	 ,@body)
+     ))
+
+(defmacro ecb-exec-in-sources-window(&rest body)
+  `(unwind-protect
+       (when (ecb-window-select ecb-sources-buffer-name)
+	 ,@body)
+     ))
+
+(defmacro ecb-exec-in-methods-window(&rest body)
+  `(unwind-protect
+       (when (ecb-window-select ecb-methods-buffer-name)
+	 ,@body)
+     ))
+
+(defmacro ecb-exec-in-history-window(&rest body)
+  `(unwind-protect
+       (when (ecb-window-select ecb-history-buffer-name)
+	 ,@body)
+     ))
+
+(defun ecb-window-select(name)
+  (let ((window (get-buffer-window name)))
+    (if window
+	(select-window window)
+      nil)))
+
+(defun ecb-buffer-select(name)
+  (set-buffer (get-buffer name)))
 
 (defun ecb-highlight-text(orig-text type)
   "If `ecb-font-lock-methods' is not nil then dependend to TYPE the face
@@ -737,7 +746,7 @@ highlighting of the methods if `ecb-font-lock-methods' is not nil."
   
     (when (or (not ecb-show-sources-in-directories-buffer)
 	      ecb-auto-expand-directory-tree)
-      (ecb-exec-in-directories-buffer
+      (ecb-exec-in-directories-window
        (when ecb-auto-expand-directory-tree
 	 ;; Expand tree to show selected directory
 	 (if (ecb-expand-tree ecb-path-selected-directory (tree-buffer-get-root))
@@ -745,7 +754,7 @@ highlighting of the methods if `ecb-font-lock-methods' is not nil."
        (when (not ecb-show-sources-in-directories-buffer)
 	 (tree-buffer-highlight-node-data ecb-path-selected-directory))))
 
-    (ecb-exec-in-sources-buffer
+    (ecb-exec-in-sources-window
      (let ((old-children (tree-node-get-children (tree-buffer-get-root))))
        (tree-node-set-children (tree-buffer-get-root) nil)
        (ecb-tree-node-add-files
@@ -776,15 +785,15 @@ given."
   
     ;; Update directory buffer
     (when ecb-show-sources-in-directories-buffer
-      (ecb-exec-in-directories-buffer
+      (ecb-exec-in-directories-window
        (tree-buffer-highlight-node-data ecb-path-selected-source)))
     
     ;; Update source buffer
-    (ecb-exec-in-sources-buffer
+    (ecb-exec-in-sources-window
      (tree-buffer-highlight-node-data ecb-path-selected-source))
 
     ;; Update history buffer
-    (ecb-exec-in-history-buffer
+    (ecb-exec-in-history-window
      (let ((child (tree-node-find-child-data
 		   (tree-buffer-get-root) ecb-path-selected-source)))
        (when child
@@ -847,7 +856,7 @@ displayed with window-start and point at beginning of buffer."
       (ecb-rebuild-methods-buffer-after-parsing))
   (when scroll-to-top
     (save-selected-window
-      (ecb-exec-in-methods-buffer
+      (ecb-exec-in-methods-window
        (tree-buffer-scroll (point-min) (point-min))))))
   
 (defun ecb-rebuild-methods-buffer-after-parsing ()
@@ -866,7 +875,7 @@ displayed with window-start and point at beginning of buffer."
 		  t)
   ;; also the whole buffer informations should be preserved!
   (save-excursion
-    (set-buffer (get-buffer ecb-methods-buffer-name))
+    (ecb-buffer-select ecb-methods-buffer-name)
     (tree-buffer-update))
   (ecb-mode-line-format)
   ;; signalize that the rebuild has already be done
@@ -931,7 +940,7 @@ CLEARALL overrides the value of this option:
 For further explanation see `ecb-clear-history-behavior'."
   (interactive "P")
   (save-selected-window
-    (ecb-exec-in-history-buffer
+    (ecb-exec-in-history-window
      (let ((buffer-file-name-list (mapcar (lambda (buff)
 					    (buffer-file-name buff))
 					  (buffer-list)))
@@ -1032,7 +1041,7 @@ OTHER-WINDOW."
   "Updates the ECB directories buffer."
   (interactive)
   (save-selected-window
-    (ecb-exec-in-directories-buffer
+    (ecb-exec-in-directories-window
      ;;     (setq tree-buffer-type-faces
      ;;       (list (cons 1 ecb-source-in-directories-buffer-face)))
      (let* ((node (tree-buffer-get-root))
@@ -1061,12 +1070,6 @@ OTHER-WINDOW."
             (tree-node-set-expandable child nil))
         (throw 'exit child)))
     (tree-node-new name type data not-expandable)))
-
-(defun ecb-buffer-select(name)
-  (let ((window (get-buffer-window name)))
-    (if window
-	(select-window window)
-      nil)))
 
 ;;====================================================
 ;; Mouse functions
@@ -1167,7 +1170,7 @@ Currently the fourth argument TREE-BUFFER-NAME is not used here."
           (when (= 2 ecb-button)
             (tree-node-toggle-expanded node))
           (ecb-set-selected-directory (tree-node-get-data node))
-          (ecb-exec-in-directories-buffer
+          (ecb-exec-in-directories-window
 	   ;; Update the tree-buffer with optimized display of NODE
 	   (tree-buffer-update node))))
     (ecb-set-selected-source (tree-node-get-data node)
