@@ -613,7 +613,7 @@ highlighting of the methods if `ecb-font-lock-methods' is not nil."
   (dolist (method methods)
     (tree-node-add-child node (tree-node-new
                                (ecb-get-method-sig method) 0
-                               method t))))
+                               (semantic-token-start method) t))))
   
 (defun ecb-add-variables(node token variables)
   (when (and ecb-show-variables variables)
@@ -629,7 +629,7 @@ highlighting of the methods if `ecb-font-lock-methods' is not nil."
       (dolist (var variables)
         (tree-node-add-child var-node (tree-node-new
                                        (ecb-get-variable-text var)
-                                       0 var t))))))
+                                       0 (semantic-token-start var) t))))))
   
 (defun ecb-add-tokens(node token &optional flatten)
   (let ((methods (semantic-find-nonterminal-by-token 'function token))
@@ -1090,7 +1090,8 @@ Currently the fourth argument TREE-BUFFER-NAME is not used here."
       ;; let us set the mark so the user can easily jump back.
       (if ecb-method-jump-sets-mark
           (push-mark))
-      (goto-char (semantic-token-start (tree-node-get-data node))))))
+      (goto-char (tree-node-get-data node)))))
+		 ;;(semantic-token-start (tree-node-get-data node))))))
 
 (defun ecb-mouse-over-node(node)
   (cond ((eq ecb-show-node-name-in-minibuffer 'always)
