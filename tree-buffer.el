@@ -26,7 +26,7 @@
 ;; This file is part of the ECB package which can be found at:
 ;; http://home.swipnet.se/mayhem/ecb.html
 
-;; $Id: tree-buffer.el,v 1.56 2001/06/22 09:08:02 berndl Exp $
+;; $Id: tree-buffer.el,v 1.57 2001/06/29 20:51:10 creator Exp $
 
 ;;; Code:
 
@@ -658,6 +658,26 @@ also the NODE-MOUSE-OVER-FN argument of `tree-buffer-create'."
           (remove-hook 'mode-motion-hook 'tree-buffer-follow-mouse)))
     (define-key special-event-map [mouse-movement] tree-buffer-saved-mouse-movement-fn)))
 
+(defun tree-buffer-tab-pressed ()
+  (interactive)
+  (unless (not (equal (selected-frame) tree-buffer-frame))
+    (let ((node (tree-buffer-get-node-at-point)))
+      (when (tree-node-is-expandable node)
+	(when (and tree-node-expanded-fn
+		   (not (tree-node-is-expanded node)))
+	  (funcall tree-node-expanded-fn node 0 nil nil (buffer-name)))
+	(when (tree-node-is-expandable node)
+	  (tree-node-toggle-expanded node))
+	;; Update the tree-buffer with optimized display of NODE           
+	(tree-buffer-update node)))))
+
+(defun tree-buffer-return-pressed ()
+  (interactive)
+  (unless (not (equal (selected-frame) tree-buffer-frame))
+    ;; reinitialize the select pattern after selecting a node
+    (setq tree-buffer-incr-searchpattern "")
+    (tree-buffer-select 0 nil nil)))
+
 (defun tree-buffer-create (name frame is-click-valid-fn node-selected-fn
                                 node-expanded-fn node-mouse-over-fn
                                 menus tr-lines read-only tree-indent
@@ -789,28 +809,8 @@ AFTER-CREATE-HOOK: A function \(with no arguments) called directly after
       (define-key tree-buffer-key-map [end]
         'tree-buffer-incremental-node-search))
     
-    (define-key tree-buffer-key-map "\C-m"
-      (function (lambda()
-		  (interactive)
-                  (unless (not (equal (selected-frame) tree-buffer-frame))
-                    ;; reinitialize the select pattern after selecting a node
-                    (setq tree-buffer-incr-searchpattern "")
-                    (tree-buffer-select 0 nil nil)))))
-    
-    (define-key tree-buffer-key-map [tab]
-      (function
-       (lambda()
-	 (interactive)
-         (unless (not (equal (selected-frame) tree-buffer-frame))
-           (let ((node (tree-buffer-get-node-at-point)))
-             (when (tree-node-is-expandable node)
-               (when (and tree-node-expanded-fn
-                          (not (tree-node-is-expanded node)))
-                 (funcall tree-node-expanded-fn node 0 nil nil (buffer-name)))
-               (when (tree-node-is-expandable node)
-                 (tree-node-toggle-expanded node))
-               ;; Update the tree-buffer with optimized display of NODE           
-               (tree-buffer-update node)))))))
+    (define-key tree-buffer-key-map "\C-m" 'tree-buffer-return-pressed)
+    (define-key tree-buffer-key-map [tab] 'tree-buffer-tab-pressed)
       
     ;; mouse-1
     (define-key tree-buffer-key-map
