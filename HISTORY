@@ -1,6 +1,9 @@
 Version 1.30 (???):
 -------------------
 
+- You can now specify paths with env-vars like $HOME in the option
+  `ecb-source-path'. (Klaus)
+
 - The user must now confirm if he tries to delete the ECB frame. If he wants
   to proceed then ECB will be first deactivated before deleting the frame.
   This works for all ways to delete a frame (shortcut, window-manager-button,

@@ -22,8 +22,6 @@
 - Optionally add "(file . line-nr)" to history when clicking on methods in
   the methods buffer. (JN)
 
-- KB: support env vars, like the latest JDE, for settings like the source paths?
-
 - KB: use the JDE source paths if the JDE variable is available 
    (perhaps there are other variables to use by default as well?). We
    should add an option where this external source-paths can be defined.

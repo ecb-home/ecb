@@ -134,9 +134,7 @@ by \(keyboard-escape-quit)."
   "*Path where to find code sources."
   :group 'ecb-directories
   :set (function (lambda(symbol value)
-		   (set symbol (mapcar (lambda (path)
-					 (ecb-fix-filename path))
-				       value))
+		   (set symbol value)
 		   (if (and ecb-activated
 			    (functionp 'ecb-update-directories-buffer))
 		       (ecb-update-directories-buffer))))
@@ -1147,7 +1145,9 @@ OTHER-WINDOW."
          (if (or ecb-source-path function-paths)
              (progn
                (dolist (dir (append function-paths ecb-source-path))
-                 (tree-node-add-child node (ecb-new-child old-children dir 0 dir)))
+                 (let ((norm-dir (ecb-fix-filename dir t)))
+                   (tree-node-add-child node (ecb-new-child old-children
+                                                            norm-dir 0 norm-dir))))
                (tree-buffer-update))
            (let ((buffer-read-only))
              ;; TODO: This should not be done, because the read-only property of

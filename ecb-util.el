@@ -33,8 +33,10 @@
 (defconst ecb-directory-sep-char directory-sep-char)
 (defconst ecb-directory-sep-string (char-to-string ecb-directory-sep-char))
 
-(defun ecb-fix-filename (name)
-  (let ((norm-path (expand-file-name name)))
+(defun ecb-fix-filename (name &optional substitute-env-vars)
+  (let ((norm-path (expand-file-name (if substitute-env-vars
+                                         (substitute-in-file-name name)
+                                       name))))
     (if (= (aref norm-path (1- (length norm-path))) ecb-directory-sep-char)
         (substring norm-path 0 (1- (length norm-path)))
       norm-path)))
@@ -46,6 +48,7 @@
 ;; code!!
 (defun ecb-create-source (dir)
   (let ((filename (read-from-minibuffer "Source name: ")))
+    ;; to avoid byte-compiler noise
     (ecb-switch-to-edit-buffer)
     (jde-gen-class-buffer (concat dir "/" filename (if (not (string-match "\\." filename)) ".java")))))
 
@@ -60,6 +63,7 @@
   (ecb-create-file-3 (tree-node-get-data node)))
 
 (defun ecb-create-file-3 (dir)
+  ;; to avoid byte-compiler noise
   (ecb-switch-to-edit-buffer)
   (find-file (concat dir "/" (read-from-minibuffer "File name: "))))
 
