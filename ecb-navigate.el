@@ -2,7 +2,7 @@
 
 ;; Copyright (C) 2001 by Free Software Foundation, Inc.
 
-;; Author:  <Sune Mangs@MAYHEM>
+;; Author: Jesper Nordenberg <mayhem@home.se>
 ;; Keywords: 
 
 ;; This file is part of GNU Emacs.

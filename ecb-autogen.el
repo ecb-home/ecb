@@ -1,6 +1,10 @@
 ;;; ecb-autogen.el --- Auto load statement generator
 
-;;; Copyright (C) 2003 Klaus Berndl
+;; Copyright (C) 2002 Klaus Berndl
+
+;; Author: Klaus Berndl <klaus.berndl@sdm.de>
+;; Maintainer: Klaus Berndl <klaus.berndl@sdm.de>
+;; Keywords: browser, code, programming, tools
 
 ;; $Id$
 
