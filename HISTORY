@@ -4,11 +4,11 @@ Version ???:
 - Now displaying the complete node name in minibuffer with the track-mouse
   mechanism works also with mouse-avoidance-mode on; the mouse-avoidance will
   be deactivated as long ECB is activated and the node-name display-mechanism
-  is on. This refers only to GNU Emacs!
+  is on. This refers only to GNU Emacs! (Klaus)
 
-- Fixed a bug in 'ecb-current-buffer-sync' and 'ecb-redraw-layout'
+- Fixed a bug in 'ecb-current-buffer-sync' and 'ecb-redraw-layout' (Klaus)
 
-- Fixed a bug in loading semantic 1.3.3 or semantic 1.4
+- Fixed a bug in loading semantic 1.3.3 or semantic 1.4 (Klaus)
 
 
 Version 1.30:

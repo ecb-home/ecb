@@ -26,14 +26,13 @@
 ;; This file is part of the ECB package which can be found at:
 ;; http://home.swipnet.se/mayhem/ecb.html
 
-;; $Id: tree-buffer.el,v 1.51 2001/05/31 12:11:33 berndl Exp $
+;; $Id: tree-buffer.el,v 1.52 2001/05/31 15:41:35 berndl Exp $
 
 ;;; Code:
 
 (eval-when-compile
   ;; to avoid compiler grips
-  (require 'cl)
-  (require 'avoid))
+  (require 'cl))
 
 (defconst running-xemacs (string-match "XEmacs\\|Lucid" emacs-version))
 
@@ -52,6 +51,8 @@
           (t ()))
         "Face for highlights."))
   ;; GNU Emacs
+  ;; needed to handle correct mouse avoidance
+  (require 'avoid)
   (defalias 'tree-buffer-line-beginning-pos 'line-beginning-position)
   (defun tree-buffer-window-display-height (&optional window)
     (1- (window-height window)))
