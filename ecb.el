@@ -54,7 +54,7 @@
 ;; The latest version of the ECB is available at
 ;; http://home.swipnet.se/mayhem/ecb.html
 
-;; $Id: ecb.el,v 1.212 2002/04/26 13:55:40 berndl Exp $
+;; $Id: ecb.el,v 1.213 2002/04/26 16:01:22 berndl Exp $
 
 ;;; Code:
 
@@ -3619,10 +3619,12 @@ active. For each major-mode there must be added an action what should be done:
 - hide: ECB just hides all the ECB windows like with `ecb-hide-ecb-windows'.
 - deactivate: ECB is completely deactivated after activating the major-mode.
 
-There are two additional options:
+There are three additional options:
 - none: No major-modes should deactivate/hide ECB automatically.
-- all-except-activated: All major-modes which are not listed in
-  `ecb-major-modes-activate'.
+- hide-all-except-activated: All major-modes which are not listed in
+  `ecb-major-modes-activate' hide the ECB-windows.
+- deactivate-all-except-activated: All major-modes which are not listed in
+  `ecb-major-modes-activate' deactivate ECB.
 
 If a major-mode is listed in `ecb-major-modes-activate' as well as in
 `ecb-major-modes-deactivate' then ECB is activated!
@@ -3630,11 +3632,12 @@ If a major-mode is listed in `ecb-major-modes-activate' as well as in
 Any auto. deactivation/hiding is only done if the edit-window of ECB is
 unsplitted and point is in the edit-window to avoid changing unnecessarily or
 unintentionally the frame-layout if the user just jumps between different
-edit-windows or between the tree-windows of ECB."
+edit-windows, the tree-windows and the compile-window of ECB."
   :group 'ecb-general
   :type '(radio :tag "Modes for deactivation"
                 (const :tag "None" none)
-                (const :tag "All except activated" all-except-activated)
+                (const :tag "Hide all except act." hide-all-except-activated)
+                (const :tag "Deactivate all except act." deactivate-all-except-activated)
                 (repeat :tag "Mode list"
                         (cons (symbol :tag "Major-mode")
                               (choice :tag "Action" :menu-tag "Action"
@@ -3653,34 +3656,40 @@ values of `ecb-major-modes-activate' and `ecb-major-modes-deactivate'."
                   (listp ecb-major-modes-deactivate)
                   ecb-major-modes-deactivate
                   (not (assoc major-mode ecb-major-modes-deactivate))
-                  (null ecb-minor-mode)
                   (equal (selected-window) (next-window)))
-             (ecb-activate))
+             (if ecb-minor-mode
+                 (and (ecb-point-in-edit-window) (ecb-show-ecb-windows))
+               (ecb-activate)))
             ((and (listp ecb-major-modes-activate)
                   ecb-major-modes-activate
-                  (assoc major-mode ecb-major-modes-activate))
-             (when (equal (selected-window) (next-window))
-               (if ecb-minor-mode
-                   (and (ecb-point-in-edit-window) (ecb-show-ecb-windows))
-                 (ecb-activate)
-                 (let* ((layout (cdr (assoc major-mode
-                                            ecb-major-modes-activate)))
-                        (layout-to-set (if (equal layout 'default)
-                                           (car (or (get 'ecb-layout-nr 'saved-value)
-                                                    (get 'ecb-layout-nr 'standard-value)))
-                                         layout)))
-                   ;; if we must set a new layout we do this via customizing
-                   ;; ecb-layout-nr for current Emacs-session!
-                   (if (not (eq layout-to-set ecb-layout-nr))
-                       (customize-set-variable 'ecb-layout-nr layout-to-set))))))
-            ((and (equal ecb-major-modes-deactivate 'all-except-activated)
+                  (assoc major-mode ecb-major-modes-activate)
+                  (equal (selected-window) (next-window)))
+             (if ecb-minor-mode
+                 (and (ecb-point-in-edit-window) (ecb-show-ecb-windows))
+               (ecb-activate)
+               (let* ((layout (cdr (assoc major-mode
+                                          ecb-major-modes-activate)))
+                      (layout-to-set (if (equal layout 'default)
+                                         (car (or (get 'ecb-layout-nr 'saved-value)
+                                                  (get 'ecb-layout-nr 'standard-value)))
+                                       layout)))
+                 ;; if we must set a new layout we do this via customizing
+                 ;; ecb-layout-nr for current Emacs-session!
+                 (if (not (eq layout-to-set ecb-layout-nr))
+                     (customize-set-variable 'ecb-layout-nr layout-to-set)))))
+            ((and (member ecb-major-modes-deactivate
+                          '(hide-all-except-activated
+                            deactivate-all-except-activated))
                   (listp ecb-major-modes-activate)
                   ecb-major-modes-activate
                   (not (assoc major-mode ecb-major-modes-activate))
                   ecb-minor-mode
                   (ecb-point-in-edit-window)
                   (not (ecb-edit-window-splitted)))
-             (ecb-deactivate))
+             (if (equal ecb-major-modes-deactivate
+                        'deactivate-all-except-activated)
+                 (ecb-deactivate)
+               (ecb-hide-ecb-windows)))
             ((and (listp ecb-major-modes-deactivate)
                   ecb-major-modes-deactivate
                   (assoc major-mode ecb-major-modes-deactivate)
@@ -3692,7 +3701,7 @@ values of `ecb-major-modes-activate' and `ecb-major-modes-deactivate'."
                  (ecb-hide-ecb-windows)
                (ecb-deactivate)))))))
 
-;; (add-hook 'post-command-hook 'ecb-handle-major-mode-activation)
+(add-hook 'post-command-hook 'ecb-handle-major-mode-activation)
 
 (add-hook 'emacs-startup-hook 'ecb-auto-activate-hook)
 
