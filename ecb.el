@@ -73,7 +73,7 @@
 ;; For the ChangeLog of this file see the CVS-repository. For a complete
 ;; history of the ECB-package see the file NEWS.
 
-;; $Id: ecb.el,v 1.303 2003/03/21 15:32:21 berndl Exp $
+;; $Id: ecb.el,v 1.304 2003/03/27 14:42:38 berndl Exp $
 
 ;;; Code:
 
@@ -3621,6 +3621,7 @@ combination is invalid \(see `ecb-interpret-mouse-click'."
       (ecb-goto-window tree-buffer-name)
       (tree-buffer-remove-highlight))))
 
+
 (defun ecb-tree-buffer-node-expand-callback (node
 					     mouse-button
 					     shift-pressed
@@ -3941,8 +3942,9 @@ can last a long time - depending of machine- and disk-performance."
          ;; let us set the mark so the user can easily jump back.
          (if ecb-token-jump-sets-mark
              (push-mark nil t))
-         (when ecb-token-jump-narrow
-           (widen))
+;;          (when ecb-token-jump-narrow
+;;            (widen))
+         (widen)
          (goto-char (ecb-semantic-token-start token))
          (if ecb-token-jump-narrow
              (narrow-to-region (ecb-line-beginning-pos)
@@ -4756,6 +4758,9 @@ always the ECB-frame if called from another frame."
                                       'identity)
                                   (append ecb-directories-menu-user-extension
                                           ecb-source-path-menu))))
+           (list (cons 0 ecb-directories-menu-title-creator)
+                 (cons 1 ecb-directories-menu-title-creator)
+                 (cons 2 ecb-directories-menu-title-creator))
            (nth 0 ecb-truncate-lines)
            t
            ecb-tree-indent
@@ -4791,6 +4796,7 @@ always the ECB-frame if called from another frame."
                                       'identity)
                                   (append ecb-sources-menu-user-extension
                                           ecb-sources-menu))))
+           (list (cons 0 ecb-sources-menu-title-creator))
            (nth 1 ecb-truncate-lines)
            t
            ecb-tree-indent
@@ -4834,7 +4840,18 @@ always the ECB-frame if called from another frame."
            (list (cons 0 (funcall (or ecb-methods-menu-sorter
                                       'identity)
                                   (append ecb-methods-menu-user-extension
-                                          ecb-methods-menu))))
+                                          ecb-methods-token-menu)))
+                 (cons 1 (funcall (or ecb-methods-menu-sorter
+                                      'identity)
+                                  (append ecb-methods-menu-user-extension
+                                          ecb-common-methods-menu)))
+                 (cons 2 (funcall (or ecb-methods-menu-sorter
+                                      'identity)
+                                  (append ecb-methods-menu-user-extension
+                                          ecb-common-methods-menu))))
+           (list (cons 0 ecb-methods-menu-title-creator)
+                 (cons 1 ecb-methods-menu-title-creator)
+                 (cons 2 ecb-methods-menu-title-creator))
            (nth 2 ecb-truncate-lines)
            t
            ecb-tree-indent
@@ -4866,6 +4883,7 @@ always the ECB-frame if called from another frame."
                                       'identity)
                                   (append ecb-history-menu-user-extension
                                           ecb-history-menu))))
+           (list (cons 0 ecb-history-menu-title-creator))
            (nth 3 ecb-truncate-lines)
            t
            ecb-tree-indent
@@ -5143,6 +5161,12 @@ source-path of `ecb-source-path'.")
        ecb-common-directories-menu
        '(("Make This a Source Path" ecb-node-to-source-path))))
 
+(defvar ecb-directories-menu-title-creator
+  (function (lambda (node)
+              (tree-node-get-data node)))
+  "The menu-title for the directories menu. Has to be either a string or a
+function which is called with current node and has to return a string.")
+
 (defvar ecb-source-path-menu nil
   "Builtin menu for the directories-buffer for directories which are elements of
 `ecb-source-path'.")
@@ -5161,8 +5185,63 @@ source-path of `ecb-source-path'.")
 	("Create File" ecb-create-file-2)
 	("Create Source" ecb-create-source)))
 
-(defvar ecb-methods-menu nil
+(defvar ecb-sources-menu-title-creator
+  (function (lambda (node)
+              (file-name-nondirectory (tree-node-get-data node))))
+  "The menu-title for the sources menu. See
+`ecb-directories-menu-title-creator'.")
+
+(defun ecb-methods-menu-jump-and-narrow (node)
+  (ecb-method-clicked node 1 t))
+
+(defun ecb-methods-menu-widen (node)
+  (ecb-select-edit-window)
+  (widen))
+
+(defun ecb-methods-menu-collapse-all (node)
+  (ecb-expand-methods-nodes-internal -1 nil t))
+
+(defun ecb-methods-menu-expand-0 (node)
+  (ecb-expand-methods-nodes-internal 0 nil t))
+
+(defun ecb-methods-menu-expand-1 (node)
+  (ecb-expand-methods-nodes-internal 1 nil t))
+
+(defun ecb-methods-menu-expand-2 (node)
+  (ecb-expand-methods-nodes-internal 2 nil t))
+
+(defun ecb-methods-menu-expand-all (node)
+  (ecb-expand-methods-nodes-internal 100 nil t))
+
+(defvar ecb-common-methods-menu nil
   "Builtin menu for the methods-buffer.")
+(setq ecb-common-methods-menu
+      '(("Undo narrowing of edit-window" ecb-methods-menu-widen)
+        ("---")
+        ("Collapse all" ecb-methods-menu-collapse-all)
+        ("Expand level 0" ecb-methods-menu-expand-0)
+        ("Expand level 1" ecb-methods-menu-expand-1)
+        ("Expand level 2" ecb-methods-menu-expand-2)
+        ("Expand all" ecb-methods-menu-expand-all)))
+
+(defvar ecb-methods-token-menu nil)
+(setq ecb-methods-token-menu
+      (append '(("Jump to token and narrow" ecb-methods-menu-jump-and-narrow))
+              ecb-common-methods-menu))
+
+(defvar ecb-methods-menu-title-creator
+  (function (lambda (node)
+              (let ((data (tree-node-get-data node)))
+                (if data
+                    (cond ((semantic-token-p data)
+                           (semantic-token-name data))
+                          ((stringp data)
+                           data)
+                          (t (tree-node-get-name node)))
+                  (tree-node-get-name node)))))
+  "The menu-title for the methods menu. See
+`ecb-directories-menu-title-creator'.")
+
 
 ;; three easy-entry functions for the history menu for conveniance
 ;; Note: The node argument in the first two functions is not used.
@@ -5211,6 +5290,12 @@ buffers does not exist anymore."
 	("Remove Current Entry" ecb-clear-history-node)
 	("Remove All Entries" ecb-clear-history-all)
 	("Remove Non Existing Buffer Entries" ecb-clear-history-only-not-existing)))
+
+(defvar ecb-history-menu-title-creator
+  (function (lambda (node)
+              (tree-node-get-data node)))
+  "The menu-title for the history menu. See
+`ecb-directories-menu-title-creator'.")
 
 
 ;; ECB byte-compilation

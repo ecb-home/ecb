@@ -31,7 +31,7 @@
 ;; For the ChangeLog of this file see the CVS-repository. For a complete
 ;; history of the ECB-package see the file NEWS.
 
-;; $Id: tree-buffer.el,v 1.108 2003/03/20 16:43:26 berndl Exp $
+;; $Id: tree-buffer.el,v 1.109 2003/03/27 14:42:36 berndl Exp $
 
 ;;; Code:
 
@@ -123,6 +123,7 @@ node name.")
 (defvar tree-buffer-indent nil)
 (defvar tree-buffer-highlighted-node-data nil)
 (defvar tree-buffer-menus nil)
+(defvar tree-buffer-menu-titles nil)
 (defvar tree-buffer-type-facer nil)
 (defvar tree-buffer-expand-symbol-before nil)
 (defvar tree-buffer-is-click-valid-fn nil)
@@ -670,13 +671,19 @@ see `tree-buffer-expand-nodes'."
     (when tree-buffer-menus
       (let ((node (tree-buffer-get-node-at-point)))
 	(when node
-	  (let ((menu (cdr (assoc (tree-node-get-type node) tree-buffer-menus))))
-	    (when menu
+	  (let* ((menu (cdr (assoc (tree-node-get-type node) tree-buffer-menus)))
+                 (menu-title-creator
+                  (cdr (assoc (tree-node-get-type node) tree-buffer-menu-titles)))
+                 (menu-title (cond ((stringp menu-title-creator)
+                                    menu-title-creator)
+                                   ((functionp menu-title-creator)
+                                    (funcall menu-title-creator node))
+                                   (t "ECB-tree-buffer-menu"))))
+            (when menu
 	      (if tree-buffer-running-xemacs
-		  (popup-menu (cons (tree-node-get-data node) menu))
+		  (popup-menu (cons menu-title menu))
 		(let ((fn (x-popup-menu
-			   event (cons 'keymap
-				       (cons (tree-node-get-data node) menu)))))
+			   event (cons 'keymap (cons menu-title menu)))))
 		  (when fn
 		    (funcall (car fn) node)))))))))))
 
@@ -1000,7 +1007,7 @@ functionality is done with the `help-echo'-property and the function
 (defun tree-buffer-create (name frame is-click-valid-fn node-selected-fn
                                 node-expanded-fn node-mouse-over-fn
                                 node-data-equal-fn
-                                menus tr-lines read-only tree-indent
+                                menus menu-titles tr-lines read-only tree-indent
                                 incr-search arrow-navigation hor-scroll
                                 &optional type-facer expand-symbol-before
                                 highlight-node-face general-face
@@ -1067,9 +1074,14 @@ NODE-MOUSE-OVER-FN: Function to call when the mouse is moved over a node. This
 NODE-DATA-EQUAL-FN: Function used by the tree-buffer to test if the data of
                     two tree-nodes are equal. The data of node can be set/get
                     with `tree-node-set-data'/`tree-node-get-data'.
-MENUS: Nil or a list of one or two conses, each cons for a node-type \(0 or 1)
-       Example: \(\(0 . menu-for-type-0) \(1 . menu-for-type-1)). The cdr of a
-       cons must be a menu.
+MENUS: Nil or a list of one to three conses, each cons for a node-type \(0, 1
+       or 2) Example: \(\(0 . menu-for-type-0) \(1 . menu-for-type-1)). The
+       cdr of a cons must be a menu.
+MENU-TITLES: Nil or a list of one to three conses, each cons for a node-type
+             \(0, 1 or 2). See MENUES. The cdr of a cons must be either a
+             string or a function which will be called with current node
+             under point and must return a string which is displayed as the
+             menu-title.
 TR-LINES: Should lines in this tree buffer be truncated \(not nil)
 READ-ONLY: Should the treebuffer be read-only \(not nil)
 TREE-INDENT: spaces subnodes should be indented.
@@ -1120,6 +1132,7 @@ AFTER-CREATE-HOOK: A function or a list of functions \(with no arguments)
     (make-local-variable 'tree-node-data-equal-fn)
     (make-local-variable 'tree-buffer-highlighted-node-data)
     (make-local-variable 'tree-buffer-menus)
+    (make-local-variable 'tree-buffer-menu-titles)
     (make-local-variable 'tree-buffer-type-facer)
     (make-local-variable 'tree-buffer-expand-symbol-before)
     (make-local-variable 'tree-buffer-highlight-overlay)
@@ -1146,6 +1159,7 @@ AFTER-CREATE-HOOK: A function or a list of functions \(with no arguments)
     (setq tree-buffer-indent tree-indent)
     (setq tree-buffer-highlighted-node-data nil)
     (setq tree-buffer-menus (tree-buffer-create-menus menus))
+    (setq tree-buffer-menu-titles menu-titles)
     (setq tree-buffer-root (tree-node-new "root" 0 "root"))
     (setq tree-buffer-type-facer type-facer)
     (setq tree-buffer-expand-symbol-before expand-symbol-before)
