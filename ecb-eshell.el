@@ -114,23 +114,15 @@
 ;;; Code:
 
 (eval-when-compile
-  (or load-in-progress
-      (let ((load-path
-             (if (and (boundp 'byte-compile-dest-file)
-                      (stringp byte-compile-dest-file))
-                 (cons (file-name-directory byte-compile-dest-file)
-                       load-path)
-               load-path)))
-        (load "ecb-bytecomp" nil t))))
+  (require 'ecb-bytecomp))
 
 (require 'ecb-util)
 
-(when (featurep 'ecb-bytecomp)
-  (ecb-bytecomp-defvar eshell-buffer-name)
-  (ecb-bytecomp-defun eshell)
-  (ecb-bytecomp-defun eshell/cd)
-  (ecb-bytecomp-defun eshell-send-input)
-  (ecb-bytecomp-defun eshell-bol))
+(ecb-bytecomp-defvar eshell-buffer-name)
+(ecb-bytecomp-defun eshell)
+(ecb-bytecomp-defun eshell/cd)
+(ecb-bytecomp-defun eshell-send-input)
+(ecb-bytecomp-defun eshell-bol)
 
 (defgroup ecb-eshell nil
   "Settings for eshell integration within the ECB."
@@ -383,8 +375,6 @@ to because the command didn't output much text, go ahead and shrink it again."
 
 (add-hook 'window-size-change-functions 'ecb-eshell-window-size-change)
 
-(if (featurep 'ecb-bytecomp)
-    (ecb-provide 'ecb-eshell)
-  (provide 'ecb-eshell))
+(ecb-provide 'ecb-eshell)
 
 ;;; ecb-eshell.el ends here

@@ -8,22 +8,21 @@ REM =======================================================================
 REM user configurable section
 
 REM Define here the correct paths to your (X)Emacs-executable and the
-REM required packages (use always forward slashes in the paths!)
+REM required packages (use always FORWARD SLASHES in the paths!)
 
 set EMACS=C:/Programme/emacs-21/bin/emacs.exe
 set SEMANTIC=../semantic
 set EIEIO=../eieio
 
-REM Call "make" to byte-compile the ECB. You can savely ignore the messages.
+REM Call "make" to byte-compile the ECB.
+REM If there are any warning messages during byte-compilation (normally
+REM there aren't any) you can savely ignore them!
 
 REM end of user configurable section
 REM =======================================================================
 
 
 REM Do not change anything below!
-
-
-set EL=tree-buffer.el ecb-util.el ecb-mode-line.el ecb-help.el ecb-layout.el ecb-layout-defs.el ecb-navigate.el ecb.el ecb-eshell.el ecb-cycle.el ecb-face.el ecb-compilation.el ecb-upgrade.el ecb-create-layout.el
 
 echo Byte-compiling ECB with LOADPATH= %SEMANTIC% %EIEIO%
 
@@ -33,10 +32,10 @@ if exist ecb.elc del *.elc
 echo (add-to-list 'load-path nil) > ecb-compile-script-init
 echo (add-to-list 'load-path "%SEMANTIC%") >> ecb-compile-script-init
 echo (add-to-list 'load-path "%EIEIO%") >> ecb-compile-script-init
-REM echo (require 'ecb-bytecomp) >> ecb-compile-script-init
+echo (require 'ecb) >> ecb-compile-script-init
 echo (setq debug-on-error t) >> ecb-compile-script-init
 
-%EMACS% -batch -no-site-file -l ecb-compile-script-init -f batch-byte-compile %EL%
+%EMACS% -batch -no-site-file -l ecb-compile-script-init --eval "(ecb-byte-compile t)"
 
 del ecb-compile-script-init
 

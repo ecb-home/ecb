@@ -46,14 +46,7 @@
 ;;   correctly.
 
 (eval-when-compile
-  (or load-in-progress
-      (let ((load-path
-             (if (and (boundp 'byte-compile-dest-file)
-                      (stringp byte-compile-dest-file))
-                 (cons (file-name-directory byte-compile-dest-file)
-                       load-path)
-               load-path)))
-        (load "ecb-bytecomp" nil t))))
+  (require 'ecb-bytecomp))
 
 (require 'ecb-compilation)
 
@@ -96,8 +89,6 @@
 
     (setq mode-line-format modeline-tab)))
 
-(if (featurep 'ecb-bytecomp)
-    (ecb-provide 'ecb-buffertab)
-  (provide 'ecb-buffertab))
+(ecb-provide 'ecb-buffertab)
 
 ;;; ecb-buffertab.el ends here

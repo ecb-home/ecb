@@ -31,14 +31,7 @@
 ;;; Code:
 
 (eval-when-compile
-  (or load-in-progress
-      (let ((load-path
-             (if (and (boundp 'byte-compile-dest-file)
-                      (stringp byte-compile-dest-file))
-                 (cons (file-name-directory byte-compile-dest-file)
-                       load-path)
-               load-path)))
-        (load "ecb-bytecomp" nil t))))
+  (require 'ecb-bytecomp))
 
 (eval-when-compile
   ;; to avoid compiler grips
@@ -50,22 +43,21 @@
   (and (not tree-buffer-running-xemacs)
        (> emacs-major-version 20)))
 
-(when (featurep 'ecb-bytecomp)
-  ;; XEmacs stuff
-  (ecb-bytecomp-defun button-release-event-p)
-  (ecb-bytecomp-defun button-press-event-p)
-  (ecb-bytecomp-defun event-key)
-  (ecb-bytecomp-defun display-message)
-  (ecb-bytecomp-defun clear-message)
-  ;; Emacs
-  (ecb-bytecomp-defvar message-log-max)
-  (ecb-bytecomp-defvar message-truncate-lines)
-  (ecb-bytecomp-defvar track-mouse)
-  (ecb-bytecomp-defvar special-event-map)
-  (ecb-bytecomp-defun posn-window)
-  (ecb-bytecomp-defun event-start)
-  (ecb-bytecomp-defun posn-point)
-  (ecb-bytecomp-defun event-basic-type))
+;; XEmacs stuff
+(ecb-bytecomp-defun button-release-event-p)
+(ecb-bytecomp-defun button-press-event-p)
+(ecb-bytecomp-defun event-key)
+(ecb-bytecomp-defun display-message)
+(ecb-bytecomp-defun clear-message)
+;; Emacs
+(ecb-bytecomp-defvar message-log-max)
+(ecb-bytecomp-defvar message-truncate-lines)
+(ecb-bytecomp-defvar track-mouse)
+(ecb-bytecomp-defvar special-event-map)
+(ecb-bytecomp-defun posn-window)
+(ecb-bytecomp-defun event-start)
+(ecb-bytecomp-defun posn-point)
+(ecb-bytecomp-defun event-basic-type)
 
 
 (if tree-buffer-running-xemacs
@@ -1312,8 +1304,6 @@ child."
 (defun tree-node-get-shorten-name (node)
   (aref node tree-node-shorten-name))
 
-(if (featurep 'ecb-bytecomp)
-    (ecb-provide 'tree-buffer)
-  (provide 'tree-buffer))
+(ecb-provide 'tree-buffer)
 
 ;;; tree-buffer.el ends here

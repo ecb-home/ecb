@@ -22,7 +22,9 @@ ECB requires the following packages being properly installed:
   (http://sunsite.auc.dk/jde) is installed.
 
 If you use XEmacs you must have the fsf-compat package installed (contains
-overlay.el).
+overlay.el). If you want to read the online-help of ECB in HTML-format you
+must have the library browse-url (part of the mail-lib XEmacs package)
+installed!
 
 
 Installation
