@@ -1,6 +1,8 @@
 Version 1.80:
 -------------
 
+- Fixed formatting of "Parent" nodes in token buffer. (Jesper)
+
 * Factored out [return] key into a new function
   'tree-buffer-select-current-node.  This will allow us to show documentation
   for our key binding.  We now have a new customization variable

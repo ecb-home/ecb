@@ -54,7 +54,7 @@
 ;; The latest version of the ECB is available at
 ;; http://home.swipnet.se/mayhem/ecb.html
 
-;; $Id: ecb.el,v 1.206 2002/03/22 02:03:29 burtonator Exp $
+;; $Id: ecb.el,v 1.207 2002/03/22 17:49:38 creator Exp $
 
 ;;; Code:
 
@@ -1358,19 +1358,22 @@ PARENT-TOKEN is only propagated to `ecb-add-token-bucket'."
 	(ecb-find-add-token-bucket node type display sort-method
 				   (cdr buckets) parent-token)))))
 
+(defun ecb-format-bucket-name (name)
+  (let ((formatted-name (concat (nth 0 ecb-bucket-token-display)
+				name
+				(nth 1 ecb-bucket-token-display))))
+    (setq formatted-name (ecb-merge-face-into-text formatted-name (nth 2 ecb-bucket-token-display)))
+    formatted-name))
+
 (defun ecb-add-token-bucket (node bucket display sort-method
                                   &optional parent-token)
   "Adds a token bucket to a node unless DISPLAY equals 'hidden."
   (when bucket
-    (let ((name (concat (nth 0 ecb-bucket-token-display)
-                        (car bucket)
-                        (nth 1 ecb-bucket-token-display)))
+    (let ((name (ecb-format-bucket-name (car bucket)))
           (type (semantic-token-token (cadr bucket)))
 	  (bucket-node node))
       (unless (eq 'hidden display)
 	(unless (eq 'flattened display)
-          (setq name
-                (ecb-merge-face-into-text name (nth 2 ecb-bucket-token-display)))
 	  (setq bucket-node (tree-node-new name 1 nil nil node
 					   (if ecb-truncate-long-names 'end)))
 	  (tree-node-set-expanded bucket-node (eq 'expanded display)))
@@ -1535,7 +1538,7 @@ The PARENT-TOKEN is propagated to the functions `ecb-add-token-bucket' and
  		   (eq 'type (semantic-token-token parent-token)))
  	  (let ((parents (ecb-get-token-parents parent-token)))
 	    (when parents
-	      (let ((node (ecb-create-node node display "[Parents]" nil 1)))
+	      (let ((node (ecb-create-node node display (ecb-format-bucket-name "Parents") nil 1)))
 		(when node
 		  (dolist (parent (if sort-method
 				      (sort parents 'string<) parents))
