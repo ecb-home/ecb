@@ -1,3 +1,13 @@
+* Changes for ECB version
+
+** All popup-menues of the ECB-tree-buffers can be openend via [Meta-m]
+
+** Fixed bugs
+
+***
+
+
+
 * Changes for ECB version 1.95
 
 ** ECB now displays the expand- and collapse symbols in the tree-buffers with
