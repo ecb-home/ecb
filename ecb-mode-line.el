@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-mode-line.el,v 1.29 2004/05/06 09:02:05 berndl Exp $
+;; $Id: ecb-mode-line.el,v 1.30 2004/12/20 17:14:46 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -139,6 +139,7 @@ GNU Emacs < 21 nor XEmacs can evaluate dynamically forms in the mode-line."
 (defcustom ecb-mode-line-data '((ecb-directories-buffer-name . sel-dir)
                                 (ecb-sources-buffer-name . sel-dir)
                                 (ecb-methods-buffer-name . sel-source)
+                                (ecb-analyse-buffer-name . sel-source)
                                 (ecb-history-buffer-name . "History"))
   "*Data shown in the modelines of the special ECB-buffers.
 Everey element of this list is a cons-cell where the car is used to define a
