@@ -26,7 +26,7 @@
 @c GNU Emacs; see the file COPYING.  If not, write to the Free Software
 @c Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-@c $Id: ecb.texi,v 1.193 2004/11/24 16:24:08 berndl Exp $
+@c $Id: ecb.texi,v 1.194 2004/11/25 18:07:49 berndl Exp $
 
 @setfilename ecb.info
 
@@ -315,6 +315,12 @@ Tips and tricks
 * Window-managers and ECB::     Support of several Emacs-window-managers
 * Tree-buffer styles::          Displaying the trees with different styles
 * Using semanticdb::            Using semanticdb for going to external nodes
+
+Supporting Version control systems
+
+* Identifying backends::        How ECB identifies the VC-backend of a dir
+* Checking the state::          How ECB checks the VC-state of a file
+* Remote repositories::         What you should now about this
 
 Displaying the trees of the ECB-windows with different styles
 
@@ -9367,21 +9373,217 @@ also @ref{ecb-version-control}:
 Enable or disable this feature.
 @item ecb-vc-supported-backends
 The most important option for this feature. Allows to specify how ECB
-should test if a directory is managed by a VC-system and - if yes -
-how it should check the VC-state of a certain file.
+should test if a directory is managed by a VC-system (how to identify
+the VC-backend of a directory) and - if yes - how it should check the
+VC-state of a certain file. The former ones are called
+@dfn{identify-backend-functions} and the latter ones
+@dfn{check-state-functions}.
 @item ecb-vc-directory-exclude-regexps
 Allows excluding certain directories (on a regexp-basis) from the
 VC-support even if they are managed by a VC-system.
 @item ecb-vc-state-mapping
 Defines the mapping between the state-values returned by a
-backend-function (a function set in @code{ecb-vc-supported-backends}
-and used for getting the VC-state of a file, e.g. @code{vc-state}) and
-the allowed state-values ECB can understand.
+check-state-function (a function set in
+@code{ecb-vc-supported-backends} and used for getting the VC-state of
+a file, e.g. @code{vc-state}) and the allowed state-values ECB can
+understand.
 @end table
 
 Probably the default settings will fit your needs but to get sure you
 should carefully read the documentation of these options!
 
+The following subsection give you important informations about
+identify-backend-functions, check-state-functions, about working with
+remote repositories.
+
+@menu
+* Identifying backends::        How ECB identifies the VC-backend of a dir
+* Checking the state::          How ECB checks the VC-state of a file
+* Remote repositories::         What you should now about this
+@end menu
+
+@node Identifying backends, Checking the state, Version-control support, Version-control support
+@subsection How ECB identifies the VC-backend of a dir
+
+ECB tries all functions added as identify-backend-funtions to the
+option @code{ecb-vc-supported-backends} until one of them returns not
+@code{nil} but a symbol which identifies the backend (e.g.
+@code{CVS}). After this check ECB stores the result of this check
+(i.e. either the identified backend or the fact that the directory is
+not managed by a VC-system) for that directory in a special cache, so
+the identify-backend-process will be performed only once per
+directory. If for a directory a VC-backend could be identified ECB
+stores not only the backend itself for that directory but also the
+associated check-state-function defined in
+@code{ecb-vc-supported-backends} (@pxref{Checking the state}).
+
+You can add arbitrary functions to this options as long they get one
+directory-argument and return either nil oder a backend-symbol. Per
+default ECB offers the following functions to identify the VC-backend
+CVS, RCS or SCCS.
+
+@table @code
+@item ecb-vc-dir-managed-by-CVS DIRECTORY
+Return @code{CVS} if DIRECTORY is managed by CVS. nil if not.
+
+This function tries to be as smart as possible: First it checks if
+DIRECTORY is managed by CVS by checking if there is a subdir
+@code{CVS}. If no then nil is returned. If yes then for GNU Emacs it
+takes into account the value of @code{vc-cvs-stay-local}: If t then
+just return @code{CVS}. Otherwise ECB checks the root repository if it
+is a remote repository. If not just @code{CVS} is returned. If a
+remote repository it checks if the value of @code{vc-cvs-stay-local}
+is a string and matches the host of that repository. If yes then just
+@code{CVS} is returned. If not then ECB checks if that host is
+currently accessible by performing a ping. If accessible @code{CVS} is
+returned otherwise nil. This has the advantage that ECB will not be
+blocked by trying to get the state from a remote repository while the
+host is not accessible (e.g. because the user works offline).
+
+Special remark for XEmacs: XEmacs has a quite outdated VC-package
+which has no option @code{vc-cvs-stay-local} so the user can not work
+with remote CVS-repositories if working offline for example. So if
+there is no option @code{vc-cvs-stay-local} then ECB performs always
+the repository check mentioned above.
+
+@item ecb-vc-dir-managed-by-RCS DIRECTORY
+Return @code{RCS} if DIRECTORY is managed by RCS. nil if not.
+
+@item ecb-vc-dir-managed-by-SCCS DIRECTORY
+Return @code{SCCS} if DIRECTORY is managed by SCCS. nil if not.
+@end table
+
+If ECB should support other VC-backends than CVS, RCS and SCCS you
+have to write your own identify-backend-funtion for the used
+VC-backend (e.g. Clearcase)!
+
+@subsubsection Special remarks for XEmacs
+
+XEmacs contains only a quite outdated VC-package, especially there is
+no backend-independent check-vc-state-function available (like
+@code{vc-state} for GNU Emacs). Only for CVS a check-vc-state-function
+is available: @code{vc-cvs-status}. Therefore ECB adds per default
+only support for CVS and uses @code{ecb-vc-managed-by-CVS} rsp.
+@code{vc-cvs-status}.
+
+@node Checking the state, Remote repositories, Identifying backends, Version-control support
+@subsection How ECB checks the VC-state of a file
+
+After ECB has identified the VC-backend of a directory it will display
+the VC-state (e.g. up-to-date, edited, needs-mergs etc...) with a
+suitable image-icon in the tree-windows of the ECB-file-browser. To
+get this state for a certain file ECB uses that check-state-function
+stored in the cache for the directory of that file (@pxref{Identifying
+backends}).
+
+You can add any arbitrary functions as check-state-function to
+@code{ecb-vc-supported-backends} as long they get one
+filename-argument and return a state-symbol (e.g. @code{up-to-date}.
+ECB can understand a certain set of state-values wghich are then
+mapped to suitable image-icons which will in turn be displayed in
+front of the filename in the file-browser. Because the values a
+check-state-function return can differ from that state-values ECB
+understands, ECB offers an option to define a appropriate
+state-mapping. The name of this option is @code{ecb-vc-state-mapping}.
+See the documentation of this option to get a list of all state-value
+ECB understands.
+
+Per default ECB uses - when running under GNU Emacs - the function
+@code{vc-state} of the VC-package@footnote{The VC-package of Emacs
+offers a standardised and uniform interface for several backends; per
+default CVS, RCS and SCCS are supported bc the VC-package.} to check
+the state for the backends CVS, RCS and SCCS. So the default-value of
+@code{ecb-vc-state-mapping} contains a mapping between these values
+@code{vc-state} can return and that state-values ECB understands.
+
+If ECB should support other VC-backends than CVS, RCS and SCCS (e.g.
+Clearcase) you should add a that new backend to the VC-package (see
+the initial comments of vc.el how to do this) then ECB will
+automatically support this new backend. Alternatively it can be enough
+if you write your own check-state-function for this backend and add
+the needed mapping to @code{ecb-vc-state-mapping} if necessary.
+
+@subsubsection Getting heuristic state-values or real ones for CVS
+
+The interface of GNU Emacs' VC-package offers two different ways to
+get the VC-state of a file:
+
+@itemize @bullet
+@item The real, fresh and expensive approach
+VC has a function @code{vc-recompute-state} which always performs a
+command ``cvs status'' to get a fresh and real state for a file. As
+you can imagine this operation can be very expensive and long lasting
+depending on the location of the repository. But the CVS-backend of VC
+offers with the option @code{vc-cvs-stay-local} a way to tell Emacs to
+stay local even for the sake of getting a real state.
+
+@item The heuristic approach:
+The function @code{vc-state} always returns a ``heuristic'' state
+which should be used when a fresh and real state is not necessary.
+With @code{vc-state} the option @code{vc-cvs-stay-local} will never
+take effect.
+@end itemize
+
+VC/CVS actually does it this way (regardless if ECB is active or not):
+When you visit a file, it always uses just the heuristic to get the
+state (comparing file times), regardless of the setting of
+@code{vc-cvs-stay-local}. This is because the "fresh-but-slow" state
+is determined by calling "cvs status" on the file, and this was deemed
+unacceptably slow if done at visiting time under any conditions.
+
+The state is updated by calling @code{vc-recompute-state} prior to
+@code{vc-next-action} (C-x v v) which either checks a file in or out.
+IF @code{vc-cvs-stay-local} is nil, then this does in fact call "cvs
+status" to get the "fresh-but-slow-state", but if
+@code{vc-cvs-stay-local} is t, then it just compares the file times
+again.
+
+The bottom line for you is this: If you use @code{vc-state} in
+@code{ecb-vc-supported-backends} to get the version control state,
+then you get the same policy that VC uses. There should no harm if you
+use @code{vc-recompute-state} as a replacement function if you want to
+get fresh and real state-values, but then (a) you must make sure to
+set @code{vc-cvs-stay-local} to nil, and (b) fetching the state over
+the network under all conditions was deemed unacceptably slow in VC.
+
+@node Remote repositories, , Checking the state, Version-control support
+@subsection Important informations about remote repositories
+
+At least CVS can be used in a mode called ``Client/Server'' which
+means the root repository is located on a remote machine. We call a
+repository which can not being mounted by the client-machine (which
+contains the working directory) a @dfn{remote repository}. In most
+cases getting the fresh and real VC-state for such repositories will
+be unacceptable slow or often users will work offline means with no
+connection available to the remote host. To avoid problems like these
+ECB offers first an option @code{ecb-vc-directory-exclude-regexps} to
+exclude such directories with a remote repository from the VC-support
+of ECB and secondary the identify-backend-funtion
+@code{ecb-vc-dir-managed-by-CVS} behaves smart with that respect
+(@pxref{Identifying backends}).
+
+@subsubsection Remote paths and the VC-support of ECB
+
+ECB supports working with remote directories like TRAMP- or
+EFS-directories (@pxref{Remote directories}). Do not confuse remote
+directories with remote repositories. A local directory located on
+your disk and set in @code{ecb-source-path} can have a remote
+repository if managed by a VC-system. A remote directory means a path
+in the format of TRAMP, ANGE-FTP or EFS set in @code{ecb-source-path}.
+Its very likely that getting the VC-state of files contained in such a
+remote directory would be extremly expensive and therefore ECB would
+be blocked quite long even if the VC-check is performed stealthy
+(@pxref{Stealthy background tasks}).
+
+To avoid problems with such remote directories ECB prevents per
+default such directories from being processed by the VC-support of
+ECB. But if a user is dying to having the VC-state being displayed in
+the tree-buffers ECB offers two ways to switch on the VC-support - see
+the option @code{ecb-vc-enable-support}: This option is set per
+default to the value @code{unless-remote} which means remote paths
+will not be processed but it can be set to @code{t} which means
+process all directories regardless if remote or not. It's strongly
+recommended to use @code{unless-remote}!
 
 @node Using eshell, Grepping directories, Version-control support, Tips and tricks
 @section Optimal using of eshell in ECB
