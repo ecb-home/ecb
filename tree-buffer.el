@@ -26,7 +26,7 @@
 ;; This file is part of the ECB package which can be found at:
 ;; http://home.swipnet.se/mayhem/ecb.html
 
-;; $Id: tree-buffer.el,v 1.58 2001/07/12 20:55:51 creator Exp $
+;; $Id: tree-buffer.el,v 1.59 2001/07/13 19:57:19 creator Exp $
 
 ;;; Code:
 
@@ -932,6 +932,15 @@ child."
     (dolist (child (tree-node-get-children node))
       (when (equal (tree-node-get-name child) child-name)
         (throw 'exit child)))))
+
+(defun tree-node-find-data-recursively (node data)
+  (if (eq data (tree-node-get-data node))
+      node
+    (catch 'exit
+      (dolist (child (tree-node-get-children node))
+	(let ((n (tree-node-find-data-recursively child data)))
+	  (when n
+	    (throw 'exit n)))))))
 
 ;;; Tree node
 
