@@ -19,7 +19,7 @@
 @c Free Software Foundation, Inc., 59 Temple Place - Suite 330,
 @c Boston, MA 02111-1307, USA.
 
-@c $Id: ecb.texi,v 1.94 2003/06/23 14:13:39 berndl Exp $
+@c $Id: ecb.texi,v 1.95 2003/06/24 15:52:13 berndl Exp $
 
 @setfilename ecb.info
 
@@ -816,10 +816,12 @@ This chapter describes all aspects of activating and deactivating ECB.
 @node Standard activation, Automatic activation, Activation and Deactivation, Activation and Deactivation
 @section Standard activation and deactivation
 
-Call @kbd{M-x ecb-activate} and @kbd{M-x ecb-deactivate} to activate or
-deactivate ECB. If you want ECB started in a new frame see the option
-@code{ecb-new-ecb-frame} (default is nil). @code{ecb-activate} always
-raises and selects the ECB-frame even if ECB is already started.
+Call @kbd{M-x ecb-activate} and @kbd{M-x ecb-deactivate} to activate
+or deactivate ECB@footnote{Activation is also possible via the menu
+``Tools --> Start Code Browser (ECB)''.}. If you want ECB started in a
+new frame see the option @code{ecb-new-ecb-frame} (default is nil).
+@code{ecb-activate} always raises and selects the ECB-frame even if
+ECB is already started.
 
 @cindex minor mode
 Because ECB is a global minor-mode it can also be
@@ -1467,7 +1469,7 @@ reparsing of semantic-sources.
 You can switch on autom. rescanning/reparsing with the option
 @code{imenu-auto-rescan}. But nevertheless you have to manually
 rebuild the Method-buffer (with the autom. updated imenu-tags) via the
-command @code{ecb-rebuild-methods-buffer}.
+command @code{ecb-rebuild-methods-buffer} (bound to @kbd{C-c . r}).
 
 @item non-sematic-sources (etags supported):
 For these sources there is no builtin auto-rescan mechanism, because
@@ -2190,7 +2192,7 @@ ECB-windows of layout ``left1'':
 
 @enumerate
 @item
-Switch to layout ``left1'' via @code{ecb-change-layout} (@kbd{C-c . l})
+Switch to layout ``left1'' via @code{ecb-change-layout} (@kbd{C-c . lc})
 @item
 Resize the ECB-windows by dragging the window-borders with the mouse
 @item
@@ -6049,7 +6051,7 @@ Save your changes.
 
 @item To edit your buffers:
 Call @code{ecb-toggle-ecb-windows} (also available via the menu ``ECB'' and
-by @kbd{C-c . w}) or @code{ecb-hide-ecb-windows} to hide the ECB-method buffer
+by @kbd{C-c . lw}) or @code{ecb-hide-ecb-windows} to hide the ECB-method buffer
 so you get all the place of your screen for editing.
 
 @item To browse and select functions:
@@ -6468,10 +6470,10 @@ non-semantic-sources and then updating the contens of the
 Methods-buffer.
 
 For non-semantic-sources you have always at least to call
-@code{ecb-rebuild-methods-buffer} or saving the source-file (if
-@code{ecb-auto-update-methods-after-save} is true) to update the
-Method-buffer@footnote{Maybe future versions of ECB (> 1.94) will offer an
-autom. mechanism for this.}.
+@code{ecb-rebuild-methods-buffer} (bound to @kbd{C-c . r}) or saving
+the source-file (if @code{ecb-auto-update-methods-after-save} is true)
+to update the Method-buffer@footnote{Maybe future versions of ECB (>
+1.94) will offer an autom. mechanism for this.}.
 
 Depending on the parsing-mechanism the following options have to be
 switched on so ECB can rebuild the methods-buffer for
@@ -6924,7 +6926,7 @@ needed to program this new example layout. ECB contains a library
 @file{ecb-examples.el} which contains the full working code of this
 example. To test this example and to play with it you can load this
 library into Emacs (with @code{load-library} for example) and then
-calling @code{ecb-change-layout} (bound to @kbd{C-c . l}) and
+calling @code{ecb-change-layout} (bound to @kbd{C-c . lc}) and
 inserting ``example-layout1'' as layout-name. An alternative is
 calling @code{ecb-examples-activate} and
 @code{ecb-examples-deactivate}. For details see file
@@ -7966,6 +7968,12 @@ How can i change the modeline of an ECB-tree-buffer?
 You can change it with the options @code{ecb-mode-line-prefixes} and
 @code{ecb-mode-line-data}.
 
+@item @tab @tab
+
+@item
+How can i change the keybindings of ECB?
+@tab @tab
+You can do this with option @code{ecb-key-map} (@pxref{ecb-general}).
 @end multitable
 
 
