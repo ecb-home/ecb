@@ -59,7 +59,7 @@
 ;; The latest version of the ECB is available at
 ;; http://home.swipnet.se/mayhem/ecb.html
 
-;; $Id: ecb.el,v 1.235 2002/08/10 12:18:40 berndl Exp $
+;; $Id: ecb.el,v 1.236 2002/08/10 17:57:02 berndl Exp $
 
 ;;; Code:
 
@@ -3324,6 +3324,21 @@ That is remove the unsupported :help stuff."
       ])
     )
    (list
+    "Upgrade and Download"
+    (ecb-menu-item
+     [ "Upgrade ECB-options to current ECB-version"
+       ecb-upgrade-options
+       :active (equal (selected-frame) ecb-frame)
+       :help "Try to upgrade ECB-options to current ECB-version if necessary."
+       ])
+    (ecb-menu-item
+     [ "Download new ECB-version"
+       ecb-download-ecb
+       :active (equal (selected-frame) ecb-frame)
+       :help "Download a new ECB-version from the ECB-website."
+       ])
+    )
+   (list
     "Help"
     (ecb-menu-item
      [ "Show Online Help"
@@ -3332,10 +3347,20 @@ That is remove the unsupported :help stuff."
        :help "Show the online help of ECB."
        ])
     (ecb-menu-item
-     [ "Upgrade ECB-options to current ECB-version"
-       ecb-upgrade-options
+     [ "List of all commands"
+       (let ((ecb-show-help-format 'info))
+         (ecb-show-help)
+         (Info-goto-node "Function Index"))
        :active (equal (selected-frame) ecb-frame)
-       :help "Try to upgrade ECB-options to current ECB-version if necessary."
+       :help "Displays an index of all commands in the online-help."
+       ])
+    (ecb-menu-item
+     [ "List of all options"
+       (let ((ecb-show-help-format 'info))
+         (ecb-show-help)
+         (Info-goto-node "Variable Index"))
+       :active (equal (selected-frame) ecb-frame)
+       :help "Displays an index of all user-options in the online-help."
        ])
     (ecb-menu-item
      [ "Submit problem report"
