@@ -77,6 +77,11 @@
   "List of latest news displayed on the main page.")
 (setq ecb-latest-news
       `(
+        ,(h-sub-section "ECB 2.24 released! (2004-04-14)"
+                        "New \"current-type\"-filter for the Methods-buffer. More and better icons for the Methods-buffer. Now directories are prescanned for emptyness so they are displayed as empty in the directories buffer. Fixed some bugs which made ECB 2.23 incompatible with semantic 1.4.X. "
+                        (h-link "docs/Install-and-first-steps.html#Install%20and%20first%20steps" "Here") " is a short installation guide. "
+                        "Click " (h-link "NEWS.html" "here")
+                        " for information about changes in the new version. ")
         ,(h-sub-section "ECB 2.23 released! (2004-04-02)"
                         "Works with the new cedet1.0beta2-release which offers much better intellisense! The look&feel of the Methods-buffer now looks much nicer because it has been polished with a lot of new icons for methods, variables, classes and private, protected and public protection, static etc. (see Screenshot Nr. 1). New feature for applying default tag-filters for certain files. Distinction between functions and function-prototypes in the Methods-buffer. Better internal self-monitoring of ECB. Some important bug fixes "
                         (h-link "docs/Install-and-first-steps.html#Install%20and%20first%20steps" "Here") " is a short installation guide. "
