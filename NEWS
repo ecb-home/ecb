@@ -83,6 +83,12 @@ TODO: Change version to 2.30 before releasing!!!! Add news to ecb-upgrade!
    they will be not saved, i.e. no customization-file is touched and the
    changed and upgraded values will be lost after quiting Emacs.
 
+** With XEmacs ECB temporary sets `progress-feedback-use-echo-area' to t
+   This is necessary because otherwise the progress-display with native
+   widgets modifies the window-sizes of ECB and does not exactly restore the
+   window-sizes as before that progress-display. Deactivating ECB
+   automatically restores the old value of this option.
+   
 ** Fixed bugs
 
 *** Fixed resizing of the ecb-windows after opening a file
@@ -98,7 +104,7 @@ TODO: Change version to 2.30 before releasing!!!! Add news to ecb-upgrade!
 
 *** Fixed a bug in restoring sizes of the ecb-windows.
     Now a check will be performed if there are ecb-windows visible. If not
-    nothing will be done (versions < 2.28 have failed in such a case).
+    nothing will be done (versions < 2.30 have failed in such a case).
     This bug has prevented ediff from working together with ECB when a
     compile-window was visible and the user has stored window-sizes for the
     current layout.

@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-util.el,v 1.122 2004/11/22 16:58:34 berndl Exp $
+;; $Id: ecb-util.el,v 1.123 2004/11/24 16:24:08 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -1820,29 +1820,6 @@ defcustom-clause and has to be <= MAX-LEVEL."
 
 ;;; net-stuff
 
-;; currently not used!
-(defun ecb-online-p ()
-  (let ((website-to-check "http://ecb.sourceforge.net"))
-      ;; Emacs 20.X does not autoload executable-find :-(
-      (require 'executable)
-      (if (not (executable-find
-                (if (eq system-type 'windows-nt) "wget.exe" "wget")))
-          (ecb-error
-           (concat "Cannot find wget. This utilities is needed "
-                   "to check if the computer in online")))
-      (= 0 (ecb-working-status-call-process
-            0.1
-            "Checking if online"
-            "done"
-            (if (eq system-type 'windows-nt)
-                "wget.exe"
-              "wget")
-            nil
-            nil
-            nil
-            "-q"
-            "--spider"
-            website-to-check))))
 
 ;;; ----- Provide ------------------------------------------
 
