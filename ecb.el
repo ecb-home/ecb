@@ -2650,6 +2650,8 @@ always the ECB-frame if called from another frame."
     (tree-buffer-destroy ecb-sources-buffer-name)
     (tree-buffer-destroy ecb-methods-buffer-name)
     (tree-buffer-destroy ecb-history-buffer-name)
+
+    (setq ecb-activated-window-configuration nil)
     
     (setq ecb-minor-mode nil))
   (message "The ECB is now deactivated.")
