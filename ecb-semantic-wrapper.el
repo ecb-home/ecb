@@ -118,7 +118,13 @@
     (semantic-current-nonterminal-parent      . semantic-current-tag-parent)
     (semantic-adopt-external-members          . semantic-adopt-external-members)
     (semantic-bucketize                       . semantic-bucketize)
-    (semantic-c-template-string               . semantic-c-template-string)
+    ;; Do not define an alias for this function because probably we define an
+    ;; alias for an undefined function because this function is only loaded
+    ;; when c or c++-file is edited! if we define an alias this could break
+    ;; XEmacs-apropos from working when a user calls apropos "string" foe
+    ;; example (IMO a bug in apropos of XEmacs but we have to avoid breaking
+    ;; some basic functionality of XEmacs/Emacs!
+;;     (semantic-c-template-string               . semantic-c-template-string)
     (semantic-clear-toplevel-cache            . semantic-clear-toplevel-cache)
     (semantic-colorize-text                   . semantic--format-colorize-text)
     (semantic-current-nonterminal             . semantic-current-tag)
