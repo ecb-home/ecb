@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: tree-buffer.el,v 1.154 2004/09/20 15:11:46 berndl Exp $
+;; $Id: tree-buffer.el,v 1.155 2004/10/04 15:53:03 berndl Exp $
 
 ;;; Commentary:
 
@@ -858,19 +858,22 @@ the node and the cdr is the data of the node which is equal to NODE-DATA."
                        ;; especially with complex-data (e.g. semantic tags).
                        ;; Therefore we first get the position P of the name of
                        ;; start-node in the list of node-names of
-                       ;; tree-buffer-nodes (list of cars of this list) and
-                       ;; then we get that sublist of tree-buffer-nodes which
-                       ;; begins with the P-th elemen of tree-buffer-nodes
-                       ;; (nthcdr P tree-buffer-nodes).
+                       ;; tree-buffer-nodes (list of names of cdrs of this
+                       ;; list) and then we get that sublist of
+                       ;; tree-buffer-nodes which begins with the P-th element
+                       ;; of tree-buffer-nodes (nthcdr P tree-buffer-nodes).
                        (or (ignore-errors
-                             (nthcdr (ecb-position (mapcar 'car tree-buffer-nodes)
+                             (nthcdr (ecb-position (mapcar (lambda (n)
+                                                             (tree-node-get-name
+                                                              (cdr n)))
+                                                           tree-buffer-nodes)
                                                    (tree-node-get-name start-node))
                                      tree-buffer-nodes))
                            tree-buffer-nodes)))
           (equal-fcn 'tree-buffer-node-data-equal-p))
-      (dolist (node node-list)
-        (when (funcall equal-fcn (tree-node-get-data (cdr node)) node-data)
-          (throw 'exit node))))))
+      (dolist (name-node node-list)
+        (when (funcall equal-fcn (tree-node-get-data (cdr name-node)) node-data)
+          (throw 'exit name-node))))))
 
 (defun tree-buffer-search-node-list (find-fcn)
   (catch 'exit

@@ -23,7 +23,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-file-browser.el,v 1.38 2004/09/29 16:34:00 berndl Exp $
+;; $Id: ecb-file-browser.el,v 1.39 2004/10/04 15:53:06 berndl Exp $
 
 ;;; Commentary:
 
@@ -67,6 +67,11 @@
 
 (defgroup ecb-history nil
   "Settings for the history-buffer in the Emacs code browser."
+  :group 'ecb
+  :prefix "ecb-")
+
+(defgroup ecb-version-control nil
+  "Settings for the version-control support in the ECB."
   :group 'ecb
   :prefix "ecb-")
 
@@ -289,6 +294,7 @@ NOT use \"~\" because ECB tries always to match full path-names!"
   :group 'ecb-directories
   :type `(repeat (regexp :tag "Directory-regexp")))
 
+;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: update texi
 (defcustom ecb-prescan-directories-for-emptyness t
   "*Prescan directories for emptyness.
 ECB does this so directories are displayed as empty in the directories-buffer
@@ -296,10 +302,28 @@ even without user-interaction \(i.e. in previous ECB-versions the emptyness of
 a directory has been first checked when the user has clicked onto a
 directory). ECB optimizes this check as best as possible but if a directory
 contains a lot of subdirectories which contain in turn a lot of entries, then
-expanding such a directory or selecting it takes of course more time as
+expanding such a directory or selecting it would take of course more time as
 without this check - at least at the first time \(all following selects of a
 directory uses the cached information if its subdirectories are empty or not).
-Therefore this feature can be switched of via this option."
+Therefore ECB performs this check stealthy \(see `ecb-stealthy-tasks-delay')
+so normally there should no performance-decrease or additional waiting-time
+for the user. But to get sure this feature can be switched off completely via
+this option."
+  :group 'ecb-directories
+  :type 'boolean)
+
+;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: add entry in texi
+(defcustom ecb-sources-perform-read-only-check t
+  "*Check if source-items in the tree-buffers are read-only.
+If a sourcefile is read-only then it will be displayed with that face set in
+the option `ecb-source-read-only-face'.
+
+Because this check can be take some time if files are used via a mounted
+net-drive ECB performs this check stealthy \(see `ecb-stealthy-tasks-delay')
+so normally there should no performance-decrease or additional waiting-time
+for the user. But to get sure this feature can be switched off completely via
+this option."
+  :group 'ecb-sources
   :group 'ecb-directories
   :type 'boolean)
 
@@ -724,6 +748,108 @@ key-bindings only for the history-buffer of ECB."
   :group 'ecb-history
   :type 'hook)
 
+;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: add a section where all necessary
+;; informations are described - e.g. the potential drawback when using a
+;; function as vc-cvs-state and not to stay local!
+;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: update texi
+(defcustom ecb-vc-enable-support t
+  "*Enable support for version-control \(VC) systems.
+If on then in the directories-buffer \(if the value of the option
+`ecb-show-sources-in-directories-buffer' is on for current layout), the
+sources-buffer and the history-buffer all file-items are displayed with an
+appropriate icon in front of the item-name to indicate the VC-state of this
+item. If off then no version-control-state checking is done.
+
+Because this check can be take some time if files are managed by a not local
+Version-control-server ECB performs this check stealthy \(see
+`ecb-stealthy-tasks-delay') so normally there should no performance-decrease
+or additional waiting-time for the user. But to get sure this feature can be
+switched off completely via this option.
+
+See `ecb-vc-supported-backends' how to customize the VC-support itself."
+  :group 'ecb-version-control
+  :group 'ecb-sources
+  :type 'boolean)
+
+(defcustom ecb-vc-supported-backends
+  '((ecb-vc-managed-by-CVS-RCS-SCCS . vc-state))
+  "*Define how to to identify the VC-backend and how to check the state.
+The value of this option is a list containing cons-cells where the car is a
+function which is called to identify the VC-backend for a DIRECTORY and the
+cdr is a function which is called to check the VC-state of the FILEs contained
+in DIRECTORY.
+
+Identify-backend-function: It gets a full directory-name as argument - always
+without ending slash \(rsp. backslash for native Windows-XEmacs) - and has to
+return a unique symbol for the VC-backend which manages that directory \(e.g.
+'CVS for the CVS-system or 'RCS for the RCS-system) or nil if the file is not
+managed by a version-control-system.
+
+Check-vc-state-function: It gets a full filename \(ie. incl. the complete
+directory-part) and has to return one of the following values:
+
+  'up-to-date        The working file is unmodified with respect to the
+                     latest version on the current branch, and not locked.
+
+  'edited            The working file has been edited by the user. If
+                     locking is used for the file, this state means that
+                     the current version is locked by the calling user.
+
+  'needs-patch       The file has not been edited by the user, but there is
+                     a more recent version on the current branch stored
+                     in the master file.
+
+  'needs-merge       The file has been edited by the user, and there is also
+                     a more recent version on the current branch stored in
+                     the master file. This state can only occur if locking
+                     is not used for the file.
+
+  'unlocked-changes  The current version of the working file is not locked,
+                     but the working file has been changed with respect
+                     to that version. This state can only occur for files
+                     with locking\; it represents an erroneous condition that
+                     should be resolved by the user.
+
+  'ignored           The version-control-system ignores this file \(e.g.
+                     because included in a .cvsignore-file in case of CVS).
+
+  nil                The state of the file can not be retrieved\; probably the
+                     file is not under a version-control-system.
+
+ECB runs for a certain DIRECTORY all identify-backend-functions in that order
+they are listed in this option. For the first which returns a value unequal
+nil the associated check-state-function is used to retrieve the VC-state of
+all sourcefiles in that DIRECTORY.
+
+There is no need for the identify-backend-function or the
+check-vc-state-function to cache any state because ECB automatically caches
+internally all necessary informations for directories and files for best
+possible performance.
+
+To prepend ECB from checking the VC-state for any file set
+`ecb-vc-enable-support' to nil.
+
+Per default ECB uses `ecb-vc-managed-by-CVS-RCS-SCCS' to identify the
+VC-backend of a file \(supports the backends RCS, CVS and SCCS) and `vc-state'
+to check the state of a file. If other check-vc-state-functions should be used
+for one of the backends RCS, CVS or SCCS they should be added to this option
+*before* this default because otherwise these other function would never be
+called because `ecb-vc-managed-by-CVS-RCS-SCCS' returns not nil for these
+three backends!
+
+Example: If `vc-cvs-state' should be used to check the state for CVS-managed
+files and `vc-state' for all other backends then an element
+\(ecb-vc-managed-by-CVS-RCS-SCCS . vc-cvs-state) sould be added at the
+beginning of this option."
+  :group 'ecb-version-control
+  :group 'ecb-sources
+  :initialize 'custom-initialize-default  
+  :set (function (lambda (sym val)
+                   (set sym val)
+                   (ecb-vc-cache-clear)))
+  :type '(repeat (cons (function :tag "Identify-backend-function")
+                       (function :tag "Check-state-function"))))
+
 
 ;;====================================================
 ;; Internals
@@ -776,14 +902,17 @@ Currently there are three subcaches managed within this cache:
   VC:
 
   Cache necessary informations for the version-control-support. This is a
-  cache with
+  cache for filenames and directories. In case of a file with
      key: <filename> of a sourcefile
-     value: \(<state> <check-timestamp> <checked-buffers> <vc-state-fcn>)
+     value: \(<state> <check-timestamp> <checked-buffers>)
   whereas <state> is the that VC-state the file had at time <check-timestamp>.
   <checked-buffers> is a list of tree-buffer-names for which <state> was
-  checked. <vc-state-fcn> is the function used to get the VC-state if
-  <check-timestamp> is older than the most recent modification-timestamp of
-  <filename>.")
+  checked.
+  In case of a directory with
+     key: <dirname> of a directory
+     value: <vc-state-fcn> or 'NO-VC
+  <vc-state-fcn> is the function used to get the VC-state if <check-timestamp>
+  is older than the most recent modification-timestamp of <filename>.")
 
 (defun ecb-filename-cache-init ()
   "Initialize the whole cache for file- and directory-names"
@@ -920,13 +1049,16 @@ cache-entries are not dumped."
 
 ;; accessors for the VC-cache
 
-(defun ecb-vc-cache-add (file state checked-buffer-names vc-state-fcn)
+(defun ecb-vc-cache-add-file (file state checked-buffer-names)
   (ecb-multicache-put-value 'ecb-filename-cache file 'VC
                             (list state
                                   (ecb-subseq (current-time) 0 2)
-                                  checked-buffer-names
-                                  vc-state-fcn))
+                                  checked-buffer-names))
   state)
+
+(defun ecb-vc-cache-add-dir (dir backend)
+  (ecb-multicache-put-value 'ecb-filename-cache dir 'VC backend)
+  backend)
 
 (defun ecb-vc-cache-get (file)
   (ecb-multicache-get-value 'ecb-filename-cache file 'VC))
@@ -939,7 +1071,7 @@ cache-entries are not dumped."
   "Remove all files contained in DIR from the VC-cache."
   (let ((regexp (concat "^"
                         (regexp-quote dir)
-                        ;; TODO: native XEmacs uses \ as
+                        ;; TODO: native Windows XEmacs uses \ as
                         ;; directory separator!!!
                         "/[^/]+$")))
     (save-match-data
@@ -1124,7 +1256,7 @@ related threshold."
 file in current directory."
   (let* ((fixed-path (ecb-fix-path dir))
          (cvsignore-content (ecb-file-content-as-string
-                            (expand-file-name ".cvsignore" fixed-path)))
+                             (expand-file-name ".cvsignore" fixed-path)))
         (files nil))
     (when cvsignore-content
       (dolist (f (split-string cvsignore-content))
@@ -1588,11 +1720,14 @@ by the option `ecb-mode-line-prefixes'."
                             (if b
                                 (buffer-name b)
                               (ecb-get-source-name filename)))
-                        (ecb-get-source-name filename)))
-              (vc-cached-state (nth 0 (ecb-vc-cache-get filename))))
-          (if ecb-vc-support-beta-disable
+                        (ecb-get-source-name filename))))
+          (if (not ecb-vc-enable-support)
               file-1
-            (ecb-vc-generate-node-name file-1 vc-cached-state)))
+            (if (ecb-vc-managed-dir-p (file-name-directory filename))
+                (ecb-vc-generate-node-name file-1
+                                           (nth 0 (ecb-vc-cache-get filename)))
+              (ecb-generate-node-name file-1 -1 "leaf"
+                                      ecb-sources-buffer-name))))
         ecb-history-nodetype-sourcefile
         filename t)))))
 
@@ -1840,11 +1975,12 @@ sources-buffer if the associated file is writable or not. This function does
 the real job and is is only for use by a stealthy function defined with
 `defecb-stealthy'! STATE is the initial state-value the stealthy-function has
 when called. Return the new state-value."
-  (if (not (or (string= (buffer-name (current-buffer))
-                        ecb-sources-buffer-name)
-               (and (string= (buffer-name (current-buffer))
-                             ecb-directories-buffer-name)
-                    (ecb-show-sources-in-directories-buffer-p))))
+  (if (or (not ecb-sources-perform-read-only-check)
+          (not (or (string= (buffer-name (current-buffer))
+                            ecb-sources-buffer-name)
+                   (and (string= (buffer-name (current-buffer))
+                                 ecb-directories-buffer-name)
+                        (ecb-show-sources-in-directories-buffer-p)))))
       'done
     ;; Now we are either in the sources-buffer or in the directories-buffer
     ;; when sources are displayed in the directories-buffer
@@ -1913,94 +2049,15 @@ is writable or not."
 
 ;; version control support
 
-;; TODO: Klaus Berndl <klaus.berndl@sdm.de>:
-;; maybe a separate defgroup for the vc-options?
-(defcustom ecb-vc-supported-backends '((vc-backend . vc-state))
-  "*Define how to to identify the VC-backend and how to check the state.
-The value of this option is a list containing cons-cells where the car is a
-function which is called to identify the VC-backend for a fill and the cdr is
-a function which is called to check the VC-state of a file. Both functions get
-two arguments: the directory-part and the filename-part of a sourcefile \(both
-args concatenated are the full path of the sourcefile-name.
-
-Identify-backend-function: Has to return a unique symbol for the VC-backend of
-the file \(e.g. 'CVS for the CVS-system or 'RCS for the RCS-system) or nil if
-the file is not managed by a version-control-system.
-
-Check-state-function: Has to return one of the following values:
-
-  'up-to-date        The working file is unmodified with respect to the
-                     latest version on the current branch, and not locked.
-
-  'edited            The working file has been edited by the user. If
-                     locking is used for the file, this state means that
-                     the current version is locked by the calling user.
-
-  USER               The current version of the working file is locked by
-                     some other USER \(a string).
-            
-  'needs-patch       The file has not been edited by the user, but there is
-                     a more recent version on the current branch stored
-                     in the master file.
-
-  'needs-merge       The file has been edited by the user, and there is also
-                     a more recent version on the current branch stored in
-                     the master file. This state can only occur if locking
-                     is not used for the file.
-
-  'unlocked-changes  The current version of the working file is not locked,
-                     but the working file has been changed with respect
-                     to that version. This state can only occur for files
-                     with locking\; it represents an erroneous condition that
-                     should be resolved by the user.
-
-  nil                The state of the file can not be retrieved\; probably the
-                     file is not under a version-control-system.
-
-ECB runs all identify-backend-functions in that order they are listed in this
-option. For the first which returns a value unequal nil the associated
-check-state-function is used to retrieve the VC-state of the sourcefile.
-
-To prepend ECB from checking the VC-state for any file just set this option to
-nil.
-
-Per default ECB uses `vc-backend' to identify the VC-backend of a file
-\(supports per default the backends RCS, CVS and SCCS) and `vc-state' to check
-the state of a file. If other functions should be used for one of the backends
-RCS, CVS or SCCS they should be added to this option *before* this default
-because otherwise these other function would never be called because
-`vc-backend' returns not nil for these three backends!
-
-Example: If `vc-cvs-state' should be used to check the state for CVS-managed
-files and `vc-state' for all other backends then an element \(vc-backend .
-vc-cvs-state) sould be added at the beginning of this option."
-  :group 'ecb-sources
-  :type '(repeat (cons (function :tag "Identify-backend-function")
-                       (function :tag "Check-state-function"))))
-
-(defcustom ecb-vc-directory-managed-hook nil
-  "*Hook used to check if a directory is managed by a VC-system.
-Each function of this hook is called with a directory and has to return not
-nil if this directory is managed by a Version-Control-system.
-
-If ECB can support a certain VC-backend doesn't depend on the settings of this
-hook: ECB supports a certain VC-backend if and only if an appropriate setting
-for the needed backend is added to `ecb-vc-supported-backends'! But adding a
-\"check-if-managed-by-VC\"-function to this hook for a certain backend makes
-things going faster because then ECB does not run the whole VC-\"apparatus\"
-for directories which are not managed by a VC-system.
-
-By default ECB already recognizes if a directory is managed by RCS, CVS or
-SCCS. For all other VC-backend own functions have to be added."
-  :group 'ecb-sources
-  :type 'hook)
-  
-
-;; We use a cache which stores for a file the function used to check its
-;; VC-state and the most recent VC-state plus the check-timestamp for this
-;; state. So we have to call only once the identify-backend-function (see
-;; above) for a file. The check-state-function must only be called if the file
-;; has been modified since the stored check-state-timestamp. With this caching
+;; We use a cache which stores for
+;; + a directory: either the function used to check the VC-state of its files
+;;   (if the directory is managed by a VC-backend) or the symbol 'NO-VC (if
+;;   the dir is not managed by a VC-backend).
+;; + a file: the most recent VC-state plus the check-timestamp for this state.
+;;
+;; So we have to call only once the identify-backend-function (see above) for
+;; a directory. The check-state-function must only be called if the file has
+;; been modified since the stored check-state-timestamp. With this caching
 ;; even using real-VC-checks (as vc-cvs-state) which never uses heuristics is
 ;; possible without loosing to much informations (only if a file is modified
 ;; by another user can not be detected with this cache - but for this we have
@@ -2008,47 +2065,47 @@ SCCS. For all other VC-backend own functions have to be added."
 
 (defconst ecb-vc-state-icon-alist '((up-to-date . ("vc-up-to-date" "(u)"))
                                     (edited . ("vc-edited" "(e)"))
+                                    (needs-patch . ("vc-needs-patch" "(p)"))
+                                    (needs-merge . ("vc-needs-merge" "(m)"))
+                                    (ignored . ("vc-ignored" "(x)"))
                                     (nil . ("vc-unknown" "(?)")))
-  "Associate an image-name and a texutal icon to the allowed VC-states - see
-`ecb-vc-supported-backends'.")
-
-
-(defconst ecb-vc-incr-searchpattern-node-prefix
-  '("\\(([uemp?])\\)?" . 1)
-
-  "Prefix-pattern which ignores all not interesting vc-icon-stuff of a
-node-name at incr. search. This ignores the \"(<vc-state-char>)\" whereas
-<vc-state-char> is one of u, e, m, p or ?.
-
-Format: cons with car is the pattern and cdr is the number of subexpr in this
-pattern.")
+  "Associate an image-name and a textual icon to the allowed VC-states - see
+`ecb-vc-supported-backends'. Each element is a cons-cell where the car is the
+symbol of a supported VC-state and the cdr a 2-element list where the first
+element is the name of the needed image-icon and the second element the
+ascii-string which should be dislayed if Emacs doesn't support image-display.")
 
 (defsubst ecb-vc-get-image-name-for-vc-state (state)
   "Return the associated image-name for the vc-state STATE."
-  (nth 0 (cdr (assq state ecb-vc-state-icon-alist))))
-
+  (or (nth 0 (cdr (assq state ecb-vc-state-icon-alist)))
+      "vc-unknown"))
+  
 (defsubst ecb-vc-get-ascii-icon-for-vc-state (state)
   "Return the associated texual icon for the vc-state STATE."
   (or (nth 1 (cdr (assq state ecb-vc-state-icon-alist)))
       "(?)"))
 
 
-(defun ecb-get-vc-state-fcn (file)
-  "Call the car of each element of `ecb-vc-supported-backends' and return the
-cdr of the first elem where the car returns not nil"
-  (catch 'found
-    (dolist (elem ecb-vc-supported-backends)
-      (if (and (fboundp (car elem))
-               (funcall (car elem) file))
-          (throw 'found (cdr elem))))
-    nil))
+(defconst ecb-vc-incr-searchpattern-node-prefix
+  '("\\(([uempx?])\\)?" . 1)
+  "Prefix-pattern which ignores all not interesting vc-icon-stuff of a
+node-name at incr. search. This ignores the \"(<vc-state-char>)\" whereas
+<vc-state-char> is one of u, e, m, p or ?.
+Format: cons with car is the pattern and cdr is the number of subexpr in this
+pattern.")
 
-(defun ecb-check-vc-state (file tree-buffer-name)
+(defun ecb-vc-check-state (file tree-buffer-name vc-state-fcn)
+  "Check if the VC-state for FILE must be rechecked, i.e. if it is out of
+date. If it is still valid and also already checked for TREE-BUFFER-NAME then
+return the symbol 'unchanged \(if still valid but only not checked for
+TREE-BUFFER-NAME then return the state and store the fact that it has been
+check now also for this buffer). Otherwise check the new state for FILE with
+VC-STATE-FCN, store it in the cache only for TREE-BUFFER-NAME and return the
+new state."
   (let* ((cached-state (ecb-vc-cache-get file))
          (last-state (nth 0 cached-state))
          (last-check-time (nth 1 cached-state))
          (checked-tree-buffer-names (nth 2 cached-state))
-         (vc-state-fcn (nth 3 cached-state))
          (no-need-for-state-check-p
           (and last-check-time
                (or (null last-state) ;; FILE has been checked but is not in VC
@@ -2080,10 +2137,6 @@ cdr of the first elem where the car returns not nil"
       ;; and then cached to TREE-BUFFER-NAME ==> Only for this buffer-name the
       ;; cache is valid.
       (setq checked-tree-buffer-names (list tree-buffer-name))
-      ;; get the backend if there is no cached one
-      (setq vc-state-fcn
-            (or vc-state-fcn
-                (ecb-get-vc-state-fcn file)))
       ;; get the new vc-state
       (setq result (and vc-state-fcn
                         (fboundp vc-state-fcn)
@@ -2094,12 +2147,11 @@ cdr of the first elem where the car returns not nil"
                         ;; and restore it when the call fails - later... ;-)
                         (ignore-errors (funcall vc-state-fcn file)))))
     (if (not (equal result 'unchanged))
-      ;; add the new state to the cache because either the list of checked
-      ;; buffers and/or the state has been modified.
-      (ecb-vc-cache-add file
-                        result
-                        checked-tree-buffer-names
-                        vc-state-fcn))
+        ;; add the new state to the cache because either the list of checked
+        ;; buffers and/or the state has been modified.
+        (ecb-vc-cache-add-file file
+                               result
+                               checked-tree-buffer-names))
     ;; return the result - either 'unchanged or the new VC-state
     result))
 
@@ -2130,41 +2182,79 @@ the SOURCES-cache."
                                             (buffer-substring (point-min)
                                                               (point-max))))))))
 
-;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: Something like the following
-;; could be used to check if a dir is managed by a VC-system... If we use this
-;; then maybe we should also redefine our option `ecb-vc-supported-backends'?!
-;; Because then we use the function below to get the backend (for this we have
-;; to modive the function below) (e.g. 'CVS, 'RCS, 'SCCS 'Clearcase...) and
-;; then we change the element of ecb-vc-support-beta-disable as follows:
-;; - car: The backend (e.g. 'CVS, 'RCS, 'SCCS 'Clearcase...)
-;; - cdr: The vc-state-fcn
-;; Then probably the performance of the whole vc-support increases because all
-;; not VC-managed directories can be overjumped very fast!
-(defun ecb-vc-managed-dir-p (directory)
-  "Return t if we should bother checking DIRECTORY for version control files.
-This can be overloaded to add new types of version control systems."
+(defun ecb-vc-managed-by-CVS-RCS-SCCS (directory)
+  "Return the VC-backend if DIRECTORY is managed by CVS, RCS or SCCS or nil if
+not managed by one of these backends."
   (or
    ;; Local CVS available in Emacs 21
    (and (fboundp 'vc-state)
-	(file-exists-p (concat directory "CVS/")))
+        (file-exists-p (concat directory "/CVS/"))
+        'CVS)
    ;; Local RCS
-   (file-exists-p (concat directory "RCS/"))
+   (and (file-exists-p (concat directory "/RCS/")) 'RCS)
    ;; Local SCCS
-   (file-exists-p (concat directory "SCCS/"))
+   (and (file-exists-p (concat directory "/SCCS/")) 'SCCS)
    ;; Remote SCCS project
    (let ((proj-dir (getenv "PROJECTDIR")))
      (if proj-dir
-	 (file-exists-p (concat proj-dir "/SCCS"))
-       nil))
-   ;; User extension
-   (run-hook-with-args 'ecb-vc-directory-managed-hook directory)
-   ))
+         (and (file-exists-p (concat proj-dir "/SCCS")) 'SCCS)
+       nil))))
+
+(silentcomp-defvar ange-ftp-directory-format)
+(silentcomp-defvar efs-directory-regexp)
+(silentcomp-defvar ange-ftp-name-format)
+(defun ecb-remote-dir-p (directory)
+  "Return not nil if DIRECTORY is an ange-ftp- or efs-directory."
+  (or (and (featurep 'ange-ftp)
+           (string-match (car (if ecb-running-xemacs
+                                  ange-ftp-directory-format
+                                ange-ftp-name-format))
+                         directory))
+      ;; efs support
+      (and (featurep 'efs)
+           (string-match (if (stringp efs-directory-regexp)
+                             efs-directory-regexp
+                           (car efs-directory-regexp))
+                         directory))))
+
+  (defun ecb-vc-get-state-fcn-for-dir (directory)
+  "Get that function which should be used for checking the VC-state for files
+contained in DIRECTORY. Get it either from the VC-cache or call the car of
+each element of `ecb-vc-supported-backends' and return the cdr of the first
+elem where the car returns not nil. If Directory is not managed by a
+version-control system then return nil. Store the result in the VC-cache for
+speeding up things next time. Ange-ftp- or efs-directories will never be
+checked for VC-states!"
+  (let* ((norm-dir (ecb-fix-filename directory))
+         (cache-val (ecb-vc-cache-get norm-dir)))
+    (cond ((equal cache-val 'NO-VC)
+           nil)
+          (cache-val cache-val)
+          (t
+           (let ((vc-backend-fcn
+                  (and (not (ecb-remote-dir-p norm-dir))
+                      ;; we never check VC-states in "remote" paths!
+                       (catch 'found
+                         (dolist (elem ecb-vc-supported-backends)
+                           (when (and (fboundp (car elem))
+                                      (funcall (car elem) norm-dir))
+                             (throw 'found (cdr elem))))
+                         nil))))
+             ;; Add it to the vc-cache: Either NO-VC if nil otherwise the
+             ;; check-state-function
+             (ecb-vc-cache-add-dir norm-dir (or vc-backend-fcn 'NO-VC))
+             vc-backend-fcn)))))
+
+(defalias 'ecb-vc-managed-dir-p 'ecb-vc-get-state-fcn-for-dir)
 
 (defun ecb-vc-generate-node-name (name state)
+  "Generate a node-name with an appropriate icon in the front of NAME
+depending on STATE. If Emacs supports image-display then an image-icon wll be
+used otherwise an ascii-icon."
   (let* ((ascii-icon (ecb-vc-get-ascii-icon-for-vc-state state))
          (node-name (concat ascii-icon " "
                             (save-match-data
-                              (if (string-match "^(.+) \\(.+\\)$" name)
+                              (if (string-match "^(.) \\(.+\\)$" name)
                                   (match-string 1 name)
                                 name)))))
     (ecb-generate-node-name node-name 4
@@ -2175,41 +2265,22 @@ This can be overloaded to add new types of version control systems."
                             ecb-sources-buffer-name)))
 
 
-(defvar ecb-vc-support-beta-disable nil)
-
-;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: we have to exclude remote-path
-;; from being checked! Use this code:
-;;    (not (or (and (featurep 'ange-ftp)
-;;                  (string-match
-;;                   (car (if dframe-xemacsp
-;;                            ange-ftp-directory-format
-;;                          ange-ftp-name-format))
-;;                   (expand-file-name default-directory)))
-;;             ;; efs support: Bob Weiner
-;;             (and (featurep 'efs)
-;;                  (string-match
-;;                   (if (stringp efs-directory-regexp)
-;;                       efs-directory-regexp
-;;                     (car efs-directory-regexp))
-;;                   (expand-file-name default-directory))))))
-
-(defun ecb-stealthy-vc-check--internal (state)
+(defun ecb-stealthy-vc-check--dir/history (state)
   "Check for all sourcefile-nodes either in the directories- or the
-sources-buffer the VC-state. This function does the real job and is is only
+history-buffer the VC-state. This function does the real job and is is only
 for use by a stealthy function defined with `defecb-stealthy'! STATE is the
 initial state-value the stealthy-function has when called. Return the new
 state-value."
-  (if ecb-vc-support-beta-disable
+  (if (not ecb-vc-enable-support)
       'done
-    (if (not (or (member (buffer-name (current-buffer))
-                         (list ecb-sources-buffer-name ecb-history-buffer-name))
+    (if (not (or (string= (buffer-name (current-buffer))
+                          ecb-history-buffer-name)
                  (and (string= (buffer-name (current-buffer))
                                ecb-directories-buffer-name)
                       (ecb-show-sources-in-directories-buffer-p))))
         'done
-      ;; Now we are either in the sources-, or history-buffer or in the
-      ;; directories-buffer when sources are displayed in the
-      ;; directories-buffer
+      ;; Now we are either in the history-buffer or in the directories-buffer
+      ;; when sources are displayed in the directories-buffer
       (if (equal state 'restart)
           (setq state 1))
       ;; Here the state is an integer because a stealthy functions runs only
@@ -2217,51 +2288,89 @@ state-value."
       (let ((lines-of-buffer (count-lines (point-min) (point-max)))
             (curr-node nil)
             (new-name nil)
+            (vc-state-fcn nil)
             (new-state nil)
-            (update-performed-for-dir nil)
-            (node-type-to-check (cond ((string= (buffer-name (current-buffer))
-                                                ecb-sources-buffer-name)
-                                       ecb-sources-nodetype-sourcefile)
-                                      ((string= (buffer-name (current-buffer))
-                                                ecb-history-buffer-name)
-                                       ecb-history-nodetype-sourcefile)
-                                      (t
-                                       ecb-directories-nodetype-sourcefile))))
+            (node-type-to-check (if (string= (buffer-name (current-buffer))
+                                             ecb-history-buffer-name)
+                                    ecb-history-nodetype-sourcefile
+                                  ecb-directories-nodetype-sourcefile)))
         (save-excursion
           (while (and (not (input-pending-p))
                       (<= state lines-of-buffer))
             (goto-line state)
             (setq curr-node (tree-buffer-get-node-at-point))
             (when (= (tree-node-get-type curr-node) node-type-to-check)
+              (setq vc-state-fcn
+                    (ecb-vc-get-state-fcn-for-dir
+                     (file-name-directory (tree-node-get-data curr-node))))
+              (when vc-state-fcn ;; file is under VC-control
+                (setq new-name (tree-node-get-name curr-node))
+                (setq new-state
+                      (ecb-vc-check-state (tree-node-get-data curr-node)
+                                          (buffer-name (current-buffer))
+                                          vc-state-fcn))
+                ;; we update the node only if the state has changed 
+                (when (not (equal 'unchanged new-state))
+                  (setq new-name (ecb-vc-generate-node-name new-name new-state))
+                  (tree-buffer-update-node
+                   nil new-name
+                   'use-old-value 'use-old-value 'use-old-value 'use-old-value t))))
+            (setq state (1+ state))))
+        (if (> state lines-of-buffer)
+            (setq state 'done)))
+      state)))
+
+(defun ecb-stealthy-vc-check--sources (state)
+  "Check for all sourcefile-nodes in sources-buffer the VC-state. This
+function does the real job and is is only for use by a stealthy function
+defined with `defecb-stealthy'! STATE is the initial state-value the
+stealthy-function has when called. Return the new state-value."
+  (if (not ecb-vc-enable-support)
+      'done
+    (let ((vc-state-fcn (ecb-vc-get-state-fcn-for-dir ecb-path-selected-directory)))
+      (if (null vc-state-fcn)
+          ;; the sources-files are not under VC-control
+          'done
+        ;; Now we are either in the sources-, or history-buffer or in the
+        ;; directories-buffer when sources are displayed in the
+        ;; directories-buffer
+        (if (equal state 'restart)
+            (setq state 1))
+        ;; Here the state is an integer because a stealthy functions runs only
+        ;; when state != 'done
+        (let ((lines-of-buffer (count-lines (point-min) (point-max)))
+              (curr-node nil)
+              (new-name nil)
+              (new-state nil)
+              (update-performed-for-dir nil))
+          (save-excursion
+            (while (and (not (input-pending-p))
+                        (<= state lines-of-buffer))
+              (goto-line state)
+              (setq curr-node (tree-buffer-get-node-at-point))
               (setq new-name (tree-node-get-name curr-node))
-              (setq new-state (ecb-check-vc-state (tree-node-get-data curr-node)
-                                                  (buffer-name (current-buffer))))
+              (setq new-state
+                    (ecb-vc-check-state (tree-node-get-data curr-node)
+                                        (buffer-name (current-buffer))
+                                        vc-state-fcn))
               ;; we update the node only if the state has changed 
               (when (not (equal 'unchanged new-state))
-                (setq new-name
-                      (ecb-vc-generate-node-name new-name new-state))
+                (setq new-name (ecb-vc-generate-node-name new-name new-state))
                 (or update-performed-for-dir
                     (setq update-performed-for-dir
                           (ecb-fix-filename
                            (file-name-directory (tree-node-get-data curr-node)))))
                 (tree-buffer-update-node
-                 nil
-                 new-name
-                 'use-old-value
-                 'use-old-value
-                 'use-old-value
-                 'use-old-value
-                 t)))
-            (setq state (1+ state))))
-        ;; if we are in the sources-buffer and if we have performed at least
-        ;; one update then we must update the SOURCES-cache.
-        (when (and (string= (buffer-name (current-buffer))
-                            ecb-sources-buffer-name)
-                   update-performed-for-dir)
-          (ecb-vc-update-sources-cache update-performed-for-dir))
-        (if (> state lines-of-buffer)
-            (setq state 'done)))
-      state)))
+                 nil new-name
+                 'use-old-value 'use-old-value 'use-old-value 'use-old-value t))
+              (setq state (1+ state))))
+          ;; if we have performed at least one update then we must update the
+          ;; SOURCES-cache.
+          (when update-performed-for-dir
+            (ecb-vc-update-sources-cache update-performed-for-dir))
+          (if (> state lines-of-buffer)
+              (setq state 'done)))
+        state))))
 
 (defecb-stealthy ecb-stealthy-vc-check-in-history-buf
   "Check for all entries in the history-buffer their VC-state and
@@ -2270,7 +2379,7 @@ display an appropriate icon in front of the item."
     (when (equal 'window-not-visible
                  (ecb-exec-in-history-window
                   (setq state
-                        (ecb-stealthy-vc-check--internal state))))
+                        (ecb-stealthy-vc-check--dir/history state))))
       (setq state 'done))))
 
 
@@ -2281,7 +2390,7 @@ display an appropriate icon in front of the file."
     (when (equal 'window-not-visible
                  (ecb-exec-in-sources-window
                   (setq state
-                        (ecb-stealthy-vc-check--internal state))))
+                        (ecb-stealthy-vc-check--sources state))))
       (setq state 'done))))
 
 (defecb-stealthy ecb-stealthy-vc-check-in-directories-buf
@@ -2292,20 +2401,27 @@ display an appropriate icon in front of the file."
         (when (equal 'window-not-visible
                      (ecb-exec-in-directories-window
                       (setq state
-                            (ecb-stealthy-vc-check--internal state))))
+                            (ecb-stealthy-vc-check--dir/history state))))
           (setq state 'done)))
     (setq state 'done)))
 
+(defun ecb-vc-reset-vc-stealthy-checks ()
+  "Resets all stealthy VC-checks."
+  (ecb-stealthy-function-state-init 'ecb-stealthy-vc-check-in-sources-buf)
+  (ecb-stealthy-function-state-init 'ecb-stealthy-vc-check-in-directories-buf)
+  (ecb-stealthy-function-state-init 'ecb-stealthy-vc-check-in-history-buf))
+  
+
+(defun ecb-vc-enable-internals (arg)
+  "Enable or disable \(if ARG < 0) all settings needed by the VC-support."
+  (if (< arg 0)
+      (remove-hook 'after-revert-hook 'ecb-vc-reset-vc-stealthy-checks)
+    (add-hook 'after-revert-hook 'ecb-vc-reset-vc-stealthy-checks)))
+
+;; -- end of vc-support ---------------
+
 ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: Maybe we should run directly
 ;; `ecb-stealthy-updates' from within this after-update-hooks?!
-
-;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: We should also add a function to
-;; after-revert-hook and also write-file-hooks which calls
-;; (ecb-stealthy-function-state-init
-;;     'ecb-stealthy-vc-check-in-directories-buf)
-;; and
-;; (ecb-stealthy-function-state-init
-;;     'ecb-stealthy-vc-check-in-sources-buf)
 
 (defun ecb-stealth-tasks-after-directories-update ()
   "After update hook for the directories-buffer. Runs directly after
@@ -2325,42 +2441,38 @@ performing a `tree-buffer-update' for this buffer."
 (defun ecb-stealth-tasks-after-history-update ()
   "After update hook for the history-buffer. Runs directly after
 performing a `tree-buffer-update' for this buffer."
-  (ecb-stealthy-function-state-init 'ecb-stealthy-ro-check-in-history-buf)
+  (ecb-stealthy-function-state-init 'ecb-stealthy-vc-check-in-history-buf)
   )
-
-;; -- end of vc-support ---------------
 
 (defun ecb-tree-node-add-files
   (node path files type include-extension old-children
         &optional not-expandable)
   "For every file in FILES add a child-node to NODE."
-  ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: Here we should add a check too
-  ;; if the directory PATH is managed by a VC-backend because then we would
-  ;; never deal with VC but can immediately generate a "leaf"
-  ;; displayed-file-name. If PATH is managed by a VC-system then we never use
-  ;; "leaf" but always that icon associated to the cached vc-state (if file
-  ;; has currently no vc-cached-state then it has not yet checked and we use
-  ;; the unknow-state....but for know we do not use this test....
-  (let ((no-vc-state-display
-         (or ecb-vc-support-beta-disable
-             ;; no vc-state-display when the node is a subdir in the
-             ;; directories-buffer
-             (and (equal (buffer-name) ecb-directories-buffer-name)
-                  (= type ecb-directories-nodetype-directory)))))
+  (let* ((no-vc-state-display
+          (or (not ecb-vc-enable-support)
+              ;; no vc-state-display when the node is a subdir in the
+              ;; directories-buffer
+              (and (equal (buffer-name) ecb-directories-buffer-name)
+                   (= type ecb-directories-nodetype-directory))))
+         (dir-managed-by-vc (if no-vc-state-display
+                                nil
+                              (ecb-vc-managed-dir-p path))))
     (dolist (file files)
       (let* ((filename (ecb-fix-filename path file))
              (file-1 (if include-extension
                          file
-                       (file-name-sans-extension file)))
-             (vc-cached-state (nth 0 (ecb-vc-cache-get filename)))
-             (displayed-file (if no-vc-state-display
-                                 file-1
-                               (ecb-vc-generate-node-name file-1 vc-cached-state))))
+                       (file-name-sans-extension file))))
         (tree-node-add-child
          node
          (ecb-new-child
           old-children
-          displayed-file
+          (if no-vc-state-display
+              file-1
+            (if dir-managed-by-vc
+                (ecb-vc-generate-node-name file-1
+                                           (nth 0 (ecb-vc-cache-get filename)))
+              (ecb-generate-node-name file-1 -1 "leaf"
+                                      ecb-sources-buffer-name)))
           type filename
           (or not-expandable
               (= type ecb-directories-nodetype-sourcefile)

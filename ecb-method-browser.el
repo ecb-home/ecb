@@ -24,7 +24,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-method-browser.el,v 1.59 2004/09/29 16:32:48 berndl Exp $
+;; $Id: ecb-method-browser.el,v 1.60 2004/10/04 15:53:06 berndl Exp $
 
 ;;; Commentary:
 
@@ -4062,11 +4062,15 @@ pattern.")
 
 (defun ecb-dump-semantic-tags-internal (table parent source-buffer indent)
   (dolist (tag table)
-    (insert (format "%s%s, tag-class: %s\n" (make-string indent ? )
+    ;; we ca not use format here because XEmacs-format removes all
+    ;; text-properties! 
+    (insert (concat (make-string indent ? )
                     (save-excursion
                       (set-buffer source-buffer)
                       (ecb--semantic-format-tag-uml-prototype tag parent t))
-                    (ecb--semantic-tag-class tag)))
+                    ", tag-class: "
+                    (format "%s" (ecb--semantic-tag-class tag))
+                    "\n"))
     (ecb-dump-semantic-tags-internal (ecb--semantic-tag-children-compatibility tag t)
                                      (if (equal (ecb--semantic-tag-class tag)
                                                 'type)

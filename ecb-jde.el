@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-jde.el,v 1.10 2004/08/03 09:37:21 berndl Exp $
+;; $Id: ecb-jde.el,v 1.11 2004/10/04 15:53:06 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -180,7 +180,6 @@ is not available then `find-file' is called."
       (add-hook 'efc-dialog-close-after-hook
                 (function (lambda ()
                             (ecb-toggle-compile-window 1))))))
-
 
 (silentcomp-provide 'ecb-jde)
 

@@ -26,7 +26,7 @@
 @c GNU Emacs; see the file COPYING.  If not, write to the Free Software
 @c Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-@c $Id: ecb.texi,v 1.188 2004/09/29 16:30:41 berndl Exp $
+@c $Id: ecb.texi,v 1.189 2004/10/04 15:53:03 berndl Exp $
 
 @setfilename ecb.info
 
@@ -220,6 +220,7 @@ Usage of ECB
 * Maximizing the ECB windows::  Maximizing the ECB-windows
 * Back/forward navigation::     Back- and forward navigation like a browser
 * ECB-window synchronizing::    Auto./manual synchronizing the ECB-windows
+* Version-control-support::     Supporting of version-control systems 
 * Interactive ECB commands::    All interactive user-commands of ECB
 
 Working with the keyboard in the ECB-windows
@@ -282,6 +283,7 @@ All customizable options of ECB
 * ecb-non-semantic::            Customizing parsing non-semantic sources
 * ecb-winman::                  Customizing window-manager support
 * ecb-mode-line::               Customizing the tree-buffer-modelines
+* ecb-version-control::         Customizing the version-control-support
 
 Upgrading and downloading packages
 
@@ -1094,6 +1096,7 @@ Emacs Code Browser.
 * Maximizing the ECB windows::  Maximizing the ECB-windows
 * Back/forward navigation::     Back- and forward navigation like a browser
 * ECB-window synchronizing::    Auto./manual synchronizing the ECB-windows
+* Version-control-support::     Supporting of version-control systems 
 * Interactive ECB commands::    All interactive user-commands of ECB
 @end menu
 
@@ -3566,7 +3569,7 @@ scenario where the buffer is narrowed to a tag (see
 Now you will edit at the same place in the function.
 @end enumerate
 
-@node ECB-window synchronizing, Interactive ECB commands, Back/forward navigation, Usage of ECB
+@node ECB-window synchronizing, Version-control-support, Back/forward navigation, Usage of ECB
 @section Synchronization of the ECB-windows
 
 Per default ECB synchronizes automatically the contents of the
@@ -3634,7 +3637,12 @@ therefore ECB offers the command @code{ecb-toggle-window-sync}.
 do a manually synchronization if the automatic one is switched off or
 if you just want to do this!
 
-@node Interactive ECB commands, , ECB-window synchronizing, Usage of ECB
+@node Version-control-support, Interactive ECB commands, ECB-window synchronizing, Usage of ECB
+@section Support of version-control systems
+
+TODO
+
+@node Interactive ECB commands, ,Version-control-support, Usage of ECB
 @section Interactive ECB commands
 
 @noindent
@@ -4715,6 +4723,7 @@ been done for a better readable option index. @xref{Option Index}.
 * ecb-non-semantic::            Customizing parsing non-semantic sources
 * ecb-winman::                  Customizing window-manager support
 * ecb-mode-line::               Customizing the tree-buffer-modelines
+* ecb-version-control::         Customizing the version-control-support
 @end menu
 
 @node ecb-general, ecb-tree-buffer, Customizable options, Customizable options
@@ -5048,6 +5057,34 @@ nil then ediff decides in which frame it will run - depending on the current
 window-layout (e.g. if the ecb-windows are currently hidden) this can be the
 ecb-frame but this can also be a newly created frame or any other frame.
 @end defopt
+
+@defopt stealthy-tasks-delay
+Time Emacs must be idle before ECB runs its stealthy tasks. Currently
+ECB performes the following stealthy tasks:
+
+@table @asis
+@item Prescann directories for emptyness
+Prescann directories and display them as empty or not-empty in the
+directories-buffer. See the documentation of the option
+@code{ecb-prescan-directories-for-emptyness} for a description.
+
+@item File is read only
+Check if sourcefile-items of the directories- or sources-buffer are
+read-only or not. See documentation of the option
+@code{ecb-sources-perform-read-only-check}.
+
+@item Version-control-state
+Checks the version-control-state of files in directories which are
+managed by a VC-backend. See the option @code{ecb-vc-enable-support}.
+
+@end table
+
+Here the interval is defined ECB has to be idle before starting with
+these stealthy tasks. It can be a floating-point value in seconds. The
+value can also be changed during running ECB.
+@end defopt
+
+
 
 @defopt tip-of-the-day
 Show tip of the day at start time of ECB.
@@ -5734,16 +5771,20 @@ value of this variable should be a list of regular expression.
 @end defopt
 
 @defopt prescan-directories-for-emptyness
-ECB does this so directories are displayed as empty in the
-directories-buffer even without user-interaction (i.e. in previous
-ECB-versions the emptyness of a directory has been first checked when
-the user has clicked onto a directory). ECB optimizes this check as
-best as possible but if a directory contains a lot of subdirectories
-which contain in turn a lot of entries, then expanding such a
-directory or selecting it takes of course more time as without this
-check - at least at the first time (all following selects of a
-directory uses the cached information if its subdirectories are empty
-or not). Therefore this feature can be switched of via this option."
+Prescan directories for emptyness. ECB does this so directories are
+displayed as empty in the directories-buffer even without
+user-interaction (i.e. in previous ECB-versions the emptyness of a
+directory has been first checked when the user has clicked onto a
+directory). ECB optimizes this check as best as possible but if a
+directory contains a lot of subdirectories which contain in turn a lot
+of entries, then expanding such a directory or selecting it would take
+of course more time as without this check - at least at the first time
+(all following selects of a directory uses the cached information if
+its subdirectories are empty or not). Therefore ECB performs this
+check stealthy (see @code{ecb-stealthy-tasks-delay}) so normally there
+should no performance-decrease or additional waiting-time for the
+user. But to get sure this feature can be switched off completely via
+this option.
 @end defopt
 
 @defopt show-sources-in-directories-buffer
@@ -5938,6 +5979,18 @@ the user opens the popup-menu for the sources buffer.
 Per default the dynamic user-extensions are added in front of the
 static extensions of @code{ecb-sources-menu-user-extension} but the
 whole menu can be re-arranged with @code{ecb-sources-menu-sorter}.
+@end defopt
+
+@defopt sources-perform-read-only-check
+Check if source-items in the tree-buffers are read-only. If a
+sourcefile is read-only then it will be displayed with that face set
+in the option @code{ecb-source-read-only-face}.
+
+Because this check can be take some time if files are used via a
+mounted net-drive ECB performs this check stealthy (see
+@code{ecb-stealthy-tasks-delay}) so normally there should no
+performance-decrease or additional waiting-time for the user. But to
+get sure this feature can be switched off completely via this option.
 @end defopt
 
 @defopt sources-sort-ignore-case
@@ -8070,7 +8123,7 @@ window-configuration with activated ECB. All other
 window-configuration are configurations with deactivated ECB!
 @end defopt
 
-@node ecb-mode-line, , ecb-winman, Customizable options
+@node ecb-mode-line, ecb-version-control, ecb-winman, Customizable options
 @subsection Group ecb-mode-line
 
 @noindent
@@ -8182,6 +8235,112 @@ the face @code{modeline} (see @code{set-face-parent})!
 Face used for the window-number in the mode-line. See
 @code{ecb-mode-line-display-window-number}. For XEmacs the face should
 inherit from the face @code{modeline} (see @code{set-face-parent})!
+@end defopt
+
+@node ecb-version-control, ,ecb-mode-line, Customizable options
+@subsection Group ecb-version-control
+
+@noindent
+This group contains settings for the version-control-support of ECB:
+
+@defopt vc-enable-support
+Enable support for version-control (VC) systems. If on then in the
+directories-buffer (if the value of the option
+@code{ecb-show-sources-in-directories-buffer} is on for current
+layout), the sources-buffer and the history-buffer all file-items are
+displayed with an appropriate icon in front of the item-name to
+indicate the VC-state of this item. If off then no
+version-control-state checking is done.
+
+Because this check can be take some time if files are managed by a not
+local Version-control-server ECB performs this check stealthy (see
+@code{ecb-stealthy-tasks-delay}) so normally there should no
+performance-decrease or additional waiting-time for the user. But to
+get sure this feature can be switched off completely via this option.
+
+See @code{ecb-vc-supported-backends} how to customize the VC-support
+itself.
+@end defopt
+
+@defopt vc-supported-backends
+Define how to to identify the VC-backend and how to check the state.
+The value of this option is a list containing cons-cells where the car
+is a function which is called to identify the VC-backend for a
+DIRECTORY and the cdr is a function which is called to check the
+VC-state of the FILEs contained in DIRECTORY.
+
+Identify-backend-function: It gets a full directory-name as argument -
+always without ending slash (rsp. backslash for native Windows-XEmacs)
+- and has to return a unique symbol for the VC-backend which manages
+that directory (e.g. 'CVS for the CVS-system or 'RCS for the
+RCS-system) or nil if the file is not managed by a
+version-control-system.
+
+Check-vc-state-function: It gets a full filename (ie. incl. the
+complete directory-part) and has to return one of the following
+values:
+
+@table @code
+@item up-to-date
+The working file is unmodified with respect to the latest version on
+the current branch, and not locked.
+
+@item edited
+The working file has been edited by the user. If locking is used for
+the file, this state means that the current version is locked by the
+calling user.
+
+@item needs-patch
+The file has not been edited by the user, but there is a more recent
+version on the current branch stored in the master file.
+
+@item needs-merge
+The file has been edited by the user, and there is also a more recent
+version on the current branch stored in the master file. This state
+can only occur if locking is not used for the file.
+
+@item unlocked-changes
+The current version of the working file is not locked, but the working
+file has been changed with respect to that version. This state can
+only occur for files with locking; it represents an erroneous
+condition that should be resolved by the user.
+
+@item ignored
+The version-control-system ignores this file (e.g. because included in
+a .cvsignore-file in case of CVS).
+
+@item nil
+The state of the file can not be retrieved; probably the file is not
+under a version-control-system.
+
+@end table
+
+ECB runs for a certain DIRECTORY all identify-backend-functions in
+that order they are listed in this option. For the first which returns
+a value unequal nil the associated check-state-function is used to
+retrieve the VC-state of all sourcefiles in that DIRECTORY.
+
+There is no need for the identify-backend-function or the
+check-vc-state-function to cache any state because ECB automatically
+caches internally all necessary informations for directories and files
+for best possible performance.
+
+To prepend ECB from checking the VC-state for any file set
+@code{ecb-vc-enable-support} to nil.
+
+Per default ECB uses @code{ecb-vc-managed-by-CVS-RCS-SCCS} to identify
+the VC-backend of a file (supports the backends RCS, CVS and SCCS) and
+@code{vc-state} to check the state of a file. If other
+check-vc-state-functions should be used for one of the backends RCS,
+CVS or SCCS they should be added to this option
+*before* this default because otherwise these other function would never be
+called because @code{ecb-vc-managed-by-CVS-RCS-SCCS} returns not nil for these
+three backends!
+
+Example: If @code{vc-cvs-state} should be used to check the state for
+CVS-managed files and @code{vc-state} for all other backends then an
+element (ecb-vc-managed-by-CVS-RCS-SCCS . vc-cvs-state) sould be added
+at the beginning of this option.
 @end defopt
 
 
@@ -11525,8 +11684,19 @@ Yes, see @ref{Conflicts}.
 @item
 Opening directories takes a long time - what can i do?
 @tab @tab
-Read @ref{Large directories} and/or set the option
-@code{ecb-prescan-directories-for-emptyness} to nil.
+Read @ref{Large directories}.
+
+@item @tab @tab
+
+@item
+ECB seems to be blocked sometimes - what is the reason?
+@tab @tab
+ECB performs some stealthy tasks when idle - this can cause sometimes
+a blocked Emacs but this tasks will be immetiatelly interrupted by any
+user-event so there should be normally no problems. But especially for
+mounted net-drives some of the stealthy tasks can take time up to some
+seconds for each file - and during one file-operation it can not be
+interrupted. See also @code{ecb-stealthy-tasks-delay}.
 
 @end multitable
 

@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb.el,v 1.410 2004/09/29 16:31:26 berndl Exp $
+;; $Id: ecb.el,v 1.411 2004/10/04 15:53:04 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -418,6 +418,35 @@ almost the same effect as if you set no delay."
                        (ecb-activate-ecb-autocontrol-functions
                         value 'ecb-window-sync-function))))
   :initialize 'custom-initialize-default)
+
+(defcustom ecb-stealthy-tasks-delay 1
+  "*Time Emacs must be idle before ECB runs its stealthy tasks.
+Currently ECB performes the following stealthy tasks:
+
+  Prescann directories for emptyness: Prescann directories and display them as
+  empty or not-empty in the directories-buffer. See the documentation of the
+  option `ecb-prescan-directories-for-emptyness' for a description.
+
+  File is read only: Check if sourcefile-items of the directories- or
+  sources-buffer are read-only or not. See documentation of the option
+  `ecb-sources-perform-read-only-check'.
+
+  Version-control-state: Checks the version-control-state of files in
+  directories which are managed by a VC-backend. See the option
+  `ecb-vc-enable-support'.
+
+Here the interval is defined ECB has to be idle before starting with these
+stealthy tasks. It can be a floating-point value in seconds. The value can
+also be changed during running ECB."
+  :group 'ecb-general
+  :type '(number :tag "Idle time before running stealthy tasks"
+                 :value 1)
+  :initialize 'custom-initialize-default
+  :set (function (lambda (sym val)
+                   (set sym val)
+                   (ecb-activate-ecb-autocontrol-functions
+                    val 'ecb-stealthy-updates))))
+                    
 
 
 (defcustom ecb-minor-mode-text " ECB"
@@ -1123,6 +1152,12 @@ That is remove the unsupported :help stuff."
       :help "Customize ECB history"
       ])
     (ecb-menu-item
+     ["Version control..."
+      (customize-group "ecb-version-control")
+      :active t
+      :help "Customize the version-control-support"
+      ])
+    (ecb-menu-item
      ["Layout..."
       (customize-group "ecb-layout")
       :active t
@@ -1627,7 +1662,7 @@ ECB has been deactivated. Do not set this variable!")
 
             ;; We activate the stealthy update mechanism
             (ecb-stealthy-function-state-init)
-            (ecb-activate-ecb-autocontrol-functions 0.5
+            (ecb-activate-ecb-autocontrol-functions ecb-stealthy-tasks-delay
                                                     'ecb-stealthy-updates)
             
             ;; running the compilation-buffer update first time
@@ -1641,10 +1676,13 @@ ECB has been deactivated. Do not set this variable!")
             (add-hook 'ediff-quit-hook 'ediff-cleanup-mess)
             (add-hook 'ediff-quit-hook 'ecb-ediff-quit-hook t)
             ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: suspending ediff and
-            ;; especially reactivating does currently not really work good...
+            ;; especially reactivating does currently not really work well...
             ;; (add-hook 'ediff-suspend-hook 'ecb-ediff-quit-hook t)
             (add-hook 'ediff-before-setup-hook
                       'ecb-ediff-before-setup-hook)
+
+            ;; enabling the VC-support
+            (ecb-vc-enable-internals 1)
             
             ;; menus - dealing with the menu for XEmacs is really a pain...
             (when ecb-running-xemacs
@@ -1909,6 +1947,9 @@ does all necessary after finishing ediff."
         (remove-hook 'ediff-quit-hook 'ecb-ediff-quit-hook))
       (remove-hook 'ediff-before-setup-hook
                    'ecb-ediff-before-setup-hook)
+
+      ;; disabling the VC-support
+      (ecb-vc-enable-internals -1)
 
       ;; menus - dealing with the menu for XEmacs is really a pain...
       (ignore-errors
