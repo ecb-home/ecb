@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-layout.el,v 1.192 2003/09/26 07:20:17 berndl Exp $
+;; $Id: ecb-layout.el,v 1.193 2003/10/01 17:41:34 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -2758,7 +2758,7 @@ visibility of the ECB windows. ECB minor mode remains active!"
           ;; we have to unfix all our ECB windows!!
           (ecb-set-window-size-fixed nil)
           (ecb-with-original-functions
-           (let* ((config (ecb-window-configuration))
+           (let* ((config (ecb-window-configuration-data))
                   (split-before-redraw (car (nth 0 config)))
                   (split-amount-before-redraw (cdr (nth 0 config)))
                   (window-before-redraw (nth 1 config))
@@ -2877,7 +2877,7 @@ buffer-name is the next one in the cycle-sequence. Is only set by
 
 ;; This function must savely work even if `ecb-edit-window' is not longer
 ;; alive, which should normally not happen!
-(defun ecb-window-configuration ()
+(defun ecb-window-configuration-data ()
   "Return current window configuration of the ecb-frame as a list with the
 following structure:
 0. Edit-window split data: cons with car is a boolean if the edit-window is
@@ -3141,8 +3141,9 @@ ecb-buffer-setting-function."
          (delete-window (next-window))
          t)
         ((equal (ecb-point-in-edit-window) 2)
-         (let ((prev-height (window-height (previous-window
-                                            (selected-window) 0))))
+         (let ((prev-height (+ (if ecb-running-xemacs 0 2)
+                               (window-height (previous-window
+                                               (selected-window) 0)))))
            (setq ecb-edit-window (selected-window))
            (delete-window (previous-window (selected-window) 0))
            (if (equal split 'vertical)
@@ -3152,7 +3153,8 @@ ecb-buffer-setting-function."
 
 (defun ecb-delete-window-ecb-windows-top (split)
   (cond ((equal (ecb-point-in-edit-window) 1)
-         (let ((height (1+ (window-height (selected-window)))))
+         (let ((height (+ (if ecb-running-xemacs 0 2)
+                          (window-height (selected-window)))))
            (setq ecb-edit-window (next-window))
            (delete-window)
            (if (equal split 'vertical)
@@ -3511,7 +3513,7 @@ this function the edit-window is selected which was current before redrawing."
              (equal (selected-frame) ecb-frame))
     ;; this functions are only needed at runtime!
     (ecb-load-layouts)
-    (let* ((config (ecb-window-configuration))
+    (let* ((config (ecb-window-configuration-data))
            (split-before-redraw (car (nth 0 config)))
            (split-amount-before-redraw (cdr (nth 0 config)))
            (window-before-redraw (nth 1 config))

@@ -1,5 +1,32 @@
 * Changes for ECB version 1.96.1
 
+** Completely rewritten popup-menu mechanism.
+
+*** Now submenus are allowed.
+    To give a better lucidity of the popup-menus of the tree-buffers these
+    menus can now arranged in submenus. The default values now use already
+    submenus. So if you have added menu-entries to one of the options
+    `ecb-directories-menu-user-extension', `ecb-sources-menu-user-extension',
+    `ecb-methods-menu-user-extension' or `ecb-history-menu-user-extension' ECB
+    resets these options to the new defaults of ECB because the type of these
+    options has changed. So get the new submenu-structure. After that you can
+    add again your personal menu-entries. Thanks for suggestion to Ole Arndt
+    <ole@sugarshark.com>.
+
+*** Added new defaults to `ecb-directories-menu-user-extension'
+    Three new entries "CVS status", "CVS examine" and "CVS update" for running
+    CVS-commands against the directory. These menu-entries are added as new
+    default values to `ecb-directories-menu-user-extension' so a user can
+    delete or change them if he does not use CVS but another revision-tool
+    (e.g. Clearcase). Thanks for suggestion and first implementation to Ole
+    Arndt <ole@sugarshark.com>.
+
+*** Added new defaults to `ecb-sources-menu-user-extension'
+    One new entry "Ediff against revision" for easy diffing against the
+    revision of a source. See also new default for the option
+    `ecb-directories-menu-user-extension'. Thanks for suggestion and first
+    implementation to Ole Arndt <ole@sugarshark.com>.
+
 ** No window-restrictions if the ECB-windows are hidden
    If the special ECB-windows are hidden (e.g. by `ecb-toggle-ecb-windows')
    then there are no restrictions about the window-layout of the ecb-frame:
@@ -21,20 +48,8 @@
    ECB also restores exactly the "before-ediff" window-layout of the ecb-frame
    See new option `ecb-run-ediff-in-ecb-frame'.
 
-** Added new defaults to `ecb-directories-menu-user-extension'
-   Three new entries "CVS status", "CVS examine" and "CVS update" for running
-   CVS-commands against the directory. These menu-entries are added as new
-   default values to `ecb-directories-menu-user-extension' so a user can
-   delete or change them if he does not use CVS but another revision-tool
-   (e.g. Clearcase). Thanks for suggestion and first implementation to Ole
-   Arndt <ole@sugarshark.com>.
-
-** Added new defaults to `ecb-sources-menu-user-extension'
-   One new entry "Ediff against revision" for easy diffing against the
-   revision of a source. See also new default for the option
-   `ecb-directories-menu-user-extension'. Thanks for suggestion and first
-   implementation to Ole Arndt <ole@sugarshark.com>.
-   
+** More flexible directory-caching with new `ecb-cache-directory-contents-not'
+      
 ** New option `ecb-advice-window-functions-signal-error'
    Now the adviced window functions of `ecb-advice-window-functions' do not
    signal per default an error if called in situations which are not allowed -

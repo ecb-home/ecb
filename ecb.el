@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb.el,v 1.342 2003/09/25 15:41:55 berndl Exp $
+;; $Id: ecb.el,v 1.343 2003/10/01 17:41:34 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -569,7 +569,7 @@ The value 'auto \(see above) takes exactly these two scenarios into account."
                       ecb-show-sources-in-directories-buffer)))))
 
 (defcustom ecb-cache-directory-contents nil
-  "*Cache contents of directories.
+  "*Cache contents of certain directories.
 This can be useful if `ecb-source-path' contains directories with many files
 and subdirs, especially if these directories are mounted net-drives \(\"many\"
 means here something > 1000, dependent of the speed of the net-connection and
@@ -583,9 +583,10 @@ looks like:
 <dir-regexp>: Regular expression a directory must match to be cached.
 <filenumber threshold>: Number of directory contents must exceed this number.
 
-A directory will we only be cached if and only if the directory-name matches
+A directory will only be cached if and only if the directory-name matches
 one regexp of this option and its content-number exceeds the related
-threshold.
+threshold AND the directory-name does not match and regexp of
+`ecb-cache-directory-contents-not'!
 
 The cache entry for a certain directory will be refreshed and actualized only
 by using the POWER-click \(see `ecb-primary-secondary-mouse-buttons') in the
@@ -593,18 +594,45 @@ directories-buffer of ECB.
 
 Examples:
 
-A value of \(\"~/bigdir*\" . 1000) means the contents of every subdirectory of
-the home-directory will be cached if the directory contains more than 1000
-entries and its name begins with \"bigdir\".
+A value of \(\(\"/usr/home/john_smith/bigdir*\" . 1000)) means the contents of
+every subdirectory of the home-directory of John Smith will be cached if the
+directory contains more than 1000 entries and its name begins with \"bigdir\".
 
-A value of \(\".*\" . 1000) caches every directory which has more than 1000
+A value of \(\(\".*\" . 1000)) caches every directory which has more than 1000
 entries.
 
-A value of \(\".*\" . 0) caches every directory regardless of the number of
-entries."
+A value of \(\(\".*\" . 0)) caches every directory regardless of the number of
+entries.
+
+Please note: If you want your home-dir being cached then you MUST NOT use
+\"~\" because ECB tries always to match full path-names!"
   :group 'ecb-directories
   :type `(repeat (cons (regexp :tag "Directory-regexp")
                        (integer :tag "Filenumber threshold" :value 1000))))
+
+(defcustom ecb-cache-directory-contents-not nil
+  "*Do not cache the contents of certain directories.
+The value of this option is a list where the each element is a regular
+expression a directory must match if it should not being cached.
+
+If a directory-name matches at least one of the regexps of this option the
+directory-contents will never being cached. See `ecb-cache-directory-contents'
+to see when a directory will be cached.
+
+This option can be useful when normally all directories with a certain amount
+of content \(files and subdirs) should be cached but some special directories
+not. This can be achieved by:
+- setting `ecb-cache-directory-contents' to \(\".*\" . 500): Caches all
+  directories with more then 500 entries
+- setting `ecb-cache-directory-contents-not' to a value which matches these
+  directories which should not being cached \(e.g. \(\"/usr/home/john_smith\")
+  excludes the HOME-directory of John Smith from being cached).
+
+Please note: If you want your home-dir exclude from being cached then you MUST
+NOT use \"~\" because ECB tries always to match full path-names!"
+  :group 'ecb-directories
+  :type `(repeat (regexp :tag "Directory-regexp")))
+  
 
 (defcustom ecb-directories-buffer-name " *ECB Directories*"
   "*Name of the ECB directory buffer.
@@ -1833,19 +1861,24 @@ switch on this option and submitting a bug-report to the ecb-mailing-list
   :type 'boolean)
 
 (defcustom ecb-directories-menu-user-extension
-  '(("CVS Status" ecb-dir-popup-cvs-status)
-    ("CVS Examine" ecb-dir-popup-cvs-examine)
-    ("CVS Update" ecb-dir-popup-cvs-update)
-    ("---"))
+  '(("Version Control"
+     (cb-dir-popup-cvs-status "CVS Status" )
+     (ecb-dir-popup-cvs-examine "CVS Examine")
+     (ecb-dir-popup-cvs-update "CVS Update")))
   "*User extensions for the popup-menu of the directories buffer.
 Value is a list of elements of the following type: Each element defines a new
-menu-entry and is a list containing two sub-elements, whereas the first is the
-name of the menu-entry and the second the function \(a function symbol or a
-lambda-expression) being called if the menu-entry is selected. If there is no
-second sub-element and the first one is the string \"---\" then a
-non-selectable menu-separator is displayed.
+menu-entry and is either:
 
-The function must follow the following guidelines:
+a) Menu-command: A list containing two sub-elements, whereas the first is the
+   function \(a function symbol or a lambda-expression) being called if the
+   menu-entry is selected and the second is the name of the menu-entry.
+b) Separator: A one-element-list and the element is the string \"---\": Then a
+   non-selectable menu-separator is displayed.
+c) Submenu: A list where the first element is the title of the submenu
+   displayed in the main-menu and all other elements are either menu-commands
+   \(see a) or separators \(see b).
+
+The function of a menu-command must follow the following guidelines:
 It takes one argument which is the tree-buffer-node of the selected node \(means
 the node for which the popup-menu has been opened). With the function
 `tree-node-get-data' the related data of this node is accessible and returns
@@ -1865,15 +1898,29 @@ with `ecb-directories-menu-sorter'.
 If you change this option you have to restart ECB to take effect."
   :group 'ecb-directories
   :type '(repeat (choice :tag "Menu-entry" :menu-tag "Menu-entry"
-                         :value ("" ignore)
+                         :value (ignore "")
                          (const :tag "Separator" :value ("---"))
-                         (list :tag "Menu-entry"
-                               (string :tag "Entry-name")
-                               (function :tag "Function" :value ignore)))))
+                         (list :tag "Menu-command"
+                               (function :tag "Function" :value ignore)
+                               (string :tag "Entry-name"))
+                         (cons :tag "Submenu"
+                               (string :tag "Submenu-title")
+                               (repeat (choice :tag "Submenu-entry" :menu-tag "Submenu-entry"
+                                               :value (ignore "")
+                                               (const :tag "Separator" :value ("---"))
+                                               (list :tag "Submenu-command"
+                                                     (function :tag "Function"
+                                                               :value ignore)
+                                                     (string :tag "Entry-name"))))))))
+
 
 (defcustom ecb-sources-menu-user-extension
-  '(("Ediff against revision" ecb-file-popup-ediff-revision)
-    ("---"))
+  '(("Version control"
+     (ecb-file-popup-ediff-revision "Ediff against revision")
+     ("---")
+     (ecb-file-popup-vc-log "Revision history")
+     (ecb-file-popup-vc-annotate "Annotate")
+     (ecb-file-popup-vc-diff "Diff against last version")))
   "*User extensions for the popup-menu of the sources buffer.
 For further explanations see `ecb-directories-menu-user-extension'.
 
@@ -1887,11 +1934,20 @@ with `ecb-sources-menu-sorter'.
 If you change this option you have to restart ECB to take effect."
   :group 'ecb-sources
   :type '(repeat (choice :tag "Menu-entry" :menu-tag "Menu-entry"
-                         :value ("" ignore)
+                         :value (ignore "")
                          (const :tag "Separator" :value ("---"))
-                         (list :tag "Menu-entry"
-                               (string :tag "Entry-name")
-                               (function :tag "Function" :value ignore)))))
+                         (list :tag "Menu-command"
+                               (function :tag "Function" :value ignore)
+                               (string :tag "Entry-name"))
+                         (cons :tag "Submenu"
+                               (string :tag "Submenu-title")
+                               (repeat (choice :tag "Submenu-entry" :menu-tag "Submenu-entry"
+                                               :value (ignore "")
+                                               (const :tag "Separator" :value ("---"))
+                                               (list :tag "Submenu-command"
+                                                     (function :tag "Function"
+                                                               :value ignore)
+                                                     (string :tag "Entry-name"))))))))
 
 (defcustom ecb-methods-menu-user-extension nil
   "*User extensions for the popup-menu of the methods buffer.
@@ -1907,13 +1963,28 @@ with `ecb-methods-menu-sorter'.
 If you change this option you have to restart ECB to take effect."
   :group 'ecb-methods
   :type '(repeat (choice :tag "Menu-entry" :menu-tag "Menu-entry"
-                         :value ("" ignore)
+                         :value (ignore "")
                          (const :tag "Separator" :value ("---"))
-                         (list :tag "Menu-entry"
-                               (string :tag "Entry-name")
-                               (function :tag "Function" :value ignore)))))
+                         (list :tag "Menu-command"
+                               (function :tag "Function" :value ignore)
+                               (string :tag "Entry-name"))
+                         (cons :tag "Submenu"
+                               (string :tag "Submenu-title")
+                               (repeat (choice :tag "Submenu-entry" :menu-tag "Submenu-entry"
+                                               :value (ignore "")
+                                               (const :tag "Separator" :value ("---"))
+                                               (list :tag "Submenu-command"
+                                                     (function :tag "Function"
+                                                               :value ignore)
+                                                     (string :tag "Entry-name"))))))))
 
-(defcustom ecb-history-menu-user-extension nil
+(defcustom ecb-history-menu-user-extension
+  '(("Version control"
+     (ecb-file-popup-ediff-revision "Ediff against revision")
+     ("---")
+     (ecb-file-popup-vc-log "Revision history")
+     (ecb-file-popup-vc-annotate "Annotate")
+     (ecb-file-popup-vc-diff "Diff against last version")))
   "*User extensions for the popup-menu of the history buffer.
 For further explanations see `ecb-directories-menu-user-extension'.
 
@@ -1927,11 +1998,20 @@ with `ecb-history-menu-sorter'.
 If you change this option you have to restart ECB to take effect."
   :group 'ecb-history
   :type '(repeat (choice :tag "Menu-entry" :menu-tag "Menu-entry"
-                         :value ("" ignore)
+                         :value (ignore "")
                          (const :tag "Separator" :value ("---"))
-                         (list :tag "Menu-entry"
-                               (string :tag "Entry-name")
-                               (function :tag "Function" :value ignore)))))
+                         (list :tag "Menu-command"
+                               (function :tag "Function" :value ignore)
+                               (string :tag "Entry-name"))
+                         (cons :tag "Submenu"
+                               (string :tag "Submenu-title")
+                               (repeat (choice :tag "Submenu-entry" :menu-tag "Submenu-entry"
+                                               :value (ignore "")
+                                               (const :tag "Separator" :value ("---"))
+                                               (list :tag "Submenu-command"
+                                                     (function :tag "Function"
+                                                               :value ignore)
+                                                     (string :tag "Entry-name"))))))))
 
 
 (defcustom ecb-directories-menu-sorter nil
@@ -2868,16 +2948,25 @@ element looks like:
   (setq ecb-files-and-subdirs-cache nil))
 
 (defun ecb-check-directory-for-caching (dir number-of-contents)
-  "Return not nil if DIR matches any regexp in `ecb-cache-directory-contents'
-and NUMBER-OF-CONTENTS is greater then the related threshold."
-  (catch 'exit
-    (dolist (elem ecb-cache-directory-contents)
-      (let ((case-fold-search t))
-        (save-match-data
-          (if (and (string-match (car elem) dir)
-                   (> number-of-contents (cdr elem)))
-              (throw 'exit (car elem))))
-        nil))))
+  "Return not nil if DIR matches not any regexp of the option
+`ecb-cache-directory-contents-not' but matches at least one regexp in
+`ecb-cache-directory-contents' and NUMBER-OF-CONTENTS is greater then the
+related threshold."
+  (and (not (catch 'exit
+              (dolist (elem ecb-cache-directory-contents-not)
+                (let ((case-fold-search t))
+                  (save-match-data
+                    (if (string-match (car elem) dir)
+                        (throw 'exit (car elem))))
+                  nil))))
+       (catch 'exit
+         (dolist (elem ecb-cache-directory-contents)
+           (let ((case-fold-search t))
+             (save-match-data
+               (if (and (string-match (car elem) dir)
+                        (> number-of-contents (cdr elem)))
+                   (throw 'exit (car elem))))
+             nil)))))
 
 (defun ecb-check-directory-for-source-regexps (dir)
   "Return the related source-exclude-include-regexps of
@@ -5401,9 +5490,9 @@ always the ECB-frame if called from another frame."
 (defun ecb-xemacs-add-submenu-hack ()
   "XEmacs seems not to add the ECB-menu to the menubar for that buffer which
 is current when ECB is activated. This hack fixes this."
-  (ignore-errors
-    (if (null (car (find-menu-item current-menubar (list ecb-menu-name))))
-        (add-submenu nil ecb-minor-menu)))
+;;   (ignore-errors
+;;     (if (null (car (find-menu-item current-menubar (list ecb-menu-name))))
+;;         (add-submenu nil ecb-minor-menu)))
   (remove-hook 'post-command-hook
                'ecb-xemacs-add-submenu-hack))
 
@@ -5653,8 +5742,8 @@ is current when ECB is activated. This hack fixes this."
                   ecb-common-tree-buffer-after-create-hook
                   ecb-directories-buffer-after-create-hook))))
     
-            ;; Now store all tree-buffer-names used by ECB
-            ;; ECB must not use the variable `tree-buffers' but must always refer to
+            ;; Now store all tree-buffer-names used by ECB ECB must not use
+            ;; the variable `tree-buffers' but must always refer to
             ;; `ecb-tree-buffers'!!
             (setq ecb-tree-buffers (list ecb-directories-buffer-name
                                          ecb-sources-buffer-name
@@ -5697,13 +5786,19 @@ is current when ECB is activated. This hack fixes this."
             (add-hook 'ediff-before-setup-hook
                       'ecb-ediff-before-setup-hook)
             
-            ;; menus
+            ;; menus - dealing with the menu for XEmacs is really a pain...
             (when ecb-running-xemacs
               (let ((dummy-buf-name " *dummytogetglobalmap*"))
                 (save-excursion
                   (set-buffer (get-buffer-create dummy-buf-name))
                   (add-submenu nil ecb-minor-menu)
-                  (kill-buffer dummy-buf-name))))          
+                  (kill-buffer dummy-buf-name)))
+              (save-excursion
+                (dolist (buf (buffer-list))
+                  (set-buffer buf)
+                  (if (null (car (find-menu-item current-menubar
+                                                 (list ecb-menu-name))))
+                      (add-submenu nil ecb-minor-menu)))))
 
             (add-hook (if ecb-running-xemacs
                           'activate-menubar-hook
@@ -5946,10 +6041,15 @@ does all necessary after finishing ediff."
       (remove-hook 'ediff-before-setup-hook
                    'ecb-ediff-before-setup-hook)
 
-      ;; menus
+      ;; menus - dealing with the menu for XEmacs is really a pain...
       (ignore-errors
         (when ecb-running-xemacs
-          (delete-menu-item (list ecb-menu-name))))
+          (save-excursion
+            (dolist (buf (buffer-list))
+              (set-buffer buf)
+              (if (car (find-menu-item current-menubar
+                                       (list ecb-menu-name)))
+                  (delete-menu-item (list ecb-menu-name)))))))
       
       (remove-hook (if ecb-running-xemacs
                        'activate-menubar-hook
@@ -6131,37 +6231,39 @@ if the minor mode is enabled.
 (defun ecb-dired-directory-other-window (node)
   (ecb-dired-directory-internal node 'other))
 
-(defun ecb-dir-run-cvs-op (node op)
-  (let ((default-directory (tree-node-get-data node)))
-    (call-interactively op)))
+(defun ecb-dir-run-cvs-op (node op op-arg-list)
+  (let ((dir (tree-node-get-data node)))
+    (funcall op dir op-arg-list)))
 
 (defun ecb-dir-popup-cvs-status (node)
   "Check status of directory \(and below) in pcl-cvs mode."
-  (ecb-dir-run-cvs-op node 'cvs-status))
+  (ecb-dir-run-cvs-op node 'cvs-status '("-v")))
 
 (defun ecb-dir-popup-cvs-examine (node)
   "Examine directory \(and below) in pcl-cvs mode."
-  (ecb-dir-run-cvs-op node 'cvs-examine))
+  (ecb-dir-run-cvs-op node 'cvs-examine '("-d" "-P")))
 
 (defun ecb-dir-popup-cvs-update (node)
   "Update directory \(and below) in pcl-cvs mode."
-  (ecb-dir-run-cvs-op node 'cvs-update))
+  (ecb-dir-run-cvs-op node 'cvs-update '("-d" "-P")))
 
 
 
 (defvar ecb-common-directories-menu nil)
 (setq ecb-common-directories-menu
-      '(("Grep Directory" ecb-grep-directory t)
-        ("Grep Directory recursive" ecb-grep-find-directory t)
+      '(("Grep"
+         (ecb-grep-directory "Grep Directory")
+         (ecb-grep-find-directory "Grep Directory recursive"))
+        ;;("---")
+        ("Dired"
+         (ecb-dired-directory "Open in Dired")
+         (ecb-dired-directory-other-window "Open in Dired other window"))
         ("---")
-        ("Open in Dired" ecb-dired-directory t)
-        ("Open in Dired other window" ecb-dired-directory-other-window t)
+	(ecb-create-source "Create Sourcefile")
+	(ecb-create-directory "Create Child Directory")
+	(ecb-delete-directory "Delete Directory")
         ("---")
-	("Create Sourcefile" ecb-create-source t)
-	("Create Child Directory" ecb-create-directory t)
-	("Delete Directory" ecb-delete-directory t)
-        ("---")
-	("Add Source Path" ecb-add-source-path-node t)))
+	(ecb-add-source-path-node "Add Source Path")))
 
 (defvar ecb-directories-menu nil
   "Built-in menu for the directories-buffer for directories which are not a
@@ -6169,9 +6271,9 @@ source-path of `ecb-source-path'.")
 (setq ecb-directories-menu
       (append
        ecb-common-directories-menu
-       '(("Make This a Source Path" ecb-node-to-source-path t)
+       '((ecb-node-to-source-path "Make This a Source Path")
          ("---")
-         ("Maximize window" ecb-maximize-ecb-window-menu-wrapper))))
+         (ecb-maximize-ecb-window-menu-wrapper "Maximize window"))))
 
 
 (defvar ecb-directories-menu-title-creator
@@ -6187,9 +6289,9 @@ function which is called with current node and has to return a string.")
 (setq ecb-source-path-menu
       (append
        ecb-common-directories-menu
-       '(("Delete Source Path" ecb-delete-source-path t)
+       '((ecb-delete-source-path "Delete Source Path")
          ("---")
-         ("Maximize window" ecb-maximize-ecb-window-menu-wrapper))))
+         (ecb-maximize-ecb-window-menu-wrapper "Maximize window"))))
 
 
 (defun ecb-delete-source (node)
@@ -6209,19 +6311,39 @@ function which is called with current node and has to return a string.")
   (let ((file (tree-node-get-data node)))
     (ediff-revision file)))
 
+(defun ecb-file-popup-vc-log (node)
+  "Print revision history of file."
+  (let ((file (tree-node-get-data node)))
+    (find-file file)
+    (vc-print-log)))
+
+(defun ecb-file-popup-vc-annotate (node)
+  "Annotate file"
+  (let ((file (tree-node-get-data node)))
+    (find-file file)
+    (vc-annotate nil)))
+
+(defun ecb-file-popup-vc-diff (node)
+  "Diff file against last version in repository."
+  (let ((file (tree-node-get-data node)))
+    (find-file file)
+    (vc-diff nil)))
+
 (defvar ecb-sources-menu nil
   "Built-in menu for the sources-buffer.")
 (setq ecb-sources-menu
-      '(("Grep Directory" ecb-grep-directory t)
-        ("Grep Directory recursive" ecb-grep-find-directory t)
+      '(("Grep"
+         (ecb-grep-directory "Grep Directory")
+         (ecb-grep-find-directory "Grep Directory recursive"))
+        ;;("---")
+        ("Dired"
+         (ecb-dired-directory "Open Dir in Dired")
+         (ecb-dired-directory-other-window "Open Dir in Dired other window"))
         ("---")
-        ("Open Dir in Dired" ecb-dired-directory t)
-        ("Open Dir in Dired other window" ecb-dired-directory-other-window t)
+	(ecb-create-source "Create Sourcefile")
+        (ecb-delete-source "Delete Sourcefile")
         ("---")
-	("Create Sourcefile" ecb-create-source t)
-        ("Delete Sourcefile" ecb-delete-source t)
-        ("---")
-        ("Maximize window" ecb-maximize-ecb-window-menu-wrapper)))
+        (ecb-maximize-ecb-window-menu-wrapper "Maximize window")))
 
 
 (defvar ecb-sources-menu-title-creator
@@ -6302,23 +6424,25 @@ this fails then nil is returned otherwise t."
 (defvar ecb-common-methods-menu nil
   "Built-in menu for the methods-buffer.")
 (setq ecb-common-methods-menu
-      '(("Undo narrowing of edit-window" ecb-methods-menu-widen t)
+      '(;;("---")
+        ("Expand/Collapse"
+         (ecb-methods-menu-collapse-all "Collapse all")
+         (ecb-methods-menu-expand-0 "Expand level 0")
+         (ecb-methods-menu-expand-1 "Expand level 1")
+         (ecb-methods-menu-expand-2 "Expand level 2")
+         (ecb-methods-menu-expand-all "Expand all"))
         ("---")
-        ("Collapse all" ecb-methods-menu-collapse-all t)
-        ("Expand level 0" ecb-methods-menu-expand-0 t)
-        ("Expand level 1" ecb-methods-menu-expand-1 t)
-        ("Expand level 2" ecb-methods-menu-expand-2 t)
-        ("Expand all" ecb-methods-menu-expand-all t)
-        ("---")
-        ("Maximize window" ecb-maximize-ecb-window-menu-wrapper)))
+        (ecb-maximize-ecb-window-menu-wrapper "Maximize window")))
 
 
 (defvar ecb-methods-token-menu nil)
 (setq ecb-methods-token-menu
-      (append '(("Jump to token and hide block" ecb-methods-menu-hide-block t)
-                ("Jump to token and show block" ecb-methods-menu-show-block t)
-                ("---")
-                ("Jump to token and narrow" ecb-methods-menu-jump-and-narrow t))
+      (append '(("Hide & Narrow"
+                 (ecb-methods-menu-hide-block "Jump to token and hide block")
+                 (ecb-methods-menu-show-block "Jump to token and show block")
+                 ("---")
+                 (ecb-methods-menu-jump-and-narrow "Jump to token and narrow")
+                 (ecb-methods-menu-widen "Undo narrowing of edit-window")))
               ecb-common-methods-menu))
 
 (defvar ecb-methods-menu-title-creator
@@ -6371,23 +6495,25 @@ buffers does not exist anymore."
 (defvar ecb-history-menu nil
   "Built-in menu for the history-buffer.")
 (setq ecb-history-menu
-      '(("Grep Directory" ecb-grep-directory t)
-        ("Grep Directory recursive" ecb-grep-find-directory t)
+      '(("Grep"
+         (ecb-grep-directory "Grep Directory")
+         (ecb-grep-find-directory "Grep Directory recursive"))
+        ;;("---")
+        ("Dired"
+         (ecb-dired-directory "Open Dir in Dired")
+         (ecb-dired-directory-other-window "Open Dir in Dired other window"))
         ("---")
-        ("Open Dir in Dired" ecb-dired-directory t)
-        ("Open Dir in Dired other window" ecb-dired-directory-other-window t)
+        (ecb-delete-source "Delete Sourcefile")
+        (ecb-history-kill-buffer "Kill Buffer")
         ("---")
-        ("Delete Sourcefile" ecb-delete-source t)
-        ("Kill Buffer" ecb-history-kill-buffer t)
+        (ecb-add-history-buffers-popup "Add all filebuffer to history")
+        ;;("---")
+	("Remove Entries"
+         (ecb-clear-history-node "Remove Current Entry")
+         (ecb-clear-history-all "Remove All Entries")
+         (ecb-clear-history-only-not-existing "Remove Non Existing Buffer Entries"))
         ("---")
-        ("Add all filebuffer to history" ecb-add-history-buffers-popup t)
-        ("---")
-	("Remove Current Entry" ecb-clear-history-node t)
-	("Remove All Entries" ecb-clear-history-all t)
-	("Remove Non Existing Buffer Entries"
-         ecb-clear-history-only-not-existing t)
-        ("---")
-        ("Maximize window" ecb-maximize-ecb-window-menu-wrapper)))
+        (ecb-maximize-ecb-window-menu-wrapper "Maximize window")))
 
 
 (defvar ecb-history-menu-title-creator
