@@ -54,7 +54,7 @@
 ;; The latest version of the ECB is available at
 ;; http://home.swipnet.se/mayhem/ecb.html
 
-;; $Id: ecb.el,v 1.124 2001/07/12 20:55:51 creator Exp $
+;; $Id: ecb.el,v 1.125 2001/07/12 21:03:06 creator Exp $
 
 ;;; Code:
 
@@ -336,7 +336,7 @@ so the user can easily jump back."
   :group 'ecb-methods
   :type 'boolean)
 
-(defcustom ecb-token-display-function 'semantic-abbreviate-nonterminal
+(defcustom ecb-token-display-function 'semantic-prototype-nonterminal
   "*Function to use when displaying tokens in the methods buffer.
 Some useful functions are found in `semantic-token->text-functions'."
   :group 'ecb-methods
