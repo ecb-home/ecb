@@ -99,35 +99,47 @@
 
     (modify-frame-parameters frame (list (cons variable nil))))
 
-  (let((index (number-to-string (length (frame-list)))))
+  (let((frame-index (number-to-string (length (frame-list)))))
 
     ;;ecb-eshell-buffer-name ?
     ;;ecb-speedbar-buffer-name ?
 
     ;;set ECB special buffer names
 
-    (make-variable-frame-local 'ecb-history-buffer-name-buffer-name)
+    (make-variable-frame-local 'ecb-history-buffer-name)
     (modify-frame-parameters frame (list (cons 'ecb-history-buffer-name
-                                               (concat " *ECB History <" index ">*"))))
+                                               (concat " *ECB History <" frame-index ">*"))))
 
     (make-variable-frame-local 'ecb-sources-buffer-name)
     (modify-frame-parameters frame (list (cons 'ecb-sources-buffer-name
-                                               (concat " *ECB Sources <" index ">*"))))
+                                               (concat " *ECB Sources <" frame-index ">*"))))
 
     (make-variable-frame-local 'ecb-directories-buffer-name)
     (modify-frame-parameters frame (list (cons 'ecb-directories-buffer-name
-                                               (concat " *ECB Directories <" index ">*"))))
+                                               (concat " *ECB Directories <" frame-index ">*"))))
 
     (make-variable-frame-local 'ecb-methods-buffer-name)
     (modify-frame-parameters frame (list (cons 'ecb-methods-buffer-name
-                                               (concat " *ECB Methods <" index ">*")))))
+                                               (concat " *ECB Methods <" frame-index ">*"))))
 
-  ;;fix speedbar by binding the given speedbar frame value with the current frame
-  (mapcar (lambda(sframe)
-            (when (boundp sframe)
-              (make-variable-frame-local sframe)
-              (modify-frame-parameters frame (list (cons sframe frame)))))
-          '(speedbar-frame speedbar-attached-frame dframe-attached-frame)))
+    ;;fix speedbar by binding the given speedbar frame value with the current frame
+    (mapcar (lambda(sframe)
+              (when (boundp sframe)
+                (make-variable-frame-local sframe)
+                (modify-frame-parameters frame (list (cons sframe frame)))))
+            '(speedbar-frame speedbar-attached-frame dframe-attached-frame))
+    
+    ;;setup speedbar with a new buffer
+    (make-variable-frame-local 'ecb-speedbar-buffer-name)
+
+    (let((new-ecb-speedbar-buffer-name (concat " SPEEDBAR <" frame-index ">")))
+    
+      (modify-frame-parameters frame (list (cons 'ecb-speedbar-buffer-name
+                                                 new-ecb-speedbar-buffer-name)))
+
+      (make-variable-frame-local 'speedbar-buffer)
+      (modify-frame-parameters frame (list (cons 'speedbar-buffer
+                                                 (get-buffer-create new-ecb-speedbar-buffer-name)))))))
 
 (defun ecb-deactivate-internal ()
   "Deactivates the ECB and kills all ECB buffers and windows."
