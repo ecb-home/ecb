@@ -54,7 +54,7 @@
 ;; The latest version of the ECB is available at
 ;; http://home.swipnet.se/mayhem/ecb.html
 
-;; $Id: ecb.el,v 1.148 2001/08/26 09:58:24 berndl Exp $
+;; $Id: ecb.el,v 1.149 2001/08/30 11:30:57 berndl Exp $
 
 ;;; Code:
 
@@ -1039,25 +1039,25 @@ given."
     (ecb-exec-in-sources-window
      (tree-buffer-highlight-node-data ecb-path-selected-source))
 
-    ;; Update history buffer
+    ;; Update history buffer always regardless of visibilty of history window
     (ecb-exec-in-history-window
      (tree-node-remove-child-data (tree-buffer-get-root) ecb-path-selected-source)
      (tree-node-add-child-first
       (tree-buffer-get-root)
       (tree-node-new
        (if (eq ecb-history-item-name 'buffer-name)
-	   (let ((b (get-file-buffer ecb-path-selected-source)))
-	     (if b
-		 (buffer-name b)
-	       (ecb-get-source-name ecb-path-selected-source)))
-	 (ecb-get-source-name ecb-path-selected-source))
+           (let ((b (get-file-buffer ecb-path-selected-source)))
+             (if b
+                 (buffer-name b)
+               (ecb-get-source-name ecb-path-selected-source)))
+         (ecb-get-source-name ecb-path-selected-source))
        0
        ecb-path-selected-source t))
      (when ecb-sort-history-items
        (tree-node-sort-children
-	(tree-buffer-get-root)
-	(function (lambda (l r) (string< (tree-node-get-name l)
-					 (tree-node-get-name r))))))
+        (tree-buffer-get-root)
+        (function (lambda (l r) (string< (tree-node-get-name l)
+                                         (tree-node-get-name r))))))
      (tree-buffer-update)
      (tree-buffer-highlight-node-data ecb-path-selected-source))))
 
