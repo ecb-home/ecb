@@ -127,13 +127,17 @@ means not to count the minibuffer even if it is active."
                                             (shrink-window-if-larger-than-buffer . around)
                                             (show-temp-buffer-in-current-frame . around)
                                             (scroll-other-window . around)
-                                            (custom-save-all . around))
+                                            (custom-save-all . around)
+                                            (winner-mode . around)
+                                            (scroll-all-mode . after))
                                         '((delete-frame . around)
                                           (compilation-set-window-height . around)
                                           (resize-temp-buffer-window . around)
                                           (shrink-window-if-larger-than-buffer . around)
                                           (scroll-other-window . around)
-                                          (custom-save-all . around)))
+                                          (custom-save-all . around)
+                                          (winner-mode . around)
+                                          (scroll-all-mode . after)))
   "These functions are always adviced if ECB is active. Each element of the
 list is a cons-cell where the car is the function-symbol and the cdr the
 advice-class \(before, around or after). If a function should be adviced with

@@ -6211,6 +6211,25 @@ The variable @code{vc-delete-logbuf-window} must be set to nil during
 active ECB. This can be done with the hooks mentioned in @ref{Elisp
 programming}.
 
+@subsection Package winner.el (winner-mode)
+
+@cindex winner-mode
+@cindex winner
+@code{winner-mode} is autom. disabled as long as ECB is running. ECB
+has its own window-management which is completely incomatible with
+@code{winner-mode}! But @code{winner-mode} makes also not really sense
+with ECB.
+
+@subsection Package scroll-all.el (scroll-all-mode)
+
+@cindex scroll-all-mode
+@cindex scroll-all
+ECB advices @code{scroll-all-mode} so it is working correct during
+running ECB. This means if point stays in an edit-window and the
+edit-window is splitted then both edit-windows are scrolled by
+@code{scroll-all-mode} and no other window! If point stays in any
+other window just this selected window is scrolled. This is the only
+senseful behavior of @code{scroll-all-mode} with ECB.
 
 @node Bugs, , Conflicts, Conflicts and bugs
 @section Known bugs

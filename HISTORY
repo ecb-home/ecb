@@ -1,6 +1,13 @@
 Version 1.90
 ------------
 
+* Advicing `scroll-all-mode' so it works correct with ECB, means
+  `scroll-all-mode' scroll only the windows of the edit-area, i.e. max. the two
+  edit-windows (Klaus).
+
+* Autom. preventing `winner-mode' from being activated as long as ECB is
+  running (Klaus).
+
 * The option ecb-source-file-regexps now works on a directory-base, which means
   for each directory-regexp the files to display can be specified. Default is
   an all-matching directory-regexp. Old saved values are autom. upgraded
