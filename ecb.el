@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb.el,v 1.367 2004/01/27 17:30:27 berndl Exp $
+;; $Id: ecb.el,v 1.368 2004/01/28 19:21:17 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -392,8 +392,7 @@ conjunction with ECB."
                 (const :tag "For methods" :value method))
   :set (function (lambda (sym val)
                    (set sym val)
-                   (let ((ecb-redraw-layout-quickly nil))
-                     (ecb-redraw-layout-full)))))
+                   (ecb-redraw-layout-full))))
 
 (defcustom ecb-grep-function (if (fboundp 'igrep) 'igrep 'grep)
   "*Function used for performing a grep.
@@ -2809,9 +2808,7 @@ does all necessary after finishing ediff."
   (if (and ecb-minor-mode
            (equal (selected-frame) ecb-frame))
       (progn
-        (setq ecb-before-ediff-window-config
-              ;; XXX: window-config-change
-              (ecb-current-window-configuration))
+        (setq ecb-before-ediff-window-config (ecb-current-window-configuration))
         (if ecb-run-ediff-in-ecb-frame
             (progn
               (ecb-toggle-ecb-windows -1)
@@ -2834,7 +2831,6 @@ does all necessary after finishing ediff."
               (run-hook-with-args-until-failure 'ecb-before-deactivate-hook))
 
       (setq ecb-last-window-config-before-deactivation
-            ;; XXX: window-config-change
             (ecb-current-window-configuration))
       
       ;; deactivating the adviced functions

@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-util.el,v 1.91 2004/01/27 17:30:32 berndl Exp $
+;; $Id: ecb-util.el,v 1.92 2004/01/28 19:21:36 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -1012,6 +1012,20 @@ the same ordering as `other-window' would walk through the frame."
                                    (frame-first-window ecb-frame))
                                 (window-list)))))))
 
+
+;; ringstuff
+
+(require 'ring)
+(defalias 'ecb-make-ring 'make-ring)
+(defalias 'ecb-ring-p 'ring-p)
+(defalias 'ecb-ring-empty-p 'ring-empty-p)
+(defalias 'ecb-ring-insert 'ring-insert)
+(defalias 'ecb-ring-ref 'ring-ref)
+;; at least XEmacs does not have this function.
+(defun ecb-ring-elements (ring)
+  "Return a list of the lements of RING."
+  (mapcar #'identity (cddr ring)))
+      
 
 (silentcomp-provide 'ecb-util)
 

@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-layout.el,v 1.209 2004/01/27 17:30:32 berndl Exp $
+;; $Id: ecb-layout.el,v 1.210 2004/01/28 19:21:37 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -194,8 +194,7 @@
 	      (when (and (boundp 'ecb-minor-mode)
                          ecb-minor-mode
                          (frame-live-p ecb-frame))
-                (let ((curr-frame (selected-frame))
-                      (ecb-redraw-layout-quickly nil))
+                (let ((curr-frame (selected-frame)))
                   (unwind-protect
                       (progn
                         (select-frame ecb-frame)
@@ -314,8 +313,7 @@ layout with `ecb-redraw-layout'"
                    (when (and (boundp 'ecb-minor-mode)
                               ecb-minor-mode
                               (frame-live-p ecb-frame))
-                     (let ((curr-frame (selected-frame))
-                           (ecb-redraw-layout-quickly nil))
+                     (let ((curr-frame (selected-frame)))
                        (unwind-protect
                            (progn
                              (select-frame ecb-frame)
@@ -375,8 +373,7 @@ This option takes only effect if `ecb-compile-window-height' is not nil!"
                    (when (and (boundp 'ecb-minor-mode)
                               ecb-minor-mode
                               (frame-live-p ecb-frame))
-                     (let ((curr-frame (selected-frame))
-                           (ecb-redraw-layout-quickly nil))
+                     (let ((curr-frame (selected-frame)))
                        (unwind-protect
                            (progn
                              (select-frame ecb-frame)
@@ -1146,7 +1143,7 @@ not change this variable!")
         ecb-layout-prevent-handle-ecb-window-selection nil
         ecb-ecb-window-was-selected-before-command nil
         ecb-compile-window-was-selected-before-command nil)
-  (ecb-window-config-cache-init))
+  (ecb-window-config-cache-clear))
 
 (defun ecb-layout-debug-error (&rest args)
   "Run ARGS through `format' and write it to the *Messages*-buffer."
@@ -2276,7 +2273,6 @@ nothing is done."
                          (car edit-win-list))))
       (select-window edit-win))))
 
-;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: A first try:
 (defvar ecb-ecb-window-was-selected-before-command nil)
 (defvar ecb-layout-prevent-handle-ecb-window-selection nil)
 
@@ -2324,13 +2320,21 @@ can use these variables."
 
 ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: Not yet perfect - need some more
 ;; tests. Currently not used.
-(defun ecb-minibuffer-exit-hook ()
-  (remove-hook 'minibuffer-exit-hook 'ecb-minibuffer-exit-hook)
-  (ecb-layout-debug-error "ecb-minibuffer-exit-hook: active: %s"
-                          (minibuffer-window-active-p
-                           (minibuffer-window ecb-frame)))
-   (ecb-layout-debug-error "ecb-minibuffer-exit-hook: shrink after leaving minibuf")
-  (ecb-toggle-compile-window-height -1))
+;; (defun ecb-minibuffer-exit-hook ()
+;;   (remove-hook 'minibuffer-exit-hook 'ecb-minibuffer-exit-hook)
+;;   (ecb-layout-debug-error "ecb-minibuffer-exit-hook: active: %s"
+;;                           (minibuffer-window-active-p
+;;                            (minibuffer-window ecb-frame)))
+;;    (ecb-layout-debug-error "ecb-minibuffer-exit-hook: shrink after leaving minibuf")
+;;   (ecb-toggle-compile-window-height -1))
+
+;; (defun ecb-minibuffer-exit-hook ()
+;;   (message "Klausi-minib-exit-hook: %s"
+;;            (save-excursion
+;;              (set-buffer (window-buffer (minibuffer-window ecb-frame)))
+;;              (buffer-string))))
+
+;; (add-hook 'minibuffer-exit-hook 'ecb-minibuffer-exit-hook)
 
 (defvar ecb-layout-prevent-handle-compile-window-selection nil)
 (defvar ecb-last-edit-area-creators nil)
@@ -4077,36 +4081,60 @@ outline of the chosen layout."
 
 ;; the window-configuration cache with some accessors
 
-;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: implementing a mechanism for
-;; limiting the increasing of the cache. In addition make this advices
-;; permanent.
-(defvar ecb-window-config-cache nil)
+;; TODO: Make this advices permanent.
+(defvar ecb-window-config-cache-size 200)
+(defvar ecb-window-config-cache nil
+  "A ring-cache for ecb-window-configurations. Max. size is
+`ecb-window-config-cache-size'. If a new element is added and the cache is
+already full then the oldest item is dumped to make room.")
 
 (defun ecb-window-config-cache-add (ecb-window-config)
-  (setq ecb-window-config-cache
-        (cons ecb-window-config ecb-window-config-cache)))
-
-(defun ecb-window-config-cache-del (ecb-window-config)
-  (setq ecb-window-config-cache
-        (delete ecb-window-config ecb-window-config-cache)))
+  "Add ECB-WINDOW-CONFIG to the `ecb-window-config-cache'-ring. The new config
+will be added as the newest \(last) item. If the cache is full \(see
+`ecb-window-config-cache-size'), dump the oldest item to make room."
+  (ecb-window-config-cache-init)
+  (ecb-ring-insert ecb-window-config-cache ecb-window-config))
 
 (defun ecb-window-config-cache-get (emacs-window-config)
-  (assq emacs-window-config ecb-window-config-cache))
+  "Get the cache-element for the EMACS-WINDOW-CONFIG which is
+window-configuration-object like returned by `current-window-configuration'.
+If the cache does not contain such an element then nil is returned."
+  (if (and (ecb-ring-p ecb-window-config-cache)
+           (not (ecb-ring-empty-p ecb-window-config-cache)))
+      (let ((configs (ecb-ring-elements ecb-window-config-cache)))
+        (assq emacs-window-config configs))))
 
 (defun ecb-window-config-cache-get-latest ()
-  (car ecb-window-config-cache))
+  "Get the newest \(last) cache-item."
+  (if (and (ecb-ring-p ecb-window-config-cache)
+           (not (ecb-ring-empty-p ecb-window-config-cache)))
+      (ecb-ring-ref ecb-window-config-cache 0)))
 
 (defun ecb-window-config-cache-init ()
+  "Initialize the cache as a ring of size `ecb-window-config-cache-size' if
+not already initialized."
+  (or (ecb-ring-p ecb-window-config-cache)
+      (setq ecb-window-config-cache
+            (ecb-make-ring ecb-window-config-cache-size))))
+
+(defun ecb-window-config-cache-clear ()
+  "Clear the cache."
   (setq ecb-window-config-cache nil))
 
 ;; handling window-configurations 
 
-(defun ecb-current-window-configuration ()
-  (progn
-    (current-window-configuration)
-    (ecb-window-config-cache-get-latest)))
-
+(defun ecb-window-configuration-invalidp (window-config)
+  "Return non nil when WINDOW-CONFIG is probably not valid anymore.
+WINDOW-CONFIG must be got from the adviced version of
+`current-window-configuration'."
+  (not (equal (nth 3 window-config)
+              (list ecb-layout-name ecb-compile-window-height
+                    ecb-compile-window-width
+                    ecb-windows-width ecb-windows-height))))
+              
 (defadvice current-window-configuration (after ecb)
+  "Stores some additional informations about the window-configurations needed
+by ECB."
   (condition-case oops
       (let ((f (or (ad-get-arg 0) (selected-frame))))
         (when (equal f ecb-frame)
@@ -4132,61 +4160,75 @@ outline of the chosen layout."
 
 
 (defadvice set-window-configuration (after ecb)
+  "Resets some internal window-configuration-states needed by ECB. These
+internal ECB-states were stored by `current-window-configuration' in a
+ring-cache as add-on to CONFIGURATION."
   (condition-case oops
       (when (equal (selected-frame) ecb-frame)
         (let ((config (ecb-window-config-cache-get (ad-get-arg 0))))
-          (when config
-            (if (not (ecb-window-configuration-invalidp config))
-                (progn
-                  (ecb-make-windows-not-dedicated ecb-frame)
-                  ;; we have to reset the dedicated state because it is not
-                  ;; preserved by `current-window-configuration' and
-                  ;; `set-window-configuration'! At least not with GNU Emacs
-                  ;; 21.X, In addition we have to reset ecb-compile-window and
-                  ;; also to set ecb-windows-hidden correctly
-                  (and (nth 1 config)
-                       (ecb-set-windows-dedicated-state (nth 1 config) t))
-                  (when (nth 2 config)
-                    (let ((win-list (ecb-window-list ecb-frame 0
-                                                     (frame-first-window ecb-frame))))
-                      (and ecb-compile-window-height
-                           (setq ecb-compile-window (nth (nth 2 config) win-list)))))
-                  ;; (nth 3 config) is not used and needed within this function!
-                  (setq ecb-edit-area-creators (nth 4 config))
-                  (setq ecb-windows-hidden (nth 5 config)))
-              (ecb-window-config-cache-del config)))))
+          (when (and config
+                     (not (ecb-window-configuration-invalidp config)))
+            (ecb-make-windows-not-dedicated ecb-frame)
+            ;; we have to reset the dedicated state because it is not
+            ;; preserved by `current-window-configuration' and
+            ;; `set-window-configuration'! At least not with GNU Emacs 21.X,
+            ;; In addition we have to reset ecb-compile-window and also to set
+            ;; ecb-windows-hidden correctly
+            (and (nth 1 config)
+                 (ecb-set-windows-dedicated-state (nth 1 config) t))
+            (when (nth 2 config)
+              (let ((win-list (ecb-window-list ecb-frame 0
+                                               (frame-first-window ecb-frame))))
+                (and ecb-compile-window-height
+                     (setq ecb-compile-window (nth (nth 2 config) win-list)))))
+            ;; (nth 3 config) is not used and needed within this function!
+            (setq ecb-edit-area-creators (nth 4 config))
+            (setq ecb-windows-hidden (nth 5 config)))))
     (error
      (ecb-layout-debug-error "advice of set-window-configuration failed: (error-type: %S, error-data: %S)"
                              (car oops) (cdr oops))))
   ad-return-value)
 
 
-;; test of the advices of set-window-configuration and
-;; current-window-configuration. Show a compile-window and split the edit-area
-;; and then run this code
-;; (let ((config (current-window-configuration)))
-;;   (ecb-with-original-functions
-;;    (delete-other-windows))
-;;   ;; set ecb-compile-window and ecb-edit-area-creators to some crap. If the
-;;   ;; test is ok, then the adviced set-window-configuration must reset these
-;;   ;; variables correctly!
-;;   (setq ecb-compile-window nil)
-;;   (setq ecb-edit-area-creators '(1 2 3 4))
-;;   (set-window-configuration config))
-
-
-(defun ecb-window-configuration-invalidp (window-config)
-  "Return non nil when WINDOW-CONFIG is probably not valid anymore.
-WINDOW-CONFIG must be got from the adviced version of
-`current-window-configuration'."
-  (not (equal (nth 3 window-config)
-              (list ecb-layout-name ecb-compile-window-height
-                    ecb-compile-window-width
-                    ecb-windows-width ecb-windows-height))))
-              
+(defun ecb-current-window-configuration ()
+  "Return the current ecb-window-configuration"
+  (progn
+    (current-window-configuration)
+    (ecb-window-config-cache-get-latest)))
 
 (defun ecb-set-window-configuration (ecb-window-config)
+  "Sets the window-configuration of ECB-WINDOW-CONFIG. The additional
+informations needed by ECB will be set by the adviced version of
+`set-window-configuration'."
   (set-window-configuration (car ecb-window-config)))
+
+;; test of the advices of set-window-configuration and
+;; current-window-configuration.
+
+;; Show a compile-window and split the edit-area and then run this code. At
+;; the end the layout has to be as before.
+;;   (let ((config (current-window-configuration)))
+;;     (ecb-with-original-functions
+;;      (delete-other-windows))
+;;     ;; set ecb-compile-window and ecb-edit-area-creators to some crap. If the
+;;     ;; test is ok, then the adviced set-window-configuration must reset these
+;;     ;; variables correctly!
+;;     (setq ecb-compile-window nil)
+;;     (setq ecb-edit-area-creators '(1 2 3 4))
+;;     (set-window-configuration config))
+
+;; run `ecb-test-store' when some splitted layout is active. Then do anything
+;; what you want to change the split-state of the layout and/or the
+;; visibility-state of the compile-window. Then run `ecb-test-restore': This
+;; has to bring back completely the stored configuration!
+;;   (defvar ecb-test-config nil)
+;;   (defun ecb-test-store ()
+;;     (interactive)
+;;     (setq ecb-test-config (current-window-configuration)))
+;;   (defun ecb-test-restore ()
+;;     (interactive)
+;;     (set-window-configuration ecb-test-config))
+
 
 ;; redrawing the layout
 
@@ -4451,11 +4493,9 @@ this function the edit-window is selected which was current before redrawing."
 
       ;; after a full redraw the stored window-configuration for a quick
       ;; redraw should be actualized
-      ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: maybe we must not do this
-      ;; when NO-ECB-WINDOWS is not nil?!
-      ;; XXX: window-config-change
-      (setq ecb-activated-window-configuration
-            (ecb-current-window-configuration)))
+      (if ecb-redraw-layout-quickly
+          (setq ecb-activated-window-configuration
+                (ecb-current-window-configuration))))
     (run-hooks 'ecb-redraw-layout-after-hook)))
     
 
