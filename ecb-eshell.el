@@ -145,11 +145,6 @@
 ;; is visible in a window, we always resynch.  If it is not visible then
 ;; ecb-eshell-goto-eshell will synch up when the user goes to the eshell buffer.
 
-;;; TODO:
-;;
-;; - BUG: enable just-in-time current-buffer-sync... only execute if the current
-;; buffer's directlry is not equal to the ecb directory.
-;;
 
 ;;; Code:
 
