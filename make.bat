@@ -1,25 +1,8 @@
 @echo off
-REM This batchfile compiles the ECB lisp files. It assumes that the ECB is
-REM installed in the same directory as that packages that it requires:
-REM Semantic (version >= 1.4beta11) and eieio (version >= 0.16)
-REM
-REM An example for a possible directory-structure:
-REM 
-REM root
-REM   emacs
-REM 	site-lisp
-REM 	  ecb
-REM 	  semantic
-REM       eieio
-REM 
-REM If your installation is different, edit the "user configurable section"
-REM below in this batchfile to reflect the actual locations of the required
-REM packages!
-REM
-REM Make sure you compile ECB with the semantic-and eieio-version you
+REM This batchfile byte-compiles the ECB lisp files.
+
+REM Make sure you byte-compile ECB with the semantic-and eieio-version you
 REM load into (X)Emacs (see below)!
-REM
-REM Call "make" to byte-compile the ECB. You can savely ignore the messages.
 
 REM =======================================================================
 REM user configurable section
@@ -32,6 +15,8 @@ set SEMANTIC=../semantic
 set EIEIO=../eieio
 set JDE=../jde/lisp
 
+REM Call "make" to byte-compile the ECB. You can savely ignore the messages.
+
 REM end of user configurable section
 REM =======================================================================
 
@@ -41,7 +26,7 @@ REM Do not change anything below!
 
 set EL=tree-buffer.el ecb-util.el ecb-mode-line.el ecb-help.el ecb-layout.el ecb-navigate.el ecb.el ecb-eshell.el ecb-cycle.el ecb-face.el ecb-compilation.el ecb-upgrade.el
 
-echo Byte-compiling ECB with make.bat and %SEMANTIC%, %EIEIO% and %JDE% ...
+echo Byte-compiling ECB with LOADPATH= %SEMANTIC% %EIEIO% %JDE% 
 
 if exist ecb-compile-script-init del ecb-compile-script-init
 if exist ecb.elc del *.elc
