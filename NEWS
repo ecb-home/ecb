@@ -7,6 +7,10 @@
    old setting of this option to the new type. Thanks to Javier Oviedo
    <joviedo@telogy.com> for the suggestion.
 
+** Not accessible directories are displayed in a different face in the
+   directory-browser. See the new option `ecb-directory-not-accessible-face'
+   and the new face with same name.
+   
 ** Enhancements to the permanent compile-window
    
 *** Enlarging the compile-window does not destroy some ecb-windows
@@ -14,11 +18,12 @@
     often destroyed some ecb-windows if the compile-window has occupied a
     large portion of the frame-height (e.g. half of the frame). Beginning with
     ECB 2.27 such a ecb-window-damage is either prevented or - if it still
-    occurs (can not be prevented in all situations) ECB now has a
+    occurs (can not be prevented in all situations) - ECB now has a
     "self-healing"-mechanism which immediatelly repairs the layout via
     idle-checks if the current window-layout is correct for the current
-    `ecb-layout-name'. Thanks to Javier Oviedo <joviedo@telogy.com> for a
-    great problem-report!
+    `ecb-layout-name'. Conclusion: Enlarging or shrinking the compile-window
+    should never damage the ecb-windows! Thanks to Javier Oviedo
+    <joviedo@telogy.com> for a great problem-report!
 
     Caution: If bytecompiled user-defined layouts are used (ie. the file,
     which contains the user-defined layouts is byte-compiled) then you MUST
@@ -31,15 +36,27 @@
     with a compile-window).
 
 *** Now ECB ensures that the permanent compile-window has always its specified
-    size when shrinked by `ecb-toggle-compile-window-height'.
+    size when shrinked either by Emacs/ECB or by the command
+    `ecb-toggle-compile-window-height'.
 
+*** Now ECB ensures that all ecb-windows have always either their default or
+    stored size size after the compile-window has been shrinked either by
+    Emacs/ECB or by the command `ecb-toggle-compile-window-height'.
+
+*** ECB takes into account the new Emacs-option `grep-window-height' when it
+    compute the max. allowed size of its permanent compile-window. More
+    generally spoken: It takes into account all options with name
+    *-window-height defined for modes which are defined by the macro
+    `define-compilation-mode'. This mechanism is available in the forthcoming
+    Emacs 21.4 (and of course with current CVS-Emacs 21).
+    
 ** Fixed Bugs
 
-*** Added a workaround for a bug in the custom-library of GNU Emacs which causes
-    under certain circumstances the autom. option-upgrading-feature of ECB to
-    fail. Same for the command `ecb-store-window-sizes'. Thanks for reporting
-    this annoying bug to Christoph Ludwig
-    <cludwig@cdc.informatik.tu-darmstadt.de>
+*** Added a workaround for a bug in the custom-library of current release 21.3
+    of GNU Emacs which causes under certain circumstances the autom.
+    option-upgrading-feature of ECB to fail. Same for the command
+    `ecb-store-window-sizes'. Thanks for reporting this annoying bug and great
+    help to Christoph Ludwig <cludwig@cdc.informatik.tu-darmstadt.de>
 
 
 

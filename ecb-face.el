@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-face.el,v 1.20 2004/08/12 14:05:10 berndl Exp $
+;; $Id: ecb-face.el,v 1.21 2004/08/31 15:33:04 berndl Exp $
 
 ;;; Commentary:
 
@@ -388,6 +388,22 @@ jumping to it by clicking onto a node in the methods buffer."
   'ecb-source-read-only-face
   "*Face for read-only sources."
   :group 'ecb-sources
+  :group 'ecb-directories
+  :group 'ecb-face-options
+  :type 'face)
+
+(defface ecb-directory-not-accessible-face (ecb-face-default nil nil nil
+                                                             'ecb-default-general-face
+                                                             "gray60"
+                                                             "gray60"
+                                                             nil nil
+                                                             nil "gray60")
+  "*Define a face for displaying not accessible dirs in the directories buffer."
+  :group 'ecb-faces)
+ 
+(defcustom ecb-directory-not-accessible-face
+  'ecb-directory-not-accessible-face
+  "*Face for not accessible dirs in the directories buffer."
   :group 'ecb-directories
   :group 'ecb-face-options
   :type 'face)
