@@ -92,7 +92,7 @@ then also the string \": \" is appended."
 	     (window-width (get-buffer-window buffer-name)))))))))
 
 (defun ecb-mode-line-get-directory (prefix directory width)
-  "Given the prefix for the mode-line (' ECB Sources: '), the directory to
+  "Given the prefix for the mode-line \(' ECB Sources: '), the directory to
 display, and the width of the window,  compute what directory name to display.
 This should trim the beginning of the directory so that the mode-line does not
 stretch past the screen."
