@@ -109,7 +109,7 @@ mailing list @email{ecb-list@@lists.sourceforge.net} via
 * Tips and tricks::             Useful hints and tips
 * Elisp programming::           Entry points for elisp programmers
 * Conflicts and bugs::          Known Conflicts with other packages and bugs
-* FAQ::                         Frequent asked questions
+* FAQ::                         Frequently asked questions
 * Command Index::               Index for interactive commands
 * Option Index::                Index for user options
 * Concept Index::               Index for concepts and terms
@@ -1803,6 +1803,33 @@ see @ref{Creating a new ECB-layout}); just customize the option
 @end group
 @end example
 
+@item Layout ``leftright3''
+@example
+@group
+-------------------------------------------------------
+|             |                         |             |
+| Directories |                         |  Methods    |
+|             |                         |             |
+|             |                         |             |
+|             |                         |             |
+|             |                         |             |
+|             |                         |             |
+|             |          Edit           |             |
+|             |                         |             |
+|             |                         |             |
+|             |                         |             |
+|             |                         |             |
+|             |                         |             |
+|             |                         |             |
+|             |                         |             |
+-------------------------------------------------------
+|                                                     |
+|                    Compilation                      |
+|                                                     |
+-------------------------------------------------------
+@end group
+@end example
+
 @end table
 
 @node Redrawing the ECB-layout, Creating a new ECB-layout, Changing the ECB-layout, The ECB-layout
@@ -3164,11 +3191,17 @@ actualized only by using the POWER-click (see
 @code{ecb-primary-secondary-mouse-buttons}) in the directories-buffer
 of ECB (@pxref{Using the mouse}).
 
-Example: A value of @code{("~/bigdir*" 1000)} means the
-contents of every subdirectory of the home-directory with name
-beginning with ``bigdir'' will be cached if the directory contains more
+Examples:
+
+A value of @code{("~/bigdir*" . 1000)} means the contents of every
+subdirectory of the home-directory will be cached if the directory
+contains more than 1000 entries and its name begins with ``bigdir''.
+
+A value of @code{(".*" . 1000)} caches every directory which has more
 than 1000 entries.
 
+A value of @code{(".*" . 0)} caches every directory regardless of the
+number of entries."
 @end defopt
 
 @defopt directories-buffer-after-create-hook
@@ -5513,13 +5546,15 @@ The name of the bufferinfo buffer:
 
 Two helper functions for displaying infos in a special buffer:
 
+
 @lisp
+@group
 (defun ecb-examples-print-file-attributes (buffer filename)
   (ecb-with-readonly-buffer buffer
     (erase-buffer)
     (insert (format "Bufferinfo for %s:\n\n" filename))
-    ;; insert with the function `file-attributes' some informations
-    ;; about FILENAME.
+    ;; insert with the function `file-attributes' some 
+    ;; informations about FILENAME.
     ))
 
 (defun ecb-examples-print-non-filebuffer (buffer buffer-name)
@@ -5527,6 +5562,7 @@ Two helper functions for displaying infos in a special buffer:
     (erase-buffer)
     ;; analogous to `ecb-examples-print-file-attributes'
     ))
+@end group
 @end lisp
 
 The main synchronizing function added to
@@ -5537,16 +5573,17 @@ synchronizes the bufferinfo buffer with the current buffer of the
 edit-window if that buffer has changed.
 
 @lisp
+@group
 (defun ecb-examples-bufferinfo-sync ()
   (ecb-do-if-buffer-visible-in-ecb-frame
       'ecb-examples-bufferinfo-buffer-name
 
     ;; here we can be sure that the buffer with name
-    ;; `ecb-examples-bufferinfo-buffer-name' is displayed in a window
-    ;; of `ecb-frame'
+    ;; `ecb-examples-bufferinfo-buffer-name' is displayed in a 
+    ;; window of `ecb-frame'
 
-    ;; The macro `ecb-do-if-buffer-visible-in-ecb-frame' locally binds
-    ;; the variables visible-buffer and visible-window!! See
+    ;; The macro `ecb-do-if-buffer-visible-in-ecb-frame' locally 
+    ;; binds the variables visible-buffer and visible-window!! See
     ;; documentation of this macro!
 
     (let ((filename (buffer-file-name (current-buffer))))
@@ -5554,8 +5591,10 @@ edit-window if that buffer has changed.
       (if (and filename (file-readable-p filename))
             
           ;; real filebuffers
-          ;; here we could add a smarter mechanism; see ecb-examples.el
-          (ecb-examples-print-file-attributes visible-buffer filename)
+          ;; here we could add a smarter mechanism;
+          ;; see ecb-examples.el
+          (ecb-examples-print-file-attributes visible-buffer
+                                              filename)
         
         ;; non file buffers like help-buffers etc...
         (setq ecb-examples-bufferinfo-last-file nil)
@@ -5563,6 +5602,7 @@ edit-window if that buffer has changed.
                                            (buffer-name
                                              (current-buffer)))
         ))))
+@end group
 @end lisp
 
 This is all what we need for the special bufferinfo buffer. We have
@@ -5585,22 +5625,26 @@ special local keymap for the middle-mouse-button and two buttons
 [prior] and [next]:
 
 @lisp
+@group
 (defun ecb-examples-insert-text-in-action-buffer (text)
   (let ((p (point)))
     (insert text)
-    (put-text-property p (+ p (length text)) 'mouse-face 'highlight)))
+    (put-text-property p (+ p (length text)) 'mouse-face
+                                             'highlight)))
 
 (defun ecb-examples-action-buffer-create ()
   (save-excursion
     (if (get-buffer ecb-examples-action-buffer-name)
         (get-buffer ecb-examples-action-buffer-name)
 
-      (set-buffer (get-buffer-create ecb-examples-action-buffer-name))
+      (set-buffer (get-buffer-create
+                    ecb-examples-action-buffer-name))
 
       ;; we setup a local keymap and bind middle-mouse-button
       ;; see ecb-examples.el for the full code        
 
-      ;; insert the action buttons [prior] und [next] and make it read-only
+      ;; insert the action buttons [prior] und [next] and
+      ;; make it read-only
       
       (ecb-with-readonly-buffer (current-buffer)
         (erase-buffer)
@@ -5609,22 +5653,26 @@ special local keymap for the middle-mouse-button and two buttons
         )
       
       (current-buffer))))
+@end group
 @end lisp
 
 The function which performs the actions in the action-buffer if
 clicked with the middle-mouse button onto a button [next] or [prior].
 
 @lisp
+@group
 (defun ecb-examples-action-buffer-clicked (e)
   (interactive "e")
   (mouse-set-point e)
-  (let ((line (buffer-substring (ecb-line-beginning-pos) (ecb-line-end-pos))))
+  (let ((line (buffer-substring (ecb-line-beginning-pos)
+                                (ecb-line-end-pos))))
     (cond ((string-match "prior" line)
            (ecb-select-edit-window)
            (call-interactively 'scroll-down))
           ((string-match "next" line)
            ;; analogous for [next]
            ))))
+@end group
 @end lisp
 
 We do not need more code for the action buffer. All of the code is
@@ -5636,11 +5684,13 @@ Now we add the bufferinfo- and the action-buffer to a new layout of
 type top with name ``example-layout1'':
 
 @lisp
+@group
 (ecb-layout-define "example-layout1" top
   
   ;; dedicating the bufferinfo window to the bufferinfo-buffer
   (ecb-with-dedicated-window
-   (switch-to-buffer (get-buffer-create ecb-examples-bufferinfo-buffer-name))
+   (switch-to-buffer (get-buffer-create
+                       ecb-examples-bufferinfo-buffer-name))
    (setq buffer-read-only t))
 
   ;; creating the action-window
@@ -5648,10 +5698,12 @@ type top with name ``example-layout1'':
   
   ;; dedicate the action window to the action-buffer
   (ecb-with-dedicated-window
-   (switch-to-buffer (buffer-name (ecb-examples-action-buffer-create))))
+   (switch-to-buffer (buffer-name
+                       (ecb-examples-action-buffer-create))))
 
   ;; select the edit-window
   (select-window (next-window)))
+@end group
 @end lisp
 
 This all what we need to define the new layout. We have demonstrated
@@ -5692,6 +5744,7 @@ The code for saving and restoring the state before activation (the
 full code is available in @file{ecb-examples.el}:
 
 @lisp
+@group
 (defun ecb-examples-preactivation-state(action)
   (cond ((equal action 'save)
          ;; code for saving the state
@@ -5699,11 +5752,13 @@ full code is available in @file{ecb-examples.el}:
         ((equal action 'restore)
         ;; code for restoring the state
         )))
+@end group
 @end lisp
 
 The following function activates the GUI of our example tool:
 
 @lisp
+@group
 (defun ecb-examples-activate ()
   (interactive)
   
@@ -5718,12 +5773,14 @@ The following function activates the GUI of our example tool:
   (setq ecb-windows-height 6)
   (setq ecb-compile-window-height 5)
   (ecb-layout-switch "example-layout1"))
+@end group
 @end lisp
 
 This function deactivates the GUI of our example-tool and restores the
 state as before activation:
 
 @lisp
+@group
 (defun ecb-examples-deactivate ()
   (interactive)
   
@@ -5731,6 +5788,7 @@ state as before activation:
                'ecb-examples-bufferinfo-sync)
   (ecb-examples-preactivation-state 'restore)
   (ecb-layout-switch ecb-layout-name))
+@end group
 @end lisp
 
 
@@ -5811,6 +5869,7 @@ windows.
 Here is the code for that top layout (all buffers are dummy-buffers):
 
 @lisp
+@group
 (ecb-layout-define "example-layout3" top
   nil
 
@@ -5830,6 +5889,7 @@ Here is the code for that top layout (all buffers are dummy-buffers):
 
   ;; select the edit-window.
   (select-window (next-window)))
+@end group
 @end lisp
 
 
@@ -5869,6 +5929,7 @@ Here is the code for that left-right layout, again with dummy-buffers
 for @code{ecb-windows-width}, e.g. 0.4):
 
 @lisp
+@group
 (ecb-layout-define "example-layout2" left-right
   nil
 
@@ -5902,6 +5963,7 @@ for @code{ecb-windows-width}, e.g. 0.4):
 
   ;; select the edit-window
   (select-window (previous-window (selected-window) 0)))
+@end group
 @end lisp
 
 Especially the last example should demonstrate that even very
@@ -6099,7 +6161,7 @@ This section describes all currently known bugs of ECB. The
 maintainers of ECB try to fix these bugs as soon as possible.
 
 @node FAQ, Command Index, Conflicts and bugs, Top
-@chapter Frequent asked questions
+@chapter Frequently asked questions
 
 This is the Emacs Code Browser FAQ.
 
@@ -6140,7 +6202,7 @@ ANSWER
 @item
 What is the first step i should do if i have problems with ECB?
 @tab @tab
-Read carefully the complete online-help of ECB.
+Read carefully the related sections of the online-help of ECB.
 
 @item @tab @tab
 
@@ -6287,6 +6349,30 @@ You can, but it is recommended not to use Gnus and ECB simultaniously
 in one frame because each of them has it's own window-management and
 probably there will be conflicts. Use different frames for ECB and
 Gnus!
+
+@item @tab @tab
+
+@item
+Can i speed up displaying the contents of big-size directories?
+@tab @tab
+Yes. Read the section @ref{Large directories} and see the option
+@code{ecb-cache-directory-contents}.
+
+@item @tab @tab
+
+@item
+Is it possible to create/use other layouts than the buildin ones?
+@tab @tab
+Yes, read the sections @ref{Creating a new ECB-layout} and @ref{The
+layout-engine}. The former one describes how to create interactively
+new layouts wheres the latter one is for elisp-progammers.
+
+@item @tab @tab
+
+@item
+Can i use speedbar as directory-browser within ECB?
+@tab @tab
+Yes, read the section @ref{Integrating speedbar}.
 
 @end multitable
 

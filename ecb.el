@@ -62,7 +62,7 @@
 ;; The latest version of the ECB is available at
 ;; http://home.swipnet.se/mayhem/ecb.html
 
-;; $Id: ecb.el,v 1.270 2003/01/10 14:51:51 berndl Exp $
+;; $Id: ecb.el,v 1.271 2003/01/13 12:25:57 berndl Exp $
 
 ;;; Code:
 
@@ -411,10 +411,17 @@ The cache entry for a certain directory will be refreshed and actualized only
 by using the POWER-click \(see `ecb-primary-secondary-mouse-buttons') in the
 directories-buffer of ECB.
 
-Example:
-A value of \(\"~/bigdir*\" . 1000) means the contents of every subdirectory
-of the home-directory with name beginning with \"bigdir\" will be cached if
-the directory contains more than 1000 entries."
+Examples:
+
+A value of \(\"~/bigdir*\" . 1000) means the contents of every subdirectory of
+the home-directory will be cached if the directory contains more than 1000
+entries and its name begins with \"bigdir\".
+
+A value of \(\".*\" . 1000) caches every directory which has more than 1000
+entries.
+
+A value of \(\".*\" . 0) caches every directory regardless of the number of
+entries."
   :group 'ecb-directories
   :type `(repeat (cons (regexp :tag "Directory-regexp")
                        (integer :tag "Filenumber threshold" :value 1000))))
@@ -2179,7 +2186,6 @@ semantic-reparse. This function is added to the hook
                          (ecb-expand-directory-tree path child))
                        (not was-expanded)))))))))
 
-;; TODO: The timestamp-mechanism is not yet implemented (Klaus)
 (defvar ecb-files-and-subdirs-cache nil
   "Cache for every directory all subdirs and files. This is an alist where an
 element looks like:
@@ -2251,86 +2257,6 @@ according to `ecb-sources-sort-method'."
             (ecb-files-and-subdirs-cache-add cache-elem))
         ;; return the result
         (cdr cache-elem))))
-
-
-;; (defun ecb-set-selected-directory (path &optional force)
-;;   "Set the contents of the ECB-directories and -sources buffer correct for the
-;; value of PATH. If PATH is equal to the value of `ecb-path-selected-directory'
-;; then nothing is done unless first optional argument FORCE is not nil."
-;;   (let ((last-dir ecb-path-selected-directory))
-;;     (save-selected-window
-;;       (setq ecb-path-selected-directory (ecb-fix-filename path))
-;;       ;; if ecb-path-selected-directory has not changed then there is no need
-;;       ;; to do anything here because neither the content of directory buffer
-;;       ;; nor the content of the sources buffer can have been changed!
-;;       (when (or force (not (string= last-dir ecb-path-selected-directory)))
-;;         (when (or (not (ecb-show-sources-in-directories-buffer-p))
-;;                   ecb-auto-expand-directory-tree)
-;;           (ecb-exec-in-directories-window
-;;            (let (start)
-;;              (when ecb-auto-expand-directory-tree
-;;                ;; Expand tree to show selected directory
-;;                (setq start
-;;                      (if (equal ecb-auto-expand-directory-tree 'best)
-;;                          ;; If none of the source-paths in the buffer
-;;                          ;; `ecb-directories-buffer-name' matches then nil
-;;                          ;; otherwise the node of the best matching source-path
-;;                          (cdar (sort (delete nil
-;;                                              (mapcar (lambda (elem)
-;;                                                        (let ((data (tree-node-get-data elem)))
-;;                                                          (save-match-data
-;;                                                            (if (string-match
-;;                                                                 (concat "^"
-;;                                                                         (regexp-quote data))
-;;                                                                 ecb-path-selected-directory)
-;;                                                                (cons data elem)
-;;                                                              nil))))
-;;                                                      (tree-node-get-children (tree-buffer-get-root))))
-;;                                      (lambda (lhs rhs)
-;;                                        (> (length (car lhs)) (length (car rhs))))))
-;;                        ;; we start at the root node
-;;                        (tree-buffer-get-root)))
-;;                (when (and (equal ecb-auto-expand-directory-tree 'best)
-;;                           start)
-;;                  ;; expand the best-match node itself
-;;                  (tree-node-set-expanded start t)
-;;                  (ecb-update-directory-node start))
-;;                ;; start recursive expanding of either the best-matching node or
-;;                ;; the root-node itself.
-;;                (ecb-expand-directory-tree ecb-path-selected-directory
-;;                                           (or start
-;;                                               (tree-buffer-get-root)))
-;;                (tree-buffer-update))
-;;              (when (not (ecb-show-sources-in-directories-buffer-p))
-;;                (tree-buffer-highlight-node-data ecb-path-selected-directory
-;;                                                 start)))))
-
-;;         (ecb-exec-in-sources-window
-;;          (let ((old-children (tree-node-get-children (tree-buffer-get-root))))
-;;            (tree-node-set-children (tree-buffer-get-root) nil)
-;;            (ecb-tree-node-add-files
-;;             (tree-buffer-get-root)
-;;             ecb-path-selected-directory
-;;             (car (ecb-get-files-and-subdirs ecb-path-selected-directory))
-;;             0 ecb-show-source-file-extension old-children t))
-;;          (tree-buffer-update)
-;;          (when (not (string= last-dir ecb-path-selected-directory))
-;;            (tree-buffer-scroll (point-min) (point-min)))))))
-;;   ;; set the default-directory of each tree-buffer to current selected
-;;   ;; directory so we can open files via find-file from each tree-buffer.
-;;   ;; is this necessary if neither dir.- nor sources-buffer-contents have been
-;;   ;; changed? I think not but anyway, doesn't matter, costs are very low.
-;;   (save-excursion
-;;     (dolist (buf ecb-tree-buffers)
-;;       (set-buffer buf)
-;;       (setq default-directory
-;;             (concat ecb-path-selected-directory
-;;                     (and (not (= (aref ecb-path-selected-directory
-;;                                        (1- (length ecb-path-selected-directory)))
-;;                                  ecb-directory-sep-char))
-;;                          ecb-directory-sep-string)))))
-;;   ;; set the modelines of all visible tree-buffers new
-;;   (ecb-mode-line-format))
 
 
 (defvar ecb-sources-cache nil
@@ -2432,20 +2358,22 @@ then nothing is done unless first optional argument FORCE is not nil."
                 ecb-path-selected-directory
                 (car (ecb-get-files-and-subdirs ecb-path-selected-directory))
                 0 ecb-show-source-file-extension old-children t)
-               (tree-buffer-set-root new-tree)
+
                ;; updating the buffer itself
+               (tree-buffer-set-root new-tree)
                (tree-buffer-update)
-               ;; updating the cache
-               (setq new-cache-elem (cons ecb-path-selected-directory
-                                          (list (tree-buffer-get-root)
-                                                (copy-list tree-buffer-nodes)
-                                                (buffer-string))))
+               
                ;; check if the sources buffer for this directory must be
-               ;; cached
-               (if (ecb-check-directory-for-caching
-                    ecb-path-selected-directory
-                    (length tree-buffer-nodes))
-                   (ecb-sources-cache-add new-cache-elem))))
+               ;; cached: If yes update the cache
+               (when (ecb-check-directory-for-caching
+                      ecb-path-selected-directory
+                      (length tree-buffer-nodes))
+                 (setq new-cache-elem (cons ecb-path-selected-directory
+                                            (list (tree-buffer-get-root)
+                                                  (copy-list tree-buffer-nodes)
+                                                  (buffer-string))))
+                 (ecb-sources-cache-add new-cache-elem))))
+           
            (when (not (string= last-dir ecb-path-selected-directory))
              (tree-buffer-scroll (point-min) (point-min))))))))
   
