@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-help.el,v 1.96 2003/08/06 09:15:19 berndl Exp $
+;; $Id: ecb-help.el,v 1.97 2003/09/01 14:47:37 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -317,6 +317,10 @@ could be interesting for support."
                                     compilation-mode-hook
                                     truncate-partial-width-windows
                                     truncate-lines
+                                    ,(if (boundp 'compilation-window-height)
+                                         'compilation-window-height)
+                                    ,(if (boundp 'temp-buffer-max-height)
+                                         'temp-buffer-max-height)
                                     auto-mode-alist
                                     ,(if (boundp 'c-mode-hook)
                                          'c-mode-hook)
@@ -366,6 +370,7 @@ could be interesting for support."
                                    ecb-idle-timer-alist
                                    ecb-post-command-hooks
                                    ecb-old-compilation-window-height
+                                   ecb-old-temp-buffer-max-height
                                    ecb-minor-mode
                                    ecb-toggle-layout-state)
                                  (function (lambda (l r)

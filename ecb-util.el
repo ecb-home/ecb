@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-util.el,v 1.69 2003/09/01 09:13:24 berndl Exp $
+;; $Id: ecb-util.el,v 1.70 2003/09/01 14:47:37 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -675,7 +675,6 @@ for FILE, but proper EOL-conversion and character interpretation is done!"
         (with-temp-buffer
           (insert-file-contents exp-filename)
           (buffer-string)))))
-
 
 (silentcomp-provide 'ecb-util)
 

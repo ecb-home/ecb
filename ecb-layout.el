@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-layout.el,v 1.178 2003/09/01 09:13:24 berndl Exp $
+;; $Id: ecb-layout.el,v 1.179 2003/09/01 14:47:37 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -134,7 +134,7 @@
 (silentcomp-defvar pre-display-buffer-function)
 (silentcomp-defvar split-width-threshold)
 (silentcomp-defvar split-width-threshold)
-
+;; for the display-buffer stuff of XEmacs
 (silentcomp-defun last-nonminibuf-frame)
 (silentcomp-defun check-argument-type)
 (silentcomp-defun buffer-dedicated-frame)
@@ -869,8 +869,31 @@ If you use the eshell-integration of ECB then the function
   :group 'ecb-layout
   :type 'hook)
 
+(defcustom ecb-layout-debug-mode nil
+  "*Write debug-information about layout-operations in the Messages-buffer.
+Normally there should be no need to set this option to true but if there are
+problems to display buffers in the compile-window of ECB \(e.g. buffers which
+should be displayed there aren't or the temporally enlarging-mechanism does
+not do what you think it should do etc...) then please do the following steps:
+1. Set `ecb-layout-debug-mode' to not nil
+2. Reproduce the wrong behavior exactly by repeating all the operations which
+   lead to the problem.
+3. Now send immediately a bug report with `ecb-submit-problem-report'.
+4. Set `ecb-layout-debug-mode' back to nil if you do not want further
+   debugging output in the *Messages* buffer"
+  :group 'ecb-layout
+  :type 'boolean)
+
 
 ;; ====== internal variables ====================================
+
+
+(defun ecb-layout-debug-error (&rest args)
+  "Run ARGS through `format' and write it to the *Messages*-buffer."
+  (when ecb-layout-debug-mode
+    (message (concat (format "ECB %s layout debug: " ecb-version)
+                     (apply 'format args)))))
+
 
 (defvar ecb-frame nil
   "Frame where ECB runs")
@@ -946,6 +969,8 @@ either not activated or it behaves exactly like the original version!"
          ;; which might not be the same as the selected window's buffer.
          (save-excursion
            (let ((w (selected-window)))
+             (ecb-layout-debug-error "compilation-set-window-height: window: %s, cur-win: %s"
+                                     (ad-get-arg 0) w)
              (unwind-protect
                  (progn
                    (select-window (ad-get-arg 0))
@@ -1051,8 +1076,8 @@ only enabled and disabled by `ecb-enable-count-windows-advice'!"
       (defadvice shrink-window-if-larger-than-buffer (around ecb)
         "Makes the function compatible with ECB."
         (or (ad-get-arg 0) (ad-set-arg 0 (selected-window)))
-        (message "XXX-Klausi: shrink-window...: win: %s"
-                 (ad-get-arg 0))
+        (ecb-layout-debug-error "shrink-window-if-larger-than-buffer: window: %s"
+                                (ad-get-arg 0))
         (if (or (not (equal (window-frame (ad-get-arg 0)) ecb-frame))
                 (member (ad-get-arg 0) (ecb-canonical-ecb-windows-list)))
             ad-do-it
@@ -1060,8 +1085,8 @@ only enabled and disabled by `ecb-enable-count-windows-advice'!"
           ;; ecb-frame in a special manner.
           (save-excursion
             (set-buffer (window-buffer (ad-get-arg 0)))
-            (message "XXX-Klausi-0: shrink-window...: cur-buf: %s"
-                     (current-buffer))
+            (ecb-layout-debug-error "shrink-window-if-larger-than-buffer: buffer to shrink: %s"
+                                    (current-buffer))
             (let ((n 0)
                   (test-pos
                    (- (point-max)
@@ -1088,15 +1113,13 @@ only enabled and disabled by `ecb-enable-count-windows-advice'!"
                            (> (nth 1 edges)
                               0)))
                   (progn
-                    (message "XXX-Klausi-1: shrink-window...: win: %s"
-                             (ad-get-arg 0))
                     (save-window-excursion
                       (goto-char (point-min))
                       (while (and (window-live-p (ad-get-arg 0))
                                   (pos-visible-in-window-p test-pos (ad-get-arg 0)))
                         (shrink-window 1 nil (ad-get-arg 0))
                         (setq n (1+ n))))
-                    (message "XXX-Klausi-2: shrink-window...: n: %d" n)
+                    (ecb-layout-debug-error "shrink-window-if-larger-than-buffer: n: %d" n)
                     (if (> n 0)
                         (shrink-window (min (1- n)
                                             (- (window-height (ad-get-arg 0))
@@ -1161,11 +1184,15 @@ for current layout."
   (defadvice shrink-window-if-larger-than-buffer (around ecb)
     "Makes the function compatible with ECB."
     (or (ad-get-arg 0) (ad-set-arg 0 (selected-window)))
+    (ecb-layout-debug-error "shrink-window-if-larger-than-buffer: window: %s"
+                            (ad-get-arg 0))
     (if (or (not (equal (window-frame (ad-get-arg 0)) ecb-frame))
             (member (ad-get-arg 0) (ecb-canonical-ecb-windows-list)))
         ad-do-it
       (save-selected-window
         (select-window (ad-get-arg 0))
+        (ecb-layout-debug-error "shrink-window-if-larger-than-buffer: buffer to shrink: %s"
+                                (current-buffer))
         (let* ((params (frame-parameters))
                (mini (cdr (assq 'minibuffer params)))
                (edges (ecb-window-edges)))
@@ -1194,7 +1221,8 @@ for current layout."
 
   (defadvice resize-temp-buffer-window (around ecb)
     "Makes the function compatible with ECB."
-    (message "XXX-klausi: resize-temp-buffer-window")
+    (ecb-layout-debug-error "resize-temp-buffer-window: buffer: %s"
+                            (current-buffer))
     (if (or (not (equal (selected-frame) ecb-frame))
             (equal (ecb-where-is-point) 'ecb))
         ad-do-it
@@ -1222,8 +1250,8 @@ for current layout."
         ad-do-it
       (condition-case nil
           (progn
-            (message "XXX-Klausi: pop-to-buffer: %s, %s"
-                     (ad-get-arg 0) (ad-get-arg 1))
+            (ecb-layout-debug-error "pop-to-buffer: buffer: %s, %s"
+                                    (ad-get-arg 0) (ad-get-arg 1))
             (select-window (ecb-with-adviced-functions
                             (display-buffer (ad-get-arg 0)
                                             (ad-get-arg 1))))
@@ -1233,7 +1261,10 @@ for current layout."
         ;; This is if the call to the adviced `display-buffer' fails (seems
         ;; to make problems with C-h i and the *info*-buffer). Then we run the
         ;; orginal version.
-        (error ad-do-it))))
+        (error
+         (ecb-layout-debug-error "pop-to-buffer: adviced version failed for buffer: %s, %s"
+                                 (ad-get-arg 0) (ad-get-arg 1))
+         ad-do-it))))
         
   
   ) ;; end of (if ecb-running-xemacs...)
@@ -1272,6 +1303,8 @@ If `pop-up-frames' is non-nil, make a new frame if no window shows BUFFER.
 Returns the window displaying BUFFER."
   (interactive "BDisplay buffer:\nP")
 
+  (ecb-layout-debug-error "ecb-display-buffer-xemacs for %s %s %s %s"
+                          buffer not-this-window-p override-frame shrink-to-fit)
   (let ((wconfig (current-window-configuration))
         (result
          ;; We just simulate a `return' in C.  This function is way ugly
@@ -1550,22 +1583,23 @@ Returns the window displaying BUFFER."
   ;; redraw the layout. This conflicts with the save-selected-window.
   ;; Therefore we toggle the compile-window before the save-selected-window!
   (when (ecb-compilation-buffer-p buf)
-         (message "XXX-Klausi: temp-buffer-show-function for comp-buffer: %s"
-                  buf)
-         (when (and (numberp (car (get 'ecb-compile-window-height 'saved-value)))
-                    (not (ecb-compile-window-live-p))
-                    ;; calling this from minibuffer (e.g. completions)
-                    ;; seems to cause problems
-                    (not (equal (minibuffer-window ecb-frame) (selected-window))))
-           (ecb-toggle-compile-window 1)))
+    (ecb-layout-debug-error "ecb-temp-buffer-show-function-emacs: comp-buffer: %s"
+                            buf)
+    (when (and (numberp (car (get 'ecb-compile-window-height 'saved-value)))
+               (not (ecb-compile-window-live-p))
+               ;; calling this from minibuffer (e.g. completions)
+               ;; seems to cause problems
+               (not (equal (minibuffer-window ecb-frame) (selected-window))))
+      (ecb-layout-debug-error "ecb-temp-buffer-show-function-emacs: comp-win will toggled")
+      (ecb-toggle-compile-window 1)))
   (save-selected-window
     (save-excursion
       ;; this call to `display-buffer' runs the adviced version of ECB which
       ;; always handles all the compile-window stuff if buf is a
       ;; compile-buffer in the sense of `ecb-compilation-buffer-p'.
-      (message "XXX-Klausi-tbsf-1: buf: %s" buf)
       (let ((win (ecb-with-adviced-functions (display-buffer buf))))
-        (message "XXX-Klausi-tbsf-2: window: %s" win)
+        (ecb-layout-debug-error "ecb-temp-buffer-show-function-emacs: win: %s, buf: %s"
+                                win buf)
         (select-window win)
         (set-buffer buf)
         (run-hooks 'temp-buffer-show-hook)))))
@@ -1754,11 +1788,8 @@ handle `ecb-compile-window-temporally-enlarge'."
 ;; here come the advices
 
 ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: curr Bugs:
-;; - Docu: ecb.texi nachziehen: ecb-toggle-enlarged-compilation-window und
-;;   alle mit dem compile-window related options!
 ;; - Emacs: enlarge-window byte-comp warning eliminieren!
 ;; - Beide: Testen!!!
-;; - Code: Klausi-stuff rausschmeissen
 
 ;; This advice is the heart of the mechanism which displays all buffer in the
 ;; compile-window if they are are "compilation-buffers" in the sense of
@@ -1771,7 +1802,16 @@ compile-window \(`ecb-compile-window-height' is nil) then it splits the
 edit-window if unsplitted and displays BUFFER in the other edit-window.
 
 If called for other frames it works like the original version."
-  (message "XXX-Klausi: display-buffer intro for: %s" (ad-get-arg 0))
+  (if ecb-running-xemacs
+      (ecb-layout-debug-error "display-buffer entered with: %s %s %s %s"
+                              (ad-get-arg 0)
+                              (ad-get-arg 1)
+                              (ad-get-arg 2)
+                              (ad-get-arg 3))
+    (ecb-layout-debug-error "display-buffer entered with: %s %s %s"
+                            (ad-get-arg 0)
+                            (ad-get-arg 1)
+                            (ad-get-arg 2)))
   (if (or (and (ad-get-arg 2)
                (framep (ad-get-arg 2))
                (equal (ad-get-arg 2) ecb-frame))
@@ -1780,8 +1820,8 @@ If called for other frames it works like the original version."
                    (equal (ad-get-arg 2) 0))
                (equal (selected-frame) ecb-frame)))
       (cond ((ecb-compilation-buffer-p (ad-get-arg 0))
-             (message "XXX-Klausi: display-buffer for comp-buffer: %s"
-                      (ad-get-arg 0))
+             (ecb-layout-debug-error "display-buffer for a comp-buffer: %s"
+                                     (ad-get-arg 0))
              ;; we have to display the buffer in the compile-window if a
              ;; compile-window was set but currently hidden --> then we have
              ;; to show it now. `ecb-toggle-compile-window' preserves always
@@ -1791,6 +1831,7 @@ If called for other frames it works like the original version."
                         ;; calling this from minibuffer (e.g. completions)
                         ;; seems to cause problems
                         (not (equal (minibuffer-window ecb-frame) (selected-window))))
+               (ecb-layout-debug-error "display-buffer: comp-win will be toggled.")
                (ecb-toggle-compile-window 1))
              (if (ecb-compile-window-live-p)
                  ;; now we have to make the edit-window(s) dedicated
@@ -1817,8 +1858,9 @@ If called for other frames it works like the original version."
                                  ;; ecb-frame unsplitable.
                                  (unwind-protect
                                      (progn
-                                       (message "XXX-Klausi: display-buffer from comp-buffer: %s"
-                                                (ad-get-arg 0))
+                                       (ecb-layout-debug-error
+                                        "display-buffer from comp-win for comp-buf: %s"
+                                        (ad-get-arg 0))
                                        (set-frame-property ecb-frame 'unsplittable t)
                                        (setq ad-return-value
                                              (ecb-display-buffer-xemacs (ad-get-arg 0)
@@ -1842,8 +1884,8 @@ If called for other frames it works like the original version."
                ;; edit-window would be used for the completions which is not
                ;; the default-behavior of Emacs.
                (when (not (ecb-edit-window-splitted))
-                 (message "XXX-Klausi: display-buffer for comp-buffer - split edit-window: %s"
-                          (ad-get-arg 0))
+                 (ecb-layout-debug-error "display-buffer for comp-buffer %s - split edit-window:"
+                                         (ad-get-arg 0))
                  (ecb-with-adviced-functions (split-window
                                               ecb-edit-window)))
                (if ecb-running-xemacs
@@ -1855,8 +1897,8 @@ If called for other frames it works like the original version."
                  ad-do-it)))
             
             ((not (member (ad-get-arg 0) (ecb-get-current-visible-ecb-buffers)))
-             (message "XXX-Klausi: display-buffer for normal buffer: %s"
-                      (ad-get-arg 0))
+             (ecb-layout-debug-error "display-buffer for normal buffer: %s"
+                                     (ad-get-arg 0))
              (if (ecb-compile-window-live-p)
                  (unwind-protect
                      (progn
@@ -1885,7 +1927,7 @@ If called for other frames it works like the original version."
             (t
              (or (setq ad-return-value (get-buffer-window (ad-get-arg 0) ecb-frame))
                  (ecb-error "display-buffer can not display not visible ecb-buffers!"))))
-    (message "XXX-Klausi: display-buffer - just do it")
+    (ecb-layout-debug-error "display-buffer - just run original version.")
     (if ecb-running-xemacs
         (setq ad-return-value
               (ecb-display-buffer-xemacs (ad-get-arg 0)

@@ -26,7 +26,7 @@
 @c GNU Emacs; see the file COPYING.  If not, write to the Free Software
 @c Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-@c $Id: ecb.texi,v 1.111 2003/09/01 09:13:23 berndl Exp $
+@c $Id: ecb.texi,v 1.112 2003/09/01 14:47:36 berndl Exp $
 
 @setfilename ecb.info
 
@@ -1439,6 +1439,33 @@ open compilation-buffers (in the sense of
 @code{ecb-compilation-buffer-p}) very fast.
 @end itemize
 
+@anchor{Problems with the compile window}
+@subsection What to do if there are problems with the compile-window
+
+Normally displaying temp- and compilation-buffers (or more general:
+displaying buffer for which @code{ecb-compilation-buffer-p} is not
+nil) should work reliable. But if there are problems which you can not
+handle with the options @code{ecb-compilation-buffer-names},
+@code{ecb-compilation-major-modes} or
+@code{ecb-compilation-predicates} then please go on like follows:
+
+@enumerate
+@item
+Set the option @code{ecb-layout-debug-mode} to not nil.
+
+@item
+Reproduce the wrong behavior exactly by repeating all the operations
+which lead to the problem. If possible then restart Emacs before
+reproducing the problem so you can begin from the beginning!
+
+@item
+Now send immediately a bug report with
+@code{ecb-submit-problem-report}.
+
+@item
+Set @code{ecb-layout-debug-mode} back to nil if you do not want
+further debugging output in the *Messages* buffer"
+@end enumerate
 
 @node The Methods buffer, The ECB-layout, Temp- and compile-buffers, Usage of ECB
 @section Using and customizing the ECB-Methods buffer
@@ -5122,6 +5149,34 @@ Per default this is enabled for @code{delete-window},
 @end defopt
 
 
+@defopt layout-debug-mode
+Write debug-information about layout-operations in the
+Messages-buffer. Normally there should be no need to set this option
+to true but if there are problems to display buffers in the
+compile-window of ECB (e.g. buffers which should be displayed there
+aren't or the temporally enlarging-mechanism does not do what you
+think it should do etc...) then please do the following steps:
+
+@enumerate
+@item
+Set @code{ecb-layout-debug-mode} to not nil
+
+@item
+Reproduce the wrong behavior exactly by repeating all the operations
+which lead to the problem.
+
+@item
+Now send immediately a bug report with
+@code{ecb-submit-problem-report}.
+
+@item
+Set @code{ecb-layout-debug-mode} back to nil if you do not want
+further debugging output in the *Messages* buffer
+@end enumerate
+@end defopt
+
+
+
 @defopt layout-name
 Select a window layout of ECB. Value is any arbitrary string. There are
 four different types of layouts: left, right, top and left-right,
@@ -8453,6 +8508,13 @@ Yes, see @ref{Hiding the ECB windows}.
 Can i define the actions ECB performs after visiting a token?
 @tab @tab
 Yes, see @ref{Visiting tokens}.
+
+@item @tab @tab
+
+@item
+Buffers are not displayed correctly in the compile-window?
+@tab @tab
+See @ref{Problems with the compile window}.
 
 @end multitable
 
