@@ -54,7 +54,7 @@
 ;; The latest version of the ECB is available at
 ;; http://home.swipnet.se/mayhem/ecb.html
 
-;; $Id: ecb.el,v 1.174 2002/01/20 13:56:27 berndl Exp $
+;; $Id: ecb.el,v 1.175 2002/01/20 14:06:26 berndl Exp $
 
 ;;; Code:
 
@@ -698,11 +698,6 @@ Therefore the default value is a delay of 0.25 seconds."
 after jumping to this method by clicking in the ECB-method-buffer onto this
 method. For highlighting `ecb-token-header-face' is used."
   :group 'ecb-methods
-;;   :set (function (lambda (symbol value)
-;;                    (set symbol value)
-;;                    (if 
-;;                        (overlay-put ecb-method-overlay 'face
-;;                                     ecb-token-header-face))))
   :type 'boolean)
 
 (defcustom ecb-scroll-window-after-jump nil
