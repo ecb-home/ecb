@@ -28,7 +28,7 @@
 ;; Do not change any html-file besides the index.html manually but do all
 ;; changes in this elisp file!
 
-;; $Id: ecb-html.el,v 1.38 2003/02/06 09:34:06 berndl Exp $
+;; $Id: ecb-html.el,v 1.39 2003/02/10 16:53:21 berndl Exp $
 
 ;;; Code:
 
@@ -291,8 +291,9 @@
        ecb-bullet
        (list
         ;;; Add here all patches which should offered directly on the website.
-        '("patches/ecb-upgrade.el" "ecb-upgrade.el" "Fixes a bug in ECB 1.90 related to package-downloading.")
+        '("patches/ecb-upgrade.el" "ecb-upgrade.el" "Fixes a bug in ECB 1.90 related to package-downloading and a bug related to upgrading from ECB 1.80.")
         '("patches/ecb-navigate.el" "ecb-navigate.el" "Fixes a bug in ECB 1.90 which can inhibit that a user can open sources or clicking onto methods.")
+        '("patches/ecb-layout.el" "ecb-layout.el" "Fixes a bug in the command ecb-store-window-sizes of ECB 1.90.")
         )
        "_top")
       h-br "Instructions:"
