@@ -1,6 +1,6 @@
 ;;; ecb-speedbar.el --- 
 
-;; $Id: ecb-speedbar.el,v 1.21 2002/11/06 11:25:38 berndl Exp $
+;; $Id: ecb-speedbar.el,v 1.22 2002/11/15 15:29:18 berndl Exp $
 
 ;; Copyright (C) 2000-2003 Free Software Foundation, Inc.
 ;; Copyright (C) 2000-2003 Kevin A. Burton (burton@openprivacy.org)
@@ -123,6 +123,7 @@
 (require 'speedbar)
 
 (ecb-bytecomp-defvar speedbar-attached-frame)
+(ecb-bytecomp-defvar dframe-attached-frame)
 (ecb-bytecomp-defvar speedbar-select-frame-method)
 
 (defvar ecb-speedbar-buffer-name " SPEEDBAR" "Name of the ECB speedbar buffer.")
