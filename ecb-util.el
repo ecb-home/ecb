@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-util.el,v 1.101 2004/03/04 17:28:27 berndl Exp $
+;; $Id: ecb-util.el,v 1.102 2004/03/05 16:46:32 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -318,10 +318,6 @@ means not to count the minibuffer even if it is active."
                                             (scroll-other-window . around)
                                             (custom-save-all . around)
                                             (count-windows . around)
-                                            (narrow-to-region . before)
-                                            (narrow-to-defun . before)
-                                            (narrow-to-page . before)
-                                            (widen . before)
                                             (scroll-all-mode . after))
                                         '((delete-frame . around)
                                           (compilation-set-window-height . around)
@@ -337,10 +333,6 @@ means not to count the minibuffer even if it is active."
                                           (tmm-prompt . around)
                                           (scroll-other-window . around)
                                           (custom-save-all . around)
-                                          (narrow-to-region . before)
-                                          (narrow-to-defun . before)
-                                          (narrow-to-page . before)
-                                          (widen . before)
                                           (count-windows . around)
                                           (scroll-all-mode . after)))
   "These functions are always adviced if ECB is active. Each element of the

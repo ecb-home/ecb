@@ -24,7 +24,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-method-browser.el,v 1.20 2004/03/02 06:48:36 berndl Exp $
+;; $Id: ecb-method-browser.el,v 1.21 2004/03/05 16:46:32 berndl Exp $
 
 ;;; Commentary:
 
@@ -1719,8 +1719,7 @@ help-echo."
           ;; because this would always reparse the source-buffer even if not
           ;; necessary.
           (save-restriction
-            (ecb-with-original-basic-functions
-             (widen))
+            (widen)
             (ecb-rebuild-methods-buffer-with-tagcache
              (ecb--semantic-bovinate-toplevel t)))
         (ecb-rebuild-methods-buffer)))
@@ -1902,12 +1901,9 @@ argument to not nil!"
     (let ((current-tagcache (and (ecb--semantic-active-p)
                                    ;; if we manually bovinate the buffer we
                                    ;; must widen the source to get all tags.
-                                   ;; But here we must not use the adviced
-                                   ;; version of widen!
                                    (save-excursion
                                      (save-restriction
-                                       (ecb-with-original-basic-functions
-                                        (widen))
+                                       (widen)
                                        (ecb--semantic-bovinate-toplevel t))))))
       ;; If the `ecb--semantic-bovinate-toplevel' has done no reparsing but only
       ;; used it´s still valid `semantic-toplevel-bovine-cache' then neither
@@ -2818,8 +2814,7 @@ nil too then no post-actions are performed."
          ;; let us set the mark so the user can easily jump back.
          (if ecb-tag-jump-sets-mark
              (push-mark nil t))
-         (ecb-with-original-basic-functions
-          (widen))
+         (widen)
          (goto-char (ecb-semantic-tag-start tag))
          ;; process post action
          (unless no-tag-visit-post-actions
@@ -2849,7 +2844,8 @@ nil too then no post-actions are performed."
                               tag-buf
                               tag-start
                               tag-end
-                              ecb-buffer-narrowed-by-ecb))))))
+                              (member 'ecb-tag-visit-narrow-tag
+                                      additional-post-action-list)))))))
 
 
 (defun ecb-mouse-over-method-node (node &optional window no-message click-force)
@@ -2876,29 +2872,6 @@ help-text should be printed here."
 
 ;;; popup-menu stuff for the methods-buffer
 
-(defvar ecb-buffer-narrowed-by-ecb nil
-  "If not nil then current buffer is narrowed to a tag by ECB. Otherwise
-the buffer is not narrowed or it is narrowed by ECB but one of the
-interactive commands `narrow-to-*' or function/commands which use in turn one
-of these `narrow-to-*'-functions.")
-(make-variable-buffer-local 'ecb-buffer-narrowed-by-ecb)
-
-(defadvice narrow-to-region (before ecb)
-  "Set an internal ECB-state. This does not influence the behavior."
-  (setq ecb-buffer-narrowed-by-ecb nil))
-
-(defadvice narrow-to-defun (before ecb)
-  "Set an internal ECB-state. This does not influence the behavior."
-  (setq ecb-buffer-narrowed-by-ecb nil))
-
-(defadvice narrow-to-page (before ecb)
-  "Set an internal ECB-state. This does not influence the behavior."
-  (setq ecb-buffer-narrowed-by-ecb nil))
-
-(defadvice widen (before ecb)
-  "Set an internal ECB-state. This does not influence the behavior."
-  (setq ecb-buffer-narrowed-by-ecb nil))
-
 (defun ecb-tag-visit-narrow-tag (tag)
   "Narrow the source buffer to TAG.
 If an outside located documentation belongs to TAG and if this documentation
@@ -2909,11 +2882,7 @@ Returns current point."
   (when (not (ecb-speedbar-sb-tag-p tag))
     (narrow-to-region (or (ecb-start-of-tag-doc tag)
                           (ecb-semantic-tag-start tag))
-                      (ecb-semantic-tag-end tag))
-    ;; This is the only location where this variable is set to not nil!
-    ;; before every call to `narrow-to-*' or `widen' this variable is reset to
-    ;; nil! 
-    (setq ecb-buffer-narrowed-by-ecb t))
+                      (ecb-semantic-tag-end tag)))
   (point))
 
 
@@ -2950,8 +2919,7 @@ Returns current point."
 (tree-buffer-defpopup-command ecb-methods-menu-widen
   "Widen the current buffer in the current edit-window."
   (ecb-select-edit-window)
-  (widen)
-  (setq ecb-buffer-narrowed-by-ecb nil))
+  (widen))
 
 
 (if (not ecb-running-xemacs)
