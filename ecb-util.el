@@ -1219,9 +1219,13 @@ CALLPROCESSARGS are the same style of args as passed to `call-process'.
 The are: PROGRAM, INFILE, BUFFER, DISPLAY, and ARGS.
 Since it actually calls `start-process', not all features will work."
   (ecb-working-status-timeout timeout message donestr
-    (let ((proc (apply 'start-process "ecb-working"
-                       (if (listp buffer) (car buffer) buffer)
-                       program args)))
+    ;; we must explicitly set the LOKALE to C to avoid that a process is
+    ;; called with a different LOKALE...otherwise parsing the output of a
+    ;; process could fail!
+    (let* ((process-environment (cons "LC_ALL=C" process-environment))
+           (proc (apply 'start-process "ecb-working"
+                        (if (listp buffer) (car buffer) buffer)
+                        program args)))
       (set-process-sentinel proc 'list)
       (while (eq (process-status proc) 'run)
 	(accept-process-output proc)
