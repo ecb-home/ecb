@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-speedbar.el,v 1.59 2004/05/06 09:02:05 berndl Exp $
+;; $Id: ecb-speedbar.el,v 1.60 2004/09/09 15:46:16 berndl Exp $
 
 ;;; Commentary:
 
@@ -319,6 +319,21 @@ future this could break."
                  speedbar-buffer
                  (buffer-live-p speedbar-buffer))
         (ecb-speedbar-update-contents)))))
+
+(defun ecb-goto-window-speedbar ()
+  "Make the ECB-speedbar window the current window.
+This command does nothing if no integrated speedbar is visible in the
+ECB-frame."
+  (interactive)
+  (ecb-goto-ecb-window ecb-speedbar-buffer-name))
+
+(defun ecb-maximize-window-speedbar ()
+  "Maximize the ECB-speedbar-window.
+I.e. delete all other ECB-windows, so only one ECB-window and the
+edit-window\(s) are visible \(and maybe a compile-window). Does nothing if the
+speedbar-window is not visible within the ECB-frame."
+  (interactive)
+  (ecb-display-one-ecb-buffer ecb-speedbar-buffer-name))
 
 
 ;; Handling of files which can not be parsed by semantic (i.e. there is no

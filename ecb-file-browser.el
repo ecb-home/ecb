@@ -23,7 +23,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-file-browser.el,v 1.33 2004/09/08 16:41:54 berndl Exp $
+;; $Id: ecb-file-browser.el,v 1.34 2004/09/09 15:46:17 berndl Exp $
 
 ;;; Commentary:
 
@@ -771,6 +771,57 @@ value of BODY is returned."
 	 ,@body)
      ))
 
+
+(defun ecb-goto-window-directories ()
+  "Make the ECB-directories window the current window.
+If `ecb-use-speedbar-instead-native-tree-buffer' is 'dir then goto to the
+speedbar-window."
+  (interactive)
+  (or (ecb-goto-ecb-window ecb-directories-buffer-name)
+      (and (equal ecb-use-speedbar-instead-native-tree-buffer 'dir)
+           (ecb-goto-window-speedbar))))
+
+(defun ecb-goto-window-sources ()
+  "Make the ECB-sources window the current window.
+If `ecb-use-speedbar-instead-native-tree-buffer' is 'source then goto to the
+speedbar-window."
+  (interactive)
+  (or (ecb-goto-ecb-window ecb-sources-buffer-name)
+      (and (equal ecb-use-speedbar-instead-native-tree-buffer 'source)
+           (ecb-goto-window-speedbar))))
+
+(defun ecb-goto-window-history ()
+  "Make the ECB-history window the current window."
+  (interactive)
+  (ecb-goto-ecb-window ecb-history-buffer-name))
+
+(defun ecb-maximize-window-directories ()
+  "Maximize the ECB-directories-window.
+I.e. delete all other ECB-windows, so only one ECB-window and the
+edit-window\(s) are visible \(and maybe a compile-window). Works also if the
+ECB-directories-window is not visible in current layout."
+  (interactive)
+  (if (equal ecb-use-speedbar-instead-native-tree-buffer 'dir)
+      (ecb-maximize-window-speedbar)
+    (ecb-display-one-ecb-buffer ecb-directories-buffer-name)))
+
+(defun ecb-maximize-window-sources ()
+  "Maximize the ECB-sources-window.
+I.e. delete all other ECB-windows, so only one ECB-window and the
+edit-window\(s) are visible \(and maybe a compile-window). Works also if the
+ECB-sources-window is not visible in current layout."
+  (interactive)
+  (if (equal ecb-use-speedbar-instead-native-tree-buffer 'source)
+      (ecb-maximize-window-speedbar)
+    (ecb-display-one-ecb-buffer ecb-sources-buffer-name)))
+
+(defun ecb-maximize-window-history ()
+  "Maximize the ECB-history-window.
+I.e. delete all other ECB-windows, so only one ECB-window and the
+edit-window\(s) are visible \(and maybe a compile-window). Works also if the
+ECB-history-window is not visible in current layout."
+  (interactive)
+  (ecb-display-one-ecb-buffer ecb-history-buffer-name))
 
 
 (defun ecb-expand-directory-tree (path node)

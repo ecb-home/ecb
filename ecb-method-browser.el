@@ -24,7 +24,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-method-browser.el,v 1.54 2004/09/08 16:41:52 berndl Exp $
+;; $Id: ecb-method-browser.el,v 1.55 2004/09/09 15:46:16 berndl Exp $
 
 ;;; Commentary:
 
@@ -1226,6 +1226,25 @@ value of BODY is returned."
 	 ,@body)
      ))
 
+
+(defun ecb-goto-window-methods ()
+  "Make the ECB-methods window the current window.
+If `ecb-use-speedbar-instead-native-tree-buffer' is 'method then goto to the
+speedbar-window."
+  (interactive)
+  (or (ecb-goto-ecb-window ecb-methods-buffer-name)
+      (and (equal ecb-use-speedbar-instead-native-tree-buffer 'method)
+           (ecb-goto-window-speedbar))))
+
+(defun ecb-maximize-window-methods ()
+  "Maximize the ECB-methods-window.
+I.e. delete all other ECB-windows, so only one ECB-window and the
+edit-window\(s) are visible \(and maybe a compile-window). Works also if the
+ECB-methods-window is not visible in current layout."
+  (interactive)
+  (if (equal ecb-use-speedbar-instead-native-tree-buffer 'method)
+      (ecb-maximize-window-speedbar)
+    (ecb-display-one-ecb-buffer ecb-methods-buffer-name)))
 
 (defun ecb-create-node (parent-node display name data type)
   (if (eq 'hidden display)

@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-util.el,v 1.115 2004/09/08 16:41:52 berndl Exp $
+;; $Id: ecb-util.el,v 1.116 2004/09/09 15:46:15 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -412,6 +412,18 @@ means not to count the minibuffer even if it is active."
   from the left-most top-most window) in the order `other-window' would walk
   through these windows."
   (ecb-window-list ecb-frame 0 (frame-first-window ecb-frame)))
+
+(defun ecb-window-select (name)
+  "Select that window which displays the buffer with NAME in the `ecb-frame'
+and return the window-object. If that buffer is not displayed in the
+`ecb-frame' then nothing happens and nil is returned."
+  (let ((window (get-buffer-window name ecb-frame)))
+    (if window
+	(select-window window)
+      nil)))
+
+(defun ecb-buffer-select (name)
+  (set-buffer (get-buffer name)))
 
 
 ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: Attention. Current mechanism of

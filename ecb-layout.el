@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-layout.el,v 1.236 2004/09/08 16:41:52 berndl Exp $
+;; $Id: ecb-layout.el,v 1.237 2004/09/09 15:46:16 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -2443,6 +2443,66 @@ dedicated special ECB-window not only for the built-in standard tree-buffers!"
   (when (and (equal (selected-frame) ecb-frame)
              (member (selected-window) (ecb-canonical-ecb-windows-list)))
     (selected-window)))
+
+
+(defun ecb-goto-ecb-window (name)
+  "Select that special ecb-window with name NAME. Only names defined
+for the current layout \(see `ecb-special-ecb-buffers-of-current-layout') or
+the buffer-name of the integrated speedbar are accepted. If such a window can
+not be selected then probably because another ecb-window of current layout is
+currently maximized; therefore in such a case the layout has been redrawn and
+then tried to select the window again. This function does nothing if NAME
+fulfills not the described conditions or if the ecb-windows are hidden or ECB
+is not active. If necessary the `ecb-frame' will be first raised."
+  (when (and ecb-minor-mode
+             (not ecb-windows-hidden)
+             (or (equal name ecb-speedbar-buffer-name)
+                 (member name ecb-special-ecb-buffers-of-current-layout)))
+    (raise-frame ecb-frame)
+    (select-frame ecb-frame)
+    (or (ecb-window-select name)
+        ;; the window is not visible because another one is maximized;
+        ;; therefore we first redraw the layout
+        (progn
+          (ecb-redraw-layout-full nil nil nil nil)
+          ;; now we can go to the window
+          (ecb-window-select name)))))
+
+(defun ecb-goto-window-edit-last ()
+  "Make the last selected edit-window window the current window. This is the
+same as if `ecb-mouse-click-destination' is set to 'last-point."
+  (interactive)
+  (when ecb-minor-mode
+    (raise-frame ecb-frame)
+    (select-frame ecb-frame)
+    (let ((ecb-mouse-click-destination 'last-point))
+      (ecb-select-edit-window))))
+
+(defun ecb-goto-window-edit1 ()
+  "Make the \(first) edit-window window the current window."
+  (interactive)
+  (when ecb-minor-mode
+    (raise-frame ecb-frame)
+    (select-frame ecb-frame)
+    (ecb-select-edit-window 1)))
+
+(defun ecb-goto-window-edit2 ()
+  "Make the second edit-window \(if available) window the current window."
+  (interactive)
+  (when ecb-minor-mode
+    (raise-frame ecb-frame)
+    (select-frame ecb-frame)
+    (ecb-select-edit-window t)))
+
+(defun ecb-goto-window-compilation ()
+  "Goto the ecb compilation window `ecb-compile-window'."
+  (interactive)
+  (when (and ecb-minor-mode
+             (equal 'visible (ecb-compile-window-state)))
+    (raise-frame ecb-frame)
+    (select-frame ecb-frame)
+    (select-window ecb-compile-window)))
+
 
 (defun ecb-select-ecb-frame ()
   "Selects the `ecb-frame' if ECB is activated - otherwise reports an error."

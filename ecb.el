@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb.el,v 1.404 2004/09/08 16:41:49 berndl Exp $
+;; $Id: ecb.el,v 1.405 2004/09/09 15:46:13 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -233,7 +233,6 @@
 (silentcomp-defvar ediff-quit-hook)
 (silentcomp-defun Info-goto-node)
 
-(silentcomp-defun ecb-speedbar-active-p)
 (silentcomp-defun ecb-speedbar-deactivate)
 (silentcomp-defvar ecb-speedbar-buffer-name)
 
@@ -566,178 +565,6 @@ examples how to use this macro!"
 ;; Internals
 ;;====================================================
 
-
-;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: XXX: --> layout
-(defun ecb-window-select (name)
-  "Select that window which displays the buffer with NAME in the `ecb-frame'
-and return the window-object. If that buffer is not displayed in the
-`ecb-frame' then nothing happens and nil is returned."
-  (let ((window (get-buffer-window name ecb-frame)))
-    (if window
-	(select-window window)
-      nil)))
-
-;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: XXX: --> layout
-(defun ecb-goto-ecb-window (name)
-  "Select that special ecb-window with name NAME. Only names defined
-for the current layout \(see `ecb-special-ecb-buffers-of-current-layout') or
-the buffer-name of the integrated speedbar are accepted. If such a window can
-not be selected then probably because another ecb-window of current layout is
-currently maximized; therefore in such a case the layout has been redrawn and
-then tried to select the window again. This function does nothing if NAME
-fulfills not the described conditions or if the ecb-windows are hidden or ECB
-is not active. If necessary the `ecb-frame' will be first raised."
-  (when (and ecb-minor-mode
-             (not ecb-windows-hidden)
-             (or (equal name ecb-speedbar-buffer-name)
-                 (member name ecb-special-ecb-buffers-of-current-layout)))
-    (raise-frame ecb-frame)
-    (select-frame ecb-frame)
-    (or (ecb-window-select name)
-        ;; the window is not visible because another one is maximized;
-        ;; therefore we first redraw the layout
-        (progn
-          (ecb-redraw-layout-full nil nil nil nil)
-          ;; now we can go to the window
-          (ecb-window-select name)))))
-
-;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: XXX: --> file-browser
-(defun ecb-goto-window-directories ()
-  "Make the ECB-directories window the current window.
-If `ecb-use-speedbar-instead-native-tree-buffer' is 'dir then goto to the
-speedbar-window."
-  (interactive)
-  (or (ecb-goto-ecb-window ecb-directories-buffer-name)
-      (and (equal ecb-use-speedbar-instead-native-tree-buffer 'dir)
-           (ecb-goto-window-speedbar))))
-
-;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: XXX: --> file-browser
-(defun ecb-goto-window-sources ()
-  "Make the ECB-sources window the current window.
-If `ecb-use-speedbar-instead-native-tree-buffer' is 'source then goto to the
-speedbar-window."
-  (interactive)
-  (or (ecb-goto-ecb-window ecb-sources-buffer-name)
-      (and (equal ecb-use-speedbar-instead-native-tree-buffer 'source)
-           (ecb-goto-window-speedbar))))
-
-;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: XXX: --> methods-browser
-(defun ecb-goto-window-methods ()
-  "Make the ECB-methods window the current window.
-If `ecb-use-speedbar-instead-native-tree-buffer' is 'method then goto to the
-speedbar-window."
-  (interactive)
-  (or (ecb-goto-ecb-window ecb-methods-buffer-name)
-      (and (equal ecb-use-speedbar-instead-native-tree-buffer 'method)
-           (ecb-goto-window-speedbar))))
-
-;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: XXX: --> file-browser
-(defun ecb-goto-window-history ()
-  "Make the ECB-history window the current window."
-  (interactive)
-  (ecb-goto-ecb-window ecb-history-buffer-name))
-
-;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: XXX: --> speedbar???
-(defun ecb-goto-window-speedbar ()
-  "Make the ECB-speedbar window the current window.
-This command does nothing if no integrated speedbar is visible in the
-ECB-frame."
-  (interactive)
-  (ecb-goto-ecb-window ecb-speedbar-buffer-name))
-
-;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: XXX: --> layout
-(defun ecb-goto-window-edit-last ()
-  "Make the last selected edit-window window the current window. This is the
-same as if `ecb-mouse-click-destination' is set to 'last-point."
-  (interactive)
-  (when ecb-minor-mode
-    (raise-frame ecb-frame)
-    (select-frame ecb-frame)
-    (let ((ecb-mouse-click-destination 'last-point))
-      (ecb-select-edit-window))))
-
-;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: XXX: --> layout
-(defun ecb-goto-window-edit1 ()
-  "Make the \(first) edit-window window the current window."
-  (interactive)
-  (when ecb-minor-mode
-    (raise-frame ecb-frame)
-    (select-frame ecb-frame)
-    (ecb-select-edit-window 1)))
-
-;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: XXX: --> layout
-(defun ecb-goto-window-edit2 ()
-  "Make the second edit-window \(if available) window the current window."
-  (interactive)
-  (when ecb-minor-mode
-    (raise-frame ecb-frame)
-    (select-frame ecb-frame)
-    (ecb-select-edit-window t)))
-
-;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: XXX: --> layout
-(defun ecb-goto-window-compilation ()
-  "Goto the ecb compilation window `ecb-compile-window'."
-  (interactive)
-  (when (and ecb-minor-mode
-             (equal 'visible (ecb-compile-window-state)))
-    (raise-frame ecb-frame)
-    (select-frame ecb-frame)
-    (select-window ecb-compile-window)))
-
-;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: XXX: --> layout
-(defun ecb-buffer-select (name)
-  (set-buffer (get-buffer name)))
-
-;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: XXX: --> file-browser
-(defun ecb-maximize-window-directories ()
-  "Maximize the ECB-directories-window.
-I.e. delete all other ECB-windows, so only one ECB-window and the
-edit-window\(s) are visible \(and maybe a compile-window). Works also if the
-ECB-directories-window is not visible in current layout."
-  (interactive)
-  (if (equal ecb-use-speedbar-instead-native-tree-buffer 'dir)
-      (ecb-maximize-window-speedbar)
-    (ecb-display-one-ecb-buffer ecb-directories-buffer-name)))
-
-;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: XXX: --> file-browser
-(defun ecb-maximize-window-sources ()
-  "Maximize the ECB-sources-window.
-I.e. delete all other ECB-windows, so only one ECB-window and the
-edit-window\(s) are visible \(and maybe a compile-window). Works also if the
-ECB-sources-window is not visible in current layout."
-  (interactive)
-  (if (equal ecb-use-speedbar-instead-native-tree-buffer 'source)
-      (ecb-maximize-window-speedbar)
-    (ecb-display-one-ecb-buffer ecb-sources-buffer-name)))
-
-;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: XXX: --> methods-browser
-(defun ecb-maximize-window-methods ()
-  "Maximize the ECB-methods-window.
-I.e. delete all other ECB-windows, so only one ECB-window and the
-edit-window\(s) are visible \(and maybe a compile-window). Works also if the
-ECB-methods-window is not visible in current layout."
-  (interactive)
-  (if (equal ecb-use-speedbar-instead-native-tree-buffer 'method)
-      (ecb-maximize-window-speedbar)
-    (ecb-display-one-ecb-buffer ecb-methods-buffer-name)))
-
-;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: XXX: --> file-browser
-(defun ecb-maximize-window-history ()
-  "Maximize the ECB-history-window.
-I.e. delete all other ECB-windows, so only one ECB-window and the
-edit-window\(s) are visible \(and maybe a compile-window). Works also if the
-ECB-history-window is not visible in current layout."
-  (interactive)
-  (ecb-display-one-ecb-buffer ecb-history-buffer-name))
-
-;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: XXX: --> speedbar???
-(defun ecb-maximize-window-speedbar ()
-  "Maximize the ECB-speedbar-window.
-I.e. delete all other ECB-windows, so only one ECB-window and the
-edit-window\(s) are visible \(and maybe a compile-window). Does nothing if the
-speedbar-window is not visible within the ECB-frame."
-  (interactive)
-  (ecb-display-one-ecb-buffer ecb-speedbar-buffer-name))
 
 (defun ecb-kill-buffer-hook ()
   "Function added to the `kill-buffer-hook' during ECB activation.
@@ -1672,6 +1499,7 @@ ECB has been deactivated. Do not set this variable!")
         (ecb-select-ecb-frame)
         (ecb-update-directories-buffer))
 
+    (let ((stack-trace-on-error t))
     ;; we activate only if all before-hooks return non nil
     (when (run-hook-with-args-until-failure 'ecb-before-activate-hook)
 
@@ -1851,6 +1679,7 @@ ECB has been deactivated. Do not set this variable!")
                 (ecb-activate-xemacs-modeline-menu 1))
             )
         (error
+;;          (backtrace)
          (ecb-clean-up-after-activation-failure
           "Errors during the basic setup of ECB." err-obj)))
 
@@ -1977,7 +1806,7 @@ ECB has been deactivated. Do not set this variable!")
         (error
          (ecb-clean-up-after-activation-failure
           "Errors during the snapshot of the windows-configuration." err-obj)))
-      )))
+      ))))
 
 
 ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: Should we add this function to
