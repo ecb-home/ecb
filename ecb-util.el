@@ -90,24 +90,6 @@
   (ecb-update-directory-node (tree-node-get-parent node))
   (tree-buffer-update))
 
-(defun ecb-toggle-read-only(mode)
-  "Perform misc operations after loading ECB."
-
-  (ecb-set-read-only ecb-directories-buffer-name mode)
-
-  (ecb-set-read-only ecb-sources-buffer-name mode)
-
-  (ecb-set-read-only ecb-history-buffer-name mode)
-
-  (ecb-set-read-only ecb-methods-buffer-name mode))
-  
-
-(defun ecb-set-read-only(buffer mode)
-  "Make the given buffer read-only."
-  
-  (set-buffer buffer)
-  (toggle-read-only mode))
-
 (provide 'ecb-util)
 
 ;;; ecb-util.el ends here

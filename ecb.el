@@ -125,8 +125,8 @@
 
 (defcustom ecb-use-recursive-edit nil
   "*Tell ECB to use a recursive edit so that it can easily be deactivated by
-(keyboard-escape-quit)."
-  :group 'ecb
+\(keyboard-escape-quit)."
+  :group 'ecb-general
   :type 'boolean)
 
 (defcustom ecb-source-path nil
@@ -703,57 +703,39 @@ current-buffer is saved."
            ;; current source-buffer.
            (eq (current-buffer)
                (window-buffer ecb-last-edit-window-with-point)))
-      (ecb-update-methods-buffer)))
+      (ecb-update-methods-buffer--internal)))
 
+;; Klaus: We must devide the ecb-update-method-buffer stuff for internal use
+;; and for interactive use (here nothing should be done if point stays not in
+;; an edit-window).
 (defun ecb-update-methods-buffer()
   "Updates the methods buffer with the current buffer. Point must stay in an
 edit-window otherwise nothing is done."
   (interactive)
+  (when (ecb-point-in-edit-window)
+    (ecb-update-methods-buffer-internal)))
 
-  (ecb-toggle-read-only -1)
+(defun ecb-update-methods-buffer--internal()
+  "Updates the methods buffer with the current buffer."
+  (tree-node-set-children ecb-methods-root-node nil)
+  ;;  (print (semantic-bovinate-toplevel t))
   
-;   (when (ecb-point-in-edit-window)
-
-;     (tree-node-set-children ecb-methods-root-node nil)
-;     ;;  (print (semantic-bovinate-toplevel t))
-
-;     (ecb-add-tokens ecb-methods-root-node
-;                     (condition-case nil
-;                         ;; semantic <= 1.2.1
-;                         (semantic-bovinate-toplevel 0 nil t)
-;                       (wrong-number-of-arguments
-;                        ;; semantic >= 1.3.1
-;                        (semantic-bovinate-toplevel t)))
-;                     t)
-;     (save-selected-window
-;       ;; also the whole buffer informations should be preserved!
-;       (save-excursion
-;         (ecb-buffer-select ecb-methods-buffer-name)
-;         (setq tree-buffer-indent ecb-tree-indent)
-;         (tree-buffer-update)))
-
-;     (ecb-mode-line-format)))
-
-
-    (tree-node-set-children ecb-methods-root-node nil)
-    ;;  (print (semantic-bovinate-toplevel t))
-
-    (ecb-add-tokens ecb-methods-root-node
-                    (condition-case nil
-                        ;; semantic <= 1.2.1
-                        (semantic-bovinate-toplevel 0 nil t)
-                      (wrong-number-of-arguments
-                       ;; semantic >= 1.3.1
-                       (semantic-bovinate-toplevel t)))
-                    t)
-    (save-selected-window
-      ;; also the whole buffer informations should be preserved!
-      (save-excursion
-        (ecb-buffer-select ecb-methods-buffer-name)
-        (setq tree-buffer-indent ecb-tree-indent)
-        (tree-buffer-update)))
-
-    (ecb-mode-line-format))
+  (ecb-add-tokens ecb-methods-root-node
+                  (condition-case nil
+                      ;; semantic <= 1.2.1
+                      (semantic-bovinate-toplevel 0 nil t)
+                    (wrong-number-of-arguments
+                     ;; semantic >= 1.3.1
+                     (semantic-bovinate-toplevel t)))
+                  t)
+  (save-selected-window
+    ;; also the whole buffer informations should be preserved!
+    (save-excursion
+      (ecb-buffer-select ecb-methods-buffer-name)
+      (setq tree-buffer-indent ecb-tree-indent)
+      (tree-buffer-update)))
+  
+  (ecb-mode-line-format))
   
 
 (defun ecb-set-selected-source(filename &optional window-skips
@@ -773,12 +755,12 @@ edit-window otherwise nothing is done."
       (save-selected-window
         (save-excursion
           (set-buffer (find-file-noselect ecb-path-selected-source))
-          (ecb-update-methods-buffer)))
+          (ecb-update-methods-buffer--internal)))
     ;; open the selected source in the edit-window and do all the update and
     ;; parsing stuff with this buffer
     (ecb-find-file-and-display ecb-path-selected-source
                                window-skips)
-    (ecb-update-methods-buffer)))
+    (ecb-update-methods-buffer--internal)))
 
 (defun ecb-select-method(method-start)
   (setq ecb-selected-method-start method-start)
@@ -837,7 +819,7 @@ For further explanation see `ecb-clear-history-behavior'."
       (sit-for 0.1)
       (ecb-select-source-file filename)
 
-      (ecb-update-methods-buffer))))
+      (ecb-update-methods-buffer--internal))))
 
 (defun ecb-find-file-and-display(filename &optional window-skips)
   "Finds the file in the correct window. What the correct window is depends on
@@ -902,9 +884,6 @@ the setting in `ecb-left-mouse-jump-destination'."
 (defun ecb-update-directories-buffer()
   "Updates the ECB directories buffer."
   (interactive)
-
-  (ecb-toggle-read-only -1)
-  
   (save-current-buffer
     (ecb-buffer-select ecb-directories-buffer-name)
     ;;     (setq tree-buffer-type-faces
@@ -918,7 +897,11 @@ the setting in `ecb-left-mouse-jump-destination'."
             (dolist (dir ecb-source-path)
               (tree-node-add-child node (ecb-new-child old-children dir 0 dir)))
             (tree-buffer-update))
-        (progn
+        (let ((buffer-read-only))
+          ;; TODO: This should not be done, because the read-only property of
+          ;; a treebuffer should only be changed by the tree-buffer routines.
+          ;; But for the moment it works. But let´s find a better solution,
+          ;; maybe only a message displaying in the echo-area??!!
           (erase-buffer)
           (insert "No source paths set.\nPress F2 to customize\nTo get help, call\necb-show-help."))))))
 
@@ -1022,7 +1005,6 @@ with the actually choosen layout \(see `ecb-layout-nr')."
 
 (defun ecb-activate--impl()
   "See `ecb-activate'.  This is the implementation of ECB activation."
-
   
   (if ecb-activated
       (ecb-redraw-layout)
@@ -1039,6 +1021,7 @@ with the actually choosen layout \(see `ecb-layout-nr')."
          'ecb-mouse-over-node
          (list (cons 0 ecb-directories-menu) (cons 1 ecb-sources-menu))
          ecb-truncate-lines
+         t
          (list (cons 1 ecb-source-in-directories-buffer-face))
          ecb-tree-expand-symbol-before)
         ;; if we want some keys only defined in a certain tree-buffer we
@@ -1060,7 +1043,8 @@ with the actually choosen layout \(see `ecb-layout-nr')."
          'ecb-source-clicked
          'ecb-mouse-over-node
          (list (cons 0 ecb-sources-menu))
-         ecb-truncate-lines))
+         ecb-truncate-lines
+         t))
       
       (unless (member ecb-methods-buffer-name curr-buffer-list)
         (tree-buffer-create
@@ -1070,6 +1054,7 @@ with the actually choosen layout \(see `ecb-layout-nr')."
          'ecb-mouse-over-node
          nil
          ecb-truncate-lines
+         t
          (list (cons 0 t))
          ecb-tree-expand-symbol-before)
         (setq ecb-methods-root-node (tree-buffer-get-root)))
@@ -1081,7 +1066,8 @@ with the actually choosen layout \(see `ecb-layout-nr')."
          'ecb-source-clicked
          'ecb-mouse-over-node
          (list (cons 0 ecb-history-menu))
-         ecb-truncate-lines)))
+         ecb-truncate-lines
+         t)))
     
     ;; we need some hooks
     (remove-hook 'post-command-hook 'ecb-hook)
@@ -1108,11 +1094,9 @@ with the actually choosen layout \(see `ecb-layout-nr')."
     ;; acivates at its end also the adviced functions if necessary!
     (ecb-redraw-layout)
     ;; now update all the ECB-buffer-modelines
-    (ecb-update-methods-buffer)
+    (ecb-update-methods-buffer--internal)
     ;; at the real end we run any personal hooks
     (run-hooks 'ecb-activate-hook)
-
-    ;;(ecb-toggle-read-only 1)
     
     (message "The ECB is now activated.")))
 

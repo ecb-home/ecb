@@ -1,8 +1,10 @@
 Version 1.20 (???):
 -------------------
 
+- Now all tree-buffers (ECB-buffers) are read-only (Klaus)!
+
 - Better implementation of advising the functions. Now all adviceable
-  functions are completely independent from each other!
+  functions are completely independent from each other (Klaus)!
 
 - Mon Apr 2 21:20:34 2001 (burton@relativity.yi.org): (KAB) merge my modeline
   additions... this removes the redundant modeline info and shows important
@@ -10,15 +12,15 @@ Version 1.20 (???):
 
 - Added new option `ecb-advice-window-functions'. Enabling the intelligent
   window functions via customize. No hook hacking necessary anymore!
-  Now the intelligent window functions are implemented by advicing.
+  Now the intelligent window functions are implemented by advicing (klaus).
 
-- Better online help display.
+- Better online help display (Klaus).
 
 - Added new option 'ecb-left-mouse-jump-destination' (thanks to David Hay for
   suggestion <David.Hay@requisite.com>.
 
 - Adviced 'other-window' acts now exactly like the original but always related
-  to 'ecb-other-window-jump-behavior'!
+  to 'ecb-other-window-jump-behavior' (klaus)!
 
 - Fixed bug with 'ecb-compile-window-height'. Now ECB has always the correct
   compile-window height after compilation-output (compile, grep etc.)

@@ -202,7 +202,8 @@ inserted and the TEXT itself"
 
 (defun tree-buffer-update()
   (let ((ws (window-start))
-        (p (point)))
+        (p (point))
+        (buffer-read-only nil))
     (setq tree-buffer-nodes nil)
     (erase-buffer)
     (dolist (node (tree-node-get-children tree-buffer-root))
@@ -241,7 +242,7 @@ inserted and the TEXT itself"
               (eval (list (car fn) 'node))))))))
 
 (defun tree-buffer-create(name node-selected-fn node-expanded-fn node-mouse-over-fn
-                               menus tr-lines
+                               menus tr-lines read-only
                                &optional type-facer expand-symbol-before)
   "Creates a new tree buffer with
 NAME: Name of the buffer
@@ -252,6 +253,7 @@ MENUS: Nil or a list of one or two conses, each cons for a node-type \(0 or 1)
        Example: \(\(0 . menu-for-type-0) \(1 . menu-for-type-1)). The cdr of a
        cons must be a menu.
 TR-LINES: Should lines in this tree buffer be truncated \(not nil)
+READ-ONLY: Should the treebuffer be read-only \(not nil)
 TYPE-FACER: Nil or a list of one or two conses, each cons for a node-type \(0
             or 1). The cdr of a cons can be:
             - a symbol of a face
@@ -283,6 +285,7 @@ EXPAND-SYMBOL-BEFORE: If not nil then the expand-symbol \(is displayed before
   (make-local-variable 'tree-buffer-highlight-overlay)
   
   (setq truncate-lines tr-lines)
+  (setq buffer-read-only read-only)
   (setq truncate-partial-width-windows tr-lines)
   (setq tree-buffer-key-map (make-sparse-keymap))
   (setq tree-node-selected-fn node-selected-fn)
