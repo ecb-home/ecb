@@ -62,7 +62,7 @@
 ;; The latest version of the ECB is available at
 ;; http://home.swipnet.se/mayhem/ecb.html
 
-;; $Id: ecb.el,v 1.278 2003/01/23 16:45:42 berndl Exp $
+;; $Id: ecb.el,v 1.279 2003/01/27 10:42:23 berndl Exp $
 
 ;;; Code:
 
@@ -98,6 +98,7 @@
 (require 'ecb-cycle)
 (require 'ecb-face)
 (require 'ecb-upgrade)
+(require 'ecb-tod)
 ;;(require 'ecb-profile)
 
 ;; various loads
@@ -139,6 +140,8 @@
   "Path to currently selected directory.")
 (defvar ecb-path-selected-source nil
   "Path to currently selected source.")
+(defvar ecb-major-mode-selected-source nil
+  "Major-mode of currently selected source.")
 (defvar ecb-selected-token nil
   "The currently selected Semantic token.")
 (make-variable-buffer-local 'ecb-selected-token)
@@ -153,6 +156,7 @@
         ecb-selected-method-start 0
         ecb-path-selected-directory nil
         ecb-path-selected-source nil
+        ecb-major-mode-selected-source nil
         ecb-selected-token nil
         ecb-methods-root-node nil))
 
@@ -1051,8 +1055,8 @@ not be jumped."
                              (section flattened nil)
                              (def collapsed name)
                              (t collapsed name))
-  "*How to show tokens in the methods buffer. This variable is a list where each
-element represents a type of tokens:
+  "*How to show tokens in the methods buffer first time after find-file.
+This variable is a list where each element represents a type of tokens:
 
 \(<token type> <display type> <sort method>)
 
@@ -2745,9 +2749,9 @@ is not changed."
 			       other-edit-window)
     (when ecb-token-jump-narrow
       (widen))
-    (setq ecb-selected-token nil)
     (ecb-update-methods-buffer--internal 'scroll-to-begin)
-    (ecb-token-sync)))
+    (setq ecb-major-mode-selected-source major-mode)
+    (ecb-token-sync 'force)))
 
 (defun ecb-remove-from-current-tree-buffer (node)
   (when node
@@ -2820,12 +2824,12 @@ For further explanation see `ecb-clear-history-behavior'."
        (tree-buffer-update)
        (tree-buffer-highlight-node-data ecb-path-selected-source)))))
 
-(defun ecb-token-sync ()
+(defun ecb-token-sync (&optional force)
   (when (and ecb-minor-mode
              (ecb-point-in-edit-window))
     (when ecb-highlight-token-with-point
       (let ((tok (ecb-semantic-current-nonterminal)))
-        (when (not (equal ecb-selected-token tok))
+        (when (or force (not (equal ecb-selected-token tok)))
           (setq ecb-selected-token tok)
           (save-selected-window
             (ecb-exec-in-methods-window
@@ -2906,11 +2910,11 @@ tasks are performed:
                ;; `ecb-select-source-file'!
                ;;           (ecb-update-directories-buffer)
                (ecb-select-source-file filename force)
+               (ecb-update-methods-buffer--internal 'scroll-to-begin)
+               (setq ecb-major-mode-selected-source major-mode)
                ;; selected source has changed, therfore we must initialize
                ;; ecb-selected-token again.
-               (setq ecb-selected-token nil)
-               (ecb-update-methods-buffer--internal 'scroll-to-begin)
-               (ecb-token-sync))
+               (ecb-token-sync 'force))
               
               (;; synchronizing for dired-mode
                (eq major-mode 'dired-mode)
@@ -3301,87 +3305,99 @@ Currently the fourth argument TREE-BUFFER-NAME is not used here."
          (ignore-errors (semantic-token-token (tree-node-get-data node))))
         (t nil)))
 
-
-(defun ecb-expand-methods-nodes (&optional level)
+(defun ecb-expand-methods-nodes (&optional force-all)
   "Set the expand level of the nodes in the ECB-methods-buffer.
 
-With the optional argument LEVEL \(an integer or nil) you can precisely
-spezify which level of nodes should be expanded. LEVEL means the
-indentation-level of the nodes.
+This command asks in the minibuffer for an indentation level LEVEL. With this
+LEVEL you can precisely spezify which level of nodes should be expanded. LEVEL
+means the indentation-level of the nodes.
 
-A LEVEL-value X means that all nodes with an indentation-level <= X are
+A LEVEL value X means that all nodes with an indentation-level <= X are
 expanded and all other are collapsed. A negative LEVEL value means all visible
 nodes are collapsed.
 
 Nodes which are not indented have indentation-level 0!
 
-If LEVEL is nil then the action depends on the first node of current
-method-buffer: If it is expanded than LEVEL will be treated as -1 \(i.e. all
-visible nodes will be collapsed) otherwise ALL nodes will be expanded
-regardless of their indentation-level.
-
 Which node-types are expanded \(resp. collapsed) by this command depends on
 the options `ecb-methods-nodes-expand-spec' and
-`ecb-methods-nodes-collapse-spec'!
+`ecb-methods-nodes-collapse-spec'! With optional argument FORCE-ALL all tokens
+will be expanded/collapsed regardless of the values of these options.
 
 Examples:
-LEVEL = 0 expands only nodess which have no indentation itself.
-LEVEL = 2 expands nodess which are indented once or twice
-LEVEL ~ 100 should normally expand all nodes unless there are nodes which
-are indented deeper than 100."
+- LEVEL = 0 expands only nodes which have no indentation itself.
+- LEVEL = 2 expands nodess which are either not indented or indented once or
+  twice
+- LEVEL ~ 10 should normally expand all nodes unless there are nodes which
+  are indented deeper than 10."
   (interactive "P")
-  (if (not (ecb-point-in-edit-window))
-      (ecb-error "This command can only be called in an edit-window!"))
-  (let ((symbol->name-assoc-list semantic-symbol->name-assoc-list))
+  (let ((symbol->name-assoc-list
+         ;; if possible we get the local semantic-symbol->name-assoc-list of
+         ;; the source-buffer.
+         (or (save-excursion
+               (ignore-errors
+                 (set-buffer (get-file-buffer ecb-path-selected-source))
+                 semantic-symbol->name-assoc-list))
+             semantic-symbol->name-assoc-list)))
     (save-selected-window
       (ecb-exec-in-methods-window
-       (goto-char (point-min))
-       (let ((node-at-point (tree-buffer-get-node-at-point))
-             ;; normalizing the elements of `ecb-methods-nodes-expand-spec'
-             ;; and `ecb-methods-nodes-collapse-spec'.
-             (norm-expand-types (if (equal 'all ecb-methods-nodes-expand-spec)
-                                    'all
-                                  (mapcar (function (lambda (elem)
-                                                      (intern
-                                                       (downcase (ecb-string-make-singular
-                                                                  (symbol-name elem))))))
-                                          ecb-methods-nodes-expand-spec)))
-             (norm-collapse-types (if (equal 'all ecb-methods-nodes-collapse-spec)
-                                      'all
-                                    (mapcar (function (lambda (elem)
-                                                        (intern
-                                                         (downcase (ecb-string-make-singular
-                                                                    (symbol-name elem))))))
-                                            ecb-methods-nodes-collapse-spec))))
-         ;; setting the indentation level suitable if not set by the caller
-         (setq level (or level
-                         (if (and node-at-point
-                                  (tree-node-is-expandable node-at-point)
-                                  (tree-node-is-expanded node-at-point))
-                             -1
-                           1000)))
-         (while node-at-point
-           (when (tree-node-is-expandable node-at-point)
-             (if (or (and (not (tree-node-is-expanded node-at-point))
-                          (or (equal norm-expand-types 'all)
-                              (member (ecb-methods-node-get-semantic-type
-                                       node-at-point symbol->name-assoc-list)
-                                      norm-expand-types))
-                          (<= (tree-buffer-get-node-indent node-at-point)
-                              (* tree-buffer-indent level)))
-                     (and (tree-node-is-expanded node-at-point)
-                          (or (equal norm-collapse-types 'all)
-                              (member (ecb-methods-node-get-semantic-type
-                                       node-at-point symbol->name-assoc-list)
-                                      norm-collapse-types))
-                          (> (tree-buffer-get-node-indent node-at-point)
-                             (* tree-buffer-indent level))))
-                 (tree-buffer-tab-pressed)))
-           (forward-line)
-           (setq node-at-point (tree-buffer-get-node-at-point))))))))
+       (let* ((first-node (save-excursion
+                            (goto-char (point-min))
+                            (tree-buffer-get-node-at-point)))
+              ;; normalizing the elements of `ecb-methods-nodes-expand-spec'
+              ;; and `ecb-methods-nodes-collapse-spec'.
+              (norm-expand-types (ecb-normalize-expand-spec
+                                  ecb-methods-nodes-expand-spec))
+              (norm-collapse-types (ecb-normalize-expand-spec
+                                    ecb-methods-nodes-collapse-spec))
+              (level (ecb-read-number
+                      "Expand indentation-level: "
+                      (if (and first-node
+                               (tree-node-is-expandable first-node)
+                               (tree-node-is-expanded first-node))
+                          -1
+                        10))))
+         (tree-buffer-expand-nodes
+          level
+          (and (not force-all)
+               (function (lambda (node current-level)
+                           (or (equal norm-expand-types 'all)
+                               (member (ecb-methods-node-get-semantic-type
+                                        node symbol->name-assoc-list)
+                                       norm-expand-types)))))
+          (and (not force-all)
+               (function (lambda (node current-level)
+                           (or (equal norm-collapse-types 'all)
+                               (member (ecb-methods-node-get-semantic-type
+                                        node symbol->name-assoc-list)
+                                       norm-collapse-types))))))
+         (tree-buffer-scroll (point-min) (point-min)))))
 
-;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: Eventuell customizable welche
-;; Funtion bei einem POWER-Click in einem Tree-buffer ausgeführt wird!!!
+    ;; we want resync the new method-buffer to the current token in the
+    ;; edit-window.
+    (ecb-token-sync 'force)))
+
+(defun ecb-normalize-expand-spec (spec)
+  (if (equal 'all spec)
+      'all
+    (mapcar (function (lambda (elem)
+                        (intern
+                         (downcase (ecb-string-make-singular
+                                    (symbol-name elem))))))
+            spec)))
+
+
+(defun ecb-expand-directory-nodes (level)
+  "Set the expand level of the nodes in the ECB-directories-buffer.
+
+For argument LEVEL see `ecb-expand-methods-nodes'.
+
+Be aware that for deep structured paths and a lot of source-paths this command
+can last a long time - depending of machine- and disk-performance."
+  (interactive "nLevel: ")
+  (save-selected-window
+    (ecb-exec-in-directories-window
+     (tree-buffer-expand-nodes level)))
+  (ecb-current-buffer-sync 'force))
 
 ;; this mechanism is necessary because tree-buffer creates for mouse releasing
 ;; a new nop-command (otherwise the cursor jumps back to the tree-buffer).
@@ -3682,12 +3698,6 @@ That is remove the unsupported :help stuff."
       :help "Synchronize the ECB windows with the current edit-window."
       ])
    (ecb-menu-item
-    [ "Rebuild method buffer"
-      ecb-rebuild-methods-buffer
-      :active (equal (selected-frame) ecb-frame)
-      :help "Rebuild the method buffer completely"
-      ])
-   (ecb-menu-item
     [ "Update directories buffer"
       ecb-update-directories-buffer
       :active (equal (selected-frame) ecb-frame)
@@ -3699,6 +3709,19 @@ That is remove the unsupported :help stuff."
       :active (and (equal (selected-frame) ecb-frame)
                    (ecb-window-live-p ecb-history-buffer-name))
       :help "Add all current file-buffers to history"
+      ])
+   "-"
+   (ecb-menu-item
+    [ "Rebuild method buffer"
+      ecb-rebuild-methods-buffer
+      :active (equal (selected-frame) ecb-frame)
+      :help "Rebuild the method buffer completely"
+      ])
+   (ecb-menu-item
+    [ "Expand method buffer"
+      ecb-expand-methods-nodes
+      :active (equal (selected-frame) ecb-frame)
+      :help "Expand all nodes of a certain indent-level"
       ])
    "-"
    (ecb-menu-item
@@ -4030,6 +4053,7 @@ That is remove the unsupported :help stuff."
                (t "bg" ecb-goto-window-directories)
                (t "bc" speedbar-change-initial-expansion-list)
                (t "e" ecb-eshell-goto-eshell)
+               (t "x" ecb-expand-methods-nodes)
                (t "/" ecb-toggle-enlarged-compilation-window)
                (t "." ecb-cycle-through-compilation-buffers)))
 
@@ -4424,7 +4448,8 @@ always the ECB-frame if called from another frame."
           (ecb-show-help)
           (Info-goto-node "First steps")))
 
-      
+      ;; display tip of the day if `ecb-tip-of-the-day' is not nil
+      (ecb-show-tip-of-the-day)
       
       ;;now take a snapshot of the current window configuration
       (ecb-set-activated-window-configuration))))
@@ -4647,6 +4672,7 @@ buffers does not exist anymore."
 	("Remove Current Entry" ecb-clear-history-node)
 	("Remove All Entries" ecb-clear-history-all)
 	("Remove Non Existing Buffer Entries" ecb-clear-history-only-not-existing)))
+
 
 ;; ECB byte-compilation
 
