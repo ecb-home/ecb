@@ -19,10 +19,3 @@
   either filenames (in case of real files) or buffer-object in case of buffers
   which can be parsed but are not real files (not saved sources or
   archive-extracts for example).
-
-- (BUG) if we are in a compilation buffer, and we do a
-  switch-to-buffer-other-window, and the buffer currently in the edit window is
-  already the buffer we want to switch to, we should NOT split the window again
-  because this would yeild two windows each with the same buffer.
-
-- Ignore source files specified in .cvsignore files. (JN)
