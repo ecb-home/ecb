@@ -2,7 +2,8 @@ Version 1.31:
 -------------
 
 - Parents (extends and implements) of the classes in the current buffer is now
-  shown in the methods buffer. (Jesper)
+  shown in the methods buffer. (Jesper). Possibility to define a regexp which
+  parents should not be shown. (Klaus).
 
 - Now displaying the complete node name in minibuffer with the track-mouse
   mechanism works also with mouse-avoidance-mode on; the mouse-avoidance will
