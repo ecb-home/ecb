@@ -2208,6 +2208,7 @@ That is remove the unsupported :help stuff."
                (t "fm" ecb-methods-filter)
                (t "fr" ecb-methods-filter-regexp)
                (t "ft" ecb-methods-filter-tagclass)
+               (t "fc" ecb-methods-filter-current-type)
                (t "fp" ecb-methods-filter-protection)
                (t "fn" ecb-methods-filter-nofilter)
                (t "fl" ecb-methods-filter-delete-last)
