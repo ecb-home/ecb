@@ -54,42 +54,26 @@
 ;; The latest version of the ECB is available at
 ;; http://home.swipnet.se/mayhem/ecb.html
 
-;; $Id: ecb.el,v 1.125 2001/07/12 21:03:06 creator Exp $
+;; $Id: ecb.el,v 1.126 2001/07/13 15:23:03 berndl Exp $
 
 ;;; Code:
 
-;; TODO: After semantic 1.4 is stable (means no beta stadium) we throw away
-;; the compatibility with semantic 1.3.X!
-(eval-and-compile
-  (if (locate-library "semantic-load")
-      (progn
-        (message "ECB uses semantic 1.4")
-        (require 'semantic)
-        (setq semantic-load-turn-everything-on nil)
-        (require 'semantic-load)
-        (defun semantic-toplevel-get-cache ()
-          semantic-toplevel-bovine-cache))
-    ;; semantic 1.3.X
-    (message "ECB uses semantic 1.3.X")
-    (defconst semantic-version "1.3.X")
-    (require 'semantic)
-    (require 'semantic-el)
-    (require 'semantic-c)
-    (require 'semantic-make)
-    (defun semantic-active-p ()
-      (or semantic-toplevel-bovine-table
-          semantic-toplevel-bovinate-override))
-    (defun semantic-toplevel-get-cache ()
-      (car semantic-toplevel-bovine-cache))
-    )
-  )
+;; semantic load
+(if (not (boundp 'semantic-after-toplevel-cache-change-hook))
+    (error "ECB requires a semantic-version >= 1.40beta7!"))
+(message "ECB uses semantic %s" semantic-version)
+(require 'semantic)
+(setq semantic-load-turn-everything-on nil)
+(require 'semantic-load)
 
+;; ecb loads
 (require 'tree-buffer)
 (require 'ecb-layout)
 (require 'ecb-mode-line)
 (require 'ecb-util)
 (require 'ecb-help)
 
+;; various loads
 (require 'easymenu)
 (require 'assoc);; Semantic fix
 
@@ -959,64 +943,61 @@ current-buffer is saved."
 
 ;; This variable is only set and evaluated by the functions
 ;; `ecb-update-methods-buffer--internal' and
-;; `ecb-rebuild-methods-buffer-after-parsing'!
+;; `ecb-rebuild-methods-buffer-with-tokencache'!
 (defvar ecb-method-buffer-needs-rebuild t)
 (defun ecb-update-methods-buffer--internal (&optional scroll-to-top)
   "Updates the methods buffer with the current buffer. The only thing what
 must be done is to start the toplevel parsing of semantic, because the rest is
-done by `ecb-rebuild-methods-buffer-after-parsing' because this function is in
+done by `ecb-rebuild-methods-buffer-with-tokencache' because this function is in
 the `semantic-after-toplevel-bovinate-hook'.
 If optional argument SCROLL-TO-TOP is non nil then the method-buffer is
 displayed with window-start and point at beginning of buffer."
   (when (and (equal (selected-frame) ecb-frame)
              (get-buffer-window ecb-methods-buffer-name))
     ;; Set here `ecb-method-buffer-needs-rebuild' to t so we can see below if
-    ;; `ecb-rebuild-methods-buffer-after-parsing' was called auto. after
+    ;; `ecb-rebuild-methods-buffer-with-tokencache' was called auto. after
     ;; `semantic-bovinate-toplevel'.
     (setq ecb-method-buffer-needs-rebuild t)
 
-    (semantic-bovinate-toplevel t)
-    
-    ;; If the `semantic-bovinate-toplevel' has done no full reparsing but only
-    ;; used it´s still valid `semantic-toplevel-bovine-cache' or only has done
-    ;; a partial reparsing of dirty tokens the hooks in
-    ;; `semantic-after-toplevel-bovinate-hook' are not evaluated and therefore
-    ;; `ecb-rebuild-methods-buffer-after-parsing' was not called. Therefore we
-    ;; call it here manually. `ecb-rebuild-methods-buffer-after-parsing' is
-    ;; the only function which sets `ecb-method-buffer-needs-rebuild' to nil
-    ;; to signalize that a "manually" rebuild of the method buffer is not
-    ;; necessary.
-    (if ecb-method-buffer-needs-rebuild
-	(ecb-rebuild-methods-buffer-after-parsing))
+    (let ((current-tokencache (semantic-bovinate-toplevel t)))
+      ;; If the `semantic-bovinate-toplevel' has done no full reparsing but only
+      ;; used it´s still valid `semantic-toplevel-bovine-cache' or only has done
+      ;; a partial reparsing of dirty tokens the hooks in
+      ;; `semantic-after-toplevel-cache-change-hook' are not evaluated and
+      ;; therefore `ecb-rebuild-methods-buffer-with-tokencache' was not
+      ;; called. Therefore we call it here manually.
+      ;; `ecb-rebuild-methods-buffer-with-tokencache' is the only
+      ;; function which sets `ecb-method-buffer-needs-rebuild' to nil to
+      ;; signalize that a "manually" rebuild of the method buffer is not
+      ;; necessary.
+      (if ecb-method-buffer-needs-rebuild
+          (ecb-rebuild-methods-buffer-with-tokencache current-tokencache)))
     (when scroll-to-top
       (save-selected-window
 	(ecb-exec-in-methods-window
 	 (tree-buffer-scroll (point-min) (point-min)))))))
   
-(defun ecb-rebuild-methods-buffer-after-parsing ()
+(defun ecb-rebuild-methods-buffer-with-tokencache (updated-cache)
   "Rebuilds the ECB-method buffer after toplevel-parsing by semantic. This
-function is added to the hook `semantic-after-toplevel-bovinate-hook'."
+function is added to the hook `semantic-after-toplevel-cache-change-hook'."
   (when (and ecb-minor-mode
              (equal (selected-frame) ecb-frame)
              (get-buffer-window ecb-methods-buffer-name)
-             ;; In semantic 1.4 the functions of the hook
-             ;; `semantic-after-toplevel-bovinate-hook' are also called after
-             ;; clearing the cache to set the cache to nil if a buffer is
-             ;; parsed which has no tokens like plain text-buffers. Here we do
-             ;; not want rebuilding the method-buffer if the cache is nil but
-             ;; the current buffer is set up for semantic-parsing, because the
-             ;; real rebuild should be done after the cache is filled again.
-             (or (semantic-toplevel-get-cache)
+             ;; The functions of the hook
+             ;; `semantic-after-toplevel-cache-change-hook' are also called
+             ;; after clearing the cache to set the cache to nil if a buffer
+             ;; is parsed which has no tokens like plain text-buffers. Here we
+             ;; do not want rebuilding the method-buffer if the cache is nil
+             ;; but the current buffer is set up for semantic-parsing, because
+             ;; the real rebuild should be done after the cache is filled
+             ;; again.
+             (or updated-cache
                  (not (semantic-active-p))))
     ;; This is a fix for semantic 1.4beta2
     ;; otherwise it parses the mini-buffer
     (unless (string-match "^ *\\*" (buffer-name))
       (tree-node-set-children ecb-methods-root-node nil)
-      (ecb-add-tokens ecb-methods-root-node
-		      ;; this works because at call-time of the hooks in
-		      ;; `semantic-after-toplevel-bovinate-hook' the cache is
-		      ;; always either still valid or rebuild.
-                      (semantic-toplevel-get-cache))
+      (ecb-add-tokens ecb-methods-root-node updated-cache)
       ;; also the whole buffer informations should be preserved!
       (save-excursion
 	(ecb-buffer-select ecb-methods-buffer-name)
@@ -1858,8 +1839,10 @@ always the ECB-frame if called from another frame."
 	 ecb-tree-incremental-search)))
     
     ;; we need some hooks
-    (add-hook 'semantic-after-toplevel-bovinate-hook
-	      'ecb-rebuild-methods-buffer-after-parsing)
+;;     (add-hook 'semantic-after-toplevel-bovinate-hook
+;; 	      'ecb-rebuild-methods-buffer-with-tokencache)
+    (add-hook 'semantic-after-toplevel-cache-change-hook
+	      'ecb-rebuild-methods-buffer-with-tokencache)
     (ecb-activate-ecb-sync-functions ecb-highlight-token-with-point-delay
                                      'ecb-token-sync)
     (ecb-activate-ecb-sync-functions ecb-window-sync-delay
@@ -1945,8 +1928,10 @@ always the ECB-frame if called from another frame."
     (tree-buffer-destroy ecb-methods-buffer-name)
     (tree-buffer-destroy ecb-history-buffer-name)
     ;; remove the hooks
-    (remove-hook 'semantic-after-toplevel-bovinate-hook
-		 'ecb-rebuild-methods-buffer-after-parsing)
+;;     (remove-hook 'semantic-after-toplevel-bovinate-hook
+;; 		 'ecb-rebuild-methods-buffer-with-tokencache)
+    (remove-hook 'semantic-after-toplevel-cache-change-hook
+		 'ecb-rebuild-methods-buffer-with-tokencache)
     (dolist (timer-elem ecb-idle-timer-alist)
       (cancel-timer (cdr timer-elem)))
     (setq ecb-idle-timer-alist nil)
