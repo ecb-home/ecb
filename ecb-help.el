@@ -26,7 +26,7 @@
 ;;
 ;; Contains all online-help for ECB (stolen something from recentf.el)
 
-;; $Id: ecb-help.el,v 1.71 2002/06/21 12:27:24 berndl Exp $
+;; $Id: ecb-help.el,v 1.72 2002/06/27 09:01:05 berndl Exp $
 
 ;;; Code
 
@@ -442,10 +442,10 @@ submitting a problem-report!
                                Upgrading ECB
                                =============
 
-ECB offers the possibility to upgrade to newer version direct from the
+ECB offers the possibility to upgrade to newer versions direct from the
 ECB-website. This can be done with `ecb-download-ecb' if the tools wget, tar
-and gzip are installed onto the system and an connection to the web is
-available. Please read the documentation of `ecb-download-ecb' and the option
+and gzip are installed onto the system and a connection to the web is
+available. Please read the documentation of `ecb-download-ecb' and the options
 of the customize-group 'ecb-download'!
 
 
@@ -779,35 +779,36 @@ a backtrace-buffer and inserts the contents of that."
 (defun ecb-problem-report-list-all-variables()
   "List all variables starting with `ecb-' and some other variables which
 could be interesting for support."
-  (let ((emacs-vars `(semantic-after-toplevel-cache-change-hook
-                      semantic-after-partial-cache-change-hook
-                      pre-command-hook
-                      post-command-hook
-                      after-save-hook
-                      help-mode-hook
-                      compilation-mode-hook
-                      ,(if (boundp 'ediff-quit-hook)
-                           'ediff-quit-hook)))
-        ecb-vars)
-    (mapatoms
-     (lambda (symbol)
-       (when (and (string-match "ecb-" (symbol-name symbol))
-                  (get symbol 'custom-type))
-	 (setq ecb-vars (cons symbol ecb-vars)))))
-    (setq ecb-vars
-          (sort ecb-vars
-                (function (lambda (l r)
-                            (string< (symbol-name l) (symbol-name r))))))
-    (setq emacs-vars
-          (sort emacs-vars
-                (function (lambda (l r)
-                            (string< (symbol-name l) (symbol-name r))))))
-    (append emacs-vars ecb-vars)))
-    
-
+  (let ((emacs-vars (sort `(semantic-after-toplevel-cache-change-hook
+                            semantic-after-partial-cache-change-hook
+                            pre-command-hook
+                            post-command-hook
+                            after-save-hook
+                            help-mode-hook
+                            compilation-mode-hook
+                            ,(if (boundp 'ediff-quit-hook)
+                                 'ediff-quit-hook))
+                          (function (lambda (l r)
+                                      (string< (symbol-name l) (symbol-name r))))))
+        (ecb-options (mapcar
+                      'intern
+                      (sort
+                       (let (completion-ignore-case)
+                         (all-completions "ecb-" obarray 'user-variable-p))
+                       'string-lessp)))
+        (ecb-internal-vars (sort '(ecb-path-selected-directory
+                                   ecb-path-selected-source
+                                   ecb-use-semantic-grouping
+                                   ecb-idle-timer-alist
+                                   ecb-post-command-hooks
+                                   ecb-old-compilation-window-height
+                                   ecb-toggle-layout-state)
+                                 (function (lambda (l r)
+                                             (string< (symbol-name l)
+                                                      (symbol-name r)))))))
+    (append emacs-vars ecb-internal-vars ecb-options)))
 
 
 (provide 'ecb-help)
 
 ;; ecb-help.el ends here
-
