@@ -1,6 +1,9 @@
 Version 1.40:
 -------------
 
+- Long source paths in the directories buffer are now truncated at the
+  beginning. (Jesper)
+
 - Tokens can now be sorted by access. (Jesper)
 
 - Added a function to semantic-clean-token-hooks that just updates the token

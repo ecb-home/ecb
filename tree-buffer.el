@@ -26,7 +26,7 @@
 ;; This file is part of the ECB package which can be found at:
 ;; http://home.swipnet.se/mayhem/ecb.html
 
-;; $Id: tree-buffer.el,v 1.59 2001/07/13 19:57:19 creator Exp $
+;; $Id: tree-buffer.el,v 1.60 2001/07/14 13:14:17 creator Exp $
 
 ;;; Code:
 
@@ -83,7 +83,10 @@
 
 ;; tree-buffer local variables
 (defvar tree-buffer-root nil)
-(defvar tree-buffer-nodes nil)
+
+(defvar tree-buffer-nodes nil
+  "Contains all the visible nodes in the buffer in top-to-bottom order. Each item in this list is a cons pair of the displayed node name and the node. Note that the displayed node name can be truncated and therefor different from the node name.")
+
 (defvar tree-buffer-frame nil)
 (defvar tree-buffer-key-map nil)
 (defvar tree-buffer-indent nil)
@@ -138,7 +141,7 @@ mouse-tracking is activated by `tree-buffer-activate-mouse-tracking'")
               (tree-node-is-expandable node))
          4 0)))
 
-(defun tree-buffer-get-node-name-start-point (node)
+(defun tree-buffer-get-node-name-start-point (name node)
   "Returns the buffer point where the name of the node starts."
   (let ((linenr (tree-buffer-find-node node)))
     (when linenr
@@ -146,15 +149,15 @@ mouse-tracking is activated by `tree-buffer-activate-mouse-tracking'")
       (beginning-of-line)
       (+ (point) (tree-buffer-get-node-name-start-column node)))))
 
-(defun tree-buffer-get-node-name-end-point (node)
+(defun tree-buffer-get-node-name-end-point (name node)
   "Returns the buffer point where the name of the node ends."
-  (+ (tree-buffer-get-node-name-start-point node)
-     (length (tree-node-get-name node))))
+  (+ (tree-buffer-get-node-name-start-point name node)
+     (length name)))
 
-(defun tree-buffer-at-expand-symbol (node p)
+(defun tree-buffer-at-expand-symbol (name node p)
   (if tree-buffer-expand-symbol-before
-      (< p (1- (tree-buffer-get-node-name-start-point node)))
-    (> p (tree-buffer-get-node-name-end-point node))))
+      (< p (1- (tree-buffer-get-node-name-start-point name node)))
+    (> p (tree-buffer-get-node-name-end-point name node))))
 
 (defun tree-buffer-select (mouse-button shift-pressed control-pressed)
   "If the callback-function in `tree-buffer-is-click-valid-fn' returns nil
@@ -169,11 +172,13 @@ with the same arguments as `tree-node-expanded-fn'."
     (when (and tree-buffer-is-click-valid-fn
                (funcall tree-buffer-is-click-valid-fn mouse-button
                         shift-pressed control-pressed (buffer-name)))
-      (let ((p (point))
-            (node (tree-buffer-get-node-at-point)))
+      (let* ((p (point))
+	     (name-node (tree-buffer-get-name-node-at-point))
+	     (name (car name-node))
+	     (node (cdr name-node)))
         (when node
           (if (and (tree-node-is-expandable node)
-                   (tree-buffer-at-expand-symbol node p)
+                   (tree-buffer-at-expand-symbol name node p)
                    ;; if the expand-symbol is displayed before and mouse-button
                    ;; = 0, means RET is pressed, we do not toggle-expand but work
                    ;; as if point would not be at expand-symbol. This is for
@@ -198,6 +203,12 @@ with the same arguments as `tree-node-expanded-fn'."
   (save-excursion
     (if p (goto-char p))
     (let ((linenr (+ (count-lines 1 (point)) (if (= (current-column) 0) 0 -1))))
+      (cdr (nth linenr tree-buffer-nodes)))))
+
+(defun tree-buffer-get-name-node-at-point (&optional p)
+  (save-excursion
+    (if p (goto-char p))
+    (let ((linenr (+ (count-lines 1 (point)) (if (= (current-column) 0) 0 -1))))
       (nth linenr tree-buffer-nodes))))
 
 (defun tree-buffer-get-node-indent (node)
@@ -206,14 +217,20 @@ with the same arguments as `tree-node-expanded-fn'."
 (defun tree-buffer-find-node-data (node-data)
   (catch 'exit
     (dolist (node tree-buffer-nodes)
-      (when (equal (tree-node-get-data node) node-data)
+      (when (equal (tree-node-get-data (cdr node)) node-data)
+        (throw 'exit (cdr node))))))
+
+(defun tree-buffer-find-name-node-data (node-data)
+  (catch 'exit
+    (dolist (node tree-buffer-nodes)
+      (when (equal (tree-node-get-data (cdr node)) node-data)
         (throw 'exit node)))))
 
 (defun tree-buffer-find-node (node)
   (catch 'exit
     (let ((linenr 1))
       (dolist (node2 tree-buffer-nodes)
-        (when (eq node node2)
+        (when (eq node (cdr node2))
           (throw 'exit linenr))
         (setq linenr (1+ linenr))))))
 
@@ -222,11 +239,6 @@ with the same arguments as `tree-node-expanded-fn'."
     (if facer
         facer
       nil)))
-
-(defun tree-buffer-node-set-face (node face)
-  "Sets the face for a node name."
-  (put-text-property (tree-buffer-get-node-name-start-point node)
-                     (tree-buffer-get-node-name-end-point node) 'face face))
 
 (defun tree-buffer-recenter (node window)
   "If NODE is not visible then first recenter the window WINDOW so NODE is
@@ -318,8 +330,10 @@ displayed without empty-lines at the end, means WINDOW is always best filled."
 (defvar ecb-klaus-test nil)
 (defun tree-buffer-highlight-node-data (node-data &optional dont-make-visible)
   (if node-data
-      (let ((node (tree-buffer-find-node-data node-data))
-            (w (get-buffer-window (current-buffer))))
+      (let* ((name-node (tree-buffer-find-name-node-data node-data))
+	     (name (car name-node))
+	     (node (cdr name-node))
+	     (w (get-buffer-window (current-buffer))))
         (if (null node)
             ;; node can not be found because maybe the node is a subnode and
             ;; it´s parent is not expanded --> then there is no node for
@@ -328,8 +342,8 @@ displayed without empty-lines at the end, means WINDOW is always best filled."
           (setq tree-buffer-highlighted-node-data node-data)
           (save-excursion
             (move-overlay tree-buffer-highlight-overlay
-                          (tree-buffer-get-node-name-start-point node)
-                          (tree-buffer-get-node-name-end-point node)))
+                          (tree-buffer-get-node-name-start-point name node)
+                          (tree-buffer-get-node-name-end-point name node)))
           (when (not dont-make-visible)
             ;; make node visible if not and optimize the windows display for
             ;; the node.
@@ -350,21 +364,34 @@ inserted and the TEXT itself"
 	  (put-text-property p (+ p (length text)) 'face facer)))))
     
 (defun tree-buffer-add-node (node depth)
-  (insert (make-string (* depth tree-buffer-indent) ? ))
-  (when (and tree-buffer-expand-symbol-before
-             (tree-node-is-expandable node))
-    (tree-buffer-insert-text (if (tree-node-is-expanded node) "[-]" "[+]"))
-    (insert " "))
-  (tree-buffer-insert-text (tree-node-get-name node) (tree-buffer-get-node-facer node))
-  (when (and (not tree-buffer-expand-symbol-before)
-             (tree-node-is-expandable node))
-    (insert " ")
-    (tree-buffer-insert-text (if (tree-node-is-expanded node) "[-]" "[+]")))
-  (insert "\n")
-  (setq tree-buffer-nodes (append tree-buffer-nodes (list node)))
-  (if (tree-node-is-expanded node)
-      (dolist (node (tree-node-get-children node))
-        (tree-buffer-add-node node (1+ depth)))))
+  (let* ((ww (window-width))
+	 (name (tree-node-get-name node))
+	 (width (+ (* depth tree-buffer-indent)
+		   (length name)
+		   (if (tree-node-is-expandable node) 4 0))))
+    ;; Truncate name if necessary
+    (when (>= width ww)
+      (if (eq 'beginning (tree-node-get-shorten-name node))
+	  (setq name (concat "$" (substring name (+ 2 (- width ww)))))
+	(if (and (not tree-buffer-expand-symbol-before)
+		 (tree-node-is-expandable node)
+		 (eq 'end (tree-node-get-shorten-name node)))
+	    (setq name (concat (substring name 0 (- (+ 2 (- width ww)))) "$")))))
+    (insert (make-string (* depth tree-buffer-indent) ? ))
+    (when (and tree-buffer-expand-symbol-before
+	       (tree-node-is-expandable node))
+      (tree-buffer-insert-text (if (tree-node-is-expanded node) "[-]" "[+]"))
+      (insert " "))
+    (tree-buffer-insert-text name (tree-buffer-get-node-facer node))
+    (when (and (not tree-buffer-expand-symbol-before)
+	       (tree-node-is-expandable node))
+      (insert " ")
+      (tree-buffer-insert-text (if (tree-node-is-expanded node) "[-]" "[+]")))
+    (insert "\n")
+    (setq tree-buffer-nodes (append tree-buffer-nodes (list (cons name node))))
+    (if (tree-node-is-expanded node)
+	(dolist (node (tree-node-get-children node))
+	  (tree-buffer-add-node node (1+ depth))))))
 
 (defun tree-node-count-subnodes-to-display (node)
   "Returns the number of ALL subnodes of NODE which will currently be displayed
@@ -951,9 +978,15 @@ child."
 (defconst tree-node-parent 4)
 (defconst tree-node-children 5)
 (defconst tree-node-expandable 6)
+(defconst tree-node-shorten-name 7
+  "Decides if the node name can be shortened when displayed in a narrow tree buffer window. The following values are valid:
+- beginning: The name is truncated at the beginning so the end is always visible.
+- end: The name is truncated at the end. If the node is expandable the name is truncated so that the expand symbol is visible.
+- nil: The name is never truncated."
+  )
 
 (defun tree-node-new (name type data &optional not-expandable parent)
-  (let ((a (make-vector 7 nil)))
+  (let ((a (make-vector 8 nil)))
     (tree-node-set-name a name)
     (tree-node-set-type a type)
     (tree-node-set-data a data)
@@ -961,6 +994,7 @@ child."
     (tree-node-set-children a nil)
     (tree-node-set-parent a parent)
     (tree-node-set-expandable a (not not-expandable))
+    (tree-node-set-shorten-name a 'end)
     (when parent
       (tree-node-add-child parent a))
     a))
@@ -1015,6 +1049,12 @@ child."
     (if parent
         (1+ (tree-node-get-depth parent))
       '0)))
+
+(defun tree-node-set-shorten-name (node shorten)
+  (aset node tree-node-shorten-name shorten))
+
+(defun tree-node-get-shorten-name (node)
+  (aref node tree-node-shorten-name))
 
 (provide 'tree-buffer)
 

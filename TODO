@@ -1,11 +1,8 @@
 ********************************************************************************
-*** Last-Modified: $Date: 2001/06/23 23:24:26 $ 
-*** Version: $Id: TODO,v 1.18 2001/06/23 23:24:26 creator Exp $
+*** Last-Modified: $Date: 2001/07/14 13:14:16 $ 
+*** Version: $Id: TODO,v 1.19 2001/07/14 13:14:16 creator Exp $
 *** Author: Kevin A. Burton ( burton@apache.org | burton@openprivacy.org )
 ********************************************************************************
-
-- Shorten source path names when they don't fit in the directory window. For
-  example "c:/dir1/dir2" becomes "...1/dir2". (JN)
 
 - KB: Option to auto. expand also "[+] Variables" and "[+] Classname"
    in the methods buffer if 'ecb-highlight-token-with-point' is
