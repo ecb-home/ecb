@@ -54,7 +54,7 @@
 ;; The latest version of the ECB is available at
 ;; http://home.swipnet.se/mayhem/ecb.html
 
-;; $Id: ecb.el,v 1.129 2001/07/13 21:40:49 creator Exp $
+;; $Id: ecb.el,v 1.130 2001/07/13 22:19:46 creator Exp $
 
 ;;; Code:
 
@@ -737,20 +737,14 @@ cleared!) ECB by running `ecb-deactivate'."
 (defun ecb-add-token-bucket (node bucket display sorted)
   "Adds a token bucket to a node."
   (when bucket
-    (let ((name (car bucket))
+    (let ((name (concat "[" (car bucket) "]"))
 	  (type (semantic-token-token (cadr bucket)))
 	  (bucket-node node))
       (unless (eq 'hidden display)
 	(unless (eq 'flattened display)
 	  (setq bucket-node (tree-node-new name 1 nil nil node))
 	  (tree-node-set-expanded bucket-node (eq 'expanded display)))
-	(dolist (token
-		 (if sorted
-		   (sort
-		    (cdr bucket)
-		    (function (lambda(a b) (string< (semantic-token-name a)
-						    (semantic-token-name b)))))
-		   (cdr bucket)))
+	(dolist (token (if sorted (ecb-sort-tokens (cdr bucket)) (cdr bucket)))
 	  (ecb-update-token-node token
 				 (tree-node-new "" 0 token t bucket-node)))))))
 
@@ -781,6 +775,10 @@ cleared!) ECB by running `ecb-deactivate'."
   (when tokens
     (ecb-add-token-buckets node parent-token (semantic-bucketize tokens))))
 
+(defun ecb-sort-tokens (tokens)
+  (sort tokens (function (lambda(a b) (string< (semantic-token-name a)
+					       (semantic-token-name b))))))
+
 (defun ecb-add-token-buckets (node parent-token buckets)
   "Creates and adds token nodes to the given node."
    (setq buckets (cons nil buckets))
@@ -792,9 +790,12 @@ cleared!) ECB by running `ecb-deactivate'."
         ((eq 'parent type)
  	(when (and parent-token
  		   (eq 'type (semantic-token-token parent-token)))
- 	  (let ((node (ecb-create-node node display "Parents" nil 1)))
+ 	  (let ((node (ecb-create-node node display "[Parents]" nil 1)))
  	    (when node
- 	      (dolist (parent (ecb-get-token-parents parent-token))
+ 	      (dolist (parent
+		       (if sorted
+			   (sort (ecb-get-token-parents parent-token) 'string<)
+			 (ecb-get-token-parents parent-token)))
  		(tree-node-new parent 2 parent t node))))))
         (t (ecb-find-add-token-bucket node type display sorted buckets)))))
    (let ((type-display (ecb-get-token-type-display t)))
