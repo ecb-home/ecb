@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-layout.el,v 1.180 2003/09/01 16:17:51 berndl Exp $
+;; $Id: ecb-layout.el,v 1.181 2003/09/02 14:31:26 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -149,7 +149,6 @@
 (silentcomp-defun window-pixel-height)
 (silentcomp-defun record-buffer)
 (silentcomp-defun push-window-configuration)
-(silentcomp-defun set-frame-property)
 
 ;; Emacs
 (silentcomp-defvar scroll-bar-mode)
@@ -655,6 +654,7 @@ rebind it to the original function in the `ecb-deactivate-hook'."
 (defcustom ecb-layout-always-operate-in-edit-window
   '(delete-window
     delete-other-windows
+    display-buffer
     switch-to-buffer)
   "*Adviced window functions work always in the edit-window.
 If we are in an ECB special buffer (methods, directories, etc), and any of the
@@ -676,7 +676,7 @@ For `other-window', `other-window-for-scrolling' and
 enable this for them.
 
 Per default this is enabled for `delete-window', `delete-other-windows',
-`switch-to-buffer'."
+`switch-to-buffer' and `display-buffer'."
   :group 'ecb-layout
   :type '(set (const :tag "delete-window"
                      :value delete-window)
@@ -688,9 +688,12 @@ Per default this is enabled for `delete-window', `delete-other-windows',
                      :value split-window-vertically)
               (const :tag "split-window"
                      :value split-window)
+              (const :tag "display-buffer"
+                     :value display-buffer)
               (const :tag "switch-to-buffer"
                      :value switch-to-buffer)))
 
+;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: In texi geänderte Docu nachziehen
 (defcustom ecb-layout-switch-to-compilation-window
   '(switch-to-buffer)
   "*Switching buffer functions switch always in `ecb-compile-window'.
@@ -699,13 +702,6 @@ compilation buffer as defined with `ecb-compilation-buffer-p' we will select
 the `ecb-compile-window' and display there the buffer. This is useful if you
 always want your compilation buffers within the compilation window and not
 within the edit window.
-
-Note the difference between `ecb-layout-always-operate-in-edit-window' and this
-option: If a buffer-switching function is contained in the former one, then
-we always jump first into the edit-window regardless of the destination
-buffer. If also contained in this option then ECB checks the destination buffer
-and then selects the `ecb-compile-window' if it is a compilation-buffer in the
-meaning of `ecb-compilation-buffer-p'!
 
 Currently this seems only making sense for `switch-to-buffer'."
   :group 'ecb-compilation
@@ -962,6 +958,11 @@ either not activated or it behaves exactly like the original version!"
       ad-do-it
     (and compilation-window-height
          (not (equal (ecb-edit-window-splitted) 'horizontal))
+         ;; Klaus Berndl <klaus.berndl@sdm.de>: we do nothing if an unsplitted
+         ;; edit-window should be resized becuase this would fail (e.g. if
+         ;; `pop-up-windows' is nil)
+         (or (equal (ad-get-arg 0) ecb-compile-window)
+             (ecb-edit-window-splitted))
          ;; If window is alone in its frame, aside from a minibuffer,
          ;; don't change its height.
          (not (eq (ad-get-arg 0) (frame-root-window (window-frame (ad-get-arg 0)))))
@@ -1127,7 +1128,12 @@ only enabled and disabled by `ecb-enable-count-windows-advice'!"
                                        nil
                                        (ad-get-arg 0)))))))))
       
-      ) ;; end of progn
+      (defadvice pop-to-buffer (around ecb)
+        "Chooses the window with the ECB-adviced version of `display-buffer'."
+        (ecb-with-adviced-functions
+         ad-do-it))
+      
+        ) ;; end of progn
 
   ;; only GNU Emacs basic advices
   (defadvice mouse-drag-vertical-line (around ecb)
@@ -1228,7 +1234,14 @@ for current layout."
         ad-do-it
       (unless (or (one-window-p 'nomini)
                   (equal (ecb-edit-window-splitted) 'horizontal)
+                  ;; Klaus Berndl <klaus.berndl@sdm.de>: we do nothing if an unsplitted
+                  ;; edit-window should be resized becuase this would fail (e.g. if
+                  ;; `pop-up-windows' is nil)
+                  (and (not (equal (selected-window) ecb-compile-window))
+                       (not (ecb-edit-window-splitted)))
                   (not (pos-visible-in-window-p (point-min))))
+        (ecb-layout-debug-error "resize-temp-buffer-window: resize buffer: %s"
+                                (current-buffer))
         (if ecb-running-emacs-21
             (fit-window-to-buffer
              (selected-window)
@@ -1792,19 +1805,26 @@ handle `ecb-compile-window-temporally-enlarge'."
 
 ;; here come the advices
 
-;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: curr Bugs:
-;; - Emacs: enlarge-window byte-comp warning eliminieren!
-;; - Beide: Testen!!!
-
 ;; This advice is the heart of the mechanism which displays all buffer in the
 ;; compile-window if they are are "compilation-buffers" in the sense of
 ;; `ecb-compilation-buffer-p'!
 (defadvice display-buffer (around ecb)
   "Makes this function compatible with ECB if called in or for the ecb-frame.
 It displays all buffers which are \"compilation-buffers\" in the sense of
-`ecb-compilation-buffer-p' in the compile-window of ECB. If there is no
-compile-window \(`ecb-compile-window-height' is nil) then it splits the
-edit-window if unsplitted and displays BUFFER in the other edit-window.
+`ecb-compilation-buffer-p' in the compile-window of ECB.
+
+If there is no compile-window \(`ecb-compile-window-height' is nil) then it
+splits the edit-window if unsplitted and displays BUFFER in the other
+edit-window but only if `pop-up-windows' is not nil \(otherwise the
+edit-window will not splitted).
+
+If called from outside the edit-area for a non-\"compilation-buffers\" \(s.a.)
+then it behaves as if called from within an edit-window if `display-buffer' is
+contained in `ecb-layout-always-operate-in-edit-window': It depends on
+`pop-up-windows' if the edit-window is automatically splitted ot not.
+If `ecb-layout-always-operate-in-edit-window' does not contain
+`display-buffer' then the buffer is displayed in the edit-window without
+splitting it \(if unsplitted).
 
 If called for other frames it works like the original version."
   (if ecb-running-xemacs
@@ -1853,42 +1873,48 @@ If called for other frames it works like the original version."
                          ;; now we perform the original `display-buffer' but
                          ;; now the only not dedicated window is the compile
                          ;; window so `display-buffer' MUST use this.
-                         (if ecb-running-xemacs
-                             (if (equal (selected-window) ecb-compile-window)
-                                 ;; The XEmacs-version of `display-buffer'
-                                 ;; tries to split the compile-window if it is
-                                 ;; called from the compile-window (e.g.
-                                 ;; calling help from the compile-window). To
-                                 ;; avoid this we must temporally set the
-                                 ;; ecb-frame unsplitable.
-                                 (unwind-protect
-                                     (progn
-                                       (ecb-layout-debug-error
-                                        "display-buffer from comp-win for comp-buf: %s"
-                                        (ad-get-arg 0))
-                                       (set-frame-property ecb-frame 'unsplittable t)
-                                       (setq ad-return-value
-                                             (ecb-display-buffer-xemacs (ad-get-arg 0)
-                                                                        (ad-get-arg 1)
-                                                                        (ad-get-arg 2)
-                                                                        (ad-get-arg 3))))
-                                   (set-frame-property ecb-frame 'unsplittable nil))                                 
+                         (if (equal (selected-window) ecb-compile-window)
+                             ;; `display-buffer' tries to split the
+                             ;; compile-window if it is called from the
+                             ;; compile-window (e.g. calling help from the
+                             ;; compile-window). To avoid this we must
+                             ;; temporally set `pop-up-windows' to nil so
+                             ;; `display-buffer' tries no splitting
+                             (let ((pop-up-windows nil))
+                               (ecb-layout-debug-error
+                                "display-buffer from comp-win for comp-buf: %s"
+                                (ad-get-arg 0))
+                               (if ecb-running-xemacs
+                                   (setq ad-return-value
+                                         (ecb-display-buffer-xemacs (ad-get-arg 0)
+                                                                    (ad-get-arg 1)
+                                                                    (ad-get-arg 2)
+                                                                    (ad-get-arg 3)))
+                                 ad-do-it))
+                           (if ecb-running-xemacs
                                (setq ad-return-value
-                                   (ecb-display-buffer-xemacs (ad-get-arg 0)
-                                                              (ad-get-arg 1)
-                                                              (ad-get-arg 2)
-                                                              (ad-get-arg 3))))
-                           ad-do-it)
-                         )
+                                     (ecb-display-buffer-xemacs (ad-get-arg 0)
+                                                                (ad-get-arg 1)
+                                                                (ad-get-arg 2)
+                                                                (ad-get-arg 3)))
+                             ad-do-it)))
                      ;; making the edit-window(s) not dedicated
                      (mapc (function (lambda (w)
                                        (set-window-dedicated-p w nil)))
-                           edit-window-list)))
+                           edit-window-list))
+                   ;; now we run our `ecb-toggle-enlarged-compilation-window'
+                   ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: Wieder
+                   ;; hinzunehmen, wenn wird das exakte fit-to-buffer in
+                   ;; `ecb-toggle-enlarged-compilation-window' eingebaut haben!
+;;                    (ecb-toggle-enlarged-compilation-window -1)
+;;                    (ecb-toggle-enlarged-compilation-window 1)
+                   )
                ;; needed for TAB-completion if this offers the completions in
                ;; a temp-buffer. Without this manually split the whole
                ;; edit-window would be used for the completions which is not
                ;; the default-behavior of Emacs.
-               (when (not (ecb-edit-window-splitted))
+               (when (and pop-up-windows
+                          (not (ecb-edit-window-splitted)))
                  (ecb-layout-debug-error "display-buffer for comp-buffer %s - split edit-window:"
                                          (ad-get-arg 0))
                  (ecb-with-adviced-functions (split-window
@@ -1904,6 +1930,9 @@ If called for other frames it works like the original version."
             ((not (member (ad-get-arg 0) (ecb-get-current-visible-ecb-buffers)))
              (ecb-layout-debug-error "display-buffer for normal buffer: %s"
                                      (ad-get-arg 0))
+             (if (and (not (ecb-point-in-edit-window))
+                      (member 'display-buffer ecb-layout-always-operate-in-edit-window))
+                 (ecb-select-edit-window))
              (if (ecb-compile-window-live-p)
                  (unwind-protect
                      (progn
@@ -1929,7 +1958,7 @@ If called for other frames it works like the original version."
                                                     (ad-get-arg 3)))
                  ad-do-it)))
             
-            (t
+            (t ;; buffer is a special ecb-buffer
              (or (setq ad-return-value (get-buffer-window (ad-get-arg 0) ecb-frame))
                  (ecb-error "display-buffer can not display not visible ecb-buffers!"))))
     (ecb-layout-debug-error "display-buffer - just run original version.")
@@ -2262,97 +2291,62 @@ edit-windows then this one is used otherwise it behaves like the original.
 If called within an edit-window it behaves like the original function except
 for compilation-buffers \(if a compile-window is used, see above)."
   (if (not (equal (selected-frame) ecb-frame))
-      ;;if we aren't in the ECB frame, we don't need to do anything, AKA perform
-      ;;default behavior.
       ad-do-it
-
-    (let ((point-in-correct-window nil)
-          (point-location (ecb-where-is-point))
-          (destination-window (get-buffer-window (ad-get-arg 0) ecb-frame))
-          (ecb-other-window-jump-behavior 'only-edit))
-
-      ;; if called from an ecb-window we first jump to the edit-window. Then
-      ;; we go on as if we would be called from this edit-window.
-      (if (equal point-location 'ecb)
-          (select-window ecb-edit-window))
-      
-      (cond ((equal point-location 'compile)
-             ;; if we are in the compile-window then we stay here for
-             ;; compilation-buffers and for all other buffers we display it in
-             ;; the edit-window: If one of the edit-window display already the
-             ;; destination buffer we just use this window otherwise we use
-             ;; the `ecb-edit-window'.
-             (when (not (ecb-compilation-buffer-p (ad-get-arg 0)))
-               (if (and destination-window ;; dest-buf is in the ecb-frame
-                        (not (equal destination-window ecb-compile-window)))
-                   (select-window (get-buffer-window (ad-get-arg 0) ecb-frame))
-                 (select-window ecb-edit-window)))
-             (setq point-in-correct-window t))
-            (t ;; we stay in an edit-window
-             (if (ecb-compilation-buffer-p (ad-get-arg 0))
-                 ;; for compilation buffers we try to display them in the
-                 ;; compile-window if the user uses one.
-                 (if (ecb-compile-window-live-p)
-                     (progn
-                       (select-window ecb-compile-window)
-                       (setq point-in-correct-window t))
-                   (when (numberp (car (get 'ecb-compile-window-height 'saved-value)))
-                     (ecb-toggle-compile-window 1)
-                     (ecb-toggle-enlarged-compilation-window 1)
-                     (select-window ecb-compile-window)
-                     (setq point-in-correct-window t))))))
-
-      ;; if we are still not in the correct destination window (if dest.
-      ;; buffer is either not a compilation-buffer or - if it is - if
-      ;; `ecb-compile-window-height' is nil)
-      (when (not point-in-correct-window)
-        (ecb-with-adviced-functions
-         (if (ecb-edit-window-splitted)
-             (other-window 1)
-           (split-window-vertically)
-           (other-window 1)))))
-  
-    ;; now we are always in the right window, so we can switch to the
-    ;; buffer
-    (ad-with-originals 'switch-to-buffer
-      (switch-to-buffer (ad-get-arg 0) (ad-get-arg 1)))))
+    (if (equal (ecb-where-is-point) 'ecb)
+        (ecb-select-edit-window))
+    (let ((pop-up-windows t))
+      (pop-to-buffer (ad-get-arg 0) t
+                     (if ecb-running-xemacs
+                         (selected-frame)
+                       (ad-get-arg 1))))))
 
 
 
 (defadvice switch-to-buffer (around ecb)
   "The ECB-version of `switch-to-buffer'. Works exactly like the original but
-if called in any non edit-window of the current ECB-layout there are two
-alternatives:
-- If this function is contained in `ecb-layout-always-operate-in-edit-window'
-  then it jumps in the \(first) edit-window and does then it´s job.
-- If this function is contained in `ecb-layout-switch-to-compilation-window'
-  then the compile-window is selected for compile-buffers in the sense of
-  `ecb-compilation-buffer-p'.
-- Otherwise an error reported."
+  with the following enhancements for ECB:
+
+\"compile-buffers\" in the sense of `ecb-compilation-buffer-p' will be
+displayed always in the compile-window of ECB \(if `ecb-compile-window-height'
+is not nil). If you do not want this you have to modify the options
+`ecb-compilation-buffer-names', `ecb-compilation-major-modes' or
+`ecb-compilation-predicates'.
+
+If called for not \"compile-buffers\" \(s.a.) from outside the edit-area of
+ECB it behaves as if called from an edit-window if `switch-to-buffer' is
+contained in the option `ecb-layout-always-operate-in-edit-window'. Otherwise
+an error is reported."
   (if (not (equal (selected-frame) ecb-frame))
-      ad-do-it
-    
-    ;; maybe we should always operate in the edit-window
-    (when (and (member 'switch-to-buffer
-                       ecb-layout-always-operate-in-edit-window)
-               (not (ecb-point-in-edit-window)))
-      (ecb-select-edit-window))
+      ad-do-it    
+    (if (ecb-compilation-buffer-p (ad-get-arg 0))
+        (progn
+          (when (and (not (ecb-compile-window-live-p))
+                     (numberp (car (get 'ecb-compile-window-height 'saved-value))))
+            (ecb-toggle-compile-window 1))
+          (if (ecb-compile-window-live-p)
+              (select-window ecb-compile-window))
+          ;; now we must handle if there is still no compile-window and
+          ;; therefore point can still stay in an ecb-window
+          (if (equal (ecb-where-is-point) 'ecb)
+              (if (member 'switch-to-buffer ecb-layout-always-operate-in-edit-window)
+                  (ecb-select-edit-window)
+                (ecb-error "switch-to-buffer: Can not switch to %s in an ecb-window!"
+                           (ad-get-arg 0)))))
+      (if (member (ecb-where-is-point) '(ecb compile))
+          (if (member 'switch-to-buffer ecb-layout-always-operate-in-edit-window)
+              (ecb-select-edit-window)
+            (ecb-error "switch-to-buffer: Can only switch to %s in an edit-window!"
+                       (ad-get-arg 0)))))
+    ;; now we stay in the correct window
+    ad-do-it
+;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: Wieder hinzunehmen, wenn wird das
+;; exakte fit-to-buffer in `ecb-toggle-enlarged-compilation-window' eingebaut
+;; haben!
+;;     (when (ecb-point-in-compile-window)
+;;       (ecb-toggle-enlarged-compilation-window -1)
+;;       (ecb-toggle-enlarged-compilation-window 1))
+    ))
 
-    (if (and (member 'switch-to-buffer
-                     ecb-layout-switch-to-compilation-window)
-             (ecb-compilation-buffer-p (ad-get-arg 0)))
-        (if (ecb-compile-window-live-p)
-            (select-window ecb-compile-window)
-          (when (numberp (car (get 'ecb-compile-window-height 'saved-value)))
-            (ecb-toggle-compile-window 1)
-            (ecb-toggle-enlarged-compilation-window 1)
-            (select-window ecb-compile-window)))
-      (if (not (ecb-point-in-edit-window))
-          (ecb-error "Only in an edit-window the buffer can be switched!"))
-      )
-
-    ;; now we are always in the edit window, so we can switch to the buffer
-    ad-do-it))
 
 (defadvice other-window-for-scrolling (around ecb)
   "This function determines the window which is scrolled if any of the
@@ -3602,10 +3596,9 @@ The `ecb-compile-window' is enlarged depending on the value of
            (equal (selected-frame) ecb-frame)
            ecb-compile-window-height
            (ecb-compile-window-live-p))
-      (let* ((compile-window-height-lines (if ecb-compile-window-height
-                                              (ecb-normalize-number
-                                               ecb-compile-window-height
-                                               (1- (frame-height)))))
+      (let* ((compile-window-height-lines (ecb-normalize-number
+                                           ecb-compile-window-height
+                                           (1- (frame-height))))
              (should-shrink (if (null arg)
                                 (> (window-height ecb-compile-window)
                                    compile-window-height-lines)
@@ -3629,7 +3622,7 @@ The `ecb-compile-window' is enlarged depending on the value of
                                                  (current-buffer))
                                       ecb-old-temp-buffer-max-height)))
                                 (floor (/ (1- (frame-height)) 2)))
-                            (count-lines (point-min) (point-max))))
+                            (1+ (count-lines (point-min) (point-max)))))
                       ((equal ecb-enlarged-compilation-window-max-height
                               'half)
                        (floor (/ (1- (frame-height)) 2)))
