@@ -2048,9 +2048,6 @@ CLOS or Eieio source-code there can exist some positionless nodes like
 variable-attributes in a @code{defclass} form which are only displayed
 if this option is nil. Displaying such nodes can be sensefull even if
 they can not be jumped.
-
-This option works only correct if a @code{semantic-version} >
-semantic-1.4beta14 is installed. Otherwise this option should be nil!
 @end defopt
 
 @defopt ecb-show-tokens

@@ -1858,9 +1858,6 @@ This group contains the following options:
    displayed if this option is nil. Displaying such nodes can be
    sensefull even if they can not be jumped.
 
-   This option works only correct if a `semantic-version' >
-   semantic-1.4beta14 is installed. Otherwise this option should be nil!
-
  - User Option: ecb-show-tokens
    How to show tokens in the methods buffer. This variable is a list
    where each element represents a type of tokens:
@@ -3266,34 +3263,34 @@ Node: ecb-general45306
 Node: ecb-directories63536
 Node: ecb-sources68516
 Node: ecb-methods70386
-Node: ecb-history82527
-Node: ecb-layout84219
-Node: ecb-face-options98151
-Node: ecb-faces99811
-Node: ecb-download103818
-Node: Submitting problem report105040
-Node: Upgrading106197
-Node: Downloading new version106554
-Node: Auto. option-upgrading107109
-Node: User interface107416
-Node: Background information108305
-Node: Tips and tricks111703
-Node: Changing faces112262
-Node: Small screens113068
-Node: Simulating speedbar114471
-Node: Optimze scrolling115280
-Node: Large directories116355
-Node: Elisp programming116999
-Node: Conflicts and bugs118182
-Node: Conflicts118668
-Node: VC119257
-Node: follow-mouse119550
-Node: avoid120228
-Node: calendar120592
-Node: calculator121228
-Node: Bugs121730
-Node: Function Index121950
-Node: Variable Index123815
-Node: Concept Index128993
+Node: ecb-history82393
+Node: ecb-layout84085
+Node: ecb-face-options98017
+Node: ecb-faces99677
+Node: ecb-download103684
+Node: Submitting problem report104906
+Node: Upgrading106063
+Node: Downloading new version106420
+Node: Auto. option-upgrading106975
+Node: User interface107282
+Node: Background information108171
+Node: Tips and tricks111569
+Node: Changing faces112128
+Node: Small screens112934
+Node: Simulating speedbar114337
+Node: Optimze scrolling115146
+Node: Large directories116221
+Node: Elisp programming116865
+Node: Conflicts and bugs118048
+Node: Conflicts118534
+Node: VC119123
+Node: follow-mouse119416
+Node: avoid120094
+Node: calendar120458
+Node: calculator121094
+Node: Bugs121596
+Node: Function Index121816
+Node: Variable Index123681
+Node: Concept Index128859
 
 End Tag Table

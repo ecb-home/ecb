@@ -1,6 +1,8 @@
 Version 1.80:
 -------------
 
+- ECB now requires latest stable release of Semantic: Version 1.4 of Semantic
+
 - Now the adviced versions of `delete-window' and `delete-other-windows' can
   also handle the optional WINDOW argument of the original versions correctly
   so the adviced versions now also work correct if called from program (Klaus).
@@ -86,7 +88,7 @@ Version 1.80:
 
 - Better grouping of external methods, i.e. methods which are implemented
   outside the class-definition, like in C++, CLOS and EIEIO. Now this is done
-  completely by semantic, but needs for this semantic >= 1.4beta14. (Klaus).
+  completely by semantic. (Klaus)
 
 - For application programmers using the tree-buffer library:
   + The function tree-buffer-create has a new argument NODE-DATA-EQUAL-FN. See
