@@ -216,9 +216,10 @@ eshell is currently visible."
 
   (if (ecb-eshell-running-p)
       (progn 
-        (select-window ecb-compile-window)
 
-        (switch-to-buffer ecb-eshell-buffer-name)
+        (set-window-buffer ecb-compile-window ecb-eshell-buffer-name)
+
+        (select-window ecb-compile-window)
         
         (when ecb-eshell-enlarge-when-selecting
           (ecb-eshell-enlarge)))
