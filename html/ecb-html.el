@@ -352,4 +352,4 @@
 (ecb-html-links)
 ;; Not used anymore
 ;; (ecb-html-screenshots)
-;; (ecb-html-old)
+(ecb-html-old)
