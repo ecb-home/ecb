@@ -19,7 +19,7 @@
 @c Free Software Foundation, Inc., 59 Temple Place - Suite 330,
 @c Boston, MA 02111-1307, USA.
 
-@c $Id: ecb.texi,v 1.95 2003/06/24 15:52:13 berndl Exp $
+@c $Id: ecb.texi,v 1.96 2003/06/28 15:35:20 berndl Exp $
 
 @setfilename ecb.info
 
@@ -69,7 +69,7 @@ ECB stands for ``Emacs Code Browser'' and is a source code browser for
 (X)Emacs. It is a global minor-mode which displays a couple of windows
 that can be used to browse directories, files and file-contents like
 methods and variables. It supports source-code parsing for
-semantic-supported languages like Java, C, C++, Elisp, Scheme as well
+semantic-supported languages like Java, C, C++, Elisp and Scheme as well
 as for source-types supported ``only'' by imenu or etags (e.g. perl,
 TeX, LaTeX etc.).
 

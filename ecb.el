@@ -33,7 +33,7 @@
 ;; (X)Emacs. It is a global minor-mode which displays a couple of windows that
 ;; can be used to browse directories, files and file-contents like methods and
 ;; variables. It supports source-code parsing for semantic-supported languages
-;; like Java, C, C++, Elisp, Scheme as well as for source-types supported
+;; like Java, C, C++, Elisp and Scheme as well as for source-types supported
 ;; "only" by imenu or etags (e.g. perl, TeX, LaTeX etc.).
 
 
@@ -90,7 +90,7 @@
 ;; For the ChangeLog of this file see the CVS-repository. For a complete
 ;; history of the ECB-package see the file NEWS.
 
-;; $Id: ecb.el,v 1.311 2003/06/27 14:28:53 berndl Exp $
+;; $Id: ecb.el,v 1.312 2003/06/28 15:35:20 berndl Exp $
 
 ;;; Code:
 

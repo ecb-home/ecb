@@ -28,7 +28,7 @@
 ;; Do not change any html-file besides the index.html manually but do all
 ;; changes in this elisp file!
 
-;; $Id: ecb-html.el,v 1.50 2003/06/23 14:13:38 berndl Exp $
+;; $Id: ecb-html.el,v 1.51 2003/06/28 15:35:19 berndl Exp $
 
 ;;; Code:
 
@@ -168,8 +168,8 @@
               "It is a global minor-mode which displays a couple of windows "
               "that can be used to browse directories, files and file-contents "
               "like methods and variables. It supports source-code parsing for "
-              "semantic-supported languages like Java, C, C++, Elisp, Scheme "
-              "as well for source-types supported \"only\" by imenu or etags "
+              "semantic-supported languages like Java, C, C++, Elisp and Scheme "
+              "as well as for source-types supported \"only\" by imenu or etags "
               "(e.g. perl, TeX, LaTeX etc.).")
 
    (apply 'h-section "News"
