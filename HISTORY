@@ -1,6 +1,10 @@
 Version 1.90
 ------------
 
+* The website of ECB has moved from http://home.swipnet.se/mayhem/ecb.html to
+  http://ecb.sourceforge.net. Maintainance has switched from Jesper Nordenberg
+  to Klaus Berndl.
+
 * Fixed an annoying bug which results in an error "Wrong type argument:
   integer-or-marker-p nil)" after a full buffer reparse. ECB 1.80 has repaired
   its internal state but nevertheless the user had to reclick on the same

@@ -3,7 +3,7 @@
 ;; Copyright (C) 2000, 2001 Jesper Nordenberg
 
 ;; Author: Jesper Nordenberg <mayhem@home.se>
-;; Maintainer: Jesper Nordenberg <mayhem@home.se>
+;; Maintainer: Klaus Berndl <klaus.berndl@sdm.de>
 ;; Keywords: java, class, browser
 
 ;; This program is free software; you can redistribute it and/or modify it under
@@ -24,9 +24,9 @@
 ;; Contains misc utility functions for ECB.
 ;;
 ;; This file is part of the ECB package which can be found at:
-;; http://home.swipnet.se/mayhem/ecb.html
+;; http://ecb.sourceforge.net
 
-;; $Id: ecb-util.el,v 1.49 2003/01/27 10:40:37 berndl Exp $
+;; $Id: ecb-util.el,v 1.50 2003/01/30 16:13:43 berndl Exp $
 
 ;;; Code:
 

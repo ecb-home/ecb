@@ -19,7 +19,7 @@
 @c Free Software Foundation, Inc., 59 Temple Place - Suite 330,
 @c Boston, MA 02111-1307, USA.
 
-@c $Id: ecb.texi,v 1.65 2003/01/29 14:35:37 berndl Exp $
+@c $Id: ecb.texi,v 1.66 2003/01/30 16:13:18 berndl Exp $
 
 @setfilename ecb.info
 
@@ -70,7 +70,7 @@ of all commands and user-options in @ref{Interactive ECB commands} and
 @c and tex-format concerning the display of the URLs.
 @ifinfo
 The latest version of ECB can always be found at the URL
-@url{http://home.swipnet.se/mayhem/ecb.html}.
+@url{http://ecb.sourceforge.net}.
 
 To send bug reports, or participate in discussions about ECB, use the
 mailing list @email{ecb-list@@lists.sourceforge.net} via the URL
@@ -81,7 +81,7 @@ mailing list @email{ecb-list@@lists.sourceforge.net} via the URL
 @sp 1
 
 The latest version of ECB can always be found at the URL @*
-@url{http://home.swipnet.se/mayhem/ecb.html}.
+@url{http://ecb.sourceforge.net}.
 
 @sp 1
 
@@ -92,7 +92,7 @@ mailing list @*@email{ecb-list@@lists.sourceforge.net} via the URL @*
 
 @ifhtml
 The latest version of ECB can always be found at 
-@uref{http://home.swipnet.se/mayhem/ecb.html}
+@uref{http://ecb.sourceforge.net}
 
 To send bug reports, or participate in discussions about ECB, use the
 mailing list @email{ecb-list@@lists.sourceforge.net} via 

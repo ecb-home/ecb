@@ -1,10 +1,10 @@
 ;;; ecb.el --- a code browser
 
-;; Copyright (C) 2000, 2001 Jesper Nordenberg
+;; Copyright (C) 2000, 2001 Jesper Nordenberg, Klaus Berndl
 
 ;; Author: Jesper Nordenberg <mayhem@home.se>
-;; Maintainer: Jesper Nordenberg <mayhem@home.se>,
-;;             Klaus Berndl <klaus.berndl@sdm.de>
+;;         Klaus Berndl <klaus.berndl@sdm.de>
+;; Maintainer: Klaus Berndl <klaus.berndl@sdm.de>
 ;; Keywords: browser, code, programming, tools
 ;; Created: Jul 2000
 
@@ -60,9 +60,9 @@
 ;; description of what ECB offers to you and how to use ECB.
 ;;
 ;; The latest version of the ECB is available at
-;; http://home.swipnet.se/mayhem/ecb.html
+;; http://ecb.sourceforge.net
 
-;; $Id: ecb.el,v 1.280 2003/01/29 14:33:04 berndl Exp $
+;; $Id: ecb.el,v 1.281 2003/01/30 16:13:34 berndl Exp $
 
 ;;; Code:
 
@@ -3462,15 +3462,12 @@ is resynced to the current token of the edit-window."
              semantic-symbol->name-assoc-list)))
     (save-selected-window
       (ecb-exec-in-methods-window
-       (let* ((first-node (save-excursion
-                            (goto-char (point-min))
-                            (tree-buffer-get-node-at-point)))
-              ;; normalizing the elements of `ecb-methods-nodes-expand-spec'
-              ;; and `ecb-methods-nodes-collapse-spec'.
-              (norm-expand-types (ecb-normalize-expand-spec
-                                  ecb-methods-nodes-expand-spec))
-              (norm-collapse-types (ecb-normalize-expand-spec
-                                    ecb-methods-nodes-collapse-spec)))
+       (let (;; normalizing the elements of `ecb-methods-nodes-expand-spec'
+             ;; and `ecb-methods-nodes-collapse-spec'.
+             (norm-expand-types (ecb-normalize-expand-spec
+                                 ecb-methods-nodes-expand-spec))
+             (norm-collapse-types (ecb-normalize-expand-spec
+                                   ecb-methods-nodes-collapse-spec)))
          (tree-buffer-expand-nodes
           level
           (and (not force-all)

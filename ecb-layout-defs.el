@@ -1,9 +1,9 @@
 ;;; ecb-layout.el --- layout for ECB
 
-;; Copyright (C) 2000, 2001 Jesper Nordenberg
+;; Copyright (C) 2000, 2001 Jesper Nordenberg, Klaus Berndl
 
-;; Author: Jesper Nordenberg <mayhem@home.se>
-;; Maintainer: Jesper Nordenberg <mayhem@home.se>
+;; Author: Klaus Berndl <klaus.berndl@sdm.de>
+;; Maintainer: Klaus Berndl <klaus.berndl@sdm.de>
 ;; Keywords: java, class, browser
 
 ;; This program is free software; you can redistribute it and/or modify it under
@@ -19,14 +19,14 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-layout-defs.el,v 1.11 2003/01/29 14:36:40 berndl Exp $
+;; $Id: ecb-layout-defs.el,v 1.12 2003/01/30 16:13:48 berndl Exp $
 
 ;;; Commentary:
 ;;
 ;; Contains all layout definitions for ECB
 ;;
 ;; This file is part of the ECB package which can be found at:
-;; http://home.swipnet.se/mayhem/ecb.html
+;; http://ecb.sourceforge.net
 
 (eval-when-compile
   (require 'silentcomp))

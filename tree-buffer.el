@@ -3,7 +3,7 @@
 ;; Copyright (C) 2000, 2001 Jesper Nordenberg
 
 ;; Author: Jesper Nordenberg <mayhem@home.se>
-;; Maintainer: Jesper Nordenberg <mayhem@home.se>
+;; Maintainer: Klaus Berndl <klaus.berndl@sdm.de>
 ;; Keywords: java, class, browser
 
 ;; This program is free software; you can redistribute it and/or modify it under
@@ -24,9 +24,9 @@
 ;; Functions for tree buffers.
 ;;
 ;; This file is part of the ECB package which can be found at:
-;; http://home.swipnet.se/mayhem/ecb.html
+;; http://ecb.sourceforge.net
 
-;; $Id: tree-buffer.el,v 1.103 2003/01/29 14:34:33 berndl Exp $
+;; $Id: tree-buffer.el,v 1.104 2003/01/30 16:13:12 berndl Exp $
 
 ;;; Code:
 
