@@ -1,6 +1,6 @@
 ;;; ecb-speedbar.el --- 
 
-;; $Id: ecb-speedbar.el,v 1.43 2003/07/04 16:25:45 berndl Exp $
+;; $Id: ecb-speedbar.el,v 1.44 2003/07/14 14:47:53 berndl Exp $
 
 ;; Copyright (C) 2000-2003 Free Software Foundation, Inc.
 ;; Copyright (C) 2000-2003 Kevin A. Burton (burton@openprivacy.org)
@@ -57,6 +57,7 @@
 
 ;;; History:
 
+
 ;; - Fri Jul 04 2003 5:28 PM (klaus.berndl@sdm.de): removed the
 ;;   speedbar-version check because this is done now globally in ecb.el.
 ;;
@@ -96,7 +97,9 @@
 
 (defconst ecb-speedbar-adviced-functions '((speedbar-click . around)
                                            (speedbar-frame-mode . around)
-                                           (speedbar-get-focus . around))
+                                           (speedbar-get-focus . around)
+                                           ;; we have to fix a bug there
+                                           (dframe-mouse-set-point . around))
   "These functions of speedbar are always adviced if ECB is active. Each
 element of the list is a cons-cell where the car is the function-symbol and
 the cdr the advice-class \(before, around or after). If a function should be
@@ -120,6 +123,7 @@ after clicking onto a filename in the speedbar."
     (if (and (equal (selected-frame) ecb-frame)
              (window-live-p (get-buffer-window ecb-speedbar-buffer-name))
              (and item
+                  (file-exists-p item)
                   (not (file-directory-p item))))
         (ecb-select-edit-window))))
 
@@ -137,6 +141,25 @@ speedbar-window is active, then select the edit-window."
   (if (equal (current-buffer) (get-buffer ecb-speedbar-buffer-name))
       (ecb-select-edit-window)
     (ecb-speedbar-select-speedbar-window)))
+
+;; Klaus Berndl <klaus.berndl@sdm.de>: This implementation is done to make
+;; clear where the bug is fixed...a better impl. can be seen in
+;; tree-buffer-mouse-set-point (does the same but better code - IMHO).
+(defadvice dframe-mouse-set-point (around ecb)
+  "Fixes a bug in the original implementation: if clicked onto an image then
+the point was not set by `mouse-set-point'."
+  (if (and (fboundp 'event-over-glyph-p) (event-over-glyph-p e))
+      ;; We are in XEmacs, and clicked on a picture
+      (let ((ext (event-glyph-extent e)))
+        ;; This position is back inside the extent where the
+        ;; junk we pushed into the property list lives.
+        (if (extent-end-position ext)
+            (progn
+              (mouse-set-point e)
+              (goto-char (1- (extent-end-position ext))))
+          (mouse-set-point e)))
+    ;; We are not in XEmacs, OR we didn't click on a picture.
+    (mouse-set-point e)))
   
 
 (defun ecb-speedbar-enable-advices ()
@@ -215,7 +238,7 @@ future this could break."
 
   (add-hook 'ecb-current-buffer-sync-hook
             'ecb-speedbar-current-buffer-sync)
-  
+
   ;;reset the selection variable
   (setq speedbar-last-selected-file nil))
 
