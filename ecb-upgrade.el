@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-upgrade.el,v 1.101 2005/02/28 11:31:54 berndl Exp $
+;; $Id: ecb-upgrade.el,v 1.102 2005/03/30 12:50:35 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -159,7 +159,7 @@
 
 ;; IMPORTANT: The version-number is auto-frobbed from the Makefile. Do not
 ;; change it here!
-(defconst ecb-version "2.32beta1"
+(defconst ecb-version "2.32beta2"
   "Current ECB version.")
 
 (eval-when-compile
@@ -333,14 +333,11 @@ The car is the old option symbol and the cdr is a 2-element-list with:
 
 ;; upgrading ecb-compile-window-temporally-enlarge
 (defun ecb-upgrade-compile-window-temporally-enlarge (old-val)
-  (cond ((or (equal old-val t)
-             (equal old-val 'after-compilation))
-         'after-display)
-        ((null old-val)
-         nil)
-        ((member old-val '(after-selection both))
-         old-val)
-        (t 'ecb-no-upgrade-conversion)))
+  (case old-val
+    ((t after-compilation) 'after-display)
+    ((nil) nil)
+    ((after-selection both) old-val)
+    (otherwise 'ecb-no-upgrade-conversion)))
 
 ;; upgrading ecb-window-sync
 (defun ecb-upgrade-window-sync (old-val)
@@ -1026,26 +1023,19 @@ your customization-file!"
         (widget-insert "There are no incompatible or renamed options. Your settings are correct.\n")
         (widget-insert (format "But ECB must store that the ecb-settings are uptodate with %s.\n\n"
                                ecb-version))
-        (message "Klausi-1")
         (if (not (ecb-custom-file-writeable-p))
             (progn
-              (message "Klausi-2")
               (widget-insert "Emacs can not save the `ecb-options-version' because the needed file\n")
-              (message "Klausi-3")
               (widget-insert (if (ecb-custom-file)
                                  (concat (ecb-custom-file) " is not writeable by Emacs!")
                                "does not exist!"))
-              (message "Klausi-4")
               (widget-insert "\nPlease ensure that `ecb-options-version' will be saved!\n\n"))
           (widget-insert (format "Click on [Save] to save `ecb-options-version' into %s.\n"
                                  (ecb-custom-file)))
           (widget-insert (format "This makes a backup of this file unique named with a suffix .before_ecb_%s.\n\n"
                                  ecb-version)))
-        (message "Klausi-5")
         (widget-insert "Click on [Cancel] to kill this buffer.\n\n")
-        (message "Klausi-6")
         (widget-insert "For a list of the most important NEWS call `ecb-display-news-for-upgrade'!\n\n")
-        (message "Klausi-7")
         (widget-insert "\n")
         (when (ecb-custom-file-writeable-p)
           ;; Insert the Save button
@@ -1059,16 +1049,13 @@ your customization-file!"
                          "Save")
           (widget-insert " "))
         ;; Insert the Cancel button
-        (message "Klausi-8")
         (widget-create 'push-button
                        :button-keymap ecb-upgrade-button-keymap ; XEmacs
                        :keymap ecb-upgrade-button-keymap ; Emacs
                        :notify (lambda (&rest ignore)
                                  (kill-buffer (current-buffer)))
                        "Cancel")
-        (message "Klausi-9")
         (widget-setup)
-        (message "Klausi-10")
         (goto-char (point-min))))
     nil))
 
@@ -1424,13 +1411,12 @@ Note: Normally this URL should never change but who knows..."
 (defcustom ecb-wget-setup (cons (if (fboundp 'executable-find)
                                     (executable-find "wget")
                                   "wget")
-                                (cond ((eq system-type 'cygwin32)
-                                       'cygwin)
-                                      ((eq system-type 'windows-nt)
-                                       (if (getenv "CYGWIN")
-                                           'cygwin
-                                         'windows))
-                                      (t 'other)))
+                                (case system-type
+                                  (cygwin32 'cygwin)
+                                  (windows-nt (if (getenv "CYGWIN")
+                                                  'cygwin
+                                                'windows))
+                                  (otherwise 'other)))
   "*Configuration for the wget-utility.
 Value is a cons-cell where:
 - car is the name of the wget-executable - if the executable can not be found
@@ -1449,13 +1435,12 @@ Value is a cons-cell where:
 (defcustom ecb-gzip-setup (cons (if (fboundp 'executable-find)
                                     (executable-find "gzip")
                                   "gzip")
-                                (cond ((eq system-type 'cygwin32)
-                                       'cygwin)
-                                      ((eq system-type 'windows-nt)
-                                       (if (getenv "CYGWIN")
-                                           'cygwin
-                                         'windows))
-                                      (t 'other)))
+                                (case system-type
+                                  (cygwin32 'cygwin)
+                                  (windows-nt (if (getenv "CYGWIN")
+                                                  'cygwin
+                                                'windows))
+                                  (otherwise 'other)))
   "*Configuration for the gzip-utility.
 For a description about the possible settings see `ecb-wget-setup'."
   :group 'ecb-download
@@ -1468,13 +1453,12 @@ For a description about the possible settings see `ecb-wget-setup'."
 (defcustom ecb-tar-setup (cons (if (fboundp 'executable-find)
                                    (executable-find "tar")
                                  "tar")
-                               (cond ((eq system-type 'cygwin32)
-                                      'cygwin)
-                                     ((eq system-type 'windows-nt)
-                                      (if (getenv "CYGWIN")
-                                          'cygwin
-                                        'windows))
-                                     (t 'other)))
+                               (case system-type
+                                 (cygwin32 'cygwin)
+                                 (windows-nt (if (getenv "CYGWIN")
+                                                 'cygwin
+                                               'windows))
+                                 (otherwise 'other)))
   "*Configuration for the tar-utility.
 For a description about the possible settings see `ecb-wget-setup'."
   :group 'ecb-download
@@ -1488,18 +1472,18 @@ For a description about the possible settings see `ecb-wget-setup'."
 (defun ecb-upgrade-make-file-arg (file path-type)
   "Convert filename FILE according to PATH which can be 'cygwin, 'windows or
 'other. In case of the latter one no conversion is done."
-  (cond ((eq path-type 'cygwin)
-         (require 'executable)
-         (if (executable-find "cygpath.exe")
-             (ecb-trim
-              (ecb-subst-char-in-string ?\n 32
-                                        (shell-command-to-string
-                                         (concat "cygpath -u "
-                                                 (shell-quote-argument file)))))
-           (ecb-error "Cannot find the cygpath utility for filepath converting!")))
-        ((eq path-type 'windows)
-         (ecb-subst-char-in-string ?/ ?\\ file))
-        (t file)))
+  (case path-type
+    (cygwin
+     (require 'executable)
+     (if (executable-find "cygpath.exe")
+         (ecb-trim
+          (ecb-subst-char-in-string ?\n 32
+                                    (shell-command-to-string
+                                     (concat "cygpath -u "
+                                             (shell-quote-argument file)))))
+       (ecb-error "Cannot find the cygpath utility for filepath converting!")))
+    (windows (ecb-subst-char-in-string ?/ ?\\ file))
+    (otherwise file)))
 
 (defun ecb-package-version-str2list (ver-str)
   "Convert the version-str VER-STR to the internal version-list format with
@@ -1559,13 +1543,11 @@ Return nil if ver-str has not the required syntax:
   (concat (number-to-string (nth 0 ver))
           "."
           (number-to-string (nth 1 ver))
-          (cond ((= (nth 2 ver) 0)
-                 "alpha")
-                ((= (nth 2 ver) 1)
-                 "beta")
-                ((= (nth 2 ver) 3)
-                 ".")
-                (t ""))
+          (case (nth 2 ver)
+            (0 "alpha")
+            (1 "beta")
+            (3 ".")
+            (otherwise ""))
           (if (not (= (nth 2 ver) 2))
               (number-to-string (nth 3 ver))
             "")))

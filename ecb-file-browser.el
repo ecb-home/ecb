@@ -23,7 +23,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-file-browser.el,v 1.54 2005/03/10 16:37:51 berndl Exp $
+;; $Id: ecb-file-browser.el,v 1.55 2005/03/30 12:50:54 berndl Exp $
 
 ;;; Commentary:
 
@@ -252,14 +252,13 @@ The value 'auto \(see above) takes exactly these two scenarios into account."
 (defun ecb-show-sources-in-directories-buffer-p ()
   "Return not nil if in current layout sources are shown in the
 directories-buffer."
-  (cond ((equal ecb-show-sources-in-directories-buffer 'never)
-         nil)
-        ((equal ecb-show-sources-in-directories-buffer 'always)
-         t)
-        (t
-         (and (listp ecb-show-sources-in-directories-buffer)
-              (member ecb-layout-name
-                      ecb-show-sources-in-directories-buffer)))))
+  (case ecb-show-sources-in-directories-buffer
+    (never nil)
+    (always t)
+    (otherwise
+     (and (listp ecb-show-sources-in-directories-buffer)
+          (member ecb-layout-name
+                  ecb-show-sources-in-directories-buffer)))))
 
 (defcustom ecb-cache-directory-contents '(("^/\\([^:/]*@\\)?\\([^@:/]*\\):.*" . 0)
                                           (".*" . 50))
@@ -786,7 +785,7 @@ Example for the definition of such a popupmenu-command:
 
 \(tree-buffer-defpopup-command ecb-my-special-dir-popup-function
   \"Prints the name of the directory of the node under point.\"
-  \(let \(\(node-data=dir \(tree-node-get-data node)))
+  \(let \(\(node-data=dir \(tree-node->data node)))
      \(message \"Dir under node: %s\" node-data=dir)))
 
 Per default the static user-extensions are added at the beginning of the
@@ -1567,16 +1566,16 @@ done \(so normally the tree-buffer must be rebuild). Return nil if the
 expansion-state of the tree can show without any further expansion the node
 representing PATH."
   (catch 'exit
-    (dolist (child (tree-node-get-children node))
-      (let ((data (tree-node-get-data child)))
+    (dolist (child (tree-node->children node))
+      (let ((data (tree-node->data child)))
         (when (and (>= (length path) (length data))
                    (ecb-string= (substring path 0 (length data)) data)
                    (or (= (length path) (length data))
                        (eq (elt path (length data))
                            (ecb-directory-sep-char path))))
-          (let ((was-expanded (or (not (tree-node-is-expandable child))
-                                  (tree-node-is-expanded child))))
-            (tree-node-set-expanded child t)
+          (let ((was-expanded (or (not (tree-node->expandable child))
+                                  (tree-node->expanded child))))
+            (setf (tree-node->expanded child) t)
             (ecb-update-directory-node child)
             (throw 'exit
                    (or (when (> (length path) (length data))
@@ -1634,19 +1633,21 @@ file in current directory."
 (defun ecb-get-sources-sort-function (sort-method &optional ignore-case)
   "According to SORT-METHOD \(which can either be 'name, 'extension or nil)
 and IGNORE-CASE return a function which can be used as argument for `sort'."
-  (cond ((equal sort-method 'name)
-         (function (lambda (a b)
-                     (ecb-string< a b ecb-sources-sort-ignore-case))))
-        ((equal sort-method 'extension)
-         (function
-          (lambda(a b)
-            (let ((ext-a (ecb-file-name-extension a t))
-                  (ext-b (ecb-file-name-extension b t)))
-              (if (ecb-string= ext-a ext-b ecb-sources-sort-ignore-case)
-                  (ecb-string< a b ecb-sources-sort-ignore-case)
-                (ecb-string< ext-a ext-b ecb-sources-sort-ignore-case))))))
-        (t (function (lambda (a b)
-                       nil)))))
+  (case sort-method
+    (name
+     (function (lambda (a b)
+                 (ecb-string< a b ecb-sources-sort-ignore-case))))
+    (extension
+     (function
+      (lambda(a b)
+        (let ((ext-a (ecb-file-name-extension a t))
+              (ext-b (ecb-file-name-extension b t)))
+          (if (ecb-string= ext-a ext-b ecb-sources-sort-ignore-case)
+              (ecb-string< a b ecb-sources-sort-ignore-case)
+            (ecb-string< ext-a ext-b ecb-sources-sort-ignore-case))))))
+    (otherwise
+     (function (lambda (a b)
+                 nil)))))
 
 
 (defun ecb-get-files-and-subdirs (dir)
@@ -1718,7 +1719,7 @@ selected before this update."
             (tree-buffer-update nil (cons (nth 2 cache-elem)
                                           (nth 1 cache-elem))))
         (let ((new-tree (tree-node-new-root))
-              (old-children (tree-node-get-children (tree-buffer-get-root)))
+              (old-children (tree-node->children (tree-buffer-get-root)))
               (new-cache-elem nil))
           ;; building up the new files-tree
           (ecb-tree-node-add-files
@@ -1762,7 +1763,7 @@ selected before this update."
   (ecb-sources-filter-by-ext
    (read-string "Insert the filter-extension without leading dot: "
                 (and node
-                     (ecb-file-name-extension (tree-node-get-data node))))))
+                     (ecb-file-name-extension (tree-node->data node))))))
 
 (defun ecb-sources-filter-by-regexp ()
   "Filter the sources by a regexp. Ask for the regexp."
@@ -1826,7 +1827,7 @@ all files are displayed."
           (tree-buffer-highlight-node-data ecb-path-selected-source))
       ;; apply the filter-regexp
       (let ((new-tree (tree-node-new-root))
-            (old-children (tree-node-get-children (tree-buffer-get-root)))
+            (old-children (tree-node->children (tree-buffer-get-root)))
             (all-files (car (ecb-get-files-and-subdirs ecb-path-selected-directory)))
             (filtered-files nil))
         (dolist (file all-files)
@@ -1923,21 +1924,21 @@ then nothing is done unless first optional argument FORCE is not nil."
                                (function
                                 (lambda (node)
                                   (if (and (tree-buffer-node-data-equal-p
-                                            (tree-node-get-data node)
+                                            (tree-node->data node)
                                             (ecb-fix-filename best-source-path))
                                            ;; only nodes of level 0 (ie. with
                                            ;; parent == root) can be source-paths
                                            (eq (tree-buffer-get-root)
-                                               (tree-node-get-parent node)))
+                                               (tree-node->parent node)))
                                       node))))))
                       ;; we start at the root node
                       (tree-buffer-get-root)))
               (when (and (equal ecb-auto-expand-directory-tree 'best)
                          start)
-                (setq was-expanded (or (not (tree-node-is-expandable start))
-                                       (tree-node-is-expanded start)))
+                (setq was-expanded (or (not (tree-node->expandable start))
+                                       (tree-node->expanded start)))
                 ;; expand the best-match node itself
-                (tree-node-set-expanded start t)
+                (setf (tree-node->expanded start) t)
                 ;; This function ensures a correct expandable-state of
                 ;; start-node
                 (ecb-update-directory-node start))
@@ -2078,10 +2079,10 @@ by the option `ecb-mode-line-prefixes'."
 `ecb-history-filter' does not filter out this file."
   (save-excursion
     (set-buffer ecb-history-buffer-name)
-    (tree-node-remove-child-data (tree-buffer-get-root) filename)
+    (tree-node-remove-child-by-data (tree-buffer-get-root) filename)
     (when (and (not (ecb-check-filename-for-history-exclude filename))
                (funcall (car ecb-history-filter) filename))
-      (tree-node-add-child-first
+      (tree-node-add-children
        (tree-buffer-get-root)
        (tree-node-new
         (let ((file-1 (if (eq ecb-history-item-name 'buffer-name)
@@ -2098,7 +2099,8 @@ by the option `ecb-mode-line-prefixes'."
             (ecb-generate-node-name file-1 -1 "leaf"
                                     ecb-sources-buffer-name)))
         ecb-history-nodetype-sourcefile
-        filename t)))))
+        filename t)
+       'at-beginning))))
 
 
 (defun ecb-sort-history-buffer ()
@@ -2108,39 +2110,41 @@ by the option `ecb-mode-line-prefixes'."
       (set-buffer ecb-history-buffer-name)
       (tree-node-sort-children
        (tree-buffer-get-root)
-       (cond ((equal ecb-history-sort-method 'name)
-              (function (lambda (l r)
-                          (let* ((l0 (tree-node-get-name l))
-                                 (r0 (tree-node-get-name r))
-                                 (l1 (save-match-data
-                                       (if (string-match "^(.) \\(.+\\)$" l0)
-                                           (match-string 1 l0)
-                                         l0)))
-                                 (r1 (save-match-data
-                                       (if (string-match "^(.) \\(.+\\)$" r0)
-                                           (match-string 1 r0)
-                                         r0))))
-                            (ecb-string< l1 r1 ecb-history-sort-ignore-case)))))
-             ((equal ecb-history-sort-method 'extension)
-              (function
-               (lambda (l r)
-                 (let* ((l0 (tree-node-get-name l))
-                        (r0 (tree-node-get-name r))
-                        (l1 (save-match-data
-                              (if (string-match "^(.) \\(.+\\)$" l0)
-                                  (match-string 1 l0)
-                                l0)))
-                        (r1 (save-match-data
-                              (if (string-match "^(.) \\(.+\\)$" r0)
-                                  (match-string 1 r0)
-                                r0)))
-                        (ext-l (ecb-file-name-extension l1 t))
-                        (ext-r (ecb-file-name-extension r1 t)))
-                   (if (ecb-string= ext-l ext-r ecb-history-sort-ignore-case)
-                       (ecb-string< l1 r1 ecb-history-sort-ignore-case)
-                     (ecb-string< ext-l ext-r ecb-history-sort-ignore-case))))))
-             (t (function (lambda (l r)
-                            nil))))))))
+       (case ecb-history-sort-method
+         (name
+          (function (lambda (l r)
+                      (let* ((l0 (tree-node->name l))
+                             (r0 (tree-node->name r))
+                             (l1 (save-match-data
+                                   (if (string-match "^(.) \\(.+\\)$" l0)
+                                       (match-string 1 l0)
+                                     l0)))
+                             (r1 (save-match-data
+                                   (if (string-match "^(.) \\(.+\\)$" r0)
+                                       (match-string 1 r0)
+                                     r0))))
+                        (ecb-string< l1 r1 ecb-history-sort-ignore-case)))))
+         (extension
+          (function
+           (lambda (l r)
+             (let* ((l0 (tree-node->name l))
+                    (r0 (tree-node->name r))
+                    (l1 (save-match-data
+                          (if (string-match "^(.) \\(.+\\)$" l0)
+                              (match-string 1 l0)
+                            l0)))
+                    (r1 (save-match-data
+                          (if (string-match "^(.) \\(.+\\)$" r0)
+                              (match-string 1 r0)
+                            r0)))
+                    (ext-l (ecb-file-name-extension l1 t))
+                    (ext-r (ecb-file-name-extension r1 t)))
+               (if (ecb-string= ext-l ext-r ecb-history-sort-ignore-case)
+                   (ecb-string< l1 r1 ecb-history-sort-ignore-case)
+                 (ecb-string< ext-l ext-r ecb-history-sort-ignore-case))))))
+         (otherwise
+          (function (lambda (l r)
+                      nil))))))))
 
 
 (defun ecb-update-history-window (&optional filename)
@@ -2193,9 +2197,9 @@ ecb-windows after displaying the file in an edit-window."
 
 (defun ecb-update-directory-node (node)
   "Updates the directory node NODE and add all subnodes if any."
-  (let ((old-children (tree-node-get-children node))
-        (path (tree-node-get-data node)))
-    (tree-node-set-children node nil)
+  (let ((old-children (tree-node->children node))
+        (path (tree-node->data node)))
+    (setf (tree-node->children node) nil)
     (if (ecb-file-accessible-directory-p path)
         (let ((files-and-dirs (ecb-get-files-and-subdirs path)))
           (ecb-tree-node-add-files node path (cdr files-and-dirs)
@@ -2206,11 +2210,13 @@ ecb-windows after displaying the file in an edit-window."
                                        ecb-directories-nodetype-sourcefile
                                        ecb-show-source-file-extension
                                        old-children t))
-          (tree-node-set-expandable node (or (tree-node-get-children node)))
+          (setf (tree-node->expandable node)
+                (or (tree-node->children node)))
           ;; if node is not expandable we set its expanded state to nil
-          (tree-node-set-expanded node (if (not (tree-node-is-expandable node))
-                                           nil
-                                         (tree-node-is-expanded node)))))))
+          (setf (tree-node->expanded node)
+                (if (not (tree-node->expandable node))
+                    nil
+                  (tree-node->expanded node)))))))
 
 
 (defun ecb-get-source-paths-from-functions ()
@@ -2234,10 +2240,10 @@ ecb-windows after displaying the file in an edit-window."
               (not (equal (selected-frame) ecb-frame)))
     (ecb-exec-in-window ecb-directories-buffer-name
       (let* ((node (tree-buffer-get-root))
-             (old-children (tree-node-get-children node))
+             (old-children (tree-node->children node))
              (paths (append (ecb-get-source-paths-from-functions)
                             ecb-source-path)))
-        (tree-node-set-children node nil)
+        (setf (tree-node->children node) nil)
         (dolist (dir paths)
           (let* ((path (if (listp dir) (car dir) dir))
                  (remote-path (ecb-remote-path path))
@@ -2250,7 +2256,7 @@ ecb-windows after displaying the file in an edit-window."
                   (setq norm-dir (ecb-fix-filename path nil t))
                   (setq name (if (listp dir) (cadr dir) norm-dir))
                   (if (ecb-file-accessible-directory-p norm-dir)
-                      (tree-node-add-child
+                      (tree-node-add-children
                        node
                        (ecb-new-child old-children name
                                       ecb-directories-nodetype-sourcepath
@@ -2284,16 +2290,18 @@ doesn't match any regexp of `ecb-host-accessible-check-valid-time' then return
   "Return not nil if HOST is accessible."
   (let ((value (ecb-host-accessible-cache-get
                 host (ecb-host-accessible-valid-time host))))
-    (cond ((equal value 'NOT-ACCESSIBLE)
-           nil)
-          (value value)
-          (t (let* ((options (append ecb-ping-options (list host)))
-                    (result (equal 0 (apply 'call-process
-                                            ecb-ping-program
-                                            nil nil nil
-                                            options))))
-               (ecb-host-accessible-cache-add host (or result 'NOT-ACCESSIBLE))
-               result)))))
+    (case value
+      (NOT-ACCESSIBLE nil)
+      ((nil) ;; not cached or outdated
+       (let* ((options (append ecb-ping-options (list host)))
+              (result (equal 0 (apply 'call-process
+                                      ecb-ping-program
+                                      nil nil nil
+                                      options))))
+         (ecb-host-accessible-cache-add host (or result 'NOT-ACCESSIBLE))
+         result))
+      (otherwise value))))
+
 
 ;; (ecb-host-accessible-p "ecb.sourceforge.net")
 
@@ -2312,42 +2320,42 @@ the :-separator which separates user- and host-parts from the real path, i.e.
 it always ends with a colon! HOST is the remote HOST and REAL-PATH is that
 component after that :-separator. Supports tramp, ange-ftp and efs."
   (let ((value (ecb-remote-path-cache-get path)))
-    (cond ((equal value 'NOT-REMOTE)
-           nil)
-          (value value)
-          (t
-           (let* ((dissection (or (and (featurep 'tramp) ;; tramp-support
-                                       (tramp-tramp-file-p path)
-                                       (tramp-dissect-file-name path))
-                                  (and (featurep 'ange-ftp) ;; ange-ftp-support
-                                       (ange-ftp-ftp-name path))
-                                  (and (featurep 'efs) ;; efs support
-                                       (efs-ftp-path path))))
-                  (host/real-path
-                   (if dissection
-                       (or (and (featurep 'tramp) ;; tramp-support
-                                (cons (tramp-file-name-host dissection)
-                                      (if (fboundp 'tramp-file-name-localname)
-                                          (tramp-file-name-localname dissection)
-                                        (tramp-file-name-path dissection))))
-                           (and (featurep 'ange-ftp) ;; ange-ftp-support
-                                (cons (nth 0 dissection)
-                                      (nth 2 dissection)))
-                           (and (featurep 'efs) ;; efs support
-                                (cons (nth 0 dissection)
-                                      (nth 2 dissection))))
-                     (cons nil path)))
-                  (full-host-user-part
-                   (substring path 0 (- (length path)
-                                        (length (cdr host/real-path)))))
-                  (result nil))
-             (setq result
-                   (and dissection
-                        (list full-host-user-part
-                              (car host/real-path)
-                              (cdr host/real-path))))
-             (ecb-remote-path-cache-add path (or result 'NOT-REMOTE))
-             result)))))
+    (case value
+      (NOT-REMOTE nil)
+      ((nil)
+       (let* ((dissection (or (and (featurep 'tramp) ;; tramp-support
+                                   (tramp-tramp-file-p path)
+                                   (tramp-dissect-file-name path))
+                              (and (featurep 'ange-ftp) ;; ange-ftp-support
+                                   (ange-ftp-ftp-name path))
+                              (and (featurep 'efs) ;; efs support
+                                   (efs-ftp-path path))))
+              (host/real-path
+               (if dissection
+                   (or (and (featurep 'tramp) ;; tramp-support
+                            (cons (tramp-file-name-host dissection)
+                                  (if (fboundp 'tramp-file-name-localname)
+                                      (tramp-file-name-localname dissection)
+                                    (tramp-file-name-path dissection))))
+                       (and (featurep 'ange-ftp) ;; ange-ftp-support
+                            (cons (nth 0 dissection)
+                                  (nth 2 dissection)))
+                       (and (featurep 'efs) ;; efs support
+                            (cons (nth 0 dissection)
+                                  (nth 2 dissection))))
+                 (cons nil path)))
+              (full-host-user-part
+               (substring path 0 (- (length path)
+                                    (length (cdr host/real-path)))))
+              (result nil))
+         (setq result
+               (and dissection
+                    (list full-host-user-part
+                          (car host/real-path)
+                          (cdr host/real-path))))
+         (ecb-remote-path-cache-add path (or result 'NOT-REMOTE))
+         result))
+      (otherwise value))))
 
 ;; (ecb-remote-path "/berndl@ecb.sourceforge.net:~")
 ;; (ecb-remote-path "~")
@@ -2404,17 +2412,17 @@ directory. This function is only for use by `ecb-stealthy-updates'!"
                        (goto-line state)
                        (setq curr-node (tree-buffer-get-node-at-point))
                        (when (and (ecb-directory-should-prescanned-p
-                                   (tree-node-get-data curr-node))
+                                   (tree-node->data curr-node))
                                   (ecb-file-exists-p
-                                   (tree-node-get-data curr-node)))
+                                   (tree-node->data curr-node)))
                          (setq dir-empty-p
-                               (ecb-check-emptyness-of-dir (tree-node-get-data curr-node)))
+                               (ecb-check-emptyness-of-dir (tree-node->data curr-node)))
                          ;; we update the node only if we have an empty dir and the node is
                          ;; still expandable
                          (when (or (and dir-empty-p
-                                        (tree-node-is-expandable curr-node))
+                                        (tree-node->expandable curr-node))
                                    (and (not dir-empty-p)
-                                        (not (tree-node-is-expandable curr-node))))
+                                        (not (tree-node->expandable curr-node))))
                            (tree-buffer-update-node nil
                                                     'use-old-value
                                                     'use-old-value
@@ -2461,12 +2469,12 @@ when called. Return the new state-value."
                     (<= state lines-of-buffer))
           (goto-line state)
           (setq curr-node (tree-buffer-get-node-at-point))
-          (when (and (= (tree-node-get-type curr-node) node-type-to-check)
+          (when (and (= (tree-node->type curr-node) node-type-to-check)
                      (ecb-sources-read-only-check-p
-                      (ecb-file-name-directory (tree-node-get-data curr-node))))
-            (setq new-name (tree-node-get-name curr-node))
+                      (ecb-file-name-directory (tree-node->data curr-node))))
+            (setq new-name (tree-node->name curr-node))
             (setq read-only-p
-                  (not (ecb-file-writable-p (tree-node-get-data curr-node))))
+                  (not (ecb-file-writable-p (tree-node->data curr-node))))
             (if read-only-p
                 (ecb-merge-face-into-text new-name
                                           ecb-source-read-only-face))
@@ -2811,21 +2819,21 @@ speeding up things next time. Ange-ftp- or efs-directories will never be
 checked for VC-states!"
   (let* ((norm-dir (ecb-fix-filename directory))
          (cache-val (ecb-vc-cache-get norm-dir)))
-    (cond ((equal cache-val 'NO-VC)
-           nil)
-          (cache-val cache-val)
-          (t
-           (let ((vc-backend-fcn
-                  (catch 'found
-                    (dolist (elem ecb-vc-supported-backends)
-                      (when (and (fboundp (car elem))
-                                 (funcall (car elem) norm-dir))
-                        (throw 'found (cdr elem))))
-                    nil)))
-             ;; Add it to the vc-cache: Either NO-VC if nil otherwise the
-             ;; check-state-function
-             (ecb-vc-cache-add-dir norm-dir (or vc-backend-fcn 'NO-VC))
-             vc-backend-fcn)))))
+    (case cache-val
+      (NO-VC nil)
+      ((nil) ;; not cached or outdated
+       (let ((vc-backend-fcn
+              (catch 'found
+                (dolist (elem ecb-vc-supported-backends)
+                  (when (and (fboundp (car elem))
+                             (funcall (car elem) norm-dir))
+                    (throw 'found (cdr elem))))
+                nil)))
+         ;; Add it to the vc-cache: Either NO-VC if nil otherwise the
+         ;; check-state-function
+         (ecb-vc-cache-add-dir norm-dir (or vc-backend-fcn 'NO-VC))
+         vc-backend-fcn))
+      (otherwise cache-val))))
 
 (defalias 'ecb-vc-managed-dir-p 'ecb-vc-get-state-fcn-for-dir)
 
@@ -2883,18 +2891,18 @@ state-value."
                       (<= state lines-of-buffer))
             (goto-line state)
             (setq curr-node (tree-buffer-get-node-at-point))
-            (setq curr-dir (ecb-file-name-directory (tree-node-get-data curr-node)))
-            (when (and (= (tree-node-get-type curr-node) node-type-to-check)
+            (setq curr-dir (ecb-file-name-directory (tree-node->data curr-node)))
+            (when (and (= (tree-node->type curr-node) node-type-to-check)
                        (ecb-vc-directory-should-be-checked-p curr-dir)
                        ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: Move this
                        ;; existing-check to outside this when-clause and then
                        ;; do the same as in `ecb-stealthy-vc-check--sources'!
-                       (ecb-file-exists-p (tree-node-get-data curr-node)))
+                       (ecb-file-exists-p (tree-node->data curr-node)))
               (setq vc-state-fcn (ecb-vc-get-state-fcn-for-dir curr-dir))
               (when vc-state-fcn ;; file is under VC-control
-                (setq new-name (tree-node-get-name curr-node))
+                (setq new-name (tree-node->name curr-node))
                 (setq new-state
-                      (ecb-vc-check-state (tree-node-get-data curr-node)
+                      (ecb-vc-check-state (tree-node->data curr-node)
                                           (buffer-name (current-buffer))
                                           vc-state-fcn))
                 ;; we update the node only if the state has changed 
@@ -2936,11 +2944,11 @@ stealthy-function has when called. Return the new state-value."
                         (<= state lines-of-buffer))
               (goto-line state)
               (setq curr-node (tree-buffer-get-node-at-point))
-              (if (ecb-file-exists-p (tree-node-get-data curr-node))
+              (if (ecb-file-exists-p (tree-node->data curr-node))
                   (progn
-                    (setq new-name (tree-node-get-name curr-node))
+                    (setq new-name (tree-node->name curr-node))
                     (setq new-state
-                          (ecb-vc-check-state (tree-node-get-data curr-node)
+                          (ecb-vc-check-state (tree-node->data curr-node)
                                               (buffer-name (current-buffer))
                                               vc-state-fcn))
                     ;; we update the node only if the state has changed 
@@ -3145,7 +3153,7 @@ performing a `tree-buffer-update' for this buffer."
              (file-1 (if include-extension
                          file
                        (ecb-file-name-sans-extension file))))
-        (tree-node-add-child
+        (tree-node-add-children
          node
          (ecb-new-child
           old-children
@@ -3165,24 +3173,20 @@ performing a `tree-buffer-update' for this buffer."
           (if ecb-truncate-long-names 'end)))))))
 
 (defun ecb-new-child (old-children name type data
-    &optional not-expandable shorten-name)
+    &optional not-expandable shrink-name)
   "Return a node with type = TYPE, data = DATA and name = NAME. Tries to find
 a node with matching TYPE and DATA in OLD-CHILDREN. If found no new node is
 created but only the fields of this node will be updated. Otherwise a new node
 is created."
   (catch 'exit
     (dolist (child old-children)
-      (when (and (equal (tree-node-get-data child) data)
-                 (= (tree-node-get-type child) type))
-        (tree-node-set-name child name)
+      (when (and (equal (tree-node->data child) data)
+                 (= (tree-node->type child) type))
+        (setf (tree-node->name child) name)
         (if not-expandable
-            (tree-node-set-expandable child nil))
+            (setf (tree-node->expandable child) nil))
         (throw 'exit child)))
-    (let ((node (tree-node-new name type data not-expandable nil
-			       (if ecb-truncate-long-names 'end))))
-      (tree-node-set-shorten-name node shorten-name)
-      node)))
-
+    (tree-node-new name type data not-expandable nil shrink-name)))
 
 (defun ecb-add-source-path (&optional dir alias no-prompt-for-future-session)
   "Add a directory to the `ecb-source-path'."
@@ -3213,7 +3217,7 @@ is created."
 
 (tree-buffer-defpopup-command ecb-node-to-source-path
   "Add this node to the source-path."
-  (ecb-add-source-path (tree-node-get-data node)))
+  (ecb-add-source-path (tree-node->data node)))
 
 
 (defun ecb-delete-s (child children sources)
@@ -3225,10 +3229,10 @@ is created."
 
 (tree-buffer-defpopup-command ecb-delete-source-path
   "Delete this source-path via popup."
-  (let ((path (tree-node-get-data node)))
+  (let ((path (tree-node->data node)))
     (when (ecb-confirm (concat "Really delete source-path " path "?"))
       (setq ecb-source-path (ecb-delete-s
-                             node (tree-node-get-children (tree-node-get-parent node))
+                             node (tree-node->children (tree-node->parent node))
                              ecb-source-path))
       (ecb-update-directories-buffer)
       (if (y-or-n-p "Delete source-path also for future-sessions? ")
@@ -3262,18 +3266,18 @@ is created."
   "Handle clicking onto NODE in the directories-buffer. ECB-BUTTON can be 1, 2
 or 3. If 3 then EDIT-WINDOW-NR contains the number of the edit-window the NODE
 should be displayed. For 1 and 2 the value of EDIT-WINDOW-NR is ignored."
-  (if (= 3 (tree-node-get-type node))
-      (funcall (tree-node-get-data node))
+  (if (= 3 (tree-node->type node))
+      (funcall (tree-node->data node))
     (ecb-update-directory-node node)
     (if shift-mode
         (ecb-mouse-over-directory-node node nil nil 'force))
     (if (or (= ecb-directories-nodetype-directory
-               (tree-node-get-type node))
+               (tree-node->type node))
             (= ecb-directories-nodetype-sourcepath
-               (tree-node-get-type node)))
+               (tree-node->type node)))
         (progn
           (if (= 2 ecb-button)
-              (when (tree-node-is-expandable node)
+              (when (tree-node->expandable node)
                 (tree-node-toggle-expanded node)
                 (ecb-exec-in-window ecb-directories-buffer-name
                   ;; Update the tree-buffer with optimized display of NODE
@@ -3283,21 +3287,21 @@ should be displayed. For 1 and 2 the value of EDIT-WINDOW-NR is ignored."
             ;; files-and-subdirs-cache and the empty-dirs-cache (incl. all
             ;; subdirs)
             (when shift-mode
-              (ecb-remove-dir-from-caches (tree-node-get-data node))
-              (ecb-directory-empty-cache-remove-all (tree-node-get-data node))
+              (ecb-remove-dir-from-caches (tree-node->data node))
+              (ecb-directory-empty-cache-remove-all (tree-node->data node))
               ;; a powerclick should remove all vc-caches of contained files
-              (ecb-vc-cache-remove-files-of-dir (tree-node-get-data node))
+              (ecb-vc-cache-remove-files-of-dir (tree-node->data node))
               )
             
-            (ecb-set-selected-directory (tree-node-get-data node) shift-mode)
+            (ecb-set-selected-directory (tree-node->data node) shift-mode)
             ;; if we have running an integrated speedbar we must update the
             ;; speedbar 
-            (ecb-directory-update-speedbar (tree-node-get-data node))))
+            (ecb-directory-update-speedbar (tree-node->data node))))
           
 ;;           (ecb-exec-in-directories-window
 ;;            ;; Update the tree-buffer with optimized display of NODE
 ;;            (tree-buffer-update node)))
-      (ecb-set-selected-source (tree-node-get-data node)
+      (ecb-set-selected-source (tree-node->data node)
                                (ecb-combine-ecb-button/edit-win-nr ecb-button edit-window-nr)
 			       shift-mode meta-mode))))
 
@@ -3308,7 +3312,7 @@ should be displayed. For 1 and 2 the value of EDIT-WINDOW-NR is ignored."
 should be displayed. For 1 and 2 the value of EDIT-WINDOW-NR is ignored."
   (if shift-mode
       (ecb-mouse-over-source-node node nil nil 'force))
-  (ecb-set-selected-source (tree-node-get-data node)
+  (ecb-set-selected-source (tree-node->data node)
                            (ecb-combine-ecb-button/edit-win-nr ecb-button edit-window-nr)
 			   shift-mode meta-mode))
 
@@ -3319,7 +3323,7 @@ should be displayed. For 1 and 2 the value of EDIT-WINDOW-NR is ignored."
 should be displayed. For 1 and 2 the value of EDIT-WINDOW-NR is ignored."
   (if shift-mode
       (ecb-mouse-over-history-node node nil nil 'force))
-  (ecb-set-selected-source (tree-node-get-data node)
+  (ecb-set-selected-source (tree-node->data node)
                            (ecb-combine-ecb-button/edit-win-nr ecb-button edit-window-nr)
                            shift-mode meta-mode))
 
@@ -3331,7 +3335,7 @@ Be aware that for deep structured paths and a lot of source-paths this command
 can last a long time - depending of machine- and disk-performance."
   (interactive "nLevel: ")
   (ecb-exec-in-window ecb-directories-buffer-name
-    (dolist (node (tree-node-get-children (tree-buffer-get-root)))
+    (dolist (node (tree-node->children (tree-buffer-get-root)))
       (tree-buffer-expand-node node level))
     (tree-buffer-update))
   (ecb-current-buffer-sync 'force))
@@ -3358,21 +3362,21 @@ CLICK-FORCE is not nil and always with regards to the settings in
 `ecb-directories-show-node-info'. NODE is the node for which help text should
 be displayed, WINDOW is the related window, NO-MESSAGE defines if the
 help-text should be printed here."
-  (if (= (tree-node-get-type node) ecb-directories-nodetype-sourcefile)
+  (if (= (tree-node->type node) ecb-directories-nodetype-sourcefile)
       (ecb-mouse-over-source-node node window no-message click-force)
-    (if (not (= (tree-node-get-type node) 3))
+    (if (not (= (tree-node->type node) 3))
         (let ((str (when (or click-force
                              (ecb-show-minibuffer-info node window
                                                        (car ecb-directories-show-node-info))
                              (and (not (equal (car ecb-directories-show-node-info)
                                               'never))
-                                  (not (ecb-string= (tree-node-get-data node)
-                                                    (tree-node-get-name node)))
-                                  (eq (tree-node-get-parent node)
+                                  (not (ecb-string= (tree-node->data node)
+                                                    (tree-node->name node)))
+                                  (eq (tree-node->parent node)
                                       (tree-buffer-get-root))))
                      (if (equal (cdr ecb-directories-show-node-info) 'name)
-                         (tree-node-get-name node)
-                       (tree-node-get-data node)))))
+                         (tree-node->name node)
+                       (tree-node->data node)))))
           (prog1 str
             (unless no-message
               (ecb-nolog-message str)))))))
@@ -3389,8 +3393,8 @@ the help-text should be printed here."
                          (ecb-show-minibuffer-info node window
                                                    (car ecb-sources-show-node-info)))
                  (if (equal (cdr ecb-sources-show-node-info) 'name)
-                     (tree-node-get-name node)
-                   (ecb-get-file-info-text (tree-node-get-data node)))))))
+                     (tree-node->name node)
+                   (ecb-get-file-info-text (tree-node->data node)))))))
     (prog1 str
       (unless no-message
         (ecb-nolog-message str)))))
@@ -3407,8 +3411,8 @@ the help-text should be printed here."
                          (ecb-show-minibuffer-info node window
                                                    (car ecb-history-show-node-info)))
                  (if (equal (cdr ecb-history-show-node-info) 'name)
-                     (tree-node-get-name node)
-                   (tree-node-get-data node))))))
+                     (tree-node->name node)
+                   (tree-node->data node))))))
     (prog1 str
       (unless no-message
         (ecb-nolog-message str)))))
@@ -3420,10 +3424,10 @@ the help-text should be printed here."
   "Creates a new sourcefile in current directory."
   (let* ((use-dialog-box nil)
          (dir (ecb-fix-filename
-               (funcall (if (ecb-file-directory-p (tree-node-get-data node))
+               (funcall (if (ecb-file-directory-p (tree-node->data node))
                             'identity
                           'ecb-file-name-directory)
-                        (tree-node-get-data node))))
+                        (tree-node->data node))))
          (filename (ecb-file-name-nondirectory
                     (read-file-name "Source name: " (concat dir "/")))))
     (ecb-select-edit-window)
@@ -3442,7 +3446,7 @@ the help-text should be printed here."
 
 (defun ecb-grep-directory-internal (node find)
   (ecb-select-edit-window)
-  (let* ((node-data (tree-node-get-data node))
+  (let* ((node-data (tree-node->data node))
          (default-directory (concat (ecb-fix-filename
                                      (if (ecb-file-directory-p node-data)
                                          node-data
@@ -3468,7 +3472,7 @@ the help-text should be printed here."
 
 
 (defun ecb-create-directory (parent-node)
-  (make-directory (concat (tree-node-get-data parent-node) "/"
+  (make-directory (concat (tree-node->data parent-node) "/"
                           (read-from-minibuffer "Directory name: ")))
   (ecb-update-directory-node parent-node)
   (tree-buffer-update))
@@ -3476,20 +3480,20 @@ the help-text should be printed here."
 
 (tree-buffer-defpopup-command ecb-delete-directory
   "Delete current directory."
-  (let ((dir (tree-node-get-data node)))
+  (let ((dir (tree-node->data node)))
     (when (ecb-confirm (concat "Really delete directory" dir "? "))
-      (delete-directory (tree-node-get-data node))
-      (ecb-update-directory-node (tree-node-get-parent node))
+      (delete-directory (tree-node->data node))
+      (ecb-update-directory-node (tree-node->parent node))
       (tree-buffer-update))))
 
 
 (defun ecb-dired-directory-internal (node &optional other)
   (ecb-select-edit-window)
   (let ((dir (ecb-fix-filename
-              (funcall (if (ecb-file-directory-p (tree-node-get-data node))
+              (funcall (if (ecb-file-directory-p (tree-node->data node))
                            'identity
                          'ecb-file-name-directory)
-                       (tree-node-get-data node)))))
+                       (tree-node->data node)))))
     (ecb-with-adviced-functions
      (funcall (if other
                   'dired-other-window
@@ -3508,7 +3512,7 @@ the help-text should be printed here."
 
 
 (defun ecb-dir-run-cvs-op (node op op-arg-list)
-  (let ((dir (tree-node-get-data node)))
+  (let ((dir (tree-node->data node)))
     (funcall op dir op-arg-list)))
 
 
@@ -3559,8 +3563,8 @@ source-path of `ecb-source-path'.")
 
 (defvar ecb-directories-menu-title-creator
   (function (lambda (node)
-              (let ((node-type (tree-node-get-type node))
-                    (node-data (tree-node-get-name node)))
+              (let ((node-type (tree-node->type node))
+                    (node-data (tree-node->name node)))
                     (cond ((= node-type ecb-directories-nodetype-directory)
                            (format "%s  (Directory)" node-data))
                           ((= node-type ecb-directories-nodetype-sourcefile)
@@ -3569,7 +3573,6 @@ source-path of `ecb-source-path'.")
                            (format "%s  (Source-path)" node-data))))))
   "The menu-title for the directories menu. Has to be either a string or a
 function which is called with current node and has to return a string.")
-
 
 (tree-buffer-defpopup-command ecb-open-source-in-editwin1
   "Open current source-file the 1. edit-window."
@@ -3656,7 +3659,7 @@ edit-windows. Otherwise return nil."
 
 (tree-buffer-defpopup-command ecb-delete-source
   "Deletes current sourcefile."
-  (let* ((file (tree-node-get-data node))
+  (let* ((file (tree-node->data node))
          (dir (ecb-fix-filename (ecb-file-name-directory file))))
     (when (ecb-confirm (concat "Really delete " (ecb-file-name-nondirectory file) "? "))
       (when (get-file-buffer file)
@@ -3668,45 +3671,45 @@ edit-windows. Otherwise return nil."
 
 (tree-buffer-defpopup-command ecb-file-popup-ediff-revision
   "Diff file against repository with ediff."
-  (let ((file (tree-node-get-data node)))
+  (let ((file (tree-node->data node)))
     (ediff-revision file)))
 
 
 (tree-buffer-defpopup-command ecb-file-popup-vc-next-action
   "Checkin/out file."
-  (let ((file (tree-node-get-data node)))
+  (let ((file (tree-node->data node)))
     (find-file file)
     (vc-next-action nil)))
 
 
 (tree-buffer-defpopup-command ecb-file-popup-vc-log
   "Print revision history of file."
-  (let ((file (tree-node-get-data node)))
+  (let ((file (tree-node->data node)))
     (find-file file)
     (vc-print-log)))
 
 
 (tree-buffer-defpopup-command ecb-file-popup-vc-annotate
   "Annotate file"
-  (let ((file (tree-node-get-data node)))
+  (let ((file (tree-node->data node)))
     (find-file file)
     (vc-annotate nil)))
 
 (tree-buffer-defpopup-command ecb-file-popup-vc-diff
   "Diff file against last version in repository."
-  (let ((file (tree-node-get-data node)))
+  (let ((file (tree-node->data node)))
     (find-file file)
     (vc-diff nil)))
 
 (tree-buffer-defpopup-command ecb-file-popup-vc-refresh-file
   "Recompute the VC-state for this file."
-  (let ((file (tree-node-get-data node)))
+  (let ((file (tree-node->data node)))
     (ecb-vc-cache-remove file)
     (ecb-vc-reset-vc-stealthy-checks)))
 
 (tree-buffer-defpopup-command ecb-file-popup-vc-refresh-dir
   "Recompute the VC-state-values for the whole directory."
-  (let ((dir (ecb-fix-filename (ecb-file-name-directory (tree-node-get-data node)))))
+  (let ((dir (ecb-fix-filename (ecb-file-name-directory (tree-node->data node)))))
     (ecb-vc-cache-remove-files-of-dir dir)
     (ecb-vc-reset-vc-stealthy-checks)))
 
@@ -3733,7 +3736,7 @@ edit-windows. Otherwise return nil."
 
 (defvar ecb-sources-menu-title-creator
   (function (lambda (node)
-              (ecb-file-name-nondirectory (tree-node-get-data node))))
+              (ecb-file-name-nondirectory (tree-node->data node))))
   "The menu-title for the sources menu. See
 `ecb-directories-menu-title-creator'.")
 
@@ -3756,7 +3759,7 @@ edit-windows. Otherwise return nil."
 
 (tree-buffer-defpopup-command ecb-history-kill-buffer
   "Kills the buffer for current entry."
-  (let ((data (tree-node-get-data node)))
+  (let ((data (tree-node->data node)))
     (when (get-file-buffer data)
       (kill-buffer (get-file-buffer data)))))
 
@@ -3780,7 +3783,7 @@ edit-windows. Otherwise return nil."
   "Filter history entries by extension by popup."
   (let ((ext-str (read-string "Insert the filter-extension without leading dot: "
                               (and node
-                                   (ecb-file-name-extension (tree-node-get-data node))))))
+                                   (ecb-file-name-extension (tree-node->data node))))))
     (ecb-history-filter-by-ext ext-str)))
 
 (defun ecb-history-filter-by-regexp ()
@@ -3806,8 +3809,8 @@ edit-windows. Otherwise return nil."
   "Recompute the VC-state for the whole history."
   (when (equal (buffer-name) ecb-history-buffer-name)
     (let ((files (mapcar (function (lambda (node)
-                                     (tree-node-get-data node)))
-                         (tree-node-get-children (tree-buffer-get-root)))))
+                                     (tree-node->data node)))
+                         (tree-node->children (tree-buffer-get-root)))))
       (dolist (file files)
         (ecb-vc-cache-remove file))
       (ecb-vc-reset-vc-stealthy-checks))))
@@ -3856,7 +3859,7 @@ So you get a better overlooking. There are three choices:
 
 (defvar ecb-history-menu-title-creator
   (function (lambda (node)
-              (tree-node-get-name node)))
+              (tree-node->name node)))
   "The menu-title for the history menu. See
 `ecb-directories-menu-title-creator'.")
 
@@ -3914,6 +3917,7 @@ So you get a better overlooking. There are three choices:
    (ecb-member-of-symbol/value-list ecb-directories-buffer-name
                                     (cdr ecb-tree-image-icons-directories)
                                     'car 'cdr)
+   "ecb-"
    ecb-tree-buffer-style
    ecb-tree-guide-line-face
    (list (cons ecb-directories-nodetype-sourcefile
@@ -3970,6 +3974,7 @@ So you get a better overlooking. There are three choices:
    (ecb-member-of-symbol/value-list ecb-sources-buffer-name
                                     (cdr ecb-tree-image-icons-directories)
                                     'car 'cdr)
+   "ecb-"
    ecb-tree-buffer-style
    ecb-tree-guide-line-face
    nil
@@ -4017,6 +4022,7 @@ So you get a better overlooking. There are three choices:
    (ecb-member-of-symbol/value-list ecb-history-buffer-name
                                     (cdr ecb-tree-image-icons-directories)
                                     'car 'cdr)
+   "ecb-"
    ecb-tree-buffer-style
    ecb-tree-guide-line-face
    nil

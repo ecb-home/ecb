@@ -20,7 +20,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-analyse.el,v 1.8 2005/03/10 16:37:52 berndl Exp $
+;; $Id: ecb-analyse.el,v 1.9 2005/03/30 12:50:56 berndl Exp $
 
 
 ;;; Commentary:
@@ -38,6 +38,11 @@
 
 (eval-when-compile
   (require 'silentcomp))
+
+(eval-when-compile
+  ;; to avoid compiler grips
+  (require 'cl))
+
 
 (defgroup ecb-analyse nil
   "Settings for the analyse-buffer in the Emacs code browser."
@@ -314,17 +319,18 @@ of LIST."
                                                ecb-analyse-nodetype-bucket)
                                          nil
                                          (tree-buffer-get-root))))
-        (tree-node-set-expanded bucket-node (not (member bucket
-                                                         ecb-analyse-collapsed-buckets)))
+        (setf (tree-node->expanded bucket-node)
+              (not (member bucket
+                           ecb-analyse-collapsed-buckets)))
         (dolist (elem list)
           (let* ((fontify-tags (member bucket ecb-analyse-fontified-buckets))
-                 (string-1 (cond ((stringp elem)
-                                  elem)
-                                 ((ecb--semantic-tag-p elem)
-                                  (if fontify-tags
-                                      (ecb-displayed-tag-name elem)
-                                    (ecb--semantic-format-tag-uml-concise-prototype elem)))
-                                 (t "foo")))
+                 (string-1 (typecase elem
+                             (string elem)
+                             (ecb--semantic-tag
+                              (if fontify-tags
+                                  (ecb-displayed-tag-name elem)
+                                (ecb--semantic-format-tag-uml-concise-prototype elem)))
+                             (otherwise "foo")))
                  (string (concat string-1)))
             (unless fontify-tags
               (ecb-merge-face-into-text string ecb-analyse-bucket-element-face))
@@ -352,7 +358,7 @@ ECB jumps to that window. If nil then `ecb-last-edit-window-with-point' is
 used as window."
   (let ((window (nth 0 rest-arg-list)))
     (when node
-      (let* ((data (tree-node-get-data node))
+      (let* ((data (tree-node->data node))
              (tag (nth 0 data)))
         ;; if we have a positioned tag we jump to it
         (when (and tag (= (nth 1 data) ecb-analyse-nodedata-tag-with-pos))
@@ -370,9 +376,9 @@ used as window."
 (tree-buffer-defpopup-command ecb-analyse-complete
   "Complete at current point of the edit-window the selected completion-tag."
   ;; We must highlight the tag
-  (let* ((data (tree-node-get-data node))
+  (let* ((data (tree-node->data node))
          (tag (nth 0 data))
-         (type (tree-node-get-type node)))
+         (type (tree-node->type node)))
     (when (= type ecb-analyse-nodetype-completions)
       (tree-buffer-highlight-node-data data)
       (ecb-find-file-and-display ecb-path-selected-source nil)
@@ -397,9 +403,9 @@ should be displayed or whatever should be done with NODE. For 1 and 2 the
 value of EDIT-WINDOW-NR is ignored."
   (if shift-mode
       (ecb-mouse-over-analyse-node node nil nil 'force))
-  (let* ((data (tree-node-get-data node))
+  (let* ((data (tree-node->data node))
          (tag (nth 0 data))
-         (type (tree-node-get-type node)))
+         (type (tree-node->type node)))
     (cond
      ((= type ecb-analyse-nodetype-bucket)
       (tree-node-toggle-expanded node)
@@ -469,10 +475,11 @@ ECB-analyse-window is not visible in current layout."
                   ;; correct buffer, I don't think that is needed.
                   (when (fboundp 'semantic-lex-keyword-p)
                     (let ((type (ecb--semantic-tag-type tag)))
-                      (cond ((ecb--semantic-tag-p type)
-                             (setq type (ecb--semantic-tag-name type)))
-                            ((listp type)
-                             (setq type (car type))))
+                      (typecase type
+                        (ecb--semantic-tag
+                         (setq type (ecb--semantic-tag-name type)))
+                        (list
+                         (setq type (car type))))
                       (if (semantic-lex-keyword-p type)
                           (setq typetag
                                 (semantic-lex-keyword-get type 'summary))))
@@ -485,7 +492,7 @@ ECB-analyse-window is not visible in current layout."
   "Display as much information as possible about current tag.
 Show the information in a shrunk split-buffer and expand out as many details
 as possible."
-  (let* ((data (tree-node-get-data node))
+  (let* ((data (tree-node->data node))
          (tag (car data)))
     (when (ecb--semantic-tag-p tag)
       (save-selected-window
@@ -503,8 +510,8 @@ should be printed here."
                                                  (car
                                                  ecb-analyse-show-node-info)))
                (if (equal (cdr ecb-analyse-show-node-info) 'full-info)
-                   (ecb-analyse-gen-tag-info (car (tree-node-get-data node)))
-                 (tree-node-get-name node)))))
+                   (ecb-analyse-gen-tag-info (car (tree-node->data node)))
+                 (tree-node->name node)))))
     (prog1 str
       (unless no-message
         (ecb-nolog-message str)))))
@@ -514,12 +521,12 @@ should be printed here."
 completions. This means that this node should be highlighted when mouse is
 moved over it."
   (or (equal ecb-analyse-nodedata-tag-with-pos
-             (nth 1 (tree-node-get-data node)))
-      (= (tree-node-get-type node) ecb-analyse-nodetype-completions)))
+             (nth 1 (tree-node->data node)))
+      (= (tree-node->type node) ecb-analyse-nodetype-completions)))
 
 (defun ecb-analyse-create-menu (node)
   "Return a popup-menu suitable for NODE."
-  (let* ((data (tree-node-get-data node))
+  (let* ((data (tree-node->data node))
          (tag-p (not (equal (nth 1 data) ecb-analyse-nodedata-no-tag)))
          (tag-with-pos-p (equal (nth 1 data) ecb-analyse-nodedata-tag-with-pos))
          (nodetype (nth 2 data)))
@@ -533,7 +540,7 @@ moved over it."
 (defun ecb-analyse-menu-creator (tree-buffer-name node)
   "Creates the popup-menus for the analyse-buffer."
   (setq ecb-layout-prevent-handle-ecb-window-selection t)
-  (let ((nodetype (tree-node-get-type node)))
+  (let ((nodetype (tree-node->type node)))
     (unless (equal nodetype ecb-analyse-nodetype-bucket)
       (mapcar (function (lambda (type)
                           (cons type (ecb-analyse-create-menu node))))
@@ -553,7 +560,7 @@ analyse-buffer."
   (mapcar (function (lambda (nodetype)
                       (cons nodetype
                             (function (lambda (node)
-                                        (tree-node-get-name node))))))
+                                        (tree-node->name node))))))
           `(,ecb-analyse-nodetype-context
             ,ecb-analyse-nodetype-arguments
             ,ecb-analyse-nodetype-completions
@@ -595,6 +602,7 @@ analyse-buffer."
    (ecb-member-of-symbol/value-list ecb-analyse-buffer-name
                                     (cdr ecb-tree-image-icons-directories)
                                     'car 'cdr)
+   "ecb-"
    ecb-tree-buffer-style
    ecb-tree-guide-line-face
    nil
@@ -609,7 +617,8 @@ analyse-buffer."
                           (local-set-key [mode-line mouse-2]
                                          'ecb-toggle-maximize-ecb-window-with-mouse)))))
     ecb-common-tree-buffer-after-create-hook
-    ecb-analyse-buffer-after-create-hook)))
+    ecb-analyse-buffer-after-create-hook)
+   nil))
 
 (silentcomp-provide 'ecb-analyse)
 

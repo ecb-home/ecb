@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-util.el,v 1.131 2005/03/10 16:35:19 berndl Exp $
+;; $Id: ecb-util.el,v 1.132 2005/03/30 12:50:34 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -104,8 +104,7 @@
 (defconst ecb-temp-dir
   (file-name-as-directory
    (or (getenv "TMPDIR") (getenv "TMP") (getenv "TEMP")
-       (cond ((eq system-type 'windows-nt) "c:/temp/")
-             (t "/tmp/"))))
+       (if (eq system-type 'windows-nt) "c:/temp/" "/tmp/")))
   "A directory where ECB can store temporary files.")
 
 (defconst ecb-ecb-dir
@@ -138,38 +137,7 @@
 
 ;;; ----- Tracing ------------------------------------------
 
-;; Tracing - currently not used because we use the trace.el library!
-;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: Offer conveniant wrappers for the
-;; trace-function-background stuff so users can easily trace a set of
-;; ecb-functions if there occur problems where a backtrace can not be
-;; generated.
-
-(defvar ecb-trace-defun-enter t)
-(defvar ecb-trace-defun-leave t)
-
-(defsubst ecb-defun-trace (mode fcn)
-  (cond ((equal mode 'enter)
-         (and ecb-trace-defun-enter
-              (message "ECB-function %S entered!" fcn)))
-        ((equal mode 'leave)
-         (and ecb-trace-defun-leave
-              (message "ECB-function %S leaved!" fcn)))))
-
-(defmacro ecb-defun (name args docstring &rest body)
-  `(eval-and-compile
-     (defun ,name ,args
-       ,docstring
-       ,@(if (not (equal (caar body) 'interactive))
-             (append (list `(ecb-defun-trace 'enter (quote ,name)))
-                     (list `(prog1 (progn
-                                     ,@body)
-                              (ecb-defun-trace 'leave (quote ,name)))))
-           (append (list (car body))
-                   (list `(ecb-defun-trace 'enter (quote ,name)))
-                   (list `(prog1 (progn
-                                   ,@(cdr body))
-                            (ecb-defun-trace 'leave (quote ,name)))))))))
-
+;; we use the trace.el library!
 
 ;;; ----- Compatibility between GNU Emacs and XEmacs -------
 
@@ -194,15 +162,14 @@ want the BODY being parsed by semantic!. If not use the form
 
 (when ecb-running-xemacs
   (defun ecb-event-to-key (event)
-    (cond ((button-release-event-p event)
-           'mouse-release)
-          ((button-press-event-p event)
-           'mouse-press)
-          (t
-           ;; the ignore-errors is a little hack because i don't know all
-           ;; events of XEmacs so sometimes event-key produces a
-           ;; wrong-type-argument error.
-           (ignore-errors (event-key event)))))
+    (typecase event
+      (button-release-event 'mouse-release)
+      (button-press-event 'mouse-press)
+      (otherwise
+       ;; the ignore-errors is a little hack because i don't know all
+       ;; events of XEmacs so sometimes event-key produces a
+       ;; wrong-type-argument error.
+       (ignore-errors (event-key event)))))
   (defun ecb-facep (face)
     (memq face (face-list)))
   (defun ecb-noninteractive ()
@@ -248,16 +215,10 @@ Uses the `derived-mode-parent' property of the symbol to trace backwards."
 (unless ecb-running-xemacs
   (defun ecb-event-to-key (event)
     (let ((type (event-basic-type event)))
-      (cond ((or (equal type 'mouse-1)
-                 (equal type 'mouse-2)
-                 (equal type 'mouse-3))
-             'mouse-release)
-            ((or (equal type 'down-mouse-1)
-                 (equal type 'down-mouse-2)
-                 (equal type 'down-mouse-3))
-             'mouse-press)
-            (t
-             (event-basic-type event)))))
+      (case type
+        ((mouse-1 mouse-2 mouse-3) 'mouse-release)
+        ((down-mouse-1 down-mouse-2 down-mouse-3) 'mouse-press)
+        (otherwise (event-basic-type event)))))
   (defalias 'ecb-facep 'facep)
   (defun ecb-noninteractive ()
     "Return non-nil if running non-interactively, i.e. in batch mode."
@@ -664,30 +625,30 @@ If START or END is negative, it counts from the end."
     (let (len)
       (and end (< end 0) (setq end (+ end (setq len (length seq)))))
       (if (< start 0) (setq start (+ start (or len (setq len (length seq))))))
-      (cond ((listp seq)
-	     (if (> start 0) (setq seq (nthcdr start seq)))
-	     (if end
-		 (let ((res nil))
-		   (while (>= (setq end (1- end)) start)
-		     (push (pop seq) res))
-		   (nreverse res))
-	       (copy-sequence seq)))
-	    (t
-	     (or end (setq end (or len (length seq))))
-	     (let ((res (make-vector (max (- end start) 0) nil))
-		   (i 0))
-	       (while (< start end)
-		 (aset res i (aref seq start))
-		 (setq i (1+ i) start (1+ start)))
-	       res))))))
+      (typecase seq
+        (list (if (> start 0) (setq seq (nthcdr start seq)))
+              (if end
+                  (let ((res nil))
+                    (while (>= (setq end (1- end)) start)
+                      (push (pop seq) res))
+                    (nreverse res))
+                (copy-sequence seq)))
+        (otherwise (or end (setq end (or len (length seq))))
+                   (let ((res (make-vector (max (- end start) 0) nil))
+                         (i 0))
+                     (while (< start end)
+                       (aset res i (aref seq start))
+                       (setq i (1+ i) start (1+ start)))
+                     res))))))
 
 (defun ecb-concatenate (type &rest seqs)
   "Concatenate, into a sequence of type TYPE, the argument SEQUENCES.
 TYPE can be 'string, 'vector or 'list."
-  (cond ((eq type 'vector) (apply 'vconcat seqs))
-	((eq type 'string) (apply 'concat seqs))
-	((eq type 'list) (apply 'append (append seqs '(nil))))
-	(t (ecb-error "Not a sequence type name: %s" type))))
+  (case type
+    (vector (apply 'vconcat seqs))
+    (string (apply 'concat seqs))
+    (list (apply 'append (append seqs '(nil))))
+    (otherwise (ecb-error "Not a sequence type name: %s" type))))
 
 (defun ecb-rotate (seq start-elem)
   "Rotate SEQ so START-ELEM is the new first element of SEQ. SEQ is an
@@ -695,9 +656,10 @@ arbitrary sequence. Example: \(ecb-rotate '\(a b c d e f) 'c) results in \(c d
 e f a b). If START-ELEM is not contained in SEQ then nil is returned."
   (let ((start-pos (ecb-position seq start-elem)))
     (when start-pos
-      (ecb-concatenate (cond ((listp seq) 'list)
-                             ((stringp seq) 'string)
-                             ((vectorp seq) 'vector))
+      (ecb-concatenate (typecase seq
+                         (list 'list)
+                         (string 'string)
+                         (vector 'vector))
                        (ecb-subseq seq start-pos)
                        (ecb-subseq seq 0 start-pos)))))
 
@@ -1187,15 +1149,15 @@ be made either with the mouse or with the keyboard."
 (defun ecb-read-number (prompt &optional init-value)
   "Ask in the minibuffer for a number with prompt-string PROMPT. Optional
 INIT-VALUE can be either a number or a string-representation of a number."
-  (let ((init (cond ((numberp init-value)
-                     (number-to-string init-value))
-                    ((stringp init-value)
-                     (if (ecb-string= init-value "0")
-                         init-value
-                       (if (not (= 0 (string-to-number init-value)))
-                           init-value
-                         (ecb-error "ecb-read-number: init-value not a valid number!"))))
-                    (t nil)))
+  (let ((init (typecase init-value
+                (number (number-to-string init-value))
+                (string
+                 (if (ecb-string= init-value "0")
+                     init-value
+                   (if (not (= 0 (string-to-number init-value)))
+                       init-value
+                     (ecb-error "ecb-read-number: init-value not a valid number!"))))
+                (otherwise nil)))
         result)
     (while (progn
              (setq result (read-string prompt init))
@@ -1384,17 +1346,15 @@ of TEXT which are not set by FACE are preserved."
                                                                    'face
                                                                    text))
                                   (cf
-                                   (cond ((ecb-facep current-face)
-                                          (list current-face))
-                                         ((listp current-face)
-                                          current-face)
-                                         (t nil)))
+                                   (typecase current-face
+                                     (ecb-face (list current-face))
+                                     (list current-face)
+                                     (otherwise nil)))
                                   (nf
-                                   (cond ((ecb-facep face)
-                                          (list face))
-                                         ((listp face)
-                                          face)
-                                         (t nil))))
+                                   (typecase face
+                                     (ecb-face (list face))
+                                     (list face)
+                                     (otherwise nil))))
                              ;; we must add the new-face in front of
                              ;; current-face to get the right merge!
                              (append nf cf))
@@ -1402,17 +1362,15 @@ of TEXT which are not set by FACE are preserved."
       (alter-text-property 0 (length text) 'face
                            (lambda (current-face)
                              (let ((cf
-                                    (cond ((ecb-facep current-face)
-                                           (list current-face))
-                                          ((listp current-face)
-                                           current-face)
-                                          (t nil)))
+                                    (typecase current-face
+                                      (ecb-face (list current-face))
+                                      (list current-face)
+                                      (otherwise nil)))
                                    (nf
-                                    (cond ((ecb-facep face)
-                                           (list face))
-                                          ((listp face)
-                                           face)
-                                          (t nil))))
+                                    (typecase face
+                                      (ecb-face (list face))
+                                      (list face)
+                                      (otherwise nil))))
                                ;; we must add the new-face in front of
                                ;; current-face to get the right merge!
                                (append nf cf)))
@@ -1564,22 +1522,24 @@ number (which happens to be ignored.).  While coders pass t into
 NUMBER, functions using this should convert NUMBER into a vector
 describing how to render the done message.
 Argument FRAMES are the frames used in the animation."
-  (cond ((vectorp number)
-	 (let ((zone (- (length (aref frames 0)) (length (aref number 0))
-			(length (aref number 1)))))
-	   (if (< (length ecb-working-donestring) zone)
-	       (concat " " (aref number 0)
-		       (make-string
-			(ceiling (/ (- (float zone)
-				       (length ecb-working-donestring)) 2)) ? )
-		       ecb-working-donestring
-		       (make-string
-			(floor (/ (- (float zone)
-				     (length ecb-working-donestring)) 2)) ? )
-		       (aref number 1))
-	     (concat " " (aref frames (% ecb-working-ref1 (length frames)))
-		     " " ecb-working-donestring))))
-	(t (concat " " (aref frames (% ecb-working-ref1 (length frames)))))))
+  (typecase number
+    (vector
+     (let ((zone (- (length (aref frames 0)) (length (aref number 0))
+                    (length (aref number 1)))))
+       (if (< (length ecb-working-donestring) zone)
+           (concat " " (aref number 0)
+                   (make-string
+                    (ceiling (/ (- (float zone)
+                                   (length ecb-working-donestring)) 2)) ? )
+                   ecb-working-donestring
+                   (make-string
+                    (floor (/ (- (float zone)
+                                 (length ecb-working-donestring)) 2)) ? )
+                   (aref number 1))
+         (concat " " (aref frames (% ecb-working-ref1 (length frames)))
+                 " " ecb-working-donestring))))
+    (otherwise
+     (concat " " (aref frames (% ecb-working-ref1 (length frames)))))))
 
 (defvar ecb-working-celeron-strings
   [ "[O     ]" "[oO    ]" "[-oO   ]" "[ -oO  ]" "[  -oO ]" "[   -oO]"
@@ -1591,12 +1551,14 @@ Argument FRAMES are the frames used in the animation."
   "Return a string displaying a celeron as things happen.
 LENGTH is the amount of display that has been used.  NUMBER
 is t to display the done string, or the number to display."
-  (cond ((eq number t)
-	 (ecb-working-frame-animation-display length [ "[" "]" ]
+  (case number
+    ((t)
+     (ecb-working-frame-animation-display length [ "[" "]" ]
 					  ecb-working-celeron-strings))
-	;; All the % signs because it then gets passed to message.
-	(t (ecb-working-frame-animation-display length number
-					    ecb-working-celeron-strings))))
+    ;; All the % signs because it then gets passed to message.
+    (otherwise
+     (ecb-working-frame-animation-display length number
+                                          ecb-working-celeron-strings))))
 
 
 
@@ -1715,21 +1677,17 @@ During the evaluation of BODY the following local variables are bound:
 
 (defun ecb-buffer-name (buffer-or-name)
   "Return the buffer-name of BUFFER-OR-NAME."
-  (cond ((stringp buffer-or-name)
-         buffer-or-name)
-        ((bufferp buffer-or-name)
-         (buffer-name buffer-or-name))
-        (t
-         nil)))
+  (typecase buffer-or-name
+    (string buffer-or-name)
+    (buffer (buffer-name buffer-or-name))
+    (otherwise nil)))
 
 (defun ecb-buffer-obj (buffer-or-name)
   "Return the buffer-object of BUFFER-OR-NAME."
-  (cond ((stringp buffer-or-name)
-         (get-buffer buffer-or-name))
-        ((bufferp buffer-or-name)
-         buffer-or-name)
-        (t
-         nil)))
+  (typecase buffer-or-name
+    (string (get-buffer buffer-or-name))
+    (buffer buffer-or-name)
+    (otherwise nil)))
 
 (defun ecb-buffer-local-value (sym buffer)
   "Get the buffer-local value of variable SYM in BUFFER. If there is no

@@ -25,7 +25,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-common-browser.el,v 1.15 2005/03/10 16:37:52 berndl Exp $
+;; $Id: ecb-common-browser.el,v 1.16 2005/03/30 12:50:55 berndl Exp $
 
 
 ;;; History
@@ -530,11 +530,21 @@ An alist where each element is a cons where the car is a symbol which contains
 the name of a tree-buffer \(e.g. `ecb-sources-buffer-name') and the cdr is the
 associated function-symbol which creates the tree-buffer with that name.")
 
-(defsubst ecb-tree-buffer-creators-init ()
+(defun ecb-tree-buffer-creators-init ()
+  "Initialize `ecb-tree-buffer-creators'.
+Removes all creators and set it to nil."
   (setq ecb-tree-buffer-creators nil))
 
-(defsubst ecb-tree-buffer-creators-add (name-symbol fn)
+(defun ecb-tree-buffer-creators-register (name-symbol fn)
+  "Register the creator-function FN for the tree-buffer NAME-SYMBOL."
   (add-to-list 'ecb-tree-buffer-creators (cons name-symbol fn)))
+
+(defun ecb-tree-buffer-creators-run ()
+  "Run all currently registered creator-functions."
+  (dolist (creator-elem ecb-tree-buffer-creators)
+    ;; create all the tree-buffers if they don't already exist
+    (funcall (cdr creator-elem))))
+  
 
 (defmacro defecb-tree-buffer-creator (creator
                                       tree-buffer-name-symbol
@@ -550,8 +560,8 @@ automatically created \(i.e. its creator-function defined with this macro will
 be called) when activating ECB and the tree-buffer will automatically
 registered at ECB."
   `(eval-and-compile
-     (ecb-tree-buffer-creators-add (quote ,tree-buffer-name-symbol)
-                                   (quote ,creator))
+     (ecb-tree-buffer-creators-register (quote ,tree-buffer-name-symbol)
+                                        (quote ,creator))
      (defun ,creator ()
        ,docstring
        (unless (ecb-tree-buffers-get-symbol ,tree-buffer-name-symbol)
@@ -772,12 +782,14 @@ not nil then in both PATH and FILENAME env-var substitution is done. If the
                   (ecb-host-accessible-p (nth 1 remote-path)))
               (progn
                 (setq norm-path (if ecb-running-xemacs
-                                    (cond ((equal system-type 'cygwin32)
-                                           (mswindows-cygwin-to-win32-path
-                                            (expand-file-name path)))
-                                          ((equal system-type 'windows-nt)
-                                           (expand-file-name (ecb-fix-path path)))
-                                          (t (expand-file-name path)))
+                                    (case system-type
+                                      (cygwin32
+                                       (mswindows-cygwin-to-win32-path
+                                        (expand-file-name path)))
+                                      (windows-nt
+                                       (expand-file-name (ecb-fix-path path)))
+                                      (otherwise
+                                       (expand-file-name path)))
                                   (expand-file-name path)))
                 ;; substitute environment-variables
                 (setq norm-path (expand-file-name (if substitute-env-vars
@@ -855,9 +867,10 @@ See also the option `ecb-tree-RET-selects-edit-window'."
 - nil if ECB-BUTTON is 1.
 - t if ECB-BUTTON is 2 and the edit-area of ECB is splitted.
 - EDIT-WINDOW-NR if ECB-BUTTON is 3."
-  (cond ((eq ecb-button 1) nil)
-        ((eq ecb-button 2) (ecb-edit-window-splitted))
-        ((eq ecb-button 3) edit-window-nr)))
+  (case ecb-button
+    (1 nil)
+    (2 (ecb-edit-window-splitted))
+    (3 edit-window-nr)))
 
 (defun ecb-get-edit-window (other-edit-window)
   "Get the correct edit-window. Which one is the correct one depends on the
@@ -872,17 +885,18 @@ value of OTHER-EDIT-WINDOW \(which is a value returned by
 - OTHER-EDIT-WINDOW is an integer: Get exactly the edit-window with that
   number > 0."
   (let ((edit-win-list (ecb-canonical-edit-windows-list)))
-    (cond ((null other-edit-window)
-           (if (eq ecb-mouse-click-destination 'left-top)
-               (car edit-win-list)
-             ecb-last-edit-window-with-point))
-          ((integerp other-edit-window)
-           (ecb-get-edit-window-by-number other-edit-window edit-win-list))
-          (t
-           (ecb-next-listelem edit-win-list
-                              (if (eq ecb-mouse-click-destination 'left-top)
-                                  (car edit-win-list)
-                                ecb-last-edit-window-with-point))))))
+    (typecase other-edit-window
+      (null
+       (if (eq ecb-mouse-click-destination 'left-top)
+           (car edit-win-list)
+         ecb-last-edit-window-with-point))
+      (integer
+       (ecb-get-edit-window-by-number other-edit-window edit-win-list))
+      (otherwise
+       (ecb-next-listelem edit-win-list
+                          (if (eq ecb-mouse-click-destination 'left-top)
+                              (car edit-win-list)
+                            ecb-last-edit-window-with-point))))))
 
 ;;====================================================
 ;; Mouse callbacks
@@ -940,11 +954,10 @@ combination is invalid \(see `ecb-interpret-mouse-click'."
                (or (not (ecb-string= tree-buffer-name ecb-directories-buffer-name))
                    (and (ecb-show-sources-in-directories-buffer-p)
                         (= ecb-directories-nodetype-sourcefile
-                           (tree-node-get-type node)))))
+                           (tree-node->type node)))))
       (ecb-goto-ecb-window tree-buffer-name)
       (tree-buffer-remove-highlight))))
-
-
+ 
 (defun ecb-tree-buffer-node-collapsed-callback (node
                                                 mouse-button
                                                 shift-pressed
@@ -1017,19 +1030,20 @@ Currently the fourth argument TREE-BUFFER-NAME is not used here."
       (list (if control-pressed 2 1) shift-pressed meta-pressed 'keyboard)
     (if (and (not (eq mouse-button 1)) (not (eq mouse-button 2)))
 	nil
-      (cond ((eq ecb-primary-secondary-mouse-buttons 'mouse-1--mouse-2)
-	     (if control-pressed
-		 nil
-	       (list mouse-button shift-pressed meta-pressed 'mouse)))
-	    ((eq ecb-primary-secondary-mouse-buttons 'mouse-1--C-mouse-1)
-	     (if (not (eq mouse-button 1))
-		 nil
-	       (list (if control-pressed 2 1) shift-pressed meta-pressed 'mouse)))
-	    ((eq ecb-primary-secondary-mouse-buttons 'mouse-2--C-mouse-2)
-	     (if (not (eq mouse-button 2))
-		 nil
-	       (list (if control-pressed 2 1) shift-pressed meta-pressed 'mouse)))
-	    (t nil)))))
+      (case ecb-primary-secondary-mouse-buttons
+        (mouse-1--mouse-2
+         (if control-pressed
+             nil
+           (list mouse-button shift-pressed meta-pressed 'mouse)))
+        (mouse-1--C-mouse-1
+         (if (not (eq mouse-button 1))
+             nil
+           (list (if control-pressed 2 1) shift-pressed meta-pressed 'mouse)))
+        (mouse-2--C-mouse-2
+         (if (not (eq mouse-button 2))
+             nil
+           (list (if control-pressed 2 1) shift-pressed meta-pressed 'mouse)))
+        (otherwise nil)))))
 
 (defun ecb-show-minibuffer-info (node window when-spec)
   "Checks if any info about the current node in the ECB-window WINDOW should
@@ -1038,8 +1052,7 @@ be displayed. WHEN-SPEC must have the same format as the car of
   (or (eq when-spec 'always)
       (and (eq when-spec 'if-too-long)
            window
-           (>= (+ (length (tree-node-get-name node))
-                  (tree-node-get-indentlength node))
+           (>= (tree-node-linelength node)
                (window-width window)))))
 
 

@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-mode-line.el,v 1.31 2005/02/28 11:31:55 berndl Exp $
+;; $Id: ecb-mode-line.el,v 1.32 2005/03/30 12:50:35 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -211,15 +211,13 @@ prepended by the window-number, see `ecb-mode-line-display-window-number'."
                                                        nil))
                                                     (t (ecb-error "ecb-mode-line-format: Can not get prefix-elem: %s" p)))))
                                            ecb-mode-line-prefixes))
-                    (prefix-str (cond ((null prefix-elem)
-                                       nil)
-                                      ((stringp prefix-elem)
-                                       prefix-elem)
-                                      ((functionp prefix-elem)
-                                       (funcall prefix-elem
-                                                (buffer-name buffer)
-                                                ecb-path-selected-directory
-                                                ecb-path-selected-source))))
+                    (prefix-str (typecase prefix-elem
+                                  (null nil)
+                                  (string prefix-elem)
+                                  (function (funcall prefix-elem
+                                                     (buffer-name buffer)
+                                                     ecb-path-selected-directory
+                                                     ecb-path-selected-source))))
                     (data-elem (ecb-some (function
                                           (lambda (p)
                                             (cond ((stringp (car p))

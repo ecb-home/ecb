@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-jde.el,v 1.13 2005/02/28 11:31:57 berndl Exp $
+;; $Id: ecb-jde.el,v 1.14 2005/03/30 12:50:54 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -158,14 +158,15 @@ is not available then `find-file' is called."
 
 (defun ecb-jde-update-ecb-source-paths ()
   (interactive)
-  (cond ((equal ecb-jde-set-directories-buffer-to-jde-sourcepath 'add)
-         (add-hook 'ecb-source-path-functions
-                   'ecb-jde-get-source-path))
-        ((equal ecb-jde-set-directories-buffer-to-jde-sourcepath 'replace)
-         (setq ecb-source-path (ecb-jde-get-source-path)))
-        (t
-         (remove-hook 'ecb-source-path-functions
-                      'ecb-jde-get-source-path)))
+  (case ecb-jde-set-directories-buffer-to-jde-sourcepath
+    (add
+     (add-hook 'ecb-source-path-functions
+               'ecb-jde-get-source-path))
+    (replace
+     (setq ecb-source-path (ecb-jde-get-source-path)))
+    (otherwise
+     (remove-hook 'ecb-source-path-functions
+                  'ecb-jde-get-source-path)))
   (ecb-update-directories-buffer))
 
 

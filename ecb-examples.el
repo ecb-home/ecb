@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-examples.el,v 1.16 2005/02/28 11:31:58 berndl Exp $
+;; $Id: ecb-examples.el,v 1.17 2005/03/30 12:50:55 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -66,6 +66,9 @@
 (require 'ecb-layout)
 (require 'ecb-common-browser)
 
+(eval-when-compile
+  ;; to avoid compiler grips
+  (require 'cl))
 
 ;; ---------------------------------------------------------------------------
 ;; --- Code for the bufferinfo buffer ----------------------------------------

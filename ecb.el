@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb.el,v 1.423 2005/03/10 16:37:31 berndl Exp $
+;; $Id: ecb.el,v 1.424 2005/03/30 12:50:29 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -823,16 +823,17 @@ idle-list. If 'pre the FUNC is added to `pre-command-hook' and
     (remove-hook 'pre-command-hook func)
     (setq ecb-post-command-hooks (delq func ecb-post-command-hooks))
     (setq ecb-pre-command-hooks (delq func ecb-pre-command-hooks))
-    (cond ((or (null idle-value) (equal idle-value 'post))
-           (add-hook 'post-command-hook func)
-           (add-to-list 'ecb-post-command-hooks func))
-          ((equal idle-value 'pre)
-           (add-hook 'pre-command-hook func)
-           (add-to-list 'ecb-pre-command-hooks func))
-          (t
-           (add-to-list 'ecb-idle-timer-alist
-                        (cons func
-                              (ecb-run-with-idle-timer idle-value t func)))))))
+    (case idle-value
+      ((nil post)
+       (add-hook 'post-command-hook func)
+       (add-to-list 'ecb-post-command-hooks func))
+      (pre
+       (add-hook 'pre-command-hook func)
+       (add-to-list 'ecb-pre-command-hooks func))
+      (otherwise
+       (add-to-list 'ecb-idle-timer-alist
+                    (cons func
+                          (ecb-run-with-idle-timer idle-value t func)))))))
 
 (defun ecb-monitor-autocontrol-functions ()
   "Checks if all necessary ECB-hooks are contained in `post-command-hook' rsp.
@@ -1541,19 +1542,20 @@ VAR has to be a bound symbol for a variable. ACTION is either 'store or
 'restore. The optional arg NEW-VALUE is only used when ACTION is 'store and is
 that value VAR should be set to. After calling with ACTION is 'restore the
 value of VAR is as before storing a NEW-VALUE for variable-symbol VAR."
-  (cond ((equal action 'store)
-         (or (ecb-find-assoc var ecb-temporary-changed-emacs-variables-alist)
-             (progn
-               (setq ecb-temporary-changed-emacs-variables-alist
-                     (ecb-add-assoc (cons var (symbol-value var))
-                                    ecb-temporary-changed-emacs-variables-alist))
-               (set var new-value))))
-        ((equal action 'restore)
-         (let ((elem (ecb-find-assoc var ecb-temporary-changed-emacs-variables-alist)))
-           (when elem
-             (set var (cdr elem))
-             (setq ecb-temporary-changed-emacs-variables-alist
-                   (ecb-remove-assoc var ecb-temporary-changed-emacs-variables-alist)))))))
+  (case action
+    (store
+     (or (ecb-find-assoc var ecb-temporary-changed-emacs-variables-alist)
+         (progn
+           (setq ecb-temporary-changed-emacs-variables-alist
+                 (ecb-add-assoc (cons var (symbol-value var))
+                                ecb-temporary-changed-emacs-variables-alist))
+           (set var new-value))))
+    (restore
+     (let ((elem (ecb-find-assoc var ecb-temporary-changed-emacs-variables-alist)))
+       (when elem
+         (set var (cdr elem))
+         (setq ecb-temporary-changed-emacs-variables-alist
+               (ecb-remove-assoc var ecb-temporary-changed-emacs-variables-alist)))))))
 
 (defun ecb-check-semantic-load ()
   "Checks if cedet is correctly loaded if semantic 2.X is used and if the same
@@ -1698,12 +1700,9 @@ If ECB detects a problem it is reported and then an error is thrown."
               (ecb-enable-own-temp-buffer-show-function t)
       
               ;; now we can activate ECB
-              (let ((curr-buffer-list (mapcar (lambda (buff)
-                                                (buffer-name buff))
-                                              (buffer-list))))
-                (dolist (creator-elem ecb-tree-buffer-creators)
-                  ;; create all the ECB-buffers if they don't already exist
-                  (funcall (cdr creator-elem))))
+
+              ;; first we run all tree-buffer-creators
+              (ecb-tree-buffer-creators-run)
     
               ;; activate the eshell-integration - does not load eshell but
               ;; prepares ECB to run eshell right - if loaded and activated
@@ -1829,10 +1828,9 @@ If ECB detects a problem it is reported and then an error is thrown."
                             '(vertical horizontal nil))
                 (ecb-with-adviced-functions
                  (delete-other-windows)
-                 (cond ((equal ecb-split-edit-window-after-start 'horizontal)
-                        (split-window-horizontally))
-                       ((equal ecb-split-edit-window-after-start 'vertical)
-                        (split-window-vertically)))))
+                 (case ecb-split-edit-window-after-start
+                   (horizontal (split-window-horizontally))
+                   (vertical (split-window-vertically)))))
             
               ;; now we synchronize all ECB-windows
               (ecb-window-sync)

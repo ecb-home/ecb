@@ -23,7 +23,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-semantic-wrapper.el,v 1.23 2005/02/28 11:31:55 berndl Exp $
+;; $Id: ecb-semantic-wrapper.el,v 1.24 2005/03/30 12:50:35 berndl Exp $
 
 ;;; Commentary:
 
@@ -52,6 +52,10 @@
 
 (eval-when-compile
   (require 'silentcomp))
+
+(eval-when-compile
+  ;; to avoid compiler grips
+  (require 'cl))
 
 ;; semantic 1.X does not have this
 (silentcomp-defvar semanticdb-search-system-databases)
@@ -270,11 +274,10 @@ unloaded buffer representation."
     (defalias 'ecb--semantic-tag-components
       'semantic-tag-components)
   (defun ecb--semantic-tag-components (tag)
-    (cond ((equal (ecb--semantic-tag-class tag) 'type)
-           (ecb--semantic-tag-type-members tag))
-          ((equal (ecb--semantic-tag-class tag) 'function)
-           (ecb--semantic-tag-function-arguments tag))
-          (t nil))))
+    (case (ecb--semantic-tag-class tag)
+      (type (ecb--semantic-tag-type-members tag))
+      (function (ecb--semantic-tag-function-arguments tag))
+      (otherwise nil))))
 
 (if (fboundp 'semantic-flatten-tags-table)
     (defalias 'ecb--semantic-flatten-tags-table

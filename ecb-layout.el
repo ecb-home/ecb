@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-layout.el,v 1.248 2005/02/28 11:31:56 berndl Exp $
+;; $Id: ecb-layout.el,v 1.249 2005/03/30 12:50:35 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -1194,7 +1194,6 @@ not do what you think it should do etc...) then please do the following steps:
 
 ;; ====== internal variables ====================================
 
-;; Klaus Berndl <klaus.berndl@sdm.de>: FRAME-LOCAL
 (defvar ecb-frame nil
   "Frame where ECB runs. This frame is only set if this variable is nil or the
 value points to a dead frame. Deactivation and activation of ECB does not set
@@ -1204,20 +1203,16 @@ this variable to nil!")
   "Only used internally by `ecb-redraw-layout-full'. Do not refer to this
 variable because the value is not predictable!")
 
-;; Klaus Berndl <klaus.berndl@sdm.de>: FRAME-LOCAL
 (defvar ecb-last-edit-window-with-point nil
   "The edit-window of ECB which had the point before an emacs-command is
 done.")
 
-;; Klaus Berndl <klaus.berndl@sdm.de>: FRAME-LOCAL
 (defvar ecb-last-source-buffer nil
   "The source-buffer of `ecb-last-edit-window-with-point'.")
 
-;; Klaus Berndl <klaus.berndl@sdm.de>: FRAME-LOCAL
 (defvar ecb-last-compile-buffer-in-compile-window nil
   "The buffer in the compile-window before an emacs-command is done.")
 
-;; Klaus Berndl <klaus.berndl@sdm.de>: FRAME-LOCAL
 (defvar ecb-compile-window nil
   "Window to display compile-output in.")
 
@@ -1235,7 +1230,6 @@ compile-window direct after a full redraw. Only set by
 which shrink back the compile-window to its specified height without doing a
 full redraw!!")
 
-;; Klaus Berndl <klaus.berndl@sdm.de>: FRAME-LOCAL
 (defvar ecb-compile-window-was-selected-before-command nil
   "Not nil only if the `ecb-compile-window' was selected before most recent
 command.")
@@ -1244,12 +1238,10 @@ command.")
   "Contains the the sizes of the ecb-windows of the current layout exactly as
 drawn by the layout-function \(see `ecb-redraw-layout-full').")
 
-;; Klaus Berndl <klaus.berndl@sdm.de>: FRAME-LOCAL
 (defvar ecb-windows-hidden nil
   "Used with `ecb-toggle-ecb-windows'. If true the ECB windows are hidden. Do
 not change this variable!")
 
-;; Klaus Berndl <klaus.berndl@sdm.de>: FRAME-LOCAL ???
 (defvar ecb-special-ecb-buffers-of-current-layout nil)
 
 (defun ecb-initialize-layout ()
@@ -1279,6 +1271,9 @@ not change this variable!")
 
 
 (defun ecb-compile-window-live-p (&optional display-msg)
+  "Return not nil when a compile-window is live and visible.
+If optional arg DISPLAY-MSG is not nil then an informational message for the
+user is displayed in the echo-area if no compile-window is visible."
   (if (and ecb-compile-window-height
            ecb-compile-window
            (window-live-p ecb-compile-window))
@@ -2417,24 +2412,25 @@ EDIT-WIN-NR must be an integer between 1 and length of EDIT-WIN-LIST \(rsp.
   (nth (1- edit-win-nr) (or edit-win-list (ecb-canonical-edit-windows-list))))
 
 (defun ecb-point-in-compile-window ()
-  "Return non nil iff point is in the compile-window of ECB"
+  "Return not nil iff point is in the compile-window of ECB"
   (and (equal (selected-frame) ecb-frame)
        (ecb-compile-window-live-p)
        (equal (selected-window) ecb-compile-window)))
 
 
 (defun ecb-point-in-ecb-tree-buffer ()
-  "Return nil if point is not in any of the standard tree-buffers \(currently
-these are the buffers with name `ecb-directories-buffer-name',
-`ecb-sources-buffer-name', `ecb-methods-buffer-name' and
-`ecb-history-buffer-name') of ECB otherwise return the buffer-object."
+  "Return not nil if point is in any of the standard tree-buffers \(see
+function `ecb-tree-buffers-name-list') of ECB and if the current buffer is
+displayed in the currently selected window."
   (when (and (equal (selected-frame) ecb-frame)
              (member (buffer-name (current-buffer))
-                     (ecb-tree-buffers-name-list)))
+                     (ecb-tree-buffers-name-list))
+             (eq (selected-window) (get-buffer-window (current-buffer)
+                                                      ecb-frame)))
     (current-buffer)))
 
 (defun ecb-dedicated-special-buffers ()
-  "Return a list of these special dedicated buffers which are registrated via
+  "Return a list of the special dedicated buffers which are registrated via
 the macro `defecb-window-dedicator' \(these are normally only the standard
 tree-buffers of ECB plus the integrated speedbar-buffer, but in general it can
 be more if there are additional buffers registrated, e.g. by other
@@ -2443,12 +2439,18 @@ applications)."
                                 (get-buffer (car e))))
                     ecb-buffer-setfunction-registration)))
 
+;; This function should no use any call to `ecb-window-list' because XEmacs
+;; has no builtin c-function but only an elisp one for this and therefore
+;; using it within post-command-hook or pre-command-hook would dramatically
+;; slow down XEmacs.
 (defun ecb-point-in-dedicated-special-buffer ()
-  "Return nil if point is not in any of these special dedicated buffers which
+  "Return not nil if point is in any of the special dedicated buffers which
 are registrated via the macro `defecb-window-dedicator' \(see
-`ecb-dedicated-special-buffers'). Otherwise return the buffer-object."
+`ecb-dedicated-special-buffers') and if the current buffer is displayed in the
+currently selected window."
   (when (equal (selected-frame) ecb-frame)
-    (if (member (current-buffer) (ecb-dedicated-special-buffers))
+    (if (and (member (current-buffer) (ecb-dedicated-special-buffers))
+             (eq (selected-window) (get-buffer-window (current-buffer) ecb-frame)))
         (current-buffer))))
           
 (defun ecb-buffer-is-dedicated-special-buffer-p (buffer-or-name)
@@ -2457,14 +2459,6 @@ are registrated via the macro `defecb-window-dedicator' \(see
 buffer-object or a buffer-name."
   (let ((buffer (ecb-buffer-obj buffer-or-name)))
     (member buffer (ecb-dedicated-special-buffers))))
-
-(defun ecb-point-in-ecb-window ()
-  "Return nil if point is not in any of the special dedicated ECB-windows
-otherwise return the window-object of this ECB-window. This works for every
-dedicated special ECB-window not only for the built-in standard tree-buffers!"
-  (when (and (equal (selected-frame) ecb-frame)
-             (member (selected-window) (ecb-canonical-ecb-windows-list)))
-    (selected-window)))
 
 
 (defun ecb-goto-ecb-window (name)
@@ -2597,18 +2591,6 @@ can use these variables."
       (setq ecb-ecb-window-was-selected-before-command nil))))
       
 
-;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: Not yet perfect - need some more
-;; tests. Currently not used.
-;; (defun ecb-minibuffer-exit-hook ()
-;;   (remove-hook 'minibuffer-exit-hook 'ecb-minibuffer-exit-hook)
-;;   (ecb-layout-debug-error "ecb-minibuffer-exit-hook: active: %s"
-;;                           (minibuffer-window-active-p
-;;                            (minibuffer-window ecb-frame)))
-;;    (ecb-layout-debug-error "ecb-minibuffer-exit-hook: shrink after leaving minibuf")
-;;   (ecb-toggle-compile-window-height -1))
-
-;; (add-hook 'minibuffer-exit-hook 'ecb-minibuffer-exit-hook)
-
 (defvar ecb-layout-prevent-handle-compile-window-selection nil)
 (defvar ecb-last-edit-area-creators nil)
 (defun ecb-layout-post-command-hook ()
@@ -2646,6 +2628,32 @@ some special tasks:
         (setq ecb-layout-prevent-handle-ecb-window-selection nil))
     (when (and ecb-minor-mode
                ecb-maximize-ecb-window-after-selection
+               ;; Klaus Berndl <klaus.berndl@sdm.de>: There is a very
+               ;; mysterious behavior of GNU Emacs 21: When reaching this
+               ;; code-part then after the full-redraw Emacs runs
+               ;; automatically the command bound to the button-release-event
+               ;; of mouse-1 with an event which contains as event-window the
+               ;; top/left-most window which is in left- and top-layouts the
+               ;; first ecb-window - so it seems that Emacs automatically
+               ;; "clicks" into the first ecb-window which then maximizes this
+               ;; window which is definitively very annoying and a bug (with
+               ;; right-layouts there is no problem, because the top/left-most
+               ;; window is not a ecb-tree-window and has therefore no special
+               ;; mouse-1 binding!). But it's currently not sure if it is a
+               ;; bug somewhere in ECB or in GNU Emacs - but for the moment i
+               ;; assume Emacs because with XEmacs all is working fine, i.e.
+               ;; the full window redraw is done and nothing afterwards this
+               ;; post-command-hook.
+
+               ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: We should identify
+               ;; the underlying problem and if it is an Emacs-bug we should
+               ;; report it - maybe we have to write a small ECB-independent
+               ;; code-example which reproduces this bug/behavior?!!
+
+               ;; In the meanwhile we allow automatic maximizing only when
+               ;; `ecb-tree-mouse-action-trigger' is 'button-press!
+               (or ecb-running-xemacs
+                   (equal ecb-tree-mouse-action-trigger 'button-press))
                (equal (selected-frame) ecb-frame)
                (= (minibuffer-depth) 0))
       (cond ((and (not ecb-ecb-window-was-selected-before-command)
@@ -2654,12 +2662,6 @@ some special tasks:
             ((and ecb-ecb-window-was-selected-before-command
                   (not (ecb-point-in-dedicated-special-buffer)))
              (ecb-redraw-layout-full nil nil nil nil))))))
-;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: need some more tests - see above
-;; `ecb-minibuffer-exit-hook'
-;;              (if (equal (selected-window) (minibuffer-window ecb-frame))
-;;                  (add-hook 'minibuffer-exit-hook 'ecb-minibuffer-exit-hook)
-;;                (ecb-layout-debug-error "ecb-layout-post-command-hook: shrink")
-;;                (ecb-toggle-compile-window-height -1)))))))
 
 
 ;; here come the advices
@@ -2677,11 +2679,7 @@ BUFFER-OR-NAME is contained or matches `special-display-buffer-names' or
          (if (ecb-ignore-special-display)
              nil
            (catch 'done
-             (let ((buf-name (cond ((stringp buffer-or-name)
-                                    buffer-or-name)
-                                   ((bufferp buffer-or-name)
-                                    (buffer-name buffer-or-name))
-                                   (t nil))))
+             (let ((buf-name (ecb-buffer-name buffer-or-name)))
                (when (and buf-name special-display-function)
                  (if (member buf-name
                              special-display-buffer-names)
@@ -2712,11 +2710,7 @@ BUFFER-OR-NAME is contained or matches `special-display-buffer-names' or
 `same-window-buffer-names' or `same-window-regexps'."
   (let ((result
           (catch 'done
-            (let ((buf-name (cond ((stringp buffer-or-name)
-                                   buffer-or-name)
-                                  ((bufferp buffer-or-name)
-                                   (buffer-name buffer-or-name))
-                                  (t nil))))
+            (let ((buf-name (ecb-buffer-name buffer-or-name)))
               (when buf-name
                 (if (or (member buf-name same-window-buffer-names)
                         (assoc buf-name same-window-buffer-names))
@@ -2990,6 +2984,7 @@ If called for other frames it works like the original version."
                                           (ad-get-arg 3)))
        ad-do-it))))
 
+
 (defun ecb-get-other-window-minibuf-active (win-list
                                             edit-win-list
                                             ecb-win-list
@@ -3040,30 +3035,31 @@ If called for other frames it works like the original version."
                                            nth-window)
     ;; here we have no active minibuffer!
     (let ((nth-win (or nth-window 1)))
-      (cond ((equal point-loc 'ecb)
-             (ecb-next-listelem (if (and ecb-win-list
-                                         (= 1 (length ecb-win-list)))
-                                    (append ecb-win-list edit-win-list)
-                                  ecb-win-list)
-                                (selected-window) nth-win))
-            ((equal point-loc 'compile)
-             (if (= nth-win 1)
-                 (or (and ecb-last-edit-window-with-point
-                          (window-live-p ecb-last-edit-window-with-point)
-                          ecb-last-edit-window-with-point)
-                     (car edit-win-list))
-               (ecb-next-listelem (append edit-win-list
-                                          (list (selected-window)))
-                                  (selected-window)
-                                  nth-win)))
-            (t ;; must be an edit-window
-             (ecb-next-listelem (append edit-win-list
-                                        (if (and comp-win
-                                                 (= (length edit-win-list)
-                                                    1))
-                                            (list comp-win)))
-                                (selected-window)
-                                nth-win))))))
+      (case point-loc
+        (ecb
+         (ecb-next-listelem (if (and ecb-win-list
+                                     (= 1 (length ecb-win-list)))
+                                (append ecb-win-list edit-win-list)
+                              ecb-win-list)
+                            (selected-window) nth-win))
+        (compile
+         (if (= nth-win 1)
+             (or (and ecb-last-edit-window-with-point
+                      (window-live-p ecb-last-edit-window-with-point)
+                      ecb-last-edit-window-with-point)
+                 (car edit-win-list))
+           (ecb-next-listelem (append edit-win-list
+                                      (list (selected-window)))
+                              (selected-window)
+                              nth-win)))
+        (otherwise ;; must be an edit-window
+         (ecb-next-listelem (append edit-win-list
+                                    (if (and comp-win
+                                             (= (length edit-win-list)
+                                                1))
+                                        (list comp-win)))
+                            (selected-window)
+                            nth-win))))))
 
 (defun ecb-get-other-window (nth-window)
   "Return the \"other window\" according to `ecb-other-window-behavior'.
@@ -3101,38 +3097,39 @@ NTH-WINDOW is nil then it is treated as 1."
                                                point-loc
                                                nth-window)
         ;; in the following there is no minibuffer active...
-        (cond ((equal 'all ecb-other-window-behavior)
+        (case ecb-other-window-behavior
+          (all
+           (ecb-next-listelem windows-list
+                              (selected-window) nth-win))
+          (only-edit
+           (if (not (integerp point-loc))
+               (if (= nth-win 1)
+                   (or (and ecb-last-edit-window-with-point
+                            (window-live-p ecb-last-edit-window-with-point)
+                            ecb-last-edit-window-with-point)
+                       (car edit-win-list))
+                 (ecb-next-listelem windows-list
+                                    (selected-window) nth-win))
+             (ecb-next-listelem edit-win-list
+                                (selected-window) nth-win)))
+          (edit-and-compile
+           (if (equal point-loc 'ecb)
                (ecb-next-listelem windows-list
-                                  (selected-window) nth-win))
-              ((equal 'only-edit ecb-other-window-behavior)
-               (if (not (integerp point-loc))
-                   (if (= nth-win 1)
-                       (or (and ecb-last-edit-window-with-point
-                                (window-live-p ecb-last-edit-window-with-point)
-                                ecb-last-edit-window-with-point)
-                           (car edit-win-list))
-                     (ecb-next-listelem windows-list
-                                        (selected-window) nth-win))
-                 (ecb-next-listelem edit-win-list
-                                    (selected-window) nth-win)))
-              ((equal 'edit-and-compile ecb-other-window-behavior)
-               (if (equal point-loc 'ecb)
-                   (ecb-next-listelem windows-list
-                                      (selected-window) nth-win)
-                 (ecb-next-listelem (append edit-win-list
-                                            (if (equal compwin-state 'visible)
-                                                (list ecb-compile-window)))
-                                    (selected-window)
-                                    nth-win)))
-              (t ;; = 'smart
-               (ecb-get-other-window-smart windows-list
-                                           edit-win-list
-                                           ecb-win-list
-                                           (if (equal compwin-state 'visible)
-                                               ecb-compile-window)
-                                           minibuf-win
-                                           point-loc
-                                           nth-window)))))))
+                                  (selected-window) nth-win)
+             (ecb-next-listelem (append edit-win-list
+                                        (if (equal compwin-state 'visible)
+                                            (list ecb-compile-window)))
+                                (selected-window)
+                                nth-win)))
+          (otherwise ;; = 'smart
+           (ecb-get-other-window-smart windows-list
+                                       edit-win-list
+                                       ecb-win-list
+                                       (if (equal compwin-state 'visible)
+                                           ecb-compile-window)
+                                       minibuf-win
+                                       point-loc
+                                       nth-window)))))))
 
 (defadvice other-window (around ecb)
   "The ECB-version of `other-window'. Works exactly like the original function
@@ -3161,26 +3158,23 @@ allowed to be deleted."
                            (ad-get-arg 0))
                       (and (bufferp (ad-get-arg 0))
                            (buffer-name (ad-get-arg 0)))))
-        (frames (cond ( ;; visible or iconified frames
-                       (equal (ad-get-arg 1) 0)
-                       (delete nil (mapcar (lambda (f)
-                                             (if (frame-visible-p f) f))
-                                           (frame-list))))
-                      ( ;; visible frames
-                       (equal (ad-get-arg 1) 'visible)
-                       (delete nil (mapcar (lambda (f)
-                                             (if (equal (frame-visible-p f) t)
-                                                 f))
-                                           (frame-list))))
-                      ( ;; all frames
-                       (null (ad-get-arg 1))
-                       (frame-list))
-                      ( ;; current frame
-                       (equal (ad-get-arg 1) t)
-                       (list (selected-frame)))
-                      ( ;; a certain frame
-                       (frame-live-p (ad-get-arg 1))
-                       (list (ad-get-arg 1))))))
+        (frames (case (ad-get-arg 1)
+                  (0 ;; visible or iconified frames
+                   (delete nil (mapcar (lambda (f)
+                                         (if (frame-visible-p f) f))
+                                       (frame-list))))
+                  (visible ;; visible frames
+                   (delete nil (mapcar (lambda (f)
+                                         (if (equal (frame-visible-p f) t)
+                                             f))
+                                       (frame-list))))
+                  ((nil) ;; all frames
+                   (frame-list))
+                  ((t) ;; current frame
+                   (list (selected-frame)))
+                  (otherwise ;; a certain frame
+                       (if (frame-live-p (ad-get-arg 1))
+                           (list (ad-get-arg 1)))))))
     (if (member (get-buffer buf-name) (ecb-get-current-visible-ecb-buffers))
         (if ecb-advice-window-functions-signal-error
             (ecb-error "delete-windows-on is not allowed for the special ECB-buffers!"))
@@ -3204,7 +3198,6 @@ allowed to be deleted."
                                                  nil ecb-frame))))
             (select-frame curr-frame)))))))
 
-;; Klaus Berndl <klaus.berndl@sdm.de>: FRAME-LOCAL
 (defvar ecb-edit-area-creators nil)
 
 (defsubst ecb-edit-area-creators-init ()
@@ -3873,7 +3866,6 @@ visibility of the ECB windows. ECB minor mode remains active!"
   (ecb-toggle-ecb-windows 1))
 
 
-;; Klaus Berndl <klaus.berndl@sdm.de>: FRAME-LOCAL
 (defvar ecb-current-maximized-ecb-buffer-name nil
   "If not nil then it contains the buffer-name of the current maximized
 ecb-buffer. If nil then this means currently there is no ecb-buffer maximized.
@@ -3951,12 +3943,12 @@ ECB-buffer. The currently selected window does not change."
     (ecb-maximize-ecb-window ecb-buffer-name)
     ;; point is now in the edit-buffer so maybe we have to move point to the
     ;; buffer where it was before.
-    (cond ((equal curr-point 'ecb)
-           (ecb-window-select ecb-buffer-name))
-          ((equal curr-point 'compile)
-           (ecb-window-select ecb-compile-window)))))
+    (case curr-point
+      (ecb
+       (ecb-window-select ecb-buffer-name))
+      (compile
+       (ecb-window-select ecb-compile-window)))))
 
-;; Klaus Berndl <klaus.berndl@sdm.de>: FRAME-LOCAL
 (defvar ecb-cycle-ecb-buffer-state nil
   "State of ecb-buffer-cycling. An alist where the car is the list of all
 buffer-names of the ecb-buffers of current layout and the cdr the index which
@@ -4920,12 +4912,12 @@ emergency-redraw."
       ;; full redraw incl. the ecb-windows.
       (when (or emergency (not no-ecb-windows))
         (let ((current-ecb-buffers (ecb-get-current-visible-ecb-buffers)))
-          ;; fill-up the history new with all buffers if the history buffer was
-          ;; not shown before the redisplay but now (means if the layout has
-          ;; changed)
           (when (or emergency (null ecb-windows-creator))
             (setq ecb-special-ecb-buffers-of-current-layout
                   (mapcar 'buffer-name current-ecb-buffers)))
+          ;; fill-up the history new with all buffers if the history buffer was
+          ;; not shown before the redisplay but now (means if the layout has
+          ;; changed)
           (when (and (not (member (get-buffer ecb-history-buffer-name)
                                   ecb-windows-before-redraw))
                      (member (get-buffer ecb-history-buffer-name)
@@ -4950,7 +4942,8 @@ emergency-redraw."
           ;; ecb-windows of current layout were visible before redraw) and
           (when (and (not (equal ecb-windows-before-redraw current-ecb-buffers))
                      (not no-buffer-sync))
-            (ecb-current-buffer-sync t))))
+            (ecb-current-buffer-sync t))
+          ))
 
       ;; if the compile-window was selected before redraw we go back to it
       (when (and (ecb-compile-window-live-p)
@@ -4976,7 +4969,6 @@ emergency-redraw."
     (run-hooks 'ecb-redraw-layout-after-hook)))
 
 
-;; Klaus Berndl <klaus.berndl@sdm.de>: FRAME-LOCAL
 (defvar ecb-toggle-layout-state 0
   "Internal state of `ecb-toggle-layout'. Do not change it!")
 (defun ecb-toggle-layout (&optional last-one)
@@ -5161,28 +5153,29 @@ floating-point-numbers. Default referencial width rsp. height are
     (if (null ecb-win-list)
         (cons (frame-width ecb-frame)
               (frame-height ecb-frame))
-      (cond ((equal layout-type 'top)
-             (cons (frame-width ecb-frame)
-                   (- (frame-height ecb-frame)
-                      (ecb-window-full-height (ecb-first ecb-win-list))
-                      (if (equal comp-win-state 'visible)
-                          (ecb-window-full-height ecb-compile-window)
-                        0))))
-            ((equal layout-type 'left-right)
-             (cons (- (frame-width ecb-frame)
-                      (ecb-window-full-width (ecb-first ecb-win-list))
-                      (ecb-window-full-width (ecb-last ecb-win-list)))
-                   (- (frame-height ecb-frame)
-                      (if (equal comp-win-state 'visible)
-                          (ecb-window-full-height ecb-compile-window)
-                        0))))
-            (t
-             (cons (- (frame-width ecb-frame)
-                      (ecb-window-full-width (ecb-first ecb-win-list)))
-                   (- (frame-height ecb-frame)
-                      (if (equal comp-win-state 'visible)
-                          (ecb-window-full-height ecb-compile-window)
-                        0))))))))
+      (case layout-type
+        (top
+         (cons (frame-width ecb-frame)
+               (- (frame-height ecb-frame)
+                  (ecb-window-full-height (ecb-first ecb-win-list))
+                  (if (equal comp-win-state 'visible)
+                      (ecb-window-full-height ecb-compile-window)
+                    0))))
+        (left-right
+         (cons (- (frame-width ecb-frame)
+                  (ecb-window-full-width (ecb-first ecb-win-list))
+                  (ecb-window-full-width (ecb-last ecb-win-list)))
+               (- (frame-height ecb-frame)
+                  (if (equal comp-win-state 'visible)
+                      (ecb-window-full-height ecb-compile-window)
+                    0))))
+        (otherwise
+         (cons (- (frame-width ecb-frame)
+                  (ecb-window-full-width (ecb-first ecb-win-list)))
+               (- (frame-height ecb-frame)
+                  (if (equal comp-win-state 'visible)
+                      (ecb-window-full-height ecb-compile-window)
+                    0))))))))
 
 
 ;; Klaus Berndl <klaus.berndl@sdm.de>: Cause of a much better repair-mechanism
@@ -5392,12 +5385,11 @@ Emacs)."
 - 'no: No durable compile-window, i.e. `ecb-compile-window-height' is nil.
 - 'visible: The compile-window is visible.
 - 'hidden: A durable compile-window is set but it is currently hidden."
-  (cond ((null ecb-compile-window-height)
-         'no)
-        (t
-         (if (ecb-compile-window-live-p)
-             'visible
-           'hidden))))
+  (if (null ecb-compile-window-height)
+      'no
+    (if (ecb-compile-window-live-p)
+        'visible
+      'hidden)))
 
 (defun ecb-toggle-compile-window (&optional arg)
   "Toggle the visibility of the compile-window of ECB.
