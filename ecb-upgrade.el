@@ -19,7 +19,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-upgrade.el,v 1.31 2003/02/24 12:40:15 berndl Exp $
+;; $Id: ecb-upgrade.el,v 1.32 2003/02/25 20:35:36 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -597,14 +597,16 @@ are:
 ;; Cause of the need of wget we can assume the the user has cygwin installed!
 (defmacro ecb-create-shell-argument (arg)
   `(if (eq system-type 'windows-nt)
-       (if (executable-find "cygpath.exe")
-           ;; if bash is used as shell-file-name then the command must
-           ;; not contain newlines!
-           (ecb-trim
-            (ecb-subst-char-in-string ?\n 32
-                                  (shell-command-to-string
-                                   (concat "cygpath -u " ,arg))))
-         (ecb-error "Cannot find the cygpath utility!"))
+       (progn
+         (require 'executable)
+         (if (executable-find "cygpath.exe")
+             ;; if bash is used as shell-file-name then the command must
+             ;; not contain newlines!
+             (ecb-trim
+              (ecb-subst-char-in-string ?\n 32
+                                        (shell-command-to-string
+                                         (concat "cygpath -u " ,arg))))
+           (ecb-error "Cannot find the cygpath utility!")))
      ,arg))
 
 
@@ -905,6 +907,8 @@ activated."
 
       ;; checking if all necessary tools are available
 
+      ;; Emacs 20.X does not autoload executable-find :-(
+      (require 'executable)
       (if (not (and (executable-find
                      (if (eq system-type 'windows-nt) "wget.exe" "wget"))
                     (executable-find
@@ -1021,6 +1025,7 @@ for details about using \"wget\"."
         (version-list nil)
         process-result)
 
+    (require 'executable)
     (if (not (executable-find
               (if (eq system-type 'windows-nt) "wget.exe" "wget")))
         (ecb-error
