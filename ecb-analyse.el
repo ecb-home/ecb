@@ -20,7 +20,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-analyse.el,v 1.7 2005/02/28 11:31:59 berndl Exp $
+;; $Id: ecb-analyse.el,v 1.8 2005/03/10 16:37:52 berndl Exp $
 
 
 ;;; Commentary:
@@ -507,7 +507,7 @@ should be printed here."
                  (tree-node-get-name node)))))
     (prog1 str
       (unless no-message
-        (tree-buffer-nolog-message str)))))
+        (ecb-nolog-message str)))))
 
 (defun ecb-analyse-node-mouse-highlighted-p (node)
   "Return not nil when NODE has a positioned tag as data or belongs to the
@@ -606,9 +606,8 @@ analyse-buffer."
                       (local-set-key (kbd "C-t")
                                      'ecb-toggle-RET-selects-edit-window)
                       (if (not ecb-running-xemacs)
-                          (define-key tree-buffer-key-map
-                            [mode-line mouse-2]
-                            'ecb-toggle-maximize-ecb-window-with-mouse)))))
+                          (local-set-key [mode-line mouse-2]
+                                         'ecb-toggle-maximize-ecb-window-with-mouse)))))
     ecb-common-tree-buffer-after-create-hook
     ecb-analyse-buffer-after-create-hook)))
 

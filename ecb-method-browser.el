@@ -24,7 +24,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-method-browser.el,v 1.69 2005/02/28 11:31:55 berndl Exp $
+;; $Id: ecb-method-browser.el,v 1.70 2005/03/10 16:37:50 berndl Exp $
 
 ;;; Commentary:
 
@@ -2620,7 +2620,7 @@ argument to not nil!"
            nil rebuild-non-semantic)))
     (when scroll-to-top
       (ecb-exec-in-window ecb-methods-buffer-name
-        (tree-buffer-scroll (point-min) (point-min))))))
+        (ecb-scroll-window (point-min) (point-min))))))
 
 
 (defvar ecb-tag-tree-cache nil
@@ -3057,7 +3057,7 @@ current buffer."
                                           (ecb-normalize-expand-spec
                                            ecb-methods-nodes-expand-spec))))
                      (let ((bucket-node
-                            (tree-buffer-search-node-list
+                            (tree-buffer-search-displayed-node-list
                              (function (lambda (node)
                                          (if (and (tree-buffer-node-data-equal-p
                                                    (tree-node-get-data node)
@@ -3085,8 +3085,7 @@ current buffer."
                                   (member (ecb--semantic-tag-class highlight-tag)
                                           (ecb-normalize-expand-spec
                                            ecb-methods-nodes-expand-spec))))
-                     (setq type-node
-                           (cdr (tree-buffer-find-name-node-data type-tag)))
+                     (setq type-node (tree-buffer-find-displayed-node-by-data type-tag))
                      (when type-node
                        (ecb-expand-methods-node-internal
                         type-node
@@ -3340,7 +3339,7 @@ types which are parsed by imenu or etags \(see
                                       norm-collapse-types)))))))
       (if update-tree-buffer
           (tree-buffer-update)
-        (tree-buffer-scroll (point-min) (point-min)))))
+        (ecb-scroll-window (point-min) (point-min)))))
 
   ;; we want resync the new method-buffer to the current tag in the
   ;; edit-window.
@@ -3624,7 +3623,7 @@ new nop-command \(otherwise the cursor jumps back to the tree-buffer).")
 
 
 (defun ecb-unhighlight-tag-header ()
-  (let ((key (tree-buffer-event-to-key last-input-event)))
+  (let ((key (ecb-event-to-key last-input-event)))
     (when (not (or (and (equal key 'mouse-release)
                         (not ecb-unhighlight-hook-called))
                    (equal key 'mouse-movement)))
@@ -3734,7 +3733,7 @@ should be printed here."
                   "")))))
     (prog1 str
       (unless no-message
-        (tree-buffer-nolog-message str)))))
+        (ecb-nolog-message str)))))
 
 ;;; popup-menu stuff for the methods-buffer
 
@@ -4196,9 +4195,8 @@ moved over it."
                       (local-set-key (kbd "C-t")
                                      'ecb-toggle-RET-selects-edit-window)
                       (if (not ecb-running-xemacs)
-                          (define-key tree-buffer-key-map
-                            [mode-line mouse-2]
-                            'ecb-toggle-maximize-ecb-window-with-mouse))
+                          (local-set-key [mode-line mouse-2]
+                                         'ecb-toggle-maximize-ecb-window-with-mouse))
                       (setq ecb-methods-root-node (tree-buffer-get-root)))))
     ecb-common-tree-buffer-after-create-hook
     ecb-methods-buffer-after-create-hook)))

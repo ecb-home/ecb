@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb.el,v 1.422 2005/02/28 11:31:52 berndl Exp $
+;; $Id: ecb.el,v 1.423 2005/03/10 16:37:31 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -611,7 +611,7 @@ examples how to use this macro!"
     (when ecb-kill-buffer-clears-history
       (let ((node (if buffer-file
                       (ecb-exec-in-window ecb-history-buffer-name
-                        (tree-buffer-find-node-data buffer-file)))))
+                        (tree-buffer-find-displayed-node-by-data buffer-file)))))
         (when (and node
                    (or (equal ecb-kill-buffer-clears-history 'auto)
                        (and (equal ecb-kill-buffer-clears-history 'ask)

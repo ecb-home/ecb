@@ -25,7 +25,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-common-browser.el,v 1.14 2005/02/28 11:31:58 berndl Exp $
+;; $Id: ecb-common-browser.el,v 1.15 2005/03/10 16:37:52 berndl Exp $
 
 
 ;;; History
@@ -624,10 +624,10 @@ Currently there are three subcaches managed within this cache:
      key:   <directory>
      value: \(<full-content> . <filtered-content>)
   whereas <full-content> is a 3-elem list \(tree-buffer-root <copy of
-  tree-buffer-nodes> buffer-string) for a full \(i.e. all files) cache and
-  <filtered-content> is a 4-elem list \(tree-buffer-root <copy of
-  tree-buffer-nodes> sources-buffer-string <filter>) for a filtered cache
-  where <filter> is a cons-cell \(<filter-regexp> . <filter-display>).
+  tree-buffer-displayed-nodes> buffer-string) for a full \(i.e. all files)
+  cache and <filtered-content> is a 4-elem list \(tree-buffer-root <copy of
+  tree-buffer-displayed-nodes> sources-buffer-string <filter>) for a filtered
+  cache where <filter> is a cons-cell \(<filter-regexp> . <filter-display>).
 
   VC:
 

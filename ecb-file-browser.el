@@ -23,7 +23,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-file-browser.el,v 1.53 2005/02/28 11:31:57 berndl Exp $
+;; $Id: ecb-file-browser.el,v 1.54 2005/03/10 16:37:51 berndl Exp $
 
 ;;; Commentary:
 
@@ -1323,14 +1323,15 @@ has to be a list as returned by `ecb-sources-cache-get-filtered'."
 
 (defun ecb-sources-cache-get-full (dir)
   "Return the full value of a cached-directory DIR, means the 3-element-list
-\(tree-buffer-root, tree-buffer-nodes, sources-buffer-string). If no
+\(tree-buffer-root, tree-buffer-displayed-nodes, sources-buffer-string). If no
 cache-entry for DIR is available then nil is returned."
   (car (ecb-multicache-get-value 'ecb-filename-cache dir 'SOURCES)))
 
 (defun ecb-sources-cache-get-filtered (dir)
   "Return the filtered value of a cached-directory DIR, means the
-4-element-list \(tree-buffer-root, tree-buffer-nodes, sources-buffer-string,
-filter-regexp). If no cache-entry for DIR is available then nil is returned."
+4-element-list \(tree-buffer-root, tree-buffer-displayed-nodes,
+sources-buffer-string, filter-regexp). If no cache-entry for DIR is available
+then nil is returned."
   (cdr (ecb-multicache-get-value 'ecb-filename-cache dir 'SOURCES)))
 
 (defun ecb-sources-cache-clear ()
@@ -1735,16 +1736,16 @@ selected before this update."
           ;; cached: If yes update the cache
           (when (ecb-check-directory-for-caching
                  ecb-path-selected-directory
-                 (length tree-buffer-nodes))
+                 (tree-buffer-number-of-displayed-nodes))
             (setq new-cache-elem (list (tree-buffer-get-root)
-                                       (ecb-copy-list tree-buffer-nodes)
+                                       (tree-buffer-displayed-nodes-copy)
                                        (buffer-substring (point-min)
                                                          (point-max))))
             (ecb-sources-cache-add-full ecb-path-selected-directory
                                         new-cache-elem))))
            
       (when (not (ecb-string= dir-before-update ecb-path-selected-directory))
-        (tree-buffer-scroll (point-min) (point-min))))))
+        (ecb-scroll-window (point-min) (point-min))))))
 
 (defun ecb-sources-filter-by-ext (ext-str)
   "Filter the sources by extension EXT-STR."
@@ -1845,14 +1846,14 @@ all files are displayed."
           ;; updating the buffer itself
           (tree-buffer-set-root new-tree)
           (tree-buffer-update)
-          (tree-buffer-scroll (point-min) (point-min))
+          (ecb-scroll-window (point-min) (point-min))
           (tree-buffer-highlight-node-data ecb-path-selected-source)
 
           ;; add the new filter to the cache, so the next call to
           ;; `ecb-update-sources-buffer' displays the filtered sources.
           (ecb-sources-cache-add-filtered ecb-path-selected-directory
                                           (list (tree-buffer-get-root)
-                                                (ecb-copy-list tree-buffer-nodes)
+                                                (tree-buffer-displayed-nodes-copy)
                                                 (buffer-substring (point-min)
                                                                   (point-max))
                                                 (cons filter-regexp
@@ -1918,8 +1919,17 @@ then nothing is done unless first optional argument FORCE is not nil."
                                (ecb-get-best-matching-source-path
                                 ecb-path-selected-directory)))
                           (if best-source-path
-                              (tree-buffer-find-node-data
-                               (ecb-fix-filename best-source-path))))
+                              (tree-buffer-search-displayed-node-list
+                               (function
+                                (lambda (node)
+                                  (if (and (tree-buffer-node-data-equal-p
+                                            (tree-node-get-data node)
+                                            (ecb-fix-filename best-source-path))
+                                           ;; only nodes of level 0 (ie. with
+                                           ;; parent == root) can be source-paths
+                                           (eq (tree-buffer-get-root)
+                                               (tree-node-get-parent node)))
+                                      node))))))
                       ;; we start at the root node
                       (tree-buffer-get-root)))
               (when (and (equal ecb-auto-expand-directory-tree 'best)
@@ -2037,7 +2047,7 @@ which are not filtered out by current value of `ecb-history-filter'."
     ;; first we clear out the history buffer
   (save-excursion
     (set-buffer ecb-history-buffer-name)
-    (tree-buffer-clear))
+    (tree-buffer-clear-tree))
   (mapc (function (lambda (buf)
                     (when (buffer-file-name buf)
                       (ecb-add-item-to-history-buffer
@@ -2175,7 +2185,7 @@ ecb-windows after displaying the file in an edit-window."
   (unless (or (not ecb-minor-mode)
               (not (equal (selected-frame) ecb-frame)))
     (ecb-exec-in-window ecb-history-buffer-name
-      (tree-buffer-clear)
+      (tree-buffer-clear-tree)
       (tree-buffer-update)
       (tree-buffer-highlight-node-data ecb-path-selected-source))))
 
@@ -2631,7 +2641,7 @@ the SOURCES-cache."
         ;; filtered sources-cache.
         (ecb-sources-cache-add-filtered dir
                                         (list (tree-buffer-get-root)
-                                              (ecb-copy-list tree-buffer-nodes)
+                                              (tree-buffer-displayed-nodes-copy)
                                               (buffer-substring (point-min)
                                                                 (point-max))
                                               ;; add the old-filter-spec
@@ -2642,7 +2652,7 @@ the SOURCES-cache."
           ;; filter so we must update the full sources-cache.
           (ecb-sources-cache-add-full dir
                                       (list (tree-buffer-get-root)
-                                            (ecb-copy-list tree-buffer-nodes)
+                                            (tree-buffer-displayed-nodes-copy)
                                             (buffer-substring (point-min)
                                                               (point-max))))))))
 
@@ -2876,6 +2886,9 @@ state-value."
             (setq curr-dir (ecb-file-name-directory (tree-node-get-data curr-node)))
             (when (and (= (tree-node-get-type curr-node) node-type-to-check)
                        (ecb-vc-directory-should-be-checked-p curr-dir)
+                       ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: Move this
+                       ;; existing-check to outside this when-clause and then
+                       ;; do the same as in `ecb-stealthy-vc-check--sources'!
                        (ecb-file-exists-p (tree-node-get-data curr-node)))
               (setq vc-state-fcn (ecb-vc-get-state-fcn-for-dir curr-dir))
               (when vc-state-fcn ;; file is under VC-control
@@ -2923,23 +2936,42 @@ stealthy-function has when called. Return the new state-value."
                         (<= state lines-of-buffer))
               (goto-line state)
               (setq curr-node (tree-buffer-get-node-at-point))
-              (when (ecb-file-exists-p (tree-node-get-data curr-node))
-                (setq new-name (tree-node-get-name curr-node))
-                (setq new-state
-                      (ecb-vc-check-state (tree-node-get-data curr-node)
-                                          (buffer-name (current-buffer))
-                                          vc-state-fcn))
-                ;; we update the node only if the state has changed 
-                (when (not (equal 'unchanged new-state))
-                  (setq new-name (ecb-vc-generate-node-name new-name new-state))
-                  (or update-performed-for-dir
-                      (setq update-performed-for-dir
-                            (ecb-fix-filename
-                             (ecb-file-name-directory (tree-node-get-data curr-node)))))
-                  (tree-buffer-update-node
-                   nil new-name
-                   'use-old-value 'use-old-value 'use-old-value 'use-old-value t)))
-              (setq state (1+ state))))
+              (if (ecb-file-exists-p (tree-node-get-data curr-node))
+                  (progn
+                    (setq new-name (tree-node-get-name curr-node))
+                    (setq new-state
+                          (ecb-vc-check-state (tree-node-get-data curr-node)
+                                              (buffer-name (current-buffer))
+                                              vc-state-fcn))
+                    ;; we update the node only if the state has changed 
+                    (when (not (equal 'unchanged new-state))
+                      (setq new-name (ecb-vc-generate-node-name new-name new-state))
+                      (or update-performed-for-dir
+                          (setq update-performed-for-dir ecb-path-selected-directory))
+                      (tree-buffer-update-node
+                       curr-node new-name
+                       'use-old-value 'use-old-value 'use-old-value
+                       'use-old-value t))
+                    (setq state (1+ state)))
+                
+                ;; file does no longer exist
+                
+                ;; reduce the number of lines/files
+                (setq lines-of-buffer (1- lines-of-buffer))
+                ;; remove the node from the tree and the tree-display
+                (tree-buffer-remove-node curr-node t)
+                ;; remove the current dir from the files-and-sub-dir-cache
+                (ecb-files-and-subdirs-cache-remove ecb-path-selected-directory)
+                ;; if there is currently only one line in the tree-buffer the
+                ;; directory will be probably empty now (we knowingly ignore
+                ;; here the possibility that some files can exists in the dir
+                ;; but they are not displayed in the tree-buffer cause of some
+                ;; filters for example), so it's a heuristic approach
+                (if (= lines-of-buffer 1)
+                    (ecb-directory-empty-cache-remove ecb-path-selected-directory))
+                ;; we must trigger that the sources-cache will be updated below
+                (setq update-performed-for-dir ecb-path-selected-directory)
+                )))
           ;; if we have performed at least one update then we must update the
           ;; SOURCES-cache.
           (when update-performed-for-dir
@@ -3343,7 +3375,7 @@ help-text should be printed here."
                        (tree-node-get-data node)))))
           (prog1 str
             (unless no-message
-              (tree-buffer-nolog-message str)))))))
+              (ecb-nolog-message str)))))))
 
 
 (defun ecb-mouse-over-source-node (node &optional window no-message click-force)
@@ -3361,7 +3393,7 @@ the help-text should be printed here."
                    (ecb-get-file-info-text (tree-node-get-data node)))))))
     (prog1 str
       (unless no-message
-        (tree-buffer-nolog-message str)))))
+        (ecb-nolog-message str)))))
 
 
 (defun ecb-mouse-over-history-node (node &optional window no-message click-force)
@@ -3379,7 +3411,7 @@ the help-text should be printed here."
                    (tree-node-get-data node))))))
     (prog1 str
       (unless no-message
-        (tree-buffer-nolog-message str)))))
+        (ecb-nolog-message str)))))
 
 ;; popups
 
@@ -3898,9 +3930,8 @@ So you get a better overlooking. There are three choices:
                       (local-set-key (kbd "C-t")
                                      'ecb-toggle-RET-selects-edit-window)
                       (if (not ecb-running-xemacs)
-                          (define-key tree-buffer-key-map
-                            [mode-line mouse-2]
-                            'ecb-toggle-maximize-ecb-window-with-mouse)))))
+                          (local-set-key [mode-line mouse-2]
+                                         'ecb-toggle-maximize-ecb-window-with-mouse)))))
     ecb-common-tree-buffer-after-create-hook
     ecb-directories-buffer-after-create-hook)
    'ecb-stealth-tasks-after-directories-update
@@ -3950,9 +3981,8 @@ So you get a better overlooking. There are three choices:
                       (local-set-key (kbd "C-t")
                                      'ecb-toggle-RET-selects-edit-window)
                       (if (not ecb-running-xemacs)
-                          (define-key tree-buffer-key-map
-                            [mode-line mouse-2]
-                            'ecb-toggle-maximize-ecb-window-with-mouse)))))
+                          (local-set-key [mode-line mouse-2]
+                                         'ecb-toggle-maximize-ecb-window-with-mouse)))))
     ecb-common-tree-buffer-after-create-hook
     ecb-sources-buffer-after-create-hook)
    'ecb-stealth-tasks-after-sources-update))
@@ -3998,9 +4028,8 @@ So you get a better overlooking. There are three choices:
                       (local-set-key (kbd "C-t")
                                      'ecb-toggle-RET-selects-edit-window)
                       (if (not ecb-running-xemacs)
-                          (define-key tree-buffer-key-map
-                            [mode-line mouse-2]
-                            'ecb-toggle-maximize-ecb-window-with-mouse)))))
+                          (local-set-key [mode-line mouse-2]
+                                         'ecb-toggle-maximize-ecb-window-with-mouse)))))
     ecb-common-tree-buffer-after-create-hook
     ecb-history-buffer-after-create-hook)
    'ecb-stealth-tasks-after-history-update))
