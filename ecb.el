@@ -60,7 +60,7 @@
 ;; The latest version of the ECB is available at
 ;; http://home.swipnet.se/mayhem/ecb.html
 
-;; $Id: ecb.el,v 1.264 2002/12/29 10:15:12 burtonator Exp $
+;; $Id: ecb.el,v 1.265 2003/01/02 14:11:19 berndl Exp $
 
 ;;; Code:
 
@@ -368,7 +368,8 @@ handling directories amd source-files and want it in conjunction with ECB."
   :type 'boolean
   :set (function (lambda (sym val)
                    (set sym val)
-                   (ecb-redraw-layout-full))))
+                   (let ((ecb-redraw-layout-quickly nil))
+                     (ecb-redraw-layout-full)))))
 
 
 (defun ecb-show-sources-in-directories-buffer-p ()
@@ -1507,13 +1508,24 @@ will not be deactivated! See also `ecb-before-activate-hook'."
 See documentation of `ecb-current-buffer-sync' for conditions when
 synchronization takes place and so in turn these hooks are evaluated.
 
+Precondition for such a hook:
+Current buffer is the buffer of the current selected edit-window.
+
+Postcondition for such a hook:
+Point must stay in the same edit-window as before evaluating the hook.
+
 Important note: If `ecb-window-sync' is not nil `ecb-current-buffer-sync' is
 running either every time Emacs is idle or even after every command \(see
 `ecb-window-sync-delay'). So these hooks can be really called very often!
 Therefore each function of this hook should/must check in an efficient way at
 beginning if its task have to be really performed and then do them only if
 really necessary! Otherwise performance of Emacs could slow down
-dramatically!"
+dramatically!
+
+It is strongle recommended that each function added to this hook uses the
+macro `ecb-do-if-buffer-visible-in-ecb-frame' at beginning! See
+`ecb-speedbar-current-buffer-sync' and `ecb-eshell-current-buffer-sync' for
+examples how to use this macro!"
   :group 'ecb-general
   :type 'hook)
 
@@ -4078,7 +4090,8 @@ always the ECB-frame if called from another frame."
 
       ;; now we draw the layout choosen in `ecb-layout'. This function
       ;; acivates at its end also the adviced functions if necessary!
-      (ecb-redraw-layout-full 'no-buffer-sync)
+      (let ((ecb-redraw-layout-quickly nil))
+        (ecb-redraw-layout-full 'no-buffer-sync))
     
       (ecb-with-adviced-functions
        ;; activate the correct edit-window split
