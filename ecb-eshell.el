@@ -287,7 +287,7 @@ that the eshell has more screen space after we execute a command. "
   
 (add-hook 'ecb-current-buffer-sync-hook 'ecb-eshell-current-buffer-sync)
 
-(add-hook 'ecb-redraw-layout-hooks 'ecb-eshell-recenter)
+(add-hook 'ecb-redraw-layout-hook 'ecb-eshell-recenter)
 
 (add-hook 'eshell-pre-command-hook 'ecb-eshell-enlarge)
 

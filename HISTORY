@@ -1,5 +1,17 @@
-Version 1.61:
+Version 1.70:
 -------------
+
+- Now in the ECB-tree-buffers RETURN works like the primary button (already in
+  previous versions) and C-RETURN works like the secondary button (new). For
+  an explanation of primary and secondary see the option
+  ecb-primary-secondary-mouse-buttons. (Klaus)
+
+- New feature: Now the token-display function can be defined separated for
+  each major-mode. Furthermore the token-display for C++ has enhanced,
+  especially for template-classes (but template displaying is first available
+  with semantic > version 14beta13!).
+  For this the option ecb-token-display-function has been completely rewritten
+  and is now incompatible with the old values before ECB 1.61. (Klaus)
 
 - Fixed a bug with mouse-avoidance-mode (only relevant for GNU Emacs 20.X)
   Klaus. 
@@ -568,3 +580,4 @@ Version 0.01 (2000-07-08):
 --------------------------
 
 - Initial version.
+ 
