@@ -424,7 +424,7 @@ highlighting of the methods if `ecb-font-lock-methods' is not nil."
     (let ((n (tree-node-new (semantic-token-name type) 0
 			    (semantic-token-start type))))
       (tree-node-add-child node n)
-      (ecb-add-methods n (semantic-token-type-parts type))))
+      (ecb-add-types-methods n (semantic-token-type-parts type))))
   (let ((methods (semantic-find-nonterminal-by-token 'function token)))
      (if ecb-sort-methods
  	(setq methods (sort methods (lambda(a b)
