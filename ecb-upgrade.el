@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-upgrade.el,v 1.94 2004/11/26 16:19:51 berndl Exp $
+;; $Id: ecb-upgrade.el,v 1.95 2004/11/30 18:41:15 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -159,7 +159,7 @@
 
 ;; IMPORTANT: The version-number is auto-frobbed from the Makefile. Do not
 ;; change it here!
-(defconst ecb-version "2.30"
+(defconst ecb-version "2.30.1"
   "Current ECB version.")
 
 (eval-when-compile
@@ -700,10 +700,14 @@ its current defcustom-definition."
   "Only not nil if ECB has upgraded the options to a newer options-version
 after an ECB-upgrade.")
 
+(defun ecb-options-version=ecb-version-p ()
+  "Return not nil if the saved value of `ecb-options-version' is equal to
+`ecb-version'."
+  (equal (ecb-option-get-value 'ecb-options-version 'saved-value)
+         ecb-version))
+
 (defun ecb-store-current-options-version ()
-  (when (not (equal (ecb-option-get-value 'ecb-options-version
-                                          'saved-value)
-                    ecb-version))
+  (when (not (ecb-options-version=ecb-version-p))
     (setq ecb-old-ecb-version (ecb-option-get-value 'ecb-options-version
                                                     'saved-value))
     (ecb-customize-save-variable 'ecb-options-version ecb-version)))
@@ -823,6 +827,18 @@ Note: This function upgrades only the renamed but not the incompatible options
 (defun ecb-not-compatible-or-renamed-options-detected ()
   (or ecb-not-compatible-options ecb-renamed-options))
 
+(defun ecb-upgrade-make-copy-of-custom-file ()
+  "Make a backup of the file returned by `ecb-custom-file' in the same directory."
+  (let* ((file (ecb-custom-file))
+         (backup-file-base (format "%s.before_ecb_%s" file ecb-version))
+         (backup-file backup-file-base)
+         (i 0))
+    (while (file-exists-p backup-file)
+      (setq i (1+ i))
+      (setq backup-file (format "%s__%d" backup-file-base i)))
+    (copy-file file backup-file)))
+      
+
 (defun ecb-display-upgraded-options ()
   "Display a information-buffer which options have been upgraded or reset.
 Offers two buttons where the user can decide if the upgraded options should
@@ -832,7 +848,15 @@ killed.
 If saving is possible this command display where the options would be saved.
 It is that file Emacs uses to save customize-settings. This file is
 \"computed\" from the settings in `custom-file' and `user-init-file' \(see the
-documentation of these variables)."
+documentation of these variables).
+
+ECB automatically makes a backup-file of that file which will be modified by
+storing the upgraded rsp. renamed ECB-options. This backup file gets a unique
+name by adding a suffix \".before_ecb_<version>\" to the name of the modified
+file. If such a file already exists ECB adds a unique number to the end of the
+filename to make the filename unique. This is a safety mechanism if something
+fails during storing the upgraded options, so you never lose the contents of
+your customization-file!"
   (interactive)
   (if (ecb-not-compatible-or-renamed-options-detected)
       (progn
@@ -848,10 +872,12 @@ documentation of these variables)."
                                    (concat (ecb-custom-file) " is not writeable by Emacs!")
                                  "does not exist!"))
                 (widget-insert "\nPlease ensure that the new values will be stored!\n\n"))
-            (if (not (get 'ecb-display-upgraded-options
-                          'ecb-upgrades-saved))
-                (widget-insert (format "Click on [Save] to save all changed options into %s.\n"
-                                       (ecb-custom-file)))))
+            (when (not (get 'ecb-display-upgraded-options
+                            'ecb-upgrades-saved))
+              (widget-insert (format "Click on [Save] to save all changed options into %s.\n"
+                                     (ecb-custom-file)))
+              (widget-insert (format "This makes a backup of this file unique named with a suffix .before_ecb_%s.\n\n"
+                                     ecb-version))))              
           (widget-insert "Click on [Cancel] to kill this buffer.\n\n")
           (when ecb-not-compatible-options
             (widget-insert "The values of the following options are incompatible with current type.\nECB has tried to transform the old-value to the new type. In cases where\nthis was not possible ECB has reset to the current default-value.")
@@ -913,9 +939,9 @@ documentation of these variables)."
               (widget-insert "\n\n")))
           (widget-insert "If the new values are not what you want please re-customize!")
           (widget-insert "\n\n")
+          (widget-insert "For a list of the most important NEWS call `ecb-display-news-for-upgrade'!\n\n")
+          (widget-insert "\n")
           (when (ecb-custom-file-writeable-p)
-            (widget-insert "For a list of the most important NEWS call `ecb-display-news-for-upgrade'!\n\n")
-            (widget-insert "\n")
             (when (not (get 'ecb-display-upgraded-options
                             'ecb-upgrades-saved))
               ;; Insert the Save button
@@ -926,6 +952,7 @@ documentation of these variables)."
                                        (if (get 'ecb-display-upgraded-options
                                                 'ecb-upgrades-saved)
                                            (ecb-info-message "Upgraded options are already saved!")
+                                         (ecb-upgrade-make-copy-of-custom-file)
                                          (dolist (option ecb-not-compatible-options)
                                            (ecb-customize-save-variable
                                             (car option) (symbol-value (car option))))
@@ -940,18 +967,61 @@ documentation of these variables)."
                                          (ecb-store-current-options-version)
                                          (ecb-info-message "Upgraded options saved!")))
                              "Save")
-              (widget-insert " "))
-            ;; Insert the Cancel button
-            (widget-create 'push-button
-                           :button-keymap ecb-upgrade-button-keymap ; XEmacs
-                           :keymap ecb-upgrade-button-keymap ; Emacs
-                           :notify (lambda (&rest ignore)
-                                     (kill-buffer (current-buffer)))
-                           "Cancel"))
+              (widget-insert " ")))
+          ;; Insert the Cancel button
+          (widget-create 'push-button
+                         :button-keymap ecb-upgrade-button-keymap ; XEmacs
+                         :keymap ecb-upgrade-button-keymap ; Emacs
+                         :notify (lambda (&rest ignore)
+                                   (kill-buffer (current-buffer)))
+                         "Cancel")
           (widget-setup)
           (goto-char (point-min)))
         t)
-    (message "There are no incompatible or renamed options!")
+    ;; now we display only the choice to save the ecb-options-version
+    (when (not (ecb-options-version=ecb-version-p))
+      (with-current-buffer (get-buffer-create "*ECB upgraded options*")
+        (switch-to-buffer (current-buffer))
+        (kill-all-local-variables)
+        (let ((inhibit-read-only t))
+          (erase-buffer))
+        (widget-insert "There are no incompatible or renamed options. Your settings are correct.\n")
+        (widget-insert (format "But ECB must store that the ecb-settings are uptodate with %s.\n\n"
+                               ecb-version))
+        (if (not (ecb-custom-file-writeable-p))
+            (progn
+              (widget-insert "Emacs can not save the `ecb-options-version' because the needed file\n")
+              (widget-insert (if (ecb-custom-file)
+                                 (concat (ecb-custom-file) " is not writeable by Emacs!")
+                               "does not exist!"))
+              (widget-insert "\nPlease ensure that `ecb-options-version' will be saved!\n\n"))
+          (widget-insert (format "Click on [Save] to save `ecb-options-version' into %s.\n"
+                                     (ecb-custom-file)))
+          (widget-insert (format "This makes a backup of this file unique named with a suffix .before_ecb_%s.\n\n"
+                                 ecb-version)))
+        (widget-insert "Click on [Cancel] to kill this buffer.\n\n")
+        (widget-insert "For a list of the most important NEWS call `ecb-display-news-for-upgrade'!\n\n")
+        (widget-insert "\n")
+        (when (ecb-custom-file-writeable-p)
+          ;; Insert the Save button
+          (widget-create 'push-button
+                         :button-keymap ecb-upgrade-button-keymap ; XEmacs
+                         :keymap ecb-upgrade-button-keymap ; Emacs
+                         :notify (lambda (&rest ignore)
+                                   (ecb-upgrade-make-copy-of-custom-file)
+                                   (ecb-store-current-options-version)
+                                   (ecb-info-message "ecb-options-version saved!"))
+                         "Save")
+          (widget-insert " "))
+        ;; Insert the Cancel button
+        (widget-create 'push-button
+                       :button-keymap ecb-upgrade-button-keymap ; XEmacs
+                       :keymap ecb-upgrade-button-keymap ; Emacs
+                       :notify (lambda (&rest ignore)
+                                 (kill-buffer (current-buffer)))
+                       "Cancel")
+        (widget-setup)
+        (goto-char (point-min))))
     nil))
 
 (defun ecb-display-news-for-upgrade (&optional full-news)
@@ -1294,6 +1364,10 @@ Note: Normally this URL should never change but who knows..."
 
 (defconst ecb-download-buffername " *ecb-download*")
 
+(defvar ecb-wget-path nil)
+(defvar ecb-tar-path nil)
+(defvar ecb-gzip-path nil)
+
 ;; Klaus: Arrghhhhhhhhhhhhhhh... the cygwin version of tar does not accept
 ;; args in windows-style file-format :-( Therefore we convert it with cygpath.
 ;; Cause of the need of wget we can assume the the user has cygwin installed!
@@ -1582,7 +1656,7 @@ activated."
          (downloaded-filename (concat download-install-dir
                                       package "-download.tar.gz"))
          (success t)
-         process-result)
+         (process-result nil))
 
     ;; a first simple check if the new version is already installed
     
@@ -1607,12 +1681,22 @@ activated."
 
       ;; Emacs 20.X does not autoload executable-find :-(
       (require 'executable)
-      (if (not (and (executable-find
+      (setq ecb-wget-path
+            (or ecb-wget-path
+                (or (executable-find
                      (if (eq system-type 'windows-nt) "wget.exe" "wget"))
-                    (executable-find
+                    (read-file-name "Insert full path to wget: " nil nil t))))
+      (setq ecb-tar-path
+            (or ecb-tar-path
+                (or (executable-find
                      (if (eq system-type 'windows-nt) "tar.exe" "tar"))
-                    (executable-find
-                     (if (eq system-type 'windows-nt) "gzip.exe" "gzip"))))
+                    (read-file-name "Insert full path to tar: " nil nil t))))
+      (setq ecb-gzip-path
+            (or ecb-gzip-path
+                (or (executable-find
+                     (if (eq system-type 'windows-nt) "gzip.exe" "gzip"))
+                    (read-file-name "Insert full path to gzip: " nil nil t))))
+      (if (not (and ecb-wget-path ecb-tar-path ecb-gzip-path))
           (ecb-error
            (concat "Cannot find wget, tar and gzip. These utilities are needed "
                    "to download and install ECB or required packages."))
@@ -1626,9 +1710,7 @@ activated."
                         0.1
                         (concat "Downloading new " package)
                         "done"
-                        (if (eq system-type 'windows-nt)
-                            "wget.exe"
-                          "wget")
+                        ecb-wget-path
                         nil
                         ecb-download-buffername
                         nil
@@ -1664,7 +1746,7 @@ activated."
         (when success
           (message "Uncompressing new %s..." package)
           (setq process-result
-                (shell-command-to-string (concat "gzip -d " downloaded-filename)))
+                (shell-command-to-string (concat ecb-gzip-path " -d " downloaded-filename)))
           (when (> (length process-result) 0)
             (setq success nil)
             (with-output-to-temp-buffer "*ECB-uncompressing-failure*"
@@ -1680,7 +1762,7 @@ activated."
           (message "Unpacking new %s..." package)
           (setq process-result
                 (shell-command-to-string
-                 (concat "tar -C "
+                 (concat ecb-tar-path " -C "
                          (ecb-create-shell-file-argument download-install-dir)
                          " -xf "
                          (ecb-create-shell-file-argument
@@ -1714,8 +1796,12 @@ for details about using \"wget\"."
         (version-list nil))
 
     (require 'executable)
-    (if (not (executable-find
-              (if (eq system-type 'windows-nt) "wget.exe" "wget")))
+    (setq ecb-wget-path
+          (or ecb-wget-path
+              (or (executable-find
+                   (if (eq system-type 'windows-nt) "wget.exe" "wget"))
+                  (read-file-name "Insert full path to wget: " nil nil t))))
+    (if (not ecb-wget-path)
         (ecb-error
          (concat "Cannot find wget. This utility is needed "
                  "to get available-package-list."))
@@ -1740,9 +1826,7 @@ for details about using \"wget\"."
                       0.1
                       (concat "Getting list of available versions of package " package)
                       "done"
-                      (if (eq system-type 'windows-nt)
-                          "wget.exe"
-                        "wget")
+                      ecb-wget-path
                       nil
                       ecb-download-buffername
                       nil
