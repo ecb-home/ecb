@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb.el,v 1.363 2004/01/15 13:00:54 berndl Exp $
+;; $Id: ecb.el,v 1.364 2004/01/19 20:03:25 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -271,6 +271,11 @@ command.")
   :group 'ecb
   :prefix "ecb-")
 
+(defgroup ecb-most-important nil
+  "The most important settings of ECB you should know."
+  :group 'ecb
+  :prefix "ecb-")
+
 (defcustom ecb-use-recursive-edit nil
   "*Tell ECB to use a recursive edit.
 If set then it can easily be deactivated by \(keyboard-escape-quit)."
@@ -281,6 +286,7 @@ If set then it can easily be deactivated by \(keyboard-escape-quit)."
   "*Automatically startup ECB when Emacs starts up.
 This should only be true if you always want to run `ecb-activate'."
   :group 'ecb-general
+  :group 'ecb-most-important
   :type 'boolean)
 
 (defcustom ecb-activation-selects-ecb-frame-if-already-active 'ask
@@ -324,6 +330,7 @@ Any auto. activation is only done if the current-frame is unsplitted to avoid
 changing unnecessarily or unintentionally the frame-layout if the user just
 jumps between different windows."
   :group 'ecb-general
+  :group 'ecb-most-important
   :type '(radio :tag "Modes for activation"
                 (const :tag "None" none)
                 (regexp :tag "All except deactivated but not"
@@ -367,6 +374,7 @@ There is one exception from this rule: If the edit-window is splitted and one
 window contains a dired-buffer and a \"ECB-deactivating\"-file is opened via
 dired then opening this file deactivates ECB \(rsp. hides the ECB-windows)."
   :group 'ecb-general
+  :group 'ecb-most-important
   :type '(radio :tag "Modes for deactivation"
                 (const :tag "None" none)
                 (cons :tag "All except activated"
@@ -545,11 +553,13 @@ for future Emacs sessions!"
 If you change this during ECB is activated you must deactivate and activate
 ECB again to take effect."
   :group 'ecb-tree-buffer
+  :group 'ecb-most-important
   :type 'integer)
 
 (defcustom ecb-tree-expand-symbol-before nil
   "*Show the expand symbol before the items in a tree."
   :group 'ecb-tree-buffer
+  :group 'ecb-most-important
   :type 'boolean)
 
 
@@ -603,6 +613,7 @@ used by ECB <= 1.96:
 With both ascii-styles the tree-layout can be affected with the options
 `ecb-tree-indent' and `ecb-tree-expand-symbol-before'."
   :group 'ecb-tree-buffer
+  :group 'ecb-most-important
   :type '(radio (const :tag "Images-style" :value image)
                 (const :tag "Ascii-style with guide-lines" :value ascii-guides)
                 (const :tag "Ascii-style w/o guide-lines" :value ascii-no-guides)))
@@ -661,6 +672,7 @@ ECB-etc data-directory \(the directory returned by \(locate-data-directory
 If you change this during ECB is activated you must deactivate and activate
 ECB again to take effect."
   :group 'ecb-tree-buffer
+  :group 'ecb-most-important
   :type '(list (boolean :tag "Directories buffer")
                (boolean :tag "Sources buffer")
                (boolean :tag "Methods buffer")
@@ -694,6 +706,7 @@ nil then no keys for horizontal scrolling are bound."
 If you change this during ECB is activated you must deactivate and activate
 ECB again to take effect."
   :group 'ecb-tree-buffer
+  :group 'ecb-most-important
   :type 'boolean)
 
 (defcustom ecb-window-sync '(Info-mode dired-mode)
@@ -819,6 +832,7 @@ For every tree-buffer you can define what info should be displayed:
 
 Do NOT set this option directly via setq but use always customize!"
   :group 'ecb-tree-buffer
+  :group 'ecb-most-important
   :set (function (lambda (symbol value)
                    (set symbol value)
                    (if (and (boundp 'ecb-minor-mode)
@@ -910,6 +924,7 @@ mouse-button!
 If you change this during ECB is activated you must deactivate and activate
 ECB again to take effect!"
   :group 'ecb-tree-buffer
+  :group 'ecb-most-important
   :type '(radio (const :tag "Primary: mouse-2, secondary: Ctrl-mouse-2"
                        :value mouse-2--C-mouse-2)
                 (const :tag "Primary: mouse-1, secondary: Ctrl-mouse-1"
@@ -943,6 +958,7 @@ Note: If the tree-buffers are used with the keyboard instead with the mouse
 then this option takes effect too because [RET] is interpreted as primary
 mouse-button and [C-RET] as secondary mouse-button!"
   :group 'ecb-general
+  :group 'ecb-most-important
   :type '(radio (const :tag "Left/topmost edit-window"
                        :value left-top)
                 (const :tag "Last edit-window with point"
@@ -1493,6 +1509,12 @@ value of OTHER-EDIT-WINDOW \(which is a value returned by
   (ecb-select-edit-window)
   (customize-group "ecb"))
 
+(defun ecb-customize-most-important ()
+  "Open a customize-buffer for the most important options of ECB."
+  (interactive)
+  (ecb-select-edit-window)
+  (customize-group "ecb-most-important"))
+
 ;;====================================================
 ;; Mouse functions
 ;;====================================================
@@ -1960,6 +1982,12 @@ That is remove the unsupported :help stuff."
    (list
     "Preferences"
     (ecb-menu-item
+     ["Most important..."
+      (customize-group "ecb-most-important")
+      :active t
+      :help "Customize the most important options"
+      ])
+    (ecb-menu-item
      ["All..."
       (ecb-customize)
       :active t
@@ -2076,12 +2104,12 @@ That is remove the unsupported :help stuff."
        :help "Show the online help of ECB."
        ])
     (ecb-menu-item
-     [ "List of all commands"
+     [ "List of most important options"
        (let ((ecb-show-help-format 'info))
          (ecb-show-help)
-         (Info-goto-node "Command Index"))
+         (Info-goto-node "Most important options"))
        :active t
-       :help "Displays an index of all commands in the online-help."
+       :help "Displays a a list of options which you should know."
        ])
     (ecb-menu-item
      [ "List of all options"
@@ -2090,6 +2118,14 @@ That is remove the unsupported :help stuff."
          (Info-goto-node "Option Index"))
        :active t
        :help "Displays an index of all user-options in the online-help."
+       ])
+    (ecb-menu-item
+     [ "List of all commands"
+       (let ((ecb-show-help-format 'info))
+         (ecb-show-help)
+         (Info-goto-node "Command Index"))
+       :active t
+       :help "Displays an index of all commands in the online-help."
        ])
     (ecb-menu-item
      [ "FAQ"
@@ -2140,30 +2176,6 @@ That is remove the unsupported :help stuff."
       ])
    )
   "Menu for ECB minor mode.")
-
-;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: Modeline should display some
-;; states of ECB:
-;; - visibility of ecb-windows: v|h (state: ecb-windows-hidden)
-;; - auto-expand-state of the methods-buffer: a|- (state: ecb-auto-expand-tag-tree)
-;; - is a durable compile-window used: c|- (state: ecb-compile-window-height)
-;; - scroll-other-window-scrolls-compwin: se|sc (ScrollEdit|ScrollComp)
-;;   (state: ecb-scroll-other-window-scrolls-compile-window)
-;; - ....
-;; An Example: " ECB[h|a|c|se]" would mean that the ECB-windows are hidden,
-;; methods-buffer will be auto-expanded, a compile-window is used (maybe
-;; hidden) and scroll-other-window will scroll always the next edit-window. We
-;; should add a new option, where the user can set which states he want to be
-;; displayed in the modeline. For each of the states above we need an internal
-;; state-variable (should be there in most cases (e.g. ecb-windows-hidden). We
-;; have a format-string which has %-sequences for each state. The function
-;; ecb-minor-mode-display-update updates the variable ecb-minor-mode-display
-;; which is used in the modeline. Always any of the states changes the changer
-;; MUST call ecb-minor-mode-display-update. I think this way (or something
-;; similar) we can implement that.
-(defvar ecb-minor-mode-display nil)
-(defvar ecb-minor-mode-display-format-string "%s[%s%s%s%s]")
-(defun ecb-minor-mode-display-update ()
-  )
 
 (defun ecb-add-to-minor-modes ()
   "Does all necessary to add ECB as a minor mode with current values of
@@ -2276,6 +2288,7 @@ macro must be written explicitly, as in \"C-c SPC\".
 
   * The `^' notation for control characters also works:  ^M = C-m."
   :group 'ecb-general
+  :group 'ecb-most-important
   :type '(cons (choice :tag "Common prefix-key"
                        (const :tag "No common prefix-key" :value nil)
                        (string :tag "Prefix-key" :value "C-c ."))
@@ -2658,7 +2671,7 @@ has been deactivated. Do not set this variable!")
             (add-hook 'ediff-quit-hook 'ecb-ediff-quit-hook t)
             ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: suspending ediff and
             ;; especially reactivating does currently not really work good...
-;;             (add-hook 'ediff-suspend-hook 'ecb-ediff-quit-hook t)
+            ;; (add-hook 'ediff-suspend-hook 'ecb-ediff-quit-hook t)
             (add-hook 'ediff-before-setup-hook
                       'ecb-ediff-before-setup-hook)
             
@@ -2950,8 +2963,11 @@ does all necessary after finishing ediff."
 
               ;; now we restore the edit-windows as before the deactivation
               ;; (All other advices are already disabled!)
-              (ecb-with-original-permanent-functions
-               (ecb-restore-edit-area))
+              (if (= (length edit-win-data-before-redraw)
+                     (ecb-edit-area-creators-number-of-edit-windows))
+                  (ecb-with-original-permanent-functions
+                   (ecb-restore-edit-area))
+                (ecb-edit-area-creators-init))
               
               (setq edit-win-list-after-redraw (ecb-canonical-edit-windows-list))
 
@@ -3198,7 +3214,7 @@ changed there should be no performance-problem!"
                          (ecb-hide-ecb-windows)
                        (ecb-deactivate)))))))))))
   
-(add-hook 'post-command-hook 'ecb-handle-major-mode-activation)
+;; (add-hook 'post-command-hook 'ecb-handle-major-mode-activation)
 
 (add-hook 'emacs-startup-hook 'ecb-auto-activate-hook)
 

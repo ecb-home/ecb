@@ -24,7 +24,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-method-browser.el,v 1.11 2004/01/14 14:01:10 berndl Exp $
+;; $Id: ecb-method-browser.el,v 1.12 2004/01/19 20:03:26 berndl Exp $
 
 ;;; Commentary:
 
@@ -230,6 +230,7 @@ displaying the tags.
 This options takes only effect for semantic-sources - means sources supported
 by semantic!"
   :group 'ecb-methods
+  :group 'ecb-most-important
   :set (function (lambda (symbol value)
 		   (set symbol value)
 		   (ecb-clear-tag-tree-cache)))
@@ -310,6 +311,7 @@ specifier-string is removed from the display.
 This options takes only effect for semantic-sources - means sources supported
 by semantic!"
   :group 'ecb-methods
+  :group 'ecb-most-important
   :set (function (lambda (symbol value)
 		   (set symbol value)
 		   (ecb-clear-tag-tree-cache)))
@@ -383,6 +385,7 @@ cons-cells:
 This options takes only effect for semantic-sources - means sources supported
 by semantic!"
   :group 'ecb-methods
+  :group 'ecb-most-important
   :type '(repeat (cons (symbol :tag "Major-mode")
                        (radio (const :tag "Expand all type-specifiers"
                                      :value all-specifiers)
@@ -610,6 +613,7 @@ A symbol describing how to sort the tags of this type:
 This options takes only effect for semantic-sources - means sources supported
 by semantic!"
   :group 'ecb-methods
+  :group 'ecb-most-important
   :set (function (lambda (symbol value)
 		   (set symbol value)
 		   (ecb-clear-tag-tree-cache)))
@@ -854,6 +858,7 @@ key-bindings only for the methods-buffer of ECB."
 See also `ecb-non-semantic-parsing-function'."
   :group 'ecb-general
   :group 'ecb-non-semantic
+  :group 'ecb-most-important
   :type 'boolean)
 
 

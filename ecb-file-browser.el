@@ -23,7 +23,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-file-browser.el,v 1.8 2004/01/14 14:01:11 berndl Exp $
+;; $Id: ecb-file-browser.el,v 1.9 2004/01/19 20:03:26 berndl Exp $
 
 ;;; Commentary:
 
@@ -84,6 +84,7 @@
 Each path can have an optional alias that is used as it's display name. If no
 alias is set, the path is used as display name."
   :group 'ecb-directories
+  :group 'ecb-most-important
   :initialize 'custom-initialize-default
   :set (function (lambda (symbol value)
 		   (set symbol value)
@@ -258,6 +259,7 @@ entries.
 Please note: If you want your home-dir being cached then you MUST NOT use
 \"~\" because ECB tries always to match full path-names!"
   :group 'ecb-directories
+  :group 'ecb-most-important
   :type `(repeat (cons (regexp :tag "Directory-regexp")
                        (integer :tag "Filenumber threshold" :value 1000))))
 
@@ -389,6 +391,7 @@ combination can be defined.
 Tips for the directory- and file-regexps: \"$^\" matches no files/directories,
 \".*\" matches all files/directories."
   :group 'ecb-sources
+  :group 'ecb-most-important
   :type '(repeat (cons :tag "Directory file-spec"
                        (regexp :tag "Directory regexp")
                        (choice :tag "Files to display"

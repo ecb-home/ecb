@@ -170,6 +170,9 @@ Usage
 
 Call "M-x ecb-activate" to activated ECB.
 
+Call "M-x ecb-customize-most-important" to get a list of the most important
+options of ECB. These are options you should at least know that they exist.
+
 Call "M-x ecb-show-help" to get a detailed online-help for ECB. If you are
 using ECB the first time you should read the online help accurately!
 

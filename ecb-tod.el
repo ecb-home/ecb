@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-tod.el,v 1.15 2003/11/04 17:39:40 berndl Exp $
+;; $Id: ecb-tod.el,v 1.16 2004/01/19 20:03:26 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -83,7 +83,7 @@
     "Narrow the source-buffer to the selected tag in the methods-buffer with `ecb-tag-visit-post-actions'."
     "Enable autom. enlarging of the compile-window by select with the option `ecb-compile-window-temporally-enlarge'."
     "Customize with `ecb-compile-window-temporally-enlarge' the situations the compile-window is allowed to enlarge."
-    "Customize the jump-behavior of `other-window' [C-x o] with the option `ecb-other-window-jump-behavior'."
+    "Customize the jump-behavior of `other-window' [C-x o] with the option `ecb-other-window-behavior'."
     "Customize height and width of the ECB-windows with `ecb-windows-height' and `ecb-windows-width'."
     "Define with `ecb-compilation-buffer-names' and `ecb-compilation-major-modes' which buffers are \"compile-buffers\"."
     "Customize all faces used by ECB with the customize-groups `ecb-face-options' and `ecb-faces'."

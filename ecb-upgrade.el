@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-upgrade.el,v 1.56 2004/01/12 17:58:47 berndl Exp $
+;; $Id: ecb-upgrade.el,v 1.57 2004/01/19 20:03:26 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -226,7 +226,8 @@
     (ecb-post-process-semantic-taglist . (ecb-post-process-semantic-taglist
                                           ecb-upgrade-post-process-semantic-taglist))
     (ecb-primary-mouse-jump-destination . (ecb-mouse-click-destination identity))
-    (ecb-split-edit-window . (ecb-split-edit-window-after-start ecb-upgrade-split-edit-window)))
+    (ecb-split-edit-window . (ecb-split-edit-window-after-start ecb-upgrade-split-edit-window))
+    (ecb-other-window-jump-behavior . (ecb-other-window-behavior ecb-upgrade-other-window-jump-behavior)))
   "Alist of all options which should be upgraded for current ECB-version.
 There are several reasons why an option should be contained in this alist:
 a) An old option has just be renamed in current-ECB version but has still the
@@ -487,6 +488,12 @@ The car is the old option symbol and the cdr is a 2-element-list with:
       'before-activation
     old-val))
 
+(defun ecb-upgrade-other-window-jump-behavior (old-val)
+  (if (equal old-val 'all)
+      'all
+    (ecb-option-get-value 'ecb-other-window-behavior
+                          'standard-value)))
+
 ;; ----------------------------------------------------------------------
 ;; internal functions. Dot change anything below this line
 ;; ----------------------------------------------------------------------
@@ -518,7 +525,7 @@ true:
    + the type of the value of OLD-OPTION is not compatible with the current
      type of OLD-OPTION \(this prevents from doing an upgrade twice!)
    or
-   + OLD-OPTION is not a bound and valid option in current ECB and
+   + OLD-OPTION is not a valid option in current ECB and
    + The related new-option `ecb-upgradable-option-alist' is not already
      customized, i.e. the 'saved-value of new-option is nil.
 
@@ -539,7 +546,7 @@ result-list!"
     (when (and upgrade-elem
                (or (and (equal old-option (nth 0 upgrade-elem))
                         (not (ecb-option-compatible-p old-option)))
-                   (and (not (boundp old-option))
+                   (and (not (member old-option ecb-all-options))
                         (null (get (nth 0 upgrade-elem) 'saved-value))))
                (get old-option 'saved-value))
       ;; try to transform the old-value in the new type.
@@ -577,28 +584,35 @@ compatible value of this option.
 This option is evaluated by `ecb-upgrade-not-compatible-options' and
 `ecb-display-upgraded-options'.")
 
+
+(defvar ecb-all-options nil)
+
+(defun ecb-get-all-ecb-options ()
+  (or ecb-all-options
+      (mapatoms
+       (lambda (symbol)
+         (when (and (string-match "ecb-" (symbol-name symbol))
+                    (get symbol 'custom-type))
+           (setq ecb-all-options (cons symbol ecb-all-options)))))))
+
 (defun ecb-check-not-compatible-options ()
   "Check for all ECB-options if their current value is compatible to the
 defined type. If not store it in `ecb-not-compatible-options'."
   (setq ecb-not-compatible-options nil)
 
   ;; get all options of ECB
-  (let ((ecb-options nil))
-    (mapatoms
-     (lambda (symbol)
-       (when (and (string-match "ecb-" (symbol-name symbol))
-                  (get symbol 'custom-type))
-         (setq ecb-options (cons symbol ecb-options)))))
-
-    ;; check if all current values of ECB options match their types. Add not
-    ;; matching options to `ecb-not-compatible-options'.
-    (dolist (option ecb-options)
-      (require 'cus-edit)
-      (unless (ecb-option-compatible-p option)
-        (setq ecb-not-compatible-options
-              (cons (cons option
-                          (symbol-value option))
-                    ecb-not-compatible-options))))))
+;;   (let ((ecb-options nil))
+  (ecb-get-all-ecb-options)
+  
+  ;; check if all current values of ECB options match their types. Add not
+  ;; matching options to `ecb-not-compatible-options'.
+  (dolist (option ecb-all-options)
+    (require 'cus-edit)
+    (unless (ecb-option-compatible-p option)
+      (setq ecb-not-compatible-options
+            (cons (cons option
+                        (symbol-value option))
+                  ecb-not-compatible-options)))))
 
 (defun ecb-upgrade-not-compatible-options ()
   "Upgrade all not anymore compatible options of `ecb-not-compatible-options'.
@@ -638,6 +652,7 @@ Note: This function upgrades only the renamed but not the incompatible options
   (when (not (ecb-package-version-list<
               (ecb-package-version-str2list ecb-version)
               (ecb-package-version-str2list ecb-options-version)))
+    (ecb-get-all-ecb-options)
     (dolist (option ecb-upgradable-option-alist)
       ;; perform only an upgrade if the option is not contained in
       ;; `ecb-not-compatible-options' too because then ECB has auto.

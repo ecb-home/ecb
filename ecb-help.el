@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-help.el,v 1.101 2003/11/13 18:53:41 berndl Exp $
+;; $Id: ecb-help.el,v 1.102 2004/01/19 20:03:26 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -75,6 +75,7 @@ used.
 Note: If you got ECB as a standard XEmacs-package maybe the
 HTML-online-documentation is not included."
   :group 'ecb-help
+  :group 'ecb-most-important
   :type '(choice :tag "Online-help format" :menu-tag "Online-help format"
                  (const :tag "Info" :value info)
                  (const :tag "Html" :value html)))
