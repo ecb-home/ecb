@@ -144,7 +144,8 @@
 	      ;; if we have changed the initial value regardless if ECB is
 	      ;; activated or not.
 	      (when (and (boundp 'ecb-activated)
-                         ecb-activated)
+                         ecb-activated
+                         (frame-live-p ecb-frame))
                 (let ((curr-frame (selected-frame)))
                   (select-frame ecb-frame)
 		  (ecb-redraw-layout)
@@ -452,6 +453,27 @@ done.")
         ecb-edit-window nil
         ecb-last-edit-window-with-point nil
         ecb-compile-window))
+
+(defadvice delete-frame (around ecb)
+  "If FRAME is equal to the ECB frame then the user will be asked if he want
+to proceed. If yes then ECB will be deactivated before deleting FRAME. If ECB
+is not activated or FRAME is not equal the ECB-frame then this advice is
+either not activated or it behaves exactly like the original version!"
+  (let ((frame (or (ad-get-arg 0) (selected-frame))))
+    (if (and ecb-activated
+             (equal frame ecb-frame))
+        (if (yes-or-no-p "Attempt to delete the ECB-frame. ECB will be dactivated! Proceed? ")
+            (ecb-deactivate)) ;; deletes also the ecb-frame if not the only frame
+      ad-do-it)))
+
+(defun ecb-enable-delete-frame-advice ()
+  (ad-enable-advice 'delete-frame 'around 'ecb)
+  (ad-activate 'delete-frame))
+
+(defun ecb-disable-delete-frame-advice ()
+  (ad-disable-advice 'delete-frame 'around 'ecb)
+  (ad-activate 'delete-frame))
+
 
 ;; =========== intelligent window functions ==========================
 

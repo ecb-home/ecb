@@ -1371,6 +1371,7 @@ always the ECB-frame if called from another frame."
     (ecb-initialize-layout)
 
     ;; set the ecb-frame
+    (ecb-enable-delete-frame-advice)
     (if ecb-new-ecb-frame
         (progn
           (run-hooks 'ecb-activate-before-new-frame-created-hook)
@@ -1504,6 +1505,7 @@ always the ECB-frame if called from another frame."
     
     ;; deactivating the adviced functions
     (ecb-activate-adviced-functions nil)
+    (ecb-disable-delete-frame-advice)
 
     ;; restore the old compilation-window-height
     (setq compilation-window-height ecb-old-compilation-window-height)

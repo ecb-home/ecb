@@ -1,6 +1,11 @@
 Version 1.30 (???):
 -------------------
 
+- The user must now confirm if he tries to delete the ECB frame. If he wants
+  to proceed then ECB will be first deactivated before deleting the frame.
+  This works for all ways to delete a frame (shortcut, window-manager-button,
+  ...). (Klaus)
+
 - ECB now optionally create its own frame when activated. See the new option
   'ecb-new-ecb-frame'. (Klaus)
 
