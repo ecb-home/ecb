@@ -236,8 +236,6 @@ that the eshell has more screen space after we execute a command. "
 
 (add-hook 'eshell-pre-command-hook 'ecb-eshell-resize)
 
-(define-key ecb-mode-map "\C-c.e" 'ecb-eshell-goto-eshell)
-
 (provide 'ecb-eshell)
 
 ;;; ecb-eshell.el ends here
