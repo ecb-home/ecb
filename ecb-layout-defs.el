@@ -19,6 +19,8 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
+;; $Id: ecb-layout-defs.el,v 1.11 2003/01/29 14:36:40 berndl Exp $
+
 ;;; Commentary:
 ;;
 ;; Contains all layout definitions for ECB

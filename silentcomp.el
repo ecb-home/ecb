@@ -22,6 +22,8 @@
 ;; the Free Software Foundation, Inc., 59 Temple Place - Suite 330,
 ;; Boston, MA 02111-1307, USA.
 
+;; $Id: silentcomp.el,v 1.2 2003/01/29 14:36:39 berndl Exp $
+
 ;;; Location
 
 ;; The latest version of this package is always available at

@@ -44,6 +44,8 @@
 ;; information. For example graphical debuggers (like JDEbug of JDEE) could be
 ;; made this way.
 
+;; $Id: ecb-examples.el,v 1.6 2003/01/29 14:36:40 berndl Exp $
+
 ;;; Code
 
 ;; ---------------------------------------------------------------------------
