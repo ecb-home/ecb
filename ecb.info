@@ -2967,41 +2967,78 @@ Group ecb-face-options
 This group contains the following options:
 
  - User Option: directories-general-face
-   Basic face for the ECB directories buffer. It큦 recommended to define here
-   the font-family, the font-size, the basic color etc.
+   Basic face for the ECB directories buffer. This defines the basic face the
+   whole directory buffer should displayed with. If the face
+   `ecb-default-general-face' is used then the display of all
+   ECB-tree-buffers can be changed by modifying only the face
+   `ecb-default-general-face'.
+
+   Changes take first effect after finishing and reactivating ECB!
 
  - User Option: directory-face
-   Define face used for highlighting current directory in the directories
-   buffer.
+   Face used for highlighting current directory in the directories buffer. If
+   the face `ecb-default-highlight-face' is used then the display of all
+   ECB-tree-buffers can be changed by modifying only the face
+   `ecb-default-highlight-face'.
+
+   Changes take first effect after finishing and reactivating ECB!
 
  - User Option: history-face
-   Define face used for highlighting current history-entry in the history
-   buffer.
+   Face used for highlighting current history-entry in the history buffer. If
+   the face `ecb-default-highlight-face' is used then the display of all
+   ECB-tree-buffers can be changed by modifying only the face
+   `ecb-default-highlight-face'.
+
+   Changes take first effect after finishing and reactivating ECB!
 
  - User Option: history-general-face
-   Basic face for the ECB history buffer. It큦 recommended to define here the
-   font-family, the font-size, the basic color etc.
+   Basic face for the ECB directory buffer. This defines the basic face the
+   whole history buffer should displayed with. If the face
+   `ecb-default-general-face' is used then the display of all
+   ECB-tree-buffers can be changed by modifying only the face
+   `ecb-default-general-face'.
+
+   Changes take first effect after finishing and reactivating ECB!
 
  - User Option: method-face
-   Define face used for highlighting current method, class or variable in the
-   methods buffer.
+   Face used for highlighting current method, class or variable in the
+   methods buffer. If the face `ecb-default-highlight-face' is used then the
+   display of all ECB-tree-buffers can be changed by modifying only the face
+   `ecb-default-highlight-face'.
+
+   Changes take first effect after finishing and reactivating ECB!
 
  - User Option: methods-general-face
-   Basic face for the ECB methods buffer. It큦 recommended to define here the
-   font-family, the font-size, the basic color etc.
+   Basic face for the ECB methods buffer. This defines the basic face the
+   whole methods buffer should displayed with. If the face
+   `ecb-default-general-face' is used then the display of all
+   ECB-tree-buffers can be changed by modifying only the face
+   `ecb-default-general-face'.
+
+   Changes take first effect after finishing and reactivating ECB!
 
  - User Option: source-face
-   Define face used for highlighting current source in the sources buffer.
+   Face used for highlighting current source in the sources buffer. If the
+   face `ecb-default-highlight-face' is used then the display of all
+   ECB-tree-buffers can be changed by modifying only the face
+   `ecb-default-highlight-face'.
+
+   Changes take first effect after finishing and reactivating ECB!
 
  - User Option: source-in-directories-buffer-face
-   Define a face for displaying sources in the directories buffer.
+   Face for source files in the directories buffer.
 
  - User Option: sources-general-face
-   Basic face for the ECB sources buffer. It큦 recommended to define here the
-   font-family, the font-size, the basic color etc.
+   Basic face for the ECB sources buffer. This defines the basic face the
+   whole sources buffer should displayed with. If the face
+   `ecb-default-general-face' is used then the display of all
+   ECB-tree-buffers can be changed by modifying only the face
+   `ecb-default-general-face'.
+
+   Changes take first effect after finishing and reactivating ECB!
 
  - User Option: token-header-face
-   Define face used for highlighting the token header after jumping to it by
+   Face used for highlighting the token header after jumping to it by
    clicking onto a node in the methods buffer.
 
 
@@ -3440,6 +3477,9 @@ With these faces you can change the basic attributes easily and fast for ALL
 ECB-tree-buffers. But you are also able to display each ECB-tree-buffer with
 different faces, see the different options for every tree-buffer mentioned
 above.
+
+TODO: Describing in more details about the differences between XEmacs and
+Emacs and what can be problems!
 
 
 File: ecb.info,  Node: Small screens,  Next: Simulating speedbar,  Prev: Changing faces,  Up: Tips and tricks
@@ -4079,37 +4119,37 @@ Node: ecb-methods104872
 Node: ecb-history116740
 Node: ecb-layout118400
 Node: ecb-face-options132183
-Node: ecb-faces133800
-Node: ecb-download137792
-Node: Submitting problem report139001
-Node: Upgrading140364
-Node: Downloading new versions141127
-Ref: Download required packages142884
-Ref: Downloading new versions-Footnote-1143982
-Node: Auto. option-upgrading144031
-Node: User interface144339
-Node: Background information145225
-Node: Tips and tricks148623
-Node: Changing faces149316
-Node: Small screens151411
-Node: Simulating speedbar152805
-Node: Integrating speedbar153614
-Node: Optimize scrolling153880
-Node: Large directories154960
-Node: Using eshell155626
-Node: Elisp programming155816
-Node: List of variables156425
-Node: List of hooks156737
-Node: tree-buffer157235
-Node: Adviced functions158041
-Ref: Adviced functions-Footnote-1158648
-Node: New layouts158719
-Node: Conflicts and bugs158902
-Node: Conflicts159377
-Node: Bugs161833
-Node: FAQ162053
-Node: Command Index166481
-Node: Option Index168598
-Node: Concept Index173952
+Node: ecb-faces135605
+Node: ecb-download139597
+Node: Submitting problem report140806
+Node: Upgrading142169
+Node: Downloading new versions142932
+Ref: Download required packages144689
+Ref: Downloading new versions-Footnote-1145787
+Node: Auto. option-upgrading145836
+Node: User interface146144
+Node: Background information147030
+Node: Tips and tricks150428
+Node: Changing faces151121
+Node: Small screens153323
+Node: Simulating speedbar154717
+Node: Integrating speedbar155526
+Node: Optimize scrolling155792
+Node: Large directories156872
+Node: Using eshell157538
+Node: Elisp programming157728
+Node: List of variables158337
+Node: List of hooks158649
+Node: tree-buffer159147
+Node: Adviced functions159953
+Ref: Adviced functions-Footnote-1160560
+Node: New layouts160631
+Node: Conflicts and bugs160814
+Node: Conflicts161289
+Node: Bugs163745
+Node: FAQ163965
+Node: Command Index168393
+Node: Option Index170510
+Node: Concept Index175864
 
 End Tag Table
