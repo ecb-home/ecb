@@ -159,9 +159,11 @@ beginns with the current search-pattern. If no match is found then nothing is
 done. There are some special keys:
 - \[backspace] and \[delete]: Delete the last character from the search-pattern.
 - \[home]: Delete the complete search-pattern
-- \[end]: Expand to the greates common prefix of the nodes
+- \[end]: Expand either to a complete node if current search-pattern is
+         already unique or expands to the greates common prefix of the nodes.
 For better overlooking the current search-pattern is shown in the echo area.
 After selecting a node with RET the search-pattern is cleared out.
+For this feature see also `ecb-tree-incremental-search'.
 
 For easy jumping to a certain ECB-buffer with the keyboard you should ensure
 that `ecb-other-window-jump-behavior' is set to 'all.

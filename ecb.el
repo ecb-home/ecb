@@ -423,6 +423,14 @@ you must deactivate and activate ECB again to take effect."
   :group 'ecb-general
   :type 'boolean)
 
+(defcustom ecb-tree-incremental-search t
+  "*Enable incremental search in the ECB-tree-buffers. For a detailed
+explanation see the online help section \"Working with the keyboard in the ECB
+buffers\". If you change this during ECB is activated you must deactivate and
+activate ECB again to take effect."
+  :group 'ecb-general
+  :type 'boolean)  
+
 (defcustom ecb-show-node-name-in-minibuffer 'always
   "*Show the name of the item under mouse in minibuffer."
   :group 'ecb-general
@@ -1331,6 +1339,7 @@ with the actually choosen layout \(see `ecb-layout-nr')."
          ecb-truncate-lines
          t
          ecb-tree-indent
+         ecb-tree-incremental-search
          (list (cons 1 ecb-source-in-directories-buffer-face))
          ecb-tree-expand-symbol-before)
         ;; if we want some keys only defined in a certain tree-buffer we
@@ -1355,7 +1364,8 @@ with the actually choosen layout \(see `ecb-layout-nr')."
          (list (cons 0 ecb-sources-menu))
          ecb-truncate-lines
          t
-         ecb-tree-indent))
+         ecb-tree-indent
+         ecb-tree-incremental-search))
       
       (unless (member ecb-methods-buffer-name curr-buffer-list)
         (tree-buffer-create
@@ -1368,6 +1378,7 @@ with the actually choosen layout \(see `ecb-layout-nr')."
          ecb-truncate-lines
          t
          ecb-tree-indent
+         ecb-tree-incremental-search
 	 nil
 ;;         (list (cons 0 t))
          ecb-tree-expand-symbol-before)
@@ -1383,7 +1394,8 @@ with the actually choosen layout \(see `ecb-layout-nr')."
          (list (cons 0 ecb-history-menu))
          ecb-truncate-lines
          t
-         ecb-tree-indent)))
+         ecb-tree-indent
+         ecb-tree-incremental-search)))
     
     ;; we need some hooks
     (add-hook 'semantic-after-toplevel-bovinate-hook

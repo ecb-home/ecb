@@ -8,8 +8,9 @@ Version 1.30 (???):
 - ECB windows are now updated when saving new files and deleting files. (Jesper)
 
 - incremental-search in every tree-buffer for easier and faster selecting
-  nodes with the keyboard (see new function
-  'tree-buffer-incremental-node-search') for more details. (Klaus)
+  nodes with the keyboard (see new option `ecb-tree-incremental-search' and
+  new function 'tree-buffer-incremental-node-search') for more details.
+  (Klaus)
 
 - ecb-redraw-layout now restores both edit window buffers and the edit window
   start. (Jesper)
