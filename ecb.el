@@ -54,7 +54,7 @@
 ;; The latest version of the ECB is available at
 ;; http://home.swipnet.se/mayhem/ecb.html
 
-;; $Id: ecb.el,v 1.117 2001/06/24 15:58:34 berndl Exp $
+;; $Id: ecb.el,v 1.118 2001/07/01 15:33:25 creator Exp $
 
 ;;; Code:
 
@@ -320,123 +320,44 @@ the current source-buffer."
   :group 'ecb-methods
   :type 'boolean)
 
-(defcustom ecb-show-method-arguments 'only-type
-  "*Show method argument types and/or names. You have the following
-choices:
-- only-type: Show only the type of the argument
-- type-and-name: Show both type and name
-- nil: Do not show arguments.
-In an untyped language like emacs-lisp show always only the argumentnames
-instead."
-  :group 'ecb-methods
-  :type '(radio (const :tag "Show only type"
-                       :value only-type)
-                (const :tag "Show type and name"
-                       :value type-and-name)
-                (const :tag "Do not show arguments"
-                       :value nil)))
-
-(defcustom ecb-show-method-return-type 'after
-  "*Show method return type. You can specify where the return type
-is displayed:
-- after: <method-name> \(<arguments>) : <return type> \(= UML notation)
-- before: <return type> <method-name> \(<arguments>)"
-  :group 'ecb-methods
-  :type '(radio (const :tag "Display after method \(UML\)"
-                       :value after)
-                (const :tag "Display before method"
-                       :value before)
-                (const :tag "Do not show return type"
-                       :value nil)))
-
-(defcustom ecb-font-lock-methods t
+(defcustom ecb-font-lock-tokens t
   "*Adds font-locking \(means highlighting) to the ECB-method buffer." 
   :group 'ecb-methods
   :type 'boolean)
 
-(defcustom ecb-show-classes 'before
-  "*How to show classes in the methods buffer."
-  :group 'ecb-methods
-  :type '(radio (const :tag "Display before methods"
-                       :value before)
-                (const :tag "Display after methods"
-                       :value after)
-                (const :tag "Do not show classes"
-                       :value nil)))
-
-(defcustom ecb-font-lock-method-faces '(font-lock-function-name-face
-                                        font-lock-type-face
-                                        font-lock-variable-name-face
-                                        font-lock-type-face
-                                        bold
-                                        font-lock-variable-name-face
-                                        font-lock-type-face)
-  "*Specify how to highlight the parts of a method in the method buffer.
-The value must be a list of exactly seven elements each of them either nil
-\(not highlighting this part) or a face for this part. The sequence within the
-list must be \(methodename argumenttype argumentname returntype classtype
-variablename variabletype).
-
-This option takes only effect if `ecb-font-lock-methods' is on."
-  :group 'ecb-methods
-  :type '(list (radio :tag "Method name"
-                      (const :tag "Do not highlight" :value nil)
-                      (face))
-               (radio :tag "Argument type"
-                      (const :tag "Do not highlight" :value nil)
-                      (face))
-               (radio :tag "Argument name"
-                      (const :tag "Do not highlight" :value nil)
-                      (face))
-               (radio :tag "Return type"
-                      (const :tag "Do not highlight" :value nil)
-                      (face))
-               (radio :tag "Class type"
-                      (const :tag "Do not highlight" :value nil)
-                      (face))
-               (radio :tag "Variable name"
-                      (const :tag "Do not highlight" :value nil)
-                      (face))
-               (radio :tag "Variable type"
-                      (const :tag "Do not highlight" :value nil)
-                      (face))))
-
-(defcustom ecb-sort-methods t
-  "*Sort the methods in the methods buffer." 
+(defcustom ecb-sort-tokens t
+  "*Sort the tokens in the methods buffer." 
   :group 'ecb-methods
   :type 'boolean)
 
-(defcustom ecb-method-jump-sets-mark t
-  "*Jumping to a method from the ECB-method buffer now sets the mark
+(defcustom ecb-token-jump-sets-mark t
+  "*Jumping to a token from the ECB-method buffer now sets the mark
 so the user can easily jump back."
   :group 'ecb-methods
   :type 'boolean)
 
-(defcustom ecb-sort-variables t
-  "*Sort the variables in the methods buffer." 
+(defcustom ecb-token-display-method 'language-specific
+  "*How to display tokens in the methods buffer."
   :group 'ecb-methods
-  :type 'boolean)
+  :type '(choice :tag "Token display"
+		 (const :tag "Language specific" language-specific)
+		 (const :tag "UML" uml)))
 
-(defcustom ecb-show-variables 'collapsed
-  "*How to show variables in the methods buffer."
+(defcustom ecb-show-tokens '((include collapsed) (type expanded) (variable collapsed) (function flattened) (rule flattened) (t collapsed))
+  "*How to show tokens in the methods buffer. This variable is a list where each item is a list of a Semantic token type symbol and a symbol which describes how the token type shall be shown:
+- expanded: The tokens are shown in an expanded node.
+- collapsed: The tokens are shown in a collapsed node.
+- flattened: The tokens are added to the parent node.
+- hidden: The tokens are not shown.
+The token type symbol can be any symbol returned from Semantic (type, function, variable, rule, include etc.) or the symbol 't which includes all tokens not specified anywhere else in the list.
+The tokens in the methods buffer are displayed in the order as they appear in this list."
   :group 'ecb-methods
-  :type '(radio (const :tag "Show variables expanded"
-                       :value expanded)
-                (const :tag "Show variables collapsed"
-                       :value collapsed)
-                (const :tag "Do not show variables"
-                       :value nil)))
-
-(defcustom ecb-show-parents 'expanded
-  "*How to show parents (extends and implements) of a class in the
-methods buffer \(see also `ecb-exclude-parents-regexp')."
-  :group 'ecb-methods
-  :type '(radio (const :tag "Show parents expanded"
-                       :value expanded)
-                (const :tag "Show parents collapsed"
-                       :value collapsed)
-                (const :tag "Do not show parents"
-                       :value nil)))
+  :type '(repeat (list (symbol :tag "Token symbol")
+		       (choice :tag "Display type" :value collapsed
+			       (const :tag "Expanded" expanded)
+			       (const :tag "Collapsed" collapsed)
+			       (const :tag "Flattened" flattened)
+			       (const :tag "Hidden" hidden)))))
 
 (defcustom ecb-exclude-parents-regexp nil
   "*Regexp which parent classes should not be shown in the methods buffer
@@ -485,8 +406,8 @@ Therefore the default value is a delay of 0.25 seconds."
 (defvar ecb-method-overlay (make-overlay 1 1)
   "Internal overlay used for the first line of a method.")
 
-(defcustom ecb-highlight-method-header-after-jump 'secondary-selection
-  "*If not nil then highlight the method-header in the source-buffer
+(defcustom ecb-highlight-token-header-after-jump 'secondary-selection
+  "*If not nil then highlight the token line in the source-buffer
 after jumping to this method by clicking in the ECB-method-buffer onto this
 method. If not nil then it must be a face."
   :group 'ecb-methods
@@ -494,7 +415,7 @@ method. If not nil then it must be a face."
                    (set symbol value)
                    (if (or running-xemacs (facep value))
                        (overlay-put ecb-method-overlay 'face value))))
-  :type '(radio (const :tag "No highlighting of method-header" :value nil)
+  :type '(radio (const :tag "No highlighting of token header" :value nil)
                 (face :tag "Face for the highligthing"
                       :value secondary-selection)))
 
@@ -761,188 +682,96 @@ cleared!) ECB by running `ecb-deactivate'."
 (defun ecb-buffer-select (name)
   (set-buffer (get-buffer name)))
 
-(defun ecb-highlight-text (orig-text type)
-  "If `ecb-font-lock-methods' is not nil then dependend to TYPE the face
-specified in `ecb-font-lock-method-faces' is added to TEXT. If either
-`font-lock-mode' in the source-buffer is nil or the face is not defined then
-nothing is done. Returns TEXT."
-  (let ((text (copy-sequence orig-text)))
-    (if (stringp text)
-        (if (and ecb-font-lock-methods font-lock-mode)
-            (let* ((face-option-val (nth type ecb-font-lock-method-faces))
-                   (face (or (and face-option-val
-				  (if running-xemacs
-                                      ;; facep seems not to work correct with
-                                      ;; XEmacs and boundp returns nil for
-                                      ;; faces like bold, italic, underline.
-				      (or (boundp face-option-val)
-                                          (equal face-option-val 'bold)
-                                          (equal face-option-val 'italic)
-                                          (equal face-option-val 'underline))
-				    (facep face-option-val))
-                                  face-option-val)
-                             'default)))
-              (put-text-property 0 (length text) 'face face text)
-              ;; some special heuristic for better handling of the lisp-dialects
-              (when (and (memq major-mode
-                               ecb-language-modes-args-separated-with-space)
-                         (eq type ecb-argumentname)
-                         (not (eq face 'default))
-                         ;; lets look if some special keywords like &optional or :key
-                         ;; are in the text.
-                         (or (string-match "^\\(&[^& \t]+\\)" text)
-                             (string-match "^\\(:[^: \t]+\\)" text)))
-                (put-text-property (match-beginning 1) (match-end 1)
-                                   'face (if (boundp 'font-lock-type-face)
-                                             'font-lock-type-face 'default) text)))))
-    text))
+(defun ecb-find-tokens (token)
+  (cond
+   ((semantic-token-p token) (list token))
+   ((listp token)
+    (let (tokens)
+      (dolist (part token)
+	(setq tokens (append tokens (ecb-find-tokens part))))
+      tokens))))
 
-(defun ecb-get-method-sig (method-token)
-  "Returns the complete method-signature as a string and does also the
-highlighting of the methods if `ecb-font-lock-methods' is not nil."
-  ;; all strings i this method must be build with concat and not with format
-  ;; because format does not preserve text-properties!
-  (let* ((method-type (semantic-token-type method-token))
-         (return-type (ecb-highlight-text
-                       (if (and ecb-show-method-return-type
-                                (> (length method-type) 0))
-                           (if (listp method-type)
-                               (car method-type) method-type)
-                         "")
-                       ecb-returntype))
-         (method-and-args
-          (concat
-           (ecb-highlight-text (semantic-token-name method-token)
-                               ecb-methodname)
-           " ("
-           (if ecb-show-method-arguments
-               (mapconcat
-                (lambda(method-arg-token)
-                  (let ((method-arg-type
-                         (ignore-errors
-                           (semantic-token-type method-arg-token))))
-                    (if method-arg-type
-                        (concat (ecb-highlight-text (if (listp method-arg-type)
-                                                        (car method-arg-type)
-                                                      method-arg-type)
-                                                    ecb-argumenttype)
-                                (ecb-highlight-text
-                                 (if (eq ecb-show-method-arguments 'type-and-name)
-                                     (concat " "
-                                             (if (listp method-arg-token)
-                                                 (car method-arg-token)
-                                               method-arg-token)))
-                                 ecb-argumentname))
-                      ;; there is no type so we probably have an untyped language
-                      ;; like emacs-lisp etc. In such a case we display the
-                      ;; argument-name.
-                      (ecb-highlight-text (if (listp method-arg-token)
-                                              (car method-arg-token)
-                                            method-arg-token)
-                                          ecb-argumentname))))
-                (delete nil (semantic-token-function-args method-token))
-                ;; dependent of the language we separate the args either with a
-                ;; space or with a comma. With this trick there is no need to
-                ;; recognice in lisp-like languages such keywords like &optional to
-                ;; set the commas correct.
-                (if (memq major-mode ecb-language-modes-args-separated-with-space)
-                    " "
-                  ", ")))
-           ")")))
-    ;; now lets build the complete signature
-    (cond ((eq ecb-show-method-return-type 'before)
-           (concat return-type
-                   (if (> (length return-type) 0) " " "")
-                   method-and-args))
-          ((eq ecb-show-method-return-type 'after)
-           (concat method-and-args
-                   (if (> (length return-type) 0) " : " "")
-                   return-type))
-          (t method-and-args))))
-  
-(defun ecb-get-variable-text (var-token)
-  (let ((type (semantic-token-type var-token)))
-    (concat (ecb-highlight-text (semantic-token-name var-token) ecb-variablename)
-            (if type
-                (concat " : " (ecb-highlight-text 
-			       (cond ((semantic-token-p type)
-				      (semantic-prototype-nonterminal type))
-				     (t type))
-			       ecb-variabletype))
-              ""))))
+(defun ecb-add-bucketize-tokens (node tokens)
+  (when tokens
+    (ecb-add-bucketized-tokens
+     node
+     (semantic-bucketize
+      tokens
+      (when ecb-sort-tokens
+	(function
+	 (lambda (items)
+	   (sort items
+		 (function
+		  (lambda(a b)
+		    (string< (semantic-token-name a)
+			     (semantic-token-name b))))))))))))
 
-(defun ecb-add-classes (node token &optional flatten)
-  (let ((children (semantic-find-nonterminal-by-token 'type token)))
-    (dolist (type children)
-      (let ((n (if (and flatten (= 1 (length children)))
-                   node
-                 (tree-node-new (ecb-highlight-text (semantic-token-name type)
-                                                    ecb-classtype)
-                                0 type)))
-	    (parents (delq nil
-                           (mapcar (function
-				    (lambda (p)
-				      (if (or (not p)
-					      (not ecb-exclude-parents-regexp)
-					      (not (string-match
-						    ecb-exclude-parents-regexp p)))
-					  p)))
-                                   (semantic-token-type-parent type)))))
-	(when (and parents ecb-show-parents)
-	  (let ((pn (tree-node-new "[Parents]" 1 nil)))
-	    (dolist (p (if (listp parents) parents (list parents)))
-	      (tree-node-add-child
-	       pn
-	       (tree-node-new (ecb-highlight-text p ecb-classtype) 2 p t)))
-	    (when (eq ecb-show-parents 'expanded)
-	      (tree-node-set-expanded pn t))
-	    (tree-node-add-child n pn)))
-        (unless (and flatten (= 1 (length children)))
-          (tree-node-add-child node n))
-        (ecb-add-tokens n (semantic-token-type-parts type))))))
-  
-(defun ecb-add-methods (node token methods)
-  (if ecb-sort-methods
-      (setq methods (sort methods (lambda(a b)
-                                    (string< (semantic-token-name a)
-                                             (semantic-token-name b))))))
-  (dolist (method methods)
-    (tree-node-add-child node (tree-node-new
-                               (ecb-get-method-sig method) 0
-                               method t))))
+(defun ecb-add-bucketized-tokens (node buckets)
+  (let ((bucket-order (mapcar 'car ecb-show-tokens))
+	(bucket-vector (make-vector (1+ (length ecb-show-tokens)) nil))
+	extra-buckets)
+    (dolist (bucket buckets)
+      (let ((pos (position (semantic-token-token (cadr bucket)) bucket-order)))
+	(if pos
+	    (let ((display (nth pos ecb-show-tokens)))
+	      (unless (eq 'hidden (cadr display))
+		(aset bucket-vector pos (cons (if (eq 'type (car display))
+						  '(type flattened)
+						display)
+					      bucket))))
+	  (setq extra-buckets (cons bucket extra-buckets)))))
+    (let ((i 0))
+      (dolist (display ecb-show-tokens)
+	(when (eq t (car display))
+	  (aset bucket-vector i (list display)))
+	(setq i (1+ i))))
+    (loop for bucket across bucket-vector do
+	  (when bucket
+	    (if (eq t (caar bucket))
+		(dolist (b (nreverse extra-buckets))
+		  (ecb-add-token-bucket node b (cadar bucket)))
+	      (ecb-add-token-bucket node (cdr bucket) (cadar bucket)))))))
 
-(defun ecb-add-variables (node token variables)
-  (when (and ecb-show-variables variables)
-    (let ((var-node node))
-      (when (eq ecb-show-variables 'collapsed)
-        (setq var-node (tree-node-new "[Variables]" 1 nil))
-        (tree-node-add-child node var-node))
-      (if ecb-sort-variables
-          (setq variables (sort variables (lambda(a b)
-                                            (string< (semantic-token-name a)
-                                                     (semantic-token-name b))))))
-      (dolist (var variables)
-        (tree-node-add-child var-node (tree-node-new
-                                       (ecb-get-variable-text var)
-                                       0 var t))))))
-  
-(defun ecb-add-tokens (node token &optional flatten)
+(defun ecb-add-token-bucket (node bucket display &optional node-type node-data)
+  (let ((name (car bucket))
+	(type (semantic-token-token (cadr bucket)))
+	(child-node node))
+    (unless (eq 'hidden display)
+      (unless (eq 'flattened display)
+	(setq child-node (tree-node-new name (if node-type node-type 1) node-data))
+	(tree-node-add-child node child-node)
+	(tree-node-set-expanded child-node (eq 'expanded display)))
+      (dolist (token (cdr bucket))
+	(ecb-add-tokens child-node token)))))
+
+(defun ecb-get-token-type-display (token-type)
+  (let ((display (find token-type ecb-show-tokens :test
+		       (function (lambda (a b) (eq a (car b)))))))
+    (if display
+	(cadr display)
+      (setq display (find t ecb-show-tokens :test
+			  (function (lambda (a b) (eq a (car b))))))
+      (if display
+	  (cadr display)
+	'hidden))))
+
+(defun ecb-add-tokens (node token)
   ;; Semantic 1.4beta2 fix for EIEIO class parts
   ;; They are really strings, but here converted to tokens
-  (if (stringp (car token))
-      (setq token (mapcar (lambda (s) (list s 'variable nil)) token)))
-  (let ((methods (semantic-find-nonterminal-by-token 'function token))
-        (variables (semantic-find-nonterminal-by-token 'variable token)))
-    (setq flatten (and flatten
-                       (not methods)
-                       (not (and variables ecb-show-variables))))
-    (tree-node-set-expanded node t)
-    (when (eq ecb-show-classes 'before)
-      (ecb-add-classes node token flatten))
-    (ecb-add-variables node token variables)
-    (ecb-add-methods node token methods)
-    (when (eq ecb-show-classes 'after)
-      (ecb-add-classes node token flatten))))
+  ;;  (when (stringp (car token))
+  ;;    (setq token (mapcar (lambda (s) (list s 'variable nil)) token)))
+  (if (semantic-token-p token)
+      (let* ((type (semantic-token-token token))
+	     (name
+	      (if (eq 'language-specific ecb-token-display-method)
+		  (semantic-prototype-nonterminal token nil ecb-font-lock-tokens)
+		(semantic-uml-abbreviate-nonterminal token nil ecb-font-lock-tokens))))
+	(if (eq type 'type)
+	  (let ((parts (semantic-token-type-parts token)))
+	    (ecb-add-token-bucket node (list name parts)
+				  (ecb-get-token-type-display 'type) 0 token))
+	  (tree-node-add-child node (tree-node-new name 0 token t))))
+    (ecb-add-bucketize-tokens node (ecb-find-tokens token))))
 
 (defun ecb-expand-tree (path node)
   (catch 'exit
@@ -1132,7 +961,7 @@ function is added to the hook `semantic-after-toplevel-bovinate-hook'."
 		      ;; this works because at call-time of the hooks in
 		      ;; `semantic-after-toplevel-bovinate-hook' the cache is
 		      ;; always either still valid or rebuild.
-                      (semantic-toplevel-get-cache) t)
+                      (semantic-toplevel-get-cache))
       ;; also the whole buffer informations should be preserved!
       (save-excursion
 	(ecb-buffer-select ecb-methods-buffer-name)
@@ -1283,7 +1112,7 @@ OTHER-EDIT-WINDOW."
        (let ((ecb-other-window-jump-behavior 'only-edit))
 	 (other-window 1))))
   (ecb-with-original-functions
-   (find-file ecb-path-selected-source)
+   (find-file filename)
    (pop-to-buffer (buffer-name))))
 
 (defun ecb-tree-node-add-files
@@ -1534,14 +1363,14 @@ Currently the fourth argument TREE-BUFFER-NAME is not used here."
 ;; this mechanism is necessary because tree-buffer creates for mouse releasing
 ;; a new nop-command (otherwise the cursor jumps back to the tree-buffer).
 (defvar ecb-unhighlight-hook-called nil)
-(defun ecb-unhighlight-method-header ()
+(defun ecb-unhighlight-token-header ()
   (let ((key (tree-buffer-event-to-key last-input-event)))
     (when (not (or (and (equal key 'mouse-release)
                         (not ecb-unhighlight-hook-called))
                    (equal key 'mouse-movement)))
-      (if ecb-highlight-method-header-after-jump
+      (if ecb-highlight-token-header-after-jump
           (delete-overlay ecb-method-overlay))
-      (remove-hook 'pre-command-hook 'ecb-unhighlight-method-header)))
+      (remove-hook 'pre-command-hook 'ecb-unhighlight-token-header)))
   (setq ecb-unhighlight-hook-called t))
 
 (defun ecb-method-clicked (node ecb-button shift-mode)
@@ -1552,26 +1381,34 @@ Currently the fourth argument TREE-BUFFER-NAME is not used here."
       ;; Update the tree-buffer with optimized display of NODE
       (tree-buffer-update node))
     (if (= 2 (tree-node-get-type node))
-	(progn
-	  (jde-show-class-source (tree-node-get-data node)))
-      (when (tree-node-get-data node)
-	(ecb-find-file-and-display ecb-path-selected-source
-				   (and (ecb-edit-window-splitted)
-                                        (eq ecb-button 2)))
-	;; let us set the mark so the user can easily jump back.
-	(if ecb-method-jump-sets-mark
-	    (push-mark))
-	;; Semantic 1.4beta2 fix for EIEIO class parts
-	(ignore-errors
-	  (goto-char (semantic-token-start (tree-node-get-data node))))
-        (when ecb-highlight-method-header-after-jump
-          (save-excursion
-            (move-overlay ecb-method-overlay
-                          (tree-buffer-line-beginning-pos)
-                          (tree-buffer-line-end-pos)
-                          (current-buffer)))
-          (setq ecb-unhighlight-hook-called nil)
-          (add-hook 'pre-command-hook 'ecb-unhighlight-method-header))))))
+	(jde-show-class-source (cdr (tree-node-get-data node)))
+      (let ((token (tree-node-get-data node)))
+	(when token
+	  (if (eq 'include (semantic-token-token token))
+	      (progn
+		(set-buffer (get-file-buffer ecb-path-selected-source))
+		(let ((file (semantic-find-dependency token)))
+		  (when (and file (file-exists-p file))
+		    (ecb-find-file-and-display (semantic-find-dependency token)
+					       (and (ecb-edit-window-splitted)
+						    (eq ecb-button 2))))))
+	    (ecb-find-file-and-display ecb-path-selected-source
+				       (and (ecb-edit-window-splitted)
+					    (eq ecb-button 2)))
+	    ;; let us set the mark so the user can easily jump back.
+	    (if ecb-token-jump-sets-mark
+		(push-mark))
+	    ;; Semantic 1.4beta2 fix for EIEIO class parts
+	    (ignore-errors
+	      (goto-char (semantic-token-start token)))
+	    (when ecb-highlight-token-header-after-jump
+	      (save-excursion
+		(move-overlay ecb-method-overlay
+			      (tree-buffer-line-beginning-pos)
+			      (tree-buffer-line-end-pos)
+			      (current-buffer)))
+	      (setq ecb-unhighlight-hook-called nil)
+	      (add-hook 'pre-command-hook 'ecb-unhighlight-token-header))))))))
 
 (defun ecb-get-file-info-text (file)
   (let ((attrs (file-attributes file)))
@@ -1617,8 +1454,11 @@ node in the ECB-window WINDOW."
 
 (defun ecb-mouse-over-method-node (node &optional buffer window)
   (tree-buffer-nolog-message (when (ecb-show-minibuffer-info node window)
-                               (tree-node-get-name node))))
-
+                               (concat (tree-node-get-name node)
+				       (if (tree-node-get-data node)
+					   (concat ", "
+						   (symbol-name (semantic-token-token (tree-node-get-data node))))
+					 "")))))
 
 (defvar ecb-idle-timer-alist nil)
 (defvar ecb-post-command-hooks nil)
