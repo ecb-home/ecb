@@ -26,7 +26,7 @@
 ;; This file is part of the ECB package which can be found at:
 ;; http://home.swipnet.se/mayhem/ecb.html
 
-;; $Id: tree-buffer.el,v 1.53 2001/06/07 19:36:25 berndl Exp $
+;; $Id: tree-buffer.el,v 1.54 2001/06/08 19:38:54 berndl Exp $
 
 ;;; Code:
 
@@ -40,8 +40,15 @@
     ;; XEmacs
     (progn
       (defalias 'tree-buffer-line-beginning-pos 'point-at-bol)
+      (defalias 'tree-buffer-line-end-pos 'point-at-eol)
       (defalias 'tree-buffer-window-display-height 'window-displayed-height)
-      (defalias 'tree-buffer-event-to-key 'event-key)
+      (defun tree-buffer-event-to-key (event)
+        (cond ((button-release-event-p event)
+               'mouse-release)
+              ((button-press-event-p event)
+               'mouse-press)
+              (t
+               (event-key event))))
       (defalias 'tree-buffer-event-window 'event-window)
       (defalias 'tree-buffer-event-point 'event-point)
       (require 'overlay)
@@ -54,13 +61,25 @@
   ;; needed to handle correct mouse avoidance
   (require 'avoid)
   (defalias 'tree-buffer-line-beginning-pos 'line-beginning-position)
+  (defalias 'tree-buffer-line-end-pos 'line-end-position)
   (defun tree-buffer-window-display-height (&optional window)
     (1- (window-height window)))
   (defun tree-buffer-event-window (event)
     (posn-window (event-start event)))
   (defun tree-buffer-event-point (event)
     (posn-point (event-start event)))
-  (defalias 'tree-buffer-event-to-key 'event-basic-type))
+  (defun tree-buffer-event-to-key (event)
+    (let ((type (event-basic-type event)))
+      (cond ((or (equal type 'mouse-1)
+                 (equal type 'mouse-2)
+                 (equal type 'mouse-3))
+             'mouse-release)
+            ((or (equal type 'down-mouse-1)
+                 (equal type 'down-mouse-2)
+                 (equal type 'down-mouse-3))
+             'mouse-press)
+            (t
+             (event-basic-type event))))))
 
 ;; tree-buffer local variables
 (defvar tree-buffer-root nil)

@@ -52,7 +52,7 @@
 ;; The latest version of the ECB is available at
 ;; http://home.swipnet.se/mayhem/ecb.html
 
-;; $Id: ecb.el,v 1.111 2001/06/07 19:36:25 berndl Exp $
+;; $Id: ecb.el,v 1.112 2001/06/08 19:38:54 berndl Exp $
 
 ;;; Code:
 
@@ -475,7 +475,22 @@ If your computer is slow then it could be reasonable to set a value of about
                    (if ecb-activated
                        (ecb-activate-ecb-sync-functions value 'ecb-token-sync))))
   :initialize 'custom-initialize-default)
-                     
+
+(defvar ecb-method-overlay (make-overlay 1 1)
+  "Internal overlay used for the first line of a method.")
+
+(defcustom ecb-highlight-method-header-after-jump 'secondary-selection
+  "*If not nil then highlight the method-header in the source-buffer
+after jumping to this method by clicking in the ECB-method-buffer onto this
+method. If not nil then it must be a face."
+  :group 'ecb-methods
+  :set (function (lambda (symbol value)
+                   (set symbol value)
+                   (if (or running-xemacs (facep value))
+                       (overlay-put ecb-method-overlay 'face value))))
+  :type '(radio (const :tag "No highlighting of method-header" :value nil)
+                (face :tag "Face for the highligthing"
+                      :value secondary-selection)))
 
 (defcustom ecb-tree-indent 2
   "*Indent size for tree buffer. If you change this during ECB is activated
@@ -1460,6 +1475,19 @@ Currently the fourth argument TREE-BUFFER-NAME is not used here."
 			   (and ecb-split-edit-window (eq ecb-button 2))
 			   shift-mode))
 
+;; this mechanism is necessary because tree-buffer creates for mouse releasing
+;; a new nop-command (otherwise the cursor jumps back to the tree-buffer).
+(defvar ecb-unhighlight-hook-called nil)
+(defun ecb-unhighlight-method-header ()
+  (let ((key (tree-buffer-event-to-key last-input-event)))
+    (when (not (or (and (equal key 'mouse-release)
+                        (not ecb-unhighlight-hook-called))
+                   (equal key 'mouse-movement)))
+      (if ecb-highlight-method-header-after-jump
+          (delete-overlay ecb-method-overlay))
+      (remove-hook 'pre-command-hook 'ecb-unhighlight-method-header)))
+  (setq ecb-unhighlight-hook-called t))
+
 (defun ecb-method-clicked (node ecb-button shift-mode)
   (if shift-mode
       (ecb-mouse-over-method-node node)
@@ -1478,7 +1506,15 @@ Currently the fourth argument TREE-BUFFER-NAME is not used here."
 	    (push-mark))
 	;; Semantic 1.4beta2 fix for EIEIO class parts
 	(ignore-errors
-	  (goto-char (semantic-token-start (tree-node-get-data node))))))))
+	  (goto-char (semantic-token-start (tree-node-get-data node))))
+        (when ecb-highlight-method-header-after-jump
+          (save-excursion
+            (move-overlay ecb-method-overlay
+                          (tree-buffer-line-beginning-pos)
+                          (tree-buffer-line-end-pos)
+                          (current-buffer)))
+          (setq ecb-unhighlight-hook-called nil)
+          (add-hook 'pre-command-hook 'ecb-unhighlight-method-header))))))
 
 (defun ecb-get-file-info-text (file)
   (let ((attrs (file-attributes file)))
