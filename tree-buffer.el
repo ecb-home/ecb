@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: tree-buffer.el,v 1.162 2004/12/29 08:36:12 berndl Exp $
+;; $Id: tree-buffer.el,v 1.163 2005/01/03 14:28:05 berndl Exp $
 
 ;;; Commentary:
 
@@ -1935,7 +1935,14 @@ Example for the usage of this macro:
     \(message \"Dir under node: %s\" node-data=dir)))"
   `(eval-and-compile
      (defun ,name (&optional node &rest rest-arg-list)
-       ,docstring
+       ,(concat docstring
+                "\n\n"
+                "This is a generated command intended to be called via the popup-menu of ECB.\n"
+                "The arguments NODE and REST-ARG-LIST can not be inserted in an interactive\n"
+                "way by the end-user but are passed from ECB to this command.\n"
+                "NODE is that node-object for which this command is called. If NODE is nil\n"
+                "then the current node at point in the currently selected tree-buffer is used.\n"
+                "REST-ARG-LIST is a list of zero or more extra arguments passed to this command.")
        (interactive)
        (let ((node (if (and (interactive-p) (null node))
                        (tree-buffer-get-node-at-point)
