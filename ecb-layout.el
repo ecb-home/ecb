@@ -432,12 +432,13 @@ frame-height)."
                        :value half)
                 (number :tag "Height" :value 0.3)))
 
-(defcustom ecb-split-edit-window nil
+(defcustom ecb-split-edit-window t
   "*Sets how and if the edit window should be splitted.
 But be aware: This option determines only if the edit-window should be
 splitted at start-time of ECB."
   :group 'ecb-layout
-  :type '(radio (const :tag "Split horizontally"
+  :type '(radio (const :tag "Split as before ECB-start" :value t)
+                (const :tag "Split horizontally"
                        :value horizontal)
                 (const :tag "Split vertically"
                        :value vertical)
@@ -3449,9 +3450,9 @@ this function the edit-window is selected which was current before redrawing."
           (or (and compile-buffer-before-redraw
                    (ecb-compilation-buffer-p compile-buffer-before-redraw))
               (some (function (lambda (buf)
-                                (and (ecb-compilation-buffer-p buf)
-                                     (not (string= "*Completions*"
-                                                   (buffer-name buf))))))
+                                (and (not (string= "*Completions*"
+                                                   (buffer-name buf)))
+                                     (ecb-compilation-buffer-p buf))))
                     (buffer-list ecb-frame))
               (get-buffer-create "*scratch*"))))
 
