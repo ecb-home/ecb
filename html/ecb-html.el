@@ -21,7 +21,7 @@
 
 ;; Generates ECB HTML pages.
 
-;; $Id: ecb-html.el,v 1.4 2001/04/30 11:30:50 berndl Exp $
+;; $Id: ecb-html.el,v 1.5 2001/05/01 04:27:53 berndl Exp $
 
 ;;; Code:
 
@@ -74,7 +74,8 @@
   (h-doc
    "screenshots.html"
    "ECB Screenshots"
-   (h-img "ecb.png")))
+   (h-img "ecb.png")
+   (h-img "ecb-java.png")))
   
 (defun ecb-html-links()
   (h-doc
