@@ -27,7 +27,7 @@
 *** `switch-to-buffer-other-window' now works more naturally within the
     ECB-frame, especially if a compile-window is used.
 
-*** `ecb-toggle-compile-window' now has a key-binding: [C-c . \]
+*** `ecb-toggle-compile-window' now has a default key-binding: [C-c . \]
 
 ** New option `ecb-sources-exclude-cvsignore' which allows to exclude files from
    being displayed in the sources-buffer if they are contained in a .cvsignore
