@@ -181,7 +181,6 @@ is not available then `find-file' is called."
                 (function (lambda ()
                             (ecb-toggle-compile-window 1))))))
 
-
 (silentcomp-provide 'ecb-jde)
 
 ;;; ecb-jde.el ends here

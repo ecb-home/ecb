@@ -4062,11 +4062,15 @@ pattern.")
 
 (defun ecb-dump-semantic-tags-internal (table parent source-buffer indent)
   (dolist (tag table)
-    (insert (format "%s%s, tag-class: %s\n" (make-string indent ? )
+    ;; we ca not use format here because XEmacs-format removes all
+    ;; text-properties! 
+    (insert (concat (make-string indent ? )
                     (save-excursion
                       (set-buffer source-buffer)
                       (ecb--semantic-format-tag-uml-prototype tag parent t))
-                    (ecb--semantic-tag-class tag)))
+                    ", tag-class: "
+                    (format "%s" (ecb--semantic-tag-class tag))
+                    "\n"))
     (ecb-dump-semantic-tags-internal (ecb--semantic-tag-children-compatibility tag t)
                                      (if (equal (ecb--semantic-tag-class tag)
                                                 'type)

@@ -2,6 +2,17 @@
 
 ** Enhancements to the file-browser
 
+*** ECB displays the Version-control-state of a file in the tree-buffers.
+    There are two new options `ecb-vc-enable-support' and
+    `ecb-vc-supported-backends' which define if and how ECB should check the
+    state of a sourcefile in a directory managed by a version-control system.
+    By default ECB supports the same VC-backends as the builtin VC-support of
+    Emacs: CVS, RCS and SCCS. But the option `ecb-vc-supported-backends'
+    allows to add support for arbitrary VC-backends (e.g. Clearcase). New
+    image-icons are also included for a cute display of the VC-state in the
+    directories, sources and history-buffer. Thanks to Thanks to Markus
+    Gritsch <gritsch@iue.tuwien.ac.at> for contributing the icons.
+
 *** Much better performance of the file-browser display because all
     time-consuming tasks (like the check if the displayed directories are
     empty of not) are now performed "stealthy" - means when Emacs is idle.
@@ -11,17 +22,34 @@
     There is a new macro `ecb-defstealthy' which can be used by a user to
     program own stealthy tasks.
 
-*** Automatically upgraded not-compatible ecb-option-settings are now not saved
-    by default. This means that ECB has now the new policy "Never touching the
-    customization-files of a user without asking". The result is a completely
-    redesigned upgraded-options-buffer: Now at the bottom of this buffer
-    (displayed by `ecb-display-upgraded-options') two clickable buttons [Save]
-    and [Cancel] are displayed which give the user the choice between saving
-    the upgraded options for future Emacs-sessions ot just to cancel this
-    buffer. In the latter case ECB has also upgraded the not compatible or
-    renamed options (as listed in the displayed upgraded-options-buffer) but
-    they will be not saved, i.e. no customization-file is touched and the
-    changed and upgraded values will be lost after quiting Emacs.
+    Currently ECB performs three stealthy tasks:
+
+       Prescann directories for emptyness: Prescann directories and display
+       them as empty or not-empty in the directories-buffer. See the
+       documentation of the option `ecb-prescan-directories-for-emptyness' for
+       a description.
+     
+       File is read only: Check if sourcefile-items of the directories- or
+       sources-buffer are read-only or not. See documentation of the option
+       `ecb-sources-perform-read-only-check'.
+     
+       Version-control-state: Checks the version-control-state of files in
+       directories which are managed by a VC-backend. See the option
+       `ecb-vc-enable-support'.
+
+    There is also a new option `ecb-stealthy-tasks-delay'.    
+
+** Automatically upgraded ecb-option-settings are now not saved by default.
+   This means that ECB has now the new policy "Never touching the
+   customization-files of a user without asking". The result is a completely
+   redesigned upgraded-options-buffer: Now at the bottom of this buffer
+   (displayed by `ecb-display-upgraded-options') two clickable buttons [Save]
+   and [Cancel] are displayed which give the user the choice between saving
+   the upgraded options for future Emacs-sessions ot just to cancel this
+   buffer. In the latter case ECB has also upgraded the not compatible or
+   renamed options (as listed in the displayed upgraded-options-buffer) but
+   they will be not saved, i.e. no customization-file is touched and the
+   changed and upgraded values will be lost after quiting Emacs.
 
 ** Fixed bugs
 
