@@ -54,7 +54,7 @@
 ;; The latest version of the ECB is available at
 ;; http://home.swipnet.se/mayhem/ecb.html
 
-;; $Id: ecb.el,v 1.123 2001/07/08 14:20:33 berndl Exp $
+;; $Id: ecb.el,v 1.124 2001/07/12 20:55:51 creator Exp $
 
 ;;; Code:
 
@@ -336,14 +336,14 @@ so the user can easily jump back."
   :group 'ecb-methods
   :type 'boolean)
 
-(defcustom ecb-token-display-method 'language-specific
-  "*How to display tokens in the methods buffer."
+(defcustom ecb-token-display-function 'semantic-abbreviate-nonterminal
+  "*Function to use when displaying tokens in the methods buffer.
+Some useful functions are found in `semantic-token->text-functions'."
   :group 'ecb-methods
-  :type '(choice :tag "Token display"
-		 (const :tag "Language specific" language-specific)
-		 (const :tag "UML" uml)))
+  :type semantic-token->text-custom-list)
 
 (defcustom ecb-show-tokens '((include collapsed)
+			     (parent collapsed)
                              (type expanded)
                              (variable collapsed)
                              (function flattened)
@@ -357,9 +357,10 @@ describes how the token type shall be shown:
 - flattened: The tokens are added to the parent node.
 - hidden: The tokens are not shown.
 The token type symbol can be any symbol returned from Semantic \(type,
-function, variable, rule, include etc.) or the symbol 't which includes all
-tokens not specified anywhere else in the list. The tokens in the methods
-buffer are displayed in the order as they appear in this list."
+function, variable, rule, include etc.), the symbol 't which includes all
+tokens not specified anywhere else in the list or one of the following:
+- parent: The parent types of a type
+The tokens in the methods buffer are displayed in the order as they appear in this list."
   :group 'ecb-methods
   :type '(repeat (list (symbol :tag "Token symbol")
 		       (choice :tag "Display type" :value collapsed
@@ -710,58 +711,81 @@ cleared!) ECB by running `ecb-deactivate'."
 	(setq tokens (append tokens (ecb-find-tokens part))))
       tokens))))
 
-(defun ecb-add-bucketize-tokens (node tokens)
-  (when tokens
-    (ecb-add-bucketized-tokens
-     node
-     (semantic-bucketize
-      tokens
-      (when ecb-sort-tokens
-	(function
-	 (lambda (items)
-	   (sort items
-		 (function
-		  (lambda(a b)
-		    (string< (semantic-token-name a)
-			     (semantic-token-name b))))))))))))
+(defun ecb-add-bucketize-tokens (node token tokens)
+  (ecb-add-sub-tokens
+   node
+   token
+   (semantic-bucketize
+    tokens
+    (when ecb-sort-tokens
+      (function
+       (lambda (items)
+	 (sort items
+	       (function
+		(lambda(a b)
+		  (string< (semantic-token-name a)
+			   (semantic-token-name b)))))))))))
 
-(defun ecb-add-bucketized-tokens (node buckets)
-  (let ((bucket-order (mapcar 'car ecb-show-tokens))
-	(bucket-vector (make-vector (1+ (length ecb-show-tokens)) nil))
-	extra-buckets)
+(defun ecb-find-bucket (type buckets)
+  (cond
+   ((not buckets) nil)
+   ((eq type (semantic-token-token (cadar buckets))) (car buckets))
+   (t (ecb-find-bucket type (cdr buckets)))))
+
+(defun ecb-get-token-type-name (type)
+  (cond
+   ((eq 'parent type) "Parents")
+   (t (let ((n (assoc type semantic-symbol->name-assoc-list)))
+	(if n n (symbol-name type))))))
+
+(defun ecb-create-node (parent-node display name data type)
+  (if (eq 'hidden display)
+      nil
+    (if (eq 'flattened display)
+	parent-node
+      (let ((node (tree-node-new name type data nil parent-node)))
+	(when (eq 'expanded display)
+	  (tree-node-set-expanded node t))
+	node))))
+
+(defun ecb-add-sub-tokens (parent-node token buckets)
+  (dolist (token-display ecb-show-tokens)
+    (let* ((type (car token-display))
+	   (display (cadr token-display)))
+      (cond
+       ((eq 'parent type)
+	(when (eq 'type (semantic-token-token token))
+	  (let ((node (ecb-create-node parent-node display "Parents" nil 1)))
+	    (when node
+	      (dolist (parent (ecb-get-parents token))
+		(tree-node-new parent 2 parent t node))))))
+       ((eq 'type type)
+	(let ((bucket (ecb-find-bucket type buckets)))
+	  (dolist (tok (cdr bucket))
+	    (ecb-add-tokens parent-node tok))))
+       (t (ecb-add-token-bucket parent-node (ecb-find-bucket type buckets) display)))))
+  ;; Add all token types in buckets that are not listed in ecb-show-tokens
+  ;; TODO: Optimize this
+  (let ((display (ecb-get-token-type-display t)))
     (dolist (bucket buckets)
-      (let ((pos (position (semantic-token-token (cadr bucket)) bucket-order)))
-	(if pos
-	    (let ((display (nth pos ecb-show-tokens)))
-	      (unless (eq 'hidden (cadr display))
-		(aset bucket-vector pos (cons (if (eq 'type (car display))
-						  '(type flattened)
-						display)
-					      bucket))))
-	  (setq extra-buckets (cons bucket extra-buckets)))))
-    (let ((i 0))
-      (dolist (display ecb-show-tokens)
-	(when (eq t (car display))
-	  (aset bucket-vector i (list display)))
-	(setq i (1+ i))))
-    (loop for bucket across bucket-vector do
-	  (when bucket
-	    (if (eq t (caar bucket))
-		(dolist (b (nreverse extra-buckets))
-		  (ecb-add-token-bucket node b (cadar bucket)))
-	      (ecb-add-token-bucket node (cdr bucket) (cadar bucket)))))))
+      (let ((type (semantic-token-token (cadr bucket))))
+	(when (not
+	       (find type ecb-show-tokens
+		     :test (function (lambda (a b) (eq a (car b))))))
+	  (ecb-add-token-bucket parent-node bucket display))))))
 
 (defun ecb-add-token-bucket (node bucket display &optional node-type node-data)
-  (let ((name (car bucket))
-	(type (semantic-token-token (cadr bucket)))
-	(child-node node))
-    (unless (eq 'hidden display)
-      (unless (eq 'flattened display)
-	(setq child-node (tree-node-new name (if node-type node-type 1) node-data))
-	(tree-node-add-child node child-node)
-	(tree-node-set-expanded child-node (eq 'expanded display)))
-      (dolist (token (cdr bucket))
-	(ecb-add-tokens child-node token)))))
+  (when bucket
+    (let ((name (car bucket))
+	  (type (semantic-token-token (cadr bucket)))
+	  (child-node node))
+      (unless (eq 'hidden display)
+	(unless (eq 'flattened display)
+	  (setq child-node (tree-node-new name (if node-type node-type 1) node-data))
+	  (tree-node-add-child node child-node)
+	  (tree-node-set-expanded child-node (eq 'expanded display)))
+	(dolist (token (cdr bucket))
+	  (ecb-add-tokens child-node token))))))
 
 (defun ecb-get-token-type-display (token-type)
   (let ((display (find token-type ecb-show-tokens :test
@@ -774,6 +798,23 @@ cleared!) ECB by running `ecb-deactivate'."
 	  (cadr display)
 	'hidden))))
 
+(defun ecb-get-parents (token)
+  (let ((parents
+	 (delq nil
+	       (mapcar (function
+			(lambda (p)
+			  (if (or (not p)
+				  (not ecb-exclude-parents-regexp)
+				  (not (string-match
+					ecb-exclude-parents-regexp p)))
+			      p)))
+		       (semantic-token-type-parent token)))))
+    (if (listp parents)	parents (list parents))))
+
+(defun ecb-get-token-name (token)
+  (condition-case nil
+      (funcall ecb-token-display-function token nil ecb-font-lock-tokens)
+    (error (semantic-prototype-nonterminal token nil ecb-font-lock-tokens))))
 
 (defun ecb-add-tokens (node token)
   ;; Semantic 1.4beta2 fix for EIEIO class parts
@@ -782,16 +823,15 @@ cleared!) ECB by running `ecb-deactivate'."
   ;;    (setq token (mapcar (lambda (s) (list s 'variable nil)) token)))
   (if (semantic-token-p token)
       (let* ((type (semantic-token-token token))
-	     (name
-	      (if (eq 'language-specific ecb-token-display-method)
-		  (semantic-prototype-nonterminal token nil ecb-font-lock-tokens)
-		(semantic-uml-abbreviate-nonterminal token nil ecb-font-lock-tokens))))
+	     (name (ecb-get-token-name token)))
 	(if (eq type 'type)
-	  (let ((parts (semantic-token-type-parts token)))
-	    (ecb-add-token-bucket node (list name parts)
-				  (ecb-get-token-type-display 'type) 0 token))
+	    (let ((parts (semantic-token-type-parts token))
+		  (node (ecb-create-node node (ecb-get-token-type-display 'type)
+					 name token 0)))
+	      (when node
+		(ecb-add-bucketize-tokens node token parts)))
 	  (tree-node-add-child node (tree-node-new name 0 token t))))
-    (ecb-add-bucketize-tokens node (ecb-find-tokens token))))
+    (ecb-add-bucketize-tokens node token (ecb-find-tokens token))))
 
 (defun ecb-expand-tree (path node)
   (catch 'exit
@@ -890,22 +930,17 @@ given."
     ;; Update history buffer
     (ecb-exec-in-history-window
      (tree-node-remove-child-data (tree-buffer-get-root) ecb-path-selected-source)
-     (tree-node-set-children
+     (tree-node-add-child-first
       (tree-buffer-get-root)
-      (let ((history-items
-	     (cons
-	      (tree-node-new (ecb-get-source-name ecb-path-selected-source) 0
-			     ecb-path-selected-source t
-			     (tree-buffer-get-root))
-	      (tree-node-get-children (tree-buffer-get-root)))))
-	(if ecb-sort-history-items
-	    (sort history-items
-		  (function (lambda (l r) (string< (tree-node-get-name l)
-						   (tree-node-get-name r)))))
-	  history-items)))
+      (tree-node-new (ecb-get-source-name ecb-path-selected-source) 0
+		     ecb-path-selected-source t))
+     (when ecb-sort-history-items
+       (tree-node-sort-children
+	(tree-buffer-get-root)
+	(function (lambda (l r) (string< (tree-node-get-name l)
+					 (tree-node-get-name r))))))
      (tree-buffer-update)
      (tree-buffer-highlight-node-data ecb-path-selected-source))))
-
 
 (defun ecb-update-methods-after-saving ()
   "Updates the methods-buffer after saving if this option is turned on and if
@@ -1401,7 +1436,10 @@ Currently the fourth argument TREE-BUFFER-NAME is not used here."
       ;; Update the tree-buffer with optimized display of NODE
       (tree-buffer-update node))
     (if (= 2 (tree-node-get-type node))
-	(jde-show-class-source (cdr (tree-node-get-data node)))
+	(progn
+	  (set-buffer (get-file-buffer ecb-path-selected-source))
+	  (when (eq major-mode 'jde-mode)
+	    (jde-show-class-source (tree-node-get-data node))))
       (let ((token (tree-node-get-data node)))
 	(when token
 	  (if (eq 'include (semantic-token-token token))
@@ -1473,12 +1511,14 @@ node in the ECB-window WINDOW."
            (tree-node-get-name node)))))))
 
 (defun ecb-mouse-over-method-node (node &optional buffer window)
-  (tree-buffer-nolog-message (when (ecb-show-minibuffer-info node window)
-                               (concat (tree-node-get-name node)
-				       (if (tree-node-get-data node)
-					   (concat ", "
-						   (symbol-name (semantic-token-token (tree-node-get-data node))))
-					 "")))))
+  (tree-buffer-nolog-message
+   (when (ecb-show-minibuffer-info node window)
+     (concat
+      (tree-node-get-name node)
+      (if (and (= 0 (tree-node-get-type node)) (tree-node-get-data node))
+	  (concat ", "
+		  (symbol-name (semantic-token-token (tree-node-get-data node))))
+	"")))))
 
 (defvar ecb-idle-timer-alist nil)
 (defvar ecb-post-command-hooks nil)

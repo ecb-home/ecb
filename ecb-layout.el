@@ -125,7 +125,7 @@
 ;;   + The edit-window must not be splitted and the point must reside in
 ;;     the not deleted edit-window.
 
-;; $Id: ecb-layout.el,v 1.70 2001/07/08 14:20:33 berndl Exp $
+;; $Id: ecb-layout.el,v 1.71 2001/07/12 20:55:51 creator Exp $
 
 ;;; Code:
 
@@ -655,7 +655,7 @@ either not activated or it behaves exactly like the original version!"
                            temp-buffer-max-height))
              (win-height (1- (window-height)))
              (min-height (1- window-min-height))
-             (text-height (window-buffer-height(selected-window)))
+             (text-height (window-buffer-height (selected-window)))
              (new-height (max (min text-height max-height) min-height)))
         (enlarge-window (- new-height win-height))))))
 

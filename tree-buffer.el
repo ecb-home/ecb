@@ -26,7 +26,7 @@
 ;; This file is part of the ECB package which can be found at:
 ;; http://home.swipnet.se/mayhem/ecb.html
 
-;; $Id: tree-buffer.el,v 1.57 2001/06/29 20:51:10 creator Exp $
+;; $Id: tree-buffer.el,v 1.58 2001/07/12 20:55:51 creator Exp $
 
 ;;; Code:
 
@@ -890,6 +890,13 @@ AFTER-CREATE-HOOK: A function \(with no arguments) called directly after
   (tree-node-set-children node (append (tree-node-get-children node) (list child)))
   (tree-node-set-parent child node))
 
+(defun tree-node-add-child-first (node child)
+  (tree-node-set-children node (cons child (tree-node-get-children node)))
+  (tree-node-set-parent child node))
+
+(defun tree-node-sort-children (node sortfn)
+  (tree-node-set-children node (sort (tree-node-get-children node) sortfn)))
+
 (defun tree-node-remove-child (node child)
   "Removes the child from the node."
   (tree-node-set-parent child nil)
@@ -942,9 +949,11 @@ child."
     (tree-node-set-type a type)
     (tree-node-set-data a data)
     (tree-node-set-expanded a nil)
-    (tree-node-set-parent a parent)
     (tree-node-set-children a nil)
+    (tree-node-set-parent a parent)
     (tree-node-set-expandable a (not not-expandable))
+    (when parent
+      (tree-node-add-child parent a))
     a))
 
 (defun tree-node-get-name (node)
