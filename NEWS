@@ -29,17 +29,21 @@
 
 *** `ecb-toggle-compile-window' now has a default key-binding: [C-c . \]
 
+*** Now also layouts with user-defined special ecb-windows can be created
+    interactively. See the online-manual for further details.
+
+** Enhancements to the tree-buffers:
+   
+*** Now user-extensions can be added to the popup-menues of the tree-buffers.
+    See new options `ecb-directories-menu-user-extension',
+    `ecb-sources-menu-user-extension', `ecb-methods-menu-user-extension',
+    `ecb-history-menu-user-extension'.
+
+*** The methods-buffer now has a popup-menu with senseful actions
+    
 ** New option `ecb-sources-exclude-cvsignore' which allows to exclude files from
    being displayed in the sources-buffer if they are contained in a .cvsignore
    file.
-
-** Now also layouts with user-defined special ecb-windows can be created
-   interactively. See the online-manual for further details.
-
-** Now user-extensions can be added to the popup-menues of the tree-buffers.
-   See new options `ecb-directories-menu-user-extension',
-   `ecb-sources-menu-user-extension', `ecb-methods-menu-user-extension',
-   `ecb-history-menu-user-extension'.
 
 ** ECB now also works with buffers "online" extracted from archives.
    Buffers extracted from an archive in `tar-mode' or `archive-mode' are now
