@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb.el,v 1.385 2004/04/06 15:17:29 berndl Exp $
+;; $Id: ecb.el,v 1.386 2004/04/07 11:57:57 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -726,7 +726,7 @@ must deactivate and activate ECB again to take effect."
                        :value nil)))
 
 (defconst ecb-methods-incr-searchpattern-node-prefix
-  '("\\([-+#]\\|[^-+#][^ \n]+ \\)?" . 1)
+  '("\\([-+#(]\\|[^-+#(][^ \n]+ \\)?" . 1)
   "Prefix-pattern which ignores all not interesting stuff of a node-name at
 incr. search. The following contents of a node-name are ignored by this
 pattern:

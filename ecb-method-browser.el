@@ -24,7 +24,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-method-browser.el,v 1.34 2004/04/06 15:17:30 berndl Exp $
+;; $Id: ecb-method-browser.el,v 1.35 2004/04/07 11:58:00 berndl Exp $
 
 ;;; Commentary:
 
@@ -1547,7 +1547,9 @@ is returned which contains only the leaf-type in the hierarchy."
                 ;; current-type filter is no longer useable! TODO: Klaus
                 ;; Berndl <klaus.berndl@sdm.de>: Maybe we should be smarter
                 ;; and only remove the current-type-filter instead of all
-                ;; filters.
+                ;; filters. This could be done with
+                ;; `ecb-replace-first-occurence' (replace the curr filter with
+                ;; nil and then do (delq nil filters)
                 (ecb-methods-filter-apply nil nil nil "" "" (current-buffer))
                 (message "ECB has removed all filters cause of changes in the type-hierarchy for the current-type!")
                 ;; whenever we can not found any type in our filter type-hierarchy
@@ -1809,9 +1811,6 @@ used; if point does not stay on a tag then nil is returned."
 ;; ecb-get-type-name-hierarchy-of-current-node (und kleinen Änderungen) ginge
 ;; das aber sehr leicht!
 
-;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: Applizieren eines
-;; current-type-filters sollte einen bestehenden current-type-filter immer
-;; autom. ersetzen
 (defun ecb-methods-filter-by-current-type (inverse source-buffer &optional
                                                    tag)
   "Display only the current-type and its contents in the methods-buffer. The
@@ -1890,7 +1889,7 @@ with a prefix arg) then an inverse filter is applied. For further details see
   "Display in the Methods-buffer only the current type and its members. For
 further details see `ecb-methods-filter'."
   (interactive)
-  (ecb-methods-filter-internal nil "current-type"))
+  (ecb-methods-filter-internal nil "curr-type"))
 
 (defun ecb-methods-filter-regexp (&optional inverse)
   "Filter the methods-buffer by a regexp. If INVERSE is not nil \(called
@@ -1941,8 +1940,8 @@ So you get a better overlooking. There are six choices:
 - Delete the last added: This removes only the topmost filter-layer, means
   that filter added last.
 
-The protection- and the tag-class-filter is only available for
-semantic-supported sources.
+The protection-, the current-type and the tag-class-filter are only available
+for semantic-supported sources.
 
 Be aware that the tag-list specified by the option `ecb-show-tags' is the
 basis of all filters, i.e. tags which are excluded by that option will never
@@ -1958,7 +1957,11 @@ do NOT match the choosen filter will be displayed in the Methods-buffer!
 Per default the choosen filter will be applied on top of already existing
 filters. This means that filters applied before are combined with the new
 filter. This behavior can changed via the option
-`ecb-methods-filter-replace-existing'.
+`ecb-methods-filter-replace-existing'. But regardless of the setting in
+`ecb-methods-filter-replace-existing' applying one of the not-inverse filters
+protection, tag-class or current-type always replaces exactly already existing
+filters of that type. On the other hand applying more than one inverse
+tag-class- or protection-filter can make sense.
 
 Such a filter is only applied to the current source-buffer, i.e. each
 source-buffer can have its own tag-filters.
@@ -2014,7 +2017,6 @@ applied default-tag-filters."
              (ecb-methods-filter-apply nil nil nil "" "" source-buffer))
             (t (ecb-methods-filter-apply nil nil nil "" "" source-buffer))))))
 
-
 (defun ecb-methods-filter-apply (filtertype filter inverse filter-type-display
                                             filter-display
                                             source-buffer &optional remove-last)
@@ -2035,14 +2037,24 @@ SOURCE-BUFFER arguments are ignored."
          (new-filter-spec (and filtertype
                                (list filtertype filter (if inverse 'not 'identity)
                                      filter-type-display filter-display)))
-         (replace (and (not remove-last)
-                       (not (equal ecb-methods-filter-replace-existing 'never))
-                       (or (equal ecb-methods-filter-replace-existing 'always)
-                           (y-or-n-p "Should the new filter replace existing ones? "))))
-         (filters (or (and remove-last
+         (replace-all (and (not remove-last)
+                           (not (equal ecb-methods-filter-replace-existing 'never))
+                           (or (equal ecb-methods-filter-replace-existing 'always)
+                               (y-or-n-p "Should the new filter replace existing ones? "))))
+         (replace-filter-type (and (not inverse)
+                                   (not replace-all)
+                                   (not remove-last)
+                                   (assoc filtertype (cdr filter-elem))
+                                   (member filtertype '(protection tag-class current-type))))
+         (filters (or (and replace-filter-type
+                           (progn
+                             (setcdr filter-elem
+                                     (ecb-remove-assoc filtertype (cdr filter-elem)))
+                             (append (cdr filter-elem) (list new-filter-spec))))
+                      (and remove-last
                            (nreverse (cdr (reverse (cdr filter-elem)))))
                       (and new-filter-spec ;; if nil there should be no filter anymore
-                           (if replace
+                           (if replace-all
                                new-filter-spec ;; just the new filter-spec
                              (append (cdr filter-elem) (list new-filter-spec)))))))
     (if filter-elem
@@ -3530,8 +3542,13 @@ edit-windows. Otherwise return nil."
 
 (defun ecb-methods-menu-tagfilter-entries ()
   "Generate popup-menu-entries for the tag-filtering"
-  (let* ((curr-semantic-symbol->name-assoc-list (ecb-methods-get-data-store
-                                                 'semantic-symbol->name-assoc-list))
+  (let* ((curr-semantic-symbol->name-assoc-list
+          ;; we must not use here (ecb-methods-get-data-store
+          ;; 'semantic-symbol->name-assoc-list) because we do not want the
+          ;; function-prototypes...
+          (save-excursion
+            (set-buffer (ecb-methods-get-data-store 'source-buffer))
+            (ecb--semantic-symbol->name-assoc-list)))
          (prot-list '("private" "protected" "public"))
          (prot-menu-elems nil)
          (prot-menu-elems-inverse nil)

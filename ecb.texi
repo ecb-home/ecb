@@ -26,7 +26,7 @@
 @c GNU Emacs; see the file COPYING.  If not, write to the Free Software
 @c Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-@c $Id: ecb.texi,v 1.170 2004/04/06 15:17:29 berndl Exp $
+@c $Id: ecb.texi,v 1.171 2004/04/07 11:57:56 berndl Exp $
 
 @setfilename ecb.info
 
@@ -3883,8 +3883,8 @@ This removes only the topmost filter-layer, means that filter added
 last.
 @end itemize
 
-The protection- and the tag-class-filter is only available for
-semantic-supported sources.
+The protection-, current-type- and the tag-class-filter are only
+available for semantic-supported sources.
 
 Be aware that the tag-list specified by the option
 @code{ecb-show-tags} is the basis of all filters, i.e. tags which are
@@ -3902,7 +3902,12 @@ Methods-buffer!
 Per default the choosen filter will be applied on top of already
 existing filters. This means that filters applied before are combined
 with the new filter. This behavior can changed via the option
-@code{ecb-methods-filter-replace-existing}.
+@code{ecb-methods-filter-replace-existing}. But regardless of the
+setting in @code{ecb-methods-filter-replace-existing} applying one of
+the not-inverse filters protection, tag-class or current-type always
+replaces exactly already existing filters of that type. On the other
+hand applying more than one inverse tag-class- or protection-filter
+can make sense.
 
 Such a filter is only applied to the current source-buffer, i.e. each
 source-buffer can have its own tag-filters.

@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-util.el,v 1.105 2004/04/01 14:08:43 berndl Exp $
+;; $Id: ecb-util.el,v 1.106 2004/04/07 11:57:59 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -443,6 +443,7 @@ by semantic and also killed afterwards."
                                 elem)))
                   list)))
 
+
 (defun ecb-add-assoc (key-value list)
   (cons key-value list))
 
@@ -510,8 +511,40 @@ Return the sublist of LIST whose car is ITEM."
 
 (defun ecb-set-elt (seq n val)
   "Set VAL as new N-th element of SEQ. SEQ can be any sequence. SEQ will be
-changed."
-  (if (listp seq) (setcar (nthcdr n seq) val) (aset seq n val)))
+changed because this is desctructive function. SEQ is returned."
+  (if (listp seq)
+      (setcar (nthcdr n seq) val)
+    (aset seq n val))
+  seq)
+
+(defun ecb-replace-first-occurence (seq old-elem new-elem)
+  "Replace in SEQ the first occurence of OLD-ELEM with NEW-ELEM. Comparison is
+done by `equal'. This is desctructive function. SEQ is returned."
+  (let ((pos (ecb-position seq old-elem)))
+    (if pos
+        (ecb-set-elt seq pos new-elem)))
+  seq)
+
+(defun ecb-replace-all-occurences (seq old-elem new-elem)
+  "Replace in SEQ all occurences of OLD-ELEM with NEW-ELEM. Comparison is
+done by `equal'. This is desctructive function. SEQ is returned."
+  (while (ecb-position seq old-elem)
+    (setq seq (ecb-replace-first-occurence seq old-elem new-elem)))
+  seq)
+
+(defun ecb-remove-first-occurence-from-list (list elem)
+  "Replace first occurence of ELEM from LIST. Comparison is done by `equal'.
+This is desctructive function. LIST is returned."
+  (delq nil (ecb-replace-first-occurence list elem nil)))
+
+(defun ecb-remove-all-occurences-from-list (list elem)
+  "Replace all occurences of ELEM from LIST. Comparison is done by `equal'.
+This is desctructive function. LIST is returned."
+  (delq nil
+        (progn          
+          (while (ecb-position list elem)
+            (setq list (ecb-replace-first-occurence list elem nil)))
+          list)))
 
 ;; canonical filenames
 
@@ -913,7 +946,8 @@ with a single space-character."
   (let ((split-result (split-string str "^[\n\t ]*")))
     (or (or (and (cdr split-result) ;; GNU Emacs > 21.3
                  (car (cdr split-result)))
-            (car split-result)) "")))
+            (car split-result))
+        "")))
 
 (defun ecb-right-trim (str)
   "Return a string stripped of all trailing whitespaces of STR."
@@ -1043,13 +1077,19 @@ Since it actually calls `start-process', not all features will work."
 	;; (if (not (sit-for timeout)) (read-event))
 	))))
 
-(defun ecb-position (list elem)
-  "Return the position of ELEM within LIST counting from 0. Comparison is done
+(defun ecb-position (seq elem)
+  "Return the position of ELEM within SEQ counting from 0. Comparison is done
 with `equal'."
-  (let ((pos (1- (length (member elem (reverse list))))))
-    (if (< pos 0)
-        nil
-      pos)))
+  (if (listp seq)
+      (let ((pos (- (length seq) (length (member elem seq)))))
+        (if (= pos (length seq))
+            nil
+          pos))
+    (catch 'found
+      (dotimes (i (length seq))
+        (if (equal elem (aref seq i))
+            (throw 'found i)))
+      nil)))
 
 (defun ecb-last (seq)
   "Return the last elem of the sequence SEQ."
