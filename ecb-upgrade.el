@@ -204,7 +204,8 @@
     (ecb-methods-menu-user-extension . (ecb-methods-menu-user-extension
                                         ecb-upgrade-methods-menu-ext))
     (ecb-history-menu-user-extension . (ecb-history-menu-user-extension
-                                        ecb-upgrade-history-menu-ext)))
+                                        ecb-upgrade-history-menu-ext))
+    (ecb-bucket-token-display . (ecb-bucket-node-display identity)))
   "Alist of all options which should be upgraded for current ECB-version.
 There are several reasons why an option should be contained in this alist:
 a) An old option has just be renamed in current-ECB version but has still the
