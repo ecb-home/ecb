@@ -3133,7 +3133,7 @@ store this options for later display in `ecb-not-compatible-options'."
                              (car (cdar (get 'ecb-token-display-function
                                              'standard-value)))))
 
-  ;; maybe we need here more resttings in future...
+  ;; maybe we need here more resettings in future...
   )
 
 (defun ecb-display-reset-options ()
