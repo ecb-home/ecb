@@ -344,6 +344,27 @@ layouts sources should be displayed in the directories window."
                 (repeat :tag "With these layouts"
                         (string :tag "Layout name"))))
 
+
+(defcustom ecb-use-speedbar-for-directories nil
+  "*If true then uses speedbar for displaying and handling directories.
+This means that speedbar is integrated in the ECB-frame and is displayed in
+that window normally displaying the standard ECB-directories-buffer.
+
+This option takes effect in all layouts which contain a directory window.
+
+Note: A similar effect and useability is available by setting this option to
+nil and setting `ecb-show-sources-in-directories-buffer' to not nil, because
+this combination displays also directories and sources in one window.
+
+`ecb-use-speedbar-for-directories' is for people who like the speedbar way
+handling directories amd source-files and want it in conjunction with ECB."
+  :group 'ecb-directories
+  :type 'boolean
+  :set (function (lambda (sym val)
+                   (set sym val)
+                   (ecb-redraw-layout-full))))
+
+
 (defun ecb-show-sources-in-directories-buffer-p ()
   (cond ((equal ecb-show-sources-in-directories-buffer 'never)
          nil)

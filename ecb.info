@@ -2716,6 +2716,21 @@ This group contains the following options:
    that is used as it's display name. If no alias is set, the path is used as
    display name.
 
+ - User Option: use-speedbar-for-directories
+   If true then uses speedbar for displaying and handling directories.  This
+   means that speedbar is integrated in the ECB-frame and is displayed in
+   that window normally displaying the standard ECB-directories-buffer.
+
+   This option takes effect in all layouts which contain a directory window.
+
+   Note: A similar effect and useability is available by setting this option
+   to nil and setting `ecb-show-sources-in-directories-buffer' to not nil,
+   because this combination displays also directories and sources in one
+   window.
+
+   `ecb-use-speedbar-for-directories' is for people who like the speedbar way
+   handling directories amd source-files and want it in conjunction with ECB.
+
 
 File: ecb.info,  Node: ecb-sources,  Next: ecb-methods,  Prev: ecb-directories,  Up: Customizable options
 
@@ -4182,13 +4197,41 @@ following:
 
 6. Save your changes.
 
+But not only simulating speedbar is possible but also full integrating it
+into the ECB and the ECB-frame, *Note Integrating speedbar::.
+
 
 File: ecb.info,  Node: Integrating speedbar,  Next: Optimize scrolling,  Prev: Simulating speedbar,  Up: Tips and tricks
 
 Integrating speedbar in the ECB-frame
 =====================================
 
-This feature will be first available in future versions of ECB.
+It is very easy to integrate speedbar in the directories window of ECB. So
+people who likes the speedbar way of handling directories and source-files
+but also like the ECB-way of displaying the buffer-contents (like methods and
+variables in a source-file) can combine both worlds:
+
+1. Choose a layout which contains a directories-window but no
+   sources-window(1).
+
+2. Set the option `ecb-use-speedbar-for-directories' to not nil. After this
+   the directories window of ECB will contain a full featured speedbar (the
+   only difference to standard speedbar is not residing in an extra frame).
+
+Note: A similar effect and useability is available by setting
+`ecb-use-speedbar-for-directories' to nil and setting
+`ecb-show-sources-in-directories-buffer' to not nil, because this combination
+displays also directories and sources in one window.
+
+So with the option `ecb-use-speedbar-for-directories' you have the choice
+which way of displaying and handling directories and source-files you want
+(the speedbar- or the ECB-way).
+
+---------- Footnotes ----------
+
+(1) The latter one is not needed if you use speedbar because speedbar
+displays directories and sources in one window. But if you like you can also
+use a sources window too...
 
 
 File: ecb.info,  Node: Optimize scrolling,  Next: Large directories,  Prev: Integrating speedbar,  Up: Tips and tricks
@@ -4870,6 +4913,7 @@ the option `ecb-layout-name' is listed with name "layout-name").
 * truncate-long-names:                   ecb-general.
 * type-token-display:                    ecb-methods.
 * use-recursive-edit:                    ecb-general.
+* use-speedbar-for-directories:          ecb-directories.
 * version-check:                         ecb-general.
 * window-sync:                           ecb-general.
 * window-sync-delay:                     ecb-general.
@@ -4995,48 +5039,49 @@ Node: Most important options92814
 Node: Customizable options94609
 Node: ecb-general95972
 Node: ecb-directories115922
-Node: ecb-sources122077
-Node: ecb-methods124332
-Node: ecb-history136601
-Node: ecb-layout138662
-Node: ecb-compilation-content155658
-Node: ecb-create-layout156224
-Node: ecb-face-options156740
-Node: ecb-faces160169
-Node: ecb-download164161
-Node: ecb-help165387
-Node: Submitting problem report167352
-Node: Upgrading168715
-Node: Downloading new versions169478
-Ref: Download required packages171235
-Ref: Downloading new versions-Footnote-1172333
-Node: Auto. option-upgrading172382
-Node: User interface172690
-Node: Background information173576
-Node: Tips and tricks176974
-Node: Changing faces177724
-Ref: Changing faces-Footnote-1180560
-Node: Small screens180736
-Node: Big screens182130
-Node: Simulating speedbar182971
-Node: Integrating speedbar183804
-Node: Optimize scrolling184070
-Node: Large directories185150
-Node: Using eshell185815
-Node: Elisp programming186005
-Node: List of variables186614
-Node: List of hooks186926
-Node: tree-buffer187882
-Node: Adviced functions188688
-Ref: Adviced functions-Footnote-1189307
-Node: Programming new layouts189378
-Node: Conflicts and bugs195082
-Node: Conflicts195557
-Node: Bugs199267
-Node: FAQ199487
-Ref: FAQ-Footnote-1204656
-Node: Command Index204687
-Node: Option Index207138
-Node: Concept Index213671
+Node: ecb-sources122818
+Node: ecb-methods125073
+Node: ecb-history137342
+Node: ecb-layout139403
+Node: ecb-compilation-content156399
+Node: ecb-create-layout156965
+Node: ecb-face-options157481
+Node: ecb-faces160910
+Node: ecb-download164902
+Node: ecb-help166128
+Node: Submitting problem report168093
+Node: Upgrading169456
+Node: Downloading new versions170219
+Ref: Download required packages171976
+Ref: Downloading new versions-Footnote-1173074
+Node: Auto. option-upgrading173123
+Node: User interface173431
+Node: Background information174317
+Node: Tips and tricks177715
+Node: Changing faces178465
+Ref: Changing faces-Footnote-1181301
+Node: Small screens181477
+Node: Big screens182871
+Node: Simulating speedbar183712
+Node: Integrating speedbar184682
+Ref: Integrating speedbar-Footnote-1185942
+Node: Optimize scrolling186118
+Node: Large directories187198
+Node: Using eshell187863
+Node: Elisp programming188053
+Node: List of variables188662
+Node: List of hooks188974
+Node: tree-buffer189930
+Node: Adviced functions190736
+Ref: Adviced functions-Footnote-1191355
+Node: Programming new layouts191426
+Node: Conflicts and bugs197130
+Node: Conflicts197605
+Node: Bugs201315
+Node: FAQ201535
+Ref: FAQ-Footnote-1206704
+Node: Command Index206735
+Node: Option Index209186
+Node: Concept Index215777
 
 End Tag Table
