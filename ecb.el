@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb.el,v 1.340 2003/09/22 10:29:15 berndl Exp $
+;; $Id: ecb.el,v 1.341 2003/09/25 12:13:04 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -92,7 +92,7 @@
 
 ;; IMPORTANT: The version-number is auto-frobbed from the Makefile. Do not
 ;; change it here!
-(defconst ecb-version "1.96"
+(defconst ecb-version "1.96.1"
   "Current ECB version.")
 
 (eval-when-compile
@@ -183,7 +183,10 @@
 (silentcomp-defun force-mode-line-update)
 
 (silentcomp-defvar dired-directory)
+(silentcomp-defvar current-menubar)
+(silentcomp-defun find-menu-item)
 (silentcomp-defun add-submenu)
+(silentcomp-defun delete-menu-item)
 (silentcomp-defun semanticdb-minor-mode-p)
 (silentcomp-defun semanticdb-find-nonterminal-by-name)
 (silentcomp-defun semanticdb-full-filename)
@@ -1982,8 +1985,9 @@ For the guidelines for such a sorter-function see
 
 (defcustom ecb-run-ediff-in-ecb-frame t
   "*Run ediff-sessions in the same frame as ECB is running.
-If not nil then ECB ensures that ediff runs in the same frame as ECB. If nil
-then ediff decides in which frame it will run - depending on the current
+If not nil then ECB ensures that ediff runs in the same frame as ECB and ECB
+restores exactly the \"before-ediff\"-window-layout after quiting ediff. If
+nil then ediff decides in which frame it will run - depending on the current
 window-layout \(e.g. if the ecb-windows are currently hidden) this can be the
 ecb-frame but this can also be a newly created frame or any other frame."
   :group 'ecb-general
@@ -3679,7 +3683,6 @@ tasks are performed:
   (when (and ecb-minor-mode
              (not ecb-windows-hidden)
              (ecb-point-in-edit-window))
-;;     (message "Klausi: %s, %s" (current-buffer) force)
     (ignore-errors
       (let ((filename (buffer-file-name (current-buffer))))
         (cond (;; synchronizing for real filesource-buffers
@@ -5383,6 +5386,15 @@ always the ECB-frame if called from another frame."
     (error msg)))
   
 
+(defun ecb-xemacs-add-submenu-hack ()
+  "XEmacs seems not to add the ECB-menu to the menubar for that buffer which
+is current when ECB is activated. This hack fixes this."
+  (ignore-errors
+    (if (null (car (find-menu-item current-menubar (list ecb-menu-name))))
+        (add-submenu nil ecb-minor-menu)))
+  (remove-hook 'post-command-hook
+               'ecb-xemacs-add-submenu-hack))
+
 (defun ecb-activate--impl ()
   "See `ecb-activate'.  This is the implementation of ECB activation."
 
@@ -5667,17 +5679,25 @@ always the ECB-frame if called from another frame."
                      ediff-quit-hook))
             (add-hook 'ediff-quit-hook 'ediff-cleanup-mess)
             (add-hook 'ediff-quit-hook 'ecb-ediff-quit-hook t)
+            ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: suspending ediff and
+            ;; especially reactivating does currently not really work good...
+;;             (add-hook 'ediff-suspend-hook 'ecb-ediff-quit-hook t)
             (add-hook 'ediff-before-setup-hook
                       'ecb-ediff-before-setup-hook)
             
             ;; menus
-            (if ecb-running-xemacs
-                (add-submenu nil ecb-minor-menu))
+            (when ecb-running-xemacs
+              (let ((dummy-buf-name " *dummytogetglobalmap*"))
+                (save-excursion
+                  (set-buffer (get-buffer-create dummy-buf-name))
+                  (add-submenu nil ecb-minor-menu)
+                  (kill-buffer dummy-buf-name))))          
 
             (add-hook (if ecb-running-xemacs
                           'activate-menubar-hook
                         'menu-bar-update-hook)
-                      'ecb-compilation-update-menu))
+                      'ecb-compilation-update-menu)
+            )
         (error
          (ecb-clean-up-after-activation-failure
           "Errors during the basic setup of ECB.")))
@@ -5754,6 +5774,12 @@ always the ECB-frame if called from another frame."
          (ecb-clean-up-after-activation-failure
           "Errors during setting the default directory.")))
 
+      ;; We need this ugly hack for a XEmacs-mystery concerning `add-submenu';
+      ;; see `ecb-xemacs-add-submenu-hack'. `ecb-xemacs-add-submenu-hack'
+      ;; removes itself from the post-command-hook after the first call!
+      (when ecb-running-xemacs
+        (add-hook 'post-command-hook 'ecb-xemacs-add-submenu-hack))
+      
       (condition-case nil
           ;; we run any personal hooks
           (run-hooks 'ecb-activate-hook)
@@ -5811,16 +5837,14 @@ always the ECB-frame if called from another frame."
   "Set the `ecb-activated-window-configuration' after the ECB is activated."
 
   (save-window-excursion
-
-   ;;set the edit window buffer to *scratch* so that we are not dependent on a
+    ;;set the edit window buffer to *scratch* so that we are not dependent on a
     ;;specific window being available
-    
     (set-window-buffer ecb-edit-window (get-buffer-create "*scratch*"))
-    
     (setq ecb-activated-window-configuration (current-window-configuration))))
 
 ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: Should we add this function to
-;; `ediff-suspend-hook' too?!
+;; `ediff-suspend-hook' too?! We should add something but this functions is
+;; not perfectly....in general suspending ediff need some work here...
 (defun ecb-ediff-quit-hook ()
   "Added to the end of `ediff-quit-hook' during ECB is activated. It
 does all necessary after finishing ediff."
@@ -5830,14 +5854,11 @@ does all necessary after finishing ediff."
               "Ediff finished. Do you want to delete the extra ediff-frame? "))
         (delete-frame (selected-frame) t))
     (select-frame ecb-frame)
-    (if ecb-hidden-window-config
-        (progn
-          (set-window-configuration ecb-hidden-window-config)
-          (setq ecb-hidden-window-config nil))
-      (ecb-redraw-layout))))
+    (when ecb-before-ediff-window-config
+      (ecb-set-window-configuration ecb-before-ediff-window-config)
+      (setq ecb-before-ediff-window-config nil))))
 
-(defvar ecb-hidden-window-config nil
-  "Used by `ecb-ediff-before-setup-hook' and `ecb-ediff-quit-hook'.")
+(defvar ecb-before-ediff-window-config nil)
 
 ;; We must not add this function to `ediff-before-setup-windows-hook' because
 ;; this hook is called very often - see docu. The hook
@@ -5847,10 +5868,8 @@ does all necessary after finishing ediff."
   (if (and ecb-minor-mode
            (equal (selected-frame) ecb-frame))
       (progn
-        (if ecb-windows-hidden
-            (setq ecb-hidden-window-config
-                  (current-window-configuration))
-          (setq ecb-hidden-window-config nil))
+        (setq ecb-before-ediff-window-config
+              (ecb-current-window-configuration))
         (if ecb-run-ediff-in-ecb-frame
             (ecb-toggle-ecb-windows -1)
           (if (and (not ecb-windows-hidden)
@@ -5859,9 +5878,7 @@ does all necessary after finishing ediff."
                 (select-window ecb-edit-window)
                 (ecb-with-adviced-functions
                  (delete-window))))))
-    (setq ecb-hidden-window-config nil)))
-
-
+    (setq ecb-before-ediff-window-config nil)))
 
 (defun ecb-deactivate ()
   "Deactivates the ECB and kills all ECB buffers and windows."
@@ -5919,9 +5936,9 @@ does all necessary after finishing ediff."
 
       ;; menus
       (ignore-errors
-        (if ecb-running-xemacs
-            (easy-menu-remove ecb-minor-menu)))
-
+        (when ecb-running-xemacs
+          (delete-menu-item (list ecb-menu-name))))
+      
       (remove-hook (if ecb-running-xemacs
                        'activate-menubar-hook
                      'menu-bar-update-hook)

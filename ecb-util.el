@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-util.el,v 1.79 2003/09/22 10:29:16 berndl Exp $
+;; $Id: ecb-util.el,v 1.80 2003/09/25 12:13:04 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -742,6 +742,16 @@ for FILE, but proper EOL-conversion and character interpretation is done!"
   (mapc (function (lambda (w)
                     (set-window-dedicated-p w nil)))
         (ecb-window-list (or frame (selected-frame)))))
+
+(defun ecb-set-windows-dedicated-state (buf-list state)
+  "For every buffer in BUF-LIST set its windows dedicated-state to STATE if
+visible in the `ecb-frame'."
+  (mapc (function (lambda (b)
+                    (when (get-buffer-window b ecb-frame)
+                      (set-window-dedicated-p
+                       (get-buffer-window b ecb-frame) state))))
+        buf-list))
+
 
 (defun ecb-window-number (&optional window)
   "Return the number of WINDOW or - if nil - of the current selected window.

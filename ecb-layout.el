@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-layout.el,v 1.190 2003/09/22 10:29:16 berndl Exp $
+;; $Id: ecb-layout.el,v 1.191 2003/09/25 12:13:04 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -675,8 +675,8 @@ signaled.
 If this option is nil then no error is signaled but the called adviced
 function does simply nothing.
 
-Default is t but it can also be useful not to signal errors - especially if
-there are conflicts with other packages."
+Default is nil but it can also be useful to signal errors - so you see when
+call a function in a situation which is not supported by this function."
   :group 'ecb-layout
   :type 'boolean)
 
@@ -1716,6 +1716,7 @@ Returns the window displaying BUFFER."
     (ecb-layout-debug-error "ecb-temp-buffer-show-function-emacs: comp-buffer: %s"
                             buf)
     (when (and (equal (selected-frame) ecb-frame)
+               (not ecb-windows-hidden)
                (numberp (car (get 'ecb-compile-window-height 'saved-value)))
                (not (ecb-compile-window-live-p))
                ;; calling this from minibuffer (e.g. completions)
@@ -1843,8 +1844,8 @@ is in the left/topmost edit-window or 2 if in the other edit-window."
 
 (defun ecb-point-in-compile-window ()
   "Return non nil iff point is in the compile-window of ECB"
-  (and ecb-compile-window
-       (equal (selected-frame) ecb-frame)
+  (and (equal (selected-frame) ecb-frame)
+       (ecb-compile-window-live-p)
        (equal (selected-window) ecb-compile-window)))
 
 
@@ -3419,14 +3420,63 @@ outline of the chosen layout."
                    (ecb-choose-layout-name (ecb-available-layouts-of-type nil)
                                            t)))))
 
+(defun ecb-current-window-configuration ()
+  "Return the current ecb-window-configuration.
+Result is a four-element list with:
+0. Result of `current-window-configuration'
+1. List of buffers which are currently dedicated in the ecb-frame
+2. The number of the `ecb-edit-window' in the `ecb-window-list' of the
+   `ecb-frame'
+3. The number of the `ecb-compile-window' in the `ecb-window-list' of the
+   `ecb-frame' \(nil if there is no compile-window alive)
+
+If the special ECB-windows are hidden at call-time then the last three
+elements are nil!"
+  (if ecb-windows-hidden
+      (list (current-window-configuration ecb-frame) nil nil nil)
+    (list (current-window-configuration ecb-frame)
+          (ecb-get-current-visible-ecb-buffers)
+          (if (ecb-edit-window-live-p)
+              (ecb-window-number ecb-edit-window))
+          (if (ecb-compile-window-live-p)
+              (ecb-window-number ecb-compile-window)))))
+
+(defun ecb-set-window-configuration (ecb-window-config)
+  "Restore a window-configuration ECB-WINDOW-CONFIG which must be returned by
+`ecb-current-window-configuration'."
+  (ecb-make-windows-not-dedicated ecb-frame)
+  (ecb-with-original-functions
+   (ecb-with-original-basic-functions
+    (set-window-configuration (nth 0 ecb-window-config))))
+  ;; we have to reset the dedicated state because it is not preserved by
+  ;; `current-window-configuration' and `set-window-configuration'! At least
+  ;; not with GNU Emacs 21.X, In addition we have to reset ecb-edit-window and
+  ;; ecb-compile-window and also to set ecb-windows-hidden correctly
+  (and (nth 1 ecb-window-config)
+       (ecb-set-windows-dedicated-state (nth 1 ecb-window-config) t))
+  (when (or (nth 2 ecb-window-config)
+            (nth 3 ecb-window-config))
+    (let ((win-list (ecb-window-list ecb-frame 0
+                                     (frame-first-window ecb-frame))))
+      (and (nth 2 ecb-window-config)
+           (setq ecb-edit-window (nth (nth 2 ecb-window-config) win-list)))
+      (and ecb-compile-window-height
+           (nth 3 ecb-window-config)
+           (setq ecb-compile-window (nth (nth 3 ecb-window-config) win-list)))))
+  (and (nth 1 ecb-window-config)
+       (setq ecb-windows-hidden nil)))
+
 (defun ecb-redraw-layout()
-  "Redraw the ECB screen.
+  "Redraw the ECB screen quickly.
 If the variable `ecb-redraw-layout-quickly' is not nil then the redraw is done
 by the `ecb-redraw-layout-quickly' function, otherwise by
-`ecb-redraw-layout-full'. But it's strongly recommended to use the quick
-redraw only if you have really slow machines where a full redraw takes several
-seconds because the quick redraw is not really safe and may have some
-drawbacks! On normal machines the full drawback should be done in << 1s!"
+`ecb-redraw-layout-full'.
+
+Please not: It's strongly recommended to use the quick redraw only if you have
+really slow machines where a full redraw takes several seconds because the
+quick redraw is not really safe and has some annoying drawbacks! On normal
+machines the full redraw should be done in << 1s so there should be no need
+for the quick version!"
   (interactive)
 
   (message "ECB redrawing layout...")
@@ -3475,7 +3525,7 @@ this function the edit-window is selected which was current before redrawing."
             (nth 2 compile-window-config))
            (ecb-windows-before-redraw (ecb-get-current-visible-ecb-buffers)))
 
-      (ecb-layout-debug-error "ecb-redraw-layout-full: config: %s, hidden: %s,curr-buff: %s,last-source-buff:%s"
+      (ecb-layout-debug-error "ecb-redraw-layout-full: config: %s, hidden-state: %s, curr-buff: %s, last-source-buff: %s"
                               config ecb-windows-hidden (current-buffer)
                               ecb-last-source-buffer)
       
@@ -3639,7 +3689,6 @@ this function the edit-window is selected which was current before redrawing."
 ;; TODO: this function is a first try to use the built-in window-configuration
 ;; stuff of Emacs for the layout-redraw. But currently this does not work
 ;; really well, there is a lot of work to do (Klaus).
-
 (defun ecb-redraw-layout-quickly()
   "Redraw the layout quickly using the cached window configuration
 `ecb-activated-window-configuration'."
@@ -3654,9 +3703,6 @@ this function the edit-window is selected which was current before redrawing."
     (let((main-window-buffer nil)
          (compilation-window-buffer nil))
       
-      ;; lets try to make this save.
-      ;; TODO: Does not really work well....
-    
       (if (ecb-edit-window-live-p)
           (setq main-window-buffer (window-buffer ecb-edit-window))
         (setq compilation-window-buffer "*scratch*")
@@ -3670,6 +3716,7 @@ this function the edit-window is selected which was current before redrawing."
       (ecb-with-original-functions
        (set-window-configuration ecb-activated-window-configuration))
 
+      
       ;;OK... now restore the buffers in the compile and edit windows..
 
       (if main-window-buffer
@@ -3927,16 +3974,20 @@ of not nil!"
       (if new-state
           (let ((height (car (get 'ecb-compile-window-height 'saved-value))))
             (when (numberp height)
-              (customize-set-variable 'ecb-compile-window-height height)))
-        (customize-set-variable 'ecb-compile-window-height nil))
-      ;; toggling (ecb-redraw-layout-full) only preserves point and selected
-      ;; window if called from an edit- or compile-window. If called from an
-      ;; ECB-window we have to restore it here.
-      (when ecb-buf
-        (setq new-win (get-buffer-window ecb-buf))
-        (if (and new-win (window-live-p new-win)
-                 (equal (window-frame new-win) ecb-frame))
-            (select-window new-win))))))
+              (customize-set-variable 'ecb-compile-window-height height))
+            ;; ecb-redraw-layout-full only preserves point and selected window
+            ;; if called from an edit- or compile-window. If called from an
+            ;; ECB-window we have to restore it here.
+            (when ecb-buf
+              (setq new-win (get-buffer-window ecb-buf))
+              (if (and new-win (window-live-p new-win)
+                       (equal (window-frame new-win) ecb-frame))
+                  (select-window new-win))))
+        (when (ecb-compile-window-live-p)
+          (ecb-with-original-functions
+           (ecb-with-original-basic-functions
+            (delete-window ecb-compile-window))))))))
+
 
 (silentcomp-provide 'ecb-layout)
 
