@@ -1,6 +1,6 @@
 ;;; ecb-eshell.el --- eshell integration for the ECB.
 
-;; $Id: ecb-eshell.el,v 1.56 2002/12/29 23:51:00 burtonator Exp $
+;; $Id: ecb-eshell.el,v 1.57 2002/12/30 18:17:40 berndl Exp $
 
 ;; Copyright (C) 2000-2003 Free Software Foundation, Inc.
 ;; Copyright (C) 2000-2003 Kevin A. Burton (burton@openprivacy.org)
@@ -57,6 +57,8 @@
 
 ;;; History:
 
+;; - Mon Dec 30 2002 6:57 PM (klaus.berndl@sdm.de):
+;;   Added ecb-eshell-start. See docstring.
 ;; - Son Dec 29 2002 9:43 AM (klaus.berndl@sdm.de):
 ;;   Fixes some bugs and cleans up the code:
 ;;   + ecb-eshell-save-buffer-history: In macros with a let-clause we must
@@ -177,6 +179,17 @@ which can be called interactively but normally it is called autom. by the
 (defvar ecb-eshell-pre-window-enlarged nil
   "True if we enlarged the window before we executed a command.")
 
+(defun ecb-eshell-start ()
+  "Create an interactive Eshell buffer.
+This function is used instead of the original `eshell' cause of a mysterious
+behavior of XEmacs which always starts eshell in the edit-window even if
+called from the compile-window. This functions ensures that eshell is started
+in that window where this function is called from!"
+  (require 'eshell)
+  (ecb-with-original-functions
+   (display-buffer (get-buffer-create eshell-buffer-name)))
+  (eshell-mode))
+
 (defun ecb-eshell-current-buffer-sync()
   "Synchronize the eshell with the current buffer. This is only done if the
 eshell is currently visible and if either this function is called
@@ -205,19 +218,19 @@ interactively or `ecb-eshell-synchronize' is not nil."
            
            ;;get copies of the current source directory.
            
-           (setq source-buffer-directory (ecb-fix-filename default-directory))
+           (setq source-buffer-directory default-directory)
            
            (save-excursion
              (set-buffer (get-buffer eshell-buffer-name))
              (setq buffer-read-only nil)
-             (setq ecb-buffer-directory (ecb-fix-filename default-directory)))
+             (setq ecb-buffer-directory default-directory))
            
            ;; at this point source-buffer-directory is a snapshot of the
            ;; source buffer window and default directory is the directory
            ;; in the eshell window
 
-           (when (not (string-equal source-buffer-directory
-                                    ecb-buffer-directory))
+           (when (not (string-equal (ecb-fix-filename source-buffer-directory)
+                                    (ecb-fix-filename ecb-buffer-directory)))
              (save-excursion
                (set-buffer eshell-buffer-name)
                ;;change the directory without showing the cd command
@@ -286,9 +299,8 @@ then an error is reported!"
    (save-excursion
      (when (ecb-compile-window-live-p 'display-msg)
        (select-window ecb-compile-window)
-       (if (and (not (ecb-eshell-running-p))
-                (fboundp 'eshell))
-           (eshell))
+       (if (not (ecb-eshell-running-p))
+           (ecb-eshell-start))
        (if (ecb-eshell-running-p)
            (set-window-buffer ecb-compile-window
                               (get-buffer eshell-buffer-name))
