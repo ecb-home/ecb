@@ -1,6 +1,6 @@
 ;;; ecb-eshell.el --- eshell integration for the ECB.
 
-;; $Id: ecb-eshell.el,v 1.54 2002/12/29 10:13:06 berndl Exp $
+;; $Id: ecb-eshell.el,v 1.55 2002/12/29 10:15:12 burtonator Exp $
 
 ;; Copyright (C) 2000-2003 Free Software Foundation, Inc.
 ;; Copyright (C) 2000-2003 Kevin A. Burton (burton@openprivacy.org)
@@ -129,6 +129,7 @@
 ;;
 ;; - BUG: enable just-in-time current-buffer-sync... only execute if the current
 ;; buffer's directlry is not equal to the ecb directory.
+;;
 
 ;;; Code:
 

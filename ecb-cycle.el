@@ -1,6 +1,6 @@
 ;;; ecb-cycle.el --- cycle buffers through ecb windows.
 
-;; $Id: ecb-cycle.el,v 1.19 2002/12/06 20:40:57 berndl Exp $
+;; $Id: ecb-cycle.el,v 1.20 2002/12/29 10:15:12 burtonator Exp $
 
 ;; Copyright (C) 2000-2003 Free Software Foundation, Inc.
 ;; Copyright (C) 2000-2003 Kevin A. Burton (burton@openprivacy.org)
@@ -57,6 +57,9 @@
 ;; - If possible, try to put fit the buffer so that the end of buffer is at the
 ;; end of the window... if necessary.
 
+;; What do we do if 
+;; 
+
 ;;; Code:
 
 (eval-when-compile
@@ -88,38 +91,42 @@ offers any buffer but switches to `ecb-compile-window' if a compilation-buffer!"
   
   (interactive "P")
 
-  (if choose-buffer
-      (when (ecb-compile-window-live-p 'display-msg)
-        (let ((ecb-layout-switch-to-compilation-window '(switch-to-buffer)))
-          (switch-to-buffer (completing-read "ECB compilation buffer: "
-                                             (ecb-compilation-get-buffers)))))
-    (when (ecb-compile-window-live-p 'display-msg)
-      (let*((compilation-buffers (ecb-compilation-get-buffers))
-            (current-buffer (window-buffer ecb-compile-window))
-            (current-buffer-name (buffer-name current-buffer)))
+  (ecb-with-original-functions
+   
+   (select-window ecb-compile-window)
+  
+   (if choose-buffer
+       (when (ecb-compile-window-live-p 'display-msg)
+         (let ((ecb-layout-switch-to-compilation-window '(switch-to-buffer)))
+           (switch-to-buffer (completing-read "ECB compilation buffer: "
+                                              (ecb-compilation-get-buffers)))))
+     (when (ecb-compile-window-live-p 'display-msg)
+       (let*((compilation-buffers (ecb-compilation-get-buffers))
+             (current-buffer (window-buffer ecb-compile-window))
+             (current-buffer-name (buffer-name current-buffer)))
       
-        (when (null compilation-buffers)
-          (ecb-error "No compilation buffers"))
+         (when (null compilation-buffers)
+           (ecb-error "No compilation buffers"))
       
-        (if (not (ecb-compilation-buffer-p current-buffer))
-          ;;if the current bufffer is not a compilation buffer, goto the first
-            ;;compilation buffer.
+         (if (not (ecb-compilation-buffer-p current-buffer))
+             ;;if the current bufffer is not a compilation buffer, goto the first
+             ;;compilation buffer.
           
-            (ecb-cycle-set-compilation-buffer 0 compilation-buffers)
+             (ecb-cycle-set-compilation-buffer 0 compilation-buffers)
         
-          ;;else... we need to determine what buffer to display.
+           ;;else... we need to determine what buffer to display.
         
-          (let(current index)
+           (let(current index)
           
-            (setq current (assoc current-buffer-name compilation-buffers))
+             (setq current (assoc current-buffer-name compilation-buffers))
           
-            (setq index (cdr current))
+             (setq index (cdr current))
           
-            (if (= (1+ index) (length compilation-buffers))
-                ;;go back to the first buffer.
-                (ecb-cycle-set-compilation-buffer 0 compilation-buffers)
-              (ecb-cycle-set-compilation-buffer (1+ index)
-                                                compilation-buffers))))))))
+             (if (= (1+ index) (length compilation-buffers))
+                 ;;go back to the first buffer.
+                 (ecb-cycle-set-compilation-buffer 0 compilation-buffers)
+               (ecb-cycle-set-compilation-buffer (1+ index)
+                                                 compilation-buffers)))))))))
 
 (defun ecb-cycle-set-compilation-buffer(index compilation-buffers)
   "Set the buffer in the compilation window."

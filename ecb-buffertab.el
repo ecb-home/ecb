@@ -1,6 +1,6 @@
 ;;; ecb-buffertab.el --- 
 
-;; $Id: ecb-buffertab.el,v 1.6 2002/12/06 20:41:25 berndl Exp $
+;; $Id: ecb-buffertab.el,v 1.7 2002/12/29 10:15:12 burtonator Exp $
 
 ;; Copyright (C) 2000-2003 Free Software Foundation, Inc.
 ;; Copyright (C) 2000-2003 Kevin A. Burton (burton@openprivacy.org)
@@ -50,19 +50,28 @@
 
 (require 'ecb-compilation)
 
-(defface ecb-buffertab-face '((t (:bold t :foreground "lightyellow")))
+(defface ecb-buffertab-primary-face '((t (:bold t :foreground "black")))
   "Face used to highlight the annotation lines to the left of the annotate buffer.")
 
-(defcustom ecb-buffertab-map (make-sparse-keymap)
+(defface ecb-buffertab-secondary-face '((t (:bold nil :foreground "black")))
+  "Face used to highlight the annotation lines to the left of the annotate buffer.")
+
+(defface ecb-buffertab-secondary-mouse-face '((t (:bold nil :foreground "black" :italic t)))
+  "Face used to highlight the annotation lines to the left of the annotate buffer.")
+
+(defcustom ecb-buffertab-map (let ((map (make-sparse-keymap)))
+                               (define-key map [header-line down-mouse-2] 'ecb-buffertab-popup-menu)
+                               map)
+
   "Key map used for buffertab navigation")
 
-(define-key ecb-buffertab-map [mode-line down-mouse-1] 'ecb-buffertab-popup-menu)
-
 (defun ecb-buffertab-popup-menu()
-  ""
+  "Popup a menu for selecting an ECB buffer."
   (interactive)
-  
-  (popup-menu (ecb-buffertab-make-menu "Compilation Buffers")))
+
+  (let((menu (ecb-buffertab-make-menu "Compilation Buffers")))
+
+    (popup-menu menu)))
 
 (defun ecb-buffertab-make-menu(name)
   "Make a menu for use on the buffertab."
@@ -71,23 +80,34 @@
 
     (dolist(entry (ecb-compilation-get-buffers))
 
-      (add-to-list 'menu (list 'menu-item 'menu-item (car entry) (car entry)) t))
+      (add-to-list 'menu (cons (list (car entry) (car entry))
+                               'switch-to-buffer)) t)
 
+    (pp menu)
+    
     menu))
 
-(defun ecb-buffertab-setup-modeline()
+(defun ecb-buffertab-setup-header()
   ""
   (interactive)
 
-  (let((modeline-tab ""))
+  (let((ecb-prefix "   ECB: " ))
+    (save-excursion
 
-    ;;FIXME: figure out what modeline tab to use
-    (setq modeline-tab "   ECB: ")
+      (set-buffer (get-buffer ecb-speedbar-buffer-name))
 
-    (set-text-properties 0 (length modeline-tab) (list 'local-map ecb-buffertab-map
-                                                       'face 'ecb-buffertab-face) modeline-tab)
-
-    (setq mode-line-format modeline-tab)))
+      ;;FIXME: figure out what modeline tab to use
+      (setq header-line-format (concat ecb-prefix "/ " (buffer-name)" "))
+                                   
+      (add-text-properties 0 (length ecb-prefix)
+                           (list 'face 'ecb-buffertab-primary-face)
+                           header-line-format)
+      
+      (add-text-properties (1+ (length ecb-prefix)) (length header-line-format)
+                           (list 'face 'ecb-buffertab-secondary-face
+                                 'mouse-face 'ecb-buffertab-secondary-mouse-face
+                                 'local-map 'ecb-buffertab-map)
+                           header-line-format))))
 
 (silentcomp-provide 'ecb-buffertab)
 
