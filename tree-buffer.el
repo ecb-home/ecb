@@ -26,7 +26,7 @@
 ;; This file is part of the ECB package which can be found at:
 ;; http://home.swipnet.se/mayhem/ecb.html
 
-;; $Id: tree-buffer.el,v 1.81 2002/03/22 02:03:29 burtonator Exp $
+;; $Id: tree-buffer.el,v 1.82 2002/03/22 17:55:26 creator Exp $
 
 ;;; Code:
 
@@ -985,7 +985,7 @@ AFTER-CREATE-HOOK: A function \(with no arguments) called directly after
                   (interactive)
                   (tree-buffer-return-pressed t nil))))
     
-    (define-key tree-buffer-key-map [tab] 'tree-buffer-tab-pressed)
+    (define-key tree-buffer-key-map (kbd "TAB") 'tree-buffer-tab-pressed)
 
     (when arrow-navigation
       (define-key tree-buffer-key-map (kbd "<right>") 'tree-buffer-arrow-pressed)
