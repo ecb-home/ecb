@@ -938,7 +938,7 @@ run starts with this interrupted function."
         ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: remove this test if it works
         (message "TEST: ecb-stealthy-updates: %s has been interrupted" (car l))
         (setq ecb-stealthy-function-list
-              (ecb-rotate-list ecb-stealthy-function-list (car l)))))))
+              (ecb-rotate ecb-stealthy-function-list (car l)))))))
 
 
 
