@@ -298,17 +298,29 @@ a backtrace-buffer and inserts the contents of that."
 (defun ecb-problem-report-list-all-variables()
   "List all variables starting with `ecb-' and some other variables which
 could be interesting for support."
-  (let ((emacs-vars (sort `(pre-command-hook
-                            post-command-hook
-                            after-save-hook
-                            help-mode-hook
-                            compilation-mode-hook
-                            truncate-partial-width-windows
-                            truncate-lines
-                            system-type
-                            window-system
-                            ,(if (boundp 'ediff-quit-hook)
-                                 'ediff-quit-hook))
+  (let ((emacs-vars (sort (delete nil
+                                  `(pre-command-hook
+                                    post-command-hook
+                                    after-save-hook
+                                    help-mode-hook
+                                    compilation-mode-hook
+                                    truncate-partial-width-windows
+                                    truncate-lines
+                                    auto-mode-alist
+                                    ,(if (boundp 'c-mode-hook)
+                                         'c-mode-hook)
+                                    ,(if (boundp 'c++-mode-hook)
+                                         'c++-mode-hook)
+                                    ,(if (boundp 'c-mode-common-hook)
+                                         'c-mode-common-hook)
+                                    ,(if (boundp 'java-mode-hook)
+                                         'java-mode-hook)
+                                    ,(if (boundp 'jde-mode-hook)
+                                         'jde-mode-hook)
+                                    system-type
+                                    window-system
+                                    ,(if (boundp 'ediff-quit-hook)
+                                         'ediff-quit-hook)))
                           (function (lambda (l r)
                                       (string< (symbol-name l)
                                                (symbol-name r))))))
