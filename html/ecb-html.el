@@ -196,13 +196,22 @@
    "ECB - Emacs Code Browser"
 
    (h-section "About"
-	      "ECB is a source code browser for Emacs. "
-              "It is a global minor-mode which displays a couple of windows "
-              "that can be used to browse directories, files and file-contents "
-              "like methods and variables. It supports source-code parsing for "
-              "semantic-supported languages like Java, C, C++, Elisp and Scheme "
-              "as well as for source-types supported \"only\" by imenu or etags "
-              "(e.g. perl, TeX, LaTeX etc.).")
+              "ECB stands for \"Emacs Code Browser\" and is a source-code-"
+              "browser for (X)Emacs. It is a global minor-mode which offers a "
+              "language-independent and complete IDE (Integrated Development "
+              "Environment) within one Emacs-frame. It displays a couple of "
+              "windows that can be used to browse directories, files and "
+              "file-contents like methods and variables. It supports "
+              "source-code parsing for semantic-supported languages like Java, "
+              "C, C++, Elisp and Scheme as well as for source-types supported "
+              "\"only\" by imenu or etags (e.g. perl, TeX, LaTeX etc.). In "
+              "addition it offers (optional) a durable \"compile-window\" at "
+              "the bottom of the frame which is used to display all help-, "
+              "grep-, compile- and etc.-output. The rest of the frame is called "
+              "the \"edit-area\" which can be devided in several (no limit) "
+              "edit-windows which are used for editing of sources. Deleting "
+              "some of the edit-windows does neither destroy the compile-window "
+              "nor the browsing-windows.")
 
    (apply 'h-section "News"
           (append ecb-latest-news

@@ -238,7 +238,8 @@ case no position saving is done."
 
 (defmethod ecb-nav-goto ((item ecb-nav-file-history-item))
   (find-file (ecb-nav-get-file item))
-  (widen)
+  (ecb-with-original-basic-functions
+   (widen))
   (goto-char (ecb-nav-get-pos item))
   (set-window-start (selected-window) (ecb-nav-get-window-start item)))
   

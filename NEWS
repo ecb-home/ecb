@@ -1,10 +1,8 @@
 * Changes for ECB version 2.12
 
-TODO: 10pt images hinzufÅ¸gen!!!
-
 ** The restriction of only two edit-windows has been gone!
 
-*** Beginning with this version 2.12 there are no restrictions about the
+*** Beginning with this version 2.20 there are no restrictions about the
     window-layout in the edit-area of ECB. This means you can split the
     edit-area of ECB in as many windows as you like. The split-state of the
     edit-area will be preserved when toggling the visibility of the
@@ -13,35 +11,95 @@ TODO: 10pt images hinzufÅ¸gen!!!
     compile-window. Just work with the edit-area of ECB as if it would be an
     extra frame!
 
+*** Compile-window can now be displayed even when the ECB-windows are hidden.
+    So now you can have the same compile-window functionality when the
+    ECB-window are hidden as when the ECB-windows are visible. The state of
+    the compile-window will be preserved when toggling the ecb-windows or when
+    maximizing one ecb-windows! So you have the advantage of one special
+    window for all help-, grep or compile-output also when the ecb-windows are
+    hidden - a window which will not be deleted if you call
+    `delete-other-windows' (bound to [C-x 1]) for one of the edit-windows.
+    
 *** The option `ecb-primary-mouse-jump-destination' has been renamed to
     `ecb-mouse-click-destination' and has also changed its default value to
     'last-point.
 
 *** New keybinding [C-c . g l] for selecting the last selected edit-window.
-    Also available via the ECB-menu. The command is `ecb-goto-window-edit-last'.
+    Also available via the ECB-menu. The command is
+    `ecb-goto-window-edit-last'.
 
-** Enhancements to the popup-menus of the tree-buffers
+*** New option `ecb-scroll-other-window-scrolls-compile-window' and new
+    command `ecb-toggle-scroll-other-window-scrolls-compile'. If this new
+    option is nil then ECB chooses very smart and intuitive the window which
+    will be scrolled by commands like `scroll-other-window' (see documentation
+    of the advice of `other-window-for-scrolling'). But sometimes the user
+    wants to scroll the compile-window from another window. With this new
+    command the user can fest and easy toggle the behavior ECB chooses another
+    window for scrolling.
 
-*** All popup-menus of the tree-buffers can be used with the tmm-library
-    The already existing command `tree-buffer-show-menu-keyboard' (bound to
-    [M-m] in every tree-buffer of ECB) accepts now a prefix argument. If called
-    with a prefix-argument (hit [C-u M-m]) then the popup-menu is displayed
-    with the tmm-mechanismus (like the Emacs-[menu-bar] is displayed when
-    `tmm-menubar' is called). Thanks for suggestion to Yvonne Thomson
-    <yvonne@thewatch.net>.
+*** Higher compatibility of ECB with other packages
+    Without the 2-edit-window-restriction ECB is now more compatible with
+    other packages. For example the package calculator.el can now also being
+    used without setting `calculator-electric-mode' to not nil - regardless
+    in how many edit-windows the edit-area of ECB is splitted.
 
-*** Select an edit-window via popup where a source should be opened or a token
-    should be displayed.
+*** Option `ecb-split-edit-window' has been renamed in
+    `ecb-split-edit-window-after-start' because this new name reflects much
+    better the purpose of this option. In addition there is offered a new
+    value 'before-deactivation which is also the new default value. ECB auto.
+    upgrades your setting!
+
+** Enhancements to the tree-buffers of ECB
     
-*** The popup-menus can be dynamically extended.
-    See the new options `ecb-directories-menu-user-extension-function',
-    `ecb-sources-menu-user-extension-function',
-    `ecb-methods-menu-user-extension-function' and
-    `ecb-history-menu-user-extension-function'.
+*** Enhancements to the popup-menus of the tree-buffers
 
-*** All popup-menu-commands respect the setting of the option
-    `ecb-mouse-click-destination' (formerly known as
-    `ecb-primary-mouse-jump-destination' - see above).
+**** All popup-menus of the tree-buffers can be used with the tmm-library
+     The already existing command `tree-buffer-show-menu-keyboard' (bound to
+     [M-m] in every tree-buffer of ECB) accepts now a prefix argument. If called
+     with a prefix-argument (hit [C-u M-m]) then the popup-menu is displayed
+     with the tmm-mechanismus (like the Emacs-[menu-bar] is displayed when
+     `tmm-menubar' is called). Thanks for suggestion to Yvonne Thomson
+     <yvonne@thewatch.net>.
+
+**** Select an edit-window via popup where a source should be opened or a token
+     should be displayed.
+    
+**** The popup-menus can be dynamically extended.
+     See the new options `ecb-directories-menu-user-extension-function',
+     `ecb-sources-menu-user-extension-function',
+     `ecb-methods-menu-user-extension-function' and
+     `ecb-history-menu-user-extension-function'.
+
+**** All popup-menu-commands respect the setting of the option
+     `ecb-mouse-click-destination' (formerly known as
+     `ecb-primary-mouse-jump-destination' - see above).
+
+*** ECB supports the default modeline-mechanisms for deleting other windows
+    GNU Emacs binds [mouse-2] in its modeline to `delete-other-window'. ECB
+    now supports this mechanism by binding a toggle-command to [mouse-2] in
+    the modeline of each tree-buffer: If all ECB-windows are visible then this
+    command maximizes the current tree-window and if current tree-window is
+    maximized all ECB-windows are displayed again. XEmacs binds a popup-menu
+    with some window commands to [button-3] in its modeline. ECB supports this
+    mechanism by replacing this menu by a menu which offers exactly 2
+    commands: Maximizing current tree-window and displaying all ECB-windows.
+       
+*** Changes to the image-icons of the tree-buffers
+
+**** Alle image-files have been renamed from <IMAGENAME>.xpm to
+     ecb-<IMAGENAME>.xpm. This was necessary because the icons for "open" and
+     "close" in Emacs toolbar got superseeded by ECB's icons for "open" and
+     "close". The problem was, that ECB was using the same names for the icon
+     files "open.xpm" and "close.xpm" as emacs toolbar does. This problem
+     occurs if the image-directory of ECB is contained in the `load-path' which
+     is when ECB is installed in the site-lisp directory of Emacs with the
+     default subdirs.el of Emacs which adds automatically all subdirectories to
+     the load-path (and therefore also subdirectories which does not contain
+     elisp-files but only images - btw: not really smart;-). Thanks for
+     pointing out that to Roland Schaeuble <roland.schaeuble@siemens.com>.
+
+**** Added all image-icons in a 10-point height.
+     Thanks to Nick Cross <nick@goots.org> for sizing down the images.
 
 ** New default-value for `ecb-post-process-semantic-taglist'.
    Now for buffers with major-mode `c-mode' all function-prototypes are
@@ -71,7 +129,11 @@ TODO: 10pt images hinzufÅ¸gen!!!
     several layouts and wants to preserve the hidden-state of the
     compile-window. Thanks to John S. Yates, Jr. <john@yates-sheets.org> for
     suggestion.
-   
+
+** New option `ecb-activation-selects-ecb-frame-if-already-active'.
+   See the docstring for more details. Thanks for suggestion to Jeff Jensen
+   <jeffjensen@nospam.visi.com>
+
 ** Fixed Bugs
 
 *** Fixed a bug in the adviced version of `other-window'.
@@ -85,6 +147,10 @@ TODO: 10pt images hinzufÅ¸gen!!!
 
 *** Fixed a bug when an ECB-window was maximized and the user has stored sizes
     for this layout.
+
+*** Fixed a bug in `ecb-major-modes-activate' and `ecb-major-modes-deactivate'
+
+*** Fixed a bug in the handling of the option `ecb-kill-buffer-clears-history'
 
 *** Fixed a bug which prevents some older version of XEmacs 21.4 working well.
     For XEmacs 21.4.6 a bug was reported which causes this XEmacs-version to

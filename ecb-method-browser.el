@@ -2118,7 +2118,8 @@ nil too then no post-actions are performed."
          ;; let us set the mark so the user can easily jump back.
          (if ecb-tag-jump-sets-mark
              (push-mark nil t))
-         (widen)
+         (ecb-with-original-basic-functions
+          (widen))
          (goto-char (ecb-semantic-tag-start tag))
          ;; process post action
          (unless no-tag-visit-post-actions
