@@ -26,7 +26,7 @@
 ;;
 ;; Contains all online-help for ECB (stolen something from recentf.el)
 
-;; $Id: ecb-help.el,v 1.68 2002/05/05 19:22:50 berndl Exp $
+;; $Id: ecb-help.el,v 1.69 2002/06/07 16:12:32 berndl Exp $
 
 ;;; Code
 
@@ -357,11 +357,13 @@ Available interactive ECB commands:
 - `ecb-rebuild-methods-buffer' \(see \"Rebuilding the ECB-method buffer\")
 - `ecb-redraw-layout' \(see \"Redrawing the ECB-layout\")
 - `ecb-clear-history'
+- `ecb-add-all-buffers-to-history'
 - `ecb-show-help'
 - `ecb-submit-problem-report'.
 - `ecb-goto-window-directories' \(and much more `ecb-goto-window...'
    functions)
 - `ecb-toggle-ecb-windows'
+- `ecb-toggle-layout'
 - `ecb-toggle-enlarged-compilation-window'
 - `ecb-cycle-switch-to-compilation-buffer'
 - `ecb-cycle-through-compilation-buffers'
@@ -477,14 +479,19 @@ The possibility of hiding temporally the ECB windows like described above is
 also useful for all the other layouts.
 
 
-Simulating speedbar without an extra frame:
--------------------------------------------
+Simulating a speedbar without an extra frame:
+---------------------------------------------
 
 You can simulate a speedbar-like layout within ONE frame by doing the following:
-1. Customize `ecb-layout-nr' to layout nr. 11
+1. Customize `ecb-layout-nr' to layout nr. 11, 14, 15 or 16 dependend to what
+   you like.
 2. Optional: Ensure that `ecb-compile-window-height' is nil.
 3. Optional: Ajust the `ecb-windows-width'.
-4. Save your changes.
+4. Optional: Customize `ecb-toggle-layout-sequence' and toggle very fast
+   between several layouts by `ecb-toggle-layout'. See the doc-strings!
+5. Optional: Customize `ecb-show-sources-in-directories-buffer' to not nil if
+   the choosen layout \(see 1. and 4.) contains a directories-tree-buffer.
+6. Save your changes.
 
 
 Optimze Scrolling in the edit-windows:

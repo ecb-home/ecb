@@ -118,8 +118,8 @@
 
 (defun ecb-nav-token-history-item-new (token &optional narrow)
   (ecb-nav-token-history-item (semantic-token-name token)
-			  :token token
-			  :narrow narrow))
+                              :token token
+                              :narrow narrow))
 
 (defmethod ecb-nav-get-token ((item ecb-nav-token-history-item))
   (oref item token))
@@ -128,24 +128,26 @@
   (oref item narrow))
 
 (defmethod ecb-nav-goto ((item ecb-nav-token-history-item))
-  (let ((token (ecb-nav-get-token item)))
-    (set-window-buffer (selected-window) (semantic-token-buffer token))
-    (widen)
-    (goto-char (semantic-token-start token))
-    (when (ecb-nav-get-narrow item)
-      (narrow-to-region (tree-buffer-line-beginning-pos)
-			(semantic-token-end token)))
-    (goto-char (+ (semantic-token-start token) (ecb-nav-get-pos item)))
-    (set-window-start (selected-window)
-		      (+ (semantic-token-start token)
-			 (ecb-nav-get-window-start item)))))
+  (ignore-errors
+    (let ((token (ecb-nav-get-token item)))
+      (set-window-buffer (selected-window) (semantic-token-buffer token))
+      (widen)
+      (goto-char (semantic-token-start token))
+      (when (ecb-nav-get-narrow item)
+        (narrow-to-region (tree-buffer-line-beginning-pos)
+                          (semantic-token-end token)))
+      (goto-char (+ (semantic-token-start token) (ecb-nav-get-pos item)))
+      (set-window-start (selected-window)
+                        (+ (semantic-token-start token)
+                           (ecb-nav-get-window-start item))))))
 
 (defmethod ecb-nav-save ((item ecb-nav-token-history-item))
-  (let ((token (ecb-nav-get-token item)))
-    (when (semantic-token-start token)
-      (ecb-nav-set-pos item (- (point) (semantic-token-start token)))
-      (ecb-nav-set-window-start item (- (window-start)
-					(semantic-token-start token))))))
+  (ignore-errors
+    (let ((token (ecb-nav-get-token item)))
+      (when (semantic-token-start token)
+        (ecb-nav-set-pos item (- (point) (semantic-token-start token)))
+        (ecb-nav-set-window-start item (- (window-start)
+                                          (semantic-token-start token)))))))
 
 (defmethod ecb-nav-to-string ((item ecb-nav-token-history-item))
   (concat (semantic-token-name (ecb-nav-get-token item)) ":" (call-next-method)))
@@ -216,7 +218,8 @@
     (setq ecb-nav-current-node node)))
 
 (defun ecb-nav-save-current ()
-  (ecb-nav-save (ecb-get-data ecb-nav-current-node)))
+  (ignore-errors
+    (ecb-nav-save (ecb-get-data ecb-nav-current-node))))
 
 (defun ecb-nav-goto-next ()
   "Go forward in the navigator history list."

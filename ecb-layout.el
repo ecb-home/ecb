@@ -124,7 +124,7 @@
 ;;   + The edit-window must not be splitted and the point must reside in
 ;;     the not deleted edit-window.
 
-;; $Id: ecb-layout.el,v 1.108 2002/05/24 16:08:32 berndl Exp $
+;; $Id: ecb-layout.el,v 1.109 2002/06/07 16:12:32 berndl Exp $
 
 ;;; Code:
 
@@ -181,8 +181,8 @@ Attention: You should never change this!")
 
 (defcustom ecb-layout-nr 9
   "*Define the window layout of ECB. A positive integer which sets the
-general layout. Currently there are 14 predefined layouts with index from 0 to
-13. You can savely try out any of them by changing this value and saving it
+general layout. Currently there are 17 predefined layouts with index from 0 to
+16. You can savely try out any of them by changing this value and saving it
 only for the current session. If you are sure which layout you want you can
 save it for future sessions. To get a picture of the layout for index <index>
 call C-h f ecb-layout-function-<index>, e.g. `ecb-layout-function-9'.
@@ -202,6 +202,9 @@ Currently available layouts \(see the doc-string for a picture ot the layout):
 `ecb-layout-function-11'
 `ecb-layout-function-12'
 `ecb-layout-function-13'
+`ecb-layout-function-14'
+`ecb-layout-function-15'
+`ecb-layout-function-16'
 
 Regardless of the settings you define here: If you have destroyed or
 changed the ECB-screen-layout by any action you can always go back to this
@@ -511,6 +514,28 @@ ecb-frame has the size it has normally during your work with ECB!."
 Please read also carefully the documentation of `ecb-redraw-layout'."
   :type 'boolean
   :group 'ecb-layout)
+
+(defcustom ecb-toggle-layout-sequence '(11 16)
+  "*Toggle sequence for layout toggling with `ecb-toggle-layout'.
+Every element of this list has to be a valid layout-number \(see option
+`ecb-layout-nr).
+
+You can add here as many layouts as you want but to use this option most
+effective you should not add more than 2 or 3 layouts so every layout can be
+accessed very fast by toggling with `ecb-toggle-layout'. It is also senseful
+to add layouts which have the same principal outline, i.e. all their
+tree-buffers are on the same side of the frame and the
+tree-buffer-\"column\" \(or -\"row\") has identical size for the layouts.
+
+Recommended values are for example:
+- \(11 16), toggles between methods and directories+sources/history
+- \(11 15), toggles between methods and directories+sources
+- \(11 14), toggles between methods and history
+- \(11 14 15), toggles between methods, history and directories+sources 
+
+This option makes only sense if the value is a list with more than 1 element!"
+  :group 'ecb-layout
+  :type '(repeat (integer :tag "Layout-Nr.")))
 
 (defcustom ecb-hide-ecb-windows-hook nil
   "*Hooks run after the ECB windows have been hidden
@@ -1298,7 +1323,7 @@ ECB-adviced functions."
          t)
         (t nil)))
 
-;; for the layouts 1-4, 6, 8, 9 the ecb-delete-window- and
+;; for the layouts 1-4, 6, 8, 9, 11 - 15 the ecb-delete-window- and
 ;; ecb-delete-other-windows-in-editwindow-0 function can be used.
 (defalias 'ecb-delete-other-windows-in-editwindow-1
   'ecb-delete-other-windows-in-editwindow-0)
@@ -1339,6 +1364,18 @@ ECB-adviced functions."
 (defalias 'ecb-delete-other-windows-in-editwindow-13
   'ecb-delete-other-windows-in-editwindow-0)
 (defalias 'ecb-delete-window-in-editwindow-13
+  'ecb-delete-window-in-editwindow-0)
+(defalias 'ecb-delete-other-windows-in-editwindow-14
+  'ecb-delete-other-windows-in-editwindow-0)
+(defalias 'ecb-delete-window-in-editwindow-14
+  'ecb-delete-window-in-editwindow-0)
+(defalias 'ecb-delete-other-windows-in-editwindow-15
+  'ecb-delete-other-windows-in-editwindow-0)
+(defalias 'ecb-delete-window-in-editwindow-15
+  'ecb-delete-window-in-editwindow-0)
+(defalias 'ecb-delete-other-windows-in-editwindow-16
+  'ecb-delete-other-windows-in-editwindow-0)
+(defalias 'ecb-delete-window-in-editwindow-16
   'ecb-delete-window-in-editwindow-0)
 
 (defun ecb-delete-other-windows-in-editwindow-5 (split)
@@ -1579,7 +1616,7 @@ On normal machines the full drawback should be done in << 1s!"
 ;; the main layout core-function. This function is the "environment" for a
 ;; special layout function (l.b.)
 
-(defun ecb-redraw-layout-full ()
+(defun ecb-redraw-layout-full (&optional no-buffer-sync)
   "Redraw the ECB screen according to the layout set in `ecb-layout-nr'. After
 this function the edit-window is selected which was current before redrawing."
   (interactive)
@@ -1604,7 +1641,7 @@ this function the edit-window is selected which was current before redrawing."
                                              (window-buffer ecb-compile-window)))
            (tree-windows-before-redraw (ecb-layout-get-current-tree-windows)))
 
-    ;; deactivating the adviced functions, so the layout-functions can use the
+      ;; deactivating the adviced functions, so the layout-functions can use the
       ;; original function-definitions.
       (ecb-activate-adviced-functions nil)
       
@@ -1644,7 +1681,7 @@ this function the edit-window is selected which was current before redrawing."
                            ecb-compile-window
                          (error "Compilations-window not set in the layout-function")))
         
-       ;; go one window back, so display-buffer always shows the buffer in the
+        ;; go one window back, so display-buffer always shows the buffer in the
         ;; next window, which is then savely the compile-window.
         (select-window (previous-window (selected-window) 0))
         (display-buffer
@@ -1676,7 +1713,7 @@ this function the edit-window is selected which was current before redrawing."
                          ecb-edit-window
                        (error "Edit-window not set in the layout-function")))
       
-     ;; Maybe we must split the editing window again if it was splitted before
+      ;; Maybe we must split the editing window again if it was splitted before
       ;; the redraw
       (cond ((equal split-before-redraw 'horizontal)
              (ecb-split-hor 0.5 t))
@@ -1711,13 +1748,20 @@ this function the edit-window is selected which was current before redrawing."
       ;; activating the adviced functions again
       (ecb-activate-adviced-functions ecb-advice-window-functions)
       
-      ;; synchronize the ecb-tree-buffers if necessary (means if not all
-      ;; tree-windows of current layout were visible before redraw).
-      (if (not (equal tree-windows-before-redraw
-                      (ecb-layout-get-current-tree-windows)))
-          (ecb-current-buffer-sync t))
-
       (setq ecb-windows-hidden nil)
+
+      ;; synchronize the ecb-tree-buffers if necessary (means if not all
+      ;; tree-windows of current layout were visible before redraw) and
+      ;; fillup the history new with all buffers if the history buffer was not
+      ;; shown before the redisplay but now (means if the layout has changed)
+      (let ((current-tree-windows (ecb-layout-get-current-tree-windows)))
+        (if (and (not (member ecb-history-buffer-name
+                              tree-windows-before-redraw))
+                 (member ecb-history-buffer-name current-tree-windows))
+            (ecb-add-all-buffers-to-history))
+        (if (and (not (equal tree-windows-before-redraw current-tree-windows))
+                 (not no-buffer-sync))
+          (ecb-current-buffer-sync t)))
 
       ;; after a full redraw the stored window-configuration for a quick
       ;; redraw should be actualized
@@ -1725,10 +1769,9 @@ this function the edit-window is selected which was current before redrawing."
 
       (run-hooks 'ecb-redraw-layout-hook))))
 
-;; TODO: this function is a first try to use the buildin window-configuration stuff
-
-;; of Emacs for the layout-redraw. But currently this does not work really
-;; well, there is a lot of work to do (klaus).
+;; TODO: this function is a first try to use the buildin window-configuration
+;; stuff of Emacs for the layout-redraw. But currently this does not work
+;; really well, there is a lot of work to do (klaus).
 
 (defun ecb-redraw-layout-quickly()
   "Redraw the layout quickly using the cached window configuration
@@ -1775,6 +1818,22 @@ this function the edit-window is selected which was current before redrawing."
       ;; tree-buffer we must do here a manually synch
 
       (run-hooks 'ecb-redraw-layout-hook))))
+
+(defvar ecb-toggle-layout-state 0
+  "Internal state of `ecb-toggle-layout'. Do not change it!")
+(defun ecb-toggle-layout ()
+  "Toggles between the layouts defined in `ecb-toggle-layout-sequence'.
+Note: This function works by changing the options `ecb-layout-nr' and
+`ecb-show-sources-in-directories-buffer' but only for current Emacs-session."
+  (interactive)
+  (let ((layout-nr (nth ecb-toggle-layout-state ecb-toggle-layout-sequence))
+        (next-index (if (< (1+ ecb-toggle-layout-state)
+                           (length ecb-toggle-layout-sequence))
+                        (1+ ecb-toggle-layout-state)
+                      0)))
+    (when (and layout-nr (not (= ecb-toggle-layout-state next-index)))
+      (setq ecb-toggle-layout-state next-index)
+      (customize-set-variable 'ecb-layout-nr layout-nr))))
 
 (defun ecb-store-window-sizes ()
   "Stores the sizes of the ECB windows for the current layout. The size of the
@@ -2452,6 +2511,112 @@ more place."
     (setq ecb-compile-window (next-window)))
   (ecb-split-hor ecb-windows-width t)
   (ecb-set-methods-buffer)
+  (ecb-split-ver 0.75)
+  (ecb-set-history-buffer)
+  (select-window (next-window))
+  (setq ecb-edit-window (selected-window)))
+
+(defun ecb-layout-function-14 ()
+  "This function creates the following layout:
+
+   -------------------------------------------------------
+   |              |                                      |
+   |              |                                      |
+   |              |                                      |
+   |              |                                      |
+   |              |                                      |
+   |              |                                      |
+   |              |                                      |
+   |   History    |                 Edit                 |
+   |              |                                      |
+   |              |                                      |
+   |              |                                      |
+   |              |                                      |
+   |              |                                      |
+   |              |                                      |
+   |              |                                      |
+   -------------------------------------------------------
+   |                                                     |
+   |                    Compilation                      |
+   |                                                     |
+   -------------------------------------------------------
+
+If you have not set a compilation-window in `ecb-compile-window-height' then
+the layout contains no durable compilation window and the other windows get a
+little more place."
+  (when ecb-compile-window-height
+    (ecb-split-ver (* -1 ecb-compile-window-height) t)
+    (setq ecb-compile-window (next-window)))
+  (ecb-split-hor ecb-windows-width t)
+  (ecb-set-history-buffer)
+  (select-window (next-window))
+  (setq ecb-edit-window (selected-window)))
+
+(defun ecb-layout-function-15 ()
+  "This function creates the following layout:
+
+   -------------------------------------------------------
+   |              |                                      |
+   |              |                                      |
+   |              |                                      |
+   |              |                                      |
+   |              |                                      |
+   |              |                                      |
+   |              |                                      |
+   | Directories  |                 Edit                 |
+   |              |                                      |
+   |              |                                      |
+   |              |                                      |
+   |              |                                      |
+   |              |                                      |
+   |              |                                      |
+   |              |                                      |
+   -------------------------------------------------------
+   |                                                     |
+   |                    Compilation                      |
+   |                                                     |
+   -------------------------------------------------------
+
+If you have not set a compilation-window in `ecb-compile-window-height' then
+the layout contains no durable compilation window and the other windows get a
+little more place."
+  (when ecb-compile-window-height
+    (ecb-split-ver (* -1 ecb-compile-window-height) t)
+    (setq ecb-compile-window (next-window)))
+  (ecb-split-hor ecb-windows-width t)
+  (ecb-set-directories-buffer)
+  (select-window (next-window))
+  (setq ecb-edit-window (selected-window)))
+
+(defun ecb-layout-function-16 ()
+  "This function creates the following layout:
+
+   -------------------------------------------------------
+   |              |                                      |
+   |              |                                      |
+   |              |                                      |
+   | Directories  |                 Edit                 |
+   |              |                                      |
+   |              |                                      |
+   |              |                                      |
+   |              |                                      |
+   |              |                                      |
+   |--------------|                                      |
+   |    Hist      |                                      |
+   -------------------------------------------------------
+   |                                                     |
+   |                    Compilation                      |
+   |                                                     |
+   -------------------------------------------------------
+
+If you have not set a compilation-window in `ecb-compile-window-height' then the
+layout contains no durable compilation window and the other windows get a little
+more place."
+  (when ecb-compile-window-height
+    (ecb-split-ver (* -1 ecb-compile-window-height) t)
+    (setq ecb-compile-window (next-window)))
+  (ecb-split-hor ecb-windows-width t)
+  (ecb-set-directories-buffer)
   (ecb-split-ver 0.75)
   (ecb-set-history-buffer)
   (select-window (next-window))

@@ -54,7 +54,7 @@
 ;; The latest version of the ECB is available at
 ;; http://home.swipnet.se/mayhem/ecb.html
 
-;; $Id: ecb.el,v 1.217 2002/05/24 16:08:33 berndl Exp $
+;; $Id: ecb.el,v 1.218 2002/06/07 16:12:32 berndl Exp $
 
 ;;; Code:
 
@@ -1938,6 +1938,16 @@ given."
      (tree-buffer-update)
      (tree-buffer-highlight-node-data filename))))
 
+(defun ecb-add-all-buffers-to-history ()
+  "Add all current file-buffers to the history-buffer of ECB."
+  (interactive)
+  (when (ecb-window-live-p ecb-history-buffer-name)
+    (mapc (lambda (buffer)
+            (when (buffer-file-name buffer)
+              (ecb-add-item-to-history-buffer (buffer-file-name buffer))))
+          (buffer-list))
+    (ecb-sort-history-buffer))
+  (ecb-update-history-window (buffer-file-name (current-buffer))))
 
 (defun ecb-update-methods-after-saving ()
   "Updates the methods-buffer after saving if this option is turned on and if
@@ -2899,6 +2909,13 @@ That is remove the unsupported :help stuff."
       :help "Rebuild the method buffer completely"
       ])
    (ecb-menu-item
+    [ "Add buffers to history"
+      ecb-add-all-buffers-to-history
+      :active (and (equal (selected-frame) ecb-frame)
+                   (ecb-window-live-p ecb-history-buffer-name))
+      :help "Add all current file-buffers to history"
+      ])
+   (ecb-menu-item
     [ "Clear directory cache"
       ecb-clear-directory-cache
       :active ecb-files-and-subdirs-cache
@@ -2910,6 +2927,13 @@ That is remove the unsupported :help stuff."
       ecb-toggle-ecb-windows
       :active (equal (selected-frame) ecb-frame)
       :help "Toggle the visibility of all ECB windows."
+      ])
+   (ecb-menu-item
+    [ "Toggle layout"
+      ecb-toggle-layout
+      :active (and (equal (selected-frame) ecb-frame)
+                   (> (length ecb-toggle-layout-sequence) 1))
+      :help "Toggle between several layouts"
       ])
    (ecb-menu-item
     [ "Toggle enlarged compilation window"
@@ -3094,9 +3118,9 @@ That is remove the unsupported :help stuff."
   '("C-c ." . ((t "f" ecb-activate)
                (t "p" ecb-nav-goto-previous)
                (t "n" ecb-nav-goto-next)
-               (t "l" ecb-redraw-layout)
-               (t "t" ecb-toggle-ecb-windows)
-               (t "r" ecb-rebuild-methods-buffer)
+               (t "r" ecb-redraw-layout)
+               (t "w" ecb-toggle-ecb-windows)
+               (t "l" ecb-toggle-layout)
                (t "o" ecb-show-help)
                (t "1" ecb-goto-window-edit1)
                (t "2" ecb-goto-window-edit2)
@@ -3215,6 +3239,7 @@ always the ECB-frame if called from another frame."
     (ecb-activate--impl))
   ecb-minor-mode)
 
+
 (defun ecb-activate--impl ()
   "See `ecb-activate'.  This is the implementation of ECB activation."
 
@@ -3252,10 +3277,10 @@ always the ECB-frame if called from another frame."
     
     ;; set the ecb-frame
     (if ecb-new-ecb-frame
-	(progn
-	  (run-hooks 'ecb-activate-before-new-frame-created-hook)
-	  (setq ecb-frame (make-frame))
-	  (put 'ecb-frame 'ecb-new-frame-created t))
+        (progn
+          (run-hooks 'ecb-activate-before-new-frame-created-hook)
+          (setq ecb-frame (make-frame))
+          (put 'ecb-frame 'ecb-new-frame-created t))
       (setq ecb-frame (selected-frame))
       (put 'ecb-frame 'ecb-new-frame-created nil))
     (raise-frame ecb-frame)
@@ -3263,8 +3288,8 @@ always the ECB-frame if called from another frame."
     
     ;; now we can activate ECB
     (let ((curr-buffer-list (mapcar (lambda (buff)
-				      (buffer-name buff))
-				    (buffer-list))))
+                                      (buffer-name buff))
+                                    (buffer-list))))
       ;; create all the ECB-buffers if they don´t already exist
       (unless (member ecb-directories-buffer-name curr-buffer-list)
         (tree-buffer-create
@@ -3296,19 +3321,19 @@ always the ECB-frame if called from another frame."
          ))
       
       (unless (member ecb-sources-buffer-name curr-buffer-list)
-	(tree-buffer-create
-	 ecb-sources-buffer-name
-	 ecb-frame
-	 'ecb-interpret-mouse-click
-	 'ecb-tree-buffer-node-select-callback
-	 'ecb-tree-buffer-node-expand-callback
+        (tree-buffer-create
+         ecb-sources-buffer-name
+         ecb-frame
+         'ecb-interpret-mouse-click
+         'ecb-tree-buffer-node-select-callback
+         'ecb-tree-buffer-node-expand-callback
          'ecb-mouse-over-source-node
          'equal
-	 (list (cons 0 ecb-sources-menu))
-	 ecb-truncate-lines
-	 t
-	 ecb-tree-indent
-	 ecb-tree-incremental-search
+         (list (cons 0 ecb-sources-menu))
+         ecb-truncate-lines
+         t
+         ecb-tree-indent
+         ecb-tree-incremental-search
          ecb-tree-navigation-by-arrow
          nil
          nil
@@ -3319,12 +3344,12 @@ always the ECB-frame if called from another frame."
                                     'ecb-toggle-RET-selects-edit-window)))))
       
       (unless (member ecb-methods-buffer-name curr-buffer-list)
-	(tree-buffer-create
-	 ecb-methods-buffer-name
-	 ecb-frame
-	 'ecb-interpret-mouse-click
-	 'ecb-tree-buffer-node-select-callback
-	 nil
+        (tree-buffer-create
+         ecb-methods-buffer-name
+         ecb-frame
+         'ecb-interpret-mouse-click
+         'ecb-tree-buffer-node-select-callback
+         nil
          'ecb-mouse-over-method-node
          ;; Function which compares the node-data of a tree-buffer-node in the
          ;; method-buffer for equality. We must compare semantic-tokens but we
@@ -3350,12 +3375,12 @@ always the ECB-frame if called from another frame."
                    (eq (semantic-token-end l) (semantic-token-end r))))))
          nil
          ecb-truncate-lines
-	 t
-	 ecb-tree-indent
-	 ecb-tree-incremental-search
+         t
+         ecb-tree-indent
+         ecb-tree-incremental-search
          ecb-tree-navigation-by-arrow
-	 nil
-	 ecb-tree-expand-symbol-before
+         nil
+         ecb-tree-expand-symbol-before
          ecb-method-face
          ecb-methods-general-face
          (function (lambda ()
@@ -3364,19 +3389,19 @@ always the ECB-frame if called from another frame."
         (setq ecb-methods-root-node (tree-buffer-get-root)))
       
       (unless (member ecb-history-buffer-name curr-buffer-list)
-	(tree-buffer-create
-	 ecb-history-buffer-name
-	 ecb-frame
-	 'ecb-interpret-mouse-click
-	 'ecb-tree-buffer-node-select-callback
-	 'ecb-tree-buffer-node-expand-callback
+        (tree-buffer-create
+         ecb-history-buffer-name
+         ecb-frame
+         'ecb-interpret-mouse-click
+         'ecb-tree-buffer-node-select-callback
+         'ecb-tree-buffer-node-expand-callback
          'ecb-mouse-over-history-node
          'equal
-	 (list (cons 0 ecb-history-menu))
-	 ecb-truncate-lines
-	 t
-	 ecb-tree-indent
-	 ecb-tree-incremental-search
+         (list (cons 0 ecb-history-menu))
+         ecb-truncate-lines
+         t
+         ecb-tree-indent
+         ecb-tree-incremental-search
          ecb-tree-navigation-by-arrow
          nil
          nil
@@ -3385,7 +3410,7 @@ always the ECB-frame if called from another frame."
          (function (lambda ()
                      (local-set-key (kbd "C-t")
                                     'ecb-toggle-RET-selects-edit-window))))))
-
+    
     ;; Now store all tree-buffer-names used by ECB
     ;; ECB must not use the variable `tree-buffers' but must always refer to
     ;; `ecb-tree-buffers'!!
@@ -3398,7 +3423,7 @@ always the ECB-frame if called from another frame."
     (add-hook 'semantic-after-partial-cache-change-hook
               'ecb-update-after-partial-reparse t)
     (add-hook 'semantic-after-toplevel-cache-change-hook
-	      'ecb-rebuild-methods-buffer-with-tokencache t)
+              'ecb-rebuild-methods-buffer-with-tokencache t)
     (ecb-activate-ecb-sync-functions ecb-highlight-token-with-point-delay
                                      'ecb-token-sync)
     (ecb-activate-ecb-sync-functions ecb-window-sync-delay
@@ -3411,11 +3436,11 @@ always the ECB-frame if called from another frame."
     ;; ediff-stuff; we operate here only with symbols to avoid bytecompiler
     ;; warnings
     (if (boundp 'ediff-quit-hook)
-	(put 'ediff-quit-hook 'ecb-ediff-quit-hook-value
-	     (symbol-value 'ediff-quit-hook)))
+        (put 'ediff-quit-hook 'ecb-ediff-quit-hook-value
+             (symbol-value 'ediff-quit-hook)))
     (add-hook 'ediff-quit-hook 'ediff-cleanup-mess)
     (add-hook 'ediff-quit-hook 'ecb-ediff-quit-hook t)
-
+    
     ;; menus
     (if running-xemacs
         (add-submenu nil ecb-minor-menu))
@@ -3441,15 +3466,6 @@ always the ECB-frame if called from another frame."
             (split-window-horizontally))
            ((not ecb-split-edit-window)
             (delete-other-windows))))
-
-    ;; fill up the history-buffer with all file-buffers
-    (when (ecb-window-live-p ecb-history-buffer-name)
-      (mapc (lambda (buffer)
-              (when (buffer-file-name buffer)
-                (ecb-add-item-to-history-buffer (buffer-file-name buffer))))
-            (buffer-list))
-      (ecb-sort-history-buffer))
-    (ecb-update-history-window (buffer-file-name (current-buffer)))
     
     (ecb-update-directories-buffer)
     ;; now update all the ECB-buffer-modelines
@@ -3477,6 +3493,7 @@ always the ECB-frame if called from another frame."
     
     ;;now take a snapshot of the current window configuration
     (ecb-set-activated-window-configuration)))
+
 
 (defun ecb-set-activated-window-configuration()
   "Set the `ecb-activated-window-configuration' after the ECB is activated."

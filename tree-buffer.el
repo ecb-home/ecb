@@ -26,7 +26,7 @@
 ;; This file is part of the ECB package which can be found at:
 ;; http://home.swipnet.se/mayhem/ecb.html
 
-;; $Id: tree-buffer.el,v 1.86 2002/05/17 12:09:22 berndl Exp $
+;; $Id: tree-buffer.el,v 1.87 2002/06/07 16:12:33 berndl Exp $
 
 ;;; Code:
 
@@ -107,6 +107,13 @@ node name.")
 (defvar tree-buffer-incr-searchpattern nil)
 (defvar tree-buffer-last-incr-searchpattern nil)
 (defvar tree-buffer-incr-search nil)
+
+;; tree-buffer-local data-storage with get- and set-function
+(defvar tree-buffer-data-store nil)
+(defun tree-buffer-set-data-store (data)
+  (setq tree-buffer-data-store data))
+(defun tree-buffer-get-data-store ()
+  tree-buffer-data-store)
 
 ;; tree-buffer global variables
 (defvar tree-buffers nil)
@@ -372,8 +379,8 @@ displayed without empty-lines at the end, means WINDOW is always best filled."
     (tree-buffer-remove-highlight)))
 
 (defun tree-buffer-help-echo-fn (win obj pos)
-  "This function is the value of the `help-echo' property of each tree-node.
-This is only used with GNU Emacs 21!"
+  "This function is the value of the `help-echo' property of each
+tree-node. This is only used with GNU Emacs 21!"
   (let* ((window win)
          (position pos)
          (buffer (window-buffer window))
@@ -381,9 +388,9 @@ This is only used with GNU Emacs 21!"
     (save-excursion
       (set-buffer buffer)
       (setq node (tree-buffer-get-node-at-point position))
-      (or (and tree-node-mouse-over-fn
-               node
-               (funcall tree-node-mouse-over-fn node window 'no-print)) ""))))
+      (and tree-node-mouse-over-fn
+           node
+           (funcall tree-node-mouse-over-fn node window 'no-print)))))
 
 (defun tree-buffer-insert-text (text &optional facer help-echo)
   "Insert TEXT at point and faces it with FACER. FACER can be a face then the
@@ -835,8 +842,14 @@ functionality is done with the `help-echo'-property and the function
                                 highlight-node-face general-face
                                 after-create-hook)
   "Creates a new tree buffer and returns the newly created buffer.
-NAME: Name of the buffer
-FRAME: Frame in which the tree-buffer is displayed and valid. All keybindings
+This function creates also a special data-storage for this tree-buffer which
+can be accessed via `tree-buffer-set-data-store' and `tree-buffer-get-data-store'.
+The user of this tree-buffer can store any arbitrary data in this storage.
+Before using the accessor-functions above the tree-buffer has to be the
+current buffer!
+
+NAME: Name of the buffer FRAME: Frame in
+which the tree-buffer is displayed and valid. All keybindings
        and interactive functions of the tree-buffer work only if called in
        FRAME otherwise nothing is done!
 IS-CLICK-VALID-FN: `tree-buffer-create' rebinds down-mouse-1, down-mouse-2,
@@ -944,7 +957,10 @@ AFTER-CREATE-HOOK: A function \(with no arguments) called directly after
     (make-local-variable 'tree-buffer-incr-searchpattern)
     (make-local-variable 'tree-buffer-last-incr-searchpattern)
     (make-local-variable 'tree-buffer-incr-search)
-  
+
+    ;; initialize the user-data-storage for this tree-buffer.
+    (set (make-local-variable 'tree-buffer-data-store) nil)
+    
     (setq truncate-lines tr-lines)
     (setq truncate-partial-width-windows tr-lines)
     (setq buffer-read-only read-only)
