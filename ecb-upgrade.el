@@ -165,8 +165,8 @@
                                  ecb-upgrade-major-modes-activate))
     (ecb-cache-directory-contents . (ecb-cache-directory-contents
                                      ecb-upgrade-cache-directory-contents))
-    (ecb-source-file-regexps .(ecb-source-file-regexps
-                               ecb-upgrade-source-file-regexps)))
+    (ecb-source-file-regexps . (ecb-source-file-regexps
+                                ecb-upgrade-source-file-regexps)))
   
   "Alist of all options which should be upgraded for current ECB-version.
 There are several reasons why an option should be contained in this alist:
