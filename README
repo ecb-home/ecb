@@ -16,15 +16,18 @@ Requirements
 ------------
 
 ECB requires the following packages:
+
 - Semantic, author version between 1.4 and 1.4.9
   (http://cedet.sourceforge.net/semantic.shtml)
+  
 - Eieio, author version between 0.17 and 0.17.9
   (http://cedet.sourceforge.net/eieio.shtml).
   
-- Optional: speedbar, author version 0.14beta1 or higher
-  (http://cedet.sourceforge.net/eieio.shtml)
-  This is only needed if the speedbar-integration of ECB is used or if
-  non-semantic-sources should be parsed and displayed.
+- speedbar, author version 0.14beta1 or higher
+  (http://cedet.sourceforge.net/speedbar.shtml)
+  IMPORTANT: The speedbar-version shipped with GNU Emacs <= 21.3 does not
+  satisfy the requirements - download and install a newer one!
+
 - Optional: If Java code is edited the ECB works best when the JDE package
   (http://sunsite.auc.dk/jde) is installed.
 
@@ -46,7 +49,7 @@ with `ecb-activate' or read the online-help with `ecb-show-help'.
 
 1. Unpack the ECB archive (probably you have already done this :-)
 
-2. Install the required semantic- and eieio-version.
+2. Install the required semantic-, eieio- and speedbar-version.
 
    *Note*: ECB maybe requires a newer version of these libraries than shipped
    with (X)Emacs. You have to install exactly a version ECB requires and also
@@ -54,12 +57,12 @@ with `ecb-activate' or read the online-help with `ecb-show-help'.
 
    But ECB performs two automatic checks:
 
-    - At load-time: It checks if the packages semantic and eieio are at least
-      installed so ECB can be loaded. If not it offers to download and
-      install them.
+    - At load-time: It checks if the packages semantic, eieio and speedbar are
+      at least installed so ECB can be loaded. If not it offers to download
+      and install them.
 
-    - At start-time: It checks if the correct versions of semantic and eieio
-      are installed and gives you proper feedback.
+    - At start-time: It checks if the correct versions of semantic, eieio and
+      speedbar are installed and gives you proper feedback.
 
     So if you are not sure if you have installed the required packages at all
     or if you have installed the correct versions of these packages then do
