@@ -104,7 +104,7 @@
 ;; - `ecb-with-some-adviced-functions'
 ;;
 
-;; $Id: ecb-layout.el,v 1.147 2003/01/21 18:05:53 berndl Exp $
+;; $Id: ecb-layout.el,v 1.148 2003/01/22 10:13:23 berndl Exp $
 
 ;;; Code:
 
@@ -800,7 +800,14 @@ either not activated or it behaves exactly like the original version!"
 (defadvice scroll-all-mode (after ecb)
   "With active ECB `scroll-all-mode' scrolls only the two edit-windows if point
 stays in one of them. In all other situations just the selected window is scrolled."
-  (ecb-enable-count-windows-advice scroll-all-mode))
+  (ecb-enable-count-windows-advice scroll-all-mode)
+  (if scroll-all-mode
+      ;; scroll all mode needs 'only-edit as value for
+      ;; `ecb-other-window-jump-behavior'
+      (setq ecb-other-window-jump-behavior 'only-edit)
+    ;; setting back to the old user customized value
+    (setq ecb-other-window-jump-behavior
+          (ecb-option-get-value 'ecb-other-window-jump-behavior))))
 
 (defadvice count-windows (around ecb)
   "Return the current number of edit-windows if point is in an edit-window. If
