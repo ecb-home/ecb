@@ -41,14 +41,15 @@ mouse. There are currently three different types of ECB-windows:
 
 1. ECB Directories:
 
-- Select directories and, if enabled, source files, in the \"*ECB Directories*\"
-  buffer by clicking the left mouse button on the directory name or by hitting
-  ENTER/RETURN when the cursor is placed on the item line.
+- Select directories and, if enabled, source files, in the \"*ECB
+  Directories*\" buffer by clicking a mouse button (see \"Usage of ECB\"
+  below) on the directory name or by hitting ENTER/RETURN when the cursor is
+  placed on the item line.
 
 - Directory names with a \"[+]\" symbol after \(or before) them can be
-  expanded/collapsed by left-clicking on the symbol, pressing the TAB key when
-  the cursor is placed on the package line or clicking the middle mouse button
-  on the item.
+  expanded/collapsed by clicking on the symbol, pressing the TAB key when the
+  cursor is placed on the package line or clicking a mouse button (see \"Usage
+  of ECB\" below) on the item.
 
 - Right clicking on an item will open a popup menu where different operations
   on the item under the mouse cursor can be performed.
@@ -58,19 +59,20 @@ mouse. There are currently three different types of ECB-windows:
 
 2. ECB Sources:
 
-- Source files can be select by clicking the left mouse button or hitting
-  ENTER/RETURN on the source row in the \"*ECB Sources*\" or \"*ECB History*\"
-  windows.
+- Source files can be selected by clicking a mouse button (see \"Usage of
+  ECB\" below) or hitting ENTER/RETURN on the source row in the \"*ECB
+  Sources*\" or \"*ECB History*\" windows.
 
-  IMPORTANT: If you hold down the SHIFT-key while clicking with the left mouse
-  button on a source row in the \"*ECB Sources*\" or \"*ECB History*\" windows
-  then the source will not be displayed in the edit-window but it will be
-  scanned in the background and all it´s methods and variables are listed in
-  the \"ECB Methods\" window. So you can get an overlook over the source
-  without changing the buffer in the edit-window.
+  IMPORTANT: If you hold down the SHIFT-key while clicking with the primary
+  mouse button (see \"Usage of ECB\" below) on a source row in the \"*ECB
+  Sources*\" or \"*ECB History*\" windows then the source will not be
+  displayed in the edit-window but it will be scanned in the background and
+  all it´s methods and variables are listed in the \"ECB Methods\" window. So
+  you can get an overlook over the source without changing the buffer in the
+  edit-window.
 
-- Clicking on the source file with the middle mouse button will open the class
-  file in the other edit window.
+- Clicking on the source file with the secondary mouse button (see \"Usage of
+  ECB\" below) will open the class file in the other edit window.
 
 - Right clicking on a source file will open a popup menu where different
   operation on the item under the mouse cursor can be performed.
@@ -79,11 +81,11 @@ mouse. There are currently three different types of ECB-windows:
 
 - The \"*ECB Methods*\" buffer contains the methods \(and variables, if you
   want) in the selected source file. When a method/variable is selected with
-  the left mouse button or ENTER/RETURN the edit buffer will jump to the
-  method/variable.
+  the primary mouse button (see \"Usage of ECB\" below) or ENTER/RETURN the
+  edit buffer will jump to the method/variable.
 
-- Clicking on a method/variable with the middle mouse button will jump to the
-  method in the other edit window.
+- Clicking on a method/variable with the secondary mouse button (see \"Usage
+  of ECB\" below) will jump to the method in the other edit window.
 
 In addition to these ECB-windows you have always one or two edit-windows in
 the ECB-frame and \(if you want) at the bottom a compilation-window, where all
@@ -107,26 +109,38 @@ Working with the mouse in the ECB-buffers:
 
 Normally you get best usage if you use ECB with a mouse.
 
-- Left-button: Opens the source/jumps to method/variable in the edit-window.
-               If the edit-window is splitted in two edit-windows then you can
-               choose in which of the edit-windows ECB jumps if you click with
-               the left button: See `ecb-left-mouse-jump-destination'!
+ECB distinguishes between a primary and a secondary mouse-button:
 
-- Middle-button: Like left-button but do this in the \"other\" edit-window if
-                 the edit-window is splitted, otherwise exactly like
-                 left-button.
-
-If you hold down shift-key while you click with left- or middle-button the
-item under mouse-point is displayed in the echo-area. This is useful if you
-have longer items than the window-width of an ECB-window and truncated lines
-so you can read the whole item.
+A click with the primary button causes the main effect in each ECB-buffer:
+- ECB Directories: Expanding/collapsing nodes and displaying files in the ECB
+  Sources buffer.
+- ECB sources/history: Opening the file in that edit-window specified by the
+  option `ecb-primary-mouse-jump-destination'.
+- ECB Methods: Jumping to the method in that edit-window specified by the
+  option `ecb-primary-mouse-jump-destination'.
+A click with the primary mouse-button while the SHIFT-key is pressed only
+displays the complete clicked node in the minibuffer. This is useful if the
+node is longer as the window-width of the ECB-window and `ecb-truncate-lines'
+is not nil.
 IMPORTANT: Doing this in the \"*ECB Sources*\" or \"*ECB History*\" windows
 does not only show the node in the echo area but it also opens the clicked
 source only in the background and shows all its methods/variables in \"ECB
 Methods\"; the buffer of the edit-window is not changed!
 
-- Right-button: Opens a special context popup-menu for the clicked item where
-                you can choose several senseful actions.
+The secondary mouse-button is for opening \(jumping to) the file in the other
+window \(see the documentation `ecb-primary-mouse-jump-destination').
+
+With the option `ecb-primary-secondary-mouse-buttons' the following
+combinations of primary and secondary mouse-buttons are possible:
+- primary: mouse-2, secondary: C-mouse-2 \(means mouse-2 while CTRL-key is
+  pressed). This is the default setting.
+- primary: mouse-1, secondary: C-mouse-1
+- primary: mouse-1, secondary: mouse-2
+If you change this during ECB is activated you must deactivate and activate
+ECB again to take effect
+
+In each ECB-buffer mouse-3 \(= right button) opens a special context
+popup-menu for the clicked item where you can choose several senseful actions.
 
 
 Working with the edit-window of ECB:

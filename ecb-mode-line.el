@@ -1,4 +1,4 @@
-;;; ecb-layout.el --- layout for ECB
+;;; ecb-mode-line.el --- mode-line for ECB
 
 ;; Copyright (C) 2001 Jesper Nordenberg
 ;; Copyright (C) 2001 Free Software Foundation, Inc.
