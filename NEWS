@@ -1,3 +1,22 @@
+* Changes for ECB version 2.22
+
+TODO: News in ecb-upgrade.el nachziehen. Wenn nur Bug-fixes, dann lediglich
+eine Zeile "This is a bugfix-release."
+
+** Compatibility enhancements
+
+*** Fixes a small bug in the compatibility-code for `bs-show' when the
+    buffer-selection should be displayed in the permanent compile-window.
+
+** Fixed Bugs
+
+*** Makes the behavior of adviced `display-buffer' fully compatible to the
+    original version for all buffers which are neither ecb-tree-buffer nor
+    compilation-buffers in the sense of `ecb-compilation-buffer-p'. These
+    "source-buffers" are now also handled correctly in all situations.
+    
+
+
 * Changes for ECB version 2.21
 
 ** Advice for `balance-windows' so only the edit-windows are balanced.

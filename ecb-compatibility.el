@@ -24,7 +24,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-compatibility.el,v 1.3 2004/02/16 08:56:41 berndl Exp $
+;; $Id: ecb-compatibility.el,v 1.4 2004/02/17 16:50:10 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -69,10 +69,10 @@ edit-window. Does nothing if called in another frame as the `ecb-frame'."
     ;; now we handle if bs-show should always display in the compile-window
     (let ((my-bs-buffer (get-buffer-create "*buffer-selection*")))
       ;; ecb-compilation-buffer-p needs a living buffer!
-      (if (and (ecb-compilation-buffer-p my-bs-buffer)
-               ecb-compile-window-height)
-          (ecb-with-adviced-functions
-           (display-buffer (buffer-name my-bs-buffer)))))))
+      (when (and (ecb-compilation-buffer-p my-bs-buffer)
+                 ecb-compile-window-height)
+        (ecb-with-adviced-functions
+         (display-buffer (buffer-name my-bs-buffer)))))))
 
 (defadvice Electric-pop-up-window (around ecb)
   "Ensures that the electric-* commands \(e.g. `electric-buffer-list') work

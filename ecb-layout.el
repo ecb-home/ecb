@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-layout.el,v 1.215 2004/02/16 08:56:25 berndl Exp $
+;; $Id: ecb-layout.el,v 1.216 2004/02/17 16:50:10 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -889,8 +889,7 @@ call a function in a situation which is not supported by this function."
   :type 'boolean)
 
 (defcustom ecb-layout-always-operate-in-edit-window
-  '(display-buffer
-    switch-to-buffer)
+  '(switch-to-buffer)
   "*Adviced window functions work always in the edit-window.
 If we are in an ECB special buffer (methods, directories, etc), and any of the
 adviced windowing functions is called interactively \(see
@@ -908,11 +907,11 @@ otherwise either an error is reported or some other special reaction (depends
 on `ecb-advice-window-functions-signal-error'); see the documentation of the
 adviced functions for this.
 
-For `other-window', `other-window-for-scrolling' and
+For `other-window', `other-window-for-scrolling', `display-buffer' and
 `switch-to-buffer-other-window' this makes no sense, therefore you can not
 enable this for them.
 
-Per default this is enabled for `switch-to-buffer' and `display-buffer'."
+Per default this is only enabled for `switch-to-buffer'."
   :group 'ecb-layout
   :type '(set (const :tag "delete-window"
                      :value delete-window)
@@ -2538,13 +2537,10 @@ splits the edit-window if unsplitted and displays BUFFER in the other
 edit-window but only if `pop-up-windows' is not nil \(otherwise the
 edit-window will not splitted).
 
-If called from outside the edit-area for a non-\"compilation-buffers\" \(s.a.)
-then it behaves as if called from within an edit-window if `display-buffer' is
-contained in `ecb-layout-always-operate-in-edit-window': It depends on
-`pop-up-windows' if the edit-window is automatically splitted ot not.
-If `ecb-layout-always-operate-in-edit-window' does not contain
-`display-buffer' then the buffer is displayed in the edit-window without
-splitting it \(if unsplitted).
+All buffers which are not \"compilation-buffers\" in the sense of
+`ecb-compilation-buffer-p' will be displayed in one of the edit-area and
+`display-buffer' behaves as if the edit-windows would be the only windows in
+the frame.
 
 If BUFFER is contained in `special-display-buffer-names' or matches
 `special-display-regexps' then `special-display-function' will be called \(if
@@ -2660,8 +2656,14 @@ If called for other frames it works like the original version."
                      ;; to display does not contain its final contents so the
                      ;; algorithm of `ecb-toggle-compile-window-height' fails
                      ;; (e.g. during `compile-internal'!).
-                     (when (interactive-p)
-                       (ecb-set-compile-window-height))
+                     (if (interactive-p)
+                         (ecb-set-compile-window-height)
+                       (if (save-excursion
+                             (set-buffer (ad-get-arg 0))
+                             (= (point-min) (point-max)))
+                           ;; Klaus Berndl <klaus.berndl@sdm.de>: If this
+                           ;; makes trouble we remove it.
+                           (ecb-toggle-compile-window-height -1)))
 
                      (if (member ecb-compile-window-temporally-enlarge
                                  '(after-selection both))
@@ -2693,17 +2695,29 @@ If called for other frames it works like the original version."
               ((not (member (ad-get-arg 0) (ecb-get-current-visible-ecb-buffers)))
                (ecb-layout-debug-error "display-buffer for normal buffer: %s"
                                        (ad-get-arg 0))
-               (if (and (not (ecb-point-in-edit-window))
-                        (member 'display-buffer ecb-layout-always-operate-in-edit-window))
-                   (ecb-select-edit-window))
-               ;; maybe we have to split the edit-area here
-               (when (and pop-up-windows
-                          (not (ecb-edit-window-splitted))
-                          (not (ecb-check-for-same-window-buffer (ad-get-arg 0))))
-                 (ecb-layout-debug-error "display-buffer for normal-buffer %s - split edit-window:"
-                                         (ad-get-arg 0))
-                 (ecb-with-adviced-functions
-                  (split-window (car (ecb-canonical-edit-windows-list)))))
+               (let ((edit-win-list (ecb-canonical-edit-windows-list)))
+                 ;; maybe we have to split the edit-area here
+                 (when (and (or pop-up-windows (ad-get-arg 1))
+                            (not (ecb-edit-window-splitted edit-win-list))
+                            ;; if the BUFFER is already displayed in an
+                            ;; edit-window and NOT-THIS-WINDOW is nil then
+                            ;; we must not split the edit-window because
+                            ;; display-buffer then just uses this window for
+                            ;; displaying BUFFER.
+                            (not (and (not (ad-get-arg 1))
+                                      (member (get-buffer-window (ad-get-arg 0) ecb-frame)
+                                              edit-win-list)))
+                            ;; if we display a "normal" buffer from outside
+                            ;; the edit-windows then we have per se another
+                            ;; window because the buffer will displayed in
+                            ;; an edit-window ==> we only split if we are
+                            ;; already in an edit-window.
+                            (ecb-point-in-edit-window edit-win-list)
+                            (not (ecb-check-for-same-window-buffer (ad-get-arg 0))))
+                   (ecb-layout-debug-error "display-buffer for normal-buffer %s - split edit-window:"
+                   (ad-get-arg 0))
+                   (ecb-with-adviced-functions
+                   (split-window (car edit-win-list)))))
                (if (ecb-compile-window-live-p)
                    (unwind-protect
                        (progn
