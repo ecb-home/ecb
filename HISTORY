@@ -3,16 +3,23 @@ Version 1.90:
 
 * ECB now has a list of valid compilation buffers within the ECB menu. (Kevin)
 
+* Modified syntax-table for all tree-buffers with all paren, braces and
+  brackets handled as whitespace so for example no paren-matching takes place
+  (Klaus).
+
 * Speedbar is now integrated in ECB and can be used instead of the standard
-  ECB-directories buffer. Most of the work has been done by Kevin
-  A. Burton. See new option 'ecb-use-speedbar-for-directories'.
+  ECB-directories buffer (or instead of all tree-buffers if you like :-). Most
+  of the important basic work has been done by Kevin A. Burton.
+
+  See new option 'ecb-use-speedbar-for-directories' and the node "Integrating
+  speedbar" in the online-help. (Klaus)
 
   + Version-checking for correct speedbar version (>= 0.14beta1). For lower
     versions ecb-use-speedbar-for-directories has no effect. (Klaus)
   + ecb-speedbar and speedbar first loaded direct before drawing the layout
     with integrated speedbar. (Klaus)
   + The speedbar-commands speedbar, speedbar-get-focus are adviced during
-    running speedbar within ECB, so they behave in a senseful way.
+    running speedbar within ECB, so they behave in a senseful way. (Klaus)
 
 * Naming and managing of layouts has been changed! Now a layout is not
   identified by an integer but by an arbitrary string! Example: The layout
@@ -58,9 +65,9 @@ Version 1.90:
 
 * Adding a new layout type "left-right" which allows the ECB-tree-windows to
   be located at the left and the right side of the ECB-frame. See the new
-  layouts nr. 18 and nr. 19 for examples. Other layouts of this type can be
-  created or programmed very easy with 'ecb-create-newlayout' resp. the macro
-  'ecb-layout-define'. (Klaus)
+  layouts "leftright1", "leftright2" and "leftright3" for examples. Other
+  layouts of this type can be created or programmed very easy with
+  'ecb-create-newlayout' resp. the macro 'ecb-layout-define'. (Klaus)
 
 * Silencing the byte-compiler, i.e. byte-compilation of ECB should now be
   warning free. If byte-compilation still throws warnings during

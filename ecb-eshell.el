@@ -353,7 +353,9 @@ to because the command didn't output much text, go ahead and shrink it again."
   (when (equal frame ecb-frame)
     (ecb-eshell-recenter)))
 
-(add-to-list 'ecb-compilation-buffer-names-internal ecb-eshell-buffer-name)
+(add-to-list 'ecb-compilation-buffer-names-internal
+             (cons ecb-eshell-buffer-name nil))
+             
 
 (add-hook 'ecb-activate-hook 'ecb-eshell-auto-activate-hook)
   
