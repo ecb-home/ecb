@@ -5,6 +5,7 @@
 *** Fixing eating up a lot of CPU-power just for updating the menu-
     entries of current compilation-buffers in the ECB-menu. Now the mechanism
     is based on a idle-timer and a cache.
+    Fixed with great testing-help by Dan Debertin <airboss@nodewarrior.org>
 
 *** Fixed a bug which always truncates lines in the ECB-windows regardless
     of the value of `ecb-truncate-lines'

@@ -1,6 +1,6 @@
 ;;; ecb-compilation.el --- 
 
-;; $Id: ecb-compilation.el,v 1.18 2003/03/04 15:08:47 berndl Exp $
+;; $Id: ecb-compilation.el,v 1.19 2003/03/05 09:05:27 berndl Exp $
 
 ;; Copyright (C) 2000-2003 Free Software Foundation, Inc.
 ;; Copyright (C) 2000-2003 Kevin A. Burton (burton@openprivacy.org)
@@ -188,11 +188,15 @@ is contained in the list returned by the function
 (defvar ecb-compilation-update-idle-time 0.25)
 
 (defun ecb-compilation-buffer-list-init ()
+  "Initialize the compilation buffer list cache."
   (setq ecb-compilation-update-menu-p nil)
   (setq ecb-compilation-buffer-list-cache nil)
   (ecb-compilation-buffer-list-changed-p))
 
 (defun ecb-compilation-buffer-list-changed-p ()
+  "Check if current active buffer list has changed - i.e. if a new buffer has
+been created or a buffer has been deleted. If yes then
+`ecb-compilation-update-menu-p' is set to not nil and the cache is updated."
   (let ((new-buffer-list (buffer-list)))
     (when (not (equal new-buffer-list
                       ecb-compilation-buffer-list-cache))
@@ -202,8 +206,10 @@ is contained in the list returned by the function
 
 (defun ecb-compilation-update-menu()
   "Create an install a menu that allows the user to navigate buffers that are
-valid ECB compilation buffers.  See `ecb-compilation-buffer-p' for more
-information about compilation buffers."
+valid ECB compilation buffers. This is only done if
+`ecb-compilation-update-menu-p' is not nil; see
+`ecb-compilation-buffer-list-changed-p'. For more information about
+compilation buffers see `ecb-compilation-buffer-p'."
 
   (when ecb-compilation-update-menu-p
     (let ((submenu nil)
