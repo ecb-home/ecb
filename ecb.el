@@ -52,7 +52,7 @@
 ;; The latest version of the ECB is available at
 ;; http://home.swipnet.se/mayhem/ecb.html
 
-;; $Id: ecb.el,v 1.103 2001/05/31 12:11:33 berndl Exp $
+;; $Id: ecb.el,v 1.104 2001/05/31 13:00:59 berndl Exp $
 
 ;;; Code:
 
@@ -223,7 +223,7 @@ then activating ECB again!"
   :type 'string)
 
 (defcustom ecb-source-file-regexps
-  '("\\(^\\(\\.\\|#\\)\\|\\(~$\\|\\.\\(elc\\|obj\\|o\\|class\\|lib\\|dll\\|a\\|so\\)$\\)\\)"
+  '("\\(^\\(\\.\\|#\\)\\|\\(~$\\|\\.\\(elc\\|obj\\|o\\|class\\|lib\\|dll\\|a\\|so\\|cache\\)$\\)\\)"
     "^\\.\\(emacs\\|gnus\\)$")
   "*Specifies which files are shown as source files. Consists of one exclude
 regexp and one include regexp. A file is displayed in the source-buffer of ECB
@@ -242,7 +242,7 @@ combination can be defined."
   :type '(radio (const :tag "All files"
 		       :value ("" ""))
 		(const :tag "All, but no backup, object, lib or ini-files \(except .emacs and .gnus)"
-		       :value ("\\(^\\(\\.\\|#\\)\\|\\(~$\\|\\.\\(elc\\|obj\\|o\\|class\\|lib\\|dll\\|a\\|so\\)$\\)\\)" "^\\.\\(emacs\\|gnus\\)$"))
+		       :value ("\\(^\\(\\.\\|#\\)\\|\\(~$\\|\\.\\(elc\\|obj\\|o\\|class\\|lib\\|dll\\|a\\|so\\|cache\\)$\\)\\)" "^\\.\\(emacs\\|gnus\\)$"))
 		(const :tag "Common source file types (.c, .java etc.)"
 		       :value ("" "\\(\\(M\\|m\\)akefile\\|.*\\.\\(java\\|el\\|c\\|cc\\|h\\|hh\\|txt\\|html\\|texi\\|info\\|bnf\\)\\)$"))
 		(list :tag "Custom (tips: \"$^\" matches no files, \"\" mathes all files)"
