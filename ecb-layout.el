@@ -2395,6 +2395,9 @@ can use these variables."
     ;; slow-down the performance of all Emacs-versions unless GNU Emacs 21
     ;; because they have no builtin `window-list'-function.
     (when (and (not (ecb-point-in-tree-buffer))
+               ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>:  Do we need this
+               ;; check elsewhere??
+               (not (ecb-speedbar-buffer-selected))
                (not (equal (minibuffer-window ecb-frame)
                            (selected-window)))
                (not (ecb-point-in-compile-window)))
