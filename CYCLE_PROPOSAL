@@ -69,13 +69,13 @@ Need a consistent function metaphor so that we can use
   `ecb-cycle-switch-to-compilation-buffer', etc.
 
 Should support the ability to automatically change buffers on current-buffer
-  sync.  For example if one methods-buffer is a better representation for the
-  current buffer than the one in the methods window, it should automatically
-  changed to the better one (this could also be disabled in customization).  A
-  good example of this is XML.  The methods buffer doesn't support hierarchical
-  XML navigation (nor should it).  We could automatically change to an XML
-  hierarchical representation in the methods buffer when an XML buffer is
-  selected.
+sync.  For example if one methods-buffer is a better representation for the
+current buffer than the one in the methods window, it should automatically
+changed to the better one (this could also be disabled in customization).  A
+good example of this is XML.  The methods buffer doesn't support hierarchical
+XML navigation (nor should it).  We could automatically change to an XML
+hierarchical representation in the methods buffer when an XML buffer is
+selected.
 
     - we will need to support some type of current buffer mapping.  For example
       we could use regexps
@@ -105,8 +105,8 @@ ISSUES:
 
 TODO:
 
-- We need to have a `ecb-directories-window' and an `ecb-methods-window'
-  like `ecb-compile-window'
+- We need to have a `ecb-directories-window' and an `ecb-methods-window',
+  'ecb-history-window' like `ecb-compile-window'
 
 - Need to provide an initial implementation in ecb-cycle
 
@@ -123,8 +123,8 @@ the buffers that are available for selection and then choose one.
 - need the ability to support a profile stack so that you can pop out of a
   current profile and restore the last one.
 
-- when we restore the default window configuration, we should pop out of any
-  profiles.
+- When we restore the default window configuration (ecb-redraw-layout), we
+  should pop out of any profiles.  (should this be an option)
 
 - ability to *suggest* how a profile should be handled on redraw.
 
@@ -133,3 +133,24 @@ the buffers that are available for selection and then choose one.
     - yield-to-setting
 
 - All external profiles (gnus, calc, etc) should be stored in ecb-cycle-ext.el
+
+- the following windows need to be accounted for:
+
+    - sources
+    - methods
+    - directory
+    - history
+
+- need the ability to run a function prior to displaying a buffer.
+
+    Example: ' *ECB Directories*' needs to have ecb-update-directories-buffer
+    pior to viewing.
+
+    Actually this is a good way from keeping ecb-cycle from refreshing too many
+    buffers on ecb-current-buffer-sync.  By default we should run the update
+    function when we change to a buffer.
+    
+- use a design pattern for creating profiles.  AKA instead of a profile object I
+  could just do an:
+
+    - (defun ecb-cycle-create-profile(name buffers)

@@ -189,7 +189,6 @@ The parameters are set for the following display-types:
                           (if ,bg-rest (list :foreground ,bg-rest))
                           (if ,reverse-video (list :reverse-video t))))))
 
-
 (defface ecb-directories-general-face (ecb-face-default 0.9)
   "Basic face for the ECB directories buffer.
 It´s recommended to define here the font-family, the font-size, the basic
@@ -201,7 +200,6 @@ color etc."
   you always want to run `ecb-activate'."
   :group 'ecb-general
   :type 'boolean)
-
 
 (defcustom ecb-directories-general-face 'ecb-directories-general-face
   "Basic face for the ECB directories buffer. This defines the basic
@@ -1426,7 +1424,6 @@ semantic-reparse. This function is added to the hook
                          (ecb-expand-tree path child))
                        (not was-expanded)))))))))
 
-
 ;; TODO: The timestamp-mechanism is not yet implemented (Klaus)
 (defvar ecb-files-and-subdirs-cache nil
   "Cache for every directory all subdirs and files. This is an alist where an
@@ -1980,7 +1977,6 @@ OTHER-EDIT-WINDOW."
                               (ecb-fix-filename (file-name-directory path)))
                 (throw 'exit norm-dir)))
           nil)))))
-        
 
 (defun ecb-update-directories-buffer ()
   "Updates the ECB directories buffer."

@@ -201,7 +201,7 @@ will/could break."
 (defun ecb-speedbar-current-buffer-sync()
   "Update the speedbar so that we sync up with the current file."
   (interactive)
-
+  
   (save-excursion
     (let(speedbar-directory current-directory)
 
@@ -219,13 +219,14 @@ will/could break."
         (speedbar-update-contents)))))
 
 (defun ecb-speedbar-goto-speedbar()
+  "Goto the speedbar window."
   (interactive)
 
   (select-window (get-buffer-window ecb-speedbar-buffer-name)))
 
 (add-hook 'ecb-current-buffer-sync-hook 'ecb-speedbar-current-buffer-sync)
 
-;;FIXME: migrate this into ecb-mode-map
+;;FIXME: migrate this into ecb-mode-map when speedbar is ready.
 (define-key ecb-mode-map "\C-c.b" 'ecb-speedbar-goto-speedbar)
 
 (provide 'ecb-speedbar)

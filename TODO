@@ -1,8 +1,6 @@
-********************************************************************************
-*** Last-Modified: $Date$ 
-*** Version: $Id$
-*** Author: Kevin A. Burton ( burton@apache.org | burton@openprivacy.org )
-********************************************************************************
+
+- (BUG) ecb-current-buffer-sync doesn't seem to run from dired.  At least hooks
+  aren't run.  The speedbar, eshell and methods buffers all need to be updated.
 
 - KB: Option to auto. expand also "[+] Variables" and "[+] Classname"
    in the methods buffer if 'ecb-highlight-token-with-point' is
