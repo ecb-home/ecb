@@ -1,6 +1,6 @@
 ;;; ecb-eshell.el --- eshell integration for the ECB.
 
-;; $Id: ecb-eshell.el,v 1.29 2002/02/01 09:35:23 burtonator Exp $
+;; $Id: ecb-eshell.el,v 1.30 2002/02/05 06:34:11 burtonator Exp $
 
 ;; Copyright (C) 2000-2003 Free Software Foundation, Inc.
 ;; Copyright (C) 2000-2003 Kevin A. Burton (burton@openprivacy.org)
@@ -225,6 +225,7 @@ eshell is currently visible."
        (get-buffer ecb-eshell-buffer-name)))
   
 (defun ecb-eshell-goto-eshell()
+  "Go ot the eshell buffer"
   (interactive)
   
   ;;first... make sure that we change the compilation window to the eshell
@@ -264,7 +265,9 @@ that the eshell has more screen space after we execute a command. "
     
     (when (and (ecb-eshell-running-p)
                (window-live-p window)
+               (equal (selected-window) ecb-compile-window)
                ecb-minor-mode)
+
       ;;is there a better way to do this?  It seems that there should be a way
       ;;to have emacs split or expand a window by 50% like it is done in a lot
       ;;of other places (display-buffer, etc)
