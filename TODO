@@ -1,21 +1,28 @@
-
-- In online-help:
-  + pointer to the intellisense feature of semantic
-
 - (BUG) if a buffer is opened from within an archive (zip or tar) then
   clicking onto a method in this buffer tries to jump somewhere in the archive
   (tar or zip) buffer (Klaus)
+
+  This is fixed for GNU Emacs - for XEmacs see next point
+
+- KB: I think it would be best if ECB would not be so file-based means it
+  would be good if all semantic-parsable buffers could be displayed correct -
+  regardless if saved in a file or not - this would be good for sources not
+  yet saved as file or for extracted files from an archive with XEmacs (XEmacs
+  does not handle such extracts as normal files like GUN Emacs does)
+
+  But this implies some deeper changes - because we must take care of
+  ecb-path-selected-source and ecb-path-selected-directory and all places
+  where buffer-file-name is used and ECB currently expects a real existing
+  file...
+
+  A solution could be instead of storing filenames as tree-buffer-data storing
+  either filenames (in case of real files) or buffer-object in case of buffers
+  which can be parsed but are not real files (not saved sources or
+  archive-extracts for example).
 
 - (BUG) if we are in a compilation buffer, and we do a
   switch-to-buffer-other-window, and the buffer currently in the edit window is
   already the buffer we want to switch to, we should NOT split the window again
   because this would yeild two windows each with the same buffer.
-
-- KB: Option to auto. expand also "[+] Variables" and "[+] Classname"
-   in the methods buffer if 'ecb-highlight-token-with-point' is
-   'highlight-scroll. (Like the auto. expand directory feature)
-
-- KB: Support horizontal scrolling (especially with XEmacs) in the
-   intelligent tree-buffer recentering.
 
 - Ignore source files specified in .cvsignore files. (JN)
