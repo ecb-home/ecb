@@ -1035,7 +1035,6 @@ For further explanation see `ecb-clear-history-behavior'."
   "Synchronizes the ECB buffers with the current buffer."
   (interactive)
   ;;(message (prin1-to-string this-command))
-  (ecb-token-sync)
   (let ((filename (buffer-file-name (if opt-buffer opt-buffer (current-buffer)))))
     (when (and filename (not (string= filename ecb-path-selected-source)))
       ;; KB: seems this little sleep is necessary because otherwise jumping to
@@ -1045,6 +1044,9 @@ For further explanation see `ecb-clear-history-behavior'."
       ;; sec is enough!
       (sit-for 0.1)
       (ecb-select-source-file filename)
+      ;; selected source has changed, therfore we must initialize
+      ;; ecb-selected-token again.
+      (setq ecb-selected-token nil)
       (ecb-update-methods-buffer--internal 'scroll-to-begin))))
 
 (defun ecb-find-file-and-display(filename other-edit-window)
@@ -1565,7 +1567,8 @@ buffers does not exist anymore."
 
 (defun ecb-post-command-hook()
   (when (and ecb-window-sync (eq (selected-frame) ecb-frame))
-    (ignore-errors (ecb-current-buffer-sync))))
+    (ignore-errors (ecb-current-buffer-sync))
+    (ecb-token-sync)))
 
 
 ;; ECB byte-compilation
