@@ -122,7 +122,7 @@
 ;;   + The edit-window must not be splitted and the point must reside in
 ;;     the not deleted edit-window.
 
-;; $Id: ecb-layout.el,v 1.52 2001/05/27 16:02:08 berndl Exp $
+;; $Id: ecb-layout.el,v 1.53 2001/05/28 15:52:54 berndl Exp $
 
 ;;; Code:
 
@@ -1079,6 +1079,14 @@ handle splitting the edit-window correctly."
            (not ecb-split-edit-window))
       (setq ecb-split-edit-window 'vertical)))
 
+(defun ecb-layout-get-current-tree-windows ()
+  "Return a list of all tree-buffers whose windows are currently visible." 
+  (mapcar (function (lambda (tree-buffer)
+                      (if (window-live-p (get-buffer-window tree-buffer))
+                          tree-buffer
+                        nil)))
+          tree-buffers))
+
 ;; the main layout core-function. This function is the "environment" for a
 ;; special layout function (l.b.)
 
@@ -1106,7 +1114,8 @@ this function the edit-window is selected."
                                                  (if (< ecb-compile-window-height 1.0)
                                                      (* (1- (frame-height))
                                                         ecb-compile-window-height)
-                                                   ecb-compile-window-height)))))
+                                                   ecb-compile-window-height))))
+           (tree-windows-before-redraw (ecb-layout-get-current-tree-windows)))
       
       ;; deactivating the adviced functions, so the layout-functions can use the
       ;; original function-definitions.
@@ -1187,6 +1196,8 @@ this function the edit-window is selected."
       ;; Restore saved window sizes
       (ecb-restore-window-sizes)
 
+      (ecb-update-directories-buffer)
+
       ;; at the end of the redraw we always stay in that edit-window as before
       ;; the redraw
       (ecb-select-edit-window)
@@ -1196,15 +1207,17 @@ this function the edit-window is selected."
       
       (setq ecb-last-edit-window-with-point (selected-window))
       
-      ;; Now let´s update the directories buffer
-      (ecb-update-directories-buffer)
-      
       ;; activating the adviced functions
       (ecb-activate-adviced-functions ecb-advice-window-functions)
       
-      ;; if we were in an edit-window before redraw let us go to the old place.
-      (if pos-before-redraw
-          (goto-char pos-before-redraw)))))
+      ;; if we were in an edit-window before redraw let us go to the old place
+      ;; and synchronize the tree-buffers if necessary (means if not all
+      ;; tree-windows of current layout were visible before redraw).
+      (when pos-before-redraw
+        (goto-char pos-before-redraw)
+        (if (not (equal tree-windows-before-redraw
+                        (ecb-layout-get-current-tree-windows)))
+            (ecb-current-buffer-sync t))))))
 
 
 (defun ecb-store-window-sizes ()

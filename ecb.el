@@ -52,7 +52,7 @@
 ;; The latest version of the ECB is available at
 ;; http://home.swipnet.se/mayhem/ecb.html
 
-;; $Id: ecb.el,v 1.95 2001/05/25 15:49:12 berndl Exp $
+;; $Id: ecb.el,v 1.96 2001/05/28 15:52:54 berndl Exp $
 
 ;;; Code:
 
@@ -925,15 +925,18 @@ displayed with window-start and point at beginning of buffer."
     ;; `ecb-rebuild-methods-buffer-after-parsing' was called auto. after
     ;; `semantic-bovinate-toplevel'.
     (setq ecb-method-buffer-needs-rebuild t)
+    
     (semantic-bovinate-toplevel t)
-
-    ;; Only if the `semantic-bovinate-toplevel' has done no reparsing but only
-    ;; used it´s still valid `semantic-toplevel-bovine-cache' the hooks in
+    
+    ;; If the `semantic-bovinate-toplevel' has done no full reparsing but only
+    ;; used it´s still valid `semantic-toplevel-bovine-cache' or only has done
+    ;; a partial reparsing of dirty tokens the hooks in
     ;; `semantic-after-toplevel-bovinate-hook' are not evaluated and therefore
     ;; `ecb-rebuild-methods-buffer-after-parsing' was not called. Therefore we
-    ;; call it here manually. `ecb-rebuild-methods-buffer-after-parsing' is the
-    ;; only function which sets `ecb-method-buffer-needs-rebuild' to nil to
-    ;; signalize that a "manually" rebuild of the method buffer is not necessary.
+    ;; call it here manually. `ecb-rebuild-methods-buffer-after-parsing' is
+    ;; the only function which sets `ecb-method-buffer-needs-rebuild' to nil
+    ;; to signalize that a "manually" rebuild of the method buffer is not
+    ;; necessary.
     (if ecb-method-buffer-needs-rebuild
 	(ecb-rebuild-methods-buffer-after-parsing))
     (when scroll-to-top
@@ -943,19 +946,24 @@ displayed with window-start and point at beginning of buffer."
   
 (defun ecb-rebuild-methods-buffer-after-parsing ()
   "Rebuilds the ECB-method buffer after toplevel-parsing by semantic. This
-  function is added to the hook `semantic-after-toplevel-bovinate-hook'."
-  ;; This is a fix for semantic 1.4beta2
-  ;; otherwise it parses the mini-buffer
+function is added to the hook `semantic-after-toplevel-bovinate-hook'."
   (when (and ecb-activated
              (equal (selected-frame) ecb-frame)
              (get-buffer-window ecb-methods-buffer-name))
+    ;; if we check also if semantic-toplevel-bovine-cache is non nil then this
+    ;; functions is not called after clearing the cache (new in semantic 1.4)
+    ;; but then also the method-buffer is not cleared if we open a source
+    ;; which has no tokens like txt-files.
+    ;; TODO: We need a smarter mechanism to combine this.
+
+    ;; This is a fix for semantic 1.4beta2
+    ;; otherwise it parses the mini-buffer
     (unless (string-match "^ *\\*" (buffer-name))
       (tree-node-set-children ecb-methods-root-node nil)
       (ecb-add-tokens ecb-methods-root-node
 		      ;; this works because at call-time of the hooks in
 		      ;; `semantic-after-toplevel-bovinate-hook' the cache is
 		      ;; always either still valid or rebuild.
-		      ;;
 		      ;; TODO: Ugly fix to make it work with semantic 1.4
 		      (if (listp (caar semantic-toplevel-bovine-cache))
 			  (car semantic-toplevel-bovine-cache)
@@ -1068,13 +1076,16 @@ For further explanation see `ecb-clear-history-behavior'."
              (tree-buffer-highlight-node-data
               tok (equal ecb-highlight-token-with-point 'highlight)))))))))
 
-(defun ecb-current-buffer-sync (&optional opt-buffer)
-  "Synchronizes the ECB buffers with the current buffer."
-  (interactive)
+(defun ecb-current-buffer-sync (&optional force opt-buffer)
+  "Synchronizes the ECB buffers with the current buffer. Unless FORCE is non
+nil then do this only if current-buffer differs from the source displayed in
+the ECB tree-buffers."
+  (interactive "P")
   (when (and ecb-activated
              (equal (selected-frame) ecb-frame))
     (let ((filename (buffer-file-name (if opt-buffer opt-buffer (current-buffer)))))
-      (when (and filename (not (string= filename ecb-path-selected-source)))
+      (when (or force
+                (and filename (not (string= filename ecb-path-selected-source))))
         ;; KB: seems this little sleep is necessary because otherwise jumping to
         ;; certain markers in new opened files (e.g. with next-error etc. )
         ;; doesn´t work correct. Can´t debug down this mysterious thing!
@@ -1568,6 +1579,7 @@ always the ECB-frame if called from another frame."
     ;; now we draw the layout choosen in `ecb-layout'. This function
     ;; acivates at its end also the adviced functions if necessary!
     (ecb-redraw-layout)
+
     ;; now update all the ECB-buffer-modelines
     (ecb-mode-line-format)
 
