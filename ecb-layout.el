@@ -164,6 +164,8 @@ layout with `ecb-redraw-layout'"
               (ecb-redraw-layout)))
   :type 'integer)
 
+(defconst ecb-old-compilation-window-height compilation-window-height)
+
 (defcustom ecb-compile-window-height 5.0
   "*If you want a compilation window shown at the bottom
 of the ECB-layout then set here the height of it \(Default is a height of 5).
@@ -281,8 +283,8 @@ frame height."
   "*Which windows of ECB should be accessable by the ECB-adviced function
 `other-window', an intelligent replacement for the Emacs standard version of
 `other-window'. Following settings are possible:
-- 'only-edit: ECB will only cycle throuh the edit-windows of ECB.
-- 'edit-and-compile: Like 'only-edit plus the compile window if any
+- 'only-edit: ECB will only cycle through the edit-windows of ECB.
+- 'edit-and-compile: Like 'only-edit plus the compile window if any.
 - 'all: ECB will cycle through all windows of ECB, means it behaves like the
   original `other-window'."
   :group 'ecb-layout
@@ -394,7 +396,12 @@ correct subsets of adviced functions are set!"
 ;; ====== internal variables ====================================
 
 (defvar ecb-edit-window nil
-  "Window to edit source in.")
+  "Window to edit source in. If this window is splitted in two windows then
+`ecb-edit-window' is always the leftmost/topmost window of the two
+edit-windows! ")
+(defvar ecb-last-edit-window-with-point nil
+  "The edit-window of ECB which had the point before an emacs-command is
+done.")
 (defvar ecb-compile-window nil
   "Window to display compile-output in.")
 
@@ -452,6 +459,13 @@ ECB adviced functions!"
          t)
         (t nil)))
 
+(defun ecb-pre-command-hook-function ()
+  "During activated ECB this function is added to `pre-command-hook' to set
+always `ecb-last-edit-window-with-point' correct so other functions can use
+this variable."
+  (if (ecb-point-in-edit-window)
+      (setq ecb-last-edit-window-with-point (selected-window))))
+
 ;; here come the advices
 
 (defadvice other-window (around ecb)
@@ -463,31 +477,51 @@ The behavior depends on `ecb-other-window-jump-behavior'."
       ;; here we process the 'all value of `ecb-other-window-jump-behavior'
       ad-do-it
     ;; in the following cond-clause `ecb-other-window-jump-behavior' can only
-    ;; have the values 'only-edit and 'edit-and-compile!
-    (cond ((eq (selected-window) ecb-edit-window)
-           (if ecb-split-edit-window
-               (select-window (next-window))
-             (if (eq ecb-other-window-jump-behavior 'edit-and-compile)
-                 (condition-case ()
-                     (select-window ecb-compile-window)
-                   (error nil)))))
-          ((and ecb-compile-window
-                (eq (selected-window) ecb-compile-window))
-           (condition-case ()
-               (select-window ecb-edit-window)
-             (error nil)))
-          ((and ecb-split-edit-window
-                (eq (previous-window (selected-window) 0) ecb-edit-window))
-           (if (and (eq ecb-other-window-jump-behavior 'edit-and-compile)
-                    ecb-compile-window)
-               (condition-case ()
-                   (select-window ecb-compile-window)
-                 (error nil))
-             (select-window ecb-edit-window)))
-          (t
-           (condition-case ()
-               (select-window ecb-edit-window)
-             (error nil))))))
+    ;; have the values 'only-edit and 'edit-and-compile! we have implemented
+    ;; the logic for the values 1 and -1 for ARG-argument of other-window.
+    ;; This algorithm is called ARG-times with the right direction if ARG != 1
+    ;; or -1.
+    (let ((count (if (ad-get-arg 0)
+                     (if (< (ad-get-arg 0) 0)
+                         (* -1 (ad-get-arg 0))
+                       (ad-get-arg 0))
+                   1))
+          (direction (if (or (not (ad-get-arg 0)) (>= (ad-get-arg 0) 0)) 1 -1)))
+      (while (> count 0)
+        (setq count (1- count))
+        (cond ((eq (selected-window) ecb-edit-window)
+               (if (= direction 1)
+                   (if ecb-split-edit-window
+                       (select-window (next-window))
+                     (if (eq ecb-other-window-jump-behavior 'edit-and-compile)
+                         (ignore-errors
+                           (select-window ecb-compile-window))))
+                 (if (eq ecb-other-window-jump-behavior 'edit-and-compile)
+                     (ignore-errors
+                       (select-window ecb-compile-window))
+                   (if ecb-split-edit-window
+                       (select-window (next-window))))))
+              ((and ecb-compile-window
+                    (eq (selected-window) ecb-compile-window))
+               (ignore-errors
+                 (select-window ecb-edit-window))
+               (if ecb-split-edit-window
+                   (if (= direction -1)
+                       (select-window (next-window)))))
+              ((and ecb-split-edit-window
+                    (eq (previous-window (selected-window) 0) ecb-edit-window))
+               (if (= direction 1)
+                   (if (and (eq ecb-other-window-jump-behavior 'edit-and-compile)
+                            ecb-compile-window)
+                       (ignore-errors
+                         (select-window ecb-compile-window))
+                     (ignore-errors
+                       (select-window ecb-edit-window)))
+                 (ignore-errors
+                   (select-window ecb-edit-window))))
+              (t
+               (ignore-errors
+                 (select-window ecb-edit-window))))))))
 
 (defadvice delete-window (around ecb)
   "The ECB-version of `delete-window'. Works exactly like the original
@@ -834,14 +868,13 @@ This is only be done if `ecb-select-compile-window' is non nil.
 This hook will only be added to `compilation-mode-hook' if ECB was activated."
   (setq ecb-layout-selected-window-before-compile (selected-window))
   (if ecb-select-compile-window
-      ;; we must du this with condition-case because maybe the
+      ;; we must du this with ignore-errors because maybe the
       ;; compilation-window was destroyed and `ecb-compile-window' was
       ;; not nil.
-      (condition-case ()
-          (progn
-            (select-window ecb-compile-window)
-            (end-of-buffer))
-        (error nil))))
+      (ignore-errors
+        (progn
+          (select-window ecb-compile-window)
+          (end-of-buffer)))))
 
 (defun ecb-layout-return-from-compilation (comp-buf process-state)
   "Jumps back to the window from which the compilation-process was started.
@@ -851,9 +884,8 @@ activated. The arguments are required by `compilation-finish-functions' but
 will not be evaluated here."
   (setq ecb-last-compile-window-buffer (buffer-name))
   (if ecb-select-compile-window
-      (condition-case ()
-          (select-window ecb-layout-selected-window-before-compile)
-        (error nil))))
+      (ignore-errors
+          (select-window ecb-layout-selected-window-before-compile))))
 
 (defun ecb-set-edit-window-split-hook-function ()
   "This function is added to `compilation-mode-hook' and `help-mode-hook' to
@@ -883,12 +915,11 @@ this function the edit-window is selected."
     ;; original function-definitions.
     (ecb-activate-adviced-functions nil)
 
-    ;; first we go to the edit-window we must du this with condition-case
+    ;; first we go to the edit-window we must do this with ignore-errors
     ;; because maybe the edit-window was destroyed by some mistake or error
     ;; and `ecb-edit-window' was not nil.
-    (condition-case ()
-        (select-window ecb-edit-window)
-      (error nil))
+    (ignore-errors
+        (select-window ecb-edit-window))
 
     ;; Do some actions regardless of the choosen layout
     (delete-other-windows)
@@ -910,13 +941,14 @@ this function the edit-window is selected."
 
     ;; The following when-expression is added for better relayouting the
     ;; choosen layout if we have a compilation-window.
-    (when ecb-compile-window-height
+    (if (not ecb-compile-window-height)
+        (setq compilation-window-height ecb-old-compilation-window-height)
       ;; here we always stay in the `ecb-edit-window'
-
+      
       (select-window (if ecb-compile-window
                          ecb-compile-window
                        (error "Compilations-window not set in the layout-function")))
-
+      
       ;; go one window back, so display-buffer always shows the buffer in the
       ;; next window, which is then savely the compile-window.
       (select-window (previous-window (selected-window) 0))
@@ -925,14 +957,17 @@ this function the edit-window is selected."
       ;; *compilation*- or any other buffer with compile-mode.
       (display-buffer (or (get-buffer ecb-last-compile-window-buffer)
                           (get-buffer "*scratch*")))
+      ;; setting compilation-window-height
+      (setq compilation-window-height
+            (floor (if (< ecb-compile-window-height 1.0)
+                       (* (1- (frame-height))
+                          ecb-compile-window-height)
+                     ecb-compile-window-height)))
       ;; Cause of display-buffer changes the height of the compile-window we
       ;; must resize it again to the correct value
       (select-window (next-window))
       (shrink-window (- (window-height)
-                        (floor (if (< ecb-compile-window-height 1.0)
-                                   (* (1- (frame-height))
-                                      ecb-compile-window-height)
-                                 ecb-compile-window-height)))))
+                        compilation-window-height)))
 
     (select-window (if ecb-edit-window
                        ecb-edit-window
@@ -950,6 +985,8 @@ this function the edit-window is selected."
     (select-window ecb-edit-window)
     (if (eq window-before-redraw 2)
         (select-window (next-window)))
+
+    (setq ecb-last-edit-window-with-point (selected-window))
 
     ;; Now let´s update the directories buffer
     (ecb-update-directories-buffer)

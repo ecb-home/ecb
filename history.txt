@@ -7,6 +7,15 @@ Version 1.20 (???):
 
 - Better online help display.
 
+- Added new option 'ecb-left-mouse-jump-destination' (thanks to David Hay for
+  suggestion <David.Hay@requisite.com>.
+
+- Adviced 'other-window' acts now exactly like the original but always related
+  to 'ecb-other-window-jump-behavior'!
+
+- Fixed bug with 'ecb-compile-window-height'. Now ECB has always the correct
+  compile-window height after compilation-output (compile, grep etc.)
+
 
 Version 1.10 (2001-03-25):
 --------------------------

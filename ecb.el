@@ -192,7 +192,7 @@ and then activating ECB again!"
   :group 'ecb-sources
   :type 'string)
 
-(defcustom ecb-source-file-regexp "\\(\\(M\\|m\\)akefile\\|.*\\.\\(java\\|el\\|c\\|cc\\|h\\|hh\\|txt\\|html\\|mk\\|xml\\|dtd\\|texi\\|info\\|bnf\\|cpp\\|hpp\\)\\)$"
+(defcustom ecb-source-file-regexp "\\(\\(M\\|m\\)akefile\\|^\\.\\(emacs\\|gnus\\)\\|.*\\.\\(java\\|el\\|c\\|cc\\|h\\|hh\\|txt\\|html\\|mk\\|xml\\|dtd\\|texi\\|info\\|bnf\\|cpp\\|hpp\\)\\)$"
   "*Files matching this regular expression will be shown in the source
 buffer."
   :group 'ecb-sources
@@ -385,6 +385,27 @@ This option takes only effect if `ecb-font-lock-methods' is on."
                        :value if-too-long)
                 (const :tag "Never"
                        :value nil)))
+
+;; Thanks to David Hay for the suggestion <David.Hay@requisite.com>
+(defcustom ecb-left-mouse-jump-destination 'left-top
+  "*Jump-destination of a left-mouse-button click in an ECB-window,
+if you click onto a source or method or variable. Defines in which edit-window
+\(if splitted) ECB does the \"right\" action \(opening the source, jumping to
+a method/variable). There are two possible choices:
+- left-top: Does the \"right\" action alyways in the left/topmost edit-window.
+- last-point: Does the \"right\" action alyways in that edit-window which had
+  the point before.
+
+If the edit-window is not splitted this setting doesn´t matter.
+
+Note: A click with the middle-mouse-button does the \"right\" action always in
+the \"other\" window related to the setting in this option."
+  :group 'ecb-general
+  :type '(radio (const :tag "Left/topmost edit-window"
+                       :value left-top)
+                (const :tag "Last edit-window with point"
+                       :value last-point)))
+  
 
 (defcustom ecb-activate-before-layout-draw-hook nil
   "*Normal hook run at the end of activating the ecb-package by running
@@ -790,13 +811,30 @@ For further explanation see `ecb-clear-history-behavior'."
     ;;      (when (not (equal method-start ecb-selected-method-start))
     ;;	(ecb-select-method (ecb-get-method-start-at-point))))))
 
+;; (defun ecb-find-file-and-display(filename &optional window-skips)
+;;   "Finds the file in the correct window."
+;;   (select-window ecb-edit-window)
+;;   ;; do the following with not ecb-adviced window-functions.
+;;   (ecb-with-original-functions
+;;    (if window-skips
+;;        (other-window window-skips))
+;;    (find-file ecb-path-selected-source)
+;;    (pop-to-buffer (buffer-name))))
+
 (defun ecb-find-file-and-display(filename &optional window-skips)
-  "Finds the file in the correct window."
-  (select-window ecb-edit-window)
-  ;; do the following with not ecb-adviced window-functions.
-  (ecb-with-original-functions
+  "Finds the file in the correct window. What the correct window is depends on
+the setting in `ecb-left-mouse-jump-destination'."
+  (if (eq ecb-left-mouse-jump-destination 'left-top)
+      (select-window ecb-edit-window)
+    (select-window ecb-last-edit-window-with-point))
+;;   (ecb-with-original-functions
+;;    (if window-skips
+;;        (other-window window-skips)))
+  (ecb-with-adviced-functions
    (if window-skips
-       (other-window window-skips))
+       (let ((ecb-other-window-jump-behavior 'only-edit))
+         (other-window window-skips))))
+  (ecb-with-original-functions
    (find-file ecb-path-selected-source)
    (pop-to-buffer (buffer-name))))
 
@@ -1003,10 +1041,14 @@ Working with the mouse in the ECB-buffers:
 
 Normally you get best usage if you use ECB with a mouse.
 
-- Left-button: Opens the source/jumps to method/variable in the edit-window
+- Left-button: Opens the source/jumps to method/variable in the edit-window.
+               If the edit-window is splitted in two edit-windows then you can
+               choose in which of the edit-windows ECB jumps if you click with
+               the left button: See `ecb-left-mouse-jump-destination'!
 
-- Middle-button: Like left-button but do this in the other edit-window if the
-                 edit window is splitted, otherwise exactly like left-button.
+- Middle-button: Like left-button but do this in the \"other\" edit-window if
+                 the edit-window is splitted, otherwise exactly like
+                 left-button.
 
 If you hold down shift-key while you click with left- or middle-button the
 item under mouse-point is displayed in the echo-area. This is useful if you
@@ -1064,6 +1106,13 @@ grep etc.) in this special window. If not ECB splits the edit-window \(or uses
 the \"other\" edit-window if already splitted) vertically and displays the
 compilation-output there.
 Same for displaying help-buffers or similar stuff.
+
+Know Bug: The setting in `ecb-compile-window-height' works correct for all
+compilation-output of Emacs (compile, grep etc.) but for some other output
+like help-buffers etc. Emacs enlarges the height of the compile-window for
+it´s output. Currently ECB can´t restore auto. the height of the
+compile-window for such outputs. But you can always restore the correct layout
+by calling `ecb-redraw-layout'!.
 
 
 Redrawing the ECB-layout:
@@ -1251,6 +1300,7 @@ with the actually choosen layout \(see `ecb-layout-nr')."
     ;; we need some hooks
     (remove-hook 'post-command-hook 'ecb-hook)
     (add-hook 'post-command-hook 'ecb-hook)
+    (add-hook 'pre-command-hook 'ecb-pre-command-hook-function)
     (add-hook 'after-save-hook 'ecb-update-methods-after-saving)
     ;; we add a function to this hook at the end because this function should
     ;; be called at the end of all hook-functions of this hook!
@@ -1282,6 +1332,9 @@ with the actually choosen layout \(see `ecb-layout-nr')."
     ;; deactivating the adviced functions
     (ecb-activate-adviced-functions nil)
 
+    ;; restore the old compilation-window-height
+    (setq compilation-window-height ecb-old-compilation-window-height)
+
     (if ecb-edit-window
 	(ecb-switch-to-edit-buffer))   
     ;; first we delete all ECB-windows.
@@ -1294,6 +1347,7 @@ with the actually choosen layout \(see `ecb-layout-nr')."
     (kill-buffer ecb-history-buffer-name)
     ;; remove the hooks
     (remove-hook 'post-command-hook 'ecb-hook)
+    (remove-hook 'pre-command-hook 'ecb-pre-command-hook-function)
     (remove-hook 'after-save-hook 'ecb-update-methods-after-saving)
     (remove-hook 'compilation-finish-functions
                  'ecb-layout-return-from-compilation)
