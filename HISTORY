@@ -1,6 +1,8 @@
 Version 1.30 (???):
 -------------------
 
+- Mouse over directories now shows directory path. (Jesper)
+
 - Methods and variables with point are now highlighted. (Jesper)
 
 - ECB windows are now updated when saving new files and deleting files. (Jesper)
