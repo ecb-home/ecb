@@ -2696,8 +2696,15 @@ visibility of the ECB windows. ECB minor mode remains active!"
                   (window-before-redraw (nth 1 config))
                   (pos-before-redraw (nth 2 config))
                   (saved-edit-1 (nth 3 config))
-                  (saved-edit-2 (nth 4 config)))                  
+                  (saved-edit-2 (nth 4 config)))
+             ;; we first make all windows of our ecb-frame not dedicated and
+             ;; then we delete all other windows...we restore the split- and
+             ;; buffer-state later...
+             (ecb-make-windows-not-dedicated ecb-frame)
              (delete-other-windows)
+             ;; some paranoia...
+             (set-window-dedicated-p (selected-window) nil)
+             ;; now we restore the split-state as before the toggle.
              (cond ((equal split-before-redraw 'horizontal)
                     (ecb-split-hor 0.5 t))
                    ((equal split-before-redraw 'vertical)
@@ -3408,7 +3415,14 @@ this function the edit-window is selected which was current before redrawing."
        
        (ecb-do-with-unfixed-ecb-buffers
         ;; Do some actions regardless of the chosen layout
+
+        ;; first we make all windows of ecb-frame not dedicated and then we
+        ;; delete all other windows so we have a clean frame with only one
+        ;; window where we can draw our layout. We restore later the
+        ;; frame-state (splits, buffers, points etc.)
+        (ecb-make-windows-not-dedicated ecb-frame)
         (delete-other-windows)
+        ;; some paranoia...
         (set-window-dedicated-p (selected-window) nil)
         
         ;; we force a layout-function to set both of these windows

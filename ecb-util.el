@@ -687,6 +687,12 @@ for FILE, but proper EOL-conversion and character interpretation is done!"
           (insert-file-contents exp-filename)
           (buffer-string)))))
 
+(defun ecb-make-windows-not-dedicated (&optional frame)
+  "Make all windows of FRAME not dedicated."
+  (mapc (function (lambda (w)
+                    (set-window-dedicated-p w nil)))
+        (ecb-window-list (or frame (selected-frame)))))
+  
 
 (silentcomp-provide 'ecb-util)
 
