@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-layout.el,v 1.234 2004/09/06 15:46:14 berndl Exp $
+;; $Id: ecb-layout.el,v 1.235 2004/09/07 14:49:58 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -2545,7 +2545,16 @@ some special tasks:
       (cond ((and (ecb-point-in-compile-window)
                   (not ecb-compile-window-was-selected-before-command))
              (ecb-layout-debug-error "ecb-layout-post-command-hook: enlarge")
-             (ecb-toggle-compile-window-height 1))
+             ;; now we change the window-start, so we see autom. more text
+             ;; after the enlargement of the window.
+             (let ((height-before (ecb-window-full-height))
+                   (height-after (ecb-toggle-compile-window-height 1)))
+               (set-window-start ecb-compile-window
+                                 (save-excursion
+                                   (goto-char (window-start))
+                                   (forward-line (* -1 (- height-after height-before)))
+                                   (ecb-line-beginning-pos))
+                                 t)))
             ((and ecb-compile-window-was-selected-before-command
                   (not (ecb-point-in-compile-window)))
              (ecb-layout-debug-error "ecb-layout-post-command-hook: shrink")
@@ -5201,7 +5210,8 @@ If ARG > 0 then shrink or enlarge the the compile-window according to the
 value of `ecb-enlarged-compilation-window-max-height'. But never shrink below
 the value of `ecb-compile-window-height'. If ARG <= 0 then shrink
 `ecb-compile-window' to `ecb-compile-window-height' and if ARG is nil then
-toggle the enlarge-state."
+toggle the enlarge-state. Returns the new height of the compile-window or nil
+if no compile-window is visible."
   (interactive "P")
   (if (and ecb-minor-mode
            (equal (selected-frame) ecb-frame)
@@ -5282,8 +5292,12 @@ toggle the enlarge-state."
               ;; now we set the window-start
               (when (and (not (equal major-mode 'compilation-mode))
                          (not compile-window-selected-p))
-                (set-window-start ecb-compile-window (point-min)))))))
-    (message "No compile-window in current ECB-layout!")))
+                (set-window-start ecb-compile-window (point-min))))
+            ;; return the new compile-window height
+            (ecb-window-full-height))))
+    (if (interactive-p)
+        (ecb-info-message "No compile-window in current ECB-layout!"))
+    nil))
 
 ;; This function takes into account the value of of
 ;; `temp-buffer-shrink-to-fit' (XEmacs) and `temp-buffer-resize-mode' (GNU

@@ -26,7 +26,7 @@
 @c GNU Emacs; see the file COPYING.  If not, write to the Free Software
 @c Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-@c $Id: ecb.texi,v 1.185 2004/09/03 16:33:44 berndl Exp $
+@c $Id: ecb.texi,v 1.186 2004/09/07 14:49:56 berndl Exp $
 
 @setfilename ecb.info
 
@@ -7568,6 +7568,10 @@ face @code{ecb-default-highlight-face}.
 Changes take first effect after finishing and reactivating ECB!
 @end defopt
 
+@defopt directory-not-accessible-face
+Face for not accessible dirs in the directories buffer.
+@end defopt
+
 @defopt history-face
 Face used for highlighting current history-entry in the history
 buffer. If the face @code{ecb-default-highlight-face} is used then the
@@ -7637,6 +7641,10 @@ ECB-tree-buffers can be changed by modifying only the face
 Changes take first effect after finishing and reactivating ECB!
 @end defopt
 
+@defopt source-read-only-face
+Face for read-only sources.
+@end defopt
+
 @defopt tag-header-face
 Face used for highlighting the tag header after jumping to it by
 clicking onto a node in the methods buffer.
@@ -7699,6 +7707,9 @@ here the font-family, the font-size, the basic color etc.
 Define face used for highlighting current directory in the directories
 buffer.
 
+@item ecb-directory-not-accessible-face
+Define a face for not accessible dirs in the directories buffer.
+
 @item ecb-history-face:
 Define face used for highlighting current history-entry in the history
 buffer.
@@ -7736,6 +7747,9 @@ Define a face for displaying sources in the directories buffer.
 @item ecb-sources-general-face:
 Basic face for the ECB sources buffer. It´s recommended to define here
 the font-family, the font-size, the basic color etc.
+
+@item ecb-source-read-only-face
+Define a face for read-only sources
 
 @item ecb-tag-header-face:
 Define face used for highlighting the tag header after jumping to it

@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: tree-buffer.el,v 1.151 2004/09/06 15:47:39 berndl Exp $
+;; $Id: tree-buffer.el,v 1.152 2004/09/07 14:49:56 berndl Exp $
 
 ;;; Commentary:
 
@@ -1499,8 +1499,7 @@ of CONTENT."
     ;; content?? maybe we should define tree-buffer-after-update-hook so for
     ;; each function can be defined if should be run in veery case or only if
     ;; real update (not from content-cache)
-    (unless (consp content)
-      (tree-buffer-run-after-update-hook))))
+    (tree-buffer-run-after-update-hook)))
 
 
 (defun tree-buffer-scroll (point window-start)
@@ -2549,6 +2548,40 @@ AFTER-UPDATE-HOOK: A function or a list of functions \(with no arguments)
   (when buffer
     (setq tree-buffers (delq (get-buffer buffer) tree-buffers))
     (ignore-errors (kill-buffer buffer))))
+
+
+;; editor goodies
+(defconst tree-buffer-font-lock-keywords
+  (eval-when-compile
+    (let* (
+           ;; Function declarations
+	   (vf '(
+                 "tree-buffer-defpopup-command"
+		 ))
+           (kf (if vf (regexp-opt vf t) ""))
+           ;; Regexp depths
+           (kf-depth (if kf (regexp-opt-depth kf) nil))
+           (full (concat
+                  ;; Declarative things
+                  "(\\(" kf "\\)"
+                  ;; Whitespaces & name
+                  "\\>[ \t]*\\(\\sw+\\)?"
+                  ))
+           )
+      `((,full
+         (1 font-lock-keyword-face)
+         (,(+ 1 kf-depth 1)
+          (if (match-beginning 3)
+              font-lock-function-name-face)
+          nil t)))
+      ))
+  "Highlighted tree-buffer keywords.")
+
+(when (fboundp 'font-lock-add-keywords)
+  (font-lock-add-keywords 'emacs-lisp-mode
+                          tree-buffer-font-lock-keywords)
+  )
+
 
 (silentcomp-provide 'tree-buffer)
 

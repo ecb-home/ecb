@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb.el,v 1.402 2004/09/06 15:48:49 berndl Exp $
+;; $Id: ecb.el,v 1.403 2004/09/07 14:49:57 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -3125,26 +3125,45 @@ performance-problem!"
 (defconst ecb-font-lock-keywords
   (eval-when-compile
     (let* (
-           ;; Function declarations
-	   (vf '(
-                 "ecb-defstealthy"
-                 "tree-buffer-defpopup-command"
-		 ))
-           (kf (if vf (regexp-opt vf t) ""))
+           ;; Function declarations and exec-with-macros
+	   (function-defs '(
+                            "ecb-defstealthy"
+                            ))
+           (keywords '(
+                       "ecb-exec-in-history-window"
+                       "ecb-exec-in-directories-window"
+                       "ecb-exec-in-sources-window"
+                       "ecb-exec-in-methods-window"
+                       "ecb-do-with-unfixed-ecb-buffers"
+                       "ecb-with-original-functions"
+                       "ecb-with-adviced-functions"
+                       "ecb-with-some-adviced-functions"
+                       "ecb-with-original-permanent-functions"
+                       "ecb-with-dedicated-window"
+                       "ecb-with-original-basic-functions"
+                       "ecb-with-ecb-advice"
+                       "ecb-with-readonly-buffer"
+                       "ecb-do-if-buffer-visible-in-ecb-frame"
+                       "ecb-layout-define"
+                       ))
+           (regexp (regexp-opt (append function-defs
+                                       keywords)
+                               t))
            ;; Regexp depths
-           (kf-depth (if kf (regexp-opt-depth kf) nil))
+           (depth (regexp-opt-depth regexp))
            (full (concat
                   ;; Declarative things
-                  "(\\(" kf "\\)"
+                  "(\\(" regexp "\\)"
                   ;; Whitespaces & name
                   "\\>[ \t]*\\(\\sw+\\)?"
                   ))
            )
       `((,full
          (1 font-lock-keyword-face)
-         (,(+ 1 kf-depth 1)
-          (if (match-beginning 3)
-              font-lock-function-name-face)
+         (,(+ 1 depth 1)
+          (when (and (match-beginning 3)
+                     (member (match-string 1) (quote ,function-defs)))
+            font-lock-function-name-face)
           nil t)))
       ))
   "Highlighted ecb keywords.")

@@ -24,7 +24,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-method-browser.el,v 1.52 2004/09/06 15:46:14 berndl Exp $
+;; $Id: ecb-method-browser.el,v 1.53 2004/09/07 14:49:58 berndl Exp $
 
 ;;; Commentary:
 
@@ -1216,8 +1216,12 @@ check the result if `ecb-debug-mode' is nil in which case the function
 
 
 (defmacro ecb-exec-in-methods-window (&rest body)
+  "Evaluates BODY in the methods-window of ECB. If that window is not
+visible then return the symbol 'window-not-visible. Otherwise the return
+value of BODY is returned."
   `(unwind-protect
-       (when (ecb-window-select ecb-methods-buffer-name)
+       (if (not (ecb-window-select ecb-methods-buffer-name))
+           'window-not-visible
 	 ,@body)
      ))
 
