@@ -4846,19 +4846,23 @@ if that buffer has changed.
        ;; `ecb-examples-bufferinfo-buffer-name' is displayed in a window
        ;; of `ecb-frame'
    
-       (let ((buffer (get-buffer ecb-examples-bufferinfo-buffer-name))
-             (filename (buffer-file-name (current-buffer))))
+       ;; The macro `ecb-do-if-buffer-visible-in-ecb-frame' locally binds
+       ;; the variables visible-buffer, visible-window and
+       ;; edit-window-buffer!! See documentation of this macro!
+   
+       (let ((filename (buffer-file-name edit-window-buffer)))
    
          (if (and filename (file-readable-p filename))
    
              ;; real filebuffers
              ;; here we could add a smarter mechanism; see ecb-examples.el
-             (ecb-examples-print-file-attributes buffer filename))
+             (ecb-examples-print-file-attributes visible-buffer filename)
    
            ;; non file buffers like help-buffers etc...
            (setq ecb-examples-bufferinfo-last-file nil)
-           (ecb-examples-print-non-filebuffer buffer
-                                              (buffer-name (current-buffer)))
+           (ecb-examples-print-non-filebuffer visible-buffer
+                                              (buffer-name
+                                                edit-window-buffer))
            ))))
 
 This is all what we need for the special bufferinfo buffer. We have
@@ -5608,15 +5612,15 @@ Ref: Adviced functions-Footnote-1198498
 Node: The layout-engine198569
 Node: Programming a new layout199742
 Node: Programming special windows206617
-Ref: Programming special windows-Footnote-1216400
-Node: The layout-engine API216452
-Node: Conflicts and bugs218034
-Node: Conflicts218509
-Node: Bugs222219
-Node: FAQ222439
-Ref: FAQ-Footnote-1227608
-Node: Command Index227639
-Node: Option Index230158
-Node: Concept Index236908
+Ref: Programming special windows-Footnote-1216597
+Node: The layout-engine API216649
+Node: Conflicts and bugs218231
+Node: Conflicts218706
+Node: Bugs222416
+Node: FAQ222636
+Ref: FAQ-Footnote-1227805
+Node: Command Index227836
+Node: Option Index230355
+Node: Concept Index237105
 
 End Tag Table

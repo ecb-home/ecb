@@ -1,6 +1,6 @@
 ;;; ecb-eshell.el --- eshell integration for the ECB.
 
-;; $Id: ecb-eshell.el,v 1.58 2003/01/02 14:09:46 berndl Exp $
+;; $Id: ecb-eshell.el,v 1.59 2003/01/02 18:07:55 berndl Exp $
 
 ;; Copyright (C) 2000-2003 Free Software Foundation, Inc.
 ;; Copyright (C) 2000-2003 Kevin A. Burton (burton@openprivacy.org)
@@ -207,15 +207,17 @@ interactively or `ecb-eshell-synchronize' is not nil."
       ;; here we can be sure that the eshell is visible in a window of
       ;; `ecb-frame'.
 
+      ;; This macro locally binds the variables visible-buffer, visible-window
+      ;; and edit-window-buffer! See documentation.
+
       (let ((source-buffer-directory nil)
-            (ecb-buffer-directory nil)
-            (window (get-buffer-window eshell-buffer-name)))
+            (ecb-buffer-directory nil))
       
         ;; we synchronize only if the eshell is displayed in the
         ;; compile-window otherwise the following ecb-eshell-cleanse would
         ;; prevent from inserting any command if the eshell is displayed in
         ;; the edit-window (e.g. by calling `eshell' in the edit-window)
-        (when (equal window ecb-compile-window)
+        (when (equal visible-window ecb-compile-window)
           (ecb-eshell-save-buffer-history
            ;;make sure we are clean.
            (ecb-eshell-cleanse)
@@ -225,7 +227,7 @@ interactively or `ecb-eshell-synchronize' is not nil."
            (setq source-buffer-directory default-directory)
            
            (save-excursion
-             (set-buffer (get-buffer eshell-buffer-name))
+             (set-buffer visible-buffer)
              (setq buffer-read-only nil)
              (setq ecb-buffer-directory default-directory))
            
@@ -236,13 +238,13 @@ interactively or `ecb-eshell-synchronize' is not nil."
            (when (not (string-equal (ecb-fix-filename source-buffer-directory)
                                     (ecb-fix-filename ecb-buffer-directory)))
              (save-excursion
-               (set-buffer eshell-buffer-name)
+               (set-buffer visible-buffer)
                ;;change the directory without showing the cd command
                (eshell/cd source-buffer-directory)
                
                ;;execute the command
                (save-selected-window
-                 (select-window window)
+                 (select-window visible-window)
                  (eshell-send-input)))
              
              (ecb-eshell-recenter))))))))

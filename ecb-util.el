@@ -26,7 +26,7 @@
 ;; This file is part of the ECB package which can be found at:
 ;; http://home.swipnet.se/mayhem/ecb.html
 
-;; $Id: ecb-util.el,v 1.39 2003/01/02 14:10:10 berndl Exp $
+;; $Id: ecb-util.el,v 1.40 2003/01/02 18:07:52 berndl Exp $
 
 ;;; Code:
 
@@ -287,64 +287,36 @@ buffer is current which was it before calling this macro."
 
 (put 'ecb-with-readonly-buffer 'lisp-indent-function 1)
 
-;; (defmacro ecb-do-if-buffer-visible-in-ecb-frame (buffer-name-symbol &rest body)
-;;   "Evaluate BODY if the following condititions are all true:
-;; - The symbol BUFFER-NAME-SYMBOL is bound
-;; - The value of BUFFER-NAME-SYMBOL is a name of a living buffer B
-;; - The buffer B is visible and displayed in a window of the `ecb-frame'
-;; - ECB is active
-;; - The current frame is the `ecb-frame'
-;; - The window of buffer B is not the `ecb-edit-window'.
-;; If one of these condititions is false then nothing will be done.
-
-;; During the evaluation of BODY the following local variables are bound:
-;; - ecb-buffer: The buffer-object which name is the value of
-;;   BUFFER-NAME-SYMBOL.
-;; - ecb-window: The window which displays ecb-buffer
-;; - edit-window-buffer: The buffer-object currently displayed in the
-;;   `ecb-edit-window' which is equal to `current-buffer'."
-;;   (let ((buffer-sym (make-symbol "ecb-buffer"))
-;;         (window-sym (make-symbol "ecb-window"))
-;;         (curr-buffer-sym (make-symbol "edit-window-buffer")))
-;;     `(let* ((,buffer-sym (if (and (boundp ,buffer-name-symbol)
-;;                                   (stringp (symbol-value ,buffer-name-symbol)))
-;;                              (get-buffer (symbol-value ,buffer-name-symbol))))
-;;             (,window-sym (if (bufferp ,buffer-sym)
-;;                              (get-buffer-window ,buffer-sym)))
-;;             (,curr-buffer-sym (current-buffer)))
-;;        (when (and ecb-minor-mode
-;;                   (equal (selected-frame) ecb-frame)
-;;                   ,window-sym
-;;                   (window-live-p ,window-sym)
-;;                   (not (equal ,window-sym ecb-edit-window)))
-;;          ,@body))))
-
 (defmacro ecb-do-if-buffer-visible-in-ecb-frame (buffer-name-symbol &rest body)
-  "Evaluate BODY if the following conditions are all true:
+  "Evaluate BODY if the following condititions are all true:
 - The symbol BUFFER-NAME-SYMBOL is bound
-- The value of BUFFER-NAME-SYMBOL is the name of a living buffer B
+- The value of BUFFER-NAME-SYMBOL is a name of a living buffer B
 - The buffer B is visible and displayed in a window of the `ecb-frame'
 - ECB is active
 - The current frame is the `ecb-frame'
+- The window of buffer B is not the `ecb-edit-window'.
 If one of these condititions is false then nothing will be done.
 
-See `ecb-eshell-current-buffer-sync' and `ecb-speedbar-current-buffer-sync'
-for examples how to use this macro."
-  `(when (and ecb-minor-mode
-              (equal (selected-frame) ecb-frame)
-              (boundp ,buffer-name-symbol)
-              (stringp (symbol-value ,buffer-name-symbol))
-              (get-buffer-window (symbol-value ,buffer-name-symbol)
-                                 ecb-frame))
-     ,@body))
+During the evaluation of BODY the following local variables are bound:
+- visible-buffer: The buffer-object which name is the value of
+  BUFFER-NAME-SYMBOL.
+- visible-window: The window which displays visible-buffer
+- edit-window-buffer: The buffer-object currently displayed in the
+  `ecb-edit-window' which is equal to `current-buffer'."
+  `(let* ((visible-buffer (if (and (boundp ,buffer-name-symbol)
+                                   (stringp (symbol-value ,buffer-name-symbol)))
+                              (get-buffer (symbol-value ,buffer-name-symbol))))
+          (visible-window (if (bufferp visible-buffer)
+                              (get-buffer-window visible-buffer)))
+          (edit-window-buffer (current-buffer)))
+     (when (and ecb-minor-mode
+                (equal (selected-frame) ecb-frame)
+                visible-window
+                (window-live-p visible-window)
+                (not (equal visible-window ecb-edit-window)))
+       ,@body)))
 
 (put 'ecb-do-if-buffer-visible-in-ecb-frame 'lisp-indent-function 1)
-
-;; (insert (pp (macroexpand '(ecb-do-if-buffer-is-visible
-;;                            'eshell-buffer-name
-;;                            (if ters
-;;                                (do-it)
-;;                              (testerli))))))
 
 
 (defmacro ecb-error (&rest args)
