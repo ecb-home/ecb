@@ -5423,6 +5423,9 @@ always the ECB-frame if called from another frame."
             ;; enable basic advices
             (ecb-enable-advices ecb-basic-adviced-functions)
 
+            ;; enable advices for not supported window-managers
+            (ecb-enable-advices ecb-winman-not-supported-function-advices)
+            
             ;; set the ecb-frame
             (if ecb-new-ecb-frame
                 (progn
@@ -5842,6 +5845,7 @@ does all necessary after finishing ediff."
       (ecb-disable-advices ecb-basic-adviced-functions)
       (ecb-disable-advices ecb-speedbar-adviced-functions)
       (ecb-disable-advices ecb-eshell-adviced-functions)
+      (ecb-disable-advices ecb-winman-not-supported-function-advices)
 
       (ecb-enable-own-temp-buffer-show-function nil)      
 
