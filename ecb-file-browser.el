@@ -23,7 +23,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-file-browser.el,v 1.13 2004/03/02 06:48:37 berndl Exp $
+;; $Id: ecb-file-browser.el,v 1.14 2004/03/04 17:28:28 berndl Exp $
 
 ;;; Commentary:
 
@@ -785,12 +785,14 @@ related threshold."
 (defun ecb-files-from-cvsignore (dir)
   "Return an expanded list of filenames which are excluded by the .cvsignore
 file in current directory."
-  (let ((cvsignore-content (ecb-file-content-as-string
-                            (expand-file-name ".cvsignore" dir)))
+  (let* ((fixed-path (ecb-fix-path dir))
+         (cvsignore-content (ecb-file-content-as-string
+                            (expand-file-name ".cvsignore" fixed-path)))
         (files nil))
     (when cvsignore-content
       (dolist (f (split-string cvsignore-content))
-        (setq files (append (directory-files dir nil (wildcard-to-regexp f) t)
+        (setq files (append (directory-files fixed-path nil
+                                             (wildcard-to-regexp f) t)
                             files)))
       files)))
 
@@ -812,7 +814,7 @@ cdr is a list of all subdirs to display in DIR. Both lists are sorted
 according to `ecb-sources-sort-method'."
   (or (ecb-files-and-subdirs-cache-get dir)
       ;; dir is not cached
-      (let ((files (directory-files dir nil nil t))
+      (let ((files (directory-files (ecb-fix-path dir) nil nil t))
             (source-regexps (or (ecb-check-directory-for-source-regexps
                                  (ecb-fix-filename dir))
                                 '("" "")))
@@ -1079,7 +1081,12 @@ all files are displayed."
   ;; now we update the mode-lines so the current filter (can be no filter) is
   ;; displayed in the mode-line. See `ecb-sources-filter-modeline-prefix'.
   (ecb-mode-line-format))
-    
+
+(defun klausi-bb-test ()
+  (interactive)
+  (when (not (ecb-show-sources-in-directories-buffer-p))
+    (ecb-exec-in-directories-window
+     (tree-buffer-highlight-node-data ecb-path-selected-directory))))
 
 (defun ecb-set-selected-directory (path &optional force)
   "Set the contents of the ECB-directories and -sources buffer correct for the
@@ -1369,7 +1376,7 @@ is not changed. For the allowed values of OTHER-EDIT-WINDOW see
       (setq paths (append paths (funcall (car ecb-source-path-functions)))
 	    func (cdr func)))
     (while paths
-      (setq rpaths (cons (expand-file-name (car paths)) rpaths)
+      (setq rpaths (cons (ecb-fix-filename (car paths)) rpaths)
 	    paths (cdr paths)))
     rpaths))
 

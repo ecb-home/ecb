@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-upgrade.el,v 1.66 2004/03/01 06:28:04 berndl Exp $
+;; $Id: ecb-upgrade.el,v 1.67 2004/03/04 17:28:28 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -178,7 +178,8 @@
 (defconst ecb-upgrade-news
   '(("2.22" . ("New nifty feature for filtering the tags displayed in the Methods-buffer"
                "Much smarter mechanism to highlight the current tag in the methods-buffer"
-               "New option `ecb-auto-expand-tag-tree-collapse-other'."))
+               "New option `ecb-auto-expand-tag-tree-collapse-other'."
+               "Fixed a bug preventing the native Windows-port of XEmacs from working."))
     ("2.21" . ("Advice for `balance-windows' so only the edit-windows are balanced."
                "Gnus, BBDB, VM, Xrefactory etc. work even when ECB-windows are visible."
                "Commands using `Electric-pop-up-window' now work correctly with ECB."

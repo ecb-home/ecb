@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-util.el,v 1.100 2004/03/02 06:48:36 berndl Exp $
+;; $Id: ecb-util.el,v 1.101 2004/03/04 17:28:27 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -90,7 +90,11 @@
 (defconst ecb-running-emacs-21 (and (not ecb-running-xemacs)
                                     (> emacs-major-version 20)))
 
-(defconst ecb-directory-sep-char ?/)
+;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: Test this with native
+;; Windows-XEmacs if it works with this change correct and also if it works
+;; without this change incorrect!
+(defconst ecb-directory-sep-char
+  (if ecb-running-xemacs directory-sep-char ?/))
 (defconst ecb-directory-sep-string (char-to-string ecb-directory-sep-char))
 
 (defconst ecb-temp-dir
@@ -511,6 +515,24 @@ changed."
 
 ;; canonical filenames
 
+(defun ecb-fix-path (path)
+  "Fixes an annoying behavior of the native windows-version of XEmacs:
+When PATH contains only a drive-letter and a : then `expand-file-name' does
+not interpret this PATH as root of that drive. So we add a trailing
+`directory-sep-char' and return this new path because then `expand-file-name'
+treats this as root-dir of that drive. For all \(X)Emacs-version besides the
+native-windows-XEmacs PATH is returned."
+  (if (and ecb-running-xemacs
+           (equal system-type 'windows-nt))
+      (if (and (= (length path) 2)
+               (equal (aref path 1) ?:))
+          (concat path ecb-directory-sep-string)
+        path)
+    path))
+
+;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: What about the new cygwin-version
+;; of GNU Emacs 21? We have to test if this function and all locations where
+;; `ecb-fix-path' is used work correctly with the cygwin-port of GNU Emacs.
 (defun ecb-fix-filename (path &optional filename substitute-env-vars)
   "Normalizes path- and filenames for ECB. If FILENAME is not nil its pure
 filename \(i.e. without directory part) will be concatenated to PATH. The
@@ -519,8 +541,12 @@ not nil then in both PATH and FILENAME env-var substitution is done. If the
 `system-type' is 'cygwin32 then the path is converted to win32-path-style!"
   (when (stringp path)
     (let (norm-path)    
-      (setq norm-path (if (and ecb-running-xemacs (equal system-type 'cygwin32))
-                          (mswindows-cygwin-to-win32-path path)
+      (setq norm-path (if ecb-running-xemacs
+                          (cond ((equal system-type 'cygwin32)
+                                 (mswindows-cygwin-to-win32-path path))
+                                ((equal system-type 'windows-nt)
+                                 (ecb-fix-path path))
+                                (t path))
                         path))
       (setq norm-path (expand-file-name (if substitute-env-vars
                                             (substitute-in-file-name norm-path)
