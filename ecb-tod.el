@@ -22,7 +22,7 @@
 ;; with GNU Emacs; see the file COPYING. If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-tod.el,v 1.5 2003/02/14 11:47:02 berndl Exp $
+;; $Id: ecb-tod.el,v 1.6 2003/02/17 08:46:34 berndl Exp $
 
 ;;; Commentary:
 ;;
