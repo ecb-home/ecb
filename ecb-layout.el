@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-layout.el,v 1.241 2004/11/25 18:10:12 berndl Exp $
+;; $Id: ecb-layout.el,v 1.242 2004/11/30 18:39:15 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -1416,6 +1416,8 @@ either not activated or it behaves exactly like the original version!"
 ;; that of GDB and watches expressions in the speedbar. It also uses features
 ;; of Emacs 21 such as the display margin for breakpoints, and the toolbar.
 ;; This is new in Emacs 21.4 so maybe we have to make it compatible with ECB!
+;; But maybe this could be hard because AFAIK gdb-ui.el uses dedicated
+;; windows!
 
 
 (defadvice scroll-all-mode (after ecb)
@@ -1487,6 +1489,7 @@ not for direct usage therefore it is always disabled; use the macro
 special ecb-windows after opening a file. This advices restores the sizes of
 the ecb-windows exactly as before this command."
   (if (and ecb-minor-mode
+           (equal (selected-frame) ecb-frame)
            (not ecb-windows-hidden))
       (let ((ecb-sizes-before (ecb-get-ecb-window-sizes t)))
         ad-do-it
@@ -1501,6 +1504,7 @@ the ecb-windows exactly as before this command."
 special ecb-windows after opening a file. This advices restores the sizes of
 the ecb-windows exactly as before this command."
   (if (and ecb-minor-mode
+           (equal (selected-frame) ecb-frame)
            (not ecb-windows-hidden))
       (let ((ecb-sizes-before (ecb-get-ecb-window-sizes t)))
         ad-do-it
