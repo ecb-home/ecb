@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-util.el,v 1.76 2003/09/10 16:01:42 berndl Exp $
+;; $Id: ecb-util.el,v 1.77 2003/09/12 09:19:24 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -45,6 +45,7 @@
 (eval-when-compile
   (require 'silentcomp))
 
+(eval-when-compile (require 'cl))
 
 ;; XEmacs
 (silentcomp-defun mswindows-cygwin-to-win32-path)
@@ -64,14 +65,13 @@
 (silentcomp-defvar message-truncate-lines)
 (silentcomp-defun x-popup-dialog)
 (silentcomp-defvar noninteractive)
-  
+
+
 ;; Some constants
 (defconst ecb-running-xemacs (string-match "XEmacs\\|Lucid" emacs-version))
 (defconst ecb-running-emacs-21 (and (not ecb-running-xemacs)
                                 (> emacs-major-version 20)))
-(defconst ecb-directory-sep-char (if (boundp 'directory-sep-char)
-                                     directory-sep-char
-                                   ?/))
+(defconst ecb-directory-sep-char ?/)
 (defconst ecb-directory-sep-string (char-to-string ecb-directory-sep-char))
 
 (defconst ecb-temp-dir
@@ -275,17 +275,71 @@ by semantic and also killed afterwards."
 
 ;; assoc helpers
 
-(defun ecb-remove-assoc (list key)
-  (delete* key list :test (function (lambda (key item) (string= key (car item))))))
+(defun ecb-remove-assoc (key list)
+  (delete nil
+          (mapcar (function (lambda (elem)
+                              (if (equal (car elem) key)
+                                  nil
+                                elem)))
+                  list)))
 
-(defun ecb-add-assoc (list key-value)
+(defun ecb-add-assoc (key-value list)
   (cons key-value list))
 
-(defun ecb-find-assoc-value (list key)
+(defun ecb-find-assoc-value (key list)
   (cdr (assoc key list)))
 
-(defun ecb-find-assoc (list key)
+(defun ecb-find-assoc (key list)
   (assoc key list))
+
+
+;; some function from cl - but we do not want to call cl-functions at runtime
+
+(defun ecb-some (cl-pred cl-seq &rest cl-rest)
+  "Return true if PREDICATE is true of any element of SEQ or SEQs.
+If so, return the true (non-nil) value returned by PREDICATE."
+  (if (or cl-rest (nlistp cl-seq))
+      (catch 'cl-some
+	(apply 'map nil
+	       (function (lambda (&rest cl-x)
+			   (let ((cl-res (apply cl-pred cl-x)))
+			     (if cl-res (throw 'cl-some cl-res)))))
+	       cl-seq cl-rest) nil)
+    (let ((cl-x nil))
+      (while (and cl-seq (not (setq cl-x (funcall cl-pred (pop cl-seq))))))
+      cl-x)))
+
+(defun ecb-copy-list (list)
+  "Return a copy of a list, which may be a dotted list.
+The elements of the list are not copied, just the list structure itself."
+  (if (consp list)
+      (let ((res nil))
+	(while (consp list) (push (pop list) res))
+	(prog1 (nreverse res) (setcdr res list)))
+    (car list)))
+
+(defun ecb-set-difference (list1 list2)
+  "Combine LIST1 and LIST2 using a set-difference operation.
+The result list contains all items that appear in LIST1 but not LIST2.
+This is a non-destructive function; it makes a copy of the data if necessary
+to avoid corrupting the original LIST1 and LIST2."
+  (if (or (null list1) (null list2)) list1
+    (let ((res nil))
+      (while list1
+        (or (if (numberp (car list1))
+                (apply 'ecb-member (car list1) list2)
+              (memq (car list1) list2))
+            (push (car list1) res))
+        (pop list1))
+      res)))
+
+(defun ecb-member (item list)
+  "Find the first occurrence of ITEM in LIST.
+Return the sublist of LIST whose car is ITEM."
+  (if (and (numberp item) (not (integerp item)))
+      (member item list)
+    (memq item list)))
+
 
 ;;; Compatibility
 (defun ecb-noninteractive ()
@@ -701,9 +755,21 @@ for FILE, but proper EOL-conversion and character interpretation is done!"
 The left-top-most window of the ecb-frame has number 0. The other windows have
 the same ordering as `other-window' would walk through the frame."
   (1- (length (memq (or window (selected-window))
-                      (nreverse (ecb-window-list
-                                 ecb-frame 0
-                                 (frame-first-window ecb-frame)))))))
+                    (nreverse (if (not ecb-running-emacs-21)
+                                  ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>:
+                                  ;; There seems to be a mysterious behavior of
+                                  ;; `ecb-window-list' when changing one buffer,
+                                  ;; immediately opening another buffer and
+                                  ;; scrolling sown to bottom of the new buffer
+                                  ;; - then if this function is added to the
+                                  ;;   modeline via (:eval...) the new buffer
+                                  ;;   scrolls autom. back to beginng of
+                                  ;;   buffer.
+                                  ;; With the original window-list all is ok...
+                                  (ecb-window-list
+                                   ecb-frame 0
+                                   (frame-first-window ecb-frame))
+                                (window-list)))))))
 
 
 (silentcomp-provide 'ecb-util)

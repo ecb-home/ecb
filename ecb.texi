@@ -26,7 +26,7 @@
 @c GNU Emacs; see the file COPYING.  If not, write to the Free Software
 @c Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-@c $Id: ecb.texi,v 1.119 2003/09/10 16:01:41 berndl Exp $
+@c $Id: ecb.texi,v 1.120 2003/09/12 09:19:23 berndl Exp $
 
 @setfilename ecb.info
 
@@ -8593,10 +8593,16 @@ semantic offer something similar, see
 @item
 Can i use ECB in combination with Gnus within one frame?
 @tab @tab
-You can, but it is recommended not to use Gnus and ECB simultaneously
-in one frame because each of them has it's own window-management and
-probably there will be conflicts. Use different frames for ECB and
-Gnus!
+You can, but for ECB-versions < 1.96 it is not recommended because
+each of them has it's own window-management and probably there will be
+conflicts, so use different frames for ECB and Gnus! But beginning
+with ECB 1.96 you can use either escreen.el or winring.el as
+``window-manager'' which allows you in consequence to use ECB and
+applications like Gnus in one frame!
+@ifinfo
+@*
+@end ifinfo
+@xref{Window-managers and ECB}.
 
 @item @tab @tab
 

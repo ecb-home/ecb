@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-create-layout.el,v 1.25 2003/09/10 16:01:42 berndl Exp $
+;; $Id: ecb-create-layout.el,v 1.26 2003/09/12 09:19:26 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -45,8 +45,6 @@
 
 (require 'ecb-mode-line)
 (require 'ecb-util)
-
-(require 'cl) ;; for set-difference
 
 ;; XEmacs stuff
 (silentcomp-defvar vertical-divider-map)
@@ -213,7 +211,7 @@
 
 (defun ecb-create-layout-initilize ()
   (setq ecb-create-layout-buf-types
-        (copy-list ecb-create-layout-all-buf-types))
+        (ecb-copy-list ecb-create-layout-all-buf-types))
   (setq ecb-create-layout-frame nil)
   (setq ecb-create-layout-edit-window nil)
   (setq ecb-create-layout-old-global-map nil)
@@ -637,7 +635,7 @@ never selects the edit-window."
   (erase-buffer)
   (unless do-not-fill
     (dotimes (i (window-height))
-      (insert-string
+      (insert
        (format "%s\n"
                (make-string (- (window-width)
                                (if ecb-running-xemacs 3 1))
@@ -797,11 +795,10 @@ unbound."
   ;; ensure we have load all layouts defined until now
   (ecb-load-layouts)
   (let ((new-layout-list
-         (sort (set-difference (ecb-available-layouts-of-type nil)
+         (sort (ecb-set-difference (ecb-available-layouts-of-type nil)
                                (mapcar (function (lambda (elem)
                                                    (car elem)))
-                                       ecb-buildin-layouts)
-                               :test 'string=)
+                                       ecb-buildin-layouts))
                'string<))
         (layout-name nil))
     (if (= (length new-layout-list) 0)

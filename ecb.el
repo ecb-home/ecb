@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb.el,v 1.336 2003/09/09 15:37:00 berndl Exp $
+;; $Id: ecb.el,v 1.337 2003/09/12 09:19:24 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -196,6 +196,8 @@
 (silentcomp-defun hs-hide-block)
 (silentcomp-defvar hs-minor-mode)
 (silentcomp-defvar hs-block-start-regexp)
+
+(silentcomp-defun Info-goto-node)
 
 ;; ecb-speedbar is are first loaded if
 ;; ecb-use-speedbar-instead-native-tree-buffer is set to not nil or if
@@ -896,7 +898,7 @@ for future Emacs sessions!"
   :set (function (lambda (sym val)
                    (set sym val)
                    (setq ecb-tree-RET-selects-edit-window--internal
-                         (copy-list val))))
+                         (ecb-copy-list val))))
   :type `(set (const :tag ,ecb-directories-buffer-name
                      :value ,ecb-directories-buffer-name)
               (const :tag ,ecb-sources-buffer-name
@@ -2505,12 +2507,10 @@ See also the option `ecb-tree-RET-selects-edit-window'."
 	node))))
 
 (defun ecb-get-token-type-display (token-type)
-  (let ((display (find token-type ecb-show-tokens :test
-		       (function (lambda (a b) (eq a (car b)))))))
+  (let ((display (ecb-find-assoc 'rule ecb-show-tokens)))
     (if display
 	display
-      (setq display (find t ecb-show-tokens :test
-			  (function (lambda (a b) (eq a (car b))))))
+      (setq display (ecb-find-assoc t ecb-show-tokens))
       (if display
 	  display
 	'(t hidden nil)))))
@@ -3045,7 +3045,7 @@ then nothing is done unless first optional argument FORCE is not nil."
                       (length tree-buffer-nodes))
                  (setq new-cache-elem (cons ecb-path-selected-directory
                                             (list (tree-buffer-get-root)
-                                                  (copy-list tree-buffer-nodes)
+                                                  (ecb-copy-list tree-buffer-nodes)
                                                   (buffer-string))))
                  (ecb-sources-cache-add new-cache-elem))))
            
@@ -5320,7 +5320,7 @@ macro must be written explicitly, as in \"C-c SPC\".
                    ;; make a mode-map and save it
                    (setq ecb-mode-map
                          (let ((km (make-sparse-keymap))
-                               (val-list (copy-list (cdr value)))
+                               (val-list (ecb-copy-list (cdr value)))
                                keq-string)
                            (dolist (elem val-list)
                              (setq key-string (concat (if (nth 0 elem) (car value))

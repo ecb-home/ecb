@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-help.el,v 1.98 2003/09/05 07:27:35 berndl Exp $
+;; $Id: ecb-help.el,v 1.99 2003/09/12 09:19:25 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -273,37 +273,37 @@ a backtrace-buffer and inserts the contents of that."
     (if (re-search-forward "^--[ \t]*$" nil t)
         (progn
           (beginning-of-line)
-          (insert-string "\n\n\n")
+          (insert "\n\n\n")
           (forward-line -2))
       (goto-char (point-max))
-      (insert-string "\n\n")) 
+      (insert "\n\n")) 
     (let* ((messages-buffer 
 	    (get-buffer
 	     (if ecb-running-xemacs " *Message-Log*" "*Messages*")))
 	   (backtrace-buffer (get-buffer "*Backtrace*")))
 
       ;;insert the contents of the backtrace buffer if it is there. 
-      (insert-string "\n\n-----------------------------------------------------\n")
+      (insert "\n\n-----------------------------------------------------\n")
       (if backtrace-buffer
           (progn
-            (insert-string "The contents of the *Backtrace* buffer were\n\n")
+            (insert "The contents of the *Backtrace* buffer were\n\n")
 	    (insert-buffer backtrace-buffer)
             ;; we must force the mark
 	    (goto-char (mark t))
-            (insert-string "\nEnd Insert *Backtrace* buffer" ))
-        (insert-string "There was no *Backtrace* buffer" ))
-      (insert-string "\n-----------------------------------------------------\n\n")
+            (insert "\nEnd Insert *Backtrace* buffer" ))
+        (insert "There was no *Backtrace* buffer" ))
+      (insert "\n-----------------------------------------------------\n\n")
 
       ;;insert the contents of the messages buffer if it is there. 
-      (insert-string "-----------------------------------------------------\n")
+      (insert "-----------------------------------------------------\n")
       (if messages-buffer
           (progn
-            (insert-string "The contents of the *Messages* buffer were\n\n")
+            (insert "The contents of the *Messages* buffer were\n\n")
 	    (insert-buffer messages-buffer)
 	    (goto-char (mark t))
-            (insert-string "\nEnd Insert *Messages* buffer" ))
-        (insert-string "There was no *Messages* buffer" ))
-      (insert-string  "\n-----------------------------------------------------\n\n"))))
+            (insert "\nEnd Insert *Messages* buffer" ))
+        (insert "There was no *Messages* buffer" ))
+      (insert  "\n-----------------------------------------------------\n\n"))))
 
 
 (defun ecb-problem-report-list-all-variables()

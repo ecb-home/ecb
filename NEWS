@@ -98,6 +98,8 @@
    `ecb-fix-window-size' is not nil for current layout. Thanks for suggestion
    Massimiliano Mirra <mmirra@libero.it>. Only relevant for GNU Emacs 21.X.
 
+** ECB does not call any functions of the cl-library at runtime.
+
 ** Fixed Bugs
 
 *** Fixed all the file- and directory-commands in the popup-menus.

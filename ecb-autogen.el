@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-autogen.el,v 1.10 2003/07/31 16:02:08 berndl Exp $
+;; $Id: ecb-autogen.el,v 1.11 2003/09/12 09:19:26 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -51,12 +51,15 @@
 (eval-when-compile
   (require 'silentcomp))
 
+
 (when (ecb-noninteractive)
   ;; If the user is doing this non-interactively, we need to set up
   ;; these conveniences.
   (add-to-list 'load-path nil)
-  (setq find-file-hooks nil
-        find-file-suppress-same-file-warnings t)
+  (set (if (boundp 'find-file-hook)
+           'find-file-hook
+         'find-file-hooks) nil)
+  (setq find-file-suppress-same-file-warnings t)
   )
 
 
@@ -97,6 +100,24 @@ Run as `write-contents-hooks'."
       nil ;; Say not already written.
       )))
 
+;; We code this so clumsy to silence the bytecompiler of GNU Emacs >= 21.4 not
+;; to complain about obsoleteness of `write-contents-hooks'.
+(defun ecb-batch-update-autoloads ()
+  (let ((old-val (symbol-value (if (boundp 'write-contents-functions)
+                                   'write-contents-functions
+                                 'write-contents-hooks))))
+    (unwind-protect
+        (progn
+          (set (if (boundp 'write-contents-functions)
+                   'write-contents-functions
+                 'write-contents-hooks)
+               '(ecb-autogen-update-header))
+          (batch-update-autoloads))
+      (set (if (boundp 'write-contents-functions)
+               'write-contents-functions
+             'write-contents-hooks)
+           old-val)))) 
+
 (defun ecb-update-autoloads ()
   "Update ecb autoloads from sources.
 Autoloads file name is defined in variable `ecb-autogen-file'. If ECB is
@@ -120,10 +141,9 @@ does nothing."
            ;; autoload-package-name is not provided.
            (autoload-package-name "ecb")
            (subdirs (mapcar 'expand-file-name ecb-autogen-subdirs))
-           (write-contents-hooks '(ecb-autogen-update-header))
            (command-line-args-left (cons default-directory subdirs))
            )
-      (batch-update-autoloads))
+      (ecb-batch-update-autoloads))
     ;; XEmacs adds autom. the provide statement but for GNU Emacs we must do
     ;; this:
     (when (not ecb-running-xemacs)

@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-mode-line.el,v 1.22 2003/09/10 16:01:42 berndl Exp $
+;; $Id: ecb-mode-line.el,v 1.23 2003/09/12 09:19:24 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -43,7 +43,6 @@
   (require 'silentcomp))
 
 (require 'ecb-util)
-(require 'cl)
 
 ;; XEmacs
 (silentcomp-defun redraw-modeline)
@@ -179,22 +178,22 @@ prepended by the window-number, see `ecb-mode-line-display-window-number'."
     ;; update the modeline for each visible(!!) ECB-buffer
     (mapc (function
            (lambda (buffer)
-             (let* ((prefix-elem (some (function
-                                        (lambda (p)
-                                          (cond ((stringp (car p))
-                                                 (if (string= (car p)
-                                                              (buffer-name buffer))
-                                                     (cdr p)
-                                                   nil))
-                                                ((and (symbolp (car p))
-                                                      (boundp (car p))
-                                                      (stringp (symbol-value (car p))))
-                                                 (if (string= (symbol-value (car p))
-                                                              (buffer-name buffer))
-                                                     (cdr p)
-                                                   nil))
-                                                (t (ecb-error "ecb-mode-line-format: Can not get prefix-elem: %s" p)))))
-                                       ecb-mode-line-prefixes))
+             (let* ((prefix-elem (ecb-some (function
+                                            (lambda (p)
+                                              (cond ((stringp (car p))
+                                                     (if (string= (car p)
+                                                                  (buffer-name buffer))
+                                                         (cdr p)
+                                                       nil))
+                                                    ((and (symbolp (car p))
+                                                          (boundp (car p))
+                                                          (stringp (symbol-value (car p))))
+                                                     (if (string= (symbol-value (car p))
+                                                                  (buffer-name buffer))
+                                                         (cdr p)
+                                                       nil))
+                                                    (t (ecb-error "ecb-mode-line-format: Can not get prefix-elem: %s" p)))))
+                                           ecb-mode-line-prefixes))
                     (prefix-str (cond ((null prefix-elem)
                                        nil)
                                       ((stringp prefix-elem)
@@ -204,22 +203,22 @@ prepended by the window-number, see `ecb-mode-line-display-window-number'."
                                                 (buffer-name buffer)
                                                 ecb-path-selected-directory
                                                 ecb-path-selected-source))))
-                    (data-elem (some (function
-                                      (lambda (p)
-                                        (cond ((stringp (car p))
-                                                    (if (string= (car p)
-                                                                 (buffer-name buffer))
-                                                        (cdr p)
-                                                      nil))
-                                              ((and (symbolp (car p))
-                                                    (boundp (car p))
-                                                    (stringp (symbol-value (car p))))
-                                               (if (string= (symbol-value (car p))
-                                                            (buffer-name buffer))
-                                                   (cdr p)
-                                                 nil))
-                                              (t (ecb-error "ecb-mode-line-format: Can not get data-elem: %s" p)))))
-                                     ecb-mode-line-data))
+                    (data-elem (ecb-some (function
+                                          (lambda (p)
+                                            (cond ((stringp (car p))
+                                                   (if (string= (car p)
+                                                                (buffer-name buffer))
+                                                       (cdr p)
+                                                     nil))
+                                                  ((and (symbolp (car p))
+                                                        (boundp (car p))
+                                                        (stringp (symbol-value (car p))))
+                                                   (if (string= (symbol-value (car p))
+                                                                (buffer-name buffer))
+                                                       (cdr p)
+                                                     nil))
+                                                  (t (ecb-error "ecb-mode-line-format: Can not get data-elem: %s" p)))))
+                                         ecb-mode-line-data))
                     (data-str (cond ((equal data-elem 'sel-dir)
                                      ecb-path-selected-directory)
                                     ((equal data-elem 'sel-source)
