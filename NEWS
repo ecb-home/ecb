@@ -1,5 +1,10 @@
 * Changes for ECB version 1.97
 
+** Rewritten tree-buffer display-layer - now there are three different styles
+   Image: Looks very nice and modern - give it a try :-)
+   Ascii with guide-lines: TODO Klaus
+   Ascii without guide-lines: This is the style of ECB <= 1.96
+
 ** Completely rewritten popup-menu mechanism.
 
 *** Now sub-menus are allowed for all popups

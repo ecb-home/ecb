@@ -119,6 +119,16 @@ the basic face-settings can be easily changed just by customizing the face
 'ecb-default-general-face'!"
   :group 'ecb-faces)
 
+(defface ecb-tree-guide-line-face (ecb-face-default 1.0 nil nil
+                                                    'ecb-default-general-face
+                                                    "grey" "gray")
+  "*Face for the guide-lines in the tree-buffers."
+  :group 'ecb-faces)
+
+(defcustom ecb-tree-guide-line-face 'ecb-tree-guide-line-face
+  "*Face for the guide-lines in the tree-buffers."
+  :group 'ecb-face-options)
+
 (defface ecb-directories-general-face (ecb-face-default 1.0 nil nil
                                                         'ecb-default-general-face)
   "*Basic face for the ECB directories buffer.

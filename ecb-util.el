@@ -65,6 +65,7 @@
 (silentcomp-defvar message-truncate-lines)
 (silentcomp-defun x-popup-dialog)
 (silentcomp-defvar noninteractive)
+(silentcomp-defun display-images-p)
 
 
 ;; Some constants
@@ -101,6 +102,14 @@
        ecb-semantic-dir
        (file-exists-p (expand-file-name (concat ecb-semantic-dir "_pkg.el")))
        (file-exists-p (expand-file-name (concat ecb-semantic-dir "auto-autoloads.el")))))
+
+(defconst ecb-images-can-be-used
+  (and (or (fboundp 'defimage)
+           (fboundp 'make-image-specifier))
+       (if (fboundp 'display-images-p)
+           (display-images-p)
+         window-system)))
+
 
 (if ecb-running-xemacs
     (progn
