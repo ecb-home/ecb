@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-help.el,v 1.108 2004/08/27 15:42:22 berndl Exp $
+;; $Id: ecb-help.el,v 1.109 2004/11/17 17:28:38 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -199,7 +199,7 @@ HTML-online-documentation is not included."
                                               ecb-help-info-path))
                             (concat ecb-ecb-dir ecb-help-info-path)
                           ecb-help-info-path)))
-        (html-path-abs (ecb-fix-filename
+        (html-path-abs (expand-file-name
                         (if (or (string-match "^\\." ecb-help-html-path)
                                 (string-match (concat "^"
                                                       (regexp-quote

@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-examples.el,v 1.13 2004/05/06 09:02:08 berndl Exp $
+;; $Id: ecb-examples.el,v 1.14 2004/11/17 17:28:39 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -64,6 +64,7 @@
 
 (require 'ecb-util)
 (require 'ecb-layout)
+(require 'ecb-common-browser)
 
 
 ;; ---------------------------------------------------------------------------

@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-eshell.el,v 1.73 2004/05/06 09:02:08 berndl Exp $
+;; $Id: ecb-eshell.el,v 1.74 2004/11/17 17:28:39 berndl Exp $
 
 ;;; Commentary:
 
@@ -80,6 +80,7 @@
 
 (require 'ecb-util)
 (require 'ecb-compilation)
+(require 'ecb-common-browser)
 
 (silentcomp-defvar eshell-buffer-name)
 (silentcomp-defun eshell)

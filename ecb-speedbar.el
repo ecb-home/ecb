@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-speedbar.el,v 1.60 2004/09/09 15:46:16 berndl Exp $
+;; $Id: ecb-speedbar.el,v 1.61 2004/11/17 17:28:23 berndl Exp $
 
 ;;; Commentary:
 
@@ -69,6 +69,8 @@
 (require 'speedbar)
 (require 'ecb-util)
 (require 'ecb-semantic-wrapper)
+(require 'ecb-common-browser)
+
 
 ;; imenu
 (silentcomp-defvar imenu--rescan-item)

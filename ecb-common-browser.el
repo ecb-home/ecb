@@ -25,7 +25,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-common-browser.el,v 1.7 2004/09/29 16:32:54 berndl Exp $
+;; $Id: ecb-common-browser.el,v 1.8 2004/11/17 17:28:39 berndl Exp $
 
 
 ;;; History
@@ -42,7 +42,7 @@
 (require 'ecb-util)
 
 (require 'tree-buffer)
-(require 'ecb-layout)
+;; (require 'ecb-layout)
 (require 'ecb-mode-line)
 
 ;; various loads
@@ -610,6 +610,182 @@ The following keys must not be rebind in all tree-buffers:
 ;; Internals
 ;;====================================================
 
+;; the filename/path cache
+
+(defecb-multicache ecb-filename-cache 500 nil '(FILES-AND-SUBDIRS
+                                                EMPTY-DIR-P
+                                                SOURCES
+                                                VC
+                                                FIXED-FILENAMES)
+  "Cache used for the filebrowser to cache all necessary informations
+associated to file- or directory-names.
+
+Currently there are three subcaches managed within this cache:
+
+  FILES-AND-SUBDIRS:
+  
+  Cache for every directory all subdirs and files. This is a cache with
+     key:   <directory>
+     value: \(<file-list> . <subdirs-list>)
+  
+  EMPTY-DIR-P:
+  
+  Cache for every directory if it is empty or not. This is a cache with
+     key:   <directory>
+     value: \(\[nil|t] . <checked-with-show-sources>)
+  
+  SOURCES:
+  
+  Cache for the contents of the buffer `ecb-sources-buffer-name'. This is a
+  cache with
+     key:   <directory>
+     value: \(<full-content> . <filtered-content>)
+  whereas <full-content> is a 3-elem list \(tree-buffer-root <copy of
+  tree-buffer-nodes> buffer-string) for a full \(i.e. all files) cache and
+  <filtered-content> is a 4-elem list \(tree-buffer-root <copy of
+  tree-buffer-nodes> sources-buffer-string <filter>) for a filtered cache
+  where <filter> is a cons-cell \(<filter-regexp> . <filter-display>).
+
+  VC:
+
+  Cache necessary informations for the version-control-support. This is a
+  cache for filenames and directories. In case of a file with
+     key: <filename> of a sourcefile
+     value: \(<state> <check-timestamp> <checked-buffers>)
+  whereas <state> is the that VC-state the file had at time <check-timestamp>.
+  <checked-buffers> is a list of tree-buffer-names for which <state> was
+  checked.
+  In case of a directory with
+     key: <dirname> of a directory
+     value: <vc-state-fcn> or 'NO-VC
+  <vc-state-fcn> is the function used to get the VC-state if <check-timestamp>
+  is older than the most recent modification-timestamp of <filename>.
+
+  FIXED-FILENAMES:
+
+  Cache for fixed filenames which can speedup handling-remote-paths \(like
+  tramp-paths)
+     key: The concatenation of the args PATH and FILENAME of `ecb-fix-filename'.
+     value: The result of `ecb-fix-filename' for these args.")
+
+(defun ecb-filename-cache-init ()
+  "Initialize the whole cache for file- and directory-names"
+  (if (ecb-multicache-p 'ecb-filename-cache)
+      (ecb-multicache-clear 'ecb-filename-cache)))
+
+;; directory separator
+
+(defconst ecb-directory-sep-char
+  (if ecb-running-xemacs directory-sep-char ?/))
+
+(defsubst ecb-directory-sep-char (&optional refdir)
+  (if (or (null refdir)
+          (not (ecb-remote-path refdir)))
+      ecb-directory-sep-char
+    ?/))
+
+(defsubst ecb-directory-sep-string (&optional refdir)
+  (char-to-string (ecb-directory-sep-char refdir)))   
+
+;;; ----- Canonical filenames ------------------------------
+
+(defun ecb-fix-path (path)
+  "Fixes an annoying behavior of the native windows-version of XEmacs:
+When PATH contains only a drive-letter and a : then `expand-file-name' does
+not interpret this PATH as root of that drive. So we add a trailing
+`directory-sep-char' and return this new path because then `expand-file-name'
+treats this as root-dir of that drive. For all \(X)Emacs-version besides the
+native-windows-XEmacs PATH is returned."
+  (if (and ecb-running-xemacs
+           (equal system-type 'windows-nt))
+      (if (and (= (length path) 2)
+               (equal (aref path 1) ?:))
+          (concat path (ecb-directory-sep-string))
+        path)
+    path))
+
+;; accessors for the FIXED-FILENAMES-cache
+
+(defsubst ecb-fixed-filename-cache-put (path filename fixed-filename)
+  "Add FIXED-FILENAME for PATH and FILENAME to the FIXED-FILENAMES-cache
+of `ecb-filename-cache'."
+  (ecb-multicache-put-value 'ecb-filename-cache
+                            (concat path filename)
+                            'FIXED-FILENAMES
+                            fixed-filename))
+
+(defsubst ecb-fixed-filename-cache-get (path filename)
+  "Get the cached value for PATH and FILENAME from the FIXED-FILENAMES-cache
+in `ecb-filename-cache'. If no vaue is cached for PATH and FILENAME then nil
+is returned."
+  (ecb-multicache-get-value 'ecb-filename-cache
+                            (concat path filename)
+                            'FIXED-FILENAMES))
+
+(defun ecb-fixed-filename-cache-dump (&optional no-nil-value)
+  "Dump the whole FIXED-FILENAMES-cache. If NO-NIL-VALUE is not nil then these
+cache-entries are not dumped. This command is not intended for end-users of ECB."
+  (interactive "P")
+  (ecb-multicache-print-subcache 'ecb-filename-cache
+                                 'FIXED-FILENAMES
+                                 no-nil-value))
+
+;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: What about the new cygwin-version
+;; of GNU Emacs 21? We have to test if this function and all locations where
+;; `ecb-fix-path' is used work correctly with the cygwin-port of GNU Emacs.
+(silentcomp-defun mswindows-cygwin-to-win32-path)
+(defun ecb-fix-filename (path &optional filename substitute-env-vars)
+  "Normalizes path- and filenames for ECB. If FILENAME is not nil its pure
+filename \(i.e. without directory part) will be concatenated to PATH. The
+result will never end with the directory-separator! If SUBSTITUTE-ENV-VARS is
+not nil then in both PATH and FILENAME env-var substitution is done. If the
+`system-type' is 'cygwin32 then the path is converted to win32-path-style!"
+  (when (stringp path)
+    (or (ecb-fixed-filename-cache-get path filename)
+        (let ((norm-path nil)
+              (result nil))
+          (setq norm-path (if ecb-running-xemacs
+                              (cond ((equal system-type 'cygwin32)
+                                     (mswindows-cygwin-to-win32-path
+                                      (expand-file-name path)))
+                                    ((equal system-type 'windows-nt)
+                                     (expand-file-name (ecb-fix-path path)))
+                                    (t (expand-file-name path)))
+                            (expand-file-name path)))
+          ;; For windows systems we normalize drive-letters to downcase
+          (setq norm-path (if (and (member system-type '(windows-nt cygwin32))
+                                   (> (length norm-path) 1)
+                                   (equal (aref norm-path 1) ?:))
+                              (concat (downcase (substring norm-path 0 2))
+                                      (substring norm-path 2))
+                            norm-path))
+          ;; substitute environment-variables
+          (setq norm-path (expand-file-name (if substitute-env-vars
+                                                (substitute-in-file-name norm-path)
+                                              norm-path)))
+          ;; delete a trailing directory-separator if there is any
+          (setq norm-path (if (and (> (length norm-path) 1)
+                                   (= (aref norm-path (1- (length norm-path)))
+                                      (ecb-directory-sep-char path)))
+                              (substring norm-path 0 (1- (length norm-path)))
+                            norm-path))
+          (setq result
+                (concat norm-path
+                        (if (stringp filename)
+                            (concat (when (> (length norm-path) 1)
+                                      ;; currently all protocols like tramp,
+                                      ;; ange-ftp or efs support only not
+                                      ;; windows-remote-hosts ==> we must not
+                                      ;; add a backslash here (would be done
+                                      ;; in case of a native Windows-XEmacs)
+                                      (ecb-directory-sep-string path))
+                                    (file-name-nondirectory (if substitute-env-vars
+                                                                (substitute-in-file-name filename)
+                                                              filename))))))
+          (ecb-fixed-filename-cache-put path filename result)
+          result))))
+
+;; -- end of canonical filenames
 
 (defun ecb-find-optionsym-for-tree-buffer-name (name)
   (cond ((string= name ecb-directories-buffer-name)
@@ -969,6 +1145,7 @@ node-name will be displayed."
                      0 1 (make-string (- first-chars) ? ) image)
                     text-name))
         text-name))))
+
 
 (silentcomp-provide 'ecb-common-browser)
 
