@@ -1633,7 +1633,9 @@ Currently the fourth argument TREE-BUFFER-NAME is not used here."
 	  (goto-char (semantic-token-start token))
 	  (cond
 	   ((eq 'top ecb-scroll-window-after-jump)
-	    (set-window-start (selected-window) (semantic-token-start token)))
+	    (save-excursion
+	      (beginning-of-line)
+	      (set-window-start (selected-window) (point))))
 	   ((eq 'center ecb-scroll-window-after-jump)
 	    (set-window-start
 	     (selected-window)

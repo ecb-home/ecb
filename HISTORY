@@ -1,3 +1,10 @@
+Version 1.xx:
+-------------
+
+- Fixed a small bug that placed the window start at the beginning of the token
+  instead of the beginning of the token line. (Jesper)
+
+
 Version 1.50:
 -------------
 
