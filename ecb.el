@@ -54,7 +54,7 @@
 ;; The latest version of the ECB is available at
 ;; http://home.swipnet.se/mayhem/ecb.html
 
-;; $Id: ecb.el,v 1.169 2001/12/10 08:57:07 burtonator Exp $
+;; $Id: ecb.el,v 1.170 2001/12/11 12:12:47 berndl Exp $
 
 ;;; Code:
 
@@ -181,7 +181,7 @@ The parameters are set for the following display-types:
                           (if ,reverse-video (list :reverse-video t))))))
 
 
-(defface ecb-directories-general-face (ecb-face-default 0.95)
+(defface ecb-directories-general-face (ecb-face-default 0.9)
   "Basic face for the ECB directories buffer.
 It큦 recommended to define here the font-family, the font-size, the basic
 color etc."
@@ -195,7 +195,7 @@ face is used but always the default-face."
   :group 'ecb-directories
   :type 'face)
 
-(defface ecb-sources-general-face (ecb-face-default 0.95)
+(defface ecb-sources-general-face (ecb-face-default 0.9)
   "Basic face for the ECB sources buffer.
 It큦 recommended to define here the font-family, the font-size, the basic
 color etc."
@@ -209,7 +209,7 @@ face is used but always the default-face."
   :group 'ecb-sources
   :type 'face)
 
-(defface ecb-methods-general-face (ecb-face-default 0.95)
+(defface ecb-methods-general-face (ecb-face-default 0.9)
   "Basic face for the ECB methods buffer.
 It큦 recommended to define here the font-family, the font-size, the basic
 color etc."
@@ -223,7 +223,7 @@ face is used but always the default-face."
   :group 'ecb-methods
   :type 'face)
 
-(defface ecb-history-general-face (ecb-face-default 0.95)
+(defface ecb-history-general-face (ecb-face-default 0.9)
   "Basic face for the ECB history buffer.
 It큦 recommended to define here the font-family, the font-size, the basic
 color etc."
@@ -266,7 +266,7 @@ sources buffer."
   :type 'face)
 
 (defface ecb-method-face (ecb-face-default nil nil nil
-                                           "khaki" "khaki" nil nil t)
+                                           "SeaGreen1" "SeaGreen1" nil nil t)
   "*Define face used for highlighting current method, class or variable
 in the methods buffer."
   :group 'faces)
@@ -293,10 +293,10 @@ history buffer."
   :type 'face)
 
 (defface ecb-token-header-face (ecb-face-default nil nil nil
-                                                 "khaki" "khaki"
+                                                 "SeaGreen1" "SeaGreen1"
                                                  nil nil t)
   "*Define face used for highlighting the token header after jumping to
-it by clicking onto a node in the methods buffer."
+  it by clicking onto a node in the methods buffer."
   :group 'faces)
   
 (defcustom ecb-token-header-face 'ecb-token-header-face
@@ -1064,26 +1064,70 @@ cleared!) ECB by running `ecb-deactivate'."
 (defun ecb-get-token-parents (token)
   (ecb-get-token-parent-names (semantic-token-type-parent token)))
 
-(defun ecb-get-token-name (token)
+(defun ecb-get-token-name (token &optional parent-token)
+  "Get the name of TOKEN with the appropriate semantic-API-fcn.
+Here the parent-token of TOKEN is available with `semantic-token-get' and the
+property 'parent-token!"
+;;   (let ((parent-token (semantic-token-get token 'parent-token)))
   (if (eq 'type (semantic-token-token token))
-      (semantic-name-nonterminal token nil ecb-font-lock-tokens)
+      (semantic-name-nonterminal token parent-token ecb-font-lock-tokens)
     (condition-case nil
-	(funcall ecb-token-display-function token nil ecb-font-lock-tokens)
-      (error (semantic-prototype-nonterminal token nil ecb-font-lock-tokens)))))
+        (funcall ecb-token-display-function token parent-token
+                 ecb-font-lock-tokens)
+      (error (semantic-prototype-nonterminal token parent-token
+                                             ecb-font-lock-tokens)))))
 
-(defun ecb-find-add-token-bucket (node type display sort-method buckets)
-  "Finds a bucket containing tokens of the given type, creates nodes for them and adds them to the given node. The bucket is removed from the buckets list."
+;; (defun ecb-get-token-name (token)
+;;   "Get the name of TOKEN with the appropriate semantic-API-fcn.
+;; Here the parent-token of TOKEN is available with `semantic-token-get' and the
+;; property 'parent-token!"
+;;   (let ((parent-token (semantic-token-get token 'parent-token)))
+;;     (if (eq 'type (semantic-token-token token))
+;;         (semantic-name-nonterminal token parent-token ecb-font-lock-tokens)
+;;       (condition-case nil
+;;           (funcall ecb-token-display-function token parent-token
+;;                    ecb-font-lock-tokens)
+;;         (error (semantic-prototype-nonterminal token parent-token
+;;                                                ecb-font-lock-tokens))))))
+
+(defun ecb-find-add-token-bucket (node type display sort-method buckets
+                                       &optional parent-token)
+  "Finds a bucket containing tokens of the given type, creates nodes for them
+and adds them to the given node. The bucket is removed from the buckets list.
+PARENT-TOKEN is only propagated to `ecb-add-token-bucket'."
   (when (cdr buckets)
     (let ((bucket (cadr buckets)))
       (if (eq type (semantic-token-token (cadr bucket)))
 	  (progn
-	    (ecb-add-token-bucket node bucket display sort-method)
+	    (ecb-add-token-bucket node bucket display sort-method parent-token)
 	    (setcdr buckets (cddr buckets)))
 	(ecb-find-add-token-bucket node type display sort-method
-				   (cdr buckets))))))
+				   (cdr buckets) parent-token)))))
 
-(defun ecb-add-token-bucket (node bucket display sort-method)
-  "Adds a token bucket to a node."
+;; (defun ecb-add-token-bucket (node bucket display sort-method
+;;                                   &optional parent-token)
+;;   "Adds a token bucket to a node unless DISPLAY equals 'hidden.
+;; PARENT-TOKEN is added to every token of BUCKET as property 'parent-token, so
+;; it's later available by calling `semantic-token-get'. See
+;; `ecb-get-token-name'."
+;;   (when bucket
+;;     (let ((name (concat "[" (car bucket) "]"))
+;; 	  (type (semantic-token-token (cadr bucket)))
+;; 	  (bucket-node node))
+;;       (unless (eq 'hidden display)
+;; 	(unless (eq 'flattened display)
+;; 	  (setq bucket-node (tree-node-new name 1 nil nil node
+;; 					   (if ecb-truncate-long-names 'end)))
+;; 	  (tree-node-set-expanded bucket-node (eq 'expanded display)))
+;; 	(dolist (token (ecb-sort-tokens sort-method (cdr bucket)))
+;;           (semantic-token-put token 'parent-token parent-token)
+;; 	  (ecb-update-token-node token
+;;                                  (tree-node-new "" 0 token t bucket-node
+;;                                                 (if ecb-truncate-long-names 'end))))))))
+
+(defun ecb-add-token-bucket (node bucket display sort-method
+                                  &optional parent-token)
+  "Adds a token bucket to a node unless DISPLAY equals 'hidden."
   (when bucket
     (let ((name (concat "[" (car bucket) "]"))
 	  (type (semantic-token-token (cadr bucket)))
@@ -1094,14 +1138,16 @@ cleared!) ECB by running `ecb-deactivate'."
 					   (if ecb-truncate-long-names 'end)))
 	  (tree-node-set-expanded bucket-node (eq 'expanded display)))
 	(dolist (token (ecb-sort-tokens sort-method (cdr bucket)))
-	  (ecb-update-token-node token (tree-node-new "" 0 token t bucket-node
-						      (if ecb-truncate-long-names
-							  'end))))))))
+          ;;           (semantic-token-put token 'parent-token parent-token)
+	  (ecb-update-token-node token
+                                 (tree-node-new "" 0 token t bucket-node
+                                                (if ecb-truncate-long-names 'end))
+                                 parent-token))))))
 
-(defun ecb-update-token-node (token node)
+(defun ecb-update-token-node (token node &optional parent-token)
   "Updates a node containing a token."
   (let* ((children (semantic-nonterminal-children token t)))
-    (tree-node-set-name node (ecb-get-token-name token))
+    (tree-node-set-name node (ecb-get-token-name token parent-token))
     ;; Always expand types, maybe this should be customizable and more
     ;; flexible
     (tree-node-set-expanded node (eq 'type (semantic-token-token token)))
@@ -1109,6 +1155,31 @@ cleared!) ECB by running `ecb-deactivate'."
       (ecb-add-tokens node children token)
       (tree-node-set-expandable 
        node (not (eq nil (tree-node-get-children node)))))))
+
+;; (defun ecb-update-token-node (token node)
+;;   "Updates a node containing a token."
+;;   (let* ((children (semantic-nonterminal-children token t)))
+;;     (tree-node-set-name node (ecb-get-token-name token))
+;;     ;; Always expand types, maybe this should be customizable and more
+;;     ;; flexible
+;;     (tree-node-set-expanded node (eq 'type (semantic-token-token token)))
+;;     (unless (eq 'function (semantic-token-token token))
+;;       (ecb-add-tokens node children token)
+;;       (tree-node-set-expandable 
+;;        node (not (eq nil (tree-node-get-children node)))))))
+
+;; (defun ecb-klaus-test (tokenlist)
+;;   '(("klaus.hh" include nil nil nil)
+;;     ("KLAUS" parent nil
+;;      (("aPrivateMethod" function ("void") (("i" variable "int" nil ... nil nil)) ((parent . "KLAUS")) nil nil )
+;;       ("KLAUS" function ("KLAUS" type "class") nil ((parent . "KLAUS") (constructor . t)) nil nil)
+;;       ("KLAUS" function "void" nil ((parent . "KLAUS") (destructor . t)) nil nil )) nil nil)
+;;     ("BERNDL" parent nil
+;;      (("aPrivateMethod" function ("void") nil ((parent . "BERNDL")) nil nil )
+;;       ("BERNDL" function ("BERNDL" type "class") nil ((parent . "BERNDL") (constructor . t)) nil nil )
+;;       ("BERNDL" function "void" nil ((parent . "BERNDL") (destructor . t)) nil nil )) nil nil)
+;;     )
+;;   )
 
 (defun ecb-dump-toplevel ()
   (interactive)
@@ -1137,8 +1208,10 @@ cleared!) ECB by running `ecb-deactivate'."
 	      "\n")
       (if (eq 'type (semantic-token-token tok))
 	  (ecb-dump-type tok prefix))
-      (ecb-dump-tokens (semantic-nonterminal-children tok t)
-		       (concat prefix "  ")))))
+      (if (eq 'parent (semantic-token-token tok))
+          (ecb-dump-tokens (nth 3 tok) (concat prefix "  "))
+        (ecb-dump-tokens (semantic-nonterminal-children tok t)
+                         (concat prefix "  "))))))
 
 (defun ecb-add-tokens (node tokens &optional parent-token)
   (ecb-add-token-buckets node parent-token (semantic-bucketize tokens)))
@@ -1166,7 +1239,9 @@ cleared!) ECB by running `ecb-deactivate'."
     tokens))
 
 (defun ecb-add-token-buckets (node parent-token buckets)
-  "Creates and adds token nodes to the given node."
+  "Creates and adds token nodes to the given node.
+The PARENT-TOKEN is propagated to the functions `ecb-add-token-bucket' and
+`ecb-find-add-token-bucket'."
   (setq buckets (cons nil buckets))
   (dolist (token-display ecb-show-tokens)
     (let* ((type (car token-display))
@@ -1187,11 +1262,12 @@ cleared!) ECB by running `ecb-deactivate'."
 				     parent)
 				   2 parent t node
 				   (if ecb-truncate-long-names 'end)))))))))
-       (t (ecb-find-add-token-bucket node type display sort-method buckets)))))
+       (t (ecb-find-add-token-bucket node type display sort-method buckets
+                                     parent-token)))))
   (let ((type-display (ecb-get-token-type-display t)))
     (dolist (bucket buckets)
       (ecb-add-token-bucket node bucket (cadr type-display)
-                            (caddr type-display)))))
+                            (caddr type-display) parent-token))))
 
 (defun ecb-update-after-partial-reparse (updated-tokens)
   "Updates the method buffer and all internal ECB-caches after a partial
@@ -2247,6 +2323,13 @@ That is remove the unsupported :help stuff."
       ecb-toggle-ecb-windows
       :active (equal (selected-frame) ecb-frame)
       :help "Toggle the visibility of all ECB windows."
+      ])
+   (ecb-menu-item
+    [ "Synchronize ECB windows"
+      (ecb-current-buffer-sync t)
+      :active (and (equal (selected-frame) ecb-frame)
+                   (ecb-point-in-edit-window))
+      :help "Synchronize the ECB windows with the current edit-window."
       ])
    (ecb-menu-item
     [ "Rebuild method buffer"
