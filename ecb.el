@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb.el,v 1.408 2004/09/20 15:11:47 berndl Exp $
+;; $Id: ecb.el,v 1.409 2004/09/24 12:21:14 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -2158,6 +2158,41 @@ performance-problem!"
                          :active t
                          :help "Start the Emacs Code Browser."
                          ])))
+
+
+;; some goodies for editing the ecb-elisp-code
+
+;; parsing of our ecb-macros
+
+(eval-after-load "semantic-el"
+  (when (fboundp 'semantic-elisp-setup-form-parser)
+    ;; defecb-multicache
+    (semantic-elisp-reuse-form-parser defvar defecb-multicache)
+    ;; defecb-stealthy and tree-buffer-defpopup-command
+    (semantic-elisp-setup-form-parser
+        (lambda (read-lobject start end)
+          (semantic-tag-new-function
+           (symbol-name (nth 1 read-lobject)) nil nil
+           :user-visible-flag nil
+           :documentation (semantic-elisp-do-doc (nth 2 read-lobject))))
+      defecb-stealthy
+      tree-buffer-defpopup-command)
+    ;; ecb-layout-define
+    (semantic-elisp-setup-form-parser
+        (lambda (read-lobject start end)
+          (semantic-tag-new-function
+           (nth 1 read-lobject) nil
+           (semantic-elisp-desymbolify (list (nth 2 read-lobject)))
+           :user-visible-flag nil
+           :documentation (semantic-elisp-do-doc (nth 3 read-lobject))))
+      ecb-layout-define)
+    ;; when-ecb-running-... macros
+    (semantic-elisp-reuse-form-parser eval-and-compile
+                                      when-ecb-running-xemacs
+                                      when-ecb-running-emacs-21
+                                      when-ecb-running-emacs-20
+                                      when-ecb-running-emacs)
+    ))
 
 
 ;; highlighting of some ecb-keywords

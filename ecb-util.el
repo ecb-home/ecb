@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-util.el,v 1.119 2004/09/20 15:10:17 berndl Exp $
+;; $Id: ecb-util.el,v 1.120 2004/09/24 12:21:16 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -1510,6 +1510,35 @@ the same ordering as `other-window' would walk through the frame."
                                   (ecb-canonical-windows-list)
                                 (window-list)))))))
 
+;;; Timestamp stuff
+
+;; stolen from tramp
+(defun ecb-time-diff (t1 t2)
+  "Return the difference between the two times, in seconds.
+T1 and T2 are time values (as returned by `current-time' for example).
+
+NOTE: This function will fail if the time difference is too large to
+fit in an integer."
+  ;; Pacify byte-compiler with `symbol-function'.
+  (cond ((fboundp 'subtract-time)
+         (cadr (funcall (symbol-function 'subtract-time) t1 t2)))
+        ((fboundp 'itimer-time-difference)
+         (floor (funcall
+		 (symbol-function 'itimer-time-difference)
+		 (if (< (length t1) 3) (append t1 '(0)) t1)
+		 (if (< (length t2) 3) (append t2 '(0)) t2))))
+        (t
+         ;; snarfed from Emacs 21 time-date.el
+         (cadr (let ((borrow (< (cadr t1) (cadr t2))))
+                 (list (- (car t1) (car t2) (if borrow 1 0))
+                       (- (+ (if borrow 65536 0) (cadr t1)) (cadr t2))))))))
+
+;; stolen from gnus
+(defun ecb-time-less-p (t1 t2)
+  "Say whether time T1 is less than time T2."
+  (or (< (car t1) (car t2))
+      (and (= (car t1) (car t2))
+	   (< (nth 1 t1) (nth 1 t2)))))
 
 ;;; ----- Multicache ---------------------------------------
 
@@ -1608,6 +1637,27 @@ following meanings:
   is not recommended, see `ecb-multicache-apply-to-value'."
   (cdr (ecb-multicache-get-subcache cache-var key subcache)))
 
+(defun ecb-multicache-get-values (cache-var key &optional subcache-list)
+  "Return an assoc-list with the subcaches listed in SUBCACHE-LIST. If
+SUBCACHE-LIST is nil then all currently registered subcaches of CACHE-VAR are
+returned. The result is an assoc-list where each element is a cons-cell:
+- car: subcache-symbol.
+- cdr: The currenty cached value for the subcache in the car.
+
+So apply `assoc' and `cdr' to the result of this function.to get the value of
+a certain subcache.
+
+This function is useful when the values of more than one subcache for a key are
+needed at the same time, i.e. with one cache-lookup."
+  (ecb-multicache-init cache-var)
+  (let ((cache-val (gethash key (symbol-value cache-var))))
+    (when cache-val
+      (if (null subcache-list)
+          cache-val
+        (mapcar (function (lambda (s)
+                            (assoc s cache-val)))
+                subcache-list)))))
+
 (defun ecb-multicache-apply-to-value (cache-var key subcache apply-fcn
                                                  &optional only-if-key-exist)
   "Apply the function APPLY-FCN to the old SUBCACHE-value of the cached item
@@ -1702,7 +1752,7 @@ to be a symbol for which an assoc cache has been defined with
   (ecb-multicache-init cache-var)
   (clrhash (symbol-value cache-var)))
 
-(defun ecb-multicache-print-subcache (cache-var subcache)
+(defun ecb-multicache-print-subcache (cache-var subcache &optional no-nil-value)
   "Print the contents of SUBCACHE of the cache of CACHE-VAR in another window
 in a special buffer. This is mostly for debugging the cache-contents.
 CACHE-VAR has to be a symbol for which an assoc cache has been defined with
@@ -1716,7 +1766,10 @@ Key: <the key of a cached element>
      Value: <the associated value in the subcache SUBCACHE>
 ...
 Key: <the key of a cached element>
-     Value: <the associated value in the subcache SUBCACHE>"
+     Value: <the associated value in the subcache SUBCACHE>
+
+If NO-NIL-VALUE is not nil then Keys with a SUBCACHE-value nil will be
+excluded from the output."
   (let ((dump-buffer-name (format "*ecb-multicache - subcache: %s"
                                   subcache))
         (key-str "Key:")
@@ -1746,14 +1799,15 @@ Key: <the key of a cached element>
                                       (concat key))))
                      (and key-cp (put-text-property 0 (length key-cp)
                                                     'face key-face key-cp))
-                     (insert (concat key-str " "
-                                     (if key-cp
-                                         key-cp
-                                       (format "%s" key))
-                                     "\n     "
-                                     value-str " "
-                                     (format "%s" value)
-                                     "\n"))
+                     (unless (and no-nil-value (null value))
+                       (insert (concat key-str " "
+                                       (if key-cp
+                                           key-cp
+                                         (format "%s" key))
+                                       "\n     "
+                                       value-str " "
+                                       (format "%s" value)
+                                       "\n")))
                      value))))
       (switch-to-buffer-other-window (get-buffer-create dump-buffer-name))
       (goto-char (point-min)))))

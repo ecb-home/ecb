@@ -25,7 +25,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-common-browser.el,v 1.5 2004/09/20 15:13:19 berndl Exp $
+;; $Id: ecb-common-browser.el,v 1.6 2004/09/24 12:21:17 berndl Exp $
 
 
 ;;; History
@@ -268,7 +268,7 @@ With both ascii-styles the tree-layout can be affected with the options
                                         (concat base i))))
                         '("default/height-17"
                           "directories/height-17"
-                          nil
+                          "sources/height-14_to_21"
                           "methods/height-14_to_21"
                           nil))))
   "*Directories where the images for the tree-buffer can be found.
@@ -935,12 +935,39 @@ run starts with this interrupted function."
       ;; otherwise we ensure that next time we start with the interrupted
       ;; function.
       (when l
-        ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: remove this test if it works
+        ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: remove this test if it
+        ;; all stealth tasks work - currently only the VC-support is not
+        ;; enough tested
         (message "TEST: ecb-stealthy-updates: %s has been interrupted" (car l))
         (setq ecb-stealthy-function-list
               (ecb-rotate ecb-stealthy-function-list (car l)))))))
 
 
+
+;; generation of nodes rsp. of attributes of nodes
+
+(defun ecb-generate-node-name (text-name first-chars icon-name name-of-buffer)
+  "Generate a new name from TEXT-NAME by adding an appropriate image according
+to ICON-NAME to the first FIRST-CHARS of TEXT-NAME. If FIRST-CHARS is < 0 then
+a string with length abs\(FIRST-CHARS) is created, the image is applied to
+this new string and this \"image\"-string is added to the front of TEXT-NAME.
+If no image can be found for ICON-NAME then the original TEXT-NAME is
+returned. NAME-OF-BUFFER is the name of the tree-buffer where the resulting
+node-name will be displayed."
+  (let ((image nil))
+    (save-excursion
+      (set-buffer name-of-buffer)
+      (setq image (and icon-name
+                       (ecb-use-images-for-semantic-tags)
+                       (tree-buffer-find-image icon-name)))
+      (if image
+          (if (> first-chars 0)
+              (tree-buffer-add-image-icon-maybe
+               0 first-chars text-name image)
+            (concat (tree-buffer-add-image-icon-maybe
+                     0 1 (make-string (- first-chars) ? ) image)
+                    text-name))
+        text-name))))
 
 (silentcomp-provide 'ecb-common-browser)
 

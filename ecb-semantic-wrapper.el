@@ -23,7 +23,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-semantic-wrapper.el,v 1.19 2004/09/20 15:12:28 berndl Exp $
+;; $Id: ecb-semantic-wrapper.el,v 1.20 2004/09/24 12:21:16 berndl Exp $
 
 ;;; Commentary:
 
@@ -118,13 +118,6 @@
     (semantic-current-nonterminal-parent      . semantic-current-tag-parent)
     (semantic-adopt-external-members          . semantic-adopt-external-members)
     (semantic-bucketize                       . semantic-bucketize)
-    ;; Do not define an alias for this function because probably we define an
-    ;; alias for an undefined function because this function is only loaded
-    ;; when c or c++-file is edited! if we define an alias this could break
-    ;; XEmacs-apropos from working when a user calls apropos "string" foe
-    ;; example (IMO a bug in apropos of XEmacs but we have to avoid breaking
-    ;; some basic functionality of XEmacs/Emacs!
-;;     (semantic-c-template-string               . semantic-c-template-string)
     (semantic-clear-toplevel-cache            . semantic-clear-toplevel-cache)
     (semantic-colorize-text                   . semantic--format-colorize-text)
     (semantic-current-nonterminal             . semantic-current-tag)
@@ -181,7 +174,6 @@ function of `semantic-token->text-functions' (rsp. for semantic 2.X
 equivalent new function of semanticdb 2.X. This alist should contain every
 function ECB uses from the semanticdb library.")
   
-
 ;; new let us create the aliase. Each alias has the name "ecb--"<function of
 ;; semantic 2.0>.
 (dolist (f-elem (append ecb--semantic-function-alist
@@ -191,6 +183,7 @@ function ECB uses from the semanticdb library.")
     (if (fboundp (cdr f-elem))
         (cdr f-elem)
       (car f-elem))))
+
 
 (defsubst ecb--semantic-tag (name class &rest ignore)
   "Create a new semantic tag with name NAME and tag-class CLASS."
@@ -368,76 +361,6 @@ with a file, then the cdr of the result-cons is nil."
         (cons (car result-nth)
               (ecb--semanticdb-full-filename (cdr result-nth)))
       (cons (car result-nth) nil))))
-    
-;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: Add this code to semantic-el.el
-;; after a cedet-upgrade. It has to be added to the function
-;; `semantic-elisp-use-read' direct before the (t ...)-clause in the cond!
-
-;; ;; Now for ecb-stuff
-;; ((eq ts 'defecb-multicache)
-;;  (let ((doc (semantic-elisp-form-to-doc-string (nth 3 rt))))
-;;    ;; Variables and constants
-;;    (semantic-tag-new-variable
-;;     sn nil (nth 2 rt)
-;;     :user-visible-flag (and doc
-;;                             (> (length doc) 0)
-;;                             (= (aref doc 0) ?*))
-;;     :constant-flag (if (eq ts 'defconst) t nil)
-;;     :documentation (semantic-elisp-do-doc doc)
-;;     )
-;;    ))
-;; ((or (eq ts 'tree-buffer-defpopup-command)
-;;      (eq ts 'defecb-stealthy))
-;;  ;; tree-buffer-defpopup-command
-;;  (semantic-tag-new-function
-;;   sn nil nil
-;;   :user-visible-flag nil
-;;   :documentation (semantic-elisp-do-doc (nth 2 rt))
-;;   )
-;;  )
-;; ((eq ts 'ecb-layout-define)
-;;  ;; ecb-layout-define
-;;  (semantic-tag-new-function
-;;   tss nil (semantic-elisp-desymbolify (list (nth 2 rt)))
-;;   :user-visible-flag nil
-;;   :documentation (semantic-elisp-do-doc (nth 3 rt))
-;;   )
-;;  )
-
-;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: change this to the final
-;; mechanism of semantic when it is commited.
-(when (fboundp 'semantic-elisp-set-tagger)
-  (eval-after-load "semantic-el"
-    (progn
-      ;; defecb-multicache
-      (semantic-elisp-set-tagger 'defecb-multicache 'defvar)
-      ;; defecb-stealthy and tree-buffer-defpopup-command
-      (semantic-elisp-set-tagger
-       'defecb-stealthy
-       (function
-        (lambda (read-lobject keyword-symbol name-after-keyword start end)
-          (semantic-tag-new-function
-           name-after-keyword nil nil
-           :user-visible-flag nil
-           :documentation (semantic-elisp-do-doc (nth 2 read-lobject))))))
-      (semantic-elisp-set-tagger 'tree-buffer-defpopup-command 'defecb-stealthy)
-      ;; ecb-layout-define
-      (semantic-elisp-set-tagger
-       'ecb-layout-define
-       (function
-        (lambda (read-lobject keyword-symbol name-after-keyword start end)
-          (semantic-tag-new-function
-           name-after-keyword nil
-           (semantic-elisp-desymbolify (list (nth 2 read-lobject)))
-           :user-visible-flag nil
-           :documentation (semantic-elisp-do-doc (nth 3 read-lobject))))))
-      ;; if-ecb-running-... macros
-      (semantic-elisp-set-tagger 'when-ecb-running-xemacs 'eval-and-compile)
-      (semantic-elisp-set-tagger 'when-ecb-running-emacs-21 'eval-and-compile)
-      (semantic-elisp-set-tagger 'when-ecb-running-emacs-20 'eval-and-compile)
-      (semantic-elisp-set-tagger 'when-ecb-running-emacs 'eval-and-compile))))
-             
-
 
 (silentcomp-provide 'ecb-semantic-wrapper)
 

@@ -23,7 +23,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-file-browser.el,v 1.36 2004/09/17 11:43:57 berndl Exp $
+;; $Id: ecb-file-browser.el,v 1.37 2004/09/24 12:21:17 berndl Exp $
 
 ;;; Commentary:
 
@@ -743,7 +743,7 @@ key-bindings only for the history-buffer of ECB."
 (defvar ecb-path-selected-source nil
   "Path to currently selected source.")
 
-(defecb-multicache ecb-filename-cache '(FILES-AND-SUBDIRS EMPTY-DIR-P SOURCES)
+(defecb-multicache ecb-filename-cache '(FILES-AND-SUBDIRS EMPTY-DIR-P SOURCES VC)
   "Cache used for the filebrowser to cache all necessary informations
 associated to file- or directory-names.
 
@@ -772,7 +772,16 @@ Currently there are three subcaches managed within this cache:
   <filtered-content> is a 4-elem list \(tree-buffer-root <copy of
   tree-buffer-nodes> sources-buffer-string <filter>) for a filtered cache
   where <filter> is a cons-cell \(<filter-regexp> . <filter-display>).
-")
+
+  VC:
+
+  Cache necessary informations for the version-control-support. This is a
+  cache with
+     key: <filename> of a sourcefile
+     value: \(<state> <check-timestamp> <vc-state-fcn>)
+  whereas <state> is the that VC-state the file had at time <check-timestamp>.
+  <vc-state-fcn> is the function used to get the VC-state if <check-timestamp>
+  is older than the most recent modification-timestamp of <filename>.")
 
 (defun ecb-filename-cache-init ()
   "Initialize the whole cache for file- and directory-names"
@@ -794,14 +803,17 @@ Currently there are three subcaches managed within this cache:
   "Remove DIR from the cache."
   (ecb-multicache-clear-value 'ecb-filename-cache dir 'FILES-AND-SUBDIRS))
 
-(defun ecb-clear-files-and-subdirs-cache ()
+(defun ecb-files-and-subdirs-cache-clear ()
   "Clear the whole FILES-AND-SUBDIRS-cache."
   (ecb-multicache-clear-subcache 'ecb-filename-cache 'FILES-AND-SUBDIRS))
 
-(defun ecb-dump-files-and-subdirs-cache ()
-  "Dump the whole FILES-AND-SUBDIRS-cache in another window."
-  (interactive)
-  (ecb-multicache-print-subcache 'ecb-filename-cache 'FILES-AND-SUBDIRS))
+(defun ecb-files-and-subdirs-cache-dump (&optional no-nil-value)
+  "Dump the whole FILES-AND-SUBDIRS-cache in another window. If NO-NIL-VALUE
+is not nil then these cache-entries are not dumped."
+  (interactive "P")
+  (ecb-multicache-print-subcache 'ecb-filename-cache
+                                 'FILES-AND-SUBDIRS
+                                 no-nil-value))
   
 ;; accessors for the EMPTY-DIR-P-cache
 
@@ -838,14 +850,16 @@ Currently there are three subcaches managed within this cache:
                    ;; the old-value, which means in fact that nothing changes
                    old-value))))))
 
-(defun ecb-clear-directory-empty-cache ()
+(defun ecb-directory-empty-cache-clear ()
   "Clear the whole EMPTY-DIR-P-cache."
   (ecb-multicache-clear-subcache 'ecb-filename-cache 'EMPTY-DIR-P))
 
-(defun ecb-dump-directory-empty-cache ()
-  "Dump the whole EMPTY-DIR-P-cache."
-  (interactive)
-  (ecb-multicache-print-subcache 'ecb-filename-cache 'EMPTY-DIR-P))
+(defun ecb-directory-empty-cache-dump (&optional no-nil-value)
+  "Dump the whole EMPTY-DIR-P-cache. If NO-NIL-VALUE is not nil then these
+cache-entries are not dumped."
+  (interactive "P")
+  (ecb-multicache-print-subcache 'ecb-filename-cache
+                                 'EMPTY-DIR-P no-nil-value))
 
 
 ;; accessors for the SOURCES-cache
@@ -856,7 +870,8 @@ Currently there are three subcaches managed within this cache:
 
 (defun ecb-sources-cache-add-full (dir cache-elem-full)
   "Add the full sources-cache CACHE-ELEM-FULL for DIR to the cache. If there
-is already a full cache-entry then replace it."
+is already a full cache-entry then replace it. CACHE-ELEM-FULL has to be a
+list as returned by `ecb-sources-cache-get-full'."
   (ecb-multicache-apply-to-value
    'ecb-filename-cache dir 'SOURCES
    (function (lambda (old-cached-value)
@@ -868,7 +883,8 @@ is already a full cache-entry then replace it."
 
 (defun ecb-sources-cache-add-filtered (dir cache-elem-filtered)
   "Add the filtered sources-cache CACHE-ELEM-FILTERED for DIR to the cache. If
-there is already a filtered cache-entry then replace it."
+there is already a filtered cache-entry then replace it. CACHE-ELEM-FILTERED
+has to be a list as returned by `ecb-sources-cache-get-filtered'."
   (ecb-multicache-apply-to-value
    'ecb-filename-cache dir 'SOURCES
    (function (lambda (old-cached-value)
@@ -894,10 +910,59 @@ filter-regexp). If no cache-entry for DIR is available then nil is returned."
   "Clear the whole SOURCES-cache."
   (ecb-multicache-clear-subcache 'ecb-filename-cache 'SOURCES))
 
-(defun ecb-dump-sources-cache ()
-  "Dump the whole SOURCES-cache."
-  (interactive)
-  (ecb-multicache-print-subcache 'ecb-filename-cache 'SOURCES))
+(defun ecb-sources-cache-dump (&optional no-nil-value)
+  "Dump the whole SOURCES-cache. If NO-NIL-VALUE is not nil then these
+cache-entries are not dumped."
+  (interactive "P")
+  (ecb-multicache-print-subcache 'ecb-filename-cache 'SOURCES no-nil-value))
+
+;; accessors for the VC-cache
+
+(defun ecb-vc-cache-add (file state vc-state-fcn)
+  (ecb-multicache-put-value 'ecb-filename-cache file 'VC
+                            (list state
+                                  (ecb-subseq (current-time) 0 2)
+                                  vc-state-fcn))
+  state)
+
+(defun ecb-vc-cache-get (file)
+  (ecb-multicache-get-value 'ecb-filename-cache file 'VC))
+
+(defun ecb-vc-cache-remove (file)
+  "Remove FILE from the VC-cache."
+  (ecb-multicache-clear-value 'ecb-filename-cache file 'VC))
+
+(defun ecb-vc-cache-remove-files-of-dir (dir)
+  "Remove all files contained in DIR from the VC-cache."
+  (let ((regexp (concat "^"
+                        (regexp-quote dir)
+                        ;; TODO: native XEmacs uses \ as
+                        ;; directory separator!!!
+                        "/[^/]+$")))
+    (save-match-data
+      (ecb-multicache-mapsubcache
+       'ecb-filename-cache 'VC
+       (function (lambda (key old-value)
+                   (if (and old-value
+                            (string-match regexp key))
+                       ;; the filename-key has a VC-cache value and matches the
+                       ;; regexp above so its a cached file of DIR so we return
+                       ;; nil ==> in fact we remove this file from the VC-cache
+                       nil
+                     ;; the filename-key doesn't match the regexp above so we
+                     ;; just return the old-value, which means in fact that
+                     ;; nothing changes
+                     old-value)))))))
+
+(defun ecb-vc-cache-clear ()
+  "Clear the whole VC-cache."
+  (ecb-multicache-clear-subcache 'ecb-filename-cache 'VC))
+
+(defun ecb-vc-cache-dump (&optional no-nil-value)
+  "Dump the whole VC-cache. If NO-NIL-VALUE is not nil then these
+cache-entries are not dumped."
+  (interactive "P")
+  (ecb-multicache-print-subcache 'ecb-filename-cache 'VC no-nil-value))
 
 ;; ---- end of filename-cache implementation -----------------------
 
@@ -1296,7 +1361,8 @@ all files are displayed."
            (ecb-sources-cache-add-filtered ecb-path-selected-directory
                                            (list (tree-buffer-get-root)
                                                  (ecb-copy-list tree-buffer-nodes)
-                                                 (buffer-string)
+                                                 (buffer-substring (point-min)
+                                                                   (point-max))
                                                  (cons filter-regexp
                                                        (or filter-display
                                                            filter-regexp)))))))))
@@ -1599,28 +1665,46 @@ ecb-windows after displaying the file in an edit-window."
        (tree-buffer-highlight-node-data ecb-path-selected-source)))))
 
 
- (defun ecb-tree-node-add-files
+(defun ecb-tree-node-add-files
   (node path files type include-extension old-children
         &optional not-expandable)
   "For every file in FILES add a child-node to NODE."
-  (dolist (file files)
-    (let* ((filename (ecb-fix-filename path file))
-           (file-1 (if include-extension
-                       file
-                     (file-name-sans-extension file)))
-           (displayed-file file-1))
-      (tree-node-add-child
-       node
-       (ecb-new-child
-        old-children
-        displayed-file
-        type filename
-        (or not-expandable
-            (= type ecb-directories-nodetype-sourcefile)
-            ;; The empty-dir-check is performed stealthy
-            nil ;;(ecb-check-emptyness-of-dir filename)
-            )
-        (if ecb-truncate-long-names 'end))))))
+  ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: Here we should add a check too
+  ;; if the directory PATH is managed by a VC-backend because then we would
+  ;; never deal with VC but can immediately generate a "leaf"
+  ;; displayed-file-name. If PATH is managed by a VC-system then we never use
+  ;; "leaf" but always that icon associated to the cached vc-state (if file
+  ;; has currently no vc-cached-state then it has not yet checked and we use
+  ;; the unknow-state....but for know we do not use this test....
+  (let ((no-vc-state-display
+         (or ecb-vc-support-beta-disable
+             ;; no vc-state-display when the node is a subdir in the
+             ;; directories-buffer
+             (and (equal (buffer-name) ecb-directories-buffer-name)
+                  (= type ecb-directories-nodetype-directory)))))
+    (dolist (file files)
+      (let* ((filename (ecb-fix-filename path file))
+             (file-1 (if include-extension
+                         file
+                       (file-name-sans-extension file)))
+             (vc-cached-state (nth 0 (ecb-vc-cache-get filename)))
+             (displayed-file (if no-vc-state-display
+                                 file-1
+                               (ecb-generate-node-name file-1 -1
+                                                       (ecb-get-icon-for-vc-state vc-cached-state)
+                                                       ecb-sources-buffer-name))))
+        (tree-node-add-child
+         node
+         (ecb-new-child
+          old-children
+          displayed-file
+          type filename
+          (or not-expandable
+              (= type ecb-directories-nodetype-sourcefile)
+              ;; The empty-dir-check is performed stealthy
+              nil ;;(ecb-check-emptyness-of-dir filename)
+              )
+          (if ecb-truncate-long-names 'end)))))))
 
 
 (defun ecb-update-directory-node (node)
@@ -1693,6 +1777,8 @@ ecb-windows after displaying the file in an edit-window."
          (tree-buffer-update))))
     ))
 
+;; empty dirs?
+
 (defun ecb-check-emptyness-of-dir (dir)
   "Checks if DIR is an empty directory. If empty return not nil otherwise nil."
   (if (not ecb-prescan-directories-for-emptyness)
@@ -1763,6 +1849,8 @@ directory. This function is only for use by `ecb-stealthy-updates'!"
                     (if (> state lines-of-buffer)
                         (setq state 'done)))))
       (setq state 'done))))
+
+;; read-only-files?
 
 (defun ecb-stealthy-read-only-check--internal (state)
   "Check for all sourcefile-nodes either in the directories- or the
@@ -1841,22 +1929,6 @@ is writable or not."
                         (ecb-stealthy-read-only-check--internal state))))
       (setq state 'done))))
 
-;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: Maybe we should run directly
-;; `ecb-stealthy-updates' from within this after-update-hooks?!
-(defun ecb-stealth-tasks-after-directories-update ()
-  "After update hook for the directories-buffer. Runs directly after
-performing a `tree-buffer-update' for this buffer."
-  (ecb-stealthy-function-state-init 'ecb-stealthy-empty-dir-check)
-  (ecb-stealthy-function-state-init 'ecb-stealthy-read-only-check)
-  )
-
-(defun ecb-stealth-tasks-after-sources-update ()
-  "After update hook for the sources-buffer. Runs directly after
-performing a `tree-buffer-update' for this buffer."
-  (ecb-stealthy-function-state-init 'ecb-stealthy-read-only-check)
-  )
-
-
 ;; version control support
 
 (defcustom ecb-vc-supported-backends '((vc-backend . vc-state))
@@ -1902,7 +1974,7 @@ Check-state-function: Has to return one of the following values:
                      file is not under a version-control-system.
 
 ECB runs all identify-backend-functions in that order they are listed in this
-option. For the first on which returns a value unequal nil the associated
+option. For the first which returns a value unequal nil the associated
 check-state-function is used to retrieve the VC-state of the sourcefile.
 
 To prepend ECB from checking the VC-state for any file just set this option to
@@ -1916,11 +1988,23 @@ because otherwise these other function would never be called because
 `vc-backend' returns not nil for these three backends!
 
 Example: If `vc-cvs-state' should be used to check the state for CVS-managed
-files then an element \(vc-backend . vc-cvs-state) could be added at the
-beginning of this option."
+files and `vc-state' for all other backends then an element \(vc-backend .
+vc-cvs-state) sould be added at the beginning of this option."
   :group 'ecb-sources
   :type '(repeat (cons (function :tag "Identify-backend-function")
                        (function :tag "Check-state-function"))))
+
+(defconst ecb-vcstate-image-name-alist '((up-to-date . "vc-up-to-date")
+                                         (edited . "vc-edited")
+                                         (nil . "vc-unknown"))
+  "Associate an image-name to the allowed VC-states - see
+`ecb-vc-supported-backends'.")
+
+
+(defsubst ecb-get-icon-for-vc-state (state)
+  "Return the associated image-name for the vc-state STATE."
+  (cdr (assq state ecb-vcstate-image-name-alist)))
+
 
 ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: We need a cache which stores for
 ;; a file the identified backend and the most recent state plus the
@@ -1935,6 +2019,240 @@ beginning of this option."
 ;; heuristics is possible  without lossing to much informations (only if a
 ;; file is modified by another user can not be detected with this cache - but
 ;; for this we have the power-click which always throws away any cache-state)
+
+(defun ecb-get-vc-state-fcn (file)
+  "Call the car of each element of `ecb-vc-supported-backends' and return the
+cdr of the first elem where the car returns not nil"
+  (catch 'found
+    (dolist (elem ecb-vc-supported-backends)
+      (if (and (fboundp (car elem))
+               (funcall (car elem) file))
+          (throw 'found (cdr elem))))
+    nil))
+
+(defun ecb-check-vc-state (file)
+  (let* ((cached-state (ecb-vc-cache-get file))
+         (last-state (nth 0 cached-state))
+         (last-check-time (nth 1 cached-state))
+         (vc-state-fcn (nth 2 cached-state)))
+    (if (and last-check-time
+             (or (null last-state) ;; FILE has been checked but is not in VC
+                 (not (ecb-time-less-p last-check-time
+                                       (ecb-subseq (nth 5 (file-attributes file))
+                                                   0 2)))))
+        ;; FILE was not modified since our last vc-state-check ==> we return
+        ;; 'unchanged to signal that nothing is to do since the last check.
+        'unchanged
+      ;; FILE was modified since our last vc-state-check, so we have to check
+      ;; the state again
+      ;; get the backend if there is no cached one
+      (setq vc-state-fcn
+            (or vc-state-fcn
+                (ecb-get-vc-state-fcn file)))
+      ;; add the new state to the cache and return the new state
+      (ecb-vc-cache-add file
+                        (and vc-state-fcn
+                             (fboundp vc-state-fcn)
+                             (ignore-errors (funcall vc-state-fcn file)))
+                        vc-state-fcn))))
+
+(defun ecb-vc-update-sources-cache (dir)
+  "Update the SOURCES cache for DIR with the current-content of the
+sources-buffer if DIR has currently either a filtered or full cache entry in
+the SOURCES-cache."
+  (let* ((full-sources-cache (ecb-sources-cache-get-full dir))
+         (filtered-sources-cache (and full-sources-cache
+                                      (ecb-sources-cache-get-filtered dir))))
+    (if filtered-sources-cache
+        ;; we have currently a filtered sources-buffer so we must update the
+        ;; filtered sources-cache.
+        (ecb-sources-cache-add-filtered dir
+                                        (list (tree-buffer-get-root)
+                                              (ecb-copy-list tree-buffer-nodes)
+                                              (buffer-substring (point-min)
+                                                                (point-max))
+                                              ;; add the old-filter-spec
+                                              ;; because it must be the same
+                                              (nth 3 filtered-sources-cache)))
+      (if full-sources-cache
+          ;; we have currently a cached sources-buffer without an applied
+          ;; filter so we must update the full sources-cache.
+          (ecb-sources-cache-add-full dir
+                                      (list (tree-buffer-get-root)
+                                            (ecb-copy-list tree-buffer-nodes)
+                                            (buffer-substring (point-min)
+                                                              (point-max))))))))
+
+;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: Something like the following
+;; could be used to check if a dir is managed by a VC-system... If we use this
+;; then maybe we should also redefine our option `ecb-vc-supported-backends'?!
+;; Because then we use the function below to get the backend (for this we have
+;; to modive the function below) (e.g. 'CVS, 'RCS, 'SCCS 'Clearcase...) and
+;; then we change the element of ecb-vc-support-beta-disable as follows:
+;; - car: The backend (e.g. 'CVS, 'RCS, 'SCCS 'Clearcase...)
+;; - cdr: The vc-state-fcn
+;; Then probably the performance of the whole vc-support increases because all
+;; not VC-managed directories can be overjumped very fast!
+(defun ecb-vc-managed-dir-p (directory)
+  "Return t if we should bother checking DIRECTORY for version control files.
+This can be overloaded to add new types of version control systems."
+  (or
+   ;; Local CVS available in Emacs 21
+   (and (fboundp 'vc-state)
+	(file-exists-p (concat directory "CVS/")))
+   ;; Local RCS
+   (file-exists-p (concat directory "RCS/"))
+   ;; Local SCCS
+   (file-exists-p (concat directory "SCCS/"))
+   ;; Remote SCCS project
+   (let ((proj-dir (getenv "PROJECTDIR")))
+     (if proj-dir
+	 (file-exists-p (concat proj-dir "/SCCS"))
+       nil))
+   ;; User extension
+   (run-hook-with-args 'ecb-vc-directory-enable-hook directory)
+   ))
+
+(defvar ecb-vc-support-beta-disable nil)
+
+;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: We should enable the VC-stuff
+;; also for Emacs which does not support images - so we need ascii-"icons".
+;; How about:
+;; * for leaf
+;; ? for unknown VC-state
+;; e for edited
+;; u for up-to-date
+
+;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: We should also display vc-icons
+;; in the History-buffer!
+
+;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: If we use the
+;; ecb-vc-managed-dir-p check then we can ignore these files
+(defun ecb-stealthy-vc-check--internal (state)
+  "Check for all sourcefile-nodes either in the directories- or the
+sources-buffer the VC-state. This function does the real job and is is only
+for use by a stealthy function defined with `defecb-stealthy'! STATE is the
+initial state-value the stealthy-function has when called. Return the new
+state-value."
+  (if ecb-vc-support-beta-disable
+      'done
+    (if (not (or (member (buffer-name (current-buffer))
+                         (list ecb-sources-buffer-name ecb-history-buffer-name))
+                 (and (string= (buffer-name (current-buffer))
+                               ecb-directories-buffer-name)
+                      (ecb-show-sources-in-directories-buffer-p))))
+        'done
+      ;; Now we are either in the sources-, or history-buffer or in the
+      ;; directories-buffer when sources are displayed in the
+      ;; directories-buffer
+      (if (equal state 'restart)
+          (setq state 1))
+      ;; Here the state is an integer because a stealthy functions runs only
+      ;; when state != 'done
+      (let ((lines-of-buffer (count-lines (point-min) (point-max)))
+            (curr-node nil)
+            (new-name nil)
+            (new-state nil)
+            (update-performed-for-dir nil)
+            (node-type-to-check (cond ((string= (buffer-name (current-buffer))
+                                                ecb-sources-buffer-name)
+                                       ecb-sources-nodetype-sourcefile)
+                                      ((string= (buffer-name (current-buffer))
+                                                ecb-history-buffer-name)
+                                       ecb-history-nodetype-sourcefile)
+                                      (t
+                                       ecb-directories-nodetype-sourcefile))))
+        (save-excursion
+          (while (and (not (input-pending-p))
+                      (<= state lines-of-buffer))
+            (goto-line state)
+            (setq curr-node (tree-buffer-get-node-at-point))
+            (when (= (tree-node-get-type curr-node) node-type-to-check)
+              (setq new-name (tree-node-get-name curr-node))
+              (setq new-state (ecb-check-vc-state (tree-node-get-data curr-node)))
+              ;; we update the node only if the state has changed 
+              (when (not (equal 'unchanged new-state))
+                (setq new-name
+                      (ecb-generate-node-name new-name 1
+                                              (ecb-get-icon-for-vc-state new-state)
+                                              ;; even in the history- or the
+                                              ;; directories-buffers we use
+                                              ;; the icons of the
+                                              ;; sources-buffer because they
+                                              ;; are the same!
+                                              ecb-sources-buffer-name))
+                (or update-performed-for-dir
+                    (setq update-performed-for-dir
+                          (ecb-fix-filename
+                           (file-name-directory (tree-node-get-data curr-node)))))
+                (tree-buffer-update-node
+                 nil
+                 new-name
+                 'use-old-value
+                 'use-old-value
+                 'use-old-value
+                 'use-old-value
+                 t)))
+            (setq state (1+ state))))
+        ;; if we are in the sources-buffer and if we have performed at least
+        ;; one update then we must update the SOURCES-cache.
+        (when (and (string= (buffer-name (current-buffer))
+                            ecb-sources-buffer-name)
+                   update-performed-for-dir)
+          (ecb-vc-update-sources-cache update-performed-for-dir))
+        (if (> state lines-of-buffer)
+            (setq state 'done)))
+      state)))
+
+(defecb-stealthy ecb-stealthy-vc-check-in-sources-buf
+  "Check for all sourcefile-nodes in the sources-buffer their VC-state and
+display an appropriate icon in front of the file."
+  (save-selected-window
+    (when (equal 'window-not-visible
+                 (ecb-exec-in-sources-window
+                  (setq state
+                        (ecb-stealthy-vc-check--internal state))))
+      (setq state 'done))))
+
+(defecb-stealthy ecb-stealthy-vc-check-in-directories-buf
+  "Check for all sourcefile-nodes in the directories-buffer their VC-state and
+display an appropriate icon in front of the file."
+  (if (ecb-show-sources-in-directories-buffer-p)
+      (save-selected-window
+        (when (equal 'window-not-visible
+                     (ecb-exec-in-directories-window
+                      (setq state
+                            (ecb-stealthy-vc-check--internal state))))
+          (setq state 'done)))
+    (setq state 'done)))
+
+;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: Maybe we should run directly
+;; `ecb-stealthy-updates' from within this after-update-hooks?!
+
+;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: We should also add a function to
+;; after-revert-hook and also write-file-hooks which calls
+;; (ecb-stealthy-function-state-init
+;;     'ecb-stealthy-vc-check-in-directories-buf)
+;; and
+;; (ecb-stealthy-function-state-init
+;;     'ecb-stealthy-vc-check-in-sources-buf)
+
+(defun ecb-stealth-tasks-after-directories-update ()
+  "After update hook for the directories-buffer. Runs directly after
+performing a `tree-buffer-update' for this buffer."
+  (ecb-stealthy-function-state-init 'ecb-stealthy-empty-dir-check)
+  (ecb-stealthy-function-state-init 'ecb-stealthy-ro-check-in-directories-buf)
+  (ecb-stealthy-function-state-init 'ecb-stealthy-vc-check-in-directories-buf)
+  )
+
+(defun ecb-stealth-tasks-after-sources-update ()
+  "After update hook for the sources-buffer. Runs directly after
+performing a `tree-buffer-update' for this buffer."
+  (ecb-stealthy-function-state-init 'ecb-stealthy-ro-check-in-sources-buf)
+  (ecb-stealthy-function-state-init 'ecb-stealthy-vc-check-in-sources-buf)
+  )
+
+;; -- end of vc-support ---------------
 
 (defun ecb-new-child (old-children name type data
                                    &optional not-expandable shorten-name)
@@ -2055,7 +2373,10 @@ should be displayed. For 1 and 2 the value of EDIT-WINDOW-NR is ignored."
             ;; subdirs)
             (when shift-mode
               (ecb-remove-dir-from-caches (tree-node-get-data node))
-              (ecb-directory-empty-cache-remove-all (tree-node-get-data node)))
+              (ecb-directory-empty-cache-remove-all (tree-node-get-data node))
+              ;; a powerclick should remove all vc-caches of contained files
+              (ecb-vc-cache-remove-files-of-dir (tree-node-get-data node))
+              )
             
             (ecb-set-selected-directory (tree-node-get-data node) shift-mode)
             ;; if we have running an integrated speedbar we must update the
@@ -2646,7 +2967,10 @@ So you get a better overlooking. There are three choices:
    'ecb-mouse-over-directory-node
    'equal
    (list ecb-directories-nodetype-directory)
-   (list ecb-directories-nodetype-sourcefile)
+   ;; Now no longer tree-buffer decides if a node is displayed as leave but
+   ;; now the file-browser does it in the function `ecb-tree-node-add-files' -
+   ;; Reason: We have now to deal with the VC-support
+   nil ;;(list ecb-directories-nodetype-sourcefile)
    'ecb-directories-menu-creator
    (list (cons ecb-directories-nodetype-directory
                ecb-directories-menu-title-creator)
@@ -2700,12 +3024,10 @@ So you get a better overlooking. There are three choices:
    'ecb-mouse-over-source-node
    'equal
    nil
-   ;; set this list if you want leaf-symbols TODO: Klaus Berndl
-   ;; <klaus.berndl@sdm.de>: If we want to display the VC-state in the
-   ;; sources-icon then we should set this argument to nil because then we
-   ;; must compute the needed icon in the file-browser and not in the
-   ;; tree-buffer-library (analogue to the methods-icons computet in the
-   ;; methods-browser).
+   ;; If we want to display the VC-state in the sources-icon then we should
+   ;; set this argument to nil because then we must compute the needed icon in
+   ;; the file-browser and not in the tree-buffer-library (analogue to the
+   ;; methods-icons computet in the methods-browser).
    nil ;; (list ecb-sources-nodetype-sourcefile)
    'ecb-sources-menu-creator
    (list (cons ecb-sources-nodetype-sourcefile ecb-sources-menu-title-creator))
