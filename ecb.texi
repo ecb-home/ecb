@@ -26,7 +26,7 @@
 @c GNU Emacs; see the file COPYING.  If not, write to the Free Software
 @c Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-@c $Id: ecb.texi,v 1.175 2004/05/06 09:02:01 berndl Exp $
+@c $Id: ecb.texi,v 1.176 2004/05/10 11:00:38 berndl Exp $
 
 @setfilename ecb.info
 
@@ -10560,7 +10560,7 @@ first *AFTER* ECB is activated. This can be done with the hook
 @cindex desktop
 ECB works perfectly with the desktop-saver desktop.el. But to ensure
 this the option @code{desktop-minor-mode-table} @strong{MUST} contain
-an the following entry:
+the following entry:
 
 @example
 (ecb-minor-mode nil)
@@ -10590,6 +10590,10 @@ semantic-package because these modes are normally activated by the
 related ``global'' command (e.g.
 @code{global-semantic-show-unmatched-syntax-mode}) or by adding the
 minor-mode to the related major-mode-hook.
+
+It has also been reported that just disabling the Tip-Of-The-Day
+(option: @code{ecb-tip-of-the-day}) fixes the compatibility-problems
+with desktop.el. Just try it out!
 
 @subsubsection Package edebug (Lisp Debugger)
 
@@ -10710,7 +10714,16 @@ with ECB.
 
 @subsubsection Package wb-line-number.el
 @cindex wb-line-number
-TODO: 
+
+Do not use the package wb-line-number.el in combination with ECB - it
+will not work and it will not work under any circumstances and there
+is no way to make it work together and there will be no way in the
+future!
+
+The reason behind that is: wb-line-number.el uses additional dedicated
+windows to display the line-numbers. And ECB can not work if there
+there are additional dedicated windows - additional to that ones
+created by ECB.
 
 @subsubsection Application xrefactory
 
