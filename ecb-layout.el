@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-layout.el,v 1.179 2003/09/01 14:47:37 berndl Exp $
+;; $Id: ecb-layout.el,v 1.180 2003/09/01 16:17:51 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -1543,11 +1543,16 @@ Returns the window displaying BUFFER."
                                         (nth 1 (window-pixel-edges window))))
                                 (> (window-pixel-height other)
                                    (window-pixel-height window)))
-                           (enlarge-window (- (/ (+ (window-height other)
-                                                    (window-height window))
-                                                 2)
-                                              (window-height upper))
-                                           nil upper))
+                           ;; Klaus Berndl <klaus.berndl@sdm.de>: here we
+                           ;; write this as somehow clumsy code to silence the
+                           ;; byte-compiler because GNU Emacs <= 21.3. knows
+                           ;; only 2 args for `enlarge-window'
+                           (funcall (symbol-function 'enlarge-window)
+                                    (- (/ (+ (window-height other)
+                                             (window-height window))
+                                          2)
+                                       (window-height upper))
+                                    nil upper))
                        ;; Klaus Berndl <klaus.berndl@sdm.de>: Only in
                        ;; this situation we shrink-to-fit but we can do
                        ;; this first after we have displayed buffer in

@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb.el,v 1.329 2003/09/01 14:48:37 berndl Exp $
+;; $Id: ecb.el,v 1.330 2003/09/01 16:17:51 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -6198,7 +6198,7 @@ FILE.el is newer than FILE.elc or if FILE.elc doesn't exist."
         (byte-compile-file file))))
 
 ;;;###autoload
-(defun ecb-byte-compile (&optional force-all force-no-warnings)
+(defun ecb-byte-compile (&optional force-all)
   "Byte-compiles the ECB package.
 This is done for all lisp-files of ECB if FORCE-ALL is not nil or for each
 lisp-file FILE.el which is either newer than FILE.elc or if FILE.elc doesn't
@@ -6208,12 +6208,7 @@ exist."
       (if (ecb-check-requirements t)
           (ecb-error "Incorrect requirements; check the versions of semantic, eieio and speedbar!"))
     (ecb-check-requirements))
-  (if (interactive-p)
-      (setq force-no-warnings t))
-  (let ((byte-compile-warnings (if force-no-warnings
-                                   nil
-                                 byte-compile-warnings))
-        (load-path
+  (let ((load-path
 	 (append (list (file-name-directory
 			(or (locate-library "semantic")
 			    (ecb-error "Semantic is not in the load-path!")))

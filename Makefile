@@ -26,7 +26,7 @@
 # GNU Emacs; see the file COPYING.  If not, write to the Free Software
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-# $Id: Makefile,v 1.71 2003/09/01 14:48:42 berndl Exp $
+# $Id: Makefile,v 1.72 2003/09/01 16:17:51 berndl Exp $
 
 
 # ========================================================================
@@ -120,7 +120,7 @@ INSTALLINFO=/usr/bin/install-info
 
 # Do not change anything below!
 
-# $Id: Makefile,v 1.71 2003/09/01 14:48:42 berndl Exp $
+# $Id: Makefile,v 1.72 2003/09/01 16:17:51 berndl Exp $
 
 # For the ECB-maintainers: Change the version-number here and not
 # elsewhere!
@@ -180,7 +180,7 @@ ecb: $(ecb_LISP_EL)
 	fi
 	@echo "(require 'ecb)" >> ecb-compile-script
 	@echo "(setq debug-on-error t)" >> ecb-compile-script
-	$(EBATCH) -l ecb-compile-script --eval '(ecb-byte-compile t t)'
+	$(EBATCH) -l ecb-compile-script --eval '(ecb-byte-compile t)'
 	@$(RM) ecb-compile-script
 
 all: ecb online-help

@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-util.el,v 1.70 2003/09/01 14:47:37 berndl Exp $
+;; $Id: ecb-util.el,v 1.71 2003/09/01 16:17:51 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -343,7 +343,7 @@ not nil then in both PATH and FILENAME env-var substitution is done. If the
         (delete-file exp-file))))
 
 (defun ecb-enlarge-window(window &optional val)
-  "Enlarge the given window
+  "Enlarge the given window.
 If VAL is nil then WINDOW is enlarged so that it is 1/2 of the current frame.
 If VAL is a positive integer then WINDOW is enlarged so that its new height is
 VAL lines. If VAL is > 0 and < 1 then WINDOW is enlarged so that its new
