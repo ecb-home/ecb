@@ -6,7 +6,7 @@
 # Or type "make all" or "make upload-build" to generate the whole website
 # and build an uploadable ecb-website.tar.gz file.
 
-# $Id: Makefile,v 1.10 2003/03/21 15:32:58 berndl Exp $
+# $Id: Makefile,v 1.11 2003/07/04 16:27:15 berndl Exp $
 
 EMACS=emacs
 
@@ -57,7 +57,7 @@ $(ecb_HTMLDOCU_DIR)/index.html: online-docu
 NEWS.html:
 	@$(CP) ../NEWS .
 	@$(RM) NEWS.html
-	@gnuclientw.exe -e '(progn (find-file "NEWS") (load-library "htmlfontify") (htmlfontify-buffer) (write-file "NEWS.html") (kill-buffer "NEWS") (kill-buffer "NEWS.html"))'
+	@gnuclientw.exe -e '(progn (find-file "NEWS") (save-excursion (end-of-buffer) (previous-line 6) (delete-region (point) (point-max))) (load-library "htmlfontify") (htmlfontify-buffer) (write-file "NEWS.html") (kill-buffer "NEWS.html") (switch-to-buffer "NEWS") (set-buffer-modified-p nil) (kill-buffer "NEWS"))'
 	@$(RM) NEWS
 
 

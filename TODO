@@ -19,3 +19,8 @@
   either filenames (in case of real files) or buffer-object in case of buffers
   which can be parsed but are not real files (not saved sources or
   archive-extracts for example).
+
+- For left-right-layouts: Not only hiding all the ecb-windows but offering to
+  hide only one of the left or the right column. Maybe toggling in the
+  sequence "Hide left" --> "Hide all" --> Hide right" --> "Show all". But i
+  (Klaus) think this is not so easy........
