@@ -1,6 +1,9 @@
 Version 1.60:
 -------------
 
+- Added ecb-redraw-layout-hooks so that code can be executed after we redraw the
+  ecb layout.
+
 - New function `ecb-redraw-layout-quickly' is used to redraw the ECB layout when
   the ECB is activated.  This gives us a significant performance increase.
 

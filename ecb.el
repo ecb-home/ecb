@@ -54,7 +54,7 @@
 ;; The latest version of the ECB is available at
 ;; http://home.swipnet.se/mayhem/ecb.html
 
-;; $Id: ecb.el,v 1.163 2001/11/21 22:07:22 burtonator Exp $
+;; $Id: ecb.el,v 1.164 2001/11/22 05:09:02 burtonator Exp $
 
 ;;; Code:
 
@@ -117,6 +117,8 @@
 
 (defvar ecb-activated-window-configuration nil
   "Window configuration used after the ECB is activated.")
+
+(defvar ecb-redraw-layout-hooks nil "Hooks to run after we redraw the layout.")
 
 ;;====================================================
 ;; Customization

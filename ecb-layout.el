@@ -124,7 +124,7 @@
 ;;   + The edit-window must not be splitted and the point must reside in
 ;;     the not deleted edit-window.
 
-;; $Id: ecb-layout.el,v 1.82 2001/11/21 22:07:22 burtonator Exp $
+;; $Id: ecb-layout.el,v 1.83 2001/11/22 05:09:02 burtonator Exp $
 
 ;;; Code:
 
@@ -1463,7 +1463,9 @@ this function the edit-window is selected which was current before redrawing."
         (if (not (equal tree-windows-before-redraw
                         (ecb-layout-get-current-tree-windows)))
             (ecb-current-buffer-sync t))
-        (setq ecb-windows-hidden nil)))))
+        (setq ecb-windows-hidden nil)
+
+        (run-hooks 'ecb-redraw-layout-hooks)))))
 
 (defun ecb-redraw-layout-quickly()
   "Redraw the layout quickly using the cached window configuration
