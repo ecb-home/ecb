@@ -248,10 +248,10 @@ ECB Directories
  * Right clicking on an item will open a popup menu where different
    operations on the item under the mouse cursor can be performed.
 
- * Pressing F1 in the ECB-directories buffer will offer adding a new
-   source-path. Pressing F2 will open the ECB customization group
-   (*note Customizing::) in the edit window. F3 shows the online help in
-   the edit-window.
+ * Pressing F2 will open the ECB customization group (*note
+   Customizing::) in the edit window. F3 shows the online help in the
+   edit-window. Pressing F4 in the ECB-directories buffer will offer
+   adding a new source-path.
 
 
 File: ecb.info,  Node: ECB Sources,  Next: ECB Methods,  Prev: ECB Directories,  Up: Overview
@@ -440,8 +440,8 @@ of ECB to keys so you can easily use ECB without a mouse.
 IMPORTANT: Do not modify `ecb-mode-map' directly! The option
 `ecb-key-map' defines all ECB keybindings, including a common prefixkey
 (This is by default `C-c .'). If there are conflicts with other
-minor-modes or packages you can define very easy another prefix.
-Please read carefully the description of `ecb-key-map'!
+minor-modes or packages you can define very easy another prefix. Please
+read carefully the description of `ecb-key-map' (*note ecb-general::).!
 
 * Menu:
 
@@ -2583,7 +2583,7 @@ This group contains the following options:
    Which version of ECB should be downloaded by `ecb-download-ecb'.
    Valid values are either the string "latest" or a version number like
    "1.70". ECB creates automatically the correct URL for download, see
-   `ecb-download-ecb'.
+   `ecb-download-ecb' (*note Interactive ECB commands::).
 
 
 File: ecb.info,  Node: Submitting problem report,  Next: Upgrading,  Prev: Customizing,  Up: Top
@@ -2899,6 +2899,10 @@ Available hooks:
 
  * `ecb-deactivate-hook'
 
+ * `ecb-show-ecb-windows-hook'
+
+ * `ecb-hide-ecb-windows-hook'
+
  * `ecb-current-buffer-sync-hook'
 
 Look at the documentation of these variables and hooks to get a
@@ -3211,52 +3215,52 @@ Node: Usage of ECB13223
 Node: Using the mouse14058
 Ref: Using the mouse-Footnote-116333
 Node: Using the keyboard16379
-Node: Navigation17173
-Node: Incremental search18516
-Node: The edit-window20667
-Node: Temp- and compile-buffers22473
-Node: The Methods buffer24520
-Node: Customizing the display24961
-Node: Rebuilding the Methods26683
-Node: The ECB-layout27537
-Node: Changing the ECB-layout28087
-Node: Redrawing the ECB-layout29125
-Node: Hiding the ECB windows29928
-Node: ECB-window synchronizing30502
-Node: Interactive ECB commands32164
-Node: Customizing40908
-Node: Most important options42421
-Node: Customizable options44213
-Node: ecb-general45129
-Node: ecb-directories63359
-Node: ecb-sources68339
-Node: ecb-methods70209
-Node: ecb-history82350
-Node: ecb-layout84042
-Node: ecb-face-options97947
-Node: ecb-faces99607
-Node: ecb-download103614
-Node: Submitting problem report104801
-Node: Upgrading105958
-Node: Downloading new version106315
-Node: Auto. option-upgrading106870
-Node: User interface107177
-Node: Background information108066
-Node: Tips and tricks111464
-Node: Changing faces112023
-Node: Small screens112829
-Node: Simulating speedbar114232
-Node: Optimze scrolling115041
-Node: Large directories116116
-Node: Elisp programming116760
-Node: Conflicts117870
-Node: VC118453
-Node: follow-mouse118746
-Node: avoid119424
-Node: calendar119788
-Node: calculator120424
-Node: Function Index120926
-Node: Variable Index122782
-Node: Concept Index127960
+Node: Navigation17196
+Node: Incremental search18539
+Node: The edit-window20690
+Node: Temp- and compile-buffers22496
+Node: The Methods buffer24543
+Node: Customizing the display24984
+Node: Rebuilding the Methods26706
+Node: The ECB-layout27560
+Node: Changing the ECB-layout28110
+Node: Redrawing the ECB-layout29148
+Node: Hiding the ECB windows29951
+Node: ECB-window synchronizing30525
+Node: Interactive ECB commands32187
+Node: Customizing40931
+Node: Most important options42444
+Node: Customizable options44236
+Node: ecb-general45152
+Node: ecb-directories63382
+Node: ecb-sources68362
+Node: ecb-methods70232
+Node: ecb-history82373
+Node: ecb-layout84065
+Node: ecb-face-options97970
+Node: ecb-faces99630
+Node: ecb-download103637
+Node: Submitting problem report104859
+Node: Upgrading106016
+Node: Downloading new version106373
+Node: Auto. option-upgrading106928
+Node: User interface107235
+Node: Background information108124
+Node: Tips and tricks111522
+Node: Changing faces112081
+Node: Small screens112887
+Node: Simulating speedbar114290
+Node: Optimze scrolling115099
+Node: Large directories116174
+Node: Elisp programming116818
+Node: Conflicts117992
+Node: VC118575
+Node: follow-mouse118868
+Node: avoid119546
+Node: calendar119910
+Node: calculator120546
+Node: Function Index121048
+Node: Variable Index122904
+Node: Concept Index128082
 
 End Tag Table

@@ -280,10 +280,10 @@ button on the item, See <a href="#Usage%20of%20ECB">Usage of ECB</a>.
 <li>Right clicking on an item will open a popup menu where different
 operations on the item under the mouse cursor can be performed.
 
-<li>Pressing F1 in the ECB-directories buffer will offer adding a new
-source-path. Pressing F2 will open the ECB customization group
+<li>Pressing F2 will open the ECB customization group
 (see <a href="#Customizing">Customizing</a>) in the edit window. F3 shows the online help in
-the edit-window. 
+the edit-window. Pressing F4 in the ECB-directories buffer will offer
+adding a new source-path. 
 </ul>
 
 <p><hr>
@@ -496,9 +496,10 @@ functions of ECB to keys so you can easily use ECB without a mouse.
 
 <p>IMPORTANT: Do not modify <code>ecb-mode-map</code> directly! The option
 <code>ecb-key-map</code> defines all ECB keybindings, including a common
-prefixkey (This is by default <kbd>C-c .</kbd>). If there are conflicts with
-other minor-modes or packages you can define very easy another prefix. 
-Please read carefully the description of <code>ecb-key-map</code>!
+prefixkey (This is by default <kbd>C-c .</kbd>). If there are conflicts
+with other minor-modes or packages you can define very easy another
+prefix. Please read carefully the description of <code>ecb-key-map</code>
+(see <a href="#ecb-general">ecb-general</a>).!
 
 <ul>
 <li><a accesskey=1 href="#Navigation">Navigation</a>:                   Keyboard navigation in a tree-buffer
@@ -4042,7 +4043,7 @@ URL where downloadable ECB-versions are located. The ECB-archive-file
 Which version of ECB should be downloaded by <code>ecb-download-ecb</code>. 
 Valid values are either the string "latest" or a version number like
 "1.70". ECB creates automatically the correct URL for download, see
-<code>ecb-download-ecb</code>. 
+<code>ecb-download-ecb</code> (see <a href="#Interactive%20ECB%20commands">Interactive ECB commands</a>). 
 </td></tr>
 </table>
 
@@ -4409,6 +4410,8 @@ Up:<a rel=up accesskey=u href="#Top">Top</a>
 <li><code>ecb-activate-before-layout-draw-hook</code>
 <li><code>ecb-activate-hook</code>
 <li><code>ecb-deactivate-hook</code>
+<li><code>ecb-show-ecb-windows-hook</code>
+<li><code>ecb-hide-ecb-windows-hook</code>
 <li><code>ecb-current-buffer-sync-hook</code>
 </ul>
 

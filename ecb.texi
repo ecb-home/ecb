@@ -349,10 +349,10 @@ Right clicking on an item will open a popup menu where different
 operations on the item under the mouse cursor can be performed.
 
 @item
-Pressing F1 in the ECB-directories buffer will offer adding a new
-source-path. Pressing F2 will open the ECB customization group
+Pressing F2 will open the ECB customization group
 (@pxref{Customizing}) in the edit window. F3 shows the online help in
-the edit-window.
+the edit-window. Pressing F4 in the ECB-directories buffer will offer
+adding a new source-path.
 @end itemize
 
 @node ECB Sources, ECB Methods, ECB Directories, Overview
@@ -544,9 +544,10 @@ functions of ECB to keys so you can easily use ECB without a mouse.
 
 IMPORTANT: Do not modify @code{ecb-mode-map} directly! The option
 @code{ecb-key-map} defines all ECB keybindings, including a common
-prefixkey (This is by default @kbd{C-c .}). If there are conflicts with
-other minor-modes or packages you can define very easy another prefix.
-Please read carefully the description of @code{ecb-key-map}!
+prefixkey (This is by default @kbd{C-c .}). If there are conflicts
+with other minor-modes or packages you can define very easy another
+prefix. Please read carefully the description of @code{ecb-key-map}
+(@pxref{ecb-general}).!
 
 @menu
 * Navigation::                  Keyboard navigation in a tree-buffer
@@ -2855,7 +2856,7 @@ Note: Normally this URL should never change but who knows...
 Which version of ECB should be downloaded by @code{ecb-download-ecb}.
 Valid values are either the string ``latest'' or a version number like
 ``1.70''. ECB creates automatically the correct URL for download, see
-@code{ecb-download-ecb}.
+@code{ecb-download-ecb} (@pxref{Interactive ECB commands}).
 @end defopt
 
 
@@ -3176,6 +3177,8 @@ Available hooks:
 @item @code{ecb-activate-before-layout-draw-hook}
 @item @code{ecb-activate-hook}
 @item @code{ecb-deactivate-hook}
+@item @code{ecb-show-ecb-windows-hook}
+@item @code{ecb-hide-ecb-windows-hook}
 @item @code{ecb-current-buffer-sync-hook}
 @end itemize
 
