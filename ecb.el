@@ -54,7 +54,7 @@
 ;; The latest version of the ECB is available at
 ;; http://home.swipnet.se/mayhem/ecb.html
 
-;; $Id: ecb.el,v 1.133 2001/07/15 09:48:59 berndl Exp $
+;; $Id: ecb.el,v 1.134 2001/07/15 11:15:32 creator Exp $
 
 ;;; Code:
 
@@ -308,7 +308,11 @@ the current source-buffer."
 (defcustom ecb-font-lock-tokens t
   "*Adds font-locking \(means highlighting) to the ECB-method buffer." 
   :group 'ecb-methods
-  :type 'boolean)
+  :set (function (lambda (symbol value)
+		   (set symbol value)
+		   (ecb-clear-token-tree-cache)))
+  :type 'boolean
+  :initialize 'custom-initialize-default)
 
 (defcustom ecb-token-jump-sets-mark t
   "*Jumping to a token from the ECB-method buffer now sets the mark
@@ -320,7 +324,11 @@ so the user can easily jump back."
   "*Function to use when displaying tokens in the methods buffer.
 Some useful functions are found in `semantic-token->text-functions'."
   :group 'ecb-methods
-  :type semantic-token->text-custom-list)
+  :set (function (lambda (symbol value)
+		   (set symbol value)
+		   (ecb-clear-token-tree-cache)))
+  :type semantic-token->text-custom-list
+  :initialize 'custom-initialize-default)
 
 (defcustom ecb-show-tokens '((include collapsed nil)
 			     (parent collapsed nil)
@@ -342,6 +350,9 @@ tokens not specified anywhere else in the list or one of the following:
 - parent: The parent types of a type
 The tokens in the methods buffer are displayed in the order as they appear in this list."
   :group 'ecb-methods
+  :set (function (lambda (symbol value)
+		   (set symbol value)
+		   (ecb-clear-token-tree-cache)))
   :type '(repeat (list (symbol :tag "Token symbol")
 		       (choice :tag "Display type" :value collapsed
 			       (const :tag "Expanded" expanded)
@@ -351,16 +362,21 @@ The tokens in the methods buffer are displayed in the order as they appear in th
 		       (choice :tag "Sort by" :value nil
 			       (const :tag "Name" name)
 			       (const :tag "Access then name" access)
-			       (const :tag "No sort" nil)))))
+			       (const :tag "No sort" nil))))
+  :initialize 'custom-initialize-default)
 
 (defcustom ecb-exclude-parents-regexp nil
   "*Regexp which parent classes should not be shown in the methods buffer
 \(see also `ecb-show-parents'). If nil then all parents will be shown if
 `ecb-show-parents' is not nil."
   :group 'ecb-methods
+  :set (function (lambda (symbol value)
+		   (set symbol value)
+		   (ecb-clear-token-tree-cache)))
   :type '(radio (const :tag "Do not exclude any parents"
                        :value nil)
-                (regexp :tag "Parents-regexp to exclude")))
+                (regexp :tag "Parents-regexp to exclude"))
+  :initialize 'custom-initialize-default)
 
 (defcustom ecb-highlight-token-with-point 'highlight-scroll
   "*How to highlight the method or variable under the cursor.
@@ -761,7 +777,7 @@ cleared!) ECB by running `ecb-deactivate'."
     (tree-node-set-expanded node (eq 'type (semantic-token-token token)))
     (unless (eq 'function (semantic-token-token token))
       (ecb-add-tokens node children token)
-      (tree-node-set-expandable
+      (tree-node-set-expandable 
        node (not (eq nil (tree-node-get-children node)))))))
 
 (defun ecb-dump-toplevel ()
@@ -777,8 +793,7 @@ cleared!) ECB by running `ecb-deactivate'."
 			 (concat prefix "  "))))))
 
 (defun ecb-add-tokens (node tokens &optional parent-token)
-  (when tokens
-    (ecb-add-token-buckets node parent-token (semantic-bucketize tokens))))
+  (ecb-add-token-buckets node parent-token (semantic-bucketize tokens)))
 
 (defun ecb-access-order (access)
   (cond
@@ -991,8 +1006,8 @@ displayed with window-start and point at beginning of buffer."
           (ecb-rebuild-methods-buffer-with-tokencache current-tokencache t)))
     (when scroll-to-top
       (save-selected-window
-        (ecb-exec-in-methods-window
-         (tree-buffer-scroll (point-min) (point-min)))))))
+	(ecb-exec-in-methods-window
+	 (tree-buffer-scroll (point-min) (point-min)))))))
 
 
 (defvar ecb-token-tree-cache nil
@@ -1001,6 +1016,9 @@ a list of cons-cells where the car is the name of the source and the cdr is
 the current token-tree for this source. The cache contains exactly one element
 for a certain source.")
 (setq ecb-token-tree-cache nil)
+
+(defun ecb-clear-token-tree-cache ()
+  (setq ecb-token-tree-cache nil))
 
 (defun ecb-rebuild-methods-buffer-with-tokencache (updated-cache
 						   &optional no-update)
@@ -1097,7 +1115,9 @@ is not changed."
     ;; parsing stuff with this buffer
     (ecb-find-file-and-display ecb-path-selected-source
 			       other-edit-window)
-    (ecb-update-methods-buffer--internal 'scroll-to-begin)))
+    (setq ecb-selected-token nil)
+    (ecb-update-methods-buffer--internal 'scroll-to-begin)
+    (ecb-token-sync)))
 
 (defun ecb-remove-from-current-tree-buffer (node)
   (when node
