@@ -52,7 +52,7 @@
 ;; The latest version of the ECB is available at
 ;; http://home.swipnet.se/mayhem/ecb.html
 
-;; $Id: ecb.el,v 1.102 2001/05/30 19:48:47 berndl Exp $
+;; $Id: ecb.el,v 1.103 2001/05/31 12:11:33 berndl Exp $
 
 ;;; Code:
 
@@ -1625,7 +1625,7 @@ always the ECB-frame if called from another frame."
     (tree-buffer-deactivate-mouse-tracking)
     (tree-buffer-deactivate-follow-mouse)
     
-    ;; restore the old compilation-window-height and temp-buffer-max-height
+    ;; restore the old values
     (setq compilation-window-height ecb-old-compilation-window-height
           temp-buffer-max-height ecb-old-temp-buffer-max-height)
 

@@ -26,13 +26,14 @@
 ;; This file is part of the ECB package which can be found at:
 ;; http://home.swipnet.se/mayhem/ecb.html
 
-;; $Id: tree-buffer.el,v 1.50 2001/05/25 15:49:12 berndl Exp $
+;; $Id: tree-buffer.el,v 1.51 2001/05/31 12:11:33 berndl Exp $
 
 ;;; Code:
 
 (eval-when-compile
   ;; to avoid compiler grips
-  (require 'cl))
+  (require 'cl)
+  (require 'avoid))
 
 (defconst running-xemacs (string-match "XEmacs\\|Lucid" emacs-version))
 
@@ -86,6 +87,7 @@
 (defvar tree-buffer-track-mouse-idle-delay 0.2
   "After this idle-time of Emacs `tree-buffer-do-mouse-tracking' is called if
 mouse-tracking is activated by `tree-buffer-activate-mouse-tracking'")
+(defvar tree-buffer-old-mouse-avoidance-mode mouse-avoidance-mode)
 
 (defun tree-buffer-nolog-message (&rest args)
   "Works exactly like `message' but does not log the message"
@@ -587,6 +589,12 @@ keysequence!"
   "Activates GNU Emacs mouse tracking for all tree-buffers."
   (unless running-xemacs
     (unless tree-buffer-track-mouse-timer
+      ;; disable mouse avoidance because this can be very annoying with
+      ;; key-sequences: If a key is pressed during mouse is over point then
+      ;; the mouse goes away and therefore the key-sequence is broken because
+      ;; the mouse move generates a mouse-movement event.
+      (setq tree-buffer-old-mouse-avoidance-mode mouse-avoidance-mode)
+      (mouse-avoidance-mode 'none)
       (setq tree-buffer-saved-track-mouse track-mouse)
       (setq tree-buffer-track-mouse-timer
             (run-with-idle-timer tree-buffer-track-mouse-idle-delay
@@ -596,6 +604,8 @@ keysequence!"
   "Deactivates GNU Emacs mouse tracking for all tree-buffers."
   (unless running-xemacs
     (unless (not tree-buffer-track-mouse-timer)
+      ;; restore the old value
+      (mouse-avoidance-mode tree-buffer-old-mouse-avoidance-mode)
       (setq track-mouse tree-buffer-saved-track-mouse)
       (cancel-timer tree-buffer-track-mouse-timer)
       (setq tree-buffer-track-mouse-timer nil))))
