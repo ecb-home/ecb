@@ -1,17 +1,25 @@
 Version 1.60:
 -------------
 
+- Fixed a bug which prevented ECB using the root path "/" on unix-like systems
+  as a source-path. (Klaus)
+
+- If a file via the standard-mechanisms of Emacs (e.g. find-file) is openend,
+  then the auto. window synch (see `ecb-window-sync') has worked only correct
+  if the new file is located in any of the paths in `ecb-source-path'. Now ECB
+  adds the path of the new file at least temporally via `ecb-add-source-path'
+  to the list of paths in `ecb-source-path', so the window-synch works always
+  correct. ECB asks the user if the new path should saved also for future
+  sessions. (Klaus)
+
 - Added ecb-redraw-layout-hooks so that code can be executed after we redraw the
   ecb layout.
-
-- New function `ecb-redraw-layout-quickly' is used to redraw the ECB layout when
-  the ECB is activated.  This gives us a significant performance increase.
 
 - New hook ecb-current-buffer-sync-hook allows developers to add code to be
   evaluated after the ECB is synchronized with the current buffer.
 
-- Now all faces used by ECB for highlighting it´s own stuff are customizable.
-  See new group 'ecb-faces' (Klaus).
+- Now all faces used by ECB for highlighting and displaying it´s own stuff are
+  customizable. See new group 'ecb-faces' (Klaus).
 
 - ECB is now fully prepared for Emacs 21. The new feature
   `ecb-show-node-info-in-minibuffer' is implemented with the new 'help-echo
@@ -25,7 +33,7 @@ Version 1.60:
   separately for every tree-buffer when and which node info should be
   displayed in the minibuffer (Klaus).
 
-  - ecb-auto-expand-directory-tree now offers two options:
+- ecb-auto-expand-directory-tree now offers two options:
   - best: Expand always the best matching source-path for a file
   - first: Expand always the first matching source-path for a file (Klaus)
 
