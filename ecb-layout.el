@@ -111,6 +111,7 @@
   (require 'silentcomp))
 
 (require 'ecb-util)
+(require 'ecb-compilation)
 (require 'ecb-create-layout)
 
 (silentcomp-defvar jde-open-class-at-point-find-file-function)
