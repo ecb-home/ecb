@@ -18,6 +18,9 @@
 *** Static tags are no longer underlined when icons are displayed because this
     is somehow "tautological" when a special static icon is already displayed.
 
+*** Interfaces are displayed with the same icon as classes - at least till
+    someone provides special images for interfaces ;-)
+
 ** Fixed Bugs
 
 *** Fixed some newly introduced bugs which made ECB 2.23 incompatible with

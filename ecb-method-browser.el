@@ -1390,7 +1390,7 @@ Methods-buffer."
 
 
 (defconst ecb-tag-image-name-alias-alist
-  '(
+  '(;; struct
     ("struct-nil-nil" . "class-unknown")
     ("struct-unknown-nil" . "class-unknown")
     ("struct-private-nil" . "class-private")
@@ -1404,6 +1404,7 @@ Methods-buffer."
     ("struct-private-t" . "class-private")
     ("struct-protected-t" . "class-protected")
     ("struct-public-t" . "class-public")
+    ;; class
     ("class-nil-nil" . "class-unknown")
     ("class-unknown-nil" . "class-unknown")
     ("class-private-nil" . "class-private")
@@ -1414,15 +1415,29 @@ Methods-buffer."
     ("class-private-t" . "class-private")
     ("class-protected-t" . "class-protected")
     ("class-public-t" . "class-public")
+    ;; interface
+    ("interface-nil-nil" . "class-unknown")
+    ("interface-unknown-nil" . "class-unknown")
+    ("interface-private-nil" . "class-private")
+    ("interface-protected-nil" . "class-protected")
+    ("interface-public-nil" . "class-public")
+    ("interface-nil-t" . "class-unknown")
+    ("interface-unknown-t" . "class-unknown")
+    ("interface-private-t" . "class-private")
+    ("interface-protected-t" . "class-protected")
+    ("interface-public-t" . "class-public")
+    ;; enum
     ("enum-public-nil" . "enum-public")
     ("enum-protected-nil" . "enum-protected")
     ("enum-private-nil" . "enum-private")
     ("enum-unknown-nil" . "enum-unknown")
+    ;; constructor
     ("constructor-nil-nil" . "constructor-unknown")
     ("constructor-unknown-nil" . "constructor-unknown")
     ("constructor-private-nil" . "constructor-private")
     ("constructor-protected-nil" . "constructor-protected")
     ("constructor-public-nil" . "constructor-public")
+    ;; function, method
     ("function-nil-nil" . "function-unknown")
     ("function-unknown-nil" . "function-unknown")
     ("function-private-nil" . "function-private")
@@ -1433,6 +1448,7 @@ Methods-buffer."
     ("function-private-t" . "function-private-static")
     ("function-protected-t" . "function-protected-static")
     ("function-public-t" . "function-public-static")
+    ;; variable, attribute
     ("variable-nil-nil" . "variable-unknown")
     ("variable-unknown-nil" . "variable-unknown")
     ("variable-private-nil" . "variable-private")
