@@ -62,7 +62,7 @@
 ;; The latest version of the ECB is available at
 ;; http://ecb.sourceforge.net
 
-;; $Id: ecb.el,v 1.287 2003/02/14 16:42:08 berndl Exp $
+;; $Id: ecb.el,v 1.288 2003/02/17 08:45:21 berndl Exp $
 
 ;;; Code:
 
@@ -4953,7 +4953,6 @@ FILE.elc or if FILE.elc doesn't exist."
 
 (defvar ecb-last-major-mode nil)
 
-;;;###autoload
 (defun ecb-handle-major-mode-activation ()
   "Added to `post-command-hook' after loading the ecb-library. Handles the
 values of `ecb-major-modes-activate' and `ecb-major-modes-deactivate'.

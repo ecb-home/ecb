@@ -1,8 +1,8 @@
 ;;; ecb-autogen.el --- Auto load statement generator
 
-;;; Copyright (C) 2002, 2003 Eric M. Ludlam
+;;; Copyright (C) 2003 Klaus Berndl
 
-;; $Id: ecb-autogen.el,v 1.1 2003/02/14 16:42:58 berndl Exp $
+;; $Id: ecb-autogen.el,v 1.2 2003/02/17 08:45:24 berndl Exp $
 
 ;; This file is not part of GNU Emacs.
 
@@ -30,9 +30,9 @@
 ;;; Code
 ;;
 
-;; Load this in first
 (require 'autoload)
 
+(require 'ecb-util)
 
 (eval-when-compile
   (require 'silentcomp))
@@ -93,8 +93,10 @@ Run as `write-contents-hooks'."
   "Update ecb autoloads from sources.
 Autoloads file name is defined in variable `ecb-autogen-file'."
   (interactive)
-  (when (not (file-exists-p (expand-file-name ecb-autogen-file)))
-    ;; generate a new one
+  (when (and (not ecb-running-xemacs)
+             (not (file-exists-p (expand-file-name ecb-autogen-file))))
+    ;; generate a new one if ecb-autogen-file does not exist, but do this not
+    ;; for XEmacs because it XEmacs must(!) handle this itself
     (with-temp-file (expand-file-name ecb-autogen-file)
       (insert "")))
   (let* ((default-directory (file-name-directory (locate-library "ecb")))
