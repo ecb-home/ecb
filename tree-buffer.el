@@ -26,7 +26,7 @@
 ;; This file is part of the ECB package which can be found at:
 ;; http://home.swipnet.se/mayhem/ecb.html
 
-;; $Id: tree-buffer.el,v 1.41 2001/05/07 07:09:01 berndl Exp $
+;; $Id: tree-buffer.el,v 1.42 2001/05/09 10:15:46 berndl Exp $
 
 ;;; Code:
 
@@ -57,6 +57,7 @@
 
 (defvar tree-buffer-root nil)
 (defvar tree-buffer-nodes nil)
+(defvar tree-buffer-frame nil)
 (defvar tree-buffer-key-map nil)
 (defvar tree-buffer-indent nil)
 (defvar tree-buffer-highlighted-node-data nil)
@@ -105,32 +106,33 @@ mouse-button but a key like RET or TAB), SHIFT-PRESSED and CONTROL-PRESSED
 informations and the name of the tree-buffer as arguments. If the node is not
 expandable then the callback-function in `tree-node-selected-fn' is called
 with the same arguments as `tree-node-expanded-fn'."
-  (when (and tree-buffer-is-click-valid-fn
-             (funcall tree-buffer-is-click-valid-fn mouse-button
-                      shift-pressed control-pressed (buffer-name)))
-    (let ((p (point))
-          (node (tree-buffer-get-node-at-point)))
-      (when node
-        (if (and (tree-node-is-expandable node)
-                 (tree-buffer-at-expand-symbol node p)
-                 ;; if the expand-symbol is displayed before and mouse-button
-                 ;; = 0, means RET is pressed, we do not toggle-expand but work
-                 ;; as if point would not be at expand-symbol. This is for
-                 ;; conveniance.
-                 (not (and (= mouse-button 0)
-                           tree-buffer-expand-symbol-before)))
-            (progn
-              (when (and (not (tree-node-is-expanded node))
-                         tree-node-expanded-fn)
-                (funcall tree-node-expanded-fn node mouse-button
-                         shift-pressed control-pressed (buffer-name)))
-              (when (tree-node-is-expandable node)
-                (tree-node-toggle-expanded node))
-              ;; Update the tree-buffer with optimized display of NODE
-              (tree-buffer-update node))
-          (when tree-node-selected-fn
-            (funcall tree-node-selected-fn node mouse-button
-                     shift-pressed control-pressed (buffer-name))))))))
+  (unless (not (equal (selected-frame) tree-buffer-frame))
+    (when (and tree-buffer-is-click-valid-fn
+               (funcall tree-buffer-is-click-valid-fn mouse-button
+                        shift-pressed control-pressed (buffer-name)))
+      (let ((p (point))
+            (node (tree-buffer-get-node-at-point)))
+        (when node
+          (if (and (tree-node-is-expandable node)
+                   (tree-buffer-at-expand-symbol node p)
+                   ;; if the expand-symbol is displayed before and mouse-button
+                   ;; = 0, means RET is pressed, we do not toggle-expand but work
+                   ;; as if point would not be at expand-symbol. This is for
+                   ;; conveniance.
+                   (not (and (= mouse-button 0)
+                             tree-buffer-expand-symbol-before)))
+              (progn
+                (when (and (not (tree-node-is-expanded node))
+                           tree-node-expanded-fn)
+                  (funcall tree-node-expanded-fn node mouse-button
+                           shift-pressed control-pressed (buffer-name)))
+                (when (tree-node-is-expandable node)
+                  (tree-node-toggle-expanded node))
+                ;; Update the tree-buffer with optimized display of NODE
+                (tree-buffer-update node))
+            (when tree-node-selected-fn
+              (funcall tree-node-selected-fn node mouse-button
+                       shift-pressed control-pressed (buffer-name)))))))))
 
 (defun tree-buffer-get-node-at-point ()
   (let ((linenr (+ (count-lines 1 (point)) (if (= (current-column) 0) 0 -1))))
@@ -363,15 +365,16 @@ point will stay on POINT."
 (defun tree-buffer-show-menu (event)
   (interactive "e")
   (mouse-set-point event)
-  (when tree-buffer-menus
-    (let* ((node (tree-buffer-get-node-at-point))
-           (menu (cdr (assoc (tree-node-get-type node) tree-buffer-menus)))
-           (map (make-sparse-keymap (tree-node-get-data node))))
-      (when menu
-        (set-keymap-parent map menu)
-        (let ((fn (x-popup-menu event map)))
-          (if fn
-              (eval (list (car fn) 'node))))))))
+  (unless (not (equal (selected-frame) tree-buffer-frame))
+    (when tree-buffer-menus
+      (let* ((node (tree-buffer-get-node-at-point))
+             (menu (cdr (assoc (tree-node-get-type node) tree-buffer-menus)))
+             (map (make-sparse-keymap (tree-node-get-data node))))
+        (when menu
+          (set-keymap-parent map menu)
+          (let ((fn (x-popup-menu event map)))
+            (if fn
+                (eval (list (car fn) 'node)))))))))
 
 ;; idea is stolen from ido.el, written by Kim F. Storm <stormware@get2net.dk>
 (defun tree-buffer-find-common-substring (lis subs &optional only-prefix)
@@ -413,56 +416,60 @@ After selecting a node with RET the search-pattern is cleared out.
 Do NOT call this function directly. It works only if called from the binding
 mentioned above!"
   (interactive)
-  (let ((last-comm (tree-buffer-event-to-key last-command-event)))
-    (cond  ((or (equal last-comm 'delete)
-                (equal last-comm 'backspace))
-          ;; reduce by one from the end
-          (setq tree-buffer-incr-searchpattern
-                (substring tree-buffer-incr-searchpattern
-                           0
-                           (max 0 (1- (length tree-buffer-incr-searchpattern))))))
-         ;; delete the complete search-pattern
-         ((equal last-comm 'home)
-          (setq tree-buffer-incr-searchpattern ""))
-         ;; expand to the max. common prefix
-         ((equal last-comm 'end)
-          (let* ((node-name-list (mapcar 'tree-node-get-name
-                                         (tree-node-get-children tree-buffer-root)))
-                 (common-prefix (tree-buffer-find-common-substring
-                                 node-name-list tree-buffer-incr-searchpattern
-                                 (if (equal tree-buffer-incr-search 'prefix) t))))
-            (if (stringp common-prefix)
-                (setq tree-buffer-incr-searchpattern common-prefix))))
-         (t
-          ;; add the last command to the end
-          (setq tree-buffer-incr-searchpattern
-                (concat tree-buffer-incr-searchpattern
-                        (char-to-string last-comm)))))
-    (message "%s node search: [%s]%s"
-             (buffer-name (current-buffer))
-             tree-buffer-incr-searchpattern
-             (if (let ((case-fold-search t))
-                   (save-excursion
-                     (goto-char (point-min))
-                     (re-search-forward
-                      (concat tree-buffer-incr-searchpattern-prefix
-                              (if (equal tree-buffer-incr-search 'substring)
-                                  "[^()]*"
-                                "")
-                              (regexp-quote tree-buffer-incr-searchpattern)) nil t)))
-                 ;; we have found a matching ==> jump to it
-                 (progn
-                   (goto-char (match-end 0))
-                   "")
-               " - no match"))))
+  (unless (not (equal (selected-frame) tree-buffer-frame))
+    (let ((last-comm (tree-buffer-event-to-key last-command-event)))
+      (cond  ((or (equal last-comm 'delete)
+                  (equal last-comm 'backspace))
+              ;; reduce by one from the end
+              (setq tree-buffer-incr-searchpattern
+                    (substring tree-buffer-incr-searchpattern
+                               0
+                               (max 0 (1- (length tree-buffer-incr-searchpattern))))))
+             ;; delete the complete search-pattern
+             ((equal last-comm 'home)
+              (setq tree-buffer-incr-searchpattern ""))
+             ;; expand to the max. common prefix
+             ((equal last-comm 'end)
+              (let* ((node-name-list (mapcar 'tree-node-get-name
+                                             (tree-node-get-children tree-buffer-root)))
+                     (common-prefix (tree-buffer-find-common-substring
+                                     node-name-list tree-buffer-incr-searchpattern
+                                     (if (equal tree-buffer-incr-search 'prefix) t))))
+                (if (stringp common-prefix)
+                    (setq tree-buffer-incr-searchpattern common-prefix))))
+             (t
+              ;; add the last command to the end
+              (setq tree-buffer-incr-searchpattern
+                    (concat tree-buffer-incr-searchpattern
+                            (char-to-string last-comm)))))
+      (message "%s node search: [%s]%s"
+               (buffer-name (current-buffer))
+               tree-buffer-incr-searchpattern
+               (if (let ((case-fold-search t))
+                     (save-excursion
+                       (goto-char (point-min))
+                       (re-search-forward
+                        (concat tree-buffer-incr-searchpattern-prefix
+                                (if (equal tree-buffer-incr-search 'substring)
+                                    "[^()]*"
+                                  "")
+                                (regexp-quote tree-buffer-incr-searchpattern)) nil t)))
+                   ;; we have found a matching ==> jump to it
+                   (progn
+                     (goto-char (match-end 0))
+                     "")
+                 " - no match")))))
   
-(defun tree-buffer-create (name is-click-valid-fn node-selected-fn
-                               node-expanded-fn node-mouse-over-fn
-                               menus tr-lines read-only tree-indent
-                               incr-search
-                               &optional type-facer expand-symbol-before)
+(defun tree-buffer-create (name frame is-click-valid-fn node-selected-fn
+                                node-expanded-fn node-mouse-over-fn
+                                menus tr-lines read-only tree-indent
+                                incr-search
+                                &optional type-facer expand-symbol-before)
   "Creates a new tree buffer with
 NAME: Name of the buffer
+FRAME: Frame in which the tree-buffer is displayed and valid. All keybindings
+       and interactive functions of the tree-buffer work only if called in
+       FRAME otherwise nothing is done!
 IS-CLICK-VALID-FN: `tree-buffer-create' rebinds down-mouse-1 and down-mouse-2
                    and also in combination with shift and control to
                    `tree-buffer-select'. IS-CLICK-VALID-FN is called first if
@@ -520,6 +527,7 @@ EXPAND-SYMBOL-BEFORE: If not nil then the expand-symbol \(is displayed before
     (make-local-variable 'truncate-lines)
     (make-local-variable 'truncate-partial-width-windows)
     (make-local-variable 'tree-buffer-key-map)
+    (make-local-variable 'tree-buffer-frame)
     (make-local-variable 'tree-buffer-root)
     (make-local-variable 'tree-buffer-nodes)
     (make-local-variable 'tree-buffer-indent)
@@ -540,6 +548,7 @@ EXPAND-SYMBOL-BEFORE: If not nil then the expand-symbol \(is displayed before
     (setq truncate-partial-width-windows tr-lines)
     (setq buffer-read-only read-only)
     (setq tree-buffer-key-map (make-sparse-keymap))
+    (setq tree-buffer-frame frame)
     (setq tree-buffer-is-click-valid-fn is-click-valid-fn)
     (setq tree-node-selected-fn node-selected-fn)
     (setq tree-node-expanded-fn node-expanded-fn)
@@ -575,44 +584,46 @@ EXPAND-SYMBOL-BEFORE: If not nil then the expand-symbol \(is displayed before
     (define-key tree-buffer-key-map "\C-m"
       (function (lambda()
 		  (interactive)
-                  ;; reinitialize the select pattern after selecting a node
-                  (setq tree-buffer-incr-searchpattern "")
-		  (tree-buffer-select 0 nil nil))))
+                  (unless (not (equal (selected-frame) tree-buffer-frame))
+                    ;; reinitialize the select pattern after selecting a node
+                    (setq tree-buffer-incr-searchpattern "")
+                    (tree-buffer-select 0 nil nil)))))
     
     (define-key tree-buffer-key-map [tab]
       (function
        (lambda()
 	 (interactive)
-	 (let ((node (tree-buffer-get-node-at-point)))
-	   (when (tree-node-is-expandable node)
-	     (when (not (tree-node-is-expanded node))
-	       (funcall tree-node-expanded-fn node 0 nil nil (buffer-name)))
-	     (when (tree-node-is-expandable node)
-	       (tree-node-toggle-expanded node))
-	     ;; Update the tree-buffer with optimized display of NODE           
-	     (tree-buffer-update node))))))
-
+         (unless (not (equal (selected-frame) tree-buffer-frame))
+           (let ((node (tree-buffer-get-node-at-point)))
+             (when (tree-node-is-expandable node)
+               (when (not (tree-node-is-expanded node))
+                 (funcall tree-node-expanded-fn node 0 nil nil (buffer-name)))
+               (when (tree-node-is-expandable node)
+                 (tree-node-toggle-expanded node))
+               ;; Update the tree-buffer with optimized display of NODE           
+               (tree-buffer-update node)))))))
+      
     ;; mouse-1
     (define-key tree-buffer-key-map
       (if running-xemacs '(button1) [down-mouse-1])
       (function (lambda(e)
 		  (interactive "e")
-		  (mouse-set-point e)
-		  (tree-buffer-select 1 nil nil))))
+                  (mouse-set-point e)
+                  (tree-buffer-select 1 nil nil))))
   
     (define-key tree-buffer-key-map
       (if running-xemacs '(shift button1) [S-down-mouse-1])
       (function (lambda(e)
 		  (interactive "e")
-		  (mouse-set-point e)
-		  (tree-buffer-select 1 t nil))))
+                  (mouse-set-point e)
+                  (tree-buffer-select 1 t nil))))
 
     (define-key tree-buffer-key-map
       (if running-xemacs '(control button1) [C-down-mouse-1])
       (function (lambda(e)
 		  (interactive "e")
-		  (mouse-set-point e)
-		  (tree-buffer-select 1 nil t))))
+                  (mouse-set-point e)
+                  (tree-buffer-select 1 nil t))))
 
     (define-key tree-buffer-key-map [drag-mouse-1] nop)
     (define-key tree-buffer-key-map [mouse-1] nop)
@@ -624,22 +635,22 @@ EXPAND-SYMBOL-BEFORE: If not nil then the expand-symbol \(is displayed before
       (if running-xemacs '(button2) [down-mouse-2])
       (function (lambda(e)
 		  (interactive "e")
-		  (mouse-set-point e)
-		  (tree-buffer-select 2 nil nil))))
+                  (mouse-set-point e)
+                  (tree-buffer-select 2 nil nil))))
 
     (define-key tree-buffer-key-map
       (if running-xemacs '(shift button2) [S-down-mouse-2])
       (function (lambda(e)
 		  (interactive "e")
-		  (mouse-set-point e)
-		  (tree-buffer-select 2 t nil))))
+                  (mouse-set-point e)
+                  (tree-buffer-select 2 t nil))))
 
     (define-key tree-buffer-key-map
       (if running-xemacs '(control button2) [C-down-mouse-2])
       (function (lambda(e)
 		  (interactive "e")
-		  (mouse-set-point e)
-		  (tree-buffer-select 2 nil t))))
+                  (mouse-set-point e)
+                  (tree-buffer-select 2 nil t))))
 
     (define-key tree-buffer-key-map [mouse-2] nop)
     (define-key tree-buffer-key-map [double-mouse-2] nop)
@@ -653,18 +664,16 @@ EXPAND-SYMBOL-BEFORE: If not nil then the expand-symbol \(is displayed before
     (define-key tree-buffer-key-map [double-mouse-3] nop)
     (define-key tree-buffer-key-map [triple-mouse-3] nop)
 
-    (define-key tree-buffer-key-map [mouse-movement]
-      'tree-buffer-mouse-move)
-
     ;; mouse-movement
     (define-key tree-buffer-key-map [mouse-movement]
       (function (lambda(e)
 		  (interactive "e")
-		  (save-excursion
-		    (mouse-set-point e);; (cadadr e)
-		    (let ((node (tree-buffer-get-node-at-point)))
-		      (when (and tree-node-mouse-over-fn node)
-			(funcall tree-node-mouse-over-fn node)))))))
+                  (save-excursion
+                    (mouse-set-point e);; (cadadr e)
+                    (unless (not (equal (selected-frame) tree-buffer-frame))
+                      (let ((node (tree-buffer-get-node-at-point)))
+                        (when (and tree-node-mouse-over-fn node)
+                          (funcall tree-node-mouse-over-fn node))))))))
 
     (use-local-map tree-buffer-key-map)))
 

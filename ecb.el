@@ -52,7 +52,7 @@
 ;; The latest version of the ECB is available at
 ;; http://home.swipnet.se/mayhem/ecb.html
 
-;; $Id: ecb.el,v 1.79 2001/05/07 16:06:23 berndl Exp $
+;; $Id: ecb.el,v 1.80 2001/05/09 10:15:46 berndl Exp $
 
 ;;; Code:
 
@@ -1389,6 +1389,7 @@ always the ECB-frame if called from another frame."
       (unless (member ecb-directories-buffer-name curr-buffer-list)
         (tree-buffer-create
          ecb-directories-buffer-name
+         ecb-frame
          'ecb-interpret-mouse-click
          'ecb-tree-buffer-node-select-callback
          'ecb-tree-buffer-node-expand-callback
@@ -1415,6 +1416,7 @@ always the ECB-frame if called from another frame."
       (unless (member ecb-sources-buffer-name curr-buffer-list)
         (tree-buffer-create
          ecb-sources-buffer-name
+         ecb-frame
          'ecb-interpret-mouse-click
          'ecb-tree-buffer-node-select-callback
          'ecb-tree-buffer-node-expand-callback
@@ -1428,6 +1430,7 @@ always the ECB-frame if called from another frame."
       (unless (member ecb-methods-buffer-name curr-buffer-list)
         (tree-buffer-create
          ecb-methods-buffer-name
+         ecb-frame
          'ecb-interpret-mouse-click
          'ecb-tree-buffer-node-select-callback
          nil
@@ -1445,6 +1448,7 @@ always the ECB-frame if called from another frame."
       (unless (member ecb-history-buffer-name curr-buffer-list)
         (tree-buffer-create
          ecb-history-buffer-name
+         ecb-frame
          'ecb-interpret-mouse-click
          'ecb-tree-buffer-node-select-callback
          'ecb-tree-buffer-node-expand-callback
