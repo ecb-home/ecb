@@ -73,10 +73,20 @@ Optional steps:
      batch-file `make.bat'. Just read the comments in that file you
      choose.)
 
-  7. Call `ecb-install-help'.  Installs the file `ecb.info' in the
-     info-directory of Emacs and modifies the file `dir'. It doesn't
-     matter if you do not execute this step because the online help of
-     ECB is available though (*note Interactive ECB commands::).
+  7. Install the supplied `ecb.info' The ECB distribution contains a
+     file `ecb.info' which is the online-help of ECB in Info-format.
+     You can install this online help so it's available in the
+     Top-directory of Info. There are two ways to do this:
+
+        - Use the command "install-info" if available on your system
+          (recommended).
+
+        - Copy the file `ecb.info' into the info-directory of Emacs and
+          modify the file `dir' manually.
+
+     It doesn't matter if you do not execute this step because the
+     online help of ECB is always available though, see `ecb-show-help'
+     (*note Interactive ECB commands::).
 
 
 
@@ -85,7 +95,7 @@ File: ecb.info,  Node: Overview,  Next: Activation and Deactivation,  Prev: Inst
 Overview
 ********
 
-ECB is a global minor-mode which offers a few "ECB-windows" for
+   ECB is a global minor-mode which offers a few "ECB-windows" for
 browsing your sources comfortable with the mouse and the keyboard.
 These "special" windows are also called "tree-buffer" in this manual.
 There are currently three different types of ECB-windows/tree-buffers:
@@ -1196,41 +1206,41 @@ Concept Index
 Tag Table:
 Node: Top151
 Node: Install1530
-Node: Overview2928
-Node: ECB Directories3683
-Node: ECB Sources4691
-Node: ECB Methods5926
-Node: Activation and Deactivation6461
-Node: Usage of ECB7172
-Node: Working with the mouse7686
-Node: Working with the keyboard10036
-Node: Navigation10769
-Node: Incremental search12171
-Node: Working with the edit-window14377
-Node: Temp- and compilation-buffers16121
-Node: Rebuilding the Methods buffer17811
-Node: Changing the ECB-layout18719
-Node: Redrawing the ECB-layout19786
-Node: Hiding/Showing the ECB windows20632
-Node: Interactive ECB commands21227
-Node: Customizing29273
-Node: Submitting problem report31811
-Node: Upgrading32977
-Node: Tips and tricks33451
-Node: Changing faces33927
-Node: Small screens34746
-Node: Simulating speedbar36219
-Node: Optimze scrolling37056
-Node: Large directories38141
-Node: Elisp programming38788
-Node: Conflicts39926
-Node: VC40272
-Node: follow-mouse40545
-Node: avoid41176
-Node: calendar41543
-Node: calculator42131
-Node: Function Index42636
-Node: Variable Index44312
-Node: Concept Index45377
+Node: Overview3307
+Node: ECB Directories4065
+Node: ECB Sources5073
+Node: ECB Methods6308
+Node: Activation and Deactivation6843
+Node: Usage of ECB7554
+Node: Working with the mouse8068
+Node: Working with the keyboard10418
+Node: Navigation11151
+Node: Incremental search12553
+Node: Working with the edit-window14759
+Node: Temp- and compilation-buffers16503
+Node: Rebuilding the Methods buffer18193
+Node: Changing the ECB-layout19101
+Node: Redrawing the ECB-layout20168
+Node: Hiding/Showing the ECB windows21014
+Node: Interactive ECB commands21609
+Node: Customizing29655
+Node: Submitting problem report32193
+Node: Upgrading33359
+Node: Tips and tricks33833
+Node: Changing faces34309
+Node: Small screens35128
+Node: Simulating speedbar36601
+Node: Optimze scrolling37438
+Node: Large directories38523
+Node: Elisp programming39170
+Node: Conflicts40308
+Node: VC40654
+Node: follow-mouse40927
+Node: avoid41558
+Node: calendar41925
+Node: calculator42513
+Node: Function Index43018
+Node: Variable Index44694
+Node: Concept Index45759
 
 End Tag Table
