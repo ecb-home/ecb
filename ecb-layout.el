@@ -103,7 +103,7 @@
 ;; - `ecb-with-some-adviced-functions'
 ;;
 
-;; $Id: ecb-layout.el,v 1.133 2002/12/15 19:35:57 berndl Exp $
+;; $Id: ecb-layout.el,v 1.134 2002/12/16 10:54:29 berndl Exp $
 
 ;;; Code:
 
@@ -578,9 +578,11 @@ This option makes only sense if the value is a list with more than 1 element!"
   :set (function (lambda (symbol value)
                    (ecb-load-layouts)
                    (dolist (name value)
-                     (if (not (fboundp (intern
-                                        (format "ecb-layout-function-%s"
-                                                name))))
+                     (if (and (boundp 'ecb-minor-mode)
+                              ecb-minor-mode
+                              (not (fboundp (intern
+                                             (format "ecb-layout-function-%s"
+                                                     name)))))
                          (ecb-error "There is no layout available with name %s!"
                                     name)))
                    (set symbol value))))
