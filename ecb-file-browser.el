@@ -23,7 +23,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-file-browser.el,v 1.30 2004/09/03 16:32:08 berndl Exp $
+;; $Id: ecb-file-browser.el,v 1.31 2004/09/06 15:49:59 berndl Exp $
 
 ;;; Commentary:
 
@@ -1222,7 +1222,11 @@ then nothing is done unless first optional argument FORCE is not nil."
                                                       (tree-buffer-get-root)))
                        (not was-expanded))
                    (tree-buffer-update)
-                 (tree-buffer-recenter start (selected-window))))
+                 (tree-buffer-recenter start (selected-window))
+                 ;; sometimes we do not need a full tree-buffer-update, even
+                 ;; when FORCE is not nil. But we have to restart the
+                 ;; directories-buffer stealthy-state.
+                 (and force (ecb-directories-after-tree-buffer-update))))
 ;;              (ecb-expand-directory-tree ecb-path-selected-directory
 ;;                                           (or start
 ;;                                               (tree-buffer-get-root)))
@@ -1456,7 +1460,7 @@ ecb-windows after displaying the file in an edit-window."
             (= type 1)
             ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: remove this if the
             ;; stealthy mechanism works
-            (ecb-check-emptyness-of-dir filename)
+            nil ;;(ecb-check-emptyness-of-dir filename)
             )
         (if ecb-truncate-long-names 'end))))))
 
@@ -1519,13 +1523,16 @@ ecb-windows after displaying the file in an edit-window."
                   (ecb-new-child old-children name 2 norm-dir
                                  ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: remove this if the
                                  ;; stealthy mechanism works
-                                 (ecb-check-emptyness-of-dir norm-dir)
+                                 nil ;;(ecb-check-emptyness-of-dir norm-dir)
                                  (if ecb-truncate-long-names 'beginning)))
                (if (listp dir)
                    (ecb-warning "Source-path %s with alias %s is not accessible - ignored!"
                                 norm-dir (cadr dir))
                  (ecb-warning "Source-path %s is not accessible - ignored!" norm-dir)))))
-         (tree-buffer-update))))))
+         (tree-buffer-update))))
+    ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: Maybe we have to reset and
+    ;; start here the stealthy updates?!
+    ))
 
 
 (defvar ecb-directory-empty-cache nil
@@ -1549,6 +1556,20 @@ element looks like:
     (if elem
         (setq ecb-directory-empty-cache
               (delete elem ecb-directory-empty-cache)))))
+
+(defun ecb-directory-empty-cache-remove-all (dir)
+  (ecb-directory-empty-cache-remove dir)
+  ;; now we remove the subdirs
+  (let ((remaining-dirs nil))
+    (save-match-data
+      (dolist (elem ecb-directory-empty-cache)
+        (if (not (string-match (concat "^"
+                                       (regexp-quote dir)
+                                       ".+")
+                               (car elem)))
+            (setq remaining-dirs (cons elem remaining-dirs)))))
+    (setq ecb-directory-empty-cache remaining-dirs)))
+
 
 
 (defun ecb-clear-directory-empty-cache ()
@@ -1585,51 +1606,139 @@ element looks like:
                                                (cons empty-p show-sources)))
           empty-p)))))
 
+
 ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: Maybe we should perform the
 ;; read-only check for source-files also stealthy?! The forthcoming VC-check
 ;; too! 
 
-;; TODO: Klaus Berndl <klaus.berndl@sdm.de>:
-;; Works already quite nifty but probably we should it makes more smart:
-;; - save a state when interrupted and go on from this state when next time
-;;   called
-;; - Probably it would be best to steal the whole stealthy concept from
-;;   speedbar - for this the functions:
-;;   + speedbar-reset-scanners
-;;   + speedbar-stealthy-updates
-;;   + speedbar-timer-fn
-;;   + speedbar-set-timer
-;;   + speedbar-check-read-only (as an example how handling a state)
-(defun ecb-stealthy-empty-dir-check ()
+
+;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: We must move this code either to
+;; ecb.el or - better - to a new file ecb-common-browser.el
+
+(defvar ecb-stealthy-function-list nil
+  "List of functions which ECB runs stealthy. Do not modify this variable!
+This variable is autom. set by the macro `ecb-defstealthy'!")
+
+(defvar ecb-stealthy-function-state-alist nil
+  "Alist which stores the state of each function of
+`ecb-stealthy-function-list'.")
+(defsubst ecb-stealthy-function-state-get (fcn)
+  "Getter for `ecb-stealthy-function-state-alist'. Return state for the
+stealthy function FCN."
+  (cdr (assoc fcn ecb-stealthy-function-state-alist)))
+(defsubst ecb-stealthy-function-state-set (fcn state)
+  "Setter for `ecb-stealthy-function-state-alist'. Set STATE for the
+stealthy function FCN. Return STATE."
+  (setcdr (assoc fcn ecb-stealthy-function-state-alist) state))
+(defsubst ecb-stealthy-function-p (fcn)
+  "Return not nil if FCN is a stealthy function defined with
+`ecb-defstealthy'."
+  (member fcn ecb-stealthy-function-list))
+(defun ecb-stealthy-function-state-init (&optional fcn)
+  "Restart all stealthy functions to state 'restart. If optional arg FCN is a
+stealthy function then reset only this function to state 'restart."
+  (if (ecb-stealthy-function-p fcn)
+      (ecb-stealthy-function-state-set fcn 'restart)
+    (dolist (f ecb-stealthy-function-list)
+      (ecb-stealthy-function-state-set f 'restart))))
+
+(defmacro ecb-defstealthy (name docstring &rest body)
+  "Define a so called stealthy function with NAME. This function will be
+registered by this macro in `ecb-stealthy-function-list' and
+`ecb-stealthy-function-state-alist'. During the evaluation of BODY the
+variable `state' will be bound and initialized with the stealthy state. BODY
+can use and modify `state'. After evaluating BODY `state' will be
+automatically saved so its available at the runtime of this stealthy function.
+BODY will only be evaluated if `state' is not 'done. BODY should be designed
+to be interruptable by the user \(e.g. with `input-pending-p'). If BODY
+completes then BODY has to set `state' to the special value 'done! If BODY has
+been interrupted then `state' can have an arbitrary value which will be autom.
+stored and at next runtime of the stealthy function NAME `state' will be
+initialized with this stored value. If `state' is initialized with the special
+value 'restart then this means the stealthy function should start from scratch
+because an eventually stored state is not longer valid."
+  `(eval-and-compile
+     (add-to-list 'ecb-stealthy-function-list (quote ,name))
+     (add-to-list 'ecb-stealthy-function-state-alist
+                  (cons (quote ,name) nil))
+     (unless (fboundp (quote ,name))
+       (defun ,name nil
+         ,docstring
+         (let ((state (ecb-stealthy-function-state-get (quote ,name))))
+           (unless (equal state 'done)
+             ,@body)
+           (ecb-stealthy-function-state-set (quote ,name) state))))))
+(put 'ecb-defstealthy 'lisp-indent-function 1)
+
+(defvar ecb-stealthy-update-running nil
+  "Recursion avoidance variable for stealthy performance.")
+
+(defun ecb-stealthy-updates ()
+  "Run all functions in the stealthy function list.
+Each function returns 'done if it completes successfully, or something else if
+interrupted by the user \(i.e. the function has been interrupted by the
+user). If a function is interrupted then `ecb-stealthy-function-list' is
+rotated so the interrupted function is the first element so the nect stealthy
+run starts with this interrupted function."
+  (unless ecb-stealthy-update-running
+    (let ((l ecb-stealthy-function-list)
+          (ecb-stealthy-update-running t))
+      (while (and l (equal 'done (funcall (car l))))
+        (setq l (cdr l)))
+      ;; if l is nil this means all functions have successfully completed -
+      ;; otherwise we ensure that next time we start with the interrupted
+      ;; function.
+      (when l
+        (message "TEST: ecb-stealthy-updates: %s has been interrupted" (car l))
+        (setq ecb-stealthy-function-list
+              (ecb-rotate-list ecb-stealthy-function-list (car l)))))))
+
+(ecb-defstealthy ecb-stealthy-empty-dir-check
+  "Check for each current visible nodes in the directories buffer if the
+underlying directory is empty or not and update the node if the current node
+state and display is different from the empty-state of the associated
+directory. This function is only for use by `ecb-stealthy-updates'!"
   (save-selected-window
     (ecb-exec-in-directories-window
-     ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>:
-     ;; We probably should add a function tree-buffer-visit-nodes
-     ;; (visitor-fcn)
-     (let ((nodes (mapcar 'cdr tree-buffer-nodes))
+     (if (equal state 'restart)
+         (setq state 1))
+     ;; Here the state is an integer because a stealthy functions runs only
+     ;; when state != 'done
+     (let ((lines-of-buffer (count-lines (point-min) (point-max)))
+           (curr-node nil)
            (dir-empty-p nil))
-       (while (and (not (input-pending-p))
-                   nodes)
-         (setq dir-empty-p
-               (ecb-check-emptyness-of-dir (tree-node-get-data (car nodes))))
-         ;; we update the node only if we have an empty dir and the node is
-         ;; still expandable
-         (when (and dir-empty-p
-                    (tree-node-is-expandable (car nodes)))
-           (tree-buffer-update-node (car nodes)
-                                    (tree-node-get-name (car nodes))
-                                    (tree-node-get-shorten-name (car nodes))
-                                    (tree-node-get-type (car nodes))
-                                    (tree-node-get-data (car nodes))
-                                    nil ;; we set the node as not-expandable
-                                    t))
-         (setq nodes (cdr nodes)))
-       (when (input-pending-p)
-         (message "Klausi - we have interrupted by pending input"))))))
+       (save-excursion
+         (while (and (not (input-pending-p))
+                     (<= state lines-of-buffer))
+           (goto-line state)
+           (setq curr-node (tree-buffer-get-node-at-point))
+           (setq dir-empty-p
+                 (ecb-check-emptyness-of-dir (tree-node-get-data curr-node)))
+           ;; we update the node only if we have an empty dir and the node is
+           ;; still expandable
+           (when (or (and dir-empty-p
+                          (tree-node-is-expandable curr-node))
+                     (and (not dir-empty-p)
+                          (not (tree-node-is-expandable curr-node))))
+             (tree-buffer-update-node nil
+                                      'use-old-value
+                                      'use-old-value
+                                      'use-old-value
+                                      'use-old-value
+                                      (not dir-empty-p)
+                                      t))
+           (setq state (1+ state))))
+       (if (> state lines-of-buffer)
+           (setq state 'done))))))
 
-;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: We do not activate it directly
-;; but we will implement a general stealthy mechanism like speedbar
-;; (ecb-activate-ecb-autocontrol-functions 1 'ecb-stealthy-empty-dir-check)
+(defun ecb-directories-after-tree-buffer-update ()
+  (ecb-stealthy-function-state-init 'ecb-stealthy-empty-dir-check)
+  ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: Add here all inits for further
+  ;; necessary stealthy checks
+  ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: without the next line all
+  ;; updates will be done when Emacs is idle.
+  ;;   (ecb-stealthy-updates)
+  )
 
 (defun ecb-new-child (old-children name type data &optional not-expandable shorten-name)
   "Return a node with type = TYPE, data = DATA and name = NAME. Tries to find
@@ -1741,10 +1850,12 @@ should be displayed. For 1 and 2 the value of EDIT-WINDOW-NR is ignored."
                  ;; Update the tree-buffer with optimized display of NODE
                  (tree-buffer-update node)))
             
-            ;; Removing the element from the sources-cache and the
-            ;; files-and-subdirs-cache
-            (if shift-mode
-                (ecb-remove-dir-from-caches (tree-node-get-data node)))
+            ;; Removing the element from the sources-cache, the
+            ;; files-and-subdirs-cache and the empty-dirs-cache (incl. all
+            ;; subdirs)
+            (when shift-mode
+              (ecb-remove-dir-from-caches (tree-node-get-data node))
+              (ecb-directory-empty-cache-remove-all (tree-node-get-data node)))
             
             (ecb-set-selected-directory (tree-node-get-data node) shift-mode)
             ;; if we have running an integrated speedbar we must update the
@@ -2361,6 +2472,7 @@ So you get a better overlooking. There are three choices:
                             'ecb-toggle-maximize-ecb-window-with-mouse)))))
     ecb-common-tree-buffer-after-create-hook
     ecb-directories-buffer-after-create-hook)
+   'ecb-directories-after-tree-buffer-update
    ))
 
 (defun ecb-create-sources-tree-buffer ()
@@ -2409,7 +2521,7 @@ So you get a better overlooking. There are three choices:
                             [mode-line mouse-2]
                             'ecb-toggle-maximize-ecb-window-with-mouse)))))
     ecb-common-tree-buffer-after-create-hook
-    ecb-directories-buffer-after-create-hook)))
+    ecb-sources-buffer-after-create-hook)))
 
 (defun ecb-create-history-tree-buffer ()
   "Create the tree-buffer for history"
@@ -2451,7 +2563,7 @@ So you get a better overlooking. There are three choices:
                             [mode-line mouse-2]
                             'ecb-toggle-maximize-ecb-window-with-mouse)))))
     ecb-common-tree-buffer-after-create-hook
-    ecb-directories-buffer-after-create-hook)))
+    ecb-history-buffer-after-create-hook)))
 
 (silentcomp-provide 'ecb-file-browser)
 
