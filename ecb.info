@@ -615,10 +615,11 @@ Interactive ECB commands
  - Function: ecb-add-all-buffers-to-history
      Add all current file-buffers to the history-buffer of ECB.
 
- - Function: ecb-show-help &optional force-info
+ - Function: ecb-show-help &optional format
      Shows the online help of ECB either in Info or in HTML format
-     depending of the value of `ecb-show-help-format'. If FORCE-INFO is
-     not nil then always the Info format is used.
+     depending of the value of `ecb-show-help-format'. If called with
+     prefix argument, i.e. if FORMAT is not nil then the user is
+     prompted to choose the format of the help (Info or HTML).
 
  - Function: ecb-submit-problem-report
      Submit a problem report for the ECB to the ECB mailing-list. This
@@ -1223,24 +1224,24 @@ Node: Changing the ECB-layout19101
 Node: Redrawing the ECB-layout20168
 Node: Hiding/Showing the ECB windows21014
 Node: Interactive ECB commands21609
-Node: Customizing29655
-Node: Submitting problem report32193
-Node: Upgrading33359
-Node: Tips and tricks33833
-Node: Changing faces34309
-Node: Small screens35128
-Node: Simulating speedbar36601
-Node: Optimze scrolling37438
-Node: Large directories38523
-Node: Elisp programming39170
-Node: Conflicts40308
-Node: VC40654
-Node: follow-mouse40927
-Node: avoid41558
-Node: calendar41925
-Node: calculator42513
-Node: Function Index43018
-Node: Variable Index44694
-Node: Concept Index45759
+Node: Customizing29727
+Node: Submitting problem report32265
+Node: Upgrading33431
+Node: Tips and tricks33905
+Node: Changing faces34381
+Node: Small screens35200
+Node: Simulating speedbar36673
+Node: Optimze scrolling37510
+Node: Large directories38595
+Node: Elisp programming39242
+Node: Conflicts40380
+Node: VC40726
+Node: follow-mouse40999
+Node: avoid41630
+Node: calendar41997
+Node: calculator42585
+Node: Function Index43090
+Node: Variable Index44766
+Node: Concept Index45831
 
 End Tag Table

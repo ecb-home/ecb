@@ -26,7 +26,7 @@
 ;;
 ;; Contains all online-help for ECB (stolen something from recentf.el)
 
-;; $Id: ecb-help.el,v 1.76 2002/07/12 11:02:21 berndl Exp $
+;; $Id: ecb-help.el,v 1.77 2002/07/12 16:27:44 berndl Exp $
 
 ;;; Code
 
@@ -43,13 +43,17 @@ then `browse-url-browser-function' says which browser is used."
                  (const :tag "Info" :value info)
                  (const :tag "Html" :value html)))
 
-(defun ecb-show-help (&optional force-info)
+(defun ecb-show-help (&optional format)
   "Shows the online help of ECB in Info or HTML-format depending on the value
-of the option `ecb-show-help-format'. If FORCE-INFO is not nil then always the
-Info format is used."
+of the option `ecb-show-help-format'. If called with prefix argument, i.e. if
+FORMAT is not nil then the user is prompted to choose the format of the help
+\(Info or Html)."
   (interactive "P")
-  (if (or (eq ecb-show-help-format 'info)
-          force-info)
+  (let ((f (if format
+               (intern (ecb-query-string "Choose format of online-help:"
+                                          '("info" "html")))
+             ecb-show-help-format)))
+  (if (equal f 'info)
       (info (concat ecb-ecb-dir "ecb.info"))
     (message "Opening ECB online-help in a web-browser...")
     (browse-url (concat "file://"
@@ -57,7 +61,7 @@ Info format is used."
                 (if (boundp 'browse-url-new-window-flag)
                     browse-url-new-window-flag
                   browse-url-new-window-p))
-    (message "Opening ECB online-help in a web-browser...done")))
+    (message "Opening ECB online-help in a web-browser...done"))))
 
 ;;
 ;; Problem reporting functions stolen from JDE
