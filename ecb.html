@@ -10,7 +10,7 @@
 <h1>ECB - the Emacs Code Browser</h1>
 <p><hr>
 Node:<a name="Top">Top</a>,
-Next:<a rel=next accesskey=n href="#Install">Install</a>,
+Next:<a rel=next accesskey=n href="#Install%20and%20first%20steps">Install and first steps</a>,
 Previous:<a rel=previous accesskey=p href="#dir">(dir)</a>,
 Up:<a rel=up accesskey=u href="#dir">(dir)</a>
 <br>
@@ -32,7 +32,7 @@ mailing list <a href="mailto:ecb-list@lists.sourceforge.net">ecb-list@lists.sour
 <a href="http://lists.sourceforge.net/lists/listinfo/ecb-list">http://lists.sourceforge.net/lists/listinfo/ecb-list</a>
 
 <ul>
-<li><a accesskey=1 href="#Install">Install</a>:                      Installing ECB. 
+<li><a accesskey=1 href="#Install%20and%20first%20steps">Install and first steps</a>:      Installing ECB and first steps
 <li><a accesskey=2 href="#Overview">Overview</a>:                     Introduce basic concepts
 <li><a accesskey=3 href="#Activation%20and%20Deactivation">Activation and Deactivation</a>:  How to start and end ECB
 <li><a accesskey=4 href="#Usage%20of%20ECB">Usage of ECB</a>:                 How to use ECB
@@ -47,6 +47,11 @@ mailing list <a href="mailto:ecb-list@lists.sourceforge.net">ecb-list@lists.sour
 <li><a href="#Concept%20Index">Concept Index</a>:                Index for concepts and terms
 
 <p>--- The Detailed Node Listing ---
+
+<p>Installation and first steps of ECB
+
+</p><li><a href="#Installation">Installation</a>:                 Installation of ECB
+<li><a href="#First%20steps">First steps</a>:                  First steps after activating ECB first time
 
 <p>Overview
 
@@ -137,13 +142,30 @@ mailing list <a href="mailto:ecb-list@lists.sourceforge.net">ecb-list@lists.sour
 </ul>
 
 <p><hr>
-Node:<a name="Install">Install</a>,
+Node:<a name="Install%20and%20first%20steps">Install and first steps</a>,
 Next:<a rel=next accesskey=n href="#Overview">Overview</a>,
 Previous:<a rel=previous accesskey=p href="#Top">Top</a>,
 Up:<a rel=up accesskey=u href="#Top">Top</a>
 <br>
 
-<h2>Installation</h2>
+<h2>Installation and first steps of ECB</h2>
+
+<p>This chapter describes how to install ECB and what are the first
+steps after activation of ECB
+
+<ul>
+<li><a accesskey=1 href="#Installation">Installation</a>:                 Installation of ECB
+<li><a accesskey=2 href="#First%20steps">First steps</a>:                  First steps after activating ECB first time
+</ul>
+
+<p><hr>
+Node:<a name="Installation">Installation</a>,
+Next:<a rel=next accesskey=n href="#First%20steps">First steps</a>,
+Previous:<a rel=previous accesskey=p href="#Install%20and%20first%20steps">Install and first steps</a>,
+Up:<a rel=up accesskey=u href="#Install%20and%20first%20steps">Install and first steps</a>
+<br>
+
+<h3>Installation of ECB</h3>
 
 <ol type=1 start=1>
 
@@ -177,14 +199,17 @@ ECB is NOT properly installed if it's directory is not added to
 
 <br><pre>(require 'ecb)
 </pre>
+
+<li>Restart Emacs.
 </ol>
 
-<p>Now ECB is ready for use but you can do these optional steps:
+<p>ECB is now ready for use and can be activated by calling <code>M-x
+ecb-activate</code>. Now you can either starting using ECB or you can do
+these optional installation steps:
 
-<ol type=1 start=5>
-</p><li>Restart Emacs.
+<ol type=1 start=6>
 
-<li>Call <code>ecb-byte-compile</code>
+</p><li>Call <code>ecb-byte-compile</code>
 
 <p>This byte compiles ECB. You can safely ignore all messages. 
 (You can also bytecompile ECB from the command-line either by using
@@ -229,9 +254,49 @@ online help of ECB is always available though, see
 </ol>
 
 <p><hr>
+Node:<a name="First%20steps">First steps</a>,
+Previous:<a rel=previous accesskey=p href="#Installation">Installation</a>,
+Up:<a rel=up accesskey=u href="#Install%20and%20first%20steps">Install and first steps</a>
+<br>
+
+<h3>First steps after activating ECB first time</h3>
+
+<p>This section of the ECB online-help is displayed automatically by ECB
+after activating ECB first time and describes what are the first basic
+steps:
+
+<ol type=1 start=1>
+
+</p><li>Configure where ECB can find your sources:
+
+<p>Call <code>M-x customize-option RET ecb-source-path RET</code><a rel=footnote href="#fn-1"><sup>1</sup></a>. This lets you customize the option
+<code>ecb-source-path</code> with the customize-feature of Emacs. This opens
+a customize-buffer where you can insert all the directories where ECB
+can find your source-files. Save your changes with the button "Save
+for future sessions" and then throw away this customize-buffer either
+by killing it with <code>M-x kill-buffer</code> or clicking at the button
+"Finish".
+
+</p><li>Read the online-help of ECB:
+
+<p>The online-help of ECB is available via
+
+<ul>
+<li>calling <code>M-x ecb-show-help</code>,
+<li>pressing <kbd>C-c . o</kbd> or
+<li>using the menu "ECB". 
+</ul>
+
+<p>(The section you are currently reading is part of the online-help of
+ECB)
+
+</p><li>Start working with ECB.
+</ol>
+
+<p><hr>
 Node:<a name="Overview">Overview</a>,
 Next:<a rel=next accesskey=n href="#Activation%20and%20Deactivation">Activation and Deactivation</a>,
-Previous:<a rel=previous accesskey=p href="#Install">Install</a>,
+Previous:<a rel=previous accesskey=p href="#Install%20and%20first%20steps">Install and first steps</a>,
 Up:<a rel=up accesskey=u href="#Top">Top</a>
 <br>
 
@@ -474,7 +539,7 @@ window (see the documentation <code>ecb-primary-mouse-jump-destination</code>).
 combinations of primary and secondary mouse-buttons are possible:
 
 <ul>
-<li>primary: mouse-2, secondary: C-mouse-2<a rel=footnote href="#fn-1"><sup>1</sup></a>. This is the default.
+<li>primary: mouse-2, secondary: C-mouse-2<a rel=footnote href="#fn-2"><sup>2</sup></a>. This is the default.
 
 <li>primary: mouse-1, secondary: C-mouse-1
 
@@ -4766,8 +4831,12 @@ Up:<a rel=up accesskey=u href="#Top">Top</a>
 
 <h2>Table of Contents</h2>
 <ul>
-<li><a name="toc_Install"></a>
-    <a href="#Install">Installation</a>
+<li><a name="toc_Install%20and%20first%20steps"></a>
+    <a href="#Install%20and%20first%20steps">Installation and first steps of ECB</a>
+<ul>
+<li><a href="#Installation">Installation of ECB</a>
+<li><a href="#First%20steps">First steps after activating ECB first time</a>
+</ul>
 <li><a name="toc_Overview"></a>
     <a href="#Overview">Overview</a>
 <ul>
@@ -4871,6 +4940,13 @@ Up:<a rel=up accesskey=u href="#Top">Top</a>
 <hr><h4>Footnotes</h4>
 <ol type="1">
 <li><a name="fn-1"></a>
+<p>This
+means first hitting the keys <kbd>M</kbd> (Meta- or Alt-key) and <kbd>x</kbd>
+simultaniously, inserting "customize-option" in the minibuffer,
+hitting RETURN, inserting "ecb-source-path" in the minibuffer and
+finally hitting RETURN again</p>
+
+<li><a name="fn-2"></a>
 <p>means mouse-2 while CTRL-key
 is pressed.</p>
 
