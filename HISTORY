@@ -3,6 +3,9 @@ Version 1.80:
 
 - ECB now requires latest stable release of Semantic: Version 1.4 of Semantic
 
+- ECB now displays the section "First steps" of the online-manual after
+  activating first time. (Klaus)
+
 - Now the adviced versions of `delete-window' and `delete-other-windows' can
   also handle the optional WINDOW argument of the original versions correctly
   so the adviced versions now also work correct if called from program (Klaus).

@@ -49,7 +49,7 @@
 Copyright @copyright{} 2000, 2001, 2002 Jesper Nordenberg
 @end titlepage
 
-@node Top, Install, (dir), (dir)
+@node Top, Install and first steps, (dir), (dir)
 @comment  node-name,  next,  previous,  up
 
 ECB (Emacs Code Browser) is a source code browser for Emacs. It is a
@@ -98,8 +98,9 @@ mailing list @email{ecb-list@@lists.sourceforge.net} via
 @uref{http://lists.sourceforge.net/lists/listinfo/ecb-list}
 @end ifhtml
 
+
 @menu
-* Install::                     Installing ECB.
+* Install and first steps::     Installing ECB and first steps
 * Overview::                    Introduce basic concepts
 * Activation and Deactivation:: How to start and end ECB
 * Usage of ECB::                How to use ECB
@@ -116,6 +117,11 @@ mailing list @email{ecb-list@@lists.sourceforge.net} via
 
 @detailmenu
  --- The Detailed Node Listing ---
+
+Installation and first steps of ECB
+
+* Installation::                Installation of ECB
+* First steps::                 First steps after activating ECB first time
 
 Overview
 
@@ -206,8 +212,19 @@ Known conflicts with other packages
 @end detailmenu
 @end menu
 
-@node Install, Overview, Top, Top
-@chapter Installation
+@node Install and first steps, Overview, Top, Top
+@chapter Installation and first steps of ECB
+
+This chapter describes how to install ECB and what are the first
+steps after activation of ECB
+
+@menu
+* Installation::                Installation of ECB
+* First steps::                 First steps after activating ECB first time
+@end menu
+
+@node Installation, First steps, Install and first steps, Install and first steps
+@section Installation of ECB
 
 @enumerate
 
@@ -247,13 +264,15 @@ Add to your @file{.emacs} or @file{site-lisp/site-start.el} the line:
 @example
 (require 'ecb)
 @end example
+
+@item Restart Emacs.
 @end enumerate
 
-@noindent
-Now ECB is ready for use but you can do these optional steps:
+ECB is now ready for use and can be activated by calling @code{M-x
+ecb-activate}. Now you can either starting using ECB or you can do
+these optional installation steps:
 
-@enumerate 5
-@item Restart Emacs.
+@enumerate 6
 
 @item Call @code{ecb-byte-compile}
 
@@ -302,7 +321,46 @@ online help of ECB is always available though, see
 
 @end enumerate
 
-@node Overview, Activation and Deactivation , Install, Top
+@node First steps, , Installation, Install and first steps
+@section First steps after activating ECB first time
+
+This section of the ECB online-help is displayed automatically by ECB
+after activating ECB first time and describes what are the first basic
+steps:
+
+@enumerate
+
+@item Configure where ECB can find your sources:
+
+Call @code{M-x customize-option RET ecb-source-path RET}@footnote{This
+means first hitting the keys @kbd{M} (Meta- or Alt-key) and @kbd{x}
+simultaniously, inserting ``customize-option'' in the minibuffer,
+hitting RETURN, inserting ``ecb-source-path'' in the minibuffer and
+finally hitting RETURN again}. This lets you customize the option
+@code{ecb-source-path} with the customize-feature of Emacs. This opens
+a customize-buffer where you can insert all the directories where ECB
+can find your source-files. Save your changes with the button ``Save
+for future sessions'' and then throw away this customize-buffer either
+by killing it with @code{M-x kill-buffer} or clicking at the button
+``Finish''.
+
+@item Read the online-help of ECB:
+
+The online-help of ECB is available via
+
+@itemize @minus
+@item calling @code{M-x ecb-show-help},
+@item pressing @kbd{C-c . o} or
+@item using the menu ``ECB''.
+@end itemize
+
+(The section you are currently reading is part of the online-help of
+ECB)
+
+@item Start working with ECB.
+@end enumerate
+
+@node Overview, Activation and Deactivation , Install and first steps, Top
 @chapter Overview
 
 @cindex tree-buffer

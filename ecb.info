@@ -6,7 +6,7 @@ START-INFO-DIR-ENTRY
 END-INFO-DIR-ENTRY
 
 
-File: ecb.info,  Node: Top,  Next: Install,  Prev: (dir),  Up: (dir)
+File: ecb.info,  Node: Top,  Next: Install and first steps,  Prev: (dir),  Up: (dir)
 
 ECB (Emacs Code Browser) is a source code browser for Emacs. It is a
 global minor-mode which displays a couple of windows that can be used
@@ -26,7 +26,7 @@ mailing list <ecb-list@lists.sourceforge.net> via the URL
 
 * Menu:
 
-* Install::                     Installing ECB.
+* Install and first steps::     Installing ECB and first steps
 * Overview::                    Introduce basic concepts
 * Activation and Deactivation:: How to start and end ECB
 * Usage of ECB::                How to use ECB
@@ -41,6 +41,11 @@ mailing list <ecb-list@lists.sourceforge.net> via the URL
 * Concept Index::               Index for concepts and terms
 
  --- The Detailed Node Listing ---
+
+Installation and first steps of ECB
+
+* Installation::                Installation of ECB
+* First steps::                 First steps after activating ECB first time
 
 Overview
 
@@ -129,10 +134,24 @@ Known conflicts with other packages
 * calculator::                  Conflicts with calculator.el
 
 
-File: ecb.info,  Node: Install,  Next: Overview,  Prev: Top,  Up: Top
+File: ecb.info,  Node: Install and first steps,  Next: Overview,  Prev: Top,  Up: Top
 
-Installation
-************
+Installation and first steps of ECB
+***********************************
+
+This chapter describes how to install ECB and what are the first steps
+after activation of ECB
+
+* Menu:
+
+* Installation::                Installation of ECB
+* First steps::                 First steps after activating ECB first time
+
+
+File: ecb.info,  Node: Installation,  Next: First steps,  Prev: Install and first steps,  Up: Install and first steps
+
+Installation of ECB
+===================
 
 1. Unpack the ECB archive.
 
@@ -161,9 +180,11 @@ Installation
 
       (require 'ecb)
 
-Now ECB is ready for use but you can do these optional steps:
-
 5. Restart Emacs.
+
+ECB is now ready for use and can be activated by calling `M-x
+ecb-activate'. Now you can either starting using ECB or you can do
+these optional installation steps:
 
 6. Call `ecb-byte-compile'
 
@@ -204,7 +225,49 @@ Now ECB is ready for use but you can do these optional steps:
 
 
 
-File: ecb.info,  Node: Overview,  Next: Activation and Deactivation,  Prev: Install,  Up: Top
+File: ecb.info,  Node: First steps,  Prev: Installation,  Up: Install and first steps
+
+First steps after activating ECB first time
+===========================================
+
+This section of the ECB online-help is displayed automatically by ECB
+after activating ECB first time and describes what are the first basic
+steps:
+
+1. Configure where ECB can find your sources:
+
+   Call `M-x customize-option RET ecb-source-path RET'(1). This lets
+   you customize the option `ecb-source-path' with the
+   customize-feature of Emacs. This opens a customize-buffer where you
+   can insert all the directories where ECB can find your source-files.
+   Save your changes with the button "Save for future sessions" and
+   then throw away this customize-buffer either by killing it with `M-x
+   kill-buffer' or clicking at the button "Finish".
+
+2. Read the online-help of ECB:
+
+   The online-help of ECB is available via
+
+    - calling `M-x ecb-show-help',
+
+    - pressing `C-c . o' or
+
+    - using the menu "ECB".
+
+   (The section you are currently reading is part of the online-help of
+   ECB)
+
+3. Start working with ECB.
+
+---------- Footnotes ----------
+
+(1) This means first hitting the keys `M' (Meta- or Alt-key) and `x'
+simultaniously, inserting "customize-option" in the minibuffer, hitting
+RETURN, inserting "ecb-source-path" in the minibuffer and finally
+hitting RETURN again
+
+
+File: ecb.info,  Node: Overview,  Next: Activation and Deactivation,  Prev: Install and first steps,  Up: Top
 
 Overview
 ********
@@ -3231,66 +3294,69 @@ Concept Index
 
 Tag Table:
 Node: Top183
-Node: Install5204
-Node: Overview7669
-Node: ECB Directories8715
-Node: ECB Sources9695
-Node: ECB Methods10858
-Node: Activation and Deactivation11379
-Node: Standard activation11749
-Node: Automatic activation12327
-Node: Usage of ECB13377
-Node: Using the mouse14212
-Ref: Using the mouse-Footnote-116487
-Node: Using the keyboard16533
-Node: Navigation17350
-Node: Incremental search18693
-Node: The edit-window20844
-Node: Temp- and compile-buffers22650
-Node: The Methods buffer24697
-Node: Customizing the display25138
-Node: Rebuilding the Methods26860
-Node: The ECB-layout27714
-Node: Changing the ECB-layout28264
-Node: Redrawing the ECB-layout29302
-Node: Hiding the ECB windows30105
-Node: ECB-window synchronizing30679
-Node: Interactive ECB commands32341
-Node: Customizing41085
-Node: Most important options42598
-Node: Customizable options44390
-Node: ecb-general45306
-Node: ecb-directories63536
-Node: ecb-sources68516
-Node: ecb-methods70386
-Node: ecb-history82393
-Node: ecb-layout84085
-Node: ecb-face-options98017
-Node: ecb-faces99677
-Node: ecb-download103684
-Node: Submitting problem report104906
-Node: Upgrading106063
-Node: Downloading new version106420
-Node: Auto. option-upgrading106975
-Node: User interface107282
-Node: Background information108171
-Node: Tips and tricks111569
-Node: Changing faces112128
-Node: Small screens112934
-Node: Simulating speedbar114337
-Node: Optimze scrolling115146
-Node: Large directories116221
-Node: Elisp programming116865
-Node: Conflicts and bugs118048
-Node: Conflicts118534
-Node: VC119123
-Node: follow-mouse119416
-Node: avoid120094
-Node: calendar120458
-Node: calculator121094
-Node: Bugs121596
-Node: Function Index121816
-Node: Variable Index123681
-Node: Concept Index128859
+Node: Install and first steps5401
+Node: Installation5797
+Node: First steps8426
+Ref: First steps-Footnote-19573
+Node: Overview9802
+Node: ECB Directories10864
+Node: ECB Sources11844
+Node: ECB Methods13007
+Node: Activation and Deactivation13528
+Node: Standard activation13898
+Node: Automatic activation14476
+Node: Usage of ECB15526
+Node: Using the mouse16361
+Ref: Using the mouse-Footnote-118636
+Node: Using the keyboard18682
+Node: Navigation19499
+Node: Incremental search20842
+Node: The edit-window22993
+Node: Temp- and compile-buffers24799
+Node: The Methods buffer26846
+Node: Customizing the display27287
+Node: Rebuilding the Methods29009
+Node: The ECB-layout29863
+Node: Changing the ECB-layout30413
+Node: Redrawing the ECB-layout31451
+Node: Hiding the ECB windows32254
+Node: ECB-window synchronizing32828
+Node: Interactive ECB commands34490
+Node: Customizing43234
+Node: Most important options44747
+Node: Customizable options46539
+Node: ecb-general47455
+Node: ecb-directories65685
+Node: ecb-sources70665
+Node: ecb-methods72535
+Node: ecb-history84542
+Node: ecb-layout86234
+Node: ecb-face-options100166
+Node: ecb-faces101826
+Node: ecb-download105833
+Node: Submitting problem report107055
+Node: Upgrading108212
+Node: Downloading new version108569
+Node: Auto. option-upgrading109124
+Node: User interface109431
+Node: Background information110320
+Node: Tips and tricks113718
+Node: Changing faces114277
+Node: Small screens115083
+Node: Simulating speedbar116486
+Node: Optimze scrolling117295
+Node: Large directories118370
+Node: Elisp programming119014
+Node: Conflicts and bugs120197
+Node: Conflicts120683
+Node: VC121272
+Node: follow-mouse121565
+Node: avoid122243
+Node: calendar122607
+Node: calculator123243
+Node: Bugs123745
+Node: Function Index123965
+Node: Variable Index125830
+Node: Concept Index131008
 
 End Tag Table

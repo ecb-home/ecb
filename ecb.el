@@ -58,7 +58,7 @@
 ;; The latest version of the ECB is available at
 ;; http://home.swipnet.se/mayhem/ecb.html
 
-;; $Id: ecb.el,v 1.231 2002/08/03 13:41:28 berndl Exp $
+;; $Id: ecb.el,v 1.232 2002/08/04 11:32:27 berndl Exp $
 
 ;;; Code:
 
@@ -2554,20 +2554,20 @@ OTHER-EDIT-WINDOW."
 	      node
 	      (ecb-new-child old-children name 2 norm-dir nil
 			     (if ecb-truncate-long-names 'beginning)))))
-	 (when (not paths)
-	   (tree-node-add-child node (tree-node-new "Welcome to ECB! Please select:"
-						    3 '(lambda()) t))
-           (tree-node-add-child node (tree-node-new "" 3 '(lambda()) t))
-           (tree-node-add-child node (tree-node-new "[F2] Customize ECB" 3
-                                                    'ecb-customize t))
-           (tree-node-add-child node (tree-node-new "[F3] ECB Help" 3
-                                                    'ecb-show-help t))
-           (tree-node-add-child
-            node (tree-node-new
-                  "[F4] Add Source Path" 3
-                  '(lambda () (call-interactively 'ecb-add-source-path)) t)))
+;; 	 (when (not paths)
+;; 	   (tree-node-add-child node (tree-node-new "Welcome to ECB! Please select:"
+;; 						    3 '(lambda()) t))
+;;            (tree-node-add-child node (tree-node-new "" 3 '(lambda()) t))
+;;            (tree-node-add-child node (tree-node-new "[F2] Customize ECB" 3
+;;                                                     'ecb-customize t))
+;;            (tree-node-add-child node (tree-node-new "[F3] ECB Help" 3
+;;                                                     'ecb-show-help t))
+;;            (tree-node-add-child
+;;             node (tree-node-new
+;;                   "[F4] Add Source Path" 3
+;;                   '(lambda () (call-interactively 'ecb-add-source-path)) t)))
          (tree-buffer-update))))))
-  
+
 (defun ecb-new-child (old-children name type data &optional not-expandable shorten-name)
   "Return a node with type = TYPE, data = DATA and name = NAME. Tries to find
 a node with matching TYPE and DATA in OLD-CHILDREN. If found no new node is
@@ -3677,7 +3677,7 @@ always the ECB-frame if called from another frame."
     ;; we run any personal hooks
     (run-hooks 'ecb-activate-hook)
 
-   ;; enable mouse-tracking for the ecb-tree-buffers; we do this after running
+    ;; enable mouse-tracking for the ecb-tree-buffers; we do this after running
     ;; the personal hooks because if a user put´s activation of
     ;; follow-mouse.el (`turn-on-follow-mouse') in the `ecb-activate-hook'
     ;; then our own ECb mouse-tracking must be activated later.
@@ -3693,6 +3693,13 @@ always the ECB-frame if called from another frame."
     ;; `ecb-renamed-options'
     (when ecb-auto-compatibility-check
       (ecb-display-upgraded-options))
+
+    ;; if we activate ECB first time then we display the node "First steps" of
+    ;; the online-manual
+    (when (null ecb-source-path)
+      (let ((ecb-show-help-format 'info))
+        (ecb-show-help)
+        (Info-goto-node "First steps")))
     
     ;;now take a snapshot of the current window configuration
     (ecb-set-activated-window-configuration)))

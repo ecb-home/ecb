@@ -52,9 +52,11 @@ Installation
 4. Add to your .emacs or site-start.el file the line:
    (require 'ecb)
 
-Now ECB is ready for use but you can do these optional steps:
-
 5. Restart Emacs.
+
+ECB is now ready for use and can be activated by calling 'M-x ecb-activate'.
+Now you can either starting using ECB or you can do these optional
+installation steps:
 
 6. Call `ecb-byte-compile'. Byte compiles ECB. You can safely ignore all
    messages. (You can also bytecompile ECB from the command-line either by
