@@ -3299,7 +3299,7 @@ That is remove the unsupported :help stuff."
                (t "h" ecb-goto-window-history)
                (t "e" ecb-eshell-goto-eshell)
                (t "/" ecb-toggle-enlarged-compilation-window)
-               (t "." ecb-cycle-switch-to-compilation-buffer)))
+               (t "." ecb-cycle-through-compilation-buffers)))
 
   "*Specifies all keybindings for the ECB minor-mode keymap.
 The value is a cons-cell where the car is a common-prefix key for all the

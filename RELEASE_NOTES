@@ -3,10 +3,9 @@ This file contains some important release-notes for ECB 1.80
 General:
 --------
 
-Please read also the sections "Known conflicts of ECB with other packages" and
-"Tips and Tricks" in the online help ('ecb-show-help'). The former one is a
-small list of known conflicts and for each conflict a proper and easy
-solution!
+Please read also the sections "Known conflicts with other packages" and "Tips
+and Tricks" in the online help ('ecb-show-help'). The former one is a small
+list of known conflicts and for each conflict a proper and easy solution!
 Please read also carefully the upgrade informations below!
 
 

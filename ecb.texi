@@ -1,6 +1,25 @@
 \input texinfo   @c -*-texinfo-*-
 @c
-@c
+
+@c This manual covers the tool "ECB", and is a part of it's
+@c distribution.
+
+@c This manual is free software; you can redistribute it and/or modify
+@c it under the terms of the GNU General Public License as published by
+@c the Free Software Foundation; either version 2, or (at your option)
+@c any later version.
+
+@c This manual is distributed in the hope that it will be useful,
+@c but WITHOUT ANY WARRANTY; without even the implied warranty of
+@c MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+@c GNU General Public License for more details.
+
+@c You should have received a copy of the GNU General Public License
+@c along with GNU Emacs; see the file COPYING.  If not, write to the
+@c Free Software Foundation, Inc., 59 Temple Place - Suite 330,
+@c Boston, MA 02111-1307, USA.
+
+
 @setfilename ecb.info
 
 @settitle ECB - the Emacs Code Browser
@@ -8,6 +27,13 @@
 @c If we want only one index for concepts, functions and variables
 @c @syncodeindex vr cp
 @c @syncodeindex fn cp
+
+@c in info we do not want paragraph indenting
+@ifinfo
+@paragraphindent 0
+@end ifinfo
+
+@exampleindent   3
 
 @dircategory GNU Emacs Lisp
 @direntry
@@ -29,12 +55,25 @@ global minor-mode which displays a couple of windows that can be used
 to browse directories, files and methods. It supports method parsing
 for Java, C, C++, Elisp and some more.
 
-The latest version of ECB can always be found at the URL:
+@c In the following tow paragraphs we distinct between HTML- and
+@c Not-HTML-format concerning the display of the URLs.
+@ifnothtml
+The latest version of ECB can always be found at the URL
 @url{http://home.swipnet.se/mayhem/ecb.html}
 
 To send bug reports, or participate in discussions about ECB, use the
-mailing list @email{ecb-list@@lists.sourceforge.net} via the URL:
+mailing list @email{ecb-list@@lists.sourceforge.net} via the URL
 @url{http://lists.sourceforge.net/lists/listinfo/ecb-list}
+@end ifnothtml
+
+@ifhtml
+The latest version of ECB can always be found at 
+@uref{http://home.swipnet.se/mayhem/ecb.html}
+
+To send bug reports, or participate in discussions about ECB, use the
+mailing list @email{ecb-list@@lists.sourceforge.net} via 
+@uref{http://lists.sourceforge.net/lists/listinfo/ecb-list}
+@end ifhtml
 
 @menu
 * Install::                     Installing ECB.
@@ -51,6 +90,91 @@ mailing list @email{ecb-list@@lists.sourceforge.net} via the URL:
 * Variable Index::              Index for variables and options
 * Concept Index::               Index for concepts and terms
 @comment * Index::
+
+@detailmenu
+ --- The Detailed Node Listing ---
+
+Overview
+
+* ECB Directories::             Contents of the ECB Directories-buffer
+* ECB Sources::                 Contents of the ECB Sources/history-buffer
+* ECB Methods::                 Contents of the ECB Methods-buffer
+
+Activation and Deactivation
+
+* Standard activation::         How to manually (de)activate ECB
+* Automatic activation::        Automaticaly (de)activating ECB
+
+Usage of ECB
+
+* Using the mouse::             Working with the mouse
+* Using the keyboard::          Working with the keyboard
+* The edit-window::             How to use the edit-window(s)
+* Temp- and compile-buffers::   Displaying temp- and compilation-buffers
+* The Methods buffer::          Using and customizing he Methods-buffer
+* The ECB-layout::              Changing, customizing, redrawing the layout
+* Hiding the ECB windows::      Hiding/Showing the ECB-windows
+* Interactive ECB commands::    All interactive user-commands of ECB
+
+Working with the keyboard in the ECB-windows
+
+* Navigation::                  Keyboard navigation in a tree-buffer
+* Incremental search::          Find nodes as fast as possible
+
+Using and customizing the ECB-Methods buffer
+
+* Customizing the display::     How to customize the Methods-buffer display
+* Rebuilding the Methods::      When to rebuild the Methods-buffer      
+
+Changing, customizing and redrawing the ECB-layout
+
+* Changing the ECB-layout::     How to change and customize the layout
+* Redrawing the ECB-layout::    How and when redrawing the layout
+
+Customizing ECB
+
+* Most important options::      Which option you must know
+* Customizable options::        All customizable options of ECB
+
+All customizable options of ECB
+
+* ecb-general::                 General customizing ECB
+* ecb-directories::             Customizing the ECB-directories
+* ecb-sources::                 Customizing the ECB-sources
+* ecb-methods::                 Customizing the ECB-methods
+* ecb-history::                 Customizing the ECB-history
+* ecb-layout::                  Customizing the ECB-layout
+* ecb-face-options::            Customizing options for faces
+* ecb-faces::                   Customizing the faces
+* ecb-download::                Customizing how to download ECB
+
+Upgrading ECB
+
+* Downloading new version::     How to download a newer version of ECB 
+* Auto. option-upgrading::      ECB can auto. upgrade your options
+
+Automatic upgrading of options
+
+* User interface::              Options and commands you should know
+* Background information::      Maybe some interesting informations
+
+Tips and tricks
+
+* Changing faces::              Changing faces in the ECB tree-buffers
+* Small screens::               Working with small screens
+* Simulating speedbar::         Simulating speedbar without an extra frame
+* Optimze scrolling::           Optimze scrolling in the edit-window
+* Large directories::           Working with large directories
+
+Known conflicts with other packages
+
+* VC::                          Conflicts with Version Control
+* follow-mouse::                Conflicts with follow-mouse.el
+* avoid::                       Conflicts with avoid.el
+* calendar::                    Conflicts with calendar.el
+* calculator::                  Conflicts with calculator.el
+
+@end detailmenu
 @end menu
 
 @node Install, Overview, Top, Top
@@ -101,30 +225,51 @@ Now ECB is ready for use but you can do these optional steps:
 
 @enumerate 5
 @item Restart Emacs.
-@item Call @code{ecb-byte-compile}.
+
+@item Call @code{ecb-byte-compile}
+
 This byte compiles ECB. You can safely ignore all messages.
 (You can also bytecompile ECB from the command-line either by using
 the @file{Makefile} or by using the batch-file @file{make.bat}. Just
 read the comments in that file you choose.)
 
 @item Install the supplied @file{ecb.info}
+
 The ECB distribution contains a file @file{ecb.info} which is the
 online-help of ECB in Info-format. You can install this online help so
 it's available in the Top-directory of Info. There are two ways to do
 this:
 
 @itemize @minus
+@item Use ``install-info'' (recommended):
+
+@enumerate
 @item
-Use the command ``install-info'' if available on your system
-(recommended).
+Copy the file @file{ecb.info} into the info-directory of Emacs
+
 @item
+Install it with the command ``install-info'' (if available on your
+system) in the @file{dir}-file.
+@end enumerate
+
+The supplied @file{Makefile} offers a target @code{install-help} which
+does both of these steps. You have just to call @code{make
+install-help} with the correct EMACSINFOPATH set (see the comment in
+@file{Makefile}). Here is an example:
+
+@example
+make EMACSINFOPATH=/path/to/emacs/info install-help
+@end example
+
+@item Manual Installation:
+
 Copy the file @file{ecb.info} into the info-directory of Emacs and
 modify the file @file{dir} manually.
 @end itemize
 
-It doesn't matter if you do not execute this step because the online
-help of ECB is always available though, see @code{ecb-show-help}
-(@pxref{Interactive ECB commands}).
+But it doesn't matter if you do not execute this step (7.) because the
+online help of ECB is always available though, see
+@code{ecb-show-help} (@pxref{Interactive ECB commands}).
 
 @end enumerate
 
@@ -132,6 +277,7 @@ help of ECB is always available though, see @code{ecb-show-help}
 @chapter Overview
 
 @cindex tree-buffer
+@cindex ECB-windows
 ECB is a global minor-mode which offers a few @dfn{ECB-windows} for
 browsing your sources comfortable with the mouse and the keyboard.
 These ``special'' windows are also called @dfn{tree-buffer} in this
@@ -139,16 +285,16 @@ manual. There are currently three different types of
 ECB-windows/tree-buffers:
 
 @menu
-* ECB Directories::
-* ECB Sources::
-* ECB Methods::
+* ECB Directories::             Contents of the ECB Directories-buffer
+* ECB Sources::                 Contents of the ECB Sources/history-buffer
+* ECB Methods::                 Contents of the ECB Methods-buffer
 @end menu
 
 In addition to these ECB-windows you have always one or two
-@dfn{edit-windows} (@pxref{Working with the edit-window}) in the
+@dfn{edit-windows} (@pxref{The edit-window}) in the
 ECB-frame and (if you want) at the bottom a @dfn{compilation-window},
 where all the output of Emacs-compilation (compile, grep etc.) is
-shown (@pxref{Temp- and compilation-buffers}).
+shown (@pxref{Temp- and compile-buffers}).
 
 @node ECB Directories, ECB Sources, Overview, Overview
 @section ECB Directories
@@ -185,14 +331,13 @@ the edit-window.
 @cindex History
 @itemize @bullet
 @item
-Source files can be selected by clicking a mouse button
-(@pxref{Working with the mouse}) or hitting RETURN (@pxref{Working
-with the keyboard}) on the source row in the @dfn{ECB-Sources} or
-@dfn{ECB- History} windows.
+Source files can be selected by clicking a mouse button (@pxref{Using
+the mouse}) or hitting RETURN (@pxref{Using the keyboard}) on the
+source row in the @dfn{ECB-Sources} or @dfn{ECB- History} windows.
 
 IMPORTANT: If you hold down the SHIFT-key while clicking with the
-primary mouse button (@pxref{Working with the mouse}) or RETURN
-(@pxref{Working with the keyboard}) on a source row in the ECB-Sources
+primary mouse button (@pxref{Using the mouse}) or RETURN
+(@pxref{Using the keyboard}) on a source row in the ECB-Sources
 or ECB-History windows then the source will not be displayed in the
 edit-window but it will be scanned in the background and all its
 contents (e.g. methods and variables) are listed in the @dfn{ECB
@@ -229,17 +374,51 @@ Clicking on a method/variable with the secondary mouse button or C-RETURN
 @node Activation and Deactivation, Usage of ECB, Overview, Top
 @chapter Activation and Deactivation
 
+@noindent
+This chapter describes all aspects of activating and deactivating ECB.
+
+@menu
+* Standard activation::         How to manually (de)activate ECB
+* Automatic activation::        Automaticaly (de)activating ECB
+@end menu
+
+@node Standard activation, Automatic activation, Activation and Deactivation, Activation and Deactivation
+@section Standard activation and deactivation
+
 Call @kbd{M-x ecb-activate} and @kbd{M-x ecb-deactivate} to activate or
 deactivate ECB. If you want ECB started in a new frame see the option
 @code{ecb-new-ecb-frame} (default is nil). @code{ecb-activate} always
 raises and selects the ECB-frame even if ECB is already started.
 
+@cindex minor mode
 Because ECB is a global minor-mode it can also be
 (de)activated/toggled by @kbd{M-x ecb-minor-mode}.
 
+@node Automatic activation, , Standard activation, Activation and Deactivation
+@section Automatic activation and deactivation
+
+@cindex Automatic activation
+@cindex Automatic deactivation
 There are three options for auto. (de)activation ECB after Emacs-start
-and also major-mode based. See @code{ecb-auto-activate},
-@code{ecb-major-modes-activate} and @code{ecb-major-modes-deactivate}.
+and also major-mode based.
+
+@table @code
+@item ecb-auto-activate
+This option is for auto. activating ECB after Emacs-startup. Set this
+to not nil and ECB will automaticaly be started after Emacs comes up.
+
+@item ecb-major-modes-activate
+@itemx ecb-major-modes-deactivate
+These option give you the possibility to activate (rsp. deactivate)
+ECB on a major-mode basis, means you can define for which major-modes
+ECB should be activated and for which modes it should activated.
+
+If activating or deactivating is too strong you can also customize ECB
+with these two option only hiding/showing it's ECB-windows
+(tree-buffers) on a major-mode basis. At last this is nothing more
+than auto. calling @code{ecb-toggle-ecb-windows} (@pxref{Interactive
+ECB commands} depending which major-mode is active.
+@end table
 
 
 @node Usage of ECB, Customizing, Activation and Deactivation, Top
@@ -249,18 +428,17 @@ This chapter describes in a detailed manner all aspects of using the
 Emacs Code Browser.
 
 @menu
-* Working with the mouse::
-* Working with the keyboard::
-* Working with the edit-window::
-* Temp- and compilation-buffers::
-* Rebuilding the Methods buffer::
-* Changing the ECB-layout::
-* Redrawing the ECB-layout::
-* Hiding/Showing the ECB windows::
-* Interactive ECB commands::
+* Using the mouse::             Working with the mouse
+* Using the keyboard::          Working with the keyboard
+* The edit-window::             How to use the edit-window(s)
+* Temp- and compile-buffers::   Displaying temp- and compilation-buffers
+* The Methods buffer::          Using and customizing he Methods-buffer
+* The ECB-layout::              Changing, customizing, redrawing the layout
+* Hiding the ECB windows::      Hiding/Showing the ECB-windows
+* Interactive ECB commands::    All interactive user-commands of ECB
 @end menu
 
-@node Working with the mouse, Working with the keyboard, Usage of ECB, Usage of ECB
+@node Using the mouse, Using the keyboard, Usage of ECB, Usage of ECB
 @section Working with the mouse in the ECB-windows
 
 @cindex primary button
@@ -311,8 +489,10 @@ combinations of primary and secondary mouse-buttons are possible:
 @item
 primary: mouse-2, secondary: C-mouse-2 (means mouse-2 while CTRL-key
 is pressed). This is the default setting.
+
 @item
 primary: mouse-1, secondary: C-mouse-1
+
 @item
 primary: mouse-1, secondary: mouse-2
 @end itemize
@@ -324,7 +504,7 @@ In each ECB-buffer mouse-3 (= right button) opens a special context popup-menu
 for the clicked item where you can choose several senseful actions.
 
 
-@node Working with the keyboard, Working with the edit-window, Working with the mouse, Usage of ECB
+@node Using the keyboard, The edit-window, Using the mouse, Usage of ECB
 @section Working with the keyboard in the ECB-windows
 
 ECB offers the @code{ecb-mode-map} which binds the most important
@@ -337,11 +517,11 @@ other minor-modes or packages you can define very easy another prefix.
 Please read carefully the description of @code{ecb-key-map}!
 
 @menu
-* Navigation::
-* Incremental search::
+* Navigation::                  Keyboard navigation in a tree-buffer
+* Incremental search::          Find nodes as fast as possible
 @end menu
 
-@node Navigation, Incremental search, Working with the keyboard, Working with the keyboard
+@node Navigation, Incremental search, Using the keyboard, Using the keyboard
 @subsection Navigation
 
 @cindex RETURN key
@@ -354,7 +534,7 @@ In the ECB-buffers RETURN and TAB are the most important keys:
 @item
 RETURN does the same as the primary button and C-RETURN does the same
 as the secondary button. The terms primary and secondary are explained
-in @ref{Working with the mouse}. S-RETURN is the same as the
+in @ref{Using the mouse}. S-RETURN is the same as the
 SHIFT-click (@pxref{ECB Sources}). See also the option
 @code{ecb-tree-RET-selects-edit-window} and the function
 @code{ecb-toggle-RET-selects-edit-window} which is bound to @kbd{C-t}
@@ -385,7 +565,7 @@ Onto a not expandable node the horizontal arrow-keys go one character in the
 senseful correct direction.
 
 
-@node Incremental search, , Navigation, Working with the keyboard
+@node Incremental search, , Navigation, Using the keyboard
 @subsection Incremental search for a node in current tree-buffer
 
 @cindex Incremental search
@@ -437,7 +617,7 @@ of the ecb-frame. This makes window-selection a child´s play. For
 example you can jump into the method-window by hitting @kbd{C-c . m}.
 
 
-@node Working with the edit-window, Temp- and compilation-buffers, Working with the keyboard, Usage of ECB
+@node The edit-window, Temp- and compile-buffers, Using the keyboard, Usage of ECB
 @section Working with the edit-window
 
 @cindex edit-window
@@ -488,8 +668,8 @@ carefully the documentation of this option!
 Another interesting option in the context of the edit-window and these
 adviced functions is @code{ecb-layout-always-operate-in-edit-window}!
 
-@node Temp- and compilation-buffers, Rebuilding the Methods buffer, Working with the edit-window, Usage of ECB
-@section Temp- and compilation-buffers display in ECB
+@node Temp- and compile-buffers, The Methods buffer, The edit-window, Usage of ECB
+@section Temp- and compile-buffers display in ECB
 
 @cindex temporary buffers
 @cindex help buffers
@@ -527,15 +707,74 @@ the function @code{ecb-toggle-enlarged-compilation-window}.
 With the option @code{ecb-layout-switch-to-compilation-window} you can
 modify the switch-to-buffer...-functions to work best if your layout
 contains a compilation-window. See the docstring of this option.
+
+@item
+With the command @code{ecb-cycle-through-compilation-buffers}
+(@pxref{Interactive ECB commands}) you can cycle through all current
+open compilation-buffers in the sense of
+@code{ecb-compilation-buffer-p} very fast.
 @end itemize
 
 But because ECB works best without such a durable compilation-window
 you should read the documentation of these two options carefully!
 
-@node Rebuilding the Methods buffer, Changing the ECB-layout, Temp- and compilation-buffers, Usage of ECB
-@section Rebuilding the ECB-Methods buffer
+@node The Methods buffer, The ECB-layout, Temp- and compile-buffers, Usage of ECB
+@section Using and customizing the ECB-Methods buffer
 
-In almost all cases there is NO need to manually rebuild the
+This chapter describes how to use and customize the Methods-buffer of
+ECB.
+
+@menu
+* Customizing the display::     How to customize the Methods-buffer display
+* Rebuilding the Methods::      When to rebuild the Methods-buffer      
+@end menu
+
+@node Customizing the display, Rebuilding the Methods, The Methods buffer, The Methods buffer
+@subsection Customizing the display of the Methods-buffer
+
+@cindex semantic token
+@cindex token
+The ECB-Methods buffer is probably the most important browsing window
+offeren by ECB. It displays all semantic informations of the current
+buffer in the edit-window.
+
+ECB gets all informations displayed in this Methods-buffer from the
+semantic-library. This library parses auto. the current source-buffer
+in the edit-window of ECB and returns all information in form of
+@dfn{tokens} to ECB which displays them in a browsable form in its
+Method-buffer. See @ref{ECB Methods} for information how to use the
+Methods-buffer.
+
+There are several options to customize which tokens ECB should display
+in general, if the tokens should be collapsed or expanded, how to
+fontify them (i.e. syntax-highlighting) and something more.
+
+@table @code
+@item ecb-show-tokens
+Which semantic-tokens (e.g. types, methods, variables etc.) should be
+displayed and should they be collapsed, flattened or expanded. Sorting
+is also possible.
+
+@item ecb-font-lock-tokens
+@itemx ecb-type-token-display
+How to fontify the tokens in the Method-buffer
+
+@item ecb-token-display-function
+ECB and semantic offer several predefined functions for displaying the
+tokens. Here you can customize, what informations tokens should
+contain (only the method-name or the whole signature or something
+else) and what notation should be used, e.g. UML or not.
+
+@end table
+
+These are the most important options for this topic but it is
+recommended to have a look into the customize-group @code{ecb-methods}
+(@pxref{ecb-methods}) and check all the options offered there!
+
+@node Rebuilding the Methods, , Customizing the display, The Methods buffer
+@subsection Rebuilding the Methods-buffer
+
+In almost all cases there is @strong{NO} need to manually rebuild the
 method-buffer, because it is always done automatically if necessary.
 But nevertheless there exist a few rare scenarios where a complete
 manual rebuild can be necessary. Here is one example:
@@ -549,10 +788,23 @@ method buffer!
 
 A complete manually rebuild is done by @code{ecb-rebuild-methods-buffer}.
 
-@node Changing the ECB-layout, Redrawing the ECB-layout, Rebuilding the Methods buffer, Usage of ECB
-@section Changing and customizing the ECB-layout
+@node The ECB-layout, Hiding the ECB windows, The Methods buffer, Usage of ECB
+@section Changing, customizing and redrawing the ECB-layout
 
 @cindex layout
+@cindex ECB-layout
+The term @dfn{ECB-layout} means in which windows the ECB-frame is
+divided. This chapter describes all aspects concerning this layout,
+especially changing, customizing and redrawing it.
+
+@menu
+* Changing the ECB-layout::     How to change and customize the layout
+* Redrawing the ECB-layout::    How and when redrawing the layout
+@end menu
+
+@node Changing the ECB-layout, Redrawing the ECB-layout, The ECB-layout, The ECB-layout
+@subsection Changing and customizing the ECB-layout
+
 ECB offers several predefined layouts. To see which layouts are
 available and choose an appropriate one just customize the option
 @code{ecb-layout-nr}. The docstring of this option explains how to see
@@ -564,16 +816,15 @@ If you want to switch fast between some layouts see the option
 
 In addition to the general layout you can specify if the layout should
 contain a durable compilation-window at the bottom of the frame, see
-@code{ecb-compile-window-height} (@pxref{Temp- and
-compilation-buffers}).
+@code{ecb-compile-window-height} (@pxref{Temp- and compile-buffers}).
 
 Maybe you want also change the look&feel of the tree-buffers. Then you
 can change the location of the collapse- and expand-symbols and the
 indendation of sub-nodes in a tree. See @code{ecb-tree-indent} and
 @code{ecb-tree-expand-symbol-before}.
 
-@node Redrawing the ECB-layout, Hiding/Showing the ECB windows, Changing the ECB-layout, Usage of ECB
-@section Redrawing the ECB-layout
+@node Redrawing the ECB-layout, , Changing the ECB-layout, The ECB-layout
+@subsection Redrawing the ECB-layout
 
 @cindex redraw
 If you have unintenionally destroyed the ECB-layout, you can always
@@ -590,7 +841,7 @@ may have some drawbacks! On normal machines the full redraw should be
 done in << 1s!
 
 
-@node Hiding/Showing the ECB windows, Interactive ECB commands, Redrawing the ECB-layout, Usage of ECB
+@node Hiding the ECB windows, Interactive ECB commands, The ECB-layout, Usage of ECB
 @section Hiding/Showing the ECB windows
 
 @cindex Hide windows
@@ -602,7 +853,7 @@ deactivating the advices for @code{delete-other-windows} and/or
 (@pxref{Tips and tricks}) or if you want to have maximum space for
 editing and you don't need the browsing windows all the time.
 
-@node Interactive ECB commands, , Hiding/Showing the ECB windows, Usage of ECB
+@node Interactive ECB commands, , Hiding the ECB windows, Usage of ECB
 @section Interactive ECB commands
 
 @deffn Command ecb-minor-mode &optional arg
@@ -639,12 +890,14 @@ Point must stay in an edit-window otherwise nothing is done. This
 method is merely needed if semantic parses not the whole buffer
 because it reaches a not parsable code. Examples when a call to this
 function is necessary:
+
 If an elisp-file is parsed which contains in the middle a defun X
 where the closing ) is missing then semantic parses only until this
 defun X is reached and you will get an incomplete ECB-method buffer.
 In such a case you must complete the defun X and then call this
 function to completely reparse the elisp-file and rebuild the ECB
 method buffer!
+
 If you change only the name of a method or a variable and you want
 the new name be shown immediately in the ECB-method buffer then you
 must call this function.
@@ -665,11 +918,13 @@ Clears the ECB history-buffer. If @var{CLEARALL} is @code{nil} then
 the behavior is defined in the option @code{ecb-clear-history-behavior}
 otherwise the value of @var{CLEARALL} overrides the value of this
 option:
+
 @itemize @minus
 @item < 0: Means not-existing-buffers
 @item > 0: Means existing-buffers
 @item = 0: Means all
 @end itemize
+
 For further explanation see @code{ecb-clear-history-behavior}.
 @end deffn
 
@@ -738,17 +993,23 @@ never enlarges the @code{ecb-compile-window} over the value of
 takes first effect after restarting ECB!
 @end deffn
 
-@deffn Command ecb-cycle-switch-to-compilation-buffer
-Switch to the given compilation buffer in the compilation window.
-@end deffn
-
-@deffn Command ecb-cycle-through-compilation-buffers
+@deffn Command ecb-cycle-through-compilation-buffers &optional choose-buffer
 Cycle through all compilation buffers currently open and display them
-within the compilation window @code{ecb-compile-window}. If the currently
-opened buffer within the compilation window is not a compilation
-buffer, we jump to the first compilation buffer. If not we try to loop
-through all compilation buffers. If we hit the end we go back to the
-beginning. See @code{ecb-compilation-buffer-p}.
+within the compilation window @code{ecb-compile-window}. If the
+currently opened buffer within the compilation window is not a
+compilation buffer, we jump to the first compilation buffer. If not we
+try to loop through all compilation buffers. If we hit the end we go
+back to the beginning.
+
+If @var{CHOOSE-BUFFER} is not @code{nil} then the user will be
+prompted for the compilation-buffer to swtich to.
+
+See also the option @code{ecb-layout-switch-to-compilation-window}!
+The difference is that this cycling-function offers only
+compilation-buffers in the sense of @code{ecb-compilation-buffer-p}
+whereas the adviced version of @code{switch-to-buffer} offers any
+buffer but switches to @code{ecb-compile-window} if a
+compilation-buffer!
 @end deffn
 
 @deffn Command ecb-upgrade-options
@@ -801,29 +1062,22 @@ also via the ECB keymap with prefix @kbd{C-c .} (see
 @node Customizing, Submitting problem report, Usage of ECB, Top
 @chapter Customizing ECB
 
-@noindent
-All customization of ECB is divided into the following customize
-groups:
+This chapter describes how to customize ECB for your personal taste.
+The first chapter gives an overview of the most important options and
+the second one lists all options of ECB.
 
-@itemize @bullet
-@item ecb-general: General customization of ECB
-@item ecb-directories: Customization of the ECB-directories buffer.
-@item ecb-sources: Customization of the ECB-sources buffer.
-@item ecb-methods: Customization of the ECB-methods buffer.
-@item ecb-history: Customization of the ECB-history buffer.
-@item ecb-layout: Customization of the layout of ECB.
-@item ecb-faces: All faces used by ECB to highlight nodes and some other stuff.
-@item ecb-download: Options for downloading another ECB version from within ECB.
-@end itemize
+@menu
+* Most important options::      Which option you must know
+* Customizable options::        All customizable options of ECB
+@end menu
 
-You can highly customize all the ECB behavior/layout so just go to
-this groups and you will see all well documented ECB-options. The
-easiest access for this customize groups is via the menu ``ECB''.
+@node Most important options, Customizable options, Customizing, Customizing
+@section The most important options of ECB
 
-Here are the most important options (it is recommended to check the following
-options before working with ECB):
+Here are the most important options (it is recommended to check at
+least the following options before working with ECB):
 
-@vtable @code
+@table @code
 @item ecb-source-path
 Where ECB can find your sources. You must set this option!
 @item ecb-show-help-format
@@ -834,13 +1088,13 @@ or in HTML format in a web-browser.
 @itemx ecb-major-modes-deactivate
 Auto. (de)activation of ECB
 @item ecb-key-map
-All ECB-keybindings incl. a common prefixkey (@pxref{Working with the
+All ECB-keybindings incl. a common prefixkey (@pxref{Using the
 keyboard}).
 @item ecb-new-ecb-frame
 Should ECB create a new frame at activation time.
 @item  ecb-primary-secondary-mouse-buttons
 @itemx ecb-primary-mouse-jump-destination
-Define how to use the mouse (@pxref{Working with the mouse}).
+Define how to use the mouse (@pxref{Using the mouse}).
 @item  ecb-tree-expand-symbol-before
 @itemx ecb-tree-indent
 The look&feel of the trees. Maybe you like a value of 4 for the
@@ -856,11 +1110,1603 @@ ECB-frame and also the location of these windows (@pxref{Changing the
 ECB-layout}).
 @item  ecb-token-display-function
 @itemx ecb-type-token-display
-How to display the entries in the ECB-method window.
-@end vtable
+@itemx ecb-show-tokens
+How to display the entries in the ECB-method window
+(@pxref{Customizing the display}).
+@end table
 
-But especially all the options in the customize groups 'ecb-layout',
-'ecb-methods' and 'ecb-face-options' are also worth to be checked.
+But to make ECB working best for you it is also recommened to have a
+look at @ref{Customizable options}!
+
+@node Customizable options, ,Most important options, Customizing
+@section All customizable options of ECB
+
+@noindent
+All customization of ECB is divided into the following ``customize
+groups''. You can highly customize all the ECB behavior/layout so just
+go to these groups and you will see all well documented ECB-options.
+
+@menu
+* ecb-general::                 General customizing ECB
+* ecb-directories::             Customizing the ECB-directories
+* ecb-sources::                 Customizing the ECB-sources
+* ecb-methods::                 Customizing the ECB-methods
+* ecb-history::                 Customizing the ECB-history
+* ecb-layout::                  Customizing the ECB-layout
+* ecb-face-options::            Customizing options for faces
+* ecb-faces::                   Customizing the faces
+* ecb-download::                Customizing how to download ECB
+@end menu
+
+@node ecb-general, ecb-directories, Customizable options, Customizable options
+@subsection Group ecb-general
+
+@noindent
+This group contains the following options:
+
+@defopt ecb-activate-before-layout-draw-hook
+Normal hook run at the end of activating the ecb-package by running
+@code{ecb-activate}. This hooks are run after all the internal setup
+process but directly before(!) drawing the layout specified in
+@code{ecb-layout} (means before dividing the frame into several
+windows).
+
+A senseful using of this hook can be maximizing the Emacs-frame for
+example, because this should be done before the layout is drawn
+because ECB computes the size of the ECB-windows with the current
+frame size! If you need a hook-option for the real end of the
+activating process (i.e. after the layout-drawing) look at
+@code{ecb-activate-hook}.
+@end defopt
+
+@defopt ecb-activate-hook
+Normal hook run at the end of activating the ecb-package by running
+@code{ecb-activate}. This hooks are run at the real end of the
+activating process, means after the layout has been drawn!. If you
+need hooks which are run direct before the layout-drawing look at
+@code{ecb-activate-before-layout-draw-hook}.
+@end defopt
+
+@defopt ecb-auto-activate
+Automatically startup ECB when Emacs starts up. This should only be
+true if you always want to run @code{ecb-activate}.
+@end defopt
+
+@defopt ecb-auto-compatibility-check
+Check at ECB-startup if all ECB-options have correct values. If not
+nil then all ECB-options are checked if their current value have the
+correct type. It the type is incorrect the option is either auto.
+upgraded to the new type or reset to the default-value of current ECB
+if no upgrade is possible. This feature can also upgrade options which
+are renamed in current ECB and try to transform the old-value to the
+new named option. After startup all upgraded or reset options are
+displayed with their old (before upgrade/reset) and new values. See
+also the commands @code{ecb-upgrade-options} and
+@code{ecb-display-upgraded-options}. If this option is off then the
+user can perform the check and reset manually with
+@code{ecb-upgrade-options}.
+@xref{Auto. option-upgrading}.
+@end defopt
+
+@defopt ecb-current-buffer-sync-hook
+Normal hook run at the end of @code{ecb-current-buffer-sync}.
+@end defopt
+
+@defopt ecb-deactivate-hook
+Normal hook run at the end of deactivating (but before the ecb-layout
+is cleared!) ECB by running @code{ecb-deactivate}.
+@end defopt
+
+@defopt ecb-debug-mode
+If not nil ECB displays debug-information in the Messages-buffer. This
+is done for some critical situations concerning semantic-tokens and
+their overlays (or extends for XEmacs). Normally you should not need
+this switched on! But if you get errors like "destroyed extend" for
+XEmacs or "wrong-argument-type" concerning overlays for GNU Emacs then
+you should switch on this option and submitting a bug-report to the
+ecb-mailing-list (@code{ecb-submit-problem-report}) after getting the
+error again!
+@end defopt
+
+@defopt ecb-key-map
+Specifies all keybindings for the ECB minor-mode keymap. The value is
+a cons-cell where the car is a common-prefix key for all the
+keybindings. The cdr is a list of keybindings each of them a list
+again. A keybinding has the following form:
+
+@example
+'(<common-prefix-flag> <keysequence> <function>) where
+@end example
+
+@table @code
+@item <common-prefix-flag>
+If t then the common-prefixkey defined as car of the value (see above)
+is used.
+
+@item <keysequence>
+If the common prefixkey is used then the final keybinding is the
+concatenation of the common-prefixkey (see above) and this
+keysequence.
+
+@item <function>:
+The function to bind to the key. This can also be a lambda-expression
+.
+@end table
+
+It is highly recommended to use one of the standard keys C-c or C-x as
+first key of your common-prefixkey!
+
+You MUST change this option via customize to take effect!
+
+All keysequences must be inserted as a string and must follow the
+syntax needed by @code{read-kbd-macro} or @code{kbd}. This means you
+can insert the key in the same manner @kbd{C-h k} displays keysequences.
+Here is the summary of the syntax:
+
+Text is divided into ``words'' separated by whitespace. Except for the words
+described below, the characters of each word go directly as characters of the
+keysequence. The whitespace that separates words is ignored. Whitespace in the
+macro must be written explicitly, as in @kbd{C-c SPC}.
+
+@itemize @bullet
+@item
+The special words RET, SPC, TAB, DEL, LFD, ESC, and NUL represent
+special control characters. The words must be written in uppercase.
+
+@item
+A word in angle brackets, e.g., <return>, <down>, <left> or <f1>,
+represents a function key. (Note that in the standard configuration,
+the function key <return> and the control key RET are synonymous.).
+You can use angle brackets on the words RET, SPC, etc., but they are
+not required there.
+
+@item
+Keys can be written by their ASCII code, using a backslash followed by
+up to six octal digits. This is the only way to represent keys with
+codes above ÿ.
+
+@item
+One or more prefixes M- (meta), C- (control), S- (shift), A- (alt), H-
+(hyper), and s- (super) may precede a character or key notation. For
+function keys, the prefixes may go inside or outside of the brackets:
+C-<down> = <C-down>. The prefixes may be written in any order: M-C-x =
+C-M-x. Prefixes are not allowed on multi-key words, e.g., C-abc,
+except that the Meta prefix is allowed on a sequence of digits and
+optional minus sign: M--123 = M-- M-1 M-2 M-3.
+
+@item
+The @code{^} notation for control characters also works: ^M = C-m.
+@end itemize
+
+@end defopt
+
+@defopt ecb-major-modes-activate
+List of major-modes for which ECB shoulb be activated or shown. Do not
+mistake this option with @code{ecb-auto-activate}. The latter one is
+for activating ECB after Emacs-startup (even without opening a buffer)
+and this one is for defining for which major-modes ECB should be
+activated if the mode goes active!
+
+The behaviour is like follows: If a mode is contained in this option
+ECB is activated after activating this mode (if ECB was deactivated
+before) or the ECB-windows are shown if ECB was already active but its
+windows were hidden. In every case ECB is activated with visible
+ECB-windows afterwards!
+
+For every major mode there can be specified an @code{ecb-layout-nr}:
+
+@itemize @minus
+@item @code{default}:
+The value customized with @code{ecb-layout-nr} is choosen.
+@item an integer:
+ECB is activated with this layout-nr. This changes the value of
+@code{ecb-layout-nr} but only for current emacs-session! But the
+layout is only changed if ECB was activated, if just the ECB-windows
+were shown, the current layout is used!
+@end itemize
+
+There are two additional options:
+
+@itemize @minus
+@item @code{none}:
+No major-modes should activate ECB automatically.
+@item a regexp:
+This means all major-modes which are not listed in
+@code{ecb-major-modes-deactivate} activate ECB except the symbol-name
+of @code{major-mode} matches this regexp. If this option is set then
+the default regexp excludes all Info- and customize-buffers because
+this buffers should not change anything in the ECB-activation state.
+@end itemize
+
+Any auto. activation is only done if the current-frame is unsplitted
+to avoid changing unnecessarily or unintentionally the frame-layout if
+the user just jumps between different windows.
+@end defopt
+
+@defopt ecb-major-modes-deactivate
+List of major-modes for which ECB should be deactivated or hidden.
+Specify if ECB should be deactivated or at least hidden if a
+major-mode is active. For each major-mode there must be added an
+action what should be done:
+
+@itemize @minus
+@item @code{hide}:
+ECB just hides all the ECB windows like with @code{ecb-hide-ecb-windows}.
+@item @code{deactivate}:
+ECB is completely deactivated after activating the major-mode.
+@end itemize
+
+There are two additional options:
+
+@itemize @bullet
+@item @code{none}:
+No major-modes should deactivate/hide ECB automatically.
+
+@item A cons for the meaning ``All except the activated modes of
+@code{ecb-major-modes-activate}''. The car of this cons can be:
+
+@itemize @minus
+@item @code{hide-all-except-activated}:
+All major-modes which are not listed in
+@code{ecb-major-modes-activate} hide the ECB-windows.
+@item @code{deactivate-all-except-activated}:
+All major-modes which are not listed in
+@code{ecb-major-modes-activate} deactivate ECB.
+@end itemize
+
+The cdr of this cons is a regexp: This means all major-modes which are
+not listed in @code{ecb-major-modes-activate} deactivate/hide ECB
+except the symbol-name of @code{major-mode} matches this regexp. If
+this option is set then the default regexp excludes all Info- and
+customize-buffers because this buffers should not change anything in
+the ECB-activation state.
+@end itemize
+
+If a major-mode is listed in @code{ecb-major-modes-activate} as well
+as in @code{ecb-major-modes-deactivate} then ECB is activated!
+
+Any auto. deactivation/hiding is only done if the edit-window of ECB
+is unsplitted and point is in the edit-window to avoid changing
+unnecessarily or unintentionally the frame-layout if the user just
+jumps between different edit-windows, the tree-windows and the
+compile-window of ECB.
+@end defopt
+
+@defopt ecb-minor-mode-text
+String to display in the mode line when ECB minor mode is active.
+(When the string is not empty, make sure that it has a leading space.)
+@end defopt
+
+@defopt ecb-primary-mouse-jump-destination
+Jump-destination of a primary mouse-button click (see
+@code{ecb-primary-secondary-mouse-buttons}) in an ECB-window, if you
+click onto a source or method or variable. Defines in which
+edit-window (if splitted) ECB does the "right" action (opening the
+source, jumping to a method/variable). There are two possible choices:
+
+@itemize @minus
+@item @code{left-top}:
+Does the "right" action always in the left/topmost edit-window.
+@item @code{last-point}:
+Does the "right" action always in that edit-window which had the point
+before.
+@end itemize
+
+If the edit-window is not splitted this setting doesn't matter.
+
+Note: A click with the secondary mouse-button (see again
+@code{ecb-primary-secondary-mouse-buttons} does the ``right'' action
+always in the ``other'' window related to the setting in this option.
+@end defopt
+
+@defopt ecb-primary-secondary-mouse-buttons
+Primary- and secondary mouse button for using the ECB-buffers. A click
+with the primary button causes the main effect in each ECB-buffer:
+
+@itemize @bullet
+@item ECB Directories:
+Expanding/collapsing nodes and displaying files in the ECB
+Sources buffer.
+
+@item ECB sources/history:
+Opening the file in that edit-window specified by the option
+@code{ecb-primary-mouse-jump-destination}.
+
+@item ECB Methods:
+Jumping to the method in that edit-window specified by the option
+@code{ecb-primary-mouse-jump-destination}.
+@end itemize
+
+A click with the primary mouse-button while the SHIFT-key is pressed
+only displays the complete clicked node in the minibuffer. This is
+useful if the node is longer as the window-width of the ECB-window and
+@code{ecb-truncate-lines} is not nil.
+
+The secondary mouse-button is for opening (jumping to) the file in the
+other window (see the documentation
+@code{ecb-primary-mouse-jump-destination}).
+
+The following combinations are possible:
+
+@itemize @minus
+@item
+primary: mouse-2, secondary: C-mouse-2 (means mouse-2 while CTRL-key is
+pressed). This is the default setting.
+@item
+primary: mouse-1, secondary: C-mouse-1
+@item
+primary: mouse-1, secondary: mouse-2
+@end itemize
+
+If you change this during ECB is activated you must deactivate and
+activate ECB again to take effect
+@end defopt
+
+@defopt ecb-show-help-format
+The format @code{ecb-show-help} shows its online help. Allowed values
+are 'info (for the Info format) and 'html (for HTML format). If the
+value is 'html then @code{browse-url-browser-function} says which
+browser is used.
+@end defopt
+
+@defopt ecb-show-node-info-in-minibuffer
+Define which node info should displayed in a tree-buffer after mouse
+moving over the node or after a shift click onto the node.
+
+For every tree-buffer you can define ``when'' node info should be
+displayed:
+
+@itemize @minus
+@item @code{always}:
+Node info is displayed by moving with the mouse over a node.
+@item @code{if-too-long}:
+Node info is only displayed by moving with the mouse over a node does
+not fit into the window-width of the tree-buffer window. In the ECB
+directories buffer this means also if a node is shortend or if the
+node has an alias (see @code{ecb-source-path}).
+@item @code{shift-click}:
+Node info is only displayed after a shift click with the primary mouse
+button onto the node.
+@item @code{never}:
+Node info is never displayed.
+@end itemize
+
+For every tree-buffer you can define what info should be displayed:
+
+@itemize @bullet
+@item Directory-buffer:
+@itemize @minus
+@item @code{name}: Only the full node-name is displayed.
+@item @code{path}: The full-path of the node is displayed.
+@end itemize
+
+@item Sources-buffer:
+@itemize @minus
+@item @code{name}: Only the full node-name is displayed.
+@item @code{file-info}: File infos for this file are displayed.
+@item @code{file-info-full}: Fill infos incl. full path for this file are
+displayed.
+@end itemize
+@item History-buffer: see Directories-buffer.
+@item Methods-buffer:
+@itemize @minus
+@item @code{name}: Only the full node name is displayed.
+@item @code{name+type}: The full name + the type of the node (function, class,
+variable) is displayed.
+@end itemize
+@end itemize
+
+Do NOT set this option directly via setq but use always customize!
+@end defopt
+
+@defopt ecb-temp-dir
+Specify a directory where ECB can store temporary files. This is for
+example needed for upgrading ECB by @code{ecb-upgrade-ecb}.
+@end defopt
+
+@defopt ecb-tree-RET-selects-edit-window
+In which tree-buffers RET should finally select an edit-window. If a
+name of an ECB tree-buffer is contained in this list then hitting RET
+in this tree-buffer selects as last action the right edit-window
+otherwise only the right action is performed (opening a new source,
+selecting a method etc.) but point stays in the tree-buffer.
+
+A special remark for the @code{ecb-directories-buffer-name}: Of course
+here the edit-window is only selected if
+@code{ecb-show-sources-in-directories-buffer} is not nil (otherwise
+this would not make any sense)!
+
+The setting in this option is only the default for each tree-buffer.
+With @code{ecb-toggle-RET-selects-edit-window} the behavior of RET can
+be changed fast and easy in a tree-buffer without customizing this
+option, but of course not for future Emacs sessions!
+@end defopt
+
+@defopt ecb-tree-expand-symbol-before
+Show the expand symbol before the items in a tree.
+@end defopt
+
+@defopt ecb-tree-incremental-search
+Enable incremental search in the ECB-tree-buffers. For a detailed
+explanation see @ref{Using the keyboard}. If you change this
+during ECB is activated you must deactivate and activate ECB again to
+take effect.
+@end defopt
+
+@defopt ecb-tree-indent
+Indent size for tree buffer. If you change this during ECB is
+activated you must deactivate and activate ECB again to take effect.
+@end defopt
+
+@defopt ecb-tree-navigation-by-arrow
+Enable smart navigation in the tree-windows by horiz. arrow-keys. If
+not nil then the left- and right-arrow keys work in the ECB
+tree-window in the following smart way if onto an expandable node:
+
+@itemize @bullet
+@item Left-arrow:
+If node is expanded then it will be collapsed otherwise point jumps to
+the next ``higher'' node in the hierarchical tree (higher means the next
+higher tree-level or - if no higher level available - the next higher
+node on the same level).
+
+@item Right-arrow:
+If node is not expanded then it will be expanded. Onto a not
+expandable node the horizontal arrow-keys go one character in the
+senseful correct direction.
+@end itemize
+
+If this option is changed the new value takes first effect after deactivating
+ECB and then activating it again!
+@end defopt
+
+@defopt ecb-truncate-lines
+Truncate lines in ECB buffers. If you change this during ECB is
+activated you must deactivate and activate ECB again to take effect.
+@end defopt
+
+@defopt ecb-truncate-long-names
+Truncate long names that don't fit in the width of the ECB windows. If
+you change this during ECB is activated you must deactivate and
+activate ECB again to take effect.
+@end defopt
+
+@defopt ecb-use-recursive-edit
+Tell ECB to use a recursive edit so that it can easily be deactivated
+by (keyboard-escape-quit).
+@end defopt
+
+@defopt ecb-window-sync
+Synchronize the ECB-windows with current edit window. If t then the
+synchronization takes place always a buffer changes in the edit
+window, if nil then never. If a list of major-modes then only if the
+major-mode of the new buffer belongs NOT to this list.
+@end defopt
+
+@defopt ecb-window-sync-delay
+Time Emacs must be idle before the ECB-windows are synchronized with
+current edit window. If nil then there is no delay, means
+synchronization takes place immediately. A small value of about 0.25
+seconds saves CPU resources and you get even though almost the same
+effect as if you set no delay.
+@end defopt
+
+
+@node ecb-directories, ecb-sources, ecb-general, Customizable options
+@subsection Group ecb-directories
+
+@noindent
+This group contains the following options:
+
+@defopt ecb-add-path-for-not-matching-files
+Add path of a file to @code{ecb-source-path} if not already contained.
+This is done during the auto. windows synchronization which happens if
+a file is opened not via the file/directory-browser of ECB. In such a
+situation ECB adds the path of the new file auto. to
+@code{ecb-source-path} at least temporally for the current Emacs
+session. This option defines two things:
+
+@enumerate
+@item
+Should only the root-part (which means for unix-like systems always
+'/' and for windows-like systems the drive) of the new file be added
+as source-path to @code{ecb-source-path} or the whole directory-part?
+@item
+Should this path be added for future sessions too?
+@end enumerate
+
+The value of this option is a cons-cell where the car is a boolean for
+1. and the cdr is a boolean for 2.
+
+A value of not nil for the car (1.) is reasonably if a user often
+opens files not via the ECB-browser which are not located in any of
+the paths of @code{ecb-source-path} because then only one path for
+each drive (windows) or the root-path (unix) is added to the directory
+buffer of ECB.
+@end defopt
+
+@defopt ecb-auto-expand-directory-tree
+Automatically expand the directory tree to the current source file.
+There are three options:
+
+@itemize @minus
+@item @code{best}: Expand the best-matching source-path
+@item @code{first}: Expand the first matching source-path
+@item @code{nil}: Do not automatically expand the directory tree.
+@end itemize
+@end defopt
+
+@defopt ecb-cache-directory-contents
+Cache contents of directories.
+
+This can be useful if @code{ecb-source-path} contains directories with
+many files and subdirs, especially if these directories are mounted
+net-drives ("many" means here something > 1000, dependend of the speed
+of the net-connection and the machine). For these directories
+actualizing the sources- and/or directories- buffer of ECB (if
+displayed in current layout!) can slow down dramatically so a caching
+increases speed a lot.
+ 
+The value of this option is a list where each element looks like:
+
+@example
+  (<dir-regexp> <filenumber threshold> <cache clearing> with
+@end example
+
+@table @code
+@item <dir-regexp>:
+Regular expression a directory must match to be cached.
+@item <filenumber threshold>:
+Number of directory contents must exceed this number.
+@item <cache clearing>:
+When the cache should be cleared:
+
+@itemize @minus
+@item @code{demand}:
+Cache will only be cleared on user demand. See
+@code{ecb-clear-directory-cache}.
+@item @code{auto}:
+Cache will be cleared if the contents of the directory have been
+changed. ECB can detect this automatically. This works for Unix- but
+probably not for Windows-systems, because Windows offers no way to
+detect when the contents of a directory have been changed.
+@item @code{<number>}:
+First selection of directories matching the regexp after <number>
+seconds after last caching time will rescan the directory.
+@end itemize
+@end table
+
+A directory will we only be cached if and only if the directory-name
+matches one rexexp of this option and it's content-number exceeds the
+related threshold.
+
+Example: A value of @code{("~/bigdir*" 1000 3600)} means the
+contents of every subdirectory of the home-directory with name
+beginning with "bigdir" will be cached if the directory contains more
+than 1000 entries. One hour after the last caching time of such a
+directory the next selection (clicking onto it in the
+directories-window, changing buffers so the directory becomes current
+in the directories-window, etc...) will rescan the directory and
+update the cache.
+
+@strong{Attention}: Currently the <cache clearing> part is ignored.
+Currently the cache can only be cleared on demand and only the whole
+cache can be cleared, see @code{ecb-clear-directory-cache}. This will
+change in a future version.
+@end defopt
+
+@defopt ecb-directories-buffer-name
+Name of the ECB directory buffer. Because it is not a normal buffer
+for editing you should enclose the name with stars, e.g. "*ECB
+Directories*".
+
+If it is necessary for you you can get emacs-lisp access to the buffer-object of
+the ECB-directory-buffer by this name, e.g. by a call of @code{set-buffer}.
+
+Changes for this option at runtime will take affect only after
+deactivating and then activating ECB again!
+@end defopt
+
+@defopt ecb-excluded-directories-regexp
+Specifies directories that should not be included in the directories
+list. The value of this variable should be a regular expression.
+@end defopt
+
+@defopt ecb-show-sources-in-directories-buffer
+Show source files in directories buffer.
+@end defopt
+
+@defopt ecb-source-path
+Paths where to find code sources. Each path can have an optional alias
+that is used as it's display name. If no alias is set, the path is
+used as display name.
+@end defopt
+
+
+@node ecb-sources, ecb-methods, ecb-directories, Customizable options
+@subsection Group ecb-sources
+
+@noindent
+This group contains the following options:
+
+@defopt ecb-show-source-file-extension
+Show the file extension of source files.
+@end defopt
+
+@defopt ecb-source-file-regexps
+Specifies which files are shown as source files. Consists of one
+exclude regexp and one include regexp. A file is displayed in the
+source-buffer of ECB iff: The file does not match the exclude regexp
+OR the file matches the include regexp. There are three predefined and
+useful combinations of an exclude and include regexp:
+
+@itemize @bullet
+@item All files
+
+@item All, but no backup, object, lib or ini-files (except .emacs and .gnus). This
+means all files except those starting with ".", "#" or ending with
+"~", ".elc", ".obj", ".o", ".lib", ".dll", ".a", ".so". (but including
+.emacs and .gnus)
+
+@item Common source file types (.c, .java etc.)
+@end itemize
+
+In addition to these predefined values a custom exclude and include
+combination can be defined.
+@end defopt
+
+@defopt ecb-sources-buffer-name
+Name of the ECB sources buffer. Because it is not a normal buffer for
+editing you should enclose the name with stars, e.g. ``*ECB Sources*''.
+
+If it is necessary for you you can get emacs-lisp access to the
+buffer-object of the ECB-sources-buffer by this name, e.g. by a call
+of @code{set-buffer}.
+
+Changes for this option at runtime will take affect only after
+deactivating and then activating ECB again!
+@end defopt
+
+@defopt ecb-sources-sort-method
+Defines how the source files are sorted.
+
+@itemize @minus
+@item @code{name}:
+Sorting by name.
+@item @code{extension}:
+Sorting first by name and then by extension.
+@item @code{nil}:
+No sorting, means source files are displayed in the sequence returned
+by @code{directory-files} (called without sorting).
+@end itemize
+@end defopt
+
+
+@node ecb-methods, ecb-history, ecb-sources, Customizable options
+@subsection Group ecb-methods
+
+@noindent
+This group contains the following options:
+
+@defopt ecb-auto-update-methods-after-save
+Automatically updating the ECB method buffer after saving the current
+source-buffer.
+@end defopt
+
+@defopt ecb-bucket-token-display
+How ECB displays bucket tokens in the ECB methods buffer. Bucket
+tokens are tokens like ``[+] Variables'', ``[+] Dependencies'' etc. The
+name of the bucket-token comes from semantic but you can define a
+prefix, a suffix and a special face for the bucket token.
+
+The default are empty prefix/suffix-strings and
+'ecb-bucket-token-face'. But an alternative can be for example @code{("["
+"]" nil)} which means no special face and a display like ``[+]
+[<bucket-name>]''.
+@end defopt
+
+@defopt ecb-exclude-parents-regexp
+Regexp which parent classes should not be shown in the methods buffer
+(see also @code{ecb-show-parents}). If nil then all parents will be
+shown if @code{ecb-show-parents} is not nil.
+@end defopt
+
+@defopt ecb-font-lock-tokens
+Adds font-locking (means highlighting) to the ECB-method buffer.
+@end defopt
+
+@defopt ecb-highlight-token-header-after-jump
+If not nil then highlight the token line in the source-buffer after
+jumping to this method by clicking in the ECB-method-buffer onto this
+method. For highlighting @code{ecb-token-header-face} is used.
+@end defopt
+
+@defopt ecb-highlight-token-with-point
+How to highlight the method or variable under the cursor.
+
+@itemize @minus
+@item @code{highlight-scroll}:
+Always scroll the method buffer, so the current method of the
+edit-window is highlighted in the method-window.
+@item @code{highlight}:
+Only highlight the current method of the edit window in the
+method window if the method is visible in the method-window.
+@item @code{nil}:
+No highlighting is done.
+@end itemize
+
+See also @code{ecb-highlight-token-with-point-delay}.
+@end defopt
+
+@defopt ecb-highlight-token-with-point-delay
+Time Emacs must be idle before current token is highlighted. If nil
+then there is no delay, means current token is highlighted
+immediately. A small value of about 0.25 seconds saves CPU resources
+and you get even though almost the same effect as if you set no delay.
+But such a delay prevents also ``jumping backward/forward'' during
+scrolling within java-classes if point goes out of method-definition
+into class-definition. Therefore the default value is a delay of 0.25
+seconds.
+@end defopt
+
+@defopt ecb-methods-buffer-name
+Name of the ECB methods buffer. Because it is not a normal buffer for
+editing you should enclose the name with stars, e.g. ``*ECB
+Methods*''.
+
+If it is necessary for you you can get emacs-lisp access to the
+buffer-object of the ECB-methods-buffer by this name, e.g. by a call
+of @code{set-buffer}.
+
+Changes for this option at runtime will take affect only after
+deactivating and then activating ECB again!
+@end defopt
+
+@defopt ecb-post-process-semantic-tokenlist
+Define mode-dependend postprocessing for the semantic-tokenlist. This
+is an alist where the car is a major-mode symbol and the cdr is a
+function-symbol of a function which should be used for post-processing
+the tokenlist (returned by @code{semantic-bovinate-toplevel}) for a
+buffer in this major-mode. Such a function is called with current
+semantic tokenlist of current buffer and must return a valid tokenlist
+again.
+
+For oo-programming languages where the methods of a class can be
+defined outside the class-definition (e.g. C++, Eieio) the function
+@code{ecb-group-function-tokens-with-parents} can be used to get a
+much better method-display in the methods-window of ECB, because all
+method implementations of a class are grouped together.
+@end defopt
+
+@defopt ecb-scroll-window-after-jump
+How to scroll the window when jumping to a token.
+@end defopt
+
+@defopt ecb-show-only-positioned-tokens
+Show only nodes in the method-buffer which are ``jumpable''. If not nil
+then ECB displays in the method-buffer only nodes which are
+``jumpable'', i.e. after selecting it by clicking or with RET then ECB
+jumps to the corresponding location in the edit-window. Example: With
+CLOS or Eieio source-code there can exist some positionless nodes like
+variable-attributes in a @code{defclass} form which are only displayed
+if this option is nil. Displaying such nodes can be sensefull even if
+they can not be jumped.
+
+This option works only correct if a @code{semantic-version} >
+semantic-1.4beta14 is installed. Otherwise this option should be nil!
+@end defopt
+
+@defopt ecb-show-tokens
+How to show tokens in the methods buffer. This variable is a list
+where each element represents a type of tokens:
+
+@example
+(<token type> <display type> <sort method>)
+@end example
+
+The tokens in the methods buffer are displayed in the order as they appear in
+this list.
+
+@table @code
+@item <token type>
+A Semantic token type symbol (function, variable, rule, include etc.)
+or one of the following:
+
+@itemize @minus
+@item @code{t}: All token types not specified anywhere else in the list.
+@item @code{parent}: The parents of a type.
+@end itemize
+
+@item <display type>
+A symbol which describes how the tokens of this type shall be shown:
+
+@itemize @minus
+@item @code{expanded}: The tokens are shown in an expanded node.
+@item @code{collapsed}: The tokens are shown in a collapsed node.
+@item @code{flattened}: The tokens are added to the parent node.
+@item @code{hidden}: The tokens are not shown.
+@end itemize
+
+@item <sort method>
+A symbol describing how to sort the tokens of this type:
+
+@itemize @minus
+@item @code{name}:
+Sort by the token name.
+@item @code{access}:
+Sort by token access (public, protected, private) and then by name.
+@item @code{nil}:
+Don't sort tokens. They appear in the same order as in the source
+buffer.
+@end itemize
+@end table
+
+@end defopt
+
+@defopt ecb-token-display-function
+Function to use for displaying tokens in the methods buffer. This
+functionality is set on major-mode base, i.e. for every major-mode a
+different function can be used. The value of this option is a list of
+cons-cells:
+
+@itemize @minus
+@item
+The car is either a major-mode symbol or the special symbol 'default which
+means if no function for a certain major-mode is defined then the cdr of
+the 'default cons-cell is used.
+@item
+The cdr is the function used for displaying a token in the related
+major-mode.
+@end itemize
+
+Every function is called with 3 arguments:
+
+@enumerate
+@item The token
+@item The parent-token of token (can be nil)
+@item The value of @code{ecb-font-lock-tokens}.
+@end enumerate
+
+Every function must return the display of the token as string,
+colorized if the third argument is not nil.
+
+The following functions are predefined:
+
+@itemize @bullet
+@item
+All functions of @code{semantic-token->text-functions}.
+
+@item
+For every function in @code{semantic-token->text-functions} with name
+``semantic-XYZ'' a function with name "ecb-XYC" is predefined. The
+differences between the semantic- and the ECB-version are:
+
+@itemize @minus
+@item
+The ECB-version displays for type tokens only the type-name and nothing
+else (exception: In c++-mode a template specifier is appended to the
+type-name if a template instead a normal class).
+@item
+The ECB-version displays type-tokens according to the setting in
+@code{ecb-type-token-display}. This is useful for better recognizing
+different classes, structs etc. in the ECB-method window.
+@end itemize
+
+For all tokens which are not types the display of the ECB-version is
+identical to the semantic version. Example: For @code{semantic-name-nonterminal}
+the pendant is @code{ecb-name-nonterminal}.
+@end itemize
+
+This functionality also allows the user to display tokens as UML. To
+enable this functionality set the function for a major-mode (e.g.
+@code{jde-mode}) to @code{semantic-uml-concise-prototype-nonterminal},
+@code{semantic-uml-prototype-nonterminal}, or
+@code{semantic-uml-abbreviate-nonterminal} or the ECB-versions of
+these functions.
+
+If the value is @code{nil}, i.e. neither a function for a major-mode
+is defined nor the special 'default, then
+@code{semantic-prototype-nonterminal} is used for displaying the
+tokens.
+@end defopt
+
+@defopt ecb-token-jump-narrow
+When jumping to a token from the ECB methods buffer narrows the buffer
+to only show that token. To display the entire buffer again, click on
+a source file or call @code{widen} (@kbd{C-x n w}).
+@end defopt
+
+@defopt ecb-token-jump-sets-mark
+Jumping to a token from the ECB-method buffer now sets the mark so the
+user can easily jump back.
+@end defopt
+
+@defopt ecb-type-token-display
+How to display semantic type-tokens in the methods buffer. Normally
+all token displaying, colorizing and facing is done by semantic
+according to the value of @code{semantic-face-alist} and the semantic
+display-function (e.g. one from
+@code{semantic-token->text-functions}). But sometimes a finer
+distinction in displaying the different type specifiers of type-tokens
+can be usefull. For a description when this option is evaluated look
+at @code{ecb-token-display-function}!
+
+This functionality is set on a major-mode base, i.e. for every
+major-mode a different setting can be used. The value of this option
+is a list of cons-cells:
+
+@itemize @bullet
+@item
+The car is either a major-mode symbol or the special symbol 'default which
+means if no setting for a certain major-mode is defined then the cdr of
+the 'default cons-cell is used.
+
+@item
+The cdr is a list of 3-element-lists:
+
+@enumerate
+@item
+First entry is a semantic type specifier in string-form. Current
+available type specifiers are for example ``class'', ``interface'',
+``struct'', ``typedef'' and ``enum''. In addition to these ones there
+is also a special ECB type specifier "group" which is related to
+grouping tokens (see @code{ecb-post-process-semantic-tokenlist} and
+@code{ecb-group-function-tokens-with-parents}). Any arbitrary
+specifier can be set here but if it is not "group" or not known by
+semantic it will be useless.
+@item
+Second entry is a flag which indicates if the type-specifier string
+from (1.) itself should be removed (if there is any) from the display.
+@item
+Third entry is the face which is used in the ECB-method window to
+display type-tokens with this specifier. ECB has some predefined faces
+for this (@code{ecb-type-token-class-face},
+@code{ecb-type-token-struct-face}, @code{ecb-type-token-typedef-face},
+@code{ecb-type-token-enum-face} and @code{ecb-type-token-group-face})
+but any arbitrary face can be set here. This face is merged with the
+faces semantic already uses to display a token,
+i.e. the result is a display where all face-attributes of the ECB-face
+take effect plus all face-attributes of the semantic-faces which are not
+set in the ECB-face (with XEmacs this merge doesn't work so here the
+ECB-face replaces the semantic-faces; this may be fixed in future
+versions).
+@end enumerate
+@end itemize
+
+The default value is nil means there is no special ECB-displaying of
+type-tokens in addition to the displaying and colorizing semantic
+does. But a value like the following could be a usefull setting:
+
+@example
+((default
+   ("class" t ecb-type-token-class-face)
+   ("group" nil ecb-type-token-group-face))
+ (c-mode
+  ("struct" nil ecb-type-token-struct-face)
+  ("typedef" nil ecb-type-token-typedef-face)))
+@end example
+
+This means that in @code{c-mode} only ``struct''s and ``typedef''s are
+displayed with special faces (the specifiers itself are not removed)
+and in all other modes ``class''es and grouping-tokens (see
+@code{ecb-token-display-function},
+@code{ecb-group-function-tokens-with-parents}) have special faces and
+the "class" specifier-string is removed from the display.
+@end defopt
+
+
+@node ecb-history, ecb-layout, ecb-methods, Customizable options
+@subsection Group ecb-history
+
+@noindent
+This group contains the following options:
+
+@defopt ecb-clear-history-behavior
+Defines which entries of the history buffer should be deleted if
+@code{ecb-clear-history} is called. Three options are available:
+
+@itemize @minus
+@item @code{not-existing-buffers}:
+All entries which represent a buffername not existing
+anymore in the bufferlist will be cleared. Probably the most senseful value.
+@item @code{existing-buffers}:
+The opposite of 'not-existing-buffers.
+@item @code{all}:
+The whole history will be cleared.
+@end itemize
+@end defopt
+
+@defopt ecb-history-buffer-name
+Name of the ECB history buffer. Because it is not a normal buffer for
+editing you should enclose the name with stars, e.g. ``*ECB
+History*''.
+
+If it is necessary for you you can get emacs-lisp access to the
+buffer-object of the ECB-history-buffer by this name, e.g. by a call
+of @code{set-buffer}.
+
+Changes for this option at runtime will take affect only after
+deactivating and then activating ECB again!
+@end defopt
+
+@defopt ecb-history-item-name
+The name to use for items in the history buffer.
+@end defopt
+
+@defopt ecb-kill-buffer-clears-history
+Define if @code{kill-buffer} should also clear the history. There are
+three options:
+
+@itemize @minus
+@item @code{auto}:
+Removes automatically the corresponding history-entry after the buffer
+has been killed.
+@item @code{ask}:
+Asks, if the history-entry should be removed after the kill.
+@item @code{nil}:
+@code{kill-buffer} does not affect the history (this is the default).
+@end itemize
+@end defopt
+
+@defopt ecb-sort-history-items
+Sorts the items in the history buffer.
+@end defopt
+
+@node ecb-layout, ecb-face-options, ecb-history, Customizable options
+@subsection Group ecb-layout
+
+@noindent
+This group contains the following options:
+
+@defopt ecb-activate-before-new-frame-created-hook
+Normal hook run before the new ECB-frame is created if
+@code{ecb-new-ecb-frame} is not nil (otherwise this hook is not
+evaluated).
+@end defopt
+
+@defopt ecb-advice-window-functions
+Use the intelligent windows functions of ECB instead of the standard
+Emacs functions. You can choose the following functions to be adviced
+by ECB so they behave as if the edit-window(s) of ECB would be the
+only windows(s) of the ECB-frame:
+
+@itemize @bullet
+@item @code{other-window}
+For this one see also the option @code{ecb-other-window-jump-behavior}!
+@item @code{delete-window}
+@item @code{delete-other-windows}
+@item @code{split-window-horizontally}
+@item @code{split-window-vertically}
+@item @code{switch-to-buffer}
+@item @code{switch-to-buffer-other-window}
+@item @code{other-window-for-scrolling}
+If this advice is enabled then the following functions scroll always
+the first edit-window if the edit-window is splitted, point stays in
+the ``other'' edit-window and there is no durable compilation-window
+(see @code{ecb-compile-window-height}):
+
+@itemize @minus
+@item @code{scroll-other-window}
+@item @code{scroll-other-window-down}
+@item @code{beginning-of-buffer-other-window}
+@item @code{end-of-buffer-other-window}
+@end itemize
+
+This advice is per default not enabled.
+@end itemize
+
+For working most conveniantly with ECB it is the best to advice all
+these functions, because then all the standard shortcuts of these
+functions are also usable with ECB without doing anything else. Also
+other packages can interact best with ECB if these functions are all
+adviced. If these adviced functions are called in another frame than
+the ECB-frame they behave all exactly like the not adviced versions!
+
+But please read also the following:
+
+Normally all packages should work correct with ECB and it´s adviced
+functions but if there occur problems with a package cause of some of
+these adviced functions ECB offers the following fall-back solution:
+
+@enumerate
+@item
+Deactivate in @code{ecb-advice-window-functions} all the
+adviced-functions which make problems with other packages.
+@item
+For every of the adviceable functions <adv-func> ECB offers a
+interactively function named ``ecb-<adv-func>'' which does exactly the
+same as the adviced version of <adv-func>. Use ``ecb-<adv-func>''
+instead the original one to get the proper ECB behavior even if the
+function is not adviced anymore.
+@item
+You can bind in @code{ecb-activate-hook} the standard-shortcut of
+<adv-func> to ``ecb-<adv-func>'' and rebind it in
+@code{ecb-deactivate-hook} to <adv-func>.
+@item 
+Now you have the best of both worlds: The problematic package works
+and you have the ECB-behavior of <adv-func> as if it would be adviced.
+@end enumerate
+
+Here is an example: Suppose you must deactivating the advice for
+@code{switch-to-buffer-other-window}. Then you deactivate this
+function with this option and you can use
+@code{ecb-switch-to-buffer-other-window} instead. Bind the shortcut
+you normally use for @code{switch-to-buffer-other-window} to
+@code{ecb-switch-to-buffer-other-window} (use @code{ecb-activate-hook}
+for this) and rebind it to the original function in the
+@code{ecb-deactivate-hook}.
+@end defopt
+
+@defopt ecb-compile-window-enlarge-by-select
+The compile-window is auto. enlarged after selecting it. If not nil
+then selecting the @code{ecb-compile-window} auto. enlarges it and
+deselecting (means selecting another window after point was in
+@code{ecb-compile-window}) auto. shrinks it. Enlarging and shrinking
+the @code{ecb-compile-window} is done with
+@code{ecb-toggle-enlarged-compilation-window}. See also the
+documentation of this function!
+@end defopt
+
+@defopt ecb-compile-window-height
+If you want a compilation window shown at the bottom of the ECB-layout
+then set here the height of it (Default is a height of 5). If you
+redraw the current layout with @code{ecb-redraw-layout} then the
+compilation window (if any) has the heigth you set here. If the number
+is less than 1.0 the height is a fraction of the frame height.
+
+If you do not set a durable compilation window then doing a
+compilation splits temporally the edit window vertically if the edit
+window is not splitted already or uses the ``other'' edit window
+temporally for comilation output if the edit window is already
+splitted. This is the recommended value for this option!
+
+Beware: If you set a durable compilation window then ECB can not
+guarantee always behaving like a standard Emacs concerning displaying
+temp-buffers and compilation-buffers. It should work in most cases but
+maybe not in all. Just try it out.
+
+See also the option @code{ecb-compile-window-temporally-enlarge} and
+also the function @code{ecb-toggle-enlarged-compilation-window}!
+
+@xref{Temp- and compile-buffers}.
+
+Regardless of the settings you define here: If you have destroyed or
+changed the ECB-screen-layout by any action you can always go back to
+this layout with @code{ecb-redraw-layout}
+@end defopt
+
+@defopt ecb-compile-window-temporally-enlarge
+Let Emacs temporally enlarge the compile-window of the ECB-layout.
+
+This option has only an effect if @code{ecb-compile-window-height} is
+not nil!
+
+The following values are possible:
+
+@itemize @minus
+@item @code{after-compilation}:
+After finishing the compilation-output and during jumping to the
+errors ECB let temporally enlarge all compilation-buffers in
+@code{ecb-compile-window} (e.g. compile- and grep-buffers) to
+@code{compilation-window-height}. But be aware this setting is
+currently not meaningful for temporary buffers like help-buffers
+because these buffers currently enlarge always to
+@code{temp-buffer-max-height}.
+
+@item @code{after-selection}:
+Selecting the @code{ecb-compile-window} auto. enlarges it and
+deselecting (means leaving @code{ecb-compile-window}) auto. shrinks
+it. Enlarging and shrinking the @code{ecb-compile-window} is done with
+@code{ecb-toggle-enlarged-compilation-window}. See also the
+documentation of this function! This is possible for all buffers in
+@code{ecb-compile-window} not only for compilation-buffers!
+
+@item @code{both}:
+The combination of 'after-compilation and 'after-selection.
+
+@item @code{nil}:
+ECB tries to fix always the height of the @code{ecb-compile-window} at
+the value of @code{ecb-compile-window-height}. But for all temporary
+buffers (e.g. help-buffers) this is currently not possible.
+@end itemize
+
+To restore the ECB-layout after such a buffer-enlarge just call
+@code{ecb-toggle-enlarged-compilation-window} or
+@code{ecb-redraw-layout}.
+@end defopt
+
+@defopt ecb-hide-ecb-windows-hook
+Hooks run after the ECB windows have been hidden either by
+@code{ecb-toggle-ecb-windows} or @code{ecb-hide-ecb-windows}.
+@end defopt
+
+@defopt ecb-layout-always-operate-in-edit-window
+Adviced window functions work always in the edit-window. If we are in
+an ECB special buffer (methods, directories, etc), and any of the
+adviced windowing functions is called (see
+@code{ecb-advice-window-functions}), we will select the
+@code{ecb-edit-window} first. This is useful if you have any functions
+that use such functions and you don't want them to just error with a
+method complaining that the current buffer can not be split, or
+something similar.
+
+Because this may not be desirable in all situations and all adviced
+functions this can be enabled separately for every advisable function
+(see also @code{ecb-advice-window-functions}). If the symbol of an
+adviced function is contained in the value of this option, then the
+edit-window is first selected otherwise either an error is reported or
+some other special reaction; see the documentation of the adviced
+functions for this.
+
+For @code{other-window} and @code{other-window-for-scrolling} this
+makes no sense, therefore you can not enable this for both of them.
+
+Per default this is enabled for @code{delete-window},
+@code{delete-other-windows}, @code{switch-to-buffer} and
+@code{switch-to-buffer-other-window}.
+@end defopt
+
+@defopt ecb-layout-nr
+Define the window layout of ECB. A positive integer which sets the
+general layout. Currently there are 17 predefined layouts with index from 0 to
+16. You can savely try out any of them by changing this value and saving it
+only for the current session. If you are sure which layout you want
+you can save it for future sessions. To get a picture of the layout
+for index <index> call C-h f ecb-layout-function-<index>, e.g.
+@code{ecb-layout-function-9}.
+
+Currently available layouts (see the doc-string for a picture ot the
+layout):
+
+@code{ecb-layout-function-0}
+@code{ecb-layout-function-1}
+@code{ecb-layout-function-2}
+@code{ecb-layout-function-3}
+@code{ecb-layout-function-4}
+@code{ecb-layout-function-5}
+@code{ecb-layout-function-6}
+@code{ecb-layout-function-7}
+@code{ecb-layout-function-8}
+@code{ecb-layout-function-9}
+@code{ecb-layout-function-10}
+@code{ecb-layout-function-11}
+@code{ecb-layout-function-12}
+@code{ecb-layout-function-13}
+@code{ecb-layout-function-14}
+@code{ecb-layout-function-15}
+@code{ecb-layout-function-16}
+
+Regardless of the settings you define here: If you have destroyed or
+changed the ECB-screen-layout by any action you can always go back to
+this layout with @code{ecb-redraw-layout}
+@end defopt
+
+@defopt ecb-layout-switch-to-compilation-window
+Switch-to-buffer...-functions switch to @code{ecb-compile-window}. If
+the buffer argument of @code{switch-to-buffer} or
+@code{switch-to-buffer-other-window} is an compilation buffer as
+defined with @code{ecb-compilation-buffer-p} we will select the
+@code{ecb-compile-window} first. This is useful if you always want
+your compilation buffers within the compilation window and now within
+the edit window.
+
+Note the difference between
+@code{ecb-layout-always-operate-in-edit-window} and this option: If a
+switch-to-buffer...-function is contained in the former one, then we
+always jump first into the edit-window regardless of the destination
+buffer. If also contained in this option then ECB checks the
+destination buffer and then selects the @code{ecb-compile-window} if
+it is a compilation-buffer in the meaning of
+@code{ecb-compilation-buffer-p}!
+
+Per default this is only enabled for @code{switch-to-buffer}. We
+provide the option for @code{switch-to-buffer-other-window} too but
+the assumption is that when a user asks for a buffer in another window
+it should always be presented in another window.
+@end defopt
+
+@c @defopt ecb-layout-switch-to-compilation-window-auto-enlarge
+@c When we automatically switch to a compilation buffer, automatically enlarge
+@c the buffer with @code{ecb-toggle-enlarged-compilation-window}.
+@c @end defopt
+
+@defopt ecb-layout-window-sizes
+Specifies the sizes of the ECB windows for each layout. The easiest
+way to change this variable is to change the window sizes by dragging
+the window borders using the mouse and then store the window sizes by
+calling the @code{ecb-store-window-sizes} function. Next time the
+layout is redrawn the values stored in this option will be used.
+
+But be aware: These values are only suitable for the frame-size the
+ecb-frame had at the time you store the values by calling
+@code{ecb-store-window-sizes}. Therefore ensure always before calling
+@code{ecb-store-window-sizes} that the ecb-frame has the size it has
+normally during your work with ECB!.
+@end defopt
+
+@defopt ecb-new-ecb-frame
+Create a new frame at activation time of ECB.
+@end defopt
+
+@defopt ecb-other-window-jump-behavior
+Which windows of ECB should be accessible by the ECB-adviced function
+@code{other-window}, an intelligent replacement for the Emacs standard
+version of @code{other-window}. The following settings are possible:
+
+@itemize @minus
+@item @code{all}:
+ECB will cycle through all windows of ECB, means it behaves like the
+original @code{other-window}.
+@item @code{only-edit}:
+ECB will only cycle through the (max. 2) edit-windows of ECB.
+@item @code{edit-and-compile}:
+Like 'only-edit plus the compile window if any.
+@end itemize
+@end defopt
+
+@defopt ecb-redraw-layout-quickly
+If non-nil, we will attempt to redraw the layout quickly. Please read
+also carefully the documentation of @code{ecb-redraw-layout}.
+@end defopt
+
+@defopt ecb-select-edit-window-on-redraw
+Select the first edit window on @code{ecb-redraw-layout}.
+@end defopt
+
+@defopt ecb-show-ecb-windows-hook
+Hooks run after the ECB windows have been shown either by
+@code{ecb-toggle-ecb-windows} or @code{ecb-show-ecb-windows}.
+@end defopt
+
+@defopt ecb-split-edit-window
+Sets how and if the edit window should be splitted. But be aware: This
+option determines only if the edit-window should be splitted at
+start-time of ECB.
+@end defopt
+
+@defopt ecb-toggle-layout-sequence
+Toggle sequence for layout toggling with @code{ecb-toggle-layout}.
+Every element of this list has to be a valid layout-number (see option
+@code{ecb-layout-nr}).
+
+You can add here as many layouts as you want but to use this option
+most effective you should not add more than 2 or 3 layouts so every
+layout can be accessed very fast by toggling with
+@code{ecb-toggle-layout}. It is also senseful to add layouts which
+have the same principal outline, i.e. all their tree-buffers are on
+the same side of the frame and the tree-buffer-''column'' (or
+-''row'') has identical size for the layouts.
+
+Recommended values are for example:
+
+@itemize @minus
+@item (11 16), toggles between methods and directories/history
+@item (11 15), toggles between methods and directories
+@item (11 14), toggles between methods and history
+@item (11 14 15), toggles between methods, history and directories
+@end itemize
+
+This option makes only sense if the value is a list with more than 1
+element!
+@end defopt
+
+@defopt ecb-windows-height
+The height of the ECB windows in lines when they are placed above or
+below the edit window. If the number is less than 1.0 the width is a
+fraction of the frame height.
+@end defopt
+
+@defopt ecb-windows-width
+The width of the ECB windows in columns when they are placed to the
+left or right of the edit window. If the number is less than 1.0 the
+width is a fraction of the frame width.
+@end defopt
+
+
+@node ecb-face-options, ecb-faces, ecb-layout, Customizable options
+@subsection Group ecb-face-options
+
+@noindent
+This group contains the following options:
+
+@defopt ecb-directories-general-face
+Basic face for the ECB directories buffer. It´s recommended to define
+here the font-family, the font-size, the basic color etc.
+@end defopt
+
+@defopt ecb-directory-face
+Define face used for highlighting current directory in the directories
+buffer.
+@end defopt
+
+@defopt ecb-history-face
+Define face used for highlighting current history-entry in the history
+buffer.
+@end defopt
+
+@defopt ecb-history-general-face
+Basic face for the ECB history buffer. It´s recommended to define here
+the font-family, the font-size, the basic color etc.
+@end defopt
+
+@defopt ecb-method-face
+Define face used for highlighting current method, class or variable in
+the methods buffer.
+@end defopt
+
+@defopt ecb-methods-general-face
+Basic face for the ECB methods buffer. It´s recommended to define here
+the font-family, the font-size, the basic color etc.
+@end defopt
+
+@defopt ecb-source-face
+Define face used for highlighting current source in the sources
+buffer.
+@end defopt
+
+@defopt ecb-source-in-directories-buffer-face
+Define a face for displaying sources in the directories buffer.
+@end defopt
+
+@defopt ecb-sources-general-face
+Basic face for the ECB sources buffer. It´s recommended to define here
+the font-family, the font-size, the basic color etc.
+@end defopt
+
+@defopt ecb-token-header-face
+Define face used for highlighting the token header after jumping to it
+by clicking onto a node in the methods buffer.
+@end defopt
+
+
+
+@node ecb-faces, ecb-download, ecb-face-options, Customizable options
+@subsection Group ecb-faces
+
+@noindent
+This group contains the following faces:
+
+@table @code
+@item ecb-bucket-token-face:
+Face which can be used for displaying bucket tokens in the methods
+buffer. See also `ecb-bucket-token-display'.
+
+@item ecb-default-general-face:
+Basic face for all ECB tree-buffers.
+It's recommended to define here the font-family, the font-size, the basic
+color etc.
+
+In GNU Emacs 21.X all faces (even the face
+@code{ecb-default-highlight-face}) used in the ECB tree-buffers inherit
+from this face. Therefore the default attributes like font etc. of a
+face used in a tree-buffer can be very easily changed with face
+@code{ecb-default-general-face}.
+
+With XEmacs and GNU Emacs 20.X there is no inheritance-feature but the
+options @code{ecb-directories-general-face},
+@code{ecb-sources-general-face}, @code{ecb-methods-general-face} and
+@code{ecb-history-general-face} offer the choice to use the face
+@code{ecb-default-general-face} so also with XEmacs and GNU Emacs 20.X
+the basic face-settings can be easily changed just by customizing the
+face @code{ecb-default-general-face}!
+
+@item ecb-default-highlight-face:
+Define basic face for highlighting the selected node in an ECB
+tree-buffer.
+
+In GNU Emacs 21.X all highlighting faces in the ECB tree-buffers
+inherit from this face. Therefore the default attributes like font
+etc. of a face used in a tree-buffer for highlighting the current
+token can be very easily changed with face
+@code{ecb-default-highlight-face}.
+
+With XEmacs and GNU Emacs 20.X there is no inheritance-feature but the
+options @code{ecb-directory-face}, @code{ecb-source-face},
+@code{ecb-method-face} and @code{ecb-history-face} offer the choice to
+use the face @code{ecb-default-highlight-face} so also with XEmacs and
+GNU Emacs 20.X the basic face-settings can be easily changed just by
+customizing the face @code{ecb-default-highlight-face}!
+
+@item ecb-directories-general-face:
+Basic face for the ECB directories buffer. It´s recommended to define
+here the font-family, the font-size, the basic color etc.
+
+@item ecb-directory-face:
+Define face used for highlighting current directory in the directories
+buffer.
+
+@item ecb-history-face:
+Define face used for highlighting current history-entry in the history
+buffer.
+
+@item ecb-history-general-face:
+Basic face for the ECB history buffer. It´s recommended to define here
+the font-family, the font-size, the basic color etc.
+
+@item ecb-method-face:
+Define face used for highlighting current method, class or variable in
+the methods buffer.
+
+@item ecb-methods-general-face:
+Basic face for the ECB methods buffer. It´s recommended to define here
+the font-family, the font-size, the basic color etc.
+
+@item ecb-source-face:
+Define face used for highlighting current source in the sources
+buffer.
+
+@item ecb-source-in-directories-buffer-face:
+Define a face for displaying sources in the directories buffer.
+
+@item ecb-sources-general-face:
+Basic face for the ECB sources buffer. It´s recommended to define here
+the font-family, the font-size, the basic color etc.
+
+@item ecb-token-header-face:
+Define face used for highlighting the token header after jumping to it
+by clicking onto a node in the methods buffer.
+
+@item ecb-type-token-class-face:
+Define face used with option @code{ecb-type-token-display}.
+
+@item ecb-type-token-enum-face:
+Define face used with option @code{ecb-type-token-display}.
+
+@item ecb-type-token-group-face:
+Define face used with option @code{ecb-type-token-display}.
+
+@item ecb-type-token-interface-face:
+Define face used with option @code{ecb-type-token-display}.
+
+@item ecb-type-token-struct-face:
+Define face used with option @code{ecb-type-token-display}.
+
+@item ecb-type-token-typedef-face:
+Define face used with option @code{ecb-type-token-display}.
+
+@end table
+
+Just call @code{customize-face <face-name>} to customize these faces
+for your personal taste. Or customize the related option in the group
+@ref{ecb-face-options}.
+
+@node ecb-download, , ecb-faces, Customizable options
+@subsection Group ecb-download
+
+@noindent
+This group contains the following options:
+
+@defopt ecb-download-delete-archive
+Should the downloaded archive be deleted after successfull
+installation or after failure during the installation-process.
+Possible values are:
+
+@itemize @minus
+@item @code{only-after-success}:
+Archive is only deleted after successfull installation
+but not if a failure occurs during the installation process.
+@item @code{always}:
+Archive is also deleted if an error occurs.
+@item @code{nil}:
+Archive will never be deleted.
+@end itemize
+@end defopt
+
+@defopt ecb-download-url
+URL where downloadable ECB-versions are located. The ECB-archive-file
+(e.g. ecb-1.70.tar.gz) will be appended to this URL and
+@code{ecb-download-ecb} will try to download this archive.
+
+Note: Normally this URL should never change but who knows...
+@end defopt
+
+@defopt ecb-download-version
+Which version of ECB should be downloaded by @code{ecb-download-ecb}.
+Valid values are either the string ``latest'' or a version number like
+``1.70''. ECB creates automatically the correct URL for download, see
+@code{ecb-download-ecb}.
+@end defopt
+
 
 @node Submitting problem report, Upgrading, Customizing, Top
 @chapter Submitting a problem report
@@ -889,14 +2735,131 @@ ECB!) before submitting a problem-report!
 @node Upgrading, Tips and tricks, Submitting problem report, Top
 @chapter Upgrading ECB
 
-@cindex Upgrade
+This chapter describes all apsects of upgrading to a newer version of
+ECB.
+
+@menu
+* Downloading new version::     How to download a newer version of ECB 
+* Auto. option-upgrading::      ECB can auto. upgrade your options
+@end menu
+
+@node Downloading new version, Auto. option-upgrading, Upgrading, Upgrading
+@section Downloading a new version of ECB
+
 @cindex Download
 ECB offers the possibility to upgrade to newer versions direct from
-the ECB-website. This can be done with @code{ecb-download-ecb} if the tools
-wget, tar and gzip are installed onto the system and a connection to
-the web is available. Please read the documentation of
-@code{ecb-download-ecb} and the options of the customize-group
-'ecb-download'!
+the ECB-website. This can be done with @code{ecb-download-ecb} if the
+tools wget, tar and gzip are installed onto the system and a
+connection to the web is available. Please read the documentation of
+@code{ecb-download-ecb} (@pxref{Interactive ECB commands}) and the
+options of the customize-group 'ecb-download'!
+
+@node Auto. option-upgrading, , Downloading new version, Upgrading
+@section Automatic upgrading of options
+
+@menu
+* User interface::              Options and commands you should know
+* Background information::      Maybe some interesting informations
+@end menu
+
+@node User interface, Background information, Auto. option-upgrading, Auto. option-upgrading
+@subsection User interface for option-upgrading
+
+There are two interactive commands (@pxref{Interactive ECB commands}):
+
+@itemize @minus
+@item @code{ecb-upgrade-options}:
+Does all necessary beginning with a incompatibility-check for all
+options, upgrading/resetting incompatible options and ending with the
+display of all upgraded or reset options.
+
+@item @code{ecb-display-upgraded-options}:
+Displays a temp. buffer with all upgraded or resetted ECB-options with
+their old and new values.
+@end itemize
+
+If the option @code{ecb-auto-compatibility-check} has a non-nil value
+(which is the default) then ECB does all this stuff automatically at
+startup. This is very recommended!
+
+If you are interested in some background information, read
+@ref{Background information}!
+
+@node Background information, , User interface, Auto. option-upgrading
+@subsection Background information
+
+Big packages like ECB will be enhanced and developed continously so
+sometimes a new version must be released. Such packages offer in
+general a lot of customizable options so probably some of these
+options change the type or are renamed because the old type and/or
+name of the option makes no sense in the new release.
+
+Especially options which have changed the type of their value are now
+a problem for the user which want to upgrade to the latest
+ECB-version: If the user has saved a certain value for option X in its
+file @file{.emacs} but the type of this saved value doesn't match the
+new defined type in the defcustom-form after an ECB-upgrade then there
+can occur serious problems like ECB can not be started anymore or even
+Emacs can not be startet without errors.
+
+Until now there was only one way to fix these problems: The user must
+manually edit his file @file{.emacs} and remove all entries for
+options which have now another type. After this and after restarting
+Emacs the new default-values of the type-changed options in the new
+ECB-release are active and the user can go on using Emacs and ECB. But
+this approach to fix the incompatible-option-problem has two serious
+drawbacks:
+
+@enumerate
+@item
+The user must manually edit the customize-section in his file
+@file{.emacs}. This should normally not be done and if then only by
+old-handed Emacs-users.
+
+@item
+The customized value of the option X in the old-release (with the old
+type) is lost because after removing the related entry from the
+file @file{.emacs} the new default-value is active, so the user must
+re-customize the option X.
+@end enumerate
+
+Ok, this is one half of the option-upgrade-problem but a new ECB-release
+can also rename a option from name X to name Y because the new name Y makes
+much more sense and/or is more mnemonic. If only the name has changed but
+not the type this is not a serious problem like above but also annoying
+because the customized value of the old-option X takes no effect in the new
+release but instead the default-value of the new-option Y is now active.
+But nevertheless this problem has the drawback number 2 (see above).
+
+The last category of upgrade-problems is a renamed option which has also
+changed its type.
+
+@noindent
+ECB has a solution for all these problems:
+
+@itemize @bullet
+
+@item
+It checks all customized values of all ECB-optons if they are still
+type-compatible. If not then it tries to upgrade the old-value to the
+new value-type and if this is not possible then it resets the option
+to the new default value and store it via customize in the .emacs-file
+(or in any file which is used for customized options).
+
+@item
+It offers a special constant @code{ecb-upgradable-option-alist} which
+allows the ECB-maintainers to define special transformings for renamed
+options so even the value of an old-option X can be savely transformed
+to the new-option Y and the old setting is not lost.
+@end itemize
+
+All these checks and transformings are done at beginning of activating
+ECB - if the option @code{ecb-auto-compatibility-check} is not nil. If
+ECB has recognized incompatible or renamed options it does its
+upgrading/reseting-job so all ECB-options have correct types so ECB
+can start correct. After ECB is started it displays a list of all
+upgraded or resetted option with their old and new values.
+
 
 @node Tips and tricks, Elisp programming, Upgrading, Top
 @chapter Tips and tricks
@@ -917,6 +2880,7 @@ There are two basic faces:
 
 @itemize @bullet
 @item @code{ecb-default-general-face}:
+
 Basic face for displaying an ECB-tree-buffer.
 @item @code{ecb-default-highlight-face}:
 Basic face for highlighting the current node in an ECB-tree-buffer.
@@ -947,10 +2911,13 @@ such a situation:
 @enumerate
 @item
 Customize @code{ecb-layout-nr} to layout nr. 10 (on top) or nr. 11 (on left-side)
+
 @item
 Ensure that @code{ecb-compile-window-height} is nil.
+
 @item
 Optional: Ajust the @code{ecb-windows-height} resp. @code{ecb-windows-width}.
+
 @item
 Save your changes.
 @end enumerate
@@ -964,7 +2931,7 @@ so you get all the place of your screen for editing.
 Call @code{ecb-toggle-ecb-windows} or @code{ecb-show-ecb-windows} to
 make the ECB-method buffer visible if not already. If you want select
 a method/variable with the keyboard instead with the mouse you should
-read the section @ref{Working with the keyboard} in this online help!
+read the section @ref{Using the keyboard} in this online help!
 @end itemize
 
 The possibility of hiding temporally the ECB windows like described
@@ -982,17 +2949,22 @@ following:
 @item
 Customize @code{ecb-layout-nr} to layout nr. 11, 14, 15 or 16 dependend to
 what you like.
+
 @item
 Optional: Ensure that @code{ecb-compile-window-height} is nil.
+
 @item
 Optional: Ajust the @code{ecb-windows-width}.
+
 @item
 Optional: Customize @code{ecb-toggle-layout-sequence} and toggle very fast
 between several layouts by @code{ecb-toggle-layout}. See the doc-strings!
+
 @item
 Optional: Customize @code{ecb-show-sources-in-directories-buffer} to not
 nil if the choosen layout (see 1. and 4.) contains a
 directories-tree-buffer.
+
 @item
 Save your changes.
 @end enumerate
@@ -1053,7 +3025,8 @@ Available hooks:
 @item @code{ecb-current-buffer-sync-hook}
 @end itemize
 
-Look at the documentation of these variables and hooks to get description.
+Look at the documentation of these variables and hooks to get a
+description.
 
 Remark to the library tree-buffer: This library is ECB independent and
 can be used for other applications too. But such an application is not
@@ -1076,11 +3049,11 @@ Here is a list of known conflicts of ECB with other packages and
 helpful solutions/hints/workarounds:
 
 @menu
-* VC::
-* follow-mouse::
-* avoid::
-* calendar::
-* calculator::
+* VC::                          Conflicts with Version Control
+* follow-mouse::                Conflicts with follow-mouse.el
+* avoid::                       Conflicts with avoid.el
+* calendar::                    Conflicts with calendar.el
+* calculator::                  Conflicts with calculator.el
 @end menu
 
 @node VC, follow-mouse, Conflicts, Conflicts
@@ -1089,20 +3062,24 @@ helpful solutions/hints/workarounds:
 @cindex VC package
 @cindex Version control
 The variable @code{vc-delete-logbuf-window} must be set to nil during
-active ECB. This can be done with the hooks mentioned above.
+active ECB. This can be done with the hooks mentioned in @ref{Elisp
+programming}.
 
 @node follow-mouse, avoid, VC, Conflicts
 @section Package follow-mouse.el
 
+@noindent
+The following is only relevant for Emacs 20.X!
+
 @cindex follow-mouse package
 ECB works very well with follow-mouse if follow-mouse is turned on
-BEFORE ECB is activated (e.g. within the @code{ecb-activate-hook}). But if
-you activate follow-mouse first after ECB is already activated, then
-the follow-mouse stuff prevents the complete node-name to be displayed
-in the echo-area if mouse moves over it. Because ECB has a much more
-intelligent mouse tracking mechanism than follow-mouse the
-follow-mouse stuff profit from ECB and works even better and saver as
-without activated ECB!
+@strong{BEFORE} ECB is activated (e.g. within the
+@code{ecb-activate-hook}). But if you activate follow-mouse first
+after ECB is already activated, then the follow-mouse stuff prevents
+the complete node-name to be displayed in the echo-area if mouse moves
+over it. Because ECB has a much more intelligent mouse tracking
+mechanism than follow-mouse the follow-mouse stuff profit from ECB and
+works even better and saver as without activated ECB!
 
 
 @node avoid, calendar, follow-mouse, Conflicts
@@ -1150,8 +3127,6 @@ echo-area instead of creating a new small window!
 @node Variable Index, Concept Index, Function Index, Top
 @unnumbered Variable Index
 
-This index contains only the most important options of ECB!
-
 @printindex vr
 
 @node Concept Index, , Variable Index, Top
@@ -1159,6 +3134,6 @@ This index contains only the most important options of ECB!
 
 @printindex cp
 
-@c @contents
+@contents
 
 @bye
