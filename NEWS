@@ -6,10 +6,30 @@
    "Window-managers and ECB" in the chapter "Tips and tricks" in the
    info-manual of ECB.
    
-   Thanks to Johann ??? <myrkraverk@users.sourceforge.net> who has reported
-   some bugs related to escreen and has therefore motivated a lot to add
-   support for the well known window-managers escreen and winring.
-            
+   Thanks to Johann Myrkraverk <myrkraverk@users.sourceforge.net> who has
+   reported some bugs related to escreen and has therefore motivated a lot to
+   add support for the well known window-managers escreen and winring.
+
+** ECB can display the window-number in the modeline of the special windows.
+   The left-top-most window in a frame has the window-number 0 and all other
+   windows are numbered with increasing numbers in the sequence, functions
+   like `other-window' or `next-window' would walk through the frame. This
+   allows to jump to windows by name as described at the Emacs-Wiki
+   http://www.emacswiki.org/cgi-bin/wiki.pl?SwitchingWindows.
+
+   See the new option `ecb-mode-line-display-window-number'. Currently this
+   feature is only available for GNU Emacs 21.X, because neither GNU Emacs <
+   21 nor XEmacs can dynamically evaluate forms in the mode-line.
+
+   Thanks to Johann Myrkraverk <myrkraverk@users.sourceforge.net> for
+   suggesting this.
+
+   In addition the already existing options `ecb-mode-line-data' and
+   `ecb-mode-line-prefixes' are now more flexible and are now able to define
+   special modelines not only for the 4 builtin ECB-tree-buffers but for every
+   special ECB-buffer. ECB will autom. upgrade the old values of these options
+   as best as possible to their new types!
+               
 ** Much better support of the ECB-compile-window
 
 *** General overhaul for displaying buffers in the ECB-compile-window.
@@ -97,8 +117,8 @@
 *** Fixed a bug in `ecb-toggle-enlarged-compilation-window'.
 
 *** Fixed a bug in the layout-engine related to dedicated windows.
-    Thanks to Johann ??? <myrkraverk@users.sourceforge.net> who
-    helped to find this bug.
+    Thanks to Johann Myrkraverk <myrkraverk@users.sourceforge.net> who helped
+    to find this bug.
 
 
 
