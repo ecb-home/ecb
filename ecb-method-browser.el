@@ -24,7 +24,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-method-browser.el,v 1.60 2004/10/04 15:53:06 berndl Exp $
+;; $Id: ecb-method-browser.el,v 1.61 2004/11/17 17:25:08 berndl Exp $
 
 ;;; Commentary:
 
@@ -3212,7 +3212,8 @@ If NODE is equal to the root-node of the methods-tree-buffer then this
 function will be called for each of the root-children. Otherwise it will only
 expand/collaps NODE.
 
-For description of LEVEL and FORCE-ALL see `ecb-expand-methods-nodes'.
+For a description of LEVEL see `tree-buffer-expand-node' and for a description
+of FORCE-ALL see `ecb-expand-methods-nodes'.
 
 If RESYNC-TAG is not nil then after expanding/collapsing the methods-buffer
 is resynced to the current tag of the edit-window.
@@ -3740,25 +3741,46 @@ this fails then nil is returned otherwise t."
   "Collapse all expandable and expanded nodes"
   (ecb-expand-methods-node-internal (tree-buffer-get-root) -1 nil t t))
 
+(tree-buffer-defpopup-command ecb-methods-menu-collapse-current
+  "Collapse the current node"
+  (let ((ecb-methods-nodes-collapse-spec 'all))
+    (ecb-expand-methods-node-internal node -1 nil t t)))
 
-(tree-buffer-defpopup-command ecb-methods-menu-expand-0
-  "Expand all nodes with level 0."
+(tree-buffer-defpopup-command ecb-methods-menu-expand-all-0
+  "Expand all nodes exactly to level 0."
   (ecb-expand-methods-node-internal (tree-buffer-get-root) 0 nil t t))
 
+(tree-buffer-defpopup-command ecb-methods-menu-expand-current-0
+  "Expand current node exactly to level 0."
+  (let ((ecb-methods-nodes-expand-spec 'all))
+    (ecb-expand-methods-node-internal node 0 nil t t)))
 
-(tree-buffer-defpopup-command ecb-methods-menu-expand-1
-  "Expand all nodes with level 1."
+(tree-buffer-defpopup-command ecb-methods-menu-expand-all-1
+  "Expand all nodes to exactly level 1."
   (ecb-expand-methods-node-internal (tree-buffer-get-root) 1 nil t t))
 
+(tree-buffer-defpopup-command ecb-methods-menu-expand-current-1
+  "Expand current node exactly to level 0."
+  (let ((ecb-methods-nodes-expand-spec 'all))
+    (ecb-expand-methods-node-internal node 1 nil t t)))
 
-(tree-buffer-defpopup-command ecb-methods-menu-expand-2
-  "Expand all nodes with level 2."
+(tree-buffer-defpopup-command ecb-methods-menu-expand-all-2
+  "Expand all nodes to exactly level 2."
   (ecb-expand-methods-node-internal (tree-buffer-get-root) 2 nil t t))
 
+(tree-buffer-defpopup-command ecb-methods-menu-expand-current-2
+  "Expand current node exactly to level 0."
+  (let ((ecb-methods-nodes-expand-spec 'all))
+    (ecb-expand-methods-node-internal node 2 nil t t)))
 
-(tree-buffer-defpopup-command ecb-methods-menu-expand-all
-  "Expand all expandable nodes recursively."
+(tree-buffer-defpopup-command ecb-methods-menu-expand-all-full
+  "Expand all expandable nodes recursively, i.e. completely."
   (ecb-expand-methods-node-internal (tree-buffer-get-root) 100 nil t t))
+
+(tree-buffer-defpopup-command ecb-methods-menu-expand-current-full
+  "Expand the current node recursively, i.e. completely."
+  (let ((ecb-methods-nodes-expand-spec 'all))
+    (ecb-expand-methods-node-internal node 100 nil t t)))
 
 
 (defvar ecb-common-methods-menu nil
@@ -3768,11 +3790,18 @@ this fails then nil is returned otherwise t."
 (setq ecb-common-methods-menu
       '( ;;("---")
         ("Expand/Collapse"
-         (ecb-methods-menu-collapse-all "Collapse all")
-         (ecb-methods-menu-expand-0 "Expand level 0")
-         (ecb-methods-menu-expand-1 "Expand level 1")
-         (ecb-methods-menu-expand-2 "Expand level 2")
-         (ecb-methods-menu-expand-all "Expand all"))
+         (ecb-methods-menu-collapse-current "Collapse this node completely")
+         (ecb-methods-menu-expand-current-0 "Expand this node to level 0")
+         (ecb-methods-menu-expand-current-1 "Expand this node to level 1")
+         (ecb-methods-menu-expand-current-2 "Expand this node to level 2")
+         (ecb-methods-menu-expand-current-full "Expand this node completely")
+         ("---")
+         (ecb-methods-menu-collapse-all "Collapse all completely")
+         (ecb-methods-menu-expand-all-0 "Expand all to level 0")
+         (ecb-methods-menu-expand-all-1 "Expand all to level 1")
+         (ecb-methods-menu-expand-all-2 "Expand all to level 2")
+         (ecb-methods-menu-expand-all-full "Expand all completely")
+         )
         ("---")
         (ecb-maximize-ecb-window-menu-wrapper "Maximize window")))
 
