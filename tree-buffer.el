@@ -26,7 +26,7 @@
 ;; This file is part of the ECB package which can be found at:
 ;; http://home.swipnet.se/mayhem/ecb.html
 
-;; $Id: tree-buffer.el,v 1.38 2001/05/05 05:51:39 berndl Exp $
+;; $Id: tree-buffer.el,v 1.39 2001/05/06 07:02:23 berndl Exp $
 
 ;;; Code:
 
@@ -69,6 +69,7 @@
 (defvar tree-node-mouse-over-fn nil)
 (defvar tree-buffer-highlight-overlay nil)
 (defvar tree-buffer-incr-searchpattern nil)
+(defvar tree-buffer-incr-search nil)
 
 (defun list-append(list item)
   (if list
@@ -388,9 +389,11 @@ point will stay on POINT."
               (eval (list (car fn) 'node))))))))
 
 ;; idea is stolen from ido.el, written by Kim F. Storm <stormware@get2net.dk>
-(defun tree-buffer-find-common-prefix (lis subs)
-  "Return common prefix beginning with SUBS in each element of LIS."
-  (let ((change-word-sub (concat "^" (regexp-quote subs)))
+(defun tree-buffer-find-common-substring (lis subs &optional only-prefix)
+  "Return common substring beginning with SUBS in each element of LIS. If
+ONLY-PREFIX is not nil then only common prefix is returned."
+  (let ((change-word-sub (concat (if only-prefix "^" "")
+                                 (regexp-quote subs)))
         res alist)
     (setq res (mapcar (function (lambda (word)
                                   (let ((case-fold-search t)
@@ -440,8 +443,9 @@ mentioned above!"
          ((equal last-comm 'end)
           (let* ((node-name-list (mapcar 'tree-node-get-name
                                          (tree-node-get-children tree-buffer-root)))
-                 (common-prefix (tree-buffer-find-common-prefix
-                                 node-name-list tree-buffer-incr-searchpattern)))
+                 (common-prefix (tree-buffer-find-common-substring
+                                 node-name-list tree-buffer-incr-searchpattern
+                                 (if (equal tree-buffer-incr-search 'prefix) t))))
             (if (stringp common-prefix)
                 (setq tree-buffer-incr-searchpattern common-prefix))))
          (t
@@ -457,6 +461,9 @@ mentioned above!"
                      (goto-char (point-min))
                      (re-search-forward
                       (concat tree-buffer-incr-searchpattern-prefix
+                              (if (equal tree-buffer-incr-search 'substring)
+                                  "[^()]*"
+                                "")
                               (regexp-quote tree-buffer-incr-searchpattern)) nil t)))
                  ;; we have found a matching ==> jump to it
                  (progn
@@ -507,8 +514,9 @@ MENUS: Nil or a list of one or two conses, each cons for a node-type \(0 or 1)
 TR-LINES: Should lines in this tree buffer be truncated \(not nil)
 READ-ONLY: Should the treebuffer be read-only \(not nil)
 TREE-INDENT: spaces subnodes should be indented.
-INCR-SEARCH: Should the incremental search be anabled in the tree-buffer \(not
-             nil). See `tree-buffer-incremental-node-search'.
+INCR-SEARCH: Should the incremental search be anabled in the tree-buffer.
+             Three choices: 'prefix, 'substring, nil. See
+             `tree-buffer-incremental-node-search'.
 TYPE-FACER: Nil or a list of one or two conses, each cons for a node-type \(0
             or 1). The cdr of a cons can be:
             - a symbol of a face
@@ -541,6 +549,7 @@ EXPAND-SYMBOL-BEFORE: If not nil then the expand-symbol \(is displayed before
     (make-local-variable 'tree-buffer-expand-symbol-before)
     (make-local-variable 'tree-buffer-highlight-overlay)
     (make-local-variable 'tree-buffer-incr-searchpattern)
+    (make-local-variable 'tree-buffer-incr-search)
   
     (setq truncate-lines tr-lines)
     (setq truncate-partial-width-windows tr-lines)
@@ -559,6 +568,7 @@ EXPAND-SYMBOL-BEFORE: If not nil then the expand-symbol \(is displayed before
     (setq tree-buffer-highlight-overlay (make-overlay 1 1))
     (overlay-put tree-buffer-highlight-overlay 'face 'secondary-selection)
     (setq tree-buffer-incr-searchpattern "")
+    (setq tree-buffer-incr-search incr-search)
 
     (when incr-search
       ;; settings for the incremental search.
