@@ -26,7 +26,7 @@
 ;; This file is part of the ECB package which can be found at:
 ;; http://home.swipnet.se/mayhem/ecb.html
 
-;; $Id: tree-buffer.el,v 1.66 2001/09/08 16:18:06 berndl Exp $
+;; $Id: tree-buffer.el,v 1.67 2001/10/21 11:56:37 berndl Exp $
 
 ;;; Code:
 
@@ -333,7 +333,6 @@ displayed without empty-lines at the end, means WINDOW is always best filled."
         (delete-overlay tree-buffer-highlight-overlay))))
   (setq tree-buffer-highlighted-node-data nil))
 
-(defvar ecb-klaus-test nil)
 (defun tree-buffer-highlight-node-data (node-data &optional dont-make-visible)
   (if node-data
       (let* ((name-node (tree-buffer-find-name-node-data node-data))

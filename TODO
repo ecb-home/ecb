@@ -1,6 +1,6 @@
 ********************************************************************************
-*** Last-Modified: $Date: 2001/07/15 09:48:59 $ 
-*** Version: $Id: TODO,v 1.20 2001/07/15 09:48:59 berndl Exp $
+*** Last-Modified: $Date: 2001/10/21 11:56:37 $ 
+*** Version: $Id: TODO,v 1.21 2001/10/21 11:56:37 berndl Exp $
 *** Author: Kevin A. Burton ( burton@apache.org | burton@openprivacy.org )
 ********************************************************************************
 
@@ -12,10 +12,3 @@
    intelligent tree-buffer recentering.
 
 - Ignore source files specified in .cvsignore files. (JN)
-
-- Add history back/forward functions. Should behave similar to web browser
-  history, which means we should keep a history list and a current position
-  in the history list. (JN)
-
-- Optionally add "(file . line-nr)" to history when clicking on methods in
-  the methods buffer. (JN)

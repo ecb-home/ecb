@@ -125,7 +125,7 @@
 ;;   + The edit-window must not be splitted and the point must reside in
 ;;     the not deleted edit-window.
 
-;; $Id: ecb-layout.el,v 1.76 2001/08/29 12:55:44 berndl Exp $
+;; $Id: ecb-layout.el,v 1.77 2001/10/21 11:56:37 berndl Exp $
 
 ;;; Code:
 
@@ -988,7 +988,7 @@ the \(first) edit-window and does then it´s job \(see above)."
     (if (and (not (ecb-point-in-edit-window))
              (not (ecb-point-in-compile-window)))
         (ecb-select-edit-window))
-      ;; now we are always in the edit window, so we can switch to the buffer
+    ;; now we are always in the edit window, so we can switch to the buffer
     ad-do-it))
 
 (defadvice other-window-for-scrolling (around ecb)

@@ -26,7 +26,7 @@
 ;;
 ;; Contains all online-help for ECB (stolen something from recentf.el)
 
-;; $Id: ecb-help.el,v 1.47 2001/09/26 16:08:35 berndl Exp $
+;; $Id: ecb-help.el,v 1.48 2001/10/21 11:56:37 berndl Exp $
 
 ;;; Code
 
@@ -650,7 +650,7 @@ a backtrace-buffer and inserts the contents of that."
   "List all variables starting with `ecb-' and some other variables which
 could be interesting for support."
   (let ((emacs-vars `(semantic-after-toplevel-cache-change-hook
-                      semantic-clean-token-hooks
+                      semantic-after-partial-cache-change-hook
                       pre-command-hook
                       post-command-hook
                       after-save-hook

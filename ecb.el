@@ -7,7 +7,7 @@
 ;; Keywords: java, class, browser
 ;; Created: Jul 2000
 
-(defvar ecb-version "1.50"
+(defvar ecb-version "1.51"
   "Current ECB version.")
 
 ;; This program is free software; you can redistribute it and/or modify it under
@@ -37,7 +37,7 @@
 ;; Optional: You can byte-compile ECB after the ECB-package is loaded with
 ;; `ecb-byte-compile'.
 ;;
-;; ECB requires version 1.3.3 of Eric's semantic bovinator
+;; ECB requires version 1.4beta11 or higher of Eric's semantic bovinator
 ;; (http://www.ultranet.com/~zappo/semantic.shtml).
 ;; If you are working with Java, ECB works best when the JDE package
 ;; (http://sunsite.auc.dk/jde) is installed.
@@ -54,14 +54,17 @@
 ;; The latest version of the ECB is available at
 ;; http://home.swipnet.se/mayhem/ecb.html
 
-;; $Id: ecb.el,v 1.152 2001/09/26 16:08:35 berndl Exp $
+;; $Id: ecb.el,v 1.153 2001/10/21 11:56:37 berndl Exp $
 
 ;;; Code:
 
 ;; semantic load
 (require 'semantic)
 
-(if (not (boundp 'semantic-after-toplevel-cache-change-hook))
+;; ensure that we use the right semantic-version
+;; currently we need >= 1.4beta11
+(if (not (and (boundp 'semantic-version)
+              (string-match "^1\\.4\\(beta1[1-9]\\)?$" semantic-version)))
     (error "ECB requires a semantic-version >= 1.40beta7!"))
 (message "ECB uses semantic %s and eieio %s" semantic-version eieio-version)
 (setq semantic-load-turn-everything-on nil)
@@ -169,7 +172,7 @@ where each string is a path.")
   :group 'ecb-directories
   :type 'boolean)
 
-(defcustom ecb-directories-buffer-name "*ECB Directories*"
+(defcustom ecb-directories-buffer-name " *ECB Directories*"
   "*Name of the ECB directory buffer. Because it is not a normal buffer for
 editing you should enclose the name with stars, e.g. \"*ECB Directories*\".
 
@@ -206,7 +209,7 @@ list. The value of this variable should be a regular expression."
   :group 'ecb-directories
   :type 'boolean)
 
-(defcustom ecb-sources-buffer-name "*ECB Sources*"
+(defcustom ecb-sources-buffer-name " *ECB Sources*"
   "*Name of the ECB sources buffer. Because it is not a normal buffer for
 editing you should enclose the name with stars, e.g. \"*ECB Sources*\".
 
@@ -262,7 +265,7 @@ combination can be defined."
                 (const :tag "No sorting"
                        :value nil)))
                 
-(defcustom ecb-history-buffer-name "*ECB History*"
+(defcustom ecb-history-buffer-name " *ECB History*"
   "*Name of the ECB history buffer. Because it is not a normal buffer for
 editing you should enclose the name with stars, e.g. \"*ECB History*\".
 
@@ -302,7 +305,7 @@ then activating ECB again!"
                 (const :tag "File name"
                        :value file-name)))
                 
-(defcustom ecb-methods-buffer-name "*ECB Methods*"
+(defcustom ecb-methods-buffer-name " *ECB Methods*"
   "*Name of the ECB methods buffer. Because it is not a normal buffer for
 editing you should enclose the name with stars, e.g. \"*ECB Methods*\".
 
@@ -676,17 +679,6 @@ cleared!) ECB by running `ecb-deactivate'."
 ;; Methods
 ;;====================================================
 
-(defconst ecb-language-modes-args-separated-with-space
-  '(emacs-lisp-mode scheme-mode lisp-mode))
-
-(defconst ecb-methodname 0)
-(defconst ecb-argumenttype 1)
-(defconst ecb-argumentname 2)
-(defconst ecb-returntype 3)
-(defconst ecb-classtype 4)
-(defconst ecb-variablename 5)
-(defconst ecb-variabletype 6)
-
 (defmacro ecb-exec-in-directories-window (&rest body)
   `(unwind-protect
        (when (ecb-window-select ecb-directories-buffer-name)
@@ -937,6 +929,15 @@ cleared!) ECB by running `ecb-deactivate'."
        (ecb-add-token-bucket node bucket (cadr type-display)
 			     (caddr type-display)))))
 
+(defun ecb-update-after-partial-reparse (updated-tokens)
+  "Updates the method buffer and all internal ECB-caches after a partial
+semantic-reparse. This function is added to the hook
+`semantic-after-partial-cache-change-hook'."
+  (message "Partial reparsing...")
+  (ecb-rebuild-methods-buffer-with-tokencache (semantic-bovinate-toplevel t)))
+
+;; Klaus: Currently unused because the hook `semantic-clear-toplevel-cache' is
+;; currently unused by ECB.
 (defun ecb-update-token (token)
   "Finds a node displaying token and updates it."
   (let ((node (tree-node-find-data-recursively ecb-methods-root-node token)))
@@ -2189,9 +2190,10 @@ always the ECB-frame if called from another frame."
 	 ecb-tree-incremental-search)))
     
     ;; we need some hooks
+    (add-hook 'semantic-after-partial-cache-change-hook
+              'ecb-update-after-partial-reparse t)
     (add-hook 'semantic-after-toplevel-cache-change-hook
-	      'ecb-rebuild-methods-buffer-with-tokencache)
-    (add-hook 'semantic-clean-token-hooks 'ecb-update-token)
+	      'ecb-rebuild-methods-buffer-with-tokencache t)
     (ecb-activate-ecb-sync-functions ecb-highlight-token-with-point-delay
                                      'ecb-token-sync)
     (ecb-activate-ecb-sync-functions ecb-window-sync-delay
@@ -2271,9 +2273,10 @@ always the ECB-frame if called from another frame."
     (setq compilation-window-height ecb-old-compilation-window-height)
 
     ;; remove the hooks
+    (remove-hook 'semantic-after-partial-cache-change-hook
+                 'ecb-update-after-partial-reparse)
     (remove-hook 'semantic-after-toplevel-cache-change-hook
 		 'ecb-rebuild-methods-buffer-with-tokencache)
-    (remove-hook 'semantic-clean-token-hooks 'ecb-update-token)
     (dolist (timer-elem ecb-idle-timer-alist)
       (cancel-timer (cdr timer-elem)))
     (setq ecb-idle-timer-alist nil)
