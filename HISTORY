@@ -1,5 +1,7 @@
-Version ???:
-------------
+Version 1.32:
+-------------
+
+- Nil parent bug fixed. (Jesper)
 
 - New advices for find-file and switch-to-buffer (Klaus).
 
@@ -7,7 +9,6 @@ Version ???:
   useful for slow machines but prevents also "jumping backward/forward" during
   scrolling within java-classes if point goes out of method-definition into
   class-definition. Default is an idle time of 0.25 seconds. (Klaus).
-
 
 Version 1.31:
 -------------
