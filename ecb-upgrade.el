@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-upgrade.el,v 1.67 2004/03/04 17:28:28 berndl Exp $
+;; $Id: ecb-upgrade.el,v 1.68 2004/03/12 16:48:19 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -159,7 +159,7 @@
 
 ;; IMPORTANT: The version-number is auto-frobbed from the Makefile. Do not
 ;; change it here!
-(defconst ecb-version "2.22"
+(defconst ecb-version "2.23"
   "Current ECB version.")
 
 (eval-when-compile

@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-layout.el,v 1.221 2004/03/02 06:48:36 berndl Exp $
+;; $Id: ecb-layout.el,v 1.222 2004/03/12 16:48:19 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -223,6 +223,10 @@ hook is not evaluated)."
   :group 'ecb-layout
   :type 'hook)
 
+(defvar ecb-last-selected-layout nil
+  "Name of that layout which was current direct before switching to another
+layout.")
+
 (defcustom ecb-layout-name "left8"
   "*Select a window layout of ECB.
 Value is any arbitrary string. There are four different types of layouts:
@@ -258,8 +262,10 @@ layout with `ecb-redraw-layout'"
                    (ecb-load-layouts)
                    (if (fboundp (intern (format "ecb-layout-function-%s"
                                                 value)))
-                       (funcall ecb-layout-option-set-function
-                                symbol value)
+                       (progn
+                         (setq ecb-last-selected-layout ecb-layout-name)
+                         (funcall ecb-layout-option-set-function
+                                  symbol value))
                      (ecb-error "There is no layout with name %s available!"
                                 value))))
   :type 'string)
@@ -4194,7 +4200,6 @@ first element of LAYOUT-LIST is returned."
         (car layout-list)
       result)))
 
-
 (defun ecb-layout-switch (name)
   "Switch to layout with layout-name NAME."
   (let ((comp-win-state (ecb-compile-window-state)))
@@ -4699,18 +4704,28 @@ emergency-redraw."
 
 (defvar ecb-toggle-layout-state 0
   "Internal state of `ecb-toggle-layout'. Do not change it!")
-(defun ecb-toggle-layout ()
+(defun ecb-toggle-layout (&optional last-one)
   "Toggles between the layouts defined in `ecb-toggle-layout-sequence'.
-See also option `ecb-show-sources-in-directories-buffer'."
-  (interactive)
-  (let ((layout-name (nth ecb-toggle-layout-state ecb-toggle-layout-sequence))
-        (next-index (if (< (1+ ecb-toggle-layout-state)
-                           (length ecb-toggle-layout-sequence))
-                        (1+ ecb-toggle-layout-state)
-                      0)))
-    (when (and layout-name (not (= ecb-toggle-layout-state next-index)))
-      (setq ecb-toggle-layout-state next-index)
-      (ecb-layout-switch layout-name))))
+See also option `ecb-show-sources-in-directories-buffer'.
+
+If optional argument LAST-ONE is not nil \(e.g. called with a prefix-arg) then
+always the last selected layout was choosen regardless of the setting in
+`ecb-toggle-layout-sequence'. The last selected layout is always that layout
+which was current direct before the most recent layout-switch. So now a user
+can switch to another layout via `ecb-change-layout' and always come back to
+his previous layout via \[C-u] `ecb-toggle-layout'."
+  (interactive "P")
+  (if (and last-one
+           (stringp ecb-last-selected-layout))
+      (ecb-layout-switch ecb-last-selected-layout)
+    (let ((layout-name (nth ecb-toggle-layout-state ecb-toggle-layout-sequence))
+          (next-index (if (< (1+ ecb-toggle-layout-state)
+                             (length ecb-toggle-layout-sequence))
+                          (1+ ecb-toggle-layout-state)
+                        0)))
+      (when (and layout-name (not (= ecb-toggle-layout-state next-index)))
+        (setq ecb-toggle-layout-state next-index)
+        (ecb-layout-switch layout-name)))))
 
 (defun ecb-store-window-sizes (&optional fix)
   "Stores the sizes of the ECB windows for the current layout.

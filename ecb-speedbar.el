@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-speedbar.el,v 1.55 2004/02/28 16:14:46 berndl Exp $
+;; $Id: ecb-speedbar.el,v 1.56 2004/03/12 16:48:19 berndl Exp $
 
 ;;; Commentary:
 
@@ -73,7 +73,8 @@
 ;; imenu
 (silentcomp-defvar imenu--rescan-item)
 (silentcomp-defvar imenu--index-alist)
-
+;; XEmacs
+(silentcomp-defun event-button)
 
 (defconst ecb-speedbar-adviced-functions '((speedbar-click . around)
                                            (speedbar-frame-mode . around)
@@ -105,6 +106,7 @@ after clicking onto a filename in the speedbar."
   ;; file if a clicked directory contains any.
   (let ((item (and (fboundp 'speedbar-line-file)
                    (speedbar-line-file))))
+    (message "Klausi: %s" item)
     ad-do-it
     (if (and ecb-minor-mode
              (equal (selected-frame) ecb-frame)
@@ -194,7 +196,32 @@ future this could break."
     (save-excursion
       (setq speedbar-buffer (get-buffer-create ecb-speedbar-buffer-name))
       (set-buffer speedbar-buffer)
-      (speedbar-mode)))
+      (speedbar-mode)
+
+      (if ecb-running-xemacs
+          ;; Hack the XEmacs mouse-motion handler
+          (progn
+            ;; Hack the XEmacs mouse-motion handler
+            (set (make-local-variable 'mouse-motion-handler)
+                 'dframe-track-mouse-xemacs)
+            ;; Hack the double click handler
+            (make-local-variable 'mouse-track-click-hook)
+            (add-hook 'mouse-track-click-hook
+                      (lambda (event count)
+                        (if (/= (event-button event) 1)
+                            nil		; Do normal operations.
+                          (cond ((eq count 1)
+                                 (dframe-quick-mouse event))
+                                ((or (eq count 2)
+                                     (eq count 3))
+                                 (dframe-click event)))
+                          ;; Don't do normal operations.
+                          t))))
+        ;; Enable mouse tracking in emacs
+        (if dframe-track-mouse-function
+            (set (make-local-variable 'track-mouse) t)) ;this could be messy.
+        ;; disable auto-show-mode for Emacs
+        (setq auto-show-mode nil))))
 
   ;;Start up the timer
   (speedbar-reconfigure-keymaps)

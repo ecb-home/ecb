@@ -26,7 +26,7 @@
 @c GNU Emacs; see the file COPYING.  If not, write to the Free Software
 @c Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-@c $Id: ecb.texi,v 1.162 2004/03/08 18:51:30 berndl Exp $
+@c $Id: ecb.texi,v 1.163 2004/03/12 16:48:02 berndl Exp $
 
 @setfilename ecb.info
 
@@ -49,7 +49,7 @@
 @c edit the Makefile to change the version number. mechanism stolen
 @c from Tramp
 @macro ecbver{}
-2.22
+2.23
 @end macro
 
 
@@ -4101,12 +4101,20 @@ with (de)activating ECB but only affects the visibility of the ECB
 windows. ECB minor mode remains active!
 @end deffn
 
-@deffn Command toggle-layout
+@deffn Command toggle-layout &optional last-one
 Toggles between the layouts defined in
 @code{ecb-toggle-layout-sequence} (See also option
 @code{ecb-show-sources-in-directories-buffer}). Note: This function
 works by changing the options @code{ecb-layout-name} but only for
 current Emacs-session.
+
+If optional argument @var{LAST-ONE} is not nil (e.g. called with a
+prefix-arg) then always the last selected layout was choosen
+regardless of the setting in @code{ecb-toggle-layout-sequence}. The
+last selected layout is always that layout which was current direct
+before the most recent layout-switch. So now a user can switch to
+another layout via `ecb-change-layout' and always come back to his
+previous layout via @kbd{[C-u]} @code{ecb-toggle-layout}.
 @end deffn
 
 @deffn Command toggle-scroll-other-window-scrolls-compile &optional ARG

@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb.el,v 1.379 2004/03/02 06:48:36 berndl Exp $
+;; $Id: ecb.el,v 1.380 2004/03/12 16:48:03 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -704,8 +704,8 @@ almost the same effect as if you set no delay."
   :set (function (lambda (symbol value)
                    (set symbol value)
                    (if ecb-minor-mode
-                       (ecb-activate-ecb-sync-functions value
-                                                        'ecb-window-sync-function))))
+                       (ecb-activate-ecb-autocontrol-functions
+                        value 'ecb-window-sync-function))))
   :initialize 'custom-initialize-default)
 
 (defcustom ecb-tree-incremental-search 'prefix
@@ -1491,7 +1491,7 @@ combination is invalid \(see `ecb-interpret-mouse-click'."
 	 (ecb-button (car ecb-button-list))
 	 (shift-mode (cadr ecb-button-list)))
     ;; we need maybe later that something has clicked in a tree-buffer, e.g.
-    ;; in `ecb-handle-major-mode-activation'.
+    ;; in `ecb-handle-major-mode-visibilty'.
     (setq ecb-item-in-tree-buffer-selected t)
     (if (/= mouse-button 0)
         (setq ecb-layout-prevent-handle-ecb-window-selection t))
@@ -1649,22 +1649,47 @@ mouse-moving."
 
 (defvar ecb-idle-timer-alist nil)
 (defvar ecb-post-command-hooks nil)
-(defun ecb-activate-ecb-sync-functions (idle-value func)
+(defvar ecb-pre-command-hooks nil)
+(defun ecb-activate-ecb-autocontrol-functions (idle-value func)
   "Adds function FUNC to `ecb-idle-timer-alist' and activates an idle-timer
-with idle-time IDLE-VALUE if IDLE-VALUE not nil. If nil the FUNC is added to
-`post-command-hook' and `ecb-post-command-hooks' and removed from the idle-list."
+with idle-time IDLE-VALUE if IDLE-VALUE not nil. If nil or 'post the FUNC is
+added to `post-command-hook' and `ecb-post-command-hooks' and removed from the
+idle-list. If 'pre the FUNC is added to `pre-command-hook' and
+`ecb-pre-command-hooks' and removed from the idle-list."
   (let* ((timer-elem (assoc func ecb-idle-timer-alist))
          (timer (cdr timer-elem)))
     (when timer-elem
       (ecb-cancel-timer timer)
       (setq ecb-idle-timer-alist (delq timer-elem ecb-idle-timer-alist)))
     (remove-hook 'post-command-hook func)
+    (remove-hook 'pre-command-hook func)
     (setq ecb-post-command-hooks (delq func ecb-post-command-hooks))
-    (if idle-value
-        (add-to-list 'ecb-idle-timer-alist
-                     (cons func (ecb-run-with-idle-timer idle-value t func)))
-      (add-hook 'post-command-hook func)
-      (add-to-list 'ecb-post-command-hooks func))))
+    (setq ecb-pre-command-hooks (delq func ecb-pre-command-hooks))
+    (cond ((or (null idle-value) (equal idle-value 'post))
+           (add-hook 'post-command-hook func)
+           (add-to-list 'ecb-post-command-hooks func))
+          ((equal idle-value 'pre)
+           (add-hook 'pre-command-hook func)
+           (add-to-list 'ecb-pre-command-hooks func))
+          (t
+           (add-to-list 'ecb-idle-timer-alist
+                        (cons func
+                              (ecb-run-with-idle-timer idle-value t func)))))))
+
+(defun ecb-monitor-autocontrol-functions ()
+  "Checks if all necessary ECB-hooks are contained in `post-command-hook' rsp.
+`pre-command-hook'. If one of them has been removed by Emacs \(Emacs resets
+these hooks to nil if any of the contained functions fails!) then this
+function readds them to these hooks."
+  ;; post-command-hook
+  (dolist (hook (cons 'ecb-handle-major-mode-visibilty
+                      ecb-post-command-hooks))
+    (when (not (member hook post-command-hook))
+      (add-hook 'post-command-hook hook)))
+  ;; pre-command-hook
+  (dolist (hook ecb-pre-command-hooks)
+    (when (not (member hook pre-command-hook))
+      (add-hook 'pre-command-hook hook))))
 
 ;;====================================================
 ;; ECB minor mode: Create buffers & menus & maps
@@ -2461,16 +2486,22 @@ ECB has been deactivated. Do not set this variable!")
                       'ecb-update-after-partial-reparse t)
             (add-hook (ecb--semantic-after-toplevel-cache-change-hook)
                       'ecb-rebuild-methods-buffer-with-tagcache t)
-            (ecb-activate-ecb-sync-functions ecb-highlight-tag-with-point-delay
-                                             'ecb-tag-sync)
-            (ecb-activate-ecb-sync-functions ecb-window-sync-delay
-                                             'ecb-window-sync-function)
-            (ecb-activate-ecb-sync-functions ecb-compilation-update-idle-time
-                                             'ecb-compilation-buffer-list-changed-p)
-            (ecb-activate-ecb-sync-functions nil 'ecb-layout-post-command-hook)
-            (add-hook 'pre-command-hook 'ecb-layout-pre-command-hook)
+            (ecb-activate-ecb-autocontrol-functions ecb-highlight-tag-with-point-delay
+                                                    'ecb-tag-sync)
+            (ecb-activate-ecb-autocontrol-functions ecb-window-sync-delay
+                                                    'ecb-window-sync-function)
+            (ecb-activate-ecb-autocontrol-functions ecb-compilation-update-idle-time
+                                                    'ecb-compilation-buffer-list-changed-p)
+            (ecb-activate-ecb-autocontrol-functions 'post
+                                                    'ecb-layout-post-command-hook)
+            (ecb-activate-ecb-autocontrol-functions 'pre
+                                                    'ecb-layout-pre-command-hook)
             (add-hook 'after-save-hook 'ecb-update-methods-after-saving)
             (add-hook 'kill-buffer-hook 'ecb-kill-buffer-hook)
+
+            ;; after adding all idle-timers and post- and pre-command-hooks we
+            ;; activate the monitoring
+            (ecb-activate-ecb-autocontrol-functions 1 'ecb-monitor-autocontrol-functions)
 
             ;; running the compilation-buffer update first time
             (ecb-compilation-buffer-list-init)
@@ -2727,7 +2758,9 @@ does all necessary after finishing ediff."
       (dolist (hook ecb-post-command-hooks)
         (remove-hook 'post-command-hook hook))
       (setq ecb-post-command-hooks nil)
-      (remove-hook 'pre-command-hook 'ecb-layout-pre-command-hook)
+      (dolist (hook ecb-pre-command-hooks)
+        (remove-hook 'pre-command-hook hook))
+      (setq ecb-pre-command-hooks nil)
       (remove-hook 'after-save-hook 'ecb-update-methods-after-saving)
       (remove-hook 'kill-buffer-hook 'ecb-kill-buffer-hook)
       (if (get 'ediff-quit-hook 'ecb-ediff-quit-hook-value)

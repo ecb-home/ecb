@@ -24,7 +24,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-method-browser.el,v 1.21 2004/03/05 16:46:32 berndl Exp $
+;; $Id: ecb-method-browser.el,v 1.22 2004/03/12 16:48:19 berndl Exp $
 
 ;;; Commentary:
 
@@ -549,6 +549,12 @@ by semantic!"
   :type '(repeat (cons (symbol :tag "Major-mode")
                        (repeat (function :tag "Post-process function")))))
 
+;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: 
+;; (defcustom ecb-default-tag-filter nil
+;;   "*"
+;;   :group 'ecb-methods
+;;   :type 'boolean)
+
 (defcustom ecb-show-only-positioned-tags t
   "*Show only nodes in the method-buffer which are \"jump-able\".
 If not nil then ECB displays in the method-buffer only nodes which are
@@ -750,7 +756,8 @@ by semantic!"
   :set (function (lambda (symbol value)
                    (set symbol value)
                    (if ecb-minor-mode
-                       (ecb-activate-ecb-sync-functions value 'ecb-tag-sync))))
+                       (ecb-activate-ecb-autocontrol-functions value
+                                                               'ecb-tag-sync))))
   :initialize 'custom-initialize-default)
 
 

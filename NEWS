@@ -1,3 +1,29 @@
+* Changes for ECB version 2.23
+
+** The command `ecb-toggle-layout' now has a prefix-argument:
+   If this optional argument is not nil (e.g. if called with a prefix-arg)
+   then always the last selected layout was choosen regardless of the setting
+   in `ecb-toggle-layout-sequence'. The last selected layout is always that
+   layout which was current direct before the most recent layout-switch. So
+   now a user can switch to another layout via `ecb-change-layout' [C-c . l c]
+   and always come back to his previous layout via [C-u C-c . l t].
+
+** Better internal self-monitoring of ECB
+   ECB now monitors itself when Emacs is idle, ie. it monitors if all
+   necessary ecb-functions are still member of the hooks `post-command-hook'
+   and `pre-command-hook'. This is because Emacs resets these hooks to nil if
+   any of the contained hook-functions fails with an error-signal. The
+   ECB-hook-functions are error-save but if any of the "other" hook-functions
+   of these hooks fails then the ECB-hooks would also have been removed from
+   these hooks. The new monitoring-mechanism checks this periodically and
+   re-adds the ECB-hooks if necessary.
+
+** Fixed bugs
+
+*** Double-clicking the mouse-1-button now works with integrated speedbar.
+
+
+
 * Changes for ECB version 2.22
 
 ** New nifty feature for filtering the tags displayed in the Methods-buffer
