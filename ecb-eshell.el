@@ -1,6 +1,6 @@
 ;;; ecb-eshell.el --- eshell integration for the ECB.
 
-;; $Id: ecb-eshell.el,v 1.63 2003/01/14 01:34:57 burtonator Exp $
+;; $Id: ecb-eshell.el,v 1.64 2003/01/14 13:57:33 berndl Exp $
 
 ;; Copyright (C) 2000-2003 Free Software Foundation, Inc.
 ;; Copyright (C) 2000-2003 Kevin A. Burton (burton@openprivacy.org)
@@ -57,9 +57,13 @@
 
 ;;; History:
 
+;; Tue Jan 14 2003 14:53 PM (klaus.berndl@sdm.de):
+;; Swiched back to the use of visible-window during body of
+;; `ecb-do-if-buffer-visible-in-ecb-frame'.
+
 ;; Mon Jan 13 2003 09:33 AM (burton@peace): Fixed a bug with
-;; ecb-eshell-shrink-if-necessary if it wasn't being run from within the correct
-;; buffer.  Reworked some code to restore the old behavior prior to
+;; ecb-eshell-shrink-if-necessary if it wasn't being run from within the
+;; correct buffer. Reworked some code to restore the old behavior prior to
 ;; visible-window being used as a side effect from within a macro.
 
 ;; Sun Jan 05 2003 04:05 PM (burton@universe): Fixed a bug with the way we
@@ -231,7 +235,7 @@ interactively or `ecb-eshell-synchronize' is not nil."
         ;; compile-window otherwise the following ecb-eshell-cleanse would
         ;; prevent from inserting any command if the eshell is displayed in
         ;; the edit-window (e.g. by calling `eshell' in the edit-window)
-        (when (equal (selected-window) ecb-compile-window)
+        (when (equal visible-window ecb-compile-window)
           (ecb-eshell-save-buffer-history
            ;;make sure we are clean.
            (ecb-eshell-cleanse)
@@ -258,7 +262,7 @@ interactively or `ecb-eshell-synchronize' is not nil."
                
                ;;execute the command
                (save-selected-window
-                 (select-window (get-buffer-window ecb-eshell-buffer-name))
+                 (select-window visible-window)
                  (eshell-send-input)))
              
              (ecb-eshell-recenter)
@@ -397,26 +401,25 @@ to because the command didn't output much text, go ahead and shrink it again.
 Note that this function needs to be standalone as a hook so we have to make sure
 we execute it with the eshell buffer."
 
-  (when (and (ecb-eshell-running-p)
-             ecb-minor-mode
-             (equal (selected-window) ecb-compile-window)
-             (equal ecb-compile-window (get-buffer-window eshell-buffer-name)))
-
     (ecb-do-if-buffer-visible-in-ecb-frame 'eshell-buffer-name
-      (select-window (get-buffer-window eshell-buffer-name))
       
-      ;; only shrink up if we expanded... we don't want to shrink if we just
-      ;; happend to be runnning in large mode
-      (when (and ecb-eshell-pre-command-point ecb-eshell-pre-window-enlarged
-                 (< (count-lines ecb-eshell-pre-command-point
-                                 (point))
-                    ecb-compile-window-height))
-        (ecb-toggle-enlarged-compilation-window -1)
-        (ecb-eshell-recenter))
+      (when (and (ecb-eshell-running-p)
+                 (equal ecb-compile-window visible-window))
+        
+        (select-window visible-window)
       
-      ;;reset
-      (setq ecb-eshell-pre-command-point nil)
-      (setq ecb-eshell-pre-window-enlarged nil))))
+        ;; only shrink up if we expanded... we don't want to shrink if we just
+        ;; happend to be runnning in large mode
+        (when (and ecb-eshell-pre-command-point ecb-eshell-pre-window-enlarged
+                   (< (count-lines ecb-eshell-pre-command-point
+                                   (point))
+                      ecb-compile-window-height))
+          (ecb-toggle-enlarged-compilation-window -1)
+          (ecb-eshell-recenter))
+        
+        ;;reset
+        (setq ecb-eshell-pre-command-point nil)
+        (setq ecb-eshell-pre-window-enlarged nil))))
 
 (defun ecb-eshell-cleanse()
   "If the user has entered text in the eshell, we need to clean it. If we
