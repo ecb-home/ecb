@@ -2,12 +2,19 @@
 
 ** Fixed bugs:
 
+*** Fixing eating up a lot of CPU-power just for updating the menu-
+    entries of current compilation-buffers in the ECB-menu. Now the mechanism
+    is based on a idle-timer and a cache.
+
 *** Fixed a bug which always truncates lines in the ECB-windows regardless
     of the value of `ecb-truncate-lines'
 
 *** The upgrade library of ECB now explicitly requires and loads the
     library executable.el because Emacs 20.X does not autoload the
     function `executable-find'.
+
+*** `ecb-toggle-compile-window' now works also correct if called with
+    a prefix arg.
 
 
 

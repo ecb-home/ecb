@@ -1,6 +1,6 @@
 ;;; ecb-compilation.el --- 
 
-;; $Id: ecb-compilation.el,v 1.17 2003/01/14 16:19:25 berndl Exp $
+;; $Id: ecb-compilation.el,v 1.18 2003/03/04 15:08:47 berndl Exp $
 
 ;; Copyright (C) 2000-2003 Free Software Foundation, Inc.
 ;; Copyright (C) 2000-2003 Kevin A. Burton (burton@openprivacy.org)
@@ -173,29 +173,63 @@ is contained in the list returned by the function
               ;;else it isn't a complication buffer
               nil)))))))
 
+;; Klaus Berndl <klaus.berndl@sdm.de>: The following mechanism is necessary to
+;; avoid eating up whole CPU for updating the menu-entries for the
+;; compilation-buffers. Especially if you have opened a lot of buffers this
+;; can slow down Emacs/ECB dramatically. Now we add an idle-times
+;; check-function `ecb-compilation-buffer-list-changed-p' which checks if the
+;; buffer-list has changed. If yes, then the variable
+;; `ecb-compilation-update-menu-p' is set to t. Only if this variable if not
+;; nil the menu-bar-update-hook `ecb-compilation-update-menu' updates the
+;; ECB-menu.
+
+(defvar ecb-compilation-update-menu-p nil)
+(defvar ecb-compilation-buffer-list-cache nil)
+(defvar ecb-compilation-update-idle-time 0.25)
+
+(defun ecb-compilation-buffer-list-init ()
+  (setq ecb-compilation-update-menu-p nil)
+  (setq ecb-compilation-buffer-list-cache nil)
+  (ecb-compilation-buffer-list-changed-p))
+
+(defun ecb-compilation-buffer-list-changed-p ()
+  (let ((new-buffer-list (buffer-list)))
+    (when (not (equal new-buffer-list
+                      ecb-compilation-buffer-list-cache))
+      (setq ecb-compilation-buffer-list-cache new-buffer-list)
+      ;; Nowhere else this variable will be set to t.
+      (setq ecb-compilation-update-menu-p t))))
+
 (defun ecb-compilation-update-menu()
   "Create an install a menu that allows the user to navigate buffers that are
 valid ECB compilation buffers.  See `ecb-compilation-buffer-p' for more
 information about compilation buffers."
 
-  (let((submenu nil)
-       (buffers (ecb-compilation-get-buffers)))
-
-    (dolist(buffer buffers)
-      (setq submenu
-            (append submenu
-                    (list (vector (car buffer)
-                                  `(funcall (if (ecb-compile-window-live-p)
-                                                'switch-to-buffer
-                                              'switch-to-buffer-other-window)
-                                            ,(car buffer))
-                                    :active t)))))
-
-    ;;TODO: Klaus Berndl <klaus.berndl@sdm.de>: Seems not to work with Emacs 20.X
-    (easy-menu-change (list ecb-menu-name)
-                      "Compilation Buffers"
-                      submenu
-                      "Navigate")))
+  (when ecb-compilation-update-menu-p
+    (let ((submenu nil)
+          (buffers (ecb-compilation-get-buffers)))
+      (condition-case nil
+          (progn
+            (setq ecb-compilation-update-menu-p nil)
+            (dolist(buffer buffers)
+              (setq submenu
+                    (append submenu
+                            (list (vector (car buffer)
+                                          `(funcall (if (ecb-compile-window-live-p)
+                                                        'switch-to-buffer
+                                                      'switch-to-buffer-other-window)
+                                                  ,(car buffer))
+                                          :active t)))))
+            
+            ;;TODO: Klaus Berndl <klaus.berndl@sdm.de>: Seems not to work with
+            ;;Emacs 20.X
+            (easy-menu-change (list ecb-menu-name)
+                              "Compilation Buffers"
+                              submenu
+                              "Navigate")
+            t)
+        (error nil)))))
+      
 
 
 (silentcomp-provide 'ecb-compilation)

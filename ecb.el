@@ -68,7 +68,7 @@
 ;; The latest version of the ECB is available at
 ;; http://ecb.sourceforge.net
 
-;; $Id: ecb.el,v 1.293 2003/02/26 17:18:13 berndl Exp $
+;; $Id: ecb.el,v 1.294 2003/03/04 15:08:44 berndl Exp $
 
 ;;; Code:
 
@@ -4610,11 +4610,16 @@ always the ECB-frame if called from another frame."
                                        'ecb-token-sync)
       (ecb-activate-ecb-sync-functions ecb-window-sync-delay
                                        'ecb-window-sync-function)
+      (ecb-activate-ecb-sync-functions ecb-compilation-update-idle-time
+                                       'ecb-compilation-buffer-list-changed-p)
       (ecb-activate-ecb-sync-functions nil 'ecb-layout-post-command-hook)
       (add-hook 'pre-command-hook 'ecb-layout-pre-command-hook)
       (add-hook 'after-save-hook 'ecb-update-methods-after-saving)
       (add-hook 'kill-buffer-hook 'ecb-kill-buffer-hook)
 
+      ;; running the compilation-buffer update first time
+      (ecb-compilation-buffer-list-init)
+      
       ;; ediff-stuff; we operate here only with symbols to avoid bytecompiler
       ;; warnings
       (if (boundp 'ediff-quit-hook)
