@@ -5,6 +5,8 @@
 *** Now the "goto-window-..." menu-entries in the "ECB"-menu are working correct
     if a speedbar is integrated.
 
+*** Preventing etags-supported sources from being parsed (and saved) too often.
+
 ** Changed default keybindings:
    - C-c . r:  `ecb-rebuild-methods-buffer'
    - C-c . lc: `ecb-change-layout'
