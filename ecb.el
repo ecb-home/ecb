@@ -88,6 +88,7 @@
 (require 'ecb-help)
 (require 'ecb-navigate)
 (require 'ecb-eshell)
+(require 'ecb-compilation)
 (require 'ecb-cycle)
 
 ;; various loads

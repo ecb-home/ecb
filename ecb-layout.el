@@ -163,6 +163,11 @@ Attention: You should never change this!")
 		  (ecb-redraw-layout)
                   (select-frame curr-frame))))))
 
+(defcustom ecb-select-edit-window-on-redraw nil
+  "*Select the first edit window on `ecb-redraw-layout'."
+  :group 'ecb-layout
+  :type 'boolean)
+
 (defcustom ecb-new-ecb-frame nil
   "*Create a new frame at activation time of ECB."
   :group 'ecb-layout
@@ -1468,6 +1473,10 @@ On normal machines the full drawback should be done in << 1s!"
             (ecb-redraw-layout-full)))
       (ecb-redraw-layout-full)))
 
+  ;;make sure we are in the edit window if necessary.
+  (when ecb-select-edit-window-on-redraw
+    (ecb-goto-window-edit1))
+  
   (message "ECB redrawing layout...done"))
 
 ;; the main layout core-function. This function is the "environment" for a
