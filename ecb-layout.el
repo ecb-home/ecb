@@ -110,7 +110,7 @@
 ;; For the ChangeLog of this file see the CVS-repository. For a complete
 ;; history of the ECB-package see the file NEWS.
 
-;; $Id: ecb-layout.el,v 1.166 2003/06/23 14:13:40 berndl Exp $
+;; $Id: ecb-layout.el,v 1.167 2003/07/04 16:25:45 berndl Exp $
 
 ;;; Code:
 
@@ -118,6 +118,7 @@
   (require 'silentcomp))
 
 (require 'ecb-util)
+(require 'ecb-speedbar)
 (require 'ecb-compilation)
 (require 'ecb-create-layout)
 
@@ -1857,6 +1858,10 @@ special ecb-window."
   "Used with `ecb-toggle-ecb-windows'. If true the ECB windows are hidden. Do
 not change this variable!")
 
+;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: For left-right-layouts: Not only
+;; hiding all the ecb-windows but offering to hide only one of the left or the
+;; right column. Maybe toggling in the sequence "Hide left" --> "Hide all" -->
+;; Hide right" --> "Show all". But i (Klaus) think this is not so easy........
 (defun ecb-toggle-ecb-windows (&optional arg)
   "Toggle visibilty of the ECB-windows.
 With prefix argument ARG, make visible if positive, otherwise invisible.
@@ -2000,13 +2005,11 @@ during evaluating BODY the current window is always dedicated at the end!"
     ;; - if ecb-use-speedbar-instead-native-tree-buffer is not 'dir or
     ;; - if setting the speedbar buffer has failed.
     (when set-directories-buffer
-      (if (featurep 'ecb-speedbar)
-          (ignore-errors (ecb-speedbar-deactivate)))
+      (ignore-errors (ecb-speedbar-deactivate))
       (ecb-with-dedicated-window
        (switch-to-buffer ecb-directories-buffer-name)))))
 
 (defun ecb-set-speedbar-buffer ()
-  (require 'ecb-speedbar)
   (ecb-with-dedicated-window (ecb-speedbar-set-buffer)))
 
 (defun ecb-set-sources-buffer ()
@@ -2025,8 +2028,7 @@ during evaluating BODY the current window is always dedicated at the end!"
     ;; - if ecb-use-speedbar-instead-native-tree-buffer is not 'source or
     ;; - if setting the speedbar buffer has failed.
     (when set-sources-buffer
-      (if (featurep 'ecb-speedbar)
-          (ignore-errors (ecb-speedbar-deactivate)))
+      (ignore-errors (ecb-speedbar-deactivate))
       (ecb-with-dedicated-window
        (switch-to-buffer ecb-sources-buffer-name)))))
 
@@ -2046,8 +2048,7 @@ during evaluating BODY the current window is always dedicated at the end!"
     ;; - if ecb-use-speedbar-instead-native-tree-buffer is not 'method or
     ;; - if setting the speedbar buffer has failed.
     (when set-methods-buffer
-      (if (featurep 'ecb-speedbar)
-          (ignore-errors (ecb-speedbar-deactivate)))
+      (ignore-errors (ecb-speedbar-deactivate))
       (ecb-with-dedicated-window
        (switch-to-buffer ecb-methods-buffer-name)))))
 
@@ -2619,8 +2620,7 @@ this function the edit-window is selected which was current before redrawing."
           (ecb-update-directories-buffer))
         ;; deactivate the speedbar stuff if the speedbar-integration-buffer
         ;; was shown before but not now
-        (when (and (featurep 'ecb-speedbar)
-                   (member (get-buffer ecb-speedbar-buffer-name)
+        (when (and (member (get-buffer ecb-speedbar-buffer-name)
                            ecb-windows-before-redraw)
                    (not (member (get-buffer ecb-speedbar-buffer-name)
                                 current-ecb-windows)))

@@ -1,6 +1,6 @@
 ;;; ecb-speedbar.el --- 
 
-;; $Id: ecb-speedbar.el,v 1.42 2003/06/23 14:13:40 berndl Exp $
+;; $Id: ecb-speedbar.el,v 1.43 2003/07/04 16:25:45 berndl Exp $
 
 ;; Copyright (C) 2000-2003 Free Software Foundation, Inc.
 ;; Copyright (C) 2000-2003 Kevin A. Burton (burton@openprivacy.org)
@@ -56,6 +56,9 @@
 ;; (http://www.eff.org)
 
 ;;; History:
+
+;; - Fri Jul 04 2003 5:28 PM (klaus.berndl@sdm.de): removed the
+;;   speedbar-version check because this is done now globally in ecb.el.
 ;;
 ;; - Mon Jun 23 2003 11:54 AM (klaus.berndl@sdm.de): Added speedbar-mechanism
 ;;   for parsing files not supported by semantic but by imenu and/or etags.
@@ -78,7 +81,6 @@
 ;;   ecb-delete-other-windows-in-editwindow-20
 
 
-
 ;;; Code:
 
 (eval-when-compile
@@ -91,16 +93,6 @@
 (silentcomp-defvar imenu--rescan-item)
 (silentcomp-defvar imenu--index-alist)
 
-
-(defconst ecb-speedbar-version-ok (and (boundp 'speedbar-version)
-                                       (stringp speedbar-version)
-                                       (string-match "^0\\.\\(1[4-9]\\|[2-9][0-9]*\\)"
-                                                     speedbar-version))
-  "ECB can only integrate and use speedbar versions >= 0.14beta1 so the value
-is only true for these versions.")
-
-(if (not ecb-speedbar-version-ok)
-    (ecb-error "Integrating speedbar or parsing of non-semantic-sources need speedbar-version >= 0.14beta1!"))
 
 (defconst ecb-speedbar-adviced-functions '((speedbar-click . around)
                                            (speedbar-frame-mode . around)
@@ -184,78 +176,74 @@ current speedbar implementation but normally it should work with recent
 speedbar versions >= 0.14beta1. But be aware: If the speedbar impl changes in
 future this could break."
 
-  (if (not ecb-speedbar-version-ok)
-      (error "Speedbar integration needs speedbar-version >= 0.14beta1!")
-    ;; enable the advices for speedbar
-    (ecb-speedbar-enable-advices)
+  ;; enable the advices for speedbar
+  (ecb-speedbar-enable-advices)
   
-    ;;disable automatic speedbar updates... let the ECB handle this with
-    ;;ecb-current-buffer-sync
-    (speedbar-disable-update)
+  ;;disable automatic speedbar updates... let the ECB handle this with
+  ;;ecb-current-buffer-sync
+  (speedbar-disable-update)
 
-    ;;always stay in the current frame
-    ;; save the old value but only first time!
-    (if (null ecb-speedbar-select-frame-method-old)
-        (setq ecb-speedbar-select-frame-method-old speedbar-select-frame-method))
-    (setq speedbar-select-frame-method 'attached)
+  ;;always stay in the current frame
+  ;; save the old value but only first time!
+  (if (null ecb-speedbar-select-frame-method-old)
+      (setq ecb-speedbar-select-frame-method-old speedbar-select-frame-method))
+  (setq speedbar-select-frame-method 'attached)
 
-    (when (not (buffer-live-p speedbar-buffer))
-      (save-excursion
-        (setq speedbar-buffer (get-buffer-create ecb-speedbar-buffer-name))
-        (set-buffer speedbar-buffer)
-        (speedbar-mode)))
+  (when (not (buffer-live-p speedbar-buffer))
+    (save-excursion
+      (setq speedbar-buffer (get-buffer-create ecb-speedbar-buffer-name))
+      (set-buffer speedbar-buffer)
+      (speedbar-mode)))
 
-    ;;Start up the timer
-    (speedbar-reconfigure-keymaps)
-    (speedbar-update-contents)
-    (speedbar-set-timer 1)
+  ;;Start up the timer
+  (speedbar-reconfigure-keymaps)
+  (speedbar-update-contents)
+  (speedbar-set-timer 1)
 
-    ;;Set the frame that the speedbar should use.  This should be the selected
-    ;;frame.  AKA the frame that ECB is running in.
-    (setq speedbar-frame ecb-frame)
-    (setq dframe-attached-frame ecb-frame)
+  ;;Set the frame that the speedbar should use.  This should be the selected
+  ;;frame.  AKA the frame that ECB is running in.
+  (setq speedbar-frame ecb-frame)
+  (setq dframe-attached-frame ecb-frame)
   
-    ;;this needs to be 0 because we can't have the speedbar too chatty in the
-    ;;current frame because this will mean that the minibuffer will be updated too
-    ;;much.
-    ;; save the old value but only first time!
-    (if (null ecb-speedbar-verbosity-level-old)
-        (setq ecb-speedbar-verbosity-level-old speedbar-verbosity-level))
-    (setq speedbar-verbosity-level 0)
+  ;;this needs to be 0 because we can't have the speedbar too chatty in the
+  ;;current frame because this will mean that the minibuffer will be updated too
+  ;;much.
+  ;; save the old value but only first time!
+  (if (null ecb-speedbar-verbosity-level-old)
+      (setq ecb-speedbar-verbosity-level-old speedbar-verbosity-level))
+  (setq speedbar-verbosity-level 0)
 
-    (add-hook 'ecb-current-buffer-sync-hook
-              'ecb-speedbar-current-buffer-sync)
+  (add-hook 'ecb-current-buffer-sync-hook
+            'ecb-speedbar-current-buffer-sync)
   
-    ;;reset the selection variable
-    (setq speedbar-last-selected-file nil)))
+  ;;reset the selection variable
+  (setq speedbar-last-selected-file nil))
 
 
 (defun ecb-speedbar-deactivate ()
   "Reset things as before activating speedbar by ECB"
-  (if (not ecb-speedbar-version-ok)
-      (error "Speedbar integration needs speedbar-version >= 0.14beta1!")
-    (ecb-speedbar-disable-advices)
+  (ecb-speedbar-disable-advices)
   
-    (setq speedbar-frame nil)
-    (setq dframe-attached-frame nil)
+  (setq speedbar-frame nil)
+  (setq dframe-attached-frame nil)
 
-    (speedbar-enable-update)
+  (speedbar-enable-update)
   
-    (if ecb-speedbar-select-frame-method-old
-        (setq speedbar-select-frame-method ecb-speedbar-select-frame-method-old))
-    (setq ecb-speedbar-select-frame-method-old nil)
+  (if ecb-speedbar-select-frame-method-old
+      (setq speedbar-select-frame-method ecb-speedbar-select-frame-method-old))
+  (setq ecb-speedbar-select-frame-method-old nil)
 
-    (if ecb-speedbar-verbosity-level-old
-        (setq speedbar-verbosity-level ecb-speedbar-verbosity-level-old))
-    (setq ecb-speedbar-verbosity-level-old nil)
+  (if ecb-speedbar-verbosity-level-old
+      (setq speedbar-verbosity-level ecb-speedbar-verbosity-level-old))
+  (setq ecb-speedbar-verbosity-level-old nil)
   
-    (remove-hook 'ecb-current-buffer-sync-hook
-                 'ecb-speedbar-current-buffer-sync)
+  (remove-hook 'ecb-current-buffer-sync-hook
+               'ecb-speedbar-current-buffer-sync)
 
-    (when (and speedbar-buffer
-               (buffer-live-p speedbar-buffer))
-      (kill-buffer speedbar-buffer)
-      (setq speedbar-buffer nil))))
+  (when (and speedbar-buffer
+             (buffer-live-p speedbar-buffer))
+    (kill-buffer speedbar-buffer)
+    (setq speedbar-buffer nil)))
 
 
 
@@ -361,38 +349,36 @@ Return NODE."
 (defun ecb-get-tags-for-non-semantic-files ()
   "Get a tag-list for current source-file. This is done via the
 `speedbar-fetch-dynamic-tags' mechanism which supports imenu and etags."
-  (if (not ecb-speedbar-version-ok)
-      (error "Parsing of non-semantic-sources needs speedbar-version >= 0.14beta1!")
-    (require 'imenu)
-    (if (member major-mode ecb-non-semantic-exclude-modes)
-        nil
-      (let* ((lst (let ((speedbar-dynamic-tags-function-list
-                         (if (not (assoc major-mode
-                                         ecb-non-semantic-parsing-function))
-                             speedbar-dynamic-tags-function-list
-                           (list (cons (cdr (assoc major-mode
-                                                   ecb-non-semantic-parsing-function))
-                                       'identity)))))
-                    (speedbar-fetch-dynamic-tags (buffer-file-name
-                                                  (current-buffer)))))
-             (tag-list (cdr lst))
-             (methods speedbar-tag-hierarchy-method))
+  (require 'imenu)
+  (if (member major-mode ecb-non-semantic-exclude-modes)
+      nil
+    (let* ((lst (let ((speedbar-dynamic-tags-function-list
+                       (if (not (assoc major-mode
+                                       ecb-non-semantic-parsing-function))
+                           speedbar-dynamic-tags-function-list
+                         (list (cons (cdr (assoc major-mode
+                                                 ecb-non-semantic-parsing-function))
+                                     'identity)))))
+                  (speedbar-fetch-dynamic-tags (buffer-file-name
+                                                (current-buffer)))))
+           (tag-list (cdr lst))
+           (methods speedbar-tag-hierarchy-method))
     
-        ;; removing the imenu-Rescan-item
-        (if (string= (car (car tag-list)) (car imenu--rescan-item))
-            (setq tag-list (cdr tag-list)))
-        ;; If imenu or etags returns already groups (etags will do this probably
-        ;; not, but imenu will do this sometimes - e.g. with cperl) then we do not
-        ;; regrouping with the speedbar-methods of
-        ;; `speedbar-tag-hierarchy-method'!
-        (when (dolist (tag tag-list t)
-                (if (or (speedbar-generic-list-positioned-group-p tag)
-                        (speedbar-generic-list-group-p tag))
-                    (return nil)))
-          (while methods
-            (setq tag-list (funcall (car methods) tag-list)
-                  methods (cdr methods))))
-        tag-list))))
+      ;; removing the imenu-Rescan-item
+      (if (string= (car (car tag-list)) (car imenu--rescan-item))
+          (setq tag-list (cdr tag-list)))
+      ;; If imenu or etags returns already groups (etags will do this probably
+      ;; not, but imenu will do this sometimes - e.g. with cperl) then we do not
+      ;; regrouping with the speedbar-methods of
+      ;; `speedbar-tag-hierarchy-method'!
+      (when (dolist (tag tag-list t)
+              (if (or (speedbar-generic-list-positioned-group-p tag)
+                      (speedbar-generic-list-group-p tag))
+                  (return nil)))
+        (while methods
+          (setq tag-list (funcall (car methods) tag-list)
+                methods (cdr methods))))
+      tag-list)))
 
 
 (silentcomp-provide 'ecb-speedbar)

@@ -60,10 +60,8 @@
 ;;   (http://cedet.sourceforge.net/semantic.shtml).
 ;; - Eieio, author-version between 0.17 and 0.17.9
 ;;   (http://cedet.sourceforge.net/eieio.shtml).
-;; - Optional: speedbar, author version 0.14beta1 or higher
-;;   (http://cedet.sourceforge.net/eieio.shtml) This is only needed if the
-;;   speedbar-integration of ECB is used or if sources should be parsed and
-;;   displayed which are not supported by semantic.
+;; - speedbar, author version 0.14beta1 or higher
+;;   (http://cedet.sourceforge.net/speedbar.shtml)
 ;; - Optional: If Java code is edited the ECB works best when the JDE package
 ;;   (http://sunsite.auc.dk/jde) is installed.
 
@@ -90,7 +88,7 @@
 ;; For the ChangeLog of this file see the CVS-repository. For a complete
 ;; history of the ECB-package see the file NEWS.
 
-;; $Id: ecb.el,v 1.312 2003/06/28 15:35:20 berndl Exp $
+;; $Id: ecb.el,v 1.313 2003/07/04 16:25:45 berndl Exp $
 
 ;;; Code:
 
@@ -98,157 +96,10 @@
   (require 'silentcomp))
 
 
-(defconst ecb-required-semantic-version-min '(1 4 2 0))
-(defconst ecb-required-semantic-version-max '(1 4 3 9))
-(defconst ecb-required-eieio-version-min '(0 17 2 0))
-(defconst ecb-required-eieio-version-max '(0 17 3 9))
-
-(defvar ecb-all-requirements-available nil)
-(defvar ecb-upgrade-check-done nil)
-
 ;; We need this libraries already here if we miss some requirements and we
 ;; want to offer the user to download them.
 (require 'ecb-upgrade)
 (require 'ecb-util)
-
-(defun ecb-check-requirements (&optional just-check)
-  "Ensure that we use the right `semantic-version' and right `eieio-version'
-and offer to download them if not installed.
-
-If JUST-CHECK is not nil then
-1. Only the version check is done but no download
-2. It returns nil if all requirements are correct, otherwise a list which
-   contains the symbol 'semantic if `semantic-version' is incorrect and 'eieio
-   if `eieio-version' is incorrect.
-
-If called in noninteractive mode \(e.g. in batch-mode) then JUST-CHECK is
-always true."
-  (when (and (or (not (boundp 'ecb-version-check)) ecb-version-check)
-             (not ecb-all-requirements-available))
-    (let ((semantic-required-version-str-min (ecb-package-version-list2str
-                                              ecb-required-semantic-version-min))
-          (semantic-required-version-str-max (ecb-package-version-list2str
-                                              ecb-required-semantic-version-max))
-          (eieio-required-version-str-min (ecb-package-version-list2str
-                                           ecb-required-eieio-version-min))
-          (eieio-required-version-str-max (ecb-package-version-list2str
-                                           ecb-required-eieio-version-max))
-          (failed-result)
-          (version-error nil)
-          (semantic-dir nil)
-          (semantic-state nil)
-          (semantic-installed-version-str nil)
-          (eieio-dir nil)
-          (eieio-state nil)
-          (eieio-installed-version-str nil))
-      ;; check if semantic version is correct
-      (when (or (not (boundp 'semantic-version))
-                (ecb-package-version-list<
-                 (ecb-package-version-str2list semantic-version)
-                 ecb-required-semantic-version-min)
-                (ecb-package-version-list<
-                 ecb-required-semantic-version-max
-                 (ecb-package-version-str2list semantic-version)))
-        (setq version-error (concat "semantic ["
-                                    semantic-required-version-str-min
-                                    ", "
-                                    semantic-required-version-str-max
-                                    "]"))
-        (setq failed-result (cons 'semantic failed-result)))
-      ;; check if eieio version is correct
-      (when (or (not (boundp 'eieio-version))
-                (ecb-package-version-list<
-                 (ecb-package-version-str2list eieio-version)
-                 ecb-required-eieio-version-min)
-                (ecb-package-version-list<
-                 ecb-required-eieio-version-max
-                 (ecb-package-version-str2list eieio-version)))
-        (setq version-error
-              (concat version-error (if version-error " and ")
-                      "eieio ["
-                      eieio-required-version-str-min
-                      ", "
-                      eieio-required-version-str-max
-                      "]"))
-        (setq failed-result (cons 'eieio failed-result)))
-      (if (null failed-result)
-          ;; this is the only place where this variable is set
-          (setq ecb-all-requirements-available t))
-      (if (or just-check (ecb-noninteractive))
-          failed-result
-        (when failed-result
-          (when ecb-regular-xemacs-package-p
-            (with-output-to-temp-buffer "*ECB downloading and installing*"
-              (princ "Current ECB is installed as regular XEmacs package and not with the\n")
-              (princ "archive available at the ECB-website. So you should use the package-manager\n")
-              (princ "of XEmacs to get the required versions of semantic and/or eieio and to\n")
-              (princ "install them also as regular XEmacs-packages! If you now proceed installing\n")
-              (princ "from the CEDET-website then the new versions will NOT be installed as\n")
-              (princ "regular XEmacs-package(s) but as \"flat\" package(s) parallel to the current\n")
-              (princ "ECB directory!\n\n")))
-          (if (not (yes-or-no-p (format "ECB requires %s. Download now? "
-                                        version-error)))
-              (ecb-error "ECB can only be used with %s! Sorry!"
-                         version-error)
-            (message nil)
-
-            ;; try to download semantic and set state and install dir
-            (if (not (member 'semantic failed-result))
-                (setq semantic-state "Correct version already loaded!")
-              (setq semantic-installed-version-str
-                    (ecb-package-get-matching-versions-str
-                     "semantic" ecb-semantic-eieio-url
-                     ecb-required-semantic-version-min
-                     ecb-required-semantic-version-max))
-              (setq semantic-dir
-                    (ecb-package-download "semantic"
-                                          semantic-installed-version-str
-                                          ecb-semantic-eieio-url))
-              (setq semantic-state (if (and semantic-dir
-                                            semantic-installed-version-str)
-                                       (concat "Installed "
-                                               semantic-installed-version-str
-                                               " in " semantic-dir)
-                                     "Download- or installing-failure!")))
-
-            ;; try to download eieio and set state and install dir
-            (if (not (member 'eieio failed-result))
-                (setq eieio-state "Correct version already loaded!")
-              (setq eieio-installed-version-str
-                    (ecb-package-get-matching-versions-str
-                     "eieio" ecb-semantic-eieio-url
-                     ecb-required-eieio-version-min
-                     ecb-required-eieio-version-max))
-              (setq eieio-dir
-                    (ecb-package-download "eieio"
-                                          eieio-installed-version-str
-                                          ecb-semantic-eieio-url))
-              (setq eieio-state (if (and eieio-dir
-                                         eieio-installed-version-str)
-                                    (concat "Installed "
-                                            eieio-installed-version-str
-                                            " in " eieio-dir)
-                                  "Download- or installing-failure!")))
-
-            ;; display the success
-            (with-output-to-temp-buffer "*ECB downloading and installing*"
-              (princ "Current state of the required packages semantic and eieio:\n\n")
-              (princ (concat "- semantic author-version must be ["
-                             semantic-required-version-str-min
-                             ", "
-                             semantic-required-version-str-max "]:\n  "))
-              (princ semantic-state)
-              (princ "\n")
-              (princ (concat "- eieio author-version must be ["
-                             eieio-required-version-str-min
-                             ", "
-                             eieio-required-version-str-max "]:\n  "))
-              (princ eieio-state)
-              (princ "\n\n")
-              (princ "After adding the new directories to your `load-path' and then restarting\n")
-              (princ "Emacs and ECB the new packages will be used.\n\n")
-              (princ "\n\n"))
-            (ecb-error "Please restart Emacs with the required packages!")))))))
 
 
 ;; if we miss some of the requirements we offer the user to download and
@@ -260,13 +111,20 @@ always true."
        (eieio-load-ok (condition-case nil
                           (require 'eieio)
                         (error nil)))
-       (missing-msg (concat (if (not semantic-load-ok) "package semantic")
+       (speedbar-load-ok (condition-case nil
+                          (require 'speedbar)
+                        (error nil)))
+       (missing-msg (concat (if (not semantic-load-ok) "the package semantic")
                             (when (not eieio-load-ok)
                               (concat (if (not semantic-load-ok) " and the ")
-                                      "package eieio")))))
-  (when (not (and semantic-load-ok eieio-load-ok))
+                                      "package eieio"))
+                            (when (not speedbar-load-ok)
+                              (concat (if (or (not semantic-load-ok)
+                                              (not eieio-load-ok)) " and the ")
+                                      "package speedbar")))))
+  (when (not (and semantic-load-ok eieio-load-ok speedbar-load-ok))
     (if (ecb-noninteractive)
-        (ecb-error "ECB is missing the %s!" missing-msg)
+        (ecb-error "ECB is missing %s!" missing-msg)
       (ecb-check-requirements))))
 
 ;; If we are here we can load ECB because at least we have installed and
@@ -274,8 +132,16 @@ always true."
 ;; at start- or byte-compile-time
 
 
-(message "ECB %s uses semantic %s and eieio %s" ecb-version
-         semantic-version eieio-version)
+(message "ECB %s uses semantic %s, eieio %s and speedbar %s." ecb-version
+         (or (and (boundp 'semantic-version)
+                  semantic-version)
+             "<unknown version>")
+         (or (and (boundp 'eieio-version)
+                  eieio-version)
+             "<unknown version>")
+         (or (and (boundp 'speedbar-version)
+                  speedbar-version)
+             "<unknown version>"))
 
 (require 'semantic-load)
 
@@ -292,6 +158,7 @@ always true."
 (require 'ecb-cycle)
 (require 'ecb-face)
 (require 'ecb-tod)
+(require 'ecb-speedbar)
 (require 'ecb-autogen)
 ;;(require 'ecb-profile)
 
@@ -320,6 +187,11 @@ always true."
 (silentcomp-defvar ediff-quit-hook)
 (silentcomp-defvar tar-subfile-mode)
 (silentcomp-defvar archive-subfile-mode)
+(silentcomp-defun hs-minor-mode)
+(silentcomp-defun hs-show-block)
+(silentcomp-defun hs-hide-block)
+(silentcomp-defvar hs-minor-mode)
+(silentcomp-defvar hs-block-start-regexp)
 
 ;; ecb-speedbar is are first loaded if
 ;; ecb-use-speedbar-instead-native-tree-buffer is set to not nil or if
@@ -1875,8 +1747,8 @@ perform the check and reset manually with `ecb-upgrade-options'."
   :type 'boolean)
 
 (defcustom ecb-version-check t
-  "*If not nil ECB checks at start-time if the required versions of semantic
-and eieio are installed and loaded into Emacs.
+  "*If not nil ECB checks at start-time if the required versions of semantic,
+eieio and speedbar are installed and loaded into Emacs.
 
 It is strongly recommended to set this option to not nil!"
   :group 'ecb-general
@@ -2479,8 +2351,7 @@ speedbar-window."
   "Make the ECB-speedbar window the current window. This command does nothing
 if no integrated speedbar is visible in the ECB-frame."
   (interactive)
-  (and (require 'ecb-speedbar)
-       (ecb-speedbar-active-p)
+  (and (ecb-speedbar-active-p)
        (ecb-goto-window ecb-speedbar-buffer-name)))
 
 (defun ecb-goto-window-edit1 ()
@@ -3333,10 +3204,8 @@ to be rescanned/reparsed and therefore the Method-buffer will be rebuild too."
                  (not (semantic-active-p))
                  (buffer-file-name (current-buffer))
                  (or non-semantic-rebuild (null cached-tree)))
-        (setq updated-cache (progn
-                              (ignore-errors (require 'ecb-speedbar))
-                              (ignore-errors
-                                (ecb-get-tags-for-non-semantic-files))))
+        (setq updated-cache (ignore-errors
+                              (ecb-get-tags-for-non-semantic-files)))
         (setq non-semantic-handling
               (if updated-cache 'parsed 'parsed-failed)))
 
@@ -4058,8 +3927,7 @@ Currently the fourth argument TREE-BUFFER-NAME is not used here."
 
 (defun ecb-directory-update-speedbar (dir)
   "Update the integrated speedbar if necessary."
-  (and (featurep 'ecb-speedbar)
-       (ecb-speedbar-active-p)
+  (and (ecb-speedbar-active-p)
        ;; depending on the value of `ecb-directory-update-speedbar' we have to
        ;; check if it is senseful to update the speedbar.
        (or (equal ecb-directories-update-speedbar t)
@@ -4348,8 +4216,20 @@ can last a long time - depending of machine- and disk-performance."
              (push-mark nil t))
          (widen)
          (goto-char (ecb-semantic-token-start token))
+         (beginning-of-line)
+         ;; goto the token name; this is especially needed for languages
+         ;; like c++ where a often used style is like:
+         ;;     void
+         ;;     ClassX::methodM(arg1...)
+         ;;     {
+         ;;       ...
+         ;;     }
+         ;; here we want to jump to the line "ClassX::..." and not to line
+         ;; "void".
+         (search-forward (semantic-token-name token) nil t)
+         (beginning-of-line-text)
          (if (and ecb-token-jump-narrow (semantic-active-p))
-             (narrow-to-region (ecb-line-beginning-pos)
+             (narrow-to-region (ecb-semantic-token-start token)
                                (ecb-semantic-token-end token))
            (cond
             ((eq 'top ecb-scroll-window-after-jump)
@@ -4377,14 +4257,18 @@ can last a long time - depending of machine- and disk-performance."
                               tok-start
                               tok-end
                               ecb-token-jump-narrow)))
-         (when ecb-highlight-token-header-after-jump
-           (save-excursion
-             (move-overlay ecb-method-overlay
-                           (ecb-line-beginning-pos)
-                           (ecb-line-end-pos)
-                           (current-buffer)))
-           (setq ecb-unhighlight-hook-called nil)
-           (add-hook 'pre-command-hook 'ecb-unhighlight-token-header)))))
+         (ecb-highlight-token-header-after-jump))))
+
+(defun ecb-highlight-token-header-after-jump ()
+  (when ecb-highlight-token-header-after-jump
+    (save-excursion
+      (move-overlay ecb-method-overlay
+                    (ecb-line-beginning-pos)
+                    (ecb-line-end-pos)
+                    (current-buffer)))
+    (setq ecb-unhighlight-hook-called nil)
+    (add-hook 'pre-command-hook 'ecb-unhighlight-token-header)))
+  
 
 (defun ecb-show-any-node-info-by-mouse-moving-p ()
   "Return not nil if for at least one tree-buffer showing node info only by
@@ -5094,6 +4978,8 @@ always the ECB-frame if called from another frame."
   ecb-minor-mode)
 
 
+(defvar ecb-upgrade-check-done nil)
+
 (defun ecb-activate--impl ()
   "See `ecb-activate'.  This is the implementation of ECB activation."
 
@@ -5464,8 +5350,7 @@ does all necessary after finishing ediff."
       (ecb-disable-basic-advices)
 
       ;; deactivate and reset the speedbar stuff
-      (if (featurep 'ecb-speedbar)
-          (ignore-errors (ecb-speedbar-deactivate)))
+      (ignore-errors (ecb-speedbar-deactivate))
 
       ;; deactivating the eshell stuff; activation is done implicitly by
       ;; `ecb-eshell-goto-eshell'!
@@ -5559,15 +5444,15 @@ if the minor mode is enabled.
 
 (defvar ecb-common-directories-menu nil)
 (setq ecb-common-directories-menu
-      '(("Grep Directory" ecb-grep-directory)
-        ("Grep Directory recursive" ecb-grep-find-directory)
+      '(("Grep Directory" ecb-grep-directory t)
+        ("Grep Directory recursive" ecb-grep-find-directory t)
         ("---")
-        ("Create File" ecb-create-file)
-	("Create Source" ecb-create-directory-source)
-	("Create Child Directory" ecb-create-directory)
-	("Delete Directory" ecb-delete-directory)
+        ("Create File" ecb-create-file t)
+	("Create Source" ecb-create-directory-source t)
+	("Create Child Directory" ecb-create-directory t)
+	("Delete Directory" ecb-delete-directory t)
         ("---")
-	("Add Source Path" ecb-add-source-path-node)))
+	("Add Source Path" ecb-add-source-path-node t)))
 
 (defvar ecb-directories-menu nil
   "Builtin menu for the directories-buffer for directories which are not a
@@ -5575,7 +5460,7 @@ source-path of `ecb-source-path'.")
 (setq ecb-directories-menu
       (append
        ecb-common-directories-menu
-       '(("Make This a Source Path" ecb-node-to-source-path))))
+       '(("Make This a Source Path" ecb-node-to-source-path t))))
 
 (defvar ecb-directories-menu-title-creator
   (function (lambda (node)
@@ -5589,17 +5474,17 @@ function which is called with current node and has to return a string.")
   (setq ecb-source-path-menu
       (append
        ecb-common-directories-menu
-       '(("Delete Source Path" ecb-delete-source-path))))
+       '(("Delete Source Path" ecb-delete-source-path t))))
 
 (defvar ecb-sources-menu nil
   "Builtin menu for the sources-buffer.")
 (setq ecb-sources-menu
-      '(("Grep Directory" ecb-grep-directory)
-        ("Grep Directory recursive" ecb-grep-find-directory)
+      '(("Grep Directory" ecb-grep-directory t)
+        ("Grep Directory recursive" ecb-grep-find-directory t)
         ("---")
-        ("Delete File" ecb-delete-source-2)
-	("Create File" ecb-create-file-2)
-	("Create Source" ecb-create-source)))
+        ("Delete File" ecb-delete-source-2 t)
+	("Create File" ecb-create-file-2 t)
+	("Create Source" ecb-create-source t)))
 
 (defvar ecb-sources-menu-title-creator
   (function (lambda (node)
@@ -5613,6 +5498,65 @@ function which is called with current node and has to return a string.")
 (defun ecb-methods-menu-widen (node)
   (ecb-select-edit-window)
   (widen))
+
+
+(if (not ecb-running-xemacs)
+    (require 'hideshow))
+(defun ecb-methods-menu-activate-hs ()
+  "Activates `hs-minor-mode' in the buffer of `ecb-path-selected-source'. If
+this fails then nil is returned otherwise t."
+  (save-excursion
+    (set-buffer (get-file-buffer ecb-path-selected-source))
+    (if (or (not (boundp 'hs-minor-mode))
+            (not hs-minor-mode))
+        (if (fboundp 'hs-minor-mode)
+            (progn
+              (hs-minor-mode 1)
+              t)
+          nil)
+      t)))
+
+(defvar ecb-methods-hs-show-xemacs-special-modes '(emacs-lisp-mode
+                                                   lisp-mode
+                                                   scheme-mode)
+  "List of `major-modes' which contains all modes which need the following
+behavior for the XEmacs-version of `hs-show-block': To show a hidden block at
+toplevel point must stay at the first char of that block. Example: In
+`emacs-lisp-mode' point must stay onto the opening paren of a defun so the
+hidden block can be shown.")
+  
+
+(defun ecb-methods-menu-show-block (node)
+  (if (not (ecb-methods-menu-activate-hs))
+      (ecb-error "hs-minor-mode can not be activated!")
+    (ecb-method-clicked node 1 nil)
+    (save-excursion
+      ;; The XEmacs-shipped version of hide-show seems not to hide the last line
+      ;; of a block, therefore we have to go 1 line forward to be surely within
+      ;; the block. TODO: Klaus Berndl <klaus.berndl@sdm.de>: This is somehow
+      ;; clumsy and unsave....because if hideshow-implementation changes we have
+      ;; to change this code too...but currently i know no better solution.
+      (if (and ecb-running-xemacs
+               (not (boundp 'hs-isearch-open))
+               (not (boundp 'hs-hide-comments-when-hiding-all))
+               (not (fboundp 'hs-already-hidden-p)))
+          (unless (member major-mode ecb-methods-hs-show-xemacs-special-modes)
+            (forward-line 1)))
+      (hs-show-block))
+    ;; Now we are at the beginning of the block or - with other word - on that
+    ;; position `ecb-method-clicked' has set the point.
+    (ecb-highlight-token-header-after-jump)))
+
+(defun ecb-methods-menu-hide-block (node)
+  (if (not (ecb-methods-menu-activate-hs))
+      (ecb-error "hs-minor-mode can not be activated!")
+    (ecb-method-clicked node 1 nil)
+    (or (looking-at hs-block-start-regexp)
+        (search-forward hs-block-start-regexp nil t))
+;;     (forward-line 1)
+;;     (end-of-line)
+    (hs-hide-block)
+    (beginning-of-line)))
 
 (defun ecb-methods-menu-collapse-all (node)
   (ecb-expand-methods-nodes-internal -1 nil t))
@@ -5632,17 +5576,20 @@ function which is called with current node and has to return a string.")
 (defvar ecb-common-methods-menu nil
   "Builtin menu for the methods-buffer.")
 (setq ecb-common-methods-menu
-      '(("Undo narrowing of edit-window" ecb-methods-menu-widen)
+      '(("Undo narrowing of edit-window" ecb-methods-menu-widen t)
         ("---")
-        ("Collapse all" ecb-methods-menu-collapse-all)
-        ("Expand level 0" ecb-methods-menu-expand-0)
-        ("Expand level 1" ecb-methods-menu-expand-1)
-        ("Expand level 2" ecb-methods-menu-expand-2)
-        ("Expand all" ecb-methods-menu-expand-all)))
+        ("Collapse all" ecb-methods-menu-collapse-all t)
+        ("Expand level 0" ecb-methods-menu-expand-0 t)
+        ("Expand level 1" ecb-methods-menu-expand-1 t)
+        ("Expand level 2" ecb-methods-menu-expand-2 t)
+        ("Expand all" ecb-methods-menu-expand-all t)))
 
 (defvar ecb-methods-token-menu nil)
 (setq ecb-methods-token-menu
-      (append '(("Jump to token and narrow" ecb-methods-menu-jump-and-narrow))
+      (append '(("Jump to token and hide block" ecb-methods-menu-hide-block t)
+                ("Jump to token and show block" ecb-methods-menu-show-block t)
+                ("---")
+                ("Jump to token and narrow" ecb-methods-menu-jump-and-narrow t))
               ecb-common-methods-menu))
 
 (defvar ecb-methods-menu-title-creator
@@ -5695,17 +5642,18 @@ buffers does not exist anymore."
 (defvar ecb-history-menu nil
   "Builtin menu for the history-buffer.")
 (setq ecb-history-menu
-      '(("Grep Directory" ecb-grep-directory)
-        ("Grep Directory recursive" ecb-grep-find-directory)
+      '(("Grep Directory" ecb-grep-directory t)
+        ("Grep Directory recursive" ecb-grep-find-directory t)
         ("---")
-        ("Delete File" ecb-delete-source-2)
-        ("Kill Buffer" ecb-history-kill-buffer)
+        ("Delete File" ecb-delete-source-2 t)
+        ("Kill Buffer" ecb-history-kill-buffer t)
         ("---")
-        ("Add all filebuffer to history" ecb-add-history-buffers-popup)
+        ("Add all filebuffer to history" ecb-add-history-buffers-popup t)
         ("---")
-	("Remove Current Entry" ecb-clear-history-node)
-	("Remove All Entries" ecb-clear-history-all)
-	("Remove Non Existing Buffer Entries" ecb-clear-history-only-not-existing)))
+	("Remove Current Entry" ecb-clear-history-node t)
+	("Remove All Entries" ecb-clear-history-all t)
+	("Remove Non Existing Buffer Entries"
+         ecb-clear-history-only-not-existing t)))
 
 (defvar ecb-history-menu-title-creator
   (function (lambda (node)
@@ -5733,7 +5681,7 @@ FILE.elc or if FILE.elc doesn't exist."
   (interactive "P")
   (if (ecb-noninteractive)
       (if (ecb-check-requirements t)
-          (ecb-error "Incorrect requirements; check the versions of semantic and eieio!"))
+          (ecb-error "Incorrect requirements; check the versions of semantic, eieio and speedbar!"))
     (ecb-check-requirements))
   (let (;; (byte-compile-warnings nil)
         (load-path
@@ -5743,6 +5691,9 @@ FILE.elc or if FILE.elc doesn't exist."
                        (file-name-directory
 			(or (locate-library "eieio")
 			    (ecb-error "Eieio is not in the load-path!")))
+                       (file-name-directory
+			(or (locate-library "speedbar")
+			    (ecb-error "Speedbar is not in the load-path!")))
 		       (file-name-directory (locate-library "ecb")))
 		 load-path))
 	(files (directory-files (file-name-directory (locate-library "ecb"))

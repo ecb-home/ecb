@@ -19,7 +19,7 @@
 @c Free Software Foundation, Inc., 59 Temple Place - Suite 330,
 @c Boston, MA 02111-1307, USA.
 
-@c $Id: ecb.texi,v 1.96 2003/06/28 15:35:20 berndl Exp $
+@c $Id: ecb.texi,v 1.97 2003/07/04 16:25:45 berndl Exp $
 
 @setfilename ecb.info
 
@@ -291,7 +291,11 @@ Unpack the ECB archive (probably you have already done this :-)
 
 @item
 Read the file @file{README} in the ECB-directory and install the
-required semantic- and eieio-version.
+required semantic-, eieio- and speedbar-version. The latter one is
+only needed if you want to parse source-types not supported by
+semantic (perl, LaTeX...)@footnote{The speedbar-version shipped with
+GNU Emacs <= 21.3 does not satisfy the requirements for this feature -
+download a newer one!}.
 
 @strong{Note}: ECB maybe requires a newer version of these libraries
 than shipped with (X)Emacs. You have to install exactly a version ECB
@@ -302,13 +306,14 @@ But ECB performs two autom checks:
 
 @itemize @minus
 @item At load-time:
-It checks if the packages semantic and eieio are at
-least installed so ECB can be loaded. If not it offers to download and
+It checks if the packages semantic, eieio and speedbar are at least
+installed so ECB can be loaded. If not it offers to download and
 install them.
 
 @item At start-time:
-It checks if the correct versions of semantic and eieio are installed
-and gives you proper feedback. @xref{Download required packages}.
+It checks if the correct versions of semantic, eieio and speedbar are
+installed and gives you proper feedback. @xref{Download required
+packages}.
 @end itemize
 
 So if you are not sure if you have installed the required packages at
@@ -343,16 +348,16 @@ Load ECB by adding code to your @file{.emacs}:
 If you want to load the complete ECB at (X)Emacs-loadtime (Advantage:
 All ECB-options available after loading ECB. Disadvantage: Increasing
 loadtime@footnote{Cause of full loading of ECB itself and also the
-packages semantic and eieio regardless if ECB is started.}):
+packages semantic, eieio and speedbar regardless if ECB is started.}):
 
 @example
 (require 'ecb)
 @end example
 
 If you want to load the ECB first after starting it by
-@code{ecb-activate} (Advantage: Fast loading@footnote{ECB, semantic
-and eieio are first loaded after starting ECB or with other words: ECB
-and semantic are not loaded if you do not use/need them}.
+@code{ecb-activate} (Advantage: Fast loading@footnote{ECB, semantic,
+eieio and speedbar are first loaded after starting ECB or with other
+words: ECB and semantic are not loaded if you do not use/need them}.
 Disadvantage: ECB- and semantic-options first available after starting
 ECB):
 
@@ -1351,7 +1356,7 @@ these filetypes. Examples are programming-sources like C++, C, Java,
 Emacs-Lisp and Texinfo-file and some more.
 
 @cindex non-semantic-sources
-@item @dfn{non-semantic-files}:
+@item @dfn{non-semantic-sources}:
 For these files there is no semantic-grammar available so they can not
 be parsed by semantic. Examples are Perl-, LaTeX- and TeX-files. But
 for many of these files imenu and/or etags parsers exist. ECB supports
@@ -2640,7 +2645,7 @@ for proceeding!
 
 @deffn Command download-semantic
 Download semantic from the semantic-website and install it. For this
-the variable @code{ecb-semantic-eieio-url} must be set correct,
+the variable @code{ecb-cedet-url} must be set correct,
 whereas the default value of this variable should always be correct.
 
 If @code{ecb-download-package-version-type} is set to -1 (means asking
@@ -3697,8 +3702,8 @@ by (keyboard-escape-quit).
 
 @defopt version-check
 If not @code{nil} ECB checks at start-time if the required versions of
-semantic and eieio are installed and loaded into Emacs. It is strongly
-recommended to set this option to not @code{nil}!
+semantic, eieio and speedbar are installed and loaded into Emacs. It
+is strongly recommended to set this option to not @code{nil}!
 @end defopt
 
 @defopt window-sync
@@ -5461,11 +5466,11 @@ Version type ECB is allowed to download for upgrading.
 
 If you want to upgrade to a newer ECB-version via
 @code{ecb-download-ecb} or if you must upgrade to newer semantic-
-and/or eieio-versions (because ECB requires these newer versions) then
-this option specifies which version-types are allowed. ECB checks on
-the download-sites of ECB/semantic/eieio which versions are currently
-available and then downloads always the latest version matching the
-specified type:
+eieio- and/or speedbar-versions (because ECB requires these newer
+versions) then this option specifies which version-types are allowed.
+ECB checks on the download-sites of ECB/semantic/eieio/speedbar which
+versions are currently available and then downloads always the latest
+version matching the specified type:
 
 @itemize @minus
 @item 2: Get the newest version of all stable versions available.
@@ -5704,7 +5709,7 @@ ECB.
 
 The first section describes how to download and install a new
 package from the web, where ``package'' means either ECB itself or the
-required libraries semantic and eieio.
+required libraries semantic, eieio and speedbar.
 
 After installing a new ECB-version ECB checks if the values of the
 customized ECB-options are still compatible. If not ECB does some
@@ -5756,7 +5761,8 @@ use_proxy = on
 @end enumerate
 
 If these requirements are satisfied you can download and install both
-ECB itself and also the required versions of semantic and eieio:
+ECB itself and also the required versions of semantic, eieio and
+speedbar:
 
 @itemize @bullet
 @item Download a new ECB-version with @code{ecb-download-ecb}:
@@ -5768,11 +5774,11 @@ commands}. Check also the options of the customize-group
 @anchor{Download required packages}
 @item Download and install of required packages:
 
-ECB checks at load-time if the packages semantic and eieio are at
-least installed and at start-time if the required versions of semantic
-and eieio (see @file{README}) are installed and loaded into Emacs. If
-not you will be asked if you want auto. download and install them. If
-you confirm this then ECB does the following:
+ECB checks at load-time if the packages semantic, eieio and speedbar
+are at least installed and at start-time if the required versions of
+semantic, eieio and speedbar (see @file{README}) are installed and
+loaded into Emacs. If not you will be asked if you want auto. download
+and install them. If you confirm this then ECB does the following:
 
 @enumerate
 @item
@@ -5787,6 +5793,10 @@ autom. the newest version available which is matching both its
 min-max-requirements and the setting in
 @code{ecb-download-package-version-type}.
 
+NOTE: Currently there are only beta-versions of speedbar available
+therefore this option has to be set to 1 (allow stable and beta
+versions). But the speedbar beta-versions are very stable!
+
 @item
 Downloading and installing the right version (see 1.) of the required
 packages. ECB downloads and installs the new package versions in
@@ -5798,8 +5808,8 @@ which tells you something like:
 
 @example
 @group
----------------------------------------------------------------
-Current state of the required packages semantic and eieio:
+-----------------------------------------------------------------
+Current state of the required packages semantic, eieio, speedbar:
 
 - semantic author-version must be [1.4, 1.4.9]:
   Installed in /usr/local/lib/site-lisp/semantic-1.4
@@ -5807,9 +5817,12 @@ Current state of the required packages semantic and eieio:
 - eieio author-version must be [0.17, 0.17.9]:
   Correct version already loaded!
 
+- speedbar author-version must be [0.14beta1, 0.15.9]:
+  Correct version already loaded!
+
 After adding the new directory to your @code{load-path} and then
 restarting Emacs the new package(s) can be activated.
----------------------------------------------------------------
+-----------------------------------------------------------------
 
 @end group
 @end example
@@ -5819,7 +5832,8 @@ package P in a version-number >= x and <= y.
 
 @strong{Note2}: By setting the option @code{ecb-version-check} to
 @code{nil} you can prevent ECB from checking correct versions of
-semantic and eieio, but it's strongly recommended not to do this!
+semantic, eieio and speedbar but it's strongly recommended not to do
+this!
 @end itemize
 
 @node Auto. option-upgrading, , Downloading new versions, Upgrading

@@ -1,6 +1,6 @@
 # This Makefile byte-compiles the ECB lisp files and generates online-help.
 
-# $Id: Makefile,v 1.63 2003/06/13 15:13:06 berndl Exp $
+# $Id: Makefile,v 1.64 2003/07/04 16:25:46 berndl Exp $
 
 # ========================================================================
 # User configurable section
@@ -12,19 +12,21 @@
 # Define here the correct path to your Emacs or XEmacs binary
 EMACS=emacs
 
-# If semantic and eieio are added to load-path within some elisp-statements
-# in the Emacs initialisation-files (e.g. .emacs or site-start.el) then set
-# here again the load-path of the semantic-version and eieio-version loaded
-# into your Emacs (use always FORWARD-SLASHES as directory-separator even
-# with MS Windows systems). Make sure you compile ECB with the semantic-
-# and eieio-version you load into Emacs!
+# If semantic, eieio and speedbar are added to load-path within some
+# elisp-statements in the Emacs initialisation-files (e.g. .emacs or
+# site-start.el) then set here again the load-path of the semantic-version,
+# the eieio-version and the speedbar-version loaded into your Emacs (use
+# always FORWARD-SLASHES as directory-separator even with MS Windows
+# systems). Make sure you compile ECB with the semantic-, eieio- and
+# speedbar-version you load into Emacs!
 
 # If you are using XEmacs with already installed xemacs-packages for
-# semantic and eieio or if you are using a file subdirs.el with GNU Emacs
-# which adds semantic and eieio then there is NO need to set the load-path
-# for semantic or eieio.
+# semantic, eieio and speedbar or if you are using a file subdirs.el with
+# GNU Emacs which adds semantic, eieio and speedbar then there is NO need
+# to set the load-path for semantic, eieio or speedbar.
 SEMANTIC=
 EIEIO=
+SPEEDBAR=
 
 # You can set here more load-paths to arbitrary packages if you want. But
 # this is really not necessary!
@@ -39,7 +41,7 @@ LOADPATH=
 #      or
 #
 #      make SEMANTIC="path/to/semantic" EIEIO="path/to/eieio" \
-#           EMACS="path/to/emacs"
+#           SPEEDBAR="path/to/speedbar "EMACS="path/to/emacs"
 #
 #   if you want to set either different load-pathes or Emacs-binary and
 #   you do not want edit the Makefile. Do not forget quoting the arguments
@@ -91,7 +93,7 @@ INSTALLINFO=/usr/bin/install-info
 
 # Do not change anything below!
 
-# $Id: Makefile,v 1.63 2003/06/13 15:13:06 berndl Exp $
+# $Id: Makefile,v 1.64 2003/07/04 16:25:46 berndl Exp $
 
 # For the ECB-maintainers: Change the version-number here and not
 # elsewhere!
@@ -140,6 +142,9 @@ ecb: $(ecb_LISP_EL)
 	fi
 	@if test ! -z "${EIEIO}"; then\
 	   echo "(add-to-list 'load-path \"$(EIEIO)\")" >> ecb-compile-script; \
+	fi
+	@if test ! -z "${SPEEDBAR}"; then\
+	   echo "(add-to-list 'load-path \"$(SPEEDBAR)\")" >> ecb-compile-script; \
 	fi
 	@if test ! -z "${LOADPATH}"; then\
 	   for loadpath in ${LOADPATH}; do \

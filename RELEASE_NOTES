@@ -26,6 +26,8 @@ Some default keybindings have changed; the new bindings are:
   C-c . lt: `ecb-toggle-layout'
   C-c . lw: `ecb-toggle-ecb-windows'
 
+ECB now requires speedbar. ECB needs a version >= 0.14beta1.
+
 
 Upgrading from versions >= 1.90:
 --------------------------------
