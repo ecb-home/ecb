@@ -1514,7 +1514,7 @@ See documentation of `ecb-current-buffer-sync' for conditions when
 synchronization takes place and so in turn these hooks are evaluated.
 
 Precondition for such a hook:
-Current buffer is the buffer of the current selected edit-window.
+Current buffer is the buffer of the currently selected edit-window.
 
 Postcondition for such a hook:
 Point must stay in the same edit-window as before evaluating the hook.

@@ -156,6 +156,7 @@
 (silentcomp-defun eshell-send-input)
 (silentcomp-defun eshell-bol)
 
+
 (defgroup ecb-eshell nil
   "Settings for eshell integration within the ECB."
   :group 'ecb
@@ -216,8 +217,8 @@ interactively or `ecb-eshell-synchronize' is not nil."
       ;; here we can be sure that the eshell is visible in a window of
       ;; `ecb-frame'.
 
-      ;; This macro locally binds the variables visible-buffer, visible-window
-      ;; and edit-window-buffer! See documentation.
+      ;; This macro locally binds the variables visible-buffer and
+      ;; visible-window. See documentation.
 
       (let ((source-buffer-directory nil)
             (ecb-buffer-directory nil))

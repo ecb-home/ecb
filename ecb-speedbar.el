@@ -239,8 +239,7 @@ future this could break."
   ;;only operate if the current frame is the ECB frame and the
   ;;ecb-speedbar-buffer is visible!
   (ecb-do-if-buffer-visible-in-ecb-frame 'ecb-speedbar-buffer-name
-    ;; this macro binds the local variables visible-buffer, visible-window and
-    ;; edit-window-buffer!
+    ;; this macro binds the local variables visible-buffer and visible-window!
     (let ((speedbar-default-directory
            (save-excursion
              (set-buffer visible-buffer)
