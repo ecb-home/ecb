@@ -50,7 +50,7 @@
 ;; The latest version of the ECB is available at
 ;; http://home.swipnet.se/mayhem/ecb.html
 
-;; $Id: ecb.el,v 1.53 2001/04/25 06:44:09 berndl Exp $
+;; $Id: ecb.el,v 1.54 2001/04/26 12:59:37 berndl Exp $
 
 ;;; Code:
 
@@ -814,12 +814,6 @@ displayed with window-start and point at beginning of buffer."
   ;; `ecb-rebuild-methods-buffer-after-parsing' was called auto. after
   ;; `semantic-bovinate-toplevel'.
   (setq ecb-method-buffer-needs-rebuild t)
-;;   (condition-case nil
-;;       ;; semantic <= 1.2.1
-;;       (semantic-bovinate-toplevel 0 nil t)
-;;     (wrong-number-of-arguments
-;;      ;; semantic >= 1.3.1
-;;      (semantic-bovinate-toplevel t)))
   (semantic-bovinate-toplevel t)
 
   ;; Only if the `semantic-bovinate-toplevel' has done no reparsing but only
@@ -835,7 +829,7 @@ displayed with window-start and point at beginning of buffer."
     (save-excursion
       (ecb-buffer-select ecb-methods-buffer-name)
       (tree-buffer-scroll (point-min) (point-min)))))
-  
+
 
 (defun ecb-rebuild-methods-buffer-after-parsing ()
   "Rebuilds the ECB-method buffer after toplevel-parsing by semantic. This
@@ -861,14 +855,26 @@ function is added to the hook `semantic-after-toplevel-bovinate-hook'."
   ;; signalize that the rebuild has already be done
   (setq ecb-method-buffer-needs-rebuild nil))
 
-;; Klaus: We must devide the ecb-update-method-buffer stuff for internal use
-;; and for interactive use (here nothing should be done if point stays not in
-;; an edit-window).
-(defun ecb-update-methods-buffer()
-  "Updates the methods buffer with the current buffer. Point must stay in an
-edit-window otherwise nothing is done."
+(defun ecb-rebuild-methods-buffer ()
+  "Updates the methods buffer with the current buffer after deleting the
+complete previous parser-information, means no semantic-cache is used! Point
+must stay in an edit-window otherwise nothing is done.
+This method is merely needed if semantic parses not the whole buffer because
+it reaches a not parsable code.
+Examples when a call to this function is necessary:
++ If an elisp-file is parsed which contains in the middle a defun X where the
+  closing ) is missing then semantic parses only until this defun X is reached
+  and you will get an incomplete ECB-method buffer. In such a case you must
+  complete the defun X and then call this function to completely reparse the
+  elisp-file and rebuild the ECB method buffer!
++ If you change only the name of a method or a variable and you want the new
+  name be shown immediately in the ECB-method buffer then you must call this
+  function."
   (interactive)
   (when (ecb-point-in-edit-window)
+    ;; to force a really complete rebuild we must completely clear the
+    ;; semantic cache
+    (semantic-clear-toplevel-cache)
     (ecb-update-methods-buffer--internal)))
 
 (defun ecb-set-selected-source(filename other-edit-window

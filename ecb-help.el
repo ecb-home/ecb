@@ -26,7 +26,7 @@
 ;;
 ;; Contains all online-help for ECB (stolen something from recentf.el)
 
-;; $Id: ecb-help.el,v 1.6 2001/04/24 12:51:04 berndl Exp $
+;; $Id: ecb-help.el,v 1.7 2001/04/26 12:59:37 berndl Exp $
 
 ;;; Code
 
@@ -224,6 +224,26 @@ compile-window for such outputs. But you can always restore the correct layout
 by calling `ecb-redraw-layout'!.
 
 
+Rebuilding the ECB-method buffer:
+---------------------------------
+
+In almost all cases there is NO need to manually rebuild the method-buffer,
+because it is always done automatically if necessary. But nevertheless there
+exist a few seldom scenarios where a complete manually rebuild is necessary.
+Here are some of them:
+
++ If an elisp-file is parsed which contains in the middle a defun X where the
+  closing ) is missing then semantic parses only until this defun X is reached
+  and you will get an incomplete ECB-method buffer. In such a case you must
+  complete the defun X and then call this function to completely reparse the
+  elisp-file and rebuild the ECB method buffer!
++ If you change only the name of a method or a variable and you want the new
+  name be shown immediately in the ECB-method buffer then you must call this
+  function.
+
+A complete manually rebuild is done by `ecb-rebuild-methods-buffer'.
+
+
 Redrawing the ECB-layout:
 -------------------------
 
@@ -236,8 +256,9 @@ Available interactive ECB commands:
 
 - `ecb-activate'
 - `ecb-deactivate'
-- `ecb-update-directories-buffer' (normally not needed)
-- `ecb-current-buffer-sync' (normally not needed)
+- `ecb-update-directories-buffer' \(normally not needed)
+- `ecb-current-buffer-sync' \(normally not needed)
+- `ecb-rebuild-methods-buffer' \(see the doc-string of this function)
 - `ecb-redraw-layout'
 - `ecb-clear-history'
 - `ecb-show-help'

@@ -122,7 +122,7 @@
 ;;   + The edit-window must not be splitted and the point must reside in
 ;;     the not deleted edit-window.
 
-;; $Id: ecb-layout.el,v 1.32 2001/04/25 06:26:22 berndl Exp $
+;; $Id: ecb-layout.el,v 1.33 2001/04/26 12:59:37 berndl Exp $
 
 ;;; Code:
 
@@ -460,14 +460,50 @@ FUNCTIONS must be nil or a subset of `ecb-adviceable-functions'!"
      (ecb-activate-adviced-functions ecb-advice-window-functions)))
 
 (defun ecb-point-in-edit-window ()
-  "Return non nil iff point stays in an edit-window nil otherwise."
-
+  "Return nil if point stays not in an edit-window otherwise return 1 if point
+is in the left/topmost edit-window or 2 if in the other edit-window."
   (cond ((eq (selected-window) ecb-edit-window)
-         t)
+         1)
         ((and ecb-split-edit-window
               (eq (previous-window (selected-window) 0) ecb-edit-window))
-         t)
+         2)
         (t nil)))
+
+(defun ecb-point-in-compile-window ()
+  "Return non nil iff point is in the compile-window of ECB"
+  (eq (selected-window) ecb-compile-window))
+
+(defun ecb-point-in-tree-buffer ()
+  "Return nil if point is not in any tree-buffer of ECB otherwise return the
+buffer-object."
+  (let ((curr-buf (current-buffer))
+        (dir-buf (get-buffer ecb-directories-buffer-name))
+        (source-buf (get-buffer ecb-sources-buffer-name))
+        (method-buf (get-buffer ecb-methods-buffer-name))
+        (hist-buf (get-buffer ecb-history-buffer-name)))
+    (or (if (eq curr-buf dir-buf) dir-buf nil)
+        (if (eq curr-buf source-buf) source-buf nil)
+        (if (eq curr-buf method-buf) method-buf nil)
+        (if (eq curr-buf hist-buf) hist-buf nil))))
+
+(defun ecb-select-edit-window (&optional other-edit-window)
+  "Moves point into the edit-window. If optional OTHER-EDIT-WINDOW is non nil
+then point goes in the \"other\" edit-window if the edit-window is splitted.
+Note: The \"other\" edit window means always the right/downmost edit-window!
+If point already stays in the right edit-window nothing is done."
+  (let ((point-location (ecb-point-in-edit-window)))
+    (cond ((not point-location) ;; point not in an edit-window
+           (ignore-errors (select-window ecb-edit-window))
+           (if (and other-edit-window ecb-split-edit-window)
+               (select-window (next-window))))
+          ((equal point-location 1) ;; point in main edit-window
+           (if (and other-edit-window ecb-split-edit-window)
+               (select-window (next-window))))
+          ((equal point-location 2) ;; point in other edit window
+           (if (not other-edit-window)
+               (select-window (previous-window (selected-window) 0))))
+          (t
+           (error "Internal layout error; redraw the whole layout!")))))
 
 (defun ecb-pre-command-hook-function ()
   "During activated ECB this function is added to `pre-command-hook' to set
@@ -515,7 +551,7 @@ The behavior depends on `ecb-other-window-jump-behavior'."
           (direction (if (or (not (ad-get-arg 0)) (>= (ad-get-arg 0) 0)) 1 -1)))
       (while (> count 0)
         (setq count (1- count))
-        (cond ((eq (selected-window) ecb-edit-window)
+        (cond ((equal (ecb-point-in-edit-window) 1)
                (if (= direction 1)
                    (if ecb-split-edit-window
                        (select-window (next-window))
@@ -527,27 +563,21 @@ The behavior depends on `ecb-other-window-jump-behavior'."
                        (select-window ecb-compile-window))
                    (if ecb-split-edit-window
                        (select-window (next-window))))))
-              ((and ecb-compile-window
-                    (eq (selected-window) ecb-compile-window))
-               (ignore-errors
-                 (select-window ecb-edit-window))
+              ((ecb-point-in-compile-window)
+               (ecb-select-edit-window)
                (if ecb-split-edit-window
                    (if (= direction -1)
                        (select-window (next-window)))))
-              ((and ecb-split-edit-window
-                    (eq (previous-window (selected-window) 0) ecb-edit-window))
+              ((equal (ecb-point-in-edit-window) 2)
                (if (= direction 1)
                    (if (and (eq ecb-other-window-jump-behavior 'edit-and-compile)
                             ecb-compile-window)
                        (ignore-errors
                          (select-window ecb-compile-window))
-                     (ignore-errors
-                       (select-window ecb-edit-window)))
-                 (ignore-errors
-                   (select-window ecb-edit-window))))
+                     (ecb-select-edit-window))
+                 (ecb-select-edit-window)))
               (t
-               (ignore-errors
-                 (select-window ecb-edit-window))))))))
+               (ecb-select-edit-window)))))))
 
 (defadvice delete-window (around ecb)
   "The ECB-version of `delete-window'. Works exactly like the original
@@ -563,7 +593,7 @@ If called in any other window of the current ECB-layout it jumps first in the
   (if (not (eq (selected-frame) ecb-frame))
       ad-do-it
     (if (not (ecb-point-in-edit-window))
-        (ignore-errors (select-window ecb-edit-window)))
+        (ecb-select-edit-window))
     (ad-with-originals 'delete-window
       (if ecb-split-edit-window
           (if (funcall (intern (format "ecb-delete-window-in-editwindow-%d"
@@ -584,7 +614,7 @@ If called in any other window of the current ECB-layout it jumps first in the
   (if (not (eq (selected-frame) ecb-frame))
       ad-do-it
     (if (not (ecb-point-in-edit-window))
-        (ignore-errors (select-window ecb-edit-window)))
+        (ecb-select-edit-window))
     (ad-with-originals 'delete-window
       (if ecb-split-edit-window
           (if (funcall (intern (format "ecb-delete-other-windows-in-editwindow-%d"
@@ -603,7 +633,7 @@ If called in any other window of the current ECB-layout it jumps first in the
   (if (not (eq (selected-frame) ecb-frame))
       ad-do-it
     (if (not (ecb-point-in-edit-window))
-        (ignore-errors (select-window ecb-edit-window)))
+        (ecb-select-edit-window))
     (when (and (not ecb-split-edit-window)
                (eq (selected-window) ecb-edit-window))
       (ad-with-originals 'split-window-horizontally
@@ -622,7 +652,7 @@ If called in any other window of the current ECB-layout it jumps first in the
   (if (not (eq (selected-frame) ecb-frame))
       ad-do-it
     (if (not (ecb-point-in-edit-window))
-        (ignore-errors (select-window ecb-edit-window)))
+        (ecb-select-edit-window))
     (when (and (not ecb-split-edit-window)
                (eq (selected-window) ecb-edit-window))
       (ad-with-originals 'split-window-vertically
@@ -638,7 +668,7 @@ the \(first) edit-window and does then it´s job \(see above)."
   (if (not (eq (selected-frame) ecb-frame))
       ad-do-it
     (if (not (ecb-point-in-edit-window))
-        (ignore-errors (select-window ecb-edit-window)))
+        (ecb-select-edit-window))
     (let ((ecb-other-window-jump-behavior 'only-edit))
       (ecb-with-adviced-functions
        (if ecb-split-edit-window
@@ -657,7 +687,7 @@ the \(first) edit-window and does then it´s job \(see above)."
   (if (not (eq (selected-frame) ecb-frame))
       ad-do-it
     (if (not (ecb-point-in-edit-window))
-        (ignore-errors (select-window ecb-edit-window)))
+        (ecb-select-edit-window))
     (let ((ecb-other-window-jump-behavior 'only-edit))
       (ecb-with-adviced-functions
        (if ecb-split-edit-window
@@ -721,16 +751,15 @@ ECB-adviced functions."
    (call-interactively 'split-window-horizontally)))
 
 
-;; here come the internal ...delete-...functions which are called from
-;; `ecb-delete-other-windows' or `ecb-delete-window' with respect
+;; here come the internal ...delete-...functions which are called from the
+;; adviced versions of `delete-other-windows' or `delete-window' with respect
 ;; to the current layout-index (see `ecb-layout-nr').
 (defun ecb-delete-other-windows-in-editwindow-0 ()
-  (cond ((eq (selected-window) ecb-edit-window)
+  (cond ((equal (ecb-point-in-edit-window) 1)
          (delete-window (next-window))
-         (select-window ecb-edit-window)
+         (ecb-select-edit-window)
          t)
-        ((eq (previous-window (selected-window) 0)
-             ecb-edit-window)
+        ((equal (ecb-point-in-edit-window) 2)
          (let ((prev-width (window-width (previous-window
                                           (selected-window) 0))))
            (setq ecb-edit-window (selected-window))
@@ -741,17 +770,16 @@ ECB-adviced functions."
         (t nil)))
 
 (defun ecb-delete-window-in-editwindow-0 ()
-  (cond ((eq (selected-window) ecb-edit-window)
+  (cond ((equal (ecb-point-in-edit-window) 1)
          (let ((width (window-width (selected-window))))
            (setq ecb-edit-window (next-window))
            (delete-window)
            (if (eq ecb-split-edit-window 'horizontal)
                (enlarge-window (+ 2 width) t))
            t))
-        ((eq (previous-window (selected-window) 0)
-             ecb-edit-window)
+        ((equal (ecb-point-in-edit-window) 2)
          (delete-window)
-         (select-window ecb-edit-window)
+         (ecb-select-edit-window)
          t)
         (t nil)))
 
@@ -791,34 +819,31 @@ ECB-adviced functions."
   'ecb-delete-window-in-editwindow-0)
 
 (defun ecb-delete-other-windows-in-editwindow-5 ()
-  (cond ((eq (previous-window (selected-window) 0)
-             ecb-edit-window)
+  (cond ((equal (ecb-point-in-edit-window) 2)
          (setq ecb-edit-window (selected-window))
          (delete-window (previous-window))
          t)
-        ((eq (selected-window) ecb-edit-window)
+        ((equal (ecb-point-in-edit-window) 1)
          (delete-window (next-window))
          t)
         (t nil)))
 
 (defun ecb-delete-window-in-editwindow-5 ()
-  (cond ((eq (previous-window (selected-window) 0)
-             ecb-edit-window)
+  (cond ((equal (ecb-point-in-edit-window) 2)
          (delete-window)
-         (select-window ecb-edit-window)
+         (ecb-select-edit-window)
          t)
-        ((eq (selected-window) ecb-edit-window)
+        ((equal (ecb-point-in-edit-window) 1)
          (setq ecb-edit-window (next-window))
          (delete-window)
          t)
         (t nil)))
 
 (defun ecb-delete-other-windows-in-editwindow-7 ()
-  (cond ((eq (selected-window) ecb-edit-window)
+  (cond ((equal (ecb-point-in-edit-window) 1)
          (delete-window (next-window))
          t)
-        ((eq (previous-window (selected-window) 0)
-             ecb-edit-window)
+        ((equal (ecb-point-in-edit-window) 2)
          (let ((prev-height (window-height (previous-window
                                             (selected-window) 0))))
            (setq ecb-edit-window (selected-window))
@@ -829,17 +854,16 @@ ECB-adviced functions."
         (t nil)))
 
 (defun ecb-delete-window-in-editwindow-7 ()
-  (cond ((eq (selected-window) ecb-edit-window)
-         (let ((height (window-height (selected-window))))
+  (cond ((equal (ecb-point-in-edit-window) 1)
+         (let ((height (1+ (window-height (selected-window)))))
            (setq ecb-edit-window (next-window))
            (delete-window)
            (if (eq ecb-split-edit-window 'vertical)
                (enlarge-window height))
            t))
-        ((eq (previous-window (selected-window) 0)
-             ecb-edit-window)
+        ((equal (ecb-point-in-edit-window) 2)
          (delete-window)
-         (select-window ecb-edit-window)
+         (ecb-select-edit-window)
          t)
         (t nil)))
 
@@ -978,9 +1002,8 @@ this function the edit-window is selected."
     ;; first we go to the edit-window we must do this with ignore-errors
     ;; because maybe the edit-window was destroyed by some mistake or error
     ;; and `ecb-edit-window' was not nil.
-    (ignore-errors
-      (select-window ecb-edit-window))
-
+    (ecb-select-edit-window)
+    
     ;; Do some actions regardless of the choosen layout
     (delete-other-windows)
     (setq ecb-frame (selected-frame))
@@ -1040,7 +1063,7 @@ this function the edit-window is selected."
 
     ;; at the end of the redraw we always stay in that edit-window as before
     ;; the redraw
-    (select-window ecb-edit-window)
+    (ecb-select-edit-window)
     (if (eq window-before-redraw 2)
         (select-window (next-window)))
 
