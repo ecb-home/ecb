@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-layout.el,v 1.185 2003/09/09 09:45:27 berndl Exp $
+;; $Id: ecb-layout.el,v 1.186 2003/09/09 15:37:00 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -1011,17 +1011,17 @@ either not activated or it behaves exactly like the original version!"
       ad-do-it)))
 
 
-(defadvice winner-mode (around ecb)
+(defadvice winner-mode (before ecb)
   "Prevents `winner-mode' from being activated for the ECB-frame."
   (if (equal (selected-frame) ecb-frame)
       (ecb-error "Can't use winner-mode functions in the ecb-frame.")))
 
-(defadvice winner-redo (around ecb)
+(defadvice winner-redo (before ecb)
   "Prevents `winner-redo' from being used within the ECB-frame."
   (if (equal (selected-frame) ecb-frame)
       (ecb-error "Can't use winner-mode functions in the ecb-frame.")))
 
-(defadvice winner-undo (around ecb)
+(defadvice winner-undo (before ecb)
   "Prevents `winner-undo' from being used within the ECB-frame."
   (if (equal (selected-frame) ecb-frame)
       (ecb-error "Can't use winner-mode functions in the ecb-frame.")))

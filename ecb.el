@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb.el,v 1.335 2003/09/09 09:45:27 berndl Exp $
+;; $Id: ecb.el,v 1.336 2003/09/09 15:37:00 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -163,7 +163,7 @@
 (require 'ecb-tod)
 (require 'ecb-speedbar)
 (require 'ecb-autogen)
-(require 'ecb-escreen)
+(require 'ecb-winman-support)
 ;;(require 'ecb-profile)
 
 ;; various loads
@@ -5093,6 +5093,12 @@ That is remove the unsupported :help stuff."
       (customize-group "ecb-non-semantic")
       :active t
       :help "Customize options for parsing non-semantic-sources"
+      ])
+    (ecb-menu-item
+     ["Supporting window-managers..."
+      (customize-group "ecb-winman-support")
+      :active t
+      :help "Customize options for the window-manager-support"
       ])
     )
    (list

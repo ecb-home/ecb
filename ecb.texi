@@ -26,7 +26,7 @@
 @c GNU Emacs; see the file COPYING.  If not, write to the Free Software
 @c Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-@c $Id: ecb.texi,v 1.116 2003/09/09 09:45:27 berndl Exp $
+@c $Id: ecb.texi,v 1.117 2003/09/09 15:37:00 berndl Exp $
 
 @setfilename ecb.info
 
@@ -226,6 +226,7 @@ All customizable options of ECB
 * ecb-help::                    Customizing the online help of ECB
 * ecb-eshell::                  Customizing the eshell-integration
 * ecb-non-semantic::            Customizing parsing non-semantic sources
+* ecb-winman::                  Customizing window-manager support 
 
 Upgrading and downloading packages
 
@@ -252,6 +253,7 @@ Tips and tricks
 * Compile-window on demand::    Displaying the compile-window on demand
 * Non-semantic sources::        Parsing and displaying non-semantic sources
 * Hide-show::                   Using hide-show from the methods-buffer-menu
+* Window-managers and ECB::     Support of several Emacs-window-managers
 
 Entry points for Elisp programmers
 
@@ -3364,6 +3366,7 @@ readable option index. @xref{Option Index}.
 * ecb-help::                    Customizing the online help of ECB
 * ecb-eshell::                  Customizing the eshell-integration
 * ecb-non-semantic::            Customizing parsing non-semantic sources
+* ecb-winman::                  Customizing window-manager support 
 @end menu
 
 @node ecb-general, ecb-directories, Customizable options, Customizable options
@@ -5947,8 +5950,11 @@ interactively but normally it is called autom. by the
 @end defopt
 
 
-@node ecb-non-semantic, , ecb-eshell, Customizable options
+@node ecb-non-semantic, ecb-winman, ecb-eshell, Customizable options
 @subsection Group ecb-non-semantic
+
+@noindent
+This group contains the following options:
 
 @defopt auto-save-before-etags-methods-rebuild
 Automatic saving of current buffer before rebuilding its methods.
@@ -6036,6 +6042,25 @@ only rebuild by @code{ecb-rebuild-methods-buffer-for-non-semantic} if
 either the hook contains no function (the default) or if no function
 of this hook returns nil! See @code{run-hook-with-args-until-failure}
 for description how these function are processed.
+@end defopt
+
+@node ecb-winman, , ecb-non-semantic, Customizable options
+@subsection Group ecb-winman
+
+@noindent
+This group contains the following options:
+
+@defopt winman-escreen-number
+Number of the escreen which is reserved for ECB. If you go to the
+escreen with this number you go always to the escreen with activated
+ECB. All other escreen-numbers are escreens with deactivated ECB!
+@end defopt
+
+@defopt winman-winring-name
+Name of the winring-window-configuration reserved for ECB. If you go
+to the window-configuration with this name you go always to the
+window-configuration with activated ECB. All other
+window-configuration are configurations with deactivated ECB!
 @end defopt
 
 
@@ -6335,6 +6360,7 @@ situations.
 * Compile-window on demand::    Displaying the compile-window on demand
 * Non-semantic sources::        Parsing and displaying non-semantic sources
 * Hide-show::                   Using hide-show from the methods-buffer-menu
+* Window-managers and ECB::     Support of several Emacs-window-managers
 @end menu
 
 @node Changing faces, Small screens, Tips and tricks, Tips and tricks
@@ -6922,7 +6948,7 @@ non-semantic-sources.
 @code{ecb-non-semantic-methods-initial-expand} can be useful too.
 
 
-@node Hide-show, , Non-semantic sources, Tips and tricks
+@node Hide-show, Window-managers and ECB, Non-semantic sources, Tips and tricks
 @section Using hide-show from the methods-buffer-menu
 
 The popup-menu of the Methods-buffer offer two entries for either
@@ -6956,6 +6982,124 @@ for further details. One example of such a @code{major-mode} is
 entry for it like the already contained entries for @code{c++-mode} or
 @code{java-mode} and hiding and showing will work for you with JDEE
 too.
+
+@node Window-managers and ECB, , Hide-show, Tips and tricks
+@section Support of several Emacs-window-managers
+
+@cindex winring
+@cindex escreen
+@cindex window-manager
+There are several window-managers available which offer an easy
+interface to jump between different window-configurations within the
+same frame. A window configuration is the layout of windows and
+associated buffers within a frame. There is always at least one
+configuration, the current configuration. You can create new
+configurations and cycle through the layouts in either direction.
+Window configurations are often named or numbered, and you can jump to
+and delete named rsp. numbered configurations.
+
+Without special support by ECB these window-managers would not work in
+combination with ECB!
+
+ECB currently supports the following managers:
+@email{ecb-list@@lists.sourceforge.net} 
+@itemize @bullet
+@item winring.el:
+Written by Barry A. Warsaw @email{bwarsaw@@python.org}, available at
+@ifhtml
+@uref{http://www.python.org/emacs/}
+@end ifhtml
+@ifnothtml
+@url{http://www.python.org/emacs/}
+@end ifnothtml
+
+@item escreen.el:
+Written by Noah Friedman @email{friedman@@splode.com}, available at
+@ifhtml
+@uref{http://www.splode.com/~friedman/software/emacs-lisp/}
+@end ifhtml
+@ifnothtml
+@url{http://www.splode.com/~friedman/software/emacs-lisp/}
+@end ifnothtml
+@end itemize
+
+The rest of this section describes how to enable the special
+ECB-support for these window-managers and how to use them.
+
+@subsection Enabling of the support
+
+Every support must be enabled explicitly:
+@itemize @bullet
+@item winring:
+Call @code{ecb-winman-winring-enable-support}. This @strong{MUST} be
+done @strong{BEFORE} the first call to any winring-command, so also
+before calling @code{winring-initialize}!
+
+@item escreen:
+Call @code{ecb-winman-escreen-enable-support}. This @strong{MUST} be
+done @strong{BEFORE} the first call to any escreen-command, so also
+before calling @code{escreen-install}!
+@end itemize
+
+If a window-manager-support should be enabled autom. after Emacs-start
+just put the following into your @file{.emacs}:
+
+@lisp
+@group
+(ecb-winman-winring-enable-support)
+(winring-initialize)
+
+;; or - if you like escreen more
+
+(ecb-winman-escreen-enable-support)
+(escreen-install)
+@end group
+@end lisp
+
+@subsection Usage of a window-manager in combination with ECB
+
+After enabling the support of one of the supported window-managers
+just go on as described in the commentary or introduction of the
+respective library-file(s) of the window-manager. Here is a short
+description:
+
+@itemize @bullet
+@item winring:
+First you have to define how to identify the ECB-window-configuration,
+i.e. the configuration with activated ECB. This done with the option
+@code{ecb-winman-winring-name}. There is always only one
+window-configurations with name @code{ecb-winman-winring-name}!
+
+Then run @code{winring-initialize}. If ECB is active then the
+resulting window-configuration is the ECB-window-configuration.
+Otherwise you can create the ECB-window-configuration when you first
+time call @code{winring-new-configuration} with name equal to
+@code{ecb-winman-winring-name}. In general you can run all commands of
+the winring-library. If you jump to the ECB-window-configuration then
+ECB will be autom. activated and if you leave the
+ECB-window-configuration then ECB will autom. deactivated.
+
+@item escreen:
+First you have to define how to identify the ECB-escreen
+i.e. that escreen with activated ECB. This done with the option
+@code{ecb-winman-escreen-number}. There is always only one
+escreen with number @code{ecb-winman-escreen-number}!
+
+Then run @code{escreen-install} (deactivates ECB if currently
+running). After that you can call @code{escreen-create-screen} and
+@code{escreen-goto-screen}@footnote{And of course all other
+@code{escreen-goto-*} commands!}. These commands autom. activate ECB
+if creating or selecting the escreen with number
+@code{ecb-escreen-number} (default = 1) and autom. deactivate ECB if
+leaving the ECB-escreen.
+@end itemize
+
+@subsection Disabling the support
+
+There is normally no need to do this but nevertheless it can be done
+by @code{ecb-winman-escreen-disable-support} rsp.
+@code{ecb-winman-winring-disable-support}.
+
 
 @node Elisp programming, Conflicts and bugs, Tips and tricks, Top
 @chapter Entry points for Elisp programmers
@@ -8017,33 +8161,8 @@ first *AFTER* ECB is activated. This can be done with the hook
 
 @subsection Package escreen.el
 
-@cindex escreen package
-ECB and escreen do not work together for all ECB-versions < 1.96.
-Beginning with version 1.96 ECB contains an escreen-integration: Just
-run @code{ecb-escreen-enable-integration} before the first call of any
-escreen-command - so also before the calling @code{escreen-install}!
-
-So put into your @file{.emacs} the following lines:
-
-@lisp
-@group
-(ecb-escreen-enable-integration)
-;; The following install escreen and will deactivate an already
-;; running ECB - but this is ok!
-(escreen-install)
-@end group
-@end lisp
-
-Then ECB will work very well with escreens. With the option
-@code{ecb-escreen-number} you define the number of the escreen which
-should always display ECB (default = 1). Let us refer to this special
-escreen as @dfn{ECB-escreen}.
-
-Then the commands @code{escreen-create-screen} and
-@code{escreen-goto-screen}@footnote{And of course all other
-@code{escreen-goto-*} commands!} activate ECB if selecting the
-ECB-escreen and deactivate ECB if leaving the ECB-escreen (i.e. if
-selecting another escreen than the ECB-escreen).
+Beginning with version 1.96 ECB supports the window-manager
+escreen.el. See @ref{Window-managers and ECB}.
 
 @subsection Package follow-mouse.el
 
@@ -8124,6 +8243,11 @@ programming}.
 has its own window-management which is completely incompatible with
 @code{winner-mode}! But @code{winner-mode} makes also not really sense
 with ECB.
+
+@subsection Package winring.el
+
+Beginning with version 1.96 ECB supports the window-manager
+winring.el. See @ref{Window-managers and ECB}.
 
 @node Bugs, , Conflicts, Conflicts and bugs
 @section Known bugs
