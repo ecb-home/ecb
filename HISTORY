@@ -1,6 +1,14 @@
 Version 1.90:
 -------------
 
+* Fixed some bugs concerning the eshell-integration (Klaus):
+  + Synchronizing does not set the mark anymore
+  + No longer synchronizing after every command if current source resides in
+    the HOME directory.
+  + Redrawing the layout preserves the eshell-buffer in the compile-window.
+  + Standard emacs-hooks are not clobbered with ecb-eshell-functions if ECB is
+    not active.
+
 * ECB now has a list of valid compilation buffers within the ECB menu. (Kevin)
 
 * Modified syntax-table for all tree-buffers with all paren, braces and
@@ -21,7 +29,7 @@ Version 1.90:
   + The speedbar-commands speedbar, speedbar-get-focus are adviced during
     running speedbar within ECB, so they behave in a senseful way. (Klaus)
 
-* Naming and managing of layouts has been changed! Now a layout is not
+* Naming and managing of layouts has been changed! Now a layout is not longer
   identified by an integer but by an arbitrary string! Example: The layout
   with index 0 in ECB <= 1.80 is now named "left1" in ECB 1.90.
 
@@ -93,7 +101,8 @@ Version 1.90:
   + ecb-activate,
   + ecb-minor-mode,
   + ecb-byte-compile and
-  + ecb-show-help are autoload-able via '(autoload ...)' (Klaus)
+  + ecb-show-help
+  are autoload-able via '(autoload ...)' (Klaus)
 
 * Now ECB offers a command `ecb-create-new-layout' for interactively creating
   new layouts "by example". Read the online-help. (Klaus)
