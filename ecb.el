@@ -54,7 +54,7 @@
 ;; The latest version of the ECB is available at
 ;; http://home.swipnet.se/mayhem/ecb.html
 
-;; $Id: ecb.el,v 1.176 2002/01/21 07:35:39 burtonator Exp $
+;; $Id: ecb.el,v 1.177 2002/01/21 17:08:08 berndl Exp $
 
 ;;; Code:
 
@@ -328,22 +328,27 @@ name."
 			       (directory :tag "Path")
 			       (string :tag "Alias")))))
 
-(defcustom ecb-add-only-root-path-for-not-matching-files t
-  "*If not nil then ECB adds only the root-path of a filename to
-`ecb-source-path' during the auto. windows synchronization which happens if a
-file is opened not via the file/directory-browser of ECB. In such a situation
-ECB adds the path of the new file auto. to `ecb-source-path' but asks the uses
-also if he wants to save the new path for future sessions too.
-This options defines if the whole directory-part of the new file is added as
-source-path to `ecb-source-path' or only the root-part \(which means for
-unix-like systems always '/' and for windows-like systems the drive).
+(defcustom ecb-add-path-for-not-matching-files '(t . nil)
+  "*Add path of a file to `ecb-source-path' if not already contained.
+This is done during the auto. windows synchronization which happens if a file
+is opened not via the file/directory-browser of ECB. In such a situation ECB
+adds the path of the new file auto. to `ecb-source-path' at least temporally
+for the current Emacs session. This option defines two things:
+1. Should only the root-part \(which means for unix-like systems always '/'
+   and for windows-like systems the drive) of the new file be added as
+   source-path to `ecb-source-path' or the whole directory-part?
+2. Should this path be added for future sessions too?
 
-A value of not nil is reasonably if a user often opens files not via the
-ECB-browser which are not located in any of the paths of `ecb-source-path'
-because then only one path for each drive \(windows) or the root-path \(unix)
-is added to the directory buffer of ECB."
+The value of this option is a cons-cell where the car is a boolean for 1. and
+the cdr is a boolean for 2.
+
+A value of not nil for the car \(1.) is reasonably if a user often opens files
+not via the ECB-browser which are not located in any of the paths of
+`ecb-source-path' because then only one path for each drive \(windows) or the
+root-path \(unix) is added to the directory buffer of ECB."
   :group 'ecb-directories
-  :type 'boolean)
+  :type '(cons (boolean :tag "Add only root path")
+               (boolean :tag "Ask for saving for future sessions")))
 
 (defvar ecb-source-path-functions nil
   "List of functions to call for finding sources. Each time the function
@@ -1744,17 +1749,21 @@ the ECB tree-buffers."
           ;; path temporally to our paths. But the uses has also the choice to
           ;; save it for future sessions too.
           (if (not (ecb-path-matching-any-source-path-p filename))
-              (let ((norm-filename (ecb-fix-filename filename)))
-                (ecb-add-source-path
-                 (if ecb-add-only-root-path-for-not-matching-files
-                     (if (= (aref norm-filename 0) ?/)
-                         ;; for unix-style-path we add the root-dir
-                         (substring norm-filename 0 1)
-                       ;; for win32-style-path we add the drive; because
-                       ;; `ecb-fix-filename' also converts cygwin-path-style
-                       ;; to win32-path-style here also the drive is added.
-                       (substring norm-filename 0 2))
-                   (file-name-directory norm-filename)))))
+              (let* ((norm-filename (ecb-fix-filename filename))
+                     (source-path (if (car ecb-add-path-for-not-matching-files)
+                                      (if (= (aref norm-filename 0) ?/)
+                                          ;; for unix-style-path we add the
+                                          ;; root-dir
+                                          (substring norm-filename 0 1)
+                                        ;; for win32-style-path we add the
+                                        ;; drive; because `ecb-fix-filename'
+                                        ;; also converts cygwin-path-style to
+                                        ;; win32-path-style here also the
+                                        ;; drive is added.
+                                        (substring norm-filename 0 2))
+                                    (file-name-directory norm-filename))))
+                (ecb-add-source-path source-path source-path
+                                     (not (cdr ecb-add-path-for-not-matching-files)))))
           ;; now we can be sure that a matching source-path exists
           (ecb-update-directories-buffer)
           (ecb-select-source-file filename)
@@ -1913,7 +1922,7 @@ OTHER-EDIT-WINDOW."
       (tree-node-set-shorten-name node shorten-name)
       node)))
 
-(defun ecb-add-source-path (&optional dir alias)
+(defun ecb-add-source-path (&optional dir alias no-prompt-for-future-session)
   "Add a directory to the `ecb-source-path'."
   (interactive)
   ;; we must manually cut a filename because we must not add filenames to
@@ -1926,10 +1935,11 @@ OTHER-EDIT-WINDOW."
                        (read-string (format "Alias for \"%s\" (empty = no alias): "
                                             my-dir)))))
     (setq ecb-source-path (append ecb-source-path
-                                  (list (if (and alias (> (length alias) 0))
-                                            (list my-dir alias) my-dir))))
+                                  (list (if (> (length my-alias) 0)
+                                            (list my-dir my-alias) my-dir))))
     (ecb-update-directories-buffer)
-    (if (y-or-n-p "Add the new source-path also for future-sessions? ")
+    (if (and (not no-prompt-for-future-session)
+             (y-or-n-p "Add the new source-path also for future-sessions? "))
         (customize-save-variable 'ecb-source-path ecb-source-path)
       (customize-set-variable 'ecb-source-path ecb-source-path))))
 
