@@ -28,7 +28,7 @@
 ;; Do not change any html-file besides the index.html manually but do all
 ;; changes in this elisp file!
 
-;; $Id: ecb-html.el,v 1.49 2003/06/13 15:13:02 berndl Exp $
+;; $Id: ecb-html.el,v 1.50 2003/06/23 14:13:38 berndl Exp $
 
 ;;; Code:
 
@@ -76,7 +76,13 @@
 (defvar ecb-latest-news nil
   "List of latest news displayed on the main page.")
 (setq ecb-latest-news
-      `(,(h-sub-section "ECB 1.93 now available as XEmacs package 1.06! (2003-04-09)"
+      `(
+        ,(h-sub-section "ECB 1.94 released! (2003-06-23)"
+                        "Additional native parsing/displaying of source-contents of imenu- or etags-supported source-types (e.g. perl, TeX, LaTeX...). "
+                        (h-link "docs/Install-and-first-steps.html#Install%20and%20first%20steps" "Here") " is a short installation guide. "
+                        "Click " (h-link "NEWS.html" "here")
+                        " for information about changes in the new version. ")
+        ,(h-sub-section "ECB 1.93 now available as XEmacs package 1.06! (2003-04-09)"
                         "The XEmacs-package ECB 1.06 can be installed either via "
                         (h-link "http://www.xemacs.org/Download/win32/setup.exe"
                                 "XEmacs-netinstaller")
@@ -91,15 +97,16 @@
                         "This is a bugfix-release without new features. "
                         (h-link "docs/Install-and-first-steps.html#Install%20and%20first%20steps" "Here") " is a short installation guide. "
                         "Click " (h-link "NEWS.html" "here")
-                        " for information about changes in the new version. ")
-        ,(h-sub-section "Bugfixes for ECB 1.92 available. (2003-02-26)"
-                        "Click " (h-link "downloads.html" "here") " to get it.")))
+                        " for information about changes in the new version. ")))
 
 (defvar ecb-rest-news nil
   "List of older news - these news are displayed in all-news.html ; see
 `ecb-html-all-news'.")
 (setq ecb-rest-news
-      `(,(h-sub-section "ECB 1.92 released! (2003-02-24)"
+      `(
+        ,(h-sub-section "Bugfixes for ECB 1.92 available. (2003-02-26)"
+                        "Click " (h-link "downloads.html" "here") " to get it.")
+        ,(h-sub-section "ECB 1.92 released! (2003-02-24)"
                         "This release fixes some bugs and enhances layout and tree-buffer customizing. "
                         (h-link "docs/Install-and-first-steps.html#Install%20and%20first%20steps" "Here") " is a short installation guide. "
                         "Click " (h-link "NEWS.html" "here")
@@ -161,7 +168,9 @@
               "It is a global minor-mode which displays a couple of windows "
               "that can be used to browse directories, files and file-contents "
               "like methods and variables. It supports source-code parsing for "
-              "Java, C, C++, Elisp, Scheme etc.")
+              "semantic-supported languages like Java, C, C++, Elisp, Scheme "
+              "as well for source-types supported \"only\" by imenu or etags "
+              "(e.g. perl, TeX, LaTeX etc.).")
 
    (apply 'h-section "News"
           (append ecb-latest-news

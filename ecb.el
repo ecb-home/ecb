@@ -10,7 +10,7 @@
 
 ;; IMPORTANT: The version-number is auto-frobbed from the Makefile. Do not
 ;; change it here!
-(defconst ecb-version "1.93"
+(defconst ecb-version "1.94"
   "Current ECB version.")
 
 ;; This program is free software; you can redistribute it and/or modify it under
@@ -73,7 +73,7 @@
 ;; For the ChangeLog of this file see the CVS-repository. For a complete
 ;; history of the ECB-package see the file NEWS.
 
-;; $Id: ecb.el,v 1.308 2003/06/13 15:13:05 berndl Exp $
+;; $Id: ecb.el,v 1.309 2003/06/23 14:13:39 berndl Exp $
 
 ;;; Code:
 
@@ -310,12 +310,16 @@ always true."
 (silentcomp-defvar tar-subfile-mode)
 (silentcomp-defvar archive-subfile-mode)
 
-;; ecb-speedbar is first loaded if ecb-use-speedbar-for-directories is set to
-;; true
+;; ecb-speedbar is are first loaded if
+;; ecb-use-speedbar-instead-native-tree-buffer is set to not nil or if
+;; non-semantic-sources are openend and ecb-process-non-semantic-files is not
+;; nil.
 (silentcomp-defun ecb-speedbar-active-p)
 (silentcomp-defun ecb-speedbar-deactivate)
 (silentcomp-defvar ecb-speedbar-buffer-name)
 (silentcomp-defun ecb-speedbar-update-contents)
+(silentcomp-defun ecb-get-tags-for-non-semantic-files)
+(silentcomp-defun ecb-create-non-semantic-tree)
 
 ;;====================================================
 ;; Variables
@@ -390,6 +394,10 @@ command.")
   :group 'ecb
   :prefix "ecb-")
 
+(defgroup ecb-non-semantic nil
+  "Settings for parsing and displaying non-semantic files."
+  :group 'ecb
+  :prefix "ecb-")
 
 (defcustom ecb-use-recursive-edit nil
   "*Tell ECB to use a recursive edit so that it can easily be deactivated
@@ -554,21 +562,37 @@ layouts sources should be displayed in the directories window."
                         (string :tag "Layout name"))))
 
 
-(defcustom ecb-use-speedbar-for-directories nil
-  "*If true then uses speedbar for displaying and handling directories.
+(defcustom ecb-use-speedbar-instead-native-tree-buffer nil
+  "*If true then uses speedbar for directories, sources or methods.
 This means that speedbar is integrated in the ECB-frame and is displayed in
-that window normally displaying the standard ECB-directories-buffer.
+that window normally displaying the standard ECB-directories-buffer,
+ECB-sources-buffer or ECB-methods-buffer.
 
-This option takes effect in all layouts which contain a directory window.
+This option takes effect in all layouts which contain either a directory
+window, a sources window or a method window.
 
-Note: A similar effect and useability is available by setting this option to
-nil and setting `ecb-show-sources-in-directories-buffer' to not nil, because
-this combination displays also directories and sources in one window.
+This option can have four valid values:
+- nil: Do not use speedbar \(default)
+- dir: Use speedbar instead of the standard directories-buffer
+- source: Use speedbar instead of the standard sources-buffer
+- method: Use speedbar instead of the standard methods-buffer
 
-`ecb-use-speedbar-for-directories' is for people who like the speedbar way
-handling directories amd source-files and want it in conjunction with ECB."
+Note: For directories and sources a similar effect and useability is available
+by setting this option to nil \(or 'method) and setting
+`ecb-show-sources-in-directories-buffer' to not nil, because this combination
+displays also directories and sources in one window.
+
+`ecb-use-speedbar-instead-native-tree-buffer' is for people who like the
+speedbar way handling directories and source-files or methods and want it in
+conjunction with ECB."
+  :group 'ecb-general
   :group 'ecb-directories
-  :type 'boolean
+  :group 'ecb-sources
+  :group 'ecb-methods
+  :type '(radio (const :tag "Do not use speedbar" :value nil)
+                (const :tag "For directories" :value dir)
+                (const :tag "For sources" :value source)
+                (const :tag "For methods" :value method))
   :set (function (lambda (sym val)
                    (set sym val)
                    (let ((ecb-redraw-layout-quickly nil))
@@ -608,8 +632,8 @@ If `ecb-show-sources-in-directories-buffer' is nil and there is also no
 ECB-sources-buffer visible in the current layout then you probably want to use
 an integrated speedbar for browsing directory-contents \(i.e. the files) and
 file-contents \(instead of the ECB-methods-buffer for example). In this case
-you probably the speedbar updated because you need speedbar reflecting the
-current-directory contents so you can select files.
+you probably want the speedbar updated because you need speedbar reflecting
+the current-directory contents so you can select files.
 
 The value 'auto \(see above) takes exactly these two scenarios into account."
   :group 'ecb-directories
@@ -913,7 +937,10 @@ switched on too. There are three possible choices:
   But expanding is only done if the type of the token under point in the
   edit-buffer is contained in `ecb-methods-nodes-expand-spec'.
 - all: Like expand-spec but expands all tokens regardess of the setting in
-  `ecb-methods-nodes-expand-spec'."
+  `ecb-methods-nodes-expand-spec'.
+
+This options takes only effect for semantic-sources - means sources supported
+by semantic!"
   :group 'ecb-methods
   :type '(radio (const :tag "No auto. expand" :value nil)
                 (const :tag "Expand as specified" :value expand-spec)
@@ -981,7 +1008,10 @@ the current source-buffer."
   :type 'boolean)
 
 (defcustom ecb-font-lock-tokens t
-  "*Adds font-locking \(means highlighting) to the ECB-method buffer."
+  "*Adds font-locking \(means highlighting) to the ECB-method buffer.
+
+This options takes only effect for semantic-sources - means sources supported
+by semantic!"
   :group 'ecb-methods
   :set (function (lambda (symbol value)
 		   (set symbol value)
@@ -1001,7 +1031,10 @@ only show that token. To display the entire buffer again, click on a source file
 or call `widen' (C-x n w).
 
 Note: The same effect can be achieved by using the POWER-click in the
-methods-buffer \(see `ecb-primary-secondary-mouse-buttons')."
+methods-buffer \(see `ecb-primary-secondary-mouse-buttons').
+
+This options takes only effect for semantic-sources - means sources supported
+by semantic!"
   :group 'ecb-methods
   :type 'boolean)
 
@@ -1027,7 +1060,10 @@ suffix and a special face for the bucket token.
 
 The default are empty prefix/suffix-strings and 'ecb-bucket-token-face'. But
 an alternative can be for example '\(\"[\" \"]\" nil) which means no special
-face and a display like \"[+] [<bucket-name>]\"."
+face and a display like \"[+] [<bucket-name>]\".
+
+This options takes only effect for semantic-sources - means sources supported
+by semantic!"
   :group 'ecb-methods
   :set (function (lambda (symbol value)
 		   (set symbol value)
@@ -1079,7 +1115,10 @@ this functionality set the function for a major-mode \(e.g. `jde-mode') to
 
 If the value is nil, i.e. neither a function for a major-mode is defined nor
 the special 'default, then `semantic-prototype-nonterminal' is used for
-displaying the tokens."
+displaying the tokens.
+
+This options takes only effect for semantic-sources - means sources supported
+by semantic!"
   :group 'ecb-methods
   :set (function (lambda (symbol value)
 		   (set symbol value)
@@ -1154,7 +1193,10 @@ This means that in `c-mode' only \"struct\"s and \"typedef\"s are displayed
 with special faces \(the specifiers itself are not removed) and in all other
 modes \"class\"es and grouping-tokens \(see `ecb-token-display-function',
 `ecb-group-function-tokens-with-parents') have special faces and the \"class\"
-specifier-string is removed from the display."
+specifier-string is removed from the display.
+
+This options takes only effect for semantic-sources - means sources supported
+by semantic!"
   :group 'ecb-methods
   :set (function (lambda (symbol value)
 		   (set symbol value)
@@ -1317,7 +1359,10 @@ For oo-programming languages where the methods of a class can be defined
 outside the class-definition \(e.g. C++, Eieio) the function
 `ecb-group-function-tokens-with-parents' can be used to get a much better
 method-display in the methods-window of ECB, because all method
-implementations of a class are grouped together."
+implementations of a class are grouped together.
+
+This options takes only effect for semantic-sources - means sources supported
+by semantic!"
   :group 'ecb-methods
   :type '(repeat (cons (symbol :tag "Major-mode")
                        (function :tag "Postprocess function"))))
@@ -1330,7 +1375,10 @@ to the corresponding location in the edit-window.
 Example: With CLOS or Eieio source-code there can exist some positionless
 nodes like variable-attributes in a `defclass' form which are only displayed
 if this option is nil. Displaying such nodes can be sensefull even if they can
-not be jumped."
+not be jumped.
+
+This options takes only effect for semantic-sources - means sources supported
+by semantic!"
   :group 'ecb-methods
   :type 'boolean)
 
@@ -1388,7 +1436,9 @@ A symbol describing how to sort the tokens of this type:
 - access: Sort by token access (public, protected, private) and then by name.
 - nil:    Don't sort tokens. They appear in the same order as in the source
           buffer.
-"
+
+This options takes only effect for semantic-sources - means sources supported
+by semantic!"
   :group 'ecb-methods
   :set (function (lambda (symbol value)
 		   (set symbol value)
@@ -1422,7 +1472,10 @@ If there is a bucket-name \(the node-name stripped of the settings in
 `semantic-symbol->name-assoc-list' then the symbol with this bucket-name as
 name is also a valid symbol for this list. Example: In ECB there are buckets
 \"\[Parents\]\". The bucket-name is \"Parents\" and the valid symbol-name is
-then 'Parents."
+then 'Parents.
+
+This options takes only effect for semantic-sources - means sources supported
+by semantic!"
   :group 'ecb-methods
   :type '(radio (const :tag "All node-types" :value all)
                 (repeat :tag "Node-type list"
@@ -1430,8 +1483,10 @@ then 'Parents."
 
 (defcustom ecb-methods-nodes-collapse-spec 'all
   "*Semantic token-types collapsed by `ecb-expand-methods-nodes'.
+For valid values of this option see `ecb-methods-nodes-expand-spec'!
 
-For valid values of this option see `ecb-methods-nodes-expand-spec'!"
+This options takes only effect for semantic-sources - means sources supported
+by semantic!"
   :group 'ecb-methods
   :type '(radio (const :tag "All node-types" :value all)
                 (repeat :tag "Node-type list"
@@ -1440,7 +1495,10 @@ For valid values of this option see `ecb-methods-nodes-expand-spec'!"
 (defcustom ecb-exclude-parents-regexp nil
   "*Regexp which parent classes should not be shown in the methods buffer
 \(see also `ecb-show-parents'). If nil then all parents will be shown if
-`ecb-show-parents' is not nil."
+`ecb-show-parents' is not nil.
+
+This options takes only effect for semantic-sources - means sources supported
+by semantic!"
   :group 'ecb-methods
   :set (function (lambda (symbol value)
 		   (set symbol value)
@@ -1457,7 +1515,10 @@ For valid values of this option see `ecb-methods-nodes-expand-spec'!"
 - highlight: Only highlight the current method of the edit window in the
   method window if the method is visible in the method-window.
 - nil: No highlighting is done.
-See also `ecb-highlight-token-with-point-delay'."
+See also `ecb-highlight-token-with-point-delay'.
+
+This options takes only effect for semantic-sources - means sources supported
+by semantic!"
   :group 'ecb-methods
   :type '(radio (const :tag "Highlight and scroll window"
                        :value highlight-scroll)
@@ -1473,7 +1534,10 @@ A small value of about 0.25 seconds saves CPU resources and you get even
 though almost the same effect as if you set no delay. But such a delay
 prevents also \"jumping backward/forward\" during scrolling within
 java-classes if point goes out of method-definition into class-definition.
-Therefore the default value is a delay of 0.25 seconds."
+Therefore the default value is a delay of 0.25 seconds.
+
+This options takes only effect for semantic-sources - means sources supported
+by semantic!"
   :group 'ecb-methods
   :type '(radio (const :tag "No highlighting delay"
                        :value nil)
@@ -1599,11 +1663,6 @@ delay."
                        (ecb-activate-ecb-sync-functions value
                                                         'ecb-window-sync-function))))
   :initialize 'custom-initialize-default)
-
-(defcustom ecb-process-non-semantic-files nil
-  "*Display content of non-semantic-files in the ECB-methods-buffer."
-  :group 'ecb-general
-  :type 'boolean)
 
 (defcustom ecb-tree-incremental-search 'prefix
   "*Enable incremental search in the ECB-tree-buffers. For a detailed
@@ -1738,7 +1797,7 @@ POWER-click occurs):
 + Sources- and History-buffer: Only displaying the source-contents in the
   method-buffer but not displaying the source-file in the edit-window.
 + Methods-buffer: Narrowing to the clicked method/variable/ect... \(see
-  `ecb-token-jump-narrow').
+  `ecb-token-jump-narrow'). This works only for sources supported by semantic!
 
 In addition always the whole node-name is displayed in the minibuffer after a
 POWER-click \(for this see also `ecb-show-node-info-in-minibuffer').
@@ -2131,6 +2190,105 @@ keybindings only for the history-buffer of ECB."
   :group 'ecb-history
   :type 'hook)
 
+(defcustom ecb-process-non-semantic-files (if (locate-library "speedbar")
+                                              t)
+  "*Display contents of non-semantic-files in the ECB-methods-buffer. See also
+`ecb-non-semantic-parsing-function'."
+  :group 'ecb-general
+  :group 'ecb-non-semantic
+  :type 'boolean)
+
+(defcustom ecb-non-semantic-parsing-function nil
+  "*Define mode-dependend parsing functions for non-semantic files.
+This is an alist where the car is a major-mode symbol and the cdr is a
+function-symbol of a function which should be used for parsing a non-semantic
+buffer, i.h. a buffer for which no semantic grammar exists. Such a function
+gets one argument - the filename of current buffer - and has to generate and
+return a token/tag list which is understandable by
+`speedbar-insert-generic-list'. speedbar has already included two functions
+`speedbar-fetch-dynamic-imenu' and `speedbar-fetch-dynamic-etags' which can be
+used for parsing buffers with imenu resp. etags.
+
+This option takes only effect if `ecb-process-non-semantic-files' is not nil:
+Then ECB checks for non-semantic buffers if current `major-mode' is contained
+in this option and if yes, then the specified parsing function is called;
+if not then the cars of the elements of `speedbar-dynamic-tags-function-list'
+are called in that sequence they are listed in this variable. See option
+`speedbar-dynamic-tags-function-list' for further details.
+
+In most cases imenu-parsing is preferable over etags-parsing because imenu
+operates on Emacs-buffers and needs no external tool and therefore parsing
+works also if current contents of a buffer are not saved to disk. But maybe
+sometimes etags may return better parsing results.
+
+IMPORTANT: if imenu-parsing should be used then the option
+`speedbar-use-imenu-flag' must be set to not nil!"
+  :group 'ecb-methods
+  :group 'ecb-non-semantic
+  :type '(repeat (cons (symbol :tag "Major-mode")
+                       (function :tag "Parsing function"))))
+
+
+(defcustom ecb-non-semantic-methods-initial-expand nil
+  "*Initially expand all tokens for not by semantic supported sources.
+This option can be customized on a major-mode basis, i.e. if a `major-mode' is
+contained in this option then al tokens for this modes will be initially
+expanded - otherwise not."
+  :group 'ecb-methods
+  :group 'ecb-non-semantic
+  :type '(repeat :tag "Expand this modes"
+                 (symbol :tag "major mode")))
+
+(defcustom ecb-auto-save-before-etags-methods-rebuild t
+  "*Automatic saving of current buffer before rebuilding its methods.
+
+This option is only relevant for sources which are supported and parsed by
+etags \(see `ecb-process-non-semantic-files'). Because etags is an external
+tool a source-buffer can only be reparsed if the buffer is saved to disk. So
+the command `ecb-rebuild-methods-buffer' checkes for sources which are not
+supported by semantic or imenu if either this option is t or if the major-mode
+of the source-buffer is contained in this list: In both cases ECB saves the
+current source-buffer before it re-runs etags for reparsing the source.
+If nil or if the major-mode is not contained then no automatic saving will be
+done!
+
+For all source supported by semantic or by imenu this option takes no effect."
+  :group 'ecb-methods
+  :group 'ecb-non-semantic
+  :type '(radio (const :tag "For all etags modes" :value t)
+                (repeat :tag "For these modes" (symbol :tag "Major-mode"))))
+
+(defcustom ecb-non-semantic-exclude-modes '(sh-mode fundamental-mode text-mode)
+  "*Exclude modes from parsing with imenu or etags.
+Per default, ECB tries to parse all file-types not supported by semantic with
+imenu or etags or some other method \(for details see the option
+`ecb-non-semantic-parsing-function'). If a file-type can not be parsed by
+semantic, imenu or etags than this simply results in an empty method-buffer
+for this file. But nevertheless you will get a message \"Sorry, no support for
+a file of that extension\" which comes from the speedbar-library and can not
+switched off. Therefore if a `major-mode' is known as not parsable by
+semantic, imenu or etags it can be added to this option and then it will be
+excluded from being tried to parsed."
+  :group 'ecb-non-semantic
+  :type '(repeat :tag "Modes to exclude"
+                 (symbol :tag "Major-mode")))
+
+(defcustom ecb-rebuild-non-semantic-methods-before-hook nil
+  "*Hook running at beginning of the function
+`ecb-rebuild-methods-buffer-for-non-semantic' so this function is always
+called by the command `ecb-rebuild-methods-buffer' for not semantic supported
+source-types.
+
+Every function of this hook gets one argument: The complete filename of the
+current source-buffer in the edit-window. The Method-buffer is only rebuild by
+`ecb-rebuild-methods-buffer-for-non-semantic' if either the hook contains no
+function \(the default) or if no function of this hook returns nil! See
+`run-hook-with-args-until-failure' for description how these function are
+prcessed."
+  :group 'ecb-methods
+  :group 'ecb-non-semantic
+  :type 'hook)
+  
 ;;====================================================
 ;; Internals
 ;;====================================================
@@ -2276,21 +2434,30 @@ check the result if `ecb-debug-mode' is nil in which case the function
 
 (defun ecb-goto-window-directories ()
   "Make the ECB-directories window the current window. If
-`ecb-use-speedbar-for-directories' is not nil then goto to the
+`ecb-use-speedbar-instead-native-tree-buffer' is 'dir then goto to the
 speedbar-window."
   (interactive)
   (or (ecb-goto-window ecb-directories-buffer-name)
-      (ecb-goto-window ecb-speedbar-buffer-name)))
+      (and (equal ecb-use-speedbar-instead-native-tree-buffer 'dir)
+           (ecb-goto-window ecb-speedbar-buffer-name))))
 
 (defun ecb-goto-window-sources ()
-  "Make the ECB-sources window the current window."
+  "Make the ECB-sources window the current window. If
+`ecb-use-speedbar-instead-native-tree-buffer' is 'source then goto to the
+speedbar-window."
   (interactive)
-  (ecb-goto-window ecb-sources-buffer-name))
+  (or (ecb-goto-window ecb-sources-buffer-name)
+      (and (equal ecb-use-speedbar-instead-native-tree-buffer 'source)
+           (ecb-goto-window ecb-speedbar-buffer-name))))
 
 (defun ecb-goto-window-methods ()
-  "Make the ECB-methods window the current window."
+  "Make the ECB-methods window the current window. If
+`ecb-use-speedbar-instead-native-tree-buffer' is 'method then goto to the
+speedbar-window."
   (interactive)
-  (ecb-goto-window ecb-methods-buffer-name))
+  (or (ecb-goto-window ecb-methods-buffer-name)
+      (and (equal ecb-use-speedbar-instead-native-tree-buffer 'method)
+           (ecb-goto-window ecb-speedbar-buffer-name))))
 
 (defun ecb-goto-window-history ()
   "Make the ECB-history window the current window."
@@ -2905,7 +3072,15 @@ then nothing is done unless first optional argument FORCE is not nil."
     (if ecb-show-source-file-extension
         f
       (file-name-sans-extension f))))
-  
+
+(defun ecb-semantic-active-for-file (filename)
+  "Return not nil if FILENAME is already displayed in a buffer and if semantic
+is active for this buffer."
+  (and (get-file-buffer filename)
+       (save-excursion
+         (set-buffer (get-file-buffer filename))
+         (semantic-active-p))))
+
 (defun ecb-select-source-file (filename &optional force)
   "Updates the directories, sources and history buffers to match the filename
 given. If FORCE is not nil then the update of the directories buffer is done
@@ -2990,19 +3165,27 @@ current-buffer is saved."
              (equal (current-buffer)
                     (window-buffer ecb-last-edit-window-with-point)))
     (ecb-select-source-file ecb-path-selected-source)
-    (ecb-update-methods-buffer--internal)))
+    (ecb-rebuild-methods-buffer)))
 
 ;; This variable is only set and evaluated by the functions
 ;; `ecb-update-methods-buffer--internal' and
 ;; `ecb-rebuild-methods-buffer-with-tokencache'!
 (defvar ecb-method-buffer-needs-rebuild t)
-(defun ecb-update-methods-buffer--internal (&optional scroll-to-top)
+
+(defun ecb-update-methods-buffer--internal (&optional scroll-to-top
+                                                      rebuild-non-semantic)
   "Updates the methods buffer with the current buffer. The only thing what
 must be done is to start the toplevel parsing of semantic, because the rest is
 done by `ecb-rebuild-methods-buffer-with-tokencache' because this function is in
 the `semantic-after-toplevel-cache-change-hook'.
 If optional argument SCROLL-TO-TOP is non nil then the method-buffer is
-displayed with window-start and point at beginning of buffer."
+displayed with window-start and point at beginning of buffer.
+
+If second optional argument REBUILD-NON-SEMANTIC is not nil then non-semantic
+sources are forced to be rescanned and reparsed by
+`ecb-rebuild-methods-buffer-with-tokencache'. The function
+`ecb-rebuild-methods-buffer-for-non-semantic' is the only one settings this
+argument to not nil!"
   (when (and (equal (selected-frame) ecb-frame)
              (get-buffer-window ecb-methods-buffer-name))
     ;; Set here `ecb-method-buffer-needs-rebuild' to t so we can see below if
@@ -3035,11 +3218,8 @@ displayed with window-start and point at beginning of buffer."
           ;; the hook was not called therefore here manually
           (ecb-rebuild-methods-buffer-with-tokencache
            current-tokencache
-           ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: Maybe this can cause
-           ;; performance-drawbacks because with this non-semantic (but imenu
-           ;; or etags buffers) will be rescaned in
-           ;; `ecb-rebuild-methods-buffer-with-tokencache'!)
-           (semantic-active-p))))
+           (semantic-active-p)
+           nil rebuild-non-semantic)))
     (when scroll-to-top
       (save-selected-window
 	(ecb-exec-in-methods-window
@@ -3060,159 +3240,31 @@ removes only the token-tree for SOURCE-FILE-NAME from the cache."
     (setq ecb-token-tree-cache
           (adelete 'ecb-token-tree-cache source-file-name))))
 
-(defun ecb-handle-non-semantic-tags ()
-  (require 'speedbar)
-  (require 'imenu)
-  (let* ((lst (speedbar-fetch-dynamic-tags (buffer-file-name
-                                            (current-buffer))))
-         (tag-list (cdr lst))
-         (methods speedbar-tag-hierarchy-method)
-         (speedbar-tag-split-minimum-length 2)
-         (speedbar-tag-regroup-maximum-length 2)
-         bucket-list token-list misc-token-list token)
-    (if (string= (car (car tag-list)) (car imenu--rescan-item))
-        (setq tag-list (cdr tag-list)))
-    ;; If imenu or etags returns already groups (etags will do this probably
-    ;; not, but imenu will do this sometimes - e.g. with cperl) then we do not
-    ;; regrouping with the speedbar-methods of
-    ;; `speedbar-tag-hierarchy-method'! 
-    (when (dolist (tag tag-list t)
-            (if (or (speedbar-generic-list-positioned-group-p tag)
-                    (speedbar-generic-list-group-p tag))
-                (return nil)))
-      (while methods
-        (setq tag-list (funcall (car methods) tag-list)
-              methods (cdr methods)))
-      )
-    ;; Here we create a new token-stream in semantic format which is in
-    ;; addition already bucketized (in the meaning of `semantic-bucketize').
-    ;; ECB will not bucketize this stream again because `ecb-add-tokens' has
-    ;; an additional argument which prevents this.
-    (while tag-list
-      (cond ((null (car-safe tag-list)) nil) ;this would be a separator
-	    ((speedbar-generic-list-tag-p (car tag-list))
-             (setq token
-                   (list (car (car tag-list))
-                         'misc ;; was: (intern (car (car tag-list)))
-                         nil nil nil
-                         (make-vector 2 (cdr (car tag-list)))))
-             (setq misc-token-list
-                   (cons token misc-token-list)))
-            ((speedbar-generic-list-positioned-group-p (car tag-list))
-             ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: currently we do not
-             ;; interpret positioned groups....maybe in future versions....
-             nil)
-            ((speedbar-generic-list-group-p (car tag-list))
-             (setq token-list nil)
-             ;; Here we must process recursive, because some of the tags can
-             ;; be groups itself (example: files in cperl-mode)
-             ;; groups will be intepreted as type-tokens like:
-             ;; type-token: ("name" 'type "typename" (children)
-             ;;              nil nil [start end])
-             ;;
-             ;; "typename" is the groupname, (children) ist the list of
-             ;; group-elements...for these the recursions begins again...
-             ;;
-             ;; The Children of a new type a either:
-             ;; - groups, then 'type and the game begins again
-             ;; - plain tags, then new token with the groupname als type
-             (setq token-list (ecb-handle-non-semantic-generic-list-group
-                               (car (car tag-list)) (cdr (car tag-list))))
-             (setq bucket-list
-                   (cons (cons (car (car tag-list))
-                               token-list)
-                         bucket-list)))
-            (t (speedbar-message "speedbar-insert-generic-list: malformed list!")
-	       ))
-      (setq tag-list (cdr tag-list)))
-    (when misc-token-list
-      (setq bucket-list
-            (cons (cons "Misc" misc-token-list)
-                  bucket-list)))
-    bucket-list
-    ))
 
-;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: cperl-mode files do not work 100%
-;; because the hierachies of +Hierarchie+ etc...are not displayed as a
-;; hierarchie but only a one single token....We have to fix this later...
-(defun ecb-handle-non-semantic-generic-list-group (group-name group-children
-                                                              &optional bucketize)
-  (let ((token-list nil)
-        (misc-token-list nil))
-    (dolist (tag group-children)
-      (if (speedbar-generic-list-group-p tag)
-          (setq token-list
-                (cons (list (car tag)
-                            'type
-                            "class" ;; was: group-name
-                            (ecb-handle-non-semantic-generic-list-group
-                             (car tag) (cdr tag) t)
-                            nil nil nil (make-vector 2 1))
-                      token-list))
-        (setq misc-token-list
-              (cons (list (car tag)
-                          (intern group-name)
-                          nil nil nil
-                          (make-vector 2 (cdr tag)))
-                    misc-token-list))))
-    (if bucketize
-        (progn
-          (cons (cons "Misc"
-                      misc-token-list)
-                (if token-list
-                    (list (cons "Types"
-                                token-list))
-                  token-list)))
-      (append token-list misc-token-list))))
-
-;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: A not very well working version:
-;; (defun ecb-handle-non-semantic-generic-list-group (group-name group-children
-;;                                                               &optional bucketize)
-;;   (let ((token-list nil)
-;;         (misc-token-list nil))
-;;     (dolist (tag group-children)
-;;       (if (speedbar-generic-list-group-p tag)
-;;           (setq token-list
-;;                 (cons (list (car tag)
-;;                             'type
-;;                             group-name
-;;                             (if bucketize
-;;                                 (semantic-bucketize
-;;                                  (ecb-handle-non-semantic-generic-list-group
-;;                                   (car tag) (cdr tag) t))
-;;                               (ecb-handle-non-semantic-generic-list-group
-;;                                (car tag) (cdr tag) t))
-;;                             nil nil nil (make-vector 2 1))
-;;                       token-list))
-;;         (setq token-list
-;;               (cons (list (car tag)
-;;                           (intern group-name)
-;;                           nil nil nil
-;;                           (make-vector 2 (cdr tag)))
-;;                     token-list))))
-;;     token-list))
-
-
-
+;; The most important function for (re)building the Method-buffer
 (defun ecb-rebuild-methods-buffer-with-tokencache (updated-cache
-						   &optional no-update
-                                                   force-nil-cache)
+						   &optional no-update-semantic
+                                                   force-nil-cache
+                                                   non-semantic-rebuild)
   "Rebuilds the ECB-method buffer after toplevel-parsing by semantic. This
-function is added to the hook `semantic-after-toplevel-cache-change-hook'. If
+function is added to the hook `semantic-after-toplevel-cache-change-hook'.
 
-If NO-UPDATE is not nil then the tokens of the ECB-methods-buffer are not
-updated with UPDATED-TOKENS but the method-buffer is rebuild with these tokens
-ECB has already cached in it `ecb-token-tree-cache'.
+If NO-UPDATE-SEMANTIC is not nil then the tokens of the ECB-methods-buffer are
+not updated with UPDATED-CACHE but the method-buffer is rebuild with these
+tokens ECB has already cached in it `ecb-token-tree-cache'. Only relevant for
+semantic-parsed sources!
 
 If FORCE-NIL-CACHE is not nil then the method-buffer is even rebuild if
 UPDATED-CACHE is nil. Normally a nil cache is ignored if it belongs to a
-buffer with is setup for semantic-parsing; only nil caches for no-semantic
+buffer witch is setup for semantic-parsing; only nil caches for non-semantic
 buffers \(like plain text-buffers) are used for updating the method-buffers.
 With FORCE-NIL-CACHE the method-buffer is updated with a nil cache too, i.e.
-it is cleared."
+it is cleared.
+
+IF NON-SEMANTIC-REBUILD is not nil then current non-semantic-source is forced
+to be rescanned/reparsed and therefore the Method-buffer will be rebuild too."
   (when (and ecb-minor-mode
-             (ecb-point-in-edit-window)
-;;              (equal (selected-frame) ecb-frame)
+             (equal (selected-frame) ecb-frame)
              (get-buffer-window ecb-methods-buffer-name)
              (buffer-file-name (current-buffer))             
              ;; The functions of the hook
@@ -3221,14 +3273,19 @@ it is cleared."
              ;; is parsed which has no tokens. Here we do not want rebuilding
              ;; the method-buffer if the cache is nil but the current buffer
              ;; is set up for semantic-parsing, because the real rebuild
-             ;; should be done after the cache is filled again.
-             ;; If this hook is called "manually" by
-             ;; `ecb-update-methods-buffer--internal' then we do an update
-             ;; also for a nil cache if the buffer is not setup for semantic
-             ;; (like text-buffers) so we can clear out the method-buffer!
+             ;; should be done after the cache is filled again. If this hook
+             ;; is called "manually" by `ecb-update-methods-buffer--internal'
+             ;; then we do an update also for a nil cache if the buffer is not
+             ;; setup for semantic (like text-buffers or non-semantic-sources)
+             ;; so we can either clear out the method-buffer or fill it with
+             ;; parsing information of non-semantic-sources!
              (or updated-cache
                  (not (semantic-active-p))
                  force-nil-cache))
+
+    ;; no-update-semantic has to be nil for non-semantic-sources!
+    (if (not (semantic-active-p)) (setq no-update-semantic nil))
+    
     ;; the following cache-mechanism MUST use the (buffer-file-name
     ;; (current-buffer)) instead of ecb-path-selected-source because in case
     ;; of opening a buffer not via directory-window but via the
@@ -3244,32 +3301,66 @@ it is cleared."
     (let* ((norm-buffer-file-name (ecb-fix-filename
                                    (buffer-file-name (current-buffer))))
            (cached-tree (assoc norm-buffer-file-name ecb-token-tree-cache))
-           new-tree non-semantic-handling-p)
+           new-tree non-semantic-handling)
+      
       (if ecb-debug-mode
           (dolist (tok updated-cache)
             (ecb-semantic-assert-valid-token tok)))
-      ;; here we process non-semantic buffers if the user wants this
+      
+      ;; here we process non-semantic buffers if the user wants this. But only
+      ;; if either non-semantic-rebuild is true or no cached-tree exists.
       (when (and ecb-process-non-semantic-files
-                 (null updated-cache) (not (semantic-active-p))
-                 (buffer-file-name (current-buffer)))
-        (setq updated-cache (ecb-handle-non-semantic-tags))
-        (if updated-cache (setq non-semantic-handling-p t)))
-      (unless (and no-update cached-tree)
-	(setq new-tree (tree-node-new "root" 0 nil))
-        (if non-semantic-handling-p
-            (ecb-add-tokens new-tree updated-cache nil t)
+                 (null updated-cache)
+                 (not (semantic-active-p))
+                 (buffer-file-name (current-buffer))
+                 (or non-semantic-rebuild (null cached-tree)))
+        (setq updated-cache (progn
+                              (ignore-errors (require 'ecb-speedbar))
+                              (ignore-errors
+                                (ecb-get-tags-for-non-semantic-files))))
+        (setq non-semantic-handling
+              (if updated-cache 'parsed 'parsed-failed)))
+
+      ;; Now non-semantic-handling is only nil either for semantic-sources or
+      ;; for non-semantic-sources if already a cached-tree exists and
+      ;; non-semantic-rebuild is nil (i.e. no rescan and rebuild is
+      ;; necessary). A not-nil value is only possible for non-semantic-sources
+      ;; and is then either 'parsed in case the parsing was successfull or
+      ;; 'parsed-failed.
+
+      ;; We always make a new token-tree with updated-cache except for
+      ;; - semantic-sources if no-update-semantic is true and already a
+      ;;   cached-tree exists. This means this function is NOT called by
+      ;;   `semantic-after-toplevel-cache-change-hook'.
+      ;; - non-semantic-sources if non-semantic-handling is false, because
+      ;;   then no rescan has been performed and updated-cache contains
+      ;;   nothing; see comment above.
+      (unless (or (and no-update-semantic cached-tree)  ;; for semantic-sources
+                  (and (not (semantic-active-p))    ;; for non-semantic-sources
+                       (not non-semantic-handling)
+                       ;; for clearing out non-semantic-buffers too after
+                       ;; killing one; see `ecb-kill-buffer-hook'.
+                       (not force-nil-cache)))
+        (setq new-tree (tree-node-new "root" 0 nil))
+        (if non-semantic-handling
+            (if (equal non-semantic-handling 'parsed)
+                (ecb-create-non-semantic-tree new-tree updated-cache))
           (ecb-add-tokens new-tree (ecb-post-process-tokenlist updated-cache)))
         (if cached-tree
             (setcdr cached-tree new-tree)
           (setq cached-tree (cons norm-buffer-file-name new-tree))
           (setq ecb-token-tree-cache (cons cached-tree ecb-token-tree-cache))))
+
+      ;; Now we either update the method-buffer with a newly created
+      ;; token-tree or with the token-tree from the cache (with all its
+      ;; existing expansions!)
       (save-excursion
         (ecb-buffer-select ecb-methods-buffer-name)
         (tree-buffer-set-root (cdr cached-tree))
         (setq ecb-methods-root-node (cdr cached-tree))
         (setq tree-buffer-indent ecb-tree-indent)
         (tree-buffer-update)))
-
+    
     ;; Klaus Berndl <klaus.berndl@sdm.de>: after a full reparse all overlays
     ;; stored in the dnodes of the navigation-list now are invalid. Therefore
     ;; we have changed the implementation of ecb-navigate.el from storing
@@ -3280,35 +3371,79 @@ it is cleared."
     ;; signalize that the rebuild has already be done
     (setq ecb-method-buffer-needs-rebuild nil)))
 
+(defun ecb-rebuild-methods-buffer-for-non-semantic ()
+  "Rebuild the ECB-method-buffer for current source-file of the edit-window.
+This function does nothing if point stays not in an edit-window of the
+ECB-frame or if current source-file is supported by semantic!
+
+Before rebuilding the Methods-buffer the hook
+`ecb-rebuild-non-semantic-methods-before-hook' is called. The Method-buffer is
+only rebuild if either the hook contains no function \(the default) or if no
+function of this hook returns nil! See `run-hook-with-args-until-failure' for
+description how these function are prcessed.
+
+The option `ecb-auto-save-before-etags-methods-rebuild' is checked before
+rescanning the source-buffer and rebuilding the methods-buffer.
+
+This function is called by the command `ecb-rebuild-methods-buffer'."
+  (when (and ecb-minor-mode
+             (equal (selected-frame) ecb-frame)
+             (not (semantic-active-p))
+             (ecb-point-in-edit-window))
+    (when (run-hook-with-args-until-failure
+           'ecb-rebuild-non-semantic-methods-before-hook
+           (buffer-file-name))
+      ;; For etags supported non-semantic-sources we maybe have to save the
+      ;; buffer first.
+      (if (and (not (and (boundp 'imenu--index-alist)
+                         imenu--index-alist))
+               (or (equal ecb-auto-save-before-etags-methods-rebuild t)
+                   (member major-mode
+                           ecb-auto-save-before-etags-methods-rebuild)))
+          (save-buffer))
+      (ecb-update-methods-buffer--internal nil t))))
+
+(defun ecb-rebuild-methods-buffer-for-semantic ()
+  "Rebuild the ECB-method-buffer for current source-file of the edit-window.
+This function does nothing if point stays not in an edit-window of the
+ECB-frame or if current source-file is not supported by semantic!"
+  (when (and ecb-minor-mode
+             (equal (selected-frame) ecb-frame)
+             (semantic-active-p)
+             (ecb-point-in-edit-window))
+    ;; to force a really complete rebuild we must completely clear the
+    ;; semantic cache for semantic-files.
+    (semantic-clear-toplevel-cache)
+    (ecb-update-methods-buffer--internal)))
+
 (defun ecb-rebuild-methods-buffer ()
   "Updates the methods buffer with the current buffer after deleting the
 complete previous parser-information, means no semantic-cache is used! Point
-must stay in an edit-window otherwise nothing is done.
-This method is merely needed if semantic parses not the whole buffer because
-it reaches a not parsable code.
-Examples when a call to this function is necessary:
+must stay in an edit-window otherwise nothing is done. This method is merely
+needed for semantic parsed buffers if semantic parses not the whole buffer
+because it reaches a not parsable code or for buffers not supported by
+semantic but by imenu or etags.
+
+Examples when a call to this function can be necessary:
+
 + If an elisp-file is parsed which contains in the middle a defun X where the
   closing ) is missing then semantic parses only until this defun X is reached
   and you will get an incomplete ECB-method buffer. In such a case you must
   complete the defun X and then call this function to completely reparse the
   elisp-file and rebuild the ECB method buffer!
-+ If you change only the name of a method or a variable and you want the new
-  name be shown immediately in the ECB-method buffer then you must call this
-  function."
+
++ For not semantic supported buffers which can be parsed by imenu or etags
+  \(see `ecb-process-non-semantic-files') because for these buffers there is
+  no builtin auto-rebuild mechanism. For these buffers this command calls
+  `ecb-rebuild-methods-buffer-for-non-semantic'.
+
+For non-semantic-sources supported by etags the option
+`ecb-auto-save-before-etags-methods-rebuild' is checked before rescanning the
+source-buffer and rebuilding the methods-buffer."
   (interactive)
-  (when (and ecb-minor-mode
-             (equal (selected-frame) ecb-frame)
-             (ecb-point-in-edit-window)
-             (y-or-n-p "Do you want completely rebuilding the method buffer? "))
-    ;; to force a really complete rebuild we must completely clear the
-    ;; semantic cache
     (if (semantic-active-p)
-        (semantic-clear-toplevel-cache)
-      ;; for non-semantic-buffers not parsed via imenu (but maybe with etags)
-      ;; we must save the buffer because otherwise it can not be reparsed by
-      ;; tools like etags.
-      (if (null imenu--index-alist) (save-buffer)))
-    (ecb-update-methods-buffer--internal)))
+        (ecb-rebuild-methods-buffer-for-semantic)
+      (ecb-rebuild-methods-buffer-for-non-semantic)))
 
 (defun ecb-set-selected-source (filename other-edit-window
 					 no-edit-buffer-selection)
@@ -3324,9 +3459,9 @@ is not changed."
       ;; display the methods in the METHOD-buffer. We can not go back to
       ;; the edit-window because then the METHODS buffer would be
       ;; immediately updated with the methods of the edit-window.
-      (save-excursion
-	(set-buffer (find-file-noselect filename))
-	(ecb-update-methods-buffer--internal 'scroll-to-begin))
+        (save-excursion
+          (set-buffer (find-file-noselect filename))
+          (ecb-update-methods-buffer--internal 'scroll-to-begin))
     ;; open the selected source in the edit-window and do all the update and
     ;; parsing stuff with this buffer
     (ecb-find-file-and-display ecb-path-selected-source
@@ -3346,7 +3481,7 @@ is not changed."
 It does several tasks:
 - Depending on the value in `ecb-kill-buffer-clears-history' the corresponding
   entry in the history-buffer is removed.
-- Clearing the method buffer if a semantic-parsed buffer has been killed.
+- Clearing the method buffer if a file-buffer has been killed.
 - The entry of the removed file-buffer is removed from `ecb-token-tree-cache'."
   (let ((buffer-file (ecb-fix-filename (buffer-file-name (current-buffer)))))
     ;; 1. clearing the history if necessary
@@ -3360,8 +3495,8 @@ It does several tasks:
                        (y-or-n-p "Remove history entry for this buffer? ")))
               (ecb-clear-history-node node)))))
 
-    ;; 2. clearing the method buffer if a semantic parsed buffer is killed
-    (if (and buffer-file (semantic-active-p))
+    ;; 2. clearing the method buffer if a file-buffer is killed
+    (if buffer-file
         (ecb-rebuild-methods-buffer-with-tokencache nil nil t))
 
     ;; 3. removing the file-buffer from `ecb-token-tree-cache'. Must be done
@@ -4009,9 +4144,13 @@ Examples:
 - LEVEL ~ 10 should normally expand all nodes unless there are nodes which
   are indented deeper than 10.
 
-Note: This command switches off auto. expanding of the method-buffer if
+Note 1: This command switches off auto. expanding of the method-buffer if
 `ecb-expand-methods-switch-off-auto-expand' is not nil. But it can be switched
-on again quickly with `ecb-toggle-auto-expand-token-tree' or \[C-c . a]."
+on again quickly with `ecb-toggle-auto-expand-token-tree' or \[C-c . a].
+
+Note 2: All this is only valid for file-types parsed by semantic. For other
+file types which are parsed by imenu or etags \(see
+`ecb-process-non-semantic-files') FORCE-ALL is always true!"
   (interactive "P")
   (let* ((first-node (save-excursion
                        (goto-char (point-min))
@@ -4038,13 +4177,19 @@ on again quickly with `ecb-toggle-auto-expand-token-tree' or \[C-c . a]."
 For description of LEVEL and FORCE-ALL see `ecb-expand-methods-nodes'.
 
 If RESYNC-TOKEN is not nil then after expanding/collapsing the methods-buffer
-is resynced to the current token of the edit-window."
+is resynced to the current token of the edit-window.
+
+Note: All this is only valid for file-types parsed by semantic. For other file
+types which are parsed by imenu or etags \(see
+`ecb-process-non-semantic-files') FORCE-ALL is always true!"
   (let ((symbol->name-assoc-list
          ;; if possible we get the local semantic-symbol->name-assoc-list of
          ;; the source-buffer.
          (or (save-excursion
                (ignore-errors
                  (set-buffer (get-file-buffer ecb-path-selected-source))
+                 ;; for non-semantic buffers we set force-all always to t
+                 (setq force-all (not (semantic-active-p)))
                  semantic-symbol->name-assoc-list))
              semantic-symbol->name-assoc-list)))
     (save-selected-window
@@ -4130,7 +4275,8 @@ can last a long time - depending of machine- and disk-performance."
       (tree-node-toggle-expanded node)
       ;; Update the tree-buffer with optimized display of NODE
       (tree-buffer-update node))
-     ;; Type 2 = a token name
+     ;; Type 2 = a token name for a token not defined in current buffer; e.g.
+     ;; parent or include tokens can be such tokens!
      ;; Try to find the token
      ((= type 2)
       (set-buffer (get-file-buffer ecb-path-selected-source))
@@ -4172,11 +4318,9 @@ can last a long time - depending of machine- and disk-performance."
          ;; let us set the mark so the user can easily jump back.
          (if ecb-token-jump-sets-mark
              (push-mark nil t))
-;;          (when ecb-token-jump-narrow
-;;            (widen))
          (widen)
          (goto-char (ecb-semantic-token-start token))
-         (if ecb-token-jump-narrow
+         (if (and ecb-token-jump-narrow (semantic-active-p))
              (narrow-to-region (ecb-line-beginning-pos)
                                (ecb-semantic-token-end token))
            (cond
@@ -4655,6 +4799,12 @@ That is remove the unsupported :help stuff."
       (customize-group "ecb-eshell")
       :active t
       :help "Customize options for the eshell integration of ECB"
+      ])
+    (ecb-menu-item
+     ["Supporting non-semantic-sources..."
+      (customize-group "ecb-non-semantic")
+      :active t
+      :help "Customize options for parsing non-semantic-sources"
       ])
     )
    (list
@@ -5275,7 +5425,7 @@ does all necessary after finishing ediff."
 
       ;; deactivate and reset the speedbar stuff
       (if (featurep 'ecb-speedbar)
-          (ecb-speedbar-deactivate))
+          (ignore-errors (ecb-speedbar-deactivate)))
 
       ;; deactivating the eshell stuff; activation is done implicitly by
       ;; `ecb-eshell-goto-eshell'!
@@ -5300,8 +5450,6 @@ does all necessary after finishing ediff."
       (remove-hook 'pre-command-hook 'ecb-layout-pre-command-hook)
       (remove-hook 'after-save-hook 'ecb-update-methods-after-saving)
       (remove-hook 'kill-buffer-hook 'ecb-kill-buffer-hook)
-      ;; ediff-stuff; we operate here only with symbols to avoid bytecompiler
-      ;; warnings
       (if (get 'ediff-quit-hook 'ecb-ediff-quit-hook-value)
           (setq ediff-quit-hook (get 'ediff-quit-hook
                                      'ecb-ediff-quit-hook-value))

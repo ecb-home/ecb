@@ -19,7 +19,7 @@
 @c Free Software Foundation, Inc., 59 Temple Place - Suite 330,
 @c Boston, MA 02111-1307, USA.
 
-@c $Id: ecb.texi,v 1.93 2003/06/13 15:13:04 berndl Exp $
+@c $Id: ecb.texi,v 1.94 2003/06/23 14:13:39 berndl Exp $
 
 @setfilename ecb.info
 
@@ -42,7 +42,7 @@
 @c edit the Makefile to change the version number. mechanism stolen
 @c from Tramp
 @macro ecbver{}
-1.93
+1.94
 @end macro
 
 
@@ -68,8 +68,10 @@ This is the user manual for ECB version @ecbver{}.
 ECB stands for ``Emacs Code Browser'' and is a source code browser for
 (X)Emacs. It is a global minor-mode which displays a couple of windows
 that can be used to browse directories, files and file-contents like
-methods and variables. It supports source-code parsing for Java, C,
-C++, Elisp, Scheme and some more.
+methods and variables. It supports source-code parsing for
+semantic-supported languages like Java, C, C++, Elisp, Scheme as well
+as for source-types supported ``only'' by imenu or etags (e.g. perl,
+TeX, LaTeX etc.).
 
 @iftex
 @sp 1
@@ -135,8 +137,14 @@ mailing list @email{ecb-list@@lists.sourceforge.net} via
 Installation and first steps of ECB
 
 * Installation::                Installation of ECB
-* Setting up Emacs::            How to set up Emacs for semantic and ECB
+* Setting up Emacs::            How to set up Emacs for file parsing with ECB
 * First steps::                 First steps after activating ECB first time
+
+How to set up Emacs for file parsing with ECB
+
+* General hints::               General hints for a correct setup
+* Setting up semantic::         How to setup semantic correctly
+* Non-semantic files::          Setup for file types not supported by semantic
 
 Overview
 
@@ -203,6 +211,7 @@ All customizable options of ECB
 * ecb-download::                Customizing how to download ECB
 * ecb-help::                    Customizing the online help of ECB
 * ecb-eshell::                  Customizing the eshell-integration
+* ecb-non-semantic::            Customizing parsing non-semantic sources
 
 Upgrading and downloading packages
 
@@ -227,6 +236,7 @@ Tips and tricks
 * Grepping directories::        Grepping directories with ECB
 * Working with JDEE::           Working best with ECB and JDEE
 * Compile-window on demand::    Displaying the compile-window on demand
+* Non-semantic sources::        Parsing and displaying non-semantic sources
 
 Entry points for elisp programmers
 
@@ -259,7 +269,7 @@ and what are the first steps after activation of ECB.
 
 @menu
 * Installation::                Installation of ECB
-* Setting up Emacs::            How to set up Emacs for semantic and ECB
+* Setting up Emacs::            How to set up Emacs for file parsing with ECB
 * First steps::                 First steps after activating ECB first time
 @end menu
 
@@ -417,61 +427,32 @@ online help of ECB is always available though, see
 @end enumerate
 
 @node Setting up Emacs, First steps, Installation, Install and first steps
-@section How to set up Emacs for file parsing
+@section How to set up Emacs for file parsing with ECB
 
 @strong{NOTE}: Normally it should not necessary for you to bother with
 the following stuff unless you have problems getting ECB working
-correctly for you. 
+correctly for you.
 
-To ensure ECB and semantic are working correctly for all by semantic
-supported languages you have to pay attention to the following aspects
-concerning your Emacs-setup:
+@menu
+* General hints::               General hints for a correct setup
+* Setting up semantic::         How to setup semantic correctly
+* Non-semantic files::          Setup for file types not supported by semantic
+@end menu
 
-@enumerate
-@item Setting up semantic
+@node General hints, Setting up semantic, Setting up Emacs, Setting up Emacs
+@subsection General hints for a correct setup
 
-Parsing files is done completely by semantic. ECB just displays the
-parsing results. For all needs of ECB semantic is completely setup by
-ECB itself, i.e. ECB sets up semantic for you! You have only to add
-the installation directory of semantic to your @code{load-path} (in an
-appropriate way)!
-
-@strong{NOTE}: If you setup semantic for yourself following the
-recommendations in the installation instructions of semantic then you
-have probably added code to your startup-file like:
-
-@example
-(setq semantic-load-turn-everything-on t)
-(require 'semantic-load)
-@end example
-
-Be aware that this also enables the minor-modes
-@code{semantic-show-dirty-mode} and
-@code{semantic-show-unmatched-syntax-mode} where the former one
-highlights all code which has to be reparsed with dark background
-(which results in large portions of dark background ;-) and the latter
-one underlines all syntax which can not be parsed. Especially the
-former one can be really annoying.
-
-To switch off these modes you can add to your startup-file:
-
-@example
-(global-semantic-show-dirty-mode -1)
-(global-semantic-show-unmatched-syntax-mode -1)
-@end example
-
-@item Activating the correct major-mode
-
-ECB is for browsing source-files and therefore you have to setup your
-Emacs-configuration properly so semantic can be activated
-automatically for parsing your Emacs-Lisp, C, C++ or Java
-buffers@footnote{semantic supports some more ``languages'' like
-Makefiles etc. but these are the most important ones.}. For this Emacs
-must activate the correct @code{major-mode} for the source-files and
-Emacs can only do this if the option @code{auto-mode-alist} is setup
-correctly. The correct major-modes and possible
-file-extensions@footnote{Especially for C++ and C you can use any
-extension you want but these are the most common ones!} are:
+ECB is for browsing files and therefore you have to setup your
+Emacs-configuration properly so the file-parsing engines like
+semantic, imenu or etags can be activated automatically for parsing
+your Emacs-Lisp, C, C++ or Java buffers@footnote{semantic supports
+some more ``languages'' like Makefiles etc. but these are the most
+important ones.}. For this Emacs must activate the correct
+@code{major-mode} for the source-files and Emacs can only do this if
+the option @code{auto-mode-alist} is setup correctly. The correct
+major-modes and possible file-extensions@footnote{Especially for C++
+and C you can use any extension you want but these are the most common
+ones!} are:
 
 @multitable @columnfractions 0.20 0.50 0.30
 
@@ -517,17 +498,57 @@ like:
 @end example
 
 After this ECB will correctly parse your ``.cpp''-sources and display
-all the semantic information in the ECB-methods buffer.
+all the parsing information in the ECB-methods buffer.
+
+@node Setting up semantic, Non-semantic files, General hints, Setting up Emacs
+@subsection Setting up semantic
+
+To ensure ECB and semantic are working correctly for all by semantic
+supported languages you have to pay attention to the following aspects
+concerning your Emacs-setup:
+
+@enumerate
+@item Setting up semantic itself
+
+For all semantic-supported file-types parsing files is done completely
+by semantic. ECB just displays the parsing results. For all needs of
+ECB semantic is completely setup by ECB itself, i.e. ECB sets up
+semantic for you! You have only to add the installation directory of
+semantic to your @code{load-path} (in an appropriate way)!
+
+@strong{NOTE}: If you setup semantic for yourself following the
+recommendations in the installation instructions of semantic then you
+have probably added code to your startup-file like:
+
+@example
+(setq semantic-load-turn-everything-on t)
+(require 'semantic-load)
+@end example
+
+Be aware that this also enables the minor-modes
+@code{semantic-show-dirty-mode} and
+@code{semantic-show-unmatched-syntax-mode} where the former one
+highlights all code which has to be reparsed with dark background
+(which results in large portions of dark background ;-) and the latter
+one underlines all syntax which can not be parsed. Especially the
+former one can be really annoying.
+
+To switch off these modes you can add to your startup-file:
+
+@example
+(global-semantic-show-dirty-mode -1)
+(global-semantic-show-unmatched-syntax-mode -1)
+@end example
 
 @anchor{Checking your hooks}
 @item Checking your hooks
 
-If you have already checked points (1.) and (2.) and if you have still
-problems getting ECB/semantic working properly for your sources you
-should check the related major-mode hook. Every major-mode X has a
-hook with name ``X-hook'' which is evaluated after activating the
-major-mode (see above, 2.), e.g. the hook for the major-mode
-@code{c++-mode} is @code{c++-mode-hook}.
+If you have already checked point (1.) and if you have still problems
+getting ECB/semantic working properly for your sources you should
+check the related major-mode hook. Every major-mode X has a hook with
+name ``X-hook'' which is evaluated after activating the major-mode
+(see above, 2.), e.g. the hook for the major-mode @code{c++-mode} is
+@code{c++-mode-hook}.
 
 Semantic adds automatically during load-time a special
 ``semantic-setup'' to these major-mode hooks@footnote{Of course only
@@ -553,6 +574,30 @@ If your source-files are ``running'' with correct @code{major-mode}
 and correct major-mode hooks ECB and semantic will do what you expect
 them doing!
 
+@node Non-semantic files, , Setting up semantic, Setting up Emacs
+@subsection Setup for file types not supported by semantic
+
+From version 1.94 on ECB supports also parsing and displaying
+file-contents for file-types not supported by semantic (i.e. there is
+no semantic-grammar available for such file-types).
+
+Such non-semantic file-types can often be parsed by imenu and/or
+etags. Both of these parsing methods are now supported: ECB can
+display the results of imenu and/or etags in its Method-buffer. ECB
+uses for this speedbar-logic. Therefore the following speedbar options
+takes effect for this feature:
+
+@itemize @minus
+@item @code{speedbar-dynamic-tags-function-list}
+@item @code{speedbar-tag-split-minimum-length}
+@item @code{speedbar-tag-regroup-maximum-length}
+@item @code{speedbar-tag-hierarchy-method}
+@end itemize
+
+Normally ther should no need for you to bother with these options,
+because the default values are suitable for most situations! But if
+you are not satisfied with the parsing/display results then you can
+change some of these options.
 
 @node First steps, , Setting up Emacs, Install and first steps
 @section First steps after activating ECB first time
@@ -725,20 +770,27 @@ operation on the item under the mouse cursor can be performed.
 @section ECB Methods-buffer
 
 @cindex Methods
-@cindex Methods
+The @dfn{ECB-Methods} buffer contains all parsed and recognized tokens
+of the current source-buffer. It is called ``Method-buffer'' because
+ECB is mostly designed for browsing sourcecode files and for
+programming-languages these tokens are often methods (and variables
+etc.) To simplify explanations we talk in the following only about
+methods and variables - but in general the method-buffer can contain
+any kind of tokens (e.g. sections and subsections for texinfo
+buffers).
+
 @itemize @bullet
 @item
-The @dfn{ECB-Methods} buffer contains the methods (and variables, if
-you want) in the selected source file. When a method/variable is
-selected with the primary mouse button (@pxref{Using the mouse}) or
-RETURN (@pxref{Using the keyboard}) the edit buffer will jump to the
-method/variable.
+When a method/variable is selected with the primary mouse button
+(@pxref{Using the mouse}) or RETURN (@pxref{Using the keyboard}) the
+edit buffer will jump to the method/variable.
 
 IMPORTANT: If you use the POWER-click (i.e. hold down the SHIFT-key
 while clicking with the primary mouse button (@pxref{Using the mouse})
 or RETURN (@pxref{Using the keyboard})) on a node in this buffer then
 the edit-buffer will be narrowed to the selected token (see also
-option @code{ecb-token-jump-narrow}).
+option @code{ecb-token-jump-narrow}). But this works only for sources
+parsed by semantic, not by imenu or etags!
 
 @item
 Clicking on a method/variable with the secondary mouse button or C-RETURN
@@ -820,7 +872,7 @@ If activating or deactivating is too strong you can also customize ECB
 with these two option only hiding/showing it's ECB-windows
 (tree-buffers) on a major-mode basis. At last this is nothing more
 than auto. calling @code{ecb-toggle-ecb-windows} (@pxref{Interactive
-ECB commands} depending which major-mode is active.
+ECB commands}) depending which major-mode is active.
 @end table
 
 If you activate ECB on a major-mode basis you probably want switch off
@@ -915,7 +967,8 @@ source.
 
 @item ECB Methods:
 Narrowing to the clicked method/variable/ect... (see
-@code{ecb-token-jump-narrow}).
+@code{ecb-token-jump-narrow}). But this works only for sources parsed
+by semantic, not by imenu or etags!
 @end itemize
 
 Per default the complete node-name of an item in a tree-buffer is
@@ -1113,7 +1166,7 @@ be used to add personal local keybindings@footnote{To be more general:
 They can be used to run any arbitrary lisp code after a tree-buffer
 creation!} either to all tree-buffers
 (@code{ecb-common-tree-buffer-after-create-hook}) or just to a certain
-tree-buffer. Here is a list which keys MUST NOT be rebind:
+tree-buffer. Here is a list which keys MUST NOT be rebound:
 
 @itemize @bullet
 @item @kbd{RET} and all combinations with @kbd{Shift} and @kbd{Ctrl}:
@@ -1279,6 +1332,31 @@ open compilation-buffers in the sense of
 @node The Methods buffer, The ECB-layout, Temp- and compile-buffers, Usage of ECB
 @section Using and customizing the ECB-Methods buffer
 
+ECB is mostly designed to display parsing information for files
+supported by semantic. But from version 1.94 on it also supports other
+parsing engines like imenu and etags, so also files not supported by
+semantic but by imenu/etags can be displayed in the Method-buffer of
+ECB. Therefore we have to intruduce some terminology:
+
+@cindex semantic-sources
+@anchor{Definiton of semantic- and non-semantic-sources}
+@itemize @minus
+@item @dfn{semantic-sources}:
+These are filestypes for which a semantic grammar is available, so the
+files are parsable by semantic. These sources are supported best by
+ECB and most of the following options and descriptions are related to
+these filetypes. Examples are programming-sources like C++, C, Java,
+Emacs-Lisp and Texinfo-file and some more.
+
+@cindex non-semantic-sources
+@item @dfn{non-semantic-files}:
+For these files there is no semantic-grammar available so they can not
+be parsed by semantic. Examples are Perl-, LaTeX- and TeX-files. But
+for many of these files imenu and/or etags parsers exist. ECB supports
+now parsing and displaying these file-types too and it uses for this
+some speedbar-logic.
+@end itemize
+
 This chapter describes how to use and customize the Methods-buffer of
 ECB.
 
@@ -1302,8 +1380,11 @@ a buffer at one glance. Or you can expand exactly that tokens of a
 certain indentation level.
 
 Which node-types are expanded (resp. collapsed) by this command
-depends on the options @code{ecb-methods-nodes-expand-spec} and
-@code{ecb-methods-nodes-collapse-spec}!
+depends for semantic-sources on the options
+@code{ecb-methods-nodes-expand-spec} and
+@code{ecb-methods-nodes-collapse-spec}! For non-sematic-sources always
+all node-types are expanded/collapsed, i.e. the two options above
+takes no effect for these files.
 
 @subsubsection Automatic expanding the ECB-methods-buffer
 
@@ -1315,7 +1396,7 @@ collapsed) then no node is highlighted if the auto. expanding feature
 is switched off.
 
 You can either switch on this feature with the option
-@code{ecb-auto-expand-token-tree} or with even easier with the command
+@code{ecb-auto-expand-token-tree} or even easier with the command
 @code{ecb-toggle-auto-expand-token-tree}.
 
 There is another option
@@ -1323,21 +1404,23 @@ There is another option
 explicit and auto. expanding best working together. See the
 documentation of this option to get the details.
 
+The autom. expanding feature is only available for semantic-sources!
+
 @node Customizing the display, Rebuilding the Methods, Expanding, The Methods buffer
 @subsection Customizing the display of the Methods-buffer
 
 @cindex semantic token
 @cindex token
 The ECB-Methods buffer is probably the most important browsing window
-offered by ECB. It displays all semantic informations of the current
-buffer in the edit-window.
+offered by ECB. It displays all parsing informations of the current
+source-buffer (the buffer displayed in the edit-window).
 
-ECB gets all informations displayed in this Methods-buffer from the
-semantic-library. This library parses auto. the current source-buffer
-in the edit-window of ECB and returns all information in form of
-@dfn{tokens} to ECB which displays them in a browsable form in its
-Method-buffer. See @ref{ECB Methods-buffer} for information how to use the
-Methods-buffer.
+Normally ECB gets all informations displayed in this Methods-buffer
+from the semantic-library - at least for semantic-sources. This
+library parses auto. the current source-buffer in the edit-window of
+ECB and returns all information in form of @dfn{tokens} to ECB which
+displays them in a browsable form in its Method-buffer. See @ref{ECB
+Methods-buffer} for information how to use the Methods-buffer.
 
 There are several options to customize which tokens ECB should display
 in general, if the tokens should be collapsed or expanded, how to
@@ -1365,13 +1448,40 @@ These are the most important options for this topic but it is
 recommended to have a look into the customize-group @code{ecb-methods}
 (@pxref{ecb-methods}) and check all the options offered there!
 
+All these options are only relevant for semantic-sources and take no
+effect for non-sematic-sources!
+
 @node Rebuilding the Methods, , Customizing the display, The Methods buffer
 @subsection Rebuilding the Methods-buffer
 
 In almost all cases there is @strong{NO} need to manually rebuild the
-method-buffer, because it is always done automatically if necessary.
-But nevertheless there exist a few rare scenarios where a complete
-manual rebuild can be necessary. Here is one example:
+method-buffer, because it is always done automatically if necessary;
+the mechanism depends on the sources:
+
+@itemize @minus
+@item semantic-sources:
+The command @code{global-semantic-auto-parse-mode} switches on autom.
+reparsing of semantic-sources.
+
+@item non-sematic-sources (imenu supported):
+You can switch on autom. rescanning/reparsing with the option
+@code{imenu-auto-rescan}. But nevertheless you have to manually
+rebuild the Method-buffer (with the autom. updated imenu-tags) via the
+command @code{ecb-rebuild-methods-buffer}.
+
+@item non-sematic-sources (etags supported):
+For these sources there is no builtin auto-rescan mechanism, because
+etags is an external tool it can only operate on the saved
+file-contents. So rescanning the buffer contents would need to save
+the buffer before. Therefore there is no builtin auto-rescan mechanism
+because this would always result in saving the buffer and running an
+external tool. But of course you can program such a an
+etags-auto-rescan mechanism for yourself!
+@end itemize
+
+Besides for etags-supported non-sematic-sources there exist a few rare
+scenarios also for the other sources where a complete manual rebuild
+can be necessary. Here is one example:
 
 Depending on the semantic-version: If an elisp-file is parsed which
 contains a defun X in the middle where the closing ) is missing, then
@@ -1380,7 +1490,11 @@ incomplete ECB-method buffer. In such a case you must complete the
 defun X and then completely reparse the elisp-file and rebuild the ECB
 method buffer!
 
-A complete manually rebuild is done by @code{ecb-rebuild-methods-buffer}.
+A complete manually rebuild is done by
+@code{ecb-rebuild-methods-buffer}. For etags-parsed
+non-sematic-sources this causes an automatic saving of the
+source-buffer because otherwise etags would not operate with the
+latest contents!
 
 @node The ECB-layout, Hiding the ECB windows, The Methods buffer, Usage of ECB
 @section Changing, customizing, redrawing and creating layouts
@@ -2004,6 +2118,33 @@ see @ref{Creating a new ECB-layout}); just customize the option
 @end group
 @end example
 
+@item Layout ``left-dir-plus-speedbar''
+@example
+@group
+-------------------------------------------------------
+|             |                                       |
+| Directories |                                       |
+|             |                                       |
+|             |                                       |
+|             |                                       |
+|             |                                       |
+|             |                                       |
+|-------------|                                       |
+|             |                                       |
+|             |                                       |
+|             |                                       |
+| Speedbar    |                                       |
+|             |                                       |
+|             |                                       |
+|             |                                       |
+-------------------------------------------------------
+|                                                     |
+|                    Compilation                      |
+|                                                     |
+-------------------------------------------------------
+@end group
+@end example
+
 @end table
 
 @node Redrawing the ECB-layout, Changing window sizes, Changing the ECB-layout, The ECB-layout
@@ -2552,10 +2693,14 @@ should normally expand all nodes expect there are nodes which are
 indented deeper than 10.
 @end itemize
 
-Note: This command switches off auto. expanding of the method-buffer
+Note 1: This command switches off auto. expanding of the method-buffer
 if @code{ecb-expand-methods-switch-off-auto-expand} is not nil. But it
 can be switched on again quickly with
 @code{ecb-toggle-auto-expand-token-tree} or @kbd{[C-c . a]}.
+
+Note 2: All this is only valid for file-types parsed by semantic. For
+other file types which are parsed by imenu or etags (see
+@code{ecb-process-non-semantic-files}) @var{FORCE-ALL} is always true!
 @end deffn
 
 @deffn Command expand-directory-nodes
@@ -2572,7 +2717,9 @@ Goto the ecb compilation window @code{ecb-compile-window}.
 @end deffn
 
 @deffn Command goto-window-directories
-Make the ECB-directories window the current window.
+Make the ECB-directories window the current window. If
+@code{ecb-use-speedbar-instead-native-tree-buffer} is @code{dir} then
+goto to the speedbar-window.
 @end deffn
 
 @deffn Command goto-window-edit1
@@ -2588,11 +2735,15 @@ Make the ECB-history window the current window.
 @end deffn
 
 @deffn Command goto-window-methods
-Make the ECB-methods window the current window.
+Make the ECB-methods window the current window. If
+@code{ecb-use-speedbar-instead-native-tree-buffer} is @code{method}
+then goto to the speedbar-window.
 @end deffn
 
 @deffn Command goto-window-sources
-Make the ECB-sources window the current window.
+Make the ECB-sources window the current window. If
+@code{ecb-use-speedbar-instead-native-tree-buffer} is @code{source}
+then goto to the speedbar-window.
 @end deffn
 
 @deffn Command jde-display-class-at-point
@@ -2606,7 +2757,7 @@ the method-completion feature of JDEE (see
 @var{$CLASSPATH}, then in current-directory.
 
 Works only for classes where the source-code (i.e. the *.java-file) is
-available."
+available.
 @end deffn
 
 @deffn Command minor-mode &optional arg
@@ -2629,10 +2780,14 @@ navigation}.
 Updates the methods buffer with the current buffer after deleting the
 complete previous parser-information, means no semantic-cache is used!
 Point must stay in an edit-window otherwise nothing is done. This
-method is merely needed if semantic parses not the whole buffer
-because it reaches a not parsable code. Examples when a call to this
-function is necessary:
+method is merely needed for semantic parsed buffers if semantic parses
+not the whole buffer because it reaches a not parsable code or for
+buffers not supported by semantic but by imenu or etags.
 
+Examples when a call to this function can be necessary:
+
+@itemize
+@item
 If an elisp-file is parsed which contains in the middle a defun X
 where the closing ) is missing then semantic parses only until this
 defun X is reached and you will get an incomplete ECB-method buffer.
@@ -2640,9 +2795,12 @@ In such a case you must complete the defun X and then call this
 function to completely reparse the elisp-file and rebuild the ECB
 method buffer!
 
-If you change only the name of a method or a variable and you want
-the new name be shown immediately in the ECB-method buffer then you
-must call this function.
+@item
+For not semantic supported buffers which can be parsed by imenu or
+etags (see @code{ecb-process-non-semantic-files}) because for these
+buffers there is no builtin auto-rebuild mechanism. For these buffers
+this command calls @code{ecb-rebuild-methods-buffer-for-non-semantic}.
+@end itemize
 @end deffn
 
 @deffn Command redraw-layout
@@ -2825,7 +2983,7 @@ elisp-code but only with the customize-feature!
 @tab @code{ecb-windows-height}
 @item @code{ecb-window-sync-delay}
 @tab @code{ecb-windows-width}
-@item @code{ecb-use-speedbar-for-directories}
+@item @code{ecb-use-speedbar-instead-native-tree-buffer}
 @tab @code{ecb-toggle-layout-sequence}
 @item @code{ecb-mode-line-data}
 @end multitable
@@ -2903,8 +3061,13 @@ ECB-layout}).
 @item  ecb-token-display-function
 @itemx ecb-type-token-display
 @itemx ecb-show-tokens
-How to display the entries in the ECB-method window
-(@pxref{Customizing the display}).
+How to display the entries in the ECB-method window for semantic
+supported sources (@pxref{Customizing the display}). These options
+take only effect for semantic-sources (@pxref{Definiton of semantic-
+and non-semantic-sources}).
+@item ecb-process-non-semantic-files
+Displaying file-contents for not by semantic supported files too, e.g.
+for LaTeX- and perl-sources.
 @end table
 
 But to make ECB working best for you it is also recommened to have a
@@ -2937,6 +3100,7 @@ readable option index. @xref{Option Index}.
 * ecb-download::                Customizing how to download ECB
 * ecb-help::                    Customizing the online help of ECB
 * ecb-eshell::                  Customizing the eshell-integration
+* ecb-non-semantic::            Customizing parsing non-semantic sources
 @end menu
 
 @node ecb-general, ecb-directories, Customizable options, Customizable options
@@ -3351,7 +3515,8 @@ displaying the source-file in the edit-window.
 
 @item ECB Methods:
 Narrowing to the clicked method/variable/ect... (see
-@code{ecb-token-jump-narrow}).
+@code{ecb-token-jump-narrow}). This works only for semantic supported
+sources but not for imenu- or etags-supported ones!
 @end itemize
 
 In addition always the whole node-name is displayed in the minibuffer after a
@@ -3784,19 +3949,32 @@ that is used as it's display name. If no alias is set, the path is
 used as display name.
 @end defopt
 
-@defopt use-speedbar-for-directories
-If true then uses speedbar for displaying and handling directories.
-This means that speedbar is integrated in the ECB-frame and is displayed in
-that window normally displaying the standard ECB-directories-buffer.
+@defopt use-speedbar-instead-native-tree-buffer
+If true then uses speedbar for directories, sources or methods. This
+means that speedbar is integrated in the ECB-frame and is displayed in
+that window normally displaying the standard ECB-directories-buffer,
+ECB-sources-buffer or ECB-methods-buffer.
 
-This option takes effect in all layouts which contain a directory window.
+This option takes effect in all layouts which contain either a
+directory window, a sources window or a method window.
 
-Note: A similar effect and useability is available by setting this option to
-nil and setting @code{ecb-show-sources-in-directories-buffer} to not nil, because
-this combination displays also directories and sources in one window.
+This option can have four valid values:
+@itemize @minus
+@item @code{nil}: Do not use speedbar (default)
+@item @code{dir}: Use speedbar instead of the standard directories-buffer
+@item @code{source}: Use speedbar instead of the standard sources-buffer
+@item @code{method}: Use speedbar instead of the standard methods-buffer
+@end itemize
 
-@code{ecb-use-speedbar-for-directories} is for people who like the speedbar way
-handling directories amd source-files and want it in conjunction with ECB.
+Note: For directories and sources a similar effect and useability is
+available by setting this option to @code{nil} (or @code{method}) and
+setting @code{ecb-show-sources-in-directories-buffer} to not
+@code{nil}, because this combination displays also directories and
+sources in one window.
+
+@code{ecb-use-speedbar-instead-native-tree-buffer} is for people who
+like the speedbar way handling directories and source-files or methods
+and want it in conjunction with ECB.
 @end defopt
 
 
@@ -3966,6 +4144,9 @@ edit-buffer is contained in @code{ecb-methods-nodes-expand-spec}.
 Like expand-spec but expands all tokens regardess of the setting in
 @code{ecb-methods-nodes-expand-spec}.
 @end itemize
+
+This options takes only effect for semantic-sources - means sources
+supported by semantic!
 @end defopt
 
 
@@ -3984,12 +4165,18 @@ The default are empty prefix/suffix-strings and
 'ecb-bucket-token-face'. But an alternative can be for example @code{("["
 "]" nil)} which means no special face and a display like ``[+]
 [<bucket-name>]''.
+
+This options takes only effect for semantic-sources - means sources
+supported by semantic!
 @end defopt
 
 @defopt exclude-parents-regexp
 Regexp which parent classes should not be shown in the methods buffer
 (see also @code{ecb-show-parents}). If nil then all parents will be
 shown if @code{ecb-show-parents} is not nil.
+
+This options takes only effect for semantic-sources - means sources
+supported by semantic!
 @end defopt
 
 @defopt expand-methods-switch-off-auto-expand
@@ -4011,6 +4198,9 @@ set expand-level.
 
 @defopt font-lock-tokens
 Adds font-locking (means highlighting) to the ECB-method buffer.
+
+This options takes only effect for semantic-sources - means sources
+supported by semantic!
 @end defopt
 
 @defopt highlight-token-header-after-jump
@@ -4034,6 +4224,9 @@ No highlighting is done.
 @end itemize
 
 See also @code{ecb-highlight-token-with-point-delay}.
+
+This options takes only effect for semantic-sources - means sources
+supported by semantic!
 @end defopt
 
 @defopt highlight-token-with-point-delay
@@ -4045,6 +4238,9 @@ But such a delay prevents also ``jumping backward/forward'' during
 scrolling within java-classes if point goes out of method-definition
 into class-definition. Therefore the default value is a delay of 0.25
 seconds.
+
+This options takes only effect for semantic-sources - means sources
+supported by semantic!
 @end defopt
 
 @defopt methods-buffer-after-create-hook
@@ -4107,6 +4303,9 @@ If you change this option you have to restart ECB to take effect.
 @defopt methods-nodes-collapse-spec
 Semantic token-types collapsed by @code{ecb-expand-methods-nodes}.
 For valid values of this option see @code{ecb-methods-nodes-expand-spec}!
+
+This options takes only effect for semantic-sources - means sources
+supported by semantic!
 @end defopt
 
 
@@ -4128,6 +4327,9 @@ If there is a bucket-name (the node-name stripped of the settings in
 name is also a valid symbol for this list. Example: In ECB there are buckets
 ``[Parents]''. The bucket-name is ``Parents'' and the valid symbol-name is
 then @code{Parents}.
+
+This options takes only effect for semantic-sources - means sources
+supported by semantic!
 @end defopt
 
 
@@ -4146,6 +4348,9 @@ defined outside the class-definition (e.g. C++, Eieio) the function
 @code{ecb-group-function-tokens-with-parents} can be used to get a
 much better method-display in the methods-window of ECB, because all
 method implementations of a class are grouped together.
+
+This options takes only effect for semantic-sources - means sources
+supported by semantic!
 @end defopt
 
 @defopt scroll-window-after-jump
@@ -4161,6 +4366,9 @@ CLOS or Eieio source-code there can exist some positionless nodes like
 variable-attributes in a @code{defclass} form which are only displayed
 if this option is nil. Displaying such nodes can be sensefull even if
 they can not be jumped.
+
+This options takes only effect for semantic-sources - means sources
+supported by semantic!
 @end defopt
 
 @defopt show-tokens
@@ -4209,6 +4417,9 @@ buffer.
 @end itemize
 @end table
 
+
+This options takes only effect for semantic-sources - means sources
+supported by semantic!
 @end defopt
 
 @defopt token-display-function
@@ -4276,6 +4487,9 @@ If the value is @code{nil}, i.e. neither a function for a major-mode
 is defined nor the special 'default, then
 @code{semantic-prototype-nonterminal} is used for displaying the
 tokens.
+
+This options takes only effect for semantic-sources - means sources
+supported by semantic!
 @end defopt
 
 @defopt token-jump-narrow
@@ -4285,6 +4499,9 @@ a source file or call @code{widen} (@kbd{C-x n w}).
 
 Note: The same effect can be achieved by using the POWER-click in the
 methods-buffer (@pxref{Using the mouse}).
+
+This options takes only effect for semantic-sources - means sources
+supported by semantic!
 @end defopt
 
 @defopt token-jump-sets-mark
@@ -4365,6 +4582,9 @@ and in all other modes ``class''es and grouping-tokens (see
 @code{ecb-token-display-function},
 @code{ecb-group-function-tokens-with-parents}) have special faces and
 the ``class'' specifier-string is removed from the display.
+
+This options takes only effect for semantic-sources - means sources
+supported by semantic!
 @end defopt
 
 
@@ -5041,6 +5261,14 @@ only the face @code{ecb-default-highlight-face}.
 Changes take first effect after finishing and reactivating ECB!
 @end defopt
 
+@defopt method-non-semantic-face
+Face used for for displaying tokens of sources not supported by
+semantic.
+
+Changes take first effect after finishing and reactivating ECB!
+@end defopt
+
+
 @defopt methods-general-face
 Basic face for the ECB methods buffer. This defines the basic face the
 whole methods buffer should displayed with. If the face
@@ -5151,6 +5379,9 @@ the methods buffer.
 @item ecb-methods-general-face:
 Basic face for the ECB methods buffer. It´s recommended to define here
 the font-family, the font-size, the basic color etc.
+
+@item ecb-method-non-semantic-face:
+Define face used for displaying tokens of sources not supported by semantic.
 
 @item ecb-source-face:
 Define face used for highlighting current source in the sources
@@ -5312,7 +5543,7 @@ Note: If you got ECB as a standard XEmacs-package maybe the
 HTML-online-documentation is not included.
 @end defopt
 
-@node ecb-eshell, , ecb-help, Customizable options
+@node ecb-eshell, ecb-non-semantic, ecb-help, Customizable options
 @subsection Group ecb-eshell
 
 @noindent
@@ -5337,6 +5568,96 @@ interactively but normally it is called autom. by the
 @code{ecb-current-buffer-sync-hook}.
 @end defopt
 
+@node ecb-non-semantic, , ecb-eshell, Customizable options
+@subsection Group ecb-non-semantic
+
+@defopt auto-save-before-etags-methods-rebuild
+Automatic saving of current buffer before rebuilding its methods.
+
+This option is only relevant for sources which are supported and
+parsed by etags (see @code{ecb-process-non-semantic-files}). Because
+etags is an external tool a source-buffer can only be reparsed if the
+buffer is saved to disk. So the command
+@code{ecb-rebuild-methods-buffer} checkes for sources which are not
+supported by semantic or imenu if either this option is t or if the
+major-mode of the source-buffer is contained in this list: In both
+cases ECB saves the current source-buffer before it re-runs etags for
+reparsing the source. If nil or if the major-mode is not contained
+then no automatic saving will be done!
+
+For all source supported by semantic or by imenu this option takes no
+effect.
+@end defopt
+
+@defopt non-semantic-exclude-modes
+Exclude modes from parsing with imenu or etags. Per default, ECB tries
+to parse all file-types not supported by semantic with imenu or etags
+or some other method (for details see the option
+@code{ecb-non-semantic-parsing-function}). If a file-type can not be
+parsed by semantic, imenu or etags than this simply results in an
+empty method-buffer for this file. But nevertheless you will get a
+message ``Sorry, no support for a file of that extension'' which comes
+from the speedbar-library and can not switched off. Therefore if a
+@code{major-mode} is known as not parsable by semantic, imenu or etags
+it can be added to this option and then it will be excluded from being
+tried to parsed.
+@end defopt
+
+@defopt non-semantic-methods-initial-expand
+Initially expand all tokens for not by semantic supported sources.
+This option can be customized on a major-mode basis, i.e. if a
+@code{major-mode} is contained in this option then al tokens for this
+modes will be initially expanded - otherwise not.
+@end defopt
+
+@defopt non-semantic-parsing-function
+Define mode-dependend parsing functions for non-semantic files. This
+is an alist where the car is a major-mode symbol and the cdr is a
+function-symbol of a function which should be used for parsing a
+non-semantic buffer, i.h. a buffer for which no semantic grammar
+exists. Such a function gets one argument - the filename of current
+buffer - and has to generate and return a token/tag list which is
+understandable by @code{speedbar-insert-generic-list}. speedbar has
+already included two functions @code{speedbar-fetch-dynamic-imenu} and
+@code{speedbar-fetch-dynamic-etags} which can be used for parsing
+buffers with imenu resp. etags.
+
+This option takes only effect if @code{ecb-process-non-semantic-files}
+is not nil: Then ECB checks for non-semantic buffers if current
+@code{major-mode} is contained in this option and if yes, then the
+specified parsing function is called; if not then the cars of the
+elements of @code{speedbar-dynamic-tags-function-list} are called in
+that sequence they are listed in this variable. See option
+@code{speedbar-dynamic-tags-function-list} for further details.
+
+In most cases imenu-parsing is preferable over etags-parsing because
+imenu operates on Emacs-buffers and needs no external tool and
+therefore parsing works also if current contents of a buffer are not
+saved to disk. But maybe sometimes etags may return better parsing
+results
+
+IMPORTANT: if imenu-parsing should be used then the option
+@code{speedbar-use-imenu-flag} must be set to not nil!
+@end defopt
+
+@defopt process-non-semantic-files
+Display content of non-semantic-files in the ECB-methods-buffer. See
+also @code{ecb-non-semantic-parsing-function}.
+@end defopt
+
+@defopt rebuild-non-semantic-methods-before-hook
+Hook running at beginning of the function
+@code{ecb-rebuild-methods-buffer-for-non-semantic}. This function is
+always called by the command @code{ecb-rebuild-methods-buffer} for not
+semantic supported source-types.
+
+Every function of this hook gets one argument: The complete filename
+of the current source-buffer in the edit-window. The Method-buffer is
+only rebuild by @code{ecb-rebuild-methods-buffer-for-non-semantic} if
+either the hook contains no function (the default) or if no function
+of this hook returns nil! See @code{run-hook-with-args-until-failure}
+for description how these function are processed.
+@end defopt
 
 
 @node Submitting problem report, Upgrading, Customizing, Top
@@ -5624,6 +5945,7 @@ situations.
 * Grepping directories::        Grepping directories with ECB
 * Working with JDEE::           Working best with ECB and JDEE
 * Compile-window on demand::    Displaying the compile-window on demand
+* Non-semantic sources::        Parsing and displaying non-semantic sources
 @end menu
 
 @node Changing faces, Small screens, Tips and tricks, Tips and tricks
@@ -5798,14 +6120,22 @@ it into the ECB and the ECB-frame, @xref{Integrating speedbar}.
 It is very easy to integrate speedbar into ECB. There are two
 different ways to do this:
 
-You can either use speedbar in the directories window of ECB instead
-of the builtin directory-browser of ECB. Or you can integrate an extra
-speedbar-window into a layout independent of the existence of a
-directory-window. The former one can be done via the option
-@code{ecb-use-speedbar-for-directories} and for the latter one you can
-either use the builtin layout ``left-dir-plus-speedbar'' or you have
-to create your own layout interactively with the command
-@code{ecb-create-new-layout}.
+@enumerate
+@item
+You can either use speedbar in the directories-, sources- or
+methods-window of ECB instead of the builtin directory-, sources- or
+methods-browser of ECB. This can be done via the option
+@code{ecb-use-speedbar-instead-native-tree-buffer}.
+
+@item
+Or you can integrate an extra speedbar-window into a layout
+independent of the existence of a directory-, sources- or
+methods-window. For this you can either use the builtin layout
+``left-dir-plus-speedbar'' or you have to create your own layout
+interactively with the command @code{ecb-create-new-layout}. This way
+is not described in more details because there is nothing more to
+describe - just create your layout.
+@end enumerate
 
 In general integrating speedbar into the ECB-frame makes sense for
 people...
@@ -5815,27 +6145,28 @@ people...
 ...who like the speedbar way of handling directories and source-files
 but also like the ECB-way of displaying the buffer-contents (like
 methods and variables in a source-file). This people should use the
-option @code{ecb-use-speedbar-for-directories}.
-
-@item
-...who like the ECB-way of browsing things like directories,
-source-files, file-contents but who need or want also browsing types
-of sources for which currently no semantic-parser exist but which can
-be parsed by imenu or etags.
+option @code{ecb-use-speedbar-instead-native-tree-buffer} and set it
+to @code{dir}.
 
 @item
 ...who like the speedbar way of browsing things like directories,
-files, file-contents etc. but who dislike the extra speedbar-frame
+files, file-contents etc. but who dislike the extra speedbar-frame.
 @end itemize
+
+Note: It is not necessary to integrate speedbar if you only want
+parsing sources not supported by semantic. From version 1.94 on ECB
+supports native parsing and displaying of such sources
+(@pxref{Non-semantic sources})!
 
 Regardles the group you belong, with the speedbar-integration feature
 of ECB you can combine both worlds, the speedbar- and the ECB-world:
 
 @enumerate
-@item Choose a layout which contains a directories-window but no
-sources-window@footnote{The latter one is not needed if you use speedbar
-because speedbar displays directories and sources in one window. But
-if you like you can also use a sources window too...}.
+@item Choose a layout which either contains a directories- or a
+sources-window but not both of them@footnote{Only one of them is
+needed if you use speedbar because speedbar displays directories and
+sources in one window. But if you like wasting space then you can also
+use a layout with both windows...}.
 
 Because speedbar has also display-modes for buffers and info-nodes and
 some other useful things (which can be changed by the speedbar-command
@@ -5844,24 +6175,26 @@ convenience to the keysequence @kbd{C-c . bc} in the
 @code{ecb-key-map}) we recommend layouts like ``left15'' or
 ``leftright3'' for using with speedbar.
 
-@item Set the option @code{ecb-use-speedbar-for-directories} to not
-nil. After this the directories window of ECB will contain a full
-featured speedbar (the only difference to standard speedbar is not
-residing in an extra frame).
+@item Set the option
+@code{ecb-use-speedbar-instead-native-tree-buffer} to not nil. After
+this the choosen window of ECB will contain a full featured speedbar
+(the only difference to standard speedbar is not residing in an extra
+frame).
 @end enumerate
 
 Note: If you belong to the first group of people (s.a.) a similar
 effect and useability is available by setting
-@code{ecb-use-speedbar-for-directories} to nil and setting
+@code{ecb-use-speedbar-instead-native-tree-buffer} to nil and setting
 @code{ecb-show-sources-in-directories-buffer} to not nil, because this
 combination displays also directories and sources in one window.
 
-So with the option @code{ecb-use-speedbar-for-directories} you have
-the choice which way of displaying and handling directories and
-source-files you want (the speedbar- or the ECB-way).
+So with the option @code{ecb-use-speedbar-instead-native-tree-buffer}
+you have the choice which way of displaying and handling ``things''
+(directories, sources, methods...) you want (the speedbar- or the
+ECB-way).
 
 During speedbar is running within ECB (i.e.
-@code{ecb-use-speedbar-for-directories} is not nil) the
+@code{ecb-use-speedbar-instead-native-tree-buffer} is not nil) the
 speedbar-command @code{speedbar} is disabled and the speedbar-command
 @code{speedbar-get-focus} switches between the speedbar-window and the
 edit-window@footnote{The standard behavior is switching between the
@@ -6027,7 +6360,7 @@ command ``Create Source'' which allows easy creating new java-sources
 by calling the command @code{jde-gen-class-buffer}.
 @end itemize
 
-@node Compile-window on demand, , Working with JDEE, Tips and tricks
+@node Compile-window on demand, Non-semantic sources, Working with JDEE, Tips and tricks
 @section Displaying the compile-window on demand
 
 If you like displaying all output of compile/grep/etc. in an extra
@@ -6063,6 +6396,138 @@ If you have finished with using the compile-output (e.g. fixing
 errors) then you can throw away the compile-window just by
 @code{ecb-toggle-compile-window} - ECB will reactivate it autom.
 before next compilation!
+
+@node Non-semantic sources, , Compile-window on demand, Tips and tricks
+@section Parsing and displaying non-semantic sources
+
+ECB is mostly designed to display parsing information for files
+supported by semantic. But from version 1.94 on it also supports other
+parsing engines like imenu and etags, so also files not supported by
+semantic but by imenu/etags can be displayed in the Method-buffer of
+ECB. See @ref{Definiton of semantic- and non-semantic-sources} for a
+description of ``semantic-sources'' and ``non-semantic-sources''.
+
+If support of non-semantic-sources is enabled then ECB will display
+the contents of all sources which can be displayed by speedbar too.
+This comes from the fact that ECB uses speedbar-logic to parse sources
+with imenu or etags.
+
+In most cases imenu-parsing is preferable over etags-parsing because
+imenu operates on Emacs-buffers and needs no external tool and
+therefore parsing works also if current contents of a buffer are not
+saved to disk.
+
+This section describes all important aspects about parsing and
+displaying file-contents of file-types not supported by semantic but
+by imenu and/or etags.
+
+@subsection Enabling parsing and displaying of non-semantic-sources
+
+Enabling is simply done with the option @code{ecb-process-non-semantic-files}.
+
+ECB offers an option @code{ecb-non-semantic-parsing-function} to
+specify on a major-mode basis which parsing-method should be used:
+imenu or etags. Normaly there should be no need to change this option
+but read the documentation of this option (@pxref{ecb-non-semantic})
+for further details.
+
+IMPORTANT:
+
+@itemize
+@item
+If imenu-parsing should be used then the option
+@code{speedbar-use-imenu-flag} must be set to not @code{nil}!
+
+@item
+If some non-semantic-sources are not parsed (i.e. there is an empty
+Methods-buffer) and you think that they should then maybe they are neither
+supported by imenu nor by etags or you have to check the options
+@code{ecb-non-semantic-parsing-function} and
+@code{speedbar-dynamic-tags-function-list} and - especially for etags -
+@code{speedbar-fetch-etags-parse-list}, @code{speedbar-fetch-etags-arguments}
+and @code{speedbar-fetch-etags-command}.
+
+@item
+Even with support for semantic-, imenu- and etags-parsing there will
+remain some file-types resp. @code{major-modes} which are not
+parsable, neither by semantic, imenu nor etags. This is no problem
+because these files simply have an empty Methods-buffer. But
+nevertheless you will get a message ``Sorry, no support for a file of
+that extension'' which comes from the speedbar-library and can not
+switched off. Therefore if a @code{major-mode} is known as not
+parsable by semantic, imenu or etags it can be added to the option
+@code{ecb-non-semantic-exclude-modes} and then it will be excluded
+from being tried to parsed and this (annoying) message will not occur.
+@end itemize
+
+@subsection Automatic rescanning/reparsing of non-semantic-sources
+
+In contrast to semantic (see @code{global-semantic-auto-parse-mode})
+there is no builtin mechanism for autom. reparsing
+non-semantic-sources and then updating the contens of the
+Methods-buffer.
+
+For non-semantic-sources you have always at least to call
+@code{ecb-rebuild-methods-buffer} or saving the source-file (if
+@code{ecb-auto-update-methods-after-save} is true) to update the
+Method-buffer@footnote{Maybe future versions of ECB (> 1.94) will offer an
+autom. mechanism for this.}.
+
+Depending on the parsing-mechanism the following options have to be
+switched on so ECB can rebuild the methods-buffer for
+non-semantic-sources:
+
+@itemize @bullet
+@item imenu:
+
+The imenu-option @code{imenu-auto-rescan} must be enabled and
+@code{imenu-auto-rescan-maxout} has to be set big enough to auto-parse
+big files too! But this results not directly in an autom. updated
+Method-buffer. This is first done after calling the command
+@code{ecb-rebuild-methods-buffer} or saving the source-file (if
+@code{ecb-auto-update-methods-after-save} is true).
+
+@item etags:
+
+Only if @code{ecb-auto-save-before-etags-methods-rebuild} is switched on
+the command @code{ecb-rebuild-methods-buffer} rebuilds the
+method-buffer with current source-contents. See description of this
+option for an explanation.
+@end itemize
+
+Tip: If you want to program your own real. automatic
+rescan/reparse/rebuild mechanism for non-semantic-sources you can do:
+
+Adding to @code{after-change-functions} a function F which either runs
+itself @code{ecb-rebuild-methods-buffer-for-non-semantic} or which
+adds only another function FF to an idle-timer and the function FF
+runs @code{ecb-rebuild-methods-buffer-for-non-semantic}. The latter
+approach has the advantage that the reparse/rebuild is not performed
+immediately after every change but first after Emacs is idle for a
+senseful interval (e.g. 4 seconds) after last change. Of course the
+function FF has to cancel its own idle-timer at the end, so the next
+idle-timer is first started again after the next change (i.e. by
+function F which is still contained in @code{after-change-functions}.
+
+@subsection Customizing the display of the tokens
+
+For non-semantic-sources ECB uses does no special organizing of tokens
+in groups and subtokens but it completely uses the token-hierarchy the
+imenu- and etags-parsers of speedbar return. So the displayed token
+hierarchy can only be customized with some options speedbar offers for
+this:
+
+@code{speedbar-tag-hierarchy-method},
+@code{speedbar-tag-group-name-minimum-length},
+@code{speedbar-tag-split-minimum-length} and
+@code{speedbar-tag-regroup-maximum-length}. See the speedbar
+documentation for details about these options.
+
+With the option @code{ecb-method-non-semantic-face} you can define the
+face used for displaying the tokens in the Method-buffer for
+non-semantic-sources.
+
+@code{ecb-non-semantic-methods-initial-expand} can be useful too.
 
 @node Elisp programming, Conflicts and bugs, Tips and tricks, Top
 @chapter Entry points for elisp programmers
@@ -7260,6 +7725,15 @@ ECB?
 @tab @tab
 Take a look into @ref{Conflicts}. If your package is not listed there
 then submit a problem-report.
+
+@item @tab @tab
+
+@item
+Can ECB parse and display source-contents not supported by semantic?
+@tab @tab
+Yes, in all version >= 1.94. ECB can now parse and display all
+source-contents supported by semantic, imenu or etags - same as
+speedbar. See @ref{Non-semantic sources}.
 
 @item @tab @tab
 
