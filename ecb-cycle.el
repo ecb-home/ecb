@@ -1,6 +1,6 @@
 ;;; ecb-cycle.el --- cycle buffers through ecb windows.
 
-;; $Id: ecb-cycle.el,v 1.3 2002/01/26 01:22:42 burtonator Exp $
+;; $Id: ecb-cycle.el,v 1.4 2002/01/26 05:19:08 burtonator Exp $
 
 ;; Copyright (C) 2000-2003 Free Software Foundation, Inc.
 ;; Copyright (C) 2000-2003 Kevin A. Burton (burton@openprivacy.org)
@@ -57,6 +57,11 @@
 ;;
 ;; - We need an easier way to setup completion and a better way to get the
 ;;   index.
+;;
+;; - if possible, try to put fit the buffer so that the end of buffer is at the
+;;   end of the window... if necessary.
+;;
+;; - Maybe this should be ecb-cycle-switch-to-compilation-buffer.
 
 ;;; Code:
 
@@ -78,12 +83,15 @@ compilation buffer.  If not we try to loop through all compilation buffers.  If
 we hit the end we go back to the beginning.  See `ecb-compilation-buffer-p'."
   (interactive)
 
-  (when ecb-cycle-enlarge-compile-window
-    (ecb-enlarge-window ecb-compile-window))
-
   (let*((compilation-buffers (ecb-get-compilation-buffers))
         (current-buffer (window-buffer ecb-compile-window))
         (current-buffer-name (buffer-name current-buffer)))
+
+    (when (null compilation-buffers)
+      (error "No compilation buffers"))
+
+    (when ecb-cycle-enlarge-compile-window
+      (ecb-enlarge-window ecb-compile-window))
 
     (if (not (ecb-compilation-buffer-p current-buffer))
         ;;if the current bufffer is not a compilation buffer, goto the first
