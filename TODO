@@ -11,8 +11,6 @@
 - KB: Support horizontal scrolling (especially with XEmacs) in the
    intelligent tree-buffer recentering.
 
-- Fix pop-up menus in XEmacs. (JN)
-
 - Ignore source files specified in .cvsignore files. (JN)
 
 - Add history back/forward functions. Should behave similar to web browser
@@ -25,9 +23,6 @@
 - KB: use the JDE source paths if the JDE variable is available 
    (perhaps there are other variables to use by default as well?). We
    should add an option where this external source-paths can be defined.
-
-- Possibility to save the current sizes of the windows. This will make it
-  possible to customize the layout better. (JN)
 
 - KB: Easy selecting of a certain ECB-buffer with a ECB-keymap like.
    This means we need an ECB minor mode with
