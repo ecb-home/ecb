@@ -1,17 +1,8 @@
 * Changes for ECB version 2.28
 
-** Enhancements to the file-browser
+TODO: Change version to 2.30!!!!
 
-*** ECB displays the Version-control-state of a file in the tree-buffers.
-    There are two new options `ecb-vc-enable-support' and
-    `ecb-vc-supported-backends' which define if and how ECB should check the
-    state of a sourcefile in a directory managed by a version-control system.
-    By default ECB supports the same VC-backends as the builtin VC-support of
-    Emacs: CVS, RCS and SCCS. But the option `ecb-vc-supported-backends'
-    allows to add support for arbitrary VC-backends (e.g. Clearcase). New
-    image-icons are also included for a cute display of the VC-state in the
-    directories, sources and history-buffer. Thanks to Thanks to Markus
-    Gritsch <gritsch@iue.tuwien.ac.at> for contributing the icons.
+** Enhancements to the file-browser
 
 *** Much better performance of the file-browser display because all
     time-consuming tasks (like the check if the displayed directories are
@@ -37,11 +28,48 @@
        directories which are managed by a VC-backend. See the option
        `ecb-vc-enable-support'.
 
-    There is also a new option `ecb-stealthy-tasks-delay'.    
+    There is also a new option `ecb-stealthy-tasks-delay'.
+
+    There are three options which allow excluding certain directories from
+    these stealthy tasks: `ecb-prescan-directories-exclude-regexps',
+    `ecb-read-only-check-exclude-regexps' and last but not least
+    `ecb-vc-directory-exclude-regexps'.
+
+*** ECB is now capable of handling remote paths.
+    "Remote" means file- or directory-paths in the sense of TRAMP, ANGE-FTP or
+    EFS. Such paths can now being added to the option `ecb-source-path' with
+    no limitation compared to "local" paths. Just work with remote-paths in
+    the same manner as with local paths. See also the additional choices of
+    the options `ecb-prescan-directories-for-emptyness',
+    `ecb-sources-perform-read-only-check' and `ecb-vc-enable-support' (new).
+    This new support is tested with the combinations GNU Emacs+TRAMP and
+    XEmacs+EFS but it should (hopefully) also work with all other
+    combinations.
+
+*** ECB displays the Version-control-state of a file in the tree-buffers.
+    There are two new options `ecb-vc-enable-support' and
+    `ecb-vc-supported-backends' which define if and how ECB should check the
+    state of a sourcefile in a directory managed by a version-control system.
+    By default ECB supports the same VC-backends as the builtin VC-support of
+    Emacs: CVS, RCS and SCCS. But the option `ecb-vc-supported-backends'
+    allows to add support for arbitrary VC-backends (e.g. Clearcase). New
+    image-icons are also included for a cute display of the VC-state in the
+    directories, sources and history-buffer. Thanks to Thanks to Markus
+    Gritsch <gritsch@iue.tuwien.ac.at> for contributing the icons.
 
 *** New hook which runs directly after the selected directory has changed.
     See documentation of `ecb-after-directory-change-hook'.
     
+** The popup-menu of the methods-browser allows precisely expanding of the
+   current node. This means you can precisely expand a certain node to an
+   exact indentation level relative to the node. This means all subnodes <=
+   this level will be expanded (full recursive expanding is therefore of
+   course also possible) and all subnodes indented deeper than this level will
+   be collapsed - this is very different from using the expand/collapse symbol
+   of a node. For forther details and examples the the manual and the section
+   "Expanding" and here the subsection "Explicit expanding of the current node
+   to a certain level".
+
 ** Automatically upgraded ecb-option-settings are now not saved by default.
    This means that ECB has now the new policy "Never touching the
    customization-files of a user without asking". The result is a completely
