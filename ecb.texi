@@ -108,7 +108,7 @@ mailing list @email{ecb-list@@lists.sourceforge.net} via
 * Upgrading::                   Upgrading ECB from within Emacs
 * Tips and tricks::             Useful hints and tips
 * Elisp programming::           Entry points for elisp programmers
-* Conflicts::                   Known Conflicts with other packages
+* Conflicts and bugs::          Known Conflicts with other packages and bugs
 * Function Index::              Index for functions
 * Variable Index::              Index for variables and options
 * Concept Index::               Index for concepts and terms
@@ -189,6 +189,11 @@ Tips and tricks
 * Simulating speedbar::         Simulating speedbar without an extra frame
 * Optimze scrolling::           Optimze scrolling in the edit-window
 * Large directories::           Working with large directories
+
+Known conflicts and bugs of ECB
+
+* Conflicts::                   Known conflicts with other packages
+* Bugs::                        Known bugs
 
 Known conflicts with other packages
 
@@ -3160,7 +3165,7 @@ If this is a problem the contents of certain directories can be cached
 which increases the speed a lot. See @code{ecb-cache-directory-contents}.
 
 
-@node Elisp programming, Conflicts, Tips and tricks, Top
+@node Elisp programming, Conflicts and bugs, Tips and tricks, Top
 @chapter Entry points for elisp programmers
 
 Variables an elisp-program can use:
@@ -3199,8 +3204,20 @@ its tree-buffers in @code{ecb-tree-buffers}!
 An application can only use the methods tree-buffer.el provides!
 
 
-@node Conflicts, Function Index, Elisp programming, Top
-@chapter Known conflicts with other packages
+@node Conflicts and bugs, Function Index, Elisp programming, Top
+@chapter Known conflicts and bugs of ECB
+
+This chapter describes all already known conflicts with other packages
+and also the known (and currently unfixed) bugs of ECB. If possible
+then a practicable solution or workaround is described.
+
+@menu
+* Conflicts::                   Known conflicts with other packages
+* Bugs::                        Known bugs
+@end menu
+
+@node Conflicts, Bugs, Conflicts and bugs, Conflicts and bugs
+@section Known conflicts with other packages
 
 Here is a list of known conflicts of ECB with other packages and
 helpful solutions/hints/workarounds:
@@ -3214,7 +3231,7 @@ helpful solutions/hints/workarounds:
 @end menu
 
 @node VC, follow-mouse, Conflicts, Conflicts
-@section Package VC (Version Control)
+@subsection Package VC (Version Control)
 
 @cindex VC package
 @cindex Version control
@@ -3223,7 +3240,7 @@ active ECB. This can be done with the hooks mentioned in @ref{Elisp
 programming}.
 
 @node follow-mouse, avoid, VC, Conflicts
-@section Package follow-mouse.el
+@subsection Package follow-mouse.el
 
 @noindent
 The following is only relevant for Emacs 20.X!
@@ -3240,7 +3257,7 @@ works even better and saver as without activated ECB!
 
 
 @node avoid, calendar, follow-mouse, Conflicts
-@section Package avoid.el
+@subsection Package avoid.el
 
 @cindex avoid package
 With GNU Emacs 20.X ECB must deactivate @code{mouse-avoidance-mode} if the
@@ -3250,7 +3267,7 @@ but only as long ECB is activated.
 
 
 @node calendar, calculator, avoid, Conflicts
-@section Package calendar.el
+@subsection Package calendar.el
 
 @cindex calendar package
 With activated ECB @code{calendar} does not shrink it´s window to the small
@@ -3268,7 +3285,7 @@ size but splits the window equally. But if you add this to your
 @end example
 
 @node calculator, , calendar, Conflicts
-@section Package calculator.el
+@subsection Package calculator.el
 
 @cindex calculator package
 If the edit-window is already splitted then calling @code{calculator} uses
@@ -3278,7 +3295,13 @@ lines. Therefore it´s recommended to set @code{calculator-electric-mode}
 during ECB activation to not nil so calculator uses always the
 echo-area instead of creating a new small window!
 
-@node Function Index, Variable Index, Conflicts, Top
+@node Bugs, , Conflicts, Conflicts and bugs
+@section Known bugs
+
+This section describes all currently known bugs of ECB. The
+maintainers of ECB try to fix these bugs as soon as possible.
+
+@node Function Index, Variable Index, Conflicts and bugs, Top
 @unnumbered Function Index
 
 @noindent

@@ -41,7 +41,7 @@ mailing list <a href="mailto:ecb-list@lists.sourceforge.net">ecb-list@lists.sour
 <li><a accesskey=7 href="#Upgrading">Upgrading</a>:                    Upgrading ECB from within Emacs
 <li><a accesskey=8 href="#Tips%20and%20tricks">Tips and tricks</a>:              Useful hints and tips
 <li><a accesskey=9 href="#Elisp%20programming">Elisp programming</a>:            Entry points for elisp programmers
-<li><a href="#Conflicts">Conflicts</a>:                    Known Conflicts with other packages
+<li><a href="#Conflicts%20and%20bugs">Conflicts and bugs</a>:           Known Conflicts with other packages and bugs
 <li><a href="#Function%20Index">Function Index</a>:               Index for functions
 <li><a href="#Variable%20Index">Variable Index</a>:               Index for variables and options
 <li><a href="#Concept%20Index">Concept Index</a>:                Index for concepts and terms
@@ -120,6 +120,11 @@ mailing list <a href="mailto:ecb-list@lists.sourceforge.net">ecb-list@lists.sour
 <li><a href="#Simulating%20speedbar">Simulating speedbar</a>:          Simulating speedbar without an extra frame
 <li><a href="#Optimze%20scrolling">Optimze scrolling</a>:            Optimze scrolling in the edit-window
 <li><a href="#Large%20directories">Large directories</a>:            Working with large directories
+
+<p>Known conflicts and bugs of ECB
+
+</p><li><a href="#Conflicts">Conflicts</a>:                    Known conflicts with other packages
+<li><a href="#Bugs">Bugs</a>:                         Known bugs
 
 <p>Known conflicts with other packages
 
@@ -4390,7 +4395,7 @@ which increases the speed a lot. See <code>ecb-cache-directory-contents</code>.
 
 <p><hr>
 Node:<a name="Elisp%20programming">Elisp programming</a>,
-Next:<a rel=next accesskey=n href="#Conflicts">Conflicts</a>,
+Next:<a rel=next accesskey=n href="#Conflicts%20and%20bugs">Conflicts and bugs</a>,
 Previous:<a rel=previous accesskey=p href="#Tips%20and%20tricks">Tips and tricks</a>,
 Up:<a rel=up accesskey=u href="#Top">Top</a>
 <br>
@@ -4432,13 +4437,31 @@ its tree-buffers in <code>ecb-tree-buffers</code>!
 <p>An application can only use the methods tree-buffer.el provides!
 
 <p><hr>
-Node:<a name="Conflicts">Conflicts</a>,
+Node:<a name="Conflicts%20and%20bugs">Conflicts and bugs</a>,
 Next:<a rel=next accesskey=n href="#Function%20Index">Function Index</a>,
 Previous:<a rel=previous accesskey=p href="#Elisp%20programming">Elisp programming</a>,
 Up:<a rel=up accesskey=u href="#Top">Top</a>
 <br>
 
-<h2>Known conflicts with other packages</h2>
+<h2>Known conflicts and bugs of ECB</h2>
+
+<p>This chapter describes all already known conflicts with other packages
+and also the known (and currently unfixed) bugs of ECB. If possible
+then a practicable solution or workaround is described.
+
+<ul>
+<li><a accesskey=1 href="#Conflicts">Conflicts</a>:                    Known conflicts with other packages
+<li><a accesskey=2 href="#Bugs">Bugs</a>:                         Known bugs
+</ul>
+
+<p><hr>
+Node:<a name="Conflicts">Conflicts</a>,
+Next:<a rel=next accesskey=n href="#Bugs">Bugs</a>,
+Previous:<a rel=previous accesskey=p href="#Conflicts%20and%20bugs">Conflicts and bugs</a>,
+Up:<a rel=up accesskey=u href="#Conflicts%20and%20bugs">Conflicts and bugs</a>
+<br>
+
+<h3>Known conflicts with other packages</h3>
 
 <p>Here is a list of known conflicts of ECB with other packages and
 helpful solutions/hints/workarounds:
@@ -4458,7 +4481,7 @@ Previous:<a rel=previous accesskey=p href="#Conflicts">Conflicts</a>,
 Up:<a rel=up accesskey=u href="#Conflicts">Conflicts</a>
 <br>
 
-<h3>Package VC (Version Control)</h3>
+<h4>Package VC (Version Control)</h4>
 
 <p>The variable <code>vc-delete-logbuf-window</code> must be set to nil during
 active ECB. This can be done with the hooks mentioned in <a href="#Elisp%20programming">Elisp programming</a>.
@@ -4470,7 +4493,7 @@ Previous:<a rel=previous accesskey=p href="#VC">VC</a>,
 Up:<a rel=up accesskey=u href="#Conflicts">Conflicts</a>
 <br>
 
-<h3>Package follow-mouse.el</h3>
+<h4>Package follow-mouse.el</h4>
 
 <p>The following is only relevant for Emacs 20.X!
 
@@ -4490,7 +4513,7 @@ Previous:<a rel=previous accesskey=p href="#follow-mouse">follow-mouse</a>,
 Up:<a rel=up accesskey=u href="#Conflicts">Conflicts</a>
 <br>
 
-<h3>Package avoid.el</h3>
+<h4>Package avoid.el</h4>
 
 <p>With GNU Emacs 20.X ECB must deactivate <code>mouse-avoidance-mode</code> if the
 option <code>ecb-show-node-info-in-minibuffer</code> activates for at least one
@@ -4504,7 +4527,7 @@ Previous:<a rel=previous accesskey=p href="#avoid">avoid</a>,
 Up:<a rel=up accesskey=u href="#Conflicts">Conflicts</a>
 <br>
 
-<h3>Package calendar.el</h3>
+<h4>Package calendar.el</h4>
 
 <p>With activated ECB <code>calendar</code> does not shrink it´s window to the small
 size but splits the window equally. But if you add this to your
@@ -4525,7 +4548,7 @@ Previous:<a rel=previous accesskey=p href="#calendar">calendar</a>,
 Up:<a rel=up accesskey=u href="#Conflicts">Conflicts</a>
 <br>
 
-<h3>Package calculator.el</h3>
+<h4>Package calculator.el</h4>
 
 <p>If the edit-window is already splitted then calling <code>calculator</code> uses
 the whole "other" edit-window for the calculator. With an unsplitted
@@ -4535,9 +4558,20 @@ during ECB activation to not nil so calculator uses always the
 echo-area instead of creating a new small window!
 
 <p><hr>
+Node:<a name="Bugs">Bugs</a>,
+Previous:<a rel=previous accesskey=p href="#Conflicts">Conflicts</a>,
+Up:<a rel=up accesskey=u href="#Conflicts%20and%20bugs">Conflicts and bugs</a>
+<br>
+
+<h3>Known bugs</h3>
+
+<p>This section describes all currently known bugs of ECB. The
+maintainers of ECB try to fix these bugs as soon as possible.
+
+<p><hr>
 Node:<a name="Function%20Index">Function Index</a>,
 Next:<a rel=next accesskey=n href="#Variable%20Index">Variable Index</a>,
-Previous:<a rel=previous accesskey=p href="#Conflicts">Conflicts</a>,
+Previous:<a rel=previous accesskey=p href="#Conflicts%20and%20bugs">Conflicts and bugs</a>,
 Up:<a rel=up accesskey=u href="#Top">Top</a>
 <br>
 
@@ -4814,14 +4848,18 @@ Up:<a rel=up accesskey=u href="#Top">Top</a>
 </ul>
 <li><a name="toc_Elisp%20programming"></a>
     <a href="#Elisp%20programming">Entry points for elisp programmers</a>
-<li><a name="toc_Conflicts"></a>
-    <a href="#Conflicts">Known conflicts with other packages</a>
+<li><a name="toc_Conflicts%20and%20bugs"></a>
+    <a href="#Conflicts%20and%20bugs">Known conflicts and bugs of ECB</a>
+<ul>
+<li><a href="#Conflicts">Known conflicts with other packages</a>
 <ul>
 <li><a href="#VC">Package VC (Version Control)</a>
 <li><a href="#follow-mouse">Package follow-mouse.el</a>
 <li><a href="#avoid">Package avoid.el</a>
 <li><a href="#calendar">Package calendar.el</a>
 <li><a href="#calculator">Package calculator.el</a>
+</ul>
+<li><a href="#Bugs">Known bugs</a>
 </ul>
 <li><a name="toc_Function%20Index"></a>
     <a href="#Function%20Index">Function Index</a>

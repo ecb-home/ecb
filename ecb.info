@@ -35,7 +35,7 @@ mailing list <ecb-list@lists.sourceforge.net> via the URL
 * Upgrading::                   Upgrading ECB from within Emacs
 * Tips and tricks::             Useful hints and tips
 * Elisp programming::           Entry points for elisp programmers
-* Conflicts::                   Known Conflicts with other packages
+* Conflicts and bugs::          Known Conflicts with other packages and bugs
 * Function Index::              Index for functions
 * Variable Index::              Index for variables and options
 * Concept Index::               Index for concepts and terms
@@ -114,6 +114,11 @@ Tips and tricks
 * Simulating speedbar::         Simulating speedbar without an extra frame
 * Optimze scrolling::           Optimze scrolling in the edit-window
 * Large directories::           Working with large directories
+
+Known conflicts and bugs of ECB
+
+* Conflicts::                   Known conflicts with other packages
+* Bugs::                        Known bugs
 
 Known conflicts with other packages
 
@@ -2880,7 +2885,7 @@ this is a problem the contents of certain directories can be cached
 which increases the speed a lot. See `ecb-cache-directory-contents'.
 
 
-File: ecb.info,  Node: Elisp programming,  Next: Conflicts,  Prev: Tips and tricks,  Up: Top
+File: ecb.info,  Node: Elisp programming,  Next: Conflicts and bugs,  Prev: Tips and tricks,  Up: Top
 
 Entry points for elisp programmers
 **********************************
@@ -2922,10 +2927,25 @@ tree-buffers in `ecb-tree-buffers'!
 An application can only use the methods tree-buffer.el provides!
 
 
-File: ecb.info,  Node: Conflicts,  Next: Function Index,  Prev: Elisp programming,  Up: Top
+File: ecb.info,  Node: Conflicts and bugs,  Next: Function Index,  Prev: Elisp programming,  Up: Top
+
+Known conflicts and bugs of ECB
+*******************************
+
+This chapter describes all already known conflicts with other packages
+and also the known (and currently unfixed) bugs of ECB. If possible
+then a practicable solution or workaround is described.
+
+* Menu:
+
+* Conflicts::                   Known conflicts with other packages
+* Bugs::                        Known bugs
+
+
+File: ecb.info,  Node: Conflicts,  Next: Bugs,  Prev: Conflicts and bugs,  Up: Conflicts and bugs
 
 Known conflicts with other packages
-***********************************
+===================================
 
 Here is a list of known conflicts of ECB with other packages and
 helpful solutions/hints/workarounds:
@@ -2942,7 +2962,7 @@ helpful solutions/hints/workarounds:
 File: ecb.info,  Node: VC,  Next: follow-mouse,  Prev: Conflicts,  Up: Conflicts
 
 Package VC (Version Control)
-============================
+----------------------------
 
 The variable `vc-delete-logbuf-window' must be set to nil during active
 ECB. This can be done with the hooks mentioned in *Note Elisp
@@ -2952,7 +2972,7 @@ programming::.
 File: ecb.info,  Node: follow-mouse,  Next: avoid,  Prev: VC,  Up: Conflicts
 
 Package follow-mouse.el
-=======================
+-----------------------
 
 The following is only relevant for Emacs 20.X!
 
@@ -2969,7 +2989,7 @@ activated ECB!
 File: ecb.info,  Node: avoid,  Next: calendar,  Prev: follow-mouse,  Up: Conflicts
 
 Package avoid.el
-================
+----------------
 
 With GNU Emacs 20.X ECB must deactivate `mouse-avoidance-mode' if the
 option `ecb-show-node-info-in-minibuffer' activates for at least one
@@ -2980,7 +3000,7 @@ only as long ECB is activated.
 File: ecb.info,  Node: calendar,  Next: calculator,  Prev: avoid,  Up: Conflicts
 
 Package calendar.el
-===================
+-------------------
 
 With activated ECB `calendar' does not shrink it´s window to the small
 size but splits the window equally. But if you add this to your
@@ -2998,7 +3018,7 @@ size but splits the window equally. But if you add this to your
 File: ecb.info,  Node: calculator,  Prev: calendar,  Up: Conflicts
 
 Package calculator.el
-=====================
+---------------------
 
 If the edit-window is already splitted then calling `calculator' uses
 the whole "other" edit-window for the calculator. With an unsplitted
@@ -3008,7 +3028,16 @@ during ECB activation to not nil so calculator uses always the
 echo-area instead of creating a new small window!
 
 
-File: ecb.info,  Node: Function Index,  Next: Variable Index,  Prev: Conflicts,  Up: Top
+File: ecb.info,  Node: Bugs,  Prev: Conflicts,  Up: Conflicts and bugs
+
+Known bugs
+==========
+
+This section describes all currently known bugs of ECB. The maintainers
+of ECB try to fix these bugs as soon as possible.
+
+
+File: ecb.info,  Node: Function Index,  Next: Variable Index,  Prev: Conflicts and bugs,  Up: Top
 
 Function Index
 **************
@@ -3203,64 +3232,66 @@ Concept Index
 
 Tag Table:
 Node: Top183
-Node: Install5050
-Node: Overview7515
-Node: ECB Directories8561
-Node: ECB Sources9541
-Node: ECB Methods10704
-Node: Activation and Deactivation11225
-Node: Standard activation11595
-Node: Automatic activation12173
-Node: Usage of ECB13223
-Node: Using the mouse14058
-Ref: Using the mouse-Footnote-116333
-Node: Using the keyboard16379
-Node: Navigation17196
-Node: Incremental search18539
-Node: The edit-window20690
-Node: Temp- and compile-buffers22496
-Node: The Methods buffer24543
-Node: Customizing the display24984
-Node: Rebuilding the Methods26706
-Node: The ECB-layout27560
-Node: Changing the ECB-layout28110
-Node: Redrawing the ECB-layout29148
-Node: Hiding the ECB windows29951
-Node: ECB-window synchronizing30525
-Node: Interactive ECB commands32187
-Node: Customizing40931
-Node: Most important options42444
-Node: Customizable options44236
-Node: ecb-general45152
-Node: ecb-directories63382
-Node: ecb-sources68362
-Node: ecb-methods70232
-Node: ecb-history82373
-Node: ecb-layout84065
-Node: ecb-face-options97970
-Node: ecb-faces99630
-Node: ecb-download103637
-Node: Submitting problem report104859
-Node: Upgrading106016
-Node: Downloading new version106373
-Node: Auto. option-upgrading106928
-Node: User interface107235
-Node: Background information108124
-Node: Tips and tricks111522
-Node: Changing faces112081
-Node: Small screens112887
-Node: Simulating speedbar114290
-Node: Optimze scrolling115099
-Node: Large directories116174
-Node: Elisp programming116818
-Node: Conflicts117992
-Node: VC118575
-Node: follow-mouse118868
-Node: avoid119546
-Node: calendar119910
-Node: calculator120546
-Node: Function Index121048
-Node: Variable Index122904
-Node: Concept Index128082
+Node: Install5204
+Node: Overview7669
+Node: ECB Directories8715
+Node: ECB Sources9695
+Node: ECB Methods10858
+Node: Activation and Deactivation11379
+Node: Standard activation11749
+Node: Automatic activation12327
+Node: Usage of ECB13377
+Node: Using the mouse14212
+Ref: Using the mouse-Footnote-116487
+Node: Using the keyboard16533
+Node: Navigation17350
+Node: Incremental search18693
+Node: The edit-window20844
+Node: Temp- and compile-buffers22650
+Node: The Methods buffer24697
+Node: Customizing the display25138
+Node: Rebuilding the Methods26860
+Node: The ECB-layout27714
+Node: Changing the ECB-layout28264
+Node: Redrawing the ECB-layout29302
+Node: Hiding the ECB windows30105
+Node: ECB-window synchronizing30679
+Node: Interactive ECB commands32341
+Node: Customizing41085
+Node: Most important options42598
+Node: Customizable options44390
+Node: ecb-general45306
+Node: ecb-directories63536
+Node: ecb-sources68516
+Node: ecb-methods70386
+Node: ecb-history82527
+Node: ecb-layout84219
+Node: ecb-face-options98124
+Node: ecb-faces99784
+Node: ecb-download103791
+Node: Submitting problem report105013
+Node: Upgrading106170
+Node: Downloading new version106527
+Node: Auto. option-upgrading107082
+Node: User interface107389
+Node: Background information108278
+Node: Tips and tricks111676
+Node: Changing faces112235
+Node: Small screens113041
+Node: Simulating speedbar114444
+Node: Optimze scrolling115253
+Node: Large directories116328
+Node: Elisp programming116972
+Node: Conflicts and bugs118155
+Node: Conflicts118641
+Node: VC119230
+Node: follow-mouse119523
+Node: avoid120201
+Node: calendar120565
+Node: calculator121201
+Node: Bugs121703
+Node: Function Index121923
+Node: Variable Index123788
+Node: Concept Index128966
 
 End Tag Table
