@@ -2507,7 +2507,7 @@ See also the option `ecb-tree-RET-selects-edit-window'."
 	node))))
 
 (defun ecb-get-token-type-display (token-type)
-  (let ((display (ecb-find-assoc 'rule ecb-show-tokens)))
+  (let ((display (ecb-find-assoc token-type ecb-show-tokens)))
     (if display
 	display
       (setq display (ecb-find-assoc t ecb-show-tokens))
