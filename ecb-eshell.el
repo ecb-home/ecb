@@ -122,7 +122,7 @@ behavior of XEmacs which always starts eshell in the edit-window even if
 called from the compile-window. This functions ensures that eshell is started
 in that window where this function is called from!"
   (require 'eshell)
-  (ecb-with-original-functions
+  (ecb-with-adviced-functions
    (display-buffer (get-buffer-create eshell-buffer-name)))
   (eshell-mode))
 

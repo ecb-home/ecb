@@ -222,11 +222,13 @@ The car is the old option symbol and the cdr is a 2-element-list with:
 
 ;; upgrading ecb-compile-window-temporally-enlarge
 (defun ecb-upgrade-compile-window-temporally-enlarge (old-val)
-  "save"
-  (cond ((equal old-val t)
-         'after-compilation)
+  (cond ((or (equal old-val t)
+             (equal old-val 'after-compilation))
+         'after-display)
         ((null old-val)
          nil)
+        ((member old-val '(after-selection both))
+         old-val)
         (t 'ecb-no-upgrade-conversion)))
 
 ;; upgrading ecb-window-sync

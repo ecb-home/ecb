@@ -52,11 +52,18 @@
                                           ("*vc*" . nil)
                                           ("*vc-diff*" . nil)
                                           ("*Apropos*" . nil)
+                                          ("*Occur*" . nil)
+                                          ("*shell*" . nil)
+;;                                           ("*ECB upgraded options*" . nil)
+                                          ("\\*[cC]ompilation.*\\*" . t)
+                                          ("\\*i?grep.*\\*" . t)
+                                          ("*JDEE Compile Server*" . nil)
                                           ,(if ecb-running-xemacs
                                                '("\\*Help.*\\*" . t)
                                               '("*Help*" . nil))
+                                          ("*Completions*" . nil)
                                           ("*Backtrace*" . nil)
-                                          ("*shell*" . nil)
+                                          ("*Compile-log*" . nil)
                                           ("*bsh*" . nil)
                                           (,(if ecb-running-xemacs
                                                " *Message-Log*"
@@ -168,7 +175,7 @@ displayed in the compile-window. This is a list combined of
     buffer-names))
 
 
-(defun ecb-compilation-buffer-p(buffer-or-name)
+(defun ecb-compilation-buffer-p (buffer-or-name)
   "Test if the given buffer BUFFER-OR-NAME should be treated as a compilation
 buffer. Note that in this case we define \"compilation buffer\" as a buffer
 that should ideally be displayed in the compile-window of ECB \(see
