@@ -1,0 +1,82 @@
+Version 0.05 (2000-11-07):
+--------------------------
+
+- Works with semantic 1.3.1 and higher.
+
+- Fixed a couple of bugs when creating and deleting files.
+
+
+Contributed by Klaus Berndl <klaus.berndl@sdm.de>:
+
+- New layout functionality.
+
+- The history buffer can optionally be sorted.
+
+- The package expanded symbol can optionally be placed before the package name.
+
+
+Version 0.04 (2000-11-07):
+--------------------------
+
+- Keyboard navigation in JCB buffers. Use Return to select and Tab to expand.
+
+- Tree view of packages.
+
+- Class files can be viewed in the packages buffer.
+
+- Better handling of mouse events.
+
+- Automatic update of the packages buffer.
+
+- Added pop-up menus to the packages and classes buffers. They are activated 
+  with mouse button 3 (right button).
+
+- Added method sorting. Thanks to Brian Anderson <brian.anderson@luna.com> 
+  for this improvement.
+
+
+Version 0.03 (2000-07-28):
+--------------------------
+
+- Fixed naming of variables.
+
+- Fixed license and copyright comments.
+
+- Fixed class file regular expression bug. 
+  Thanks to Jim Loverde <loverde@str.com> for finding it.
+
+- Added three new layouts.
+
+- The JCB buffers can now be (almost) synchronized with the edit window.
+
+- When clicking on a class or method using mouse button 2, it will be loaded
+  into another window. A new customization variable was added for this.
+
+- Minor changes. Thanks to Jim for his suggestions.
+
+- Removed the "jde-jcb-window-skips-from-methods-buffer" and 
+  "jde-jcb-window-skips-from-history-buffer" customization variables.
+
+
+Version 0.02 (2000-07-15):
+--------------------------
+
+- Changed prefix from "jcb-" to "jde-jcb-". This will cause JCB customization 
+  variables to be saved in JDE project files.
+
+- Lists and parses non-Java file types. Currently the C and Lisp parsers from 
+  semantic-ex.el are used.
+
+- History buffer implemented.
+
+- Layout function implement. Thanks to Jim Loverde <loverde@str.com> for 
+  helping out with this.
+
+- Packages matching a regular expression can be excluded from the packages 
+  buffer. Thanks to Mark Gibson <mark@markg.co.uk> for this feature.
+
+
+Version 0.01 (2000-07-08):
+--------------------------
+
+- Initial version.
