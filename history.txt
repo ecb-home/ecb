@@ -1,3 +1,12 @@
+Version XXXX (2001-03-17):
+--------------------------
+
+- Automatic expansion of the directory tree.
+
+- Method parsing is now recursive, so that for example inner classes
+  in Java are shown in the methods buffer.
+
+
 Version 1.0 (2001-03-17):
 -------------------------
 
