@@ -56,7 +56,7 @@ LOADPATH=
 # tests if the tools are available on these locations, so if a tool x is
 # not available let the related setting X empty! NOTE: For generating the
 # PDF-format you will need an installed TeX and Ghostscript!
-MAKEINFO=/C/Programme/texmf/miktex/bin/makeinfo
+MAKEINFO=/usr/bin/makeinfo
 TEXI2DVI=/C/Programme/texmf/miktex/bin/texi2dvi
 # You need either the dvipdfm-tool
 #DVIPDFM=/C/Programme/texmf/miktex/bin/dvipdfm
@@ -89,16 +89,20 @@ INSTALLINFO=/usr/bin/install-info
 
 # Do not change anything below!
 
-# $Id: Makefile,v 1.46 2002/12/20 14:31:39 berndl Exp $
+# $Id: Makefile,v 1.47 2003/01/07 14:46:20 berndl Exp $
 
 RM=rm -f
 CP=cp
+MV=mv -f
+MKDIR=mkdir -p
+
+ecb_VERSION=1.90
 
 ecb_LISP_EL=tree-buffer.el ecb-util.el ecb-mode-line.el ecb-help.el \
             ecb-layout.el ecb-layout-defs.el ecb-navigate.el ecb.el \
             ecb-eshell.el ecb-cycle.el ecb-face.el ecb-compilation.el \
             ecb-upgrade.el ecb-create-layout.el silentcomp.el \
-            ecb-speedbar.el
+            ecb-speedbar.el ecb-examples.el
 
 ecb_LISP_ELC=$(ecb_LISP_EL:.el=.elc)
 
@@ -106,9 +110,15 @@ ecb_TEXI=ecb.texi
 
 ecb_INFO=$(ecb_TEXI:.texi=.info)
 ecb_HTML=$(ecb_TEXI:.texi=.html)
+ecb_HTML_DIR=html-help
+ecb_INFO_DIR=info-help
+
 ecb_DVI=$(ecb_TEXI:.texi=.dvi)
 ecb_PS=$(ecb_TEXI:.texi=.ps)
 ecb_PDF=$(ecb_TEXI:.texi=.pdf)
+
+ecb_DISTRIB_FILES=$(ecb_LISP_EL) $(ecb_TEXI) \
+                  HISTORY README RELEASE_NOTES Makefile make.bat
 
 ecb: $(ecb_LISP_EL)
 	@echo "Byte-compiling ECB with LOADPATH=${LOADPATH} ..."
@@ -134,11 +144,19 @@ all: ecb online-help
 
 online-help: $(ecb_TEXI)
 	@if test -x "$(MAKEINFO)" ; then\
-	   $(RM) $(ecb_INFO) $(ecb_HTML); \
+	   $(RM) -R $(ecb_INFO_DIR) $(ecb_HTML_DIR); \
+	   $(MKDIR) $(ecb_INFO_DIR) $(ecb_HTML_DIR); \
 	   echo Generating info-format...; \
-	   $(MAKEINFO) --fill-column=78 --no-split $<; \
+	   $(MAKEINFO) --fill-column=78 $<; \
+	   $(MV) *.info* $(ecb_INFO_DIR); \
 	   echo Generating html-format...; \
-	   $(MAKEINFO) --no-split --html $<; \
+	   $(MAKEINFO) --html --output=$(ecb_HTML_DIR) $<; \
+	   for file in $(ecb_HTML_DIR)/*.html; do\
+	      $(MV) $$file tmpfile; \
+	      sed "s/index\\.html/$(ecb_HTML)/" tmpfile > $$file; \
+	      $(RM) tmpfile; \
+	   done; \
+	   $(MV) $(ecb_HTML_DIR)/index.html $(ecb_HTML_DIR)/$(ecb_HTML); \
 	else \
 	   echo No info- and html-format generating because the tool; \
 	   echo - makeinfo in $(MAKEINFO); \
@@ -168,10 +186,10 @@ pdf: $(ecb_TEXI)
 	fi
 
 
-install-help: $(ecb_INFO)
+install-help: $(ecb_INFO_DIR)/$(ecb_INFO)
 	@if test -x "$(INSTALLINFO)" -a -f "$(EMACSINFOPATH)/dir" ; then\
 	   echo Installing the Online-help in $(INSTALLINFO)...; \
-	   $(CP) $< $(EMACSINFOPATH); \
+	   $(CP) $(ecb_INFO_DIR)/*info* $(EMACSINFOPATH); \
 	   $(INSTALLINFO) $< $(EMACSINFOPATH)/dir; \
 	else \
 	   echo Can not install the online-help because either; \
@@ -180,7 +198,23 @@ install-help: $(ecb_INFO)
 	   echo is not available!; \
 	fi
 
+
 clean:
 	@$(RM) $(ecb_LISP_ELC) ecb-compile-script
+
+# The targets below are only for maintaining the ECB-package.
+
+$(ecb_INFO_DIR)/$(ecb_INFO): online-help
+
+
+distrib: $(ecb_INFO_DIR)/$(ecb_INFO)
+	@$(RM) ecb-$(ecb_VERSION).tar.gz
+	@$(RM) -R ecb-$(ecb_VERSION)
+	@$(MKDIR) ecb-$(ecb_VERSION)
+	@$(CP) $(ecb_DISTRIB_FILES) ecb-$(ecb_VERSION)
+	@$(CP) -r $(ecb_INFO_DIR) ecb-$(ecb_VERSION)
+	@$(CP) -r $(ecb_HTML_DIR) ecb-$(ecb_VERSION)
+	@tar -cvzf ecb-$(ecb_VERSION).tar.gz ecb-$(ecb_VERSION)
+	@$(RM) -R ecb-$(ecb_VERSION)
 
 # End of Makefile

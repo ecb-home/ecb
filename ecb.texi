@@ -335,23 +335,24 @@ are any. (You can also bytecompile ECB from the command-line either by
 using the @file{Makefile} or by using the batch-file @file{make.bat};
 just read the comments in that file you choose.)
 
-@item Installing the supplied @file{ecb.info}
+@item Installing the Info-help of ECB
 
-The ECB distribution contains a file @file{ecb.info} which is the
-online-help of ECB in Info-format. You can install this online help so
-it's available in the Top-directory of Info. There are two ways to do
-this:
+The ECB distribution contains a subdirectory @file{info-help} which
+contains the online-help of ECB in Info-format. You can install this
+online help so it's available in the Top-directory of Info. There are
+two ways to do this:
 
 @itemize @minus
 @item Use ``install-info'' (recommended):
 
 @enumerate
 @item
-Copy the file @file{ecb.info} into the info-directory of Emacs
+Copy the files of the subdirectory @file{info-help} into the
+info-directory of Emacs
 
 @item
-Install it with the command ``install-info'' (if available on your
-system) in the @file{dir}-file.
+Install the file @file{info-help/ecb.info} with the command
+``install-info'' (if available on your system) in the @file{dir}-file.
 @end enumerate
 
 The supplied @file{Makefile} offers a target @code{install-help} which
@@ -365,8 +366,8 @@ make EMACSINFOPATH=/path/to/emacs/info install-help
 
 @item Manual Installation:
 
-Copy the file @file{ecb.info} into the info-directory of Emacs and
-modify the file @file{dir} manually.
+Copy the files of the subdirectory @file{info-help} into the
+info-directory of Emacs and modify the file @file{dir} manually.
 @end itemize
 
 But it doesn't matter if you do not execute this step (8.) because the
@@ -4411,12 +4412,11 @@ This group contains the following options:
 Path where the ECB online help in HTML format resides. This must be
 the location of the @file{ecb.html} which comes with the ECB
 distribution. If is installed by unpacking the archive available on
-the ECB website then this is the installation directory of ECB, i.e.
-where the elisp files of ECB reside. If it is installed as
+the ECB website then this is the subdir @code{ecb-help-html-subdir} of
+the installation directory of ECB. If it is installed as
 XEmacs-package (e.g. via the package manager of XEmacs) then this is
-probably not the directory where the elisp files of ECB reside but
-either the directory ``../../html/'' or ``../../etc/ecb/html/'' (both
-relativ to the elisp directory of ECB).
+probably either the directory ``../../html/'' or
+``../../etc/ecb/html/'' (both relativ to the elisp directory of ECB).
 
 The path can either be an absolute path or a path relativ to the directory
 where the elisp files of ECB are.
@@ -4429,11 +4429,11 @@ Normally there should be no need to change this option!
 Path where the ECB online help in info format resides. This must be
 the location of the @file{ecb.info} which comes with the ECB
 distribution. If is installed by unpacking the archive available on
-the ECB website then this is the installation directory of ECB, i.e.
-where the elisp files of ECB reside. If it is installed as
+the ECB website then this is the subdir @code{ecb-help-info-subdir} of
+the installation directory of ECB. If it is installed as
 XEmacs-package (e.g. via the package manager of XEmacs) then this is
-probably not the directory where the elisp files of ECB reside but the
-directory ``../../info/'' (relativ to the elisp directory of ECB).
+probably the directory ``../../info/'' (relativ to the elisp directory
+of ECB).
 
 The path can either be an absolute path or a path relativ to the directory
 where the elisp files of ECB are.

@@ -3,25 +3,27 @@
 # Script for creating ECB releases.
 # Author: Jesper Nordenberg
 #
-# $Id: make_release.sh,v 1.12 2002/07/25 12:35:08 berndl Exp $
+# $Id: make_release.sh,v 1.13 2003/01/07 14:46:15 berndl Exp $
 
-set files="*.el HISTORY Makefile make.bat README RELEASE_NOTES ecb.texi ecb.html ecb.info"
-set version="1.80"
+if( "$1" == "" ) then
+    echo "Usage: make_release.sh <version-number>"
+    exit -1    
+endif
 
-set name=ecb-$version
-set release_dir=releases
-set dir=$release_dir/$name
+# building the distribution file: ecb-$1.tar.gz
+make ecb_VERSION=$1 distrib
 
+name=ecb-$1
+release_dir=releases
 
-rm -rf $dir
-mkdir -p $dir
-cp $files $dir
+cp $name.tar.gz $release_dir
 cd $release_dir
+rm -Rf $name
+tar -xzvf $name.tar.gz 
 
-echo "Creating .zip file..."
+echo -n "Creating .zip file..."
 rm -f $name.zip
-zip -rv $name.zip $name
+zip -rq $name.zip $name
+echo "done"
 
-echo "\nCreating .tar.gz file..."
-rm -f $name.tar.gz
-tar cvzf $name.tar.gz $name
+cd -

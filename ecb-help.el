@@ -26,7 +26,7 @@
 ;;
 ;; Contains all online-help for ECB (stolen something from recentf.el)
 
-;; $Id: ecb-help.el,v 1.88 2002/12/06 20:40:19 berndl Exp $
+;; $Id: ecb-help.el,v 1.89 2003/01/07 14:46:20 berndl Exp $
 
 ;;; Code
 
@@ -50,6 +50,8 @@
 
 (defconst ecb-help-info-start-file "ecb.info")
 (defconst ecb-help-html-start-file "ecb.html")
+(defconst ecb-help-info-subdir "./info-help/")
+(defconst ecb-help-html-subdir "./html-help/")
 
 (defgroup ecb-help nil
   "Settings for the ECB online help"
@@ -69,19 +71,19 @@ then `browse-url-browser-function' says which browser is used."
                                (if ecb-running-xemacs
                                    (if (file-exists-p
                                         (concat ecb-ecb-dir
+                                                ecb-help-info-subdir
                                                 ecb-help-info-start-file))
-                                       "./"
+                                       ecb-help-info-subdir
                                      "../../info/")
-                                 "./")
+                                 ecb-help-info-subdir)
                                ecb-help-info-start-file)
   "*Path where the ECB online help in info format resides.
 This must be the location of the file \"ecb.info\" which comes with the ECB
 distribution. If is installed by unpacking the archive available on the ECB
-website then this is the installation directory of ECB, i.e. where the elisp
-files of ECB reside. If it is installed as XEmacs-package \(e.g. via the
-package manager of XEmacs) then this is probably not the directory where the
-elisp files of ECB reside but the directory \"../../info/\" \(relativ to the
-elisp directory of ECB).
+website then this is the subdir `ecb-help-info-subdir' of the installation
+directory of ECB. If it is installed as XEmacs-package \(e.g. via the package
+manager of XEmacs) then this is probably the directory \"../../info/\"
+\(relativ to the elisp directory of ECB).
 
 The path can either be an absolute path or a path relativ to the directory
 where the elisp files of ECB are.
@@ -94,8 +96,9 @@ Normally there should be no need to change this option!"
                                (if ecb-running-xemacs
                                    (cond ((file-exists-p
                                            (concat ecb-ecb-dir
+                                                   ecb-help-html-subdir
                                                    ecb-help-html-start-file))
-                                          "./")
+                                          ecb-help-html-subdir)
                                          ((file-exists-p
                                            (concat ecb-ecb-dir
                                                    "../../html/"
@@ -103,15 +106,14 @@ Normally there should be no need to change this option!"
                                           "../../html/")
                                          (t
                                           "../../etc/ecb/html/"))
-                                 "./")
+                                 ecb-help-html-subdir)
                                ecb-help-html-start-file)
   "*Path where the ECB online help in HTML format resides.
-This must be the location of the file \"ecb.html\" which comes with the ECB
+This must be the location of the file \"index.html\" which comes with the ECB
 distribution. If is installed by unpacking the archive available on the ECB
-website then this is the installation directory of ECB, i.e. where the elisp
-files of ECB reside. If it is installed as XEmacs-package \(e.g. via the
-package manager of XEmacs) then this is probably not the directory where the
-elisp files of ECB reside but either the directory \"../../html/\" or
+website then this is the subdir `ecb-help-html-subdir' of the installation
+directory of ECB. If it is installed as XEmacs-package \(e.g. via the package
+manager of XEmacs) then this is probably either the directory \"../../html/\" or
 \"../../etc/ecb/html/\" \(both relativ to the elisp directory of ECB).
 
 The path can either be an absolute path or a path relativ to the directory
