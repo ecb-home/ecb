@@ -26,7 +26,7 @@
 ;;
 ;; Contains all online-help for ECB (stolen something from recentf.el)
 
-;; $Id: ecb-help.el,v 1.17 2001/05/10 09:25:53 berndl Exp $
+;; $Id: ecb-help.el,v 1.18 2001/05/17 13:42:21 berndl Exp $
 
 ;;; Code
 
@@ -308,6 +308,9 @@ following options before working with ECB):
 - `ecb-tree-expand-symbol-before' and `ecb-tree-indent' \(maybe you like a
   value of 4 for the latter one if you display the expand-symbol before!).
 - `ecb-source-file-regexps': Which files will \(not) be shown in ECB.
+- `ecb-show-node-name-in-minibuffer': When the whole nodename should be
+  displayed in the minibuffer? Please read carefully the documentation of this
+  option.
 - All the options in the customize group 'ecb-layout'
 
 

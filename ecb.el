@@ -52,7 +52,7 @@
 ;; The latest version of the ECB is available at
 ;; http://home.swipnet.se/mayhem/ecb.html
 
-;; $Id: ecb.el,v 1.87 2001/05/16 23:06:43 creator Exp $
+;; $Id: ecb.el,v 1.88 2001/05/17 13:42:21 berndl Exp $
 
 ;;; Code:
 
@@ -446,13 +446,30 @@ activate ECB again to take effect."
                 (const :tag "No incremental search"
                        :value nil)))
 
-(defcustom ecb-show-node-name-in-minibuffer 'always
-  "*Show the name of the item under mouse in minibuffer."
+(defcustom ecb-show-node-name-in-minibuffer 'shift-click
+  "*Show the name of the ECB-buffer item under mouse in minibuffer.
+If set to 'always of 'if-too-long then this works always only by moving the
+mouse over a node regardless if the ECB-window is the active window or not.
+
+But beware: If you set this to 'always or 'if-too-long then there can occur
+an annoying effect: If your mouse moves between a keysequence \(e.g. C-h v,
+i.e. the mouse moves between the C-h and the v) then the keysequence is
+terminated and the key after the move is evaluated as single key \(e.g. the v
+is not longer evaluated in combination with the C-h, means 'describe-variable'
+is called, but the v is inserted in the current buffer, because the mousemove
+has terminated the C-h). This should normally not occur but under some
+circumstances the mouse can be moved without your interaction, e.g. if your
+table is not really stable or something similar.
+
+If you change this option during active ECB you must deactivate and activate
+it again to take effect!"
   :group 'ecb-general
   :type '(radio (const :tag "Always"
                        :value always)
                 (const :tag "If longer than window-width"
                        :value if-too-long)
+                (const :tag "After SHIFT-primary-mouse-button-click"
+                       :value shift-click)
                 (const :tag "Never"
                        :value nil)))
 
@@ -1262,7 +1279,7 @@ Currently the fourth argument TREE-BUFFER-NAME is not used here."
   (ecb-update-directory-node node)
   (if (= 0 (tree-node-get-type node))
       (if shift-mode
-          (ecb-mouse-over-node node)
+          (ecb-mouse-over-source-node node)
         (progn
           (if (= 2 ecb-button)
 	      (tree-node-toggle-expanded node)
@@ -1276,7 +1293,7 @@ Currently the fourth argument TREE-BUFFER-NAME is not used here."
 
 (defun ecb-source-clicked (node ecb-button shift-mode)
   (if shift-mode
-      (ecb-mouse-over-node node))
+      (ecb-mouse-over-source-node node))
   (ecb-set-selected-source (tree-node-get-data node)
                            (and ecb-split-edit-window (eq ecb-button 2))
                            shift-mode))
@@ -1306,32 +1323,36 @@ Currently the fourth argument TREE-BUFFER-NAME is not used here."
 	    (nth 3 attrs)
 	    (nth 7 attrs)
 	    (format-time-string "%Y/%m/%d %H:%M" (nth 5 attrs))
-	    file
+	    (if (null (nth 0 attrs)) (file-name-nondirectory file) file)
 	    )))
 
-(defun ecb-show-minibuffer-info (node)
+(defun ecb-show-minibuffer-info (node window)
+  "Checks if in the minibuffer should displayed any info about the current
+node in the ECB-window WINDOW."
   (or (eq ecb-show-node-name-in-minibuffer 'always)
+      (eq ecb-show-node-name-in-minibuffer 'shift-click)
       (and (eq ecb-show-node-name-in-minibuffer 'if-too-long)
 	   (>= (+ (length (tree-node-get-name node))
 		  (tree-buffer-get-node-indent node))
-	       (window-width)))))
+	       (window-width window)))))
 
-(defun ecb-mouse-over-directory-node (node)
-  (when (ecb-show-minibuffer-info node)
-    (if (= (tree-node-get-type node) 1)
-	(ecb-mouse-over-node node)
-      (message (tree-node-get-data node)))))
+;; argument buffer currently not used in the following three functions!
+(defun ecb-mouse-over-directory-node (node &optional buffer window)
+  (if (= (tree-node-get-type node) 1)
+      (ecb-mouse-over-source-node node)
+    (message (when (ecb-show-minibuffer-info node window)
+               (tree-node-get-data node)))))
 
-(defun ecb-mouse-over-node (node)
+(defun ecb-mouse-over-source-node (node &optional buffer window)
   ;; For buffers that hasnt been saved yet
   (ignore-errors
-    (message (when (ecb-show-minibuffer-info node)
+    (message (when (ecb-show-minibuffer-info node window)
 	       (if ecb-show-file-info-in-minibuffer
 		   (ecb-get-file-info-text (tree-node-get-data node))
 		 (tree-node-get-name node))))))
 
-(defun ecb-mouse-over-method-node (node)
-  (message (when (ecb-show-minibuffer-info node)
+(defun ecb-mouse-over-method-node (node &optional buffer window)
+  (message (when (ecb-show-minibuffer-info node window)
 	     (tree-node-get-name node))))
 
 
@@ -1395,7 +1416,10 @@ always the ECB-frame if called from another frame."
          'ecb-interpret-mouse-click
          'ecb-tree-buffer-node-select-callback
          'ecb-tree-buffer-node-expand-callback
-         'ecb-mouse-over-directory-node
+         (if (or (equal ecb-show-node-name-in-minibuffer 'shift-click)
+                 (null ecb-show-node-name-in-minibuffer))
+             nil
+           'ecb-mouse-over-directory-node)
          (list (cons 0 ecb-directories-menu) (cons 1 ecb-sources-menu))
          ecb-truncate-lines
          t
@@ -1419,7 +1443,10 @@ always the ECB-frame if called from another frame."
          'ecb-interpret-mouse-click
          'ecb-tree-buffer-node-select-callback
          'ecb-tree-buffer-node-expand-callback
-         'ecb-mouse-over-node
+         (if (or (equal ecb-show-node-name-in-minibuffer 'shift-click)
+                 (null ecb-show-node-name-in-minibuffer))
+             nil
+           'ecb-mouse-over-source-node)
          (list (cons 0 ecb-sources-menu))
          ecb-truncate-lines
          t
@@ -1433,7 +1460,10 @@ always the ECB-frame if called from another frame."
          'ecb-interpret-mouse-click
          'ecb-tree-buffer-node-select-callback
          nil
-         'ecb-mouse-over-method-node
+         (if (or (equal ecb-show-node-name-in-minibuffer 'shift-click)
+                 (null ecb-show-node-name-in-minibuffer))
+             nil
+           'ecb-mouse-over-method-node)
          nil
          ecb-truncate-lines
          t
@@ -1450,7 +1480,10 @@ always the ECB-frame if called from another frame."
          'ecb-interpret-mouse-click
          'ecb-tree-buffer-node-select-callback
          'ecb-tree-buffer-node-expand-callback
-         'ecb-mouse-over-node
+         (if (or (equal ecb-show-node-name-in-minibuffer 'shift-click)
+                 (null ecb-show-node-name-in-minibuffer))
+             nil
+           'ecb-mouse-over-source-node)
          (list (cons 0 ecb-history-menu))
          ecb-truncate-lines
          t

@@ -26,7 +26,7 @@
 ;; This file is part of the ECB package which can be found at:
 ;; http://home.swipnet.se/mayhem/ecb.html
 
-;; $Id: tree-buffer.el,v 1.46 2001/05/16 23:06:43 creator Exp $
+;; $Id: tree-buffer.el,v 1.47 2001/05/17 13:42:21 berndl Exp $
 
 ;;; Code:
 
@@ -42,6 +42,8 @@
       (defalias 'tree-buffer-line-beginning-pos 'point-at-bol)
       (defalias 'tree-buffer-window-display-height 'window-displayed-height)
       (defalias 'tree-buffer-event-to-key 'event-key)
+      (defalias 'tree-buffer-event-window 'event-window)
+      (defalias 'tree-buffer-event-point 'event-point)
       (require 'overlay)
       (defface secondary-selection
         '((((class color) (background light)) (:foreground "blue" :background "LightGray"))
@@ -52,6 +54,10 @@
   (defalias 'tree-buffer-line-beginning-pos 'line-beginning-position)
   (defun tree-buffer-window-display-height (&optional window)
     (1- (window-height window)))
+  (defun tree-buffer-event-window (event)
+    (posn-window (event-start event)))
+  (defun tree-buffer-event-point (event)
+    (posn-point (event-start event)))
   (defalias 'tree-buffer-event-to-key 'event-basic-type))
 
 
@@ -490,9 +496,7 @@ mentioned above!"
 
 (defun tree-buffer-follow-mouse (event)
   (interactive "e")
-  (let ((window (if running-xemacs
-		    (event-window event)
-		  (posn-window (event-start event))))
+  (let ((window (tree-buffer-event-window event))
 	(current-window (get-buffer-window (current-buffer))))
     (if (and (or (not (window-minibuffer-p current-window))
 		 (not (minibuffer-window-active-p current-window)))
@@ -508,15 +512,15 @@ mentioned above!"
 
 (defun tree-buffer-mouse-movement (event)
   (interactive "e")
-  (set-buffer (window-buffer (if running-xemacs (event-window event)
-			       (posn-window (event-start event)))))
-  (let ((p (if running-xemacs (event-point event)
-	     (posn-point (event-start event)))))
+  (set-buffer (window-buffer (tree-buffer-event-window event)))
+  (let ((p (tree-buffer-event-point event)))
     (when (integer-or-marker-p p)
 ;;      (unless (not (equal (selected-frame) tree-buffer-frame))
       (let ((node (tree-buffer-get-node-at-point p)))
 	(when (and tree-node-mouse-over-fn node)
-	  (funcall tree-node-mouse-over-fn node))))))
+	  (funcall tree-node-mouse-over-fn node
+                   (current-buffer)
+                   (get-buffer-window (current-buffer))))))))
 
 (defun tree-buffer-create (name frame is-click-valid-fn node-selected-fn
                                 node-expanded-fn node-mouse-over-fn
@@ -558,7 +562,11 @@ NODE-EXPANDED-FN: Function to call if a node is expandable, point stays onto
                   function is called with the same arguments as
                   NODE-SELECTED-FN and should add all children nodes to this
                   node \(if possible).
-NODE-MOUSE-OVER-FN: Function to call when the mouse is moved over a node.
+NODE-MOUSE-OVER-FN: Function to call when the mouse is moved over a node. This
+                    function is called with three arguments: NODE, BUFFER,
+                    WINDOW, each of them current related to the tree-buffer.
+                    If nil then the follow-mouse/track-mouse mechanism is not
+                    used!
 MENUS: Nil or a list of one or two conses, each cons for a node-type \(0 or 1)
        Example: \(\(0 . menu-for-type-0) \(1 . menu-for-type-1)). The cdr of a
        cons must be a menu.
@@ -628,16 +636,20 @@ AFTER-CREATE-HOOK: A function \(with no arguments) called directly after
     (setq tree-buffer-incr-search incr-search)
 
     ;; Follow mouse stuff
-    (if running-xemacs
-	(progn
-	  (make-local-hook 'mode-motion-hook)
-	  (add-hook 'mode-motion-hook 'tree-buffer-follow-mouse))
-      (let ((saved-fn (lookup-key special-event-map [mouse-movement])))
-	(when (not (eq saved-fn 'tree-buffer-follow-mouse))
-	  (setq tree-buffer-saved-mouse-movement saved-fn)
-	  (setq track-mouse t)
-	  (define-key special-event-map [mouse-movement] 'tree-buffer-follow-mouse))))
-  
+    (when tree-node-mouse-over-fn
+      (if running-xemacs
+          (progn
+            (make-local-hook 'mode-motion-hook)
+            (add-hook 'mode-motion-hook 'tree-buffer-follow-mouse))
+        (let ((saved-fn (lookup-key special-event-map [mouse-movement])))
+          (when (not (eq saved-fn 'tree-buffer-follow-mouse))
+            (setq tree-buffer-saved-mouse-movement saved-fn)
+            (setq track-mouse t)
+            (define-key special-event-map [mouse-movement] 'tree-buffer-follow-mouse))))
+      
+      ;; mouse-movement
+      (define-key tree-buffer-key-map [mouse-movement] 'tree-buffer-mouse-movement))
+
     (when incr-search
       ;; settings for the incremental search.
       ;; for all keys which are bound to `self-insert-command' in `global-map'
@@ -737,9 +749,6 @@ AFTER-CREATE-HOOK: A function \(with no arguments) called directly after
     (define-key tree-buffer-key-map [mouse-3] nop)
     (define-key tree-buffer-key-map [double-mouse-3] nop)
     (define-key tree-buffer-key-map [triple-mouse-3] nop)
-
-    ;; mouse-movement
-    (define-key tree-buffer-key-map [mouse-movement] 'tree-buffer-mouse-movement)
 
     (use-local-map tree-buffer-key-map)
 
