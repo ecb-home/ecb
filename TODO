@@ -1,6 +1,6 @@
 ********************************************************************************
-*** Last-Modified: $Date: 2001/05/03 19:14:32 $ 
-*** Version: $Id: TODO,v 1.11 2001/05/03 19:14:32 creator Exp $
+*** Last-Modified: $Date: 2001/05/04 13:21:44 $ 
+*** Version: $Id: TODO,v 1.12 2001/05/04 13:21:44 berndl Exp $
 *** Author: Kevin A. Burton ( burton@apache.org | burton@openprivacy.org )
 ********************************************************************************
 
@@ -26,20 +26,15 @@
 - Possibility to save the current sizes of the windows. This will make it
   possible to customize the layout better. (JN)
 
-- KB: Special keymap for all ECB-buffers for better keyboard-usability:
-  If the ECB-buffers are readonly (see above) then we can do the
-  following: Instead of scrolling with the mouse each inserted
-  character scrolls to the next matching tree-node. Example:
-  Inserting 'e' scrolls to the first node beginning with "e...".
-  Then inserting an 'c' scrolls to the first node beginning with
-  "ec...". Maybe we need an somehow intelligent mechanism...
-
-- KB: Easy selecting of a certain ECB-buffer with a ECB-keymap like:
-  [C-c C-e ...] as ECB-keybindings:
+- KB: Easy selecting of a certain ECB-buffer with a ECB-keymap like.
+   This means we need an ECB minor mode with
+   [C-c C-e ...] as ECB-keybindings:
    d: Directory buffer
    s: Source-Buffer
    m: Method-buffer
    h: History-Buffer
+   This minor mode should be enabled in each ecb-buffer and also in
+   each buffer in general if ECB is activated.
 
 - KB: the utility- (also know as compile-) window stores not only the
   last compilation-buffer but a list of recent utility-buffers
