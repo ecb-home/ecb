@@ -50,7 +50,7 @@
   "*Frame height of the layout creation frame."
   :group 'ecb-create-layout
   :type 'integer)
-  
+
 
 ;; internal vars and consts
 
@@ -64,14 +64,14 @@
   "
  ECB layout creation mode
  ========================
- 
+
  This is the help-screen of this mode. The window displaying
  this help text is called the edit-window which is neither
  selectable nor deletable nor splittable in this mode.
- 
+
  <left/right/up/down-arrow>: Moving around in current window
  C-n, C-p: Go to next/previous window (beside the edit-window)
- 
+
  C-s: Split current window. You will be asked:
       - If \"vertical\" or \"horizontal\" split
       - How to split: \"at-point\", \"half\" or \"other\" (i.e.
@@ -81,7 +81,7 @@
  C-u: Delete current window
  C-t: Give the current window a type (\"directories\", \"sources\",
       \"methods\" or \"history\")
- 
+
  C-c: Cancel layout creation. This does not save the layout.
       Deletes this frame.
  C-q: Save current defined layout and quit the layout creation.
@@ -94,13 +94,13 @@ are disabled in this mode!
 (defconst ecb-create-layout-help-text-top
   " ECB layout creation mode
  ========================
- 
+
  This is the help-screen of this mode. The window displaying this help text is called
  the edit-window which is neither selectable nor deletable nor splittable in this mode.
- 
+
  <left/right/up/down-arrow>: Moving around in current window
  C-n, C-p: Go to next/previous window (beside the edit-window)
- 
+
  C-s: Split current window. You will be asked:
       - If \"vertical\" or \"horizontal\" split
       - How to split: \"at-point\", \"half\" or \"other\" (i.e. you can specify any
@@ -109,7 +109,7 @@ are disabled in this mode!
         window should be.
  C-u: Delete current window
  C-t: Give the current window a type (\"directories\", \"sources\", \"methods\" or \"history\")
- 
+
  C-c: Cancel layout creation. This does not save the layout. Deletes this frame.
  C-q: Save current defined layout and quit the layout creation. You will be asked for a
       layout-number. Deletes this frame.
@@ -159,6 +159,8 @@ There are NO other commands or keys avaliable. ALL other keys are disabled in th
 (defvar ecb-create-layout-old-hscroll nil)
 (defvar ecb-create-layout-old-debug-on-error nil)
 (defvar ecb-create-layout-old-frame nil)
+(defvar ecb-create-layout-old-vertical-div-map nil)
+(defvar ecb-create-layout-old-modeline-map nil)
 
 (defvar ecb-create-layout-generated-lisp nil)
 (defvar ecb-create-layout-gen-counter 0)
@@ -179,6 +181,10 @@ There are NO other commands or keys avaliable. ALL other keys are disabled in th
   (setq ecb-create-layout-old-minor-mode-map-alist nil)
   (setq ecb-create-layout-old-hscroll nil)
   (setq ecb-create-layout-old-frame nil)
+  (when ecb-running-xemacs
+    (setq ecb-create-layout-old-vertical-div-map nil)
+    (setq ecb-create-layout-old-modeline-map nil))
+  
   (setq ecb-create-layout-generated-lisp nil)
   (setq ecb-create-layout-gen-counter 0))
 
@@ -188,9 +194,16 @@ There are NO other commands or keys avaliable. ALL other keys are disabled in th
                    ecb-create-layout-frame-name)
       (ecb-create-layout-cancel))))
 
+(defun ecb-create-layout-frame-ok ()
+  "Return not nil if current frame is the `ecb-create-layout-frame'"
+  (and ecb-create-layout-frame
+       (frame-live-p ecb-create-layout-frame)
+       (equal (selected-frame) ecb-create-layout-frame)))
+
+
 (defun ecb-create-layout-cancel (&rest ignore)
   (interactive)
-  (when (and ecb-create-layout-frame (frame-live-p ecb-create-layout-frame))
+  (when (ecb-create-layout-frame-ok)
     (ecb-create-layout-clear-all (interactive-p))
     (message "ECB Layout Creation canceled - the layout is not saved!")))
 
@@ -215,6 +228,10 @@ DELETE-FRAME is not nil then the new created frame will be deleted and the
   ;; restore horiz. scrolling
   (if ecb-running-emacs-21
       (setq automatic-hscrolling ecb-create-layout-old-hscroll))
+  ;; for XEmacs restore these maps
+  (when ecb-running-xemacs
+    (setq vertical-divider-map ecb-create-layout-old-vertical-div-map)
+    (setq modeline-map ecb-create-layout-old-modeline-map))
   ;; restore old debug-on-error
   (setq debug-on-error ecb-create-layout-old-debug-on-error)
   ;; delete the layout-frame and select the ecb-create-layout-old-frame
@@ -232,8 +249,7 @@ DELETE-FRAME is not nil then the new created frame will be deleted and the
 (defun ecb-create-layout-save-and-quit (&rest ignore)
   "Quit the ECB Layout creation and save the defined layout."
   (interactive)
-  (when (and ecb-create-layout-frame
-             (frame-live-p ecb-create-layout-frame))
+  (when (ecb-create-layout-frame-ok)
     (if (ecb-create-layout-ready-for-save-p)
         (let ((delete-frame (interactive-p)))
           ;; if an error occurs during `ecb-create-layout-save-layout' or the
@@ -272,7 +288,7 @@ DELETE-FRAME is not nil then the new created frame will be deleted and the
                        nr) nil))
           nil)
       t)))
-        
+
 
 (defmacro ecb-create-layout-insert-line (line)
   "Insert LINE in current-buffer and adds a newline."
@@ -348,7 +364,7 @@ DELETE-FRAME is not nil then the new created frame will be deleted and the
 (defun ecb-create-layout-split-ver (&optional fraction)
   (let ((factor (or fraction
                     (/ (float (count-lines (window-start) (point)))
-                       (float (window-height))))))
+                       (float (- (window-height) 2))))))
     (ecb-split-ver factor t)
     (ecb-create-layout-gen-lisp `(ecb-split-ver ,factor t))
     factor))
@@ -356,7 +372,7 @@ DELETE-FRAME is not nil then the new created frame will be deleted and the
 (defun ecb-create-layout-split-hor (&optional fraction)
   (let ((factor (or fraction
                     (/ (float (- (point) (line-beginning-position)))
-                       (float (1- (window-width)))))))
+                       (float (- (window-width) 3))))))
     (ecb-split-hor factor t)
     (ecb-create-layout-gen-lisp `(ecb-split-hor ,factor t))
     (beginning-of-line)
@@ -383,7 +399,7 @@ DELETE-FRAME is not nil then the new created frame will be deleted and the
   (let ((buffer-read-only nil))
     (put-text-property (point-min) (1+ (point-min)) 'ecb-create-layout-type
                        type)))
-    
+
 (defun ecb-create-layout-set-buffer-factor (factor)
   (let ((buffer-read-only nil))
     (put-text-property (point-min) (1+ (point-min)) 'ecb-create-layout-factor
@@ -391,23 +407,24 @@ DELETE-FRAME is not nil then the new created frame will be deleted and the
 
 (defun ecb-create-layout-set-buffer-to-type (&optional type)
   (interactive)
-  ;; adding the old buffer type to the available-list
-  (ecb-create-layout-add-to-buf-types (or type
-                                          (ecb-create-layout-buffer-type)))
-  (let ((new-type (or (and (stringp type) type)
-                      (ecb-query-string "Type of current ECB-tree-buffer:"
-                                        ecb-create-layout-buf-types))))
-    ;; removing the new buffer type from the available-list
-    (ecb-create-layout-remove-from-buf-type new-type)
-    (ecb-mode-line-set (buffer-name (current-buffer)) new-type)
-    ;; setting the new buffer type in the buffer itself
-    (ecb-create-layout-set-buffer-type new-type)
-    (when (interactive-p)
-      (ecb-create-layout-gen-lisp `(ecb-set-buffer ,(concat "ecb-"
-                                                            new-type
-                                                            "-buffer-name")))
-      (ecb-create-layout-next-window))
-    new-type))
+  (when (ecb-create-layout-frame-ok)
+    ;; adding the old buffer type to the available-list
+    (ecb-create-layout-add-to-buf-types (or type
+                                            (ecb-create-layout-buffer-type)))
+    (let ((new-type (or (and (stringp type) type)
+                        (ecb-query-string "Type of current ECB-tree-buffer:"
+                                          ecb-create-layout-buf-types))))
+      ;; removing the new buffer type from the available-list
+      (ecb-create-layout-remove-from-buf-type new-type)
+      (ecb-mode-line-set (buffer-name (current-buffer)) new-type)
+      ;; setting the new buffer type in the buffer itself
+      (ecb-create-layout-set-buffer-type new-type)
+      (when (interactive-p)
+        (ecb-create-layout-gen-lisp `(ecb-set-buffer ,(concat "ecb-"
+                                                              new-type
+                                                              "-buffer-name")))
+        (ecb-create-layout-next-window))
+      new-type)))
 
 (defun ecb-create-layout-select-edit-window ()
   (let ((counter 0))
@@ -422,91 +439,96 @@ DELETE-FRAME is not nil then the new created frame will be deleted and the
 
 (defun ecb-create-layout-split ()
   (interactive)
-  ;; splitting
-  (let* ((old-buf-type (ecb-create-layout-buffer-type))
-         (split-choices (if (equal ecb-create-layout-type 'top)
-                            '("horizontal" "vertical")
-                          '("vertical" "horizontal")))
-         (split-type (ecb-query-string "Split type:" split-choices))
-         (split-method
-          (ecb-query-string "Split method:"
-                            '("at-point" "half")
-                            "Insert a fraction between 0.1 and 0.9"))
-         (fraction (cond ((string= split-method "at-point")
-                          nil)
-                         ((string= split-method "half")
-                          0.5)
-                         ((floatp (string-to-number split-method))
-                          (string-to-number split-method))
-                         (t 0.5)))
-         (real-split-factor
-          (if (string= split-type "horizontal")
-              (ecb-create-layout-split-hor fraction)
-            (ecb-create-layout-split-ver fraction))))
-    ;; creating new fitting buffers
-    (save-selected-window
-      (ecb-create-layout-new-buffer)
-      (select-window (next-window))
-      (ecb-create-layout-new-buffer))
-    ;; asking for the buffer type
-    (ecb-create-layout-set-buffer-factor real-split-factor)
-    (ecb-create-layout-gen-lisp
-     `(ecb-set-buffer
-       ,(concat "ecb-"
-                (ecb-create-layout-set-buffer-to-type old-buf-type)
-                "-buffer-name")))
-    (ecb-create-layout-next-window)))
+  (when (ecb-create-layout-frame-ok)
+    ;; splitting
+    (let* ((old-buf-type (ecb-create-layout-buffer-type))
+           (split-choices (if (equal ecb-create-layout-type 'top)
+                              '("horizontal" "vertical")
+                            '("vertical" "horizontal")))
+           (split-type (ecb-query-string "Split type:" split-choices))
+           (split-method
+            (ecb-query-string "Split method:"
+                              '("at-point" "half")
+                              "Insert a fraction between 0.1 and 0.9"))
+           (fraction (cond ((string= split-method "at-point")
+                            nil)
+                           ((string= split-method "half")
+                            0.5)
+                           ((floatp (string-to-number split-method))
+                            (string-to-number split-method))
+                           (t 0.5)))
+           (real-split-factor
+            (if (string= split-type "horizontal")
+                (ecb-create-layout-split-hor fraction)
+              (ecb-create-layout-split-ver fraction))))
+      ;; creating new fitting buffers
+      (save-selected-window
+        (ecb-create-layout-new-buffer)
+        (select-window (next-window))
+        (ecb-create-layout-new-buffer))
+      ;; asking for the buffer type
+      (ecb-create-layout-set-buffer-factor real-split-factor)
+      (ecb-create-layout-gen-lisp
+       `(ecb-set-buffer
+         ,(concat "ecb-"
+                  (ecb-create-layout-set-buffer-to-type old-buf-type)
+                  "-buffer-name")))
+      (ecb-create-layout-next-window))))
 
 (defun ecb-create-layout-forward-char ()
   (interactive)
-  (unless (> (- (point) (line-beginning-position)) (- (window-width)
-                                                      (if ecb-running-emacs-21
-                                                          2
-                                                        3)))
-    (call-interactively 'forward-char)))
+  (when (ecb-create-layout-frame-ok)
+    (unless (> (- (point) (line-beginning-position)) (- (window-width)
+                                                        (if ecb-running-emacs-21
+                                                            2
+                                                          3)))
+      (call-interactively 'forward-char))))
 
 (defun ecb-create-layout-next-window ()
   (interactive)
-  (let ((steps (if (equal (next-window) ecb-create-layout-edit-window) 2 1)))
-    (other-window steps)
-    (ecb-create-layout-gen-lisp `(dotimes (i ,steps)
-                                   (other-window 1)
-                                   (if (equal (selected-window)
-                                              ecb-compile-window)
-                                       (other-window 1))))))
+  (when (ecb-create-layout-frame-ok)
+    (let ((steps (if (equal (next-window) ecb-create-layout-edit-window) 2 1)))
+      (other-window steps)
+      (ecb-create-layout-gen-lisp `(dotimes (i ,steps)
+                                     (other-window 1)
+                                     (if (equal (selected-window)
+                                                ecb-compile-window)
+                                         (other-window 1)))))))
 
 (defun ecb-create-layout-previous-window ()
   (interactive)
-  (let ((steps (if (equal (previous-window (selected-window) 0)
-                          ecb-create-layout-edit-window)
-                   -2 -1)))
-    (other-window steps)
-    (ecb-create-layout-gen-lisp `(dotimes (i ,(abs steps))
-                                   (other-window -1)
-                                   (if (equal (selected-window)
-                                              ecb-compile-window)
-                                       (other-window -1))))))
+  (when (ecb-create-layout-frame-ok)
+    (let ((steps (if (equal (previous-window (selected-window) 0)
+                            ecb-create-layout-edit-window)
+                     -2 -1)))
+      (other-window steps)
+      (ecb-create-layout-gen-lisp `(dotimes (i ,(abs steps))
+                                     (other-window -1)
+                                     (if (equal (selected-window)
+                                                ecb-compile-window)
+                                         (other-window -1)))))))
 
 
 (defun ecb-create-layout-delete-window ()
   (interactive)
-  (unless (or (equal (selected-window) ecb-create-layout-edit-window)
-              (equal (next-window)
-                     (previous-window (selected-window) 0)))
-    (let ((go-back (if (equal ecb-create-layout-type 'right)
-                       (not (= (nth 1 (window-edges)) 0))
-                     (not (and (= (nth 0 (window-edges)) 0)
-                               (= (nth 1 (window-edges)) 0))))))
-      ;; add the buffer type of the deleted window to the available-list
-      (ecb-create-layout-add-to-buf-types (ecb-create-layout-buffer-type))
-      (kill-buffer (current-buffer))
-      (delete-window)
-      (ecb-create-layout-gen-lisp '(delete-window))
-      (if go-back (ecb-create-layout-previous-window))
-      ;; add the buffer type of the new bigger window to the available-list      
-      (ecb-create-layout-add-to-buf-types (ecb-create-layout-buffer-type))
-      (kill-buffer (current-buffer))
-      (ecb-create-layout-new-buffer))))
+  (when (ecb-create-layout-frame-ok)
+    (unless (or (equal (selected-window) ecb-create-layout-edit-window)
+                (equal (next-window)
+                       (previous-window (selected-window) 0)))
+      (let ((go-back (if (equal ecb-create-layout-type 'right)
+                         (not (= (nth 1 (window-edges)) 0))
+                       (not (and (= (nth 0 (window-edges)) 0)
+                                 (= (nth 1 (window-edges)) 0))))))
+        ;; add the buffer type of the deleted window to the available-list
+        (ecb-create-layout-add-to-buf-types (ecb-create-layout-buffer-type))
+        (kill-buffer (current-buffer))
+        (delete-window)
+        (ecb-create-layout-gen-lisp '(delete-window))
+        (if go-back (ecb-create-layout-previous-window))
+        ;; add the buffer type of the new bigger window to the available-list
+        (ecb-create-layout-add-to-buf-types (ecb-create-layout-buffer-type))
+        (kill-buffer (current-buffer))
+        (ecb-create-layout-new-buffer)))))
 
 (defvar ecb-create-layout-mode-map nil
   "`ecb-create-layout-mode' keymap.")
@@ -553,6 +575,8 @@ DELETE-FRAME is not nil then the new created frame will be deleted and the
     'describe-variable)
   (define-key ecb-create-layout-mode-map (kbd "C-h k")
     'describe-key)
+  (define-key ecb-create-layout-mode-map (kbd "C-h d")
+    'ecb-create-layout-debug)
   (define-key ecb-create-layout-mode-map (kbd "M-<down>")
     'scroll-other-window)
   (set-keymap-parent ecb-create-layout-mode-map nil))
@@ -609,8 +633,8 @@ DELETE-FRAME is not nil then the new created frame will be deleted and the
   (set-window-dedicated-p (selected-window) nil)
   (other-window 1)
   ;; we set the buffer for the (currently unsplitted) ECB-window
-  (ecb-create-layout-new-buffer))  
-  
+  (ecb-create-layout-new-buffer))
+
 (defun ecb-create-layout-make-frame ()
   "Create a new frame for the layout creation process and return it."
   (if ecb-running-xemacs
@@ -676,11 +700,24 @@ DELETE-FRAME is not nil then the new created frame will be deleted and the
       (setq ecb-create-layout-old-hscroll automatic-hscrolling)
       (setq automatic-hscrolling nil))
 
+    ;; for XEmacs modeline- and vertical-divider maps
+    (when ecb-running-xemacs
+      (setq ecb-create-layout-old-vertical-div-map vertical-divider-map)
+      (setq vertical-divider-map nil)
+      (setq ecb-create-layout-old-modeline-map modeline-map)
+      (setq modeline-map nil))
+
     ;; debug on error
     (setq ecb-create-layout-old-debug-on-error debug-on-error)
     (setq debug-on-error nil)
-    
+
     (ecb-create-layout-init-layout t)))
+
+(defun ecb-create-layout-debug ()
+  (interactive)
+  (message "Layout-Debug: Type: %s, Factor: %s"
+           (ecb-create-layout-buffer-type)
+           (ecb-create-layout-buffer-factor)))
 
 (provide 'ecb-create-layout)
 
