@@ -26,7 +26,7 @@
 ;; This file is part of the ECB package which can be found at:
 ;; http://home.swipnet.se/mayhem/ecb.html
 
-;; $Id: tree-buffer.el,v 1.55 2001/06/12 15:37:12 berndl Exp $
+;; $Id: tree-buffer.el,v 1.56 2001/06/22 09:08:02 berndl Exp $
 
 ;;; Code:
 
@@ -189,6 +189,7 @@ with the same arguments as `tree-node-expanded-fn'."
                   (tree-node-toggle-expanded node))
                 ;; Update the tree-buffer with optimized display of NODE
                 (tree-buffer-update node))
+            (setq tree-buffer-incr-searchpattern "")
             (when tree-node-selected-fn
               (funcall tree-node-selected-fn node mouse-button
                        shift-pressed control-pressed (buffer-name)))))))))

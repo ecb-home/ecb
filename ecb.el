@@ -7,7 +7,7 @@
 ;; Keywords: java, class, browser
 ;; Created: Jul 2000
 
-(defvar ecb-version "1.40prerelease"
+(defvar ecb-version "1.40beta1"
   "Current ECB version.")
 
 ;; This program is free software; you can redistribute it and/or modify it under
@@ -54,7 +54,7 @@
 ;; The latest version of the ECB is available at
 ;; http://home.swipnet.se/mayhem/ecb.html
 
-;; $Id: ecb.el,v 1.114 2001/06/12 15:37:35 berndl Exp $
+;; $Id: ecb.el,v 1.115 2001/06/22 09:08:02 berndl Exp $
 
 ;;; Code:
 
@@ -1523,14 +1523,14 @@ Currently the fourth argument TREE-BUFFER-NAME is not used here."
 	     ;; Update the tree-buffer with optimized display of NODE
 	     (tree-buffer-update node))))
       (ecb-set-selected-source (tree-node-get-data node)
-			       (and ecb-split-edit-window (eq ecb-button 2))
+			       (and (ecb-edit-window-splitted) (eq ecb-button 2))
 			       shift-mode))))
 
 (defun ecb-source-clicked (node ecb-button shift-mode)
   (if shift-mode
       (ecb-mouse-over-source-node node))
   (ecb-set-selected-source (tree-node-get-data node)
-			   (and ecb-split-edit-window (eq ecb-button 2))
+			   (and (ecb-edit-window-splitted) (eq ecb-button 2))
 			   shift-mode))
 
 ;; this mechanism is necessary because tree-buffer creates for mouse releasing
@@ -1558,7 +1558,8 @@ Currently the fourth argument TREE-BUFFER-NAME is not used here."
 	  (jde-show-class-source (tree-node-get-data node)))
       (when (tree-node-get-data node)
 	(ecb-find-file-and-display ecb-path-selected-source
-				   (and ecb-split-edit-window (eq ecb-button 2)))
+				   (and (ecb-edit-window-splitted)
+                                        (eq ecb-button 2)))
 	;; let us set the mark so the user can easily jump back.
 	(if ecb-method-jump-sets-mark
 	    (push-mark))
@@ -1803,18 +1804,23 @@ That is remove the unsupported :help stuff."
       ])
     )
    "-"
-   (ecb-menu-item
-    [ "Show Online Help"
-      ecb-show-help
-      :active (equal (selected-frame) ecb-frame)
-      :help "Show the online help of ECB."
-      ])
-   (ecb-menu-item
-    [ "Submit problem report"
-      ecb-submit-problem-report
-      :active (equal (selected-frame) ecb-frame)
-      :help "Submit a problem report to the ECB mailing list."
-      ])
+   (list
+    "Help"
+    (ecb-menu-item
+     [ "Show Online Help"
+       ecb-show-help
+       :active (equal (selected-frame) ecb-frame)
+       :help "Show the online help of ECB."
+       ])
+    (ecb-menu-item
+     [ "Submit problem report"
+       ecb-submit-problem-report
+       :active (equal (selected-frame) ecb-frame)
+       :help "Submit a problem report to the ECB mailing list."
+       ])
+    "-"
+    (concat "ECB " ecb-version)
+    )
    )
   "Menu for ECB minor mode.")
 
@@ -1864,8 +1870,10 @@ always the ECB-frame if called from another frame."
     ;; first initialize the whole layout-engine
     (ecb-initialize-layout)
 
+    ;; enable basic advices
+    (ecb-enable-basic-advices)
+    
     ;; set the ecb-frame
-    (ecb-enable-delete-frame-advice)
     (if ecb-new-ecb-frame
 	(progn
 	  (run-hooks 'ecb-activate-before-new-frame-created-hook)
@@ -1960,10 +1968,6 @@ always the ECB-frame if called from another frame."
     (add-hook 'after-save-hook 'ecb-update-methods-after-saving)
     (add-hook 'compilation-mode-hook
 	      'ecb-layout-compilation-initialize)
-    (add-hook 'compilation-mode-hook
-	      'ecb-set-edit-window-split-hook-function)
-    (add-hook 'help-mode-hook
-	      'ecb-set-edit-window-split-hook-function)
 
     ;; ediff-stuff; we operate here only with symbols to avoid bytecompiler
     ;; warnings
@@ -1992,9 +1996,16 @@ always the ECB-frame if called from another frame."
     ;; now we draw the layout choosen in `ecb-layout'. This function
     ;; acivates at its end also the adviced functions if necessary!
     (ecb-redraw-layout)
+    
+    (ecb-with-adviced-functions
+     (cond ((equal ecb-split-edit-window 'vertical)
+            (split-window-vertically))
+           ((equal ecb-split-edit-window 'horizontal)
+            (split-window-horizontally))
+           ((not ecb-split-edit-window)
+            (delete-other-windows))))
 
     (ecb-update-directories-buffer)
-
     ;; now update all the ECB-buffer-modelines
     (ecb-mode-line-format)
 
@@ -2025,7 +2036,7 @@ always the ECB-frame if called from another frame."
     
     ;; deactivating the adviced functions
     (ecb-activate-adviced-functions nil)
-    (ecb-disable-delete-frame-advice)
+    (ecb-disable-basic-advices)
 
     (tree-buffer-deactivate-mouse-tracking)
     (tree-buffer-deactivate-follow-mouse)
@@ -2053,10 +2064,6 @@ always the ECB-frame if called from another frame."
     (remove-hook 'after-save-hook 'ecb-update-methods-after-saving)
     (remove-hook 'compilation-mode-hook
 		 'ecb-layout-compilation-initialize)
-    (remove-hook 'compilation-mode-hook
-		 'ecb-set-edit-window-split-hook-function)
-    (remove-hook 'help-mode-hook
-		 'ecb-set-edit-window-split-hook-function)
     ;; ediff-stuff; we operate here only with symbols to avoid bytecompiler
     ;; warnings
     (if (get 'ediff-quit-hook 'ecb-ediff-quit-hook-value)

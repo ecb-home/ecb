@@ -26,7 +26,7 @@
 ;;
 ;; Contains all online-help for ECB (stolen something from recentf.el)
 
-;; $Id: ecb-help.el,v 1.30 2001/06/13 09:34:03 berndl Exp $
+;; $Id: ecb-help.el,v 1.31 2001/06/22 09:08:02 berndl Exp $
 
 ;;; Code
 
@@ -425,6 +425,11 @@ solutions/hints/workarounds:
    Because ECB has a much more intelligent mouse tracking mechanism than
    follow-mouse the follow-mouse stuff profit from ECB and works even better
    and saver as without activated ECB!
+
+3. Package avoid.el
+   With GNU Emacs ECB must deactivate `mouse-avoidance-mode' if the option
+   `ecb-show-node-name-in-minibuffer' is set to either 'if-too-long or
+   'always. This is only be done as long ECB is activated.
 ")
 
 (defconst ecb-help-buffer-name "*ECB help*")

@@ -1,13 +1,16 @@
 Version ???:
 ------------
 
+- temp-buffer-max-height and compilation-window-height now work also if
+  ecb-compilation-window-height is nil. (Klaus)
+
 - New function to toggle visibility of the ECB windows. Now it´s possible to
   hide all ECB windows without deactivating ECB (see 'ecb-toggle-ecb-windows')
   (Klaus).
 
 - ECB is now a global minor mode with it´s own menu "ECB" and it´s own keymap
   with prefix "C-c .". New function to (de)activate/toggle ECB with
-  'ecb-minor-mode'.
+  'ecb-minor-mode'. (Klaus)
 
 - Fixed a bug in highlighting current token in the method-buffer when
   font-lock-mode is nil for the source-buffer. (Klaus)

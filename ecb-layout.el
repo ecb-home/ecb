@@ -103,6 +103,8 @@
 ;; Both of these functions must follow the following guide-lines:
 ;; - Preconditions for these functions:
 ;;   + the edit window is splitted
+;;   + The function gets one argument 'split' which can have the values
+;;     'horizontal and 'vertical.
 ;;   + These functions are always(!) with deactivated adviced `delete-window'
 ;;     function.
 ;; - What must they do:
@@ -122,9 +124,18 @@
 ;;   + The edit-window must not be splitted and the point must reside in
 ;;     the not deleted edit-window.
 
-;; $Id: ecb-layout.el,v 1.60 2001/06/12 08:38:20 berndl Exp $
+;; $Id: ecb-layout.el,v 1.61 2001/06/22 09:08:02 berndl Exp $
 
 ;;; Code:
+
+(require 'ecb-util)
+
+(if running-xemacs
+    ;; because we want only check if the car of this function is equal for two
+    ;; different windows for the sake if the two window are located side by
+    ;; side or not be can here define this alias even if this function does in
+    ;; XEmacs soemthing different.
+    (defalias 'window-edges 'window-pixel-edges))
 
 ;;; Options
 (eval-when-compile
@@ -194,7 +205,12 @@ layout with `ecb-redraw-layout'"
 (defvar ecb-old-compilation-window-height compilation-window-height)
 (defvar ecb-old-temp-buffer-max-height temp-buffer-max-height)
 
-(defcustom ecb-compile-window-height 5.0
+;; Klaus: because the durable compilation window just generates a lot of
+;; problems in the layouting-engine and it is not very muched uses by the
+;; users (most of them dislike and disable it), we change first the default
+;; value to nil. later we will throw the whole durable compile-window stuff
+;; away!
+(defcustom ecb-compile-window-height nil
   "*If you want a compilation window shown at the bottom
 of the ECB-layout then set here the height of it \(Default is a height of 5).
 If you redraw the current layout with `ecb-redraw-layout' then the compilation
@@ -203,12 +219,10 @@ compilation, a grepping or any opther things using the compilation-mode of
 Emacs) and has the heigth you set here. If the number is less than 1.0 the
 height is a fraction of the frame height.
 
-If you do not set a durable compilation window then doing a compilation
-splits temporally the edit window vertically if the edit window is not
-splitted already \(see documentation of the
-window-function-replacements, e.g. `ecb-delete-window') or uses the
-\"other\" edit window temporally for comilation output if the edit window
-is already splitted.
+If you do not set a durable compilation window then doing a compilation splits
+temporally the edit window vertically if the edit window is not splitted
+already or uses the \"other\" edit window temporally for comilation output if
+the edit window is already splitted.
 
 Regardless of the settings you define here: If you have destroyed or
 changed the ECB-screen-layout by any action you can always go back to this
@@ -242,33 +256,11 @@ compilation-output."
                      :value compile)))
 
 
-;; This variable is also set by the following adviced functions:
-;; - `delete-other-windows'
-;; - `delete-window'
-;; - `split-window-vertically'
-;; - `split-window-horizontally'
 (defcustom ecb-split-edit-window nil
   "*Sets how and if the edit window should be splitted.
-But be aware: ECB offers four somehow intelligent \"window-\(un)splitting\"-
-functions:
-- `delete-other-windows'
-- `delete-window'
-- `split-window-vertically'
-- `split-window-horizontally'.
-If `ecb-advice-window-functions' is set properly then ECB advices these
-functions so they are more suitable for ECB.
-
-These adviced function change the value of this option too so do not wonder if
-you open a customize buffer for this option and it contains a value you have
-not set. This value has been set from one of these adviced functions! Also
-`ecb-redraw-layout' is always oriented on the CURRENT value of this option
-regardless if set by your customization or by one of these adviced functions!
-
-But you can always \(un)split the edit-window by customizing this option and
-ECB uses at start-time always the value you have set for this option!"
+But be aware: This option determines only if the edit-window should be
+splitted at start-time of ECB."
   :group 'ecb-layout
-  :initialize 'custom-initialize-default
-  :set ecb-layout-option-set-function
   :type '(radio (const :tag "Split horizontally"
                        :value horizontal)
                 (const :tag "Split vertically"
@@ -470,6 +462,19 @@ done.")
         ecb-last-source-buffer nil
         ecb-compile-window nil))
 
+;; ====== basic advices ===============================================
+
+(defconst ecb-basic-adviced-functions (if running-xemacs
+                                          '(delete-frame
+                                            compilation-set-window-height
+                                            shrink-window-if-larger-than-buffer
+                                            show-temp-buffer-in-current-frame)
+                                        '(delete-frame
+                                          compilation-set-window-height
+                                          resize-temp-buffer-window
+                                          shrink-window-if-larger-than-buffer))
+  "This functions are always adviced if ECB is active.")
+
 (defadvice delete-frame (around ecb)
   "If FRAME is equal to the ECB frame then the user will be asked if he want
 to proceed. If yes then ECB will be deactivated before deleting FRAME. If ECB
@@ -482,16 +487,187 @@ either not activated or it behaves exactly like the original version!"
             (ecb-deactivate-internal)) ;; deletes also the ecb-frame if not the only frame
       ad-do-it)))
 
-(defun ecb-enable-delete-frame-advice ()
-  (ad-enable-advice 'delete-frame 'around 'ecb)
-  (ad-activate 'delete-frame))
+(require 'compile)
+;; because in the ECB layout all not dedicated windows have either
+;; window-width == frame-width or are completely contained in the edit-space of
+;; ECB which is only splittable in an ECB-controlled manner we can throw away
+;; the restriction (window-width == frame-width) in the following two
+;; functions!
+(defadvice compilation-set-window-height (around ecb)
+  "Makes the function compatible with ECB."
+  (if (not (equal (selected-frame) ecb-frame))
+      ad-do-it
+    (and compilation-window-height
+         (not (equal (ecb-edit-window-splitted) 'horizontal))
+         ;; If window is alone in its frame, aside from a minibuffer,
+         ;; don't change its height.
+         (not (eq (ad-get-arg 0) (frame-root-window (window-frame (ad-get-arg 0)))))
+         ;; This save-excursion prevents us from changing the current buffer,
+         ;; which might not be the same as the selected window's buffer.
+         (save-excursion
+           (let ((w (selected-window)))
+             (unwind-protect
+                 (progn
+                   (select-window (ad-get-arg 0))
+                   (enlarge-window (- compilation-window-height
+                                      (window-height))))
+               (select-window w)))))))
 
-(defun ecb-disable-delete-frame-advice ()
-  (ad-disable-advice 'delete-frame 'around 'ecb)
-  (ad-activate 'delete-frame))
+
+(defun ecb-edit-window-splitted ()
+  "Returns either nil if the ECB edit-window is not splitted or 'vertical or
+'horizontal depending on the splitting."
+  (when ecb-edit-window
+    (let ((next-w (next-window ecb-edit-window 0 ecb-frame)))
+      (if (or (equal next-w ecb-edit-window)
+              (window-dedicated-p next-w))
+          nil
+        (if (= (car (window-edges ecb-edit-window))
+               (car (window-edges next-w)))
+            'vertical
+          'horizontal)))))
+      
+
+(if running-xemacs
+    (progn
+    ;; XEmacs-version
+(defadvice shrink-window-if-larger-than-buffer (around ecb)
+  "Makes the function compatible with ECB."
+  (if (not (equal (selected-frame) ecb-frame))
+      ad-do-it
+    (or (ad-get-arg 0) (ad-set-arg 0 (selected-window)))
+    (save-excursion
+      (set-buffer (window-buffer (ad-get-arg 0)))
+      (let ((n 0)
+            (test-pos
+             (- (point-max)
+                ;; If buffer ends with a newline, ignore it when counting
+                ;; height unless point is after it.
+                (if (and (not (eobp))
+                         (eq ?\n (char-after (1- (point-max)))))
+                    1 0)))
+            (mini (frame-property (window-frame (ad-get-arg 0)) 'minibuffer))
+            (edges (window-pixel-edges (selected-window))))
+        (if (and (< 1 (let ((frame (selected-frame)))
+                        (select-frame (window-frame (ad-get-arg 0)))
+                        (unwind-protect
+                            (count-windows)
+                          (select-frame frame))))
+                 (not (equal (ecb-edit-window-splitted) 'horizontal))
+                 (pos-visible-in-window-p (point-min) (ad-get-arg 0))
+                 (not (eq mini 'only))
+                 (or (not mini) (eq mini t)
+                     (< (nth 3 edges)
+                        (nth 1 (window-pixel-edges mini)))
+                     (> (nth 1 edges)
+                        0)))
+            (progn
+              (save-window-excursion
+                (goto-char (point-min))
+                (while (and (window-live-p (ad-get-arg 0))
+                            (pos-visible-in-window-p test-pos (ad-get-arg 0)))
+                  (shrink-window 1 nil (ad-get-arg 0))
+                  (setq n (1+ n))))
+              (if (> n 0)
+                  (shrink-window (min (1- n)
+                                      (- (window-height (ad-get-arg 0))
+                                         (1+ window-min-height)))
+                                 nil
+                                 (ad-get-arg 0)))))))))
+
+(require 'frame)
+(defadvice show-temp-buffer-in-current-frame (around ecb)
+  "Makes the function compatible with ECB."
+  (if (not (equal (selected-frame) ecb-frame))
+      ad-do-it
+    (let ((pre-display-buffer-function nil)) ; turn it off, whatever it is
+      (save-selected-window
+        (save-excursion
+          (if (not (ecb-point-in-edit-window))
+              (ecb-select-edit-window))
+          (when (not (ecb-edit-window-splitted))
+            (split-window-vertically)
+            (switch-to-buffer ecb-last-source-buffer))))
+      (let ((window (display-buffer (ad-get-arg 0))))
+        (if (not (eq (last-nonminibuf-frame) (window-frame window)))
+            ;; only the pre-display-buffer-function should ever do this.
+            (error "display-buffer switched frames on its own!!"))
+        (setq minibuffer-scroll-window window)
+        (set-window-start window 1)       ; obeys narrowing
+        (set-window-point window 1)
+        (when temp-buffer-shrink-to-fit
+          (let* ((temp-window-size (round (* temp-buffer-max-height
+                                             (frame-height (window-frame window)))))
+                 (size (window-displayed-height window)))
+            (when (< size temp-window-size)
+              (enlarge-window (- temp-window-size size) nil window)))
+          (shrink-window-if-larger-than-buffer window))
+        nil))))
+);; end of progn
+
+;; only GNU Emacs basic advices
+(defadvice shrink-window-if-larger-than-buffer (around ecb)
+  "Makes the function compatible with ECB."
+  (if (not (equal (selected-frame) ecb-frame))
+      ad-do-it
+    (save-selected-window
+      (if (ad-get-arg 0)
+          (select-window (ad-get-arg 0))
+        (ad-set-arg 0 (selected-window)))
+      (let* ((params (frame-parameters))
+             (mini (cdr (assq 'minibuffer params)))
+             (edges (window-edges)))
+        (if (and (< 1 (count-windows))
+                 (not (equal (ecb-edit-window-splitted) 'horizontal))
+                 (pos-visible-in-window-p (point-min) (ad-get-arg 0))
+                 (not (eq mini 'only))
+                 (or (not mini)
+                     (< (nth 3 edges) (nth 1 (window-edges mini)))
+                     (> (nth 1 edges) (cdr (assq 'menu-bar-lines params)))))
+            (let ((text-height (window-buffer-height (ad-get-arg 0)))
+                  (window-height (window-height)))
+              ;; Don't try to redisplay with the cursor at the end
+              ;; on its own line--that would force a scroll and spoil things.
+              (when (and (eobp) (bolp))
+                (forward-char -1))
+              (when (> window-height (1+ text-height))
+                (shrink-window
+                 (- window-height (max (1+ text-height) window-min-height))))))))))
+
+(defadvice resize-temp-buffer-window (around ecb)
+  "Makes the function compatible with ECB."
+  (if (not (equal (selected-frame) ecb-frame))
+      ad-do-it
+    (unless (or (one-window-p 'nomini)
+                (equal (ecb-edit-window-splitted) 'horizontal)
+                (not (pos-visible-in-window-p (point-min))))
+      (when (not (ecb-edit-window-splitted))
+        (split-window-vertically)
+        (switch-to-buffer ecb-last-source-buffer)
+        (other-window 1))
+      (let* ((max-height (if (functionp temp-buffer-max-height)
+                             (funcall temp-buffer-max-height (current-buffer))
+                           temp-buffer-max-height))
+             (win-height (1- (window-height)))
+             (min-height (1- window-min-height))
+             (text-height (window-buffer-height(selected-window)))
+             (new-height (max (min text-height max-height) min-height)))
+        (enlarge-window (- new-height win-height))))))
+
+) ;; end of (if running-xemacs...)
+
+(defun ecb-enable-basic-advices ()
+  (dolist (elem ecb-basic-adviced-functions)
+    (ad-enable-advice elem 'around 'ecb)
+    (ad-activate elem)))
+
+(defun ecb-disable-basic-advices ()
+  (dolist (elem ecb-basic-adviced-functions)
+    (ad-disable-advice elem 'around 'ecb)
+    (ad-activate elem)))
 
 
-;; =========== intelligent window functions ==========================
+;; =========== intelligent window function advices ===================
 
 (defconst ecb-adviceable-functions
   '(other-window
@@ -557,7 +733,7 @@ is in the left/topmost edit-window or 2 if in the other edit-window."
   (and (equal (selected-frame) ecb-frame)
        (cond ((equal (selected-window) ecb-edit-window)
               1)
-             ((and ecb-split-edit-window
+             ((and (ecb-edit-window-splitted)
                    (equal (previous-window (selected-window) 0) ecb-edit-window))
               2)
              (t nil))))
@@ -589,11 +765,11 @@ If point already stays in the right edit-window nothing is done."
   (let ((point-location (ecb-point-in-edit-window)))
     (cond ((not point-location) ;; point not in an edit-window
            (ignore-errors (select-window ecb-edit-window))
-           (if (and other-edit-window ecb-split-edit-window)
+           (if (and other-edit-window (ecb-edit-window-splitted))
                (select-window (next-window)))
              )
           ((equal point-location 1) ;; point in main edit-window
-           (if (and other-edit-window ecb-split-edit-window)
+           (if (and other-edit-window (ecb-edit-window-splitted))
                (select-window (next-window)))
              )
           ((equal point-location 2) ;; point in other edit window
@@ -654,7 +830,7 @@ The behavior depends on `ecb-other-window-jump-behavior'."
         (setq count (1- count))
         (cond ((equal (ecb-point-in-edit-window) 1)
                (if (= direction 1)
-                   (if ecb-split-edit-window
+                   (if (ecb-edit-window-splitted)
                        (select-window (next-window))
                      (if (equal ecb-other-window-jump-behavior 'edit-and-compile)
                          (ignore-errors
@@ -662,11 +838,11 @@ The behavior depends on `ecb-other-window-jump-behavior'."
                  (if (equal ecb-other-window-jump-behavior 'edit-and-compile)
                      (ignore-errors
                        (select-window ecb-compile-window))
-                   (if ecb-split-edit-window
+                   (if (ecb-edit-window-splitted)
                        (select-window (next-window))))))
               ((ecb-point-in-compile-window)
                (ecb-select-edit-window)
-               (if ecb-split-edit-window
+               (if (ecb-edit-window-splitted)
                    (if (= direction -1)
                        (select-window (next-window)))))
               ((equal (ecb-point-in-edit-window) 2)
@@ -696,10 +872,10 @@ If called in any other window of the current ECB-layout it jumps first in the
     (if (not (ecb-point-in-edit-window))
         (ecb-select-edit-window))
     (ad-with-originals 'delete-window
-      (if ecb-split-edit-window
-          (if (funcall (intern (format "ecb-delete-window-in-editwindow-%d"
-                                       ecb-layout-nr)))
-              (setq ecb-split-edit-window nil))))))
+      (if (ecb-edit-window-splitted)
+          (funcall (intern (format "ecb-delete-window-in-editwindow-%d"
+                                   ecb-layout-nr))
+                   (ecb-edit-window-splitted))))))
 
 (defadvice delete-other-windows (around ecb)
   "The ECB-version of `delete-other-windows'. Works exactly like the
@@ -717,10 +893,11 @@ If called in any other window of the current ECB-layout it jumps first in the
     (if (not (ecb-point-in-edit-window))
         (ecb-select-edit-window))
     (ad-with-originals 'delete-window
-      (if ecb-split-edit-window
-          (if (funcall (intern (format "ecb-delete-other-windows-in-editwindow-%d"
-                                       ecb-layout-nr)))
-              (setq ecb-split-edit-window nil))))))
+      (if (ecb-edit-window-splitted)
+          (funcall (intern (format "ecb-delete-other-windows-in-editwindow-%d"
+                                   ecb-layout-nr))
+                   (ecb-edit-window-splitted))))))
+
 
 (defadvice split-window-horizontally (around ecb)
   "The ECB-version of `split-window-horizontally'. Works exactly like the
@@ -735,11 +912,9 @@ If called in any other window of the current ECB-layout it jumps first in the
       ad-do-it
     (if (not (ecb-point-in-edit-window))
         (ecb-select-edit-window))
-    (when (and (not ecb-split-edit-window)
+    (when (and (not (ecb-edit-window-splitted))
                (equal (selected-window) ecb-edit-window))
-      (ad-with-originals 'split-window-horizontally
-        (ecb-split-hor 0.5 t))
-      (setq ecb-split-edit-window 'horizontal))))
+      ad-do-it)))
 
 (defadvice split-window-vertically (around ecb)
   "The ECB-version of `split-window-vertically'. Works exactly like the
@@ -754,11 +929,9 @@ If called in any other window of the current ECB-layout it jumps first in the
       ad-do-it
     (if (not (ecb-point-in-edit-window))
         (ecb-select-edit-window))
-    (when (and (not ecb-split-edit-window)
+    (when (and (not (ecb-edit-window-splitted))
                (equal (selected-window) ecb-edit-window))
-      (ad-with-originals 'split-window-vertically
-        (ecb-split-ver 0.5 t))
-      (setq ecb-split-edit-window 'vertical))))
+      ad-do-it)))
 
 
 (defadvice switch-to-buffer-other-window (around ecb)
@@ -773,7 +946,7 @@ the \(first) edit-window and does then it´s job \(see above)."
         (ecb-select-edit-window))
     (let ((ecb-other-window-jump-behavior 'only-edit))
       (ecb-with-adviced-functions
-       (if ecb-split-edit-window
+       (if (ecb-edit-window-splitted)
            (other-window 1)
          (split-window-vertically)
          (other-window 1)))
@@ -849,7 +1022,7 @@ ECB-adviced functions."
 ;; here come the internal ...delete-...functions which are called from the
 ;; adviced versions of `delete-other-windows' or `delete-window' with respect
 ;; to the current layout-index (see `ecb-layout-nr').
-(defun ecb-delete-other-windows-in-editwindow-0 ()
+(defun ecb-delete-other-windows-in-editwindow-0 (split)
   (cond ((equal (ecb-point-in-edit-window) 1)
          (delete-window (next-window))
          (ecb-select-edit-window)
@@ -859,17 +1032,17 @@ ECB-adviced functions."
                                           (selected-window) 0))))
            (setq ecb-edit-window (selected-window))
            (delete-window (previous-window (selected-window) 0))
-           (if (equal ecb-split-edit-window 'horizontal)
+           (if (equal split 'horizontal)
                (enlarge-window (+ 2 prev-width) t))
            t))
         (t nil)))
 
-(defun ecb-delete-window-in-editwindow-0 ()
+(defun ecb-delete-window-in-editwindow-0 (split)
   (cond ((equal (ecb-point-in-edit-window) 1)
          (let ((width (window-width (selected-window))))
            (setq ecb-edit-window (next-window))
            (delete-window)
-           (if (equal ecb-split-edit-window 'horizontal)
+           (if (equal split 'horizontal)
                (enlarge-window (+ 2 width) t))
            t))
         ((equal (ecb-point-in-edit-window) 2)
@@ -909,7 +1082,7 @@ ECB-adviced functions."
 (defalias 'ecb-delete-window-in-editwindow-9
   'ecb-delete-window-in-editwindow-0)
 
-(defun ecb-delete-other-windows-in-editwindow-5 ()
+(defun ecb-delete-other-windows-in-editwindow-5 (split)
   (cond ((equal (ecb-point-in-edit-window) 2)
          (setq ecb-edit-window (selected-window))
          (delete-window (previous-window))
@@ -919,7 +1092,7 @@ ECB-adviced functions."
          t)
         (t nil)))
 
-(defun ecb-delete-window-in-editwindow-5 ()
+(defun ecb-delete-window-in-editwindow-5 (split)
   (cond ((equal (ecb-point-in-edit-window) 2)
          (delete-window)
          (ecb-select-edit-window)
@@ -930,7 +1103,7 @@ ECB-adviced functions."
          t)
         (t nil)))
 
-(defun ecb-delete-other-windows-in-editwindow-7 ()
+(defun ecb-delete-other-windows-in-editwindow-7 (split)
   (cond ((equal (ecb-point-in-edit-window) 1)
          (delete-window (next-window))
          t)
@@ -939,17 +1112,17 @@ ECB-adviced functions."
                                             (selected-window) 0))))
            (setq ecb-edit-window (selected-window))
            (delete-window (previous-window (selected-window) 0))
-           (if (equal ecb-split-edit-window 'vertical)
+           (if (equal split 'vertical)
                (enlarge-window prev-height))
            t))
         (t nil)))
 
-(defun ecb-delete-window-in-editwindow-7 ()
+(defun ecb-delete-window-in-editwindow-7 (split)
   (cond ((equal (ecb-point-in-edit-window) 1)
          (let ((height (1+ (window-height (selected-window)))))
            (setq ecb-edit-window (next-window))
            (delete-window)
-           (if (equal ecb-split-edit-window 'vertical)
+           (if (equal split 'vertical)
                (enlarge-window height))
            t))
         ((equal (ecb-point-in-edit-window) 2)
@@ -1079,15 +1252,6 @@ of `compilation-finish-functions' in XEmacs."
           (setq compilation-finish-function ecb-old-compilation-finish-function)))))
     
 
-(defun ecb-set-edit-window-split-hook-function ()
-  "This function is added to `compilation-mode-hook' and `help-mode-hook' to
-handle splitting the edit-window correctly."
-  (if (and ecb-minor-mode
-           (equal (selected-frame) ecb-frame)
-           (not ecb-compile-window-height)
-           (not ecb-split-edit-window))
-      (setq ecb-split-edit-window 'vertical)))
-
 (defun ecb-layout-get-current-tree-windows ()
   "Return a list of all tree-buffers whose windows are currently visible." 
   (mapcar (function (lambda (tree-buffer)
@@ -1114,11 +1278,12 @@ visibility of the ECB windows. ECB minor mode remains active!"
           (if (not (ecb-point-in-edit-window))
               (ecb-select-edit-window))
           (ecb-with-original-functions
-           (delete-other-windows)
-           (cond ((equal ecb-split-edit-window 'vertical)
-                  (split-window-vertically))
-                 ((equal ecb-split-edit-window 'horizontal)
-                  (split-window-horizontally))))
+           (let ((split (ecb-edit-window-splitted)))
+             (delete-other-windows)
+             (cond ((equal split 'vertical)
+                    (split-window-vertically))
+                   ((equal split 'horizontal)
+                    (split-window-horizontally)))))
           (setq ecb-windows-hidden t))))))
 
 (defun ecb-hide-ecb-windows ()
@@ -1140,13 +1305,14 @@ this function the edit-window is selected which was current before redrawing."
   (interactive)
   (unless (or (not ecb-minor-mode)
               (not (equal (selected-frame) ecb-frame)))
-    (let* ((saved-edit-buffer-1 (ignore-errors (window-buffer ecb-edit-window)))
+    (let* ((split-before-redraw (ecb-edit-window-splitted))
+           (saved-edit-buffer-1 (ignore-errors (window-buffer ecb-edit-window)))
            (saved-edit-buffer-2 (ignore-errors
                                   (window-buffer (next-window ecb-edit-window))))
            (saved-edit-window-start (ignore-errors (window-start ecb-edit-window)))
            (window-before-redraw (cond ((equal (selected-window) ecb-edit-window)
                                         1)
-                                       ((and ecb-split-edit-window
+                                       ((and split-before-redraw
                                              (equal (previous-window (selected-window) 0)
                                                     ecb-edit-window))
                                         2)
@@ -1225,16 +1391,16 @@ this function the edit-window is selected which was current before redrawing."
       
       ;; Maybe we must split the editing window again if it was splitted before
       ;; the redraw
-      (cond ((equal ecb-split-edit-window 'horizontal)
+      (cond ((equal split-before-redraw 'horizontal)
              (ecb-split-hor 0.5 t))
-            ((equal ecb-split-edit-window 'vertical)
+            ((equal split-before-redraw 'vertical)
              (ecb-split-ver 0.5 t)))
       
       ;; Restore edit window buffers
       (when (and saved-edit-window-start saved-edit-buffer-1 saved-edit-buffer-2)
         (set-window-buffer ecb-edit-window saved-edit-buffer-1)
         (set-window-start ecb-edit-window saved-edit-window-start)
-        (when ecb-split-edit-window
+        (when split-before-redraw
           (set-window-buffer (next-window ecb-edit-window) saved-edit-buffer-2)))
       
       ;; Restore saved window sizes

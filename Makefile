@@ -22,7 +22,7 @@ LOADPATH=../semantic-1.4beta6 ../jde-2.2.7.1/lisp
 
 # Do not change anything below!
 
-# $Id: Makefile,v 1.8 2001/06/13 09:40:20 berndl Exp $
+# $Id: Makefile,v 1.9 2001/06/22 09:08:02 berndl Exp $
 
 ecb_LISP_EL=tree-buffer.el ecb-util.el ecb-mode-line.el ecb-help.el ecb-layout.el ecb.el
 ecb_LISP_ELC=$(ecb_LISP_EL:.el=.elc)
@@ -40,7 +40,7 @@ all: $(ecb_LISP_EL)
 	@echo "(require 'ecb)" >> ecb-compile-script
 	@echo "(setq debug-on-error t)" >> ecb-compile-script
 	$(EMACS) -batch -no-site-file -l ecb-compile-script --eval '(ecb-byte-compile t)'
-#	@rm -f ecb-compile-script
+	@rm -f ecb-compile-script
 
 clean:
 	@rm -f $(ecb_LISP_ELC) ecb-compile-script
