@@ -106,12 +106,17 @@ win32-path-style!"
 (defun ecb-delete-source-2 (node)
   (ecb-delete-source (tree-node-get-data node)))
 
+(defun ecb-delete-file (file)
+  (let ((exp-file (expand-file-name file)))
+    (if (file-exists-p exp-file)
+        (delete-file exp-file))))
+
 (defun ecb-delete-source (file)
   (when (ecb-confirm (concat "Delete " file "?"))
     (when (get-file-buffer file)
       (kill-buffer (get-file-buffer file)))
       
-    (delete-file file)
+    (ecb-delete-file file)
     (ecb-clear-history -1)))
 
 (defun ecb-create-directory (parent-node)

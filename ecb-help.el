@@ -57,8 +57,9 @@ different types of ECB-windows:
 - Right clicking on an item will open a popup menu where different operations
   on the item under the mouse cursor can be performed.
 
-- Pressing F1 in the directories buffer will update it. Pressing F2 will open
-  the ECB customization group in the edit window ECB Sources:
+- Pressing F1 in the directories buffer will offer adding a new source-path.
+  Pressing F2 will open the ECB customization group in the edit window. F3
+  shows the online help in the edit-window.
 
 2. ECB Sources:
 
@@ -709,7 +710,6 @@ the problem as detailed as possible!"
      (progn
        (message "Preparing problem report...")
        ;;prepare the basic buffer
-    ;;        (let ((reporter-prompt-for-summary-p "Subject of the report: "))
        (reporter-submit-bug-report
         ecb-problem-report-mail-address
         (format "ECB: %s, Semantic: %s, JDE: %s"
