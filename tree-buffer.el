@@ -26,7 +26,7 @@
 ;; This file is part of the ECB package which can be found at:
 ;; http://home.swipnet.se/mayhem/ecb.html
 
-;; $Id: tree-buffer.el,v 1.28 2001/04/30 05:22:43 berndl Exp $
+;; $Id: tree-buffer.el,v 1.29 2001/04/30 11:30:29 berndl Exp $
 
 ;;; Code:
 
@@ -34,15 +34,23 @@
   ;; to avoid compiler grips
   (require 'cl))
 
-(defvar running-xemacs (string-match "XEmacs\\|Lucid" emacs-version))
+(defconst running-xemacs (string-match "XEmacs\\|Lucid" emacs-version))
 
-(when running-xemacs
-  (require 'overlay)
-  (defface secondary-selection
-    '((((class color) (background light)) (:foreground "blue" :background "LightGray"))
-      (((class color) (background dark))  (:foreground "blue" :background "LightGray"))
-      (t ()))
-    "Face for highlights."))
+(if running-xemacs
+    ;; XEmacs
+    (progn
+      (defalias 'tree-buffer-line-beginning-pos 'point-at-bol)
+      (defalias 'tree-buffer-window-display-height 'window-displayed-height)
+      (require 'overlay)
+      (defface secondary-selection
+        '((((class color) (background light)) (:foreground "blue" :background "LightGray"))
+          (((class color) (background dark))  (:foreground "blue" :background "LightGray"))
+          (t ()))
+        "Face for highlights."))
+  ;; GNU Emacs
+  (defalias 'tree-buffer-line-beginning-pos 'line-beginning-position)
+  (defun tree-buffer-window-display-height (&optional window)
+    (1- (window-height window))))
 
 (defvar tree-buffer-root nil)
 (defvar tree-buffer-nodes nil)
@@ -188,15 +196,13 @@ NODE must be valid and already be visible in WINDOW!"
                         (pos-visible-in-window-p (point) window))))
             ;; optimize the display of NODE and it´s children so as much as
             ;; possible are visible.
-            (recenter (max 0 (- (1- (window-height window))
+            (recenter (max 0 (- (tree-buffer-window-display-height window)
                                 (1+ exp-node-children-count))))))
     ;; maybe there are empty lines in the window after the last non-empty
     ;; line. If they are we scroll until the whole window is filled with
     ;; non-empty lines.
     (if (not (tree-node-is-expandable node))
-        (let ((w-height (if running-xemacs
-			    (window-displayed-height window)
-			  (1- (window-height window))))
+        (let ((w-height (tree-buffer-window-display-height window))
               (full-lines-in-window (count-lines (window-start window)
                                                  (window-end window t))))
           (if (< full-lines-in-window
@@ -205,9 +211,7 @@ NODE must be valid and already be visible in WINDOW!"
                                 (save-excursion
                                   (goto-char (window-start window))
                                   (forward-line (- full-lines-in-window w-height))
-                                  (if running-xemacs
-				      (point-at-bol)
-				    (line-beginning-position)))))))))
+                                  (tree-buffer-line-beginning-pos))))))))
 
 ;; Klaus: Now we use overlays to highlight current node in a tree-buffer. This
 ;; makes it easier to do some facing with the nodes itself and above all this
