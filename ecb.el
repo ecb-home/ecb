@@ -54,7 +54,7 @@
 ;; The latest version of the ECB is available at
 ;; http://home.swipnet.se/mayhem/ecb.html
 
-;; $Id: ecb.el,v 1.159 2001/11/19 12:11:54 berndl Exp $
+;; $Id: ecb.el,v 1.160 2001/11/20 23:59:02 burtonator Exp $
 
 ;;; Code:
 
@@ -114,6 +114,9 @@
 (defvar ecb-minor-mode nil
   "Do not set this variable directly. Use `ecb-activate' and
 `ecb-deactivate'!")
+
+(defvar ecb-activated-window-configuration nil
+  "Window configuration used after the ECB is activated.")
 
 ;;====================================================
 ;; Customization
@@ -580,7 +583,6 @@ Therefore the default value is a delay of 0.25 seconds."
 (defvar ecb-method-overlay (make-overlay 1 1)
   "Internal overlay used for the first line of a method.")
 
-
 (defcustom ecb-highlight-token-header-after-jump ecb-token-header-face
   "*If not nil then highlight the token line in the source-buffer
 after jumping to this method by clicking in the ECB-method-buffer onto this
@@ -745,7 +747,6 @@ Do NOT set this option directly via setq but use always customize!"
                      (choice :tag "What"
                              (const :tag "Node-name" :value name)
                              (const :tag "Node-name + type" :value name+type)))))
- 
 
 (defcustom ecb-primary-secondary-mouse-buttons 'mouse-2--C-mouse-2
   "*Primary- and secondary mouse button for using the ECB-buffers.
@@ -1996,7 +1997,6 @@ Currently the fourth argument TREE-BUFFER-NAME is not used here."
   (cdr (nth (ecb-show-node-info-index tree-buffer-name)
             ecb-show-node-info-in-minibuffer)))
 
-
 (defun ecb-get-file-info-text (file)
   "Return a file-info string for a file in the ECB sources buffer"
   (let ((attrs (file-attributes file)))
@@ -2107,7 +2107,6 @@ help-text should be printed here."
     (prog1 str
       (unless no-message
         (tree-buffer-nolog-message str)))))
-
 
 (defvar ecb-idle-timer-alist nil)
 (defvar ecb-post-command-hooks nil)
@@ -2639,7 +2638,22 @@ always the ECB-frame if called from another frame."
             (equal ecb-show-node-name-in-minibuffer 'if-too-long))
         (tree-buffer-activate-follow-mouse))
     
-    (message "The ECB is now activated.")))
+    (message "The ECB is now activated.")
+
+    ;;now take a snapshot of the current window configuration
+    (ecb-set-activated-window-configuration)))
+
+(defun ecb-set-activated-window-configuration()
+  "Set the `ecb-activated-window-configuration' after the ECB is activated."
+
+  (save-window-excursion
+
+    ;;set the edit window buffer to *scratch* so that we are not dependent on a
+    ;;specific window being available
+    
+    (set-window-buffer ecb-edit-window (get-buffer-create "*scratch*"))
+    
+    (setq ecb-activated-window-configuration (current-window-configuration))))
 
 (defun ecb-deactivate ()
   "Deactivates the ECB and kills all ECB buffers and windows."

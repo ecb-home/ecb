@@ -1,6 +1,6 @@
 ;;; ecb-eshell.el --- eshell integration for the ECB.
 
-;; $Id: ecb-eshell.el,v 1.3 2001/11/19 03:32:56 burtonator Exp $
+;; $Id: ecb-eshell.el,v 1.4 2001/11/20 23:59:02 burtonator Exp $
 
 ;; Copyright (C) 2000-2003 Free Software Foundation, Inc.
 ;; Copyright (C) 2000-2003 Kevin A. Burton (burton@openprivacy.org)
@@ -44,6 +44,10 @@
 
 ;; - should I use eshell-pre-command-hook to increase the size of the window if
 ;; we are in an ECB layout?? (and the ecb is activated)...
+
+;; - only run eshell/cd if the current directory is different than the
+;; eshell/pwd.
+;;
 ;;
 
 ;;; Code:
