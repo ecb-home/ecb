@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-layout.el,v 1.243 2004/12/01 14:19:39 berndl Exp $
+;; $Id: ecb-layout.el,v 1.244 2004/12/20 17:02:13 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -2446,7 +2446,8 @@ these are the buffers with name `ecb-directories-buffer-name',
 `ecb-sources-buffer-name', `ecb-methods-buffer-name' and
 `ecb-history-buffer-name') of ECB otherwise return the buffer-object."
   (when (and (equal (selected-frame) ecb-frame)
-             (member (buffer-name (current-buffer)) ecb-tree-buffers))
+             (member (buffer-name (current-buffer))
+                     (ecb-tree-buffers-name-list)))
     (current-buffer)))
 
 (defun ecb-dedicated-special-buffers ()
@@ -4070,83 +4071,9 @@ this macro for making the current window dedicated to the history buffer. So
 
 (put 'ecb-with-dedicated-window 'lisp-indent-function 2)
 
-(defun ecb-set-directories-buffer ()
-  (let ((set-directories-buffer
-         (not (equal ecb-use-speedbar-instead-native-tree-buffer 'dir))))
-    ;; first we act depending on the value of
-    ;; ecb-use-speedbar-instead-native-tree-buffer
-    (when (not set-directories-buffer)
-      (condition-case error-data
-          (ecb-set-speedbar-buffer)
-        ;; setting the speedbar buffer has failed so we set
-        ;; set-directories-buffer to t ==> standard-directories-buffer is set!
-        (error (message "%s" error-data)
-               (setq set-directories-buffer t))))
-    ;; maybe we need to set the standard directories buffer:
-    ;; - if ecb-use-speedbar-instead-native-tree-buffer is not 'dir or
-    ;; - if setting the speedbar buffer has failed.
-    (when set-directories-buffer
-      (if (null ecb-use-speedbar-instead-native-tree-buffer)
-          (ignore-errors (ecb-speedbar-deactivate)))
-      (ecb-with-dedicated-window
-          ecb-directories-buffer-name
-          'ecb-set-directories-buffer
-        (switch-to-buffer ecb-directories-buffer-name)))))
-
-
 (defun ecb-set-speedbar-buffer ()
   (ecb-with-dedicated-window ecb-speedbar-buffer-name 'ecb-set-speedbar-buffer
     (ecb-speedbar-set-buffer)))
-
-
-(defun ecb-set-sources-buffer ()
-  (let ((set-sources-buffer
-         (not (equal ecb-use-speedbar-instead-native-tree-buffer 'source))))
-    ;; first we act depending on the value of
-    ;; ecb-use-speedbar-instead-native-tree-buffer
-    (when (not set-sources-buffer)
-      (condition-case error-data
-          (ecb-set-speedbar-buffer)
-        ;; setting the speedbar buffer has failed so we set
-        ;; set-sources-buffer to t ==> standard-sources-buffer is set!
-        (error (message "%s" error-data)
-               (setq set-sources-buffer t))))
-    ;; maybe we need to set the standard sources buffer:
-    ;; - if ecb-use-speedbar-instead-native-tree-buffer is not 'source or
-    ;; - if setting the speedbar buffer has failed.
-    (when set-sources-buffer
-      (if (null ecb-use-speedbar-instead-native-tree-buffer)
-          (ignore-errors (ecb-speedbar-deactivate)))
-      (ecb-with-dedicated-window ecb-sources-buffer-name 'ecb-set-sources-buffer
-        (switch-to-buffer ecb-sources-buffer-name)))))
-
-
-(defun ecb-set-methods-buffer ()
-  (let ((set-methods-buffer
-         (not (equal ecb-use-speedbar-instead-native-tree-buffer 'method))))
-    ;; first we act depending on the value of
-    ;; ecb-use-speedbar-instead-native-tree-buffer
-    (when (not set-methods-buffer)
-      (condition-case error-data
-          (ecb-set-speedbar-buffer)
-        ;; setting the speedbar buffer has failed so we set
-        ;; set-method-buffer to t ==> standard-methods-buffer is set!
-        (error (message "%s" error-data)
-               (setq set-methods-buffer t))))
-    ;; maybe we need to set the standard methods buffer:
-    ;; - if ecb-use-speedbar-instead-native-tree-buffer is not 'method or
-    ;; - if setting the speedbar buffer has failed.
-    (when set-methods-buffer
-      (if (null ecb-use-speedbar-instead-native-tree-buffer)
-          (ignore-errors (ecb-speedbar-deactivate)))
-      (ecb-with-dedicated-window ecb-methods-buffer-name 'ecb-set-methods-buffer
-        (switch-to-buffer ecb-methods-buffer-name)))))
-
-
-(defun ecb-set-history-buffer ()
-  (ecb-with-dedicated-window ecb-history-buffer-name 'ecb-set-history-buffer
-    (switch-to-buffer ecb-history-buffer-name)))
-
 
 (defun ecb-set-default-ecb-buffer ()
   "Set in the current window the default ecb-buffer which is useless but is
