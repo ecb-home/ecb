@@ -68,7 +68,7 @@
 ;; The latest version of the ECB is available at
 ;; http://ecb.sourceforge.net
 
-;; $Id: ecb.el,v 1.296 2003/03/06 19:04:31 berndl Exp $
+;; $Id: ecb.el,v 1.297 2003/03/10 09:09:46 berndl Exp $
 
 ;;; Code:
 
@@ -1587,9 +1587,11 @@ switch on this option and submitting a bug-report to the ecb-mailing-list
   "*User extensions for the popup-menu of the directories buffer.
 
 Value is a list of elements of the following type: Each element defines a new
-menu-entry and is a list containing two entries, whereas the first is the name
-of the menu-entry and the second the function \(a function symbol or a
-lambda-expression) being called if the menu-entry is selected.
+menu-entry and is a list containing two subelements, whereas the first is the
+name of the menu-entry and the second the function \(a function symbol or a
+lambda-expression) being called if the menu-entry is selected. If there is no
+second subelement and the first one is the string \"---\" then a
+non-selectable menu-separator is displayed.
 
 The function must follow the following guidelines:
 It takes one argument which is the tree-buffer-node of the selected node \(means
@@ -1604,13 +1606,18 @@ Example for such a menu-function:
   \(let \(\(node-data=dir \(tree-node-get-data node)))
      \(message \"Dir under node: %s\" node-data=dir)))
 
-The user menu-extensions will be added at the beginning of the menu.
+Per default the user-extensions are added at the beginning of the builtin
+menu-entries of `ecb-directories-menu' but the whole menu can be re-arranged
+with `ecb-directories-menu-sorter'.
 
 If you change this option you have to restart ECB to take effect."
   :group 'ecb-directories
-  :type '(repeat (list :tag "Menu-entry"
-                       (string :tag "Entry-name")
-                       (function :tag "Function" :value ignore))))
+  :type '(repeat (choice :tag "Menu-entry" :menu-tag "Menu-entry"
+                         :value ("" ignore)
+                         (const :tag "Separator" :value ("---"))
+                         (list :tag "Menu-entry"
+                               (string :tag "Entry-name")
+                               (function :tag "Function" :value ignore)))))
 
 (defcustom ecb-sources-menu-user-extension nil
   "*User extensions for the popup-menu of the sources buffer.
@@ -1619,6 +1626,10 @@ For further explanations see `ecb-directories-menu-user-extension'.
 
 The node-argument of a menu-function contains as data the filename of the
 source for which the popup-menu has been opened.
+
+Per default the user-extensions are added at the beginning of the builtin
+menu-entries of `ecb-sources-menu' but the whole menu can be re-arranged
+with `ecb-sources-menu-sorter'.
 
 If you change this option you have to restart ECB to take effect."
   :group 'ecb-sources
@@ -1634,6 +1645,10 @@ For further explanations see `ecb-directories-menu-user-extension'.
 The node-argument of a menu-function contains as data the semantic-token of
 the method/variable/token for which the popup-menu has been opened. 
 
+Per default the user-extensions are added at the beginning of the builtin
+menu-entries of `ecb-methods-menu' but the whole menu can be re-arranged
+with `ecb-methods-menu-sorter'.
+
 If you change this option you have to restart ECB to take effect."
   :group 'ecb-methods
   :type '(repeat (list :tag "Menu-entry"
@@ -1648,12 +1663,82 @@ For further explanations see `ecb-directories-menu-user-extension'.
 The node-argument of a menu-function contains as data the filename of the
 source for which the popup-menu has been opened. 
 
+Per default the user-extensions are added at the beginning of the builtin
+menu-entries of `ecb-history-menu' but the whole menu can be re-arranged
+with `ecb-history-menu-sorter'.
+
 If you change this option you have to restart ECB to take effect."
   :group 'ecb-history
   :type '(repeat (list :tag "Menu-entry"
                        (string :tag "Entry-name")
                        (function :tag "Function" :value ignore))))
 
+
+(defcustom ecb-directories-menu-sorter nil
+  "*Function which re-sorts the menu-entries of the directories buffer.
+
+If a function then this function is called to re-arrange the menu-entries of
+the combined menu-entries of the user-menu-extensions of
+`ecb-directories-menu-user-extension' and the builtin-menu
+`ecb-directories-menu'. If nil then no special sorting will be done and the
+user-extensions are placed in front of the builtin-entries.
+
+The function get one argument, a list of menu-entries. For the format of this
+argument see `ecb-directories-menu-user-extension'. The function must return a
+new list in the same format. Of course this function can not only re-arrange
+the entries but also delete entries or add new entries."
+  :group 'ecb-directories
+  :type '(choice :tag "Menu-sorter" :menu-tag "Menu-sorter"
+                 (const :tag "No special sorting" :value nil)
+                 (function :tag "Sort-function" :value identity)))
+
+(defcustom ecb-sources-menu-sorter nil
+  "*Function which re-sorts the menu-entries of the directories buffer.
+
+If a function then this function is called to sort the menu-entries of the
+combined menu-entries of the user-menu-extensions of
+`ecb-sources-menu-user-extension' and the builtin-menu
+`ecb-sources-menu'. If nil then no special sorting will be done and the
+user-extensions are placed in front of the builtin-entries.
+
+For the guidelines for such a sorter-function see
+`ecb-directories-menu-sorter'."
+  :group 'ecb-sources
+  :type '(choice :tag "Menu-sorter" :menu-tag "Menu-sorter"
+                 (const :tag "No special sorting" :value nil)
+                 (function :tag "Sort-function" :value identity)))
+
+(defcustom ecb-methods-menu-sorter nil
+  "*Function which re-sorts the menu-entries of the directories buffer.
+
+If a function then this function is called to sort the menu-entries of the
+combined menu-entries of the user-menu-extensions of
+`ecb-methods-menu-user-extension' and the builtin-menu
+`ecb-methods-menu'. If nil then no special sorting will be done and the
+user-extensions are placed in front of the builtin-entries.
+
+For the guidelines for such a sorter-function see
+`ecb-directories-menu-sorter'."
+  :group 'ecb-methods
+  :type '(choice :tag "Menu-sorter" :menu-tag "Menu-sorter"
+                 (const :tag "No special sorting" :value nil)
+                 (function :tag "Sort-function" :value identity)))
+
+(defcustom ecb-history-menu-sorter nil
+  "*Function which re-sorts the menu-entries of the directories buffer.
+
+If a function then this function is called to sort the menu-entries of the
+combined menu-entries of the user-menu-extensions of
+`ecb-history-menu-user-extension' and the builtin-menu
+`ecb-history-menu'. If nil then no special sorting will be done and the
+user-extensions are placed in front of the builtin-entries.
+
+For the guidelines for such a sorter-function see
+`ecb-directories-menu-sorter'."
+  :group 'ecb-history
+  :type '(choice :tag "Menu-sorter" :menu-tag "Menu-sorter"
+                 (const :tag "No special sorting" :value nil)
+                 (function :tag "Sort-function" :value identity)))
 
 (defcustom ecb-activate-before-layout-draw-hook nil
   "*Normal hook run at the end of activating the ecb-package by running
@@ -2423,7 +2508,6 @@ The PARENT-TOKEN is propagated to the functions `ecb-add-token-bucket' and
   "Updates the method buffer and all internal ECB-caches after a partial
 semantic-reparse. This function is added to the hook
 `semantic-after-partial-cache-change-hook'."
-  (message "Partial reparsing...")
   ;; TODO: Currently we get simply the whole cache from semantic (already up
   ;; to date at this time!) and then we rebuild the whole tree-buffer with
   ;; this cache-contents. This is for great sources slow. We should implement
@@ -4593,11 +4677,18 @@ always the ECB-frame if called from another frame."
            'ecb-tree-buffer-node-expand-callback
            'ecb-mouse-over-directory-node
            'equal
-           (list (cons 0 (append ecb-directories-menu-user-extension
-                                  ecb-directories-menu))
-                 (cons 1 ecb-sources-menu)
-                 (cons 2 (append ecb-directories-menu-user-extension
-                                 ecb-source-path-menu)))
+           (list (cons 0 (funcall (or ecb-directories-menu-sorter
+                                      'identity)
+                                  (append ecb-directories-menu-user-extension
+                                          ecb-directories-menu)))
+                 (cons 1 (funcall (or ecb-sources-menu-sorter
+                                      'identity)
+                                  (append ecb-sources-menu-user-extension
+                                          ecb-sources-menu)))
+                 (cons 2 (funcall (or ecb-directories-menu-sorter
+                                      'identity)
+                                  (append ecb-directories-menu-user-extension
+                                          ecb-source-path-menu))))
            (nth 0 ecb-truncate-lines)
            t
            ecb-tree-indent
@@ -4629,8 +4720,10 @@ always the ECB-frame if called from another frame."
            'ecb-tree-buffer-node-expand-callback
            'ecb-mouse-over-source-node
            'equal
-           (list (cons 0 (append ecb-sources-menu-user-extension
-                                 ecb-sources-menu)))
+           (list (cons 0 (funcall (or ecb-sources-menu-sorter
+                                      'identity)
+                                  (append ecb-sources-menu-user-extension
+                                          ecb-sources-menu))))
            (nth 1 ecb-truncate-lines)
            t
            ecb-tree-indent
@@ -4671,7 +4764,10 @@ always the ECB-frame if called from another frame."
                      (eq (semantic-token-token l) (semantic-token-token r))
                      (eq (ecb-semantic-token-start l) (ecb-semantic-token-start r))
                      (eq (ecb-semantic-token-end l) (ecb-semantic-token-end r))))))
-           (list (cons 0 ecb-history-menu-user-extension))
+           (list (cons 0 (funcall (or ecb-methods-menu-sorter
+                                      'identity)
+                                  (append ecb-methods-menu-user-extension
+                                          ecb-methods-menu))))
            (nth 2 ecb-truncate-lines)
            t
            ecb-tree-indent
@@ -4699,8 +4795,10 @@ always the ECB-frame if called from another frame."
            'ecb-tree-buffer-node-expand-callback
            'ecb-mouse-over-history-node
            'equal
-           (list (cons 0 (append ecb-history-menu-user-extension
-                                 ecb-history-menu)))
+           (list (cons 0 (funcall (or ecb-history-menu-sorter
+                                      'identity)
+                                  (append ecb-history-menu-user-extension
+                                          ecb-history-menu))))
            (nth 3 ecb-truncate-lines)
            t
            ecb-tree-indent
@@ -4970,19 +5068,24 @@ if the minor mode is enabled.
         ("---")
 	("Add Source Path" ecb-add-source-path-node)))
 
-(defvar ecb-directories-menu nil)
+(defvar ecb-directories-menu nil
+  "Builtin menu for the directories-buffer for directories which are not a
+source-path of `ecb-source-path'.")
 (setq ecb-directories-menu
       (append
        ecb-common-directories-menu
        '(("Make This a Source Path" ecb-node-to-source-path))))
 
-(defvar ecb-source-path-menu nil)
-(setq ecb-source-path-menu
+(defvar ecb-source-path-menu nil
+  "Builtin menu for the directories-buffer for directories which are elements of
+`ecb-source-path'.")
+  (setq ecb-source-path-menu
       (append
        ecb-common-directories-menu
        '(("Delete Source Path" ecb-delete-source-path))))
 
-(defvar ecb-sources-menu nil)
+(defvar ecb-sources-menu nil
+  "Builtin menu for the sources-buffer.")
 (setq ecb-sources-menu
       '(("Grep Directory" ecb-grep-directory)
         ("Grep Directory recursive" ecb-grep-find-directory)
@@ -4990,6 +5093,9 @@ if the minor mode is enabled.
         ("Delete File" ecb-delete-source-2)
 	("Create File" ecb-create-file-2)
 	("Create Source" ecb-create-source)))        
+
+(defvar ecb-methods-menu nil
+  "Builtin menu for the methods-buffer.")
 
 ;; three easy-entry functions for the history menu for conveniance
 ;; Note: The node argument in the first two functions is not used.
@@ -5024,7 +5130,8 @@ buffers does not exist anymore."
       (kill-buffer (get-file-buffer data)))))
 
 
-(defvar ecb-history-menu nil)
+(defvar ecb-history-menu nil
+  "Builtin menu for the history-buffer.")
 (setq ecb-history-menu
       '(("Grep Directory" ecb-grep-directory)
         ("Grep Directory recursive" ecb-grep-find-directory)
@@ -5192,3 +5299,12 @@ changed there should be no performance-problem!"
 (silentcomp-provide 'ecb)
 
 ;;;ecb.el ends here
+;; (x-popup-menu
+;;  (list (list 20 20) (selected-window))
+;;  (cons 'keymap
+;;        (cons "klaus"
+;;              (cdr (assoc 0 
+;; (tree-buffer-create-menus (list (cons 0 (funcall (or (functionp ecb-sources-menu-sorter)
+;;                                                      'identity)
+;;                                                  (append ecb-sources-menu-user-extension
+;;                                                          ecb-sources-menu))))))))))

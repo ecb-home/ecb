@@ -19,7 +19,7 @@
 @c Free Software Foundation, Inc., 59 Temple Place - Suite 330,
 @c Boston, MA 02111-1307, USA.
 
-@c $Id: ecb.texi,v 1.82 2003/03/04 15:10:42 berndl Exp $
+@c $Id: ecb.texi,v 1.83 2003/03/10 09:09:45 berndl Exp $
 
 @setfilename ecb.info
 
@@ -914,6 +914,17 @@ window (see the documentation @code{ecb-primary-mouse-jump-destination}).
 
 In each ECB-buffer mouse-3 (= right button) opens a special context popup-menu
 for the clicked item where you can choose several senseful actions.
+
+With the options @code{ecb-directories-menu-user-extension},
+@code{ecb-sources-menu-user-extension},
+@code{ecb-methods-menu-user-extension} and
+@code{ecb-history-menu-user-extension} you can add new commands to the
+popup-menues.
+
+With the options @code{ecb-directories-menu-sorter},
+@code{ecb-sources-menu-sorter}, @code{ecb-methods-menu-sorter} and
+@code{ecb-history-menu-sorter} you can even re-arrange all the entries
+of the popup-menues.
 
 @subsection Horizontal scrolling with the mouse
 
@@ -3588,6 +3599,61 @@ Changes for this option at runtime will take affect only after
 deactivating and then activating ECB again!
 @end defopt
 
+@defopt directories-menu-sorter
+Function which re-sorts the menu-entries of the directories buffer.
+
+If a function then this function is called to re-arrange the
+menu-entries of the combined menu-entries of the user-menu-extensions
+of @code{ecb-directories-menu-user-extension} and the builtin-menu
+@code{ecb-directories-menu}. If nil then no special sorting will be
+done and the user-extensions are placed in front of the
+builtin-entries.
+
+The function get one argument, a list of menu-entries. For the format
+of this argument see @code{ecb-directories-menu-user-extension}. The
+function must return a new list in the same format. Of course this
+function can not only re-arrange the entries but also delete entries
+or add new entries.
+@end defopt
+
+
+
+@defopt directories-menu-user-extension
+User extensions for the popup-menu of the directories buffer.
+
+Value is a list of elements of the following type: Each element
+defines a new menu-entry and is a list containing two subelements,
+whereas the first is the name of the menu-entry and the second the
+function (a function symbol or a lambda-expression) being called if
+the menu-entry is selected. If there is no second subelement and the
+first one is the string ``---'' then a non-selectable menu-separator
+is displayed.
+
+The function must follow the following guidelines: It takes one
+argument which is the tree-buffer-node of the selected node (means the
+node for which the popup-menu has been opened). With the function
+@code{tree-node-get-data} the related data of this node is accessible
+and returns in case of the directories buffer the directory for which
+the popup-menu has been opened. The function can do any arbitrary
+things with this directory.
+
+Example for such a menu-function:
+
+@example
+(defun ecb-my-special-dir-popup-function (node)
+  (let ((node-data=dir (tree-node-get-data node)))
+     (message "Dir under node: %s" node-data=dir)))
+@end example
+
+Per default the user-extensions are added at the beginning of the
+builtin menu-entries of @code{ecb-directories-menu} but the whole menu
+can be re-arranged with @code{ecb-directories-menu-sorter}.
+
+If you change this option you have to restart ECB to take effect.
+@end defopt
+
+
+
 @defopt excluded-directories-regexp
 Specifies directories that should not be included in the directories
 list. The value of this variable should be a regular expression.
@@ -3712,6 +3778,38 @@ of @code{set-buffer}.
 Changes for this option at runtime will take affect only after
 deactivating and then activating ECB again!
 @end defopt
+
+@defopt sources-menu-sorter
+Function which re-sorts the menu-entries of the directories buffer.
+
+If a function then this function is called to sort the menu-entries of
+the combined menu-entries of the user-menu-extensions of
+@code{ecb-sources-menu-user-extension} and the builtin-menu
+@code{ecb-sources-menu}. If nil then no special sorting will be done
+and the user-extensions are placed in front of the builtin-entries.
+
+For the guidelines for such a sorter-function see
+@code{ecb-directories-menu-sorter}.
+@end defopt
+
+
+
+@defopt sources-menu-user-extension
+User extensions for the popup-menu of the sources buffer.
+
+For further explanations see
+@code{ecb-directories-menu-user-extension}.
+
+The node-argument of a menu-function contains as data the filename of
+the source for which the popup-menu has been opened.
+
+Per default the user-extensions are added at the beginning of the
+builtin menu-entries of @code{ecb-sources-menu} but the whole menu can
+be re-arranged with @code{ecb-sources-menu-sorter}.
+
+If you change this option you have to restart ECB to take effect.
+@end defopt
+
 
 @defopt sources-sort-method
 Defines how the source files are sorted.
@@ -3854,6 +3952,39 @@ of @code{set-buffer}.
 Changes for this option at runtime will take affect only after
 deactivating and then activating ECB again!
 @end defopt
+
+@defopt methods-menu-sorter
+Function which re-sorts the menu-entries of the directories buffer.
+
+If a function then this function is called to sort the menu-entries of
+the combined menu-entries of the user-menu-extensions of
+@code{ecb-methods-menu-user-extension} and the builtin-menu
+@code{ecb-methods-menu}. If nil then no special sorting will be done
+and the user-extensions are placed in front of the builtin-entries.
+
+For the guidelines for such a sorter-function see
+@code{ecb-directories-menu-sorter}.
+@end defopt
+
+
+
+@defopt methods-menu-user-extension
+User extensions for the popup-menu of the methods buffer.
+
+For further explanations see
+@code{ecb-directories-menu-user-extension}.
+
+The node-argument of a menu-function contains as data the
+semantic-token of the method/variable/token for which the popup-menu
+has been opened.
+
+Per default the user-extensions are added at the beginning of the
+builtin menu-entries of @code{ecb-methods-menu} but the whole menu can
+be re-arranged with @code{ecb-methods-menu-sorter}.
+
+If you change this option you have to restart ECB to take effect.
+@end defopt
+
 
 
 @defopt methods-nodes-collapse-spec
@@ -4167,6 +4298,38 @@ deactivating and then activating ECB again!
 @defopt history-item-name
 The name to use for items in the history buffer.
 @end defopt
+
+@defopt history-menu-sorter
+Function which re-sorts the menu-entries of the directories buffer.
+
+If a function then this function is called to sort the menu-entries of
+the combined menu-entries of the user-menu-extensions of
+@code{ecb-history-menu-user-extension} and the builtin-menu
+@code{ecb-history-menu}. If nil then no special sorting will be done
+and the user-extensions are placed in front of the builtin-entries.
+
+For the guidelines for such a sorter-function see
+@code{ecb-directories-menu-sorter}.
+@end defopt
+
+
+
+@defopt history-menu-user-extension
+User extensions for the popup-menu of the history buffer.
+
+For further explanations see
+@code{ecb-directories-menu-user-extension}.
+
+The node-argument of a menu-function contains as data the filename of
+the source for which the popup-menu has been opened.
+
+Per default the user-extensions are added at the beginning of the
+builtin menu-entries of @code{ecb-history-menu} but the whole menu can
+be re-arranged with @code{ecb-history-menu-sorter}.
+
+If you change this option you have to restart ECB to take effect.
+@end defopt
+
 
 @defopt kill-buffer-clears-history
 Define if @code{kill-buffer} should also clear the history. There are
@@ -7066,6 +7229,13 @@ This comes from semantic;
 @*
 @end ifinfo
 see @ref{Setting up Emacs}.
+
+@item @tab @tab
+
+@item
+Can i add my own commands to the popup-menues of tree-buffers?
+@tab @tab
+Yes, see @ref{Using the mouse}.
 
 @end multitable
 
