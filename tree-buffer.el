@@ -26,7 +26,7 @@
 ;; This file is part of the ECB package which can be found at:
 ;; http://home.swipnet.se/mayhem/ecb.html
 
-;; $Id: tree-buffer.el,v 1.100 2002/12/22 14:11:50 berndl Exp $
+;; $Id: tree-buffer.el,v 1.101 2002/12/28 19:14:15 berndl Exp $
 
 ;;; Code:
 
@@ -367,9 +367,9 @@ displayed without empty-lines at the end, means WINDOW is always best filled."
     (if (tree-node-is-expanded node)
         (let ((exp-node-children-count (tree-node-count-subnodes-to-display node))
               (point-window-line (count-lines (window-start window) node-point)))
-      ;; if the current node is not already displayed in the first line of the
-      ;; window (= condition 1) and if not all of it´s children are visible in
-          ;; the window then we can do some optimization.
+          ;; if the current node is not already displayed in the first line of
+          ;; the window (= condition 1) and if not all of it´s children are
+          ;; visible in the window then we can do some optimization.
           (if (and (save-excursion
                      (goto-char node-point)
                      (forward-line -1)
@@ -403,7 +403,6 @@ displayed without empty-lines at the end, means WINDOW is always best filled."
                                     (goto-char (window-start window))
                                     (forward-line (- full-lines-in-window w-height))
                                     (tree-buffer-line-beginning-pos)))))))
-    )
 
   ;; now we have to hor. recenter the whole window/buffer to the last computed
   ;; value
@@ -419,7 +418,8 @@ displayed without empty-lines at the end, means WINDOW is always best filled."
 ;;       (setq tree-buffer-current-hor-scroll-amount
 ;;             (+ 5 tree-buffer-current-hor-scroll-amount))
 ;;       (tree-buffer-scroll-hor tree-buffer-current-hor-scroll-amount)))
-  )
+
+    ))
 
 ;; Klaus: Now we use overlays to highlight current node in a tree-buffer. This
 ;; makes it easier to do some facing with the nodes itself and above all this
