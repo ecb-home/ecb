@@ -21,7 +21,7 @@
 
 ;; Generates ECB HTML pages.
 
-;; $Id: ecb-html.el,v 1.5 2001/05/01 04:27:53 berndl Exp $
+;; $Id: ecb-html.el,v 1.6 2001/05/01 13:33:44 creator Exp $
 
 ;;; Code:
 
@@ -74,8 +74,13 @@
   (h-doc
    "screenshots.html"
    "ECB Screenshots"
-   (h-img "ecb.png")
-   (h-img "ecb-java.png")))
+   (h-section "ECB 1.20 showing fields and inner classes in a Java source file"
+	      (h-img "ecb-java.png"))
+   (h-section "ECB running in XEmacs under Windows 98"
+	      (h-img "ecb-xemacs.png"))
+   (h-section "ECB 1.0 running in GNU Emacs under Windows 98"
+	      (h-img "ecb.png"))
+   ))
   
 (defun ecb-html-links()
   (h-doc

@@ -1,3 +1,19 @@
+Version 1.30 (???):
+-------------------
+
+- ecb-redraw-layout now restores both edit window buffers and the edit window
+  start. (Jesper)
+
+- Spelling corrections. Thanks to Colin Marquardt
+  <colin.marquardt@usa.alcatel.com> for spotting them.
+
+- Mode line prefixes can now be optionally be shown. The default is to not show
+  them. (Jesper)
+
+- Fixed small bug in directory tree that caused directories to be sorted by
+  extension. (Jesper)
+
+
 Version 1.20 (2001-04-28):
 --------------------------
 
