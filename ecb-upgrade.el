@@ -534,8 +534,8 @@ The car is the old option symbol and the cdr is a 2-element-list with:
                           'standard-value)))
 
 (defun ecb-upgrade-show-tags (old-val)
-  (list (cons 'default
-              old-val)))
+  (ecb-option-get-value 'ecb-show-tags
+                        'standard-value))
 
 ;; ----------------------------------------------------------------------
 ;; internal functions. Dot change anything below this line
