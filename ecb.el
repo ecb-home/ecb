@@ -54,7 +54,7 @@
 ;; The latest version of the ECB is available at
 ;; http://home.swipnet.se/mayhem/ecb.html
 
-;; $Id: ecb.el,v 1.134 2001/07/15 11:15:32 creator Exp $
+;; $Id: ecb.el,v 1.135 2001/07/15 13:23:36 creator Exp $
 
 ;;; Code:
 
@@ -834,7 +834,10 @@ cleared!) ECB by running `ecb-deactivate'."
 		(when node
 		  (dolist (parent (if sort-method
 				      (sort parents 'string<) parents))
-		    (tree-node-new parent 2 parent t node))))))))
+		    (tree-node-new (if ecb-font-lock-tokens
+				       (semantic-colorize-text parent 'type)
+				     parent)
+				   2 parent t node))))))))
         (t (ecb-find-add-token-bucket node type display sort-method buckets)))))
    (let ((type-display (ecb-get-token-type-display t)))
      (dolist (bucket buckets)
@@ -1478,42 +1481,64 @@ Currently the fourth argument TREE-BUFFER-NAME is not used here."
 (defun ecb-method-clicked (node ecb-button shift-mode)
   (if shift-mode
       (ecb-mouse-over-method-node node)
-    (when (= 1 (tree-node-get-type node))
-      (tree-node-toggle-expanded node)
-      ;; Update the tree-buffer with optimized display of NODE
-      (tree-buffer-update node))
-    (if (= 2 (tree-node-get-type node))
-	(progn
-	  (set-buffer (get-file-buffer ecb-path-selected-source))
-	  (when (eq major-mode 'jde-mode)
-	    (jde-show-class-source (tree-node-get-data node))))
-      (let ((token (tree-node-get-data node)))
-	(when token
-	  (if (eq 'include (semantic-token-token token))
+    (let ((data (tree-node-get-data node))
+	  (type (tree-node-get-type node))
+	  (filename ecb-path-selected-source)
+	  token found)
+      (cond
+       ;; Type 0 = a token
+       ((= type 0) (setq token data))
+       ;; Type 1 = a title of a group
+       ;; Just expand/collapse the node
+       ((= type 1)
+	(tree-node-toggle-expanded node)
+	;; Update the tree-buffer with optimized display of NODE
+	(tree-buffer-update node))
+       ;; Type 2 = a token name
+       ;; Try to find the token
+       ((= type 2)
+	(set-buffer (get-file-buffer ecb-path-selected-source))
+	;; Try to find source using JDE
+	(when (eq major-mode 'jde-mode)
+	  (condition-case nil
 	      (progn
-		(set-buffer (get-file-buffer ecb-path-selected-source))
-		(let ((file (semantic-find-dependency token)))
-		  (when (and file (file-exists-p file))
-		    (ecb-find-file-and-display (semantic-find-dependency token)
-					       (and (ecb-edit-window-splitted)
-						    (eq ecb-button 2))))))
-	    (ecb-find-file-and-display ecb-path-selected-source
-				       (and (ecb-edit-window-splitted)
-					    (eq ecb-button 2)))
-	    ;; let us set the mark so the user can easily jump back.
-	    (if ecb-token-jump-sets-mark
-		(push-mark))
-	    ;; Semantic 1.4beta2 fix for EIEIO class parts
-	    (ignore-errors
-	      (goto-char (semantic-token-start token)))
-	    (when ecb-highlight-token-header-after-jump
-	      (save-excursion
-		(move-overlay ecb-method-overlay
-			      (tree-buffer-line-beginning-pos)
-			      (tree-buffer-line-end-pos)
-			      (current-buffer)))
-	      (setq ecb-unhighlight-hook-called nil)
-	      (add-hook 'pre-command-hook 'ecb-unhighlight-token-header))))))))
+		(jde-show-class-source data)
+		(setq found t))
+	    (error nil)))
+	;; Try to find source using Semantic DB
+	(when (and (not found) (featurep 'semanticdb) (semanticdb-minor-mode-p))
+	  (let ((parent (semanticdb-find-nonterminal-by-name data)))
+	    (when parent
+	      (setq token (cdar parent))
+	      (setq filename (semanticdb-full-filename (caar parent)))))))
+       )
+      (when (and token (not found))
+	(if (eq 'include (semantic-token-token token))
+	    ;; Include token -> try to find source
+	    (progn
+	      (set-buffer (get-file-buffer ecb-path-selected-source))
+	      (let ((file (semantic-find-dependency token)))
+		(when (and file (file-exists-p file))
+		  (ecb-find-file-and-display (semantic-find-dependency token)
+					     (and (ecb-edit-window-splitted)
+						  (eq ecb-button 2))))))
+	  (ecb-find-file-and-display filename
+				     (and (ecb-edit-window-splitted)
+					  (eq ecb-button 2)))
+	  ;; let us set the mark so the user can easily jump back.
+	  (if ecb-token-jump-sets-mark
+	      (push-mark))
+	  ;; Semantic 1.4beta2 fix for EIEIO class parts
+	  (ignore-errors
+	  (goto-char (semantic-token-start token)))
+	  (when ecb-highlight-token-header-after-jump
+	  (save-excursion
+	    (move-overlay ecb-method-overlay
+			  (tree-buffer-line-beginning-pos)
+			  (tree-buffer-line-end-pos)
+			  (current-buffer)))
+	  (setq ecb-unhighlight-hook-called nil)
+	  (add-hook 'pre-command-hook 'ecb-unhighlight-token-header)))))))
 
 (defun ecb-get-file-info-text (file)
   (let ((attrs (file-attributes file)))
