@@ -1,5 +1,13 @@
 * Changes for ECB version 2.12
 
+** All popup-menus of the tree-buffers can be used with the tmm-library
+   The already existing command `tree-buffer-show-menu-keyboard' (bound to
+   [M-m] in every tree-buffer of ECB) accepts now a prefix argument. If called
+   with a prefix-argument (hit [C-u M-m]) then the popup-menu is displayed
+   with the tmm-mechanismus (like the Emacs-[menu-bar] is displayed when
+   `tmm-menubar' is called). Thanks for suggestion to Yvonne Thomson
+   <yvonne@thewatch.net>.
+
 ** New default-value for `ecb-post-process-semantic-taglist'.
    Now for buffers with major-mode `c-mode' all function-prototypes are
    filtered out. For example this is useful for editing C files which have the

@@ -15,6 +15,15 @@ Installing ECB first time:
 No special notes beyond the contents of README.
 
 
+Upgrading from any version:
+---------------------------
+
+All user-defined extensions written for and added to one of the options
+`directories-menu-user-extension', `sources-menu-user-extension',
+`methods-menu-user-extension' or `history-menu-user-extension' must be
+rewritten and redefined via the new macro `tree-buffer-defpopup-command'!
+
+
 Upgrading from versions < 2.11:
 -------------------------------
 

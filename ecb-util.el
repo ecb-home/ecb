@@ -209,7 +209,7 @@ means not to count the minibuffer even if it is active."
                                           (pop-to-buffer . around)
                                           (enlarge-window . around)
                                           (shrink-window . around)
-                                          (tmm-menubar . around)
+                                          (tmm-prompt . around)
                                           (scroll-other-window . around)
                                           (custom-save-all . around)
                                           (narrow-to-region . before)
