@@ -16,7 +16,7 @@ make ecb_VERSION=$1 distrib
 name=ecb-$1
 release_dir=releases
 
-cp $name.tar.gz $release_dir
+mv -f $name.tar.gz $release_dir
 cd $release_dir
 rm -Rf $name
 tar -xzvf $name.tar.gz 
