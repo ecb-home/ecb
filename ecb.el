@@ -52,7 +52,7 @@
 ;; The latest version of the ECB is available at
 ;; http://home.swipnet.se/mayhem/ecb.html
 
-;; $Id: ecb.el,v 1.78 2001/05/07 07:09:01 berndl Exp $
+;; $Id: ecb.el,v 1.79 2001/05/07 16:06:23 berndl Exp $
 
 ;;; Code:
 
@@ -1006,8 +1006,8 @@ CLEARALL overrides the value of this option:
 = 0: Means all
 For further explanation see `ecb-clear-history-behavior'."
   (interactive "P")
-  (unless (not ecb-activated)
-    (ecb-raise-ecb-frame-maybe)
+  (unless (or (not ecb-activated)
+              (not (equal (selected-frame) ecb-frame)))
     (save-selected-window
       (ecb-exec-in-history-window
        (let ((buffer-file-name-list (mapcar (lambda (buff)
@@ -1141,29 +1141,30 @@ OTHER-WINDOW."
 (defun ecb-update-directories-buffer ()
   "Updates the ECB directories buffer."
   (interactive)
-  (ecb-raise-ecb-frame-maybe)
-  (save-selected-window
-    (ecb-exec-in-directories-window
-     ;;     (setq tree-buffer-type-faces
-     ;;       (list (cons 1 ecb-source-in-directories-buffer-face)))
-     (setq tree-buffer-indent ecb-tree-indent)
-     (let* ((node (tree-buffer-get-root))
-	    (old-children (tree-node-get-children node))
-	    (function-paths (ecb-get-source-paths-from-functions)))
-       (tree-node-set-children node nil)
-       (if (or ecb-source-path function-paths)
-	   (progn
-	     (dolist (dir (append function-paths ecb-source-path))
-	       (tree-node-add-child node (ecb-new-child old-children dir 0 dir)))
-	     (tree-buffer-update))
-	 (let ((buffer-read-only))
-	   ;; TODO: This should not be done, because the read-only property of
-	   ;; a treebuffer should only be changed by the tree-buffer routines.
-	   ;; But for the moment it works. But let´s find a better solution,
-	   ;; maybe only a message displaying in the echo-area??!!
-	   (erase-buffer)
-	   (insert "No source paths set.\nPress F2 to customize\nTo get help, call\necb-show-help.")))))))
-
+  (unless (or (not ecb-activated)
+              (not (equal (selected-frame) ecb-frame)))
+    (save-selected-window
+      (ecb-exec-in-directories-window
+       ;;     (setq tree-buffer-type-faces
+       ;;       (list (cons 1 ecb-source-in-directories-buffer-face)))
+       (setq tree-buffer-indent ecb-tree-indent)
+       (let* ((node (tree-buffer-get-root))
+              (old-children (tree-node-get-children node))
+              (function-paths (ecb-get-source-paths-from-functions)))
+         (tree-node-set-children node nil)
+         (if (or ecb-source-path function-paths)
+             (progn
+               (dolist (dir (append function-paths ecb-source-path))
+                 (tree-node-add-child node (ecb-new-child old-children dir 0 dir)))
+               (tree-buffer-update))
+           (let ((buffer-read-only))
+             ;; TODO: This should not be done, because the read-only property of
+             ;; a treebuffer should only be changed by the tree-buffer routines.
+             ;; But for the moment it works. But let´s find a better solution,
+             ;; maybe only a message displaying in the echo-area??!!
+             (erase-buffer)
+             (insert "No source paths set.\nPress F2 to customize\nTo get help, call\necb-show-help."))))))))
+  
 (defun ecb-new-child (old-children name type data &optional not-expandable)
   (catch 'exit
     (dolist (child old-children)
@@ -1347,7 +1348,8 @@ Currently the fourth argument TREE-BUFFER-NAME is not used here."
 
 (defun ecb-activate ()
   "Activates the ECB and creates all the buffers and draws the ECB-screen
-with the actually choosen layout \(see `ecb-layout-nr')."
+with the actually choosen layout \(see `ecb-layout-nr'). This function raises
+always the ECB-frame if called from another frame."
   (interactive)
 
   (if ecb-use-recursive-edit
@@ -1377,9 +1379,7 @@ with the actually choosen layout \(see `ecb-layout-nr')."
           (put 'ecb-frame 'ecb-new-frame-created t))
       (setq ecb-frame (selected-frame))
       (put 'ecb-frame 'ecb-new-frame-created nil))
-    (if running-xemacs
-        (raise-frame ecb-frame)
-      (select-frame ecb-frame))
+    (raise-frame ecb-frame)
     
     ;; now we can activate ECB
     (let ((curr-buffer-list (mapcar (lambda (buff)
@@ -1497,9 +1497,8 @@ with the actually choosen layout \(see `ecb-layout-nr')."
   "Deactivates the ECB and kills all ECB buffers and windows."
   (interactive)
   (unless (not ecb-activated)
-
-    (ecb-raise-ecb-frame-maybe)
-
+    (select-frame ecb-frame)
+    (raise-frame)
     ;; deactivating the adviced functions
     (ecb-activate-adviced-functions nil)
 

@@ -26,7 +26,7 @@
 ;;
 ;; Contains all online-help for ECB (stolen something from recentf.el)
 
-;; $Id: ecb-help.el,v 1.15 2001/05/06 07:08:15 berndl Exp $
+;; $Id: ecb-help.el,v 1.16 2001/05/07 16:06:23 berndl Exp $
 
 ;;; Code
 
@@ -301,7 +301,7 @@ and you will see all well documented ECB-options.
 Here are the most important options \(it is recommended to check the
 following options before working with ECB):
 - `ecb-source-path': You must set this option!
-- `ecb-new-ecb-frame', `ecb-auto-raise-ecb-frame': Frame-handling of ECB.
+- `ecb-new-ecb-frame': Should ECB create a new frame at activation time.
 - `ecb-primary-secondary-mouse-buttons', `ecb-primary-mouse-jump-destination':
   Define how to use the mouse.
 - `ecb-tree-expand-symbol-before' and `ecb-tree-indent' \(maybe you like a
