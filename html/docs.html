@@ -130,6 +130,7 @@ mailing list <a href="mailto:ecb-list@lists.sourceforge.net">ecb-list@lists.sour
 
 </p><li><a href="#Changing%20faces">Changing faces</a>:               Changing faces in the ECB tree-buffers
 <li><a href="#Small%20screens">Small screens</a>:                Working with small screens
+<li><a href="#Big%20screens">Big screens</a>:                  Working with big screens
 <li><a href="#Simulating%20speedbar">Simulating speedbar</a>:          Simulating speedbar without an extra frame
 <li><a href="#Integrating%20speedbar">Integrating speedbar</a>:         Integrating speedbar in the ECB-frame
 <li><a href="#Optimize%20scrolling">Optimize scrolling</a>:           Optimize scrolling in the edit-window
@@ -2452,9 +2453,10 @@ enlarge-state.
 <table width="95%" align="center">
 <tr><td>
 Toggles between the layouts defined in
-<code>ecb-toggle-layout-sequence</code>. Note: This function works by
-changing the options <code>ecb-layout-name</code> but only for current
-Emacs-session. 
+<code>ecb-toggle-layout-sequence</code> (See also option
+<code>ecb-show-sources-in-directories-buffer</code>). Note: This function
+works by changing the options <code>ecb-layout-name</code> but only for
+current Emacs-session. 
 </td></tr>
 </table>
 
@@ -5142,6 +5144,8 @@ the same side of the frame and the tree-buffer-"column" (or
 <li>("left10" "left13" "left14"), toggles between methods, history and directories
 </ul>
 
+<p>See also option <code>ecb-show-sources-in-directories-buffer</code>.
+
 <p>This option makes only sense if the value is a list with more than 1
 element! 
 </td></tr>
@@ -6602,6 +6606,12 @@ over it. Because ECB has a much more intelligent mouse tracking
 mechanism than follow-mouse the follow-mouse stuff profit from ECB and
 works even better and saver as without activated ECB!
 
+<h4>Package Gnus (Newsreader)</h4>
+
+<p>It is recommended not to use Gnus and ECB simultaniously in one frame
+because each of them has its own window-management and probably there
+will be conflicts. Use different frames for ECB and Gnus!
+
 <h4>Package VC (Version Control)</h4>
 
 <p>The variable <code>vc-delete-logbuf-window</code> must be set to nil during
@@ -6750,6 +6760,15 @@ to the ECB-history after ECB-start.
 For Java the JDEE<a rel=footnote href="#fn-20"><sup>20</sup></a> has this feature and for all other languages
 semantic offer something similar, see
 <a href="http://cedet.sourceforge.net/intellisense.shtml">http://cedet.sourceforge.net/intellisense.shtml</a>
+
+<br></td></tr><tr align="left"><td valign="top"></td><td valign="top"></td><td valign="top">
+
+<br></td></tr><tr align="left"><td valign="top">Can i use ECB in combination with Gnus within one frame? 
+</td><td valign="top"></td><td valign="top">
+You can, but it is recommended not to use Gnus and ECB simultaniously
+in one frame because each of them has it's own window-management and
+probably there will be conflicts. Use different frames for ECB and
+Gnus!
 
 <br></td></tr></table>
 
@@ -6960,6 +6979,7 @@ Up:<a rel=up accesskey=u href="#Top">Top</a>
 <li>expanding: <a href="#Navigation">Navigation</a>
 <li>Faces: <a href="#Changing%20faces">Changing faces</a>
 <li>follow-mouse package: <a href="#Conflicts">Conflicts</a>
+<li>Gnus: <a href="#Conflicts">Conflicts</a>
 <li>grep buffers: <a href="#Temp-%20and%20compile-buffers">Temp- and compile-buffers</a>
 <li>help buffers: <a href="#Temp-%20and%20compile-buffers">Temp- and compile-buffers</a>
 <li>Hide windows: <a href="#Hiding%20the%20ECB%20windows">Hiding the ECB windows</a>
@@ -7104,6 +7124,7 @@ Up:<a rel=up accesskey=u href="#Top">Top</a>
 <li><a href="#Conflicts">Package calendar.el</a>
 <li><a href="#Conflicts">Package cygwin-mount.el</a>
 <li><a href="#Conflicts">Package follow-mouse.el</a>
+<li><a href="#Conflicts">Package Gnus (Newsreader)</a>
 <li><a href="#Conflicts">Package VC (Version Control)</a>
 </ul>
 <li><a href="#Bugs">Known bugs</a>
