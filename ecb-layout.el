@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-layout.el,v 1.172 2003/07/31 16:02:08 berndl Exp $
+;; $Id: ecb-layout.el,v 1.173 2003/08/01 15:23:29 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -855,7 +855,7 @@ either not activated or it behaves exactly like the original version!"
   (let ((frame (or (ad-get-arg 0) (selected-frame))))
     (if (and ecb-minor-mode
              (equal frame ecb-frame))
-        (when (yes-or-no-p "Attempt to delete the ECB-frame. ECB will be deactivated! Proceed? ")
+        (when (ecb-confirm "Attempt to delete the ECB-frame. ECB will be deactivated! Proceed? ")
 	  (ecb-deactivate-internal) ;; deletes also the ecb-frame if not the only frame
 	  ad-do-it)
       ad-do-it)))
