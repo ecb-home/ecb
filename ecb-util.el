@@ -343,7 +343,7 @@ not nil then in both PATH and FILENAME env-var substitution is done. If the
         (delete-file exp-file))))
 
 (defun ecb-enlarge-window(window &optional val)
-  "Enlarge the given window
+  "Enlarge the given window.
 If VAL is nil then WINDOW is enlarged so that it is 1/2 of the current frame.
 If VAL is a positive integer then WINDOW is enlarged so that its new height is
 VAL lines. If VAL is > 0 and < 1 then WINDOW is enlarged so that its new

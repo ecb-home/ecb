@@ -66,7 +66,7 @@ echo (add-to-list 'load-path "%SPEEDBAR%") >> ecb-compile-script-init
 echo (require 'ecb) >> ecb-compile-script-init
 echo (setq debug-on-error t) >> ecb-compile-script-init
 
-%EMACS% -batch -no-site-file -l ecb-compile-script-init --eval "(ecb-byte-compile t t)"
+%EMACS% -batch -no-site-file -l ecb-compile-script-init --eval "(ecb-byte-compile t)"
 
 del ecb-compile-script-init
 

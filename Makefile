@@ -180,7 +180,7 @@ ecb: $(ecb_LISP_EL)
 	fi
 	@echo "(require 'ecb)" >> ecb-compile-script
 	@echo "(setq debug-on-error t)" >> ecb-compile-script
-	$(EBATCH) -l ecb-compile-script --eval '(ecb-byte-compile t t)'
+	$(EBATCH) -l ecb-compile-script --eval '(ecb-byte-compile t)'
 	@$(RM) ecb-compile-script
 
 all: ecb online-help

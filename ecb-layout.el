@@ -1543,11 +1543,16 @@ Returns the window displaying BUFFER."
                                         (nth 1 (window-pixel-edges window))))
                                 (> (window-pixel-height other)
                                    (window-pixel-height window)))
-                           (enlarge-window (- (/ (+ (window-height other)
-                                                    (window-height window))
-                                                 2)
-                                              (window-height upper))
-                                           nil upper))
+                           ;; Klaus Berndl <klaus.berndl@sdm.de>: here we
+                           ;; write this as somehow clumsy code to silence the
+                           ;; byte-compiler because GNU Emacs <= 21.3. knows
+                           ;; only 2 args for `enlarge-window'
+                           (funcall (symbol-function 'enlarge-window)
+                                    (- (/ (+ (window-height other)
+                                             (window-height window))
+                                          2)
+                                       (window-height upper))
+                                    nil upper))
                        ;; Klaus Berndl <klaus.berndl@sdm.de>: Only in
                        ;; this situation we shrink-to-fit but we can do
                        ;; this first after we have displayed buffer in
