@@ -57,6 +57,20 @@
 (require 'ecb-file-browser)
 (require 'ecb-method-browser)
 
+
+(defgroup ecb-jde-integration nil
+  "Settings for the JDEE-integration in the Emacs code browser."
+  :group 'ecb
+  :prefix "ecb-jde-")
+
+
+(defcustom ecb-jde-set-directories-buffer-to-jde-sourcepath nil
+  "*THIS FEATURE IS NOT YET FINISHED"
+  :group 'ecb-jde-integration
+  :type '(radio (const :tag "No" :value nil)
+                (const :tag "Add" :value add)
+                (const :tag "Replace" :value replace)))
+
 (defun ecb-jde-display-class-at-point ()
   "Displays in the ECB-methods-buffer contents of class under point.
 This means displays the contents \(methods, attributes etc...) of the class
@@ -136,6 +150,23 @@ is not available then `find-file' is called."
     (if (fboundp 'jde-gen-class-buffer)
         (jde-gen-class-buffer file)
       (find-file file))))
+
+
+(defun ecb-jde-get-source-path ()
+  (mapcar 'jde-normalize-path jde-sourcepath))
+
+(defun ecb-jde-update-ecb-source-paths ()
+  (interactive)
+  (cond ((equal ecb-jde-set-directories-buffer-to-jde-sourcepath 'add)
+         (add-hook 'ecb-source-path-functions
+                   'ecb-jde-get-source-path))
+        ((equal ecb-jde-set-directories-buffer-to-jde-sourcepath 'replace)
+         (setq ecb-source-path (ecb-jde-get-source-path)))
+        (t
+         (remove-hook 'ecb-source-path-functions
+                      'ecb-jde-get-source-path)))
+  (ecb-update-directories-buffer))
+
 
 (when (locate-library "efc")
   (require 'efc)

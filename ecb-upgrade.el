@@ -274,6 +274,7 @@
                                           ecb-upgrade-post-process-semantic-taglist))
     (ecb-primary-mouse-jump-destination . (ecb-mouse-click-destination identity))
     (ecb-split-edit-window . (ecb-split-edit-window-after-start ecb-upgrade-split-edit-window))
+    (ecb-sort-history-items . (ecb-history-sort-method ecb-upgrade-sort-history-items))
     (ecb-other-window-jump-behavior . (ecb-other-window-behavior ecb-upgrade-other-window-jump-behavior)))
   "Alist of all options which should be upgraded for current ECB-version.
 There are several reasons why an option should be contained in this alist:
@@ -544,6 +545,9 @@ The car is the old option symbol and the cdr is a 2-element-list with:
 (defun ecb-upgrade-show-tags (old-val)
   (ecb-option-get-value 'ecb-show-tags
                         'standard-value))
+
+(defun ecb-upgrade-sort-history-items (old-val)
+  (if old-val ecb-sources-sort-method))
 
 ;; ----------------------------------------------------------------------
 ;; internal functions. Dot change anything below this line

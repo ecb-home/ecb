@@ -3934,7 +3934,7 @@ pattern.")
                                      source-buffer
                                      (+ 2 indent))))
 
-
 (silentcomp-provide 'ecb-method-browser)
 
 ;;; ecb-method-browser.el end here
+

@@ -1318,7 +1318,7 @@ tasks are performed:
                ;; `ecb-source-path-functions' we must at least add the new source
                ;; path temporally to our paths. But the uses has also the choice to
                ;; save it for future sessions too.
-               (if (not (ecb-path-matching-any-source-path-p filename))
+               (if (null (ecb-matching-source-paths filename))
                    (let* ((norm-filename (ecb-fix-filename filename))
                           (source-path (if (car ecb-add-path-for-not-matching-files)
                                            (if (= (aref norm-filename 0) ?/)

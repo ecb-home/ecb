@@ -3156,10 +3156,10 @@ compile-window then it will be hidden and otherwise the behavior depends on
                              window edit-win-list))
                   ;; If we have deleted that window which was current at call-time
                   ;; we have to ensure that point stays in the next edit-window
-                  (if (equal curr-window-before window)
-                      (let ((edit-win-list-after (ecb-canonical-edit-windows-list)))
-                        (if (not (member (selected-window) edit-win-list-after))
-                            (select-window (car edit-win-list-after)))))))))))))
+                  (when (equal curr-window-before window)
+                    (let ((edit-win-list-after (ecb-canonical-edit-windows-list)))
+                      (if (not (member (selected-window) edit-win-list-after))
+                          (select-window (car edit-win-list-after)))))))))))))
 
 (defadvice delete-other-windows (before ecb)
   "Does nothing special but only storing the fact that the other edit-windows

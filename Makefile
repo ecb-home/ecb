@@ -52,7 +52,8 @@ EMACS=emacs
 # variable to empty.
 
 #CEDET=
-CEDET=C:/Programme/emacs-21/site-lisp/multi-file-packages/cedet-1.0beta2b
+CEDET=c:/Programme/emacs-21/site-lisp/package-development/cedet
+# CEDET=c:/Programme/emacs-21/site-lisp/multi-file-packages/cedet-1.0beta2b
 
 # -------- Compiling ECB with the semantic < 2.0 -------------------------
 

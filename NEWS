@@ -17,6 +17,11 @@
     
 ** Fixed Bugs
 
+*** Fixed an annoying bug which results sometimes in an error "stack-overflow
+    error in equal" when using `senator-try-expand-semantic' which is called
+    when you use hippie-expand for example. Maybe the bug occured also in
+    other situation but now this bug has been extirpated!
+
 *** Fixed a bug in the mechanism which prescanes directories for emptyness.
     Now a directory is checked if it is accessible before it is prescanned -
     otherwise the prescan could fail with an error.
