@@ -1,6 +1,12 @@
-# this file generates the HTML-website of ECB
+# This file generates the HTML-website of ECB
 
-# $Id: Makefile,v 1.3 2003/01/30 15:36:10 berndl Exp $
+# Just type "make upload" to upload a complete new build of the whole
+# website to SourgeForge.
+#
+# Or type "make all" or "make upload-build" to generate the whole website
+# and build an uploadable ecb-website.tar.gz file.
+
+# $Id: Makefile,v 1.4 2003/01/30 16:14:43 berndl Exp $
 
 EMACS=emacs
 
@@ -13,13 +19,18 @@ SCP=scp
 MAKEINFO=/usr/bin/makeinfo
 
 ecb_HTMLSOURCE=ecb-html.el
+ecb_HTML_GEN=logo.html javabrowser.html main.html menu.html links.html top.html
 ecb_HTMLDOCU_DIR=./docs
 ecb_TEXI=../ecb.texi
 
+ecb_SCREENSHOTS=screenshots/index.html screenshots/*.png
+
+ecb_GIFS=bullet.gif ecb_logo.gif mail.gif smiley.gif
+
 ecb_UPLOAD_ARC=ecb-website.tar.gz
 
-ecb_WEBSITE_CONTENT=*.html docs/*.html screenshots/index.html \
-                    screenshots/*.png HISTORY *.gif
+ecb_WEBSITE_CONTENT=index.html $(ecb_HTML_GEN) $(ecb_HTMLDOCU_DIR)/*.html \
+                    $(ecb_SCREENSHOTS) HISTORY $(ecb_GIFS)
 
 ecb_WEBSITE_LOC=/home/groups/e/ec/ecb/htdocs
 ecb_SF_login=berndl@ecb.sourceforge.net
@@ -48,5 +59,5 @@ upload: website upload-build
 
 clean:
 	@$(RM) -R $(ecb_HTMLDOCU_DIR)
-	@$(RM) HISTORY *.elc $(ecb_UPLOAD_ARC)
+	@$(RM) HISTORY *.elc $(ecb_UPLOAD_ARC) $(ecb_HTML_GEN) *.*~
 

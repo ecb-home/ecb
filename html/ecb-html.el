@@ -19,9 +19,15 @@
 
 ;;; Commentary:
 
-;; Generates ECB HTML pages.
+;; Generates the ECB website. This files generates six files:
+;; main.html, menu.html, top.html, logo.html links.html and javabrowser.html.
+;; These files will be used by the start-file index.html and all together
+;; build the complete website of ECB at http://ecb.sourceforge.net.
+;;
+;; Do not change any html-file besides the index.html manually but do all
+;; changes in this elisp file!
 
-;; $Id: ecb-html.el,v 1.33 2003/01/30 15:36:09 berndl Exp $
+;; $Id: ecb-html.el,v 1.34 2003/01/30 16:14:42 berndl Exp $
 
 ;;; Code:
 
@@ -211,136 +217,140 @@
 	  (h-td '(nowrap) (h-email "klaus.berndl@sdm.de" (h-img "mail.gif" "border='0'"))))
     )))
 
-(defun ecb-faq-section(name &rest questions)
-  (list name questions))
+;; Not used anymore
+;; (defun ecb-faq-section(name &rest questions)
+;;   (list name questions))
 
-(defun ecb-faq-q-and-a(question &rest answers)
-  (cons question (h-list-to-str answers)))
+;; (defun ecb-faq-q-and-a(question &rest answers)
+;;   (cons question (h-list-to-str answers)))
 
-(defvar ecb-faq)
+;; (defvar ecb-faq)
 
-(setq ecb-faq
-  (list
-   (ecb-faq-section
-    "General"
-    (ecb-faq-q-and-a
-     "What is ECB?"
-     "ECB stands for Emacs Code Browser and is a tool for browsing source code in GNU Emacs or XEmacs. You can think of ECB as a file browser combined with a source code parser.")
-    (ecb-faq-q-and-a
-     "Where can I find the latest version?"
-     "The latest ECB version can be found " (h-link "http://home.swipnet.se/mayhem/ecb.html" '(target . "_top") "here"))
-    )
+;; (setq ecb-faq
+;;   (list
+;;    (ecb-faq-section
+;;     "General"
+;;     (ecb-faq-q-and-a
+;;      "What is ECB?"
+;;      "ECB stands for Emacs Code Browser and is a tool for browsing source code in GNU Emacs or XEmacs. You can think of ECB as a file browser combined with a source code parser.")
+;;     (ecb-faq-q-and-a
+;;      "Where can I find the latest version?"
+;;      "The latest ECB version can be found " (h-link "http://home.swipnet.se/mayhem/ecb.html" '(target . "_top") "here"))
+;;     )
 		     
-;   (ecb-faq-section
-;   "Installation"
-;   (ecb-faq-q-and-a
-;    "?"
-;    "")
-;   )
+;; ;   (ecb-faq-section
+;; ;   "Installation"
+;; ;   (ecb-faq-q-and-a
+;; ;    "?"
+;; ;    "")
+;; ;   )
     
-   (ecb-faq-section
-   "Common Problems"
-   (ecb-faq-q-and-a
-    "What is the first step i should do if i have problems with ECB?"
-    "Read carefully the complete online-help of ECB. Available via the menu \"ECB\", via \"M-x ecb-show-help RET\" or via \"C-c . o\".")
-   (ecb-faq-q-and-a
-    "Why are the lines in the ECB-buffers, temp-buffers and compilation-buffers not wrapped but truncated?"
-    "Check the variable `truncate-partial-width-windows' and set it to nil.")
-   (ecb-faq-q-and-a
-    "Why doesn't ECB work correct with VC?"
-    "The variable `vc-delete-logbuf-window' must be set to nil during active ECB. This can be done with the hooks of ECB.")
-   (ecb-faq-q-and-a
-    "Does ECB support C++ as well as Java?"
-    "This depends strongly on Semantic, but all semantic-versions >= semantic-1.4beta13 should support C++ really well.")
-   (ecb-faq-q-and-a
-    "Why doesn't ECB display the node name in the echo area if mouse moves over it?"
-    "There can be several reasons: First the value of the option 'ecb-show-node-name-in-minibuffer' must be either 'always or 'if-too-long. If this is ok, then maybe you have turned on follow-mouse AFTER activating ECB; follow-mouse must be turned on BEFORE ECB is acivated, e.g. in the 'ecb-activate-hook'! But with Emacs 21.X and XEmacs there are no problems with this feature, just activate it.") ;;
-   (ecb-faq-q-and-a
-    "What is the reason for poor scrolling performance with GNU Emacs 20.X in the edit-windows and what can i do?"
-    "Set 'scroll-conservatively' to 0 and 'scroll-step' to a value > 1. For the exact reason see the online-help of ECB, section \"Tips and Tricks\".")
-   )
-   ))
+;;    (ecb-faq-section
+;;    "Common Problems"
+;;    (ecb-faq-q-and-a
+;;     "What is the first step i should do if i have problems with ECB?"
+;;     "Read carefully the complete online-help of ECB. Available via the menu \"ECB\", via \"M-x ecb-show-help RET\" or via \"C-c . o\".")
+;;    (ecb-faq-q-and-a
+;;     "Why are the lines in the ECB-buffers, temp-buffers and compilation-buffers not wrapped but truncated?"
+;;     "Check the variable `truncate-partial-width-windows' and set it to nil.")
+;;    (ecb-faq-q-and-a
+;;     "Why doesn't ECB work correct with VC?"
+;;     "The variable `vc-delete-logbuf-window' must be set to nil during active ECB. This can be done with the hooks of ECB.")
+;;    (ecb-faq-q-and-a
+;;     "Does ECB support C++ as well as Java?"
+;;     "This depends strongly on Semantic, but all semantic-versions >= semantic-1.4beta13 should support C++ really well.")
+;;    (ecb-faq-q-and-a
+;;     "Why doesn't ECB display the node name in the echo area if mouse moves over it?"
+;;     "There can be several reasons: First the value of the option 'ecb-show-node-name-in-minibuffer' must be either 'always or 'if-too-long. If this is ok, then maybe you have turned on follow-mouse AFTER activating ECB; follow-mouse must be turned on BEFORE ECB is acivated, e.g. in the 'ecb-activate-hook'! But with Emacs 21.X and XEmacs there are no problems with this feature, just activate it.") ;;
+;;    (ecb-faq-q-and-a
+;;     "What is the reason for poor scrolling performance with GNU Emacs 20.X in the edit-windows and what can i do?"
+;;     "Set 'scroll-conservatively' to 0 and 'scroll-step' to a value > 1. For the exact reason see the online-help of ECB, section \"Tips and Tricks\".")
+;;    )
+;;    ))
 
   
-(defun ecb-faq-traverse(list section-fn item-fn)
-  (let ((snr 0))
-    (mapcar
-     (lambda (section)
-       (setq snr (1+ snr))
-       (concat
-	(funcall section-fn snr (car section))
-	(h-table
-	 (let ((i 0))
-	   (mapconcat (lambda (item)
-			(setq i (1+ i))
-			(funcall item-fn snr i item))
-		      (cadr section) "")))))
-     list)))
+;; (defun ecb-faq-traverse(list section-fn item-fn)
+;;   (let ((snr 0))
+;;     (mapcar
+;;      (lambda (section)
+;;        (setq snr (1+ snr))
+;;        (concat
+;; 	(funcall section-fn snr (car section))
+;; 	(h-table
+;; 	 (let ((i 0))
+;; 	   (mapconcat (lambda (item)
+;; 			(setq i (1+ i))
+;; 			(funcall item-fn snr i item))
+;; 		      (cadr section) "")))))
+;;      list)))
 
-(defun ecb-html-faq()
-  (h-doc
-   "faq.html"
-   "ECB FAQ"
-   (cons 'bgcolor h-section-text-bgcolor)
-   (h-h2 "ECB FAQ")
+;; (defun ecb-html-faq()
+;;   (h-doc
+;;    "faq.html"
+;;    "ECB FAQ"
+;;    (cons 'bgcolor h-section-text-bgcolor)
+;;    (h-h2 "ECB FAQ")
 
-   (ecb-faq-traverse
-    ecb-faq
-    (lambda (snr section) (h-h3 (h-link (format "#%d" snr)
-					(format "%d. %s" snr section))))
-    (lambda (snr inr item)
-      (h-tr (h-td (format "%d.%d" snr inr))
-	    (h-td (h-link (format "#%d_%d" snr inr) (car item))))))
+;;    (ecb-faq-traverse
+;;     ecb-faq
+;;     (lambda (snr section) (h-h3 (h-link (format "#%d" snr)
+;; 					(format "%d. %s" snr section))))
+;;     (lambda (snr inr item)
+;;       (h-tr (h-td (format "%d.%d" snr inr))
+;; 	    (h-td (h-link (format "#%d_%d" snr inr) (car item))))))
 	       
-   (ecb-faq-traverse
-    ecb-faq
-    (lambda (snr section) (h-h3 (h-tag (format "%d" snr)
-				       (format "%d. %s" snr section))))
-    (lambda (snr inr item)
-      (concat (h-tr (h-td (h-tag (format "%d_%d" snr inr))
-			  (h-b (format "%d.%d" snr inr)))
-		    (h-td (h-b (car item))))
-	      (h-tr (h-td)
-		    (h-td (cdr item))))))
-   ))
+;;    (ecb-faq-traverse
+;;     ecb-faq
+;;     (lambda (snr section) (h-h3 (h-tag (format "%d" snr)
+;; 				       (format "%d. %s" snr section))))
+;;     (lambda (snr inr item)
+;;       (concat (h-tr (h-td (h-tag (format "%d_%d" snr inr))
+;; 			  (h-b (format "%d.%d" snr inr)))
+;; 		    (h-td (h-b (car item))))
+;; 	      (h-tr (h-td)
+;; 		    (h-td (cdr item))))))
+;;    ))
 
-(defun ecb-html-doc()
-  (h-doc
-   "docs.html"
-   "ECB Documentation"
-   (h-section
-    "Installation and Setup"
-    (h-numbered-list
-     "Download and unzip the latest version of ECB."
-     (concat "Put the directory '" ecb-dirname "' in your Emacs load path.")
-     "Add \"(require 'ecb)\" to your .emacs file."
-     "Call \"ecb-activate\"."
-     "Select the '*ECB Directories*' window (usually top-left) and press F2. This will open the customization buffer for ECB."
-     "Add the paths to your source files under 'Ecb Directories' -> 'Ecb Source Path'."
-     "Save the settings. Done!"))
+;; Not used anymore
+;; (defun ecb-html-doc()
+;;   (h-doc
+;;    "docs.html"
+;;    "ECB Documentation"
+;;    (h-section
+;;     "Installation and Setup"
+;;     (h-numbered-list
+;;      "Download and unzip the latest version of ECB."
+;;      (concat "Put the directory '" ecb-dirname "' in your Emacs load path.")
+;;      "Add \"(require 'ecb)\" to your .emacs file."
+;;      "Call \"ecb-activate\"."
+;;      "Select the '*ECB Directories*' window (usually top-left) and press F2. This will open the customization buffer for ECB."
+;;      "Add the paths to your source files under 'Ecb Directories' -> 'Ecb Source Path'."
+;;      "Save the settings. Done!"))
  
-   (h-section
-    "Usage"
+;;    (h-section
+;;     "Usage"
 
-    (h-p "By default mouse-2 is the primary mouse button used for selecting items in the ECB buffers. Ctrl-mouse-2 is used as secondary mouse button. This can be changed with the customization variable ecb-primary-secondary-mouse-buttons.")
+;;     (h-p "By default mouse-2 is the primary mouse button used for selecting items in the ECB buffers. Ctrl-mouse-2 is used as secondary mouse button. This can be changed with the customization variable ecb-primary-secondary-mouse-buttons.")
  
-    (h-sub-section
-     "Directories Buffer"
-     "Select directories and, if enabled, source files, in the \"*ECB Directories*\" buffer by clicking the primary mouse button on the package name or by hitting ENTER/RETURN when the cursor is placed on the item line. Package names with a \"[+]\" symbol after them can be expanded/collapsed by left-clicking on the symbol, pressing the TAB key when the cursor is placed on the package line. Right clicking on an item will open a popup menu where different operations on the item under the mouse cursor can be performed." h-br
-     "Pressing F1 in the packages buffer will update it. Pressing F2 will open the ECB customization group in the edit window.")
+;;     (h-sub-section
+;;      "Directories Buffer"
+;;      "Select directories and, if enabled, source files, in the \"*ECB Directories*\" buffer by clicking the primary mouse button on the package name or by hitting ENTER/RETURN when the cursor is placed on the item line. Package names with a \"[+]\" symbol after them can be expanded/collapsed by left-clicking on the symbol, pressing the TAB key when the cursor is placed on the package line. Right clicking on an item will open a popup menu where different operations on the item under the mouse cursor can be performed." h-br
+;;      "Pressing F1 in the packages buffer will update it. Pressing F2 will open the ECB customization group in the edit window.")
 
-    (h-sub-section
-     "Source and History Buffer"
-     "Source files can be select by clicking the primary mouse button or hitting ENTER/RETURN on the class row in the \"*ECB Sources*\" or \"*ECB History*\" windows. Clicking on the source file with the secondary mouse button will open the class file in the other edit window. Right clicking on a source file will open a popup menu where different operation on the item under the mouse cursor can be performed.")
+;;     (h-sub-section
+;;      "Source and History Buffer"
+;;      "Source files can be select by clicking the primary mouse button or hitting ENTER/RETURN on the class row in the \"*ECB Sources*\" or \"*ECB History*\" windows. Clicking on the source file with the secondary mouse button will open the class file in the other edit window. Right clicking on a source file will open a popup menu where different operation on the item under the mouse cursor can be performed.")
  
-    (h-sub-section
-     "Methods Buffer"
-     "The \"*ECB Methods*\" buffer contains all classes, methods and variables in the selected source file. When a class, method or variable is selected with the primary mouse button or ENTER/RETURN the edit buffer will jump to the method. Clicking on a method with the secondary mouse button will jump to the method in the other edit window.")
+;;     (h-sub-section
+;;      "Methods Buffer"
+;;      "The \"*ECB Methods*\" buffer contains all classes, methods and variables in the selected source file. When a class, method or variable is selected with the primary mouse button or ENTER/RETURN the edit buffer will jump to the method. Clicking on a method with the secondary mouse button will jump to the method in the other edit window.")
  
-    (h-sub-section
-     "Emacs Tips"
-     "It's easier to navigate and scroll the ECB buffers if you install " (h-link "follow-mouse.el") " and activate your " (h-link "mwheel.el" "wheel mouse") " in Emacs.")
-   )))
+;;     (h-sub-section
+;;      "Emacs Tips"
+;;      "It's easier to navigate and scroll the ECB buffers if you install " (h-link "follow-mouse.el") " and activate your " (h-link "mwheel.el" "wheel mouse") " in Emacs.")
+;;    )))
+
+;; -------------------- HTML generation --------------------------------------
 
 (ecb-html-top)
 (ecb-html-menu)
