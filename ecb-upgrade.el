@@ -19,7 +19,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-upgrade.el,v 1.29 2003/02/14 09:32:03 berndl Exp $
+;; $Id: ecb-upgrade.el,v 1.30 2003/02/21 17:58:34 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -167,8 +167,8 @@
                                      ecb-upgrade-cache-directory-contents))
     (ecb-source-file-regexps . (ecb-source-file-regexps
                                 ecb-upgrade-source-file-regexps))
-    (ecb-truncate-lines .(ecb-truncate-lines
-                          ecb-upgrade-truncate-lines)))
+    (ecb-truncate-lines . (ecb-truncate-lines
+                           ecb-upgrade-truncate-lines)))
   
   "Alist of all options which should be upgraded for current ECB-version.
 There are several reasons why an option should be contained in this alist:
@@ -292,6 +292,7 @@ The car is the old option symbol and the cdr is a 2-element-list with:
   (if old-val
       '(t t t t)
     '(nil nil nil nil)))
+
 
 ;; ----------------------------------------------------------------------
 ;; internal functions. Dot change anything below this line

@@ -26,7 +26,7 @@
 ;; This file is part of the ECB package which can be found at:
 ;; http://ecb.sourceforge.net
 
-;; $Id: tree-buffer.el,v 1.106 2003/02/14 11:46:28 berndl Exp $
+;; $Id: tree-buffer.el,v 1.107 2003/02/21 17:57:03 berndl Exp $
 
 ;;; Code:
 
@@ -1127,7 +1127,7 @@ AFTER-CREATE-HOOK: A function or a list of functions \(with no arguments)
 
     ;; initialize the user-data-storage for this tree-buffer.
     (set (make-local-variable 'tree-buffer-data-store) nil)
-    
+
     (setq truncate-lines tr-lines)
     (setq truncate-partial-width-windows tr-lines)
     (setq buffer-read-only read-only)

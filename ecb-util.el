@@ -26,7 +26,7 @@
 ;; This file is part of the ECB package which can be found at:
 ;; http://ecb.sourceforge.net
 
-;; $Id: ecb-util.el,v 1.55 2003/02/19 13:57:35 berndl Exp $
+;; $Id: ecb-util.el,v 1.56 2003/02/21 17:57:49 berndl Exp $
 
 ;;; Code:
 
@@ -339,7 +339,6 @@ If VAL is nil then WINDOW is enlarged so that it is 1/2 of the current frame.
 If VAL is a positive integer then WINDOW is enlarged so that its new height is
 VAL lines. If VAL is > 0 and < 1 then WINDOW is enlarged so that its new
 height is that fraction of the frame."
-
   (if (and window (window-live-p window))
       (let* ((norm-val (if val
                            (ecb-normalize-number val (1- (frame-height)))
