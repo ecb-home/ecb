@@ -1,7 +1,11 @@
 
 - In online-help:
   + pointer to the intellisense feature of semantic
-	
+
+- (BUG) if a buffer is opened from within an archive (zip or tar) then
+  clicking onto a method in this buffer tries to jump somewhere in the archive
+  (tar or zip) buffer (Klaus)
+
 - (BUG) if we are in a compilation buffer, and we do a
   switch-to-buffer-other-window, and the buffer currently in the edit window is
   already the buffer we want to switch to, we should NOT split the window again
@@ -18,5 +22,3 @@
    intelligent tree-buffer recentering.
 
 - Ignore source files specified in .cvsignore files. (JN)
-
-- Add a grep-find command to the directory popup menu. (JN)

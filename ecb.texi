@@ -2639,6 +2639,29 @@ Specifies directories that should not be included in the directories
 list. The value of this variable should be a regular expression.
 @end defopt
 
+@defopt grep-function
+Function used for performing a grep. The popup-menu of the
+tree-buffers ``Directories'', ``Sources'' and ``History'' offer to
+grep the ``current'' directory:
+@itemize @minus
+@item
+Directory-buffer: The grep is performed in the current popup-directory
+after clicking the right mouse-button onto a node.
+@item
+Sources-buffer: The grep is performed in the current selected directory.
+@item
+History-buffer: The grep is performed in the directory of the current
+popup-source after clicking the right mouse-button onto a node.
+@end itemize
+@end defopt
+
+@defopt grep-find-function
+Function used for performing a recursive grep. For more Details see
+option `ecb-grep-function' and replace ``grep'' with ``recursive
+grep''.
+@end defopt
+
+
 @defopt show-sources-in-directories-buffer
 Show source files in directories buffer.
 @end defopt

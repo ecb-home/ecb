@@ -26,7 +26,7 @@
 ;; This file is part of the ECB package which can be found at:
 ;; http://home.swipnet.se/mayhem/ecb.html
 
-;; $Id: ecb-util.el,v 1.24 2002/08/09 11:33:44 berndl Exp $
+;; $Id: ecb-util.el,v 1.25 2002/10/06 11:05:48 berndl Exp $
 
 ;;; Code:
 
@@ -62,10 +62,9 @@
 (defun ecb-fix-filename (path &optional filename substitute-env-vars)
   "Normalizes path- and filenames for ECB. If FILENAME is not nil its pure
 filename \(i.e. without directory part) will be concatenated to PATH. The
-result will never end in the directory-separator. If SUBSTITUTE-ENV-VARS is
-not nil then in both PATH and FILENAME env-var substitution is done.
-If the `system-type' is 'cygwin32 then the path is converted to
-win32-path-style!"
+result will never end with the directory-separator! If SUBSTITUTE-ENV-VARS is
+not nil then in both PATH and FILENAME env-var substitution is done. If the
+`system-type' is 'cygwin32 then the path is converted to win32-path-style!"
   (when (stringp path)
     (let (norm-path)    
       (setq norm-path (if (and running-xemacs (equal system-type 'cygwin32))
@@ -140,6 +139,29 @@ win32-path-style!"
   (delete-directory (tree-node-get-data node))
   (ecb-update-directory-node (tree-node-get-parent node))
   (tree-buffer-update))
+
+(defun ecb-grep-directory-internal (node find)
+  (select-window (or ecb-last-edit-window-with-point ecb-edit-window))
+  (let ((default-directory (concat (ecb-fix-filename
+                                    (if (file-directory-p
+                                         (tree-node-get-data node))
+                                        (tree-node-get-data node)
+                                      (file-name-directory
+                                       (tree-node-get-data node))))
+                                   ecb-directory-sep-string)))
+    (call-interactively (if find
+                            (or (and (fboundp ecb-grep-find-function)
+                                     ecb-grep-find-function)
+                                'grep-find)
+                          (or (and (fboundp ecb-grep-function)
+                                   ecb-grep-function)
+                              'grep)))))
+
+(defun ecb-grep-find-directory (node)
+  (ecb-grep-directory-internal node t))
+
+(defun ecb-grep-directory (node)
+  (ecb-grep-directory-internal node nil))
 
 (defun ecb-enlarge-window(window)
   "Enlarge the given window so that it is 1/2 of the current frame."

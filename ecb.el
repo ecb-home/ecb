@@ -59,7 +59,7 @@
 ;; The latest version of the ECB is available at
 ;; http://home.swipnet.se/mayhem/ecb.html
 
-;; $Id: ecb.el,v 1.238 2002/09/16 14:32:43 berndl Exp $
+;; $Id: ecb.el,v 1.239 2002/10/06 11:05:48 berndl Exp $
 
 ;;; Code:
 
@@ -409,6 +409,26 @@ There are three options:
                        :value first)
                 (const :tag "No auto. expand"
                        :value nil)))
+
+(defcustom ecb-grep-function (if (fboundp 'igrep) 'igrep 'grep)
+  "*Function used for performing a grep.
+The popup-menu of the tree-buffers \"Directories\", \"Sources\" and
+\"History\" offer to grep the \"current\" directory:
+- Directory-buffer: The grep is performed in the current popup-directory after
+  clicking the right mouse-button onto a node.
+- Sources-buffer: The grep is performed in the current selected directory.
+- History-buffer: The grep is performed in the directory of the current
+  popup-source after clicking the right mouse-button onto a node."
+  :group 'ecb-directories
+  :type 'function)
+
+(defcustom ecb-grep-find-function (if (fboundp 'igrep-find)
+                                      'igrep-find 'grep-find)
+  "*Function used for performing a recursive grep.
+For more Details see option `ecb-grep-function' and replace \"grep\" with
+\"recursive grep\"."
+  :group 'ecb-directories
+  :type 'function)
 
 (defcustom ecb-sources-buffer-name " *ECB Sources*"
   "*Name of the ECB sources buffer. Because it is not a normal buffer for
@@ -2770,7 +2790,7 @@ combination is invalid \(see `ecb-interpret-mouse-click'."
 					     tree-buffer-name)
   "This is the callback-function ecb.el gives to every tree-buffer to call
 when a node should be expanded. This function does nothing if the click
-combination is invalid \(see `ecb-interpret-mouse-click'."
+combination is invalid \(see `ecb-interpret-mouse-click')."
   (let* ((ecb-button-list (ecb-interpret-mouse-click mouse-button
 						     shift-pressed
 						     control-pressed
@@ -3914,10 +3934,14 @@ if the minor mode is enabled.
 
 (defvar ecb-common-directories-menu nil)
 (setq ecb-common-directories-menu
-      '(("Create File" ecb-create-file)
+      '(("Grep Directory" ecb-grep-directory)
+        ("Grep Directory recursive" ecb-grep-find-directory)
+        ("---")
+        ("Create File" ecb-create-file)
 	("Create Source" ecb-create-directory-source)
-	("Delete Directory" ecb-delete-directory)
 	("Create Child Directory" ecb-create-directory)
+	("Delete Directory" ecb-delete-directory)
+        ("---")
 	("Add Source Path" ecb-add-source-path-node)))
 
 (defvar ecb-directories-menu nil)
@@ -3934,9 +3958,12 @@ if the minor mode is enabled.
 
 (defvar ecb-sources-menu nil)
 (setq ecb-sources-menu
-      '(("Delete File" ecb-delete-source-2)
+      '(("Grep Directory" ecb-grep-directory)
+        ("Grep Directory recursive" ecb-grep-find-directory)
+        ("---")
+        ("Delete File" ecb-delete-source-2)
 	("Create File" ecb-create-file-2)
-	("Create Source" ecb-create-source-2)))
+	("Create Source" ecb-create-source-2)))        
 
 ;; three easy-entry functions for the history menu for conveniance
 ;; Note: The node argument in the first two functions is not used.
@@ -3979,8 +4006,12 @@ buffers does not exist anymore."
 
 (defvar ecb-history-menu nil)
 (setq ecb-history-menu
-      '(("Delete File" ecb-delete-source-2)
+      '(("Grep Directory" ecb-grep-directory)
+        ("Grep Directory recursive" ecb-grep-find-directory)
+        ("---")
+        ("Delete File" ecb-delete-source-2)
         ("Kill Buffer" ecb-history-kill-buffer)
+        ("---")
 	("Remove Current Entry" ecb-clear-history-node)
 	("Remove All Entries" ecb-clear-history-all)
 	("Remove Non Existing Buffer Entries" ecb-clear-history-only-not-existing)))

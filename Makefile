@@ -34,13 +34,14 @@ LOADPATH=../semantic ../eieio ../jde/lisp
 # not available let the related setting X empty! NOTE: For generating the
 # PDF-format you will need an installed TeX and Ghostscript!
 MAKEINFO=/usr/bin/makeinfo
-TEXI2DVI=/D/Programme/Tools/tex/texmf/miktex/bin/texi2dvi
+TEXI2DVI=/C/Programme/texmf/miktex/bin/texi2dvi
 # You need either the dvipdfm-tool
-DVIPDFM=/D/Programme/Tools/tex/texmf/miktex/bin/dvipdfm
+#DVIPDFM=/C/Programme/texmf/miktex/bin/dvipdfm
+DVIPDFM=
 # or the tools dvips and ps2pdf. If dvipdfm is available the Makefile uses
 # this one!
-DVIPS=/D/Programme/Tools/tex/texmf/miktex/bin/dvips
-PS2PDF=/D/home/bin/ps2pdf
+DVIPS=/C/Programme/texmf/miktex/bin/dvips
+PS2PDF=/C/home/bin/ps2pdf
 
 # To generate the online-formats just call "make online-help"
 
@@ -50,7 +51,7 @@ PS2PDF=/D/home/bin/ps2pdf
 
 # Set here the path of the info subdirectory of your (X)Emacs installation
 # which contains the dir file.
-EMACSINFOPATH=/D/Programme/Tools/Editor/emacs-21.2/info
+EMACSINFOPATH=/C/Programme/emacs-21/info
 
 # If you want to install the info-format of the online-help in the
 # Top-directory of the info-directory of (X)Emacs (see above EMACSINFOPATH)
@@ -64,7 +65,7 @@ INSTALLINFO=/usr/bin/install-info
 
 # Do not change anything below!
 
-# $Id: Makefile,v 1.36 2002/08/22 10:04:13 berndl Exp $
+# $Id: Makefile,v 1.37 2002/10/06 11:05:47 berndl Exp $
 
 RM=rm -f
 CP=cp
@@ -116,7 +117,7 @@ online-help: $(ecb_TEXI)
 	elif test -x "$(TEXI2DVI)" -a -x "$(DVIPS)" -a -x "$(PS2PDF)" ; then\
 	   $(RM) $(ecb_DVI) $(ecb_PS) $(ecb_PDF); \
 	   echo Generating pdf-format with dvips and ps2pdf ...; \
-	   $(TEXI2DVI) --clean $<; \
+	   $(TEXI2DVI) --quiet --clean $<; \
 	   $(DVIPS) -Pcmz -q $(ecb_DVI) -o $(ecb_PS); \
 	   $(PS2PDF) $(ecb_PS); \
 	   $(RM) $(ecb_DVI) $(ecb_PS); \

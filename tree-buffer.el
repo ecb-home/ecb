@@ -26,7 +26,7 @@
 ;; This file is part of the ECB package which can be found at:
 ;; http://home.swipnet.se/mayhem/ecb.html
 
-;; $Id: tree-buffer.el,v 1.90 2002/09/09 12:05:20 berndl Exp $
+;; $Id: tree-buffer.el,v 1.91 2002/10/06 11:05:51 berndl Exp $
 
 ;;; Code:
 
@@ -666,14 +666,17 @@ mentioned above!"
   (when menu-items
     (cons
      (if running-xemacs
-	 (let ((v (make-vector 3 t)))
-	   (aset v 0 (caar menu-items))
-	   (aset v 1 (list (cadar menu-items)
-			   '(tree-buffer-get-node-at-point)))
-	   v)
+         (if (null (cdar menu-items))
+             (caar menu-items)
+           (let ((v (make-vector 3 t)))
+             (aset v 0 (caar menu-items))
+             (aset v 1 (list (cadar menu-items)
+                             '(tree-buffer-get-node-at-point)))
+             v))
        (cons (cadar menu-items)
 	     (cons (caar menu-items) t)))
      (tree-buffer-create-menu (cdr menu-items)))))
+
 
 (defun tree-buffer-create-menus (menus)
   "Creates a popup menus from an assoc list with menus."

@@ -2279,6 +2279,22 @@ This group contains the following options:
    Specifies directories that should not be included in the directories list.
    The value of this variable should be a regular expression.
 
+ - User Option: grep-function
+   Function used for performing a grep. The popup-menu of the tree-buffers
+   "Directories", "Sources" and "History" offer to grep the "current"
+   directory:
+    - Directory-buffer: The grep is performed in the current popup-directory
+      after clicking the right mouse-button onto a node.
+
+    - Sources-buffer: The grep is performed in the current selected directory.
+
+    - History-buffer: The grep is performed in the directory of the current
+      popup-source after clicking the right mouse-button onto a node.
+
+ - User Option: grep-find-function
+   Function used for performing a recursive grep. For more Details see option
+   `ecb-grep-function' and replace "grep" with "recursive grep".
+
  - User Option: show-sources-in-directories-buffer
    Show source files in directories buffer.
 
@@ -3972,6 +3988,8 @@ the option `ecb-layout-nr' is listed with name "layout-nr").
 * exclude-parents-regexp:                ecb-methods.
 * excluded-directories-regexp:           ecb-directories.
 * font-lock-tokens:                      ecb-methods.
+* grep-find-function:                    ecb-directories.
+* grep-function:                         ecb-directories.
 * hide-ecb-windows-hook:                 ecb-layout.
 * highlight-token-header-after-jump:     ecb-methods.
 * highlight-token-with-point:            ecb-methods.
@@ -4140,44 +4158,44 @@ Node: Most important options76979
 Node: Customizable options78772
 Node: ecb-general79919
 Node: ecb-directories98102
-Node: ecb-sources103018
-Node: ecb-methods104872
-Node: ecb-history116740
-Node: ecb-layout118400
-Node: ecb-face-options132183
-Node: ecb-faces135605
-Node: ecb-download139597
-Node: Submitting problem report140806
-Node: Upgrading142169
-Node: Downloading new versions142932
-Ref: Download required packages144689
-Ref: Downloading new versions-Footnote-1145787
-Node: Auto. option-upgrading145836
-Node: User interface146144
-Node: Background information147030
-Node: Tips and tricks150428
-Node: Changing faces151121
-Ref: Changing faces-Footnote-1153957
-Node: Small screens154133
-Node: Simulating speedbar155527
-Node: Integrating speedbar156336
-Node: Optimize scrolling156602
-Node: Large directories157682
-Node: Using eshell158348
-Node: Elisp programming158538
-Node: List of variables159147
-Node: List of hooks159459
-Node: tree-buffer159957
-Node: Adviced functions160763
-Ref: Adviced functions-Footnote-1161370
-Node: New layouts161441
-Node: Conflicts and bugs161624
-Node: Conflicts162099
-Node: Bugs164555
-Node: FAQ164775
-Ref: FAQ-Footnote-1169527
-Node: Command Index169558
-Node: Option Index171675
-Node: Concept Index177029
+Node: ecb-sources103748
+Node: ecb-methods105602
+Node: ecb-history117470
+Node: ecb-layout119130
+Node: ecb-face-options132913
+Node: ecb-faces136335
+Node: ecb-download140327
+Node: Submitting problem report141536
+Node: Upgrading142899
+Node: Downloading new versions143662
+Ref: Download required packages145419
+Ref: Downloading new versions-Footnote-1146517
+Node: Auto. option-upgrading146566
+Node: User interface146874
+Node: Background information147760
+Node: Tips and tricks151158
+Node: Changing faces151851
+Ref: Changing faces-Footnote-1154687
+Node: Small screens154863
+Node: Simulating speedbar156257
+Node: Integrating speedbar157066
+Node: Optimize scrolling157332
+Node: Large directories158412
+Node: Using eshell159078
+Node: Elisp programming159268
+Node: List of variables159877
+Node: List of hooks160189
+Node: tree-buffer160687
+Node: Adviced functions161493
+Ref: Adviced functions-Footnote-1162100
+Node: New layouts162171
+Node: Conflicts and bugs162354
+Node: Conflicts162829
+Node: Bugs165285
+Node: FAQ165505
+Ref: FAQ-Footnote-1170257
+Node: Command Index170288
+Node: Option Index172405
+Node: Concept Index177875
 
 End Tag Table

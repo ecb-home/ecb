@@ -3200,6 +3200,45 @@ list. The value of this variable should be a regular expression.
 <p>
 <table width="100%">
 <tr>
+<td align="left"><b>grep-function</b><i>
+</i></td>
+<td align="right">User Option</td>
+</tr>
+</table>
+<table width="95%" align="center">
+<tr><td>
+Function used for performing a grep. The popup-menu of the
+tree-buffers "Directories", "Sources" and "History" offer to
+grep the "current" directory:
+<ul>
+<li>Directory-buffer: The grep is performed in the current popup-directory
+after clicking the right mouse-button onto a node. 
+<li>Sources-buffer: The grep is performed in the current selected directory. 
+<li>History-buffer: The grep is performed in the directory of the current
+popup-source after clicking the right mouse-button onto a node. 
+</ul>
+</td></tr>
+</table>
+
+<p>
+<table width="100%">
+<tr>
+<td align="left"><b>grep-find-function</b><i>
+</i></td>
+<td align="right">User Option</td>
+</tr>
+</table>
+<table width="95%" align="center">
+<tr><td>
+Function used for performing a recursive grep. For more Details see
+option `ecb-grep-function' and replace "grep" with "recursive
+grep". 
+</td></tr>
+</table>
+
+<p>
+<table width="100%">
+<tr>
 <td align="left"><b>show-sources-in-directories-buffer</b><i>
 </i></td>
 <td align="right">User Option</td>
@@ -5782,6 +5821,8 @@ Up:<a rel=up accesskey=u href="#Top">Top</a>
 <li><code>exclude-parents-regexp</code>: <a href="#ecb-methods">ecb-methods</a>
 <li><code>excluded-directories-regexp</code>: <a href="#ecb-directories">ecb-directories</a>
 <li><code>font-lock-tokens</code>: <a href="#ecb-methods">ecb-methods</a>
+<li><code>grep-find-function</code>: <a href="#ecb-directories">ecb-directories</a>
+<li><code>grep-function</code>: <a href="#ecb-directories">ecb-directories</a>
 <li><code>hide-ecb-windows-hook</code>: <a href="#ecb-layout">ecb-layout</a>
 <li><code>highlight-token-header-after-jump</code>: <a href="#ecb-methods">ecb-methods</a>
 <li><code>highlight-token-with-point</code>: <a href="#ecb-methods">ecb-methods</a>
