@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-compilation.el,v 1.27 2003/09/01 09:13:24 berndl Exp $
+;; $Id: ecb-compilation.el,v 1.28 2003/09/05 07:27:35 berndl Exp $
 
 ;;; Commentary:
 
@@ -51,10 +51,11 @@
 (defcustom ecb-compilation-buffer-names `(("*Calculator*" . nil)
                                           ("*vc*" . nil)
                                           ("*vc-diff*" . nil)
-                                          ("*Apropos*" . nil)
+                                          ,(if ecb-running-xemacs
+                                               '("\\*Apropos.*\\*" . t)
+                                             '("*Apropos*" . nil))
                                           ("*Occur*" . nil)
                                           ("*shell*" . nil)
-;;                                           ("*ECB upgraded options*" . nil)
                                           ("\\*[cC]ompilation.*\\*" . t)
                                           ("\\*i?grep.*\\*" . t)
                                           ("*JDEE Compile Server*" . nil)
@@ -279,10 +280,13 @@ compilation buffers see `ecb-compilation-buffer-p'."
               (setq submenu
                     (append submenu
                             (list (vector (car buffer)
-                                          `(funcall (if (ecb-compile-window-live-p)
-                                                        'switch-to-buffer
-                                                      'switch-to-buffer-other-window)
-                                                  ,(car buffer))
+                                          ;; switch-to-buffer-other-window is
+                                          ;; ok for all situations because if
+                                          ;; no compile-window it uses another
+                                          ;; edit-window otherwise it uses the
+                                          ;; compile-window. 
+                                          `(funcall 'switch-to-buffer-other-window
+                                                    ,(car buffer))
                                           :active t)))))
             
             ;;TODO: Klaus Berndl <klaus.berndl@sdm.de>: Seems not to work with

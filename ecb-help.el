@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-help.el,v 1.97 2003/09/01 14:47:37 berndl Exp $
+;; $Id: ecb-help.el,v 1.98 2003/09/05 07:27:35 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -369,8 +369,6 @@ could be interesting for support."
                                    ecb-use-semantic-grouping
                                    ecb-idle-timer-alist
                                    ecb-post-command-hooks
-                                   ecb-old-compilation-window-height
-                                   ecb-old-temp-buffer-max-height
                                    ecb-minor-mode
                                    ecb-toggle-layout-state)
                                  (function (lambda (l r)

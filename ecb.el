@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb.el,v 1.330 2003/09/01 16:17:51 berndl Exp $
+;; $Id: ecb.el,v 1.331 2003/09/05 07:27:34 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -4880,18 +4880,18 @@ That is remove the unsupported :help stuff."
        ]))
    "-"
    (ecb-menu-item
-    [ "Toggle compilation window"
+    [ "Toggle compile window"
       ecb-toggle-compile-window
       :active (equal (selected-frame) ecb-frame)
-      :help "Toggle visibility of compilation window."
+      :help "Toggle visibility of compile window."
       ])
    (ecb-menu-item
-    [ "Toggle enlarged compilation window"
-      ecb-toggle-enlarged-compilation-window
+    [ "Toggle enlarged compile window"
+      ecb-toggle-compile-window-height
       :active (and (equal (selected-frame) ecb-frame)
                    ecb-compile-window
                    (ecb-compile-window-live-p))
-      :help "Toggle enlarged compilation window."
+      :help "Toggle enlarged compile window."
       ])
    "-"
    (list
@@ -5243,7 +5243,7 @@ That is remove the unsupported :help stuff."
                (t "mb" ecb-maximize-window-speedbar)
                (t "e" ecb-eshell-goto-eshell)
                (t "\\" ecb-toggle-compile-window)
-               (t "/" ecb-toggle-enlarged-compilation-window)
+               (t "/" ecb-toggle-compile-window-height)
                (t "," ecb-cycle-maximized-ecb-buffers)
                (t "." ecb-cycle-through-compilation-buffers)))
 
@@ -5389,8 +5389,6 @@ always the ECB-frame if called from another frame."
         (ecb-upgrade-not-compatible-options)
         (ecb-upgrade-renamed-options)
         (setq ecb-upgrade-check-done t))
-
-      (setq ecb-old-compilation-window-height compilation-window-height)
       
       ;; first initialize the whole layout-engine
       (ecb-initialize-layout)
@@ -5753,7 +5751,6 @@ does all necessary after finishing ediff."
       ;; deactivating the adviced functions
       (ecb-activate-adviced-functions nil)
       (ecb-disable-basic-advices)
-      (ecb-enable-count-windows-advice nil)
 
       (ecb-enable-own-temp-buffer-show-function nil)      
 
@@ -5766,8 +5763,6 @@ does all necessary after finishing ediff."
       
       (tree-buffer-deactivate-mouse-tracking)
       (tree-buffer-deactivate-follow-mouse)
-
-      (setq compilation-window-height ecb-old-compilation-window-height)
 
       ;; remove the hooks
       (remove-hook 'semantic-after-partial-cache-change-hook
@@ -6361,7 +6356,6 @@ changed there should be no performance-problem!"
 ;; AFTER the FIRST usage of our advices!!
 (ecb-disable-basic-advices)
 (ecb-activate-adviced-functions nil)
-(ecb-enable-count-windows-advice nil)
 (ecb-speedbar-disable-advices)
 
 (silentcomp-provide 'ecb)

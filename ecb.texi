@@ -26,7 +26,7 @@
 @c GNU Emacs; see the file COPYING.  If not, write to the Free Software
 @c Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-@c $Id: ecb.texi,v 1.113 2003/09/02 14:31:26 berndl Exp $
+@c $Id: ecb.texi,v 1.114 2003/09/05 07:27:34 berndl Exp $
 
 @setfilename ecb.info
 
@@ -1416,11 +1416,11 @@ With the option @code{ecb-compile-window-temporally-enlarge} you can
 allow Emacs to enlarge temporally the ECB-compile-window in some
 situations. Please read the comment of this option. See also the
 description of the command
-@code{ecb-toggle-enlarged-compilation-window}.
+@code{ecb-toggle-compile-window-height}.
 
 @item
 With the option @code{ecb-enlarged-compilation-window-max-height} you
-specify how @code{ecb-toggle-enlarged-compilation-window} should
+specify how @code{ecb-toggle-compile-window-height} should
 enlarge the compile-window.
 
 @item
@@ -3105,22 +3105,21 @@ command can only display a compile-window if
 @code{nil}!
 @end deffn
 
+@deffn Command toggle-compile-window-height &optional arg
+Toggle whether the @code{ecb-compile-window} is enlarged or not. If
+@var{ARG} > 0 then shrink or enlarge the the compile-window according
+to the value of @code{ecb-enlarged-compilation-window-max-height}. But
+never shrink below the value of @code{ecb-compile-window-height}. If
+@var{ARG} <= 0 then shrink @code{ecb-compile-window} to
+@code{ecb-compile-window-height} and if @var{ARG} is nil then toggle
+the enlarge-state.
+@end deffn
+
 @deffn Command toggle-ecb-windows &optional arg
 Toggle visibility of the ECB-windows. With prefix argument @var{ARG},
 make visible if positive, otherwise invisible. This has nothing to do
 with (de)activating ECB but only affects the visibility of the ECB
 windows. ECB minor mode remains active!
-@end deffn
-
-@deffn Command toggle-enlarged-compilation-window &optional arg
-Toggle whether the @code{ecb-compile-window} is enlarged or not. If
-@var{ARG} > 0 then enlarge to a senseful value (see below), if
-@var{ARG} <= 0 then shrink @code{ecb-compile-window} to
-@code{ecb-compile-window-height} and if @var{ARG} is nil then toggle the
-enlarge-state.
-
-The @code{ecb-compile-window} is enlarged to the value of
-@code{ecb-enlarged-compilation-window-max-height}.!
 @end deffn
 
 @deffn Command toggle-layout
@@ -5414,7 +5413,7 @@ displayed there is not displayed there then try to modify the options
 
 See also the options @code{ecb-compile-window-temporally-enlarge} and
 @code{ecb-enlarged-compilation-window-max-height} and also the command
-@code{ecb-toggle-enlarged-compilation-window}!
+@code{ecb-toggle-compile-window-height}!
 
 Regardless of the settings you define here: If you have destroyed or
 changed the ECB-screen-layout by any action you can always go back to
@@ -5438,7 +5437,7 @@ the max. height of the enlarged compile-window see the option
 Selecting the @code{ecb-compile-window} auto. enlarges it and
 de-selecting (means leaving @code{ecb-compile-window}) auto. shrinks
 it. Enlarging and shrinking the @code{ecb-compile-window} is done with
-@code{ecb-toggle-enlarged-compilation-window}. See also the
+@code{ecb-toggle-compile-window-height}. See also the
 documentation of this function!
 
 @item @code{both}:
@@ -5450,7 +5449,7 @@ value of @code{ecb-compile-window-height}.
 @end itemize
 
 To restore the ECB-layout after such a buffer-enlarge just call
-@code{ecb-toggle-enlarged-compilation-window} or
+@code{ecb-toggle-compile-window-height} or
 @code{ecb-redraw-layout}.
 @end defopt
 
@@ -5504,28 +5503,22 @@ not nil!
 @end defopt
 
 @defopt enlarged-compilation-window-max-height
-The max height of the compilation window after enlarging it. The max
+The max height of the compile-window after enlarging it. The max
 height of the compilation window after enlarged by
-@code{ecb-toggle-enlarged-compilation-window}. The following values
-are allowed:
+@code{ecb-toggle-compile-window-height}. The following values are
+allowed:
 
 @code{best}:
 
-Minimum is the value of @code{ecb-compile-window-height} and max. the
-half of the frame-height of the ECB-frame, best depending on the
-values of @code{compilation-window-height} rsp.
-@code{temp-buffer-max-height} (before ECB was started!) and the number
-of lines of current buffer in @code{ecb-compile-window}. If
+ECB fits the height of the compile-window exactly to the size of its
+current contents but never shrinks below the value of
+@code{ecb-compile-window-height} or enlarges over the half of the
+frame-height of the ECB-frame. The values of the options
 @code{compilation-window-height} and @code{temp-buffer-max-height} are
-set before ECB was started then ECB never enlarges the
-@code{ecb-compile-window} over the value of
-@code{compilation-window-height} rsp. @code{temp-buffer-max-height}!
-Changing @code{compilation-window-height} or
-@code{temp-buffer-max-height} during activated ECB takes first effect
-after restarting ECB! @code{compilation-window-height} will be used
-for buffers in @code{compilation-mode} (e.g. grep, compile etc.) and
-@code{temp-buffer-max-height} for the rest of buffers in the sense of
-@code{ecb-compilation-buffer-p}.
+taken into account dependent of the current @code{major-mode} of the
+buffer in the compile-window: If @code{compilation-mode} then
+@code{compilation-window-height} is used otherwise
+@code{temp-buffer-max-height}.
 
 @code{half}:
 
@@ -5537,6 +5530,7 @@ Max height in lines. If the number is less than 1.0 the height is a
 fraction of the frame height (e.g. 0.33 results in a max-height of 1/3
 the frame-height).
 @end defopt
+
 
 @node ecb-create-layout, ecb-face-options, ecb-compilation, Customizable options
 @subsection Group ecb-create-layout

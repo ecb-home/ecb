@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-util.el,v 1.71 2003/09/01 16:17:51 berndl Exp $
+;; $Id: ecb-util.el,v 1.72 2003/09/05 07:27:34 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -176,11 +176,13 @@ means not to count the minibuffer even if it is active."
                                           '((delete-frame . around)
                                             (compilation-set-window-height . around)
                                             (shrink-window-if-larger-than-buffer . around)
+                                            (pop-to-buffer . around)
                                             (scroll-other-window . around)
                                             (custom-save-all . around)
                                             (winner-mode . around)
                                             (winner-redo . around)
                                             (winner-undo . around)
+                                            (count-windows . around)
                                             (narrow-to-region . before)
                                             (narrow-to-defun . before)
                                             (narrow-to-page . before)
@@ -205,6 +207,7 @@ means not to count the minibuffer even if it is active."
                                           (narrow-to-defun . before)
                                           (narrow-to-page . before)
                                           (widen . before)
+                                          (count-windows . around)
                                           (scroll-all-mode . after)))
   "These functions are always adviced if ECB is active. Each element of the
 list is a cons-cell where the car is the function-symbol and the cdr the
@@ -675,6 +678,7 @@ for FILE, but proper EOL-conversion and character interpretation is done!"
         (with-temp-buffer
           (insert-file-contents exp-filename)
           (buffer-string)))))
+
 
 (silentcomp-provide 'ecb-util)
 

@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-upgrade.el,v 1.43 2003/09/01 09:13:24 berndl Exp $
+;; $Id: ecb-upgrade.el,v 1.44 2003/09/05 07:27:34 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -182,8 +182,6 @@
                                 ecb-upgrade-source-file-regexps))
     (ecb-layout-always-operate-in-edit-window . (ecb-layout-always-operate-in-edit-window
                                                  ecb-upgrade-alway-operate-in-edit-window))
-    (ecb-layout-switch-to-compilation-window . (ecb-layout-switch-to-compilation-window
-                                                 ecb-upgrade-switch-to-compilation-window))
     (ecb-truncate-lines . (ecb-truncate-lines
                            ecb-upgrade-truncate-lines))
     (ecb-use-speedbar-for-directories . (ecb-use-speedbar-instead-native-tree-buffer
@@ -321,9 +319,6 @@ The car is the old option symbol and the cdr is a 2-element-list with:
   (let ((l (copy-tree old-val)))
     (setq l (delete 'switch-to-buffer-other-window l))
     l))
-
-(defun ecb-upgrade-switch-to-compilation-window (old-val)
-  (ecb-upgrade-alway-operate-in-edit-window old-val))
 
 ;; ----------------------------------------------------------------------
 ;; internal functions. Dot change anything below this line

@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-eshell.el,v 1.69 2003/09/01 09:13:24 berndl Exp $
+;; $Id: ecb-eshell.el,v 1.70 2003/09/05 07:27:35 berndl Exp $
 
 ;;; Commentary:
 
@@ -333,7 +333,7 @@ we execute it with the eshell buffer."
                    (< (count-lines ecb-eshell-pre-command-point
                                    (point))
                       ecb-compile-window-height))
-          (ecb-toggle-enlarged-compilation-window -1)
+          (ecb-toggle-compile-window-height -1)
           (ecb-eshell-recenter))
         
         ;;reset
