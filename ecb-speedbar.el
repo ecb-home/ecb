@@ -259,7 +259,7 @@ future this could break."
   (speedbar-update-contents))
 
 (defun ecb-speedbar-current-buffer-sync()
-  "Update the speedbar so that we sync up with the current file."
+  "Update the speedbar so that it's synced up with the current file."
   (interactive)
 
   ;;only operate if the current frame is the ECB frame and the

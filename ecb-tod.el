@@ -116,8 +116,7 @@
 
 
 (defun ecb-show-tip-of-the-day ()
-  "Show tip of the day if `ecb-tip-of-the-day' is not nil or if called
-interactively."
+  "Show tip of the day if `ecb-tip-of-the-day' is not nil."
   (interactive)
   (when (or (interactive-p) ecb-tip-of-the-day)
     (ignore-errors (load-file ecb-tip-of-the-day-file))

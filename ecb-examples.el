@@ -112,8 +112,7 @@
 ;; `ecb-window-sync' and `ecb-window-sync-delay'.
 
 (defun ecb-examples-bufferinfo-sync ()
-  "Synchronizes the buffer `ecb-examples-bufferinfo-buffer-name' with current
-buffer of the edit-window if that buffer has changed.
+  "Synchronizes the buffer-info buffer with current source if changed.
 Can be called interactively but normally this should not be necessary because
 it will be called autom. with `ecb-current-buffer-sync-hook'."
   (interactive)
@@ -227,10 +226,10 @@ contains two buttons \[prior] and \[next] and mouse-2 calls
 ;; The function which performs the actions in the action-buffer
 
 (defun ecb-examples-action-buffer-clicked (e)
-  "Perform the right action for the mouse-click. If the user clicks onto
-\[prior] the buffer in the edit-window is scrolled up, if clicks onto \[next]
-the buffer in the edit-window is scrolled down. Otherwise nothing will be
-done."
+  "Perform the right action for the mouse-click.
+If the user clicks onto \[prior] the buffer in the edit-window is scrolled up,
+if clicks onto \[next] the buffer in the edit-window is scrolled down.
+Otherwise nothing will be done."
   (interactive "e")
   (mouse-set-point e)
   (let ((line (buffer-substring (ecb-line-beginning-pos) (ecb-line-end-pos))))
@@ -349,10 +348,11 @@ window/buffer of a layout."
 ;; of 0.2 instead of 6 hard lines, just try it!
 
 (defun ecb-examples-activate ()
-  "Activate the new layout \"example-layout1\". Add
-`ecb-examples-bufferinfo-sync' to `ecb-current-buffer-sync-hook', set
+  "Activate the new layout \"example-layout1\".
+Add `ecb-examples-bufferinfo-sync' to `ecb-current-buffer-sync-hook', set
 `ecb-compile-window-height' to 5 and `ecb-windows-height' to 6. The
-preactivation-state is saved and will be restored by `ecb-examples-deactivate'."
+preactivation-state is saved and will be restored by
+`ecb-examples-deactivate'."
   (interactive)
 
   (assert (featurep 'ecb) nil
@@ -381,9 +381,9 @@ preactivation-state is saved and will be restored by `ecb-examples-deactivate'."
 ;; Deactivation of the example
 
 (defun ecb-examples-deactivate ()
-  "Deactivate the new layout \"example-layout1\". Remove
-`ecb-examples-bufferinfo-sync' from `ecb-current-buffer-sync-hook' and restore
-the state as before activation."
+  "Deactivate the new layout \"example-layout1\".
+Remove `ecb-examples-bufferinfo-sync' from `ecb-current-buffer-sync-hook' and
+restore the state as before activation."
   (interactive)
 
   (assert (featurep 'ecb) nil
