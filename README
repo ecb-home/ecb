@@ -1,5 +1,5 @@
-Readme for the Emacs Code Browser (ECB) version 1.91.2
-------------------------------------------------------
+Readme for the Emacs Code Browser (ECB) version 1.92
+----------------------------------------------------
 
 About
 -----
@@ -69,7 +69,7 @@ with `ecb-activate' or read the online-help with `ecb-show-help'.
 4. Load ECB by adding code to your `.emacs':
 
    If you want to load the complete ECB at (X)Emacs-loadtime (Advantage: All
-   ECB-options available after loading (X)Emacs. Disadvantage: Increasing
+   ECB-options available after loading ECB). Disadvantage: Increasing
    loadtime):
 
       (require 'ecb)

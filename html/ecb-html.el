@@ -28,7 +28,7 @@
 ;; Do not change any html-file besides the index.html manually but do all
 ;; changes in this elisp file!
 
-;; $Id: ecb-html.el,v 1.42 2003/02/18 16:18:28 berndl Exp $
+;; $Id: ecb-html.el,v 1.43 2003/02/24 12:40:13 berndl Exp $
 
 ;;; Code:
 
@@ -76,7 +76,12 @@
 (defvar ecb-latest-news nil
   "List of latest news displayed on the main page.")
 (setq ecb-latest-news
-      `(,(h-sub-section "ECB 1.91.1 released! (2003-02-11)"
+      `(,(h-sub-section "ECB 1.92 released! (2003-02-24)"
+                        "This release fixes some bugs and enhances layout and tree-buffer customizing. "
+                        (h-link "docs/Install-and-first-steps.html#Install%20and%20first%20steps" "Here") " is a short installation guide. "
+                        "Click " (h-link "NEWS.html" "here")
+                        " for information about changes in the new version. ")
+        ,(h-sub-section "ECB 1.91.1 released! (2003-02-11)"
                         "This is mostly a bugfix-release which fixes some annoying bugs! "
                         (h-link "docs/Install-and-first-steps.html#Install%20and%20first%20steps" "Here") " is a short installation guide. "
                         "Click " (h-link "NEWS.html" "here")
@@ -84,20 +89,20 @@
         ,(h-sub-section "Bugfixes for ECB 1.90 available. (2003-02-06)"
                         "Click " (h-link "downloads.html" "here") " to get it.")
         ,(h-sub-section "Usermanual now available ín PDF-format! (2003-02-03)"
-                        "Click " (h-link "downloads.html" "here") " to get it.")
-        ,(h-sub-section "ECB 1.80 is now an official XEmacs package! (2003-02-01)"
-                        "The ECB XEmacs-package has the version-number 1.01 and can "
-                        "be installed either via "
-                        (h-link "http://www.xemacs.org/Download/win32/setup.exe"
-                                "XEmacs-netinstaller")
-                        " (for Windows) or from " (h-link "ftp://ftp.xemacs.org:/pub/xemacs/packages/" "ftp.xemacs.org")
-                        " or via the package-manager of XEmacs.")))
+                        "Click " (h-link "downloads.html" "here") " to get it.")))
 
 (defvar ecb-rest-news nil
   "List of older news - these news are displayed in all-news.html ; see
 `ecb-html-all-news'.")
 (setq ecb-rest-news
-      `(,(h-sub-section "ECB 1.90 released! (2003-01-31)"
+      `(,(h-sub-section "ECB 1.80 is now an official XEmacs package! (2003-02-01)"
+                        "The ECB XEmacs-package has the version-number 1.01 and can "
+                        "be installed either via "
+                        (h-link "http://www.xemacs.org/Download/win32/setup.exe"
+                                "XEmacs-netinstaller")
+                        " (for Windows) or from " (h-link "ftp://ftp.xemacs.org:/pub/xemacs/packages/" "ftp.xemacs.org")
+                        " or via the package-manager of XEmacs.")
+        ,(h-sub-section "ECB 1.90 released! (2003-01-31)"
                         "A lot of new features! Fixed some annoying bugs! "
                         (h-link "docs/Install-and-first-steps.html#Install%20and%20first%20steps" "Here") " is a short installation guide. "
                         "Click " (h-link "NEWS.html" "here")

@@ -19,7 +19,7 @@
 @c Free Software Foundation, Inc., 59 Temple Place - Suite 330,
 @c Boston, MA 02111-1307, USA.
 
-@c $Id: ecb.texi,v 1.79 2003/02/21 18:00:15 berndl Exp $
+@c $Id: ecb.texi,v 1.80 2003/02/24 12:40:14 berndl Exp $
 
 @setfilename ecb.info
 
@@ -42,7 +42,7 @@
 @c edit the Makefile to change the version number. mechanism stolen
 @c from Tramp
 @macro ecbver{}
-1.91.2
+1.92
 @end macro
 
 
@@ -315,9 +315,9 @@ Do not do this!
 Load ECB by adding code to your @file{.emacs}:
 
 If you want to load the complete ECB at (X)Emacs-loadtime (Advantage:
-All ECB-options available after loading (X)Emacs. Disadvantage:
-Increasing loadtime@footnote{Cause of full loading of ECB itself and
-also the packages semantic and eieio regardless if ECB is started.}):
+All ECB-options available after loading ECB. Disadvantage: Increasing
+loadtime@footnote{Cause of full loading of ECB itself and also the
+packages semantic and eieio regardless if ECB is started.}):
 
 @example
 (require 'ecb)
@@ -325,8 +325,10 @@ also the packages semantic and eieio regardless if ECB is started.}):
 
 If you want to load the ECB first after starting it by
 @code{ecb-activate} (Advantage: Fast loading@footnote{ECB, semantic
-and eieio are first loaded after starting ECB}. Disadvantage:
-ECB- and semantic-options first available after starting ECB):
+and eieio are first loaded after starting ECB or with other words: ECB
+and semantic are not loaded if you do not use/need them}.
+Disadvantage: ECB- and semantic-options first available after starting
+ECB):
 
 @example
 (require 'ecb-autoloads)

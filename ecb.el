@@ -10,7 +10,7 @@
 
 ;; IMPORTANT: The version-number is auto-frobbed from the Makefile. Do not
 ;; change it here!
-(defconst ecb-version "1.91.2"
+(defconst ecb-version "1.92"
   "Current ECB version.")
 
 ;; This program is free software; you can redistribute it and/or modify it under
@@ -35,15 +35,21 @@
 ;; To use the Emacs code browser add the ECB files to your load path and add the
 ;; following line to your .emacs file:
 ;;
-;; (require 'ecb)
+;; If you want autoloading ECB after first start:
+;;
+;;    (require 'ecb-autoloads)
+;;
+;; or if you want loading the complete ECB:
+;;
+;;    (require 'ecb)
 ;;
 ;; Optional: You can byte-compile ECB with `ecb-byte-compile' after the
 ;;           ECB-package is loaded
 ;;
 ;; ECB requires:
-;; - Semantic, version 1.4 or higher
+;; - Semantic, author-version between 1.4 and 1.4.9
 ;;   (http://cedet.sourceforge.net/semantic.shtml).
-;; - Eieio, version 0.17 or higher
+;; - Eieio, author-version between 0.17 and 0.17.9
 ;;   (http://cedet.sourceforge.net/eieio.shtml).
 ;;
 ;; If Java code is edited the ECB works best when the JDE package
@@ -62,7 +68,7 @@
 ;; The latest version of the ECB is available at
 ;; http://ecb.sourceforge.net
 
-;; $Id: ecb.el,v 1.290 2003/02/19 13:57:35 berndl Exp $
+;; $Id: ecb.el,v 1.291 2003/02/24 12:40:14 berndl Exp $
 
 ;;; Code:
 

@@ -19,7 +19,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-upgrade.el,v 1.30 2003/02/21 17:58:34 berndl Exp $
+;; $Id: ecb-upgrade.el,v 1.31 2003/02/24 12:40:15 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -256,19 +256,19 @@ The car is the old option symbol and the cdr is a 2-element-list with:
           old-val))
 
 ;; not used anymore beginning with ECB 1.91.1
-(defun ecb-upgrade-layout-window-sizes (old-val)
-  (let ((l (copy-tree old-val)))
-    (dolist (elem l)
-      (setcar elem
-              (ecb-upgrade-layout-nr2name (car elem)))
-      (setcdr elem
-              (mapcar (function (lambda (e)
-                                  (if (consp e)
-                                      e
-                                    (cons nil nil))))
-                      (cdr elem)))
-      )
-    l))
+;; (defun ecb-upgrade-layout-window-sizes (old-val)
+;;   (let ((l (copy-tree old-val)))
+;;     (dolist (elem l)
+;;       (setcar elem
+;;               (ecb-upgrade-layout-nr2name (car elem)))
+;;       (setcdr elem
+;;               (mapcar (function (lambda (e)
+;;                                   (if (consp e)
+;;                                       e
+;;                                     (cons nil nil))))
+;;                       (cdr elem)))
+;;       )
+;;     l))
 
 (defun ecb-upgrade-major-modes-activate (old-val)
   (if (not (listp old-val))
