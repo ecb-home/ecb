@@ -421,9 +421,8 @@ DELETE-FRAME is not nil then the new created frame will be deleted and the
       ;; setting the new buffer type in the buffer itself
       (ecb-create-layout-set-buffer-type new-type)
       (when (interactive-p)
-        (ecb-create-layout-gen-lisp `(ecb-set-buffer ,(concat "ecb-"
-                                                              new-type
-                                                              "-buffer-name")))
+        (ecb-create-layout-gen-lisp
+         `(,(intern (format "ecb-set-%s-buffer" new-type))))
         (ecb-create-layout-next-window))
       new-type)))
 
@@ -470,10 +469,8 @@ DELETE-FRAME is not nil then the new created frame will be deleted and the
       ;; asking for the buffer type
       (ecb-create-layout-set-buffer-factor real-split-factor)
       (ecb-create-layout-gen-lisp
-       `(ecb-set-buffer
-         ,(concat "ecb-"
-                  (ecb-create-layout-set-buffer-to-type old-buf-type)
-                  "-buffer-name")))
+       `(,(intern (format "ecb-set-%s-buffer"
+                          (ecb-create-layout-set-buffer-to-type old-buf-type)))))
       (ecb-create-layout-next-window))))
 
 (defun ecb-create-layout-forward-char ()

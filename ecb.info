@@ -8,10 +8,10 @@ END-INFO-DIR-ENTRY
 
 File: ecb.info,  Node: Top,  Next: Install and first steps,  Prev: (dir),  Up: (dir)
 
-ECB (Emacs Code Browser) is a source code browser for Emacs. It is a global
-minor-mode which displays a couple of windows that can be used to browse
-directories, files and methods. It supports method parsing for Java, C, C++,
-Elisp and some more.
+ECB (Emacs Code Browser) is a source code browser for (X)Emacs. It is a
+global minor-mode which displays a couple of windows that can be used to
+browse directories, files and methods. It supports method parsing for Java,
+C, C++, Elisp and some more.
 
 *NOTE*: Experienced ECB users find a complete alphabetical list of all
 commands and user-options in *Note Interactive ECB commands:: and *Note
@@ -151,8 +151,8 @@ File: ecb.info,  Node: Install and first steps,  Next: Overview,  Prev: Top,  Up
 Installation and first steps of ECB
 ***********************************
 
-This chapter describes how to install ECB and setup Emacs correctly and what
-are the first steps after activation of ECB.
+This chapter describes how to install ECB and setup (X)Emacs correctly and
+what are the first steps after activation of ECB.
 
 * Menu:
 
@@ -178,8 +178,8 @@ installed by the net-installer of XEmacs) then the steps 1., 2., 3., 7. and
    semantic- and eieio-version.
 
    *Note*: ECB maybe requires a newer version of these libraries than shipped
-   with Emacs or XEmacs. You have to install exactly a version ECB requires
-   and also to make sure that the correct version is loaded into (X)Emacs!
+   with (X)Emacs. You have to install exactly a version ECB requires and also
+   to make sure that the correct version is loaded into (X)Emacs!
 
    But ECB checks auto. during start-time if the correct versions of semantic
    and eieio are installed and gives you proper feedback.  *Note Download
@@ -200,8 +200,8 @@ installed by the net-installer of XEmacs) then the steps 1., 2., 3., 7. and
 
 4. Load ECB by adding code to your `.emacs':
 
-   If you want to load the complete ECB at Emacs-loadtime (Advantage: All
-   ECB-options available after loading Emacs. Disadvantage: Increasing
+   If you want to load the complete ECB at (X)Emacs-loadtime (Advantage: All
+   ECB-options available after loading (X)Emacs. Disadvantage: Increasing
    loadtime(2)):
 
       (require 'ecb)
@@ -214,7 +214,7 @@ installed by the net-installer of XEmacs) then the steps 1., 2., 3., 7. and
       (autoload 'ecb-byte-compile "ecb" "Byte-compile ECB" t)
       (autoload 'ecb-show-help "ecb-help" "Show the online help of ECB" t)
 
-5. Restart Emacs.
+5. Restart (X)Emacs.
 
 ECB is now ready for use and can be activated by calling `M-x ecb-activate'
 or `ecb-minor-mode'. Now you can either starting using ECB or you can do
@@ -1818,9 +1818,26 @@ Command Index::.
    a new ECB-layout::).
 
  - Command: current-buffer-sync &optional force
-   Synchronizes the ECB buffers with the current buffer. Unless FORCE is
-   non-`nil' then do this only if current-buffer differs from the source
-   displayed in the ECB tree-buffers.
+   Synchronizes the current buffer with any other buffers.
+
+   Depending on the contents of current buffer this function performs
+   different synchronizing tasks but only if ECB is active and point stays in
+   an edit-window. If this is true under the following additional conditions
+   some tasks are performed:
+
+    * Current buffer is a file-buffer and either FORCE is not nil or the
+      buffer is different from the source-file currently displayed in the
+      ECB-tree-buffers:
+
+      Synchronizing all `tree-buffers' with the current buffer
+
+    * Current buffer is a dired-buffer:
+
+      Synchronizing the directory- and sources-tree-buffer if visible
+
+    * Always:
+
+      Running the hooks in `ecb-current-buffer-sync-hook'.
 
  - Command: cycle-through-compilation-buffers &optional choose-buffer
    Cycle through all compilation buffers currently open and display them
@@ -2234,6 +2251,17 @@ This group contains the following options:
  - User Option: current-buffer-sync-hook
    Normal hook run at the end of `ecb-current-buffer-sync'.
 
+   See documentation of `ecb-current-buffer-sync' for conditions when
+   synchronization takes place and so in turn these hooks are evaluated.
+
+   Important note: If `ecb-window-sync' is not nil `ecb-current-buffer-sync'
+   is running either every time Emacs is idle or even after every command
+   (see `ecb-window-sync-delay').  So these hooks can be really called very
+   often! Therefore each function of this hook should/must check in an
+   efficient way at beginning if its task have to be really performed and
+   then do them only if really necessary! Otherwise performance of Emacs
+   could slow down dramatically!
+
  - User Option: deactivate-hook
    Normal hook run at the end of deactivating (but before the ecb-layout is
    cleared!) ECB by running `ecb-deactivate'.
@@ -2553,23 +2581,31 @@ This group contains the following options:
    to set this option to not `nil'!
 
  - User Option: window-sync
-   Synchronize the ECB-windows automatically with current edit window. If
-   `always' then the synchronization takes place always a buffer changes in
-   the edit window, if `nil' then never. If a list of major-modes then only
-   if the `major-mode' of the new buffer belongs NOT to this list.
+   Synchronize the ECB-windows automatically with current edit window.  The
+   real synchronization is done by `ecb-current-buffer-sync'. If `always'
+   then the synchronization by `ecb-current-buffer-sync' takes place always a
+   buffer changes in the edit window, if `nil' then never. If a list of
+   major-modes then only if the major-mode of the new buffer belongs NOT to
+   this list.
 
-   But in every case the synchronization takes only place if the
-   current-buffer in the edit-window has a relation to files or directories.
-   Examples for the former one are all programming-language-modes,
-   `Info-mode' too, an example for the latter one is `dired-mode'. For all
-   major-modes related to non-file/directory-buffers like `help-mode',
-   `customize-mode' and others never a synchronization will be done!
+   But in every case the synchronization by `ecb-current-buffer-sync' takes
+   only place if the current-buffer in the edit-window has a relation to
+   files or directories. Examples for the former one are all
+   programming-language-modes, `Info-mode' too, an example for the latter one
+   is `dired-mode'. For all major-modes related to non-file/directory-buffers
+   like `help-mode', `customize-mode' and others never an autom.
+   synchronization will be done!
 
    It's recommended to exclude at least `Info-mode' because it makes no sense
    to synchronize the ECB-windows after calling the Info help.  Per default
    also `dired-mode' is excluded but it can also making sense to synchronize
    the ECB-directories/sources windows with the current directory in the
    dired-buffer.
+
+   IMPORTANT NOTE: The synchronization is done by `ecb-current-buffer-sync'
+   and therefore the hook `ecb-current-buffer-sync-hook' is evaluated every
+   time `ecb-current-buffer-sync' is called (see above and documentation of
+   `ecb-current-buffer-sync')!
 
  - User Option: window-sync-delay
    Time Emacs must be idle before the ECB-windows are synchronized with
@@ -4207,22 +4243,36 @@ File: ecb.info,  Node: Integrating speedbar,  Next: Optimize scrolling,  Prev: S
 Integrating speedbar in the ECB-frame
 =====================================
 
-It is very easy to integrate speedbar in the directories window of ECB. So
-people who likes the speedbar way of handling directories and source-files
-but also like the ECB-way of displaying the buffer-contents (like methods and
-variables in a source-file) can combine both worlds:
+It is very easy to integrate speedbar in the directories window of ECB. This
+makes sense for people...
+
+ * ...who likes the speedbar way of handling directories and source-files but
+   also like the ECB-way of displaying the buffer-contents (like methods and
+   variables in a source-file)
+
+ * ...who likes the speedbar way of browsing things like directories, files,
+   file-contents etc. but who dislike the extra speedbar-frame
+
+Regardles the group you belong, with the speedbar-integration feature of ECB
+you can combine both worlds, the speedbar- and the ECB-world:
 
 1. Choose a layout which contains a directories-window but no
    sources-window(1).
+
+   Because speedbar has also display-modes for buffers and info-nodes and
+   some other useful things (which can be changed by the speedbar-command
+   `speedbar-change-initial-expansion-list', which is bound for convenience
+   to the keysequence `C-c . bc' in the `ecb-key-map') we recommend layouts
+   like "left15" or "leftright3" for using with speedbar.
 
 2. Set the option `ecb-use-speedbar-for-directories' to not nil. After this
    the directories window of ECB will contain a full featured speedbar (the
    only difference to standard speedbar is not residing in an extra frame).
 
-Note: A similar effect and useability is available by setting
-`ecb-use-speedbar-for-directories' to nil and setting
-`ecb-show-sources-in-directories-buffer' to not nil, because this combination
-displays also directories and sources in one window.
+Note: If you belong to the first group of people (s.a.) a similar effect and
+useability is available by setting `ecb-use-speedbar-for-directories' to nil
+and setting `ecb-show-sources-in-directories-buffer' to not nil, because this
+combination displays also directories and sources in one window.
 
 So with the option `ecb-use-speedbar-for-directories' you have the choice
 which way of displaying and handling directories and source-files you want
@@ -4233,8 +4283,8 @@ During speedbar is running within ECB (i.e.
 `speedbar' is disabled and the speedbar-command `speedbar-get-focus' switches
 between the speedbar-window and the edit-window(2).
 
-Note: ECB can only integrate speedbar-versions >= 0.14beta1! If you use lower
-versions of speedbar `ecb-use-speedbar-for-directories' has no effect.
+*NOTE*: ECB can only integrate speedbar-versions >= 0.14beta1!  If you use
+lower versions of speedbar `ecb-use-speedbar-for-directories' has no effect.
 
 ---------- Footnotes ----------
 
@@ -4425,14 +4475,17 @@ for better indexing this manual):
    layout and is literal, i.e. not evaluated. It can be left, right, top or
    left-right. DOC is the docstring for the new layout-function
    "ecb-layout-function-<name>". CREATE-CODE is all the lisp code which is
-   necessary to define the ECB-windows/buffers.
+   necessary to define the ECB-windows/buffers. This macro adds the
+   layout-name NAME to the internal variable `ecb-available-layouts' which is
+   used by `ecb-change-layout', `ecb-toggle-layout', `ecb-show-layout-help'
+   and `ecb-layout-get-type'.
 
    Preconditions for CREATE-CODE:
    1. Current frame is splitted at least in one edit-window and the column
       (for layout types left, right and left-right) resp. row (for a top
-      layout) for the ECB-tree-windows/buffers. Depending on the value of the
-      option `ecb-compile-window-height' there is also a compile window at
-      the bottom of the frame which is stored in `ecb-compile-window'.
+      layout) for the special ECB-windows/buffers. Depending on the value of
+      the option `ecb-compile-window-height' there is also a compile window
+      at the bottom of the frame which is stored in `ecb-compile-window'.
 
    2. All windows are not dedicated.
 
@@ -4452,7 +4505,8 @@ for better indexing this manual):
       "hard" number of split-lines or -rows but using fractions between 0.1
       and 0.9!
 
-   2. Naming each ECB-tree-window with one of the following functions:
+   2. Making each special ECB-window a dedicated window. This can be done with
+      one of the following functions:
        - `ecb-set-directories-buffer'
 
        - `ecb-set-sources-buffer'
@@ -4462,12 +4516,18 @@ for better indexing this manual):
        - `ecb-set-history-buffer'
       Each layout can only contain one of each tree-buffer-type!
 
-   3. The ECB-tree-windows-column(s)/row must contain at least one named
-      ECB-tree-window.
+      In addition to these functions there is a general macro
+      `ecb-with-dedicated-window'. This macro performs any arbitrary code in
+      current window and makes the window autom. dedicated at the end. This
+      can be used by third party packages like JDEE to create arbitrary
+      ECB-windows besides the standard tree-windows.
 
-   4. Every(!) ECB-tree-window must be named as described in 2.
+      It's strongly recommended not to use any other function/macro to make a
+      window dedicated!
 
-   5. CREATE-CODE must work correctly regardless if there is already a
+   3. Every(!) special ECB-window must be dedicated as described in 2.
+
+   4. CREATE-CODE must work correctly regardless if there is already a
       compile-window (stored in `ecb-compile-window') or not
       (`ecb-compile-window' is nil).
 
@@ -4482,7 +4542,7 @@ for better indexing this manual):
    2. Creating a compile-window
 
    3. Deleting the edit-window, the compile-window (if there is any) or the
-      ECB-tree-windows-column(s)/row (see Precondition 1.)
+      ECB-windows-column(s)/row (see Precondition 1.)
 
    4. Referring to the value of `ecb-edit-window' because this is always nil
       during CREATE-CODE.
@@ -4491,12 +4551,12 @@ for better indexing this manual):
    1. The edit-window must be the selected window and must not be dedicated.
 
    2. Every window besides the edit-window \(and the compile-window) must be
-      set as a ECB-tree-window."
+      a dedicated window \(e.g. a ECB-tree-window).
 
 Use this macro to program new layouts within your `.emacs' or any other file
 which is loaded into your Emacs. After loading the file(s) with all the new
 layout-definitions you can use it by customizing the option `ecb-layout-name'
-to the appropriate name.
+to the appropriate name or with the command `ecb-change-layout'.
 
 Here is an example:
 
@@ -4997,105 +5057,105 @@ Concept Index
 
 Tag Table:
 Node: Top183
-Node: Install and first steps6276
-Node: Installation6772
-Ref: Installation-Footnote-110696
-Ref: Installation-Footnote-210831
-Ref: Installation-Footnote-310943
-Node: Setting up Emacs11008
-Ref: Checking your hooks12954
-Ref: Setting up Emacs-Footnote-114151
-Ref: Setting up Emacs-Footnote-214255
-Ref: Setting up Emacs-Footnote-314356
-Ref: Setting up Emacs-Footnote-414415
-Node: First steps14564
-Ref: First steps-Footnote-115712
-Node: Overview15941
-Ref: Overview-Footnote-118692
-Node: ECB Directories18785
-Node: ECB Sources19802
-Node: ECB Methods20956
-Node: Activation and Deactivation21505
-Node: Standard activation21875
-Ref: Activation hook-sequence22453
-Ref: Deactivation hook-sequence22773
-Node: Automatic activation22947
-Node: Usage of ECB24080
-Node: Using the mouse24990
-Ref: Using the mouse-Footnote-127265
-Node: Using the keyboard27311
-Ref: Using the keyboard-Footnote-128355
-Node: Navigation28406
-Node: Incremental search29746
-Node: Personal keybindings31922
-Ref: Personal keybindings-Footnote-133920
-Node: The edit-window34023
-Node: Temp- and compile-buffers35853
-Node: The Methods buffer38135
-Node: Customizing the display38576
-Node: Rebuilding the Methods40298
-Node: The ECB-layout41153
-Node: Changing the ECB-layout41800
-Ref: Changing the ECB-layout-Footnote-169522
-Node: Redrawing the ECB-layout69614
-Node: Creating a new ECB-layout70539
-Ref: Creating a new ECB-layout-Footnote-174801
-Node: Hiding the ECB windows74975
-Node: Back/forward navigation76080
-Ref: Back/forward navigation-Footnote-177181
-Node: ECB-window synchronizing77240
-Node: Interactive ECB commands79822
-Node: Customizing89284
-Node: General aspects89918
-Ref: General aspects-Footnote-192751
-Node: Most important options92883
-Node: Customizable options94678
-Node: ecb-general96041
-Node: ecb-directories115991
-Node: ecb-sources122887
-Node: ecb-methods125142
-Node: ecb-history137411
-Node: ecb-layout139472
-Node: ecb-compilation-content156468
-Node: ecb-create-layout157034
-Node: ecb-face-options157550
-Node: ecb-faces160979
-Node: ecb-download164971
-Node: ecb-help166197
-Node: Submitting problem report168162
-Node: Upgrading169525
-Node: Downloading new versions170288
-Ref: Download required packages172045
-Ref: Downloading new versions-Footnote-1173143
-Node: Auto. option-upgrading173192
-Node: User interface173500
-Node: Background information174386
-Node: Tips and tricks177784
-Node: Changing faces178534
-Ref: Changing faces-Footnote-1181370
-Node: Small screens181546
-Node: Big screens182940
-Node: Simulating speedbar183781
-Node: Integrating speedbar184751
-Ref: Integrating speedbar-Footnote-1186404
-Ref: Integrating speedbar-Footnote-2186580
-Node: Optimize scrolling186738
-Node: Large directories187818
-Node: Using eshell188483
-Node: Elisp programming188673
-Node: List of variables189282
-Node: List of hooks189594
-Node: tree-buffer190550
-Node: Adviced functions191356
-Ref: Adviced functions-Footnote-1191975
-Node: Programming new layouts192046
-Node: Conflicts and bugs197750
-Node: Conflicts198225
-Node: Bugs201935
-Node: FAQ202155
-Ref: FAQ-Footnote-1207324
-Node: Command Index207355
-Node: Option Index209806
-Node: Concept Index216397
+Node: Install and first steps6279
+Node: Installation6778
+Ref: Installation-Footnote-110704
+Ref: Installation-Footnote-210839
+Ref: Installation-Footnote-310951
+Node: Setting up Emacs11016
+Ref: Checking your hooks12962
+Ref: Setting up Emacs-Footnote-114159
+Ref: Setting up Emacs-Footnote-214263
+Ref: Setting up Emacs-Footnote-314364
+Ref: Setting up Emacs-Footnote-414423
+Node: First steps14572
+Ref: First steps-Footnote-115720
+Node: Overview15949
+Ref: Overview-Footnote-118700
+Node: ECB Directories18793
+Node: ECB Sources19810
+Node: ECB Methods20964
+Node: Activation and Deactivation21513
+Node: Standard activation21883
+Ref: Activation hook-sequence22461
+Ref: Deactivation hook-sequence22781
+Node: Automatic activation22955
+Node: Usage of ECB24088
+Node: Using the mouse24998
+Ref: Using the mouse-Footnote-127273
+Node: Using the keyboard27319
+Ref: Using the keyboard-Footnote-128363
+Node: Navigation28414
+Node: Incremental search29754
+Node: Personal keybindings31930
+Ref: Personal keybindings-Footnote-133928
+Node: The edit-window34031
+Node: Temp- and compile-buffers35861
+Node: The Methods buffer38143
+Node: Customizing the display38584
+Node: Rebuilding the Methods40306
+Node: The ECB-layout41161
+Node: Changing the ECB-layout41808
+Ref: Changing the ECB-layout-Footnote-169530
+Node: Redrawing the ECB-layout69622
+Node: Creating a new ECB-layout70547
+Ref: Creating a new ECB-layout-Footnote-174809
+Node: Hiding the ECB windows74983
+Node: Back/forward navigation76088
+Ref: Back/forward navigation-Footnote-177189
+Node: ECB-window synchronizing77248
+Node: Interactive ECB commands79830
+Node: Customizing89845
+Node: General aspects90479
+Ref: General aspects-Footnote-193312
+Node: Most important options93444
+Node: Customizable options95239
+Node: ecb-general96602
+Node: ecb-directories117572
+Node: ecb-sources124468
+Node: ecb-methods126723
+Node: ecb-history138992
+Node: ecb-layout141053
+Node: ecb-compilation-content158049
+Node: ecb-create-layout158615
+Node: ecb-face-options159131
+Node: ecb-faces162560
+Node: ecb-download166552
+Node: ecb-help167778
+Node: Submitting problem report169743
+Node: Upgrading171106
+Node: Downloading new versions171869
+Ref: Download required packages173626
+Ref: Downloading new versions-Footnote-1174724
+Node: Auto. option-upgrading174773
+Node: User interface175081
+Node: Background information175967
+Node: Tips and tricks179365
+Node: Changing faces180115
+Ref: Changing faces-Footnote-1182951
+Node: Small screens183127
+Node: Big screens184521
+Node: Simulating speedbar185362
+Node: Integrating speedbar186332
+Ref: Integrating speedbar-Footnote-1188687
+Ref: Integrating speedbar-Footnote-2188863
+Node: Optimize scrolling189021
+Node: Large directories190101
+Node: Using eshell190766
+Node: Elisp programming190956
+Node: List of variables191565
+Node: List of hooks191877
+Node: tree-buffer192833
+Node: Adviced functions193639
+Ref: Adviced functions-Footnote-1194258
+Node: Programming new layouts194329
+Node: Conflicts and bugs200694
+Node: Conflicts201169
+Node: Bugs204879
+Node: FAQ205099
+Ref: FAQ-Footnote-1210268
+Node: Command Index210299
+Node: Option Index212750
+Node: Concept Index219341
 
 End Tag Table
