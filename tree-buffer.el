@@ -26,7 +26,7 @@
 ;; This file is part of the ECB package which can be found at:
 ;; http://home.swipnet.se/mayhem/ecb.html
 
-;; $Id: tree-buffer.el,v 1.32 2001/05/03 16:17:03 berndl Exp $
+;; $Id: tree-buffer.el,v 1.33 2001/05/03 19:58:08 berndl Exp $
 
 ;;; Code:
 
@@ -41,6 +41,7 @@
     (progn
       (defalias 'tree-buffer-line-beginning-pos 'point-at-bol)
       (defalias 'tree-buffer-window-display-height 'window-displayed-height)
+      (defalias 'tree-buffer-event-to-key 'event-key)
       (require 'overlay)
       (defface secondary-selection
         '((((class color) (background light)) (:foreground "blue" :background "LightGray"))
@@ -50,7 +51,9 @@
   ;; GNU Emacs
   (defalias 'tree-buffer-line-beginning-pos 'line-beginning-position)
   (defun tree-buffer-window-display-height (&optional window)
-    (1- (window-height window))))
+    (1- (window-height window)))
+  (defalias 'tree-buffer-event-to-key 'event-basic-type))
+
 
 (defvar tree-buffer-root nil)
 (defvar tree-buffer-nodes nil)
@@ -377,27 +380,29 @@ point will stay on POINT."
 key \(e.g. all keys normally bound to `self-insert-command') is appended to
 the current seach-pattern. The tree-buffer tries to jump to the current
 search-pattern. If no match is found then nothing is done. Some special keys:
-- backspace and delete: Delete the last character from the search-pattern.
-- home: Delete the complete search-pattern
-- end: Expand to the greates common prefix of the nodes
+- \[backspace] and \[delete]: Delete the last character from the search-pattern.
+- \[home]: Delete the complete search-pattern
+- \[end]: Expand either to a complete node if current search-pattern is
+         already unique or expands to the greates common prefix of the nodes
 The current search-pattern is shown in the echo area.
 After selecting a node with RET the search-pattern is cleared out.
 
 Do NOT call this function directly. It works only if called from the binding
 mentioned above!"
   (interactive)
-  (cond  ((or (equal last-command-char 'delete)
-              (equal last-command-char 'backspace))
+  (let ((last-comm (tree-buffer-event-to-key last-command-event)))
+    (cond  ((or (equal last-comm 'delete)
+                (equal last-comm 'backspace))
           ;; reduce by one from the end
           (setq tree-buffer-incr-searchpattern
                 (substring tree-buffer-incr-searchpattern
                            0
                            (max 0 (1- (length tree-buffer-incr-searchpattern))))))
          ;; delete the complete search-pattern
-         ((equal last-command-char 'home)
+         ((equal last-comm 'home)
           (setq tree-buffer-incr-searchpattern ""))
          ;; expand to the max. common prefix
-         ((equal last-command-char 'end)
+         ((equal last-comm 'end)
           (let* ((node-name-list (mapcar 'tree-node-get-name
                                          (tree-node-get-children tree-buffer-root)))
                  (common-prefix (tree-buffer-find-common-prefix
@@ -408,25 +413,26 @@ mentioned above!"
           ;; add the last command to the end
           (setq tree-buffer-incr-searchpattern
                 (concat tree-buffer-incr-searchpattern
-                        (char-to-string last-command-char)))))
-  (message "%s node search: [%s]%s"
-           (buffer-name (current-buffer))
-           tree-buffer-incr-searchpattern
-           (if (let ((case-fold-search t))
-                 (save-excursion
-                   (goto-char (point-min))
-                   (re-search-forward
-                    (concat tree-buffer-incr-searchpattern-prefix
-                            (regexp-quote tree-buffer-incr-searchpattern)) nil t)))
-               ;; we have found a matching ==> jump to it
-               (progn
-                 (goto-char (match-end 0))
-                 "")
-             " - no match")))
-
+                        (char-to-string last-comm)))))
+    (message "%s node search: [%s]%s"
+             (buffer-name (current-buffer))
+             tree-buffer-incr-searchpattern
+             (if (let ((case-fold-search t))
+                   (save-excursion
+                     (goto-char (point-min))
+                     (re-search-forward
+                      (concat tree-buffer-incr-searchpattern-prefix
+                              (regexp-quote tree-buffer-incr-searchpattern)) nil t)))
+                 ;; we have found a matching ==> jump to it
+                 (progn
+                   (goto-char (match-end 0))
+                   "")
+               " - no match"))))
+  
 (defun tree-buffer-create(name is-click-valid-fn node-selected-fn
                                node-expanded-fn node-mouse-over-fn
                                menus tr-lines read-only tree-indent
+                               incr-search
                                &optional type-facer expand-symbol-before)
   "Creates a new tree buffer with
 NAME: Name of the buffer
@@ -466,6 +472,8 @@ MENUS: Nil or a list of one or two conses, each cons for a node-type \(0 or 1)
 TR-LINES: Should lines in this tree buffer be truncated \(not nil)
 READ-ONLY: Should the treebuffer be read-only \(not nil)
 TREE-INDENT: spaces subnodes should be indented.
+INCR-SEARCH: Should the incremental search be anabled in the tree-buffer \(not
+             nil). See `tree-buffer-incremental-node-search'.
 TYPE-FACER: Nil or a list of one or two conses, each cons for a node-type \(0
             or 1). The cdr of a cons can be:
             - a symbol of a face
@@ -517,21 +525,22 @@ EXPAND-SYMBOL-BEFORE: If not nil then the expand-symbol \(is displayed before
     (overlay-put tree-buffer-highlight-overlay 'face 'secondary-selection)
     (setq tree-buffer-incr-searchpattern "")
 
-    ;; settings for the incremental search.
-    ;; for all keys which are bound to `self-insert-command' in `global-map'
-    ;; we change this binding to `tree-buffer-klaus'.
-    (substitute-key-definition 'self-insert-command
-                               'tree-buffer-incremental-node-search
-                               tree-buffer-key-map
-                               global-map)
-    (define-key tree-buffer-key-map [delete]
-      'tree-buffer-incremental-node-search)
-    (define-key tree-buffer-key-map [backspace]
-      'tree-buffer-incremental-node-search)
-    (define-key tree-buffer-key-map [home]
-      'tree-buffer-incremental-node-search)
-    (define-key tree-buffer-key-map [end]
-      'tree-buffer-incremental-node-search)
+    (when incr-search
+      ;; settings for the incremental search.
+      ;; for all keys which are bound to `self-insert-command' in `global-map'
+      ;; we change this binding to `tree-buffer-klaus'.
+      (substitute-key-definition 'self-insert-command
+                                 'tree-buffer-incremental-node-search
+                                 tree-buffer-key-map
+                                 global-map)
+      (define-key tree-buffer-key-map [delete]
+        'tree-buffer-incremental-node-search)
+      (define-key tree-buffer-key-map [backspace]
+        'tree-buffer-incremental-node-search)
+      (define-key tree-buffer-key-map [home]
+        'tree-buffer-incremental-node-search)
+      (define-key tree-buffer-key-map [end]
+        'tree-buffer-incremental-node-search))
     
     (define-key tree-buffer-key-map "\C-m"
       (function (lambda()
