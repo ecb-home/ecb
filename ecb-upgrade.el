@@ -19,7 +19,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-upgrade.el,v 1.34 2003/03/19 15:35:09 berndl Exp $
+;; $Id: ecb-upgrade.el,v 1.35 2003/03/20 14:47:07 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -299,7 +299,8 @@ The car is the old option symbol and the cdr is a 2-element-list with:
 
 (defun ecb-upgrade-alway-operate-in-edit-window (old-val)
   (let ((l (copy-tree old-val)))
-    (delete 'switch-to-buffer-other-window l)))
+    (setq l (delete 'switch-to-buffer-other-window l))
+    l))
 
 (defun ecb-upgrade-switch-to-compilation-window (old-val)
   (ecb-upgrade-alway-operate-in-edit-window old-val))

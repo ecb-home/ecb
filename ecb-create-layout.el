@@ -22,7 +22,7 @@
 ;; with GNU Emacs; see the file COPYING. If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-create-layout.el,v 1.18 2003/01/29 14:36:40 berndl Exp $
+;; $Id: ecb-create-layout.el,v 1.19 2003/03/20 14:47:14 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -100,8 +100,10 @@
         \"methods\" or \"history\") the current window
         should be.
  C-u: Unsplit, ie. delete current window
- C-t: Give the current window a type (\"directories\",
-      \"sources\", \"methods\" or \"history\")
+ C-t: Give the current window a builtin type
+      (\"directories\", \"sources\", \"methods\" or
+      \"history\") or any arbitary user-defined type
+      (\"other\"). See the Online-manual!
 
  C-c: Cancel layout creation. This does not save the
       layout. Deletes this frame.
@@ -132,7 +134,8 @@
       - Which type (\"directories\", \"sources\", \"methods\" or \"history\") the current
         window should be.
  C-u: Unsplit, ie. delete current window
- C-t: Give the current window a type (\"directories\", \"sources\", \"methods\" or \"history\")
+ C-t: Give the current window a builtin type (\"directories\", \"sources\", \"methods\" or
+      \"history\") or any arbitray user-defined type (\"other\"). See the Online-manual!
 
  C-c: Cancel layout creation. This does not save the layout. Deletes this frame.
  C-q: Save current defined layout and quit the layout creation. You will be asked for a
@@ -384,7 +387,8 @@ DELETE-FRAME is not nil then the new created frame will be deleted and the
     factor))
 
 (defun ecb-create-layout-add-to-buf-types (type)
-  (when (stringp type)
+  (when (and (stringp type)
+             (member type ecb-create-layout-all-buf-types))
     (add-to-list 'ecb-create-layout-buf-types type)
     (setq ecb-create-layout-buf-types
           (sort ecb-create-layout-buf-types 'string-lessp))))
@@ -410,6 +414,15 @@ DELETE-FRAME is not nil then the new created frame will be deleted and the
     (put-text-property (point-min) (1+ (point-min)) 'ecb-create-layout-factor
                        factor)))
 
+
+(defun ecb-create-layout-gen-lisp-for-buffer-type (type)
+  (let ((func-sym (intern (format "ecb-set-%s-buffer" type))))
+    (ecb-create-layout-gen-lisp
+     `(if (fboundp (quote ,func-sym))
+          (,func-sym)
+        (ecb-set-default-ecb-buffer)))))
+  
+
 (defun ecb-create-layout-set-buffer-to-type (&optional type)
   (interactive)
   (when (ecb-create-layout-frame-ok)
@@ -418,7 +431,8 @@ DELETE-FRAME is not nil then the new created frame will be deleted and the
                                             (ecb-create-layout-buffer-type)))
     (let ((new-type (or (and (stringp type) type)
                         (ecb-query-string "Type of current ECB-tree-buffer:"
-                                          ecb-create-layout-buf-types))))
+                                          ecb-create-layout-buf-types
+                                          "Insert the buffer type"))))
       ;; removing the new buffer type from the available-list
       (ecb-create-layout-remove-from-buf-type new-type)
       (ecb-mode-line-set (buffer-name (current-buffer))
@@ -426,8 +440,7 @@ DELETE-FRAME is not nil then the new created frame will be deleted and the
       ;; setting the new buffer type in the buffer itself
       (ecb-create-layout-set-buffer-type new-type)
       (when (interactive-p)
-        (ecb-create-layout-gen-lisp
-         `(,(intern (format "ecb-set-%s-buffer" new-type))))
+        (ecb-create-layout-gen-lisp-for-buffer-type new-type)
         (ecb-create-layout-next-window))
       new-type)))
 
@@ -473,9 +486,8 @@ DELETE-FRAME is not nil then the new created frame will be deleted and the
         (ecb-create-layout-new-buffer))
       ;; asking for the buffer type
       (ecb-create-layout-set-buffer-factor real-split-factor)
-      (ecb-create-layout-gen-lisp
-       `(,(intern (format "ecb-set-%s-buffer"
-                          (ecb-create-layout-set-buffer-to-type old-buf-type)))))
+      (ecb-create-layout-gen-lisp-for-buffer-type
+       (ecb-create-layout-set-buffer-to-type old-buf-type))
       (ecb-create-layout-next-window))))
 
 (defun ecb-create-layout-forward-char ()

@@ -19,7 +19,7 @@
 @c Free Software Foundation, Inc., 59 Temple Place - Suite 330,
 @c Boston, MA 02111-1307, USA.
 
-@c $Id: ecb.texi,v 1.86 2003/03/19 15:35:08 berndl Exp $
+@c $Id: ecb.texi,v 1.87 2003/03/20 14:47:01 berndl Exp $
 
 @setfilename ecb.info
 
@@ -2145,8 +2145,42 @@ mode. Here all the available commands are displayed.
 The small window(s) (here the left and right windows) can be splitted
 by you wherever you want (@kbd{C-s}). The left one contains the point.
 You must give every ECB-tree-window you create a type (@kbd{C-t})
-which can be either ``directories'', ``sources'', ``methods'' or
-``history''.
+which can be either
+
+@itemize
+@item
+One of the builtin types ``directories'', ``sources'', ``methods'' or
+``history'' or
+
+@item
+any user-defined type:
+
+In this case you insert ``other'' after hitting @kbd{C-t} and you will
+then be asked for the name of the user-defined type. You can insert
+any arbitray type name X. But to get this layout working you have to
+define a function with name @code{ecb-set-X-buffer} whereas X is the
+name of the user-defined type you have specified during
+layout-creation.
+
+This function @code{ecb-set-X-buffer} has first to switch to the
+buffer you want to display in this window and then making this window
+dedicated. It is strongle recommended to use the macro
+@code{ecb-with-dedicated-window} in such a function!
+
+Here is an example: Suppose you have inserted as type name ``example''
+then you have to define and load a function
+@code{ecb-set-example-buffer} which could be defined like follows:
+
+@example
+(defun ecb-set-example-buffer ()
+  (ecb-with-dedicated-window
+   (switch-to-buffer (get-buffer-create " *ECB example-buffer*"))))
+@end example
+
+If you forget to define such a function for the user-defined type then
+nevertheless ECB will draw this layout but it will use the
+default-function @code{ecb-set-default-ecb-buffer} instead.
+@end itemize
 
 If you are satisfied with your new layout just hit @kbd{C-q}. You will
 be asked for a new layout-name (TAB-completion is offered to get a
@@ -6051,11 +6085,18 @@ like directories, sources, methods and history it's is strongly
 recommended to define the new layout interactively with the command
 @code{ecb-create-new-layout} (@pxref{Creating a new ECB-layout}).
 
-But if you want programming a new layout with elisp-code and if this
-layout should even contain other special windows than the standard
-ECB-windows use the macro @code{ecb-layout-define} (the following
-definiton has stripped the prefix ``ecb-'' for better indexing this
-manual):
+If you want creating a new layout and if this layout should contain
+other special windows than the standard ECB-windows then it's still
+recommended to define this layout interactively with
+@code{ecb-create-new-layout} and using the option to give the created
+windows user-defined types. For every user defined type you have then
+just to program the necessary buffer-set function. For all the details
+see @ref{Creating a new ECB-layout}.
+
+But if you do not like the interactive way (because you are tough and
+brave) but you want programming the new layout with elisp then use the
+macro @code{ecb-layout-define} (the following definiton has stripped
+the prefix ``ecb-'' for better indexing this manual):
 
 @defmac layout-define name type &rest create-code
 Creates a new ECB-layout with name @var{NAME}. @var{TYPE} is the type

@@ -29,6 +29,9 @@
 
 *** `ecb-toggle-compile-window' now has a key-binding: [C-c . \]
 
+** Now also layouts with user-defined special ecb-windows can be created
+   interactively. See the online-manual for further details.
+
 ** ECB now also works with buffers "online" extracted from archives.
    Buffers extracted from an archive in `tar-mode' or `archive-mode' are now
    correct handled as if they were normal file-buffers. This feature doesn't
