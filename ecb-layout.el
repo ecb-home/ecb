@@ -80,6 +80,7 @@
 ;; - `delete-other-windows'
 ;; - `split-window-horizontally'
 ;; - `split-window-vertically'
+;; - `find-file-other-window'
 ;; The new function have the prefix "ecb-<originalname>" (e.g.
 ;; `ecb-split-window-horizontally').
 ;; The behavior of the new functions is:
@@ -88,8 +89,9 @@
 ;;   current frame. See the documentation of these functions.
 ;; - If called in any other ECB-window a completely redraw with
 ;;   `ecb-redraw-layout' will be done (except `ecb-other-window')
-;; - If called with a prefix arg then the original-function is called
-;;   regardless in which window the point is.
+;; - (Except of `ecb-find-file-other-window'): If called with a prefix arg
+;;   then the original-function is called regardless in which window the point
+;;   is.
 ;;
 ;; You can rebind your key-shortcuts during ECB with the hooks. In
 ;; ecb.el you find a hook example how to this:
@@ -263,6 +265,33 @@ This variable is only set by the following functions:
 - `ecb-split-window-horizontally'.")
 
 ;; =========== intelligent window functions ==========================
+
+(defun ecb-find-file-other-window (filename &optional wildcards)
+  "The ECB-version of `find-file-other-window'. Works exactly like this
+function but opens the file always in another edit-window."
+  (interactive "FFind file in other edit-window: \np")
+  (let ((ecb-other-window-jump-behavior 'only-edit))
+    (if ecb-layout-edit-window-splitted
+        (ecb-other-window)
+      (ecb-split-window-vertically)
+      (ecb-other-window))
+    ;; now we are always in the other window, so we can now open the file.
+    (find-file filename wildcards)))
+
+(defun ecb-jde-open-class-at-point-ff-function(filename &optional wildcards)
+  "Special handling of the class opening at point JDE feature. This function
+checks if `jde-open-class-at-point-find-file-function' has a value which is a
+\"other-window/frame\"-opening function. In this case ECB´s own
+other-window-function is called otherwise the original value.
+This function is automatically set as value for the variable
+`jde-open-cap-ff-function-temp-override'."
+  (if (boundp 'jde-open-class-at-point-find-file-function)
+      (if (string-match "other"
+                        (symbol-name jde-open-class-at-point-find-file-function))
+          (ecb-find-file-other-window filename wildcards)
+        (funcall jde-open-class-at-point-find-file-function
+                 filename wildcards))))
+                    
 
 (defun ecb-other-window (&optional arg)
   "A more ECB suitable replacement for the standard function `other-window'.
