@@ -3,18 +3,45 @@
 TODO: 10pt images hinzufÅ¸gen!!!
 
 ** The restriction of only two edit-windows has been gone!
-   Beginning with this version 2.12 there are no restrictions about the
-   window-layout of the edit-area of ECB. This means you can split the
-   edit-area of ECB in as many windows as you like. Just work with the
-   edit-area of ECB as if it would be an extra frame!
 
-** All popup-menus of the tree-buffers can be used with the tmm-library
-   The already existing command `tree-buffer-show-menu-keyboard' (bound to
-   [M-m] in every tree-buffer of ECB) accepts now a prefix argument. If called
-   with a prefix-argument (hit [C-u M-m]) then the popup-menu is displayed
-   with the tmm-mechanismus (like the Emacs-[menu-bar] is displayed when
-   `tmm-menubar' is called). Thanks for suggestion to Yvonne Thomson
-   <yvonne@thewatch.net>.
+*** Beginning with this version 2.12 there are no restrictions about the
+    window-layout in the edit-area of ECB. This means you can split the
+    edit-area of ECB in as many windows as you like. The split-state of the
+    edit-area will be preserved when toggling the visibility of the
+    ECB-windows and even between activation and deactivation of ECB. Deleting
+    of certain edit-windows will never destroy the special ECB-windows or the
+    compile-window. Just work with the edit-area of ECB as if it would be an
+    extra frame!
+
+*** The option `ecb-primary-mouse-jump-destination' has been renamed to
+    `ecb-mouse-click-destination' and has also changed its default value to
+    'last-point.
+
+*** New keybinding [C-c . g l] for selecting the last selected edit-window.
+    Also available via the ECB-menu. The command is `ecb-goto-window-edit-last'.
+
+** Enhancements to the popup-menus of the tree-buffers
+
+*** All popup-menus of the tree-buffers can be used with the tmm-library
+    The already existing command `tree-buffer-show-menu-keyboard' (bound to
+    [M-m] in every tree-buffer of ECB) accepts now a prefix argument. If called
+    with a prefix-argument (hit [C-u M-m]) then the popup-menu is displayed
+    with the tmm-mechanismus (like the Emacs-[menu-bar] is displayed when
+    `tmm-menubar' is called). Thanks for suggestion to Yvonne Thomson
+    <yvonne@thewatch.net>.
+
+*** Select an edit-window via popup where a source should be opened or a token
+    should be displayed.
+    
+*** The popup-menus can be dynamically extended.
+    See the new options `ecb-directories-menu-user-extension-function',
+    `ecb-sources-menu-user-extension-function',
+    `ecb-methods-menu-user-extension-function' and
+    `ecb-history-menu-user-extension-function'.
+
+*** All popup-menu-commands respect the setting of the option
+    `ecb-mouse-click-destination' (formerly known as
+    `ecb-primary-mouse-jump-destination' - see above).
 
 ** New default-value for `ecb-post-process-semantic-taglist'.
    Now for buffers with major-mode `c-mode' all function-prototypes are

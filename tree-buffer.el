@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: tree-buffer.el,v 1.132 2003/12/28 15:28:56 berndl Exp $
+;; $Id: tree-buffer.el,v 1.133 2004/01/07 10:23:38 berndl Exp $
 
 ;;; Commentary:
 
@@ -194,7 +194,7 @@ node name.")
 (defvar tree-buffer-key-map nil)
 (defvar tree-buffer-indent nil)
 (defvar tree-buffer-highlighted-node-data nil)
-(defvar tree-buffer-menus nil)
+(defvar tree-buffer-menu-creator nil)
 (defvar tree-buffer-menu-titles nil)
 (defvar tree-buffer-type-facer nil)
 (defvar tree-buffer-expand-symbol-before nil)
@@ -1338,13 +1338,15 @@ mentioned above!"
   (interactive "P")
   (if use-tmm
       (unless (not (equal (selected-frame) tree-buffer-frame))
-        (when tree-buffer-menus
+        (when tree-buffer-menu-creator
           (let ((node (tree-buffer-get-node-at-point)))
             (when (and (not tree-buffer-running-xemacs)
                        node
                        (locate-library "tmm"))
               (let ((menu (cdr (assoc (tree-node-get-type node)
-                                      tree-buffer-menus))))
+                                      (tree-buffer-create-menus
+                                       (funcall tree-buffer-menu-creator
+                                                (buffer-name)))))))
                 (tmm-prompt menu))))))
     (if tree-buffer-running-xemacs
         (tree-buffer-show-menu (get-buffer-window (current-buffer)
@@ -1360,10 +1362,13 @@ mentioned above!"
 
 (defun tree-buffer-show-menu (&optional event)
   (unless (not (equal (selected-frame) tree-buffer-frame))
-    (when tree-buffer-menus
+    (when tree-buffer-menu-creator
       (let ((node (tree-buffer-get-node-at-point)))
 	(when node
-	  (let* ((menu (cdr (assoc (tree-node-get-type node) tree-buffer-menus)))
+	  (let* ((menu (cdr (assoc (tree-node-get-type node)
+                                   (tree-buffer-create-menus
+                                    (funcall tree-buffer-menu-creator
+                                             (buffer-name))))))
                  (menu-title-creator
                   (cdr (assoc (tree-node-get-type node) tree-buffer-menu-titles)))
                  (menu-title (cond ((stringp menu-title-creator)
@@ -1594,7 +1599,7 @@ functionality is done with the `help-echo'-property and the function
 (defun tree-buffer-create (name frame is-click-valid-fn node-selected-fn
                                 node-expanded-fn node-mouse-over-fn
                                 node-data-equal-fn maybe-empty-node-types leaf-node-types
-                                menus menu-titles tr-lines read-only tree-indent
+                                menu-creator menu-titles tr-lines read-only tree-indent
                                 incr-search incr-search-add-pattern arrow-navigation hor-scroll
                                 &optional
                                 default-image-dir add-image-dir tree-style ascii-guide-face
@@ -1685,12 +1690,14 @@ LEAF-NODE-TYPES: Nil or a list of node-types \(see above). Nodes
                     LEAF-NODE-TYPES will be displayed with the leaf-symbol.
                   * All other nodes will be displayed with no symbol just with
                     correct indentation.
-MENUS: Nil or a list of one to three conses, each cons for a node-type \(0, 1
-       or 2) Example: \(\(0 . menu-for-type-0) \(1 . menu-for-type-1)). The
-       cdr of a cons must be a menu.
+MENU-CREATOR: A function which has to return nil or a list of one to three
+              conses, each cons for a node-type \(0, 1 or 2) Example: \(\(0 .
+              menu-for-type-0) \(1 . menu-for-type-1)). The cdr of a cons must
+              be a menu. This function gets one argument: The name of the
+              tree-buffer for which a popup-menu should be opened.
 MENU-TITLES: Nil or a list of one to three conses, each cons for a node-type
-             \(0, 1 or 2). See MENUS. The cdr of a cons must be either a
-             string or a function which will be called with current node
+             \(0, 1 or 2). See MENU-CREATOR. The cdr of a cons must be either
+             a string or a function which will be called with current node
              under point and must return a string which is displayed as the
              menu-title.
 TR-LINES: Should lines in this tree buffer be truncated \(not nil)
@@ -1767,7 +1774,7 @@ AFTER-CREATE-HOOK: A function or a list of functions \(with no arguments)
     (make-local-variable 'tree-buffer-maybe-empty-node-types)
     (make-local-variable 'tree-buffer-leaf-node-types)
     (make-local-variable 'tree-buffer-highlighted-node-data)
-    (make-local-variable 'tree-buffer-menus)
+    (make-local-variable 'tree-buffer-menu-creator)
     (make-local-variable 'tree-buffer-menu-titles)
     (make-local-variable 'tree-buffer-type-facer)
     (make-local-variable 'tree-buffer-expand-symbol-before)
@@ -1803,7 +1810,7 @@ AFTER-CREATE-HOOK: A function or a list of functions \(with no arguments)
     (setq tree-buffer-maybe-empty-node-types maybe-empty-node-types)
     (setq tree-buffer-leaf-node-types leaf-node-types)
     (setq tree-buffer-highlighted-node-data nil)
-    (setq tree-buffer-menus (tree-buffer-create-menus menus))
+    (setq tree-buffer-menu-creator menu-creator)
     (setq tree-buffer-menu-titles menu-titles)
     (setq tree-buffer-root (tree-node-new-root))
     (setq tree-buffer-type-facer type-facer)

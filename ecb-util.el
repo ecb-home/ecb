@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-util.el,v 1.89 2003/12/28 15:28:57 berndl Exp $
+;; $Id: ecb-util.el,v 1.90 2004/01/07 10:23:39 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -906,9 +906,10 @@ times. Example: Suppose LIST = '\(a b c d), ELEM is 'c and NTH-NEXT = 3 then
 'b is returned - same result for NTH-NEXT = 7, 11..."
   (let ((elem-pos (ecb-position list elem))
         (next (or nth-next 1)))
-    (nth (mod (+ elem-pos next)
-              (length list))
-         list)))
+    (and elem-pos
+         (nth (mod (+ elem-pos next)
+                   (length list))
+              list))))
 
 (defun ecb-prev-listelem (list elem &optional nth-prev)
   "Return that element of LIST which preceeds directly ELEM when ELEM is an

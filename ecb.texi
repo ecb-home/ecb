@@ -26,7 +26,7 @@
 @c GNU Emacs; see the file COPYING.  If not, write to the Free Software
 @c Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-@c $Id: ecb.texi,v 1.135 2003/12/28 15:28:56 berndl Exp $
+@c $Id: ecb.texi,v 1.136 2004/01/07 10:23:38 berndl Exp $
 
 @setfilename ecb.info
 
@@ -772,11 +772,13 @@ ECB-windows/tree-buffers:
 @item ECB-Methods
 @end itemize
 
-In addition to these ``special'' ECB-windows you have always one or
-two @dfn{edit-windows} (@pxref{The edit-window}) in the ECB-frame and
-at the bottom a @dfn{compilation-window} (optional), where all the
-output of Emacs-compilation (compile, grep etc.) is shown
-(@pxref{Temp- and compile-buffers}).
+In addition to these ``special'' ECB-windows you have always an
+@dfn{edit-area} where you can edit sour source-files. The edit-area
+can be devided into several @dfn{edit-windows} - as many as you need
+(@pxref{The edit-window}). And at the bottom of the ECB-frame a
+@dfn{compilation-window} (also called @dfn{compile-window}) can be
+displayed (optional), where all the output of Emacs-compilation
+(compile, grep etc.) is shown (@pxref{Temp- and compile-buffers}).
 
 The following ``ascii-screenshot'' illustrates the typical layout of
 the ECB-frame@footnote{This is only one example of the layouts ECB
@@ -792,8 +794,8 @@ offers, see @ref{Changing the ECB-layout}}:
 |              |                                                 |
 |  Sources     |                                                 |
 |              |                                                 |
-|--------------|                 Edit-window(s)                  |
-|              |        (can be splitted in two windows)         |
+|--------------|                   Edit-area                     |
+|              |   (can be splitted in several edit-windows)     |
 |  Methods     |                                                 |
 |              |                                                 |
 |--------------|                                                 |
@@ -858,15 +860,18 @@ adding a new source-path.
 @cindex History
 @itemize @bullet
 @item
-Source files can be selected by clicking a mouse button (@pxref{Using
-the mouse}) or hitting RETURN (@pxref{Using the keyboard}) on the
-source row in the @dfn{ECB-Sources} or @dfn{ECB- History} windows.
+Source files can be selected by clicking with the primary mouse button
+(@pxref{Using the mouse}) or hitting RETURN (@pxref{Using the
+keyboard}) on the source row in the @dfn{ECB-Sources} or
+@dfn{ECB-History} windows. The buffer of the selected source-file will
+be displayed in an edit-window - which one depends on the setting in
+@code{ecb-mouse-click-destination}.
 
 IMPORTANT: If you use the POWER-click (i.e. hold down the SHIFT-key
 while clicking with the primary mouse button (@pxref{Using the mouse})
 or RETURN (@pxref{Using the keyboard})) on a source row in the
 ECB-Sources or ECB-History windows then the source will not be
-displayed in the edit-window but it will be scanned in the background
+displayed in an edit-window but it will be scanned in the background
 and all its contents (e.g. methods and variables) are listed in the
 @dfn{ECB Methods} window (@pxref{ECB Methods-buffer}. So you can get an
 overlook over the source without changing the buffer in the
@@ -875,11 +880,13 @@ edit-window.
 @item
 Clicking on the source file with the secondary mouse button or
 C-RETURN (@pxref{Usage of ECB}) will open the source file in
-the other edit window.
+another edit window - which one depends on the setting in
+@code{ecb-mouse-click-destination}. 
 
 @item
-Right clicking on a source file will open a popup menu where different
-operation on the item under the mouse cursor can be performed.
+Right clicking on a source file (mouse-button 3) will open a popup
+menu where different operation on the item under the mouse cursor can
+be performed.
 @end itemize
 
 @node ECB Methods-buffer, , ECB Sources-buffer, Overview
@@ -899,7 +906,8 @@ buffers).
 @item
 When a method/variable is selected with the primary mouse button
 (@pxref{Using the mouse}) or RETURN (@pxref{Using the keyboard}) the
-edit buffer will jump to the method/variable.
+buffer in the edit-window (which one depends on the setting in
+@code{ecb-mouse-click-destination}) will jump to the method/variable.
 
 IMPORTANT: If you use the POWER-click (i.e. hold down the SHIFT-key
 while clicking with the primary mouse button (@pxref{Using the mouse})
@@ -910,7 +918,9 @@ sources parsed by semantic, not by imenu or etags!
 
 @item
 Clicking on a method/variable with the secondary mouse button or C-RETURN
-(@pxref{Usage of ECB}) will jump to the method in the other edit window.
+(@pxref{Usage of ECB}) will jump to the method in another edit window
+- which one depends on the setting in
+@code{ecb-mouse-click-destination}.
 
 @item
 Right clicking on a method/variable will open a popup menu where
@@ -1065,11 +1075,11 @@ buffer.
 
 @item ECB sources/history:
 Opening the file in that edit-window specified by the option
-@code{ecb-primary-mouse-jump-destination}.
+@code{ecb-mouse-click-destination}.
 
 @item ECB Methods:
 Jumping to the method in that edit-window specified by the option
-@code{ecb-primary-mouse-jump-destination}.
+@code{ecb-mouse-click-destination}.
 @end itemize
 
 @subsection The POWER- or SHIFT-click
@@ -1087,7 +1097,7 @@ Refreshing the directory-contents-cache (see
 
 @item ECB sources/history:
 Only displaying the source-contents in the method-buffer but not
-displaying the source-file in the edit-window. This means it opens the
+displaying the source-file in an edit-window. This means it opens the
 clicked source only in the background and shows all its
 methods/variables in ECB-Methods; the buffer of the edit-window is not
 changed! This is very useful to get only an overlook for a certain
@@ -1109,19 +1119,29 @@ displayed in the minibuffer.
 
 @subsection The secondary mouse-button
 
-The secondary mouse-button is for opening (jumping to) the file in the other
-window (see the documentation @code{ecb-primary-mouse-jump-destination}).
+The secondary mouse-button is for opening (jumping to) the file in
+another edit-window (see the documentation of the option
+@code{ecb-mouse-click-destination}).
 
 @subsection The right mouse-button
 
-In each ECB-buffer mouse-3 (= right button) opens a special context popup-menu
-for the clicked item where you can choose several senseful actions.
+In each ECB-buffer mouse-3 (= right button) opens a special context
+popup-menu for the clicked item where you can choose several senseful
+actions.
 
 With the options @code{ecb-directories-menu-user-extension},
 @code{ecb-sources-menu-user-extension},
 @code{ecb-methods-menu-user-extension} and
-@code{ecb-history-menu-user-extension} you can add new commands to the
-popup-menus.
+@code{ecb-history-menu-user-extension} you can add statically new
+commands to the popup-menus. See the docstring of
+@code{ecb-directories-menu-user-extension} for more details.
+
+With the options @code{ecb-directories-menu-user-extension-function},
+@code{ecb-sources-menu-user-extension-function},
+@code{ecb-methods-menu-user-extension-function} and
+@code{ecb-history-menu-user-extension-function} you can add new
+commands to the popup-menus in a dynamic manner. See the docstring of
+@code{ecb-directories-menu-user-extension-function} for more details.
 
 With the options @code{ecb-directories-menu-sorter},
 @code{ecb-sources-menu-sorter}, @code{ecb-methods-menu-sorter} and
@@ -1358,7 +1378,7 @@ depends if this command is called with a prefix-argument or not:
 If called without a prefix-arg then the popup-menu is displayed
 graphically as if it would be activated via mouse (for GNU Emacs this
 works perfectly but for XEmacs there is a bug which results in a wrong
-menu-position).
+menu-position - but the menu itself works also with XEmacs).
 
 If called with a prefix-arg (@kbd{C-u M-m}) then the popup-menu is
 displayed with the tmm-mechanism (like the Emacs-[menu-bar] is
@@ -1370,8 +1390,9 @@ available for GNU Emacs.
 @section Working with the edit-window
 
 @cindex edit-window
-ECB offers you all what you need to work with the edit-window as if
-the edit-window would be the only window of the ECB-frame.
+ECB offers you all what you need to work with the edit-area as if the
+edit-windows of the edit-area would be the only windows of the
+ECB-frame.
 
 @cindex Adviced functions
 ECB offers you to advice the following functions so they work best with ECB:
@@ -1398,7 +1419,10 @@ The behavior of the adviced functions is (slightly simplified):
 All these adviced functions behaves exactly like their corresponding
 original functions but they always act as if the edit-window(s) of ECB
 would be the only window(s) of the ECB-frame. So the edit-window(s) of
-ECB seems to be a normal Emacs-frame to the user.
+ECB seems to be a normal Emacs-frame to the user. This means that you
+can split and delete edit-windows without any restriction - ECB
+ensures that neither the special ECB-windows nor the compile-window
+will be damaged.
 
 @item
 If there is a durable compile-window (@pxref{Temp- and
@@ -1411,13 +1435,14 @@ If called in another frame than the ECB-frame these functions behave
 exactly like the not adviced original versions!
 @end itemize
 
-ATTENTION: If you want to work within the edit-window with splitting
-and unsplitting the edit-window(s) it is highly recommended to use the
-adviced-functions of ECB instead of the original Emacs-functions (see
-above). Per default ECB advices all of the functions mentioned
-above but with the option @code{ecb-advice-window-functions} you can
-customizes which functions should be adviced by ECB. Please read
-carefully the documentation of this option!
+ATTENTION: If you want to work within the edit-area with splitting and
+unsplitting (i.e. deleting) the edit-window(s) it is highly
+recommended to use the adviced-functions of ECB instead of the
+original Emacs-functions (see above). Per default ECB advices all of
+the functions mentioned above but with the option
+@code{ecb-advice-window-functions} you can customizes which functions
+should be adviced by ECB. Please read carefully the documentation of
+this option!
 
 Another interesting option in the context of the edit-window and these
 adviced functions is @code{ecb-layout-always-operate-in-edit-window}!
@@ -1441,28 +1466,28 @@ Around-advice @code{ecb}: The ECB-version of @code{delete-window}.
 Works exactly like the original function with the following
 ECB-adjustment:
 
-If optional argument @var{WINDOW} is nil (i.e. probably called
-interactively): If called in a splitted edit-window then it works like
-as if the two parts of the splitted edit window would be the only
-windows in the frame. This means the part of the splitted edit-window
-which contains the point will be destroyed and the other part fills
-the whole edit-window. If called in an unsplitted edit-window then
-nothing is done. If called in any other window of the current
-ECB-layout there are two alternatives:
+If optional argument WINDOW is nil (i.e. probably called interactively): If
+called in a splitted edit-window then it works like as if all the edit-windows
+would be the only windows in the frame. This means the current edit-window
+which contains the point will be destroyed and its place will be occupied from
+another one. If called in an unsplitted edit-window then nothing is done. If
+called in any other window of the current ECB-layout there are two
+alternatives:
 
-@itemize @minus
-@item
-If the function is contained in
-@code{ecb-layout-always-operate-in-edit-window} it jumps first in the
-(first) edit-window and does then it´s job.
+@itemize
+@item If the function is contained in
+@code{ecb-layout-always-operate-in-edit-window} the right edit-window
+is selected (depends on the value of the option
+@code{ecb-mouse-click-destination}) and does then it´s job.
 
-@item
-Otherwise an error is reported.
+@item Otherwise the behavior depends on the value of the option
+@code{ecb-advice-window-functions-signal-error}.
 @end itemize
 
-If optional argument @var{WINDOW} is a live window (i.e. called from
-program): If @var{WINDOW} is an edit-window then this window is
-deleted, otherwise an error is reported.
+If optional argument WINDOW is a living window (i.e. called from
+program): If WINDOW is an edit-window then this window is deleted,
+otherwise the behavior depends on
+@code{ecb-advice-window-functions-signal-error}.
 @end deffn
 
 @deffn Command delete-other-windows &optional WINDOW
@@ -1470,34 +1495,41 @@ Around-advice @code{ecb}: The ECB-version of
 @code{delete-other-windows}. Works exactly like the original function
 with the following ECB-adjustment:
 
-If optional argument @var{WINDOW} is nil (i.e. probably called
-interactively): If called in a splitted edit-window then it works like
-as if the two parts of the splitted edit window would be the only
-windows in the frame. This means the part of the splitted edit-window
-which contains the point fills the whole edit-window.
+If optional argument WINDOW is nil (i.e. probably called interactively): If
+called in a splitted edit-window then it works like as if all the edit-windows
+would be the only windows in the frame. This means all other edit-windows
+besides the current edit-window which contains the point will be destroyed and
+the current edit-window fills the whole edit-area. Neither the special
+ecb-windows nor the compile-window will be destroyed!
+
+@itemize
+
+@item If called in an unsplitted edit-window then nothing is
+done.
+
+@item If called in one of the ecb-windows then the current one
+is maximized, i.e. the other ecb-windows (not the edit-windows!) are
+deleted.
+
+@item If called in the compile window there are two alternatives:
 
 @itemize @minus
-@item
-If called in an unsplitted edit-window then nothing is done.
+@item If the function is contained in @code{ecb-layout-always-operate-in-edit-window}
+the right edit-window is selected (depends on the value of the option
+@code{ecb-mouse-click-destination}) and then it does it´s job.
 
-@item
-If called in one of the ecb-windows then the current one is maximized, i.e.
-the other ecb-windows (not the edit-windows!) are deleted.
-
-@item
-If called in the compile window there are two alternatives: If the
-function is contained in
-@code{ecb-layout-always-operate-in-edit-window} it jumps first in the
-(first) edit-window and does then it´s job. Otherwise an error is
-reported.
+@item Otherwise the behavior depends on the value of the option
+@code{ecb-advice-window-functions-signal-error}.
+@end itemize
 @end itemize
 
-If optional argument @var{WINDOW} is a live window (i.e. called from
-program): If @var{WINDOW} is an edit-window then this window is
-maximized (i.e. the other edit-window is deleted), if @var{WINDOW} is
-an ecb-window then only the other ecb-windows are deleted and in all
-other cases an error is reported.
+If optional argument WINDOW is a living window (i.e. called from
+program): If WINDOW is an edit-window then this window is maximized
+(i.e. the other edit-window is deleted), if WINDOW is an ecb-window
+then only the other ecb-windows are deleted and in all other cases the
+behavior depends on @code{ecb-advice-window-functions-signal-error}.
 @end deffn
+
 
 @deffn Command delete-windows-on BUFFER &optional FRAME
 Around-advice @code{ecb}: The ECB-version of @code{delete-windows-on}.
@@ -1509,24 +1541,15 @@ windows are not allowed to be deleted.
 @end deffn
 
 @deffn Command split-window &optional WINDOW SIZE HORFLAG
-Around-advice @code{ecb}: The ECB-version of @code{split-window}. The
-meaning of @var{WINDOW} must be one of the edit-windows of ECB
-otherwise an error is reported. If the edit-window is already splitted
-then nothing will be done. Besides this (e.g. called for a window in
-another frame than the @code{ecb-frame}) it behaves like the original
-version.
-@end deffn
+Around-advice @code{ecb}: The ECB-version of @code{split-window}.
+Works exactly like the original function with the following
+ECB-adjustment:
 
-@deffn Command split-window-vertically
-Around-advice @code{ecb}: The ECB-version of
-@code{split-window-vertically}. Works exactly like the original
-function with the following ECB-adjustment:
-
-Called in an unsplitted edit-window then the edit window will be
-splitted vertically. If called in an already splitted edit-window then
-nothing is done. If called in any other window of the current
-ECB-layout it stops with an error if this function is not contained in
-@code{ecb-layout-always-operate-in-edit-window}.
+If called for a not-edit-window in the @code{ecb-frame} it stops with
+an error if @code{split-window} is not contained in the option
+@code{ecb-layout-always-operate-in-edit-window}! Besides this (e.g.
+called for a window in another frame than the @code{ecb-frame}) it
+behaves like the original version.
 @end deffn
 
 
@@ -1535,12 +1558,21 @@ Around-advice @code{ecb}: The ECB-version of
 @code{split-window-horizontally}. Works exactly like the original
 function with the following ECB-adjustment:
 
-Called in an unsplitted edit-window then the edit window will be
-splitted horizontally. If called in an already splitted edit-window
-then nothing is done. If called in any other window of the current
-ECB-layout it stops with an error if this function is not contained in
-@code{ecb-layout-always-operate-in-edit-window}!
+If called in any other window of the current ECB-layout it stops with
+an error if this @code{split-window-horizontally} is not contained in
+the option @code{ecb-layout-always-operate-in-edit-window}!
 @end deffn
+
+@deffn Command split-window-vertically
+Around-advice @code{ecb}: The ECB-version of
+@code{split-window-vertically}. Works exactly like the original
+function with the following ECB-adjustment:
+
+If called in any other window of the current ECB-layout it stops with
+an error if this @code{split-window-vertically} is not contained in
+the option @code{ecb-layout-always-operate-in-edit-window}!
+@end deffn
+
 
 @deffn Command display-buffer BUFFER &optional NOT-THIS-WINDOW FRAME
 Around-advice @code{ecb}: Makes this function compatible with ECB if
@@ -1551,8 +1583,8 @@ compile-window is temporally hidden then it will be displayed first.
 
 If there is no compile-window (@code{ecb-compile-window-height} is
 nil) then it splits the edit-window if unsplitted and displays BUFFER
-in the other edit-window but only if @code{pop-up-windows} is not nil
-(otherwise the edit-window will not splitted).
+in another edit-window but only if @code{pop-up-windows} is not nil
+(otherwise the edit-window will not be splitted).
 
 If called from outside the edit-area for a non-``compilation-buffers''
 (s.a.) then it behaves as if called from within an edit-window if
@@ -1571,7 +1603,6 @@ behavior depends on the value of the option
 
 If called for other frames it works like the original version.
 @end deffn
-
 
 @deffn Command switch-to-buffer BUFFER &optional NORECORD
 Around-advice @code{ecb}: The ECB-version of @code{switch-to-buffer}.
@@ -1601,8 +1632,9 @@ but with some adaptions for ECB so this function works in a
 ``natural'' way:
 
 If called in any special ecb-window of the current ECB-layout then it
-goes always to the first edit-window and then goes on as if called
-from this edit-window.
+goes always to an edit-window (which one depends on the setting in
+@code{ecb-mouse-click-destination}) and then goes on as if called from
+this edit-window.
 
 If a compile-window is used (i.e. @code{ecb-compile-window-height} is
 not nil) then ``compilation-buffers'' in the sense of
@@ -1622,12 +1654,15 @@ except for compilation-buffers (if a compile-window is used, see
 above).
 @end deffn
 
+
 @deffn Function other-window-for-scrolling
-Around-advice `ecb': This function determines the window which is
+Around-advice @code{ecb}: This function determines the window which is
 scrolled if any of the ``other-window-scrolling-functions'' is called
-(e.g. @code{scroll-other-window}). If edit-window is splitted, point
-stays in the ``other'' edit-window and there is no durable
-compilation-window then always the first edit-window is chosen.
+(e.g. @code{scroll-other-window}). If the edit-area is splitted and
+point stays in one of the edit-windows always the ``next'' edit-window
+is scrolled (whereas the next edit-window of the last edit-window is
+the first edit-window). If the edit-area is unsplitted then the
+compile-window is scrolled if there is one.
 @end deffn
 
 @node Temp- and compile-buffers, The Methods buffer, The edit-window, Usage of ECB
@@ -1643,9 +1678,10 @@ result-buffer in another window. This behavior you have also in ECB.
 
 @subsection Standard Emacs behavior
 
-If the edit-window is already splitted then the temp-buffer is
-displayed in the ``other'' edit-window otherwise the edit-window will
-be splitted first. The variables @code{temp-buffer-max-height} and
+If the edit-area is already splitted into at least two edit-windows
+then the temp-buffer is displayed in another edit-window otherwise the
+edit-are will be splitted first into two edit-windows, one above the
+other. The variables @code{temp-buffer-max-height} and
 @code{temp-buffer-resize-mode} (the latter one does not exist in
 XEmacs) work also correctly with ECB.
 
@@ -1733,7 +1769,7 @@ further debugging output in the *Messages* buffer"
 @end enumerate
 
 @anchor{Using special-display with ECB}
-@cindex specîal-display
+@cindex special-display
 @subsection Handling special-display-buffers
 
 Emacs offers three options for a special-display-handling of certain
@@ -1759,10 +1795,10 @@ the values of these options - like the original behavior of Emacs.
 @section Using and customizing the ECB-Methods buffer
 
 ECB is mostly designed to display parsing information for files
-supported by semantic. But from version 1.94 on it also supports other
-parsing engines like imenu and etags, so also files not supported by
-semantic but by imenu/etags can be displayed in the Method-buffer of
-ECB. Therefore we have to introduce some terminology:
+supported by semantic. But beginning with version 1.94 it also
+supports other parsing engines like imenu and etags, so also files not
+supported by semantic but by imenu/etags can be displayed in the
+Method-buffer of ECB. Therefore we have to introduce some terminology:
 
 @cindex semantic-sources
 @anchor{Definition of semantic- and non-semantic-sources}
@@ -1797,11 +1833,12 @@ ECB.
 @subsection Possible actions after visiting a tag
 
 You visit a tag by clicking with either the primary oder secondary
-mouse-button (or by hitting RET if using the keyboard) onto a node in
-the Methods-tree-buffer of ECB. This simply selects the ``right''
-edit-window (depends if clicked with the primary or secondary button
-and if the edit-window is splitted) and puts the point onto the first
-line of the clicked tag.
+mouse-button (or by hitting @kbd{RET} or @kbd{C-RET} if using the
+keyboard) onto a node in the Methods-tree-buffer of ECB. This simply
+selects the ``right'' edit-window (depends if clicked with the primary
+or secondary button, in how many windows the edit-area is splitted and
+the value of @code{ecb-mouse-click-destination}) and puts the point
+onto the first line of the clicked tag.
 
 But you can define if after this ``basic'' tag-visit-action more
 additional actions should be performed by ECB. You can either use some
@@ -1849,12 +1886,12 @@ takes no effect for these files.
 
 @subsubsection Automatic expanding the ECB-methods-buffer
 
-If the option @code{ecb-highlight-tag-with-point} is switched on,
-then then always that node in the method-buffer is highlighted which
-belongs to the current semantic-tag under point in the edit-window.
-But if this node is invisible (probably because its parent node is
-collapsed) then no node is highlighted if the auto. expanding feature
-is switched off.
+If the option @code{ecb-highlight-tag-with-point} is switched on, then
+then always that node in the method-buffer is highlighted which
+belongs to the current semantic-tag under point in the current active
+edit-window. But if this node is invisible (probably because its
+parent node is collapsed) then no node is highlighted if the auto.
+expanding feature is switched off.
 
 You can either switch on this feature with the option
 @code{ecb-auto-expand-tag-tree} or even easier with the command
@@ -1874,7 +1911,8 @@ The autom. expanding feature is only available for semantic-sources!
 @cindex tag
 The ECB-Methods buffer is probably the most important browsing window
 offered by ECB. It displays all parsing informations of the current
-source-buffer (the buffer displayed in the edit-window).
+source-buffer (the buffer displayed in the current active
+edit-window).
 
 Normally ECB gets all informations displayed in this Methods-buffer
 from the semantic-library - at least for semantic-sources. This
@@ -2761,7 +2799,7 @@ Afterwards you will see a frame like follows (here the layout-type is
 @end group
 @end example
 
-The big window (here the middle window) will be the edit-window of the
+The big window (here the middle window) will be the edit-area of the
 new layout and can not be selected, deleted or splitted during the
 creation process. It displays the help-screen for the layout-creation
 mode. Here all the available commands are displayed.
@@ -2861,19 +2899,22 @@ ECB-windows:
 @end enumerate
 
 If the special ECB-windows are hidden (e.g. by
-`ecb-toggle-ecb-windows') then there are no restrictions about the
-window-layout of the ecb-frame: The frame can be splitted in any
-arbitrary windows. All adviced functions behave as their originals. So
-the frame can be used as if ECB would not be active but ECB IS still
-active in the ``background'' and all ECB-commands and all
+`ecb-toggle-ecb-windows') all adviced functions behave as their
+originals. So the frame can be used as if ECB would not be active but
+ECB IS still active in the ``background'' and all ECB-commands and all
 ECB-keybindings can be used. Of course some of them doesn't make much
-sense but nevertheless they can be called.
+sense but nevertheless they can be called. Toggling the visibility of
+the ECB-windows preserves the splitting-state of the edit-area: If you
+hide the ECB-windows then the frame will be devided in the same
+window-layout the edit-area had before the hiding and if you show the
+ECB-windows again the edit-area will be devided into all the
+edit-windows the ECB-frame had before the showing.
 
 Therefore it should be enough to hide the ECB-windows to run other
 Emacs-applications which have their own window-layout-managing. There
 should be no conflicts. But nevertheless the most recommended method
 for running ECB and other applications (e.g. xrefactory, Gnus etc.) in
-the sane frame is to use a window-manager like winring.el or
+the same frame is to use a window-manager like winring.el or
 escreen.el (@pxref{Window-managers and ECB}).
 
 
@@ -2959,10 +3000,10 @@ current buffer of the edit window):
 @item ECB-directories:
 
 This windows is synchronized to display the directory where the
-source-file which is displayed in the edit-window is located. If the
-source-path (i.e. an element of the option @code{ecb-source-path})
-containing this directory is not expanded it will be auto. expanded
-according to the value of the option
+source-file which is displayed in the current active edit-window is
+located. If the source-path (i.e. an element of the option
+@code{ecb-source-path}) containing this directory is not expanded it
+will be auto. expanded according to the value of the option
 @code{ecb-auto-expand-directory-tree} (@pxref{ecb-directories}).
 
 @item ECB-sources:
@@ -2973,30 +3014,31 @@ edit-window. The entry of the ``current'' source-file is highlighted.
 
 @item ECB-methods:
 
-Contains after synchronizing all the tags of the buffer in the
-edit-window, i.e. all methods, variables etc... depending of the
-major-mode.
+Contains after synchronizing all the tags of the buffer in the current
+selected edit-window, i.e. all methods, variables etc... depending of
+the major-mode.
 
 @item ECB-history:
 
-Highlights the entry of the buffer displayed in the edit-window if
-this buffer is a source-file.
+Highlights the entry of the buffer displayed in the current active
+edit-window if this buffer is a source-file.
 
 @end itemize
 
 This feature can be customized with the option @code{ecb-window-sync}:
 
 If active then the synchronization takes place always a buffer changes
-in the edit window, if deactivated then never. But you can also set
-this option to a list of major-modes and then the sync. will only be
-done if the major-mode of the current buffer belongs NOT to this list.
+in an edit window or if another edit-window with another buffer will
+be selected, if deactivated then never. But you can also set this
+option to a list of major-modes and then the sync. will only be done
+if the major-mode of the current buffer belongs NOT to this list.
 
 But in every case the synchronization takes only place if the
-major-mode of the current-buffer in the edit-window has a relation to
-files or directories. Examples for the former one are all
-programming-language-modes like @code{c++-mode} or @code{java-mode},
-@code{Info-mode} too, an example for the latter one is
-@code{dired-mode}. For all major-modes related to
+major-mode of the current-buffer in the current selected edit-window
+has a relation to files or directories. Examples for the former one
+are all programming-language-modes like @code{c++-mode} or
+@code{java-mode}, @code{Info-mode} too, an example for the latter one
+is @code{dired-mode}. For all major-modes related to
 non-file/directory-buffers like @code{help-mode},
 @code{customize-mode} and others never a synchronization will be done!
 
@@ -3233,6 +3275,13 @@ Make the (first) edit-window window the current window.
 @deffn Command goto-window-edit2
 Make the second edit-window (if available) window the current window.
 @end deffn
+
+@deffn Command goto-window-edit-last
+Make the last selected edit-window window the current window. This is
+the same as if @code{ecb-mouse-click-destination} is set to
+@code{last-point}.
+@end deffn
+
 
 @deffn Command goto-window-history
 Make the ECB-history window the current window.
@@ -3711,7 +3760,7 @@ keyboard}).
 @item ecb-new-ecb-frame
 Should ECB create a new frame at activation time.
 @item  ecb-primary-secondary-mouse-buttons
-@itemx ecb-primary-mouse-jump-destination
+@itemx ecb-mouse-click-destination
 Define how to use the mouse (@pxref{Using the mouse}).
 @item ecb-tree-buffer-style
 @itemx ecb-tree-expand-symbol-before
@@ -4128,13 +4177,13 @@ the ECB-activation state.
 If a major-mode is listed in @code{ecb-major-modes-activate} as well
 as in @code{ecb-major-modes-deactivate} then ECB is activated!
 
-Any auto. deactivation/hiding is only done if the edit-window of ECB
+Any auto. deactivation/hiding is only done if the edit-area of ECB
 is unsplitted and point is in the edit-window to avoid changing
 unnecessarily or unintentionally the frame-layout if the user just
 jumps between different edit-windows, the tree-windows and the
 compile-window of ECB.
 
-There is one exception from this rule: If the edit-window is splitted
+There is one exception from this rule: If the edit-area is splitted
 and one window contains a dired-buffer and a ``ECB-deactivating''-file
 is opened via dired then opening this file deactivates ECB (rsp.
 hides the ECB-windows).
@@ -4146,12 +4195,12 @@ String to display in the mode line when ECB minor mode is active.
 @end defopt
 
 
-@defopt primary-mouse-jump-destination
-Jump-destination of a primary mouse-button click. Defines in which
-edit-window (if splitted) ECB does the ``right'' action (opening the
-source, jumping to a method/variable) after clicking with the primary
-mouse-button (see @code{ecb-primary-secondary-mouse-buttons}) onto a
-node. There are two possible choices:
+@defopt mouse-click-destination
+Destination of a mouse-button click. Defines in which edit-window (if
+splitted) ECB does the ``right'' action (opening a source, jumping to
+a method/variable etc.) after clicking with the primary mouse-button
+(see @code{ecb-primary-secondary-mouse-buttons}) onto a node. There
+are two possible choices:
 
 @itemize @minus
 @item @code{left-top}:
@@ -4160,12 +4209,23 @@ Does the ``right'' action always in the left/topmost edit-window.
 Does the ``right'' action always in that edit-window which had the point
 before.
 @end itemize
+This is if the user has clicked either with the primary mouse-button or
+has activated a popup-menu in the tree-buffer.
 
-If the edit-window is not splitted this setting doesn't matter.
+If the edit-area is not splitted this setting doesn't matter.
 
-Note: A click with the secondary mouse-button (see again
+A click with the secondary mouse-button (see again
 @code{ecb-primary-secondary-mouse-buttons} does the ``right'' action
-always in the ``other'' window related to the setting in this option.
+always in another edit-window related to the setting in this option:
+If there are two edit-windows then the ``other'' edit-window is used
+and for more than 2 edit-windows the ``next'' edit-window is used
+(whereas the next edit-window of the last edit-window is the first
+edit-window).
+
+Note: If the tree-buffers are used with the keyboard instead with the
+mouse then this option takes effect too because @kbd{RET} is
+interpreted as primary mouse-button and @kbd{C-RET} as secondary
+mouse-button!
 @end defopt
 
 @defopt run-ediff-in-ecb-frame
@@ -4206,8 +4266,8 @@ major-modes then only if the @code{major-mode} of the new buffer
 belongs NOT to this list.
 
 But in every case the synchronization takes only place if the
-current-buffer in the edit-window has a relation to files or
-directories. Examples for the former one are all
+current-buffer in the current active edit-window has a relation to
+files or directories. Examples for the former one are all
 programming-language-modes, @code{Info-mode} too, an example for the
 latter one is @code{dired-mode}. For all major-modes related to
 non-file/directory-buffers like @code{help-mode},
@@ -4267,11 +4327,11 @@ Sources buffer.
 
 @item ECB sources/history:
 Opening the file in that edit-window specified by the option
-@code{ecb-primary-mouse-jump-destination}.
+@code{ecb-mouse-click-destination}.
 
 @item ECB Methods:
 Jumping to the method in that edit-window specified by the option
-@code{ecb-primary-mouse-jump-destination}.
+@code{ecb-mouse-click-destination}.
 @end itemize
 
 A click with the primary mouse-button while the SHIFT-key is pressed called
@@ -4296,9 +4356,9 @@ supported sources but not for imenu- or etags-supported ones!
 In addition always the whole node-name is displayed in the minibuffer after a
 POWER-click \(for this see also `ecb-show-node-info-in-minibuffer').
 
-The secondary mouse-button is for opening (jumping to) the file in the
-other window (see the documentation
-@code{ecb-primary-mouse-jump-destination}).
+The secondary mouse-button is for opening (jumping to) the file in
+another edit-window (see the documentation
+@code{ecb-mouse-click-destination}).
 
 The following combinations are possible:
 
@@ -4311,6 +4371,10 @@ primary: mouse-1, secondary: C-mouse-1
 @item
 primary: mouse-1, secondary: mouse-2
 @end itemize
+
+Please note: If the tree-buffers are used with the keyboard instead
+with the mouse then @kbd{RET} is interpreted as primary mouse-button and
+@kbd{C-RET} as secondary mouse-button!
 
 If you change this during ECB is activated you must deactivate and
 activate ECB again to take effect
@@ -4718,9 +4782,9 @@ or add new entries.
 
 
 @defopt directories-menu-user-extension
-User extensions for the popup-menu of the directories buffer. Value is
-a list of elements of the following type: Each element defines a new
-menu-entry and is either:
+Static user extensions for the popup-menu of the directories buffer.
+Value is a list of elements of the following type: Each element
+defines a new menu-entry and is either:
 
 @enumerate
 @item Menu-command:
@@ -4754,30 +4818,45 @@ Example for the definition of such a menu-function:
      (message ``Dir under node: %s'' node-data=dir)))
 @end example
 
-Per default the user-extensions are added at the beginning of the
-built-in menu-entries of @code{ecb-directories-menu} but the whole
+Per default the static user-extensions are added at the beginning of
+the built-in menu-entries of @code{ecb-directories-menu} but the whole
 menu can be re-arranged with @code{ecb-directories-menu-sorter}.
 
-If you change this option you have to restart ECB to take effect.
+These menu-extensions are static. A dynamic menu-extension can be
+achieved via @code{ecb-directories-menu-user-extension-function}.
 @end defopt
+
+@defopt directories-menu-user-extension-function
+Dynamic user extensions for the popup-menu of the directories buffer.
+A function which has to return a list in the same format like the
+option @code{ecb-directories-menu-user-extension}. This function is
+called when the user opens the popup-menu for the directories buffer.
+
+Per default the dynamic user-extensions are added in front of the
+static extensions of @code{ecb-directories-menu-user-extension} but
+the whole menu can be re-arranged with
+@code{ecb-directories-menu-sorter}.
+@end defopt
+
+
 
 @defopt display-default-dir-after-start
 Automatically display current default-directory after activating ECB.
 
-If a file-buffer is displayed in the edit-window then ECB synchronizes
-its tree-buffers to this file-buffer - at least if the option
-@code{ecb-window-sync} it not nil. So for this situation
+If a file-buffer is displayed in the current active edit-window then
+ECB synchronizes its tree-buffers to this file-buffer - at least if
+the option @code{ecb-window-sync} it not nil. So for this situation
 @code{ecb-display-default-dir-after-start} takes no effect but this
 option is for the case if no file-buffer is displayed in the
 edit-window after startup:
 
 If true then ECB selects autom. the current default-directory after
-activation even if no file-buffer is displayed in the edit-window.
-This is useful if ECB is autom. activated after startup of Emacs and
-Emacs is started without a file-argument. So the directory from which
-the startup has performed is auto. selected in the ECB-directories
-buffer and the ECB-sources buffer displays the contents of this
-directory.
+activation even if no file-buffer is displayed in the current active
+edit-window. This is useful if ECB is autom. activated after startup
+of Emacs and Emacs is started without a file-argument. So the
+directory from which the startup has performed is auto. selected in
+the ECB-directories buffer and the ECB-sources buffer displays the
+contents of this directory.
 @end defopt
 
 
@@ -4935,22 +5014,29 @@ For the guidelines for such a sorter-function see
 @end defopt
 
 
-
 @defopt sources-menu-user-extension
-User extensions for the popup-menu of the sources buffer.
-
-For further explanations see
-@code{ecb-directories-menu-user-extension}.
+Static user extensions for the popup-menu of the sources buffer. For
+further explanations see @code{ecb-directories-menu-user-extension}.
 
 The node-argument of a menu-function contains as data the filename of
 the source for which the popup-menu has been opened.
 
-Per default the user-extensions are added at the beginning of the
-built-in menu-entries of @code{ecb-sources-menu} but the whole menu can
-be re-arranged with @code{ecb-sources-menu-sorter}.
-
-If you change this option you have to restart ECB to take effect.
+Per default the static user-extensions are added at the beginning of
+the built-in menu-entries of @code{ecb-sources-menu} but the whole
+menu can be re-arranged with @code{ecb-sources-menu-sorter}.
 @end defopt
+
+@defopt sources-menu-user-extension-function
+Dynamic user extensions for the popup-menu of the sources buffer. A
+function which has to return a list in the same format like the option
+@code{ecb-sources-menu-user-extension}. This function is called when
+the user opens the popup-menu for the sources buffer.
+
+Per default the dynamic user-extensions are added in front of the
+static extensions of @code{ecb-sources-menu-user-extension} but the
+whole menu can be re-arranged with @code{ecb-sources-menu-sorter}.
+@end defopt
+
 
 
 @defopt sources-sort-method
@@ -5021,10 +5107,10 @@ quickly.
 
 But after explicitly expanding/collapsing the methods-buffer to a
 certain level the auto. expanding could undo this when the node
-belonging to current tag under point in the edit-window is invisible
-after @code{ecb-expand-methods-nodes} - then the auto. expand feature
-would make this node immediately visible and destroys the explicitly
-set expand-level.
+belonging to current tag under point in the current active edit-window
+is invisible after @code{ecb-expand-methods-nodes} - then the auto.
+expand feature would make this node immediately visible and destroys
+the explicitly set expand-level.
 @end defopt
 
 
@@ -5106,24 +5192,30 @@ For the guidelines for such a sorter-function see
 @end defopt
 
 
-
 @defopt methods-menu-user-extension
-User extensions for the popup-menu of the methods buffer.
+Static user extensions for the popup-menu of the methods buffer. For
+further explanations see @code{ecb-directories-menu-user-extension}.
 
-For further explanations see
-@code{ecb-directories-menu-user-extension}.
+The node-argument of a menu-function contains as data the semantic-tag
+of the method/variable/tag for which the popup-menu has been opened.
 
-The node-argument of a menu-function contains as data the
-semantic-tag of the method/variable/tag for which the popup-menu
-has been opened.
-
-Per default the user-extensions are added at the beginning of the
-built-in menu-entries of @code{ecb-methods-menu} but the whole menu can
-be re-arranged with @code{ecb-methods-menu-sorter}.
-
-If you change this option you have to restart ECB to take effect.
+Per default the static user-extensions are added at the beginning of
+the built-in menu-entries of @code{ecb-methods-menu} but the whole
+menu can be re-arranged with @code{ecb-methods-menu-sorter}.
 @end defopt
 
+@defopt methods-menu-user-extension-function
+Dynamic user extensions for the popup-menu of the methods buffer. A
+function which has to return a list in the same format like the option
+@code{ecb-methods-menu-user-extension}. This function is called when
+the user opens the popup-menu for the methods buffer. For an example
+how such a function can be programmed see
+@code{ecb-methods-menu-editwin-entries}.
+
+Per default the dynamic user-extensions are added in front of the
+static extensions of @code{ecb-methods-menu-user-extension} but the
+whole menu can be re-arranged with @code{ecb-methods-menu-sorter}.
+@end defopt
 
 
 @defopt methods-nodes-collapse-spec
@@ -5531,23 +5623,28 @@ For the guidelines for such a sorter-function see
 @end defopt
 
 
-
 @defopt history-menu-user-extension
-User extensions for the popup-menu of the history buffer.
-
-For further explanations see
-@code{ecb-directories-menu-user-extension}.
+Static user extensions for the popup-menu of the history buffer. For
+further explanations see @code{ecb-directories-menu-user-extension}.
 
 The node-argument of a menu-function contains as data the filename of
 the source for which the popup-menu has been opened.
 
-Per default the user-extensions are added at the beginning of the
-built-in menu-entries of @code{ecb-history-menu} but the whole menu can
-be re-arranged with @code{ecb-history-menu-sorter}.
-
-If you change this option you have to restart ECB to take effect.
+Per default the static user-extensions are added at the beginning of
+the built-in menu-entries of @code{ecb-history-menu} but the whole
+menu can be re-arranged with @code{ecb-history-menu-sorter}.
 @end defopt
 
+@defopt history-menu-user-extension-function
+Dynamic user extensions for the popup-menu of the history buffer. A
+function which has to return a list in the same format like the option
+@code{ecb-history-menu-user-extension}. This function is called when
+the user opens the popup-menu for the history buffer.
+
+Per default the dynamic user-extensions are added in front of the
+static extensions of @code{ecb-history-menu-user-extension} but the
+whole menu can be re-arranged with @code{ecb-history-menu-sorter}.
+@end defopt
 
 @defopt kill-buffer-clears-history
 Define if @code{kill-buffer} should also clear the history. There are
@@ -5604,9 +5701,10 @@ Especially if @code{ecb-compile-window-height} is not nil it is
 strongly recommended not to disable this advice!
 @item @code{other-window-for-scrolling}
 If this advice is enabled then the following functions scroll always
-the first edit-window if the edit-window is splitted, point stays in
-the ``other'' edit-window and there is no durable compilation-window
-(see @code{ecb-compile-window-height}):
+the ``next'' (the next edit-window of the last edit-window is the
+first edit-window!) edit-window if the edit-area is splitted. If the
+edit-area is not splitted and there is a compile-window then the
+compile-window is scolled:
 
 @itemize @minus
 @item @code{scroll-other-window}
@@ -5739,34 +5837,34 @@ options @code{special-display-function},
 @code{special-display-regexps}.
 
 @end itemize
-
 @end defopt
-
 
 @defopt layout-always-operate-in-edit-window
 Adviced window functions work always in the edit-window. If we are in
 an ECB special buffer (methods, directories, etc), and any of the
-adviced windowing functions is called (see
-@code{ecb-advice-window-functions}), we will select the
-@code{ecb-edit-window} first. This is useful if you have any functions
-that use such functions and you don't want them to just error with a
-method complaining that the current buffer can not be split, or
+adviced windowing functions is called interactively (see
+@code{ecb-advice-window-functions}), we will select first an
+edit-window according to the value of
+@code{ecb-mouse-click-destination}. This is useful if you have any
+functions that use such functions and you don't want them to fail with
+an error complaining that the current buffer can not be split, or
 something similar.
 
-Because this may not be desirable in all situations and all adviced
-functions this can be enabled separately for every advisable function
-(see also @code{ecb-advice-window-functions}). If the symbol of an
-adviced function is contained in the value of this option, then the
-edit-window is first selected otherwise either an error is reported or
-some other special reaction; see the documentation of the adviced
-functions for this.
+Because this may not be desirable in all situations and for all
+adviced functions this can be enabled separately for every advicable
+function (see also @code{ecb-advice-window-functions}). If the symbol
+of an adviced function is contained in the value of this option, then
+a edit-window is first selected otherwise either an error is
+reported or some other special reaction (depends on
+@code{ecb-advice-window-functions-signal-error}); see the
+documentation of the adviced functions for this.
 
 For @code{other-window}, @code{other-window-for-scrolling} and
 @code{switch-to-buffer-other-window} this makes no sense, therefore
 you can not enable this for them.
 
-Per default this is enabled for @code{delete-window},
-@code{delete-other-windows}, @code{switch-to-buffer}.
+Per default this is enabled for @code{switch-to-buffer} and
+@code{display-buffer}.
 @end defopt
 
 
@@ -5871,7 +5969,7 @@ version of @code{other-window}. The following settings are possible:
 ECB will cycle through all windows of ECB, means it behaves like the
 original @code{other-window}.
 @item @code{only-edit}:
-ECB will only cycle through the (max. 2) edit-windows of ECB.
+ECB will only cycle through the edit-windows of ECB.
 @item @code{edit-and-compile}:
 Like 'only-edit plus the compile window if any.
 @end itemize
@@ -5942,11 +6040,43 @@ So be aware which code you add to which hook!
 @end defopt
 
 
-
 @defopt split-edit-window
-Sets how and if the edit window should be splitted. But be aware: This
-option determines only if the edit-window should be splitted at
-start-time of ECB.
+Sets how and if the edit window should be splitted.
+But be aware: This option determines only if the edit-window should be
+splitted at start-time of ECB. There are different values allowed for this
+option:
+
+@itemize @minus
+@item @code{nil}:
+Do not split the edit-area of ECB after activation, i.e. there will be
+only one edit-window after starting ECB.
+
+@item @code{horizontal}:
+Split the edit-area in 2 edit-windows side by side.
+
+@item @code{vertical}:
+Split the edit-area in 2 edit-windows, one above the other.
+
+@item @code{t}:
+Split the edit-area as before the ECB-start, i.e. the edit-area will
+have a window-layout after start as the whole frame had before the
+start of ECB.
+@end itemize
+
+Some remarks to the value @code{t}: If this value has been set then
+ECB needs three permanent adivces even when ECB is deactivated:
+@code{split-window}, @code{delete-window} and
+@code{delete-other-windows}. But these advices do not change any
+behavior of these functions but only storing in an internal
+ECB-variable the facts that a window has been splitted or deleted. In
+addition to this these advices are 100% error-save, means the
+functionality of the original functions will be performed in every(!)
+case even if within the advice an error occurs (but normally there can
+no errors occur in these advices because they are very simple).
+Conclusion: If you want really all ECB-advices being disabled after
+deactivating ECB then you have to set this option to other values then
+@code{t}. But setting this variable to @code{t} is really completely
+save.
 @end defopt
 
 @defopt toggle-layout-sequence
@@ -6044,7 +6174,7 @@ height is a fraction of the frame height.
 If you do not set a durable compilation window then doing a
 compilation or displaying temp-buffers (e.g. *Help*-buffers) splits
 temporally the edit window vertically if the edit window is not
-splitted already or uses the ''other'' edit window temporally for
+splitted already or uses another edit window temporally for
 compilation output if the edit window is already splitted. This is the
 recommended value for this option because this is the
 standard-behavior of Emacs.
@@ -7252,7 +7382,7 @@ above is also useful for all the other layouts.
 @section Working with big screens
 
 ECB offers a layout type ``left-right'' with special ECB-tree-windows
-on the left and right side of the edit-window. The layouts
+on the left and right side of the edit-area. The layouts
 ``leftright1'' and ``leftright2''are examples for this layout type.
 See @ref{Creating a new ECB-layout} and @ref{The layout-engine}
 for details about how to create or program more layouts of this type.
@@ -7467,7 +7597,7 @@ sources-buffer. This can be done via the command
 ECB offers a very smart integration of the ``eshell'' if you are using
 a compile window (@pxref{Temp- and compile-buffers})@footnote{Of
 course you can use eshell also if there is no compile-window. Then it
-is just displayed in the edit-window and there is no special
+is just displayed in the edit-area and there is no special
 integration.}
 
 Here is a short summary of provided features:
@@ -7486,7 +7616,7 @@ the output of the command you run).
 
 @item
 Synchronizes the current directory of the eshell with the current
-buffer in the edit-window of ECB.
+buffer in the current active edit-window of ECB.
 
 @item
 Provides smart window layout of the eshell buffer. This makes sure
@@ -7517,7 +7647,7 @@ command @code{ecb-eshell-recenter}.
 
 If option @code{ecb-eshell-synchronize} is true then ECB always
 synchronizes the command prompt of eshell with the directory of
-current source-buffer of the edit-window.
+current source-buffer of the current active edit-window.
 
 With the option @code{ecb-eshell-auto-activate} you can start eshell
 autom. in the compile-window when ECB is started but of course if a
@@ -7572,8 +7702,11 @@ by calling the command @code{jde-gen-class-buffer}.
 @item Adding user-extensions to the popup-menus
 
 The options @code{ecb-directories-menu-user-extension} and
-@code{ecb-sources-menu-user-extension} allow adding often used
-JDEE-commands to the popup-menus of the directories- or
+@code{ecb-sources-menu-user-extension}@footnote{If you need a dynamic
+way of menu-extension then you should have a look at the options
+@code{ecb-directories-menu-user-extension-function} and
+@code{ecb-sources-menu-user-extension-function}.} allow adding often
+used JDEE-commands to the popup-menus of the directories- or
 sources-buffer. One example is to add building the project of current
 directory. Here is a function which could be added to
 @code{ecb-directories-menu-user-extension}:
@@ -7635,11 +7768,12 @@ before next compilation or help-buffer-display.!
 @section Parsing and displaying non-semantic sources
 
 ECB is mostly designed to display parsing information for files
-supported by semantic. But from version 1.94 on it also supports other
-parsing engines like imenu and etags, so also files not supported by
-semantic but by imenu/etags can be displayed in the Method-buffer of
-ECB. See @ref{Definition of semantic- and non-semantic-sources} for a
-description of ``semantic-sources'' and ``non-semantic-sources''.
+supported by semantic. But beginning with version 1.94 it also
+supports other parsing engines like imenu and etags, so also files not
+supported by semantic but by imenu/etags can be displayed in the
+Method-buffer of ECB. See @ref{Definition of semantic- and
+non-semantic-sources} for a description of ``semantic-sources'' and
+``non-semantic-sources''.
 
 If support of non-semantic-sources is enabled then ECB will display
 the contents of all sources which can be displayed by speedbar too.
@@ -8126,7 +8260,7 @@ method-buffer which are somehow virtual because there is no definition
 in the current source-file. But such a virtual type collects all its
 outside defined members like methods in C++ which are defined in the
 @file{*.cc} file whereas the class-definition is defined in the
-associated header-file. ECB uses semanticb to open the definition-file
+associated header-file. ECB uses semanticdb to open the definition-file
 of such a tag and to jump to the definition of this tag. Same for
 parent-tags in the methods-buffer. This feature can only work
 correctly if semanticdb is well configured!
@@ -8336,15 +8470,15 @@ and arranging them in a new outline.
 @item
 Creating complete new special windows (e.g. a local-variable window
 for a graphical debugger like JDEbug of JDEE), adding them to a layout
-and synchronizing them with the edit-window.
+and synchronizing them with the current active edit-window.
 @end enumerate
 
 The former one covers merely the layout-programming aspect which is
-explained in the first subsection of this chapter whereas the latter one
-covers all aspects of creating new special windows and what is
-necessary to synchronize it with the edit-window of ECB. This is
-explained in the second subsection which will refers to the first
-subsection.
+explained in the first subsection of this chapter whereas the latter
+one covers all aspects of creating new special windows and what is
+necessary to synchronize it with the current active edit-window of
+ECB. This is explained in the second subsection which will refers to
+the first subsection.
 
 @menu
 * Programming a new layout::    How to program a new layout
@@ -8498,10 +8632,9 @@ With the function @code{ecb-layout-undefine} you can remove a layout
 from the list of available layouts:
 
 @defun layout-undefine name
-Unbind ecb-layout-function-<NAME>,
-ecb-delete-window-ecb-windows-<NAME>,
-ecb-delete-other-windows-ecb-windows-<NAME> and remove @code{NAME}
-from @code{ecb-available-layouts}.
+Unbind ecb-layout-function-<NAME> and
+ecb-delete-window-ecb-windows-<NAME> and remove @code{NAME} from
+@code{ecb-available-layouts}.
 @end defun
 
 Here is an example for a new layout programmed with
@@ -8941,7 +9074,9 @@ OK, here are the real restrictions and conditions for a layout
 programmed with @code{ecb-layout-define}:
 @enumerate
 @item
-It must have exactly one edit-window regardless of its size.
+It must have exactly one edit-window regardless of its size. The user
+of this layout can later split this edit-window in as many
+edit-windows as he like.
 
 @item
 All other windows created within the @var{CREATE-CODE} body of
@@ -8982,8 +9117,8 @@ windows.
 |                                                                |
 |================================================================|
 |                                                                |
-|                         Edit-window(s)                         |
-|                 (can be splitted in two windows)               |
+|                         Edit-area                              |
+|      (can be splitted by the user in several edit-windows)     |
 ------------------------------------------------------------------
 |                                                                |
 |                 Compilation-window (optional)                  |
@@ -9054,10 +9189,10 @@ right-''column'' have always the same width.
 |      |      |       |                   |                      |
 |      |      |       |                   |                      |
 |      |      |       |                   |                      |
-| Left2| Left3|-------|  Edit-window(s)   |   Right1             |
+| Left2| Left3|-------|     Edit-area     |   Right1             |
 |      |      |       | (can be splitted  |                      |
-|      |      |       |  in two windows)  |                      |
-|      |      |       |                   |                      |
+|      |      |       |  in several edit- |                      |
+|      |      |       |      windows)     |                      |
 |-------------|       |                   |                      |
 |             |       |                   |                      |
 | Left4       | Left6 |                   |                      |
@@ -9141,7 +9276,6 @@ Functions for programming with layouts and special ecb-windows:
 @item ecb-canonical-ecb-windows-list
 @item ecb-compile-window-live-p
 @item ecb-do-if-buffer-visible-in-ecb-frame
-@item ecb-edit-window-live-p
 @item ecb-get-current-visible-ecb-buffers
 @item ecb-layout-define
 @item ecb-layout-switch
@@ -9152,6 +9286,7 @@ Functions for programming with layouts and special ecb-windows:
 @item ecb-select-edit-window
 @item ecb-split-hor
 @item ecb-split-ver
+@item ecb-where-is-point
 @item ecb-with-dedicated-window
 @end itemize
 
@@ -9173,10 +9308,12 @@ Some other maybe useful functions/macros:
 Some useful @strong{READONLY} variables:
 @itemize @minus
 @item ecb-compile-window
-@item ecb-edit-window
 @item ecb-last-edit-window-with-point
 @item ecb-last-source-buffer
 @end itemize
+
+@strong{Caution}: DO NOT USE THE VARIABLE @code{ecb-edit-window} IN
+YOUR PROGRAMS!
 
 User-options and hooks related to the layout-engine API:
 @itemize @minus
@@ -9234,6 +9371,9 @@ the same frame!
 @subsection Package calculator.el
 
 @cindex calculator package
+The following is only for ECB-versions < 2.20. From beginning with
+version 2.20 there are no conflicts with the package calculator.el!
+
 If the edit-window is already splitted then calling @code{calculator} uses
 the whole ``other'' edit-window for the calculator. With an unsplitted
 edit-window the calculator window has it´s normal size of about 2
@@ -9370,7 +9510,7 @@ of ECB and not within the compile-window.
 @cindex scroll-all
 ECB advices @code{scroll-all-mode} so it is working correct during
 running ECB. This means if point stays in an edit-window and the
-edit-window is splitted then both edit-windows are scrolled by
+edit-window is splitted then all edit-windows are scrolled by
 @code{scroll-all-mode} and no other window! If point stays in any
 other window just this selected window is scrolled. This is the only
 senseful behavior of @code{scroll-all-mode} with ECB.
@@ -9625,10 +9765,9 @@ semantic-versions >= semantic-1.4.3 support C++ really well.
 @item
 Does ECB support Perl?
 @tab @tab
-This depends completely on semantic. If there is a semantic-BNF for
-Perl then semantic can parse Perl and then in turn ECB supports Perl.
-Check semantic if Perl is supported or write your own Perl-BNF for
-semantic.
+If perl can be parsed either by imenu, etags or semantic then ECB
+supports perl. Of course ECB would support perl best if perl is
+supported by semantic.
 
 @item @tab @tab
 
@@ -9645,7 +9784,8 @@ How to add new languages to ECB?
 @tab @tab
 Add the language XYZ to semantic (perform all necessary steps described in
 the semantic-manual) and ECB will automatically support language XYZ!
-There is nothing to do in ECB itself!
+There is nothing to do in ECB itself! Same when you write an imenu- or
+etags-support for language XYZ.
 
 @item @tab @tab
 
@@ -9943,6 +10083,14 @@ Yes, see @ref{Using popup-menus}.
 Can i display the popup-menu of a tree-buffer with tmm?
 @tab @tab
 Yes, see @ref{Using popup-menus}.
+
+@item @tab @tab
+
+@item
+Does ECB disable all advices after deactivation?
+@tab @tab
+``Nes''@footnote{Nes is a combination of No and Yes :-)}, see remarks
+in the documentation of option @code{ecb-split-edit-window}.
 
 @end multitable
 

@@ -23,7 +23,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-file-browser.el,v 1.6 2003/12/28 15:28:57 berndl Exp $
+;; $Id: ecb-file-browser.el,v 1.7 2004/01/07 10:23:40 berndl Exp $
 
 ;;; Commentary:
 
@@ -470,13 +470,12 @@ There are three options:
                 (const :tag "File name"
                        :value file-name)))
 
-
 (defcustom ecb-directories-menu-user-extension
   '(("Version Control"
      (ecb-dir-popup-cvs-status "CVS Status" )
      (ecb-dir-popup-cvs-examine "CVS Examine")
      (ecb-dir-popup-cvs-update "CVS Update")))
-  "*User extensions for the popup-menu of the directories buffer.
+  "*Static user extensions for the popup-menu of the directories buffer.
 Value is a list of elements of the following type: Each element defines a new
 menu-entry and is either:
 
@@ -502,11 +501,12 @@ Example for the definition of such a popupmenu-command:
   \(let \(\(node-data=dir \(tree-node-get-data node)))
      \(message \"Dir under node: %s\" node-data=dir)))
 
-Per default the user-extensions are added at the beginning of the built-in
-menu-entries of `ecb-directories-menu' but the whole menu can be re-arranged
-with `ecb-directories-menu-sorter'.
+Per default the static user-extensions are added at the beginning of the
+built-in menu-entries of `ecb-directories-menu' but the whole menu can be
+re-arranged with `ecb-directories-menu-sorter'.
 
-If you change this option you have to restart ECB to take effect."
+These menu-extensions are static. A dynamic menu-extension can be achieved via
+`ecb-directories-menu-user-extension-function'."
   :group 'ecb-directories
   :type '(repeat (choice :tag "Menu-entry" :menu-tag "Menu-entry"
                          :value (ignore "")
@@ -524,6 +524,17 @@ If you change this option you have to restart ECB to take effect."
                                                                :value ignore)
                                                      (string :tag "Entry-name"))))))))
 
+(defcustom ecb-directories-menu-user-extension-function nil
+  "*Dynamic user extensions for the popup-menu of the directories buffer.
+A function which has to return a list in the same format like the option
+`ecb-directories-menu-user-extension'. This function is called when the user
+opens the popup-menu for the directories buffer.
+
+Per default the dynamic user-extensions are added in front of the static
+extensions of `ecb-directories-menu-user-extension' but the whole menu can be
+re-arranged with `ecb-directories-menu-sorter'."
+  :group 'ecb-directories
+  :type 'function)
 
 (defcustom ecb-sources-menu-user-extension
   '(("Version control"
@@ -533,17 +544,15 @@ If you change this option you have to restart ECB to take effect."
      (ecb-file-popup-vc-log "Revision history")
      (ecb-file-popup-vc-annotate "Annotate")
      (ecb-file-popup-vc-diff "Diff against last version")))
-  "*User extensions for the popup-menu of the sources buffer.
+  "*Static user extensions for the popup-menu of the sources buffer.
 For further explanations see `ecb-directories-menu-user-extension'.
 
 The node-argument of a menu-function contains as data the filename of the
 source for which the popup-menu has been opened.
 
-Per default the user-extensions are added at the beginning of the built-in
-menu-entries of `ecb-sources-menu' but the whole menu can be re-arranged
-with `ecb-sources-menu-sorter'.
-
-If you change this option you have to restart ECB to take effect."
+Per default the static user-extensions are added at the beginning of the
+built-in menu-entries of `ecb-sources-menu' but the whole menu can be
+re-arranged with `ecb-sources-menu-sorter'."
   :group 'ecb-sources
   :type '(repeat (choice :tag "Menu-entry" :menu-tag "Menu-entry"
                          :value (ignore "")
@@ -561,6 +570,17 @@ If you change this option you have to restart ECB to take effect."
                                                                :value ignore)
                                                      (string :tag "Entry-name"))))))))
 
+(defcustom ecb-sources-menu-user-extension-function nil
+  "*Dynamic user extensions for the popup-menu of the sources buffer.
+A function which has to return a list in the same format like the option
+`ecb-sources-menu-user-extension'. This function is called when the user
+opens the popup-menu for the sources buffer.
+
+Per default the dynamic user-extensions are added in front of the static
+extensions of `ecb-sources-menu-user-extension' but the whole menu can be
+re-arranged with `ecb-sources-menu-sorter'."
+  :group 'ecb-sources
+  :type 'function)
 
 (defcustom ecb-history-menu-user-extension
   '(("Version control"
@@ -570,17 +590,15 @@ If you change this option you have to restart ECB to take effect."
      (ecb-file-popup-vc-log "Revision history")
      (ecb-file-popup-vc-annotate "Annotate")
      (ecb-file-popup-vc-diff "Diff against last version")))
-  "*User extensions for the popup-menu of the history buffer.
+  "*Static user extensions for the popup-menu of the history buffer.
 For further explanations see `ecb-directories-menu-user-extension'.
 
 The node-argument of a menu-function contains as data the filename of the
 source for which the popup-menu has been opened.
 
-Per default the user-extensions are added at the beginning of the built-in
-menu-entries of `ecb-history-menu' but the whole menu can be re-arranged
-with `ecb-history-menu-sorter'.
-
-If you change this option you have to restart ECB to take effect."
+Per default the static user-extensions are added at the beginning of the
+built-in menu-entries of `ecb-history-menu' but the whole menu can be
+re-arranged with `ecb-history-menu-sorter'."
   :group 'ecb-history
   :type '(repeat (choice :tag "Menu-entry" :menu-tag "Menu-entry"
                          :value (ignore "")
@@ -598,6 +616,18 @@ If you change this option you have to restart ECB to take effect."
                                                                :value ignore)
                                                      (string :tag "Entry-name"))))))))
 
+
+(defcustom ecb-history-menu-user-extension-function nil
+  "*Dynamic user extensions for the popup-menu of the history buffer.
+A function which has to return a list in the same format like the option
+`ecb-history-menu-user-extension'. This function is called when the user
+opens the popup-menu for the history buffer.
+
+Per default the dynamic user-extensions are added in front of the static
+extensions of `ecb-history-menu-user-extension' but the whole menu can be
+re-arranged with `ecb-history-menu-sorter'."
+  :group 'ecb-history
+  :type 'function)
 
 (defcustom ecb-directories-menu-sorter nil
   "*Function which re-sorts the menu-entries of the directories buffer.
@@ -1275,7 +1305,8 @@ by the option `ecb-mode-line-prefixes'."
 displayed unless NO-EDIT-BUFFER-SELECTION is set to non nil. In such case
 the file is only loaded invisible in the background, all semantic-parsing
 and ECB-Buffer-updating is done but the content of the main-edit window
-is not changed."
+is not changed. For the allowed values of OTHER-EDIT-WINDOW see
+`ecb-combine-ecb-button/edit-win-nr'."
   (ecb-select-source-file filename)
   (if no-edit-buffer-selection
       ;; load the selected source in an invisible buffer, do all the
@@ -1501,10 +1532,12 @@ is created."
        (ecb-speedbar-update-contents)))
 
 
-(defun ecb-directory-clicked (node ecb-button shift-mode)
+(defun ecb-directory-clicked (node ecb-button edit-window-nr shift-mode)
+  "Handle clicking onto NODE in the directories-buffer. ECB-BUTTON can be 1, 2
+or 3. If 3 then EDIT-WINDOW-NR contains the number of the edit-window the NODE
+should be displayed. For 1 and 2 the value of EDIT-WINDOW-NR is ignored."
   (if (= 3 (tree-node-get-type node))
       (funcall (tree-node-get-data node))
-
     (ecb-update-directory-node node)
     (if shift-mode
         (ecb-mouse-over-directory-node node nil nil 'force))
@@ -1528,25 +1561,30 @@ is created."
            ;; Update the tree-buffer with optimized display of NODE
            (tree-buffer-update node)))
       (ecb-set-selected-source (tree-node-get-data node)
-			       (and (ecb-edit-window-splitted) (eq ecb-button 2))
+                               (ecb-combine-ecb-button/edit-win-nr ecb-button edit-window-nr)
 			       shift-mode))))
 
 
-(defun ecb-source-clicked (node ecb-button shift-mode)
+(defun ecb-source-clicked (node ecb-button edit-window-nr shift-mode)
+  "Handle clicking onto NODE in the sources-buffer. ECB-BUTTON can be 1, 2 or
+3. If 3 then EDIT-WINDOW-NR contains the number of the edit-window the NODE
+should be displayed. For 1 and 2 the value of EDIT-WINDOW-NR is ignored."
   (if shift-mode
       (ecb-mouse-over-source-node node nil nil 'force))
   (ecb-set-selected-source (tree-node-get-data node)
-			   (and (ecb-edit-window-splitted) (eq ecb-button 2))
+                           (ecb-combine-ecb-button/edit-win-nr ecb-button edit-window-nr)
 			   shift-mode))
 
 
-(defun ecb-history-clicked (node ecb-button shift-mode)
+(defun ecb-history-clicked (node ecb-button edit-window-nr shift-mode)
+  "Handle clicking onto NODE in the history-buffer. ECB-BUTTON can be 1, 2 or
+3. If 3 then EDIT-WINDOW-NR contains the number of the edit-window the NODE
+should be displayed. For 1 and 2 the value of EDIT-WINDOW-NR is ignored."
   (if shift-mode
       (ecb-mouse-over-history-node node nil nil 'force))
   (ecb-set-selected-source (tree-node-get-data node)
-			   (and (ecb-edit-window-splitted) (eq ecb-button 2))
-			   shift-mode))
-
+                           (ecb-combine-ecb-button/edit-win-nr ecb-button edit-window-nr)
+                           shift-mode))
 
 (defun ecb-expand-directory-nodes (level)
   "Set the expand level of the nodes in the ECB-directories-buffer.
@@ -1668,10 +1706,7 @@ help-text should be printed here."
 
 
 (defun ecb-grep-directory-internal (node find)
-  (select-window (or (and ecb-last-edit-window-with-point
-                          (window-live-p ecb-last-edit-window-with-point)
-                          ecb-last-edit-window-with-point)
-                     (car (ecb-canonical-edit-windows-list))))
+  (ecb-select-edit-window)
   (let ((default-directory (concat (ecb-fix-filename
                                     (if (file-directory-p
                                          (tree-node-get-data node))
@@ -1715,10 +1750,7 @@ help-text should be printed here."
 
 
 (defun ecb-dired-directory-internal (node &optional other)
-  (select-window (or (and ecb-last-edit-window-with-point
-                          (window-live-p ecb-last-edit-window-with-point)
-                          ecb-last-edit-window-with-point)
-                     (car (ecb-canonical-edit-windows-list))))
+  (ecb-select-edit-window)
   (let ((dir (ecb-fix-filename
               (funcall (if (file-directory-p (tree-node-get-data node))
                            'identity
@@ -1805,6 +1837,73 @@ source-path of `ecb-source-path'.")
 function which is called with current node and has to return a string.")
 
 
+(tree-buffer-defpopup-command ecb-open-source-in-editwin1
+  "Open current source-file the 1. edit-window."
+  ;; We can use `ecb-source-clicked' for history-buffer too because shift-mode
+  ;; is nil.
+  (ecb-source-clicked node 3 1 nil))
+(tree-buffer-defpopup-command ecb-open-source-in-editwin2
+  "Open current source-file the 2. edit-window."
+  (ecb-source-clicked node 3 2 nil))
+(tree-buffer-defpopup-command ecb-open-source-in-editwin3
+  "Open current source-file the 3. edit-window."
+  (ecb-source-clicked node 3 3 nil))
+(tree-buffer-defpopup-command ecb-open-source-in-editwin4
+  "Open current source-file the 4. edit-window."
+  (ecb-source-clicked node 3 4 nil))
+(tree-buffer-defpopup-command ecb-open-source-in-editwin5
+  "Open current source-file the 5. edit-window."
+  (ecb-source-clicked node 3 5 nil))
+(tree-buffer-defpopup-command ecb-open-source-in-editwin6
+  "Open current source-file the 6. edit-window."
+  (ecb-source-clicked node 3 6 nil))
+(tree-buffer-defpopup-command ecb-open-source-in-editwin7
+  "Open current source-file the 7. edit-window."
+  (ecb-source-clicked node 3 7 nil))
+(tree-buffer-defpopup-command ecb-open-source-in-editwin8
+  "Open current source-file the 8. edit-window."
+  (ecb-source-clicked node 3 8 nil))
+
+(defun ecb-dir/source/hist-menu-editwin-entries ()
+  "Generate popup-menu-entries for each edit-window if there are at least 2
+edit-windows. Otherwise return nil."
+  (let ((edit-win-list (ecb-canonical-edit-windows-list))
+        (result nil))
+    (when (> (length edit-win-list) 1)
+      (dotimes (i (min 8 (length edit-win-list)))
+        (setq result
+              (append result
+                      (list (list (intern (format "ecb-open-source-in-editwin%d" (1+ i)))
+                                  (format "edit-window %d" (1+ i)))))))
+      (append (list (list "---")) ;; we want a separator
+              (list (append (list "Open source-file in ...")
+                            result))))))
+
+
+(defun ecb-directories-menu-creator (tree-buffer-name)
+  "Creates the popup-menus for the directories-buffer."
+  (let ((dyn-user-extension
+         (and (functionp ecb-directories-menu-user-extension-function)
+              (funcall ecb-directories-menu-user-extension-function)))
+        (dyn-builtin-extension (ecb-dir/source/hist-menu-editwin-entries)))
+    (list (cons 0 (funcall (or ecb-directories-menu-sorter
+                               'identity)
+                           (append dyn-user-extension
+                                   ecb-directories-menu-user-extension
+                                   ecb-directories-menu)))
+          (cons 1 (funcall (or ecb-sources-menu-sorter
+                               'identity)
+                           (append dyn-user-extension
+                                   ecb-sources-menu-user-extension
+                                   ecb-sources-menu
+                                   dyn-builtin-extension)))
+          (cons 2 (funcall (or ecb-directories-menu-sorter
+                               'identity)
+                           (append dyn-user-extension
+                                   ecb-directories-menu-user-extension
+                                   ecb-source-path-menu))))))
+
+
 (defvar ecb-source-path-menu nil
   "Built-in menu for the directories-buffer for directories which are elements of
 `ecb-source-path'.")
@@ -1889,6 +1988,19 @@ function which is called with current node and has to return a string.")
               (file-name-nondirectory (tree-node-get-data node))))
   "The menu-title for the sources menu. See
 `ecb-directories-menu-title-creator'.")
+
+(defun ecb-sources-menu-creator (tree-buffer-name)
+  "Creates the popup-menus for the sources-buffer."
+  (let ((dyn-user-extension
+         (and (functionp ecb-sources-menu-user-extension-function)
+              (funcall ecb-sources-menu-user-extension-function)))
+        (dyn-builtin-extension (ecb-dir/source/hist-menu-editwin-entries)))
+    (list (cons 0 (funcall (or ecb-sources-menu-sorter
+                               'identity)
+                           (append dyn-user-extension
+                                   ecb-sources-menu-user-extension
+                                   ecb-sources-menu
+                                   dyn-builtin-extension))))))
 
 ;; history popups
 
@@ -1979,6 +2091,20 @@ So you get a better overlooking. There are three choices:
               (tree-node-get-name node)))
   "The menu-title for the history menu. See
 `ecb-directories-menu-title-creator'.")
+
+(defun ecb-history-menu-creator (tree-buffer-name)
+  "Creates the popup-menus for the history-buffer."
+  (let ((dyn-user-extension
+         (and (functionp ecb-history-menu-user-extension-function)
+              (funcall ecb-history-menu-user-extension-function)))
+        (dyn-builtin-extension (ecb-dir/source/hist-menu-editwin-entries)))
+    (list (cons 0 (funcall (or ecb-history-menu-sorter
+                               'identity)
+                           (append dyn-user-extension
+                                   ecb-history-menu-user-extension
+                                   ecb-history-menu
+                                   dyn-builtin-extension))))))
+
 
 (silentcomp-provide 'ecb-file-browser)
 

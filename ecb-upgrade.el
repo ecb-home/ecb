@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-upgrade.el,v 1.53 2003/12/09 16:47:57 berndl Exp $
+;; $Id: ecb-upgrade.el,v 1.54 2004/01/07 10:23:39 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -224,7 +224,8 @@
     (ecb-token-header-face . (ecb-tag-header-face
                               ecb-upgrade-token-header-face))
     (ecb-post-process-semantic-taglist . (ecb-post-process-semantic-taglist
-                                          ecb-upgrade-post-process-semantic-taglist)))
+                                          ecb-upgrade-post-process-semantic-taglist))
+    (ecb-primary-mouse-jump-destination . (ecb-mouse-click-destination identity)))
   "Alist of all options which should be upgraded for current ECB-version.
 There are several reasons why an option should be contained in this alist:
 a) An old option has just be renamed in current-ECB version but has still the

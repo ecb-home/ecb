@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-layout.el,v 1.199 2003/12/28 15:28:57 berndl Exp $
+;; $Id: ecb-layout.el,v 1.200 2004/01/07 10:23:39 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -219,13 +219,12 @@ hook is not evaluated)."
   :group 'ecb-layout
   :type 'hook)
 
-
 (defcustom ecb-layout-name "left8"
   "*Select a window layout of ECB.
 Value is any arbitrary string. There are four different types of layouts:
 left, right, top and left-right, which means the location of the
 ECB-tree-windows in the ECB-frame. Currently there are 20 predefined layouts;
-names the below. You can savely try out any of them by changing this value and
+names see below. You can savely try out any of them by changing this value and
 saving it only for the current session. If you are sure which layout you want
 you can save it for future sessions. To get a picture of the layout for name
 <name> call `ecb-show-layout-help'.
@@ -270,10 +269,10 @@ fraction of the frame height.
 
 If you do not set a durable compilation window then doing a compilation or
 displaying temp-buffers \(e.g. *Help*-buffers) splits temporally the edit
-window vertically if the edit window is not splitted already or uses the
-\"other\" edit window temporally for compilation output if the edit window is
-already splitted. This is the recommended value for this option because this
-is the standard-behavior of Emacs.
+window vertically if the edit window is not splitted already or uses another
+edit window temporally for compilation output if the edit window is already
+splitted. This is the recommended value for this option because this is the
+standard-behavior of Emacs.
 
 Beware: If you set a durable compilation window then ECB displays all buffers
 for which `ecb-compilation-buffer-p' returns not nil in that durable
@@ -461,9 +460,29 @@ This means, that all values of `special-display-function',
 (defcustom ecb-split-edit-window t
   "*Sets how and if the edit window should be splitted.
 But be aware: This option determines only if the edit-window should be
-splitted at start-time of ECB."
+splitted at start-time of ECB. There are different values allowed for this
+option:
+- nil: Do not split the edit-area of ECB after activation, i.e. there will be
+  only one edit-window after starting ECB.
+- 'horizontal: Split the edit-area in 2 edit-windows side by side.
+- 'vertical: Split the edit-area in 2 edit-windows, one above the other.
+- t: Split the edit-area as before the ECB-start, i.e. the edit-area will have
+  a window-layout after start as the whole frame had before the start of ECB.
+
+Some remarks to the value t: If this value has been set then ECB needs three
+permanent adivces even when ECB is deactivated: `split-window',
+`delete-window' and `delete-other-windows'. But these advices do not change
+any behavior of these functions but only storing in an internal ECB-variable
+the facts that a window has been splitted or deleted. In addition to this
+these advices are 100% error-save, means the functionality of the original
+functions will be performed in every\(!) case even if within the advice an
+error occurs \(but normally there can no errors occur in these advices because
+they are very simple). Conclusion: If you want really all ECB-advices being
+disabled after deactivating ECB then you have to set this option to other
+values then t. But setting this variable to t is really completely save."
   :group 'ecb-layout
-  :type '(radio (const :tag "Split as before ECB-start" :value t)
+  :type '(radio (const :tag "Split as before ECB-start"
+                       :value t)
                 (const :tag "Split horizontally"
                        :value horizontal)
                 (const :tag "Split vertically"
@@ -571,20 +590,22 @@ buffer-local `window-size-fixed' from the setting in `ecb-fix-window-size'."
          ,@body)
      (ecb-set-window-size-fixed (ecb-get-window-fix-type ecb-layout-name))))
 
-
 (defcustom ecb-other-window-jump-behavior 'all
   "*Which windows of ECB should be accessible by the command `other-window'.
 This has an effect if `other-window' is adviced by ECB, see
 `ecb-advice-window-functions'. The following settings are possible:
 - 'all: ECB will cycle through all windows of ECB, means it behaves like the
   original `other-window'.
-- 'only-edit: ECB will only cycle through the \(max. 2) edit-windows of ECB.
+- 'only-edit: ECB will only cycle through the edit-windows of ECB.
 - 'edit-and-compile: Like 'only-edit plus the compile window if any."
   :group 'ecb-layout
   :type '(radio (const :tag "All windows" all)
                 (const :tag "Only edit windows" only-edit)
                 (const :tag "Edit + compile window" edit-and-compile)))
 
+;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: Hier auch noch ne neue
+;; toggle-funktion machen, mit der man umschalten kann, zwsichen next
+;; edit-window und last edit/compile-window
 (defcustom ecb-advice-window-functions '(other-window
                                          delete-window
                                          delete-other-windows
@@ -613,11 +634,11 @@ if the edit-window\(s) of ECB would be the only windows\(s) of the ECB-frame:
 - `display-buffer'
   Especially if `ecb-compile-window-height' is not nil it is strongly
   recommended not to disable this advice!
-- `other-window-for-scrolling'
-  If this advice is enabled then the following functions scroll always the
-  first edit-window if the edit-window is splitted, point stays in the
-  \"other\" edit-window and there is no durable compilation-window \(see
-  `ecb-compile-window-height'):
+- `other-window-for-scrolling': If this advice is enabled then the following
+  functions scroll always the \"next\" \(the next edit-window of the last
+  edit-window is the first edit-window!) edit-window if the edit-area is
+  splitted. If the edit-area is not splitted and there is a compile-window
+  then the compile-window is scolled:
   - `scroll-other-window'
   - `scroll-other-window-down'
   - `beginning-of-buffer-other-window'
@@ -705,32 +726,31 @@ call a function in a situation which is not supported by this function."
   :group 'ecb-layout
   :type 'boolean)
 
-;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: docstring anpassen - auch in
-;; texi.
 (defcustom ecb-layout-always-operate-in-edit-window
   '(display-buffer
     switch-to-buffer)
   "*Adviced window functions work always in the edit-window.
 If we are in an ECB special buffer (methods, directories, etc), and any of the
 adviced windowing functions is called interactively \(see
-`ecb-advice-window-functions'), we will select the first the first edit-window
-in the edit-area. This is useful if you have any functions that use such
-functions and you don't want them to just error with a method complaining that
-the current buffer can not be split, or something similar.
+`ecb-advice-window-functions'), we will select first an edit-window according
+to the value of `ecb-mouse-click-destination'. This is useful if you have any
+functions that use such functions and you don't want them to fail with an
+error complaining that the current buffer can not be split, or something
+similar.
 
-Because this may not be desirable in all situations and all adviced functions
-this can be enabled separately for every advisable function \(see also
-`ecb-advice-window-functions'). If the symbol of an adviced function is
+Because this may not be desirable in all situations and for all adviced
+functions this can be enabled separately for every advicable function \(see
+also `ecb-advice-window-functions'). If the symbol of an adviced function is
 contained in the value of this option, then the edit-window is first selected
-otherwise either an error is reported or some other special reaction; see the
-documentation of the adviced functions for this.
+otherwise either an error is reported or some other special reaction (depends
+on `ecb-advice-window-functions-signal-error'); see the documentation of the
+adviced functions for this.
 
 For `other-window', `other-window-for-scrolling' and
 `switch-to-buffer-other-window' this makes no sense, therefore you can not
 enable this for them.
 
-Per default this is enabled for `delete-window', `delete-other-windows',
-`switch-to-buffer' and `display-buffer'."
+Per default this is enabled for `switch-to-buffer' and `display-buffer'."
   :group 'ecb-layout
   :type '(set (const :tag "delete-window"
                      :value delete-window)
@@ -816,8 +836,8 @@ Please read also carefully the documentation of `ecb-redraw-layout'."
 
 (defcustom ecb-toggle-layout-sequence '("left9" "left14")
   "*Toggle sequence for layout toggling with `ecb-toggle-layout'.
-Every element of this list has to be a valid layout-name \"string) i.e. either
-one of the predefined layouts or one of the user-defined layouts \(see
+Every element of this list has to be a valid layout-name \(a string) i.e.
+either one of the predefined layouts or one of the user-defined layouts \(see
 `ecb-create-new-layout').
 
 You can add here as many layouts as you want but to use this option most
@@ -945,8 +965,6 @@ this variable to nil!")
 (defvar ecb-edit-window nil
   "Only used internally by `ecb-redraw-layout-full'. Do not refer to this
 variable because the value is not predictable!")
-;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: Die folgenden beiden Variablen
-;; überprüfen, ob sie immer noch überall korrekt verwendet werden.
 (defvar ecb-last-edit-window-with-point nil
   "The edit-window of ECB which had the point before an emacs-command is
 done.")
@@ -1104,9 +1122,6 @@ if `scroll-all-mode' is nil return the number of visible windows."
      (ecb-with-original-functions
       ad-do-it))))
 
-
-;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: Alle user dieser Funktion auf
-;; neuen zusätzlichen Wert 'splitted anpassen!
 (defun ecb-edit-window-splitted (&optional edit-windows-list)
   "Returns either nil if the ECB edit-window is not splitted or 'vertical or
 'horizontal when splitted in two windows \(depending on the splitting) or
@@ -1954,7 +1969,8 @@ FUNCTIONS must be nil or a subset of `ecb-adviceable-functions'!"
 (put 'ecb-with-some-adviced-functions 'lisp-indent-function 1)
 
 (defconst ecb-permanent-adviced-functions '((split-window . before)
-                                            (delete-window . before)))
+                                            (delete-window . before)
+                                            (delete-other-windows . before)))
 
 (defmacro ecb-with-original-permanent-functions (&rest body)
   "Evaluates BODY with all adviced permanent-functions of ECB deactivated
@@ -1968,9 +1984,6 @@ the advices of exactly the functions in `ecb-permanent-adviced-functions'!"
      (ecb-enable-advices ecb-permanent-adviced-functions)))
 
 
-;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: Alle user dieser Funktion
-;; anpassen, dass jetzt beliebige Werte > 1 geliefert werden können (nicht nur
-;; 1 und 2), je nachdem wie viele Edit-windows existieren!
 (defun ecb-where-is-point (&optional edit-windows-list)
   "Return either the number of the edit-window when point is in an edit-window
 \(see `ecb-point-in-edit-window') or 'compile if in compile-window and 'ecb if
@@ -1985,9 +1998,6 @@ is nil then a new edit-window-list is computed via
       (and (equal (selected-frame) ecb-frame)
            'ecb)))
 
-;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: Alle user dieser Funktion
-;; anpassen, dass jetzt beliebige Werte > 1 geliefert werden können (nicht nur
-;; 1 und 2), je nachdem wie viele Edit-windows existieren!
 (defun ecb-point-in-edit-window (&optional edit-windows-list)
   "Return nil if point stays not in an edit-window otherwise return 1 if point
 is in the left/topmost edit-window or 2 if in the next edit-window and so on.
@@ -2031,28 +2041,31 @@ dedicated special ECB-window not only for the built-in standard tree-buffers!"
              (member (selected-window) (ecb-canonical-ecb-windows-list)))
     (selected-window)))
   
-
-
-;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: Alle user dieser Funktion prüfen
-;; und ev. anpassen!
 (defun ecb-select-edit-window (&optional edit-window-number)
   "Moves point into the edit-window. If optional EDIT-WINDOW-NUMBER
 is an integer then move point into the EDIT-WINDOW-NUMBER-nth edit-window
 \(beginning from 1). If EDIT-WINDOW-NUMBER is not nil but not an integer or an
 integer < 0 or > number of current available edit-windows then move point to
-the second edit-window if there is more than 1. If point already stays in the
-right edit-window nothing is done."
-  (let* ((edit-win-list (ecb-canonical-edit-windows-list))
-         (edit-win (or (and (not edit-window-number)
-                            (car edit-win-list))
-                       (and (integerp edit-window-number)
-                            (> edit-window-number 0)
-                            (<= edit-window-number (length edit-win-list))
-                            (nth (1- edit-window-number) edit-win-list))
-                       (and (> (length edit-win-list) 1)
-                            (nth 1 edit-win-list))
-                       (car edit-win-list))))
-    (select-window edit-win)))
+the second edit-window if there is more than 1. If EDIT-WINDOW-NUMBER is nil
+then select the edit-window according to the value of the option
+`ecb-mouse-click-destination'. If point already stays in the right edit-window
+nothing is done."
+  (if (and (null edit-window-number)
+           (equal ecb-mouse-click-destination 'last-point))
+      (condition-case nil
+          (select-window ecb-last-edit-window-with-point)
+        (error (ecb-select-edit-window 1)))
+    (let* ((edit-win-list (ecb-canonical-edit-windows-list))
+           (edit-win (or (and (not edit-window-number)
+                              (car edit-win-list))
+                         (and (integerp edit-window-number)
+                              (> edit-window-number 0)
+                              (<= edit-window-number (length edit-win-list))
+                              (nth (1- edit-window-number) edit-win-list))
+                         (and (> (length edit-win-list) 1)
+                              (nth 1 edit-win-list))
+                         (car edit-win-list))))
+      (select-window edit-win))))
 
 (defun ecb-layout-pre-command-hook ()
   "During activated ECB this function is added to `pre-command-hook' to set
@@ -2074,7 +2087,7 @@ can use these variables."
       (setq ecb-last-compile-buffer-in-compile-window nil))))
 
 ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: Not yet perfect - need some more
-;; tests.
+;; tests. Currently not used.
 (defun ecb-minibuffer-exit-hook ()
   (remove-hook 'minibuffer-exit-hook 'ecb-minibuffer-exit-hook)
   (ecb-layout-debug-error "ecb-minibuffer-exit-hook: active: %s"
@@ -2360,8 +2373,6 @@ If called for other frames it works like the original version."
 ;; other functions or advices can savely (de)activate these "basic"-advices!
 
 
-;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: Alle user dieser Funtion prüfen
-;; und ev. anpassen.
 (defadvice other-window (around ecb)
   "The ECB-version of `other-window'. Works exactly like the original function
 with the following ECB-adjustment: The behavior depends on
@@ -2464,12 +2475,12 @@ allowed to be deleted."
       (funcall (cdr elem)))))
 
 (defadvice delete-window (before ecb)
-  "Does nothing special but only storing the fact that the window is deleted.
-This is done even when ECB is deactivated so ECB can later restore the
-window-layout as if before activation. Normally there can not occur an error
-in this advice but nevertheless this advice is constructed error-save, i.e. if
-an error occurs during this before-advice then it will be reported but
-`delete-window' will be executed correctly."
+  "Does nothing special but only storing the fact that the edit-window has
+been deleted. This is done even when ECB is deactivated so ECB can later
+restore the window-layout as if before activation. Normally there can not
+occur an error in this advice but nevertheless this advice is constructed
+error-save, i.e. if an error occurs during this before-advice then it will be
+reported but `delete-window' will be executed correctly."
   (when (equal (window-frame (or (ad-get-arg 0) (selected-window)))
                ecb-frame)
     (condition-case oops
@@ -2489,26 +2500,26 @@ an error occurs during this before-advice then it will be reported but
       (error (ecb-warning "Before-advice delete-window (error-type: %S, error-data: %S)"
                           (car oops) (cdr oops))))))
 
-;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: docstring anpassen
 (defadvice delete-window (around ecb)
   "The ECB-version of `delete-window'. Works exactly like the original
 function with the following ECB-adjustment:
 
-If optional argument WINDOW is nil \(i.e. probably called interactively):
-If called in a splitted edit-window then it works like as if the two parts of
-the splitted edit window would be the only windows in the frame. This means
-the part of the splitted edit-window which contains the point will be
-destroyed and the other part fills the whole edit-window.
-If called in an unsplitted edit-window then nothing is done.
-If called in any other window of the current ECB-layout there are two
+If optional argument WINDOW is nil \(i.e. probably called interactively): If
+called in a splitted edit-window then it works like as if all the edit-windows
+would be the only windows in the frame. This means the current edit-window
+which contains the point will be destroyed and its place will be occupied from
+another one. If called in an unsplitted edit-window then nothing is done. If
+called in any other window of the current ECB-layout there are two
 alternatives:
 - If the function is contained in `ecb-layout-always-operate-in-edit-window'
-  it jumps first in the \(first) edit-window and does then it´s job.
-- Otherwise an error is reported.
+  the right edit-window is selected \(depends on the value of the option
+  `ecb-mouse-click-destination') and does then it´s job.
+- Otherwise the behavior depends on the value of the option
+  `ecb-advice-window-functions-signal-error'.
 
-If optional argument WINDOW is a live window \(i.e. called from program):
-If WINDOW is an edit-window then this window is deleted, otherwise an error is
-reported."
+If optional argument WINDOW is a living window \(i.e. called from program): If
+WINDOW is an edit-window then this window is deleted, otherwise the behavior
+depends on `ecb-advice-window-functions-signal-error'."
   (if (or (not ecb-minor-mode)
           (not (equal (window-frame (or (ad-get-arg 0) (selected-window)))
                       ecb-frame)))
@@ -2545,30 +2556,56 @@ reported."
                    (if (not (member (selected-window) edit-win-list-after))
                        (select-window (car edit-win-list-after))))))))))))
 
-;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: docstring anpassen - auch in
-;; texi!! 
+(defadvice delete-other-windows (before ecb)
+  "Does nothing special but only storing the fact that the other edit-windows
+have been deleted. This is done even when ECB is deactivated so ECB can later
+restore the window-layout as if before activation. Normally there can not
+occur an error in this advice but nevertheless this advice is constructed
+error-save, i.e. if an error occurs during this before-advice then it will be
+reported but `delete-window' will be executed correctly."
+  (when (and (equal (window-frame (or (ad-get-arg 0) (selected-window)))
+                    ecb-frame)
+             ;; The case when ecb is active is handled completely by
+             ;; delete-window!
+             (not ecb-minor-mode))
+    (condition-case oops
+        (let* ((edit-win-list (ecb-canonical-edit-windows-list))
+               (window (or (ad-get-arg 0) (selected-window)))
+               (edit-win-number (ecb-position edit-win-list window)))
+          (when (and edit-win-number
+                     (> (length edit-win-list) 1))
+            ;; After the deletion of the other edit-windows there will be only
+            ;; one edit-window.
+            (ecb-edit-area-creators-init)))
+      (error (ecb-warning "Before-advice delete-other-windows (error-type: %S, error-data: %S)"
+                          (car oops) (cdr oops))))))
+
 (defadvice delete-other-windows (around ecb)
   "The ECB-version of `delete-other-windows'. Works exactly like the
 original function with the following ECB-adjustment:
 
-If optional argument WINDOW is nil \(i.e. probably called interactively):
-If called in a splitted edit-window then it works like as if the two parts of
-the splitted edit window would be the only windows in the frame. This means
-the part of the splitted edit-window which contains the point fills the whole
-edit-window.
+If optional argument WINDOW is nil \(i.e. probably called interactively): If
+called in a splitted edit-window then it works like as if all the edit-windows
+would be the only windows in the frame. This means all other edit-windows
+besides the current edit-window which contains the point will be destroyed and
+the current edit-window fills the whole edit-area. Neither the special
+ecb-windows nor the compile-window will be destroyed!
 - If called in an unsplitted edit-window then nothing is done.
 - If called in one of the ecb-windows then the current one is maximized, i.e.
   the other ecb-windows \(not the edit-windows!) are deleted.
 - If called in the compile window there are two
   alternatives:
   + If the function is contained in `ecb-layout-always-operate-in-edit-window'
-    it jumps first in the \(first) edit-window and does then it´s job.
-  + Otherwise an error is reported.
+    the right edit-window is selected \(depends on the value of the option
+    `ecb-mouse-click-destination') and then it does it´s job.
+  + Otherwise the behavior depends on the value of the option
+  `ecb-advice-window-functions-signal-error'.
 
-If optional argument WINDOW is a live window \(i.e. called from program):
+If optional argument WINDOW is a living window \(i.e. called from program):
 If WINDOW is an edit-window then this window is maximized \(i.e. the other
 edit-window is deleted), if WINDOW is an ecb-window then only the other
-ecb-windows are deleted and in all other cases an error is reported."
+ecb-windows are deleted and in all other cases the behavior depends on
+`ecb-advice-window-functions-signal-error'."
   
   (if (or (not ecb-minor-mode)
           (not (equal (window-frame (or (ad-get-arg 0) (selected-window)))
@@ -2604,15 +2641,12 @@ ecb-windows are deleted and in all other cases an error is reported."
                (buffer-name (window-buffer window)))))))))
             
   
-;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: docstring anpassen
 (defadvice split-window-horizontally (around ecb)
   "The ECB-version of `split-window-horizontally'. Works exactly like the
 original function with the following ECB-adjustment:
 
-Called in an unsplitted edit-window then the edit window will be splitted
-horizontally. If called in an already splitted edit-window then nothing is
-done. If called in any other window of the current ECB-layout it stops with an
-error if this function is not contained in
+If called in any other window of the current ECB-layout it stops with an error
+if this `split-window-horizontally' is not contained in the option
 `ecb-layout-always-operate-in-edit-window'!"
   (if (or (not ecb-minor-mode)
           (not (equal (selected-frame) ecb-frame))
@@ -2629,16 +2663,13 @@ error if this function is not contained in
     (ecb-with-adviced-functions
      ad-do-it)))
 
-;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: docstring anpassen
 (defadvice split-window-vertically (around ecb)
   "The ECB-version of `split-window-vertically'. Works exactly like the
 original function with the following ECB-adjustment:
 
-Called in an unsplitted edit-window then the edit window will be splitted
-vertically. If called in an already splitted edit-window then nothing is done.
 If called in any other window of the current ECB-layout it stops with an error
-if this function is not contained in
-`ecb-layout-always-operate-in-edit-window'."
+if this `split-window-vertically' is not contained in the option
+`ecb-layout-always-operate-in-edit-window'!"
   (if (or (not ecb-minor-mode)
           (not (equal (selected-frame) ecb-frame))
           ecb-windows-hidden)
@@ -2674,13 +2705,15 @@ an error occurs during this before-advice then it will be reported but
                           (car oops) (cdr oops))))))
       
 
-;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: Alle user der adviced version
-;; prüfen.
 (defadvice split-window (around ecb)
-  "The ECB-version of `split-window'. The meaning of WINDOW must be one of the
-edit-windows of ECB otherwise an error is reported. Besides this \(e.g. called
-for a window in another frame than the `ecb-frame') it behaves like the
-original version."
+  "The ECB-version of `split-window'. Works exactly like the original function
+with the following ECB-adjustment:
+
+If called for a not-edit-window in the `ecb-frame' it stops with an error if
+`split-window' is not contained in the option
+`ecb-layout-always-operate-in-edit-window'! Besides this \(e.g. called for a
+window in another frame than the `ecb-frame') it behaves like the original
+version."
   (ecb-layout-debug-error "split-window entered for window: %s" (ad-get-arg 0))
   (if (or (not ecb-minor-mode)
           (not (equal (window-frame (or (ad-get-arg 0) (selected-window)))
@@ -2715,7 +2748,8 @@ original but with some adaptions for ECB so this function works in a
 \"natural\" way:
 
 If called in any special ecb-window of the current ECB-layout then it goes
-always to the first edit-window and then goes on as if called from this
+always to an edit-window \(which one depends on the setting in
+`ecb-mouse-click-destination') and then goes on as if called from this
 edit-window.
 
 If a compile-window is used \(i.e. `ecb-compile-window-height' is not nil)
@@ -2794,19 +2828,21 @@ an error is reported."
       (ecb-set-compile-window-height))))
 
 
+(defvar ecb-scroll-other-window-scrolls-compile-window nil)
+
 (defadvice other-window-for-scrolling (around ecb)
   "This function determines the window which is scrolled if any of the
 \"other-window-scrolling-functions\" is called \(e.g. `scroll-other-window').
-If edit-window is splitted, point stays in the \"other\" edit-window and there
-is no durable compilation-window then always the first edit-window is chosen."
+If the edit-area is splitted and point stays in one of the edit-windows always
+the \"next\" edit-window is scrolled \(whereas the next edit-window of the
+last edit-window is the first edit-window). If the edit-area is unsplitted
+then the compile-window is scrolled if there is one."
   (if (or (not ecb-minor-mode)
           (not (equal (selected-frame) ecb-frame))
           ecb-windows-hidden)
       (ecb-with-original-basic-functions
        (ecb-with-original-functions
         ad-do-it))
-    ;; point stays in the "other" edit-window and there is no
-    ;; compilation-window
     (let* ((edit-win-list (ecb-canonical-edit-windows-list))
            (win-list (append (ecb-canonical-edit-windows-list)
                              (if (and (equal 'visible
@@ -3061,7 +3097,6 @@ visibility of the ECB windows. ECB minor mode remains active!"
           (setq ecb-windows-hidden t)
           (run-hooks 'ecb-hide-ecb-windows-after-hook)
           (message "ECB windows are now hidden."))))))
-
 
 (defun ecb-hide-ecb-windows ()
   "Hide the ECB windows if not already hidden."
@@ -3413,8 +3448,6 @@ and TYPE must be an element of `ecb-layout-types'."
   (cdr (assoc name ecb-available-layouts)))
 
 ;; Macro for easy defining new layouts
-;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: In texi im docstring
-;; ecb-edit-window-live-p eliminieren!
 (defmacro ecb-layout-define (name type doc &rest create-code)
   "Creates a new ECB-layout with name NAME which must be a string. TYPE is the
 type of the new layout and is literal, i.e. not evaluated. It can be left,
@@ -3681,7 +3714,7 @@ for the quick version!"
 
   ;;make sure we are in the edit window if necessary.
   (when ecb-select-edit-window-on-redraw
-    (ecb-goto-window-edit1))
+    (ecb-select-edit-window))
 
   (run-hooks 'ecb-redraw-layout-after-hook)
   
@@ -3691,9 +3724,6 @@ for the quick version!"
 ;; the main layout core-function. This function is the "environment" for a
 ;; special layout function (l.b.)
 
-;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: Mechanismus, um das
-;; compile-window-hidding sticky zu machen, d.h. bei einem layout-wechsel
-;; (ecb-toggle-layout) etc. bleibt das compile-window hidden
 (defun ecb-redraw-layout-full (&optional no-buffer-sync ecb-windows-creator)
   "Redraw the ECB screen according to the layout set in `ecb-layout-name'. After
 this function the edit-window is selected which was current before redrawing."
@@ -4017,7 +4047,7 @@ height are `frame-width' rsp. `frame-height' of the `ecb-frame'."
          (ecb-error "Stored sizes of layout %s not applicable for current window layout!"
                     ecb-layout-name))))))
 
-;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: frame-width is smaller than
+;; Klaus Berndl <klaus.berndl@sdm.de>: frame-width is smaller than
 ;; ecb-window-full-width for only one window in the frame. But for now this
 ;; doesn't matter because it is only important that for getting and setting
 ;; the edit-windows-sizes the same reference-sizes are used.

@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb.el,v 1.355 2003/12/28 15:28:56 berndl Exp $
+;; $Id: ecb.el,v 1.356 2004/01/07 10:23:39 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -832,9 +832,9 @@ A click with the primary button causes the main effect in each ECB-buffer:
 - ECB Directories: Expanding/collapsing nodes and displaying files in the ECB
   Sources buffer.
 - ECB sources/history: Opening the file in that edit-window specified by the
-  option `ecb-primary-mouse-jump-destination'.
+  option `ecb-mouse-click-destination'.
 - ECB Methods: Jumping to the method in that edit-window specified by the
-  option `ecb-primary-mouse-jump-destination'.
+  option `ecb-mouse-click-destination'.
 
 A click with the primary mouse-button while the SHIFT-key is pressed called
 the POWER-click and does the following \(depending on the ECB-buffer where the
@@ -850,14 +850,18 @@ POWER-click occurs):
 In addition always the whole node-name is displayed in the minibuffer after a
 POWER-click \(for this see also `ecb-show-node-info-in-minibuffer').
 
-The secondary mouse-button is for opening \(jumping to) the file in the other
-window \(see the documentation `ecb-primary-mouse-jump-destination').
+The secondary mouse-button is for opening \(jumping to) the file in another
+edit-window \(see the documentation `ecb-mouse-click-destination').
 
 The following combinations are possible:
 - primary: mouse-2, secondary: C-mouse-2 \(means mouse-2 while CTRL-key is
   pressed). This is the default setting.
 - primary: mouse-1, secondary: C-mouse-1
 - primary: mouse-1, secondary: mouse-2
+
+Note: If the tree-buffers are used with the keyboard instead with the mouse
+then [RET] is interpreted as primary mouse-button and [C-RET] as secondary
+mouse-button!
 
 If you change this during ECB is activated you must deactivate and activate
 ECB again to take effect!"
@@ -870,21 +874,30 @@ ECB again to take effect!"
                        :value mouse-1--mouse-2)))
 
 ;; Thanks to David Hay for the suggestion <David.Hay@requisite.com>
-(defcustom ecb-primary-mouse-jump-destination 'left-top
-  "*Jump-destination of a primary mouse-button click.
+(defcustom ecb-mouse-click-destination 'last-point
+  "*Destination of a mouse-button click.
 Defines in which edit-window \(if splitted) ECB does the \"right\" action
-\(opening the source, jumping to a method/variable) after clicking with the
-primary mouse-button \(see `ecb-primary-secondary-mouse-buttons') onto a node.
-There are two possible choices:
+\(opening a source, jumping to a method/variable etc.) after clicking with a
+mouse-button \(see `ecb-primary-secondary-mouse-buttons') onto a node. There
+are two possible choices:
 - left-top: Does the \"right\" action always in the left/topmost edit-window.
 - last-point: Does the \"right\" action always in that edit-window which had
   the point before.
+This is if the user has clicked either with the primary mouse-button or
+has activated a popup-menu in the tree-buffer.
 
-If the edit-window is not splitted this setting doesn´t matter.
+A click with the secondary mouse-button \(see again
+`ecb-primary-secondary-mouse-buttons') does the \"right\" action always in
+another edit-window related to the setting in this option: If there are two
+edit-windows then the \"other\" edit-window is used and for more than 2
+edit-windows the \"next\" edit-window is used \(whereas the next edit-window
+of the last edit-window is the first edit-window).
 
-Note: A click with the secondary mouse-button \(see again
-`ecb-primary-secondary-mouse-buttons' does the \"right\" action always in the
-\"other\" window related to the setting in this option."
+If the edit-window is not splitted this setting has no effect.
+
+Note: If the tree-buffers are used with the keyboard instead with the mouse
+then this option takes effect too because [RET] is interpreted as primary
+mouse-button and [C-RET] as secondary mouse-button!"
   :group 'ecb-general
   :type '(radio (const :tag "Left/topmost edit-window"
                        :value left-top)
@@ -1099,13 +1112,23 @@ ECB-frame."
   (and (ecb-speedbar-active-p)
        (ecb-goto-window ecb-speedbar-buffer-name)))
 
+(defun ecb-goto-window-edit-last ()
+  "Make the last selected edit-window window the current window. This is the
+same as if `ecb-mouse-click-destination' is set to 'last-point."
+  (interactive)
+  (when ecb-minor-mode
+    (raise-frame ecb-frame)
+    (select-frame ecb-frame)
+    (let ((ecb-mouse-click-destination 'last-point))
+      (ecb-select-edit-window))))
+
 (defun ecb-goto-window-edit1 ()
   "Make the \(first) edit-window window the current window."
   (interactive)
   (when ecb-minor-mode
     (raise-frame ecb-frame)
     (select-frame ecb-frame)
-    (ecb-select-edit-window nil)))
+    (ecb-select-edit-window 1)))
 
 (defun ecb-goto-window-edit2 ()
   "Make the second edit-window \(if available) window the current window."
@@ -1379,21 +1402,39 @@ by this command. See also the option `ecb-window-sync'."
                (if new-value "on" "off")
                new-value)))
 
-;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: Verhalten bei
-;; ecb-last-edit-window-with-point testen. Auch wenn other-edit-window ist not
-;; nil.
+(defun ecb-combine-ecb-button/edit-win-nr (ecb-button edit-window-nr)
+  "Depending on ECB-BUTTON and EDIT-WINDOW-NR return one value:
+- nil id ECB-BUTTON is 1.
+- t if ECB-BUTTON is 2 and the edit-area of ECB is splitted.
+- EDIT-WINDOW-NR if ECB-BUTTON is 3."
+  (cond ((eq ecb-button 1) nil)
+        ((eq ecb-button 2) (ecb-edit-window-splitted))
+        ((eq ecb-button 3) edit-window-nr)))
+
 (defun ecb-get-edit-window (other-edit-window)
-  (save-selected-window
-    (if (eq ecb-primary-mouse-jump-destination 'left-top)
-	(select-window (car (ecb-canonical-edit-windows-list)))
-      (select-window ecb-last-edit-window-with-point))
-    (ecb-with-adviced-functions
-     (if other-edit-window
-	 (let ((ecb-other-window-jump-behavior 'only-edit))
-	   (other-window 1))))
-    (selected-window)))
-
-
+  "Get the correct edit-window. Which one is the correct one depends on the
+value of OTHER-EDIT-WINDOW \(which is a value returned by
+`ecb-combine-ecb-button/edit-win-nr') and `ecb-mouse-click-destination'.
+- OTHER-EDIT-WINDOW is nil: Get the edit-window according to the option
+  `ecb-mouse-click-destination'.
+- OTHER-EDIT-WINDOW is t: Get the next edit-window in the cyclic list of
+  current edit-windows starting either from the left-top-most one or from the
+  last edit-window with point (depends on
+  `ecb-mouse-click-destination').
+- OTHER-EDIT-WINDOW is an integer: Get exactly the edit-window with that
+  number > 0."
+  (let ((edit-win-list (ecb-canonical-edit-windows-list)))
+    (cond ((null other-edit-window)
+           (if (eq ecb-mouse-click-destination 'left-top)
+               (car edit-win-list)
+             ecb-last-edit-window-with-point))
+          ((integerp other-edit-window)
+           (ecb-get-edit-window-by-number other-edit-window edit-win-list))
+          (t
+           (ecb-next-listelem edit-win-list
+                              (if (eq ecb-mouse-click-destination 'left-top)
+                                  (car edit-win-list)
+                                ecb-last-edit-window-with-point))))))
 
 (defun ecb-customize ()
   "Open a customize-buffer for all customize-groups of ECB."
@@ -1425,13 +1466,13 @@ combination is invalid \(see `ecb-interpret-mouse-click'."
     ;; first we dispatch to the right action
     (when ecb-button-list
       (cond ((string= tree-buffer-name ecb-directories-buffer-name)
-	     (ecb-directory-clicked node ecb-button shift-mode))
+	     (ecb-directory-clicked node ecb-button nil shift-mode))
 	    ((string= tree-buffer-name ecb-sources-buffer-name)
-	     (ecb-source-clicked node ecb-button shift-mode))
+	     (ecb-source-clicked node ecb-button nil shift-mode))
 	    ((string= tree-buffer-name ecb-history-buffer-name)
-	     (ecb-history-clicked node ecb-button shift-mode))
+	     (ecb-history-clicked node ecb-button nil shift-mode))
 	    ((string= tree-buffer-name ecb-methods-buffer-name)
-	     (ecb-method-clicked node ecb-button shift-mode))
+	     (ecb-method-clicked node ecb-button nil shift-mode))
 	    (t nil)))
 
     ;; TODO: IMHO the mechanism how the physical keys are mapped and
@@ -1475,9 +1516,9 @@ combination is invalid \(see `ecb-interpret-mouse-click')."
       (cond ((string= tree-buffer-name ecb-directories-buffer-name)
 	     (ecb-update-directory-node node))
 	    ((string= tree-buffer-name ecb-sources-buffer-name)
-	     (ecb-source-clicked node ecb-button shift-mode))
+	     (ecb-source-clicked node ecb-button nil shift-mode))
 	    ((string= tree-buffer-name ecb-history-buffer-name)
-	     (ecb-history-clicked node ecb-button shift-mode))
+	     (ecb-history-clicked node ecb-button nil shift-mode))
 	    ((string= tree-buffer-name ecb-methods-buffer-name)
 	     nil)
 	    (t nil)))))
@@ -1750,13 +1791,17 @@ That is remove the unsupported :help stuff."
    (list
     "Goto window"
     (ecb-menu-item
+     ["Last selected edit-window"
+      ecb-goto-window-edit-last
+      :active t
+      :help "Go to the last selected edit-window"
+      ])
+    (ecb-menu-item
      ["Edit-window 1"
       ecb-goto-window-edit1
       :active t
       :help "Go to the first edit-window"
       ])
-    ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: Hier eventuell noch ein menu
-    ;; für edit-window 3 hinzufügen - :active-Bedingung überprüfen und ändern!
     (ecb-menu-item
      ["Edit-window 2"
       ecb-goto-window-edit2
@@ -1808,26 +1853,6 @@ That is remove the unsupported :help stuff."
     )
    (list
     "Display window maximized"
-    (ecb-menu-item
-     ["Edit-window 1"
-      (progn
-        (ecb-goto-window-edit1)
-        (ecb-with-adviced-functions
-         (delete-other-windows)))
-      :active (ecb-edit-window-splitted)
-      :help "Maximize the first edit-window"
-      ])
-    ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: Hier eventuell noch eins für
-    ;; edit-window 3 hinzufügen.
-    (ecb-menu-item
-     ["Edit-window 2"
-      (progn
-        (ecb-goto-window-edit2)
-        (ecb-with-adviced-functions
-         (delete-other-windows)))
-      :active (ecb-edit-window-splitted)
-      :help "Maximize the second edit-window"
-      ])
     (ecb-menu-item
      ["Directories"
       ecb-maximize-window-directories
@@ -2044,9 +2069,32 @@ That is remove the unsupported :help stuff."
    )
   "Menu for ECB minor mode.")
 
+;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: Modeline should display some
+;; states of ECB:
+;; - visibility of ecb-windows: v|h
+;; - auto-expand-state of the methods-buffer: a|-
+;; - is a durable compile-window used: c|-
+;; - scroll-other-window-scrolls-compwin: se|sc (ScrollEdit|ScrollComp)
+;; - ....
+;; An Example: " ECB[h|a|c|se]" would mean that the ECB-windows are hidden,
+;; methods-buffer will be auto-expanded, a compile-window is used (maybe
+;; hidden) and scroll-other-window will scroll always the next edit-window. We
+;; should add a new option, where the user can set which states he want to be
+;; displayed in the modeline. For each of the states above we need an internal
+;; state-variable (should be there in most cases (e.g. ecb-windows-hidden). We
+;; have a format-string which has %-sequences for each state. The function
+;; ecb-minor-mode-display-update updates the variable ecb-minor-mode-display
+;; which is used in the modeline. Always any of the states changes the changer
+;; MUST call ecb-minor-mode-display-update. I think this way (or something
+;; similar) we can implement that.
+(defvar ecb-minor-mode-display nil)
+(defvar ecb-minor-mode-display-format-string "%s[%s%s%s%s]")
+(defun ecb-minor-mode-display-update ()
+  )
+
 (defun ecb-add-to-minor-modes ()
   "Does all necessary to add ECB as a minor mode with current values of
-`ecb-mode-map' and `ecb-minor-mode-text'"
+`ecb-mode-map' and `ecb-minor-mode-text'."
   (if (fboundp 'add-minor-mode)
       ;; Emacs 21 & XEmacs
       ;; These Emacs-versions do all necessary itself
@@ -2083,6 +2131,7 @@ That is remove the unsupported :help stuff."
                (t "a" ecb-toggle-auto-expand-tag-tree)
                (t "x" ecb-expand-methods-nodes)
                (t "o" ecb-show-help)
+               (t "gl" ecb-goto-window-edit-last)
                (t "g1" ecb-goto-window-edit1)
                (t "g2" ecb-goto-window-edit2)
                (t "gc" ecb-goto-window-compilation)
@@ -2200,14 +2249,12 @@ always the ECB-frame if called from another frame."
       (if ecb-minor-mode
 	  (progn
 	    (message "ECB already activated. Drawing layout.")
-            
 	    (ecb-redraw-layout))
 	(catch 'exit
 	  (progn
 	    (ecb-activate--impl)
 	    (recursive-edit))
 	  (ecb-deactivate-internal)))
-    
     (ecb-activate--impl))
   ecb-minor-mode)
 
@@ -2227,7 +2274,6 @@ always the ECB-frame if called from another frame."
 
 (defun ecb-activate--impl ()
   "See `ecb-activate'.  This is the implementation of ECB activation."
-
   (when (or (null ecb-frame) (not (frame-live-p ecb-frame)))
     (setq ecb-frame (selected-frame)))
   
@@ -2279,7 +2325,9 @@ always the ECB-frame if called from another frame."
             (ecb-enable-advices ecb-basic-adviced-functions)
 
             ;; enable permanent advices - these advices will never being
-            ;; deactivated after first activation of ECB!
+            ;; deactivated after first activation of ECB unless
+            ;; `ecb-split-edit-window' is not t (see
+            ;; `ecb-deactivate-internal')
             (ecb-enable-advices ecb-permanent-adviced-functions)
 
             ;; enable advices for not supported window-managers
@@ -2320,18 +2368,7 @@ always the ECB-frame if called from another frame."
                  'equal
                  (list 0)
                  (list 1)
-                 (list (cons 0 (funcall (or ecb-directories-menu-sorter
-                                            'identity)
-                                        (append ecb-directories-menu-user-extension
-                                                ecb-directories-menu)))
-                       (cons 1 (funcall (or ecb-sources-menu-sorter
-                                            'identity)
-                                        (append ecb-sources-menu-user-extension
-                                                ecb-sources-menu)))
-                       (cons 2 (funcall (or ecb-directories-menu-sorter
-                                            'identity)
-                                        (append ecb-directories-menu-user-extension
-                                                ecb-source-path-menu))))
+                 'ecb-directories-menu-creator
                  (list (cons 0 ecb-directories-menu-title-creator)
                        (cons 1 ecb-directories-menu-title-creator)
                        (cons 2 ecb-directories-menu-title-creator))
@@ -2373,10 +2410,7 @@ always the ECB-frame if called from another frame."
                  'equal
                  nil
                  nil ;(list 0) ;; set this list if you want leaf-symbols
-                 (list (cons 0 (funcall (or ecb-sources-menu-sorter
-                                            'identity)
-                                        (append ecb-sources-menu-user-extension
-                                                ecb-sources-menu))))
+                 'ecb-sources-menu-creator
                  (list (cons 0 ecb-sources-menu-title-creator))
                  (nth 1 ecb-truncate-lines)
                  t
@@ -2426,18 +2460,7 @@ always the ECB-frame if called from another frame."
                            (eq (ecb-semantic-tag-end l) (ecb-semantic-tag-end r))))))
                  (list 1)
                  nil
-                 (list (cons 0 (funcall (or ecb-methods-menu-sorter
-                                            'identity)
-                                        (append ecb-methods-menu-user-extension
-                                                ecb-methods-tag-menu)))
-                       (cons 1 (funcall (or ecb-methods-menu-sorter
-                                            'identity)
-                                        (append ecb-methods-menu-user-extension
-                                                ecb-common-methods-menu)))
-                       (cons 2 (funcall (or ecb-methods-menu-sorter
-                                            'identity)
-                                        (append ecb-methods-menu-user-extension
-                                                ecb-common-methods-menu))))
+                 'ecb-methods-menu-creator
                  (list (cons 0 ecb-methods-menu-title-creator)
                        (cons 1 ecb-methods-menu-title-creator)
                        (cons 2 ecb-methods-menu-title-creator))
@@ -2475,10 +2498,7 @@ always the ECB-frame if called from another frame."
                  'equal
                  nil
                  nil
-                 (list (cons 0 (funcall (or ecb-history-menu-sorter
-                                            'identity)
-                                        (append ecb-history-menu-user-extension
-                                                ecb-history-menu))))
+                 'ecb-history-menu-creator
                  (list (cons 0 ecb-history-menu-title-creator))
                  (nth 3 ecb-truncate-lines)
                  t
@@ -2730,8 +2750,7 @@ does all necessary after finishing ediff."
       (ecb-disable-advices ecb-speedbar-adviced-functions)
       (ecb-disable-advices ecb-eshell-adviced-functions)
       (ecb-disable-advices ecb-winman-not-supported-function-advices)
-      ;; we do NOT disable the permanent-advices of
-      ;; `ecb-permanent-adviced-functions'!
+      ;; we disable the permanent advices later
 
       (ecb-enable-own-temp-buffer-show-function nil)      
 
@@ -2803,11 +2822,11 @@ does all necessary after finishing ediff."
               (ecb-select-edit-window)
               (ecb-make-windows-not-dedicated ecb-frame)
 
-              ;; deletion of all windows.
-              ;; (All other advices are already disabled!)
+              ;; deletion of all windows. (All other advices are already
+              ;; disabled!) 
               (ecb-with-original-permanent-functions
                (delete-other-windows))
-
+              
               ;; some paranoia....
               (set-window-dedicated-p (selected-window) nil)
 
@@ -2854,6 +2873,13 @@ does all necessary after finishing ediff."
         
       (ecb-initialize-layout)
 
+      ;; we do NOT disable the permanent-advices of
+      ;; `ecb-permanent-adviced-functions' unless the user don't want
+      ;; preserving the split-state after reactivating ECB.
+      (when (not (equal ecb-split-edit-window t))
+        (ecb-disable-advices ecb-permanent-adviced-functions)
+        (ecb-edit-area-creators-init))
+
       ;; we can safely do the kills because killing non existing buffers
       ;; doesn´t matter.
       (tree-buffer-destroy ecb-directories-buffer-name)
@@ -2886,6 +2912,7 @@ if the minor mode is enabled.
       (redraw-modeline t)
     (force-mode-line-update t))
   ecb-minor-mode)
+
 
 (tree-buffer-defpopup-command ecb-maximize-ecb-window-menu-wrapper
   "Expand the current ECB-window from popup-menu."

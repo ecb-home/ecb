@@ -24,7 +24,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-method-browser.el,v 1.8 2003/12/28 15:28:57 berndl Exp $
+;; $Id: ecb-method-browser.el,v 1.9 2004/01/07 10:23:39 berndl Exp $
 
 ;;; Commentary:
 
@@ -781,19 +781,16 @@ fulfilled:
   (or (member fnc (cdr (assoc 'default ecb-tag-visit-post-actions)))
       (member fnc (cdr (assoc major-mode ecb-tag-visit-post-actions)))))
 
-
 (defcustom ecb-methods-menu-user-extension nil
-  "*User extensions for the popup-menu of the methods buffer.
+  "*Static user extensions for the popup-menu of the methods buffer.
 For further explanations see `ecb-directories-menu-user-extension'.
 
 The node-argument of a menu-function contains as data the semantic-tag of
 the method/variable/tag for which the popup-menu has been opened.
 
-Per default the user-extensions are added at the beginning of the built-in
-menu-entries of `ecb-methods-menu' but the whole menu can be re-arranged
-with `ecb-methods-menu-sorter'.
-
-If you change this option you have to restart ECB to take effect."
+Per default the static user-extensions are added at the beginning of the
+built-in menu-entries of `ecb-methods-menu' but the whole menu can be
+re-arranged with `ecb-methods-menu-sorter'."
   :group 'ecb-methods
   :type '(repeat (choice :tag "Menu-entry" :menu-tag "Menu-entry"
                          :value (ignore "")
@@ -811,6 +808,19 @@ If you change this option you have to restart ECB to take effect."
                                                                :value ignore)
                                                      (string :tag "Entry-name"))))))))
 
+
+(defcustom ecb-methods-menu-user-extension-function nil
+  "*Dynamic user extensions for the popup-menu of the methods buffer.
+A function which has to return a list in the same format like the option
+`ecb-methods-menu-user-extension'. This function is called when the user opens
+the popup-menu for the methods buffer. For an example how such a function can
+be programmed see `ecb-methods-menu-editwin-entries'.
+
+Per default the dynamic user-extensions are added in front of the static
+extensions of `ecb-methods-menu-user-extension' but the whole menu can be
+re-arranged with `ecb-methods-menu-sorter'."
+  :group 'ecb-methods
+  :type 'function)
 
 (defcustom ecb-methods-menu-sorter nil
   "*Function which re-sorts the menu-entries of the directories buffer.
@@ -1691,11 +1701,10 @@ by this command."
                     a-tag nil (equal ecb-highlight-tag-with-point 'highlight))
                    )))))))))
 
-
 (defun ecb-find-file-and-display (filename other-edit-window)
   "Finds the file in the correct window. What the correct window is depends on
-the setting in `ecb-primary-mouse-jump-destination' and the value of
-OTHER-EDIT-WINDOW."
+the setting in `ecb-mouse-click-destination' and the value of
+OTHER-EDIT-WINDOW \(for this see `ecb-combine-ecb-button/edit-win-nr')."
   (select-window (ecb-get-edit-window other-edit-window))
   (ecb-nav-save-current)
   (ecb-with-original-functions
@@ -1920,9 +1929,11 @@ is a full filename and cdr is a tag for TYPENAME. "
                  type-definition-alist)
         (car type-definition-alist)))))
     
-  
-(defun ecb-method-clicked (node ecb-button shift-mode &optional no-post-action
-                                additional-post-action-list)
+(defun ecb-method-clicked (node ecb-button edit-window-nr shift-mode
+                                &optional no-post-action additional-post-action-list)
+  "Handle clicking onto NODE in the methods-buffer. ECB-BUTTON can be 1, 2 or
+3. If 3 then EDIT-WINDOW-NR contains the number of the edit-window the NODE
+should be displayed. For 1 and 2 the value of EDIT-WINDOW-NR is ignored."
   (if shift-mode
       (ecb-mouse-over-method-node node nil nil 'force))
   (let ((data (tree-node-get-data node))
@@ -1971,12 +1982,13 @@ is a full filename and cdr is a tag for TYPENAME. "
             (set-buffer (get-file-buffer ecb-path-selected-source))
             (let ((file (ecb--semantic-dependency-tag-file tag)))
               (when (and file (file-exists-p file))
-                (ecb-find-file-and-display file
-                                           (and (ecb-edit-window-splitted)
-                                                (eq ecb-button 2))))))
-        (ecb-jump-to-tag filename tag (ecb-get-edit-window
-                                       (and (ecb-edit-window-splitted)
-                                            (eq ecb-button 2)))
+                (ecb-find-file-and-display
+                 file (ecb-combine-ecb-button/edit-win-nr ecb-button edit-window-nr)))))
+        (ecb-jump-to-tag filename
+                         tag
+                         (ecb-get-edit-window
+                          (ecb-combine-ecb-button/edit-win-nr
+                           ecb-button edit-window-nr))
                          no-post-action
                          (if (and shift-mode
                                   (not (member 'ecb-tag-visit-narrow-tag
@@ -2230,8 +2242,8 @@ Returns current point."
 
 (tree-buffer-defpopup-command ecb-methods-menu-jump-and-narrow
   "Jump to the token related to the node under point an narrow to this token."
-  (ecb-method-clicked node 1 nil t '(ecb-tag-visit-narrow-tag
-                                     ecb-tag-visit-highlight-tag-header)))
+  (ecb-method-clicked node 1 nil nil t '(ecb-tag-visit-narrow-tag
+                                         ecb-tag-visit-highlight-tag-header)))
 
 
 (tree-buffer-defpopup-command ecb-methods-menu-widen
@@ -2267,7 +2279,7 @@ this fails then nil is returned otherwise t."
   (if (not (ecb-methods-menu-activate-hs))
       (ecb-error "hs-minor-mode can not be activated!")
     ;; point must be at beginning of tag-name
-    (ecb-method-clicked node 1 nil t '(ecb-tag-visit-smart-tag-start))
+    (ecb-method-clicked node 1 nil nil t '(ecb-tag-visit-smart-tag-start))
     (save-excursion
       (or (looking-at hs-block-start-regexp)
           (re-search-forward hs-block-start-regexp nil t))
@@ -2282,7 +2294,7 @@ this fails then nil is returned otherwise t."
   (if (not (ecb-methods-menu-activate-hs))
       (ecb-error "hs-minor-mode can not be activated!")
     ;; point must be at beginning of tag-name
-    (ecb-method-clicked node 1 nil t '(ecb-tag-visit-smart-tag-start))
+    (ecb-method-clicked node 1 nil nil t '(ecb-tag-visit-smart-tag-start))
     (save-excursion
       (or (looking-at hs-block-start-regexp)
           (re-search-forward hs-block-start-regexp nil t))
@@ -2355,6 +2367,68 @@ this fails then nil is returned otherwise t."
   "The menu-title for the methods menu. See
 `ecb-directories-menu-title-creator'.")
 
+(tree-buffer-defpopup-command ecb-jump-to-token-in-editwin1
+  "Jump to current token in the 1. edit-window."
+  (ecb-method-clicked node 3 1 nil))
+(tree-buffer-defpopup-command ecb-jump-to-token-in-editwin2
+  "Jump to current token in the 2. edit-window."
+  (ecb-method-clicked node 3 2 nil))
+(tree-buffer-defpopup-command ecb-jump-to-token-in-editwin3
+  "Jump to current token in the 3. edit-window."
+  (ecb-method-clicked node 3 3 nil))
+(tree-buffer-defpopup-command ecb-jump-to-token-in-editwin4
+  "Jump to current token in the 4. edit-window."
+  (ecb-method-clicked node 3 4 nil))
+(tree-buffer-defpopup-command ecb-jump-to-token-in-editwin5
+  "Jump to current token in the 5. edit-window."
+  (ecb-method-clicked node 3 5 nil))
+(tree-buffer-defpopup-command ecb-jump-to-token-in-editwin6
+  "Jump to current token in the 6. edit-window."
+  (ecb-method-clicked node 3 6 nil))
+(tree-buffer-defpopup-command ecb-jump-to-token-in-editwin7
+  "Jump to current token in the 7. edit-window."
+  (ecb-method-clicked node 3 7 nil))
+(tree-buffer-defpopup-command ecb-jump-to-token-in-editwin8
+  "Jump to current token in the 8. edit-window."
+  (ecb-method-clicked node 3 8 nil))
+
+(defun ecb-methods-menu-editwin-entries ()
+  "Generate popup-menu-entries for each edit-window if there are at least 2
+edit-windows. Otherwise return nil."
+  (let ((edit-win-list (ecb-canonical-edit-windows-list))
+        (result nil))
+    (when (> (length edit-win-list) 1)
+      (dotimes (i (min 8 (length edit-win-list)))
+        (setq result
+              (append result
+                      (list (list (intern (format "ecb-jump-to-token-in-editwin%d" (1+ i)))
+                                  (format "edit-window %d" (1+ i)))))))
+      (append (list (list "---")) ;; we want a separator
+              (list (append (list "Jump to token in ...")
+                            result))))))
+
+(defun ecb-methods-menu-creator (tree-buffer-name)
+  "Creates the popup-menus for the methods-buffer."
+  (let ((dyn-user-extension
+         (and (functionp ecb-methods-menu-user-extension-function)
+              (funcall ecb-methods-menu-user-extension-function)))
+        (dyn-builtin-extension (ecb-methods-menu-editwin-entries)))
+    (list (cons 0 (funcall (or ecb-methods-menu-sorter
+                               'identity)
+                           (append dyn-user-extension
+                                   ecb-methods-menu-user-extension
+                                   ecb-methods-tag-menu
+                                   dyn-builtin-extension)))
+          (cons 1 (funcall (or ecb-methods-menu-sorter
+                               'identity)
+                           (append dyn-user-extension
+                                   ecb-methods-menu-user-extension
+                                   ecb-common-methods-menu)))
+          (cons 2 (funcall (or ecb-methods-menu-sorter
+                               'identity)
+                           (append dyn-user-extension
+                                   ecb-methods-menu-user-extension
+                                   ecb-common-methods-menu))))))
 
 
 (defun ecb-dump-semantic-toplevel ()
