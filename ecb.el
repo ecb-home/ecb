@@ -54,7 +54,7 @@
 ;; The latest version of the ECB is available at
 ;; http://home.swipnet.se/mayhem/ecb.html
 
-;; $Id: ecb.el,v 1.194 2002/02/25 10:49:54 berndl Exp $
+;; $Id: ecb.el,v 1.195 2002/02/25 11:13:43 berndl Exp $
 
 ;;; Code:
 
@@ -3133,7 +3133,7 @@ store this options for later display in `ecb-not-compatible-options'."
                              (car (cdar (get 'ecb-token-display-function
                                              'standard-value)))))
 
-  ;; maybe we need here more resttings in future...
+  ;; maybe we need here more resettings in future...
   )
 
 (defun ecb-display-reset-options ()
