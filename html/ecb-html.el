@@ -324,6 +324,8 @@
     (h-bullet-link-list
      ecb-bullet
      (list 
+      (list (concat ecb-download-url "ecb-1.30.zip") "ecb-1.30.zip")
+      (list (concat ecb-download-url "ecb-1.30.tar.gz") "ecb-1.30.tar.gz")
       (list (concat ecb-download-url "ecb-1.20.zip") "ecb-1.20.zip")
       (list (concat ecb-download-url "ecb-1.20.tar.gz") "ecb-1.20.tar.gz")
       (list (concat ecb-download-url "ecb-1.10.zip") "ecb-1.10.zip")
