@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-util.el,v 1.118 2004/09/17 11:43:57 berndl Exp $
+;; $Id: ecb-util.el,v 1.119 2004/09/20 15:10:17 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -46,6 +46,8 @@
   (require 'silentcomp))
 
 (eval-when-compile (require 'cl))
+
+;;; ----- Silentcomp-Defs ----------------------------------
 
 ;; XEmacs
 (silentcomp-defun frame-property)
@@ -86,14 +88,12 @@
 
 (silentcomp-defun custom-file)
 
-;; Some constants
+;;; ----- Some constants -----------------------------------
+
 (defconst ecb-running-xemacs (string-match "XEmacs\\|Lucid" emacs-version))
 (defconst ecb-running-emacs-21 (and (not ecb-running-xemacs)
                                     (> emacs-major-version 20)))
 
-;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: Test this with native
-;; Windows-XEmacs if it works with this change correct and also if it works
-;; without this change incorrect!
 (defconst ecb-directory-sep-char
   (if ecb-running-xemacs directory-sep-char ?/))
 (defconst ecb-directory-sep-string (char-to-string ecb-directory-sep-char))
@@ -133,7 +133,8 @@
            (display-images-p)
          window-system)))
 
-;; -------------------------------------------------------------------
+;;; ----- Tracing ------------------------------------------
+
 ;; Tracing - currently not used because we use the trace.el library!
 ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: Offer conveniant wrappers for the
 ;; trace-function-background stuff so users can easily trace a set of
@@ -167,57 +168,84 @@
                             (ecb-defun-trace 'leave (quote ,name)))))))))
 
 
-;; -------------------------------------------------------------------
-
-
-;; ---------- compatibility between GNU Emacs and XEmacs ---------------------
+;;; ----- Compatibility between GNU Emacs and XEmacs -------
 
 ;; miscellaneous differences
 
-(if ecb-running-xemacs
-    (progn
-;;; Compatibility
-      (defun ecb-facep (face)
-        (memq face (face-list)))
-      (defun ecb-noninteractive ()
-        "Return non-nil if running non-interactively, i.e. in batch mode."
-        (noninteractive))
-      (defun ecb-subst-char-in-string (fromchar tochar string &optional inplace)
-        "Replace FROMCHAR with TOCHAR in STRING each time it occurs.
+(defmacro when-ecb-running-xemacs (&rest body)
+  "Evaluates BODY when `ecb-running-xemacs' is true. Use this macro when you
+want the BODY being parsed by semantic!. If not use the variable
+`ecb-running-xemacs'."
+  `(when ecb-running-xemacs
+     ,@body))
+
+(defmacro when-ecb-running-emacs-21 (&rest body)
+  "Evaluates BODY when `ecb-running-emacs-21' is true. Use this macro when you
+want the BODY being parsed by semantic!. If not use the variable
+`ecb-running-emacs-21'."
+  `(when ecb-running-emacs-21
+     ,@body))
+
+(defmacro when-ecb-running-emacs-20 (&rest body)
+  "Evaluates BODY when ECB runs Emacs 20. Use this macro when you want the
+BODY being parsed by semantic!. If not use the form
+\(and \(not ecb-running-emacs-21) \(not ecb-running-xemacs))."
+  `(when (and (not ecb-running-emacs-21) (not ecb-running-xemacs))
+     ,@body))
+
+(defmacro when-ecb-running-emacs (&rest body)
+  "Evaluates BODY when `ecb-running-xemacs' is false. Use this macro when you
+want the BODY being parsed by semantic!. If not use the variable
+`ecb-running-xemacs'."
+  `(when (not ecb-running-xemacs)
+     ,@body))
+
+;; I do not want all this compatibitly stuff being parsed by semantic,
+;; therefore i do not use the macro `when-ecb-running-xemacs'!
+
+(when ecb-running-xemacs
+  (defun ecb-facep (face)
+    (memq face (face-list)))
+  (defun ecb-noninteractive ()
+    "Return non-nil if running non-interactively, i.e. in batch mode."
+    (noninteractive))
+  (defun ecb-subst-char-in-string (fromchar tochar string &optional inplace)
+    "Replace FROMCHAR with TOCHAR in STRING each time it occurs.
 Unless optional argument INPLACE is non-nil, return a new string."
-        (let ((i (length string))
-              (newstr (if inplace string (copy-sequence string))))
-          (while (> i 0)
-            (setq i (1- i))
-            (if (eq (aref newstr i) fromchar)
-                (aset newstr i tochar)))
-          newstr))
-      (defun ecb-derived-mode-p (&rest modes)
-        "Non-nil if the current major mode is derived from one of MODES.
+    (let ((i (length string))
+          (newstr (if inplace string (copy-sequence string))))
+      (while (> i 0)
+        (setq i (1- i))
+        (if (eq (aref newstr i) fromchar)
+            (aset newstr i tochar)))
+      newstr))
+  (defun ecb-derived-mode-p (&rest modes)
+    "Non-nil if the current major mode is derived from one of MODES.
 Uses the `derived-mode-parent' property of the symbol to trace backwards."
-        (let ((parent major-mode))
-          (while (and (not (memq parent modes))
-                      (setq parent (get parent 'derived-mode-parent))))
-          parent))
-      (defalias 'ecb-frame-parameter 'frame-property)
-      (defalias 'ecb-line-beginning-pos 'point-at-bol)
-      (defalias 'ecb-line-end-pos 'point-at-eol)
-      (defalias 'ecb-event-window 'event-window)
-      (defalias 'ecb-event-point 'event-point)
-      (defalias 'ecb-event-buffer 'event-buffer)
-      (defalias 'ecb-window-full-width 'window-full-width)
-      (defalias 'ecb-window-full-height 'window-height)
-      (defun ecb-frame-char-width (&optional frame)
-        (/ (frame-pixel-width frame) (frame-width frame)))
-      (defun ecb-frame-char-height (&optional frame)
-        (/ (frame-pixel-height frame) (frame-height frame)))
-      (defun ecb-window-edges (&optional window)
-        (let ((pix-edges (window-pixel-edges window)))
-          (list (/ (nth 0 pix-edges) (ecb-frame-char-width))
-                (/ (nth 1 pix-edges) (ecb-frame-char-height))
-                (/ (nth 2 pix-edges) (ecb-frame-char-width))
-                (/ (nth 3 pix-edges) (ecb-frame-char-height))))))
-      
+    (let ((parent major-mode))
+      (while (and (not (memq parent modes))
+                  (setq parent (get parent 'derived-mode-parent))))
+      parent))
+  (defalias 'ecb-frame-parameter 'frame-property)
+  (defalias 'ecb-line-beginning-pos 'point-at-bol)
+  (defalias 'ecb-line-end-pos 'point-at-eol)
+  (defalias 'ecb-event-window 'event-window)
+  (defalias 'ecb-event-point 'event-point)
+  (defalias 'ecb-event-buffer 'event-buffer)
+  (defalias 'ecb-window-full-width 'window-full-width)
+  (defalias 'ecb-window-full-height 'window-height)
+  (defun ecb-frame-char-width (&optional frame)
+    (/ (frame-pixel-width frame) (frame-width frame)))
+  (defun ecb-frame-char-height (&optional frame)
+    (/ (frame-pixel-height frame) (frame-height frame)))
+  (defun ecb-window-edges (&optional window)
+    (let ((pix-edges (window-pixel-edges window)))
+      (list (/ (nth 0 pix-edges) (ecb-frame-char-width))
+            (/ (nth 1 pix-edges) (ecb-frame-char-height))
+            (/ (nth 2 pix-edges) (ecb-frame-char-width))
+            (/ (nth 3 pix-edges) (ecb-frame-char-height))))))
+
+(when (not ecb-running-xemacs)
   (defalias 'ecb-facep 'facep)
   (defun ecb-noninteractive ()
     "Return non-nil if running non-interactively, i.e. in batch mode."
@@ -300,131 +328,7 @@ Uses the `derived-mode-parent' property of the symbol to trace backwards."
     (delete-itimer timer))
   )
 
-;; ---------- End of compatibility between GNU Emacs and XEmacs -------------
-  
-(defsubst ecb-current-line ()
-  "Return the current line-number - the first line in a buffer has number 1."
-  (+ (count-lines 1 (point)) (if (= (current-column) 0) 1 0)))
-
-(if (fboundp 'compare-strings)
-    (defalias 'ecb-compare-strings 'compare-strings)
-  (defun ecb-compare-strings (str1 start1 end1 str2 start2 end2 &optional ignore-case)
-    "Compare the contents of two strings.
-In string STR1, skip the first START1 characters and stop at END1.
-In string STR2, skip the first START2 characters and stop at END2.
-END1 and END2 default to the full lengths of the respective strings.
-
-Case is significant in this comparison if IGNORE-CASE is nil.
-
-The value is t if the strings (or specified portions) match.
-If string STR1 is less, the value is a negative number N;
-  - 1 - N is the number of characters that match at the beginning.
-If string STR1 is greater, the value is a positive number N;
-  N - 1 is the number of characters that match at the beginning."
-    (or start1 (setq start1 0))
-    (or start2 (setq start2 0))
-    (setq end1 (if end1
-                   (min end1 (length str1))
-                 (length str1)))
-    (setq end2 (if end2
-                   (min end2 (length str2))
-                 (length str2)))
-    (let ((i1 start1)
-          (i2 start2)
-          result c1 c2)
-      (while (and (not result) (< i1 end1) (< i2 end2))
-        (setq c1 (aref str1 i1)
-              c2 (aref str2 i2)
-              i1 (1+ i1)
-              i2 (1+ i2))
-        (if ignore-case
-            (setq c1 (upcase c1)
-                  c2 (upcase c2)))
-        (setq result (cond ((< c1 c2) (- i1))
-                           ((> c1 c2) i1))))
-      (or result
-          (cond ((< i1 end1) (1+ (- i1 start1)))
-                ((< i2 end2) (1- (- start1 i1)))
-                (t)))
-      )))
-
-(defsubst ecb-string= (str1 str2 &optional ignore-case)
-  (let ((s1 (or (and (stringp str1) str1) (symbol-name str1)))
-        (s2 (or (and (stringp str2) str2) (symbol-name str2))))
-    (eq (ecb-compare-strings s1 nil nil s2 nil nil ignore-case) t)))
-
-(defsubst ecb-string< (str1 str2 &optional ignore-case)
-  (let ((s1 (or (and (stringp str1) str1) (symbol-name str1)))
-        (s2 (or (and (stringp str2) str2) (symbol-name str2)))
-        (result nil))
-    (setq result (ecb-compare-strings s1 nil nil s2 nil nil ignore-case))
-    (and (numberp result) (< result 0))))
-
-;; Emacs 20 has no window-list function and the XEmacs and Emacs 21 one has no
-;; specified ordering. The following one is stolen from XEmacs and has fixed
-;; this lack of a well defined order. We preserve also point of current
-;; buffer! IMPORTANT: When the window-ordering is important then currently
-;; these function should only be used with WINDOW = (frame-first-window
-;; ecb-frame)!
-(defun ecb-window-list (&optional frame minibuf window)
-  "Return a list of windows on FRAME, beginning with WINDOW. The
-windows-objects in the result-list are in the same canonical windows-ordering
-of `next-window'. If omitted, WINDOW defaults to the selected window. FRAME and
-WINDOW default to the selected ones. Optional second arg MINIBUF t means count
-the minibuffer window even if not active. If MINIBUF is neither t nor nil it
-means not to count the minibuffer even if it is active."
-  (if ecb-running-emacs-21
-      ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: There seems to be
-      ;; mysterious behavior when running our own window-list version with
-      ;; GNU Emacs >= 21.3 - especially when running an igrep when the
-      ;; igrep-buffer is already in another window. We can here savely use the
-      ;; function `window-list' because it returns an ordered list
-      (window-list frame minibuf window)
-    (setq window (or window (selected-window))
-          frame (or frame (selected-frame)))
-    (if (not (eq (window-frame window) frame))
-        (error "Window must be on frame."))
-    (let ((current-frame (selected-frame))
-          (current-point (point))
-          list)
-      (unwind-protect
-          (save-window-excursion
-            (select-frame frame)
-            ;; this is needed for correct start-point
-            (select-window window)
-            (walk-windows
-             (function (lambda (cur-window)
-                         (if (not (eq window cur-window))
-                             (setq list (cons cur-window list)))))
-             minibuf
-             'selected)
-            ;; This is needed to get the right canonical windows-order, i.e. the
-            ;; same order of windows than `walk-windows' walks through!
-            (setq list (nreverse list))
-            (setq list (cons window list)))
-        (select-frame current-frame)
-        ;; we must reset the point of the buffer which was current at call-time
-        ;; of this function
-        (goto-char current-point)))))
-
-(defun ecb-canonical-windows-list ()
-  "Return a list of all current visible windows in the `ecb-frame' \(starting
-  from the left-most top-most window) in the order `other-window' would walk
-  through these windows."
-  (ecb-window-list ecb-frame 0 (frame-first-window ecb-frame)))
-
-(defun ecb-window-select (name)
-  "Select that window which displays the buffer with NAME in the `ecb-frame'
-and return the window-object. If that buffer is not displayed in the
-`ecb-frame' then nothing happens and nil is returned."
-  (let ((window (get-buffer-window name ecb-frame)))
-    (if window
-	(select-window window)
-      nil)))
-
-(defun ecb-buffer-select (name)
-  (set-buffer (get-buffer name)))
-
+;;; ----- advice stuff -------------------------------------
 
 ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: Attention. Current mechanism of
 ;; (de)activating the basic advices and the intelligent window advices of
@@ -519,7 +423,7 @@ another frame than the `ecb-frame'."
 (put 'ecb-with-ecb-advice 'lisp-indent-function 2)
 
 
-;; some basic advices
+;;; ----- Customize stuff ----------------------------------
 
 (defun ecb-custom-file ()
   "Filename of that file which is used by \(X)Emacs to store the
@@ -578,7 +482,24 @@ by semantic and also killed afterwards."
           (kill-buffer (find-file-noselect (ecb-custom-file)))))
     ad-do-it))
 
-;; assoc helpers
+(defun ecb-option-get-value (option &optional type)
+  "Return the value of a customizable ECB-option OPTION with TYPE, where TYPE
+can either be 'standard-value \(the default-value of the defcustom) or
+'saved-value \(the value stored durable by the user via customize) or
+'customized-value \(the value set but not saved in the customize buffer).
+If TYPE is nil then the most recent set value is returned, means it
+tries the customized-value, then the saved-value and then the standard-value
+in exactly this sequence."
+  (let ((val (car (if type
+                      (get option type)
+                    (or (get option 'customized-value)
+                        (get option 'saved-value)
+                        (get option 'standard-value))))))
+    (cond ((not (listp val)) val)
+          ((equal 'quote (car val)) (car (cdr val)))
+          (t (car val)))))
+
+;;; ----- Assoc helpers ------------------------------------
 
 (defun ecb-remove-assoc (key list)
   (delete nil
@@ -599,7 +520,7 @@ by semantic and also killed afterwards."
   (assoc key list))
 
 
-;; some function from cl - but we do not want to call cl-functions at runtime
+;;; ----- Some function from cl ----------------------------
 
 (defun ecb-filter (seq pred)
   "Filter out those elements of SEQUENCE for which PREDICATE returns nil."
@@ -654,23 +575,6 @@ Return the sublist of LIST whose car is ITEM."
       (member item list)
     (memq item list)))
 
-(defsubst ecb-match-regexp-list (str regexp-list &optional elem-accessor
-                                     return-accessor)
-  "Return not nil if STR matches one of the regexps in REGEXP-LIST. If
-ELEM-ACCESSOR is a function then it is used to get the regexp from the
-processed elem of REGEXP-LIST. If nil the elem itself is used. If
-RETURN-ACCESSOR is a function then it is used to get from the matching elem
-the object to return. If nil then the matching elem itself is returned."
-  (let ((elem-acc (or elem-accessor 'identity))
-        (return-acc (or return-accessor 'identity)))
-    (catch 'exit
-      (dolist (elem regexp-list)
-        (let ((case-fold-search t))
-          (save-match-data
-            (if (string-match (funcall elem-acc elem) str)
-                (throw 'exit (funcall return-acc elem))))
-          nil)))))
-
 
 (defun ecb-set-elt (seq n val)
   "Set VAL as new N-th element of SEQ. SEQ can be any sequence. SEQ will be
@@ -709,7 +613,121 @@ This is desctructive function. LIST is returned."
             (setq list (ecb-replace-first-occurence list elem nil)))
           list)))
 
-;; canonical filenames
+(defun ecb-subseq (seq start &optional end)
+  "Return the subsequence of SEQ from START to END.
+If END is omitted, it defaults to the length of the sequence.
+If START or END is negative, it counts from the end."
+  (if (stringp seq) (substring seq start end)
+    (let (len)
+      (and end (< end 0) (setq end (+ end (setq len (length seq)))))
+      (if (< start 0) (setq start (+ start (or len (setq len (length seq))))))
+      (cond ((listp seq)
+	     (if (> start 0) (setq seq (nthcdr start seq)))
+	     (if end
+		 (let ((res nil))
+		   (while (>= (setq end (1- end)) start)
+		     (push (pop seq) res))
+		   (nreverse res))
+	       (copy-sequence seq)))
+	    (t
+	     (or end (setq end (or len (length seq))))
+	     (let ((res (make-vector (max (- end start) 0) nil))
+		   (i 0))
+	       (while (< start end)
+		 (aset res i (aref seq start))
+		 (setq i (1+ i) start (1+ start)))
+	       res))))))
+
+(defun ecb-concatenate (type &rest seqs)
+  "Concatenate, into a sequence of type TYPE, the argument SEQUENCES.
+TYPE can be 'string, 'vector or 'list."
+  (cond ((eq type 'vector) (apply 'vconcat seqs))
+	((eq type 'string) (apply 'concat seqs))
+	((eq type 'list) (apply 'append (append seqs '(nil))))
+	(t (ecb-error "Not a sequence type name: %s" type))))
+
+(defun ecb-rotate (seq start-elem)
+  "Rotate SEQ so START-ELEM is the new first element of SEQ. SEQ is an
+arbitrary sequence. Example: \(ecb-rotate '\(a b c d e f) 'c) results in \(c d
+e f a b). If START-ELEM is not contained in SEQ then nil is returned."
+  (let ((start-pos (ecb-position seq start-elem)))
+    (when start-pos
+      (ecb-concatenate (cond ((listp seq) 'list)
+                             ((stringp seq) 'string)
+                             ((vectorp seq) 'vector))
+                       (ecb-subseq seq start-pos)
+                       (ecb-subseq seq 0 start-pos)))))
+
+(defun ecb-position (seq elem)
+  "Return the position of ELEM within SEQ counting from 0. Comparison is done
+with `equal'."
+  (if (listp seq)
+      (let ((pos (- (length seq) (length (member elem seq)))))
+        (if (= pos (length seq))
+            nil
+          pos))
+    (catch 'found
+      (dotimes (i (length seq))
+        (if (equal elem (aref seq i))
+            (throw 'found i)))
+      nil)))
+
+(defun ecb-last (seq)
+  "Return the last elem of the sequence SEQ."
+  (if (listp seq)
+      (car (last seq))
+    (if seq
+        (aref seq (1- (length seq)))
+      nil)))
+
+(defun ecb-first (seq)
+  "Return the first elem of the sequence SEQ."
+  (if (listp seq)
+      (car seq)
+    (if seq
+        (aref seq 0)
+      nil)))
+  
+
+(defun ecb-next-listelem (list elem &optional nth-next)
+  "Return that element of LIST which follows directly ELEM when ELEM is an
+element of LIST. If ELEM is the last element of LIST then return the first
+element of LIST. If ELEM is not an element of LIST nil is returned. Elements
+are compared with `equal'.
+
+If NTH-NEXT is an integer then the NTH-NEXT element of LIST in the meaning
+described above is returned, i.e. the algorithm above is applied NTH-NEXT
+times. Example: Suppose LIST = '\(a b c d), ELEM is 'c and NTH-NEXT = 3 then
+'b is returned - same result for NTH-NEXT = 7, 11... It works also for
+negative integers, so when NTH-NEXT is -1 in the example above then 'b is
+returned."
+  (let ((elem-pos (ecb-position list elem))
+        (next (or nth-next 1)))
+    (and elem-pos
+         (nth (mod (+ elem-pos next)
+                   (length list))
+              list))))
+
+;;; ----- Some regexp stuff  -------------------------------
+
+(defsubst ecb-match-regexp-list (str regexp-list &optional elem-accessor
+                                     return-accessor)
+  "Return not nil if STR matches one of the regexps in REGEXP-LIST. If
+ELEM-ACCESSOR is a function then it is used to get the regexp from the
+processed elem of REGEXP-LIST. If nil the elem itself is used. If
+RETURN-ACCESSOR is a function then it is used to get the object to return from
+the matching elem. If nil then the matching elem itself is returned."
+  (let ((elem-acc (or elem-accessor 'identity))
+        (return-acc (or return-accessor 'identity)))
+    (catch 'exit
+      (dolist (elem regexp-list)
+        (let ((case-fold-search t))
+          (save-match-data
+            (if (string-match (funcall elem-acc elem) str)
+                (throw 'exit (funcall return-acc elem))))
+          nil)))))
+
+;;; ----- Canonical filenames ------------------------------
 
 (defun ecb-fix-path (path)
   "Fixes an annoying behavior of the native windows-version of XEmacs:
@@ -771,53 +789,10 @@ not nil then in both PATH and FILENAME env-var substitution is done. If the
                                                     filename))))))))
 
 
-(defun ecb-nolog-message (&rest args)
-  "Works exactly like `message' but does not log the message"
-  (let ((msg (cond ((or (null args)
-                        (null (car args)))
-                    nil)
-                   ((null (cdr args))
-                    (car args))
-                   (t
-                    (apply 'format args)))))
-    ;; Now message is either nil or the formated string.
-    (if ecb-running-xemacs
-        ;; XEmacs way of preventing log messages.
-        (if msg
-            (display-message 'no-log msg)
-          (clear-message 'no-log))
-      ;; Emacs way of preventing log messages.
-      (let ((message-log-max nil)
-            (message-truncate-lines nil))
-        (if msg
-            (message "%s" msg)
-          (message nil))))
-    msg))
+;;; ----- User-interaction ---------------------------------
 
 (defun ecb-confirm (text)
   (yes-or-no-p text))
-
-(defun ecb-delete-file (file)
-  (let ((exp-file (expand-file-name file)))
-    (if (file-exists-p exp-file)
-        (delete-file exp-file))))
-
-(defun ecb-enlarge-window(window &optional val)
-  "Enlarge the given window.
-If VAL is nil then WINDOW is enlarged so that it is 1/2 of the current frame.
-If VAL is a positive integer then WINDOW is enlarged so that its new height is
-VAL lines. If VAL is > 0 and < 1 then WINDOW is enlarged so that its new
-height is that fraction of the frame."
-  (if (and window (window-live-p window))
-      (let* ((norm-val (if val
-                           (ecb-normalize-number val (1- (frame-height)))
-                         (/ (1- (frame-height)) 2)))
-             (enlargement (- norm-val (ecb-window-full-height window))))
-        (save-selected-window
-          (select-window window)          
-          (if (> enlargement 0)
-              (enlarge-window enlargement))))
-    (error "Window is not alive!")))
 
 ;; stolen from query.el and slightly enhanced
 ;; This is for a small number of choices each of them a short string
@@ -919,61 +894,6 @@ be made either with the mouse or with the keyboard."
         (car choices)
       answer)))
 
-(defun ecb-normalize-number (value &optional ref-value)
-  "Normalize VALUE in the following manner and return:
-* VALUE > -1.0 and < +1.0 and REF-VALUE a number: `floor' of VALUE * REF-VALUE
-* all other cases: `floor' of VALUE"
-  (floor (if (and (< value 1.0)
-                  (> value -1.0)
-                  (numberp ref-value))
-             (* ref-value value)
-           value)))
-
-(defmacro ecb-with-readonly-buffer (buffer &rest body)
-  "Make buffer BUFFER current but do not display it. Evaluate BODY in buffer
-BUFFER \(not read-only an evaluation-time of BODY) and make afterwards BUFFER
-read-only. Note: All this is done with `save-excursion' so after BODY that
-buffer is current which was it before calling this macro."
-  `(if (buffer-live-p ,buffer)
-       (save-excursion
-         (set-buffer ,buffer)
-         (unwind-protect
-             (progn
-               (setq buffer-read-only nil)
-               ,@body)
-           (setq buffer-read-only t)))
-     (ecb-error "Try to set a not existing buffer.")))
-
-(put 'ecb-with-readonly-buffer 'lisp-indent-function 1)
-
-(defmacro ecb-do-if-buffer-visible-in-ecb-frame (buffer-name-symbol &rest body)
-  "Evaluate BODY if the following conditions are all true:
-- The symbol BUFFER-NAME-SYMBOL is bound
-- The value of BUFFER-NAME-SYMBOL is a name of a living buffer B
-- The buffer B is visible and displayed in a window of the `ecb-frame'
-- ECB is active
-- The current frame is the `ecb-frame'
-- The window of buffer B is not a window in the edit-area.
-If one of these conditions is false then nothing will be done.
-
-During the evaluation of BODY the following local variables are bound:
-- visible-buffer: The buffer-object which name is the value of
-  BUFFER-NAME-SYMBOL.
-- visible-window: The window which displays visible-buffer"
-  `(let* ((visible-buffer (if (and (boundp ,buffer-name-symbol)
-                                   (stringp (symbol-value ,buffer-name-symbol)))
-                              (get-buffer (symbol-value ,buffer-name-symbol))))
-          (visible-window (if (bufferp visible-buffer)
-                              (get-buffer-window visible-buffer))))
-     (when (and ecb-minor-mode
-                (equal (selected-frame) ecb-frame)
-                visible-window
-                (window-live-p visible-window)
-                (not (member visible-window (ecb-canonical-edit-windows-list))))
-       ,@body)))
-
-(put 'ecb-do-if-buffer-visible-in-ecb-frame 'lisp-indent-function 1)
-
 (defun ecb-read-number (prompt &optional init-value)
   "Ask in the minibuffer for a number with prompt-string PROMPT. Optional
 INIT-VALUE can be either a number or a string-representation of a number."
@@ -992,23 +912,6 @@ INIT-VALUE can be either a number or a string-representation of a number."
              (not (or (ecb-string= "0" result)
                       (not (= 0 (string-to-number result)))))))
     (string-to-number result)))
-
-(defun ecb-option-get-value (option &optional type)
-  "Return the value of a customizable ECB-option OPTION with TYPE, where TYPE
-can either be 'standard-value \(the default-value of the defcustom) or
-'saved-value \(the value stored durable by the user via customize) or
-'customized-value \(the value set but not saved in the customize buffer).
-If TYPE is nil then the most recent set value is returned, means it
-tries the customized-value, then the saved-value and then the standard-value
-in exactly this sequence."
-  (let ((val (car (if type
-                      (get option type)
-                    (or (get option 'customized-value)
-                        (get option 'saved-value)
-                        (get option 'standard-value))))))
-    (cond ((not (listp val)) val)
-          ((equal 'quote (car val)) (car (cdr val)))
-          (t (car val)))))
 
 (defun ecb-message-box (message-str &optional title-text button-text)
   "Display a message-box with message MESSAGE-STR and title TITLE-TEXT if
@@ -1039,6 +942,49 @@ If `window-system' is nil then a simple message is displayed in the echo-area."
             (x-popup-dialog t (list title (cons message-str t))))
           t)
       (message (concat title " " message-str)))))
+
+;;; ----- Information-display - errors, warnings, infos ----
+
+(defun ecb-nolog-message (&rest args)
+  "Works exactly like `message' but does not log the message"
+  (let ((msg (cond ((or (null args)
+                        (null (car args)))
+                    nil)
+                   ((null (cdr args))
+                    (car args))
+                   (t
+                    (apply 'format args)))))
+    ;; Now message is either nil or the formated string.
+    (if ecb-running-xemacs
+        ;; XEmacs way of preventing log messages.
+        (if msg
+            (display-message 'no-log msg)
+          (clear-message 'no-log))
+      ;; Emacs way of preventing log messages.
+      (let ((message-log-max nil)
+            (message-truncate-lines nil))
+        (if msg
+            (message "%s" msg)
+          (message nil))))
+    msg))
+
+(defun ecb-error (&rest args)
+  "Signals an error but prevents it from entering the debugger. This is
+useful if an error-message should be signaled to the user and evaluating
+should stopped but no debugging is senseful."
+  (let ((debug-on-error nil))
+    (error (concat "ECB " ecb-version " - Error: "
+                   (apply 'format args)))))
+
+(defun ecb-warning (&rest args)
+  "Displays a warning."
+  (message (concat "ECB " ecb-version " - Warning: " (apply 'format args))))
+
+(defun ecb-info-message (&rest args)
+  "Displays an information."
+  (message (concat "ECB " ecb-version " - Info: " (apply 'format args))))
+
+;;; ----- Text and string-stuff ----------------------------
 
 (defun ecb-merge-face-into-text (text face)
   "Merge FACE to the already precolored TEXT so the values of all
@@ -1087,23 +1033,59 @@ of TEXT which are not set by FACE are preserved."
                            text))
     text))
 
-(defun ecb-error (&rest args)
-  "Signals an error but prevents it from entering the debugger. This is
-useful if an error-message should be signaled to the user and evaluating
-should stopped but no debugging is senseful."
-  (let ((debug-on-error nil))
-    (error (concat "ECB " ecb-version " - Error: "
-                   (apply 'format args)))))
+(if (fboundp 'compare-strings)
+    (defalias 'ecb-compare-strings 'compare-strings)
+  (defun ecb-compare-strings (str1 start1 end1 str2 start2 end2 &optional ignore-case)
+    "Compare the contents of two strings.
+In string STR1, skip the first START1 characters and stop at END1.
+In string STR2, skip the first START2 characters and stop at END2.
+END1 and END2 default to the full lengths of the respective strings.
 
-(defun ecb-warning (&rest args)
-  "Displays a warning."
-  (message (concat "ECB " ecb-version " - Warning: " (apply 'format args))))
+Case is significant in this comparison if IGNORE-CASE is nil.
 
-(defun ecb-info-message (&rest args)
-  "Displays an information."
-  (message (concat "ECB " ecb-version " - Info: " (apply 'format args))))
+The value is t if the strings (or specified portions) match.
+If string STR1 is less, the value is a negative number N;
+  - 1 - N is the number of characters that match at the beginning.
+If string STR1 is greater, the value is a positive number N;
+  N - 1 is the number of characters that match at the beginning."
+    (or start1 (setq start1 0))
+    (or start2 (setq start2 0))
+    (setq end1 (if end1
+                   (min end1 (length str1))
+                 (length str1)))
+    (setq end2 (if end2
+                   (min end2 (length str2))
+                 (length str2)))
+    (let ((i1 start1)
+          (i2 start2)
+          result c1 c2)
+      (while (and (not result) (< i1 end1) (< i2 end2))
+        (setq c1 (aref str1 i1)
+              c2 (aref str2 i2)
+              i1 (1+ i1)
+              i2 (1+ i2))
+        (if ignore-case
+            (setq c1 (upcase c1)
+                  c2 (upcase c2)))
+        (setq result (cond ((< c1 c2) (- i1))
+                           ((> c1 c2) i1))))
+      (or result
+          (cond ((< i1 end1) (1+ (- i1 start1)))
+                ((< i2 end2) (1- (- start1 i1)))
+                (t)))
+      )))
 
-;; trimming
+(defsubst ecb-string= (str1 str2 &optional ignore-case)
+  (let ((s1 (or (and (stringp str1) str1) (symbol-name str1)))
+        (s2 (or (and (stringp str2) str2) (symbol-name str2))))
+    (eq (ecb-compare-strings s1 nil nil s2 nil nil ignore-case) t)))
+
+(defsubst ecb-string< (str1 str2 &optional ignore-case)
+  (let ((s1 (or (and (stringp str1) str1) (symbol-name str1)))
+        (s2 (or (and (stringp str2) str2) (symbol-name str2)))
+        (result nil))
+    (setq result (ecb-compare-strings s1 nil nil s2 nil nil ignore-case))
+    (and (numberp result) (< result 0))))
 
 (defun ecb-excessive-trim (str)
   "Return a string where all double-and-more whitespaces in STR are replaced
@@ -1139,7 +1121,36 @@ with a single space-character."
   "Applies `ecb-trim' and `ecb-middle-trim' to STR."
   (ecb-excessive-trim (ecb-trim str)))
 
+(defun ecb-fit-str-to-width (str width from)
+  "If STR is longer than WIDTH then fit it to WIDTH by stripping from left or
+right \(depends on FROM which can be 'left or 'right) and prepend \(rsp.
+append) \"...\" to signalize that the string is stripped. If WIDTH >= length
+of STR the always STR is returned. If either WIDTH or length of STR is < 5
+then an empty string is returned because stripping makes no sense here."
+  (let ((len-str (length str)))
+    (if (>= width len-str)
+        str
+      (if (or (< len-str 5) ;; we want at least two characters visible of str
+              (< width 5))
+          ""
+        (if (equal from 'left)
+            (concat "..." (substring str (* -1 (- width 3))))
+          (concat (substring str 0 (- width 3)) "..."))))))
 
+;;; ----- Number-stuff -------------------------------------
+
+(defun ecb-normalize-number (value &optional ref-value)
+  "Normalize VALUE in the following manner and return:
+* VALUE > -1.0 and < +1.0 and REF-VALUE a number: `floor' of VALUE * REF-VALUE
+* all other cases: `floor' of VALUE"
+  (floor (if (and (< value 1.0)
+                  (> value -1.0)
+                  (numberp ref-value))
+             (* ref-value value)
+           value)))
+
+
+;;; ----- Working-display ----------------------------------
 
 ;; code for a working display - complete stolen from the semantic-package.
 ;; ECB has thrown away all code which is not needed by ECB
@@ -1149,8 +1160,7 @@ with a single space-character."
 ;; download eieio and semantic even if the user has not installed any version
 ;; of semantic.
 
-;;; Variables used in stages
-;;
+;; Variables used in stages
 (defvar ecb-working-message nil
   "Message stored when in a status loop.")
 (defvar ecb-working-donestring nil
@@ -1258,91 +1268,65 @@ It returns the exit-status of the called PROGRAM."
 	)
       (process-exit-status proc))))
 
-(defun ecb-subseq (seq start &optional end)
-  "Return the subsequence of SEQ from START to END.
-If END is omitted, it defaults to the length of the sequence.
-If START or END is negative, it counts from the end."
-  (if (stringp seq) (substring seq start end)
-    (let (len)
-      (and end (< end 0) (setq end (+ end (setq len (length seq)))))
-      (if (< start 0) (setq start (+ start (or len (setq len (length seq))))))
-      (cond ((listp seq)
-	     (if (> start 0) (setq seq (nthcdr start seq)))
-	     (if end
-		 (let ((res nil))
-		   (while (>= (setq end (1- end)) start)
-		     (push (pop seq) res))
-		   (nreverse res))
-	       (copy-sequence seq)))
-	    (t
-	     (or end (setq end (or len (length seq))))
-	     (let ((res (make-vector (max (- end start) 0) nil))
-		   (i 0))
-	       (while (< start end)
-		 (aset res i (aref seq start))
-		 (setq i (1+ i) start (1+ start)))
-	       res))))))
+;;; ----- Buffers and files --------------------------------
 
-;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: Generalize this for sequences
-;; (ie. arrays and strings too)
-(defun ecb-rotate-list (list start-elem)
-  "Rotate LIST so START-ELEM is the new first element of LIST. Example:
-\(ecb-rotate-list '\(a b c d e f) 'c) results in \(c d e f a b). If START-ELEM
-is not a member of LIST then nil is returned."
-  (let ((start-pos (ecb-position list start-elem)))
-    (when start-pos
-      (append (nthcdr start-pos list)
-              (ecb-subseq list 0 start-pos)))))
+(defsubst ecb-current-line ()
+  "Return the current line-number - the first line in a buffer has number 1."
+  (+ (count-lines 1 (point)) (if (= (current-column) 0) 1 0)))
 
-(defun ecb-position (seq elem)
-  "Return the position of ELEM within SEQ counting from 0. Comparison is done
-with `equal'."
-  (if (listp seq)
-      (let ((pos (- (length seq) (length (member elem seq)))))
-        (if (= pos (length seq))
-            nil
-          pos))
-    (catch 'found
-      (dotimes (i (length seq))
-        (if (equal elem (aref seq i))
-            (throw 'found i)))
-      nil)))
+(defmacro ecb-with-readonly-buffer (buffer &rest body)
+  "Make buffer BUFFER current but do not display it. Evaluate BODY in buffer
+BUFFER \(not read-only an evaluation-time of BODY) and make afterwards BUFFER
+read-only. Note: All this is done with `save-excursion' so after BODY that
+buffer is current which was it before calling this macro."
+  `(if (buffer-live-p ,buffer)
+       (save-excursion
+         (set-buffer ,buffer)
+         (unwind-protect
+             (progn
+               (setq buffer-read-only nil)
+               ,@body)
+           (setq buffer-read-only t)))
+     (ecb-error "Try to set a not existing buffer.")))
 
-(defun ecb-last (seq)
-  "Return the last elem of the sequence SEQ."
-  (if (listp seq)
-      (car (last seq))
-    (if seq
-        (aref seq (1- (length seq)))
-      nil)))
+(put 'ecb-with-readonly-buffer 'lisp-indent-function 1)
 
-(defun ecb-first (seq)
-  "Return the first elem of the sequence SEQ."
-  (if (listp seq)
-      (car seq)
-    (if seq
-        (aref seq 0)
-      nil)))
-  
+(defmacro ecb-do-if-buffer-visible-in-ecb-frame (buffer-name-symbol &rest body)
+  "Evaluate BODY if the following conditions are all true:
+- The symbol BUFFER-NAME-SYMBOL is bound
+- The value of BUFFER-NAME-SYMBOL is a name of a living buffer B
+- The buffer B is visible and displayed in a window of the `ecb-frame'
+- ECB is active
+- The current frame is the `ecb-frame'
+- The window of buffer B is not a window in the edit-area.
+If one of these conditions is false then nothing will be done.
 
-(defun ecb-next-listelem (list elem &optional nth-next)
-  "Return that element of LIST which follows directly ELEM when ELEM is an
-element of LIST. If ELEM is the last element of LIST then return the first
-element of LIST. If ELEM is not an element of LIST nil is returned. Elements
-are compared with `equal'.
+During the evaluation of BODY the following local variables are bound:
+- visible-buffer: The buffer-object which name is the value of
+  BUFFER-NAME-SYMBOL.
+- visible-window: The window which displays visible-buffer"
+  `(let* ((visible-buffer (if (and (boundp ,buffer-name-symbol)
+                                   (stringp (symbol-value ,buffer-name-symbol)))
+                              (get-buffer (symbol-value ,buffer-name-symbol))))
+          (visible-window (if (bufferp visible-buffer)
+                              (get-buffer-window visible-buffer))))
+     (when (and ecb-minor-mode
+                (equal (selected-frame) ecb-frame)
+                visible-window
+                (window-live-p visible-window)
+                (not (member visible-window (ecb-canonical-edit-windows-list))))
+       ,@body)))
+(put 'ecb-do-if-buffer-visible-in-ecb-frame 'lisp-indent-function 1)
 
-If NTH-NEXT is an integer then the NTH-NEXT element of LIST in the meaning
-described above is returned, i.e. the algorithm above is applied NTH-NEXT
-times. Example: Suppose LIST = '\(a b c d), ELEM is 'c and NTH-NEXT = 3 then
-'b is returned - same result for NTH-NEXT = 7, 11... It works also for
-negative integers, so when NTH-NEXT is -1 in the example above then 'b is
-returned."
-  (let ((elem-pos (ecb-position list elem))
-        (next (or nth-next 1)))
-    (and elem-pos
-         (nth (mod (+ elem-pos next)
-                   (length list))
-              list))))
+(defun ecb-delete-file (file)
+  "Delete FILE if it eexists."
+  (let ((exp-file (expand-file-name file)))
+    (if (file-exists-p exp-file)
+        (delete-file exp-file))))
+
+(defun ecb-buffer-select (buffer-or-name)
+  "Make buffer of BUFFER-OR-NAME current - do not display it."
+  (set-buffer (ecb-buffer-obj buffer-or-name)))
 
 (defun ecb-buffer-name (buffer-or-name)
   "Return the buffer-name of BUFFER-OR-NAME."
@@ -1361,6 +1345,17 @@ returned."
          buffer-or-name)
         (t
          nil)))
+
+(defun ecb-buffer-local-value (sym buffer)
+  "Get the buffer-local value of variable SYM in BUFFER. If there is no
+buffer-local value in BUFFER then the global value of SYM is used."
+  (if (fboundp 'buffer-local-value)
+      (buffer-local-value sym buffer)
+    (or (cdr (assoc sym (buffer-local-variables buffer)))
+        (save-excursion
+          (set-buffer buffer)
+          (symbol-value sym)))))
+
 
 (defun ecb-file-content-as-string (file)
   "If FILE exists and is readable returns the contents as a string otherwise
@@ -1397,22 +1392,87 @@ nil whereas in the latter case the current-buffer is assumed."
                    (ecb-current-buffer-archive-extract-p))
                (ecb-current-buffer-archive-extract-p))))))
 
-(defun ecb-fit-str-to-width (str width from)
-  "If STR is longer than WIDTH then fit it to WIDTH by stripping from left or
-right \(depends on FROM which can be 'left or 'right) and prepend \(rsp.
-append) \"...\" to signalize that the string is stripped. If WIDTH >= length
-of STR the always STR is returned. If either WIDTH or length of STR is < 5
-then an empty string is returned because stripping makes no sense here."
-  (let ((len-str (length str)))
-    (if (>= width len-str)
-        str
-      (if (or (< len-str 5) ;; we want at least two characters visible of str
-              (< width 5))
-          ""
-        (if (equal from 'left)
-            (concat "..." (substring str (* -1 (- width 3))))
-          (concat (substring str 0 (- width 3)) "..."))))))
 
+;;; ----- Windows ------------------------------------------
+
+;; Emacs 20 has no window-list function and the XEmacs and Emacs 21 one has no
+;; specified ordering. The following one is stolen from XEmacs and has fixed
+;; this lack of a well defined order. We preserve also point of current
+;; buffer! IMPORTANT: When the window-ordering is important then currently
+;; these function should only be used with WINDOW = (frame-first-window
+;; ecb-frame)!
+(defun ecb-window-list (&optional frame minibuf window)
+  "Return a list of windows on FRAME, beginning with WINDOW. The
+windows-objects in the result-list are in the same canonical windows-ordering
+of `next-window'. If omitted, WINDOW defaults to the selected window. FRAME and
+WINDOW default to the selected ones. Optional second arg MINIBUF t means count
+the minibuffer window even if not active. If MINIBUF is neither t nor nil it
+means not to count the minibuffer even if it is active."
+  (if ecb-running-emacs-21
+      ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: There seems to be
+      ;; mysterious behavior when running our own window-list version with
+      ;; GNU Emacs >= 21.3 - especially when running an igrep when the
+      ;; igrep-buffer is already in another window. We can here savely use the
+      ;; function `window-list' because it returns an ordered list
+      (window-list frame minibuf window)
+    (setq window (or window (selected-window))
+          frame (or frame (selected-frame)))
+    (if (not (eq (window-frame window) frame))
+        (error "Window must be on frame."))
+    (let ((current-frame (selected-frame))
+          (current-point (point))
+          list)
+      (unwind-protect
+          (save-window-excursion
+            (select-frame frame)
+            ;; this is needed for correct start-point
+            (select-window window)
+            (walk-windows
+             (function (lambda (cur-window)
+                         (if (not (eq window cur-window))
+                             (setq list (cons cur-window list)))))
+             minibuf
+             'selected)
+            ;; This is needed to get the right canonical windows-order, i.e. the
+            ;; same order of windows than `walk-windows' walks through!
+            (setq list (nreverse list))
+            (setq list (cons window list)))
+        (select-frame current-frame)
+        ;; we must reset the point of the buffer which was current at call-time
+        ;; of this function
+        (goto-char current-point)))))
+
+(defun ecb-canonical-windows-list ()
+  "Return a list of all current visible windows in the `ecb-frame' \(starting
+  from the left-most top-most window) in the order `other-window' would walk
+  through these windows."
+  (ecb-window-list ecb-frame 0 (frame-first-window ecb-frame)))
+
+(defun ecb-enlarge-window(window &optional val)
+  "Enlarge the given window.
+If VAL is nil then WINDOW is enlarged so that it is 1/2 of the current frame.
+If VAL is a positive integer then WINDOW is enlarged so that its new height is
+VAL lines. If VAL is > 0 and < 1 then WINDOW is enlarged so that its new
+height is that fraction of the frame."
+  (if (and window (window-live-p window))
+      (let* ((norm-val (if val
+                           (ecb-normalize-number val (1- (frame-height)))
+                         (/ (1- (frame-height)) 2)))
+             (enlargement (- norm-val (ecb-window-full-height window))))
+        (save-selected-window
+          (select-window window)          
+          (if (> enlargement 0)
+              (enlarge-window enlargement))))
+    (error "Window is not alive!")))
+
+(defun ecb-window-select (name)
+  "Select that window which displays the buffer with NAME in the `ecb-frame'
+and return the window-object. If that buffer is not displayed in the
+`ecb-frame' then nothing happens and nil is returned."
+  (let ((window (get-buffer-window name ecb-frame)))
+    (if window
+	(select-window window)
+      nil)))
 
 (defun ecb-make-windows-not-dedicated (&optional frame)
   "Make all windows of FRAME not dedicated."
@@ -1451,18 +1511,7 @@ the same ordering as `other-window' would walk through the frame."
                                 (window-list)))))))
 
 
-(defun ecb-buffer-local-value (sym buffer)
-  "Get the buffer-local value of variable SYM in BUFFER. If there is no
-buffer-local value in BUFFER then the global value of SYM is used."
-  (if (fboundp 'buffer-local-value)
-      (buffer-local-value sym buffer)
-    (or (cdr (assoc sym (buffer-local-variables buffer)))
-        (save-excursion
-          (set-buffer buffer)
-          (symbol-value sym)))))
-
-
-;; multicache
+;;; ----- Multicache ---------------------------------------
 
 ;; internal functions
 (defun ecb-multicache-init (cache-var)
@@ -1710,7 +1759,7 @@ Key: <the key of a cached element>
       (goto-char (point-min)))))
   
 
-;; ringstuff
+;;; ----- Ringstuff ----------------------------------------
 
 (require 'ring)
 (defalias 'ecb-make-ring 'make-ring)
@@ -1723,7 +1772,7 @@ Key: <the key of a cached element>
   "Return a list of the lements of RING."
   (mapcar #'identity (cddr ring)))
 
-;; menu stuff
+;;; ----- Menu stuff ---------------------------------------
 
 (defvar ecb-max-submenu-depth 4
   "The maximum depth of nesting submenus for the tree-buffers.")
@@ -1746,6 +1795,11 @@ defcustom-clause and has to be <= MAX-LEVEL."
                                     (list 'string ':tag "Submenu-title")
                                     (ecb-create-menu-user-ext-type (1+ curr-level)
                                                                    max-level)))))))
+
+;;; ----- Provide ------------------------------------------
+
 (silentcomp-provide 'ecb-util)
 
-;;; ecb-util.el ends here
+;;; Local Variables: ***
+;;; mode:outline-minor ***
+;;; End: ***
