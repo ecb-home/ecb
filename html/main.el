@@ -3,8 +3,10 @@
 (setq version "1.20")
 (setq dirname (concat "ecb-" version))
 (setq zipname (concat dirname ".zip"))
+(setq gzname (concat dirname ".tar.gz"))
 (setq download-url "http://ftp1.sourceforge.net/ecb/")
 (setq url (concat "http://ftp1.sourceforge.net/ecb/" zipname))
+(setq gz-url (concat "http://ftp1.sourceforge.net/ecb/" gzname))
 (setq date "2001-04-28")
 
 (h-doc
@@ -12,10 +14,10 @@
  "ECB - Emacs Code Browser"
  (h-h2 "ECB - Emacs Code Browser")
  (h-p "Updated: " date)
- (h-p (h-b "Download the latest version: " (h-link url zipname)))
+ (h-p (h-b "Download the latest version: " (h-link url zipname) " " (h-link gz-url gzname)))
 
  (h-p (h-b "This project is hosted by " (h-link "http://sourceforge.net/projects/ecb" (h-img "http://sourceforge.net/sflogo.php?group_id=17484&type=1" "width='88' height='31' border='0' alt='SourceForge Logo'"))))
- (h-p (h-b "The CVS tree can be accessed " (h-link "http://cvs.sourceforge.net/cgi-bin/cvsweb.cgi/?cvsroot=ecb" "here") "."))
+ (h-p (h-b "The CVS tree can be accessed " (h-link "http://cvs.sourceforge.net/cgi-bin/viewcvs.cgi/ecb/" "here") "."))
 
  (h-h3 "About")
  (h-p "ECB is source code browser for Emacs. It displays a few windows that can be used to browse directories, files and methods. It supports method parsing for Java, C, C++, Elisp etc. " (h-link "ecb.png" "Here's") " a screenshot of the browser in action.")
@@ -50,7 +52,7 @@
  (h-p "It's easier to navigate and scroll the ECB buffers if you install " (h-link "follow-mouse.el") " and activate your " (h-link "mwheel.el" "wheel mouse") " in Emacs.")
  
  (h-h3 "Download")
- (h-p "The latest version: " (h-link url zipname))
+ (h-p "The latest version: " (h-link url zipname) " " (h-link gz-url gzname))
  (h-p "Older versions:" h-br
       (h-link (concat download-url "ecb-1.10.zip") "ecb-1.10.zip") h-br
       (h-link (concat download-url "ecb-1.0.zip") "ecb-1.0.zip") h-br
