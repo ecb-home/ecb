@@ -26,7 +26,7 @@
 @c GNU Emacs; see the file COPYING.  If not, write to the Free Software
 @c Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-@c $Id: ecb.texi,v 1.145 2004/01/21 17:17:45 berndl Exp $
+@c $Id: ecb.texi,v 1.146 2004/01/27 17:30:17 berndl Exp $
 
 @setfilename ecb.info
 
@@ -1005,36 +1005,20 @@ ECB:
 
 @cindex Automatic activation
 @cindex Automatic deactivation
-There are three options for auto. (de)activation ECB after Emacs-start
-and also major-mode based.
+There are two ways for auto. (de)activation ECB after Emacs-start and
+for different window-configurations.
 
 @table @code
 @item ecb-auto-activate
 This option is for auto. activating ECB after Emacs-startup. Set this
 to not nil and ECB will automatically be started after Emacs comes up.
 
-@item ecb-major-modes-activate
-@itemx ecb-major-modes-deactivate
-These option give you the possibility to activate (rsp. deactivate)
-ECB on a major-mode basis, means you can define for which major-modes
-ECB should be activated and for which modes it should deactivated (See
-@ref{Activation hook-sequence} and @ref{Deactivation hook-sequence}).
-
-If activating or deactivating is too strong you can also customize ECB
-with these two option only hiding/showing it's ECB-windows
-(tree-buffers) on a major-mode basis. At last this is nothing more
-than auto. calling @code{ecb-toggle-ecb-windows} (@pxref{Interactive
-ECB commands}) depending which major-mode is active.
+@item window-manager support
+The window-manager support of ECB deactivates ECB when going to
+another window-configuration and reactivates ECB when coming back to
+the ECB-window-configuration. For all details about this see
+@ref{Window-managers and ECB}.
 @end table
-
-If you activate ECB on a major-mode basis you probably want switch off
-displaying the tip of the day. You can do this with the option
-@code{ecb-tip-of-the-day}.
-
-Regardless of the activation type the option
-@code{ecb-split-edit-window-after-start} determines if and how ECB
-should preserve the state of ECB between deactivations and
-(re)-activations.
 
 @node Usage of ECB, Customizing, Activation and Deactivation, Top
 @chapter Usage of ECB
@@ -1630,7 +1614,9 @@ If BUFFER is contained in @code{special-display-buffer-names} or
 matches @code{special-display-regexps} then
 @code{special-display-function} will be called (if not nil). But this
 behavior depends on the value of the option
-@code{ecb-ignore-special-display}.
+@code{ecb-ignore-special-display}. The values of
+@code{same-window-buffer-names} and @code{same-window-regexps} are
+supported as well.
 
 If called for other frames it works like the original version.
 @end deffn
@@ -4079,10 +4065,10 @@ Where ECB can find your sources. You must set this option!
 @item ecb-show-help-format
 Should the online help of ECB be displayed in the standard Info format
 or in HTML format in a web-browser.
-@item  ecb-auto-activate
-@itemx ecb-major-modes-activate
-@itemx ecb-major-modes-deactivate
-Auto. (de)activation of ECB (@pxref{Automatic activation}).
+@item ecb-auto-activate
+@item ecb-major-modes-show-or-hide
+Auto. activation of ECB after start (@pxref{Automatic activation}) or
+major-mode-based showing or hiding the ecb-windows.
 @item ecb-winman-escreen-number
 @itemx ecb-winman-winring-name
 Support of several window-managers (@pxref{Window-managers and ECB}).
@@ -4287,11 +4273,9 @@ the history-filter.
 This caches are completely clean at load-time of the ECB-library!
 
 Default is nil, because is makes sense not to clear these caches at
-start-time because ECB is often deacticated temporally (see
-@code{ecb-major-modes-activate} and @code{ecb-major-modes-deactivate})
-especially in combination with window-managers like escreen.el. In
-these situations the internal state of ECB should be preserved for
-next activation.
+start-time because ECB is often deacticated temporally especially in
+combination with window-managers like escreen.el. In these situations
+the internal state of ECB should be preserved for next activation.
 @end defopt
 
 
@@ -4432,105 +4416,18 @@ optional minus sign: M--123 = M-- M-1 M-2 M-3.
 @item
 The @code{^} notation for control characters also works: ^M = C-m.
 @end itemize
-
 @end defopt
 
-@defopt major-modes-activate
-List of major-modes for which ECB should be activated or shown. Do not
-mistake this option with @code{ecb-auto-activate}. The latter one is
-for activating ECB after Emacs-startup (even without opening a buffer)
-and this one is for defining for which major-modes ECB should be
-activated if the mode goes active!
-
-The behavior is like follows: If a mode is contained in this option
-ECB is activated after activating this mode (if ECB was deactivated
-before) or the ECB-windows are shown if ECB was already active but its
-windows were hidden. In every case ECB is activated with visible
-ECB-windows afterwards!
-
-For every major mode there can be specified an @code{ecb-layout-name}:
-
-@itemize @minus
-@item @code{default}:
-The value customized with @code{ecb-layout-name} is chosen.
-@item a string:
-ECB is activated with this layout-name. This changes the value of
-@code{ecb-layout-name} but only for current emacs-session! But the
-layout is only changed if ECB was activated, if just the ECB-windows
-were shown, the current layout is used!
-@end itemize
-
-There are two additional options:
-
-@itemize @minus
-@item @code{none}:
-No major-modes should activate ECB automatically.
-@item a regexp:
-This means all major-modes which are not listed in
-@code{ecb-major-modes-deactivate} activate ECB except the symbol-name
-of @code{major-mode} matches this regexp. If this option is set then
-the default regexp excludes all Info- and customize-buffers because
-this buffers should not change anything in the ECB-activation state.
-@end itemize
-
-Any auto. activation is only done if the current-frame is unsplitted
-to avoid changing unnecessarily or unintentionally the frame-layout if
-the user just jumps between different windows.
+@defopt major-modes-show-or-hide
+List of major-modes which show or hide the ecb-windows. The value is a
+cons-cell where the car contains all major-mode-symbols which should
+show the special ecb-windows and the cdr contains all
+major-mode-symbols which should hide the special ecb-windows. If the
+symbol of a major-mode is neither contained in the car-``show-list''
+nor in the cdr-``hide-list'' then the visibility-state of the
+ecb-windows does not change.
 @end defopt
 
-@defopt major-modes-deactivate
-List of major-modes for which ECB should be deactivated or hidden.
-Specify if ECB should be deactivated or at least hidden if a
-major-mode is active. For each major-mode there must be added an
-action what should be done:
-
-@itemize @minus
-@item @code{hide}:
-ECB just hides all the ECB windows like with @code{ecb-hide-ecb-windows}.
-@item @code{deactivate}:
-ECB is completely deactivated after activating the major-mode.
-@end itemize
-
-There are two additional options:
-
-@itemize @bullet
-@item @code{none}:
-No major-modes should deactivate/hide ECB automatically.
-
-@item A cons for the meaning ``All except the activated modes of
-@code{ecb-major-modes-activate}''. The car of this cons can be:
-
-@itemize @minus
-@item @code{hide-all-except-activated}:
-All major-modes which are not listed in
-@code{ecb-major-modes-activate} hide the ECB-windows.
-@item @code{deactivate-all-except-activated}:
-All major-modes which are not listed in
-@code{ecb-major-modes-activate} deactivate ECB.
-@end itemize
-
-The cdr of this cons is a regexp: This means all major-modes which are
-not listed in @code{ecb-major-modes-activate} deactivate/hide ECB
-except the symbol-name of @code{major-mode} matches this regexp. If
-this option is set then the default regexp excludes all Info- and
-customize-buffers because this buffers should not change anything in
-the ECB-activation state.
-@end itemize
-
-If a major-mode is listed in @code{ecb-major-modes-activate} as well
-as in @code{ecb-major-modes-deactivate} then ECB is activated!
-
-Any auto. deactivation/hiding is only done if the edit-area of ECB
-is unsplitted and point is in the edit-window to avoid changing
-unnecessarily or unintentionally the frame-layout if the user just
-jumps between different edit-windows, the tree-windows and the
-compile-window of ECB.
-
-There is one exception from this rule: If the edit-area is splitted
-and one window contains a dired-buffer and a ``ECB-deactivating''-file
-is opened via dired then opening this file deactivates ECB (rsp.
-hides the ECB-windows).
-@end defopt
 
 @defopt minor-mode-text
 String to display in the mode line when ECB minor mode is active.
@@ -8254,11 +8151,9 @@ hiding will not be done if there is a compile-window and if a
 displayed in this compile-window. Without this additional check the
 compile-window would always be hidden after the ECB-start even when
 ECB is reactivated after a deactivation by the window-manager-support
-of ECB (@pxref{Window-managers and ECB}) or by the options
-@code{ecb-major-modes-activate} or @code{ecb-major-modes-deactivate};
-but in these cases we want to preserve the state before deactivation
-as good as possible (see also option
-@code{ecb-split-edit-window-after-start}).
+of ECB (@pxref{Window-managers and ECB}); but in these cases we want
+to preserve the state before deactivation as good as possible (see
+also option @code{ecb-split-edit-window-after-start}).
 
 @end enumerate
 

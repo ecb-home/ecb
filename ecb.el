@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb.el,v 1.366 2004/01/21 17:17:45 berndl Exp $
+;; $Id: ecb.el,v 1.367 2004/01/27 17:30:27 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -299,100 +299,21 @@ asks if the ECB-frame should be selected if the current-frame is not the
                 (const :tag "Ask if the ECB-frame should be selected" :value ask)
                 (const :tag "Do not select the ECB-frame" :value nil)))
 
-(defcustom ecb-major-modes-activate 'none
-  "*List of major-modes for which ECB should be activated or shown.
-Do not mistake this option with `ecb-auto-activate'. The latter one is for
-activating ECB after Emacs-startup \(even without opening a buffer) and this
-one is for defining for which major-modes ECB should be activated if the mode
-goes active!
-
-The behavior is like follows: If a mode is contained in this option ECB is
-activated after activating this mode \(if ECB was deactivated before) or the
-ECB-windows are shown if ECB was already active but its windows were hidden.
-In every case ECB is activated with visible ECB-windows afterwards!
-
-For every major mode there can be specified an `ecb-layout-name':
-- default: The value customized with `ecb-layout-name' is chosen.
-- a string: ECB is activated with this layout-name. This changes the value of
-  `ecb-layout-name' but only for current emacs-session!
-But the layout is only changed if ECB was activated, if just the ECB-windows
-were shown, the current layout is used!
-
-There are two additional options:
-- none: No major-modes should activate ECB automatically.
-- a regexp: This means all major-modes which are not listed in
-  `ecb-major-modes-deactivate' activate ECB except the `symbol-name' of
-  `major-mode' matches this regexp. If this option is set then the default
-  regexp excludes all Info- and customize-buffers because this buffers should
-  not change anything in the ECB-activation state.
-
-Any auto. activation is only done if the current-frame is unsplitted to avoid
-changing unnecessarily or unintentionally the frame-layout if the user just
-jumps between different windows."
+(defcustom ecb-major-modes-show-or-hide (cons nil nil)
+  "*List of major-modes which show or hide the ecb-windows.
+The value is a cons-cell where the car contains all major-mode-symbols which
+should show the special ecb-windows and the cdr contains all
+major-mode-symbols which should hide the special ecb-windows. If the symbol of
+a major-mode is neither contained in the car-\"show-list\" nor in the
+cdr-\"hide-list\" then the visibility-state of the ecb-windows does not
+change."
   :group 'ecb-general
   :group 'ecb-most-important
-  :type '(radio :tag "Modes for activation"
-                (const :tag "None" none)
-                (regexp :tag "All except deactivated but not"
-                        :value "\\(Info\\|custom\\)-mode")
-                (repeat :tag "Mode list"
-                        (cons (symbol :tag "Major-mode")
-                              (choice :tag "Layout" :menu-tag "Layout"
-                                      :value default
-                                      (const :tag "Default" default)
-                                      (string :tag "Layout-name"))))))
+  :type '(cons (repeat :tag "Modes for activation"
+                       (symbol :tag "Major-mode"))
+               (repeat :tag "Modes for deactivation"
+                       (symbol :tag "Major-mode"))))
 
-(defcustom ecb-major-modes-deactivate 'none
-  "*List of major-modes for which ECB should be deactivated or hidden.
-Specify if ECB should be deactivated or at least hidden if a `major-mode' is
-active. For each `major-mode' there must be added an action what should be done:
-- hide: ECB just hides all the ECB windows like with `ecb-hide-ecb-windows'.
-- deactivate: ECB is completely deactivated after activating the `major-mode'.
-
-There are two additional options:
-- none: No major-modes should deactivate/hide ECB automatically.
-- A cons for the meaning \"All except the activated modes of
-  `ecb-major-modes-activate'\". The car of this cons can be:
-   + hide-all-except-activated: All major-modes which are not listed in
-     `ecb-major-modes-activate' hide the ECB-windows.
-   + deactivate-all-except-activated: All major-modes which are not listed in
-     `ecb-major-modes-activate' deactivate ECB.
-  The cdr of this cons is a regexp: This means all major-modes which are not
-  listed in `ecb-major-modes-activate' deactivate/hide ECB except the
-  `symbol-name' of `major-mode' matches this regexp. If this option is set then
-  the default regexp excludes all Info- and customize-buffers because this
-  buffers should not change anything in the ECB-activation state.
-
-If a `major-mode' is listed in `ecb-major-modes-activate' as well as in
-`ecb-major-modes-deactivate' then ECB is activated!
-
-Any auto. deactivation/hiding is only done if the edit-window of ECB is
-unsplitted and point is in the edit-window to avoid changing unnecessarily or
-unintentionally the frame-layout if the user just jumps between different
-edit-windows, the tree-windows and the compile-window of ECB.
-There is one exception from this rule: If the edit-window is splitted and one
-window contains a dired-buffer and a \"ECB-deactivating\"-file is opened via
-dired then opening this file deactivates ECB \(rsp. hides the ECB-windows)."
-  :group 'ecb-general
-  :group 'ecb-most-important
-  :type '(radio :tag "Modes for deactivation"
-                (const :tag "None" none)
-                (cons :tag "All except activated"
-                      (choice :tag "Action"
-                              :menu-tag "Action"
-                              :value hide-all-except-activated
-                              (const :tag "Hide ECB-windows"
-                                     hide-all-except-activated)
-                              (const :tag "Deactivate ECB"
-                                     deactivate-all-except-activated))
-                      (regexp :tag "But not for these modes"
-                              :value "\\(Info\\|custom\\)-mode"))
-                (repeat :tag "Mode list"
-                        (cons (symbol :tag "Major-mode")
-                              (choice :tag "Action" :menu-tag "Action"
-                                      :value hide
-                                      (const :tag "Just Hide" hide)
-                                      (const :tag "Deactivate" deactivate))))))
 
 (defcustom ecb-clear-caches-before-activate nil
   "*Clear all ECB internal caches before startup.
@@ -404,8 +325,7 @@ history-filter.
 This caches are completely clean at load-time of the ECB-library!
 
 Default is nil, because is makes sense not to clear these caches at start-time
-because ECB is often deacticated temporally \(see `ecb-major-modes-activate'
-and `ecb-major-modes-deactivate') especially in combination with
+because ECB is often deacticated temporally especially in combination with
 window-managers like escreen.el. In these situations the internal state of ECB
 should be preserved for next activation."
   :group 'ecb-general
@@ -2388,8 +2308,8 @@ always the ECB-frame if called from another frame."
   
 
 (defvar ecb-last-window-config-before-deactivation nil
-  "Contains the last `ecb-current-window-configuration' directly before ECB
-has been deactivated. Do not set this variable!")
+  "Contains the last `ecb-current-window-configuration' directly before
+ECB has been deactivated. Do not set this variable!")
 
 (defvar ecb-max-specpdl-size-old nil)
 (defvar ecb-max-lisp-eval-depth-old nil)
@@ -2855,16 +2775,12 @@ has been deactivated. Do not set this variable!")
 
       (condition-case err-obj
           ;;now take a snapshot of the current window configuration
-          (ecb-set-activated-window-configuration)
+          (setq ecb-activated-window-configuration
+                (ecb-current-window-configuration))
         (error
          (ecb-clean-up-after-activation-failure
           "Errors during the snapshot of the windows-configuration." err-obj)))
       )))
-
-
-(defun ecb-set-activated-window-configuration()
-  "Set the `ecb-activated-window-configuration' after the ECB is activated."
-  (setq ecb-activated-window-configuration (ecb-current-window-configuration)))
 
 
 ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: Should we add this function to
@@ -2894,9 +2810,12 @@ does all necessary after finishing ediff."
            (equal (selected-frame) ecb-frame))
       (progn
         (setq ecb-before-ediff-window-config
+              ;; XXX: window-config-change
               (ecb-current-window-configuration))
         (if ecb-run-ediff-in-ecb-frame
-            (ecb-toggle-ecb-windows -1)
+            (progn
+              (ecb-toggle-ecb-windows -1)
+              (ecb-toggle-compile-window -1))
           (if (not ecb-windows-hidden)
               (ecb-with-adviced-functions
                (delete-other-windows (car (ecb-canonical-edit-windows-list)))))))
@@ -2915,6 +2834,7 @@ does all necessary after finishing ediff."
               (run-hook-with-args-until-failure 'ecb-before-deactivate-hook))
 
       (setq ecb-last-window-config-before-deactivation
+            ;; XXX: window-config-change
             (ecb-current-window-configuration))
       
       ;; deactivating the adviced functions
@@ -3151,11 +3071,11 @@ exist."
 
 (defvar ecb-last-major-mode nil)
 
-(defun ecb-handle-major-mode-activation ()
+(defun ecb-handle-major-mode-visibilty ()
   "Added to `post-command-hook' after loading the ecb-library. Handles the
-values of `ecb-major-modes-activate' and `ecb-major-modes-deactivate'.
-Because this hook of `post-command-hook' does nothing if the major-mode has not
-changed there should be no performance-problem!"
+value `ecb-major-modes-show-or-hide'. Because this hook of `post-command-hook'
+does nothing if the major-mode has not changed there should be no
+performance-problem!"
   ;; Klaus: I think we need this to prevent doing here (de)activation
   ;; immediately after the button-pressed event (which is a command) because
   ;; then a mysterious window-live-p error for the minibuffer-window occurs if
@@ -3167,103 +3087,34 @@ changed there should be no performance-problem!"
   ;; TODO: detecting the real reason why this happens and fixing it.
   (if ecb-item-in-tree-buffer-selected
       (setq ecb-item-in-tree-buffer-selected nil)
-    ;; do nothing if major-mode has not been changed or if a minibuffer is active
+    ;; do nothing if major-mode has not been changed or if a minibuffer is
+    ;; active or if now one of the ecb-buffers is active
     (when (and (not (> (minibuffer-depth) 0))
-               (not (equal ecb-last-major-mode major-mode)))
+               (not (equal ecb-last-major-mode major-mode))
+               (not (member (buffer-name (current-buffer)) ecb-tree-buffers)))
       (let ((last-mode ecb-last-major-mode))
         (setq ecb-last-major-mode major-mode)
         (ignore-errors
-          (cond ( ;; ecb-major-modes-activate is "All except deactivated:
-                 (and (stringp ecb-major-modes-activate)
-                      ;; ecb-major-modes-deactivate must be the major-mode-list
-                      (listp ecb-major-modes-deactivate)
-                      ecb-major-modes-deactivate
-                      (listp (car ecb-major-modes-deactivate))
-                      ;; current major-mode must not be contained in
-                      ;; ecb-major-modes-deactivate
-                      (not (assoc major-mode ecb-major-modes-deactivate))
-                      ;; current major-mode must not match the regexp of
-                      ;; ecb-major-modes-activate.
-                      (not (save-match-data
-                             (string-match ecb-major-modes-activate
-                                           (symbol-name major-mode)))))
+          (cond ((member major-mode (car ecb-major-modes-show-or-hide))
                  (let ((edit-win-list (ecb-canonical-edit-windows-list)))
                    ;; the window must not be splitted or if splitted the last
                    ;; major-mode must be dired-mode
                    (when (or (not (ecb-edit-window-splitted edit-win-list))
                              (equal last-mode 'dired-mode))
-                     (if ecb-minor-mode
-                         (and (ecb-point-in-edit-window edit-win-list)
-                              (ecb-show-ecb-windows))
-                       (ecb-activate)))))
-                ;; ecb-major-modes-activate is a major-mode list:
-                ((and (listp ecb-major-modes-activate)
-                      ecb-major-modes-activate
-                      (assoc major-mode ecb-major-modes-activate))
+                     (and (ecb-point-in-edit-window edit-win-list)
+                          ecb-windows-hidden
+                          (ecb-show-ecb-windows)))))
+                ((member major-mode (cdr ecb-major-modes-show-or-hide))
                  (let ((edit-win-list (ecb-canonical-edit-windows-list)))
                    ;; the window must not be splitted or if splitted the last
                    ;; major-mode must be dired-mode
                    (when (or (not (ecb-edit-window-splitted edit-win-list))
                              (equal last-mode 'dired-mode))
-                     (if ecb-minor-mode
-                         (and (ecb-point-in-edit-window edit-win-list)
-                              (ecb-show-ecb-windows))
-                       (ecb-activate)
-                       (let* ((layout (cdr (assoc major-mode
-                                                  ecb-major-modes-activate)))
-                              (layout-to-set (if (equal layout 'default)
-                                                 (car (or (get 'ecb-layout-name 'saved-value)
-                                                          (get 'ecb-layout-name 'standard-value)))
-                                               layout)))
-                         ;; if we must set a new layout we do this via
-                         ;; customizing ecb-layout-name for current
-                         ;; Emacs-session!
-                         (if (not (string= layout-to-set ecb-layout-name))
-                             (ecb-layout-switch layout-to-set)))))))
-                ;; ecb-major-modes-deactivate is "All except activated"
-                ((and (listp ecb-major-modes-deactivate)
-                      (member (car ecb-major-modes-deactivate)
-                              '(hide-all-except-activated
-                                deactivate-all-except-activated))
-                      (stringp (cdr ecb-major-modes-deactivate))
-                      ;; ecb-major-modes-activate must be a major-mode list
-                      (listp ecb-major-modes-activate)
-                      ecb-major-modes-activate
-                      ;; current major-mode must not be contained in
-                      ;; ecb-major-modes-activate.
-                      (not (assoc major-mode ecb-major-modes-activate))
-                      ecb-minor-mode)
-                 (let ((edit-win-list (ecb-canonical-edit-windows-list)))
-                   (when (and
-                          ;; point must be in the unsplitted edit-area of ECB
-                          (ecb-point-in-edit-window edit-win-list)
-                          (or (not (ecb-edit-window-splitted edit-win-list))
-                              (equal last-mode 'dired-mode))
-                          (not (save-match-data
-                                 (string-match (cdr ecb-major-modes-deactivate)
-                                               (symbol-name major-mode)))))
-                     (if (equal (car ecb-major-modes-deactivate)
-                                'deactivate-all-except-activated)
-                         (ecb-deactivate)
-                       (ecb-hide-ecb-windows)))))
-                ;; ecb-major-modes-deactivate is a major-mode list
-                ((and (listp ecb-major-modes-deactivate)
-                      (listp (car ecb-major-modes-deactivate))
-                      ecb-major-modes-deactivate
-                      (assoc major-mode ecb-major-modes-deactivate)
-                      ecb-minor-mode)
-                 (let ((edit-win-list (ecb-canonical-edit-windows-list)))
-                   (when (and
-                          ;; point must be in the unsplitted edit-area of ECB
-                          (ecb-point-in-edit-window edit-win-list)
-                          (or (not (ecb-edit-window-splitted edit-win-list))
-                              (equal last-mode 'dired-mode)))
-                     (if (equal (cdr (assoc major-mode ecb-major-modes-deactivate))
-                                'hide)
-                         (ecb-hide-ecb-windows)
-                       (ecb-deactivate)))))))))))
+                     (and (ecb-point-in-edit-window edit-win-list)
+                          (not ecb-windows-hidden)
+                          (ecb-hide-ecb-windows)))))))))))
   
-;; (add-hook 'post-command-hook 'ecb-handle-major-mode-activation)
+(add-hook 'post-command-hook 'ecb-handle-major-mode-visibilty)
 
 (add-hook 'emacs-startup-hook 'ecb-auto-activate-hook)
 

@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-upgrade.el,v 1.59 2004/01/21 17:17:45 berndl Exp $
+;; $Id: ecb-upgrade.el,v 1.60 2004/01/27 17:30:32 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -177,6 +177,7 @@
 ;; Each NEWS-string should be a one-liner shorter than 70 chars
 (defconst ecb-upgrade-news
   '(("2.20" . ("Fixed a bug preventing tree-buffers with expand-symbol \'before\' to work"
+               "'ecb-major-modes-\(de)activate' replaced by `ecb-major-modes-show-or-hide'"
                "New keybinding for the online-help: [C-c . h]"
                "The edit-area can be splitted in more than 2 windows."
                "`ecb-other-window-jump-behavior' renamed in `ecb-other-window-behavior'"
@@ -209,8 +210,6 @@
     (ecb-layout-nr . (ecb-layout-name ecb-upgrade-layout-nr))
     (ecb-toggle-layout-sequence . (ecb-toggle-layout-sequence
                                    ecb-upgrade-toggle-layout-sequence))
-    (ecb-major-modes-activate . (ecb-major-modes-activate
-                                 ecb-upgrade-major-modes-activate))
     (ecb-cache-directory-contents . (ecb-cache-directory-contents
                                      ecb-upgrade-cache-directory-contents))
     (ecb-source-file-regexps . (ecb-source-file-regexps

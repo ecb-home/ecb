@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-tod.el,v 1.16 2004/01/19 20:03:26 berndl Exp $
+;; $Id: ecb-tod.el,v 1.17 2004/01/27 17:30:32 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -60,13 +60,13 @@
   '("You can expand the ECB-methods-buffer with `ecb-expand-methods-nodes' [C-c . x]."
     "You can toggle between different layouts with `ecb-toggle-layout' [C-c . t]."
     "You can toggle displaying the ECB-windows with `ecb-toggle-ecb-windows' [C-c . w]."
+    "You can show and hide the ECB-windows on a major-mode-basis with `ecb-major-modes-show-or-hide'."
     "You can maximize a certain ECB-window either via its popup-menu or with [C-x 1] in that window."
     "You can use speedbar as directory browser with option `ecb-use-speedbar-for-directories'."
     "You can speedup access for big directories with option `ecb-cache-directory-contents'."
     "You can display the online help also in HTML-format with option `ecb-show-help-format'."
     "You can interactively create your own layouts with the command `ecb-create-new-layout'."
     "You can start the eshell in the compile-window simply with `eshell' or [C-c . e]."
-    "You can \(de)activate ECB on a major-mode basis with `ecb-major-modes-activate' and `ecb-major-modes-deactivate'."
     "Use the incremental search in the methods-buffer for fast node-selecting; see `ecb-tree-incremental-search'."
     "You can cycle through all currently opened \"compile-buffers\" with `ecb-cycle-through-compilation-buffers'."
     "You can change the window-sizes by dragging the mouse and storing the new sizes with `ecb-store-window-sizes'."
@@ -83,7 +83,7 @@
     "Narrow the source-buffer to the selected tag in the methods-buffer with `ecb-tag-visit-post-actions'."
     "Enable autom. enlarging of the compile-window by select with the option `ecb-compile-window-temporally-enlarge'."
     "Customize with `ecb-compile-window-temporally-enlarge' the situations the compile-window is allowed to enlarge."
-    "Customize the jump-behavior of `other-window' [C-x o] with the option `ecb-other-window-behavior'."
+    "Customize the meaning of `other-window' [C-x o] with the option `ecb-other-window-behavior'."
     "Customize height and width of the ECB-windows with `ecb-windows-height' and `ecb-windows-width'."
     "Define with `ecb-compilation-buffer-names' and `ecb-compilation-major-modes' which buffers are \"compile-buffers\"."
     "Customize all faces used by ECB with the customize-groups `ecb-face-options' and `ecb-faces'."

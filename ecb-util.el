@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-util.el,v 1.90 2004/01/07 10:23:39 berndl Exp $
+;; $Id: ecb-util.el,v 1.91 2004/01/27 17:30:32 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -213,6 +213,8 @@ means not to count the minibuffer even if it is active."
                                             (shrink-window-if-larger-than-buffer . around)
                                             (show-temp-buffer-in-current-frame . around)
                                             (pop-to-buffer . around)
+                                            (current-window-configuration . after)
+                                            (set-window-configuration . after)
                                             (scroll-other-window . around)
                                             (custom-save-all . around)
                                             (count-windows . around)
@@ -228,6 +230,8 @@ means not to count the minibuffer even if it is active."
                                           (mouse-drag-vertical-line . around)
                                           (mouse-drag-mode-line . around)
                                           (pop-to-buffer . around)
+                                          (current-window-configuration . after)
+                                          (set-window-configuration . after)
                                           (enlarge-window . around)
                                           (shrink-window . around)
                                           (tmm-prompt . around)
