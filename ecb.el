@@ -2395,6 +2395,11 @@ ECB has been deactivated. Do not set this variable!")
             ;; initialize the navigate-library
             (ecb-nav-initialize)
 
+            ;; enable basic advices (we need the custom-save-all advice
+            ;; already here! Maybe it would be better to remove this advice
+            ;; from the basic-advices and add it to upgrade-advices.....)
+            (ecb-enable-advices ecb-basic-adviced-functions)
+
             ;; maybe we must upgrade some not anymore compatible or even renamed
             ;; options
             (when (and ecb-auto-compatibility-check
@@ -2419,9 +2424,6 @@ ECB has been deactivated. Do not set this variable!")
             ;; initialize internal vars
             (ecb-initialize-internal-vars)
     
-            ;; enable basic advices
-            (ecb-enable-advices ecb-basic-adviced-functions)
-
             ;; enable permanent advices - these advices will never being
             ;; deactivated after first activation of ECB unless
             ;; `ecb-split-edit-window-after-start' is not 'before-activation
