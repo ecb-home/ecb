@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-util.el,v 1.111 2004/08/25 15:09:06 berndl Exp $
+;; $Id: ecb-util.el,v 1.112 2004/09/01 13:57:51 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -1219,9 +1219,13 @@ CALLPROCESSARGS are the same style of args as passed to `call-process'.
 The are: PROGRAM, INFILE, BUFFER, DISPLAY, and ARGS.
 Since it actually calls `start-process', not all features will work."
   (ecb-working-status-timeout timeout message donestr
-    (let ((proc (apply 'start-process "ecb-working"
-                       (if (listp buffer) (car buffer) buffer)
-                       program args)))
+    ;; we must explicitly set the LOKALE to C to avoid that a process is
+    ;; called with a different LOKALE...otherwise parsing the output of a
+    ;; process could fail!
+    (let* ((process-environment (cons "LC_ALL=C" process-environment))
+           (proc (apply 'start-process "ecb-working"
+                        (if (listp buffer) (car buffer) buffer)
+                        program args)))
       (set-process-sentinel proc 'list)
       (while (eq (process-status proc) 'run)
 	(accept-process-output proc)
