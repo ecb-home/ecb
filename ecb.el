@@ -73,7 +73,7 @@
 ;; For the ChangeLog of this file see the CVS-repository. For a complete
 ;; history of the ECB-package see the file NEWS.
 
-;; $Id: ecb.el,v 1.305 2003/03/28 16:48:18 berndl Exp $
+;; $Id: ecb.el,v 1.306 2003/04/29 08:21:13 berndl Exp $
 
 ;;; Code:
 
@@ -312,8 +312,10 @@ always true."
 
 ;; ecb-speedbar is first loaded if ecb-use-speedbar-for-directories is set to
 ;; true
+(silentcomp-defun ecb-speedbar-active-p)
 (silentcomp-defun ecb-speedbar-deactivate)
 (silentcomp-defvar ecb-speedbar-buffer-name)
+(silentcomp-defun ecb-speedbar-update-contents)
 
 ;;====================================================
 ;; Variables
@@ -572,6 +574,49 @@ handling directories amd source-files and want it in conjunction with ECB."
                    (let ((ecb-redraw-layout-quickly nil))
                      (ecb-redraw-layout-full)))))
 
+(defcustom ecb-directories-update-speedbar 'auto
+  "*Update an integrated speedbar after selecting a directory.
+
+If not nil then an integrated speedar will be updated after selecting a
+directory in the ECB-directories-buffer so the speedbar displays the contents
+of that directory.
+
+Of course this option makes only sense if the integrated speedbar is displayed
+in addition to the ECB-directories-buffer.
+
+This option can have the following values:
+- t: Always update speedbar.
+- nil: Never update speedbar.
+- auto: Update when senseful \(see scenarios below)
+- <function>: A user-defined function. The function is called after a
+  directory is selected, gets the selected directory as argument and has to
+  return nil if the the integrated speedbar should NOT be updated.
+
+Two example-scenarios where different values for this option can be senseful:
+
+If `ecb-show-sources-in-directories-buffer' is not nil or you have a layout
+where an ECB-sources-buffer is visible then you probably want to use the
+ECB-directories-buffer \(and/or the ECB-sources-buffer) for directory- and
+file-browsing. If you have in addition an integrated speedbar running then you
+probably want to use speedbar instead of the ECB-methods-buffer for
+source-content-browsing. In this case you probably want the speedbar not be
+updated because you do not need speedbar reflecting the current-directory
+contents but only the contents of the currently selected source-file and the
+integrated speedbar updates itself autom. for the latter one!
+
+If `ecb-show-sources-in-directories-buffer' is nil and there is also no
+ECB-sources-buffer visible in the current layout then you probably want to use
+an integrated speedbar for browsing directory-contents \(i.e. the files) and
+file-contents \(instead of the ECB-methods-buffer for example). In this case
+you probably the speedbar updated because you need speedbar reflecting the
+current-directory contents so you can select files.
+
+The value 'auto \(see above) takes exactly these two scenarios into account."
+  :group 'ecb-directories
+  :type '(radio (const :tag "Always" :value t)
+                (const :tag "Never" :value nil)
+                (const :tag "Automatic" :value auto)
+                (function :tag "Custom function")))
 
 (defun ecb-show-sources-in-directories-buffer-p ()
   (cond ((equal ecb-show-sources-in-directories-buffer 'never)
@@ -1555,6 +1600,11 @@ delay."
                                                         'ecb-window-sync-function))))
   :initialize 'custom-initialize-default)
 
+(defcustom ecb-process-non-semantic-files nil
+  "*Display content of non-semantic-files in the ECB-methods-buffer."
+  :group 'ecb-general
+  :type 'boolean)
+
 (defcustom ecb-tree-incremental-search 'prefix
   "*Enable incremental search in the ECB-tree-buffers. For a detailed
 explanation see the online help section \"Working with the keyboard in the ECB
@@ -2354,7 +2404,7 @@ edit-window. See also the option `ecb-tree-RET-selects-edit-window'."
                                            ecb-font-lock-tokens))))
 
 (defun ecb-find-add-token-bucket (node type display sort-method buckets
-                                       &optional parent-token)
+                                       &optional parent-token no-bucketize)
   "Finds a bucket containing tokens of the given type, creates nodes for them
 and adds them to the given node. The bucket is removed from the buckets list.
 PARENT-TOKEN is only propagated to `ecb-add-token-bucket'."
@@ -2362,10 +2412,11 @@ PARENT-TOKEN is only propagated to `ecb-add-token-bucket'."
     (let ((bucket (cadr buckets)))
       (if (eq type (semantic-token-token (cadr bucket)))
 	  (progn
-	    (ecb-add-token-bucket node bucket display sort-method parent-token)
+	    (ecb-add-token-bucket node bucket display sort-method parent-token
+                                  no-bucketize)
 	    (setcdr buckets (cddr buckets)))
 	(ecb-find-add-token-bucket node type display sort-method
-				   (cdr buckets) parent-token)))))
+				   (cdr buckets) parent-token no-bucketize)))))
 
 (defun ecb-format-bucket-name (name)
   (let ((formatted-name (concat (nth 0 ecb-bucket-token-display)
@@ -2375,7 +2426,7 @@ PARENT-TOKEN is only propagated to `ecb-add-token-bucket'."
     formatted-name))
 
 (defun ecb-add-token-bucket (node bucket display sort-method
-                                  &optional parent-token)
+                                  &optional parent-token no-bucketize)
   "Adds a token bucket to a node unless DISPLAY equals 'hidden."
   (when bucket
     (let ((name (ecb-format-bucket-name (car bucket)))
@@ -2391,9 +2442,9 @@ PARENT-TOKEN is only propagated to `ecb-add-token-bucket'."
 	  (ecb-update-token-node token
                                  (tree-node-new "" 0 token t bucket-node
                                                 (if ecb-truncate-long-names 'end))
-                                 parent-token))))))
+                                 parent-token no-bucketize))))))
 
-(defun ecb-update-token-node (token node &optional parent-token)
+(defun ecb-update-token-node (token node &optional parent-token no-bucketize)
   "Updates a node containing a token."
   (let* ((children (semantic-nonterminal-children
                     token ecb-show-only-positioned-tokens)))
@@ -2402,7 +2453,7 @@ PARENT-TOKEN is only propagated to `ecb-add-token-bucket'."
     ;; flexible
     (tree-node-set-expanded node (eq 'type (semantic-token-token token)))
     (unless (eq 'function (semantic-token-token token))
-      (ecb-add-tokens node children token)
+      (ecb-add-tokens node children token no-bucketize)
       (tree-node-set-expandable
        node (not (eq nil (tree-node-get-children node)))))))
 
@@ -2506,8 +2557,14 @@ be defined outside the class-definition, e.g. C++, Eieio."
                         tok ecb-show-only-positioned-tokens)
                        (concat prefix "  ")))))
 
-(defun ecb-add-tokens (node tokens &optional parent-token)
-  (ecb-add-token-buckets node parent-token (semantic-bucketize tokens)))
+(defun ecb-add-tokens (node tokens &optional parent-token no-bucketize)
+  "If NO-BUCKETIZE is not nil then TOKENS will not bucketized by
+`semantic-bucketize' but must aleady been bucketized!"
+  (ecb-add-token-buckets node parent-token
+                         (if no-bucketize
+                             tokens
+                           (semantic-bucketize tokens))
+                         no-bucketize))
 
 (defun ecb-access-order (access)
   (cond
@@ -2531,7 +2588,7 @@ be defined outside the class-definition, e.g. C++, Eieio."
 	  tokens-by-name))
     tokens))
 
-(defun ecb-add-token-buckets (node parent-token buckets)
+(defun ecb-add-token-buckets (node parent-token buckets &optional no-bucketize)
   "Creates and adds token nodes to the given node.
 The PARENT-TOKEN is propagated to the functions `ecb-add-token-bucket' and
 `ecb-find-add-token-bucket'."
@@ -2556,11 +2613,11 @@ The PARENT-TOKEN is propagated to the functions `ecb-add-token-bucket' and
 				   2 parent t node
 				   (if ecb-truncate-long-names 'end)))))))))
        (t (ecb-find-add-token-bucket node type display sort-method buckets
-                                     parent-token)))))
+                                     parent-token no-bucketize)))))
   (let ((type-display (ecb-get-token-type-display t)))
     (dolist (bucket buckets)
       (ecb-add-token-bucket node bucket (cadr type-display)
-                            (caddr type-display) parent-token))))
+                            (caddr type-display) parent-token no-bucketize))))
 
 (defun ecb-update-after-partial-reparse (updated-tokens)
   "Updates the method buffer and all internal ECB-caches after a partial
@@ -2997,6 +3054,161 @@ removes only the token-tree for SOURCE-FILE-NAME from the cache."
     (setq ecb-token-tree-cache
           (adelete 'ecb-token-tree-cache source-file-name))))
 
+(defun ecb-handle-non-semantic-tags ()
+  (require 'speedbar)
+  (let* ((lst (speedbar-fetch-dynamic-tags (buffer-file-name
+                                            (current-buffer))))
+         (fnc (car lst))
+         (tag-list (cdr lst))
+         (methods speedbar-tag-hierarchy-method)
+         (speedbar-tag-split-minimum-length 2)
+         (speedbar-tag-regroup-maximum-length 2)
+         bucket-list token-list misc-token-list token)
+    (if (string= (car (car tag-list)) "*Rescan*")
+        (setq tag-list (cdr tag-list)))
+    ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: Hier erstmal testen, ob etags
+    ;; oder imenu vielleicht schon Gruppen liefert (etags eher nein, imenu bei
+    ;; cperl in jedem Fall). Falls bereits Gruppen vorhanden, dann nicht mehr
+    ;; neu gruppieren!!!
+    (when (dolist (tag tag-list t)
+            (if (or (speedbar-generic-list-positioned-group-p tag)
+                    (speedbar-generic-list-group-p tag))
+                (return nil)))
+      (message "Neugruppierung der Tags")
+      (while methods
+        (setq tag-list (funcall (car methods) tag-list)
+              methods (cdr methods)))
+      )
+    ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: fertigen bucketierten(!)
+    ;; Token-stream erzeugen. ECB wird diesen Stream nicht mehr bucketieren
+    ;; --> ecb-add-tokens hat bereits neues Argument no-bucketize!
+    (while tag-list
+      (cond ((null (car-safe tag-list)) nil) ;this would be a separator
+	    ((speedbar-generic-list-tag-p (car tag-list))
+             (setq token
+                   (list (car (car tag-list))
+                         'misc
+                         ;; (intern (car (car tag-list)))
+                         nil nil nil
+                         (make-vector 2 (cdr (car tag-list)))))
+             (setq misc-token-list
+                   (cons token misc-token-list)))
+            ((speedbar-generic-list-positioned-group-p (car tag-list)) nil)
+            ;; 	     (speedbar-make-tag-line expand-button
+            ;; 				     ?+ expand-fun (cdr (cdr (car tag-list)))
+            ;; 				     (car (car tag-list)) ;button name
+            ;; 				     find-fun ;function
+            ;; 				     (car (cdr (car tag-list))) ;token is posn
+            ;; 				     'speedbar-tag-face
+            ;; 				     (1+ level)))
+            ((speedbar-generic-list-group-p (car tag-list))
+             (setq token-list nil)
+             ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: Hier muss rekursiv
+             ;; vorgegangen werden, da die einzelnen Tags wiederum Gruppen
+             ;; sein können!! Beispiel: bigfloat.pl!!
+             ;; Gruppen werden ab hier als type-tokens interpretiert.
+             ;; Type-token: ("name" 'type "typename" (children)
+             ;;              nil nil [start end])
+             ;;
+             ;; "typename" ist dann der Gruppenname, (children) ist die Liste
+             ;; an Gruppen-elementen...für welche dann das Spiel von vorne
+             ;; (rekursion!) beginnt! Die Children eines neuen Types sind
+             ;; entweder:
+             ;; - wiederum Gruppen, dann 'type und gleiches Spiel von vorne
+             ;; - plain tags, dann neues Token mit dem Gruppenname als type
+
+             (setq token-list (ecb-handle-non-semantic-generic-list-group
+                               (car (car tag-list)) (cdr (car tag-list))))
+             (setq bucket-list
+                   (cons (cons (car (car tag-list))
+                               token-list)
+                         bucket-list)))
+            (t (speedbar-message "speedbar-insert-generic-list: malformed list!")
+	       ))
+      (setq tag-list (cdr tag-list)))
+    (when misc-token-list
+      (setq bucket-list
+            (cons (cons "Misc" misc-token-list)
+                  bucket-list)))
+    bucket-list
+    ))
+
+;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: bigfloat.pl funktioniert bzgl.
+;; +Hierarchy+... immer noch nicht!
+;; (defun ecb-handle-non-semantic-generic-list-group (group-name group-children
+;;                                                               &optional bucketize)
+;;   (let ((token-list nil)
+;;         (misc-token-list nil))
+;;     (dolist (tag group-children)
+;;       (if (speedbar-generic-list-group-p tag)
+;;           (setq token-list
+;;                 (cons (list (car tag)
+;;                             'type
+;;                             group-name
+;;                             (ecb-handle-non-semantic-generic-list-group
+;;                              (car tag) (cdr tag) t)
+;;                             nil nil nil (make-vector 2 1))
+;;                       token-list))
+;;         (setq misc-token-list
+;;               (cons (list (car tag)
+;;                           (intern group-name)
+;;                           nil nil nil
+;;                           (make-vector 2 (cdr tag)))
+;;                     misc-token-list))))
+;;     (if bucketize
+;;         (progn
+;;           (cons (cons "Misc"
+;;                       misc-token-list)
+;;                 (if token-list
+;;                     (list (cons "Types"
+;;                                 token-list))
+;;                   token-list)))
+;;       (append token-list misc-token-list))))
+
+(defun ecb-handle-non-semantic-generic-list-group (group-name group-children
+                                                              &optional bucketize)
+  (let ((token-list nil)
+        (misc-token-list nil))
+    (dolist (tag group-children)
+      (if (speedbar-generic-list-group-p tag)
+          (setq token-list
+                (cons (list (car tag)
+                            'type
+                            group-name
+                            (if bucketize
+                                (semantic-bucketize
+                                 (ecb-handle-non-semantic-generic-list-group
+                                  (car tag) (cdr tag) t))
+                              (ecb-handle-non-semantic-generic-list-group
+                               (car tag) (cdr tag) t))
+                            nil nil nil (make-vector 2 1))
+                      token-list))
+        (setq token-list
+              (cons (list (car tag)
+                          (intern group-name)
+                          nil nil nil
+                          (make-vector 2 (cdr tag)))
+                    token-list))))
+    token-list))
+
+
+;; (insert (pp-to-string (ecb-handle-non-semantic-generic-list-group    
+;; "main"
+;;  '(("norm" . 1742)
+;;    ("neg" . 2478)
+;;    ("abs"
+;;     ("normabs" . 2774)
+;;     ("norm"
+;;      ("norm1" . 2774)
+;;      ("norm2" . 2774)
+;;      ("norm3" . 2774))
+;;     ("Morm"
+;;      ("Morm1" . 2774)
+;;      ("Morm2" . 2774)
+;;      ("Morm3" . 2774)))))))
+
+
+
 (defun ecb-rebuild-methods-buffer-with-tokencache (updated-cache
 						   &optional no-update
                                                    force-nil-cache)
@@ -3047,16 +3259,26 @@ it is cleared."
     ;; update this cache-element instead of always adding a new one to the
     ;; cache. Otherwith we would get more than one cache-element for the same
     ;; source!.
+    
     (let* ((norm-buffer-file-name (ecb-fix-filename
                                    (buffer-file-name (current-buffer))))
            (cached-tree (assoc norm-buffer-file-name ecb-token-tree-cache))
-           new-tree)
+           new-tree non-semantic-handling-p)
       (if ecb-debug-mode
           (dolist (tok updated-cache)
             (ecb-semantic-assert-valid-token tok)))
+      ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: Hier updating auch für
+      ;; non-semantic buffers.
+      (when (and ecb-process-non-semantic-files
+                 (null updated-cache) (not (semantic-active-p))
+                 (buffer-file-name (current-buffer)))
+        (setq updated-cache (ecb-handle-non-semantic-tags))
+        (if updated-cache (setq non-semantic-handling-p t)))
       (unless (and no-update cached-tree)
 	(setq new-tree (tree-node-new "root" 0 nil))
-	(ecb-add-tokens new-tree (ecb-post-process-tokenlist updated-cache))
+        (if non-semantic-handling-p
+            (ecb-add-tokens new-tree updated-cache nil t)
+          (ecb-add-tokens new-tree (ecb-post-process-tokenlist updated-cache)))
         (if cached-tree
             (setcdr cached-tree new-tree)
           (setq cached-tree (cons norm-buffer-file-name new-tree))
@@ -3685,6 +3907,23 @@ Currently the fourth argument TREE-BUFFER-NAME is not used here."
   (ecb-files-and-subdirs-cache-remove dir)
   (ecb-sources-cache-remove dir))
 
+(defun ecb-directory-update-speedbar (dir)
+  "Update the integrated speedbar if necessary."
+  (and (featurep 'ecb-speedbar)
+       (ecb-speedbar-active-p)
+       ;; depending on the value of `ecb-directory-update-speedbar' we have to
+       ;; check if it is senseful to update the speedbar.
+       (or (equal ecb-directories-update-speedbar t)
+           (and (equal ecb-directories-update-speedbar 'auto)
+                (not (or (get-buffer-window ecb-sources-buffer-name ecb-frame)
+                         (member ecb-layout-name
+                                 ecb-show-sources-in-directories-buffer))))
+           (and (not (equal ecb-directories-update-speedbar 'auto))
+                (functionp ecb-directories-update-speedbar)
+                (funcall ecb-directories-update-speedbar dir)))
+       (ecb-speedbar-update-contents)))
+                    
+
 (defun ecb-directory-clicked (node ecb-button shift-mode)
   (if (= 3 (tree-node-get-type node))
       (funcall (tree-node-get-data node))
@@ -3701,8 +3940,11 @@ Currently the fourth argument TREE-BUFFER-NAME is not used here."
             (if shift-mode
                 (ecb-remove-dir-from-caches (tree-node-get-data node)))
             
-            (ecb-set-selected-directory (tree-node-get-data node)))
-            
+            (ecb-set-selected-directory (tree-node-get-data node))
+            ;; if we have running an integrated speedbar we must update the
+            ;; speedbar 
+            (ecb-directory-update-speedbar (tree-node-get-data node)))
+          
           (ecb-exec-in-directories-window
            ;; Update the tree-buffer with optimized display of NODE
            (tree-buffer-update node)))
@@ -3891,6 +4133,8 @@ can last a long time - depending of machine- and disk-performance."
         (filename ecb-path-selected-source)
         (ecb-token-jump-narrow (if shift-mode t ecb-token-jump-narrow))
         token found)
+    ;; Klaus Berndl <klaus.berndl@sdm.de>: We must highlight the token
+    (tree-buffer-highlight-node-data data)
     (cond
      ;; Type 0 = a token
      ((= type 0) (setq token data))
