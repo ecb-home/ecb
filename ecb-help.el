@@ -26,7 +26,12 @@
 ;;
 ;; Contains all online-help for ECB (stolen something from recentf.el)
 
-;; $Id: ecb-help.el,v 1.92 2003/02/12 15:13:50 berndl Exp $
+;;; History
+;;
+;; For the ChangeLog of this file see the CVS-repository. For a complete
+;; history of the ECB-package see the file NEWS.
+
+;; $Id: ecb-help.el,v 1.93 2003/03/20 16:43:31 berndl Exp $
 
 ;;; Code
 

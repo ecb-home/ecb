@@ -2,7 +2,7 @@
 
 ;;; Copyright (C) 2003 Klaus Berndl
 
-;; $Id: ecb-autogen.el,v 1.6 2003/03/19 15:35:09 berndl Exp $
+;; $Id: ecb-autogen.el,v 1.7 2003/03/20 16:43:33 berndl Exp $
 
 ;; This file is not part of GNU Emacs.
 
@@ -27,6 +27,12 @@
 ;; This code is based onto semantic-autogen.el, the autoload generator of
 ;; semantic.
 ;;
+
+;;; History
+;;
+;; For the ChangeLog of this file see the CVS-repository. For a complete
+;; history of the ECB-package see the file NEWS.
+
 ;;; Code
 ;;
 

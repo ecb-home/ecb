@@ -22,11 +22,16 @@
 ;; with GNU Emacs; see the file COPYING. If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-tod.el,v 1.6 2003/02/17 08:46:34 berndl Exp $
+;; $Id: ecb-tod.el,v 1.7 2003/03/20 16:43:30 berndl Exp $
 
 ;;; Commentary:
 ;;
 ;; Contains code for tips of the day
+
+;;; History
+;;
+;; For the ChangeLog of this file see the CVS-repository. For a complete
+;; history of the ECB-package see the file NEWS.
 
 ;;; Code
 

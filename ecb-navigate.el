@@ -22,11 +22,15 @@
 ;; the Free Software Foundation, Inc., 59 Temple Place - Suite 330,
 ;; Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-navigate.el,v 1.13 2003/02/06 09:37:08 berndl Exp $
+;; $Id: ecb-navigate.el,v 1.14 2003/03/20 16:43:30 berndl Exp $
 
 ;;; Commentary:
 
-;; 
+;;; History
+;;
+;; For the ChangeLog of this file see the CVS-repository. For a complete
+;; history of the ECB-package see the file NEWS.
+
 
 ;;; Code:
 

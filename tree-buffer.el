@@ -26,7 +26,12 @@
 ;; This file is part of the ECB package which can be found at:
 ;; http://ecb.sourceforge.net
 
-;; $Id: tree-buffer.el,v 1.107 2003/02/21 17:57:03 berndl Exp $
+;;; History
+;;
+;; For the ChangeLog of this file see the CVS-repository. For a complete
+;; history of the ECB-package see the file NEWS.
+
+;; $Id: tree-buffer.el,v 1.108 2003/03/20 16:43:26 berndl Exp $
 
 ;;; Code:
 

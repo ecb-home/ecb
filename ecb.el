@@ -29,7 +29,7 @@
 ;;; Commentary:
 ;;
 ;; The Emacs code browser (ECB) creates four buffers: *ECB Directories*, *ECB
-;; Sources*, *ECB Methods* and *ECB History*. These buffers can be used to
+;; Sources*, *ECB Methods* and *ECB History*.  These buffers can be used to
 ;; navigate through source code with the mouse (and also with keyboard).
 ;;
 ;; To use the Emacs code browser add the ECB files to your load path and add the
@@ -68,7 +68,12 @@
 ;; The latest version of the ECB is available at
 ;; http://ecb.sourceforge.net
 
-;; $Id: ecb.el,v 1.300 2003/03/19 16:29:07 berndl Exp $
+;;; History
+;;
+;; For the ChangeLog of this file see the CVS-repository. For a complete
+;; history of the ECB-package see the file NEWS.
+
+;; $Id: ecb.el,v 1.301 2003/03/20 16:43:27 berndl Exp $
 
 ;;; Code:
 
@@ -331,7 +336,7 @@ always true."
   "Path to currently selected source.")
 (defvar ecb-item-in-tree-buffer-selected nil
   "Only true if any item in any tree-buffer has been selected in recent
-  command.")
+command.")
 
 (defun ecb-initialize-internal-vars ()
   (setq ecb-tree-buffers nil
@@ -419,7 +424,7 @@ were shown, the current layout is used!
 There are two additional options:
 - none: No major-modes should activate ECB automatically.
 - a regexp: This means all major-modes which are not listed in
-  `ecb-major-modes-deactivate' activate ECB except the symbol-name of
+  `ecb-major-modes-deactivate' activate ECB except the `symbol-name' of
   `major-mode' matches this regexp. If this option is set then the default
   regexp excludes all Info- and customize-buffers because this buffers should
   not change anything in the ECB-activation state.
@@ -441,10 +446,10 @@ jumps between different windows."
 
 (defcustom ecb-major-modes-deactivate 'none
   "*List of major-modes for which ECB should be deactivated or hidden.
-Specify if ECB should be deactivated or at least hidden if a major-mode is
-active. For each major-mode there must be added an action what should be done:
+Specify if ECB should be deactivated or at least hidden if a `major-mode' is
+active. For each `major-mode' there must be added an action what should be done:
 - hide: ECB just hides all the ECB windows like with `ecb-hide-ecb-windows'.
-- deactivate: ECB is completely deactivated after activating the major-mode.
+- deactivate: ECB is completely deactivated after activating the `major-mode'.
 
 There are two additional options:
 - none: No major-modes should deactivate/hide ECB automatically.
@@ -456,11 +461,11 @@ There are two additional options:
      `ecb-major-modes-activate' deactivate ECB.
   The cdr of this cons is a regexp: This means all major-modes which are not
   listed in `ecb-major-modes-activate' deactivate/hide ECB except the
-  symbol-name of `major-mode' matches this regexp. If this option is set then
+  `symbol-name' of `major-mode' matches this regexp. If this option is set then
   the default regexp excludes all Info- and customize-buffers because this
   buffers should not change anything in the ECB-activation state.
 
-If a major-mode is listed in `ecb-major-modes-activate' as well as in
+If a `major-mode' is listed in `ecb-major-modes-activate' as well as in
 `ecb-major-modes-deactivate' then ECB is activated!
 
 Any auto. deactivation/hiding is only done if the edit-window of ECB is
@@ -1015,7 +1020,7 @@ displaying the tokens."
                     '(symbol :tag "Major mode")
                     (nconc (list 'choice ':tag "Display function"
                                  ':menu-tag '"Display function")
-                           (append 
+                           (append
                             (mapcar (lambda (f)
                                       (list 'const ':tag
                                             (symbol-name (car f)) (car f)))
@@ -1222,7 +1227,7 @@ faces of TEXT!"
                                            col-type-name)
                                           template-text))
                      (setq text (concat col-type-name template-text
-                                        col-type-spec))))                     
+                                        col-type-spec))))
                  ;; now we add some own colorizing if necessary
                  (if face
                      (setq text (ecb-merge-face-into-text text face)))
@@ -1482,7 +1487,7 @@ to take effect."
 The real synchronization is done by `ecb-current-buffer-sync'. If 'always then
 the synchronization by `ecb-current-buffer-sync' takes place always a buffer
 changes in the edit window, if nil then never. If a list of major-modes then
-only if the major-mode of the new buffer belongs NOT to this list.
+only if the `major-mode' of the new buffer belongs NOT to this list.
 
 But in every case the synchronization by `ecb-current-buffer-sync' takes only
 place if the current-buffer in the edit-window has a relation to files or
@@ -1804,7 +1809,7 @@ If you change this option you have to restart ECB to take effect."
 For further explanations see `ecb-directories-menu-user-extension'.
 
 The node-argument of a menu-function contains as data the semantic-token of
-the method/variable/token for which the popup-menu has been opened. 
+the method/variable/token for which the popup-menu has been opened.
 
 Per default the user-extensions are added at the beginning of the builtin
 menu-entries of `ecb-methods-menu' but the whole menu can be re-arranged
@@ -1822,7 +1827,7 @@ If you change this option you have to restart ECB to take effect."
 For further explanations see `ecb-directories-menu-user-extension'.
 
 The node-argument of a menu-function contains as data the filename of the
-source for which the popup-menu has been opened. 
+source for which the popup-menu has been opened.
 
 Per default the user-extensions are added at the beginning of the builtin
 menu-entries of `ecb-history-menu' but the whole menu can be re-arranged
@@ -1963,7 +1968,7 @@ will not be deactivated! See also `ecb-before-activate-hook'."
   :group 'ecb-general
   :type 'hook)
 
-(defcustom ecb-current-buffer-sync-hook nil 
+(defcustom ecb-current-buffer-sync-hook nil
   "*Normal hook run at the end of `ecb-current-buffer-sync'.
 
 See documentation of `ecb-current-buffer-sync' for conditions when
@@ -1990,7 +1995,7 @@ examples how to use this macro!"
   :group 'ecb-general
   :type 'hook)
 
-(defcustom ecb-common-tree-buffer-after-create-hook nil 
+(defcustom ecb-common-tree-buffer-after-create-hook nil
   "*Local hook running at the end of each tree-buffer creation.
 Every function of this hook is called once without arguments direct after
 creating a tree-buffer of ECB and it's local keymap. So for example a function
@@ -2004,7 +2009,7 @@ The following keys must not be rebind in all tree-buffers:
   :group 'ecb-general
   :type 'hook)
 
-(defcustom ecb-directories-buffer-after-create-hook nil 
+(defcustom ecb-directories-buffer-after-create-hook nil
   "*Local hook running after the creation of the directories-buffer.
 Every function of this hook is called once without arguments direct after
 creating the directories-buffer of ECB and it's local keymap. So for example a
@@ -2016,7 +2021,7 @@ The following keys must not be rebind in the directories-buffer:
   :group 'ecb-directories
   :type 'hook)
 
-(defcustom ecb-sources-buffer-after-create-hook nil 
+(defcustom ecb-sources-buffer-after-create-hook nil
   "*Local hook running after the creation of the sources-buffer.
 Every function of this hook is called once without arguments direct after
 creating the sources-buffer of ECB and it's local keymap. So for example a
@@ -2025,7 +2030,7 @@ keybindings only for the sources-buffer of ECB."
   :group 'ecb-sources
   :type 'hook)
 
-(defcustom ecb-methods-buffer-after-create-hook nil 
+(defcustom ecb-methods-buffer-after-create-hook nil
   "*Local hook running after the creation of the methods-buffer.
 Every function of this hook is called once without arguments direct after
 creating the methods-buffer of ECB and it's local keymap. So for example a
@@ -2034,7 +2039,7 @@ keybindings only for the methods-buffer of ECB."
   :group 'ecb-methods
   :type 'hook)
 
-(defcustom ecb-history-buffer-after-create-hook nil 
+(defcustom ecb-history-buffer-after-create-hook nil
   "*Local hook running after the creation of the history-buffer.
 Every function of this hook is called once without arguments direct after
 creating the history-buffer of ECB and it's local keymap. So for example a
@@ -2183,7 +2188,7 @@ check the result if `ecb-debug-mode' is nil in which case the function
 (defun ecb-goto-window (name)
   (when ecb-minor-mode
     (raise-frame ecb-frame)
-    (select-frame ecb-frame)    
+    (select-frame ecb-frame)
     (ecb-window-select name)))
 
 (defun ecb-goto-window-directories ()
@@ -2214,7 +2219,7 @@ speedbar-window."
   (interactive)
   (when ecb-minor-mode
     (raise-frame ecb-frame)
-    (select-frame ecb-frame)    
+    (select-frame ecb-frame)
     (ecb-select-edit-window nil)))
 
 (defun ecb-goto-window-edit2 ()
@@ -2222,7 +2227,7 @@ speedbar-window."
   (interactive)
   (when ecb-minor-mode
     (raise-frame ecb-frame)
-    (select-frame ecb-frame)    
+    (select-frame ecb-frame)
     (ecb-select-edit-window t)))
 
 (defun ecb-goto-window-compilation ()
@@ -2233,7 +2238,7 @@ speedbar-window."
              ecb-compile-window
              (window-live-p ecb-compile-window))
     (raise-frame ecb-frame)
-    (select-frame ecb-frame)    
+    (select-frame ecb-frame)
     (select-window ecb-compile-window)))
 
 (defun ecb-buffer-select (name)
@@ -2365,7 +2370,7 @@ PARENT-TOKEN is only propagated to `ecb-add-token-bucket'."
     (tree-node-set-expanded node (eq 'type (semantic-token-token token)))
     (unless (eq 'function (semantic-token-token token))
       (ecb-add-tokens node children token)
-      (tree-node-set-expandable 
+      (tree-node-set-expandable
        node (not (eq nil (tree-node-get-children node)))))))
 
 (defun ecb-post-process-tokenlist (tokenlist)
@@ -2952,7 +2957,7 @@ it is cleared."
 ;;              (equal (selected-frame) ecb-frame)
              (get-buffer-window ecb-methods-buffer-name)
              (buffer-file-name (current-buffer))
-             ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: 
+             ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>:
 ;;              (not (string= (buffer-name (current-buffer))
 ;;              jde-project-file-name))
              
@@ -3631,7 +3636,7 @@ Currently the fourth argument TREE-BUFFER-NAME is not used here."
 	       (list (if control-pressed 2 1) shift-pressed)))
 	    ((eq ecb-primary-secondary-mouse-buttons 'mouse-2--C-mouse-2)
 	     (if (not (eq mouse-button 2))
-		 nil           
+		 nil
 	       (list (if control-pressed 2 1) shift-pressed)))
 	    (t nil)))))
 
@@ -3651,7 +3656,7 @@ Currently the fourth argument TREE-BUFFER-NAME is not used here."
               (tree-node-toggle-expanded node)
               
             ;; Removing the element from the sources-cache and the
-            ;; files-and-subdirs-cache 
+            ;; files-and-subdirs-cache
             (if shift-mode
                 (ecb-remove-dir-from-caches (tree-node-get-data node)))
             
@@ -4458,7 +4463,7 @@ That is remove the unsupported :help stuff."
     "-"
     (concat "ECB " ecb-version)
     )
-   "-"   
+   "-"
    (ecb-menu-item
     [ "Deactivate ECB"
       ecb-deactivate
@@ -5114,7 +5119,7 @@ source-path of `ecb-source-path'.")
         ("---")
         ("Delete File" ecb-delete-source-2)
 	("Create File" ecb-create-file-2)
-	("Create Source" ecb-create-source)))        
+	("Create Source" ecb-create-source)))
 
 (defvar ecb-methods-menu nil
   "Builtin menu for the methods-buffer.")
@@ -5322,4 +5327,4 @@ changed there should be no performance-problem!"
 
 (silentcomp-provide 'ecb)
 
-;;;ecb.el ends here
+;;; ecb.el ends here

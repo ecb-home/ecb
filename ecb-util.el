@@ -26,7 +26,12 @@
 ;; This file is part of the ECB package which can be found at:
 ;; http://ecb.sourceforge.net
 
-;; $Id: ecb-util.el,v 1.60 2003/03/19 15:35:09 berndl Exp $
+;;; History
+;;
+;; For the ChangeLog of this file see the CVS-repository. For a complete
+;; history of the ECB-package see the file NEWS.
+
+;; $Id: ecb-util.el,v 1.61 2003/03/20 16:43:29 berndl Exp $
 
 ;;; Code:
 

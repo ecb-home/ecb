@@ -25,7 +25,14 @@
 ;;
 ;; Contains all mode-line enhancements for ECB.
 
-;; $Id: ecb-mode-line.el,v 1.17 2003/01/20 07:18:32 berndl Exp $
+;;; History
+;;
+;; For the ChangeLog of this file see the CVS-repository. For a complete
+;; history of the ECB-package see the file NEWS.
+
+;; $Id: ecb-mode-line.el,v 1.18 2003/03/20 16:43:30 berndl Exp $
+
+;;; Code
 
 (eval-when-compile
   (require 'silentcomp))

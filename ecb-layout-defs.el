@@ -19,7 +19,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-layout-defs.el,v 1.12 2003/01/30 16:13:48 berndl Exp $
+;; $Id: ecb-layout-defs.el,v 1.13 2003/03/20 16:43:30 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -27,6 +27,13 @@
 ;;
 ;; This file is part of the ECB package which can be found at:
 ;; http://ecb.sourceforge.net
+
+;;; History
+;;
+;; For the ChangeLog of this file see the CVS-repository. For a complete
+;; history of the ECB-package see the file NEWS.
+
+;;; Code
 
 (eval-when-compile
   (require 'silentcomp))

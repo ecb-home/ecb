@@ -22,11 +22,17 @@
 ;; with GNU Emacs; see the file COPYING. If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-create-layout.el,v 1.19 2003/03/20 14:47:14 berndl Exp $
+;; $Id: ecb-create-layout.el,v 1.20 2003/03/20 16:43:32 berndl Exp $
 
 ;;; Commentary:
 ;;
 ;; Contains code for easy creating new layouts
+
+;;; History
+;;
+;; For the ChangeLog of this file see the CVS-repository. For a complete
+;; history of the ECB-package see the file NEWS.
+
 
 ;;; Code
 

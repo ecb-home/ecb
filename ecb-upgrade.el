@@ -19,7 +19,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-upgrade.el,v 1.35 2003/03/20 14:47:07 berndl Exp $
+;; $Id: ecb-upgrade.el,v 1.36 2003/03/20 16:43:30 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -138,6 +138,12 @@
 ;; As an addition to this upgrade feature this library offers a set of
 ;; functions ecb-package-... for downloading and installing newer versions of
 ;; packages (ecb itself and the required packages)!
+
+;;; History
+;;
+;; For the ChangeLog of this file see the CVS-repository. For a complete
+;; history of the ECB-package see the file NEWS.
+
 
 ;;; Code
 

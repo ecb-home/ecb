@@ -105,7 +105,12 @@
 ;; - `ecb-with-some-adviced-functions'
 ;;
 
-;; $Id: ecb-layout.el,v 1.161 2003/03/20 14:47:08 berndl Exp $
+;;; History
+;;
+;; For the ChangeLog of this file see the CVS-repository. For a complete
+;; history of the ECB-package see the file NEWS.
+
+;; $Id: ecb-layout.el,v 1.162 2003/03/20 16:43:30 berndl Exp $
 
 ;;; Code:
 

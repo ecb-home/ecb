@@ -22,7 +22,7 @@
 ;; the Free Software Foundation, Inc., 59 Temple Place - Suite 330,
 ;; Boston, MA 02111-1307, USA.
 
-;; $Id: silentcomp.el,v 1.2 2003/01/29 14:36:39 berndl Exp $
+;; $Id: silentcomp.el,v 1.3 2003/03/20 16:43:27 berndl Exp $
 
 ;;; Location
 
@@ -114,8 +114,14 @@
 ;;      `----
 
 
-;;; This package is stolen from original cc-bytecomp.el from Martin Stjernholm
-;;; who is the maintainer of cc-mode.
+;; This package is stolen from original cc-bytecomp.el from Martin Stjernholm
+;; who is the maintainer of cc-mode.
+
+;;; History
+;;
+;; For the ChangeLog of this file see the CVS-repository. For a complete
+;; history of the ECB-package see the file NEWS.
+
 
 
 ;;; Code:
