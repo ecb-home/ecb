@@ -4129,4 +4129,3 @@ changed there should be no performance-problem!"
 (provide 'ecb)
 
 ;;; ecb.el ends here
-

@@ -5196,8 +5196,23 @@ for ALL ECB-tree-buffers. But you are also able to display each
 ECB-tree-buffer with different faces, see the different options for
 every tree-buffer mentioned above.
 
-<p>TODO: Describing in more details about the differences between XEmacs
-and Emacs and what can be problems!
+<p><strong>NOTE</strong> (only for XEmacs users): Cause of the lack of the
+font-inheritance feature using ONE other font for the ECB-methods
+buffer can NOT be achieved just by setting
+<code>ecb-methods-general-face</code> to <code>ecb-default-general-face</code> and
+changing the font of this default face. In addition you have to set
+the same font also for the face <code>ecb-bucket-token-face</code> like in
+the following example:
+
+<br><pre>(defconst my-ecb-font
+          "-outline-Courier-normal-normal-13-97-96-96-c-*-iso8859-1")
+(set-face-font 'ecb-default-general-face my-ecb-font)
+(set-face-font 'ecb-bucket-token-face my-ecb-font)
+</pre>
+
+<p>This code sets the new defined font <code>my-ecb-font</code> as font for
+all<a rel=footnote href="#fn-11"><sup>11</sup></a> ECB-tree-buffers (incl. the methods
+buffer).
 
 <p><hr>
 Node:<a name="Small%20screens">Small screens</a>,
@@ -5431,7 +5446,7 @@ Up:<a rel=up accesskey=u href="#Elisp%20programming">Elisp programming</a>
 <h3>How to deal with the adviced window-functions</h3>
 
 <p>ECB offers for packages which work during activated ECB three macros
-for easy temporally<a rel=footnote href="#fn-11"><sup>11</sup></a> using all original-functions, all
+for easy temporally<a rel=footnote href="#fn-12"><sup>12</sup></a> using all original-functions, all
 adviced functions or only some adviced functions:
 
 <ul>
@@ -5669,6 +5684,14 @@ You can use the library "desktop.el" which works very well with ECB.
 Then all files of your recent Emacs-session will be opened
 automatically after next Emacs-start and will be added automatically
 to the ECB-history after ECB-start.
+
+<br></td></tr><tr align="left"><td valign="top"></td><td valign="top"></td><td valign="top">
+
+<br></td></tr><tr align="left"><td valign="top">Is there an "Intellisense"-mechanism like with other IDEs? 
+</td><td valign="top"></td><td valign="top">
+For Java the JDEE<a rel=footnote href="#fn-13"><sup>13</sup></a> has this feature and for all other languages
+semantic offer something similar, see
+<a href="http://cedet.sourceforge.net/intellisense.shtml">http://cedet.sourceforge.net/intellisense.shtml</a>
 
 <br></td></tr></table>
 
@@ -6052,8 +6075,19 @@ to use always <code>custom-set-variables</code>!</p>
 </p>
 
 <li><a name="fn-11"></a>
+<p>Of course <code>ecb-directories-general-face</code>,
+<code>ecb-sources-general-face</code>, <code>ecb-methods-general-face</code> and
+<code>ecb-history-general-face</code> must be set to
+<code>ecb-default-general-face</code>!</p>
+
+<li><a name="fn-12"></a>
 <p>I.e. regardless of the settings in
 <code>ecb-advice-window-functions</code>!</p>
+
+<li><a name="fn-13"></a>
+<p>
+<a href="http://jdee.sunsite.dk/">http://jdee.sunsite.dk/</a>
+</p>
 
 </ol><hr>
 

@@ -3478,8 +3478,25 @@ ECB-tree-buffers. But you are also able to display each ECB-tree-buffer with
 different faces, see the different options for every tree-buffer mentioned
 above.
 
-TODO: Describing in more details about the differences between XEmacs and
-Emacs and what can be problems!
+*NOTE* (only for XEmacs users): Cause of the lack of the font-inheritance
+feature using ONE other font for the ECB-methods buffer can NOT be achieved
+just by setting `ecb-methods-general-face' to `ecb-default-general-face' and
+changing the font of this default face. In addition you have to set the same
+font also for the face `ecb-bucket-token-face' like in the following example:
+
+   (defconst my-ecb-font
+             "-outline-Courier-normal-normal-13-97-96-96-c-*-iso8859-1")
+   (set-face-font 'ecb-default-general-face my-ecb-font)
+   (set-face-font 'ecb-bucket-token-face my-ecb-font)
+
+This code sets the new defined font `my-ecb-font' as font for all(1)
+ECB-tree-buffers (incl. the methods buffer).
+
+---------- Footnotes ----------
+
+(1) Of course `ecb-directories-general-face', `ecb-sources-general-face',
+`ecb-methods-general-face' and `ecb-history-general-face' must be set to
+`ecb-default-general-face'!
 
 
 File: ecb.info,  Node: Small screens,  Next: Simulating speedbar,  Prev: Changing faces,  Up: Tips and tricks
@@ -3865,6 +3882,15 @@ history of ECB persistent?        works very well with ECB.  Then all files of
                                   be added automatically to the ECB-history
                                   after ECB-start.
 
+Is there an                       For Java the JDEE(1) has this feature and for
+"Intellisense"-mechanism like     all other languages semantic offer something
+with other IDEs?                  similar, see
+                                  <http://cedet.sourceforge.net/intellisense.shtml>
+
+---------- Footnotes ----------
+
+(1) <http://jdee.sunsite.dk/>
+
 
 File: ecb.info,  Node: Command Index,  Next: Option Index,  Prev: FAQ,  Up: Top
 
@@ -4131,25 +4157,27 @@ Node: User interface146144
 Node: Background information147030
 Node: Tips and tricks150428
 Node: Changing faces151121
-Node: Small screens153323
-Node: Simulating speedbar154717
-Node: Integrating speedbar155526
-Node: Optimize scrolling155792
-Node: Large directories156872
-Node: Using eshell157538
-Node: Elisp programming157728
-Node: List of variables158337
-Node: List of hooks158649
-Node: tree-buffer159147
-Node: Adviced functions159953
-Ref: Adviced functions-Footnote-1160560
-Node: New layouts160631
-Node: Conflicts and bugs160814
-Node: Conflicts161289
-Node: Bugs163745
-Node: FAQ163965
-Node: Command Index168393
-Node: Option Index170510
-Node: Concept Index175864
+Ref: Changing faces-Footnote-1153957
+Node: Small screens154133
+Node: Simulating speedbar155527
+Node: Integrating speedbar156336
+Node: Optimize scrolling156602
+Node: Large directories157682
+Node: Using eshell158348
+Node: Elisp programming158538
+Node: List of variables159147
+Node: List of hooks159459
+Node: tree-buffer159957
+Node: Adviced functions160763
+Ref: Adviced functions-Footnote-1161370
+Node: New layouts161441
+Node: Conflicts and bugs161624
+Node: Conflicts162099
+Node: Bugs164555
+Node: FAQ164775
+Ref: FAQ-Footnote-1169527
+Node: Command Index169558
+Node: Option Index171675
+Node: Concept Index177029
 
 End Tag Table
