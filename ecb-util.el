@@ -30,10 +30,7 @@
 
 ;;; Code:
 (defconst running-xemacs (string-match "XEmacs\\|Lucid" emacs-version))
-
-(defconst ecb-directory-sep-char (if running-xemacs
-				     directory-sep-char
-				   ?/))
+(defconst ecb-directory-sep-char directory-sep-char)
 (defconst ecb-directory-sep-string (char-to-string ecb-directory-sep-char))
 
 (defun ecb-fix-filename(name)
