@@ -1,6 +1,6 @@
 ********************************************************************************
-*** Last-Modified: $Date: 2001/04/03 17:03:56 $ 
-*** Version: $Id: TODO,v 1.4 2001/04/03 17:03:56 berndl Exp $
+*** Last-Modified: $Date: 2001/04/07 06:10:25 $ 
+*** Version: $Id: TODO,v 1.5 2001/04/07 06:10:25 burtonator Exp $
 *** Author: Kevin A. Burton ( burton@apache.org | burton@openprivacy.org )
 ********************************************************************************
 
@@ -17,11 +17,6 @@
 
    KB: No, this should not be moved. The left- and the middle-mouse
    button jumps to different edit windows amd this is a very useful behavior.
-
-- more readme.txt, history.txt, and makefile to README, HISTORY and
-  Makefile
-   
-   KB: I agree.
 
 - All of the ECB special buffer accept text input( I can type in this buffer if
   I wanted to ).  This buffer should be read-only.  

@@ -92,6 +92,7 @@
 ;;====================================================
 ;; Customization
 ;;====================================================
+
 (defgroup ecb nil
   "Emacs code browser."
   :group 'tools
@@ -121,6 +122,12 @@
   "Settings for the history buffer in the Emacs code browser."
   :group 'ecb
   :prefix "ecb-")
+
+(defcustom ecb-use-recursive-edit nil
+  "*Tell ECB to use a recursive edit so that it can easily be deactivated by
+(keyboard-escape-quit)."
+  :group 'ecb
+  :type 'boolean)
 
 (defcustom ecb-source-path nil
   "*Path where to find code sources."
@@ -963,10 +970,30 @@ the setting in `ecb-left-mouse-jump-destination'."
 ;; Create buffers & menus
 ;;====================================================
 
-(defun ecb-activate ()
+(defun ecb-activate()
   "Activates the ECB and creates all the buffers and draws the ECB-screen
 with the actually choosen layout \(see `ecb-layout-nr')."
   (interactive)
+
+  (if ecb-use-recursive-edit
+      (progn
+
+        (if ecb-activated
+            (progn
+              
+              (message "ECB already activated.  Drawing layout.")
+              
+              (ecb-redraw-layout))
+          (catch 'exit
+            (progn
+              (ecb-activate--impl)
+              (recursive-edit))
+            (ecb-deactivate))))
+
+    (ecb-activate--impl)))
+
+(defun ecb-activate--impl()
+  "See `ecb-activate'.  This is the implementation of ECB activation."
   (if ecb-activated
       (ecb-redraw-layout)
     (let ((curr-buffer-list (mapcar (lambda (buff)
