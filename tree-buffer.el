@@ -26,7 +26,7 @@
 ;; This file is part of the ECB package which can be found at:
 ;; http://home.swipnet.se/mayhem/ecb.html
 
-;; $Id: tree-buffer.el,v 1.92 2002/10/07 15:01:37 berndl Exp $
+;; $Id: tree-buffer.el,v 1.93 2002/10/18 10:45:45 berndl Exp $
 
 ;;; Code:
 
@@ -34,10 +34,12 @@
   ;; to avoid compiler grips
   (require 'cl))
 
-(defconst running-xemacs (string-match "XEmacs\\|Lucid" emacs-version))
-(defconst running-emacs-21 (and (not running-xemacs)
-                                (> emacs-major-version 20)))
-(if running-xemacs
+(defconst tree-buffer-running-xemacs
+  (string-match "XEmacs\\|Lucid" emacs-version))
+(defconst tree-buffer-running-emacs-21
+  (and (not tree-buffer-running-xemacs)
+       (> emacs-major-version 20)))
+(if tree-buffer-running-xemacs
     ;; XEmacs
     (progn
       (defalias 'tree-buffer-line-beginning-pos 'point-at-bol)
@@ -137,7 +139,7 @@ mouse-tracking is activated by `tree-buffer-activate-mouse-tracking'")
                    (t
                     (apply 'format args)))))
     ;; Now message is either nil or the formated string.
-    (if running-xemacs
+    (if tree-buffer-running-xemacs
         ;; XEmacs way of preventing log messages.
         (if msg
             (display-message 'no-log msg)
@@ -418,7 +420,7 @@ inserted and the TEXT itself"
   (let ((p (point)))
     (insert text)
     (put-text-property p (+ p (length text)) 'mouse-face 'highlight)
-    (if (and help-echo (not running-xemacs))
+    (if (and help-echo (not tree-buffer-running-xemacs))
         (put-text-property p (+ p (length text)) 'help-echo
                            'tree-buffer-help-echo-fn))
     (if facer
@@ -435,12 +437,12 @@ inserted and the TEXT itself"
     ;; Truncate name if necessary
     (when (>= width ww)
       (if (eq 'beginning (tree-node-get-shorten-name node))
-	  (setq name (concat "..." (substring name (+ (if running-xemacs 5 4)
+	  (setq name (concat "..." (substring name (+ (if tree-buffer-running-xemacs 5 4)
                                                       (- width ww)))))
 	(if (and (not tree-buffer-expand-symbol-before)
 		 (tree-node-is-expandable node)
 		 (eq 'end (tree-node-get-shorten-name node)))
-	    (setq name (concat (substring name 0 (- (+ (if running-xemacs 5 4)
+	    (setq name (concat (substring name 0 (- (+ (if tree-buffer-running-xemacs 5 4)
                                                        (- width ww))))
                                "...")))))
     (insert (make-string (* depth tree-buffer-indent) ? ))
@@ -532,7 +534,7 @@ point will stay on POINT."
 	(when node
 	  (let ((menu (cdr (assoc (tree-node-get-type node) tree-buffer-menus))))
 	    (when menu
-	      (if running-xemacs
+	      (if tree-buffer-running-xemacs
 		  (popup-menu (cons (tree-node-get-data node) menu))
 		(let ((fn (x-popup-menu
 			   event (cons 'keymap
@@ -665,7 +667,7 @@ mentioned above!"
   "Creates a popup menu from a list with menu items."
   (when menu-items
     (cons
-     (if running-xemacs
+     (if tree-buffer-running-xemacs
          (if (null (cdar menu-items))
              (caar menu-items)
            (let ((v (make-vector 3 t)))
@@ -696,7 +698,7 @@ mentioned above!"
 	     (windowp window)
 	     (member (window-buffer window) tree-buffers))
 	(tree-buffer-mouse-movement event)))
-  (if (not running-xemacs)
+  (if (not tree-buffer-running-xemacs)
       (if tree-buffer-saved-mouse-movement-fn
 	  (funcall tree-buffer-saved-mouse-movement-fn event)
 	;; Enable dragging
@@ -748,7 +750,7 @@ keysequence!"
   "Activates GNU Emacs < version 21 mouse tracking for all tree-buffers.
 With GNU Emacs 21 this functionality is done with the `help-echo'-property and
 the function `tree-buffer-help-echo-fn'!"
-  (unless (or running-xemacs running-emacs-21)
+  (unless (or tree-buffer-running-xemacs tree-buffer-running-emacs-21)
     (unless tree-buffer-track-mouse-timer
       ;; disable mouse avoidance because this can be very annoying with
       ;; key-sequences: If a key is pressed during mouse is over point then
@@ -766,7 +768,7 @@ the function `tree-buffer-help-echo-fn'!"
   "Deactivates GNU Emacs < version 21 mouse tracking for all tree-buffers.
 With GNU Emacs 21 this functionality is done with the `help-echo'-property and
 the function `tree-buffer-help-echo-fn'!"
-  (unless (or running-xemacs running-emacs-21)
+  (unless (or tree-buffer-running-xemacs tree-buffer-running-emacs-21)
     (unless (not tree-buffer-track-mouse-timer)
       ;; restore the old value
       (mouse-avoidance-mode tree-buffer-old-mouse-avoidance-mode)
@@ -783,24 +785,24 @@ This function does nothing for GNU Emacs 21; with this version this
 functionality is done with the `help-echo'-property and the function
 `tree-buffer-help-echo-fn'!"
   (tree-buffer-activate-mouse-tracking)
-  (if running-xemacs
+  (if tree-buffer-running-xemacs
       (dolist (buf tree-buffers)
         (save-excursion
           (set-buffer buf)
           (add-hook 'mode-motion-hook 'tree-buffer-follow-mouse)))
-    (unless running-emacs-21
+    (unless tree-buffer-running-emacs-21
       (let ((saved-fn (lookup-key special-event-map [mouse-movement])))
         (unless (equal saved-fn 'tree-buffer-follow-mouse)
           (setq tree-buffer-saved-mouse-movement-fn saved-fn)
           (define-key special-event-map [mouse-movement] 'tree-buffer-follow-mouse))))))
 
 (defun tree-buffer-deactivate-follow-mouse ()
-  (if running-xemacs
+  (if tree-buffer-running-xemacs
       (dolist (buf tree-buffers)
         (save-excursion
           (set-buffer buf)
           (remove-hook 'mode-motion-hook 'tree-buffer-follow-mouse)))
-    (unless running-emacs-21
+    (unless tree-buffer-running-emacs-21
       (define-key special-event-map [mouse-movement] tree-buffer-saved-mouse-movement-fn))))
 
 ;; pressed keys
@@ -1060,21 +1062,21 @@ AFTER-CREATE-HOOK: A function or a list of functions \(with no arguments)
     
     ;; mouse-1
     (define-key tree-buffer-key-map
-      (if running-xemacs '(button1) [down-mouse-1])
+      (if tree-buffer-running-xemacs '(button1) [down-mouse-1])
       (function (lambda(e)
 		  (interactive "e")
                   (mouse-set-point e)
                   (tree-buffer-select 1 nil nil))))
   
     (define-key tree-buffer-key-map
-      (if running-xemacs '(shift button1) [S-down-mouse-1])
+      (if tree-buffer-running-xemacs '(shift button1) [S-down-mouse-1])
       (function (lambda(e)
 		  (interactive "e")
                   (mouse-set-point e)
                   (tree-buffer-select 1 t nil))))
 
     (define-key tree-buffer-key-map
-      (if running-xemacs '(control button1) [C-down-mouse-1])
+      (if tree-buffer-running-xemacs '(control button1) [C-down-mouse-1])
       (function (lambda(e)
 		  (interactive "e")
                   (mouse-set-point e)
@@ -1087,21 +1089,21 @@ AFTER-CREATE-HOOK: A function or a list of functions \(with no arguments)
 
     ;; mouse-2
     (define-key tree-buffer-key-map
-      (if running-xemacs '(button2) [down-mouse-2])
+      (if tree-buffer-running-xemacs '(button2) [down-mouse-2])
       (function (lambda(e)
 		  (interactive "e")
                   (mouse-set-point e)
                   (tree-buffer-select 2 nil nil))))
 
     (define-key tree-buffer-key-map
-      (if running-xemacs '(shift button2) [S-down-mouse-2])
+      (if tree-buffer-running-xemacs '(shift button2) [S-down-mouse-2])
       (function (lambda(e)
 		  (interactive "e")
                   (mouse-set-point e)
                   (tree-buffer-select 2 t nil))))
 
     (define-key tree-buffer-key-map
-      (if running-xemacs '(control button2) [C-down-mouse-2])
+      (if tree-buffer-running-xemacs '(control button2) [C-down-mouse-2])
       (function (lambda(e)
 		  (interactive "e")
                   (mouse-set-point e)
@@ -1113,7 +1115,7 @@ AFTER-CREATE-HOOK: A function or a list of functions \(with no arguments)
 
     ;; mouse-3
     (define-key tree-buffer-key-map
-      (if running-xemacs '(button3) [down-mouse-3])
+      (if tree-buffer-running-xemacs '(button3) [down-mouse-3])
       'tree-buffer-show-menu)
     (define-key tree-buffer-key-map [mouse-3] nop)
     (define-key tree-buffer-key-map [double-mouse-3] nop)

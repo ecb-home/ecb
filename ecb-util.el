@@ -26,12 +26,14 @@
 ;; This file is part of the ECB package which can be found at:
 ;; http://home.swipnet.se/mayhem/ecb.html
 
-;; $Id: ecb-util.el,v 1.27 2002/10/10 08:35:37 berndl Exp $
+;; $Id: ecb-util.el,v 1.28 2002/10/18 10:45:44 berndl Exp $
 
 ;;; Code:
 
 ;; Some constants
-(defconst running-xemacs (string-match "XEmacs\\|Lucid" emacs-version))
+(defconst ecb-running-xemacs (string-match "XEmacs\\|Lucid" emacs-version))
+(defconst ecb-running-emacs-21 (and (not ecb-running-xemacs)
+                                (> emacs-major-version 20)))
 (defconst ecb-directory-sep-char (if (boundp 'directory-sep-char)
                                      directory-sep-char
                                    ?/))
@@ -67,7 +69,7 @@ not nil then in both PATH and FILENAME env-var substitution is done. If the
 `system-type' is 'cygwin32 then the path is converted to win32-path-style!"
   (when (stringp path)
     (let (norm-path)    
-      (setq norm-path (if (and running-xemacs (equal system-type 'cygwin32))
+      (setq norm-path (if (and ecb-running-xemacs (equal system-type 'cygwin32))
                           (mswindows-cygwin-to-win32-path path)
                         path))
       (setq norm-path (expand-file-name (if substitute-env-vars
@@ -198,11 +200,11 @@ not nil then in both PATH and FILENAME env-var substitution is done. If the
   "Prints PROMPT and returns a string which must be one of CHOICES.
 CHOICES is a list of strings. The first choice is the default,
 which is returned if the user simply types RET.
-If OTHER-PROMPT is not nil and a string then the choice \"Other\" is added to
+If OTHER-PROMPT is not nil and a string then the choice \"other\" is added to
 CHOICES and after selecting this choice the user is prompted with OTHER-PROMPT
 to insert any arbitrary string."
   (let* ((new-choices (if other-prompt
-                          (add-to-list 'choices "Other" t)
+                          (add-to-list 'choices "other" t)
                         choices))
          (default (car new-choices))
          answer)
@@ -215,7 +217,7 @@ to insert any arbitrary string."
     (setq answer (completing-read prompt new-choices nil t ""))
     (cond ((string= answer "")
            (setq answer default))
-          ((string= answer "Other")
+          ((string= answer "other")
            (setq answer (read-string (concat other-prompt ": ")))))
     answer))
 

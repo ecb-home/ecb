@@ -35,7 +35,7 @@
 
 ;; Layout Nr. 0 -----------------------------------------------------
 
-(defun ecb-layout-function-0 ()
+(ecb-layout-define 0 left
   "This function creates the following layout:
 
    -------------------------------------------------------
@@ -63,26 +63,19 @@
 If you have not set a compilation-window in `ecb-compile-window-height' then
 the layout contains no durable compilation window and the other windows get a
 little more place."
-  (ecb-layout-create-layout
-   'left
-   (ecb-set-directories-buffer)
-   (ecb-split-ver 0.3)
-   (ecb-set-sources-buffer)
-   (ecb-split-ver 0.5)
-   (ecb-set-methods-buffer)
-   (select-window (previous-window))
-   (ecb-split-hor 0.5)
-   (ecb-set-history-buffer)
-   (select-window (next-window (next-window)))))
-
-(defalias 'ecb-delete-other-windows-in-editwindow-0
-  'ecb-delete-other-windows-ecb-windows-left)
-(defalias 'ecb-delete-window-in-editwindow-0
-  'ecb-delete-window-ecb-windows-left)
+  (ecb-set-directories-buffer)
+  (ecb-split-ver 0.3)
+  (ecb-set-sources-buffer)
+  (ecb-split-ver 0.5)
+  (ecb-set-methods-buffer)
+  (select-window (previous-window))
+  (ecb-split-hor 0.5)
+  (ecb-set-history-buffer)
+  (select-window (next-window (next-window))))
 
 ;; Layout Nr. 1 -----------------------------------------------------
 
-(defun ecb-layout-function-1 ()
+(ecb-layout-define 1 left
   "This function creates the following layout:
 
    -------------------------------------------------------
@@ -110,21 +103,14 @@ little more place."
 If you have not set a compilation-window in `ecb-compile-window-height' then
 the layout contains no durable compilation window and the other windows get a
 little more place."
-  (ecb-layout-create-layout
-   'left
-   (ecb-set-directories-buffer)
-   (ecb-split-ver 0.5)
-   (ecb-set-sources-buffer)
-   (select-window (next-window))))
-
-(defalias 'ecb-delete-other-windows-in-editwindow-1
-  'ecb-delete-other-windows-ecb-windows-left)
-(defalias 'ecb-delete-window-in-editwindow-1
-  'ecb-delete-window-ecb-windows-left)
+  (ecb-set-directories-buffer)
+  (ecb-split-ver 0.5)
+  (ecb-set-sources-buffer)
+  (select-window (next-window)))
 
 ;; Layout Nr. 2 -----------------------------------------------------
 
-(defun ecb-layout-function-2 ()
+(ecb-layout-define 2 left
   "This function creates the following layout:
 
    -------------------------------------------------------
@@ -152,23 +138,16 @@ little more place."
 If you have not set a compilation-window in `ecb-compile-window-height' then
 the layout contains no durable compilation window and the other windows get a
 little more place."
-  (ecb-layout-create-layout
-   'left
-   (ecb-set-directories-buffer)
-   (ecb-split-ver 0.3)
-   (ecb-set-sources-buffer)
-   (ecb-split-ver 0.5)
-   (ecb-set-methods-buffer)
-   (select-window (next-window))))
-
-(defalias 'ecb-delete-other-windows-in-editwindow-2
-  'ecb-delete-other-windows-ecb-windows-left)
-(defalias 'ecb-delete-window-in-editwindow-2
-  'ecb-delete-window-ecb-windows-left)
+  (ecb-set-directories-buffer)
+  (ecb-split-ver 0.3)
+  (ecb-set-sources-buffer)
+  (ecb-split-ver 0.5)
+  (ecb-set-methods-buffer)
+  (select-window (next-window)))
 
 ;; Layout Nr. 3 -----------------------------------------------------
 
-(defun ecb-layout-function-3 ()
+(ecb-layout-define 3 left
   "This function creates the following layout:
 
    -------------------------------------------------------
@@ -196,23 +175,16 @@ little more place."
 If you have not set a compilation-window in `ecb-compile-window-height' then
 the layout contains no durable compilation window and the other windows get a
 little more place."
-  (ecb-layout-create-layout
-   'left
-   (ecb-set-directories-buffer)
-   (ecb-split-ver 0.5)
-   (ecb-set-sources-buffer)
-   (ecb-split-hor 0.5)
-   (ecb-set-history-buffer)
-   (select-window (next-window))))
-
-(defalias 'ecb-delete-other-windows-in-editwindow-3
-  'ecb-delete-other-windows-ecb-windows-left)
-(defalias 'ecb-delete-window-in-editwindow-3
-  'ecb-delete-window-ecb-windows-left)
+  (ecb-set-directories-buffer)
+  (ecb-split-ver 0.5)
+  (ecb-set-sources-buffer)
+  (ecb-split-hor 0.5)
+  (ecb-set-history-buffer)
+  (select-window (next-window)))
 
 ;; Layout Nr. 4 -----------------------------------------------------
 
-(defun ecb-layout-function-4 ()
+(ecb-layout-define 4 left
   "This function creates the following layout:
 
    -------------------------------------------------------
@@ -240,23 +212,16 @@ little more place."
 If you have not set a compilation-window in `ecb-compile-window-height' then
 the layout contains no durable compilation window and the other windows get a
 little more place."
-  (ecb-layout-create-layout
-   'left
-   (ecb-set-directories-buffer)
-   (ecb-split-ver 0.3)
-   (ecb-set-sources-buffer)
-   (ecb-split-ver 0.5)
-   (ecb-set-history-buffer)
-   (select-window (next-window))))
-
-(defalias 'ecb-delete-other-windows-in-editwindow-4
-  'ecb-delete-other-windows-ecb-windows-left)
-(defalias 'ecb-delete-window-in-editwindow-4
-  'ecb-delete-window-ecb-windows-left)
+  (ecb-set-directories-buffer)
+  (ecb-split-ver 0.3)
+  (ecb-set-sources-buffer)
+  (ecb-split-ver 0.5)
+  (ecb-set-history-buffer)
+  (select-window (next-window)))
 
 ;; Layout Nr. 5 -----------------------------------------------------
 
-(defun ecb-layout-function-5 ()
+(ecb-layout-define 5 right
   "This function creates the following layout:
 
    -------------------------------------------------------
@@ -284,24 +249,17 @@ little more place."
 If you have not set a compilation-window in `ecb-compile-window-height' then
 the layout contains no durable compilation window and the other windows get a
 little more place."
-  (ecb-layout-create-layout
-   'right
-   (let ((edit-win (previous-window (selected-window) 0)))
-     (ecb-set-directories-buffer)
-     (ecb-split-ver 0.3)
-     (ecb-set-sources-buffer)
-     (ecb-split-ver 0.5)
-     (ecb-set-methods-buffer)
-     (select-window edit-win))))
-
-(defalias 'ecb-delete-other-windows-in-editwindow-5
-  'ecb-delete-other-windows-ecb-windows-right)
-(defalias 'ecb-delete-window-in-editwindow-5
-  'ecb-delete-window-ecb-windows-right)
+  (let ((edit-win (previous-window (selected-window) 0)))
+    (ecb-set-directories-buffer)
+    (ecb-split-ver 0.3)
+    (ecb-set-sources-buffer)
+    (ecb-split-ver 0.5)
+    (ecb-set-methods-buffer)
+    (select-window edit-win)))
 
 ;; Layout Nr. 6 -----------------------------------------------------
 
-(defun ecb-layout-function-6 ()
+(ecb-layout-define 6 left
   "This function creates the following layout:
 
    -------------------------------------------------------
@@ -325,23 +283,16 @@ little more place."
 If you have not set a compilation-window in `ecb-compile-window-height' then
 the layout contains no durable compilation window and the other windows get a
 little more place."
-  (ecb-layout-create-layout
-   'left
-   (ecb-set-sources-buffer)
-   (ecb-split-ver 0.2)
-   (ecb-set-methods-buffer)
-   (ecb-split-ver 0.75)
-   (ecb-set-history-buffer)
-   (select-window (next-window))))
-
-(defalias 'ecb-delete-other-windows-in-editwindow-6
-  'ecb-delete-other-windows-ecb-windows-left)
-(defalias 'ecb-delete-window-in-editwindow-6
-  'ecb-delete-window-ecb-windows-left)
+  (ecb-set-sources-buffer)
+  (ecb-split-ver 0.2)
+  (ecb-set-methods-buffer)
+  (ecb-split-ver 0.75)
+  (ecb-set-history-buffer)
+  (select-window (next-window)))
 
 ;; Layout Nr. 7 -----------------------------------------------------
 
-(defun ecb-layout-function-7 ()
+(ecb-layout-define 7 top
   "This function creates the following layout:
 
    -------------------------------------------------------
@@ -369,23 +320,16 @@ little more place."
 If you have not set a compilation-window in `ecb-compile-window-height' then
 the layout contains no durable compilation window and the other windows get a
 little more place."
-  (ecb-layout-create-layout
-   'top
-   (ecb-set-directories-buffer)
-   (ecb-split-hor 0.5)
-   (ecb-set-sources-buffer)
-   (ecb-split-hor 0.5)
-   (ecb-set-methods-buffer)
-   (select-window (next-window))))
-   
-(defalias 'ecb-delete-other-windows-in-editwindow-7
-  'ecb-delete-other-windows-ecb-windows-top)
-(defalias 'ecb-delete-window-in-editwindow-7
-  'ecb-delete-window-ecb-windows-top)
+  (ecb-set-directories-buffer)
+  (ecb-split-hor 0.5)
+  (ecb-set-sources-buffer)
+  (ecb-split-hor 0.5)
+  (ecb-set-methods-buffer)
+  (select-window (next-window)))
 
 ;; Layout Nr. 8 -----------------------------------------------------
 
-(defun ecb-layout-function-8 ()
+(ecb-layout-define 8 left
   "This function creates the following layout:
 
    -------------------------------------------------------
@@ -415,23 +359,16 @@ the layout contains no durable compilation window and the other windows get a
 little more place.
 This layout works best if you set `ecb-show-sources-in-directories-buffer'
 to non nil!"
-  (ecb-layout-create-layout
-   'left
-   (ecb-set-directories-buffer)
-   (ecb-split-ver 0.6)
-   (ecb-set-history-buffer)
-   (ecb-split-ver 0.4)
-   (ecb-set-methods-buffer)
-   (select-window (next-window))))
-
-(defalias 'ecb-delete-other-windows-in-editwindow-8
-  'ecb-delete-other-windows-ecb-windows-left)
-(defalias 'ecb-delete-window-in-editwindow-8
-  'ecb-delete-window-ecb-windows-left)
+  (ecb-set-directories-buffer)
+  (ecb-split-ver 0.6)
+  (ecb-set-history-buffer)
+  (ecb-split-ver 0.4)
+  (ecb-set-methods-buffer)
+  (select-window (next-window)))
 
 ;; Layout Nr. 9 -----------------------------------------------------
 
-(defun ecb-layout-function-9 ()
+(ecb-layout-define 9 left
   "This function creates the following layout:
 
    -------------------------------------------------------
@@ -459,25 +396,18 @@ to non nil!"
 If you have not set a compilation-window in `ecb-compile-window-height' then
 the layout contains no durable compilation window and the other windows get a
 little more place."
-  (ecb-layout-create-layout
-   'left
-   (ecb-set-directories-buffer)
-   (ecb-split-ver 0.3)
-   (ecb-set-sources-buffer)
-   (ecb-split-ver 0.35)
-   (ecb-set-methods-buffer)
-   (ecb-split-ver 0.65)
-   (ecb-set-history-buffer)
-   (select-window (next-window))))
-
-(defalias 'ecb-delete-other-windows-in-editwindow-9
-  'ecb-delete-other-windows-ecb-windows-left)
-(defalias 'ecb-delete-window-in-editwindow-9
-  'ecb-delete-window-ecb-windows-left)
+  (ecb-set-directories-buffer)
+  (ecb-split-ver 0.3)
+  (ecb-set-sources-buffer)
+  (ecb-split-ver 0.35)
+  (ecb-set-methods-buffer)
+  (ecb-split-ver 0.65)
+  (ecb-set-history-buffer)
+  (select-window (next-window)))
 
 ;; Layout Nr. 10 -----------------------------------------------------
 
-(defun ecb-layout-function-10 ()
+(ecb-layout-define 10 top
   "This function creates the following layout:
 
    -------------------------------------------------------
@@ -505,19 +435,12 @@ little more place."
 If you have not set a compilation-window in `ecb-compile-window-height' then
 the layout contains no durable compilation window and the other windows get a
 little more place."
-  (ecb-layout-create-layout
-   'top
-   (ecb-set-methods-buffer)
-   (select-window (next-window))))
-
-(defalias 'ecb-delete-other-windows-in-editwindow-10
-  'ecb-delete-other-windows-ecb-windows-top)
-(defalias 'ecb-delete-window-in-editwindow-10
-  'ecb-delete-window-ecb-windows-top)
+  (ecb-set-methods-buffer)
+  (select-window (next-window)))
 
 ;; Layout Nr. 11 -----------------------------------------------------
 
-(defun ecb-layout-function-11 ()
+(ecb-layout-define 11 left
   "This function creates the following layout:
 
    -------------------------------------------------------
@@ -545,19 +468,12 @@ little more place."
 If you have not set a compilation-window in `ecb-compile-window-height' then
 the layout contains no durable compilation window and the other windows get a
 little more place."
-  (ecb-layout-create-layout
-   'left
-   (ecb-set-methods-buffer)
-   (select-window (next-window))))
-
-(defalias 'ecb-delete-other-windows-in-editwindow-11
-  'ecb-delete-other-windows-ecb-windows-left)
-(defalias 'ecb-delete-window-in-editwindow-11
-  'ecb-delete-window-ecb-windows-left)
+  (ecb-set-methods-buffer)
+  (select-window (next-window)))
 
 ;; Layout Nr. 12 -----------------------------------------------------
 
-(defun ecb-layout-function-12 ()
+(ecb-layout-define 12 left
   "This function creates the following layout:
 
    -------------------------------------------------------
@@ -581,23 +497,16 @@ little more place."
 If you have not set a compilation-window in `ecb-compile-window-height' then the
 layout contains no durable compilation window and the other windows get a little
 more place."
-  (ecb-layout-create-layout
-   'left
-   (ecb-set-methods-buffer)
-   (ecb-split-ver 0.75)
-   (ecb-set-sources-buffer)
-   (ecb-split-hor 0.5)
-   (ecb-set-history-buffer)
-   (select-window (next-window))))
-
-(defalias 'ecb-delete-other-windows-in-editwindow-12
-  'ecb-delete-other-windows-ecb-windows-left)
-(defalias 'ecb-delete-window-in-editwindow-12
-  'ecb-delete-window-ecb-windows-left)
+  (ecb-set-methods-buffer)
+  (ecb-split-ver 0.75)
+  (ecb-set-sources-buffer)
+  (ecb-split-hor 0.5)
+  (ecb-set-history-buffer)
+  (select-window (next-window)))
 
 ;; Layout Nr. 13 -----------------------------------------------------
 
-(defun ecb-layout-function-13 ()
+(ecb-layout-define 13 left
   "This function creates the following layout:
 
    -------------------------------------------------------
@@ -621,21 +530,14 @@ more place."
 If you have not set a compilation-window in `ecb-compile-window-height' then the
 layout contains no durable compilation window and the other windows get a little
 more place."
-  (ecb-layout-create-layout
-   'left
-   (ecb-set-methods-buffer)
-   (ecb-split-ver 0.75)
-   (ecb-set-history-buffer)
-   (select-window (next-window))))
-
-(defalias 'ecb-delete-other-windows-in-editwindow-13
-  'ecb-delete-other-windows-ecb-windows-left)
-(defalias 'ecb-delete-window-in-editwindow-13
-  'ecb-delete-window-ecb-windows-left)
+  (ecb-set-methods-buffer)
+  (ecb-split-ver 0.75)
+  (ecb-set-history-buffer)
+  (select-window (next-window)))
 
 ;; Layout Nr. 14 -----------------------------------------------------
 
-(defun ecb-layout-function-14 ()
+(ecb-layout-define 14 left
   "This function creates the following layout:
 
    -------------------------------------------------------
@@ -663,19 +565,12 @@ more place."
 If you have not set a compilation-window in `ecb-compile-window-height' then
 the layout contains no durable compilation window and the other windows get a
 little more place."
-  (ecb-layout-create-layout
-   'left
-   (ecb-set-history-buffer)
-   (select-window (next-window))))
-
-(defalias 'ecb-delete-other-windows-in-editwindow-14
-  'ecb-delete-other-windows-ecb-windows-left)
-(defalias 'ecb-delete-window-in-editwindow-14
-  'ecb-delete-window-ecb-windows-left)
+  (ecb-set-history-buffer)
+  (select-window (next-window)))
 
 ;; Layout Nr. 15 -----------------------------------------------------
 
-(defun ecb-layout-function-15 ()
+(ecb-layout-define 15 left
   "This function creates the following layout:
 
    -------------------------------------------------------
@@ -703,19 +598,12 @@ little more place."
 If you have not set a compilation-window in `ecb-compile-window-height' then
 the layout contains no durable compilation window and the other windows get a
 little more place."
-  (ecb-layout-create-layout
-   'left
-   (ecb-set-directories-buffer)
-   (select-window (next-window))))
-
-(defalias 'ecb-delete-other-windows-in-editwindow-15
-  'ecb-delete-other-windows-ecb-windows-left)
-(defalias 'ecb-delete-window-in-editwindow-15
-  'ecb-delete-window-ecb-windows-left)
+  (ecb-set-directories-buffer)
+  (select-window (next-window)))
 
 ;; Layout Nr. 16 -----------------------------------------------------
 
-(defun ecb-layout-function-16 ()
+(ecb-layout-define 16 left
   "This function creates the following layout:
 
    -------------------------------------------------------
@@ -739,21 +627,14 @@ little more place."
 If you have not set a compilation-window in `ecb-compile-window-height' then the
 layout contains no durable compilation window and the other windows get a little
 more place."
-  (ecb-layout-create-layout
-   'left
-   (ecb-set-directories-buffer)
-   (ecb-split-ver 0.75)
-   (ecb-set-history-buffer)
-   (select-window (next-window))))
-
-(defalias 'ecb-delete-other-windows-in-editwindow-16
-  'ecb-delete-other-windows-ecb-windows-left)
-(defalias 'ecb-delete-window-in-editwindow-16
-  'ecb-delete-window-ecb-windows-left)
+  (ecb-set-directories-buffer)
+  (ecb-split-ver 0.75)
+  (ecb-set-history-buffer)
+  (select-window (next-window)))
 
 ;; Layout Nr. 17 -----------------------------------------------------
 
-(defun ecb-layout-function-17 ()
+(ecb-layout-define 17 left
   "This function creates the following layout:
 
    -------------------------------------------------------
@@ -783,18 +664,10 @@ the layout contains no durable compilation window and the other windows get a
 little more place.
 This layout works best if you set `ecb-show-sources-in-directories-buffer'
 to non nil!"
-  (ecb-layout-create-layout
-   'left
-   (ecb-set-directories-buffer)
-   (ecb-split-ver 0.5)
-   (ecb-set-methods-buffer)
-   (select-window (next-window))))
-
-(defalias 'ecb-delete-other-windows-in-editwindow-17
-  'ecb-delete-other-windows-ecb-windows-left)
-(defalias 'ecb-delete-window-in-editwindow-17
-  'ecb-delete-window-ecb-windows-left)
-
+  (ecb-set-directories-buffer)
+  (ecb-split-ver 0.5)
+  (ecb-set-methods-buffer)
+  (select-window (next-window)))
 
 (provide 'ecb-layout-defs)
 

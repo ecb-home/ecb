@@ -59,7 +59,7 @@
 ;; The latest version of the ECB is available at
 ;; http://home.swipnet.se/mayhem/ecb.html
 
-;; $Id: ecb.el,v 1.242 2002/10/16 16:44:17 berndl Exp $
+;; $Id: ecb.el,v 1.243 2002/10/18 10:45:44 berndl Exp $
 
 ;;; Code:
 
@@ -83,6 +83,7 @@
 ;; ecb loads
 (require 'tree-buffer)
 (require 'ecb-layout)
+(require 'ecb-create-layout)
 (require 'ecb-mode-line)
 (require 'ecb-util)
 (require 'ecb-help)
@@ -824,7 +825,7 @@ faces of TEXT!"
   (if (null face)
       text
     (let ((newtext (concat text)))
-      (if running-xemacs
+      (if ecb-running-xemacs
           (add-text-properties 0 (length newtext) (list 'face face) newtext)
         (alter-text-property 0 (length newtext) 'face
                              (lambda (current-face)
@@ -3215,7 +3216,7 @@ with idle-time IDLE-VALUE if IDLE-VALUE not nil. If nil the FUNC is added to
 (defun ecb-menu-item (item)
   "Build an XEmacs compatible menu item from vector ITEM.
 That is remove the unsupported :help stuff."
-  (if running-xemacs
+  (if ecb-running-xemacs
       (let ((n (length item))
             (i 0)
             slot l)
@@ -3298,6 +3299,13 @@ That is remove the unsupported :help stuff."
                    ecb-compile-window
                    (window-live-p ecb-compile-window))
       :help "Toggle enlarged compilation window."
+      ])
+   "-"
+   (ecb-menu-item
+    [ "Create new layout"
+      ecb-create-new-layout
+      :active (equal (selected-frame) ecb-frame)
+      :help "Create a new ECB-layout layout."
       ])
    "-"
    (list
@@ -3861,7 +3869,7 @@ always the ECB-frame if called from another frame."
       (add-hook 'ediff-quit-hook 'ecb-ediff-quit-hook t)
       
       ;; menus
-      (if running-xemacs
+      (if ecb-running-xemacs
           (add-submenu nil ecb-minor-menu))
 
       (setq ecb-minor-mode t)
@@ -3891,6 +3899,10 @@ always the ECB-frame if called from another frame."
       ;; now update all the ECB-buffer-modelines
       (ecb-mode-line-format)
 
+      ;; load user-defined layouts
+      (if (file-readable-p (expand-file-name ecb-create-layout-file))
+          (load-file (expand-file-name ecb-create-layout-file)))
+      
       ;; we run any personal hooks
       (run-hooks 'ecb-activate-hook)
 
@@ -3977,7 +3989,7 @@ always the ECB-frame if called from another frame."
         (remove-hook 'ediff-quit-hook 'ecb-ediff-quit-hook))
 
       ;; menus
-      (if running-xemacs
+      (if ecb-running-xemacs
           (easy-menu-remove ecb-minor-menu))
 
       ;; run any personal hooks

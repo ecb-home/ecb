@@ -26,7 +26,7 @@
 ;;
 ;; Contains all online-help for ECB (stolen something from recentf.el)
 
-;; $Id: ecb-help.el,v 1.81 2002/10/16 16:44:16 berndl Exp $
+;; $Id: ecb-help.el,v 1.82 2002/10/18 10:45:44 berndl Exp $
 
 ;;; Code
 
@@ -138,7 +138,7 @@ a backtrace-buffer and inserts the contents of that."
       (insert-string "\n\n")) 
     (let* ((messages-buffer 
 	    (get-buffer
-	     (if running-xemacs " *Message-Log*" "*Messages*")))
+	     (if ecb-running-xemacs " *Message-Log*" "*Messages*")))
 	   (backtrace-buffer (get-buffer "*Backtrace*")))
 
       ;;insert the contents of the backtrace buffer if it is there. 

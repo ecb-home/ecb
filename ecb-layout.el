@@ -37,37 +37,15 @@
 ;;    specified in `ecb-layout-nr'. All changes to the layout must be made
 ;;    by customizing this new option. Please read the very detailed comment
 ;;    of `ecb-layout-nr'!
-;; 2. Adding new layouts is now much easier and more straightforward: We
-;;    have now a main core-layout function (`ecb-redraw-layout') which is
+;; 2. Adding new layouts is now much easier and more straightforward:
+;;    We have now a main core-layout function (`ecb-redraw-layout') which is
 ;;    the "environment" for the specific "layout-index" functions. The core
 ;;    function does first some layout independent actions, then calls the
 ;;    layout-index-function for the index which has been set in
 ;;    `ecb-layout-nr' and after that it does some layout independent
 ;;    actions again (see the comments in this function).
-;;    An index layout function must follow the following guide-lines:
-;;    - The name of the function must be
-;;      "ecb-layout-function-<integer>". So this function is called for
-;;      layouting if a user has set in `ecb-layout-nr' <integer> als
-;;      general layout index.
-;;    - A layout functon is called without any argument.
-;;    - Preconditions a layout-function can assume:
-;;      + The current frame contains only one window
-;;      + This window is not dedicated
-;;    - Postconditions a layout-function must fulfil after finishing the
-;;      job:
-;;      + All windows of the layout must be created.
-;;      + The edit window must not be splitted! (This is done outside a
-;;        layout-function)
-;;      + The edit window must be stored in `ecb-edit-window'
-;;      + The compilation window (if one) must be stored in
-;;        `ecb-compile-window'.
-;;    - Things a layout function can/should use:
-;;      + Height of the compilation window (if any): `ecb-compile-window-height'
-;;      + Height of the ECB-windows: `ecb-windows-height'
-;;      + Width of the ECB-windows: `ecb-windows-width'
-;;    A good recipe to make a new layout-function is to copy an existing
-;;    one and modify that one.
-;;
+;;    See the macro `ecb-layout-define' and the command
+;;    `ecb-create-new-layout'!
 ;;
 ;; New adviced intelligent window-functions as replacement for these originals:
 ;; - `other-window'
@@ -97,8 +75,8 @@
 ;; - `ecb-with-adviced-functions'
 ;; - `ecb-with-some-adviced-functions'
 ;;
-;; IMPORTANT: For each layout-type (ecb-windows left, right or top) there are
-;; two functions:
+;; For each layout-type (ecb-windows left, right or top) there are two
+;; functions:
 ;; - 'ecb-delete-other-windows-ecb-windows[left|right|top]' and
 ;; - 'ecb-delete-window-ecb-windows[left|right|top]'.
 ;; Both of these functions follow the following guide-lines:
@@ -125,14 +103,14 @@
 ;;   + The edit-window must not be splitted and the point must reside in
 ;;     the not deleted edit-window.
 
-;; $Id: ecb-layout.el,v 1.118 2002/10/16 16:44:16 berndl Exp $
+;; $Id: ecb-layout.el,v 1.119 2002/10/18 10:45:44 berndl Exp $
 
 ;;; Code:
 
 (require 'ecb-util)
 (require 'ecb-create-layout)
 
-(if running-xemacs
+(if ecb-running-xemacs
     ;; because we want only check if the car of this function is equal for two
     ;; different windows for the sake if the two window are located side by
     ;; side or not we can here define this alias even if this function does in
@@ -634,7 +612,7 @@ command.")
 
 ;; ====== basic advices ===============================================
 
-(defconst ecb-basic-adviced-functions (if running-xemacs
+(defconst ecb-basic-adviced-functions (if ecb-running-xemacs
                                           '(delete-frame
                                             compilation-set-window-height
                                             shrink-window-if-larger-than-buffer
@@ -715,7 +693,7 @@ either not activated or it behaves exactly like the original version!"
             'vertical
           'horizontal)))))
 
-(if running-xemacs
+(if ecb-running-xemacs
     (progn
       ;; XEmacs-version
       (defadvice shrink-window-if-larger-than-buffer (around ecb)
@@ -845,7 +823,7 @@ either not activated or it behaves exactly like the original version!"
                (new-height (max (min text-height max-height) min-height)))
           (enlarge-window (- new-height win-height))))))
 
-  ) ;; end of (if running-xemacs...)
+  ) ;; end of (if ecb-running-xemacs...)
 
 (defun ecb-enable-basic-advices ()
   (dolist (elem ecb-basic-adviced-functions)
@@ -1686,11 +1664,16 @@ visibility of the ECB windows. ECB minor mode remains active!"
          t)
         (t nil)))
 
-;; Macro for easy creating layouts
-(defmacro ecb-layout-create-layout (type &rest create-code)
-  "Creates a new ECB-layout with type TYPE \(can be 'left, 'right or 'top).
+;; Macro for easy defining new layouts
+
+
+(defmacro ecb-layout-define (number type doc &rest create-code)
+  "Creates a new ECB-layout with number NUMBER. TYPE is the type of the new
+layout and is literal, i.e. not evaluated. It can be left, right or top. DOC
+is the docstring for the new layout-function \"ecb-layout-function-<number>\".
 CREATE-CODE is all the lisp code which is necessary to define the
 ECB-windows/buffers.
+
 Preconditions for CREATE-CODE:
 1. Current frame is splitted at least in one edit-window and the column \(for
    layout types 'left and 'right) resp. row \(for a 'top layout) for the
@@ -1717,8 +1700,8 @@ Things CREATE-CODE has to do:
    ECB-tree-window.
 4. Every\(!) ECB-tree-window must be named as described in 2.
 5. CREATE-CODE must work correctly regardless if there is already a
-   compile-window \(stored in `ecb-compile-window) or not
-   \(`ecb-compile-window is nil)
+   compile-window \(stored in `ecb-compile-window') or not
+   \(`ecb-compile-window' is nil)
 
 Things CREATE-CODE can do or can use:
 1. The value of `ecb-compile-window' which contains the compile-window \(if
@@ -1736,104 +1719,45 @@ Things CREATE-CODE must NOT do:
 Postconditions for CREATE-CODE:
 1. The edit-window must be the selected window and must not be dedicated."
   `(progn
-     (when ecb-compile-window-height
-       (ecb-split-ver (* -1 ecb-compile-window-height) t)
-       (setq ecb-compile-window (next-window)))
-     (cond ((equal ,type 'left)
-            (ecb-split-hor ecb-windows-width t))
-           ((equal ,type 'right)
-            (ecb-split-hor (- ecb-windows-width)))
-           ((equal ,type 'top)
-            (ecb-split-ver ecb-windows-height t)))
-     ,@create-code
-     (setq ecb-edit-window (selected-window))))
+     (defun ,(intern (format "ecb-layout-function-%d" number)) ()
+       ,doc
+       (when ecb-compile-window-height
+         (ecb-split-ver (- ecb-compile-window-height) t)
+         (setq ecb-compile-window (next-window)))
+       ,(cond ((equal type 'left)
+               '(ecb-split-hor ecb-windows-width t))
+              ((equal type 'right)
+               '(ecb-split-hor (- ecb-windows-width)))
+              ((equal type 'top)
+               '(ecb-split-ver ecb-windows-height t)))
+       ,@create-code
+       (setq ecb-edit-window (selected-window)))
+     (defalias (quote ,(intern
+                        (format "ecb-delete-other-windows-in-editwindow-%d"
+                                number)))
+       (quote ,(intern
+                (format "ecb-delete-other-windows-ecb-windows-%s" type))))
+     (defalias (quote ,(intern
+                        (format "ecb-delete-window-in-editwindow-%d"
+                                number)))
+       (quote ,(intern
+                (format "ecb-delete-window-ecb-windows-%s" type))))))
 
-;; (insert (pp (macroexpand '(ecb-layout-create-layout
-;;                    'left
-;;                    (ecb-split-ver 0.3076923076923077 t)
-;;                    (ecb-set-buffer "ecb-directories-buffer-name")
-;;                    (dotimes
-;;                        (i 1)
-;;                      (other-window 1)
-;;                      (if
-;;                          (equal
-;;                           (selected-window)
-;;                           ecb-compile-window)
-;;                          (other-window 1)))
-;;                    (ecb-split-ver 0.5 t)
-;;                    (ecb-set-buffer "ecb-sources-buffer-name")
-;;                    (dotimes
-;;                        (i 1)
-;;                      (other-window 1)
-;;                      (if
-;;                          (equal
-;;                           (selected-window)
-;;                           ecb-compile-window)
-;;                          (other-window 1)))
-;;                    (delete-window)
-;;                    (dotimes
-;;                        (i 1)
-;;                      (other-window -1)
-;;                      (if
-;;                          (equal
-;;                           (selected-window)
-;;                           ecb-compile-window)
-;;                          (other-window -1)))
-;;                    (ecb-split-ver 0.5 t)
-;;                    (ecb-set-buffer "ecb-sources-buffer-name")
-;;                    (dotimes
-;;                        (i 1)
-;;                      (other-window 1)
-;;                      (if
-;;                          (equal
-;;                           (selected-window)
-;;                           ecb-compile-window)
-;;                          (other-window 1)))
-;;                    (ecb-set-buffer "ecb-methods-buffer-name")
-;;                    (dotimes
-;;                        (i 2)
-;;                      (other-window 1)
-;;                      (if
-;;                          (equal
-;;                           (selected-window)
-;;                           ecb-compile-window)
-;;                          (other-window 1)))
-;;                    (dotimes
-;;                        (i 1)
-;;                      (other-window 1)
-;;                      (if
-;;                          (equal
-;;                           (selected-window)
-;;                           ecb-compile-window)
-;;                          (other-window 1)))
-;;                    (ecb-split-hor 0.5 t)
-;;                    (ecb-set-buffer "ecb-sources-buffer-name")
-;;                    (dotimes
-;;                        (i 1)
-;;                      (other-window 1)
-;;                      (if
-;;                          (equal
-;;                           (selected-window)
-;;                           ecb-compile-window)
-;;                          (other-window 1)))
-;;                    (ecb-set-buffer "ecb-history-buffer-name")
-;;                    (dotimes
-;;                        (i 1)
-;;                      (other-window 1)
-;;                      (if
-;;                          (equal
-;;                           (selected-window)
-;;                           ecb-compile-window)
-;;                          (other-window 1)))
-;;                    (dotimes
-;;                        (i 1)
-;;                      (other-window 1)
-;;                      (if
-;;                          (equal
-;;                           (selected-window)
-;;                           ecb-compile-window)
-;;                          (other-window 1)))))))
+(put 'ecb-layout-define 'lisp-indent-function 1)
 
+;; (insert (pp (macroexpand
+;;              `(ecb-layout-define 0 left
+;;                                 "This function creates the following layout:"
+;;                                 (ecb-set-directories-buffer)
+;;                                 (ecb-split-ver 0.3)
+;;                                 (ecb-set-sources-buffer)
+;;                                 (ecb-split-ver 0.5)
+;;                                 (ecb-set-methods-buffer)
+;;                                 (select-window (previous-window))
+;;                                 (ecb-split-hor 0.5)
+;;                                 (ecb-set-history-buffer)
+;;                                 (select-window (next-window
+;;                                 (next-window)))))))
 
 
 ;; the main layout core-function. This function is the "environment" for a
@@ -2223,7 +2147,6 @@ first effect after restarting ECB!"
                                        compile-window-height-lines)))
             (enlarge-window (max 0 (- max-height (window-height)))))))
     (message "No ecb-compile-window in current ECB-layout!")))
-
 
 (provide 'ecb-layout)
 
