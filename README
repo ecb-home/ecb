@@ -14,7 +14,7 @@ http://home.swipnet.se/mayhem/ecb.html
 Requirements
 ------------
 
-ECB requires version 1.3.3 of Eric's semantic bovinator
+ECB requires version 1.3.3 or higher of Eric's semantic bovinator
 (http://www.ultranet.com/~zappo/semantic.shtml).  If Java code is edited the ECB
 works best when the JDE package (http://sunsite.auc.dk/jde) is installed.
 

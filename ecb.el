@@ -52,13 +52,25 @@
 ;; The latest version of the ECB is available at
 ;; http://home.swipnet.se/mayhem/ecb.html
 
-;; $Id: ecb.el,v 1.93 2001/05/22 13:55:16 berndl Exp $
+;; $Id: ecb.el,v 1.94 2001/05/23 21:13:09 berndl Exp $
 
 ;;; Code:
 
-(require 'semantic)
-(require 'semantic-el)
-(require 'semantic-c)
+(if (and (boundp 'semantic-version)
+         (string-match "^1\\.4" semantic-version))
+    (progn
+      (setq semantic-load-turn-everything-on nil)
+      (require 'semantic-load)
+      ;; we need all the macros of semantic-util
+      (eval-when-compile
+        (require 'semantic-util)))
+  ;; semantic 1.3.X
+  (require 'semantic)
+  (require 'semantic-el)
+  (require 'semantic-c)
+  (require 'semantic-make)
+)
+
 (require 'tree-buffer)
 (require 'ecb-layout)
 (require 'ecb-mode-line)
