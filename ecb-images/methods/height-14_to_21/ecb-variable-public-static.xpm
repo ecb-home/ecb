@@ -12,7 +12,7 @@ static char * ecb_variable_public_static_xpm[] = {
 "*	c #6E7683",
 "=	c #E7EBD8",
 "-	c #8296BD",
-";	c #060606",
+";	c #040404",
 ">	c #2D3544",
 ",	c #CBCEBD",
 "'	c #5C729A",

@@ -6,7 +6,7 @@ static char * ecb_variable_private_xpm[] = {
 "+	c #F2F2F2",
 "@	c #FF9090",
 "#	c #FFFFFF",
-"$	c #060606",
+"$	c #040404",
 "%	c #C2CBDF",
 "&	c #8AAAEA",
 "*	c #83A1DE",
