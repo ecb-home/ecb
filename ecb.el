@@ -181,7 +181,7 @@ The parameters are set for the following display-types:
                           (if ,reverse-video (list :reverse-video t))))))
 
 
-(defface ecb-directories-general-face (ecb-face-default 0.9)
+(defface ecb-directories-general-face (ecb-face-default 0.95)
   "Basic face for the ECB directories buffer.
 It큦 recommended to define here the font-family, the font-size, the basic
 color etc."
@@ -193,10 +193,9 @@ face the whole directory buffer should displayed with. If nil then no special
 face is used but always the default-face."
   :group 'ecb-faces
   :group 'ecb-directories
-  :type '(choice (const :tag "No special face" :value nil)
-                 face))
+  :type 'face)
 
-(defface ecb-sources-general-face (ecb-face-default 0.9)
+(defface ecb-sources-general-face (ecb-face-default 0.95)
   "Basic face for the ECB sources buffer.
 It큦 recommended to define here the font-family, the font-size, the basic
 color etc."
@@ -210,7 +209,7 @@ face is used but always the default-face."
   :group 'ecb-sources
   :type 'face)
 
-(defface ecb-methods-general-face (ecb-face-default 0.9)
+(defface ecb-methods-general-face (ecb-face-default 0.95)
   "Basic face for the ECB methods buffer.
 It큦 recommended to define here the font-family, the font-size, the basic
 color etc."
@@ -224,7 +223,7 @@ face is used but always the default-face."
   :group 'ecb-methods
   :type 'face)
 
-(defface ecb-history-general-face (ecb-face-default 0.9)
+(defface ecb-history-general-face (ecb-face-default 0.95)
   "Basic face for the ECB history buffer.
 It큦 recommended to define here the font-family, the font-size, the basic
 color etc."
