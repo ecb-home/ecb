@@ -1,6 +1,11 @@
 Version 1.xx:
 -------------
 
+- Complete new customization of the ECB-keybindings. The option
+  `ecb-prefix-key' has been removed. There is one new option `ecb-key-map'
+  where you can customize all keysettings of ECB (including a common
+  prefixkey). (Klaus)
+
 - ecb-add-source-path and ecb-delete-source-path now ask if saving should be
   done for future sessions (Klaus).
 

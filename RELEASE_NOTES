@@ -18,6 +18,9 @@ No special notes beyond the contents of README.
 Upgrading from any previous version:
 ------------------------------------
 
++ The option ecb-prefix-key has been removed. Now all customization of
+  keybindings is done via the new option ecb-key-map.
+
 + ecb-layout-window-sizes is now an association list. If you have customized
   this variable or used the ecb-store-window-sizes function, there will be an
   error when drawing the ECB layout. Reset ecb-layout-window-sizes to it's
@@ -28,7 +31,7 @@ Upgrading from any previous version:
 + A new customization variable ecb-show-tokens controls the behaviour of the
   methods buffer. Read the documentation for more information.
 
-
+  
 Upgrading from versions < 1.20:
 -------------------------------
 
