@@ -1,8 +1,11 @@
 ********************************************************************************
-*** Last-Modified: $Date: 2001/04/15 11:11:11 $ 
-*** Version: $Id: TODO,v 1.6 2001/04/15 11:11:11 berndl Exp $
+*** Last-Modified: $Date: 2001/04/24 20:44:09 $ 
+*** Version: $Id: TODO,v 1.7 2001/04/24 20:44:09 creator Exp $
 *** Author: Kevin A. Burton ( burton@apache.org | burton@openprivacy.org )
 ********************************************************************************
+
+- JN: Possibility to save the current sizes of the windows. This will make it
+      possible to customize the layout better.
 
 - KB: Intelligent automatic scrolling the ECB-buffers. If i expand a
    node (e.g. in the directory buffer), the tree-buffer should auto.
@@ -10,14 +13,6 @@
    it´s subnodes. It´s annoying to expand the node in the last visible
    line of the directory-window and then i must manually scroll down
    to see the subnodes!
-
-- other-window ignores all the ECB windows.  I realize that the goal was to only
-  have the side windows as non-important to your current editing activity but if
-  you want to use ECB without the mouse then this is impossible :(
-
-   KB: In current version the advice of 'other-window' can either be
-   deactivated or - and this is the better way - you can set the
-   behavior of it via the option 'ecb-other-window-jump-behavior'!
 
 - KB: Special keymap for all ECB-buffers for better keyboard-usability:
   If the ECB-buffers are readonly (see above) then we can do the
