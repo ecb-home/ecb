@@ -25,7 +25,7 @@
 @c Free Software Foundation, Inc., 59 Temple Place - Suite 330,
 @c Boston, MA 02111-1307, USA.
 
-@c $Id: ecb.texi,v 1.100 2003/07/14 14:48:41 berndl Exp $
+@c $Id: ecb.texi,v 1.101 2003/07/15 07:57:19 berndl Exp $
 
 @setfilename ecb.info
 
@@ -7705,6 +7705,13 @@ works even better and saver as without activated ECB!
 It is recommended not to use Gnus and ECB simultaniously in one frame
 because each of them has its own window-management and probably there
 will be conflicts. Use different frames for ECB and Gnus!
+
+@subsection Package BBDB
+
+@cindex BBDB
+It is recommended not to use BBDB and ECB simultaniously in one frame
+because each of them has its own window-management and probably there
+will be conflicts. Use different frames for ECB and BBDB!
 
 @subsection Package VC (Version Control)
 

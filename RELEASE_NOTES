@@ -18,6 +18,16 @@ No special notes beyond the contents of README.
 Upgrading from any version:
 ---------------------------
 
+If there are byte-compiled(!) user-defined layouts - either created
+interactively by `ecb-create-new-layout' or programmed with the macro
+`ecb-layout-define' - then the file where these user-defined layouts are saved
+must be re-byte-compiled with latest ECB version >= 1.95.1! If the use-defined
+layouts are not byte-compiled then there is nothing to do.
+
+
+Upgrading from version < 1.95:
+------------------------------
+
 Some default keybindings have changed; the new bindings are:
 
   C-c . r:  `ecb-rebuild-methods-buffer'
@@ -31,7 +41,8 @@ ECB now requires speedbar. ECB needs a version >= 0.14beta1.
 For XEmacs now the package c-support (contains hideshow.el) has to be
 installed.
 
-Upgrading from versions >= 1.90:
+
+Upgrading from versions < 1.92:
 --------------------------------
 
 The type of the option `ecb-truncate-lines' has changed.

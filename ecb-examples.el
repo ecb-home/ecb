@@ -50,7 +50,7 @@
 ;; history of the ECB-package see the file NEWS.
 
 
-;; $Id: ecb-examples.el,v 1.8 2003/07/14 14:48:41 berndl Exp $
+;; $Id: ecb-examples.el,v 1.9 2003/07/15 07:57:19 berndl Exp $
 
 ;;; Code
 
@@ -146,6 +146,10 @@ it will be called autom. with `ecb-current-buffer-sync-hook'."
                                            (buffer-name (current-buffer)))))))
 
 
+
+;; The "dedicated setter" function for the bufferinfo-buffer. See
+;; `ecb-with-dedicated-window' for an explanation.
+
 (defun ecb-examples-set-bufferinfo-buffer ()
   "Set the buffer in the current window to the bufferinfo-buffer and make this
 window dedicated for this buffer."
@@ -234,6 +238,11 @@ done."
            (call-interactively 'scroll-up))
           (t nil))))
 
+
+
+;; The "dedicated setter" function for the bufferinfo-buffer. See
+;; `ecb-with-dedicated-window' for an explanation.
+
 (defun ecb-examples-set-action-buffer ()
   "Set the buffer in the current window to the action-buffer and make this
 window dedicated for this buffer."
@@ -284,17 +293,15 @@ demonstrates how to drive the edit-window with actions performed in a special
 window/buffer of a layout."
 
   ;; dedicating the bufferinfo window to the bufferinfo-buffer
-  (ecb-with-dedicated-window
-   (switch-to-buffer (get-buffer-create ecb-examples-bufferinfo-buffer-name))
-   (setq buffer-read-only t))
+  (ecb-examples-set-bufferinfo-buffer)
   
   ;; creating the action-window
   (ecb-split-hor 0.75)
   
-  ;; dedicate the action window to the action-buffer
+  ;; dedicating the action window to the action-buffer
   (ecb-examples-set-action-buffer)
 
-  ;; select the edit-window
+  ;; selecting the edit-window
   (select-window (next-window)))
 
 
