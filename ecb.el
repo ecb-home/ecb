@@ -50,7 +50,7 @@
 ;; The latest version of the ECB is available at
 ;; http://home.swipnet.se/mayhem/ecb.html
 
-;; $Id: ecb.el,v 1.49 2001/04/24 20:44:09 creator Exp $
+;; $Id: ecb.el,v 1.50 2001/04/24 21:40:57 creator Exp $
 
 ;;; Code:
 
@@ -194,17 +194,23 @@ and then activating ECB again!"
   :group 'ecb-sources
   :type 'string)
 
-(defcustom ecb-source-file-regexp "\\(\\(M\\|m\\)akefile\\|^\\.\\(emacs\\|gnus\\)\\|.*\\.\\(java\\|el\\|c\\|cc\\|h\\|hh\\|txt\\|html\\|mk\\|xml\\|dtd\\|texi\\|info\\|bnf\\|cpp\\|hpp\\)\\)$"
-  "*Files matching this regular expression will be shown in the source
-buffer."
-  :group 'ecb-sources
-  :type 'regexp)
-
-(defcustom ecb-source-file-exclude-regexp "\\(^\\.[^eg].*\\|~$\\)"
-  "*Files matching this regular expression will not be shown in the source
-buffer."
-  :group 'ecb-sources
-  :type 'regexp)
+(defcustom ecb-source-file-regexps
+ '("\\(^\\(\\.\\|#\\)\\|~$\\)" "^\\.\\(emacs\\|gnus\\)$")
+ "*Specifies which files are shown as source files. Consists of one exclude regexp and one include regexp. A file is displayed in the source-buffer of ECB iff:
+the file does not match the exclude regexp OR the file matches the include
+regexp."
+ :group 'ecb-sources
+ :type '(radio (const :tag "All files"
+		      :value ("" ""))
+	       (const :tag "All files except those starting with \".\", \"#\" or ending with \"~\" (but including .emacs and .gnus)"
+		      :value ("\\(^\\(\\.\\|#\\)\\|~$\\)" "^\\.\\(emacs\\|gnus\\)$"))
+	       (const :tag "Common source file types (.c, .java etc.)"
+		      :value ("" "\\(\\(M\\|m\\)akefile\\|.*\\.\\(java\\|el\\|c\\|cc\\|h\\|hh\\|txt\\|html\\|texi\\|info\\|bnf\\)\\)$"))
+	       (list :tag "Custom (tips: \"$^\" matches no files, \"\" mathes all files)"
+		     (regexp :tag "Exclude regexp"
+			     :value "")
+		     (regexp :tag "Include regexp"
+			     :value ""))))
 
 (defcustom ecb-show-source-file-extension t
   "*Show the file extension of source files."
@@ -687,8 +693,8 @@ highlighting of the methods if `ecb-font-lock-methods' is not nil."
     (dolist (file files)
       (let ((long-file-name (concat dir "/" file)))
 	(if (and (not (file-directory-p long-file-name))
-		 (string-match ecb-source-file-regexp file)
-		 (not (string-match ecb-source-file-exclude-regexp file)))
+		 (or (string-match (cadr ecb-source-file-regexps) file)
+		     (not (string-match (car ecb-source-file-regexps) file))))
 	    (setq source-files (list-append source-files (list file))))))
     source-files))
 
@@ -716,7 +722,7 @@ highlighting of the methods if `ecb-font-lock-methods' is not nil."
      path
      (ecb-get-source-files
       ecb-path-selected-directory
-      (directory-files ecb-path-selected-directory nil ecb-source-file-regexp t))
+      (directory-files ecb-path-selected-directory nil nil t))
      0
      ecb-show-source-file-extension
      old-children t))
