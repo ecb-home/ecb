@@ -18,11 +18,6 @@
    KB: No, this should not be moved. The left- and the middle-mouse
    button jumps to different edit windows amd this is a very useful behavior.
 
-- more readme.txt, history.txt, and makefile to README, HISTORY and
-  Makefile
-   
-   KB: I agree.
-
 - All of the ECB special buffer accept text input( I can type in this buffer if
   I wanted to ).  This buffer should be read-only.  
 
