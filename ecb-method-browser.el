@@ -24,7 +24,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-method-browser.el,v 1.26 2004/03/26 09:35:57 berndl Exp $
+;; $Id: ecb-method-browser.el,v 1.27 2004/03/26 16:00:35 berndl Exp $
 
 ;;; Commentary:
 
@@ -625,16 +625,16 @@ by semantic!"
                  (parent collapsed nil)
                  (type flattened nil)
                  (variable collapsed access)
-                 (function flattened access) ;; for Methods
                  (function collapsed access) ;; for Method-prototypes
+                 (function flattened access) ;; for Methods
                  (label hidden nil)
                  (t collapsed nil)))
     (c-mode . ((include collapsed nil)
                (parent collapsed nil)
                (type flattened nil)
                (variable collapsed access)
-               (function flattened access) ;; for Functions
                (function collapsed access) ;; for Function-prototypes
+               (function flattened access) ;; for Functions
                (label hidden nil)
                (t collapsed nil)))
     (texinfo-mode . ((section flattened nil)
@@ -908,39 +908,6 @@ fulfilled:
       (member fnc (cdr (assoc major-mode ecb-tag-visit-post-actions)))))
 
 (defcustom ecb-methods-menu-user-extension nil
-;;   '(("Filter tags"
-;;      (ecb-methods-filter-by-nothing-popup "No tag filter")
-;;      (ecb-methods-filter-delete-last-popup "Remove last added")
-;;       ("---")
-;;      (ecb-methods-filter-by-regexp-popup "By regexp")
-;;      ("By protection"
-;;       (ecb-methods-filter-by-private-prot "private")
-;;       (ecb-methods-filter-by-protected-prot "protected")
-;;       (ecb-methods-filter-by-public-prot "public"))
-;;      ("By tag-class"
-;;       (ecb-methods-filter-by-function-tagclass "function")
-;;       (ecb-methods-filter-by-variable-tagclass "variable")
-;;       (ecb-methods-filter-by-type-tagclass "type")
-;;       (ecb-methods-filter-by-include-tagclass "include")
-;;       (ecb-methods-filter-by-rule-tagclass "rule")
-;;       (ecb-methods-filter-by-section-tagclass "section")
-;;       (ecb-methods-filter-by-def-tagclass "def"))
-;;      (ecb-methods-filter-by-function-popup "By a filter-function")
-;;      ("---")
-;;      (ecb-methods-filter-by-regexp-popup-inverse "By inverse regexp")
-;;      ("By inverse protection"
-;;       (ecb-methods-filter-by-private-prot-inverse "not private")
-;;       (ecb-methods-filter-by-protected-prot-inverse "not protected")
-;;       (ecb-methods-filter-by-public-prot-inverse "not public"))
-;;      ("By inverse tag-class"
-;;       (ecb-methods-filter-by-function-tagclass-inverse "not function")
-;;       (ecb-methods-filter-by-variable-tagclass-inverse "not variable")
-;;       (ecb-methods-filter-by-type-tagclass-inverse "not type")
-;;       (ecb-methods-filter-by-include-tagclass-inverse "not include")
-;;       (ecb-methods-filter-by-rule-tagclass-inverse "not rule")
-;;       (ecb-methods-filter-by-section-tagclass-inverse "not section")
-;;       (ecb-methods-filter-by-def-tagclass-inverse "not def"))
-;;      (ecb-methods-filter-by-function-popup-inverse "By a inverse filter-function")))
   "*Static user extensions for the popup-menu of the methods buffer.
 For further explanations see `ecb-directories-menu-user-extension'.
 
@@ -2314,23 +2281,23 @@ to be rescanned/reparsed and therefore the Method-buffer will be rebuild too."
            (semantic-symbol->name-assoc-list-for-type-parts
             (and (ecb--semantic-active-p)
                  (ecb--semantic-symbol->name-assoc-list-for-type-parts)
-                 (append semantic-symbol->name-assoc-list-for-type-parts
-                         (list (cons 'prototype
-                                     (format "%s-prototypes"
-                                             (ecb-string-make-singular
-                                              (cdr (assoc 'function
-                                                          (ecb--semantic-symbol->name-assoc-list-for-type-parts)
-                                                          )))))))))
+                 (cons (cons 'prototype
+                             (format "%s-prototypes"
+                                     (ecb-string-make-singular
+                                      (cdr (assoc 'function
+                                                  (ecb--semantic-symbol->name-assoc-list-for-type-parts)
+                                                  )))))
+                       (ecb--semantic-symbol->name-assoc-list-for-type-parts))))
            (semantic-symbol->name-assoc-list
             (and (ecb--semantic-active-p)
                  (ecb--semantic-symbol->name-assoc-list)
-                 (append semantic-symbol->name-assoc-list
-                         (list (cons 'prototype
-                                     (format "%s-prototypes"
-                                             (ecb-string-make-singular
-                                              (cdr (assoc 'function
-                                                          (ecb--semantic-symbol->name-assoc-list)
-                                                          )))))))))
+                 (cons (cons 'prototype
+                             (format "%s-prototypes"
+                                     (ecb-string-make-singular
+                                      (cdr (assoc 'function
+                                                  (ecb--semantic-symbol->name-assoc-list)
+                                                  )))))
+                       (ecb--semantic-symbol->name-assoc-list))))
            (curr-semantic-symbol->name-assoc-list semantic-symbol->name-assoc-list)
            new-tree non-semantic-handling)
       
@@ -2649,6 +2616,9 @@ current buffer."
         (if curr-tag
             (ecb-try-highlight-tag highlight-tag type-tag table)))))
 
+(defvar ecb-tag-sync-do-nothing nil
+  "Only set by `ecb-jump-to-tag' and only evaluated by `ecb-tag-sync'")
+
 ;; This approach only expands the needed parts of the tree-buffer when
 ;; the current-tag is not visible as node and not the whole tree-buffer.
 (defun ecb-tag-sync (&optional force)
@@ -2658,62 +2628,67 @@ current buffer."
              ;; done via post-command-hook and not via an idle-timer.
              (not (ecb-point-in-dedicated-special-buffer))
              (not (ecb-point-in-compile-window)))
-    (when ecb-highlight-tag-with-point
-      (let ((curr-tag (ecb-get-real-curr-tag)))
-        (when (or force (not (equal ecb-selected-tag curr-tag)))
-          (setq ecb-selected-tag curr-tag)
-          ;; If there is no tag to highlight then we remove the highlighting
-          (if (null curr-tag)
-              (save-selected-window
-                (ecb-exec-in-methods-window
-                 (tree-buffer-highlight-node-data nil)))
-            ;; Maybe we must first collapse all so only the needed parts are
-            ;; expanded afterwards. Klaus Berndl <klaus.berndl@sdm.de>: Is it
-            ;; necessary to update the tree-buffer after collapsing? IMO yes,
-            ;; because otherwise we set the expansion-state of the tree-buffer
-            ;; to all collapsed and if we find really nothing to highlight and
-            ;; do also no node-expanding (which would update the tree-buffer)
-            ;; then we have an inconsistent state - would be probably very
-            ;; seldom but could be - so let us per somehow paranoid ;-)
-            (if ecb-auto-expand-tag-tree-collapse-other
+    (if ecb-tag-sync-do-nothing
+        ;; user has selected a tag via the Methods-window so there is nothing
+        ;; to sync - but we must reset this flag so the resync-mechanism runs
+        ;; next time...
+        (setq ecb-tag-sync-do-nothing nil)
+      (when ecb-highlight-tag-with-point
+        (let ((curr-tag (ecb-get-real-curr-tag)))
+          (when (or force (not (equal ecb-selected-tag curr-tag)))
+            (setq ecb-selected-tag curr-tag)
+            ;; If there is no tag to highlight then we remove the highlighting
+            (if (null curr-tag)
                 (save-selected-window
                   (ecb-exec-in-methods-window
-                   (when (and curr-tag
-                              (or (equal ecb-auto-expand-tag-tree 'all)
-                                  (member (ecb--semantic-tag-class curr-tag)
-                                          (ecb-normalize-expand-spec
-                                           ecb-methods-nodes-expand-spec))))
-                     (ecb-expand-methods-node-internal
-                      (tree-buffer-get-root)
-                      -1
-                      (equal ecb-auto-expand-tag-tree 'all)
-                      nil t)))))
-            ;; First we try to expand only the absolute needed parts - this
-            ;; means we go upstairs the ladder of types the current tag
-            ;; belongs to. If there is no containing type then we try to
-            ;; expand only the containing toplevel bucket. If this has no
-            ;; success then we expand the full tree-buffer and try it again.
-            (if (not (ecb-try-highlight-tag curr-tag curr-tag
-                                            (ecb-get-current-tag-table)))
-                ;; The node representing CURR-TAG could not be highlighted by
-                ;; `tree-buffer-highlight-node-data' - probably it is still
-                ;; invisible. Let's try to make visible all nodes and then
-                ;; highlighting again.
-                (save-selected-window
-                  (ecb-exec-in-methods-window
-                   (when (and curr-tag
-                              (or (equal ecb-auto-expand-tag-tree 'all)
-                                  (member (ecb--semantic-tag-class curr-tag)
-                                          (ecb-normalize-expand-spec
-                                           ecb-methods-nodes-expand-spec))))
-                     (ecb-expand-methods-node-internal
-                      (tree-buffer-get-root)
-                      100 ;; this should be enough levels ;-)
-                      (equal ecb-auto-expand-tag-tree 'all)
-                      nil t)
-                     (tree-buffer-highlight-node-data
-                      curr-tag nil (equal ecb-highlight-tag-with-point 'highlight)))
-                   )))))))))
+                   (tree-buffer-highlight-node-data nil)))
+              ;; Maybe we must first collapse all so only the needed parts are
+              ;; expanded afterwards. Klaus Berndl <klaus.berndl@sdm.de>: Is it
+              ;; necessary to update the tree-buffer after collapsing? IMO yes,
+              ;; because otherwise we set the expansion-state of the tree-buffer
+              ;; to all collapsed and if we find really nothing to highlight and
+              ;; do also no node-expanding (which would update the tree-buffer)
+              ;; then we have an inconsistent state - would be probably very
+              ;; seldom but could be - so let us per somehow paranoid ;-)
+              (if ecb-auto-expand-tag-tree-collapse-other
+                  (save-selected-window
+                    (ecb-exec-in-methods-window
+                     (when (and curr-tag
+                                (or (equal ecb-auto-expand-tag-tree 'all)
+                                    (member (ecb--semantic-tag-class curr-tag)
+                                            (ecb-normalize-expand-spec
+                                             ecb-methods-nodes-expand-spec))))
+                       (ecb-expand-methods-node-internal
+                        (tree-buffer-get-root)
+                        -1
+                        (equal ecb-auto-expand-tag-tree 'all)
+                        nil t)))))
+              ;; First we try to expand only the absolute needed parts - this
+              ;; means we go upstairs the ladder of types the current tag
+              ;; belongs to. If there is no containing type then we try to
+              ;; expand only the containing toplevel bucket. If this has no
+              ;; success then we expand the full tree-buffer and try it again.
+              (if (not (ecb-try-highlight-tag curr-tag curr-tag
+                                              (ecb-get-current-tag-table)))
+                  ;; The node representing CURR-TAG could not be highlighted by
+                  ;; `tree-buffer-highlight-node-data' - probably it is still
+                  ;; invisible. Let's try to make visible all nodes and then
+                  ;; highlighting again.
+                  (save-selected-window
+                    (ecb-exec-in-methods-window
+                     (when (and curr-tag
+                                (or (equal ecb-auto-expand-tag-tree 'all)
+                                    (member (ecb--semantic-tag-class curr-tag)
+                                            (ecb-normalize-expand-spec
+                                             ecb-methods-nodes-expand-spec))))
+                       (ecb-expand-methods-node-internal
+                        (tree-buffer-get-root)
+                        100 ;; this should be enough levels ;-)
+                        (equal ecb-auto-expand-tag-tree 'all)
+                        nil t)
+                       (tree-buffer-highlight-node-data
+                        curr-tag nil (equal ecb-highlight-tag-with-point 'highlight)))
+                     ))))))))))
 
 
 (defun ecb-find-file-and-display (filename other-edit-window)
@@ -3122,6 +3097,10 @@ nil too then no post-actions are performed."
              (push-mark nil t))
          (widen)
          (goto-char (ecb-semantic-tag-start tag))
+         ;; the following 2 lines prevent the autom. tag-sync-mechanism from
+         ;; starting.
+         (setq ecb-tag-sync-do-nothing t)
+         (setq ecb-selected-tag tag)
          ;; process post action
          (unless no-tag-visit-post-actions
            ;; first the default post actions
