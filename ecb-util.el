@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-util.el,v 1.87 2003/12/09 16:47:57 berndl Exp $
+;; $Id: ecb-util.el,v 1.88 2003/12/15 17:29:36 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -209,7 +209,7 @@ means not to count the minibuffer even if it is active."
                                           (pop-to-buffer . around)
                                           (enlarge-window . around)
                                           (shrink-window . around)
-                                          (tmm-menubar . around)
+                                          (tmm-prompt . around)
                                           (scroll-other-window . around)
                                           (custom-save-all . around)
                                           (narrow-to-region . before)

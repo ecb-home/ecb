@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb.el,v 1.353 2003/12/09 16:47:57 berndl Exp $
+;; $Id: ecb.el,v 1.354 2003/12/15 17:29:35 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -2214,17 +2214,9 @@ always the ECB-frame if called from another frame."
     (if ecb-running-xemacs
         (redraw-modeline t)
       (force-mode-line-update t))
-    (error "ECB %s: %s (%S)" ecb-version msg err)))
+    (error "ECB %s: %s (error-type: %S, error-data: %S)" ecb-version msg
+           (car err) (cdr err))))
   
-
-(defun ecb-xemacs-add-submenu-hack ()
-  "XEmacs seems not to add the ECB-menu to the menubar for that buffer which
-is current when ECB is activated. This hack fixes this."
-;;   (ignore-errors
-;;     (if (null (car (find-menu-item current-menubar (list ecb-menu-name))))
-;;         (add-submenu nil ecb-minor-menu)))
-  (remove-hook 'post-command-hook
-               'ecb-xemacs-add-submenu-hack))
 
 (defun ecb-activate--impl ()
   "See `ecb-activate'.  This is the implementation of ECB activation."
@@ -2234,6 +2226,9 @@ is current when ECB is activated. This hack fixes this."
   
   (if ecb-minor-mode
       (progn
+        ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: We should here check if
+        ;; we are in another frame and if yes, we should ask if the user want
+        ;; so switch to the ecb-frame!
 	(raise-frame ecb-frame)
 	(select-frame ecb-frame)
 	(ecb-redraw-layout)
@@ -2630,12 +2625,6 @@ is current when ECB is activated. This hack fixes this."
          (ecb-clean-up-after-activation-failure
           "Errors during setting the default directory." err-obj)))
 
-      ;; We need this ugly hack for a XEmacs-mystery concerning `add-submenu';
-      ;; see `ecb-xemacs-add-submenu-hack'. `ecb-xemacs-add-submenu-hack'
-      ;; removes itself from the post-command-hook after the first call!
-      (when ecb-running-xemacs
-        (add-hook 'post-command-hook 'ecb-xemacs-add-submenu-hack))
-      
       (condition-case err-obj
           ;; we run any personal hooks
           (run-hooks 'ecb-activate-hook)
@@ -2883,7 +2872,8 @@ if the minor mode is enabled.
     (force-mode-line-update t))
   ecb-minor-mode)
 
-(defun ecb-maximize-ecb-window-menu-wrapper (node)
+(tree-buffer-defpopup-command ecb-maximize-ecb-window-menu-wrapper
+  "Expand the current ECB-window from popup-menu."
   (let ((ecb-buffer (current-buffer)))
     (ecb-maximize-ecb-window)
     (ignore-errors (select-window (get-buffer-window ecb-buffer)))))

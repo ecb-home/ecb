@@ -23,7 +23,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-file-browser.el,v 1.4 2003/11/04 17:39:40 berndl Exp $
+;; $Id: ecb-file-browser.el,v 1.5 2003/12/15 17:29:36 berndl Exp $
 
 ;;; Commentary:
 
@@ -481,24 +481,24 @@ Value is a list of elements of the following type: Each element defines a new
 menu-entry and is either:
 
 a) Menu-command: A list containing two sub-elements, whereas the first is the
-   function \(a function symbol or a lambda-expression) being called if the
-   menu-entry is selected and the second is the name of the menu-entry.
+   function \(a function symbol) being called if the menu-entry is selected
+   and the second is the name of the menu-entry.
 b) Separator: A one-element-list and the element is the string \"---\": Then a
    non-selectable menu-separator is displayed.
 c) Submenu: A list where the first element is the title of the submenu
    displayed in the main-menu and all other elements are either menu-commands
    \(see a) or separators \(see b).
 
-The function of a menu-command must follow the following guidelines:
-It takes one argument which is the tree-buffer-node of the selected node \(means
-the node for which the popup-menu has been opened). With the function
-`tree-node-get-data' the related data of this node is accessible and returns
-in case of the directories buffer the directory for which the popup-menu has
-been opened. The function can do any arbitrary things with this directory.
+The function of a menu-command must follow the following guidelines: Such a
+function must be defined with the macro `tree-buffer-defpopup-command! This
+macro defines a new popup-command whereas the newly defined command gets one
+argument NODE. See the docstring of `tree-buffer-defpopup-command' for further
+details.
 
-Example for such a menu-function:
+Example for the definition of such a popupmenu-command:
 
-\(defun ecb-my-special-dir-popup-function \(node)
+\(tree-buffer-defpopup-command ecb-my-special-dir-popup-function
+  \"Prints the name of the directory of the node under point.\"
   \(let \(\(node-data=dir \(tree-node-get-data node)))
      \(message \"Dir under node: %s\" node-data=dir)))
 
@@ -971,7 +971,8 @@ selected before this update."
        (tree-buffer-scroll (point-min) (point-min))))))
 
 
-(defun ecb-sources-filter-by-ext (node)
+(tree-buffer-defpopup-command ecb-sources-filter-by-ext
+  "Filter the sources by extension from popup."
   (let ((ext-str (read-string "Insert the filter-extension without leading dot: "
                               (and node
                                    (file-name-extension (tree-node-get-data node))))))
@@ -984,12 +985,14 @@ selected before this update."
        (format "*.%s" ext-str)))))
        
   
-(defun ecb-sources-filter-by-regexp (node)
+(tree-buffer-defpopup-command ecb-sources-filter-by-regexp
+  "Filter the sources by regexp from popup."
   (let ((regexp-str (read-string "Insert the filter-regexp: ")))
     (if (> (length regexp-str) 0)
         (ecb-apply-filter-to-sources-buffer regexp-str))))
   
-(defun ecb-sources-filter-none (node)
+(tree-buffer-defpopup-command ecb-sources-filter-none
+  "Remove any filter from the sources by popup."
   (ecb-apply-filter-to-sources-buffer nil))
   
 
@@ -1448,12 +1451,13 @@ is created."
         (customize-save-variable 'ecb-source-path ecb-source-path)
       (customize-set-variable 'ecb-source-path ecb-source-path))))
 
-
-(defun ecb-add-source-path-node (node)
+(tree-buffer-defpopup-command ecb-add-source-path-node
+  "Runs `ecb-add-source-path' from popup."
   (call-interactively 'ecb-add-source-path))
 
 
-(defun ecb-node-to-source-path (node)
+(tree-buffer-defpopup-command ecb-node-to-source-path
+  "Add this node to the source-path."
   (ecb-add-source-path (tree-node-get-data node)))
 
 
@@ -1464,7 +1468,8 @@ is created."
       (cons (car sources) (ecb-delete-s child (cdr children) (cdr sources))))))
 
 
-(defun ecb-delete-source-path (node)
+(tree-buffer-defpopup-command ecb-delete-source-path
+  "Delete this source-path via popup."
   (let ((path (tree-node-get-data node)))
     (when (ecb-confirm (concat "Really delete source-path " path "?"))
       (setq ecb-source-path (ecb-delete-s
@@ -1638,7 +1643,7 @@ help-text should be printed here."
 
 
 ;; needs methods
-(defun ecb-create-source (node)
+(tree-buffer-defpopup-command ecb-create-source
   "Creates a new sourcefile in current directory."
   (let* ((use-dialog-box nil)
          (dir (ecb-fix-filename
@@ -1680,11 +1685,13 @@ help-text should be printed here."
                               'grep)))))
 
 
-(defun ecb-grep-find-directory (node)
+(tree-buffer-defpopup-command ecb-grep-find-directory
+  "Runs grep-find for current directory."
   (ecb-grep-directory-internal node t))
 
 
-(defun ecb-grep-directory (node)
+(tree-buffer-defpopup-command ecb-grep-directory
+  "Runs grep for current directory."
   (ecb-grep-directory-internal node nil))
 
 
@@ -1695,8 +1702,8 @@ help-text should be printed here."
   (tree-buffer-update))
 
 
-(defun ecb-delete-directory (node)
-  "Deletes current directory."
+(tree-buffer-defpopup-command ecb-delete-directory
+  "Delete current directory."
   (let ((dir (tree-node-get-data node)))
     (when (ecb-confirm (concat "Really delete directory" dir "? "))
       (delete-directory (tree-node-get-data node))
@@ -1723,11 +1730,13 @@ help-text should be printed here."
               dir))))
 
 
-(defun ecb-dired-directory (node)
+(tree-buffer-defpopup-command ecb-dired-directory
+  "Run dired for this directory."
   (ecb-dired-directory-internal node))
 
 
-(defun ecb-dired-directory-other-window (node)
+(tree-buffer-defpopup-command ecb-dired-directory-other-window
+  "Run dired for this directory in the other window."
   (ecb-dired-directory-internal node 'other))
 
 
@@ -1736,17 +1745,17 @@ help-text should be printed here."
     (funcall op dir op-arg-list)))
 
 
-(defun ecb-dir-popup-cvs-status (node)
+(tree-buffer-defpopup-command ecb-dir-popup-cvs-status
   "Check status of directory \(and below) in pcl-cvs mode."
   (ecb-dir-run-cvs-op node 'cvs-status '("-v")))
 
 
-(defun ecb-dir-popup-cvs-examine (node)
+(tree-buffer-defpopup-command ecb-dir-popup-cvs-examine
   "Examine directory \(and below) in pcl-cvs mode."
   (ecb-dir-run-cvs-op node 'cvs-examine '("-d" "-P")))
 
 
-(defun ecb-dir-popup-cvs-update (node)
+(tree-buffer-defpopup-command ecb-dir-popup-cvs-update
   "Update directory \(and below) in pcl-cvs mode."
   (ecb-dir-run-cvs-op node 'cvs-update '("-d" "-P")))
 
@@ -1806,7 +1815,7 @@ function which is called with current node and has to return a string.")
          (ecb-maximize-ecb-window-menu-wrapper "Maximize window"))))
 
 
-(defun ecb-delete-source (node)
+(tree-buffer-defpopup-command ecb-delete-source
   "Deletes current sourcefile."
   (let* ((file (tree-node-get-data node))
          (dir (ecb-fix-filename (file-name-directory file))))
@@ -1818,34 +1827,34 @@ function which is called with current node and has to return a string.")
       (ecb-set-selected-directory dir t))))
 
 
-(defun ecb-file-popup-ediff-revision (node)
+(tree-buffer-defpopup-command ecb-file-popup-ediff-revision
   "Diff file against repository with ediff."
   (let ((file (tree-node-get-data node)))
     (ediff-revision file)))
 
 
-(defun ecb-file-popup-vc-next-action (node)
+(tree-buffer-defpopup-command ecb-file-popup-vc-next-action
   "Checkin/out file."
   (let ((file (tree-node-get-data node)))
     (find-file file)
     (vc-next-action nil)))
 
 
-(defun ecb-file-popup-vc-log (node)
+(tree-buffer-defpopup-command ecb-file-popup-vc-log
   "Print revision history of file."
   (let ((file (tree-node-get-data node)))
     (find-file file)
     (vc-print-log)))
 
 
-(defun ecb-file-popup-vc-annotate (node)
+(tree-buffer-defpopup-command ecb-file-popup-vc-annotate
   "Annotate file"
   (let ((file (tree-node-get-data node)))
     (find-file file)
     (vc-annotate nil)))
 
 
-(defun ecb-file-popup-vc-diff (node)
+(tree-buffer-defpopup-command ecb-file-popup-vc-diff
   "Diff file against last version in repository."
   (let ((file (tree-node-get-data node)))
     (find-file file)
@@ -1882,13 +1891,14 @@ function which is called with current node and has to return a string.")
 
 ;; history popups
 
-(defun ecb-history-kill-buffer (node)
+(tree-buffer-defpopup-command ecb-history-kill-buffer
   "Kills the buffer for current entry."
   (let ((data (tree-node-get-data node)))
     (when (get-file-buffer data)
       (kill-buffer (get-file-buffer data)))))
 
-(defun ecb-history-filter-by-ext (node)
+(tree-buffer-defpopup-command ecb-history-filter-by-ext
+  "Filter history entries by extension."
   (let ((ext-str (read-string "Insert the filter-extension without leading dot: "
                               (and node
                                    (file-name-extension (tree-node-get-data node))))))
@@ -1907,7 +1917,8 @@ function which is called with current node and has to return a string.")
   (ecb-add-buffers-to-history))
        
   
-(defun ecb-history-filter-by-regexp (node)
+(tree-buffer-defpopup-command ecb-history-filter-by-regexp
+  "Filter history entries by regexp."
   (let ((regexp-str (read-string "Insert the filter-regexp: ")))
     (if (> (length regexp-str) 0)
         (setq ecb-history-filter
@@ -1917,7 +1928,8 @@ function which is called with current node and has to return a string.")
                     regexp-str))))
   (ecb-add-buffers-to-history))
   
-(defun ecb-history-filter-all-existing (node)
+(tree-buffer-defpopup-command ecb-history-filter-all-existing
+  "No history filter, i.e. add all existing file-buffers to the history."
   (ecb-add-all-buffers-to-history))
   
 

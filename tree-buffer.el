@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: tree-buffer.el,v 1.130 2003/11/04 17:39:36 berndl Exp $
+;; $Id: tree-buffer.el,v 1.131 2003/12/15 17:29:35 berndl Exp $
 
 ;;; Commentary:
 
@@ -74,6 +74,7 @@
 (silentcomp-defun display-images-p)
 (silentcomp-defun image-type-available-p)
 (silentcomp-defun count-screen-lines)
+(silentcomp-defun tmm-prompt)
 
 (defconst tree-buffer-running-xemacs
   (string-match "XEmacs\\|Lucid" emacs-version))
@@ -1331,17 +1332,27 @@ mentioned above!"
 ;; x-popup-menu is wrong because it seems this function needs offsets related
 ;; to current window not to frame!
 ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: For XEmacs this does not work!
-(defun tree-buffer-show-menu-keyboard ()
+(defun tree-buffer-show-menu-keyboard (&optional use-tmm)
   "Activate the popup-menu of current tree-buffer via keyboard."
-  (interactive)
-  (if tree-buffer-running-xemacs
-      (tree-buffer-show-menu)
-    (let ((curr-frame-ypos (* (/ (frame-pixel-height) (frame-height))
-                              (count-lines (window-start) (point))))
-          (curr-frame-xpos (* (/ (frame-pixel-width) (frame-width))
-                              (current-column))))
-      (tree-buffer-show-menu (list (list curr-frame-xpos curr-frame-ypos)
-                                   (selected-window))))))
+  (interactive "P")
+  (if use-tmm
+      (unless (not (equal (selected-frame) tree-buffer-frame))
+        (when tree-buffer-menus
+          (let ((node (tree-buffer-get-node-at-point)))
+            (when (and (not tree-buffer-running-xemacs)
+                       node
+                       (locate-library "tmm"))
+              (let ((menu (cdr (assoc (tree-node-get-type node)
+                                      tree-buffer-menus))))
+                (tmm-prompt menu))))))
+    (if tree-buffer-running-xemacs
+        (tree-buffer-show-menu)
+      (let ((curr-frame-ypos (* (/ (frame-pixel-height) (frame-height))
+                                (count-lines (window-start) (point))))
+            (curr-frame-xpos (* (/ (frame-pixel-width) (frame-width))
+                                (current-column))))
+        (tree-buffer-show-menu (list (list curr-frame-xpos curr-frame-ypos)
+                                     (selected-window)))))))
 
 
 
@@ -1371,6 +1382,37 @@ mentioned above!"
                                (lookup-key menu menu-selection))))
                   (when (functionp fn)
 		    (funcall fn node)))))))))))
+
+
+(defmacro tree-buffer-defpopup-command (name docstring &rest body)
+  "Define a new popup-command for a tree-buffer.
+NAME is the name of the popup-command to create. It will get one optional
+argument NODE \(s.b.). DOCSTRING is a documentation string to describe the
+function. BODY is the code evaluated when this command is called from a
+popup-menu of a tree-buffer. BODY can refer to NODE which is bound to the node
+for which this popup-command is called \(i.h. that node with the point at
+call-time of this command). With the function `tree-node-get-data' the related
+data of this NODE is accessible and returns for example in case of the
+directories buffer the directory for which the popup-menu has been opened. The
+BODY can do any arbitrary things with this node-data.
+
+Example for the usage of this macro:
+
+\(tree-buffer-defpopup-command ecb-my-special-dir-popup-function
+   \"Prints the name of the directory of the node under point.\"
+  \(let \(\(node-data=dir \(tree-node-get-data node)))
+    \(message \"Dir under node: %s\" node-data=dir)))"
+  `(eval-and-compile
+     (defun ,name (&optional node)
+       ,docstring
+       (interactive)
+       (let ((node (if (and (interactive-p) (null node))
+                       (tree-buffer-get-node-at-point)
+                     node)))
+         (when node
+           ,@body)))))
+
+(put 'tree-buffer-defpopup-command 'lisp-indent-function 1)
 
 
 ;; mouse tracking stuff
@@ -1943,7 +1985,8 @@ AFTER-CREATE-HOOK: A function or a list of functions \(with no arguments)
                     (tree-buffer-mouse-set-point e)
                     (tree-buffer-hscroll (- (window-width) 2)))))
       
-      ;; This lets the user scroll as if we had a scrollbar...
+      ;; This lets the GNU Emacs user scroll as if we had a horiz.
+      ;; scrollbar...
       (define-key tree-buffer-key-map
         [mode-line mouse-1] 'tree-buffer-mouse-hscroll)
       (define-key tree-buffer-key-map

@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-layout.el,v 1.197 2003/12/09 16:47:57 berndl Exp $
+;; $Id: ecb-layout.el,v 1.198 2003/12/15 17:29:36 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -1107,6 +1107,11 @@ if `scroll-all-mode' is nil return the number of visible windows."
           (next-window ecb-edit-window)
         ecb-edit-window))))
 
+(defvar ecb-temp-buffer-shrink-to-fit nil
+  "Workaround for XEmacs-version which have a `display-buffer' with only 3
+arguments. Do never set this variable; it is only set by
+`show-temp-buffer-in-current-frame'!")
+
 (if ecb-running-xemacs
     (progn
       ;; We advice this function to exactly that version of XEmacs 21.4.13.
@@ -1114,7 +1119,8 @@ if `scroll-all-mode' is nil return the number of visible windows."
       ;; we need this advice for versions of XEmacs which do not have the
       ;; 4-argument-version of `display-buffer'. With this advice we give
       ;; older XEmacsen the newest display-buffer- and
-      ;; shrink-to-fit-mechanism.
+      ;; shrink-to-fit-mechanism. How this is done is described at beginning
+      ;; of `ecb-display-buffer-xemacs'.
       (defadvice show-temp-buffer-in-current-frame (around ecb)
         "Makes the function compatible with ECB."
         (let ((pre-display-buffer-function nil)) ; turn it off, whatever it is
@@ -1122,8 +1128,28 @@ if `scroll-all-mode' is nil return the number of visible windows."
           ;; `ecb-display-buffer-xemacs' which contains the shrink-to-fit
           ;; mechanism.
           (let ((window (ecb-with-adviced-functions
-                         (display-buffer (ad-get-arg 0) nil nil
-                                         temp-buffer-shrink-to-fit))))
+                         (condition-case oops
+                             ;; For this call `ecb-temp-buffer-shrink-to-fit'
+                             ;; is always nil
+                             (display-buffer (ad-get-arg 0) nil nil
+                                             temp-buffer-shrink-to-fit)
+                           (wrong-number-of-arguments
+                            ;; we have a XEmacs which do not support the 4.
+                            ;; arg SHRINK-TO-FIT of `display-buffer'. So we
+                            ;; call it with only three args and simulate the
+                            ;; 4. arg by setting
+                            ;; `ecb-temp-buffer-shrink-to-fit' to the value of
+                            ;; `temp-buffer-shrink-to-fit'. The adviced
+                            ;; version of `display-buffer' calls
+                            ;; `ecb-display-buffer-xemacs' for XEmacs which in
+                            ;; turn evaluates `ecb-temp-buffer-shrink-to-fit'.
+                            ;; For details see `ecb-display-buffer-xemacs'.
+                            (let ((ecb-temp-buffer-shrink-to-fit temp-buffer-shrink-to-fit))
+                              (ecb-layout-debug-error "show-temp-buffer-in-current-frame for %s: we call a 3-arg display-buffer: %s"
+                                                      (ad-get-arg 0) ecb-temp-buffer-shrink-to-fit)
+                              (display-buffer (ad-get-arg 0) nil nil)))
+                           (error (signal (car oops) (cdr oops)))
+                           (quit (signal 'quit nil))))))
             (if (not (eq (last-nonminibuf-frame) (window-frame window)))
                 ;; only the pre-display-buffer-function should ever do this.
                 (error "display-buffer switched frames on its own!!"))
@@ -1282,7 +1308,9 @@ for current layout."
         (ecb-do-with-unfixed-ecb-buffers ad-do-it)
       ad-do-it))
 
-  (defadvice tmm-menubar (around ecb)
+  ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: Hier besser tmm-prompt advicen!
+  ;; oder - falls nötig - eben beide!
+  (defadvice tmm-prompt (around ecb)
     "Make it compatible with ECB."
     (if (or (not ecb-minor-mode)
             (not (equal (selected-frame) ecb-frame))
@@ -1449,22 +1477,9 @@ for current layout."
 
 ;; Klaus Berndl <klaus.berndl@sdm.de>: Some older versions of XEmacs
 ;; 21.4 does not support a four-argument display-buffer. We handle this case
-;; properly for ecb-display-buffer-xemacs.
-;;
-;; Shrinking temp-windows correctly to the buffer contents:
-;; ========================================================
-;; We advice `show-temp-buffer-in-current-frame' to exactly the code contained
-;; in XEmacs 21.4.13 (which calls display-buffer with shrink-to-fit according
-;; to `temp-buffer-shrink-to-fit'). Then this version of
-;; `show-temp-buffer-in-current-frame' is called by an older
-;; 3-arg-display-buffer-XEmacs 21.4 and calls in turn always our adviced
-;; `display-buffer' with SHRINK-TO-FIT set according to the option
-;; `temp-buffer-shrink-to-fit'. This calls in turn `ecb-display-buffer-xemacs'
-;; with properly set SHRINK-TO-FIT. The `pre-display-buffer-function' and
-;; `display-buffer-function' are called only with three-args (see below) but
-;; the window is correctly shrinked with the adviced version of
-;; `shrink-window-if-larger-than-buffer' - see below out imlementation
-;; `ecb-display-buffer-xemacs'.
+;; properly within `ecb-display-buffer-xemacs' and
+;; `show-temp-buffer-in-current-frame'; see the comments in both of these
+;; functions.
 (defun ecb-display-buffer-xemacs (buffer &optional not-this-window-p
                                          override-frame
                                          shrink-to-fit)
@@ -1493,8 +1508,23 @@ If `pop-up-frames' is non-nil, make a new frame if no window shows BUFFER.
 Returns the window displaying BUFFER."
   (interactive "BDisplay buffer:\nP")
 
-  (ecb-layout-debug-error "ecb-display-buffer-xemacs for %s %s %s %s"
-                          buffer not-this-window-p override-frame shrink-to-fit)
+  (ecb-layout-debug-error "ecb-display-buffer-xemacs for %s %s %s %s [%s]"
+                          buffer not-this-window-p override-frame
+                          shrink-to-fit ecb-temp-buffer-shrink-to-fit)
+  ;; Here we make the shrink-to-fit workaround for these old XEmacs 21.4
+  ;; versions which do not have a display-buffer-command with 4 arguments:
+  ;; `ecb-temp-buffer-shrink-to-fit' is only set by
+  ;; `show-temp-buffer-in-current-frame' (an XEmacs-only function) to the
+  ;; value of `temp-buffer-shrink-to-fit' and can only be set to not nil
+  ;; there. This is done be a let-binding so `ecb-temp-buffer-shrink-to-fit'
+  ;; has always nil after finishing this function! Only if
+  ;; `ecb-temp-buffer-shrink-to-fit' is not nil here we override the value of
+  ;; SHRINK-TO-FIT. And because  `ecb-temp-buffer-shrink-to-fit' is only set
+  ;; to not nil in case of a wrong-number-of-arguments error for
+  ;; `display-buffer' (see `show-temp-buffer-in-current-frame') this will
+  ;; never take place for XEmacs-versions with the 4-arg version of
+  ;; `display-buffer'!
+  (setq shrink-to-fit (or ecb-temp-buffer-shrink-to-fit shrink-to-fit))
   (let ((wconfig (current-window-configuration))
         (result
          ;; We just simulate a `return' in C.  This function is way ugly
@@ -3076,6 +3106,9 @@ following structure:
 
 ;; =================== Helper functions ==================================
 
+;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: Dieses Makro zwar aus
+;; kompatibilitäts-Gründen drin lassen aber neues makro schreiben, das diese
+;; Setter komplett definiert (siehe tree-buffer-defpopup-command).
 (defmacro ecb-with-dedicated-window (buffer-name dedicated-setter &rest body)
   "Make current selected window not dedicated, evaluate BODY in current
 window and make this window dedicated at the end. Even if an error occurs

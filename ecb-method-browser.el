@@ -24,7 +24,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-method-browser.el,v 1.6 2003/12/09 16:47:57 berndl Exp $
+;; $Id: ecb-method-browser.el,v 1.7 2003/12/15 17:29:36 berndl Exp $
 
 ;;; Commentary:
 
@@ -2228,12 +2228,14 @@ Returns current point."
   (set-window-start (selected-window)
                     (ecb-line-beginning-pos)))
 
-(defun ecb-methods-menu-jump-and-narrow (node)
+(tree-buffer-defpopup-command ecb-methods-menu-jump-and-narrow
+  "Jump to the token related to the node under point an narrow to this token."
   (ecb-method-clicked node 1 nil t '(ecb-tag-visit-narrow-tag
                                      ecb-tag-visit-highlight-tag-header)))
 
 
-(defun ecb-methods-menu-widen (node)
+(tree-buffer-defpopup-command ecb-methods-menu-widen
+  "Widen the current buffer in the current edit-window."
   (ecb-select-edit-window)
   (widen)
   (setq ecb-buffer-narrowed-by-ecb nil))
@@ -2244,7 +2246,6 @@ Returns current point."
     ;; byte-compiler. Normally there should be no warning when
     ;; silentcomp-defun is used for hs-minor-mode but....argghhh.
     (require 'hideshow))
-
 
 (defun ecb-methods-menu-activate-hs ()
   "Activates `hs-minor-mode' in the buffer of `ecb-path-selected-source'. If
@@ -2261,7 +2262,8 @@ this fails then nil is returned otherwise t."
       t)))
 
 
-(defun ecb-methods-menu-show-block (node)
+(tree-buffer-defpopup-command ecb-methods-menu-show-block
+  "Runs `hs-show-block' for the current node under point."
   (if (not (ecb-methods-menu-activate-hs))
       (ecb-error "hs-minor-mode can not be activated!")
     ;; point must be at beginning of tag-name
@@ -2275,7 +2277,8 @@ this fails then nil is returned otherwise t."
     (ecb-tag-visit-highlight-tag-header (tree-node-get-data node))))
 
 
-(defun ecb-methods-menu-hide-block (node)
+(tree-buffer-defpopup-command ecb-methods-menu-hide-block
+  "Runs `hs-hide-block' for the current node under point."
   (if (not (ecb-methods-menu-activate-hs))
       (ecb-error "hs-minor-mode can not be activated!")
     ;; point must be at beginning of tag-name
@@ -2287,23 +2290,28 @@ this fails then nil is returned otherwise t."
     (ecb-tag-visit-highlight-tag-header (tree-node-get-data node))))
 
 
-(defun ecb-methods-menu-collapse-all (node)
+(tree-buffer-defpopup-command ecb-methods-menu-collapse-all
+  "Collapse all expandable and expanded nodes"
   (ecb-expand-methods-nodes-internal -1 nil t))
 
 
-(defun ecb-methods-menu-expand-0 (node)
+(tree-buffer-defpopup-command ecb-methods-menu-expand-0
+  "Expand all nodes with level 0."
   (ecb-expand-methods-nodes-internal 0 nil t))
 
 
-(defun ecb-methods-menu-expand-1 (node)
+(tree-buffer-defpopup-command ecb-methods-menu-expand-1
+  "Expand all nodes with level 1."
   (ecb-expand-methods-nodes-internal 1 nil t))
 
 
-(defun ecb-methods-menu-expand-2 (node)
+(tree-buffer-defpopup-command ecb-methods-menu-expand-2
+  "Expand all nodes with level 2."
   (ecb-expand-methods-nodes-internal 2 nil t))
 
 
-(defun ecb-methods-menu-expand-all (node)
+(tree-buffer-defpopup-command ecb-methods-menu-expand-all
+  "Expand all expandable nodes recursively."
   (ecb-expand-methods-nodes-internal 100 nil t))
 
 
