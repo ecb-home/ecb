@@ -32,7 +32,8 @@
 
 (defgroup ecb-faces nil
   "Definitions of all ECB-faces"
-  :group 'ecb-face-options
+  :group 'ecb-face-options 
+  :group 'faces
   :prefix "ecb-")
 
 (defmacro ecb-face-default (&optional height bold-p italic-p
