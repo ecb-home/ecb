@@ -1,6 +1,9 @@
 Version 1.xx:
 -------------
 
+- Added an option to narrow the buffer to the token that is jumped to. See
+  ecb-token-jump-narrow. (Jesper)
+
 - Fixed a small bug that placed the window start at the beginning of the token
   instead of the beginning of the token line. (Jesper)
 
