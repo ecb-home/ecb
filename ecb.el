@@ -140,6 +140,9 @@
 		       (ecb-update-directories-buffer))))
   :type '(repeat (directory :tag "Path")))
 
+(defvar ecb-source-path-functions nil
+  "List of functions to call for finding sources.")
+
 (defcustom ecb-show-sources-in-directories-buffer nil
   "*Show source files in directories buffer."
   :group 'ecb-directories
@@ -674,7 +677,11 @@ highlighting of the methods if `ecb-font-lock-methods' is not nil."
   (let ((type (semantic-token-type var-token)))
     (concat (ecb-highlight-text (semantic-token-name var-token) ecb-variablename)
             (if type
-                (concat " : " (ecb-highlight-text type ecb-variabletype))
+                (concat " : " (ecb-highlight-text 
+			       (cond ((semantic-token-p type)
+				      (semantic-prototype-nonterminal type))
+				     (t type))
+			       ecb-variabletype))
               ""))))
 
 (defun ecb-add-classes(node token &optional flatten)
@@ -1067,6 +1074,19 @@ OTHER-WINDOW."
                                        old-children ecb-sources-sort-method))
           (tree-node-set-expandable node (or (tree-node-get-children node)))))))
 
+(defun ecb-get-source-paths-from-functions ()
+  "Return a list of paths found by querying `ecb-source-path-functions'."
+  (let ((func ecb-source-path-functions)
+	(paths nil)
+	(rpaths nil))
+    (while func
+      (setq paths (append paths (funcall (car ecb-source-path-functions)))
+	    func (cdr func)))
+    (while paths
+      (setq rpaths (cons (expand-file-name (car paths)) rpaths)
+	    paths (cdr paths)))
+    rpaths))
+
 (defun ecb-update-directories-buffer()
   "Updates the ECB directories buffer."
   (interactive)
@@ -1076,11 +1096,12 @@ OTHER-WINDOW."
      ;;       (list (cons 1 ecb-source-in-directories-buffer-face)))
      (setq tree-buffer-indent ecb-tree-indent)
      (let* ((node (tree-buffer-get-root))
-	    (old-children (tree-node-get-children node)))
+	    (old-children (tree-node-get-children node))
+	    (function-paths (ecb-get-source-paths-from-functions)))
        (tree-node-set-children node nil)
-       (if ecb-source-path
+       (if (or ecb-source-path function-paths)
 	   (progn
-	     (dolist (dir ecb-source-path)
+	     (dolist (dir (append function-paths ecb-source-path))
 	       (tree-node-add-child node (ecb-new-child old-children dir 0 dir)))
 	     (tree-buffer-update))
 	 (let ((buffer-read-only))
