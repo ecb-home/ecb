@@ -1,4 +1,4 @@
-;;; ecb-upgrade.el: Contains all code to upgrade an old ecb-version
+;;; ecb-upgrade.el: Upgrade an old ecb-version to the latest one
 
 ;; Copyright (C) 2002 Klaus Berndl
 
@@ -22,11 +22,122 @@
 ;;; Commentary:
 ;;
 ;; This file upgrades an old ECB-version best possible to the latest one.
+;;
+;; What is the intention of this library:
+;;
+;; Big packages like ECB will be enhanced and developed continously so
+;; sometimes a new version must be released. Such packages offer in general a
+;; lot of customizable options so probably some of these options change the
+;; type or are renamed because the old type and/or name of the option makes no
+;; sense in the new release.
+;;
+;; Especially options which have changed the type of their value are now a
+;; problem for the user which want to upgrade to the latest ECB-version: If
+;; the user has saved a certain value for option X in its .emacs-file but the
+;; type of this saved value doesn't match the new defined type in the
+;; defcustom-form after an ECB-upgrade then there can occur serious problems
+;; like ECB can not be started anymore or even Emacs can not be startet
+;; without errors.
+;;
+;; Until now there was only one way to fix these problems: The user must
+;; manually edit his .emacs-file and remove all entries for options which have
+;; now another type. After this and after restarting Emacs the new
+;; default-values of the type-changed options in the new ECB-release are
+;; active and the user can go on using Emacs and ECB. But this approach to fix
+;; the incompatible-option-problem has two serious drawbacks:
+;; 1. The user must manually edit the customize-section in his .emacs-file.
+;;    This should normally not be done and if then only by old-handed
+;;    Emacs-users.
+;; 2. The customized value of the option X in the old-release (with the old
+;;    type) is lost because after removing the related entry from the
+;;    .emacs-file the new default-value is active, so the user must
+;;    re-customize the option X.
+;;
+;; Ok, this is one half of the option-upgrade-problem but a new ECB-release
+;; can also rename a option from name X to name Y because the new name Y makes
+;; much more sense and/or is more mnemonic. If only the name has changed but
+;; not the type this is not a serious problem like above but also annoying
+;; because the customized value of the old-option X takes no effect in the new
+;; release but instead the default-value of the new-option Y is now active.
+;; But nevertheless this problem has the drawback number 2 (see above).
+;;
+;; The last category of upgrade-problems is a renamed option which has also
+;; changed its type.
+;;
+;; ecb-upgrade.el is the solution for all these problems:
+
+;; - It checks all customized values of all ECB-optons if they are still
+;;   type-compatible. If not then it tries to upgrade the old-value to the new
+;;   value-type and if this is not possible then it resets the option to the
+;;   new default value and store it via customize in the .emacs-file (or in
+;;   any file which is used for customized options).
+;; - It offers a special constant `ecb-upgradable-option-alist' which allows
+;;   the ECB-maintainers to define special transformings for renamed options
+;;   so even the value of an old-option X can be savely transformed to the
+;;   new-option Y and the old setting is not lost.
+;;
+;; All these checks and transformings are done at beginning of activating ECB.
+;; If ECB has recognized incompatible or renamed options it does its
+;; upgrading/reseting-job so all ECB-options have correct types so ECB can
+;; start correct. After ECB is started it displays a list of all upgraded or
+;; resetted option with their old and new values.
+;;
+;; How does this library work:
+;;
+;; The important functions are `ecb-check-not-compatible-options' and
+;; `ecb-upgrade-not-compatible-options':
+;;
+;; The former one checks if all customized values of ECB-options have still
+;; correct type. If not the incompatible options and their old values are
+;; stored in an alist `ecb-not-compatible-options'. Only this function is
+;; allowed to changed this alist!!
+;;
+;; The latter one processes now this alist and looks for every incompatible
+;; option if there is an entry in `ecb-upgradable-option-alist'. If yes then a
+;; special value-transforming is tried by `ecb-option-upgrade'. If no or if
+;; the special transforming has been failed for any reason then it resets the
+;; option to the default-value of current active ECB-version and save it via
+;; `customize-save-variable'.
+;;
+;; So if the ECB-maintainers define no special transforming in the alist
+;; `ecb-upgradable-option-alist' for a re-typed option X then all incompatible
+;; options are at least reset to their current default-value and therefore ECB
+;; can start correct.
+;;
+;; But there is another function `ecb-upgrade-renamed-options': This function
+;; processes the alist `ecb-upgradable-option-alist' and call for every
+;; element-key (an old option-symbol) of this alist `ecb-option-upgrade' but
+;; only if this element-key is not also contained in the alist
+;; `ecb-not-compatible-options' because in this case this option has been
+;; already be upgraded/resetted by `ecb-upgrade-not-compatible-options' (see
+;; above).
+;;
+;; So the calling sequence of these three functions must be:
+;; 1. `ecb-check-not-compatible-options'
+;; 2. `ecb-upgrade-not-compatible-options'
+;;    `ecb-upgrade-renamed-options' or vice versa.
+;; 
+;; There are also two interactive commands:
+;; - `ecb-display-upgraded-options' displays a temp. buffer with all upgraded
+;;   or resetted ECB-options with their old and new values.
+;; - `ecb-upgrade-options': Does all necessary beginning with the
+;;   incompatibility-check and ending with the display of the options.
+;;
+;; What must an ECB-maintainer do:
+;;
+;; + If he wants only a save and correct ECB-start with the new release:
+;;   NOTHING
+;; + If he wants to preserve best possible the customized values of now
+;;   type-incompatible and/or renamed options:
+;;   - Adding entries to the alist `ecb-upgradable-option-alist' and
+;;   - Defining suitable transforming-functions for every of these options.
+;;   See the comment of `ecb-upgradable-option-alist'.
+
 
 ;;; Code
 
 (defconst ecb-upgradable-option-alist nil
-  "Alist of all options which must be upgraded for current ECB-version.
+  "Alist of all options which should be upgraded for current ECB-version.
 There are several reasons why an option should be contained in this alist:
 a) An old option has just be renamed in current-ECB version but has still the
    same type of value so the new option should get the value of the old one.
@@ -36,24 +147,29 @@ c) An old option has be renamed and also changed its type so we try to
    transform the value of the old option to the type of the new option and set
    the new option to this transformed value.
 
-If an old option has changed its type and we can not transform the old-value
-save to the new type then this option should NOT be contained in this alist!
+If an old option has changed its type and we can not savely transform the
+old-value to the new type then this option should NOT be contained in this
+alist! Such an option is auto. reset to the current default-value by
+`ecb-upgrade-not-compatible-options'!
 
+Every element of this alist has the following form:
 The car is the old option symbol and the cdr is a 2-element-list with:
 1. elem: The new option symbol \(can be equal with the old option symbol, see
    b) above)
 2. elem: A function which converts the value of the old option to the new
-   option. If the type of the option is identical \(i.e. only the option name
-   has been changed) then this function should be `identity' otherwise a
-   function which gets one argument \(the value of the old option) and returns
-   either the corresponding value for the new option with the new correct type
-   or the symbol 'ecb-no-upgrade-conversion if no correct conversion can be
-   performed!")
+   option. If the type of the options is identical \(i.e. only the option name
+   has been changed, see a) above) then this function should be `identity'
+   otherwise a function which gets one argument \(the value of the old option)
+   and returns either a corresponding value for the new option with the new
+   correct type or the symbol 'ecb-no-upgrade-conversion if no correct
+   conversion can be performed! Maybe the function `ecb-option-get-value' can
+   be helpful within such a transforming-function.")
 
 
 (defun ecb-option-get-value (option type)
   "Return the value of a customizable ECB-option OPTION with TYPE, where TYPE
-can either be 'standard-value or 'saved-value."
+can either be 'standard-value \(the default-value of the defcustom) or
+'saved-value \(the value stored durable by the user via customize)."
   (let ((val (car (get option type))))
     (cond ((not (listp val)) val)
           ((equal 'quote (car val)) (car (cdr val)))
@@ -78,6 +194,12 @@ true:
    + OLD-OPTION is not a bound and valid option in current ECB and
    + The related new-option `ecb-upgradable-option-alist' is not already
      customized, i.e. the 'saved-value of new-option is nil.
+
+If all conditions are true then the value of OLD-OPTION is transformed by the
+transforming-function of the related element of `ecb-upgradable-option-alist'
+to the correct new type and then the related new option is saved with this new
+value.
+
 Return nil if no upgrade is necessary because at least one of the conditions
 above is not true. Returns the transformed value of OLD-OPTION or
 'ecb-no-upgrade-conversion in form of a list, to distinguish a transformed
@@ -109,7 +231,7 @@ result-list!"
 
 (defun ecb-option-compatible-p (option)
   "Return not nil only if the type of the value of OPTION is compatible with
-current ECB."
+its current defcustom-definition."
   (require 'cus-edit)
   (widget-apply (widget-convert (get option 'custom-type))
                 :match (symbol-value option)))
@@ -147,8 +269,8 @@ defined type. If not store it in `ecb-not-compatible-options'."
 (defun ecb-upgrade-not-compatible-options ()
   "Upgrade all not anymore compatible options of `ecb-not-compatible-options'.
 If such an option is contained in `ecb-upgradable-option-alist' then try to
-perform a special upgrade with `ecb-option-upgrade'. If no upgrade is done
-then the option is reset to the default-value of current ECB-version."
+perform a special upgrade with `ecb-option-upgrade'. If no special upgrade is
+done then the option is reset to the default-value of current ECB-version."
   ;; For every not compatible option perform an upgrade
   (dolist (option ecb-not-compatible-options)
     ;; if the incompatible option is not upgraded by `ecb-option-upgrade' then
@@ -163,8 +285,8 @@ then the option is reset to the default-value of current ECB-version."
 
 (defun ecb-upgrade-renamed-options ()
   "Upgrade all renamed options of `ecb-upgradable-option-alist' and store
-every option in `ecb-renamed-options' if at least an upgrade was necessary and
-therefore tried \(see `ecb-option-upgrade').
+every option in `ecb-renamed-options' if at least an upgrade was tried \(see
+`ecb-option-upgrade').
 
 Note: This function upgrades only the renamed but not the incompatible options
 \(i.e. only the type but not the name of the option has changed) of
