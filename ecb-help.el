@@ -26,7 +26,7 @@
 ;;
 ;; Contains all online-help for ECB (stolen something from recentf.el)
 
-;; $Id: ecb-help.el,v 1.60 2002/02/27 19:09:02 berndl Exp $
+;; $Id: ecb-help.el,v 1.61 2002/02/28 16:11:04 berndl Exp $
 
 ;;; Code
 
@@ -401,7 +401,7 @@ following options before working with ECB):
 - `ecb-token-display-function', `ecb-type-token-display': How to display the
   entries in the ECB-method window.
 - All the options in the customize groups 'ecb-layout', 'ecb-methods' and
-  'ecb-faces'.
+  'ecb-face-options'.
 
 
                          ===========================
@@ -425,6 +425,22 @@ buffer after filling it out and sending it with your standard mail-client to
                               ===============
                               Tips and tricks
                               ===============
+
+Changing the faces of the ECB-tree-buffers:
+-------------------------------------------
+
+There are two basic faces:
+- 'ecb-default-general-face': Basic face for displaying an ECB-tree-buffer.
+- 'ecb-default-highlight-face': Basic face for highlighting the current node
+  in an ECB-tree-buffer.
+
+With this faces you can change the basic attributes easily and fast for ALL
+ECB-tree-buffers. But you are also able to display each ECB-tree-buffer with
+different faces. For further details see the doc-strings of the faces
+'ecb-default-general-face' and 'ecb-default-highlight-face' \(just call
+`customize-face' to see the doc-strings). The options of the group
+'ecb-face-options' are also interesting.
+
 
 Working with small screens:
 ---------------------------
