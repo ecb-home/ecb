@@ -1,6 +1,13 @@
 Version 1.90:
 -------------
 
+* Added a complete new section "The layout-engine of ECB" to the online-help
+  which describes in detail how to program new layouts and new special
+  windows. This is for foreign packages which want to display own informations
+  in own special windows and synchronizing these windows with the edit-window
+  of ECB (a graphical debugger could be an example). Also a full working
+  example is added in the new file ecb-examples.el. (Klaus)
+
 * Fixed some bugs concerning the eshell-integration (Klaus):
   + Synchronizing does not set the mark anymore
   + No longer synchronizing after every command if current source resides in
