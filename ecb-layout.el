@@ -105,7 +105,7 @@
 ;; - `ecb-with-some-adviced-functions'
 ;;
 
-;; $Id: ecb-layout.el,v 1.155 2003/02/21 18:00:22 berndl Exp $
+;; $Id: ecb-layout.el,v 1.156 2003/03/04 15:10:43 berndl Exp $
 
 ;;; Code:
 
@@ -2608,7 +2608,7 @@ The `ecb-compile-window' is enlarged depending on the value of
 
 (defun ecb-toggle-compile-window (&optional arg)
   "Toggle the visibility of the compile-window of ECB. With prefix argument
-ARG, make display a compile-window, otherwise not. The height of the
+ARG, make visible if positive, otherwise invisible. The height of the
 compile-window is always the current *saved* \(for future sessions) value of
 `ecb-compile-window-height', i.e. this command can only display a
 compile-window if `ecb-compile-window-height' has such a saved value of not
@@ -2618,7 +2618,7 @@ nil!"
               (not (equal (selected-frame) ecb-frame)))
     (let ((new-state (if (null arg)
                          (not (ecb-compile-window-live-p))
-                       (<= (prefix-numeric-value arg) 0))))
+                       (>= (prefix-numeric-value arg) 0))))
       (if new-state
           (let ((height (car (get 'ecb-compile-window-height 'saved-value))))
             (when (numberp height)

@@ -19,7 +19,7 @@
 @c Free Software Foundation, Inc., 59 Temple Place - Suite 330,
 @c Boston, MA 02111-1307, USA.
 
-@c $Id: ecb.texi,v 1.81 2003/02/26 17:18:12 berndl Exp $
+@c $Id: ecb.texi,v 1.82 2003/03/04 15:10:42 berndl Exp $
 
 @setfilename ecb.info
 
@@ -2644,7 +2644,7 @@ the next switch on by this command.
 
 @deffn Command toggle-compile-window &optional arg
 Toggle the visibility of the compile-window of ECB. With prefix
-argument @var{ARG}, make display a compile-window, otherwise not. The
+argument @var{ARG}, make visible if positive, otherwise invisible. The
 height of the compile-window is always the current @strong{saved} (for
 future sessions) value of @code{ecb-compile-window-height}, i.e. this
 command can only display a compile-window if
@@ -6744,6 +6744,26 @@ edit-window is splitted then both edit-windows are scrolled by
 @code{scroll-all-mode} and no other window! If point stays in any
 other window just this selected window is scrolled. This is the only
 senseful behavior of @code{scroll-all-mode} with ECB.
+
+@subsection Package JDE (Java Development Environment)
+
+@cindex JDE
+JDEE has a lot of ``dialogs'' where the user can select among several
+choices. An example is importing classes via the command
+@code{jde-import-find-and-import}. These dialogs are strongly designed
+to work in an environment where a new temporary window is created, the
+contents of the dialog are displayed in the new window, the user
+select his choice and hits [OK]. After that the new window is deleted
+and the selection is performed (for example the choosen import
+statement are inserted in the source-buffer.
+
+ECB can be work very well with this dialogs but only if no
+@strong{durable} compilation-window is used, i.e. if the option
+@code{ecb-compile-window-height} is nil. See @ref{Temp- and
+compile-buffers}.
+
+If @code{ecb-compile-window-height} is not @code{nil} then these
+JDE-dialogs will not work correct!
 
 @node Bugs, , Conflicts, Conflicts and bugs
 @section Known bugs
