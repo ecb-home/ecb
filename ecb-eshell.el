@@ -198,20 +198,24 @@ interactively or `ecb-eshell-synchronize' is not nil."
 
   (when (and (or ecb-eshell-synchronize (interactive-p))
              (ecb-eshell-running-p))
-    (let ((source-buffer-directory nil)
-          (ecb-buffer-directory nil)
-          (window (get-buffer-window eshell-buffer-name)))
+
+    ;;only do this if the user is looking at the eshell buffer; for this we
+    ;;have the macro `ecb-do-if-buffer-visible-in-ecb-frame'.
+
+    (ecb-do-if-buffer-visible-in-ecb-frame 'eshell-buffer-name
       
-      ;;only do this if the user is looking at the eshell buffer
+      ;; here we can be sure that the eshell is visible in a window of
+      ;; `ecb-frame'.
+
+      (let ((source-buffer-directory nil)
+            (ecb-buffer-directory nil)
+            (window (get-buffer-window eshell-buffer-name)))
       
-      (if (and window
-               (window-live-p window)
-               ;; we synchronize only if the eshell is displayed in the
-               ;; compile-window otherwise would the following
-               ;; ecb-eshell-cleanse prevent from inserting any command if the
-               ;; eshell is displayed in the edit-window (e.g. by calling
-               ;; `eshell' in the edit-window)
-               (equal window ecb-compile-window))
+        ;; we synchronize only if the eshell is displayed in the
+        ;; compile-window otherwise the following ecb-eshell-cleanse would
+        ;; prevent from inserting any command if the eshell is displayed in
+        ;; the edit-window (e.g. by calling `eshell' in the edit-window)
+        (when (equal window ecb-compile-window)
           (ecb-eshell-save-buffer-history
            ;;make sure we are clean.
            (ecb-eshell-cleanse)
@@ -241,7 +245,7 @@ interactively or `ecb-eshell-synchronize' is not nil."
                  (select-window window)
                  (eshell-send-input)))
              
-             (ecb-eshell-recenter)))))))
+             (ecb-eshell-recenter))))))))
 
 (defmacro ecb-eshell-save-buffer-history (&rest body)
   "Protect the buffer-list so that the eshell buffer name is not placed early

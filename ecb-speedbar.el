@@ -238,11 +238,7 @@ future this could break."
 
   ;;only operate if the current frame is the ECB frame and the
   ;;ecb-speedbar-buffer is visible!
-  (when (and ecb-minor-mode
-             (equal (selected-frame) ecb-frame)
-             (get-buffer-window ecb-speedbar-buffer-name)
-             (window-live-p (get-buffer-window ecb-speedbar-buffer-name)))
-    
+  (ecb-do-if-buffer-visible-in-ecb-frame 'ecb-speedbar-buffer-name
     (let ((speedbar-default-directory
            (save-excursion
              (set-buffer ecb-speedbar-buffer-name)
