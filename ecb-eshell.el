@@ -1,6 +1,6 @@
 ;;; ecb-eshell.el --- eshell integration for the ECB.
 
-;; $Id: ecb-eshell.el,v 1.10 2001/12/10 08:57:07 burtonator Exp $
+;; $Id: ecb-eshell.el,v 1.11 2001/12/14 23:29:58 burtonator Exp $
 
 ;; Copyright (C) 2000-2003 Free Software Foundation, Inc.
 ;; Copyright (C) 2000-2003 Kevin A. Burton (burton@openprivacy.org)
@@ -28,30 +28,38 @@
 
 ;;; Commentary:
 
-;; Provides eshell integration for the ECB.  Basically allows you to jump to the
-;; eshell in the compilation window, synch up the current eshell with the
-;; current ECB buffer, etc.
-
+;; This package provides eshell integration for the ECB.  This basically allows
+;; you to jump to the eshell in the compilation window, synch up the current
+;; eshell with the current ECB buffer, etc.
+;;
+;; The goal is to make it easy to jump to a command prompt to run OS level
+;; commands.  
+;; 
 ;; If you enjoy this software, please consider a donation to the EFF
 ;; (http://www.eff.org)
 
 ;;; History:
+
+;; - Fri Dec 14 2001 03:24 PM (burton@openprivacy.org): use
+;; eshell-pre-command-hook to increase the size of the window if we are in an
+;; ECB layout (and the ecb is activated)...
 
 ;; - Sun Nov 18 2001 07:20 PM (burton@openprivacy.org): putting the cursor one
 ;;   line from the bottom of the window.
 
 ;;; TODO:
 
-;; 
+;;; RELEASE BREAKERS
 
-;; - should I use eshell-pre-command-hook to increase the size of the window if
-;; we are in an ECB layout?? (and the ecb is activated)...
+;; NORMAL PRIORITY
 
 ;; - only run eshell/cd if the current directory is different than the
-;; eshell/pwd.
+;;   eshell/pwd (this is a performance issue and needs to be added in
+;;   ecb-eshell-current-buffer-sync
 ;;
 ;;   - we can't do this.  eshell/pwd does't return a string.  Instead we should
-;;     change to the eshell-buffer and see what the directory is there...
+;;     change to the eshell-buffer and see what the directory default-directory
+;;     is there.
 
 ;;; Code:
 
@@ -112,7 +120,7 @@
 (defun ecb-eshell-goto-eshell()
   (interactive)
   
-  ;;TODO: first... make sure that we change the compilation window to the eshell
+  ;;first... make sure that we change the compilation window to the eshell
   ;;buffer.
 
   (if (ecb-eshell-running-p)
@@ -135,16 +143,20 @@
 
   (if (and (ecb-eshell-running-p)
            ecb-minor-mode)
+      (let(enlargement window)
 
-      (progn 
-      
-;;         (other-window 1)
-        
-;;         (pop-to-buffer "*eshell*" t)
+        ;;is there a better way to do this?
 
-;;         (other-window -1)
+        (setq window (get-buffer-window eshell-buffer-name))
 
-        )))
+        (if (window-live-p window)
+            (progn 
+              (select-window window)
+
+              (setq enlargement (- (/ (frame-height) 2) (window-height)))
+              
+              (if (> enlargement 0)
+                  (enlarge-window enlargement)))))))
 
 (add-hook 'ecb-current-buffer-sync-hook 'ecb-eshell-current-buffer-sync)
 
