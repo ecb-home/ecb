@@ -23,7 +23,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-semantic-wrapper.el,v 1.12 2004/04/06 15:17:30 berndl Exp $
+;; $Id: ecb-semantic-wrapper.el,v 1.13 2004/04/07 15:46:33 berndl Exp $
 
 ;;; Commentary:
 
@@ -53,7 +53,8 @@
 
 ;; semantic 1.X does not have this
 (silentcomp-defvar semanticdb-search-system-databases)
-
+(silentcomp-defvar semantic-format-use-images-flag)
+(silentcomp-defvar ezimage-use-images)
 
 ;; -- getter functions for all variables of semantic currently used by ECB ---
 
@@ -95,15 +96,25 @@
   "Return the hook-symbol `semantic-after-partial-cache-change-hook'."
   'semantic-after-partial-cache-change-hook)
 
+(defsubst ecb--ezimage-use-images ()
+  (if (boundp 'ezimage-use-images)
+      ezimage-use-images))
+
+(defsubst ecb--semantic-format-use-images-flag ()
+  (if (boundp 'semantic-format-use-images-flag)
+      semantic-format-use-images-flag))
+
 ;; -- an alias for all functions of semantic currently used by ECB ---
 
 (defconst ecb--semantic-function-alist
   '((semantic-active-p                        . semantic-active-p)
     (semantic-token-function-args             . semantic-tag-function-arguments)
+    (semantic-token-type-parts                . semantic-tag-type-members)
+    (semantic-something-to-stream             . semantic-something-to-tag-table)
     (semantic-find-nonterminal-by-overlay     . semantic-find-tag-by-overlay)
+    ;; here both functions return a list of tags!
     (semantic-find-nonterminal-by-token       . semantic-find-tags-by-class)
-    (semantic-find-nonterminal-by-name        . semantic-find-tags-by-name)
-    (semantic-find-nonterminal-by-name-regexp . semantic-find-tags-by-name-regexp)
+    (semantic-find-nonterminal-by-name        . semantic-brute-find-first-tag-by-name)
     (semantic-current-nonterminal-parent      . semantic-current-tag-parent)
     (semantic-adopt-external-members          . semantic-adopt-external-members)
     (semantic-bucketize                       . semantic-bucketize)
@@ -232,8 +243,53 @@ unloaded buffer representation."
   (if (fboundp 'semantic-fetch-tags)
       (apply 'semantic-fetch-tags nil)
     (apply 'semantic-bovinate-toplevel (list check-cache))))
-  
-;;; API Functions
+
+
+(if (fboundp 'semantic-tag-components)
+    (defalias 'ecb--semantic-tag-components
+      'semantic-tag-components)
+  (defun ecb--semantic-tag-components (tag)
+    (cond ((equal (ecb--semantic-tag-class tag) 'type)
+           (ecb--semantic-tag-type-members tag))
+          ((equal (ecb--semantic-tag-class tag) 'function)
+           (ecb--semantic-tag-function-arguments tag))
+          (t nil))))
+
+(if (fboundp 'semantic-flatten-tags-table)
+    (defalias 'ecb--semantic-flatten-tags-table
+      'semantic-flatten-tags-table)
+  (defun ecb--semantic-flatten-tags-table (&optional table)
+    "Flatten the tags table TABLE.
+All tags in TABLE, and all components of top level tags
+in TABLE will appear at the top level of list.
+Tags promoted to the top of the list will still appear
+unmodified as components of their parent tags."
+    (let* ((table (ecb--semantic-something-to-tag-table table))
+           ;; Initialize the starting list with our table.
+           (lists (list table)))
+      (mapc (lambda (tag)
+              (let ((components (ecb--semantic-tag-components tag)))
+                (if (and components
+                         ;; unpositined tags can be hazardous to
+                         ;; completion.  Do we need any type of tag
+                         ;; here? - EL
+                         (ecb--semantic-tag-with-position-p (car components)))
+                    (setq lists (cons
+                                 (ecb--semantic-flatten-tags-table components)
+                                 lists)))))
+            table)
+      (apply 'append (nreverse lists))
+      )))
+
+;; Klaus Berndl <klaus.berndl@sdm.de>: Here we must make a list of tags by
+;; hand for semantic 1.4!!
+(if (fboundp 'semantic-find-tags-by-name)
+    (defalias 'ecb--semantic-find-tags-by-name
+      'semantic-find-tags-by-name)
+  (defsubst ecb--semantic-find-tags-by-name (name &optional table)
+    (list (ecb--semantic-brute-find-first-tag-by-name name table))))
+
+;;; semanticdb-API Functions
 ;;
 ;; Once you have a search result, use these routines to operate
 ;; on the search results at a higher level

@@ -24,7 +24,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-method-browser.el,v 1.35 2004/04/07 11:58:00 berndl Exp $
+;; $Id: ecb-method-browser.el,v 1.36 2004/04/07 15:46:33 berndl Exp $
 
 ;;; Commentary:
 
@@ -1468,6 +1468,9 @@ to an existing icon-file-name.")
                                        (ecb--semantic-tag-class tag))
                                    (or (and (ecb--semantic--tag-get-property tag 'adopted)
                                             'unknown)
+                                       (and (not (member (ecb--semantic-tag-class tag)
+                                                         '(type function variable)))
+                                            "")
                                        (ecb--semantic-tag-protection tag parent-tag))
                                    (ecb--semantic-tag-static-p tag parent-tag)))
          (image-name (cdr (assoc image-name-alias
@@ -1525,6 +1528,18 @@ TAGLIST otherwise TAGLIST is returned."
           (setq taglist (funcall (cdr filter) (car filter) taglist)))))
   taglist)
 
+(defun ecb-klausi-test ()
+  (let* ((by-name-result-1 (ecb--semantic-find-tags-by-name "XXX"
+                                                            (ecb-get-current-tag-table)))
+         (by-type-result-1 (ecb--semantic-find-tags-by-class 'type
+                                                             by-name-result-1))
+         (by-name-result-2 (ecb--semantic-find-tags-by-name
+                            "list_of_facts"
+                            (ecb--semantic-tag-children-compatibility (car by-type-result-1))))
+         (by-type-result-2 (ecb--semantic-find-tags-by-class 'type
+                                                             by-name-result-2)))
+    (if by-type-result-2
+        (ecb--semantic-tag-name (car by-type-result-2)))))
 
 (defun ecb-methods-filter-perform-current-type (filter taglist)
   "Perform a current-type filter on TAGLIST. FILTER is a type-name-hierarchy
@@ -1538,9 +1553,9 @@ is returned which contains only the leaf-type in the hierarchy."
       (catch 'not-found
         (dolist (type-name curr-type-filter)
           (setq found-type-tag
-                (car (ecb--semantic-find-tags-by-class
-                      'type
-                      (ecb--semantic-find-tags-by-name type-name new-tag-list))))
+                (car (ecb--semantic-find-tags-by-name
+                      type-name
+                      (ecb--semantic-find-tags-by-class 'type new-tag-list))))
           (if (null found-type-tag)
               (progn
                 ;; remove here the filters for current source because the
@@ -1765,7 +1780,7 @@ TABLE is used."
           ;; external member is defined outside the current source - but this
           ;; faux-type is contained in table too.
           (catch 'found
-            (dolist (tag (semantic-flatten-tags-table table))
+            (dolist (tag (ecb--semantic-flatten-tags-table table))
               (if (and (equal (ecb--semantic-tag-class tag) 'type)
                        (string= (ecb--semantic-tag-name tag) function-parent)
                        (delq nil (mapcar (lambda (child)
@@ -2462,10 +2477,10 @@ to be rescanned/reparsed and therefore the Method-buffer will be rebuild too."
            (curr-major-mode major-mode)
            (ezimage-use-images (if (ecb-use-images-for-semantic-tags)
                                    nil
-                                 ezimage-use-images))
+                                 (ecb--ezimage-use-images)))
            (semantic-format-use-images-flag (if (ecb-use-images-for-semantic-tags)
                                                 nil
-                                              semantic-format-use-images-flag))
+                                              (ecb--semantic-format-use-images-flag)))
            (semantic-bucketize-tag-class
             (function (lambda (tag)
                         (if (ecb--semantic-tag-prototype-p tag)
@@ -3684,6 +3699,20 @@ edit-windows. Otherwise return nil."
                                    ecb-methods-menu-user-extension
                                    dyn-builtin-extension-tagfilter
                                    ecb-common-methods-menu))))))
+
+(defconst ecb-methods-incr-searchpattern-node-prefix
+  '("\\([-+#(]\\|[^-+#(][^ \n]+ \\)?" . 1)
+  "Prefix-pattern which ignores all not interesting stuff of a node-name at
+incr. search. The following contents of a node-name are ignored by this
+pattern:
+- types of a variable or return-types of a method
+- const specifier of variables
+- protection sign of a variable/method: +, - or #
+
+Format: cons with car is the pattern and cdr is the number of subexpr in this
+pattern.")
+
+
 
 (defun ecb-create-methods-tree-buffer ()
   "Create the tree-buffer for methods."
