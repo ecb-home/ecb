@@ -149,6 +149,7 @@ means not to count the minibuffer even if it is active."
                                             (custom-save-all . around)
                                             (winner-mode . around)
                                             (winner-redo . around)
+                                            (winner-undo . around)
                                             (scroll-all-mode . after))
                                         '((delete-frame . around)
                                           (compilation-set-window-height . around)
@@ -158,6 +159,7 @@ means not to count the minibuffer even if it is active."
                                           (custom-save-all . around)
                                           (winner-mode . around)
                                           (winner-redo . around)
+                                          (winner-undo . around)
                                           (scroll-all-mode . after)))
   "These functions are always adviced if ECB is active. Each element of the
 list is a cons-cell where the car is the function-symbol and the cdr the

@@ -2,7 +2,10 @@
 
 ** Fixed bugs:
 
-*** `winner-mode' and `winner-redo' are now only forbidden in the ecb-frame.
+*** The commands of `winner-mode'are now only forbidden in the ECB-frame but work
+    in any other frame.
+
+*** `scroll-all-mode' now works correct in other frames than the ECB-frame.
 
 *** Removed the annoying message "Partial reparsing..."
 
