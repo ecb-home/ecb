@@ -1,9 +1,20 @@
 * Changes for ECB version 2.25
 
+** More flexible sorting of the Sources- and the History-buffer
+
+*** `ecb-sort-history-items' has been renamed to `ecb-history-sort-method'
+    and offers now the same choices as the already existing option
+    `ecb-sources-sort-method'.
+
+*** Two new options `ecb-sources-sort-ignore-case' and
+    `ecb-history-sort-ignore-case' which allow to ignore case when sorting the
+    Sources- and/or the History-buffer. Thanks for suggestion to Markus
+    Gritsch <gritsch@iue.tuwien.ac.at>. Per default case is now ignored.
+
 ** Fixed Bugs
 
 *** Fixed a bug in the mechanism which prescanes directories for emptyness.
-    Now a directory is checked if it is accible before it is prescanned -
+    Now a directory is checked if it is accessible before it is prescanned -
     otherwise the prescan could fail with an error.
 
 

@@ -79,7 +79,7 @@
 (defun ecb-autogen-update-header ()
   "Update header of the auto-generated autoloads file.
 Run as `write-contents-hooks'."
-  (when (string-equal generated-autoload-file (buffer-file-name))
+  (when (ecb-string= generated-autoload-file (buffer-file-name))
     (let ((tag (format ";;; %s ---" (file-name-nondirectory
                                      (buffer-file-name)))))
       (message "Updating header...")

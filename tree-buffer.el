@@ -1375,7 +1375,7 @@ mentioned above!"
         (counter 0)
         (menu-items (reverse menu-def)))
     (dolist (item menu-items)
-      (cond ((string-equal (car item) "---")
+      (cond ((string= (car item) "---")
              (define-key map
                (make-vector 1
                             (setq counter (1+ counter)))
@@ -1397,7 +1397,7 @@ mentioned above!"
 (defun tree-buffer-create-menu-xemacs (menu-def)
   (when menu-def
     (let ((item (car menu-def)))
-      (cons (cond ((string-equal (car item) "---")
+      (cons (cond ((string= (car item) "---")
 		   (car item))
 		  ((stringp (cadr item)) ;; menu-entry
                    (let ((v (make-vector 3 t)))

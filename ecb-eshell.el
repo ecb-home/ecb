@@ -243,8 +243,8 @@ ECB and if either this function is called interactively or
       (when (and (bufferp my-eshell-buffer)
                  (stringp my-reference-directory)
                  (stringp my-eshell-directory)
-                 (not (string-equal (ecb-fix-filename my-reference-directory)
-                                    (ecb-fix-filename my-eshell-directory))))
+                 (not (ecb-string= (ecb-fix-filename my-reference-directory)
+                                   (ecb-fix-filename my-eshell-directory))))
         (ecb-eshell-save-buffer-history
          (save-excursion
            (set-buffer my-eshell-buffer)

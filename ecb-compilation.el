@@ -103,7 +103,7 @@ compile-window of ECB. This is a list combined of
   (catch 'exit
     (dolist (b (ecb-compilation-buffer-names))
       (if (null (cdr b))
-          (if (string= name (car b))
+          (if (ecb-string= name (car b))
               (throw 'exit name))
         (save-match-data
           (if (string-match (car b) name)
@@ -170,8 +170,8 @@ displayed in the compile-window. This is a list combined of
        (index 0))
 
     (setq buffer-list (sort buffer-list (lambda(first second)
-                                          (string-lessp (buffer-name first)
-                                                        (buffer-name second)))))
+                                          (ecb-string< (buffer-name first)
+                                                       (buffer-name second)))))
     (dolist(buffer buffer-list)
       (when (ecb-compilation-buffer-p buffer)
         (setq buffer-names
