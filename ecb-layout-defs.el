@@ -872,6 +872,42 @@ little more place. This layout works best if it is contained in
   (ecb-set-speedbar-buffer)
   (select-window (next-window)))
 
+(ecb-layout-define "analyse-test" left
+  "This function creates the following layout:
+
+   -------------------------------------------------------
+   |              |                                      |
+   |  Directories |                                      |
+   |              |                                      |
+   |--------------|                                      |
+   |              |                                      |
+   |  Sources     |                                      |
+   |              |                                      |
+   |--------------|                 Edit                 |
+   |              |                                      |
+   |  Methods     |                                      |
+   |              |                                      |
+   |--------------|                                      |
+   |              |                                      |
+   |  Analyse     |                                      |
+   |              |                                      |
+   -------------------------------------------------------
+   |                                                     |
+   |                    Compilation                      |
+   |                                                     |
+   -------------------------------------------------------
+
+If you have not set a compilation-window in `ecb-compile-window-height' then
+the layout contains no durable compilation window and the other windows get a
+little more place."
+  (ecb-set-directories-buffer)
+  (ecb-split-ver 0.3)
+  (ecb-set-sources-buffer)
+  (ecb-split-ver 0.35)
+  (ecb-set-methods-buffer)
+  (ecb-split-ver 0.5)
+  (ecb-set-analyse-buffer)
+  (select-window (next-window)))
 
 (defconst ecb-buildin-layouts (ecb-copy-list ecb-available-layouts)
   "All layouts defined until now.")
