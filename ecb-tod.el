@@ -22,7 +22,7 @@
 ;; with GNU Emacs; see the file COPYING. If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-tod.el,v 1.2 2003/01/29 14:30:12 berndl Exp $
+;; $Id: ecb-tod.el,v 1.3 2003/01/29 16:52:49 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -91,6 +91,12 @@
     "Call `ecb-show-help' [C-c . o] with a prefix-argument [C-u] and choose the help-format."
     "You can change the prefix [C-c .] of all ECB-keybindings quick and easy with `ecb-key-map'."
     "Send a problem-report to the ECB-mailing-list quick and easy with `ecb-submit-problem-report'."
+    "Switch on/off auto. expanding of the ECB-methods-buffer with `ecb-auto-expand-directory-tree'."
+    "You can quickly toggle auto. expanding of the ECB-methods-buffer with `ecb-toggle-auto-expand-token-tree'."
+    "Highlight current semantic-token of the edit-buffer in the ECB-methods-buffer with `ecb-highlight-token-with-point'."
+    "Use `scroll-all-mode' to scroll both edit-windows of ECB simultaneously - and no other windows are scrolled!"
+    "You can toggle having a compile window with `ecb-toggle-compile-window' if `ecb-compile-window-height' is not nil."
+    "Start ECB automatically after Emacs is started. Use option `ecb-auto-activate'"
     )
   "List of all available tips of the day.")
 
