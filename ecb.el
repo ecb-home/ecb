@@ -54,7 +54,7 @@
 ;; The latest version of the ECB is available at
 ;; http://home.swipnet.se/mayhem/ecb.html
 
-;; $Id: ecb.el,v 1.141 2001/07/20 17:14:36 berndl Exp $
+;; $Id: ecb.el,v 1.142 2001/08/08 20:15:54 creator Exp $
 
 ;;; Code:
 
@@ -759,18 +759,25 @@ cleared!) ECB by running `ecb-deactivate'."
 	  display
 	'(t hidden nil)))))
 
+(defun ecb-get-token-parent-names (parents)
+  (when parents
+    (let* ((parent (car parents))
+	   (name (cond
+		  ((semantic-token-p parent)
+		   (semantic-name-nonterminal parent nil ecb-font-lock-tokens))
+		  ((stringp parent)
+		   (semantic-colorize-text parent 'type)))))
+      (if name
+	  (if (and ecb-exclude-parents-regexp
+		   (string-match ecb-exclude-parents-regexp name))
+	      (ecb-get-token-parent-names (cdr parents))
+	    (cons name (ecb-get-token-parent-names (cdr parents))))
+	(if (listp parent)
+	    (append (ecb-get-token-parent-names parent)
+		    (ecb-get-token-parent-names (cdr parents))))))))
+
 (defun ecb-get-token-parents (token)
-  (let ((parents
-	 (delq nil
-	       (mapcar (function
-			(lambda (p)
-			  (if (or (not p)
-				  (not ecb-exclude-parents-regexp)
-				  (not (string-match
-					ecb-exclude-parents-regexp p)))
-			      p)))
-		       (semantic-token-type-parent token)))))
-    (if (listp parents)	parents (list parents))))
+  (ecb-get-token-parent-names (semantic-token-type-parent token)))
 
 (defun ecb-get-token-name (token)
   (if (eq 'type (semantic-token-token token))
@@ -825,13 +832,26 @@ cleared!) ECB by running `ecb-deactivate'."
       (set-buffer (get-buffer-create "ecb-dump"))
       (erase-buffer)
       (ecb-dump-tokens tokens ""))))
-  
+
+(defun ecb-dump-type (tok)
+  (dolist (parent (ecb-get-token-parents tok))
+    (insert (concat prefix "  " parent))))
+
 (defun ecb-dump-tokens (tokens prefix)
   (dolist (tok tokens)
     (if (stringp tok)
 	(insert prefix tok)
-      (insert prefix (semantic-token-name tok) ": "
-	      (symbol-name (semantic-token-token tok)) "\n")
+      (insert prefix
+	      (semantic-name-nonterminal tok nil ecb-font-lock-tokens)
+	      ", "
+	      (symbol-name (semantic-token-token tok))
+	      ", "
+	      (if (stringp (semantic-token-type tok))
+		  (semantic-token-type tok)
+		"<unknown type>")
+	      "\n")
+      (if (eq 'type (semantic-token-token tok))
+	  (ecb-dump-type tok))
       (ecb-dump-tokens (semantic-nonterminal-children tok t)
 		       (concat prefix "  ")))))
 
@@ -1848,7 +1868,7 @@ directly, but use instead `ecb-prefix-key'!")
 
 (defcustom ecb-prefix-key "[?\C-c ?.]"
   "*Specifies the prefix-keysequence for the ECB minor-mode keymap.
-The keysequence must be inserted as string. Here comes how the string must
+The keysequence must be inserted as a string. Here's how the string must
 look like:
 
    \[?<key-1> ... ?<key-n>]
@@ -1873,8 +1893,8 @@ clearness of the display every real keystroke you have to hit onto your
 keyboard is enclosed in \' and is separated by a \'+\'):
 \'\[\' + \'?\' + \'C-q\' + \'C-c\' + ' ' + \'?\' + \'.\' + \']\'
 
-It is highly recommended to use at first key of your prefix-keysequence one of
-the standard keys C-c or C-x!"
+It is highly recommended to use one of the standard keys C-c or C-x as first key
+of your prefix-key sequence!"
   :group 'ecb-general
   :type '(string :tag "Keysequence")
   :set (function (lambda (symbol value)
