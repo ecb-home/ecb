@@ -1,10 +1,18 @@
 Version 1.90
 ------------
 
-* New command `ecb-expand-methods-tokens' which allows precisely expanding
+* Now ECB displays at every start a "Tip of the day" in a dialog-box. This can
+  be switched off with option `ecb-tip-of-the-day'. There is also a new
+  command `ecb-show-tip-of-the-day' (Klaus).
+
+* New command `ecb-expand-methods-nodes' which allows precisely expanding
   tokens with a certain indentation-level. There are also two new related
   options `ecb-methods-nodes-expand-spec' and
   `ecb-methods-nodes-collapse-spec' (Klaus).
+
+* New command `ecb-expand-directory-nodes' which does the same for the
+  directories tree-buffer as the new command `ecb-expand-methods-nodes' for
+  the methods tree-buffer (Klaus).
 
 * Advicing `scroll-all-mode' so it works correct with ECB, means
   `scroll-all-mode' scrolls only the windows of the edit-area, i.e. max. the
