@@ -62,7 +62,7 @@
 ;; The latest version of the ECB is available at
 ;; http://home.swipnet.se/mayhem/ecb.html
 
-;; $Id: ecb.el,v 1.279 2003/01/27 10:42:23 berndl Exp $
+;; $Id: ecb.el,v 1.280 2003/01/29 14:33:04 berndl Exp $
 
 ;;; Code:
 
@@ -646,6 +646,38 @@ then activating ECB again!"
   :group 'ecb-methods
   :type 'string)
 
+(defcustom ecb-auto-expand-token-tree 'expand-spec
+  "*Expand the methods-token-tree automatically if node invisible.
+
+This option has only an effect if option `ecb-highlight-token-with-point' is
+switched on too. There are three possible choices:
+- nil: No auto. expanding of the method buffer.
+- expand-spec: Auto expand the method-buffer nodes if the node belonging to
+  current token under point is invisible because its parent-node is collapsed.
+  But expanding is only done if the type of the token under point in the
+  edit-buffer is contained in `ecb-methods-nodes-expand-spec'.
+- all: Like expand-spec but expands all tokens regardess of the setting in
+  `ecb-methods-nodes-expand-spec'."
+  :group 'ecb-methods
+  :type '(radio (const :tag "No auto. expand" :value nil)
+                (const :tag "Expand as specified" :value expand-spec)
+                (const :tag "Expand all" :value all)))
+
+(defcustom ecb-expand-methods-switch-off-auto-expand t
+  "*Switch off auto expanding in the ECB-method buffer
+after explicit expanding or collapsing by `ecb-expand-methods-nodes'.
+
+This is done with `ecb-toggle-auto-expand-token-tree' so after the switch off
+the auto expanding feature can again switched on quickly.
+
+But after explicitly expanding/collapsing the methods-buffer to a certain
+level the auto. expanding could undo this when the node belonging to current
+token under point in the edit-window is invisible after
+`ecb-expand-methods-nodes' - then the auto. expand feature would make this
+node immediatelly visible and destroys the explicitly set expand-level."
+  :group 'ecb-methods
+  :type 'boolean)
+
 (defvar ecb-tree-RET-selects-edit-window--internal nil
   "Only set by customizing `ecb-tree-RET-selects-edit-window' or calling
 `ecb-toggle-RET-selects-edit-window'!
@@ -1117,7 +1149,7 @@ A symbol describing how to sort the tokens of this type:
 			       (const :tag "No sort" nil))))
   :initialize 'custom-initialize-default)
 
-(defcustom ecb-methods-nodes-expand-spec '(type variable section)
+(defcustom ecb-methods-nodes-expand-spec '(type variable function section)
   "*Semantic token-types expanded by `ecb-expand-methods-nodes'.
 
 The value of this option is either the symbol 'all \(all tokens are expanded
@@ -1770,13 +1802,12 @@ error with ERROR-ARGS."
 ;; semantic-overlays, so we can handle an error if these overlays (extends for
 ;; XEmacs) are destroyed and invalid cause of some mysterious circumstances.
 
-;; (delete-overlay (car (semantic-overlays-at (point))))
-;; (semantic-overlay-start (semantic-token-overlay klaus))
-;; (setq klaus (semantic-current-nonterminal))
-
 (defun ecb-semantic-assert-valid-token (token &optional no-reparse)
   "Assert that TOKEN is a valid token. If not valid then `ecb-enter-debugger'
-is called."
+is called. If NO-REPARSE is not nil then the buffer is not autom. reparsed. It
+returns nil if the assertion fails otherwise not nil. So the caller can even
+check the result if `ecb-debug-mode' is nil in which case the function
+`ecb-enter-debugger' is a no-op."
   (if (semantic-token-p token)
       (if (semantic-token-with-position-p token)
           (let ((o  (semantic-token-overlay token)))
@@ -1815,14 +1846,23 @@ is called."
                     (ecb-nav-initialize)
                     (semantic-clear-toplevel-cache)
                     (ecb-update-methods-buffer--internal))
-                  (ecb-enter-debugger "Token %S is invalid!" token))
+                  (ecb-enter-debugger "Token %S is invalid!" token)
+                  nil)
               ;; else, token is OK.
-              ))
+              t))
         ;; Positionless tokens are also ok.
-        )
+        t)
     ;; For no semantic-tokens a reparse makes no sense!
-    (ecb-enter-debugger "Not a semantic token: %S" token)))
+    (ecb-enter-debugger "Not a semantic token: %S" token)
+    nil))
 
+
+(defun ecb-semantic-token-buffer (token)
+  (ecb-semantic-assert-valid-token token)
+  ;; if ecb-debug-mode is not nil then the TOKEN is valid if we pass the
+  ;; assert. If ecb-debug-mode is nil then we call simply the semantic
+  ;; function and see what happens.
+  (semantic-token-buffer token))
 
 (defun ecb-semantic-token-start (token)
   (ecb-semantic-assert-valid-token token)
@@ -2545,13 +2585,16 @@ even if current directory is equal to `ecb-path-selected-directory'."
      (tree-buffer-highlight-node-data filename))))
 
 (defun ecb-add-all-buffers-to-history ()
-  "Add all current file-buffers to the history-buffer of ECB."
+  "Add all current file-buffers to the history-buffer of ECB. If
+`ecb-sort-history-items' is not nil then afterwards the history is sorted
+alphabetically. Otherwise the most recently used buffers are on the top of the
+history and the seldom used buffers at the bottom."
   (interactive)
   (when (ecb-window-live-p ecb-history-buffer-name)
     (mapc (lambda (buffer)
             (when (buffer-file-name buffer)
               (ecb-add-item-to-history-buffer (buffer-file-name buffer))))
-          (buffer-list))
+          (reverse (buffer-list)))
     (ecb-sort-history-buffer))
   (ecb-update-history-window (buffer-file-name (current-buffer))))
 
@@ -2697,7 +2740,13 @@ it is cleared."
         (setq ecb-methods-root-node (cdr cached-tree))
         (setq tree-buffer-indent ecb-tree-indent)
         (tree-buffer-update)))
-   (ecb-mode-line-format)
+
+    ;; Klaus Berndl <klaus.berndl@sdm.de>: after a full reparse all overlays
+    ;; stored in the dnodes of the navigation-list now are invalid. Therefore
+    ;; we have changed the implementation of ecb-navigate.el from storing
+    ;; whole tokens to storing buffer and start- and end-markers!
+    
+    (ecb-mode-line-format)
     ;; signalize that the rebuild has already be done
     (setq ecb-method-buffer-needs-rebuild nil)))
 
@@ -2824,6 +2873,34 @@ For further explanation see `ecb-clear-history-behavior'."
        (tree-buffer-update)
        (tree-buffer-highlight-node-data ecb-path-selected-source)))))
 
+(defvar ecb-auto-expand-token-tree-old 'expand-spec)
+(defun ecb-toggle-auto-expand-token-tree (&optional arg)
+  "Toggle auto expanding of the ECB-methods-buffer.
+With prefix argument ARG, make switch on if positive, otherwise switch off.
+If the effect is that auto-expanding is switched off then the current value of
+`ecb-auto-expand-token-tree' is saved so it can be used for the next switch on
+by this command."
+  (interactive "P")
+  (let* ((new-value (if (null arg)
+                        (if ecb-auto-expand-token-tree
+                            (progn
+                              (setq ecb-auto-expand-token-tree-old
+                                    ecb-auto-expand-token-tree)
+                              nil)
+                          ecb-auto-expand-token-tree-old)
+                      (if (<= (prefix-numeric-value arg) 0)
+                          (progn
+                            (if ecb-auto-expand-token-tree
+                                (setq ecb-auto-expand-token-tree-old
+                                      ecb-auto-expand-token-tree))
+                            nil)
+                        (or ecb-auto-expand-token-tree
+                            ecb-auto-expand-token-tree-old)))))
+    (setq ecb-auto-expand-token-tree new-value)
+    (message "Auto. expanding of the methods-buffer is switched %s \(Value: %s\)."
+             (if new-value "on" "off")
+             new-value)))
+
 (defun ecb-token-sync (&optional force)
   (when (and ecb-minor-mode
              (ecb-point-in-edit-window))
@@ -2833,8 +2910,23 @@ For further explanation see `ecb-clear-history-behavior'."
           (setq ecb-selected-token tok)
           (save-selected-window
             (ecb-exec-in-methods-window
-             (tree-buffer-highlight-node-data
-              tok nil (equal ecb-highlight-token-with-point 'highlight)))))))))
+             (or (tree-buffer-highlight-node-data
+                  tok nil (equal ecb-highlight-token-with-point 'highlight))
+                 ;; The node representing TOK could not be highlighted be
+                 ;; `tree-buffer-highlight-node-data' - probably it is
+                 ;; invisible. Let's try to make visible and then highlighting
+                 ;; again.
+                 (when (and tok ecb-auto-expand-token-tree
+                            (or (equal ecb-auto-expand-token-tree 'all)
+                                (member (semantic-token-token tok)
+                                        (ecb-normalize-expand-spec
+                                         ecb-methods-nodes-expand-spec))))
+                   (ecb-expand-methods-nodes-internal
+                    100
+                    (equal ecb-auto-expand-token-tree 'all))
+                   (tree-buffer-highlight-node-data
+                    tok nil (equal ecb-highlight-token-with-point 'highlight))
+                   )))))))))
 
 (defun ecb-current-buffer-sync (&optional force)
   "Synchronizes the current buffer with any other buffers.
@@ -3328,8 +3420,38 @@ Examples:
 - LEVEL = 2 expands nodess which are either not indented or indented once or
   twice
 - LEVEL ~ 10 should normally expand all nodes unless there are nodes which
-  are indented deeper than 10."
+  are indented deeper than 10.
+
+Note: This command switches off auto. expanding of the method-buffer if
+`ecb-expand-methods-switch-off-auto-expand' is not nil. But it can be switched
+on again quickly with `ecb-toggle-auto-expand-token-tree' or \[C-c . a]."
   (interactive "P")
+  (let* ((first-node (save-excursion
+                       (goto-char (point-min))
+                       (tree-buffer-get-node-at-point)))
+         (level (ecb-read-number
+                 "Expand indentation-level: "
+                 (if (and first-node
+                          (tree-node-is-expandable first-node)
+                          (tree-node-is-expanded first-node))
+                     -1
+                   10))))
+    ;; here we should switch off autom. expanding token-tree because otherwise
+    ;; our expanding to a certain level takes no effect because if the current
+    ;; token in the edit-buffer would be invisible afterwards (after the
+    ;; expanding/collapsing) then immediately the token would be autom.
+    ;; expanded to max level...
+    (when ecb-expand-methods-switch-off-auto-expand
+      (ecb-toggle-auto-expand-token-tree -1))
+    (ecb-expand-methods-nodes-internal level force-all t)))
+
+(defun ecb-expand-methods-nodes-internal (level &optional force-all resync-token)
+  "Set the expand level of the nodes in the ECB-methods-buffer.
+
+For description of LEVEL and FORCE-ALL see `ecb-expand-methods-nodes'.
+
+If RESYNC-TOKEN is not nil then after expanding/collapsing the methods-buffer
+is resynced to the current token of the edit-window."
   (let ((symbol->name-assoc-list
          ;; if possible we get the local semantic-symbol->name-assoc-list of
          ;; the source-buffer.
@@ -3348,14 +3470,7 @@ Examples:
               (norm-expand-types (ecb-normalize-expand-spec
                                   ecb-methods-nodes-expand-spec))
               (norm-collapse-types (ecb-normalize-expand-spec
-                                    ecb-methods-nodes-collapse-spec))
-              (level (ecb-read-number
-                      "Expand indentation-level: "
-                      (if (and first-node
-                               (tree-node-is-expandable first-node)
-                               (tree-node-is-expanded first-node))
-                          -1
-                        10))))
+                                    ecb-methods-nodes-collapse-spec)))
          (tree-buffer-expand-nodes
           level
           (and (not force-all)
@@ -3374,7 +3489,7 @@ Examples:
 
     ;; we want resync the new method-buffer to the current token in the
     ;; edit-window.
-    (ecb-token-sync 'force)))
+    (if resync-token (ecb-token-sync 'force))))
 
 (defun ecb-normalize-expand-spec (spec)
   (if (equal 'all spec)
@@ -3412,7 +3527,7 @@ can last a long time - depending of machine- and disk-performance."
       (remove-hook 'pre-command-hook 'ecb-unhighlight-token-header)))
   (setq ecb-unhighlight-hook-called t))
 
-(defun ecb-method-clicked (node ecb-button shift-mode)
+(defun ecb-method-clicked (node ecb-button shift-mode &optional second-try)
   (if shift-mode
       (ecb-mouse-over-method-node node nil nil 'force))
   (let ((data (tree-node-get-data node))
@@ -3479,22 +3594,39 @@ can last a long time - depending of machine- and disk-performance."
            (widen))
          (goto-char (ecb-semantic-token-start token))
          (if ecb-token-jump-narrow
-             (narrow-to-region (tree-buffer-line-beginning-pos)
+             (narrow-to-region (ecb-line-beginning-pos)
                                (ecb-semantic-token-end token))
            (cond
             ((eq 'top ecb-scroll-window-after-jump)
              (set-window-start (selected-window)
-                               (tree-buffer-line-beginning-pos)))
+                               (ecb-line-beginning-pos)))
             ((eq 'center ecb-scroll-window-after-jump)
              (set-window-start
               (selected-window)
-              (tree-buffer-line-beginning-pos (- (/ (window-height) 2)))))))
-         (ecb-nav-add-item (ecb-nav-token-history-item-new token ecb-token-jump-narrow))
+              (ecb-line-beginning-pos (- (/ (window-height) 2)))))))
+         ;; Klaus Berndl <klaus.berndl@sdm.de>: Now we use a different
+         ;; implementation of ecb-nav-token-history-item. Not longer storing
+         ;; the whole token but the token-buffer and markers of token-start
+         ;; and token-end. This prevents the navigation-tree from getting
+         ;; unuseable cause of invalid overlays after a full reparse!
+         (let* ((tok-buf (or (ecb-semantic-token-buffer token)
+                             (current-buffer)))
+                (tok-name (semantic-token-name token))
+                (tok-start (move-marker (make-marker)
+                                        (semantic-token-start token) tok-buf))
+                (tok-end (move-marker (make-marker)
+                                        (semantic-token-end token) tok-buf)))
+           (ecb-nav-add-item (ecb-nav-token-history-item-new
+                              tok-name
+                              tok-buf
+                              tok-start
+                              tok-end
+                              ecb-token-jump-narrow)))
          (when ecb-highlight-token-header-after-jump
            (save-excursion
              (move-overlay ecb-method-overlay
-                           (tree-buffer-line-beginning-pos)
-                           (tree-buffer-line-end-pos)
+                           (ecb-line-beginning-pos)
+                           (ecb-line-end-pos)
                            (current-buffer)))
            (setq ecb-unhighlight-hook-called nil)
            (add-hook 'pre-command-hook 'ecb-unhighlight-token-header)))))
@@ -3712,16 +3844,22 @@ That is remove the unsupported :help stuff."
       ])
    "-"
    (ecb-menu-item
-    [ "Rebuild method buffer"
+    [ "Rebuild methods buffer"
       ecb-rebuild-methods-buffer
       :active (equal (selected-frame) ecb-frame)
-      :help "Rebuild the method buffer completely"
+      :help "Rebuild the methods buffer completely"
       ])
    (ecb-menu-item
-    [ "Expand method buffer"
+    [ "Expand methods buffer"
       ecb-expand-methods-nodes
       :active (equal (selected-frame) ecb-frame)
       :help "Expand all nodes of a certain indent-level"
+      ])
+   (ecb-menu-item
+    [ "Toggle auto. expanding of the method buffer"
+      ecb-toggle-auto-expand-token-tree
+      :active (equal (selected-frame) ecb-frame)
+      :help "Toggle auto. expanding of the method buffer"
       ])
    "-"
    (ecb-menu-item
@@ -3754,19 +3892,19 @@ That is remove the unsupported :help stuff."
     (ecb-menu-item
      [ "Store current window-sizes"
        ecb-store-window-sizes
-       :active t
+       :active (equal (selected-frame) ecb-frame)
        :help "Store current sizes of the ecb-windows in current layout."
        ])
     (ecb-menu-item
      [ "Restore sizes of the ecb-windows"
        ecb-restore-window-sizes
-       :active t
+       :active (equal (selected-frame) ecb-frame)
        :help "Restore the sizes of the ecb-windows in current layout."
        ])
     (ecb-menu-item
      [ "Restore default-sizes of the ecb-windows"
        ecb-restore-default-window-sizes
-       :active t
+       :active (equal (selected-frame) ecb-frame)
        :help "Restore the default-sizes of the ecb-windows in current layout."
        ])
     "-"
@@ -4042,6 +4180,7 @@ That is remove the unsupported :help stuff."
                (t "r" ecb-redraw-layout)
                (t "w" ecb-toggle-ecb-windows)
                (t "t" ecb-toggle-layout)
+               (t "a" ecb-toggle-auto-expand-token-tree)
                (t "o" ecb-show-help)
                (t "1" ecb-goto-window-edit1)
                (t "2" ecb-goto-window-edit2)
@@ -4648,18 +4787,6 @@ buffers does not exist anymore."
     (when (get-file-buffer data)
       (kill-buffer (get-file-buffer data)))))
 
-;; (defun ecb-clear-history-node (node)
-;;   "Removes current entry from the ECB history buffer."
-;;   (save-selected-window
-;;     (ecb-exec-in-history-window
-;;      (let ((buffer-file-name-list (mapcar (lambda (buff)
-;; 					    (buffer-file-name buff))
-;; 					  (buffer-list))))
-;;        (when (or (not (member (tree-node-get-data node) buffer-file-name-list))
-;; 		 (not (equal ecb-clear-history-behavior 'not-existing-buffers)))
-;; 	 (ecb-remove-from-current-tree-buffer node)
-;; 	 (tree-buffer-update)
-;; 	 (tree-buffer-highlight-node-data ecb-path-selected-source))))))
 
 (defvar ecb-history-menu nil)
 (setq ecb-history-menu
