@@ -26,7 +26,7 @@
 ;;
 ;; Contains all online-help for ECB (stolen something from recentf.el)
 
-;; $Id: ecb-help.el,v 1.35 2001/07/03 13:47:15 berndl Exp $
+;; $Id: ecb-help.el,v 1.36 2001/07/03 16:57:01 berndl Exp $
 
 ;;; Code
 
@@ -192,16 +192,14 @@ ECB offers you all what you need to work with the edit-window as if the
 edit-window would be the only window of the ECB-frame.
 
 ECB offers you to advice the following functions so they work best with ECB
-- `other-window' \(for this one see also the option
-                  `ecb-other-window-jump-behavior'!)
+- `other-window'
 - `delete-window'
 - `delete-other-windows'
 - `split-window-horizontally'
 - `split-window-vertically'
 - `switch-to-buffer'
 - `switch-to-buffer-other-window'
-- `other-window-for-scrolling' \(for this one see also the option
-                                `ecb-other-window-scroll-behavior'!)
+- `other-window-for-scrolling'
 
 The behavior of the adviced functions is:
 - All these adviced functions behaves exactly like their corresponding
@@ -224,7 +222,7 @@ adviced `split-window-vertically' \(or horizontally) and NOT with the original
 
 Per default ECB does advice all of the functions mentioned above but with the
 option `ecb-advice-window-functions' you can customizes which functions should
-be adviced by ECB.
+be adviced by ECB. Please read carefully the documentation of this option!
 
 
 Temp-buffer and compilation-buffer display in ECB:

@@ -125,7 +125,7 @@
 ;;   + The edit-window must not be splitted and the point must reside in
 ;;     the not deleted edit-window.
 
-;; $Id: ecb-layout.el,v 1.66 2001/07/03 13:47:15 berndl Exp $
+;; $Id: ecb-layout.el,v 1.67 2001/07/03 16:57:01 berndl Exp $
 
 ;;; Code:
 
@@ -287,45 +287,35 @@ frame height."
                 (const :tag "Only edit windows" only-edit)
                 (const :tag "Edit + compile window" edit-and-compile)))
 
-(defcustom ecb-other-window-scroll-behavior 'standard
-  "*Determine which window should be scrolled if any of the
-\"other-window-scrolling-functions\" is called, which means one of these:
-- `scroll-other-window'
-- `scroll-other-window-down'
-- `beginning-of-buffer-other-window'
-- `end-of-buffer-other-window'
-There are two possible values:
-- 'standard: All these functions above behave like the original version.
-- 'only-edit-window: All these function scroll always the first edit window if
-  the edit-window is splitted and point stays in the second one.
-This option takes only effect if `other-window-for-scrolling' is adviced \(see
-`ecb-advice-window-functions')."
-  :group 'ecb-layout
-  :type '(radio (const :tag "Standard-behavior" standard)
-                (const :tag "Scroll always other edit-window" only-edit-window)))
-  
 (defcustom ecb-advice-window-functions '(other-window
                                          delete-window
                                          delete-other-windows
                                          split-window-horizontally
                                          split-window-vertically
                                          switch-to-buffer
-                                         switch-to-buffer-other-window
-                                         other-window-for-scrolling)
+                                         switch-to-buffer-other-window)
   "*Use the intelligent windows functions of ECB instead of the standard
 Emacs functions. You can choose the following functions to be adviced by ECB
 so they behave as if the edit-window\(s) of ECB would be the only windows\(s)
 of the ECB-frame:
-- `other-window' \(for this one see also the option
-                  `ecb-other-window-jump-behavior'!)
+- `other-window'
+  For this one see also the option `ecb-other-window-jump-behavior'!
 - `delete-window'
 - `delete-other-windows'
 - `split-window-horizontally'
 - `split-window-vertically'
 - `switch-to-buffer'
 - `switch-to-buffer-other-window'
-- `other-window-for-scrolling' \(for this one see also the option
-                                `ecb-other-window-scroll-behavior'!)
+- `other-window-for-scrolling'
+  If this advice is enabled then the following functions scroll always the
+  first edit-window if the edit-window is splitted, point stays in the
+  \"other\" edit-window and there is no durable compilation-window \(see
+  `ecb-compile-window-height'):
+  - `scroll-other-window'
+  - `scroll-other-window-down'
+  - `beginning-of-buffer-other-window'
+  - `end-of-buffer-other-window'
+  This advice is per default not enabled.
 
 For working most conveniantly with ECB it is the best to advice all these
 functions, because then all the standard shortcuts of these functions are also
@@ -512,17 +502,18 @@ either not activated or it behaves exactly like the original version!"
 ;; `other-window-for-scrolling'.
 (defadvice scroll-other-window (around ecb)
   "The bahavior depends on the advice of `other-window-for-scrolling' \(see
-`ecb-advice-window-functions') and the value of the related option
-`ecb-other-window-scroll-behavior'."
+`ecb-advice-window-functions')."
   (if (not (equal (ecb-point-in-edit-window) 2))
       ad-do-it
     (let ((other-window-scroll-buffer (window-buffer (other-window-for-scrolling))))
       ad-do-it)))
 
+;; This function must savely work even if `ecb-edit-window' is not longer
+;; alive, which should normally not happen! In this case nil is returned.
 (defun ecb-edit-window-splitted ()
   "Returns either nil if the ECB edit-window is not splitted or 'vertical or
 'horizontal depending on the splitting."
-  (when ecb-edit-window
+  (when (and ecb-edit-window (window-live-p ecb-edit-window))
     (let ((next-w (next-window ecb-edit-window 0 ecb-frame)))
       (if (or (equal next-w ecb-edit-window)
               (window-dedicated-p next-w)
@@ -1003,15 +994,15 @@ the \(first) edit-window and does then it´s job \(see above)."
 (defadvice other-window-for-scrolling (around ecb)
   "This function determines the window which is scrolled if any of the
 \"other-window-scrolling-functions\" is called \(e.g. `scroll-other-window').
-The behavior depends on the option `ecb-other-window-scroll-behavior'."
+If edit-window is splitted, point stays in the \"other\" edit-window and there
+is no durable compilation-window then always the first edit-window is choosen."
   (if (or (not (equal (selected-frame) ecb-frame))
           (and ecb-compile-window-height ecb-compile-window
                (window-live-p ecb-compile-window))
-          (equal ecb-other-window-scroll-behavior 'standard)
           (not (equal (ecb-point-in-edit-window) 2)))
       ad-do-it
-    ;; point stays in the "other" edit-window and
-    ;; `ecb-other-window-scroll-behavior' is 'other-edit-window 
+    ;; point stays in the "other" edit-window and there is no
+    ;; compilation-window
     (let ((other-window-scroll-buffer (window-buffer ecb-edit-window)))
       ad-do-it)))
     
@@ -1309,7 +1300,8 @@ visibility of the ECB windows. ECB minor mode remains active!"
   (interactive)
   (ecb-toggle-ecb-windows 1))
 
-
+;; This function must savely work even if `ecb-edit-window' is not longer
+;; alive, which should normally not happen!
 (defun ecb-edit-window-configuration ()
   (let ((split (ecb-edit-window-splitted))
         (selected-edit-window (ecb-point-in-edit-window)))
@@ -1358,7 +1350,12 @@ this function the edit-window is selected which was current before redrawing."
       (ecb-activate-adviced-functions nil)
       
       ;; first we go to the edit-window
-      (ecb-select-edit-window)
+      (if (and ecb-edit-window (window-live-p ecb-edit-window))
+          (ecb-select-edit-window)
+        ;; if the edit-window is destroyed (what should never happen) we go to
+        ;; the scratch-buffer.
+        (set-window-dedicated-p (selected-window) nil)
+        (switch-to-buffer (get-buffer-create "*scratch*")))
       
       ;; Do some actions regardless of the choosen layout
       (delete-other-windows)
