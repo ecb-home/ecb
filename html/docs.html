@@ -145,14 +145,6 @@ mailing list <a href="mailto:ecb-list@lists.sourceforge.net">ecb-list@lists.sour
 </p><li><a href="#Conflicts">Conflicts</a>:                    Known conflicts with other packages
 <li><a href="#Bugs">Bugs</a>:                         Known bugs
 
-<p>Known conflicts with other packages
-
-</p><li><a href="#VC">VC</a>:                           Conflicts with Version Control
-<li><a href="#follow-mouse">follow-mouse</a>:                 Conflicts with follow-mouse.el
-<li><a href="#avoid">avoid</a>:                        Conflicts with avoid.el
-<li><a href="#calendar">calendar</a>:                     Conflicts with calendar.el
-<li><a href="#calculator">calculator</a>:                   Conflicts with calculator.el
-
 </ul>
 
 <p><hr>
@@ -281,15 +273,24 @@ Up:<a rel=up accesskey=u href="#Install%20and%20first%20steps">Install and first
 
 <h3>How to set up Emacs for file parsing</h3>
 
+<p>To ensure ECB and semantic are working correctly for all by semantic
+supported languages you have to pay attention to the following aspects
+concerning your Emacs-setup:
+
+<ol type=1 start=1>
+</p><li>Setting up semantic
+
 <p>Parsing files is done completely by semantic. ECB just displays the
 parsing results. For all needs of ECB semantic is completely setup by
 ECB itself, i.e. ECB sets up semantic for you! You have only to add
 the installation directory of semantic to your <code>load-path</code> (in an
 appropriate way)!
 
-<p><strong>NOTE</strong>: ECB is for browsing source-files and therefore you have
-to setup your Emacs-configuration properly so semantic can be
-activated automatically for parsing your Emacs-Lisp, C, C++ or Java
+</p><li>Activating the correct major-mode
+
+<p>ECB is for browsing source-files and therefore you have to setup your
+Emacs-configuration properly so semantic can be activated
+automatically for parsing your Emacs-Lisp, C, C++ or Java
 buffers<a rel=footnote href="#fn-1"><sup>1</sup></a>. For this Emacs
 must activate the correct <code>major-mode</code> for the source-files and
 Emacs can only do this if the option <code>auto-mode-alist</code> is setup
@@ -314,10 +315,6 @@ file-extensions<a rel=footnote href="#fn-2"><sup>2</sup></a> are:
 </td><td valign="top">.java
 <br></td></tr></table>
 
-<br><p>
-<p>If your source-files are "running" with correct <code>major-mode</code>
-ECB and semantic will do what you expect them doing!
-
 <p>Example: If you want files with extension ".cpp" being c++-parsed by
 semantic and ECB, your <code>auto-mode-alist</code> must contain an entry
 like:
@@ -327,6 +324,37 @@ like:
 
 <p>After this ECB will correctly parse your ".cpp"-sources and display
 all the semantic information in the ECB-methods buffer.
+
+<p><a name="Checking%20your%20hooks"></a>
+</p><li>Checking your hooks
+
+<p>If you have already checked points (1.) and (2.) and if you have still
+problems getting ECB/semantic working properly for your sources you
+should check the related major-mode hook. Every major-mode X has a
+hook with name "X-hook" which is evaluated after activating the
+major-mode (see above, 2.), e.g. the hook for the major-mode
+<code>c++-mode</code> is <code>c++-mode-hook</code>.
+
+<p>Semantic adds automatically during load-time a special
+"semantic-setup" to these major-mode hooks<a rel=footnote href="#fn-3"><sup>3</sup></a> in form of a
+"setup-function". Example: For c and c++ modes semantic adds
+<code>semantic-default-c-setup</code> to <code>c-mode-hook</code> and
+<code>c++-mode-hook</code>.
+
+<p>If your own Emacs-setup (e.g. in <code>.emacs</code> or
+<code>site-lisp/site-start.el</code>) overwrites such a major-mode-hook then
+semantic can not be activated for this major-mode and in consequence
+ECB can not work properly too!
+
+<p>Check if your Emacs-setup uses somewhere <code>setq</code> for adding code
+to a major-mode-hook. <strong>IMPORTANT</strong>: Use <code>add-hook</code> instead of
+<code>setq</code><a rel=footnote href="#fn-4"><sup>4</sup></a>!
+
+</ol>
+
+<p>If your source-files are "running" with correct <code>major-mode</code>
+and correct major-mode hooks ECB and semantic will do what you expect
+them doing!
 
 <p><hr>
 Node:<a name="First%20steps">First steps</a>,
@@ -344,7 +372,7 @@ steps:
 
 </p><li>Configure where ECB can find your sources:
 
-<p>Call <code>M-x customize-option RET ecb-source-path RET</code><a rel=footnote href="#fn-3"><sup>3</sup></a>. This lets you customize the option
+<p>Call <code>M-x customize-option RET ecb-source-path RET</code><a rel=footnote href="#fn-5"><sup>5</sup></a>. This lets you customize the option
 <code>ecb-source-path</code> with the customize-feature of Emacs. This opens
 a customize-buffer where you can insert all the directories where ECB
 can find your source-files. Save your changes with the button "Save
@@ -397,7 +425,7 @@ output of Emacs-compilation (compile, grep etc.) is shown
 (see <a href="#Temp-%20and%20compile-buffers">Temp- and compile-buffers</a>).
 
 <p>The following "ascii-screenshot" illustrates the typical layout of
-the ECB-frame<a rel=footnote href="#fn-4"><sup>4</sup></a>:
+the ECB-frame<a rel=footnote href="#fn-6"><sup>6</sup></a>:
 
 <br><pre>------------------------------------------------------------------
 |              |                                                 |
@@ -645,7 +673,7 @@ window (see the documentation <code>ecb-primary-mouse-jump-destination</code>).
 combinations of primary and secondary mouse-buttons are possible:
 
 <ul>
-<li>primary: mouse-2, secondary: C-mouse-2<a rel=footnote href="#fn-5"><sup>5</sup></a>. This is the default.
+<li>primary: mouse-2, secondary: C-mouse-2<a rel=footnote href="#fn-7"><sup>7</sup></a>. This is the default.
 
 <li>primary: mouse-1, secondary: C-mouse-1
 
@@ -796,6 +824,7 @@ the edit-window would be the only window of the ECB-frame.
 <li><code>other-window</code>
 <li><code>delete-window</code>
 <li><code>delete-other-windows</code>
+<li><code>delete-windows-on</code>
 <li><code>split-window-horizontally</code>
 <li><code>split-window-vertically</code>
 <li><code>switch-to-buffer</code>
@@ -991,10 +1020,8 @@ Up:<a rel=up accesskey=u href="#The%20ECB-layout">The ECB-layout</a>
 <h4>Changing and customizing the ECB-layout</h4>
 
 <p>ECB offers several predefined layouts with different sets and also
-different locations of ECB-windows. To see which layouts are available
-and choose an appropriate one just customize the option
-<code>ecb-layout-nr</code>. The docstring of this option explains how to see
-the different available layouts.
+different locations of ECB-windows. See below the "ascii-screenshot"
+of all currently available layouts.
 
 <p>If you want to switch fast between some layouts see the option
 <code>ecb-toggle-layout-sequence</code> and the command
@@ -1008,6 +1035,426 @@ contain a durable compilation-window at the bottom of the frame, see
 can change the location of the collapse- and expand-symbols and the
 indendation of sub-nodes in a tree. See <code>ecb-tree-indent</code> and
 <code>ecb-tree-expand-symbol-before</code>.
+
+<p>Here are all currently available layouts (Just customize the option
+<code>ecb-layout-nr</code> to the related number):
+
+<dl>
+<dt>Layout Nr. 0
+<dd>
+<br><pre>-------------------------------------------------------
+|              |                                      |
+|  Directories |                                      |
+|              |                                      |
+|              |                                      |
+|              |                                      |
+|--------------|                                      |
+|      |       |                                      |
+| Sour | Hist  |                 Edit                 |
+|      |       |                                      |
+|      |       |                                      |
+|--------------|                                      |
+|              |                                      |
+|  Methods     |                                      |
+|              |                                      |
+|              |                                      |
+-------------------------------------------------------
+|                                                     |
+|                    Compilation                      |
+|                                                     |
+-------------------------------------------------------
+</pre>
+
+<br><dt>Layout Nr. 1
+<dd>
+<br><pre>-------------------------------------------------------
+|              |                                      |
+|              |                                      |
+|              |                                      |
+|  Directories |                                      |
+|              |                                      |
+|              |                                      |
+|              |                                      |
+|--------------|                 Edit                 |
+|              |                                      |
+|              |                                      |
+|              |                                      |
+|  Sources     |                                      |
+|              |                                      |
+|              |                                      |
+|              |                                      |
+-------------------------------------------------------
+|                                                     |
+|                    Compilation                      |
+|                                                     |
+-------------------------------------------------------
+</pre>
+
+<br><dt>Layout Nr. 2
+<dd>
+<br><pre>-------------------------------------------------------
+|              |                                      |
+|  Directories |                                      |
+|              |                                      |
+|              |                                      |
+|              |                                      |
+|--------------|                                      |
+|              |                                      |
+|  Sources     |                 Edit                 |
+|              |                                      |
+|              |                                      |
+|--------------|                                      |
+|              |                                      |
+|  Methods     |                                      |
+|              |                                      |
+|              |                                      |
+-------------------------------------------------------
+|                                                     |
+|                    Compilation                      |
+|                                                     |
+-------------------------------------------------------
+</pre>
+
+<br><dt>Layout Nr. 3
+<dd>
+<br><pre>-------------------------------------------------------
+|              |                                      |
+|              |                                      |
+|              |                                      |
+|  Directories |                                      |
+|              |                                      |
+|              |                                      |
+|              |                                      |
+|--------------|                 Edit                 |
+|      |       |                                      |
+|      |       |                                      |
+|      |       |                                      |
+| Sour | Hist  |                                      |
+|      |       |                                      |
+|      |       |                                      |
+|      |       |                                      |
+-------------------------------------------------------
+|                                                     |
+|                    Compilation                      |
+|                                                     |
+-------------------------------------------------------
+</pre>
+
+<br><dt>Layout Nr. 4
+<dd>
+<br><pre>-------------------------------------------------------
+|              |                                      |
+|  Directories |                                      |
+|              |                                      |
+|              |                                      |
+|              |                                      |
+|--------------|                                      |
+|              |                                      |
+|  Sources     |                 Edit                 |
+|              |                                      |
+|              |                                      |
+|--------------|                                      |
+|              |                                      |
+|  History     |                                      |
+|              |                                      |
+|              |                                      |
+-------------------------------------------------------
+|                                                     |
+|                    Compilation                      |
+|                                                     |
+-------------------------------------------------------
+</pre>
+
+<br><dt>Layout Nr. 5
+<dd>
+<br><pre>-------------------------------------------------------
+|                                      |              |
+|                                      |  Directories |
+|                                      |              |
+|                                      |              |
+|                                      |--------------|
+|                                      |              |
+|                                      |              |
+|             Edit                     |  Sources     |
+|                                      |              |
+|                                      |              |
+|                                      |--------------|
+|                                      |              |
+|                                      |  Methods     |
+|                                      |              |
+|                                      |              |
+-------------------------------------------------------
+|                                                     |
+|                    Compilation                      |
+|                                                     |
+-------------------------------------------------------
+</pre>
+
+<br><dt>Layout Nr. 6
+<dd>
+<br><pre>-------------------------------------------------------
+|  Sources     |                                      |
+|--------------|                                      |
+|              |                                      |
+|              |                                      |
+|              |                                      |
+|  Methods     |                 Edit                 |
+|              |                                      |
+|              |                                      |
+|              |                                      |
+|--------------|                                      |
+|  History     |                                      |
+-------------------------------------------------------
+|                                                     |
+|                    Compilation                      |
+|                                                     |
+-------------------------------------------------------
+</pre>
+
+<br><dt>Layout Nr. 7
+<dd>
+<br><pre>-------------------------------------------------------
+|                        |             |              |
+|                        |             |              |
+|      Directories       |  Sources    |  Methods     |
+|                        |             |              |
+|                        |             |              |
+|-----------------------------------------------------|
+|                                                     |
+|                                                     |
+|                                                     |
+|                                                     |
+|                    Edit                             |
+|                                                     |
+|                                                     |
+|                                                     |
+|                                                     |
+-------------------------------------------------------
+|                                                     |
+|                    Compilation                      |
+|                                                     |
+-------------------------------------------------------
+</pre>
+
+<br><dt>Layout Nr. 8
+<dd>
+<br><pre>-------------------------------------------------------
+|              |                                      |
+|  Directories |                                      |
+|              |                                      |
+|              |                                      |
+|              |                                      |
+|              |                                      |
+|              |                                      |
+|--------------|                 Edit                 |
+|              |                                      |
+|  History     |                                      |
+|              |                                      |
+|--------------|                                      |
+|              |                                      |
+|  Methods     |                                      |
+|              |                                      |
+-------------------------------------------------------
+|                                                     |
+|                    Compilation                      |
+|                                                     |
+-------------------------------------------------------
+</pre>
+
+<br><dt>Layout Nr. 9
+<dd>
+<br><pre>-------------------------------------------------------
+|              |                                      |
+|  Directories |                                      |
+|              |                                      |
+|--------------|                                      |
+|              |                                      |
+|  Sources     |                                      |
+|              |                                      |
+|--------------|                 Edit                 |
+|              |                                      |
+|  Methods     |                                      |
+|              |                                      |
+|              |                                      |
+|--------------|                                      |
+|  History     |                                      |
+|              |                                      |
+-------------------------------------------------------
+|                                                     |
+|                    Compilation                      |
+|                                                     |
+-------------------------------------------------------
+</pre>
+
+<br><dt>Layout Nr. 10
+<dd>
+<br><pre>-------------------------------------------------------
+|                                                     |
+|                                                     |
+|                    Methods                          |
+|                                                     |
+|                                                     |
+|-----------------------------------------------------|
+|                                                     |
+|                                                     |
+|                                                     |
+|                                                     |
+|                    Edit                             |
+|                                                     |
+|                                                     |
+|                                                     |
+|                                                     |
+-------------------------------------------------------
+|                                                     |
+|                    Compilation                      |
+|                                                     |
+-------------------------------------------------------
+</pre>
+
+<br><dt>Layout Nr. 11
+<dd>
+<br><pre>-------------------------------------------------------
+|              |                                      |
+|              |                                      |
+|              |                                      |
+|              |                                      |
+|              |                                      |
+|              |                                      |
+|              |                                      |
+|   Methods    |                 Edit                 |
+|              |                                      |
+|              |                                      |
+|              |                                      |
+|              |                                      |
+|              |                                      |
+|              |                                      |
+|              |                                      |
+-------------------------------------------------------
+|                                                     |
+|                    Compilation                      |
+|                                                     |
+-------------------------------------------------------
+</pre>
+
+<br><dt>Layout Nr. 12
+<dd>
+<br><pre>-------------------------------------------------------
+|              |                                      |
+|              |                                      |
+|              |                                      |
+|  Methods     |                 Edit                 |
+|              |                                      |
+|              |                                      |
+|              |                                      |
+|              |                                      |
+|              |                                      |
+|--------------|                                      |
+|      |       |                                      |
+| Sou  | Hist  |                                      |
+|      |       |                                      |
+-------------------------------------------------------
+|                                                     |
+|                    Compilation                      |
+|                                                     |
+-------------------------------------------------------
+</pre>
+
+<br><dt>Layout Nr. 13
+<dd>
+<br><pre>-------------------------------------------------------
+|              |                                      |
+|              |                                      |
+|              |                                      |
+|  Methods     |                 Edit                 |
+|              |                                      |
+|              |                                      |
+|              |                                      |
+|              |                                      |
+|              |                                      |
+|--------------|                                      |
+|              |                                      |
+|  History     |                                      |
+|              |                                      |
+-------------------------------------------------------
+|                                                     |
+|                    Compilation                      |
+|                                                     |
+-------------------------------------------------------
+</pre>
+
+<br><dt>Layout Nr. 14
+<dd>
+<br><pre>-------------------------------------------------------
+|              |                                      |
+|              |                                      |
+|              |                                      |
+|              |                                      |
+|              |                                      |
+|              |                                      |
+|              |                                      |
+|   History    |                 Edit                 |
+|              |                                      |
+|              |                                      |
+|              |                                      |
+|              |                                      |
+|              |                                      |
+|              |                                      |
+|              |                                      |
+-------------------------------------------------------
+|                                                     |
+|                    Compilation                      |
+|                                                     |
+-------------------------------------------------------
+</pre>
+
+<br><dt>Layout Nr. 15
+<dd>
+<br><pre>-------------------------------------------------------
+|              |                                      |
+|              |                                      |
+|              |                                      |
+|              |                                      |
+|              |                                      |
+|              |                                      |
+|              |                                      |
+| Directories  |                 Edit                 |
+|              |                                      |
+|              |                                      |
+|              |                                      |
+|              |                                      |
+|              |                                      |
+|              |                                      |
+|              |                                      |
+-------------------------------------------------------
+|                                                     |
+|                    Compilation                      |
+|                                                     |
+-------------------------------------------------------
+</pre>
+
+<br><dt>Layout Nr. 16
+<dd>
+<br><pre>-------------------------------------------------------
+|              |                                      |
+|              |                                      |
+|              |                                      |
+| Directories  |                 Edit                 |
+|              |                                      |
+|              |                                      |
+|              |                                      |
+|              |                                      |
+|              |                                      |
+|--------------|                                      |
+|              |                                      |
+|  History     |                                      |
+|              |                                      |
+-------------------------------------------------------
+|                                                     |
+|                    Compilation                      |
+|                                                     |
+-------------------------------------------------------
+</pre>
+</dl>
 
 <p><hr>
 Node:<a name="Redrawing%20the%20ECB-layout">Redrawing the ECB-layout</a>,
@@ -1057,7 +1504,7 @@ Up:<a rel=up accesskey=u href="#Usage%20of%20ECB">Usage of ECB</a>
 
 <p>With ECB you can "browse" in your source-files like with a
 web-browser. This means ECB stores the current buffer- and
-window-position relative to the current token<a rel=footnote href="#fn-6"><sup>6</sup></a> in the edit-window after
+window-position relative to the current token<a rel=footnote href="#fn-8"><sup>8</sup></a> in the edit-window after
 
 <ul>
 <li>selecting a token in the ECB-methods buffer or
@@ -1171,13 +1618,15 @@ then you will be prompted in the minibuffer with:
 TAB-completion; hitting RET direct after the prompt chooses auto. the
 first offered option (in the example above "all").
 
-<p>These are the interactive commands of ECB (listed in alphabetical
-order):
+<p><strong>Note</strong>: The following interactive commands of ECB are listed
+without the prefix "ecb-" (e.g. the command <code>ecb-activate</code> is
+listed with name "activate"). This has been done for a better
+readable command index. See <a href="#Command%20Index">Command Index</a>.
 
 <p>
 <table width="100%">
 <tr>
-<td align="left"><b>ecb-activate</b><i>
+<td align="left"><b>activate</b><i>
 </i></td>
 <td align="right">Command</td>
 </tr>
@@ -1194,7 +1643,7 @@ same as calling <code>ecb-minor-mode</code> with a positive argument.
 <p>
 <table width="100%">
 <tr>
-<td align="left"><b>ecb-add-all-buffers-to-history</b><i>
+<td align="left"><b>add-all-buffers-to-history</b><i>
 </i></td>
 <td align="right">Command</td>
 </tr>
@@ -1208,7 +1657,7 @@ Add all current file-buffers to the history-buffer of ECB.
 <p>
 <table width="100%">
 <tr>
-<td align="left"><b>ecb-clear-history</b><i> &amp;optional clearall
+<td align="left"><b>clear-history</b><i> &amp;optional clearall
 </i></td>
 <td align="right">Command</td>
 </tr>
@@ -1226,7 +1675,7 @@ explanation see <code>ecb-clear-history-behavior</code>.
 <p>
 <table width="100%">
 <tr>
-<td align="left"><b>ecb-current-buffer-sync</b><i> &amp;optional force
+<td align="left"><b>current-buffer-sync</b><i> &amp;optional force
 </i></td>
 <td align="right">Command</td>
 </tr>
@@ -1242,7 +1691,7 @@ differs from the source displayed in the ECB tree-buffers.
 <p>
 <table width="100%">
 <tr>
-<td align="left"><b>ecb-cycle-through-compilation-buffers</b><i> &amp;optional choose-buffer
+<td align="left"><b>cycle-through-compilation-buffers</b><i> &amp;optional choose-buffer
 </i></td>
 <td align="right">Command</td>
 </tr>
@@ -1271,7 +1720,7 @@ compilation-buffer!
 <p>
 <table width="100%">
 <tr>
-<td align="left"><b>ecb-deactivate</b><i>
+<td align="left"><b>deactivate</b><i>
 </i></td>
 <td align="right">Command</td>
 </tr>
@@ -1285,7 +1734,7 @@ Deactivates the ECB and kills all ECB buffers and windows.
 <p>
 <table width="100%">
 <tr>
-<td align="left"><b>ecb-display-upgraded-options</b><i>
+<td align="left"><b>display-upgraded-options</b><i>
 </i></td>
 <td align="right">Command</td>
 </tr>
@@ -1299,7 +1748,7 @@ Display a message-buffer which options have been upgraded or reset.
 <p>
 <table width="100%">
 <tr>
-<td align="left"><b>ecb-download-ecb</b><i>
+<td align="left"><b>download-ecb</b><i>
 </i></td>
 <td align="right">Command</td>
 </tr>
@@ -1324,7 +1773,7 @@ be activated by <code>ecb-activate</code>.
 <p>
 <table width="100%">
 <tr>
-<td align="left"><b>ecb-goto-window-compilation</b><i>
+<td align="left"><b>goto-window-compilation</b><i>
 </i></td>
 <td align="right">Command</td>
 </tr>
@@ -1338,7 +1787,7 @@ Goto the ecb compilation window <code>ecb-compile-window</code>.
 <p>
 <table width="100%">
 <tr>
-<td align="left"><b>ecb-goto-window-directories</b><i>
+<td align="left"><b>goto-window-directories</b><i>
 </i></td>
 <td align="right">Command</td>
 </tr>
@@ -1352,7 +1801,7 @@ Make the ECB-directories window the current window.
 <p>
 <table width="100%">
 <tr>
-<td align="left"><b>ecb-goto-window-edit1</b><i>
+<td align="left"><b>goto-window-edit1</b><i>
 </i></td>
 <td align="right">Command</td>
 </tr>
@@ -1366,7 +1815,7 @@ Make the (first) edit-window window the current window.
 <p>
 <table width="100%">
 <tr>
-<td align="left"><b>ecb-goto-window-edit2</b><i>
+<td align="left"><b>goto-window-edit2</b><i>
 </i></td>
 <td align="right">Command</td>
 </tr>
@@ -1380,7 +1829,7 @@ Make the second edit-window (if available) window the current window.
 <p>
 <table width="100%">
 <tr>
-<td align="left"><b>ecb-goto-window-history</b><i>
+<td align="left"><b>goto-window-history</b><i>
 </i></td>
 <td align="right">Command</td>
 </tr>
@@ -1394,7 +1843,7 @@ Make the ECB-history window the current window.
 <p>
 <table width="100%">
 <tr>
-<td align="left"><b>ecb-goto-window-methods</b><i>
+<td align="left"><b>goto-window-methods</b><i>
 </i></td>
 <td align="right">Command</td>
 </tr>
@@ -1408,7 +1857,7 @@ Make the ECB-methods window the current window.
 <p>
 <table width="100%">
 <tr>
-<td align="left"><b>ecb-goto-window-sources</b><i>
+<td align="left"><b>goto-window-sources</b><i>
 </i></td>
 <td align="right">Command</td>
 </tr>
@@ -1422,7 +1871,7 @@ Make the ECB-sources window the current window.
 <p>
 <table width="100%">
 <tr>
-<td align="left"><b>ecb-minor-mode</b><i> &amp;optional arg
+<td align="left"><b>minor-mode</b><i> &amp;optional arg
 </i></td>
 <td align="right">Command</td>
 </tr>
@@ -1438,7 +1887,7 @@ enabled.
 <p>
 <table width="100%">
 <tr>
-<td align="left"><b>ecb-nav-goto-previous</b><i>
+<td align="left"><b>nav-goto-previous</b><i>
 </i></td>
 <td align="right">Command</td>
 </tr>
@@ -1452,7 +1901,7 @@ Go backward in the navigation historylist, see <a href="#Back%2fforward%20naviga
 <p>
 <table width="100%">
 <tr>
-<td align="left"><b>ecb-nav-goto-next</b><i>
+<td align="left"><b>nav-goto-next</b><i>
 </i></td>
 <td align="right">Command</td>
 </tr>
@@ -1466,7 +1915,7 @@ Go forward in the navigation historylist, see <a href="#Back%2fforward%20navigat
 <p>
 <table width="100%">
 <tr>
-<td align="left"><b>ecb-rebuild-methods-buffer</b><i>
+<td align="left"><b>rebuild-methods-buffer</b><i>
 </i></td>
 <td align="right">Command</td>
 </tr>
@@ -1496,7 +1945,7 @@ must call this function.
 <p>
 <table width="100%">
 <tr>
-<td align="left"><b>ecb-redraw-layout</b><i>
+<td align="left"><b>redraw-layout</b><i>
 </i></td>
 <td align="right">Command</td>
 </tr>
@@ -1516,7 +1965,7 @@ machines the full drawback should be done in &lt;&lt; 1s!
 <p>
 <table width="100%">
 <tr>
-<td align="left"><b>ecb-show-help</b><i> &amp;optional format
+<td align="left"><b>show-help</b><i> &amp;optional format
 </i></td>
 <td align="right">Command</td>
 </tr>
@@ -1533,7 +1982,7 @@ to choose the format of the help (Info or HTML).
 <p>
 <table width="100%">
 <tr>
-<td align="left"><b>ecb-submit-problem-report</b><i>
+<td align="left"><b>submit-problem-report</b><i>
 </i></td>
 <td align="right">Command</td>
 </tr>
@@ -1553,7 +2002,7 @@ possible!
 <p>
 <table width="100%">
 <tr>
-<td align="left"><b>ecb-toggle-ecb-windows</b><i> &amp;optional arg
+<td align="left"><b>toggle-ecb-windows</b><i> &amp;optional arg
 </i></td>
 <td align="right">Command</td>
 </tr>
@@ -1570,7 +2019,7 @@ windows. ECB minor mode remains active!
 <p>
 <table width="100%">
 <tr>
-<td align="left"><b>ecb-toggle-enlarged-compilation-window</b><i> &amp;optional arg
+<td align="left"><b>toggle-enlarged-compilation-window</b><i> &amp;optional arg
 </i></td>
 <td align="right">Command</td>
 </tr>
@@ -1598,7 +2047,7 @@ takes first effect after restarting ECB!
 <p>
 <table width="100%">
 <tr>
-<td align="left"><b>ecb-toggle-layout</b><i>
+<td align="left"><b>toggle-layout</b><i>
 </i></td>
 <td align="right">Command</td>
 </tr>
@@ -1615,7 +2064,7 @@ Emacs-session.
 <p>
 <table width="100%">
 <tr>
-<td align="left"><b>ecb-update-directories-buffer</b><i>
+<td align="left"><b>update-directories-buffer</b><i>
 </i></td>
 <td align="right">Command</td>
 </tr>
@@ -1629,7 +2078,7 @@ Updates the ECB directories buffer.
 <p>
 <table width="100%">
 <tr>
-<td align="left"><b>ecb-upgrade-options</b><i>
+<td align="left"><b>upgrade-options</b><i>
 </i></td>
 <td align="right">Command</td>
 </tr>
@@ -1718,7 +2167,7 @@ changing everyones <code>.emacs</code>-file and normally you will do this
 with the file <code>site-start.el</code>. You can customize all options of
 ECB in a central <code>site-start.el</code> (even the options mentioned
 above!) but you <strong>MUST NOT</strong> do this via <code>setq</code> but you have
-to use <code>custom-set-variables</code><a rel=footnote href="#fn-7"><sup>7</sup></a>! Here is a short example
+to use <code>custom-set-variables</code><a rel=footnote href="#fn-9"><sup>9</sup></a>! Here is a short example
 how this can be done:
 
 <br><pre>(custom-set-variables '(ecb-show-tokens ((include collapsed nil)
@@ -1802,6 +2251,11 @@ Up:<a rel=up accesskey=u href="#Customizing">Customizing</a>
 groups". You can highly customize all the ECB behavior/layout so just
 go to these groups and you will see all well documented ECB-options.
 
+<p><strong>Note</strong>: All options in the following subsections are listed
+without the prefix "ecb-" (e.g. the option <code>ecb-layout-nr</code> is
+listed with name "layout-nr"). This has been done for a better
+readable option index. See <a href="#Option%20Index">Option Index</a>.
+
 <ul>
 <li><a accesskey=1 href="#ecb-general">ecb-general</a>:                  General customizing ECB
 <li><a accesskey=2 href="#ecb-directories">ecb-directories</a>:              Customizing the ECB-directories
@@ -1828,7 +2282,7 @@ Up:<a rel=up accesskey=u href="#Customizable%20options">Customizable options</a>
 <p>
 <table width="100%">
 <tr>
-<td align="left"><b>ecb-activate-before-layout-draw-hook</b><i>
+<td align="left"><b>activate-before-layout-draw-hook</b><i>
 </i></td>
 <td align="right">User Option</td>
 </tr>
@@ -1853,7 +2307,7 @@ activating process (i.e. after the layout-drawing) look at
 <p>
 <table width="100%">
 <tr>
-<td align="left"><b>ecb-activate-hook</b><i>
+<td align="left"><b>activate-hook</b><i>
 </i></td>
 <td align="right">User Option</td>
 </tr>
@@ -1871,7 +2325,7 @@ need hooks which are run direct before the layout-drawing look at
 <p>
 <table width="100%">
 <tr>
-<td align="left"><b>ecb-auto-activate</b><i>
+<td align="left"><b>auto-activate</b><i>
 </i></td>
 <td align="right">User Option</td>
 </tr>
@@ -1886,7 +2340,7 @@ true if you always want to run <code>ecb-activate</code>.
 <p>
 <table width="100%">
 <tr>
-<td align="left"><b>ecb-auto-compatibility-check</b><i>
+<td align="left"><b>auto-compatibility-check</b><i>
 </i></td>
 <td align="right">User Option</td>
 </tr>
@@ -1912,7 +2366,7 @@ See <a href="#Auto.%20option-upgrading">Auto. option-upgrading</a>.
 <p>
 <table width="100%">
 <tr>
-<td align="left"><b>ecb-current-buffer-sync-hook</b><i>
+<td align="left"><b>current-buffer-sync-hook</b><i>
 </i></td>
 <td align="right">User Option</td>
 </tr>
@@ -1926,7 +2380,7 @@ Normal hook run at the end of <code>ecb-current-buffer-sync</code>.
 <p>
 <table width="100%">
 <tr>
-<td align="left"><b>ecb-deactivate-hook</b><i>
+<td align="left"><b>deactivate-hook</b><i>
 </i></td>
 <td align="right">User Option</td>
 </tr>
@@ -1941,7 +2395,7 @@ is cleared!) ECB by running <code>ecb-deactivate</code>.
 <p>
 <table width="100%">
 <tr>
-<td align="left"><b>ecb-debug-mode</b><i>
+<td align="left"><b>debug-mode</b><i>
 </i></td>
 <td align="right">User Option</td>
 </tr>
@@ -1962,7 +2416,7 @@ error again!
 <p>
 <table width="100%">
 <tr>
-<td align="left"><b>ecb-key-map</b><i>
+<td align="left"><b>key-map</b><i>
 </i></td>
 <td align="right">User Option</td>
 </tr>
@@ -2038,7 +2492,7 @@ optional minus sign: M-123 = M- M-1 M-2 M-3.
 <p>
 <table width="100%">
 <tr>
-<td align="left"><b>ecb-major-modes-activate</b><i>
+<td align="left"><b>major-modes-activate</b><i>
 </i></td>
 <td align="right">User Option</td>
 </tr>
@@ -2091,7 +2545,7 @@ the user just jumps between different windows.
 <p>
 <table width="100%">
 <tr>
-<td align="left"><b>ecb-major-modes-deactivate</b><i>
+<td align="left"><b>major-modes-deactivate</b><i>
 </i></td>
 <td align="right">User Option</td>
 </tr>
@@ -2150,7 +2604,7 @@ compile-window of ECB.
 <p>
 <table width="100%">
 <tr>
-<td align="left"><b>ecb-minor-mode-text</b><i>
+<td align="left"><b>minor-mode-text</b><i>
 </i></td>
 <td align="right">User Option</td>
 </tr>
@@ -2165,7 +2619,7 @@ String to display in the mode line when ECB minor mode is active.
 <p>
 <table width="100%">
 <tr>
-<td align="left"><b>ecb-mode-line-prefixes</b><i>
+<td align="left"><b>mode-line-prefixes</b><i>
 </i></td>
 <td align="right">User Option</td>
 </tr>
@@ -2183,7 +2637,7 @@ sources buffer) then also the string ": " is appended.
 <p>
 <table width="100%">
 <tr>
-<td align="left"><b>ecb-primary-mouse-jump-destination</b><i>
+<td align="left"><b>primary-mouse-jump-destination</b><i>
 </i></td>
 <td align="right">User Option</td>
 </tr>
@@ -2215,7 +2669,7 @@ always in the "other" window related to the setting in this option.
 <p>
 <table width="100%">
 <tr>
-<td align="left"><b>ecb-primary-secondary-mouse-buttons</b><i>
+<td align="left"><b>primary-secondary-mouse-buttons</b><i>
 </i></td>
 <td align="right">User Option</td>
 </tr>
@@ -2265,7 +2719,7 @@ activate ECB again to take effect
 <p>
 <table width="100%">
 <tr>
-<td align="left"><b>ecb-show-help-format</b><i>
+<td align="left"><b>show-help-format</b><i>
 </i></td>
 <td align="right">User Option</td>
 </tr>
@@ -2282,7 +2736,7 @@ browser is used.
 <p>
 <table width="100%">
 <tr>
-<td align="left"><b>ecb-show-node-info-in-minibuffer</b><i>
+<td align="left"><b>show-node-info-in-minibuffer</b><i>
 </i></td>
 <td align="right">User Option</td>
 </tr>
@@ -2342,7 +2796,7 @@ variable) is displayed.
 <p>
 <table width="100%">
 <tr>
-<td align="left"><b>ecb-temp-dir</b><i>
+<td align="left"><b>temp-dir</b><i>
 </i></td>
 <td align="right">User Option</td>
 </tr>
@@ -2356,7 +2810,7 @@ Specify a directory where ECB can store temporary files.
 <p>
 <table width="100%">
 <tr>
-<td align="left"><b>ecb-tree-RET-selects-edit-window</b><i>
+<td align="left"><b>tree-RET-selects-edit-window</b><i>
 </i></td>
 <td align="right">User Option</td>
 </tr>
@@ -2384,7 +2838,7 @@ option, but of course not for future Emacs sessions!
 <p>
 <table width="100%">
 <tr>
-<td align="left"><b>ecb-tree-expand-symbol-before</b><i>
+<td align="left"><b>tree-expand-symbol-before</b><i>
 </i></td>
 <td align="right">User Option</td>
 </tr>
@@ -2398,7 +2852,7 @@ Show the expand symbol before the items in a tree.
 <p>
 <table width="100%">
 <tr>
-<td align="left"><b>ecb-tree-incremental-search</b><i>
+<td align="left"><b>tree-incremental-search</b><i>
 </i></td>
 <td align="right">User Option</td>
 </tr>
@@ -2415,7 +2869,7 @@ take effect.
 <p>
 <table width="100%">
 <tr>
-<td align="left"><b>ecb-tree-indent</b><i>
+<td align="left"><b>tree-indent</b><i>
 </i></td>
 <td align="right">User Option</td>
 </tr>
@@ -2430,7 +2884,7 @@ activated you must deactivate and activate ECB again to take effect.
 <p>
 <table width="100%">
 <tr>
-<td align="left"><b>ecb-tree-navigation-by-arrow</b><i>
+<td align="left"><b>tree-navigation-by-arrow</b><i>
 </i></td>
 <td align="right">User Option</td>
 </tr>
@@ -2462,7 +2916,7 @@ ECB and then activating it again!
 <p>
 <table width="100%">
 <tr>
-<td align="left"><b>ecb-truncate-lines</b><i>
+<td align="left"><b>truncate-lines</b><i>
 </i></td>
 <td align="right">User Option</td>
 </tr>
@@ -2477,7 +2931,7 @@ activated you must deactivate and activate ECB again to take effect.
 <p>
 <table width="100%">
 <tr>
-<td align="left"><b>ecb-truncate-long-names</b><i>
+<td align="left"><b>truncate-long-names</b><i>
 </i></td>
 <td align="right">User Option</td>
 </tr>
@@ -2493,7 +2947,7 @@ activate ECB again to take effect.
 <p>
 <table width="100%">
 <tr>
-<td align="left"><b>ecb-use-recursive-edit</b><i>
+<td align="left"><b>use-recursive-edit</b><i>
 </i></td>
 <td align="right">User Option</td>
 </tr>
@@ -2508,7 +2962,7 @@ by (keyboard-escape-quit).
 <p>
 <table width="100%">
 <tr>
-<td align="left"><b>ecb-version-check</b><i>
+<td align="left"><b>version-check</b><i>
 </i></td>
 <td align="right">User Option</td>
 </tr>
@@ -2524,7 +2978,7 @@ recommended to set this option to not <code>nil</code>!
 <p>
 <table width="100%">
 <tr>
-<td align="left"><b>ecb-window-sync</b><i>
+<td align="left"><b>window-sync</b><i>
 </i></td>
 <td align="right">User Option</td>
 </tr>
@@ -2556,7 +3010,7 @@ current directory in the dired-buffer.
 <p>
 <table width="100%">
 <tr>
-<td align="left"><b>ecb-window-sync-delay</b><i>
+<td align="left"><b>window-sync-delay</b><i>
 </i></td>
 <td align="right">User Option</td>
 </tr>
@@ -2585,7 +3039,7 @@ Up:<a rel=up accesskey=u href="#Customizable%20options">Customizable options</a>
 <p>
 <table width="100%">
 <tr>
-<td align="left"><b>ecb-add-path-for-not-matching-files</b><i>
+<td align="left"><b>add-path-for-not-matching-files</b><i>
 </i></td>
 <td align="right">User Option</td>
 </tr>
@@ -2620,7 +3074,7 @@ buffer of ECB.
 <p>
 <table width="100%">
 <tr>
-<td align="left"><b>ecb-auto-expand-directory-tree</b><i>
+<td align="left"><b>auto-expand-directory-tree</b><i>
 </i></td>
 <td align="right">User Option</td>
 </tr>
@@ -2641,7 +3095,7 @@ There are three options:
 <p>
 <table width="100%">
 <tr>
-<td align="left"><b>ecb-cache-directory-contents</b><i>
+<td align="left"><b>cache-directory-contents</b><i>
 </i></td>
 <td align="right">User Option</td>
 </tr>
@@ -2709,7 +3163,7 @@ change in a future version.
 <p>
 <table width="100%">
 <tr>
-<td align="left"><b>ecb-directories-buffer-name</b><i>
+<td align="left"><b>directories-buffer-name</b><i>
 </i></td>
 <td align="right">User Option</td>
 </tr>
@@ -2731,7 +3185,7 @@ deactivating and then activating ECB again!
 <p>
 <table width="100%">
 <tr>
-<td align="left"><b>ecb-excluded-directories-regexp</b><i>
+<td align="left"><b>excluded-directories-regexp</b><i>
 </i></td>
 <td align="right">User Option</td>
 </tr>
@@ -2746,7 +3200,7 @@ list. The value of this variable should be a regular expression.
 <p>
 <table width="100%">
 <tr>
-<td align="left"><b>ecb-show-sources-in-directories-buffer</b><i>
+<td align="left"><b>show-sources-in-directories-buffer</b><i>
 </i></td>
 <td align="right">User Option</td>
 </tr>
@@ -2760,7 +3214,7 @@ Show source files in directories buffer.
 <p>
 <table width="100%">
 <tr>
-<td align="left"><b>ecb-source-path</b><i>
+<td align="left"><b>source-path</b><i>
 </i></td>
 <td align="right">User Option</td>
 </tr>
@@ -2787,7 +3241,7 @@ Up:<a rel=up accesskey=u href="#Customizable%20options">Customizable options</a>
 <p>
 <table width="100%">
 <tr>
-<td align="left"><b>ecb-show-source-file-extension</b><i>
+<td align="left"><b>show-source-file-extension</b><i>
 </i></td>
 <td align="right">User Option</td>
 </tr>
@@ -2801,7 +3255,7 @@ Show the file extension of source files.
 <p>
 <table width="100%">
 <tr>
-<td align="left"><b>ecb-source-file-regexps</b><i>
+<td align="left"><b>source-file-regexps</b><i>
 </i></td>
 <td align="right">User Option</td>
 </tr>
@@ -2833,7 +3287,7 @@ combination can be defined.
 <p>
 <table width="100%">
 <tr>
-<td align="left"><b>ecb-sources-buffer-name</b><i>
+<td align="left"><b>sources-buffer-name</b><i>
 </i></td>
 <td align="right">User Option</td>
 </tr>
@@ -2855,7 +3309,7 @@ deactivating and then activating ECB again!
 <p>
 <table width="100%">
 <tr>
-<td align="left"><b>ecb-sources-sort-method</b><i>
+<td align="left"><b>sources-sort-method</b><i>
 </i></td>
 <td align="right">User Option</td>
 </tr>
@@ -2890,7 +3344,7 @@ Up:<a rel=up accesskey=u href="#Customizable%20options">Customizable options</a>
 <p>
 <table width="100%">
 <tr>
-<td align="left"><b>ecb-auto-update-methods-after-save</b><i>
+<td align="left"><b>auto-update-methods-after-save</b><i>
 </i></td>
 <td align="right">User Option</td>
 </tr>
@@ -2905,7 +3359,7 @@ source-buffer.
 <p>
 <table width="100%">
 <tr>
-<td align="left"><b>ecb-bucket-token-display</b><i>
+<td align="left"><b>bucket-token-display</b><i>
 </i></td>
 <td align="right">User Option</td>
 </tr>
@@ -2927,7 +3381,7 @@ prefix, a suffix and a special face for the bucket token.
 <p>
 <table width="100%">
 <tr>
-<td align="left"><b>ecb-exclude-parents-regexp</b><i>
+<td align="left"><b>exclude-parents-regexp</b><i>
 </i></td>
 <td align="right">User Option</td>
 </tr>
@@ -2943,7 +3397,7 @@ shown if <code>ecb-show-parents</code> is not nil.
 <p>
 <table width="100%">
 <tr>
-<td align="left"><b>ecb-font-lock-tokens</b><i>
+<td align="left"><b>font-lock-tokens</b><i>
 </i></td>
 <td align="right">User Option</td>
 </tr>
@@ -2957,7 +3411,7 @@ Adds font-locking (means highlighting) to the ECB-method buffer.
 <p>
 <table width="100%">
 <tr>
-<td align="left"><b>ecb-highlight-token-header-after-jump</b><i>
+<td align="left"><b>highlight-token-header-after-jump</b><i>
 </i></td>
 <td align="right">User Option</td>
 </tr>
@@ -2973,7 +3427,7 @@ method. For highlighting <code>ecb-token-header-face</code> is used.
 <p>
 <table width="100%">
 <tr>
-<td align="left"><b>ecb-highlight-token-with-point</b><i>
+<td align="left"><b>highlight-token-with-point</b><i>
 </i></td>
 <td align="right">User Option</td>
 </tr>
@@ -3000,7 +3454,7 @@ No highlighting is done.
 <p>
 <table width="100%">
 <tr>
-<td align="left"><b>ecb-highlight-token-with-point-delay</b><i>
+<td align="left"><b>highlight-token-with-point-delay</b><i>
 </i></td>
 <td align="right">User Option</td>
 </tr>
@@ -3021,7 +3475,7 @@ seconds.
 <p>
 <table width="100%">
 <tr>
-<td align="left"><b>ecb-token-jump-narrow</b><i>
+<td align="left"><b>token-jump-narrow</b><i>
 </i></td>
 <td align="right">User Option</td>
 </tr>
@@ -3037,7 +3491,7 @@ a source file or call <code>widen</code> <kbd>C-x n w</kbd>.
 <p>
 <table width="100%">
 <tr>
-<td align="left"><b>ecb-token-jump-sets-mark</b><i>
+<td align="left"><b>token-jump-sets-mark</b><i>
 </i></td>
 <td align="right">User Option</td>
 </tr>
@@ -3052,7 +3506,7 @@ user can easily jump back.
 <p>
 <table width="100%">
 <tr>
-<td align="left"><b>ecb-methods-buffer-name</b><i>
+<td align="left"><b>methods-buffer-name</b><i>
 </i></td>
 <td align="right">User Option</td>
 </tr>
@@ -3075,7 +3529,7 @@ deactivating and then activating ECB again!
 <p>
 <table width="100%">
 <tr>
-<td align="left"><b>ecb-post-process-semantic-tokenlist</b><i>
+<td align="left"><b>post-process-semantic-tokenlist</b><i>
 </i></td>
 <td align="right">User Option</td>
 </tr>
@@ -3101,7 +3555,7 @@ method implementations of a class are grouped together.
 <p>
 <table width="100%">
 <tr>
-<td align="left"><b>ecb-scroll-window-after-jump</b><i>
+<td align="left"><b>scroll-window-after-jump</b><i>
 </i></td>
 <td align="right">User Option</td>
 </tr>
@@ -3115,7 +3569,7 @@ How to scroll the window when jumping to a token.
 <p>
 <table width="100%">
 <tr>
-<td align="left"><b>ecb-show-only-positioned-tokens</b><i>
+<td align="left"><b>show-only-positioned-tokens</b><i>
 </i></td>
 <td align="right">User Option</td>
 </tr>
@@ -3136,7 +3590,7 @@ they can not be jumped.
 <p>
 <table width="100%">
 <tr>
-<td align="left"><b>ecb-show-tokens</b><i>
+<td align="left"><b>show-tokens</b><i>
 </i></td>
 <td align="right">User Option</td>
 </tr>
@@ -3192,7 +3646,7 @@ buffer.
 <p>
 <table width="100%">
 <tr>
-<td align="left"><b>ecb-token-display-function</b><i>
+<td align="left"><b>token-display-function</b><i>
 </i></td>
 <td align="right">User Option</td>
 </tr>
@@ -3263,7 +3717,7 @@ tokens.
 <p>
 <table width="100%">
 <tr>
-<td align="left"><b>ecb-token-jump-narrow</b><i>
+<td align="left"><b>token-jump-narrow</b><i>
 </i></td>
 <td align="right">User Option</td>
 </tr>
@@ -3279,7 +3733,7 @@ a source file or call <code>widen</code> (<kbd>C-x n w</kbd>).
 <p>
 <table width="100%">
 <tr>
-<td align="left"><b>ecb-token-jump-sets-mark</b><i>
+<td align="left"><b>token-jump-sets-mark</b><i>
 </i></td>
 <td align="right">User Option</td>
 </tr>
@@ -3294,7 +3748,7 @@ user can easily jump back.
 <p>
 <table width="100%">
 <tr>
-<td align="left"><b>ecb-type-token-display</b><i>
+<td align="left"><b>type-token-display</b><i>
 </i></td>
 <td align="right">User Option</td>
 </tr>
@@ -3382,7 +3836,7 @@ Up:<a rel=up accesskey=u href="#Customizable%20options">Customizable options</a>
 <p>
 <table width="100%">
 <tr>
-<td align="left"><b>ecb-clear-history-behavior</b><i>
+<td align="left"><b>clear-history-behavior</b><i>
 </i></td>
 <td align="right">User Option</td>
 </tr>
@@ -3407,7 +3861,7 @@ The whole history will be cleared.
 <p>
 <table width="100%">
 <tr>
-<td align="left"><b>ecb-history-buffer-name</b><i>
+<td align="left"><b>history-buffer-name</b><i>
 </i></td>
 <td align="right">User Option</td>
 </tr>
@@ -3430,7 +3884,7 @@ deactivating and then activating ECB again!
 <p>
 <table width="100%">
 <tr>
-<td align="left"><b>ecb-history-item-name</b><i>
+<td align="left"><b>history-item-name</b><i>
 </i></td>
 <td align="right">User Option</td>
 </tr>
@@ -3444,7 +3898,7 @@ The name to use for items in the history buffer.
 <p>
 <table width="100%">
 <tr>
-<td align="left"><b>ecb-kill-buffer-clears-history</b><i>
+<td align="left"><b>kill-buffer-clears-history</b><i>
 </i></td>
 <td align="right">User Option</td>
 </tr>
@@ -3469,7 +3923,7 @@ Asks, if the history-entry should be removed after the kill.
 <p>
 <table width="100%">
 <tr>
-<td align="left"><b>ecb-sort-history-items</b><i>
+<td align="left"><b>sort-history-items</b><i>
 </i></td>
 <td align="right">User Option</td>
 </tr>
@@ -3494,7 +3948,7 @@ Up:<a rel=up accesskey=u href="#Customizable%20options">Customizable options</a>
 <p>
 <table width="100%">
 <tr>
-<td align="left"><b>ecb-activate-before-new-frame-created-hook</b><i>
+<td align="left"><b>activate-before-new-frame-created-hook</b><i>
 </i></td>
 <td align="right">User Option</td>
 </tr>
@@ -3510,7 +3964,7 @@ evaluated).
 <p>
 <table width="100%">
 <tr>
-<td align="left"><b>ecb-advice-window-functions</b><i>
+<td align="left"><b>advice-window-functions</b><i>
 </i></td>
 <td align="right">User Option</td>
 </tr>
@@ -3590,7 +4044,7 @@ for this) and rebind it to the original function in the
 <p>
 <table width="100%">
 <tr>
-<td align="left"><b>ecb-compile-window-enlarge-by-select</b><i>
+<td align="left"><b>compile-window-enlarge-by-select</b><i>
 </i></td>
 <td align="right">User Option</td>
 </tr>
@@ -3610,7 +4064,7 @@ documentation of this function!
 <p>
 <table width="100%">
 <tr>
-<td align="left"><b>ecb-compile-window-height</b><i>
+<td align="left"><b>compile-window-height</b><i>
 </i></td>
 <td align="right">User Option</td>
 </tr>
@@ -3648,7 +4102,7 @@ this layout with <code>ecb-redraw-layout</code>
 <p>
 <table width="100%">
 <tr>
-<td align="left"><b>ecb-compile-window-temporally-enlarge</b><i>
+<td align="left"><b>compile-window-temporally-enlarge</b><i>
 </i></td>
 <td align="right">User Option</td>
 </tr>
@@ -3698,7 +4152,7 @@ buffers (e.g. help-buffers) this is currently not possible.
 <p>
 <table width="100%">
 <tr>
-<td align="left"><b>ecb-hide-ecb-windows-hook</b><i>
+<td align="left"><b>hide-ecb-windows-hook</b><i>
 </i></td>
 <td align="right">User Option</td>
 </tr>
@@ -3713,7 +4167,7 @@ Hooks run after the ECB windows have been hidden either by
 <p>
 <table width="100%">
 <tr>
-<td align="left"><b>ecb-layout-always-operate-in-edit-window</b><i>
+<td align="left"><b>layout-always-operate-in-edit-window</b><i>
 </i></td>
 <td align="right">User Option</td>
 </tr>
@@ -3749,7 +4203,7 @@ makes no sense, therefore you can not enable this for both of them.
 <p>
 <table width="100%">
 <tr>
-<td align="left"><b>ecb-layout-nr</b><i>
+<td align="left"><b>layout-nr</b><i>
 </i></td>
 <td align="right">User Option</td>
 </tr>
@@ -3794,7 +4248,7 @@ this layout with <code>ecb-redraw-layout</code>
 <p>
 <table width="100%">
 <tr>
-<td align="left"><b>ecb-layout-switch-to-compilation-window</b><i>
+<td align="left"><b>layout-switch-to-compilation-window</b><i>
 </i></td>
 <td align="right">User Option</td>
 </tr>
@@ -3828,7 +4282,7 @@ it should always be presented in another window.
 <p>
 <table width="100%">
 <tr>
-<td align="left"><b>ecb-layout-window-sizes</b><i>
+<td align="left"><b>layout-window-sizes</b><i>
 </i></td>
 <td align="right">User Option</td>
 </tr>
@@ -3852,7 +4306,7 @@ normally during your work with ECB!.
 <p>
 <table width="100%">
 <tr>
-<td align="left"><b>ecb-new-ecb-frame</b><i>
+<td align="left"><b>new-ecb-frame</b><i>
 </i></td>
 <td align="right">User Option</td>
 </tr>
@@ -3866,7 +4320,7 @@ Create a new frame at activation time of ECB.
 <p>
 <table width="100%">
 <tr>
-<td align="left"><b>ecb-other-window-jump-behavior</b><i>
+<td align="left"><b>other-window-jump-behavior</b><i>
 </i></td>
 <td align="right">User Option</td>
 </tr>
@@ -3892,7 +4346,7 @@ Like 'only-edit plus the compile window if any.
 <p>
 <table width="100%">
 <tr>
-<td align="left"><b>ecb-redraw-layout-quickly</b><i>
+<td align="left"><b>redraw-layout-quickly</b><i>
 </i></td>
 <td align="right">User Option</td>
 </tr>
@@ -3907,7 +4361,7 @@ also carefully the documentation of <code>ecb-redraw-layout</code>.
 <p>
 <table width="100%">
 <tr>
-<td align="left"><b>ecb-select-edit-window-on-redraw</b><i>
+<td align="left"><b>select-edit-window-on-redraw</b><i>
 </i></td>
 <td align="right">User Option</td>
 </tr>
@@ -3921,7 +4375,7 @@ Select the first edit window on <code>ecb-redraw-layout</code>.
 <p>
 <table width="100%">
 <tr>
-<td align="left"><b>ecb-show-ecb-windows-hook</b><i>
+<td align="left"><b>show-ecb-windows-hook</b><i>
 </i></td>
 <td align="right">User Option</td>
 </tr>
@@ -3936,7 +4390,7 @@ Hooks run after the ECB windows have been shown either by
 <p>
 <table width="100%">
 <tr>
-<td align="left"><b>ecb-split-edit-window</b><i>
+<td align="left"><b>split-edit-window</b><i>
 </i></td>
 <td align="right">User Option</td>
 </tr>
@@ -3952,7 +4406,7 @@ start-time of ECB.
 <p>
 <table width="100%">
 <tr>
-<td align="left"><b>ecb-toggle-layout-sequence</b><i>
+<td align="left"><b>toggle-layout-sequence</b><i>
 </i></td>
 <td align="right">User Option</td>
 </tr>
@@ -3988,7 +4442,7 @@ element!
 <p>
 <table width="100%">
 <tr>
-<td align="left"><b>ecb-windows-height</b><i>
+<td align="left"><b>windows-height</b><i>
 </i></td>
 <td align="right">User Option</td>
 </tr>
@@ -4004,7 +4458,7 @@ fraction of the frame height.
 <p>
 <table width="100%">
 <tr>
-<td align="left"><b>ecb-windows-width</b><i>
+<td align="left"><b>windows-width</b><i>
 </i></td>
 <td align="right">User Option</td>
 </tr>
@@ -4031,7 +4485,7 @@ Up:<a rel=up accesskey=u href="#Customizable%20options">Customizable options</a>
 <p>
 <table width="100%">
 <tr>
-<td align="left"><b>ecb-directories-general-face</b><i>
+<td align="left"><b>directories-general-face</b><i>
 </i></td>
 <td align="right">User Option</td>
 </tr>
@@ -4046,7 +4500,7 @@ here the font-family, the font-size, the basic color etc.
 <p>
 <table width="100%">
 <tr>
-<td align="left"><b>ecb-directory-face</b><i>
+<td align="left"><b>directory-face</b><i>
 </i></td>
 <td align="right">User Option</td>
 </tr>
@@ -4061,7 +4515,7 @@ buffer.
 <p>
 <table width="100%">
 <tr>
-<td align="left"><b>ecb-history-face</b><i>
+<td align="left"><b>history-face</b><i>
 </i></td>
 <td align="right">User Option</td>
 </tr>
@@ -4076,7 +4530,7 @@ buffer.
 <p>
 <table width="100%">
 <tr>
-<td align="left"><b>ecb-history-general-face</b><i>
+<td align="left"><b>history-general-face</b><i>
 </i></td>
 <td align="right">User Option</td>
 </tr>
@@ -4091,7 +4545,7 @@ the font-family, the font-size, the basic color etc.
 <p>
 <table width="100%">
 <tr>
-<td align="left"><b>ecb-method-face</b><i>
+<td align="left"><b>method-face</b><i>
 </i></td>
 <td align="right">User Option</td>
 </tr>
@@ -4106,7 +4560,7 @@ the methods buffer.
 <p>
 <table width="100%">
 <tr>
-<td align="left"><b>ecb-methods-general-face</b><i>
+<td align="left"><b>methods-general-face</b><i>
 </i></td>
 <td align="right">User Option</td>
 </tr>
@@ -4121,7 +4575,7 @@ the font-family, the font-size, the basic color etc.
 <p>
 <table width="100%">
 <tr>
-<td align="left"><b>ecb-source-face</b><i>
+<td align="left"><b>source-face</b><i>
 </i></td>
 <td align="right">User Option</td>
 </tr>
@@ -4136,7 +4590,7 @@ buffer.
 <p>
 <table width="100%">
 <tr>
-<td align="left"><b>ecb-source-in-directories-buffer-face</b><i>
+<td align="left"><b>source-in-directories-buffer-face</b><i>
 </i></td>
 <td align="right">User Option</td>
 </tr>
@@ -4150,7 +4604,7 @@ Define a face for displaying sources in the directories buffer.
 <p>
 <table width="100%">
 <tr>
-<td align="left"><b>ecb-sources-general-face</b><i>
+<td align="left"><b>sources-general-face</b><i>
 </i></td>
 <td align="right">User Option</td>
 </tr>
@@ -4165,7 +4619,7 @@ the font-family, the font-size, the basic color etc.
 <p>
 <table width="100%">
 <tr>
-<td align="left"><b>ecb-token-header-face</b><i>
+<td align="left"><b>token-header-face</b><i>
 </i></td>
 <td align="right">User Option</td>
 </tr>
@@ -4305,7 +4759,7 @@ Up:<a rel=up accesskey=u href="#Customizable%20options">Customizable options</a>
 <p>
 <table width="100%">
 <tr>
-<td align="left"><b>ecb-download-delete-archive</b><i>
+<td align="left"><b>download-delete-archive</b><i>
 </i></td>
 <td align="right">User Option</td>
 </tr>
@@ -4331,7 +4785,7 @@ Archive will never be deleted.
 <p>
 <table width="100%">
 <tr>
-<td align="left"><b>ecb-download-url</b><i>
+<td align="left"><b>download-url</b><i>
 </i></td>
 <td align="right">User Option</td>
 </tr>
@@ -4349,7 +4803,7 @@ URL where downloadable ECB-versions are located. The ECB-archive-file
 <p>
 <table width="100%">
 <tr>
-<td align="left"><b>ecb-download-version</b><i>
+<td align="left"><b>download-version</b><i>
 </i></td>
 <td align="right">User Option</td>
 </tr>
@@ -4444,7 +4898,7 @@ satisfied:
 
 <p>With unix-systems these tools are in the
 standard-distribution. If you are running any Microsoft Windows system
-then you need cygwin<a rel=footnote href="#fn-8"><sup>8</sup></a> which offers these tools too. On every
+then you need cygwin<a rel=footnote href="#fn-10"><sup>10</sup></a> which offers these tools too. On every
 system these tools must reside in the <code>PATH</code> environment-variable!
 
 <p>If you are behind a firewall and you have to use a proxy you maybe
@@ -4665,19 +5119,46 @@ Up:<a rel=up accesskey=u href="#Tips%20and%20tricks">Tips and tricks</a>
 
 <ul>
 <li><code>ecb-default-general-face</code>:
+Basic face for displaying an ECB-tree-buffer.
 
-<p>Basic face for displaying an ECB-tree-buffer. 
+<p>It´s recommended to define the font-family, the font-size, the basic
+color etc. with this face.
+
+<p>In GNU Emacs 21.X all faces (even the face
+<code>ecb-default-highlight-face</code>) used in the ECB tree-buffers
+inherit from this face. Therefore the default attributes like font
+etc. of a face used in a tree-buffer can be very easily changed with
+face <code>ecb-default-general-face</code>.
+
+<p>With XEmacs and GNU Emacs 20.X there is no inheritance-feature but the
+options <code>ecb-directories-general-face</code>,
+<code>ecb-sources-general-face</code>, <code>ecb-methods-general-face</code> and
+<code>ecb-history-general-face</code> offer the choice to use the face
+<code>ecb-default-general-face</code> so also with XEmacs and GNU Emacs 20.X
+the basic face-settings can be easily changed just by customizing the
+face <code>ecb-default-general-face</code>.
+
 </p><li><code>ecb-default-highlight-face</code>:
-Basic face for highlighting the current node in an ECB-tree-buffer. 
+Basic face for highlighting the current node in an ECB-tree-buffer.
+
+<p>In GNU Emacs 21.X all highlighting faces used in the ECB tree-buffers
+inherit from this face. Therefore the default attributes like font
+etc. of a highlighting face used in a tree-buffer can be very easily
+changed with face <code>ecb-default-highlight-face</code>.
+
+<p>With XEmacs and GNU Emacs 20.X there is no inheritance-feature but the
+options <code>ecb-directory-face</code>, <code>ecb-source-face</code>,
+<code>ecb-method-face</code> and <code>ecb-history-face</code> offer the choice to
+use the face <code>ecb-default-highlight-face</code> so also with XEmacs and
+GNU Emacs 20.X the basic face-settings can be easily changed just by
+customizing the face <code>ecb-default-highlight-face</code>.
+
 </ul>
 
-<p>With this faces you can change the basic attributes easily and fast
+<p>With these faces you can change the basic attributes easily and fast
 for ALL ECB-tree-buffers. But you are also able to display each
-ECB-tree-buffer with different faces. For further details see the
-doc-strings of the faces <code>ecb-default-general-face</code> and
-<code>ecb-default-highlight-face</code> (just call <code>customize-face</code> to see the
-doc-strings). The options of the group 'ecb-face-options' are also
-interesting.
+ECB-tree-buffer with different faces, see the different options for
+every tree-buffer mentioned above.
 
 <p><hr>
 Node:<a name="Small%20screens">Small screens</a>,
@@ -4911,7 +5392,7 @@ Up:<a rel=up accesskey=u href="#Elisp%20programming">Elisp programming</a>
 <h3>How to deal with the adviced window-functions</h3>
 
 <p>ECB offers for packages which work during activated ECB three macros
-for easy temporally<a rel=footnote href="#fn-9"><sup>9</sup></a> using all original-functions, all
+for easy temporally<a rel=footnote href="#fn-11"><sup>11</sup></a> using all original-functions, all
 adviced functions or only some adviced functions:
 
 <ul>
@@ -4963,32 +5444,10 @@ Up:<a rel=up accesskey=u href="#Conflicts%20and%20bugs">Conflicts and bugs</a>
 <p>Here is a list of known conflicts of ECB with other packages and
 helpful solutions/hints/workarounds:
 
-<ul>
-<li><a accesskey=1 href="#VC">VC</a>:                           Conflicts with Version Control
-<li><a accesskey=2 href="#follow-mouse">follow-mouse</a>:                 Conflicts with follow-mouse.el
-<li><a accesskey=3 href="#avoid">avoid</a>:                        Conflicts with avoid.el
-<li><a accesskey=4 href="#calendar">calendar</a>:                     Conflicts with calendar.el
-<li><a accesskey=5 href="#calculator">calculator</a>:                   Conflicts with calculator.el
-</ul>
-
-<p><hr>
-Node:<a name="VC">VC</a>,
-Next:<a rel=next accesskey=n href="#follow-mouse">follow-mouse</a>,
-Previous:<a rel=previous accesskey=p href="#Conflicts">Conflicts</a>,
-Up:<a rel=up accesskey=u href="#Conflicts">Conflicts</a>
-<br>
-
 <h4>Package VC (Version Control)</h4>
 
 <p>The variable <code>vc-delete-logbuf-window</code> must be set to nil during
 active ECB. This can be done with the hooks mentioned in <a href="#Elisp%20programming">Elisp programming</a>.
-
-<p><hr>
-Node:<a name="follow-mouse">follow-mouse</a>,
-Next:<a rel=next accesskey=n href="#avoid">avoid</a>,
-Previous:<a rel=previous accesskey=p href="#VC">VC</a>,
-Up:<a rel=up accesskey=u href="#Conflicts">Conflicts</a>
-<br>
 
 <h4>Package follow-mouse.el</h4>
 
@@ -5003,26 +5462,12 @@ over it. Because ECB has a much more intelligent mouse tracking
 mechanism than follow-mouse the follow-mouse stuff profit from ECB and
 works even better and saver as without activated ECB!
 
-<p><hr>
-Node:<a name="avoid">avoid</a>,
-Next:<a rel=next accesskey=n href="#calendar">calendar</a>,
-Previous:<a rel=previous accesskey=p href="#follow-mouse">follow-mouse</a>,
-Up:<a rel=up accesskey=u href="#Conflicts">Conflicts</a>
-<br>
-
 <h4>Package avoid.el</h4>
 
 <p>With GNU Emacs 20.X ECB must deactivate <code>mouse-avoidance-mode</code> if the
 option <code>ecb-show-node-info-in-minibuffer</code> activates for at least one
 ECB tree-buffer 'if-too-long or 'always. This is done automatically
 but only as long ECB is activated.
-
-<p><hr>
-Node:<a name="calendar">calendar</a>,
-Next:<a rel=next accesskey=n href="#calculator">calculator</a>,
-Previous:<a rel=previous accesskey=p href="#avoid">avoid</a>,
-Up:<a rel=up accesskey=u href="#Conflicts">Conflicts</a>
-<br>
 
 <h4>Package calendar.el</h4>
 
@@ -5040,12 +5485,6 @@ size but splits the window equally. But if you add this to your
                             (shrink-window (- (window-height) 9))))
                      )))
 </pre>
-
-<p><hr>
-Node:<a name="calculator">calculator</a>,
-Previous:<a rel=previous accesskey=p href="#calendar">calendar</a>,
-Up:<a rel=up accesskey=u href="#Conflicts">Conflicts</a>
-<br>
 
 <h4>Package calculator.el</h4>
 
@@ -5124,15 +5563,43 @@ active ECB. This can be done with the hooks of ECB.
 
 <br></td></tr><tr align="left"><td valign="top">Does ECB support C++ as well as Java? 
 </td><td valign="top"></td><td valign="top">
-This depends strongly on Semantic, but all semantic-versions &gt;=
-semantic-1.4beta13 should support C++ really well.
+For older versions of ECB (&lt; 1.80) this depends strongly on the used
+semantic-version, but all semantic-versions &gt;= semantic-1.4beta13
+should support C++ really well. All versions of ECB &gt;= 1.80 support
+C++ as well as Java.
+
+<br></td></tr><tr align="left"><td valign="top"></td><td valign="top"></td><td valign="top">
+
+<br></td></tr><tr align="left"><td valign="top">Does ECB support Perl? 
+</td><td valign="top"></td><td valign="top">
+This depends completely on semantic. If there is a semantic-BNF for
+Perl then semantic can parse Perl and then in turn ECB supports Perl. 
+Check semantic if Perl is supported or write your own Perl-BNF for
+semantic.
+
+<br></td></tr><tr align="left"><td valign="top"></td><td valign="top"></td><td valign="top">
+
+<br></td></tr><tr align="left"><td valign="top">Does ECB support language XYZ? 
+</td><td valign="top"></td><td valign="top">
+See question "Does ECB support Perl?" and replace "Perl" with
+"XYZ" in the answer.
+
+<br></td></tr><tr align="left"><td valign="top"></td><td valign="top"></td><td valign="top">
+
+<br></td></tr><tr align="left"><td valign="top">How to add new languages to ECB? 
+</td><td valign="top"></td><td valign="top">
+Add the language XYZ to semantic (perform all necessary steps described in
+the semantic-manual) and ECB will automatically support language XYZ! 
+There is nothing to do in ECB itself!
 
 <br></td></tr><tr align="left"><td valign="top"></td><td valign="top"></td><td valign="top">
 
 <br></td></tr><tr align="left"><td valign="top">Why does ECB not recognize my source-files for C++? 
 </td><td valign="top"></td><td valign="top">
 Your C++-files have probably an extension which is not mapped to
-c++-mode in <code>auto-mode-alist</code>, see <a href="#Setting%20up%20Emacs">Setting up Emacs</a>.
+c++-mode in <code>auto-mode-alist</code> and/or your own Emacs-setup has
+"destroyed" the correct value of the hook-variable
+<code>c++-mode-hook</code>, see <a href="#Setting%20up%20Emacs">Setting up Emacs</a>.
 
 <br></td></tr><tr align="left"><td valign="top"></td><td valign="top"></td><td valign="top">
 
@@ -5155,6 +5622,15 @@ in the edit-windows and what can i do?
 Set <code>scroll-conservatively</code> to 0 and <code>scroll-step</code> to a
 value &gt; 1. For the exact reason look at <a href="#Optimize%20scrolling">Optimize scrolling</a>.
 
+<br></td></tr><tr align="left"><td valign="top"></td><td valign="top"></td><td valign="top">
+
+<br></td></tr><tr align="left"><td valign="top">Is it possible to make the history of ECB persistent? 
+</td><td valign="top"></td><td valign="top">
+You can use the library "desktop.el" which works very well with ECB. 
+Then all files of your recent Emacs-session will be opened
+automatically after next Emacs-start and will be added automatically
+to the ECB-history after ECB-start.
+
 <br></td></tr></table>
 
 <p><hr>
@@ -5166,36 +5642,40 @@ Up:<a rel=up accesskey=u href="#Top">Top</a>
 
 <h2>Command Index</h2>
 
-<p>This index contains all user commands of ECB:
+<p>This index contains all user commands of ECB.
+
+<p><strong>Note</strong>: The commands in this index are listed without the
+prefix "ecb-" (e.g. the command <code>ecb-activate</code> is listed with
+name "activate").
 
 <ul compact>
-<li><code>ecb-activate</code>: <a href="#Interactive%20ECB%20commands">Interactive ECB commands</a>
-<li><code>ecb-add-all-buffers-to-history</code>: <a href="#Interactive%20ECB%20commands">Interactive ECB commands</a>
-<li><code>ecb-clear-history</code>: <a href="#Interactive%20ECB%20commands">Interactive ECB commands</a>
-<li><code>ecb-current-buffer-sync</code>: <a href="#Interactive%20ECB%20commands">Interactive ECB commands</a>
-<li><code>ecb-cycle-through-compilation-buffers</code>: <a href="#Interactive%20ECB%20commands">Interactive ECB commands</a>
-<li><code>ecb-deactivate</code>: <a href="#Interactive%20ECB%20commands">Interactive ECB commands</a>
-<li><code>ecb-display-upgraded-options</code>: <a href="#Interactive%20ECB%20commands">Interactive ECB commands</a>
-<li><code>ecb-download-ecb</code>: <a href="#Interactive%20ECB%20commands">Interactive ECB commands</a>
-<li><code>ecb-goto-window-compilation</code>: <a href="#Interactive%20ECB%20commands">Interactive ECB commands</a>
-<li><code>ecb-goto-window-directories</code>: <a href="#Interactive%20ECB%20commands">Interactive ECB commands</a>
-<li><code>ecb-goto-window-edit1</code>: <a href="#Interactive%20ECB%20commands">Interactive ECB commands</a>
-<li><code>ecb-goto-window-edit2</code>: <a href="#Interactive%20ECB%20commands">Interactive ECB commands</a>
-<li><code>ecb-goto-window-history</code>: <a href="#Interactive%20ECB%20commands">Interactive ECB commands</a>
-<li><code>ecb-goto-window-methods</code>: <a href="#Interactive%20ECB%20commands">Interactive ECB commands</a>
-<li><code>ecb-goto-window-sources</code>: <a href="#Interactive%20ECB%20commands">Interactive ECB commands</a>
-<li><code>ecb-minor-mode</code>: <a href="#Interactive%20ECB%20commands">Interactive ECB commands</a>
-<li><code>ecb-nav-goto-next</code>: <a href="#Interactive%20ECB%20commands">Interactive ECB commands</a>
-<li><code>ecb-nav-goto-previous</code>: <a href="#Interactive%20ECB%20commands">Interactive ECB commands</a>
-<li><code>ecb-rebuild-methods-buffer</code>: <a href="#Interactive%20ECB%20commands">Interactive ECB commands</a>
-<li><code>ecb-redraw-layout</code>: <a href="#Interactive%20ECB%20commands">Interactive ECB commands</a>
-<li><code>ecb-show-help</code>: <a href="#Interactive%20ECB%20commands">Interactive ECB commands</a>
-<li><code>ecb-submit-problem-report</code>: <a href="#Interactive%20ECB%20commands">Interactive ECB commands</a>
-<li><code>ecb-toggle-ecb-windows</code>: <a href="#Interactive%20ECB%20commands">Interactive ECB commands</a>
-<li><code>ecb-toggle-enlarged-compilation-window</code>: <a href="#Interactive%20ECB%20commands">Interactive ECB commands</a>
-<li><code>ecb-toggle-layout</code>: <a href="#Interactive%20ECB%20commands">Interactive ECB commands</a>
-<li><code>ecb-update-directories-buffer</code>: <a href="#Interactive%20ECB%20commands">Interactive ECB commands</a>
-<li><code>ecb-upgrade-options</code>: <a href="#Interactive%20ECB%20commands">Interactive ECB commands</a>
+<li><code>activate</code>: <a href="#Interactive%20ECB%20commands">Interactive ECB commands</a>
+<li><code>add-all-buffers-to-history</code>: <a href="#Interactive%20ECB%20commands">Interactive ECB commands</a>
+<li><code>clear-history</code>: <a href="#Interactive%20ECB%20commands">Interactive ECB commands</a>
+<li><code>current-buffer-sync</code>: <a href="#Interactive%20ECB%20commands">Interactive ECB commands</a>
+<li><code>cycle-through-compilation-buffers</code>: <a href="#Interactive%20ECB%20commands">Interactive ECB commands</a>
+<li><code>deactivate</code>: <a href="#Interactive%20ECB%20commands">Interactive ECB commands</a>
+<li><code>display-upgraded-options</code>: <a href="#Interactive%20ECB%20commands">Interactive ECB commands</a>
+<li><code>download-ecb</code>: <a href="#Interactive%20ECB%20commands">Interactive ECB commands</a>
+<li><code>goto-window-compilation</code>: <a href="#Interactive%20ECB%20commands">Interactive ECB commands</a>
+<li><code>goto-window-directories</code>: <a href="#Interactive%20ECB%20commands">Interactive ECB commands</a>
+<li><code>goto-window-edit1</code>: <a href="#Interactive%20ECB%20commands">Interactive ECB commands</a>
+<li><code>goto-window-edit2</code>: <a href="#Interactive%20ECB%20commands">Interactive ECB commands</a>
+<li><code>goto-window-history</code>: <a href="#Interactive%20ECB%20commands">Interactive ECB commands</a>
+<li><code>goto-window-methods</code>: <a href="#Interactive%20ECB%20commands">Interactive ECB commands</a>
+<li><code>goto-window-sources</code>: <a href="#Interactive%20ECB%20commands">Interactive ECB commands</a>
+<li><code>minor-mode</code>: <a href="#Interactive%20ECB%20commands">Interactive ECB commands</a>
+<li><code>nav-goto-next</code>: <a href="#Interactive%20ECB%20commands">Interactive ECB commands</a>
+<li><code>nav-goto-previous</code>: <a href="#Interactive%20ECB%20commands">Interactive ECB commands</a>
+<li><code>rebuild-methods-buffer</code>: <a href="#Interactive%20ECB%20commands">Interactive ECB commands</a>
+<li><code>redraw-layout</code>: <a href="#Interactive%20ECB%20commands">Interactive ECB commands</a>
+<li><code>show-help</code>: <a href="#Interactive%20ECB%20commands">Interactive ECB commands</a>
+<li><code>submit-problem-report</code>: <a href="#Interactive%20ECB%20commands">Interactive ECB commands</a>
+<li><code>toggle-ecb-windows</code>: <a href="#Interactive%20ECB%20commands">Interactive ECB commands</a>
+<li><code>toggle-enlarged-compilation-window</code>: <a href="#Interactive%20ECB%20commands">Interactive ECB commands</a>
+<li><code>toggle-layout</code>: <a href="#Interactive%20ECB%20commands">Interactive ECB commands</a>
+<li><code>update-directories-buffer</code>: <a href="#Interactive%20ECB%20commands">Interactive ECB commands</a>
+<li><code>upgrade-options</code>: <a href="#Interactive%20ECB%20commands">Interactive ECB commands</a>
 </ul>
 <p><hr>
 Node:<a name="Option%20Index">Option Index</a>,
@@ -5206,101 +5686,105 @@ Up:<a rel=up accesskey=u href="#Top">Top</a>
 
 <h2>Option Index</h2>
 
-<p>This index contains all customizable options of ECB:
+<p>This index contains all customizable options of ECB.
+
+<p><strong>Note</strong>: All options in this index are listed without the prefix
+"ecb-" (e.g. the option <code>ecb-layout-nr</code> is listed with name
+"layout-nr").
 
 <ul compact>
-<li><code>ecb-activate-before-layout-draw-hook</code>: <a href="#ecb-general">ecb-general</a>
-<li><code>ecb-activate-before-new-frame-created-hook</code>: <a href="#ecb-layout">ecb-layout</a>
-<li><code>ecb-activate-hook</code>: <a href="#ecb-general">ecb-general</a>
-<li><code>ecb-add-path-for-not-matching-files</code>: <a href="#ecb-directories">ecb-directories</a>
-<li><code>ecb-advice-window-functions</code>: <a href="#ecb-layout">ecb-layout</a>
-<li><code>ecb-auto-activate</code>: <a href="#ecb-general">ecb-general</a>
-<li><code>ecb-auto-compatibility-check</code>: <a href="#ecb-general">ecb-general</a>
-<li><code>ecb-auto-expand-directory-tree</code>: <a href="#ecb-directories">ecb-directories</a>
-<li><code>ecb-auto-update-methods-after-save</code>: <a href="#ecb-methods">ecb-methods</a>
-<li><code>ecb-bucket-token-display</code>: <a href="#ecb-methods">ecb-methods</a>
-<li><code>ecb-cache-directory-contents</code>: <a href="#ecb-directories">ecb-directories</a>
-<li><code>ecb-clear-history-behavior</code>: <a href="#ecb-history">ecb-history</a>
-<li><code>ecb-compile-window-enlarge-by-select</code>: <a href="#ecb-layout">ecb-layout</a>
-<li><code>ecb-compile-window-height</code>: <a href="#ecb-layout">ecb-layout</a>
-<li><code>ecb-compile-window-temporally-enlarge</code>: <a href="#ecb-layout">ecb-layout</a>
-<li><code>ecb-current-buffer-sync-hook</code>: <a href="#ecb-general">ecb-general</a>
-<li><code>ecb-deactivate-hook</code>: <a href="#ecb-general">ecb-general</a>
-<li><code>ecb-debug-mode</code>: <a href="#ecb-general">ecb-general</a>
-<li><code>ecb-directories-buffer-name</code>: <a href="#ecb-directories">ecb-directories</a>
-<li><code>ecb-directories-general-face</code>: <a href="#ecb-face-options">ecb-face-options</a>
-<li><code>ecb-directory-face</code>: <a href="#ecb-face-options">ecb-face-options</a>
-<li><code>ecb-download-delete-archive</code>: <a href="#ecb-download">ecb-download</a>
-<li><code>ecb-download-url</code>: <a href="#ecb-download">ecb-download</a>
-<li><code>ecb-download-version</code>: <a href="#ecb-download">ecb-download</a>
-<li><code>ecb-exclude-parents-regexp</code>: <a href="#ecb-methods">ecb-methods</a>
-<li><code>ecb-excluded-directories-regexp</code>: <a href="#ecb-directories">ecb-directories</a>
-<li><code>ecb-font-lock-tokens</code>: <a href="#ecb-methods">ecb-methods</a>
-<li><code>ecb-hide-ecb-windows-hook</code>: <a href="#ecb-layout">ecb-layout</a>
-<li><code>ecb-highlight-token-header-after-jump</code>: <a href="#ecb-methods">ecb-methods</a>
-<li><code>ecb-highlight-token-with-point</code>: <a href="#ecb-methods">ecb-methods</a>
-<li><code>ecb-highlight-token-with-point-delay</code>: <a href="#ecb-methods">ecb-methods</a>
-<li><code>ecb-history-buffer-name</code>: <a href="#ecb-history">ecb-history</a>
-<li><code>ecb-history-face</code>: <a href="#ecb-face-options">ecb-face-options</a>
-<li><code>ecb-history-general-face</code>: <a href="#ecb-face-options">ecb-face-options</a>
-<li><code>ecb-history-item-name</code>: <a href="#ecb-history">ecb-history</a>
-<li><code>ecb-key-map</code>: <a href="#ecb-general">ecb-general</a>
-<li><code>ecb-kill-buffer-clears-history</code>: <a href="#ecb-history">ecb-history</a>
-<li><code>ecb-layout-always-operate-in-edit-window</code>: <a href="#ecb-layout">ecb-layout</a>
-<li><code>ecb-layout-nr</code>: <a href="#ecb-layout">ecb-layout</a>
-<li><code>ecb-layout-switch-to-compilation-window</code>: <a href="#ecb-layout">ecb-layout</a>
-<li><code>ecb-layout-window-sizes</code>: <a href="#ecb-layout">ecb-layout</a>
-<li><code>ecb-major-modes-activate</code>: <a href="#ecb-general">ecb-general</a>
-<li><code>ecb-major-modes-deactivate</code>: <a href="#ecb-general">ecb-general</a>
-<li><code>ecb-method-face</code>: <a href="#ecb-face-options">ecb-face-options</a>
-<li><code>ecb-methods-buffer-name</code>: <a href="#ecb-methods">ecb-methods</a>
-<li><code>ecb-methods-general-face</code>: <a href="#ecb-face-options">ecb-face-options</a>
-<li><code>ecb-minor-mode-text</code>: <a href="#ecb-general">ecb-general</a>
-<li><code>ecb-mode-line-prefixes</code>: <a href="#ecb-general">ecb-general</a>
-<li><code>ecb-new-ecb-frame</code>: <a href="#ecb-layout">ecb-layout</a>
-<li><code>ecb-other-window-jump-behavior</code>: <a href="#ecb-layout">ecb-layout</a>
-<li><code>ecb-post-process-semantic-tokenlist</code>: <a href="#ecb-methods">ecb-methods</a>
-<li><code>ecb-primary-mouse-jump-destination</code>: <a href="#ecb-general">ecb-general</a>
-<li><code>ecb-primary-secondary-mouse-buttons</code>: <a href="#ecb-general">ecb-general</a>
-<li><code>ecb-redraw-layout-quickly</code>: <a href="#ecb-layout">ecb-layout</a>
-<li><code>ecb-scroll-window-after-jump</code>: <a href="#ecb-methods">ecb-methods</a>
-<li><code>ecb-select-edit-window-on-redraw</code>: <a href="#ecb-layout">ecb-layout</a>
-<li><code>ecb-show-ecb-windows-hook</code>: <a href="#ecb-layout">ecb-layout</a>
-<li><code>ecb-show-help-format</code>: <a href="#ecb-general">ecb-general</a>
-<li><code>ecb-show-node-info-in-minibuffer</code>: <a href="#ecb-general">ecb-general</a>
-<li><code>ecb-show-only-positioned-tokens</code>: <a href="#ecb-methods">ecb-methods</a>
-<li><code>ecb-show-source-file-extension</code>: <a href="#ecb-sources">ecb-sources</a>
-<li><code>ecb-show-sources-in-directories-buffer</code>: <a href="#ecb-directories">ecb-directories</a>
-<li><code>ecb-show-tokens</code>: <a href="#ecb-methods">ecb-methods</a>
-<li><code>ecb-sort-history-items</code>: <a href="#ecb-history">ecb-history</a>
-<li><code>ecb-source-face</code>: <a href="#ecb-face-options">ecb-face-options</a>
-<li><code>ecb-source-file-regexps</code>: <a href="#ecb-sources">ecb-sources</a>
-<li><code>ecb-source-in-directories-buffer-face</code>: <a href="#ecb-face-options">ecb-face-options</a>
-<li><code>ecb-source-path</code>: <a href="#ecb-directories">ecb-directories</a>
-<li><code>ecb-sources-buffer-name</code>: <a href="#ecb-sources">ecb-sources</a>
-<li><code>ecb-sources-general-face</code>: <a href="#ecb-face-options">ecb-face-options</a>
-<li><code>ecb-sources-sort-method</code>: <a href="#ecb-sources">ecb-sources</a>
-<li><code>ecb-split-edit-window</code>: <a href="#ecb-layout">ecb-layout</a>
-<li><code>ecb-temp-dir</code>: <a href="#ecb-general">ecb-general</a>
-<li><code>ecb-toggle-layout-sequence</code>: <a href="#ecb-layout">ecb-layout</a>
-<li><code>ecb-token-display-function</code>: <a href="#ecb-methods">ecb-methods</a>
-<li><code>ecb-token-header-face</code>: <a href="#ecb-face-options">ecb-face-options</a>
-<li><code>ecb-token-jump-narrow</code>: <a href="#ecb-methods">ecb-methods</a>
-<li><code>ecb-token-jump-sets-mark</code>: <a href="#ecb-methods">ecb-methods</a>
-<li><code>ecb-tree-expand-symbol-before</code>: <a href="#ecb-general">ecb-general</a>
-<li><code>ecb-tree-incremental-search</code>: <a href="#ecb-general">ecb-general</a>
-<li><code>ecb-tree-indent</code>: <a href="#ecb-general">ecb-general</a>
-<li><code>ecb-tree-navigation-by-arrow</code>: <a href="#ecb-general">ecb-general</a>
-<li><code>ecb-tree-RET-selects-edit-window</code>: <a href="#ecb-general">ecb-general</a>
-<li><code>ecb-truncate-lines</code>: <a href="#ecb-general">ecb-general</a>
-<li><code>ecb-truncate-long-names</code>: <a href="#ecb-general">ecb-general</a>
-<li><code>ecb-type-token-display</code>: <a href="#ecb-methods">ecb-methods</a>
-<li><code>ecb-use-recursive-edit</code>: <a href="#ecb-general">ecb-general</a>
-<li><code>ecb-version-check</code>: <a href="#ecb-general">ecb-general</a>
-<li><code>ecb-window-sync</code>: <a href="#ecb-general">ecb-general</a>
-<li><code>ecb-window-sync-delay</code>: <a href="#ecb-general">ecb-general</a>
-<li><code>ecb-windows-height</code>: <a href="#ecb-layout">ecb-layout</a>
-<li><code>ecb-windows-width</code>: <a href="#ecb-layout">ecb-layout</a>
+<li><code>activate-before-layout-draw-hook</code>: <a href="#ecb-general">ecb-general</a>
+<li><code>activate-before-new-frame-created-hook</code>: <a href="#ecb-layout">ecb-layout</a>
+<li><code>activate-hook</code>: <a href="#ecb-general">ecb-general</a>
+<li><code>add-path-for-not-matching-files</code>: <a href="#ecb-directories">ecb-directories</a>
+<li><code>advice-window-functions</code>: <a href="#ecb-layout">ecb-layout</a>
+<li><code>auto-activate</code>: <a href="#ecb-general">ecb-general</a>
+<li><code>auto-compatibility-check</code>: <a href="#ecb-general">ecb-general</a>
+<li><code>auto-expand-directory-tree</code>: <a href="#ecb-directories">ecb-directories</a>
+<li><code>auto-update-methods-after-save</code>: <a href="#ecb-methods">ecb-methods</a>
+<li><code>bucket-token-display</code>: <a href="#ecb-methods">ecb-methods</a>
+<li><code>cache-directory-contents</code>: <a href="#ecb-directories">ecb-directories</a>
+<li><code>clear-history-behavior</code>: <a href="#ecb-history">ecb-history</a>
+<li><code>compile-window-enlarge-by-select</code>: <a href="#ecb-layout">ecb-layout</a>
+<li><code>compile-window-height</code>: <a href="#ecb-layout">ecb-layout</a>
+<li><code>compile-window-temporally-enlarge</code>: <a href="#ecb-layout">ecb-layout</a>
+<li><code>current-buffer-sync-hook</code>: <a href="#ecb-general">ecb-general</a>
+<li><code>deactivate-hook</code>: <a href="#ecb-general">ecb-general</a>
+<li><code>debug-mode</code>: <a href="#ecb-general">ecb-general</a>
+<li><code>directories-buffer-name</code>: <a href="#ecb-directories">ecb-directories</a>
+<li><code>directories-general-face</code>: <a href="#ecb-face-options">ecb-face-options</a>
+<li><code>directory-face</code>: <a href="#ecb-face-options">ecb-face-options</a>
+<li><code>download-delete-archive</code>: <a href="#ecb-download">ecb-download</a>
+<li><code>download-url</code>: <a href="#ecb-download">ecb-download</a>
+<li><code>download-version</code>: <a href="#ecb-download">ecb-download</a>
+<li><code>exclude-parents-regexp</code>: <a href="#ecb-methods">ecb-methods</a>
+<li><code>excluded-directories-regexp</code>: <a href="#ecb-directories">ecb-directories</a>
+<li><code>font-lock-tokens</code>: <a href="#ecb-methods">ecb-methods</a>
+<li><code>hide-ecb-windows-hook</code>: <a href="#ecb-layout">ecb-layout</a>
+<li><code>highlight-token-header-after-jump</code>: <a href="#ecb-methods">ecb-methods</a>
+<li><code>highlight-token-with-point</code>: <a href="#ecb-methods">ecb-methods</a>
+<li><code>highlight-token-with-point-delay</code>: <a href="#ecb-methods">ecb-methods</a>
+<li><code>history-buffer-name</code>: <a href="#ecb-history">ecb-history</a>
+<li><code>history-face</code>: <a href="#ecb-face-options">ecb-face-options</a>
+<li><code>history-general-face</code>: <a href="#ecb-face-options">ecb-face-options</a>
+<li><code>history-item-name</code>: <a href="#ecb-history">ecb-history</a>
+<li><code>key-map</code>: <a href="#ecb-general">ecb-general</a>
+<li><code>kill-buffer-clears-history</code>: <a href="#ecb-history">ecb-history</a>
+<li><code>layout-always-operate-in-edit-window</code>: <a href="#ecb-layout">ecb-layout</a>
+<li><code>layout-nr</code>: <a href="#ecb-layout">ecb-layout</a>
+<li><code>layout-switch-to-compilation-window</code>: <a href="#ecb-layout">ecb-layout</a>
+<li><code>layout-window-sizes</code>: <a href="#ecb-layout">ecb-layout</a>
+<li><code>major-modes-activate</code>: <a href="#ecb-general">ecb-general</a>
+<li><code>major-modes-deactivate</code>: <a href="#ecb-general">ecb-general</a>
+<li><code>method-face</code>: <a href="#ecb-face-options">ecb-face-options</a>
+<li><code>methods-buffer-name</code>: <a href="#ecb-methods">ecb-methods</a>
+<li><code>methods-general-face</code>: <a href="#ecb-face-options">ecb-face-options</a>
+<li><code>minor-mode-text</code>: <a href="#ecb-general">ecb-general</a>
+<li><code>mode-line-prefixes</code>: <a href="#ecb-general">ecb-general</a>
+<li><code>new-ecb-frame</code>: <a href="#ecb-layout">ecb-layout</a>
+<li><code>other-window-jump-behavior</code>: <a href="#ecb-layout">ecb-layout</a>
+<li><code>post-process-semantic-tokenlist</code>: <a href="#ecb-methods">ecb-methods</a>
+<li><code>primary-mouse-jump-destination</code>: <a href="#ecb-general">ecb-general</a>
+<li><code>primary-secondary-mouse-buttons</code>: <a href="#ecb-general">ecb-general</a>
+<li><code>redraw-layout-quickly</code>: <a href="#ecb-layout">ecb-layout</a>
+<li><code>scroll-window-after-jump</code>: <a href="#ecb-methods">ecb-methods</a>
+<li><code>select-edit-window-on-redraw</code>: <a href="#ecb-layout">ecb-layout</a>
+<li><code>show-ecb-windows-hook</code>: <a href="#ecb-layout">ecb-layout</a>
+<li><code>show-help-format</code>: <a href="#ecb-general">ecb-general</a>
+<li><code>show-node-info-in-minibuffer</code>: <a href="#ecb-general">ecb-general</a>
+<li><code>show-only-positioned-tokens</code>: <a href="#ecb-methods">ecb-methods</a>
+<li><code>show-source-file-extension</code>: <a href="#ecb-sources">ecb-sources</a>
+<li><code>show-sources-in-directories-buffer</code>: <a href="#ecb-directories">ecb-directories</a>
+<li><code>show-tokens</code>: <a href="#ecb-methods">ecb-methods</a>
+<li><code>sort-history-items</code>: <a href="#ecb-history">ecb-history</a>
+<li><code>source-face</code>: <a href="#ecb-face-options">ecb-face-options</a>
+<li><code>source-file-regexps</code>: <a href="#ecb-sources">ecb-sources</a>
+<li><code>source-in-directories-buffer-face</code>: <a href="#ecb-face-options">ecb-face-options</a>
+<li><code>source-path</code>: <a href="#ecb-directories">ecb-directories</a>
+<li><code>sources-buffer-name</code>: <a href="#ecb-sources">ecb-sources</a>
+<li><code>sources-general-face</code>: <a href="#ecb-face-options">ecb-face-options</a>
+<li><code>sources-sort-method</code>: <a href="#ecb-sources">ecb-sources</a>
+<li><code>split-edit-window</code>: <a href="#ecb-layout">ecb-layout</a>
+<li><code>temp-dir</code>: <a href="#ecb-general">ecb-general</a>
+<li><code>toggle-layout-sequence</code>: <a href="#ecb-layout">ecb-layout</a>
+<li><code>token-display-function</code>: <a href="#ecb-methods">ecb-methods</a>
+<li><code>token-header-face</code>: <a href="#ecb-face-options">ecb-face-options</a>
+<li><code>token-jump-narrow</code>: <a href="#ecb-methods">ecb-methods</a>
+<li><code>token-jump-sets-mark</code>: <a href="#ecb-methods">ecb-methods</a>
+<li><code>tree-expand-symbol-before</code>: <a href="#ecb-general">ecb-general</a>
+<li><code>tree-incremental-search</code>: <a href="#ecb-general">ecb-general</a>
+<li><code>tree-indent</code>: <a href="#ecb-general">ecb-general</a>
+<li><code>tree-navigation-by-arrow</code>: <a href="#ecb-general">ecb-general</a>
+<li><code>tree-RET-selects-edit-window</code>: <a href="#ecb-general">ecb-general</a>
+<li><code>truncate-lines</code>: <a href="#ecb-general">ecb-general</a>
+<li><code>truncate-long-names</code>: <a href="#ecb-general">ecb-general</a>
+<li><code>type-token-display</code>: <a href="#ecb-methods">ecb-methods</a>
+<li><code>use-recursive-edit</code>: <a href="#ecb-general">ecb-general</a>
+<li><code>version-check</code>: <a href="#ecb-general">ecb-general</a>
+<li><code>window-sync</code>: <a href="#ecb-general">ecb-general</a>
+<li><code>window-sync-delay</code>: <a href="#ecb-general">ecb-general</a>
+<li><code>windows-height</code>: <a href="#ecb-layout">ecb-layout</a>
+<li><code>windows-width</code>: <a href="#ecb-layout">ecb-layout</a>
 </ul>
 <p><hr>
 Node:<a name="Concept%20Index">Concept Index</a>,
@@ -5314,10 +5798,10 @@ Up:<a rel=up accesskey=u href="#Top">Top</a>
 <li>Adviced functions: <a href="#The%20edit-window">The edit-window</a>
 <li>Automatic activation: <a href="#Automatic%20activation">Automatic activation</a>
 <li>Automatic deactivation: <a href="#Automatic%20activation">Automatic activation</a>
-<li>avoid package: <a href="#avoid">avoid</a>
+<li>avoid package: <a href="#Conflicts">Conflicts</a>
 <li>Bug report: <a href="#Submitting%20problem%20report">Submitting problem report</a>
-<li>calculator package: <a href="#calculator">calculator</a>
-<li>calendar package: <a href="#calendar">calendar</a>
+<li>calculator package: <a href="#Conflicts">Conflicts</a>
+<li>calendar package: <a href="#Conflicts">Conflicts</a>
 <li>collapsing: <a href="#Navigation">Navigation</a>
 <li>compilation buffers: <a href="#Temp-%20and%20compile-buffers">Temp- and compile-buffers</a>
 <li>Directories: <a href="#ECB%20Directories">ECB Directories</a>
@@ -5327,7 +5811,7 @@ Up:<a rel=up accesskey=u href="#Top">Top</a>
 <li>edit-window: <a href="#The%20edit-window">The edit-window</a>
 <li>expanding: <a href="#Navigation">Navigation</a>
 <li>Faces: <a href="#Changing%20faces">Changing faces</a>
-<li>follow-mouse package: <a href="#follow-mouse">follow-mouse</a>
+<li>follow-mouse package: <a href="#Conflicts">Conflicts</a>
 <li>grep buffers: <a href="#Temp-%20and%20compile-buffers">Temp- and compile-buffers</a>
 <li>help buffers: <a href="#Temp-%20and%20compile-buffers">Temp- and compile-buffers</a>
 <li>Hide windows: <a href="#Hiding%20the%20ECB%20windows">Hiding the ECB windows</a>
@@ -5354,8 +5838,8 @@ Up:<a rel=up accesskey=u href="#Top">Top</a>
 <li>temporary buffers: <a href="#Temp-%20and%20compile-buffers">Temp- and compile-buffers</a>
 <li>token: <a href="#Customizing%20the%20display">Customizing the display</a>
 <li>tree-buffer: <a href="#Overview">Overview</a>
-<li>VC package: <a href="#VC">VC</a>
-<li>Version control: <a href="#VC">VC</a>
+<li>VC package: <a href="#Conflicts">Conflicts</a>
+<li>Version control: <a href="#Conflicts">Conflicts</a>
 </ul>
 
 <h2>Table of Contents</h2>
@@ -5461,11 +5945,11 @@ Up:<a rel=up accesskey=u href="#Top">Top</a>
 <ul>
 <li><a href="#Conflicts">Known conflicts with other packages</a>
 <ul>
-<li><a href="#VC">Package VC (Version Control)</a>
-<li><a href="#follow-mouse">Package follow-mouse.el</a>
-<li><a href="#avoid">Package avoid.el</a>
-<li><a href="#calendar">Package calendar.el</a>
-<li><a href="#calculator">Package calculator.el</a>
+<li><a href="#Conflicts">Package VC (Version Control)</a>
+<li><a href="#Conflicts">Package follow-mouse.el</a>
+<li><a href="#Conflicts">Package avoid.el</a>
+<li><a href="#Conflicts">Package calendar.el</a>
+<li><a href="#Conflicts">Package calculator.el</a>
 </ul>
 <li><a href="#Bugs">Known bugs</a>
 </ul>
@@ -5491,35 +5975,44 @@ Makefiles etc. but these are the most important ones.</p>
 extension you want but these are the most common ones!</p>
 
 <li><a name="fn-3"></a>
+<p>Of course only
+for major-modes supported by semantic!</p>
+
+<li><a name="fn-4"></a>
+<p><code>setq</code> replaces/overwrites the current
+value of a hook with the new value whereas <code>add-hook</code>
+<strong>adds</strong> the new value to the old-value of the hook!</p>
+
+<li><a name="fn-5"></a>
 <p>This
 means first hitting the keys <kbd>M</kbd> (Meta- or Alt-key) and <kbd>x</kbd>
 simultaniously, inserting "customize-option" in the minibuffer,
 hitting RETURN, inserting "ecb-source-path" in the minibuffer and
 finally hitting RETURN again</p>
 
-<li><a name="fn-4"></a>
+<li><a name="fn-6"></a>
 <p>This is only one example of the layouts ECB
 offers, see <a href="#Changing%20the%20ECB-layout">Changing the ECB-layout</a></p>
 
-<li><a name="fn-5"></a>
+<li><a name="fn-7"></a>
 <p>means mouse-2 while CTRL-key
 is pressed.</p>
 
-<li><a name="fn-6"></a>
+<li><a name="fn-8"></a>
 <p>e.g. a method,
 a variable or any other semantic token</p>
 
-<li><a name="fn-7"></a>
+<li><a name="fn-9"></a>
 <p>At least for the options
 for which <code>setq</code> is explicitly forbidden, but it is recommended
 to use always <code>custom-set-variables</code>!</p>
 
-<li><a name="fn-8"></a>
+<li><a name="fn-10"></a>
 <p>cygwin is available at
 <a href="http://cygwin.com/">http://cygwin.com/</a>
 </p>
 
-<li><a name="fn-9"></a>
+<li><a name="fn-11"></a>
 <p>I.e. regardless of the settings in
 <code>ecb-advice-window-functions</code>!</p>
 

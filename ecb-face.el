@@ -346,11 +346,18 @@ it by clicking onto a node in the methods buffer."
   "*Define face used with option `ecb-type-token-display'."
   :group 'ecb-faces)
 
-(defface ecb-bucket-token-face (ecb-face-default nil t)
-  "*Face which can be used for displaying bucket tokens in the methods
-buffer. See also `ecb-bucket-token-display'."
-  :group 'ecb-faces)
+(defface ecb-bucket-token-face (ecb-face-default nil t nil
+                                                 'ecb-default-general-face)
+  "*Face used for displaying bucket tokens in the methods
+buffer. See also `ecb-bucket-token-display'.
 
+In GNU Emacs 21.X this face inherits from the face 'ecb-default-general-face'.
+
+With XEmacs and GNU Emacs 20.X there is no inheritance-feature so if the
+buckets in the ECB-methods-buffer should be displayed with the same basic
+attributes set by 'ecb-default-general-face' this set of basic attributes have
+to be set in 'ecb-bucket-token-face' too!"
+:group 'ecb-faces)
 
 (provide 'ecb-face)
 
