@@ -133,6 +133,9 @@
 ;;   - Defining suitable transforming-functions for every of these options.
 ;;   See the comment of `ecb-upgradable-option-alist'.
 
+;; As an addition to this upgrade feature this library offers a function
+;; `ecb-download-ecb' to download a newer version of ECB direct from the
+;; website!
 
 ;;; Code
 
@@ -426,7 +429,7 @@ Note: Normally this URL should never change but who knows..."
   :group 'ecb-download
   :type 'string)
 
-(defcustom ecb-download-version "1.70"
+(defcustom ecb-download-version "latest"
   "*Which version of ECB should be downloaded by `ecb-download-ecb'.
 Valid values are either the string \"latest\" or a version number like
 \"1.70\". ECB creates automatically the correct URL for download, see
@@ -436,7 +439,7 @@ Valid values are either the string \"latest\" or a version number like
                 (string :tag "ECB version")))
 
 (defcustom ecb-download-delete-archive-after-installing t
-  "*Should the downloaded archive be delete after sucessfull installation."
+  "*Should the downloaded archive be deleted after sucessfull installation."
   :group 'ecb-download
   :type 'boolean)
 
@@ -445,16 +448,15 @@ Valid values are either the string \"latest\" or a version number like
   (expand-file-name (file-name-directory (locate-library "ecb"))))
 (defconst ecb-ecb-parent-dir (concat ecb-ecb-dir "../"))
 
-;; Arrghhhhhhhhhhhhhhh... the cygwin version of tar does not accept args in
-;; windows-style file-format :-( Therefore we convert it with cygpath. Cause
-;; of the need of wget we can assume the the user has cygwin installed!
+;; Klaus: Arrghhhhhhhhhhhhhhh... the cygwin version of tar does not accept
+;; args in windows-style file-format :-( Therefore we convert it with cygpath.
+;; Cause of the need of wget we can assume the the user has cygwin installed!
 (defmacro ecb-create-shell-argument (arg)
   `(if (eq system-type 'windows-nt)
        (if (executable-find "cygpath.exe")
            (shell-command-to-string (concat "cygpath -u " ,arg))
          (error "Cannot find the cygpath utility!"))
      ,arg))
-  
 
 (defun ecb-download-ecb ()
   "Download ECB from the ECB-website and install it. For this the utilities
@@ -511,7 +513,7 @@ parallel to current ECB-directory. After adding this new directory tp
 
         ;; OK, now we begin....
         
-        ;; Downloading with progress-display
+        ;; Downloading with working-display
 
         (working-status-call-process
          0.1
@@ -544,15 +546,15 @@ parallel to current ECB-directory. After adding this new directory tp
             (setq success nil)))
         (unless success
           (with-output-to-temp-buffer "*ECB-download-failure*"
-            (princ "The download of ECB has failed cause of the following problems:")
-            (princ "\n\n")
-            (princ "------------------------------------------------------------------------------")
+            (princ "The download of ECB has failed cause of the following wget-failure:")
+            (princ "\n")
+            (princ "______________________________________________________________________________\n\n")
             (princ process-result)
-            (princ "------------------------------------------------------------------------------")
+            (princ "\n______________________________________________________________________________")
             (princ "\n\n")
             (princ "Please check the wget configuration in \"~/.wgetrc\" and also the values\n")
-            (princ "of the options `ecb-download-url' and `ecb-download-version' Cause of these\n")
-            (princ "options ECB has tried to download the following url:\n\n")
+            (princ "of the options `ecb-download-url' and `ecb-download-version'. Cause of these\n")
+            (princ "options ECB has tried to download the following URL:\n\n")
             (princ (concat "  "ecb-download-url "ecb-" ecb-download-version ".tar.gz"))
             (princ "\n\n")
             (princ "Maybe this URL does not exist...please check this!\n\n")

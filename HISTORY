@@ -28,7 +28,7 @@ Version 1.80:
 
 - Fixed a bug: Sometimes there occurs a a "wrong-type-argument"-error (or
   "destroyed extent"-error with XEmacs) under some circumstances. Now ECB
-  auto- reparses the buffer and after that ECB is in correct state again.
+  auto-reparses the buffer and after that ECB is in correct state again.
   (Klaus)
 
 - Two new options: ecb-major-modes-activate and ecb-major-modes-deactivate.
