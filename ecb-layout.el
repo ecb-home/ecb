@@ -122,7 +122,7 @@
 ;;   + The edit-window must not be splitted and the point must reside in
 ;;     the not deleted edit-window.
 
-;; $Id: ecb-layout.el,v 1.41 2001/05/06 12:08:58 creator Exp $
+;; $Id: ecb-layout.el,v 1.42 2001/05/06 12:43:58 creator Exp $
 
 ;;; Code:
 
@@ -158,7 +158,7 @@
   :group 'ecb-layout
   :type 'hook)
 
-  (defcustom ecb-auto-raise-ecb-frame t
+(defcustom ecb-auto-raise-ecb-frame t
   "*Auto-raising of the ECB-frame in some command of ECB \(e.g.
 `ecb-redraw-layout'). If nil then these ECB commands do nothing if called in
 another frame than the ECB frame otherwise they raises first the ECB-frame and
@@ -1188,7 +1188,8 @@ ECB windows will be set to their stored values when `ecb-redraw-layout' or
 `ecb-restore-window-sizes' is called. To reset the window sizes to their default
 values call `ecb-restore-default-window-sizes'."
   (interactive)
-  (aset ecb-layout-window-sizes ecb-layout-nr (ecb-get-window-sizes)))
+  (aset ecb-layout-window-sizes ecb-layout-nr (ecb-get-window-sizes))
+  (customize-save-variable 'ecb-layout-window-sizes ecb-layout-window-sizes))
 
 (defun ecb-restore-window-sizes()
   "Sets the sizes of the ECB windows to their stored values."
