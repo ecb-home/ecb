@@ -130,13 +130,14 @@ online-help: $(ecb_TEXI)
 
 
 install-help: $(ecb_INFO)
-	@if test -x "$(INSTALLINFO)" ; then\
+	@if test -x "$(INSTALLINFO)" -a -f "$(EMACSINFOPATH)/dir" ; then\
 	   echo Installing the Online-help in $(INSTALLINFO)...; \
 	   $(CP) $< $(EMACSINFOPATH); \
 	   $(INSTALLINFO) $< $(EMACSINFOPATH)/dir; \
 	else \
-	   echo Can not install the online-help because the tool; \
-	   echo - $(INSTALLINFO); \
+	   echo Can not install the online-help because either; \
+	   echo - the tool $(INSTALLINFO) or; \
+	   echo - the file $(EMACSINFOPATH)/dir; \
 	   echo is not available!; \
 	fi
 

@@ -17,7 +17,7 @@ Requirements
 ECB requires the following packages being properly installed:
 - Semantic, version 1.4 or higher
   (http://cedet.sourceforge.net/semantic.shtml)
-- Eieio, version 0.16 or higher (http://cedet.sourceforge.net/eieio.shtml).
+- Eieio, version 0.17 or higher (http://cedet.sourceforge.net/eieio.shtml).
 - If Java code is edited the ECB works best when the JDE package
   (http://sunsite.auc.dk/jde) is installed.
 

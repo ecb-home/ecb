@@ -182,6 +182,13 @@ to insert any arbitrary string."
            (setq answer (read-string (concat other-prompt ": ")))))
     answer))
 
+(defmacro ecb-error (&rest args)
+  "Signals an error but prevents it from entering the debugger. This is
+usefull if an error-message should be signaled to the user and evaluating
+should stopped but no debugging is senseful."
+  `(let ((debug-on-error nil))
+     (error ,@args)))
+
 
 (provide 'ecb-util)
 

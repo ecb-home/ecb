@@ -59,7 +59,7 @@ FORMAT is not nil then the user is prompted to choose the format of the help
     (if (equal f 'info)
         (if (file-exists-p (concat ecb-ecb-dir "ecb.info"))
             (info (concat ecb-ecb-dir "ecb.info"))
-          (error "File %s does not exist" (concat ecb-ecb-dir "ecb.info")))
+          (ecb-error "File %s does not exist" (concat ecb-ecb-dir "ecb.info")))
       (message "Opening ECB online-help in a web-browser...")
       (if (file-exists-p (concat ecb-ecb-dir "ecb.html"))
           (progn
@@ -69,7 +69,7 @@ FORMAT is not nil then the user is prompted to choose the format of the help
                             browse-url-new-window-flag
                           browse-url-new-window-p))
             (message "Opening ECB online-help in a web-browser...done"))
-        (error "File %s does not exist" (concat ecb-ecb-dir "ecb.html"))))))
+        (ecb-error "File %s does not exist" (concat ecb-ecb-dir "ecb.html"))))))
 
 ;;
 ;; Problem reporting functions stolen from JDE
@@ -90,7 +90,7 @@ the problem as detailed as possible!"
   (if (not (ecb-point-in-edit-window))
       (ecb-select-edit-window))
   (if (not (locate-library "reporter"))
-      (error "You need the reporter.el package to submit a bugreport for ECB!")
+      (ecb-error "You need the reporter.el package to submit a bugreport for ECB!")
     (require 'reporter)
     (and 
      (y-or-n-p "Do you want to submit a problem report on the ECB? ")

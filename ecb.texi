@@ -98,7 +98,6 @@ mailing list @email{ecb-list@@lists.sourceforge.net} via
 @uref{http://lists.sourceforge.net/lists/listinfo/ecb-list}
 @end ifhtml
 
-
 @menu
 * Install and first steps::     Installing ECB and first steps
 * Overview::                    Introduce basic concepts
@@ -106,7 +105,7 @@ mailing list @email{ecb-list@@lists.sourceforge.net} via
 * Usage of ECB::                How to use ECB
 * Customizing::                 How to customize ECB
 * Submitting problem report::   What to do when problems occur
-* Upgrading::                   Upgrading ECB from within Emacs
+* Upgrading::                   Upgrading and downloading packages
 * Tips and tricks::             Useful hints and tips
 * Elisp programming::           Entry points for elisp programmers
 * Conflicts and bugs::          Known Conflicts with other packages and bugs
@@ -178,9 +177,9 @@ All customizable options of ECB
 * ecb-faces::                   Customizing the faces
 * ecb-download::                Customizing how to download ECB
 
-Upgrading ECB
+Upgrading and downloading packages
 
-* Downloading new version::     How to download a newer version of ECB 
+* Downloading new versions::    How to download newer versions of packages
 * Auto. option-upgrading::      ECB can auto. upgrade your options
 
 Automatic upgrading of options
@@ -239,6 +238,10 @@ required semantic- and eieio-version.
 shipped with Emacs or XEmacs. You have to install exactly a version
 ECB requires and also to make sure that the correct version is loaded
 into (X)Emacs!
+
+But ECB checks auto. during start-time if the correct versions of
+semantic and eieio are installed and gives you proper feedback.
+@xref{Download required packages}.
 
 @item
 Add the new ECB-directory to your @code{load-path} variable.
@@ -954,8 +957,39 @@ editing and you don't need the browsing windows all the time.
 
 Per default ECB synchronizes automatically the contents of the
 ECB-windows/tree-buffers with the current active edit-window (rsp. the
-current buffer of the edit window). The feature can be customized with
-the option @code{ecb-window-sync}:
+current buffer of the edit window):
+
+@itemize @bullet
+
+@item ECB-directories:
+
+This windows is synchronized to display the directory where the
+source-file which is displayed in the edit-window is located. If the
+source-path (i.e. an element of the option @code{ecb-source-path})
+containing this directory is not expanded it will be auto. expanded
+according to the value of the option
+@code{ecb-auto-expand-directory-tree} (@pxref{ecb-directories}).
+
+@item ECB-sources:
+
+The ECB-sources-buffer contains after synchronizing all the sources of
+the directory of the ``current'' source-file displayed in the
+edit-window. The entry of the ``current'' source-file is highlighted.
+
+@item ECB-methods:
+
+Contains after synchronizing all the tokens of the buffer in the
+edit-window, i.e. all methods, variables etc... depending of the
+major-mode.
+
+@item ECB-history:
+
+Highlights the entry of the buffer displayed in the edit-window if
+this buffer is a source-file.
+
+@end itemize
+
+This feature can be customized with the option @code{ecb-window-sync}:
 
 If active then the synchronization takes place always a buffer changes
 in the edit window, if deactivated then never. But you can also set
@@ -1048,28 +1082,13 @@ Display a message-buffer which options have been upgraded or reset.
 @end deffn
 
 @deffn Command ecb-download-ecb
-Download ECB from the ECB-website and install it. For this the utilities
-``wget'', ``tar'' and ``gzip'' are needed which are available for unix and
-also for windows with cygwin. All utilities must reside in your PATH!
-
-If you are behind a firewall and you have to use a proxy you maybe
-need the following wget-configuration in your file @file{~/.wgetrc}:
-
-@example
-# Define your proxies (where 8080 and 8081 are examples
-# for the portnumbers)
-http_proxy = http://your.proxy.com:8080
-ftp_proxy  = http://your.ftpproxy.com:8081
-  
-# If you do not want to use proxy at all, set this to off.
-use_proxy = on
-@end example
-
-ECB will try to download the following url:
-``<ecb-download-url>ecb-<ecb-download-version>.tar.gz''. For this the
-options @code{ecb-download-url} and @code{ecb-download-version} must be set
+Download ECB from the ECB-website and install it. For this the options
+@code{ecb-download-url} and @code{ecb-download-version} must be set
 correct, whereas the default value of the former one should always be
 correct.
+
+For details about downloading and what requirements must be satisfied
+see @ref{Downloading new versions}!
 
 After sucessfull downloading the new ECB will be installed in a
 directory parallel to current ECB-directory. After adding this new
@@ -1764,6 +1783,12 @@ activate ECB again to take effect.
 @defopt ecb-use-recursive-edit
 Tell ECB to use a recursive edit so that it can easily be deactivated
 by (keyboard-escape-quit).
+@end defopt
+
+@defopt ecb-version-check
+If not @code{nil} ECB checks at start-time if the required versions of
+semantic and eieio are installed and loaded into Emacs. It is strongly
+recommended to set this option to not @code{nil}!
 @end defopt
 
 @defopt ecb-window-sync
@@ -2946,28 +2971,119 @@ switch on the debug mode of ECB (also available in the Help-menu of
 ECB!) before submitting a problem-report!
 
 @node Upgrading, Tips and tricks, Submitting problem report, Top
-@chapter Upgrading ECB
+@chapter Upgrading and downloading packages
 
-This chapter describes all apsects of upgrading to a newer version of
+This chapter describes all aspects of upgrading to a newer version of
 ECB.
 
+The first section describes how to download and install a new
+package from the web, where ``package'' means either ECB itself or the
+required libraries semantic and eieio.
+
+After installing a new ECB-version ECB checks if the values of the
+customized ECB-options are still compatible. If not ECB does some
+smart things. This is the topic of the second section.
+
 @menu
-* Downloading new version::     How to download a newer version of ECB 
+* Downloading new versions::    How to download newer versions of packages
 * Auto. option-upgrading::      ECB can auto. upgrade your options
 @end menu
 
-@node Downloading new version, Auto. option-upgrading, Upgrading, Upgrading
-@section Downloading a new version of ECB
+@node Downloading new versions, Auto. option-upgrading, Upgrading, Upgrading
+@section Downloading new versions of ECB and/or required packages
 
 @cindex Download
 ECB offers the possibility to upgrade to newer versions direct from
-the ECB-website. This can be done with @code{ecb-download-ecb} if the
-tools wget, tar and gzip are installed onto the system and a
-connection to the web is available. Please read the documentation of
-@code{ecb-download-ecb} (@pxref{Interactive ECB commands}) and the
-options of the customize-group 'ecb-download'!
+the ECB-website. This can be done if the following requirements are
+satisfied:
 
-@node Auto. option-upgrading, , Downloading new version, Upgrading
+@enumerate
+@item A connection to the web is available
+@item The tools ``wget'', ``tar'' and ``gzip'' are installed
+
+With unix-systems these tools are in the
+standard-distribution. If you are running any Microsoft Windows system
+then you need cygwin@footnote{cygwin is available at
+@ifhtml
+@uref{http://cygwin.com/}
+@end ifhtml
+@ifnothtml
+@url{http://cygwin.com/}
+@end ifnothtml
+} which offers these tools too. On every
+system these tools must reside in the @env{PATH} environment-variable!
+
+If you are behind a firewall and you have to use a proxy you maybe
+need the following wget-configuration in your file @file{~/.wgetrc}:
+
+@example
+# Define your proxies (where 8080 and 8081 are examples
+# for the portnumbers)
+http_proxy = http://your.proxy.com:8080
+ftp_proxy  = http://your.ftpproxy.com:8081
+  
+# If you do not want to use proxy at all, set this to off.
+use_proxy = on
+@end example
+@end enumerate
+
+If these requirements are satisfied you can download and install both
+ECB itself and also the required versions of semantic and eieio:
+
+@itemize @bullet
+@item Download a new ECB-version with @code{ecb-download-ecb}:
+
+A description for this command you will find in @ref{Interactive ECB
+commands}. Check also the options of the customize-group
+'ecb-download' (@pxref{ecb-download}).
+
+ECB will try to download the file:
+
+@example
+<URL><PACKAGE>-<VERSION>.tar.gz
+@end example
+
+where
+
+@table @code
+@item URL
+Value of the option @code{ecb-download-url}.
+@item PACKAGE
+The string ``ecb''
+@item VERSION
+Value of the option @code{ecb-download-version}.
+@end table
+
+@anchor{Download required packages}
+@item Download and install of required packages:
+
+ECB checks at start-time if the required versions of semantic and
+eieio (see @file{README}) are installed and loaded into Emacs. If not
+you will be asked if you want auto. download and install them. If you
+confirm this and the download and install succeeds then you will get a
+message-buffer which tells you something like:
+
+@example
+---------------------------------------------------------------
+Current state of the required packages semantic and eieio:
+
+- semantic 1.4:
+  Installed in /usr/local/lib/site-lisp/semantic-1.4
+  
+- eieio 0.17:
+  Correct version already loaded!
+
+After adding the new directory to your @code{load-path} and then
+restarting Emacs the new package(s) can be activated.
+---------------------------------------------------------------
+@end example
+
+@strong{Note}: By setting the option @code{ecb-version-check} to
+@code{nil} you can prevent ECB from checking correct versions of
+semantic and eieio, but it's strongly recommended not to do this!
+@end itemize
+
+@node Auto. option-upgrading, , Downloading new versions, Upgrading
 @section Automatic upgrading of options
 
 @menu

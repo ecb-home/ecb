@@ -1,7 +1,12 @@
 Version 1.80:
 -------------
 
-- ECB now requires latest stable release of Semantic: Version 1.4 of Semantic
+- ECB now requires:
+  + Latest stable release of semantic: Version 1.4
+  + Latest stable release of eieio: Version 0.17
+  ECB checks at start-time if the correct versions are available and if not
+  ECB offers you to download and install them from within Emacs. After this
+  you have only to restart Emacs and you are fine. (Klaus)
 
 - ECB now displays the section "First steps" of the online-manual after
   activating first time. (Klaus)
@@ -10,7 +15,7 @@ Version 1.80:
   also handle the optional WINDOW argument of the original versions correctly
   so the adviced versions now also work correct if called from program (Klaus).
 
-- New adviced window command: `delete-window-on' now works correct with ECB.
+- New adviced window command: `delete-windows-on' now works correct with ECB.
   See `ecb-advice-window-functions'. (Klaus)
 
 - In the ECB-directories buffer now F4 adds a new source-path instead of F1.
@@ -26,10 +31,10 @@ Version 1.80:
   HTML-format. With the new option 'ecb-show-help-format' you can choose which
   format is used by the function 'ecb-show-help'. (Klaus)
 
-- New feature: ecb-download-ecb. With this function you can download and
-  install any arbitrary ECB-version from the ECB-website from within Emacs.
-  This is especially usefull for upgrading to the latest version.
-  (Klaus)
+- New feature and command: ecb-download-ecb. With this function you can
+  download and install any arbitrary ECB-version from the ECB-website from
+  within Emacs. This is especially usefull for upgrading to the latest
+  version. (Klaus)
 
 - New debug mode for ECB which prints some debug informations in the message
   buffer for certain critical operations with semantic-overlays/extends.
@@ -719,4 +724,5 @@ Version 0.01 (2000-07-08):
 --------------------------
 
 - Initial version.
+
 

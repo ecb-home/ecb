@@ -96,7 +96,7 @@ offers any buffer but switches to `ecb-compile-window' if a compilation-buffer!"
             (current-buffer-name (buffer-name current-buffer)))
       
         (when (null compilation-buffers)
-          (error "No compilation buffers"))
+          (ecb-error "No compilation buffers"))
       
         (if (not (ecb-compilation-buffer-p current-buffer))
           ;;if the current bufffer is not a compilation buffer, goto the first

@@ -463,6 +463,8 @@ are:
                  (const :tag "Always" always)
                  (const :tag "Never" nil)))
 
+(defvar ecb-semantic-eieio-url "http://ftp1.sourceforge.net/cedet/")
+
 (defconst ecb-download-buffername " *ecb-download*")
 
 ;; Klaus: Arrghhhhhhhhhhhhhhh... the cygwin version of tar does not accept
@@ -472,13 +474,54 @@ are:
   `(if (eq system-type 'windows-nt)
        (if (executable-find "cygpath.exe")
            (shell-command-to-string (concat "cygpath -u " ,arg))
-         (error "Cannot find the cygpath utility!"))
+         (ecb-error "Cannot find the cygpath utility!"))
      ,arg))
 
 (defun ecb-download-ecb ()
-  "Download ECB from the ECB-website and install it. For this the utilities
-\"wget\", \"tar\" and \"gzip\" are needed which are available for unix and
-also for windows with cygwin. All utilities must reside in your PATH!
+  "Download ECB from the ECB-website and install it. For this the options
+`ecb-download-url' and `ecb-download-version' must be set correct, whereas the
+default value of the former one should always be correct.
+
+For details about downloading and what requirements must be satisfied see
+`ecb-download-package'!
+
+After sucessfull downloading the new ECB will be installed in a directory
+parallel to current ECB-directory. After adding this new directory tp
+`load-path' and restarting Emacs the new ECB version can be activated by
+`ecb-activate'."
+  (interactive)
+        ;; Installing the new version finished - displaying a message-buffer
+
+  (let ((install-dir (ecb-download-package "ecb" ecb-download-version
+                                           ecb-download-url)))
+    (when install-dir
+      (message "New ECB successfully installed!")
+      (with-output-to-temp-buffer "*ECB downloading and installing*"
+        (princ "ECB has successfully installed the new ECB version in a directory parallel to\n")
+        (princ "current ECB.\n\n")
+        (princ (concat "+ Current ECB: " ecb-ecb-dir "\n"))
+        (princ (concat "+ New ECB: " install-dir))
+        (princ "\n\n")
+        (princ "After replacing the current ECB-directory with the new one in your `load-path'\n")
+        (princ "and then restarting Emacs the new ECB version can be activated by `ecb-activate'.\n\n")
+        (princ "If the value of `ecb-auto-compatibility-check' is not nil then the new version\n")
+        (princ "checks at start-time if there are incompatible options! Please read the\n")
+        (princ "documentation of this option!")
+        (princ "\n\n")
+        (save-excursion
+          (set-buffer "*ECB downloading and installing*")
+          (goto-char (point-min))
+          (ignore-errors (help-make-xrefs)))))))
+    
+
+(defun ecb-download-package (package version url)
+  "Download VERSION of PACKAGE from URL and install it. If no failure occurs
+during this process the full path of the directory is returned in which the
+new package is installed. Otherwise an error is reported.
+
+For correct downloading and installing the utilities \"wget\", \"tar\" and
+\"gzip\" are needed which are available for unix and also for windows with
+cygwin. All utilities must reside in your PATH!
 
 If you are behind a firewall and you have to use a proxy you maybe need the
 following wget-configuration in your \"~/.wgetrc\"-file:
@@ -490,37 +533,37 @@ following wget-configuration in your \"~/.wgetrc\"-file:
    # If you do not want to use proxy at all, set this to off.
    use_proxy = on
 
-ECB will try to download the following url:
-\"<ecb-download-url>ecb-<ecb-download-version>.tar.gz\". For this the options
-`ecb-download-url' and `ecb-download-version' must be set correct, whereas the
-default value of the former one should always be correct.
+ECB will try to download the file: \"<URL><PACKAGE>-<VERSION>.tar.gz\".
+Example: For PACKAGE = \"ecb\", VERSION = \"latest\" and URL =
+\"http://ftp1.sourceforge.net/ecb/\" the download-file would be
+\"http://ftp1.sourceforge.net/ecb/ecb-latest.tar.gz\".
 
-After sucessfull downloading the new ECB will be installed in a directory
-parallel to current ECB-directory. After adding this new directory tp
-`load-path' and restarting Emacs the new ECB version can be activated by
-`ecb-activate'."
-  (interactive)
-  (let ((ecb-downloaded-filename (concat ecb-ecb-parent-dir
-                                         "ecb-download.tar.gz"))
+After sucessfull downloading the new package version will be installed in a
+directory parallel to current ECB-directory. After adding this new directory
+tp `load-path' and restarting Emacs the new package version can be activated."
+  (let ((downloaded-filename (concat ecb-ecb-parent-dir
+                                     package "-download.tar.gz"))
         (success t)
         process-result install-dir)
 
     ;; a first simple check if the new version is already installed - will not
     ;; work for "latest"
     
-    (when (or (not (file-directory-p (concat ecb-ecb-parent-dir "ecb-"
-                                             ecb-download-version)))
-              (yes-or-no-p
-               (format "ECB %s seems to be already installed in directory %s! Continue? "
-                       ecb-download-version
-                       (concat "ecb-" ecb-download-version))))
-
+    (if (not (or (not (file-directory-p (concat ecb-ecb-parent-dir package "-"
+                                                version)))
+                 (yes-or-no-p
+                  (format "%s %s seems to be already installed in directory %s! Force? "
+                          package version
+                          (concat package "-" version)))))
+        ;; we can go back with this install dir
+        (concat ecb-ecb-parent-dir package "-" version)
+      
       ;; cleaning up
 
       (if (get-buffer ecb-download-buffername)
           (kill-buffer ecb-download-buffername))
-      (ecb-delete-file ecb-downloaded-filename)
-      (ecb-delete-file (file-name-sans-extension ecb-downloaded-filename))
+      (ecb-delete-file downloaded-filename)
+      (ecb-delete-file (file-name-sans-extension downloaded-filename))
 
       ;; checking if all necessary tools are available
 
@@ -530,9 +573,9 @@ parallel to current ECB-directory. After adding this new directory tp
                      (if (eq system-type 'windows-nt) "tar.exe" "tar"))
                     (executable-find
                      (if (eq system-type 'windows-nt) "gzip.exe" "gzip"))))
-          (error
+          (ecb-error
            (concat "Cannot find wget, tar and gzip. These utilities are needed "
-                   "to download and install ECB."))
+                   "to download and install ECB or required packages."))
 
         ;; OK, now we begin....
         
@@ -540,7 +583,7 @@ parallel to current ECB-directory. After adding this new directory tp
 
         (working-status-call-process
          0.1
-         "Downloading new ECB"
+         (concat "Downloading new " package)
          "done"
          (if (eq system-type 'windows-nt)
              "wget.exe"
@@ -551,9 +594,8 @@ parallel to current ECB-directory. After adding this new directory tp
          "-C"
          "off"
          "-O"
-         ecb-downloaded-filename
-         (concat ecb-download-url "ecb-"
-                 ecb-download-version ".tar.gz"))
+         downloaded-filename
+         (concat url package "-" version ".tar.gz"))
 
         ;; checking the download-result
 
@@ -564,121 +606,104 @@ parallel to current ECB-directory. After adding this new directory tp
           (when (not (and (save-excursion
                             (search-forward-regexp "200" nil t))
                           (search-forward-regexp
-                           (concat (regexp-quote ecb-downloaded-filename) ".*saved.*")
+                           (concat (regexp-quote downloaded-filename) ".*saved.*")
                            nil t)
-                          (file-exists-p ecb-downloaded-filename)))
+                          (file-exists-p downloaded-filename)))
             (setq success nil)))
         (unless success
           (with-output-to-temp-buffer "*ECB-download-failure*"
-            (princ "The download of ECB has failed cause of the following wget-failure:")
+            (princ (format "The download of %s has failed cause of the following wget-failure:"
+                           package))
             (princ "\n")
             (princ "______________________________________________________________________________\n\n")
             (princ process-result)
             (princ "\n______________________________________________________________________________")
             (princ "\n\n")
             (princ "Please check the wget configuration in \"~/.wgetrc\" and also the values\n")
-            (princ "of the options `ecb-download-url' and `ecb-download-version'. Cause of these\n")
-            (princ "options ECB has tried to download the following URL:\n\n")
-            (princ (concat "  "ecb-download-url "ecb-" ecb-download-version ".tar.gz"))
+            (princ "of the options in the customize group 'ecb-download'.")
+            (princ "ECB has tried to download the following URL:\n\n")
+            (princ (concat "  " url package "-" version ".tar.gz"))
             (princ "\n\n")
-            (princ "Maybe this URL does not exist...please check this!\n\n")
-            (save-excursion
-              (set-buffer "*ECB-download-failure*")
-              (goto-char (point-min))
-              (ignore-errors (help-make-xrefs)))))
+            (princ "Maybe this URL does not exist...please check this!\n\n")))
+;;             (save-excursion
+;;               (set-buffer "*ECB-download-failure*")
+;;               (goto-char (point-min))
+;;               (ignore-errors (help-make-xrefs)))))
         (kill-buffer ecb-download-buffername)
 
         ;; uncompressing with gzip
 
         (when success
-          (message "Uncompressing new ECB...")
+          (message "Uncompressing new %s..." package)
           (setq process-result
-                (shell-command-to-string (concat "gzip -d " ecb-downloaded-filename)))
+                (shell-command-to-string (concat "gzip -d " downloaded-filename)))
           (when (> (length process-result) 0)
             (setq success nil)
             (with-output-to-temp-buffer "*ECB-uncompressing-failure*"
-              (princ "Uncompressing of ECB has failed cause of the following problems:")
+              (princ (format "Uncompressing of %s has failed cause of the following problems:"
+                             package))
               (princ "\n\n")
               (princ process-result))))
 
-        ;; checking the version of the new ECB
+        ;; checking the version of the new package
 
         (when success
-          (message "Uncompressing new ECB...done")
+          (message "Uncompressing new %s...done" package)
           (message "Checking if already installed...")
           (setq process-result
                 (shell-command-to-string
                  (concat "tar"
                          " -tf "
                          (ecb-create-shell-argument
-                          (file-name-sans-extension (concat ecb-ecb-parent-dir
-                                                            "ecb-download.tar.gz"))))))
-          (if (string-match "^ecb-\\(.+\\)/" process-result)
+                          (file-name-sans-extension downloaded-filename)))))
+          (if (string-match (format "^%s-\\(.+\\)/" package) process-result)
               (let ((downloaded-version (match-string 1 process-result)))
-                (setq install-dir (concat "ecb-" downloaded-version))
+                (setq install-dir (concat package "-" downloaded-version))
                 (when (not (or (not (file-directory-p (concat ecb-ecb-parent-dir
                                                               install-dir)))
                                (yes-or-no-p
-                                (format "ECB %s seems to be already installed in directory %s! Continue? "
-                                        downloaded-version install-dir))))
-                  ;; not really a failure but so we can finish the process
-                  (setq success nil)))
+                                (format "%s %s seems to be already installed in directory %s! Force? "
+                                        package downloaded-version install-dir))))
+                  ;; we have finished an can go back with this install dir
+                  (return install-dir)))
             (setq success nil)
             (with-output-to-temp-buffer "*ECB-archive-failure*"
-              (princ "Checking the archive of ECB has failed cause of the following problems:")
+              (princ (format "Checking the archive of %s has failed cause of the following problems:"
+                             package))
               (princ "\n\n")
               (princ process-result))))
 
-        ;; unpacking new ECB
+        ;; unpacking new package
 
         (when success
           (message "Checking if already installed...done")
-          (message "Unpacking new ECB...")
+          (message "Unpacking new %s..." package)
           (setq process-result
                 (shell-command-to-string
                  (concat "tar -C "
                          (ecb-create-shell-argument ecb-ecb-parent-dir)
                          " -xf "
                          (ecb-create-shell-argument
-                          (file-name-sans-extension ecb-downloaded-filename)))))
+                          (file-name-sans-extension downloaded-filename)))))
           (when (> (length process-result) 0)
             (setq success nil)
             (with-output-to-temp-buffer "*ECB-unpacking-failure*"
-              (princ "Unpacking of ECB has failed cause of the following problems:")
+              (princ (format "Unpacking of %s has failed cause of the following problems:"
+                             package))
               (princ "\n\n")
               (princ process-result))))
 
-        ;; Installing the new version finished - displaying a message-buffer
-
-        (when success
-          (message "Unpacking new ECB...done")
-          (message "New ECB successfully installed!")
-          (with-output-to-temp-buffer "*ECB downloading and installing*"
-            (princ "ECB has successfully installed the new ECB version in a directory parallel to\n")
-            (princ "current ECB.\n\n")
-            (princ (concat "+ Current ECB: " ecb-ecb-dir "\n"))
-            (princ (concat "+ New ECB:     " ecb-ecb-parent-dir install-dir))
-            (princ "\n\n")
-            (princ "After replacing the current ECB-directory with the new one in your `load-path'\n")
-            (princ "and then restarting Emacs the new ECB version can be activated by `ecb-activate'.\n\n")
-            (princ "If the value of `ecb-auto-compatibility-check' is not nil then the new version\n")
-            (princ "checks at start-time if there are incompatible options! Please read the\n")
-            (princ "documentation of this option!")
-            (princ "\n\n")
-            (save-excursion
-              (set-buffer "*ECB downloading and installing*")
-              (goto-char (point-min))
-              (ignore-errors (help-make-xrefs)))))
-        
         ;; maybe cleaning up
 
         (when (or (and success ecb-download-delete-archive)
                   (and (not success) (eq ecb-download-delete-archive 'always)))
-          (ecb-delete-file (file-name-sans-extension ecb-downloaded-filename))
-          (ecb-delete-file ecb-downloaded-filename))
-        ))))
+          (ecb-delete-file (file-name-sans-extension downloaded-filename))
+          (ecb-delete-file downloaded-filename))))
+    ;; now we return if we had success or not
+    (if success
+        (concat ecb-ecb-parent-dir install-dir)
+      (ecb-error "Downloading or installing failure for %s %s" package version))))
 
 (provide 'ecb-upgrade)
 
 ;;; ecb-upgrade.el ends here
-
