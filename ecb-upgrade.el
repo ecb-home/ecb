@@ -734,6 +734,7 @@ done then the option is reset to the default-value of current ECB-version."
           (ecb-option-set-default (car option)))))
     ;; Now we store the version of the options
     (ecb-store-current-options-version)))
+    
 
 (defvar ecb-renamed-options nil)
 
@@ -1724,8 +1725,8 @@ for details about using \"wget\"."
             )
         (if (get-buffer ecb-download-buffername)
             (kill-buffer ecb-download-buffername))
-        (ecb-delete-file downloaded-filename))
-
+        (ecb-delete-file downloaded-filename)
+        )
       ;; now we return the version-list
       version-list)))
 
