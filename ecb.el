@@ -2540,9 +2540,15 @@ ECB has been deactivated. Do not set this variable!")
                  ;; If `ecb--semantic-equivalent-tag-p' fails we return the
                  ;; result of an eq-comparison.
                  (function (lambda (l r)
-                             (condition-case nil
-                                 (ecb--semantic-equivalent-tag-p l r)
-                               (error (eq l r)))))
+                             (cond ((or (stringp l) (stringp r))
+                                    (equal l r))
+                                   ((or (equal 'ecb-bucket-node (car l))
+                                        (equal 'ecb-bucket-node (car r)))
+                                    (equal l r))
+                                   (t ;; tags
+                                    (condition-case nil
+                                        (ecb--semantic-equivalent-tag-p l r)
+                                      (error (eq l r)))))))
                  (list 1)
                  nil
                  'ecb-methods-menu-creator

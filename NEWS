@@ -26,7 +26,7 @@
    filter can not used with such "non-semantic"-sources.
 
 ** Much smarter mechanism to highlight the current tag in the methods-buffer.
-   Previous versions of ECB have always expanded the whole tree in the
+   Previous versions of ECB have always fully expanded the whole tree in the
    Methods-buffer if the current tag in the source-buffer was not visible in
    the current tree - e.g. because the variables-bucket was collapsed or the
    containing type of a tag (e.g. the class of a method) was collapsed. So in
@@ -39,8 +39,20 @@
    visible so the tag can not be highlighted then we go upstairs the ladder of
    type-tags the current tag belongs to (e.g. we expand successive the nodes
    of the whole class-hierachy of the current method-tag until the related
-   node becomes visible). Only if this has still no success then we expand the
-   full tree-buffer and try to highlight the current tag.
+   node becomes visible). If there is no containing type for the current tag
+   then the node of the tag is probably contained in a toplevel-bucket which
+   is currently collapsed; in this case we expand only this bucket-node and
+   try highlighting again. Only if this has still no success then we expand
+   the full tree-buffer and try to highlight the current tag.
+
+   There is also a new option `ecb-auto-expand-tag-tree-collapse-other': If
+   this option is set then auto. expanding the tag-tree collapses all not
+   related nodes. This means that all nodes which have no relevance for the
+   currently highlighted node will be collapsed, because they are not
+   necessary to make the highlighted node visible. This feature is switched
+   off by default because if always collapses the complete Methods-tree before
+   the the following highlighting of the node for the current tag expands the
+   needed parts of the tree-buffer.
    
 ** The popup-menus can now be nested into 4 levels of submenus. In general there
    could be an infinite depth of nesting but it makes no sense - if possible

@@ -609,6 +609,13 @@ with the same arguments as `tree-node-expanded-fn'."
         (throw 'exit (cdr node))))))
 
 (defun tree-buffer-find-name-node-data (node-data &optional start-node)
+  "Find the first node in current tree-buffer which has data equal to
+NODA-DATA. When START-NODE is nil then all currently visible nodes are
+searched beginning with the first one otherwise START-NODE is the startpoint
+for the search.
+
+If the search has success then a cons-cell is returned with car is the name of
+the node and the cdr is the data of the node which is equal to NODE-DATA."
   (catch 'exit
     (let ((node-list (if (or (not start-node)
                              (eq start-node (tree-buffer-get-root)))
@@ -619,11 +626,17 @@ with the same arguments as `tree-node-expanded-fn'."
                        (or (member (cons (tree-node-get-name start-node)
                                          start-node)
                                    tree-buffer-nodes)
-                           tree-buffer-nodes))))
+                           tree-buffer-nodes)))
+          (equal-fcn 'tree-buffer-node-data-equal-p))
       (dolist (node node-list)
-        (when (tree-buffer-node-data-equal-p (tree-node-get-data (cdr node))
-                                             node-data)
+        (when (funcall equal-fcn (tree-node-get-data (cdr node)) node-data)
           (throw 'exit node))))))
+
+(defun tree-buffer-search-node-list (find-fcn)
+  (catch 'exit
+    (dolist (node tree-buffer-nodes)
+      (when (funcall find-fcn (cdr node))
+        (throw 'exit (cdr node))))))
 
 (defun tree-buffer-find-node (node)
   (catch 'exit
