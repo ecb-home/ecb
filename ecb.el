@@ -58,7 +58,7 @@
 ;; The latest version of the ECB is available at
 ;; http://home.swipnet.se/mayhem/ecb.html
 
-;; $Id: ecb.el,v 1.229 2002/07/28 19:43:34 berndl Exp $
+;; $Id: ecb.el,v 1.230 2002/08/02 15:04:31 berndl Exp $
 
 ;;; Code:
 
@@ -1420,8 +1420,8 @@ is called."
                 (progn
                   (when (not no-reparse)
                     ;; we need this because:
-                  ;; 1. After every jump to a token X via the method-buffer of
-                ;;    ECB this token X is added to the navigation history list
+                    ;; 1. After every jump to a token X via the method-buffer of
+                    ;;    ECB this token X is added to the navigation history list
                     ;;    as new ecb-nav-token-history-item.
                     ;; 2. Before every select of a source in the sources- or
                     ;;    history-buffer or of a node in the method-buffer
@@ -1958,14 +1958,17 @@ according to `ecb-sources-sort-method'."
         ;; return the result
         (cdr cache-elem))))
 
-(defun ecb-set-selected-directory (path)
+(defun ecb-set-selected-directory (path &optional force)
+  "Set the contents of the ECB-directories and -sources buffer correct for the
+value of PATH. If PATH is equal to the value of `ecb-path-selected-directory'
+then nothing is done unless first optional argument FORCE is not nil."
   (let ((last-dir ecb-path-selected-directory))
     (save-selected-window
       (setq ecb-path-selected-directory (ecb-fix-filename path))
       ;; if ecb-path-selected-directory has not changed then there is no need
       ;; to do anything here because neither the content of directory buffer
       ;; nor the content of the sources buffer can have been changed!
-      (when (not (string= last-dir ecb-path-selected-directory))
+      (when (or force (not (string= last-dir ecb-path-selected-directory)))
         (when (or (not ecb-show-sources-in-directories-buffer)
                   ecb-auto-expand-directory-tree)
           (ecb-exec-in-directories-window
@@ -2833,7 +2836,7 @@ Currently the fourth argument TREE-BUFFER-NAME is not used here."
 	      (set-buffer (get-file-buffer ecb-path-selected-source))
 	      (let ((file (semantic-find-dependency token)))
 		(when (and file (file-exists-p file))
-		  (ecb-find-file-and-display (semantic-find-dependency token)
+		  (ecb-find-file-and-display file
 					     (and (ecb-edit-window-splitted)
 						  (eq ecb-button 2))))))
 	  (ecb-jump-to-token filename token (ecb-get-edit-window
@@ -4013,4 +4016,5 @@ changed there should be no performance-problem!"
 (provide 'ecb)
 
 ;;; ecb.el ends here
+
 

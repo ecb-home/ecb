@@ -2108,6 +2108,8 @@ This group contains the following options:
 
     * `delete-other-windows'
 
+    * `delete-windows-on'
+
     * `split-window-horizontally'
 
     * `split-window-vertically'
@@ -3266,32 +3268,32 @@ Node: ecb-sources68516
 Node: ecb-methods70386
 Node: ecb-history82527
 Node: ecb-layout84219
-Node: ecb-face-options98124
-Node: ecb-faces99784
-Node: ecb-download103791
-Node: Submitting problem report105013
-Node: Upgrading106170
-Node: Downloading new version106527
-Node: Auto. option-upgrading107082
-Node: User interface107389
-Node: Background information108278
-Node: Tips and tricks111676
-Node: Changing faces112235
-Node: Small screens113041
-Node: Simulating speedbar114444
-Node: Optimze scrolling115253
-Node: Large directories116328
-Node: Elisp programming116972
-Node: Conflicts and bugs118155
-Node: Conflicts118641
-Node: VC119230
-Node: follow-mouse119523
-Node: avoid120201
-Node: calendar120565
-Node: calculator121201
-Node: Bugs121703
-Node: Function Index121923
-Node: Variable Index123788
-Node: Concept Index128966
+Node: ecb-face-options98151
+Node: ecb-faces99811
+Node: ecb-download103818
+Node: Submitting problem report105040
+Node: Upgrading106197
+Node: Downloading new version106554
+Node: Auto. option-upgrading107109
+Node: User interface107416
+Node: Background information108305
+Node: Tips and tricks111703
+Node: Changing faces112262
+Node: Small screens113068
+Node: Simulating speedbar114471
+Node: Optimze scrolling115280
+Node: Large directories116355
+Node: Elisp programming116999
+Node: Conflicts and bugs118182
+Node: Conflicts118668
+Node: VC119257
+Node: follow-mouse119550
+Node: avoid120228
+Node: calendar120592
+Node: calculator121228
+Node: Bugs121730
+Node: Function Index121950
+Node: Variable Index123815
+Node: Concept Index128993
 
 End Tag Table

@@ -2332,6 +2332,7 @@ only windows(s) of the ECB-frame:
 For this one see also the option @code{ecb-other-window-jump-behavior}!
 @item @code{delete-window}
 @item @code{delete-other-windows}
+@item @code{delete-windows-on}
 @item @code{split-window-horizontally}
 @item @code{split-window-vertically}
 @item @code{switch-to-buffer}

@@ -1,6 +1,13 @@
 Version 1.80:
 -------------
 
+- Now the adviced versions of `delete-window' and `delete-other-windows' can
+  also handle the optional WINDOW argument of the original versions correctly
+  so the adviced versions now also work correct if called from program (Klaus).
+
+- New adviced window command: `delete-window-on' now works correct with ECB.
+  See `ecb-advice-window-functions'. (Klaus)
+
 - In the ECB-directories buffer now F4 adds a new source-path instead of F1.
   That is because F1 is such an important key in many OS and tools (e.g. opens
   help in all windows-programs), so ECB should not hardly "rebind" it. (Klaus)
@@ -707,3 +714,4 @@ Version 0.01 (2000-07-08):
 --------------------------
 
 - Initial version.
+
