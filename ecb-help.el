@@ -26,7 +26,7 @@
 ;;
 ;; Contains all online-help for ECB (stolen something from recentf.el)
 
-;; $Id: ecb-help.el,v 1.18 2001/05/17 13:42:21 berndl Exp $
+;; $Id: ecb-help.el,v 1.19 2001/05/17 22:21:31 creator Exp $
 
 ;;; Code
 
@@ -379,8 +379,9 @@ These are the special commands of `ecb-dialog-mode' mode:
   "Shows the online help of ECB."
   (interactive)
 
-  (if (not (ecb-point-in-edit-window))
-      (ecb-other-window))
+  (when (not (ecb-point-in-edit-window))
+    (ecb-select-edit-window))
+  
   (if (get-buffer ecb-help-buffer-name)
       (switch-to-buffer ecb-help-buffer-name t)
     (if (not ecb-buffer-before-help)
