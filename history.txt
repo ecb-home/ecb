@@ -6,6 +6,14 @@ Version XXXX (2001-03-17):
 - Method parsing is now recursive, so that for example inner classes
   in Java are shown in the methods buffer.
 
+- Selected files and directories now use the secondary-selection
+  face. Thanks to Kevin A. Burton <burton@relativity.yi.org> for this
+  patch.
+
+- ecb-activate now de-activates ECB when keyboard-escape-quit is
+  called. Thanks to Kevin A. Burton <burton@relativity.yi.org> for
+  this patch.
+
 
 Version 1.0 (2001-03-17):
 -------------------------

@@ -19,7 +19,7 @@
  (h-p "ECB is source code browser for Emacs. It displays a few windows that can be used to browse directories, files and methods. It supports method parsing for Java, C, C++, Elisp etc. " (h-link "ecb.png" "Here's") " a screenshot of the browser in action.")
 
  (h-h3 "Dependencies")
- (h-p "ECB requires version 1.2.x of " (h-link "http://cedet.sourceforge.net/semantic.shtml" "Eric Ludlam's semantic bovinator") ". If you use ECB for Java development you also need version 2.1.9 or higher of " (h-link "http://sunsite.auc.dk/jde/" "JDE") ".")
+ (h-p "ECB requires version 1.2.x or higher of " (h-link "http://cedet.sourceforge.net/semantic.shtml" "Eric Ludlam's semantic bovinator") ". If you use ECB for Java development you also need version 2.1.9 or higher of " (h-link "http://sunsite.auc.dk/jde/" "JDE") ".")
 
  (h-h3 "Installation and Setup")
  (h-numbered-list
