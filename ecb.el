@@ -774,6 +774,7 @@ cleared!) ECB by running `ecb-deactivate'."
 	  (cadr display)
 	'hidden))))
 
+
 (defun ecb-add-tokens (node token)
   ;; Semantic 1.4beta2 fix for EIEIO class parts
   ;; They are really strings, but here converted to tokens
