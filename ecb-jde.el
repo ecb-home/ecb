@@ -51,6 +51,7 @@
 (silentcomp-defun jde-open-get-path-prefix-list)
 (silentcomp-defun jde-open-find-java-file-name)
 (silentcomp-defun jde-gen-class-buffer)
+(silentcomp-defvar jde-sourcepath)
 
 (require 'ecb-util)
 (require 'ecb-layout)
@@ -115,7 +116,7 @@ available."
                   ;; we have found the java-sourcefile. So let´s display its
                   ;; contents in the method-buffer of ECB
                   (ecb-exec-in-methods-window
-                   (ecb-set-selected-source java-file-name nil t))))
+                   (ecb-set-selected-source java-file-name nil t nil))))
             
             (ecb-error "Can not parse the thing at point!")))
       (message "You need JDE >= 2.2.6 and Senator for using this feature!"))))

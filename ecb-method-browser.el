@@ -3331,11 +3331,8 @@ should be displayed. For 1 and 2 the value of EDIT-WINDOW-NR is ignored."
       ;; calling here directly ecb-hide-ecb-windows fails and why even going
       ;; the way via post-command-hooks fails too...running with an idle-times
       ;; seems to work so for the moment we can do this.......
-      ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: Eventually we should check
-      ;; if the method-window is the only one and only then we hide?!
       (if (and meta-mode
-               (equal ecb-current-maximized-ecb-buffer-name
-                      ecb-methods-buffer-name))
+               t) ;;(ecb-buffer-is-the-only-visible-ecb-buffer-p ecb-methods-buffer-name))
           (ecb-run-with-idle-timer 0.001 nil 'ecb-hide-ecb-windows)))))
 ;;           (ecb-hide-ecb-windows)))))
 

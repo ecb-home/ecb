@@ -3689,7 +3689,12 @@ buffer-object or a buffer-name."
   (let ((buffer (ecb-buffer-obj buffer-or-name)))
     (member buffer (ecb-get-current-visible-ecb-buffers))))
 
-  
+(defun ecb-buffer-is-the-only-visible-ecb-buffer-p (buffer-or-name)
+  "Return not nil if BUFFER-OR-NAME is currently the only visible ecb-buffer."
+  (let ((buffer (ecb-buffer-obj buffer-or-name))
+        (current-ecb-buffers (ecb-get-current-visible-ecb-buffers)))
+    (and (= (length current-ecb-buffers) 1)
+         (equal buffer (car current-ecb-buffers)))))
 
 (defun ecb-set-minor-mode-text ()
   (setq ecb-minor-mode-text
