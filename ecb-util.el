@@ -26,7 +26,7 @@
 ;; This file is part of the ECB package which can be found at:
 ;; http://ecb.sourceforge.net
 
-;; $Id: ecb-util.el,v 1.59 2003/03/18 13:18:39 berndl Exp $
+;; $Id: ecb-util.el,v 1.60 2003/03/19 15:35:09 berndl Exp $
 
 ;;; Code:
 
@@ -44,8 +44,14 @@
 (silentcomp-defun line-end-position)
 (silentcomp-defun window-pixel-edges)
 (silentcomp-defun make-dialog-box)
+(silentcomp-defun display-message)
+(silentcomp-defun clear-message)
+(silentcomp-defun noninteractive)
 ;; Emacs
+(silentcomp-defvar message-log-max)
+(silentcomp-defvar message-truncate-lines)
 (silentcomp-defun x-popup-dialog)
+(silentcomp-defvar noninteractive)
   
 ;; Some constants
 (defconst ecb-running-xemacs (string-match "XEmacs\\|Lucid" emacs-version))
@@ -56,10 +62,18 @@
                                    ?/))
 (defconst ecb-directory-sep-string (char-to-string ecb-directory-sep-char))
 
+(defconst ecb-temp-dir
+  (file-name-as-directory
+   (or (getenv "TMPDIR") (getenv "TMP") (getenv "TEMP")
+       (cond ((eq system-type 'windows-nt) "c:/temp/")
+             (t "/tmp/"))))
+  "a directory where ECB can store temporary files.")
+
 (defconst ecb-ecb-dir
   (expand-file-name (file-name-directory (locate-library "ecb"))))
 (defconst ecb-semantic-dir
-  (expand-file-name (file-name-directory (locate-library "semantic"))))
+  (if (locate-library "semantic")
+      (expand-file-name (file-name-directory (locate-library "semantic")))))
 
 (defconst ecb-ecb-parent-dir (expand-file-name (concat ecb-ecb-dir "../")))
 
@@ -72,6 +86,7 @@
        (file-exists-p (expand-file-name (concat ecb-ecb-dir "auto-autoloads.el")))))
 (defconst ecb-semantic-regular-xemacs-package-p
   (and ecb-running-xemacs
+       ecb-semantic-dir
        (file-exists-p (expand-file-name (concat ecb-semantic-dir "_pkg.el")))
        (file-exists-p (expand-file-name (concat ecb-semantic-dir "auto-autoloads.el")))))
 
@@ -221,6 +236,13 @@ by semantic and also killed afterwards."
 (defun ecb-find-assoc (list key)
   (assoc key list))
 
+;;; Compatibility
+(defun ecb-noninteractive ()
+  "Return non-nil if running non-interactively, i.e. in batch mode."
+  (if ecb-running-xemacs
+      (noninteractive)
+    noninteractive))
+
 ;; canonical filenames
 
 (defun ecb-fix-filename (path &optional filename substitute-env-vars)
@@ -249,6 +271,32 @@ not nil then in both PATH and FILENAME env-var substitution is done. If the
                           (file-name-nondirectory (if substitute-env-vars
                                                       (substitute-in-file-name filename)
                                                     filename))))))))
+
+
+(defun ecb-nolog-message (&rest args)
+  "Works exactly like `message' but does not log the message"
+  (let ((msg (cond ((or (null args)
+                        (null (car args)))
+                    nil)
+                   ((null (cdr args))
+                    (car args))
+                   (t
+                    (apply 'format args)))))
+    ;; Now message is either nil or the formated string.
+    (if ecb-running-xemacs
+        ;; XEmacs way of preventing log messages.
+        (if msg
+            (display-message 'no-log msg)
+          (clear-message 'no-log))
+      ;; Emacs way of preventing log messages.
+      (let ((message-log-max nil)
+            (message-truncate-lines nil))
+        (if msg
+            (message "%s" msg)
+          (message nil))))
+    msg))
+
+
 
 (defun ecb-confirm (text)
   (yes-or-no-p text))
@@ -509,13 +557,13 @@ If `window-system' is nil then a simple message is displayed in the echo-area."
       (message (concat title " " message-str)))))
 
 
-(defmacro ecb-error (&rest args)
+(defun ecb-error (&rest args)
   "Signals an error but prevents it from entering the debugger. This is
 usefull if an error-message should be signaled to the user and evaluating
 should stopped but no debugging is senseful."
-  `(let ((debug-on-error nil))
-     (error (concat "ECB " ecb-version ": "
-                    (format ,@args)))))
+  (let ((debug-on-error nil))
+    (error (concat "ECB " ecb-version ": "
+                   (apply 'format args)))))
 
 ;; trimming
 
@@ -544,6 +592,122 @@ with a single space-character."
 (defun ecb-full-trim (str)
   "Applies `ecb-trim' and `ecb-middle-trim' to STR."
   (ecb-excessive-trim (ecb-trim str)))
+
+
+
+;; code for a working display - complete stolen from the semantic-package.
+;; ECB has thrown away all code which is not needed by ECB
+;; The original code is written by Eric M. Ludlam <zappo@gnu.org>
+
+;; we need this here so we are independent of the semantic-package so we can
+;; download eieio and semantic even if the user has not installed any version
+;; of semantic.
+
+;;; Variables used in stages
+;;
+(defvar ecb-working-message nil
+  "Message stored when in a status loop.")
+(defvar ecb-working-donestring nil
+  "Done string stored when in a status loop.")
+(defvar ecb-working-ref1 nil
+  "A reference number used in a status loop.")
+(defvar ecb-working-last-percent 0
+  "A reference number used in a status loop.")
+
+(defun ecb-working-frame-animation-display (length number frames)
+  "Manage a simple frame-based animation for working functions.
+LENGTH is the number of characters left.  NUMBER is a passed in
+number (which happens to be ignored.).  While coders pass t into
+NUMBER, functions using this should convert NUMBER into a vector
+describing how to render the done message.
+Argument FRAMES are the frames used in the animation."
+  (cond ((vectorp number)
+	 (let ((zone (- (length (aref frames 0)) (length (aref number 0))
+			(length (aref number 1)))))
+	   (if (< (length ecb-working-donestring) zone)
+	       (concat " " (aref number 0)
+		       (make-string
+			(ceiling (/ (- (float zone)
+				       (length ecb-working-donestring)) 2)) ? )
+		       ecb-working-donestring
+		       (make-string
+			(floor (/ (- (float zone)
+				     (length ecb-working-donestring)) 2)) ? )
+		       (aref number 1))
+	     (concat " " (aref frames (% ecb-working-ref1 (length frames)))
+		     " " ecb-working-donestring))))
+	(t (concat " " (aref frames (% ecb-working-ref1 (length frames)))))))
+
+(defvar ecb-working-celeron-strings
+  [ "[O     ]" "[oO    ]" "[-oO   ]" "[ -oO  ]" "[  -oO ]" "[   -oO]"
+    "[    -O]" "[     O]" "[    Oo]" "[   Oo-]"  "[  Oo- ]" "[ Oo-  ]"
+    "[Oo-   ]" "[O-    ]"]
+  "Strings representing a silly celeron.")
+
+(defun ecb-working-celeron-display (length number)
+  "Return a string displaying a celeron as things happen.
+LENGTH is the amount of display that has been used.  NUMBER
+is t to display the done string, or the number to display."
+  (cond ((eq number t)
+	 (ecb-working-frame-animation-display length [ "[" "]" ]
+					  ecb-working-celeron-strings))
+	;; All the % signs because it then gets passed to message.
+	(t (ecb-working-frame-animation-display length number
+					    ecb-working-celeron-strings))))
+
+
+
+(defun ecb-working-dynamic-status (&optional number)
+  "show the status. If NUMBER is nil, then increment a local NUMBER from 0
+with each call. If it is a number or float, use it as the raw percentile."
+  (let* ((n (or number ecb-working-ref1))
+         (m1 (funcall 'format ecb-working-message))
+         (m2 (ecb-working-celeron-display (length m1) n)))
+    (ecb-nolog-message "%s%s" m1 m2)
+    (setq ecb-working-ref1 (1+ ecb-working-ref1))))
+
+(defmacro ecb-working-status-timeout (timeout message donestr &rest forms)
+  "Contain a block of code during which working status is shown.
+The code may call `sit-for' or `accept-process-output', so a timer
+is needed to update the message.
+TIMEOUT is the length of time to wait between message updates.
+MESSAGE is the message string to use and DONESTR is the completed text
+to use when the functions `ecb-working-status' is called from FORMS."
+  (let ((current-message (make-symbol "ecb-working-current-message")))
+    `(let* ((,current-message (current-message))
+            (ecb-working-message ,message)
+            (ecb-working-donestring ,donestr)
+            (ecb-working-ref1 0)
+            (time ,timeout)
+            (ecb-working-timer
+             (run-with-timer time time 'ecb-working-dynamic-status)))
+       (unwind-protect
+           (progn ,@forms)
+         (cancel-timer ecb-working-timer)
+         (ecb-working-dynamic-status t)
+         (message ,current-message)))))
+
+
+(defun ecb-working-status-call-process
+  (timeout message donestr program &optional infile buffer display &rest args)
+  "Display working messages while running a process.
+TIMEOUT is how fast to display the messages.
+MESSAGE is the message to show, and DONESTR is the string to add when done.
+CALLPROCESSARGS are the same style of args as passed to `call-process'.
+The are: PROGRAM, INFILE, BUFFER, DISPLAY, and ARGS.
+Since it actually calls `start-process', not all features will work."
+  (ecb-working-status-timeout timeout message donestr
+    (let ((proc (apply 'start-process "ecb-working"
+                       (if (listp buffer) (car buffer) buffer)
+                       program args)))
+      (set-process-sentinel proc 'list)
+      (while (eq (process-status proc) 'run)
+	(accept-process-output proc)
+	;; accept-process-output caused my solaris Emacs 20.3 to crash.
+	;; If this is unreliable for you, use the below which will work
+	;; in that situation.
+	;; (if (not (sit-for timeout)) (read-event))
+	))))
 
 
 (silentcomp-provide 'ecb-util)

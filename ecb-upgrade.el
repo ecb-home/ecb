@@ -19,7 +19,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-upgrade.el,v 1.33 2003/03/18 13:19:11 berndl Exp $
+;; $Id: ecb-upgrade.el,v 1.34 2003/03/19 15:35:09 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -933,7 +933,7 @@ activated."
         
         ;; Downloading with working-display
 
-        (working-status-call-process
+        (ecb-working-status-call-process
          0.1
          (concat "Downloading new " package)
          "done"
@@ -1057,7 +1057,7 @@ for details about using \"wget\"."
         
       ;; Downloading with working-display
 
-      (working-status-call-process
+      (ecb-working-status-call-process
        0.1
        (concat "Getting list of available versions of package " package)
        "done"

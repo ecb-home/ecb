@@ -19,7 +19,7 @@
 @c Free Software Foundation, Inc., 59 Temple Place - Suite 330,
 @c Boston, MA 02111-1307, USA.
 
-@c $Id: ecb.texi,v 1.85 2003/03/18 13:18:38 berndl Exp $
+@c $Id: ecb.texi,v 1.86 2003/03/19 15:35:08 berndl Exp $
 
 @setfilename ecb.info
 
@@ -42,7 +42,7 @@
 @c edit the Makefile to change the version number. mechanism stolen
 @c from Tramp
 @macro ecbver{}
-1.92.1
+1.93
 @end macro
 
 
@@ -288,9 +288,24 @@ than shipped with (X)Emacs. You have to install exactly a version ECB
 requires and also to make sure that the correct version is loaded into
 (X)Emacs!
 
-But ECB checks auto. during start-time if the correct versions of
-semantic and eieio are installed and gives you proper feedback.
-@xref{Download required packages}.
+But ECB performs two autom checks:
+
+@itemize @minus
+@item At load-time:
+It checks if the packages semantic and eieio are at
+least installed so ECB can be loaded. If not it offers to download and
+install them.
+
+@item At start-time:
+It checks if the correct versions of semantic and eieio are installed
+and gives you proper feedback. @xref{Download required packages}.
+@end itemize
+
+So if you are not sure if you have installed the required packages at
+all or if you have installed the correct versions of these packages
+then do not worry about this, just go on with the following
+installation steps: If ECB is missing something it will give you
+proper feedback and support not later than at load-time or start-time!
 
 @item
 Add the new ECB-directory to your @code{load-path} variable.
@@ -3332,10 +3347,6 @@ variable) is displayed.
 Do NOT set this option directly via setq but use always customize!
 @end defopt
 
-@defopt temp-dir
-Specify a directory where ECB can store temporary files.
-@end defopt
-
 @defopt tip-of-the-day
 Show tip of the day at start time of ECB.
 @end defopt
@@ -5311,10 +5322,11 @@ commands}. Check also the options of the customize-group
 @anchor{Download required packages}
 @item Download and install of required packages:
 
-ECB checks at start-time if the required versions of semantic and
-eieio (see @file{README}) are installed and loaded into Emacs. If not
-you will be asked if you want auto. download and install them. If you
-confirm this then ECB does the following:
+ECB checks at load-time if the packages semantic and eieio are at
+least installed and at start-time if the required versions of semantic
+and eieio (see @file{README}) are installed and loaded into Emacs. If
+not you will be asked if you want auto. download and install them. If
+you confirm this then ECB does the following:
 
 @enumerate
 @item

@@ -1,4 +1,4 @@
-Readme for the Emacs Code Browser (ECB) version 1.92.1
+Readme for the Emacs Code Browser (ECB) version 1.93
 
 
 About
@@ -14,12 +14,12 @@ http://ecb.sourceforge.net
 Requirements
 ------------
 
-ECB requires the following packages being properly installed:
+ECB requires the following packages:
 - Semantic, author version between 1.4 and 1.4.9
   (http://cedet.sourceforge.net/semantic.shtml)
 - Eieio, author version between 0.17 and 0.17.9
   (http://cedet.sourceforge.net/eieio.shtml).
-
+  
 - Optional: speedbar, author version 0.14beta1 or higher
   (http://cedet.sourceforge.net/eieio.shtml)
   This is only needed if the speedbar-integration of ECB is used
@@ -50,8 +50,20 @@ with `ecb-activate' or read the online-help with `ecb-show-help'.
    with (X)Emacs. You have to install exactly a version ECB requires and also
    to make sure that the correct version is loaded into (X)Emacs!
 
-   But ECB checks auto. during start-time if the correct versions of semantic
-   and eieio are installed and gives you proper feedback.
+   But ECB performs two automatic checks:
+
+    - At load-time: It checks if the packages semantic and eieio are at least
+      installed so ECB can be loaded. If not it offers to download and
+      install them.
+
+    - At start-time: It checks if the correct versions of semantic and eieio
+      are installed and gives you proper feedback.
+
+    So if you are not sure if you have installed the required packages at all
+    or if you have installed the correct versions of these packages then do
+    not worry about this, just go on with the following installation steps: If
+    ECB is missing something it will give you proper feedback and support not
+    later than at load-time or start-time!
 
 3. Add the new ECB-directory to your `load-path' variable.
 

@@ -10,7 +10,7 @@
 
 ;; IMPORTANT: The version-number is auto-frobbed from the Makefile. Do not
 ;; change it here!
-(defconst ecb-version "1.92.1"
+(defconst ecb-version "1.93"
   "Current ECB version.")
 
 ;; This program is free software; you can redistribute it and/or modify it under
@@ -68,18 +68,19 @@
 ;; The latest version of the ECB is available at
 ;; http://ecb.sourceforge.net
 
-;; $Id: ecb.el,v 1.298 2003/03/18 13:18:38 berndl Exp $
+;; $Id: ecb.el,v 1.299 2003/03/19 15:35:08 berndl Exp $
 
 ;;; Code:
 
 (eval-when-compile
   (require 'silentcomp))
 
-;; semantic load
-(require 'semantic)
-;; eieio load
-(require 'eieio)
-
+;; (defun check-test (s-ver e-ver)
+;;   (interactive "sSemantic-version: \nsEieio-version: ")
+;;   (let ((ecb-all-requirements-available nil)
+;;         (semantic-version s-ver)
+;;         (eieio-version e-ver))
+;;     (ecb-check-requirements)))
 
 (defconst ecb-required-semantic-version-min '(1 4 2 0))
 (defconst ecb-required-semantic-version-max '(1 4 3 9))
@@ -89,25 +90,187 @@
 (defvar ecb-all-requirements-available nil)
 (defvar ecb-upgrade-check-done nil)
 
+;; We need this libraries already here if we miss some requirements and we
+;; want to offer the user to download them.
+(require 'ecb-upgrade)
+(require 'ecb-util)
+
+(defun ecb-check-requirements (&optional just-check)
+  "Ensure that we use the right `semantic-version' and right `eieio-version'
+and offer to download them if not installed.
+
+If JUST-CHECK is not nil then
+1. Only the version check is done but no download
+2. It returns nil if all requirements are correct, otherwise a list which
+   contains the symbol 'semantic if `semantic-version' is incorrect and 'eieio
+   if `eieio-version' is incorrect.
+
+If called in noninteractive mode \(e.g. in batch-mode) then JUST-CHECK is
+always true."
+  (when (and (or (not (boundp 'ecb-version-check)) ecb-version-check)
+             (not ecb-all-requirements-available))
+    (let ((semantic-required-version-str-min (ecb-package-version-list2str
+                                              ecb-required-semantic-version-min))
+          (semantic-required-version-str-max (ecb-package-version-list2str
+                                              ecb-required-semantic-version-max))
+          (eieio-required-version-str-min (ecb-package-version-list2str
+                                           ecb-required-eieio-version-min))
+          (eieio-required-version-str-max (ecb-package-version-list2str
+                                           ecb-required-eieio-version-max))
+          (failed-result)
+          (version-error nil)
+          (semantic-dir nil)
+          (semantic-state nil)
+          (semantic-installed-version-str nil)
+          (eieio-dir nil)
+          (eieio-state nil)
+          (eieio-installed-version-str nil))
+      ;; check if semantic version is correct
+      (when (or (not (boundp 'semantic-version))
+                (ecb-package-version-list<
+                 (ecb-package-version-str2list semantic-version)
+                 ecb-required-semantic-version-min)
+                (ecb-package-version-list<
+                 ecb-required-semantic-version-max
+                 (ecb-package-version-str2list semantic-version)))
+        (setq version-error (concat "semantic ["
+                                    semantic-required-version-str-min
+                                    ", "
+                                    semantic-required-version-str-max
+                                    "]"))
+        (setq failed-result (cons 'semantic failed-result)))
+      ;; check if eieio version is correct
+      (when (or (not (boundp 'eieio-version))
+                (ecb-package-version-list<
+                 (ecb-package-version-str2list eieio-version)
+                 ecb-required-eieio-version-min)
+                (ecb-package-version-list<
+                 ecb-required-eieio-version-max
+                 (ecb-package-version-str2list eieio-version)))
+        (setq version-error
+              (concat version-error (if version-error " and ")
+                      "eieio ["
+                      eieio-required-version-str-min
+                      ", "
+                      eieio-required-version-str-max
+                      "]"))
+        (setq failed-result (cons 'eieio failed-result)))
+      (if (null failed-result)
+          ;; this is the only place where this variable is set
+          (setq ecb-all-requirements-available t))
+      (if (or just-check (ecb-noninteractive))
+          failed-result
+        (when failed-result
+          (when ecb-regular-xemacs-package-p
+            (with-output-to-temp-buffer "*ECB downloading and installing*"
+              (princ "Current ECB is installed as regular XEmacs package and not with the\n")
+              (princ "archive available at the ECB-website. So you should use the package-manager\n")
+              (princ "of XEmacs to get the required versions of semantic and/or eieio and to\n")
+              (princ "install them also as regular XEmacs-packages! If you now proceed installing\n")
+              (princ "from the CEDET-website then the new versions will NOT be installed as\n")
+              (princ "regular XEmacs-package(s) but as \"flat\" package(s) parallel to the current\n")
+              (princ "ECB directory!\n\n")))
+          (if (not (yes-or-no-p (format "ECB requires %s. Download now? "
+                                        version-error)))
+              (ecb-error "ECB can only be used with %s! Sorry!"
+                         version-error)
+            (message nil)
+
+            ;; try to download semantic and set state and install dir
+            (if (not (member 'semantic failed-result))
+                (setq semantic-state "Correct version already loaded!")
+              (setq semantic-installed-version-str
+                    (ecb-package-get-matching-versions-str
+                     "semantic" ecb-semantic-eieio-url
+                     ecb-required-semantic-version-min
+                     ecb-required-semantic-version-max))
+              (setq semantic-dir
+                    (ecb-package-download "semantic"
+                                          semantic-installed-version-str
+                                          ecb-semantic-eieio-url))
+              (setq semantic-state (if (and semantic-dir
+                                            semantic-installed-version-str)
+                                       (concat "Installed "
+                                               semantic-installed-version-str
+                                               " in " semantic-dir)
+                                     "Download- or installing-failure!")))
+
+            ;; try to download eieio and set state and install dir
+            (if (not (member 'eieio failed-result))
+                (setq eieio-state "Correct version already loaded!")
+              (setq eieio-installed-version-str
+                    (ecb-package-get-matching-versions-str
+                     "eieio" ecb-semantic-eieio-url
+                     ecb-required-eieio-version-min
+                     ecb-required-eieio-version-max))
+              (setq eieio-dir
+                    (ecb-package-download "eieio"
+                                          eieio-installed-version-str
+                                          ecb-semantic-eieio-url))
+              (setq eieio-state (if (and eieio-dir
+                                         eieio-installed-version-str)
+                                    (concat "Installed "
+                                            eieio-installed-version-str
+                                            " in " eieio-dir)
+                                  "Download- or installing-failure!")))
+
+            ;; display the success
+            (with-output-to-temp-buffer "*ECB downloading and installing*"
+              (princ "Current state of the required packages semantic and eieio:\n\n")
+              (princ (concat "- semantic author-version must be ["
+                             semantic-required-version-str-min
+                             ", "
+                             semantic-required-version-str-max "]:\n  "))
+              (princ semantic-state)
+              (princ "\n")
+              (princ (concat "- eieio author-version must be ["
+                             eieio-required-version-str-min
+                             ", "
+                             eieio-required-version-str-max "]:\n  "))
+              (princ eieio-state)
+              (princ "\n\n")
+              (princ "After adding the new directory to your `load-path' and then restarting\n")
+              (princ "Emacs the new package(s) can be activated.\n\n")
+              (princ "\n\n"))
+            (ecb-error "Please restart Emacs with the required packages!")))))))
+
+
+;; if we miss some of the requirements we offer the user to download and
+;; install them if Emacs ist started interactive or - in batch mode - we
+;; report an error.
+(when (or (not (locate-library "semantic"))
+          (not (locate-library "eieio")))
+  (if (ecb-noninteractive)
+      (ecb-error "Missing requirements: ECB needs semantic and eieio!")
+    (ecb-check-requirements)))
+
+;; If we are here we can load ECB because at least we have installed all
+;; required packages. If they have correct version will be checked at
+;; start- or byte-compile-time
+
+;; semantic load
+(require 'semantic)
+;; eieio load
+(require 'eieio)
+
+
 (message "ECB %s uses semantic %s and eieio %s" ecb-version
          semantic-version eieio-version)
 
 (require 'semantic-load)
 
-;; ecb loads
+;; rest of ecb loads
 (require 'tree-buffer)
 (require 'ecb-jde)
 (require 'ecb-layout)
 (require 'ecb-create-layout)
 (require 'ecb-mode-line)
-(require 'ecb-util)
 (require 'ecb-help)
 (require 'ecb-navigate)
 (require 'ecb-eshell)
 (require 'ecb-compilation)
 (require 'ecb-cycle)
 (require 'ecb-face)
-(require 'ecb-upgrade)
 (require 'ecb-tod)
 (require 'ecb-autogen)
 ;;(require 'ecb-profile)
@@ -119,6 +282,9 @@
 (eval-when-compile
   ;; to avoid compiler grips
   (require 'cl))
+
+
+
 
 ;; XEmacs
 (silentcomp-defun redraw-modeline)
@@ -1541,15 +1707,6 @@ Note: A click with the secondary mouse-button \(see again
   :group 'ecb-general
   :type 'string)
 
-(defcustom ecb-temp-dir
-  (file-name-as-directory
-   (or (getenv "TMPDIR") (getenv "TMP") (getenv "TEMP")
-       (cond ((eq system-type 'windows-nt) "c:/temp/")
-             (t "/tmp/"))))
-  "*Specify a directory where ECB can store temporary files."
-  :type '(directory :tag "Temporary Directory")
-  :group 'ecb-general)
-
 (defcustom ecb-auto-compatibility-check t
   "*Check at ECB-startup if all ECB-options have correct values.
 If not nil then all ECB-options are checked if their current value have the
@@ -1886,147 +2043,6 @@ keybindings only for the history-buffer of ECB."
 ;; Internals
 ;;====================================================
 
-
-;; (defun check-test (s-ver e-ver)
-;;   (interactive "sSemantic-version: \nsEieio-version: ")
-;;   (let ((ecb-all-requirements-available nil)
-;;         (semantic-version s-ver)
-;;         (eieio-version e-ver))
-;;     (ecb-check-requirements)))
-
-(defun ecb-check-requirements (&optional just-check)
-  "Ensure that we use the right `semantic-version' and right `eieio-version'
-and offer to download them if not installed.
-
-If JUST-CHECK is not nil then
-1. Only the version check is done but no download
-2. It returns nil if all requirements are correct, otherwise a list which
-   contains the symbol 'semantic if `semantic-version' is incorrect and 'eieio
-   if `eieio-version' is incorrect."
-  (when (and ecb-version-check
-             (not ecb-all-requirements-available))
-    (let ((semantic-required-version-str-min (ecb-package-version-list2str
-                                              ecb-required-semantic-version-min))
-          (semantic-required-version-str-max (ecb-package-version-list2str
-                                              ecb-required-semantic-version-max))
-          (eieio-required-version-str-min (ecb-package-version-list2str
-                                           ecb-required-eieio-version-min))
-          (eieio-required-version-str-max (ecb-package-version-list2str
-                                           ecb-required-eieio-version-max))
-          (failed-result)
-          (version-error nil)
-          (semantic-dir nil)
-          (semantic-state nil)
-          (semantic-installed-version-str nil)
-          (eieio-dir nil)
-          (eieio-state nil)
-          (eieio-installed-version-str nil))
-      ;; check if semantic version is correct
-      (when (or (ecb-package-version-list<
-                 (ecb-package-version-str2list semantic-version)
-                 ecb-required-semantic-version-min)
-                (ecb-package-version-list<
-                 ecb-required-semantic-version-max
-                 (ecb-package-version-str2list semantic-version)))
-        (setq version-error (concat "semantic ["
-                                    semantic-required-version-str-min
-                                    ", "
-                                    semantic-required-version-str-max
-                                    "]"))
-        (setq failed-result (cons 'semantic failed-result)))
-      ;; check if eieio version is correct
-      (when (or (ecb-package-version-list<
-                 (ecb-package-version-str2list eieio-version)
-                 ecb-required-eieio-version-min)
-                (ecb-package-version-list<
-                 ecb-required-eieio-version-max
-                 (ecb-package-version-str2list eieio-version)))
-        (setq version-error
-              (concat version-error (if version-error " and ")
-                      "eieio ["
-                      eieio-required-version-str-min
-                      ", "
-                      eieio-required-version-str-max
-                      "]"))
-        (setq failed-result (cons 'eieio failed-result)))
-      (if (null failed-result)
-          ;; this is the only place where this variable is set
-          (setq ecb-all-requirements-available t))
-      (if just-check
-          failed-result
-        (when failed-result
-          (when ecb-regular-xemacs-package-p
-            (with-output-to-temp-buffer "*ECB downloading and installing*"
-              (princ "Current ECB is installed as regular XEmacs package and not with the\n")
-              (princ "archive available at the ECB-website. So you should use the package-manager\n")
-              (princ "of XEmacs to get the required versions of semantic and/or eieio and to\n")
-              (princ "install them also as regular XEmacs-packages! If you now proceed installing\n")
-              (princ "from the CEDET-website then the new versions will NOT be installed as\n")
-              (princ "regular XEmacs-package(s) but as \"flat\" package(s) parallel to the current\n")
-              (princ "ECB directory!\n\n")))
-          (if (not (yes-or-no-p (format "ECB requires %s. Download now? "
-                                        version-error)))
-              (ecb-error "ECB can only be started with %s! Sorry!"
-                         version-error)
-            (message nil)
-
-            ;; try to download semantic and set state and install dir
-            (if (not (member 'semantic failed-result))
-                (setq semantic-state "Correct version already loaded!")
-              (setq semantic-installed-version-str
-                    (ecb-package-get-matching-versions-str
-                     "semantic" ecb-semantic-eieio-url
-                     ecb-required-semantic-version-min
-                     ecb-required-semantic-version-max))
-              (setq semantic-dir
-                    (ecb-package-download "semantic"
-                                          semantic-installed-version-str
-                                          ecb-semantic-eieio-url))
-              (setq semantic-state (if (and semantic-dir
-                                            semantic-installed-version-str)
-                                       (concat "Installed "
-                                               semantic-installed-version-str
-                                               " in " semantic-dir)
-                                     "Download- or installing-failure!")))
-
-            ;; try to download eieio and set state and install dir
-            (if (not (member 'eieio failed-result))
-                (setq eieio-state "Correct version already loaded!")
-              (setq eieio-installed-version-str
-                    (ecb-package-get-matching-versions-str
-                     "eieio" ecb-semantic-eieio-url
-                     ecb-required-eieio-version-min
-                     ecb-required-eieio-version-max))
-              (setq eieio-dir
-                    (ecb-package-download "eieio"
-                                          eieio-installed-version-str
-                                          ecb-semantic-eieio-url))
-              (setq eieio-state (if (and eieio-dir
-                                         eieio-installed-version-str)
-                                    (concat "Installed "
-                                            eieio-installed-version-str
-                                            " in " eieio-dir)
-                                  "Download- or installing-failure!")))
-
-            ;; display the success
-            (with-output-to-temp-buffer "*ECB downloading and installing*"
-              (princ "Current state of the required packages semantic and eieio:\n\n")
-              (princ (concat "- semantic author-version must be ["
-                             semantic-required-version-str-min
-                             ", "
-                             semantic-required-version-str-max "]:\n  "))
-              (princ semantic-state)
-              (princ "\n")
-              (princ (concat "- eieio author-version must be ["
-                             eieio-required-version-str-min
-                             ", "
-                             eieio-required-version-str-max "]:\n  "))
-              (princ eieio-state)
-              (princ "\n\n")
-              (princ "After adding the new directory to your `load-path' and then restarting\n")
-              (princ "Emacs the new package(s) can be activated.\n\n")
-              (princ "\n\n"))
-            (ecb-error "Please restart Emacs with the required packages!")))))))
 
 (defun ecb-enter-debugger (&rest error-args)
   "If `ecb-debug-mode' is not nil then enter the Emacs-debugger and signal an
@@ -5165,7 +5181,7 @@ FILE.el is newer than FILE.elc or if FILE.elc doesn't exist."
 FORCE-ALL is not nil or for each lisp-file FILE.el which is either newer than
 FILE.elc or if FILE.elc doesn't exist."
   (interactive "P")
-  (if noninteractive
+  (if (ecb-noninteractive)
       (if (ecb-check-requirements t)
           (ecb-error "Incorrect requirements; check the versions of semantic and eieio!"))
     (ecb-check-requirements))
@@ -5183,8 +5199,9 @@ FILE.elc or if FILE.elc doesn't exist."
 				t)))
     (save-excursion
       (dolist (file files)
-	(if (string-match "\\(silentcomp\\|tree-buffer\\|ecb.*\\)\\.el$" file)
-	    (ecb-compile-file-if-necessary file force-all))))))
+	(if (and (string-match "\\(silentcomp\\|tree-buffer\\|ecb.*\\)\\.el$" file)
+                 (not (string-match "ecb-autoloads" file)))
+            (ecb-compile-file-if-necessary file force-all))))))
 
 (defun ecb-auto-activate-hook()
   "If necessary, run `ecb-activate' when Emacs is started."
@@ -5295,18 +5312,10 @@ changed there should be no performance-problem!"
   
 (add-hook 'post-command-hook 'ecb-handle-major-mode-activation)
 
-(add-hook 'emacs-startup-hook 'ecb-auto-activate-hook)  
-        
+(add-hook 'emacs-startup-hook 'ecb-auto-activate-hook)
+
+
 
 (silentcomp-provide 'ecb)
 
 ;;;ecb.el ends here
-;; (x-popup-menu
-;;  (list (list 20 20) (selected-window))
-;;  (cons 'keymap
-;;        (cons "klaus"
-;;              (cdr (assoc 0 
-;; (tree-buffer-create-menus (list (cons 0 (funcall (or (functionp ecb-sources-menu-sorter)
-;;                                                      'identity)
-;;                                                  (append ecb-sources-menu-user-extension
-;;                                                          ecb-sources-menu))))))))))

@@ -2,7 +2,7 @@
 
 ;;; Copyright (C) 2003 Klaus Berndl
 
-;; $Id: ecb-autogen.el,v 1.5 2003/03/18 13:18:39 berndl Exp $
+;; $Id: ecb-autogen.el,v 1.6 2003/03/19 15:35:09 berndl Exp $
 
 ;; This file is not part of GNU Emacs.
 
@@ -37,18 +37,7 @@
 (eval-when-compile
   (require 'silentcomp))
 
-;; Emacs knows only a variable noninteractive whereas XEmacs knows both,
-;; funtion and variable. Therefore we silence here the byte-compiler.
-(silentcomp-defun noninteractive)
-
-;;; Compatibility
-(defun ecb-autogen-noninteractive ()
-  "Return non-nil if running non-interactively."
-  (if (featurep 'xemacs)
-      (noninteractive)
-    noninteractive))
-
-(when (ecb-autogen-noninteractive)
+(when (ecb-noninteractive)
   ;; If the user is doing this non-interactively, we need to set up
   ;; these conveniences.
   (add-to-list 'load-path nil)
@@ -102,10 +91,11 @@ does nothing."
   (interactive)
   (if ecb-regular-xemacs-package-p
       (ecb-error "Updating autoloads not possible for regular XEmacs-packages!")
-    (when (and (not ecb-running-xemacs)
-               (not (file-exists-p (expand-file-name ecb-autogen-file))))
-      ;; generate a new one if ecb-autogen-file does not exist, but do this not
-      ;; for XEmacs because XEmacs must(!) handle this itself
+    (if (file-exists-p (expand-file-name ecb-autogen-file))
+        (delete-file (expand-file-name ecb-autogen-file)))
+    (when (not ecb-running-xemacs)
+      ;; generate a new one but do this not for XEmacs because XEmacs must(!)
+      ;; handle this itself
       (with-temp-file (expand-file-name ecb-autogen-file)
         (insert "")))
     (let* ((default-directory (file-name-directory (locate-library "ecb")))
