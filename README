@@ -31,7 +31,7 @@ Installation
 Optional compilation steps:
 
 1. - If you have a make-environment (either Unix or Windows plus cygwin):
-     You must check or edit the file "makefile" in the ECB directory.
+     You must check or edit the file "Makefile" in the ECB directory.
    - If you have not a make environment:
      You must check or edit the file "make.bat" in the ECB directory.
 

@@ -122,7 +122,7 @@
 ;;   + The edit-window must not be splitted and the point must reside in
 ;;     the not deleted edit-window.
 
-;; $Id: ecb-layout.el,v 1.24 2001/04/22 15:45:01 creator Exp $
+;; $Id: ecb-layout.el,v 1.25 2001/04/23 14:38:19 berndl Exp $
 
 ;;; Code:
 
@@ -375,6 +375,9 @@ the `ecb-deactivate-hook'."
   :type 'boolean)
 
 ;; ====== internal variables ====================================
+
+(defvar ecb-frame nil
+  "Frame where ECB runs")
 
 (defvar ecb-edit-window nil
   "Window to edit source in. If this window is splitted in two windows then

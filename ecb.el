@@ -47,7 +47,7 @@
 ;; The latest version of the ECB is available at
 ;; http://home.swipnet.se/mayhem/ecb.html
 
-;; $Id: ecb.el,v 1.44 2001/04/23 09:44:19 berndl Exp $
+;; $Id: ecb.el,v 1.45 2001/04/23 14:38:19 berndl Exp $
 
 ;;; Code:
 
@@ -717,7 +717,8 @@ highlighting of the methods if `ecb-font-lock-methods' is not nil."
      0
      ecb-show-source-file-extension
      old-children t))
-  (tree-buffer-update))
+  (tree-buffer-update)
+  (tree-buffer-scroll (point-min) (point-min)))
                    
 (defun ecb-get-source-name(filename)
   "Returns the source name of a file."
@@ -782,11 +783,13 @@ current-buffer is saved."
 ;; `ecb-update-methods-buffer--internal' and
 ;; `ecb-rebuild-methods-buffer-after-parsing'!
 (defvar ecb-method-buffer-needs-rebuild t)
-(defun ecb-update-methods-buffer--internal()
+(defun ecb-update-methods-buffer--internal(&optional scroll-to-top)
   "Updates the methods buffer with the current buffer. The only thing what
 must be done is to start the toplevel parsing of semantic, because the rest is
 done by `ecb-rebuild-methods-buffer-after-parsing' because this function is in
-the `semantic-after-toplevel-bovinate-hook'."
+the `semantic-after-toplevel-bovinate-hook'.
+If optional argument SCROLL-TO-TOP is non nil then the method-buffer is
+displayed with window-start and point at beginning of buffer."
   ;; Set here `ecb-method-buffer-needs-rebuild' to t so we can see below if
   ;; `ecb-rebuild-methods-buffer-after-parsing' was called auto. after
   ;; `semantic-bovinate-toplevel'.
@@ -803,9 +806,13 @@ the `semantic-after-toplevel-bovinate-hook'."
   ;; `ecb-rebuild-methods-buffer-after-parsing' was not called. Therefore we
   ;; call it here manually. `ecb-rebuild-methods-buffer-after-parsing' is the
   ;; only function which sets `ecb-method-buffer-needs-rebuild' to nil to
-  ;; signalize that a "manually" rebuild of the method buffer is necessary.
+  ;; signalize that a "manually" rebuild of the method buffer is not necessary.
   (if ecb-method-buffer-needs-rebuild
-      (ecb-rebuild-methods-buffer-after-parsing)))
+      (ecb-rebuild-methods-buffer-after-parsing))
+  (when scroll-to-top
+    (save-excursion
+      (ecb-buffer-select ecb-methods-buffer-name)
+      (tree-buffer-scroll (point-min) (point-min)))))
   
 
 (defun ecb-rebuild-methods-buffer-after-parsing ()
@@ -855,12 +862,12 @@ is not changed."
       (save-selected-window
         (save-excursion
           (set-buffer (find-file-noselect ecb-path-selected-source))
-          (ecb-update-methods-buffer--internal)))
+          (ecb-update-methods-buffer--internal 'scroll-to-begin)))
     ;; open the selected source in the edit-window and do all the update and
     ;; parsing stuff with this buffer
     (ecb-find-file-and-display ecb-path-selected-source
                                other-edit-window)
-    (ecb-update-methods-buffer--internal)))
+    (ecb-update-methods-buffer--internal 'scroll-to-begin)))
 
 (defun ecb-select-method(method-start)
   (setq ecb-selected-method-start method-start)
@@ -919,7 +926,7 @@ For further explanation see `ecb-clear-history-behavior'."
       (sit-for 0.1)
       (ecb-select-source-file filename)
 
-      (ecb-update-methods-buffer--internal))))
+      (ecb-update-methods-buffer--internal 'scroll-to-begin))))
 
 (defun ecb-find-file-and-display(filename other-edit-window)
   "Finds the file in the correct window. What the correct window is depends on

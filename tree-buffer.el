@@ -26,7 +26,7 @@
 ;; This file is part of the ECB package which can be found at:
 ;; http://home.swipnet.se/mayhem/ecb.html
 
-;; $Id: tree-buffer.el,v 1.19 2001/04/22 15:45:01 creator Exp $
+;; $Id: tree-buffer.el,v 1.20 2001/04/23 14:38:19 berndl Exp $
 
 ;;; Code:
 
@@ -217,16 +217,25 @@ inserted and the TEXT itself"
         (tree-buffer-add-node node (1+ depth)))))
 
 (defun tree-buffer-update()
-  (let ((ws (window-start))
-        (p (point))
-        (buffer-read-only nil))
+  "Updates the current tree-buffer. The buffer will be completely rebuild with
+it´s current nodes. window-start and point will be preserved."
+  (let* ((w (get-buffer-window (current-buffer)))
+         (ws (window-start w))
+         (p (point))
+         (buffer-read-only nil))
     (setq tree-buffer-nodes nil)
     (erase-buffer)
     (dolist (node (tree-node-get-children tree-buffer-root))
       (tree-buffer-add-node node 0))
     (tree-buffer-highlight-node-data tree-buffer-highlighted-node-data)
     (goto-char p)
-    (set-window-start (selected-window) ws)))
+    (set-window-start w ws)))
+
+(defun tree-buffer-scroll(point window-start)
+  "Scrolls current tree-buffer. The window will start at WINDOW-START and
+point will stay on POINT."
+  (goto-char point)
+  (set-window-start (get-buffer-window (current-buffer)) window-start))
 
 (defun tree-buffer-set-root(root)
   (setq tree-buffer-root root)
@@ -253,7 +262,7 @@ inserted and the TEXT itself"
                                menus tr-lines read-only
                                &optional type-facer expand-symbol-before)
   "Creates a new tree buffer with
-NAME: Name of the buffer
+  NAME: Name of the buffer
 IS-CLICK-VALID-FN: `tree-buffer-create' rebinds down-mouse-1 and down-mouse-2
                    and also in combination with shift and control to
                    `tree-buffer-select'. IS-CLICK-VALID-FN is called first if
