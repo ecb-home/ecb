@@ -4,7 +4,7 @@
    
 *** Enhancements to the icon-display in the Methods-buffer
 
-**** New icon-image for enumerations and abstract/virtual tags (interfaces are
+**** New icon-images for enumerations and abstract/virtual tags (interfaces are
      currently displayed with the icon for abstract classes - at least til
      someone provides special icons ;-)
 
@@ -16,8 +16,8 @@
      rsp. abstract icon is already displayed.
 
 *** New option for switching on/off distinction of function-prototypes from the
-    real function-definitions: `ecb-methods-separate-prototypes'. This is for
-    example useful for C++ and C because these languages distinct between a
+    real function-definitions: `ecb-methods-separate-prototypes'. This is
+    useful for C++ and C because these languages distinct between a
     method-prototype (rsp. function-prototype for C) and the method (rsp.
     function for C) itself. If this option is not nil (default) then ECB
     separates the prototypes from the real function/methods in the
@@ -132,7 +132,7 @@
    and `pre-command-hook'. This is because Emacs resets these hooks to nil if
    any of the contained hook-functions fails with an error-signal. The
    ECB-hook-functions are error-save but if any of the "other" hook-functions
-   of these hooks fails then the ECB-hooks would also have been removed from
+   of these hooks fail then the ECB-hooks would also have been removed from
    these hooks. The new monitoring-mechanism checks this periodically and
    re-adds the ECB-hooks if necessary.
 

@@ -1315,7 +1315,7 @@ either not activated or it behaves exactly like the original version!"
       ad-do-it)))
 
 ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: 
-;; ** master-mode.el implements a minor mode for scrolling a slave
+;; *** master-mode.el implements a minor mode for scrolling a slave
 ;; buffer without leaving your current buffer, the master buffer. This is new
 ;; in Emacs 21.4 so maybe we have to make it compatible with ECB!
 
@@ -2507,7 +2507,7 @@ some special tasks:
 ;; here come the advices
 
 ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>:
-;; ** `special-display-buffer-names' and `special-display-regexps' now
+;; *** `special-display-buffer-names' and `special-display-regexps' now
 ;; understand two new boolean pseudo-frame-parameters `same-frame' and
 ;; `same-window'. This is new in Emacs 21.4 so we have to integrate it!
 
