@@ -46,6 +46,8 @@
   :prefix "ecb-compilation-")
 
 (defcustom ecb-compilation-buffer-names `(("*Calculator*" . nil)
+                                          ("*vc*" . nil)
+                                          ("*vc-diff*" . nil)
                                           ("*Apropos*" . nil)
                                           ,(if ecb-running-xemacs
                                                '("\\*Help.*\\*" . t)
