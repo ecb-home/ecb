@@ -421,6 +421,24 @@ During the evaluation of BODY the following local variables are bound:
 
 (put 'ecb-do-if-buffer-visible-in-ecb-frame 'lisp-indent-function 1)
 
+(defun ecb-read-number (prompt &optional init-value)
+  "Ask in the minibuffer for a number with promptstring PROMPT. Optional
+INIT-VALUE can be either a number or a string-representation of a number."
+  (let ((init (cond ((numberp init-value)
+                     (number-to-string init-value))
+                    ((stringp init-value)
+                     (if (string= init-value "0")
+                         init-value
+                       (if (not (= 0 (string-to-number init-value)))
+                           init-value
+                         (ecb-error "ecb-read-number: init-value not a valid number!"))))
+                    (t nil)))
+        result)
+    (while (progn
+             (setq result (read-string prompt init))
+             (not (or (string= "0" result)
+                      (not (= 0 (string-to-number result)))))))
+    (string-to-number result)))
 
 (defun ecb-option-get-value (option &optional type)
   "Return the value of a customizable ECB-option OPTION with TYPE, where TYPE
