@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb.el,v 1.407 2004/09/17 11:43:56 berndl Exp $
+;; $Id: ecb.el,v 1.408 2004/09/20 15:11:47 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -2171,45 +2171,70 @@ performance-problem!"
 	   (function-defs '(
                             "defecb-stealthy"
                             ))
-           (keywords '(
-                       "ecb-exec-in-history-window"
-                       "ecb-exec-in-directories-window"
-                       "ecb-exec-in-sources-window"
-                       "ecb-exec-in-methods-window"
-                       "ecb-do-with-unfixed-ecb-buffers"
-                       "ecb-with-original-functions"
-                       "ecb-with-adviced-functions"
-                       "ecb-with-some-adviced-functions"
-                       "ecb-with-original-permanent-functions"
-                       "ecb-with-dedicated-window"
-                       "ecb-with-original-basic-functions"
-                       "ecb-with-ecb-advice"
-                       "ecb-with-readonly-buffer"
-                       "ecb-do-if-buffer-visible-in-ecb-frame"
-                       "ecb-layout-define"
-                       ))
-           (regexp (regexp-opt (append variable-defs
-                                       function-defs
-                                       keywords)
-                               t))
+           (plain-keywords '(
+                             "ecb-exec-in-history-window"
+                             "ecb-exec-in-directories-window"
+                             "ecb-exec-in-sources-window"
+                             "ecb-exec-in-methods-window"
+                             "ecb-do-with-unfixed-ecb-buffers"
+                             "ecb-with-original-functions"
+                             "ecb-with-adviced-functions"
+                             "ecb-with-some-adviced-functions"
+                             "ecb-with-original-permanent-functions"
+                             "ecb-with-dedicated-window"
+                             "ecb-with-original-basic-functions"
+                             "ecb-with-ecb-advice"
+                             "ecb-with-readonly-buffer"
+                             "ecb-do-if-buffer-visible-in-ecb-frame"
+                             "ecb-layout-define"
+                             "when-ecb-running-xemacs"
+                             "when-ecb-running-emacs-21"
+                             "when-ecb-running-emacs-20"
+                             "when-ecb-running-emacs"
+                             ))
+           (v-regexp (regexp-opt variable-defs t))
+           (f-regexp (regexp-opt function-defs t))
+           (k-regexp (regexp-opt plain-keywords t))
            ;; Regexp depths
-           (depth (regexp-opt-depth regexp))
+           (v-depth (regexp-opt-depth v-regexp))
+           (f-depth (regexp-opt-depth f-regexp))
+           (k-depth (regexp-opt-depth k-regexp))
            (full (concat
-                  ;; Declarative things
-                  "(\\(" regexp "\\)"
-                  ;; Whitespaces & name
+                  ;; Declarative things: the whole parenthesis expr has always
+                  ;; number 1 ==> The paren-expression number for a keyword
+                  ;; contained in (append variable-defs function-defs
+                  ;; plain-keywords) is always 1
+                  "(\\(" v-regexp "\\|" f-regexp "\\|" k-regexp "\\)"
+                  ;; Whitespaces & name: The parenthesis expr for name has
+                  ;; always the number
+                  ;; (+ 1        -- the whole paren-expr for the declarative
+                  ;;                things
+                  ;;    v-depth  -- all paren-expressions of the variable-defs
+                  ;;    f-depth  -- all paren-expressions of the function-defs
+                  ;;    k-depth  -- all paren-expressions of the plain keywords
+                  ;;    1        -- The \\(\\sw+\\)?: This is the name in case
+                  ;;                of a variable- or function-def
+                  ;;  )
+                  ;; So variable, functions and keywords have the following
+                  ;; numbers:
+                  ;; - variable-match: Always 2 (The whole surrounding
+                  ;;   paren-expr + the surrounding paren-expr defined with
+                  ;;   regexp-opt for the variable-defs
+                  ;; - function-match: 1 (for the whole surrounding
+                  ;;   paren-expr) + v-depth (to jump over the paren-expr of
+                  ;;   the variable-defs + 1 (the surrounding paren-expr
+                  ;;   defined with regexp-opt for the function-defs
                   "\\>[ \t]*\\(\\sw+\\)?"
                   ))
            )
       `((,full
          (1 font-lock-keyword-face)
-         (,(+ 1 depth 1)
-          (when (match-beginning 3)
-            (cond ((member (match-string 1) (quote ,function-defs))
-                   font-lock-function-name-face)
-                  ((member (match-string 1) (quote ,variable-defs))
-                   font-lock-variable-name-face)
-                  (t nil)))
+         (,(+ 1 v-depth f-depth k-depth 1) ;; see explanation above
+          (cond ((match-beginning 2) ;; see explanation above
+                 font-lock-variable-name-face)
+                ((match-beginning ,(+ 1 v-depth 1)) ;; see explanation above
+                 font-lock-function-name-face)
+                (t nil))
           nil t)))
       ))
   "Highlighted ecb keywords.")

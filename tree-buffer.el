@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: tree-buffer.el,v 1.153 2004/09/08 16:41:49 berndl Exp $
+;; $Id: tree-buffer.el,v 1.154 2004/09/20 15:11:46 berndl Exp $
 
 ;;; Commentary:
 
@@ -2572,8 +2572,7 @@ AFTER-UPDATE-HOOK: A function or a list of functions \(with no arguments)
       `((,full
          (1 font-lock-keyword-face)
          (,(+ 1 kf-depth 1)
-          (if (match-beginning 3)
-              font-lock-function-name-face)
+          font-lock-function-name-face
           nil t)))
       ))
   "Highlighted tree-buffer keywords.")
