@@ -1106,8 +1106,9 @@ can change the location of the collapse- and expand-symbols and the
 indendation of sub-nodes in a tree. See <code>ecb-tree-indent</code> and
 <code>ecb-tree-expand-symbol-before</code>.
 
-<p>Here are all currently available layouts (Just customize the option
-<code>ecb-layout-nr</code> to the related number):
+<p>Here are all currently available layouts (for creating own new layouts
+see <a href="#Creating%20a%20new%20ECB-layout">Creating a new ECB-layout</a>); just customize the option
+<code>ecb-layout-nr</code> to the related number:
 
 <dl>
 <dt>Layout Nr. 0
@@ -1581,22 +1582,34 @@ Up:<a rel=up accesskey=u href="#The%20ECB-layout">The ECB-layout</a>
 
 <h4>Interactively creating new layouts</h4>
 
+<p><strong>For Emacs 20.X users:</strong>
+
+<p>Creating new layouts is only possible (but nevertheless quite easy) by
+programming them with emacs-lisp, see <a href="#Programming%20new%20layouts">Programming new layouts</a>.
+
+<p><strong>For Emacs 21.X and XEmacs 21.X users:</strong>
+
 <p>If you want to create your own ECB-layout then you can do this very
 easy "by example" with the command <code>ecb-create-new-layout</code>. 
 This command creates a new empty frame and offers a small set of keys
 to create the new layout by splitting windows. 
 <code>ecb-create-new-layout</code> and this couple of keys are your guide
-during the layout-creation-process.
+during the layout-creation-process<a rel=footnote href="#fn-10"><sup>10</sup></a>.
 
 <p>After calling <code>ecb-create-new-layout</code> you will be asked which
 type of layout you want to create: "left", "right", "top". Here
 you specify where the ECB-tree-windows/buffers should be located in
 the ECB-frame:
+
 <ul>
 <li>left: All ECB-tree-windows are located on the left side
 <li>right: All ECB-tree-windows are located on the right side
 <li>top: All ECB-tree-windows are located on the top side
 </ul>
+
+<p>Depending on the type you choose the window is splitted by the values
+of the options <code>ecb-windows-width</code> (types "left" and "right")
+or <code>ecb-windows-height</code> (type "top").
 
 <p>Afterwards you will see a frame like follows (here the layout-type is
 "left"):
@@ -1618,6 +1631,10 @@ the ECB-frame:
 |              |                                      |
 |              |                                      |
 -------------------------------------------------------
+               |
+               |   ,---
+               `---| Splitted by the value of <code>ecb-windows-width</code>.
+                   `---
 </pre>
 
 <p>The big window (here the right window) will be the edit-window of the
@@ -1669,7 +1686,7 @@ Up:<a rel=up accesskey=u href="#Usage%20of%20ECB">Usage of ECB</a>
 
 <p>With ECB you can "browse" in your source-files like with a
 web-browser. This means ECB stores the current buffer- and
-window-position relative to the current token<a rel=footnote href="#fn-10"><sup>10</sup></a> in the edit-window after
+window-position relative to the current token<a rel=footnote href="#fn-11"><sup>11</sup></a> in the edit-window after
 
 <ul>
 <li>selecting a token in the ECB-methods buffer or
@@ -2347,7 +2364,7 @@ changing everyones <code>.emacs</code>-file and normally you will do this
 with the file <code>site-start.el</code>. You can customize all options of
 ECB in a central <code>site-start.el</code> (even the options mentioned
 above!) but you <strong>MUST NOT</strong> do this via <code>setq</code> but you have
-to use <code>custom-set-variables</code><a rel=footnote href="#fn-11"><sup>11</sup></a>! Here is a short example
+to use <code>custom-set-variables</code><a rel=footnote href="#fn-12"><sup>12</sup></a>! Here is a short example
 how this can be done:
 
 <br><pre>(custom-set-variables '(ecb-show-tokens ((include collapsed nil)
@@ -5354,7 +5371,7 @@ satisfied:
 
 <p>With unix-systems these tools are in the
 standard-distribution. If you are running any Microsoft Windows system
-then you need cygwin<a rel=footnote href="#fn-12"><sup>12</sup></a> which offers these tools too. On every
+then you need cygwin<a rel=footnote href="#fn-13"><sup>13</sup></a> which offers these tools too. On every
 system these tools must reside in the <code>PATH</code> environment-variable!
 
 <p>If you are behind a firewall and you have to use a proxy you maybe
@@ -5631,7 +5648,7 @@ the following example:
 </pre>
 
 <p>This code sets the new defined font <code>my-ecb-font</code> as font for
-all<a rel=footnote href="#fn-13"><sup>13</sup></a> ECB-tree-buffers (incl. the methods
+all<a rel=footnote href="#fn-14"><sup>14</sup></a> ECB-tree-buffers (incl. the methods
 buffer).
 
 <p><hr>
@@ -5873,7 +5890,7 @@ Up:<a rel=up accesskey=u href="#Elisp%20programming">Elisp programming</a>
 <h3>How to deal with the adviced window-functions</h3>
 
 <p>ECB offers for packages which work during activated ECB three macros
-for easy temporally<a rel=footnote href="#fn-14"><sup>14</sup></a> using all original-functions, all
+for easy temporally<a rel=footnote href="#fn-15"><sup>15</sup></a> using all original-functions, all
 adviced functions or only some adviced functions:
 
 <ul>
@@ -5893,10 +5910,13 @@ Up:<a rel=up accesskey=u href="#Elisp%20programming">Elisp programming</a>
 
 <h3>How to program new layouts</h3>
 
-<p>It's is strongly recommended to define new layouts interactively with
-the command <code>ecb-create-new-layout</code> (see <a href="#Creating%20a%20new%20ECB-layout">Creating a new ECB-layout</a>). But if you want to program a new layout with elisp-code
-use the macro <code>ecb-layout-define</code> (the following definiton has
-stripped the prefix "ecb-" for better indexing this manual):
+<p>At least for Emacs 21.X and XEmacs 21.X users it's is strongly
+recommended to define new layouts interactively with the command
+<code>ecb-create-new-layout</code> (see <a href="#Creating%20a%20new%20ECB-layout">Creating a new ECB-layout</a>). But
+if you want (with Emacs 20.X you must) to program a new layout with
+elisp-code use the macro <code>ecb-layout-define</code> (the following
+definiton has stripped the prefix "ecb-" for better indexing this
+manual):
 
 <p>
 <table width="100%">
@@ -6092,24 +6112,6 @@ size but splits the window equally. But if you add this to your
                      )))
 </pre>
 
-<h4>Package follow-mouse.el</h4>
-
-<p>The following is only relevant for Emacs 20.X!
-
-<p>ECB works very well with follow-mouse if follow-mouse is turned on
-<strong>BEFORE</strong> ECB is activated (e.g. within the
-<code>ecb-activate-hook</code>). But if you activate follow-mouse first
-after ECB is already activated, then the follow-mouse stuff prevents
-the complete node-name to be displayed in the echo-area if mouse moves
-over it. Because ECB has a much more intelligent mouse tracking
-mechanism than follow-mouse the follow-mouse stuff profit from ECB and
-works even better and saver as without activated ECB!
-
-<h4>Package VC (Version Control)</h4>
-
-<p>The variable <code>vc-delete-logbuf-window</code> must be set to nil during
-active ECB. This can be done with the hooks mentioned in <a href="#Elisp%20programming">Elisp programming</a>.
-
 <h4>Package cygwin-mount.el</h4>
 
 <p>There can be a conflict between ECB and cygwin-mount.el if the
@@ -6132,13 +6134,30 @@ least with Windows XP) and the cygwin-mount-table is never build.
 first *AFTER* ECB is activated. This can be done with the hook
 <code>ecb-activate-hook</code>:
 
-<br><pre>
-(add-hook 'ecb-activate-hook
+<br><pre>(add-hook 'ecb-activate-hook
           (function (lambda ()
                       (require 'cygwin-mount)
                       (setq cygwin-mount-build-mount-table-asynch t)
                       (cygwin-mount-activate))))
 </pre>
+
+<h4>Package follow-mouse.el</h4>
+
+<p>The following is only relevant for Emacs 20.X!
+
+<p>ECB works very well with follow-mouse if follow-mouse is turned on
+<strong>BEFORE</strong> ECB is activated (e.g. within the
+<code>ecb-activate-hook</code>). But if you activate follow-mouse first
+after ECB is already activated, then the follow-mouse stuff prevents
+the complete node-name to be displayed in the echo-area if mouse moves
+over it. Because ECB has a much more intelligent mouse tracking
+mechanism than follow-mouse the follow-mouse stuff profit from ECB and
+works even better and saver as without activated ECB!
+
+<h4>Package VC (Version Control)</h4>
+
+<p>The variable <code>vc-delete-logbuf-window</code> must be set to nil during
+active ECB. This can be done with the hooks mentioned in <a href="#Elisp%20programming">Elisp programming</a>.
 
 <p><hr>
 Node:<a name="Bugs">Bugs</a>,
@@ -6280,7 +6299,7 @@ to the ECB-history after ECB-start.
 
 <br></td></tr><tr align="left"><td valign="top">Is there an "Intellisense"-mechanism like with other IDEs? 
 </td><td valign="top"></td><td valign="top">
-For Java the JDEE<a rel=footnote href="#fn-15"><sup>15</sup></a> has this feature and for all other languages
+For Java the JDEE<a rel=footnote href="#fn-16"><sup>16</sup></a> has this feature and for all other languages
 semantic offer something similar, see
 <a href="http://cedet.sourceforge.net/intellisense.shtml">http://cedet.sourceforge.net/intellisense.shtml</a>
 
@@ -6621,9 +6640,9 @@ Up:<a rel=up accesskey=u href="#Top">Top</a>
 <li><a href="#Conflicts">Package avoid.el</a>
 <li><a href="#Conflicts">Package calculator.el</a>
 <li><a href="#Conflicts">Package calendar.el</a>
+<li><a href="#Conflicts">Package cygwin-mount.el</a>
 <li><a href="#Conflicts">Package follow-mouse.el</a>
 <li><a href="#Conflicts">Package VC (Version Control)</a>
-<li><a href="#Conflicts">Package cygwin-mount.el</a>
 </ul>
 <li><a href="#Bugs">Known bugs</a>
 </ul>
@@ -6681,30 +6700,36 @@ They can be used to run any arbitrary lisp code after a tree-buffer
 creation!</p>
 
 <li><a name="fn-10"></a>
+<p>During the creation
+process you will be asked in the minibuffer for several options; here
+you can use TAB-completion and an "empty" RET chooses always the
+first option!</p>
+
+<li><a name="fn-11"></a>
 <p>e.g. a method,
 a variable or any other semantic token</p>
 
-<li><a name="fn-11"></a>
+<li><a name="fn-12"></a>
 <p>At least for the options
 for which <code>setq</code> is explicitly forbidden, but it is recommended
 to use always <code>custom-set-variables</code>!</p>
 
-<li><a name="fn-12"></a>
+<li><a name="fn-13"></a>
 <p>cygwin is available at
 <a href="http://cygwin.com/">http://cygwin.com/</a>
 </p>
 
-<li><a name="fn-13"></a>
+<li><a name="fn-14"></a>
 <p>Of course <code>ecb-directories-general-face</code>,
 <code>ecb-sources-general-face</code>, <code>ecb-methods-general-face</code> and
 <code>ecb-history-general-face</code> must be set to
 <code>ecb-default-general-face</code>!</p>
 
-<li><a name="fn-14"></a>
+<li><a name="fn-15"></a>
 <p>I.e. regardless of the settings in
 <code>ecb-advice-window-functions</code>!</p>
 
-<li><a name="fn-15"></a>
+<li><a name="fn-16"></a>
 <p>
 <a href="http://jdee.sunsite.dk/">http://jdee.sunsite.dk/</a>
 </p>

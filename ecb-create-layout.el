@@ -498,12 +498,12 @@ DELETE-FRAME is not nil then the new created frame will be deleted and the
     (define-key ecb-create-layout-mode-map
       (string (+ i 48)) 'self-insert-command))
 
-   (if ecb-running-xemacs
-       (define-key ecb-create-layout-mode-map (kbd "<BS>")
-         'delete-backward-char)
-     (define-key ecb-create-layout-mode-map (kbd "<DEL>")
-       'backward-delete-char-untabify))
-   
+  (if ecb-running-xemacs
+      (define-key ecb-create-layout-mode-map (kbd "<BS>")
+        'delete-backward-char)
+    (define-key ecb-create-layout-mode-map (kbd "<DEL>")
+      'backward-delete-char-untabify))
+
   (define-key ecb-create-layout-mode-map (kbd "C-q")
     'ecb-create-layout-save-and-quit)
   (define-key ecb-create-layout-mode-map (kbd "C-c")
@@ -522,6 +522,12 @@ DELETE-FRAME is not nil then the new created frame will be deleted and the
     'ecb-create-layout-next-window)
   (define-key ecb-create-layout-mode-map (kbd "C-p")
     'ecb-create-layout-previous-window)
+  (define-key ecb-create-layout-mode-map (kbd "C-h v")
+    'describe-variable)
+  (define-key ecb-create-layout-mode-map (kbd "C-h k")
+    'describe-key)
+  (define-key ecb-create-layout-mode-map (kbd "M-<down>")
+    'scroll-other-window)
   (set-keymap-parent ecb-create-layout-mode-map nil))
 
 
@@ -579,6 +585,7 @@ DELETE-FRAME is not nil then the new created frame will be deleted and the
   (ecb-create-layout-new-buffer))  
   
 (defun ecb-create-layout-make-frame ()
+  "Create a new frame for the layout creation process and return it."
   (if ecb-running-xemacs
       (make-frame `((name . ,ecb-create-layout-frame-name)
                     (minibuffer . t)
@@ -616,22 +623,31 @@ DELETE-FRAME is not nil then the new created frame will be deleted and the
   "Start process for interactively creating a new ECB-layout."
   (interactive)
   (if (not (or ecb-running-emacs-21 ecb-running-xemacs))
-      (error "Interactively creating new layouts not possible with Emacs 20.X!")
+      (error "This command works not with Emacs 20.X; use the macro 'ecb-layout-define'!")
     (ecb-create-layout-initilize)
     (setq ecb-create-layout-frame (ecb-create-layout-make-frame))
     (raise-frame ecb-create-layout-frame)
     (select-frame ecb-create-layout-frame)
     (ad-enable-advice 'delete-frame 'before 'ecb-create-layout)
     (ad-activate 'delete-frame)
+
+    ;; global map
     (setq ecb-create-layout-old-global-map (current-global-map))
     (use-global-map ecb-create-layout-mode-map)
+
+    ;; minor-modes map
     (setq ecb-create-layout-old-minor-mode-map-alist minor-mode-map-alist)
     (setq minor-mode-map-alist nil)
+
+    ;; horiz. scrolling
     (when ecb-running-emacs-21
       (setq ecb-create-layout-old-hscroll automatic-hscrolling)
       (setq automatic-hscrolling nil))
+
+    ;; debug on error
     (setq ecb-create-layout-old-debug-on-error debug-on-error)
     (setq debug-on-error nil)
+    
     (ecb-create-layout-init-layout t)))
 
 (provide 'ecb-create-layout)

@@ -37,15 +37,42 @@
 ;;    specified in `ecb-layout-nr'. All changes to the layout must be made
 ;;    by customizing this new option. Please read the very detailed comment
 ;;    of `ecb-layout-nr'!
-;; 2. Adding new layouts is now much easier and more straightforward:
-;;    We have now a main core-layout function (`ecb-redraw-layout') which is
-;;    the "environment" for the specific "layout-index" functions. The core
+;; 2. Adding new layouts is now much easier and more straightforward: We have
+;;    now a main core-layout function (`ecb-redraw-layout-full') which is the
+;;    "environment" for the specific "layout-index" functions. The core
 ;;    function does first some layout independent actions, then calls the
 ;;    layout-index-function for the index which has been set in
-;;    `ecb-layout-nr' and after that it does some layout independent
-;;    actions again (see the comments in this function).
-;;    See the macro `ecb-layout-define' and the command
-;;    `ecb-create-new-layout'!
+;;    `ecb-layout-nr' and after that it does some layout independent actions
+;;    again (see the comments in this function). See the macro
+;;    `ecb-layout-define' and the command `ecb-create-new-layout'!
+;;
+;; Backgroud-info: For each layout-type (ecb-windows left, right or top) there
+;; are two functions:
+;; - 'ecb-delete-other-windows-ecb-windows[left|right|top]' and
+;; - 'ecb-delete-window-ecb-windows[left|right|top]'.
+;; Both of these functions follow these guide-lines:
+;; - Preconditions for these functions:
+;;   + the edit window is splitted
+;;   + The function gets one argument 'split' which can have the values
+;;     'horizontal and 'vertical.
+;;   + These functions are always(!) called with deactivated advice
+;;     `delete-window' function.
+;; - What must they do:
+;;   1. Checking if the point is in one of the two parts of the splitted
+;;      edit-window. If in another window, do nothing and return nil.
+;;   2. Checking in which part of the splitted editwindow the point is.
+;;   3. Doing the appropriate action (e.g.
+;;      `ecb-delete-window-ecb-windows-left' must delete this half-part
+;;      of the splitted edit-window which contains the point, so the other
+;;      half-part fills the whole edit-window. If the split has been undone
+;;      then non nil must be returned! This action must be done appropriate
+;;      for the current ECB-layout type.
+;;   4. These functions can only use `delete-window' of the set of maybe
+;;      adviced window functions, because of a bug in advice.el only one
+;;      function´s advice can be deactivated within a advice itself!
+;; - Postcondition of these functions:
+;;   + The edit-window must not be splitted and the point must reside in
+;;     the not deleted edit-window.
 ;;
 ;; New adviced intelligent window-functions as replacement for these originals:
 ;; - `other-window'
@@ -75,35 +102,8 @@
 ;; - `ecb-with-adviced-functions'
 ;; - `ecb-with-some-adviced-functions'
 ;;
-;; For each layout-type (ecb-windows left, right or top) there are two
-;; functions:
-;; - 'ecb-delete-other-windows-ecb-windows[left|right|top]' and
-;; - 'ecb-delete-window-ecb-windows[left|right|top]'.
-;; Both of these functions follow the following guide-lines:
-;; - Preconditions for these functions:
-;;   + the edit window is splitted
-;;   + The function gets one argument 'split' which can have the values
-;;     'horizontal and 'vertical.
-;;   + These functions are always(!) called with deactivated advice
-;;     `delete-window' function.
-;; - What must they do:
-;;   1. Checking if the point is in one of the two parts of the splitted
-;;      edit-window. If in another window, do nothing and return nil.
-;;   2. Checking in which part of the splitted editwindow the point is.
-;;   3. Doing the appropriate action (e.g.
-;;      `ecb-delete-window-ecb-windows-left' must delete this half-part
-;;      of the splitted edit-window which contains the point, so the other
-;;      half-part fills the whole edit-window. If the split has been undone
-;;      then non nil must be returned! This action must be done appropriate
-;;      for the current ECB-layout type.
-;;   4. These functions can only use `delete-window' of the set of maybe
-;;      adviced window functions, because of a bug in advice.el only one
-;;      function´s advice can be deactivated within a advice itself!
-;; - Postcondition of these functions:
-;;   + The edit-window must not be splitted and the point must reside in
-;;     the not deleted edit-window.
 
-;; $Id: ecb-layout.el,v 1.119 2002/10/18 10:45:44 berndl Exp $
+;; $Id: ecb-layout.el,v 1.120 2002/10/21 11:38:34 berndl Exp $
 
 ;;; Code:
 

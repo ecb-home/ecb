@@ -988,8 +988,9 @@ change the location of the collapse- and expand-symbols and the indendation
 of sub-nodes in a tree. See `ecb-tree-indent' and
 `ecb-tree-expand-symbol-before'.
 
-Here are all currently available layouts (Just customize the option
-`ecb-layout-nr' to the related number):
+Here are all currently available layouts (for creating own new layouts see
+*Note Creating a new ECB-layout::); just customize the option `ecb-layout-nr'
+to the related number:
 
 Layout Nr. 0
       -------------------------------------------------------
@@ -1418,20 +1419,32 @@ File: ecb.info,  Node: Creating a new ECB-layout,  Prev: Redrawing the ECB-layou
 Interactively creating new layouts
 ----------------------------------
 
+*For Emacs 20.X users:*
+
+Creating new layouts is only possible (but nevertheless quite easy) by
+programming them with emacs-lisp, see *Note Programming new layouts::.
+
+*For Emacs 21.X and XEmacs 21.X users:*
+
 If you want to create your own ECB-layout then you can do this very easy "by
 example" with the command `ecb-create-new-layout'.  This command creates a
 new empty frame and offers a small set of keys to create the new layout by
 splitting windows.  `ecb-create-new-layout' and this couple of keys are your
-guide during the layout-creation-process.
+guide during the layout-creation-process(1).
 
 After calling `ecb-create-new-layout' you will be asked which type of layout
 you want to create: "left", "right", "top". Here you specify where the
 ECB-tree-windows/buffers should be located in the ECB-frame:
+
  - left: All ECB-tree-windows are located on the left side
 
  - right: All ECB-tree-windows are located on the right side
 
  - top: All ECB-tree-windows are located on the top side
+
+Depending on the type you choose the window is splitted by the values of the
+options `ecb-windows-width' (types "left" and "right") or
+`ecb-windows-height' (type "top").
 
 Afterwards you will see a frame like follows (here the layout-type is "left"):
 
@@ -1452,6 +1465,10 @@ Afterwards you will see a frame like follows (here the layout-type is "left"):
    |              |                                      |
    |              |                                      |
    -------------------------------------------------------
+                  |
+                  |   ,---
+                  `---| Splitted by the value of `ecb-windows-width'.
+                      `---
 
 The big window (here the right window) will be the edit-window of the new
 layout and can not be selected, deleted or splitted during the creation
@@ -1474,6 +1491,12 @@ the mouse-commands).
 
 For programming new layouts with emacs-lisp see *Note Programming new
 layouts::.
+
+---------- Footnotes ----------
+
+(1) During the creation process you will be asked in the minibuffer for
+several options; here you can use TAB-completion and an "empty" RET chooses
+always the first option!
 
 
 File: ecb.info,  Node: Hiding the ECB windows,  Next: Back/forward navigation,  Prev: The ECB-layout,  Up: Usage of ECB
@@ -3983,9 +4006,10 @@ File: ecb.info,  Node: Programming new layouts,  Prev: Adviced functions,  Up: E
 How to program new layouts
 ==========================
 
-It's is strongly recommended to define new layouts interactively with the
-command `ecb-create-new-layout' (*note Creating a new ECB-layout::). But if
-you want to program a new layout with elisp-code use the macro
+At least for Emacs 21.X and XEmacs 21.X users it's is strongly recommended to
+define new layouts interactively with the command `ecb-create-new-layout'
+(*note Creating a new ECB-layout::). But if you want (with Emacs 20.X you
+must) to program a new layout with elisp-code use the macro
 `ecb-layout-define' (the following definiton has stripped the prefix "ecb-"
 for better indexing this manual):
 
@@ -4158,25 +4182,6 @@ but splits the window equally. But if you add this to your `.emacs' it works:
                                (shrink-window (- (window-height) 9))))
                         )))
 
-Package follow-mouse.el
------------------------
-
-The following is only relevant for Emacs 20.X!
-
-ECB works very well with follow-mouse if follow-mouse is turned on *BEFORE*
-ECB is activated (e.g. within the `ecb-activate-hook'). But if you activate
-follow-mouse first after ECB is already activated, then the follow-mouse
-stuff prevents the complete node-name to be displayed in the echo-area if
-mouse moves over it. Because ECB has a much more intelligent mouse tracking
-mechanism than follow-mouse the follow-mouse stuff profit from ECB and works
-even better and saver as without activated ECB!
-
-Package VC (Version Control)
-----------------------------
-
-The variable `vc-delete-logbuf-window' must be set to nil during active ECB.
-This can be done with the hooks mentioned in *Note Elisp programming::.
-
 Package cygwin-mount.el
 -----------------------
 
@@ -4198,12 +4203,30 @@ least with Windows XP) and the cygwin-mount-table is never build.
 But there is an easy work-around: Call `cygwin-mount-activate' first *AFTER*
 ECB is activated. This can be done with the hook `ecb-activate-hook':
 
-
    (add-hook 'ecb-activate-hook
              (function (lambda ()
                          (require 'cygwin-mount)
                          (setq cygwin-mount-build-mount-table-asynch t)
                          (cygwin-mount-activate))))
+
+Package follow-mouse.el
+-----------------------
+
+The following is only relevant for Emacs 20.X!
+
+ECB works very well with follow-mouse if follow-mouse is turned on *BEFORE*
+ECB is activated (e.g. within the `ecb-activate-hook'). But if you activate
+follow-mouse first after ECB is already activated, then the follow-mouse
+stuff prevents the complete node-name to be displayed in the echo-area if
+mouse moves over it. Because ECB has a much more intelligent mouse tracking
+mechanism than follow-mouse the follow-mouse stuff profit from ECB and works
+even better and saver as without activated ECB!
+
+Package VC (Version Control)
+----------------------------
+
+The variable `vc-delete-logbuf-window' must be set to nil during active ECB.
+This can be done with the hooks mentioned in *Note Elisp programming::.
 
 
 File: ecb.info,  Node: Bugs,  Prev: Conflicts,  Up: Conflicts and bugs
@@ -4562,59 +4585,60 @@ Node: Customizing the display36134
 Node: Rebuilding the Methods37856
 Node: The ECB-layout38711
 Node: Changing the ECB-layout39358
-Node: Redrawing the ECB-layout63524
-Node: Creating a new ECB-layout64361
-Node: Hiding the ECB windows67403
-Node: Back/forward navigation67976
-Ref: Back/forward navigation-Footnote-169077
-Node: ECB-window synchronizing69136
-Node: Interactive ECB commands71718
-Node: Customizing80697
-Node: General aspects81331
-Ref: General aspects-Footnote-184095
-Node: Most important options84227
-Node: Customizable options86020
-Node: ecb-general87240
-Node: ecb-directories106850
-Node: ecb-sources113005
-Node: ecb-methods115260
-Node: ecb-history127529
-Node: ecb-layout129590
-Node: ecb-create-layout143399
-Node: ecb-face-options143902
-Node: ecb-faces147331
-Node: ecb-download151323
-Node: Submitting problem report152532
-Node: Upgrading153895
-Node: Downloading new versions154658
-Ref: Download required packages156415
-Ref: Downloading new versions-Footnote-1157513
-Node: Auto. option-upgrading157562
-Node: User interface157870
-Node: Background information158756
-Node: Tips and tricks162154
-Node: Changing faces162847
-Ref: Changing faces-Footnote-1165683
-Node: Small screens165859
-Node: Simulating speedbar167253
-Node: Integrating speedbar168062
-Node: Optimize scrolling168328
-Node: Large directories169408
-Node: Using eshell170074
-Node: Elisp programming170264
-Node: List of variables170873
-Node: List of hooks171185
-Node: tree-buffer171970
-Node: Adviced functions172776
-Ref: Adviced functions-Footnote-1173395
-Node: Programming new layouts173466
-Node: Conflicts and bugs178721
-Node: Conflicts179196
-Node: Bugs182655
-Node: FAQ182875
-Ref: FAQ-Footnote-1187627
-Node: Command Index187658
-Node: Option Index189908
-Node: Concept Index195940
+Node: Redrawing the ECB-layout63592
+Node: Creating a new ECB-layout64429
+Ref: Creating a new ECB-layout-Footnote-168032
+Node: Hiding the ECB windows68206
+Node: Back/forward navigation68779
+Ref: Back/forward navigation-Footnote-169880
+Node: ECB-window synchronizing69939
+Node: Interactive ECB commands72521
+Node: Customizing81500
+Node: General aspects82134
+Ref: General aspects-Footnote-184898
+Node: Most important options85030
+Node: Customizable options86823
+Node: ecb-general88043
+Node: ecb-directories107653
+Node: ecb-sources113808
+Node: ecb-methods116063
+Node: ecb-history128332
+Node: ecb-layout130393
+Node: ecb-create-layout144202
+Node: ecb-face-options144705
+Node: ecb-faces148134
+Node: ecb-download152126
+Node: Submitting problem report153335
+Node: Upgrading154698
+Node: Downloading new versions155461
+Ref: Download required packages157218
+Ref: Downloading new versions-Footnote-1158316
+Node: Auto. option-upgrading158365
+Node: User interface158673
+Node: Background information159559
+Node: Tips and tricks162957
+Node: Changing faces163650
+Ref: Changing faces-Footnote-1166486
+Node: Small screens166662
+Node: Simulating speedbar168056
+Node: Integrating speedbar168865
+Node: Optimize scrolling169131
+Node: Large directories170211
+Node: Using eshell170877
+Node: Elisp programming171067
+Node: List of variables171676
+Node: List of hooks171988
+Node: tree-buffer172773
+Node: Adviced functions173579
+Ref: Adviced functions-Footnote-1174198
+Node: Programming new layouts174269
+Node: Conflicts and bugs179597
+Node: Conflicts180072
+Node: Bugs183530
+Node: FAQ183750
+Ref: FAQ-Footnote-1188502
+Node: Command Index188533
+Node: Option Index190783
+Node: Concept Index196815
 
 End Tag Table
