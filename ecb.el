@@ -81,6 +81,8 @@
   "Path to currently selected directory.")
 (defvar ecb-path-selected-source nil
   "Path to currently selected source.")
+(defvar ecb-selected-token nil
+  "The currently selected Semantic token.")
 (defvar ecb-methods-root-node nil
   "Path to currently selected source.")
 
@@ -399,6 +401,16 @@ so the user can easily jump back."
                 (const :tag "Show variables collapsed"
                        :value collapsed)
                 (const :tag "Do not show variables"
+                       :value nil)))
+
+(defcustom ecb-highlight-token-with-point 'highlight
+  "*How to highlight the method or variable under the cursor."
+  :group 'ecb-methods
+  :type '(radio (const :tag "Highlight and scroll window"
+                       :value highlight-scroll)
+                (const :tag "Just highlight"
+                       :value highlight)
+                (const :tag "Do not highlight"
                        :value nil)))
 
 (defcustom ecb-tree-indent 2
@@ -856,7 +868,7 @@ given."
 (defun ecb-update-methods-after-saving ()
   "Updates the methods-buffer after saving if this option is turned on and if
 current-buffer is saved."
-  (if (and ecb-auto-update-methods-after-save
+  (when (and ecb-auto-update-methods-after-save
            ecb-last-edit-window-with-point
            ;; this prevents updating the method buffer after saving a not
            ;; current buffer (e.g. with `save-some-buffers'), because this
@@ -864,7 +876,8 @@ current-buffer is saved."
            ;; current source-buffer.
            (eq (current-buffer)
                (window-buffer ecb-last-edit-window-with-point)))
-      (ecb-update-methods-buffer--internal)))
+    (ecb-select-source-file ecb-path-selected-source)
+    (ecb-update-methods-buffer--internal)))
 
 ;; This variable is only set and evaluated by the functions
 ;; `ecb-update-methods-buffer--internal' and
@@ -1008,10 +1021,21 @@ For further explanation see `ecb-clear-history-behavior'."
      (tree-buffer-update)
      (tree-buffer-highlight-node-data ecb-path-selected-source))))
 
+(defun ecb-token-sync()
+  (when ecb-highlight-token-with-point
+    (let* ((tok (semantic-current-nonterminal)))
+      (when (not (eq ecb-selected-token tok))
+	(setq ecb-selected-token tok)
+	(save-selected-window
+	  (ecb-exec-in-methods-window
+	   (tree-buffer-highlight-node-data
+	    tok (equal ecb-highlight-token-with-point 'highlight))))))))
+
 (defun ecb-current-buffer-sync(&optional opt-buffer)
   "Synchronizes the ECB buffers with the current buffer."
   (interactive)
   ;;(message (prin1-to-string this-command))
+  (ecb-token-sync)
   (let ((filename (buffer-file-name (if opt-buffer opt-buffer (current-buffer)))))
     (when (and filename (not (string= filename ecb-path-selected-source)))
       ;; KB: seems this little sleep is necessary because otherwise jumping to
@@ -1282,6 +1306,11 @@ Currently the fourth argument TREE-BUFFER-NAME is not used here."
 		  (tree-buffer-get-node-indent node))
 	       (window-width)))))
 
+(defun ecb-mouse-over-directory-node(node)
+  (if (= (tree-node-get-type node) 1)
+      (ecb-mouse-over-node node)
+    (message (tree-node-get-data node))))
+
 (defun ecb-mouse-over-node(node)
   ;; For buffers that hasnt been saved yet
   (ignore-errors
@@ -1334,7 +1363,7 @@ with the actually choosen layout \(see `ecb-layout-nr')."
          'ecb-interpret-mouse-click
          'ecb-tree-buffer-node-select-callback
          'ecb-tree-buffer-node-expand-callback
-         'ecb-mouse-over-node
+         'ecb-mouse-over-directory-node
          (list (cons 0 ecb-directories-menu) (cons 1 ecb-sources-menu))
          ecb-truncate-lines
          t
@@ -1400,8 +1429,8 @@ with the actually choosen layout \(see `ecb-layout-nr')."
     ;; we need some hooks
     (add-hook 'semantic-after-toplevel-bovinate-hook
               'ecb-rebuild-methods-buffer-after-parsing)
-    (remove-hook 'post-command-hook 'ecb-hook)
-    (add-hook 'post-command-hook 'ecb-hook)
+    (remove-hook 'post-command-hook 'ecb-post-command-hook)
+    (add-hook 'post-command-hook 'ecb-post-command-hook)
     (add-hook 'pre-command-hook 'ecb-pre-command-hook-function)
     (add-hook 'after-save-hook 'ecb-update-methods-after-saving)
     (add-hook 'compilation-mode-hook
@@ -1460,7 +1489,7 @@ with the actually choosen layout \(see `ecb-layout-nr')."
     ;; remove the hooks
     (remove-hook 'semantic-after-toplevel-bovinate-hook
                  'ecb-rebuild-methods-buffer-after-parsing)
-    (remove-hook 'post-command-hook 'ecb-hook)
+    (remove-hook 'post-command-hook 'ecb-post-command-hook)
     (remove-hook 'pre-command-hook 'ecb-pre-command-hook-function)
     (remove-hook 'after-save-hook 'ecb-update-methods-after-saving)
     (remove-hook 'compilation-mode-hook
@@ -1495,7 +1524,7 @@ with the actually choosen layout \(see `ecb-layout-nr')."
 
 (defvar ecb-sources-menu nil)
 (setq ecb-sources-menu (make-sparse-keymap "Source Menu"))
-(define-key ecb-sources-menu [ecb-delete-source-2] '("Delete Source" . t))
+(define-key ecb-sources-menu [ecb-delete-source-2] '("Delete File" . t))
 (define-key ecb-sources-menu [ecb-create-file-2] '("Create File" . t))
 (define-key ecb-sources-menu [ecb-create-source-2] '("Create Source" . t))
 
@@ -1534,9 +1563,9 @@ buffers does not exist anymore."
 (define-key ecb-history-menu [ecb-clear-history-only-not-existing]
   '("Remove not existing buffer-entries" . t))
 
-(defun ecb-hook()
-  (if (and ecb-window-sync (eq (selected-frame) ecb-frame))
-      (ignore-errors (ecb-current-buffer-sync))))
+(defun ecb-post-command-hook()
+  (when (and ecb-window-sync (eq (selected-frame) ecb-frame))
+    (ignore-errors (ecb-current-buffer-sync))))
 
 
 ;; ECB byte-compilation
