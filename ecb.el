@@ -7,7 +7,7 @@
 ;; Keywords: java, class, browser
 ;; Created: Jul 2000
 
-(defvar ecb-version "1.40beta1"
+(defvar ecb-version "1.40beta2"
   "Current ECB version.")
 
 ;; This program is free software; you can redistribute it and/or modify it under
@@ -54,7 +54,7 @@
 ;; The latest version of the ECB is available at
 ;; http://home.swipnet.se/mayhem/ecb.html
 
-;; $Id: ecb.el,v 1.116 2001/06/22 17:40:02 berndl Exp $
+;; $Id: ecb.el,v 1.117 2001/06/24 15:58:34 berndl Exp $
 
 ;;; Code:
 

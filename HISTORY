@@ -1,3 +1,10 @@
+Version 1.40beta2:
+------------------
+
+- ecb-toggle-ecb-windows now preserves the split, the split-amount, the buffer
+  contents, the window starts and current point. (Klaus)
+
+
 Version 1.40beta1:
 ------------------
 

@@ -102,8 +102,8 @@
 ;;   + the edit window is splitted
 ;;   + The function gets one argument 'split' which can have the values
 ;;     'horizontal and 'vertical.
-;;   + These functions are always(!) with deactivated adviced `delete-window'
-;;     function.
+;;   + These functions are always(!) called with deactivated advice
+;;     `delete-window' function.
 ;; - What must they do:
 ;;   1. Checking if the point is in one of the two parts of the splitted
 ;;      edit-window. If in another window, do nothing and return nil.
@@ -121,7 +121,7 @@
 ;;   + The edit-window must not be splitted and the point must reside in
 ;;     the not deleted edit-window.
 
-;; $Id: ecb-layout.el,v 1.62 2001/06/22 17:40:02 berndl Exp $
+;; $Id: ecb-layout.el,v 1.63 2001/06/24 15:58:33 berndl Exp $
 
 ;;; Code:
 
@@ -1100,12 +1100,36 @@ visibility of the ECB windows. ECB minor mode remains active!"
           (if (not (ecb-point-in-edit-window))
               (ecb-select-edit-window))
           (ecb-with-original-functions
-           (let ((split (ecb-edit-window-splitted)))
+           (let* ((config (ecb-edit-window-configuration))
+                  (split-before-redraw (car (nth 0 config)))
+                  (split-amount-before-redraw (cdr (nth 0 config)))
+                  (window-before-redraw (nth 1 config))
+                  (pos-before-redraw (nth 2 config))
+                  (saved-edit-1 (nth 3 config))
+                  (saved-edit-2 (nth 4 config)))                  
              (delete-other-windows)
-             (cond ((equal split 'vertical)
-                    (split-window-vertically))
-                   ((equal split 'horizontal)
-                    (split-window-horizontally)))))
+             (cond ((equal split-before-redraw 'horizontal)
+                    (ecb-split-hor 0.5 t))
+                   ((equal split-before-redraw 'vertical)
+                    (ecb-split-ver split-amount-before-redraw t)))      
+             (setq ecb-edit-window (selected-window))
+             ;; Restore edit window buffers
+             (set-window-buffer ecb-edit-window (car saved-edit-1))
+             (set-window-start ecb-edit-window (cdr saved-edit-1))
+             (when (and split-before-redraw saved-edit-2)
+               (set-window-buffer (next-window ecb-edit-window) (car saved-edit-2))
+               (set-window-start (next-window ecb-edit-window) (cdr saved-edit-2)))
+             ;; at the end of the redraw we always stay in that edit-window as
+             ;; before the redraw
+             (ecb-select-edit-window)    
+             (if (equal window-before-redraw 2)
+                 (select-window (next-window)))
+             ;; if we were in an edit-window before redraw let us go to the
+             ;; old place
+             (when pos-before-redraw
+               (goto-char pos-before-redraw))
+             (setq ecb-last-source-buffer (current-buffer))
+             (setq ecb-last-edit-window-with-point (selected-window))))             
           (setq ecb-windows-hidden t))))))
 
 (defun ecb-hide-ecb-windows ()
@@ -1117,29 +1141,39 @@ visibility of the ECB windows. ECB minor mode remains active!"
   "Make the ECB windows visible."
   (interactive)
   (ecb-toggle-ecb-windows 1))
-      
+
+
+(defun ecb-edit-window-configuration ()
+  (let ((split (ecb-edit-window-splitted))
+        (selected-edit-window (ecb-point-in-edit-window)))
+    (list (cons split (if (equal split 'vertical)
+                          (window-height ecb-edit-window)))
+          selected-edit-window
+          (if selected-edit-window (point))
+          (cons (ignore-errors (window-buffer ecb-edit-window))
+                (ignore-errors (window-start ecb-edit-window)))
+          (if split
+              (cons (ignore-errors (window-buffer (next-window ecb-edit-window)))
+                    (ignore-errors (window-start (next-window ecb-edit-window)))))
+          )
+    ))
+
 ;; the main layout core-function. This function is the "environment" for a
 ;; special layout function (l.b.)
 
-(defun ecb-redraw-layout ()
+(defun ecb-redraw-layout (&optional force)
   "Redraw the ECB screen according to the layout set in `ecb-layout-nr'. After
 this function the edit-window is selected which was current before redrawing."
-  (interactive)
+  (interactive "P")
   (unless (or (not ecb-minor-mode)
               (not (equal (selected-frame) ecb-frame)))
-    (let* ((split-before-redraw (ecb-edit-window-splitted))
-           (saved-edit-buffer-1 (ignore-errors (window-buffer ecb-edit-window)))
-           (saved-edit-buffer-2 (ignore-errors
-                                  (window-buffer (next-window ecb-edit-window))))
-           (saved-edit-window-start (ignore-errors (window-start ecb-edit-window)))
-           (window-before-redraw (cond ((equal (selected-window) ecb-edit-window)
-                                        1)
-                                       ((and split-before-redraw
-                                             (equal (previous-window (selected-window) 0)
-                                                    ecb-edit-window))
-                                        2)
-                                       (t 0)))
-           (pos-before-redraw (and (> window-before-redraw 0) (point)))
+    (let* ((config (ecb-edit-window-configuration))
+           (split-before-redraw (car (nth 0 config)))
+           (split-amount-before-redraw (cdr (nth 0 config)))
+           (window-before-redraw (nth 1 config))
+           (pos-before-redraw (nth 2 config))
+           (saved-edit-1 (nth 3 config))
+           (saved-edit-2 (nth 4 config))
            (tree-windows-before-redraw (ecb-layout-get-current-tree-windows)))
       
       ;; deactivating the adviced functions, so the layout-functions can use the
@@ -1160,7 +1194,7 @@ this function the edit-window is selected which was current before redrawing."
       (funcall (intern (format "ecb-layout-function-%d" ecb-layout-nr)))
       
       ;; Now all the windows must be created and the editing window must not
-      ;; be splitted! In addition the variables `ecb-edit-window' must be set
+      ;; be splitted! In addition the variable `ecb-edit-window' must be set
       ;; the correct windows.
       
       (select-window (if ecb-edit-window
@@ -1172,34 +1206,33 @@ this function the edit-window is selected which was current before redrawing."
       (cond ((equal split-before-redraw 'horizontal)
              (ecb-split-hor 0.5 t))
             ((equal split-before-redraw 'vertical)
-             (ecb-split-ver 0.5 t)))
+             (ecb-split-ver split-amount-before-redraw t)))
       
       ;; Restore edit window buffers
-      (when (and saved-edit-window-start saved-edit-buffer-1 saved-edit-buffer-2)
-        (set-window-buffer ecb-edit-window saved-edit-buffer-1)
-        (set-window-start ecb-edit-window saved-edit-window-start)
-        (when split-before-redraw
-          (set-window-buffer (next-window ecb-edit-window) saved-edit-buffer-2)))
+      (set-window-buffer ecb-edit-window (car saved-edit-1))
+      (set-window-start ecb-edit-window (cdr saved-edit-1))
+      (when (and split-before-redraw saved-edit-2)
+        (set-window-buffer (next-window ecb-edit-window) (car saved-edit-2))
+        (set-window-start (next-window ecb-edit-window) (cdr saved-edit-2)))
       
       ;; Restore saved window sizes
       (ecb-restore-window-sizes)
 
       ;; at the end of the redraw we always stay in that edit-window as before
       ;; the redraw
-      (ecb-select-edit-window)
-      
+      (ecb-select-edit-window)    
       (if (equal window-before-redraw 2)
           (select-window (next-window)))
       
-      (setq ecb-last-edit-window-with-point (selected-window))
-      
-      ;; activating the adviced functions
-      (ecb-activate-adviced-functions ecb-advice-window-functions)
-      
       ;; if we were in an edit-window before redraw let us go to the old place
       (when pos-before-redraw
-        (goto-char pos-before-redraw)
-        (setq ecb-last-source-buffer (current-buffer)))
+        (goto-char pos-before-redraw))
+      
+      (setq ecb-last-source-buffer (current-buffer))
+      (setq ecb-last-edit-window-with-point (selected-window))
+      
+      ;; activating the adviced functions again
+      (ecb-activate-adviced-functions ecb-advice-window-functions)
       
       ;; synchronize the tree-buffers if necessary (means if not all
       ;; tree-windows of current layout were visible before redraw).
