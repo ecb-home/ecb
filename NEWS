@@ -9,6 +9,10 @@
 ** ECB now includes a file "ecb-autoloads.el" which contains all available
    autoloads of ECB. Therefore loading this file is enough.
   
+** The command `ecb-store-window-sizes' can now also store fixed sizes.
+   If called with a prefix arg then fixed sizes are stored instead of
+   fractions of frame-width resp. -height.
+
 ** "Create Source" in the popup-menues now work also for non-java-files.
 
 ** Added a command `ecb-jde-display-class-at-point' which displays the contents
