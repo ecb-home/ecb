@@ -220,6 +220,7 @@ How to program new layouts and new special windows
 
 * Programming a new layout::    How to program a new layout
 * Programming special windows:: Aspects of programming special windows
+* Possible layout-outlines::    The wide range of possible layouts
 * The layout-engine API::       The complete layout-engine API
 
 Known conflicts and bugs of ECB
@@ -5075,7 +5076,8 @@ elisp-program. This contains:
 @node List of variables, List of hooks, Elisp programming, Elisp programming
 @section Variables for elisp-programs
 
-Variables an elisp-program can use:
+Variables an elisp-program can use beyond those ones mentioned in
+@ref{The layout-engine}:
 
 @itemize @bullet
 @item @code{ecb-source-path-functions}
@@ -5174,6 +5176,7 @@ subsection.
 @menu
 * Programming a new layout::    How to program a new layout
 * Programming special windows:: Aspects of programming special windows
+* Possible layout-outlines::    The wide range of possible layouts
 * The layout-engine API::       The complete layout-engine API
 @end menu
 
@@ -5204,12 +5207,14 @@ ECB-windows/buffers. This macro adds the layout with @var{NAME} and
 Preconditions for @var{CREATE-CODE}:
 @enumerate
 @item
-Current frame is splitted at least in one edit-window and the column
-(for layout types left, right and left-right) resp. row (for a top
-layout) for the special ECB-windows/buffers. Depending on the value of
-the option @code{ecb-compile-window-height} there is also a compile
-window at the bottom of the frame which is stored in
-@code{ecb-compile-window}.
+Current frame is splitted at least in one edit-window and the
+``column'' (for layout types left, right and left-right) resp. ``row''
+(for a top layout) for the special ECB-windows/buffers. The width of
+the ``column'' resp. the height of the ``row'' is always defined with
+the option @code{ecb-windows-width} resp. @code{ecb-windows-height}.
+Depending on the value of the option @code{ecb-compile-window-height}
+there is also a compile window at the bottom of the frame which is
+stored in @code{ecb-compile-window}.
 
 @item
 All windows are not dedicated.
@@ -5364,7 +5369,7 @@ which looks like:
 @end group
 @end example
 
-@node Programming special windows, The layout-engine API, Programming a new layout, The layout-engine
+@node Programming special windows, Possible layout-outlines, Programming a new layout, The layout-engine
 @subsection All aspects of programming special windows
 
 ECB offers a flexible programmable layout-engine for other packages to
@@ -5399,7 +5404,6 @@ Here comes the example:
 |Type: file                            |[next]        |
 |Size: 23456                           |              |
 |Modes: rw-rw-rw-                      |              |
-|                                      |              |
 |-----------------------------------------------------|
 |                                                     |
 |                                                     |
@@ -5618,15 +5622,241 @@ with current edit-window. We do this by adding
 shows a smarter mechanism for (de)activating the new layout and the
 synchronization but this works also very well).
 
-
 @lisp
 (add-hook 'ecb-current-buffer-sync-hook 'ecb-examples-bufferinfo-sync)
 @end lisp
 
+@subsubsection Activating and deactivating new layouts
+
+Because a set of new special windows integrated in a new layout is
+often just the GUI of a complete tool (like a graphical debugger) we
+demonstrate here the complete activation and deactivation of such a
+tool or at least of the tool-GUI. We decide that the GUI of our
+example ``tool'' needs a compile-window with height 5 lines and the
+height of the special windows ``row'' on top should be exactly 6 lines
+(normally width and height of the special windows should be a fraction
+of the frame, but here we use 6 lines@footnote{You can change the code
+in the file @file{ecb-examples.el} to use a frame-fraction of 0.2
+instead of 6 hard lines, just try it!}
+
+Here comes the (de)activation code.
+
+The code for saving and restoring the state before activation (the
+full code is available in @file{ecb-examples.el}:
+
+@lisp
+(defun ecb-examples-preactivation-state(action)
+  (cond ((equal action 'save)
+         ;; code for saving the state
+         )
+        ((equal action 'restore)
+        ;; code for restoring the state
+        )))
+@end lisp
+
+The following function activates the GUI of our example tool:
+
+@lisp
+(defun ecb-examples-activate ()
+  (interactive)
+  
+  ;; activating the synchronization of the bufferinfo-window
+  (add-hook 'ecb-current-buffer-sync-hook
+            'ecb-examples-bufferinfo-sync)
+  
+  ;; saving the state
+  (ecb-examples-preactivation-state 'save)
+
+  ;; switch to our prefered layout
+  (setq ecb-windows-height 6)
+  (setq ecb-compile-window-height 5)
+  (ecb-layout-switch "example-layout1"))
+@end lisp
+
+This function deactivates the GUI of our example-tool and restores the
+state as before activation:
+
+@lisp
+(defun ecb-examples-deactivate ()
+  (interactive)
+  
+  (remove-hook 'ecb-current-buffer-sync-hook
+               'ecb-examples-bufferinfo-sync)
+  (ecb-examples-preactivation-state 'restore)
+  (ecb-layout-switch ecb-layout-name))
+@end lisp
+
+
 Now we have all code for the new layout and the new layout-buffers.
 The example is ready for use; just load @file{ecb-examples.el} (s.a.).
 
-@node The layout-engine API, , Programming special windows, The layout-engine
+@node Possible layout-outlines, The layout-engine API, Programming special windows, The layout-engine
+@subsection The wide range of possible layout-outlines
+
+In the two previous sections @ref{Programming a new layout} and
+@ref{Programming special windows} we have explained in detail how to
+program new layouts and how to program new special windows/buffers and
+adding them to a new layout.
+
+The intention of this section is to be a summary what are the real
+restrictions for a new layout-outline programmed with
+@code{ecb-layout-define}. This is necessary because until now we just
+programmed ``obvious'' layouts, means layout which are in principle
+very similar to the standard ones which means one big edit-window and
+some special windows ``around'' this edit-window. This section will
+show you that a layout can have also very different outlines.
+
+Ok, here are the real restrictions and conditions for a layout
+programmed with @code{ecb-layout-define}:
+@enumerate
+@item
+It must have exactly one edit-window regardless of its size.
+
+@item
+All other windows created within the @var{CREATE-CODE} body of
+@code{ecb-layout-define} (@pxref{Programming a new layout}) must be
+dedicated to their buffers.
+
+@item
+All the dedicated windows must (exclusive!) either reside on the left,
+right, top or left-and-right side of the edit-window. This will be
+defined with the @var{TYPE}-argument of @code{ecb-layout-define}
+(@pxref{Programming a new layout}).
+@end enumerate
+
+You see, there are only three restrictions/conditions. These and only
+these must be fullfilled at layout-programming.
+
+Demonstrating what this really means and how flexible the
+layout-engine of ECB really is can be done best with some
+``pathological'' layout-outlines. All the following are correct
+layouts (working code is added below each layout):
+
+The following is a top layout with three vertical layered special
+windows.
+
+@example
+@group
+------------------------------------------------------------------
+|                                                                |
+|                 Upper special window                           |
+|                                                                |
+|----------------------------------------------------------------|
+|                                                                |
+|                 Middle special window                          |
+|                                                                |
+|----------------------------------------------------------------|
+|                                                                |
+|                 Lower special window                           |
+|                                                                |
+|================================================================|
+|                                                                |
+|                         Edit-window(s)                         |
+|                 (can be splitted in two windows)               |
+------------------------------------------------------------------
+|                                                                |
+|                 Compilation-window (optional)                  |
+|                                                                |
+------------------------------------------------------------------
+@end group
+@end example
+
+Here is the code for that top layout (all buffers are dummy-buffers):
+
+@lisp
+(ecb-layout-define "example-layout3" top
+  nil
+
+  ;; here we have an edit-window and above one top window which we can
+  ;; now split in several other windows. Dependend on the value of
+  ;; `ecb-compile-window-height' we have also a compile-window at the
+  ;; bottom.
+  
+  (ecb-with-dedicated-window
+   (switch-to-buffer (get-buffer-create "Upper special window")))
+  (ecb-split-ver 0.33)
+  (ecb-with-dedicated-window
+   (switch-to-buffer (get-buffer-create "Middle special window")))
+  (ecb-split-ver 0.5)
+  (ecb-with-dedicated-window
+   (switch-to-buffer (get-buffer-create "Lower special window")))
+
+  ;; select the edit-window.
+  (select-window (next-window)))
+@end lisp
+
+
+The following is a left-right layout which has six special windows in
+the left-''column'' and one big special window in the
+right-''column''. For left-right layouts the left-''column'' and the
+right-''column'' have always the same width.
+
+@example
+@group
+------------------------------------------------------------------
+|             |       |                   |                      |
+| Left1       | Left5 |                   |                      |
+|             |       |                   |                      |
+|-------------|       |                   |                      |
+|      |      |       |                   |                      |
+|      |      |       |                   |                      |
+|      |      |       |                   |                      |
+| Left2| Left3|-------|  Edit-window(s)   |   Right1             |
+|      |      |       | (can be splitted  |                      |
+|      |      |       |  in two windows)  |                      |
+|      |      |       |                   |                      |
+|-------------|       |                   |                      |
+|             |       |                   |                      |
+| Left4       | Left6 |                   |                      |
+|             |       |                   |                      |
+------------------------------------------------------------------
+|                                                                |
+|                 Compilation-window (optional)                  |
+|                                                                |
+------------------------------------------------------------------
+@end group
+@end example
+
+Here is the code for that left-right layout, again with dummy-buffers:
+
+@lisp
+(ecb-layout-define "example-layout2" left-right
+  nil
+
+  ;; here we have an edit-window and left and right two windows each
+  ;; with width `ecb-windows-width'. Dependend to the value of
+  ;; `ecb-compile-window-height' we have also a compile-window at the
+  ;; bottom.
+  
+  (ecb-with-dedicated-window
+   (switch-to-buffer (get-buffer-create "Left1")))  
+  (ecb-split-hor 0.66 t)
+  (ecb-split-ver 0.75)
+  (ecb-with-dedicated-window
+   (switch-to-buffer (get-buffer-create "Left4")))
+  (select-window (previous-window (selected-window) 0))
+  (ecb-split-ver 0.25 nil t)
+  (ecb-with-dedicated-window
+   (switch-to-buffer (get-buffer-create "Left2")))
+  (ecb-split-hor 0.5)
+  (ecb-with-dedicated-window
+   (switch-to-buffer (get-buffer-create "Left3")))
+  (select-window (next-window (next-window)))
+  (ecb-with-dedicated-window
+   (switch-to-buffer (get-buffer-create "Left5")))
+  (ecb-split-ver 0.5)
+  (ecb-with-dedicated-window
+   (switch-to-buffer (get-buffer-create "Left6")))
+  (select-window (next-window (next-window)))
+  (ecb-with-dedicated-window
+   (switch-to-buffer (get-buffer-create "Right1")))
+
+  ;; select the edit-window
+  (select-window (previous-window (selected-window) 0)))
+@end lisp
+
+
+@node The layout-engine API, , Possible layout-outlines, The layout-engine
 @subsection The complete layout-engine API of ECB
 
 This section lists all functions, macros, variables and user-options
@@ -5646,6 +5876,8 @@ Functions for programming layout and special windows:
 @item ecb-point-in-compile-window
 @item ecb-point-in-edit-window
 @item ecb-select-edit-window
+@item ecb-split-hor
+@item ecb-split-ver
 @item ecb-with-dedicated-window
 @end itemize
 
@@ -5653,8 +5885,6 @@ Utility functions/macros:
 @itemize @minus
 @item ecb-enlarge-window
 @item ecb-fix-filename
-@item ecb-split-hor
-@item ecb-split-ver
 @item ecb-window-live-p
 @item ecb-with-readonly-buffer
 @end itemize

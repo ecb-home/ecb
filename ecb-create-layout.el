@@ -634,8 +634,8 @@ DELETE-FRAME is not nil then the new created frame will be deleted and the
         ((equal ecb-create-layout-type 'top)
          (ecb-split-ver ecb-windows-height))
         (t
-         (ecb-split-hor (* 0.667 ecb-windows-width))
-         (ecb-split-hor (- (* 0.667 ecb-windows-width)) t t)))
+         (ecb-split-hor (- (* 0.667 ecb-windows-width)) t)
+         (ecb-split-hor (* 0.667 ecb-windows-width) nil t)))
   ;; we set the buffer in the big edit-window
   (ecb-create-layout-new-buffer t)
   ;; now we insert the help in the edit-window

@@ -151,6 +151,7 @@ mailing list <a href="mailto:ecb-list@lists.sourceforge.net">ecb-list@lists.sour
 
 </p><li><a href="#Programming%20a%20new%20layout">Programming a new layout</a>:     How to program a new layout
 <li><a href="#Programming%20special%20windows">Programming special windows</a>:  Aspects of programming special windows
+<li><a href="#Possible%20layout-outlines">Possible layout-outlines</a>:     The wide range of possible layouts
 <li><a href="#The%20layout-engine%20API">The layout-engine API</a>:        The complete layout-engine API
 
 <p>Known conflicts and bugs of ECB
@@ -6556,7 +6557,8 @@ Up:<a rel=up accesskey=u href="#Elisp%20programming">Elisp programming</a>
 
 <h3>Variables for elisp-programs</h3>
 
-<p>Variables an elisp-program can use:
+<p>Variables an elisp-program can use beyond those ones mentioned in
+<a href="#The%20layout-engine">The layout-engine</a>:
 
 <ul>
 <li><code>ecb-source-path-functions</code>
@@ -6674,7 +6676,8 @@ subsection.
 <ul>
 <li><a accesskey=1 href="#Programming%20a%20new%20layout">Programming a new layout</a>:     How to program a new layout
 <li><a accesskey=2 href="#Programming%20special%20windows">Programming special windows</a>:  Aspects of programming special windows
-<li><a accesskey=3 href="#The%20layout-engine%20API">The layout-engine API</a>:        The complete layout-engine API
+<li><a accesskey=3 href="#Possible%20layout-outlines">Possible layout-outlines</a>:     The wide range of possible layouts
+<li><a accesskey=4 href="#The%20layout-engine%20API">The layout-engine API</a>:        The complete layout-engine API
 </ul>
 
 <p><hr>
@@ -6718,12 +6721,14 @@ ECB-windows/buffers. This macro adds the layout with <var>NAME</var> and
 
 <p>Preconditions for <var>CREATE-CODE</var>:
 <ol type=1 start=1>
-</p><li>Current frame is splitted at least in one edit-window and the column
-(for layout types left, right and left-right) resp. row (for a top
-layout) for the special ECB-windows/buffers. Depending on the value of
-the option <code>ecb-compile-window-height</code> there is also a compile
-window at the bottom of the frame which is stored in
-<code>ecb-compile-window</code>.
+</p><li>Current frame is splitted at least in one edit-window and the
+"column" (for layout types left, right and left-right) resp. "row"
+(for a top layout) for the special ECB-windows/buffers. The width of
+the "column" resp. the height of the "row" is always defined with
+the option <code>ecb-windows-width</code> resp. <code>ecb-windows-height</code>. 
+Depending on the value of the option <code>ecb-compile-window-height</code>
+there is also a compile window at the bottom of the frame which is
+stored in <code>ecb-compile-window</code>.
 
 <li>All windows are not dedicated.
 
@@ -6873,7 +6878,7 @@ which looks like:
 
 <p><hr>
 Node:<a name="Programming%20special%20windows">Programming special windows</a>,
-Next:<a rel=next accesskey=n href="#The%20layout-engine%20API">The layout-engine API</a>,
+Next:<a rel=next accesskey=n href="#Possible%20layout-outlines">Possible layout-outlines</a>,
 Previous:<a rel=previous accesskey=p href="#Programming%20a%20new%20layout">Programming a new layout</a>,
 Up:<a rel=up accesskey=u href="#The%20layout-engine">The layout-engine</a>
 <br>
@@ -6902,7 +6907,6 @@ layout-engine of ECB do display their own information.
 |Type: file                            |[next]        |
 |Size: 23456                           |              |
 |Modes: rw-rw-rw-                      |              |
-|                                      |              |
 |-----------------------------------------------------|
 |                                                     |
 |                                                     |
@@ -7115,12 +7119,226 @@ synchronization but this works also very well).
 <br><pre>(add-hook 'ecb-current-buffer-sync-hook 'ecb-examples-bufferinfo-sync)
 </pre>
 
+<h5>Activating and deactivating new layouts</h5>
+
+<p>Because a set of new special windows integrated in a new layout is
+often just the GUI of a complete tool (like a graphical debugger) we
+demonstrate here the complete activation and deactivation of such a
+tool or at least of the tool-GUI. We decide that the GUI of our
+example "tool" needs a compile-window with height 5 lines and the
+height of the special windows "row" on top should be exactly 6 lines
+(normally width and height of the special windows should be a fraction
+of the frame, but here we use 6 lines<a rel=footnote href="#fn-24"><sup>24</sup></a>
+
+<p>Here comes the (de)activation code.
+
+<p>The code for saving and restoring the state before activation (the
+full code is available in <code>ecb-examples.el</code>:
+
+<br><pre>(defun ecb-examples-preactivation-state(action)
+  (cond ((equal action 'save)
+         ;; code for saving the state
+         )
+        ((equal action 'restore)
+        ;; code for restoring the state
+        )))
+</pre>
+
+<p>The following function activates the GUI of our example tool:
+
+<br><pre>(defun ecb-examples-activate ()
+  (interactive)
+
+  ;; activating the synchronization of the bufferinfo-window
+  (add-hook 'ecb-current-buffer-sync-hook
+            'ecb-examples-bufferinfo-sync)
+
+  ;; saving the state
+  (ecb-examples-preactivation-state 'save)
+
+  ;; switch to our prefered layout
+  (setq ecb-windows-height 6)
+  (setq ecb-compile-window-height 5)
+  (ecb-layout-switch "example-layout1"))
+</pre>
+
+<p>This function deactivates the GUI of our example-tool and restores the
+state as before activation:
+
+<br><pre>(defun ecb-examples-deactivate ()
+  (interactive)
+
+  (remove-hook 'ecb-current-buffer-sync-hook
+               'ecb-examples-bufferinfo-sync)
+  (ecb-examples-preactivation-state 'restore)
+  (ecb-layout-switch ecb-layout-name))
+</pre>
+
 <p>Now we have all code for the new layout and the new layout-buffers. 
 The example is ready for use; just load <code>ecb-examples.el</code> (s.a.).
 
 <p><hr>
-Node:<a name="The%20layout-engine%20API">The layout-engine API</a>,
+Node:<a name="Possible%20layout-outlines">Possible layout-outlines</a>,
+Next:<a rel=next accesskey=n href="#The%20layout-engine%20API">The layout-engine API</a>,
 Previous:<a rel=previous accesskey=p href="#Programming%20special%20windows">Programming special windows</a>,
+Up:<a rel=up accesskey=u href="#The%20layout-engine">The layout-engine</a>
+<br>
+
+<h4>The wide range of possible layout-outlines</h4>
+
+<p>In the two previous sections <a href="#Programming%20a%20new%20layout">Programming a new layout</a> and
+<a href="#Programming%20special%20windows">Programming special windows</a> we have explained in detail how to
+program new layouts and how to program new special windows/buffers and
+adding them to a new layout.
+
+<p>The intention of this section is to be a summary what are the real
+restrictions for a new layout-outline programmed with
+<code>ecb-layout-define</code>. This is necessary because until now we just
+programmed "obvious" layouts, means layout which are in principle
+very similar to the standard ones which means one big edit-window and
+some special windows "around" this edit-window. This section will
+show you that a layout can have also very different outlines.
+
+<p>Ok, here are the real restrictions and conditions for a layout
+programmed with <code>ecb-layout-define</code>:
+<ol type=1 start=1>
+</p><li>It must have exactly one edit-window regardless of its size.
+
+<li>All other windows created within the <var>CREATE-CODE</var> body of
+<code>ecb-layout-define</code> (see <a href="#Programming%20a%20new%20layout">Programming a new layout</a>) must be
+dedicated to their buffers.
+
+<li>All the dedicated windows must (exclusive!) either reside on the left,
+right, top or left-and-right side of the edit-window. This will be
+defined with the <var>TYPE</var>-argument of <code>ecb-layout-define</code>
+(see <a href="#Programming%20a%20new%20layout">Programming a new layout</a>).
+</ol>
+
+<p>You see, there are only three restrictions/conditions. These and only
+these must be fullfilled at layout-programming.
+
+<p>Demonstrating what this really means and how flexible the
+layout-engine of ECB really is can be done best with some
+"pathological" layout-outlines. All the following are correct
+layouts (working code is added below each layout):
+
+<p>The following is a top layout with three vertical layered special
+windows.
+
+<br><pre>------------------------------------------------------------------
+|                                                                |
+|                 Upper special window                           |
+|                                                                |
+|----------------------------------------------------------------|
+|                                                                |
+|                 Middle special window                          |
+|                                                                |
+|----------------------------------------------------------------|
+|                                                                |
+|                 Lower special window                           |
+|                                                                |
+|================================================================|
+|                                                                |
+|                         Edit-window(s)                         |
+|                 (can be splitted in two windows)               |
+------------------------------------------------------------------
+|                                                                |
+|                 Compilation-window (optional)                  |
+|                                                                |
+------------------------------------------------------------------
+</pre>
+
+<p>Here is the code for that top layout (all buffers are dummy-buffers):
+
+<br><pre>(ecb-layout-define "example-layout3" top
+  nil
+
+  ;; here we have an edit-window and above one top window which we can
+  ;; now split in several other windows. Dependend on the value of
+  ;; `ecb-compile-window-height' we have also a compile-window at the
+  ;; bottom.
+
+  (ecb-with-dedicated-window
+   (switch-to-buffer (get-buffer-create "Upper special window")))
+  (ecb-split-ver 0.33)
+  (ecb-with-dedicated-window
+   (switch-to-buffer (get-buffer-create "Middle special window")))
+  (ecb-split-ver 0.5)
+  (ecb-with-dedicated-window
+   (switch-to-buffer (get-buffer-create "Lower special window")))
+
+  ;; select the edit-window.
+  (select-window (next-window)))
+</pre>
+
+<p>The following is a left-right layout which has six special windows in
+the left-"column" and one big special window in the
+right-"column". For left-right layouts the left-"column" and the
+right-"column" have always the same width.
+
+<br><pre>------------------------------------------------------------------
+|             |       |                   |                      |
+| Left1       | Left5 |                   |                      |
+|             |       |                   |                      |
+|-------------|       |                   |                      |
+|      |      |       |                   |                      |
+|      |      |       |                   |                      |
+|      |      |       |                   |                      |
+| Left2| Left3|-------|  Edit-window(s)   |   Right1             |
+|      |      |       | (can be splitted  |                      |
+|      |      |       |  in two windows)  |                      |
+|      |      |       |                   |                      |
+|-------------|       |                   |                      |
+|             |       |                   |                      |
+| Left4       | Left6 |                   |                      |
+|             |       |                   |                      |
+------------------------------------------------------------------
+|                                                                |
+|                 Compilation-window (optional)                  |
+|                                                                |
+------------------------------------------------------------------
+</pre>
+
+<p>Here is the code for that left-right layout, again with dummy-buffers:
+
+<br><pre>(ecb-layout-define "example-layout2" left-right
+  nil
+
+  ;; here we have an edit-window and left and right two windows each
+  ;; with width `ecb-windows-width'. Dependend to the value of
+  ;; `ecb-compile-window-height' we have also a compile-window at the
+  ;; bottom.
+
+  (ecb-with-dedicated-window
+   (switch-to-buffer (get-buffer-create "Left1")))
+  (ecb-split-hor 0.66 t)
+  (ecb-split-ver 0.75)
+  (ecb-with-dedicated-window
+   (switch-to-buffer (get-buffer-create "Left4")))
+  (select-window (previous-window (selected-window) 0))
+  (ecb-split-ver 0.25 nil t)
+  (ecb-with-dedicated-window
+   (switch-to-buffer (get-buffer-create "Left2")))
+  (ecb-split-hor 0.5)
+  (ecb-with-dedicated-window
+   (switch-to-buffer (get-buffer-create "Left3")))
+  (select-window (next-window (next-window)))
+  (ecb-with-dedicated-window
+   (switch-to-buffer (get-buffer-create "Left5")))
+  (ecb-split-ver 0.5)
+  (ecb-with-dedicated-window
+   (switch-to-buffer (get-buffer-create "Left6")))
+  (select-window (next-window (next-window)))
+  (ecb-with-dedicated-window
+   (switch-to-buffer (get-buffer-create "Right1")))
+
+  ;; select the edit-window
+  (select-window (previous-window (selected-window) 0)))
+</pre>
+
+<p><hr>
+Node:<a name="The%20layout-engine%20API">The layout-engine API</a>,
+Previous:<a rel=previous accesskey=p href="#Possible%20layout-outlines">Possible layout-outlines</a>,
 Up:<a rel=up accesskey=u href="#The%20layout-engine">The layout-engine</a>
 <br>
 
@@ -7143,6 +7361,8 @@ detailed description.
 <li>ecb-point-in-compile-window
 <li>ecb-point-in-edit-window
 <li>ecb-select-edit-window
+<li>ecb-split-hor
+<li>ecb-split-ver
 <li>ecb-with-dedicated-window
 </ul>
 
@@ -7150,8 +7370,6 @@ detailed description.
 <ul>
 <li>ecb-enlarge-window
 <li>ecb-fix-filename
-<li>ecb-split-hor
-<li>ecb-split-ver
 <li>ecb-window-live-p
 <li>ecb-with-readonly-buffer
 </ul>
@@ -7441,7 +7659,7 @@ to the ECB-history after ECB-start.
 
 <br></td></tr><tr align="left"><td valign="top">Is there an "Intellisense"-mechanism like with other IDEs? 
 </td><td valign="top"></td><td valign="top">
-For Java the JDEE<a rel=footnote href="#fn-24"><sup>24</sup></a> has this feature and for all other languages
+For Java the JDEE<a rel=footnote href="#fn-25"><sup>25</sup></a> has this feature and for all other languages
 semantic offer something similar, see
 <a href="http://cedet.sourceforge.net/intellisense.shtml">http://cedet.sourceforge.net/intellisense.shtml</a>
 
@@ -7818,7 +8036,9 @@ Up:<a rel=up accesskey=u href="#Top">Top</a>
 <li><a href="#Programming%20special%20windows">The action buffer of the example</a>
 <li><a href="#Programming%20special%20windows">Adding the bufferinfo- and action-buffer to a new layout</a>
 <li><a href="#Programming%20special%20windows">Synchronizing the bufferinfo-buffer automatically</a>
+<li><a href="#Programming%20special%20windows">Activating and deactivating new layouts</a>
 </ul>
+<li><a href="#Possible%20layout-outlines">The wide range of possible layout-outlines</a>
 <li><a href="#The%20layout-engine%20API">The complete layout-engine API of ECB</a>
 </ul>
 </ul>
@@ -7961,6 +8181,11 @@ available at
 </p>
 
 <li><a name="fn-24"></a>
+<p>You can change the code
+in the file <code>ecb-examples.el</code> to use a frame-fraction of 0.2
+instead of 6 hard lines, just try it!</p>
+
+<li><a name="fn-25"></a>
 <p>
 <a href="http://jdee.sunsite.dk/">http://jdee.sunsite.dk/</a>
 </p>
