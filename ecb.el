@@ -96,6 +96,7 @@
 (require 'ecb-cycle)
 (require 'ecb-face)
 (require 'ecb-upgrade)
+;;(require 'ecb-profile)
 
 ;; various loads
 (require 'easymenu)
@@ -3175,7 +3176,7 @@ Currently the fourth argument TREE-BUFFER-NAME is not used here."
          (find-file filename)
          ;; let us set the mark so the user can easily jump back.
          (if ecb-token-jump-sets-mark
-             (push-mark))
+             (push-mark nil t))
          (when ecb-token-jump-narrow
            (widen))
          (goto-char (ecb-semantic-token-start token))

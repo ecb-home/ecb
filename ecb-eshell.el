@@ -129,6 +129,7 @@
 ;;
 ;; - BUG: enable just-in-time current-buffer-sync... only execute if the current
 ;; buffer's directlry is not equal to the ecb directory.
+;;
 
 ;;; Code:
 
