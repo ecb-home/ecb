@@ -1560,10 +1560,10 @@ abstract-static-tag-protection to an existing icon-file-name.")
 
 
 (defsubst ecb-get-icon-for-tag (abstract-p static-p type protection)
-  (cdr (assoc protection
-              (cdr (assoc type
-                          (cdr (assoc static-p
-                                      (cdr (assoc abstract-p
+  (cdr (assq protection
+              (cdr (assq type
+                          (cdr (assq static-p
+                                      (cdr (assq abstract-p
                                                   ecb-tag-image-name-alias-alist)))))))))
 
 ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: All this tag-icon-display-stuff

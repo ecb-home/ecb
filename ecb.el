@@ -573,7 +573,7 @@ With both ascii-styles the tree-layout can be affected with the options
 
 (defcustom ecb-tree-image-icons-directories
   (let ((base (concat (if ecb-regular-xemacs-package-p
-                          (format "%s/" (locate-data-directory "ecb"))
+                          (format "%s" (locate-data-directory "ecb"))
                         ecb-ecb-dir)
                       "ecb-images/")))
         (append (mapcar (function (lambda (i)
