@@ -28,7 +28,7 @@
 ;; Do not change any html-file besides the index.html manually but do all
 ;; changes in this elisp file!
 
-;; $Id: ecb-html.el,v 1.47 2003/03/28 09:48:44 berndl Exp $
+;; $Id: ecb-html.el,v 1.48 2003/04/03 16:47:12 berndl Exp $
 
 ;;; Code:
 
@@ -252,11 +252,12 @@
        ecb-bullet
        '(
 	 ("main.html" "Main")
-	 ("downloads.html" "Downloads")
+         ("docs/Overview.html" "Overview")
          ("docs/Install-and-first-steps.html#Install%20and%20first%20steps" "Installation")
 	 ("docs/index.html" "Documentation")
 	 ("docs/FAQ.html#FAQ" "FAQ")
 	 ("NEWS.html" "History")
+	 ("downloads.html" "Downloads")
 	 ("http://lists.sourceforge.net/lists/listinfo/ecb-list" "Mailing List")
 	 ("http://cvs.sourceforge.net/cgi-bin/viewcvs.cgi/ecb/ecb/" "CVS")
 	 ("screenshots/index.html" "Screenshots")
