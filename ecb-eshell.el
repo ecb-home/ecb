@@ -1,6 +1,6 @@
 ;;; ecb-eshell.el --- eshell integration for the ECB.
 
-;; $Id: ecb-eshell.el,v 1.14 2001/12/15 10:11:35 burtonator Exp $
+;; $Id: ecb-eshell.el,v 1.16 2001/12/15 10:13:36 burtonator Exp $
 
 ;; Copyright (C) 2000-2003 Free Software Foundation, Inc.
 ;; Copyright (C) 2000-2003 Kevin A. Burton (burton@openprivacy.org)
@@ -82,14 +82,6 @@
 ;; - Right now ecb-eshell doesn't work with dired.  Why?  Try to setup a hook
 ;; and an ecb-eshell-dired-buffer-sync function that will take care of this.
 
-;; - BUG: ecb-eshell STILL recenters itself!!!  This is BS.
-;; 
-;;   - this only manifests itself when I an runing eshell.
-;;
-;;   - the bug is in ecb-eshell-current-buffer-sync
-;;
-;;   - the problem is in (eshell-send-input)
-
 ;;; Code:
 
 (defun ecb-eshell-current-buffer-sync()
@@ -134,7 +126,7 @@
 
       (select-window (get-buffer-window eshell-buffer-name))
         
-      (recenter -1))))
+      (recenter -2))))
 
 (defun ecb-eshell-running-p()
   "Return true if eshell is currently running."
@@ -191,9 +183,9 @@
 
 ;;(add-hook 'dired-after-readin-hook 'ecb-eshell-current-buffer-sync)
 
-(remove-hook 'ecb-redraw-layout-hooks 'ecb-eshell-recenter)
+(add-hook 'ecb-redraw-layout-hooks 'ecb-eshell-recenter)
 
-(remove-hook 'eshell-pre-command-hook 'ecb-eshell-resize)
+(add-hook 'eshell-pre-command-hook 'ecb-eshell-resize)
 
 (define-key ecb-mode-map "\C-c.e" 'ecb-eshell-goto-eshell)
 

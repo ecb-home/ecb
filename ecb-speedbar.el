@@ -1,6 +1,6 @@
 ;;; ecb-speedbar.el --- 
 
-;; $Id: ecb-speedbar.el,v 1.5 2001/12/15 05:47:08 burtonator Exp $
+;; $Id: ecb-speedbar.el,v 1.6 2001/12/15 10:11:35 burtonator Exp $
 
 ;; Copyright (C) 2000-2003 Free Software Foundation, Inc.
 ;; Copyright (C) 2000-2003 Kevin A. Burton (burton@openprivacy.org)
@@ -29,27 +29,54 @@
 ;;; Commentary:
 
 ;; This package provide speedbar integration for the ECB.
+;;
+;; This allows you to:
+;;
+;; - Sync up to the speedbar with the current buffer.
+;;
+;; - Files opened with the speedbar are displayed in the ecb source window.
+;;
+;; Note that this is only known to work under Speedbar 0.14beta2
 
 ;; If you enjoy this software, please consider a donation to the EFF
 ;; (http://www.eff.org)
 
+;;; Design:
+
+;; There are two major issues we have with the speedbar-frame variable.
+;;
+;; 1. If we set this value to the (selected-frame), when set change buffers,
+;; the current buffers point is reset to (point-min)
+;;
+;; 2. If we set this to a newly created frame, say an invisible frame, we have
+;; the following problems:
+;;
+;;   - all the glphys in the speedbar window are NOT set.
+;;
+;;   - if we hit [ENTER] in the speedbar window the invisible frame is made
+;;     visible  :(
+
+;;; NOTE: it could be possible to fix this.  We could setup two variables.
+;;; ecb-speedbar-invisible-frame and ecb-frame (actually already defined).
+;;; Within ecb-current-buffer-sync-hook we could then set speedbar-frame and
+;;; dframe-attached-frame to ecb-speedbar-invisible-frame and then restore these
+;;; variables to ecb-frame when complete.
+
 ;;; History:
+;;
+;; - Fri Dec 14 2001 10:11 PM (burton@openprivacy.org): when we hit <ENTER> on a
+;; file in the speedbar window, a new window is created.
 ;;
 ;; - Sun Nov 18 2001 01:46 AM (burton@openprivacy.org): BUG: we need to set
 ;; dframe-activate-frame to the current frame and NOT use an invisible frame.
 ;; This is important because when I select a buffer in ECB it can't use the
 ;; invisible frame.  :(
-
+;;
 ;; Sat Nov 10 2001 09:30 PM (burton@openprivacy.org): implementation of
 ;; ecb-delete-other-windows-in-editwindow-20
 ;;
 
 ;;; TODO:
-
-;; BREAKER BUG:
-;;
-;;   - when we hit <ENTER> on a file in the speedbar window, a new window is
-;;     created.
 
 ;; - only sync up the eshell if the current file is in a different dir than the
 ;; speedbar.  
@@ -134,12 +161,12 @@ will/could break."
 
   (set (make-local-variable 'automatic-hscrolling) nil) ;;Emacs 21
 
-  ;;set the frame that the speedbar should use.  Right now we are just using an
-  ;;invisible frame.
+  ;;Set the frame that the speedbar should use.  This should be the selected
+  ;;frame.  AKA the frame that ECB is running in.
 
-  (setq speedbar-frame (make-frame '((visibility . nil))))
-
-  (setq dframe-attached-frame (selected-frame))
+  (setq speedbar-frame ecb-frame)
+  (setq speedbar-attached-frame ecb-frame)
+  (setq dframe-attached-frame ecb-frame)
   
   ;;this needs to be 0 because we can't have the speedbar too chatty in the
   ;;current frame because this will mean that the minibuffer will be updated too
