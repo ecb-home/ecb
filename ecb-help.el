@@ -26,7 +26,7 @@
 ;;
 ;; Contains all online-help for ECB (stolen something from recentf.el)
 
-;; $Id: ecb-help.el,v 1.16 2001/05/07 16:06:23 berndl Exp $
+;; $Id: ecb-help.el,v 1.17 2001/05/10 09:25:53 berndl Exp $
 
 ;;; Code
 
@@ -100,7 +100,8 @@ the output of Emacs-compilation \(compile, grep etc.) is shown.
 
 Call M-x `ecb-activate' and M-x `ecb-deactivate' to activate or deactivate
 ECB. If you want ECB started in a new frame see the option
-`ecb-new-ecb-frame' \(default is nil).
+`ecb-new-ecb-frame' \(default is nil). `ecb-activate' always raises and
+selects the ECB-frame even if ECB is already started.
 
 
 

@@ -52,7 +52,7 @@
 ;; The latest version of the ECB is available at
 ;; http://home.swipnet.se/mayhem/ecb.html
 
-;; $Id: ecb.el,v 1.81 2001/05/09 18:12:32 berndl Exp $
+;; $Id: ecb.el,v 1.82 2001/05/10 09:25:53 berndl Exp $
 
 ;;; Code:
 
@@ -462,11 +462,6 @@ activate ECB again to take effect."
   "*Show file information about the file under mouse in minibuffer."
   :group 'ecb-general
   :type 'boolean)
-
-;; (defcustom ecb-mode-line-show-prefix nil
-;;   "*Show the ECB buffer prefix in the mode line."
-;;   :group 'ecb-general
-;;   :type 'boolean)
 
 (defcustom ecb-primary-secondary-mouse-buttons 'mouse-2--C-mouse-2
   "*Primary- and secondary mouse button for using the ECB-buffers.

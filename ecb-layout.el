@@ -122,7 +122,7 @@
 ;;   + The edit-window must not be splitted and the point must reside in
 ;;     the not deleted edit-window.
 
-;; $Id: ecb-layout.el,v 1.46 2001/05/09 18:12:32 berndl Exp $
+;; $Id: ecb-layout.el,v 1.47 2001/05/10 09:25:53 berndl Exp $
 
 ;;; Code:
 
@@ -143,9 +143,12 @@
 	      ;; we must check this because otherwise the layout would be drawn
 	      ;; if we have changed the initial value regardless if ECB is
 	      ;; activated or not.
-	      (if (and (boundp 'ecb-activated)
-		       ecb-activated)
-		  (ecb-redraw-layout)))))
+	      (when (and (boundp 'ecb-activated)
+                         ecb-activated)
+                (let ((curr-frame (selected-frame)))
+                  (select-frame ecb-frame)
+		  (ecb-redraw-layout)
+                  (select-frame curr-frame))))))
 
 (defcustom ecb-new-ecb-frame nil
   "*Create a new frame at activation time of ECB."

@@ -1,10 +1,14 @@
 ********************************************************************************
-*** Last-Modified: $Date: 2001/05/06 07:08:15 $ 
-*** Version: $Id: TODO,v 1.14 2001/05/06 07:08:15 berndl Exp $
+*** Last-Modified: $Date: 2001/05/10 09:25:53 $ 
+*** Version: $Id: TODO,v 1.15 2001/05/10 09:25:53 berndl Exp $
 *** Author: Kevin A. Burton ( burton@apache.org | burton@openprivacy.org )
 ********************************************************************************
 
-- Support horizontal scrolling (especially with XEmacs) in the
+- KB: Option to auto. expand also "[+] Variables" and "[+] Classname"
+   in the methods buffer if 'ecb-highlight-token-with-point' is
+   'highlight-scroll. (Like the auto. expand directory feature)
+
+- KB: Support horizontal scrolling (especially with XEmacs) in the
    intelligent tree-buffer recentering.
 
 - Fix pop-up menus in XEmacs. (JN)

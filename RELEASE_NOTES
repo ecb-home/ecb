@@ -1,4 +1,4 @@
-This file contains some important release-notes for ECB 1.20
+This file contains some important release-notes for ECB 1.30
 
 General:
 --------
@@ -10,6 +10,12 @@ and also proper and easy solutions!
 
 Installing ECB first time:
 --------------------------
+
+No special notes beyond the contents of README.
+
+
+Upgrading from version 1.20:
+----------------------------
 
 No special notes beyond the contents of README.
 
@@ -45,5 +51,5 @@ Upgrading from versions < 1.20:
   integer-or-marker-p nil" is displayed after clicking onto a method/variable
   in the ECB-method-buffer. This bug is fixed!
 
-+ For a complete list of changes and new features for version 1.20 see the
++ For a complete list of changes and new features for versions > 1.20 see the
   HISTORY file.
