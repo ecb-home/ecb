@@ -1,3 +1,9 @@
+Version 1.61:
+-------------
+
+- new option ecb-add-path-for-not-matching-files. Look at the documentation
+  (Klaus).
+
 Version 1.60:
 -------------
 
