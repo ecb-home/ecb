@@ -30,7 +30,7 @@
 ;; This file has been re-implemented by Klaus Berndl <klaus.berndl@sdm.de>.
 ;; What has been done:
 ;; Completely rewritten the layout mechanism for better customizing, adding
-;; new layouts, better redrawing and more straight forward code.
+;; new layouts, better redrawing and more straightforward code.
 ;; 1. Now all user-layouting is done by customizing the new option
 ;;    `ecb-layout-nr'. The function `ecb-redraw-layout' (formally
 ;;    known as 'ecb-set-layout) can still be called interactively but
@@ -38,7 +38,7 @@
 ;;    specified in `ecb-layout-nr'. All changes to the layout must be made
 ;;    by customizing this new option. Please read the very detailed comment
 ;;    of `ecb-layout-nr'!
-;; 2. Adding new layouts is now much easier and more straight forward: We
+;; 2. Adding new layouts is now much easier and more straightforward: We
 ;;    have now a main core-layout function (`ecb-redraw-layout') which is
 ;;    the "environment" for the specific "layout-index" functions. The core
 ;;    function does first some layout independent actions, then calls the
@@ -285,9 +285,9 @@ frame height."
   :type 'number)
 
 (defcustom ecb-other-window-jump-behavior 'all
-  "*Which windows of ECB should be accessable by the ECB-adviced function
+  "*Which windows of ECB should be accessible by the ECB-adviced function
 `other-window', an intelligent replacement for the Emacs standard version of
-`other-window'. Following settings are possible:
+`other-window'. The following settings are possible:
 - 'all: ECB will cycle through all windows of ECB, means it behaves like the
   original `other-window'.
 - 'only-edit: ECB will only cycle through the edit-windows of ECB.
@@ -326,9 +326,9 @@ of the ECB-frame:
 - `find-file-other-window'
 - `switch-to-buffer-other-window'
 
-For working most conveniant with ECB it is the best to advice all these
-functions, because then all the standard-shortcuts of these functions are also
-useable with ECB without doing anything else. Also other packages can interact
+For working most conveniantly with ECB it is the best to advice all these
+functions, because then all the standard shortcuts of these functions are also
+usable with ECB without doing anything else. Also other packages can interact
 best with ECB if these functions are all adviced. If these adviced functions
 are called in another frame than the ECB-frame they behave all exactly like the
 not adviced versions!
@@ -914,12 +914,12 @@ ECB-adviced functions."
 ;;======= The new layout mechanism========================================
 
 ;; Klaus: Completely rewritten the layout mechanism to make it more
-;; straight forward, more customizable by users and slightly more
-;; conveniant.
+;; straightforward, more customizable by users and slightly more
+;; convenient.
 
 
 ;; the next section makes handling of the compilation window (if any) much
-;; better and more conveniant.
+;; better and more convenient.
 
 (defvar ecb-layout-selected-window-before-compile nil
   "Contains the window from which a compilation-process \(compile, igrep etc.)
@@ -970,7 +970,10 @@ handle splitting the edit-window correctly."
 this function the edit-window is selected."
   (interactive)
 
-  (let* ((window-before-redraw (cond ((eq (selected-window) ecb-edit-window)
+  (let* ((saved-edit-buffer-1 (window-buffer ecb-edit-window))
+	 (saved-edit-buffer-2 (window-buffer (next-window ecb-edit-window)))
+	 (saved-edit-window-start (window-start ecb-edit-window))
+	 (window-before-redraw (cond ((eq (selected-window) ecb-edit-window)
                                       1)
                                      ((and ecb-split-edit-window
                                            (eq (previous-window (selected-window) 0)
@@ -1057,9 +1060,17 @@ this function the edit-window is selected."
           ((eq ecb-split-edit-window 'vertical)
            (ecb-split-ver 0.5 t)))
 
+    ;; Restore edit window buffers
+    (set-window-buffer ecb-edit-window saved-edit-buffer-1)
+    (set-window-start ecb-edit-window saved-edit-window-start)
+
+    (when ecb-split-edit-window
+	(set-window-buffer (next-window ecb-edit-window) saved-edit-buffer-2))
+    
     ;; at the end of the redraw we always stay in that edit-window as before
     ;; the redraw
     (ecb-select-edit-window)
+    
     (if (eq window-before-redraw 2)
         (select-window (next-window)))
 
@@ -1073,7 +1084,7 @@ this function the edit-window is selected."
 
     ;; if we were in an edit-window before redraw let us go to the old place.
     (if pos-before-redraw
-        (goto-char pos-before-redraw))))
+	(goto-char pos-before-redraw))))
 
 
 ;; ========= Current available layouts ===============================
