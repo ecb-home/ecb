@@ -26,7 +26,7 @@
 ;; This file is part of the ECB package which can be found at:
 ;; http://home.swipnet.se/mayhem/ecb.html
 
-;; $Id: ecb-util.el,v 1.26 2002/10/07 15:01:18 berndl Exp $
+;; $Id: ecb-util.el,v 1.27 2002/10/10 08:35:37 berndl Exp $
 
 ;;; Code:
 
@@ -91,37 +91,49 @@ not nil then in both PATH and FILENAME env-var substitution is done. If the
 
 ;; Klaus TODO: Making this function more general, means useable for non java
 ;; code!!
-(defun ecb-create-source (dir)
+
+
+(defun ecb-create-source-internal (dir)
   (let ((filename (read-from-minibuffer "Source name: ")))
     (ecb-select-edit-window)
-    (jde-gen-class-buffer (concat dir "/" filename (if (not (string-match "\\." filename)) ".java")))))
+    (jde-gen-class-buffer (concat dir
+                                  "/"
+                                  filename
+                                  (if (not (string-match "\\." filename))
+                                      ".java")))))
+
 
 (defun ecb-create-directory-source (node)
-  (ecb-create-source (tree-node-get-data node)))
+  (ecb-create-source-internal (tree-node-get-data node)))
 
-(defun ecb-create-source-2 (node)
-  (ecb-create-source (ecb-fix-filename (file-name-directory
-					(tree-node-get-data node)))))
 
+(defun ecb-create-source (node)
+  (ecb-create-source-internal (ecb-fix-filename (file-name-directory
+                                                 (tree-node-get-data node)))))
+;; ecb.el 4005
 (defun ecb-create-file (node)
   (ecb-create-file-3 (tree-node-get-data node)))
 
+;; Nur intern
 (defun ecb-create-file-3 (dir)
   (ecb-select-edit-window)
   (find-file (concat dir "/" (read-from-minibuffer "File name: "))))
 
+;; ecb.el 4030
 (defun ecb-create-file-2 (node)
   (ecb-create-file-3 (ecb-fix-filename (file-name-directory
 					(tree-node-get-data node)))))
-
+;; ecb.el 4029, 4077
 (defun ecb-delete-source-2 (node)
   (ecb-delete-source (tree-node-get-data node)))
 
+;; ecb-upgrade.el: 701
 (defun ecb-delete-file (file)
   (let ((exp-file (expand-file-name file)))
     (if (file-exists-p exp-file)
         (delete-file exp-file))))
 
+;; Nur intern
 (defun ecb-delete-source (file)
   (when (ecb-confirm (concat "Delete " file "?"))
     (when (get-file-buffer file)
@@ -130,12 +142,14 @@ not nil then in both PATH and FILENAME env-var substitution is done. If the
     (ecb-delete-file file)
     (ecb-clear-history -1)))
 
+;; ecb.el 4007
 (defun ecb-create-directory (parent-node)
   (make-directory (concat (tree-node-get-data parent-node) "/"
                           (read-from-minibuffer "Directory name: ")))
   (ecb-update-directory-node parent-node)
   (tree-buffer-update))
 
+;; ecb.el 4008
 (defun ecb-delete-directory (node)
   (delete-directory (tree-node-get-data node))
   (ecb-update-directory-node (tree-node-get-parent node))

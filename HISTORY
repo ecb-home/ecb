@@ -16,7 +16,11 @@ Version 1.90:
   used for example to add personal local keybindings either to all
   tree-buffers (ecb-common-tree-buffer-after-create-hook) or just to a certain
   tree-buffer. Please read the documentation. (Klaus)
-  
+
+- Added two general hooks:
+  + ecb-before-activate-hook: Activate ECB only if all hooks return not nil
+  + ecb-before-deactivate-hook: deactivate ECB only if all hooks return not nil
+  (Klaus)
   
 Version 1.80:
 -------------

@@ -1369,6 +1369,29 @@ Layout Nr. 16
       |                                                     |
       -------------------------------------------------------
 
+Layout Nr. 17
+      -------------------------------------------------------
+      |              |                                      |
+      |  Directories |                                      |
+      |              |                                      |
+      |              |                                      |
+      |              |                                      |
+      |              |                                      |
+      |              |                                      |
+      |--------------|                 Edit                 |
+      |              |                                      |
+      |              |                                      |
+      |              |                                      |
+      |  Methods     |                                      |
+      |              |                                      |
+      |              |                                      |
+      |              |                                      |
+      -------------------------------------------------------
+      |                                                     |
+      |                    Compilation                      |
+      |                                                     |
+      -------------------------------------------------------
+
 
 File: ecb.info,  Node: Redrawing the ECB-layout,  Prev: Changing the ECB-layout,  Up: The ECB-layout
 
@@ -1890,6 +1913,23 @@ This group contains the following options:
    `ecb-upgrade-options' and `ecb-display-upgraded-options'. If this option
    is off then the user can perform the check and reset manually with
    `ecb-upgrade-options'.  *Note Auto. option-upgrading::.
+
+ - User Option: before-activate-hook
+   Normal hook run at the beginning of activating the ecb-package by running
+   `ecb-activate'. These hooks run before any other tasks of the activating
+   process are performed. If any of these hooks returns nil then ECB will not
+   be activated!
+
+   This can be used to check some conditions and then only start ECB if all
+   conditions are true. For example a function could be added which returns
+   only nil if Gnus is running. Then calling `ecb-activate' or
+   `ecb-minor-mode' will only start ECB if Gnus is not already running.
+
+ - User Option: before-deactivate-hook
+   Normal hook run at the beginning of deactivating ECB by running
+   `ecb-deactivate'. These hooks run before any other tasks of the
+   deactivating process are performed. If any of these hooks returns nil then
+   ECB will not be deactivated! See also `ecb-before-activate-hook'.
 
  - User Option: common-tree-buffer-after-create-hook
    Local hook running at the end of each tree-buffer creation. Every function
@@ -2982,7 +3022,7 @@ This group contains the following options:
    `ecb-layout-function-6' `ecb-layout-function-7' `ecb-layout-function-8'
    `ecb-layout-function-9' `ecb-layout-function-10' `ecb-layout-function-11'
    `ecb-layout-function-12' `ecb-layout-function-13' `ecb-layout-function-14'
-   `ecb-layout-function-15' `ecb-layout-function-16'
+   `ecb-layout-function-15' `ecb-layout-function-16' `ecb-layout-function-17'
 
    Regardless of the settings you define here: If you have destroyed or
    changed the ECB-screen-layout by any action you can always go back to this
@@ -3783,6 +3823,10 @@ The following hooks are available:
 
  * `ecb-activate-hook'
 
+ * `ecb-before-activate-hook'
+
+ * `ecb-before-deactivate-hook'
+
  * `ecb-common-tree-buffer-after-create-hook'
 
  * `ecb-current-buffer-sync-hook'
@@ -3877,25 +3921,6 @@ Known conflicts with other packages
 Here is a list of known conflicts of ECB with other packages and helpful
 solutions/hints/workarounds:
 
-Package VC (Version Control)
-----------------------------
-
-The variable `vc-delete-logbuf-window' must be set to nil during active ECB.
-This can be done with the hooks mentioned in *Note Elisp programming::.
-
-Package follow-mouse.el
------------------------
-
-The following is only relevant for Emacs 20.X!
-
-ECB works very well with follow-mouse if follow-mouse is turned on *BEFORE*
-ECB is activated (e.g. within the `ecb-activate-hook'). But if you activate
-follow-mouse first after ECB is already activated, then the follow-mouse
-stuff prevents the complete node-name to be displayed in the echo-area if
-mouse moves over it. Because ECB has a much more intelligent mouse tracking
-mechanism than follow-mouse the follow-mouse stuff profit from ECB and works
-even better and saver as without activated ECB!
-
 Package avoid.el
 ----------------
 
@@ -3903,6 +3928,16 @@ With GNU Emacs 20.X ECB must deactivate `mouse-avoidance-mode' if the option
 `ecb-show-node-info-in-minibuffer' activates for at least one ECB tree-buffer
 'if-too-long or 'always. This is done automatically but only as long ECB is
 activated.
+
+Package calculator.el
+---------------------
+
+If the edit-window is already splitted then calling `calculator' uses the
+whole "other" edit-window for the calculator. With an unsplitted edit-window
+the calculator window has it큦 normal size of about 2 lines. Therefore it큦
+recommended to set `calculator-electric-mode' during ECB activation to not
+nil so calculator uses always the echo-area instead of creating a new small
+window!
 
 Package calendar.el
 -------------------
@@ -3920,15 +3955,52 @@ but splits the window equally. But if you add this to your `.emacs' it works:
                                (shrink-window (- (window-height) 9))))
                         )))
 
-Package calculator.el
----------------------
+Package follow-mouse.el
+-----------------------
 
-If the edit-window is already splitted then calling `calculator' uses the
-whole "other" edit-window for the calculator. With an unsplitted edit-window
-the calculator window has it큦 normal size of about 2 lines. Therefore it큦
-recommended to set `calculator-electric-mode' during ECB activation to not
-nil so calculator uses always the echo-area instead of creating a new small
-window!
+The following is only relevant for Emacs 20.X!
+
+ECB works very well with follow-mouse if follow-mouse is turned on *BEFORE*
+ECB is activated (e.g. within the `ecb-activate-hook'). But if you activate
+follow-mouse first after ECB is already activated, then the follow-mouse
+stuff prevents the complete node-name to be displayed in the echo-area if
+mouse moves over it. Because ECB has a much more intelligent mouse tracking
+mechanism than follow-mouse the follow-mouse stuff profit from ECB and works
+even better and saver as without activated ECB!
+
+Package VC (Version Control)
+----------------------------
+
+The variable `vc-delete-logbuf-window' must be set to nil during active ECB.
+This can be done with the hooks mentioned in *Note Elisp programming::.
+
+Package cygwin-mount.el
+-----------------------
+
+There can be a conflict between ECB and cygwin-mount.el if the following
+conditions are true:
+
+ - You are working with cygwin-mount.el (sounds clear :-)
+
+ - You have set `cygwin-mount-build-mount-table-asynch' to not nil
+
+ - ECB is automatically started after starting Emacs (e.g. with
+   `ecb-auto-activate' or calling `ecb-activate' in `window-setup-hook')
+
+ - Your Emacs-setup contains a call of `cygwin-mount-activate'.
+
+Under these circumstances Emacs 21.X sometimes eats up the whole CPU (at
+least with Windows XP) and the cygwin-mount-table is never build.
+
+But there is an easy work-around: Call `cygwin-mount-activate' first *AFTER*
+ECB is activated. This can be done with the hook `ecb-activate-hook':
+
+
+   (add-hook 'ecb-activate-hook
+             (function (lambda ()
+                         (require 'cygwin-mount)
+                         (setq cygwin-mount-build-mount-table-asynch t)
+                         (cygwin-mount-activate))))
 
 
 File: ecb.info,  Node: Bugs,  Prev: Conflicts,  Up: Conflicts and bugs
@@ -4094,6 +4166,8 @@ the option `ecb-layout-nr' is listed with name "layout-nr").
 * auto-compatibility-check:              ecb-general.
 * auto-expand-directory-tree:            ecb-directories.
 * auto-update-methods-after-save:        ecb-methods.
+* before-activate-hook:                  ecb-general.
+* before-deactivate-hook:                ecb-general.
 * bucket-token-display:                  ecb-methods.
 * cache-directory-contents:              ecb-directories.
 * clear-history-behavior:                ecb-history.
@@ -4202,6 +4276,7 @@ Concept Index
 * calendar package:                      Conflicts.
 * collapsing:                            Navigation.
 * compilation buffers:                   Temp- and compile-buffers.
+* cygwin-mount package:                  Conflicts.
 * Directories:                           ECB Directories.
 * Download:                              Downloading new versions.
 * ECB-layout:                            The ECB-layout.
@@ -4277,57 +4352,57 @@ Node: Customizing the display35993
 Node: Rebuilding the Methods37715
 Node: The ECB-layout38570
 Node: Changing the ECB-layout39120
-Node: Redrawing the ECB-layout61969
-Node: Hiding the ECB windows62772
-Node: Back/forward navigation63345
-Ref: Back/forward navigation-Footnote-164446
-Node: ECB-window synchronizing64505
-Node: Interactive ECB commands67087
-Node: Customizing75934
-Node: General aspects76568
-Ref: General aspects-Footnote-179332
-Node: Most important options79464
-Node: Customizable options81257
-Node: ecb-general82404
-Node: ecb-directories101119
-Node: ecb-sources107274
-Node: ecb-methods109529
-Node: ecb-history121798
-Node: ecb-layout123859
-Node: ecb-face-options137642
-Node: ecb-faces141064
-Node: ecb-download145056
-Node: Submitting problem report146265
-Node: Upgrading147628
-Node: Downloading new versions148391
-Ref: Download required packages150148
-Ref: Downloading new versions-Footnote-1151246
-Node: Auto. option-upgrading151295
-Node: User interface151603
-Node: Background information152489
-Node: Tips and tricks155887
-Node: Changing faces156580
-Ref: Changing faces-Footnote-1159416
-Node: Small screens159592
-Node: Simulating speedbar160986
-Node: Integrating speedbar161795
-Node: Optimize scrolling162061
-Node: Large directories163141
-Node: Using eshell163807
-Node: Elisp programming163997
-Node: List of variables164606
-Node: List of hooks164918
-Node: tree-buffer165639
-Node: Adviced functions166445
-Ref: Adviced functions-Footnote-1167052
-Node: New layouts167123
-Node: Conflicts and bugs167306
-Node: Conflicts167781
-Node: Bugs170237
-Node: FAQ170457
-Ref: FAQ-Footnote-1175209
-Node: Command Index175240
-Node: Option Index177357
-Node: Concept Index183101
+Node: Redrawing the ECB-layout63286
+Node: Hiding the ECB windows64089
+Node: Back/forward navigation64662
+Ref: Back/forward navigation-Footnote-165763
+Node: ECB-window synchronizing65822
+Node: Interactive ECB commands68404
+Node: Customizing77251
+Node: General aspects77885
+Ref: General aspects-Footnote-180649
+Node: Most important options80781
+Node: Customizable options82574
+Node: ecb-general83721
+Node: ecb-directories103331
+Node: ecb-sources109486
+Node: ecb-methods111741
+Node: ecb-history124010
+Node: ecb-layout126071
+Node: ecb-face-options139879
+Node: ecb-faces143301
+Node: ecb-download147293
+Node: Submitting problem report148502
+Node: Upgrading149865
+Node: Downloading new versions150628
+Ref: Download required packages152385
+Ref: Downloading new versions-Footnote-1153483
+Node: Auto. option-upgrading153532
+Node: User interface153840
+Node: Background information154726
+Node: Tips and tricks158124
+Node: Changing faces158817
+Ref: Changing faces-Footnote-1161653
+Node: Small screens161829
+Node: Simulating speedbar163223
+Node: Integrating speedbar164032
+Node: Optimize scrolling164298
+Node: Large directories165378
+Node: Using eshell166044
+Node: Elisp programming166234
+Node: List of variables166843
+Node: List of hooks167155
+Node: tree-buffer167940
+Node: Adviced functions168746
+Ref: Adviced functions-Footnote-1169353
+Node: New layouts169424
+Node: Conflicts and bugs169607
+Node: Conflicts170082
+Node: Bugs173541
+Node: FAQ173761
+Ref: FAQ-Footnote-1178513
+Node: Command Index178544
+Node: Option Index180661
+Node: Concept Index186513
 
 End Tag Table

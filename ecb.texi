@@ -1590,6 +1590,33 @@ Here are all currently available layouts (Just customize the option
 -------------------------------------------------------
 @end group
 @end example
+
+@item Layout Nr. 17
+@example
+@group
+-------------------------------------------------------
+|              |                                      |
+|  Directories |                                      |
+|              |                                      |
+|              |                                      |
+|              |                                      |
+|              |                                      |
+|              |                                      |
+|--------------|                 Edit                 |
+|              |                                      |
+|              |                                      |
+|              |                                      |
+|  Methods     |                                      |
+|              |                                      |
+|              |                                      |
+|              |                                      |
+-------------------------------------------------------
+|                                                     |
+|                    Compilation                      |
+|                                                     |
+-------------------------------------------------------
+@end group
+@end example
 @end table
 
 @node Redrawing the ECB-layout, , Changing the ECB-layout, The ECB-layout
@@ -2151,6 +2178,28 @@ user can perform the check and reset manually with
 @code{ecb-upgrade-options}.
 @xref{Auto. option-upgrading}.
 @end defopt
+
+@defopt before-activate-hook
+Normal hook run at the beginning of activating the ecb-package by
+running @code{ecb-activate}. These hooks run before any other tasks of
+the activating process are performed. If any of these hooks returns
+nil then ECB will not be activated!
+
+This can be used to check some conditions and then only start ECB if
+all conditions are true. For example a function could be added which
+returns only nil if Gnus is running. Then calling @code{ecb-activate}
+or @code{ecb-minor-mode} will only start ECB if Gnus is not already
+running.
+@end defopt
+
+@defopt before-deactivate-hook
+Normal hook run at the beginning of deactivating ECB by running
+@code{ecb-deactivate}. These hooks run before any other tasks of the
+deactivating process are performed. If any of these hooks returns nil
+then ECB will not be deactivated! See also
+@code{ecb-before-activate-hook}.
+@end defopt
+
 
 @defopt common-tree-buffer-after-create-hook
 Local hook running at the end of each tree-buffer creation. Every
@@ -3458,6 +3507,7 @@ layout):
 @code{ecb-layout-function-14}
 @code{ecb-layout-function-15}
 @code{ecb-layout-function-16}
+@code{ecb-layout-function-17}
 
 Regardless of the settings you define here: If you have destroyed or
 changed the ECB-screen-layout by any action you can always go back to
@@ -4325,6 +4375,8 @@ The following hooks are available:
 @item @code{ecb-activate-before-new-frame-created-hook}
 @item @code{ecb-activate-before-layout-draw-hook}
 @item @code{ecb-activate-hook}
+@item @code{ecb-before-activate-hook}
+@item @code{ecb-before-deactivate-hook}
 @item @code{ecb-common-tree-buffer-after-create-hook}
 @item @code{ecb-current-buffer-sync-hook}
 @item @code{ecb-deactivate-hook}
@@ -4396,29 +4448,6 @@ then a practicable solution or workaround is described.
 Here is a list of known conflicts of ECB with other packages and
 helpful solutions/hints/workarounds:
 
-@subsection Package VC (Version Control)
-
-@cindex VC package
-@cindex Version control
-The variable @code{vc-delete-logbuf-window} must be set to nil during
-active ECB. This can be done with the hooks mentioned in @ref{Elisp
-programming}.
-
-@subsection Package follow-mouse.el
-
-@noindent
-The following is only relevant for Emacs 20.X!
-
-@cindex follow-mouse package
-ECB works very well with follow-mouse if follow-mouse is turned on
-@strong{BEFORE} ECB is activated (e.g. within the
-@code{ecb-activate-hook}). But if you activate follow-mouse first
-after ECB is already activated, then the follow-mouse stuff prevents
-the complete node-name to be displayed in the echo-area if mouse moves
-over it. Because ECB has a much more intelligent mouse tracking
-mechanism than follow-mouse the follow-mouse stuff profit from ECB and
-works even better and saver as without activated ECB!
-
 @subsection Package avoid.el
 
 @cindex avoid package
@@ -4426,6 +4455,16 @@ With GNU Emacs 20.X ECB must deactivate @code{mouse-avoidance-mode} if the
 option @code{ecb-show-node-info-in-minibuffer} activates for at least one
 ECB tree-buffer 'if-too-long or 'always. This is done automatically
 but only as long ECB is activated.
+
+@subsection Package calculator.el
+
+@cindex calculator package
+If the edit-window is already splitted then calling @code{calculator} uses
+the whole ``other'' edit-window for the calculator. With an unsplitted
+edit-window the calculator window has it큦 normal size of about 2
+lines. Therefore it큦 recommended to set @code{calculator-electric-mode}
+during ECB activation to not nil so calculator uses always the
+echo-area instead of creating a new small window!
 
 @subsection Package calendar.el
 
@@ -4448,15 +4487,63 @@ size but splits the window equally. But if you add this to your
 @end group
 @end example
 
-@subsection Package calculator.el
+@subsection Package follow-mouse.el
 
-@cindex calculator package
-If the edit-window is already splitted then calling @code{calculator} uses
-the whole ``other'' edit-window for the calculator. With an unsplitted
-edit-window the calculator window has it큦 normal size of about 2
-lines. Therefore it큦 recommended to set @code{calculator-electric-mode}
-during ECB activation to not nil so calculator uses always the
-echo-area instead of creating a new small window!
+@noindent
+The following is only relevant for Emacs 20.X!
+
+@cindex follow-mouse package
+ECB works very well with follow-mouse if follow-mouse is turned on
+@strong{BEFORE} ECB is activated (e.g. within the
+@code{ecb-activate-hook}). But if you activate follow-mouse first
+after ECB is already activated, then the follow-mouse stuff prevents
+the complete node-name to be displayed in the echo-area if mouse moves
+over it. Because ECB has a much more intelligent mouse tracking
+mechanism than follow-mouse the follow-mouse stuff profit from ECB and
+works even better and saver as without activated ECB!
+
+@subsection Package VC (Version Control)
+
+@cindex VC package
+@cindex Version control
+The variable @code{vc-delete-logbuf-window} must be set to nil during
+active ECB. This can be done with the hooks mentioned in @ref{Elisp
+programming}.
+
+@subsection Package cygwin-mount.el
+
+@cindex cygwin-mount package
+There can be a conflict between ECB and cygwin-mount.el if the
+following conditions are true:
+
+@itemize @minus
+@item You are working with cygwin-mount.el (sounds clear :-)
+@item You have set @code{cygwin-mount-build-mount-table-asynch} to not
+nil
+@item ECB is automatically started after starting Emacs (e.g. with
+@code{ecb-auto-activate} or calling @code{ecb-activate} in
+@code{window-setup-hook})
+@item Your Emacs-setup contains a call of @code{cygwin-mount-activate}.
+@end itemize
+
+Under these circumstances Emacs 21.X sometimes eats up the whole CPU (at
+least with Windows XP) and the cygwin-mount-table is never build.
+
+But there is an easy work-around: Call @code{cygwin-mount-activate}
+first *AFTER* ECB is activated. This can be done with the hook
+@code{ecb-activate-hook}:
+
+@example
+@group
+
+(add-hook 'ecb-activate-hook
+          (function (lambda ()
+                      (require 'cygwin-mount)
+                      (setq cygwin-mount-build-mount-table-asynch t)
+                      (cygwin-mount-activate))))
+
+@end group
+@end example
 
 @node Bugs, , Conflicts, Conflicts and bugs
 @section Known bugs

@@ -1520,6 +1520,31 @@ indendation of sub-nodes in a tree. See <code>ecb-tree-indent</code> and
 |                                                     |
 -------------------------------------------------------
 </pre>
+
+<br><dt>Layout Nr. 17
+<dd>
+<br><pre>-------------------------------------------------------
+|              |                                      |
+|  Directories |                                      |
+|              |                                      |
+|              |                                      |
+|              |                                      |
+|              |                                      |
+|              |                                      |
+|--------------|                 Edit                 |
+|              |                                      |
+|              |                                      |
+|              |                                      |
+|  Methods     |                                      |
+|              |                                      |
+|              |                                      |
+|              |                                      |
+-------------------------------------------------------
+|                                                     |
+|                    Compilation                      |
+|                                                     |
+-------------------------------------------------------
+</pre>
 </dl>
 
 <p><hr>
@@ -2426,6 +2451,47 @@ also the commands <code>ecb-upgrade-options</code> and
 user can perform the check and reset manually with
 <code>ecb-upgrade-options</code>. 
 See <a href="#Auto.%20option-upgrading">Auto. option-upgrading</a>. 
+</td></tr>
+</table>
+
+<p>
+<table width="100%">
+<tr>
+<td align="left"><b>before-activate-hook</b><i>
+</i></td>
+<td align="right">User Option</td>
+</tr>
+</table>
+<table width="95%" align="center">
+<tr><td>
+Normal hook run at the beginning of activating the ecb-package by
+running <code>ecb-activate</code>. These hooks run before any other tasks of
+the activating process are performed. If any of these hooks returns
+nil then ECB will not be activated!
+
+<p>This can be used to check some conditions and then only start ECB if
+all conditions are true. For example a function could be added which
+returns only nil if Gnus is running. Then calling <code>ecb-activate</code>
+or <code>ecb-minor-mode</code> will only start ECB if Gnus is not already
+running. 
+</td></tr>
+</table>
+
+<p>
+<table width="100%">
+<tr>
+<td align="left"><b>before-deactivate-hook</b><i>
+</i></td>
+<td align="right">User Option</td>
+</tr>
+</table>
+<table width="95%" align="center">
+<tr><td>
+Normal hook run at the beginning of deactivating ECB by running
+<code>ecb-deactivate</code>. These hooks run before any other tasks of the
+deactivating process are performed. If any of these hooks returns nil
+then ECB will not be deactivated! See also
+<code>ecb-before-activate-hook</code>. 
 </td></tr>
 </table>
 
@@ -4447,6 +4513,7 @@ layout):
 <code>ecb-layout-function-14</code>
 <code>ecb-layout-function-15</code>
 <code>ecb-layout-function-16</code>
+<code>ecb-layout-function-17</code>
 
 <p>Regardless of the settings you define here: If you have destroyed or
 changed the ECB-screen-layout by any action you can always go back to
@@ -5613,6 +5680,8 @@ Up:<a rel=up accesskey=u href="#Elisp%20programming">Elisp programming</a>
 <li><code>ecb-activate-before-new-frame-created-hook</code>
 <li><code>ecb-activate-before-layout-draw-hook</code>
 <li><code>ecb-activate-hook</code>
+<li><code>ecb-before-activate-hook</code>
+<li><code>ecb-before-deactivate-hook</code>
 <li><code>ecb-common-tree-buffer-after-create-hook</code>
 <li><code>ecb-current-buffer-sync-hook</code>
 <li><code>ecb-deactivate-hook</code>
@@ -5712,30 +5781,21 @@ Up:<a rel=up accesskey=u href="#Conflicts%20and%20bugs">Conflicts and bugs</a>
 <p>Here is a list of known conflicts of ECB with other packages and
 helpful solutions/hints/workarounds:
 
-<h4>Package VC (Version Control)</h4>
-
-<p>The variable <code>vc-delete-logbuf-window</code> must be set to nil during
-active ECB. This can be done with the hooks mentioned in <a href="#Elisp%20programming">Elisp programming</a>.
-
-<h4>Package follow-mouse.el</h4>
-
-<p>The following is only relevant for Emacs 20.X!
-
-<p>ECB works very well with follow-mouse if follow-mouse is turned on
-<strong>BEFORE</strong> ECB is activated (e.g. within the
-<code>ecb-activate-hook</code>). But if you activate follow-mouse first
-after ECB is already activated, then the follow-mouse stuff prevents
-the complete node-name to be displayed in the echo-area if mouse moves
-over it. Because ECB has a much more intelligent mouse tracking
-mechanism than follow-mouse the follow-mouse stuff profit from ECB and
-works even better and saver as without activated ECB!
-
 <h4>Package avoid.el</h4>
 
 <p>With GNU Emacs 20.X ECB must deactivate <code>mouse-avoidance-mode</code> if the
 option <code>ecb-show-node-info-in-minibuffer</code> activates for at least one
 ECB tree-buffer 'if-too-long or 'always. This is done automatically
 but only as long ECB is activated.
+
+<h4>Package calculator.el</h4>
+
+<p>If the edit-window is already splitted then calling <code>calculator</code> uses
+the whole "other" edit-window for the calculator. With an unsplitted
+edit-window the calculator window has it큦 normal size of about 2
+lines. Therefore it큦 recommended to set <code>calculator-electric-mode</code>
+during ECB activation to not nil so calculator uses always the
+echo-area instead of creating a new small window!
 
 <h4>Package calendar.el</h4>
 
@@ -5754,14 +5814,53 @@ size but splits the window equally. But if you add this to your
                      )))
 </pre>
 
-<h4>Package calculator.el</h4>
+<h4>Package follow-mouse.el</h4>
 
-<p>If the edit-window is already splitted then calling <code>calculator</code> uses
-the whole "other" edit-window for the calculator. With an unsplitted
-edit-window the calculator window has it큦 normal size of about 2
-lines. Therefore it큦 recommended to set <code>calculator-electric-mode</code>
-during ECB activation to not nil so calculator uses always the
-echo-area instead of creating a new small window!
+<p>The following is only relevant for Emacs 20.X!
+
+<p>ECB works very well with follow-mouse if follow-mouse is turned on
+<strong>BEFORE</strong> ECB is activated (e.g. within the
+<code>ecb-activate-hook</code>). But if you activate follow-mouse first
+after ECB is already activated, then the follow-mouse stuff prevents
+the complete node-name to be displayed in the echo-area if mouse moves
+over it. Because ECB has a much more intelligent mouse tracking
+mechanism than follow-mouse the follow-mouse stuff profit from ECB and
+works even better and saver as without activated ECB!
+
+<h4>Package VC (Version Control)</h4>
+
+<p>The variable <code>vc-delete-logbuf-window</code> must be set to nil during
+active ECB. This can be done with the hooks mentioned in <a href="#Elisp%20programming">Elisp programming</a>.
+
+<h4>Package cygwin-mount.el</h4>
+
+<p>There can be a conflict between ECB and cygwin-mount.el if the
+following conditions are true:
+
+<ul>
+<li>You are working with cygwin-mount.el (sounds clear :-)
+<li>You have set <code>cygwin-mount-build-mount-table-asynch</code> to not
+nil
+<li>ECB is automatically started after starting Emacs (e.g. with
+<code>ecb-auto-activate</code> or calling <code>ecb-activate</code> in
+<code>window-setup-hook</code>)
+<li>Your Emacs-setup contains a call of <code>cygwin-mount-activate</code>. 
+</ul>
+
+<p>Under these circumstances Emacs 21.X sometimes eats up the whole CPU (at
+least with Windows XP) and the cygwin-mount-table is never build.
+
+<p>But there is an easy work-around: Call <code>cygwin-mount-activate</code>
+first *AFTER* ECB is activated. This can be done with the hook
+<code>ecb-activate-hook</code>:
+
+<br><pre>
+(add-hook 'ecb-activate-hook
+          (function (lambda ()
+                      (require 'cygwin-mount)
+                      (setq cygwin-mount-build-mount-table-asynch t)
+                      (cygwin-mount-activate))))
+</pre>
 
 <p><hr>
 Node:<a name="Bugs">Bugs</a>,
@@ -5978,6 +6077,8 @@ Up:<a rel=up accesskey=u href="#Top">Top</a>
 <li><code>auto-compatibility-check</code>: <a href="#ecb-general">ecb-general</a>
 <li><code>auto-expand-directory-tree</code>: <a href="#ecb-directories">ecb-directories</a>
 <li><code>auto-update-methods-after-save</code>: <a href="#ecb-methods">ecb-methods</a>
+<li><code>before-activate-hook</code>: <a href="#ecb-general">ecb-general</a>
+<li><code>before-deactivate-hook</code>: <a href="#ecb-general">ecb-general</a>
 <li><code>bucket-token-display</code>: <a href="#ecb-methods">ecb-methods</a>
 <li><code>cache-directory-contents</code>: <a href="#ecb-directories">ecb-directories</a>
 <li><code>clear-history-behavior</code>: <a href="#ecb-history">ecb-history</a>
@@ -6087,6 +6188,7 @@ Up:<a rel=up accesskey=u href="#Top">Top</a>
 <li>calendar package: <a href="#Conflicts">Conflicts</a>
 <li>collapsing: <a href="#Navigation">Navigation</a>
 <li>compilation buffers: <a href="#Temp-%20and%20compile-buffers">Temp- and compile-buffers</a>
+<li>cygwin-mount package: <a href="#Conflicts">Conflicts</a>
 <li>Directories: <a href="#ECB%20Directories">ECB Directories</a>
 <li>Download: <a href="#Downloading%20new%20versions">Downloading new versions</a>
 <li>ECB-layout: <a href="#The%20ECB-layout">The ECB-layout</a>
@@ -6229,11 +6331,12 @@ Up:<a rel=up accesskey=u href="#Top">Top</a>
 <ul>
 <li><a href="#Conflicts">Known conflicts with other packages</a>
 <ul>
-<li><a href="#Conflicts">Package VC (Version Control)</a>
-<li><a href="#Conflicts">Package follow-mouse.el</a>
 <li><a href="#Conflicts">Package avoid.el</a>
-<li><a href="#Conflicts">Package calendar.el</a>
 <li><a href="#Conflicts">Package calculator.el</a>
+<li><a href="#Conflicts">Package calendar.el</a>
+<li><a href="#Conflicts">Package follow-mouse.el</a>
+<li><a href="#Conflicts">Package VC (Version Control)</a>
+<li><a href="#Conflicts">Package cygwin-mount.el</a>
 </ul>
 <li><a href="#Bugs">Known bugs</a>
 </ul>
