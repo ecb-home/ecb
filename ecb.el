@@ -52,7 +52,7 @@
 ;; The latest version of the ECB is available at
 ;; http://home.swipnet.se/mayhem/ecb.html
 
-;; $Id: ecb.el,v 1.94 2001/05/23 21:13:09 berndl Exp $
+;; $Id: ecb.el,v 1.95 2001/05/25 15:49:12 berndl Exp $
 
 ;;; Code:
 
@@ -1391,22 +1391,24 @@ node in the ECB-window WINDOW."
   (if (= (tree-node-get-type node) 1)
       (ecb-mouse-over-source-node node)
     (if (not (= (tree-node-get-type node) 3))
-	(message (when (ecb-show-minibuffer-info node window)
-		   (tree-node-get-data node))))))
+	(tree-buffer-nolog-message
+         (when (ecb-show-minibuffer-info node window)
+           (tree-node-get-data node))))))
 
 (defun ecb-mouse-over-source-node (node &optional buffer window)
   ;; For buffers that hasnt been saved yet
   (ignore-errors
-    (message (when (ecb-show-minibuffer-info node window)
-	       (if ecb-show-file-info-in-minibuffer
-		   (ecb-get-file-info-text (tree-node-get-data node))
-		 (if ecb-show-complete-file-name-in-minibuffer
-		     (tree-node-get-data node)
-		   (tree-node-get-name node)))))))
+    (tree-buffer-nolog-message
+     (when (ecb-show-minibuffer-info node window)
+       (if ecb-show-file-info-in-minibuffer
+           (ecb-get-file-info-text (tree-node-get-data node))
+         (if ecb-show-complete-file-name-in-minibuffer
+             (tree-node-get-data node)
+           (tree-node-get-name node)))))))
 
 (defun ecb-mouse-over-method-node (node &optional buffer window)
-  (message (when (ecb-show-minibuffer-info node window)
-	     (tree-node-get-name node))))
+  (tree-buffer-nolog-message (when (ecb-show-minibuffer-info node window)
+                               (tree-node-get-name node))))
 
 
 ;;====================================================
