@@ -1624,6 +1624,8 @@ behavior depends on the value of the option
 @code{same-window-buffer-names} and @code{same-window-regexps} are
 supported as well.
 
+See the option @code{ecb-ignore-display-buffer-function}!
+
 If called for other frames it works like the original version.
 @end deffn
 
@@ -6187,6 +6189,34 @@ IMPORTANT: Hiding the ECB-windows is internally done by calling
 is analogous to that described in
 @code{ecb-show-ecb-windows-before-hook}.
 @end defopt
+
+@defopt ignore-display-buffer-function
+Adviced @code{display-buffer} ignores @code{display-buffer-function}.
+This means, that the adviced version of @code{display-buffer} (see
+@code{ecb-advice-window-functions}) ignores the value of
+@code{display-buffer-function} when called for the @code{ecb-frame}.
+If this variable should not be ignored then the function of
+@code{display-buffer-function} is completely responsible which window
+is used for the buffer to display - no smart ECB-logic will help to
+deal best with the ECB-window-layout! You can define if and when
+@code{display-buffer-function} should be ignored:
+
+@itemize @minus
+@item
+only when durable compile window is used - i.e. if
+@code{ecb-compile-window-height} is not nil
+
+@item
+always when ECB is active - that means ignore when ECB is active
+otherwise not - this is the default value
+
+@item
+never, the adviced version of @code{display-buffer} always uses the
+value of @code{display-buffer-function} if the value is a function.
+@end itemize
+@end defopt
+
+
 
 @defopt ignore-special-display
 Ignore special-display-handling. This means, that all values of

@@ -52,8 +52,6 @@
 (silentcomp-defun jde-open-find-java-file-name)
 (silentcomp-defun jde-gen-class-buffer)
 
-(silentcomp-defun end-of-thing)
-
 (require 'ecb-util)
 (require 'ecb-layout)
 (require 'ecb-file-browser)
@@ -77,8 +75,8 @@ available."
              (equal major-mode 'jde-mode))
     (if (jde-open-functions-exist)
         (let* (
-               (thing-of-interest (thing-at-point 'symbol))
-               (pair (save-excursion (end-of-thing 'symbol)
+               (thing-of-interest (ecb-thing-at-point 'symbol))
+               (pair (save-excursion (ecb-end-of-thing 'symbol)
                                      (jde-parse-java-variable-at-point)))
                (class-to-open (jde-open-get-class-to-open
                                pair thing-of-interest))

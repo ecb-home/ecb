@@ -3,6 +3,19 @@
 ** Advice for `balance-windows' so only the edit-windows are balanced.
    Thanks to for <> suggestion.
 
+** New option `ecb-ignore-display-buffer-function'
+   Per default the adviced version of `display-buffer' ignores the value of
+   `display-buffer-function' when called for the ECB-frame. If this variable
+   should not be ignored then the function of `display-buffer-function' is
+   completely responsible which window is used for the buffer to display - no
+   smart ECB-logic will help to deal best with the ECB-window-layout! You can
+   define if and when `display-buffer-function' should be ignored: Always
+   (default), when a compile-window is used or never.
+
+** For XEmacs the package fsf-compat is no longer required by ECB.
+   But it is still necessary to check if fsf-compat is required by the
+   packages semantic, eieio and speedbar which in turn are required by ECB.
+      
 ** Fixed Bugs
 
 *** If point stays in the current source-buffer on a function argument then still

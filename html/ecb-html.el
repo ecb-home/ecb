@@ -234,7 +234,7 @@
 		 ("http://cedet.sourceforge.net/speedbar.shtml" "Speedbar" "Version 0.14beta1 or higher.")
 		 ("http://jdee.sunsite.dk" "JDEE (optional)" "If you use ECB for Java development."))
 		 "_top")
-	      (h-p "If you use XEmacs you must have the packages fsf-compat (contains overlay.el), mail-lib and c-support (contains hideshow.el) installed."))
+	      (h-p "If you use XEmacs you must have installed the packages mail-lib and c-support (contains hideshow.el)."))
 
    (h-section "Developers"
 	      (h-bullet-link-list

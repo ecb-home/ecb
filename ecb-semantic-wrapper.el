@@ -89,6 +89,8 @@
 
 (defconst ecb--semantic-function-alist
   '((semantic-active-p                     . semantic-active-p)
+    (semantic-token-function-args          . semantic-tag-function-arguments)
+    (semantic-find-nonterminal-by-overlay  . semantic-find-tag-by-overlay)
     (semantic-current-nonterminal-parent   . semantic-current-tag-parent)
     (semantic-adopt-external-members       . semantic-adopt-external-members)
     (semantic-bovinate-toplevel            . semantic-bovinate-toplevel)
