@@ -28,7 +28,7 @@
 ;; Do not change any html-file besides the index.html manually but do all
 ;; changes in this elisp file!
 
-;; $Id: ecb-html.el,v 1.62 2004/02/07 11:08:42 berndl Exp $
+;; $Id: ecb-html.el,v 1.63 2004/02/16 08:56:22 berndl Exp $
 
 ;;; Code:
 
@@ -77,6 +77,11 @@
   "List of latest news displayed on the main page.")
 (setq ecb-latest-news
       `(
+        ,(h-sub-section "ECB 2.21 released! (2004-02-16)"
+                        "Better compatibility with other packages: Applications like Gnus, BBDB or Xrefactory run within the ECB-frame without conflicts - even when the ECB-windows are visible. Some important bug fixes. "
+                        (h-link "docs/Install-and-first-steps.html#Install%20and%20first%20steps" "Here") " is a short installation guide. "
+                        "Click " (h-link "NEWS.html" "here")
+                        " for information about changes in the new version. ")
         ,(h-sub-section "ECB 2.20 released! (2004-02-02)"
                         "The most important news at the beginning: The restriction of only two edit-windows has been gone; now you can get as many edit-windows as you need! The window-layout of the edit-area will be fully preserved between deactivation/activation and hidding/showing ecb-windows! A lot of improvements for the tree-buffers. Much better compatibility with other packages. A lot of bug fixes. "
                         (h-link "docs/Install-and-first-steps.html#Install%20and%20first%20steps" "Here") " is a short installation guide. "
@@ -84,11 +89,6 @@
                         " for information about changes in the new version. ")
         ,(h-sub-section "Now always the latest stable CVS-snapshot is available for download! (2004-01-15)"
                         "Click " (h-link "downloads.html" "here") " to get it.")
-        ,(h-sub-section "ECB 2.11 released! (2003-11-14)"
-                        "Semanticdb is used for jumping to external type-definitions. Special-display-buffers are handled correctly. Automatic upgrading has been fixed for this new version. Some bug fixes. "
-                        (h-link "docs/Install-and-first-steps.html#Install%20and%20first%20steps" "Here") " is a short installation guide. "
-                        "Click " (h-link "NEWS.html" "here")
-                        " for information about changes in the new version. ")
         ))
 
 (defvar ecb-rest-news nil
@@ -96,6 +96,11 @@
 `ecb-html-all-news'.")
 (setq ecb-rest-news
       `(
+        ,(h-sub-section "ECB 2.11 released! (2003-11-14)"
+                        "Semanticdb is used for jumping to external type-definitions. Special-display-buffers are handled correctly. Automatic upgrading has been fixed for this new version. Some bug fixes. "
+                        (h-link "docs/Install-and-first-steps.html#Install%20and%20first%20steps" "Here") " is a short installation guide. "
+                        "Click " (h-link "NEWS.html" "here")
+                        " for information about changes in the new version. ")
         ,(h-sub-section "ECB 2.01 released! (2003-11-04)"
                         "New image-style tree-buffers. Complete overhaul of the popup-menu mechanism - now submenus are allowed and some new default entries. If the special ECB-windows are hidden then there are no restrictions about the window-layout of the ecb-frame. Runs with cedet 1.0. Some bug fixes. "
                         (h-link "docs/Install-and-first-steps.html#Install%20and%20first%20steps" "Here") " is a short installation guide. "

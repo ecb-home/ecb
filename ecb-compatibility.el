@@ -24,7 +24,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-compatibility.el,v 1.2 2004/02/13 16:10:06 berndl Exp $
+;; $Id: ecb-compatibility.el,v 1.3 2004/02/16 08:56:41 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -50,10 +50,13 @@
 ;; 2. Add the advice-code below.
 ;;
 ;; All advices of `ecb-compatibility-advices' will be autom. enabled when ECB
-;; starts and autom. disabled when ECB shuts down.
+;; starts and autom. disabled when ECB shuts down. No advice is enabled just
+;; by loading the ECB-library!
 
 (defvar ecb-compatibility-advices '((bs-show . before)
                                     (Electric-pop-up-window . around)
+                                    (electric-command-history . before)
+                                    (electric-buffer-list . before)
                                     (electric-buffer-list . after))
   "Contains all advices needed for package-compatibility.")
 
@@ -72,10 +75,39 @@ edit-window. Does nothing if called in another frame as the `ecb-frame'."
            (display-buffer (buffer-name my-bs-buffer)))))))
 
 (defadvice Electric-pop-up-window (around ecb)
-  (ecb-with-ecb-advice 'one-window-p 'around
+  "Ensures that the electric-* commands \(e.g. `electric-buffer-list') work
+well with ECB. If BUFFER is a \"compilation-buffer\" in the sense of
+`ecb-compilation-buffer-p' then BUFFER will be displayed in the compile-window
+of ECB - if there is any. If the compile-window is temporally hidden then the
+BUFFER is displayed in an edit-window!"
+  (if (and ecb-minor-mode
+           (equal (selected-frame) ecb-frame))
+      (if (and (ecb-compilation-buffer-p (ad-get-arg 0))
+               (equal (ecb-compile-window-state) 'visible))
+          (pop-to-buffer (ad-get-arg 0))
+        (let ((ecb-compilation-buffer-names nil)
+              (ecb-compilation-major-modes nil)
+              (ecb-compilation-predicates nil))
+          (ecb-with-ecb-advice 'one-window-p 'around
+            ad-do-it)))
     ad-do-it))
 
+(defadvice electric-command-history (before ecb)
+  "Ensures that the electric-* commands work well with ECB."
+  (when (and ecb-minor-mode
+             (equal (selected-frame) ecb-frame)
+             (ecb-point-in-ecb-window))
+    (ecb-select-edit-window)))
+
+(defadvice electric-buffer-list (before ecb)
+  "Ensures that the electric-* commands work well with ECB."
+  (when (and ecb-minor-mode
+             (equal (selected-frame) ecb-frame)
+             (ecb-point-in-ecb-window))
+    (ecb-select-edit-window)))
+
 (defadvice electric-buffer-list (after ecb)
+  "Ensures that the electric-* commands work well with ECB."
   (if (get-buffer "*Buffer List*")
       (bury-buffer (get-buffer "*Buffer List*"))))
 

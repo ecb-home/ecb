@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-compilation.el,v 1.31 2004/02/02 11:57:54 berndl Exp $
+;; $Id: ecb-compilation.el,v 1.32 2004/02/16 08:56:41 berndl Exp $
 
 ;;; Commentary:
 
@@ -76,8 +76,12 @@ will be displayed in the compile-window of ECB even if `compilation-buffer-p'
 says nil for this buffer.
 
 It is not recommended to add the name of eshell-buffers to this list because
-ECB already handles the eshell-integration as best as possible."
+ECB already handles the eshell-integration as best as possible.
+
+See also the options `ecb-compilation-major-modes' and
+`ecb-compilation-predicates'."
   :group 'ecb-compilation
+  :group 'ecb-most-important
   :type '(repeat (cons (string :tag "Buffer name")
                        (boolean :tag "Handled as regexp"))))
 

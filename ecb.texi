@@ -26,7 +26,7 @@
 @c GNU Emacs; see the file COPYING.  If not, write to the Free Software
 @c Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-@c $Id: ecb.texi,v 1.152 2004/02/13 16:09:52 berndl Exp $
+@c $Id: ecb.texi,v 1.153 2004/02/16 08:56:24 berndl Exp $
 
 @setfilename ecb.info
 
@@ -3685,6 +3685,14 @@ etags (see @code{ecb-process-non-semantic-files}) because for these
 buffers there is no built-in auto-rebuild mechanism. For these buffers
 this command calls @code{ecb-rebuild-methods-buffer-for-non-semantic}.
 @end itemize
+
+For non-semantic-sources supported by etags the option
+@code{ecb-auto-save-before-etags-methods-rebuild} is checked before
+rescanning the source-buffer and rebuilding the methods-buffer.
+
+If point is in one of the ecb-windows or in the compile-window then
+this command rebuids the methods-buffer with the contents of the
+source-buffer the last selected edit-window.
 @end deffn
 
 @deffn Command redraw-layout &optional ARG
@@ -4191,6 +4199,9 @@ When and which node-info should be displayed in the minibuffer?
 The ECB layout, means which windows you want to be displayed in the
 ECB-frame and also the location of these windows (@pxref{Changing the
 ECB-layout}).
+@item ecb-compilation-buffer-names
+Which buffers should be treaten as ``compilation-buffers'' and
+therefore displayed in the compile-window of ECB - if there is any.
 @item  ecb-tag-display-function
 @itemx ecb-type-tag-display
 @itemx ecb-type-tag-expansion
@@ -6645,6 +6656,9 @@ ECB even if @code{compilation-buffer-p} says nil for this buffer.
 It is not recommended to add the eshell-buffer-names to this list
 because ECB already handles the eshell-integration as best as
 possible (@pxref{Using eshell}).
+
+See also the options @code{ecb-compilation-major-modes} and
+@code{ecb-compilation-predicates}.
 @end defopt
 
 @defopt compilation-major-modes
@@ -9897,7 +9911,7 @@ between ECB and a package not listed in the know-conflicts-section.
 As of version 2.20 the layout-engine of ECB is so flexible that
 normally there should be no conflicts with other packages unless these
 packages have their own complete window-layout-management (e.g. Gnus,
-BBDM, Xrefactory). But these packages can and should be handled very
+BBDB, Xrefactory). But these packages can and should be handled very
 well with the window-manager-support of ECB (@pxref{Window-managers
 and ECB}).
 
@@ -9969,15 +9983,13 @@ Otherwise bs will use the edit-area to do its job.
 @subsubsection Package BBDB
 
 @cindex BBDB
-With ECB-version < 1.96 it is not recommended to use BBDB and ECB
-simultaneously in one frame because each of them has its own
-window-management and probably there will be conflicts. Use different
-frames for ECB and BBDB!
+As of ECB 2.21 there should be no conflicts between BBDB and ECB, so
+BBDB can be used even when the ECB-windows are visible.
 
-But beginning with ECB 1.96 you can use one of the window-managers
-escreen.el or winring.el (@pxref{Window-managers and ECB}). With such
-a window-manager ECB and BBDB should work very well together - even in
-the same frame!
+But if you encounter problems then it is recommened to use one of the
+window-managers escreen.el or winring.el (@pxref{Window-managers and
+ECB}). With such a window-manager ECB and BBDB should work very well
+together under all circumstances!
 
 @subsubsection Package calculator.el
 
@@ -10083,15 +10095,13 @@ works even better and saver as without activated ECB!
 @subsubsection Package Gnus (Newsreader)
 
 @cindex Gnus
-With ECB-version < 1.96 it is not recommended to use Gnus and ECB
-simultaneously in one frame because each of them has its own
-window-management and probably there will be conflicts. Use different
-frames for ECB and Gnus!
+As of ECB 2.21 there should be no conflicts between Gnus and ECB, so
+Gnus can be used even when the ECB-windows are visible.
 
-But beginning with ECB 1.96 you can use one of the window-managers
-escreen.el or winring.el (@pxref{Window-managers and ECB}). With such
-a window-manager ECB and Gnus should work very well together - even in
-the same frame!
+But if you encounter problems then it is recommened to use one of the
+window-managers escreen.el or winring.el (@pxref{Window-managers and
+ECB}). With such a window-manager ECB and Gnus should work very well
+together under all circumstances!
 
 @subsubsection Package JDEE (Java Development Environment)
 
@@ -10167,39 +10177,14 @@ refactoring browser for (X)Emacs@footnote{Xrefactory is available at
 @ifnothtml
 @url{http://www.xref-tech.com}
 @end ifnothtml
-}, can be used during running ECB so long as
-not the Xrefactory-browser is used (e.g. via
-@code{xref-show-browser}). using the Xrefactory-broswer confuses the
-ECB-layout-engine as well as the Xrefactory window-layouter because
-the latter one does some wild window splitting and resizing of its
-own. The symbol completion window plays nice with ECB, but the source
-code browsers 3 window layout won't work with ECB enabled. It is so
-deeply confused by ECB that it drops a window. Normally hiding the ECB
-windows before starting the Xref-brwoser should help because with
-hidden ECB-windows there are no restrictions on the part of ECB
-concering window-layout. But to get sure ECB can also be deactivated
-;-)
+}, can be used during running ECB regardless if the ECB-windows are
+visible or not. There should be no conflicts as of ECB versions >=
+2.21.
 
-This can be achieved with the following advice which should be put in
-the @file{.emacs}:
-
-@example
-@group
-(defadvice xref-create-browser-windows 
-     (before hide-or-deactivate-ecb-for-xref first nil compile)
-   "deactivate ecb when invoking the xrefactory browser"
-   (when ecb-minor-mode
-     (ecb-toggle-ecb-windows -1)
-     ;; or if you want completely deactivating ECB uncomment this
-     ;; (ecb-deactivate)
-     )
-@end group
-@end example
-
-But the most recommended way is to use a window-manager as
-escreen.el or winring.el (and then use different escreens or
-window-configurations for ECB and Xrefactory-browsing -
-@ref{Window-managers and ECB}).
+If there are conflicts with the Xref-browser then the most recommended
+way is to use one of the window-manager escreen.el or winring.el (and
+then use different escreens or window-configurations for ECB and
+Xrefactory-browsing - @ref{Window-managers and ECB}).
 
 @node Bugs, , Conflicts, Conflicts and bugs
 @section Known bugs

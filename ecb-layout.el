@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-layout.el,v 1.214 2004/02/13 16:10:05 berndl Exp $
+;; $Id: ecb-layout.el,v 1.215 2004/02/16 08:56:25 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -1602,6 +1602,10 @@ for current layout."
         (ecb-do-with-unfixed-ecb-buffers ad-do-it)
       ad-do-it))
 
+  ;; Klaus Berndl <klaus.berndl@sdm.de>: We can not use our
+  ;; Electric-pop-up-window advice instaed of this advice because otherwise
+  ;; some commands of the popup-menus of the ecb-buffers would not work - this
+  ;; comes from the save-window-excursion in the the tmm.
   (defadvice tmm-prompt (around ecb)
     "Make it compatible with ECB."
     (if (or (not ecb-minor-mode)
@@ -1623,6 +1627,7 @@ for current layout."
             (ecb-compilation-predicates nil))
         ad-do-it)))
 
+  
   (defadvice shrink-window-if-larger-than-buffer (around ecb)
     "Makes the function compatible with ECB."
     (or (ad-get-arg 0) (ad-set-arg 0 (selected-window)))

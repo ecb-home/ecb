@@ -23,7 +23,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-file-browser.el,v 1.9 2004/01/19 20:03:26 berndl Exp $
+;; $Id: ecb-file-browser.el,v 1.10 2004/02/16 08:56:41 berndl Exp $
 
 ;;; Commentary:
 
@@ -1003,28 +1003,34 @@ selected before this update."
      (when (not (string= dir-before-update ecb-path-selected-directory))
        (tree-buffer-scroll (point-min) (point-min))))))
 
-
-(tree-buffer-defpopup-command ecb-sources-filter-by-ext
-  "Filter the sources by extension from popup."
-  (let ((ext-str (read-string "Insert the filter-extension without leading dot: "
-                              (and node
-                                   (file-name-extension (tree-node-get-data node))))))
-    (if (= (length ext-str) 0)
-        (ecb-apply-filter-to-sources-buffer
-         "^[^.]+$" ;; matches only filenames with no extension
-         "No ext.")
+(defun ecb-sources-filter-by-ext (ext-str)
+  "Filter the sources by extension EXT-STR."
+  (if (= (length ext-str) 0)
       (ecb-apply-filter-to-sources-buffer
-       (format "\\.%s\\'" ext-str)
-       (format "*.%s" ext-str)))))
-       
-  
-(tree-buffer-defpopup-command ecb-sources-filter-by-regexp
-  "Filter the sources by regexp from popup."
+       "^[^.]+$" ;; matches only filenames with no extension
+       "No ext.")
+    (ecb-apply-filter-to-sources-buffer
+     (format "\\.%s\\'" ext-str)
+     (format "*.%s" ext-str))))
+
+(tree-buffer-defpopup-command ecb-popup-sources-filter-by-ext
+  "Filter the sources by extension by popup."
+  (ecb-sources-filter-by-ext
+   (read-string "Insert the filter-extension without leading dot: "
+                (and node
+                     (file-name-extension (tree-node-get-data node))))))
+
+(defun ecb-sources-filter-by-regexp ()
+  "Filter the sources by a regexp. Ask for the regexp."
   (let ((regexp-str (read-string "Insert the filter-regexp: ")))
     (if (> (length regexp-str) 0)
         (ecb-apply-filter-to-sources-buffer regexp-str))))
   
-(tree-buffer-defpopup-command ecb-sources-filter-none
+(tree-buffer-defpopup-command ecb-popup-sources-filter-by-regexp
+  "Filter the sources by regexp by popup."
+  (ecb-sources-filter-by-regexp))
+  
+(tree-buffer-defpopup-command ecb-popup-sources-filter-none
   "Remove any filter from the sources by popup."
   (ecb-apply-filter-to-sources-buffer nil))
   
@@ -1044,10 +1050,11 @@ directory has its own filtered sources-buffer."
   (let ((choice (ecb-query-string "Filter sources by:"
                                   '("extension" "regexp" "nothing"))))
     (cond ((string= choice "extension")
-           (ecb-sources-filter-by-ext nil))
+           (ecb-sources-filter-by-ext
+            (read-string "Insert the filter-extension without leading dot: ")))
           ((string= choice "regexp")
-           (ecb-sources-filter-by-regexp nil))
-          (t (ecb-sources-filter-none nil)))))
+           (ecb-sources-filter-by-regexp))
+          (t (ecb-apply-filter-to-sources-buffer nil)))))
 
 (defun ecb-sources-filter-modeline-prefix (buffer-name sel-dir sel-source)
   "Compute a mode-line prefix for the Sources-buffer so the current filter
@@ -1977,9 +1984,9 @@ edit-windows. Otherwise return nil."
          (ecb-dired-directory "Open Dir in Dired")
          (ecb-dired-directory-other-window "Open Dir in Dired other window"))
         ("Filter"
-         (ecb-sources-filter-by-ext "Filter by extension")
-         (ecb-sources-filter-by-regexp "Filter by a regexp")
-         (ecb-sources-filter-none "No filter"))
+         (ecb-popup-sources-filter-by-ext "Filter by extension")
+         (ecb-popup-sources-filter-by-regexp "Filter by a regexp")
+         (ecb-popup-sources-filter-none "No filter"))
         ("---")        
 	(ecb-create-source "Create Sourcefile")
         (ecb-delete-source "Delete Sourcefile")
@@ -2015,27 +2022,30 @@ edit-windows. Otherwise return nil."
     (when (get-file-buffer data)
       (kill-buffer (get-file-buffer data)))))
 
-(tree-buffer-defpopup-command ecb-history-filter-by-ext
+(defun ecb-history-filter-by-ext (ext-str)
   "Filter history entries by extension."
-  (let ((ext-str (read-string "Insert the filter-extension without leading dot: "
-                              (and node
-                                   (file-name-extension (tree-node-get-data node))))))
-    (if (= (length ext-str) 0)
-        (setq ecb-history-filter
-         (cons `(lambda (filename)
-                  (save-match-data
-                    (string-match "^[^.]+$" filename)))
-               "No ext."))
+  (if (= (length ext-str) 0)
       (setq ecb-history-filter
             (cons `(lambda (filename)
                      (save-match-data
-                       (string-match ,(format "\\.%s\\'" ext-str)
-                                     filename)))
-                  (format "*.%s" ext-str)))))
+                       (string-match "^[^.]+$" filename)))
+                  "No ext."))
+    (setq ecb-history-filter
+          (cons `(lambda (filename)
+                   (save-match-data
+                     (string-match ,(format "\\.%s\\'" ext-str)
+                                   filename)))
+                (format "*.%s" ext-str))))
   (ecb-add-buffers-to-history))
-       
-  
-(tree-buffer-defpopup-command ecb-history-filter-by-regexp
+
+(tree-buffer-defpopup-command ecb-popup-history-filter-by-ext
+  "Filter history entries by extension by popup."
+  (let ((ext-str (read-string "Insert the filter-extension without leading dot: "
+                              (and node
+                                   (file-name-extension (tree-node-get-data node))))))
+    (ecb-history-filter-by-ext ext-str)))
+
+(defun ecb-history-filter-by-regexp ()
   "Filter history entries by regexp."
   (let ((regexp-str (read-string "Insert the filter-regexp: ")))
     (if (> (length regexp-str) 0)
@@ -2045,8 +2055,12 @@ edit-windows. Otherwise return nil."
                          (string-match ,regexp-str filename)))
                     regexp-str))))
   (ecb-add-buffers-to-history))
+
+(tree-buffer-defpopup-command ecb-popup-history-filter-by-regexp
+  "Filter history entries by regexp by popup."
+  (ecb-history-filter-by-regexp))
   
-(tree-buffer-defpopup-command ecb-history-filter-all-existing
+(tree-buffer-defpopup-command ecb-popup-history-filter-all-existing
   "No history filter, i.e. add all existing file-buffers to the history."
   (ecb-add-all-buffers-to-history))
   
@@ -2063,10 +2077,11 @@ So you get a better overlooking. There are three choices:
   (let ((choice (ecb-query-string "Filter history by:"
                                   '("extension" "regexp" "no filter"))))
     (cond ((string= choice "extension")
-           (ecb-history-filter-by-ext nil))
+           (ecb-history-filter-by-ext
+            (read-string "Insert the filter-extension without leading dot: ")))
           ((string= choice "regexp")
-           (ecb-history-filter-by-regexp nil))
-          (t (ecb-history-filter-all-existing nil)))))
+           (ecb-history-filter-by-regexp))
+          (t (ecb-add-all-buffers-to-history)))))
 
 (defvar ecb-history-menu nil
   "Built-in menu for the history-buffer.")
@@ -2081,9 +2096,9 @@ So you get a better overlooking. There are three choices:
          (ecb-dired-directory "Open Dir in Dired")
          (ecb-dired-directory-other-window "Open Dir in Dired other window"))
 	("Filter"
-         (ecb-history-filter-by-ext "Filter by extension")
-         (ecb-history-filter-by-regexp "Filter by regexp")
-         (ecb-history-filter-all-existing "No filter (all file-buffers)"))
+         (ecb-popup-history-filter-by-ext "Filter by extension")
+         (ecb-popup-history-filter-by-regexp "Filter by regexp")
+         (ecb-popup-history-filter-all-existing "No filter (all file-buffers)"))
         ("---")
         (ecb-history-kill-buffer "Kill Buffer")
         (ecb-delete-source "Delete Sourcefile")

@@ -24,7 +24,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-method-browser.el,v 1.14 2004/02/07 11:08:44 berndl Exp $
+;; $Id: ecb-method-browser.el,v 1.15 2004/02/16 08:56:25 berndl Exp $
 
 ;;; Commentary:
 
@@ -71,7 +71,8 @@
 
 (defun ecb-method-browser-initialize ()
   (setq ecb-selected-tag nil)
-  (setq ecb-methods-root-node nil))
+  (setq ecb-methods-root-node nil)
+  (setq ecb-methods-user-filter-alist nil))
 
 ;;====================================================
 ;; Customization
@@ -1204,7 +1205,8 @@ TAGLIST otherwise TAGLIST is returned."
     (dolist (fcn fcn-list)
       (if (fboundp fcn)
         (setq taglist (funcall fcn taglist))))
-    taglist))
+    ;; at the end we apply the user-filter if there is any.
+    (ecb-apply-user-filter-to-tags taglist)))
 
 (defun ecb-group-function-tags-with-parents (taglist)
   "Return a new taglist based on TAGLIST where all function-tags in
@@ -1237,6 +1239,121 @@ For C-header-files prototypes are never filtered out!"
         (ecb-filter taglist
                     (function (lambda (x)
                                 (not (ecb--semantic-tag-get-attribute x 'prototype))))))))
+
+(defvar ecb-methods-user-filter-alist nil
+  "The filter currently applied to the methods-buffer by the user. It can be a
+regexp-string, or one of the symbols 'private, 'protected or 'public or one of
+the tag-type-symbols mentioned in the the option `ecb-tag-display-function'.
+This cache is an alist where the key is the buffer-object of that buffer the
+filter belongs and the value is the applied filter to that buffer.")
+
+
+;; TODO: Klaus Berndl <klaus.berndl@sdm.de>:
+;; - Fuer jede der 4 Funktionen unten ein tree-buffer-defpopup-command
+;;   schreiben (diese müssen tree-buffer-get-data-store verwenden!). Dabei
+;;   auch `ecb-sources-filter und ecb-history-filter fixen!
+;; - Filteranzeige in der Modeline des methods-buffers
+;; - Smartere und besser customizable Filterung:
+;;   + Ev. recursive absteigen - children von tags auch filtern
+;;   + Start-level bestimmbar (z.B. erst ab dem ersten children-level beginnen
+;;   + Oder Exclude-tag-classes customizable, z.B. Filterung bezieht sich nie
+;;     auf types: damit würden in Sprachen wie C++ oder Java die Klassen immer
+;;     angezeigt, nur ihre children würden gefiltert.
+;;   Ohne solche Mechanismen ist die Filterung bei OO-Sprachen fast nutzlos!
+
+(defun ecb-methods-filter-by-prot (source-buffer)
+  "Filter the Methods-buffer by protection."
+  (let ((choice (ecb-query-string "Protection filter: "
+                                  '("private" "protected" "public"))))
+    (ecb-methods-filter-apply (intern choice) source-buffer)))
+
+(defun ecb-methods-filter-by-tag-class (source-buffer)
+  "Filter the Methods-buffer by a tag-class."
+  (let ((choice (ecb-query-string "Tag-class filter: "
+                                  '("function" "variable" "type"
+                                    "include" "rule" "section" "def"))))
+    (ecb-methods-filter-apply (intern choice) source-buffer)))
+
+(defun ecb-methods-filter-by-regexp (source-buffer)
+  "Filter the Methods-buffer by a regular expression."
+  (let ((regexp-str (read-string "Insert the filter-regexp: ")))
+    (if (> (length regexp-str) 0)
+        (ecb-methods-filter-apply regexp-str source-buffer)
+      (ecb-methods-filter-apply nil source-buffer))))
+
+(defun ecb-methods-filter-none (source-buffer)
+  "Remove any filter from the Methods-buffer."
+  (ecb-methods-filter-apply nil source-buffer))
+
+(defun ecb-apply-user-filter-to-tags (taglist)
+  (save-match-data
+    (let ((filter (cdr (assoc (current-buffer) ecb-methods-user-filter-alist))))
+      (if (null filter)
+          taglist
+        (ecb-filter taglist
+                    (function
+                     (lambda (tag)
+                       (cond ((stringp filter)
+                              (if (string-match filter
+                                                (ecb--semantic-tag-name tag))
+                                  tag))
+                             ((member filter '(private protected public))
+                              (if (or (null (ecb--semantic-tag-protection tag))
+                                      (equal (ecb--semantic-tag-protection tag) filter))
+                                  tag))
+                             ((symbolp filter)
+                              (if (equal (ecb--semantic-tag-class tag) filter)
+                                  tag))
+                             (t tag)))))))))
+
+(defun ecb-methods-filter ()
+  "Apply a filter to the Methods-buffer to reduce the number of entries.
+So you get a better overlooking. There are four choices:
+- Filter by protection: Just insert the protection you want the Methods-buffer
+  being filtered: private, protected or public!
+- Filter by regexp: Insert the filter as regular expression.
+- Filter by tag-class: You can filter by the tag-classes include, type,
+  variable, function, rule, section \(chapters and sections in `info-mode'),
+  def \(definitions in `info-mode').
+- No filter: This means to display all tags specified with the option
+  `ecb-show-tokens'.
+
+Be aware that the tag-list specified by the option `ecb-show-tags' is the
+basis of all filters, i.e. tags which are excluded by that option will never
+be shown regardless of the filter type here!
+
+Such a filter is only applied to the current source-buffer, i.e. each
+source-buffer can have its own tag-filter."
+  (interactive)
+  (ecb-error "This command will be offered first in future-versions of ECB!")
+  (let ((source-buffer (if (ecb-point-in-edit-window)
+                           (current-buffer)
+                         (or ecb-last-source-buffer
+                             (ecb-error "There is no source-file to filter!"))))
+        (choice (ecb-query-string "Filter Methods-buffer by:"
+                                  '("regexp" "protection" "tag-class" "nothing"))))
+    (cond ((string= choice "protection")
+           (ecb-methods-filter-by-prot source-buffer))
+          ((string= choice "tag-class")
+           (ecb-methods-filter-by-tag-class source-buffer))
+          ((string= choice "regexp")
+           (ecb-methods-filter-by-regexp source-buffer))
+          (t (ecb-methods-filter-none source-buffer)))))
+
+
+(defun ecb-methods-filter-apply (filter source-buffer)
+  (let ((filter-elem (assoc source-buffer ecb-methods-user-filter-alist)))
+    (if filter-elem
+        (setcdr filter-elem filter)
+      (if filter
+          (setq ecb-methods-user-filter-alist
+                (cons (cons source-buffer filter)
+                      ecb-methods-user-filter-alist)))))
+  (if (get-buffer-window source-buffer ecb-frame)
+      (save-selected-window
+        (select-window (get-buffer-window source-buffer ecb-frame))
+        (ecb-rebuild-methods-buffer))))
+  
 
 (defun ecb-add-tags (node tags &optional parent-tag no-bucketize)
   "If NO-BUCKETIZE is not nil then TAGS will not bucketized by
@@ -1490,6 +1607,8 @@ to be rescanned/reparsed and therefore the Method-buffer will be rebuild too."
     (let* ((norm-buffer-file-name (ecb-fix-filename
                                    (buffer-file-name (current-buffer))))
            (cache (assoc norm-buffer-file-name ecb-tag-tree-cache))
+           (curr-buff (current-buffer))
+           (curr-major-mode major-mode)
            new-tree non-semantic-handling)
       
       (if ecb-debug-mode
@@ -1549,6 +1668,9 @@ to be rescanned/reparsed and therefore the Method-buffer will be rebuild too."
       ;; automatically.
       (save-excursion
         (ecb-buffer-select ecb-methods-buffer-name)
+        ;; we store in the tree-buffer the buffer and the major-mode for which
+        ;; the tree-buffer has been build
+        (tree-buffer-set-data-store (cons curr-buff curr-major-mode))
         (tree-buffer-set-root (cdr cache))
         (setq ecb-methods-root-node (cdr cache))
         (tree-buffer-update)))
@@ -1642,11 +1764,19 @@ Examples when a call to this function can be necessary:
 
 For non-semantic-sources supported by etags the option
 `ecb-auto-save-before-etags-methods-rebuild' is checked before rescanning the
-source-buffer and rebuilding the methods-buffer."
+source-buffer and rebuilding the methods-buffer.
+
+If point is in one of the ecb-windows or in the compile-window then this
+command rebuids the methods-buffer with the contents of the source-buffer the
+last selected edit-window."
   (interactive)
-  (if (ecb--semantic-active-p)
-      (ecb-rebuild-methods-buffer-for-semantic)
-    (ecb-rebuild-methods-buffer-for-non-semantic)))
+  (save-selected-window
+    (when (not (ecb-point-in-edit-window))
+      (let ((ecb-mouse-click-destination 'last-point))
+        (ecb-select-edit-window)))
+    (if (ecb--semantic-active-p)
+        (ecb-rebuild-methods-buffer-for-semantic)
+      (ecb-rebuild-methods-buffer-for-non-semantic))))
 
 
 (defvar ecb-auto-expand-tag-tree-old 'expand-spec)

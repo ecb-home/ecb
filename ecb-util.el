@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-util.el,v 1.96 2004/02/13 16:10:05 berndl Exp $
+;; $Id: ecb-util.el,v 1.97 2004/02/16 08:56:24 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -839,6 +839,10 @@ should stopped but no debugging is senseful."
 (defun ecb-warning (&rest args)
   "Displays a warning."
   (message (concat "ECB " ecb-version " - Warning: " (apply 'format args))))
+
+(defun ecb-info-message (&rest args)
+  "Displays an information."
+  (message (concat "ECB " ecb-version " - Info: " (apply 'format args))))
 
 ;; trimming
 

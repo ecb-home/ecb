@@ -12,31 +12,39 @@
    define if and when `display-buffer-function' should be ignored: Always
    (default), when a compile-window is used or never.
 
+** Compatibility enhancements
+
+*** Commands like `bs-show' of the library bs.el now work correctly with ECB
+
+*** Xrefactory works even when all ECB-windows are visible (see Fixed Bugs).
+
+*** Applications like Gnus or BBDB run withing the ECB-frame without conflicts -
+    even when the ECB-windows are visible.
+
+*** Commands using `Electric-pop-up-window' now work correctly with ECB.
+    This ensures that the electric-* commands (e.g. `electric-buffer-list' or
+    `electric-command-history') work well with ECB. If the related
+    "display-buffer" of such an electric command is a "compilation-buffer" in
+    the sense of `ecb-compilation-buffer-p' then this buffer will be displayed
+    in the compile-window of ECB - if there is any shown.
+
 ** For XEmacs the package fsf-compat is no longer required by ECB.
    But it is still necessary to check if fsf-compat is required by the
    packages semantic, eieio and speedbar which in turn are required by ECB.
-
-** Compatibility enhancements
-
-*** Commands like bs-show of the library bs.el now work correctly with ECB
-
-*** Xrefactory works even when all ECB-windows are visible (see Fixed Bugs).
-    !!!TODO!!! When true and well tested then remoce the restriction in the
-    texi-file.
-
-*** Commands using `Electric-pop-up-window' now work correctly with ECB
 
 ** Fixed Bugs
 
 *** Fixed a fatal bug which prevents `other-window' from working with
     arguments < 0. This bug has also prevented Xrefactory from working correct
-    when ECB is active.
+    when ECB is active - see compatibility enhancements above.
 
 *** If point stays in the current source-buffer on a function argument then still
     ECB highlights the function in the Methods-buffer.
 
-*** ECB now uses `compilation-window-height' also correct when set buffer-local
-    as possible with latest CVS-version of GNU Emacs.
+*** ECB now uses `compilation-window-height' correctly when set buffer-local
+    as possible with latest CVS-version of GNU Emacs 21.
+
+*** Fixed a bug in `ecb-sources-filter' and `ecb-history-filter'.
     
 
 
