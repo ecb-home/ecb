@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-upgrade.el,v 1.74 2004/04/07 11:58:00 berndl Exp $
+;; $Id: ecb-upgrade.el,v 1.75 2004/04/08 14:56:39 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -872,9 +872,6 @@ options with their old \(before the upgrade/reset) and new values."
 ;; cedet-library by hacking ecb-check-requirements see the TODO there). But
 ;; when cedet is stable (or a stable beta ;-) then we should add here a
 ;; cedet-required-version-min|max etc....
-
-;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: We should only support the latest
-;; cedet-beta!
 
 (defvar ecb-all-requirements-available nil)
 

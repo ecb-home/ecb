@@ -23,7 +23,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-file-browser.el,v 1.17 2004/04/01 14:08:44 berndl Exp $
+;; $Id: ecb-file-browser.el,v 1.18 2004/04/08 14:56:40 berndl Exp $
 
 ;;; Commentary:
 
@@ -1424,12 +1424,38 @@ is not changed. For the allowed values of OTHER-EDIT-WINDOW see
          ;;                   '(lambda () (call-interactively 'ecb-add-source-path)) t)))
          (tree-buffer-update))))))
 
+(defvar ecb-prescan-directories-for-emptyness nil)
 
 (defun ecb-new-child (old-children name type data &optional not-expandable shorten-name)
   "Return a node with type = TYPE, data = DATA and name = NAME. Tries to find
 a node with matching TYPE and DATA in OLD-CHILDREN. If found no new node is
 created but only the fields of this node will be updated. Otherwise a new node
 is created."
+  ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: Here we prescan for emptyness
+  ;; of directories in case DATA is a directory. We do this with
+  ;; `ecb-get-files-and-subdirs' because:
+  ;; - only this function takes all ecb-options into account which influences
+  ;;   the display of certain directories or files
+  ;; - this function gets its informations from a fast cache access if
+  ;;   possible
+  ;; - stores autom. all scanned directories in its cache so for the next time
+  ;;   the access is as fast as possible.
+  ;; Nevertheless this mechanism increases the time ECB now needs when
+  ;; clicking onto a directory or expanding a directory - the real loss of
+  ;; time depends on the number of entries for the directory of DATA! So it
+  ;; would be good if we good enhance this! The best would be a fast routine
+  ;; which checks only if a directory contains subdirs and/or files and then
+  ;; we give 'ecb-get-files-and-subdirs' a new argument which tells this
+  ;; function if only the dir should be checked for emptyness or if a full
+  ;; files- and subdirs-contents-access should be made. But i doubt if this is
+  ;; possible.
+  (if (and ecb-prescan-directories-for-emptyness
+           (file-directory-p data))
+      (let ((files-and-subdirs (ecb-get-files-and-subdirs data)))
+        (if (and (= (length (cdr files-and-subdirs)) 0)
+                 (or (not (ecb-show-sources-in-directories-buffer-p))
+                     (= (length (car files-and-subdirs)) 0)))
+            (setq not-expandable t))))
   (catch 'exit
     (dolist (child old-children)
       (when (and (equal (tree-node-get-data child) data)
