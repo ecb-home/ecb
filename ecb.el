@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb.el,v 1.332 2003/09/08 12:20:16 berndl Exp $
+;; $Id: ecb.el,v 1.333 2003/09/08 13:32:10 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -5652,6 +5652,8 @@ always the ECB-frame if called from another frame."
                      ediff-quit-hook))
             (add-hook 'ediff-quit-hook 'ediff-cleanup-mess)
             (add-hook 'ediff-quit-hook 'ecb-ediff-quit-hook t)
+            (add-hook 'ediff-before-setup-windows-hook
+                      'ecb-ediff-before-setup-windows-hook)
             
             ;; menus
             (if ecb-running-xemacs
@@ -5787,6 +5789,13 @@ does all necessary after finishing ediff."
     (select-frame ecb-frame)
     (ecb-redraw-layout)))
 
+(defun ecb-ediff-before-setup-windows-hook ()
+  (if (ecb-edit-window-splitted)
+      (save-selected-window
+        (select-window ecb-edit-window)
+        (delete-window))))
+
+
 (defun ecb-deactivate ()
   "Deactivates the ECB and kills all ECB buffers and windows."
   (interactive)
@@ -5837,6 +5846,8 @@ does all necessary after finishing ediff."
           (setq ediff-quit-hook (get 'ediff-quit-hook
                                      'ecb-ediff-quit-hook-value))
         (remove-hook 'ediff-quit-hook 'ecb-ediff-quit-hook))
+      (remove-hook 'ediff-before-setup-windows-hook
+                   'ecb-ediff-before-setup-windows-hook)
 
       ;; menus
       (ignore-errors
