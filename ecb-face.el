@@ -346,6 +346,12 @@ it by clicking onto a node in the methods buffer."
   "*Define face used with option `ecb-type-token-display'."
   :group 'ecb-faces)
 
+(defface ecb-bucket-token-face (ecb-face-default nil t)
+  "*Face which can be used for displaying bucket tokens in the methods
+buffer. See also `ecb-bucket-token-display'."
+  :group 'ecb-faces)
+
+
 (provide 'ecb-face)
 
 ;;; ecb-face.el ends here

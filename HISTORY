@@ -1,6 +1,8 @@
 Version 1.70:
 -------------
 
+- New option ecb-bucket-token-display. See doc-string for details. (Klaus)
+
 - Reorganisation of the faces used by ECB. The group 'ecb-face-options'
   contains now all options which type is 'face (i.e. the defcustom's) and the
   group 'ecb-faces' contains all face-definition (the defface's). In addition
