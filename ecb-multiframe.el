@@ -1,6 +1,6 @@
 ;;; ecb-multiframe.el --- 
 
-;; $Id: ecb-multiframe.el,v 1.5 2002/10/30 05:13:07 burtonator Exp $
+;; $Id: ecb-multiframe.el,v 1.6 2002/10/30 05:29:59 burtonator Exp $
 
 ;; Copyright (C) 2000-2003 Free Software Foundation, Inc.
 ;; Copyright (C) 2000-2003 Kevin A. Burton (burton@openprivacy.org)
@@ -73,6 +73,8 @@
 
 ;;make certain variables frame local
 
+(defvar ecb-multiframe--index 0 "Index of frames we have created.  Do not modify.")
+
 (defvar ecb-multiframe-variables (list 'ecb-last-edit-window-with-point
                                        'ecb-edit-window
                                        'ecb-compile-window
@@ -98,51 +100,51 @@
 
     (modify-frame-parameters frame (list (cons variable nil))))
 
-  (let((frame-index (number-to-string (length (frame-list)))))
+  (setq ecb-multiframe--index (1+ ecb-multiframe--index))
 
-    ;;ecb-eshell-buffer-name ?
-    ;;ecb-speedbar-buffer-name ?
+  ;;ecb-eshell-buffer-name ?
+  ;;ecb-speedbar-buffer-name ?
 
-    ;;set ECB special buffer names
+  ;;set ECB special buffer names
 
-    (make-variable-frame-local 'ecb-history-buffer-name)
-    (modify-frame-parameters frame (list (cons 'ecb-history-buffer-name
-                                               (concat " *ECB History <" frame-index ">*"))))
+  (make-variable-frame-local 'ecb-history-buffer-name)
+  (modify-frame-parameters frame (list (cons 'ecb-history-buffer-name
+                                             (concat " *ECB History <" ecb-multiframe--index ">*"))))
 
-    (make-variable-frame-local 'ecb-sources-buffer-name)
-    (modify-frame-parameters frame (list (cons 'ecb-sources-buffer-name
-                                               (concat " *ECB Sources <" frame-index ">*"))))
+  (make-variable-frame-local 'ecb-sources-buffer-name)
+  (modify-frame-parameters frame (list (cons 'ecb-sources-buffer-name
+                                             (concat " *ECB Sources <" ecb-multiframe--index ">*"))))
 
-    (make-variable-frame-local 'ecb-directories-buffer-name)
-    (modify-frame-parameters frame (list (cons 'ecb-directories-buffer-name
-                                               (concat " *ECB Directories <" frame-index ">*"))))
+  (make-variable-frame-local 'ecb-directories-buffer-name)
+  (modify-frame-parameters frame (list (cons 'ecb-directories-buffer-name
+                                             (concat " *ECB Directories <" ecb-multiframe--index ">*"))))
 
-    (make-variable-frame-local 'ecb-methods-buffer-name)
-    (modify-frame-parameters frame (list (cons 'ecb-methods-buffer-name
-                                               (concat " *ECB Methods <" frame-index ">*"))))
+  (make-variable-frame-local 'ecb-methods-buffer-name)
+  (modify-frame-parameters frame (list (cons 'ecb-methods-buffer-name
+                                             (concat " *ECB Methods <" ecb-multiframe--index ">*"))))
 
-    (when (and (featurep 'speedbar)
-               (featurep 'ecb-speedbar))
+  (when (and (featurep 'speedbar)
+             (featurep 'ecb-speedbar))
     
-      ;;fix speedbar by binding the given speedbar frame value with the current frame
+    ;;fix speedbar by binding the given speedbar frame value with the current frame
       
-      (mapcar (lambda(sframe)
-                (when (boundp sframe)
-                  (make-variable-frame-local sframe)
-                  (modify-frame-parameters frame (list (cons sframe frame)))))
-              '(speedbar-frame speedbar-attached-frame dframe-attached-frame))
+    (mapcar (lambda(sframe)
+              (when (boundp sframe)
+                (make-variable-frame-local sframe)
+                (modify-frame-parameters frame (list (cons sframe frame)))))
+            '(speedbar-frame speedbar-attached-frame dframe-attached-frame))
       
-      ;;setup speedbar with a new buffer
-      (make-variable-frame-local 'ecb-speedbar-buffer-name)
+    ;;setup speedbar with a new buffer
+    (make-variable-frame-local 'ecb-speedbar-buffer-name)
       
-      (let((new-ecb-speedbar-buffer-name (concat " SPEEDBAR <" frame-index ">")))
+    (let((new-ecb-speedbar-buffer-name (concat " SPEEDBAR <" ecb-multiframe--index ">")))
     
-        (modify-frame-parameters frame (list (cons 'ecb-speedbar-buffer-name
-                                                   new-ecb-speedbar-buffer-name)))
+      (modify-frame-parameters frame (list (cons 'ecb-speedbar-buffer-name
+                                                 new-ecb-speedbar-buffer-name)))
 
-        (make-variable-frame-local 'speedbar-buffer)
-        (modify-frame-parameters frame (list (cons 'speedbar-buffer
-                                                   (get-buffer-create new-ecb-speedbar-buffer-name))))))))
+      (make-variable-frame-local 'speedbar-buffer)
+      (modify-frame-parameters frame (list (cons 'speedbar-buffer
+                                                 (get-buffer-create new-ecb-speedbar-buffer-name)))))))
 
 (defun ecb-deactivate-internal ()
   "Deactivates the ECB and kills all ECB buffers and windows."
