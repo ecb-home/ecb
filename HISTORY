@@ -1,9 +1,14 @@
 Version 1.90
 ------------
 
+* New command `ecb-expand-methods-tokens' which allows precisely expanding
+  tokens with a certain indentation-level. There are also two new related
+  options `ecb-methods-nodes-expand-spec' and
+  `ecb-methods-nodes-collapse-spec' (Klaus).
+
 * Advicing `scroll-all-mode' so it works correct with ECB, means
-  `scroll-all-mode' scroll only the windows of the edit-area, i.e. max. the two
-  edit-windows (Klaus).
+  `scroll-all-mode' scrolls only the windows of the edit-area, i.e. max. the
+  two edit-windows (Klaus).
 
 * Autom. preventing `winner-mode' from being activated as long as ECB is
   running (Klaus).
@@ -12,8 +17,6 @@ Version 1.90
   for each directory-regexp the files to display can be specified. Default is
   an all-matching directory-regexp. Old saved values are autom. upgraded
   (Klaus).
-
-* Interactively creating new layouts now works also with Emacs 20.X (Klaus).
 
 * Rewritten the mechanism for storing customized window-sizes. See option
   ecb-layout-window-sizes and the command ecb-store-window-sizes and

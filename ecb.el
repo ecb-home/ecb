@@ -62,7 +62,7 @@
 ;; The latest version of the ECB is available at
 ;; http://home.swipnet.se/mayhem/ecb.html
 
-;; $Id: ecb.el,v 1.277 2003/01/20 07:18:31 berndl Exp $
+;; $Id: ecb.el,v 1.278 2003/01/23 16:45:42 berndl Exp $
 
 ;;; Code:
 
@@ -1048,6 +1048,8 @@ not be jumped."
                              (variable collapsed access)
                              (function flattened access)
                              (rule flattened name)
+                             (section flattened nil)
+                             (def collapsed name)
                              (t collapsed name))
   "*How to show tokens in the methods buffer. This variable is a list where each
 element represents a type of tokens:
@@ -1060,8 +1062,17 @@ this list.
 Token Type
 ----------
 
-A Semantic token type symbol (function, variable, rule, include etc.) or one of
-the following:
+A Semantic token type symbol \(for all possible type symbols see documentation
+of semantic):
+- include
+- type
+- variable
+- function
+- rule
+- section \(chapters and sections in `info-mode')
+- def \(definitions in `info-mode')
+
+or one of the following:
 
 - t:      All token types not specified anywhere else in the list.
 - parent: The parents of a type.
@@ -1101,6 +1112,38 @@ A symbol describing how to sort the tokens of this type:
 			       (const :tag "Access then name" access)
 			       (const :tag "No sort" nil))))
   :initialize 'custom-initialize-default)
+
+(defcustom ecb-methods-nodes-expand-spec '(type variable section)
+  "*Semantic token-types expanded by `ecb-expand-methods-nodes'.
+
+The value of this option is either the symbol 'all \(all tokens are expanded
+regardless of their type) or a list of symbols where each symbol is a valid
+semantic token-type. For a description of semantic token types see option
+`ecb-show-tokens'.
+
+But this option also defines if bucket-nodes in the ECB-method-buffer \(e.g.
+\"\[Variables\]\") should be expanded. Therefore valid symbols for this list
+are also all cars of the variable `semantic-symbol->name-assoc-list'.
+
+If there is a bucket-name \(the node-name stripped of the settings in
+`ecb-bucket-token-display') which is not contained as cdr in
+`semantic-symbol->name-assoc-list' then the symbol with this bucket-name as
+name is also a valid symbol for this list. Example: In ECB there are buckets
+\"\[Parents\]\". The bucket-name is \"Parents\" and the valid symbol-name is
+then 'Parents."
+  :group 'ecb-methods
+  :type '(radio (const :tag "All node-types" :value all)
+                (repeat :tag "Node-type list"
+                        (symbol :tag "Node-type"))))
+
+(defcustom ecb-methods-nodes-collapse-spec 'all
+  "*Semantic token-types collapsed by `ecb-expand-methods-nodes'.
+
+For valid values of this option see `ecb-methods-nodes-expand-spec'!"
+  :group 'ecb-methods
+  :type '(radio (const :tag "All node-types" :value all)
+                (repeat :tag "Node-type list"
+                        (symbol :tag "Node-type"))))
 
 (defcustom ecb-exclude-parents-regexp nil
   "*Regexp which parent classes should not be shown in the methods buffer
@@ -3225,6 +3268,120 @@ Currently the fourth argument TREE-BUFFER-NAME is not used here."
   (ecb-set-selected-source (tree-node-get-data node)
 			   (and (ecb-edit-window-splitted) (eq ecb-button 2))
 			   shift-mode))
+
+
+(defun ecb-string-make-singular (string)
+  (if (equal (aref string (1- (length string))) ?s)
+      (substring string 0 (1- (length string)))
+    string))
+
+(defun ecb-methods-node-get-semantic-type (node symbol->name-assoc-list)
+  (cond ((= 1 (tree-node-get-type node))
+         (let ((bucket-name
+                (save-match-data
+                  (if (string-match (concat (regexp-quote (nth 0 ecb-bucket-token-display))
+                                            "\\(.+\\)"
+                                            (regexp-quote (nth 1 ecb-bucket-token-display)))
+                                    (tree-node-get-name node))
+                      (match-string 1 (tree-node-get-name node))))))
+           (if (stringp bucket-name)
+               (or (car (delete nil (mapcar (function (lambda (elem)
+                                                        (if (string= (cdr elem)
+                                                                     bucket-name)
+                                                            (car elem))))
+                                            symbol->name-assoc-list)))
+                   ;; This is a little hack for bucket-names not defined in
+                   ;; symbol->name-assoc-list: First we strip a trailing 's'
+                   ;; if there is any to be consistent with the singular names
+                   ;; of the cars of symbol->name-assoc-list. Then we downcase
+                   ;; the bucket-name and convert it to a symbol. This is done
+                   ;; for example for the ECB created bucket-name "Parents"!
+                   (intern (downcase (ecb-string-make-singular bucket-name)))))))
+        ((= 0 (tree-node-get-type node))
+         (ignore-errors (semantic-token-token (tree-node-get-data node))))
+        (t nil)))
+
+
+(defun ecb-expand-methods-nodes (&optional level)
+  "Set the expand level of the nodes in the ECB-methods-buffer.
+
+With the optional argument LEVEL \(an integer or nil) you can precisely
+spezify which level of nodes should be expanded. LEVEL means the
+indentation-level of the nodes.
+
+A LEVEL-value X means that all nodes with an indentation-level <= X are
+expanded and all other are collapsed. A negative LEVEL value means all visible
+nodes are collapsed.
+
+Nodes which are not indented have indentation-level 0!
+
+If LEVEL is nil then the action depends on the first node of current
+method-buffer: If it is expanded than LEVEL will be treated as -1 \(i.e. all
+visible nodes will be collapsed) otherwise ALL nodes will be expanded
+regardless of their indentation-level.
+
+Which node-types are expanded \(resp. collapsed) by this command depends on
+the options `ecb-methods-nodes-expand-spec' and
+`ecb-methods-nodes-collapse-spec'!
+
+Examples:
+LEVEL = 0 expands only nodess which have no indentation itself.
+LEVEL = 2 expands nodess which are indented once or twice
+LEVEL ~ 100 should normally expand all nodes unless there are nodes which
+are indented deeper than 100."
+  (interactive "P")
+  (if (not (ecb-point-in-edit-window))
+      (ecb-error "This command can only be called in an edit-window!"))
+  (let ((symbol->name-assoc-list semantic-symbol->name-assoc-list))
+    (save-selected-window
+      (ecb-exec-in-methods-window
+       (goto-char (point-min))
+       (let ((node-at-point (tree-buffer-get-node-at-point))
+             ;; normalizing the elements of `ecb-methods-nodes-expand-spec'
+             ;; and `ecb-methods-nodes-collapse-spec'.
+             (norm-expand-types (if (equal 'all ecb-methods-nodes-expand-spec)
+                                    'all
+                                  (mapcar (function (lambda (elem)
+                                                      (intern
+                                                       (downcase (ecb-string-make-singular
+                                                                  (symbol-name elem))))))
+                                          ecb-methods-nodes-expand-spec)))
+             (norm-collapse-types (if (equal 'all ecb-methods-nodes-collapse-spec)
+                                      'all
+                                    (mapcar (function (lambda (elem)
+                                                        (intern
+                                                         (downcase (ecb-string-make-singular
+                                                                    (symbol-name elem))))))
+                                            ecb-methods-nodes-collapse-spec))))
+         ;; setting the indentation level suitable if not set by the caller
+         (setq level (or level
+                         (if (and node-at-point
+                                  (tree-node-is-expandable node-at-point)
+                                  (tree-node-is-expanded node-at-point))
+                             -1
+                           1000)))
+         (while node-at-point
+           (when (tree-node-is-expandable node-at-point)
+             (if (or (and (not (tree-node-is-expanded node-at-point))
+                          (or (equal norm-expand-types 'all)
+                              (member (ecb-methods-node-get-semantic-type
+                                       node-at-point symbol->name-assoc-list)
+                                      norm-expand-types))
+                          (<= (tree-buffer-get-node-indent node-at-point)
+                              (* tree-buffer-indent level)))
+                     (and (tree-node-is-expanded node-at-point)
+                          (or (equal norm-collapse-types 'all)
+                              (member (ecb-methods-node-get-semantic-type
+                                       node-at-point symbol->name-assoc-list)
+                                      norm-collapse-types))
+                          (> (tree-buffer-get-node-indent node-at-point)
+                             (* tree-buffer-indent level))))
+                 (tree-buffer-tab-pressed)))
+           (forward-line)
+           (setq node-at-point (tree-buffer-get-node-at-point))))))))
+
+;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: Eventuell customizable welche
+;; Funtion bei einem POWER-Click in einem Tree-buffer ausgeführt wird!!!
 
 ;; this mechanism is necessary because tree-buffer creates for mouse releasing
 ;; a new nop-command (otherwise the cursor jumps back to the tree-buffer).

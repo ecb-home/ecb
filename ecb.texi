@@ -156,6 +156,7 @@ Working with the keyboard in the ECB-windows
 
 Using and customizing the ECB-Methods buffer
 
+* Fast overlook::               Getting a fast content-overlook
 * Customizing the display::     How to customize the Methods-buffer display
 * Rebuilding the Methods::      When to rebuild the Methods-buffer      
 
@@ -1148,11 +1149,27 @@ This chapter describes how to use and customize the Methods-buffer of
 ECB.
 
 @menu
+* Fast overlook::               Getting a fast content-overlook
 * Customizing the display::     How to customize the Methods-buffer display
 * Rebuilding the Methods::      When to rebuild the Methods-buffer      
 @end menu
 
-@node Customizing the display, Rebuilding the Methods, The Methods buffer, The Methods buffer
+@node Fast overlook, Customizing the display, The Methods buffer, The Methods buffer
+@subsection Getting a fast overlook of the buffer-contents
+
+With the command @code{ecb-expand-methods-nodes} you can get a fast
+overlook of the contents of the source-buffer, because this command
+allows precisely expanding tokens with a certain indentation-level. So
+you can either expand no tokens (or with other words collapse all
+tokens) or expand all tokens so see the contents of a buffer at one
+glance. Or you can expand exactly that tokens of a certain indentation
+level.
+
+Which node-types are expanded (resp. collapsed) by this command
+depends on the options @code{ecb-methods-nodes-expand-spec} and
+@code{ecb-methods-nodes-collapse-spec}!
+
+@node Customizing the display, Rebuilding the Methods, Fast overlook, The Methods buffer
 @subsection Customizing the display of the Methods-buffer
 
 @cindex semantic token
@@ -2244,6 +2261,41 @@ After sucessfull downloading the new ECB will be installed in a
 directory parallel to current ECB-directory. After adding this new
 directory tp @code{load-path} and restarting Emacs the new ECB version can
 be activated by @code{ecb-activate}.
+@end deffn
+
+@deffn Command expand-methods-nodes &optional level
+Set the expand level of the nodes in the ECB-methods-buffer.
+
+With the optional argument @var{LEVEL} (an integer or nil) you can
+precisely spezify which level of nodes should be expanded.
+@var{LEVEL} means the indentation-level of the nodes.
+
+A @var{LEVEL} value X means that all nodes with an indentation-level
+<= X are expanded and all other are collapsed. A negative @var{LEVEL}
+value means all visible nodes are collapsed.
+
+Nodes which are not indented have indentation-level 0!
+
+Which node-types are expanded (resp. collapsed) by this command
+depends on the options @code{ecb-methods-nodes-expand-spec} and
+@code{ecb-methods-nodes-collapse-spec}!
+
+If @var{LEVEL} is @code{nil} then the action depends on the first
+node of current method-buffer: If it is expanded than @var{LEVEL}
+will be treated as -1 (i.e. all visible nodes will be collapsed)
+otherwise ALL nodes will be expanded regardless of their
+indentation-level.
+
+Examples:
+@itemize @minus
+@item @var{LEVEL} = 0
+expands only nodes which have no indentation itself.
+@item @var{LEVEL} = 2
+expands nodes which are indented once or twice
+@item @var{LEVEL} ~ 100
+should normally expand all nodes expect there are nodes which are
+indented deeper than 100.
+@end itemize
 @end deffn
 
 @deffn Command goto-window-compilation
@@ -3492,6 +3544,35 @@ of @code{set-buffer}.
 Changes for this option at runtime will take affect only after
 deactivating and then activating ECB again!
 @end defopt
+
+
+@defopt methods-nodes-collapse-spec
+Semantic token-types collapsed by @code{ecb-expand-methods-nodes}.
+For valid values of this option see @code{ecb-methods-nodes-expand-spec}!
+@end defopt
+
+
+@defopt methods-nodes-expand-spec
+Semantic token-types expanded by @code{ecb-expand-methods-nodes}.
+
+The value of this option is either the symbol @code{all} (all tokens
+are expanded regardless of their type) or a list of symbols where each
+symbol is a valid semantic token-type. For a description of semantic
+token types see option @code{ecb-show-tokens}.
+
+But this option also defines if bucket-nodes in the ECB-method-buffer (e.g.
+``[Variables]'') should be expanded. Therefore valid symbols for this list
+are also all cars of the variable @code{semantic-symbol->name-assoc-list}.
+
+If there is a bucket-name (the node-name stripped of the settings in
+@code{ecb-bucket-token-display}) which is not contained as cdr in
+@code{semantic-symbol->name-assoc-list} then the symbol with this bucket-name as
+name is also a valid symbol for this list. Example: In ECB there are buckets
+``[Parents]''. The bucket-name is ``Parents'' and the valid symbol-name is
+then @code{Parents}.
+@end defopt
+
+
 
 @defopt post-process-semantic-tokenlist
 Define mode-dependend postprocessing for the semantic-tokenlist. This
