@@ -369,8 +369,6 @@ could be interesting for support."
                                    ecb-use-semantic-grouping
                                    ecb-idle-timer-alist
                                    ecb-post-command-hooks
-                                   ecb-old-compilation-window-height
-                                   ecb-old-temp-buffer-max-height
                                    ecb-minor-mode
                                    ecb-toggle-layout-state)
                                  (function (lambda (l r)

@@ -182,8 +182,6 @@
                                 ecb-upgrade-source-file-regexps))
     (ecb-layout-always-operate-in-edit-window . (ecb-layout-always-operate-in-edit-window
                                                  ecb-upgrade-alway-operate-in-edit-window))
-    (ecb-layout-switch-to-compilation-window . (ecb-layout-switch-to-compilation-window
-                                                 ecb-upgrade-switch-to-compilation-window))
     (ecb-truncate-lines . (ecb-truncate-lines
                            ecb-upgrade-truncate-lines))
     (ecb-use-speedbar-for-directories . (ecb-use-speedbar-instead-native-tree-buffer
@@ -321,9 +319,6 @@ The car is the old option symbol and the cdr is a 2-element-list with:
   (let ((l (copy-tree old-val)))
     (setq l (delete 'switch-to-buffer-other-window l))
     l))
-
-(defun ecb-upgrade-switch-to-compilation-window (old-val)
-  (ecb-upgrade-alway-operate-in-edit-window old-val))
 
 ;; ----------------------------------------------------------------------
 ;; internal functions. Dot change anything below this line

@@ -333,7 +333,7 @@ we execute it with the eshell buffer."
                    (< (count-lines ecb-eshell-pre-command-point
                                    (point))
                       ecb-compile-window-height))
-          (ecb-toggle-enlarged-compilation-window -1)
+          (ecb-toggle-compile-window-height -1)
           (ecb-eshell-recenter))
         
         ;;reset
