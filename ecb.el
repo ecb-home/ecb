@@ -1017,6 +1017,7 @@ cleared!) ECB by running `ecb-deactivate'."
     (ecb-select-edit-window t)))
 
 (defun ecb-goto-window-compilation ()
+  "Goto the ecb compilation window `ecb-compile-window'."
   (interactive)
   (when (and ecb-minor-mode
              ecb-compile-window-height
