@@ -124,7 +124,7 @@
 ;;   + The edit-window must not be splitted and the point must reside in
 ;;     the not deleted edit-window.
 
-;; $Id: ecb-layout.el,v 1.87 2001/11/26 14:16:39 berndl Exp $
+;; $Id: ecb-layout.el,v 1.88 2001/11/26 14:59:00 berndl Exp $
 
 ;;; Code:
 
@@ -1331,15 +1331,16 @@ slow machines where a full redraw takes several seconds because the quick
 redraw is not really save and some drawbacks! On normal machines the full
 drawback should be done in < 1s!"
   (interactive "P")
-  (if (and quickly
-           ecb-activated-window-configuration
-           ecb-minor-mode)
-      (condition-case nil
-          (ecb-redraw-layout-quickly)
-        (progn
-          (message "ECB: Quick redraw failed...full redraw has been done!")
-          (ecb-redraw-layout-full)))
-    (ecb-redraw-layout-full)))
+  (when (and ecb-minor-mode
+             (equal (selected-frame) ecb-frame))
+    (if (and quickly
+             ecb-activated-window-configuration)
+        (condition-case nil
+            (ecb-redraw-layout-quickly)
+          (progn
+            (message "ECB: Quick redraw failed...full redraw has been done!")
+            (ecb-redraw-layout-full)))
+      (ecb-redraw-layout-full))))
 
 ;; the main layout core-function. This function is the "environment" for a
 ;; special layout function (l.b.)
@@ -1347,7 +1348,8 @@ drawback should be done in < 1s!"
 (defun ecb-redraw-layout-full ()
   "Redraw the ECB screen according to the layout set in `ecb-layout-nr'. After
 this function the edit-window is selected which was current before redrawing."
-  (unless (not (equal (selected-frame) ecb-frame))
+  (when (and ecb-minor-mode
+             (equal (selected-frame) ecb-frame))
     (let* ((config (ecb-edit-window-configuration))
            (split-before-redraw (car (nth 0 config)))
            (split-amount-before-redraw (cdr (nth 0 config)))
@@ -1481,38 +1483,55 @@ this function the edit-window is selected which was current before redrawing."
 
       (setq ecb-windows-hidden nil)
 
-      (run-hooks 'ecb-redraw-layout-hooks))))  
+      ;; after a full redraw the stored window-configuration for a quick
+      ;; redraw should be actualized
+      (setq ecb-activated-window-configuration (current-window-configuration))
+
+      (run-hooks 'ecb-redraw-layout-hooks))))
+
+;; TODO: this function is a first try to use the buildin window-configuration stuff
+;; of Emacs for the layout-redraw. But currently this does not work really
+;; well, there is a lot of work to do (klaus).
 
 (defun ecb-redraw-layout-quickly()
   "Redraw the layout quickly using the cached window configuration
 `ecb-activated-window-configuration'."
+  (when (and ecb-minor-mode
+             (equal (selected-frame) ecb-frame))
+    ;;save copies of:
+    ;;
+    ;; - the current buffer in the main window
+    ;; - the current buffer in the compilation window
 
-  ;;save copies of:
-  ;;
-  ;; - the current buffer in the main window
-  ;; - the current buffer in the compilation window
+    (let((main-window-buffer nil)
+         (compilation-window-buffer nil))
 
-  (let((main-window-buffer nil)
-       (compilation-window-buffer nil))
-
-    (if (and ecb-edit-window (window-live-p ecb-edit-window))
-        (setq main-window-buffer (window-buffer ecb-edit-window))
-      (error "ECB quick redraw: ecb-edit-window not alive!"))
-
-    (if ecb-compile-window
-        (if (window-live-p ecb-compile-window)
-            (setq compilation-window-buffer (window-buffer ecb-compile-window))
-          (error "ECB quick redraw: ecb-compile-window not alive!")))
+      ;; lets try to make this save.
+      ;; TODO: Does not really work well....
     
-    (set-window-configuration ecb-activated-window-configuration)
+      (if (and ecb-edit-window (window-live-p ecb-edit-window))
+          (setq main-window-buffer (window-buffer ecb-edit-window))
+        (error "ECB quick redraw: ecb-edit-window not alive!"))
 
-    ;;ok... now restore the buffers in the compile and edit windows..
+      (if ecb-compile-window
+          (if (window-live-p ecb-compile-window)
+              (setq compilation-window-buffer (window-buffer ecb-compile-window))
+            (error "ECB quick redraw: ecb-compile-window not alive!")))
+    
+      (set-window-configuration ecb-activated-window-configuration)
 
-    (if main-window-buffer
-        (set-window-buffer ecb-edit-window main-window-buffer))
+      ;;ok... now restore the buffers in the compile and edit windows..
 
-    (if compilation-window-buffer
-        (set-window-buffer ecb-compile-window compilation-window-buffer))))
+      (if main-window-buffer
+          (set-window-buffer ecb-edit-window main-window-buffer))
+
+      (if compilation-window-buffer
+          (set-window-buffer ecb-compile-window compilation-window-buffer))
+
+    ;; because the current-window-configuration sets also the display-start of
+     ;; all windows and in most cases this is the top of a buffer in case of a
+      ;; tree-buffer we must do here a manually synch
+      (ecb-current-buffer-sync))))
 
 (defun ecb-store-window-sizes ()
   "Stores the sizes of the ECB windows for the current layout. The size of the
