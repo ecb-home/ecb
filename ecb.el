@@ -583,7 +583,7 @@ With both ascii-styles the tree-layout can be affected with the options
                         '("default/height-17"
                           "directories/height-17"
                           nil
-                          "methods/height-15_to_21"
+                          "methods/height-14_to_21"
                           nil))))
   "*Directories where the images for the tree-buffer can be found.
 This is a five-element list where:
