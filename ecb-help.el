@@ -26,7 +26,7 @@
 ;;
 ;; Contains all online-help for ECB (stolen something from recentf.el)
 
-;; $Id: ecb-help.el,v 1.37 2001/07/03 19:16:27 berndl Exp $
+;; $Id: ecb-help.el,v 1.38 2001/07/04 16:12:45 uid40339 Exp $
 
 ;;; Code
 
@@ -581,7 +581,7 @@ a backtrace-buffer and inserts the contents of that."
           (progn
             (insert-string "The contents of the *Backtrace* buffer were\n\n")
 	    (insert-buffer backtrace-buffer)
-	    (goto-char (mark))
+	    (goto-char (mark t))
             (insert-string "\nEnd Insert *Backtrace* buffer" ))
         (insert-string "There was no *Backtrace* buffer" ))
       (insert-string "\n-----------------------------------------------------\n\n")
@@ -592,10 +592,11 @@ a backtrace-buffer and inserts the contents of that."
           (progn
             (insert-string "The contents of the *Messages* buffer were\n\n")
 	    (insert-buffer messages-buffer)
-	    (goto-char (mark))
+	    (goto-char (mark t))
             (insert-string "\nEnd Insert *Messages* buffer" ))
         (insert-string "There was no *Messages* buffer" ))
       (insert-string  "\n-----------------------------------------------------\n\n"))))
+
 
 (defun ecb-problem-report-list-all-variables()
   "List all variables starting with `ecb-' and some other variables which

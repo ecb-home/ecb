@@ -125,7 +125,7 @@
 ;;   + The edit-window must not be splitted and the point must reside in
 ;;     the not deleted edit-window.
 
-;; $Id: ecb-layout.el,v 1.68 2001/07/03 19:16:27 berndl Exp $
+;; $Id: ecb-layout.el,v 1.69 2001/07/04 16:12:45 uid40339 Exp $
 
 ;;; Code:
 
@@ -228,7 +228,7 @@ layout with `ecb-redraw-layout'"
   :initialize 'custom-initialize-default
   :set ecb-layout-option-set-function
   :type '(radio (const :tag "No compilation window" nil)
-                (number :tag "Window height")))
+                (number :tag "Window height" :value 5)))
 
 (defcustom ecb-compile-window-temporally-enlarge t
   "*Let Emacs temporally enlarge the compile-window of the ECB-layout
