@@ -23,7 +23,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-file-browser.el,v 1.37 2004/09/24 12:21:17 berndl Exp $
+;; $Id: ecb-file-browser.el,v 1.38 2004/09/29 16:34:00 berndl Exp $
 
 ;;; Commentary:
 
@@ -483,7 +483,7 @@ these regexps! Therefore be carefore with regexps beginning with ^!"
 - nil: No sorting, means the most recently used buffers are on the top of the
        history and the seldom used buffers at the bottom.
 See also `ecb-history-sort-ignore-case'."
-  :group 'ecb-sources
+  :group 'ecb-history
   :type '(radio (const :tag "By name"
                        :value name)
                 (const :tag "By extension"
@@ -778,10 +778,12 @@ Currently there are three subcaches managed within this cache:
   Cache necessary informations for the version-control-support. This is a
   cache with
      key: <filename> of a sourcefile
-     value: \(<state> <check-timestamp> <vc-state-fcn>)
+     value: \(<state> <check-timestamp> <checked-buffers> <vc-state-fcn>)
   whereas <state> is the that VC-state the file had at time <check-timestamp>.
-  <vc-state-fcn> is the function used to get the VC-state if <check-timestamp>
-  is older than the most recent modification-timestamp of <filename>.")
+  <checked-buffers> is a list of tree-buffer-names for which <state> was
+  checked. <vc-state-fcn> is the function used to get the VC-state if
+  <check-timestamp> is older than the most recent modification-timestamp of
+  <filename>.")
 
 (defun ecb-filename-cache-init ()
   "Initialize the whole cache for file- and directory-names"
@@ -918,10 +920,11 @@ cache-entries are not dumped."
 
 ;; accessors for the VC-cache
 
-(defun ecb-vc-cache-add (file state vc-state-fcn)
+(defun ecb-vc-cache-add (file state checked-buffer-names vc-state-fcn)
   (ecb-multicache-put-value 'ecb-filename-cache file 'VC
                             (list state
                                   (ecb-subseq (current-time) 0 2)
+                                  checked-buffer-names
                                   vc-state-fcn))
   state)
 
@@ -1580,13 +1583,17 @@ by the option `ecb-mode-line-prefixes'."
       (tree-node-add-child-first
        (tree-buffer-get-root)
        (tree-node-new
-        (if (eq ecb-history-item-name 'buffer-name)
-            (let ((b (get-file-buffer filename)))
-              (if b
-                  (buffer-name b)
-                (ecb-get-source-name filename)))
-          (ecb-get-source-name filename))
-        ecb-sources-nodetype-sourcefile
+        (let ((file-1 (if (eq ecb-history-item-name 'buffer-name)
+                          (let ((b (get-file-buffer filename)))
+                            (if b
+                                (buffer-name b)
+                              (ecb-get-source-name filename)))
+                        (ecb-get-source-name filename)))
+              (vc-cached-state (nth 0 (ecb-vc-cache-get filename))))
+          (if ecb-vc-support-beta-disable
+              file-1
+            (ecb-vc-generate-node-name file-1 vc-cached-state)))
+        ecb-history-nodetype-sourcefile
         filename t)))))
 
 
@@ -1599,20 +1606,36 @@ by the option `ecb-mode-line-prefixes'."
        (tree-buffer-get-root)
        (cond ((equal ecb-history-sort-method 'name)
               (function (lambda (l r)
-                          (ecb-string< (tree-node-get-name l)
-                                       (tree-node-get-name r)
-                                       ecb-history-sort-ignore-case))))
+                          (let* ((l0 (tree-node-get-name l))
+                                 (r0 (tree-node-get-name r))
+                                 (l1 (save-match-data
+                                       (if (string-match "^(.) \\(.+\\)$" l0)
+                                           (match-string 1 l0)
+                                         l0)))
+                                 (r1 (save-match-data
+                                       (if (string-match "^(.) \\(.+\\)$" r0)
+                                           (match-string 1 r0)
+                                         r0))))
+                            (ecb-string< l1 r1 ecb-history-sort-ignore-case)))))
              ((equal ecb-history-sort-method 'extension)
               (function
                (lambda (l r)
-                 (let* ((a (tree-node-get-name l))
-                        (b (tree-node-get-name r))
-                        (ext-a (file-name-extension a t))
-                        (ext-b (file-name-extension b t)))
-                   (if (ecb-string= ext-a ext-b ecb-history-sort-ignore-case)
-                       (ecb-string< a b ecb-history-sort-ignore-case)
-                     (ecb-string< ext-a ext-b ecb-history-sort-ignore-case))))))
-             (t (function (lambda (a b)
+                 (let* ((l0 (tree-node-get-name l))
+                        (r0 (tree-node-get-name r))
+                        (l1 (save-match-data
+                              (if (string-match "^(.) \\(.+\\)$" l0)
+                                  (match-string 1 l0)
+                                l0)))
+                        (r1 (save-match-data
+                              (if (string-match "^(.) \\(.+\\)$" r0)
+                                  (match-string 1 r0)
+                                r0)))
+                        (ext-l (file-name-extension l1 t))
+                        (ext-r (file-name-extension r1 t)))
+                   (if (ecb-string= ext-l ext-r ecb-history-sort-ignore-case)
+                       (ecb-string< l1 r1 ecb-history-sort-ignore-case)
+                     (ecb-string< ext-l ext-r ecb-history-sort-ignore-case))))))
+             (t (function (lambda (l r)
                             nil))))))))
 
 
@@ -1664,47 +1687,6 @@ ecb-windows after displaying the file in an edit-window."
        (tree-buffer-update)
        (tree-buffer-highlight-node-data ecb-path-selected-source)))))
 
-
-(defun ecb-tree-node-add-files
-  (node path files type include-extension old-children
-        &optional not-expandable)
-  "For every file in FILES add a child-node to NODE."
-  ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: Here we should add a check too
-  ;; if the directory PATH is managed by a VC-backend because then we would
-  ;; never deal with VC but can immediately generate a "leaf"
-  ;; displayed-file-name. If PATH is managed by a VC-system then we never use
-  ;; "leaf" but always that icon associated to the cached vc-state (if file
-  ;; has currently no vc-cached-state then it has not yet checked and we use
-  ;; the unknow-state....but for know we do not use this test....
-  (let ((no-vc-state-display
-         (or ecb-vc-support-beta-disable
-             ;; no vc-state-display when the node is a subdir in the
-             ;; directories-buffer
-             (and (equal (buffer-name) ecb-directories-buffer-name)
-                  (= type ecb-directories-nodetype-directory)))))
-    (dolist (file files)
-      (let* ((filename (ecb-fix-filename path file))
-             (file-1 (if include-extension
-                         file
-                       (file-name-sans-extension file)))
-             (vc-cached-state (nth 0 (ecb-vc-cache-get filename)))
-             (displayed-file (if no-vc-state-display
-                                 file-1
-                               (ecb-generate-node-name file-1 -1
-                                                       (ecb-get-icon-for-vc-state vc-cached-state)
-                                                       ecb-sources-buffer-name))))
-        (tree-node-add-child
-         node
-         (ecb-new-child
-          old-children
-          displayed-file
-          type filename
-          (or not-expandable
-              (= type ecb-directories-nodetype-sourcefile)
-              ;; The empty-dir-check is performed stealthy
-              nil ;;(ecb-check-emptyness-of-dir filename)
-              )
-          (if ecb-truncate-long-names 'end)))))))
 
 
 (defun ecb-update-directory-node (node)
@@ -1931,6 +1913,8 @@ is writable or not."
 
 ;; version control support
 
+;; TODO: Klaus Berndl <klaus.berndl@sdm.de>:
+;; maybe a separate defgroup for the vc-options?
 (defcustom ecb-vc-supported-backends '((vc-backend . vc-state))
   "*Define how to to identify the VC-backend and how to check the state.
 The value of this option is a list containing cons-cells where the car is a
@@ -1994,31 +1978,60 @@ vc-cvs-state) sould be added at the beginning of this option."
   :type '(repeat (cons (function :tag "Identify-backend-function")
                        (function :tag "Check-state-function"))))
 
-(defconst ecb-vcstate-image-name-alist '((up-to-date . "vc-up-to-date")
-                                         (edited . "vc-edited")
-                                         (nil . "vc-unknown"))
-  "Associate an image-name to the allowed VC-states - see
+(defcustom ecb-vc-directory-managed-hook nil
+  "*Hook used to check if a directory is managed by a VC-system.
+Each function of this hook is called with a directory and has to return not
+nil if this directory is managed by a Version-Control-system.
+
+If ECB can support a certain VC-backend doesn't depend on the settings of this
+hook: ECB supports a certain VC-backend if and only if an appropriate setting
+for the needed backend is added to `ecb-vc-supported-backends'! But adding a
+\"check-if-managed-by-VC\"-function to this hook for a certain backend makes
+things going faster because then ECB does not run the whole VC-\"apparatus\"
+for directories which are not managed by a VC-system.
+
+By default ECB already recognizes if a directory is managed by RCS, CVS or
+SCCS. For all other VC-backend own functions have to be added."
+  :group 'ecb-sources
+  :type 'hook)
+  
+
+;; We use a cache which stores for a file the function used to check its
+;; VC-state and the most recent VC-state plus the check-timestamp for this
+;; state. So we have to call only once the identify-backend-function (see
+;; above) for a file. The check-state-function must only be called if the file
+;; has been modified since the stored check-state-timestamp. With this caching
+;; even using real-VC-checks (as vc-cvs-state) which never uses heuristics is
+;; possible without loosing to much informations (only if a file is modified
+;; by another user can not be detected with this cache - but for this we have
+;; the power-click which always throws away any cache-state)
+
+(defconst ecb-vc-state-icon-alist '((up-to-date . ("vc-up-to-date" "(u)"))
+                                    (edited . ("vc-edited" "(e)"))
+                                    (nil . ("vc-unknown" "(?)")))
+  "Associate an image-name and a texutal icon to the allowed VC-states - see
 `ecb-vc-supported-backends'.")
 
 
-(defsubst ecb-get-icon-for-vc-state (state)
+(defconst ecb-vc-incr-searchpattern-node-prefix
+  '("\\(([uemp?])\\)?" . 1)
+
+  "Prefix-pattern which ignores all not interesting vc-icon-stuff of a
+node-name at incr. search. This ignores the \"(<vc-state-char>)\" whereas
+<vc-state-char> is one of u, e, m, p or ?.
+
+Format: cons with car is the pattern and cdr is the number of subexpr in this
+pattern.")
+
+(defsubst ecb-vc-get-image-name-for-vc-state (state)
   "Return the associated image-name for the vc-state STATE."
-  (cdr (assq state ecb-vcstate-image-name-alist)))
+  (nth 0 (cdr (assq state ecb-vc-state-icon-alist))))
 
+(defsubst ecb-vc-get-ascii-icon-for-vc-state (state)
+  "Return the associated texual icon for the vc-state STATE."
+  (or (nth 1 (cdr (assq state ecb-vc-state-icon-alist)))
+      "(?)"))
 
-;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: We need a cache which stores for
-;; a file the identified backend and the most recent state plus the
-;; check-timestamp for this state. So we have to call
-;; only once the identify-backend-function (see above) for a file. The
-;; check-state-function must only be called if the file has been modified
-;; since the stored check-state-timestamp (timestamps: (nth 5 (file-attributes
-;; FILE)) gets the timestamp for the last modification-time of a file and
-;; (ecb-subseq (current-time) 0 2) gets the current time which can be used as
-;; recent VC-check-state-time which is then stored in our cache.) With this
-;; caching even using real-VC-checks (as vc-cvs-state) which never uses
-;; heuristics is possible  without lossing to much informations (only if a
-;; file is modified by another user can not be detected with this cache - but
-;; for this we have the power-click which always throws away any cache-state)
 
 (defun ecb-get-vc-state-fcn (file)
   "Call the car of each element of `ecb-vc-supported-backends' and return the
@@ -2030,31 +2043,65 @@ cdr of the first elem where the car returns not nil"
           (throw 'found (cdr elem))))
     nil))
 
-(defun ecb-check-vc-state (file)
+(defun ecb-check-vc-state (file tree-buffer-name)
   (let* ((cached-state (ecb-vc-cache-get file))
          (last-state (nth 0 cached-state))
          (last-check-time (nth 1 cached-state))
-         (vc-state-fcn (nth 2 cached-state)))
-    (if (and last-check-time
-             (or (null last-state) ;; FILE has been checked but is not in VC
-                 (not (ecb-time-less-p last-check-time
-                                       (ecb-subseq (nth 5 (file-attributes file))
-                                                   0 2)))))
-        ;; FILE was not modified since our last vc-state-check ==> we return
-        ;; 'unchanged to signal that nothing is to do since the last check.
-        'unchanged
+         (checked-tree-buffer-names (nth 2 cached-state))
+         (vc-state-fcn (nth 3 cached-state))
+         (no-need-for-state-check-p
+          (and last-check-time
+               (or (null last-state) ;; FILE has been checked but is not in VC
+                   (not (ecb-time-less-p last-check-time
+                                         (ecb-subseq (nth 5 (file-attributes file))
+                                                     0 2))))))
+         (result nil))
+    (if no-need-for-state-check-p
+        ;; FILE was not modified since our last vc-state-check
+        (if (member tree-buffer-name checked-tree-buffer-names)
+            ;; TREE-BUFFER-NAMES is in the list of buffer-names for which the
+            ;; state of FILE has already been cached ==> there is no need to
+            ;; update the cache we can just return 'unchanged to signalize
+            ;; that nothing has to be updated
+            (setq result 'unchanged)
+          ;; now we add TREE-BUFFER-NAME to that list - this new list will be
+          ;; added to the cache below. As result we will return the last-state
+          ;; because the state itself is still valid - the only thing we now
+          ;; have to store in the cache is that the last-state is now valid
+          ;; for TREE-BUFFER-NAME too!
+          (setq result last-state)
+          (setq checked-tree-buffer-names
+                (cons tree-buffer-name checked-tree-buffer-names)))
+
       ;; FILE was modified since our last vc-state-check, so we have to check
       ;; the state again
+      
+      ;; set the list of the buffer-names for which the check will be performed
+      ;; and then cached to TREE-BUFFER-NAME ==> Only for this buffer-name the
+      ;; cache is valid.
+      (setq checked-tree-buffer-names (list tree-buffer-name))
       ;; get the backend if there is no cached one
       (setq vc-state-fcn
             (or vc-state-fcn
                 (ecb-get-vc-state-fcn file)))
-      ;; add the new state to the cache and return the new state
+      ;; get the new vc-state
+      (setq result (and vc-state-fcn
+                        (fboundp vc-state-fcn)
+                        ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>:
+                        ;; vc-cvs-state seems to change the window-config
+                        ;; (opens a new small window) if it fails...so maybe
+                        ;; we have to save the window-config before this call
+                        ;; and restore it when the call fails - later... ;-)
+                        (ignore-errors (funcall vc-state-fcn file)))))
+    (if (not (equal result 'unchanged))
+      ;; add the new state to the cache because either the list of checked
+      ;; buffers and/or the state has been modified.
       (ecb-vc-cache-add file
-                        (and vc-state-fcn
-                             (fboundp vc-state-fcn)
-                             (ignore-errors (funcall vc-state-fcn file)))
-                        vc-state-fcn))))
+                        result
+                        checked-tree-buffer-names
+                        vc-state-fcn))
+    ;; return the result - either 'unchanged or the new VC-state
+    result))
 
 (defun ecb-vc-update-sources-cache (dir)
   "Update the SOURCES cache for DIR with the current-content of the
@@ -2110,24 +2157,42 @@ This can be overloaded to add new types of version control systems."
 	 (file-exists-p (concat proj-dir "/SCCS"))
        nil))
    ;; User extension
-   (run-hook-with-args 'ecb-vc-directory-enable-hook directory)
+   (run-hook-with-args 'ecb-vc-directory-managed-hook directory)
    ))
+
+(defun ecb-vc-generate-node-name (name state)
+  (let* ((ascii-icon (ecb-vc-get-ascii-icon-for-vc-state state))
+         (node-name (concat ascii-icon " "
+                            (save-match-data
+                              (if (string-match "^(.+) \\(.+\\)$" name)
+                                  (match-string 1 name)
+                                name)))))
+    (ecb-generate-node-name node-name 4
+                            (ecb-vc-get-image-name-for-vc-state state)
+                            ;; even in the history- or the directories-buffers
+                            ;; we use the icons of the sources-buffer because
+                            ;; they are the same!
+                            ecb-sources-buffer-name)))
+
 
 (defvar ecb-vc-support-beta-disable nil)
 
-;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: We should enable the VC-stuff
-;; also for Emacs which does not support images - so we need ascii-"icons".
-;; How about:
-;; * for leaf
-;; ? for unknown VC-state
-;; e for edited
-;; u for up-to-date
+;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: we have to exclude remote-path
+;; from being checked! Use this code:
+;;    (not (or (and (featurep 'ange-ftp)
+;;                  (string-match
+;;                   (car (if dframe-xemacsp
+;;                            ange-ftp-directory-format
+;;                          ange-ftp-name-format))
+;;                   (expand-file-name default-directory)))
+;;             ;; efs support: Bob Weiner
+;;             (and (featurep 'efs)
+;;                  (string-match
+;;                   (if (stringp efs-directory-regexp)
+;;                       efs-directory-regexp
+;;                     (car efs-directory-regexp))
+;;                   (expand-file-name default-directory))))))
 
-;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: We should also display vc-icons
-;; in the History-buffer!
-
-;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: If we use the
-;; ecb-vc-managed-dir-p check then we can ignore these files
 (defun ecb-stealthy-vc-check--internal (state)
   "Check for all sourcefile-nodes either in the directories- or the
 sources-buffer the VC-state. This function does the real job and is is only
@@ -2169,18 +2234,12 @@ state-value."
             (setq curr-node (tree-buffer-get-node-at-point))
             (when (= (tree-node-get-type curr-node) node-type-to-check)
               (setq new-name (tree-node-get-name curr-node))
-              (setq new-state (ecb-check-vc-state (tree-node-get-data curr-node)))
+              (setq new-state (ecb-check-vc-state (tree-node-get-data curr-node)
+                                                  (buffer-name (current-buffer))))
               ;; we update the node only if the state has changed 
               (when (not (equal 'unchanged new-state))
                 (setq new-name
-                      (ecb-generate-node-name new-name 1
-                                              (ecb-get-icon-for-vc-state new-state)
-                                              ;; even in the history- or the
-                                              ;; directories-buffers we use
-                                              ;; the icons of the
-                                              ;; sources-buffer because they
-                                              ;; are the same!
-                                              ecb-sources-buffer-name))
+                      (ecb-vc-generate-node-name new-name new-state))
                 (or update-performed-for-dir
                     (setq update-performed-for-dir
                           (ecb-fix-filename
@@ -2203,6 +2262,17 @@ state-value."
         (if (> state lines-of-buffer)
             (setq state 'done)))
       state)))
+
+(defecb-stealthy ecb-stealthy-vc-check-in-history-buf
+  "Check for all entries in the history-buffer their VC-state and
+display an appropriate icon in front of the item."
+  (save-selected-window
+    (when (equal 'window-not-visible
+                 (ecb-exec-in-history-window
+                  (setq state
+                        (ecb-stealthy-vc-check--internal state))))
+      (setq state 'done))))
+
 
 (defecb-stealthy ecb-stealthy-vc-check-in-sources-buf
   "Check for all sourcefile-nodes in the sources-buffer their VC-state and
@@ -2252,10 +2322,55 @@ performing a `tree-buffer-update' for this buffer."
   (ecb-stealthy-function-state-init 'ecb-stealthy-vc-check-in-sources-buf)
   )
 
+(defun ecb-stealth-tasks-after-history-update ()
+  "After update hook for the history-buffer. Runs directly after
+performing a `tree-buffer-update' for this buffer."
+  (ecb-stealthy-function-state-init 'ecb-stealthy-ro-check-in-history-buf)
+  )
+
 ;; -- end of vc-support ---------------
 
+(defun ecb-tree-node-add-files
+  (node path files type include-extension old-children
+        &optional not-expandable)
+  "For every file in FILES add a child-node to NODE."
+  ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: Here we should add a check too
+  ;; if the directory PATH is managed by a VC-backend because then we would
+  ;; never deal with VC but can immediately generate a "leaf"
+  ;; displayed-file-name. If PATH is managed by a VC-system then we never use
+  ;; "leaf" but always that icon associated to the cached vc-state (if file
+  ;; has currently no vc-cached-state then it has not yet checked and we use
+  ;; the unknow-state....but for know we do not use this test....
+  (let ((no-vc-state-display
+         (or ecb-vc-support-beta-disable
+             ;; no vc-state-display when the node is a subdir in the
+             ;; directories-buffer
+             (and (equal (buffer-name) ecb-directories-buffer-name)
+                  (= type ecb-directories-nodetype-directory)))))
+    (dolist (file files)
+      (let* ((filename (ecb-fix-filename path file))
+             (file-1 (if include-extension
+                         file
+                       (file-name-sans-extension file)))
+             (vc-cached-state (nth 0 (ecb-vc-cache-get filename)))
+             (displayed-file (if no-vc-state-display
+                                 file-1
+                               (ecb-vc-generate-node-name file-1 vc-cached-state))))
+        (tree-node-add-child
+         node
+         (ecb-new-child
+          old-children
+          displayed-file
+          type filename
+          (or not-expandable
+              (= type ecb-directories-nodetype-sourcefile)
+              ;; The empty-dir-check is performed stealthy
+              nil ;;(ecb-check-emptyness-of-dir filename)
+              )
+          (if ecb-truncate-long-names 'end)))))))
+
 (defun ecb-new-child (old-children name type data
-                                   &optional not-expandable shorten-name)
+    &optional not-expandable shorten-name)
   "Return a node with type = TYPE, data = DATA and name = NAME. Tries to find
 a node with matching TYPE and DATA in OLD-CHILDREN. If found no new node is
 created but only the fields of this node will be updated. Otherwise a new node
@@ -2982,7 +3097,7 @@ So you get a better overlooking. There are three choices:
    t
    ecb-tree-indent
    ecb-tree-incremental-search
-   nil
+   ecb-vc-incr-searchpattern-node-prefix
    ecb-tree-navigation-by-arrow
    ecb-tree-easy-hor-scroll
    (nth 0 ecb-tree-image-icons-directories)
@@ -3035,7 +3150,7 @@ So you get a better overlooking. There are three choices:
    t
    ecb-tree-indent
    ecb-tree-incremental-search
-   nil
+   ecb-vc-incr-searchpattern-node-prefix
    ecb-tree-navigation-by-arrow
    ecb-tree-easy-hor-scroll
    (nth 0 ecb-tree-image-icons-directories)
@@ -3079,7 +3194,7 @@ So you get a better overlooking. There are three choices:
    t
    ecb-tree-indent
    ecb-tree-incremental-search
-   nil
+   ecb-vc-incr-searchpattern-node-prefix
    ecb-tree-navigation-by-arrow
    ecb-tree-easy-hor-scroll
    (nth 0 ecb-tree-image-icons-directories)
@@ -3099,7 +3214,8 @@ So you get a better overlooking. There are three choices:
                             [mode-line mouse-2]
                             'ecb-toggle-maximize-ecb-window-with-mouse)))))
     ecb-common-tree-buffer-after-create-hook
-    ecb-history-buffer-after-create-hook)))
+    ecb-history-buffer-after-create-hook)
+   'ecb-stealth-tasks-after-history-update))
 
 
 (silentcomp-provide 'ecb-file-browser)
