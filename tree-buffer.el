@@ -133,21 +133,6 @@
   (put-text-property (tree-buffer-get-node-name-start-point node)
 		     (tree-buffer-get-node-name-end-point node) 'face face))
 
-;; (defun tree-buffer-remove-highlight()
-;;   (when tree-buffer-highlighted-node-data
-;;     (let ((node (tree-buffer-find-node-data tree-buffer-highlighted-node-data)))
-;;       (when node
-;; 	(tree-buffer-node-set-face node (tree-buffer-get-node-face node)))))
-;;   (setq tree-buffer-highlighted-node-data nil))
-
-;; (defun tree-buffer-highlight-node-data(node-data)
-;;   (tree-buffer-remove-highlight)
-;;   (setq tree-buffer-highlighted-node-data node-data)
-;;   (when tree-buffer-highlighted-node-data
-;;     (let ((node (tree-buffer-find-node-data tree-buffer-highlighted-node-data)))
-;;       (when node
-;; 	(tree-buffer-node-set-face node 'region)))))
-
 ;; Klaus: Now we use overlays to highlight current node in a tree-buffer. This
 ;; makes it easier to do same facing with the nodes itself and above all this
 ;; the facees of the node are always visible even if the node is highlighted
@@ -169,9 +154,9 @@
         (move-overlay tree-buffer-highlight-overlay
                       (tree-buffer-get-node-name-start-point node)
                       (tree-buffer-get-node-name-end-point node))
-	(if (not (pos-visible-in-window-p (tree-buffer-get-node-name-start-point node)))
-	    (recenter))
-	))))
+	(if (not (pos-visible-in-window-p
+		  (tree-buffer-get-node-name-start-point node)))
+	    (recenter))))))
   
 (defun tree-buffer-insert-text(text &optional facer)
   "Insert TEXT at point and faces it with FACER. FACER can be a face then the
@@ -287,7 +272,7 @@ EXPAND-SYMBOL-BEFORE: If not nil then the expand-symbol \(is displayed before
   (setq tree-buffer-type-facer type-facer)
   (setq tree-buffer-expand-symbol-before expand-symbol-before)
   (setq tree-buffer-highlight-overlay (make-overlay 1 1))
-  (overlay-put tree-buffer-highlight-overlay 'face 'region)
+  (overlay-put tree-buffer-highlight-overlay 'face 'secondary-selection)
 
   (define-key tree-buffer-key-map "\C-m"
     '(lambda()
