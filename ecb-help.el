@@ -26,7 +26,7 @@
 ;;
 ;; Contains all online-help for ECB (stolen something from recentf.el)
 
-;; $Id: ecb-help.el,v 1.28 2001/06/12 08:38:20 berndl Exp $
+;; $Id: ecb-help.el,v 1.29 2001/06/12 15:37:35 berndl Exp $
 
 ;;; Code
 
@@ -517,19 +517,29 @@ the problem as detailed as possible!"
      (progn
        (message "Preparing problem report...")
        ;;prepare the basic buffer
-       (let ((reporter-prompt-for-summary-p "Subject of the report: "))
+;;        (let ((reporter-prompt-for-summary-p "Subject of the report: "))
          (reporter-submit-bug-report
           ecb-problem-report-mail-address
-          (concat "ECB version: " ecb-version)
+          (format "ECB: %s, Semantic: %s, JDE: %s"
+                  ecb-version
+                  (if (boundp 'semantic-version)
+                      semantic-version
+                    "<=1.3.3")
+                  (if (boundp 'jde-version)
+                      jde-version
+                    "No JDE"))
           (ecb-problem-report-list-all-variables)
           nil
           'ecb-problem-report-post-hook
           ecb-problem-report-message)
          (ecb-redraw-layout)
+         (mail-subject)
+         (insert (read-string "Problem report subject: "
+                              (format "ECB-%s -- " ecb-version)))
          (mail-text)
          (search-forward ecb-problem-report-message)
          (end-of-line)
-         (message "Preparing bug report...done"))))))
+         (message "Preparing bug report...done")))))
 
 (defun ecb-problem-report-post-hook()
   "Function run the reporter package done its work. It looks for a message- and
