@@ -60,7 +60,7 @@
 ;; The latest version of the ECB is available at
 ;; http://home.swipnet.se/mayhem/ecb.html
 
-;; $Id: ecb.el,v 1.261 2002/12/23 14:47:40 berndl Exp $
+;; $Id: ecb.el,v 1.262 2002/12/28 19:12:52 berndl Exp $
 
 ;;; Code:
 
@@ -4165,6 +4165,10 @@ does all necessary after finishing ediff."
       ;; deactivate and reset the speedbar stuff
       (if (featurep 'ecb-speedbar)
           (ecb-speedbar-deactivate))
+
+      ;; deactivating the eshell stuff; activation is done implicitly by
+      ;; `ecb-eshell-goto-eshell'!
+      (ecb-eshell-deactivate)
       
       (tree-buffer-deactivate-mouse-tracking)
       (tree-buffer-deactivate-follow-mouse)
