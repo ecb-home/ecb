@@ -40,7 +40,8 @@
 ;; ECB requires:
 ;; - Semantic, version 1.4 or higher
 ;;   (http://cedet.sourceforge.net/semantic.shtml).
-;; - Eieio, version 0.16 or higher (http://cedet.sourceforge.net/eieio.shtml).
+;; - Eieio, version 0.17 or higher
+;;   (http://cedet.sourceforge.net/eieio.shtml).
 ;;
 ;; If Java code is edited the ECB works best when the JDE package
 ;; (http://sunsite.auc.dk/jde) is installed.
@@ -58,7 +59,7 @@
 ;; The latest version of the ECB is available at
 ;; http://home.swipnet.se/mayhem/ecb.html
 
-;; $Id: ecb.el,v 1.232 2002/08/04 11:32:27 berndl Exp $
+;; $Id: ecb.el,v 1.233 2002/08/09 11:33:44 berndl Exp $
 
 ;;; Code:
 
@@ -67,24 +68,15 @@
 ;; eieio load
 (require 'eieio)
 
-;;ensure that we use the right semantic-version and right eieio-version
-(let ((version-error nil))
-;;   (if (not (and (boundp 'semantic-version)
-;;                 (string-match "^1\\.4\\(beta1[1-9]\\)?$" semantic-version)))
-;;       (setq version-error "Semantic >= 1.4beta11"))
-  (if (not (and (boundp 'semantic-version)
-                (string-match "^1\\.4$" semantic-version)))
-      (setq version-error "Semantic >= 1.4"))
-  (if (not (and (boundp 'eieio-version)
-                (string-match "^0\\.1[6-9]" eieio-version)))
-      (setq version-error
-            (concat version-error (if version-error " and ")
-                    "Eieio >= 0.16")))
-  (if version-error
-      (error "ECB requires %s!" version-error)))
+(defconst ecb-required-semantic-version '(1 4))
+(defconst ecb-required-eieio-version '(0 17))
+
+(defvar ecb-all-requirements-available nil)
+(defvar ecb-upgrade-check-done nil)
 
 (message "ECB %s uses semantic %s and eieio %s" ecb-version
          semantic-version eieio-version)
+
 (let ((semantic-load-turn-everything-on nil))
   (require 'semantic-load))
 
@@ -1345,6 +1337,13 @@ perform the check and reset manually with `ecb-upgrade-options'."
   :group 'ecb-general
   :type 'boolean)
 
+(defcustom ecb-version-check t
+  "*If not nil ECB checks at start-time if the required versions of semantic
+and eieio are installed and loaded into Emacs.
+It is strongly recommended to set this option to not nil!"
+  :group 'ecb-general
+  :type 'boolean)
+
 (defcustom ecb-debug-mode nil
   "*If not nil ECB displays debug-information in the Messages-buffer.
 This is done for some critical situations concerning semantic-tokens and their
@@ -1392,6 +1391,82 @@ cleared!) ECB by running `ecb-deactivate'."
 ;;====================================================
 ;; Internals
 ;;====================================================
+
+(defmacro ecb-build-version-string (version-list)
+  `(concat (number-to-string (nth 0 ,version-list)) "."
+           (number-to-string (nth 1 ,version-list))
+           (if (nth 2 ,version-list)
+               (concat "beta" (number-to-string (nth 2 ,version-list))))))
+
+(defun ecb-check-requirements ()
+  "Ensure that we use the right `semantic-version' and right `eieio-version'
+and offer to download them if not installed. Check is done by using
+`semantic-require-version' and `eieio-require-version'."
+  (when (and ecb-version-check
+             (not ecb-all-requirements-available))
+    (let ((semantic-required-version-str (ecb-build-version-string
+                                          ecb-required-semantic-version))
+          (eieio-required-version-str (ecb-build-version-string
+                                       ecb-required-eieio-version))
+          (version-error nil)
+          (semantic-dir nil)
+          (eieio-dir nil))
+      (if (not (and (fboundp 'semantic-require-version)
+                    (not (semantic-require-version
+                          (nth 0 ecb-required-semantic-version)
+                          (nth 1 ecb-required-semantic-version)
+                          (nth 2 ecb-required-semantic-version)))))
+          (setq version-error (concat "semantic >= "
+                                      semantic-required-version-str)))
+      (if (not (and (fboundp 'eieio-require-version)
+                    (not (eieio-require-version
+                          (nth 0 ecb-required-eieio-version)
+                          (nth 1 ecb-required-eieio-version)
+                          (nth 2 ecb-required-eieio-version)))))
+          (setq version-error
+                (concat version-error (if version-error " and ")
+                        "eieio >= " eieio-required-version-str)))
+      (if (not version-error)
+          ;; this is the only place where this variable is set
+          (setq ecb-all-requirements-available t)
+        (if (not (yes-or-no-p (format "ECB requires %s. Do you want to download it? "
+                                      version-error)))
+            (ecb-error "ECB can only be started with %s! Sorry!" version-error)
+          ;; no we try to download the required versions
+          (message nil)
+          (if (string-match "semantic" version-error)
+              (setq semantic-dir
+                    (ecb-download-package "semantic"
+                                          semantic-required-version-str
+                                          ecb-semantic-eieio-url)))
+          (if (string-match "eieio" version-error)
+              (setq eieio-dir (ecb-download-package "eieio"
+                                                    eieio-required-version-str
+                                                    ecb-semantic-eieio-url)))
+          (with-output-to-temp-buffer "*ECB downloading and installing*"
+            (princ "Current state of the required packages semantic and eieio:\n\n")
+            (princ (concat "- semantic " semantic-required-version-str ":\n  "))
+            (princ (if (string-match "semantic" version-error)
+                       (if semantic-dir
+                           (concat "Installed in " semantic-dir)
+                         "Download- or installing-failure!")
+                     "Correct version already loaded!"))
+            (princ "\n")
+            (princ (concat "- eieio " eieio-required-version-str ":\n  "))
+            (princ (if (string-match "eieio" version-error)
+                       (if eieio-dir
+                           (concat "Installed in " eieio-dir)
+                         "Download- or installing-failure!")
+                     "Correct version already loaded!"))
+            (princ "\n\n")
+            (princ "After adding the new directory to your `load-path' and then restarting\n")
+            (princ "Emacs the new package(s) can be activated.\n\n")
+            (princ "\n\n")
+            (save-excursion
+              (set-buffer "*ECB downloading and installing*")
+              (goto-char (point-min))
+              (ignore-errors (help-make-xrefs))))
+          (ecb-error "Please restart Emacs with the required packages!"))))))
 
 (defun ecb-enter-debugger (&rest error-args)
   "If `ecb-debug-mode' is not nil then enter the Emacs-debugger and signal an
@@ -1871,6 +1946,7 @@ semantic-reparse. This function is added to the hook
   ;; single nodes without refreshing the whole tree-buffer like now.
   (ecb-rebuild-methods-buffer-with-tokencache (semantic-bovinate-toplevel t)))
 
+
 (defun ecb-expand-directory-tree (path node)
   (catch 'exit
     (dolist (child (tree-node-get-children node))
@@ -1977,7 +2053,7 @@ then nothing is done unless first optional argument FORCE is not nil."
                      (if (equal ecb-auto-expand-directory-tree 'best)
                          ;; If none of the source-paths in the buffer
                          ;; `ecb-directories-buffer-name' matches then nil
-                        ;; otherwise the node of the best matching source-path
+                         ;; otherwise the node of the best matching source-path
                          (cdar (sort (delete nil
                                              (mapcar (lambda (elem)
                                                        (let ((data (tree-node-get-data elem)))
@@ -1998,11 +2074,12 @@ then nothing is done unless first optional argument FORCE is not nil."
                  ;; expand the best-match node itself
                  (tree-node-set-expanded start t)
                  (ecb-update-directory-node start))
-              ;; start recursive expanding of either the best-matching node or
+               ;; start recursive expanding of either the best-matching node or
                ;; the root-node itself.
-               (ecb-expand-directory-tree ecb-path-selected-directory start)
+               (ecb-expand-directory-tree ecb-path-selected-directory
+                                          (or start
+                                              (tree-buffer-get-root)))
                (tree-buffer-update))
-             ;;              (message "Klausi: %s" (pp start))
              (when (not ecb-show-sources-in-directories-buffer)
                (tree-buffer-highlight-node-data ecb-path-selected-directory
                                                 start)))))
@@ -3424,6 +3501,7 @@ always the ECB-frame if called from another frame."
   "Activates the ECB and creates all the buffers and draws the ECB-screen
 with the actually choosen layout \(see `ecb-layout-nr'). This function raises
 always the ECB-frame if called from another frame."
+  (ecb-check-requirements)
   (if ecb-use-recursive-edit
       (if ecb-minor-mode
 	  (progn
@@ -3458,10 +3536,12 @@ always the ECB-frame if called from another frame."
 
     ;; maybe we must upgrade some not anymore compatible or even renamed
     ;; options
-    (when ecb-auto-compatibility-check
+    (when (and ecb-auto-compatibility-check
+               (not ecb-upgrade-check-done))
       (ecb-check-not-compatible-options)
       (ecb-upgrade-not-compatible-options)
-      (ecb-upgrade-renamed-options))
+      (ecb-upgrade-renamed-options)
+      (setq ecb-upgrade-check-done t))
 
     (setq ecb-old-compilation-window-height compilation-window-height)
     
@@ -3654,12 +3734,9 @@ always the ECB-frame if called from another frame."
     ;; run personal hooks before drawing the layout
     (run-hooks 'ecb-activate-before-layout-draw-hook)
 
-    ;; we must update the directories buffer first time
-    (ecb-update-directories-buffer)
-
     ;; now we draw the layout choosen in `ecb-layout'. This function
     ;; acivates at its end also the adviced functions if necessary!
-    (ecb-redraw-layout)
+    (ecb-redraw-layout-full 'no-buffer-sync)
     
     (ecb-with-adviced-functions
      ;; activate the correct edit-window split
@@ -3669,8 +3746,13 @@ always the ECB-frame if called from another frame."
             (split-window-horizontally))
            ((not ecb-split-edit-window)
             (delete-other-windows))))
-    
+
+    ;; now we update the directories window - if visible
     (ecb-update-directories-buffer)
+
+    ;; now we synchronize all ECB-windows
+    (ecb-current-buffer-sync 'force)
+    
     ;; now update all the ECB-buffer-modelines
     (ecb-mode-line-format)
 
@@ -3904,7 +3986,7 @@ FILE.elc or if FILE.elc doesn't exist."
   (let ((load-path
 	 (append (list (file-name-directory
 			(or (locate-library "semantic")
-			    (error "Semantic is not in the load-path!")))
+			    (ecb-error "Semantic is not in the load-path!")))
 		       (file-name-directory (locate-library "ecb")))
 		 load-path))
 	(files (directory-files (file-name-directory (locate-library "ecb"))
@@ -4021,5 +4103,4 @@ changed there should be no performance-problem!"
 (provide 'ecb)
 
 ;;; ecb.el ends here
-
 

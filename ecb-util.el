@@ -26,7 +26,7 @@
 ;; This file is part of the ECB package which can be found at:
 ;; http://home.swipnet.se/mayhem/ecb.html
 
-;; $Id: ecb-util.el,v 1.23 2002/07/12 08:46:43 berndl Exp $
+;; $Id: ecb-util.el,v 1.24 2002/08/09 11:33:44 berndl Exp $
 
 ;;; Code:
 
@@ -181,6 +181,13 @@ to insert any arbitrary string."
           ((string= answer "Other")
            (setq answer (read-string (concat other-prompt ": ")))))
     answer))
+
+(defmacro ecb-error (&rest args)
+  "Signals an error but prevents it from entering the debugger. This is
+usefull if an error-message should be signaled to the user and evaluating
+should stopped but no debugging is senseful."
+  `(let ((debug-on-error nil))
+     (error ,@args)))
 
 
 (provide 'ecb-util)

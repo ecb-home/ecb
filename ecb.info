@@ -32,7 +32,7 @@ mailing list <ecb-list@lists.sourceforge.net> via the URL
 * Usage of ECB::                How to use ECB
 * Customizing::                 How to customize ECB
 * Submitting problem report::   What to do when problems occur
-* Upgrading::                   Upgrading ECB from within Emacs
+* Upgrading::                   Upgrading and downloading packages
 * Tips and tricks::             Useful hints and tips
 * Elisp programming::           Entry points for elisp programmers
 * Conflicts and bugs::          Known Conflicts with other packages and bugs
@@ -102,9 +102,9 @@ All customizable options of ECB
 * ecb-faces::                   Customizing the faces
 * ecb-download::                Customizing how to download ECB
 
-Upgrading ECB
+Upgrading and downloading packages
 
-* Downloading new version::     How to download a newer version of ECB
+* Downloading new versions::    How to download newer versions of packages
 * Auto. option-upgrading::      ECB can auto. upgrade your options
 
 Automatic upgrading of options
@@ -162,6 +162,10 @@ Installation of ECB
    shipped with Emacs or XEmacs. You have to install exactly a version
    ECB requires and also to make sure that the correct version is loaded
    into (X)Emacs!
+
+   But ECB checks auto. during start-time if the correct versions of
+   semantic and eieio are installed and gives you proper feedback.
+   *Note Download required packages::.
 
 3. Add the new ECB-directory to your `load-path' variable.
 
@@ -852,8 +856,36 @@ Synchronization of the ECB-windows
 
 Per default ECB synchronizes automatically the contents of the
 ECB-windows/tree-buffers with the current active edit-window (rsp. the
-current buffer of the edit window). The feature can be customized with
-the option `ecb-window-sync':
+current buffer of the edit window):
+
+ * ECB-directories:
+
+   This windows is synchronized to display the directory where the
+   source-file which is displayed in the edit-window is located. If the
+   source-path (i.e. an element of the option `ecb-source-path')
+   containing this directory is not expanded it will be auto. expanded
+   according to the value of the option
+   `ecb-auto-expand-directory-tree' (*note ecb-directories::).
+
+ * ECB-sources:
+
+   The ECB-sources-buffer contains after synchronizing all the sources
+   of the directory of the "current" source-file displayed in the
+   edit-window. The entry of the "current" source-file is highlighted.
+
+ * ECB-methods:
+
+   Contains after synchronizing all the tokens of the buffer in the
+   edit-window, i.e. all methods, variables etc... depending of the
+   major-mode.
+
+ * ECB-history:
+
+   Highlights the entry of the buffer displayed in the edit-window if
+   this buffer is a source-file.
+
+
+This feature can be customized with the option `ecb-window-sync':
 
 If active then the synchronization takes place always a buffer changes
 in the edit window, if deactivated then never. But you can also set
@@ -941,26 +973,12 @@ order):
 
  - Command: ecb-download-ecb
    Download ECB from the ECB-website and install it. For this the
-   utilities "wget", "tar" and "gzip" are needed which are available
-   for unix and also for windows with cygwin. All utilities must reside
-   in your PATH!
-
-   If you are behind a firewall and you have to use a proxy you maybe
-   need the following wget-configuration in your file `~/.wgetrc':
-
-      # Define your proxies (where 8080 and 8081 are examples
-      # for the portnumbers)
-      http_proxy = http://your.proxy.com:8080
-      ftp_proxy  = http://your.ftpproxy.com:8081
-      
-      # If you do not want to use proxy at all, set this to off.
-      use_proxy = on
-
-   ECB will try to download the following url:
-   "<ecb-download-url>ecb-<ecb-download-version>.tar.gz". For this the
    options `ecb-download-url' and `ecb-download-version' must be set
    correct, whereas the default value of the former one should always be
    correct.
+
+   For details about downloading and what requirements must be satisfied
+   see *Note Downloading new versions::!
 
    After sucessfull downloading the new ECB will be installed in a
    directory parallel to current ECB-directory. After adding this new
@@ -1610,6 +1628,11 @@ This group contains the following options:
  - User Option: ecb-use-recursive-edit
    Tell ECB to use a recursive edit so that it can easily be deactivated
    by (keyboard-escape-quit).
+
+ - User Option: ecb-version-check
+   If not `nil' ECB checks at start-time if the required versions of
+   semantic and eieio are installed and loaded into Emacs. It is
+   strongly recommended to set this option to not `nil'!
 
  - User Option: ecb-window-sync
    Synchronize the ECB-windows automatically with current edit window.
@@ -2679,32 +2702,110 @@ ECB!) before submitting a problem-report!
 
 File: ecb.info,  Node: Upgrading,  Next: Tips and tricks,  Prev: Submitting problem report,  Up: Top
 
-Upgrading ECB
-*************
+Upgrading and downloading packages
+**********************************
 
-This chapter describes all apsects of upgrading to a newer version of
+This chapter describes all aspects of upgrading to a newer version of
 ECB.
+
+The first section describes how to download and install a new package
+from the web, where "package" means either ECB itself or the required
+libraries semantic and eieio.
+
+After installing a new ECB-version ECB checks if the values of the
+customized ECB-options are still compatible. If not ECB does some smart
+things. This is the topic of the second section.
 
 * Menu:
 
-* Downloading new version::     How to download a newer version of ECB
+* Downloading new versions::    How to download newer versions of packages
 * Auto. option-upgrading::      ECB can auto. upgrade your options
 
 
-File: ecb.info,  Node: Downloading new version,  Next: Auto. option-upgrading,  Prev: Upgrading,  Up: Upgrading
+File: ecb.info,  Node: Downloading new versions,  Next: Auto. option-upgrading,  Prev: Upgrading,  Up: Upgrading
 
-Downloading a new version of ECB
-================================
+Downloading new versions of ECB and/or required packages
+========================================================
 
 ECB offers the possibility to upgrade to newer versions direct from the
-ECB-website. This can be done with `ecb-download-ecb' if the tools
-wget, tar and gzip are installed onto the system and a connection to
-the web is available. Please read the documentation of
-`ecb-download-ecb' (*note Interactive ECB commands::) and the options
-of the customize-group 'ecb-download'!
+ECB-website. This can be done if the following requirements are
+satisfied:
+
+1. A connection to the web is available
+
+2. The tools "wget", "tar" and "gzip" are installed
+
+   With unix-systems these tools are in the standard-distribution. If
+   you are running any Microsoft Windows system then you need cygwin(1)
+   which offers these tools too. On every system these tools must
+   reside in the `PATH' environment-variable!
+
+   If you are behind a firewall and you have to use a proxy you maybe
+   need the following wget-configuration in your file `~/.wgetrc':
+
+      # Define your proxies (where 8080 and 8081 are examples
+      # for the portnumbers)
+      http_proxy = http://your.proxy.com:8080
+      ftp_proxy  = http://your.ftpproxy.com:8081
+      
+      # If you do not want to use proxy at all, set this to off.
+      use_proxy = on
+
+If these requirements are satisfied you can download and install both
+ECB itself and also the required versions of semantic and eieio:
+
+ * Download a new ECB-version with `ecb-download-ecb':
+
+   A description for this command you will find in *Note Interactive
+   ECB commands::. Check also the options of the customize-group
+   'ecb-download' (*note ecb-download::).
+
+   ECB will try to download the file:
+
+      <URL><PACKAGE>-<VERSION>.tar.gz
+
+   where
+
+  `URL'
+      Value of the option `ecb-download-url'.
+
+  `PACKAGE'
+      The string "ecb"
+
+  `VERSION'
+      Value of the option `ecb-download-version'.
+
+ * Download and install of required packages:
+
+   ECB checks at start-time if the required versions of semantic and
+   eieio (see `README') are installed and loaded into Emacs. If not you
+   will be asked if you want auto. download and install them. If you
+   confirm this and the download and install succeeds then you will get
+   a message-buffer which tells you something like:
+
+      ---------------------------------------------------------------
+      Current state of the required packages semantic and eieio:
+      
+      - semantic 1.4:
+        Installed in /usr/local/lib/site-lisp/semantic-1.4
+      
+      - eieio 0.17:
+        Correct version already loaded!
+      
+      After adding the new directory to your `load-path' and then
+      restarting Emacs the new package(s) can be activated.
+      ---------------------------------------------------------------
+
+   *Note*: By setting the option `ecb-version-check' to `nil' you can
+   prevent ECB from checking correct versions of semantic and eieio,
+   but it's strongly recommended not to do this!
+
+---------- Footnotes ----------
+
+(1) cygwin is available at <http://cygwin.com/>
 
 
-File: ecb.info,  Node: Auto. option-upgrading,  Prev: Downloading new version,  Up: Upgrading
+File: ecb.info,  Node: Auto. option-upgrading,  Prev: Downloading new versions,  Up: Upgrading
 
 Automatic upgrading of options
 ==============================
@@ -3231,6 +3332,7 @@ This index contains all customizable options of ECB:
 * ecb-truncate-long-names:               ecb-general.
 * ecb-type-token-display:                ecb-methods.
 * ecb-use-recursive-edit:                ecb-general.
+* ecb-version-check:                     ecb-general.
 * ecb-window-sync:                       ecb-general.
 * ecb-window-sync-delay:                 ecb-general.
 * ecb-windows-height:                    ecb-layout.
@@ -3254,7 +3356,7 @@ Concept Index
 * collapsing:                            Navigation.
 * compilation buffers:                   Temp- and compile-buffers.
 * Directories:                           ECB Directories.
-* Download:                              Downloading new version.
+* Download:                              Downloading new versions.
 * ECB-layout:                            The ECB-layout.
 * ECB-windows:                           Overview.
 * edit-window:                           The edit-window.
@@ -3294,69 +3396,71 @@ Concept Index
 
 Tag Table:
 Node: Top183
-Node: Install and first steps5401
-Node: Installation5797
-Node: First steps8426
-Ref: First steps-Footnote-19573
-Node: Overview9802
-Node: ECB Directories10864
-Node: ECB Sources11844
-Node: ECB Methods13007
-Node: Activation and Deactivation13528
-Node: Standard activation13898
-Node: Automatic activation14476
-Node: Usage of ECB15526
-Node: Using the mouse16361
-Ref: Using the mouse-Footnote-118636
-Node: Using the keyboard18682
-Node: Navigation19499
-Node: Incremental search20842
-Node: The edit-window22993
-Node: Temp- and compile-buffers24799
-Node: The Methods buffer26846
-Node: Customizing the display27287
-Node: Rebuilding the Methods29009
-Node: The ECB-layout29863
-Node: Changing the ECB-layout30413
-Node: Redrawing the ECB-layout31451
-Node: Hiding the ECB windows32254
-Node: ECB-window synchronizing32828
-Node: Interactive ECB commands34490
-Node: Customizing43234
-Node: Most important options44747
-Node: Customizable options46539
-Node: ecb-general47455
-Node: ecb-directories65685
-Node: ecb-sources70665
-Node: ecb-methods72535
-Node: ecb-history84542
-Node: ecb-layout86234
-Node: ecb-face-options100166
-Node: ecb-faces101826
-Node: ecb-download105833
-Node: Submitting problem report107055
-Node: Upgrading108212
-Node: Downloading new version108569
-Node: Auto. option-upgrading109124
-Node: User interface109431
-Node: Background information110320
-Node: Tips and tricks113718
-Node: Changing faces114277
-Node: Small screens115083
-Node: Simulating speedbar116486
-Node: Optimze scrolling117295
-Node: Large directories118370
-Node: Elisp programming119014
-Node: Conflicts and bugs120197
-Node: Conflicts120683
-Node: VC121272
-Node: follow-mouse121565
-Node: avoid122243
-Node: calendar122607
-Node: calculator123243
-Node: Bugs123745
-Node: Function Index123965
-Node: Variable Index125830
-Node: Concept Index131008
+Node: Install and first steps5429
+Node: Installation5825
+Node: First steps8630
+Ref: First steps-Footnote-19777
+Node: Overview10006
+Node: ECB Directories11068
+Node: ECB Sources12048
+Node: ECB Methods13211
+Node: Activation and Deactivation13732
+Node: Standard activation14102
+Node: Automatic activation14680
+Node: Usage of ECB15730
+Node: Using the mouse16565
+Ref: Using the mouse-Footnote-118840
+Node: Using the keyboard18886
+Node: Navigation19703
+Node: Incremental search21046
+Node: The edit-window23197
+Node: Temp- and compile-buffers25003
+Node: The Methods buffer27050
+Node: Customizing the display27491
+Node: Rebuilding the Methods29213
+Node: The ECB-layout30067
+Node: Changing the ECB-layout30617
+Node: Redrawing the ECB-layout31655
+Node: Hiding the ECB windows32458
+Node: ECB-window synchronizing33032
+Node: Interactive ECB commands35613
+Node: Customizing43777
+Node: Most important options45290
+Node: Customizable options47082
+Node: ecb-general47998
+Node: ecb-directories66454
+Node: ecb-sources71434
+Node: ecb-methods73304
+Node: ecb-history85311
+Node: ecb-layout87003
+Node: ecb-face-options100935
+Node: ecb-faces102595
+Node: ecb-download106602
+Node: Submitting problem report107824
+Node: Upgrading108981
+Node: Downloading new versions109744
+Ref: Download required packages111501
+Ref: Downloading new versions-Footnote-1112599
+Node: Auto. option-upgrading112648
+Node: User interface112956
+Node: Background information113845
+Node: Tips and tricks117243
+Node: Changing faces117802
+Node: Small screens118608
+Node: Simulating speedbar120011
+Node: Optimze scrolling120820
+Node: Large directories121895
+Node: Elisp programming122539
+Node: Conflicts and bugs123722
+Node: Conflicts124208
+Node: VC124797
+Node: follow-mouse125090
+Node: avoid125768
+Node: calendar126132
+Node: calculator126768
+Node: Bugs127270
+Node: Function Index127490
+Node: Variable Index129355
+Node: Concept Index134587
 
 End Tag Table

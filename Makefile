@@ -64,7 +64,7 @@ INSTALLINFO=/usr/bin/install-info
 
 # Do not change anything below!
 
-# $Id: Makefile,v 1.34 2002/07/27 15:59:59 berndl Exp $
+# $Id: Makefile,v 1.35 2002/08/09 11:33:44 berndl Exp $
 
 RM=rm -f
 CP=cp
@@ -130,13 +130,14 @@ online-help: $(ecb_TEXI)
 
 
 install-help: $(ecb_INFO)
-	@if test -x "$(INSTALLINFO)" ; then\
+	@if test -x "$(INSTALLINFO)" -a -f "$(EMACSINFOPATH)/dir" ; then\
 	   echo Installing the Online-help in $(INSTALLINFO)...; \
 	   $(CP) $< $(EMACSINFOPATH); \
 	   $(INSTALLINFO) $< $(EMACSINFOPATH)/dir; \
 	else \
-	   echo Can not install the online-help because the tool; \
-	   echo - $(INSTALLINFO); \
+	   echo Can not install the online-help because either; \
+	   echo - the tool $(INSTALLINFO) or; \
+	   echo - the file $(EMACSINFOPATH)/dir; \
 	   echo is not available!; \
 	fi
 

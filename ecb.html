@@ -38,7 +38,7 @@ mailing list <a href="mailto:ecb-list@lists.sourceforge.net">ecb-list@lists.sour
 <li><a accesskey=4 href="#Usage%20of%20ECB">Usage of ECB</a>:                 How to use ECB
 <li><a accesskey=5 href="#Customizing">Customizing</a>:                  How to customize ECB
 <li><a accesskey=6 href="#Submitting%20problem%20report">Submitting problem report</a>:    What to do when problems occur
-<li><a accesskey=7 href="#Upgrading">Upgrading</a>:                    Upgrading ECB from within Emacs
+<li><a accesskey=7 href="#Upgrading">Upgrading</a>:                    Upgrading and downloading packages
 <li><a accesskey=8 href="#Tips%20and%20tricks">Tips and tricks</a>:              Useful hints and tips
 <li><a accesskey=9 href="#Elisp%20programming">Elisp programming</a>:            Entry points for elisp programmers
 <li><a href="#Conflicts%20and%20bugs">Conflicts and bugs</a>:           Known Conflicts with other packages and bugs
@@ -108,9 +108,9 @@ mailing list <a href="mailto:ecb-list@lists.sourceforge.net">ecb-list@lists.sour
 <li><a href="#ecb-faces">ecb-faces</a>:                    Customizing the faces
 <li><a href="#ecb-download">ecb-download</a>:                 Customizing how to download ECB
 
-<p>Upgrading ECB
+<p>Upgrading and downloading packages
 
-</p><li><a href="#Downloading%20new%20version">Downloading new version</a>:      How to download a newer version of ECB
+</p><li><a href="#Downloading%20new%20versions">Downloading new versions</a>:     How to download newer versions of packages
 <li><a href="#Auto.%20option-upgrading">Auto. option-upgrading</a>:       ECB can auto. upgrade your options
 
 <p>Automatic upgrading of options
@@ -179,7 +179,11 @@ shipped with Emacs or XEmacs. You have to install exactly a version
 ECB requires and also to make sure that the correct version is loaded
 into (X)Emacs!
 
-<li>Add the new ECB-directory to your <code>load-path</code> variable.
+<p>But ECB checks auto. during start-time if the correct versions of
+semantic and eieio are installed and gives you proper feedback. 
+See <a href="#Download%20required%20packages">Download required packages</a>.
+
+</p><li>Add the new ECB-directory to your <code>load-path</code> variable.
 
 <p>You <strong>MUST</strong> add the ECB-install-directory to the
 <code>load-path</code> either by changing the <code>load-path</code> variable
@@ -950,8 +954,39 @@ Up:<a rel=up accesskey=u href="#Usage%20of%20ECB">Usage of ECB</a>
 
 <p>Per default ECB synchronizes automatically the contents of the
 ECB-windows/tree-buffers with the current active edit-window (rsp. the
-current buffer of the edit window). The feature can be customized with
-the option <code>ecb-window-sync</code>:
+current buffer of the edit window):
+
+<ul>
+
+<li>ECB-directories:
+
+<p>This windows is synchronized to display the directory where the
+source-file which is displayed in the edit-window is located. If the
+source-path (i.e. an element of the option <code>ecb-source-path</code>)
+containing this directory is not expanded it will be auto. expanded
+according to the value of the option
+<code>ecb-auto-expand-directory-tree</code> (see <a href="#ecb-directories">ecb-directories</a>).
+
+</p><li>ECB-sources:
+
+<p>The ECB-sources-buffer contains after synchronizing all the sources of
+the directory of the "current" source-file displayed in the
+edit-window. The entry of the "current" source-file is highlighted.
+
+</p><li>ECB-methods:
+
+<p>Contains after synchronizing all the tokens of the buffer in the
+edit-window, i.e. all methods, variables etc... depending of the
+major-mode.
+
+</p><li>ECB-history:
+
+<p>Highlights the entry of the buffer displayed in the edit-window if
+this buffer is a source-file.
+
+</ul>
+
+<p>This feature can be customized with the option <code>ecb-window-sync</code>:
 
 <p>If active then the synchronization takes place always a buffer changes
 in the edit window, if deactivated then never. But you can also set
@@ -1127,27 +1162,13 @@ Display a message-buffer which options have been upgraded or reset.
 </table>
 <table width="95%" align="center">
 <tr><td>
-Download ECB from the ECB-website and install it. For this the utilities
-"wget", "tar" and "gzip" are needed which are available for unix and
-also for windows with cygwin. All utilities must reside in your PATH!
-
-<p>If you are behind a firewall and you have to use a proxy you maybe
-need the following wget-configuration in your file <code>~/.wgetrc</code>:
-
-<br><pre># Define your proxies (where 8080 and 8081 are examples
-# for the portnumbers)
-http_proxy = http://your.proxy.com:8080
-ftp_proxy  = http://your.ftpproxy.com:8081
-
-# If you do not want to use proxy at all, set this to off.
-use_proxy = on
-</pre>
-
-<p>ECB will try to download the following url:
-"&lt;ecb-download-url&gt;ecb-&lt;ecb-download-version&gt;.tar.gz". For this the
-options <code>ecb-download-url</code> and <code>ecb-download-version</code> must be set
+Download ECB from the ECB-website and install it. For this the options
+<code>ecb-download-url</code> and <code>ecb-download-version</code> must be set
 correct, whereas the default value of the former one should always be
 correct.
+
+<p>For details about downloading and what requirements must be satisfied
+see <a href="#Downloading%20new%20versions">Downloading new versions</a>!
 
 <p>After sucessfull downloading the new ECB will be installed in a
 directory parallel to current ECB-directory. After adding this new
@@ -2270,6 +2291,22 @@ activate ECB again to take effect.
 <tr><td>
 Tell ECB to use a recursive edit so that it can easily be deactivated
 by (keyboard-escape-quit). 
+</td></tr>
+</table>
+
+<p>
+<table width="100%">
+<tr>
+<td align="left"><b>ecb-version-check</b><i>
+</i></td>
+<td align="right">User Option</td>
+</tr>
+</table>
+<table width="95%" align="center">
+<tr><td>
+If not <code>nil</code> ECB checks at start-time if the required versions of
+semantic and eieio are installed and loaded into Emacs. It is strongly
+recommended to set this option to not <code>nil</code>! 
 </td></tr>
 </table>
 
@@ -4150,35 +4187,115 @@ Previous:<a rel=previous accesskey=p href="#Submitting%20problem%20report">Submi
 Up:<a rel=up accesskey=u href="#Top">Top</a>
 <br>
 
-<h2>Upgrading ECB</h2>
+<h2>Upgrading and downloading packages</h2>
 
-<p>This chapter describes all apsects of upgrading to a newer version of
+<p>This chapter describes all aspects of upgrading to a newer version of
 ECB.
 
+<p>The first section describes how to download and install a new
+package from the web, where "package" means either ECB itself or the
+required libraries semantic and eieio.
+
+<p>After installing a new ECB-version ECB checks if the values of the
+customized ECB-options are still compatible. If not ECB does some
+smart things. This is the topic of the second section.
+
 <ul>
-<li><a accesskey=1 href="#Downloading%20new%20version">Downloading new version</a>:      How to download a newer version of ECB
+<li><a accesskey=1 href="#Downloading%20new%20versions">Downloading new versions</a>:     How to download newer versions of packages
 <li><a accesskey=2 href="#Auto.%20option-upgrading">Auto. option-upgrading</a>:       ECB can auto. upgrade your options
 </ul>
 
 <p><hr>
-Node:<a name="Downloading%20new%20version">Downloading new version</a>,
+Node:<a name="Downloading%20new%20versions">Downloading new versions</a>,
 Next:<a rel=next accesskey=n href="#Auto.%20option-upgrading">Auto. option-upgrading</a>,
 Previous:<a rel=previous accesskey=p href="#Upgrading">Upgrading</a>,
 Up:<a rel=up accesskey=u href="#Upgrading">Upgrading</a>
 <br>
 
-<h3>Downloading a new version of ECB</h3>
+<h3>Downloading new versions of ECB and/or required packages</h3>
 
 <p>ECB offers the possibility to upgrade to newer versions direct from
-the ECB-website. This can be done with <code>ecb-download-ecb</code> if the
-tools wget, tar and gzip are installed onto the system and a
-connection to the web is available. Please read the documentation of
-<code>ecb-download-ecb</code> (see <a href="#Interactive%20ECB%20commands">Interactive ECB commands</a>) and the
-options of the customize-group 'ecb-download'!
+the ECB-website. This can be done if the following requirements are
+satisfied:
+
+<ol type=1 start=1>
+</p><li>A connection to the web is available
+<li>The tools "wget", "tar" and "gzip" are installed
+
+<p>With unix-systems these tools are in the
+standard-distribution. If you are running any Microsoft Windows system
+then you need cygwin<a rel=footnote href="#fn-3"><sup>3</sup></a> which offers these tools too. On every
+system these tools must reside in the <code>PATH</code> environment-variable!
+
+<p>If you are behind a firewall and you have to use a proxy you maybe
+need the following wget-configuration in your file <code>~/.wgetrc</code>:
+
+<br><pre># Define your proxies (where 8080 and 8081 are examples
+# for the portnumbers)
+http_proxy = http://your.proxy.com:8080
+ftp_proxy  = http://your.ftpproxy.com:8081
+
+# If you do not want to use proxy at all, set this to off.
+use_proxy = on
+</pre>
+</ol>
+
+<p>If these requirements are satisfied you can download and install both
+ECB itself and also the required versions of semantic and eieio:
+
+<ul>
+<li>Download a new ECB-version with <code>ecb-download-ecb</code>:
+
+<p>A description for this command you will find in <a href="#Interactive%20ECB%20commands">Interactive ECB commands</a>. Check also the options of the customize-group
+'ecb-download' (see <a href="#ecb-download">ecb-download</a>).
+
+<p>ECB will try to download the file:
+
+<br><pre>&lt;URL&gt;&lt;PACKAGE&gt;-&lt;VERSION&gt;.tar.gz
+</pre>
+
+<p>where
+
+<dl>
+<dt><code>URL</code>
+<dd>Value of the option <code>ecb-download-url</code>. 
+<br><dt><code>PACKAGE</code>
+<dd>The string "ecb"
+<br><dt><code>VERSION</code>
+<dd>Value of the option <code>ecb-download-version</code>. 
+</dl>
+
+<p><a name="Download%20required%20packages"></a>
+</p><li>Download and install of required packages:
+
+<p>ECB checks at start-time if the required versions of semantic and
+eieio (see <code>README</code>) are installed and loaded into Emacs. If not
+you will be asked if you want auto. download and install them. If you
+confirm this and the download and install succeeds then you will get a
+message-buffer which tells you something like:
+
+<br><pre>---------------------------------------------------------------
+Current state of the required packages semantic and eieio:
+
+- semantic 1.4:
+  Installed in /usr/local/lib/site-lisp/semantic-1.4
+
+- eieio 0.17:
+  Correct version already loaded!
+
+After adding the new directory to your <code>load-path</code> and then
+restarting Emacs the new package(s) can be activated.
+---------------------------------------------------------------
+</pre>
+
+<p><strong>Note</strong>: By setting the option <code>ecb-version-check</code> to
+<code>nil</code> you can prevent ECB from checking correct versions of
+semantic and eieio, but it's strongly recommended not to do this! 
+</ul>
 
 <p><hr>
 Node:<a name="Auto.%20option-upgrading">Auto. option-upgrading</a>,
-Previous:<a rel=previous accesskey=p href="#Downloading%20new%20version">Downloading new version</a>,
+Previous:<a rel=previous accesskey=p href="#Downloading%20new%20versions">Downloading new versions</a>,
 Up:<a rel=up accesskey=u href="#Upgrading">Upgrading</a>
 <br>
 
@@ -4768,6 +4885,7 @@ Up:<a rel=up accesskey=u href="#Top">Top</a>
 <li><code>ecb-truncate-long-names</code>: <a href="#ecb-general">ecb-general</a>
 <li><code>ecb-type-token-display</code>: <a href="#ecb-methods">ecb-methods</a>
 <li><code>ecb-use-recursive-edit</code>: <a href="#ecb-general">ecb-general</a>
+<li><code>ecb-version-check</code>: <a href="#ecb-general">ecb-general</a>
 <li><code>ecb-window-sync</code>: <a href="#ecb-general">ecb-general</a>
 <li><code>ecb-window-sync-delay</code>: <a href="#ecb-general">ecb-general</a>
 <li><code>ecb-windows-height</code>: <a href="#ecb-layout">ecb-layout</a>
@@ -4792,7 +4910,7 @@ Up:<a rel=up accesskey=u href="#Top">Top</a>
 <li>collapsing: <a href="#Navigation">Navigation</a>
 <li>compilation buffers: <a href="#Temp-%20and%20compile-buffers">Temp- and compile-buffers</a>
 <li>Directories: <a href="#ECB%20Directories">ECB Directories</a>
-<li>Download: <a href="#Downloading%20new%20version">Downloading new version</a>
+<li>Download: <a href="#Downloading%20new%20versions">Downloading new versions</a>
 <li>ECB-layout: <a href="#The%20ECB-layout">The ECB-layout</a>
 <li>ECB-windows: <a href="#Overview">Overview</a>
 <li>edit-window: <a href="#The%20edit-window">The edit-window</a>
@@ -4895,9 +5013,9 @@ Up:<a rel=up accesskey=u href="#Top">Top</a>
 <li><a name="toc_Submitting%20problem%20report"></a>
     <a href="#Submitting%20problem%20report">Submitting a problem report</a>
 <li><a name="toc_Upgrading"></a>
-    <a href="#Upgrading">Upgrading ECB</a>
+    <a href="#Upgrading">Upgrading and downloading packages</a>
 <ul>
-<li><a href="#Downloading%20new%20version">Downloading a new version of ECB</a>
+<li><a href="#Downloading%20new%20versions">Downloading new versions of ECB and/or required packages</a>
 <li><a href="#Auto.%20option-upgrading">Automatic upgrading of options</a>
 <ul>
 <li><a href="#User%20interface">User interface for option-upgrading</a>
@@ -4949,6 +5067,11 @@ finally hitting RETURN again</p>
 <li><a name="fn-2"></a>
 <p>means mouse-2 while CTRL-key
 is pressed.</p>
+
+<li><a name="fn-3"></a>
+<p>cygwin is available at
+<a href="http://cygwin.com/">http://cygwin.com/</a>
+</p>
 
 </ol><hr>
 

@@ -29,8 +29,8 @@ auto. upgraded to the new type or reset to the default-values of current
 ECB-version if no upgrade is possible. All upgraded or reset options are
 displayed to the user with their old and new values!
 
-ECB now requires Semantic version 1.4! Any previous beta version is not
-supported anymore!
+ECB now requires Semantic version 1.4 and eieio version 0.17! Any previous
+beta version is not supported anymore!
 
 
 Upgrading from any version < 1.60:

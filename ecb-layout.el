@@ -125,7 +125,7 @@
 ;;   + The edit-window must not be splitted and the point must reside in
 ;;     the not deleted edit-window.
 
-;; $Id: ecb-layout.el,v 1.115 2002/08/02 15:04:31 berndl Exp $
+;; $Id: ecb-layout.el,v 1.116 2002/08/09 11:33:44 berndl Exp $
 
 ;;; Code:
 
@@ -1115,7 +1115,7 @@ allowed to be deleted."
                        (frame-live-p (ad-get-arg 1))
                        (list (ad-get-arg 1))))))
     (if (member buf-name ecb-tree-buffers)
-        (error "delete-windows-on is not allowed for the ECB-tree-buffers!")
+        (ecb-error "delete-windows-on is not allowed for the ECB-tree-buffers!")
       (dolist (f frames)
         (if (not (equal f ecb-frame))
             (progn
@@ -1170,7 +1170,7 @@ reported."
           (select-window (ad-get-arg 0))))
     
     (if (not (ecb-point-in-edit-window))
-        (error "Only an edit-window can be deleted!"))
+        (ecb-error "Only an edit-window can be deleted!"))
     (ad-with-originals 'delete-window
       (if (ecb-edit-window-splitted)
           (funcall (intern (format "ecb-delete-window-in-editwindow-%d"
@@ -1210,7 +1210,7 @@ edit-window is deleted), otherwise an error is reported."
           (select-window (ad-get-arg 0))))
     
     (if (not (ecb-point-in-edit-window))
-        (error "Only an edit-window can be maximized!"))
+        (ecb-error "Only an edit-window can be maximized!"))
     (ad-with-originals 'delete-window
       (if (ecb-edit-window-splitted)
           (funcall (intern (format "ecb-delete-other-windows-in-editwindow-%d"
@@ -1242,7 +1242,7 @@ error if this function is not contained in `ecb-layout-always-operate-in-edit-wi
     
     (let ((p (ecb-point-in-edit-window)))
       (if (not p)
-          (error "Only the edit-window of ECB is splitable!")
+          (ecb-error "Only the edit-window of ECB is splitable!")
         ;; point either in first or second edit-window
         (if (not (ecb-edit-window-splitted))
             ad-do-it
@@ -1268,7 +1268,7 @@ if this function is not contained in `ecb-layout-always-operate-in-edit-window'.
     
     (let ((p (ecb-point-in-edit-window)))
       (if (not p)
-          (error "Only the edit-window of ECB is splitable!")
+          (ecb-error "Only the edit-window of ECB is splitable!")
         ;; point either in first or second edit-window
         (if (not (ecb-edit-window-splitted))
             ad-do-it
@@ -1353,7 +1353,7 @@ alternatives:
       ;;             (ecb-toggle-enlarged-compilation-window 1)))
           
       (if (not (ecb-point-in-edit-window))
-          (error "Only in an edit-window the buffer can be switched!"))
+          (ecb-error "Only in an edit-window the buffer can be switched!"))
       )
 
     ;; now we are always in the edit window, so we can switch to the buffer
@@ -2771,3 +2771,5 @@ more place."
 (provide 'ecb-layout)
 
 ;;; ecb-layout.el ends here
+
+

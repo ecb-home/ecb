@@ -1,6 +1,6 @@
 ;;; ecb-cycle.el --- cycle buffers through ecb windows.
 
-;; $Id: ecb-cycle.el,v 1.15 2002/07/22 12:38:16 berndl Exp $
+;; $Id: ecb-cycle.el,v 1.16 2002/08/09 11:33:44 berndl Exp $
 
 ;; Copyright (C) 2000-2003 Free Software Foundation, Inc.
 ;; Copyright (C) 2000-2003 Kevin A. Burton (burton@openprivacy.org)
@@ -96,7 +96,7 @@ offers any buffer but switches to `ecb-compile-window' if a compilation-buffer!"
             (current-buffer-name (buffer-name current-buffer)))
       
         (when (null compilation-buffers)
-          (error "No compilation buffers"))
+          (ecb-error "No compilation buffers"))
       
         (if (not (ecb-compilation-buffer-p current-buffer))
           ;;if the current bufffer is not a compilation buffer, goto the first
