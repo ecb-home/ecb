@@ -44,16 +44,10 @@
 ;; After activating ECB you should call `ecb-show-help' to get a detailed
 ;; description of what ECB offers to you and how to use ECB.
 ;;
-;;
-;; TODO:
-;; - Fix XEmacs incompatibilities (I need help on this one!)
-;; - More layouts
-;; - More functions on the pop-up menus. Suggestions are welcome!
-;; - Convert the code to EIEIO
-;; - Lots more...
-;;
 ;; The latest version of the ECB is available at
 ;; http://home.swipnet.se/mayhem/ecb.html
+
+;; $Id$
 
 ;;; Code:
 
@@ -173,7 +167,7 @@ and then activating ECB again!"
   :group 'ecb-directories
   :type 'face)
 
-(defcustom ecb-excluded-directories-regexp ".*CVS.*"
+(defcustom ecb-excluded-directories-regexp "^\\(CVS\\|\\..*\\)$"
   "*Specifies directories that should not be included in the directories
 list. The value of this variable should be a regular expression."
   :group 'ecb-directories
@@ -203,11 +197,27 @@ buffer."
   :group 'ecb-sources
   :type 'regexp)
 
+(defcustom ecb-source-file-exclude-regexp "\\(^\\..*\\|~$\\)"
+  "*Files matching this regular expression will not be shown in the source
+buffer."
+  :group 'ecb-sources
+  :type 'regexp)
+
 (defcustom ecb-show-source-file-extension t
   "*Show the file extension of source files."
   :group 'ecb-sources
   :type 'boolean)
 
+(defcustom ecb-sources-sort-method 'name
+  "*Defines how the source files are sorted."
+  :group 'ecb-sources
+  :type '(radio (const :tag "By name"
+                       :value name)
+                (const :tag "By extension"
+                       :value extension)
+                (const :tag "No sorting"
+                       :value nil)))
+                
 (defcustom ecb-history-buffer-name "*ECB History*"
   "*Name of the ECB-history-buffer which is displayed in the modeline.
 Because it is not a normal buffer for editing you should enclose the name with
@@ -662,6 +672,16 @@ highlighting of the methods if `ecb-font-lock-methods' is not nil."
                                           child))
                        (not was-expanded)))))))))
 
+(defun ecb-get-source-files(dir files)
+  (let (source-files)
+    (dolist (file files)
+      (let ((long-file-name (concat dir "/" file)))
+	(if (and (not (file-directory-p long-file-name))
+		 (string-match ecb-source-file-regexp file)
+		 (not (string-match ecb-source-file-exclude-regexp file)))
+	    (setq source-files (list-append source-files (list file))))))
+    source-files))
+
 (defun ecb-set-selected-directory(path)
   (setq path (ecb-strip-slash path))
   (setq ecb-path-selected-directory path)
@@ -684,7 +704,9 @@ highlighting of the methods if `ecb-font-lock-methods' is not nil."
     (ecb-tree-node-add-files
      (tree-buffer-get-root)
      path
-     (directory-files ecb-path-selected-directory nil ecb-source-file-regexp)
+     (ecb-get-source-files
+      ecb-path-selected-directory
+      (directory-files ecb-path-selected-directory nil ecb-source-file-regexp t))
      0
      ecb-show-source-file-extension
      old-children t))
@@ -883,17 +905,16 @@ OTHER-WINDOW."
 (defun ecb-switch-to-edit-buffer()
   (select-window ecb-edit-window))
   
-(defun ecb-get-directories(path)
-  (let ((files (directory-files path nil "^[^.].*"))
-        dirs)
-    (dolist (file files dirs)
-      (if (and (file-accessible-directory-p (concat path "/" file))
-               (not (string-match ecb-excluded-directories-regexp file)))
-          (setq dirs (list-append dirs (list file)))))))
-
 (defun ecb-tree-node-add-files
   (node path files type include-extension old-children &optional not-expandable)
-  (dolist (file files)
+  (dolist (file (if ecb-sources-sort-method
+		    (let ((sorted-files (sort files 
+					      '(lambda(a b) (string< a b)))))
+		      (if (eq ecb-sources-sort-method 'extension)
+			  (sort sorted-files 
+				'(lambda(a b) (string< (file-name-extension a t)
+						       (file-name-extension b t))))
+			sorted-files))))
     (let ((filename (concat path "/" file))
           child)
       (tree-node-add-child
@@ -911,15 +932,14 @@ OTHER-WINDOW."
         (path (tree-node-get-data node)))
     (tree-node-set-children node nil)
     (if (file-accessible-directory-p path)
-        (let ((files (directory-files path nil "^[^.].*"))
-              dirs normal-files)
+        (let* ((files (directory-files path nil nil t))
+	       dirs
+	      (normal-files (ecb-get-source-files path files)))
           (dolist (file files)
             (let ((filename (concat path "/" file)))
               (if (file-accessible-directory-p filename)
                   (if (not (string-match ecb-excluded-directories-regexp file))
-                      (setq dirs (list-append dirs (list file))))
-                (if (string-match ecb-source-file-regexp file)
-                    (setq normal-files (list-append normal-files (list file)))))))
+                      (setq dirs (list-append dirs (list file)))))))
           (ecb-tree-node-add-files node path dirs 0 t old-children)
           (if ecb-show-sources-in-directories-buffer
               (ecb-tree-node-add-files node path normal-files 1

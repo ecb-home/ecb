@@ -5,7 +5,7 @@
 (setq zipname (concat dirname ".zip"))
 (setq download-url "http://ftp1.sourceforge.net/ecb/")
 (setq url (concat "http://ftp1.sourceforge.net/ecb/" zipname))
-(setq date "2001-03-25")
+(setq date "2001-04-22")
 
 (h-doc
  "ecb.html"
@@ -59,7 +59,8 @@
 
  (h-h3 "Developers")
  (h-p (h-email "mayhem@home.se" "Jesper Nordenberg") h-br
-      (h-email "klaus.berndl@sdm.de" "Klaus Berndl"))
+      (h-email "klaus.berndl@sdm.de" "Klaus Berndl") h-br
+      (h-email "burton@apache.org" "Kevin A. Burton"))
 
  (h-h3 "Comments, Suggestions etc.")
  (h-p "Please feel free to contact me if you find the code browser useful, if you have found some bugs or if you some suggestions on how to improve it.\n"

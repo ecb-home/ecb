@@ -1,6 +1,12 @@
 Version 1.20 (???):
 -------------------
 
+- Source files can now be sorted by name, extension or not sorted at all
+  (Jesper).
+
+- Added functionality and a customization variable to exclude source files
+  matching a regular expression (Jesper).
+
 - Jumping to a method/variable from the ECB-method buffer now sets the mark so
   the user can easily jump back (see `ecb-method-jump-sets-mark'). (Klaus)
 
