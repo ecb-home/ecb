@@ -1,6 +1,6 @@
 ;;; ecb-speedbar.el --- 
 
-;; $Id: ecb-speedbar.el,v 1.17 2002/10/30 05:13:07 burtonator Exp $
+;; $Id: ecb-speedbar.el,v 1.18 2002/10/30 10:23:28 burtonator Exp $
 
 ;; Copyright (C) 2000-2003 Free Software Foundation, Inc.
 ;; Copyright (C) 2000-2003 Kevin A. Burton (burton@openprivacy.org)
@@ -111,6 +111,9 @@
 ;;   that we HAVE to have the speedbar in a frame.  If we try to run (speedbar)
 ;;   when ecb-speedbar is active the ecb-frame will go away :(
 
+;; (speedbar-current-frame) doesn't seem to work right..
+;; 
+
 ;;; Code:
 
 (require 'ecb)
@@ -190,8 +193,16 @@ will/could break."
 
             (speedbar-update-contents))))))
 
-(defun ecb-layout-function-20()
+(defun speedbar-find-file-in-frame(file)
+  "This will load FILE into the speedbar attached frame.  If the file is being
+displayed in a different frame already, then raise that frame instead.  Note
+that this is a reimplemntation of this for the ECB that does no frame selection"
 
+  (find-file file))
+
+(defun ecb-layout-function-20()
+  "ECB layout function for the speedbar."
+  
   (when ecb-compile-window-height
     (ecb-split-ver (* -1 ecb-compile-window-height) t)
     (setq ecb-compile-window (next-window)))
@@ -209,6 +220,7 @@ will/could break."
 
 (defalias 'ecb-delete-other-windows-in-editwindow-20
   'ecb-delete-other-windows-ecb-windows-right)
+
 (defalias 'ecb-delete-window-in-editwindow-20
   'ecb-delete-window-ecb-windows-right)
 
@@ -226,6 +238,9 @@ will/could break."
 ;;disable automatic speedbar updates... let the ECB handle this with
 ;;ecb-current-buffer-sync
 (speedbar-disable-update)
+
+;;always stay in the current frame
+(setq speedbar-select-frame-method 0)
 
 (provide 'ecb-speedbar)
 

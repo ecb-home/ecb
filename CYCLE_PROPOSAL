@@ -154,3 +154,9 @@ the buffers that are available for selection and then choose one.
   could just do an:
 
     - (defun ecb-cycle-create-profile(name buffers)
+
+- support the ability to compare two buffers to find out which should be higher
+  priority
+
+- support JIT buffer generation so that we aren't constantly regenerating
+  bufffers when they are actually hidden.

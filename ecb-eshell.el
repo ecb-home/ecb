@@ -1,6 +1,6 @@
 ;;; ecb-eshell.el --- eshell integration for the ECB.
 
-;; $Id: ecb-eshell.el,v 1.42 2002/10/30 05:54:12 burtonator Exp $
+;; $Id: ecb-eshell.el,v 1.43 2002/10/30 10:23:28 burtonator Exp $
 
 ;; Copyright (C) 2000-2003 Free Software Foundation, Inc.
 ;; Copyright (C) 2000-2003 Kevin A. Burton (burton@openprivacy.org)
@@ -233,12 +233,7 @@ eshell is currently visible."
               
             (select-window window)
 
-            ;;this needs to be present under GNU Emacs or recenter will fail.
-            (end-of-buffer) 
-        
-            (recenter -2)
-
-            (end-of-buffer))
+            (recenter -2))
         (when display-errors
           (error "Eshell not running or window not live"))))))
 
