@@ -23,7 +23,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-file-browser.el,v 1.35 2004/09/15 17:04:43 berndl Exp $
+;; $Id: ecb-file-browser.el,v 1.36 2004/09/17 11:43:57 berndl Exp $
 
 ;;; Commentary:
 
@@ -50,23 +50,6 @@
 
 (silentcomp-defun ecb-speedbar-update-contents)
 
-(defvar ecb-path-selected-directory nil
-  "Path to currently selected directory.")
-
-(defvar ecb-path-selected-source nil
-  "Path to currently selected source.")
-
-(defconst ecb-directories-nodetype-directory 0)
-(defconst ecb-directories-nodetype-sourcefile 1)
-(defconst ecb-directories-nodetype-sourcepath 2)
-(defconst ecb-sources-nodetype-sourcefile 0)
-(defconst ecb-history-nodetype-sourcefile 0)
-
-
-(defun ecb-file-browser-initialize ()
-  (setq ecb-path-selected-directory nil
-        ecb-path-selected-source nil))
-  
 ;;====================================================
 ;; Customization
 ;;====================================================
@@ -746,6 +729,191 @@ key-bindings only for the history-buffer of ECB."
 ;; Internals
 ;;====================================================
 
+;; constants for the node-types
+(defconst ecb-directories-nodetype-directory 0)
+(defconst ecb-directories-nodetype-sourcefile 1)
+(defconst ecb-directories-nodetype-sourcepath 2)
+(defconst ecb-sources-nodetype-sourcefile 0)
+(defconst ecb-history-nodetype-sourcefile 0)
+
+
+(defvar ecb-path-selected-directory nil
+  "Path to currently selected directory.")
+
+(defvar ecb-path-selected-source nil
+  "Path to currently selected source.")
+
+(defecb-multicache ecb-filename-cache '(FILES-AND-SUBDIRS EMPTY-DIR-P SOURCES)
+  "Cache used for the filebrowser to cache all necessary informations
+associated to file- or directory-names.
+
+Currently there are three subcaches managed within this cache:
+
+  FILES-AND-SUBDIRS:
+  
+  Cache for every directory all subdirs and files. This is a cache with
+     key:   <directory>
+     value: \(<file-list> . <subdirs-list>)
+  
+  EMPTY-DIR-P:
+  
+  Cache for every directory if it is empty or not. This is a cache with
+     key:   <directory>
+     value: \(\[nil|t] . <checked-with-show-sources>)
+  
+  SOURCES:
+  
+  Cache for the contents of the buffer `ecb-sources-buffer-name'. This is a
+  cache with
+     key:   <directory>
+     value: \(<full-content> . <filtered-content>)
+  whereas <full-content> is a 3-elem list \(tree-buffer-root <copy of
+  tree-buffer-nodes> buffer-string) for a full \(i.e. all files) cache and
+  <filtered-content> is a 4-elem list \(tree-buffer-root <copy of
+  tree-buffer-nodes> sources-buffer-string <filter>) for a filtered cache
+  where <filter> is a cons-cell \(<filter-regexp> . <filter-display>).
+")
+
+(defun ecb-filename-cache-init ()
+  "Initialize the whole cache for file- and directory-names"
+  (if (ecb-multicache-p 'ecb-filename-cache)
+      (ecb-multicache-clear 'ecb-filename-cache)))
+
+;; accessors for the FILES-AND-SUBDIRS-cache
+
+(defun ecb-files-and-subdirs-cache-add (dir cached-value)
+  "Add the files and subdirs of DIR to the cache."
+  (ecb-multicache-put-value 'ecb-filename-cache dir 'FILES-AND-SUBDIRS
+                             cached-value))
+
+(defun ecb-files-and-subdirs-cache-get (dir)
+  "Get the files and subdirs of DIR from the cache. Nil if not cached."
+  (ecb-multicache-get-value 'ecb-filename-cache dir 'FILES-AND-SUBDIRS))
+
+(defun ecb-files-and-subdirs-cache-remove (dir)
+  "Remove DIR from the cache."
+  (ecb-multicache-clear-value 'ecb-filename-cache dir 'FILES-AND-SUBDIRS))
+
+(defun ecb-clear-files-and-subdirs-cache ()
+  "Clear the whole FILES-AND-SUBDIRS-cache."
+  (ecb-multicache-clear-subcache 'ecb-filename-cache 'FILES-AND-SUBDIRS))
+
+(defun ecb-dump-files-and-subdirs-cache ()
+  "Dump the whole FILES-AND-SUBDIRS-cache in another window."
+  (interactive)
+  (ecb-multicache-print-subcache 'ecb-filename-cache 'FILES-AND-SUBDIRS))
+  
+;; accessors for the EMPTY-DIR-P-cache
+
+(defun ecb-directory-empty-cache-add (dir cached-value)
+  "Add information if DIR is empty or not to the cache."
+  (ecb-multicache-put-value 'ecb-filename-cache dir 'EMPTY-DIR-P
+                             cached-value))
+
+(defun ecb-directory-empty-cache-get (dir)
+  "get information if DIR is empty or not from the cache."
+  (ecb-multicache-get-value 'ecb-filename-cache dir 'EMPTY-DIR-P))
+
+(defun ecb-directory-empty-cache-remove (dir)
+  "Remove DIR from the EMPTY-DIR-P-cache."
+  (ecb-multicache-clear-value 'ecb-filename-cache dir 'EMPTY-DIR-P))
+
+(defun ecb-directory-empty-cache-remove-all (dir)
+  "Remove DIR and all its suddirs from the EMPTY-DIR-P-cache."
+  (ecb-directory-empty-cache-remove dir)
+  ;; now we remove the subdirs
+  (save-match-data
+    (ecb-multicache-mapsubcache
+     'ecb-filename-cache 'EMPTY-DIR-P
+     (function (lambda (key old-value)
+                 (if (string-match (concat "^"
+                                           (regexp-quote dir)
+                                           ".+")
+                                   key)
+                     ;; the directory-key matches DIR so its a cache
+                     ;; subdirectory of DIR so we return nil ==> in fact we
+                     ;; remove this subdir from the empty-dir-p-cache
+                     nil
+                   ;; the directory-key doesn't match DIR so we just return
+                   ;; the old-value, which means in fact that nothing changes
+                   old-value))))))
+
+(defun ecb-clear-directory-empty-cache ()
+  "Clear the whole EMPTY-DIR-P-cache."
+  (ecb-multicache-clear-subcache 'ecb-filename-cache 'EMPTY-DIR-P))
+
+(defun ecb-dump-directory-empty-cache ()
+  "Dump the whole EMPTY-DIR-P-cache."
+  (interactive)
+  (ecb-multicache-print-subcache 'ecb-filename-cache 'EMPTY-DIR-P))
+
+
+;; accessors for the SOURCES-cache
+
+(defun ecb-sources-cache-remove (dir)
+  "Remove the cache-entry for DIR from the cache."
+  (ecb-multicache-clear-value 'ecb-filename-cache dir 'SOURCES))
+
+(defun ecb-sources-cache-add-full (dir cache-elem-full)
+  "Add the full sources-cache CACHE-ELEM-FULL for DIR to the cache. If there
+is already a full cache-entry then replace it."
+  (ecb-multicache-apply-to-value
+   'ecb-filename-cache dir 'SOURCES
+   (function (lambda (old-cached-value)
+               (if (consp old-cached-value)
+                   (progn
+                     (setcar old-cached-value cache-elem-full)
+                     old-cached-value)
+                 (cons cache-elem-full nil))))))
+
+(defun ecb-sources-cache-add-filtered (dir cache-elem-filtered)
+  "Add the filtered sources-cache CACHE-ELEM-FILTERED for DIR to the cache. If
+there is already a filtered cache-entry then replace it."
+  (ecb-multicache-apply-to-value
+   'ecb-filename-cache dir 'SOURCES
+   (function (lambda (old-cached-value)
+               (if (consp old-cached-value)
+                   (progn
+                     (setcdr old-cached-value cache-elem-filtered)
+                     old-cached-value)
+                 (cons nil cache-elem-filtered))))))
+
+(defun ecb-sources-cache-get-full (dir)
+  "Return the full value of a cached-directory DIR, means the 3-element-list
+\(tree-buffer-root, tree-buffer-nodes, sources-buffer-string). If no
+cache-entry for DIR is available then nil is returned."
+  (car (ecb-multicache-get-value 'ecb-filename-cache dir 'SOURCES)))
+
+(defun ecb-sources-cache-get-filtered (dir)
+  "Return the filtered value of a cached-directory DIR, means the
+4-element-list \(tree-buffer-root, tree-buffer-nodes, sources-buffer-string,
+filter-regexp). If no cache-entry for DIR is available then nil is returned."
+  (cdr (ecb-multicache-get-value 'ecb-filename-cache dir 'SOURCES)))
+
+(defun ecb-sources-cache-clear ()
+  "Clear the whole SOURCES-cache."
+  (ecb-multicache-clear-subcache 'ecb-filename-cache 'SOURCES))
+
+(defun ecb-dump-sources-cache ()
+  "Dump the whole SOURCES-cache."
+  (interactive)
+  (ecb-multicache-print-subcache 'ecb-filename-cache 'SOURCES))
+
+;; ---- end of filename-cache implementation -----------------------
+
+(defun ecb-file-browser-initialize-caches ()
+  "Initialize the caches of the file-browser of ECB."
+  (ecb-reset-history-filter)
+  (ecb-filename-cache-init))
+
+(defun ecb-file-browser-initialize (&optional no-caches)
+  "Initialize the file-browser of ECB. If optional arg NO-CACHES is not nil
+then the caches used by the file-browser will not be initialized."
+  (setq ecb-path-selected-directory nil
+        ecb-path-selected-source nil)
+  (unless no-caches
+    (ecb-file-browser-initialize-caches)))
+  
 (defmacro ecb-exec-in-directories-window (&rest body)
   "Evaluates BODY in the directories-window of ECB. If that window is not
 visible then return the symbol 'window-not-visible. Otherwise the return
@@ -854,33 +1022,6 @@ representing PATH."
                        (not was-expanded)))))))))
 
 
-(defvar ecb-files-and-subdirs-cache nil
-  "Cache for every directory all subdirs and files. This is an alist where an
-element looks like:
-   \(<directory> . \(<file-list> . <subdirs-list>))")
-
-
-(defun ecb-files-and-subdirs-cache-add (cache-elem)
-  (if (not (ecb-files-and-subdirs-cache-get (car cache-elem)))
-      (setq ecb-files-and-subdirs-cache
-            (cons cache-elem ecb-files-and-subdirs-cache))))
-
-
-(defun ecb-files-and-subdirs-cache-get (dir)
-  (cdr (assoc dir ecb-files-and-subdirs-cache)))
-
-
-(defun ecb-files-and-subdirs-cache-remove (dir)
-  (let ((elem (assoc dir ecb-files-and-subdirs-cache)))
-    (if elem
-        (setq ecb-files-and-subdirs-cache
-              (delete elem ecb-files-and-subdirs-cache)))))
-
-
-(defun ecb-clear-files-and-subdirs-cache ()
-  (setq ecb-files-and-subdirs-cache nil))
-
-
 (defun ecb-check-directory-for-caching (dir number-of-contents)
   "Return not nil if DIR matches not any regexp of the option
 `ecb-cache-directory-contents-not' but matches at least one regexp in
@@ -959,7 +1100,7 @@ according to `ecb-sources-sort-method'."
                                 '(("") (""))))
             (cvsignore-files (if (ecb-check-directory-for-cvsignore-exclude dir)
                                  (ecb-files-from-cvsignore dir)))
-            sorted-files source-files subdirs cache-elem)
+            sorted-files source-files subdirs cached-value)
         ;; if necessary sort FILES
         (setq sorted-files
               (if ecb-sources-sort-method
@@ -983,70 +1124,12 @@ according to `ecb-sources-sort-method'."
 ;;                 (ecb-merge-face-into-text file ecb-source-read-only-face))
               (setq source-files (append source-files (list file))))))
         
-        (setq cache-elem (cons dir (cons source-files subdirs)))
+        (setq cached-value (cons source-files subdirs))
         ;; check if this directory must be cached
         (if (ecb-check-directory-for-caching dir (length sorted-files))
-            (ecb-files-and-subdirs-cache-add cache-elem))
+            (ecb-files-and-subdirs-cache-add dir cached-value))
         ;; return the result
-        (cdr cache-elem))))
-
-
-(defvar ecb-sources-cache nil
-  "Cache for the contents of the buffer `ecb-sources-buffer-name'. This is an
-alist where every element is a cons cell which looks like:
- \(<directory> . <cache-entry>) whereas <cache-entry> is a cons-cell too which
-contains as car a 3-elem list \(tree-buffer-root <copy of tree-buffer-nodes>
-buffer-string) for a full \(i.e. all files) cache and as cdr a 4-elem list
-\(tree-buffer-root, tree-buffer-nodes, sources-buffer-string, <filter>) for a
-filtered cache where <filter> is another cons-cell \(<filter-regexp> .
-<filter-display>).")
-
-
-(defun ecb-sources-cache-remove (dir)
-  "Remove the cache-entry for DIR in `ecb-sources-cache'."
-  (let ((cache-elem (assoc dir ecb-sources-cache)))
-    (if cache-elem
-        (setq ecb-sources-cache (delq cache-elem ecb-sources-cache)))))
-
-
-(defun ecb-sources-cache-add-full (dir cache-elem-full)
-  "Add the full sources-cache CACHE-ELEM-FULL for DIR to
-`ecb-sources-cache'. If there is already a full cache-entry then replace it."
-  (let ((elem (assoc dir ecb-sources-cache)))
-    (if (not elem)
-        (setq ecb-sources-cache
-              (cons (cons dir (cons cache-elem-full nil))
-                    ecb-sources-cache))
-      (setcdr elem (cons cache-elem-full
-                         (cdr (cdr elem)))))))
-
-(defun ecb-sources-cache-add-filtered (dir cache-elem-filtered)
-  "Add the filtered sources-cache CACHE-ELEM-FILTERED for DIR to
-`ecb-sources-cache'. If there is already a filtered cache-entry then replace
-it."
-  (let ((elem (assoc dir ecb-sources-cache)))
-    (if (not elem)
-        (setq ecb-sources-cache
-              (cons (cons dir (cons nil cache-elem-filtered))
-                    ecb-sources-cache))
-      (setcdr elem (cons (car (cdr elem))
-                         cache-elem-filtered)))))
-
-(defun ecb-sources-cache-get-full (dir)
-  "Return the full value of a cached-directory DIR, means the 3-element-list
-\(tree-buffer-root, tree-buffer-nodes, sources-buffer-string). If no
-cache-entry for DIR is available then nil is returned."
-  (car (cdr (assoc dir ecb-sources-cache))))
-
-(defun ecb-sources-cache-get-filtered (dir)
-  "Return the filtered value of a cached-directory DIR, means the
-4-element-list \(tree-buffer-root, tree-buffer-nodes, sources-buffer-string,
-filter-regexp). If no cache-entry for DIR is available then nil is returned."
-  (cdr (cdr (assoc dir ecb-sources-cache))))
-
-(defun ecb-sources-cache-clear ()
-  "Clear the whole cache of `ecb-sources-cache'."
-  (setq ecb-sources-cache nil))
+        cached-value)))
 
 
 (defun ecb-update-sources-buffer (dir-before-update)
@@ -1610,48 +1693,6 @@ ecb-windows after displaying the file in an edit-window."
          (tree-buffer-update))))
     ))
 
-
-(defvar ecb-directory-empty-cache nil
-  "Cache for every directory if it is empty or not. This is an alist where an
-element looks like:
-   \(<directory> . \(\[nil|t] . <checked-with-show-sources>")
-
-
-(defun ecb-directory-empty-cache-add (cache-elem)
-  (if (not (ecb-directory-empty-cache-get (car cache-elem)))
-      (setq ecb-directory-empty-cache
-            (cons cache-elem ecb-directory-empty-cache))))
-
-
-(defun ecb-directory-empty-cache-get (dir)
-  (cdr (assoc dir ecb-directory-empty-cache)))
-
-
-(defun ecb-directory-empty-cache-remove (dir)
-  (let ((elem (assoc dir ecb-directory-empty-cache)))
-    (if elem
-        (setq ecb-directory-empty-cache
-              (delete elem ecb-directory-empty-cache)))))
-
-(defun ecb-directory-empty-cache-remove-all (dir)
-  (ecb-directory-empty-cache-remove dir)
-  ;; now we remove the subdirs
-  (let ((remaining-dirs nil))
-    (save-match-data
-      (dolist (elem ecb-directory-empty-cache)
-        (if (not (string-match (concat "^"
-                                       (regexp-quote dir)
-                                       ".+")
-                               (car elem)))
-            (setq remaining-dirs (cons elem remaining-dirs)))))
-    (setq ecb-directory-empty-cache remaining-dirs)))
-
-
-
-(defun ecb-clear-directory-empty-cache ()
-  (setq ecb-directory-empty-cache nil))
-
-
 (defun ecb-check-emptyness-of-dir (dir)
   "Checks if DIR is an empty directory. If empty return not nil otherwise nil."
   (if (not ecb-prescan-directories-for-emptyness)
@@ -1678,12 +1719,12 @@ element looks like:
                             (throw 'found 'nil)))))
                   t))
           ;; now we add this value to the cache
-          (ecb-directory-empty-cache-add (cons (ecb-fix-filename dir)
-                                               (cons empty-p show-sources)))
+          (ecb-directory-empty-cache-add (ecb-fix-filename dir)
+                                         (cons empty-p show-sources))
           empty-p)))))
 
 
-(ecb-defstealthy ecb-stealthy-empty-dir-check
+(defecb-stealthy ecb-stealthy-empty-dir-check
   "Check for each current visible nodes in the directories buffer if the
 underlying directory is empty or not and update the node if the current node
 state and display is different from the empty-state of the associated
@@ -1727,7 +1768,7 @@ directory. This function is only for use by `ecb-stealthy-updates'!"
   "Check for all sourcefile-nodes either in the directories- or the
 sources-buffer if the associated file is writable or not. This function does
 the real job and is is only for use by a stealthy function defined with
-`ecb-defstealthy'! STATE is the initial state-value the stealthy-function has
+`defecb-stealthy'! STATE is the initial state-value the stealthy-function has
 when called. Return the new state-value."
   (if (not (or (string= (buffer-name (current-buffer))
                         ecb-sources-buffer-name)
@@ -1778,7 +1819,7 @@ when called. Return the new state-value."
     state))
 
 
-(ecb-defstealthy ecb-stealthy-ro-check-in-directories-buf
+(defecb-stealthy ecb-stealthy-ro-check-in-directories-buf
   "Check for all sourcefile-nodes in the directories-buffer if the associated
 file is writable or not."
   (if (ecb-show-sources-in-directories-buffer-p)
@@ -1790,7 +1831,7 @@ file is writable or not."
           (setq state 'done)))
     (setq state 'done)))
 
-(ecb-defstealthy ecb-stealthy-ro-check-in-sources-buf
+(defecb-stealthy ecb-stealthy-ro-check-in-sources-buf
   "Check for all sourcefile-nodes in the sources-buffer if the associated file
 is writable or not."
   (save-selected-window
@@ -1894,21 +1935,6 @@ beginning of this option."
 ;; heuristics is possible  without lossing to much informations (only if a
 ;; file is modified by another user can not be detected with this cache - but
 ;; for this we have the power-click which always throws away any cache-state)
-
-;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: probably now it would make sense
-;; to merge all caches with directory-names or filenames as key (the
-;; empty-dir-cache, the ecb-sources-cache and the ecb-files-and-subdirs-cache,
-;; the VC-cache) into one cache of the form
-;; - key: filename/directory-name
-;; - value: an assoc-list of the form
-;;         ((empty-dir-cache . (...empty-dir-values...))
-;;          (vc-cache . (...vc-values))
-;;          (...      . (............)))
-;;
-;; This cache is build as hash-table (XEmacs >= 21.4.13 and >= Emacs 21.X
-;; supports both the same hash-table-API): (make-hash-table :test 'equal). Use
-;; the new ecb-assoc-cache- for this
-
 
 (defun ecb-new-child (old-children name type data
                                    &optional not-expandable shorten-name)

@@ -23,7 +23,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-semantic-wrapper.el,v 1.17 2004/09/15 17:02:31 berndl Exp $
+;; $Id: ecb-semantic-wrapper.el,v 1.18 2004/09/17 11:43:57 berndl Exp $
 
 ;;; Commentary:
 
@@ -372,31 +372,37 @@ with a file, then the cdr of the result-cons is nil."
 ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: Add this code to semantic-el.el
 ;; after a cedet-upgrade. It has to be added to the function
 ;; `semantic-elisp-use-read' direct before the (t ...)-clause in the cond!
-;;
-;;    ((eq ts 'tree-buffer-defpopup-command)
-;;     ;; tree-buffer-defpopup-command
-;;     (semantic-tag-new-function
-;;      sn nil nil
-;;      :user-visible-flag nil
-;;      :documentation (semantic-elisp-do-doc (nth 2 rt))
-;;      )
+
+;; ;; Now for ecb-stuff
+;; ((eq ts 'defecb-multicache)
+;;  (let ((doc (semantic-elisp-form-to-doc-string (nth 3 rt))))
+;;    ;; Variables and constants
+;;    (semantic-tag-new-variable
+;;     sn nil (nth 2 rt)
+;;     :user-visible-flag (and doc
+;;                             (> (length doc) 0)
+;;                             (= (aref doc 0) ?*))
+;;     :constant-flag (if (eq ts 'defconst) t nil)
+;;     :documentation (semantic-elisp-do-doc doc)
 ;;     )
-;;    ((eq ts 'ecb-defstealthy)
-;;     ;; ecb-defstealthy
-;;     (semantic-tag-new-function
-;;      sn nil nil
-;;      :user-visible-flag nil
-;;      :documentation (semantic-elisp-do-doc (nth 2 rt))
-;;      )
-;;     )
-;;    ((eq ts 'ecb-layout-define)
-;;     ;; ecb-layout-define
-;;     (semantic-tag-new-function
-;;      tss nil (semantic-elisp-desymbolify (list (nth 2 rt)))
-;;      :user-visible-flag nil
-;;      :documentation (semantic-elisp-do-doc (nth 3 rt))
-;;      )
-;;     )
+;;    ))
+;; ((or (eq ts 'tree-buffer-defpopup-command)
+;;      (eq ts 'defecb-stealthy))
+;;  ;; tree-buffer-defpopup-command
+;;  (semantic-tag-new-function
+;;   sn nil nil
+;;   :user-visible-flag nil
+;;   :documentation (semantic-elisp-do-doc (nth 2 rt))
+;;   )
+;;  )
+;; ((eq ts 'ecb-layout-define)
+;;  ;; ecb-layout-define
+;;  (semantic-tag-new-function
+;;   tss nil (semantic-elisp-desymbolify (list (nth 2 rt)))
+;;   :user-visible-flag nil
+;;   :documentation (semantic-elisp-do-doc (nth 3 rt))
+;;   )
+;;  )
 
 
 (silentcomp-provide 'ecb-semantic-wrapper)

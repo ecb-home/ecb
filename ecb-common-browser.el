@@ -25,7 +25,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-common-browser.el,v 1.3 2004/09/15 17:04:44 berndl Exp $
+;; $Id: ecb-common-browser.el,v 1.4 2004/09/17 11:43:57 berndl Exp $
 
 
 ;;; History
@@ -842,12 +842,12 @@ mouse-moving."
 
 (defvar ecb-stealthy-function-list nil
   "List of functions which ECB runs stealthy. Do not modify this variable!
-This variable is autom. set by the macro `ecb-defstealthy'!")
+This variable is autom. set by the macro `defecb-stealthy'!")
 
 (defvar ecb-stealthy-function-state-alist nil
   "Alist which stores the state of each function of
 `ecb-stealthy-function-list'. Do not add new items to this variable because
-this is autom. done by the macro `ecb-defstealthy'!")
+this is autom. done by the macro `defecb-stealthy'!")
 
 (defun ecb-stealthy-function-list-add (fcn)
   (add-to-list 'ecb-stealthy-function-list fcn))
@@ -868,7 +868,7 @@ stealthy function FCN. Return STATE."
 
 (defun ecb-stealthy-function-p (fcn)
   "Return not nil if FCN is a stealthy function defined with
-`ecb-defstealthy'."
+`defecb-stealthy'."
   (member fcn ecb-stealthy-function-list))
 
 (defun ecb-stealthy-function-state-init (&optional fcn state)
@@ -882,7 +882,7 @@ optional arg STATE is nil then the state will be reset to the special state
     (dolist (f ecb-stealthy-function-list)
       (ecb-stealthy-function-state-set f (or state 'restart)))))
 
-(defmacro ecb-defstealthy (name docstring &rest body)
+(defmacro defecb-stealthy (name docstring &rest body)
   "Define a so called stealthy function with NAME. This function will be
 registered by this macro in `ecb-stealthy-function-list' and
 `ecb-stealthy-function-state-alist'. During the evaluation of BODY the
@@ -914,7 +914,7 @@ be done by any code and must be done via `ecb-stealthy-function-state-init'!"
                ,@body)
              (ecb-stealthy-function-state-set (quote ,name) state)))))))
   
-(put 'ecb-defstealthy 'lisp-indent-function 1)
+(put 'defecb-stealthy 'lisp-indent-function 1)
 
 (defvar ecb-stealthy-update-running nil
   "Recursion avoidance variable for stealthy performance.")

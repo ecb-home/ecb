@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-util.el,v 1.117 2004/09/15 17:06:53 berndl Exp $
+;; $Id: ecb-util.el,v 1.118 2004/09/17 11:43:57 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -1462,68 +1462,92 @@ buffer-local value in BUFFER then the global value of SYM is used."
           (symbol-value sym)))))
 
 
-;; assoc-cache
-
-;; TODO: Klaus Berndl <klaus.berndl@sdm.de>:
-;; - using this cache removes Emacs 20.X compatibility
-;; - add docstring for each function
-;; - test this cache basically
-;; - Use this cache for the ecb-sources-cache, ecb-files-and-subdirs-cache
-;;   and ecb-directory-empty-cache
-;; - TEST TEST TEST
-;; - use this cache for the new VC-cache
+;; multicache
 
 ;; internal functions
-(defun ecb-assoc-cache-add-empty-key (cache-var key)
+(defun ecb-multicache-init (cache-var)
+  "Initialize the ecb-multicache of CACHE-VAR. If CACHE-VAR contains already
+a valid cache then nothing is done otherwise a new cache is created."
+  (or (ecb-multicache-p cache-var)
+      (set cache-var (make-hash-table :test 'equal))))
+
+(defun ecb-multicache-add-empty-key (cache-var key)
   "Checks if KEY is already cached in the cache of CACHE-VAR. If yes nothing
 is done otherwise a new cache-element with empty subcaches is added to the
-cache. All subcaches defined via `ecb-assoc-cache-create' are created with a
+cache. All subcaches defined via `defecb-multicache' are created with a
 value nil. CACHE-VAR has to be a symbol for which an assoc cache has been
-created with `ecb-assoc-cache-create'!"
-  (assert (hash-table-p (symbol-value cache-var)))
+defined with `defecb-multicache'!"
+  (ecb-multicache-init cache-var)
   (or (gethash key (symbol-value cache-var))
       ;; now we add as value an assoc-list with an element for each registered
       ;; subcache-element
       (puthash key (mapcar (function (lambda (sc)
                                        (cons sc nil)))
                            (get cache-var
-                                'ecb-assoc-cache-subcache-list))
+                                'ecb-multicache-subcache-list))
                (symbol-value cache-var))))
 
-(defun ecb-assoc-cache-get-subcache (cache-var key subcache)
+(defun ecb-multicache-get-subcache (cache-var key subcache)
   "Return that cons-cell which is associated with KEY in the cache of
 CACHE-VAR and which has the symbol SUBCACHE as its car. The cdr of this
-cons-cell is the currently stored SUBCACHE-value for KEY."
-  (assert (hash-table-p (symbol-value cache-var)))
+cons-cell is the currently stored SUBCACHE-value for KEY. If KEY is not cached
+then nil is returned."
+  (ecb-multicache-init cache-var)
   (let ((hash-val (gethash key (symbol-value cache-var))))
     (and hash-val
          (assoc subcache hash-val))))
 
 ;; public interface for the assoc-cache
 
-(defun ecb-assoc-cache-create (cache-var subcache)
-  "Make the value of CACHE-VAR being an \"associeted cache\".
-This means that for each cache-item of the cache of CACHE-VAR informations can
-be associated to different subcaches SUBCACHE. SUBCACHE is either a symbol or
-a list of symbols. Such a cache is especially senseful if different
-informations should be associated to one key. The keys of the cache are
-compared and tested with `equal'.
+(defmacro defecb-multicache (name subcache docstring)
+  "Defines NAME as variable and make it an ecb-multicache.
+This means that for each cache-item of the cache NAME informations can be
+associated to different subcaches. SUBCACHE is either a symbol or a list of
+symbols. For each symbol in SUBCACHE a subcache is reserved in the cache NAME.
+
+Such a cache is especially senseful if different informations should be
+associated to one key. The keys of the cache are compared and tested with
+`equal'.
+
+After defining the cache with this macro the cache can be used immediately\;
+there is no need for special initialization. The following functions are
+available for accessing values in such a cache:
+
+  `ecb-multicache-put-value'
+  `ecb-multicache-apply-to-value'
+  `ecb-multicache-get-value'
+  `ecb-multicache-mapsubcache'
+  `ecb-multicache-clear-value'
+  `ecb-multicache-clear-subcache'
+  `ecb-multicache-remove'
+  `ecb-multicache-clear'
+  `ecb-multicache-print-subcache'
+  `ecb-multicache-p'
 
 The lookup in this assoc cache is really fast because the time required is
 essentially _independent_ of how many elements are stored in the cache."
-  (or (and (hash-table-p (symbol-value cache-var))
-           (symbol-value cache-var))
-      (prog1
-          (set cache-var (make-hash-table :test 'equal))
-        (put cache-var 'ecb-assoc-cache-subcache-list
-             (if (listp subcache)
-                 subcache
-               (list subcache))))))
+  `(progn
+     (eval-and-compile
+       (defvar ,name nil ,docstring))
+     (unless (get ',name 'ecb-multicache-p)
+       (setq ,name nil)
+       (put ',name 'ecb-multicache-subcache-list
+            (if (listp ,subcache)
+                ,subcache
+              (list ,subcache)))
+       (put ',name 'ecb-multicache-p t))))
+(put 'defecb-multicache 'lisp-indent-function 2)
 
-(defun ecb-assoc-cache-get-value (cache-var key subcache)
+(defun ecb-multicache-p (cache-var)
+  "Return not nil if the value of CACHE-VAR is a cache defined with
+`defecb-multicache'."
+  (and (hash-table-p (symbol-value cache-var))
+       (get cache-var 'ecb-multicache-p)))
+
+(defun ecb-multicache-get-value (cache-var key subcache)
   "Return the currently associated value for KEY in the subcache SUBCACHE of
 the cache of CACHE-VAR. CACHE-VAR has to be a symbol for which an assoc cache
-has been created with `ecb-assoc-cache-create'!
+has been defined with `defecb-multicache'!
 
 Be aware that the semantic of nil is not unique because nil can have the
 following meanings:
@@ -1531,54 +1555,81 @@ following meanings:
 - There is an item with KEY in the cache but there is no assigned value for
   SUBCACHE.
 - nil has been set as value for KEY and SUBCACHE \(via
-  `ecb-assoc-cache-put-value')."
-  (cdr (ecb-assoc-cache-get-subcache cache-var key subcache)))
-;
-(defun ecb-assoc-cache-put-value (cache-var key subcache value)
-  "Put VALUE as value of the cached item with key KEY under the subcache
-SUBCACHE. If there is already a value for this subcache and key then it will
-be replaced with VALUE. CACHE-VAR has to be a symbol for which an assoc cache
-has been created with `ecb-assoc-cache-create'!
+  `ecb-multicache-put-value' or `ecb-multicache-apply-to-value') - but this
+  is not recommended, see `ecb-multicache-apply-to-value'."
+  (cdr (ecb-multicache-get-subcache cache-var key subcache)))
 
-It is recommended not to put nil as value because then the returned value of
-`ecb-assoc-cache-get-value' can have an ambiguous semantic - see documentation
-of `ecb-assoc-cache-get-value'. nil should be reserved to indicate that either
-no item with KEY is cached or that no value has been put for SUBCACHE."
-  (assert (hash-table-p (symbol-value cache-var)))
-  (let* ((hash-val (or (gethash key (symbol-value cache-var))
-                       (progn 
-                         (ecb-assoc-cache-add-empty-key cache-var key)
-                         (gethash key (symbol-value cache-var)))))
-         ;; now cache is always not nil because hash-val is either the already
-         ;; contained hash-value or a new empty assoc-list with an empty
-         ;; subcache-elem for each registered subcache.
-         (cache (assoc subcache hash-val)))
-    (setcdr cache value)))
+(defun ecb-multicache-apply-to-value (cache-var key subcache apply-fcn
+                                                 &optional only-if-key-exist)
+  "Apply the function APPLY-FCN to the old SUBCACHE-value of the cached item
+with key KEY. APPLY-FCN is called with the old SUBCACHE-value as argument and
+should return the new value which is then set as new SUBCACHE-value of the
+cached-item. If optional argument ONLY-IF-KEY-EXIST is not nil then nothing
+will be done if no cached item with key KEY exists. Otherwise a new item with
+KEY will be added to the cache and APPLY-FCN will be called with nil.
+CACHE-VAR has to be a symbol for which an assoc cache has been defined with
+`defecb-multicache'!
 
-(defun ecb-assoc-cache-clear-value (cache-var key subcache)
+With this function an already cached SUBCACHE-value for KEY can be evaluated
+and then modified with only one cache-lookup because APPLY-FCN gets the
+old-value as argument and has to return the new value which is then set as new
+SUBCACHE-value of the cached item. This is more efficient than a call-sequence
+of `ecb-multicache-get-value' \(to get the old-value) and then
+`ecb-multicache-put-value' to set a new value.
+
+It is recommended that APPLY-FCN doesn't return nil \(unless the SUBCACHE for
+KEY should be cleared within APPLY-FCN) because then this will be set as new
+value and then the returned value of next call to `ecb-multicache-get-value'
+can have an ambiguous semantic - see documentation of
+`ecb-multicache-get-value'. nil should be reserved to indicate that either no
+item with KEY is cached or that no value has been put for SUBCACHE."
+  (let ((subcache-conscell
+         (or (ecb-multicache-get-subcache cache-var key subcache)
+             ;; key is currently not cached
+             (unless only-if-key-exist
+               (ecb-multicache-add-empty-key cache-var key)
+               (ecb-multicache-get-subcache cache-var key subcache)))))
+    (when subcache-conscell
+      (setcdr subcache-conscell
+              (funcall apply-fcn (cdr subcache-conscell))))))
+        
+(defun ecb-multicache-put-value (cache-var key subcache value)
+  "Put VALUE as SUBCACHE-value of the cached item with key KEY. If there is
+already a value for this subcache and key then it will be replaced with VALUE.
+CACHE-VAR has to be a symbol for which an assoc cache has been defined with
+`defecb-multicache'!
+
+It is recommended not to put nil as value - see
+`ecb-multicache-apply-to-value' for an explanation. If the SUBCACHE for KEY
+should be cleared use `ecb-multicache-clear-value'."
+  (ecb-multicache-apply-to-value cache-var key subcache
+                                  (function (lambda (old-val)
+                                              value))))
+
+(defun ecb-multicache-clear-value (cache-var key subcache)
   "Put nil as value of the cached item with key KEY under the subcache
 SUBCACHE. This clears in fact the subcache SUBCACHE for a cached item with key
-KEY. CACHE-VAR has to be a symbol for which an assoc cache has been created
-with `ecb-assoc-cache-create'!"
-  (ecb-assoc-cache-put-value cache-var key subcache nil))
+KEY. CACHE-VAR has to be a symbol for which an assoc cache has been defined
+with `defecb-multicache'!"
+  (ecb-multicache-put-value cache-var key subcache nil))
 
-(defun ecb-assoc-cache-remove (cache-var key)
+(defun ecb-multicache-remove (cache-var key)
   "Remove the cache item with key KEY from the cache of CACHE-VAR. CACHE-VAR
-has to be a symbol for which an assoc cache has been created with
-`ecb-assoc-cache-create'!"
-  (assert (hash-table-p (symbol-value cache-var)))
+has to be a symbol for which an assoc cache has been defined with
+`defecb-multicache'!"
+  (ecb-multicache-init cache-var)
   (remhash key (symbol-value cache-var)))
 
-(defun ecb-assoc-cache-mapsubcache (cache-var subcache mapfcn)
+(defun ecb-multicache-mapsubcache (cache-var subcache mapfcn)
   "Iterate over all item of the cache of CACHE-VAR and call the function
 MAPFCN for each item for the subcache SUBCACHE. MAPFCN is called with two
 arguments, the key and the SUBCACHE-value of the currently processed
 cache-item. The SUBCACHE-value of this cache-item will be set to the
 return-value of MAPFCN. So if MAPFCN is not intended to change the
 SUBCACHE-value it should return the value of its second argument! CACHE-VAR
-has to be a symbol for which an assoc cache has been created with
-`ecb-assoc-cache-create'!"
-  (assert (hash-table-p (symbol-value cache-var)))
+has to be a symbol for which an assoc cache has been defined with
+`defecb-multicache'!"
+  (ecb-multicache-init cache-var)
   (maphash (function (lambda (key value)
                        (let ((cache (assoc subcache value)))
                          (and cache
@@ -1587,54 +1638,77 @@ has to be a symbol for which an assoc cache has been created with
                                                key (cdr cache)))))))
            (symbol-value cache-var)))
 
-(defun ecb-assoc-cache-clear-subcache (cache-var subcache)
+(defun ecb-multicache-clear-subcache (cache-var subcache)
   "Put nil as SUBCACHE-value for each cached item. This clears in fact the
 whole SUBCACHE. CACHE-VAR has to be a symbol for which an assoc cache has been
-created with `ecb-assoc-cache-create'!"
-  (assert (hash-table-p (symbol-value cache-var)))
-  (ecb-assoc-cache-mapsubcache cache-var subcache
+defined with `defecb-multicache'!"
+  (ecb-multicache-mapsubcache cache-var subcache
                                (function (lambda (key value)
                                            nil))))
 
-(defun ecb-assoc-cache-clear (cache-var)
+(defun ecb-multicache-clear (cache-var)
   "Clears the whole cache of CACHE-VAR, i.e. remove all items. CACHE-VAR has
-to be a symbol for which an assoc cache has been created with
-`ecb-assoc-cache-create'!"
-  (assert (hash-table-p (symbol-value cache-var)))
+to be a symbol for which an assoc cache has been defined with
+`defecb-multicache'!"
+  (ecb-multicache-init cache-var)
   (clrhash (symbol-value cache-var)))
 
-(defun ecb-assoc-cache-print-full-subcache (cache-var subcache)
+(defun ecb-multicache-print-subcache (cache-var subcache)
   "Print the contents of SUBCACHE of the cache of CACHE-VAR in another window
 in a special buffer. This is mostly for debugging the cache-contents.
-CACHE-VAR has to be a symbol for which an assoc cache has been created with
-`ecb-assoc-cache-create'!"
-  (assert (hash-table-p (symbol-value cache-var)))
-  (save-selected-window
-    (set-buffer (get-buffer-create "*ecb-assoc-cache-dump*"))
-    (erase-buffer)
-    (ecb-assoc-cache-mapsubcache
-     cache-var subcache
-     (function (lambda (key value)
-                 (insert (format "Key: %s, value for subcache %s: %s\n"
-                                           key subcache value))
-                 value)))
-    (switch-to-buffer-other-window (get-buffer-create "*ecb-assoc-cache-dump*"))
-    (goto-char (point-min))))
+CACHE-VAR has to be a symbol for which an assoc cache has been defined with
+`defecb-multicache'!
+
+The output has the following form:
+
+Key: <the key of a cached element>
+     Value: <the associated value in the subcache SUBCACHE>
+Key: <the key of a cached element>
+     Value: <the associated value in the subcache SUBCACHE>
+...
+Key: <the key of a cached element>
+     Value: <the associated value in the subcache SUBCACHE>"
+  (let ((dump-buffer-name (format "*ecb-multicache - subcache: %s"
+                                  subcache))
+        (key-str "Key:")
+        (value-str "Value:")
+        ;; Because XEmacs is not able to get a face-attributes-plist as value
+        ;; for the special property 'face we have to create two temporary
+        ;; faces here :-(
+	(key-face (copy-face 'default 'ecb-multicache-print-key-face))
+	(value-str-face (copy-face 'italic
+                                   'ecb-multicache-print-value-str-face)))
+    (set-face-foreground key-face "blue")
+    (set-face-foreground value-str-face "forest green")    
+    (put-text-property 0 (length key-str) 'face 'bold key-str)
+    (put-text-property 0 (length value-str) 'face value-str-face value-str)
+    (save-selected-window
+      (set-buffer (get-buffer-create dump-buffer-name))
+      (erase-buffer)
+      (ecb-multicache-mapsubcache
+       cache-var subcache
+       (function (lambda (key value)
+                   ;; if key is a string we colorize it blue but we must du
+                   ;; this with a copy of key because otherwise we would
+                   ;; colorize the key-object itself which maybe is not what
+                   ;; we want if key is displayed somewhere else (e.g. in a
+                   ;; tree-buffer).
+                   (let ((key-cp (and (stringp key)
+                                      (concat key))))
+                     (and key-cp (put-text-property 0 (length key-cp)
+                                                    'face key-face key-cp))
+                     (insert (concat key-str " "
+                                     (if key-cp
+                                         key-cp
+                                       (format "%s" key))
+                                     "\n     "
+                                     value-str " "
+                                     (format "%s" value)
+                                     "\n"))
+                     value))))
+      (switch-to-buffer-other-window (get-buffer-create dump-buffer-name))
+      (goto-char (point-min)))))
   
-;; test of the assoc-cache
-(defvar klaus-assoc-cache nil)
-;; (ecb-assoc-cache-create 'klaus-assoc-cache '(empty-dir files-and-subdirs sources))
-;; (ecb-assoc-cache-get-value 'klaus-assoc-cache "wichtige.txt" 'sources)
-;; (ecb-assoc-cache-put-value 'klaus-assoc-cache "wichtige.txt" 'sources '(a b c))
-;; (ecb-assoc-cache-put-value 'klaus-assoc-cache "klaus.txt" 'sources '(d e f))
-;; (ecb-assoc-cache-get-value 'klaus-assoc-cache "klaus.txt" 'sources)
-;; (ecb-assoc-cache-put-value 'klaus-assoc-cache "wichtige.txt" 'empty-dir t)
-;; (ecb-assoc-cache-get-value 'klaus-assoc-cache "wichtige.txt" 'empty-dir)
-;; (ecb-assoc-cache-get-value 'klaus-assoc-cache "klaus.txt" 'empty-dir)
-;; (ecb-assoc-cache-clear-subcache 'klaus-assoc-cache 'sources)
-;; (ecb-assoc-cache-clear 'klaus-assoc-cache)
-;; (ecb-assoc-cache-print-full-subcache 'klaus-assoc-cache 'sources)
-;; (ecb-assoc-cache-print-full-subcache 'klaus-assoc-cache 'empty-dir)
 
 ;; ringstuff
 
@@ -1648,6 +1722,8 @@ CACHE-VAR has to be a symbol for which an assoc cache has been created with
 (defun ecb-ring-elements (ring)
   "Return a list of the lements of RING."
   (mapcar #'identity (cddr ring)))
+
+;; menu stuff
 
 (defvar ecb-max-submenu-depth 4
   "The maximum depth of nesting submenus for the tree-buffers.")

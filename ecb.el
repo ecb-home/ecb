@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb.el,v 1.406 2004/09/15 17:05:08 berndl Exp $
+;; $Id: ecb.el,v 1.407 2004/09/17 11:43:56 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -250,12 +250,12 @@
   "Only true if any item in any tree-buffer has been selected in recent
 command.")
 
-(defun ecb-initialize-internal-vars ()
+(defun ecb-initialize-all-internals (&optional no-caches)
   (setq ecb-tree-buffers nil
         ecb-major-mode-selected-source nil
         ecb-item-in-tree-buffer-selected nil)
-  (ecb-file-browser-initialize)
-  (ecb-method-browser-initialize))
+  (ecb-file-browser-initialize no-caches)
+  (ecb-method-browser-initialize no-caches))
 
 ;; Klaus Berndl <klaus.berndl@sdm.de>: FRAME-LOCAL
 (defvar ecb-minor-mode nil
@@ -1536,17 +1536,8 @@ ECB has been deactivated. Do not set this variable!")
             ;; first initialize the whole layout-engine
             (ecb-initialize-layout)
 
-            ;; clear the tag-tree-cache, the files-subdir-cache, the
-            ;; sources-cache and the history-filter.
-            (when ecb-clear-caches-before-activate
-              (ecb-clear-tag-tree-cache)
-              (ecb-clear-files-and-subdirs-cache)
-              (ecb-clear-directory-empty-cache)
-              (ecb-sources-cache-clear)
-              (ecb-reset-history-filter))
-
-            ;; initialize internal vars
-            (ecb-initialize-internal-vars)
+            ;; initialize internals
+            (ecb-initialize-all-internals (not ecb-clear-caches-before-activate))
     
             ;; enable permanent advices - these advices will never being
             ;; deactivated after first activation of ECB unless
@@ -2174,8 +2165,11 @@ performance-problem!"
   (eval-when-compile
     (let* (
            ;; Function declarations and exec-with-macros
+	   (variable-defs '(
+                            "defecb-multicache"
+                            ))
 	   (function-defs '(
-                            "ecb-defstealthy"
+                            "defecb-stealthy"
                             ))
            (keywords '(
                        "ecb-exec-in-history-window"
@@ -2194,7 +2188,8 @@ performance-problem!"
                        "ecb-do-if-buffer-visible-in-ecb-frame"
                        "ecb-layout-define"
                        ))
-           (regexp (regexp-opt (append function-defs
+           (regexp (regexp-opt (append variable-defs
+                                       function-defs
                                        keywords)
                                t))
            ;; Regexp depths
@@ -2209,9 +2204,12 @@ performance-problem!"
       `((,full
          (1 font-lock-keyword-face)
          (,(+ 1 depth 1)
-          (when (and (match-beginning 3)
-                     (member (match-string 1) (quote ,function-defs)))
-            font-lock-function-name-face)
+          (when (match-beginning 3)
+            (cond ((member (match-string 1) (quote ,function-defs))
+                   font-lock-function-name-face)
+                  ((member (match-string 1) (quote ,variable-defs))
+                   font-lock-variable-name-face)
+                  (t nil)))
           nil t)))
       ))
   "Highlighted ecb keywords.")
@@ -2234,13 +2232,9 @@ performance-problem!"
 (ecb-enable-ecb-advice 'walk-windows 'around -1)
 (ecb-enable-ecb-advice 'one-window-p 'around -1)
 
-;; clearing all caches at load-time
-(ecb-clear-tag-tree-cache)
-(ecb-clear-files-and-subdirs-cache)
-(ecb-clear-directory-empty-cache)
-(ecb-sources-cache-clear)
-(ecb-reset-history-filter)
-
+;; init the method- and file-browser at load-time
+(ecb-file-browser-initialize)
+(ecb-method-browser-initialize)
 
 (silentcomp-provide 'ecb)
 
