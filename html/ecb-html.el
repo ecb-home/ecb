@@ -28,7 +28,7 @@
 ;; Do not change any html-file besides the index.html manually but do all
 ;; changes in this elisp file!
 
-;; $Id: ecb-html.el,v 1.40 2003/02/11 14:39:02 berndl Exp $
+;; $Id: ecb-html.el,v 1.41 2003/02/14 09:31:13 berndl Exp $
 
 ;;; Code:
 
@@ -79,7 +79,7 @@
       `(,(h-sub-section "ECB 1.91.1 released! (2003-02-11)"
                         "This is mostly a bugfix-release which fixes some annoying bugs! "
                         (h-link "docs/Install-and-first-steps.html#Install%20and%20first%20steps" "Here") " is a short installation guide. "
-                        "Click " (h-link "history" "here")
+                        "Click " (h-link "NEWS.html" "here")
                         " for information about changes in the new version. ")
         ,(h-sub-section "Bugfixes for ECB 1.90 available. (2003-02-06)"
                         "Click " (h-link "downloads.html" "here") " to get it.")
@@ -101,7 +101,7 @@
       `(,(h-sub-section "ECB 1.90 released! (2003-01-31)"
                         "A lot of new features! Fixed some annoying bugs! "
                         (h-link "docs/Install-and-first-steps.html#Install%20and%20first%20steps" "Here") " is a short installation guide. "
-                        "Click " (h-link "history" "here")
+                        "Click " (h-link "NEWS.html" "here")
                         " for information about changes in the new version. ")
         ,(h-sub-section "ECB has a new official website! (2003-01-30)"
                         "You are already visiting the "
@@ -169,7 +169,7 @@
 	      "Please use " (h-link "http://lists.sourceforge.net/lists/listinfo/ecb-list" "the public ECB mailing list") " for reporting bugs, making suggestions and asking questions about ECB.")
 
    (h-table
-    (h-tr (h-td "The page's WebCounter count says that you are visitor number ")
+    (h-tr (h-td "The page's WebCounter says that you are visitor number ")
 	  (h-td	(h-img "http://counter.digits.com/wc/-d/4/javabrowser" "ALIGN=middle WIDTH=60 HEIGHT=20 BORDER=0 HSPACE=4 VSPACE=2"))
 	  (h-td " since 2000-07-28.")))
    ))
@@ -240,7 +240,7 @@
          ("docs/Install-and-first-steps.html#Install%20and%20first%20steps" "Installation")
 	 ("docs/index.html" "Documentation")
 	 ("docs/FAQ.html#FAQ" "FAQ")
-	 ("history" "History")
+	 ("NEWS.html" "History")
 	 ("http://lists.sourceforge.net/lists/listinfo/ecb-list" "Mailing List")
 	 ("http://cvs.sourceforge.net/cgi-bin/viewcvs.cgi/ecb/ecb/" "CVS")
 	 ("screenshots/index.html" "Screenshots")

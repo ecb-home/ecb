@@ -6,7 +6,7 @@
 # Or type "make all" or "make upload-build" to generate the whole website
 # and build an uploadable ecb-website.tar.gz file.
 
-# $Id: Makefile,v 1.6 2003/02/04 11:10:13 berndl Exp $
+# $Id: Makefile,v 1.7 2003/02/14 09:31:13 berndl Exp $
 
 EMACS=emacs
 
@@ -31,7 +31,7 @@ ecb_GIFS=bullet.gif ecb_logo.gif mail.gif smiley.gif
 ecb_UPLOAD_ARC=ecb-website.tar.gz
 
 ecb_WEBSITE_CONTENT=index.html $(ecb_HTML_GEN) $(ecb_HTMLDOCU_DIR)/*.html \
-                    $(ecb_SCREENSHOTS) history $(ecb_GIFS)
+                    $(ecb_SCREENSHOTS) NEWS.html $(ecb_GIFS)
 
 ecb_WEBSITE_LOC=/home/groups/e/ec/ecb/htdocs
 ecb_SF_login=berndl@ecb.sourceforge.net
@@ -52,9 +52,15 @@ online-docu: $(ecb_TEXI)
 
 $(ecb_HTMLDOCU_DIR)/index.html: online-docu
 
+NEWS.html:
+	@$(CP) ../NEWS .
+	@$(RM) NEWS.html
+	@gnuclientw.exe -e '(progn (find-file "NEWS") (load-library "htmlfontify") (htmlfontify-buffer) (write-file "NEWS.html") (kill-buffer "NEWS") (kill-buffer "NEWS.html"))'
+	@$(RM) NEWS	
+
+
 # Creates a complete new build of the whole website
-upload-build: $(ecb_HTMLDOCU_DIR)/index.html website
-	@$(CP) ../HISTORY history
+upload-build: $(ecb_HTMLDOCU_DIR)/index.html NEWS.html website
 	@$(RM) $(ecb_UPLOAD_ARC)
 	$(TARC) $(ecb_UPLOAD_ARC) $(ecb_WEBSITE_CONTENT)
 
@@ -71,5 +77,5 @@ upload-update:
 
 clean:
 	@$(RM) -R $(ecb_HTMLDOCU_DIR)
-	@$(RM) history *.elc $(ecb_UPLOAD_ARC) $(ecb_HTML_GEN) *.*~
+	@$(RM) NEWS.html *.elc $(ecb_UPLOAD_ARC) $(ecb_HTML_GEN) *.*~
 
