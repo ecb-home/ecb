@@ -25,7 +25,7 @@
 ;;
 ;; Contains all mode-line enhancements for ECB.
 
-;; $Id: ecb-mode-line.el,v 1.14 2002/12/06 20:40:07 berndl Exp $
+;; $Id: ecb-mode-line.el,v 1.15 2002/12/15 19:35:57 berndl Exp $
 
 (eval-when-compile
   (require 'silentcomp))
@@ -101,7 +101,7 @@ This should trim the beginning of the directory so that the mode-line does not
 stretch past the screen."
 
   (if (< width (length prefix))
-      (error "Given prefix '%s' is longer than modeline, increase window width" prefix))
+      (ecb-error "Given prefix '%s' is longer than modeline, increase window width" prefix))
 
   ;;make modifications to directory so that the line is the correct length
   ;;remove the first characters of directory so that we have ... at the beginning.

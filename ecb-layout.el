@@ -31,22 +31,22 @@
 ;; Completely rewritten the layout mechanism for better customizing, adding
 ;; new layouts, better redrawing and more straightforward code.
 ;; 1. Now all user-layouting is done by customizing the new option
-;;    `ecb-layout-nr'. The function `ecb-redraw-layout' (formally
-;;    known as 'ecb-set-layout) can still be called interactively but
-;;    without arguments because it does only a redraw of the layout
-;;    specified in `ecb-layout-nr'. All changes to the layout must be made
-;;    by customizing this new option. Please read the very detailed comment
-;;    of `ecb-layout-nr'!
+;;    `ecb-layout-name' or by the command `ecb-change-layout'. The function
+;;    `ecb-redraw-layout' (formally known as 'ecb-set-layout) can still be
+;;    called interactively but without arguments because it does only a redraw
+;;    of the layout specified in `ecb-layout-name'. All changes to the layout
+;;    must be made by customizing this new option. Please read the very
+;;    detailed comment of `ecb-layout-name'!
 ;; 2. Adding new layouts is now much easier and more straightforward: We have
 ;;    now a main core-layout function (`ecb-redraw-layout-full') which is the
-;;    "environment" for the specific "layout-index" functions. The core
-;;    function does first some layout independent actions, then calls the
-;;    layout-index-function for the index which has been set in
-;;    `ecb-layout-nr' and after that it does some layout independent actions
-;;    again (see the comments in this function). See the macro
-;;    `ecb-layout-define' and the command `ecb-create-new-layout'!
+;;    "environment" for the specific "layout-functions". The core function
+;;    does first some layout independent actions, then calls the
+;;    "layout-function" for the name which has been set in `ecb-layout-name'
+;;    and after that it does some layout independent actions again (see the
+;;    comments in this function). See the macro `ecb-layout-define' and the
+;;    command `ecb-create-new-layout'!
 ;;
-;; Backgroud-info: For each layout-type (ecb-windows left, right, top and
+;; Background-info: For each layout-type (ecb-windows left, right, top and
 ;; left-right) there are two functions:
 ;; - 'ecb-delete-other-windows-ecb-windows[left|right|top|left-right]' and
 ;; - 'ecb-delete-window-ecb-windows[left|right|top|left-right]'.
@@ -103,7 +103,7 @@
 ;; - `ecb-with-some-adviced-functions'
 ;;
 
-;; $Id: ecb-layout.el,v 1.132 2002/12/11 16:53:52 berndl Exp $
+;; $Id: ecb-layout.el,v 1.133 2002/12/15 19:35:57 berndl Exp $
 
 ;;; Code:
 
@@ -120,21 +120,17 @@
 (silentcomp-defvar scroll-bar-mode)
 
 
-(if ecb-running-xemacs
-    ;; because we want only check if the car of this function is equal for two
-    ;; different windows for the sake if the two window are located side by
-    ;; side or not we can here define this alias even if this function does in
-    ;; XEmacs soemthing different.
-    (defalias 'window-edges 'window-pixel-edges))
-
 ;; needed for the `some'-function.
 (require 'cl)
 
+(defvar ecb-layouts-reload-needed t)
 (defun ecb-load-layouts ()
   "Load all defined layouts"
-  (require 'ecb-layout-defs)
-  (if (file-readable-p ecb-create-layout-file)
-      (load-file ecb-create-layout-file)))
+  (when ecb-layouts-reload-needed
+    (require 'ecb-layout-defs)
+    (if (file-readable-p ecb-create-layout-file)
+        (load-file ecb-create-layout-file))
+    (setq ecb-layouts-reload-needed nil)))
 
 (defvar ecb-use-dedicated-windows t
   "Use dedicated windows for the ECB buffers.
@@ -175,45 +171,30 @@ Attention: You should never change this!")
   :group 'ecb-layout
   :type 'hook)
 
-(defcustom ecb-layout-nr 9
-  "*Define the window layout of ECB. A positive integer which sets the
-general layout. There are four different types of layouts: left, right, top
-and left-right, which means the location of the ECB-tree-windows in the
-ECB-frame. Currently there are 20 predefined layouts with index from 0 to
-19. You can savely try out any of them by changing this value and saving it
-only for the current session. If you are sure which layout you want you can
-save it for future sessions. To get a picture of the layout for index <index>
-call C-h f ecb-layout-function-<index>, e.g. `ecb-layout-function-9'.
 
-Currently available layouts \(see the doc-string for a picture ot the layout):
+(defcustom ecb-layout-name "left8"
+  "*Select a window layout of ECB. Value is any arbitary string. There are
+four different types of layouts: left, right, top and left-right, which means
+the location of the ECB-tree-windows in the ECB-frame. Currently there are 20
+predefined layouts; names the below. You can savely try out any of them by
+changing this value and saving it only for the current session. If you are
+sure which layout you want you can save it for future sessions. To get a
+picture of the layout for name <name> call `ecb-show-layout-help'.
 
-Left layouts:
-`ecb-layout-function-0'
-`ecb-layout-function-1'
-`ecb-layout-function-2'
-`ecb-layout-function-3'
-`ecb-layout-function-4'
-`ecb-layout-function-6'
-`ecb-layout-function-8'
-`ecb-layout-function-9'
-`ecb-layout-function-10'
-`ecb-layout-function-11'
-`ecb-layout-function-12'
-`ecb-layout-function-13'
-`ecb-layout-function-14'
-`ecb-layout-function-15'
-`ecb-layout-function-16'
-`ecb-layout-function-17'
+Currently available layouts:
 
-Right layouts:
-`ecb-layout-function-5'
++ Left layouts:
+  left1 left2 left3 left4 left5 left6 left7 left8 left9 left10 left11 left12
+  left13 left14 left15
 
-Top layouts:
-`ecb-layout-function-7'
++ Right layouts:
+  right1
 
-Left-right layouts:
-`ecb-layout-function-18'
-`ecb-layout-function-19'
++ Top layouts:
+  top1 top2
+
++ Left-right layouts:
+  leftright1 leftright2
 
 Regardless of the settings you define here: If you have destroyed or
 changed the ECB-screen-layout by any action you can always go back to this
@@ -222,13 +203,13 @@ layout with `ecb-redraw-layout'"
   :initialize 'custom-initialize-default
   :set (function (lambda (symbol value)
                    (ecb-load-layouts)
-                   (if (fboundp (intern (format "ecb-layout-function-%d"
+                   (if (fboundp (intern (format "ecb-layout-function-%s"
                                                 value)))
                        (funcall ecb-layout-option-set-function
                                 symbol value)
-                     (error "There is no layout with number %d available!"
-                            value))))
-  :type 'integer)
+                     (ecb-error "There is no layout with name %s available!"
+                                value))))
+  :type 'string)
 
 (defvar ecb-old-compilation-window-height compilation-window-height)
 
@@ -532,7 +513,6 @@ window."
               (const :tag "switch-to-buffer-other-window"
                      :value switch-to-buffer-other-window)))
 
-(defconst ecb-number-of-layouts 13)
 (defcustom ecb-layout-window-sizes nil
   "*Specifies the sizes of the ECB windows for each layout. The easiest way to
 change this variable is to change the window sizes by dragging the window
@@ -549,7 +529,7 @@ ecb-frame has the size it has normally during your work with ECB!."
   :set ecb-layout-option-set-function
   :type (list
 	 'repeat
-	 (list 'cons ':tag "Window layout" '(integer :tag "Layout nr.")
+	 (list 'cons ':tag "Window layout" '(string :tag "Layout name")
 	       (nconc '(list :tag "Window sizes")
                       (mapcar
                        (function
@@ -560,7 +540,6 @@ ecb-frame has the size it has normally during your work with ECB!."
                                        (integer :tag "Width")
                                        (integer :tag "Height"))
                                 '(const :tag "Default size" nil))))
-    ;; 		      '("ECB Editwindow" "ECB Directories" "ECB Sources"
                        '("ECB Directories" "ECB Sources"
                          "ECB History" "ECB Methods"))))))
 
@@ -570,10 +549,11 @@ Please read also carefully the documentation of `ecb-redraw-layout'."
   :type 'boolean
   :group 'ecb-layout)
 
-(defcustom ecb-toggle-layout-sequence '(11 16)
+(defcustom ecb-toggle-layout-sequence '("left9" "left14")
   "*Toggle sequence for layout toggling with `ecb-toggle-layout'.
-Every element of this list has to be a valid layout-number i.e. either one of
-the predefined layouts or one of the user-defined layouts.
+Every element of this list has to be a valid layout-name \"string) i.e. either
+one of the predefined layouts or one of the user-defined layouts \(see
+`ecb-create-new-layout').
 
 You can add here as many layouts as you want but to use this option most
 effective you should not add more than 2 or 3 layouts so every layout can be
@@ -583,23 +563,26 @@ tree-buffers are on the same side of the frame and the
 tree-buffer-\"column\" \(or -\"row\") has identical size for the layouts.
 
 Recommended values are for example:
-- \(11 16), toggles between methods and directories/history
-- \(11 15), toggles between methods and directories
-- \(11 14), toggles between methods and history
-- \(11 14 15), toggles between methods, history and directories 
+- \(\"left10\" \"left15\"), toggles between methods and directories/history
+- \(\"left10\" \"left13\"), toggles between methods and directories
+- \(\"left10\" \"left14\"), toggles between methods and history
+- \(\"left10\" \"left13\" \"left14\"), toggles between methods, history and
+  directories
+
+See also option `ecb-show-sources-in-directories-buffer'.
 
 This option makes only sense if the value is a list with more than 1 element!"
   :group 'ecb-layout
-  :type '(repeat (integer :tag "Layout-Nr."))
+  :type '(repeat (string :tag "Layout name."))
   :initialize 'custom-initialize-default
   :set (function (lambda (symbol value)
                    (ecb-load-layouts)
-                   (dolist (nr value)
+                   (dolist (name value)
                      (if (not (fboundp (intern
-                                        (format "ecb-layout-function-%d"
-                                                nr))))
-                         (error "There is no layout with number %d available!"
-                                nr)))
+                                        (format "ecb-layout-function-%s"
+                                                name))))
+                         (ecb-error "There is no layout available with name %s!"
+                                    name)))
                    (set symbol value))))
 
 (defcustom ecb-hide-ecb-windows-before-hook nil
@@ -787,8 +770,8 @@ either not activated or it behaves exactly like the original version!"
               (window-dedicated-p next-w)
               (equal next-w ecb-compile-window))
           nil
-        (if (= (car (window-edges ecb-edit-window))
-               (car (window-edges next-w)))
+        (if (= (car (ecb-window-edges ecb-edit-window))
+               (car (ecb-window-edges next-w)))
             'vertical
           'horizontal)))))
 
@@ -883,13 +866,13 @@ either not activated or it behaves exactly like the original version!"
           (ad-set-arg 0 (selected-window)))
         (let* ((params (frame-parameters))
                (mini (cdr (assq 'minibuffer params)))
-               (edges (window-edges)))
+               (edges (ecb-window-edges)))
           (if (and (< 1 (count-windows))
                    (not (equal (ecb-edit-window-splitted) 'horizontal))
                    (pos-visible-in-window-p (point-min) (ad-get-arg 0))
                    (not (eq mini 'only))
                    (or (not mini)
-                       (< (nth 3 edges) (nth 1 (window-edges mini)))
+                       (< (nth 3 edges) (nth 1 (ecb-window-edges mini)))
                        (> (nth 1 edges) (cdr (assq 'menu-bar-lines params)))))
               (let ((text-height (window-buffer-height (ad-get-arg 0)))
                     (window-height (window-height)))
@@ -1226,8 +1209,8 @@ reported."
         (ecb-error "Only an edit-window can be deleted!"))
     (ad-with-originals 'delete-window
       (if (ecb-edit-window-splitted)
-          (funcall (intern (format "ecb-delete-window-in-editwindow-%d"
-                                   ecb-layout-nr))
+          (funcall (intern (format "ecb-delete-window-in-editwindow-%s"
+                                   ecb-layout-name))
                    (ecb-edit-window-splitted))))))
 
 (defadvice delete-other-windows (around ecb)
@@ -1266,8 +1249,8 @@ edit-window is deleted), otherwise an error is reported."
         (ecb-error "Only an edit-window can be maximized!"))
     (ad-with-originals 'delete-window
       (if (ecb-edit-window-splitted)
-          (funcall (intern (format "ecb-delete-other-windows-in-editwindow-%d"
-                                   ecb-layout-nr))
+          (funcall (intern (format "ecb-delete-other-windows-in-editwindow-%s"
+                                   ecb-layout-name))
                    (ecb-edit-window-splitted))))))
 
 ;; (defadvice delete-windows-on (around ecb)
@@ -1761,12 +1744,15 @@ visibility of the ECB windows. ECB minor mode remains active!"
 
 ;; Macro for easy defining new layouts
 
+(defvar ecb-available-layouts nil
+  "List of all current avaiable layout names. Do not change this variable!
+This variable is only modified by `ecb-layout-define'.")
 
-(defmacro ecb-layout-define (number type doc &rest create-code)
-  "Creates a new ECB-layout with number NUMBER. TYPE is the type of the new
-layout and is literal, i.e. not evaluated. It can be left, right, top or
-left-right. DOC is the docstring for the new layout-function
-\"ecb-layout-function-<number>\". CREATE-CODE is all the lisp code which is
+(defmacro ecb-layout-define (name type doc &rest create-code)
+  "Creates a new ECB-layout with name NAME which must be a string. TYPE is the
+type of the new layout and is literal, i.e. not evaluated. It can be left,
+right, top or left-right. DOC is the docstring for the new layout-function
+\"ecb-layout-function-<name>\". CREATE-CODE is all the lisp code which is
 necessary to define the ECB-windows/buffers.
 
 Preconditions for CREATE-CODE:
@@ -1818,7 +1804,7 @@ Postconditions for CREATE-CODE:
 2. Every window besides the edit-window \(and the compile-window) must be
    set as a ECB-tree-window."
   `(progn
-     (defun ,(intern (format "ecb-layout-function-%d" number)) ()
+     (defun ,(intern (format "ecb-layout-function-%s" name)) ()
        ,doc
        (when ecb-compile-window-height
          (ecb-split-ver (- ecb-compile-window-height) t)
@@ -1836,20 +1822,22 @@ Postconditions for CREATE-CODE:
        ,@create-code
        (setq ecb-edit-window (selected-window)))
      (defalias (quote ,(intern
-                        (format "ecb-delete-other-windows-in-editwindow-%d"
-                                number)))
+                        (format "ecb-delete-other-windows-in-editwindow-%s"
+                                name)))
        (quote ,(intern
                 (format "ecb-delete-other-windows-ecb-windows-%s" type))))
      (defalias (quote ,(intern
-                        (format "ecb-delete-window-in-editwindow-%d"
-                                number)))
+                        (format "ecb-delete-window-in-editwindow-%s"
+                                name)))
        (quote ,(intern
-                (format "ecb-delete-window-ecb-windows-%s" type))))))
+                (format "ecb-delete-window-ecb-windows-%s" type))))
+     (add-to-list 'ecb-available-layouts ,name)
+     (setq ecb-available-layouts (sort ecb-available-layouts 'string<))))
 
 (put 'ecb-layout-define 'lisp-indent-function 1)
 
 ;; (insert (pp (macroexpand
-;;              `(ecb-layout-define 0 left
+;;              `(ecb-layout-define "left1" left
 ;;                                 "This function creates the following layout:"
 ;;                                 (ecb-set-directories-buffer)
 ;;                                 (ecb-split-ver 0.3)
@@ -1863,8 +1851,52 @@ Postconditions for CREATE-CODE:
 ;;                                 (next-window)))))))
 
 
-;; the main layout core-function. This function is the "environment" for a
-;; special layout function (l.b.)
+(defun ecb-layout-undefine (name)
+  "Unbind ecb-layout-function-<NAME>, ecb-delete-window-ecb-windows-<NAME>,
+ecb-delete-other-windows-ecb-windows-<NAME> and remove NAME from
+`ecb-available-layouts'."
+  (fmakunbound (intern (format "ecb-layout-function-%s" name)))
+  (fmakunbound (intern (format "ecb-delete-window-ecb-windows-%s" name)))
+  (fmakunbound (intern (format "ecb-delete-other-windows-ecb-windows-%s"
+                               name)))
+  (setq ecb-available-layouts (sort (delete name ecb-available-layouts)
+                                    'string<)))
+
+
+(defun ecb-choose-layout-name (layout-list require-match)
+  "Calls `completing-read' for LAYOUT-LIST which is a list of all layout-names
+or nil. For REQUIRE-MATCH see documentation of `completing-read'. For a null
+input the first element of LAYOUT-LIST is returned."
+  (let ((result (completing-read "Insert a layout name: "
+                                 (mapcar (function (lambda (x) (list x t)))
+                                         layout-list)
+                                 nil require-match)))
+    (if (= (length result) 0)
+        (car layout-list)
+      result)))
+
+
+(defun ecb-change-layout ()
+  "Select a layout-name from all current available layouts \(TAB-completion is
+offered) and change the layout to the selected layout-name.
+Note: This function works by changing the option `ecb-layout-name' but only
+for current Emacs-session."
+  (interactive)
+  (when (and ecb-minor-mode
+             (equal (selected-frame) ecb-frame))
+    (customize-set-variable 'ecb-layout-name
+                            (ecb-choose-layout-name ecb-available-layouts t))))
+
+(defun ecb-show-layout-help ()
+  "Select a name of a layout and shows the documentation of the associated
+layout-function. At least for the buildin layouts the documentation contains a
+picture of the outline of the choosen layout."
+  (interactive)
+  ;; ensure we have load all layouts defined until now
+  (ecb-load-layouts)
+  (describe-function
+   (intern (format "ecb-layout-function-%s"
+                   (ecb-choose-layout-name ecb-available-layouts t)))))
 
 (defun ecb-redraw-layout()
   "Redraw the ECB screen. If the variable `ecb-redraw-layout-quickly' is not nil
@@ -1896,8 +1928,12 @@ On normal machines the full drawback should be done in << 1s!"
   
   (message "ECB redrawing layout...done"))
 
+
+;; the main layout core-function. This function is the "environment" for a
+;; special layout function (l.b.)
+
 (defun ecb-redraw-layout-full (&optional no-buffer-sync)
-  "Redraw the ECB screen according to the layout set in `ecb-layout-nr'. After
+  "Redraw the ECB screen according to the layout set in `ecb-layout-name'. After
 this function the edit-window is selected which was current before redrawing."
   (when (and ecb-minor-mode
              (equal (selected-frame) ecb-frame))
@@ -1946,12 +1982,12 @@ this function the edit-window is selected which was current before redrawing."
             ecb-compile-window nil)
 
       ;; Now we call the layout-function
-      (funcall (intern (format "ecb-layout-function-%d" ecb-layout-nr)))
+      (funcall (intern (format "ecb-layout-function-%s" ecb-layout-name)))
       (select-window
        (if ecb-edit-window
            ecb-edit-window
-         (error "Edit-window not set in function 'ecb-layout-function-%d"
-                ecb-layout-nr)))
+         (error "Edit-window not set in function 'ecb-layout-function-%s"
+                ecb-layout-name)))
       
       ;; Now all the windows must be created and the editing window must not
       ;; be splitted! In addition the variables `ecb-edit-window' and
@@ -2096,18 +2132,19 @@ this function the edit-window is selected which was current before redrawing."
 (defvar ecb-toggle-layout-state 0
   "Internal state of `ecb-toggle-layout'. Do not change it!")
 (defun ecb-toggle-layout ()
-  "Toggles between the layouts defined in `ecb-toggle-layout-sequence'.
-Note: This function works by changing the options `ecb-layout-nr' and
-`ecb-show-sources-in-directories-buffer' but only for current Emacs-session."
+  "Toggles between the layouts defined in `ecb-toggle-layout-sequence'
+\(See also option `ecb-show-sources-in-directories-buffer').
+Note: This function works by changing the option `ecb-layout-name' but only
+for current Emacs-session."
   (interactive)
-  (let ((layout-nr (nth ecb-toggle-layout-state ecb-toggle-layout-sequence))
+  (let ((layout-name (nth ecb-toggle-layout-state ecb-toggle-layout-sequence))
         (next-index (if (< (1+ ecb-toggle-layout-state)
                            (length ecb-toggle-layout-sequence))
                         (1+ ecb-toggle-layout-state)
                       0)))
-    (when (and layout-nr (not (= ecb-toggle-layout-state next-index)))
+    (when (and layout-name (not (= ecb-toggle-layout-state next-index)))
       (setq ecb-toggle-layout-state next-index)
-      (customize-set-variable 'ecb-layout-nr layout-nr))))
+      (customize-set-variable 'ecb-layout-name layout-name))))
 
 (defun ecb-store-window-sizes ()
   "Stores the sizes of the ECB windows for the current layout. The size of the
@@ -2117,9 +2154,9 @@ default values call `ecb-restore-default-window-sizes'. Please read also the
 documentation of `ecb-layout-window-sizes'!"
   (interactive)
   (when (equal (selected-frame) ecb-frame)
-    (let ((a (ecb-find-assoc ecb-layout-window-sizes ecb-layout-nr)))
+    (let ((a (ecb-find-assoc ecb-layout-window-sizes ecb-layout-name)))
       (unless a
-	(setq a (cons ecb-layout-nr nil))
+	(setq a (cons ecb-layout-name nil))
 	(setq ecb-layout-window-sizes (ecb-add-assoc ecb-layout-window-sizes a)))
       (setcdr a (ecb-get-window-sizes))
       (customize-save-variable 'ecb-layout-window-sizes ecb-layout-window-sizes))))
@@ -2129,14 +2166,14 @@ documentation of `ecb-layout-window-sizes'!"
   (interactive)
   (when (equal (selected-frame) ecb-frame)
     (ecb-set-window-sizes (ecb-find-assoc-value ecb-layout-window-sizes
-						ecb-layout-nr))))
+						ecb-layout-name))))
 
 (defun ecb-restore-default-window-sizes ()
   "Resets the sizes of the ECB windows to their default values."
   (interactive)
   (when (equal (selected-frame) ecb-frame)
     (setq ecb-layout-window-sizes
-	  (ecb-remove-assoc ecb-layout-window-sizes ecb-layout-nr))
+	  (ecb-remove-assoc ecb-layout-window-sizes ecb-layout-name))
     (ecb-redraw-layout)
     (customize-save-variable 'ecb-layout-window-sizes ecb-layout-window-sizes)))
 

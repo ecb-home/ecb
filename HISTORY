@@ -1,13 +1,46 @@
 Version 1.90:
 -------------
 
+- Naming and managing of layouts has been changed! Now a layout is not
+  identified by an integer but by an arbitrary string! Example: The layout
+  with index 0 in ECB <= 1.80 is now named "left1" in ECB 1.90.
+
+  Therefore the name of the option 'ecb-layout-nr' has changed to
+  'ecb-layout-name'! See the docstring of 'ecb-layout-name' for the names of
+  all buildin layouts.
+
+  In this context also the type of ecb-show-sources-in-directories-buffer has
+  changed so it is now a list of layout-names where the sources should be
+  displayed in the directories window (or 'always/'never). Now every change of
+  the layout also checks the value of ecb-show-sources-in-directories-buffer.
+  
+  This change also introduces three new commands:
+  - ecb-change-layout: Change layouts by selecting a name
+  - ecb-delete-new-layout: Delete an user-created (by 'ecb-create-new-layout')
+    layout.
+  - ecb-show-layout-help: Displays the docstring of a layout which at least
+    for buildin layouts contains a picture of the outline of this layout.
+  All three commands offer TAB-completion for easy selecting a layout name.
+
+  ECB autom. upgrades the following options to theirs new names/types:
+  - ecb-layout-nr: The stored value is transformed to the new name of the
+    related layout and stored in 'ecb-layout-name'
+  - ecb-toggle-layout-sequence: The stored value is transformed to the new
+    type with layout-names instead of layout-numbers.
+  - ecb-major-modes-activate: The stored value is transformed to the new type
+    with layout-names instead of layout-numbers.
+  - ecb-layout-window-sizes: The stored value is transformed to the new type
+    with layout-names instead of layout-numbers.
+  - ecb-show-sources-in-directories-buffer: Reset to the new default value.
+  (Klaus)
+  
 - New or renamed hooks:
-  - 'ecb-redraw-layout-after-hook' (new)
-  - 'ecb-redraw-layout-before-hook' (new)
-  - 'ecb-hide-ecb-windows-after-hook' (new)
-  - 'ecb-hide-ecb-windows-before-hook' (was ecb-hide-ecb-windows-hook)
-  - 'ecb-show-ecb-windows-after-hook' (new)
-  - 'ecb-show-ecb-windows-before-hook' (was ecb-show-ecb-windows-hook)
+  - ecb-redraw-layout-after-hook (new)
+  - ecb-redraw-layout-before-hook (new)
+  - ecb-hide-ecb-windows-after-hook (new)
+  - ecb-hide-ecb-windows-before-hook (was ecb-hide-ecb-windows-hook)
+  - ecb-show-ecb-windows-after-hook (new)
+  - ecb-show-ecb-windows-before-hook (was ecb-show-ecb-windows-hook)
   Read the documentation! (Klaus)
 
 - Adding a new layout type "left-right" which allows the ECB-tree-windows to

@@ -59,7 +59,7 @@
 ;; The latest version of the ECB is available at
 ;; http://home.swipnet.se/mayhem/ecb.html
 
-;; $Id: ecb.el,v 1.254 2002/12/11 16:53:50 berndl Exp $
+;; $Id: ecb.el,v 1.255 2002/12/15 19:35:56 berndl Exp $
 
 ;;; Code:
 
@@ -204,15 +204,15 @@ activating ECB after Emacs-startup \(even without opening a buffer) and this
 one is for defining for which major-modes ECB should be activated if the mode
 goes active!
 
-The behaviour is like follows: If a mode is contained in this option ECB
-is activated after activating this mode \(if ECB was deactivated before) or
-the ECB-windows are shown if ECB was already active but its windows were
-hidden. In every case ECB is activated with visible ECB-windows afterwards!
+The behaviour is like follows: If a mode is contained in this option ECB is
+activated after activating this mode \(if ECB was deactivated before) or the
+ECB-windows are shown if ECB was already active but its windows were hidden.
+In every case ECB is activated with visible ECB-windows afterwards!
 
-For every major mode there can be specified an `ecb-layout-nr':
-- default: The value customized with `ecb-layout-nr' is choosen.
-- an integer: ECB is activated with this layout-nr. This changes the value of
-  `ecb-layout-nr' but only for current emacs-session!
+For every major mode there can be specified an `ecb-layout-name':
+- default: The value customized with `ecb-layout-name' is choosen.
+- a string: ECB is activated with this layout-name. This changes the value of
+  `ecb-layout-name' but only for current emacs-session!
 But the layout is only changed if ECB was activated, if just the ECB-windows
 were shown, the current layout is used!
 
@@ -237,7 +237,7 @@ jumps between different windows."
                               (choice :tag "Layout" :menu-tag "Layout"
                                       :value default
                                       (const :tag "Default" default)
-                                      (integer :tag "Layout-nr."))))))
+                                      (string :tag "Layout-name"))))))
 
 (defcustom ecb-major-modes-deactivate 'none
   "*List of major-modes for which ECB should be deactivated or hidden.
@@ -332,10 +332,26 @@ root-path \(unix) is added to the directory buffer of ECB."
 be evaluated. Such a function must return either nil or a list of strings
 where each string is a path.")
 
-(defcustom ecb-show-sources-in-directories-buffer nil
-  "*Show source files in directories buffer."
+(defcustom ecb-show-sources-in-directories-buffer '("left7" "left13"
+                                                    "left14" "left15")
+  "*Show source files in directories buffer.
+The value is either 'always or 'never or a list of layout-names for which
+layouts sources should be displayed in the directories window."
   :group 'ecb-directories
-  :type 'boolean)
+  :type '(radio (const :tag "Always" :value always)
+                (const :tag "Never" :value never)
+                (repeat :tag "With these layouts"
+                        (string :tag "Layout name"))))
+
+(defun ecb-show-sources-in-directories-buffer-p ()
+  (cond ((equal ecb-show-sources-in-directories-buffer 'never)
+         nil)
+        ((equal ecb-show-sources-in-directories-buffer 'always)
+         t)
+        (t
+         (and (listp ecb-show-sources-in-directories-buffer)
+              (member ecb-layout-name
+                      ecb-show-sources-in-directories-buffer)))))
 
 (defcustom ecb-cache-directory-contents nil
   "*Cache contents of directories.
@@ -599,8 +615,10 @@ the right action is performed \(opening a new source, selecting a method etc.)
 but point stays in the tree-buffer.
 
 A special remark for the `ecb-directories-buffer-name': Of course here the
-edit-window is only selected if `ecb-show-sources-in-directories-buffer' is
-not nil \(otherwise this would not make any sense)!
+edit-window is only selected if the name of the current layout is contained in
+`ecb-show-sources-in-directories-buffer' or if the value of
+`ecb-show-sources-in-directories-buffer' is 'always \(otherwise this would not
+make any sense)!
 
 The setting in this option is only the default for each tree-buffer. With
 `ecb-toggle-RET-selects-edit-window' the behavior of RET can be changed fast
@@ -2185,7 +2203,7 @@ then nothing is done unless first optional argument FORCE is not nil."
       ;; to do anything here because neither the content of directory buffer
       ;; nor the content of the sources buffer can have been changed!
       (when (or force (not (string= last-dir ecb-path-selected-directory)))
-        (when (or (not ecb-show-sources-in-directories-buffer)
+        (when (or (not (ecb-show-sources-in-directories-buffer-p))
                   ecb-auto-expand-directory-tree)
           (ecb-exec-in-directories-window
            (let (start)
@@ -2222,7 +2240,7 @@ then nothing is done unless first optional argument FORCE is not nil."
                                           (or start
                                               (tree-buffer-get-root)))
                (tree-buffer-update))
-             (when (not ecb-show-sources-in-directories-buffer)
+             (when (not (ecb-show-sources-in-directories-buffer-p))
                (tree-buffer-highlight-node-data ecb-path-selected-directory
                                                 start)))))
 
@@ -2260,15 +2278,16 @@ then nothing is done unless first optional argument FORCE is not nil."
         f
       (file-name-sans-extension f))))
   
-(defun ecb-select-source-file (filename)
+(defun ecb-select-source-file (filename &optional force)
   "Updates the directories, sources and history buffers to match the filename
-given."
+given. If FORCE is not nil then the update of the directories buffer is done
+even if current directory is equal to `ecb-path-selected-directory'."
   (save-selected-window
-    (ecb-set-selected-directory (file-name-directory filename))
+    (ecb-set-selected-directory (file-name-directory filename) force)
     (setq ecb-path-selected-source filename)
   
     ;; Update directory buffer
-    (when ecb-show-sources-in-directories-buffer
+    (when (ecb-show-sources-in-directories-buffer-p)
       (ecb-exec-in-directories-window
        (tree-buffer-highlight-node-data ecb-path-selected-source)))
     
@@ -2561,7 +2580,7 @@ It does several tasks:
     ;; 4. Preventing from killing the tree-buffers by accident
     (if (member (buffer-name (current-buffer))
                 ecb-tree-buffers)
-        (error "Killing an ECB-tree-buffer is not possible!"))))
+        (ecb-error "Killing an ECB-tree-buffer is not possible!"))))
 
 (defun ecb-clear-history (&optional clearall)
   "Clears the ECB history-buffer. If CLEARALL is nil then the behavior is
@@ -2664,7 +2683,7 @@ the ECB tree-buffers."
                ;; necessary because the synch with the current source is done by
                ;; `ecb-select-source-file'!
                ;;           (ecb-update-directories-buffer)
-               (ecb-select-source-file filename)
+               (ecb-select-source-file filename force)
                ;; selected source has changed, therfore we must initialize
                ;; ecb-selected-token again.
                (setq ecb-selected-token nil)
@@ -2737,7 +2756,7 @@ OTHER-EDIT-WINDOW."
         (let ((files-and-dirs (ecb-get-files-and-subdirs path)))
           (ecb-tree-node-add-files node path (cdr files-and-dirs)
                                    0 t old-children)
-          (if ecb-show-sources-in-directories-buffer
+          (if (ecb-show-sources-in-directories-buffer-p)
               (ecb-tree-node-add-files node path (car files-and-dirs) 1
                                        ecb-show-source-file-extension
                                        old-children t))
@@ -2916,12 +2935,12 @@ combination is invalid \(see `ecb-interpret-mouse-click'."
     ;; 2. The tree-buffer-name is not contained in
     ;;    ecb-tree-RET-selects-edit-window--internal
     ;; 3. Either it is not the ecb-directories-buffer-name or
-    ;;    at least ecb-show-sources-in-directories-buffer is true.
+    ;;    at least `ecb-show-sources-in-directories-buffer-p' is true.
     (when (and (equal 0 mouse-button)
                (not (member tree-buffer-name
                             ecb-tree-RET-selects-edit-window--internal))
                (or (not (string= tree-buffer-name ecb-directories-buffer-name))
-                   ecb-show-sources-in-directories-buffer))
+                   (ecb-show-sources-in-directories-buffer-p)))
       (ecb-goto-window tree-buffer-name)
       (tree-buffer-remove-highlight))))
 
@@ -3340,16 +3359,16 @@ That is remove the unsupported :help stuff."
       ])   
    "-"
    (ecb-menu-item
+    [ "Change layout"
+      ecb-change-layout
+      :active (equal (selected-frame) ecb-frame)
+      :help "Change the layout."
+      ])
+   (ecb-menu-item
     [ "Redraw layout"
       ecb-redraw-layout
       :active (equal (selected-frame) ecb-frame)
-      :help "Redraw the layout."
-      ])
-   (ecb-menu-item
-    [ "Toggle visibility of ECB windows"
-      ecb-toggle-ecb-windows
-      :active (equal (selected-frame) ecb-frame)
-      :help "Toggle the visibility of all ECB windows."
+      :help "Redraw the current layout."
       ])
    (ecb-menu-item
     [ "Toggle layout"
@@ -3357,6 +3376,18 @@ That is remove the unsupported :help stuff."
       :active (and (equal (selected-frame) ecb-frame)
                    (> (length ecb-toggle-layout-sequence) 1))
       :help "Toggle between several layouts"
+      ])
+   (ecb-menu-item
+    [ "Show help for a layout"
+      ecb-show-layout-help
+      :active t
+      :help "Show the documentation for a layout."
+      ])
+   (ecb-menu-item
+    [ "Toggle visibility of ECB windows"
+      ecb-toggle-ecb-windows
+      :active (equal (selected-frame) ecb-frame)
+      :help "Toggle the visibility of all ECB windows."
       ])
    (ecb-menu-item
     [ "Toggle enlarged compilation window"
@@ -3371,7 +3402,13 @@ That is remove the unsupported :help stuff."
     [ "Create new layout"
       ecb-create-new-layout
       :active (equal (selected-frame) ecb-frame)
-      :help "Create a new ECB-layout layout."
+      :help "Create a new ECB-layout."
+      ])
+   (ecb-menu-item
+    [ "Delete new layout"
+      ecb-delete-new-layout
+      :active (equal (selected-frame) ecb-frame)
+      :help "Delete an user-created ECB-layout."
       ])
    "-"
    (list
@@ -3600,9 +3637,10 @@ That is remove the unsupported :help stuff."
   '("C-c ." . ((t "f" ecb-activate)
                (t "p" ecb-nav-goto-previous)
                (t "n" ecb-nav-goto-next)
+               (t "l" ecb-change-layout)
                (t "r" ecb-redraw-layout)
                (t "w" ecb-toggle-ecb-windows)
-               (t "l" ecb-toggle-layout)
+               (t "t" ecb-toggle-layout)
                (t "o" ecb-show-help)
                (t "1" ecb-goto-window-edit1)
                (t "2" ecb-goto-window-edit2)
@@ -3698,14 +3736,14 @@ macro must be written explicitly, as in \"C-c SPC\".
 ;;;###autoload
 (defun ecb-activate ()
   "Activates the ECB and creates all the buffers and draws the ECB-screen
-with the actually choosen layout \(see `ecb-layout-nr'). This function raises
+with the actually choosen layout \(see `ecb-layout-name'). This function raises
 always the ECB-frame if called from another frame."
   (interactive)
   (ecb-minor-mode 1))
 
 (defun ecb-activate-internal ()
   "Activates the ECB and creates all the buffers and draws the ECB-screen
-with the actually choosen layout \(see `ecb-layout-nr'). This function raises
+with the actually choosen layout \(see `ecb-layout-name'). This function raises
 always the ECB-frame if called from another frame."
 
   (if ecb-use-recursive-edit
@@ -4303,13 +4341,13 @@ changed there should be no performance-problem!"
                  (let* ((layout (cdr (assoc major-mode
                                             ecb-major-modes-activate)))
                         (layout-to-set (if (equal layout 'default)
-                                           (car (or (get 'ecb-layout-nr 'saved-value)
-                                                    (get 'ecb-layout-nr 'standard-value)))
+                                           (car (or (get 'ecb-layout-name 'saved-value)
+                                                    (get 'ecb-layout-name 'standard-value)))
                                          layout)))
                    ;; if we must set a new layout we do this via customizing
-                   ;; ecb-layout-nr for current Emacs-session!
-                   (if (not (eq layout-to-set ecb-layout-nr))
-                       (customize-set-variable 'ecb-layout-nr layout-to-set)))))
+                   ;; ecb-layout-name for current Emacs-session!
+                   (if (not (string= layout-to-set ecb-layout-name))
+                       (customize-set-variable 'ecb-layout-name layout-to-set)))))
               ;; ecb-major-modes-deactivate is "All except activated"
               ((and (listp ecb-major-modes-deactivate)
                     (member (car ecb-major-modes-deactivate)

@@ -1139,7 +1139,7 @@ Up:<a rel=up accesskey=u href="#The%20ECB-layout">The ECB-layout</a>
 
 <p>ECB offers several predefined layouts with different sets and also
 different locations of ECB-windows. See below the "ascii-screenshot"
-of all currently available layouts.
+of all currently buildin layouts<a rel=footnote href="#fn-13"><sup>13</sup></a>.
 
 <p>In addition to these predefined layouts you can either interactively
 create new layouts "by example" (see <a href="#Creating%20a%20new%20ECB-layout">Creating a new ECB-layout</a>)
@@ -1147,9 +1147,23 @@ or program new layouts with the macro <code>ecb-layout-define</code>
 (see <a href="#Programming%20new%20layouts">Programming new layouts</a>). The former method is the recommened
 one!
 
-<p>If you want to switch fast between some layouts see the option
-<code>ecb-toggle-layout-sequence</code> and the command
-<code>ecb-toggle-layout</code> (see <a href="#Simulating%20speedbar">Simulating speedbar</a>)
+<p>There are two ways to interactively change the layout:
+<ul>
+<li>Changing permanently:
+Customize the option <code>ecb-layout-name</code> and store it for future
+Emacs sessions.
+
+<li>Switching between several layouts at runtime:
+If you want to switch fast between a certain sequence of layouts see
+the option <code>ecb-toggle-layout-sequence</code> and the command
+<code>ecb-toggle-layout</code> (see <a href="#Simulating%20speedbar">Simulating speedbar</a>). For just
+selecting another layout during current Emacs-session use the command
+<code>ecb-change-layout</code>. 
+</ul>
+
+<p>With the option <code>ecb-show-sources-in-directories-buffer</code> you can
+define if sources are displayed in the directory-window of a layout
+(see <a href="#ECB%20Directories">ECB Directories</a>).
 
 <p>In addition to the general layout you can specify if the layout should
 contain a durable compilation-window at the bottom of the frame, see
@@ -1162,10 +1176,10 @@ indendation of sub-nodes in a tree. See <code>ecb-tree-indent</code> and
 
 <p>Here are all currently available layouts (for creating own new layouts
 see <a href="#Creating%20a%20new%20ECB-layout">Creating a new ECB-layout</a>); just customize the option
-<code>ecb-layout-nr</code> to the related number:
+<code>ecb-layout-name</code> to the related name:
 
 <dl>
-<dt>Layout Nr. 0
+<dt>Layout "left1"
 <dd>
 <br><pre>-------------------------------------------------------
 |              |                                      |
@@ -1190,7 +1204,7 @@ see <a href="#Creating%20a%20new%20ECB-layout">Creating a new ECB-layout</a>); j
 -------------------------------------------------------
 </pre>
 
-<br><dt>Layout Nr. 1
+<br><dt>Layout "left2"
 <dd>
 <br><pre>-------------------------------------------------------
 |              |                                      |
@@ -1215,7 +1229,7 @@ see <a href="#Creating%20a%20new%20ECB-layout">Creating a new ECB-layout</a>); j
 -------------------------------------------------------
 </pre>
 
-<br><dt>Layout Nr. 2
+<br><dt>Layout "left3"
 <dd>
 <br><pre>-------------------------------------------------------
 |              |                                      |
@@ -1240,7 +1254,7 @@ see <a href="#Creating%20a%20new%20ECB-layout">Creating a new ECB-layout</a>); j
 -------------------------------------------------------
 </pre>
 
-<br><dt>Layout Nr. 3
+<br><dt>Layout "left4"
 <dd>
 <br><pre>-------------------------------------------------------
 |              |                                      |
@@ -1265,7 +1279,7 @@ see <a href="#Creating%20a%20new%20ECB-layout">Creating a new ECB-layout</a>); j
 -------------------------------------------------------
 </pre>
 
-<br><dt>Layout Nr. 4
+<br><dt>Layout "left5"
 <dd>
 <br><pre>-------------------------------------------------------
 |              |                                      |
@@ -1290,7 +1304,7 @@ see <a href="#Creating%20a%20new%20ECB-layout">Creating a new ECB-layout</a>); j
 -------------------------------------------------------
 </pre>
 
-<br><dt>Layout Nr. 5
+<br><dt>Layout "right1"
 <dd>
 <br><pre>-------------------------------------------------------
 |                                      |              |
@@ -1315,7 +1329,7 @@ see <a href="#Creating%20a%20new%20ECB-layout">Creating a new ECB-layout</a>); j
 -------------------------------------------------------
 </pre>
 
-<br><dt>Layout Nr. 6
+<br><dt>Layout "left6"
 <dd>
 <br><pre>-------------------------------------------------------
 |  Sources     |                                      |
@@ -1336,7 +1350,7 @@ see <a href="#Creating%20a%20new%20ECB-layout">Creating a new ECB-layout</a>); j
 -------------------------------------------------------
 </pre>
 
-<br><dt>Layout Nr. 7
+<br><dt>Layout "top1"
 <dd>
 <br><pre>-------------------------------------------------------
 |                        |             |              |
@@ -1361,7 +1375,7 @@ see <a href="#Creating%20a%20new%20ECB-layout">Creating a new ECB-layout</a>); j
 -------------------------------------------------------
 </pre>
 
-<br><dt>Layout Nr. 8
+<br><dt>Layout "left7"
 <dd>
 <br><pre>-------------------------------------------------------
 |              |                                      |
@@ -1386,7 +1400,7 @@ see <a href="#Creating%20a%20new%20ECB-layout">Creating a new ECB-layout</a>); j
 -------------------------------------------------------
 </pre>
 
-<br><dt>Layout Nr. 9
+<br><dt>Layout "left8"
 <dd>
 <br><pre>-------------------------------------------------------
 |              |                                      |
@@ -1411,7 +1425,7 @@ see <a href="#Creating%20a%20new%20ECB-layout">Creating a new ECB-layout</a>); j
 -------------------------------------------------------
 </pre>
 
-<br><dt>Layout Nr. 10
+<br><dt>Layout "top2"
 <dd>
 <br><pre>-------------------------------------------------------
 |                                                     |
@@ -1436,7 +1450,7 @@ see <a href="#Creating%20a%20new%20ECB-layout">Creating a new ECB-layout</a>); j
 -------------------------------------------------------
 </pre>
 
-<br><dt>Layout Nr. 11
+<br><dt>Layout "left9"
 <dd>
 <br><pre>-------------------------------------------------------
 |              |                                      |
@@ -1461,7 +1475,7 @@ see <a href="#Creating%20a%20new%20ECB-layout">Creating a new ECB-layout</a>); j
 -------------------------------------------------------
 </pre>
 
-<br><dt>Layout Nr. 12
+<br><dt>Layout "left10"
 <dd>
 <br><pre>-------------------------------------------------------
 |              |                                      |
@@ -1484,7 +1498,7 @@ see <a href="#Creating%20a%20new%20ECB-layout">Creating a new ECB-layout</a>); j
 -------------------------------------------------------
 </pre>
 
-<br><dt>Layout Nr. 13
+<br><dt>Layout "left11"
 <dd>
 <br><pre>-------------------------------------------------------
 |              |                                      |
@@ -1507,7 +1521,7 @@ see <a href="#Creating%20a%20new%20ECB-layout">Creating a new ECB-layout</a>); j
 -------------------------------------------------------
 </pre>
 
-<br><dt>Layout Nr. 14
+<br><dt>Layout "left12"
 <dd>
 <br><pre>-------------------------------------------------------
 |              |                                      |
@@ -1532,7 +1546,7 @@ see <a href="#Creating%20a%20new%20ECB-layout">Creating a new ECB-layout</a>); j
 -------------------------------------------------------
 </pre>
 
-<br><dt>Layout Nr. 15
+<br><dt>Layout "left13"
 <dd>
 <br><pre>-------------------------------------------------------
 |              |                                      |
@@ -1557,7 +1571,7 @@ see <a href="#Creating%20a%20new%20ECB-layout">Creating a new ECB-layout</a>); j
 -------------------------------------------------------
 </pre>
 
-<br><dt>Layout Nr. 16
+<br><dt>Layout "left14"
 <dd>
 <br><pre>-------------------------------------------------------
 |              |                                      |
@@ -1580,7 +1594,7 @@ see <a href="#Creating%20a%20new%20ECB-layout">Creating a new ECB-layout</a>); j
 -------------------------------------------------------
 </pre>
 
-<br><dt>Layout Nr. 17
+<br><dt>Layout "left15"
 <dd>
 <br><pre>-------------------------------------------------------
 |              |                                      |
@@ -1605,7 +1619,7 @@ see <a href="#Creating%20a%20new%20ECB-layout">Creating a new ECB-layout</a>); j
 -------------------------------------------------------
 </pre>
 
-<br><dt>Layout Nr. 18
+<br><dt>Layout "leftright1"
 <dd>
 <br><pre>-------------------------------------------------------
 |             |                         |             |
@@ -1630,7 +1644,7 @@ see <a href="#Creating%20a%20new%20ECB-layout">Creating a new ECB-layout</a>); j
 -------------------------------------------------------
 </pre>
 
-<br><dt>Layout Nr. 19
+<br><dt>Layout "leftright2"
 <dd>
 <br><pre>-------------------------------------------------------
 |             |                         |             |
@@ -1695,14 +1709,14 @@ Up:<a rel=up accesskey=u href="#The%20ECB-layout">The ECB-layout</a>
 <p>Creating new layouts is only possible (but nevertheless quite easy) by
 programming them with emacs-lisp, see <a href="#Programming%20new%20layouts">Programming new layouts</a>.
 
-<p><strong>For Emacs 21.X and XEmacs 21.X users:</strong>
+<p><strong>For Emacs 21.X and XEmacs 21.X</strong>
 
 <p>If you want to create your own ECB-layout then you can do this very
 easy "by example" with the command <code>ecb-create-new-layout</code>. 
 This command creates a new empty frame and offers a small set of keys
 to create the new layout by splitting windows. 
 <code>ecb-create-new-layout</code> and this couple of keys are your guide
-during the layout-creation-process<a rel=footnote href="#fn-13"><sup>13</sup></a>.
+during the layout-creation-process<a rel=footnote href="#fn-14"><sup>14</sup></a>.
 
 <p>After calling <code>ecb-create-new-layout</code> you will be asked which
 type of layout you want to create: "left", "right", "top" or
@@ -1719,8 +1733,7 @@ right side
 
 <p>Depending on the type you choose the window is splitted by the values
 of the options <code>ecb-windows-width</code> (types "left", "right" and
-"left-right")
-or <code>ecb-windows-height</code> (type "top").
+"left-right") or <code>ecb-windows-height</code> (type "top").
 
 <p>Afterwards you will see a frame like follows (here the layout-type is
 "left-right"):
@@ -1760,10 +1773,11 @@ which can be either "directories", "sources", "methods" or
 "history".
 
 <p>If you are satisfied with your new layout just hit <kbd>C-q</kbd>. You will
-be asked for a new layout-number and after inserting this number the
-new layout is saved in the file defined by the option
+be asked for a new layout-name (TAB-completion is offered to get a
+list of all names already in use) and after inserting a new(!) name
+the new layout is saved in the file defined by the option
 <code>ecb-create-layout-file</code>. The new layout is now available via the
-option <code>ecb-layout-nr</code>.
+option <code>ecb-layout-name</code>.
 
 <p>There is no need for you to load the file
 <code>ecb-create-layout-file</code> manually into your Emacs because it's
@@ -1774,6 +1788,10 @@ displayed in the help-screen are available. ALL other commands are
 temporaly disabled (even the mouse-commands).
 
 <p>For programming new layouts with emacs-lisp see <a href="#Programming%20new%20layouts">Programming new layouts</a>.
+
+<p>With the command <code>ecb-delete-new-layout</code> you can delete
+previously created layouts (TAB-completion is offered for all names of
+user created layouts).
 
 <p><hr>
 Node:<a name="Hiding%20the%20ECB%20windows">Hiding the ECB windows</a>,
@@ -1789,7 +1807,7 @@ Up:<a rel=up accesskey=u href="#Usage%20of%20ECB">Usage of ECB</a>
 without changing the activation state of ECB and also without
 deactivating the advices for <code>delete-other-windows</code> and/or
 <code>delete-window</code>. This is most useful if you use a layout like
-nr.10 (see <a href="#Tips%20and%20tricks">Tips and tricks</a>) or if you want to have maximum space
+"top2" (see <a href="#Tips%20and%20tricks">Tips and tricks</a>) or if you want to have maximum space
 for editing and you don't need the browsing windows all the time.
 
 <p>The following sequence of hooks is evaluated during showing again the
@@ -1821,7 +1839,7 @@ Up:<a rel=up accesskey=u href="#Usage%20of%20ECB">Usage of ECB</a>
 
 <p>With ECB you can "browse" in your source-files like with a
 web-browser. This means ECB stores the current buffer- and
-window-position relative to the current token<a rel=footnote href="#fn-14"><sup>14</sup></a> in the edit-window after
+window-position relative to the current token<a rel=footnote href="#fn-15"><sup>15</sup></a> in the edit-window after
 
 <ul>
 <li>selecting a token in the ECB-methods buffer or
@@ -1951,7 +1969,7 @@ readable command index. See <a href="#Command%20Index">Command Index</a>.
 <table width="95%" align="center">
 <tr><td>
 Activates the ECB and creates all the buffers and draws the ECB-screen
-with the actually choosen layout (see <code>ecb-layout-nr</code>). This function
+with the actually choosen layout (see <code>ecb-layout-name</code>). This function
 raises always the ECB-frame if called from another frame. This is the
 same as calling <code>ecb-minor-mode</code> with a positive argument. 
 </td></tr>
@@ -1968,6 +1986,23 @@ same as calling <code>ecb-minor-mode</code> with a positive argument.
 <table width="95%" align="center">
 <tr><td>
 Add all current file-buffers to the history-buffer of ECB. 
+</td></tr>
+</table>
+
+<p>
+<table width="100%">
+<tr>
+<td align="left"><b>change-layout</b><i>
+</i></td>
+<td align="right">Command</td>
+</tr>
+</table>
+<table width="95%" align="center">
+<tr><td>
+Select a layout-name from all current available layouts
+(TAB-completion is offered) and change the layout to the selected
+layout-name. Note: This function works by changing the option
+<code>ecb-layout-name</code> but only for current Emacs-session. 
 </td></tr>
 </table>
 
@@ -2060,6 +2095,24 @@ compilation-buffer!
 <table width="95%" align="center">
 <tr><td>
 Deactivates the ECB and kills all ECB buffers and windows. 
+</td></tr>
+</table>
+
+<p>
+<table width="100%">
+<tr>
+<td align="left"><b>delete-new-layout</b><i>
+</i></td>
+<td align="right">Command</td>
+</tr>
+</table>
+<table width="95%" align="center">
+<tr><td>
+Select a layout-name for a layout created by
+<code>ecb-create-new-layout</code> and delete this layout. This means the
+layout-definiton is removed from the file
+<code>ecb-create-layout-file</code> and the layout-function and associated
+aliases are unbound. 
 </td></tr>
 </table>
 
@@ -2317,6 +2370,22 @@ the options <code>ecb-help-info-start-file</code> and
 <p>
 <table width="100%">
 <tr>
+<td align="left"><b>show-layout-help</b><i>
+</i></td>
+<td align="right">Command</td>
+</tr>
+</table>
+<table width="95%" align="center">
+<tr><td>
+Select a name of a layout and shows the documentation of the
+associated layout-function. At least for the buildin layouts the
+documentation contains a picture of the outline of the choosen layout. 
+</td></tr>
+</table>
+
+<p>
+<table width="100%">
+<tr>
 <td align="left"><b>submit-problem-report</b><i>
 </i></td>
 <td align="right">Command</td>
@@ -2382,9 +2451,9 @@ enlarge-state.
 </table>
 <table width="95%" align="center">
 <tr><td>
-Toggles between the layouts defined in <code>ecb-toggle-layout-sequence</code>. 
-Note: This function works by changing the options <code>ecb-layout-nr</code> and
-<code>ecb-show-sources-in-directories-buffer</code> but only for current
+Toggles between the layouts defined in
+<code>ecb-toggle-layout-sequence</code>. Note: This function works by
+changing the options <code>ecb-layout-name</code> but only for current
 Emacs-session. 
 </td></tr>
 </table>
@@ -2474,7 +2543,7 @@ elisp-code but only with the customize-feature!
 </td><td valign="top"><code>ecb-font-lock-tokens</code>
 <br></td></tr><tr align="left"><td valign="top"><code>ecb-highlight-token-with-point-delay</code>
 </td><td valign="top"><code>ecb-key-map</code>
-<br></td></tr><tr align="left"><td valign="top"><code>ecb-layout-nr</code>
+<br></td></tr><tr align="left"><td valign="top"><code>ecb-layout-name</code>
 </td><td valign="top"><code>ecb-layout-window-sizes</code>
 <br></td></tr><tr align="left"><td valign="top"><code>ecb-mode-line-prefixes</code>
 </td><td valign="top"><code>ecb-show-node-info-in-minibuffer</code>
@@ -2495,7 +2564,7 @@ changing everyones <code>.emacs</code>-file and normally you will do this
 with the file <code>site-start.el</code>. You can customize all options of
 ECB in a central <code>site-start.el</code> (even the options mentioned
 above!) but you <strong>MUST NOT</strong> do this via <code>setq</code> but you have
-to use <code>custom-set-variables</code><a rel=footnote href="#fn-15"><sup>15</sup></a>! Here is a short example
+to use <code>custom-set-variables</code><a rel=footnote href="#fn-16"><sup>16</sup></a>! Here is a short example
 how this can be done:
 
 <br><pre>(custom-set-variables '(ecb-show-tokens ((include collapsed nil)
@@ -2554,7 +2623,7 @@ of 4 for the latter one if you display the expand-symbol before
 <dd>Which files will (not) be shown in ECB. 
 <br><dt><code>ecb-show-node-info-in-minibuffer</code>
 <dd>When and which node-info should be displayed in the minibuffer? 
-<br><dt><code>ecb-layout-nr</code>
+<br><dt><code>ecb-layout-name</code>
 <dd>The ECB layout, means which windows you want to be displayed in the
 ECB-frame and also the location of these windows (see <a href="#Changing%20the%20ECB-layout">Changing the ECB-layout</a>). 
 <br><dt><code>ecb-token-display-function</code>
@@ -2580,8 +2649,8 @@ groups". You can highly customize all the ECB behavior/layout so just
 go to these groups and you will see all well documented ECB-options.
 
 <p><strong>Note</strong>: All options in the following subsections are listed
-without the prefix "ecb-" (e.g. the option <code>ecb-layout-nr</code> is
-listed with name "layout-nr"). This has been done for a better
+without the prefix "ecb-" (e.g. the option <code>ecb-layout-name</code> is
+listed with name "layout-name"). This has been done for a better
 readable option index. See <a href="#Option%20Index">Option Index</a>.
 
 <ul>
@@ -2922,14 +2991,14 @@ before) or the ECB-windows are shown if ECB was already active but its
 windows were hidden. In every case ECB is activated with visible
 ECB-windows afterwards!
 
-<p>For every major mode there can be specified an <code>ecb-layout-nr</code>:
+<p>For every major mode there can be specified an <code>ecb-layout-name</code>:
 
 <ul>
 <li><code>default</code>:
-The value customized with <code>ecb-layout-nr</code> is choosen. 
-<li>an integer:
-ECB is activated with this layout-nr. This changes the value of
-<code>ecb-layout-nr</code> but only for current emacs-session! But the
+The value customized with <code>ecb-layout-name</code> is choosen. 
+<li>a string:
+ECB is activated with this layout-name. This changes the value of
+<code>ecb-layout-name</code> but only for current emacs-session! But the
 layout is only changed if ECB was activated, if just the ECB-windows
 were shown, the current layout is used! 
 </ul>
@@ -4765,53 +4834,38 @@ makes no sense, therefore you can not enable this for both of them.
 <p>
 <table width="100%">
 <tr>
-<td align="left"><b>layout-nr</b><i>
+<td align="left"><b>layout-name</b><i>
 </i></td>
 <td align="right">User Option</td>
 </tr>
 </table>
 <table width="95%" align="center">
 <tr><td>
-Define the window layout of ECB. A positive integer which sets the
-general layout. There are four different types of layouts: left,
-right, top and left-right, which means the location of the
-ECB-tree-windows in the ECB-frame. Currently there are 20 predefined
-layouts with index from 0 to 19. You can savely try out any of them by
-changing this value and saving it only for the current session. If you
-are sure which layout you want you can save it for future sessions. To
-get a picture of the layout for index &lt;index&gt; call C-h f
-ecb-layout-function-&lt;index&gt;, e.g. <code>ecb-layout-function-9</code>.
+Select a window layout of ECB. Value is any arbitary string. There are
+four different types of layouts: left, right, top and left-right,
+which means the location of the ECB-tree-windows in the ECB-frame. 
+Currently there are 20 predefined layouts; names see below. You can
+savely try out any of them by changing this value and saving it only
+for the current session. If you are sure which layout you want you can
+save it for future sessions. To get a picture of the layout for name
+&lt;name&gt; call `ecb-show-layout-help'. <code>ecb-layout-function-9</code>.
 
-<p>Currently available layouts (see the doc-string for a picture ot the
-layout):
+<p>Currently available layouts:
 
-<p>Left layouts:
-<code>ecb-layout-function-0</code>
-<code>ecb-layout-function-1</code>
-<code>ecb-layout-function-2</code>
-<code>ecb-layout-function-3</code>
-<code>ecb-layout-function-4</code>
-<code>ecb-layout-function-6</code>
-<code>ecb-layout-function-8</code>
-<code>ecb-layout-function-9</code>
-<code>ecb-layout-function-10</code>
-<code>ecb-layout-function-11</code>
-<code>ecb-layout-function-12</code>
-<code>ecb-layout-function-13</code>
-<code>ecb-layout-function-14</code>
-<code>ecb-layout-function-15</code>
-<code>ecb-layout-function-16</code>
-<code>ecb-layout-function-17</code>
+<ul>
+<li>Left layouts:
+left1 left2 left3 left4 left5 left6 left7 left8 left9 left10 left11
+left12 left13 left14 left15
 
-<p>Right layouts:
-<code>ecb-layout-function-5</code>
+<li>Right layouts:
+right1
 
-<p>Top layouts:
-<code>ecb-layout-function-7</code>
+<li>Top layouts:
+top1 top2
 
-<p>Left-right layouts:
-<code>ecb-layout-function-18</code>
-<code>ecb-layout-function-19</code>
+<li>Left-right layouts:
+leftright1 leftright2
+</ul>
 
 <p>Regardless of the settings you define here: If you have destroyed or
 changed the ECB-screen-layout by any action you can always go back to
@@ -5068,7 +5122,7 @@ start-time of ECB.
 <table width="95%" align="center">
 <tr><td>
 Toggle sequence for layout toggling with <code>ecb-toggle-layout</code>. 
-Every element of this list has to be a valid layout-number i.e. either
+Every element of this list has to be a valid layout-name i.e. either
 one of the predefined layouts or one of the user-defined layouts.
 
 <p>You can add here as many layouts as you want but to use this option
@@ -5082,10 +5136,10 @@ the same side of the frame and the tree-buffer-"column" (or
 <p>Recommended values are for example:
 
 <ul>
-<li>(11 16), toggles between methods and directories/history
-<li>(11 15), toggles between methods and directories
-<li>(11 14), toggles between methods and history
-<li>(11 14 15), toggles between methods, history and directories
+<li>("left10" "left15"), toggles between methods and directories/history
+<li>("left10" "left13"), toggles between methods and directories
+<li>("left10" "left14"), toggles between methods and history
+<li>("left10" "left13" "left14"), toggles between methods, history and directories
 </ul>
 
 <p>This option makes only sense if the value is a list with more than 1
@@ -5723,7 +5777,7 @@ satisfied:
 
 <p>With unix-systems these tools are in the
 standard-distribution. If you are running any Microsoft Windows system
-then you need cygwin<a rel=footnote href="#fn-16"><sup>16</sup></a> which offers these tools too. On every
+then you need cygwin<a rel=footnote href="#fn-17"><sup>17</sup></a> which offers these tools too. On every
 system these tools must reside in the <code>PATH</code> environment-variable!
 
 <p>If you are behind a firewall and you have to use a proxy you maybe
@@ -6001,7 +6055,7 @@ the following example:
 </pre>
 
 <p>This code sets the new defined font <code>my-ecb-font</code> as font for
-all<a rel=footnote href="#fn-17"><sup>17</sup></a> ECB-tree-buffers (incl. the methods
+all<a rel=footnote href="#fn-18"><sup>18</sup></a> ECB-tree-buffers (incl. the methods
 buffer).
 
 <p><hr>
@@ -6023,7 +6077,8 @@ such a situation:
 <li>First customize your ECB:
 
 <ol type=1 start=1>
-<li>Customize <code>ecb-layout-nr</code> to layout nr. 10 (on top) or nr. 11 (on left-side)
+<li>Customize <code>ecb-layout-name</code> to layout-name "top2" (on top) or
+"left9" (on left-side)
 
 <li>Ensure that <code>ecb-compile-window-height</code> is nil.
 
@@ -6057,9 +6112,10 @@ Up:<a rel=up accesskey=u href="#Tips%20and%20tricks">Tips and tricks</a>
 <h3>Working with big screens</h3>
 
 <p>ECB offers a layout type "left-right" with special ECB-tree-windows
-on the left and right side of the edit-window. The layouts nr. 18 and
-nr. 19 are examples for this layout type. See <a href="#Creating%20a%20new%20ECB-layout">Creating a new ECB-layout</a> and <a href="#Programming%20new%20layouts">Programming new layouts</a> for details about how to
-create or program more layouts of this type.
+on the left and right side of the edit-window. The layouts
+"leftright1" and "leftright2"are examples for this layout type. 
+See <a href="#Creating%20a%20new%20ECB-layout">Creating a new ECB-layout</a> and <a href="#Programming%20new%20layouts">Programming new layouts</a>
+for details about how to create or program more layouts of this type.
 
 <p>Such a layout is eventually the best choice for big screens because
 the several ECB-tree-windows are bigger and can display more
@@ -6082,8 +6138,8 @@ Up:<a rel=up accesskey=u href="#Tips%20and%20tricks">Tips and tricks</a>
 following:
 
 <ol type=1 start=1>
-</p><li>Customize <code>ecb-layout-nr</code> to layout nr. 11, 14, 15 or 16 dependend to
-what you like.
+</p><li>Customize <code>ecb-layout-name</code> to layout name "left9", "left12",
+"left13" or "left14" dependend to what you like.
 
 <li>Optional: Ensure that <code>ecb-compile-window-height</code> is nil.
 
@@ -6092,8 +6148,8 @@ what you like.
 <li>Optional: Customize <code>ecb-toggle-layout-sequence</code> and toggle very fast
 between several layouts by <code>ecb-toggle-layout</code>. See the doc-strings!
 
-<li>Optional: Customize <code>ecb-show-sources-in-directories-buffer</code> to not
-nil if the choosen layout (see 1. and 4.) contains a
+<li>Optional: Customize <code>ecb-show-sources-in-directories-buffer</code> to
+not nil if the choosen layout (see 1. and 4.) contains a
 directories-tree-buffer.
 
 <li>Save your changes.
@@ -6128,10 +6184,10 @@ performance in large buffers, especially with java-buffers in
 <code>jde-mode</code>.
 
 <p>This scrolling performance can be increased a lot if the options
-<code>scroll-conservatively</code> and <code>scroll-step</code> are set appropriatelly: The
-former one should have a value of 0 during ECB is active and the
-latter one a value of either 0 or &gt; 1 (the exact value depends on the
-power of your machine).
+<code>scroll-conservatively</code> and <code>scroll-step</code> are set
+appropriatelly: The former one should have a value of 0 during ECB is
+active and the latter one a value of either 0 or &gt; 1 (the exact value
+depends on the power of your machine).
 
 <p>As far as we know this is not a problem of Emacs 21.X or XEmacs. With
 these versions of Emacs there should be no scrolling problem even with
@@ -6146,13 +6202,14 @@ Up:<a rel=up accesskey=u href="#Tips%20and%20tricks">Tips and tricks</a>
 
 <h3>Working with large directories</h3>
 
-<p>If <code>ecb-source-path</code> contains directories with many files and subdirs,
-especially if these directories are mounted net-drives ("many" means
-here something &gt; 1000, dependend on the speed of the net-connection
-and the machine), actualizing the sources- and/or directories- buffer
-of ECB (if displayed in current layout!) can slow down dramatically. 
-If this is a problem the contents of certain directories can be cached
-which increases the speed a lot. See <code>ecb-cache-directory-contents</code>.
+<p>If <code>ecb-source-path</code> contains directories with many files and
+subdirs, especially if these directories are mounted net-drives
+("many" means here something &gt; 1000, dependend on the speed of the
+net-connection and the machine), actualizing the sources- and/or
+directories- buffer of ECB (if displayed in current layout!) can slow
+down dramatically. If this is a problem the contents of certain
+directories can be cached which increases the speed a lot. See
+<code>ecb-cache-directory-contents</code>.
 
 <p><hr>
 Node:<a name="Using%20eshell">Using eshell</a>,
@@ -6269,7 +6326,7 @@ Up:<a rel=up accesskey=u href="#Elisp%20programming">Elisp programming</a>
 <h3>How to deal with the adviced window-functions</h3>
 
 <p>ECB offers for packages which work during activated ECB three macros
-for easy temporally<a rel=footnote href="#fn-18"><sup>18</sup></a> using all original-functions, all
+for easy temporally<a rel=footnote href="#fn-19"><sup>19</sup></a> using all original-functions, all
 adviced functions or only some adviced functions:
 
 <ul>
@@ -6300,17 +6357,17 @@ manual):
 <p>
 <table width="100%">
 <tr>
-<td align="left"><b>layout-define</b><i> number type &amp;rest create-code
+<td align="left"><b>layout-define</b><i> name type &amp;rest create-code
 </i></td>
 <td align="right">Macro</td>
 </tr>
 </table>
 <table width="95%" align="center">
 <tr><td>
-Creates a new ECB-layout with number <var>NUMBER</var>. <var>TYPE</var> is the
+Creates a new ECB-layout with name <var>NAME</var>. <var>TYPE</var> is the
 type of the new layout and is literal, i.e. not evaluated. It can be
 left, right, top or left-right. <var>DOC</var> is the docstring for the new
-layout-function "ecb-layout-function-&lt;number&gt;". <var>CREATE-CODE</var> is
+layout-function "ecb-layout-function-&lt;name&gt;". <var>CREATE-CODE</var> is
 all the lisp code which is necessary to define the
 ECB-windows/buffers.
 
@@ -6394,11 +6451,11 @@ set as a ECB-tree-window."
 <p>Use this macro to program new layouts within your <code>.emacs</code> or any
 other file which is loaded into your Emacs. After loading the file(s)
 with all the new layout-definitions you can use it by customizing the
-option <code>ecb-layout-nr</code> to the appropriate number.
+option <code>ecb-layout-name</code> to the appropriate name.
 
 <p>Here is an example:
 
-<br><pre>(ecb-layout-define 100 left nil
+<br><pre>(ecb-layout-define "my-own-layout" left nil
   ;; The frame is already splitted side-by-side and point stays in the
   ;; left window (= the ECB-tree-window-column)
 
@@ -6416,7 +6473,8 @@ option <code>ecb-layout-nr</code> to the appropriate number.
   (select-window (next-window)))
 </pre>
 
-<p>This layout definition defines a layout nr. 100 which looks like:
+<p>This layout definition defines a layout with name "my-own-layout"
+which looks like:
 
 <br><pre>-------------------------------------------------------
 |              |                                      |
@@ -6689,7 +6747,7 @@ to the ECB-history after ECB-start.
 
 <br></td></tr><tr align="left"><td valign="top">Is there an "Intellisense"-mechanism like with other IDEs? 
 </td><td valign="top"></td><td valign="top">
-For Java the JDEE<a rel=footnote href="#fn-19"><sup>19</sup></a> has this feature and for all other languages
+For Java the JDEE<a rel=footnote href="#fn-20"><sup>20</sup></a> has this feature and for all other languages
 semantic offer something similar, see
 <a href="http://cedet.sourceforge.net/intellisense.shtml">http://cedet.sourceforge.net/intellisense.shtml</a>
 
@@ -6713,11 +6771,13 @@ name "activate").
 <ul compact>
 <li><code>activate</code>: <a href="#Interactive%20ECB%20commands">Interactive ECB commands</a>
 <li><code>add-all-buffers-to-history</code>: <a href="#Interactive%20ECB%20commands">Interactive ECB commands</a>
+<li><code>change-layout</code>: <a href="#Interactive%20ECB%20commands">Interactive ECB commands</a>
 <li><code>clear-history</code>: <a href="#Interactive%20ECB%20commands">Interactive ECB commands</a>
 <li><code>create-new-layout</code>: <a href="#Interactive%20ECB%20commands">Interactive ECB commands</a>
 <li><code>current-buffer-sync</code>: <a href="#Interactive%20ECB%20commands">Interactive ECB commands</a>
 <li><code>cycle-through-compilation-buffers</code>: <a href="#Interactive%20ECB%20commands">Interactive ECB commands</a>
 <li><code>deactivate</code>: <a href="#Interactive%20ECB%20commands">Interactive ECB commands</a>
+<li><code>delete-new-layout</code>: <a href="#Interactive%20ECB%20commands">Interactive ECB commands</a>
 <li><code>display-upgraded-options</code>: <a href="#Interactive%20ECB%20commands">Interactive ECB commands</a>
 <li><code>download-ecb</code>: <a href="#Interactive%20ECB%20commands">Interactive ECB commands</a>
 <li><code>goto-window-compilation</code>: <a href="#Interactive%20ECB%20commands">Interactive ECB commands</a>
@@ -6734,6 +6794,7 @@ name "activate").
 <li><code>rebuild-methods-buffer</code>: <a href="#Interactive%20ECB%20commands">Interactive ECB commands</a>
 <li><code>redraw-layout</code>: <a href="#Interactive%20ECB%20commands">Interactive ECB commands</a>
 <li><code>show-help</code>: <a href="#Interactive%20ECB%20commands">Interactive ECB commands</a>
+<li><code>show-layout-help</code>: <a href="#Interactive%20ECB%20commands">Interactive ECB commands</a>
 <li><code>submit-problem-report</code>: <a href="#Interactive%20ECB%20commands">Interactive ECB commands</a>
 <li><code>toggle-ecb-windows</code>: <a href="#Interactive%20ECB%20commands">Interactive ECB commands</a>
 <li><code>toggle-enlarged-compilation-window</code>: <a href="#Interactive%20ECB%20commands">Interactive ECB commands</a>
@@ -6753,8 +6814,8 @@ Up:<a rel=up accesskey=u href="#Top">Top</a>
 <p>This index contains all customizable options of ECB.
 
 <p><strong>Note</strong>: All options in this index are listed without the prefix
-"ecb-" (e.g. the option <code>ecb-layout-nr</code> is listed with name
-"layout-nr").
+"ecb-" (e.g. the option <code>ecb-layout-name</code> is listed with name
+"layout-name").
 
 <ul compact>
 <li><code>activate-before-layout-draw-hook</code>: <a href="#ecb-general">ecb-general</a>
@@ -6809,7 +6870,7 @@ Up:<a rel=up accesskey=u href="#Top">Top</a>
 <li><code>key-map</code>: <a href="#ecb-general">ecb-general</a>
 <li><code>kill-buffer-clears-history</code>: <a href="#ecb-history">ecb-history</a>
 <li><code>layout-always-operate-in-edit-window</code>: <a href="#ecb-layout">ecb-layout</a>
-<li><code>layout-nr</code>: <a href="#ecb-layout">ecb-layout</a>
+<li><code>layout-name</code>: <a href="#ecb-layout">ecb-layout</a>
 <li><code>layout-switch-to-compilation-window</code>: <a href="#ecb-layout">ecb-layout</a>
 <li><code>layout-window-sizes</code>: <a href="#ecb-layout">ecb-layout</a>
 <li><code>major-modes-activate</code>: <a href="#ecb-general">ecb-general</a>
@@ -7114,36 +7175,41 @@ They can be used to run any arbitrary lisp code after a tree-buffer
 creation!</p>
 
 <li><a name="fn-13"></a>
+<p>The command
+<code>ecb-show-layout-help'</code> shows the outline-picture for all buildin
+layouts.</p>
+
+<li><a name="fn-14"></a>
 <p>During the creation
 process you will be asked in the minibuffer for several options; here
 you can use TAB-completion and an "empty" RET chooses always the
 first option!</p>
 
-<li><a name="fn-14"></a>
+<li><a name="fn-15"></a>
 <p>e.g. a method,
 a variable or any other semantic token</p>
 
-<li><a name="fn-15"></a>
+<li><a name="fn-16"></a>
 <p>At least for the options
 for which <code>setq</code> is explicitly forbidden, but it is recommended
 to use always <code>custom-set-variables</code>!</p>
 
-<li><a name="fn-16"></a>
+<li><a name="fn-17"></a>
 <p>cygwin is available at
 <a href="http://cygwin.com/">http://cygwin.com/</a>
 </p>
 
-<li><a name="fn-17"></a>
+<li><a name="fn-18"></a>
 <p>Of course <code>ecb-directories-general-face</code>,
 <code>ecb-sources-general-face</code>, <code>ecb-methods-general-face</code> and
 <code>ecb-history-general-face</code> must be set to
 <code>ecb-default-general-face</code>!</p>
 
-<li><a name="fn-18"></a>
+<li><a name="fn-19"></a>
 <p>I.e. regardless of the settings in
 <code>ecb-advice-window-functions</code>!</p>
 
-<li><a name="fn-19"></a>
+<li><a name="fn-20"></a>
 <p>
 <a href="http://jdee.sunsite.dk/">http://jdee.sunsite.dk/</a>
 </p>

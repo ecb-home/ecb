@@ -26,7 +26,7 @@
 ;; This file is part of the ECB package which can be found at:
 ;; http://home.swipnet.se/mayhem/ecb.html
 
-;; $Id: ecb-util.el,v 1.36 2002/12/06 20:40:05 berndl Exp $
+;; $Id: ecb-util.el,v 1.37 2002/12/15 19:35:57 berndl Exp $
 
 ;;; Code:
 
@@ -71,9 +71,15 @@
       (defalias 'ecb-frame-parameter 'frame-property)
       (defalias 'ecb-line-beginning-pos 'point-at-bol)
       (defalias 'ecb-line-end-pos 'point-at-eol))
+      ;; because we want only check if the car of this function is equal for two
+      ;; different windows for the sake if the two window are located side by
+      ;; side or not we can here define this alias even if this function does in
+      ;; XEmacs soemthing different.
+      (defalias 'ecb-window-edges 'window-pixel-edges)
   (defalias 'ecb-frame-parameter 'frame-parameter)
   (defalias 'ecb-line-beginning-pos 'line-beginning-position)
-  (defalias 'ecb-line-end-pos 'line-end-position))
+  (defalias 'ecb-line-end-pos 'line-end-position)
+  (defalias 'ecb-window-edges 'window-edges))
 
 (defun ecb-remove-assoc (list key)
   (delete* key list :test (function (lambda (key item) (eq key (car item))))))

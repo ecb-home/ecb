@@ -18,7 +18,17 @@ No special notes beyond the contents of README.
 Upgrading from version 1.80:
 ----------------------------
 
-No special notes beyond the contents of README.
+The type or name of the following options has changed:
+
+- ecb-layout-nr: New name is ecb-layout-name
+- ecb-toggle-layout-sequence: New type
+- ecb-major-modes-activate: New type
+- ecb-layout-window-sizes: New type
+- ecb-show-sources-in-directories-buffer: New type
+- ecb-show-ecb-windows-hook: New name is ecb-show-ecb-windows-before-hook
+- ecb-hide-ecb-windows-hook: New name is ecb-hide-ecb-windows-before-hook
+
+ECB autom. upgrades the values of these options to theirs new names/types!
 
 
 Upgrading from version < 1.80:
@@ -31,7 +41,7 @@ The type of the following options has changed:
 
 ECB has a new feature 'ecb-auto-compatibility-check' which enables a check for
 incompatible or renamed ECB-options at ECB startup. These options are then
-auto. upgraded to the new type or reset to the default-values of current
+autom. upgraded to the new type or reset to the default-values of current
 ECB-version if no upgrade is possible. All upgraded or reset options are
 displayed to the user with their old and new values!
 

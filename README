@@ -4,9 +4,9 @@ Readme for the Emacs Code Browser (ECB) v1.90
 About
 -----
 
-This package contains a code browser for several languages for Emacs. For
-instructions on how to use the browser read the online-help (see "Usage"
-below). The latest version of this package can be found at:
+This package contains a code browser for several programming-languages for
+Emacs. For instructions on how to use the browser read the online-help (see
+"Usage" below). The latest version of this package can be found at:
 
 http://home.swipnet.se/mayhem/ecb.html
 
@@ -71,7 +71,7 @@ are not necessary for you; please start reading at point 4.
       (require 'ecb)
 
    If you want to load the ECB first after starting it by `ecb-activate'
-   (Advantage: Fast loading(2). Disadvantage: ECB- and semantic-options first
+   (Advantage: Fast loading. Disadvantage: ECB- and semantic-options first
    available after starting ECB):
 
       (autoload 'ecb-activate "ecb" "Activate ECB" t)

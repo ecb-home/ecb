@@ -1,6 +1,6 @@
 ;;; ecb-speedbar.el --- 
 
-;; $Id: ecb-speedbar.el,v 1.24 2002/12/11 09:57:23 berndl Exp $
+;; $Id: ecb-speedbar.el,v 1.25 2002/12/15 19:35:57 berndl Exp $
 
 ;; Copyright (C) 2000-2003 Free Software Foundation, Inc.
 ;; Copyright (C) 2000-2003 Kevin A. Burton (burton@openprivacy.org)
@@ -207,7 +207,7 @@ that this is a reimplemntation of this for the ECB that does no frame selection"
 
   (find-file file))
 
-(ecb-layout-define 20 right
+(ecb-layout-define "speedbar1" right
   "ECB layout with integrated speedbar."  
   (ecb-set-speedbar-buffer)
   (ecb-split-ver 0.5)

@@ -1029,16 +1029,26 @@ Changing and customizing the ECB-layout
 
 ECB offers several predefined layouts with different sets and also different
 locations of ECB-windows. See below the "ascii-screenshot" of all currently
-available layouts.
+buildin layouts(1).
 
 In addition to these predefined layouts you can either interactively create
 new layouts "by example" (*note Creating a new ECB-layout::) or program new
 layouts with the macro `ecb-layout-define' (*note Programming new layouts::).
 The former method is the recommened one!
 
-If you want to switch fast between some layouts see the option
-`ecb-toggle-layout-sequence' and the command `ecb-toggle-layout' (*note
-Simulating speedbar::)
+There are two ways to interactively change the layout:
+ * Changing permanently: Customize the option `ecb-layout-name' and store it
+   for future Emacs sessions.
+
+ * Switching between several layouts at runtime: If you want to switch fast
+   between a certain sequence of layouts see the option
+   `ecb-toggle-layout-sequence' and the command `ecb-toggle-layout' (*note
+   Simulating speedbar::). For just selecting another layout during current
+   Emacs-session use the command `ecb-change-layout'.
+
+With the option `ecb-show-sources-in-directories-buffer' you can define if
+sources are displayed in the directory-window of a layout (*note ECB
+Directories::).
 
 In addition to the general layout you can specify if the layout should
 contain a durable compilation-window at the bottom of the frame, see
@@ -1050,10 +1060,10 @@ of sub-nodes in a tree. See `ecb-tree-indent' and
 `ecb-tree-expand-symbol-before'.
 
 Here are all currently available layouts (for creating own new layouts see
-*Note Creating a new ECB-layout::); just customize the option `ecb-layout-nr'
-to the related number:
+*Note Creating a new ECB-layout::); just customize the option
+`ecb-layout-name' to the related name:
 
-Layout Nr. 0
+Layout "left1"
       -------------------------------------------------------
       |              |                                      |
       |  Directories |                                      |
@@ -1076,7 +1086,7 @@ Layout Nr. 0
       |                                                     |
       -------------------------------------------------------
 
-Layout Nr. 1
+Layout "left2"
       -------------------------------------------------------
       |              |                                      |
       |              |                                      |
@@ -1099,7 +1109,7 @@ Layout Nr. 1
       |                                                     |
       -------------------------------------------------------
 
-Layout Nr. 2
+Layout "left3"
       -------------------------------------------------------
       |              |                                      |
       |  Directories |                                      |
@@ -1122,7 +1132,7 @@ Layout Nr. 2
       |                                                     |
       -------------------------------------------------------
 
-Layout Nr. 3
+Layout "left4"
       -------------------------------------------------------
       |              |                                      |
       |              |                                      |
@@ -1145,7 +1155,7 @@ Layout Nr. 3
       |                                                     |
       -------------------------------------------------------
 
-Layout Nr. 4
+Layout "left5"
       -------------------------------------------------------
       |              |                                      |
       |  Directories |                                      |
@@ -1168,7 +1178,7 @@ Layout Nr. 4
       |                                                     |
       -------------------------------------------------------
 
-Layout Nr. 5
+Layout "right1"
       -------------------------------------------------------
       |                                      |              |
       |                                      |  Directories |
@@ -1191,7 +1201,7 @@ Layout Nr. 5
       |                                                     |
       -------------------------------------------------------
 
-Layout Nr. 6
+Layout "left6"
       -------------------------------------------------------
       |  Sources     |                                      |
       |--------------|                                      |
@@ -1210,7 +1220,7 @@ Layout Nr. 6
       |                                                     |
       -------------------------------------------------------
 
-Layout Nr. 7
+Layout "top1"
       -------------------------------------------------------
       |                        |             |              |
       |                        |             |              |
@@ -1233,7 +1243,7 @@ Layout Nr. 7
       |                                                     |
       -------------------------------------------------------
 
-Layout Nr. 8
+Layout "left7"
       -------------------------------------------------------
       |              |                                      |
       |  Directories |                                      |
@@ -1256,7 +1266,7 @@ Layout Nr. 8
       |                                                     |
       -------------------------------------------------------
 
-Layout Nr. 9
+Layout "left8"
       -------------------------------------------------------
       |              |                                      |
       |  Directories |                                      |
@@ -1279,7 +1289,7 @@ Layout Nr. 9
       |                                                     |
       -------------------------------------------------------
 
-Layout Nr. 10
+Layout "top2"
       -------------------------------------------------------
       |                                                     |
       |                                                     |
@@ -1302,7 +1312,7 @@ Layout Nr. 10
       |                                                     |
       -------------------------------------------------------
 
-Layout Nr. 11
+Layout "left9"
       -------------------------------------------------------
       |              |                                      |
       |              |                                      |
@@ -1325,7 +1335,7 @@ Layout Nr. 11
       |                                                     |
       -------------------------------------------------------
 
-Layout Nr. 12
+Layout "left10"
       -------------------------------------------------------
       |              |                                      |
       |              |                                      |
@@ -1346,7 +1356,7 @@ Layout Nr. 12
       |                                                     |
       -------------------------------------------------------
 
-Layout Nr. 13
+Layout "left11"
       -------------------------------------------------------
       |              |                                      |
       |              |                                      |
@@ -1367,7 +1377,7 @@ Layout Nr. 13
       |                                                     |
       -------------------------------------------------------
 
-Layout Nr. 14
+Layout "left12"
       -------------------------------------------------------
       |              |                                      |
       |              |                                      |
@@ -1390,7 +1400,7 @@ Layout Nr. 14
       |                                                     |
       -------------------------------------------------------
 
-Layout Nr. 15
+Layout "left13"
       -------------------------------------------------------
       |              |                                      |
       |              |                                      |
@@ -1413,7 +1423,7 @@ Layout Nr. 15
       |                                                     |
       -------------------------------------------------------
 
-Layout Nr. 16
+Layout "left14"
       -------------------------------------------------------
       |              |                                      |
       |              |                                      |
@@ -1434,7 +1444,7 @@ Layout Nr. 16
       |                                                     |
       -------------------------------------------------------
 
-Layout Nr. 17
+Layout "left15"
       -------------------------------------------------------
       |              |                                      |
       |  Directories |                                      |
@@ -1457,7 +1467,7 @@ Layout Nr. 17
       |                                                     |
       -------------------------------------------------------
 
-Layout Nr. 18
+Layout "leftright1"
       -------------------------------------------------------
       |             |                         |             |
       | Directories |                         |  Methods    |
@@ -1480,7 +1490,7 @@ Layout Nr. 18
       |                                                     |
       -------------------------------------------------------
 
-Layout Nr. 19
+Layout "leftright2"
       -------------------------------------------------------
       |             |                         |             |
       | Directories |                         |  Methods    |
@@ -1502,6 +1512,11 @@ Layout Nr. 19
       |                   Compilation                       |
       |                                                     |
       -------------------------------------------------------
+
+---------- Footnotes ----------
+
+(1) The command `ecb-show-layout-help'' shows the outline-picture for all
+buildin layouts.
 
 
 File: ecb.info,  Node: Redrawing the ECB-layout,  Next: Creating a new ECB-layout,  Prev: Changing the ECB-layout,  Up: The ECB-layout
@@ -1534,7 +1549,7 @@ Interactively creating new layouts
 Creating new layouts is only possible (but nevertheless quite easy) by
 programming them with emacs-lisp, see *Note Programming new layouts::.
 
-*For Emacs 21.X and XEmacs 21.X users:*
+*For Emacs 21.X and XEmacs 21.X*
 
 If you want to create your own ECB-layout then you can do this very easy "by
 example" with the command `ecb-create-new-layout'.  This command creates a
@@ -1594,9 +1609,10 @@ every ECB-tree-window you create a type (`C-t') which can be either
 "directories", "sources", "methods" or "history".
 
 If you are satisfied with your new layout just hit `C-q'. You will be asked
-for a new layout-number and after inserting this number the new layout is
-saved in the file defined by the option `ecb-create-layout-file'. The new
-layout is now available via the option `ecb-layout-nr'.
+for a new layout-name (TAB-completion is offered to get a list of all names
+already in use) and after inserting a new(!) name the new layout is saved in
+the file defined by the option `ecb-create-layout-file'. The new layout is
+now available via the option `ecb-layout-name'.
 
 There is no need for you to load the file `ecb-create-layout-file' manually
 into your Emacs because it's automatically loaded by ECB!
@@ -1607,6 +1623,9 @@ the mouse-commands).
 
 For programming new layouts with emacs-lisp see *Note Programming new
 layouts::.
+
+With the command `ecb-delete-new-layout' you can delete previously created
+layouts (TAB-completion is offered for all names of user created layouts).
 
 ---------- Footnotes ----------
 
@@ -1624,7 +1643,7 @@ With `ecb-toggle-ecb-windows', `ecb-hide-ecb-windows' and
 `ecb-show-ecb-windows' you can hide/show all the ECB windows without changing
 the activation state of ECB and also without deactivating the advices for
 `delete-other-windows' and/or `delete-window'. This is most useful if you use
-a layout like nr.10 (*note Tips and tricks::) or if you want to have maximum
+a layout like "top2" (*note Tips and tricks::) or if you want to have maximum
 space for editing and you don't need the browsing windows all the time.
 
 The following sequence of hooks is evaluated during showing again the hidden
@@ -1768,12 +1787,18 @@ Command Index::.
 
  - Command: activate
    Activates the ECB and creates all the buffers and draws the ECB-screen
-   with the actually choosen layout (see `ecb-layout-nr'). This function
+   with the actually choosen layout (see `ecb-layout-name'). This function
    raises always the ECB-frame if called from another frame. This is the same
    as calling `ecb-minor-mode' with a positive argument.
 
  - Command: add-all-buffers-to-history
    Add all current file-buffers to the history-buffer of ECB.
+
+ - Command: change-layout
+   Select a layout-name from all current available layouts (TAB-completion is
+   offered) and change the layout to the selected layout-name. Note: This
+   function works by changing the option `ecb-layout-name' but only for
+   current Emacs-session.
 
  - Command: clear-history &optional clearall
    Clears the ECB history-buffer. If CLEARALL is `nil' then the behavior is
@@ -1808,6 +1833,12 @@ Command Index::.
 
  - Command: deactivate
    Deactivates the ECB and kills all ECB buffers and windows.
+
+ - Command: delete-new-layout
+   Select a layout-name for a layout created by `ecb-create-new-layout' and
+   delete this layout. This means the layout-definiton is removed from the
+   file `ecb-create-layout-file' and the layout-function and associated
+   aliases are unbound.
 
  - Command: display-upgraded-options
    Display a message-buffer which options have been upgraded or reset.
@@ -1893,6 +1924,11 @@ Command Index::.
    occurs please take a look at the options `ecb-help-info-start-file' and
    `ecb-help-html-start-file'!
 
+ - Command: show-layout-help
+   Select a name of a layout and shows the documentation of the associated
+   layout-function. At least for the buildin layouts the documentation
+   contains a picture of the outline of the choosen layout.
+
  - Command: submit-problem-report
    Submit a problem report for the ECB to the ECB mailing-list. This command
    generates in the edit-window a problem-report which contains already the
@@ -1917,10 +1953,9 @@ Command Index::.
    `ecb-enlarged-compilation-window-max-height'.!
 
  - Command: toggle-layout
-   Toggles between the layouts defined in `ecb-toggle-layout-sequence'.
-   Note: This function works by changing the options `ecb-layout-nr' and
-   `ecb-show-sources-in-directories-buffer' but only for current
-   Emacs-session.
+   Toggles between the layouts defined in `ecb-toggle-layout-sequence'. Note:
+   This function works by changing the options `ecb-layout-name' but only for
+   current Emacs-session.
 
  - Command: update-directories-buffer
    Updates the ECB directories buffer.
@@ -1971,7 +2006,7 @@ NOT* be changed via `setq' or elisp-code but only with the customize-feature!
 `ecb-compile-window-height'             `ecb-compile-window-temporally-enlarge'
 `ecb-exclude-parents-regexp'            `ecb-font-lock-tokens'
 `ecb-highlight-token-with-point-delay'  `ecb-key-map'
-`ecb-layout-nr'                         `ecb-layout-window-sizes'
+`ecb-layout-name'                       `ecb-layout-window-sizes'
 `ecb-mode-line-prefixes'                `ecb-show-node-info-in-minibuffer'
 `ecb-show-tokens'                       `ecb-source-path'
 `ecb-token-display-function'            `ecb-tree-RET-selects-edit-window'
@@ -2052,7 +2087,7 @@ following options before working with ECB):
 `ecb-show-node-info-in-minibuffer'
    When and which node-info should be displayed in the minibuffer?
 
-`ecb-layout-nr'
+`ecb-layout-name'
    The ECB layout, means which windows you want to be displayed in the
    ECB-frame and also the location of these windows (*note Changing the
    ECB-layout::).
@@ -2077,8 +2112,8 @@ You can highly customize all the ECB behavior/layout so just go to these
 groups and you will see all well documented ECB-options.
 
 *Note*: All options in the following subsections are listed without the
-prefix "ecb-" (e.g. the option `ecb-layout-nr' is listed with name
-"layout-nr"). This has been done for a better readable option index. *Note
+prefix "ecb-" (e.g. the option `ecb-layout-name' is listed with name
+"layout-name"). This has been done for a better readable option index. *Note
 Option Index::.
 
 * Menu:
@@ -2272,12 +2307,12 @@ This group contains the following options:
    the ECB-windows are shown if ECB was already active but its windows were
    hidden. In every case ECB is activated with visible ECB-windows afterwards!
 
-   For every major mode there can be specified an `ecb-layout-nr':
+   For every major mode there can be specified an `ecb-layout-name':
 
-    - `default': The value customized with `ecb-layout-nr' is choosen.
+    - `default': The value customized with `ecb-layout-name' is choosen.
 
-    - an integer: ECB is activated with this layout-nr. This changes the
-      value of `ecb-layout-nr' but only for current emacs-session! But the
+    - a string: ECB is activated with this layout-name. This changes the
+      value of `ecb-layout-name' but only for current emacs-session! But the
       layout is only changed if ECB was activated, if just the ECB-windows
       were shown, the current layout is used!
 
@@ -3266,32 +3301,26 @@ This group contains the following options:
    Per default this is enabled for `delete-window', `delete-other-windows',
    `switch-to-buffer' and `switch-to-buffer-other-window'.
 
- - User Option: layout-nr
-   Define the window layout of ECB. A positive integer which sets the general
-   layout. There are four different types of layouts: left, right, top and
-   left-right, which means the location of the ECB-tree-windows in the
-   ECB-frame. Currently there are 20 predefined layouts with index from 0 to
-   19. You can savely try out any of them by changing this value and saving
-   it only for the current session. If you are sure which layout you want you
-   can save it for future sessions. To get a picture of the layout for index
-   <index> call C-h f ecb-layout-function-<index>, e.g.
-   `ecb-layout-function-9'.
+ - User Option: layout-name
+   Select a window layout of ECB. Value is any arbitary string. There are
+   four different types of layouts: left, right, top and left-right, which
+   means the location of the ECB-tree-windows in the ECB-frame.  Currently
+   there are 20 predefined layouts; names see below. You can savely try out
+   any of them by changing this value and saving it only for the current
+   session. If you are sure which layout you want you can save it for future
+   sessions. To get a picture of the layout for name <name> call
+   `ecb-show-layout-help'. `ecb-layout-function-9'.
 
-   Currently available layouts (see the doc-string for a picture ot the
-   layout):
+   Currently available layouts:
 
-   Left layouts: `ecb-layout-function-0' `ecb-layout-function-1'
-   `ecb-layout-function-2' `ecb-layout-function-3' `ecb-layout-function-4'
-   `ecb-layout-function-6' `ecb-layout-function-8' `ecb-layout-function-9'
-   `ecb-layout-function-10' `ecb-layout-function-11' `ecb-layout-function-12'
-   `ecb-layout-function-13' `ecb-layout-function-14' `ecb-layout-function-15'
-   `ecb-layout-function-16' `ecb-layout-function-17'
+    * Left layouts: left1 left2 left3 left4 left5 left6 left7 left8 left9
+      left10 left11 left12 left13 left14 left15
 
-   Right layouts: `ecb-layout-function-5'
+    * Right layouts: right1
 
-   Top layouts: `ecb-layout-function-7'
+    * Top layouts: top1 top2
 
-   Left-right layouts: `ecb-layout-function-18' `ecb-layout-function-19'
+    * Left-right layouts: leftright1 leftright2
 
    Regardless of the settings you define here: If you have destroyed or
    changed the ECB-screen-layout by any action you can always go back to this
@@ -3411,8 +3440,8 @@ This group contains the following options:
 
  - User Option: toggle-layout-sequence
    Toggle sequence for layout toggling with `ecb-toggle-layout'.  Every
-   element of this list has to be a valid layout-number i.e. either one of
-   the predefined layouts or one of the user-defined layouts.
+   element of this list has to be a valid layout-name i.e. either one of the
+   predefined layouts or one of the user-defined layouts.
 
    You can add here as many layouts as you want but to use this option most
    effective you should not add more than 2 or 3 layouts so every layout can
@@ -3423,13 +3452,14 @@ This group contains the following options:
 
    Recommended values are for example:
 
-    - (11 16), toggles between methods and directories/history
+    - ("left10" "left15"), toggles between methods and directories/history
 
-    - (11 15), toggles between methods and directories
+    - ("left10" "left13"), toggles between methods and directories
 
-    - (11 14), toggles between methods and history
+    - ("left10" "left14"), toggles between methods and history
 
-    - (11 14 15), toggles between methods, history and directories
+    - ("left10" "left13" "left14"), toggles between methods, history and
+      directories
 
    This option makes only sense if the value is a list with more than 1
    element!
@@ -4059,8 +4089,8 @@ situation:
 
  * First customize your ECB:
 
-   1. Customize `ecb-layout-nr' to layout nr. 10 (on top) or nr. 11 (on
-      left-side)
+   1. Customize `ecb-layout-name' to layout-name "top2" (on top) or "left9"
+      (on left-side)
 
    2. Ensure that `ecb-compile-window-height' is nil.
 
@@ -4088,10 +4118,10 @@ Working with big screens
 ========================
 
 ECB offers a layout type "left-right" with special ECB-tree-windows on the
-left and right side of the edit-window. The layouts nr. 18 and nr. 19 are
-examples for this layout type. See *Note Creating a new ECB-layout:: and
-*Note Programming new layouts:: for details about how to create or program
-more layouts of this type.
+left and right side of the edit-window. The layouts "leftright1" and
+"leftright2"are examples for this layout type.  See *Note Creating a new
+ECB-layout:: and *Note Programming new layouts:: for details about how to
+create or program more layouts of this type.
 
 Such a layout is eventually the best choice for big screens because the
 several ECB-tree-windows are bigger and can display more informations without
@@ -4110,8 +4140,8 @@ Simulating speedbar without an extra frame
 You can simulate a speedbar-like layout within ONE frame by doing the
 following:
 
-1. Customize `ecb-layout-nr' to layout nr. 11, 14, 15 or 16 dependend to what
-   you like.
+1. Customize `ecb-layout-name' to layout name "left9", "left12", "left13" or
+   "left14" dependend to what you like.
 
 2. Optional: Ensure that `ecb-compile-window-height' is nil.
 
@@ -4165,7 +4195,7 @@ If `ecb-source-path' contains directories with many files and subdirs,
 especially if these directories are mounted net-drives ("many" means here
 something > 1000, dependend on the speed of the net-connection and the
 machine), actualizing the sources- and/or directories- buffer of ECB (if
-displayed in current layout!) can slow down dramatically.  If this is a
+displayed in current layout!) can slow down dramatically. If this is a
 problem the contents of certain directories can be cached which increases the
 speed a lot. See `ecb-cache-directory-contents'.
 
@@ -4307,11 +4337,11 @@ must) to program a new layout with elisp-code use the macro
 `ecb-layout-define' (the following definiton has stripped the prefix "ecb-"
 for better indexing this manual):
 
- - Macro: layout-define number type &rest create-code
-   Creates a new ECB-layout with number NUMBER. TYPE is the type of the new
+ - Macro: layout-define name type &rest create-code
+   Creates a new ECB-layout with name NAME. TYPE is the type of the new
    layout and is literal, i.e. not evaluated. It can be left, right, top or
    left-right. DOC is the docstring for the new layout-function
-   "ecb-layout-function-<number>". CREATE-CODE is all the lisp code which is
+   "ecb-layout-function-<name>". CREATE-CODE is all the lisp code which is
    necessary to define the ECB-windows/buffers.
 
    Preconditions for CREATE-CODE:
@@ -4382,12 +4412,12 @@ for better indexing this manual):
 
 Use this macro to program new layouts within your `.emacs' or any other file
 which is loaded into your Emacs. After loading the file(s) with all the new
-layout-definitions you can use it by customizing the option `ecb-layout-nr'
-to the appropriate number.
+layout-definitions you can use it by customizing the option `ecb-layout-name'
+to the appropriate name.
 
 Here is an example:
 
-   (ecb-layout-define 100 left nil
+   (ecb-layout-define "my-own-layout" left nil
      ;; The frame is already splitted side-by-side and point stays in the
      ;; left window (= the ECB-tree-window-column)
    
@@ -4404,7 +4434,8 @@ Here is an example:
      ;; 5. Make the ECB-edit-window current (see Postcondition above)
      (select-window (next-window)))
 
-This layout definition defines a layout nr. 100 which looks like:
+This layout definition defines a layout with name "my-own-layout" which looks
+like:
 
    -------------------------------------------------------
    |              |                                      |
@@ -4646,11 +4677,13 @@ the command `ecb-activate' is listed with name "activate").
 
 * activate:                              Interactive ECB commands.
 * add-all-buffers-to-history:            Interactive ECB commands.
+* change-layout:                         Interactive ECB commands.
 * clear-history:                         Interactive ECB commands.
 * create-new-layout:                     Interactive ECB commands.
 * current-buffer-sync:                   Interactive ECB commands.
 * cycle-through-compilation-buffers:     Interactive ECB commands.
 * deactivate:                            Interactive ECB commands.
+* delete-new-layout:                     Interactive ECB commands.
 * display-upgraded-options:              Interactive ECB commands.
 * download-ecb:                          Interactive ECB commands.
 * goto-window-compilation:               Interactive ECB commands.
@@ -4667,6 +4700,7 @@ the command `ecb-activate' is listed with name "activate").
 * rebuild-methods-buffer:                Interactive ECB commands.
 * redraw-layout:                         Interactive ECB commands.
 * show-help:                             Interactive ECB commands.
+* show-layout-help:                      Interactive ECB commands.
 * submit-problem-report:                 Interactive ECB commands.
 * toggle-ecb-windows:                    Interactive ECB commands.
 * toggle-enlarged-compilation-window:    Interactive ECB commands.
@@ -4683,7 +4717,7 @@ Option Index
 This index contains all customizable options of ECB.
 
 *Note*: All options in this index are listed without the prefix "ecb-" (e.g.
-the option `ecb-layout-nr' is listed with name "layout-nr").
+the option `ecb-layout-name' is listed with name "layout-name").
 
 * Menu:
 
@@ -4739,7 +4773,7 @@ the option `ecb-layout-nr' is listed with name "layout-nr").
 * key-map:                               ecb-general.
 * kill-buffer-clears-history:            ecb-history.
 * layout-always-operate-in-edit-window:  ecb-layout.
-* layout-nr:                             ecb-layout.
+* layout-name:                           ecb-layout.
 * layout-switch-to-compilation-window:   ecb-layout.
 * layout-window-sizes:                   ecb-layout.
 * major-modes-activate:                  ecb-general.
@@ -4901,62 +4935,63 @@ Node: Customizing the display38209
 Node: Rebuilding the Methods39931
 Node: The ECB-layout40786
 Node: Changing the ECB-layout41433
-Node: Redrawing the ECB-layout68573
-Node: Creating a new ECB-layout69498
-Ref: Creating a new ECB-layout-Footnote-173544
-Node: Hiding the ECB windows73718
-Node: Back/forward navigation74822
-Ref: Back/forward navigation-Footnote-175923
-Node: ECB-window synchronizing75982
-Node: Interactive ECB commands78564
-Node: Customizing87217
-Node: General aspects87851
-Ref: General aspects-Footnote-190615
-Node: Most important options90747
-Node: Customizable options92540
-Node: ecb-general93827
-Node: ecb-directories113771
-Node: ecb-sources119926
-Node: ecb-methods122181
-Node: ecb-history134450
-Node: ecb-layout136511
-Node: ecb-create-layout153832
-Node: ecb-face-options154335
-Node: ecb-faces157764
-Node: ecb-download161756
-Node: ecb-help162982
-Node: Submitting problem report164947
-Node: Upgrading166310
-Node: Downloading new versions167073
-Ref: Download required packages168830
-Ref: Downloading new versions-Footnote-1169928
-Node: Auto. option-upgrading169977
-Node: User interface170285
-Node: Background information171171
-Node: Tips and tricks174569
-Node: Changing faces175319
-Ref: Changing faces-Footnote-1178155
-Node: Small screens178331
-Node: Big screens179717
-Node: Simulating speedbar180546
-Node: Integrating speedbar181353
-Node: Optimize scrolling181619
-Node: Large directories182699
-Node: Using eshell183365
-Node: Elisp programming183555
-Node: List of variables184164
-Node: List of hooks184476
-Node: tree-buffer185432
-Node: Adviced functions186238
-Ref: Adviced functions-Footnote-1186857
-Node: Programming new layouts186928
-Node: Conflicts and bugs192610
-Node: Conflicts193085
-Node: Bugs196543
-Node: FAQ196763
-Ref: FAQ-Footnote-1201515
-Node: Command Index201546
-Node: Option Index203796
-Node: Concept Index210193
+Ref: Changing the ECB-layout-Footnote-169155
+Node: Redrawing the ECB-layout69247
+Node: Creating a new ECB-layout70172
+Ref: Creating a new ECB-layout-Footnote-174434
+Node: Hiding the ECB windows74608
+Node: Back/forward navigation75713
+Ref: Back/forward navigation-Footnote-176814
+Node: ECB-window synchronizing76873
+Node: Interactive ECB commands79455
+Node: Customizing88855
+Node: General aspects89489
+Ref: General aspects-Footnote-192253
+Node: Most important options92385
+Node: Customizable options94180
+Node: ecb-general95471
+Node: ecb-directories115421
+Node: ecb-sources121576
+Node: ecb-methods123831
+Node: ecb-history136100
+Node: ecb-layout138161
+Node: ecb-create-layout155089
+Node: ecb-face-options155592
+Node: ecb-faces159021
+Node: ecb-download163013
+Node: ecb-help164239
+Node: Submitting problem report166204
+Node: Upgrading167567
+Node: Downloading new versions168330
+Ref: Download required packages170087
+Ref: Downloading new versions-Footnote-1171185
+Node: Auto. option-upgrading171234
+Node: User interface171542
+Node: Background information172428
+Node: Tips and tricks175826
+Node: Changing faces176576
+Ref: Changing faces-Footnote-1179412
+Node: Small screens179588
+Node: Big screens180982
+Node: Simulating speedbar181823
+Node: Integrating speedbar182656
+Node: Optimize scrolling182922
+Node: Large directories184002
+Node: Using eshell184667
+Node: Elisp programming184857
+Node: List of variables185466
+Node: List of hooks185778
+Node: tree-buffer186734
+Node: Adviced functions187540
+Ref: Adviced functions-Footnote-1188159
+Node: Programming new layouts188230
+Node: Conflicts and bugs193934
+Node: Conflicts194409
+Node: Bugs197867
+Node: FAQ198087
+Ref: FAQ-Footnote-1202839
+Node: Command Index202870
+Node: Option Index205321
+Node: Concept Index211722
 
 End Tag Table
