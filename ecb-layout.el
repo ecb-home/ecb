@@ -28,10 +28,8 @@
 ;; This file is part of the ECB package which can be found at:
 ;; http://home.swipnet.se/mayhem/ecb.html
 
-;;; Patches:
 
-;; Patches are made by Klaus Berndl <klaus.berndl@sdm.de>. All of
-;; them are marked by a comment "Klaus: ..."!
+;; This file has been re-implemented by Klaus Berndl <klaus.berndl@sdm.de>.
 ;; What has been done:
 ;; Completely rewritten the layout mechanism for better customizing, adding
 ;; new layouts, better redrawing and more straight forward code.
@@ -91,7 +89,16 @@
 ;;   the (first) edit-window, so you can never destroy the ECB-window layout
 ;;   unintentionally.
 ;;
-;; Important: For each new layout with index <index> the programmer must
+;; IMPORTANT: A note for programing elisp for packages which work during
+;; activated ECB (for ECB itself too :-): ECB offers three macros for easy
+;; temporally (regardless of the settings in `ecb-advice-window-functions'!)
+;; using all original-functions, all adviced functions or only some adviced
+;; functions:
+;; - `ecb-with-original-functions'
+;; - `ecb-with-adviced-functions'
+;; - `ecb-with-some-adviced-functions'
+;;
+;; IMPORTANT: For each new layout with index <index> the programmer must
 ;; write two functions for this feature:
 ;; - 'ecb-delete-other-windows-in-editwindow-<index>' and
 ;; - 'ecb-delete-window-in-editwindow-<index>.
@@ -454,7 +461,8 @@ element of FUNCTIONS. FUNCTIONS must be nil or a subset of
 (defmacro ecb-with-original-functions (&rest body)
   "Evaluates BODY with all adviced functions of ECB deactivated \(means with
 their original definition). Restores always the previous state of the ECB
-adviced functions!"
+adviced functions, means after evaluating BODY it activates the advices of
+exactly the functions in `ecb-advice-window-functions'!"
   `(unwind-protect
        (progn
          (ecb-activate-adviced-functions nil)
@@ -464,10 +472,23 @@ adviced functions!"
 (defmacro ecb-with-adviced-functions (&rest body)
   "Evaluates BODY with all adviceable functions of ECB activated \(means with
 their new ECB-ajusted definition). Restores always the previous state of the
-ECB adviced functions!"
+ECB adviced functions, means after evaluating BODY it activates the advices of
+exactly the functions in `ecb-advice-window-functions'!"
   `(unwind-protect
        (progn
          (ecb-activate-adviced-functions ecb-adviceable-functions)
+	 ,@body)
+     (ecb-activate-adviced-functions ecb-advice-window-functions)))
+
+(defmacro ecb-with-some-adviced-functions (functions &rest body)
+  "Like `ecb-with-adviced-functions' but activates the advice of exactly
+FUNCTIONS. Restores always the previous state of the ECB adviced functions,
+means after evaluating BODY it activates the advices of exactly the functions
+in `ecb-advice-window-functions'!
+FUNCTIONS must be nil or a subset of `ecb-adviceable-functions'!"
+  `(unwind-protect
+       (progn
+         (ecb-activate-adviced-functions ,functions)
 	 ,@body)
      (ecb-activate-adviced-functions ecb-advice-window-functions)))
 

@@ -15,6 +15,9 @@ REM
 REM Make sure you compile ECB with the semantic version you load into Emacs
 REM (see below)!
 
+REM Define here the correct path to your Emacs or XEmacs
+set EMACSPROG=emacs
+
 REM Adapted by Klaus Berndl
 
 if exist ecb-compile-script-init del ecb-compile-script-init
@@ -22,7 +25,7 @@ if exist ecb.elc del *.elc
 echo (add-to-list 'load-path nil) > ecb-compile-script-init
 echo (add-to-list 'load-path "../semantic-1.3.3") >> ecb-compile-script-init
 echo (setq debug-on-error t) >> ecb-compile-script-init
-emacs -batch -no-site-file -l ecb-compile-script-init -f batch-byte-compile *.el
+%EMACSPROG% -batch -no-site-file -l ecb-compile-script-init -f batch-byte-compile *.el
 del ecb-compile-script-init
 
 REM End of make.bat

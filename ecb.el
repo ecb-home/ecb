@@ -76,8 +76,6 @@
 ;;====================================================
 ;; Variables
 ;;====================================================
-(defvar ecb-methods nil
-  "The currently selected method.")
 (defvar ecb-selected-method-start 0
   "The currently selected method.")
 (defvar ecb-path-selected-directory nil
@@ -516,7 +514,7 @@ highlighting of the methods if `ecb-font-lock-methods' is not nil."
                                               (car method-arg-token)
                                             method-arg-token)
                                           ecb-argumentname))))
-                (semantic-token-function-args method-token)
+                (delete nil (semantic-token-function-args method-token))
                 ;; dependent of the language we separate the args either with a
                 ;; space or with a comma. With this trick there is no need to
                 ;; recognice in lisp-like languages such keywords like &optional to
@@ -742,21 +740,7 @@ given."
       (ecb-buffer-select ecb-methods-buffer-name)
       (tree-buffer-highlight-node-data ecb-selected-method-start))))
 
-(defun ecb-get-method-start-at-point()
-  (catch 'exit
-    (let ((pos (point)))
-      (dolist (method ecb-methods)
-	(if (and (>= pos (car method))
-		 (<= pos (cdr method)))
-	    (throw 'exit (car method)))))))
 
-
-;; (defun ecb-remove-from-current-tree-buffer (node-data)
-;;   (let ((node (tree-node-find-child-data
-;;                (tree-buffer-get-root) node-data)))
-;;     (when node
-;;       (tree-node-remove-child (tree-buffer-get-root) node))))
-  
 (defun ecb-remove-from-current-tree-buffer (node)
   (when node
     (tree-node-remove-child (tree-buffer-get-root) node)))
@@ -806,20 +790,6 @@ For further explanation see `ecb-clear-history-behavior'."
       (sit-for 0.1)
       (ecb-select-source-file filename)
       (ecb-update-methods-buffer))))
-    ;; Doesnt work with selections
-    ;; (let ((method-start (ecb-get-method-start-at-point)))
-    ;;      (when (not (equal method-start ecb-selected-method-start))
-    ;;	(ecb-select-method (ecb-get-method-start-at-point))))))
-
-;; (defun ecb-find-file-and-display(filename &optional window-skips)
-;;   "Finds the file in the correct window."
-;;   (select-window ecb-edit-window)
-;;   ;; do the following with not ecb-adviced window-functions.
-;;   (ecb-with-original-functions
-;;    (if window-skips
-;;        (other-window window-skips))
-;;    (find-file ecb-path-selected-source)
-;;    (pop-to-buffer (buffer-name))))
 
 (defun ecb-find-file-and-display(filename &optional window-skips)
   "Finds the file in the correct window. What the correct window is depends on
@@ -827,9 +797,6 @@ the setting in `ecb-left-mouse-jump-destination'."
   (if (eq ecb-left-mouse-jump-destination 'left-top)
       (select-window ecb-edit-window)
     (select-window ecb-last-edit-window-with-point))
-;;   (ecb-with-original-functions
-;;    (if window-skips
-;;        (other-window window-skips)))
   (ecb-with-adviced-functions
    (if window-skips
        (let ((ecb-other-window-jump-behavior 'only-edit))

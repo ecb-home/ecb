@@ -213,6 +213,15 @@ inserted and the TEXT itself"
     (goto-char p)
     (set-window-start (selected-window) ws)))
 
+;; (defun tree-buffer-update()
+;;   (let ((ws (window-start))
+;; 	(p (point)))
+;;     (setq tree-buffer-nodes nil)
+;;     (erase-buffer)
+;;     (dolist (node (tree-node-get-children tree-buffer-root))
+;;       (tree-buffer-add-node node 0))
+;;     (tree-buffer-highlight-node-data tree-buffer-highlighted-node-data)))
+
 (defun tree-buffer-set-root(root)
   (setq tree-buffer-root root)
   (tree-node-set-expanded tree-buffer-root t))

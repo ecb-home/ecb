@@ -36,13 +36,16 @@ Optional compilation steps:
      You must check or edit the file "make.bat" in the ECB directory.
 
 2. Check the file you need for building ECB (see 1.) in the ECB directory if
+   the variable EMACSPROG is set correct and change it if necessary.
+
+3. Check the file you need for building ECB (see 1.) in the ECB directory if
    the semantic-path is correct. By default the ECB build-process assumes that
    semantic is placed in the directory where ECB was unpacked. But you always
    have to check the correct semantic-version!
    If the default-settings for semantic are not correct for your environment
    change the file you need (see 1.)
 
-3. Call "make" to byte-compile the ECB. You can savely ignore the messages.
+4. Call "make" to byte-compile the ECB. You can savely ignore the messages.
 
 
 Usage
