@@ -162,7 +162,9 @@
     (ecb-layout-window-sizes . (ecb-layout-window-sizes
                                 ecb-upgrade-layout-window-sizes))
     (ecb-major-modes-activate . (ecb-major-modes-activate
-                                 ecb-upgrade-major-modes-activate)))
+                                 ecb-upgrade-major-modes-activate))
+    (ecb-cache-directory-contents . (ecb-cache-directory-contents
+                                     ecb-upgrade-cache-directory-contents)))
   
   "Alist of all options which should be upgraded for current ECB-version.
 There are several reasons why an option should be contained in this alist:
@@ -263,6 +265,11 @@ The car is the old option symbol and the cdr is a 2-element-list with:
                  (integerp (cdr elem)))
             (setcdr elem (ecb-upgrade-layout-nr2name (cdr elem)))))
       l)))
+
+(defun ecb-upgrade-cache-directory-contents (old-val)
+  (mapcar (function (lambda (elem)
+                      (cons (nth 0 elem) (nth 1 elem))))
+          old-val))
 
 ;; ----------------------------------------------------------------------
 ;; internal functions. Dot change anything below this line

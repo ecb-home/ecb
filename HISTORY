@@ -1,6 +1,21 @@
 Version 1.90
 ------------
 
+* Rewritten cache-mechanism for directories and sources:
+  Depending on the value of the option ecb-cache-directory-contents the
+  following is cached for a directory:
+  - The disk-contents of the directory means subdirs and files
+  - If ecb-show-sources-in-directories-buffer is nil (i.e. sources are
+    displayed in the extra ECB-sources-window) then also the complete
+    sources-buffer is cached. This results in a speed-boost for big-size
+    directories.
+  The cache of a directory is refreshed and actualized with a POWER-click onto
+  the related directory in the directories-buffer (s.b.) (Klaus)
+
+* Introduced a POWER-click (was SHIFT-click before) in the ECB-tree-windows -
+  see documentation of ecb-primary-secondary-mouse-buttons and see also the
+  online-help section "Usage of ECB --> Using the moose" (Klaus).
+
 * Added new command 'ecb-toggle-compile-window': Toggle the visibility of the
   compile-window of ECB (Klaus).
 
