@@ -103,7 +103,7 @@
 ;; - `ecb-with-some-adviced-functions'
 ;;
 
-;; $Id: ecb-layout.el,v 1.137 2002/12/20 14:32:37 berndl Exp $
+;; $Id: ecb-layout.el,v 1.138 2002/12/21 14:14:33 berndl Exp $
 
 ;;; Code:
 
@@ -124,6 +124,7 @@
 ;; true
 (silentcomp-defun ecb-set-speedbar-buffer)
 (silentcomp-defun ecb-speedbar-deactivate)
+(silentcomp-defvar ecb-speedbar-buffer-name)
 
 ;; needed for the `some'-function.
 (require 'cl)
@@ -712,7 +713,7 @@ command.")
                                           (resize-temp-buffer-window . around)
                                           (shrink-window-if-larger-than-buffer . around)
                                           (scroll-other-window . around)))
-  "This functions are always adviced if ECB is active. Each element of the
+  "These functions are always adviced if ECB is active. Each element of the
 list is a cons-cell where the car is the function-symbol and the cdr the
 advice-class \(before, around or after). If a function should be adviced with
 more than one class \(e.g. with a before and an after-advice) then for every
@@ -1007,16 +1008,20 @@ is in the left/topmost edit-window or 2 if in the other edit-window."
        (equal (selected-frame) ecb-frame)
        (equal (selected-window) ecb-compile-window)))
 
-(defun ecb-point-in-tree-buffer ()
+(defun ecb-point-in-tree-buffer (&optional incl-speedbar)
   "Return nil if point is not in any tree-buffer of ECB otherwise return the
-buffer-object."
+buffer-object. If INCL-SPEEDBAR is not nil then the `ecb-speedbar-buffer-name'
+belongs to the tree-buffers."
   (let ((curr-buf (current-buffer))
         (dir-buf (get-buffer ecb-directories-buffer-name))
+        (speedbar-buf (ignore-errors (get-buffer ecb-speedbar-buffer-name)))
         (source-buf (get-buffer ecb-sources-buffer-name))
         (method-buf (get-buffer ecb-methods-buffer-name))
         (hist-buf (get-buffer ecb-history-buffer-name)))
     (and (equal (selected-frame) ecb-frame)
          (or (if (equal curr-buf dir-buf) dir-buf nil)
+             (if incl-speedbar
+                 (if (equal curr-buf speedbar-buf) speedbar-buf nil))
              (if (equal curr-buf source-buf) source-buf nil)
              (if (equal curr-buf method-buf) method-buf nil)
              (if (equal curr-buf hist-buf) hist-buf nil)))))
