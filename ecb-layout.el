@@ -124,7 +124,7 @@
 ;;   + The edit-window must not be splitted and the point must reside in
 ;;     the not deleted edit-window.
 
-;; $Id: ecb-layout.el,v 1.103 2002/02/26 10:08:12 berndl Exp $
+;; $Id: ecb-layout.el,v 1.104 2002/02/27 17:15:47 creator Exp $
 
 ;;; Code:
 

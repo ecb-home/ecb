@@ -1,6 +1,6 @@
 ;;; ecb-cycle.el --- cycle buffers through ecb windows.
 
-;; $Id: ecb-cycle.el,v 1.13 2002/02/22 08:30:43 berndl Exp $
+;; $Id: ecb-cycle.el,v 1.14 2002/02/27 17:15:47 creator Exp $
 
 ;; Copyright (C) 2000-2003 Free Software Foundation, Inc.
 ;; Copyright (C) 2000-2003 Kevin A. Burton (burton@openprivacy.org)

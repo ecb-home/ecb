@@ -21,7 +21,7 @@
 
 ;; Generates ECB HTML pages.
 
-;; $Id: ecb-html.el,v 1.25 2002/01/21 09:55:55 berndl Exp $
+;; $Id: ecb-html.el,v 1.26 2002/02/27 17:15:49 creator Exp $
 
 ;;; Code:
 
@@ -162,7 +162,7 @@
 	 ("faq.html" "FAQ")
 	 ("http://lists.sourceforge.net/lists/listinfo/ecb-list" "Mailing List")
 	 ("http://cvs.sourceforge.net/cgi-bin/viewcvs.cgi/ecb/" "CVS")
-	 ("screenshots.html" "Screenshots")
+	 ("screenshots/index.html" "Screenshots")
 	 ("links.html" "Links")
 	 )
        "main"))

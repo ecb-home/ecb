@@ -24,7 +24,7 @@ LOADPATH=../semantic ../eieio ../jde/lisp
 
 # Do not change anything below!
 
-# $Id: Makefile,v 1.24 2002/02/22 08:30:43 berndl Exp $
+# $Id: Makefile,v 1.25 2002/02/27 17:15:47 creator Exp $
 
 ecb_LISP_EL=tree-buffer.el ecb-util.el ecb-mode-line.el ecb-help.el ecb-layout.el ecb-navigate.el ecb.el ecb-eshell.el
 ecb_LISP_ELC=$(ecb_LISP_EL:.el=.elc)

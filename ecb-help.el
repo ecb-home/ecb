@@ -26,7 +26,7 @@
 ;;
 ;; Contains all online-help for ECB (stolen something from recentf.el)
 
-;; $Id: ecb-help.el,v 1.58 2002/02/26 10:08:12 berndl Exp $
+;; $Id: ecb-help.el,v 1.59 2002/02/27 17:15:47 creator Exp $
 
 ;;; Code
 
