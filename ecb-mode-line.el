@@ -53,7 +53,7 @@
 (defcustom ecb-mode-line-prefixes '((ecb-directories-buffer-name . nil)
                                     (ecb-sources-buffer-name . ecb-sources-filter-modeline-prefix)
                                     (ecb-methods-buffer-name . nil)
-                                    (ecb-history-buffer-name . "History"))
+                                    (ecb-history-buffer-name . ecb-history-filter-modeline-prefix))
   "*Prefixes shown in the modelines of the special ECB-buffers.
 The displayed prefix then looks like: \"[ <PREFIX>[: ]]\", means if a prefix
 is defined for an special ECB-buffer then a single space is prepended and if

@@ -3655,7 +3655,7 @@ this function the edit-window is selected which was current before redrawing."
                                 ecb-windows-before-redraw))
                    (member (get-buffer ecb-history-buffer-name)
                            current-ecb-windows))
-          (ecb-add-all-buffers-to-history))
+          (ecb-add-buffers-to-history))
         ;; update the directories buffer if the directories buffer was not
         ;; shown before the redisplay but now (means if the layout has
         ;; changed)
