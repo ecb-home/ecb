@@ -54,7 +54,7 @@
 ;; The latest version of the ECB is available at
 ;; http://home.swipnet.se/mayhem/ecb.html
 
-;; $Id: ecb.el,v 1.140 2001/07/20 09:38:44 berndl Exp $
+;; $Id: ecb.el,v 1.141 2001/07/20 17:14:36 berndl Exp $
 
 ;;; Code:
 
@@ -1858,11 +1858,13 @@ Description:
 - Every key of the sequence must begin with a question-mark \"?\"
 - The real <key-x> must directly follow the question-mark.
 - <key-x> has to be either:
-  + A single printable character
-  + A printable character combined with a modifier \(like Ctrl, Meta ...). To
-    enter a key with a modifier, type C-q followed by the desired modified
-    keystroke. For example, to enter C-c \(Ctrl c) as the key to be bound,
-    type C-q C-c in the key-field in the customization buffer.
+  + A single printable character \(incl. SPC)
+  + A printable character \(incl. SPC) combined with a modifier \(like Ctrl,
+    Meta ...). To enter a key with a modifier, type C-q followed by the
+    desired modified keystroke. For example, to enter C-c \(Ctrl c) as the key
+    to be bound, type C-q C-c in the key-field in the customization buffer.
+- Every \"?<key-x>\"-element of the keysequence can be surrounded by any
+  whitespace.
 
 Example:
 \[?^C ?.] binds the keysequence \"C-c .\" as prefix-keysequence for the ECB
@@ -1876,9 +1878,10 @@ the standard keys C-c or C-x!"
   :group 'ecb-general
   :type '(string :tag "Keysequence")
   :set (function (lambda (symbol value)
-                   ;; make a key-string if the user has not done it already
-                   (if (not (string-match "^\\[.+\\]$" value))
-                       (setq value (concat "[" value "]")))
+                   ;; check if the keysequence is valid
+                   (if (not (string-match "^\\[[ \t]*\\(\\?.[ \t]*\\)+\\]$"
+                                          value))
+                       (error "ecb-prefix-key contains not a valid keysequence!"))
                    (set symbol value)
                    ;; make a key and save it
                    (setq ecb-prefix-key--internal
