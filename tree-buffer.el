@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: tree-buffer.el,v 1.145 2004/07/15 15:26:19 berndl Exp $
+;; $Id: tree-buffer.el,v 1.146 2004/07/28 16:50:21 berndl Exp $
 
 ;;; Commentary:
 
@@ -532,19 +532,20 @@ TREE-IMAGE-NAME."
       (< p (1- (tree-buffer-get-node-name-start-point name node)))
     (> p (tree-buffer-get-node-name-end-point name node))))
 
-(defun tree-buffer-select (mouse-button shift-pressed control-pressed)
+(defun tree-buffer-select (mouse-button shift-pressed control-pressed meta-pressed)
   "If the callback-function in `tree-buffer-is-click-valid-fn' returns nil
 then nothing is done. Otherwise: If the node is expandable and the node is not
 expanded then the callback-function in `tree-node-expanded-fn' is called with
 the node, the clicked MOUSE-BUTTON \(1 for mouse-1, 2 for mouse-2, 0 for no
-mouse-button but a key like RET or TAB), SHIFT-PRESSED and CONTROL-PRESSED
-informations and the name of the tree-buffer as arguments. If the node is not
-expandable then the callback-function in `tree-node-selected-fn' is called
-with the same arguments as `tree-node-expanded-fn'."
+mouse-button but a key like RET or TAB), SHIFT-PRESSED, CONTROL-PRESSED and
+META-PRESSED informations and the name of the tree-buffer as arguments. If the
+node is not expandable then the callback-function in `tree-node-selected-fn'
+is called with the same arguments as `tree-node-expanded-fn'."
   (unless (not (equal (selected-frame) tree-buffer-frame))
     (when (and tree-buffer-is-click-valid-fn
                (funcall tree-buffer-is-click-valid-fn mouse-button
-                        shift-pressed control-pressed (buffer-name)))
+                        shift-pressed control-pressed meta-pressed
+                        (buffer-name)))
       (let* ((p (point))
 	     (name-node (tree-buffer-get-name-node-at-point))
 	     (name (car name-node))
@@ -562,12 +563,14 @@ with the same arguments as `tree-node-expanded-fn'."
                 (when (and (not (tree-node-is-expanded node))
                            tree-node-expanded-fn)
                   (funcall tree-node-expanded-fn node mouse-button
-                           shift-pressed control-pressed (buffer-name)))
+                           shift-pressed control-pressed meta-pressed
+                           (buffer-name)))
                 (when (tree-node-is-expandable node)
                   (when (and (tree-node-is-expanded node)
                              tree-node-collapsed-fn)
                     (funcall tree-node-collapsed-fn node mouse-button
-                             shift-pressed control-pressed (buffer-name)))
+                             shift-pressed control-pressed meta-pressed
+                             (buffer-name)))
                   (tree-node-toggle-expanded node))
                 ;; Update the tree-buffer with optimized display of NODE
                 (tree-buffer-update node)
@@ -576,7 +579,8 @@ with the same arguments as `tree-node-expanded-fn'."
             (setq tree-buffer-incr-searchpattern "")
             (when tree-node-selected-fn
               (funcall tree-node-selected-fn node mouse-button
-                       shift-pressed control-pressed (buffer-name))))))
+                       shift-pressed control-pressed meta-pressed
+                       (buffer-name))))))
       )))
 
 
@@ -1229,7 +1233,7 @@ see `tree-buffer-expand-node'. This function is not for external usage; use
   (when (tree-node-is-expandable node)
     (when (and tree-node-expanded-fn
                (not (tree-node-is-expanded node)))
-      (funcall tree-node-expanded-fn node 0 nil nil (buffer-name)))
+      (funcall tree-node-expanded-fn node 0 nil nil nil (buffer-name)))
     (when (or (and (not (tree-node-is-expanded node))
                    (or (not (functionp expand-pred-fn))
                        (funcall expand-pred-fn node current-level))
@@ -1662,20 +1666,21 @@ functionality is done with the `help-echo'-property and the function
       (when (tree-node-is-expandable node)
 	(when (and tree-node-expanded-fn
 		   (not (tree-node-is-expanded node)))
-	  (funcall tree-node-expanded-fn node 0 nil nil (buffer-name)))
+	  (funcall tree-node-expanded-fn node 0 nil nil nil (buffer-name)))
         (when (tree-node-is-expandable node)
           (when (and (tree-node-is-expanded node)
                      tree-node-collapsed-fn)
-            (funcall tree-node-collapsed-fn node 0 nil nil (buffer-name)))
+            (funcall tree-node-collapsed-fn node 0 nil nil nil (buffer-name)))
           (tree-node-toggle-expanded node))
 	;; Update the tree-buffer with optimized display of NODE           
 	(tree-buffer-update node)))))
 
-(defun tree-buffer-return-pressed (&optional shift-pressed control-pressed)
+(defun tree-buffer-return-pressed (&optional shift-pressed control-pressed
+                                             meta-pressed)
   (unless (not (equal (selected-frame) tree-buffer-frame))
     ;; reinitialize the select pattern after selecting a node
     (setq tree-buffer-incr-searchpattern "")
-    (tree-buffer-select 0 shift-pressed control-pressed)))
+    (tree-buffer-select 0 shift-pressed control-pressed meta-pressed)))
 
 (defun tree-buffer-arrow-pressed ()
   "Perform smart arrow-key navigation/movement."
@@ -1771,6 +1776,8 @@ IS-CLICK-VALID-FN: `tree-buffer-create' rebinds down-mouse-1, down-mouse-2,
                      during mouse-click or RET/TAB.
                    - control-pressed: non nil if the CONTROL-key was pressed
                      during mouse-click or RET/TAB.
+                   - meta-pressed: non nil if the META-key was pressed during
+                     mouse-click or RET/TAB.
                    - tree-buffer-name: The buffer-name of the tree-buffer
                      where the node has been clicked.
                    The function must return not nil iff exactly this click/hit
@@ -1782,6 +1789,7 @@ NODE-SELECTED-FN: Function to call if a node has been selected
                   - mouse-button \(0 = RET, 1 = mouse-1, 2 = mouse 2)
                   - shift-pressed
                   - control-pressed
+                  - meta-pressed
                   - tree-buffer-name
                   For the last four arguments see the description above. This
                   function has to ensure that the expandable- and
@@ -1794,6 +1802,7 @@ NODE-EXPANDED-FN: Function to call if a node is expandable, point stays onto
                   - mouse-button \(0 = TAB, 1 = mouse-1, 2 = mouse 2)
                   - shift-pressed
                   - control-pressed
+                  - meta-pressed
                   - tree-buffer-name
                   This function should add all children nodes to this node
                   \(if possible). This function has to ensure that the
@@ -1806,6 +1815,7 @@ NODE-COLLAPSED-FN: Function to call if a node is expandable, point stays
                    - mouse-button \(0 = TAB, 1 = mouse-1, 2 = mouse 2)
                    - shift-pressed
                    - control-pressed
+                   - meta-pressed
                    - tree-buffer-name
                    This function is only a callback to inform the user of
                    this tree-buffer that this node has been collapsed. This
@@ -2051,15 +2061,19 @@ AFTER-CREATE-HOOK: A function or a list of functions \(with no arguments)
     (define-key tree-buffer-key-map (kbd "<C-return>")
       (function (lambda ()
                   (interactive)
-                  (tree-buffer-return-pressed nil t))))
+                  (tree-buffer-return-pressed nil t nil))))
     (define-key tree-buffer-key-map (kbd "<S-return>")
       (function (lambda ()
                   (interactive)
-                  (tree-buffer-return-pressed t nil))))
+                  (tree-buffer-return-pressed t nil nil))))
+    (define-key tree-buffer-key-map (kbd "<M-return>")
+      (function (lambda ()
+                  (interactive)
+                  (tree-buffer-return-pressed nil nil t))))
     (define-key tree-buffer-key-map (kbd "<C-S-return>")
       (function (lambda ()
                   (interactive)
-                  (tree-buffer-return-pressed t t))))
+                  (tree-buffer-return-pressed t t nil))))
     
     (define-key tree-buffer-key-map (kbd "TAB") 'tree-buffer-tab-pressed)
 
@@ -2073,21 +2087,28 @@ AFTER-CREATE-HOOK: A function or a list of functions \(with no arguments)
        (function (lambda(e)
 		  (interactive "e")
                   (tree-buffer-mouse-set-point e)
-                  (tree-buffer-select 1 nil nil))))
+                  (tree-buffer-select 1 nil nil nil))))
   
     (define-key tree-buffer-key-map
       (tree-buffer-create-mouse-key 1 mouse-action-trigger 'shift)
       (function (lambda(e)
 		  (interactive "e")
                   (tree-buffer-mouse-set-point e)
-                  (tree-buffer-select 1 t nil))))
+                  (tree-buffer-select 1 t nil nil))))
 
     (define-key tree-buffer-key-map
       (tree-buffer-create-mouse-key 1 mouse-action-trigger 'control)
       (function (lambda(e)
 		  (interactive "e")
                   (tree-buffer-mouse-set-point e)
-                  (tree-buffer-select 1 nil t))))
+                  (tree-buffer-select 1 nil t nil))))
+
+    (define-key tree-buffer-key-map
+      (tree-buffer-create-mouse-key 1 mouse-action-trigger 'meta)
+      (function (lambda(e)
+		  (interactive "e")
+                  (tree-buffer-mouse-set-point e)
+                  (tree-buffer-select 1 nil nil t))))
 
     (define-key tree-buffer-key-map [drag-mouse-1] nop)
     (define-key tree-buffer-key-map
@@ -2096,6 +2117,8 @@ AFTER-CREATE-HOOK: A function or a list of functions \(with no arguments)
       (tree-buffer-create-mouse-key 1 mouse-action-trigger-not 'shift) nop)
     (define-key tree-buffer-key-map
       (tree-buffer-create-mouse-key 1 mouse-action-trigger-not 'control) nop)
+    (define-key tree-buffer-key-map
+      (tree-buffer-create-mouse-key 1 mouse-action-trigger-not 'meta) nop)
     (define-key tree-buffer-key-map [double-mouse-1] nop)
     (define-key tree-buffer-key-map [triple-mouse-1] nop)
 
@@ -2105,21 +2128,28 @@ AFTER-CREATE-HOOK: A function or a list of functions \(with no arguments)
       (function (lambda(e)
 		  (interactive "e")
                   (tree-buffer-mouse-set-point e)
-                  (tree-buffer-select 2 nil nil))))
+                  (tree-buffer-select 2 nil nil nil))))
 
     (define-key tree-buffer-key-map
       (tree-buffer-create-mouse-key 2 mouse-action-trigger 'shift)
       (function (lambda(e)
 		  (interactive "e")
                   (tree-buffer-mouse-set-point e)
-                  (tree-buffer-select 2 t nil))))
+                  (tree-buffer-select 2 t nil nil))))
 
     (define-key tree-buffer-key-map
       (tree-buffer-create-mouse-key 2 mouse-action-trigger 'control)
       (function (lambda(e)
 		  (interactive "e")
                   (tree-buffer-mouse-set-point e)
-                  (tree-buffer-select 2 nil t))))
+                  (tree-buffer-select 2 nil t nil))))
+
+    (define-key tree-buffer-key-map
+      (tree-buffer-create-mouse-key 2 mouse-action-trigger 'meta)
+      (function (lambda(e)
+		  (interactive "e")
+                  (tree-buffer-mouse-set-point e)
+                  (tree-buffer-select 2 nil nil t))))
 
     (define-key tree-buffer-key-map
       (tree-buffer-create-mouse-key 2 mouse-action-trigger-not nil) nop)
@@ -2127,6 +2157,8 @@ AFTER-CREATE-HOOK: A function or a list of functions \(with no arguments)
       (tree-buffer-create-mouse-key 2 mouse-action-trigger-not 'shift) nop)
     (define-key tree-buffer-key-map
       (tree-buffer-create-mouse-key 2 mouse-action-trigger-not 'control) nop)
+    (define-key tree-buffer-key-map
+      (tree-buffer-create-mouse-key 2 mouse-action-trigger-not 'meta) nop)
     (define-key tree-buffer-key-map [double-mouse-2] nop)
     (define-key tree-buffer-key-map [triple-mouse-2] nop)
 
@@ -2156,33 +2188,36 @@ AFTER-CREATE-HOOK: A function or a list of functions \(with no arguments)
     ;; scrolling horiz.
     (when (and (not tree-buffer-running-xemacs)
                tree-buffer-hor-scroll-step)
-      (define-key tree-buffer-key-map
-        [M-down-mouse-1]
-        (function (lambda(e)
-                    (interactive "e")
-                    (tree-buffer-mouse-set-point e)
-                    (tree-buffer-hscroll (- tree-buffer-hor-scroll-step)))))
+      ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: Deactivate these
+      ;; meta-down-mouse-1 stuff for horiz. scrolling when we add meta as an
+      ;; allowed modifier for mouse-clicks above!!
+;;       (define-key tree-buffer-key-map
+;;         [M-down-mouse-1]
+;;         (function (lambda(e)
+;;                     (interactive "e")
+;;                     (tree-buffer-mouse-set-point e)
+;;                     (tree-buffer-hscroll (- tree-buffer-hor-scroll-step)))))
 
-      (define-key tree-buffer-key-map
-        [M-down-mouse-3]
-        (function (lambda(e)
-                    (interactive "e")
-                    (tree-buffer-mouse-set-point e)
-                    (tree-buffer-hscroll tree-buffer-hor-scroll-step))))
+;;       (define-key tree-buffer-key-map
+;;         [M-down-mouse-3]
+;;         (function (lambda(e)
+;;                     (interactive "e")
+;;                     (tree-buffer-mouse-set-point e)
+;;                     (tree-buffer-hscroll tree-buffer-hor-scroll-step))))
       
-      (define-key tree-buffer-key-map
-        [C-M-down-mouse-1]
-        (function (lambda(e)
-                    (interactive "e")
-                    (tree-buffer-mouse-set-point e)
-                    (tree-buffer-hscroll (- (- (window-width) 2))))))
+;;       (define-key tree-buffer-key-map
+;;         [C-M-down-mouse-1]
+;;         (function (lambda(e)
+;;                     (interactive "e")
+;;                     (tree-buffer-mouse-set-point e)
+;;                     (tree-buffer-hscroll (- (- (window-width) 2))))))
       
-      (define-key tree-buffer-key-map
-        [C-M-down-mouse-3]
-        (function (lambda(e)
-                    (interactive "e")
-                    (tree-buffer-mouse-set-point e)
-                    (tree-buffer-hscroll (- (window-width) 2)))))
+;;       (define-key tree-buffer-key-map
+;;         [C-M-down-mouse-3]
+;;         (function (lambda(e)
+;;                     (interactive "e")
+;;                     (tree-buffer-mouse-set-point e)
+;;                     (tree-buffer-hscroll (- (window-width) 2)))))
       
       ;; This lets the GNU Emacs user scroll as if we had a horiz.
       ;; scrollbar...

@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-layout.el,v 1.227 2004/06/14 11:02:18 berndl Exp $
+;; $Id: ecb-layout.el,v 1.228 2004/07/28 16:50:23 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -163,6 +163,7 @@
 (silentcomp-defvar window-size-fixed)
 (silentcomp-defun fit-window-to-buffer)
 (silentcomp-defvar temp-buffer-resize-mode)
+(silentcomp-defun temp-buffer-resize-mode)
 
 (eval-when-compile
   ;; to avoid compiler grips
@@ -270,6 +271,43 @@ layout with `ecb-redraw-layout'"
                                 value))))
   :type 'string)
 
+(defun ecb-enable-temp-buffer-shrink-to-fit (arg)
+  "Enables `temp-buffer-resize-mode' \(GNU Emacs) rsp.
+`temp-buffer-shrink-to-fit' \(XEmacs) when a comile-window is used. When the
+compile-window is disabled or when ECB is deactivated then the old state of
+these modes/variables is restored."
+  (if arg
+      (progn
+        ;; store old value if not already done
+        (or (get 'ecb-enable-temp-buffer-shrink-to-fit
+                 'ecb-old-temp-buffer-shrink-to-fit)
+            (put 'ecb-enable-temp-buffer-shrink-to-fit
+                 'ecb-old-temp-buffer-shrink-to-fit
+                 (cons 'stored
+                       (if ecb-running-xemacs
+                           temp-buffer-shrink-to-fit
+                         temp-buffer-resize-mode))))
+        ;; now we activate temp-buffer-shrinking
+        (if ecb-running-xemacs
+            (setq temp-buffer-shrink-to-fit t)
+          (temp-buffer-resize-mode 1))
+        )
+    ;; reset to the original value
+    (and (get 'ecb-enable-temp-buffer-shrink-to-fit
+              'ecb-old-temp-buffer-shrink-to-fit)
+         (if ecb-running-xemacs
+             (setq temp-buffer-shrink-to-fit
+                   (cdr (get 'ecb-enable-temp-buffer-shrink-to-fit
+                             'ecb-old-temp-buffer-shrink-to-fit)))
+           (temp-buffer-resize-mode
+            (if (cdr (get 'ecb-enable-temp-buffer-shrink-to-fit
+                          'ecb-old-temp-buffer-shrink-to-fit))
+                1
+              -1))))
+    (put 'ecb-enable-temp-buffer-shrink-to-fit
+         'ecb-old-temp-buffer-shrink-to-fit
+         nil)))
+
 (defcustom ecb-compile-window-height nil
   "*Height of the durable compilation-window of ECB.
 If you want a compilation window shown at the bottom of the ECB-layout
@@ -322,6 +360,7 @@ layout with `ecb-redraw-layout'"
                    (when (and (boundp 'ecb-minor-mode)
                               ecb-minor-mode
                               (frame-live-p ecb-frame))
+                     (ecb-enable-temp-buffer-shrink-to-fit value)
                      (let ((curr-frame (selected-frame)))
                        (unwind-protect
                            (progn
@@ -331,6 +370,8 @@ layout with `ecb-redraw-layout'"
                          (select-frame curr-frame))))))
   :type '(radio (const :tag "No compilation window" nil)
                 (number :tag "Window height" :value 6)))
+
+
 
 (defcustom ecb-compile-window-width 'frame
   "*Width of the compile-window.
@@ -732,7 +773,8 @@ compile-window is used if there is one. In the context of an
 If one of the special ecb-windows is selected then always the \"next\"
 ecb-window is choosen \(whereas the next ecb-window of the last ecb-window is
 the first ecb-window). In the context of an `other-window'-call the ARG of
-`other-window' will be taken into account.
+`other-window' will be taken into account. If there is only one ecb-window
+then ECB considers also the edit-windows!
 
 If the compile-window is selected then always the last selected edit-window
 will be used unless `other-window' has been called with a prefix-argument
@@ -2499,7 +2541,8 @@ some special tasks:
              (ecb-layout-debug-error "ecb-layout-post-command-hook: shrink")
              (ecb-toggle-compile-window-height -1)))))
   (if ecb-layout-prevent-handle-ecb-window-selection
-      (setq ecb-layout-prevent-handle-ecb-window-selection nil)
+      (progn
+        (setq ecb-layout-prevent-handle-ecb-window-selection nil))
     (when (and ecb-minor-mode
                ecb-maximize-ecb-window-after-selection
                (equal (selected-frame) ecb-frame)
@@ -2884,7 +2927,11 @@ If called for other frames it works like the original version."
     ;; here we have no active minibuffer!
     (let ((nth-win (or nth-window 1)))
       (cond ((equal point-loc 'ecb)
-             (ecb-next-listelem ecb-win-list (selected-window) nth-win))
+             (ecb-next-listelem (if (and ecb-win-list
+                                         (= 1 (length ecb-win-list)))
+                                    (append ecb-win-list edit-win-list)
+                                  ecb-win-list)
+                                (selected-window) nth-win))
             ((equal point-loc 'compile)
              (if (= nth-win 1)
                  (or (and ecb-last-edit-window-with-point

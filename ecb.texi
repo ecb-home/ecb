@@ -26,7 +26,7 @@
 @c GNU Emacs; see the file COPYING.  If not, write to the Free Software
 @c Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-@c $Id: ecb.texi,v 1.179 2004/07/15 15:26:20 berndl Exp $
+@c $Id: ecb.texi,v 1.180 2004/07/28 16:50:21 berndl Exp $
 
 @setfilename ecb.info
 
@@ -1762,8 +1762,9 @@ If the edit-area is already splitted into at least two edit-windows
 then the temp-buffer is displayed in another edit-window otherwise the
 edit-are will be splitted first into two edit-windows, one above the
 other. The variables @code{temp-buffer-max-height} and
-@code{temp-buffer-resize-mode} (the latter one does not exist in
-XEmacs) work also correctly with ECB.
+@code{temp-buffer-resize-mode} (for GNU Emacs) and
+@code{temp-buffer-shrink-to-fit} (for XEmacs) work also correctly with
+ECB.
 
 Same for all compilation output-buffers (e.g. after a @code{compile} or
 @code{grep}) and the variable @code{compilation-window-height}.
@@ -1962,7 +1963,8 @@ If one of the special ecb-windows is selected then always the ``next''
 ecb-window is choosen (whereas the next ecb-window of the last
 ecb-window is the first ecb-window). In the context of an
 @code{other-window}-call the @var{ARG} of @code{other-window} will be
-taken into account.
+taken into account. If there is only one ecb-window then ECB considers
+also the edit-windows.
 
 If the compile-window is selected then always the last edit-window
 which had the point will be used unless @code{other-window} has been
@@ -6969,7 +6971,8 @@ If one of the special ecb-windows is selected then always the ``next''
 ecb-window is choosen (whereas the next ecb-window of the last
 ecb-window is the first ecb-window). In the context of an
 @code{other-window}-call the @var{ARG} of @code{other-window} will be
-taken into account.
+taken into account. If there is only one ecb-window then ECB considers
+also the edit-windows
 
 If the compile-window is selected then always the last edit-window
 which had the point will be used unless @code{other-window} has been
