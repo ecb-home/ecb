@@ -1740,7 +1740,7 @@ the same ordering as `other-window' would walk through the frame."
                                   (ecb-canonical-windows-list)
                                 (window-list)))))))
 
-;;; Time  stuff
+;;; ----- Time  stuff -----------------------------------------
 
 ;; next three functions stolen from gnus
 (defun ecb-time-to-seconds (time)

@@ -1134,10 +1134,6 @@ run starts with this interrupted function."
       ;; otherwise we ensure that next time we start with the interrupted
       ;; function.
       (when l
-        ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: remove this test if it
-        ;; all stealth tasks work - currently only the VC-support is not
-        ;; enough tested
-        (message "TEST: ecb-stealthy-updates: %s has been interrupted" (car l))
         (setq ecb-stealthy-function-list
               (ecb-rotate ecb-stealthy-function-list (car l)))))))
 
