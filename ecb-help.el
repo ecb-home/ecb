@@ -1,4 +1,4 @@
-;;; ecb-help.el --- online help for ECB
+;;; ecb-help.el --- online help for ECB and bug reporting
 
 ;; Copyright (C) 2001 Jesper Nordenberg
 ;; Copyright (C) 2001 Free Software Foundation, Inc.
@@ -26,7 +26,7 @@
 ;;
 ;; Contains all online-help for ECB (stolen something from recentf.el)
 
-;; $Id: ecb-help.el,v 1.26 2001/06/07 19:36:24 berndl Exp $
+;; $Id: ecb-help.el,v 1.27 2001/06/08 11:52:43 berndl Exp $
 
 ;;; Code
 
@@ -315,6 +315,24 @@ following options before working with ECB):
 - All the options in the customize group 'ecb-layout'
 
 
+                         ===========================
+                         Submitting a problem report
+                         ===========================
+
+If you run into problems with ECB you can/should send a problem report to the
+ECB mailing list \(ecb-list@lists.sourceforge.net). ECB offers you a command
+which does all necessary for you to send a problem report. Just call
+`ecb-submit-problem-report'! Please read the documentation of this command.
+
+This command creates a problem-report buffer for you. After that you get a
+menu \"Mail\" \(dependend on the mail-package used, the menu can have a
+different name) with commands to send the problem report. But for this the
+varibale `mail-user-agent' must be configured right for your system. If you
+can´t get working this mechanism you can simply copy the whole problem-report
+buffer after filling it out and sending it with your standard mail-client to
+<ecb-list@lists.sourceforge.net>!
+
+
                               ===============
                               Tips and tricks
                               ===============
@@ -447,6 +465,99 @@ These are the special commands of `ecb-dialog-mode' mode:
       (goto-char (point-min))
       (ignore-errors (help-make-xrefs))
       (goto-char (point-min)))))
+
+;;
+;; Problem reporting functions stolen from JDE
+;;
+(defvar ecb-problem-report-mail-address "ecb-list@lists.sourceforge.net" )
+
+(defconst ecb-problem-report-message
+  "Please enter the details of your bug report here")
+
+(defun ecb-submit-problem-report()
+  "Submit a problem report for the ECB to the ECB mailing-list. This command
+generates in the edit-window a problem-report which contains already the
+current values of all ECB options, the current backtrace-buffer if there is
+any and the current message-buffer. You will be asked for a problem-report
+subject and then you must insert a description of the problem. Please describe
+the problem as detailed as possible!"
+  (interactive)
+  (if (not (ecb-point-in-edit-window))
+      (ecb-select-edit-window))
+  (if (not (locate-library "reporter"))
+      (error "You need the reporter.el package to submit a bugreport for ECB!")
+    (require 'reporter)
+    (and 
+     (y-or-n-p "Do you want to submit a problem report on the ECB? ")
+     (progn
+       (message "Preparing problem report...")
+       ;;prepare the basic buffer
+       (let ((reporter-prompt-for-summary-p "Subject of the report: "))
+         (reporter-submit-bug-report
+          ecb-problem-report-mail-address
+          (concat "ECB version: " ecb-version)
+          (ecb-problem-report-list-all-variables)
+          nil
+          'ecb-problem-report-post-hook
+          ecb-problem-report-message)
+         (ecb-redraw-layout)
+         (mail-text)
+         (search-forward ecb-problem-report-message)
+         (end-of-line)
+         (message "Preparing bug report...done"))))))
+
+(defun ecb-problem-report-post-hook()
+  "Function run the reporter package done its work. It looks for a message- and
+a backtrace-buffer and inserts the contents of that."
+  (save-excursion
+    (beginning-of-buffer)
+    ;; if the mail-packages has already inserted a signature we must not go to
+    ;; the buffer-end but just before the signature
+    (if (re-search-forward "^--[ \t]*$" nil t)
+        (progn
+          (beginning-of-line)
+          (insert-string "\n\n\n")
+          (forward-line -2))
+      (goto-char (point-max))
+      (insert-string "\n\n")) 
+    (let* ((messages-buffer 
+	    (get-buffer
+	     (if running-xemacs " *Message-Log*" "*Messages*")))
+	   (backtrace-buffer (get-buffer "*Backtrace*")))
+
+      ;;insert the contents of the backtrace buffer if it is there. 
+      (insert-string "\n\n-----------------------------------------------------\n")
+      (if backtrace-buffer
+          (progn
+            (insert-string "The contents of the *Backtrace* buffer were\n\n")
+	    (insert-buffer backtrace-buffer)
+	    (goto-char (mark))
+            (insert-string "\nEnd Insert *Backtrace* buffer" ))
+        (insert-string "There was no *Backtrace* buffer" ))
+      (insert-string "\n-----------------------------------------------------\n\n")
+
+      ;;insert the contents of the messages buffer if it is there. 
+      (insert-string "-----------------------------------------------------\n")
+      (if messages-buffer
+          (progn
+            (insert-string "The contents of the *Messages* buffer were\n\n")
+	    (insert-buffer messages-buffer)
+	    (goto-char (mark))
+            (insert-string "\nEnd Insert *Messages* buffer" ))
+        (insert-string "There was no *Messages* buffer" ))
+      (insert-string  "\n-----------------------------------------------------\n\n"))))
+
+(defun ecb-problem-report-list-all-variables()
+  "List all variables starting with `ecb-'."
+  (let ((vars))
+    (mapatoms
+     (lambda (symbol)
+       (when (and (string-match "ecb-" (symbol-name symbol))
+                  (get symbol 'custom-type))
+	 (setq vars (cons symbol vars)))))
+    (sort vars (function (lambda (l r)
+                           (string< (symbol-name l) (symbol-name r)))))))
+
 
 
 (provide 'ecb-help)

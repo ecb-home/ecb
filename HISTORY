@@ -1,6 +1,9 @@
 Version ???:
 ------------
 
+- Function for automatically submitting a problem report to the ECB mailing
+  list: ecb-submit-problem-report. (Klaus)
+
 - Now not only for method-highlighting an idle delay can be set but also for
   synchronizing the ECB windows with current edit window (see option
   ecb-window-sync and ecb-window-sync-delay; default is 0.25 sec delay)
