@@ -2,10 +2,15 @@
 
 ** Fixed bugs:
 
-*** Smart arrowkey-navigation in the tree-buffers now even smarter
+*** Smart arrowkey-navigation in the tree-buffers is now even smarter.
     Thanks to John Russel <jorussel@cisco.com> for suggestion.
 
+*** If ECB was activated with a layout which does not contain a
+    directory-buffer then you got always an empty directory-buffer even after
+    switching to a layout with a directory-buffer. This is fixed now.
 
+
+    
 
 * Changes for ECB version 1.93
 

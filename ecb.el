@@ -4952,6 +4952,7 @@ always the ECB-frame if called from another frame."
 
       ;; now we draw the layout choosen in `ecb-layout'. This function
       ;; acivates at its end also the adviced functions if necessary!
+      ;; Here are the directories- and history-buffer updated.
       (let ((ecb-redraw-layout-quickly nil))
         (ecb-redraw-layout-full 'no-buffer-sync))
     
@@ -4963,9 +4964,6 @@ always the ECB-frame if called from another frame."
               (split-window-horizontally))
              ((not ecb-split-edit-window)
               (delete-other-windows))))
-
-      ;; now we update the directories window - if visible
-      (ecb-update-directories-buffer)
 
       ;; now we synchronize all ECB-windows
       (ecb-current-buffer-sync 'force)

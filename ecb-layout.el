@@ -2561,16 +2561,25 @@ this function the edit-window is selected which was current before redrawing."
       
       (setq ecb-windows-hidden nil)
 
-      ;; synchronize the special ecb-buffers if necessary (means if not all
-      ;; ecb-windows of current layout were visible before redraw) and
-      ;; fillup the history new with all buffers if the history buffer was not
-      ;; shown before the redisplay but now (means if the layout has changed)
       (let ((current-ecb-windows (ecb-get-current-visible-ecb-buffers)))
+        ;; fillup the history new with all buffers if the history buffer was
+        ;; not shown before the redisplay but now (means if the layout has
+        ;; changed)
         (when (and (not (member (get-buffer ecb-history-buffer-name)
                                 ecb-windows-before-redraw))
                    (member (get-buffer ecb-history-buffer-name)
                            current-ecb-windows))
           (ecb-add-all-buffers-to-history))
+        ;; update the directories buffer if the directories buffer was not
+        ;; shown before the redisplay but now (means if the layout has
+        ;; changed)
+        (when (and (not (member (get-buffer ecb-directories-buffer-name)
+                                ecb-windows-before-redraw))
+                   (member (get-buffer ecb-directories-buffer-name)
+                           current-ecb-windows))
+          (ecb-update-directories-buffer))
+        ;; synchronize the special ecb-buffers if necessary (means if not all
+        ;; ecb-windows of current layout were visible before redraw) and
         (when (and (not (equal ecb-windows-before-redraw current-ecb-windows))
                    (not no-buffer-sync))
           (ecb-current-buffer-sync t)))
