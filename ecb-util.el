@@ -31,7 +31,7 @@
 ;; For the ChangeLog of this file see the CVS-repository. For a complete
 ;; history of the ECB-package see the file NEWS.
 
-;; $Id: ecb-util.el,v 1.62 2003/03/21 13:29:37 berndl Exp $
+;; $Id: ecb-util.el,v 1.63 2003/07/30 16:54:49 berndl Exp $
 
 ;;; Code:
 
@@ -328,7 +328,7 @@ not nil then in both PATH and FILENAME env-var substitution is done. If the
 (defun ecb-create-file (node)
   (ecb-create-file-3 (tree-node-get-data node)))
 
-;; Nur intern
+;; Only intern
 (defun ecb-create-file-3 (dir)
   (ecb-select-edit-window)
   (find-file (concat dir "/" (read-from-minibuffer "File name: "))))
@@ -347,7 +347,7 @@ not nil then in both PATH and FILENAME env-var substitution is done. If the
     (if (file-exists-p exp-file)
         (delete-file exp-file))))
 
-;; Nur intern
+;; Only intern
 (defun ecb-delete-source (file)
   (when (ecb-confirm (concat "Delete " file "?"))
     (when (get-file-buffer file)
@@ -452,8 +452,8 @@ the user is prompted with OTHER-PROMPT to insert any arbitrary string."
 
 (defmacro ecb-with-readonly-buffer (buffer &rest body)
   "Make buffer BUFFER current but do not display it. Evaluate BODY in buffer
-BUFFER \(not readonly an evaluation-time of BODY) and make afterwards BUFFER
-readonly. Note: All this is done with `save-excursion' so after BODY that
+BUFFER \(not read-only an evaluation-time of BODY) and make afterwards BUFFER
+read-only. Note: All this is done with `save-excursion' so after BODY that
 buffer is current which was it before calling this macro."
   `(if (buffer-live-p ,buffer)
        (save-excursion
@@ -468,14 +468,14 @@ buffer is current which was it before calling this macro."
 (put 'ecb-with-readonly-buffer 'lisp-indent-function 1)
 
 (defmacro ecb-do-if-buffer-visible-in-ecb-frame (buffer-name-symbol &rest body)
-  "Evaluate BODY if the following condititions are all true:
+  "Evaluate BODY if the following conditions are all true:
 - The symbol BUFFER-NAME-SYMBOL is bound
 - The value of BUFFER-NAME-SYMBOL is a name of a living buffer B
 - The buffer B is visible and displayed in a window of the `ecb-frame'
 - ECB is active
 - The current frame is the `ecb-frame'
 - The window of buffer B is not the `ecb-edit-window'.
-If one of these condititions is false then nothing will be done.
+If one of these conditions is false then nothing will be done.
 
 During the evaluation of BODY the following local variables are bound:
 - visible-buffer: The buffer-object which name is the value of
@@ -496,7 +496,7 @@ During the evaluation of BODY the following local variables are bound:
 (put 'ecb-do-if-buffer-visible-in-ecb-frame 'lisp-indent-function 1)
 
 (defun ecb-read-number (prompt &optional init-value)
-  "Ask in the minibuffer for a number with promptstring PROMPT. Optional
+  "Ask in the minibuffer for a number with prompt-string PROMPT. Optional
 INIT-VALUE can be either a number or a string-representation of a number."
   (let ((init (cond ((numberp init-value)
                      (number-to-string init-value))
@@ -532,12 +532,12 @@ in exactly this sequence."
           (t (car val)))))
 
 (defun ecb-message-box (message-str &optional title-text button-text)
-  "Display a messagebox with message MESSAGE-STR and title TITLE-TEXT if
-TITLE-TEXT is not nil - otherwise \"Messagebox\" is used as title. The title
+  "Display a message-box with message MESSAGE-STR and title TITLE-TEXT if
+TITLE-TEXT is not nil - otherwise \"Message-box\" is used as title. The title
 gets always the prefix \"ECB - \". Second optional argument BUTTON-TEXT
 specifies the text of the message-box button; if nil then \"OK\" is used.
 
-Remark: BUTTON-TEXT is currently only used with XEmacs. Wie GNU Emacs the
+Remark: BUTTON-TEXT is currently only used with XEmacs. With GNU Emacs the
 message itself is the button because GNU Emacs currently does not support
 dialog-boxes very well.
 
@@ -564,7 +564,7 @@ If `window-system' is nil then a simple message is displayed in the echo-area."
 
 (defun ecb-error (&rest args)
   "Signals an error but prevents it from entering the debugger. This is
-usefull if an error-message should be signaled to the user and evaluating
+useful if an error-message should be signaled to the user and evaluating
 should stopped but no debugging is senseful."
   (let ((debug-on-error nil))
     (error (concat "ECB " ecb-version ": "
@@ -708,7 +708,7 @@ Since it actually calls `start-process', not all features will work."
       (set-process-sentinel proc 'list)
       (while (eq (process-status proc) 'run)
 	(accept-process-output proc)
-	;; accept-process-output caused my solaris Emacs 20.3 to crash.
+	;; accept-process-output caused my Solaris Emacs 20.3 to crash.
 	;; If this is unreliable for you, use the below which will work
 	;; in that situation.
 	;; (if (not (sit-for timeout)) (read-event))
@@ -718,7 +718,7 @@ Since it actually calls `start-process', not all features will work."
   "If FILE exists and is readable returns the contents as a string otherwise
 return nil.
 Note: No major/minor-mode is activated and no local variables are evaluated
-for FILE, but proper EOL-conversion and charcater interpretation is done!"
+for FILE, but proper EOL-conversion and character interpretation is done!"
   (let ((exp-filename (expand-file-name file)))
     (if (and (file-exists-p exp-filename)
              (file-readable-p exp-filename))

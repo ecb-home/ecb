@@ -1,6 +1,6 @@
 ;;; ecb-cycle.el --- cycle buffers through ecb windows.
 
-;; $Id: ecb-cycle.el,v 1.21 2002/12/30 10:11:49 berndl Exp $
+;; $Id: ecb-cycle.el,v 1.22 2003/07/30 16:54:49 berndl Exp $
 
 ;; Copyright (C) 2000-2003 Free Software Foundation, Inc.
 ;; Copyright (C) 2000-2003 Kevin A. Burton (burton@openprivacy.org)
@@ -83,7 +83,7 @@ compilation buffer. If not we try to loop through all compilation buffers. If
 we hit the end we go back to the beginning.
 
 If CHOOSE-BUFFER is not nil then the user will be prompted for the
-compilation-buffer to swtich to.
+compilation-buffer to switch to.
 
 Afterwards always the compile-window of ECB is selected.
 
@@ -112,7 +112,7 @@ offers any buffer but switches to `ecb-compile-window' if a compilation-buffer!"
            (ecb-error "No compilation buffers available."))
 
          (if (not (ecb-compilation-buffer-p current-buffer))
-             ;;if the current bufffer is not a compilation buffer, goto the first
+             ;;if the current buffer is not a compilation buffer, goto the first
              ;;compilation buffer.
 
              (ecb-cycle-set-compilation-buffer 0 compilation-buffers)

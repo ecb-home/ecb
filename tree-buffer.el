@@ -32,7 +32,7 @@
 ;; For the ChangeLog of this file see the CVS-repository. For a complete
 ;; history of the ECB-package see the file NEWS.
 
-;; $Id: tree-buffer.el,v 1.117 2003/07/14 14:48:41 berndl Exp $
+;; $Id: tree-buffer.el,v 1.118 2003/07/30 16:54:48 berndl Exp $
 
 ;;; Code:
 
@@ -284,7 +284,7 @@ with the same arguments as `tree-node-expanded-fn'."
                    ;; if the expand-symbol is displayed before and mouse-button
                    ;; = 0, means RET is pressed, we do not toggle-expand but work
                    ;; as if point would not be at expand-symbol. This is for
-                   ;; conveniance.
+                   ;; convenience.
                    (not (and (= mouse-button 0)
                              tree-buffer-expand-symbol-before)))
               (progn
@@ -376,7 +376,7 @@ with the same arguments as `tree-node-expanded-fn'."
       (call-interactively 'scroll-left))))
 
 ;; Stolen from dframe.el from the speedbar-library
-;; XEmacs: this can be implemented using modeline keymaps, but there
+;; XEmacs: this can be implemented using modeline key-maps, but there
 ;; is no use, as we have horizontal scrollbar (as the docstring
 ;; hints.)
 (defun tree-buffer-mouse-hscroll (e)
@@ -522,7 +522,7 @@ returned."
             ;; make node visible if not and optimize the windows display for
             ;; the node.
             (tree-buffer-recenter node w))
-          ;; we have highlighted the node wo we return not nil.
+          ;; we have highlighted the node so we return not nil.
           t))
     (tree-buffer-remove-highlight)
     nil))
@@ -580,7 +580,7 @@ add this image to SYMBOL-STR otherwise do nothing. Always return SYMBOL-STR."
   (when tree-buffer-images-can-be-used
 	;; Regular images (created with `insert-image' are intangible
 	;; which (I suppose) make them more compatible with XEmacs 21.
-	;; Unfortunatly, there is a giant pile o code dependent on the
+	;; Unfortunately, there is a giant pile o code dependent on the
 	;; underlying text.  This means if we leave it tangible, then I
 	;; don't have to change said giant piles o code.
 	(if (and image-icon (symbol-value image-icon))
@@ -676,7 +676,7 @@ it´s current nodes. window-start and point will be preserved.
 If NODE is not nil and a valid and expanded node with at least one child then
 the display of this node is optimized so the node itself and as much as
 possible of it´s children \(and also recursive the children of a child if it´s
-aleady expanded, see `tree-node-count-subnodes-to-display') are visible in
+already expanded, see `tree-node-count-subnodes-to-display') are visible in
 current tree-buffer."
   (let* ((w (get-buffer-window (current-buffer)))
          (ws (window-start w))
@@ -734,7 +734,7 @@ level is > then LEVEL.
 
 Examples:
 - LEVEL = 0 expands only nodes which have no indentation itself.
-- LEVEL = 2 expands nodess which are either not indented or indented once or
+- LEVEL = 2 expands nodes which are either not indented or indented once or
   twice."
   (dolist (node (tree-node-get-children tree-buffer-root))
     (tree-buffer-expand-node node 0 level
@@ -836,13 +836,13 @@ see `tree-buffer-expand-nodes'."
 token at incr. search. The following contents of a displayed token are ignored
 by this pattern:
 - beginning spaces
-- The expand/collapse-buttons: \[+], <+> resp. \[-], <->")
+- The expand/collapse-buttons: \[+], <+> rsp. \[-], <->")
 
 (defconst tree-buffer-incr-searchpattern-node-prefix "\\([^ ]+ \\|[-+#]\\)?"
   "Prefix-pattern which ignores all not interesting stuff of a node-name at
 incr. search. The following contents of a node-name are ignored by this
 pattern:
-- types of a variable or returntypes of a method
+- types of a variable or return-types of a method
 - const specifier of variables
 - protection sign of a variable/method: +, - or #")
 
@@ -881,14 +881,14 @@ pattern:
     result))
 
 (defun tree-buffer-incremental-node-search ()
-  "Incremental search for a node in current tree-buffer. Each displayable
+  "Incremental search for a node in current tree-buffer. Each display-able
 key \(e.g. all keys normally bound to `self-insert-command') is appended to
-the current seach-pattern. The tree-buffer tries to jump to the current
+the current search-pattern. The tree-buffer tries to jump to the current
 search-pattern. If no match is found then nothing is done. Some special keys:
 - \[backspace] and \[delete]: Delete the last character from the search-pattern.
 - \[home]: Delete the complete search-pattern
 - \[end]: Expand either to a complete node if current search-pattern is
-         already unique or expands to the greates common prefix of the nodes.
+         already unique or expands to the greatest common prefix of the nodes.
          If there are at least two nodes with the same greatest common-prefix
          than every hit of \[end] jumps to the next node with this common
          prefix.
@@ -1007,18 +1007,18 @@ mentioned above!"
 
 (defvar tree-buffer-uncompleted-keyseq nil
   "Not nil only if there is at evaluation-time of this variable an uncompleted
-keysequence, e.g. the \"C-h\" of the keysequence \"C-h v\".")
+key sequence, e.g. the \"C-h\" of the key sequence \"C-h v\".")
 
 (defun tree-buffer-do-mouse-tracking ()
   "This function is called every time Emacs is idle for seconds defined in
 `tree-buffer-track-mouse-idle-delay'. It enables mouse-tracking but only if
-isearch is not active and if no uncompleted keysequence is open, means if this
-function is called by the idle timer during a keysequence is inserted by the
-user \(e.g. between the \"C-h\" and the \"v\" of the keysequence \"C-h v\"),
-then mouse-tracking is always not enabled, because otherwise all very slighly
+isearch is not active and if no uncompleted key sequence is open, means if this
+function is called by the idle timer during a key sequence is inserted by the
+user \(e.g. between the \"C-h\" and the \"v\" of the key sequence \"C-h v\"),
+then mouse-tracking is always not enabled, because otherwise all very slightly
 \(invisible) and unintended mouse-movements \(can occur for example only by
 the convulsion cause of hitting keys onto the keyboard!) would break the
-keysequence!"
+key sequence!"
   (setq track-mouse nil)
   (if (not (equal (tree-buffer-event-to-key last-input-event)
                   'mouse-movement))
@@ -1162,7 +1162,7 @@ Before using the accessor-functions above the tree-buffer has to be the
 current buffer!
 
 NAME: Name of the buffer FRAME: Frame in
-which the tree-buffer is displayed and valid. All keybindings
+which the tree-buffer is displayed and valid. All key-bindings
        and interactive functions of the tree-buffer work only if called in
        FRAME otherwise nothing is done!
 IS-CLICK-VALID-FN: `tree-buffer-create' rebinds down-mouse-1, down-mouse-2,
@@ -1182,7 +1182,7 @@ IS-CLICK-VALID-FN: `tree-buffer-create' rebinds down-mouse-1, down-mouse-2,
                    is accepted. If the function returns nil then really
                    nothing is done by the tree-buffer after this click/hit!
 NODE-SELECTED-FN: Function to call if a node has been selected
-                  This function is called with the following paramters:
+                  This function is called with the following parameters:
                   - node: The selected node
                   - mouse-button \(0 = RET, 1 = mouse-1, 2 = mouse 2)
                   - shift-pressed
@@ -1191,7 +1191,7 @@ NODE-SELECTED-FN: Function to call if a node has been selected
                   For the last four arguments see the description above.
 NODE-EXPANDED-FN: Function to call if a node is expandable, point stays onto
                   the expand-symbol and node is not already expanded. This
-                  function is called with the following paramters:
+                  function is called with the following parameters:
                   - node: The selected node
                   - mouse-button \(0 = TAB, 1 = mouse-1, 2 = mouse 2)
                   - shift-pressed
@@ -1220,14 +1220,14 @@ MENUS: Nil or a list of one to three conses, each cons for a node-type \(0, 1
        or 2) Example: \(\(0 . menu-for-type-0) \(1 . menu-for-type-1)). The
        cdr of a cons must be a menu.
 MENU-TITLES: Nil or a list of one to three conses, each cons for a node-type
-             \(0, 1 or 2). See MENUES. The cdr of a cons must be either a
+             \(0, 1 or 2). See MENUS. The cdr of a cons must be either a
              string or a function which will be called with current node
              under point and must return a string which is displayed as the
              menu-title.
 TR-LINES: Should lines in this tree buffer be truncated \(not nil)
 READ-ONLY: Should the treebuffer be read-only \(not nil)
 TREE-INDENT: spaces subnodes should be indented.
-INCR-SEARCH: Should the incremental search be anabled in the tree-buffer.
+INCR-SEARCH: Should the incremental search be enabled in the tree-buffer.
              Three choices: 'prefix, 'substring, nil. See
              `tree-buffer-incremental-node-search'.
 ARROW-NAVIGATION: If not nil then smart navigation with horizontal arrow keys.
@@ -1259,7 +1259,7 @@ GENERAL-FACE: General face in which the whole tree-buffer should be displayed.
 AFTER-CREATE-HOOK: A function or a list of functions \(with no arguments)
                    called directly after creating the tree-buffer and defining
                    it's local keymap. For example such a function can add
-                   additional keybindings for this tree-buffer local keymap."
+                   additional key-bindings for this tree-buffer local keymap."
   (let ((nop (function (lambda() (interactive))))
         (a-c-h (if (functionp after-create-hook)
                    (list after-create-hook)

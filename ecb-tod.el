@@ -1,4 +1,4 @@
-;;; ecb-tod.el: ECB tip od the day
+;;; ecb-tod.el: ECB tip of the day
 
 ;; Copyright (C) 2003 Jesper Nordenberg
 ;; Copyright (C) 2003 Free Software Foundation, Inc.
@@ -22,7 +22,7 @@
 ;; with GNU Emacs; see the file COPYING. If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-tod.el,v 1.8 2003/07/14 14:48:41 berndl Exp $
+;; $Id: ecb-tod.el,v 1.9 2003/07/30 16:54:49 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -66,7 +66,7 @@
     "Use the incremental search in the methods-buffer for fast node-selecting; see `ecb-tree-incremental-search'."
     "You can cycle through all currently opened \"compile-buffers\" with `ecb-cycle-through-compilation-buffers'."
     "You can change the window-sizes by dragging the mouse and storing the new sizes with `ecb-store-window-sizes'."
-    "You can get a quick overlook of all builtin layouts with `ecb-show-layout-help'."
+    "You can get a quick overlook of all built-in layouts with `ecb-show-layout-help'."
     "Browse your sources as with a web-browser with `ecb-nav-goto-next' \[C-c . n], `ecb-nav-goto-previous' \[C-c . p]."
     "Download latest ECB direct from the website with `ecb-download-ecb'."
     "Download latest semantic direct from the website with `ecb-download-semantic''."
@@ -74,7 +74,7 @@
     "Customize the contents of the methods-buffer with `ecb-token-display-function', `ecb-type-token-display', `ecb-show-tokens'."
     "Customize the main mouse-buttons of the tree-buffers with `ecb-primary-secondary-mouse-buttons'."
     "Customize with `ecb-tree-RET-selects-edit-window' in which tree-buffer a RETURN selects the edit-window."
-    "Grep a directory \(recurive) by using the popup-menu \(the right mouse-button) in the directories buffer."
+    "Grep a directory \(recursive) by using the popup-menu \(the right mouse-button) in the directories buffer."
     "Customize the sorting of the sources with the option `ecb-sources-sort-method'."
     "Narrow the source-buffer to the selected token in the methods-buffer with `ecb-token-jump-narrow'."
     "Enable autom. enlarging of the compile-window by select with the option `ecb-compile-window-enlarge-by-select'."
@@ -89,14 +89,14 @@
     "Use the POWER-click in the sources- and history-buffer to get only an overlook of the source-contents."
     "Exclude not important sources from being displayed in the sources-buffer with `ecb-source-file-regexps'."
     "Use left- and right-arrow for smart expanding/collapsing tree-buffer-nodes; see `ecb-tree-navigation-by-arrow'."
-    "Add personal keybindings to the tree-buffers with `ecb-common-tree-buffer-after-create-hook'."
-    "Add personal keybindings to the directories-buffer with `ecb-directories-buffer-after-create-hook'."
-    "Add personal keybindings to the sources-buffer with `ecb-sources-buffer-after-create-hook'."
-    "Add personal keybindings to the methods-buffer with `ecb-methods-buffer-after-create-hook'."
-    "Add personal keybindings to the history-buffer with `ecb-history-buffer-after-create-hook'."
+    "Add personal key-bindings to the tree-buffers with `ecb-common-tree-buffer-after-create-hook'."
+    "Add personal key-bindings to the directories-buffer with `ecb-directories-buffer-after-create-hook'."
+    "Add personal key-bindings to the sources-buffer with `ecb-sources-buffer-after-create-hook'."
+    "Add personal key-bindings to the methods-buffer with `ecb-methods-buffer-after-create-hook'."
+    "Add personal key-bindings to the history-buffer with `ecb-history-buffer-after-create-hook'."
     "Pop up a menu with the right mouse-button and do senseful things in the tree-buffers."
     "Call `ecb-show-help' [C-c . o] with a prefix-argument [C-u] and choose the help-format."
-    "You can change the prefix [C-c .] of all ECB-keybindings quick and easy with `ecb-key-map'."
+    "You can change the prefix [C-c .] of all ECB-key-bindings quick and easy with `ecb-key-map'."
     "Send a problem-report to the ECB-mailing-list quick and easy with `ecb-submit-problem-report'."
     "Switch on/off auto. expanding of the ECB-methods-buffer with `ecb-auto-expand-directory-tree'."
     "You can quickly toggle auto. expanding of the ECB-methods-buffer with `ecb-toggle-auto-expand-token-tree'."

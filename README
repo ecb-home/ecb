@@ -1,4 +1,4 @@
-Readme for the Emacs Code Browser (ECB) version 1.95.1
+README for the Emacs Code Browser (ECB) version 1.95.1
 
 
 About
@@ -28,13 +28,14 @@ ECB requires the following packages:
   IMPORTANT: The speedbar-version shipped with GNU Emacs <= 21.3 does not
   satisfy the requirements - download and install a newer one!
 
-- Optional: If Java code is edited the ECB works best when the JDE package
+- Optional: If Java code is edited the ECB works best when the JDEE package
   (http://sunsite.auc.dk/jde) is installed.
 
 If you use XEmacs you must have the packages fsf-compat (contains overlay.el)
 and c-support (contains hideshow.el) installed. If you want to read the
 online-help of ECB in HTML-format you must have the library browse-url (part
-of the mail-lib XEmacs package) installed!
+of the mail-lib XEmacs package) installed; this package is also needed for
+submitting problem-reports to the ECB-maintainers!
 
 
 Installation
@@ -43,7 +44,7 @@ Installation
 *IMPORTANT*: The following steps 1. to 8. describe installation tasks if you
 got the archive in the format available at the ECB website. If you use XEmacs
 and got ECB as regular XEmacs-package (e.g. downloaded and installed by the
-net-installer of XEmacs) then there is nothing to do for you, just start ECB
+package-manager of XEmacs) then there is nothing to do for you, just start ECB
 with `ecb-activate' or read the online-help with `ecb-show-help'.
 
 
@@ -113,7 +114,7 @@ optional installation steps:
 7. Calling `ecb-byte-compile'
 
    This byte compiles ECB. You can safely ignore all messages. (You can also
-   bytecompile ECB from the command-line either by using the `Makefile' or by
+   byte-compile ECB from the command-line either by using the `Makefile' or by
    using the batch-file `make.bat'. Just read the comments in that file you
    choose.)
 

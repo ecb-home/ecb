@@ -22,7 +22,7 @@
 ;; with GNU Emacs; see the file COPYING. If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-create-layout.el,v 1.21 2003/06/13 15:13:06 berndl Exp $
+;; $Id: ecb-create-layout.el,v 1.22 2003/07/30 16:54:49 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -90,8 +90,8 @@
 
  This is the help-screen of this mode. The window
  displaying this help text is called the edit-window
- which is neither selectable nor deletable nor
- splittable in this mode.
+ which is neither selectable nor delete-able nor
+ split-table in this mode.
 
  <left/right/up/down-arrow>: Moving around in current
  window C-n, C-p: Go to next/previous window (beside
@@ -106,9 +106,9 @@
         \"methods\", \"history\", \"speedbar\") the
         current window should be.
  C-u: Unsplit, ie. delete current window
- C-t: Give the current window a builtin type
+ C-t: Give the current window a built-in type
       (\"directories\", \"sources\", \"methods\",
-      \"history\", \"speedbar\") or any arbitary user-
+      \"history\", \"speedbar\") or any arbitrary user-
       defined type (\"other\"). See the Online-manual!
 
  C-c: Cancel layout creation. This does not save the
@@ -119,7 +119,7 @@
       in use. You have to choose a new name!
       Deletes this frame.
 
- There are NO other commands or keys avaliable. ALL
+ There are NO other commands or keys available. ALL
  other keys are disabled in this mode!
 ")
 
@@ -128,7 +128,7 @@
  ========================
 
  This is the help-screen of this mode. The window displaying this help text is called
- the edit-window which is neither selectable nor deletable nor splittable in this mode.
+ the edit-window which is neither selectable nor delete-able nor split-able in this mode.
 
  <left/right/up/down-arrow>: Moving around in current window
  C-n, C-p: Go to next/previous window (beside the edit-window)
@@ -140,15 +140,15 @@
       - Which type (\"directories\", \"sources\", \"methods\", \"history\", \"speedbar\")
         the current window should be.
  C-u: Unsplit, ie. delete current window
- C-t: Give the current window a builtin type (\"directories\", \"sources\", \"methods\",
-      \"history\", \"speedbar\") or any arbitray user-defined type (\"other\").
+ C-t: Give the current window a built-in type (\"directories\", \"sources\", \"methods\",
+      \"history\", \"speedbar\") or any arbitrary user-defined type (\"other\").
 
  C-c: Cancel layout creation. This does not save the layout. Deletes this frame.
  C-q: Save current defined layout and quit the layout creation. You will be asked for a
       layout-name. With TAB-completion you can get the names already in use.
       You have to choose a new name! Deletes this frame.
 
- There are NO other commands or keys avaliable. ALL other keys are disabled in this mode!
+ There are NO other commands or keys available. ALL other keys are disabled in this mode!
 ")
 
 (defconst ecb-create-layout-file-header
@@ -274,7 +274,7 @@ DELETE-FRAME is not nil then the new created frame will be deleted and the
       (progn
         (setq vertical-divider-map ecb-create-layout-old-vertical-div-map)
         (setq modeline-map ecb-create-layout-old-modeline-map))
-    ;; before and after makeing frame stuff
+    ;; before and after making frame stuff
     (setq before-make-frame-hook ecb-create-layout-old-before-frame-h)
     (setq after-make-frame-functions ecb-create-layout-old-after-frame-h))
   ;; restore old debug-on-error
@@ -558,12 +558,12 @@ DELETE-FRAME is not nil then the new created frame will be deleted and the
         (ecb-create-layout-new-buffer)))))
 
 (defvar ecb-create-layout-mode-map nil
-  "`ecb-create-layout-mode' keymap.")
+  "`ecb-create-layout-mode' key-map.")
 
 (if ecb-create-layout-mode-map
     ()
   (setq ecb-create-layout-mode-map (make-sparse-keymap))
-;;  (suppress-keymap ecb-create-layout-mode-map t)
+;;  (suppress-key-map ecb-create-layout-mode-map t)
 
   ;; for minibuffer insertion we need the following
   (dotimes (i 26)
@@ -775,7 +775,7 @@ DELETE-FRAME is not nil then the new created frame will be deleted and the
 
 (defun ecb-delete-new-layout ()
   "Select a layout-name for a layout created by `ecb-create-new-layout' and
-delete this layout. This means the layout-definiton is removed from the file
+delete this layout. This means the layout-definition is removed from the file
 `ecb-create-layout-file' and the layout-function and associated aliases are
 unbound."
   (interactive)

@@ -1,6 +1,6 @@
 # This Makefile byte-compiles the ECB lisp files and generates online-help.
 
-# $Id: Makefile,v 1.66 2003/07/15 07:57:48 berndl Exp $
+# $Id: Makefile,v 1.67 2003/07/30 16:54:49 berndl Exp $
 
 # ========================================================================
 # User configurable section
@@ -13,14 +13,14 @@
 EMACS=emacs
 
 # If semantic, eieio and speedbar are added to load-path within some
-# elisp-statements in the Emacs initialisation-files (e.g. .emacs or
+# Elisp-statements in the Emacs initialization-files (e.g. .emacs or
 # site-start.el) then set here again the load-path of the semantic-version,
 # the eieio-version and the speedbar-version loaded into your Emacs (use
 # always FORWARD-SLASHES as directory-separator even with MS Windows
 # systems). Make sure you compile ECB with the semantic-, eieio- and
 # speedbar-version you load into Emacs!
 
-# If you are using XEmacs with already installed xemacs-packages for
+# If you are using XEmacs with already installed XEmacs-packages for
 # semantic, eieio and speedbar or if you are using a file subdirs.el with
 # GNU Emacs which adds semantic, eieio and speedbar then there is NO need
 # to set the load-path for semantic, eieio or speedbar.
@@ -43,7 +43,7 @@ LOADPATH=
 #      make SEMANTIC="path/to/semantic" EIEIO="path/to/eieio" \
 #           SPEEDBAR="path/to/speedbar "EMACS="path/to/emacs"
 #
-#   if you want to set either different load-pathes or Emacs-binary and
+#   if you want to set either different load-paths or Emacs-binary and
 #   you do not want edit the Makefile. Do not forget quoting the arguments
 #   if they contain spaces!
 #
@@ -93,7 +93,7 @@ INSTALLINFO=/usr/bin/install-info
 
 # Do not change anything below!
 
-# $Id: Makefile,v 1.66 2003/07/15 07:57:48 berndl Exp $
+# $Id: Makefile,v 1.67 2003/07/30 16:54:49 berndl Exp $
 
 # For the ECB-maintainers: Change the version-number here and not
 # elsewhere!

@@ -30,7 +30,7 @@
 ;; For the ChangeLog of this file see the CVS-repository. For a complete
 ;; history of the ECB-package see the file NEWS.
 
-;; $Id: ecb-mode-line.el,v 1.19 2003/04/03 16:46:18 berndl Exp $
+;; $Id: ecb-mode-line.el,v 1.20 2003/07/30 16:54:49 berndl Exp $
 
 ;;; Code
 
@@ -209,7 +209,7 @@ stretch past the screen."
                         width))
         ;; we want to prepend "..." to the shorten directory
         (setq offset (+ offset 3))
-        ;; at least we must shorten directory from left by (runover + ...)
+        ;; at least we must shorten directory from left by (run-over + ...)
         ;; characters. If this is not possible we show no directory.
         (if (>= offset len-dir)
             (setq directory "")

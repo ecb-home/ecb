@@ -1,4 +1,4 @@
-;;; ecb-examples.el --- examples for using ECB with elisp
+;;; ecb-examples.el --- examples for using ECB with Elisp
 
 ;; Copyright (C) 2002 Jesper Nordenberg
 ;; Copyright (C) 2002 Free Software Foundation, Inc.
@@ -26,7 +26,7 @@
 ;;
 ;; Contains the code for some examples mentioned in the online-help.
 ;; This is a full working layout-example to demonstrate how to program
-;; complete new special windows/buffers, add them to a layout and syncronize
+;; complete new special windows/buffers, add them to a layout and synchronize
 ;; it with the edit-window of ECB.
 ;;
 ;; To test this example just do:
@@ -50,7 +50,7 @@
 ;; history of the ECB-package see the file NEWS.
 
 
-;; $Id: ecb-examples.el,v 1.9 2003/07/15 07:57:19 berndl Exp $
+;; $Id: ecb-examples.el,v 1.10 2003/07/30 16:54:49 berndl Exp $
 
 ;;; Code
 
@@ -104,7 +104,7 @@
 
 ;; The main synchronizing function which is added to
 ;; `ecb-current-buffer-sync-hook' for autom. evaluation by
-;; `ecb-current-buffer-sync' which runs dependend on the values of
+;; `ecb-current-buffer-sync' which runs dependent on the values of
 ;; `ecb-window-sync' and `ecb-window-sync-delay'.
 
 (defun ecb-examples-bufferinfo-sync ()
@@ -169,8 +169,8 @@ window dedicated for this buffer."
 
 
 
-;; Two helper functions for creating a readonly buffer with a special local
-;; keymap.
+;; Two helper functions for creating a read-only buffer with a special local
+;; key-map.
 
 (defun ecb-examples-insert-text-in-action-buffer (text)
   "Insert TEXT at point and make it highlight-able for mouse-movement over the
@@ -190,7 +190,7 @@ contains two buttons \[prior] and \[next] and mouse-2 calls
       (let ((nop (function (lambda() (interactive)))))
         (set-buffer (get-buffer-create ecb-examples-action-buffer-name))
 
-        ;; we setup a local keymap
+        ;; we setup a local key-map
         
         (make-local-variable 'ecb-examples-action-buffer-keymap)
         (setq ecb-examples-action-buffer-keymap (make-sparse-keymap))
@@ -207,7 +207,7 @@ contains two buttons \[prior] and \[next] and mouse-2 calls
         
         (use-local-map ecb-examples-action-buffer-keymap)
 
-        ;; insert the action buttons [prior] und [next] and make it read-only
+        ;; insert the action buttons [prior] and [next] and make it read-only
 
         (ecb-with-readonly-buffer (current-buffer)
          (erase-buffer)
@@ -224,7 +224,7 @@ contains two buttons \[prior] and \[next] and mouse-2 calls
 
 (defun ecb-examples-action-buffer-clicked (e)
   "Perform the right action for the mouse-click. If the user clicks onto
-\[prior] the buffer in the edit-window is scrolled up, if clickes onto \[next]
+\[prior] the buffer in the edit-window is scrolled up, if clicks onto \[next]
 the buffer in the edit-window is scrolled down. Otherwise nothing will be
 done."
   (interactive "e")
@@ -251,7 +251,7 @@ window dedicated for this buffer."
       (switch-to-buffer (buffer-name (ecb-examples-action-buffer-create))))))
 
 ;; ---------------------------------------------------------------------------
-;; --- The layout definiton with a bufferinfo- and a action-buffer -----------
+;; --- The layout definition with a bufferinfo- and a action-buffer -----------
 ;; ---------------------------------------------------------------------------
 
 

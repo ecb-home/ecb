@@ -1,6 +1,6 @@
 ;;; ecb-eshell.el --- eshell integration for the ECB.
 
-;; $Id: ecb-eshell.el,v 1.65 2003/01/15 16:25:58 berndl Exp $
+;; $Id: ecb-eshell.el,v 1.66 2003/07/30 16:54:49 berndl Exp $
 
 ;; Copyright (C) 2000-2003 Free Software Foundation, Inc.
 ;; Copyright (C) 2000-2003 Kevin A. Burton (burton@openprivacy.org)
@@ -29,7 +29,7 @@
 ;;; Commentary:
 
 ;; This package provides eshell integration for the ECB.  This basically allows
-;; you to jump to the eshell in the compilation window, synch up the current
+;; you to jump to the eshell in the compilation window, sync up the current
 ;; eshell with the current ECB buffer and run commands without getting in the
 ;; way.
 ;;
@@ -42,7 +42,7 @@
 ;;   allows you to view the eshell in minimized mode and then when you run 'ls'
 ;;   the window automatically expands.
 ;;
-;; - Sychronizes the current directory of the eshell with the current buffer
+;; - Synchronizes the current directory of the eshell with the current buffer
 ;;   with each every ECB buffer.
 ;;
 ;; - Provides smart window layout of the eshell buffer.  This makes sure that
@@ -58,7 +58,7 @@
 ;;; History:
 
 ;; Tue Jan 14 2003 14:53 PM (klaus.berndl@sdm.de):
-;; Swiched back to the use of visible-window during body of
+;; Switched back to the use of visible-window during body of
 ;; `ecb-do-if-buffer-visible-in-ecb-frame'.
 
 ;; Mon Jan 13 2003 09:33 AM (burton@peace): Fixed a bug with
@@ -70,7 +70,7 @@
 ;; handle the switch-to-buffer after a eshell sync.
 ;;
 ;;     we need to make sure that that the eshell buffer isn't at the top of the
-;;     buffer history list just because we implicity changed its directory and
+;;     buffer history list just because we implicitly changed its directory and
 ;;     switched to it.  It might not be a good idea in the long term to put it
 ;;     all the way at the end of the history list but it is better than leaving
 ;;     it at the top.
@@ -86,7 +86,7 @@
 ;;       function itself.
 ;;     - Normalizing directories before comparing it
 ;;   + ecb-eshell-cleanse: removed (end-of-buffer) because this always sets
-;;     the mark. This should not be used in elisp-programs!
+;;     the mark. This should not be used in Elisp-programs!
 ;;   + Added to all functions ecb-eshell-running-p
 ;;   + Removed a lot of superfluous save-excursion, save-window-excursion
 ;;     etc...
@@ -128,7 +128,7 @@
 ;; the current directory is different than the eshell/pwd (this is a performance
 ;; issue and needs to be added in ecb-eshell-current-buffer-sync
 ;;
-;;   - we can't do this.  eshell/pwd does't return a string.  Instead we should
+;;   - we can't do this.  eshell/pwd doesn't return a string.  Instead we should
 ;;     change to the eshell-buffer and see what the directory default-directory
 ;;     is there.
 ;;
@@ -141,9 +141,9 @@
 
 ;;; Design:
 ;;
-;; Synching the current buffer with the eshell is done two ways.  If the buffer
-;; is visible in a window, we always resynch.  If it is not visible then
-;; ecb-eshell-goto-eshell will synch up when the user goes to the eshell buffer.
+;; Syncing the current buffer with the eshell is done two ways.  If the buffer
+;; is visible in a window, we always resync.  If it is not visible then
+;; ecb-eshell-goto-eshell will sync up when the user goes to the eshell buffer.
 
 
 ;;; Code:
@@ -263,7 +263,7 @@ interactively or `ecb-eshell-synchronize' is not nil."
              (ecb-eshell-recenter)
 
              ;; we need to make sure that that the eshell buffer isn't at the
-             ;; top of the buffer history list just because we implicity
+             ;; top of the buffer history list just because we implicitly
              ;; changed its directory and switched to it. It might not be a
              ;; good idea in the long term to put it all the way at the end of
              ;; the history list but it is better than leaving it at the top.
@@ -393,7 +393,7 @@ that the eshell has more screen space after we execute a command. "
 (defun ecb-eshell-shrink-if-necessary()
   "If we have expanded the compile buffer after a command, but there was no need
 to because the command didn't output much text, go ahead and shrink it again.
-Note that this function needs to be standalone as a hook so we have to make sure
+Note that this function needs to be stand-alone as a hook so we have to make sure
 we execute it with the eshell buffer."
 
     (ecb-do-if-buffer-visible-in-ecb-frame 'eshell-buffer-name
@@ -404,7 +404,7 @@ we execute it with the eshell buffer."
         (select-window visible-window)
       
         ;; only shrink up if we expanded... we don't want to shrink if we just
-        ;; happend to be runnning in large mode
+        ;; happened to be running in large mode
         (when (and ecb-eshell-pre-command-point ecb-eshell-pre-window-enlarged
                    (< (count-lines ecb-eshell-pre-command-point
                                    (point))

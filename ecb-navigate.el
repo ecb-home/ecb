@@ -22,7 +22,7 @@
 ;; the Free Software Foundation, Inc., 59 Temple Place - Suite 330,
 ;; Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-navigate.el,v 1.15 2003/07/06 06:11:07 berndl Exp $
+;; $Id: ecb-navigate.el,v 1.16 2003/07/30 16:54:49 berndl Exp $
 
 ;;; Commentary:
 
@@ -128,8 +128,8 @@
 ;; Klaus Berndl <klaus.berndl@sdm.de>: Changed this class from storing the
 ;; whole token to storing explicitly the token-buffer, the marker of the
 ;; token-start, the marker of the token-end. This prevents the stored
-;; navigation-items from getting invalid und unuseable after a full
-;; semantic-reparse because such a reparse makes the overlays containd in the
+;; navigation-items from getting invalid and unusable after a full
+;; semantic-reparse because such a reparse makes the overlays contained in the
 ;; stored tokens invalid so we can not uses their informations.
 (defclass ecb-nav-token-history-item (ecb-nav-history-item)
   ((token-buffer :initarg :token-buffer :initform nil); :protection :private)

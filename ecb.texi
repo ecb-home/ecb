@@ -25,7 +25,7 @@
 @c Free Software Foundation, Inc., 59 Temple Place - Suite 330,
 @c Boston, MA 02111-1307, USA.
 
-@c $Id: ecb.texi,v 1.103 2003/07/15 13:48:17 berndl Exp $
+@c $Id: ecb.texi,v 1.104 2003/07/30 16:54:48 berndl Exp $
 
 @setfilename ecb.info
 
@@ -129,7 +129,7 @@ mailing list @email{ecb-list@@lists.sourceforge.net} via
 * Submitting problem report::   What to do when problems occur
 * Upgrading::                   Upgrading and downloading packages
 * Tips and tricks::             Useful hints and tips
-* Elisp programming::           Entry points for elisp programmers
+* Elisp programming::           Entry points for Elisp programmers
 * Conflicts and bugs::          Known Conflicts with other packages and bugs
 * FAQ::                         Frequently asked questions
 * Command Index::               Index for interactive commands
@@ -146,6 +146,11 @@ Installation and first steps of ECB
 * Setting up Emacs::            How to set up Emacs for file parsing with ECB
 * First steps::                 First steps after activating ECB first time
 
+Installation of ECB
+
+* XEmacs Installation::         Installation of ECB for XEmacs users
+* GNU Emacs Installation::      Installation of ECB for GNU Emacs users
+
 How to set up Emacs for file parsing with ECB
 
 * General hints::               General hints for a correct setup
@@ -161,7 +166,7 @@ Overview
 Activation and Deactivation
 
 * Standard activation::         How to manually (de)activate ECB
-* Automatic activation::        Automaticaly (de)activating ECB
+* Automatic activation::        Automatically (de)activating ECB
 
 Usage of ECB
 
@@ -172,7 +177,7 @@ Usage of ECB
 * The Methods buffer::          Using and customizing he Methods-buffer
 * The ECB-layout::              Changing, customizing, redrawing, creating
 * Hiding the ECB windows::      Hiding/Showing the ECB-windows
-* Maximizing the ECB windows::   Maximizing the ECB-windows
+* Maximizing the ECB windows::  Maximizing the ECB-windows
 * Back/forward navigation::     Back- and forward navigation like a browser
 * ECB-window synchronizing::    Auto./manual synchronizing the ECB-windows
 * Interactive ECB commands::    All interactive user-commands of ECB
@@ -246,9 +251,9 @@ Tips and tricks
 * Non-semantic sources::        Parsing and displaying non-semantic sources
 * Hide-show::                   Using hide-show from the methods-buffer-menu
 
-Entry points for elisp programmers
+Entry points for Elisp programmers
 
-* List of variables::           Which variables an elisp-program can use
+* List of variables::           Which variables an Elisp-program can use
 * List of hooks::               All available hooks
 * tree-buffer::                 Some words to the tree-buffer-library
 * Adviced functions::           How to deal with the adviced functions
@@ -284,26 +289,90 @@ and what are the first steps after activation of ECB.
 @node Installation, Setting up Emacs, Install and first steps, Install and first steps
 @section Installation of ECB
 
-@strong{IMPORTANT}: The following steps 1 to 8. describe installation
-tasks if you got the archive in the format available at the ECB
-website. If you use XEmacs and got ECB as a regular XEmacs-package
-(e.g. downloaded and installed by the net-installer or package-manager
-of XEmacs) then there is nothing to do for you, but you can
-immediately start ECB with @code{ecb-activate} or read the online-help
-with @code{ecb-show-help}!
+This section describes how to install ECB.
+
+@menu
+* XEmacs Installation::         Installation of ECB for XEmacs users
+* GNU Emacs Installation::      Installation of ECB for GNU Emacs users
+@end menu
+
+@node XEmacs Installation, GNU Emacs Installation, Installation, Installation
+@subsection Installation of ECB for XEmacs users
+
+For XEmacs-users it is strongly recommended to use the
+package-management-system of XEmacs for first-time
+downloading/installing ECB or for upgrading to a newer version of ECB.
+Here is a short guide (for details about the package-manager of XEmacs
+see the related info-manual):
+
+@strong{Note}: If ECB is already installed and you just want upgrading
+to a newer version then it is recommended to deactivate ECB before
+proceeding with the steps below!
+
+@enumerate
+@item Choose a download-site
+
+This can be done via the menu ``Tools --> Packages --> Add Download
+Site'': Choose one of the listed sites. Or you can customize the
+option @code{package-get-remote} by hand and save it for future
+sessions.
+
+@item Activate the packages list
+
+This can be done either by the menu ``Tools --> Packages --> List and
+Install'' or via the command @code{pui-list-packages}. After that a
+special packages-buffer is displayed where you can interactively
+install or upgrade packages. At the end of this buffer there is a
+short description how to use this buffer.
+
+@item Install ECB and all required packages
+
+Mark the package named ``ecb'' for install. Do this also for the
+required packages ``semantic'', ``eieio'' and ``speedbar''. The
+package ``mail-lib'' is needed for easy submitting of problem-reports
+to the ECB-maintainers and the package ``c-support'' is needed for
+easy using hideshow within the Methods-buffer of ECB@footnote{All
+required packages can simply autom. marked by hitting @kbd{r} in the
+packages buffer. But this installs a lot of packages more (e.g. the
+Newsreader Gnus) which are really not essential for ECB. Therefore it
+is recommended to mark the required packages by hand.}.
+
+After marking all needed packages for installation hit @kbd{x} to
+install them.
+
+If you have already installed ECB and you want just upgrading to the
+latest available version then proceed as described above - same if you
+want to upgrade one of the required packages.
+
+@item Start ECB
+
+Now you can immediately start ECB via the command @code{ecb-activate};
+there is no need to restart XEmacs! As an alternative you can first
+read the online-help via @code{ecb-show-help}.
+
+@end enumerate
+
+If you do not like the package-manager of XEmacs but you want
+installing ECB ``by hand'' direct from the ECB-website then you have
+to follow the instructions for GNU Emacs, see @ref{GNU Emacs Installation}.
+
+@node GNU Emacs Installation, , XEmacs Installation, Installation
+@subsection Installation of ECB for GNU Emacs users
+
+@strong{IMPORTANT}: If you are a XEmacs-user please read @ref{XEmacs
+Installation} before proceeding with the following instructions!
 
 @enumerate
 
 @item
-Unpack the ECB archive (probably you have already done this :-)
+Download and unpack the ECB archive (probably you have already done
+this :-)
 
 @item
 Read the file @file{README} in the ECB-directory and install the
-required semantic-, eieio- and speedbar-version. The latter one is
-only needed if you want to parse source-types not supported by
-semantic (perl, LaTeX...)@footnote{The speedbar-version shipped with
-GNU Emacs <= 21.3 does not satisfy the requirements for this feature -
-download a newer one!}.
+required semantic-, eieio- and speedbar-version@footnote{The
+speedbar-version shipped with GNU Emacs <= 21.3 does not satisfy the
+requirements for this feature - download a newer one!}.
 
 @strong{Note}: ECB maybe requires a newer version of these libraries
 than shipped with (X)Emacs. You have to install exactly a version ECB
@@ -607,7 +676,7 @@ takes effect for this feature:
 @item @code{speedbar-tag-hierarchy-method}
 @end itemize
 
-Normally ther should no need for you to bother with these options,
+Normally there should no need for you to bother with these options,
 because the default values are suitable for most situations! But if
 you are not satisfied with the parsing/display results then you can
 change some of these options.
@@ -625,7 +694,7 @@ steps:
 
 Call @code{M-x customize-option RET ecb-source-path RET}@footnote{This
 means first hitting the keys @kbd{M} (Meta- or Alt-key) and @kbd{x}
-simultaniously, inserting ``customize-option'' in the minibuffer,
+simultaneously, inserting ``customize-option'' in the minibuffer,
 hitting RETURN, inserting ``ecb-source-path'' in the minibuffer and
 finally hitting RETURN again}. This lets you customize the option
 @code{ecb-source-path} with the customize-feature of Emacs. This opens
@@ -823,7 +892,7 @@ This chapter describes all aspects of activating and deactivating ECB.
 
 @menu
 * Standard activation::         How to manually (de)activate ECB
-* Automatic activation::        Automaticaly (de)activating ECB
+* Automatic activation::        Automatically (de)activating ECB
 @end menu
 
 @node Standard activation, Automatic activation, Activation and Deactivation, Activation and Deactivation
@@ -874,7 +943,7 @@ and also major-mode based.
 @table @code
 @item ecb-auto-activate
 This option is for auto. activating ECB after Emacs-startup. Set this
-to not nil and ECB will automaticaly be started after Emacs comes up.
+to not nil and ECB will automatically be started after Emacs comes up.
 
 @item ecb-major-modes-activate
 @itemx ecb-major-modes-deactivate
@@ -908,7 +977,7 @@ Emacs Code Browser.
 * The Methods buffer::          Using and customizing he Methods-buffer
 * The ECB-layout::              Changing, customizing, redrawing, creating
 * Hiding the ECB windows::      Hiding/Showing the ECB-windows
-* Maximizing the ECB windows::   Maximizing the ECB-windows
+* Maximizing the ECB windows::  Maximizing the ECB-windows
 * Back/forward navigation::     Back- and forward navigation like a browser
 * ECB-window synchronizing::    Auto./manual synchronizing the ECB-windows
 * Interactive ECB commands::    All interactive user-commands of ECB
@@ -991,7 +1060,7 @@ Per default the complete node-name of an item in a tree-buffer is
 displayed in the echo-area if the mouse moves over it, regardless if
 the related window is the active one or not. You get the same effect
 always after a POWER-click. In general: Via
-@code{ecb-show-node-info-in-minibuffer} you can specify in a detailled
+@code{ecb-show-node-info-in-minibuffer} you can specify in a detailed
 manner for every ECB tree-buffer when and which node-info should be
 displayed in the minibuffer.
 
@@ -1009,12 +1078,12 @@ With the options @code{ecb-directories-menu-user-extension},
 @code{ecb-sources-menu-user-extension},
 @code{ecb-methods-menu-user-extension} and
 @code{ecb-history-menu-user-extension} you can add new commands to the
-popup-menues.
+popup-menus.
 
 With the options @code{ecb-directories-menu-sorter},
 @code{ecb-sources-menu-sorter}, @code{ecb-methods-menu-sorter} and
 @code{ecb-history-menu-sorter} you can even re-arrange all the entries
-of the popup-menues.
+of the popup-menus.
 
 @subsection Horizontal scrolling with the mouse
 
@@ -1037,17 +1106,17 @@ ECB offers three ways for smoothly hor. scrolling with GNU Emacs if
 @itemize @bullet
 @item
 In all ECB-tree-buffers the keys @kbd{M-mouse-1} and @kbd{M-mouse-3}
-are bound to scrolling left resp. right with scroll-step S.
+are bound to scrolling left rsp. right with scroll-step S.
 
 @item
 Clicking with mouse-1 or mouse-2 onto the edge of the modeline has the
 same effect, i.e. if you click with mouse-1 onto the left \(resp
-right) egde of the modeline you will scroll left \(resp. right) with
+right) edge of the modeline you will scroll left \(resp. right) with
 scroll-step S.
 
 @item
 Additionally @kbd{C-M-mouse-1} and @code{C-M-mouse-3} are bound to
-scrolling left resp. right with scroll-step @code{window-width} - 2.
+scrolling left rsp. right with scroll-step @code{window-width} - 2.
 @end itemize
 
 This is NOT done for XEmacs cause of its horizontal scrollbars. If you
@@ -1065,7 +1134,7 @@ a mouse.
 
 IMPORTANT: Do not modify @code{ecb-mode-map} directly! The option
 @code{ecb-key-map} defines all ECB keybindings, including a common
-prefixkey (This is by default @kbd{C-c .}). If there are conflicts
+prefix-key (This is by default @kbd{C-c .}). If there are conflicts
 with other minor-modes or packages you can define very easy another
 prefix. Please read carefully the description of @code{ecb-key-map}
 (@pxref{ecb-general}).!
@@ -1128,8 +1197,8 @@ node in the following line).
 @subsection Incremental search for a node in current tree-buffer
 
 @cindex Incremental search
-Each displayable key (e.g. all keys normally bound to @code{self-insert-command})
-is appended to the current seach-pattern. The tree-buffer tries to jump to the
+Each display-able key (e.g. all keys normally bound to @code{self-insert-command})
+is appended to the current search-pattern. The tree-buffer tries to jump to the
 first node which matching the current search-pattern either as substring or as
 prefix (see below). If no match is found then nothing is done. There are some
 special keys:
@@ -1143,7 +1212,7 @@ Delete the complete search-pattern
 
 @item @kbd{end}:
 Expand either to a complete node if current search-pattern is already
-unique or expands to the greates common substring or prefix of the
+unique or expands to the greatest common substring or prefix of the
 nodes. If there are at least two nodes with the same greatest
 common-prefix than every hit of @kbd{end} jumps to the next node with this
 common prefix.
@@ -1154,18 +1223,18 @@ After selecting a node with RET the search-pattern is cleared out. With
 @code{ecb-tree-incremental-search} you can specify if the current search-pattern
 must be a real prefix of the node (default) or if any substring is matched.
 
-For faster and easier finding the right node in a ecb-window thi incremental
+For faster and easier finding the right node in a ecb-window the incremental
 search ignores the following non interesting stuff:
 
 @itemize @minus
 @item any leading spaces
-@item expand/collapse-buttons: [+] resp. [-]
+@item expand/collapse-buttons: [+] rsp. [-]
 @item protection-signs (+, -, #) in the method-window if uml-notation is used
-@item variables types or returntypes in front of variable- or method-names.
+@item variables types or return-types in front of variable- or method-names.
 @item const specifier for variables
 @end itemize
 
-This means: Just type in the prefix (resp. a substring) of a class-,
+This means: Just type in the prefix (rsp. a substring) of a class-,
 variable-, method-, directory- or filename and ECB will bring you as
 fast as possible to the node you want. Incremental node-search uses
 the value of @code{case-fold-search}.
@@ -1261,7 +1330,7 @@ The behavior of the adviced functions is:
 @itemize @bullet
 @item
 All these adviced functions behaves exactly like their corresponding
-original functons but they always act as if the edit-window(s) of ECB
+original functions but they always act as if the edit-window(s) of ECB
 would be the only window(s) of the ECB-frame. So the edit-window(s) of
 ECB seems to be a normal Emacs-frame to the user.
 
@@ -1278,7 +1347,7 @@ exactly like the not adviced original versions!
 ATTENTION: If you want to work within the edit-window with splitting
 and unsplitting the edit-window(s) it is highly recommended to use the
 adviced-functions of ECB instead of the original Emacs-functions (see
-above). Per default ECB does advice all of the functions mentioned
+above). Per default ECB advices all of the functions mentioned
 above but with the option @code{ecb-advice-window-functions} you can
 customizes which functions should be adviced by ECB. Please read
 carefully the documentation of this option!
@@ -1364,16 +1433,16 @@ ECB is mostly designed to display parsing information for files
 supported by semantic. But from version 1.94 on it also supports other
 parsing engines like imenu and etags, so also files not supported by
 semantic but by imenu/etags can be displayed in the Method-buffer of
-ECB. Therefore we have to intruduce some terminology:
+ECB. Therefore we have to introduce some terminology:
 
 @cindex semantic-sources
-@anchor{Definiton of semantic- and non-semantic-sources}
+@anchor{Definition of semantic- and non-semantic-sources}
 @itemize @minus
 @item @dfn{semantic-sources}:
-These are filestypes for which a semantic grammar is available, so the
-files are parsable by semantic. These sources are supported best by
+These are file-types for which a semantic grammar is available, so the
+files are parse-able by semantic. These sources are supported best by
 ECB and most of the following options and descriptions are related to
-these filetypes. Examples are programming-sources like C++, C, Java,
+these file-types. Examples are programming-sources like C++, C, Java,
 Emacs-Lisp and Texinfo-file and some more.
 
 @cindex non-semantic-sources
@@ -1407,10 +1476,10 @@ words collapse all tokens) or expand all tokens so see the contents of
 a buffer at one glance. Or you can expand exactly that tokens of a
 certain indentation level.
 
-Which node-types are expanded (resp. collapsed) by this command
+Which node-types are expanded (rsp. collapsed) by this command
 depends for semantic-sources on the options
 @code{ecb-methods-nodes-expand-spec} and
-@code{ecb-methods-nodes-collapse-spec}! For non-sematic-sources always
+@code{ecb-methods-nodes-collapse-spec}! For non-semantic-sources always
 all node-types are expanded/collapsed, i.e. the two options above
 takes no effect for these files.
 
@@ -1447,7 +1516,7 @@ Normally ECB gets all informations displayed in this Methods-buffer
 from the semantic-library - at least for semantic-sources. This
 library parses auto. the current source-buffer in the edit-window of
 ECB and returns all information in form of @dfn{tokens} to ECB which
-displays them in a browsable form in its Method-buffer. See @ref{ECB
+displays them in a browse-able form in its Method-buffer. See @ref{ECB
 Methods-buffer} for information how to use the Methods-buffer.
 
 There are several options to customize which tokens ECB should display
@@ -1477,7 +1546,7 @@ recommended to have a look into the customize-group @code{ecb-methods}
 (@pxref{ecb-methods}) and check all the options offered there!
 
 All these options are only relevant for semantic-sources and take no
-effect for non-sematic-sources!
+effect for non-semantic-sources!
 
 @node Rebuilding the Methods, , Customizing the display, The Methods buffer
 @subsection Rebuilding the Methods-buffer
@@ -1491,36 +1560,36 @@ the mechanism depends on the sources:
 The command @code{global-semantic-auto-parse-mode} switches on autom.
 reparsing of semantic-sources.
 
-@item non-sematic-sources (imenu supported):
+@item non-semantic-sources (imenu supported):
 You can switch on autom. rescanning/reparsing with the option
 @code{imenu-auto-rescan}. But nevertheless you have to manually
 rebuild the Method-buffer (with the autom. updated imenu-tags) via the
 command @code{ecb-rebuild-methods-buffer} (bound to @kbd{C-c . r}).
 
-@item non-sematic-sources (etags supported):
-For these sources there is no builtin auto-rescan mechanism, because
+@item non-semantic-sources (etags supported):
+For these sources there is no built-in auto-rescan mechanism, because
 etags is an external tool it can only operate on the saved
 file-contents. So rescanning the buffer contents would need to save
-the buffer before. Therefore there is no builtin auto-rescan mechanism
+the buffer before. Therefore there is no built-in auto-rescan mechanism
 because this would always result in saving the buffer and running an
 external tool. But of course you can program such a an
 etags-auto-rescan mechanism for yourself!
 @end itemize
 
-Besides for etags-supported non-sematic-sources there exist a few rare
+Besides for etags-supported non-semantic-sources there exist a few rare
 scenarios also for the other sources where a complete manual rebuild
 can be necessary. Here is one example:
 
-Depending on the semantic-version: If an elisp-file is parsed which
+Depending on the semantic-version: If an Elisp-file is parsed which
 contains a defun X in the middle where the closing ) is missing, then
 semantic parses only until this defun X is reached and you will get an
 incomplete ECB-method buffer. In such a case you must complete the
-defun X and then completely reparse the elisp-file and rebuild the ECB
+defun X and then completely reparse the Elisp-file and rebuild the ECB
 method buffer!
 
 A complete manually rebuild is done by
 @code{ecb-rebuild-methods-buffer}. For etags-parsed
-non-sematic-sources this causes an automatic saving of the
+non-semantic-sources this causes an automatic saving of the
 source-buffer because otherwise etags would not operate with the
 latest contents!
 
@@ -1547,14 +1616,14 @@ layouts.
 
 ECB offers several predefined layouts with different sets and also
 different locations of ECB-windows. See below the ``ascii-screenshot''
-of all currently buildin layouts@footnote{The command
-@code{ecb-show-layout-help'} shows the outline-picture for all buildin
+of all currently built-in layouts@footnote{The command
+@code{ecb-show-layout-help'} shows the outline-picture for all built-in
 layouts.}.
 
 In addition to these predefined layouts you can either interactively
 create new layouts ``by example'' (@pxref{Creating a new ECB-layout})
 or program new layouts with the macro @code{ecb-layout-define}
-(@pxref{The layout-engine}). The former method is the recommened
+(@pxref{The layout-engine}). The former method is the recommended
 one!
 
 There are two ways to interactively change the layout:
@@ -1581,7 +1650,7 @@ contain a durable compilation-window at the bottom of the frame, see
 
 Maybe you want also change the look&feel of the tree-buffers. Then you
 can change the location of the collapse- and expand-symbols and the
-indendation of sub-nodes in a tree. See @code{ecb-tree-indent} and
+indentation of sub-nodes in a tree. See @code{ecb-tree-indent} and
 @code{ecb-tree-expand-symbol-before}.
 
 Here are all currently available layouts (for creating own new layouts
@@ -2179,7 +2248,7 @@ see @ref{Creating a new ECB-layout}); just customize the option
 @subsection Redrawing the ECB-layout
 
 @cindex Redraw
-If you have unintenionally destroyed the ECB-layout, you can always
+If you have unintentionally destroyed the ECB-layout, you can always
 restore the layout with calling @code{ecb-redraw-layout}. This is even
 true, if you get messages like ``wrong-type-argument window-live-p
 #<window 222>''.
@@ -2230,7 +2299,7 @@ until you call @code{ecb-restore-default-window-sizes} during layout
 ``left1'' is active.
 
 @strong{NOTE}: @code{ecb-store-window-sizes} stores the width and
-height of the windows per default as fractions of the width (resp.
+height of the windows per default as fractions of the width (rsp.
 height) of the ECB-frame, so the stored sizes are always correct
 regardless of the current frame-size! But if called with a prefix
 argument then fixed sizes are stored.
@@ -2336,7 +2405,7 @@ You must give every ECB-tree-window you create a type (@kbd{C-t})
 which can be either
 
 @itemize @bullet
-@item One of the builtin types
+@item One of the built-in types
 
 This can be either ``directories'', ``sources'', ``methods'',
 ``history'' or ``speedbar''.
@@ -2345,7 +2414,7 @@ This can be either ``directories'', ``sources'', ``methods'',
 
 In this case you insert ``other'' after hitting @kbd{C-t} and you will
 then be asked for the name of the user-defined type. You can insert
-any arbitray type name X. But to get this layout working you have to
+any arbitrary type name X. But to get this layout working you have to
 define a function with name @code{ecb-set-X-buffer} whereas X is the
 name of the user-defined type you have specified during
 layout-creation.
@@ -2385,7 +2454,7 @@ automatically loaded by ECB!
 
 @strong{NOTE}: During the layout-creation process only the commands
 displayed in the help-screen are available. ALL other commands are
-temporaly disabled (even the mouse-commands).
+temporally disabled (even the mouse-commands).
 
 For programming new layouts with emacs-lisp see @ref{The layout-engine}.
 
@@ -2416,11 +2485,11 @@ hidden ECB-windows:
 @item @code{ecb-show-ecb-windows-after-hook}
 @end enumerate
 
-The following sequence of hooks is evaluated during hidding the
+The following sequence of hooks is evaluated during hiding the
 ECB-windows:
 @enumerate
 @item @code{ecb-hide-ecb-windows-before-hook}
-@item <Hidding the ECB-windows>
+@item <Hiding the ECB-windows>
 @item @code{ecb-hide-ecb-windows-after-hook}
 @end enumerate
 
@@ -2478,10 +2547,10 @@ a variable or any other semantic token} in the edit-window after
 
 ECB offers two commands @code{ecb-nav-goto-next} (@kbd{C-c . n}) and
 @code{ecb-nav-goto-previous} (@kbd{C-c . p}) to go forward and
-backward within this navigation historylist. These commands are also
+backward within this navigation history-list. These commands are also
 available via the menu ``ECB --> Navigate''.
 
-Aside normal ``location-browsing'' this is usefull for example in a
+Aside normal ``location-browsing'' this is useful for example in a
 scenario where @code{ecb-token-jump-narrow} is activated:
 
 @enumerate
@@ -2581,7 +2650,7 @@ readable command index. @xref{Command Index}.
 
 @deffn Command activate
 Activates the ECB and creates all the buffers and draws the ECB-screen
-with the actually choosen layout (see @code{ecb-layout-name}). This function
+with the actually chosen layout (see @code{ecb-layout-name}). This function
 raises always the ECB-frame if called from another frame. This is the
 same as calling @code{ecb-minor-mode} with a positive argument.
 @end deffn
@@ -2657,7 +2726,7 @@ try to loop through all compilation buffers. If we hit the end we go
 back to the beginning.
 
 If @var{CHOOSE-BUFFER} is not @code{nil} then the user will be
-prompted for the compilation-buffer to swtich to.
+prompted for the compilation-buffer to switch to.
 
 See also the option @code{ecb-layout-switch-to-compilation-window}!
 The difference is that this cycling-function offers only
@@ -2674,7 +2743,7 @@ Deactivates the ECB and kills all ECB buffers and windows.
 @deffn Command delete-new-layout
 Select a layout-name for a layout created by
 @code{ecb-create-new-layout} and delete this layout. This means the
-layout-definiton is removed from the file
+layout-definition is removed from the file
 @code{ecb-create-layout-file} and the layout-function and associated
 aliases are unbound.
 @end deffn
@@ -2699,7 +2768,7 @@ For details about downloading and what requirements must be satisfied
 see function @code{ecb-package-download} and option
 @code{ecb-download-package-version-type}!
 
-After sucessfull downloading the new ECB will be installed in a
+After successful downloading the new ECB will be installed in a
 subdirectory of @code{ecb-download-install-parent-dir}. After adding
 this subdirectory to @code{load-path} and restarting Emacs the new ECB
 version can be activated by @code{ecb-activate}.
@@ -2725,7 +2794,7 @@ For details about downloading and what requirements must be satisfied
 see function @code{ecb-package-download} and option
 @code{ecb-download-package-version-type}!
 
-After sucessfull downloading the new semantic will be installed in a
+After successful downloading the new semantic will be installed in a
 subdirectory of @code{ecb-download-install-parent-dir}. After adding
 this new subdirectory to @code{load-path} and restarting Emacs the new
 semantic version is loaded and is used after next start of ECB.
@@ -2739,7 +2808,7 @@ function asks for proceeding!
 Set the expand level of the nodes in the ECB-methods-buffer.
 
 This command asks in the minibuffer for an indentation level LEVEL. With this
-LEVEL you can precisely spezify which level of nodes should be expanded. LEVEL
+LEVEL you can precisely specify which level of nodes should be expanded. LEVEL
 means the indentation-level of the nodes.
 
 A LEVEL value X means that all nodes with an indentation-level <= X are
@@ -2748,7 +2817,7 @@ nodes are collapsed.
 
 Nodes which are not indented have indentation-level 0!
 
-Which node-types are expanded (resp. collapsed) by this command
+Which node-types are expanded (rsp. collapsed) by this command
 depends on the options @code{ecb-methods-nodes-expand-spec} and
 @code{ecb-methods-nodes-collapse-spec}! With optional argument
 @var{FORCE-ALL} all tokens will be expanded/collapsed regardless of
@@ -2822,8 +2891,8 @@ then goto to the speedbar-window.
 @deffn Command jde-display-class-at-point
 Display in the ECB-methods-buffer the contents (methods, attributes
 etc...) of the class which contains the definition of the ``thing''
-under point (this can be a variablename, classname, methodname,
-attributename). This function needs the same requirements to work as
+under point (this can be a variable-name, class-name, method-name,
+attribute-name). This function needs the same requirements to work as
 the method-completion feature of JDEE (see
 @code{jde-complete})!. The source-file is searched first in
 @code{jde-sourcepath}, then in @code{jde-global-classpath}, then in
@@ -2875,12 +2944,12 @@ enabled.
 @end deffn
 
 @deffn Command nav-goto-previous
-Go backward in the navigation historylist, see @ref{Back/forward
+Go backward in the navigation history-list, see @ref{Back/forward
 navigation}.
 @end deffn
 
 @deffn Command nav-goto-next
-Go forward in the navigation historylist, see @ref{Back/forward
+Go forward in the navigation history-list, see @ref{Back/forward
 navigation}.
 @end deffn
 
@@ -2889,24 +2958,24 @@ Updates the methods buffer with the current buffer after deleting the
 complete previous parser-information, means no semantic-cache is used!
 Point must stay in an edit-window otherwise nothing is done. This
 method is merely needed for semantic parsed buffers if semantic parses
-not the whole buffer because it reaches a not parsable code or for
+not the whole buffer because it reaches a not parse-able code or for
 buffers not supported by semantic but by imenu or etags.
 
 Examples when a call to this function can be necessary:
 
 @itemize
 @item
-If an elisp-file is parsed which contains in the middle a defun X
+If an Elisp-file is parsed which contains in the middle a defun X
 where the closing ) is missing then semantic parses only until this
 defun X is reached and you will get an incomplete ECB-method buffer.
 In such a case you must complete the defun X and then call this
-function to completely reparse the elisp-file and rebuild the ECB
+function to completely reparse the Elisp-file and rebuild the ECB
 method buffer!
 
 @item
 For not semantic supported buffers which can be parsed by imenu or
 etags (see @code{ecb-process-non-semantic-files}) because for these
-buffers there is no builtin auto-rebuild mechanism. For these buffers
+buffers there is no built-in auto-rebuild mechanism. For these buffers
 this command calls @code{ecb-rebuild-methods-buffer-for-non-semantic}.
 @end itemize
 @end deffn
@@ -2946,8 +3015,8 @@ HTML-online-documentation is not included.
 
 @deffn Command show-layout-help
 Select a name of a layout and shows the documentation of the
-associated layout-function. At least for the buildin layouts the
-documentation contains a picture of the outline of the choosen layout.
+associated layout-function. At least for the built-in layouts the
+documentation contains a picture of the outline of the chosen layout.
 @end deffn
 
 @deffn Command show-tip-of-the-day
@@ -2999,7 +3068,7 @@ command can only display a compile-window if
 @end deffn
 
 @deffn Command toggle-ecb-windows &optional arg
-Toggle visibilty of the ECB-windows. With prefix argument @var{ARG},
+Toggle visibility of the ECB-windows. With prefix argument @var{ARG},
 make visible if positive, otherwise invisible. This has nothing to do
 with (de)activating ECB but only affects the visibility of the ECB
 windows. ECB minor mode remains active!
@@ -3007,7 +3076,7 @@ windows. ECB minor mode remains active!
 
 @deffn Command toggle-enlarged-compilation-window &optional arg
 Toggle whether the @code{ecb-compile-window} is enlarged or not. If
-@var{ARG} > 0 then enlarge to a sensefull value (see below), if
+@var{ARG} > 0 then enlarge to a senseful value (see below), if
 @var{ARG} <= 0 then shrink @code{ecb-compile-window} to
 @code{ecb-compile-window-height} and if @var{ARG} is nil then toggle the
 enlarge-state.
@@ -3038,7 +3107,7 @@ upgrade/reset) and new values.
 
 
 Most of these functions are also available via the menu ``ECB'' and
-also via the ECB keymap with prefix @kbd{C-c .} (see
+also via the ECB key-map with prefix @kbd{C-c .} (see
 @code{ecb-minor-mode} for a complete list of the keybindings).
 
 @node Customizing, Submitting problem report, Usage of ECB, Top
@@ -3064,10 +3133,10 @@ customize-feature of (X)Emacs, i.e. means calling the commands
 @code{customize-option} or @code{customize-group} etc. This is also
 the strongly recommended way!
 
-But of course you can also use @code{setq} or some elisp-code to
+But of course you can also use @code{setq} or some Elisp-code to
 change the values of many but not all of the options. The values of
 the following options @strong{MUST NOT} be changed via @code{setq} or
-elisp-code but only with the customize-feature!
+Elisp-code but only with the customize-feature!
 
 @multitable @columnfractions 0.5 0.5
 
@@ -3127,7 +3196,7 @@ how this can be done:
 
 But ensure that you customize the options with the correct lisp
 format. Read carefully the docstrings of the options you want
-to customize from within elisp-code!
+to customize from within Elisp-code!
 
 @node Most important options, Customizable options, General aspects, Customizing
 @section The most important options of ECB
@@ -3146,7 +3215,7 @@ or in HTML format in a web-browser.
 @itemx ecb-major-modes-deactivate
 Auto. (de)activation of ECB
 @item ecb-key-map
-All ECB-keybindings incl. a common prefixkey (@pxref{Using the
+All ECB-keybindings incl. a common prefix-key (@pxref{Using the
 keyboard}).
 @item ecb-new-ecb-frame
 Should ECB create a new frame at activation time.
@@ -3171,14 +3240,14 @@ ECB-layout}).
 @itemx ecb-show-tokens
 How to display the entries in the ECB-method window for semantic
 supported sources (@pxref{Customizing the display}). These options
-take only effect for semantic-sources (@pxref{Definiton of semantic-
+take only effect for semantic-sources (@pxref{Definition of semantic-
 and non-semantic-sources}).
 @item ecb-process-non-semantic-files
 Displaying file-contents for not by semantic supported files too, e.g.
 for LaTeX- and perl-sources.
 @end table
 
-But to make ECB working best for you it is also recommened to have a
+But to make ECB working best for you it is also recommended to have a
 look at @ref{Customizable options}!
 
 @node Customizable options, ,Most important options, Customizing
@@ -3301,7 +3370,7 @@ then ECB will not be deactivated! See also
 @defopt common-tree-buffer-after-create-hook
 Local hook running at the end of each tree-buffer creation. Every
 function of this hook is called once without arguments direct after
-creating a tree-buffer of ECB and it's local keymap. So for example a
+creating a tree-buffer of ECB and it's local key-map. So for example a
 function could be added which performs calls of @code{local-set-key}
 to define new keybindings for EVERY tree-buffer.
 
@@ -3335,7 +3404,7 @@ beginning if its task have to be really performed and then do them
 only if really necessary! Otherwise performance of Emacs could slow
 down dramatically!
 
-It is strongle recommended that each function added to this hook uses
+It is strongly recommended that each function added to this hook uses
 the macro @code{ecb-do-if-buffer-visible-in-ecb-frame} at beginning!
 See @code{ecb-speedbar-current-buffer-sync} and
 @code{ecb-eshell-current-buffer-sync} for examples how to use this
@@ -3361,10 +3430,10 @@ error again!
 @end defopt
 
 @defopt key-map
-Specifies all keybindings for the ECB minor-mode keymap. The value is
+Specifies all keybindings for the ECB minor-mode key-map. The value is
 a cons-cell where the car is a common-prefix key for all the
 keybindings. The cdr is a list of keybindings each of them a list
-again. A keybinding has the following form:
+again. A key-binding has the following form:
 
 @example
 '(<common-prefix-flag> <keysequence> <function>) where
@@ -3372,12 +3441,12 @@ again. A keybinding has the following form:
 
 @table @code
 @item <common-prefix-flag>
-If t then the common-prefixkey defined as car of the value (see above)
+If t then the common-prefix-key defined as car of the value (see above)
 is used.
 
 @item <keysequence>
-If the common prefixkey is used then the final keybinding is the
-concatenation of the common-prefixkey (see above) and this
+If the common prefix-key is used then the final key-binding is the
+concatenation of the common-prefix-key (see above) and this
 keysequence.
 
 @item <function>:
@@ -3386,7 +3455,7 @@ The function to bind to the key. This can also be a lambda-expression
 @end table
 
 It is highly recommended to use one of the standard keys C-c or C-x as
-first key of your common-prefixkey!
+first key of your common-prefix-key!
 
 You MUST change this option via customize to take effect!
 
@@ -3433,13 +3502,13 @@ The @code{^} notation for control characters also works: ^M = C-m.
 @end defopt
 
 @defopt major-modes-activate
-List of major-modes for which ECB shoulb be activated or shown. Do not
+List of major-modes for which ECB should be activated or shown. Do not
 mistake this option with @code{ecb-auto-activate}. The latter one is
 for activating ECB after Emacs-startup (even without opening a buffer)
 and this one is for defining for which major-modes ECB should be
 activated if the mode goes active!
 
-The behaviour is like follows: If a mode is contained in this option
+The behavior is like follows: If a mode is contained in this option
 ECB is activated after activating this mode (if ECB was deactivated
 before) or the ECB-windows are shown if ECB was already active but its
 windows were hidden. In every case ECB is activated with visible
@@ -3449,7 +3518,7 @@ For every major mode there can be specified an @code{ecb-layout-name}:
 
 @itemize @minus
 @item @code{default}:
-The value customized with @code{ecb-layout-name} is choosen.
+The value customized with @code{ecb-layout-name} is chosen.
 @item a string:
 ECB is activated with this layout-name. This changes the value of
 @code{ecb-layout-name} but only for current emacs-session! But the
@@ -3525,7 +3594,7 @@ compile-window of ECB.
 
 There is one exception from this rule: If the edit-window is splitted
 and one window contains a dired-buffer and a ``ECB-deactivating''-file
-is openend via dired then opening this file deactivates ECB (resp.
+is opened via dired then opening this file deactivates ECB (rsp.
 hides the ECB-windows).
 @end defopt
 
@@ -3663,7 +3732,7 @@ Node info is displayed by moving with the mouse over a node.
 @item @code{if-too-long}:
 Node info is only displayed by moving with the mouse over a node does
 not fit into the window-width of the tree-buffer window. In the ECB
-directories buffer this means also if a node is shortend or if the
+directories buffer this means also if a node is shortened or if the
 node has an alias (see @code{ecb-source-path}).
 @item @code{shift-click}:
 Node info is only displayed after a shift click with the primary mouse
@@ -3739,13 +3808,13 @@ and are also not bound to mouse-buttons.
 
 If this option is a positive integer S then in all ECB-tree-buffers
 the keys @kbd{M-mouse-1} and @code{M-mouse-3} are bound to scrolling
-left resp. right with scroll-step S - clicking with @kbd{mouse-1} or
+left rsp. right with scroll-step S - clicking with @kbd{mouse-1} or
 @kbd{mouse-2} onto the edge of the modeline has the same effect, i.e.
-if you click with mouse-1 onto the left (resp right) egde of the
-modeline you will scroll left (resp. right).
+if you click with mouse-1 onto the left (rsp right) edge of the
+modeline you will scroll left (rsp. right).
 
 Additionally @code{C-M-mouse-1} and @code{C-M-mouse-3} are bound to
-scrolling left resp. right with scroll-step @code{window-width} - 2.
+scrolling left rsp. right with scroll-step @code{window-width} - 2.
 
 Default is a scroll-step of 5. If the value is @code{nil} then no keys
 for horizontal scrolling are bound.
@@ -3877,7 +3946,7 @@ session. This option defines two things:
 
 @enumerate
 @item
-Should only the root-part (which means for unix-like systems always
+Should only the root-part (which means for Unix-like systems always
 '/' and for windows-like systems the drive) of the new file be added
 as source-path to @code{ecb-source-path} or the whole directory-part?
 @item
@@ -3890,7 +3959,7 @@ The value of this option is a cons-cell where the car is a boolean for
 A value of not nil for the car (1.) is reasonably if a user often
 opens files not via the ECB-browser which are not located in any of
 the paths of @code{ecb-source-path} because then only one path for
-each drive (windows) or the root-path (unix) is added to the directory
+each drive (windows) or the root-path (Unix) is added to the directory
 buffer of ECB.
 @end defopt
 
@@ -3910,7 +3979,7 @@ Cache contents of directories.
 
 This can be useful if @code{ecb-source-path} contains directories with
 many files and subdirs, especially if these directories are mounted
-net-drives (``many'' means here something > 1000, dependend of the speed
+net-drives (``many'' means here something > 1000, dependent of the speed
 of the net-connection and the machine). For these directories
 actualizing the sources- and/or directories- buffer of ECB (if
 displayed in current layout!) can slow down dramatically so a caching
@@ -3955,7 +4024,7 @@ number of entries."
 @defopt directories-buffer-after-create-hook
 Local hook running after the creation of the directories-buffer. Every
 function of this hook is called once without arguments direct after
-creating the directories-buffer of ECB and it's local keymap. So for
+creating the directories-buffer of ECB and it's local key-map. So for
 example a function could be added which performs calls of
 @code{local-set-key} to define new keybindings only for the
 directories-buffer of ECB.
@@ -3982,10 +4051,10 @@ Function which re-sorts the menu-entries of the directories buffer.
 
 If a function then this function is called to re-arrange the
 menu-entries of the combined menu-entries of the user-menu-extensions
-of @code{ecb-directories-menu-user-extension} and the builtin-menu
+of @code{ecb-directories-menu-user-extension} and the built-in-menu
 @code{ecb-directories-menu}. If nil then no special sorting will be
 done and the user-extensions are placed in front of the
-builtin-entries.
+built-in-entries.
 
 The function get one argument, a list of menu-entries. For the format
 of this argument see @code{ecb-directories-menu-user-extension}. The
@@ -4000,10 +4069,10 @@ or add new entries.
 User extensions for the popup-menu of the directories buffer.
 
 Value is a list of elements of the following type: Each element
-defines a new menu-entry and is a list containing two subelements,
+defines a new menu-entry and is a list containing two sub-elements,
 whereas the first is the name of the menu-entry and the second the
 function (a function symbol or a lambda-expression) being called if
-the menu-entry is selected. If there is no second subelement and the
+the menu-entry is selected. If there is no second sub-element and the
 first one is the string ``---'' then a non-selectable menu-separator
 is displayed.
 
@@ -4024,7 +4093,7 @@ Example for such a menu-function:
 @end example
 
 Per default the user-extensions are added at the beginning of the
-builtin menu-entries of @code{ecb-directories-menu} but the whole menu
+built-in menu-entries of @code{ecb-directories-menu} but the whole menu
 can be re-arranged with @code{ecb-directories-menu-sorter}.
 
 If you change this option you have to restart ECB to take effect.
@@ -4087,7 +4156,7 @@ This option can have four valid values:
 @item @code{method}: Use speedbar instead of the standard methods-buffer
 @end itemize
 
-Note: For directories and sources a similar effect and useability is
+Note: For directories and sources a similar effect and usability is
 available by setting this option to @code{nil} (or @code{method}) and
 setting @code{ecb-show-sources-in-directories-buffer} to not
 @code{nil}, because this combination displays also directories and
@@ -4114,7 +4183,7 @@ Specifies which files are shown as source files.
 
 This is done on directory-base, which means for each directory-regexp
 the files to display can be specified. If more than one
-direcory-regexp matches the current selected directory then always the
+directory-regexp matches the current selected directory then always the
 first one (and its related file-exclude/include-regexps) is used! If
 no directory-regexp matches then all files are displayed for the
 currently selected directory.
@@ -4158,7 +4227,7 @@ files/directories, @code{".*"} matches all files/directories.
 @defopt sources-buffer-after-create-hook
 Local hook running after the creation of the sources-buffer. Every
 function of this hook is called once without arguments direct after
-creating the sources-buffer of ECB and it's local keymap. So for
+creating the sources-buffer of ECB and it's local key-map. So for
 example a function could be added which performs calls of
 @code{local-set-key} to define new keybindings only for the
 sources-buffer of ECB.
@@ -4200,9 +4269,9 @@ Function which re-sorts the menu-entries of the directories buffer.
 
 If a function then this function is called to sort the menu-entries of
 the combined menu-entries of the user-menu-extensions of
-@code{ecb-sources-menu-user-extension} and the builtin-menu
+@code{ecb-sources-menu-user-extension} and the built-in-menu
 @code{ecb-sources-menu}. If nil then no special sorting will be done
-and the user-extensions are placed in front of the builtin-entries.
+and the user-extensions are placed in front of the built-in-entries.
 
 For the guidelines for such a sorter-function see
 @code{ecb-directories-menu-sorter}.
@@ -4220,7 +4289,7 @@ The node-argument of a menu-function contains as data the filename of
 the source for which the popup-menu has been opened.
 
 Per default the user-extensions are added at the beginning of the
-builtin menu-entries of @code{ecb-sources-menu} but the whole menu can
+built-in menu-entries of @code{ecb-sources-menu} but the whole menu can
 be re-arranged with @code{ecb-sources-menu-sorter}.
 
 If you change this option you have to restart ECB to take effect.
@@ -4262,7 +4331,7 @@ token under point is invisible because its parent-node is collapsed.
 But expanding is only done if the type of the token under point in the
 edit-buffer is contained in @code{ecb-methods-nodes-expand-spec}.
 @item @code{all}:
-Like expand-spec but expands all tokens regardess of the setting in
+Like expand-spec but expands all tokens regardless of the setting in
 @code{ecb-methods-nodes-expand-spec}.
 @end itemize
 
@@ -4312,7 +4381,7 @@ But after explicitly expanding/collapsing the methods-buffer to a
 certain level the auto. expanding could undo this when the node
 belonging to current token under point in the edit-window is invisible
 after @code{ecb-expand-methods-nodes} - then the auto. expand feature
-would make this node immediatelly visible and destroys the explicitly
+would make this node immediately visible and destroys the explicitly
 set expand-level.
 @end defopt
 
@@ -4367,7 +4436,7 @@ supported by semantic!
 @defopt methods-buffer-after-create-hook
 Local hook running after the creation of the methods-buffer. Every
 function of this hook is called once without arguments direct after
-creating the methods-buffer of ECB and it's local keymap. So for
+creating the methods-buffer of ECB and it's local key-map. So for
 example a function could be added which performs calls of
 @code{local-set-key} to define new keybindings only for the
 methods-buffer of ECB.
@@ -4392,9 +4461,9 @@ Function which re-sorts the menu-entries of the directories buffer.
 
 If a function then this function is called to sort the menu-entries of
 the combined menu-entries of the user-menu-extensions of
-@code{ecb-methods-menu-user-extension} and the builtin-menu
+@code{ecb-methods-menu-user-extension} and the built-in-menu
 @code{ecb-methods-menu}. If nil then no special sorting will be done
-and the user-extensions are placed in front of the builtin-entries.
+and the user-extensions are placed in front of the built-in-entries.
 
 For the guidelines for such a sorter-function see
 @code{ecb-directories-menu-sorter}.
@@ -4413,7 +4482,7 @@ semantic-token of the method/variable/token for which the popup-menu
 has been opened.
 
 Per default the user-extensions are added at the beginning of the
-builtin menu-entries of @code{ecb-methods-menu} but the whole menu can
+built-in menu-entries of @code{ecb-methods-menu} but the whole menu can
 be re-arranged with @code{ecb-methods-menu-sorter}.
 
 If you change this option you have to restart ECB to take effect.
@@ -4456,7 +4525,7 @@ supported by semantic!
 
 
 @defopt post-process-semantic-tokenlist
-Define mode-dependend postprocessing for the semantic-tokenlist. This
+Define mode-dependent post-processing for the semantic-tokenlist. This
 is an alist where the car is a major-mode symbol and the cdr is a
 function-symbol of a function which should be used for post-processing
 the tokenlist (returned by @code{semantic-bovinate-toplevel}) for a
@@ -4479,13 +4548,13 @@ How to scroll the window when jumping to a token.
 @end defopt
 
 @defopt show-only-positioned-tokens
-Show only nodes in the method-buffer which are ``jumpable''. If not nil
+Show only nodes in the method-buffer which are ``jump-able''. If not nil
 then ECB displays in the method-buffer only nodes which are
-``jumpable'', i.e. after selecting it by clicking or with RET then ECB
+``jump-able'', i.e. after selecting it by clicking or with RET then ECB
 jumps to the corresponding location in the edit-window. Example: With
-CLOS or Eieio source-code there can exist some positionless nodes like
+CLOS or Eieio source-code there can exist some position-less nodes like
 variable-attributes in a @code{defclass} form which are only displayed
-if this option is nil. Displaying such nodes can be sensefull even if
+if this option is nil. Displaying such nodes can be senseful even if
 they can not be jumped.
 
 This options takes only effect for semantic-sources - means sources
@@ -4637,7 +4706,7 @@ according to the value of @code{semantic-face-alist} and the semantic
 display-function (e.g. one from
 @code{semantic-token->text-functions}). But sometimes a finer
 distinction in displaying the different type specifiers of type-tokens
-can be usefull. For a description when this option is evaluated look
+can be useful. For a description when this option is evaluated look
 at @code{ecb-token-display-function}!
 
 This functionality is set on a major-mode base, i.e. for every
@@ -4684,7 +4753,7 @@ versions).
 
 The default value is nil means there is no special ECB-displaying of
 type-tokens in addition to the displaying and colorizing semantic
-does. But a value like the following could be a usefull setting:
+does. But a value like the following could be a useful setting:
 
 @example
 @group
@@ -4699,7 +4768,7 @@ does. But a value like the following could be a usefull setting:
 
 This means that in @code{c-mode} only ``struct''s and ``typedef''s are
 displayed with special faces (the specifiers itself are not removed)
-and in all other modes ``class''es and grouping-tokens (see
+and in all other modes ``class''s and grouping-tokens (see
 @code{ecb-token-display-function},
 @code{ecb-group-function-tokens-with-parents}) have special faces and
 the ``class'' specifier-string is removed from the display.
@@ -4721,8 +4790,8 @@ Defines which entries of the history buffer should be deleted if
 
 @itemize @minus
 @item @code{not-existing-buffers}:
-All entries which represent a buffername not existing
-anymore in the bufferlist will be cleared. Probably the most senseful value.
+All entries which represent a buffer-name not existing
+anymore in the buffer-list will be cleared. Probably the most senseful value.
 @item @code{existing-buffers}:
 The opposite of 'not-existing-buffers.
 @item @code{all}:
@@ -4733,7 +4802,7 @@ The whole history will be cleared.
 @defopt history-buffer-after-create-hook
 Local hook running after the creation of the history-buffer. Every
 function of this hook is called once without arguments direct after
-creating the history-buffer of ECB and it's local keymap. So for
+creating the history-buffer of ECB and it's local key-map. So for
 example a function could be added which performs calls of
 @code{local-set-key} to define new keybindings only for the
 history-buffer of ECB.
@@ -4762,9 +4831,9 @@ Function which re-sorts the menu-entries of the directories buffer.
 
 If a function then this function is called to sort the menu-entries of
 the combined menu-entries of the user-menu-extensions of
-@code{ecb-history-menu-user-extension} and the builtin-menu
+@code{ecb-history-menu-user-extension} and the built-in-menu
 @code{ecb-history-menu}. If nil then no special sorting will be done
-and the user-extensions are placed in front of the builtin-entries.
+and the user-extensions are placed in front of the built-in-entries.
 
 For the guidelines for such a sorter-function see
 @code{ecb-directories-menu-sorter}.
@@ -4782,7 +4851,7 @@ The node-argument of a menu-function contains as data the filename of
 the source for which the popup-menu has been opened.
 
 Per default the user-extensions are added at the beginning of the
-builtin menu-entries of @code{ecb-history-menu} but the whole menu can
+built-in menu-entries of @code{ecb-history-menu} but the whole menu can
 be re-arranged with @code{ecb-history-menu-sorter}.
 
 If you change this option you have to restart ECB to take effect.
@@ -4855,7 +4924,7 @@ the ``other'' edit-window and there is no durable compilation-window
 This advice is per default not enabled.
 @end itemize
 
-For working most conveniantly with ECB it is the best to advice all
+For working most conveniently with ECB it is the best to advice all
 these functions, because then all the standard shortcuts of these
 functions are also usable with ECB without doing anything else. Also
 other packages can interact best with ECB if these functions are all
@@ -4873,7 +4942,7 @@ these adviced functions ECB offers the following fall-back solution:
 Deactivate in @code{ecb-advice-window-functions} all the
 adviced-functions which make problems with other packages.
 @item
-For every of the adviceable functions <adv-func> ECB offers a
+For every of the advice-able functions <adv-func> ECB offers a
 interactively function named ``ecb-<adv-func>'' which does exactly the
 same as the adviced version of <adv-func>. Use ``ecb-<adv-func>''
 instead the original one to get the proper ECB behavior even if the
@@ -4900,7 +4969,7 @@ for this) and rebind it to the original function in the
 @defopt compile-window-enlarge-by-select
 The compile-window is auto. enlarged after selecting it. If not nil
 then selecting the @code{ecb-compile-window} auto. enlarges it and
-deselecting (means selecting another window after point was in
+de-selecting (means selecting another window after point was in
 @code{ecb-compile-window}) auto. shrinks it. Enlarging and shrinking
 the @code{ecb-compile-window} is done with
 @code{ecb-toggle-enlarged-compilation-window}. See also the
@@ -4911,13 +4980,13 @@ documentation of this function!
 If you want a compilation window shown at the bottom of the ECB-layout
 then set here the height of it (Default is a height of 5). If you
 redraw the current layout with @code{ecb-redraw-layout} then the
-compilation window (if any) has the heigth you set here. If the number
+compilation window (if any) has the height you set here. If the number
 is less than 1.0 the height is a fraction of the frame height.
 
 If you do not set a durable compilation window then doing a
 compilation splits temporally the edit window vertically if the edit
 window is not splitted already or uses the ``other'' edit window
-temporally for comilation output if the edit window is already
+temporally for compilation output if the edit window is already
 splitted. This is the recommended value for this option!
 
 Beware: If you set a durable compilation window then ECB can not
@@ -4955,7 +5024,7 @@ because these buffers currently enlarge always to
 
 @item @code{after-selection}:
 Selecting the @code{ecb-compile-window} auto. enlarges it and
-deselecting (means leaving @code{ecb-compile-window}) auto. shrinks
+de-selecting (means leaving @code{ecb-compile-window}) auto. shrinks
 it. Enlarging and shrinking the @code{ecb-compile-window} is done with
 @code{ecb-toggle-enlarged-compilation-window}. See also the
 documentation of this function! This is possible for all buffers in
@@ -5011,7 +5080,7 @@ is only available there. Therefore this option takes only effect with
 GNU Emacs 21.
 
 Note1: The description of @code{window-size-fixed} in the
-elisp-info-manual is more detailled than the description offered by
+Elisp-info-manual is more detailed than the description offered by
 @kbd{C-h v}!
 
 Note2: With current Emacs 21.2.X there seems to be no distinction
@@ -5062,7 +5131,7 @@ Per default this is enabled for @code{delete-window},
 
 
 @defopt layout-name
-Select a window layout of ECB. Value is any arbitary string. There are
+Select a window layout of ECB. Value is any arbitrary string. There are
 four different types of layouts: left, right, top and left-right,
 which means the location of the ECB-tree-windows in the ECB-frame.
 Currently there are 20 predefined layouts; names see below. You can
@@ -5112,7 +5181,7 @@ destination buffer and then selects the @code{ecb-compile-window} if
 it is a compilation-buffer in the meaning of
 @code{ecb-compilation-buffer-p}!
 
-Currently this seemes only making sense for @code{switch-to-buffer}.
+Currently this seems only making sense for @code{switch-to-buffer}.
 @end defopt
 
 
@@ -5550,13 +5619,13 @@ for your personal taste. Or customize the related option in the group
 This group contains the following options:
 
 @defopt download-delete-archive
-Should the downloaded archive be deleted after successfull
+Should the downloaded archive be deleted after successful
 installation or after failure during the installation-process.
 Possible values are:
 
 @itemize @minus
 @item @code{only-after-success}:
-Archive is only deleted after successfull installation
+Archive is only deleted after successful installation
 but not if a failure occurs during the installation process.
 @item @code{always}:
 Archive is also deleted if an error occurs.
@@ -5572,7 +5641,7 @@ ECB installs a downloaded package in this directory, i.e. the downloaded
 archive X.tar.gz will be extracted in this directory so afterwards this
 directory contains a new subdirectory X which contains the downloaded package.
 
-This directory must be writeable!
+This directory must be write-able!
 @end defopt
 
 @defopt download-package-version-type
@@ -5605,7 +5674,7 @@ max-versions of the required packages. For this see the file README!
 @end defopt
 
 @defopt download-url
-URL where downloadable ECB-versions are located. The ECB-archive-file
+URL where download-able ECB-versions are located. The ECB-archive-file
 (e.g. ecb-1.70.tar.gz) will be appended to this URL and
 @code{ecb-download-ecb} will try to download this archive.
 
@@ -5628,10 +5697,10 @@ the ECB website then this is the subdir @code{ecb-help-html-subdir} of
 the installation directory of ECB. If it is installed as
 XEmacs-package (e.g. via the package manager of XEmacs) then this is
 probably either the directory ``../../html/'' or
-``../../etc/ecb/html/'' (both relativ to the elisp directory of ECB).
+``../../etc/ecb/html/'' (both relative to the Elisp directory of ECB).
 
-The path can either be an absolute path or a path relativ to the directory
-where the elisp files of ECB are.
+The path can either be an absolute path or a path relative to the directory
+where the Elisp files of ECB are.
 
 Normally there should be no need to change this option!
 @end defopt
@@ -5644,11 +5713,11 @@ distribution. If is installed by unpacking the archive available on
 the ECB website then this is the subdir @code{ecb-help-info-subdir} of
 the installation directory of ECB. If it is installed as
 XEmacs-package (e.g. via the package manager of XEmacs) then this is
-probably the directory ``../../info/'' (relativ to the elisp directory
+probably the directory ``../../info/'' (relative to the Elisp directory
 of ECB).
 
-The path can either be an absolute path or a path relativ to the directory
-where the elisp files of ECB are.
+The path can either be an absolute path or a path relative to the directory
+where the Elisp files of ECB are.
 
 Normally there should be no need to change this option!
 @end defopt
@@ -5699,7 +5768,7 @@ This option is only relevant for sources which are supported and
 parsed by etags (see @code{ecb-process-non-semantic-files}). Because
 etags is an external tool a source-buffer can only be reparsed if the
 buffer is saved to disk. So the command
-@code{ecb-rebuild-methods-buffer} checkes for sources which are not
+@code{ecb-rebuild-methods-buffer} checks for sources which are not
 supported by semantic or imenu if either this option is t or if the
 major-mode of the source-buffer is contained in this list: In both
 cases ECB saves the current source-buffer before it re-runs etags for
@@ -5719,7 +5788,7 @@ parsed by semantic, imenu or etags than this simply results in an
 empty method-buffer for this file. But nevertheless you will get a
 message ``Sorry, no support for a file of that extension'' which comes
 from the speedbar-library and can not switched off. Therefore if a
-@code{major-mode} is known as not parsable by semantic, imenu or etags
+@code{major-mode} is known as not parse-able by semantic, imenu or etags
 it can be added to this option and then it will be excluded from being
 tried to parsed.
 @end defopt
@@ -5727,12 +5796,12 @@ tried to parsed.
 @defopt non-semantic-methods-initial-expand
 Initially expand all tokens for not by semantic supported sources.
 This option can be customized on a major-mode basis, i.e. if a
-@code{major-mode} is contained in this option then al tokens for this
+@code{major-mode} is contained in this option then all tokens for this
 modes will be initially expanded - otherwise not.
 @end defopt
 
 @defopt non-semantic-parsing-function
-Define mode-dependend parsing functions for non-semantic files. This
+Define mode-dependent parsing functions for non-semantic files. This
 is an alist where the car is a major-mode symbol and the cdr is a
 function-symbol of a function which should be used for parsing a
 non-semantic buffer, i.h. a buffer for which no semantic grammar
@@ -5741,7 +5810,7 @@ buffer - and has to generate and return a token/tag list which is
 understandable by @code{speedbar-insert-generic-list}. speedbar has
 already included two functions @code{speedbar-fetch-dynamic-imenu} and
 @code{speedbar-fetch-dynamic-etags} which can be used for parsing
-buffers with imenu resp. etags.
+buffers with imenu rsp. etags.
 
 This option takes only effect if @code{ecb-process-non-semantic-files}
 is not nil: Then ECB checks for non-semantic buffers if current
@@ -5803,9 +5872,9 @@ read the documentation of this command, see @ref{Interactive ECB
 commands}.
 
 This command creates a problem-report buffer for you. After that you
-get a menu ``Mail'' (dependend on the mail-package used, the menu can
+get a menu ``Mail'' (dependent on the mail-package used, the menu can
 have a different name) with commands to send the problem report. But
-for this the varibale @code{mail-user-agent} must be configured right for
+for this the variable @code{mail-user-agent} must be configured right for
 your system. If you can´t get working this mechanism you can simply
 copy the whole problem-report buffer after filling it out and sending
 it with your standard mail-client to
@@ -5846,7 +5915,7 @@ satisfied:
 @item A connection to the web is available
 @item The tools ``wget'', ``tar'' and ``gzip'' are installed
 
-With unix-systems these tools are in the
+With Unix-systems these tools are in the
 standard-distribution. If you are running any Microsoft Windows system
 then you need cygwin@footnote{cygwin is available at
 @ifhtml
@@ -5864,7 +5933,7 @@ need the following wget-configuration in your file @file{~/.wgetrc}:
 @example
 @group
 # Define your proxies (where 8080 and 8081 are examples
-# for the portnumbers)
+# for the port-numbers)
 http_proxy = http://your.proxy.com:8080
 ftp_proxy  = http://your.ftpproxy.com:8081
   
@@ -5970,7 +6039,7 @@ options, upgrading/resetting incompatible options and ending with the
 display of all upgraded or reset options.
 
 @item @code{ecb-display-upgraded-options}:
-Displays a temp. buffer with all upgraded or resetted ECB-options with
+Displays a temp. buffer with all upgraded or reseted ECB-options with
 their old and new values.
 @end itemize
 
@@ -5984,7 +6053,7 @@ If you are interested in some background information, read
 @node Background information, , User interface, Auto. option-upgrading
 @subsection Background information
 
-Big packages like ECB will be enhanced and developed continously so
+Big packages like ECB will be enhanced and developed continuously so
 sometimes a new version must be released. Such packages offer in
 general a lot of customizable options so probably some of these
 options change the type or are renamed because the old type and/or
@@ -5996,7 +6065,7 @@ ECB-version: If the user has saved a certain value for option X in its
 file @file{.emacs} but the type of this saved value doesn't match the
 new defined type in the defcustom-form after an ECB-upgrade then there
 can occur serious problems like ECB can not be started anymore or even
-Emacs can not be startet without errors.
+Emacs can not be started without errors.
 
 Until now there was only one way to fix these problems: The user must
 manually edit his file @file{.emacs} and remove all entries for
@@ -6019,7 +6088,7 @@ file @file{.emacs} the new default-value is active, so the user must
 re-customize the option X.
 @end enumerate
 
-Ok, this is one half of the option-upgrade-problem but a new ECB-release
+OK, this is one half of the option-upgrade-problem but a new ECB-release
 can also rename a option from name X to name Y because the new name Y makes
 much more sense and/or is more mnemonic. If only the name has changed but
 not the type this is not a serious problem like above but also annoying
@@ -6036,7 +6105,7 @@ ECB has a solution for all these problems:
 @itemize @bullet
 
 @item
-It checks all customized values of all ECB-optons if they are still
+It checks all customized values of all ECB-options if they are still
 type-compatible. If not then it tries to upgrade the old-value to the
 new value-type and if this is not possible then it resets the option
 to the new default value and store it via customize in the .emacs-file
@@ -6054,7 +6123,7 @@ ECB - if the option @code{ecb-auto-compatibility-check} is not nil. If
 ECB has recognized incompatible or renamed options it does its
 upgrading/reseting-job so all ECB-options have correct types so ECB
 can start correct. After ECB is started it displays a list of all
-upgraded or resetted option with their old and new values.
+upgraded or reseted option with their old and new values.
 
 
 @node Tips and tricks, Elisp programming, Upgrading, Top
@@ -6154,7 +6223,7 @@ buffer).
 @section Working with small screens
 
 @cindex Small screen
-If your screen is very small so you need every sqare-centimeter for
+If your screen is very small so you need every square-centimeter for
 displaying the buffer which you want to edit, ECB offers you a special
 layouts, where only the ECB-methods buffer is displayed on top or on
 left-side. Here comes what you should/can do to work best with ECB in
@@ -6172,7 +6241,7 @@ Customize @code{ecb-layout-name} to layout-name ``top2'' (on top) or
 Ensure that @code{ecb-compile-window-height} is nil.
 
 @item
-Optional: Ajust the @code{ecb-windows-height} resp. @code{ecb-windows-width}.
+Optional: Adjust the @code{ecb-windows-height} rsp. @code{ecb-windows-width}.
 
 @item
 Save your changes.
@@ -6221,13 +6290,13 @@ following:
 @enumerate
 @item
 Customize @code{ecb-layout-name} to layout name ``left9'', ``left12'',
-``left13'' or ``left14'' dependend to what you like.
+``left13'' or ``left14'' dependent to what you like.
 
 @item
 Optional: Ensure that @code{ecb-compile-window-height} is nil.
 
 @item
-Optional: Ajust the @code{ecb-windows-width}.
+Optional: Adjust the @code{ecb-windows-width}.
 
 @item
 Optional: Customize @code{ecb-toggle-layout-sequence} and toggle very fast
@@ -6235,7 +6304,7 @@ between several layouts by @code{ecb-toggle-layout}. See the doc-strings!
 
 @item
 Optional: Customize @code{ecb-show-sources-in-directories-buffer} to
-not nil if the choosen layout (see 1. and 4.) contains a
+not nil if the chosen layout (see 1. and 4.) contains a
 directories-tree-buffer.
 
 @item
@@ -6254,14 +6323,14 @@ different ways to do this:
 @enumerate
 @item
 You can either use speedbar in the directories-, sources- or
-methods-window of ECB instead of the builtin directory-, sources- or
+methods-window of ECB instead of the built-in directory-, sources- or
 methods-browser of ECB. This can be done via the option
 @code{ecb-use-speedbar-instead-native-tree-buffer}.
 
 @item
 Or you can integrate an extra speedbar-window into a layout
 independent of the existence of a directory-, sources- or
-methods-window. For this you can either use the builtin layout
+methods-window. For this you can either use the built-in layout
 ``left-dir-plus-speedbar'' or you have to create your own layout
 interactively with the command @code{ecb-create-new-layout}. This way
 is not described in more details because there is nothing more to
@@ -6289,7 +6358,7 @@ parsing sources not supported by semantic. From version 1.94 on ECB
 supports native parsing and displaying of such sources
 (@pxref{Non-semantic sources})!
 
-Regardles the group you belong, with the speedbar-integration feature
+Regardless the group you belong, with the speedbar-integration feature
 of ECB you can combine both worlds, the speedbar- and the ECB-world:
 
 @enumerate
@@ -6306,13 +6375,13 @@ like ``left15'' or ``leftright3'' for using with speedbar.
 
 @item Set the option
 @code{ecb-use-speedbar-instead-native-tree-buffer} to not nil. After
-this the choosen window of ECB will contain a full featured speedbar
+this the chosen window of ECB will contain a full featured speedbar
 (the only difference to standard speedbar is not residing in an extra
 frame).
 @end enumerate
 
 Note: If you belong to the first group of people (s.a.) a similar
-effect and useability is available by setting
+effect and usability is available by setting
 @code{ecb-use-speedbar-instead-native-tree-buffer} to nil and setting
 @code{ecb-show-sources-in-directories-buffer} to not nil, because this
 combination displays also directories and sources in one window.
@@ -6340,7 +6409,7 @@ If you use lower versions of speedbar
 @cindex Scrolling
 Emacs 20.X seems to slow down scrolling if there is a horizontal split
 in the frame and/or a lot of overlays in the buffer which is scrolled.
-This is independend of ECB! But because almost all layouts of ECB uses
+This is independent of ECB! But because almost all layouts of ECB uses
 horizontal splits of the frame and because ECB is based on semantic
 which uses overlays intensively there can be poor scrolling
 performance in large buffers, especially with java-buffers in
@@ -6348,7 +6417,7 @@ performance in large buffers, especially with java-buffers in
 
 This scrolling performance can be increased a lot if the options
 @code{scroll-conservatively} and @code{scroll-step} are set
-appropriatelly: The former one should have a value of 0 during ECB is
+appropriately: The former one should have a value of 0 during ECB is
 active and the latter one a value of either 0 or > 1 (the exact value
 depends on the power of your machine).
 
@@ -6362,7 +6431,7 @@ these versions of Emacs there should be no scrolling problem even with
 
 If @code{ecb-source-path} contains directories with many files and
 subdirs, especially if these directories are mounted net-drives
-(``many'' means here something > 1000, dependend on the speed of the
+(``many'' means here something > 1000, dependent on the speed of the
 net-connection and the machine), actualizing the sources- and/or
 directories- buffer of ECB (if displayed in current layout!) can slow
 down dramatically. If this is a problem the contents of certain
@@ -6408,7 +6477,7 @@ run ``ls'' the window automatically expands (but always depending of
 the output of the command you run).
 
 @item
-Sychronizes the current directory of the eshell with the current
+Synchronizes the current directory of the eshell with the current
 buffer in the edit-window of ECB.
 
 @item
@@ -6417,7 +6486,7 @@ that the eshell is taking up the exact amount of space and that
 nothing is hidden.
 @end itemize
 
-Here comes a detailled explanation of these features and how to use it:
+Here comes a detailed explanation of these features and how to use it:
 
 Just call @code{ecb-eshell-goto-eshell} (bound to @kbd{C-c . e}) and
 eshell will displayed in the compile-window of ECB (if eshell is not
@@ -6435,7 +6504,7 @@ Normally this is done autom but you can do it on demand with the
 command @code{ecb-eshell-recenter}.
 
 If option @code{ecb-eshell-synchronize} is true then ECB always
-syncronizes the command prompt of eshell with the directory of current
+synchronizes the command prompt of eshell with the directory of current
 source-buffer of the edit-window.
 
 With the option @code{ecb-eshell-auto-activate} you can start eshell
@@ -6447,10 +6516,10 @@ compile-window exists.
 
 ECB offers in the popup-menus in the directories- and
 sources-tree-buffer commands for easy (recursive) grepping the current
-directory under point (directory-buffer) resp. the current-directory
+directory under point (directory-buffer) rsp. the current-directory
 (sources-buffer). In every case just the function of the options
-@code{ecb-grep-function} resp. @code{ecb-grep-find-function} is called
-and the @code{default-directory} is tempor. set to the choosen
+@code{ecb-grep-function} rsp. @code{ecb-grep-find-function} is called
+and the @code{default-directory} is tempor. set to the chosen
 directory so the grep will performed in this directory regardless of
 the @code{default-directory} of current buffer in the edit-window.
 
@@ -6461,7 +6530,7 @@ So, how to exclude some subdirectories or files from the grep?
 
 Basically this has to be done with the ``-prune'' option of the
 find-utility: If the standard-grep facility of Emacs is used then this
-is not easy but with the library @file{igrep.el} there is a conveniant
+is not easy but with the library @file{igrep.el} there is a convenient
 way to exclude things like CVS- or RCS-directories from the find-call:
 See the variable @code{igrep-find-prune-clause} of the library
 @file{igrep.el}.
@@ -6484,7 +6553,7 @@ the contents of the class which contains the definition of the
 
 @item Creating new source-files
 
-The popup-menues in the directories- and the sources-buffer offer a
+The popup-menus in the directories- and the sources-buffer offer a
 command ``Create Source'' which allows easy creating new java-sources
 by calling the command @code{jde-gen-class-buffer}.
 @end itemize
@@ -6533,7 +6602,7 @@ ECB is mostly designed to display parsing information for files
 supported by semantic. But from version 1.94 on it also supports other
 parsing engines like imenu and etags, so also files not supported by
 semantic but by imenu/etags can be displayed in the Method-buffer of
-ECB. See @ref{Definiton of semantic- and non-semantic-sources} for a
+ECB. See @ref{Definition of semantic- and non-semantic-sources} for a
 description of ``semantic-sources'' and ``non-semantic-sources''.
 
 If support of non-semantic-sources is enabled then ECB will display
@@ -6556,7 +6625,7 @@ Enabling is simply done with the option @code{ecb-process-non-semantic-files}.
 
 ECB offers an option @code{ecb-non-semantic-parsing-function} to
 specify on a major-mode basis which parsing-method should be used:
-imenu or etags. Normaly there should be no need to change this option
+imenu or etags. Normally there should be no need to change this option
 but read the documentation of this option (@pxref{ecb-non-semantic})
 for further details.
 
@@ -6578,13 +6647,13 @@ and @code{speedbar-fetch-etags-command}.
 
 @item
 Even with support for semantic-, imenu- and etags-parsing there will
-remain some file-types resp. @code{major-modes} which are not
-parsable, neither by semantic, imenu nor etags. This is no problem
+remain some file-types rsp. @code{major-modes} which are not
+parse-able, neither by semantic, imenu nor etags. This is no problem
 because these files simply have an empty Methods-buffer. But
 nevertheless you will get a message ``Sorry, no support for a file of
 that extension'' which comes from the speedbar-library and can not
 switched off. Therefore if a @code{major-mode} is known as not
-parsable by semantic, imenu or etags it can be added to the option
+parse-able by semantic, imenu or etags it can be added to the option
 @code{ecb-non-semantic-exclude-modes} and then it will be excluded
 from being tried to parsed and this (annoying) message will not occur.
 @end itemize
@@ -6592,8 +6661,8 @@ from being tried to parsed and this (annoying) message will not occur.
 @subsection Automatic rescanning/reparsing of non-semantic-sources
 
 In contrast to semantic (see @code{global-semantic-auto-parse-mode})
-there is no builtin mechanism for autom. reparsing
-non-semantic-sources and then updating the contens of the
+there is no built-in mechanism for autom. reparsing
+non-semantic-sources and then updating the contents of the
 Methods-buffer.
 
 For non-semantic-sources you have always at least to call
@@ -6641,7 +6710,7 @@ function F which is still contained in @code{after-change-functions}.
 @subsection Customizing the display of the tokens
 
 For non-semantic-sources ECB uses does no special organizing of tokens
-in groups and subtokens but it completely uses the token-hierarchy the
+in groups and sub-tokens but it completely uses the token-hierarchy the
 imenu- and etags-parsers of speedbar return. So the displayed token
 hierarchy can only be customized with some options speedbar offers for
 this:
@@ -6695,13 +6764,13 @@ entry for it like the already contained entries for @code{c++-mode} or
 too.
 
 @node Elisp programming, Conflicts and bugs, Tips and tricks, Top
-@chapter Entry points for elisp programmers
+@chapter Entry points for Elisp programmers
 
 This chapter describes how ECB can be used/programmed/driven by an
-elisp-program. This contains:
+Elisp-program. This contains:
 
 @menu
-* List of variables::           Which variables an elisp-program can use
+* List of variables::           Which variables an Elisp-program can use
 * List of hooks::               All available hooks
 * tree-buffer::                 Some words to the tree-buffer-library
 * Adviced functions::           How to deal with the adviced functions
@@ -6709,9 +6778,9 @@ elisp-program. This contains:
 @end menu
 
 @node List of variables, List of hooks, Elisp programming, Elisp programming
-@section Variables for elisp-programs
+@section Variables for Elisp-programs
 
-Variables an elisp-program can use beyond those ones mentioned in
+Variables an Elisp-program can use beyond those ones mentioned in
 @ref{The layout-engine}:
 
 @itemize @bullet
@@ -6747,7 +6816,7 @@ The following hooks are available:
 @item @code{ecb-sources-buffer-after-create-hook}
 @end itemize
 
-Look at the documentation of these hooks to get a detailled description.
+Look at the documentation of these hooks to get a detailed description.
 
 @node tree-buffer, Adviced functions, List of hooks, Elisp programming
 @section The library tree-buffer.el
@@ -6833,8 +6902,8 @@ just to program the necessary buffer-set function. For all the details
 see @ref{Creating a new ECB-layout}.
 
 But if you do not like the interactive way (because you are tough and
-brave) but you want programming the new layout with elisp then use the
-macro @code{ecb-layout-define} (the following definiton has stripped
+brave) but you want programming the new layout with Elisp then use the
+macro @code{ecb-layout-define} (the following definition has stripped
 the prefix ``ecb-'' for better indexing this manual):
 
 @defmac layout-define name type &rest create-code
@@ -6850,10 +6919,10 @@ Preconditions for @var{CREATE-CODE}:
 @enumerate
 @item
 Current frame is splitted at least in one edit-window and the
-``column'' (for layout types left, right and left-right) resp. ``row''
+``column'' (for layout types left, right and left-right) rsp. ``row''
 (for a top layout) for the special ECB-windows/buffers. The width of
-the ``column'' resp. the height of the ``row'' is always defined with
-the option @code{ecb-windows-width} resp. @code{ecb-windows-height}.
+the ``column'' rsp. the height of the ``row'' is always defined with
+the option @code{ecb-windows-width} rsp. @code{ecb-windows-height}.
 Depending on the value of the option @code{ecb-compile-window-height}
 there is also a compile window at the bottom of the frame which is
 stored in @code{ecb-compile-window}.
@@ -6877,7 +6946,7 @@ Things @var{CREATE-CODE} has to do:
 Splitting the ECB-tree-windows-column(s)/row (s.a.) in all the
 ECB-windows the layout should contain (directories, sources, methods
 and history). The split must not be done with other functions than
-@code{ecb-split-hor} and @code{ecb-split-ver}! It is recommened not to
+@code{ecb-split-hor} and @code{ecb-split-ver}! It is recommended not to
 to use a ``hard'' number of split-lines or -rows but using fractions
 between -0.9 and +0.9! Tip: It is recommended to spilt from right to
 left and from bottom to top or with other words: First create the
@@ -7089,7 +7158,7 @@ compilation window and the other windows get a little more place).
 
 @subsubsection The example code
 
-Now let have us a look at the several parts of the elisp-program
+Now let have us a look at the several parts of the Elisp-program
 needed to program this new example layout. ECB contains a library
 @file{ecb-examples.el} which contains the full working code of this
 example. To test this example and to play with it you can load this
@@ -7135,7 +7204,7 @@ Two helper functions for displaying infos in a special buffer:
 
 The main synchronizing function added to
 @code{ecb-current-buffer-sync-hook} for autom. evaluation by
-@code{ecb-current-buffer-sync} which runs dependend on the values of
+@code{ecb-current-buffer-sync} which runs dependent on the values of
 @code{ecb-window-sync} and @code{ecb-window-sync-delay}. This function
 synchronizes the bufferinfo buffer with the current buffer of the
 edit-window if that buffer has changed.
@@ -7205,7 +7274,7 @@ The name of the action-buffer:
 @end lisp
 
 Two helper functions for creating a readonly action-buffer with a
-special local keymap for the middle-mouse-button and two buttons
+special local key-map for the middle-mouse-button and two buttons
 [prior] and [next]:
 
 @lisp
@@ -7224,10 +7293,10 @@ special local keymap for the middle-mouse-button and two buttons
       (set-buffer (get-buffer-create
                     ecb-examples-action-buffer-name))
 
-      ;; we setup a local keymap and bind middle-mouse-button
+      ;; we setup a local key-map and bind middle-mouse-button
       ;; see ecb-examples.el for the full code        
 
-      ;; insert the action buttons [prior] und [next] and
+      ;; insert the action buttons [prior] and [next] and
       ;; make it read-only
       
       (ecb-with-readonly-buffer (current-buffer)
@@ -7357,7 +7426,7 @@ The following function activates the GUI of our example tool:
   ;; saving the state
   (ecb-examples-preactivation-state 'save)
 
-  ;; switch to our prefered layout
+  ;; switch to our preferred layout
   (setq ecb-windows-height 6)
   (setq ecb-compile-window-height 5)
   (ecb-layout-switch "example-layout1"))
@@ -7399,7 +7468,7 @@ very similar to the standard ones which means one big edit-window and
 some special windows ``around'' this edit-window. This section will
 show you that a layout can have also very different outlines.
 
-Ok, here are the real restrictions and conditions for a layout
+OK, here are the real restrictions and conditions for a layout
 programmed with @code{ecb-layout-define}:
 @enumerate
 @item
@@ -7418,7 +7487,7 @@ defined with the @var{TYPE}-argument of @code{ecb-layout-define}
 @end enumerate
 
 You see, there are only three restrictions/conditions. These and only
-these must be fullfilled at layout-programming.
+these must be fulfilled at layout-programming.
 
 Demonstrating what this really means and how flexible the
 layout-engine of ECB really is, can be done best with some
@@ -7485,7 +7554,7 @@ Here is the code for that top layout (all buffers are dummy-buffers):
   nil
 
   ;; here we have an edit-window and above one top window which we can
-  ;; now split in several other windows. Dependend on the value of
+  ;; now split in several other windows. Dependent on the value of
   ;; `ecb-compile-window-height' we have also a compile-window at the
   ;; bottom.
 
@@ -7560,7 +7629,7 @@ Here is the layout-definition itself:
   nil
 
   ;; here we have an edit-window and left and right two windows each
-  ;; with width `ecb-windows-width'. Dependend to the value of
+  ;; with width `ecb-windows-width'. Dependent to the value of
   ;; `ecb-compile-window-height' we have also a compile-window at the
   ;; bottom.
 
@@ -7594,7 +7663,7 @@ If such layouts are senseful is another topic ;-)
 
 This section lists all functions, macros, variables and user-options
 the layout-engine API of ECB offers foreign packages. Call
-@code{describe-function} resp. @code{describe-variable} to get a
+@code{describe-function} rsp. @code{describe-variable} to get a
 detailed description.
 
 Functions for programming with layouts and special ecb-windows:
@@ -7625,7 +7694,7 @@ Utility functions/macros:
 @item ecb-with-readonly-buffer
 @end itemize
 
-Some other maybe usefull functions/macros:
+Some other maybe useful functions/macros:
 @itemize @minus
 @item ecb-with-adviced-functions
 @item ecb-with-original-functions
@@ -7763,14 +7832,14 @@ works even better and saver as without activated ECB!
 @subsection Package Gnus (Newsreader)
 
 @cindex Gnus
-It is recommended not to use Gnus and ECB simultaniously in one frame
+It is recommended not to use Gnus and ECB simultaneously in one frame
 because each of them has its own window-management and probably there
 will be conflicts. Use different frames for ECB and Gnus!
 
 @subsection Package BBDB
 
 @cindex BBDB
-It is recommended not to use BBDB and ECB simultaniously in one frame
+It is recommended not to use BBDB and ECB simultaneously in one frame
 because each of them has its own window-management and probably there
 will be conflicts. Use different frames for ECB and BBDB!
 
@@ -7787,7 +7856,7 @@ programming}.
 @cindex winner-mode
 @cindex winner
 @code{winner-mode} is autom. disabled as long as ECB is running. ECB
-has its own window-management which is completely incomatible with
+has its own window-management which is completely incompatible with
 @code{winner-mode}! But @code{winner-mode} makes also not really sense
 with ECB.
 
@@ -7811,7 +7880,7 @@ choices. An example is importing classes via the command
 to work in an environment where a new temporary window is created, the
 contents of the dialog are displayed in the new window, the user
 select his choice and hits [OK]. After that the new window is deleted
-and the selection is performed (for example the choosen import
+and the selection is performed (for example the chosen import
 statement are inserted in the source-buffer.
 
 ECB can be work very well with this dialogs but only if no
@@ -7843,7 +7912,7 @@ ecb-activate is an interactive compiled Lisp function in `ecb'.
 Activates the ECB...
 @end example
 
-The link to `ecb' is normally a clickable link, means if you click
+The link to `ecb' is normally a click-able link, means if you click
 with the middle-mouse button onto it the file is opened (in our
 example @file{ecb.el} would be opened.
 
@@ -7852,7 +7921,7 @@ buffer (i.e. the compile-window is already selected before the click!)
 then all is working fine (i.e. the file is opened in the edit-window),
 but if you click onto the link without selecting the compile-window
 before (i.e. the edit-window is the current selected window) then the
-file is openend in the compile-window which is probably not what you
+file is opened in the compile-window which is probably not what you
 want. Not a big problem but annoying.
 
 The only available workaround is, first selecting the compile-window
@@ -7875,7 +7944,7 @@ Test3
 @end example
 
 In the edit window Test1 file is edited. When clicked on Test2 entry
-in history, on occsion instead of switching to the existing buffer for
+in history, on occasion instead of switching to the existing buffer for
 Test2, a new edit buffer is opened for Test2 file. At this point, there
 are four entries in the history as follows:
 
@@ -8037,9 +8106,9 @@ over it?
 @tab @tab
 There can be several reasons: First the value of the option
 @code{ecb-show-node-name-in-minibuffer} must be either @code{always} or
-@code{if-too-long}. If this is ok, then maybe you have turned on
+@code{if-too-long}. If this is OK, then maybe you have turned on
 follow-mouse AFTER activating ECB; follow-mouse must be turned on
-BEFORE ECB is acivated, e.g. in the @code{ecb-activate-hook}! But with
+BEFORE ECB is activated, e.g. in the @code{ecb-activate-hook}! But with
 Emacs 21.X and XEmacs there are no problems with this feature, just
 activate it.
 
@@ -8092,7 +8161,7 @@ semantic offer something similar, see
 @item
 Can i use ECB in combination with Gnus within one frame?
 @tab @tab
-You can, but it is recommended not to use Gnus and ECB simultaniously
+You can, but it is recommended not to use Gnus and ECB simultaneously
 in one frame because each of them has it's own window-management and
 probably there will be conflicts. Use different frames for ECB and
 Gnus!
@@ -8112,15 +8181,15 @@ section
 @item @tab @tab
 
 @item
-Is it possible to create/use other layouts than the buildin ones?
+Is it possible to create/use other layouts than the built-in ones?
 @tab @tab
 Yes. @ref{Creating a new ECB-layout} and
 @ifinfo
 @*
 @end ifinfo
 @ref{The layout-engine} are the relevant sections. The former one
-describes how to create interactively new layouts wheres the latter
-one is for elisp-progammers.
+describes how to create interactively new layouts where the latter
+one is for Elisp-programmers.
 
 @item @tab @tab
 
@@ -8168,7 +8237,7 @@ see @ref{Setting up Emacs}.
 @item @tab @tab
 
 @item
-Can i add my own commands to the popup-menues of tree-buffers?
+Can i add my own commands to the popup-menus of tree-buffers?
 @tab @tab
 Yes, see @ref{Using the mouse}.
 
@@ -8263,3 +8332,27 @@ This index contains all customizable options of ECB.
 
 
 @bye
+
+@c  LocalWords:  texinfo Berndl java ECB ecb texi berndl Exp setfilename vr cp
+@c  LocalWords:  settitle syncodeindex fn ifinfo paragraphindent exampleindent
+@c  LocalWords:  footnotestyle frobbed ecbver dircategory direntry titlepage sp
+@c  LocalWords:  titlefont vskip pt Jesper Nordenberg dir ifnottex Elisp imenu
+@c  LocalWords:  etags perl iftex ref tex url ifhtml uref detailmenu eshell API
+@c  LocalWords:  keybindings speedbar Grepping JDEE website eieio xref subdirs
+@c  LocalWords:  loadtime autoloads Bytecompiling bytecompile EMACSINFOPATH hxx
+@c  LocalWords:  pxref alist multitable columnfractions ifnotinfo hh HH cxx cpp
+@c  LocalWords:  CC jde setq RET kbd Alt minibuffer cindex dfn grep ascii popup
+@c  LocalWords:  screenshot splitted sourcecode noindent de itemx rsp CTRL hor
+@c  LocalWords:  senseful modeline subnode uml const gm Ctrl docstring autom lc
+@c  LocalWords:  subsubsection fontify defun asis Hist leftright lr nav dired
+@c  LocalWords:  deffn var CLEARALL cedet sourcepath classpath arg html regexp
+@c  LocalWords:  backtrace def incl defopt cdr keysequence SPC DEL LFD ESC NUL
+@c  LocalWords:  alt abc horiz filenumber rexexp bigdir iff cvsignore lib ini
+@c  LocalWords:  elc obj dll rexexps assoc tokenlist bovinate toplevel oo CLOS
+@c  LocalWords:  defclass colorized XYZ XYC structs colorizing struct enum adv
+@c  LocalWords:  func comint proc min subdir wget gzip cygwin ifnothtml env iso
+@c  LocalWords:  http defcustom upgradable defconst lw doc ls grepping tempor
+@c  LocalWords:  igrep CVS gen maxout FF hs hideshow JDEbug defmac ver undefine
+@c  LocalWords:  Bufferinfo rw bufferinfo readonly filebuffer filebuffers pos
+@c  LocalWords:  cond buf preactivation usw msw lsw asynch XP Newsreader BBDB
+@c  LocalWords:  VC vc logbuf BNF Intellisense IDEs semanticdb printindex

@@ -62,7 +62,7 @@
 ;;   (http://cedet.sourceforge.net/eieio.shtml).
 ;; - speedbar, author version 0.14beta1 or higher
 ;;   (http://cedet.sourceforge.net/speedbar.shtml)
-;; - Optional: If Java code is edited the ECB works best when the JDE package
+;; - Optional: If Java code is edited the ECB works best when the JDEE package
 ;;   (http://sunsite.auc.dk/jde) is installed.
 
 
@@ -88,7 +88,7 @@
 ;; For the ChangeLog of this file see the CVS-repository. For a complete
 ;; history of the ECB-package see the file NEWS.
 
-;; $Id: ecb.el,v 1.319 2003/07/15 13:48:17 berndl Exp $
+;; $Id: ecb.el,v 1.320 2003/07/30 16:54:48 berndl Exp $
 
 ;;; Code:
 
@@ -103,7 +103,7 @@
 
 
 ;; if we miss some of the requirements we offer the user to download and
-;; install them if Emacs ist started interactive or - in batch mode - we
+;; install them if Emacs is started interactive or - in batch mode - we
 ;; report an error.
 (let* ((semantic-load-ok (condition-case nil
                              (require 'semantic)
@@ -195,7 +195,7 @@
 
 ;; ecb-speedbar is are first loaded if
 ;; ecb-use-speedbar-instead-native-tree-buffer is set to not nil or if
-;; non-semantic-sources are openend and ecb-process-non-semantic-files is not
+;; non-semantic-sources are opened and ecb-process-non-semantic-files is not
 ;; nil.
 (silentcomp-defun ecb-speedbar-active-p)
 (silentcomp-defun ecb-speedbar-deactivate)
@@ -296,19 +296,19 @@ if you always want to run `ecb-activate'."
   'boolean)
 
 (defcustom ecb-major-modes-activate 'none
-  "*List of major-modes for which ECB shoulb be activated or shown.
+  "*List of major-modes for which ECB should be activated or shown.
 Do not mistake this option with `ecb-auto-activate'. The latter one is for
 activating ECB after Emacs-startup \(even without opening a buffer) and this
 one is for defining for which major-modes ECB should be activated if the mode
 goes active!
 
-The behaviour is like follows: If a mode is contained in this option ECB is
+The behavior is like follows: If a mode is contained in this option ECB is
 activated after activating this mode \(if ECB was deactivated before) or the
 ECB-windows are shown if ECB was already active but its windows were hidden.
 In every case ECB is activated with visible ECB-windows afterwards!
 
 For every major mode there can be specified an `ecb-layout-name':
-- default: The value customized with `ecb-layout-name' is choosen.
+- default: The value customized with `ecb-layout-name' is chosen.
 - a string: ECB is activated with this layout-name. This changes the value of
   `ecb-layout-name' but only for current emacs-session!
 But the layout is only changed if ECB was activated, if just the ECB-windows
@@ -366,7 +366,7 @@ unsplitted and point is in the edit-window to avoid changing unnecessarily or
 unintentionally the frame-layout if the user just jumps between different
 edit-windows, the tree-windows and the compile-window of ECB.
 There is one exception from this rule: If the edit-window is splitted and one
-window contains a dired-buffer and a \"ECB-deactivating\"-file is openend via
+window contains a dired-buffer and a \"ECB-deactivating\"-file is opened via
 dired then opening this file deactivates ECB \(resp. hides the ECB-windows)."
   :group 'ecb-general
   :type '(radio :tag "Modes for deactivation"
@@ -411,7 +411,7 @@ This is done during the auto. windows synchronization which happens if a file
 is opened not via the file/directory-browser of ECB. In such a situation ECB
 adds the path of the new file auto. to `ecb-source-path' at least temporally
 for the current Emacs session. This option defines two things:
-1. Should only the root-part \(which means for unix-like systems always '/'
+1. Should only the root-part \(which means for Unix-like systems always '/'
    and for windows-like systems the drive) of the new file be added as
    source-path to `ecb-source-path' or the whole directory-part?
 2. Should this path be added for future sessions too?
@@ -460,7 +460,7 @@ This option can have four valid values:
 - source: Use speedbar instead of the standard sources-buffer
 - method: Use speedbar instead of the standard methods-buffer
 
-Note: For directories and sources a similar effect and useability is available
+Note: For directories and sources a similar effect and usability is available
 by setting this option to nil \(or 'method) and setting
 `ecb-show-sources-in-directories-buffer' to not nil, because this combination
 displays also directories and sources in one window.
@@ -484,7 +484,7 @@ conjunction with ECB."
 (defcustom ecb-directories-update-speedbar 'auto
   "*Update an integrated speedbar after selecting a directory.
 
-If not nil then an integrated speedar will be updated after selecting a
+If not nil then an integrated speedbar will be updated after selecting a
 directory in the ECB-directories-buffer so the speedbar displays the contents
 of that directory.
 
@@ -540,7 +540,7 @@ The value 'auto \(see above) takes exactly these two scenarios into account."
 
 This can be useful if `ecb-source-path' contains directories with many files
 and subdirs, especially if these directories are mounted net-drives \(\"many\"
-means here something > 1000, dependend of the speed of the net-connection and
+means here something > 1000, dependent of the speed of the net-connection and
 the machine). For these directories actualizing the sources- and/or directories-
 buffer of ECB \(if displayed in current layout!) can slow down dramatically so
 a caching increases speed a lot.
@@ -552,7 +552,7 @@ looks like:
 <filenumber threshold>: Number of directory contents must exceed this number.
 
 A directory will we only be cached if and only if the directory-name matches
-one rexexp of this option and its content-number exceeds the related
+one regexp of this option and its content-number exceeds the related
 threshold.
 
 The cache entry for a certain directory will be refreshed and actualized only
@@ -626,7 +626,7 @@ Conditions for such a function:
 - The function is completely responsible for performing the grep itself and
   displaying the results.
 
-Normaly one of the standard-grepping functions like `grep' or `igrep' \(or
+Normally one of the standard-grepping functions like `grep' or `igrep' \(or
 some wrappers around it) should be used!"
   :group 'ecb-directories
   :type 'function)
@@ -675,7 +675,7 @@ option to nil. This is the default."
   "*Specifies which files are shown as source files.
 
 This is done on directory-base, which means for each directory-regexp the
-files to display can be specified. If more than one direcory-regexp matches
+files to display can be specified. If more than one directory-regexp matches
 the current selected directory then always the first one \(and its related
 file-exclude/include-regexps) is used! If no directory-regexp matches then all
 files are displayed for the currently selected directory.
@@ -704,7 +704,7 @@ regexp:
 In addition to these predefined values a custom exclude and include
 combination can be defined.
 
-Tips for the directory- and file-rexexps: \"$^\" matches no files/directories,
+Tips for the directory- and file-regexps: \"$^\" matches no files/directories,
 \".*\" matches all files/directories."
   :group 'ecb-sources
   :type '(repeat (cons :tag "Directory file-spec"
@@ -762,7 +762,7 @@ then activating ECB again!"
 (defcustom ecb-clear-history-behavior 'not-existing-buffers
   "*Defines which entries of the history buffer should be deleted if
 `ecb-clear-history' is called. Three options are available:
-- not-existing-buffers: All entries which represent a buffername not existing
+- not-existing-buffers: All entries which represent a buffer-name not existing
   anymore in the bufferlist will be cleared. Probably the most senseful value.
 - existing-buffers: The opposite of 'not-existing-buffers.
 - all: The whole history will be cleared."
@@ -819,7 +819,7 @@ switched on too. There are three possible choices:
   current token under point is invisible because its parent-node is collapsed.
   But expanding is only done if the type of the token under point in the
   edit-buffer is contained in `ecb-methods-nodes-expand-spec'.
-- all: Like expand-spec but expands all tokens regardess of the setting in
+- all: Like expand-spec but expands all tokens regardless of the setting in
   `ecb-methods-nodes-expand-spec'.
 
 This options takes only effect for semantic-sources - means sources supported
@@ -840,7 +840,7 @@ But after explicitly expanding/collapsing the methods-buffer to a certain
 level the auto. expanding could undo this when the node belonging to current
 token under point in the edit-window is invisible after
 `ecb-expand-methods-nodes' - then the auto. expand feature would make this
-node immediatelly visible and destroys the explicitly set expand-level."
+node immediately visible and destroys the explicitly set expand-level."
   :group 'ecb-methods
   :type 'boolean)
 
@@ -1029,7 +1029,7 @@ Normally all token displaying, colorizing and facing is done by semantic
 according to the value of `semantic-face-alist' and the semantic
 display-function \(e.g. one from `semantic-token->text-functions'). But
 sometimes a finer distinction in displaying the different type specifiers of
-type-tokens can be usefull. For a description when this option is evaluated
+type-tokens can be useful. For a description when this option is evaluated
 look at `ecb-token-display-function'!
 
 This functionality is set on a major-mode base, i.e. for every major-mode a
@@ -1063,7 +1063,7 @@ cons-cells:
 
 The default value is nil means there is no special ECB-displaying of
 type-tokens in addition to the displaying and colorizing semantic does. But a
-value like the following could be a usefull setting:
+value like the following could be a useful setting:
 
   \(\(default
      \(\"class\" t ecb-type-token-class-face)
@@ -1231,7 +1231,7 @@ faces of TEXT!"
 (defcustom ecb-post-process-semantic-tokenlist
   '((c++-mode . ecb-group-function-tokens-with-parents)
     (emacs-lisp-mode . ecb-group-function-tokens-with-parents))
-  "*Define mode-dependend postprocessing for the semantic-tokenlist.
+  "*Define mode-dependent post-processing for the semantic-tokenlist.
 This is an alist where the car is a major-mode symbol and the cdr is a
 function-symbol of a function which should be used for post-processing the
 tokenlist \(returned by `semantic-bovinate-toplevel') for a buffer in this
@@ -1248,16 +1248,16 @@ This options takes only effect for semantic-sources - means sources supported
 by semantic!"
   :group 'ecb-methods
   :type '(repeat (cons (symbol :tag "Major-mode")
-                       (function :tag "Postprocess function"))))
+                       (function :tag "Post-process function"))))
 
 (defcustom ecb-show-only-positioned-tokens t
-  "*Show only nodes in the method-buffer which are \"jumpable\".
+  "*Show only nodes in the method-buffer which are \"jump-able\".
 If not nil then ECB displays in the method-buffer only nodes which are
-\"jumpable\", i.e. after selecting it by clicking or with RET then ECB jumps
+\"jump-able\", i.e. after selecting it by clicking or with RET then ECB jumps
 to the corresponding location in the edit-window.
-Example: With CLOS or Eieio source-code there can exist some positionless
+Example: With CLOS or Eieio source-code there can exist some position-less
 nodes like variable-attributes in a `defclass' form which are only displayed
-if this option is nil. Displaying such nodes can be sensefull even if they can
+if this option is nil. Displaying such nodes can be senseful even if they can
 not be jumped.
 
 This options takes only effect for semantic-sources - means sources supported
@@ -1488,11 +1488,11 @@ quite impossible to scroll smoothly right and left. The functions
 mouse-buttons.
 
 If this option is a positive integer S then in all ECB-tree-buffers the keys
-\[M-mouse-1] and \[M-mouse-3] are bound to scrolling left resp. right with
+\[M-mouse-1] and \[M-mouse-3] are bound to scrolling left rsp. right with
 scroll-step S - clicking with mouse-1 or mouse-2 onto the edge of the modeline
 has the same effect, i.e. if you click with mouse-1 onto the left \(resp
-right) egde of the modeline you will scroll left \(resp. right). Additionally
-\[C-M-mouse-1] and \[C-M-mouse-3] are bound to scrolling left resp. right with
+right) edge of the modeline you will scroll left \(resp. right). Additionally
+\[C-M-mouse-1] and \[C-M-mouse-3] are bound to scrolling left rsp. right with
 scroll-step `window-width' - 2. Default is a scroll-step of 5. If the value is
 nil then no keys for horizontal scrolling are bound."
   :group 'ecb-general
@@ -1778,10 +1778,10 @@ switch on this option and submitting a bug-report to the ecb-mailing-list
   "*User extensions for the popup-menu of the directories buffer.
 
 Value is a list of elements of the following type: Each element defines a new
-menu-entry and is a list containing two subelements, whereas the first is the
+menu-entry and is a list containing two sub-elements, whereas the first is the
 name of the menu-entry and the second the function \(a function symbol or a
 lambda-expression) being called if the menu-entry is selected. If there is no
-second subelement and the first one is the string \"---\" then a
+second sub-element and the first one is the string \"---\" then a
 non-selectable menu-separator is displayed.
 
 The function must follow the following guidelines:
@@ -1797,7 +1797,7 @@ Example for such a menu-function:
   \(let \(\(node-data=dir \(tree-node-get-data node)))
      \(message \"Dir under node: %s\" node-data=dir)))
 
-Per default the user-extensions are added at the beginning of the builtin
+Per default the user-extensions are added at the beginning of the built-in
 menu-entries of `ecb-directories-menu' but the whole menu can be re-arranged
 with `ecb-directories-menu-sorter'.
 
@@ -1818,7 +1818,7 @@ For further explanations see `ecb-directories-menu-user-extension'.
 The node-argument of a menu-function contains as data the filename of the
 source for which the popup-menu has been opened.
 
-Per default the user-extensions are added at the beginning of the builtin
+Per default the user-extensions are added at the beginning of the built-in
 menu-entries of `ecb-sources-menu' but the whole menu can be re-arranged
 with `ecb-sources-menu-sorter'.
 
@@ -1839,7 +1839,7 @@ For further explanations see `ecb-directories-menu-user-extension'.
 The node-argument of a menu-function contains as data the semantic-token of
 the method/variable/token for which the popup-menu has been opened.
 
-Per default the user-extensions are added at the beginning of the builtin
+Per default the user-extensions are added at the beginning of the built-in
 menu-entries of `ecb-methods-menu' but the whole menu can be re-arranged
 with `ecb-methods-menu-sorter'.
 
@@ -1860,7 +1860,7 @@ For further explanations see `ecb-directories-menu-user-extension'.
 The node-argument of a menu-function contains as data the filename of the
 source for which the popup-menu has been opened.
 
-Per default the user-extensions are added at the beginning of the builtin
+Per default the user-extensions are added at the beginning of the built-in
 menu-entries of `ecb-history-menu' but the whole menu can be re-arranged
 with `ecb-history-menu-sorter'.
 
@@ -1879,9 +1879,9 @@ If you change this option you have to restart ECB to take effect."
 
 If a function then this function is called to re-arrange the menu-entries of
 the combined menu-entries of the user-menu-extensions of
-`ecb-directories-menu-user-extension' and the builtin-menu
+`ecb-directories-menu-user-extension' and the built-in-menu
 `ecb-directories-menu'. If nil then no special sorting will be done and the
-user-extensions are placed in front of the builtin-entries.
+user-extensions are placed in front of the built-in-entries.
 
 The function get one argument, a list of menu-entries. For the format of this
 argument see `ecb-directories-menu-user-extension'. The function must return a
@@ -1897,9 +1897,9 @@ the entries but also delete entries or add new entries."
 
 If a function then this function is called to sort the menu-entries of the
 combined menu-entries of the user-menu-extensions of
-`ecb-sources-menu-user-extension' and the builtin-menu
+`ecb-sources-menu-user-extension' and the built-in-menu
 `ecb-sources-menu'. If nil then no special sorting will be done and the
-user-extensions are placed in front of the builtin-entries.
+user-extensions are placed in front of the built-in-entries.
 
 For the guidelines for such a sorter-function see
 `ecb-directories-menu-sorter'."
@@ -1913,9 +1913,9 @@ For the guidelines for such a sorter-function see
 
 If a function then this function is called to sort the menu-entries of the
 combined menu-entries of the user-menu-extensions of
-`ecb-methods-menu-user-extension' and the builtin-menu
+`ecb-methods-menu-user-extension' and the built-in-menu
 `ecb-methods-menu'. If nil then no special sorting will be done and the
-user-extensions are placed in front of the builtin-entries.
+user-extensions are placed in front of the built-in-entries.
 
 For the guidelines for such a sorter-function see
 `ecb-directories-menu-sorter'."
@@ -1929,9 +1929,9 @@ For the guidelines for such a sorter-function see
 
 If a function then this function is called to sort the menu-entries of the
 combined menu-entries of the user-menu-extensions of
-`ecb-history-menu-user-extension' and the builtin-menu
+`ecb-history-menu-user-extension' and the built-in-menu
 `ecb-history-menu'. If nil then no special sorting will be done and the
-user-extensions are placed in front of the builtin-entries.
+user-extensions are placed in front of the built-in-entries.
 
 For the guidelines for such a sorter-function see
 `ecb-directories-menu-sorter'."
@@ -2022,7 +2022,7 @@ beginning if its task have to be really performed and then do them only if
 really necessary! Otherwise performance of Emacs could slow down
 dramatically!
 
-It is strongle recommended that each function added to this hook uses the
+It is strongly recommended that each function added to this hook uses the
 macro `ecb-do-if-buffer-visible-in-ecb-frame' at beginning! See
 `ecb-speedbar-current-buffer-sync' and `ecb-eshell-current-buffer-sync' for
 examples how to use this macro!"
@@ -2032,9 +2032,9 @@ examples how to use this macro!"
 (defcustom ecb-common-tree-buffer-after-create-hook nil
   "*Local hook running at the end of each tree-buffer creation.
 Every function of this hook is called once without arguments direct after
-creating a tree-buffer of ECB and it's local keymap. So for example a function
+creating a tree-buffer of ECB and it's local key-map. So for example a function
 could be added which performs calls of `local-set-key' to define new
-keybindings for EVERY tree-buffer.
+key-bindings for EVERY tree-buffer.
 
 The following keys must not be rebind in all tree-buffers:
 - <RET> and all combinations with <Shift> and <Ctrl>
@@ -2046,9 +2046,9 @@ The following keys must not be rebind in all tree-buffers:
 (defcustom ecb-directories-buffer-after-create-hook nil
   "*Local hook running after the creation of the directories-buffer.
 Every function of this hook is called once without arguments direct after
-creating the directories-buffer of ECB and it's local keymap. So for example a
+creating the directories-buffer of ECB and it's local key-map. So for example a
 function could be added which performs calls of `local-set-key' to define new
-keybindings only for the directories-buffer of ECB.
+key-bindings only for the directories-buffer of ECB.
 
 The following keys must not be rebind in the directories-buffer:
 <F2>, <F3> and <F4>"
@@ -2058,27 +2058,27 @@ The following keys must not be rebind in the directories-buffer:
 (defcustom ecb-sources-buffer-after-create-hook nil
   "*Local hook running after the creation of the sources-buffer.
 Every function of this hook is called once without arguments direct after
-creating the sources-buffer of ECB and it's local keymap. So for example a
+creating the sources-buffer of ECB and it's local key-map. So for example a
 function could be added which performs calls of `local-set-key' to define new
-keybindings only for the sources-buffer of ECB."
+key-bindings only for the sources-buffer of ECB."
   :group 'ecb-sources
   :type 'hook)
 
 (defcustom ecb-methods-buffer-after-create-hook nil
   "*Local hook running after the creation of the methods-buffer.
 Every function of this hook is called once without arguments direct after
-creating the methods-buffer of ECB and it's local keymap. So for example a
+creating the methods-buffer of ECB and it's local key-map. So for example a
 function could be added which performs calls of `local-set-key' to define new
-keybindings only for the methods-buffer of ECB."
+key-bindings only for the methods-buffer of ECB."
   :group 'ecb-methods
   :type 'hook)
 
 (defcustom ecb-history-buffer-after-create-hook nil
   "*Local hook running after the creation of the history-buffer.
 Every function of this hook is called once without arguments direct after
-creating the history-buffer of ECB and it's local keymap. So for example a
+creating the history-buffer of ECB and it's local key-map. So for example a
 function could be added which performs calls of `local-set-key' to define new
-keybindings only for the history-buffer of ECB."
+key-bindings only for the history-buffer of ECB."
   :group 'ecb-history
   :type 'hook)
 
@@ -2091,7 +2091,7 @@ keybindings only for the history-buffer of ECB."
   :type 'boolean)
 
 (defcustom ecb-non-semantic-parsing-function nil
-  "*Define mode-dependend parsing functions for non-semantic files.
+  "*Define mode-dependent parsing functions for non-semantic files.
 This is an alist where the car is a major-mode symbol and the cdr is a
 function-symbol of a function which should be used for parsing a non-semantic
 buffer, i.h. a buffer for which no semantic grammar exists. Such a function
@@ -2099,7 +2099,7 @@ gets one argument - the filename of current buffer - and has to generate and
 return a token/tag list which is understandable by
 `speedbar-insert-generic-list'. speedbar has already included two functions
 `speedbar-fetch-dynamic-imenu' and `speedbar-fetch-dynamic-etags' which can be
-used for parsing buffers with imenu resp. etags.
+used for parsing buffers with imenu rsp. etags.
 
 This option takes only effect if `ecb-process-non-semantic-files' is not nil:
 Then ECB checks for non-semantic buffers if current `major-mode' is contained
@@ -2124,7 +2124,7 @@ IMPORTANT: if imenu-parsing should be used then the option
 (defcustom ecb-non-semantic-methods-initial-expand nil
   "*Initially expand all tokens for not by semantic supported sources.
 This option can be customized on a major-mode basis, i.e. if a `major-mode' is
-contained in this option then al tokens for this modes will be initially
+contained in this option then all tokens for this modes will be initially
 expanded - otherwise not."
   :group 'ecb-methods
   :group 'ecb-non-semantic
@@ -2137,7 +2137,7 @@ expanded - otherwise not."
 This option is only relevant for sources which are supported and parsed by
 etags \(see `ecb-process-non-semantic-files'). Because etags is an external
 tool a source-buffer can only be reparsed if the buffer is saved to disk. So
-the command `ecb-rebuild-methods-buffer' checkes for sources which are not
+the command `ecb-rebuild-methods-buffer' checks for sources which are not
 supported by semantic or imenu if either this option is t or if the major-mode
 of the source-buffer is contained in this list: In both cases ECB saves the
 current source-buffer before it re-runs etags for reparsing the source.
@@ -2158,7 +2158,7 @@ imenu or etags or some other method \(for details see the option
 semantic, imenu or etags than this simply results in an empty method-buffer
 for this file. But nevertheless you will get a message \"Sorry, no support for
 a file of that extension\" which comes from the speedbar-library and can not
-switched off. Therefore if a `major-mode' is known as not parsable by
+switched off. Therefore if a `major-mode' is known as not parse-able by
 semantic, imenu or etags it can be added to this option and then it will be
 excluded from being tried to parsed."
   :group 'ecb-non-semantic
@@ -2176,7 +2176,7 @@ current source-buffer in the edit-window. The Method-buffer is only rebuild by
 `ecb-rebuild-methods-buffer-for-non-semantic' if either the hook contains no
 function \(the default) or if no function of this hook returns nil! See
 `run-hook-with-args-until-failure' for description how these function are
-prcessed."
+processed."
   :group 'ecb-methods
   :group 'ecb-non-semantic
   :type 'hook)
@@ -2245,7 +2245,7 @@ check the result if `ecb-debug-mode' is nil in which case the function
                   nil)
               ;; else, token is OK.
               t))
-        ;; Positionless tokens are also ok.
+        ;; Position-less tokens are also OK.
         t)
     ;; For no semantic-tokens a reparse makes no sense!
     (ecb-enter-debugger "Not a semantic token: %S" token)
@@ -2286,7 +2286,7 @@ check the result if `ecb-debug-mode' is nil in which case the function
              (ecb-update-methods-buffer--internal)
              (semantic-current-nonterminal)))))
   
-;; macros and fuunctions selecting ecb-windows or operating in ecb-windows
+;; macros and functions selecting ecb-windows or operating in ecb-windows
 
 (defmacro ecb-exec-in-directories-window (&rest body)
   `(unwind-protect
@@ -2602,10 +2602,10 @@ TOKENLIST otherwise TOKENLIST is returned."
 (defun ecb-group-function-tokens-with-parents (tokenlist)
   "Return a new tokenlist based on TOKENLIST where all function-tokens in
 TOKENLIST having a parent token are grouped together under a new faux token
-for this parent-token. The new tokenlist contains first all parentless tokens
+for this parent-token. The new tokenlist contains first all parent-less tokens
 and then all grouped tokens.
 
-This is usefull for oo-programming languages where the methods of a class can
+This is useful for oo-programming languages where the methods of a class can
 be defined outside the class-definition, e.g. C++, Eieio."
   (if (fboundp 'semantic-adopt-external-members)
       (semantic-adopt-external-members tokenlist)
@@ -2639,7 +2639,7 @@ be defined outside the class-definition, e.g. C++, Eieio."
                                  'type
                                  ;; if we set "struct" the protection will be
                                  ;; public, with "class" it will be private.
-                                 ;; Unfortunatelly there is no way to display
+                                 ;; Unfortunately there is no way to display
                                  ;; the right protection, but i think public
                                  ;; is better then private. The best would be
                                  ;; a blank protection symbol but this will
@@ -2655,7 +2655,7 @@ be defined outside the class-definition, e.g. C++, Eieio."
           (semantic-token-put group-token 'ecb-group-token t)
           (setq parents (cons group-token parents))))
 
-      ;; We nreverse the parentless (because build with cons) and append then
+      ;; We nreverse the parent-less (because build with cons) and append then
       ;; all the parents.
       (append (nreverse parentless) parents))))
 
@@ -2692,7 +2692,7 @@ be defined outside the class-definition, e.g. C++, Eieio."
 
 (defun ecb-add-tokens (node tokens &optional parent-token no-bucketize)
   "If NO-BUCKETIZE is not nil then TOKENS will not bucketized by
-`semantic-bucketize' but must aleady been bucketized!"
+`semantic-bucketize' but must already been bucketized!"
   (ecb-add-token-buckets node parent-token
                          (if no-bucketize
                              tokens
@@ -2878,7 +2878,7 @@ according to `ecb-sources-sort-method'."
                                         (string< ext-a ext-b)))))))
                     (t files)))
         ;; divide real files and subdirs. For really large directories ( ~ >=
-        ;; 2000 entries) this is the preformance-bottleneck in the
+        ;; 2000 entries) this is the performance-bottleneck in the
         ;; file-browser of ECB.
         (dolist (file sorted-files)
           (if (file-directory-p (ecb-fix-filename dir file))
@@ -3064,7 +3064,7 @@ even if current directory is equal to `ecb-path-selected-directory'."
     (ecb-exec-in-sources-window
      (tree-buffer-highlight-node-data ecb-path-selected-source))
 
-    ;; Update history buffer always regardless of visibilty of history window
+    ;; Update history buffer always regardless of visibility of history window
     (ecb-add-item-to-history-buffer ecb-path-selected-source)
     (ecb-sort-history-buffer)
     ;; Update the history window only if it is visible
@@ -3111,6 +3111,10 @@ alphabetically. Otherwise the most recently used buffers are on the top of the
 history and the seldom used buffers at the bottom."
   (interactive)
   (when (ecb-window-live-p ecb-history-buffer-name)
+    ;; first we remove all not anymore existing buffers
+    (let ((ecb-clear-history-behavior 'not-existing-buffers))
+      (ecb-clear-history))
+    ;; now we add the current existing file-buffers
     (mapc (lambda (buffer)
             (when (buffer-file-name buffer)
               (ecb-add-item-to-history-buffer (buffer-file-name buffer))))
@@ -3256,12 +3260,12 @@ to be rescanned/reparsed and therefore the Method-buffer will be rebuild too."
     ;; (current-buffer)) instead of ecb-path-selected-source because in case
     ;; of opening a buffer not via directory-window but via the
     ;; standard-mechanism of Emacs this function is called via hook BEFORE
-    ;; ecb-path-selected-source is set curretly by the synchronize-mechanism
+    ;; ecb-path-selected-source is set currently by the synchronize-mechanism
     ;; of ECB.
     ;; Also if we create a new cache-element for the token-tree we MUST look
     ;; if in the cache is already an element with this key and if we MUST
     ;; update this cache-element instead of always adding a new one to the
-    ;; cache. Otherwith we would get more than one cache-element for the same
+    ;; cache. Otherwise we would get more than one cache-element for the same
     ;; source!.
     
     (let* ((norm-buffer-file-name (ecb-fix-filename
@@ -3289,7 +3293,7 @@ to be rescanned/reparsed and therefore the Method-buffer will be rebuild too."
       ;; for non-semantic-sources if already a cached-tree exists and
       ;; non-semantic-rebuild is nil (i.e. no rescan and rebuild is
       ;; necessary). A not-nil value is only possible for non-semantic-sources
-      ;; and is then either 'parsed in case the parsing was successfull or
+      ;; and is then either 'parsed in case the parsing was successful or
       ;; 'parsed-failed.
 
       ;; We always make a new token-tree with updated-cache except for
@@ -3349,7 +3353,7 @@ Before rebuilding the Methods-buffer the hook
 `ecb-rebuild-non-semantic-methods-before-hook' is called. The Method-buffer is
 only rebuild if either the hook contains no function \(the default) or if no
 function of this hook returns nil! See `run-hook-with-args-until-failure' for
-description how these function are prcessed.
+description how these function are pressed.
 
 The option `ecb-auto-save-before-etags-methods-rebuild' is checked before
 rescanning the source-buffer and rebuilding the methods-buffer.
@@ -3394,7 +3398,7 @@ ECB-frame or if current source-file is not supported by semantic!"
 complete previous parser-information, means no semantic-cache is used! Point
 must stay in an edit-window otherwise nothing is done. This method is merely
 needed for semantic parsed buffers if semantic parses not the whole buffer
-because it reaches a not parsable code or for buffers not supported by
+because it reaches a not parse-able code or for buffers not supported by
 semantic but by imenu or etags.
 
 Examples when a call to this function can be necessary:
@@ -3407,7 +3411,7 @@ Examples when a call to this function can be necessary:
 
 + For not semantic supported buffers which can be parsed by imenu or etags
   \(see `ecb-process-non-semantic-files') because for these buffers there is
-  no builtin auto-rebuild mechanism. For these buffers this command calls
+  no built-in auto-rebuild mechanism. For these buffers this command calls
   `ecb-rebuild-methods-buffer-for-non-semantic'.
 
 For non-semantic-sources supported by etags the option
@@ -3641,7 +3645,7 @@ tasks are performed:
                ;;           (sit-for 0.1)
                
                ;; if the file is not located in any of the paths in
-               ;; `ecb-source-path' or in the pathes returned from
+               ;; `ecb-source-path' or in the paths returned from
                ;; `ecb-source-path-functions' we must at least add the new source
                ;; path temporally to our paths. But the uses has also the choice to
                ;; save it for future sessions too.
@@ -3649,7 +3653,7 @@ tasks are performed:
                    (let* ((norm-filename (ecb-fix-filename filename))
                           (source-path (if (car ecb-add-path-for-not-matching-files)
                                            (if (= (aref norm-filename 0) ?/)
-                                               ;; for unix-style-path we add the
+                                               ;; for Unix-style-path we add the
                                                ;; root-dir
                                                (substring norm-filename 0 1)
                                              ;; for win32-style-path we add the
@@ -3664,8 +3668,8 @@ tasks are performed:
 
                ;; now we can be sure that a matching source-path exists
                
-               ;; Klaus: The explizit update of the directories buffer is not
-               ;; necessary because the synch with the current source is done by
+               ;; Klaus: The explicit update of the directories buffer is not
+               ;; necessary because the sync with the current source is done by
                ;; `ecb-select-source-file'!
                ;;           (ecb-update-directories-buffer)
                (ecb-select-source-file filename force)
@@ -3676,7 +3680,7 @@ tasks are performed:
                ;; end of `ecb-rebuild-methods-buffer-with-tokencache' which is
                ;; called by `ecb-update-methods-buffer--internal'!
 
-               ;; selected source has changed, therfore we must initialize
+               ;; selected source has changed, therefore we must initialize
                ;; ecb-selected-token again.
                (ecb-token-sync 'force)
                )
@@ -3915,11 +3919,11 @@ combination is invalid \(see `ecb-interpret-mouse-click'."
 	     (ecb-method-clicked node ecb-button shift-mode))
 	    (t nil)))
 
-    ;; TODO: IMHO the mechanism how the pysical keys are mapped and
+    ;; TODO: IMHO the mechanism how the physical keys are mapped and
     ;; interpreted to logical ecb-buttons and -actions should now slightly be
     ;; redesigned because now we evaluate below MOUSE-PRESSED outside
     ;; ecb-interpret-mouse-click and this is not very good. But for now it
-    ;; works and it is the only location where such an outside-interpretion is
+    ;; works and it is the only location where such an outside-interpretation is
     ;; performed (Klaus).
     
     ;; now we go back to the tree-buffer but only if all of the following
@@ -4095,7 +4099,7 @@ Currently the fourth argument TREE-BUFFER-NAME is not used here."
   "Set the expand level of the nodes in the ECB-methods-buffer.
 
 This command asks in the minibuffer for an indentation level LEVEL. With this
-LEVEL you can precisely spezify which level of nodes should be expanded. LEVEL
+LEVEL you can precisely specify which level of nodes should be expanded. LEVEL
 means the indentation-level of the nodes.
 
 A LEVEL value X means that all nodes with an indentation-level <= X are
@@ -4111,7 +4115,7 @@ will be expanded/collapsed regardless of the values of these options.
 
 Examples:
 - LEVEL = 0 expands only nodes which have no indentation itself.
-- LEVEL = 2 expands nodess which are either not indented or indented once or
+- LEVEL = 2 expands nodes which are either not indented or indented once or
   twice
 - LEVEL ~ 10 should normally expand all nodes unless there are nodes which
   are indented deeper than 10.
@@ -4302,7 +4306,20 @@ can last a long time - depending of machine- and disk-performance."
          ;;     }
          ;; here we want to jump to the line "ClassX::..." and not to line
          ;; "void".
-         (search-forward (semantic-token-name token) nil t)
+         ;; But we must bind the search to the max. of either the
+         ;; end-of-line-pos or the token-end, because in some languages the
+         ;; token-name displayed in the Methods-buffer and returned by the
+         ;; parsing engine can not be found in the source-buffer. Perl is an
+         ;; example, because here imenu returns token-names like
+         ;; <package>::<function> (e.g. bigfloat::norm) but in the source
+         ;; buffer only "sub <function>" (e.g. "sub norm...") can be found.
+         ;; So to avoid finding a wrong position in the source-buffer (e.g. if
+         ;; the token-name returned by imenu is mentioned in a comment
+         ;; somewhere) we bind the search.
+         (search-forward (semantic-token-name token)
+                         (max (ecb-line-end-pos)
+                              (semantic-token-end token))
+                         t)
          (beginning-of-line-text)
          (if (and ecb-token-jump-narrow (semantic-active-p))
              (narrow-to-region (ecb-semantic-token-start token)
@@ -4319,7 +4336,7 @@ can last a long time - depending of machine- and disk-performance."
          ;; implementation of ecb-nav-token-history-item. Not longer storing
          ;; the whole token but the token-buffer and markers of token-start
          ;; and token-end. This prevents the navigation-tree from getting
-         ;; unuseable cause of invalid overlays after a full reparse!
+         ;; unusable cause of invalid overlays after a full reparse!
          (let* ((tok-buf (or (ecb-semantic-token-buffer token)
                              (current-buffer)))
                 (tok-name (semantic-token-name token))
@@ -4337,9 +4354,11 @@ can last a long time - depending of machine- and disk-performance."
 
 (defun ecb-highlight-token-header-after-jump ()
   (when ecb-highlight-token-header-after-jump
+    (require 'hideshow)
     (save-excursion
       (move-overlay ecb-method-overlay
-                    (ecb-line-beginning-pos)
+                    ;;(ecb-line-beginning-pos)
+                    (point)
                     (ecb-line-end-pos)
                     (current-buffer)))
     (setq ecb-unhighlight-hook-called nil)
@@ -4435,7 +4454,7 @@ CLICK-FORCE is not nil and always with regards to the settings in
 `ecb-show-node-info-in-minibuffer'. NODE is the node for which help text
 should be displayed, WINDOW is the related window, NO-MESSAGE defines if the
 help-text should be printed here."
-  (let ((str (ignore-errors ;; For buffers that hasnt been saved yet
+  (let ((str (ignore-errors ;; For buffers that hasn't been saved yet
                (when (or click-force
                          (ecb-show-minibuffer-info node window
                                                    ecb-sources-buffer-name))
@@ -4453,7 +4472,7 @@ CLICK-FORCE is not nil and always with regards to the settings in
 `ecb-show-node-info-in-minibuffer'. NODE is the node for which help text
 should be displayed, WINDOW is the related window, NO-MESSAGE defines if the
 help-text should be printed here."
-  (let ((str (ignore-errors ;; For buffers that hasnt been saved yet
+  (let ((str (ignore-errors ;; For buffers that hasn't been saved yet
                (when (or click-force
                          (ecb-show-minibuffer-info node window
                                                    ecb-history-buffer-name))
@@ -4969,7 +4988,7 @@ That is remove the unsupported :help stuff."
                     minor-mode-map-alist))))))
 
 (defvar ecb-mode-map nil
-  "Internal keymap for ECB minor mode.")
+  "Internal key-map for ECB minor mode.")
 
 (defcustom ecb-key-map
   '("C-c ." . ((t "f" ecb-activate)
@@ -5002,16 +5021,16 @@ That is remove the unsupported :help stuff."
                (t "," ecb-cycle-maximized-ecb-buffers)
                (t "." ecb-cycle-through-compilation-buffers)))
 
-  "*Specifies all keybindings for the ECB minor-mode keymap.
+  "*Specifies all key-bindings for the ECB minor-mode key-map.
 The value is a cons-cell where the car is a common-prefix key for all the
-keybindings. The cdr is a list of keybindings each of them a list again. A
-keybinding has the following form:
+key-bindings. The cdr is a list of key-bindings each of them a list again. A
+key-binding has the following form:
 
   '\(<common-prefix-flag> <keysequence> <function>) where
 
 <common-prefix-flag>: If t then the common-prefixkey defined as car of the
                       value \(see above) is used.
-<keysequence>: If the common prefixkey is used then the final keybinding is the
+<keysequence>: If the common prefixkey is used then the final key-binding is the
                concatenation of the common-prefixkey \(see above) and this
                keysequence.
 <function>: The function to bind to the key. This can also be a
@@ -5057,7 +5076,7 @@ macro must be written explicitly, as in \"C-c SPC\".
   :type '(cons (choice :tag "Common prefix-key"
                        (const :tag "No common prefix-key" :value nil)
                        (string :tag "Prefix-key" :value "C-c ."))
-               (repeat :tag "Keybindings"
+               (repeat :tag "Key-bindings"
                        (list :tag "Key-definition"
                              (boolean :tag "o Use common prefix-key" :value t)
                              (string :tag "o Key")
@@ -5085,14 +5104,14 @@ macro must be written explicitly, as in \"C-c SPC\".
 ;;;###autoload
 (defun ecb-activate ()
   "Activates the ECB and creates all the buffers and draws the ECB-screen
-with the actually choosen layout \(see `ecb-layout-name'). This function raises
+with the actually chosen layout \(see `ecb-layout-name'). This function raises
 always the ECB-frame if called from another frame."
   (interactive)
   (ecb-minor-mode 1))
 
 (defun ecb-activate-internal ()
   "Activates the ECB and creates all the buffers and draws the ECB-screen
-with the actually choosen layout \(see `ecb-layout-name'). This function raises
+with the actually chosen layout \(see `ecb-layout-name'). This function raises
 always the ECB-frame if called from another frame."
 
   (if ecb-use-recursive-edit
@@ -5403,8 +5422,8 @@ always the ECB-frame if called from another frame."
       ;; run personal hooks before drawing the layout
       (run-hooks 'ecb-activate-before-layout-draw-hook)
 
-      ;; now we draw the layout choosen in `ecb-layout'. This function
-      ;; acivates at its end also the adviced functions if necessary!
+      ;; now we draw the layout chosen in `ecb-layout'. This function
+      ;; activates at its end also the adviced functions if necessary!
       ;; Here are the directories- and history-buffer updated.
       (let ((ecb-redraw-layout-quickly nil))
         (ecb-redraw-layout-full 'no-buffer-sync))
@@ -5430,7 +5449,7 @@ always the ECB-frame if called from another frame."
       ;; enable mouse-tracking for the ecb-tree-buffers; we do this after running
       ;; the personal hooks because if a user put´s activation of
       ;; follow-mouse.el (`turn-on-follow-mouse') in the `ecb-activate-hook'
-      ;; then our own ECb mouse-tracking must be activated later.
+      ;; then our own ECB mouse-tracking must be activated later.
       ;; If `turn-on-follow-mouse' would be activated after our own follow-mouse
       ;; stuff, it would overwrite our mechanism and the show-node-name stuff
       ;; would not work!
@@ -5607,7 +5626,7 @@ if the minor mode is enabled.
 	("Add Source Path" ecb-add-source-path-node t)))
 
 (defvar ecb-directories-menu nil
-  "Builtin menu for the directories-buffer for directories which are not a
+  "Built-in menu for the directories-buffer for directories which are not a
 source-path of `ecb-source-path'.")
 (setq ecb-directories-menu
       (append
@@ -5624,7 +5643,7 @@ source-path of `ecb-source-path'.")
 function which is called with current node and has to return a string.")
 
 (defvar ecb-source-path-menu nil
-  "Builtin menu for the directories-buffer for directories which are elements of
+  "Built-in menu for the directories-buffer for directories which are elements of
 `ecb-source-path'.")
 (setq ecb-source-path-menu
       (append
@@ -5635,7 +5654,7 @@ function which is called with current node and has to return a string.")
 
 
 (defvar ecb-sources-menu nil
-  "Builtin menu for the sources-buffer.")
+  "Built-in menu for the sources-buffer.")
 (setq ecb-sources-menu
       '(("Grep Directory" ecb-grep-directory t)
         ("Grep Directory recursive" ecb-grep-find-directory t)
@@ -5662,7 +5681,7 @@ function which is called with current node and has to return a string.")
 
 
 ;; Klaus Berndl <klaus.berndl@sdm.de>: This is for silencing the
-;; byte-compiler. Normally there shouls be no warning which silentcomp-defun
+;; byte-compiler. Normally there should be no warning which silentcomp-defun
 ;; for hs-minor-mode is used but....argghhh.
 (if (not ecb-running-xemacs)
     (require 'hideshow))
@@ -5719,7 +5738,7 @@ this fails then nil is returned otherwise t."
   (ecb-expand-methods-nodes-internal 100 nil t))
 
 (defvar ecb-common-methods-menu nil
-  "Builtin menu for the methods-buffer.")
+  "Built-in menu for the methods-buffer.")
 (setq ecb-common-methods-menu
       '(("Undo narrowing of edit-window" ecb-methods-menu-widen t)
         ("---")
@@ -5754,7 +5773,7 @@ this fails then nil is returned otherwise t."
 `ecb-directories-menu-title-creator'.")
 
 
-;; three easy-entry functions for the history menu for conveniance
+;; three easy-entry functions for the history menu for convenience
 ;; Note: The node argument in the first two functions is not used.
 
 (defun ecb-add-history-buffers-popup (node)
@@ -5788,7 +5807,7 @@ buffers does not exist anymore."
 
 
 (defvar ecb-history-menu nil
-  "Builtin menu for the history-buffer.")
+  "Built-in menu for the history-buffer.")
 (setq ecb-history-menu
       '(("Grep Directory" ecb-grep-directory t)
         ("Grep Directory recursive" ecb-grep-find-directory t)
@@ -5826,7 +5845,7 @@ FILE.el is newer than FILE.elc or if FILE.elc doesn't exist."
 
 ;;;###autoload
 (defun ecb-byte-compile (&optional force-all)
-  "Bytecompiles the ECB package. This is done for all lisp-files of ECB if
+  "Byte-compiles the ECB package. This is done for all lisp-files of ECB if
 FORCE-ALL is not nil or for each lisp-file FILE.el which is either newer than
 FILE.elc or if FILE.elc doesn't exist."
   (interactive "P")
@@ -5869,7 +5888,7 @@ values of `ecb-major-modes-activate' and `ecb-major-modes-deactivate'.
 Because this hook of `post-command-hook' does nothing if the major-mode has not
 changed there should be no performance-problem!"
   ;; Klaus: I think we need this to prevent doing here (de)activation
-  ;; immediatelly after the button-pressed event (which is a command) because
+  ;; immediately after the button-pressed event (which is a command) because
   ;; then a mysterious window-live-p error for the minibuffer-window occurs if
   ;; we click onto a file which deactivates ECB.
   ;; With this the (de)activation is first done after the button-released
@@ -5930,7 +5949,7 @@ changed there should be no performance-problem!"
                               '(hide-all-except-activated
                                 deactivate-all-except-activated))
                       (stringp (cdr ecb-major-modes-deactivate))
-                      ;; ecb-major-modes-activate must ne a major-mode list
+                      ;; ecb-major-modes-activate must be a major-mode list
                       (listp ecb-major-modes-activate)
                       ecb-major-modes-activate
                       ;; current major-mode must not be contained in

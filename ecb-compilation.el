@@ -1,6 +1,6 @@
 ;;; ecb-compilation.el --- 
 
-;; $Id: ecb-compilation.el,v 1.22 2003/04/01 07:58:15 berndl Exp $
+;; $Id: ecb-compilation.el,v 1.23 2003/07/30 16:54:49 berndl Exp $
 
 ;; Copyright (C) 2000-2003 Free Software Foundation, Inc.
 ;; Copyright (C) 2000-2003 Kevin A. Burton (burton@openprivacy.org)
@@ -192,7 +192,7 @@ compilation-buffer - if:
 - one of the predicates returned by `ecb-compilation-predicates' returns not
   nil for the buffer.
 
-Summary for ECB-endusers: A buffer will be treated as compilation-buffer if
+Summary for ECB-end-users: A buffer will be treated as compilation-buffer if
 either 
 - `compilation-buffer-p' returns not nil, i.e. if a real compilation-buffer or
 - if at least one of the options `ecb-compilation-buffer-names',

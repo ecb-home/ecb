@@ -19,7 +19,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-upgrade.el,v 1.38 2003/07/04 16:25:45 berndl Exp $
+;; $Id: ecb-upgrade.el,v 1.39 2003/07/30 16:54:49 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -27,7 +27,7 @@
 ;;
 ;; What is the intention of this library:
 ;;
-;; Big packages like ECB will be enhanced and developed continously so
+;; Big packages like ECB will be enhanced and developed continuously so
 ;; sometimes a new version must be released. Such packages offer in general a
 ;; lot of customizable options so probably some of these options change the
 ;; type or are renamed because the old type and/or name of the option makes no
@@ -38,7 +38,7 @@
 ;; the user has saved a certain value for option X in its .emacs-file but the
 ;; type of this saved value doesn't match the new defined type in the
 ;; defcustom-form after an ECB-upgrade then there can occur serious problems
-;; like ECB can not be started anymore or even Emacs can not be startet
+;; like ECB can not be started anymore or even Emacs can not be started
 ;; without errors.
 ;;
 ;; Until now there was only one way to fix these problems: The user must
@@ -55,7 +55,7 @@
 ;;    .emacs-file the new default-value is active, so the user must
 ;;    re-customize the option X.
 ;;
-;; Ok, this is one half of the option-upgrade-problem but a new ECB-release
+;; OK, this is one half of the option-upgrade-problem but a new ECB-release
 ;; can also rename a option from name X to name Y because the new name Y makes
 ;; much more sense and/or is more mnemonic. If only the name has changed but
 ;; not the type this is not a serious problem like above but also annoying
@@ -68,7 +68,7 @@
 ;;
 ;; ecb-upgrade.el is the solution for all these problems:
 
-;; - It checks all customized values of all ECB-optons if they are still
+;; - It checks all customized values of all ECB-options if they are still
 ;;   type-compatible. If not then it tries to upgrade the old-value to the new
 ;;   value-type and if this is not possible then it resets the option to the
 ;;   new default value and store it via customize in the .emacs-file (or in
@@ -82,7 +82,7 @@
 ;; If ECB has recognized incompatible or renamed options it does its
 ;; upgrading/reseting-job so all ECB-options have correct types so ECB can
 ;; start correct. After ECB is started it displays a list of all upgraded or
-;; resetted option with their old and new values.
+;; reseted option with their old and new values.
 ;;
 ;; How does this library work:
 ;;
@@ -111,7 +111,7 @@
 ;; element-key (an old option-symbol) of this alist `ecb-option-upgrade' but
 ;; only if this element-key is not also contained in the alist
 ;; `ecb-not-compatible-options' because in this case this option has been
-;; already be upgraded/resetted by `ecb-upgrade-not-compatible-options' (see
+;; already be upgraded/reseted by `ecb-upgrade-not-compatible-options' (see
 ;; above).
 ;;
 ;; So the calling sequence of these three functions must be:
@@ -121,7 +121,7 @@
 ;; 
 ;; There are also two interactive commands:
 ;; - `ecb-display-upgraded-options' displays a temp. buffer with all upgraded
-;;   or resetted ECB-options with their old and new values.
+;;   or reseted ECB-options with their old and new values.
 ;; - `ecb-upgrade-options': Does all necessary beginning with the
 ;;   incompatibility-check and ending with the display of the options.
 ;;
@@ -539,6 +539,7 @@ new values."
 ;; all needs for the requirements check
 ;; ----------------------------------------------------------------------
 
+
 (defconst ecb-required-semantic-version-min '(1 4 2 0))
 (defconst ecb-required-semantic-version-max '(1 4 3 9))
 (defconst ecb-required-eieio-version-min '(0 17 2 0))
@@ -558,7 +559,7 @@ If JUST-CHECK is not nil then
    contains the symbol 'semantic if `semantic-version' is incorrect and 'eieio
    if `eieio-version' is incorrect.
 
-If called in noninteractive mode \(e.g. in batch-mode) then JUST-CHECK is
+If called in non-interactive mode \(e.g. in batch-mode) then JUST-CHECK is
 always true."
   (when (and (or (not (boundp 'ecb-version-check)) ecb-version-check)
              (not ecb-all-requirements-available))
@@ -745,7 +746,7 @@ always true."
   :prefix "ecb-")
 
 (defcustom ecb-download-url "http://ftp1.sourceforge.net/ecb/"
-  "*URL where downloadable ECB-versions are located.
+  "*URL where download-able ECB-versions are located.
 The ECB-archive-file \(e.g. ecb-1.70.tar.gz\) will be appended to this URL and
 `ecb-download-ecb' will try to download this archive.
 
@@ -792,31 +793,38 @@ max-versions of the required packages. For this see the file README!"
 (defcustom ecb-download-install-parent-dir (or (and (file-writable-p ecb-ecb-parent-dir)
                                                     ecb-ecb-parent-dir)
                                                "~")
-  "*Parent directory where dowloaded packages are installed.
+  "*Parent directory where downloaded packages are installed.
 
 ECB installs a downloaded package in this directory, i.e. the downloaded
 archive X.tar.gz will be extracted in this directory so afterwards this
 directory contains a new subdirectory X which contains the downloaded package.
 
-This directory must be writeable!"
+This directory must be write-able!"
   :group 'ecb-download
   :type 'directory)
 
 (defcustom ecb-download-delete-archive 'always
-  "*Should the downloaded archive be deleted after successfull
+  "*Should the downloaded archive be deleted after successful
 installation or after failure during the installation-process. Possible values
 are:
-- only-after-success: Archive is only deleted after successfull installation
+- only-after-success: Archive is only deleted after successful installation
   but not if a failure occurs during the installation process.
 - always: Archive is also deleted if an error occurs.
 - nil: Archive will never be deleted."
   :group 'ecb-download
   :type '(choice :tag "Delete archive" :menu-tag "Delete archive"
-                 (const :tag "After successfull installation" only-after-success)
+                 (const :tag "After successful installation" only-after-success)
                  (const :tag "Always" always)
                  (const :tag "Never" nil)))
 
-(defvar ecb-cedet-url "http://ftp1.sourceforge.net/cedet/")
+(defcustom ecb-cedet-url "http://ftp1.sourceforge.net/cedet/"
+  "*URL where download-able CEDET-libraries are located.
+ECB will try to download \(if necessary) required versions of the libraries
+needed by ECB: The CEDET libraries semantic, eieio and speedbar.
+
+Note: Normally this URL should never change but who knows..."
+  :group 'ecb-download
+  :type 'string)
 
 (defconst ecb-download-buffername " *ecb-download*")
 
@@ -840,7 +848,7 @@ are:
 
 (defun ecb-package-version-str2list (ver-str)
   "Convert the version-str VER-STR to the internal version-list format with
-the following elemnts of the version-list:
+the following elements of the version-list:
 1. Major-version
 2. Minor-version
 3. 0 = alpha, 1 = beta, 2 = nothing \(e.g. \"1.4\"), 3 = . \(e.g. \"1.4.3\"
@@ -947,7 +955,7 @@ return autom. the newest version-number as version-string."
                              sorted-matching-ver-str
                              nil t nil nil (caar sorted-matching-ver-str))
           (caar sorted-matching-ver-str))
-      (ecb-error "No matching versions avaiable for %s at %s."
+      (ecb-error "No matching versions available for %s at %s."
                  package package-url))))
 
 
@@ -966,7 +974,7 @@ current one is available no download will be done.
 For details about downloading and what requirements must be satisfied see
 function `ecb-package-download' and option `ecb-download-package-version-type'!
 
-After sucessfull downloading the new ECB will be installed in a subdirectory
+After successful downloading the new ECB will be installed in a subdirectory
 of `ecb-download-install-parent-dir'. After adding this new subdirectory to
 `load-path' and restarting Emacs the new ECB version can be activated by
 `ecb-activate'.
@@ -994,7 +1002,7 @@ current one is available no download will be done.
 For details about downloading and what requirements must be satisfied see
 function `ecb-package-download' and option `ecb-download-package-version-type'!
 
-After sucessfull downloading the new semantic will be installed in a
+After successful downloading the new semantic will be installed in a
 subdirectory of `ecb-download-install-parent-dir'. After adding this new
 subdirectory to `load-path' and restarting Emacs the new semantic version is
 loaded and is used after next start of ECB.
@@ -1076,7 +1084,7 @@ the full path of the directory is returned in which the new package is
 installed. Otherwise an error is reported.
 
 For correct downloading and installing the utilities \"wget\", \"tar\" and
-\"gzip\" are needed which are available for unix and also for windows with
+\"gzip\" are needed which are available for Unix and also for windows with
 cygwin. All utilities must reside in your PATH!
 
 If you are behind a firewall and you have to use a proxy you maybe need the
@@ -1094,7 +1102,7 @@ Example: For PACKAGE = \"ecb\", VERSION = \"1.90\" and URL =
 \"http://ftp1.sourceforge.net/ecb/\" the download-file would be
 \"http://ftp1.sourceforge.net/ecb/ecb-1.90.tar.gz\".
 
-After sucessfull downloading the new package version will be installed in a
+After successful downloading the new package version will be installed in a
 new subdirectory of `ecb-download-install-parent-dir'. After adding this new
 subdirectory to `load-path' and restarting Emacs the new package version can be
 activated."
@@ -1236,7 +1244,7 @@ activated."
 
 
 (defun ecb-package-get-available-versions (package package-url)
-  "Get a list of available versions of PACKAGE downloadable at PACKAGE-URL.
+  "Get a list of available versions of PACKAGE download-able at PACKAGE-URL.
 This is done with the utility \"wget\", so please see `ecb-package-download'
 for details about using \"wget\"."
   (let ((downloaded-filename (concat ecb-temp-dir "package-index.html"))
@@ -1248,7 +1256,7 @@ for details about using \"wget\"."
     (if (not (executable-find
               (if (eq system-type 'windows-nt) "wget.exe" "wget")))
         (ecb-error
-         (concat "Cannot find wget. This utilitiy is needed "
+         (concat "Cannot find wget. This utility is needed "
                  "to get available-package-list."))
 
       ;; OK, now we begin....
@@ -1295,10 +1303,25 @@ for details about using \"wget\"."
           (setq success nil)))
       (unless success
         (with-output-to-temp-buffer "*ECB-download-failure*"
+          (princ (format "Checking available versions for %s has failed cause of the following\nwget-failure:"
+                         package))
+          (princ "\n")
           (princ "______________________________________________________________________________\n\n")
           (princ process-result)
           (princ "\n______________________________________________________________________________")
-          (princ "\n\n")))
+          (princ "\n\n")
+          (princ "Please check the wget configuration in \"~/.wgetrc\" and also the value\n")
+          (princ (format "of the option %s." (if (string= package "ecb")
+                                                 "`ecb-download-url'"
+                                               "`ecb-cedet-url'")))
+          (princ " ECB has tried to get informations from\nthe following URL:\n\n")
+          (princ (concat "   " package-url))
+          (princ "\n\n")
+          (princ "Maybe this URL does not exist...please check this!\n\n")))
+;;       (princ "______________________________________________________________________________\n\n")
+;;           (princ process-result)
+;;           (princ "\n______________________________________________________________________________")
+;;           (princ "\n\n")))
       (kill-buffer ecb-download-buffername)
 
       ;; getting the list from downloaded-filename.

@@ -6,7 +6,7 @@
 ;; Maintainer: Klaus Berndl <klaus.berndl@sdm.de>
 ;; Keywords: browser, code, programming, tools
 
-;; $Id: ecb-autogen.el,v 1.8 2003/07/06 06:11:07 berndl Exp $
+;; $Id: ecb-autogen.el,v 1.9 2003/07/30 16:54:49 berndl Exp $
 
 ;; This file is not part of GNU Emacs.
 
@@ -64,7 +64,7 @@
   "Name of the auto-generated autoloads file.")
 
 (defconst ecb-autoload-feature "ecb-autoloads"
-  "Featurename of the autoloads")
+  "Feature-name of the autoloads")
 
 (defvar ecb-autogen-subdirs nil
   "Sub-directories to scan for autoloads.")

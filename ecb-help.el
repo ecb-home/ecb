@@ -31,7 +31,7 @@
 ;; For the ChangeLog of this file see the CVS-repository. For a complete
 ;; history of the ECB-package see the file NEWS.
 
-;; $Id: ecb-help.el,v 1.93 2003/03/20 16:43:31 berndl Exp $
+;; $Id: ecb-help.el,v 1.94 2003/07/30 16:54:49 berndl Exp $
 
 ;;; Code
 
@@ -88,13 +88,13 @@ HTML-online-documentation is not included."
   "*Path where the ECB online help in info format resides.
 This must be the location of the file \"ecb.info\" which comes with the ECB
 distribution. If is installed by unpacking the archive available on the ECB
-website then this is the subdir `ecb-help-info-subdir' of the installation
+web-site then this is the subdir `ecb-help-info-subdir' of the installation
 directory of ECB. If it is installed as XEmacs-package \(e.g. via the package
 manager of XEmacs) then this is probably the directory \"../../info/\"
-\(relativ to the elisp directory of ECB).
+\(relativ to the Elisp directory of ECB).
 
-The path can either be an absolute path or a path relativ to the directory
-where the elisp files of ECB are.
+The path can either be an absolute path or a path relative to the directory
+where the Elisp files of ECB are.
 
 Normally there should be no need to change this option!"
   :group 'ecb-help
@@ -122,13 +122,13 @@ Normally there should be no need to change this option!"
   "*Path where the ECB online help in HTML format resides.
 This must be the location of the file \"index.html\" which comes with the ECB
 distribution. If is installed by unpacking the archive available on the ECB
-website then this is the subdir `ecb-help-html-subdir' of the installation
+web-site then this is the subdir `ecb-help-html-subdir' of the installation
 directory of ECB. If it is installed as XEmacs-package \(e.g. via the package
 manager of XEmacs) then this is probably either the directory \"../../html/\" or
-\"../../etc/ecb/html/\" \(both relativ to the elisp directory of ECB).
+\"../../etc/ecb/html/\" \(both relative to the Elisp directory of ECB).
 
-The path can either be an absolute path or a path relativ to the directory
-where the elisp files of ECB are.
+The path can either be an absolute path or a path relative to the directory
+where the Elisp files of ECB are.
 
 Normally there should be no need to change this option!"
   :group 'ecb-help
@@ -236,10 +236,11 @@ the problem as detailed as possible!"
        ;;prepare the basic buffer
        (reporter-submit-bug-report
         ecb-problem-report-mail-address
-        (format "ECB: %s, semantic: %s, eieio: %s, JDEE: %s"
+        (format "ECB: %s, semantic: %s, eieio: %s, speedbar: %s, JDEE: %s"
                 ecb-version
                 semantic-version
                 eieio-version
+                speedbar-version
                 (if (boundp 'jde-version)
                     jde-version
                   "No JDEE"))
@@ -337,6 +338,17 @@ could be interesting for support."
                              (function (lambda (l r)
                                          (string< (symbol-name l)
                                                   (symbol-name r))))))
+        (speedbar-vars (sort '(speedbar-dynamic-tags-function-list
+                               speedbar-tag-hierarchy-method
+                               speedbar-tag-group-name-minimum-length
+                               speedbar-tag-split-minimum-length
+                               speedbar-tag-regroup-maximum-length
+                               speedbar-fetch-etags-command
+                               speedbar-fetch-etags-arguments
+                               speedbar-fetch-etags-parse-list)
+                             (function (lambda (l r)
+                                         (string< (symbol-name l)
+                                                  (symbol-name r))))))
         (ecb-options (mapcar
                       'intern
                       (sort
@@ -354,7 +366,8 @@ could be interesting for support."
                                  (function (lambda (l r)
                                              (string< (symbol-name l)
                                                       (symbol-name r)))))))
-    (append emacs-vars semantic-vars ecb-internal-vars ecb-options)))
+    (append emacs-vars semantic-vars speedbar-vars
+            ecb-internal-vars ecb-options)))
 
 
 (silentcomp-provide 'ecb-help)
