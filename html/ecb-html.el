@@ -21,7 +21,7 @@
 
 ;; Generates ECB HTML pages.
 
-;; $Id: ecb-html.el,v 1.8 2001/05/22 12:47:56 berndl Exp $
+;; $Id: ecb-html.el,v 1.9 2001/05/28 20:36:59 creator Exp $
 
 ;;; Code:
 
@@ -167,6 +167,7 @@
 		 ("mailto:mayhem@home.se" "Jesper Nordenberg")
 		 ("mailto:klaus.berndl@sdm.de" "Klaus Berndl")
 		 ("mailto:burton@apache.org" "Kevin A. Burton")
+		 ("mailto:zappo@gnu.org" "Eric M. Ludlam")
 		 )))
 
    (h-section "Feedback"
@@ -323,6 +324,8 @@
     (h-bullet-link-list
      ecb-bullet
      (list 
+      (list (concat ecb-download-url "ecb-1.20.zip") "ecb-1.20.zip")
+      (list (concat ecb-download-url "ecb-1.20.tar.gz") "ecb-1.20.tar.gz")
       (list (concat ecb-download-url "ecb-1.10.zip") "ecb-1.10.zip")
       (list (concat ecb-download-url "ecb-1.0.zip") "ecb-1.0.zip")
       '("jde-jcb-0.04.zip")
