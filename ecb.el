@@ -698,11 +698,6 @@ Therefore the default value is a delay of 0.25 seconds."
 after jumping to this method by clicking in the ECB-method-buffer onto this
 method. For highlighting `ecb-token-header-face' is used."
   :group 'ecb-methods
-;;   :set (function (lambda (symbol value)
-;;                    (set symbol value)
-;;                    (if 
-;;                        (overlay-put ecb-method-overlay 'face
-;;                                     ecb-token-header-face))))
   :type 'boolean)
 
 (defcustom ecb-scroll-window-after-jump nil
