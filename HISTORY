@@ -1,6 +1,14 @@
 Version 1.70:
 -------------
 
+- New feature: From ECB version 1.70 on ECB checks if the current value of an
+  ECB-option OPT is not compatible with the type of OPT in current
+  ECB-release. This is done during activation. If there are incompatible
+  options ECB resets them to the default value of current ECB release and
+  displays after activation in a temporary window which options have been
+  reset, inkl. their old-value (before the reset) and new-value (after the
+  reset. (Klaus)
+
 - New feature ecb-tree-navigation-by-arrow: Smarter navigation in the
   tree-windows with left- and right-arrow key (Klaus).
   Thanks for the suggestion and a first implementation to Geert Ribbers

@@ -54,7 +54,7 @@
 ;; The latest version of the ECB is available at
 ;; http://home.swipnet.se/mayhem/ecb.html
 
-;; $Id: ecb.el,v 1.193 2002/02/24 18:51:43 berndl Exp $
+;; $Id: ecb.el,v 1.194 2002/02/25 10:49:54 berndl Exp $
 
 ;;; Code:
 
@@ -848,7 +848,7 @@ For XEmacs this merge does currently not work therefore here FACE replaces all
 faces of TEXT!"
   (let ((newtext (concat text)))
     (if running-xemacs
-        (put-text-property 0 (length newtext) 'face face newtext)
+        (add-text-properties 0 (length newtext) (list 'face face) newtext)
       (alter-text-property 0 (length newtext) 'face
                            (lambda (current-face)
                              (let ((cf
@@ -1542,55 +1542,58 @@ and then all grouped tokens.
 
 This is usefull for oo-programming languages where the methods of a class can
 be defined outside the class-definition, e.g. C++, Eieio."
-  (let ((parent-alist nil)
-        (parents nil)
-        (parentless nil))
-    (while tokenlist
-      (cond ((and (eq (semantic-token-token (car tokenlist)) 'function)
-                  (semantic-token-function-parent (car tokenlist)))
-             ;; Find or Create a faux parent token in `parents'
-             ;; and add this token to it.
-             (let ((elem (assoc (semantic-token-function-parent (car tokenlist))
-                                parent-alist)))
-               (if elem
-                   (setcdr elem (cons (car tokenlist) (cdr elem)))
-                 (setq parent-alist
-                       (cons (cons (semantic-token-function-parent (car
-                                                                    tokenlist))
-                                   (list (car tokenlist)))
-                             parent-alist)))))
-            (t
-             (setq parentless (cons (car tokenlist) parentless))))
-      (setq tokenlist (cdr tokenlist)))
-    ;; now we have an alist with an element for each parent where the key is
-    ;; the class-name (string) and the value is a list of all method-tokens
-    ;; for this class.
+  ;; current version of semantic-adopt-external-members has really problems!
+;;   (if (fboundp 'semantic-adopt-external-members)
+;;       (semantic-adopt-external-members tokenlist)
+    (let ((parent-alist nil)
+          (parents nil)
+          (parentless nil))
+      (while tokenlist
+        (cond ((and (eq (semantic-token-token (car tokenlist)) 'function)
+                    (semantic-token-function-parent (car tokenlist)))
+               ;; Find or Create a faux parent token in `parents'
+               ;; and add this token to it.
+               (let ((elem (assoc (semantic-token-function-parent (car tokenlist))
+                                  parent-alist)))
+                 (if elem
+                     (setcdr elem (cons (car tokenlist) (cdr elem)))
+                   (setq parent-alist
+                         (cons (cons (semantic-token-function-parent (car
+                                                                      tokenlist))
+                                     (list (car tokenlist)))
+                               parent-alist)))))
+              (t
+               (setq parentless (cons (car tokenlist) parentless))))
+        (setq tokenlist (cdr tokenlist)))
+      ;; now we have an alist with an element for each parent where the key is
+      ;; the class-name (string) and the value is a list of all method-tokens
+      ;; for this class.
 
-    ;; Now we must build a new token-list
-    (dolist (alist-elem parent-alist)
-      (let ((group-token (list (concat (car alist-elem) " (Methods)")
-                               'type
-                               ;; if we set "struct" the protection will be
-                               ;; public, with "class" it will be private.
-                               ;; Unfortunatelly there is no way to display
-                               ;; the right protection, but i think public
-                               ;; is better then private. The best would be
-                               ;; a blank protection symbol but this will
-                               ;; be first available with semantic-1.4beta13.
-                               "struct"
-                               ;; the PART-LIST, means all the methods of
-                               ;; this class. But first we must nreverse
-                               ;; the list because we have build the list
-                               ;; with cons.
-                               (nreverse (cdr alist-elem))
-                               nil nil nil nil nil)))
-        ;; now we mark our new group token
-        (semantic-token-put group-token 'ecb-group-token t)
-        (setq parents (cons group-token parents))))
+      ;; Now we must build a new token-list
+      (dolist (alist-elem parent-alist)
+        (let ((group-token (list (concat (car alist-elem) " (Methods)")
+                                 'type
+                                 ;; if we set "struct" the protection will be
+                                 ;; public, with "class" it will be private.
+                                 ;; Unfortunatelly there is no way to display
+                                 ;; the right protection, but i think public
+                                 ;; is better then private. The best would be
+                                 ;; a blank protection symbol but this will
+                                ;; be first available with semantic-1.4beta13.
+                                 "struct"
+                                 ;; the PART-LIST, means all the methods of
+                                 ;; this class. But first we must nreverse
+                                 ;; the list because we have build the list
+                                 ;; with cons.
+                                 (nreverse (cdr alist-elem))
+                                 nil nil nil nil nil)))
+          ;; now we mark our new group token
+          (semantic-token-put group-token 'ecb-group-token t)
+          (setq parents (cons group-token parents))))
 
-    ;; We nreverse the parentless (because build with cons) and append then
-    ;; all the parents.
-    (append (nreverse parentless) parents)))    
+      ;; We nreverse the parentless (because build with cons) and append then
+      ;; all the parents.
+      (append (nreverse parentless) parents)))
 
 (defun ecb-dump-toplevel ()
   (interactive)
@@ -3111,6 +3114,60 @@ macro must be written explicitly, as in \"C-c SPC\".
                    ;; replace the values in the alists
                    (ecb-add-to-minor-modes))))
 
+(defvar ecb-not-compatible-options nil)
+
+(defun ecb-reset-not-compatible-options ()
+  "Reset all not anymore compatible options to their default-values and
+store this options for later display in `ecb-not-compatible-options'."
+  ;; reset all with current version not compatible options to their new
+  ;; default values.
+
+  (setq ecb-not-compatible-options nil)
+  
+  ;; ecb-token-display-function
+  (when (not (listp ecb-token-display-function))
+    (setq ecb-not-compatible-options (cons (cons 'ecb-token-display-function
+                                                 ecb-token-display-function)
+                                           ecb-not-compatible-options))
+    (customize-save-variable 'ecb-token-display-function
+                             (car (cdar (get 'ecb-token-display-function
+                                             'standard-value)))))
+
+  ;; maybe we need here more resttings in future...
+  )
+
+(defun ecb-display-reset-options ()
+  "Display a message-buffer which options have been reset."
+  (when ecb-not-compatible-options
+    (with-output-to-temp-buffer "*ECB reset options*"
+      (princ (format "ECB %s has reset the following options to the new default values\nof current ECB because the old customized values are not compatible.\nPlease re-customize if the new default value is not what you need!"
+                     ecb-version))
+      (princ "\n\n")
+      (while ecb-not-compatible-options
+        (let ((option-name (symbol-name (car (car ecb-not-compatible-options))))
+              (old-value (cdr (car ecb-not-compatible-options)))
+              (new-value (symbol-value (car (car ecb-not-compatible-options)))))
+          (princ (concat "+ Option :   " option-name))
+          (princ "\n")
+          (princ (concat "  Old value: "
+                         (if (and (not (equal old-value nil))
+                                  (not (equal old-value t))
+                                  (or (symbolp old-value)
+                                      (listp old-value)))
+                             "'")
+                         (prin1-to-string old-value)))
+          (princ "\n")
+          (princ (concat "  New value: "
+                         (if (and (not (equal new-value nil))
+                                  (not (equal new-value t))
+                                  (or (symbolp new-value)
+                                      (listp new-value)))
+                             "'")
+                         (prin1-to-string new-value)))
+          (princ "\n\n"))
+        (setq ecb-not-compatible-options (cdr ecb-not-compatible-options)))
+      (print-help-return-message))))
+
 (defun ecb-activate ()
   "Activates the ECB and creates all the buffers and draws the ECB-screen
 with the actually choosen layout \(see `ecb-layout-nr'). This function raises
@@ -3150,6 +3207,9 @@ always the ECB-frame if called from another frame."
 	(ecb-redraw-layout)
 	(ecb-update-directories-buffer))
 
+    ;; maybe we must reset some not anymore compatible options
+    (ecb-reset-not-compatible-options)
+    
     (setq ecb-old-compilation-window-height compilation-window-height)
     
     ;; first initialize the whole layout-engine
@@ -3330,6 +3390,9 @@ always the ECB-frame if called from another frame."
     
     (message "The ECB is now activated.")
 
+    ;; now we display all `ecb-not-compatible-options'
+    (ecb-display-reset-options)
+    
     ;;now take a snapshot of the current window configuration
     (ecb-set-activated-window-configuration)))
 
