@@ -68,7 +68,7 @@
 ;; The latest version of the ECB is available at
 ;; http://ecb.sourceforge.net
 
-;; $Id: ecb.el,v 1.299 2003/03/19 15:35:08 berndl Exp $
+;; $Id: ecb.el,v 1.300 2003/03/19 16:29:07 berndl Exp $
 
 ;;; Code:
 
@@ -229,8 +229,8 @@ always true."
                              eieio-required-version-str-max "]:\n  "))
               (princ eieio-state)
               (princ "\n\n")
-              (princ "After adding the new directory to your `load-path' and then restarting\n")
-              (princ "Emacs the new package(s) can be activated.\n\n")
+              (princ "After adding the new directories to your `load-path' and then restarting\n")
+              (princ "Emacs and ECB the new packages will be used.\n\n")
               (princ "\n\n"))
             (ecb-error "Please restart Emacs with the required packages!")))))))
 
@@ -238,20 +238,24 @@ always true."
 ;; if we miss some of the requirements we offer the user to download and
 ;; install them if Emacs ist started interactive or - in batch mode - we
 ;; report an error.
-(when (or (not (locate-library "semantic"))
-          (not (locate-library "eieio")))
-  (if (ecb-noninteractive)
-      (ecb-error "Missing requirements: ECB needs semantic and eieio!")
-    (ecb-check-requirements)))
+(let* ((semantic-load-ok (condition-case nil
+                             (require 'semantic)
+                           (error nil)))
+       (eieio-load-ok (condition-case nil
+                          (require 'eieio)
+                        (error nil)))
+       (missing-msg (concat (if (not semantic-load-ok) "package semantic")
+                            (when (not eieio-load-ok)
+                              (concat (if (not semantic-load-ok) " and the ")
+                                      "package eieio")))))
+  (when (not (and semantic-load-ok eieio-load-ok))
+    (if (ecb-noninteractive)
+        (ecb-error "ECB is missing the %s!" missing-msg)
+      (ecb-check-requirements))))
 
-;; If we are here we can load ECB because at least we have installed all
-;; required packages. If they have correct version will be checked at
-;; start- or byte-compile-time
-
-;; semantic load
-(require 'semantic)
-;; eieio load
-(require 'eieio)
+;; If we are here we can load ECB because at least we have installed and
+;; loaded all required packages. If they have correct version will be checked
+;; at start- or byte-compile-time
 
 
 (message "ECB %s uses semantic %s and eieio %s" ecb-version
