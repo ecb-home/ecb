@@ -11,7 +11,7 @@ EMACS=emacs
 # (use always forward-slashes as directory-separator even with MS Windows
 # systems). Make sure you compile ECB with the semantic version you load
 # into Emacs!
-LOADPATH=../semantic-1.4beta8 ../jde-2.2.8beta1/lisp
+LOADPATH=../semantic-1.4beta9 ../jde-2.2.8/lisp
 
 # Two ways to build ECB:
 # - Call "make" to byte-compile the ECB. You can savely ignore the messages.
@@ -22,9 +22,9 @@ LOADPATH=../semantic-1.4beta8 ../jde-2.2.8beta1/lisp
 
 # Do not change anything below!
 
-# $Id: Makefile,v 1.12 2001/07/16 18:21:40 berndl Exp $
+# $Id: Makefile,v 1.13 2001/08/29 12:55:43 berndl Exp $
 
-ecb_LISP_EL=tree-buffer.el ecb-util.el ecb-mode-line.el ecb-help.el ecb-layout.el ecb.el
+ecb_LISP_EL=tree-buffer.el ecb-util.el ecb-mode-line.el ecb-help.el ecb-layout.el ecb-navigate.el ecb.el
 ecb_LISP_ELC=$(ecb_LISP_EL:.el=.elc)
 
 all: $(ecb_LISP_EL)

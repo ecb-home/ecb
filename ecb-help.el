@@ -26,7 +26,7 @@
 ;;
 ;; Contains all online-help for ECB (stolen something from recentf.el)
 
-;; $Id: ecb-help.el,v 1.42 2001/07/20 09:38:44 berndl Exp $
+;; $Id: ecb-help.el,v 1.43 2001/08/29 12:55:44 berndl Exp $
 
 ;;; Code
 
@@ -235,11 +235,7 @@ The behavior of the adviced functions is:
 **Attention**:
 If you want to work within the edit-window with splitting and unsplitting the
 edit-window\(s) it is highly recommended to use the adviced-functions of ECB
-instead of the original Emacs-functions \(see above). For example the adviced
-`other-window' can only work correctly if you split the edit window with the
-adviced `split-window-vertically' \(or horizontally) and NOT with the original
-`split-window-vertically'!
-
+instead of the original Emacs-functions \(see above).
 Per default ECB does advice all of the functions mentioned above but with the
 option `ecb-advice-window-functions' you can customizes which functions should
 be adviced by ECB. Please read carefully the documentation of this option!
@@ -470,7 +466,7 @@ solutions/hints/workarounds:
 3. Package avoid.el
    With GNU Emacs ECB must deactivate `mouse-avoidance-mode' if the option
    `ecb-show-node-name-in-minibuffer' is set to either 'if-too-long or
-   'always. This is only be done as long ECB is activated.
+   'always. This is done automatically but only as long ECB is activated.
 
 4. Package calendar.el:
    With activated ECB `calendar' does not shrink it´s window to the small size
@@ -481,6 +477,14 @@ solutions/hints/workarounds:
                               \(/= \(frame-width) \(window-width))
                               \(and ecb-minor-mode \(ecb-point-in-edit-window)))
                           \(shrink-window \(- (window-height) 9)))))
+
+5. Package calculator.el:
+   If the edit-window is already splitted then calling `calculator' uses the
+   whole \"other\" edit-window for the calculator. With an unsplitted
+   edit-window the calculator window has it´s normal size of about 2 lines.
+   Therefore it´s recommended to set `calculator-electric-mode' to not nil so
+   calculator uses always the echo-area instead of creating a new small
+   window!
 
 ")
 

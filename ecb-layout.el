@@ -125,7 +125,7 @@
 ;;   + The edit-window must not be splitted and the point must reside in
 ;;     the not deleted edit-window.
 
-;; $Id: ecb-layout.el,v 1.75 2001/08/12 12:29:24 creator Exp $
+;; $Id: ecb-layout.el,v 1.76 2001/08/29 12:55:44 berndl Exp $
 
 ;;; Code:
 
@@ -924,15 +924,19 @@ original function with the following ECB-ajustment:
 If called in an unsplitted edit-window then the edit window will be splitted
 horizontally.
 If called in an already splitted edit-window then nothing is done.
-If called in any other window of the current ECB-layout it jumps first in the
-\(first) edit-window and does then it´s job \(see above)."
+If called in any other window of the current ECB-layout it stops with an
+error!"
   (if (not (equal (selected-frame) ecb-frame))
       ad-do-it
-    (if (not (ecb-point-in-edit-window))
-        (ecb-select-edit-window))
-    (when (and (not (ecb-edit-window-splitted))
-               (equal (selected-window) ecb-edit-window))
-      ad-do-it)))
+    (let ((p (ecb-point-in-edit-window)))
+      (if (not p)
+          (error "Only the edit-window of ECB is splitable!")
+        ;; point either in first or second edit-window
+        (if (not (ecb-edit-window-splitted))
+            ad-do-it
+          ;; if already splitted return the "other" edit-window
+          (setq ad-return-value
+                (if (= p 1) (next-window) ecb-edit-window)))))))
 
 (defadvice split-window-vertically (around ecb)
   "The ECB-version of `split-window-vertically'. Works exactly like the
@@ -941,16 +945,19 @@ original function with the following ECB-ajustment:
 Called in an unsplitted edit-window then the edit window will be splitted
 vertically.
 If called in an already splitted edit-window then nothing is done.
-If called in any other window of the current ECB-layout it jumps first in the
-\(first) edit-window and does then it´s job \(see above)."
+If called in any other window of the current ECB-layout it stops with an
+error."
   (if (not (equal (selected-frame) ecb-frame))
       ad-do-it
-    (if (not (ecb-point-in-edit-window))
-        (ecb-select-edit-window))
-    (when (and (not (ecb-edit-window-splitted))
-               (equal (selected-window) ecb-edit-window))
-      ad-do-it)))
-
+    (let ((p (ecb-point-in-edit-window)))
+      (if (not p)
+          (error "Only the edit-window of ECB is splitable!")
+        ;; point either in first or second edit-window
+        (if (not (ecb-edit-window-splitted))
+            ad-do-it
+          ;; if already splitted return the "other" edit-window
+          (setq ad-return-value
+                (if (= p 1) (next-window) ecb-edit-window)))))))
 
 (defadvice switch-to-buffer-other-window (around ecb)
   "The ECB-version of `switch-to-buffer-other-window'. Works exactly
