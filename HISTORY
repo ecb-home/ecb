@@ -1,6 +1,9 @@
 Version 1.xx:
 -------------
 
+- Incremental node-search in the ECB-buffers now uses the value of
+  `case-fold-search'. (Klaus)
+
 - Complete new customization of the ECB-keybindings. The option
   `ecb-prefix-key' has been removed. There is one new option `ecb-key-map'
   where you can customize all keysettings of ECB (including a common
