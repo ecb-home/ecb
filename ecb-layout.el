@@ -181,6 +181,16 @@ layout with `ecb-redraw-layout'"
   :type '(radio (const :tag "No compilation window" nil)
                 (number :tag "Window height")))
 
+(defcustom ecb-split-edit-window 'horizontal
+  "*Sets how and if the edit window should be splitted."
+  :group 'ecb-layout
+  :type '(radio (const :tag "Split horizontally"
+                       :value horizontal)
+		(const :tag "Split vertically"
+                       :value vertical)
+                (const :tag "Do not split"
+                       :value nil)))
+
 (defcustom ecb-select-compile-window nil
   "*Set this to non nil if compilation-output is not displayed in the
 ECB-compile-window of the choosen ECB-layout. Normally this should not be
@@ -701,6 +711,8 @@ this function the edit-window is selected."
 
     ;; Maybe we must split the editing window again if it was splitted before
     ;; the redraw
+    (setq ecb-layout-edit-window-splitted ecb-split-edit-window)
+    
     (cond ((eq ecb-layout-edit-window-splitted 'horizontal)
            (ecb-split-hor 0.5 t))
           ((eq ecb-layout-edit-window-splitted 'vertical)
