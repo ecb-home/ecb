@@ -1,3 +1,6 @@
+- Prevent layout-engine from splitting windows when smaller than
+  window-min-height/width.
+
 - Maybe compile-window shrinking should be done by restoring a previously
   saved window-config?!
 

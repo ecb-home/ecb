@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb.el,v 1.399 2004/08/12 14:05:04 berndl Exp $
+;; $Id: ecb.el,v 1.400 2004/08/27 15:42:14 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -1145,9 +1145,9 @@ and return the window-object. If that buffer is not displayed in the
 ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: XXX: --> layout
 (defun ecb-goto-ecb-window (name)
   "Select that special ecb-window with name NAME. Only names defined
-for the current layout \(see `ecb-tree-buffers-of-current-layout') or the
-buffer-name of the integrated speedbar are accepted. If such a window can not
-be selected then probably because another ecb-window of current layout is
+for the current layout \(see `ecb-special-ecb-buffers-of-current-layout') or
+the buffer-name of the integrated speedbar are accepted. If such a window can
+not be selected then probably because another ecb-window of current layout is
 currently maximized; therefore in such a case the layout has been redrawn and
 then tried to select the window again. This function does nothing if NAME
 fulfills not the described conditions or if the ecb-windows are hidden or ECB
@@ -1155,7 +1155,7 @@ is not active. If necessary the `ecb-frame' will be first raised."
   (when (and ecb-minor-mode
              (not ecb-windows-hidden)
              (or (equal name ecb-speedbar-buffer-name)
-                 (member name ecb-tree-buffers-of-current-layout)))
+                 (member name ecb-special-ecb-buffers-of-current-layout)))
     (raise-frame ecb-frame)
     (select-frame ecb-frame)
     (or (ecb-window-select name)
@@ -1946,28 +1946,28 @@ That is remove the unsupported :help stuff."
      ["Directories"
       ecb-goto-window-directories
       :active (member ecb-directories-buffer-name
-                      ecb-tree-buffers-of-current-layout)
+                      ecb-special-ecb-buffers-of-current-layout)
       :help "Go to the directories window"
       ])
     (ecb-menu-item
      ["Sources"
       ecb-goto-window-sources
       :active (member ecb-sources-buffer-name
-                      ecb-tree-buffers-of-current-layout)
+                      ecb-special-ecb-buffers-of-current-layout)
       :help "Go to the sources window"
       ])
     (ecb-menu-item
      ["Methods and Variables"
       ecb-goto-window-methods
       :active (member ecb-methods-buffer-name
-                      ecb-tree-buffers-of-current-layout)
+                      ecb-special-ecb-buffers-of-current-layout)
       :help "Go to the methods/variables window"
       ])
     (ecb-menu-item
      ["History"
       ecb-goto-window-history
       :active (member ecb-history-buffer-name
-                      ecb-tree-buffers-of-current-layout)
+                      ecb-special-ecb-buffers-of-current-layout)
       :help "Go to the history window"
       ])
     (ecb-menu-item
@@ -1975,7 +1975,7 @@ That is remove the unsupported :help stuff."
       ecb-goto-window-speedbar
       :active (and ecb-use-speedbar-instead-native-tree-buffer
                    (member ecb-speedbar-buffer-name
-                           ecb-tree-buffers-of-current-layout))
+                           ecb-special-ecb-buffers-of-current-layout))
       :help "Go to the integrated speedbar window"
       ])
     (ecb-menu-item
@@ -1991,28 +1991,28 @@ That is remove the unsupported :help stuff."
      ["Directories"
       ecb-maximize-window-directories
       :active (member ecb-directories-buffer-name
-                      ecb-tree-buffers-of-current-layout)
+                      ecb-special-ecb-buffers-of-current-layout)
       :help "Maximize the directories window - even if currently not visible"
       ])
     (ecb-menu-item
      ["Sources"
       ecb-maximize-window-sources
       :active (member ecb-sources-buffer-name
-                      ecb-tree-buffers-of-current-layout)
+                      ecb-special-ecb-buffers-of-current-layout)
       :help "Maximize the sources window - even if currently not visible"
       ])
     (ecb-menu-item
      ["Methods and Variables"
       ecb-maximize-window-methods
       :active (member ecb-methods-buffer-name
-                      ecb-tree-buffers-of-current-layout)
+                      ecb-special-ecb-buffers-of-current-layout)
       :help "Maximize the methods/variables window - even if currently not visible"
       ])
     (ecb-menu-item
      ["History"
       ecb-maximize-window-history
       :active (member ecb-history-buffer-name
-                      ecb-tree-buffers-of-current-layout)
+                      ecb-special-ecb-buffers-of-current-layout)
       :help "Maximize the history window - even if currently not visible"
       ])
     (ecb-menu-item
@@ -2020,7 +2020,7 @@ That is remove the unsupported :help stuff."
       ecb-maximize-window-speedbar
       :active (and ecb-use-speedbar-instead-native-tree-buffer
                    (member ecb-speedbar-buffer-name
-                           ecb-tree-buffers-of-current-layout))
+                           ecb-special-ecb-buffers-of-current-layout))
       :help "Maximize the integrated speedbar window - even if not visible"
       ])
     )
@@ -2570,6 +2570,8 @@ ECB has been deactivated. Do not set this variable!")
                                                     'ecb-layout-post-command-hook)
             (ecb-activate-ecb-autocontrol-functions 'pre
                                                     'ecb-layout-pre-command-hook)
+            (ecb-activate-ecb-autocontrol-functions 0.25
+                                                    'ecb-repair-only-ecb-window-layout)
             (add-hook 'after-save-hook 'ecb-update-methods-after-saving)
             (add-hook 'kill-buffer-hook 'ecb-kill-buffer-hook)
 

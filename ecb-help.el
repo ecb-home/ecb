@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-help.el,v 1.107 2004/08/18 16:07:18 berndl Exp $
+;; $Id: ecb-help.el,v 1.108 2004/08/27 15:42:22 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -436,7 +436,7 @@ could be interesting for support."
                                    ecb-windows-hidden
                                    ecb-toggle-layout-state
                                    ecb-current-maximized-ecb-buffer-name
-                                   ecb-tree-buffers-of-current-layout)
+                                   ecb-special-ecb-buffers-of-current-layout)
                                  (function (lambda (l r)
                                              (ecb-string< (symbol-name l)
                                                           (symbol-name r)))))))
