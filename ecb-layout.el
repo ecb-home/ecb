@@ -124,7 +124,7 @@
 ;;   + The edit-window must not be splitted and the point must reside in
 ;;     the not deleted edit-window.
 
-;; $Id: ecb-layout.el,v 1.93 2002/01/22 01:19:20 burtonator Exp $
+;; $Id: ecb-layout.el,v 1.94 2002/01/22 06:36:25 burtonator Exp $
 
 ;;; Code:
 
@@ -1523,12 +1523,15 @@ this function the edit-window is selected which was current before redrawing."
     
       (if (and ecb-edit-window (window-live-p ecb-edit-window))
           (setq main-window-buffer (window-buffer ecb-edit-window))
-        (error "ECB quick redraw: ecb-edit-window not alive!"))
+        (setq compilation-window-buffer "*scratch*")
+        (message "ECB quick redraw: ecb-edit-window not alive!"))
 
       (if ecb-compile-window
           (if (window-live-p ecb-compile-window)
               (setq compilation-window-buffer (window-buffer ecb-compile-window))
-            (error "ECB quick redraw: ecb-compile-window not alive!")))
+
+            (setq compilation-window-buffer "*scratch*")
+            (message "ECB quick redraw: ecb-compile-window not alive!")))
     
       (set-window-configuration ecb-activated-window-configuration)
 

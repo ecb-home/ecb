@@ -1,6 +1,6 @@
 ;;; ecb-eshell.el --- eshell integration for the ECB.
 
-;; $Id: ecb-eshell.el,v 1.22 2002/01/22 01:36:57 burtonator Exp $
+;; $Id: ecb-eshell.el,v 1.23 2002/01/22 06:36:25 burtonator Exp $
 
 ;; Copyright (C) 2000-2003 Free Software Foundation, Inc.
 ;; Copyright (C) 2000-2003 Kevin A. Burton (burton@openprivacy.org)
@@ -58,7 +58,7 @@
 ;;; History:
 ;;
 ;; - Tue Dec 25 2001 07:54 PM (burton@openprivacy.org): We now enlarge the ecb
-;;   window when you goto it.
+;;   window when you go to it.
 ;;    
 ;; - Sat Dec 15 2001 01:50 AM (burton@openprivacy.org): We are not being much
 ;;   smarter about saving selected windows.
