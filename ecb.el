@@ -990,34 +990,49 @@ mouse. There are currently three different types of ECB-windows:
 
 1. ECB Directories:
 
-Select directories and, if enabled, source files, in the \"*ECB Directories*\"
-buffer by clicking the left mouse button on the directory name or by hitting
-ENTER/RETURN when the cursor is placed on the item line. Directory names with
-a \"[+]\" symbol after \(or before) them can be expanded/collapsed by
-left-clicking on the symbol, pressing the TAB key when the cursor is placed on
-the package line or clicking the middle mouse button on the item. Right
-clicking on an item will open a popup menu where different operations on the
-item under the mouse cursor can be performed.
+- Select directories and, if enabled, source files, in the \"*ECB Directories*\"
+  buffer by clicking the left mouse button on the directory name or by hitting
+  ENTER/RETURN when the cursor is placed on the item line.
 
-Pressing F1 in the packages buffer will update it. Pressing F2 will open the
-ECB customization group in the edit window ECB Sources:
+- Directory names with a \"[+]\" symbol after \(or before) them can be
+  expanded/collapsed by left-clicking on the symbol, pressing the TAB key when
+  the cursor is placed on the package line or clicking the middle mouse button
+  on the item.
+
+- Right clicking on an item will open a popup menu where different operations
+  on the item under the mouse cursor can be performed.
+
+- Pressing F1 in the packages buffer will update it. Pressing F2 will open the
+  ECB customization group in the edit window ECB Sources:
 
 2. ECB Sources:
 
-Source files can be select by clicking the left mouse button or hitting
-ENTER/RETURN on the source row in the \"*ECB Sources*\" or \"*ECB History*\"
-windows. Clicking on the source file with the middle mouse button will open
-the class file in the other edit window. Right clicking on a source file will
-open a popup menu where different operation on the item under the mouse cursor
-can be performed.
+- Source files can be select by clicking the left mouse button or hitting
+  ENTER/RETURN on the source row in the \"*ECB Sources*\" or \"*ECB History*\"
+  windows.
+
+  IMPORTANT: If you hold down the SHIFT-key while clicking with the left mouse
+  button on a source row in the \"*ECB Sources*\" or \"*ECB History*\" windows
+  then the source will not be displayed in the edit-window but it will be
+  scanned in the background and all it´s methods and variables are listed in
+  the \"ECB Methods\" window. So you can get an overlook over the source
+  without changing the buffer in the edit-window.
+
+- Clicking on the source file with the middle mouse button will open the class
+  file in the other edit window.
+
+- Right clicking on a source file will open a popup menu where different
+  operation on the item under the mouse cursor can be performed.
 
 3. ECB Methods:
 
-The \"*ECB Methods*\" buffer contains the methods \(and variables, if you
-want) in the selected source file. When a method/variable is selected with the
-left mouse button or ENTER/RETURN the edit buffer will jump to the
-method/variable. Clicking on a method/variable with the middle mouse button
-will jump to the method in the other edit window.
+- The \"*ECB Methods*\" buffer contains the methods \(and variables, if you
+  want) in the selected source file. When a method/variable is selected with
+  the left mouse button or ENTER/RETURN the edit buffer will jump to the
+  method/variable.
+
+- Clicking on a method/variable with the middle mouse button will jump to the
+  method in the other edit window.
 
 In addition to these ECB-windows you have always one or two edit-windows in
 the ECB-frame and \(if you want) at the bottom a compilation-window, where all
@@ -1054,6 +1069,10 @@ If you hold down shift-key while you click with left- or middle-button the
 item under mouse-point is displayed in the echo-area. This is useful if you
 have longer items than the window-width of an ECB-window and truncated lines
 so you can read the whole item.
+IMPORTANT: Doing this in the \"*ECB Sources*\" or \"*ECB History*\" windows
+does not only show the node in the echo area but it also opens the clicked
+source only in the background and shows all its methods/variables in \"ECB
+Methods\"; the buffer of the edit-window is not changed!
 
 - Right-button: Opens a special context popup-menu for the clicked item where
                 you can choose several senseful actions.
