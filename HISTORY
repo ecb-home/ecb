@@ -1,6 +1,11 @@
 Version 1.30 (???):
 -------------------
 
+- Intelligent recentering of tree-buffers now completely implemented without
+  the function 'recenter'. This means no flickering and flashing the whole
+  frame anymore after each 'recenter'. Now the ECB display is stable like a
+  rock :-) (Klaus)
+
 - Mouse over directories now shows directory path. (Jesper)
 
 - Methods and variables with point are now highlighted. (Jesper)
