@@ -3471,12 +3471,19 @@ That is remove the unsupported :help stuff."
       :active (equal (selected-frame) ecb-frame)
       :help "Toggle the visibility of all ECB windows."
       ])
+   "-"
+   (ecb-menu-item
+    [ "Toggle compilation window"
+      ecb-toggle-compile-window
+      :active (equal (selected-frame) ecb-frame)
+      :help "Toggle visibility of compilation window."
+      ])
    (ecb-menu-item
     [ "Toggle enlarged compilation window"
       ecb-toggle-enlarged-compilation-window
       :active (and (equal (selected-frame) ecb-frame)
                    ecb-compile-window
-                   (window-live-p ecb-compile-window))
+                   (ecb-compile-window-live-p))
       :help "Toggle enlarged compilation window."
       ])
    "-"

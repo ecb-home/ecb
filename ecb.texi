@@ -1079,11 +1079,13 @@ display such buffers:
 
 @itemize @bullet
 @item
-With the option @code{ecb-compile-window-height} you can define if the ECB
-layout should contain per default a compilation-window at the bottom
-(and if yes the height of it). If yes ECB displays all output of
-compilation-mode (compile, grep etc.) in this special window. Same for
-displaying help-buffers or similar stuff.
+With the option @code{ecb-compile-window-height} you can define if the
+ECB layout should contain per default a compilation-window at the
+bottom (and if yes the height of it). If yes ECB displays all output
+of compilation-mode (compile, grep etc.) in this special window. Same
+for displaying help-buffers or similar stuff. With the command
+@code{ecb-compile-window-height} you can toggle the visibility of the
+compile-window (@pxref{Interactive ECB commands}).
 
 @item
 With the option @code{ecb-compile-window-temporally-enlarge} you can allow
@@ -2250,6 +2252,16 @@ backtrace-buffer if there is any and the current message-buffer. You
 will be asked for a problem-report subject and then you must insert a
 description of the problem. Please describe the problem as detailed as
 possible!
+@end deffn
+
+@deffn Command toggle-compile-window &optional arg
+Toggle the visibility of the compile-window of ECB. With prefix
+argument @var{ARG}, make display a compile-window, otherwise not. The
+height of the compile-window is always the current @strong{saved} (for
+future sessions) value of @code{ecb-compile-window-height}, i.e. this
+command can only display a compile-window if
+@code{ecb-compile-window-height} has such a saved value of not
+@code{nil}!
 @end deffn
 
 @deffn Command toggle-ecb-windows &optional arg
@@ -5223,13 +5235,10 @@ All windows are not dedicated.
 Neither the edit-window nor the compile-window (if there is one) are
 selected for types left, right and top. For type left-right the left
 column-window is selected
-@end enumerate
 
-Postconditions for @var{CREATE-CODE}:
-@enumerate
 @item
-The edit-window must be the selected window and must not be dedicated
-and splitted.
+All ECB-advices for the functions in
+@code{ecb-advice-window-functions} are disabled!
 @end enumerate
 
 Things @var{CREATE-CODE} has to do:
@@ -5240,7 +5249,9 @@ ECB-windows the layout should contain (directories, sources, methods
 and history). The split must not be done with other functions than
 @code{ecb-split-hor} and @code{ecb-split-ver}! It is recommened not to
 to use a ``hard'' number of split-lines or -rows but using fractions
-between 0.1 and 0.9!
+between -0.9 and +0.9! Tip: It is recommended to spilt from right to
+left and from bottom to top or with other words: First create the
+right-most and bottom-most special windows!
 
 @item
 Making each special ECB-window a dedicated window. This can be done with
@@ -5254,10 +5265,10 @@ one of the following functions:
 Each layout can only contain one of each tree-buffer-type!
 
 In addition to these functions there is a general macro
-`ecb-with-dedicated-window'. This macro performs any arbitrary code in
-current window and makes the window autom. dedicated at the end. This
-can be used by third party packages like JDEE to create arbitrary
-ECB-windows besides the standard tree-windows.
+@code{ecb-with-dedicated-window}. This macro performs any arbitrary
+code in current window and makes the window autom. dedicated at the
+end. This can be used by third party packages like JDEE to create
+arbitrary ECB-windows besides the standard tree-windows.
 
 It's strongly recommended not to use any other function/macro to make
 a window dedicated!
@@ -5294,7 +5305,8 @@ during @var{CREATE-CODE}.
 Postconditions for @var{CREATE-CODE}:
 @enumerate
 @item
-The edit-window must be the selected window and must not be dedicated.
+The edit-window must be the selected window and must not be dedicated
+and not be splitted.
 
 @item
 Every window besides the edit-window \(and the compile-window) must be
@@ -5728,7 +5740,7 @@ You see, there are only three restrictions/conditions. These and only
 these must be fullfilled at layout-programming.
 
 Demonstrating what this really means and how flexible the
-layout-engine of ECB really is can be done best with some
+layout-engine of ECB really is, can be done best with some
 ``pathological'' layout-outlines. All the following are correct
 layouts (working code is added below each layout):
 
@@ -5817,7 +5829,9 @@ right-''column'' have always the same width.
 @end group
 @end example
 
-Here is the code for that left-right layout, again with dummy-buffers:
+Here is the code for that left-right layout, again with dummy-buffers
+(depending to your screen-resolution you will need a quite big value
+for @code{ecb-windows-width}, e.g. 0.4):
 
 @lisp
 (ecb-layout-define "example-layout2" left-right
@@ -5855,6 +5869,9 @@ Here is the code for that left-right layout, again with dummy-buffers:
   (select-window (previous-window (selected-window) 0)))
 @end lisp
 
+Especially the last example should demonstrate that even very
+complicated layouts are easy to program with @code{ecb-layout-define}.
+If such layouts are senseful is another topic ;-)
 
 @node The layout-engine API, , Possible layout-outlines, The layout-engine
 @subsection The complete layout-engine API of ECB

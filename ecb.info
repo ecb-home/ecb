@@ -931,7 +931,9 @@ such buffers:
    layout should contain per default a compilation-window at the bottom (and
    if yes the height of it). If yes ECB displays all output of
    compilation-mode (compile, grep etc.) in this special window. Same for
-   displaying help-buffers or similar stuff.
+   displaying help-buffers or similar stuff. With the command
+   `ecb-compile-window-height' you can toggle the visibility of the
+   compile-window (*note Interactive ECB commands::).
 
  * With the option `ecb-compile-window-temporally-enlarge' you can allow
    Emacs to enlarge temporally the ECB-compile-window in some situations.
@@ -1969,6 +1971,14 @@ Command Index::.
    is any and the current message-buffer. You will be asked for a
    problem-report subject and then you must insert a description of the
    problem. Please describe the problem as detailed as possible!
+
+ - Command: toggle-compile-window &optional arg
+   Toggle the visibility of the compile-window of ECB. With prefix argument
+   ARG, make display a compile-window, otherwise not. The height of the
+   compile-window is always the current *saved* (for future sessions) value
+   of `ecb-compile-window-height', i.e. this command can only display a
+   compile-window if `ecb-compile-window-height' has such a saved value of not
+   `nil'!
 
  - Command: toggle-ecb-windows &optional arg
    Toggle visibilty of the ECB-windows. With prefix argument ARG, make
@@ -4623,17 +4633,18 @@ definiton has stripped the prefix "ecb-" for better indexing this manual):
       selected for types left, right and top. For type left-right the left
       column-window is selected
 
-   Postconditions for CREATE-CODE:
-   1. The edit-window must be the selected window and must not be dedicated
-      and splitted.
+   4. All ECB-advices for the functions in `ecb-advice-window-functions' are
+      disabled!
 
    Things CREATE-CODE has to do:
    1. Splitting the ECB-tree-windows-column(s)/row (s.a.) in all the
       ECB-windows the layout should contain (directories, sources, methods
       and history). The split must not be done with other functions than
       `ecb-split-hor' and `ecb-split-ver'! It is recommened not to to use a
-      "hard" number of split-lines or -rows but using fractions between 0.1
-      and 0.9!
+      "hard" number of split-lines or -rows but using fractions between -0.9
+      and +0.9! Tip: It is recommended to spilt from right to left and from
+      bottom to top or with other words: First create the right-most and
+      bottom-most special windows!
 
    2. Making each special ECB-window a dedicated window. This can be done with
       one of the following functions:
@@ -4678,7 +4689,8 @@ definiton has stripped the prefix "ecb-" for better indexing this manual):
       during CREATE-CODE.
 
    Postconditions for CREATE-CODE:
-   1. The edit-window must be the selected window and must not be dedicated.
+   1. The edit-window must be the selected window and must not be dedicated
+      and not be splitted.
 
    2. Every window besides the edit-window \(and the compile-window) must be
       a dedicated window \(e.g. a ECB-tree-window).
@@ -5067,7 +5079,7 @@ You see, there are only three restrictions/conditions. These and only these
 must be fullfilled at layout-programming.
 
 Demonstrating what this really means and how flexible the layout-engine of
-ECB really is can be done best with some "pathological" layout-outlines. All
+ECB really is, can be done best with some "pathological" layout-outlines. All
 the following are correct layouts (working code is added below each layout):
 
 The following is a top layout with three vertical layered special windows.
@@ -5143,7 +5155,9 @@ same width.
    |                                                                |
    ------------------------------------------------------------------
 
-Here is the code for that left-right layout, again with dummy-buffers:
+Here is the code for that left-right layout, again with dummy-buffers
+(depending to your screen-resolution you will need a quite big value for
+`ecb-windows-width', e.g. 0.4):
 
    (ecb-layout-define "example-layout2" left-right
      nil
@@ -5178,6 +5192,10 @@ Here is the code for that left-right layout, again with dummy-buffers:
    
      ;; select the edit-window
      (select-window (previous-window (selected-window) 0)))
+
+Especially the last example should demonstrate that even very complicated
+layouts are easy to program with `ecb-layout-define'.  If such layouts are
+senseful is another topic ;-)
 
 
 File: ecb.info,  Node: The layout-engine API,  Prev: Possible layout-outlines,  Up: The layout-engine
@@ -5522,6 +5540,7 @@ the command `ecb-activate' is listed with name "activate").
 * show-help:                             Interactive ECB commands.
 * show-layout-help:                      Interactive ECB commands.
 * submit-problem-report:                 Interactive ECB commands.
+* toggle-compile-window:                 Interactive ECB commands.
 * toggle-ecb-windows:                    Interactive ECB commands.
 * toggle-enlarged-compilation-window:    Interactive ECB commands.
 * toggle-layout:                         Interactive ECB commands.
@@ -5758,79 +5777,79 @@ Node: Personal keybindings32328
 Ref: Personal keybindings-Footnote-134326
 Node: The edit-window34429
 Node: Temp- and compile-buffers36259
-Node: The Methods buffer38541
-Node: Customizing the display38982
-Node: Rebuilding the Methods40704
-Node: The ECB-layout41559
-Node: Changing the ECB-layout42206
-Ref: Changing the ECB-layout-Footnote-169922
-Node: Redrawing the ECB-layout70014
-Node: Creating a new ECB-layout70939
-Ref: Creating a new ECB-layout-Footnote-175189
-Node: Hiding the ECB windows75363
-Node: Back/forward navigation76468
-Ref: Back/forward navigation-Footnote-177569
-Node: ECB-window synchronizing77628
-Node: Interactive ECB commands80210
-Node: Customizing90443
-Node: General aspects91077
-Ref: General aspects-Footnote-193910
-Node: Most important options94042
-Node: Customizable options95837
-Node: ecb-general97267
-Node: ecb-directories118953
-Node: ecb-sources125849
-Node: ecb-methods128104
-Node: ecb-history140373
-Node: ecb-layout142434
-Node: ecb-compilation-content159430
-Node: ecb-create-layout159996
-Node: ecb-face-options160512
-Node: ecb-faces163941
-Node: ecb-download167933
-Node: ecb-help169159
-Node: ecb-eshell171143
-Node: Submitting problem report171992
-Node: Upgrading173355
-Node: Downloading new versions174118
-Ref: Download required packages175875
-Ref: Downloading new versions-Footnote-1176973
-Node: Auto. option-upgrading177022
-Node: User interface177330
-Node: Background information178216
-Node: Tips and tricks181614
-Node: Changing faces182364
-Ref: Changing faces-Footnote-1185200
-Node: Small screens185376
-Node: Big screens186770
-Node: Simulating speedbar187605
-Node: Integrating speedbar188575
-Ref: Integrating speedbar-Footnote-1190930
-Ref: Integrating speedbar-Footnote-2191106
-Node: Optimize scrolling191264
-Node: Large directories192344
-Node: Using eshell193009
-Ref: Using eshell-Footnote-1195100
-Node: Elisp programming195252
-Node: List of variables195878
-Node: List of hooks196247
-Node: tree-buffer197203
-Node: Adviced functions198009
-Ref: Adviced functions-Footnote-1198622
-Node: The layout-engine198693
-Node: Programming a new layout199933
-Node: Programming special windows206969
-Ref: Programming special windows-Footnote-1218734
-Ref: Programming special windows-Footnote-2218786
-Node: Possible layout-outlines218914
-Node: The layout-engine API226145
-Node: Conflicts and bugs227724
-Node: Conflicts228199
-Node: Bugs231909
-Node: FAQ232129
-Ref: FAQ-Footnote-1237298
-Node: Command Index237329
-Node: Option Index239848
-Node: Concept Index246598
+Node: The Methods buffer38680
+Node: Customizing the display39121
+Node: Rebuilding the Methods40843
+Node: The ECB-layout41698
+Node: Changing the ECB-layout42345
+Ref: Changing the ECB-layout-Footnote-170061
+Node: Redrawing the ECB-layout70153
+Node: Creating a new ECB-layout71078
+Ref: Creating a new ECB-layout-Footnote-175328
+Node: Hiding the ECB windows75502
+Node: Back/forward navigation76607
+Ref: Back/forward navigation-Footnote-177708
+Node: ECB-window synchronizing77767
+Node: Interactive ECB commands80349
+Node: Customizing91016
+Node: General aspects91650
+Ref: General aspects-Footnote-194483
+Node: Most important options94615
+Node: Customizable options96410
+Node: ecb-general97840
+Node: ecb-directories119526
+Node: ecb-sources126422
+Node: ecb-methods128677
+Node: ecb-history140946
+Node: ecb-layout143007
+Node: ecb-compilation-content160003
+Node: ecb-create-layout160569
+Node: ecb-face-options161085
+Node: ecb-faces164514
+Node: ecb-download168506
+Node: ecb-help169732
+Node: ecb-eshell171716
+Node: Submitting problem report172565
+Node: Upgrading173928
+Node: Downloading new versions174691
+Ref: Download required packages176448
+Ref: Downloading new versions-Footnote-1177546
+Node: Auto. option-upgrading177595
+Node: User interface177903
+Node: Background information178789
+Node: Tips and tricks182187
+Node: Changing faces182937
+Ref: Changing faces-Footnote-1185773
+Node: Small screens185949
+Node: Big screens187343
+Node: Simulating speedbar188178
+Node: Integrating speedbar189148
+Ref: Integrating speedbar-Footnote-1191503
+Ref: Integrating speedbar-Footnote-2191679
+Node: Optimize scrolling191837
+Node: Large directories192917
+Node: Using eshell193582
+Ref: Using eshell-Footnote-1195673
+Node: Elisp programming195825
+Node: List of variables196451
+Node: List of hooks196820
+Node: tree-buffer197776
+Node: Adviced functions198582
+Ref: Adviced functions-Footnote-1199195
+Node: The layout-engine199266
+Node: Programming a new layout200506
+Node: Programming special windows207700
+Ref: Programming special windows-Footnote-1219465
+Ref: Programming special windows-Footnote-2219517
+Node: Possible layout-outlines219645
+Node: The layout-engine API227161
+Node: Conflicts and bugs228740
+Node: Conflicts229215
+Node: Bugs232925
+Node: FAQ233145
+Ref: FAQ-Footnote-1238314
+Node: Command Index238345
+Node: Option Index240931
+Node: Concept Index247681
 
 End Tag Table

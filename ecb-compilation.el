@@ -181,7 +181,10 @@ information about compilation buffers."
 
     (dolist(buffer buffers)
       (add-to-list 'submenu (vector (car buffer)
-                                    (list 'switch-to-buffer (car buffer))
+                                    `(funcall (if (ecb-compile-window-live-p)
+                                                  'switch-to-buffer
+                                                'switch-to-buffer-other-window)
+                                                ,(car buffer))
                                     :active t) t))
 
     (easy-menu-change (list ecb-menu-name)
