@@ -1,6 +1,12 @@
 Version 1.30 (???):
 -------------------
 
+- Added a section "Tips and tricks" to the ECB online-help. (Klaus)
+
+- Added a new layout Nr. 10 for very small screen where all squarecentimeters
+  are needed for editing itself. This layout only displays a method-window and
+  a edit-window. (Klaus).
+
 - The messages displayed after moving the mouse over a node in a tree-buffer
   do not longer wasting the log, means they will not be logged (Klaus).
 
