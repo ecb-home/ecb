@@ -1,4 +1,4 @@
-* Changes for ECB version 2.31beta1
+* Changes for ECB version 2.31
 
 ** Fixed bugs
 
@@ -6,6 +6,48 @@
     This bug occured when a user has clicked onto a node in a tree-buffer
     during an active isearch and it had as result completely out-of-order
     tree-buffers. This buf is now fixed and should never occur.
+
+*** Fixed a bug concerning accessing root-drives in native window-XEmacs
+    Fixes an annoying behavior of the native windows-version of XEmacs: When a
+    path contains only a drive-letter and a : (e.g. C:) then
+    `expand-file-name' (and a lot of other file-operations) do not interpret
+    this path as root of that drive. So ECB adds temporary a trailing
+    `directory-sep-char' and calls file-operations like `expand-file-name'
+    with this new path because then `expand-file-name' treats this as root-dir
+    of that drive. For all (X)Emacs-version besides the native-windows-XEmacs
+    this fix is not needed and takes no effect.
+
+*** Better recognizing of remote CVS-root-repositories for the VC-support
+
+** Enhancement for the VC-support
+
+*** New option `ecb-vc-xemacs-exclude-remote-cvs-repository'
+    This excludes directories with a remote cvs-repository from VC-check. This
+    option takes only effect for XEmacs and is needed cause of the outdated
+    VC-package of XEmacs which offers no heuristic state-checking and also no
+    option `vc-cvs-stay-local'. So this option takes only effect if
+    `vc-cvs-stay-local' is not avaiable. In this case ECB treats directories
+    which are managed by CVS but have a remote repository as if the directory
+    would not being managed by CVS (so the files are not checked for their
+    VC-state). This is done to avoid blocking XEmacs cause of running full
+    cvs-commands (e.g. ``cvs status'') for a bunch of files over the net.
+
+*** Added beta-support for Clearcase
+    There is already an identify-backend-function `ecb-vc-dir-managed-by-CC'
+    and a check-state-function `ecb-vc-check-CC-state' and an advice for
+    `clearcase-sync-from-disk' which enable automatic state-update after
+    checkin/out. These code seems to work quite well but nevertheless there
+    are some problems so this Clearcase-support is not added per default to
+    `ecb-vc-supported-backends'.
+
+    So if you want Clearcase-support you have to customize the option
+    `ecb-vc-supported-backends' and add these functions mentioned above (the
+    advice of `clearcase-sync-from-disk' takes only effect if the function
+    `ecb-vc-dir-managed-by-CC' can be found in `ecb-vc-supported-backends' and
+    ECB is active!). But use it at your own risk. Of course the best would be
+    if a lot of people would test this Clearcase-support and fix the
+    encountered problems ;-). Thanks to David Ostrovsky for providing a first
+    implementation!
 
 
 
