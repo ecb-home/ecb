@@ -1,4 +1,4 @@
-This file contains some important release-notes for ECB 1.60
+This file contains some important release-notes for ECB 1.70
 
 General:
 --------
@@ -17,6 +17,12 @@ No special notes beyond the contents of README.
 
 Upgrading from any previous version:
 ------------------------------------
+
+The type of the option 'ecb-token-display-function' has changed, so this
+option must be customized again!
+
+Upgrading from any version < 1.60:
+----------------------------------
 
 - The options `ecb-show-node-name-in-minibuffer',
   `ecb-show-complete-file-name-in-minibuffer' and

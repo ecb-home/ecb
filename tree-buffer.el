@@ -26,7 +26,7 @@
 ;; This file is part of the ECB package which can be found at:
 ;; http://home.swipnet.se/mayhem/ecb.html
 
-;; $Id: tree-buffer.el,v 1.74 2002/02/08 16:32:57 berndl Exp $
+;; $Id: tree-buffer.el,v 1.75 2002/02/15 12:14:07 berndl Exp $
 
 ;;; Code:
 
@@ -185,8 +185,8 @@ with the same arguments as `tree-node-expanded-fn'."
         (when node
           (if (and (tree-node-is-expandable node)
                    (tree-buffer-at-expand-symbol name node p)
-                   ;; if the expand-symbol is displayed before and mouse-button
-                   ;; = 0, means RET is pressed, we do not toggle-expand but work
+                  ;; if the expand-symbol is displayed before and mouse-button
+                ;; = 0, means RET is pressed, we do not toggle-expand but work
                    ;; as if point would not be at expand-symbol. This is for
                    ;; conveniance.
                    (not (and (= mouse-button 0)
@@ -253,8 +253,8 @@ If NODE is expanded then recenter the WINDOW so as much as possible subnodes
 of NODE will be visible. If NODE is not expandable then WINDOW is always
 displayed without empty-lines at the end, means WINDOW is always best filled."
   (let* ((node-point (save-excursion
-                      (goto-line (tree-buffer-find-node node))
-                      (tree-buffer-line-beginning-pos)))
+                       (goto-line (tree-buffer-find-node node))
+                       (tree-buffer-line-beginning-pos)))
          (point-lines-before (count-lines (point-min) node-point))
          (point-lines-after (1- (count-lines node-point (point-max)))))
     ;; first make point best visible, means display node in the middle of the
@@ -284,8 +284,8 @@ displayed without empty-lines at the end, means WINDOW is always best filled."
     (if (tree-node-is-expanded node)
         (let ((exp-node-children-count (tree-node-count-subnodes-to-display node))
               (point-window-line (count-lines (window-start window) node-point)))
-          ;; if the current node is not already displayed in the first line of the
-          ;; window (= condition 1) and if not all of it´s children are visible in
+      ;; if the current node is not already displayed in the first line of the
+      ;; window (= condition 1) and if not all of it´s children are visible in
           ;; the window then we can do some optimization.
           (if (and (save-excursion
                      (goto-char node-point)
@@ -384,8 +384,8 @@ inserted and the TEXT itself"
     (insert text)
     (put-text-property p (+ p (length text)) 'mouse-face 'highlight)
     (if (and help-echo (not running-xemacs))
-       (put-text-property p (+ p (length text)) 'help-echo
-                          'tree-buffer-help-echo-fn))
+        (put-text-property p (+ p (length text)) 'help-echo
+                           'tree-buffer-help-echo-fn))
     (if facer
 	(if (functionp facer)
 	    (funcall facer p text)
@@ -407,7 +407,7 @@ inserted and the TEXT itself"
 		 (eq 'end (tree-node-get-shorten-name node)))
 	    (setq name (concat (substring name 0 (- (+ (if running-xemacs 5 4)
                                                        (- width ww))))
-                                                       "...")))))
+                               "...")))))
     (insert (make-string (* depth tree-buffer-indent) ? ))
     (when (and tree-buffer-expand-symbol-before
 	       (tree-node-is-expandable node))
@@ -538,10 +538,10 @@ pattern:
                                     ;; else no match
                                     nil)))
                       lis))
-    (setq res (delq nil res));; remove any nil elements (shouldn't happen)
+    (setq res (delq nil res)) ;; remove any nil elements (shouldn't happen)
     (setq alist (mapcar (function (lambda (r)
                                     (cons r 1)))
-                        res));; could use an  OBARRAY
+                        res)) ;; could use an  OBARRAY
 
     ;; try-completion returns t if there is an exact match.
     (let ((completion-ignore-case t))
@@ -662,7 +662,7 @@ mentioned above!"
   (set-buffer (window-buffer (tree-buffer-event-window event)))
   (let ((p (tree-buffer-event-point event)))
     (when (integer-or-marker-p p)
-;;      (unless (not (equal (selected-frame) tree-buffer-frame))
+      ;;      (unless (not (equal (selected-frame) tree-buffer-frame))
       (let ((node (tree-buffer-get-node-at-point p)))
 	(when (and tree-node-mouse-over-fn node)
 	  (funcall tree-node-mouse-over-fn node
@@ -770,12 +770,11 @@ functionality is done with the `help-echo'-property and the function
 	;; Update the tree-buffer with optimized display of NODE           
 	(tree-buffer-update node)))))
 
-(defun tree-buffer-return-pressed ()
-  (interactive)
+(defun tree-buffer-return-pressed (&optional shift-pressed control-pressed)
   (unless (not (equal (selected-frame) tree-buffer-frame))
     ;; reinitialize the select pattern after selecting a node
     (setq tree-buffer-incr-searchpattern "")
-    (tree-buffer-select 0 nil nil)))
+    (tree-buffer-select 0 shift-pressed control-pressed)))
 
 (defun tree-buffer-create (name frame is-click-valid-fn node-selected-fn
                                 node-expanded-fn node-mouse-over-fn
@@ -905,6 +904,7 @@ AFTER-CREATE-HOOK: A function \(with no arguments) called directly after
     (setq tree-buffer-incr-searchpattern "")
     (setq tree-buffer-incr-search incr-search)
 
+    ;; keyboard setting
     (when incr-search
       ;; settings for the incremental search.
       ;; for all keys which are bound to `self-insert-command' in `global-map'
@@ -922,7 +922,19 @@ AFTER-CREATE-HOOK: A function \(with no arguments) called directly after
       (define-key tree-buffer-key-map [end]
         'tree-buffer-incremental-node-search))
     
-    (define-key tree-buffer-key-map "\C-m" 'tree-buffer-return-pressed)
+    (define-key tree-buffer-key-map (kbd "<RET>")
+      (function (lambda ()
+                  (interactive)
+                  (tree-buffer-return-pressed))))
+    (define-key tree-buffer-key-map (kbd "<C-return>")
+      (function (lambda ()
+                  (interactive)
+                  (tree-buffer-return-pressed nil t))))
+    (define-key tree-buffer-key-map (kbd "<S-return>")
+      (function (lambda ()
+                  (interactive)
+                  (tree-buffer-return-pressed t nil))))
+    
     (define-key tree-buffer-key-map [tab] 'tree-buffer-tab-pressed)
       
     ;; mouse-1
@@ -1147,3 +1159,4 @@ child."
 (provide 'tree-buffer)
 
 ;;; tree-buffer.el ends here
+

@@ -1,6 +1,6 @@
 ;;; ecb-eshell.el --- eshell integration for the ECB.
 
-;; $Id: ecb-eshell.el,v 1.33 2002/02/11 12:09:31 burtonator Exp $
+;; $Id: ecb-eshell.el,v 1.34 2002/02/15 12:14:07 berndl Exp $
 
 ;; Copyright (C) 2000-2003 Free Software Foundation, Inc.
 ;; Copyright (C) 2000-2003 Kevin A. Burton (burton@openprivacy.org)
@@ -287,7 +287,7 @@ that the eshell has more screen space after we execute a command. "
   
 (add-hook 'ecb-current-buffer-sync-hook 'ecb-eshell-current-buffer-sync)
 
-(add-hook 'ecb-redraw-layout-hooks 'ecb-eshell-recenter)
+(add-hook 'ecb-redraw-layout-hook 'ecb-eshell-recenter)
 
 (add-hook 'eshell-pre-command-hook 'ecb-eshell-enlarge)
 

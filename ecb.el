@@ -7,7 +7,7 @@
 ;; Keywords: java, class, browser
 ;; Created: Jul 2000
 
-(defvar ecb-version "1.61"
+(defvar ecb-version "1.70"
   "Current ECB version.")
 
 ;; This program is free software; you can redistribute it and/or modify it under
@@ -54,7 +54,7 @@
 ;; The latest version of the ECB is available at
 ;; http://home.swipnet.se/mayhem/ecb.html
 
-;; $Id: ecb.el,v 1.188 2002/02/08 16:32:56 berndl Exp $
+;; $Id: ecb.el,v 1.189 2002/02/15 12:14:07 berndl Exp $
 
 ;;; Code:
 
@@ -190,7 +190,7 @@ The parameters are set for the following display-types:
                           (if ,bg-rest (list :foreground ,bg-rest))
                           (if ,reverse-video (list :reverse-video t))))))
 
-(defface ecb-directories-general-face (ecb-face-default 0.9)
+(defface ecb-directories-general-face (ecb-face-default 1.0)
   "Basic face for the ECB directories buffer.
 It큦 recommended to define here the font-family, the font-size, the basic
 color etc."
@@ -210,7 +210,7 @@ face is used but always the default-face."
   :group 'ecb-directories
   :type 'face)
 
-(defface ecb-sources-general-face (ecb-face-default 0.9)
+(defface ecb-sources-general-face (ecb-face-default 1.0)
   "Basic face for the ECB sources buffer.
 It큦 recommended to define here the font-family, the font-size, the basic
 color etc."
@@ -224,7 +224,7 @@ face is used but always the default-face."
   :group 'ecb-sources
   :type 'face)
 
-(defface ecb-methods-general-face (ecb-face-default 0.9)
+(defface ecb-methods-general-face (ecb-face-default 1.0)
   "Basic face for the ECB methods buffer.
 It큦 recommended to define here the font-family, the font-size, the basic
 color etc."
@@ -238,7 +238,7 @@ face is used but always the default-face."
   :group 'ecb-methods
   :type 'face)
 
-(defface ecb-history-general-face (ecb-face-default 0.9)
+(defface ecb-history-general-face (ecb-face-default 1.0)
   "Basic face for the ECB history buffer.
 It큦 recommended to define here the font-family, the font-size, the basic
 color etc."
@@ -622,21 +622,98 @@ or call `widen' (C-x n w)."
   :group 'ecb-methods
   :type 'boolean)
 
-(defcustom ecb-token-display-function 'semantic-prototype-nonterminal
-  "*Semantic function to use for displaying tokens in the methods buffer.  Some
-useful functions are found in `semantic-token->text-functions'.  This
-functionality also allows the user to display tokens as UML.  To enable this
-functionality set this value to either
+
+(defconst ecb-token->text-functions
+  (mapcar (lambda (fkt)
+            (cons (intern
+                   (concat "ecb-"
+                           (mapconcat 'identity
+                                      (cdr (split-string (symbol-name fkt) "-"))
+                                      "-")))
+                  fkt))
+          semantic-token->text-functions)
+  "Alist containing one element for every member of
+`semantic-token->text-functions' where the value is the member of
+`semantic-token->text-functions' with name \"semantic-XYZ\" and the key is a
+symbol with name \"ecb-XYZ\".")  
+
+;; Now we define for each function "semantic-X" of
+;; semantic-token->text-functions a function with name "ecb-X" which does the
+;; same with a little difference; see
+;; `ecb-token-display-function'.
+(dolist (elem ecb-token->text-functions)
+  (fset (car elem) `(lambda (token &optional parent-token colorize)
+                      (if (eq 'type (semantic-token-token token))
+                          (concat (semantic-name-nonterminal token
+                                                             parent-token
+                                                             colorize)
+                                  (if (eq major-mode 'c++-mode)
+                                      (semantic-c-template-string token
+                                                                  parent-token
+                                                                  colorize)
+                                    ""))
+                        (funcall (quote ,(cdr elem))
+                                 token parent-token colorize)))))
+
+
+(defcustom ecb-token-display-function '((default . ecb-prototype-nonterminal))
+  "*Function to use for displaying tokens in the methods buffer.
+This functionality is set on major-mode base, i.e. for every major-mode a
+different function can be used. The value of this option is a list of
+cons-cells:
+- The car is either a major-mode symbol or the special symbol 'default which
+  means if no function for a certain major-mode is defined then the cdr of
+  the 'default cons-cell is used.
+- The cdr is the function used for displaying a token in the related
+  major-mode.
+Everey function is called with 3 arguments:
+1. The token
+2. The parent-token of token \(can be nil)
+3. The value of `ecb-font-lock-tokens'.
+Every function must return the display of the token as string, colorized if
+the third argument is not nil.
+
+The following functions are predefined:
+- All functions of `semantic-token->text-functions'.
+- For every function in `semantic-token->text-functions' with name
+  \"semantic-XYZ\" a function with name \"ecb-XYC\" is predefined. The
+  difference between the semantic- and the ECB-version is that the ECB-version
+  displays for types only the type-name and nothing else \(exception: In
+  c++-mode a template specifier is appended to the type-name if a template
+  instead a normal class). For all tokens which are not types the display is
+  identical. Example: For `semantic-name-nonterminal' the pendant is
+  `ecb-name-nonterminal'.
+
+This functionality also allows the user to display tokens as UML. To enable
+this functionality set the function for a major-mode \(e.g. `jde-mode') to
 `semantic-uml-concise-prototype-nonterminal',
 `semantic-uml-prototype-nonterminal', or
-`semantic-uml-abbreviate-nonterminal'."
+`semantic-uml-abbreviate-nonterminal' or the ECB-versions of these functions.
+
+If the value is nil, i.e. neither a function for a major-mode is defined nor
+the special 'default, then `semantic-prototype-nonterminal' is used for
+displaying the tokens."
   :group 'ecb-methods
   :set (function (lambda (symbol value)
 		   (set symbol value)
 		   (ecb-clear-token-tree-cache)))
-  :type semantic-token->text-custom-list
+  :type (list 'repeat ':tag "Display functions per mode"
+              (list 'cons ':tag "Mode token display"
+                    '(symbol :tag "Major mode")
+                    (nconc (list 'choice ':tag "Display function"
+                                 ':menu-tag '"Display function")
+                           (append 
+                            (mapcar (lambda (f)
+                                      (list 'const ':tag
+                                            (symbol-name (car f)) (car f)))
+                                    ecb-token->text-functions)
+                            (mapcar (lambda (f)
+                                      (list 'const ':tag
+                                            (symbol-name (cdr f)) (cdr f)))
+                                    ecb-token->text-functions)
+                            (list '(function :tag "Function"))))))
   :initialize 'custom-initialize-default)
-
+          
 (defcustom ecb-post-process-semantic-tokenlist
   '((c++-mode . ecb-post-process-c++))
   "*Define mode-dependend postprocessing for the semantic-tokenlist.
@@ -1141,30 +1218,30 @@ cleared!) ECB by running `ecb-deactivate'."
   (ecb-get-token-parent-names (semantic-token-type-parent token)))
 
 (defun ecb-get-token-name (token &optional parent-token)
-  "Get the name of TOKEN with the appropriate semantic-API-fcn.
-Here the parent-token of TOKEN is available with `semantic-token-get' and the
-property 'parent-token!"
-;;   (let ((parent-token (semantic-token-get token 'parent-token)))
-  (if (eq 'type (semantic-token-token token))
-      (semantic-name-nonterminal token parent-token ecb-font-lock-tokens)
-    (condition-case nil
-        (funcall ecb-token-display-function token parent-token
-                 ecb-font-lock-tokens)
-      (error (semantic-prototype-nonterminal token parent-token
-                                             ecb-font-lock-tokens)))))
+  "Get the name of TOKEN with the appropriate fcn from
+`ecb-token-display-function'."
+  (condition-case nil
+      (let* ((mode-display-fkt (cdr (assoc major-mode ecb-token-display-function)))
+             (default-fkt (cdr (assoc 'default ecb-token-display-function)))
+             (display-fkt (or (and (fboundp mode-display-fkt) mode-display-fkt)
+                              (and (fboundp default-fkt) default-fkt)
+                              'semantic-prototype-nonterminal)))
+        (funcall display-fkt token parent-token ecb-font-lock-tokens))
+    (error (semantic-prototype-nonterminal token parent-token
+                                           ecb-font-lock-tokens))))
 
-;; (defun ecb-get-token-name (token)
+;; (defun ecb-get-token-name (token &optional parent-token)
 ;;   "Get the name of TOKEN with the appropriate semantic-API-fcn.
 ;; Here the parent-token of TOKEN is available with `semantic-token-get' and the
 ;; property 'parent-token!"
-;;   (let ((parent-token (semantic-token-get token 'parent-token)))
-;;     (if (eq 'type (semantic-token-token token))
-;;         (semantic-name-nonterminal token parent-token ecb-font-lock-tokens)
-;;       (condition-case nil
-;;           (funcall ecb-token-display-function token parent-token
-;;                    ecb-font-lock-tokens)
-;;         (error (semantic-prototype-nonterminal token parent-token
-;;                                                ecb-font-lock-tokens))))))
+;;   ;;   (let ((parent-token (semantic-token-get token 'parent-token)))
+;;   (if (eq 'type (semantic-token-token token))
+;;       (semantic-name-nonterminal token parent-token ecb-font-lock-tokens)
+;;     (condition-case nil
+;;         (funcall ecb-token-display-function token parent-token
+;;                  ecb-font-lock-tokens)
+;;       (error (semantic-prototype-nonterminal token parent-token
+;;                                              ecb-font-lock-tokens)))))
 
 (defun ecb-find-add-token-bucket (node type display sort-method buckets
                                        &optional parent-token)
@@ -1180,26 +1257,6 @@ PARENT-TOKEN is only propagated to `ecb-add-token-bucket'."
 	(ecb-find-add-token-bucket node type display sort-method
 				   (cdr buckets) parent-token)))))
 
-;; (defun ecb-add-token-bucket (node bucket display sort-method
-;;                                   &optional parent-token)
-;;   "Adds a token bucket to a node unless DISPLAY equals 'hidden.
-;; PARENT-TOKEN is added to every token of BUCKET as property 'parent-token, so
-;; it's later available by calling `semantic-token-get'. See
-;; `ecb-get-token-name'."
-;;   (when bucket
-;;     (let ((name (concat "[" (car bucket) "]"))
-;; 	  (type (semantic-token-token (cadr bucket)))
-;; 	  (bucket-node node))
-;;       (unless (eq 'hidden display)
-;; 	(unless (eq 'flattened display)
-;; 	  (setq bucket-node (tree-node-new name 1 nil nil node
-;; 					   (if ecb-truncate-long-names 'end)))
-;; 	  (tree-node-set-expanded bucket-node (eq 'expanded display)))
-;; 	(dolist (token (ecb-sort-tokens sort-method (cdr bucket)))
-;;           (semantic-token-put token 'parent-token parent-token)
-;; 	  (ecb-update-token-node token
-;;                                  (tree-node-new "" 0 token t bucket-node
-;;                                                 (if ecb-truncate-long-names 'end))))))))
 
 (defun ecb-add-token-bucket (node bucket display sort-method
                                   &optional parent-token)
@@ -1231,18 +1288,6 @@ PARENT-TOKEN is only propagated to `ecb-add-token-bucket'."
       (ecb-add-tokens node children token)
       (tree-node-set-expandable 
        node (not (eq nil (tree-node-get-children node)))))))
-
-;; (defun ecb-update-token-node (token node)
-;;   "Updates a node containing a token."
-;;   (let* ((children (semantic-nonterminal-children token t)))
-;;     (tree-node-set-name node (ecb-get-token-name token))
-;;     ;; Always expand types, maybe this should be customizable and more
-;;     ;; flexible
-;;     (tree-node-set-expanded node (eq 'type (semantic-token-token token)))
-;;     (unless (eq 'function (semantic-token-token token))
-;;       (ecb-add-tokens node children token)
-;;       (tree-node-set-expandable 
-;;        node (not (eq nil (tree-node-get-children node)))))))
 
 (defun ecb-post-process-tokenlist (tokenlist)
   "If for current major-mode a post-process function is found in
@@ -1925,7 +1970,7 @@ OTHER-EDIT-WINDOW."
 
 (defun ecb-tree-node-add-files
   (node path files type include-extension old-children &optional not-expandable)
-"For every file in FILES add a child-node to NODE."
+  "For every file in FILES add a child-node to NODE."
   (dolist (file files)
     (let ((filename (ecb-fix-filename path file)))
       (tree-node-add-child
@@ -2150,11 +2195,11 @@ shift-mode is non nil if SHIFT-PRESSED is non nil. For an invalid and not
 accepted click combination nil is returned.
 
 Note: If MOUSE-BUTTON is 0 \(means no mouse-button but a key like RET or TAB
-was hitted) then only nil is accepted for SHIFT-PRESSED and CONTROL-PRESSED.
+was hitted) then CONTROL-PRESSED is interpreted as ECB-button 2.
 
 Currently the fourth argument TREE-BUFFER-NAME is not used here."
-  (if (and (eq mouse-button 0) (not shift-pressed) (not control-pressed))
-      (list 1 nil)
+  (if (eq mouse-button 0)
+      (list (if control-pressed 2 1) shift-pressed)
     (if (and (not (eq mouse-button 1)) (not (eq mouse-button 2)))
 	nil
       (cond ((eq ecb-primary-secondary-mouse-buttons 'mouse-1--mouse-2)
@@ -2543,7 +2588,8 @@ That is remove the unsupported :help stuff."
    (ecb-menu-item
     [ "Toggle enlarged compilation window"
       ecb-toggle-enlarged-compilation-window
-      :active (equal (selected-frame) ecb-frame)
+      :active (and (equal (selected-frame) ecb-frame)
+                   ecb-compile-window)
       :help "Toggle enlarged compilation window."
       ])
    "-"

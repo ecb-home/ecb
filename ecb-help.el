@@ -26,7 +26,7 @@
 ;;
 ;; Contains all online-help for ECB (stolen something from recentf.el)
 
-;; $Id: ecb-help.el,v 1.53 2002/01/25 16:21:41 berndl Exp $
+;; $Id: ecb-help.el,v 1.54 2002/02/15 12:14:07 berndl Exp $
 
 ;;; Code
 
@@ -46,8 +46,8 @@ different types of ECB-windows:
 
 - Select directories \(and - if enabled - source files) in the \"*ECB
   Directories*\" buffer by clicking a mouse button (see \"Usage of ECB\"
-  below) on the directory name or by hitting ENTER/RETURN when the cursor is
-  placed on the item line.
+  below) on the directory name or by hitting RETURN when the cursor is placed
+  on the item line.
 
 - Directory names with a \"[+]\" symbol after \(or before) them can be
   expanded/collapsed by clicking on the symbol, pressing the TAB key when the
@@ -63,19 +63,19 @@ different types of ECB-windows:
 2. ECB Sources:
 
 - Source files can be selected by clicking a mouse button (see \"Usage of
-  ECB\" below) or hitting ENTER/RETURN on the source row in the \"*ECB
+  ECB\" below) or hitting RETURN on the source row in the \"*ECB
   Sources*\" or \"*ECB History*\" windows.
 
   IMPORTANT: If you hold down the SHIFT-key while clicking with the primary
-  mouse button (see \"Usage of ECB\" below) on a source row in the \"*ECB
-  Sources*\" or \"*ECB History*\" windows then the source will not be
+  mouse button or RETURN (see \"Usage of ECB\" below) on a source row in the
+  \"*ECB Sources*\" or \"*ECB History*\" windows then the source will not be
   displayed in the edit-window but it will be scanned in the background and
   all it´s methods and variables are listed in the \"ECB Methods\" window. So
   you can get an overlook over the source without changing the buffer in the
   edit-window.
 
-- Clicking on the source file with the secondary mouse button (see \"Usage of
-  ECB\" below) will open the class file in the other edit window.
+- Clicking on the source file with the secondary mouse button or C-RETURN (see
+  \"Usage of ECB\" below) will open the class file in the other edit window.
 
 - Right clicking on a source file will open a popup menu where different
   operation on the item under the mouse cursor can be performed.
@@ -84,11 +84,12 @@ different types of ECB-windows:
 
 - The \"*ECB Methods*\" buffer contains the methods \(and variables, if you
   want) in the selected source file. When a method/variable is selected with
-  the primary mouse button (see \"Usage of ECB\" below) or ENTER/RETURN the
+  the primary mouse button (see \"Usage of ECB\" below) or RETURN the
   edit buffer will jump to the method/variable.
 
-- Clicking on a method/variable with the secondary mouse button (see \"Usage
-  of ECB\" below) will jump to the method in the other edit window.
+- Clicking on a method/variable with the secondary mouse button or C-RETURN
+  (see \"Usage of ECB\" below) will jump to the method in the other edit
+  window.
 
 In addition to these ECB-windows you have always one or two edit-windows in
 the ECB-frame and \(if you want) at the bottom a compilation-window, where all
@@ -170,9 +171,13 @@ common prefixkey \(This is by default \"C-c .\"). If there are conflicts with
 other minor-modes or packages you can define very easy another prefix. Please
 read carefully the description of `ecb-key-map'!
 
-In the ECB-buffers RET and TAB work as primary \"buttons\" \(see above), means
-RET selects a directory or opens a source or jumps to a method and TAB toggles
-expanding/collapsing of an expandable node.
+In the ECB-buffers RETURN and TAB are the most important keys:
++ RETURN does the same as the primary button and C-RETURN does the same as the
+  secondary button \(see the section \"Working with the mouse in the
+  ECB-buffers\" for an explanation of primary and secondary!). S-RETURN is the
+  same as the SHIFT-click above.
++ TAB always expands or collapses expandable nodes.
+The RETURN and TAB keys can not be \(re)defined with `ecb-key-map'!
 
 Incremental search for a node in current tree-buffer. Each displayable key
 \(e.g. all keys normally bound to `self-insert-command') is appended to the
@@ -480,6 +485,7 @@ Available hooks:
 - `ecb-activate-before-layout-draw-hook'
 - `ecb-activate-hook'
 - `ecb-deactivate-hook'
+- `ecb-current-buffer-sync-hook'
 
 Look at the documentation of these variables and hooks to get description.
 
@@ -621,29 +627,29 @@ the problem as detailed as possible!"
      (progn
        (message "Preparing problem report...")
        ;;prepare the basic buffer
-;;        (let ((reporter-prompt-for-summary-p "Subject of the report: "))
-         (reporter-submit-bug-report
-          ecb-problem-report-mail-address
-          (format "ECB: %s, Semantic: %s, JDE: %s"
-                  ecb-version
-                  (if (boundp 'semantic-version)
-                      semantic-version
-                    "<=1.3.3")
-                  (if (boundp 'jde-version)
-                      jde-version
-                    "No JDE"))
-          (ecb-problem-report-list-all-variables)
-          nil
-          'ecb-problem-report-post-hook
-          ecb-problem-report-message)
-         (ecb-redraw-layout)
-         (mail-subject)
-         (insert (read-string "Problem report subject: "
-                              (format "ECB-%s -- " ecb-version)))
-         (mail-text)
-         (search-forward ecb-problem-report-message)
-         (end-of-line)
-         (message "Preparing bug report...done")))))
+    ;;        (let ((reporter-prompt-for-summary-p "Subject of the report: "))
+       (reporter-submit-bug-report
+        ecb-problem-report-mail-address
+        (format "ECB: %s, Semantic: %s, JDE: %s"
+                ecb-version
+                (if (boundp 'semantic-version)
+                    semantic-version
+                  "<=1.3.3")
+                (if (boundp 'jde-version)
+                    jde-version
+                  "No JDE"))
+        (ecb-problem-report-list-all-variables)
+        nil
+        'ecb-problem-report-post-hook
+        ecb-problem-report-message)
+       (ecb-redraw-layout)
+       (mail-subject)
+       (insert (read-string "Problem report subject: "
+                            (format "ECB-%s -- " ecb-version)))
+       (mail-text)
+       (search-forward ecb-problem-report-message)
+       (end-of-line)
+       (message "Preparing bug report...done")))))
 
 (defun ecb-problem-report-post-hook()
   "Function run the reporter package done its work. It looks for a message- and
@@ -721,5 +727,3 @@ could be interesting for support."
 (provide 'ecb-help)
 
 ;; ecb-help.el ends here
-
-
