@@ -408,6 +408,11 @@ you must deactivate and activate ECB again to take effect."
                 (const :tag "Never"
                        :value nil)))
 
+(defcustom ecb-show-file-info-in-minibuffer t
+  "*Show file information about the file under mouse in minibuffer."
+  :group 'ecb-general
+  :type 'boolean)
+
 (defcustom ecb-primary-secondary-mouse-buttons 'mouse-2--C-mouse-2
   "*Primary- and secondary mouse button for using the ECB-buffers.
 A click with the primary button causes the main effect in each ECB-buffer:
@@ -1100,7 +1105,7 @@ Currently the fourth argument TREE-BUFFER-NAME is not used here."
 
 (defun ecb-method-clicked(node ecb-button shift-mode)
   (if shift-mode
-      (ecb-mouse-over-node node)
+      (ecb-mouse-over-method-node node)
     (when (= 1 (tree-node-get-type node))
       (tree-node-toggle-expanded node)
       (tree-buffer-update))
@@ -1113,25 +1118,33 @@ Currently the fourth argument TREE-BUFFER-NAME is not used here."
       (goto-char (tree-node-get-data node)))))
 		 ;;(semantic-token-start (tree-node-get-data node))))))
 
+(defun ecb-get-file-info-text(file)
+  (let ((attrs (file-attributes file)))
+    (format "%s %8s %4d %10d %s %s"
+	    (nth 8 attrs)
+	    (user-login-name (nth 2 attrs))
+	    (nth 3 attrs)
+	    (nth 7 attrs)
+	    (format-time-string "%y%m%d %H:%M" (nth 5 attrs))
+	    (file-name-nondirectory file)
+	    )))
+
+(defun ecb-show-minibuffer-info(node)
+  (or (eq ecb-show-node-name-in-minibuffer 'always)
+      (and (eq ecb-show-node-name-in-minibuffer 'if-too-long)
+	   (>= (+ (length (tree-node-get-name node))
+		  (tree-buffer-get-node-indent node))
+	       (window-width)))))
+
 (defun ecb-mouse-over-node(node)
-  (cond ((eq ecb-show-node-name-in-minibuffer 'always)
-         (message "%s" (tree-node-get-name node)))
-        ((eq ecb-show-node-name-in-minibuffer 'if-too-long)
-         (if (>= (+ (length (tree-node-get-name node))
-                    (tree-buffer-get-node-indent node))
-                 (window-width))
-             (message "%s" (tree-node-get-name node))
-           ;; we must delete here the old message so no wrong info is
-           ;; displayed.
-           (message nil)))))
+  (message (when (ecb-show-minibuffer-info node)
+	     (if ecb-show-file-info-in-minibuffer
+		 (ecb-get-file-info-text (tree-node-get-data node))
+	       (tree-node-get-name node)))))
 
 (defun ecb-mouse-over-method-node(node)
-  (if ecb-show-node-name-in-minibuffer
-      (when (tree-node-get-data node)
-        (let ((doc (semantic-token-docstring (tree-node-get-data node))))
-          (when (stringp doc)
-            (message doc))))))
-
+  (message (when (ecb-show-minibuffer-info node)
+	     (tree-node-get-name node))))
 
 
 ;;====================================================
@@ -1208,7 +1221,7 @@ with the actually choosen layout \(see `ecb-layout-nr')."
          'ecb-interpret-mouse-click
          'ecb-tree-buffer-node-select-callback
          nil
-         'ecb-mouse-over-node
+         'ecb-mouse-over-method-node
          nil
          ecb-truncate-lines
          t
