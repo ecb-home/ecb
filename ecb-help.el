@@ -26,7 +26,7 @@
 ;;
 ;; Contains all online-help for ECB (stolen something from recentf.el)
 
-;; $Id: ecb-help.el,v 1.38 2001/07/04 16:12:45 uid40339 Exp $
+;; $Id: ecb-help.el,v 1.39 2001/07/08 14:24:47 berndl Exp $
 
 ;;; Code
 
@@ -581,6 +581,7 @@ a backtrace-buffer and inserts the contents of that."
           (progn
             (insert-string "The contents of the *Backtrace* buffer were\n\n")
 	    (insert-buffer backtrace-buffer)
+            ;; we must force the mark
 	    (goto-char (mark t))
             (insert-string "\nEnd Insert *Backtrace* buffer" ))
         (insert-string "There was no *Backtrace* buffer" ))
