@@ -2012,6 +2012,22 @@ during evaluating BODY the current window is always dedicated at the end!"
   (ecb-with-dedicated-window
    (switch-to-buffer ecb-history-buffer-name)))
 
+(defun ecb-set-default-ecb-buffer ()
+  "Set in the current window the default ecb-buffer which is useless but is
+used if a layout calls within its creation body a non bound
+ecb-buffer-setting- function."
+  (ecb-with-dedicated-window
+   (switch-to-buffer (get-buffer-create " *ECB-default-buffer*"))
+   (when (= (buffer-size) 0)
+     (insert " This is the default\n")
+     (insert " ecb-buffer which is\n")
+     (insert " useless. Probably this\n")
+     (insert " buffer is displayed\n")
+     (insert " because the layout uses\n")
+     (insert " an unbound buffer-set\n")
+     (insert " function!"))
+   (setq buffer-read-only t)))
+
 
 ;; ======== Delete-window-functions for the different layout-types ==========
 

@@ -299,7 +299,8 @@ The car is the old option symbol and the cdr is a 2-element-list with:
 
 (defun ecb-upgrade-alway-operate-in-edit-window (old-val)
   (let ((l (copy-tree old-val)))
-    (delete 'switch-to-buffer-other-window l)))
+    (setq l (delete 'switch-to-buffer-other-window l))
+    l))
 
 (defun ecb-upgrade-switch-to-compilation-window (old-val)
   (ecb-upgrade-alway-operate-in-edit-window old-val))
