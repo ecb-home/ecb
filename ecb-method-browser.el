@@ -2627,7 +2627,7 @@ TABLE."
 (defun ecb-methods-get-data-store (key)
   "Get the value for KEY from the tree-buffer-data-store of the Methods-buffer."
   (save-excursion
-    (ecb-buffer-select ecb-methods-buffer-name)
+    (set-buffer ecb-methods-buffer-name)
     (cdr (assoc key (tree-buffer-get-data-store)))))
   
 
@@ -2799,7 +2799,7 @@ to be rescanned/reparsed and therefore the Method-buffer will be rebuild too."
       ;; tree-buffer and therefore the cached buffer-string can not be updated
       ;; automatically.
       (save-excursion
-        (ecb-buffer-select ecb-methods-buffer-name)
+        (set-buffer ecb-methods-buffer-name)
         ;; we store in the tree-buffer the buffer and the major-mode for which
         ;; the tree-buffer has been build. In no other place the data-store
         ;; will be set!
@@ -4067,6 +4067,13 @@ pattern.")
              (ecb--semantic-equivalent-tag-p l r)
            (error (eq l r))))))
 
+(defun ecb-methods-node-mouse-highlighted-p (node)
+  "Return not nil when NODE has a positioned tag as data or belongs to the
+completions. This means that this node should be highlighted when mouse is
+moved over it."
+  (or (not (equal (tree-node-get-type node) ecb-methods-nodetype-tag))
+      (ecb--semantic-tag-with-position-p (tree-node-get-data node))))
+
 (defecb-tree-buffer-creator ecb-create-methods-tree-buffer ecb-methods-buffer-name
   "Create the tree-buffer for methods."
   (tree-buffer-create
@@ -4078,7 +4085,7 @@ pattern.")
    'ecb-tree-buffer-node-expand-callback
    'ecb-tree-buffer-node-collapsed-callback
    'ecb-mouse-over-method-node
-   t ;; highlight each node when moving mouse over it
+   'ecb-methods-node-mouse-highlighted-p
    'ecb-compare-methods-buffer-node-data
    (list ecb-methods-nodetype-bucket)
    nil

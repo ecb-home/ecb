@@ -2055,7 +2055,7 @@ by the option `ecb-mode-line-prefixes'."
   "Add a new item for FILENAME to the history buffer if the current filter of
 `ecb-history-filter' does not filter out this file."
   (save-excursion
-    (ecb-buffer-select ecb-history-buffer-name)
+    (set-buffer ecb-history-buffer-name)
     (tree-node-remove-child-data (tree-buffer-get-root) filename)
     (when (and (not (ecb-check-filename-for-history-exclude filename))
                (funcall (car ecb-history-filter) filename))
@@ -2083,7 +2083,7 @@ by the option `ecb-mode-line-prefixes'."
   "Sort the history buffer according to `ecb-history-sort-method'."
   (when ecb-history-sort-method
     (save-excursion
-      (ecb-buffer-select ecb-history-buffer-name)
+      (set-buffer ecb-history-buffer-name)
       (tree-node-sort-children
        (tree-buffer-get-root)
        (cond ((equal ecb-history-sort-method 'name)
