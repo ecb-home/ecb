@@ -1,6 +1,12 @@
 Version 1.61:
 -------------
 
+- New feature: If we are in an ECB special buffer (methods, directories, etc),
+and `split-window' or friends are called, we will select the `ecb-edit-window'
+first.  This is useful if you have any functions that split windows and you
+don't want them to just error with a method complaining that the current buffer
+can not be split. (Kevin)
+
 - Fixed a bug in `ecb-toggle-ecb-windows'.  For starters we weren't setting
   `ecb-window-hidden' when we redraw the layout.  This means that the ecb
   windows could be hidden but never shown. (Kevin)
@@ -93,7 +99,6 @@ Version 1.52:
 
 - Added EIEIO requirement to ECB.
 
-
 Version 1.51:
 -------------
 
@@ -126,7 +131,6 @@ Version 1.51:
 - Fixed a small bug that placed the window start at the beginning of the token
   instead of the beginning of the token line. (Jesper)
 
-
 Version 1.50:
 -------------
 
@@ -153,12 +157,10 @@ Version 1.50:
 + Now the option 'ecb-prefix-key' is customizable so you can define another
   prefix if there are conflicts with other minor-modes or packages (Klaus).
 
-  
 Version 1.41:
 -------------
 
 - Fixed bug when clicking on token in the methods buffer in XEmacs.
-
 
 Version 1.40:
 -------------
@@ -254,7 +256,6 @@ Version 1.40:
   directory in the directory buffer. So you can also open files with find-file
   etc. from within the tree-buffers. (Klaus).
 
-
 Version 1.32:
 -------------
 
@@ -282,7 +283,6 @@ Version 1.31:
 - Fixed a bug in 'ecb-current-buffer-sync' and 'ecb-redraw-layout' (Klaus)
 
 - Fixed a bug in loading semantic 1.3.3 or semantic 1.4 (Klaus)
-
 
 Version 1.30:
 -------------
@@ -359,7 +359,6 @@ Version 1.30:
 - Fixed small bug in directory tree that caused directories to be sorted by
   extension. (Jesper)
 
-
 Version 1.20 (2001-04-28):
 --------------------------
 
@@ -428,7 +427,6 @@ Version 1.20 (2001-04-28):
 - New option 'ecb-compile-window-temporally-enlarge'. Allowing
   Emacs-compilation to enlarge the ECB-compile-window temporally.
 
-
 Version 1.10 (2001-03-25):
 --------------------------
 
@@ -457,7 +455,6 @@ Version 1.10 (2001-03-25):
   mini-buffer. Currently this only works when follow-mouse is
   activated.
 
-
 Version 1.0 (2001-03-17):
 -------------------------
 
@@ -468,7 +465,6 @@ Version 1.0 (2001-03-17):
 - Fixed a couple of bugs when creating and deleting files.
 
 - Grouped customization variables.
-
 
 Contributed by Klaus Berndl <klaus.berndl@sdm.de>:
 
@@ -492,8 +488,6 @@ Contributed by Klaus Berndl <klaus.berndl@sdm.de>:
 
 - Fixed edit buffer sync bug.
 
-
-
 Version 0.04 (2000-11-07):
 --------------------------
 
@@ -512,7 +506,6 @@ Version 0.04 (2000-11-07):
 
 - Added method sorting. Thanks to Brian Anderson <brian.anderson@luna.com> 
   for this improvement.
-
 
 Version 0.03 (2000-07-28):
 --------------------------
@@ -536,7 +529,6 @@ Version 0.03 (2000-07-28):
 - Removed the "jde-jcb-window-skips-from-methods-buffer" and 
   "jde-jcb-window-skips-from-history-buffer" customization variables.
 
-
 Version 0.02 (2000-07-15):
 --------------------------
 
@@ -553,7 +545,6 @@ Version 0.02 (2000-07-15):
 
 - Packages matching a regular expression can be excluded from the packages 
   buffer. Thanks to Mark Gibson <mark@markg.co.uk> for this feature.
-
 
 Version 0.01 (2000-07-08):
 --------------------------

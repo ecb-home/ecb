@@ -124,7 +124,7 @@
 ;;   + The edit-window must not be splitted and the point must reside in
 ;;     the not deleted edit-window.
 
-;; $Id: ecb-layout.el,v 1.95 2002/01/22 06:50:44 burtonator Exp $
+;; $Id: ecb-layout.el,v 1.96 2002/01/22 09:37:36 burtonator Exp $
 
 ;;; Code:
 
@@ -373,6 +373,18 @@ rebind it to the original function in the `ecb-deactivate-hook'."
 (defvar ecb-use-dedicated-windows t
   "Use dedicated windows for the ECB buffers.
 Attention: You should never change this!")
+
+(defcustom ecb-layout-split-in-edit-window nil
+  "If we are in an ECB special buffer (methods, directories, etc), and
+`split-window' or friends are called, we will select the `ecb-edit-window'
+first.  This is useful if you have any functions that split windows and you
+don't want them to just error with a method complaining that the current buffer
+can not be split.
+
+Note that this may not be desirable in all situations and is disabled by
+default."
+  :group 'ecb-layout
+  :type 'boolean)
 
 (defconst ecb-number-of-layouts 13)
 (defcustom ecb-layout-window-sizes nil
@@ -926,6 +938,11 @@ horizontally.
 If called in an already splitted edit-window then nothing is done.
 If called in any other window of the current ECB-layout it stops with an
 error!"
+
+  (when ecb-layout-split-in-edit-window
+    (set-buffer (window-buffer ecb-edit-window))
+    (select-window ecb-edit-window))
+
   (if (not (equal (selected-frame) ecb-frame))
       ad-do-it
     (let ((p (ecb-point-in-edit-window)))
@@ -947,6 +964,11 @@ vertically.
 If called in an already splitted edit-window then nothing is done.
 If called in any other window of the current ECB-layout it stops with an
 error."
+
+  (when ecb-layout-split-in-edit-window
+    (set-buffer (window-buffer ecb-edit-window))
+    (select-window ecb-edit-window))
+
   (if (not (equal (selected-frame) ecb-frame))
       ad-do-it
     (let ((p (ecb-point-in-edit-window)))
@@ -1344,6 +1366,9 @@ redraw only if you have really slow machines where a full redraw takes several
 seconds because the quick redraw is not really safe and may have some drawbacks!
 On normal machines the full drawback should be done in << 1s!"
   (interactive)
+
+  (message "ECB redrawing layout...")
+    
   (when (and ecb-minor-mode
              (equal (selected-frame) ecb-frame))
     (if (and ecb-redraw-layout-quickly
@@ -1353,7 +1378,9 @@ On normal machines the full drawback should be done in << 1s!"
           (progn
             (message "ECB: Quick redraw failed...full redraw has been done!")
             (ecb-redraw-layout-full)))
-      (ecb-redraw-layout-full))))
+      (ecb-redraw-layout-full)))
+
+  (message "ECB redrawing layout...done"))
 
 ;; the main layout core-function. This function is the "environment" for a
 ;; special layout function (l.b.)
