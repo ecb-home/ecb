@@ -214,14 +214,6 @@ Known conflicts and bugs of ECB
 * Conflicts::                   Known conflicts with other packages
 * Bugs::                        Known bugs
 
-Known conflicts with other packages
-
-* VC::                          Conflicts with Version Control
-* follow-mouse::                Conflicts with follow-mouse.el
-* avoid::                       Conflicts with avoid.el
-* calendar::                    Conflicts with calendar.el
-* calculator::                  Conflicts with calculator.el
-
 @end detailmenu
 @end menu
 
@@ -342,15 +334,24 @@ online help of ECB is always available though, see
 @node Setting up Emacs, First steps, Installation, Install and first steps
 @section How to set up Emacs for file parsing
 
+To ensure ECB and semantic are working correctly for all by semantic
+supported languages you have to pay attention to the following aspects
+concerning your Emacs-setup:
+
+@enumerate
+@item Setting up semantic
+
 Parsing files is done completely by semantic. ECB just displays the
 parsing results. For all needs of ECB semantic is completely setup by
 ECB itself, i.e. ECB sets up semantic for you! You have only to add
 the installation directory of semantic to your @code{load-path} (in an
 appropriate way)!
 
-@strong{NOTE}: ECB is for browsing source-files and therefore you have
-to setup your Emacs-configuration properly so semantic can be
-activated automatically for parsing your Emacs-Lisp, C, C++ or Java
+@item Activating the correct major-mode
+
+ECB is for browsing source-files and therefore you have to setup your
+Emacs-configuration properly so semantic can be activated
+automatically for parsing your Emacs-Lisp, C, C++ or Java
 buffers@footnote{semantic supports some more ``languages'' like
 Makefiles etc. but these are the most important ones.}. For this Emacs
 must activate the correct @code{major-mode} for the source-files and
@@ -394,11 +395,6 @@ EXTENSION(S)
 @tab .java
 @end multitable
 
-@sp 1
-
-If your source-files are ``running'' with correct @code{major-mode}
-ECB and semantic will do what you expect them doing!
-
 Example: If you want files with extension ``.cpp'' being c++-parsed by
 semantic and ECB, your @code{auto-mode-alist} must contain an entry
 like:
@@ -409,6 +405,41 @@ like:
 
 After this ECB will correctly parse your ``.cpp''-sources and display
 all the semantic information in the ECB-methods buffer.
+
+@anchor{Checking your hooks}
+@item Checking your hooks
+
+If you have already checked points (1.) and (2.) and if you have still
+problems getting ECB/semantic working properly for your sources you
+should check the related major-mode hook. Every major-mode X has a
+hook with name ``X-hook'' which is evaluated after activating the
+major-mode (see above, 2.), e.g. the hook for the major-mode
+@code{c++-mode} is @code{c++-mode-hook}.
+
+Semantic adds automatically during load-time a special
+``semantic-setup'' to these major-mode hooks@footnote{Of course only
+for major-modes supported by semantic!} in form of a
+``setup-function''. Example: For c and c++ modes semantic adds
+@code{semantic-default-c-setup} to @code{c-mode-hook} and
+@code{c++-mode-hook}.
+
+If your own Emacs-setup (e.g. in @file{.emacs} or
+@file{site-lisp/site-start.el}) overwrites such a major-mode-hook then
+semantic can not be activated for this major-mode and in consequence
+ECB can not work properly too!
+
+Check if your Emacs-setup uses somewhere @code{setq} for adding code
+to a major-mode-hook. @strong{IMPORTANT}: Use @code{add-hook} instead of
+@code{setq}@footnote{@code{setq} replaces/overwrites the current
+value of a hook with the new value whereas @code{add-hook}
+@strong{adds} the new value to the old-value of the hook!}!
+
+@end enumerate
+
+If your source-files are ``running'' with correct @code{major-mode}
+and correct major-mode hooks ECB and semantic will do what you expect
+them doing!
+
 
 @node First steps, , Setting up Emacs, Install and first steps
 @section First steps after activating ECB first time
@@ -851,6 +882,7 @@ ECB offers you to advice the following functions so they work best with ECB:
 @item @code{other-window}
 @item @code{delete-window}
 @item @code{delete-other-windows}
+@item @code{delete-windows-on}
 @item @code{split-window-horizontally}
 @item @code{split-window-vertically}
 @item @code{switch-to-buffer}
@@ -1026,10 +1058,8 @@ especially changing, customizing and redrawing it.
 @subsection Changing and customizing the ECB-layout
 
 ECB offers several predefined layouts with different sets and also
-different locations of ECB-windows. To see which layouts are available
-and choose an appropriate one just customize the option
-@code{ecb-layout-nr}. The docstring of this option explains how to see
-the different available layouts.
+different locations of ECB-windows. See below the ``ascii-screenshot''
+of all currently available layouts.
 
 If you want to switch fast between some layouts see the option
 @code{ecb-toggle-layout-sequence} and the command
@@ -1043,6 +1073,460 @@ Maybe you want also change the look&feel of the tree-buffers. Then you
 can change the location of the collapse- and expand-symbols and the
 indendation of sub-nodes in a tree. See @code{ecb-tree-indent} and
 @code{ecb-tree-expand-symbol-before}.
+
+Here are all currently available layouts (Just customize the option
+@code{ecb-layout-nr} to the related number):
+
+@table @asis
+@item Layout Nr. 0
+@example
+@group
+-------------------------------------------------------
+|              |                                      |
+|  Directories |                                      |
+|              |                                      |
+|              |                                      |
+|              |                                      |
+|--------------|                                      |
+|      |       |                                      |
+| Sour | Hist  |                 Edit                 |
+|      |       |                                      |
+|      |       |                                      |
+|--------------|                                      |
+|              |                                      |
+|  Methods     |                                      |
+|              |                                      |
+|              |                                      |
+-------------------------------------------------------
+|                                                     |
+|                    Compilation                      |
+|                                                     |
+-------------------------------------------------------
+@end group
+@end example
+   
+@item Layout Nr. 1
+@example
+@group
+-------------------------------------------------------
+|              |                                      |
+|              |                                      |
+|              |                                      |
+|  Directories |                                      |
+|              |                                      |
+|              |                                      |
+|              |                                      |
+|--------------|                 Edit                 |
+|              |                                      |
+|              |                                      |
+|              |                                      |
+|  Sources     |                                      |
+|              |                                      |
+|              |                                      |
+|              |                                      |
+-------------------------------------------------------
+|                                                     |
+|                    Compilation                      |
+|                                                     |
+-------------------------------------------------------
+@end group
+@end example
+
+@item Layout Nr. 2
+@example
+@group
+-------------------------------------------------------
+|              |                                      |
+|  Directories |                                      |
+|              |                                      |
+|              |                                      |
+|              |                                      |
+|--------------|                                      |
+|              |                                      |
+|  Sources     |                 Edit                 |
+|              |                                      |
+|              |                                      |
+|--------------|                                      |
+|              |                                      |
+|  Methods     |                                      |
+|              |                                      |
+|              |                                      |
+-------------------------------------------------------
+|                                                     |
+|                    Compilation                      |
+|                                                     |
+-------------------------------------------------------
+@end group
+@end example
+
+@item Layout Nr. 3
+@example
+@group
+-------------------------------------------------------
+|              |                                      |
+|              |                                      |
+|              |                                      |
+|  Directories |                                      |
+|              |                                      |
+|              |                                      |
+|              |                                      |
+|--------------|                 Edit                 |
+|      |       |                                      |
+|      |       |                                      |
+|      |       |                                      |
+| Sour | Hist  |                                      |
+|      |       |                                      |
+|      |       |                                      |
+|      |       |                                      |
+-------------------------------------------------------
+|                                                     |
+|                    Compilation                      |
+|                                                     |
+-------------------------------------------------------
+@end group
+@end example
+
+@item Layout Nr. 4
+@example
+@group
+-------------------------------------------------------
+|              |                                      |
+|  Directories |                                      |
+|              |                                      |
+|              |                                      |
+|              |                                      |
+|--------------|                                      |
+|              |                                      |
+|  Sources     |                 Edit                 |
+|              |                                      |
+|              |                                      |
+|--------------|                                      |
+|              |                                      |
+|  History     |                                      |
+|              |                                      |
+|              |                                      |
+-------------------------------------------------------
+|                                                     |
+|                    Compilation                      |
+|                                                     |
+-------------------------------------------------------
+@end group
+@end example
+
+@item Layout Nr. 5
+@example
+@group
+-------------------------------------------------------
+|                                      |              |
+|                                      |  Directories |
+|                                      |              |
+|                                      |              |
+|                                      |--------------|
+|                                      |              |
+|                                      |              |
+|             Edit                     |  Sources     |
+|                                      |              |
+|                                      |              |
+|                                      |--------------|
+|                                      |              |
+|                                      |  Methods     |
+|                                      |              |
+|                                      |              |
+-------------------------------------------------------
+|                                                     |
+|                    Compilation                      |
+|                                                     |
+-------------------------------------------------------
+@end group
+@end example
+
+@item Layout Nr. 6
+@example
+@group
+-------------------------------------------------------
+|  Sources     |                                      | 
+|--------------|                                      |
+|              |                                      |
+|              |                                      |
+|              |                                      |
+|  Methods     |                 Edit                 |
+|              |                                      | 
+|              |                                      |
+|              |                                      |
+|--------------|                                      |
+|  History     |                                      |
+-------------------------------------------------------
+|                                                     |
+|                    Compilation                      |
+|                                                     |
+-------------------------------------------------------
+@end group
+@end example
+
+@item Layout Nr. 7
+@example
+@group
+-------------------------------------------------------
+|                        |             |              |
+|                        |             |              |
+|      Directories       |  Sources    |  Methods     |
+|                        |             |              |
+|                        |             |              |
+|-----------------------------------------------------|
+|                                                     |
+|                                                     |
+|                                                     |
+|                                                     |
+|                    Edit                             |
+|                                                     |
+|                                                     |
+|                                                     |
+|                                                     |
+-------------------------------------------------------
+|                                                     |
+|                    Compilation                      |
+|                                                     |
+-------------------------------------------------------
+@end group
+@end example
+
+@item Layout Nr. 8
+@example
+@group
+-------------------------------------------------------
+|              |                                      |
+|  Directories |                                      |
+|              |                                      |
+|              |                                      |
+|              |                                      |
+|              |                                      |
+|              |                                      |
+|--------------|                 Edit                 |
+|              |                                      |
+|  History     |                                      |
+|              |                                      |
+|--------------|                                      |
+|              |                                      |
+|  Methods     |                                      |
+|              |                                      |
+-------------------------------------------------------
+|                                                     |
+|                    Compilation                      |
+|                                                     |
+-------------------------------------------------------
+@end group
+@end example
+
+@item Layout Nr. 9
+@example
+@group
+-------------------------------------------------------
+|              |                                      |
+|  Directories |                                      |
+|              |                                      |
+|--------------|                                      |
+|              |                                      |
+|  Sources     |                                      |
+|              |                                      |
+|--------------|                 Edit                 |
+|              |                                      |
+|  Methods     |                                      |
+|              |                                      |
+|              |                                      |
+|--------------|                                      |
+|  History     |                                      |
+|              |                                      |
+-------------------------------------------------------
+|                                                     |
+|                    Compilation                      |
+|                                                     |
+-------------------------------------------------------
+@end group
+@end example
+
+@item Layout Nr. 10
+@example
+@group
+-------------------------------------------------------
+|                                                     |
+|                                                     |
+|                    Methods                          |
+|                                                     |
+|                                                     |
+|-----------------------------------------------------|
+|                                                     |
+|                                                     |
+|                                                     |
+|                                                     |
+|                    Edit                             |
+|                                                     |
+|                                                     |
+|                                                     |
+|                                                     |
+-------------------------------------------------------
+|                                                     |
+|                    Compilation                      |
+|                                                     |
+-------------------------------------------------------
+@end group
+@end example
+
+@item Layout Nr. 11
+@example
+@group
+-------------------------------------------------------
+|              |                                      |
+|              |                                      |
+|              |                                      |
+|              |                                      |
+|              |                                      |
+|              |                                      |
+|              |                                      |
+|   Methods    |                 Edit                 |
+|              |                                      |
+|              |                                      |
+|              |                                      |
+|              |                                      |
+|              |                                      |
+|              |                                      |
+|              |                                      |
+-------------------------------------------------------
+|                                                     |
+|                    Compilation                      |
+|                                                     |
+-------------------------------------------------------
+@end group
+@end example
+
+@item Layout Nr. 12
+@example
+@group
+-------------------------------------------------------
+|              |                                      |
+|              |                                      |
+|              |                                      |
+|  Methods     |                 Edit                 |
+|              |                                      |
+|              |                                      |
+|              |                                      |
+|              |                                      |
+|              |                                      |
+|--------------|                                      |
+|      |       |                                      |
+| Sou  | Hist  |                                      |
+|      |       |                                      |
+-------------------------------------------------------
+|                                                     |
+|                    Compilation                      |
+|                                                     |
+-------------------------------------------------------
+@end group
+@end example
+
+@item Layout Nr. 13
+@example
+@group
+-------------------------------------------------------
+|              |                                      |
+|              |                                      |
+|              |                                      |
+|  Methods     |                 Edit                 |
+|              |                                      |
+|              |                                      |
+|              |                                      |
+|              |                                      |
+|              |                                      |
+|--------------|                                      |
+|              |                                      |
+|  History     |                                      |
+|              |                                      |
+-------------------------------------------------------
+|                                                     |
+|                    Compilation                      |
+|                                                     |
+-------------------------------------------------------
+@end group
+@end example
+
+@item Layout Nr. 14
+@example
+@group
+-------------------------------------------------------
+|              |                                      |
+|              |                                      |
+|              |                                      |
+|              |                                      |
+|              |                                      |
+|              |                                      |
+|              |                                      |
+|   History    |                 Edit                 |
+|              |                                      |
+|              |                                      |
+|              |                                      |
+|              |                                      |
+|              |                                      |
+|              |                                      |
+|              |                                      |
+-------------------------------------------------------
+|                                                     |
+|                    Compilation                      |
+|                                                     |
+-------------------------------------------------------
+@end group
+@end example
+
+@item Layout Nr. 15
+@example
+@group
+-------------------------------------------------------
+|              |                                      |
+|              |                                      |
+|              |                                      |
+|              |                                      |
+|              |                                      |
+|              |                                      |
+|              |                                      |
+| Directories  |                 Edit                 |
+|              |                                      |
+|              |                                      |
+|              |                                      |
+|              |                                      |
+|              |                                      |
+|              |                                      |
+|              |                                      |
+-------------------------------------------------------
+|                                                     |
+|                    Compilation                      |
+|                                                     |
+-------------------------------------------------------
+@end group
+@end example
+
+@item Layout Nr. 16
+@example
+@group
+-------------------------------------------------------
+|              |                                      |
+|              |                                      |
+|              |                                      |
+| Directories  |                 Edit                 |
+|              |                                      |
+|              |                                      |
+|              |                                      |
+|              |                                      |
+|              |                                      |
+|--------------|                                      |
+|              |                                      |
+|  History     |                                      |
+|              |                                      |
+-------------------------------------------------------
+|                                                     |
+|                    Compilation                      |
+|                                                     |
+-------------------------------------------------------
+@end group
+@end example
+@end table
 
 @node Redrawing the ECB-layout, , Changing the ECB-layout, The ECB-layout
 @subsection Redrawing the ECB-layout
@@ -1185,21 +1669,23 @@ You can choose one of the options enclosed in brackets with
 TAB-completion; hitting RET direct after the prompt chooses auto. the
 first offered option (in the example above ``all'').
 
-These are the interactive commands of ECB (listed in alphabetical
-order):
+@strong{Note}: The following interactive commands of ECB are listed
+without the prefix ``ecb-'' (e.g. the command @code{ecb-activate} is
+listed with name ``activate''). This has been done for a better
+readable command index. @xref{Command Index}.
 
-@deffn Command ecb-activate
+@deffn Command activate
 Activates the ECB and creates all the buffers and draws the ECB-screen
 with the actually choosen layout (see @code{ecb-layout-nr}). This function
 raises always the ECB-frame if called from another frame. This is the
 same as calling @code{ecb-minor-mode} with a positive argument.
 @end deffn
 
-@deffn Command ecb-add-all-buffers-to-history
+@deffn Command add-all-buffers-to-history
 Add all current file-buffers to the history-buffer of ECB.
 @end deffn
 
-@deffn Command ecb-clear-history &optional clearall
+@deffn Command clear-history &optional clearall
 Clears the ECB history-buffer. If @var{CLEARALL} is @code{nil} then
 the behavior is defined in the option
 @code{ecb-clear-history-behavior} otherwise the user is prompted what
@@ -1207,13 +1693,13 @@ buffers should be cleared from the history-buffer. For further
 explanation see @code{ecb-clear-history-behavior}.
 @end deffn
 
-@deffn Command ecb-current-buffer-sync &optional force
+@deffn Command current-buffer-sync &optional force
 Synchronizes the ECB buffers with the current buffer. Unless
 @var{FORCE} is non-@code{nil} then do this only if current-buffer
 differs from the source displayed in the ECB tree-buffers.
 @end deffn
 
-@deffn Command ecb-cycle-through-compilation-buffers &optional choose-buffer
+@deffn Command cycle-through-compilation-buffers &optional choose-buffer
 Cycle through all compilation buffers currently open and display them
 within the compilation window @code{ecb-compile-window}. If the
 currently opened buffer within the compilation window is not a
@@ -1232,15 +1718,15 @@ buffer but switches to @code{ecb-compile-window} if a
 compilation-buffer!
 @end deffn
 
-@deffn Command ecb-deactivate
+@deffn Command deactivate
 Deactivates the ECB and kills all ECB buffers and windows.
 @end deffn
 
-@deffn Command ecb-display-upgraded-options
+@deffn Command display-upgraded-options
 Display a message-buffer which options have been upgraded or reset.
 @end deffn
 
-@deffn Command ecb-download-ecb
+@deffn Command download-ecb
 Download ECB from the ECB-website and install it. For this the options
 @code{ecb-download-url} and @code{ecb-download-version} must be set
 correct, whereas the default value of the former one should always be
@@ -1255,51 +1741,51 @@ directory tp @code{load-path} and restarting Emacs the new ECB version can
 be activated by @code{ecb-activate}.
 @end deffn
 
-@deffn Command ecb-goto-window-compilation
+@deffn Command goto-window-compilation
 Goto the ecb compilation window @code{ecb-compile-window}.
 @end deffn
 
-@deffn Command ecb-goto-window-directories
+@deffn Command goto-window-directories
 Make the ECB-directories window the current window.
 @end deffn
 
-@deffn Command ecb-goto-window-edit1
+@deffn Command goto-window-edit1
 Make the (first) edit-window window the current window.
 @end deffn
 
-@deffn Command ecb-goto-window-edit2
+@deffn Command goto-window-edit2
 Make the second edit-window (if available) window the current window.
 @end deffn
 
-@deffn Command ecb-goto-window-history
+@deffn Command goto-window-history
 Make the ECB-history window the current window.
 @end deffn
 
-@deffn Command ecb-goto-window-methods
+@deffn Command goto-window-methods
 Make the ECB-methods window the current window.
 @end deffn
 
-@deffn Command ecb-goto-window-sources
+@deffn Command goto-window-sources
 Make the ECB-sources window the current window.
 @end deffn
 
-@deffn Command ecb-minor-mode &optional arg
+@deffn Command minor-mode &optional arg
 Toggle ECB minor mode. With prefix argument @var{ARG}, turn on if
 positive, otherwise off. Return non-@code{nil} if the minor mode is
 enabled.
 @end deffn
 
-@deffn Command ecb-nav-goto-previous
+@deffn Command nav-goto-previous
 Go backward in the navigation historylist, see @ref{Back/forward
 navigation}.
 @end deffn
 
-@deffn Command ecb-nav-goto-next
+@deffn Command nav-goto-next
 Go forward in the navigation historylist, see @ref{Back/forward
 navigation}.
 @end deffn
 
-@deffn Command ecb-rebuild-methods-buffer
+@deffn Command rebuild-methods-buffer
 Updates the methods buffer with the current buffer after deleting the
 complete previous parser-information, means no semantic-cache is used!
 Point must stay in an edit-window otherwise nothing is done. This
@@ -1319,7 +1805,7 @@ the new name be shown immediately in the ECB-method buffer then you
 must call this function.
 @end deffn
 
-@deffn Command ecb-redraw-layout
+@deffn Command redraw-layout
 Redraw the ECB screen. If the variable @code{ecb-redraw-layout-quickly} is
 not nil then the redraw is done by the @code{ecb-redraw-layout-quickly}
 function, otherwise by @code{ecb-redraw-layout-full}. But it's strongly
@@ -1329,14 +1815,14 @@ redraw is not really safe and may have some drawbacks! On normal
 machines the full drawback should be done in << 1s!
 @end deffn
 
-@deffn Command ecb-show-help &optional format
+@deffn Command show-help &optional format
 Shows the online help of ECB either in Info or in HTML format
 depending of the value of @code{ecb-show-help-format}. If called with
 prefix argument, i.e. if @var{FORMAT} is not nil then the user is prompted
 to choose the format of the help (Info or HTML).
 @end deffn
 
-@deffn Command ecb-submit-problem-report
+@deffn Command submit-problem-report
 Submit a problem report for the ECB to the ECB mailing-list. This
 command generates in the edit-window a problem-report which contains
 already the current values of all ECB options, the current
@@ -1346,14 +1832,14 @@ description of the problem. Please describe the problem as detailed as
 possible!
 @end deffn
 
-@deffn Command ecb-toggle-ecb-windows &optional arg
+@deffn Command toggle-ecb-windows &optional arg
 Toggle visibilty of the ECB-windows. With prefix argument @var{ARG},
 make visible if positive, otherwise invisible. This has nothing to do
 with (de)activating ECB but only affects the visibility of the ECB
 windows. ECB minor mode remains active!
 @end deffn
 
-@deffn Command ecb-toggle-enlarged-compilation-window &optional arg
+@deffn Command toggle-enlarged-compilation-window &optional arg
 Toggle whether the @code{ecb-compile-window} is enlarged or not. If
 @var{ARG} > 0 then enlarge to a sensefull value (see below), if
 @var{ARG} <= 0 then shrink @code{ecb-compile-window} to
@@ -1371,18 +1857,18 @@ never enlarges the @code{ecb-compile-window} over the value of
 takes first effect after restarting ECB!
 @end deffn
 
-@deffn Command ecb-toggle-layout
+@deffn Command toggle-layout
 Toggles between the layouts defined in @code{ecb-toggle-layout-sequence}.
 Note: This function works by changing the options @code{ecb-layout-nr} and
 @code{ecb-show-sources-in-directories-buffer} but only for current
 Emacs-session.
 @end deffn
 
-@deffn Command ecb-update-directories-buffer
+@deffn Command update-directories-buffer
 Updates the ECB directories buffer.
 @end deffn
 
-@deffn Command ecb-upgrade-options
+@deffn Command upgrade-options
 Check for all ECB-options if their current value is compatible to the
 defined type. If not upgrade it to the new type or reset it to the
 default-value of current ECB. Try also to upgrade renamed options.
@@ -1535,6 +2021,11 @@ All customization of ECB is divided into the following ``customize
 groups''. You can highly customize all the ECB behavior/layout so just
 go to these groups and you will see all well documented ECB-options.
 
+@strong{Note}: All options in the following subsections are listed
+without the prefix ``ecb-'' (e.g. the option @code{ecb-layout-nr} is
+listed with name ``layout-nr''). This has been done for a better
+readable option index. @xref{Option Index}.
+
 @menu
 * ecb-general::                 General customizing ECB
 * ecb-directories::             Customizing the ECB-directories
@@ -1553,7 +2044,7 @@ go to these groups and you will see all well documented ECB-options.
 @noindent
 This group contains the following options:
 
-@defopt ecb-activate-before-layout-draw-hook
+@defopt activate-before-layout-draw-hook
 Normal hook run at the end of activating the ecb-package by running
 @code{ecb-activate}. This hooks are run after all the internal setup
 process but directly before(!) drawing the layout specified in
@@ -1568,7 +2059,7 @@ activating process (i.e. after the layout-drawing) look at
 @code{ecb-activate-hook}.
 @end defopt
 
-@defopt ecb-activate-hook
+@defopt activate-hook
 Normal hook run at the end of activating the ecb-package by running
 @code{ecb-activate}. This hooks are run at the real end of the
 activating process, means after the layout has been drawn!. If you
@@ -1576,12 +2067,12 @@ need hooks which are run direct before the layout-drawing look at
 @code{ecb-activate-before-layout-draw-hook}.
 @end defopt
 
-@defopt ecb-auto-activate
+@defopt auto-activate
 Automatically startup ECB when Emacs starts up. This should only be
 true if you always want to run @code{ecb-activate}.
 @end defopt
 
-@defopt ecb-auto-compatibility-check
+@defopt auto-compatibility-check
 Check at ECB-startup if all ECB-options have correct values. If not
 nil then all ECB-options are checked if their current value have the
 correct type. It the type is incorrect the option is either auto.
@@ -1597,16 +2088,16 @@ user can perform the check and reset manually with
 @xref{Auto. option-upgrading}.
 @end defopt
 
-@defopt ecb-current-buffer-sync-hook
+@defopt current-buffer-sync-hook
 Normal hook run at the end of @code{ecb-current-buffer-sync}.
 @end defopt
 
-@defopt ecb-deactivate-hook
+@defopt deactivate-hook
 Normal hook run at the end of deactivating (but before the ecb-layout
 is cleared!) ECB by running @code{ecb-deactivate}.
 @end defopt
 
-@defopt ecb-debug-mode
+@defopt debug-mode
 If not nil ECB displays debug-information in the Messages-buffer. This
 is done for some critical situations concerning semantic-tokens and
 their overlays (or extends for XEmacs). Normally you should not need
@@ -1617,7 +2108,7 @@ ecb-mailing-list (@code{ecb-submit-problem-report}) after getting the
 error again!
 @end defopt
 
-@defopt ecb-key-map
+@defopt key-map
 Specifies all keybindings for the ECB minor-mode keymap. The value is
 a cons-cell where the car is a common-prefix key for all the
 keybindings. The cdr is a list of keybindings each of them a list
@@ -1689,7 +2180,7 @@ The @code{^} notation for control characters also works: ^M = C-m.
 
 @end defopt
 
-@defopt ecb-major-modes-activate
+@defopt major-modes-activate
 List of major-modes for which ECB shoulb be activated or shown. Do not
 mistake this option with @code{ecb-auto-activate}. The latter one is
 for activating ECB after Emacs-startup (even without opening a buffer)
@@ -1732,7 +2223,7 @@ to avoid changing unnecessarily or unintentionally the frame-layout if
 the user just jumps between different windows.
 @end defopt
 
-@defopt ecb-major-modes-deactivate
+@defopt major-modes-deactivate
 List of major-modes for which ECB should be deactivated or hidden.
 Specify if ECB should be deactivated or at least hidden if a
 major-mode is active. For each major-mode there must be added an
@@ -1781,12 +2272,12 @@ jumps between different edit-windows, the tree-windows and the
 compile-window of ECB.
 @end defopt
 
-@defopt ecb-minor-mode-text
+@defopt minor-mode-text
 String to display in the mode line when ECB minor mode is active.
 (When the string is not empty, make sure that it has a leading space.)
 @end defopt
 
-@defopt ecb-mode-line-prefixes
+@defopt mode-line-prefixes
 Prefixes shown in the modelines of the ECB buffers. The displayed
 prefix then looks like: ``[ <PREFIX>[: ]]'', means if a prefix is
 defined for an ECB buffer then a single space is prepended and if
@@ -1794,7 +2285,7 @@ there is additional text to display (e.g. the current directory in the
 sources buffer) then also the string ``: `` is appended.
 @end defopt
 
-@defopt ecb-primary-mouse-jump-destination
+@defopt primary-mouse-jump-destination
 Jump-destination of a primary mouse-button click (see
 @code{ecb-primary-secondary-mouse-buttons}) in an ECB-window, if you
 click onto a source or method or variable. Defines in which
@@ -1816,7 +2307,7 @@ Note: A click with the secondary mouse-button (see again
 always in the ``other'' window related to the setting in this option.
 @end defopt
 
-@defopt ecb-primary-secondary-mouse-buttons
+@defopt primary-secondary-mouse-buttons
 Primary- and secondary mouse button for using the ECB-buffers. A click
 with the primary button causes the main effect in each ECB-buffer:
 
@@ -1859,14 +2350,14 @@ If you change this during ECB is activated you must deactivate and
 activate ECB again to take effect
 @end defopt
 
-@defopt ecb-show-help-format
+@defopt show-help-format
 The format @code{ecb-show-help} shows its online help. Allowed values
 are 'info (for the Info format) and 'html (for HTML format). If the
 value is 'html then @code{browse-url-browser-function} says which
 browser is used.
 @end defopt
 
-@defopt ecb-show-node-info-in-minibuffer
+@defopt show-node-info-in-minibuffer
 Define which node info should displayed in a tree-buffer after mouse
 moving over the node or after a shift click onto the node.
 
@@ -1916,11 +2407,11 @@ variable) is displayed.
 Do NOT set this option directly via setq but use always customize!
 @end defopt
 
-@defopt ecb-temp-dir
+@defopt temp-dir
 Specify a directory where ECB can store temporary files.
 @end defopt
 
-@defopt ecb-tree-RET-selects-edit-window
+@defopt tree-RET-selects-edit-window
 In which tree-buffers RET should finally select an edit-window. If a
 name of an ECB tree-buffer is contained in this list then hitting RET
 in this tree-buffer selects as last action the right edit-window
@@ -1938,23 +2429,23 @@ be changed fast and easy in a tree-buffer without customizing this
 option, but of course not for future Emacs sessions!
 @end defopt
 
-@defopt ecb-tree-expand-symbol-before
+@defopt tree-expand-symbol-before
 Show the expand symbol before the items in a tree.
 @end defopt
 
-@defopt ecb-tree-incremental-search
+@defopt tree-incremental-search
 Enable incremental search in the ECB-tree-buffers. For a detailed
 explanation see @ref{Using the keyboard}. If you change this
 during ECB is activated you must deactivate and activate ECB again to
 take effect.
 @end defopt
 
-@defopt ecb-tree-indent
+@defopt tree-indent
 Indent size for tree buffer. If you change this during ECB is
 activated you must deactivate and activate ECB again to take effect.
 @end defopt
 
-@defopt ecb-tree-navigation-by-arrow
+@defopt tree-navigation-by-arrow
 Enable smart navigation in the tree-windows by horiz. arrow-keys. If
 not nil then the left- and right-arrow keys work in the ECB
 tree-window in the following smart way if onto an expandable node:
@@ -1976,29 +2467,29 @@ If this option is changed the new value takes first effect after deactivating
 ECB and then activating it again!
 @end defopt
 
-@defopt ecb-truncate-lines
+@defopt truncate-lines
 Truncate lines in ECB buffers. If you change this during ECB is
 activated you must deactivate and activate ECB again to take effect.
 @end defopt
 
-@defopt ecb-truncate-long-names
+@defopt truncate-long-names
 Truncate long names that don't fit in the width of the ECB windows. If
 you change this during ECB is activated you must deactivate and
 activate ECB again to take effect.
 @end defopt
 
-@defopt ecb-use-recursive-edit
+@defopt use-recursive-edit
 Tell ECB to use a recursive edit so that it can easily be deactivated
 by (keyboard-escape-quit).
 @end defopt
 
-@defopt ecb-version-check
+@defopt version-check
 If not @code{nil} ECB checks at start-time if the required versions of
 semantic and eieio are installed and loaded into Emacs. It is strongly
 recommended to set this option to not @code{nil}!
 @end defopt
 
-@defopt ecb-window-sync
+@defopt window-sync
 Synchronize the ECB-windows automatically with current edit window. If
 @code{always} then the synchronization takes place always a buffer
 changes in the edit window, if @code{nil} then never. If a list of
@@ -2020,7 +2511,7 @@ sense to synchronize the ECB-directories/sources windows with the
 current directory in the dired-buffer.
 @end defopt
 
-@defopt ecb-window-sync-delay
+@defopt window-sync-delay
 Time Emacs must be idle before the ECB-windows are synchronized with
 current edit window. If nil then there is no delay, means
 synchronization takes place immediately. A small value of about 0.25
@@ -2034,7 +2525,7 @@ effect as if you set no delay.
 @noindent
 This group contains the following options:
 
-@defopt ecb-add-path-for-not-matching-files
+@defopt add-path-for-not-matching-files
 Add path of a file to @code{ecb-source-path} if not already contained.
 This is done during the auto. windows synchronization which happens if
 a file is opened not via the file/directory-browser of ECB. In such a
@@ -2061,7 +2552,7 @@ each drive (windows) or the root-path (unix) is added to the directory
 buffer of ECB.
 @end defopt
 
-@defopt ecb-auto-expand-directory-tree
+@defopt auto-expand-directory-tree
 Automatically expand the directory tree to the current source file.
 There are three options:
 
@@ -2072,7 +2563,7 @@ There are three options:
 @end itemize
 @end defopt
 
-@defopt ecb-cache-directory-contents
+@defopt cache-directory-contents
 Cache contents of directories.
 
 This can be useful if @code{ecb-source-path} contains directories with
@@ -2131,7 +2622,7 @@ cache can be cleared, see @code{ecb-clear-directory-cache}. This will
 change in a future version.
 @end defopt
 
-@defopt ecb-directories-buffer-name
+@defopt directories-buffer-name
 Name of the ECB directory buffer. Because it is not a normal buffer
 for editing you should enclose the name with stars, e.g. `` *ECB
 Directories*''.
@@ -2143,16 +2634,16 @@ Changes for this option at runtime will take affect only after
 deactivating and then activating ECB again!
 @end defopt
 
-@defopt ecb-excluded-directories-regexp
+@defopt excluded-directories-regexp
 Specifies directories that should not be included in the directories
 list. The value of this variable should be a regular expression.
 @end defopt
 
-@defopt ecb-show-sources-in-directories-buffer
+@defopt show-sources-in-directories-buffer
 Show source files in directories buffer.
 @end defopt
 
-@defopt ecb-source-path
+@defopt source-path
 Paths where to find code sources. Each path can have an optional alias
 that is used as it's display name. If no alias is set, the path is
 used as display name.
@@ -2165,11 +2656,11 @@ used as display name.
 @noindent
 This group contains the following options:
 
-@defopt ecb-show-source-file-extension
+@defopt show-source-file-extension
 Show the file extension of source files.
 @end defopt
 
-@defopt ecb-source-file-regexps
+@defopt source-file-regexps
 Specifies which files are shown as source files. Consists of one
 exclude regexp and one include regexp. A file is displayed in the
 source-buffer of ECB iff: The file does not match the exclude regexp
@@ -2191,7 +2682,7 @@ In addition to these predefined values a custom exclude and include
 combination can be defined.
 @end defopt
 
-@defopt ecb-sources-buffer-name
+@defopt sources-buffer-name
 Name of the ECB sources buffer. Because it is not a normal buffer for
 editing you should enclose the name with stars, e.g. ``*ECB Sources*''.
 
@@ -2203,7 +2694,7 @@ Changes for this option at runtime will take affect only after
 deactivating and then activating ECB again!
 @end defopt
 
-@defopt ecb-sources-sort-method
+@defopt sources-sort-method
 Defines how the source files are sorted.
 
 @itemize @minus
@@ -2224,12 +2715,12 @@ by @code{directory-files} (called without sorting).
 @noindent
 This group contains the following options:
 
-@defopt ecb-auto-update-methods-after-save
+@defopt auto-update-methods-after-save
 Automatically updating the ECB method buffer after saving the current
 source-buffer.
 @end defopt
 
-@defopt ecb-bucket-token-display
+@defopt bucket-token-display
 How ECB displays bucket tokens in the ECB methods buffer. Bucket
 tokens are tokens like ``[+] Variables'', ``[+] Dependencies'' etc. The
 name of the bucket-token comes from semantic but you can define a
@@ -2241,23 +2732,23 @@ The default are empty prefix/suffix-strings and
 [<bucket-name>]''.
 @end defopt
 
-@defopt ecb-exclude-parents-regexp
+@defopt exclude-parents-regexp
 Regexp which parent classes should not be shown in the methods buffer
 (see also @code{ecb-show-parents}). If nil then all parents will be
 shown if @code{ecb-show-parents} is not nil.
 @end defopt
 
-@defopt ecb-font-lock-tokens
+@defopt font-lock-tokens
 Adds font-locking (means highlighting) to the ECB-method buffer.
 @end defopt
 
-@defopt ecb-highlight-token-header-after-jump
+@defopt highlight-token-header-after-jump
 If not nil then highlight the token line in the source-buffer after
 jumping to this method by clicking in the ECB-method-buffer onto this
 method. For highlighting @code{ecb-token-header-face} is used.
 @end defopt
 
-@defopt ecb-highlight-token-with-point
+@defopt highlight-token-with-point
 How to highlight the method or variable under the cursor.
 
 @itemize @minus
@@ -2274,7 +2765,7 @@ No highlighting is done.
 See also @code{ecb-highlight-token-with-point-delay}.
 @end defopt
 
-@defopt ecb-highlight-token-with-point-delay
+@defopt highlight-token-with-point-delay
 Time Emacs must be idle before current token is highlighted. If nil
 then there is no delay, means current token is highlighted
 immediately. A small value of about 0.25 seconds saves CPU resources
@@ -2285,18 +2776,18 @@ into class-definition. Therefore the default value is a delay of 0.25
 seconds.
 @end defopt
 
-@defopt ecb-token-jump-narrow
+@defopt token-jump-narrow
 When jumping to a token from the ECB methods buffer narrows the buffer
 to only show that token. To display the entire buffer again, click on
 a source file or call @code{widen} @kbd{C-x n w}.
 @end defopt
 
-@defopt ecb-token-jump-sets-mark
+@defopt token-jump-sets-mark
 Jumping to a token from the ECB-method buffer now sets the mark so the
 user can easily jump back.
 @end defopt
 
-@defopt ecb-methods-buffer-name
+@defopt methods-buffer-name
 Name of the ECB methods buffer. Because it is not a normal buffer for
 editing you should enclose the name with stars, e.g. `` *ECB
 Methods*''.
@@ -2309,7 +2800,7 @@ Changes for this option at runtime will take affect only after
 deactivating and then activating ECB again!
 @end defopt
 
-@defopt ecb-post-process-semantic-tokenlist
+@defopt post-process-semantic-tokenlist
 Define mode-dependend postprocessing for the semantic-tokenlist. This
 is an alist where the car is a major-mode symbol and the cdr is a
 function-symbol of a function which should be used for post-processing
@@ -2325,11 +2816,11 @@ much better method-display in the methods-window of ECB, because all
 method implementations of a class are grouped together.
 @end defopt
 
-@defopt ecb-scroll-window-after-jump
+@defopt scroll-window-after-jump
 How to scroll the window when jumping to a token.
 @end defopt
 
-@defopt ecb-show-only-positioned-tokens
+@defopt show-only-positioned-tokens
 Show only nodes in the method-buffer which are ``jumpable''. If not nil
 then ECB displays in the method-buffer only nodes which are
 ``jumpable'', i.e. after selecting it by clicking or with RET then ECB
@@ -2340,7 +2831,7 @@ if this option is nil. Displaying such nodes can be sensefull even if
 they can not be jumped.
 @end defopt
 
-@defopt ecb-show-tokens
+@defopt show-tokens
 How to show tokens in the methods buffer. This variable is a list
 where each element represents a type of tokens:
 
@@ -2387,7 +2878,7 @@ buffer.
 
 @end defopt
 
-@defopt ecb-token-display-function
+@defopt token-display-function
 Function to use for displaying tokens in the methods buffer. This
 functionality is set on major-mode base, i.e. for every major-mode a
 different function can be used. The value of this option is a list of
@@ -2454,18 +2945,18 @@ is defined nor the special 'default, then
 tokens.
 @end defopt
 
-@defopt ecb-token-jump-narrow
+@defopt token-jump-narrow
 When jumping to a token from the ECB methods buffer narrows the buffer
 to only show that token. To display the entire buffer again, click on
 a source file or call @code{widen} (@kbd{C-x n w}).
 @end defopt
 
-@defopt ecb-token-jump-sets-mark
+@defopt token-jump-sets-mark
 Jumping to a token from the ECB-method buffer now sets the mark so the
 user can easily jump back.
 @end defopt
 
-@defopt ecb-type-token-display
+@defopt type-token-display
 How to display semantic type-tokens in the methods buffer. Normally
 all token displaying, colorizing and facing is done by semantic
 according to the value of @code{semantic-face-alist} and the semantic
@@ -2547,7 +3038,7 @@ the ``class'' specifier-string is removed from the display.
 @noindent
 This group contains the following options:
 
-@defopt ecb-clear-history-behavior
+@defopt clear-history-behavior
 Defines which entries of the history buffer should be deleted if
 @code{ecb-clear-history} is called. Three options are available:
 
@@ -2562,7 +3053,7 @@ The whole history will be cleared.
 @end itemize
 @end defopt
 
-@defopt ecb-history-buffer-name
+@defopt history-buffer-name
 Name of the ECB history buffer. Because it is not a normal buffer for
 editing you should enclose the name with stars, e.g. ``*ECB
 History*''.
@@ -2575,11 +3066,11 @@ Changes for this option at runtime will take affect only after
 deactivating and then activating ECB again!
 @end defopt
 
-@defopt ecb-history-item-name
+@defopt history-item-name
 The name to use for items in the history buffer.
 @end defopt
 
-@defopt ecb-kill-buffer-clears-history
+@defopt kill-buffer-clears-history
 Define if @code{kill-buffer} should also clear the history. There are
 three options:
 
@@ -2594,7 +3085,7 @@ Asks, if the history-entry should be removed after the kill.
 @end itemize
 @end defopt
 
-@defopt ecb-sort-history-items
+@defopt sort-history-items
 Sorts the items in the history buffer.
 @end defopt
 
@@ -2604,13 +3095,13 @@ Sorts the items in the history buffer.
 @noindent
 This group contains the following options:
 
-@defopt ecb-activate-before-new-frame-created-hook
+@defopt activate-before-new-frame-created-hook
 Normal hook run before the new ECB-frame is created if
 @code{ecb-new-ecb-frame} is not nil (otherwise this hook is not
 evaluated).
 @end defopt
 
-@defopt ecb-advice-window-functions
+@defopt advice-window-functions
 Use the intelligent windows functions of ECB instead of the standard
 Emacs functions. You can choose the following functions to be adviced
 by ECB so they behave as if the edit-window(s) of ECB would be the
@@ -2684,7 +3175,7 @@ for this) and rebind it to the original function in the
 @code{ecb-deactivate-hook}.
 @end defopt
 
-@defopt ecb-compile-window-enlarge-by-select
+@defopt compile-window-enlarge-by-select
 The compile-window is auto. enlarged after selecting it. If not nil
 then selecting the @code{ecb-compile-window} auto. enlarges it and
 deselecting (means selecting another window after point was in
@@ -2694,7 +3185,7 @@ the @code{ecb-compile-window} is done with
 documentation of this function!
 @end defopt
 
-@defopt ecb-compile-window-height
+@defopt compile-window-height
 If you want a compilation window shown at the bottom of the ECB-layout
 then set here the height of it (Default is a height of 5). If you
 redraw the current layout with @code{ecb-redraw-layout} then the
@@ -2722,7 +3213,7 @@ changed the ECB-screen-layout by any action you can always go back to
 this layout with @code{ecb-redraw-layout}
 @end defopt
 
-@defopt ecb-compile-window-temporally-enlarge
+@defopt compile-window-temporally-enlarge
 Let Emacs temporally enlarge the compile-window of the ECB-layout.
 
 This option has only an effect if @code{ecb-compile-window-height} is
@@ -2762,12 +3253,12 @@ To restore the ECB-layout after such a buffer-enlarge just call
 @code{ecb-redraw-layout}.
 @end defopt
 
-@defopt ecb-hide-ecb-windows-hook
+@defopt hide-ecb-windows-hook
 Hooks run after the ECB windows have been hidden either by
 @code{ecb-toggle-ecb-windows} or @code{ecb-hide-ecb-windows}.
 @end defopt
 
-@defopt ecb-layout-always-operate-in-edit-window
+@defopt layout-always-operate-in-edit-window
 Adviced window functions work always in the edit-window. If we are in
 an ECB special buffer (methods, directories, etc), and any of the
 adviced windowing functions is called (see
@@ -2793,7 +3284,7 @@ Per default this is enabled for @code{delete-window},
 @code{switch-to-buffer-other-window}.
 @end defopt
 
-@defopt ecb-layout-nr
+@defopt layout-nr
 Define the window layout of ECB. A positive integer which sets the
 general layout. Currently there are 17 predefined layouts with index from 0 to
 16. You can savely try out any of them by changing this value and saving it
@@ -2828,7 +3319,7 @@ changed the ECB-screen-layout by any action you can always go back to
 this layout with @code{ecb-redraw-layout}
 @end defopt
 
-@defopt ecb-layout-switch-to-compilation-window
+@defopt layout-switch-to-compilation-window
 Switch-to-buffer...-functions switch to @code{ecb-compile-window}. If
 the buffer argument of @code{switch-to-buffer} or
 @code{switch-to-buffer-other-window} is an compilation buffer as
@@ -2852,12 +3343,12 @@ the assumption is that when a user asks for a buffer in another window
 it should always be presented in another window.
 @end defopt
 
-@c @defopt ecb-layout-switch-to-compilation-window-auto-enlarge
+@c @defopt layout-switch-to-compilation-window-auto-enlarge
 @c When we automatically switch to a compilation buffer, automatically enlarge
 @c the buffer with @code{ecb-toggle-enlarged-compilation-window}.
 @c @end defopt
 
-@defopt ecb-layout-window-sizes
+@defopt layout-window-sizes
 Specifies the sizes of the ECB windows for each layout. The easiest
 way to change this variable is to change the window sizes by dragging
 the window borders using the mouse and then store the window sizes by
@@ -2871,11 +3362,11 @@ ecb-frame had at the time you store the values by calling
 normally during your work with ECB!.
 @end defopt
 
-@defopt ecb-new-ecb-frame
+@defopt new-ecb-frame
 Create a new frame at activation time of ECB.
 @end defopt
 
-@defopt ecb-other-window-jump-behavior
+@defopt other-window-jump-behavior
 Which windows of ECB should be accessible by the ECB-adviced function
 @code{other-window}, an intelligent replacement for the Emacs standard
 version of @code{other-window}. The following settings are possible:
@@ -2891,27 +3382,27 @@ Like 'only-edit plus the compile window if any.
 @end itemize
 @end defopt
 
-@defopt ecb-redraw-layout-quickly
+@defopt redraw-layout-quickly
 If non-nil, we will attempt to redraw the layout quickly. Please read
 also carefully the documentation of @code{ecb-redraw-layout}.
 @end defopt
 
-@defopt ecb-select-edit-window-on-redraw
+@defopt select-edit-window-on-redraw
 Select the first edit window on @code{ecb-redraw-layout}.
 @end defopt
 
-@defopt ecb-show-ecb-windows-hook
+@defopt show-ecb-windows-hook
 Hooks run after the ECB windows have been shown either by
 @code{ecb-toggle-ecb-windows} or @code{ecb-show-ecb-windows}.
 @end defopt
 
-@defopt ecb-split-edit-window
+@defopt split-edit-window
 Sets how and if the edit window should be splitted. But be aware: This
 option determines only if the edit-window should be splitted at
 start-time of ECB.
 @end defopt
 
-@defopt ecb-toggle-layout-sequence
+@defopt toggle-layout-sequence
 Toggle sequence for layout toggling with @code{ecb-toggle-layout}.
 Every element of this list has to be a valid layout-number (see option
 @code{ecb-layout-nr}).
@@ -2937,13 +3428,13 @@ This option makes only sense if the value is a list with more than 1
 element!
 @end defopt
 
-@defopt ecb-windows-height
+@defopt windows-height
 The height of the ECB windows in lines when they are placed above or
 below the edit window. If the number is less than 1.0 the width is a
 fraction of the frame height.
 @end defopt
 
-@defopt ecb-windows-width
+@defopt windows-width
 The width of the ECB windows in columns when they are placed to the
 left or right of the edit window. If the number is less than 1.0 the
 width is a fraction of the frame width.
@@ -2956,51 +3447,51 @@ width is a fraction of the frame width.
 @noindent
 This group contains the following options:
 
-@defopt ecb-directories-general-face
+@defopt directories-general-face
 Basic face for the ECB directories buffer. It큦 recommended to define
 here the font-family, the font-size, the basic color etc.
 @end defopt
 
-@defopt ecb-directory-face
+@defopt directory-face
 Define face used for highlighting current directory in the directories
 buffer.
 @end defopt
 
-@defopt ecb-history-face
+@defopt history-face
 Define face used for highlighting current history-entry in the history
 buffer.
 @end defopt
 
-@defopt ecb-history-general-face
+@defopt history-general-face
 Basic face for the ECB history buffer. It큦 recommended to define here
 the font-family, the font-size, the basic color etc.
 @end defopt
 
-@defopt ecb-method-face
+@defopt method-face
 Define face used for highlighting current method, class or variable in
 the methods buffer.
 @end defopt
 
-@defopt ecb-methods-general-face
+@defopt methods-general-face
 Basic face for the ECB methods buffer. It큦 recommended to define here
 the font-family, the font-size, the basic color etc.
 @end defopt
 
-@defopt ecb-source-face
+@defopt source-face
 Define face used for highlighting current source in the sources
 buffer.
 @end defopt
 
-@defopt ecb-source-in-directories-buffer-face
+@defopt source-in-directories-buffer-face
 Define a face for displaying sources in the directories buffer.
 @end defopt
 
-@defopt ecb-sources-general-face
+@defopt sources-general-face
 Basic face for the ECB sources buffer. It큦 recommended to define here
 the font-family, the font-size, the basic color etc.
 @end defopt
 
-@defopt ecb-token-header-face
+@defopt token-header-face
 Define face used for highlighting the token header after jumping to it
 by clicking onto a node in the methods buffer.
 @end defopt
@@ -3123,7 +3614,7 @@ for your personal taste. Or customize the related option in the group
 @noindent
 This group contains the following options:
 
-@defopt ecb-download-delete-archive
+@defopt download-delete-archive
 Should the downloaded archive be deleted after successfull
 installation or after failure during the installation-process.
 Possible values are:
@@ -3139,7 +3630,7 @@ Archive will never be deleted.
 @end itemize
 @end defopt
 
-@defopt ecb-download-url
+@defopt download-url
 URL where downloadable ECB-versions are located. The ECB-archive-file
 (e.g. ecb-1.70.tar.gz) will be appended to this URL and
 @code{ecb-download-ecb} will try to download this archive.
@@ -3147,7 +3638,7 @@ URL where downloadable ECB-versions are located. The ECB-archive-file
 Note: Normally this URL should never change but who knows...
 @end defopt
 
-@defopt ecb-download-version
+@defopt download-version
 Which version of ECB should be downloaded by @code{ecb-download-ecb}.
 Valid values are either the string ``latest'' or a version number like
 ``1.70''. ECB creates automatically the correct URL for download, see
@@ -3437,20 +3928,46 @@ There are two basic faces:
 
 @itemize @bullet
 @item @code{ecb-default-general-face}:
-
 Basic face for displaying an ECB-tree-buffer.
+
+It큦 recommended to define the font-family, the font-size, the basic
+color etc. with this face.
+
+In GNU Emacs 21.X all faces (even the face
+@code{ecb-default-highlight-face}) used in the ECB tree-buffers
+inherit from this face. Therefore the default attributes like font
+etc. of a face used in a tree-buffer can be very easily changed with
+face @code{ecb-default-general-face}.
+
+With XEmacs and GNU Emacs 20.X there is no inheritance-feature but the
+options @code{ecb-directories-general-face},
+@code{ecb-sources-general-face}, @code{ecb-methods-general-face} and
+@code{ecb-history-general-face} offer the choice to use the face
+@code{ecb-default-general-face} so also with XEmacs and GNU Emacs 20.X
+the basic face-settings can be easily changed just by customizing the
+face @code{ecb-default-general-face}.
+
 @item @code{ecb-default-highlight-face}:
 Basic face for highlighting the current node in an ECB-tree-buffer.
+
+In GNU Emacs 21.X all highlighting faces used in the ECB tree-buffers
+inherit from this face. Therefore the default attributes like font
+etc. of a highlighting face used in a tree-buffer can be very easily
+changed with face @code{ecb-default-highlight-face}.
+
+With XEmacs and GNU Emacs 20.X there is no inheritance-feature but the
+options @code{ecb-directory-face}, @code{ecb-source-face},
+@code{ecb-method-face} and @code{ecb-history-face} offer the choice to
+use the face @code{ecb-default-highlight-face} so also with XEmacs and
+GNU Emacs 20.X the basic face-settings can be easily changed just by
+customizing the face @code{ecb-default-highlight-face}.
+
 @end itemize
 
-With this faces you can change the basic attributes easily and fast
+With these faces you can change the basic attributes easily and fast
 for ALL ECB-tree-buffers. But you are also able to display each
-ECB-tree-buffer with different faces. For further details see the
-doc-strings of the faces @code{ecb-default-general-face} and
-@code{ecb-default-highlight-face} (just call @code{customize-face} to see the
-doc-strings). The options of the group 'ecb-face-options' are also
-interesting.
-
+ECB-tree-buffer with different faces, see the different options for
+every tree-buffer mentioned above.
 
 @node Small screens, Simulating speedbar, Changing faces, Tips and tricks
 @section Working with small screens
@@ -3671,15 +4188,6 @@ then a practicable solution or workaround is described.
 Here is a list of known conflicts of ECB with other packages and
 helpful solutions/hints/workarounds:
 
-@menu
-* VC::                          Conflicts with Version Control
-* follow-mouse::                Conflicts with follow-mouse.el
-* avoid::                       Conflicts with avoid.el
-* calendar::                    Conflicts with calendar.el
-* calculator::                  Conflicts with calculator.el
-@end menu
-
-@node VC, follow-mouse, Conflicts, Conflicts
 @subsection Package VC (Version Control)
 
 @cindex VC package
@@ -3688,7 +4196,6 @@ The variable @code{vc-delete-logbuf-window} must be set to nil during
 active ECB. This can be done with the hooks mentioned in @ref{Elisp
 programming}.
 
-@node follow-mouse, avoid, VC, Conflicts
 @subsection Package follow-mouse.el
 
 @noindent
@@ -3704,8 +4211,6 @@ over it. Because ECB has a much more intelligent mouse tracking
 mechanism than follow-mouse the follow-mouse stuff profit from ECB and
 works even better and saver as without activated ECB!
 
-
-@node avoid, calendar, follow-mouse, Conflicts
 @subsection Package avoid.el
 
 @cindex avoid package
@@ -3714,8 +4219,6 @@ option @code{ecb-show-node-info-in-minibuffer} activates for at least one
 ECB tree-buffer 'if-too-long or 'always. This is done automatically
 but only as long ECB is activated.
 
-
-@node calendar, calculator, avoid, Conflicts
 @subsection Package calendar.el
 
 @cindex calendar package
@@ -3737,7 +4240,6 @@ size but splits the window equally. But if you add this to your
 @end group
 @end example
 
-@node calculator, , calendar, Conflicts
 @subsection Package calculator.el
 
 @cindex calculator package
@@ -3838,8 +4340,37 @@ active ECB. This can be done with the hooks of ECB.
 @item
 Does ECB support C++ as well as Java?
 @tab @tab
-This depends strongly on Semantic, but all semantic-versions >=
-semantic-1.4beta13 should support C++ really well.
+For older versions of ECB (< 1.80) this depends strongly on the used
+semantic-version, but all semantic-versions >= semantic-1.4beta13
+should support C++ really well. All versions of ECB >= 1.80 support
+C++ as well as Java.
+
+@item @tab @tab
+
+@item
+Does ECB support Perl?
+@tab @tab
+This depends completely on semantic. If there is a semantic-BNF for
+Perl then semantic can parse Perl and then in turn ECB supports Perl.
+Check semantic if Perl is supported or write your own Perl-BNF for
+semantic.
+
+@item @tab @tab
+
+@item
+Does ECB support language XYZ?
+@tab @tab
+See question ``Does ECB support Perl?'' and replace ``Perl'' with
+``XYZ'' in the answer.
+
+@item @tab @tab
+
+@item
+How to add new languages to ECB?
+@tab @tab
+Add the language XYZ to semantic (perform all necessary steps described in
+the semantic-manual) and ECB will automatically support language XYZ!
+There is nothing to do in ECB itself!
 
 @item @tab @tab
 
@@ -3847,7 +4378,9 @@ semantic-1.4beta13 should support C++ really well.
 Why does ECB not recognize my source-files for C++?
 @tab @tab
 Your C++-files have probably an extension which is not mapped to
-c++-mode in @code{auto-mode-alist}, see @ref{Setting up Emacs}.
+c++-mode in @code{auto-mode-alist} and/or your own Emacs-setup has
+``destroyed'' the correct value of the hook-variable
+@code{c++-mode-hook}, see @ref{Setting up Emacs}.
 
 @item @tab @tab
 
@@ -3872,6 +4405,16 @@ in the edit-windows and what can i do?
 Set @code{scroll-conservatively} to 0 and @code{scroll-step} to a
 value > 1. For the exact reason look at @ref{Optimize scrolling}.
 
+@item @tab @tab
+
+@item
+Is it possible to make the history of ECB persistent?
+@tab @tab
+You can use the library ``desktop.el'' which works very well with ECB.
+Then all files of your recent Emacs-session will be opened
+automatically after next Emacs-start and will be added automatically
+to the ECB-history after ECB-start.
+
 @end multitable
 
 
@@ -3879,7 +4422,11 @@ value > 1. For the exact reason look at @ref{Optimize scrolling}.
 @unnumbered Command Index
 
 @noindent
-This index contains all user commands of ECB:
+This index contains all user commands of ECB.
+
+@strong{Note}: The commands in this index are listed without the
+prefix ``ecb-'' (e.g. the command @code{ecb-activate} is listed with
+name ``activate'').
 
 @printindex fn
 
@@ -3887,7 +4434,11 @@ This index contains all user commands of ECB:
 @unnumbered Option Index
 
 @noindent
-This index contains all customizable options of ECB:
+This index contains all customizable options of ECB.
+
+@strong{Note}: All options in this index are listed without the prefix
+``ecb-'' (e.g. the option @code{ecb-layout-nr} is listed with name
+``layout-nr'').
 
 @printindex vr
 
