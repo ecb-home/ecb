@@ -1,6 +1,6 @@
 ;;; ecb-multiframe.el --- 
 
-;; $Id: ecb-multiframe.el,v 1.3 2002/10/29 11:09:15 burtonator Exp $
+;; $Id: ecb-multiframe.el,v 1.4 2002/10/30 00:35:00 burtonator Exp $
 
 ;; Copyright (C) 2000-2003 Free Software Foundation, Inc.
 ;; Copyright (C) 2000-2003 Kevin A. Burton (burton@openprivacy.org)
@@ -66,7 +66,6 @@
 ;; - Is it possible to migrate some of this code into default-frame-alist
 ;; instead of using a hook?
 
-
 ;; NOTE: If you enjoy this software, please consider a donation to the EFF
 ;; (http://www.eff.org)
 
@@ -122,24 +121,28 @@
     (modify-frame-parameters frame (list (cons 'ecb-methods-buffer-name
                                                (concat " *ECB Methods <" frame-index ">*"))))
 
-    ;;fix speedbar by binding the given speedbar frame value with the current frame
-    (mapcar (lambda(sframe)
-              (when (boundp sframe)
-                (make-variable-frame-local sframe)
-                (modify-frame-parameters frame (list (cons sframe frame)))))
-            '(speedbar-frame speedbar-attached-frame dframe-attached-frame))
+    (when (and (featurep 'speedbar)
+               (featurep 'ecb-speedbar))
     
-    ;;setup speedbar with a new buffer
-    (make-variable-frame-local 'ecb-speedbar-buffer-name)
-
-    (let((new-ecb-speedbar-buffer-name (concat " SPEEDBAR <" frame-index ">")))
+      ;;fix speedbar by binding the given speedbar frame value with the current frame
+      
+      (mapcar (lambda(sframe)
+                (when (boundp sframe)
+                  (make-variable-frame-local sframe)
+                  (modify-frame-parameters frame (list (cons sframe frame)))))
+              '(speedbar-frame speedbar-attached-frame dframe-attached-frame))
+      
+      ;;setup speedbar with a new buffer
+      (make-variable-frame-local 'ecb-speedbar-buffer-name)
+      
+      (let((new-ecb-speedbar-buffer-name (concat " SPEEDBAR <" frame-index ">")))
     
-      (modify-frame-parameters frame (list (cons 'ecb-speedbar-buffer-name
-                                                 new-ecb-speedbar-buffer-name)))
+        (modify-frame-parameters frame (list (cons 'ecb-speedbar-buffer-name
+                                                   new-ecb-speedbar-buffer-name)))
 
-      (make-variable-frame-local 'speedbar-buffer)
-      (modify-frame-parameters frame (list (cons 'speedbar-buffer
-                                                 (get-buffer-create new-ecb-speedbar-buffer-name)))))))
+        (make-variable-frame-local 'speedbar-buffer)
+        (modify-frame-parameters frame (list (cons 'speedbar-buffer
+                                                   (get-buffer-create new-ecb-speedbar-buffer-name))))))))
 
 (defun ecb-deactivate-internal ()
   "Deactivates the ECB and kills all ECB buffers and windows."

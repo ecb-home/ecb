@@ -103,7 +103,7 @@
 ;; - `ecb-with-some-adviced-functions'
 ;;
 
-;; $Id: ecb-layout.el,v 1.123 2002/10/24 16:05:52 berndl Exp $
+;; $Id: ecb-layout.el,v 1.124 2002/10/30 00:34:59 burtonator Exp $
 
 ;;; Code:
 
@@ -588,6 +588,12 @@ done.")
 (defvar ecb-compile-window-was-selected-before-command nil
   "Not nil only if the `ecb-compile-window' was selected before most recent
 command.")
+
+(defcustom ecb-toggle-enlarged-compilation-window-use-max-height nil
+  "If true we will always use the maximum height for the compilation buffer
+which is 1/2 the frame height."
+  :group 'ecb-layout
+  :type 'boolean)
 
 (defun ecb-initialize-layout ()
   (setq ecb-frame nil
@@ -2137,11 +2143,15 @@ first effect after restarting ECB!"
 ;;                 (min (or ecb-old-compilation-window-height (/ (frame-height) 2))
           ;;                      (max compile-window-height-lines
          ;;                           (count-lines (point-min) (point-max)))))
-          (setq max-height
-                (min (or compilation-window-height
-                         ecb-old-compilation-window-height
-                         (/ (frame-height) 2))
-                     (count-lines (point-min) (point-max))))
+
+          (if ecb-toggle-enlarged-compilation-window-use-max-height
+              (setq max-height (/ (frame-height) 2))
+            (setq max-height
+                  (min (or compilation-window-height
+                           ecb-old-compilation-window-height
+                           (/ (frame-height) 2))
+                       (count-lines (point-min) (point-max)))))
+          
           (if should-shrink
               ;;restore the window configuration to ecb-compile-window-height
               (shrink-window (max 0 (- (window-height)
