@@ -231,9 +231,8 @@ NODE must be valid and already be visible in WINDOW!"
 
 (defun tree-buffer-highlight-node-data(node-data &optional dont-make-visible)
   (if node-data
-    (let* ((node (tree-buffer-find-node-data node-data))
-	   (w (get-buffer-window (current-buffer)))
-	   (ws (window-start w)))
+    (let ((node (tree-buffer-find-node-data node-data))
+          (w (get-buffer-window (current-buffer))))
       (when node
 ;;        (tree-buffer-remove-highlight)
         (setq tree-buffer-highlighted-node-data node-data)
