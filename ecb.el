@@ -334,6 +334,13 @@ so the user can easily jump back."
   :group 'ecb-methods
   :type 'boolean)
 
+(defcustom ecb-token-jump-narrow nil
+  "*When jumping to a token from the ECB methods buffer narrows the buffer to
+only show that token. To display the entire buffer again, click on a source file
+or call `widen' (C-x n w)."
+  :group 'ecb-methods
+  :type 'boolean)
+
 (defcustom ecb-token-display-function 'semantic-prototype-nonterminal
   "*Semantic function to use for displaying tokens in the methods buffer.
 Some useful functions are found in `semantic-token->text-functions'."
@@ -1210,6 +1217,8 @@ is not changed."
     ;; parsing stuff with this buffer
     (ecb-find-file-and-display ecb-path-selected-source
 			       other-edit-window)
+    (when ecb-token-jump-narrow
+      (widen))
     (setq ecb-selected-token nil)
     (ecb-update-methods-buffer--internal 'scroll-to-begin)
     (ecb-token-sync)))
@@ -1629,19 +1638,21 @@ Currently the fourth argument TREE-BUFFER-NAME is not used here."
 	  (if ecb-token-jump-sets-mark
 	      (push-mark))
 	  ;; Semantic 1.4beta2 fix for EIEIO class parts
-;;	  (ignore-errors
+	  ;;	  (ignore-errors
+	  (when ecb-token-jump-narrow
+	    (widen))
 	  (goto-char (semantic-token-start token))
-	  (cond
-	   ((eq 'top ecb-scroll-window-after-jump)
-	    (save-excursion
-	      (beginning-of-line)
-	      (set-window-start (selected-window) (point))))
-	   ((eq 'center ecb-scroll-window-after-jump)
-	    (set-window-start
-	     (selected-window)
-	     (save-excursion
-	       (forward-line (- (/ (window-height) 2)))
-	       (point)))))
+	  (if ecb-token-jump-narrow
+	      (narrow-to-region (tree-buffer-line-beginning-pos)
+				(semantic-token-end token))
+	    (cond
+	     ((eq 'top ecb-scroll-window-after-jump)
+	      (set-window-start (selected-window)
+				(tree-buffer-line-beginning-pos)))
+	     ((eq 'center ecb-scroll-window-after-jump)
+	      (set-window-start
+	       (selected-window)
+	       (tree-buffer-line-beginning-pos (- (/ (window-height) 2)))))))
 	  (when ecb-highlight-token-header-after-jump
 	    (save-excursion
 	      (move-overlay ecb-method-overlay
