@@ -2243,13 +2243,14 @@ this function the edit-window is selected which was current before redrawing."
       ;; fillup the history new with all buffers if the history buffer was not
       ;; shown before the redisplay but now (means if the layout has changed)
       (let ((current-ecb-windows (ecb-get-current-visible-ecb-buffers)))
-        (if (and (not (member ecb-history-buffer-name
-                              ecb-windows-before-redraw))
-                 (member ecb-history-buffer-name current-ecb-windows))
-            (ecb-add-all-buffers-to-history))
-        (if (and (not (equal ecb-windows-before-redraw current-ecb-windows))
-                 (not no-buffer-sync))
-            (ecb-current-buffer-sync t)))
+        (when (and (not (member (get-buffer ecb-history-buffer-name)
+                                ecb-windows-before-redraw))
+                   (member (get-buffer ecb-history-buffer-name)
+                           current-ecb-windows))
+          (ecb-add-all-buffers-to-history))
+        (when (and (not (equal ecb-windows-before-redraw current-ecb-windows))
+                   (not no-buffer-sync))
+          (ecb-current-buffer-sync t)))
 
       ;; after a full redraw the stored window-configuration for a quick
       ;; redraw should be actualized
