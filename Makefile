@@ -10,12 +10,19 @@
 # Define here the correct path to your Emacs or XEmacs binary
 EMACS=emacs
 
-# Set here the load-path of the semantic-version and eieio-version loaded
+# If semantic and eieio are added to load-path within some elisp-statements
+# in the Emacs initialisation-files (e.g. .emacs or site-start.el) then set
+# here again the load-path of the semantic-version and eieio-version loaded
 # into your Emacs (use always FORWARD-SLASHES as directory-separator even
 # with MS Windows systems). Make sure you compile ECB with the semantic-
 # and eieio-version you load into Emacs!
-SEMANTIC=../semantic
-EIEIO=../eieio
+
+# If you are using XEmacs with already installed xemacs-packages for
+# semantic and eieio or if you are using a file subdirs.el with GNU Emacs
+# which adds semantic and eieio then there is NO need to set the load-path
+# for semantic or eieio.
+SEMANTIC=
+EIEIO=
 
 # You can set here more load-paths to arbitrary packages if you want. But
 # this is really not necessary!
@@ -25,7 +32,11 @@ LOADPATH=
 # - Call "make" to byte-compile the ECB. You can savely ignore the messages.
 # - Or call
 #
-#      make SEMANTIC=="path/to/semantic" EIEIO="path/to/eieio" \
+#      make EMACS="path/to/emacs"
+#
+#      or
+#
+#      make SEMANTIC="path/to/semantic" EIEIO="path/to/eieio" \
 #           EMACS="path/to/emacs"
 #
 #   if you want to set either different load-pathes or Emacs-binary and
@@ -78,7 +89,7 @@ INSTALLINFO=/usr/bin/install-info
 
 # Do not change anything below!
 
-# $Id: Makefile,v 1.45 2002/12/06 20:41:25 berndl Exp $
+# $Id: Makefile,v 1.46 2002/12/20 14:31:39 berndl Exp $
 
 RM=rm -f
 CP=cp
@@ -86,9 +97,13 @@ CP=cp
 ecb_LISP_EL=tree-buffer.el ecb-util.el ecb-mode-line.el ecb-help.el \
             ecb-layout.el ecb-layout-defs.el ecb-navigate.el ecb.el \
             ecb-eshell.el ecb-cycle.el ecb-face.el ecb-compilation.el \
-            ecb-upgrade.el ecb-create-layout.el silentcomp.el
+            ecb-upgrade.el ecb-create-layout.el silentcomp.el \
+            ecb-speedbar.el
+
 ecb_LISP_ELC=$(ecb_LISP_EL:.el=.elc)
+
 ecb_TEXI=ecb.texi
+
 ecb_INFO=$(ecb_TEXI:.texi=.info)
 ecb_HTML=$(ecb_TEXI:.texi=.html)
 ecb_DVI=$(ecb_TEXI:.texi=.dvi)
@@ -99,8 +114,12 @@ ecb: $(ecb_LISP_EL)
 	@echo "Byte-compiling ECB with LOADPATH=${LOADPATH} ..."
 	@$(RM) $(ecb_LISP_ELC) ecb-compile-script
 	@echo "(add-to-list 'load-path nil)" > ecb-compile-script
-	@echo "(add-to-list 'load-path \"$(SEMANTIC)\")" >> ecb-compile-script
-	@echo "(add-to-list 'load-path \"$(EIEIO)\")" >> ecb-compile-script
+	@if test ! -z "${SEMANTIC}" ; then\
+	   @echo "(add-to-list 'load-path \"$(SEMANTIC)\")" >> ecb-compile-script; \
+	fi
+	@if test ! -z "${EIEIO}" ; then\
+	   @echo "(add-to-list 'load-path \"$(EIEIO)\")" >> ecb-compile-script; \
+	fi
 	@if test ! -z "${LOADPATH}" ; then\
 	   for loadpath in ${LOADPATH}; do \
 	      echo "(add-to-list 'load-path \"$$loadpath\")" >> ecb-compile-script; \
