@@ -6,7 +6,7 @@
 # Or type "make all" or "make upload-build" to generate the whole website
 # and build an uploadable ecb-website.tar.gz file.
 
-# $Id: Makefile,v 1.15 2004/01/15 13:00:54 berndl Exp $
+# $Id: Makefile,v 1.16 2004/01/20 08:06:58 berndl Exp $
 
 EMACS=emacs
 
@@ -105,7 +105,7 @@ upload-update:
 # update latest cvs-snapshot on the ECB-webiste
 update-cvs-snapshot:
 	@echo "Updating latest stable CVS-snapshot..."
-	$(SSH) "cvs -d:pserver:anonymous@cvs1:/cvsroot/ecb export -Dtomorrow ecb && tar czvf $(ecb_WEBSITE_LOC)/cvs_snapshots/ecb.tar.gz ecb && rm -Rf ecb"
+	$(SSH) "cvs -d:pserver:anonymous@cvs1:/cvsroot/ecb export -Dtomorrow ecb && rm -Rf ecb/html ecb/ecb2 && tar czvf $(ecb_WEBSITE_LOC)/cvs_snapshots/ecb.tar.gz ecb && rm -Rf ecb"
 
 clean:
 	@$(RM) -R $(ecb_HTMLDOCU_DIR)
