@@ -7,7 +7,7 @@
 ;; Keywords: java, class, browser
 ;; Created: Jul 2000
 
-(defvar ecb-version "1.41"
+(defvar ecb-version "1.50"
   "Current ECB version.")
 
 ;; This program is free software; you can redistribute it and/or modify it under
@@ -54,7 +54,7 @@
 ;; The latest version of the ECB is available at
 ;; http://home.swipnet.se/mayhem/ecb.html
 
-;; $Id: ecb.el,v 1.143 2001/08/10 21:09:30 creator Exp $
+;; $Id: ecb.el,v 1.144 2001/08/12 12:29:24 creator Exp $
 
 ;;; Code:
 
@@ -2207,12 +2207,6 @@ always the ECB-frame if called from another frame."
 
     (setq compilation-window-height ecb-old-compilation-window-height)
 
-    ;; we can safely do the kills because killing non existing buffers
-    ;; doesn´t matter.
-    (tree-buffer-destroy ecb-directories-buffer-name)
-    (tree-buffer-destroy ecb-sources-buffer-name)
-    (tree-buffer-destroy ecb-methods-buffer-name)
-    (tree-buffer-destroy ecb-history-buffer-name)
     ;; remove the hooks
     (remove-hook 'semantic-after-toplevel-cache-change-hook
 		 'ecb-rebuild-methods-buffer-with-tokencache)
@@ -2251,6 +2245,13 @@ always the ECB-frame if called from another frame."
     
     (ecb-initialize-layout)
 
+    ;; we can safely do the kills because killing non existing buffers
+    ;; doesn´t matter.
+    (tree-buffer-destroy ecb-directories-buffer-name)
+    (tree-buffer-destroy ecb-sources-buffer-name)
+    (tree-buffer-destroy ecb-methods-buffer-name)
+    (tree-buffer-destroy ecb-history-buffer-name)
+    
     (setq ecb-minor-mode nil))
   (message "The ECB is now deactivated.")
   ecb-minor-mode)

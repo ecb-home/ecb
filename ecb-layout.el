@@ -125,7 +125,7 @@
 ;;   + The edit-window must not be splitted and the point must reside in
 ;;     the not deleted edit-window.
 
-;; $Id: ecb-layout.el,v 1.74 2001/08/10 21:09:30 creator Exp $
+;; $Id: ecb-layout.el,v 1.75 2001/08/12 12:29:24 creator Exp $
 
 ;;; Code:
 
@@ -380,12 +380,11 @@ rebind it to the original function in the `ecb-deactivate-hook'."
 Attention: You should never change this!")
 
 (defconst ecb-number-of-layouts 13)
-(defcustom ecb-layout-window-sizes (make-vector ecb-number-of-layouts
-                                                (make-list 5 nil))
+(defcustom ecb-layout-window-sizes nil
   "*Specifies the sizes of the ECB windows for each layout. The easiest way to
 change this variable is to change the window sizes by dragging the window
 borders using the mouse and then store the window sizes by calling the
-`ecb-store-window-sizes' function. Next time the leyout is redrawn the values
+`ecb-store-window-sizes' function. Next time the layout is redrawn the values
 stored in this option will be used.
 
 But be aware: These values are only suitable for the frame-size the ecb-frame
@@ -395,30 +394,21 @@ ecb-frame has the size it has normally during your work with ECB!."
   :group 'ecb-layout
   :initialize 'custom-initialize-default
   :set ecb-layout-option-set-function
-  :type (cons
-	 'vector
-	 (let ((i 0) l)
-	   (while (< i ecb-number-of-layouts)
-	     (setq l (append
-		      l
-		      (list
-		       (append
-			(list
-			 'list
-			 ':tag (concat "Layout " (int-to-string i)))
-			(mapcar
-			 (function
-			  (lambda (item)
-			    (list 'choice ':tag item
-				  '(cons :tag "Custom size"
-					 :value (0 . 0)
-					 (integer :tag "Width")
-					 (integer :tag "Height"))
-				  '(const :tag "Default" nil))))
-			 '("Edit Window" "ECB Directories" "ECB Sources"
-			   "ECB History" "ECB Methods"))))))
-	     (setq i (1+ i)))
-	   l)))
+  :type (list
+	 'repeat
+	 (list 'cons ':tag "Window layout" '(integer :tag "Layout nr.")
+	       (nconc '(list :tag "Window sizes")
+		     (mapcar
+		      (function
+		       (lambda (item)
+			 (list 'choice ':tag item
+			       '(cons :tag "Custom size"
+				      :value (0 . 0)
+				      (integer :tag "Width")
+				      (integer :tag "Height"))
+			       '(const :tag "Default size" nil))))
+		      '("Edit Window" "ECB Directories" "ECB Sources"
+			"ECB History" "ECB Methods"))))))
 
 ;; ====== internal variables ====================================
 
@@ -437,7 +427,7 @@ done.")
 (defvar ecb-compile-window nil
   "Window to display compile-output in.")
 
-(defun ecb-initialize-layout()
+(defun ecb-initialize-layout ()
   (setq ecb-frame nil
         ecb-edit-window nil
         ecb-last-edit-window-with-point nil
@@ -467,8 +457,9 @@ either not activated or it behaves exactly like the original version!"
   (let ((frame (or (ad-get-arg 0) (selected-frame))))
     (if (and ecb-minor-mode
              (equal frame ecb-frame))
-        (if (yes-or-no-p "Attempt to delete the ECB-frame. ECB will be dactivated! Proceed? ")
-            (ecb-deactivate-internal)) ;; deletes also the ecb-frame if not the only frame
+        (when (yes-or-no-p "Attempt to delete the ECB-frame. ECB will be dactivated! Proceed? ")
+	  (ecb-deactivate-internal) ;; deletes also the ecb-frame if not the only frame
+	  ad-do-it)
       ad-do-it)))
 
 (require 'compile)
@@ -1475,21 +1466,28 @@ default values call `ecb-restore-default-window-sizes'. Please read also the
 documentation of `ecb-layout-window-sizes'!"
   (interactive)
   (when (equal (selected-frame) ecb-frame)
-    (aset ecb-layout-window-sizes ecb-layout-nr (ecb-get-window-sizes))
-    (customize-save-variable 'ecb-layout-window-sizes ecb-layout-window-sizes)))
+    (let ((a (ecb-find-assoc ecb-layout-window-sizes ecb-layout-nr)))
+      (unless a
+	(setq a (cons ecb-layout-nr nil))
+	(setq ecb-layout-window-sizes (ecb-add-assoc ecb-layout-window-sizes a)))
+      (setcdr a (ecb-get-window-sizes))
+      (customize-save-variable 'ecb-layout-window-sizes ecb-layout-window-sizes))))
 
 (defun ecb-restore-window-sizes ()
   "Sets the sizes of the ECB windows to their stored values."
   (interactive)
   (when (equal (selected-frame) ecb-frame)
-    (ecb-set-window-sizes (aref ecb-layout-window-sizes ecb-layout-nr))))
+    (ecb-set-window-sizes (ecb-find-assoc-value ecb-layout-window-sizes
+						ecb-layout-nr))))
 
 (defun ecb-restore-default-window-sizes ()
   "Resets the sizes of the ECB windows to their default values."
   (interactive)
   (when (equal (selected-frame) ecb-frame)
-    (aset ecb-layout-window-sizes ecb-layout-nr nil)
-    (ecb-redraw-layout)))
+    (setq ecb-layout-window-sizes
+	  (ecb-remove-assoc ecb-layout-window-sizes ecb-layout-nr))
+    (ecb-redraw-layout)
+    (customize-save-variable 'ecb-layout-window-sizes ecb-layout-window-sizes)))
 
 (defun ecb-get-window-size (window)
   (when window

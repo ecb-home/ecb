@@ -26,12 +26,24 @@
 ;; This file is part of the ECB package which can be found at:
 ;; http://home.swipnet.se/mayhem/ecb.html
 
-;; $Id: ecb-util.el,v 1.15 2001/05/16 20:37:55 creator Exp $
+;; $Id: ecb-util.el,v 1.16 2001/08/12 12:29:24 creator Exp $
 
 ;;; Code:
 (defconst running-xemacs (string-match "XEmacs\\|Lucid" emacs-version))
 (defconst ecb-directory-sep-char directory-sep-char)
 (defconst ecb-directory-sep-string (char-to-string ecb-directory-sep-char))
+
+(defun ecb-remove-assoc (list key)
+  (delete* key list :test (function (lambda (key item) (eq key (car item))))))
+
+(defun ecb-add-assoc (list key-value)
+  (cons key-value list))
+
+(defun ecb-find-assoc-value (list key)
+  (cdr (assoc key list)))
+
+(defun ecb-find-assoc (list key)
+  (assoc key list))
 
 (defun ecb-fix-filename (name &optional substitute-env-vars)
   (let ((norm-path (expand-file-name (if substitute-env-vars
