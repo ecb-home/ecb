@@ -1,8 +1,14 @@
 ********************************************************************************
-*** Last-Modified: $Date: 2001/04/25 06:44:09 $ 
-*** Version: $Id: TODO,v 1.8 2001/04/25 06:44:09 berndl Exp $
+*** Last-Modified: $Date: 2001/04/28 12:44:44 $ 
+*** Version: $Id: TODO,v 1.9 2001/04/28 12:44:44 berndl Exp $
 *** Author: Kevin A. Burton ( burton@apache.org | burton@openprivacy.org )
 ********************************************************************************
+
+- KB: support env vars, like the latest JDE, for settings like the source paths?
+
+- KB: use the JDE source paths if the JDE variable is available 
+   (perhaps there are other variables to use by default as well?). We
+   should add an option where this external source-paths can be defined.
 
 - JN: Possibility to save the current sizes of the windows. This will make it
       possible to customize the layout better.
