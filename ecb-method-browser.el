@@ -1385,26 +1385,26 @@ Methods-buffer."
 
 (defconst ecb-tag-image-name-alias-alist
   '(
-    ("struct-nil-nil" . "class-public")
-    ("struct-unknown-nil" . "class-public")
+    ("struct-nil-nil" . "class-unknown")
+    ("struct-unknown-nil" . "class-unknown")
     ("struct-private-nil" . "class-private")
     ("struct-protected-nil" . "class-protected")
     ("struct-public-nil" . "class-public")
     ;; currently we have no icon for for static structs and classes, but when
     ;; then we casn remove these mappings and replace with a mapping to
     ;; static-icons for structs and classes.
-    ("struct-nil-t" . "class-public")
-    ("struct-unknown-t" . "class-public")
+    ("struct-nil-t" . "class-unknown")
+    ("struct-unknown-t" . "class-unknown")
     ("struct-private-t" . "class-private")
     ("struct-protected-t" . "class-protected")
     ("struct-public-t" . "class-public")
-    ("class-nil-nil" . "class-public")
-    ("class-unknown-nil" . "class-public")
+    ("class-nil-nil" . "class-unknown")
+    ("class-unknown-nil" . "class-unknown")
     ("class-private-nil" . "class-private")
     ("class-protected-nil" . "class-protected")
     ("class-public-nil" . "class-public")
-    ("class-nil-t" . "class-public")
-    ("class-unknown-t" . "class-public")
+    ("class-nil-t" . "class-unknown")
+    ("class-unknown-t" . "class-unknown")
     ("class-private-t" . "class-private")
     ("class-protected-t" . "class-protected")
     ("class-public-t" . "class-public")
