@@ -122,7 +122,7 @@
 ;;   + The edit-window must not be splitted and the point must reside in
 ;;     the not deleted edit-window.
 
-;; $Id: ecb-layout.el,v 1.31 2001/04/25 04:36:08 burtonator Exp $
+;; $Id: ecb-layout.el,v 1.32 2001/04/25 06:26:22 berndl Exp $
 
 ;;; Code:
 
@@ -298,12 +298,14 @@ frame height."
                 (const :tag "Edit + compile window" edit-and-compile)))
 
 
-(defcustom ecb-delete-other-windows-behavor 'smart
-  "*What should ECB do when deleting other windows.  This should be used in all
-advice to enable/disable smart deletion of other windows."
-  :group 'ecb-layout
-  :type '(radio (const :tag "Smart deletion of windows within ECB" smart)
-                (const :tag "Standard deletion of all windows" standard)))
+;; (defcustom ecb-delete-other-windows-behavior 'smart
+;;   "*What should ECB do when deleting other windows.  This should be used in all
+;; advice to enable/disable smart deletion of other windows."
+;;   :group 'ecb-layout
+;;   :type '(radio (const :tag "Smart deletion of windows within ECB"
+;;                        :value smart)
+;;                 (const :tag "Standard deletion of all windows"
+;;                        :value standard)))
 
 (defcustom ecb-advice-window-functions '(other-window
                                          delete-window

@@ -26,7 +26,7 @@
 ;; This file is part of the ECB package which can be found at:
 ;; http://home.swipnet.se/mayhem/ecb.html
 
-;; $Id: tree-buffer.el,v 1.21 2001/04/24 12:51:04 berndl Exp $
+;; $Id: tree-buffer.el,v 1.22 2001/04/25 06:26:22 berndl Exp $
 
 ;;; Code:
 
@@ -120,7 +120,8 @@ with the same arguments as `tree-node-expanded-fn'."
                          shift-pressed control-pressed (buffer-name)))
               (when (tree-node-is-expandable node)
                 (tree-node-toggle-expanded node))
-              (tree-buffer-update))
+              ;; Update the tree-buffer with optimized display of NODE
+              (tree-buffer-update node))
           (when tree-node-selected-fn
             (funcall tree-node-selected-fn node mouse-button
                      shift-pressed control-pressed (buffer-name))))))))
@@ -216,20 +217,71 @@ inserted and the TEXT itself"
       (dolist (node (tree-node-get-children node))
         (tree-buffer-add-node node (1+ depth)))))
 
-(defun tree-buffer-update()
+(defun tree-node-count-subnodes-to-display(node)
+  "Returns the number of ALL subnodes of NODE which will currently be displayed
+if NODE is expanded, means the number of all the children of NODE \(if NODE is
+expanded) plus recursive the number of the children of each expanded child.
+Example:
+\[-] NODE
+    \[+] child 1
+    \[-] child 2
+        \[+] child 2.1
+        \[-] child 2.2
+            \[+] child 2.2.1
+            \[+] child 2.2.2
+        \[+] child 2.3
+    \[-] child 3
+        \[+] child 3.1
+    \[+] child 4
+The result for NODE here is 10"
+  (let ((result 0))
+    (when (and (tree-node-is-expandable node)
+               (tree-node-is-expanded node))
+      (setq result (+ result (length (tree-node-get-children node))))
+      (dolist (child (tree-node-get-children node))
+        (setq result (+ result (tree-node-count-subnodes-to-display child)))))
+    result))
+
+(defun tree-buffer-update(&optional node)
   "Updates the current tree-buffer. The buffer will be completely rebuild with
-it큦 current nodes. window-start and point will be preserved."
+it큦 current nodes. window-start and point will be preserved.
+If NODE is not nil and a valid and expanded node with at least one child then
+the display of this node is optimized so the node itself and as much as
+possible of it큦 children \(and also recursive the children of a child if it큦
+aleady expanded, see `tree-node-count-subnodes-to-display') are visible in
+current tree-buffer."
   (let* ((w (get-buffer-window (current-buffer)))
          (ws (window-start w))
          (p (point))
-         (buffer-read-only nil))
+         (exp-node-children-count
+          (if node
+              (tree-node-count-subnodes-to-display node)
+            0))
+         (buffer-read-only nil)
+         (next-line-add-newlines nil))
     (setq tree-buffer-nodes nil)
     (erase-buffer)
     (dolist (node (tree-node-get-children tree-buffer-root))
       (tree-buffer-add-node node 0))
     (tree-buffer-highlight-node-data tree-buffer-highlighted-node-data)
     (goto-char p)
-    (set-window-start w ws)))
+    (set-window-start w ws)
+    ;; let큦 optimize the display of the expanded node NODE and it큦 children.
+    (when (and node (tree-node-is-expanded node))
+      (goto-line (tree-buffer-find-node node))
+      ;; if the current node is not already displayed in the first line of the
+      ;; window (= condition 1) and if not all of it큦 children are visible in
+      ;; the window then we can do some optimization.
+      (when (and (save-excursion
+                   (previous-line 1)
+                   (pos-visible-in-window-p (point) w))
+                 (not (save-excursion
+                        (next-line exp-node-children-count)
+                        (pos-visible-in-window-p (point) w))))
+        ;; optimize the display of NODE and it큦 children so as much as
+        ;; possible are visible.
+        (recenter (max 0 (- (1- (window-height w))
+                            (1+ exp-node-children-count))))))))
 
 (defun tree-buffer-scroll(point window-start)
   "Scrolls current tree-buffer. The window will start at WINDOW-START and
@@ -359,7 +411,8 @@ EXPAND-SYMBOL-BEFORE: If not nil then the expand-symbol \(is displayed before
              (funcall tree-node-expanded-fn node 0 nil nil (buffer-name)))
            (when (tree-node-is-expandable node)
              (tree-node-toggle-expanded node))
-           (tree-buffer-update)))))
+           ;; Update the tree-buffer with optimized display of NODE           
+           (tree-buffer-update node)))))
 
   ;; mouse-1
   (define-key tree-buffer-key-map
