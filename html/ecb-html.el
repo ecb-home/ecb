@@ -21,7 +21,7 @@
 
 ;; Generates ECB HTML pages.
 
-;; $Id: ecb-html.el,v 1.29 2002/03/10 10:38:11 creator Exp $
+;; $Id: ecb-html.el,v 1.30 2002/08/12 20:05:53 creator Exp $
 
 ;;; Code:
 
@@ -60,6 +60,9 @@
 	      "ECB is source code browser for Emacs. It is a global minor-mode which displays a couple of windows that can be used to browse directories, files and methods. It supports method parsing for Java, C, C++, Elisp etc.")
 
    (h-section "News"
+	      (h-sub-section "ECB 1.80 released! (2002-08-12)"
+			     (h-link "docs.html#Install%20and%20first%20steps" "Here") " is a short installation guide. "
+			     "Click " (h-link "history" "here") " for information about changes in the new version. ")
 	      (h-sub-section "ECB 1.70 released! (2002-03-01)")
 	      (h-sub-section "ECB 1.60 released! (2002-01-20)"
 			     "Many improvements. Works fine with Emacs 21.")
@@ -74,8 +77,8 @@
    (h-section "Dependencies"
 	      (h-bullet-link-list
 	       ecb-bullet
-	       '(("http://cedet.sourceforge.net/semantic.shtml" "Semantic Bovinator" "Version 1.4beta11 or higher.")
-		 ("http://cedet.sourceforge.net/eieio.shtml" "EIEIO" "Version 0.16 or higher.")
+	       '(("http://cedet.sourceforge.net/semantic.shtml" "Semantic Bovinator" "Version 1.4 or higher.")
+		 ("http://cedet.sourceforge.net/eieio.shtml" "EIEIO" "Version 0.17 or higher.")
 		 ("http://jdee.sunsite.dk" "JDEE" "If you use ECB for Java development."))
 		 "_top")
 	      (h-p "If you use XEmacs you must have the fsf-compat package installed (contains overlay.el)."))
@@ -167,6 +170,7 @@
 	 ("http://sourceforge.net/project/showfiles.php?group_id=17484" "Download")
 	 ("docs.html" "Documentation")
 	 ("faq.html" "FAQ")
+	 ("history" "History")
 	 ("http://lists.sourceforge.net/lists/listinfo/ecb-list" "Mailing List")
 	 ("http://cvs.sourceforge.net/cgi-bin/viewcvs.cgi/ecb/" "CVS")
 	 ("screenshots/index.html" "Screenshots")
@@ -336,9 +340,8 @@
 (ecb-html-top)
 (ecb-html-menu)
 (ecb-html-main)
-(ecb-html-doc)
+;;(ecb-html-doc)
 (ecb-html-faq)
-(ecb-html-doc)
 (ecb-html-logo)
 (ecb-html-links)
 (ecb-html-screenshots)
