@@ -19,7 +19,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-layout-defs.el,v 1.13 2003/03/20 16:43:30 berndl Exp $
+;; $Id: ecb-layout-defs.el,v 1.14 2003/04/29 08:19:43 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -829,6 +829,41 @@ little more place."
   (select-window (next-window (next-window)))
   (ecb-set-methods-buffer)
   (select-window (previous-window (selected-window) 0)))
+
+
+(ecb-layout-define "left-dir-plus-speedbar" left
+  "This function creates the following layout:
+
+   -------------------------------------------------------
+   |              |                                      |
+   |  Directories |                                      |
+   |              |                                      |
+   |              |                                      |
+   |              |                                      |
+   |              |                                      |
+   |              |                                      |
+   |--------------|                 Edit                 |
+   |              |                                      |
+   |              |                                      |
+   |              |                                      |
+   |  Speedbar    |                                      |
+   |              |                                      |
+   |              |                                      |
+   |              |                                      |
+   -------------------------------------------------------
+   |                                                     |
+   |                    Compilation                      |
+   |                                                     |
+   -------------------------------------------------------
+
+If you have not set a compilation-window in `ecb-compile-window-height' then
+the layout contains no durable compilation window and the other windows get a
+little more place. This layout works best if it is contained in
+`ecb-show-sources-in-directories-buffer'!"
+  (ecb-set-directories-buffer)
+  (ecb-split-ver 0.5)
+  (ecb-set-speedbar-buffer)
+  (select-window (next-window)))
 
 
 (defconst ecb-buildin-layouts (copy-list ecb-available-layouts)

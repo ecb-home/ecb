@@ -110,7 +110,7 @@
 ;; For the ChangeLog of this file see the CVS-repository. For a complete
 ;; history of the ECB-package see the file NEWS.
 
-;; $Id: ecb-layout.el,v 1.163 2003/03/28 16:48:23 berndl Exp $
+;; $Id: ecb-layout.el,v 1.164 2003/04/29 08:19:40 berndl Exp $
 
 ;;; Code:
 
@@ -131,7 +131,7 @@
 
 ;; ecb-speedbar is only loaded if ecb-use-speedbar-for-directories is set to
 ;; true
-(silentcomp-defun ecb-set-speedbar-buffer)
+(silentcomp-defun ecb-speedbar-set-buffer)
 (silentcomp-defun ecb-speedbar-deactivate)
 (silentcomp-defvar ecb-speedbar-buffer-name)
 
@@ -1988,10 +1988,8 @@ during evaluating BODY the current window is always dedicated at the end!"
   (let ((set-directories-buffer (not ecb-use-speedbar-for-directories)))
     ;; first we act depending on the value of ecb-use-speedbar-for-directories
     (when (not set-directories-buffer)
-      (require 'ecb-speedbar)
       (condition-case error-data
-          (ecb-with-dedicated-window
-           (ecb-set-speedbar-buffer))
+          (ecb-set-speedbar-buffer)
         ;; setting the speedbar buffer has failed so we set
         ;; set-directories-buffer to t ==> standard-directories-buffer is set!
         (error (message "%s" error-data)
@@ -2004,6 +2002,10 @@ during evaluating BODY the current window is always dedicated at the end!"
           (ignore-errors (ecb-speedbar-deactivate)))
       (ecb-with-dedicated-window
        (switch-to-buffer ecb-directories-buffer-name)))))
+
+(defun ecb-set-speedbar-buffer ()
+  (require 'ecb-speedbar)
+  (ecb-with-dedicated-window (ecb-speedbar-set-buffer)))
 
 (defun ecb-set-sources-buffer ()
   (ecb-with-dedicated-window
@@ -2578,6 +2580,14 @@ this function the edit-window is selected which was current before redrawing."
                    (member (get-buffer ecb-directories-buffer-name)
                            current-ecb-windows))
           (ecb-update-directories-buffer))
+        ;; deactivate the speedbar stuff if the speedbar-integration-buffer
+        ;; was shown before but not now
+        (when (and (featurep 'ecb-speedbar)
+                   (member (get-buffer ecb-speedbar-buffer-name)
+                           ecb-windows-before-redraw)
+                   (not (member (get-buffer ecb-speedbar-buffer-name)
+                                current-ecb-windows)))
+          (ignore-errors (ecb-speedbar-deactivate)))
         ;; synchronize the special ecb-buffers if necessary (means if not all
         ;; ecb-windows of current layout were visible before redraw) and
         (when (and (not (equal ecb-windows-before-redraw current-ecb-windows))

@@ -1,6 +1,6 @@
 ;;; ecb-speedbar.el --- 
 
-;; $Id: ecb-speedbar.el,v 1.40 2003/02/11 14:39:04 berndl Exp $
+;; $Id: ecb-speedbar.el,v 1.41 2003/04/29 08:19:39 berndl Exp $
 
 ;; Copyright (C) 2000-2003 Free Software Foundation, Inc.
 ;; Copyright (C) 2000-2003 Kevin A. Burton (burton@openprivacy.org)
@@ -144,7 +144,7 @@ speedbar-window is active, then select the edit-window."
          (select-window (get-buffer-window ecb-speedbar-buffer-name)))))
 
 
-(defun ecb-set-speedbar-buffer()
+(defun ecb-speedbar-set-buffer()
   "Set the speedbar buffer within ECB."
   (ecb-speedbar-activate)
   (set-window-buffer (selected-window)
@@ -235,6 +235,15 @@ future this could break."
       (setq speedbar-buffer nil))))
 
 
+(defun ecb-speedbar-active-p ()
+  "Return not nil if speedbar is active and integrated in the `ecb-frame'."
+  (and (get-buffer ecb-speedbar-buffer-name)
+       (get-buffer-window (get-buffer ecb-speedbar-buffer-name) ecb-frame)))
+
+(defun ecb-speedbar-update-contents ()
+  "Encapsulate updating the speedbar."
+  (speedbar-update-contents))
+
 (defun ecb-speedbar-current-buffer-sync()
   "Update the speedbar so that we sync up with the current file."
   (interactive)
@@ -252,7 +261,7 @@ future this could break."
                                     ecb-default-directory))
                  speedbar-buffer
                  (buffer-live-p speedbar-buffer))
-        (speedbar-update-contents)))))
+        (ecb-speedbar-update-contents)))))
 
 (silentcomp-provide 'ecb-speedbar)
 
