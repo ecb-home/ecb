@@ -1,7 +1,8 @@
 
 - (BUG) if we are in a compilation buffer, and we do a
   switch-to-buffer-other-window, and the buffer currently in the edit window is
-  already the buffer we want to switch to, we should NOT split the window.
+  already the buffer we want to switch to, we should NOT split the window again
+  because this would yeild two windows each with the same buffer.
 
 - (BUG) ecb-current-buffer-sync doesn't seem to run from dired.  At least hooks
   aren't run.  The speedbar, eshell and methods buffers all need to be updated.

@@ -1,6 +1,6 @@
 ;;; ecb-eshell.el --- eshell integration for the ECB.
 
-;; $Id: ecb-eshell.el,v 1.30 2002/02/05 06:34:11 burtonator Exp $
+;; $Id: ecb-eshell.el,v 1.31 2002/02/05 06:42:51 burtonator Exp $
 
 ;; Copyright (C) 2000-2003 Free Software Foundation, Inc.
 ;; Copyright (C) 2000-2003 Kevin A. Burton (burton@openprivacy.org)
@@ -202,19 +202,24 @@ eshell is currently visible."
 
 (defun ecb-eshell-recenter()
   "Recenter the eshell window so that the prompt is at the end of the buffer."
+  (interactive)
 
   (save-selected-window
-
+  
     (let(window)
-
+      
       (setq window (get-buffer-window ecb-eshell-buffer-name))
-
+      
       (when (and (ecb-eshell-running-p)
                  window
-                 (window-live-p window))
-          
+                 (window-live-p window)
+                 (equal window ecb-compile-window))
+        
         (select-window window)
-          
+
+        ;;this needs to be present under GNU Emacs or recenter will fail.
+        (end-of-buffer) 
+        
         (recenter -2)))))
 
 (defun ecb-eshell-running-p()
