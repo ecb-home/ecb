@@ -19,7 +19,7 @@
 @c Free Software Foundation, Inc., 59 Temple Place - Suite 330,
 @c Boston, MA 02111-1307, USA.
 
-@c $Id: ecb.texi,v 1.70 2003/02/10 16:52:22 berndl Exp $
+@c $Id: ecb.texi,v 1.71 2003/02/11 14:39:04 berndl Exp $
 
 @setfilename ecb.info
 
@@ -2468,6 +2468,9 @@ prompted to choose the format of the help (Info or HTML). If an error
 about not finding the needed help-file occurs please take a look at
 the options @code{ecb-help-info-start-file} and
 @code{ecb-help-html-start-file}!
+
+Note: If you got ECB as a standard XEmacs-package maybe the
+HTML-online-documentation is not included.
 @end deffn
 
 @deffn Command show-layout-help
@@ -4817,6 +4820,9 @@ The format @code{ecb-show-help} shows its online help. Allowed values
 are 'info (for the Info format) and 'html (for HTML format). If the
 value is 'html then @code{browse-url-browser-function} says which
 browser is used.
+
+Note: If you got ECB as a standard XEmacs-package maybe the
+HTML-online-documentation is not included.
 @end defopt
 
 @node ecb-eshell, , ecb-help, Customizable options

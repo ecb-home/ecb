@@ -28,7 +28,7 @@
 ;; Do not change any html-file besides the index.html manually but do all
 ;; changes in this elisp file!
 
-;; $Id: ecb-html.el,v 1.39 2003/02/10 16:53:21 berndl Exp $
+;; $Id: ecb-html.el,v 1.40 2003/02/11 14:39:02 berndl Exp $
 
 ;;; Code:
 
@@ -76,7 +76,12 @@
 (defvar ecb-latest-news nil
   "List of latest news displayed on the main page.")
 (setq ecb-latest-news
-      `(,(h-sub-section "Bugfixes for ECB 1.90 available. (2003-06-03)"
+      `(,(h-sub-section "ECB 1.91.1 released! (2003-02-11)"
+                        "This is mostly a bugfix-release which fixes some annoying bugs! "
+                        (h-link "docs/Install-and-first-steps.html#Install%20and%20first%20steps" "Here") " is a short installation guide. "
+                        "Click " (h-link "history" "here")
+                        " for information about changes in the new version. ")
+        ,(h-sub-section "Bugfixes for ECB 1.90 available. (2003-02-06)"
                         "Click " (h-link "downloads.html" "here") " to get it.")
         ,(h-sub-section "Usermanual now available ín PDF-format! (2003-02-03)"
                         "Click " (h-link "downloads.html" "here") " to get it.")
@@ -87,18 +92,18 @@
                                 "XEmacs-netinstaller")
                         " (for Windows) or from " (h-link "ftp://ftp.xemacs.org" "ftp.xemacs.org")
                         " (go to directory /pub/xemacs/packages/) or "
-                        " via the package-manager of XEmacs.")
-        ,(h-sub-section "ECB 1.90 released! (2003-01-31)"
-                        "A lot of new features! Fixed some annoying bugs! "
-                        (h-link "docs/Install-and-first-steps.html#Install%20and%20first%20steps" "Here") " is a short installation guide. "
-                        "Click " (h-link "history" "here")
-                        " for information about changes in the new version. ")))
+                        " via the package-manager of XEmacs.")))
 
 (defvar ecb-rest-news nil
   "List of older news - these news are displayed in all-news.html ; see
 `ecb-html-all-news'.")
 (setq ecb-rest-news
-      `(,(h-sub-section "ECB has a new official website! (2003-01-30)"
+      `(,(h-sub-section "ECB 1.90 released! (2003-01-31)"
+                        "A lot of new features! Fixed some annoying bugs! "
+                        (h-link "docs/Install-and-first-steps.html#Install%20and%20first%20steps" "Here") " is a short installation guide. "
+                        "Click " (h-link "history" "here")
+                        " for information about changes in the new version. ")
+        ,(h-sub-section "ECB has a new official website! (2003-01-30)"
                         "You are already visiting the "
                         (h-link "main.html" "new webiste")
                         ". The "
@@ -287,23 +292,24 @@
      (h-line)
      (h-sub-section
       "Download Patches"
-      (h-bullet-link-list
-       ecb-bullet
-       (list
-        ;;; Add here all patches which should offered directly on the website.
-        '("patches/ecb-upgrade.el" "ecb-upgrade.el" "Fixes a bug in ECB 1.90 related to package-downloading and a bug related to upgrading from ECB 1.80.")
-        '("patches/ecb-navigate.el" "ecb-navigate.el" "Fixes a bug in ECB 1.90 which can inhibit that a user can open sources or clicking onto methods.")
-        '("patches/ecb-layout.el" "ecb-layout.el" "Fixes a bug in the command ecb-store-window-sizes of ECB 1.90.")
-        )
-       "_top")
-      h-br "Instructions:"
-      (h-numbered-list
-       "Download the patched files you need."
-       "Replace the old-versions in the ECB-installation directory with the new downloaded versions."
-       (concat "Re-byte-compile ECB with the command "
-               (h-i "ecb-byte-compile")
-               " if you use ECB byte-compiled.")
-       "Restart Emacs and ECB.")
+      (concat "There are no patches available for the current release ECB " ecb-version ".")
+;;       (h-bullet-link-list
+;;        ecb-bullet
+;;        (list
+;;         ;;; Add here all patches which should offered directly on the website.
+;;         '("patches/ecb-upgrade.el" "ecb-upgrade.el" "Fixes a bug in ECB 1.90 related to package-downloading and a bug related to upgrading from ECB 1.80.")
+;;         '("patches/ecb-navigate.el" "ecb-navigate.el" "Fixes a bug in ECB 1.90 which can inhibit that a user can open sources or clicking onto methods.")
+;;         '("patches/ecb-layout.el" "ecb-layout.el" "Fixes a bug in the command ecb-store-window-sizes of ECB 1.90.")
+;;         )
+;;        "_top")
+;;       h-br "Instructions:"
+;;       (h-numbered-list
+;;        "Download the patched files you need."
+;;        "Replace the old-versions in the ECB-installation directory with the new downloaded versions."
+;;        (concat "Re-byte-compile ECB with the command "
+;;                (h-i "ecb-byte-compile")
+;;                " if you use ECB byte-compiled.")
+;;        "Restart Emacs and ECB.")
       (h-line)
       (h-link "main.html" "Back") " to main section")))))
 

@@ -22,7 +22,7 @@
 ;; with GNU Emacs; see the file COPYING. If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-tod.el,v 1.3 2003/01/29 16:52:49 berndl Exp $
+;; $Id: ecb-tod.el,v 1.4 2003/02/11 14:39:04 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -63,6 +63,7 @@
     "You can get a quick overlook of all builtin layouts with `ecb-show-layout-help'."
     "Browse your sources as with a web-browser with `ecb-nav-goto-next' \[C-c . n], `ecb-nav-goto-previous' \[C-c . p]."
     "Download latest ECB direct from the website with `ecb-download-ecb'."
+    "Download latest semantic direct from the website with `ecb-download-semantic''."
     "Customize the look\&feel of the tree-buffers with `ecb-tree-expand-symbol-before' and `ecb-tree-indent'."
     "Customize the contents of the methods-buffer with `ecb-token-display-function', `ecb-type-token-display', `ecb-show-tokens'."
     "Customize the main mouse-buttons of the tree-buffers with `ecb-primary-secondary-mouse-buttons'."

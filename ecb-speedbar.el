@@ -1,6 +1,6 @@
 ;;; ecb-speedbar.el --- 
 
-;; $Id: ecb-speedbar.el,v 1.39 2003/01/16 09:21:58 berndl Exp $
+;; $Id: ecb-speedbar.el,v 1.40 2003/02/11 14:39:04 berndl Exp $
 
 ;; Copyright (C) 2000-2003 Free Software Foundation, Inc.
 ;; Copyright (C) 2000-2003 Kevin A. Burton (burton@openprivacy.org)
@@ -69,6 +69,7 @@
   (require 'silentcomp))
 
 (require 'speedbar)
+(require 'ecb-util)
 
 (defconst ecb-speedbar-version-ok (and (boundp 'speedbar-version)
                                        (stringp speedbar-version)
@@ -77,7 +78,7 @@
   "ECB can only integrate speedbar versions >= 0.14beta1 so the value is only
 true for these versions.")
 
-(defconst ecb-speedbar-adviced-functions '((speedbar-click . after)
+(defconst ecb-speedbar-adviced-functions '((speedbar-click . around)
                                            (speedbar-frame-mode . around)
                                            (speedbar-get-focus . around))
   "These functions of speedbar are always adviced if ECB is active. Each
@@ -87,15 +88,26 @@ adviced with more than one class \(e.g. with a before and an after-advice)
 then for every class a cons must be added to this list.")
 
 
-(defadvice speedbar-click (after ecb)
+
+(defadvice speedbar-click (around ecb)
   "Makes the function compatible with ECB. If ECB is active and the window of
 `ecb-speedbar-buffer-name' is visible \(means a layouts uses the
-speedbar-integration) then the ECB-edit-window is selected at the end. So
-always the edit-window is selected after clicking onto a filename in the
-speedbar."
-  (if (and (equal (selected-frame) ecb-frame)
-           (window-live-p (get-buffer-window ecb-speedbar-buffer-name)))
-      (ecb-select-edit-window)))
+speedbar-integration) and the clicked node in speedbar is a file then the
+ECB-edit-window is selected at the end. So always the edit-window is selected
+after clicking onto a filename in the speedbar."
+  ;; Klaus Berndl <klaus.berndl@sdm.de>: We must use an around-advice because
+  ;; we need exactly the information if the *clicked* item is a file or not.
+  ;; This is only available before the original speedbar-click actions because
+  ;; speedbar seems to do some inteligent stuff like autom. using the first
+  ;; file if a clicked directory contains any.
+  (let ((item (and (fboundp 'speedbar-line-file)
+                   (speedbar-line-file))))
+    ad-do-it
+    (if (and (equal (selected-frame) ecb-frame)
+             (window-live-p (get-buffer-window ecb-speedbar-buffer-name))
+             (and item
+                  (not (file-directory-p item))))
+        (ecb-select-edit-window))))
 
 
 (defadvice speedbar-frame-mode (around ecb)
@@ -236,7 +248,6 @@ future this could break."
              (set-buffer visible-buffer)
              (ecb-fix-filename default-directory)))
           (ecb-default-directory (ecb-fix-filename default-directory)))
-      
       (when (and (not (string-equal speedbar-default-directory
                                     ecb-default-directory))
                  speedbar-buffer

@@ -26,7 +26,7 @@
 ;; This file is part of the ECB package which can be found at:
 ;; http://ecb.sourceforge.net
 
-;; $Id: ecb-util.el,v 1.53 2003/02/07 15:54:43 berndl Exp $
+;; $Id: ecb-util.el,v 1.54 2003/02/11 14:39:04 berndl Exp $
 
 ;;; Code:
 
@@ -60,6 +60,9 @@
 
 (defconst ecb-ecb-dir
   (expand-file-name (file-name-directory (locate-library "ecb"))))
+(defconst ecb-semantic-dir
+  (expand-file-name (file-name-directory (locate-library "semantic"))))
+
 (defconst ecb-ecb-parent-dir (expand-file-name (concat ecb-ecb-dir "../")))
 
 ;; we assume that current loaded ECB is a regular XEmacs-package if and only
@@ -69,6 +72,10 @@
   (and ecb-running-xemacs
        (file-exists-p (expand-file-name (concat ecb-ecb-dir "_pkg.el")))
        (file-exists-p (expand-file-name (concat ecb-ecb-dir "auto-autoloads.el")))))
+(defconst ecb-semantic-regular-xemacs-package-p
+  (and ecb-running-xemacs
+       (file-exists-p (expand-file-name (concat ecb-semantic-dir "_pkg.el")))
+       (file-exists-p (expand-file-name (concat ecb-semantic-dir "auto-autoloads.el")))))
 
 (if ecb-running-xemacs
     (progn

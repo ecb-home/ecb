@@ -19,7 +19,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-upgrade.el,v 1.27 2003/02/10 16:52:24 berndl Exp $
+;; $Id: ecb-upgrade.el,v 1.28 2003/02/11 14:39:04 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -747,9 +747,11 @@ of `ecb-download-install-parent-dir'. After adding this new subdirectory to
 If current running ECB is installed as regular XEmacs-package and not with the
 archive available at the ECB website then this function asks for proceeding!"
   (interactive)
-  (ecb-package-download-ecb/semantic "ecb"
-                                     ecb-version
-                                     ecb-download-url))
+  (when (or (not ecb-regular-xemacs-package-p)
+            (ecb-package-display-xemacs-package-info "ecb"))
+    (ecb-package-download-ecb/semantic "ecb"
+                                       ecb-version
+                                       ecb-download-url)))
 
 (defun ecb-download-semantic ()
   "Download semantic from the semantic-website and install it. For this the
@@ -774,67 +776,70 @@ If current running semantic is installed as regular XEmacs-package and not
 with the archive available at the semantic website then this function asks for
 proceeding!"
   (interactive)
-  (ecb-package-download-ecb/semantic "semantic"
-                                     semantic-version
-                                     ecb-semantic-eieio-url))
+  (when (or (not ecb-semantic-regular-xemacs-package-p)
+            (ecb-package-display-xemacs-package-info "semantic"))
+    (ecb-package-download-ecb/semantic "semantic"
+                                       semantic-version
+                                       ecb-semantic-eieio-url)))
+
+(defun ecb-package-display-xemacs-package-info (package)
+  "Displays a warning if PACKAGE is a standard xemacs-package and ask if to
+proceed with downloading. Return not nil if proceeding."
+  (with-output-to-temp-buffer "*ECB downloading and installing*"
+    (princ (concat "Current "
+                   package
+                   " is installed as regular XEmacs package and not with the\n"))
+    (princ (concat "archive available at the "
+                   package
+                   "-website. So you should use the package-manager\n"))
+    (princ (concat "of XEmacs to get the latest version of "
+                   package
+                   "! If you proceed installing from\n"))
+    (princ (concat "the "
+                   package
+                   "-website then the new "
+                   package
+                   " is NOT installed as regular XEmacs-\n"))
+    (princ "package but as \"flat\" package into `ecb-download-package-version-type'!\n\n"))
+  (yes-or-no-p (concat "Do you want to proceed installing from the "
+                       package
+                       "-website? ")))
 
 
 (defun ecb-package-download-ecb/semantic (package curr-version url)
   "Download PACKAGE from URL. CURR-VERSION must be the current version of
 current active version of PACKAGE."
-  (let ((proceed t))
-    (when ecb-regular-xemacs-package-p
+  (let ((ver (ecb-package-get-matching-versions-str
+              package url
+              (if (= ecb-download-package-version-type -1)
+                  '(0 0 0 0) ;; smallest possible version-number
+                (ecb-package-version-str2list curr-version))
+              '(100 99 3 99))) ;; this version-number should be the biggest;-) 
+        (install-dir nil))
+    (if (string= ver curr-version)
+        (ecb-error "You tried to download an already installed version %s - Stop!"
+                   ver))
+    (setq install-dir (ecb-package-download package ver url))
+    (when install-dir
+      (message "New %s successfully installed!" package)
       (with-output-to-temp-buffer "*ECB downloading and installing*"
-        (princ (concat "Current "
+        (princ (concat "New "
                        package
-                       " is installed as regular XEmacs package and not with the\n"))
-        (princ (concat "archive available at the "
+                       " version is installed.\n\n"))
+        (princ (concat "+ Current " package ": "
+                       (file-name-directory (locate-library package))
+                       "\n"))
+        (princ (concat "+ New " package ": " install-dir))
+        (princ "\n\n")
+        (princ "After replacing the current directory with the new one in your `load-path'\n")
+        (princ (concat "and then restarting Emacs the new version of "
                        package
-                       "-website. So you should use the package-manager\n"))
-        (princ (concat "of XEmacs to get the latest version of "
-                       package
-                       "! If you proceed installing from\n"))
-        (princ (concat "the "
-                       package
-                       "-website then the new "
-                       package
-                       " is NOT installed as regular XEmacs-\n"))
-        (princ "package but as \"flat\" package into `ecb-download-package-version-type'!\n\n"))
-      (setq proceed (yes-or-no-p (concat "Do you want to proceed installing from the "
-                                         package
-                                         "-website? "))))
-    (when proceed
-      (let ((ver (ecb-package-get-matching-versions-str
-                  package url
-                  (if (= ecb-download-package-version-type -1)
-                      '(0 0 0 0) ;; smallest possible version-number
-                    (ecb-package-version-str2list curr-version))
-                  '(100 99 3 99))) ;; this version-number should be the biggest;-) 
-            (install-dir nil))
-        (if (string= ver curr-version)
-            (ecb-error "You tried to download an already installed version %s - Stop!"
-                       ver))
-        (setq install-dir (ecb-package-download package ver url))
-        (when install-dir
-          (message "New %s successfully installed!" package)
-          (with-output-to-temp-buffer "*ECB downloading and installing*"
-            (princ (concat "New "
-                           package
-                           " version is installed.\n\n"))
-            (princ (concat "+ Current " package ": "
-                           (file-name-directory (locate-library package))
-                           "\n"))
-            (princ (concat "+ New " package ": " install-dir))
-            (princ "\n\n")
-            (princ "After replacing the current directory with the new one in your `load-path'\n")
-            (princ (concat "and then restarting Emacs the new version of "
-                           package
-                           " is loaded."))
-            (when (string= package "ecb")
-              (princ "\n\nIf the value of `ecb-auto-compatibility-check' is not nil then the new version\n")
-              (princ "checks at start-time if there are incompatible options! Please read the\n")
-              (princ "documentation of this option!"))
-            (princ "\n\n")))))))
+                       " is loaded."))
+        (when (string= package "ecb")
+          (princ "\n\nIf the value of `ecb-auto-compatibility-check' is not nil then the new version\n")
+          (princ "checks at start-time if there are incompatible options! Please read the\n")
+          (princ "documentation of this option!"))
+        (princ "\n\n")))))
 
 
 (defun ecb-package-download (package version url)

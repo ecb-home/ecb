@@ -26,7 +26,7 @@
 ;;
 ;; Contains all online-help for ECB (stolen something from recentf.el)
 
-;; $Id: ecb-help.el,v 1.90 2003/02/02 07:00:59 berndl Exp $
+;; $Id: ecb-help.el,v 1.91 2003/02/11 14:39:06 berndl Exp $
 
 ;;; Code
 
@@ -60,7 +60,10 @@
 (defcustom ecb-show-help-format 'info
   "*The format `ecb-show-help' shows its online help. Allowed values are 'info
 \(for the Info format) and 'html \(for HTML format). If the value is 'html
-then `browse-url-browser-function' says which browser is used."
+then `browse-url-browser-function' says which browser is used.
+
+Note: If you got ECB as a standard XEmacs-package maybe the
+HTML-online-documentation is not included."
   :group 'ecb-help
   :type '(choice :tag "Online-help format" :menu-tag "Online-help format"
                  (const :tag "Info" :value info)
@@ -165,7 +168,10 @@ FORMAT is not nil then the user is prompted to choose the format of the help
 \(Info or Html).
 
 If an error about not finding the needed help-file occurs please take a look
-at the options `ecb-help-info-start-file' and `ecb-help-html-start-file'!"
+at the options `ecb-help-info-start-file' and `ecb-help-html-start-file'!
+
+Note: If you got ECB as a standard XEmacs-package maybe the
+HTML-online-documentation is not included."
   (interactive "P")
   (let ((f (if format
                (intern (ecb-query-string "Choose format of online-help:"
