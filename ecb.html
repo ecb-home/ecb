@@ -319,11 +319,40 @@ three different types of ECB-windows/tree-buffers:
 <li>ECB-Methods
 </ul>
 
-<p>In addition to these ECB-windows you have always one or two
-<dfn>edit-windows</dfn> (see <a href="#The%20edit-window">The edit-window</a>) in the
-ECB-frame and (if you want) at the bottom a <dfn>compilation-window</dfn>,
-where all the output of Emacs-compilation (compile, grep etc.) is
-shown (see <a href="#Temp-%20and%20compile-buffers">Temp- and compile-buffers</a>).
+<p>In addition to these "special" ECB-windows you have always one or
+two <dfn>edit-windows</dfn> (see <a href="#The%20edit-window">The edit-window</a>) in the ECB-frame and
+at the bottom a <dfn>compilation-window</dfn> (optional), where all the
+output of Emacs-compilation (compile, grep etc.) is shown
+(see <a href="#Temp-%20and%20compile-buffers">Temp- and compile-buffers</a>).
+
+<p>The following "ascii-screenshot" illustrates the typical layout of
+the ECB-frame<a rel=footnote href="#fn-2"><sup>2</sup></a>:
+
+<br><pre>------------------------------------------------------------------
+|              |                                                 |
+|  Directories |                                                 |
+|              |                                                 |
+|--------------|                                                 |
+|              |                                                 |
+|  Sources     |                                                 |
+|              |                                                 |
+|--------------|                 Edit-window(s)                  |
+|              |        (can be splitted in two windows)         |
+|  Methods     |                                                 |
+|              |                                                 |
+|--------------|                                                 |
+|              |                                                 |
+|  History     |                                                 |
+|              |                                                 |
+------------------------------------------------------------------
+|                                                                |
+|                 Compilation-window (optional)                  |
+|                                                                |
+------------------------------------------------------------------
+</pre>
+
+<p>In the following subsections the "special" ECB-windows will be
+explained in detail.
 
 <ul>
 <li><a accesskey=1 href="#ECB%20Directories">ECB Directories</a>:              Contents of the ECB Directories-buffer
@@ -543,7 +572,7 @@ window (see the documentation <code>ecb-primary-mouse-jump-destination</code>).
 combinations of primary and secondary mouse-buttons are possible:
 
 <ul>
-<li>primary: mouse-2, secondary: C-mouse-2<a rel=footnote href="#fn-2"><sup>2</sup></a>. This is the default.
+<li>primary: mouse-2, secondary: C-mouse-2<a rel=footnote href="#fn-3"><sup>3</sup></a>. This is the default.
 
 <li>primary: mouse-1, secondary: C-mouse-1
 
@@ -888,8 +917,9 @@ Up:<a rel=up accesskey=u href="#The%20ECB-layout">The ECB-layout</a>
 
 <h4>Changing and customizing the ECB-layout</h4>
 
-<p>ECB offers several predefined layouts. To see which layouts are
-available and choose an appropriate one just customize the option
+<p>ECB offers several predefined layouts with different sets and also
+different locations of ECB-windows. To see which layouts are available
+and choose an appropriate one just customize the option
 <code>ecb-layout-nr</code>. The docstring of this option explains how to see
 the different available layouts.
 
@@ -4229,7 +4259,7 @@ satisfied:
 
 <p>With unix-systems these tools are in the
 standard-distribution. If you are running any Microsoft Windows system
-then you need cygwin<a rel=footnote href="#fn-3"><sup>3</sup></a> which offers these tools too. On every
+then you need cygwin<a rel=footnote href="#fn-4"><sup>4</sup></a> which offers these tools too. On every
 system these tools must reside in the <code>PATH</code> environment-variable!
 
 <p>If you are behind a firewall and you have to use a proxy you maybe
@@ -5070,10 +5100,14 @@ hitting RETURN, inserting "ecb-source-path" in the minibuffer and
 finally hitting RETURN again</p>
 
 <li><a name="fn-2"></a>
+<p>This is only one example of the layouts ECB
+offers, See <a href="#Changing%20the%20ECB-layout">Changing the ECB-layout</a></p>
+
+<li><a name="fn-3"></a>
 <p>means mouse-2 while CTRL-key
 is pressed.</p>
 
-<li><a name="fn-3"></a>
+<li><a name="fn-4"></a>
 <p>cygwin is available at
 <a href="http://cygwin.com/">http://cygwin.com/</a>
 </p>

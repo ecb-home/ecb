@@ -381,11 +381,42 @@ three different types of ECB-windows/tree-buffers:
 @item ECB-Methods
 @end itemize
 
-In addition to these ECB-windows you have always one or two
-@dfn{edit-windows} (@pxref{The edit-window}) in the
-ECB-frame and (if you want) at the bottom a @dfn{compilation-window},
-where all the output of Emacs-compilation (compile, grep etc.) is
-shown (@pxref{Temp- and compile-buffers}).
+In addition to these ``special'' ECB-windows you have always one or
+two @dfn{edit-windows} (@pxref{The edit-window}) in the ECB-frame and
+at the bottom a @dfn{compilation-window} (optional), where all the
+output of Emacs-compilation (compile, grep etc.) is shown
+(@pxref{Temp- and compile-buffers}).
+
+The following ``ascii-screenshot'' illustrates the typical layout of
+the ECB-frame@footnote{This is only one example of the layouts ECB
+offers, @xref{Changing the ECB-layout}}:
+
+@example
+------------------------------------------------------------------
+|              |                                                 |
+|  Directories |                                                 |
+|              |                                                 |
+|--------------|                                                 |
+|              |                                                 |
+|  Sources     |                                                 |
+|              |                                                 |
+|--------------|                 Edit-window(s)                  |
+|              |        (can be splitted in two windows)         |
+|  Methods     |                                                 |
+|              |                                                 |
+|--------------|                                                 |
+|              |                                                 |
+|  History     |                                                 |
+|              |                                                 |
+------------------------------------------------------------------
+|                                                                |
+|                 Compilation-window (optional)                  |
+|                                                                |
+------------------------------------------------------------------
+@end example
+
+In the following subsections the ``special'' ECB-windows will be
+explained in detail.
 
 @menu
 * ECB Directories::             Contents of the ECB Directories-buffer
@@ -904,8 +935,9 @@ especially changing, customizing and redrawing it.
 @node Changing the ECB-layout, Redrawing the ECB-layout, The ECB-layout, The ECB-layout
 @subsection Changing and customizing the ECB-layout
 
-ECB offers several predefined layouts. To see which layouts are
-available and choose an appropriate one just customize the option
+ECB offers several predefined layouts with different sets and also
+different locations of ECB-windows. To see which layouts are available
+and choose an appropriate one just customize the option
 @code{ecb-layout-nr}. The docstring of this option explains how to see
 the different available layouts.
 
