@@ -2150,6 +2150,25 @@ more place."
   (select-window (next-window))
   (setq ecb-edit-window (selected-window)))
 
+(defun ecb-toggle-enlarged-compilation-window()
+  "Toggle whether the `ecb-compile-window' is enlarged or not."
+  (interactive)  
+  
+  (save-selected-window
+    (let(split-height)
+
+      (setq split-height (/ (frame-height) 2))
+
+      (select-window ecb-compile-window)
+      
+      (if (> (window-height ecb-compile-window) ecb-compile-window-height)
+          
+          ;;restore the window configuration to ecb-compile-window-height
+          
+          (shrink-window (- split-height ecb-compile-window-height))
+        
+        (enlarge-window (- split-height ecb-compile-window-height))))))
+
 (provide 'ecb-layout)
 
 ;;; ecb-layout.el ends here

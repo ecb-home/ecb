@@ -101,6 +101,11 @@
 ;;   we could setup a variable ecb-eshell-inhibit-resize which we could set in
 ;;   ecb-eshell-current-buffer-sync. ecb-eshell-resize would need to pay
 ;;   attention to this.
+;;
+;;
+;; - Include the ability to startup the eshell when the ECB is started.  This
+;; may require a new hook.
+
 
 ;;; Code:
 
