@@ -1,6 +1,6 @@
 ;;; ecb-multiframe.el --- 
 
-;; $Id: ecb-multiframe.el,v 1.4 2002/10/30 00:35:00 burtonator Exp $
+;; $Id: ecb-multiframe.el,v 1.5 2002/10/30 05:13:07 burtonator Exp $
 
 ;; Copyright (C) 2000-2003 Free Software Foundation, Inc.
 ;; Copyright (C) 2000-2003 Kevin A. Burton (burton@openprivacy.org)
@@ -151,6 +151,14 @@
     (setq ecb-minor-mode nil))
   (message "The ECB is now deactivated.")
   ecb-minor-mode)
+
+(defun ecb-multiframe-activate-hook()
+  "Hook to run to initialize multiframe support"
+
+  ;;disable ECB frame management for this frame
+  (ad-deactivate 'delete-frame))
+
+(add-hook 'ecb-activate-hook 'ecb-multiframe-activate-hook)
 
 ;;we need to modify frame parameters for new frames
 (add-hook 'after-make-frame-functions 'ecb-multiframe-make-frame-hook)

@@ -1,6 +1,11 @@
 Version 1.90:
 -------------
 
+- ecb-eshell now recenters after command execution. (burton)s
+
+- ecb-eshell now recenters if there are any window resizes.  This is done so
+  that the prompt is always at the bottom of the window. (burton)
+
 - ecb-eshell integration now protects against buffer-list modifications during
   transparent eshell updates in the compile window.  In the past, if the eshell
   was running, and you want from buffer "foo", to "bar", and then tries to go
