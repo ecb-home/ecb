@@ -1,6 +1,6 @@
 ;;; ecb-speedbar.el --- 
 
-;; $Id: ecb-speedbar.el,v 1.29 2002/12/19 18:01:58 berndl Exp $
+;; $Id: ecb-speedbar.el,v 1.30 2002/12/20 14:30:58 berndl Exp $
 
 ;; Copyright (C) 2000-2003 Free Software Foundation, Inc.
 ;; Copyright (C) 2000-2003 Kevin A. Burton (burton@openprivacy.org)
@@ -131,31 +131,39 @@
 (silentcomp-defvar dframe-attached-frame)
 (silentcomp-defvar speedbar-select-frame-method)
 
-(defconst ecb-speedbar-adviced-functions '(speedbar-click)
-  "This functions of speedbar are always adviced if ECB is active.")
+(defconst ecb-speedbar-version-ok (string-match "^0\\.\\(1[4-9]\\|[2-9][0-9]*\\)"
+                                                speedbar-version)
+  "ECB can only integrate speedbar versions >= 0.14beta1 so the value is only
+true for these versions.")
 
-(defadvice speedbar-click (around ecb)
+(defconst ecb-speedbar-adviced-functions '((speedbar-click . after))
+  "This functions of speedbar are always adviced if ECB is active. Each
+element of the list is a cons-cell where the car is the function-symbol and
+the cdr the advice-class \(before, around or after). If a function should be
+adviced with more than one class \(e.g. with a before and an after-advice)
+then for every class a cons must be added to this list.")
+
+
+(defadvice speedbar-click (after ecb)
   "Makes the function compatible with ECB. If ECB is active and the window of
 `ecb-speedbar-buffer-name' is visible \(means a layouts uses the
-speedbar-integration) the advice acts like the original version but it
-performs not the final `dframe-quick-mouse' which keeps the point positioned
-in the ECB-window. So the edit-window is selected after clicking onto a
-filename in the speedbar."
+speedbar-integration) then the ECB-edit-window is selected at the end. So
+always the edit-window is selected after clicking onto a filename in the
+speedbar."
   (if (and (equal (selected-frame) ecb-frame)
            (window-live-p (get-buffer-window ecb-speedbar-buffer-name)))
-      (let ((speedbar-power-click dframe-power-click))
-        (speedbar-do-function-pointer))      
-    ad-do-it))
+      (ecb-select-edit-window)))
+
 
 (defun ecb-speedbar-enable-advices ()
   (dolist (elem ecb-speedbar-adviced-functions)
-    (ad-enable-advice elem 'around 'ecb)
-    (ad-activate elem)))
+    (ad-enable-advice (car elem) (cdr elem) 'ecb)
+    (ad-activate (car elem))))
 
 (defun ecb-speedbar-disable-advices ()
   (dolist (elem ecb-speedbar-adviced-functions)
-    (ad-disable-advice elem 'around 'ecb)
-    (ad-activate elem)))
+    (ad-disable-advice (car elem) (cdr elem) 'ecb)
+    (ad-activate (car elem))))
 
 (defvar ecb-speedbar-buffer-name " SPEEDBAR"
   "Name of the ECB speedbar buffer.")
@@ -179,75 +187,79 @@ current speedbar implementation but normally it sould be work with recent
 speedbar versions >= 0.14beta2. But be aware: If the speedbar impl is changed
 this could break."
 
-  ;; enable the advices for speedbar
-  (ecb-speedbar-enable-advices)
+  (if (not ecb-speedbar-version-ok)
+      (error "Speedbar integration needs speedbar-version >= 0.14beta1!")
+    ;; enable the advices for speedbar
+    (ecb-speedbar-enable-advices)
   
-  ;;disable automatic speedbar updates... let the ECB handle this with
-  ;;ecb-current-buffer-sync
-  (speedbar-disable-update)
+    ;;disable automatic speedbar updates... let the ECB handle this with
+    ;;ecb-current-buffer-sync
+    (speedbar-disable-update)
 
-  ;;always stay in the current frame
-  ;; save the old value but only first time!
-  (if (null ecb-speedbar-select-frame-method-old)
-      (setq ecb-speedbar-select-frame-method-old speedbar-select-frame-method))
-  (setq speedbar-select-frame-method 'attached)
+    ;;always stay in the current frame
+    ;; save the old value but only first time!
+    (if (null ecb-speedbar-select-frame-method-old)
+        (setq ecb-speedbar-select-frame-method-old speedbar-select-frame-method))
+    (setq speedbar-select-frame-method 'attached)
 
-  (when (not (buffer-live-p speedbar-buffer))
-    (save-excursion
-      (setq speedbar-buffer (get-buffer-create ecb-speedbar-buffer-name))
-      (set-buffer speedbar-buffer)
-      (speedbar-mode)))
+    (when (not (buffer-live-p speedbar-buffer))
+      (save-excursion
+        (setq speedbar-buffer (get-buffer-create ecb-speedbar-buffer-name))
+        (set-buffer speedbar-buffer)
+        (speedbar-mode)))
 
-  ;;Start up the timer
-  (speedbar-reconfigure-keymaps)
-  (speedbar-update-contents)
-  (speedbar-set-timer 1)
+    ;;Start up the timer
+    (speedbar-reconfigure-keymaps)
+    (speedbar-update-contents)
+    (speedbar-set-timer 1)
 
-  ;;Set the frame that the speedbar should use.  This should be the selected
-  ;;frame.  AKA the frame that ECB is running in.
-  (setq speedbar-frame ecb-frame)
-  (setq speedbar-attached-frame ecb-frame)
-  (setq dframe-attached-frame ecb-frame)
+    ;;Set the frame that the speedbar should use.  This should be the selected
+    ;;frame.  AKA the frame that ECB is running in.
+    (setq speedbar-frame ecb-frame)
+    (setq speedbar-attached-frame ecb-frame)
+    (setq dframe-attached-frame ecb-frame)
   
-  ;;this needs to be 0 because we can't have the speedbar too chatty in the
-  ;;current frame because this will mean that the minibuffer will be updated too
-  ;;much.
-  ;; save the old value but only first time!
-  (if (null ecb-speedbar-verbosity-level-old)
-      (setq ecb-speedbar-verbosity-level-old speedbar-verbosity-level))
-  (setq speedbar-verbosity-level 0)
+    ;;this needs to be 0 because we can't have the speedbar too chatty in the
+    ;;current frame because this will mean that the minibuffer will be updated too
+    ;;much.
+    ;; save the old value but only first time!
+    (if (null ecb-speedbar-verbosity-level-old)
+        (setq ecb-speedbar-verbosity-level-old speedbar-verbosity-level))
+    (setq speedbar-verbosity-level 0)
 
-  (add-hook 'ecb-current-buffer-sync-hook
-            'ecb-speedbar-current-buffer-sync)
+    (add-hook 'ecb-current-buffer-sync-hook
+              'ecb-speedbar-current-buffer-sync)
   
-  ;;reset the selection variable
-  (setq speedbar-last-selected-file nil))
+    ;;reset the selection variable
+    (setq speedbar-last-selected-file nil)))
 
 (defun ecb-speedbar-deactivate ()
   "Reset things as before activating speedbar by ECB"
-  (ecb-speedbar-disable-advices)
+  (if (not ecb-speedbar-version-ok)
+      (error "Speedbar integration needs speedbar-version >= 0.14beta1!")      
+    (ecb-speedbar-disable-advices)
   
-  (setq speedbar-frame nil)
-  (setq speedbar-attached-frame nil)
-  (setq dframe-attached-frame nil)
+    (setq speedbar-frame nil)
+    (setq speedbar-attached-frame nil)
+    (setq dframe-attached-frame nil)
 
-  (speedbar-enable-update)
+    (speedbar-enable-update)
   
-  (if ecb-speedbar-select-frame-method-old
-      (setq speedbar-select-frame-method ecb-speedbar-select-frame-method-old))
-  (setq ecb-speedbar-select-frame-method-old nil)
+    (if ecb-speedbar-select-frame-method-old
+        (setq speedbar-select-frame-method ecb-speedbar-select-frame-method-old))
+    (setq ecb-speedbar-select-frame-method-old nil)
 
-  (if ecb-speedbar-verbosity-level-old
-      (setq speedbar-verbosity-level ecb-speedbar-verbosity-level-old))
-  (setq ecb-speedbar-verbosity-level-old nil)
+    (if ecb-speedbar-verbosity-level-old
+        (setq speedbar-verbosity-level ecb-speedbar-verbosity-level-old))
+    (setq ecb-speedbar-verbosity-level-old nil)
   
-  (remove-hook 'ecb-current-buffer-sync-hook
-               'ecb-speedbar-current-buffer-sync)
+    (remove-hook 'ecb-current-buffer-sync-hook
+                 'ecb-speedbar-current-buffer-sync)
 
-  (when (and speedbar-buffer
-             (buffer-live-p speedbar-buffer))
-    (kill-buffer speedbar-buffer)
-    (setq speedbar-buffer nil)))
+    (when (and speedbar-buffer
+               (buffer-live-p speedbar-buffer))
+      (kill-buffer speedbar-buffer)
+      (setq speedbar-buffer nil))))
 
 
 (defun ecb-speedbar-current-buffer-sync()
