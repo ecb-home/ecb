@@ -83,6 +83,7 @@ mailing list <a href="mailto:ecb-list@lists.sourceforge.net">ecb-list@lists.sour
 
 </p><li><a href="#Navigation">Navigation</a>:                   Keyboard navigation in a tree-buffer
 <li><a href="#Incremental%20search">Incremental search</a>:           Find nodes as fast as possible
+<li><a href="#Personal%20keybindings">Personal keybindings</a>:         Adding personal keybindings to a tree-buffer
 
 <p>Using and customizing the ECB-Methods buffer
 
@@ -696,7 +697,9 @@ Up:<a rel=up accesskey=u href="#Usage%20of%20ECB">Usage of ECB</a>
 <h3>Working with the keyboard in the ECB-windows</h3>
 
 <p>ECB offers the <code>ecb-mode-map</code> which binds the most important
-functions of ECB to keys so you can easily use ECB without a mouse.
+functions of ECB to keys so you can easily use ECB in every
+window<a rel=footnote href="#fn-8"><sup>8</sup></a> without
+a mouse.
 
 <p>IMPORTANT: Do not modify <code>ecb-mode-map</code> directly! The option
 <code>ecb-key-map</code> defines all ECB keybindings, including a common
@@ -705,9 +708,13 @@ with other minor-modes or packages you can define very easy another
 prefix. Please read carefully the description of <code>ecb-key-map</code>
 (see <a href="#ecb-general">ecb-general</a>).!
 
+<p>The following sections describe special topics about using the
+keyboard in the ECB-tree-buffers:
+
 <ul>
 <li><a accesskey=1 href="#Navigation">Navigation</a>:                   Keyboard navigation in a tree-buffer
 <li><a accesskey=2 href="#Incremental%20search">Incremental search</a>:           Find nodes as fast as possible
+<li><a accesskey=3 href="#Personal%20keybindings">Personal keybindings</a>:         Adding personal keybindings to a tree-buffer
 </ul>
 
 <p><hr>
@@ -753,6 +760,7 @@ senseful correct direction.
 
 <p><hr>
 Node:<a name="Incremental%20search">Incremental search</a>,
+Next:<a rel=next accesskey=n href="#Personal%20keybindings">Personal keybindings</a>,
 Previous:<a rel=previous accesskey=p href="#Navigation">Navigation</a>,
 Up:<a rel=up accesskey=u href="#Using%20the%20keyboard">Using the keyboard</a>
 <br>
@@ -805,6 +813,64 @@ the value of <code>case-fold-search</code>.
 (customizable via <code>ecb-key-map</code>) some keys for selecting every window
 of the ecb-frame. This makes window-selection a child´s play. For
 example you can jump into the method-window by hitting <kbd>C-c . m</kbd>.
+
+<p><hr>
+Node:<a name="Personal%20keybindings">Personal keybindings</a>,
+Previous:<a rel=previous accesskey=p href="#Incremental%20search">Incremental search</a>,
+Up:<a rel=up accesskey=u href="#Using%20the%20keyboard">Using the keyboard</a>
+<br>
+
+<h4>Adding personal keybindings</h4>
+
+<p>There are five hooks which can be used for adding personal keybindings
+to the ECB tree-buffers:
+
+<ul>
+<li><code>ecb-common-tree-buffer-after-create-hook</code>
+<li><code>ecb-directories-buffer-after-create-hook</code>
+<li><code>ecb-sources-buffer-after-create-hook</code>
+<li><code>ecb-methods-buffer-after-create-hook</code>
+<li><code>ecb-history-buffer-after-create-hook</code>
+</ul>
+
+<p>These hooks are called directly after tree-buffer creation so they can
+be used to add personal local keybindings<a rel=footnote href="#fn-9"><sup>9</sup></a> either to all tree-buffers
+(<code>ecb-common-tree-buffer-after-create-hook</code>) or just to a certain
+tree-buffer. Here is a list which keys MUST NOT be rebind:
+
+<ul>
+<li><kbd>RET</kbd> and all combinations with <kbd>Shift</kbd> and <kbd>Ctrl</kbd>:
+Used for selecting nodes in all tree-buffers. 
+<li><kbd>TAB</kbd>:
+Used for expanding/collapsing nodes in all tree-buffers. 
+<li><kbd>C-t</kbd>:
+Used for toggling "jump after selection" in all tree-buffers, see
+command <code>ecb-toggle-RET-selects-edit-window</code>. 
+<li>All self-inserting characters:
+Used for easy and fast navigation in all tree-buffers,
+See <a href="#Incremental%20search">Incremental search</a>. 
+<li><kbd>F2</kbd>, <kbd>F3</kbd>, <kbd>F4</kbd>:
+Used for customizing ECB, adding source-path in the directories buffer. 
+</ul>
+
+<p>The following example binds <kbd>C-a</kbd> to some useful code in ALL
+tree-buffers and <kbd>C-d</kbd> to even more useful code ONLY in the
+directories buffer:
+
+<br><pre>(add-hook 'ecb-common-tree-buffer-after-create-hook
+          (lambda ()
+             (local-set-key (kbd "C-a")
+                            (lambda ()
+                               (interactive)
+                               (message "ECB is great!")))))
+
+(add-hook 'ecb-directories-buffer-after-create-hook
+          (lambda ()
+             (local-set-key (kbd "C-d")
+                            (lambda ()
+                               (interactive)
+                               (message "ECB is wonderful!")))))
+</pre>
 
 <p><hr>
 Node:<a name="The%20edit-window">The edit-window</a>,
@@ -1504,7 +1570,7 @@ Up:<a rel=up accesskey=u href="#Usage%20of%20ECB">Usage of ECB</a>
 
 <p>With ECB you can "browse" in your source-files like with a
 web-browser. This means ECB stores the current buffer- and
-window-position relative to the current token<a rel=footnote href="#fn-8"><sup>8</sup></a> in the edit-window after
+window-position relative to the current token<a rel=footnote href="#fn-10"><sup>10</sup></a> in the edit-window after
 
 <ul>
 <li>selecting a token in the ECB-methods buffer or
@@ -2167,7 +2233,7 @@ changing everyones <code>.emacs</code>-file and normally you will do this
 with the file <code>site-start.el</code>. You can customize all options of
 ECB in a central <code>site-start.el</code> (even the options mentioned
 above!) but you <strong>MUST NOT</strong> do this via <code>setq</code> but you have
-to use <code>custom-set-variables</code><a rel=footnote href="#fn-9"><sup>9</sup></a>! Here is a short example
+to use <code>custom-set-variables</code><a rel=footnote href="#fn-11"><sup>11</sup></a>! Here is a short example
 how this can be done:
 
 <br><pre>(custom-set-variables '(ecb-show-tokens ((include collapsed nil)
@@ -2360,6 +2426,31 @@ also the commands <code>ecb-upgrade-options</code> and
 user can perform the check and reset manually with
 <code>ecb-upgrade-options</code>. 
 See <a href="#Auto.%20option-upgrading">Auto. option-upgrading</a>. 
+</td></tr>
+</table>
+
+<p>
+<table width="100%">
+<tr>
+<td align="left"><b>common-tree-buffer-after-create-hook</b><i>
+</i></td>
+<td align="right">User Option</td>
+</tr>
+</table>
+<table width="95%" align="center">
+<tr><td>
+Local hook running at the end of each tree-buffer creation. Every
+function of this hook is called once without arguments direct after
+creating a tree-buffer of ECB and it's local keymap. So for example a
+function could be added which performs calls of <code>local-set-key</code>
+to define new keybindings for EVERY tree-buffer.
+
+<p>The following keys must not be rebind in all tree-buffers:
+<ul>
+<li><kbd>RET</kbd> and all combinations with <kbd>Shift</kbd> and <kbd>Ctrl</kbd>
+<li><kbd>TAB</kbd>
+<li><code>C-t</code>
+</ul>
 </td></tr>
 </table>
 
@@ -3163,6 +3254,28 @@ change in a future version.
 <p>
 <table width="100%">
 <tr>
+<td align="left"><b>directories-buffer-after-create-hook</b><i>
+</i></td>
+<td align="right">User Option</td>
+</tr>
+</table>
+<table width="95%" align="center">
+<tr><td>
+Local hook running after the creation of the directories-buffer. Every
+function of this hook is called once without arguments direct after
+creating the directories-buffer of ECB and it's local keymap. So for
+example a function could be added which performs calls of
+<code>local-set-key</code> to define new keybindings only for the
+directories-buffer of ECB.
+
+<p>The following keys must not be rebind in the directories-buffer:
+<kbd>F2</kbd>, <kbd>F3</kbd> and <kbd>F4</kbd>
+</td></tr>
+</table>
+
+<p>
+<table width="100%">
+<tr>
 <td align="left"><b>directories-buffer-name</b><i>
 </i></td>
 <td align="right">User Option</td>
@@ -3320,6 +3433,25 @@ means all files except those starting with ".", "#" or ending with
 
 <p>In addition to these predefined values a custom exclude and include
 combination can be defined. 
+</td></tr>
+</table>
+
+<p>
+<table width="100%">
+<tr>
+<td align="left"><b>sources-buffer-after-create-hook</b><i>
+</i></td>
+<td align="right">User Option</td>
+</tr>
+</table>
+<table width="95%" align="center">
+<tr><td>
+Local hook running after the creation of the sources-buffer. Every
+function of this hook is called once without arguments direct after
+creating the sources-buffer of ECB and it's local keymap. So for
+example a function could be added which performs calls of
+<code>local-set-key</code> to define new keybindings only for the
+sources-buffer of ECB. 
 </td></tr>
 </table>
 
@@ -3539,6 +3671,25 @@ a source file or call <code>widen</code> <kbd>C-x n w</kbd>.
 <tr><td>
 Jumping to a token from the ECB-method buffer now sets the mark so the
 user can easily jump back. 
+</td></tr>
+</table>
+
+<p>
+<table width="100%">
+<tr>
+<td align="left"><b>methods-buffer-after-create-hook</b><i>
+</i></td>
+<td align="right">User Option</td>
+</tr>
+</table>
+<table width="95%" align="center">
+<tr><td>
+Local hook running after the creation of the methods-buffer. Every
+function of this hook is called once without arguments direct after
+creating the methods-buffer of ECB and it's local keymap. So for
+example a function could be added which performs calls of
+<code>local-set-key</code> to define new keybindings only for the
+methods-buffer of ECB. 
 </td></tr>
 </table>
 
@@ -3894,6 +4045,25 @@ The opposite of 'not-existing-buffers.
 <li><code>all</code>:
 The whole history will be cleared. 
 </ul>
+</td></tr>
+</table>
+
+<p>
+<table width="100%">
+<tr>
+<td align="left"><b>history-buffer-after-create-hook</b><i>
+</i></td>
+<td align="right">User Option</td>
+</tr>
+</table>
+<table width="95%" align="center">
+<tr><td>
+Local hook running after the creation of the history-buffer. Every
+function of this hook is called once without arguments direct after
+creating the history-buffer of ECB and it's local keymap. So for
+example a function could be added which performs calls of
+<code>local-set-key</code> to define new keybindings only for the
+history-buffer of ECB. 
 </td></tr>
 </table>
 
@@ -4973,7 +5143,7 @@ satisfied:
 
 <p>With unix-systems these tools are in the
 standard-distribution. If you are running any Microsoft Windows system
-then you need cygwin<a rel=footnote href="#fn-10"><sup>10</sup></a> which offers these tools too. On every
+then you need cygwin<a rel=footnote href="#fn-12"><sup>12</sup></a> which offers these tools too. On every
 system these tools must reside in the <code>PATH</code> environment-variable!
 
 <p>If you are behind a firewall and you have to use a proxy you maybe
@@ -5250,7 +5420,7 @@ the following example:
 </pre>
 
 <p>This code sets the new defined font <code>my-ecb-font</code> as font for
-all<a rel=footnote href="#fn-11"><sup>11</sup></a> ECB-tree-buffers (incl. the methods
+all<a rel=footnote href="#fn-13"><sup>13</sup></a> ECB-tree-buffers (incl. the methods
 buffer).
 
 <p><hr>
@@ -5443,10 +5613,15 @@ Up:<a rel=up accesskey=u href="#Elisp%20programming">Elisp programming</a>
 <li><code>ecb-activate-before-new-frame-created-hook</code>
 <li><code>ecb-activate-before-layout-draw-hook</code>
 <li><code>ecb-activate-hook</code>
-<li><code>ecb-deactivate-hook</code>
-<li><code>ecb-show-ecb-windows-hook</code>
-<li><code>ecb-hide-ecb-windows-hook</code>
+<li><code>ecb-common-tree-buffer-after-create-hook</code>
 <li><code>ecb-current-buffer-sync-hook</code>
+<li><code>ecb-deactivate-hook</code>
+<li><code>ecb-directories-buffer-after-create-hook</code>
+<li><code>ecb-hide-ecb-windows-hook</code>
+<li><code>ecb-history-buffer-after-create-hook</code>
+<li><code>ecb-methods-buffer-after-create-hook</code>
+<li><code>ecb-show-ecb-windows-hook</code>
+<li><code>ecb-sources-buffer-after-create-hook</code>
 </ul>
 
 <p>Look at the documentation of these hooks to get a description.
@@ -5485,7 +5660,7 @@ Up:<a rel=up accesskey=u href="#Elisp%20programming">Elisp programming</a>
 <h3>How to deal with the adviced window-functions</h3>
 
 <p>ECB offers for packages which work during activated ECB three macros
-for easy temporally<a rel=footnote href="#fn-12"><sup>12</sup></a> using all original-functions, all
+for easy temporally<a rel=footnote href="#fn-14"><sup>14</sup></a> using all original-functions, all
 adviced functions or only some adviced functions:
 
 <ul>
@@ -5728,7 +5903,7 @@ to the ECB-history after ECB-start.
 
 <br></td></tr><tr align="left"><td valign="top">Is there an "Intellisense"-mechanism like with other IDEs? 
 </td><td valign="top"></td><td valign="top">
-For Java the JDEE<a rel=footnote href="#fn-13"><sup>13</sup></a> has this feature and for all other languages
+For Java the JDEE<a rel=footnote href="#fn-15"><sup>15</sup></a> has this feature and for all other languages
 semantic offer something similar, see
 <a href="http://cedet.sourceforge.net/intellisense.shtml">http://cedet.sourceforge.net/intellisense.shtml</a>
 
@@ -5806,12 +5981,14 @@ Up:<a rel=up accesskey=u href="#Top">Top</a>
 <li><code>bucket-token-display</code>: <a href="#ecb-methods">ecb-methods</a>
 <li><code>cache-directory-contents</code>: <a href="#ecb-directories">ecb-directories</a>
 <li><code>clear-history-behavior</code>: <a href="#ecb-history">ecb-history</a>
+<li><code>common-tree-buffer-after-create-hook</code>: <a href="#ecb-general">ecb-general</a>
 <li><code>compile-window-enlarge-by-select</code>: <a href="#ecb-layout">ecb-layout</a>
 <li><code>compile-window-height</code>: <a href="#ecb-layout">ecb-layout</a>
 <li><code>compile-window-temporally-enlarge</code>: <a href="#ecb-layout">ecb-layout</a>
 <li><code>current-buffer-sync-hook</code>: <a href="#ecb-general">ecb-general</a>
 <li><code>deactivate-hook</code>: <a href="#ecb-general">ecb-general</a>
 <li><code>debug-mode</code>: <a href="#ecb-general">ecb-general</a>
+<li><code>directories-buffer-after-create-hook</code>: <a href="#ecb-directories">ecb-directories</a>
 <li><code>directories-buffer-name</code>: <a href="#ecb-directories">ecb-directories</a>
 <li><code>directories-general-face</code>: <a href="#ecb-face-options">ecb-face-options</a>
 <li><code>directory-face</code>: <a href="#ecb-face-options">ecb-face-options</a>
@@ -5827,6 +6004,7 @@ Up:<a rel=up accesskey=u href="#Top">Top</a>
 <li><code>highlight-token-header-after-jump</code>: <a href="#ecb-methods">ecb-methods</a>
 <li><code>highlight-token-with-point</code>: <a href="#ecb-methods">ecb-methods</a>
 <li><code>highlight-token-with-point-delay</code>: <a href="#ecb-methods">ecb-methods</a>
+<li><code>history-buffer-after-create-hook</code>: <a href="#ecb-history">ecb-history</a>
 <li><code>history-buffer-name</code>: <a href="#ecb-history">ecb-history</a>
 <li><code>history-face</code>: <a href="#ecb-face-options">ecb-face-options</a>
 <li><code>history-general-face</code>: <a href="#ecb-face-options">ecb-face-options</a>
@@ -5840,6 +6018,7 @@ Up:<a rel=up accesskey=u href="#Top">Top</a>
 <li><code>major-modes-activate</code>: <a href="#ecb-general">ecb-general</a>
 <li><code>major-modes-deactivate</code>: <a href="#ecb-general">ecb-general</a>
 <li><code>method-face</code>: <a href="#ecb-face-options">ecb-face-options</a>
+<li><code>methods-buffer-after-create-hook</code>: <a href="#ecb-methods">ecb-methods</a>
 <li><code>methods-buffer-name</code>: <a href="#ecb-methods">ecb-methods</a>
 <li><code>methods-general-face</code>: <a href="#ecb-face-options">ecb-face-options</a>
 <li><code>minor-mode-text</code>: <a href="#ecb-general">ecb-general</a>
@@ -5864,6 +6043,7 @@ Up:<a rel=up accesskey=u href="#Top">Top</a>
 <li><code>source-file-regexps</code>: <a href="#ecb-sources">ecb-sources</a>
 <li><code>source-in-directories-buffer-face</code>: <a href="#ecb-face-options">ecb-face-options</a>
 <li><code>source-path</code>: <a href="#ecb-directories">ecb-directories</a>
+<li><code>sources-buffer-after-create-hook</code>: <a href="#ecb-sources">ecb-sources</a>
 <li><code>sources-buffer-name</code>: <a href="#ecb-sources">ecb-sources</a>
 <li><code>sources-general-face</code>: <a href="#ecb-face-options">ecb-face-options</a>
 <li><code>sources-sort-method</code>: <a href="#ecb-sources">ecb-sources</a>
@@ -5975,6 +6155,7 @@ Up:<a rel=up accesskey=u href="#Top">Top</a>
 <ul>
 <li><a href="#Navigation">Navigation</a>
 <li><a href="#Incremental%20search">Incremental search for a node in current tree-buffer</a>
+<li><a href="#Personal%20keybindings">Adding personal keybindings</a>
 </ul>
 <li><a href="#The%20edit-window">Working with the edit-window</a>
 <li><a href="#Temp-%20and%20compile-buffers">Temp- and compile-buffers display in ECB</a>
@@ -6102,30 +6283,38 @@ offers, see <a href="#Changing%20the%20ECB-layout">Changing the ECB-layout</a></
 is pressed.</p>
 
 <li><a name="fn-8"></a>
+<p>Regardless if a tree-window or an edit-window</p>
+
+<li><a name="fn-9"></a>
+<p>To be more general:
+They can be used to run any arbitrary lisp code after a tree-buffer
+creation!</p>
+
+<li><a name="fn-10"></a>
 <p>e.g. a method,
 a variable or any other semantic token</p>
 
-<li><a name="fn-9"></a>
+<li><a name="fn-11"></a>
 <p>At least for the options
 for which <code>setq</code> is explicitly forbidden, but it is recommended
 to use always <code>custom-set-variables</code>!</p>
 
-<li><a name="fn-10"></a>
+<li><a name="fn-12"></a>
 <p>cygwin is available at
 <a href="http://cygwin.com/">http://cygwin.com/</a>
 </p>
 
-<li><a name="fn-11"></a>
+<li><a name="fn-13"></a>
 <p>Of course <code>ecb-directories-general-face</code>,
 <code>ecb-sources-general-face</code>, <code>ecb-methods-general-face</code> and
 <code>ecb-history-general-face</code> must be set to
 <code>ecb-default-general-face</code>!</p>
 
-<li><a name="fn-12"></a>
+<li><a name="fn-14"></a>
 <p>I.e. regardless of the settings in
 <code>ecb-advice-window-functions</code>!</p>
 
-<li><a name="fn-13"></a>
+<li><a name="fn-15"></a>
 <p>
 <a href="http://jdee.sunsite.dk/">http://jdee.sunsite.dk/</a>
 </p>

@@ -131,7 +131,8 @@ not nil then in both PATH and FILENAME env-var substitution is done. If the
     (ecb-clear-history -1)))
 
 (defun ecb-create-directory (parent-node)
-  (make-directory (concat (tree-node-get-data parent-node) "/" (read-from-minibuffer "Directory name: ")))
+  (make-directory (concat (tree-node-get-data parent-node) "/"
+                          (read-from-minibuffer "Directory name: ")))
   (ecb-update-directory-node parent-node)
   (tree-buffer-update))
 
