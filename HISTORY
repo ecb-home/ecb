@@ -1,5 +1,5 @@
-Version 1.30 (???):
--------------------
+Version 1.30:
+-------------
 
 - If not all ECB-tree-windows of current layout are visible at redraw-time
   ('ecb-redraw-layout') then the redraw synchronizes the contents of the
