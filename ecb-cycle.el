@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-cycle.el,v 1.25 2003/09/02 14:31:26 berndl Exp $
+;; $Id: ecb-cycle.el,v 1.26 2003/12/09 16:47:57 berndl Exp $
 
 ;;; Commentary:
 
@@ -89,7 +89,7 @@ compilation-buffer to switch to.
 Afterwards always the compile-window of ECB is selected."
 
   (interactive "P")
-  (if (not (numberp (car (get 'ecb-compile-window-height 'saved-value))))
+  (if (not (numberp ecb-compile-window-height))
       (ecb-error "This command needs a durable compile window!")
     (if choose-buffer
         (ecb-with-adviced-functions
@@ -97,10 +97,12 @@ Afterwards always the compile-window of ECB is selected."
                                             (ecb-compilation-get-buffers))))
       
       (let* ((compilation-buffers (ecb-compilation-get-buffers))
-             ;; This works even if ecb-compile-window is nil (means temporally
-             ;; hidden) --> then current-buffer is the buffer of the currently
-             ;; selected window!
-             (current-buffer (window-buffer ecb-compile-window))
+             ;; This works even if ecb-compile-window is nil or not alive
+             ;; (means temporally hidden) --> then current-buffer is the
+             ;; buffer of the currently selected window!
+             (current-buffer (or (and (ecb-compile-window-live-p)
+                                      (window-buffer ecb-compile-window))
+                                 (current-buffer)))
              (current-buffer-name (buffer-name current-buffer))
              (current nil)
              (index nil))

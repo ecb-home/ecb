@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb.el,v 1.352 2003/11/13 18:53:40 berndl Exp $
+;; $Id: ecb.el,v 1.353 2003/12/09 16:47:57 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -1119,9 +1119,7 @@ ECB-frame."
   "Goto the ecb compilation window `ecb-compile-window'."
   (interactive)
   (when (and ecb-minor-mode
-             ecb-compile-window-height
-             ecb-compile-window
-             (window-live-p ecb-compile-window))
+             (equal 'visible (ecb-compile-window-state)))
     (raise-frame ecb-frame)
     (select-frame ecb-frame)
     (select-window ecb-compile-window)))
@@ -1799,8 +1797,7 @@ That is remove the unsupported :help stuff."
     (ecb-menu-item
      ["Compilation"
       ecb-goto-window-compilation
-      :active (and ecb-compile-window-height ecb-compile-window
-                   (window-live-p ecb-compile-window))
+      :active (equal 'visible (ecb-compile-window-state))
       :help "Go to the history window"
       ])
     )

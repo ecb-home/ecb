@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-layout.el,v 1.196 2003/11/13 18:53:41 berndl Exp $
+;; $Id: ecb-layout.el,v 1.197 2003/12/09 16:47:57 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -451,7 +451,7 @@ This means, that all values of `special-display-function',
 (defsubst ecb-ignore-special-display ()
   (or (equal ecb-ignore-special-display 'always)
       (and (equal ecb-ignore-special-display 'compile-window)
-           (numberp (car (get 'ecb-compile-window-height 'saved-value))))))
+           ecb-compile-window-height)))
 
 (defcustom ecb-split-edit-window t
   "*Sets how and if the edit window should be splitted.
@@ -1109,6 +1109,31 @@ if `scroll-all-mode' is nil return the number of visible windows."
 
 (if ecb-running-xemacs
     (progn
+      ;; We advice this function to exactly that version of XEmacs 21.4.13.
+      ;; For that XEmacs-version (and higher) this would not be necessary but
+      ;; we need this advice for versions of XEmacs which do not have the
+      ;; 4-argument-version of `display-buffer'. With this advice we give
+      ;; older XEmacsen the newest display-buffer- and
+      ;; shrink-to-fit-mechanism.
+      (defadvice show-temp-buffer-in-current-frame (around ecb)
+        "Makes the function compatible with ECB."
+        (let ((pre-display-buffer-function nil)) ; turn it off, whatever it is
+          ;; Here we run our display-buffer-version which in turn calls
+          ;; `ecb-display-buffer-xemacs' which contains the shrink-to-fit
+          ;; mechanism.
+          (let ((window (ecb-with-adviced-functions
+                         (display-buffer (ad-get-arg 0) nil nil
+                                         temp-buffer-shrink-to-fit))))
+            (if (not (eq (last-nonminibuf-frame) (window-frame window)))
+                ;; only the pre-display-buffer-function should ever do this.
+                (error "display-buffer switched frames on its own!!"))
+            (setq minibuffer-scroll-window window)
+            (set-window-start window 1) ; obeys narrowing
+            (set-window-point window 1)
+            (ecb-layout-debug-error "show-temp-buffer-in-current-frame: buffer: %s, window: %s, shrink-to-fit: %s"
+                                    (ad-get-arg 0) window temp-buffer-shrink-to-fit)
+            nil)))
+      
       ;; XEmacs-version
       (defadvice shrink-window-if-larger-than-buffer (around ecb)
         "Makes the function compatible with ECB."
@@ -1421,6 +1446,25 @@ for current layout."
 ;; version from window-xemacs.el of XEmacs 21.4.13. Shrinking in an
 ;; after advice does not work - fails for the first call for
 ;; `display-buffer' in case of an temp-buffer!
+
+;; Klaus Berndl <klaus.berndl@sdm.de>: Some older versions of XEmacs
+;; 21.4 does not support a four-argument display-buffer. We handle this case
+;; properly for ecb-display-buffer-xemacs.
+;;
+;; Shrinking temp-windows correctly to the buffer contents:
+;; ========================================================
+;; We advice `show-temp-buffer-in-current-frame' to exactly the code contained
+;; in XEmacs 21.4.13 (which calls display-buffer with shrink-to-fit according
+;; to `temp-buffer-shrink-to-fit'). Then this version of
+;; `show-temp-buffer-in-current-frame' is called by an older
+;; 3-arg-display-buffer-XEmacs 21.4 and calls in turn always our adviced
+;; `display-buffer' with SHRINK-TO-FIT set according to the option
+;; `temp-buffer-shrink-to-fit'. This calls in turn `ecb-display-buffer-xemacs'
+;; with properly set SHRINK-TO-FIT. The `pre-display-buffer-function' and
+;; `display-buffer-function' are called only with three-args (see below) but
+;; the window is correctly shrinked with the adviced version of
+;; `shrink-window-if-larger-than-buffer' - see below out imlementation
+;; `ecb-display-buffer-xemacs'.
 (defun ecb-display-buffer-xemacs (buffer &optional not-this-window-p
                                          override-frame
                                          shrink-to-fit)
@@ -1462,21 +1506,43 @@ Returns the window displaying BUFFER."
              (setq buffer (get-buffer buffer))
              (check-argument-type 'bufferp buffer)
 
+             ;; KB: For pre-display-buffer-function and
+             ;; display-buffer-function we have to check for
+             ;; wrong-number-of-arguments errors because older XEmacs 21.4
+             ;; does not support the SHRINK-TO-FIT-argument and therefore
+             ;; these functions probably don't too. Therefore in case of this
+             ;; error we call these functions again with only the first three
+             ;; arguments.
+             
              (setq explicit-frame
                    (if pre-display-buffer-function
-                       (funcall pre-display-buffer-function buffer
-                                not-this-window-p
-                                override-frame
-                                shrink-to-fit)))
+                       (condition-case oops
+                           (funcall pre-display-buffer-function buffer
+                                    not-this-window-p
+                                    override-frame
+                                    shrink-to-fit)
+                         (wrong-number-of-arguments
+                          (funcall pre-display-buffer-function buffer
+                                   not-this-window-p
+                                   override-frame))
+                         (error (signal (car oops) (cdr oops)))
+                         (quit (signal 'quit nil)))))
 
              ;; Give the user the ability to completely reimplement
              ;; this function via the `display-buffer-function'.
              (if display-buffer-function
                  (throw 'done
-                        (funcall display-buffer-function buffer
-                                 not-this-window-p
-                                 override-frame
-                                 shrink-to-fit)))
+                        (condition-case oops
+                            (funcall display-buffer-function buffer
+                                     not-this-window-p
+                                     override-frame
+                                     shrink-to-fit)
+                          (wrong-number-of-arguments
+                           (funcall display-buffer-function buffer
+                                    not-this-window-p
+                                    override-frame))
+                          (error (signal (car oops) (cdr oops)))
+                          (quit (signal 'quit nil)))))
 
              ;; If the buffer has a dedicated frame, that takes
              ;; precedence over the current frame, and over what the
@@ -1738,8 +1804,7 @@ Returns the window displaying BUFFER."
                             buf)
     (when (and (equal (selected-frame) ecb-frame)
                (not ecb-windows-hidden)
-               (numberp (car (get 'ecb-compile-window-height 'saved-value)))
-               (not (ecb-compile-window-live-p))
+               (equal 'hidden (ecb-compile-window-state))
                ;; calling this from minibuffer (e.g. completions)
                ;; seems to cause problems
                (not (equal (minibuffer-window ecb-frame) (selected-window))))
@@ -1933,7 +1998,17 @@ window of the ecb-frame."
                 (current-buffer)))
       (setq ecb-compile-window-was-selected-before-command nil)
       (setq ecb-last-compile-buffer-in-compile-window nil))))
-      
+
+;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: Not yet perfect - need some more
+;; tests.
+(defun ecb-minibuffer-exit-hook ()
+  (remove-hook 'minibuffer-exit-hook 'ecb-minibuffer-exit-hook)
+  (ecb-layout-debug-error "ecb-minibuffer-exit-hook: active: %s"
+                          (minibuffer-window-active-p
+                           (minibuffer-window ecb-frame)))
+   (ecb-layout-debug-error "ecb-minibuffer-exit-hook: shrink after leaving minibuf")
+  (ecb-toggle-compile-window-height -1))
+
 (defvar ecb-layout-prevent-handle-compile-window-selection nil)
 (defun ecb-layout-handle-compile-window-selection ()
   "During activated ECB this function is added to `post-command-hook' to
@@ -1953,6 +2028,10 @@ handle `ecb-compile-window-temporally-enlarge'."
                   (not (ecb-point-in-compile-window)))
              (ecb-layout-debug-error "ecb-layout-handle-compile-window-selection: shrink")
              (ecb-toggle-compile-window-height -1))))))
+;;              (if (equal (selected-window) (minibuffer-window ecb-frame))
+;;                  (add-hook 'minibuffer-exit-hook 'ecb-minibuffer-exit-hook)
+;;                (ecb-layout-debug-error "ecb-layout-handle-compile-window-selection: shrink")
+;;                (ecb-toggle-compile-window-height -1)))))))
 
 
 ;; here come the advices
@@ -2055,8 +2134,7 @@ If called for other frames it works like the original version."
                ;; compile-window was set but currently hidden --> then we have
                ;; to show it now. `ecb-toggle-compile-window' preserves always
                ;; the selected window!
-               (when (and (numberp (car (get 'ecb-compile-window-height 'saved-value)))
-                          (not (ecb-compile-window-live-p))
+               (when (and (equal 'hidden (ecb-compile-window-state))
                           ;; calling this from minibuffer (e.g. completions)
                           ;; seems to cause problems
                           (not (equal (minibuffer-window ecb-frame) (selected-window))))
@@ -2212,6 +2290,7 @@ If called for other frames it works like the original version."
 ;; savely by the other advices (means, other functions or advices can savely
 ;; (de)activate these "basic"-advices!
 
+
 (defadvice other-window (around ecb)
   "The ECB-version of `other-window'. Works exactly like the original function
 with the following ECB-adjustment: The behavior depends on
@@ -2243,7 +2322,7 @@ with the following ECB-adjustment: The behavior depends on
                        (select-window (next-window))
                      (if (and (equal ecb-other-window-jump-behavior
                                      'edit-and-compile)
-                              ecb-compile-window)
+                              (ecb-compile-window-live-p))
                          (ignore-errors
                            (select-window ecb-compile-window))
                        (if (> (minibuffer-depth) 0)
@@ -2252,7 +2331,7 @@ with the following ECB-adjustment: The behavior depends on
                      (select-window (minibuffer-window ecb-frame))
                    (if (and (equal ecb-other-window-jump-behavior
                                    'edit-and-compile)
-                            ecb-compile-window)
+                            (ecb-compile-window-live-p))
                        (ignore-errors
                          (select-window ecb-compile-window))
                      (if (ecb-edit-window-splitted)
@@ -2267,7 +2346,7 @@ with the following ECB-adjustment: The behavior depends on
                (if (= direction 1)
                    (if (and (equal ecb-other-window-jump-behavior
                                    'edit-and-compile)
-                            ecb-compile-window)
+                            (ecb-compile-window-live-p))
                        (ignore-errors
                          (select-window ecb-compile-window))
                      (if (> (minibuffer-depth) 0)
@@ -2278,7 +2357,7 @@ with the following ECB-adjustment: The behavior depends on
                (if (= direction -1)
                    (if (and (equal ecb-other-window-jump-behavior
                                    'edit-and-compile)
-                            ecb-compile-window)
+                            (ecb-compile-window-live-p))
                        (ignore-errors
                          (select-window ecb-compile-window))
                      (ecb-select-edit-window t))
@@ -2592,8 +2671,7 @@ an error is reported."
         ad-do-it))
     (if (ecb-compilation-buffer-p (ad-get-arg 0))
         (progn
-          (when (and (not (ecb-compile-window-live-p))
-                     (numberp (car (get 'ecb-compile-window-height 'saved-value))))
+          (when (equal 'hidden (ecb-compile-window-state))
             (ecb-toggle-compile-window 1))
           (if (ecb-compile-window-live-p)
               (select-window ecb-compile-window))
@@ -2627,7 +2705,7 @@ is no durable compilation-window then always the first edit-window is chosen."
   (if (or (not ecb-minor-mode)
           (not (equal (selected-frame) ecb-frame))
           ecb-windows-hidden
-          (and ecb-compile-window-height (ecb-compile-window-live-p))
+          (equal 'visible (ecb-compile-window-state))
           (not (equal (ecb-point-in-edit-window) 2)))
       (ecb-with-original-basic-functions
        (ecb-with-original-functions
@@ -2981,8 +3059,7 @@ following structure:
                                                        ecb-edit-window))
                                        (window-start (next-window
                                                       ecb-edit-window)))))
-              (if (and ecb-compile-window-height
-                       (ecb-compile-window-live-p))
+              (if (equal 'visible (ecb-compile-window-state))
                   (list (window-buffer ecb-compile-window)
                         (if (equal selected-window 'compile) (point))
                         (window-height ecb-compile-window)))
@@ -3926,8 +4003,7 @@ toggle the enlarge-state."
   (interactive "P")
   (if (and ecb-minor-mode
            (equal (selected-frame) ecb-frame)
-           ecb-compile-window-height
-           (ecb-compile-window-live-p))
+           (equal 'visible (ecb-compile-window-state)))
       (let* ((compile-window-height-lines (ecb-normalize-number
                                            ecb-compile-window-height
                                            (1- (frame-height))))
@@ -3935,6 +4011,8 @@ toggle the enlarge-state."
                                 (> (window-height ecb-compile-window)
                                    compile-window-height-lines)
                               (<= (prefix-numeric-value arg) 0)))
+             (compile-window-selected-p (equal (selected-window)
+                                               ecb-compile-window))
              (max-height nil)
              (number-of-lines nil))
         (save-selected-window
@@ -3992,8 +4070,9 @@ toggle the enlarge-state."
               (enlarge-window (- (max max-height compile-window-height-lines)
                                  (window-height))))
             ;; now we set the window-start
-            (if (not (equal major-mode 'compilation-mode))
-                (goto-char (point-min))))))
+            (when (and (not (equal major-mode 'compilation-mode))
+                       (not compile-window-selected-p))
+              (set-window-start ecb-compile-window (point-min))))))
     (message "No compile-window in current ECB-layout!")))
 
 ;; This function takes into account the value of of
@@ -4028,13 +4107,27 @@ Emacs)."
     (ecb-toggle-compile-window-height -1)))
 
 
+(defun ecb-compile-window-state ()
+  "Returns the state of the compile-window:
+- 'no: No durable compile-window, i.e. `ecb-compile-window-height' is nil.
+- 'visible: The compile-window is visible.
+- 'hidden: A durable compile-window is set but it is currently hidden."
+  (cond ((null ecb-compile-window-height)
+         'no)
+        (t
+         (if (ecb-compile-window-live-p)
+             'visible
+           'hidden))))
+
 (defun ecb-toggle-compile-window (&optional arg)
   "Toggle the visibility of the compile-window of ECB.
 With prefix argument ARG, make visible if positive, otherwise invisible. The
-height of the compile-window is always the current *saved* \(for future
-sessions) value of `ecb-compile-window-height', i.e. this command can only
-display a compile-window if `ecb-compile-window-height' has such a saved value
-of not nil!"
+height of the compile-window is always the current value of
+`ecb-compile-window-height'! If called and `ecb-compile-window-height' is nil
+then ECB asks for the height of the compile-window, sets this height as new
+value of `ecb-compile-window-height' and displays the compile-window \(so if
+you have called this command by mistake and you do not want a compile-window
+you have to quit with `C-g')."
   (interactive "P")
   (unless (or (not ecb-minor-mode)
               (not (equal (selected-frame) ecb-frame)))
@@ -4046,17 +4139,21 @@ of not nil!"
                        (current-buffer)))
           (new-win nil))
       (if new-state
-          (let ((height (car (get 'ecb-compile-window-height 'saved-value))))
-            (when (numberp height)
-              (customize-set-variable 'ecb-compile-window-height height))
-            ;; ecb-redraw-layout-full only preserves point and selected window
-            ;; if called from an edit- or compile-window. If called from an
-            ;; ECB-window we have to restore it here.
-            (when ecb-buf
-              (setq new-win (get-buffer-window ecb-buf))
-              (if (and new-win (window-live-p new-win)
-                       (equal (window-frame new-win) ecb-frame))
-                  (select-window new-win))))
+          (let ((height (or ecb-compile-window-height
+                            (and (interactive-p)
+                                 (or (ecb-option-get-value 'ecb-compile-window-height
+                                                           'saved-value)
+                                     (ecb-read-number "Insert height of the compile-window: " 6))))))
+            (when height
+              (customize-set-variable 'ecb-compile-window-height height)
+              ;; ecb-redraw-layout-full only preserves point and selected window
+              ;; if called from an edit- or compile-window. If called from an
+              ;; ECB-window we have to restore it here.
+              (when ecb-buf
+                (setq new-win (get-buffer-window ecb-buf))
+                (if (and new-win (window-live-p new-win)
+                         (equal (window-frame new-win) ecb-frame))
+                    (select-window new-win)))))
         (when (ecb-compile-window-live-p)
           (let ((point-location (ecb-where-is-point)))
             (ecb-with-original-functions

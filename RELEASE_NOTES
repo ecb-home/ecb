@@ -1,4 +1,4 @@
-This file contains some important release-notes for ECB version 2.11
+This file contains some important release-notes for ECB version 2.12
 
 General:
 --------
@@ -13,6 +13,14 @@ Installing ECB first time:
 --------------------------
 
 No special notes beyond the contents of README.
+
+
+Upgrading from versions < 2.11:
+-------------------------------
+
+The type of the option `ecb-post-process-semantic-taglist' has been changed.
+ECB autom. upgrades the old-value of that option to the new type! There is
+nothing to do for you. 
 
 
 Upgrading from versions < 2.01:

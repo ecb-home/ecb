@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-eshell.el,v 1.71 2003/09/08 12:20:17 berndl Exp $
+;; $Id: ecb-eshell.el,v 1.72 2003/12/09 16:47:57 berndl Exp $
 
 ;;; Commentary:
 
@@ -157,8 +157,7 @@ an after-advice) then for every class a cons must be added to this list.")
                                 (regexp-quote eshell-buffer-name)
                                 ".*")
                         t)))
-    (if (or ecb-compile-window-height
-            (numberp (car (get 'ecb-compile-window-height 'saved-value))))
+    (if ecb-compile-window-height
         (progn
           (add-to-list 'ecb-compilation-buffer-names-internal new-elem)
           (add-to-list 'ecb-compilation-major-modes-internal 'eshell-mode))
@@ -172,8 +171,7 @@ an after-advice) then for every class a cons must be added to this list.")
             (delete 'eshell-mode ecb-compilation-major-modes-internal))))
   
   ;; maybe we have to auto toggle our compile-window if temporally hidden
-  (when (and (numberp (car (get 'ecb-compile-window-height 'saved-value)))
-             (not (ecb-compile-window-live-p)))
+  (when (equal 'hidden (ecb-compile-window-state))
     (ecb-layout-debug-error "eshell around-advice: comp-win will be toggled.")
     (ecb-toggle-compile-window 1))
 

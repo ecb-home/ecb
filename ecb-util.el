@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-util.el,v 1.86 2003/11/23 19:13:18 berndl Exp $
+;; $Id: ecb-util.el,v 1.87 2003/12/09 16:47:57 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -190,6 +190,7 @@ means not to count the minibuffer even if it is active."
                                           '((delete-frame . around)
                                             (compilation-set-window-height . around)
                                             (shrink-window-if-larger-than-buffer . around)
+                                            (show-temp-buffer-in-current-frame . around)
                                             (pop-to-buffer . around)
                                             (scroll-other-window . around)
                                             (custom-save-all . around)
@@ -305,10 +306,9 @@ by semantic and also killed afterwards."
 (defun ecb-filter (seq pred)
   "Filter out those elements of SEQUENCE for which PREDICATE returns nil."
   (let ((res))
-    (while seq
-      (if (if pred (funcall pred (car seq)) (car seq))
-          (setq res (append res (list (car seq)))))
-      (setq seq (cdr seq)))
+    (dolist (elem seq)
+      (if (if pred (funcall pred elem) elem)
+          (setq res (append res (list elem)))))
     res))
 
 (defun ecb-some (cl-pred cl-seq &rest cl-rest)

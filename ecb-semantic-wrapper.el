@@ -23,7 +23,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-semantic-wrapper.el,v 1.3 2003/11/23 19:13:18 berndl Exp $
+;; $Id: ecb-semantic-wrapper.el,v 1.4 2003/12/09 16:47:57 berndl Exp $
 
 ;;; Commentary:
 
@@ -88,38 +88,38 @@
 ;; -- an alias for all functions of semantic currently used by ECB ---
 
 (defconst ecb--semantic-function-alist
-  '((semantic-active-p               . semantic-active-p) 
-    (semantic-adopt-external-members . semantic-adopt-external-members)
-    (semantic-bovinate-toplevel      . semantic-bovinate-toplevel)
-    (semantic-bucketize              . semantic-bucketize)
-    (semantic-c-template-string      . semantic-c-template-string)
-    (semantic-clear-toplevel-cache   . semantic-clear-toplevel-cache)
-    (semantic-colorize-text          . semantic--format-colorize-text)
-    (semantic-current-nonterminal    . semantic-current-tag)
-    (semantic-equivalent-tokens-p    . semantic-equivalent-tag-p)
-    (semantic-find-dependency        . semantic-dependency-tag-file)
-    (semantic-find-documentation     . semantic-documentation-for-tag)
-    (semantic-flex-start             . semantic-lex-token-start)
-    (semantic-nonterminal-children   . semantic-tag-children-compatibility)
-    (semantic-nonterminal-protection . semantic-tag-protection)
-    (semantic-overlay-live-p         . semantic-overlay-live-p)
-    (semantic-overlay-p              . semantic-overlay-p)
-    (semantic-token-buffer           . semantic-tag-buffer)
-    (semantic-token-end              . semantic-tag-end)
-    (semantic-token-extra-spec       . semantic-tag-get-attribute)
-    (semantic-token-function-parent  . semantic-tag-function-parent)
-    (semantic-token-get              . semantic--tag-get-property)
-    (semantic-token-name             . semantic-tag-name)
-    (semantic-token-overlay          . semantic-tag-overlay)
-    (semantic-token-overlay-cdr      . semantic--tag-overlay-cdr)
-    (semantic-token-p                . semantic-tag-p)
-    (semantic-token-put              . semantic--tag-put-property)
-    (semantic-token-start            . semantic-tag-start)
-    (semantic-token-token            . semantic-tag-class)
-    (semantic-token-type             . semantic-tag-type)
+  '((semantic-active-p                     . semantic-active-p) 
+    (semantic-adopt-external-members       . semantic-adopt-external-members)
+    (semantic-bovinate-toplevel            . semantic-bovinate-toplevel)
+    (semantic-bucketize                    . semantic-bucketize)
+    (semantic-c-template-string            . semantic-c-template-string)
+    (semantic-clear-toplevel-cache         . semantic-clear-toplevel-cache)
+    (semantic-colorize-text                . semantic--format-colorize-text)
+    (semantic-current-nonterminal          . semantic-current-tag)
+    (semantic-equivalent-tokens-p          . semantic-equivalent-tag-p)
+    (semantic-find-dependency              . semantic-dependency-tag-file)
+    (semantic-find-documentation           . semantic-documentation-for-tag)
+    (semantic-flex-start                   . semantic-lex-token-start)
+    (semantic-nonterminal-children         . semantic-tag-children-compatibility)
+    (semantic-nonterminal-protection       . semantic-tag-protection)
+    (semantic-overlay-live-p               . semantic-overlay-live-p)
+    (semantic-overlay-p                    . semantic-overlay-p)
+    (semantic-token-buffer                 . semantic-tag-buffer)
+    (semantic-token-end                    . semantic-tag-end)
+    (semantic-token-extra-spec             . semantic-tag-get-attribute)
+    (semantic-token-function-parent        . semantic-tag-function-parent)
+    (semantic-token-get                    . semantic--tag-get-property)
+    (semantic-token-name                   . semantic-tag-name)
+    (semantic-token-overlay                . semantic-tag-overlay)
+    (semantic-token-overlay-cdr            . semantic--tag-overlay-cdr)
+    (semantic-token-p                      . semantic-tag-p)
+    (semantic-token-put                    . semantic--tag-put-property)
+    (semantic-token-start                  . semantic-tag-start)
+    (semantic-token-token                  . semantic-tag-class)
+    (semantic-token-type                   . semantic-tag-type)
     (semantic-token-type-parent-superclass . semantic-tag-type-superclass)
-    (semantic-token-type-parent-implement . semantic-tag-type-interfaces)
-    (semantic-token-with-position-p . semantic-tag-with-position-p))
+    (semantic-token-type-parent-implement  . semantic-tag-type-interfaces)
+    (semantic-token-with-position-p        . semantic-tag-with-position-p))
   "Alist where the car is a function of semantic 1.X and the cdr is the
 equivalent new function of semantic 2.X. This alist should contain every
 function ECB uses from the semantic library.")

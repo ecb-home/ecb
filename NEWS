@@ -6,12 +6,41 @@
    function prototypes defined at the top of the file and the implementations
    at the bottom. This means that everything appears twice in the methods
    buffer, but probably nobody wants to jump to the prototypes, they are
-   only wasting space in the methods buffer.
+   only wasting space in the methods buffer. Of course in C-header-files
+   function-prototypes will be displayed!
 
    Thanks for suggestion and a first implementation to Rob Walker
    <rob.lists@tenfoot.org.uk>.
 
+** The command `ecb-toggle-compile-window' now displays a compile-window even if
+   the option `ecb-compile-window-height' is nil. This is a shortcut for
+   customizing this option via the customize-feature if you just want
+   displaying a compile-window for the current Emacs-session. In this
+   situation ECB asks for the height of the compile-window, sets this height
+   as new value of `ecb-compile-window-height' and displays the
+   compile-window.
+   
+** Fixed Bugs
 
+*** Fixed a bug in the adviced version of `other-window'.
+    Now it works correctly also when a durable compile-window is set but
+    currently hidden.
+
+*** Toggling the compile-window has not worked when `ecb-compile-window-height'
+    has not been saved for future sessions. This is fixed now.
+
+*** `ecb-cycle-through-compilation-buffers' works with hidden compile-window.
+
+*** Fixed a bug which prevents some older version of XEmacs 21.4 working well.
+    For XEmacs 21.4.6 a bug was reported which causes this XEmacs-version to
+    fail when `compile' or `grep' is called. The reason for this was that
+    these old versions of XEmacs 21.4 contain versions of `display-buffer'
+    and/or `get-frame-for-buffer' which do not have the fourth argument
+    SHRINK-TO-FIT. Now ECB has fixed this and handles correctly the option
+    `temp-buffer-shrink-to-fit' and all shades of displaying and compiling
+    buffers even for these versions of XEmacs.
+
+    
 
 * Changes for ECB version 2.11
 

@@ -24,7 +24,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-method-browser.el,v 1.5 2003/11/23 19:13:18 berndl Exp $
+;; $Id: ecb-method-browser.el,v 1.6 2003/12/09 16:47:57 berndl Exp $
 
 ;;; Commentary:
 
@@ -511,7 +511,7 @@ position but groups some external members having the same parent-tag."
 (defcustom ecb-post-process-semantic-taglist
   '((c++-mode . (ecb-group-function-tags-with-parents))
     (emacs-lisp-mode . (ecb-group-function-tags-with-parents))
-    (c-mode . (ecb-filter-prototype-tags)))
+    (c-mode . (ecb-filter-c-prototype-tags)))
   "*Define mode-dependent post-processing for the semantic-taglist.
 This is an alist where the car is a major-mode symbol and the cdr is a list of
 function-symbols of functions which should be used for post-processing the
@@ -528,7 +528,7 @@ method-display in the methods-window of ECB, because all method
 implementations of a class are grouped together.
 
 Another senseful usage is to filter out certain tags, e.g. prototype tags in
-`c-mode'. For this you can set `ecb-filter-prototype-tags'.
+`c-mode'. For this you can set `ecb-filter-c-prototype-tags'.
 
 This options takes only effect for semantic-sources - means sources supported
 by semantic!"
@@ -1201,16 +1201,27 @@ This is useful for oo-programming languages where the methods of a class can
 be defined outside the class-definition, e.g. C++, Eieio."
   (ecb--semantic-adopt-external-members taglist))
 
-(defun ecb-filter-prototype-tags (taglist)
+(defun ecb-filter-c-prototype-tags (taglist)
   "Filter out all prototypes.
 For example this is useful for editing C files which have the function
 prototypes defined at the top of the file and the implementations at the
 bottom. This means that everything appears twice in the methods buffer, but
 probably nobody wants to jump to the prototypes, they are only wasting space
-in the methods buffer."
-  (ecb-filter taglist
-              (function (lambda (x)
-                           (not (ecb--semantic-tag-get-attribute x 'prototype))))))
+in the methods buffer.
+For C-header-files prototypes are never filtered out!"
+  ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: Is there a better way to
+  ;; recognize a C-Header-file?
+  (let ((header-extensions '("\\.h\\'" "\\.H\\'" "\\.HH\\'" "\\.hxx\\'" "\\.hh\\'")))
+    (or (and (catch 'found
+               (dolist (ext header-extensions)
+                 (if (save-match-data
+                       (string-match ext (buffer-file-name (current-buffer))))
+                     (throw 'found t)))
+               nil)
+             taglist)
+        (ecb-filter taglist
+                    (function (lambda (x)
+                                (not (ecb--semantic-tag-get-attribute x 'prototype))))))))
 
 (defun ecb-add-tags (node tags &optional parent-tag no-bucketize)
   "If NO-BUCKETIZE is not nil then TAGS will not bucketized by

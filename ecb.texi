@@ -26,7 +26,7 @@
 @c GNU Emacs; see the file COPYING.  If not, write to the Free Software
 @c Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-@c $Id: ecb.texi,v 1.132 2003/11/23 19:13:17 berndl Exp $
+@c $Id: ecb.texi,v 1.133 2003/12/09 16:47:57 berndl Exp $
 
 @setfilename ecb.info
 
@@ -49,7 +49,7 @@
 @c edit the Makefile to change the version number. mechanism stolen
 @c from Tramp
 @macro ecbver{}
-2.11
+2.12
 @end macro
 
 
@@ -3445,13 +3445,16 @@ the next switch on by this command.
 
 @deffn Command toggle-compile-window &optional arg
 Toggle the visibility of the compile-window of ECB. With prefix
-argument @var{ARG}, make visible if positive, otherwise invisible. The
-height of the compile-window is always the current @strong{saved} (for
-future sessions) value of @code{ecb-compile-window-height}, i.e. this
-command can only display a compile-window if
-@code{ecb-compile-window-height} has such a saved value of not
-@code{nil}!
+argument ARG, make visible if positive, otherwise invisible. The
+height of the compile-window is always the current value of
+@code{ecb-compile-window-height}! If called and
+@code{ecb-compile-window-height} is nil then ECB asks for the height
+of the compile-window, sets this height as new value of
+@code{ecb-compile-window-height} and displays the compile-window (so
+if you have called this command by mistake and you do not want a
+compile-window you have to quit with @key{C-g}).
 @end deffn
+
 
 @deffn Command toggle-compile-window-height &optional arg
 Toggle whether the @code{ecb-compile-window} is enlarged or not. If
@@ -5155,7 +5158,7 @@ implementations of a class are grouped together.
 
 Another senseful usage is to filter out certain tags, e.g. prototype
 tags in @code{c-mode}. For this you can set
-@code{ecb-filter-prototyp-tags}.
+@code{ecb-filter-c-prototyp-tags}.
 
 This options takes only effect for semantic-sources - means sources
 supported by semantic!
