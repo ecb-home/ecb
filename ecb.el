@@ -54,7 +54,7 @@
 ;; The latest version of the ECB is available at
 ;; http://home.swipnet.se/mayhem/ecb.html
 
-;; $Id: ecb.el,v 1.183 2002/01/26 09:47:43 burtonator Exp $
+;; $Id: ecb.el,v 1.184 2002/01/26 10:38:20 burtonator Exp $
 
 ;;; Code:
 
@@ -2511,18 +2511,6 @@ That is remove the unsupported :help stuff."
       :help "Redraw the layout."
       ])
    (ecb-menu-item
-    [ "Toggle visibility of ECB windows"
-      ecb-toggle-ecb-windows
-      :active (equal (selected-frame) ecb-frame)
-      :help "Toggle the visibility of all ECB windows."
-      ])
-   (ecb-menu-item
-    [ "Toggle enlarged compilation window"
-      ecb-toggle-enlarged-compilation-window
-      :active (equal (selected-frame) ecb-frame)
-      :help "Toggle enlarged compilation window."
-      ])
-   (ecb-menu-item
     [ "Synchronize ECB windows"
       (ecb-current-buffer-sync t)
       :active (and (equal (selected-frame) ecb-frame)
@@ -2541,6 +2529,19 @@ That is remove the unsupported :help stuff."
       :active ecb-files-and-subdirs-cache
       :help "Clear the cache of certain cached directories."
       ])   
+   "-"
+   (ecb-menu-item
+    [ "Toggle visibility of ECB windows"
+      ecb-toggle-ecb-windows
+      :active (equal (selected-frame) ecb-frame)
+      :help "Toggle the visibility of all ECB windows."
+      ])
+   (ecb-menu-item
+    [ "Toggle enlarged compilation window"
+      ecb-toggle-enlarged-compilation-window
+      :active (equal (selected-frame) ecb-frame)
+      :help "Toggle enlarged compilation window."
+      ])
    "-"
    (list
     "Navigate"
