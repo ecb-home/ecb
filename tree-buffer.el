@@ -26,7 +26,7 @@
 ;; This file is part of the ECB package which can be found at:
 ;; http://home.swipnet.se/mayhem/ecb.html
 
-;; $Id: tree-buffer.el,v 1.75 2002/02/15 12:14:07 berndl Exp $
+;; $Id: tree-buffer.el,v 1.76 2002/02/23 11:43:43 berndl Exp $
 
 ;;; Code:
 
@@ -776,10 +776,41 @@ functionality is done with the `help-echo'-property and the function
     (setq tree-buffer-incr-searchpattern "")
     (tree-buffer-select 0 shift-pressed control-pressed)))
 
+(defun tree-buffer-arrow-pressed ()
+  (interactive)
+  (unless (not (equal (selected-frame) tree-buffer-frame))
+    (let ((node (tree-buffer-get-node-at-point))
+          (arrow-key (tree-buffer-event-to-key last-command-event))
+          node-expanded-p)
+      (if (tree-node-is-expandable node)
+          (progn
+            (setq node-expanded-p (tree-node-is-expanded node))
+            (cond ((equal arrow-key 'right)
+                   (if (not node-expanded-p)
+                       (tree-buffer-tab-pressed)))
+                  ((equal arrow-key 'left)
+                   (if node-expanded-p
+                       (tree-buffer-tab-pressed)
+                     ;; jump to next higher node
+                     (let* ((indent (tree-buffer-get-node-indent node))
+                            (new-indent (max 0 (- indent tree-buffer-indent)))
+                            (search-string
+                             (concat "^"
+                                     (buffer-substring
+                                      (tree-buffer-line-beginning-pos)
+                                      (+ (tree-buffer-line-beginning-pos)
+                                          new-indent))
+                                     "[^ \t]")))
+                       (re-search-backward search-string nil t))))))
+        (cond ((equal arrow-key 'left)
+               (forward-char -1))
+              ((equal arrow-key 'right)
+               (forward-char +1)))))))
+
 (defun tree-buffer-create (name frame is-click-valid-fn node-selected-fn
                                 node-expanded-fn node-mouse-over-fn
                                 menus tr-lines read-only tree-indent
-                                incr-search
+                                incr-search arrow-navigation
                                 &optional type-facer expand-symbol-before
                                 highlight-node-face general-face
                                 after-create-hook)
@@ -840,6 +871,8 @@ TREE-INDENT: spaces subnodes should be indented.
 INCR-SEARCH: Should the incremental search be anabled in the tree-buffer.
              Three choices: 'prefix, 'substring, nil. See
              `tree-buffer-incremental-node-search'.
+ARROW-NAVIGATION: Smart navigation  with horizontal arrow keys. See
+                  `ecb-tree-navigation-by-arrow'.
 TYPE-FACER: Nil or a list of one or two conses, each cons for a node-type \(0
             or 1). The cdr of a cons can be:
             - a symbol of a face
@@ -936,7 +969,11 @@ AFTER-CREATE-HOOK: A function \(with no arguments) called directly after
                   (tree-buffer-return-pressed t nil))))
     
     (define-key tree-buffer-key-map [tab] 'tree-buffer-tab-pressed)
-      
+
+    (when arrow-navigation
+      (define-key tree-buffer-key-map (kbd "<right>") 'tree-buffer-arrow-pressed)
+      (define-key tree-buffer-key-map (kbd "<left>") 'tree-buffer-arrow-pressed))
+    
     ;; mouse-1
     (define-key tree-buffer-key-map
       (if running-xemacs '(button1) [down-mouse-1])

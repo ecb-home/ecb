@@ -26,7 +26,7 @@
 ;;
 ;; Contains all online-help for ECB (stolen something from recentf.el)
 
-;; $Id: ecb-help.el,v 1.55 2002/02/22 08:30:43 berndl Exp $
+;; $Id: ecb-help.el,v 1.56 2002/02/23 11:43:42 berndl Exp $
 
 ;;; Code
 
@@ -163,14 +163,15 @@ popup-menu for the clicked item where you can choose several senseful actions.
 Working with the keyboard in the ECB-buffers:
 ---------------------------------------------
 
+General:
 ECB offers you the `ecb-mode-map' which binds the most important functions of
 ECB to keys so you can easily use ECB without a mouse.
-
 IMPORTANT: The option `ecb-key-map' defines all ECB keybindings, including a
 common prefixkey \(This is by default \"C-c .\"). If there are conflicts with
 other minor-modes or packages you can define very easy another prefix. Please
 read carefully the description of `ecb-key-map'!
 
+Navigation:
 In the ECB-buffers RETURN and TAB are the most important keys:
 + RETURN does the same as the primary button and C-RETURN does the same as the
   secondary button \(see the section \"Working with the mouse in the
@@ -178,6 +179,17 @@ In the ECB-buffers RETURN and TAB are the most important keys:
   same as the SHIFT-click above.
 + TAB always expands or collapses expandable nodes.
 The RETURN and TAB keys can not be \(re)defined with `ecb-key-map'!
+
+If you set `ecb-tree-navigation-by-arrow' to not nil then the left- and
+right-arrow keys work in the ECB tree-window in the following smart way if
+onto an expandable node:
++ Left-arrow: If node is expanded then it will be collapsed otherwise point
+  jumps to the next \"higher\" node in the hierarchical tree \(higher means
+  the next higher level or - if no higher level available - the next higher
+  node on the same level).
++ Right-arrow: If node is not expanded then it will be expanded.
+Onto a not expandable node the horizontal arrow-keys go one character in the
+senseful correct direction.
 
 Incremental search for a node in current tree-buffer. Each displayable key
 \(e.g. all keys normally bound to `self-insert-command') is appended to the

@@ -54,7 +54,7 @@
 ;; The latest version of the ECB is available at
 ;; http://home.swipnet.se/mayhem/ecb.html
 
-;; $Id: ecb.el,v 1.191 2002/02/22 17:22:36 berndl Exp $
+;; $Id: ecb.el,v 1.192 2002/02/23 11:43:42 berndl Exp $
 
 ;;; Code:
 
@@ -728,7 +728,9 @@ symbol with name \"ecb-XYZ\".")
                                         ((listp face)
                                          face)
                                         (t nil))))
-                             (append cf nf)))
+                             ;; we must add the new-face in front of
+                             ;; current-face to get the right merge!
+                             (append nf cf)))
                          newtext)
     newtext))
 
@@ -832,7 +834,8 @@ displaying the tokens."
   "*Define face used with option `ecb-type-token-display'."
   :group 'faces)
 
-(defface ecb-type-token-group-face (ecb-face-default nil t t)
+(defface ecb-type-token-group-face (ecb-face-default nil t nil
+                                                     "dim gray" "dim gray")
   "*Define face used with option `ecb-type-token-display'."
   :group 'faces)
 
@@ -1109,6 +1112,23 @@ activate ECB again to take effect."
                        :value substring)
                 (const :tag "No incremental search"
                        :value nil)))
+
+(defcustom ecb-tree-navigation-by-arrow t
+  "*Enable smart navigation in the tree-windows by horiz. arrow-keys.
+If not nil then the left- and right-arrow keys work in the ECB tree-window in
+the following smart way if onto an expandable node:
++ Left-arrow: If node is expanded then it will be collapsed otherwise point
+  jumps to the next \"higher\" node in the hierarchical tree \(higher means
+  the next higher tree-level or - if no higher level available - the next
+  higher node on the same level).
++ Right-arrow: If node is not expanded then it will be expanded.
+Onto a not expandable node the horizontal arrow-keys go one character in the
+senseful correct direction.
+
+If this option is changed the new value takes first effect after deactivating
+ECB and then activating it again!"
+  :group 'ecb-general
+  :type 'boolean)
 
 (defcustom ecb-show-node-info-in-minibuffer '((if-too-long . path)
                                               (if-too-long . name)
@@ -3157,6 +3177,7 @@ always the ECB-frame if called from another frame."
 	 t
 	 ecb-tree-indent
 	 ecb-tree-incremental-search
+         ecb-tree-navigation-by-arrow
 	 (list (cons 1 ecb-source-in-directories-buffer-face))
 	 ecb-tree-expand-symbol-before
          ecb-directory-face
@@ -3181,6 +3202,7 @@ always the ECB-frame if called from another frame."
 	 t
 	 ecb-tree-indent
 	 ecb-tree-incremental-search
+         ecb-tree-navigation-by-arrow
          nil
          nil
          ecb-source-face
@@ -3199,6 +3221,7 @@ always the ECB-frame if called from another frame."
 	 t
 	 ecb-tree-indent
 	 ecb-tree-incremental-search
+         ecb-tree-navigation-by-arrow
 	 nil
 	 ecb-tree-expand-symbol-before
          ecb-method-face
@@ -3218,6 +3241,7 @@ always the ECB-frame if called from another frame."
 	 t
 	 ecb-tree-indent
 	 ecb-tree-incremental-search
+         ecb-tree-navigation-by-arrow
          nil
          nil
          ecb-history-face
