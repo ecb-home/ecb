@@ -260,6 +260,42 @@ little more place."
     (ecb-set-methods-buffer)
     (select-window edit-win)))
 
+;; Layout right2 -----------------------------------------------------
+
+(ecb-layout-define "right2" right
+  "This function creates the following layout:
+
+   -------------------------------------------------------
+   |                                      |              |
+   |                                      |              |
+   |                                      |              |
+   |                                      |  Directories |
+   |                                      |              |
+   |                                      |              |
+   |                                      |              |
+   |             Edit                     |--------------|
+   |                                      |              |
+   |                                      |              |
+   |                                      |              |
+   |                                      |  Methods     |
+   |                                      |              |
+   |                                      |              |
+   |                                      |              |
+   -------------------------------------------------------
+   |                                                     |
+   |                    Compilation                      |
+   |                                                     |
+   -------------------------------------------------------
+
+If you have not set a compilation-window in `ecb-compile-window-height' then
+the layout contains no durable compilation window and the other windows get a
+little more place."
+  (let ((edit-win (previous-window (selected-window) 0)))
+    (ecb-set-directories-buffer)
+    (ecb-split-ver 0.5)
+    (ecb-set-methods-buffer)
+    (select-window edit-win)))
+
 ;; Layout left6 -----------------------------------------------------
 
 (ecb-layout-define "left6" left
