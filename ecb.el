@@ -700,6 +700,10 @@ highlighting of the methods if `ecb-font-lock-methods' is not nil."
                                        0 var t))))))
   
 (defun ecb-add-tokens(node token &optional flatten)
+  ;; Semantic 1.4beta2 fix for EIEIO class parts
+  ;; They are really strings, but here converted to tokens
+  (if (stringp (car token))
+      (setq token (mapcar (lambda (s) (list s 'variable nil)) token)))
   (let ((methods (semantic-find-nonterminal-by-token 'function token))
         (variables (semantic-find-nonterminal-by-token 'variable token)))
     (setq flatten (and flatten
@@ -813,6 +817,7 @@ given."
 						     (tree-node-get-name r)))))
 	    history-items)))
        (tree-buffer-highlight-node-data ecb-path-selected-source)
+       (tree-buffer-scroll (point-min) (point-min))
        (tree-buffer-update)))))
 
 (defun ecb-update-methods-after-saving ()
@@ -862,24 +867,27 @@ displayed with window-start and point at beginning of buffer."
 (defun ecb-rebuild-methods-buffer-after-parsing ()
   "Rebuilds the ECB-method buffer after toplevel-parsing by semantic. This
   function is added to the hook `semantic-after-toplevel-bovinate-hook'."
-  (tree-node-set-children ecb-methods-root-node nil)
-  (ecb-add-tokens ecb-methods-root-node
-		  ;; this works because at call-time of the hooks in
-		  ;; `semantic-after-toplevel-bovinate-hook' the cache is
-		  ;; always either still valid or rebuild.
-		  ;;
-		  ;; TODO: Ugly fix to make it work with semantic 1.4
-		  (if (listp (caar semantic-toplevel-bovine-cache))
-		      (car semantic-toplevel-bovine-cache)
-		    semantic-toplevel-bovine-cache)
-		  t)
-  ;; also the whole buffer informations should be preserved!
-  (save-excursion
-    (ecb-buffer-select ecb-methods-buffer-name)
-    (tree-buffer-update))
-  (ecb-mode-line-format)
-  ;; signalize that the rebuild has already be done
-  (setq ecb-method-buffer-needs-rebuild nil))
+  ;; This is a fix for semantic 1.4beta2
+  ;; otherwise it parses the mini-buffer
+  (unless (string-match "^ *\\*" (buffer-name))
+    (tree-node-set-children ecb-methods-root-node nil)
+    (ecb-add-tokens ecb-methods-root-node
+		    ;; this works because at call-time of the hooks in
+		    ;; `semantic-after-toplevel-bovinate-hook' the cache is
+		    ;; always either still valid or rebuild.
+		    ;;
+		    ;; TODO: Ugly fix to make it work with semantic 1.4
+		    (if (listp (caar semantic-toplevel-bovine-cache))
+			(car semantic-toplevel-bovine-cache)
+		      semantic-toplevel-bovine-cache)
+		    t)
+    ;; also the whole buffer informations should be preserved!
+    (save-excursion
+      (ecb-buffer-select ecb-methods-buffer-name)
+      (tree-buffer-update))
+    (ecb-mode-line-format)
+    ;; signalize that the rebuild has already be done
+    (setq ecb-method-buffer-needs-rebuild nil)))
 
 (defun ecb-rebuild-methods-buffer ()
   "Updates the methods buffer with the current buffer after deleting the
@@ -1197,8 +1205,9 @@ Currently the fourth argument TREE-BUFFER-NAME is not used here."
       ;; let us set the mark so the user can easily jump back.
       (if ecb-method-jump-sets-mark
           (push-mark))
-      ;;       (goto-char (tree-node-get-data node)))))
-      (goto-char (semantic-token-start (tree-node-get-data node))))))
+      ;; Semantic 1.4beta2 fix for EIEIO class parts
+      (ignore-errors
+	(goto-char (semantic-token-start (tree-node-get-data node)))))))
 
 (defun ecb-get-file-info-text(file)
   (let ((attrs (file-attributes file)))
