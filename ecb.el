@@ -1198,7 +1198,7 @@ OTHER-EDIT-WINDOW."
         (if include-extension
             file
           (file-name-sans-extension file))
-        type filename (or not-expandable (= type 1)))))))
+        type filename (or not-expandable (= type 1)) 'end)))))
   
 (defun ecb-update-directory-node (node)
   "Updates the directory node NODE and add all subnodes if any."
@@ -1251,7 +1251,7 @@ OTHER-EDIT-WINDOW."
 	 (dolist (dir paths)
 	   (let ((norm-dir (ecb-fix-filename dir t)))
 	     (tree-node-add-child node (ecb-new-child old-children
-						      norm-dir 2 norm-dir))))
+						      norm-dir 2 norm-dir nil 'beginning))))
 	 (when (not paths)
 	   (tree-node-add-child node (tree-node-new "Welcome to ECB! Please select:"
 						    3 '(lambda()) t))
@@ -1266,7 +1266,7 @@ OTHER-EDIT-WINDOW."
                                                     'ecb-show-help t)))
 	 (tree-buffer-update))))))
   
-(defun ecb-new-child (old-children name type data &optional not-expandable)
+(defun ecb-new-child (old-children name type data &optional not-expandable shorten-name)
   (catch 'exit
     (dolist (child old-children)
       (when (and (equal (tree-node-get-data child) data)
@@ -1275,7 +1275,9 @@ OTHER-EDIT-WINDOW."
         (if not-expandable
             (tree-node-set-expandable child nil))
         (throw 'exit child)))
-    (tree-node-new name type data not-expandable)))
+    (let ((node (tree-node-new name type data not-expandable)))
+      (tree-node-set-shorten-name node shorten-name)
+      node)))
 
 (defun ecb-add-source-path (&optional dir)
   (interactive "DAdd source path: ")
