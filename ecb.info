@@ -916,7 +916,19 @@ File: ecb.info,  Node: Interactive ECB commands,  Prev: ECB-window synchronizing
 Interactive ECB commands
 ========================
 
-ECB offers the following interactive commands (listed in alphabetical
+ECB offers the a lot of interactive commands. Some of these commands
+prompt the user in the minibuffer if called with a prefix argument.
+
+Example: If `ecb-clear-history' is called with a prefix argument then
+you will be prompted in the minibuffer with:
+
+   Clear from history: [all, not-existing-buffers, existing-buffers]
+
+You can choose one of the options enclosed in brackets with
+TAB-completion; hitting RET direct after the prompt chooses auto. the
+first offered option (in the example above "all").
+
+These are the interactive commands of ECB (listed in alphabetical
 order):
 
  - Command: ecb-activate
@@ -932,15 +944,9 @@ order):
  - Command: ecb-clear-history &optional clearall
    Clears the ECB history-buffer. If CLEARALL is `nil' then the
    behavior is defined in the option `ecb-clear-history-behavior'
-   otherwise the value of CLEARALL overrides the value of this option:
-
-    - < 0: Means not-existing-buffers
-
-    - > 0: Means existing-buffers
-
-    - = 0: Means all
-
-   For further explanation see `ecb-clear-history-behavior'.
+   otherwise the user is prompted what buffers should be cleared from
+   the history-buffer. For further explanation see
+   `ecb-clear-history-behavior'.
 
  - Command: ecb-current-buffer-sync &optional force
    Synchronizes the ECB buffers with the current buffer. Unless FORCE
@@ -1565,8 +1571,7 @@ This group contains the following options:
    Do NOT set this option directly via setq but use always customize!
 
  - User Option: ecb-temp-dir
-   Specify a directory where ECB can store temporary files. This is for
-   example needed for upgrading ECB by `ecb-upgrade-ecb'.
+   Specify a directory where ECB can store temporary files.
 
  - User Option: ecb-tree-RET-selects-edit-window
    In which tree-buffers RET should finally select an edit-window. If a
@@ -3424,43 +3429,43 @@ Node: Redrawing the ECB-layout31655
 Node: Hiding the ECB windows32458
 Node: ECB-window synchronizing33032
 Node: Interactive ECB commands35613
-Node: Customizing43777
-Node: Most important options45290
-Node: Customizable options47082
-Node: ecb-general47998
-Node: ecb-directories66454
-Node: ecb-sources71434
-Node: ecb-methods73304
-Node: ecb-history85311
-Node: ecb-layout87003
-Node: ecb-face-options100935
-Node: ecb-faces102595
-Node: ecb-download106602
-Node: Submitting problem report107824
-Node: Upgrading108981
-Node: Downloading new versions109744
-Ref: Download required packages111501
-Ref: Downloading new versions-Footnote-1112599
-Node: Auto. option-upgrading112648
-Node: User interface112956
-Node: Background information113845
-Node: Tips and tricks117243
-Node: Changing faces117802
-Node: Small screens118608
-Node: Simulating speedbar120011
-Node: Optimze scrolling120820
-Node: Large directories121895
-Node: Elisp programming122539
-Node: Conflicts and bugs123722
-Node: Conflicts124208
-Node: VC124797
-Node: follow-mouse125090
-Node: avoid125768
-Node: calendar126132
-Node: calculator126768
-Node: Bugs127270
-Node: Function Index127490
-Node: Variable Index129355
-Node: Concept Index134587
+Node: Customizing44204
+Node: Most important options45717
+Node: Customizable options47509
+Node: ecb-general48425
+Node: ecb-directories66811
+Node: ecb-sources71791
+Node: ecb-methods73661
+Node: ecb-history85668
+Node: ecb-layout87360
+Node: ecb-face-options101292
+Node: ecb-faces102952
+Node: ecb-download106959
+Node: Submitting problem report108181
+Node: Upgrading109338
+Node: Downloading new versions110101
+Ref: Download required packages111858
+Ref: Downloading new versions-Footnote-1112956
+Node: Auto. option-upgrading113005
+Node: User interface113313
+Node: Background information114202
+Node: Tips and tricks117600
+Node: Changing faces118159
+Node: Small screens118965
+Node: Simulating speedbar120368
+Node: Optimze scrolling121177
+Node: Large directories122252
+Node: Elisp programming122896
+Node: Conflicts and bugs124079
+Node: Conflicts124565
+Node: VC125154
+Node: follow-mouse125447
+Node: avoid126125
+Node: calendar126489
+Node: calculator127125
+Node: Bugs127627
+Node: Function Index127847
+Node: Variable Index129712
+Node: Concept Index134944
 
 End Tag Table

@@ -65,7 +65,7 @@ for Java, C, C++, Elisp and some more.
 of all commands and user-options in @ref{Interactive ECB commands} and
 @ref{Customizable options}.
 
-@c In the following tow paragraphs we distinct between HTML-, info-,
+@c In the following two paragraphs we distinct between HTML-, info-,
 @c and tex-format concerning the display of the URLs.
 @ifinfo
 The latest version of ECB can always be found at the URL
@@ -1019,7 +1019,21 @@ if you just want to do this!
 @section Interactive ECB commands
 
 @noindent
-ECB offers the following interactive commands (listed in alphabetical
+ECB offers the a lot of interactive commands. Some of these commands
+prompt the user in the minibuffer if called with a prefix argument.
+
+Example: If @code{ecb-clear-history} is called with a prefix argument
+then you will be prompted in the minibuffer with:
+
+@example
+Clear from history: [all, not-existing-buffers, existing-buffers]
+@end example 
+
+You can choose one of the options enclosed in brackets with
+TAB-completion; hitting RET direct after the prompt chooses auto. the
+first offered option (in the example above ``all'').
+
+These are the interactive commands of ECB (listed in alphabetical
 order):
 
 @deffn Command ecb-activate
@@ -1035,17 +1049,10 @@ Add all current file-buffers to the history-buffer of ECB.
 
 @deffn Command ecb-clear-history &optional clearall
 Clears the ECB history-buffer. If @var{CLEARALL} is @code{nil} then
-the behavior is defined in the option @code{ecb-clear-history-behavior}
-otherwise the value of @var{CLEARALL} overrides the value of this
-option:
-
-@itemize @minus
-@item < 0: Means not-existing-buffers
-@item > 0: Means existing-buffers
-@item = 0: Means all
-@end itemize
-
-For further explanation see @code{ecb-clear-history-behavior}.
+the behavior is defined in the option
+@code{ecb-clear-history-behavior} otherwise the user is prompted what
+buffers should be cleared from the history-buffer. For further
+explanation see @code{ecb-clear-history-behavior}.
 @end deffn
 
 @deffn Command ecb-current-buffer-sync &optional force
@@ -1709,8 +1716,7 @@ Do NOT set this option directly via setq but use always customize!
 @end defopt
 
 @defopt ecb-temp-dir
-Specify a directory where ECB can store temporary files. This is for
-example needed for upgrading ECB by @code{ecb-upgrade-ecb}.
+Specify a directory where ECB can store temporary files.
 @end defopt
 
 @defopt ecb-tree-RET-selects-edit-window
