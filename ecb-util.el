@@ -26,7 +26,7 @@
 ;; This file is part of the ECB package which can be found at:
 ;; http://home.swipnet.se/mayhem/ecb.html
 
-;; $Id: ecb-util.el,v 1.48 2003/01/24 14:37:09 berndl Exp $
+;; $Id: ecb-util.el,v 1.49 2003/01/27 10:40:37 berndl Exp $
 
 ;;; Code:
 
@@ -45,6 +45,9 @@
 (silentcomp-defun line-beginning-position)
 (silentcomp-defun line-end-position)
 (silentcomp-defun window-pixel-edges)
+(silentcomp-defun make-dialog-box)
+;; Emacs
+(silentcomp-defun x-popup-dialog)
   
 ;; Some constants
 (defconst ecb-running-xemacs (string-match "XEmacs\\|Lucid" emacs-version))
@@ -456,6 +459,31 @@ in exactly this sequence."
     (cond ((not (listp val)) val)
           ((equal 'quote (car val)) (car (cdr val)))
           (t (car val)))))
+
+(defun ecb-message-box (message-str &optional title-text button-text)
+  "Display a messagebox with message MESSAGE-STR and title TITLE-TEXT if
+TITLE-TEXT is not nil - otherwise \"Messagebox\" is used as title. The title
+gets always the prefix \"ECB - \". Second optional argument BUTTON-TEXT
+specifies the text of the message-box button; if nil then \"OK\" is used.
+
+Remark: BUTTON-TEXT is currently only used with XEmacs. Wie GNU Emacs the
+message itself is the button because GNU Emacs currently does not support
+dialog-boxes very well."
+  (let ((button (if (stringp button-text)
+                    button-text
+                  "OK"))
+        (title (concat "ECB"
+                       (if (stringp title-text)
+                           (concat " - " title-text)
+                         " Message"))))
+    (if ecb-running-xemacs
+        (make-dialog-box 'question
+                         :title title
+                         :modal t
+                         :question message-str
+                         :buttons (list (vector button '(identity nil) t)))
+      (x-popup-dialog t (list title (cons message-str t))))
+    t))
 
 
 (defmacro ecb-error (&rest args)
