@@ -336,7 +336,7 @@ so the user can easily jump back."
   :group 'ecb-methods
   :type 'boolean)
 
-(defcustom ecb-token-display-function 'semantic-abbreviate-nonterminal
+(defcustom ecb-token-display-function 'semantic-prototype-nonterminal
   "*Function to use when displaying tokens in the methods buffer.
 Some useful functions are found in `semantic-token->text-functions'."
   :group 'ecb-methods
