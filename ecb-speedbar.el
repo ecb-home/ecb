@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-speedbar.el,v 1.62 2004/12/10 12:54:41 berndl Exp $
+;; $Id: ecb-speedbar.el,v 1.63 2004/12/20 17:00:25 berndl Exp $
 
 ;;; Commentary:
 
@@ -95,6 +95,7 @@ Example: \(speedbar-change-initial-expansion-list \"buffers\")."
 
 (defconst ecb-speedbar-adviced-functions '((speedbar-click . around)
                                            (speedbar-frame-mode . around)
+                                           (dframe-select-attached-frame . after)
                                            (speedbar-get-focus . around)
                                            ;; we have to fix a bug there
                                            (dframe-mouse-set-point . around))
@@ -136,7 +137,7 @@ after clicking onto a filename in the speedbar."
 (defadvice speedbar-frame-mode (around ecb)
   "During running speedbar within ECB this command is disabled!"
   (if ecb-minor-mode
-      (message "This command is disabled during running speedbar within ECB!")
+      (message "Takes no effect during running speedbar within ECB!")
     ad-do-it))
 
 
@@ -169,7 +170,20 @@ the point was not set by `mouse-set-point'."
           (mouse-set-point e)))
     ;; We are not in XEmacs, OR we didn't click on a picture.
     (mouse-set-point e)))
-  
+
+;; Klaus Berndl <klaus.berndl@sdm.de>: we can not advice
+;; speedbar-select-attached-frame because this is a defsubst and is therefore
+;; inline compiled into all users of this function. So our advice would never
+;; take effect. But dframe-select-attached-frame is a defun so we can advice
+;; it!
+(defadvice dframe-select-attached-frame (after ecb)
+  (when (and ad-return-value ecb-last-edit-window-with-point
+             ecb-last-source-buffer
+             (window-live-p ecb-last-edit-window-with-point)
+             (equal (window-buffer ecb-last-edit-window-with-point)
+                    ecb-last-source-buffer))
+    ;; (select-window ecb-last-edit-window-with-point)
+    (set-buffer ecb-last-source-buffer)))
 
 (defun ecb-speedbar-select-speedbar-window ()
   (ignore-errors
@@ -259,7 +273,7 @@ future this could break."
       (setq ecb-speedbar-verbosity-level-old speedbar-verbosity-level))
   (setq speedbar-verbosity-level 0)
 
-  (add-hook 'ecb-current-buffer-sync-hook
+  (add-hook 'ecb-current-buffer-sync-hook-internal
             'ecb-speedbar-current-buffer-sync)
 
   ;;reset the selection variable
@@ -283,7 +297,7 @@ future this could break."
       (setq speedbar-verbosity-level ecb-speedbar-verbosity-level-old))
   (setq ecb-speedbar-verbosity-level-old nil)
   
-  (remove-hook 'ecb-current-buffer-sync-hook
+  (remove-hook 'ecb-current-buffer-sync-hook-internal
                'ecb-speedbar-current-buffer-sync)
 
   (when (and speedbar-buffer
@@ -317,7 +331,10 @@ future this could break."
           (ecb-default-directory (ecb-fix-filename default-directory)))
       (when (and (or (not (ecb-string= speedbar-default-directory
                                        ecb-default-directory))
-                     (ecb-string= speedbar-initial-expansion-list-name "buffers"))
+                     (member speedbar-initial-expansion-list-name
+                             ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: make
+                             ;; this customizable
+                             '("buffers" "Analyze")))
                  speedbar-buffer
                  (buffer-live-p speedbar-buffer))
         (ecb-speedbar-update-contents)))))
