@@ -376,6 +376,9 @@ the `ecb-deactivate-hook'."
 
 ;; ====== internal variables ====================================
 
+(defvar ecb-frame nil
+  "Frame where ECB runs")
+
 (defvar ecb-edit-window nil
   "Window to edit source in. If this window is splitted in two windows then
 `ecb-edit-window' is always the leftmost/topmost window of the two
