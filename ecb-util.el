@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-util.el,v 1.124 2004/11/25 18:10:12 berndl Exp $
+;; $Id: ecb-util.el,v 1.125 2004/12/20 16:34:12 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -709,6 +709,40 @@ returned."
                    (length list))
               list))))
 
+;; Maybe we should enhance this docstring ;-)
+(defun ecb-member-of-symbol/value-list (value list &optional elem-accessor
+                                              return-accessor)
+  "Returns not nil when VALUE is a member of that list which is build from
+LIST by using the symbol-value if a list-member is a symbol and otherwise the
+list-member itself. But if ELEM-ACCESSOR is a function then it is used to get
+that part of a elem of LIST for which the rule above should be applied. If
+RETURN-ACCESSOR is a function then it is used to get that part of that
+list-elem which is equal according to the rules above."
+  (let ((elem-acc (or elem-accessor 'identity))
+        (return-acc (or return-accessor 'identity)))
+    (catch 'exit
+      (dolist (elem list)
+        (let ((case-fold-search t)
+              (e (funcall elem-acc elem)))
+          (if (equal value (if (symbolp e)
+                               (symbol-value e)
+                             e))
+              (throw 'exit (funcall return-acc elem)))
+          nil)))))
+
+;; tests
+
+;; (ecb-member-of-symbol/value-list ecb-directories-buffer-name
+;;                                  ecb-tree-RET-selects-edit-window--internal)
+
+;; (ecb-member-of-symbol/value-list ecb-directories-buffer-name
+;;                                  (cdr '("adgasgd" .
+;;                                         ((ecb-directories-buffer-name . "dir")
+;;                                          (ecb-sources-buffer-name . "sou")
+;;                                          (ecb-history-buffer-name . "hist"))))
+;;                                  'car
+;;                                  'cdr)
+
 ;;; ----- Some regexp stuff  -------------------------------
 
 (defsubst ecb-match-regexp-list (str regexp-list &optional elem-accessor
@@ -1171,7 +1205,109 @@ If `window-system' is nil then a simple message is displayed in the echo-area."
           t)
       (message (concat title " " message-str)))))
 
-;;; ----- Information-display - errors, warnings, infos ----
+;; some first approaches to display informations in a temp-window
+
+;; (defvar ecb-window-config-before-msg-display nil)
+
+;; (defun ecb-display-temp-message-1 (msg-title msg-content)
+;;   (require 'wid-edit)
+;;   (setq ecb-window-config-before-msg-display
+;;         (ecb-current-window-configuration))
+;;   (with-current-buffer (get-buffer-create msg-title)
+;;     (switch-to-buffer-other-window (current-buffer))
+;;     (kill-all-local-variables)
+;;     (let ((inhibit-read-only t))
+;;       (erase-buffer))
+;;     (widget-insert msg-content)
+;;     (widget-insert "\n\n")
+;;     ;; Insert the Save button
+;;     (widget-create 'push-button
+;;                    :button-keymap ecb-upgrade-button-keymap ; XEmacs
+;;                    :keymap ecb-upgrade-button-keymap ; Emacs
+;;                    :notify (lambda (&rest ignore)
+;;                              (when ecb-window-config-before-msg-display
+;;                                (ignore-errors
+;;                                  (ecb-set-window-configuration
+;;                                   ecb-window-config-before-msg-display))
+;;                                (setq ecb-window-config-before-msg-display nil)))
+;;                    "OK")
+;;     (widget-setup)
+;;     (goto-char (point-min))))
+
+
+;; (defun ecb-display-temp-message-2 (msg-title msg-content)
+;;   (require 'wid-edit)
+;;   (setq ecb-window-config-before-msg-display
+;;         (ecb-current-window-configuration))
+;;   (with-output-to-temp-buffer msg-title
+;;     (message "Klausi-1")
+;;     (widget-insert msg-content)
+;;     (message "Klausi-2")
+;;     (widget-insert "\n\n")
+;;     (message "Klausi-3")
+;;     ;; Insert the Save button
+;;     (widget-create 'push-button
+;;                    :button-keymap ecb-upgrade-button-keymap ; XEmacs
+;;                    :keymap ecb-upgrade-button-keymap ; Emacs
+;;                    :notify (lambda (&rest ignore)
+;;                              (when ecb-window-config-before-msg-display
+;;                                (ignore-errors
+;;                                  (ecb-set-window-configuration
+;;                                   ecb-window-config-before-msg-display))
+;;                                (setq ecb-window-config-before-msg-display nil)))
+;;                    "OK")
+;;     (message "Klausi-4")
+;;     (widget-setup)
+;;     (message "Klausi-5")
+;;     (goto-char (point-min))
+;;     (message "Klausi-6")))
+
+;; (defvar ecb-user-information-msg-buffer nil)
+
+;; (defun ecb-display-temp-message (msg-content)
+;;   (require 'wid-edit)
+;;   (progn
+;;     (setq ecb-user-information-msg-buffer
+;;           (get-buffer-create "*ECB User-Information*"))
+;;     (cond
+;;      ((not (get-buffer-window ecb-user-information-msg-buffer))
+;;       (let ((split-window-keep-point nil)
+;;             (window-min-height 2))
+;;         ;; maybe leave two lines for our window because of the normal
+;;         ;; `raised' modeline in Emacs 21
+;;         ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: adjust this for Xemacs!
+;;         (select-window
+;;          (split-window-vertically
+;;           (if (and (fboundp 'face-attr-construct)
+;;                    (plist-get (face-attr-construct 'modeline) :box))
+;;               -3 -2)))
+;;         (switch-to-buffer ecb-user-information-msg-buffer)))
+;;      ((not (eq (current-buffer) ecb-user-information-msg-buffer))
+;;       (select-window (get-buffer-window ecb-user-information-msg-buffer))))
+;;     ;; insert now the msg-content
+;;     (let ((inhibit-read-only t))
+;;       (erase-buffer))
+;;     (widget-insert msg-content)
+;;     (widget-insert "\n\n")
+;;     ;; Insert the Save button
+;;     (widget-create 'push-button
+;;                    :button-keymap ecb-upgrade-button-keymap ; XEmacs
+;;                    :keymap ecb-upgrade-button-keymap ; Emacs
+;;                    :notify (lambda (&rest ignore)
+;;                              (set-buffer ecb-user-information-msg-buffer)
+;;                              (condition-case nil
+;;                                  (while (get-buffer-window ecb-user-information-msg-buffer)
+;;                                    (delete-window (get-buffer-window ecb-user-information-msg-buffer)))
+;;                                (error nil))
+;;                              (kill-buffer ecb-user-information-msg-buffer)
+;;                              (setq ecb-user-information-msg-buffer nil))
+                             
+;;                    "OK")
+;;     (widget-setup)
+;;     ;; (setq buffer-read-only t)
+;;     (message "Click [OK] or hit q for restoring previous window-layout.")))
+
+;; ----- Information-display - errors, warnings, infos ----
 
 (defun ecb-nolog-message (&rest args)
   "Works exactly like `message' but does not log the message"
@@ -1818,7 +1954,18 @@ defcustom-clause and has to be <= MAX-LEVEL."
                                     (ecb-create-menu-user-ext-type (1+ curr-level)
                                                                    max-level)))))))
 
-;;; net-stuff
+;;; byte-compiling stuff
+
+(defun ecb-is-byte-compiling ()
+  "Return non-nil if eval'ed during compilation.  Don't use outside
+`eval-when-compile'."
+  (and (boundp 'byte-compile-dest-file)
+       (stringp byte-compile-dest-file)))
+
+(defun ecb-load-in-progress-p ()
+  load-in-progress)
+
+
 
 
 ;;; ----- Provide ------------------------------------------
