@@ -54,7 +54,7 @@
 ;; The latest version of the ECB is available at
 ;; http://home.swipnet.se/mayhem/ecb.html
 
-;; $Id: ecb.el,v 1.168 2001/12/03 14:05:55 berndl Exp $
+;; $Id: ecb.el,v 1.169 2001/12/10 08:57:07 burtonator Exp $
 
 ;;; Code:
 
@@ -1782,6 +1782,7 @@ OTHER-EDIT-WINDOW."
       node)))
 
 (defun ecb-add-source-path (&optional dir alias)
+  "Add a directory to the `ecb-source-path'."
   (interactive)
   ;; we must manually cut a filename because we must not add filenames to
   ;; `ecb-source-path'!

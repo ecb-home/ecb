@@ -1,6 +1,6 @@
 ;;; ecb-speedbar.el --- 
 
-;; $Id: ecb-speedbar.el,v 1.3 2001/11/23 04:09:32 burtonator Exp $
+;; $Id: ecb-speedbar.el,v 1.4 2001/12/10 08:57:07 burtonator Exp $
 
 ;; Copyright (C) 2000-2003 Free Software Foundation, Inc.
 ;; Copyright (C) 2000-2003 Kevin A. Burton (burton@openprivacy.org)
@@ -49,6 +49,9 @@
 
 ;;; TODO:
 
+;; - only sync up the eshell if the current file is in a different dir than the
+;; speedbar.  
+
 ;; - instead of ecb-layout-function-20 use ecb-layout-function-speedbar-1
 
 ;; we need to be able to goto the speedbar window via C-c . d
@@ -62,7 +65,8 @@
 (defvar ecb-speedbar-buffer-name " SPEEDBAR" "Name of the ECB speedbar buffer.")
 
 (defun ecb-set-speedbar-buffer()
-
+  "Set the speedbar buffer within ECB."
+  
   (ecb-speedbar-activate)
   
   (set-window-dedicated-p (selected-window) nil)

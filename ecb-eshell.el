@@ -1,6 +1,6 @@
 ;;; ecb-eshell.el --- eshell integration for the ECB.
 
-;; $Id: ecb-eshell.el,v 1.9 2001/11/23 04:09:32 burtonator Exp $
+;; $Id: ecb-eshell.el,v 1.10 2001/12/10 08:57:07 burtonator Exp $
 
 ;; Copyright (C) 2000-2003 Free Software Foundation, Inc.
 ;; Copyright (C) 2000-2003 Kevin A. Burton (burton@openprivacy.org)
@@ -41,6 +41,8 @@
 ;;   line from the bottom of the window.
 
 ;;; TODO:
+
+;; 
 
 ;; - should I use eshell-pre-command-hook to increase the size of the window if
 ;; we are in an ECB layout?? (and the ecb is activated)...
