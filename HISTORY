@@ -1,6 +1,9 @@
 Version ???:
 ------------
 
+- New option for highlighting the method-header in the edit-window after
+  clicking onto the method in the method-window (like Speedbar does). (Klaus)
+
 - Function for automatically submitting a problem report to the ECB mailing
   list: ecb-submit-problem-report. (Klaus)
 
