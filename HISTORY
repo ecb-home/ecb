@@ -1,6 +1,10 @@
 Version 1.80:
 -------------
 
+- In the ECB-directories buffer now F4 adds a new source-path instead of F1.
+  That is because F1 is such an important key in many OS and tools (e.g. opens
+  help in all windows-programs), so ECB should not hardly "rebind" it. (Klaus)
+
 - Enhancing the option 'ecb-window-sync': Now the synchronisation can take
   place for all buffers which have a relation to files AND directories, i.e.
   now also for dired-buffers. But per default this is switched off, see the

@@ -58,7 +58,7 @@
 ;; The latest version of the ECB is available at
 ;; http://home.swipnet.se/mayhem/ecb.html
 
-;; $Id: ecb.el,v 1.228 2002/07/26 17:07:28 berndl Exp $
+;; $Id: ecb.el,v 1.229 2002/07/28 19:43:34 berndl Exp $
 
 ;;; Code:
 
@@ -2557,15 +2557,15 @@ OTHER-EDIT-WINDOW."
 	   (tree-node-add-child node (tree-node-new "Welcome to ECB! Please select:"
 						    3 '(lambda()) t))
            (tree-node-add-child node (tree-node-new "" 3 '(lambda()) t))
-           (tree-node-add-child
-            node (tree-node-new
-                  "[F1] Add Source Path" 3
-                  '(lambda () (call-interactively 'ecb-add-source-path)) t))
            (tree-node-add-child node (tree-node-new "[F2] Customize ECB" 3
                                                     'ecb-customize t))
            (tree-node-add-child node (tree-node-new "[F3] ECB Help" 3
-                                                    'ecb-show-help t)))
-	 (tree-buffer-update))))))
+                                                    'ecb-show-help t))
+           (tree-node-add-child
+            node (tree-node-new
+                  "[F4] Add Source Path" 3
+                  '(lambda () (call-interactively 'ecb-add-source-path)) t)))
+         (tree-buffer-update))))))
   
 (defun ecb-new-child (old-children name type data &optional not-expandable shorten-name)
   "Return a node with type = TYPE, data = DATA and name = NAME. Tries to find
@@ -3069,12 +3069,6 @@ That is remove the unsupported :help stuff."
       :help "Select the ECB-frame."
       ])
    (ecb-menu-item
-    [ "Redraw layout"
-      ecb-redraw-layout
-      :active (equal (selected-frame) ecb-frame)
-      :help "Redraw the layout."
-      ])
-   (ecb-menu-item
     [ "Synchronize ECB windows"
       (ecb-current-buffer-sync t)
       :active (and (equal (selected-frame) ecb-frame)
@@ -3107,6 +3101,12 @@ That is remove the unsupported :help stuff."
       :help "Clear the cache of certain cached directories."
       ])   
    "-"
+   (ecb-menu-item
+    [ "Redraw layout"
+      ecb-redraw-layout
+      :active (equal (selected-frame) ecb-frame)
+      :help "Redraw the layout."
+      ])
    (ecb-menu-item
     [ "Toggle visibility of ECB windows"
       ecb-toggle-ecb-windows
@@ -3515,9 +3515,9 @@ always the ECB-frame if called from another frame."
          ecb-directories-general-face
          ;; we add an after-create-hook to the tree-buffer
          (function (lambda ()
-                     (local-set-key [f1] 'ecb-add-source-path)
                      (local-set-key [f2] 'ecb-customize)
                      (local-set-key [f3] 'ecb-show-help)
+                     (local-set-key [f4] 'ecb-add-source-path)
                      (local-set-key (kbd "C-t")
                                     'ecb-toggle-RET-selects-edit-window)))
          ))
@@ -3845,6 +3845,13 @@ buffers does not exist anymore."
      (tree-buffer-update)
      (tree-buffer-highlight-node-data ecb-path-selected-source))))
 
+(defun ecb-history-kill-buffer (node)
+  "Kills the buffer for current entry."
+  (ecb-clear-history-node node)
+  (let ((data (tree-node-get-data node)))
+    (when (get-file-buffer data)
+      (kill-buffer (get-file-buffer data)))))
+
 ;; (defun ecb-clear-history-node (node)
 ;;   "Removes current entry from the ECB history buffer."
 ;;   (save-selected-window
@@ -3861,6 +3868,7 @@ buffers does not exist anymore."
 (defvar ecb-history-menu nil)
 (setq ecb-history-menu
       '(("Delete File" ecb-delete-source-2)
+        ("Kill Buffer" ecb-history-kill-buffer)
 	("Remove Current Entry" ecb-clear-history-node)
 	("Remove All Entries" ecb-clear-history-all)
 	("Remove Non Existing Buffer Entries" ecb-clear-history-only-not-existing)))
