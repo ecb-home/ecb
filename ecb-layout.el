@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-layout.el,v 1.191 2003/09/25 12:13:04 berndl Exp $
+;; $Id: ecb-layout.el,v 1.192 2003/09/26 07:20:17 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -3984,9 +3984,14 @@ of not nil!"
                        (equal (window-frame new-win) ecb-frame))
                   (select-window new-win))))
         (when (ecb-compile-window-live-p)
-          (ecb-with-original-functions
-           (ecb-with-original-basic-functions
-            (delete-window ecb-compile-window))))))))
+          (let ((point-location (ecb-where-is-point)))
+            (ecb-with-original-functions
+             (ecb-with-original-basic-functions
+              (delete-window ecb-compile-window)))
+            ;; If point was in the compile-window we move it back to the first
+            ;; edit-window
+            (if (equal point-location 'compile)
+                (ecb-select-edit-window))))))))
 
 
 (silentcomp-provide 'ecb-layout)
