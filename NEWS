@@ -1,11 +1,12 @@
 * Changes for ECB version
 
-** Fixed bugs
+** ECB now requires speedbar version 0.14beta1 or higher. An automatic
+   requirements-check is done by ECB.
 
-*** Now the "goto-window-..." menu-entries in the "ECB"-menu are working correct
-    if a speedbar is integrated.
-
-*** Preventing etags-supported sources from being parsed (and saved) too often.
+** Adding hideshow to the popup-menu of the Methods-buffer.
+   This popup-menu now offers two entries for hiding resp. showing the block
+   of that token in the Methods-buffer for which the popup-menu was openend.
+   This is done with the hideshow.el library.
 
 ** Changed default keybindings:
    - C-c . r:  `ecb-rebuild-methods-buffer'
@@ -15,6 +16,13 @@
    - C-c . lw: `ecb-toggle-ecb-windows'
 
 ** Starting ECB is now possible via the "Tools"-menu
+
+** Fixed bugs
+
+*** Now the "goto-window-..." menu-entries in the "ECB"-menu are working correct
+    if a speedbar is integrated.
+
+*** Preventing etags-supported sources from being parsed (and saved) too often.
 
 
 
