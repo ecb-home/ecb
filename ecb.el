@@ -62,7 +62,7 @@
 ;; The latest version of the ECB is available at
 ;; http://home.swipnet.se/mayhem/ecb.html
 
-;; $Id: ecb.el,v 1.274 2003/01/14 16:33:21 berndl Exp $
+;; $Id: ecb.el,v 1.275 2003/01/15 16:25:57 berndl Exp $
 
 ;;; Code:
 
@@ -4082,13 +4082,6 @@ always the ECB-frame if called from another frame."
            ;; function is a save "equal"-condition for ECB because currently the
            ;; method buffer always displays only tokens from exactly the buffer
            ;; of the current edit-window.
-           ;; TODO: There is the mysterious behavior that the overlays are lost
-           ;; in re-grouped tokens if we use semantic-adopt-external-members. I
-           ;; have already send a mail to Eric. Maybe this is a bug and after
-           ;; fixing it we can use the function semantic-equivalent-tokens-p. If
-           ;; not we use the following condition for the equal-test.
-           ;; Currently it seems to be a problem in re-overlaying tokens if they
-           ;; are read from semantic.cache.
            (if (fboundp 'semantic-equivalent-tokens-p)
                'semantic-equivalent-tokens-p
              (function

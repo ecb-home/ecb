@@ -1,6 +1,6 @@
 ;;; ecb-eshell.el --- eshell integration for the ECB.
 
-;; $Id: ecb-eshell.el,v 1.64 2003/01/14 13:57:33 berndl Exp $
+;; $Id: ecb-eshell.el,v 1.65 2003/01/15 16:25:58 berndl Exp $
 
 ;; Copyright (C) 2000-2003 Free Software Foundation, Inc.
 ;; Copyright (C) 2000-2003 Kevin A. Burton (burton@openprivacy.org)
@@ -145,11 +145,6 @@
 ;; is visible in a window, we always resynch.  If it is not visible then
 ;; ecb-eshell-goto-eshell will synch up when the user goes to the eshell buffer.
 
-;;; TODO:
-;;
-;; - BUG: enable just-in-time current-buffer-sync... only execute if the current
-;; buffer's directlry is not equal to the ecb directory.
-;;
 
 ;;; Code:
 

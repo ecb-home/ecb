@@ -1,6 +1,6 @@
 ;;; ecb-speedbar.el --- 
 
-;; $Id: ecb-speedbar.el,v 1.37 2003/01/08 10:28:05 berndl Exp $
+;; $Id: ecb-speedbar.el,v 1.38 2003/01/15 16:25:58 berndl Exp $
 
 ;; Copyright (C) 2000-2003 Free Software Foundation, Inc.
 ;; Copyright (C) 2000-2003 Kevin A. Burton (burton@openprivacy.org)
@@ -39,17 +39,6 @@
 ;; Note that this is tested with recent speedbars >= 0.14beta2. If the
 ;; speedbar implementation changes a lot this could break.
 ;;
-;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: IMHO the following WARNING is not
-;; necessary anymore because IMHO we need no patched speedbar at least not
-;; when a version >= 0.14beta1 is used.
-
-;; WARNING: currently ecb-speedbar depends on patches to the speedbar which I
-;; sent to the author.  Without these patches ecb-speedbar will work but your
-;; source buffer may recenter itself when you change buffers.  Fully functionaly
-;; but very annoying.  Hopefully these patches will make it into a 0.14beta3.
-;;
-;;   - UPDATE:  the patches are in his queue but have not made it in yet.
-
 ;; If you enjoy this software, please consider a donation to the EFF
 ;; (http://www.eff.org)
 

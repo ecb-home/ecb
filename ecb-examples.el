@@ -30,13 +30,14 @@
 ;; it with the edit-window of ECB.
 ;;
 ;; To test this example just do:
-;; 1. Load ecb-examples.el into (X)Emacs: (require 'ecb-examples)
-;; 2. Call `ecb-show-layout-help' and insert "example-layout1" as layout name
+;; 1. Start ECB 
+;; 2. Load ecb-examples.el into (X)Emacs: (require 'ecb-examples)
+;; 3. Call `ecb-show-layout-help' and insert "example-layout1" as layout name
 ;;    to see the outline of the test layout and get information about the
 ;;    special windows of this layout.
-;; 3. Call `ecb-examples-activate'.
-;; 4. Play around with the new layout and test it.
-;; 5. Call `ecb-examples-deactivate'.
+;; 4. Call `ecb-examples-activate'.
+;; 5. Play around with the new layout and test it.
+;; 6. Call `ecb-examples-deactivate'.
 ;;
 ;; The intention of this example is to be a skeleton and pattern for other
 ;; packages which want to use the layout-engine of ECB do display their own
@@ -110,8 +111,11 @@ it will be called autom. with `ecb-current-buffer-sync-hook'."
     ;; here we can be sure that the buffer with name
     ;; `ecb-examples-bufferinfo-buffer-name' is displayed in a window of
     ;; `ecb-frame'.
+    
     ;; The macro `ecb-do-if-buffer-visible-in-ecb-frame' binds locally the
-    ;; variables visible-buffer and visible-window. See documentation.
+    ;; variables visible-buffer and visible-window:
+    ;; visible-window:= (get-buffer-window ecb-examples-bufferinfo-buffer-name)
+    ;; visible-buffer:= (get-buffer ecb-examples-bufferinfo-buffer-name)
 
     (let ((filename (buffer-file-name (current-buffer))))
      
