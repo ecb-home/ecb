@@ -20,7 +20,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-analyse.el,v 1.5 2005/01/12 10:27:10 berndl Exp $
+;; $Id: ecb-analyse.el,v 1.6 2005/01/13 15:42:28 berndl Exp $
 
 
 ;;; Commentary:
@@ -445,6 +445,9 @@ ECB-analyse-window is not visible in current layout."
   ;; Make it small
   (shrink-window-if-larger-than-buffer
    (get-buffer-window "*Tag Information*")))
+
+;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: we could use the function
+;; `semantic-documentation-for-tag' here to display more infos?!
 
 (defun ecb-analyse-gen-tag-info (tag)
   "Return the info-string for TAG."

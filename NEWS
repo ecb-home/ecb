@@ -51,7 +51,11 @@
     set to nil) or the sourcefile is not parsable by a parser like imenu or
     etags/ctags.
 
-    
+*** Fixed a bug in displaying semantic-tags which have plain-string members
+    E.g. parsing `defstruct' has failed in previous ECB-version cause of this
+    bug. 
+
+
 
 * Changes for ECB version 2.31
 
