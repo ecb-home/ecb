@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb.el,v 1.359 2004/01/12 17:58:47 berndl Exp $
+;; $Id: ecb.el,v 1.360 2004/01/13 15:44:59 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -2610,7 +2610,7 @@ has been deactivated. Do not set this variable!")
                                              'ecb-window-sync-function)
             (ecb-activate-ecb-sync-functions ecb-compilation-update-idle-time
                                              'ecb-compilation-buffer-list-changed-p)
-            (ecb-activate-ecb-sync-functions nil 'ecb-layout-handle-compile-window-selection)
+            (ecb-activate-ecb-sync-functions nil 'ecb-layout-post-command-hook)
             (add-hook 'pre-command-hook 'ecb-layout-pre-command-hook)
             (add-hook 'after-save-hook 'ecb-update-methods-after-saving)
             (add-hook 'kill-buffer-hook 'ecb-kill-buffer-hook)

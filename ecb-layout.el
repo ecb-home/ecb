@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-layout.el,v 1.202 2004/01/12 17:58:47 berndl Exp $
+;; $Id: ecb-layout.el,v 1.203 2004/01/13 15:44:59 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -2044,8 +2044,8 @@ FUNCTIONS must be nil or a subset of `ecb-adviceable-functions'!"
 
 (defconst ecb-permanent-adviced-functions '((split-window . before)
                                             (delete-window . before)
-                                            (delete-other-windows . before)
-                                            (set-window-configuration . after)))
+                                            (delete-other-windows . before)))
+;;                                             (set-window-configuration . after)))
 
 (defmacro ecb-with-original-permanent-functions (&rest body)
   "Evaluates BODY with all adviced permanent-functions of ECB deactivated
@@ -2151,6 +2151,10 @@ nothing is done."
                          (car edit-win-list))))
       (select-window edit-win))))
 
+;; VERY IMPORTANT: pre-command- and the post-command-hook must NOT use any
+;; function which calls `ecb-window-list' because this would slow-down the
+;; performance of all Emacs-versions unless GNU Emacs 21 because they have no
+;; builtin `window-list'-function.
 (defun ecb-layout-pre-command-hook ()
   "During activated ECB this function is added to `pre-command-hook' to set
 always `ecb-last-edit-window-with-point', `ecb-last-source-buffer',
@@ -2159,7 +2163,13 @@ always `ecb-last-edit-window-with-point', `ecb-last-source-buffer',
 can use these variables."
   (when (and ecb-minor-mode
              (equal (selected-frame) ecb-frame))
-    (when (ecb-point-in-edit-window)
+    ;; We MUST not use here `ecb-point-in-edit-window' because this would
+    ;; slow-down the performance of all Emacs-versions unless GNU Emacs 21
+    ;; because they have no builtin `window-list'-function.
+    (when (and (not (member (buffer-name) ecb-tree-buffers))
+               (not (equal (minibuffer-window ecb-frame)
+                           (selected-window)))
+               (not (equal (selected-window) ecb-compile-window)))
       (setq ecb-last-edit-window-with-point (selected-window))
       (setq ecb-last-source-buffer (current-buffer)))
     (if (ecb-point-in-compile-window)
@@ -2181,9 +2191,11 @@ can use these variables."
   (ecb-toggle-compile-window-height -1))
 
 (defvar ecb-layout-prevent-handle-compile-window-selection nil)
-(defun ecb-layout-handle-compile-window-selection ()
-  "During activated ECB this function is added to `post-command-hook' to
-handle `ecb-compile-window-temporally-enlarge'."
+(defvar ecb-last-edit-area-creators nil)
+(defun ecb-layout-post-command-hook ()
+  "During activated ECB this function is added to `post-command-hook' to do
+some special tasks:
+- handling of `ecb-compile-window-temporally-enlarge'"
   (if ecb-layout-prevent-handle-compile-window-selection
       (setq ecb-layout-prevent-handle-compile-window-selection nil)
     (when (and ecb-minor-mode
@@ -2193,15 +2205,15 @@ handle `ecb-compile-window-temporally-enlarge'."
                (ecb-compile-window-live-p))
       (cond ((and (ecb-point-in-compile-window)
                   (not ecb-compile-window-was-selected-before-command))
-             (ecb-layout-debug-error "ecb-layout-handle-compile-window-selection: enlarge")
+             (ecb-layout-debug-error "ecb-layout-post-command-hook: enlarge")
              (ecb-toggle-compile-window-height 1))
             ((and ecb-compile-window-was-selected-before-command
                   (not (ecb-point-in-compile-window)))
-             (ecb-layout-debug-error "ecb-layout-handle-compile-window-selection: shrink")
+             (ecb-layout-debug-error "ecb-layout-post-command-hook: shrink")
              (ecb-toggle-compile-window-height -1))))))
 ;;              (if (equal (selected-window) (minibuffer-window ecb-frame))
 ;;                  (add-hook 'minibuffer-exit-hook 'ecb-minibuffer-exit-hook)
-;;                (ecb-layout-debug-error "ecb-layout-handle-compile-window-selection: shrink")
+;;                (ecb-layout-debug-error "ecb-layout-post-command-hook: shrink")
 ;;                (ecb-toggle-compile-window-height -1)))))))
 
 
@@ -2556,6 +2568,17 @@ allowed to be deleted."
       (select-window (nth (car elem) edit-win-list))
       (funcall (cdr elem)))))
 
+(defun ecb-edit-area-creators-number-of-edit-windows ()
+  (let ((dels (length (delq nil (mapcar (function (lambda (e)
+                                                    (if (equal (cdr e)
+                                                               'delete-window)
+                                                        e
+                                                      nil)))
+                                        ecb-edit-area-creators)))))
+    (- (1+ (- (length ecb-edit-area-creators) dels))
+       dels)))
+                              
+
 (defadvice delete-window (before ecb)
   "Does nothing special but only storing the fact that the edit-window has
 been deleted. This is done even when ECB is deactivated so ECB can later
@@ -2569,16 +2592,19 @@ reported but `delete-window' will be executed correctly."
         (let* ((edit-win-list (ecb-canonical-edit-windows-list))
                (window (or (ad-get-arg 0) (selected-window)))
                (edit-win-number (ecb-position edit-win-list window)))
-          (when (and edit-win-number
-                     (> (length edit-win-list) 1))
-            (if (= (length edit-win-list) 2)
-                ;; After the deletion of WINDOW there will be only one
-                ;; edit-window.
+          (when edit-win-number
+            (if (or (= (length edit-win-list) 1)
+                    (/= (length edit-win-list)
+                        (ecb-edit-area-creators-number-of-edit-windows)))
                 (ecb-edit-area-creators-init)
-              ;; After the deletion of WINDOW there will be still more than
-              ;; one edit-window.
-              (ecb-edit-area-creators-add (cons edit-win-number
-                                                'delete-window)))))
+              (if (= (length edit-win-list) 2)
+                  ;; After the deletion of WINDOW there will be only one
+                  ;; edit-window.
+                  (ecb-edit-area-creators-init)
+                ;; After the deletion of WINDOW there will be still more than
+                ;; one edit-window.
+                (ecb-edit-area-creators-add (cons edit-win-number
+                                                  'delete-window))))))
       (error (ecb-warning "Before-advice delete-window (error-type: %S, error-data: %S)"
                           (car oops) (cdr oops))))))
 
@@ -2654,19 +2680,19 @@ reported but `delete-window' will be executed correctly."
         (let* ((edit-win-list (ecb-canonical-edit-windows-list))
                (window (or (ad-get-arg 0) (selected-window)))
                (edit-win-number (ecb-position edit-win-list window)))
-          (when (and edit-win-number
-                     (> (length edit-win-list) 1))
+          (when edit-win-number
             ;; After the deletion of the other edit-windows there will be only
-            ;; one edit-window.
+            ;; one edit-window. We can init the edit-area-creators always
+            ;; regardless of current number of edit-windows.
             (ecb-edit-area-creators-init)))
       (error (ecb-warning "Before-advice delete-other-windows (error-type: %S, error-data: %S)"
                           (car oops) (cdr oops))))))
 
-(defadvice set-window-configuration (after ecb)
-  "Does nothing special but only initializing an internal ECB-state. No error
-can occur in this advice!"
-  (when (equal (selected-frame) ecb-frame)
-    (ecb-edit-area-creators-init)))
+;; (defadvice set-window-configuration (after ecb)
+;;   "Does nothing special but only initializing an internal ECB-state. No error
+;; can occur in this advice!"
+;;   (when (equal (selected-frame) ecb-frame)
+;;     (ecb-edit-area-creators-init)))
 
 (defadvice delete-other-windows (around ecb)
   "The ECB-version of `delete-other-windows'. Works exactly like the
@@ -2782,6 +2808,11 @@ an error occurs during this before-advice then it will be reported but
         (let* ((edit-win-list (ecb-canonical-edit-windows-list))
                (window (or (ad-get-arg 0) (selected-window)))
                (edit-win-number (ecb-position edit-win-list window)))
+          (when (and edit-win-number
+                     (or (= (length edit-win-list) 1)
+                         (/= (length edit-win-list)
+                             (ecb-edit-area-creators-number-of-edit-windows))))
+            (ecb-edit-area-creators-init))
           (when edit-win-number
             (ecb-edit-area-creators-add (cons edit-win-number
                                               (if (ad-get-arg 2)
@@ -3944,9 +3975,12 @@ this function the edit-window is selected which was current before redrawing."
                                           ;; ecb-with-original-permanent-functions
 
        ;; now we restore the edit-windows as before the redraw
-      (ecb-with-original-functions
-       (ecb-with-original-permanent-functions
-        (ecb-restore-edit-area)))
+      (if (= (length edit-win-data-before-redraw)
+             (ecb-edit-area-creators-number-of-edit-windows))
+          (ecb-with-original-functions
+           (ecb-with-original-permanent-functions
+            (ecb-restore-edit-area)))
+        (ecb-edit-area-creators-init))
 
       (setq edit-win-list-after-redraw (ecb-canonical-edit-windows-list))
       (setq edit-area-size (ecb-get-edit-area-size))
@@ -3982,7 +4016,7 @@ this function the edit-window is selected which was current before redrawing."
         (when (integerp window-before-redraw)
           (ecb-select-edit-window window-before-redraw))       
         ;; if we were in an edit-window before redraw let us go to the old
-        ;; place if the buffer is stil alive.
+        ;; place if the buffer is still alive.
         (when (and pos-before-redraw
                    (buffer-live-p (nth 0 (nth (1- window-before-redraw)
                                               edit-win-data-before-redraw))))
