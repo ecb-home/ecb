@@ -42,7 +42,7 @@
 
 @titlepage
 @sp 10
-@center @titlefont{ECB}
+@center @titlefont{ECB - the Emacs Code Browser}
 @vskip 0pt plus 1 fill
 Copyright @copyright{} 2000, 2001, 2002 Jesper Nordenberg
 @end titlepage
@@ -55,16 +55,29 @@ global minor-mode which displays a couple of windows that can be used
 to browse directories, files and methods. It supports method parsing
 for Java, C, C++, Elisp and some more.
 
-@c In the following tow paragraphs we distinct between HTML- and
-@c Not-HTML-format concerning the display of the URLs.
-@ifnothtml
+@c In the following tow paragraphs we distinct between HTML-, info-,
+@c and tex-format concerning the display of the URLs.
+@ifinfo
 The latest version of ECB can always be found at the URL
-@url{http://home.swipnet.se/mayhem/ecb.html}
+@url{http://home.swipnet.se/mayhem/ecb.html}.
 
 To send bug reports, or participate in discussions about ECB, use the
 mailing list @email{ecb-list@@lists.sourceforge.net} via the URL
-@url{http://lists.sourceforge.net/lists/listinfo/ecb-list}
-@end ifnothtml
+@url{http://lists.sourceforge.net/lists/listinfo/ecb-list}.
+@end ifinfo
+
+@iftex
+@sp 1
+
+The latest version of ECB can always be found at the URL @*
+@url{http://home.swipnet.se/mayhem/ecb.html}.
+
+@sp 1
+
+To send bug reports, or participate in discussions about ECB, use the
+mailing list @*@email{ecb-list@@lists.sourceforge.net} via the URL @*
+@url{http://lists.sourceforge.net/lists/listinfo/ecb-list}.
+@end iftex
 
 @ifhtml
 The latest version of ECB can always be found at 
@@ -856,11 +869,9 @@ editing and you don't need the browsing windows all the time.
 @node Interactive ECB commands, , Hiding the ECB windows, Usage of ECB
 @section Interactive ECB commands
 
-@deffn Command ecb-minor-mode &optional arg
-Toggle ECB minor mode. With prefix argument @var{ARG}, turn on if
-positive, otherwise off. Return non-@code{nil} if the minor mode is
-enabled.
-@end deffn
+@noindent
+ECB offers the following interactive commands (listed in alphabetical
+order):
 
 @deffn Command ecb-activate
 Activates the ECB and creates all the buffers and draws the ECB-screen
@@ -869,48 +880,8 @@ raises always the ECB-frame if called from another frame. This is the
 same as calling @code{ecb-minor-mode} with a positive argument.
 @end deffn
 
-@deffn Command ecb-deactivate
-Deactivates the ECB and kills all ECB buffers and windows.
-@end deffn
-
-@deffn Command ecb-update-directories-buffer
-Updates the ECB directories buffer.
-@end deffn
-
-@deffn Command ecb-current-buffer-sync &optional force
-Synchronizes the ECB buffers with the current buffer. Unless
-@var{FORCE} is non-@code{nil} then do this only if current-buffer
-differs from the source displayed in the ECB tree-buffers.
-@end deffn
-
-@deffn Command ecb-rebuild-methods-buffer
-Updates the methods buffer with the current buffer after deleting the
-complete previous parser-information, means no semantic-cache is used!
-Point must stay in an edit-window otherwise nothing is done. This
-method is merely needed if semantic parses not the whole buffer
-because it reaches a not parsable code. Examples when a call to this
-function is necessary:
-
-If an elisp-file is parsed which contains in the middle a defun X
-where the closing ) is missing then semantic parses only until this
-defun X is reached and you will get an incomplete ECB-method buffer.
-In such a case you must complete the defun X and then call this
-function to completely reparse the elisp-file and rebuild the ECB
-method buffer!
-
-If you change only the name of a method or a variable and you want
-the new name be shown immediately in the ECB-method buffer then you
-must call this function.
-@end deffn
-
-@deffn Command ecb-redraw-layout
-Redraw the ECB screen. If the variable @code{ecb-redraw-layout-quickly} is
-not nil then the redraw is done by the @code{ecb-redraw-layout-quickly}
-function, otherwise by @code{ecb-redraw-layout-full}. But it's strongly
-recommended to use the quick redraw only if you have really slow
-machines where a full redraw takes several seconds because the quick
-redraw is not really safe and may have some drawbacks! On normal
-machines the full drawback should be done in << 1s!
+@deffn Command ecb-add-all-buffers-to-history
+Add all current file-buffers to the history-buffer of ECB.
 @end deffn
 
 @deffn Command ecb-clear-history &optional clearall
@@ -928,69 +899,10 @@ option:
 For further explanation see @code{ecb-clear-history-behavior}.
 @end deffn
 
-@deffn Command ecb-add-all-buffers-to-history
-Add all current file-buffers to the history-buffer of ECB.
-@end deffn
-
-@deffn Command ecb-show-help &optional format
-Shows the online help of ECB either in Info or in HTML format
-depending of the value of @code{ecb-show-help-format}. If called with
-prefix argument, i.e. if @var{FORMAT} is not nil then the user is prompted
-to choose the format of the help (Info or HTML).
-@end deffn
-
-@deffn Command ecb-submit-problem-report
-Submit a problem report for the ECB to the ECB mailing-list. This
-command generates in the edit-window a problem-report which contains
-already the current values of all ECB options, the current
-backtrace-buffer if there is any and the current message-buffer. You
-will be asked for a problem-report subject and then you must insert a
-description of the problem. Please describe the problem as detailed as
-possible!
-@end deffn
-
-@deffn Command ecb-goto-window-directories
-@end deffn
-
-@deffn Command ecb-goto-window-sources
-@end deffn
-
-@deffn Command ecb-goto-window-methods
-@end deffn
-
-@deffn Command ecb-goto-window-history
-@end deffn
-
-@deffn Command ecb-toggle-ecb-windows &optional arg
-Toggle visibilty of the ECB-windows. With prefix argument @var{ARG},
-make visible if positive, otherwise invisible. This has nothing to do
-with (de)activating ECB but only affects the visibility of the ECB
-windows. ECB minor mode remains active!
-@end deffn
-
-@deffn Command ecb-toggle-layout
-Toggles between the layouts defined in @code{ecb-toggle-layout-sequence}.
-Note: This function works by changing the options @code{ecb-layout-nr} and
-@code{ecb-show-sources-in-directories-buffer} but only for current
-Emacs-session.
-@end deffn
-
-@deffn Command ecb-toggle-enlarged-compilation-window &optional arg
-Toggle whether the @code{ecb-compile-window} is enlarged or not. If
-@var{ARG} > 0 then enlarge to a sensefull value (see below), if
-@var{ARG} <= 0 then shrink @code{ecb-compile-window} to
-@code{ecb-compile-window-height} and if @var{ARG} is nil then toggle the
-enlarge-state.
-
-The @code{ecb-compile-window} is enlarged to the following value: At least
-to the value of @code{ecb-compile-window-height} and max. to half of the
-frame-height of the ECB-frame, best depending on the values of
-@code{compilation-window-height} (before ECB was started!) and the number
-of lines of current buffer in @code{ecb-compile-window}. If
-@code{compilation-window-height} is set before ECB was started then ECB
-never enlarges the @code{ecb-compile-window} over the value of
-@code{compilation-window-height}! Changing this option during activated ECB
-takes first effect after restarting ECB!
+@deffn Command ecb-current-buffer-sync &optional force
+Synchronizes the ECB buffers with the current buffer. Unless
+@var{FORCE} is non-@code{nil} then do this only if current-buffer
+differs from the source displayed in the ECB tree-buffers.
 @end deffn
 
 @deffn Command ecb-cycle-through-compilation-buffers &optional choose-buffer
@@ -1012,12 +924,8 @@ buffer but switches to @code{ecb-compile-window} if a
 compilation-buffer!
 @end deffn
 
-@deffn Command ecb-upgrade-options
-Check for all ECB-options if their current value is compatible to the
-defined type. If not upgrade it to the new type or reset it to the
-default-value of current ECB. Try also to upgrade renamed options.
-Displays all upgraded or reset options with their old (before the
-upgrade/reset) and new values.
+@deffn Command ecb-deactivate
+Deactivates the ECB and kills all ECB buffers and windows.
 @end deffn
 
 @deffn Command ecb-display-upgraded-options
@@ -1052,6 +960,131 @@ After sucessfull downloading the new ECB will be installed in a
 directory parallel to current ECB-directory. After adding this new
 directory tp @code{load-path} and restarting Emacs the new ECB version can
 be activated by @code{ecb-activate}.
+@end deffn
+
+@deffn Command ecb-goto-window-compilation
+Goto the ecb compilation window @code{ecb-compile-window}.
+@end deffn
+
+@deffn Command ecb-goto-window-directories
+Make the ECB-directories window the current window.
+@end deffn
+
+@deffn Command ecb-goto-window-edit1
+Make the (first) edit-window window the current window.
+@end deffn
+
+@deffn Command ecb-goto-window-edit2
+Make the second edit-window (if available) window the current window.
+@end deffn
+
+@deffn Command ecb-goto-window-history
+Make the ECB-history window the current window.
+@end deffn
+
+@deffn Command ecb-goto-window-methods
+Make the ECB-methods window the current window.
+@end deffn
+
+@deffn Command ecb-goto-window-sources
+Make the ECB-sources window the current window.
+@end deffn
+
+@deffn Command ecb-minor-mode &optional arg
+Toggle ECB minor mode. With prefix argument @var{ARG}, turn on if
+positive, otherwise off. Return non-@code{nil} if the minor mode is
+enabled.
+@end deffn
+
+@deffn Command ecb-rebuild-methods-buffer
+Updates the methods buffer with the current buffer after deleting the
+complete previous parser-information, means no semantic-cache is used!
+Point must stay in an edit-window otherwise nothing is done. This
+method is merely needed if semantic parses not the whole buffer
+because it reaches a not parsable code. Examples when a call to this
+function is necessary:
+
+If an elisp-file is parsed which contains in the middle a defun X
+where the closing ) is missing then semantic parses only until this
+defun X is reached and you will get an incomplete ECB-method buffer.
+In such a case you must complete the defun X and then call this
+function to completely reparse the elisp-file and rebuild the ECB
+method buffer!
+
+If you change only the name of a method or a variable and you want
+the new name be shown immediately in the ECB-method buffer then you
+must call this function.
+@end deffn
+
+@deffn Command ecb-redraw-layout
+Redraw the ECB screen. If the variable @code{ecb-redraw-layout-quickly} is
+not nil then the redraw is done by the @code{ecb-redraw-layout-quickly}
+function, otherwise by @code{ecb-redraw-layout-full}. But it's strongly
+recommended to use the quick redraw only if you have really slow
+machines where a full redraw takes several seconds because the quick
+redraw is not really safe and may have some drawbacks! On normal
+machines the full drawback should be done in << 1s!
+@end deffn
+
+@deffn Command ecb-show-help &optional format
+Shows the online help of ECB either in Info or in HTML format
+depending of the value of @code{ecb-show-help-format}. If called with
+prefix argument, i.e. if @var{FORMAT} is not nil then the user is prompted
+to choose the format of the help (Info or HTML).
+@end deffn
+
+@deffn Command ecb-submit-problem-report
+Submit a problem report for the ECB to the ECB mailing-list. This
+command generates in the edit-window a problem-report which contains
+already the current values of all ECB options, the current
+backtrace-buffer if there is any and the current message-buffer. You
+will be asked for a problem-report subject and then you must insert a
+description of the problem. Please describe the problem as detailed as
+possible!
+@end deffn
+
+@deffn Command ecb-toggle-ecb-windows &optional arg
+Toggle visibilty of the ECB-windows. With prefix argument @var{ARG},
+make visible if positive, otherwise invisible. This has nothing to do
+with (de)activating ECB but only affects the visibility of the ECB
+windows. ECB minor mode remains active!
+@end deffn
+
+@deffn Command ecb-toggle-enlarged-compilation-window &optional arg
+Toggle whether the @code{ecb-compile-window} is enlarged or not. If
+@var{ARG} > 0 then enlarge to a sensefull value (see below), if
+@var{ARG} <= 0 then shrink @code{ecb-compile-window} to
+@code{ecb-compile-window-height} and if @var{ARG} is nil then toggle the
+enlarge-state.
+
+The @code{ecb-compile-window} is enlarged to the following value: At least
+to the value of @code{ecb-compile-window-height} and max. to half of the
+frame-height of the ECB-frame, best depending on the values of
+@code{compilation-window-height} (before ECB was started!) and the number
+of lines of current buffer in @code{ecb-compile-window}. If
+@code{compilation-window-height} is set before ECB was started then ECB
+never enlarges the @code{ecb-compile-window} over the value of
+@code{compilation-window-height}! Changing this option during activated ECB
+takes first effect after restarting ECB!
+@end deffn
+
+@deffn Command ecb-toggle-layout
+Toggles between the layouts defined in @code{ecb-toggle-layout-sequence}.
+Note: This function works by changing the options @code{ecb-layout-nr} and
+@code{ecb-show-sources-in-directories-buffer} but only for current
+Emacs-session.
+@end deffn
+
+@deffn Command ecb-update-directories-buffer
+Updates the ECB directories buffer.
+@end deffn
+
+@deffn Command ecb-upgrade-options
+Check for all ECB-options if their current value is compatible to the
+defined type. If not upgrade it to the new type or reset it to the
+default-value of current ECB. Try also to upgrade renamed options.
+Displays all upgraded or reset options with their old (before the
+upgrade/reset) and new values.
 @end deffn
 
 
@@ -2863,6 +2896,9 @@ upgraded or resetted option with their old and new values.
 
 @node Tips and tricks, Elisp programming, Upgrading, Top
 @chapter Tips and tricks
+
+This chapter contains some tips and tricks how to deal best with some
+situations.
 
 @menu
 * Changing faces::              Changing faces in the ECB tree-buffers

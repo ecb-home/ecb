@@ -1512,22 +1512,27 @@ is called."
     (ecb-window-select name)))
 
 (defun ecb-goto-window-directories ()
+  "Make the ECB-directories window the current window."
   (interactive)
   (ecb-goto-window ecb-directories-buffer-name))
 
 (defun ecb-goto-window-sources ()
+  "Make the ECB-sources window the current window."
   (interactive)
   (ecb-goto-window ecb-sources-buffer-name))
 
 (defun ecb-goto-window-methods ()
+  "Make the ECB-methods window the current window."
   (interactive)
   (ecb-goto-window ecb-methods-buffer-name))
 
 (defun ecb-goto-window-history ()
+  "Make the ECB-history window the current window."
   (interactive)
   (ecb-goto-window ecb-history-buffer-name))
 
 (defun ecb-goto-window-edit1 ()
+  "Make the \(first) edit-window window the current window."
   (interactive)
   (when ecb-minor-mode
     (raise-frame ecb-frame)
@@ -1535,6 +1540,7 @@ is called."
     (ecb-select-edit-window nil)))
 
 (defun ecb-goto-window-edit2 ()
+  "Make the second edit-window \(if available) window the current window."
   (interactive)
   (when ecb-minor-mode
     (raise-frame ecb-frame)
