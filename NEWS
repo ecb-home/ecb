@@ -1,13 +1,14 @@
 * Changes for ECB version 1.95
 
 ** ECB now displays the expand- and collapse symbols in the tree-buffers with
-   icons - the same icons as speedbar uses. See the new option
+   image-icons - the same icons as speedbar uses. See the new option
    `ecb-tree-use-image-icons'.
 
 ** Adding hideshow to the popup-menu of the Methods-buffer.
    This popup-menu now offers two entries for hiding resp. showing the block
    of that token in the Methods-buffer for which the popup-menu was openend.
    This is done with the hideshow.el library.
+   Thanks to Christoff Pale <christoff_pale@yahoo.com> for suggestion.
 
 ** Horizontal scrolling of the tree-buffers by clicking the edges of the
    modeline with mouse-1 or mouse-2. I.e. if you click with mouse-1 onto the
@@ -33,7 +34,7 @@
 ** Fixed bugs
 
 *** Now the "goto-window-..." menu-entries in the "ECB"-menu are working correct
-    if a speedbar is integrated.
+    if a speedbar is integrated into the layout.
 
 *** Preventing etags-supported sources from being parsed (and saved) too often.
 

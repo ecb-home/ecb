@@ -1159,7 +1159,9 @@ EXPAND-COLLAPSE: A 2-elem list where the first elem is a cons cell where the
                  car is the token-string for the expand-symbol \(e.g.
                  \"\[+]\") and the cdr is a speedbar-image-icon. The second
                  elem is the same for the collapse symbol. Both elems can be
-                 nil; then no expand- or collapse-symbol is drawn.
+                 nil; then no expand- or collapse-symbol is drawn. If only the
+                 cdr of an elem is nil then no image-icon is used but always
+                 the token-string.
 TYPE-FACER: Nil or a list of one or two conses, each cons for a node-type \(0
             or 1). The cdr of a cons can be:
             - a symbol of a face
