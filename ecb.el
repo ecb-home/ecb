@@ -392,8 +392,7 @@ conjunction with ECB."
                 (const :tag "For methods" :value method))
   :set (function (lambda (sym val)
                    (set sym val)
-                   (let ((ecb-redraw-layout-quickly nil))
-                     (ecb-redraw-layout-full)))))
+                   (ecb-redraw-layout-full))))
 
 (defcustom ecb-grep-function (if (fboundp 'igrep) 'igrep 'grep)
   "*Function used for performing a grep.
@@ -2809,9 +2808,7 @@ does all necessary after finishing ediff."
   (if (and ecb-minor-mode
            (equal (selected-frame) ecb-frame))
       (progn
-        (setq ecb-before-ediff-window-config
-              ;; XXX: window-config-change
-              (ecb-current-window-configuration))
+        (setq ecb-before-ediff-window-config (ecb-current-window-configuration))
         (if ecb-run-ediff-in-ecb-frame
             (progn
               (ecb-toggle-ecb-windows -1)
@@ -2834,7 +2831,6 @@ does all necessary after finishing ediff."
               (run-hook-with-args-until-failure 'ecb-before-deactivate-hook))
 
       (setq ecb-last-window-config-before-deactivation
-            ;; XXX: window-config-change
             (ecb-current-window-configuration))
       
       ;; deactivating the adviced functions

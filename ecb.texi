@@ -4775,17 +4775,25 @@ for horizontal scrolling are bound.
 Show the expand symbol before the items in a tree. When the
 expand-symbol is located before the items then the tree looks like:
 
+@example
+@group
 [-] ECB
     [+] code-save
     [-] ecb-images
         [-] directories
+@end group
+@end example
 
 When located after then the tree looks like:
 
+@example
+@group
 ECB [-]
   code-save [+]
   ecb-images [-]
     directories [-]
+@end group
+@end example
 
 The after-example above use a value of 2 for @code{ecb-tree-indent}
 whereas the before-example uses a value of 4.

@@ -1013,6 +1013,20 @@ the same ordering as `other-window' would walk through the frame."
                                 (window-list)))))))
 
 
+;; ringstuff
+
+(require 'ring)
+(defalias 'ecb-make-ring 'make-ring)
+(defalias 'ecb-ring-p 'ring-p)
+(defalias 'ecb-ring-empty-p 'ring-empty-p)
+(defalias 'ecb-ring-insert 'ring-insert)
+(defalias 'ecb-ring-ref 'ring-ref)
+;; at least XEmacs does not have this function.
+(defun ecb-ring-elements (ring)
+  "Return a list of the lements of RING."
+  (mapcar #'identity (cddr ring)))
+      
+
 (silentcomp-provide 'ecb-util)
 
 ;;; ecb-util.el ends here
