@@ -26,14 +26,21 @@
 ;; This file is part of the ECB package which can be found at:
 ;; http://home.swipnet.se/mayhem/ecb.html
 
-;; $Id: ecb-util.el,v 1.8 2001/04/22 15:45:01 creator Exp $
+;; $Id: ecb-util.el,v 1.9 2001/04/27 23:13:50 creator Exp $
 
 ;;; Code:
-(defun ecb-strip-slash(path)
-  (let ((norm-path (expand-file-name path)))
-    (if (string= (char-to-string directory-sep-char) (substring norm-path -1))
-        (substring path 0 (1- (length path)))
-      path)))
+(defconst running-xemacs (string-match "XEmacs\\|Lucid" emacs-version))
+
+(defconst ecb-directory-sep-char (if running-xemacs
+				     directory-sep-char
+				   ?/))
+(defconst ecb-directory-sep-string (char-to-string ecb-directory-sep-char))
+
+(defun ecb-fix-filename(name)
+  (let ((norm-path (expand-file-name name)))
+    (if (= (aref norm-path (1- (length norm-path))) ecb-directory-sep-char)
+        (substring norm-path 0 (1- (length norm-path)))
+      norm-path)))
 
 (defun ecb-confirm(text)
   (x-popup-dialog (list '(0 0) (selected-window)) (list text '("Yes" . t) '("No" . nil))))
@@ -49,8 +56,8 @@
   (ecb-create-source (tree-node-get-data node)))
 
 (defun ecb-create-source-2(node)
-  (ecb-create-source (ecb-strip-slash (file-name-directory
-                                       (tree-node-get-data node)))))
+  (ecb-create-source (ecb-fix-filename (file-name-directory
+					(tree-node-get-data node)))))
 
 (defun ecb-create-file(node)
   (ecb-create-file-3 (tree-node-get-data node)))
@@ -60,8 +67,8 @@
   (find-file (concat dir "/" (read-from-minibuffer "File name: "))))
 
 (defun ecb-create-file-2(node)
-  (ecb-create-file-3 (ecb-strip-slash (file-name-directory
-                                       (tree-node-get-data node)))))
+  (ecb-create-file-3 (ecb-fix-filename (file-name-directory
+					(tree-node-get-data node)))))
 
 (defun ecb-delete-source-2(node)
   (ecb-delete-source (tree-node-get-data node)))
