@@ -20,6 +20,28 @@
    class is filtered out then no filter can be applied to its members like
    methods or attributes.
 
+   These tag-filters can also applied to sources which are not supported by
+   the semantic-parser but "only" by imenu or etags. But because for these
+   sources not all information are avaiable the protection- and tag-class
+   filter can not used with such "non-semantic"-sources.
+
+** Much smarter mechanism to highlight the current tag in the methods-buffer.
+   Previous versions of ECB have always expanded the whole tree in the
+   Methods-buffer if the current tag in the source-buffer was not visible in
+   the current tree - e.g. because the variables-bucket was collapsed or the
+   containing type of a tag (e.g. the class of a method) was collapsed. So in
+   most cases much more was expanded as needed to make the current tag
+   visible.
+
+   The mechanism of ECB 2.22 only expands the needed parts of the tree-buffer
+   to make the related node visible: First we try to highlight the current tag
+   with current expansion-state of the Methods-buffer. If the node is not
+   visible so the tag can not be highlighted then we go upstairs the ladder of
+   type-tags the current tag belongs to (e.g. we expand successive the nodes
+   of the whole class-hierachy of the current method-tag until the related
+   node becomes visible). Only if this has still no success then we expand the
+   full tree-buffer and try to highlight the current tag.
+   
 ** The popup-menus can now be nested into 4 levels of submenus. In general there
    could be an infinite depth of nesting but it makes no sense - if possible
    at all - to define infinite nested defcustom-types. So there is a limit of
@@ -48,6 +70,11 @@
 *** Fixed a small bug in `ecb-toggle-compile-window-height'. This bug has
     influenced the behavior of `display-buffer' when called from programs for
     "compilation-buffers".
+
+*** Fixed a bug related to the speedbar-integration.
+    This bug complained "Can not switch buffer in dedicated window" when the
+    intergrated speedbar-buffer was selected and the user tries to open a file
+    or to jump to a tag.
     
 
 

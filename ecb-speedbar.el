@@ -309,36 +309,40 @@ Return NODE."
                                               (intern (car tag))))
              (ecb--semantic--tag-set-overlay new-tag (make-vector 2 (cdr tag)))
              (ecb--semantic--tag-put-property new-tag 'ecb-speedbar-tag t)
-             (tree-node-new (progn
-                              (set-text-properties
-                               0 (length (car tag))
-                               `(face ,ecb-method-non-semantic-face) (car tag))
-                              (car tag))
-                            0
-                            new-tag
-                            t
-                            node))
+             (ecb-apply-user-filter-to-tags (list new-tag))
+             (when (not (ecb-tag-forbidden-display-p new-tag))
+               (tree-node-new (progn
+                                (set-text-properties
+                                 0 (length (car tag))
+                                 `(face ,ecb-method-non-semantic-face) (car tag))
+                                (car tag))
+                              0
+                              new-tag
+                              t
+                              node)))
             ((speedbar-generic-list-positioned-group-p tag)
              ;; the semantic tag for this tag
              (setq new-tag (ecb--semantic-tag (car tag)
                                               (intern (car tag))))
              (ecb--semantic--tag-set-overlay new-tag
-                                            (make-vector 2 (car (cdr tag))))
+                                             (make-vector 2 (car (cdr tag))))
              (ecb--semantic--tag-put-property new-tag 'ecb-speedbar-tag t)
-             (ecb-create-non-semantic-tree
-              (setq new-node
-                    (tree-node-new (progn
-                                     (set-text-properties
-                                      0 (length (car tag))
-                                      `(face ,ecb-method-non-semantic-face) (car tag))
-                                     (car tag))
-                                   0
-                                   new-tag
-                                   nil node))
-              (cdr (cdr tag)))
-             (tree-node-set-expanded new-node
-                                     (member major-mode
-                                             ecb-non-semantic-methods-initial-expand)))
+             (ecb-apply-user-filter-to-tags (list new-tag))
+             (when (not (ecb-tag-forbidden-display-p new-tag))             
+               (ecb-create-non-semantic-tree
+                (setq new-node
+                      (tree-node-new (progn
+                                       (set-text-properties
+                                        0 (length (car tag))
+                                        `(face ,ecb-method-non-semantic-face) (car tag))
+                                       (car tag))
+                                     0
+                                     new-tag
+                                     nil node))
+                (cdr (cdr tag)))
+               (tree-node-set-expanded new-node
+                                       (member major-mode
+                                               ecb-non-semantic-methods-initial-expand))))
             ((speedbar-generic-list-group-p tag)
              (ecb-create-non-semantic-tree
               (setq new-node

@@ -1567,7 +1567,9 @@ can last a long time - depending of machine- and disk-performance."
   (interactive "nLevel: ")
   (save-selected-window
     (ecb-exec-in-directories-window
-     (tree-buffer-expand-nodes level)))
+     (dolist (node (tree-node-get-children (tree-buffer-get-root)))
+       (tree-buffer-expand-node node level))
+     (tree-buffer-update)))
   (ecb-current-buffer-sync 'force))
 
 
