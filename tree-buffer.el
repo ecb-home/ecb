@@ -26,7 +26,7 @@
 ;; This file is part of the ECB package which can be found at:
 ;; http://home.swipnet.se/mayhem/ecb.html
 
-;; $Id: tree-buffer.el,v 1.24 2001/04/27 23:12:13 creator Exp $
+;; $Id: tree-buffer.el,v 1.25 2001/04/28 10:12:01 creator Exp $
 
 ;;; Code:
 
@@ -152,7 +152,7 @@ with the same arguments as `tree-node-expanded-fn'."
   (let ((facer (cdr (assoc (tree-node-get-type node) tree-buffer-type-facer))))
     (if facer
         facer
-      'default)))
+      nil)))
 
 (defun tree-buffer-node-set-face(node face)
   "Sets the face for a node name."
@@ -195,13 +195,9 @@ inserted and the TEXT itself"
     (insert text)
     (put-text-property p (+ p (length text)) 'mouse-face 'highlight)
     (if facer
-        (cond ((facep facer)
-               (put-text-property p (+ p (length text)) 'face facer))
-              ((functionp facer)
-               (funcall facer p text))
-              (t;; do nothing, maybe the inserted text is already faced
-               )))))
-               
+	(if (functionp facer)
+	    (funcall facer p text)
+	  (put-text-property p (+ p (length text)) 'face facer)))))
     
 (defun tree-buffer-add-node(node depth)
   (insert (make-string (* depth tree-buffer-indent) ? ))
@@ -365,131 +361,133 @@ TYPE-FACER: Nil or a list of one or two conses, each cons for a node-type \(0
               updated.
 EXPAND-SYMBOL-BEFORE: If not nil then the expand-symbol \(is displayed before
                       the node-text."
-  (set-buffer (get-buffer-create name))
+  (let ((nop (function (lambda() (interactive)))))
+    (set-buffer (get-buffer-create name))
 
-  (make-local-variable 'truncate-lines)
-  (make-local-variable 'truncate-partial-width-windows)
-  (make-local-variable 'tree-buffer-key-map)
-  (make-local-variable 'tree-buffer-root)
-  (make-local-variable 'tree-buffer-nodes)
-  (make-local-variable 'tree-buffer-indent)
-  (make-local-variable 'tree-buffer-is-click-valid-fn)
-  (make-local-variable 'tree-node-selected-fn)
-  (make-local-variable 'tree-node-expanded-fn)
-  (make-local-variable 'tree-node-update-fn)
-  (make-local-variable 'tree-node-mouse-over-fn)
-  (make-local-variable 'tree-buffer-highlighted-node-data)
-  (make-local-variable 'tree-buffer-menus)
-  (make-local-variable 'tree-buffer-type-facer)
-  (make-local-variable 'tree-buffer-expand-symbol-before)
-  (make-local-variable 'tree-buffer-highlight-overlay)
+    (make-local-variable 'truncate-lines)
+    (make-local-variable 'truncate-partial-width-windows)
+    (make-local-variable 'tree-buffer-key-map)
+    (make-local-variable 'tree-buffer-root)
+    (make-local-variable 'tree-buffer-nodes)
+    (make-local-variable 'tree-buffer-indent)
+    (make-local-variable 'tree-buffer-is-click-valid-fn)
+    (make-local-variable 'tree-node-selected-fn)
+    (make-local-variable 'tree-node-expanded-fn)
+    (make-local-variable 'tree-node-update-fn)
+    (make-local-variable 'tree-node-mouse-over-fn)
+    (make-local-variable 'tree-buffer-highlighted-node-data)
+    (make-local-variable 'tree-buffer-menus)
+    (make-local-variable 'tree-buffer-type-facer)
+    (make-local-variable 'tree-buffer-expand-symbol-before)
+    (make-local-variable 'tree-buffer-highlight-overlay)
   
-  (setq truncate-lines tr-lines)
-  (setq buffer-read-only read-only)
-  (setq truncate-partial-width-windows tr-lines)
-  (setq tree-buffer-key-map (make-sparse-keymap))
-  (setq tree-buffer-is-click-valid-fn is-click-valid-fn)
-  (setq tree-node-selected-fn node-selected-fn)
-  (setq tree-node-expanded-fn node-expanded-fn)
-  (setq tree-node-mouse-over-fn node-mouse-over-fn)
-  (setq tree-buffer-indent 2)
-  (setq tree-buffer-highlighted-node-data nil)
-  (setq tree-buffer-menus menus)
-  (setq tree-buffer-root (tree-node-new "root" 0 "root"))
-  (setq tree-buffer-type-facer type-facer)
-  (setq tree-buffer-expand-symbol-before expand-symbol-before)
-  (setq tree-buffer-highlight-overlay (make-overlay 1 1))
-  (overlay-put tree-buffer-highlight-overlay 'face 'secondary-selection)
+    (setq truncate-lines tr-lines)
+    (setq buffer-read-only read-only)
+    (setq truncate-partial-width-windows tr-lines)
+    (setq tree-buffer-key-map (make-sparse-keymap))
+    (setq tree-buffer-is-click-valid-fn is-click-valid-fn)
+    (setq tree-node-selected-fn node-selected-fn)
+    (setq tree-node-expanded-fn node-expanded-fn)
+    (setq tree-node-mouse-over-fn node-mouse-over-fn)
+    (setq tree-buffer-indent 2)
+    (setq tree-buffer-highlighted-node-data nil)
+    (setq tree-buffer-menus menus)
+    (setq tree-buffer-root (tree-node-new "root" 0 "root"))
+    (setq tree-buffer-type-facer type-facer)
+    (setq tree-buffer-expand-symbol-before expand-symbol-before)
+    (setq tree-buffer-highlight-overlay (make-overlay 1 1))
+    (overlay-put tree-buffer-highlight-overlay 'face 'secondary-selection)
 
-  (define-key tree-buffer-key-map "\C-m"
-    '(lambda()
-       (interactive)
-       (tree-buffer-select 0 nil nil)))
-  (define-key tree-buffer-key-map [tab]
-    '(lambda()
-       (interactive)
-       (let ((node (tree-buffer-get-node-at-point)))
-         (when (tree-node-is-expandable node)
-           (when (not (tree-node-is-expanded node))
-             (funcall tree-node-expanded-fn node 0 nil nil (buffer-name)))
-           (when (tree-node-is-expandable node)
-             (tree-node-toggle-expanded node))
-           ;; Update the tree-buffer with optimized display of NODE           
-           (tree-buffer-update node)))))
+    (define-key tree-buffer-key-map "\C-m"
+      (function (lambda()
+		  (interactive)
+		  (tree-buffer-select 0 nil nil))))
+    (define-key tree-buffer-key-map [tab]
+      (function
+       (lambda()
+	 (interactive)
+	 (let ((node (tree-buffer-get-node-at-point)))
+	   (when (tree-node-is-expandable node)
+	     (when (not (tree-node-is-expanded node))
+	       (funcall tree-node-expanded-fn node 0 nil nil (buffer-name)))
+	     (when (tree-node-is-expandable node)
+	       (tree-node-toggle-expanded node))
+	     ;; Update the tree-buffer with optimized display of NODE           
+	     (tree-buffer-update node))))))
 
-  ;; mouse-1
-  (define-key tree-buffer-key-map
-    (if running-xemacs '(button1) [down-mouse-1])
-    '(lambda(e)
-       (interactive "e")
-       (mouse-set-point e)
-       (tree-buffer-select 1 nil nil)))
+    ;; mouse-1
+    (define-key tree-buffer-key-map
+      (if running-xemacs '(button1) [down-mouse-1])
+      (function (lambda(e)
+		  (interactive "e")
+		  (mouse-set-point e)
+		  (tree-buffer-select 1 nil nil))))
   
-  (define-key tree-buffer-key-map
-    (if running-xemacs '(shift button1) [S-down-mouse-1])
-    '(lambda(e)
-       (interactive "e")
-       (mouse-set-point e)
-       (tree-buffer-select 1 t nil)))
+    (define-key tree-buffer-key-map
+      (if running-xemacs '(shift button1) [S-down-mouse-1])
+      (function (lambda(e)
+		  (interactive "e")
+		  (mouse-set-point e)
+		  (tree-buffer-select 1 t nil))))
 
-  (define-key tree-buffer-key-map
-    (if running-xemacs '(control button1) [C-down-mouse-1])
-    '(lambda(e)
-       (interactive "e")
-       (mouse-set-point e)
-       (tree-buffer-select 1 nil t)))
+    (define-key tree-buffer-key-map
+      (if running-xemacs '(control button1) [C-down-mouse-1])
+      (function (lambda(e)
+		  (interactive "e")
+		  (mouse-set-point e)
+		  (tree-buffer-select 1 nil t))))
 
-  (define-key tree-buffer-key-map [drag-mouse-1] '(lambda()(interactive)))
-  (define-key tree-buffer-key-map [mouse-1] '(lambda()(interactive)))
-  (define-key tree-buffer-key-map [double-mouse-1] '(lambda()(interactive)))
-  (define-key tree-buffer-key-map [triple-mouse-1] '(lambda()(interactive)))
+    (define-key tree-buffer-key-map [drag-mouse-1] nop)
+    (define-key tree-buffer-key-map [mouse-1] nop)
+    (define-key tree-buffer-key-map [double-mouse-1] nop)
+    (define-key tree-buffer-key-map [triple-mouse-1] nop)
 
-  ;; mouse-2
-  (define-key tree-buffer-key-map
-    (if running-xemacs '(button2) [down-mouse-2])
-    '(lambda(e)
-       (interactive "e")
-       (mouse-set-point e)
-       (tree-buffer-select 2 nil nil)))
+    ;; mouse-2
+    (define-key tree-buffer-key-map
+      (if running-xemacs '(button2) [down-mouse-2])
+      (function (lambda(e)
+		  (interactive "e")
+		  (mouse-set-point e)
+		  (tree-buffer-select 2 nil nil))))
 
-  (define-key tree-buffer-key-map
-    (if running-xemacs '(shift button2) [S-down-mouse-2])
-    '(lambda(e)
-       (interactive "e")
-       (mouse-set-point e)
-       (tree-buffer-select 2 t nil)))
+    (define-key tree-buffer-key-map
+      (if running-xemacs '(shift button2) [S-down-mouse-2])
+      (function (lambda(e)
+		  (interactive "e")
+		  (mouse-set-point e)
+		  (tree-buffer-select 2 t nil))))
 
-  (define-key tree-buffer-key-map
-    (if running-xemacs '(control button2) [C-down-mouse-2])
-    '(lambda(e)
-       (interactive "e")
-       (mouse-set-point e)
-       (tree-buffer-select 2 nil t)))
+    (define-key tree-buffer-key-map
+      (if running-xemacs '(control button2) [C-down-mouse-2])
+      (function (lambda(e)
+		  (interactive "e")
+		  (mouse-set-point e)
+		  (tree-buffer-select 2 nil t))))
 
-  (define-key tree-buffer-key-map [mouse-2] '(lambda()(interactive)))
-  (define-key tree-buffer-key-map [double-mouse-2] '(lambda()(interactive)))
-  (define-key tree-buffer-key-map [triple-mouse-2] '(lambda()(interactive)))
+    (define-key tree-buffer-key-map [mouse-2] nop)
+    (define-key tree-buffer-key-map [double-mouse-2] nop)
+    (define-key tree-buffer-key-map [triple-mouse-2] nop)
 
-  ;; mouse-3
-  (define-key tree-buffer-key-map [down-mouse-3] 'tree-buffer-show-menu)
-  (define-key tree-buffer-key-map [mouse-3] '(lambda()(interactive)))
-  (define-key tree-buffer-key-map [double-mouse-3] '(lambda()(interactive)))
-  (define-key tree-buffer-key-map [triple-mouse-3] '(lambda()(interactive)))
+    ;; mouse-3
+    (define-key tree-buffer-key-map [down-mouse-3] 'tree-buffer-show-menu)
+    (define-key tree-buffer-key-map [mouse-3] nop)
+    (define-key tree-buffer-key-map [double-mouse-3] nop)
+    (define-key tree-buffer-key-map [triple-mouse-3] nop)
 
-  (define-key tree-buffer-key-map [mouse-movement]
-    'tree-buffer-mouse-move)
+    (define-key tree-buffer-key-map [mouse-movement]
+      'tree-buffer-mouse-move)
 
-  ;; mouse-movement
-  (define-key tree-buffer-key-map [mouse-movement]
-    '(lambda(e)
-       (interactive "e")
-       (save-excursion
-         (mouse-set-point e);; (cadadr e)
-         (let ((node (tree-buffer-get-node-at-point)))
-           (when (and tree-node-mouse-over-fn node)
-             (funcall tree-node-mouse-over-fn node))))))
+    ;; mouse-movement
+    (define-key tree-buffer-key-map [mouse-movement]
+      (function (lambda(e)
+		  (interactive "e")
+		  (save-excursion
+		    (mouse-set-point e);; (cadadr e)
+		    (let ((node (tree-buffer-get-node-at-point)))
+		      (when (and tree-node-mouse-over-fn node)
+			(funcall tree-node-mouse-over-fn node)))))))
 
-  (use-local-map tree-buffer-key-map))
+    (use-local-map tree-buffer-key-map)))
 
 ;;; Tree node
 
@@ -498,15 +496,33 @@ EXPAND-SYMBOL-BEFORE: If not nil then the expand-symbol \(is displayed before
   (tree-node-set-parent child node))
 
 (defun tree-node-remove-child(node child)
+  "Removes the child from the node."
   (tree-node-set-parent child nil)
   (tree-node-set-children node
                           (delq child (tree-node-get-children node))))
 
 (defun tree-node-find-child-data(node child-data)
+  "Finds the first child with the given child-data."
   (catch 'exit
     (dolist (child (tree-node-get-children node))
       (when (equal (tree-node-get-data child) child-data)
         (throw 'exit child)))))
+
+(defun tree-node-remove-child-data(node child-data)
+  "Removes the first child with the given child-data. Returns the removed child."
+  (catch 'exit
+    (let ((last-cell nil)
+	  (cell (tree-node-get-children node)))
+      (while cell
+	(when (equal (tree-node-get-data (car cell)) child-data)
+	  (if last-cell
+	      (setcdr last-cell (cdr cell))
+	    (tree-node-set-children node (cdr cell)))
+	  (setcdr cell nil)
+	  (tree-node-set-parent (car cell) nil)
+	  (throw 'exit cell))
+	(setq last-cell cell)
+	(setq cell (cdr cell))))))
 
 (defun tree-node-find-child-name(node child-name)
   (catch 'exit
