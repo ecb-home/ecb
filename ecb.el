@@ -4165,6 +4165,10 @@ does all necessary after finishing ediff."
       ;; deactivate and reset the speedbar stuff
       (if (featurep 'ecb-speedbar)
           (ecb-speedbar-deactivate))
+
+      ;; deactivating the eshell stuff; activation is done implicitly by
+      ;; `ecb-eshell-goto-eshell'!
+      (ecb-eshell-deactivate)
       
       (tree-buffer-deactivate-mouse-tracking)
       (tree-buffer-deactivate-follow-mouse)
