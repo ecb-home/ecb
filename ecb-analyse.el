@@ -446,6 +446,9 @@ ECB-analyse-window is not visible in current layout."
   (shrink-window-if-larger-than-buffer
    (get-buffer-window "*Tag Information*")))
 
+;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: we could use the function
+;; `semantic-documentation-for-tag' here to display more infos?!
+
 (defun ecb-analyse-gen-tag-info (tag)
   "Return the info-string for TAG."
   (or (and (functionp ecb-analyse-gen-tag-info-fn)
