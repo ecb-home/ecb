@@ -1,6 +1,6 @@
 ;;; ecb-eshell.el --- eshell integration for the ECB.
 
-;; $Id: ecb-eshell.el,v 1.1 2001/11/18 05:34:36 burtonator Exp $
+;; $Id: ecb-eshell.el,v 1.2 2001/11/18 19:10:51 burtonator Exp $
 
 ;; Copyright (C) 2000-2003 Free Software Foundation, Inc.
 ;; Copyright (C) 2000-2003 Kevin A. Burton (burton@openprivacy.org)
@@ -43,35 +43,50 @@
 
   ;;only do this if the user is looking at the eshell buffer
 
-  (if (and (boundp 'eshell-buffer-name)
-           eshell-buffer-name
-           (get-buffer eshell-buffer-name))
+  ;;FIXME: if there a way to change the directory without showing the cd command?
   
+  (if (ecb-eshell-running-p)      
       (let((new-directory default-directory))
     
         (set-buffer (get-buffer-create eshell-buffer-name))
         
         (end-of-buffer)
         
-        (eshell/clear)
+        ;;(eshell/clear)
         
-        (insert (format "cd %s\n" new-directory))
+        ;;(insert (format "cd %s" new-directory))
+
+        (eshell/cd new-directory)
         
-        ;;execute the command
+        ;;(select-window ecb-compile-window)execute the command
         (eshell-send-input)
         
         (end-of-buffer)
         
         (set-window-point (get-buffer-window eshell-buffer-name) (point-max)))))
 
+(defun ecb-eshell-running-p()
+  "Return true if eshell is currently running."
+
+  (and (boundp 'eshell-buffer-name)
+       eshell-buffer-name
+       (get-buffer eshell-buffer-name)))
+  
 (defun ecb-eshell-goto-eshell()
   (interactive)
-
+  
   ;;TODO: first... make sure that we change the compilation window to the eshell
   ;;buffer.
-  
-  (ecb-goto-window "*eshell*"))
-  
+
+  (if (ecb-eshell-running-p)
+      (progn 
+        (select-window ecb-compile-window)
+
+        (switch-to-buffer eshell-buffer-name))
+
+      ;;FIXME: should we auto start the eshell here?  I think so..
+    (error "The eshell is not running")))
+
 (add-hook 'ecb-current-buffer-sync-hook 'ecb-eshell-current-buffer-sync)
           
 (provide 'ecb-eshell)

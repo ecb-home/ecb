@@ -1,6 +1,6 @@
 ;;; ecb-speedbar.el --- 
 
-;; $Id: ecb-speedbar.el,v 1.1 2001/11/18 05:34:36 burtonator Exp $
+;; $Id: ecb-speedbar.el,v 1.2 2001/11/18 19:10:51 burtonator Exp $
 
 ;; Copyright (C) 2000-2003 Free Software Foundation, Inc.
 ;; Copyright (C) 2000-2003 Kevin A. Burton (burton@openprivacy.org)
@@ -38,6 +38,11 @@
 
 ;;; History:
 ;;
+;; - Sun Nov 18 2001 01:46 AM (burton@openprivacy.org): BUG: we need to set
+;; dframe-activate-frame to the current frame and NOT use an invisible frame.
+;; This is important because when I select a buffer in ECB it can't use the
+;; invisible frame.  :(
+
 ;; Sat Nov 10 2001 09:30 PM (burton@openprivacy.org): implementation of
 ;; ecb-delete-other-windows-in-editwindow-20
 ;;
@@ -126,6 +131,8 @@ will/could break."
 
   (setq speedbar-frame (make-frame '((visibility . nil))))
 
+  (setq dframe-attached-frame (selected-frame))
+  
   ;;this needs to be 0 because we can't have the speedbar too chatty in the
   ;;current frame because this will mean that the minibuffer will be updated too
   ;;much.
@@ -142,13 +149,9 @@ will/could break."
 
       (save-excursion
 
-        (message "ecb is updating speedbar...done")
-    
         (if (and speedbar-buffer
                  (buffer-live-p speedbar-buffer))
-            (speedbar-update-contents))
-
-        (message "ecb is updating speedbar...done"))))
+            (speedbar-update-contents)))))
   
 (add-hook 'ecb-current-buffer-sync-hook 'ecb-speedbar-current-buffer-sync)
 
