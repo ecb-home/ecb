@@ -23,7 +23,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-semantic-wrapper.el,v 1.18 2004/09/17 11:43:57 berndl Exp $
+;; $Id: ecb-semantic-wrapper.el,v 1.19 2004/09/20 15:12:28 berndl Exp $
 
 ;;; Commentary:
 
@@ -403,6 +403,40 @@ with a file, then the cdr of the result-cons is nil."
 ;;   :documentation (semantic-elisp-do-doc (nth 3 rt))
 ;;   )
 ;;  )
+
+;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: change this to the final
+;; mechanism of semantic when it is commited.
+(when (fboundp 'semantic-elisp-set-tagger)
+  (eval-after-load "semantic-el"
+    (progn
+      ;; defecb-multicache
+      (semantic-elisp-set-tagger 'defecb-multicache 'defvar)
+      ;; defecb-stealthy and tree-buffer-defpopup-command
+      (semantic-elisp-set-tagger
+       'defecb-stealthy
+       (function
+        (lambda (read-lobject keyword-symbol name-after-keyword start end)
+          (semantic-tag-new-function
+           name-after-keyword nil nil
+           :user-visible-flag nil
+           :documentation (semantic-elisp-do-doc (nth 2 read-lobject))))))
+      (semantic-elisp-set-tagger 'tree-buffer-defpopup-command 'defecb-stealthy)
+      ;; ecb-layout-define
+      (semantic-elisp-set-tagger
+       'ecb-layout-define
+       (function
+        (lambda (read-lobject keyword-symbol name-after-keyword start end)
+          (semantic-tag-new-function
+           name-after-keyword nil
+           (semantic-elisp-desymbolify (list (nth 2 read-lobject)))
+           :user-visible-flag nil
+           :documentation (semantic-elisp-do-doc (nth 3 read-lobject))))))
+      ;; if-ecb-running-... macros
+      (semantic-elisp-set-tagger 'when-ecb-running-xemacs 'eval-and-compile)
+      (semantic-elisp-set-tagger 'when-ecb-running-emacs-21 'eval-and-compile)
+      (semantic-elisp-set-tagger 'when-ecb-running-emacs-20 'eval-and-compile)
+      (semantic-elisp-set-tagger 'when-ecb-running-emacs 'eval-and-compile))))
+             
 
 
 (silentcomp-provide 'ecb-semantic-wrapper)
