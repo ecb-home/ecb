@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-eshell.el,v 1.74 2004/11/17 17:28:39 berndl Exp $
+;; $Id: ecb-eshell.el,v 1.75 2004/12/20 17:12:02 berndl Exp $
 
 ;;; Commentary:
 
@@ -118,7 +118,7 @@ If current layout does not display a compile-window \(see
   "*Synchronize eshell with the default-directory of current source-buffer.
 The synchronization is done by `ecb-eshell-current-buffer-sync' which can be
 called interactively but normally it is called autom. by the
-`ecb-current-buffer-sync-hook'."
+`ecb-current-buffer-sync-hook-internal'."
   :group 'ecb-eshell
   :type 'boolean)
 
@@ -177,7 +177,8 @@ an after-advice) then for every class a cons must be added to this list.")
     (ecb-toggle-compile-window 1))
 
   ;; some hooks
-  (add-hook 'ecb-current-buffer-sync-hook 'ecb-eshell-current-buffer-sync)  
+  (add-hook 'ecb-current-buffer-sync-hook-internal
+            'ecb-eshell-current-buffer-sync)  
   (add-hook 'eshell-post-command-hook 'ecb-eshell-recenter)
   (add-hook 'eshell-post-command-hook 'ecb-eshell-fit-window-to-output)
   (add-hook 'eshell-pre-command-hook 'ecb-eshell-precommand-hook)
@@ -214,7 +215,8 @@ load or activate eshell - it just prepares ECB to work perfectly with eshell."
 
 (defun ecb-eshell-deactivate-integration ()
   (ecb-disable-advices ecb-eshell-adviced-functions)
-  (remove-hook 'ecb-current-buffer-sync-hook 'ecb-eshell-current-buffer-sync)
+  (remove-hook 'ecb-current-buffer-sync-hook-internal
+               'ecb-eshell-current-buffer-sync)
   (remove-hook 'eshell-post-command-hook 'ecb-eshell-recenter)
   (remove-hook 'eshell-post-command-hook 'ecb-eshell-fit-window-to-output)
   (remove-hook 'eshell-pre-command-hook 'ecb-eshell-precommand-hook)
