@@ -200,8 +200,11 @@
    (ecb-faq-section
    "Common Problems"
    (ecb-faq-q-and-a
-    "My lines are truncated in the edit windows. How can I make them wrap around?"
-    "You need to set the variable truncate-partial-width-windows to nil.")
+    "Why doesn't ECB work correct with VC?"
+    "The variable `vc-delete-logbuf-window' must be set to nil during active ECB. This can be done with the hooks of ECB.")
+   (ecb-faq-q-and-a
+    "Why ECB enlarges my compile window if i call `describe-function' (or similar functions)?"
+    "This is a known bug. But after calling `ecb-redraw-layout' the compile-window height is always correct.")
    (ecb-faq-q-and-a
     "Why doesn't ECB parse my C++ files correctly?"
     "This is a problem in Semantic, which is used by ECB for parsing source files. At the moment it doesn't handle C++ source files very well.")
