@@ -1,10 +1,25 @@
-Version 1.53:
+Version 1.60:
 -------------
 
 - New hook ecb-current-buffer-sync-hook allows developers to add code to be
   evaluated after the ECB is synchronized with the current buffer.
 
-- ecb-auto-expand-directory-tree now offers two options:
+- Now all faces used by ECB for highlighting it´s own stuff are customizable.
+  See new group 'ecb-faces' (Klaus).
+
+- ECB is now fully prepared for Emacs 21. The new feature
+  `ecb-show-node-info-in-minibuffer' is implemented with the new 'help-echo
+  property of Emacs 21, therefore the ugly `track-mouse' mechanism is not
+  needed anymore with Emacs 21. (Klaus).
+
+- The options `ecb-show-node-name-in-minibuffer',
+  `ecb-show-complete-file-name-in-minibuffer' and
+  `ecb-show-file-info-in-minibuffer' are gone and have been replaced by one
+  single new option `ecb-show-node-info-in-minibuffer' where you can define
+  separately for every tree-buffer when and which node info should be
+  displayed in the minibuffer (Klaus).
+
+  - ecb-auto-expand-directory-tree now offers two options:
   - best: Expand always the best matching source-path for a file
   - first: Expand always the first matching source-path for a file (Klaus)
 
@@ -16,7 +31,7 @@ Version 1.53:
 
 - New option for the history: ecb-kill-buffer-clears-history defines if
   `kill-buffer' should also remove the corresponding history entry. There are
-  several options.
+  several options (Klaus).
 
 Version 1.52:
 -------------

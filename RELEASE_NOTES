@@ -1,4 +1,4 @@
-This file contains some important release-notes for ECB 1.52
+This file contains some important release-notes for ECB 1.60
 
 General:
 --------
@@ -17,6 +17,17 @@ No special notes beyond the contents of README.
 
 Upgrading from any previous version:
 ------------------------------------
+
+- The options `ecb-show-node-name-in-minibuffer',
+  `ecb-show-complete-file-name-in-minibuffer' and
+  `ecb-show-file-info-in-minibuffer' are gone and have been replaced by one
+  single new option `ecb-show-node-info-in-minibuffer' where you can define
+  separately for every tree-buffer when and which node info should be
+  displayed in the minibuffer
+
+  
+Upgrading from versions < 1.52:
+-------------------------------
 
 + ECB now requires eieio >= 0.16 (see also README)
 
