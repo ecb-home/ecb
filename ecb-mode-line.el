@@ -139,6 +139,7 @@ GNU Emacs < 21 nor XEmacs can evaluate dynamically forms in the mode-line."
 (defcustom ecb-mode-line-data '((ecb-directories-buffer-name . sel-dir)
                                 (ecb-sources-buffer-name . sel-dir)
                                 (ecb-methods-buffer-name . sel-source)
+                                (ecb-analyse-buffer-name . sel-source)
                                 (ecb-history-buffer-name . "History"))
   "*Data shown in the modelines of the special ECB-buffers.
 Everey element of this list is a cons-cell where the car is used to define a
