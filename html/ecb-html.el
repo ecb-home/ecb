@@ -21,6 +21,8 @@
 
 ;; Generates ECB HTML pages.
 
+;; $Id: ecb-html.el,v 1.2 2001/04/29 16:36:54 creator Exp $
+
 ;;; Code:
 (require 'html-helper)
 (require 'ecb)

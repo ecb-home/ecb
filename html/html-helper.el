@@ -21,6 +21,8 @@
 
 ;; Functions for generating HTML pages.
 
+;; $Id: html-helper.el,v 1.2 2001/04/29 16:36:54 creator Exp $
+
 ;;; Code:
 (defconst h-br "<br>\n")
 
