@@ -126,7 +126,19 @@ is not available then `find-file' is called."
     (if (fboundp 'jde-gen-class-buffer)
         (jde-gen-class-buffer file)
       (find-file file))))
+
+(when (locate-library "efc")
+  (require 'efc)
+  (if (boundp 'efc-dialog-show-before-hook)
+      (add-hook 'efc-dialog-show-before-hook
+                (function (lambda ()
+                            (ecb-toggle-compile-window -1)))))
   
+  (if (boundp 'efc-dialog-close-after-hook)
+      (add-hook 'efc-dialog-close-after-hook
+                (function (lambda ()
+                            (ecb-toggle-compile-window 1))))))
+
 
 (silentcomp-provide 'ecb-jde)
 
