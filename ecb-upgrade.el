@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-upgrade.el,v 1.98 2004/12/10 12:56:32 berndl Exp $
+;; $Id: ecb-upgrade.el,v 1.99 2004/12/20 16:36:12 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -243,8 +243,7 @@
                                      ecb-upgrade-cache-directory-contents))
     (ecb-layout-always-operate-in-edit-window . (ecb-layout-always-operate-in-edit-window
                                                  ecb-upgrade-alway-operate-in-edit-window))
-    (ecb-truncate-lines . (ecb-truncate-lines
-                           ecb-upgrade-truncate-lines))
+    (ecb-truncate-lines . (ecb-tree-truncate-lines ecb-upgrade-truncate-lines))
     (ecb-mode-line-prefixes . (ecb-mode-line-prefixes
                                ecb-upgrade-mode-line-prefixes))
     (ecb-mode-line-data . (ecb-mode-line-data
@@ -291,14 +290,14 @@
                                    ecb-upgrade-exclude-parents-regexp))
     (ecb-auto-expand-tag-tree-collapse-other . (ecb-auto-expand-tag-tree-collapse-other
                                                 ecb-upgrade-auto-expand-tag-tree-collapse-other))
-    (ecb-tree-RET-selects-edit-window . (ecb-tree-RET-selects-edit-window
-                                         ecb-upgrade-tree-RET-selects-edit-window))
     (ecb-prescan-directories-for-emptyness . (ecb-prescan-directories-for-emptyness
                                               ecb-upgrade-prescan-directories-for-emptyness))
     (ecb-sources-perform-read-only-check . (ecb-sources-perform-read-only-check
                                             ecb-upgrade-sources-perform-read-only-check))
     (ecb-vc-enable-support . (ecb-vc-enable-support
                               ecb-upgrade-vc-enable-support))
+    (ecb-tree-image-icons-directories . (ecb-tree-image-icons-directories
+                                         ecb-upgrade-tree-image-icons-directories))
     )
   "Alist of all options which should be upgraded for current ECB-version.
 There are several reasons why an option should be contained in this alist:
@@ -407,9 +406,29 @@ The car is the old option symbol and the cdr is a 2-element-list with:
           old-val))
 
 (defun ecb-upgrade-truncate-lines (old-val)
-  (if old-val
-      '(t t t t)
-    '(nil nil nil nil)))
+  (cond ((equal t old-val)
+         '(ecb-directories-buffer-name
+           ecb-sources-buffer-name
+           ecb-methods-buffer-name
+           ecb-history-buffer-name))
+        ((equal nil old-val)
+         nil)
+        ((listp old-val)
+         (let ((new-list nil))
+           (if (nth 0 old-val)
+               (setq new-list (cons 'ecb-directories-buffer-name new-list)))
+           (if (nth 1 old-val)
+               (setq new-list (cons 'ecb-sources-buffer-name new-list)))
+           (if (nth 2 old-val)
+               (setq new-list (cons 'ecb-methods-buffer-name new-list)))
+           (if (nth 3 old-val)
+               (setq new-list (cons 'ecb-history-buffer-name new-list)))
+           new-list))
+        (t
+         '(ecb-directories-buffer-name
+           ecb-sources-buffer-name
+           ecb-methods-buffer-name
+           ecb-history-buffer-name))))
 
 (defun ecb-upgrade-alway-operate-in-edit-window (old-val)
   (let ((l (copy-tree old-val)))
@@ -587,11 +606,6 @@ The car is the old option symbol and the cdr is a 2-element-list with:
       'only-if-on-tag
     nil))
 
-(defun ecb-upgrade-tree-RET-selects-edit-window (old-val)
-  (mapcar (function (lambda (e)
-                      (ecb-find-optionsym-for-tree-buffer-name e)))
-          old-val))
-  
 (defun ecb-upgrade-prescan-directories-for-emptyness (old-val)
   (if old-val 'unless-remote nil))
 
@@ -600,9 +614,25 @@ The car is the old option symbol and the cdr is a 2-element-list with:
   
 (defun ecb-upgrade-vc-enable-support (old-val)
   (if old-val 'unless-remote nil))
-  
+
+(defun ecb-upgrade-tree-image-icons-directories (old-val)
+  (let ((l (copy-tree old-val)))
+    (cons (nth 0 l)
+          (delq nil (list (if (nth 1 l)
+                              (cons 'ecb-directories-buffer-name
+                                    (nth 1 l)))
+                          (if (nth 2 l)
+                              (cons 'ecb-sources-buffer-name
+                                    (nth 2 l)))
+                          (if (nth 3 l)
+                              (cons 'ecb-methods-buffer-name
+                                    (nth 3 l)))
+                          (if (nth 4 l)
+                              (cons 'ecb-history-buffer-name
+                                    (nth 4 l))))))))
+
 ;; ----------------------------------------------------------------------
-;; internal functions. Dot change anything below this line
+;; internal functions. Don't change anything below this line
 ;; ----------------------------------------------------------------------
 
 (defgroup ecb-upgrade-internal nil
@@ -1374,23 +1404,86 @@ Note: Normally this URL should never change but who knows..."
 (defvar ecb-tar-path nil)
 (defvar ecb-gzip-path nil)
 
-;; Klaus: Arrghhhhhhhhhhhhhhh... the cygwin version of tar does not accept
-;; args in windows-style file-format :-( Therefore we convert it with cygpath.
-;; Cause of the need of wget we can assume the the user has cygwin installed!
-(defmacro ecb-create-shell-file-argument (arg)
-  `(if (eq system-type 'windows-nt)
-       (progn
+
+(defcustom ecb-wget-setup (cons (if (fboundp 'executable-find)
+                                    (executable-find "wget")
+                                  "wget")
+                                (cond ((eq system-type 'cygwin32)
+                                       'cygwin)
+                                      ((eq system-type 'windows-nt)
+                                       (if (getenv "CYGWIN")
+                                           'cygwin
+                                         'windows))
+                                      (t 'other)))
+  "*Configuration for the wget-utility.
+Value is a cons-cell where:
+- car is the name of the wget-executable - if the executable can not be found
+  in the PATH then it must be a full path.
+- cdr: The path type of the file-arguments of this binary. Possible values are
+  'cygwin, 'windows and 'other whereas the latter one is used for all Unix,
+  Linux, Mac OS etc... If 'cygwin is set then the cygpath-utility must be in
+  the PATH!"
+  :group 'ecb-download
+  :type '(cons (file :tag "wget binary" :value "wget")
+               (choice :tag "Path type" :menu-tag "Path type"
+                       (const :tag "Windows" :value windows)
+                       (const :tag "Cygwin" :value cygwin)
+                       (const :tag "Other" :value other))))
+
+(defcustom ecb-gzip-setup (cons (if (fboundp 'executable-find)
+                                    (executable-find "gzip")
+                                  "gzip")
+                                (cond ((eq system-type 'cygwin32)
+                                       'cygwin)
+                                      ((eq system-type 'windows-nt)
+                                       (if (getenv "CYGWIN")
+                                           'cygwin
+                                         'windows))
+                                      (t 'other)))
+  "*Configuration for the gzip-utility.
+For a description about the possible settings see `ecb-wget-setup'."
+  :group 'ecb-download
+  :type '(cons (file :tag "gzip binary" :value "gzip")
+               (choice :tag "Path type" :menu-tag "Path type"
+                       (const :tag "Windows" :value windows)
+                       (const :tag "Cygwin" :value cygwin)
+                       (const :tag "Other" :value other))))
+
+(defcustom ecb-tar-setup (cons (if (fboundp 'executable-find)
+                                   (executable-find "tar")
+                                 "tar")
+                               (cond ((eq system-type 'cygwin32)
+                                      'cygwin)
+                                     ((eq system-type 'windows-nt)
+                                      (if (getenv "CYGWIN")
+                                          'cygwin
+                                        'windows))
+                                     (t 'other)))
+  "*Configuration for the tar-utility.
+For a description about the possible settings see `ecb-wget-setup'."
+  :group 'ecb-download
+  :type '(cons (file :tag "tar binary" :value "tar")
+               (choice :tag "Path type" :menu-tag "Path type"
+                       (const :tag "Windows" :value windows)
+                       (const :tag "Cygwin" :value cygwin)
+                       (const :tag "Other" :value other))))
+
+
+(defun ecb-upgrade-make-file-arg (file path-type)
+  "Convert filename FILE according to PATH which can be 'cygwin, 'windows or
+'other. In case of the latter one no conversion is done."
+  (cond ((eq path-type 'cygwin)
          (require 'executable)
          (if (executable-find "cygpath.exe")
-             ;; if bash is used as shell-file-name then the command must
-             ;; not contain newlines!
              (ecb-trim
               (ecb-subst-char-in-string ?\n 32
                                         (shell-command-to-string
-                                         (concat "cygpath -u " ,arg))))
-           (ecb-error "Cannot find the cygpath utility!")))
-     ,arg))
-
+                                         (concat "cygpath -u "
+                                                 (shell-quote-argument file)))))
+           (ecb-error "Cannot find the cygpath utility for filepath converting!")))
+        ((eq path-type 'windows)
+         (ecb-subst-char-in-string ?/ ?\\ file))
+        (t file)))
 
 (defun ecb-package-version-str2list (ver-str)
   "Convert the version-str VER-STR to the internal version-list format with
@@ -1636,7 +1729,8 @@ installed. Otherwise an error is reported.
 
 For correct downloading and installing the utilities \"wget\", \"tar\" and
 \"gzip\" are needed which are available for Unix and also for windows with
-cygwin. All utilities must reside in your PATH!
+cygwin. Ensure that the ECB-configuration of these tools is correct for your
+system \(see `ecb-wget-setup', `ecb-gzip-setup' and `ecb-tar-setup').
 
 If you are behind a firewall and you have to use a proxy you maybe need the
 following wget-configuration in your \"~/.wgetrc\"-file:
@@ -1657,7 +1751,8 @@ After successful downloading the new package version will be installed in a
 new subdirectory of `ecb-download-install-parent-dir'. After adding this new
 subdirectory to `load-path' and restarting Emacs the new package version can be
 activated."
-  (let* ((download-install-dir (file-name-as-directory
+  (let* (
+         (download-install-dir (file-name-as-directory
                                 ecb-download-install-parent-dir))
          (downloaded-filename (concat download-install-dir
                                       package "-download.tar.gz"))
@@ -1685,22 +1780,18 @@ activated."
 
       ;; checking if all necessary tools are available
 
-      ;; Emacs 20.X does not autoload executable-find :-(
       (require 'executable)
       (setq ecb-wget-path
             (or ecb-wget-path
-                (or (executable-find
-                     (if (eq system-type 'windows-nt) "wget.exe" "wget"))
+                (or (executable-find (car ecb-wget-setup))
                     (read-file-name "Insert full path to wget: " nil nil t))))
       (setq ecb-tar-path
             (or ecb-tar-path
-                (or (executable-find
-                     (if (eq system-type 'windows-nt) "tar.exe" "tar"))
+                (or (executable-find (car ecb-tar-setup))
                     (read-file-name "Insert full path to tar: " nil nil t))))
       (setq ecb-gzip-path
             (or ecb-gzip-path
-                (or (executable-find
-                     (if (eq system-type 'windows-nt) "gzip.exe" "gzip"))
+                (or (executable-find (car ecb-gzip-setup))
                     (read-file-name "Insert full path to gzip: " nil nil t))))
       (if (not (and ecb-wget-path ecb-tar-path ecb-gzip-path))
           (ecb-error
@@ -1723,7 +1814,8 @@ activated."
                         "-C"
                         "off"
                         "-O"
-                        downloaded-filename
+                        (ecb-upgrade-make-file-arg downloaded-filename
+                                                   (cdr ecb-wget-setup))
                         (concat url package "-" version ".tar.gz")))
                   t
                 nil))
@@ -1752,7 +1844,11 @@ activated."
         (when success
           (message "Uncompressing new %s..." package)
           (setq process-result
-                (shell-command-to-string (concat ecb-gzip-path " -d " downloaded-filename)))
+                (shell-command-to-string (concat ecb-gzip-path
+                                                 " -d "
+                                                 (shell-quote-argument
+                                                  (ecb-upgrade-make-file-arg
+                                                   downloaded-filename (cdr ecb-gzip-setup))))))
           (when (> (length process-result) 0)
             (setq success nil)
             (with-output-to-temp-buffer "*ECB-uncompressing-failure*"
@@ -1769,10 +1865,14 @@ activated."
           (setq process-result
                 (shell-command-to-string
                  (concat ecb-tar-path " -C "
-                         (ecb-create-shell-file-argument download-install-dir)
+                         (shell-quote-argument
+                          (ecb-upgrade-make-file-arg download-install-dir
+                                                     (cdr ecb-tar-setup)))
                          " -xf "
-                         (ecb-create-shell-file-argument
-                          (file-name-sans-extension downloaded-filename)))))
+                          (shell-quote-argument
+                           (ecb-upgrade-make-file-arg
+                            (file-name-sans-extension downloaded-filename)
+                            (cdr ecb-tar-setup))))))
           (when (> (length process-result) 0)
             (setq success nil)
             (with-output-to-temp-buffer "*ECB-unpacking-failure*"
@@ -1804,8 +1904,7 @@ for details about using \"wget\"."
     (require 'executable)
     (setq ecb-wget-path
           (or ecb-wget-path
-              (or (executable-find
-                   (if (eq system-type 'windows-nt) "wget.exe" "wget"))
+              (or (executable-find (car ecb-wget-setup))
                   (read-file-name "Insert full path to wget: " nil nil t))))
     (if (not ecb-wget-path)
         (ecb-error
@@ -1837,7 +1936,8 @@ for details about using \"wget\"."
                       ecb-download-buffername
                       nil
                       "-O"
-                      downloaded-filename
+                      (ecb-upgrade-make-file-arg downloaded-filename
+                                                 (cdr ecb-wget-setup))
                       package-url))
                 t
               nil))
@@ -1900,9 +2000,8 @@ for details about using \"wget\"."
       version-list)))
 
 
+
+
 (silentcomp-provide 'ecb-upgrade)
-
-
-
 
 ;;; ecb-upgrade.el ends here
