@@ -26,7 +26,7 @@
 ;; This file is part of the ECB package which can be found at:
 ;; http://home.swipnet.se/mayhem/ecb.html
 
-;; $Id: tree-buffer.el,v 1.54 2001/06/08 19:38:54 berndl Exp $
+;; $Id: tree-buffer.el,v 1.55 2001/06/12 15:37:12 berndl Exp $
 
 ;;; Code:
 
@@ -803,7 +803,8 @@ AFTER-CREATE-HOOK: A function \(with no arguments) called directly after
          (unless (not (equal (selected-frame) tree-buffer-frame))
            (let ((node (tree-buffer-get-node-at-point)))
              (when (tree-node-is-expandable node)
-               (when (not (tree-node-is-expanded node))
+               (when (and tree-node-expanded-fn
+                          (not (tree-node-is-expanded node)))
                  (funcall tree-node-expanded-fn node 0 nil nil (buffer-name)))
                (when (tree-node-is-expandable node)
                  (tree-node-toggle-expanded node))
