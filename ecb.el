@@ -52,10 +52,12 @@
 ;; The latest version of the ECB is available at
 ;; http://home.swipnet.se/mayhem/ecb.html
 
-;; $Id: ecb.el,v 1.99 2001/05/28 22:00:11 berndl Exp $
+;; $Id: ecb.el,v 1.100 2001/05/29 15:11:19 berndl Exp $
 
 ;;; Code:
 
+;; TODO: After semantic 1.4 is stable (means no beta stadium) we throw away
+;; the compatibility with semantic 1.3.X!
 (if (and (boundp 'semantic-version)
          (string-match "^1\\.4" semantic-version))
     (progn
@@ -65,11 +67,15 @@
       (eval-when-compile
         (require 'semantic-util)))
   ;; semantic 1.3.X
+  (defconst semantic-version "1.3.X")
   (require 'semantic)
   (require 'semantic-el)
   (require 'semantic-c)
   (require 'semantic-make)
-)
+  (defun semantic-active-p ()
+    (or semantic-toplevel-bovine-table
+        semantic-toplevel-bovinate-override))
+  )
 
 (require 'tree-buffer)
 (require 'ecb-layout)
@@ -955,10 +961,9 @@ function is added to the hook `semantic-after-toplevel-bovinate-hook'."
              ;; clearing the cache to set the cache to nil if a buffer is
              ;; parsed which has no tokens like plain text-buffers. Here we do
              ;; not want rebuilding the method-buffer if the cache is nil but
-             ;; the current buffer is the same buffer which was current before
-             ;; the command which has triggered the cache clearing.
+             ;; the current buffer is set up for semantic-parsing.
              (or semantic-toplevel-bovine-cache
-                 (not (equal (current-buffer) ecb-last-source-buffer))))
+                 (not (semantic-active-p))))
     ;; This is a fix for semantic 1.4beta2
     ;; otherwise it parses the mini-buffer
     (unless (string-match "^ *\\*" (buffer-name))
@@ -967,11 +972,7 @@ function is added to the hook `semantic-after-toplevel-bovinate-hook'."
 		      ;; this works because at call-time of the hooks in
 		      ;; `semantic-after-toplevel-bovinate-hook' the cache is
 		      ;; always either still valid or rebuild.
-		      ;; TODO: Ugly fix to make it work with semantic 1.4
-		      (if (listp (caar semantic-toplevel-bovine-cache))
-			  (car semantic-toplevel-bovine-cache)
-			semantic-toplevel-bovine-cache)
-		      t)
+                      semantic-toplevel-bovine-cache t)
       ;; also the whole buffer informations should be preserved!
       (save-excursion
 	(ecb-buffer-select ecb-methods-buffer-name)
