@@ -18,7 +18,8 @@ No special notes beyond the contents of README.
 Upgrading from versions >= 1.90:
 --------------------------------
 
-No special notes beyond the contents of README.
+The type of the option `ecb-truncate-lines' has changed.
+ECB autom. upgrades the old value of this option to its new type!
 
 
 Upgrading from version 1.80:
