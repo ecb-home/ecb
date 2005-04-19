@@ -1,8 +1,4 @@
-* Changes for ECB version 2.32beta2
-
-** Support for (X)Emacs < 21 has been officialy removed.
-   ECB requires now (X)Emacs >= 21. ECB stops activation with an appropriate
-   error-message when (X)Emacs < 21 is detected.
+* Changes for ECB version 2.32beta3
 
 ** New native ECB-display interactor for the semantic-analyzer
    There is a new tree-buffer ECB-analyse which displays the tags and
@@ -11,8 +7,7 @@
    course it can be added to own build layouts (either via the command
    `ecb-create-new-layout' or via a elisp-rogrammed new layout).
    
-   TODO: + adding new section in the texi-manual
-	 + fixes all docstring of ecb-analyse.el
+   TODO: + adding new section in the info-manual
 
 ** New smart-arrow-navigation in a tree-buffer with up- and down-arrow
    Point jumps to the first character of the previous (up) rsp. next node
@@ -24,6 +19,47 @@
    Left- and right-arrow were already smart - see the existing option
    `ecb-tree-navigation-by-arrow'.
 	 
+** Better handling of maximized ecb-windows
+
+*** Smarter handling of node-selections in maximized tree-windows
+
+    Now the default behavior of ECB is:
+
+    Maximized directories-window: When selecting a directory then first
+    automatically the maximized directories-window will be "minimized" (i.e.
+    all ecb-windows of current layout are displayed) if the current layout
+    contains a sources-buffer and no sources are shown in the
+    directories-window. So the source-files can be displayed in the
+    sources-window.
+    
+    Maximized sources- or history-window: When selecting a source-file in one of
+    these buffers then first automatically the maximized window will be
+    "minimized" (i.e. all ecb-windows of current layout are displayed) if the
+    current layout contains a methods-buffer. So the tag-contents of the
+    selected source-file can be displayed in the methods-window.
+
+    For a even smater behavior ECB introduces a new option
+    `ecb-maximize-next-after-maximized-select' which automatically maximizes
+    the next logical tree-window after a node selection. The definition of
+    "next logical is": Directories --> sources, sources/history --> methods.
+    See the docstring of this new option for more detailled informations.
+    
+    Thanks for suggestion to Michael Reiher.
+    
+*** Easier maximizing and "minimizing"
+    ECB supports the default modeline-mechanisms for deleting other windows.
+    GNU Emacs binds `mouse-2' in its modeline to `delete-other-window'. XEmacs
+    binds a popup-menu with some window commands to `button-3' in its
+    modeline.
+
+    ECB combines the best of both worlds by supporting both of these
+    mechanisms for both Xemacs and Emacs: ECB binds a toggle-command to
+    `mouse-2' in the modeline of each tree-buffer which maximizes the current
+    tree-window if all ECB-windows are visible and displays all ECB-windows if
+    current tree-window is maximized. In addition ECB binds a popup-menu to
+    `mouse-3' which offers exactly 2 commands: Maximizing current tree-window
+    and displaying all ECB-windows.
+   
 ** Renamed options or options with new type
    The following options have been renamed:
    ecb-truncate-lines --> ecb-tree-truncate-lines
@@ -51,6 +87,10 @@
    when ECB is installed in a directory which name contains spaces. If there
    are still problems in running this command please check the new options
    `ecb-wget-setup', `ecb-gzip-setup' and `ecb-tar-setup'.
+
+** Support for (X)Emacs < 21 has been officialy removed.
+   ECB requires now (X)Emacs >= 21. ECB stops activation with an appropriate
+   error-message when (X)Emacs < 21 is detected.
 
 ** Fixed Bugs
 
