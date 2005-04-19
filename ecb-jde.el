@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-jde.el,v 1.14 2005/03/30 12:50:54 berndl Exp $
+;; $Id: ecb-jde.el,v 1.15 2005/04/19 15:18:59 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -114,9 +114,11 @@ available."
                   ;; be extracted in an own function of JDE.
                   
                   ;; we have found the java-sourcefile. So let´s display its
-                  ;; contents in the method-buffer of ECB
-                  (ecb-exec-in-window ecb-methods-buffer-name
-                    (ecb-set-selected-source java-file-name nil t nil))))
+                  ;; contents in the method-buffer of ECB - we must select the
+                  ;; methods-window before because otherwise our automatically
+                  ;; buffer-sync would resync with current java-source-file.
+                  (if (ecb-window-select ecb-methods-buffer-name)
+                      (ecb-set-selected-source java-file-name nil t nil))))
             
             (ecb-error "Can not parse the thing at point!")))
       (message "You need JDE >= 2.2.6 and Senator for using this feature!"))))
