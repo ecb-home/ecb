@@ -161,7 +161,7 @@ I.e. delete all other ECB-windows, so only one ECB-window and the
 edit-window\(s) are visible \(and maybe a compile-window). Works
 also if the ECB-analyse-window is not visible in current layout."
   (interactive)
-  (ecb-display-one-ecb-buffer ecb-examples-bufferinfo-buffer-name))
+  (ecb-maximize-ecb-buffer ecb-examples-bufferinfo-buffer-name t))
 
 (defun ecb-goto-bufferinfo-window ()
   "Make the bufferinfo-window the current window."
@@ -267,7 +267,7 @@ I.e. delete all other ECB-windows, so only one ECB-window and the
 edit-window\(s) are visible \(and maybe a compile-window). Works
 also if the ECB-analyse-window is not visible in current layout."
   (interactive)
-  (ecb-display-one-ecb-buffer ecb-examples-action-buffer-name))
+  (ecb-maximize-ecb-buffer ecb-examples-action-buffer-name t))
 
 (defun ecb-goto-action-window ()
   "Make the action-window the current window."
