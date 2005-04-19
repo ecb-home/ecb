@@ -248,6 +248,14 @@ prepended by the window-number, see `ecb-mode-line-display-window-number'."
                                               (buffer-name buffer)
                                               ecb-path-selected-directory
                                               ecb-path-selected-source)))))
+               ;; Display a default help-echo but only if the modeline-data is
+               ;; not computed by a user-function.
+               (when (and (not (functionp data-elem))
+                          (stringp data-str))
+                 (put-text-property 0 (length data-str) 'help-echo
+                                    "Mouse-2 toggles maximizing, mouse-3 displays a popup-menu"
+                                    data-str))
+               ;; Now set the modeline
                (ecb-mode-line-set (buffer-name buffer)
                                   ecb-frame
                                   prefix-str
