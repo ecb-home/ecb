@@ -24,7 +24,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: tree-buffer.el,v 1.166 2005/03/30 12:29:59 berndl Exp $
+;; $Id: tree-buffer.el,v 1.167 2005/04/19 15:27:43 berndl Exp $
 
 ;;; Commentary:
 
@@ -61,6 +61,7 @@
 (silentcomp-defun make-glyph)
 (silentcomp-defun popup-menu-and-execute-in-window)
 (silentcomp-defun valid-image-instantiator-format-p)
+(silentcomp-defvar modeline-map)
 ;; Emacs
 (silentcomp-defvar message-log-max)
 (silentcomp-defvar message-truncate-lines)
@@ -341,7 +342,9 @@ A tree-node can have the following slots:
   displayed name can be different from the NAME according to the value of
   SHRINK-NAME.
 
-TODO: Add here a full description about the usage of tree-node."
+TODO: Add here a full description about the usage of tree-node or - even
+better - add a hyper-link to the related info-node like follows:
+See Info node `Font Lock' and Info node `(elisp)Font Lock Basics'.."
   (let ((n (-tree-node-new :name name
                            :type type
                            :data data
@@ -620,6 +623,11 @@ The value is buffer-local in current tree-buffer.")
 (defvar tree-buffer-spec nil
   "A Buffer local object of type tree-buffer-spec.")
 
+(defvar tree-buffer-hscroll-number 0
+  "Current value of horizontal tree-buffer-scrolling'.
+The value is buffer-local in current tree-buffer.")
+
+
 ;; tree-buffer specification
 
 (defstruct (tree-buffer-spec
@@ -629,6 +637,7 @@ The value is buffer-local in current tree-buffer.")
   (tree-indent nil :read-only t)
   (menu-creator nil :read-only t)
   (menu-titles nil :read-only t)
+  (modeline-menu-creator :read-only t)
   (type-facer nil :read-only t)
   (expand-symbol-before-p nil :read-only t)
   (mouse-action-trigger nil :read-only t)
@@ -652,36 +661,46 @@ The value is buffer-local in current tree-buffer.")
   (style nil :read-only t)
   (ascii-guide-face nil :read-only t))
 
-(defun tree-buffer-spec-new (tree-indent
-                             menu-creator
-                             menu-titles
-                             type-facer
-                             expand-symbol-before-p
-                             mouse-action-trigger
-                             is-click-valid-fn
-                             node-selected-fn
-                             node-expanded-fn
-                             node-collapsed-fn
-                             node-mouse-over-fn
-                             mouse-highlight-fn
-                             node-data-equal-fn
-                             after-update-hook
-                             maybe-empty-node-types
-                             leaf-node-types
-                             general-face
-                             incr-search-additional-pattern
-                             incr-search-p
-                             hor-scroll-step
-                             default-images-dir
-                             additional-images-dir
-                             image-file-prefix
-                             style
-                             ascii-guide-face)
+(defun* tree-buffer-spec-new (&key
+                              tree-indent
+                              menu-creator
+                              menu-titles
+                              modeline-menu-creator
+                              type-facer
+                              expand-symbol-before-p
+                              mouse-action-trigger
+                              is-click-valid-fn
+                              node-selected-fn
+                              node-expanded-fn
+                              node-collapsed-fn
+                              node-mouse-over-fn
+                              mouse-highlight-fn
+                              node-data-equal-fn
+                              after-update-hook
+                              maybe-empty-node-types
+                              leaf-node-types
+                              general-face
+                              incr-search-additional-pattern
+                              incr-search-p
+                              hor-scroll-step
+                              default-images-dir
+                              additional-images-dir
+                              image-file-prefix
+                              style
+                              ascii-guide-face)
   "Creates and returns a new specification object for current tree-buffer.
+
+The arguments are key-arguments of the form :arg-name arg-value, so for
+example a call looks like \(tree-buffer-spec-new :menu-creator 'creator...)
+The key-arguments can be arranged in any arbitrary order but all of them are
+not-optional! The key-arg-name is always a : followed by the lowercase version
+of the mentioned argument \(e.g. MENU-CREATOR --> :menu-creator)
+
 See `tree-buffer-create' for a description of the arguments."
   (let ((my-style (tree-buffer-real-style style)))
     (-tree-buffer-spec-new :menu-creator menu-creator
                            :menu-titles menu-titles
+                           :modeline-menu-creator modeline-menu-creator
                            :type-facer type-facer
                            :mouse-action-trigger mouse-action-trigger
                            :is-click-valid-fn is-click-valid-fn
@@ -722,7 +741,13 @@ See `tree-buffer-create' for a description of the arguments."
                                       tree-buffer-indent-w/o-images-after-min
                                     tree-indent)))
                            :ascii-guide-face ascii-guide-face)))
-  
+
+;; incremental search in a tree-buffer 
+
+(defconst tree-buffer-incr-searchpattern-expand-prefix
+  "\\(\\[[^][]+\\] ?\\)?\\[?"
+  "The prefix ignores all expand/collapse-buttons: \[+], \[x], rsp. \[-]")
+
 (defvar tree-buffer-incr-searchpattern nil
   "Current search pattern when a inremental search is active.
 The value is buffer-local in current tree-buffer.")
@@ -846,8 +871,7 @@ STYLE of `tree-buffer-spec'. Allowed values of STYLE are nil, 'image,
 according to the value of the slot EXPAND-SYMBOL-BEFORE-P of
 `tree-buffer-spec'. It always returns a copy of the registered string in
 `tree-buffer-tree-image-names'!"
-  (let ((sym (if (tree-buffer-spec->expand-symbol-before-p
-                  tree-buffer-spec)
+  (let ((sym (if (tree-buffer-spec->expand-symbol-before-p tree-buffer-spec)
                  'before
                'after)))
     ;; Klaus Berndl <klaus.berndl@sdm.de>: If there are performance issues
@@ -868,9 +892,10 @@ according to the value of the slot EXPAND-SYMBOL-BEFORE-P of
 (defun tree-buffer-add-image-icon-maybe (start len str image-icon)
   "Add IMAGE-ICON to STR between START \(incl.) and START+LEN \(excl.). If
 IMAGE-ICON is not nil \(which must be an image-object in the sense of
-\(X)Emacs) then add this image to STR otherwise do nothing. Always return STR.
-If IMAGE-ICON is nil or `tree-buffer-real-style' returns not 'image then START
-and LEN are ignored!"
+\(X)Emacs) then add this image to STR otherwise do nothing. Normally
+IMAGE-ICON should be either nil or an image-object returned by
+`tree-buffer-find-image'. Always return STR. If IMAGE-ICON is nil or
+`tree-buffer-real-style' returns not 'image then START and LEN are ignored!"
   (when (equal 'image (tree-buffer-real-style))
     ;; Regular images (created with `insert-image' are intangible
     ;; which (I suppose) make them more compatible with XEmacs 21.
@@ -1181,9 +1206,6 @@ The result for NODE here is 10"
         (setq result (+ result (tree-buffer-count-subnodes-to-display child)))))
     result))
 
-(defvar tree-buffer-hscroll-number 0)
-
-
 (defun tree-buffer-recenter (node window)
   "If NODE is not visible then first recenter the window WINDOW so NODE is
 best visible, means NODE is displayed in the middle of the window if possible.
@@ -1283,6 +1305,7 @@ displayed without empty-lines at the end, means WINDOW is always best filled."
     ))
 
 (defun tree-buffer-remove-highlight ()
+  "Unhighlight the currently highlighted tree-node."
   (when tree-buffer-highlighted-node-data
     (tree-buffer-overlay-delete tree-buffer-highlight-overlay))
   (setq tree-buffer-highlighted-node-data nil))
@@ -1859,11 +1882,6 @@ ROOT must be a tree-node object."
   "Return the root-node of current tree-buffer."
   tree-buffer-root)
 
-
-(defconst tree-buffer-incr-searchpattern-expand-prefix
-  "\\(\\[[^][]+\\] ?\\)?\\[?"
-  "The prefix ignores all expand/collapse-buttons: \[+], \[x], rsp. \[-]")
-
 (defun tree-buffer-gen-searchpattern-indent-prefix (&optional count)
   (let ((guide-strings (tree-buffer-gen-guide-strings)))
     (concat "^\\("
@@ -1990,6 +2008,9 @@ mentioned above!"
       (setq tree-buffer-last-incr-searchpattern tree-buffer-incr-searchpattern))))
 
 (defun tree-buffer-create-menu-emacs (menu-def menu-name)
+  "Create an Emacs-menu for MENU-DEF with name MENU-NAME.
+MENU-DEF must have the same format as the first argument of
+`tree-buffer-create-menu'."
   (let ((map (make-sparse-keymap menu-name))
         (counter 0)
         (menu-items (reverse menu-def)))
@@ -2013,7 +2034,12 @@ mentioned above!"
     map))
 
 
-(defun tree-buffer-create-menu-xemacs (menu-def)
+(defun tree-buffer-create-menu-xemacs (menu-def &optional node-commands-p)
+  "Create a XEmacs-menu for MENU-DEF.
+If optional arg NODE-COMMANDS-P is not nil then the menu-commands will be
+called with the current node at point. Otherwise the menu-commands will be
+called with no argument. MENU-DEF must have the same format as the first
+argument of `tree-buffer-create-menu'."
   (when menu-def
     (let ((item (car menu-def)))
       (cons (cond ((string= (car item) "---")
@@ -2021,16 +2047,19 @@ mentioned above!"
 		  ((stringp (cadr item)) ;; menu-entry
                    (let ((v (make-vector 3 t)))
                      (aset v 0 (cadr item))
-                     (aset v 1 (list (car item)
-                                     '(tree-buffer-get-node-at-point)))
+                     (aset v 1 (delq nil
+                                     (list (car item)
+                                           (and node-commands-p
+                                                '(tree-buffer-get-node-at-point)))))
                      (aset v 2 t)
                      v))
 		  (t ;; submenu
                    `(,(car item)
-                     ,@(tree-buffer-create-menu-xemacs (cdr item)))))
-	    (tree-buffer-create-menu-xemacs (cdr menu-def))))))
+                     ,@(tree-buffer-create-menu-xemacs (cdr item)
+                                                       node-commands-p))))
+	    (tree-buffer-create-menu-xemacs (cdr menu-def) node-commands-p)))))
 
-(defun tree-buffer-create-menu (menu-items)
+(defun tree-buffer-create-menu (menu-items &optional node-commands-p)
   "Creates a popup menu from the list MENU-ITEMS.
 MENU-ITEMS is a list of elements of the following type: Each element defines a
 new menu-entry and is either:
@@ -2045,11 +2074,15 @@ c) Submenu: A list where the first element is the title of the submenu
    \(see a) or separators \(see b) or another submenu \(see c). This allows
    deep nested menu-submenu-structures!
 
-The function of a menu-command must follow the following guidelines: Such a
-function must be defined with the macro `tree-buffer-defpopup-command'! This
-macro defines a new popup-command whereas the newly defined command gets one
-argument NODE. See the docstring of `tree-buffer-defpopup-command' for further
-details.
+If optional arg NODE-COMMANDS-P is not nil then the function of a
+menu-commands will be called with a tree-node argument. Otherwise the
+menu-commands will be called with no argument.
+
+If NODE-COMMANDS-P is not nil then the function of a menu-command must follow
+the following guidelines: Such a function must be defined with the macro
+`tree-buffer-defpopup-command'! This macro defines a new popup-command whereas
+the newly defined command gets one argument NODE. See the docstring of
+`tree-buffer-defpopup-command' for further details.
 
 Example for the definition of such a popupmenu-command:
 
@@ -2059,26 +2092,28 @@ Example for the definition of such a popupmenu-command:
      \(message \"Dir under node: %s\" node-data=dir)))"
   (when menu-items
     (if tree-buffer-running-xemacs
-        (tree-buffer-create-menu-xemacs menu-items)
+        (tree-buffer-create-menu-xemacs menu-items node-commands-p)
       (tree-buffer-create-menu-emacs menu-items "dummy-name"))))
 
 
-(defun tree-buffer-create-menus (menus)
+(defun tree-buffer-create-menus (menus &optional node-commands-p)
   "Creates a popup menus from an assoc list with menus.
 MENUS is an assoc list containing cons-cells of the form:
 The car is a node-type \(see slot TYPE of a tree-node) and the cdr is a menu
 in the sense of `tree-buffer-create-menu', i.e. the cdr is a list of
-menu-items expected as argument by `tree-buffer-create-menu'."
+menu-items expected as argument by `tree-buffer-create-menu'.
+
+For a description of NODE-COMMAND-P see `tree-buffer-create-menu'."
   (when menus
     (cons (cons (caar menus)
-		(tree-buffer-create-menu (cdar menus)))
-	  (tree-buffer-create-menus (cdr menus)))))
+		(tree-buffer-create-menu (cdar menus) node-commands-p))
+	  (tree-buffer-create-menus (cdr menus) node-commands-p))))
 
 ;; Klaus Berndl <klaus.berndl@sdm.de>: Seems that the docstring of
 ;; x-popup-menu is wrong because it seems this function needs offsets related
 ;; to current window not to frame!
 ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: For XEmacs this does not work!
-(defun tree-buffer-show-menu-keyboard (&optional use-tmm)
+(defun tree-buffer-show-node-menu-keyboard (&optional use-tmm)
   "Activate the popup-menu of current tree-buffer via keyboard."
   (interactive "P")
   (if use-tmm
@@ -2095,51 +2130,75 @@ menu-items expected as argument by `tree-buffer-create-menu'."
                                                 (buffer-name) node))))))
                 (tmm-prompt menu))))))
     (if tree-buffer-running-xemacs
-        (tree-buffer-show-menu (get-buffer-window (current-buffer)
-                                                  tree-buffer-frame))
+        (tree-buffer-show-node-menu (get-buffer-window (current-buffer)
+                                                       tree-buffer-frame))
       (let ((curr-frame-ypos (* (/ (frame-pixel-height) (frame-height))
                                 (count-lines (window-start) (point))))
             (curr-frame-xpos (* (/ (frame-pixel-width) (frame-width))
                                 (current-column))))
-        (tree-buffer-show-menu (list (list curr-frame-xpos curr-frame-ypos)
-                                     (selected-window)))))))
+        (tree-buffer-show-node-menu (list (list curr-frame-xpos curr-frame-ypos)
+                                          (selected-window)))))))
 
+(defun tree-buffer-popup-menu (event menu menu-title &optional node)
+  "Popup a a context menu.
+EVENT is the event which has triggered the menu-popup. Note that EVENT is
+different for XEmacs and Emacs. For the former one it is an event as needed by
+`popup-menu' and for the latter one as needed by `x-popup-menu'. MENU-TITLE is
+the string which should be displayed as menu-title. If optional arg NODE is a
+tree-node then the selected menu-command will be called with that node as
+argument. If NODE is nil then the selected menu-command will be called with no
+argument otherwise with NODE as the only argument."
+  (if tree-buffer-running-xemacs
+      (if (windowp event)
+          (popup-menu-and-execute-in-window (cons menu-title menu)
+                                            event)
+        (popup-menu (cons menu-title menu)))
+    ;; we must set the title for the menu-keymap
+    (setcar (member (nth (1- (length menu)) menu) menu)
+            menu-title)
+    (let* ((menu-selection (apply 'vector
+                                  (x-popup-menu event menu)))
+           (fn (if (and menu-selection
+                        (> (length menu-selection) 0))
+                   (lookup-key menu menu-selection))))
+      (when (functionp fn)
+        (if node
+            (funcall fn node)
+          (funcall fn))))))
 
-
-(defun tree-buffer-show-menu (&optional event)
+(defun tree-buffer-show-node-menu (event)
+  "Display a popup-menu for the node at point.
+For an description of EVENT see `tree-buffer-popup-menu'."
   (unless (not (equal (selected-frame) tree-buffer-frame))
-    (when (tree-buffer-spec->menu-creator tree-buffer-spec)
-      (let ((node (tree-buffer-get-node-at-point)))
-	(when node
-	  (let* ((menu (cdr (assoc (tree-node->type node)
-                                   (tree-buffer-create-menus
-                                    (funcall (tree-buffer-spec->menu-creator
-                                              tree-buffer-spec)
-                                             (buffer-name) node)))))
-                 (menu-title-creator
-                  (cdr (assoc (tree-node->type node)
-                              (tree-buffer-spec->menu-titles tree-buffer-spec))))
-                 (menu-title (typecase menu-title-creator
-                               (string menu-title-creator)
-                               (function (funcall menu-title-creator node))
-                               (otherwise "Tree-buffer-menu"))))
-            (when menu
-	      (if tree-buffer-running-xemacs
-                  (if (windowp event)
-                      (popup-menu-and-execute-in-window (cons menu-title menu)
-                                                        event)
-                    (popup-menu (cons menu-title menu)))
-                ;; we must set the title for the menu-keymap
-                (setcar (member (nth (1- (length menu)) menu) menu)
-                        menu-title)
-		(let* ((menu-selection (apply 'vector
-                                              (x-popup-menu event menu)))
-                       (fn (if (and menu-selection
-                                    (> (length menu-selection) 0))
-                               (lookup-key menu menu-selection))))
-                  (when (functionp fn)
-		    (funcall fn node)))))))))))
+    (let ((node (tree-buffer-get-node-at-point))
+          (menu-creator (tree-buffer-spec->menu-creator tree-buffer-spec)))
+      (when (and node (functionp menu-creator))
+        (let* ((menu (cdr (assoc (tree-node->type node)
+                                 (tree-buffer-create-menus
+                                  (funcall (tree-buffer-spec->menu-creator
+                                            tree-buffer-spec)
+                                           (buffer-name) node)
+                                  t))))
+               (menu-title-creator
+                (cdr (assoc (tree-node->type node)
+                            (tree-buffer-spec->menu-titles tree-buffer-spec))))
+               (menu-title (typecase menu-title-creator
+                             (string menu-title-creator)
+                             (function (funcall menu-title-creator node))
+                             (otherwise "Tree-buffer-nodemenu"))))
+          (when menu
+            (tree-buffer-popup-menu event menu menu-title node)))))))
 
+(defun tree-buffer-show-modeline-menu (event)
+  "Display a popup-menu for the modeline of current tree-buffer.
+For an description of EVENT see `tree-buffer-popup-menu'."
+  (unless (not (equal (selected-frame) tree-buffer-frame))
+    (let* ((menu-creator (tree-buffer-spec->modeline-menu-creator tree-buffer-spec))
+           (menu (and menu-creator (funcall menu-creator (buffer-name)))))
+      (when menu
+        (tree-buffer-popup-menu event
+                                (tree-buffer-create-menu menu)
+                                "Tree-buffer modeline-menu")))))
 
 (defmacro tree-buffer-defpopup-command (name docstring &rest body)
   "Define a new popup-command for a tree-buffer.
@@ -2325,38 +2384,40 @@ determines when the command is triggered, values can be 'button-press and
         (delete nil (list modifier-elem (intern mouse-button)))
       (make-vector 1 (intern (concat modifier-elem mouse-button))))))
 
-(defun tree-buffer-create (name
-                           frame
-                           mouse-action-trigger
-                           is-click-valid-fn
-                           node-selected-fn
-                           node-expanded-fn
-                           node-collapsed-fn
-                           node-mouse-over-fn
-                           mouse-highlight-fn
-                           node-data-equal-fn
-                           maybe-empty-node-types
-                           leaf-node-types
-                           menu-creator
-                           menu-titles
-                           trunc-lines
-                           read-only
-                           tree-indent
-                           incr-search-p
-                           incr-search-additional-pattern
-                           arrow-navigation
-                           hor-scroll-step
-                           default-image-dir
-                           additional-image-dir
-                           image-file-prefix
-                           tree-style
-                           ascii-guide-face
-                           type-facer
-                           expand-symbol-before-p
-                           highlight-node-face
-                           general-face
-                           after-create-hook
-                           after-update-hook)
+(defun* tree-buffer-create (name
+                            &key
+                            frame
+                            mouse-action-trigger
+                            is-click-valid-fn
+                            node-selected-fn
+                            node-expanded-fn
+                            node-collapsed-fn
+                            node-mouse-over-fn
+                            mouse-highlight-fn
+                            node-data-equal-fn
+                            maybe-empty-node-types
+                            leaf-node-types
+                            menu-creator
+                            menu-titles
+                            modeline-menu-creator
+                            trunc-lines
+                            read-only
+                            tree-indent
+                            incr-search-p
+                            incr-search-additional-pattern
+                            arrow-navigation
+                            hor-scroll-step
+                            default-images-dir
+                            additional-images-dir
+                            image-file-prefix
+                            tree-style
+                            ascii-guide-face
+                            type-facer
+                            expand-symbol-before-p
+                            highlight-node-face
+                            general-face
+                            after-create-hook
+                            after-update-hook)
   "Creates a new tree buffer and returns the newly created buffer.
 This function creates also a special data-storage for this tree-buffer which
 can be accessed via `tree-buffer-set-data-store' and `tree-buffer-get-data-store'.
@@ -2365,6 +2426,14 @@ Before using the accessor-functions above the tree-buffer has to be the
 current buffer!
 
 NAME: Buffername of the new tree-buffer.
+
+The rest of the arguments are key-arguments of the form :arg-name arg-value,
+so for example a call looks like \(tree-buffer-create <buffer-name> :frame
+<frame-object> ...). The following key-arguments can be arranged in any
+arbitrary order but all of them are not-optional! The key-arg-name is always a
+: followed by the lowercase version of the mentioned argument below \(e.g.
+FRAME --> :frame, MOUSE-ACTION-TRIGGER --> :mouse-action-trigger)
+
 FRAME: Frame in which the tree-buffer is displayed and valid. All key-bindings
        and interactive functions of the tree-buffer work only if called in
        FRAME otherwise nothing is done!
@@ -2467,18 +2536,27 @@ LEAF-NODE-TYPES: Nil or a list of node-types \(see above). Nodes
                    LEAF-NODE-TYPES will be displayed with the leaf-symbol.
                  * All other nodes will be displayed with no symbol just with
                    correct indentation.
-MENU-CREATOR: A function which has to return nil or a list of conses, each
-              cons for a known node-type of this tree-buffer \(the node-type
-              of a node is an integer). Example: \(\(0 . menu-for-type-0) \(1
-              . menu-for-type-1)). The cdr of a cons must be a menu in the
-              same format `tree-buffer-create-menu' expects as argument - see
-              the documentation of this function for details. This function
-              gets two argument: The name of the tree-buffer and the node for
-              which a popup-menu should be opened.
+MENU-CREATOR: Nil or function which has to return nil or a list of conses,
+              each cons for a known node-type of this tree-buffer \(the
+              node-type of a node is an integer). Example: \(\(0 .
+              menu-for-type-0) \(1 . menu-for-type-1)). The cdr of a cons must
+              be a menu in the same format `tree-buffer-create-menu' expects
+              as argument - see the documentation of this function for
+              details. This function gets two argument: The name of the
+              tree-buffer and the node for which a popup-menu should be
+              opened.
 MENU-TITLES: Nil or a list conses, each cons for a node-type. See
              MENU-CREATOR. The cdr of a cons must be either a string or a
              function which will be called with current node under point and
              must return a string which is displayed as the menu-title.
+MODELINE-MENU-CREATOR: Nil or a function which has to return nil or a menu in
+                       the same format `tree-buffer-create-menu' expects as
+                       argument - see the documentation of this function for
+                       details. This function gets one argument: The name of
+                       the tree-buffer. If the function returns a menu then
+                       this menu will be displayed when the user clicks with
+                       mouse-button 3 at the modeline of the tree-buffer. The
+                       menu-title will be \"Tree-buffer modeline-menu\".
 TRUNC-LINES: Should lines in this tree buffer be truncated \(not nil).
 READ-ONLY: Should the treebuffer be read-only \(not nil).
 TREE-INDENT: Spaces subnodes should be indented. Ignored if TREE-STYLE is
@@ -2500,14 +2578,14 @@ ARROW-NAVIGATION: If not nil then a smart navigation with arrow keys is offered.
 HOR-SCROLL-STEP: Number of columns a hor. scroll in the tree-buffer should scroll.
                  If not nil then M-mouse-1 and M-mouse-2 scroll left and right
                  and also M-<left-arrow> and M-<right-arrow>. Ignored with XEmacs.
-DEFAULT-IMAGE-DIR: Full path where the default images for the tree-buffer can
-                   be found. It should contain an image for every name of
-                   `tree-buffer-tree-image-names'.
-ADDITIONAL-IMAGE-DIR: Additional image-dir which should be searched first for images
-                      needed for current tree-buffer. If the image can not be
-                      found in this directory then DEFAULT-IMAGE-DIR is
-                      searched. If the image can't even found here the related
-                      ascii-symbol is used.
+DEFAULT-IMAGES-DIR: Full path where the default images for the tree-buffer can
+                    be found. It should contain an image for every name of
+                    `tree-buffer-tree-image-names'.
+ADDITIONAL-IMAGES-DIR: Additional image-dir which should be searched first for
+                       images needed for current tree-buffer. If the image can
+                       not be found in this directory then DEFAULT-IMAGES-DIR
+                       is searched. If the image can't even found here the
+                       related ascii-symbol is used.
 IMAGE-FILE-PREFIX: Common prefix for all image-files for this tree-buffer,
                    e.g. \"ecb-\".
 TREE-STYLE: There are three different styles available:
@@ -2610,31 +2688,33 @@ AFTER-UPDATE-HOOK: A function or a list of functions \(with no arguments)
     (tree-buffer-initialize-displayed-nodes)
     
     (make-local-variable 'tree-buffer-spec)
-    (setq tree-buffer-spec (tree-buffer-spec-new tree-indent
-                                                 menu-creator
-                                                 menu-titles
-                                                 type-facer
-                                                 expand-symbol-before-p
-                                                 mouse-action-trigger
-                                                 is-click-valid-fn
-                                                 node-selected-fn
-                                                 node-expanded-fn
-                                                 node-collapsed-fn
-                                                 node-mouse-over-fn
-                                                 mouse-highlight-fn
-                                                 node-data-equal-fn
-                                                 after-update-hook
-                                                 maybe-empty-node-types
-                                                 leaf-node-types
-                                                 general-face
-                                                 incr-search-additional-pattern
-                                                 incr-search-p
-                                                 hor-scroll-step
-                                                 default-image-dir
-                                                 additional-image-dir
-                                                 image-file-prefix
-                                                 tree-style
-                                                 ascii-guide-face))
+    (setq tree-buffer-spec
+          (tree-buffer-spec-new :tree-indent tree-indent
+                                :menu-creator menu-creator
+                                :menu-titles menu-titles
+                                :modeline-menu-creator modeline-menu-creator
+                                :type-facer type-facer
+                                :expand-symbol-before-p expand-symbol-before-p
+                                :mouse-action-trigger mouse-action-trigger
+                                :is-click-valid-fn is-click-valid-fn
+                                :node-selected-fn node-selected-fn
+                                :node-expanded-fn node-expanded-fn
+                                :node-collapsed-fn node-collapsed-fn
+                                :node-mouse-over-fn node-mouse-over-fn
+                                :mouse-highlight-fn mouse-highlight-fn
+                                :node-data-equal-fn node-data-equal-fn
+                                :after-update-hook after-update-hook
+                                :maybe-empty-node-types maybe-empty-node-types
+                                :leaf-node-types leaf-node-types
+                                :general-face general-face
+                                :incr-search-p incr-search-p
+                                :incr-search-additional-pattern incr-search-additional-pattern
+                                :hor-scroll-step hor-scroll-step
+                                :default-images-dir default-images-dir
+                                :additional-images-dir additional-images-dir
+                                :image-file-prefix image-file-prefix
+                                :style tree-style
+                                :ascii-guide-face ascii-guide-face))
 
     (make-local-variable 'tree-buffer-incr-searchpattern)
     (make-local-variable 'tree-buffer-last-incr-searchpattern)
@@ -2715,6 +2795,9 @@ AFTER-UPDATE-HOOK: A function or a list of functions \(with no arguments)
       (define-key tree-buffer-key-map (kbd "<right>") 'tree-buffer-arrow-pressed)
       (define-key tree-buffer-key-map (kbd "<left>") 'tree-buffer-arrow-pressed))
     
+    (define-key tree-buffer-key-map (kbd "M-m")
+      'tree-buffer-show-node-menu-keyboard)
+
     ;; mouse-1
     (define-key tree-buffer-key-map
       (tree-buffer-create-mouse-key 1 mouse-action-trigger nil)
@@ -2802,9 +2885,24 @@ AFTER-UPDATE-HOOK: A function or a list of functions \(with no arguments)
       (function (lambda(e)
 		  (interactive "e")
                   (tree-buffer-mouse-set-point e)
-                  (tree-buffer-show-menu e))))
-    (define-key tree-buffer-key-map (kbd "M-m")
-      'tree-buffer-show-menu-keyboard)
+                  (tree-buffer-show-node-menu e))))
+
+;;     (when modeline-menu-creator
+    (if tree-buffer-running-xemacs
+        (progn
+          (set (make-local-variable 'modeline-map)
+               (make-sparse-keymap 'modeline-map))
+          (define-key modeline-map '(button3)
+            (function (lambda (e)
+                        (interactive "e")
+                        (tree-buffer-mouse-set-point e)
+                        (tree-buffer-show-modeline-menu e)))))
+      (define-key tree-buffer-key-map [mode-line mouse-3]
+        (function (lambda (e)
+                    (interactive "e")
+                    (tree-buffer-mouse-set-point e)
+                    (tree-buffer-show-modeline-menu e)))))
+;;       )
     
     (define-key tree-buffer-key-map
       (tree-buffer-create-mouse-key 3 mouse-action-trigger-not nil) nop)
