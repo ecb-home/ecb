@@ -23,7 +23,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-file-browser.el,v 1.55 2005/03/30 12:50:54 berndl Exp $
+;; $Id: ecb-file-browser.el,v 1.56 2005/04/19 15:18:35 berndl Exp $
 
 ;;; Commentary:
 
@@ -1491,7 +1491,7 @@ ECB-directories-window is not visible in current layout."
   (interactive)
   (if (equal ecb-use-speedbar-instead-native-tree-buffer 'dir)
       (ecb-maximize-window-speedbar)
-    (ecb-display-one-ecb-buffer ecb-directories-buffer-name)))
+    (ecb-maximize-ecb-buffer ecb-directories-buffer-name t)))
 
 (defun ecb-maximize-window-sources ()
   "Maximize the ECB-sources-window.
@@ -1501,7 +1501,7 @@ ECB-sources-window is not visible in current layout."
   (interactive)
   (if (equal ecb-use-speedbar-instead-native-tree-buffer 'source)
       (ecb-maximize-window-speedbar)
-    (ecb-display-one-ecb-buffer ecb-sources-buffer-name)))
+    (ecb-maximize-ecb-buffer ecb-sources-buffer-name t)))
 
 (defun ecb-maximize-window-history ()
   "Maximize the ECB-history-window.
@@ -1509,7 +1509,7 @@ I.e. delete all other ECB-windows, so only one ECB-window and the
 edit-window\(s) are visible \(and maybe a compile-window). Works also if the
 ECB-history-window is not visible in current layout."
   (interactive)
-  (ecb-display-one-ecb-buffer ecb-history-buffer-name))
+  (ecb-maximize-ecb-buffer ecb-history-buffer-name t))
 
 (defecb-window-dedicator ecb-set-directories-buffer ecb-directories-buffer-name
   "Display the Directories-buffer in current window and make window dedicated."
@@ -3261,7 +3261,6 @@ is created."
                 (funcall ecb-directories-update-speedbar dir)))
        (ecb-speedbar-update-contents)))
 
-
 (defun ecb-directory-clicked (node ecb-button edit-window-nr shift-mode meta-mode)
   "Handle clicking onto NODE in the directories-buffer. ECB-BUTTON can be 1, 2
 or 3. If 3 then EDIT-WINDOW-NR contains the number of the edit-window the NODE
@@ -3292,6 +3291,21 @@ should be displayed. For 1 and 2 the value of EDIT-WINDOW-NR is ignored."
               ;; a powerclick should remove all vc-caches of contained files
               (ecb-vc-cache-remove-files-of-dir (tree-node->data node))
               )
+
+            ;; if we are in a maximized directories-window and if no sources
+            ;; are shown in the directories-buffer but a sources-buffer is
+            ;; contained in current layout then we have to redraw the full
+            ;; layout first so the contents of the clicked directory can be
+            ;; displayed in the sources-buffer.
+            (when (and (ecb-buffer-is-maximized-p ecb-directories-buffer-name)
+                       (not (ecb-show-sources-in-directories-buffer-p))
+                       (ecb-buffer-is-ecb-buffer-of-current-layout-p
+                        ecb-sources-buffer-name))
+              (if ecb-maximize-next-after-maximized-select
+                  (progn
+                    (ecb-maximize-ecb-buffer ecb-sources-buffer-name)
+                    (ecb-window-select ecb-sources-buffer-name))
+                (ecb-undo-maximize-ecb-buffer t)))
             
             (ecb-set-selected-directory (tree-node->data node) shift-mode)
             ;; if we have running an integrated speedbar we must update the
@@ -3305,6 +3319,23 @@ should be displayed. For 1 and 2 the value of EDIT-WINDOW-NR is ignored."
                                (ecb-combine-ecb-button/edit-win-nr ecb-button edit-window-nr)
 			       shift-mode meta-mode))))
 
+(defun ecb-source-file-clicked (node ecb-button edit-window-nr shift-mode meta-mode)
+  ;; if we are in a maximized sources-window and if a methods-buffer is
+  ;; contained in current layout then we have to redraw the full layout first
+  ;; so the contents of the clicked source-file can be displayed in the
+  ;; methods-buffer.
+
+  (when (and (ecb-buffer-is-maximized-p (buffer-name))
+             (ecb-buffer-is-ecb-buffer-of-current-layout-p
+              ecb-methods-buffer-name))
+    (if ecb-maximize-next-after-maximized-select
+        (progn
+          (ecb-maximize-ecb-buffer ecb-methods-buffer-name)
+          (ecb-window-select ecb-methods-buffer-name))
+      (ecb-undo-maximize-ecb-buffer t)))
+  (ecb-set-selected-source (tree-node->data node)
+                           (ecb-combine-ecb-button/edit-win-nr ecb-button edit-window-nr)
+			   shift-mode meta-mode))
 
 (defun ecb-source-clicked (node ecb-button edit-window-nr shift-mode meta-mode)
   "Handle clicking onto NODE in the sources-buffer. ECB-BUTTON can be 1, 2 or
@@ -3312,10 +3343,7 @@ should be displayed. For 1 and 2 the value of EDIT-WINDOW-NR is ignored."
 should be displayed. For 1 and 2 the value of EDIT-WINDOW-NR is ignored."
   (if shift-mode
       (ecb-mouse-over-source-node node nil nil 'force))
-  (ecb-set-selected-source (tree-node->data node)
-                           (ecb-combine-ecb-button/edit-win-nr ecb-button edit-window-nr)
-			   shift-mode meta-mode))
-
+  (ecb-source-file-clicked node ecb-button edit-window-nr shift-mode meta-mode))
 
 (defun ecb-history-clicked (node ecb-button edit-window-nr shift-mode meta-mode)
   "Handle clicking onto NODE in the history-buffer. ECB-BUTTON can be 1, 2 or
@@ -3323,9 +3351,7 @@ should be displayed. For 1 and 2 the value of EDIT-WINDOW-NR is ignored."
 should be displayed. For 1 and 2 the value of EDIT-WINDOW-NR is ignored."
   (if shift-mode
       (ecb-mouse-over-history-node node nil nil 'force))
-  (ecb-set-selected-source (tree-node->data node)
-                           (ecb-combine-ecb-button/edit-win-nr ecb-button edit-window-nr)
-                           shift-mode meta-mode))
+  (ecb-source-file-clicked node ecb-button edit-window-nr shift-mode meta-mode))
 
 (defun ecb-expand-directory-nodes (level)
   "Set the expand level of the nodes in the ECB-directories-buffer.
@@ -3884,161 +3910,153 @@ So you get a better overlooking. There are three choices:
   "Create the tree-buffer for directories"
   (tree-buffer-create
    ecb-directories-buffer-name
-   ecb-frame
-   ecb-tree-mouse-action-trigger
-   'ecb-interpret-mouse-click
-   'ecb-tree-buffer-node-select-callback
-   'ecb-tree-buffer-node-expand-callback
-   'ecb-tree-buffer-node-collapsed-callback
-   'ecb-mouse-over-directory-node
-   t ;; highlight each node when moving mouse over it
-   'equal
-   (list ecb-directories-nodetype-directory)
+   :frame ecb-frame
+   :mouse-action-trigger ecb-tree-mouse-action-trigger
+   :is-click-valid-fn 'ecb-interpret-mouse-click
+   :node-selected-fn 'ecb-tree-buffer-node-select-callback
+   :node-expanded-fn 'ecb-tree-buffer-node-expand-callback
+   :node-collapsed-fn 'ecb-tree-buffer-node-collapsed-callback
+   :node-mouse-over-fn 'ecb-mouse-over-directory-node
+   :mouse-highlight-fn t ;; highlight each node when moving mouse over it
+   :node-data-equal-fn 'equal
+   :maybe-empty-node-types (list ecb-directories-nodetype-directory)
    ;; Now no longer tree-buffer decides if a node is displayed as leave but
    ;; now the file-browser does it in the function `ecb-tree-node-add-files' -
    ;; Reason: We have now to deal with the VC-support
-   nil ;;(list ecb-directories-nodetype-sourcefile)
-   'ecb-directories-menu-creator
-   (list (cons ecb-directories-nodetype-directory
-               ecb-directories-menu-title-creator)
-         (cons ecb-directories-nodetype-sourcefile
-               ecb-directories-menu-title-creator)
-         (cons ecb-directories-nodetype-sourcepath
-               ecb-directories-menu-title-creator))
-   (ecb-member-of-symbol/value-list ecb-directories-buffer-name
-                                    ecb-tree-truncate-lines)
-   t
-   ecb-tree-indent
-   ecb-tree-incremental-search
-   ecb-vc-incr-searchpattern-node-prefix
-   ecb-tree-navigation-by-arrow
-   ecb-tree-easy-hor-scroll
-   (car ecb-tree-image-icons-directories)
-   (ecb-member-of-symbol/value-list ecb-directories-buffer-name
-                                    (cdr ecb-tree-image-icons-directories)
-                                    'car 'cdr)
-   "ecb-"
-   ecb-tree-buffer-style
-   ecb-tree-guide-line-face
-   (list (cons ecb-directories-nodetype-sourcefile
-               ecb-source-in-directories-buffer-face))
-   ecb-tree-expand-symbol-before
-   ecb-directory-face
-   ecb-directories-general-face
+   :leaf-node-types nil ;;(list ecb-directories-nodetype-sourcefile)
+   :menu-creator 'ecb-directories-menu-creator
+   :menu-titles (list (cons ecb-directories-nodetype-directory
+                            ecb-directories-menu-title-creator)
+                      (cons ecb-directories-nodetype-sourcefile
+                            ecb-directories-menu-title-creator)
+                      (cons ecb-directories-nodetype-sourcepath
+                            ecb-directories-menu-title-creator))
+   :modeline-menu-creator 'ecb-common-tree-buffer-modeline-menu-creator
+   :trunc-lines (ecb-member-of-symbol/value-list ecb-directories-buffer-name
+                                                 ecb-tree-truncate-lines)
+   :read-only t
+   :tree-indent ecb-tree-indent
+   :incr-search-p ecb-tree-incremental-search
+   :incr-search-additional-pattern ecb-vc-incr-searchpattern-node-prefix
+   :arrow-navigation ecb-tree-navigation-by-arrow
+   :hor-scroll-step ecb-tree-easy-hor-scroll
+   :default-images-dir (car ecb-tree-image-icons-directories)
+   :additional-images-dir (ecb-member-of-symbol/value-list ecb-directories-buffer-name
+                                                           (cdr ecb-tree-image-icons-directories)
+                                                           'car 'cdr)
+   :image-file-prefix "ecb-"
+   :tree-style ecb-tree-buffer-style
+   :ascii-guide-face ecb-tree-guide-line-face
+   :type-facer (list (cons ecb-directories-nodetype-sourcefile
+                           ecb-source-in-directories-buffer-face))
+   :expand-symbol-before-p ecb-tree-expand-symbol-before
+   :highlight-node-face ecb-directory-face
+   :general-face ecb-directories-general-face
    ;; we add an after-create-hook to the tree-buffer
-   (append
-    (list (function (lambda ()
-                      (local-set-key [f2] 'ecb-customize)
-                      (local-set-key [f3] 'ecb-show-help)
-                      (local-set-key [f4] 'ecb-add-source-path)
-                      (local-set-key (kbd "C-t")
-                                     'ecb-toggle-RET-selects-edit-window)
-                      (if (not ecb-running-xemacs)
-                          (local-set-key [mode-line mouse-2]
-                                         'ecb-toggle-maximize-ecb-window-with-mouse)))))
-    ecb-common-tree-buffer-after-create-hook
-    ecb-directories-buffer-after-create-hook)
-   'ecb-stealth-tasks-after-directories-update
+   :after-create-hook (append
+                       (list (function (lambda ()
+                                         (local-set-key [f2] 'ecb-customize)
+                                         (local-set-key [f3] 'ecb-show-help)
+                                         (local-set-key [f4] 'ecb-add-source-path)
+                                         (ecb-common-after-tree-buffer-create-actions))))
+                       ecb-common-tree-buffer-after-create-hook
+                       ecb-directories-buffer-after-create-hook)
+   :after-update-hook 'ecb-stealth-tasks-after-directories-update
    ))
 
 (defecb-tree-buffer-creator ecb-create-sources-tree-buffer ecb-sources-buffer-name
   "Create the tree-buffer for sources"
   (tree-buffer-create
    ecb-sources-buffer-name
-   ecb-frame
-   ecb-tree-mouse-action-trigger
-   'ecb-interpret-mouse-click
-   'ecb-tree-buffer-node-select-callback
-   'ecb-tree-buffer-node-expand-callback
-   'ecb-tree-buffer-node-collapsed-callback
-   'ecb-mouse-over-source-node
-   t ;; highlight each node when moving mouse over it
-   'equal
-   nil
+   :frame ecb-frame
+   :mouse-action-trigger ecb-tree-mouse-action-trigger
+   :is-click-valid-fn 'ecb-interpret-mouse-click
+   :node-selected-fn 'ecb-tree-buffer-node-select-callback
+   :node-expanded-fn 'ecb-tree-buffer-node-expand-callback
+   :node-collapsed-fn 'ecb-tree-buffer-node-collapsed-callback
+   :node-mouse-over-fn 'ecb-mouse-over-source-node
+   :mouse-highlight-fn t ;; highlight each node when moving mouse over it
+   :node-data-equal-fn 'equal
+   :maybe-empty-node-types nil
    ;; If we want to display the VC-state in the sources-icon then we should
    ;; set this argument to nil because then we must compute the needed icon in
    ;; the file-browser and not in the tree-buffer-library (analogue to the
    ;; methods-icons computet in the methods-browser).
-   nil ;; (list ecb-sources-nodetype-sourcefile)
-   'ecb-sources-menu-creator
-   (list (cons ecb-sources-nodetype-sourcefile ecb-sources-menu-title-creator))
-   (ecb-member-of-symbol/value-list ecb-sources-buffer-name
-                                    ecb-tree-truncate-lines)
-   t
-   ecb-tree-indent
-   ecb-tree-incremental-search
-   ecb-vc-incr-searchpattern-node-prefix
-   ecb-tree-navigation-by-arrow
-   ecb-tree-easy-hor-scroll
-   (car ecb-tree-image-icons-directories)
-   (ecb-member-of-symbol/value-list ecb-sources-buffer-name
-                                    (cdr ecb-tree-image-icons-directories)
-                                    'car 'cdr)
-   "ecb-"
-   ecb-tree-buffer-style
-   ecb-tree-guide-line-face
-   nil
-   ecb-tree-expand-symbol-before
-   ecb-source-face
-   ecb-sources-general-face
-   (append
-    (list (function (lambda ()
-                      (local-set-key (kbd "C-t")
-                                     'ecb-toggle-RET-selects-edit-window)
-                      (if (not ecb-running-xemacs)
-                          (local-set-key [mode-line mouse-2]
-                                         'ecb-toggle-maximize-ecb-window-with-mouse)))))
-    ecb-common-tree-buffer-after-create-hook
-    ecb-sources-buffer-after-create-hook)
-   'ecb-stealth-tasks-after-sources-update))
+   :leaf-node-types nil ;; (list ecb-sources-nodetype-sourcefile)
+   :menu-creator 'ecb-sources-menu-creator
+   :menu-titles (list (cons ecb-sources-nodetype-sourcefile
+                            ecb-sources-menu-title-creator))
+   :modeline-menu-creator 'ecb-common-tree-buffer-modeline-menu-creator
+   :trunc-lines (ecb-member-of-symbol/value-list ecb-sources-buffer-name
+                                                 ecb-tree-truncate-lines)
+   :read-only t
+   :tree-indent ecb-tree-indent
+   :incr-search-p ecb-tree-incremental-search
+   :incr-search-additional-pattern ecb-vc-incr-searchpattern-node-prefix
+   :arrow-navigation ecb-tree-navigation-by-arrow
+   :hor-scroll-step ecb-tree-easy-hor-scroll
+   :default-images-dir (car ecb-tree-image-icons-directories)
+   :additional-images-dir (ecb-member-of-symbol/value-list ecb-sources-buffer-name
+                                                           (cdr ecb-tree-image-icons-directories)
+                                                           'car 'cdr)
+   :image-file-prefix "ecb-"
+   :tree-style ecb-tree-buffer-style
+   :ascii-guide-face ecb-tree-guide-line-face
+   :type-facer nil
+   :expand-symbol-before-p ecb-tree-expand-symbol-before
+   :highlight-node-face ecb-source-face
+   :general-face ecb-sources-general-face
+   :after-create-hook (append
+                       (list (function (lambda ()
+                                         (ecb-common-after-tree-buffer-create-actions))))
+                       ecb-common-tree-buffer-after-create-hook
+                       ecb-sources-buffer-after-create-hook)
+   :after-update-hook 'ecb-stealth-tasks-after-sources-update))
 
 (defecb-tree-buffer-creator ecb-create-history-tree-buffer ecb-history-buffer-name
   "Create the tree-buffer for history"
   (tree-buffer-create
    ecb-history-buffer-name
-   ecb-frame
-   ecb-tree-mouse-action-trigger
-   'ecb-interpret-mouse-click
-   'ecb-tree-buffer-node-select-callback
-   'ecb-tree-buffer-node-expand-callback
-   'ecb-tree-buffer-node-collapsed-callback
-   'ecb-mouse-over-history-node
-   t ;; highlight each node when moving mouse over it
-   'equal
-   nil
-   nil
-   'ecb-history-menu-creator
-   (list (cons ecb-history-nodetype-sourcefile
-               ecb-history-menu-title-creator))
-   (ecb-member-of-symbol/value-list ecb-history-buffer-name
-                                    ecb-tree-truncate-lines)
-   t
-   ecb-tree-indent
-   ecb-tree-incremental-search
-   ecb-vc-incr-searchpattern-node-prefix
-   ecb-tree-navigation-by-arrow
-   ecb-tree-easy-hor-scroll
-   (car ecb-tree-image-icons-directories)
-   (ecb-member-of-symbol/value-list ecb-history-buffer-name
-                                    (cdr ecb-tree-image-icons-directories)
-                                    'car 'cdr)
-   "ecb-"
-   ecb-tree-buffer-style
-   ecb-tree-guide-line-face
-   nil
-   ecb-tree-expand-symbol-before
-   ecb-history-face
-   ecb-history-general-face
-   (append
-    (list (function (lambda ()
-                      (local-set-key (kbd "C-t")
-                                     'ecb-toggle-RET-selects-edit-window)
-                      (if (not ecb-running-xemacs)
-                          (local-set-key [mode-line mouse-2]
-                                         'ecb-toggle-maximize-ecb-window-with-mouse)))))
-    ecb-common-tree-buffer-after-create-hook
-    ecb-history-buffer-after-create-hook)
-   'ecb-stealth-tasks-after-history-update))
+   :frame ecb-frame
+   :mouse-action-trigger ecb-tree-mouse-action-trigger
+   :is-click-valid-fn 'ecb-interpret-mouse-click
+   :node-selected-fn 'ecb-tree-buffer-node-select-callback
+   :node-expanded-fn 'ecb-tree-buffer-node-expand-callback
+   :node-collapsed-fn 'ecb-tree-buffer-node-collapsed-callback
+   :node-mouse-over-fn 'ecb-mouse-over-history-node
+   :mouse-highlight-fn t ;; highlight each node when moving mouse over it
+   :node-data-equal-fn 'equal
+   :maybe-empty-node-types nil
+   :leaf-node-types nil
+   :menu-creator 'ecb-history-menu-creator
+   :menu-titles (list (cons ecb-history-nodetype-sourcefile
+                            ecb-history-menu-title-creator))
+   :modeline-menu-creator 'ecb-common-tree-buffer-modeline-menu-creator
+   :trunc-lines (ecb-member-of-symbol/value-list ecb-history-buffer-name
+                                                 ecb-tree-truncate-lines)
+   :read-only t
+   :tree-indent ecb-tree-indent
+   :incr-search-p ecb-tree-incremental-search
+   :incr-search-additional-pattern ecb-vc-incr-searchpattern-node-prefix
+   :arrow-navigation ecb-tree-navigation-by-arrow
+   :hor-scroll-step ecb-tree-easy-hor-scroll
+   :default-images-dir (car ecb-tree-image-icons-directories)
+   :additional-images-dir (ecb-member-of-symbol/value-list ecb-history-buffer-name
+                                                           (cdr ecb-tree-image-icons-directories)
+                                                           'car 'cdr)
+   :image-file-prefix "ecb-"
+   :tree-style ecb-tree-buffer-style
+   :ascii-guide-face ecb-tree-guide-line-face
+   :type-facer nil
+   :expand-symbol-before-p ecb-tree-expand-symbol-before
+   :highlight-node-face ecb-history-face
+   :general-face ecb-history-general-face
+   :after-create-hook (append
+                       (list (function (lambda ()
+                                         (ecb-common-after-tree-buffer-create-actions))))
+                       ecb-common-tree-buffer-after-create-hook
+                       ecb-history-buffer-after-create-hook)
+   :after-update-hook 'ecb-stealth-tasks-after-history-update))
 
 
 (silentcomp-provide 'ecb-file-browser)
