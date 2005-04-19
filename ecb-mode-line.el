@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-mode-line.el,v 1.32 2005/03/30 12:50:35 berndl Exp $
+;; $Id: ecb-mode-line.el,v 1.33 2005/04/19 15:22:17 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -248,6 +248,14 @@ prepended by the window-number, see `ecb-mode-line-display-window-number'."
                                               (buffer-name buffer)
                                               ecb-path-selected-directory
                                               ecb-path-selected-source)))))
+               ;; Display a default help-echo but only if the modeline-data is
+               ;; not computed by a user-function.
+               (when (and (not (functionp data-elem))
+                          (stringp data-str))
+                 (put-text-property 0 (length data-str) 'help-echo
+                                    "Mouse-2 toggles maximizing, mouse-3 displays a popup-menu"
+                                    data-str))
+               ;; Now set the modeline
                (ecb-mode-line-set (buffer-name buffer)
                                   ecb-frame
                                   prefix-str
