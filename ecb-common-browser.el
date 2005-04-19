@@ -836,7 +836,7 @@ not nil then in both PATH and FILENAME env-var substitution is done. If the
     formatted-name))
 
 (defun ecb-toggle-do-not-leave-window-after-select ()
-  "Toggles if RET in a tree-buffer should finally select the edit-window.
+  "Toggles if a node-selection in a tree-buffer leaves the tree-window.
 See also the option `ecb-tree-do-not-leave-window-after-select'."
   (interactive)
   (let ((tree-buffer (ecb-point-in-ecb-tree-buffer)))
