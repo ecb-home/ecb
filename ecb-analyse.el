@@ -20,7 +20,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-analyse.el,v 1.9 2005/03/30 12:50:56 berndl Exp $
+;; $Id: ecb-analyse.el,v 1.10 2005/04/19 14:25:46 berndl Exp $
 
 
 ;;; Commentary:
@@ -435,7 +435,7 @@ I.e. delete all other ECB-windows, so only one ECB-window and the
 edit-window\(s) are visible \(and maybe a compile-window). Works also if the
 ECB-analyse-window is not visible in current layout."
   (interactive)
-  (ecb-display-one-ecb-buffer ecb-analyse-buffer-name))
+  (ecb-maximize-ecb-buffer ecb-analyse-buffer-name t))
 
 (defun ecb-goto-window-analyse ()
   "Make the ECB-analyse window the current window."
@@ -575,50 +575,47 @@ analyse-buffer."
   "Create the tree-buffer for analyse-display."
   (tree-buffer-create
    ecb-analyse-buffer-name
-   ecb-frame
-   ecb-tree-mouse-action-trigger
-   'ecb-interpret-mouse-click
+   :frame ecb-frame
+   :mouse-action-trigger ecb-tree-mouse-action-trigger
+   :is-click-valid-fn 'ecb-interpret-mouse-click
    ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: Maybe we should make own
    ;; callbacks for analyse...
-   'ecb-tree-buffer-node-select-callback
-   'ecb-tree-buffer-node-expand-callback
-   'ecb-tree-buffer-node-collapsed-callback
-   'ecb-mouse-over-analyse-node
-   'ecb-analyse-node-mouse-highlighted-p
-   'ecb-analyse-compare-node-data
-   nil
-   nil
-   'ecb-analyse-menu-creator
-   (ecb-analyse-gen-menu-title-creator)
-   (ecb-member-of-symbol/value-list ecb-analyse-buffer-name
-                                    ecb-tree-truncate-lines)
-   t
-   ecb-tree-indent
-   nil ;; ecb-tree-incremental-search
-   nil ;; ecb-methods-incr-searchpattern-node-prefix
-   ecb-tree-navigation-by-arrow
-   ecb-tree-easy-hor-scroll
-   (car ecb-tree-image-icons-directories)
-   (ecb-member-of-symbol/value-list ecb-analyse-buffer-name
-                                    (cdr ecb-tree-image-icons-directories)
-                                    'car 'cdr)
-   "ecb-"
-   ecb-tree-buffer-style
-   ecb-tree-guide-line-face
-   nil
-   ecb-tree-expand-symbol-before
-   ecb-analyse-face
-   ecb-analyse-general-face
-   (append
-    (list (function (lambda ()
-                      (local-set-key (kbd "C-t")
-                                     'ecb-toggle-RET-selects-edit-window)
-                      (if (not ecb-running-xemacs)
-                          (local-set-key [mode-line mouse-2]
-                                         'ecb-toggle-maximize-ecb-window-with-mouse)))))
-    ecb-common-tree-buffer-after-create-hook
-    ecb-analyse-buffer-after-create-hook)
-   nil))
+   :node-selected-fn 'ecb-tree-buffer-node-select-callback
+   :node-expanded-fn 'ecb-tree-buffer-node-expand-callback
+   :node-collapsed-fn 'ecb-tree-buffer-node-collapsed-callback
+   :node-mouse-over-fn 'ecb-mouse-over-analyse-node
+   :mouse-highlight-fn 'ecb-analyse-node-mouse-highlighted-p
+   :node-data-equal-fn 'ecb-analyse-compare-node-data
+   :maybe-empty-node-types nil
+   :leaf-node-types nil
+   :menu-creator 'ecb-analyse-menu-creator
+   :menu-titles (ecb-analyse-gen-menu-title-creator)
+   :modeline-menu-creator 'ecb-common-tree-buffer-modeline-menu-creator
+   :trunc-lines (ecb-member-of-symbol/value-list ecb-analyse-buffer-name
+                                                 ecb-tree-truncate-lines)
+   :read-only t
+   :tree-indent ecb-tree-indent
+   :incr-search-p nil ;; ecb-tree-incremental-search
+   :incr-search-additional-pattern nil ;; ecb-methods-incr-searchpattern-node-prefix
+   :arrow-navigation ecb-tree-navigation-by-arrow
+   :hor-scroll-step ecb-tree-easy-hor-scroll
+   :default-images-dir (car ecb-tree-image-icons-directories)
+   :additional-images-dir (ecb-member-of-symbol/value-list ecb-analyse-buffer-name
+                                                           (cdr ecb-tree-image-icons-directories)
+                                                           'car 'cdr)
+   :image-file-prefix "ecb-"
+   :tree-style ecb-tree-buffer-style
+   :ascii-guide-face ecb-tree-guide-line-face
+   :type-facer nil
+   :expand-symbol-before-p ecb-tree-expand-symbol-before
+   :highlight-node-face ecb-analyse-face
+   :general-face ecb-analyse-general-face
+   :after-create-hook (append
+                       (list (function (lambda ()
+                                         (ecb-common-after-tree-buffer-create-actions))))
+                       ecb-common-tree-buffer-after-create-hook
+                       ecb-analyse-buffer-after-create-hook)
+   :after-update-hook nil))
 
 (silentcomp-provide 'ecb-analyse)
 
