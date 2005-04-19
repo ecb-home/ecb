@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-examples.el,v 1.17 2005/03/30 12:50:55 berndl Exp $
+;; $Id: ecb-examples.el,v 1.18 2005/04/19 15:16:44 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -161,7 +161,7 @@ I.e. delete all other ECB-windows, so only one ECB-window and the
 edit-window\(s) are visible \(and maybe a compile-window). Works
 also if the ECB-analyse-window is not visible in current layout."
   (interactive)
-  (ecb-display-one-ecb-buffer ecb-examples-bufferinfo-buffer-name))
+  (ecb-maximize-ecb-buffer ecb-examples-bufferinfo-buffer-name t))
 
 (defun ecb-goto-bufferinfo-window ()
   "Make the bufferinfo-window the current window."
@@ -267,7 +267,7 @@ I.e. delete all other ECB-windows, so only one ECB-window and the
 edit-window\(s) are visible \(and maybe a compile-window). Works
 also if the ECB-analyse-window is not visible in current layout."
   (interactive)
-  (ecb-display-one-ecb-buffer ecb-examples-action-buffer-name))
+  (ecb-maximize-ecb-buffer ecb-examples-action-buffer-name t))
 
 (defun ecb-goto-action-window ()
   "Make the action-window the current window."
