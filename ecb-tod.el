@@ -78,7 +78,7 @@
     "Customize the look\&feel of the tree-buffers with `ecb-tree-expand-symbol-before' and `ecb-tree-indent'."
     "Customize the contents of the methods-buffer with `ecb-tag-display-function', `ecb-type-tag-display', `ecb-show-tags'."
     "Customize the main mouse-buttons of the tree-buffers with `ecb-primary-secondary-mouse-buttons'."
-    "Customize with `ecb-tree-RET-selects-edit-window' in which tree-buffer a RETURN selects the edit-window."
+    "Customize with `ecb-tree-do-not-leave-window-after-select' for which tree-buffers a selection doesn't leave the window."
     "Grep a directory \(recursive) by using the popup-menu \(the right mouse-button) in the directories buffer."
     "Customize the sorting of the sources with the option `ecb-sources-sort-method'."
     "Narrow the source-buffer to the selected tag in the methods-buffer with `ecb-tag-visit-post-actions'."
@@ -93,7 +93,7 @@
     "Use the POWER-click in the methods-buffer to narrow the clicked node in the edit-window."
     "Use the POWER-click in the sources- and history-buffer to get only an overlook of the source-contents."
     "Exclude not important sources from being displayed in the sources-buffer with `ecb-source-file-regexps'."
-    "Use left- and right-arrow for smart expanding/collapsing tree-buffer-nodes; see `ecb-tree-navigation-by-arrow'."
+    "Use left- and right-arrow for smart expanding/collapsing tree-buffer-nodes; see `ecb-tree-navigation-by-arrow'." ;;
     "Add personal key-bindings to the tree-buffers with `ecb-common-tree-buffer-after-create-hook'."
     "Add personal key-bindings to the directories-buffer with `ecb-directories-buffer-after-create-hook'."
     "Add personal key-bindings to the sources-buffer with `ecb-sources-buffer-after-create-hook'."

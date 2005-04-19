@@ -366,7 +366,7 @@ I.e. delete all other ECB-windows, so only one ECB-window and the
 edit-window\(s) are visible \(and maybe a compile-window). Does nothing if the
 speedbar-window is not visible within the ECB-frame."
   (interactive)
-  (ecb-display-one-ecb-buffer ecb-speedbar-buffer-name))
+  (ecb-maximize-ecb-buffer ecb-speedbar-buffer-name t))
 
 
 ;; Handling of files which can not be parsed by semantic (i.e. there is no
