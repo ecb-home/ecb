@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-upgrade.el,v 1.102 2005/03/30 12:50:35 berndl Exp $
+;; $Id: ecb-upgrade.el,v 1.103 2005/04/19 15:23:48 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -159,7 +159,7 @@
 
 ;; IMPORTANT: The version-number is auto-frobbed from the Makefile. Do not
 ;; change it here!
-(defconst ecb-version "2.32beta2"
+(defconst ecb-version "2.32beta3"
   "Current ECB version.")
 
 (eval-when-compile
@@ -298,6 +298,8 @@
                               ecb-upgrade-vc-enable-support))
     (ecb-tree-image-icons-directories . (ecb-tree-image-icons-directories
                                          ecb-upgrade-tree-image-icons-directories))
+    (ecb-tree-RET-selects-edit-window . (ecb-tree-do-not-leave-window-after-select
+                                         ecb-upgrade-tree-RET-selects-edit-window))
     )
   "Alist of all options which should be upgraded for current ECB-version.
 There are several reasons why an option should be contained in this alist:
@@ -627,6 +629,19 @@ The car is the old option symbol and the cdr is a 2-element-list with:
                           (if (nth 4 l)
                               (cons 'ecb-history-buffer-name
                                     (nth 4 l))))))))
+
+(defun ecb-upgrade-tree-RET-selects-edit-window (old-val)
+  (delq nil (mapcar (lambda (b)
+                      (and (not (ecb-member-of-symbol/value-list
+                                 (symbol-value b)
+                                 old-val))
+                           b))
+                    '(ecb-directories-buffer-name
+                      ecb-sources-buffer-name
+                      ecb-methods-buffer-name
+                      ecb-history-buffer-name
+                      ecb-analyse-buffer-name))))
+    
 
 ;; ----------------------------------------------------------------------
 ;; internal functions. Don't change anything below this line
