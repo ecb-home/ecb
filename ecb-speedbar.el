@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-speedbar.el,v 1.65 2005/03/30 12:50:35 berndl Exp $
+;; $Id: ecb-speedbar.el,v 1.66 2005/04/19 15:26:22 berndl Exp $
 
 ;;; Commentary:
 
@@ -366,7 +366,7 @@ I.e. delete all other ECB-windows, so only one ECB-window and the
 edit-window\(s) are visible \(and maybe a compile-window). Does nothing if the
 speedbar-window is not visible within the ECB-frame."
   (interactive)
-  (ecb-display-one-ecb-buffer ecb-speedbar-buffer-name))
+  (ecb-maximize-ecb-buffer ecb-speedbar-buffer-name t))
 
 
 ;; Handling of files which can not be parsed by semantic (i.e. there is no

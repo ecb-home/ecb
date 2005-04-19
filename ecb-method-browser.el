@@ -24,7 +24,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-method-browser.el,v 1.71 2005/03/30 12:50:35 berndl Exp $
+;; $Id: ecb-method-browser.el,v 1.72 2005/04/19 15:26:22 berndl Exp $
 
 ;;; Commentary:
 
@@ -1280,7 +1280,7 @@ ECB-methods-window is not visible in current layout."
   (interactive)
   (if (equal ecb-use-speedbar-instead-native-tree-buffer 'method)
       (ecb-maximize-window-speedbar)
-    (ecb-display-one-ecb-buffer ecb-methods-buffer-name)))
+    (ecb-maximize-ecb-buffer ecb-methods-buffer-name t)))
 
 (defecb-window-dedicator ecb-set-methods-buffer ecb-methods-buffer-name
   "Display in current window the methods-buffer and make window dedicated."
@@ -1918,7 +1918,8 @@ onto the whole tag-table are performed by `ecb-apply-tag-table-filters'.")
 
 (tree-buffer-defpopup-command ecb-methods-filter-by-nothing-popup
   "Remove any filter from the Methods-buffer from popup."
-  (ecb-methods-filter-apply nil nil nil "" "" (ecb-methods-get-data-store 'source-buffer)))
+  (ecb-methods-filter-apply nil nil nil "" ""
+                            (ecb-methods-get-data-store 'source-buffer)))
 
 (tree-buffer-defpopup-command ecb-methods-filter-delete-last-popup
   "Remove the last added filter from the Methods-buffer from popup."
@@ -4152,52 +4153,50 @@ moved over it."
   "Create the tree-buffer for methods."
   (tree-buffer-create
    ecb-methods-buffer-name
-   ecb-frame
-   ecb-tree-mouse-action-trigger
-   'ecb-interpret-mouse-click
-   'ecb-tree-buffer-node-select-callback
-   'ecb-tree-buffer-node-expand-callback
-   'ecb-tree-buffer-node-collapsed-callback
-   'ecb-mouse-over-method-node
-   'ecb-methods-node-mouse-highlighted-p
-   'ecb-compare-methods-buffer-node-data
-   (list ecb-methods-nodetype-bucket)
-   nil
-   'ecb-methods-menu-creator
-   (list (cons ecb-methods-nodetype-tag ecb-methods-menu-title-creator)
-         (cons ecb-methods-nodetype-bucket ecb-methods-menu-title-creator)
-         (cons ecb-methods-nodetype-externtag ecb-methods-menu-title-creator))
-   (ecb-member-of-symbol/value-list ecb-methods-buffer-name
-                                    ecb-tree-truncate-lines)
-   t
-   ecb-tree-indent
-   ecb-tree-incremental-search
-   ecb-methods-incr-searchpattern-node-prefix
-   ecb-tree-navigation-by-arrow
-   ecb-tree-easy-hor-scroll
-   (car ecb-tree-image-icons-directories)
-   (ecb-member-of-symbol/value-list ecb-methods-buffer-name
-                                    (cdr ecb-tree-image-icons-directories)
-                                    'car 'cdr)
-   "ecb-"
-   ecb-tree-buffer-style
-   ecb-tree-guide-line-face
-   nil
-   ecb-tree-expand-symbol-before
-   ecb-method-face
-   ecb-methods-general-face
-   (append
-    (list (function (lambda ()
-                      (local-set-key (kbd "C-t")
-                                     'ecb-toggle-RET-selects-edit-window)
-                      (if (not ecb-running-xemacs)
-                          (local-set-key [mode-line mouse-2]
-                                         'ecb-toggle-maximize-ecb-window-with-mouse))
-                      (setq ecb-methods-root-node (tree-buffer-get-root)))))
-    ecb-common-tree-buffer-after-create-hook
-    ecb-methods-buffer-after-create-hook)
-   nil))
-  
+   :frame ecb-frame
+   :mouse-action-trigger ecb-tree-mouse-action-trigger
+   :is-click-valid-fn 'ecb-interpret-mouse-click
+   :node-selected-fn 'ecb-tree-buffer-node-select-callback
+   :node-expanded-fn 'ecb-tree-buffer-node-expand-callback
+   :node-collapsed-fn 'ecb-tree-buffer-node-collapsed-callback
+   :node-mouse-over-fn 'ecb-mouse-over-method-node
+   :mouse-highlight-fn 'ecb-methods-node-mouse-highlighted-p
+   :node-data-equal-fn 'ecb-compare-methods-buffer-node-data
+   :maybe-empty-node-types (list ecb-methods-nodetype-bucket)
+   :leaf-node-types nil
+   :menu-creator 'ecb-methods-menu-creator
+   :menu-titles (list (cons ecb-methods-nodetype-tag ecb-methods-menu-title-creator)
+                      (cons ecb-methods-nodetype-bucket ecb-methods-menu-title-creator)
+                      (cons ecb-methods-nodetype-externtag ecb-methods-menu-title-creator))
+   :modeline-menu-creator 'ecb-common-tree-buffer-modeline-menu-creator
+   :trunc-lines (ecb-member-of-symbol/value-list ecb-methods-buffer-name
+                                                 ecb-tree-truncate-lines)
+   :read-only t
+   :tree-indent ecb-tree-indent
+   :incr-search-p ecb-tree-incremental-search
+   :incr-search-additional-pattern ecb-methods-incr-searchpattern-node-prefix
+   :arrow-navigation ecb-tree-navigation-by-arrow
+   :hor-scroll-step ecb-tree-easy-hor-scroll
+   :default-images-dir (car ecb-tree-image-icons-directories)
+   :additional-images-dir (ecb-member-of-symbol/value-list ecb-methods-buffer-name
+                                                           (cdr ecb-tree-image-icons-directories)
+                                                           'car 'cdr)
+   :image-file-prefix "ecb-"
+   :tree-style ecb-tree-buffer-style
+   :ascii-guide-face ecb-tree-guide-line-face
+   :type-facer nil
+   :expand-symbol-before-p ecb-tree-expand-symbol-before
+   :highlight-node-face ecb-method-face
+   :general-face ecb-methods-general-face
+   :after-create-hook (append
+                       (list (function (lambda ()
+                                         (ecb-common-after-tree-buffer-create-actions)
+                                         (setq ecb-methods-root-node (tree-buffer-get-root)))))
+                       ecb-common-tree-buffer-after-create-hook
+                       ecb-methods-buffer-after-create-hook)
+   :after-update-hook nil))
+
+
 (defun ecb-dump-semantic-toplevel ()
   "Dump the current semantic-tags in special buffer and display them."
   (interactive)

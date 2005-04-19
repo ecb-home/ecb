@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb.el,v 1.424 2005/03/30 12:50:29 berndl Exp $
+;; $Id: ecb.el,v 1.425 2005/04/19 15:26:15 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -1040,37 +1040,32 @@ That is remove the unsupported :help stuff."
     (ecb-menu-item
      ["Directories"
       ecb-goto-window-directories
-      :active (member ecb-directories-buffer-name
-                      ecb-special-ecb-buffers-of-current-layout)
+      :active (ecb-buffer-is-ecb-buffer-of-current-layout-p ecb-directories-buffer-name)
       :help "Go to the directories window"
       ])
     (ecb-menu-item
      ["Sources"
       ecb-goto-window-sources
-      :active (member ecb-sources-buffer-name
-                      ecb-special-ecb-buffers-of-current-layout)
+      :active (ecb-buffer-is-ecb-buffer-of-current-layout-p ecb-sources-buffer-name)
       :help "Go to the sources window"
       ])
     (ecb-menu-item
      ["Methods and Variables"
       ecb-goto-window-methods
-      :active (member ecb-methods-buffer-name
-                      ecb-special-ecb-buffers-of-current-layout)
+      :active (ecb-buffer-is-ecb-buffer-of-current-layout-p ecb-methods-buffer-name)
       :help "Go to the methods/variables window"
       ])
     (ecb-menu-item
      ["History"
       ecb-goto-window-history
-      :active (member ecb-history-buffer-name
-                      ecb-special-ecb-buffers-of-current-layout)
+      :active (ecb-buffer-is-ecb-buffer-of-current-layout-p ecb-history-buffer-name)
       :help "Go to the history window"
       ])
     (ecb-menu-item
      ["Speedbar"
       ecb-goto-window-speedbar
       :active (and ecb-use-speedbar-instead-native-tree-buffer
-                   (member ecb-speedbar-buffer-name
-                           ecb-special-ecb-buffers-of-current-layout))
+                   (ecb-buffer-is-ecb-buffer-of-current-layout-p ecb-speedbar-buffer-name))
       :help "Go to the integrated speedbar window"
       ])
     (ecb-menu-item
@@ -1085,37 +1080,32 @@ That is remove the unsupported :help stuff."
     (ecb-menu-item
      ["Directories"
       ecb-maximize-window-directories
-      :active (member ecb-directories-buffer-name
-                      ecb-special-ecb-buffers-of-current-layout)
+      :active (ecb-buffer-is-ecb-buffer-of-current-layout-p ecb-directories-buffer-name)
       :help "Maximize the directories window - even if currently not visible"
       ])
     (ecb-menu-item
      ["Sources"
       ecb-maximize-window-sources
-      :active (member ecb-sources-buffer-name
-                      ecb-special-ecb-buffers-of-current-layout)
+      :active (ecb-buffer-is-ecb-buffer-of-current-layout-p ecb-sources-buffer-name)
       :help "Maximize the sources window - even if currently not visible"
       ])
     (ecb-menu-item
      ["Methods and Variables"
       ecb-maximize-window-methods
-      :active (member ecb-methods-buffer-name
-                      ecb-special-ecb-buffers-of-current-layout)
+      :active (ecb-buffer-is-ecb-buffer-of-current-layout-p ecb-methods-buffer-name)
       :help "Maximize the methods/variables window - even if currently not visible"
       ])
     (ecb-menu-item
      ["History"
       ecb-maximize-window-history
-      :active (member ecb-history-buffer-name
-                      ecb-special-ecb-buffers-of-current-layout)
+      :active (ecb-buffer-is-ecb-buffer-of-current-layout-p ecb-history-buffer-name)
       :help "Maximize the history window - even if currently not visible"
       ])
     (ecb-menu-item
      ["Speedbar"
       ecb-maximize-window-speedbar
       :active (and ecb-use-speedbar-instead-native-tree-buffer
-                   (member ecb-speedbar-buffer-name
-                           ecb-special-ecb-buffers-of-current-layout))
+                   (ecb-buffer-is-ecb-buffer-of-current-layout-p ecb-speedbar-buffer-name))
       :help "Maximize the integrated speedbar window - even if not visible"
       ])
     )
@@ -1776,10 +1766,6 @@ If ECB detects a problem it is reported and then an error is thrown."
                             'activate-menubar-hook
                           'menu-bar-update-hook)
                         'ecb-compilation-update-menu)
-
-              ;; modeline for xemacs
-              (if ecb-running-xemacs
-                  (ecb-activate-xemacs-modeline-menu 1))
               )
           (error
            ;;          (backtrace)
@@ -2038,10 +2024,6 @@ does all necessary after finishing ediff."
                        'activate-menubar-hook
                      'menu-bar-update-hook)
                    'ecb-compilation-update-menu)
-
-      ;; modeline for xemacs
-      (if ecb-running-xemacs
-          (ecb-activate-xemacs-modeline-menu -1))
 
       ;; run any personal hooks
       (unless run-no-hooks
