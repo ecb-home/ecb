@@ -25,7 +25,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-common-browser.el,v 1.16 2005/03/30 12:50:55 berndl Exp $
+;; $Id: ecb-common-browser.el,v 1.17 2005/04/19 14:29:48 berndl Exp $
 
 
 ;;; History
@@ -42,7 +42,7 @@
 (require 'ecb-util)
 
 (require 'tree-buffer)
-;; (require 'ecb-layout)
+;; (require 'ecb-layout) ;; causes cyclic dependencies!
 (require 'ecb-mode-line)
 
 ;; various loads
@@ -52,7 +52,7 @@
   ;; to avoid compiler grips
   (require 'cl))
 
-
+(silentcomp-defvar modeline-map)
 
 (defgroup ecb-tree-buffer nil
   "General settings related to the tree-buffers of ECB."
@@ -124,23 +124,21 @@ conjunction with ECB."
                    (if (and (boundp 'ecb-minor-mode) ecb-minor-mode)
                        (ecb-redraw-layout-full)))))
 
-(defvar ecb-tree-RET-selects-edit-window--internal nil
-  "Only set by customizing `ecb-tree-RET-selects-edit-window' or calling
-`ecb-toggle-RET-selects-edit-window'!
-Do not set this variable directly, it is only for internal uses!")
+(defvar ecb-tree-do-not-leave-window-after-select--internal nil
+  "Only set by customizing `ecb-tree-do-not-leave-window-after-select' or
+calling `ecb-toggle-do-not-leave-window-after-select'! Do not set this
+variable directly, it is only for internal uses!")
 
-(defcustom ecb-tree-RET-selects-edit-window
-  '(ecb-directories-buffer-name
-    ecb-sources-buffer-name
-    ecb-methods-buffer-name
-    ecb-history-buffer-name
-    ecb-analyse-buffer-name)
-  "*In which tree-buffers RET should finally select an edit-window.
+(defcustom ecb-tree-do-not-leave-window-after-select nil
+  "*Tree-buffers which stay selected after a key- or mouse-selection.
 If a buffer \(either its name or the variable-symbol which holds the name) is
-contained in this list then hitting RET in the associated tree-buffer selects
-as last action the right edit-window otherwise only the right action is
-performed \(opening a new source, selecting a method etc.) but point stays in
-the tree-buffer.
+contained in this list then selecting a tree-node either by RET or by a
+mouse-click doesn't leave that tree-buffer after the node-selection but
+performes only the appropriate action \(opening a new source, selecting a
+method etc.) but point stays in the tree-buffer. In tree-buffers not contained
+in this option normaly a node-selection selects as \"last\" action the right
+edit-window or maximizes the next senseful tree-buffer in case of a currently
+maximized tree-buffer \(see `ecb-maximize-next-after-maximized-select').
 
 The buffer-name can either be defined as plain string or with a symbol which
 contains the buffer-name as value. The latter one is recommended for the
@@ -148,19 +146,19 @@ builtin ECB-tree-buffers because then simply the related option-symbol can be
 used.
 
 A special remark for the `ecb-directories-buffer-name': Of course here the
-edit-window is only selected if the name of the current layout is contained in
-`ecb-show-sources-in-directories-buffer' or if the value of
-`ecb-show-sources-in-directories-buffer' is 'always and the hitted node
-represents a sourcefile \(otherwise this would not make any sense)!
+value of this option is only relevant if the name of the current layout is
+contained in `ecb-show-sources-in-directories-buffer' or if the value of
+`ecb-show-sources-in-directories-buffer' is 'always and the clicked ot hitted
+node represents a sourcefile \(otherwise this would not make any sense)!
 
-The setting in this option is only the default for each tree-buffer. With
-`ecb-toggle-RET-selects-edit-window' the behavior of RET can be changed fast
-and easy in a tree-buffer without customizing this option, but of course not
-for future Emacs sessions!"
+The setting in this option is only the default for each tree-buffer. With the
+command `ecb-toggle-do-not-leave-window-after-select' the behavior of a
+node-selection can be changed fast and easy in a tree-buffer without
+customizing this option, but of course not for future Emacs sessions!"
   :group 'ecb-tree-buffer
   :set (function (lambda (sym val)
                    (set sym val)
-                   (setq ecb-tree-RET-selects-edit-window--internal
+                   (setq ecb-tree-do-not-leave-window-after-select--internal
                          (ecb-copy-list val))))
   :type '(repeat (choice :menu-tag "Buffer-name"
                         (string :tag "Buffer-name as string")
@@ -717,7 +715,8 @@ Currently there are three subcaches managed within this cache:
            (apply (quote ,f) (ecb-fix-path file-or-dir-name) args))))
 
 (defun ecb-expand-file-name (name &optional default-dir)
-  "Delegate all args to `expand-file-name' but call first `ecb-fix-path' for both args."
+  "Delegate all args to `expand-file-name' but call first `ecb-fix-path'
+for both args."
   (expand-file-name (ecb-fix-path name) (ecb-fix-path default-dir)))
 
 ;;; ----- Canonical filenames ------------------------------
@@ -836,31 +835,50 @@ not nil then in both PATH and FILENAME env-var substitution is done. If the
     (ecb-merge-face-into-text formatted-name (nth 2 ecb-bucket-node-display))
     formatted-name))
 
-(defun ecb-toggle-RET-selects-edit-window ()
+(defun ecb-toggle-do-not-leave-window-after-select ()
   "Toggles if RET in a tree-buffer should finally select the edit-window.
-See also the option `ecb-tree-RET-selects-edit-window'."
+See also the option `ecb-tree-do-not-leave-window-after-select'."
   (interactive)
   (let ((tree-buffer (ecb-point-in-ecb-tree-buffer)))
     (if tree-buffer
         (let ((tree-buf-name (buffer-name tree-buffer)))
           (if (ecb-member-of-symbol/value-list
                tree-buf-name
-               ecb-tree-RET-selects-edit-window--internal)
+               ecb-tree-do-not-leave-window-after-select--internal)
               (progn
-                (setq ecb-tree-RET-selects-edit-window--internal
+                (setq ecb-tree-do-not-leave-window-after-select--internal
                       ;; we must try both - the symbol of the tree-buffer-name
                       ;; and the tree-buffer-name because we do not know what
                       ;; the user has specified in
-                      ;; `ecb-tree-RET-selects-edit-window'!
+                      ;; `ecb-tree-do-not-leave-window-after-select'!
                       (delete (ecb-tree-buffers-get-symbol tree-buf-name)
                               (delete tree-buf-name
-                                      ecb-tree-RET-selects-edit-window--internal)))
-                (message "RET does not select the edit-window."))
-            (setq ecb-tree-RET-selects-edit-window--internal
-                  (append ecb-tree-RET-selects-edit-window--internal
+                                      ecb-tree-do-not-leave-window-after-select--internal)))
+                (message "Selections leave the tree-window of %s" tree-buf-name))
+            (setq ecb-tree-do-not-leave-window-after-select--internal
+                  (append ecb-tree-do-not-leave-window-after-select--internal
                           (list (ecb-tree-buffers-get-symbol tree-buf-name))))
-            (message "RET selects the edit-window.")))
+            (message "Selections don't leave the tree-window of %s." tree-buf-name)))
       (message "Point must stay in an ECB tree-buffer!"))))
+
+(defun ecb-common-tree-buffer-modeline-menu-creator (buf-name)
+  "Return a menu for the modeline of all ECB-tree-buffers."
+  '((delete-other-windows "Maximize Window Above")
+    (ecb-redraw-layout-preserving-compwin-state "Display All ECB-windows")))
+
+(defun ecb-common-after-tree-buffer-create-actions ()
+  "Things which should be performed after creating a tree-buffer.
+The tree-buffer is the current buffer."
+  (local-set-key (kbd "C-t") 'ecb-toggle-do-not-leave-window-after-select)
+  (if ecb-running-xemacs
+      ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: Is it necessary to make
+      ;; modeline-map buffer-local for current buffer first?!
+      (define-key modeline-map
+        '(button2)
+        'ecb-toggle-maximize-ecb-window-with-mouse)
+    (local-set-key [mode-line mouse-2]
+                   'ecb-toggle-maximize-ecb-window-with-mouse)))
+  
 
 (defun ecb-combine-ecb-button/edit-win-nr (ecb-button edit-window-nr)
   "Depending on ECB-BUTTON and EDIT-WINDOW-NR return one value:
@@ -919,7 +937,8 @@ combination is invalid \(see `ecb-interpret-mouse-click'."
 	 (ecb-button (nth 0 ecb-button-list))
 	 (shift-mode (nth 1 ecb-button-list))
          (meta-mode (nth 2 ecb-button-list))
-         (keyboard-p (equal (nth 3 ecb-button-list) 'keyboard)))
+         (keyboard-p (equal (nth 3 ecb-button-list) 'keyboard))
+         (maximized-p (ecb-buffer-is-maximized-p tree-buffer-name)))
     ;; we need maybe later that something has clicked in a tree-buffer, e.g.
     ;; in `ecb-handle-major-mode-visibilty'.
     (setq ecb-item-in-tree-buffer-selected t)
@@ -941,21 +960,29 @@ combination is invalid \(see `ecb-interpret-mouse-click'."
 
     ;; now we go back to the tree-buffer but only if all of the following
     ;; conditions are true:
-    ;; 1. RET is pressed in the tree-buffer
-    ;; 2. The tree-buffer-name is not contained in
-    ;;    ecb-tree-RET-selects-edit-window--internal
+    ;; 1. The ecb-windows are now not hidden
+    ;; 2. The tree-buffer-name is contained in
+    ;;    ecb-tree-do-not-leave-window-after-select--internal
     ;; 3. Either it is not the ecb-directories-buffer-name or
     ;;    at least `ecb-show-sources-in-directories-buffer-p' is true and the
     ;;    hitted node is a sourcefile
-    (when (and keyboard-p
-               (not (ecb-member-of-symbol/value-list
-                     tree-buffer-name
-                     ecb-tree-RET-selects-edit-window--internal))
+    (when (and (not ecb-windows-hidden)
+               (ecb-member-of-symbol/value-list
+                tree-buffer-name
+                ecb-tree-do-not-leave-window-after-select--internal)
                (or (not (ecb-string= tree-buffer-name ecb-directories-buffer-name))
                    (and (ecb-show-sources-in-directories-buffer-p)
                         (= ecb-directories-nodetype-sourcefile
                            (tree-node->type node)))))
-      (ecb-goto-ecb-window tree-buffer-name)
+      ;; If there is currently no maximized window then we can savely call
+      ;; `ecb-goto-ecb-window'. If we have now a maximized window then there
+      ;; are two possibilities:
+      ;; - if it is not equal to the maximzed tree-buffer before the selection
+      ;;   then we must maximi
+      (if (and maximized-p
+               (not (ecb-buffer-is-maximized-p tree-buffer-name)))
+          (ecb-maximize-ecb-buffer tree-buffer-name t)
+        (ecb-goto-ecb-window tree-buffer-name))
       (tree-buffer-remove-highlight))))
  
 (defun ecb-tree-buffer-node-collapsed-callback (node
@@ -1058,7 +1085,7 @@ be displayed. WHEN-SPEC must have the same format as the car of
 
 (tree-buffer-defpopup-command ecb-maximize-ecb-window-menu-wrapper
   "Expand the current ECB-window from popup-menu."
-  (ecb-display-one-ecb-buffer (buffer-name (current-buffer))))
+  (ecb-maximize-ecb-buffer (buffer-name (current-buffer)) t))
 
 ;; stealthy mechanism
 
@@ -1163,10 +1190,6 @@ run starts with this interrupted function."
 
 
 ;; generation of nodes rsp. of attributes of nodes
-
-;; (save-excursion
-;;   (set-buffer ecb-sources-buffer-name)
-;;   (tree-buffer-find-image "vc-added"))
 
 (defun ecb-generate-node-name (text-name first-chars icon-name name-of-buffer)
   "Generate a new name from TEXT-NAME by adding an appropriate image according
