@@ -26,7 +26,7 @@
 @c GNU Emacs; see the file COPYING.  If not, write to the Free Software
 @c Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-@c $Id: ecb.texi,v 1.203 2005/03/30 12:50:27 berndl Exp $
+@c $Id: ecb.texi,v 1.204 2005/04/19 15:52:26 berndl Exp $
 
 @setfilename ecb.info
 
@@ -49,7 +49,7 @@
 @c edit the Makefile to change the version number. mechanism stolen
 @c from Tramp
 @macro ecbver{}
-2.32beta2
+2.32beta3
 @end macro
 
 
@@ -338,6 +338,14 @@ Entry points for Elisp programmers
 * tree-buffer::                 Some words to the tree-buffer-library
 * Adviced functions::           How to deal with the adviced functions
 * The layout-engine::           Programming new layouts and special windows
+
+The library tree-buffer.el
+
+* Introduction::                General description of tree-buffers
+* A new tree-buffer::           How to create a new tree-buffer
+* A new tree-node::             How to add new tree-nodes to a tree-buffer
+* The tree-buffer-API::         All functions available for tree-buffers
+* Tree-buffer don'ts::          Things which are strictly forbidden
 
 How to program new layouts and new special windows
 
@@ -1309,9 +1317,9 @@ RETURN does the same as the primary button and C-RETURN does the same
 as the secondary button. S-RETURN is the same as the SHIFT-click or
 POWER-click. The terms ``primary'', ``secondary'', ``SHIFT-'' and
 ``POWER-click'' are explained in @ref{Using the mouse}. See also the
-option @code{ecb-tree-RET-selects-edit-window} and the function
-@code{ecb-toggle-RET-selects-edit-window} which is bound to @kbd{C-t}
-in each tree-buffer of ECB!
+option @code{ecb-tree-do-not-leave-window-after-select} and the
+function @code{ecb-toggle-do-not-leave-window-after-select} which is
+bound to @kbd{C-t} in each tree-buffer of ECB!
 
 For all RETURN (and S-RETURN and C-RETURN) hits the position of the
 point within the current node-line is irrelevant! This is for
@@ -1430,8 +1438,9 @@ Used for selecting nodes in all tree-buffers.
 @item @kbd{TAB}:
 Used for expanding/collapsing nodes in all tree-buffers.
 @item @kbd{C-t}:
-Used for toggling ``jump after selection'' in all tree-buffers, see
-command @code{ecb-toggle-RET-selects-edit-window}.
+Used for toggling ``do not leave window after selection'' in all
+tree-buffers, see command
+@code{ecb-toggle-do-not-leave-window-after-select}.
 @item All self-inserting characters:
 Used for easy and fast navigation in all tree-buffers,
 @xref{Incremental search}.
@@ -3558,6 +3567,8 @@ escreen.el (@pxref{Window-managers and ECB}).
 @node Maximizing the ECB windows, Back/forward navigation, Hiding the ECB windows, Usage of ECB
 @section Maximizing the ECB windows
 
+@subsection How to maximize and ``minimize'' special ecb-tree-windows
+
 To get a better overlook about the contents of a certain ECB-window
 every ECB-window can be ``maximized'', means all other ECB-windows are
 deleted so only the edit-window(s) and this maximized ECB-window are
@@ -3566,7 +3577,7 @@ to do this:
 
 @itemize @bullet
 @item
-Via the popup-menus of the ECB-windows
+Via the node-popup-menus of the ECB-windows
 
 @item
 Via the main ``ECB''-menu and here ``Display window maximized''
@@ -3597,20 +3608,54 @@ back all ECB-windows of current layout.
 @item
 Via the default modeline-mechanisms for deleting other windows. GNU
 Emacs binds @kbd{mouse-2} in its modeline to
-@code{delete-other-window}. ECB now supports this mechanism by binding
-a toggle-command to @kbd{mouse-2} in the modeline of each tree-buffer:
-If all ECB-windows are visible then this command maximizes the current
-tree-window and if current tree-window is maximized all ECB-windows
-are displayed again. XEmacs binds a popup-menu with some window
-commands to @kbd{button-3} in its modeline. ECB supports this
-mechanism by replacing this menu by a menu which offers exactly 2
-commands: Maximizing current tree-window and displaying all
-ECB-windows.
+@code{delete-other-window}. XEmacs binds a popup-menu with some window
+commands to @kbd{button-3} in its modeline.
+
+ECB combines the best of both worlds by supporting both of these
+mechanisms for both Xemacs and Emacs: ECB binds a toggle-command to
+@kbd{mouse-2} in the modeline of each tree-buffer which maximizes the
+current tree-window if all ECB-windows are visible and displays all
+ECB-windows if current tree-window is maximized. In addition ECB binds
+a popup-menu to @kbd{mouse-3} which offers exactly 2 commands:
+Maximizing current tree-window and displaying all ECB-windows.
 @end itemize
 
-Minimizing such a maximized ECB-window, i.e. bringing back to its
-original size, can simply be done by redrawing the layout via the
-command @code{ecb-redraw-layout} (bound to @kbd{C-c . lr}).
+``Minimizing'' such a maximized ECB-window, i.e. bringing back to its
+original size and displays all ecb-windows of current layout, can
+simply be done by redrawing the layout via the command
+@code{ecb-redraw-layout} (bound to @kbd{C-c . lr}).
+
+@subsection Selecting a node in a maximized ecb-tree-window
+
+When you select a node (either via mouse or RET) in a maximized
+tree-window the default behavior of ECB is the following:
+
+Maximized directories-window: When selecting a directory then first
+automatically the maximized directories-window will be ``minimized''
+(i.e. all ecb-windows of current layout are displayed) if the current
+layout contains a sources-buffer and no sources are shown in the
+directories-window (see @code{ecb-show-sources-in-directories-buffer}.
+So the source-files can be displayed in the sources-window.
+    
+Maximized sources- or history-window: When selecting a source-file in
+one of these buffers then first automatically the maximized window
+will be ``minimized'' (i.e. all ecb-windows of current layout are
+displayed) if the current layout contains a methods-buffer. So the
+tag-contents of the selected source-file can be displayed in the
+methods-window.
+
+For a even smarter behavior ECB offers the option
+@code{ecb-maximize-next-after-maximized-select} which automatically
+maximizes the next logical tree-window after a node selection. The
+definition of ``next logical is'': Directories --> sources,
+sources/history --> methods. But if the current maximized tree-buffer
+is contained in the option
+@code{ecb-tree-do-not-leave-window-after-select} (see also the
+tree-buffer-command @code{ecb-toggle-do-not-leave-window-after-select}
+which is bound to @key{C-t} in each tree-buffer) then ECB does *not*
+maximize the next logical tree-window but point stays in the currently
+maximized tree-buffer so for example the user can select more than one
+source-file from the sources-buffer.
 
 @node Back/forward navigation, ECB-window synchronizing, Maximizing the ECB windows, Usage of ECB
 @section Back- and forward navigation like a browser
@@ -4626,7 +4671,7 @@ Elisp-code but only with the customize-feature!
 @item @code{ecb-source-path}
 @item @code{ecb-toggle-layout-sequence}
 @item @code{ecb-tag-display-function}
-@item @code{ecb-tree-RET-selects-edit-window}
+@item @code{ecb-tree-do-not-leave-window-after-select}
 @item @code{ecb-type-tag-display}
 @item @code{ecb-type-tag-expansion}
 @item @code{ecb-use-speedbar-instead-native-tree-buffer}
@@ -5393,32 +5438,6 @@ activate ECB again to take effect
 @end defopt
 
 
-@defopt tree-RET-selects-edit-window
-In which tree-buffers RET should finally select an edit-window. If a
-buffer (either its name or the variable-symbol which holds the name)
-is contained in this list then hitting RET in the associated
-tree-buffer selects as last action the right edit-window otherwise
-only the right action is performed (opening a new source, selecting a
-method etc.) but point stays in the tree-buffer.
-
-The buffer-name can either be defined as plain string or with a symbol
-which contains the buffer-name as value. The latter one is recommended
-for the builtin ECB-tree-buffers because then simply the related
-option-symbol can be used.
-
-A special remark for the @code{ecb-directories-buffer-name}: Of course
-here the edit-window is only selected if the name of the current
-layout is contained in @code{ecb-show-sources-in-directories-buffer}
-or if the value of @code{ecb-show-sources-in-directories-buffer} is
-'always and the hitted node represents a sourcefile (otherwise this
-would not make any sense)!
-
-The setting in this option is only the default for each tree-buffer.
-With @code{ecb-toggle-RET-selects-edit-window} the behavior of RET can
-be changed fast and easy in a tree-buffer without customizing this
-option, but of course not for future Emacs sessions!
-@end defopt
-
 
 @defopt tree-buffer-style
 The style of the tree-buffers.
@@ -5477,6 +5496,40 @@ With both ascii-styles the tree-layout can be affected with the
 options @code{ecb-tree-indent} and
 @code{ecb-tree-expand-symbol-before}.
 @end defopt
+
+@defopt tree-do-not-leave-window-after-select
+Tree-buffers which stay selected after a key- or mouse-selection. If a
+buffer (either its name or the variable-symbol which holds the name)
+is contained in this list then selecting a tree-node either by RET or
+by a mouse-click doesn't leave that tree-buffer after the
+node-selection but performes only the appropriate action (opening a
+new source, selecting a method etc.) but point stays in the
+tree-buffer. In tree-buffers not contained in this option normaly a
+node-selection selects as ``last'' action the right edit-window or
+maximizes the next senseful tree-buffer in case of a currently
+maximized tree-buffer (see
+@code{ecb-maximize-next-after-maximized-select}).
+
+The buffer-name can either be defined as plain string or with a symbol
+which contains the buffer-name as value. The latter one is recommended
+for the builtin ECB-tree-buffers because then simply the related
+option-symbol can be used.
+
+A special remark for the @code{ecb-directories-buffer-name}: Of course
+here the value of this option is only relevant if the name of the
+current layout is contained in
+@code{ecb-show-sources-in-directories-buffer} or if the value of
+@code{ecb-show-sources-in-directories-buffer} is 'always and the
+clicked ot hitted node represents a sourcefile (otherwise this would
+not make any sense)!
+
+The setting in this option is only the default for each tree-buffer.
+With the command @code{ecb-toggle-do-not-leave-window-after-select}
+the behavior of a node-selection can be changed fast and easy in a
+tree-buffer without customizing this option, but of course not for
+future Emacs sessions!
+@end defopt
+
 
 @defopt tree-easy-hor-scroll
 Scroll step for easy hor. scrolling via mouse-click in tree-buffers.
@@ -7443,6 +7496,36 @@ tree-window is not maximized if either a node has been selected via
 primary- oder secondarc mouse-button or the popup-menu of that
 tree-buffer has been opened.
 @end defopt
+
+@defopt maximize-next-after-maximized-select
+Maximizes the next logical tree-window after a maximized
+node-selection. Selecting a node in a maximized tree-window is handled
+very smart by ECB:
+
+If this option is nil then selecting a node in a maximized
+directories- sources- or history-tree-buffer automatically
+``minimizes'' that tree-window (i.e. displays all windows of the
+current layout) so the user can perform the next logical step (e.g.
+the next logical step after selecting a directory in the
+directories-buffer is to select a source-file - therefore the
+sources-buffer of current layout has to be displayed - if the current
+layout contains one; the next logical step of selecting a source-file
+is probably to jump to a certain tag via the methods-buffer).
+
+If this option is not nil then selecting a node in a maximized
+directories- sources- or history-tree-buffer automatically maximizes
+the next logical tree-window (directories --> sources, sources/history
+--> methods). But if the current maximized tree-buffer is contained in
+the option @code{ecb-tree-do-not-leave-window-after-select} (see also
+the tree-buffer-command
+@code{ecb-toggle-do-not-leave-window-after-select} which is bound to
+@code{C-t} in each tree-buffer) then ECB does *not* maximize the next
+logical tree-window but point stays in the currently maximized
+tree-buffer so for example the user can select more than one
+source-file from the sources-buffer.
+@end defopt
+
+
 
 @defopt new-ecb-frame
 Create a new frame at activation time of ECB.
@@ -10758,10 +10841,48 @@ Look at the documentation of these hooks to get a detailed description.
 @node tree-buffer, Adviced functions, List of hooks, Elisp programming
 @section The library tree-buffer.el
 
-The library tree-buffer.el is ECB independent and can be used for
-other applications too. But such an application is not allowed to use
-any of the variables of tree-buffer.el especially not the variable
-@strong{tree-buffers}!
+@menu
+* Introduction::                General description of tree-buffers
+* A new tree-buffer::           How to create a new tree-buffer
+* A new tree-node::             How to add new tree-nodes to a tree-buffer
+* The tree-buffer-API::         All functions available for tree-buffers
+* Tree-buffer don'ts::          Things which are strictly forbidden
+@end menu
+
+The library tree-buffer.el is an ECB-independent library written
+completely in emacs lisp and can be used also by other applications
+than ECB. But the main purpose of tree-buffer.el is to offer a small
+but powerful API to create new tree-buffers for ECB, add new
+tree-nodes to a tree-buffer and thus use such a tree-buffer to display
+arbitrary information structured by a tree.
+
+This chapter is for emacs-lisp-programmers and describes how to create
+a new tree-buffer, how to add new tree-nodes to a tree-buffer
+(includes removing and updating already existing tree-nodes) and how
+to use the offered tree-buffer- and tree-node-APIs.
+
+@node Introduction, A new tree-buffer, tree-buffer, tree-buffer
+@subsection General description of tree-buffers
+
+TODO
+
+@node A new tree-buffer, A new tree-node, Introduction, tree-buffer
+@subsection How to create a new tree-buffer
+
+TODO
+
+@node A new tree-node, The tree-buffer-API, A new tree-buffer, tree-buffer
+@subsection How to create a new tree-node
+
+@node The tree-buffer-API, Tree-buffer don'ts, A new tree-node, tree-buffer
+@subsection All functions available for tree-buffers
+
+TODO
+
+@node Tree-buffer don'ts, ,The tree-buffer-API, tree-buffer
+@subsection Things which are strictly forbidden
+
+TODO
 
 @code{tree-buffers}: Only for internal use. It contains all
 tree-buffers of current Emacs-instance, means @strong{all}
@@ -10772,10 +10893,6 @@ tree-buffer set in @code{ecb-tree-buffers}!
 
 An application may only use the methods tree-buffer.el provides but no
 internal variables!
-
-@subsection Programming new tree-buffers
-
-@c TODO:
 
 @node Adviced functions, The layout-engine, tree-buffer, Elisp programming
 @section How to deal with the adviced window-functions
