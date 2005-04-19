@@ -95,6 +95,7 @@
 
 ;;;###autoload
 (defconst ecb-running-xemacs (string-match "XEmacs\\|Lucid" emacs-version))
+(defconst ecb-running-xemacs (featurep 'xemacs))
 
 (defconst ecb-running-unsupported-emacs (condition-case nil
                                             (<= emacs-major-version 20)
@@ -704,10 +705,11 @@ returned."
                                               return-accessor)
   "Returns not nil when VALUE is a member of that list which is build from
 LIST by using the symbol-value if a list-member is a symbol and otherwise the
-list-member itself. But if ELEM-ACCESSOR is a function then it is used to get
-that part of a elem of LIST for which the rule above should be applied. If
-RETURN-ACCESSOR is a function then it is used to get that part of that
-list-elem which is equal according to the rules above."
+list-member itself. If a member then the matching elem of LIST is returned.
+But if ELEM-ACCESSOR is a function then it is used to get that part of a elem
+of LIST for which the rule above should be applied. If RETURN-ACCESSOR is a
+function then it is used to get that part of that list-elem which is equal
+according to the rules above."
   (let ((elem-acc (or elem-accessor 'identity))
         (return-acc (or return-accessor 'identity)))
     (catch 'exit
@@ -723,7 +725,7 @@ list-elem which is equal according to the rules above."
 ;; tests
 
 ;; (ecb-member-of-symbol/value-list ecb-directories-buffer-name
-;;                                  ecb-tree-RET-selects-edit-window--internal)
+;;                                  ecb-tree-do-not-leave-window-after-select--internal)
 
 ;; (ecb-member-of-symbol/value-list ecb-directories-buffer-name
 ;;                                  (cdr '("adgasgd" .
