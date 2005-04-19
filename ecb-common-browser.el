@@ -25,7 +25,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-common-browser.el,v 1.17 2005/04/19 14:29:48 berndl Exp $
+;; $Id: ecb-common-browser.el,v 1.18 2005/04/19 15:52:03 berndl Exp $
 
 
 ;;; History
@@ -836,7 +836,7 @@ not nil then in both PATH and FILENAME env-var substitution is done. If the
     formatted-name))
 
 (defun ecb-toggle-do-not-leave-window-after-select ()
-  "Toggles if RET in a tree-buffer should finally select the edit-window.
+  "Toggles if a node-selection in a tree-buffer leaves the tree-window.
 See also the option `ecb-tree-do-not-leave-window-after-select'."
   (interactive)
   (let ((tree-buffer (ecb-point-in-ecb-tree-buffer)))
