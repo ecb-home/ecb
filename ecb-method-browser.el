@@ -3118,6 +3118,8 @@ current buffer."
 ;; This approach only expands the needed parts of the tree-buffer when
 ;; the current-tag is not visible as node and not the whole tree-buffer.
 (defun ecb-tag-sync (&optional force)
+  (ecb-debug-autocontrol-fcn-error 'ecb-tag-sync
+                                   "Begin: Cur-buf: %s" (current-buffer))
   (when (and ecb-minor-mode
              (not (ecb-point-in-dedicated-special-buffer))
              (not (ecb-point-in-compile-window)))
@@ -3198,7 +3200,10 @@ current buffer."
                        nil t)
                       (tree-buffer-highlight-node-data
                        curr-tag nil (equal ecb-highlight-tag-with-point 'highlight)))
-                    )))))))))
+                    ))))))))
+  (ecb-debug-autocontrol-fcn-error 'ecb-tag-sync
+                                   "End: Cur-buf: %s" (current-buffer)))
+  
 
 
 (defun ecb-find-file-and-display (filename other-edit-window)

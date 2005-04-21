@@ -874,7 +874,7 @@ The tree-buffer is the current buffer."
       ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: Is it necessary to make
       ;; modeline-map buffer-local for current buffer first?!
       (define-key modeline-map
-        '(button2)
+        '(button2up)
         'ecb-toggle-maximize-ecb-window-with-mouse)
     (local-set-key [mode-line mouse-2]
                    'ecb-toggle-maximize-ecb-window-with-mouse)))
@@ -1175,6 +1175,8 @@ interrupted by the user \(i.e. the function has been interrupted by the
 user). If a function is interrupted then `ecb-stealthy-function-list' is
 rotated so the interrupted function is the first element so the nect stealthy
 run starts with this interrupted function."
+  (ecb-debug-autocontrol-fcn-error 'ecb-stealthy-updates
+                                   "Begin: Cur-buf: %s" (current-buffer))
   (unless ecb-stealthy-update-running
     (let ((l ecb-stealthy-function-list)
           (ecb-stealthy-update-running t))
@@ -1185,8 +1187,9 @@ run starts with this interrupted function."
       ;; function.
       (when l
         (setq ecb-stealthy-function-list
-              (ecb-rotate ecb-stealthy-function-list (car l)))))))
-
+              (ecb-rotate ecb-stealthy-function-list (car l))))))
+  (ecb-debug-autocontrol-fcn-error 'ecb-stealthy-updates
+                                   "End: Cur-buf: %s" (current-buffer)))
 
 
 ;; generation of nodes rsp. of attributes of nodes

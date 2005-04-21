@@ -3301,7 +3301,9 @@ should be displayed. For 1 and 2 the value of EDIT-WINDOW-NR is ignored."
                        (not (ecb-show-sources-in-directories-buffer-p))
                        (ecb-buffer-is-ecb-buffer-of-current-layout-p
                         ecb-sources-buffer-name))
-              (if ecb-maximize-next-after-maximized-select
+              (if (ecb-member-of-symbol/value-list
+                   ecb-directories-buffer-name
+                   ecb-maximize-next-after-maximized-select)
                   (progn
                     (ecb-maximize-ecb-buffer ecb-sources-buffer-name)
                     (ecb-window-select ecb-sources-buffer-name))
@@ -3328,7 +3330,9 @@ should be displayed. For 1 and 2 the value of EDIT-WINDOW-NR is ignored."
   (when (and (ecb-buffer-is-maximized-p (buffer-name))
              (ecb-buffer-is-ecb-buffer-of-current-layout-p
               ecb-methods-buffer-name))
-    (if ecb-maximize-next-after-maximized-select
+    (if (ecb-member-of-symbol/value-list
+         (buffer-name)
+         ecb-maximize-next-after-maximized-select)
         (progn
           (ecb-maximize-ecb-buffer ecb-methods-buffer-name)
           (ecb-window-select ecb-methods-buffer-name))

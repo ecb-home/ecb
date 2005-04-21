@@ -2881,7 +2881,7 @@ AFTER-UPDATE-HOOK: A function or a list of functions \(with no arguments)
 
     ;; mouse-3
     (define-key tree-buffer-key-map
-      (tree-buffer-create-mouse-key 3 mouse-action-trigger nil)
+      (tree-buffer-create-mouse-key 3 'button-press nil)
       (function (lambda(e)
 		  (interactive "e")
                   (tree-buffer-mouse-set-point e)
@@ -2892,11 +2892,22 @@ AFTER-UPDATE-HOOK: A function or a list of functions \(with no arguments)
         (progn
           (set (make-local-variable 'modeline-map)
                (make-sparse-keymap 'modeline-map))
-          (define-key modeline-map '(button3)
+          ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: maybe we should use
+          ;; here mouse-action-trigger-not instead of hard button-press?! But
+          ;; at least when mouse-action-trigger is button-release then it
+          ;; works now also for XEmacs... and it is consistent to Emacs and
+          ;; standard popup-menu trigger (which is button-press)... so we
+          ;; first change this when problems are reported.......
+          (define-key modeline-map
+            (tree-buffer-create-mouse-key 3 'button-press nil)
             (function (lambda (e)
                         (interactive "e")
                         (tree-buffer-mouse-set-point e)
-                        (tree-buffer-show-modeline-menu e)))))
+                        (tree-buffer-show-modeline-menu e))))
+          (define-key modeline-map
+            (tree-buffer-create-mouse-key 1 'button-press nil)
+            'mouse-drag-modeline)
+          )
       (define-key tree-buffer-key-map [mode-line mouse-3]
         (function (lambda (e)
                     (interactive "e")
@@ -2904,8 +2915,6 @@ AFTER-UPDATE-HOOK: A function or a list of functions \(with no arguments)
                     (tree-buffer-show-modeline-menu e)))))
 ;;       )
     
-    (define-key tree-buffer-key-map
-      (tree-buffer-create-mouse-key 3 mouse-action-trigger-not nil) nop)
     (define-key tree-buffer-key-map
       (tree-buffer-create-mouse-key 3 mouse-action-trigger-not 'shift) nop)
     (define-key tree-buffer-key-map

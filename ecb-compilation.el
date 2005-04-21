@@ -259,12 +259,17 @@ either
   "Check if current active buffer list has changed - i.e. if a new buffer has
 been created or a buffer has been deleted. If yes then
 `ecb-compilation-update-menu-p' is set to not nil and the cache is updated."
+  (ecb-debug-autocontrol-fcn-error 'ecb-compilation-buffer-list-changed-p
+                                   "Begin: Cur-buf: %s" (current-buffer))
   (let ((new-buffer-list (buffer-list)))
     (when (not (equal new-buffer-list
                       ecb-compilation-buffer-list-cache))
       (setq ecb-compilation-buffer-list-cache new-buffer-list)
       ;; Nowhere else this variable will be set to t.
-      (setq ecb-compilation-update-menu-p t))))
+      (setq ecb-compilation-update-menu-p t)))
+  (ecb-debug-autocontrol-fcn-error 'ecb-compilation-buffer-list-changed-p
+                                   "End: Cur-buf: %s" (current-buffer)))
+  
 
 (defun ecb-compilation-update-menu()
   "Create an install a menu that allows the user to navigate buffers that are
