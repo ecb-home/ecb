@@ -23,7 +23,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-file-browser.el,v 1.56 2005/04/19 15:18:35 berndl Exp $
+;; $Id: ecb-file-browser.el,v 1.57 2005/04/21 12:15:53 berndl Exp $
 
 ;;; Commentary:
 
@@ -3301,7 +3301,9 @@ should be displayed. For 1 and 2 the value of EDIT-WINDOW-NR is ignored."
                        (not (ecb-show-sources-in-directories-buffer-p))
                        (ecb-buffer-is-ecb-buffer-of-current-layout-p
                         ecb-sources-buffer-name))
-              (if ecb-maximize-next-after-maximized-select
+              (if (ecb-member-of-symbol/value-list
+                   ecb-directories-buffer-name
+                   ecb-maximize-next-after-maximized-select)
                   (progn
                     (ecb-maximize-ecb-buffer ecb-sources-buffer-name)
                     (ecb-window-select ecb-sources-buffer-name))
@@ -3328,7 +3330,9 @@ should be displayed. For 1 and 2 the value of EDIT-WINDOW-NR is ignored."
   (when (and (ecb-buffer-is-maximized-p (buffer-name))
              (ecb-buffer-is-ecb-buffer-of-current-layout-p
               ecb-methods-buffer-name))
-    (if ecb-maximize-next-after-maximized-select
+    (if (ecb-member-of-symbol/value-list
+         (buffer-name)
+         ecb-maximize-next-after-maximized-select)
         (progn
           (ecb-maximize-ecb-buffer ecb-methods-buffer-name)
           (ecb-window-select ecb-methods-buffer-name))

@@ -26,7 +26,7 @@
 @c GNU Emacs; see the file COPYING.  If not, write to the Free Software
 @c Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-@c $Id: ecb.texi,v 1.204 2005/04/19 15:52:26 berndl Exp $
+@c $Id: ecb.texi,v 1.205 2005/04/21 12:15:49 berndl Exp $
 
 @setfilename ecb.info
 
@@ -345,7 +345,7 @@ The library tree-buffer.el
 * A new tree-buffer::           How to create a new tree-buffer
 * A new tree-node::             How to add new tree-nodes to a tree-buffer
 * The tree-buffer-API::         All functions available for tree-buffers
-* Tree-buffer don'ts::          Things which are strictly forbidden
+* Do not with tree-buffer::     Things which are strictly forbidden
 
 How to program new layouts and new special windows
 
@@ -3567,7 +3567,7 @@ escreen.el (@pxref{Window-managers and ECB}).
 @node Maximizing the ECB windows, Back/forward navigation, Hiding the ECB windows, Usage of ECB
 @section Maximizing the ECB windows
 
-@subsection How to maximize and ``minimize'' special ecb-tree-windows
+@subsection How to maximize and minimize special ecb-tree-windows
 
 To get a better overlook about the contents of a certain ECB-window
 every ECB-window can be ``maximized'', means all other ECB-windows are
@@ -3634,7 +3634,7 @@ Maximized directories-window: When selecting a directory then first
 automatically the maximized directories-window will be ``minimized''
 (i.e. all ecb-windows of current layout are displayed) if the current
 layout contains a sources-buffer and no sources are shown in the
-directories-window (see @code{ecb-show-sources-in-directories-buffer}.
+directories-window - see @code{ecb-show-sources-in-directories-buffer}.
 So the source-files can be displayed in the sources-window.
     
 Maximized sources- or history-window: When selecting a source-file in
@@ -3649,7 +3649,7 @@ For a even smarter behavior ECB offers the option
 maximizes the next logical tree-window after a node selection. The
 definition of ``next logical is'': Directories --> sources,
 sources/history --> methods. But if the current maximized tree-buffer
-is contained in the option
+is also contained in the option
 @code{ecb-tree-do-not-leave-window-after-select} (see also the
 tree-buffer-command @code{ecb-toggle-do-not-leave-window-after-select}
 which is bound to @key{C-t} in each tree-buffer) then ECB does *not*
@@ -7502,6 +7502,52 @@ Maximizes the next logical tree-window after a maximized
 node-selection. Selecting a node in a maximized tree-window is handled
 very smart by ECB:
 
+If a tree-buffer-name is not contained in this option then selecting a
+node in this maximized tree-buffer automatically ``minimizes'' that
+tree-window (i.e. displays all windows of the current layout) so the
+user can perform the next logical step (e.g. the next logical step
+after selecting a directory in the directories-buffer is to select a
+source-file - therefore the sources-buffer of current layout has to be
+displayed - if the current layout contains one; the next logical step
+of selecting a source-file is probably to jump to a certain tag via
+the methods-buffer).
+
+If a tree-buffer-name is contained in this option then selecting a
+node in this tree-buffer automatically maximizes the next logical
+tree-window (e.g. directories --> sources, sources/history -->
+methods). But if the current maximized tree-buffer is also contained
+in the option @code{ecb-tree-do-not-leave-window-after-select} (see
+also the tree-buffer-command
+@code{ecb-toggle-do-not-leave-window-after-select} which is bound to
+@code{C-t} in each tree-buffer) then ECB does *not* maximize the next
+logical tree-window but point stays in the currently maximized
+tree-buffer so for example the user can select more than one node
+(e.g. more than one source-file from the sources-buffer.
+
+The tree-buffer-name can either be defined as plain string or with a
+symbol which contains the buffer-name as value. The latter one is
+recommended for the builtin ECB-tree-buffers because then simply the
+related option-symbol can be used (e.g.
+@code{ecb-directories-buffer-name}, @code{ecb-sources-buffer-name} or
+@code{ecb-history-buffer-name}).
+
+In future versions this option will probably also allow to define the
+next logical tree-buffer for a tree-buffer - currently this is
+hard-coded as follows:
+@itemize @minus
+@item directories --next-logical--> sources
+@item sources     --next-logical--> methods
+@item history     --next-logical--> methods.
+@end itemize
+@end defopt
+
+
+
+@defopt maximize-next-after-maximized-select
+Maximizes the next logical tree-window after a maximized
+node-selection. Selecting a node in a maximized tree-window is handled
+very smart by ECB:
+
 If this option is nil then selecting a node in a maximized
 directories- sources- or history-tree-buffer automatically
 ``minimizes'' that tree-window (i.e. displays all windows of the
@@ -10846,7 +10892,7 @@ Look at the documentation of these hooks to get a detailed description.
 * A new tree-buffer::           How to create a new tree-buffer
 * A new tree-node::             How to add new tree-nodes to a tree-buffer
 * The tree-buffer-API::         All functions available for tree-buffers
-* Tree-buffer don'ts::          Things which are strictly forbidden
+* Do not with tree-buffer::     Things which are strictly forbidden
 @end menu
 
 The library tree-buffer.el is an ECB-independent library written
@@ -10874,12 +10920,12 @@ TODO
 @node A new tree-node, The tree-buffer-API, A new tree-buffer, tree-buffer
 @subsection How to create a new tree-node
 
-@node The tree-buffer-API, Tree-buffer don'ts, A new tree-node, tree-buffer
+@node The tree-buffer-API, Do not with tree-buffer, A new tree-node, tree-buffer
 @subsection All functions available for tree-buffers
 
 TODO
 
-@node Tree-buffer don'ts, ,The tree-buffer-API, tree-buffer
+@node Do not with tree-buffer, ,The tree-buffer-API, tree-buffer
 @subsection Things which are strictly forbidden
 
 TODO

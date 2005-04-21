@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-layout.el,v 1.250 2005/04/19 15:20:52 berndl Exp $
+;; $Id: ecb-layout.el,v 1.251 2005/04/21 12:15:52 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -490,26 +490,42 @@ mouse-button or the popup-menu of that tree-buffer has been opened."
   "*Maximizes the next logical tree-window after a maximized node-selection.
 Selecting a node in a maximized tree-window is handled very smart by ECB:
 
-If this option is nil then selecting a node in a maximized directories-
-sources- or history-tree-buffer automatically \"minimizes\" that tree-window
-\(i.e. displays all windows of the current layout) so the user can perform the
-next logical step \(e.g. the next logical step after selecting a directory in
-the directories-buffer is to select a source-file - therefore the
-sources-buffer of current layout has to be displayed - if the current layout
-contains one; the next logical step of selecting a source-file is probably to
-jump to a certain tag via the methods-buffer).
+If a tree-buffer-name is not contained in this option then selecting a node in
+this maximized tree-buffer automatically \"minimizes\" that tree-window \(i.e.
+displays all windows of the current layout) so the user can perform the next
+logical step \(e.g. the next logical step after selecting a directory in the
+directories-buffer is to select a source-file - therefore the sources-buffer
+of current layout has to be displayed - if the current layout contains one;
+the next logical step of selecting a source-file is probably to jump to a
+certain tag via the methods-buffer).
 
-If this option is not nil then selecting a node in a maximized directories-
-sources- or history-tree-buffer automatically maximizes the next logical
-tree-window \(directories --> sources, sources/history --> methods). But if
-the current maximized tree-buffer is contained in the option
+If a tree-buffer-name is contained in this option then selecting a node in
+this tree-buffer automatically maximizes the next logical tree-window \(e.g.
+directories --> sources, sources/history --> methods). But if the current
+maximized tree-buffer is also contained in the option
 `ecb-tree-do-not-leave-window-after-select' \(see also the tree-buffer-command
 `ecb-toggle-do-not-leave-window-after-select' which is bound to `C-t' in each
 tree-buffer) then ECB does *not* maximize the next logical tree-window but
 point stays in the currently maximized tree-buffer so for example the user can
-select more than one source-file from the sources-buffer."
+select more than one node \(e.g. more than one source-file from the
+sources-buffer.
+
+The tree-buffer-name can either be defined as plain string or with a symbol
+which contains the buffer-name as value. The latter one is recommended for the
+builtin ECB-tree-buffers because then simply the related option-symbol can be
+used \(e.g. `ecb-directories-buffer-name', `ecb-sources-buffer-name' or
+`ecb-history-buffer-name').
+
+In future versions this option will probably also allow to define the next
+logical tree-buffer for a tree-buffer - currently this is hard-coded as
+follows:
+- directories --next-logical--> sources
+- sources     --next-logical--> methods
+- history     --next-logical--> methods."
   :group 'ecb-layout
-  :type 'boolean)
+  :type '(repeat (choice :menu-tag "Buffer-name"
+                         (string :tag "Buffer-name as string")
+                         (symbol :tag "Symbol holding buffer-name"))))
 
 ;; A value of never makes no sense because it is not much effort to prevent
 ;; all interactive shrinking commands (incl. mouse-commands) from shrinking it
@@ -2685,7 +2701,8 @@ some special tasks:
              (ecb-maximize-ecb-buffer (buffer-name) t))
             ((and ecb-ecb-buffer-name-selected-before-command
                   (not (ecb-point-in-dedicated-special-buffer)))
-             (ecb-redraw-layout-full nil nil nil nil))))))
+             (ecb-redraw-layout-full nil nil nil nil)))))
+  )
 
 
 ;; here come the advices
@@ -3961,7 +3978,8 @@ current edit-window is selected."
           (ecb
            (ecb-window-select prev-buffer-name))
           (compile
-           (ecb-window-select ecb-compile-window)))))))
+           (ecb-window-select ecb-compile-window))))
+      (ecb-info-message "Maximizing has been undone."))))
 
 (defun ecb-maximized-tree-buffer-name ()
   "Return the currently maximized tree-buffer-name or nil if there is none."
@@ -4685,6 +4703,8 @@ for the quick version!"
   ;; (i.e. all data of all edit-windows and all data of the compile window) so
   ;; we get back all ecb-windows of current lyout but preserve the
   ;; edit-windows and also the compile-window (incl. its height).
+  (ecb-debug-autocontrol-fcn-error 'ecb-repair-only-ecb-window-layout
+                                   "Begin: Cur-buf: %s" (current-buffer))
   (if (and (ecb-compile-window-live-p)
            (not ecb-windows-hidden)
            (not (ecb-buffer-is-maximized-p))
@@ -4727,7 +4747,10 @@ for the quick version!"
           ;; repair is necessary or at least the repair doesn't fail. So we
           ;; have to implement a smarter mechanism..............
           nil ;; (ecb-set-window-configuration win-config-before)
-          ))))
+          )))
+    (ecb-debug-autocontrol-fcn-error 'ecb-repair-only-ecb-window-layout
+                                     "Begin: Cur-buf: %s" (current-buffer)))
+
                         
 
 (defun ecb-draw-compile-window (&optional height)

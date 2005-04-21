@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb.el,v 1.425 2005/04/19 15:26:15 berndl Exp $
+;; $Id: ecb.el,v 1.426 2005/04/21 12:15:49 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -744,10 +744,15 @@ tasks are performed:
 
 
 (defun ecb-window-sync-function ()
+  (ecb-debug-autocontrol-fcn-error 'ecb-window-sync-function
+                                   "Begin: Cur-buf: %s" (current-buffer))
   (when (and ecb-window-sync
              (or (equal 'always ecb-window-sync)
                  (not (member major-mode ecb-window-sync))))
-    (ecb-current-buffer-sync)))
+    (ecb-current-buffer-sync))
+  (ecb-debug-autocontrol-fcn-error 'ecb-window-sync-function
+                                   "End: Cur-buf: %s" (current-buffer)))
+  
 
 
 (defun ecb-window-sync ()
@@ -804,6 +809,20 @@ by this command. See also the option `ecb-window-sync'."
   (interactive)
   (ecb-select-edit-window)
   (customize-group "ecb-most-important"))
+
+(defvar ecb-debug-autocontrol-functions nil)
+
+;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: define e macro
+;; `defecb-autocontrol' which defines a function either added to the
+;; idle-timers or to the pre- or post-command-hook and which already wrappes
+;; the function-body with two calls to `ecb-debug-autocontrol-fcn-error'.
+(defun ecb-debug-autocontrol-fcn-error (autocontrol-fcn &rest args)
+  "Run ARGS through `format' and write it to the *Messages*-buffer."
+  (when ecb-debug-autocontrol-functions
+    (message (concat (format "ECB %s autocontrol-fcn %s debug [%s] "
+                             ecb-version autocontrol-fcn
+                             (format-time-string "%H:%M:%S"))
+                     (apply 'format args)))))
 
 (defvar ecb-idle-timer-alist nil)
 (defvar ecb-post-command-hooks nil)
@@ -2242,7 +2261,9 @@ performance-problem!"
                              (equal last-mode 'dired-mode))
                      (and (ecb-point-in-edit-window edit-win-list)
                           (not ecb-windows-hidden)
-                          (ecb-hide-ecb-windows)))))))))))
+                          (ecb-hide-ecb-windows))))))))))
+  )
+  
   
 (add-hook 'post-command-hook 'ecb-handle-major-mode-visibilty)
 
