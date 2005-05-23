@@ -2780,6 +2780,10 @@ to be rescanned/reparsed and therefore the Method-buffer will be rebuild too."
       
       ;; here we process non-semantic buffers if the user wants this. But only
       ;; if either non-semantic-rebuild is true or no cache exists.
+      ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: Here we could evaluate an
+      ;; option which would define which modes should be parsed by which
+      ;; parser (so a user could also parse semantic-anabled-files with
+      ;; etags/imenu)
       (when (and ecb-process-non-semantic-files
                  (null updated-cache)                 
                  (not (ecb--semantic-active-p))
