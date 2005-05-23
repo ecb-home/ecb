@@ -23,7 +23,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-file-browser.el,v 1.57 2005/04/21 12:15:53 berndl Exp $
+;; $Id: ecb-file-browser.el,v 1.58 2005/05/23 15:50:54 berndl Exp $
 
 ;;; Commentary:
 
@@ -1740,8 +1740,8 @@ selected before this update."
                  (tree-buffer-number-of-displayed-nodes))
             (setq new-cache-elem (list (tree-buffer-get-root)
                                        (tree-buffer-displayed-nodes-copy)
-                                       (buffer-substring (point-min)
-                                                         (point-max))))
+                                       (ecb-buffer-substring (point-min)
+                                                             (point-max))))
             (ecb-sources-cache-add-full ecb-path-selected-directory
                                         new-cache-elem))))
            
@@ -1855,8 +1855,8 @@ all files are displayed."
           (ecb-sources-cache-add-filtered ecb-path-selected-directory
                                           (list (tree-buffer-get-root)
                                                 (tree-buffer-displayed-nodes-copy)
-                                                (buffer-substring (point-min)
-                                                                  (point-max))
+                                                (ecb-buffer-substring (point-min)
+                                                                      (point-max))
                                                 (cons filter-regexp
                                                       (or filter-display
                                                           filter-regexp))))))))
@@ -2650,8 +2650,8 @@ the SOURCES-cache."
         (ecb-sources-cache-add-filtered dir
                                         (list (tree-buffer-get-root)
                                               (tree-buffer-displayed-nodes-copy)
-                                              (buffer-substring (point-min)
-                                                                (point-max))
+                                              (ecb-buffer-substring (point-min)
+                                                                    (point-max))
                                               ;; add the old-filter-spec
                                               ;; because it must be the same
                                               (nth 3 filtered-sources-cache)))
@@ -2661,8 +2661,8 @@ the SOURCES-cache."
           (ecb-sources-cache-add-full dir
                                       (list (tree-buffer-get-root)
                                             (tree-buffer-displayed-nodes-copy)
-                                            (buffer-substring (point-min)
-                                                              (point-max))))))))
+                                            (ecb-buffer-substring (point-min)
+                                                                  (point-max))))))))
 
 (defun ecb-vc-cvs-root-remote-p (root)
   "Return not nil if ROOT is a remote CVS-repository."
@@ -4066,4 +4066,3 @@ So you get a better overlooking. There are three choices:
 (silentcomp-provide 'ecb-file-browser)
 
 ;;; ecb-file-browser.el ends here
-
