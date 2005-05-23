@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb.el,v 1.426 2005/04/21 12:15:49 berndl Exp $
+;; $Id: ecb.el,v 1.427 2005/05/23 15:51:39 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -209,7 +209,10 @@ is loaded or the value of `semantic-version' at ECB-compilation time.")
 (require 'ecb-autogen)
 (require 'ecb-winman-support)
 (require 'ecb-compatibility)
+
+;; add-ons
 (require 'ecb-analyse)
+(require 'ecb-symboldef)
 
 ;; various loads
 (require 'assoc)

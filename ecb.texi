@@ -26,7 +26,7 @@
 @c GNU Emacs; see the file COPYING.  If not, write to the Free Software
 @c Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-@c $Id: ecb.texi,v 1.205 2005/04/21 12:15:49 berndl Exp $
+@c $Id: ecb.texi,v 1.206 2005/05/23 15:51:39 berndl Exp $
 
 @setfilename ecb.info
 
@@ -227,7 +227,7 @@ Working with the keyboard in the ECB-windows
 
 * Navigation/Selection::        Keyboard navigation/selection in a tree-buffer
 * Incremental search::          Find nodes as fast as possible
-* Personal keybindings::        Adding personal keybindings to a tree-buffer
+* Personal tree-keybindings::   Adding personal keybindings to a tree-buffer
 * Using popup-menus::           Using the popup-menus from keyboard.
 
 Using and customizing the ECB-Methods buffer
@@ -1298,7 +1298,7 @@ keyboard in the ECB-tree-buffers:
 @menu
 * Navigation/Selection::        Keyboard navigation/selection in a tree-buffer
 * Incremental search::          Find nodes as fast as possible
-* Personal keybindings::        Adding personal keybindings to a tree-buffer
+* Personal tree-keybindings::   Adding personal keybindings to a tree-buffer
 * Using popup-menus::           Using the popup-menus from keyboard.
 @end menu
 
@@ -1331,8 +1331,8 @@ TAB always expands or collapses expandable nodes.
 
 The RETURN and TAB keys can not be (re)defined with @code{ecb-key-map}!
 
-If you set @code{ecb-tree-navigation-by-arrow} to not nil then the left- and
-right-arrow keys work in the ECB tree-window in the following smart way:
+If you set @code{ecb-tree-navigation-by-arrow} to not nil then the
+arrow keys work in the ECB tree-window in the following smart way:
 
 @itemize @bullet
 @item
@@ -1360,7 +1360,7 @@ non-guide-line (see @code{ecb-tree-buffer-style}) character of a node
 @end itemize
 
 
-@node Incremental search, Personal keybindings, Navigation/Selection, Using the keyboard
+@node Incremental search, Personal tree-keybindings, Navigation/Selection, Using the keyboard
 @subsection Incremental search for a node in current tree-buffer
 
 @cindex Incremental search
@@ -1411,8 +1411,8 @@ Tip: The @code{ecb-minor-mode} offers you in the @code{ecb-mode-map}
 of the ecb-frame. This makes window-selection a child´s play. For
 example you can jump into the method-window by hitting @kbd{C-c . gm}.
 
-@node Personal keybindings, Using popup-menus, Incremental search, Using the keyboard
-@subsection Adding personal keybindings
+@node Personal tree-keybindings, Using popup-menus, Incremental search, Using the keyboard
+@subsection Adding personal keybindings for the tree-buffers
 
 There are five hooks which can be used for adding personal keybindings
 to the ECB tree-buffers:
@@ -1470,7 +1470,7 @@ directories buffer:
 @end group
 @end example
 
-@node Using popup-menus, ,Personal keybindings, Using the keyboard
+@node Using popup-menus, ,Personal tree-keybindings, Using the keyboard
 @subsection Using the popup-menu of a tree-buffer from keyboard.
 
 @cindex tmm

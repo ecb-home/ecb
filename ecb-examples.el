@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-examples.el,v 1.18 2005/04/19 15:16:44 berndl Exp $
+;; $Id: ecb-examples.el,v 1.19 2005/05/23 15:49:40 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -249,7 +249,7 @@ if clicks onto \[next] the buffer in the edit-window is scrolled down.
 Otherwise nothing will be done."
   (interactive "e")
   (mouse-set-point e)
-  (let ((line (buffer-substring (ecb-line-beginning-pos) (ecb-line-end-pos))))
+  (let ((line (ecb-buffer-substring (ecb-line-beginning-pos) (ecb-line-end-pos))))
     (cond ((string-match "prior" line)
            (ecb-select-edit-window)
            (call-interactively 'scroll-down))
