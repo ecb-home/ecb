@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-upgrade.el,v 1.103 2005/04/19 15:23:48 berndl Exp $
+;; $Id: ecb-upgrade.el,v 1.104 2005/05/23 15:43:27 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -1347,6 +1347,7 @@ Note: Normally this URL should never change but who knows..."
   :group 'ecb-download
   :type 'string)
 
+;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: Allow pre-release handling
 (defcustom ecb-download-package-version-type 1
   "*Version type ECB is allowed to download for upgrading.
 If you want to upgrade to a newer ECB-version via `ecb-download-ecb' or if you
@@ -1381,6 +1382,43 @@ max-versions of the required packages. For this see the file README!"
                        :value 0)
                 (const :tag "Ask for version"
                        :value -1)))
+;; (defcustom ecb-download-package-version-type 1
+;;   "*Version type ECB is allowed to download for upgrading.
+;; If you want to upgrade to a newer ECB-version via `ecb-download-ecb' or if you
+;; must upgrade to newer semantic- and/or eieio-versions \(because ECB requires
+;; these newer versions) then this option specifies which version-types are
+;; allowed. ECB checks on the download-sites of ECB/semantic/eieio which versions
+;; are currently available and then downloads always the latest version matching
+;; the specified type:
+
+;; 3: Gets the newest version of all stable versions available.
+;; 2: As 3 plus pre-releases available.
+;; 1: As 2 plus beta versions available.
+;; 0: As 1 plus alpha versions available.
+;; -1: Ask before downloading in the minibuffer for a version \(TAB-completion
+;;     of all available versions is possible).
+
+;; So, 3 means stable, 2 means stable and pre-release, 1 means stable,
+;; pre-release and betas, 0 means stable, pre-release, betas and alphas and -1
+;; means ask the user for a version.
+
+;; Per default stable, pre-release and beta-versions are allowed \(value 1). This
+;; comes also from the fact, that currently speedbar is only available in beta
+;; versions which are very stable.
+
+;; But all versions must match the restrictions of the specified min- and
+;; max-versions of the required packages. For this see the file README!"
+;;   :group 'ecb-download
+;;   :type '(radio (const :tag "Only stable versions"
+;;                        :value 3)
+;;                 (const :tag "Allow pre-releases"
+;;                        :value 2)
+;;                 (const :tag "Allow beta versions"
+;;                        :value 1)
+;;                 (const :tag "Allow alpha versions"
+;;                        :value 0)
+;;                 (const :tag "Ask for version"
+;;                        :value -1)))
 
 (defcustom ecb-download-install-parent-dir (or (and (file-writable-p ecb-ecb-parent-dir)
                                                     ecb-ecb-parent-dir)
@@ -1525,6 +1563,7 @@ Return nil if ver-str has not the required syntax:
                   (string-to-number (match-string 4 str))
                 0)))))
 
+;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: adjust this to pre-handling!
 (defun ecb-package-version-list< (ver1 ver2)
   "Return non-nil if VER1 is less than VER2."
   (let ((v1-0 (nth 0 ver1))
