@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-util.el,v 1.133 2005/04/19 15:24:53 berndl Exp $
+;; $Id: ecb-util.el,v 1.134 2005/05/23 15:39:33 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -381,7 +381,7 @@ FUNCTION-SYMBOL. The advice must be of type of the ADVICE-TYPE which can be
       (progn
         (ad-disable-advice function-symbol advice-type 'ecb)
         (ad-activate function-symbol))
-    (ad-enable-advice function-symbol advice-type  'ecb)
+    (ad-enable-advice function-symbol advice-type 'ecb)
     (ad-activate function-symbol)))
 
 (defmacro ecb-with-ecb-advice (function-symbol advice-type &rest body)
@@ -810,7 +810,7 @@ the default is `equal'.
 
 After defining the cache with this macro the cache can be used immediately\;
 there is no need for special initialization. The following functions are
-available for accessing values in such a cache:
+available for setting and accessing values in such a cache:
 
   `ecb-multicache-put-value'
   `ecb-multicache-apply-to-value'
@@ -823,7 +823,7 @@ available for accessing values in such a cache:
   `ecb-multicache-print-subcache'
   `ecb-multicache-p'
 
-The lookup in this assoc cache is really fast because the time required is
+The lookup in this multi-cache is really fast because the time required is
 essentially _independent_ of how many elements are stored in the cache."
   `(progn
      (eval-and-compile
@@ -1106,47 +1106,47 @@ be made either with the mouse or with the keyboard."
 ;; ecb-offer-choices-1 and ecb-offer-choices-2 are two other approaches for
 ;; ecb-offer-choices - but IMHO not as good and clean as the current one and
 ;; therefore not used in ECB
-(defun ecb-offer-choices-1 (prompt choices)
-  "Prints PROMPT and returns a string which must be one of CHOICES.
-CHOICES is a list of strings whereas the first choice is the default. All
-choices are immediately displayed as if completion does it so a selection can
-be made either with the mouse or with the keyboard."
-  (let* ((minibuffer-setup-hook
-          (append minibuffer-setup-hook
-                  '(minibuffer-complete
-                    minibuffer-complete
-                    minibuffer-complete)))
-         (answer (completing-read
-                  prompt
-                  (mapcar (function (lambda (x) (list x t)))
-                          choices)
-                  nil t)))
-    (if (ecb-string= answer "")
-        (car choices)
-      answer)))
+;; (defun ecb-offer-choices-1 (prompt choices)
+;;   "Prints PROMPT and returns a string which must be one of CHOICES.
+;; CHOICES is a list of strings whereas the first choice is the default. All
+;; choices are immediately displayed as if completion does it so a selection can
+;; be made either with the mouse or with the keyboard."
+;;   (let* ((minibuffer-setup-hook
+;;           (append minibuffer-setup-hook
+;;                   '(minibuffer-complete
+;;                     minibuffer-complete
+;;                     minibuffer-complete)))
+;;          (answer (completing-read
+;;                   prompt
+;;                   (mapcar (function (lambda (x) (list x t)))
+;;                           choices)
+;;                   nil t)))
+;;     (if (ecb-string= answer "")
+;;         (car choices)
+;;       answer)))
 
-(defun ecb-offer-choices-2 (prompt choices)
-  "Prints PROMPT and returns a string which must be one of CHOICES.
-CHOICES is a list of strings whereas the first choice is the default. All
-choices are immediately displayed as if completion does it so a selection can
-be made either with the mouse or with the keyboard."
-  ;; First we create a TAB-event
-  (let ((event (if ecb-running-xemacs
-                   (make-event 'key-press '(key tab))
-                 9)))
-    ;; With these 3 TAB-events we ensure that
-    ;; 1. The longest possible common substring is display in the minibuffer
-    ;; 2. All possible completions are displayed
-    (dotimes (i 3)
-      (setq unread-command-events (cons event unread-command-events))))
-  (let ((answer (completing-read
-                 prompt
-                 (mapcar (function (lambda (x) (list x t)))
-                         choices)
-                 nil t)))
-    (if (ecb-string= answer "")
-        (car choices)
-      answer)))
+;; (defun ecb-offer-choices-2 (prompt choices)
+;;   "Prints PROMPT and returns a string which must be one of CHOICES.
+;; CHOICES is a list of strings whereas the first choice is the default. All
+;; choices are immediately displayed as if completion does it so a selection can
+;; be made either with the mouse or with the keyboard."
+;;   ;; First we create a TAB-event
+;;   (let ((event (if ecb-running-xemacs
+;;                    (make-event 'key-press '(key tab))
+;;                  9)))
+;;     ;; With these 3 TAB-events we ensure that
+;;     ;; 1. The longest possible common substring is display in the minibuffer
+;;     ;; 2. All possible completions are displayed
+;;     (dotimes (i 3)
+;;       (setq unread-command-events (cons event unread-command-events))))
+;;   (let ((answer (completing-read
+;;                  prompt
+;;                  (mapcar (function (lambda (x) (list x t)))
+;;                          choices)
+;;                  nil t)))
+;;     (if (ecb-string= answer "")
+;;         (car choices)
+;;       answer)))
 
 (defun ecb-read-number (prompt &optional init-value)
   "Ask in the minibuffer for a number with prompt-string PROMPT. Optional
@@ -1671,6 +1671,13 @@ During the evaluation of BODY the following local variables are bound:
        ,@body)))
 (put 'ecb-do-if-buffer-visible-in-ecb-frame 'lisp-indent-function 1)
 
+(defun ecb-buffer-substring (minpoint maxpoint &optional buffer)
+  "Return the contents of part of BUFFER as a string.
+If BUFFER is nil then the current-buffer is used. BUFFER can be a buffer-name
+or a buffer-object."
+  (with-current-buffer (or buffer (current-buffer))
+    (buffer-substring minpoint maxpoint)))
+
 (defun ecb-delete-file (file)
   "Delete FILE if it eexists."
   (let ((exp-file (expand-file-name file)))
@@ -1789,8 +1796,8 @@ means not to count the minibuffer even if it is active."
 
 (defun ecb-canonical-windows-list ()
   "Return a list of all current visible windows in the `ecb-frame' \(starting
-  from the left-most top-most window) in the order `other-window' would walk
-  through these windows."
+from the left-most top-most window) in the order `other-window' would walk
+through these windows."
   (ecb-window-list ecb-frame 0 (frame-first-window ecb-frame)))
 
 (defun ecb-enlarge-window (window &optional val)
