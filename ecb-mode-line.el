@@ -324,7 +324,6 @@ as \"W-<number>\"."
 
 (defun ecb-mode-line-update-buffer (buffer-name new-mode-line-format)
   "Update the given buffer...."
-
   (if (get-buffer buffer-name)
       (save-excursion
         (set-buffer buffer-name)
