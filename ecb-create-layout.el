@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-create-layout.el,v 1.31 2005/03/30 12:50:55 berndl Exp $
+;; $Id: ecb-create-layout.el,v 1.32 2005/05/23 15:49:15 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -232,13 +232,26 @@
   (setq ecb-create-layout-generated-lisp nil)
   (setq ecb-create-layout-gen-counter 0))
 
+(defvar ecb-create-layout-frame-deleted nil)
+
 (defadvice delete-frame (before ecb-create-layout)
   "Ensure calling `ecb-create-layout-cancel' during deleting the
-layout-creation frame."
+layout-creation frame. Does nothing for any other other frame!"
   (let ((frame (or (ad-get-arg 0) (selected-frame))))
     (when (ecb-string= (ecb-frame-parameter frame 'name)
                        ecb-create-layout-frame-name)
+      (setq ecb-create-layout-frame-deleted t)
       (ecb-create-layout-cancel))))
+
+(defadvice delete-frame (after ecb-create-layout)
+  "Ensures correct deleting of the layout-creation frame. Does nothing for any
+other other frame!"
+  (when ecb-create-layout-frame-deleted
+    (setq ecb-create-layout-frame-deleted nil)
+    (ecb-activate))
+  (ad-disable-advice 'delete-frame 'after 'ecb-create-layout)
+  (ad-activate 'delete-frame))
+  
 
 (defun ecb-create-layout-frame-ok ()
   "Return not nil if current frame is the `ecb-create-layout-frame'"
@@ -246,14 +259,13 @@ layout-creation frame."
        (frame-live-p ecb-create-layout-frame)
        (equal (selected-frame) ecb-create-layout-frame)))
 
-
 (defun ecb-create-layout-cancel (&rest ignore)
   "Cancel layout-creation without saving the layout."
   (interactive)
   (when (ecb-create-layout-frame-ok)
     (ecb-create-layout-clear-all (interactive-p))
     (message "ECB Layout Creation canceled - the layout is not saved!")
-    (ecb-activate)))
+    (and (interactive-p) (ecb-activate))))
 
 (defun ecb-create-layout-clear-all (&optional delete-frame)
   "Resets all stuff to state before `ecb-create-new-layout' was called. If
@@ -765,6 +777,7 @@ never selects the edit-window."
   (raise-frame ecb-create-layout-frame)
   (select-frame ecb-create-layout-frame)
   (ad-enable-advice 'delete-frame 'before 'ecb-create-layout)
+  (ad-enable-advice 'delete-frame 'after 'ecb-create-layout)
   (ad-activate 'delete-frame)
 
   ;; global map
@@ -840,6 +853,15 @@ unbound."
   (message "Layout-Debug: Type: %s, Factor: %s"
            (ecb-create-layout-buffer-type)
            (ecb-create-layout-buffer-factor)))
+
+;; Klaus Berndl <klaus.berndl@sdm.de>: Cause of the magic autostart stuff of
+;; the advice-package we must disable at load-time all these advices!!
+;; Otherwise would just loading ecb (not activating!) activate each advice
+;; AFTER the FIRST usage of our advices!!
+(ad-disable-advice 'delete-frame 'after 'ecb-create-layout)
+(ad-disable-advice 'delete-frame 'before 'ecb-create-layout)
+(ad-activate 'delete-frame)
+
 
 (silentcomp-provide 'ecb-create-layout)
 
