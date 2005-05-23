@@ -209,7 +209,10 @@ is loaded or the value of `semantic-version' at ECB-compilation time.")
 (require 'ecb-autogen)
 (require 'ecb-winman-support)
 (require 'ecb-compatibility)
+
+;; add-ons
 (require 'ecb-analyse)
+(require 'ecb-symboldef)
 
 ;; various loads
 (require 'assoc)

@@ -249,7 +249,7 @@ if clicks onto \[next] the buffer in the edit-window is scrolled down.
 Otherwise nothing will be done."
   (interactive "e")
   (mouse-set-point e)
-  (let ((line (buffer-substring (ecb-line-beginning-pos) (ecb-line-end-pos))))
+  (let ((line (ecb-buffer-substring (ecb-line-beginning-pos) (ecb-line-end-pos))))
     (cond ((string-match "prior" line)
            (ecb-select-edit-window)
            (call-interactively 'scroll-down))
