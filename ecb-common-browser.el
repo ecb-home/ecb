@@ -1201,7 +1201,12 @@ a string with length abs\(FIRST-CHARS) is created, the image is applied to
 this new string and this \"image\"-string is added to the front of TEXT-NAME.
 If no image can be found for ICON-NAME then the original TEXT-NAME is
 returned. NAME-OF-BUFFER is the name of the tree-buffer where the resulting
-node-name will be displayed."
+node-name will be displayed.
+
+If an image is added then two text-properties are added to the FIRST-CHARS of
+the returned string: 'tree-buffer-image-start which holds 0 as value and
+'tree-buffer-image-length which holds the absolute value of FIRST-CHARS
+value."
   (let ((image nil))
     (save-excursion
       (set-buffer name-of-buffer)
@@ -1211,7 +1216,8 @@ node-name will be displayed."
               (tree-buffer-add-image-icon-maybe
                0 first-chars text-name image)
             (concat (tree-buffer-add-image-icon-maybe
-                     0 1 (make-string (- first-chars) ? ) image)
+                     0 (- first-chars)
+                     (make-string (- first-chars) ? ) image)
                     text-name))
         text-name))))
 
