@@ -20,7 +20,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-analyse.el,v 1.10 2005/04/19 14:25:46 berndl Exp $
+;; $Id: ecb-analyse.el,v 1.11 2005/06/10 11:13:25 berndl Exp $
 
 
 ;;; Commentary:
@@ -427,7 +427,7 @@ value of EDIT-WINDOW-NR is ignored."
   (add-hook 'ecb-current-buffer-sync-hook-internal 'ecb-analyse-buffer-sync)
   (switch-to-buffer ecb-analyse-buffer-name))
 
-;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: Add these commans to the right
+;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: Add these commands to the right
 ;; submenu of the ECB-menu and also to the ecb-key-map!
 (defun ecb-maximize-window-analyse ()
   "Maximize the ECB-analyse-window.
