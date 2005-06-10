@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-layout.el,v 1.251 2005/04/21 12:15:52 berndl Exp $
+;; $Id: ecb-layout.el,v 1.252 2005/06/10 11:04:31 berndl Exp $
 
 ;;; Commentary:
 ;;
@@ -2648,16 +2648,18 @@ some special tasks:
       (cond ((and (ecb-point-in-compile-window)
                   (not ecb-compile-window-was-selected-before-command))
              (ecb-layout-debug-error "ecb-layout-post-command-hook: enlarge")
+             (ecb-toggle-compile-window-height 1)
              ;; now we change the window-start, so we see autom. more text
              ;; after the enlargement of the window.
-             (let ((height-before (ecb-window-full-height))
-                   (height-after (ecb-toggle-compile-window-height 1)))
-               (set-window-start ecb-compile-window
-                                 (save-excursion
-                                   (goto-char (window-start))
-                                   (forward-line (* -1 (- height-after height-before)))
-                                   (ecb-line-beginning-pos))
-                                 t)))
+;;              (let ((height-before (ecb-window-full-height))
+;;                    (height-after (ecb-toggle-compile-window-height 1)))
+;;                (set-window-start ecb-compile-window
+;;                                  (save-excursion
+;;                                    (goto-char (window-start))
+;;                                    (forward-line (* -1 (- height-after height-before)))
+;;                                    (ecb-line-beginning-pos))
+;;                                  t))
+             )
             ((and ecb-compile-window-was-selected-before-command
                   (not (ecb-point-in-compile-window)))
              (ecb-layout-debug-error "ecb-layout-post-command-hook: shrink")
@@ -2710,7 +2712,12 @@ some special tasks:
 ;; TODO: Klaus Berndl <klaus.berndl@sdm.de>:
 ;; *** `special-display-buffer-names' and `special-display-regexps' now
 ;; understand two new boolean pseudo-frame-parameters `same-frame' and
-;; `same-window'. This is new in Emacs 21.4 so we have to integrate it!
+;; `same-window'. This is new in Emacs 22 so we have to integrate it!
+;; The format is: (same-window . VALUE) or (same-frame . VALUE). If VALUE is
+;; not nil then we have to take into account the new behavior! probably it is
+;; the best to include this check in `ecb-check-for-same-window-buffer' too!
+;; The best would be to handle same-window correct and ignore same-frame - the
+;; latter one could be difficult...
 
 (defun ecb-check-for-special-buffer (buffer-or-name)
   "Return  not nil if and only if `special-display-function' is not nil and
@@ -4918,7 +4925,7 @@ emergency-redraw."
                     (ecb-compilation-buffer-p compile-buffer-before-redraw))
                (ecb-some (function (lambda (buf)
                                      (and (not (ecb-string= "*Completions*"
-                                                            (buffer-name buf)))
+                                                            (ecb-buffer-name buf)))
                                           (not (ecb-check-for-special-buffer buf))
                                           (ecb-compilation-buffer-p buf))))
                          (buffer-list ecb-frame))
@@ -5343,9 +5350,9 @@ if no compile-window is visible."
   (if (and ecb-minor-mode
            (equal (selected-frame) ecb-frame)
            (equal 'visible (ecb-compile-window-state)))
-      (let ((should-shrink (if (null arg)
-                               (> (ecb-window-full-height ecb-compile-window)
-                                  ecb-compile-window-height-lines)
+      (let* ((height-before (ecb-window-full-height ecb-compile-window))
+             (should-shrink (if (null arg)
+                               (> height-before ecb-compile-window-height-lines)
                              (<= (prefix-numeric-value arg) 0)))
             (compile-window-selected-p (equal (selected-window)
                                               ecb-compile-window))
@@ -5423,9 +5430,18 @@ if no compile-window is visible."
                 (enlarge-window (- (max max-height ecb-compile-window-height-lines)
                                    (ecb-window-full-height))))
               ;; now we set the window-start
-              (when (and (not (equal major-mode 'compilation-mode))
-                         (not compile-window-selected-p))
-                (set-window-start ecb-compile-window (point-min))))
+              (set-window-start ecb-compile-window
+                                (save-excursion
+                                  (goto-char (window-start))
+                                  (forward-line (* -1
+                                                   (- (ecb-window-full-height)
+                                                      height-before)))
+                                  (ecb-line-beginning-pos))
+                                t)
+;;               (when (and (not (equal major-mode 'compilation-mode))
+;;                          (not compile-window-selected-p))
+;;                 (set-window-start ecb-compile-window (point-min)))
+              )
             ;; return the new compile-window height
             (ecb-window-full-height))))
     (if (interactive-p)
