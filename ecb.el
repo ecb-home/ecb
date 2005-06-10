@@ -1084,6 +1084,12 @@ That is remove the unsupported :help stuff."
       :help "Go to the history window"
       ])
     (ecb-menu-item
+     ["Analyse"
+      ecb-goto-window-analyse
+      :active (ecb-buffer-is-ecb-buffer-of-current-layout-p ecb-analyse-buffer-name)
+      :help "Go to the analyse window"
+      ])
+    (ecb-menu-item
      ["Speedbar"
       ecb-goto-window-speedbar
       :active (and ecb-use-speedbar-instead-native-tree-buffer
@@ -1122,6 +1128,12 @@ That is remove the unsupported :help stuff."
       ecb-maximize-window-history
       :active (ecb-buffer-is-ecb-buffer-of-current-layout-p ecb-history-buffer-name)
       :help "Maximize the history window - even if currently not visible"
+      ])
+    (ecb-menu-item
+     ["Analyse"
+      ecb-maximize-window-analyse
+      :active (ecb-buffer-is-ecb-buffer-of-current-layout-p ecb-analyse-buffer-name)
+      :help "Maximize the analyse window - even if currently not visible"
       ])
     (ecb-menu-item
      ["Speedbar"
@@ -1176,6 +1188,12 @@ That is remove the unsupported :help stuff."
       (customize-group "ecb-history")
       :active t
       :help "Customize ECB history"
+      ])
+    (ecb-menu-item
+     ["Analyse..."
+      (customize-group "ecb-analyse")
+      :active t
+      :help "Customize ECB analyse ingeractor"
       ])
     (ecb-menu-item
      ["Version control..."
@@ -1405,11 +1423,13 @@ That is remove the unsupported :help stuff."
                (t "gs" ecb-goto-window-sources)
                (t "gm" ecb-goto-window-methods)
                (t "gh" ecb-goto-window-history)
+               (t "ga" ecb-goto-window-analyse)
                (t "gb" ecb-goto-window-speedbar)
                (t "md" ecb-maximize-window-directories)
                (t "ms" ecb-maximize-window-sources)
                (t "mm" ecb-maximize-window-methods)
                (t "mh" ecb-maximize-window-history)
+               (t "ma" ecb-maximize-window-analyse)
                (t "mb" ecb-maximize-window-speedbar)
                (t "e" eshell)
                (t "o" ecb-toggle-scroll-other-window-scrolls-compile)
