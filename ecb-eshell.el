@@ -340,7 +340,7 @@ enlarge the compile-window over half of the frame-height and also not below
                                           (point))))
                         (/ (1- (frame-height)) 2))
                    compile-window-height-lines)))
-                 (ecb-toggle-compile-window-height 1)
+        (ecb-toggle-compile-window-height 1)
         (ecb-eshell-recenter))
         
       ;;reset
