@@ -26,7 +26,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: ecb-eshell.el,v 1.76 2005/02/28 11:31:58 berndl Exp $
+;; $Id: ecb-eshell.el,v 1.77 2005/06/10 11:10:11 berndl Exp $
 
 ;;; Commentary:
 
@@ -340,7 +340,7 @@ enlarge the compile-window over half of the frame-height and also not below
                                           (point))))
                         (/ (1- (frame-height)) 2))
                    compile-window-height-lines)))
-                 (ecb-toggle-compile-window-height 1)
+        (ecb-toggle-compile-window-height 1)
         (ecb-eshell-recenter))
         
       ;;reset
