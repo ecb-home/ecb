@@ -24,7 +24,7 @@
 ;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
 ;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-;; $Id: tree-buffer.el,v 1.168 2005/04/21 12:15:48 berndl Exp $
+;; $Id: tree-buffer.el,v 1.169 2005/06/10 11:12:34 berndl Exp $
 
 ;;; Commentary:
 
@@ -895,25 +895,32 @@ IMAGE-ICON is not nil \(which must be an image-object in the sense of
 \(X)Emacs) then add this image to STR otherwise do nothing. Normally
 IMAGE-ICON should be either nil or an image-object returned by
 `tree-buffer-find-image'. Always return STR. If IMAGE-ICON is nil or
-`tree-buffer-real-style' returns not 'image then START and LEN are ignored!"
+`tree-buffer-real-style' returns not 'image then START and LEN are ignored!
+If an image is added then two text-properties are added to the full length of
+STR: 'tree-buffer-image-start which holds START as value and
+'tree-buffer-image-length which holds LEN as value."
   (when (equal 'image (tree-buffer-real-style))
     ;; Regular images (created with `insert-image' are intangible
     ;; which (I suppose) make them more compatible with XEmacs 21.
     ;; Unfortunately, there is a giant pile of code dependent on the
     ;; underlying text.  This means if we leave it tangible, then I
     ;; don't have to change said giant piles of code.
-    (if image-icon
-        (if tree-buffer-running-xemacs
-            (add-text-properties (+ start len) start
-                                 (list 'end-glyph image-icon
-                                       'rear-nonsticky (list 'display)
-                                       'invisible t
-                                       'detachable t)
-                                 str)
-          (add-text-properties start (+ start len)
-                               (list 'display image-icon
-                                     'rear-nonsticky (list 'display))
-                               str))))
+    (when image-icon
+      (if tree-buffer-running-xemacs
+          (add-text-properties (+ start len) start
+                               (list 'end-glyph image-icon
+                                     'rear-nonsticky (list 'display)
+                                     'invisible t
+                                     'detachable t)
+                               str)
+        (add-text-properties start (+ start len)
+                             (list 'display image-icon
+                                   'rear-nonsticky (list 'display))
+                             str))
+      (add-text-properties 0 (length str)
+                           (list 'tree-buffer-image-start start
+                                 'tree-buffer-image-length len)
+                           str)))
   str)
 
 (defsubst tree-buffer-image-cache-get (tree-image-name)
