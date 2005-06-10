@@ -1,5 +1,21 @@
 * Changes for ECB version 2.32beta3
 
+** New backbone-add-on of ECB for getting definition for the symbol at point
+
+   It allows to display in a new special ECB-window the semantic (do not
+   confuse this trem with the semantic-library!) context of the definition of
+   the current symbol under point. Per default ECB tries to find this context
+   via semanticdb (part of cedet) and etags (shipped with (X)Emacs) but in
+   general this is completely customizable; see the options of the new
+   options-group "ecb-symboldef".
+
+   Either use the layout "left-symboldef" (e.g. via [C-c . l c]) or create a
+   new ecb-layout via the command `ecb-create-new-layout' and add a buffer of
+   type "other" and name "symboldef" into this new layout.
+
+   Thanks to Hauke Wintjen <hauke.jans@tietoenator.com> for having the idea
+   and writing the first implementation!
+
 ** New native ECB-display interactor for the semantic-analyzer
    There is a new tree-buffer ECB-analyse which displays the tags and
    informations of the semanic-analyzer in a smooth way. There are already
@@ -38,7 +54,7 @@
     current layout contains a methods-buffer. So the tag-contents of the
     selected source-file can be displayed in the methods-window.
 
-    For a even smater behavior ECB introduces a new option
+    For a even smarter behavior ECB introduces a new option
     `ecb-maximize-next-after-maximized-select' which automatically maximizes
     the next logical tree-window after a node selection. The definition of
     "next logical is": Directories --> sources, sources/history --> methods.
@@ -93,6 +109,9 @@
    error-message when (X)Emacs < 21 is detected.
 
 ** Fixed Bugs
+
+*** Version-controlled (VC) and not-VC history-entries are now sorted
+    correctly according the setting in `ecb-history-sort-method'.
 
 *** Handles not anymore existing files in the stealthy tasks.
     If a stealthy task detects that a displayed file does not exist anymore it

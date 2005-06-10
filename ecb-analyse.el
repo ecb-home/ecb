@@ -427,7 +427,7 @@ value of EDIT-WINDOW-NR is ignored."
   (add-hook 'ecb-current-buffer-sync-hook-internal 'ecb-analyse-buffer-sync)
   (switch-to-buffer ecb-analyse-buffer-name))
 
-;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: Add these commans to the right
+;; TODO: Klaus Berndl <klaus.berndl@sdm.de>: Add these commands to the right
 ;; submenu of the ECB-menu and also to the ecb-key-map!
 (defun ecb-maximize-window-analyse ()
   "Maximize the ECB-analyse-window.
